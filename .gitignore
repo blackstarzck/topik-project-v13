@@ -1,0 +1,39 @@
+# Local AI harness installs and runtime state
+.agents/
+.claude/
+.codex/
+.omx/
+
+# Local/generated analysis artifacts
+harness-docs-analysis.html
+
+# Dependencies and build outputs
+node_modules/
+dist/
+build/
+.next/
+out/
+coverage/
+
+# Logs and caches
+*.log
+.cache/
+.turbo/
+.vite/
+
+# Environment, credentials, and local secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cert
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
