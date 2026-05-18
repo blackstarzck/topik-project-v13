@@ -24,6 +24,7 @@ Use this template for implementation plans, final reports, and handoffs when the
 - TDD status:
 - Review status:
 - QA status:
+- Fallback/degraded-mode status:
 
 ## Implementation Summary
 
@@ -48,6 +49,14 @@ Use this template for implementation plans, final reports, and handoffs when the
 - Evidence:
 - Ledger/file-state consistency check:
 - Skipped checks and reason:
+
+## Fallbacks
+
+- Normal path that failed:
+- Failure class: fail-closed, degraded-mode, recover, retry-once, reassign, or none.
+- Fallback used:
+- Evidence collected:
+- Completion allowed: yes/no and why.
 
 ## Risks
 

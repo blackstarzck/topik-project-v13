@@ -125,6 +125,8 @@ Superpowers skills have the same names for both hosts:
 - Before completion, compare the context ledger with current file state, child result packets, and verification output. Do not claim completion if the ledger is stale.
 - Tiny docs/config/non-behavioral edits may skip the context ledger only when no multi-agent work, no behavior change, no doc conflict, and no resume risk exists; the final report must state the reason.
 - When resuming after compaction, a pause, or a new agent session, read the latest relevant ledger first, then re-open the docs and files it references before continuing.
+- Fallbacks do not weaken quality gates. If a required tool, skill, reviewer, test runner, browser, child agent, network operation, or context artifact is unavailable, use the fallback protocol in `docs/ai-development-workflow.md`: recover equivalent evidence, record degraded mode, or fail closed.
+- Fail closed for doc conflicts, missing approval, destructive actions, secret exposure risk, and security uncertainty. Do not implement through those blockers.
 
 ## Completion Gate
 
@@ -135,6 +137,7 @@ An AI agent may not claim done until all of these are true:
 - The final report follows `docs/ai-workflow/report-template.md`.
 - A context ledger exists and is current when the workflow requires one, or the final report states the allowed lightweight exception.
 - Tests or equivalent verification were run and read.
+- Any fallback or degraded-mode path was documented with the failed normal path, evidence collected, and remaining risk.
 - GStack review or Superpowers code review was completed for code changes.
 - GStack QA or equivalent browser/flow verification was completed for UI changes.
 - Remaining risks and untested areas are reported.

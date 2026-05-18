@@ -60,6 +60,15 @@ Append each result packet or link to where it is recorded.
 - Known failures:
 - Skipped checks and reason:
 
+## Fallback State
+
+- Normal path blocked:
+- Failure class: fail-closed, degraded-mode, recover, retry-once, reassign, or none.
+- Fallback used:
+- Evidence collected:
+- Completion allowed: yes/no.
+- Remaining fallback risk:
+
 ## Ledger/File-State Consistency
 
 - Files changed match accepted scope: yes/no.

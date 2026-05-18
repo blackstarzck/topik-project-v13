@@ -45,4 +45,6 @@ For non-trivial work, implementation work, UI/flow/integration changes, net-new 
 
 When resuming after compaction, pause, or a new session, restore context by reading `CLAUDE.md`, `docs/ai-development-workflow.md`, the latest relevant run ledger, the ledger's docs consulted, and the current file state before continuing.
 
+Fallbacks do not weaken quality gates. If a required tool, skill, reviewer, test runner, browser, child agent, network operation, or context artifact is unavailable, follow the fallback protocol in `docs/ai-development-workflow.md`: recover equivalent evidence, record degraded mode, or fail closed. Fail closed for doc conflicts, missing approval, destructive actions, secret exposure risk, and security uncertainty.
+
 Do not bypass the workflow because the task looks small. Use the lightweight path documented in `docs/ai-development-workflow.md` when the change is small.

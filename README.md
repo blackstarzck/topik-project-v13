@@ -228,6 +228,38 @@ flowchart TD
 
 ---
 
+## 도구가 실패하면 어떻게 하나요?
+
+fallback은 "대충 넘어가기"가 아닙니다.
+정상 도구가 실패했을 때 **같은 수준의 증거를 다른 방법으로 확보하거나, 안전하게 멈추는 절차**입니다.
+
+```mermaid
+flowchart TD
+    A["작업 중 문제 발생"] --> B{"문제 유형"}
+    B -->|"문서 충돌 / 승인 없음 / 보안 위험"| C["Fail closed: 구현 중단"]
+    B -->|"도구 없음 / 자동화 불가"| D["Degraded mode: 수동 체크리스트와 대체 검증"]
+    B -->|"컨텍스트 손실"| E["Recover: ledger와 docs로 복원"]
+    B -->|"일시적 CLI/네트워크 실패"| F["Retry once: 한 번 재시도 후 보고"]
+    B -->|"child agent 실패"| G["Reassign: 메인 세션이 회수하거나 재위임"]
+    D --> H["fallback 내용과 남은 위험을 최종 보고"]
+    E --> H
+    F --> H
+    G --> H
+    C --> I["사용자 결정 필요"]
+```
+
+| 실패 상황 | AI가 해야 할 일 |
+| --- | --- |
+| 관련 문서를 못 찾음 | 가장 가까운 active doc을 읽고, 신규 범위 gate로 이동 |
+| GStack이나 Superpowers가 실행되지 않음 | project-local skill 문서를 직접 읽고 수동 체크리스트로 대체 |
+| 테스트 명령이 없음 | lint, typecheck, build, static inspection, manual QA 중 가능한 검증 사용 |
+| 브라우저 QA가 안 됨 | 수동 flow checklist와 blocker 기록 |
+| child agent가 결과를 안 줌 | 메인 세션이 scope를 회수하거나 result packet을 다시 요청 |
+| GitHub push 실패 | 로컬 커밋까지만 보고하고 remote 실패 원인과 재시도 명령 기록 |
+| 문서와 사용자 요청 충돌 | 구현하지 않고 충돌 문서와 필요한 결정을 보고 |
+
+---
+
 ## 사용자가 확인해야 할 것
 
 대부분은 자연어로 말하면 됩니다.

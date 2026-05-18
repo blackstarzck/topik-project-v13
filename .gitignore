@@ -6,6 +6,7 @@
 
 # Local/generated analysis artifacts
 harness-docs-analysis.html
+workflow-evaluation.html
 
 # Dependencies and build outputs
 node_modules/

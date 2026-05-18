@@ -75,7 +75,12 @@ flowchart TD
     AIL -->|"Yes"| ALed["Compare ledger with file state"]
     AIL -->|"No"| AL["Run tests, lint, typecheck, or build"]
     ALed --> AL
-    AL --> AM{"Release-sized change?"}
+    AL --> FB{"Any blocker or tool failure?"}
+    FB -->|"No"| AM{"Release-sized change?"}
+    FB -->|"Yes"| FBR["Run fallback and recovery protocol"]
+    FBR --> FBD{"Recovered with evidence?"}
+    FBD -->|"Yes"| AM
+    FBD -->|"No"| FBS["Stop and report blocker, fallback tried, next needed input"]
     AM -->|"Yes"| AN["ship gate"]
     AM -->|"No"| AO["Final report using docs/ai-workflow/report-template.md"]
     AN --> AO
@@ -126,6 +131,8 @@ Then choose the smallest valid lane:
 - Request covered by docs: treat docs as accepted context; do not rerun domain discovery.
 - New scope or product pivot: use GStack office-hours and Superpowers brainstorming, then stop at a docs update proposal or an explicit user-approved implementation brief. Do not implement directly from office-hours output.
 - Request that conflicts with docs: stop and report the conflict with exact document references before implementation.
+
+Fallback rule: fallback is not permission to skip a quality gate. It is a controlled way to either recover equivalent evidence through another path or stop safely with a clear blocker report.
 
 ## 1. Frame The Work
 
@@ -265,6 +272,42 @@ When resuming work after a pause, context compaction, or a new agent session, re
 
 If a required ledger is missing, report `context ledger missing`, create one from `docs/ai-workflow/context-ledger-template.md`, reconstruct the known state from docs and current files, then continue.
 
+## 3e. Fallback And Recovery Protocol
+
+Use fallback only when the normal path is blocked by missing tools, unavailable automation, failed child agents, missing docs, network problems, or lost context. Fallback must preserve the same intent: evidence before claims, docs before implementation, and fail-closed behavior for unsafe or ambiguous cases.
+
+Classify the failure first:
+
+| Failure class | Examples | Required response |
+| --- | --- | --- |
+| Fail closed | Doc conflict, destructive action, secret exposure risk, security uncertainty, user approval missing | Stop. Report the blocker, exact references, and what decision/input is needed. Do not implement. |
+| Degraded mode | GStack unavailable, browser automation unavailable, test runner missing, one AI unavailable | Use the closest equivalent manual or local checklist. Record degraded mode and evidence in the ledger/final report. |
+| Recover | Context compaction, missing/stale ledger, interrupted session, child result missing context | Rebuild context from `AGENTS.md`/`CLAUDE.md`, workflow docs, run ledger, consulted docs, and current files before continuing. |
+| Retry once | Transient network error, temporary CLI failure, flaky command | Retry once after checking the command and environment. If it fails again, stop and report the command, output, and next required action. |
+| Reassign | Child agent timeout, child agent did not return result packet, overlapping write scope | Main session reclaims the scope or re-delegates with a tighter task packet. Completion is blocked until a result packet or direct verification exists. |
+
+Fallback matrix:
+
+| Normal requirement | Accepted fallback | Not acceptable |
+| --- | --- | --- |
+| Relevant docs must be read | If a specific doc is missing, state it, read the closest active doc, and use office-hours/brainstorming plus approval gate for net-new scope | Inventing requirements |
+| Superpowers skill invocation | Read the project-local skill file directly and follow the closest applicable procedure | Ignoring the skill because the host tool is unavailable |
+| GStack review | Run the equivalent review checklist manually and record degraded mode | Skipping review without explanation |
+| TDD | If no runnable test surface exists, state the exception and use static inspection, build/typecheck/lint, or manual verification | Writing behavior code with no test or verification note |
+| Browser/visual QA | Manual flow checklist, screenshots when available, responsive inspection, or documented blocker | Claiming UI works without any flow evidence |
+| Multi-agent reviewer | Same agent performs review gate with explicit self-review checklist, or reassigns to available reviewer | Treating implementation as reviewed |
+| Child result packet | Ask for a result packet again, or main session directly inspects the files and verification | Trusting hidden child context |
+| GitHub/network push | Keep local commit, report remote failure, command output, and retry command | Claiming publication succeeded before remote confirmation |
+
+The final report must include a fallback section when any fallback path was used:
+
+- Normal path that failed.
+- Failure class.
+- Fallback used.
+- Evidence collected.
+- Remaining risk.
+- Whether completion is allowed or blocked.
+
 ## 4. Review Gate
 
 Every code change must pass review before completion:
@@ -319,6 +362,7 @@ Final response must follow `docs/ai-workflow/report-template.md` and include, at
 - Context ledger path when required.
 - Skills/workflow gates used.
 - Verification commands and results.
+- Fallback/degraded-mode status when applicable.
 - Known risks or skipped checks.
 
 ## 7. Lightweight Path
