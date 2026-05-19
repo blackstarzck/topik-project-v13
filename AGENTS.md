@@ -13,8 +13,10 @@ After production source exists, current source code and accepted docs must be re
 Before answering, planning, editing, testing, reviewing, or claiming completion:
 
 1. Use Superpowers first.
-   - Claude Code: invoke `using-superpowers`.
-   - Codex: use native skill discovery when available; otherwise read `.codex/skills/using-superpowers/SKILL.md` enough to follow it.
+   - Canonical source: `.agents/superpowers/skills/using-superpowers/SKILL.md`.
+   - Claude Code: invoke `using-superpowers` after host mirrors are synced.
+   - Codex: use native skill discovery when available after host mirrors are synced; otherwise read the canonical source enough to follow it.
+   - If host skill mirrors are missing or stale, run `node scripts/sync-agent-skills.mjs` and then retry host-native skill discovery.
 2. Read [docs/agent-index.md](docs/agent-index.md).
 3. Select and read the exact docs required by the user's goal.
 4. Record `Docs consulted` and extracted requirements in the plan, ledger, or final report.

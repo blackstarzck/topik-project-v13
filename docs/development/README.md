@@ -14,7 +14,6 @@ flowchart TD
     B --> C{"What kind of detail is needed?"}
     C -->|"framework / packages / tests / frontend libraries"| D["stack.md"]
     C -->|"Supabase / Auth / RLS / Storage"| E["backend-auth.md"]
-    C -->|"problem generation / feedback / AI service boundary"| F["ai-boundary.md"]
     C -->|"Vercel / env vars / deployment / rollback"| G["deployment.md"]
     C -->|"billing / subscription / paywall"| H["deferred-scope.md"]
 ```
@@ -25,7 +24,6 @@ flowchart TD
 | --- | --- | --- |
 | [stack.md](./stack.md) | Framework, package, frontend stack, and test tooling. | Choosing or changing packages, scripts, frontend libraries, or test setup. |
 | [backend-auth.md](./backend-auth.md) | Supabase, Auth, RLS, Storage, and server-only key rules. | Implementing login, database access, storage, profiles, or admin roles. |
-| [ai-boundary.md](./ai-boundary.md) | AI problem generation and feedback service boundary. | Implementing AI tutor, generated problems, feedback, prompts, or async AI jobs. |
 | [deployment.md](./deployment.md) | Vercel environments, build settings, preview gates, rollback. | Working on preview links, production deploys, CI, env vars, or rollback. |
 | [deferred-scope.md](./deferred-scope.md) | Billing and other deferred areas. | Discussing subscriptions, paywall, Stripe, pricing, or intentionally postponed features. |
 

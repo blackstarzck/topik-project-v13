@@ -18,18 +18,18 @@ exists, reconcile accepted docs with current source before changing behavior.
 
 | Area | Fixed decision |
 | --- | --- |
+| Application architecture | Frontend + serverless application |
 | Application framework | `Next.js App Router` |
 | UI runtime | `React` |
 | Language | `TypeScript` |
 | UI system | `Ant Design` with `ConfigProvider` and theme tokens |
 | Styling utilities | `Tailwind CSS` as a constrained utility layer |
-| Backend | `Supabase` |
+| Backend | `Supabase` as the serverless backend platform |
 | Database | Supabase-hosted `Postgres` |
 | Auth | `Supabase Auth` |
 | Storage | `Supabase Storage` |
-| Deployment | `Vercel` |
+| Deployment | `Vercel` as the serverless deployment target |
 | Package manager | `pnpm` |
-| AI integration | Serverless service boundary; no direct browser-to-model calls |
 | Billing | Deferred; not part of the current fixed stack |
 
 ## Required Reading Map
@@ -40,7 +40,6 @@ Read this file first, then select the smallest matching set.
 | --- | --- |
 | framework, package, dependency, library, UI stack, state, forms, validation, chart, test | `docs/development/stack.md` |
 | Supabase, database, auth, login, RLS, storage, profile, admin role, server key | `docs/development/backend-auth.md` |
-| AI, tutor, problem generation, feedback generation, model, prompt, async job | `docs/development/ai-boundary.md` |
 | Vercel, deploy, deployment, preview, production, environment variable, rollback, CI | `docs/development/deployment.md` |
 | billing, subscription, paywall, payment, Stripe, plan pricing | `docs/development/deferred-scope.md` |
 | page, route, navigation, user flow | `docs/sitemap.md`, `docs/ia.md`, `docs/flow/user-flow.md`, and matching `docs/IA/<page>/description.md` when page-specific |
@@ -61,11 +60,9 @@ src/
     (workspace)/
     api/
   components/
-    ai-tutor/
     app/
     shared/
   lib/
-    ai/
     supabase/
     validation/
   stores/
@@ -79,14 +76,13 @@ Folder responsibilities:
 - `src/app/`: route tree, layouts, route handlers, loading/error boundaries, and
   server actions where appropriate.
 - `src/components/app/`: app shell pieces such as sidebar, header, and settings.
-- `src/components/ai-tutor/`: AI tutor panel and related helper UI.
 - `src/components/shared/`: reusable UI blocks shared by multiple pages.
-- `src/lib/`: Supabase clients, AI service helpers, validation schemas, and
-  server-only utilities.
+- `src/lib/`: Supabase clients, validation schemas, and server-only utilities.
 - `src/stores/`: focused Zustand stores for recoverable client interaction state.
 - `src/styles/`: Tailwind entrypoint and minimal global CSS used only where
   layout glue is necessary.
-- `src/theme/`: Ant Design theme setup, token composition, and theme presets.
+- `src/theme/`: Ant Design theme setup, token composition, theme presets, and
+  the Tailwind token bridge.
 - `src/types/`: shared TypeScript types.
 
 Do not use `src/App.tsx` as the route authority. The current route authority is
@@ -102,6 +98,9 @@ Do not use `src/App.tsx` as the route authority. The current route authority is
 - Do not use Tailwind as the design system, component library, or source of
   brand tokens. Ant Design tokens remain the styling authority.
 - Keep theme decisions centralized under `src/theme/`.
+- Keep Tailwind and Ant Design visually synchronized through shared theme CSS
+  variables generated from the active Ant Design theme. Do not copy separate
+  Tailwind color, radius, shadow, font, or spacing values by hand.
 - Use `ConfigProvider` at the app root.
 - Use Ant Design `App` provider for message, notification, and modal context.
 - Prefer Ant Design layout and feedback primitives such as `Layout`, `Row`,
@@ -138,10 +137,9 @@ Target stores:
 
 - `useUserStore`: learner profile display state, plan, language, and goal basics.
 - `useLearningStore`: dashboard learning metrics and current progress UI state.
-- `usePracticeStore`: reading/listening problem generation and solving state.
+- `usePracticeStore`: reading/listening practice solving state.
 - `useWritingStore`: writing setup, draft, autosave, and submission flow.
 - `useFeedbackStore`: writing feedback list/detail UI state.
-- `useAiTutorStore`: AI tutor panel state and conversation context.
 - `useThemeStore`: light/dark theme preference.
 
 Draft-like user input must be recoverable. Long-form writing surfaces need
@@ -149,7 +147,7 @@ autosave or clear draft-preservation cues.
 
 ## Backend And Auth Rules
 
-- Use Supabase as the backend platform.
+- Use Supabase as the serverless backend platform.
 - Use Supabase-hosted Postgres for relational data.
 - Use Supabase Auth for authentication.
 - Use Supabase Storage for user files or generated exports when storage is
@@ -161,20 +159,19 @@ autosave or clear draft-preservation cues.
 - Read `docs/development/backend-auth.md` before implementing auth, RLS,
   storage, profile, or admin-role behavior.
 
-## AI Boundary Rules
+## Serverless Architecture Rules
 
-- Do not call model providers directly from browser code.
-- Route AI problem generation, AI tutor, and feedback generation through a
-  serverless service boundary.
-- Keep provider-specific details behind server-side modules or route handlers.
-- Validate AI request and response contracts with shared schemas where practical.
-- Use async jobs for long-running generation or feedback flows when a request
-  may exceed normal serverless response expectations.
-- Read `docs/development/ai-boundary.md` before implementing AI behavior.
+- Build the project as a frontend + serverless application.
+- Treat Supabase and Vercel as the fixed serverless stack for backend capability,
+  runtime boundaries, hosting, deployment, and environment management.
+- Prefer managed Supabase capabilities and Vercel-supported Next.js serverless
+  boundaries over self-managed backend servers.
+- Do not introduce a separate long-running backend service without an approved
+  architecture decision and updated spec.
 
 ## Deployment And Environment Rules
 
-- Deploy on Vercel.
+- Deploy on Vercel as the serverless deployment target.
 - Use `pnpm` and commit `pnpm-lock.yaml` once packages exist.
 - Configure Vercel project environments before sharing Preview links.
 - Keep secrets out of committed files.
@@ -215,7 +212,6 @@ Before calling implementation work complete:
   approval or an updated spec.
 - Do not add billing SDKs or payment flows unless billing scope is explicitly
   reopened.
-- Do not couple UI directly to an AI model provider.
 - Do not expose secrets in browser-visible variables.
 - Do not share Preview links until Vercel environment variables are configured.
 - Do not treat legacy static `.html` route notes as current implementation
@@ -248,8 +244,6 @@ Before creating app code:
   and package snapshot.
 - `docs/development/backend-auth.md` - Supabase, Auth, RLS, Storage, and Clerk
   decision.
-- `docs/development/ai-boundary.md` - AI/problem generation ownership and
-  service contract boundary.
 - `docs/development/deployment.md` - Vercel environments, build settings,
   deployment gates, and rollback.
 - `docs/development/deferred-scope.md` - billing and other deferred areas.

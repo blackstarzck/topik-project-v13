@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import {
@@ -72,6 +72,17 @@ async function testRepositoryStateRequiresLedgerWhenImplementationFilesChange() 
       ),
     );
 
+    const missingAgentsLedger = await checkRepositoryState({
+      root,
+      changedFiles: [".agents/superpowers/skills/using-superpowers/SKILL.md"],
+    });
+    assert.equal(missingAgentsLedger.ok, false);
+    assert.ok(
+      missingAgentsLedger.errors.some((error) =>
+        error.includes("implementation/config workflow changes require a run ledger"),
+      ),
+    );
+
     const ledgerPath = join(
       root,
       "docs",
@@ -107,10 +118,42 @@ async function testRepositoryStateRequiresLedgerWhenImplementationFilesChange() 
       root,
       changedFiles: [
         "scripts/ai-workflow-check.mjs",
+        ".agents/superpowers/skills/using-superpowers/SKILL.md",
         "docs/ai-workflow/runs/20260519-1116-ai-workflow-analysis.md",
       ],
     });
     assert.equal(withLedger.ok, true);
+  });
+}
+
+async function testRepositoryStateRunsAgentSkillMirrorCheck() {
+  await withTempRepo(async (root) => {
+    await mkdir(join(root, "scripts"), { recursive: true });
+    const syncScript = join(root, "scripts", "sync-agent-skills.mjs");
+
+    await writeFile(
+      syncScript,
+      "console.error('mirror drift'); process.exit(1);\n",
+    );
+
+    const failingResult = await checkRepositoryState({
+      root,
+      changedFiles: [],
+    });
+    assert.equal(failingResult.ok, false);
+    assert.ok(
+      failingResult.errors.some((error) =>
+        error.includes("agent skill mirrors are not in sync"),
+      ),
+    );
+
+    await writeFile(syncScript, "console.log('PASS');\n");
+
+    const passingResult = await checkRepositoryState({
+      root,
+      changedFiles: [],
+    });
+    assert.equal(passingResult.ok, true);
   });
 }
 
@@ -144,6 +187,7 @@ async function testCommitMessageRequiresLoreTrailers() {
 
 await testPullRequestBodyRequiresEvidenceSections();
 await testRepositoryStateRequiresLedgerWhenImplementationFilesChange();
+await testRepositoryStateRunsAgentSkillMirrorCheck();
 await testCommitMessageRequiresLoreTrailers();
 
 console.log("ai-workflow-check self-test passed");

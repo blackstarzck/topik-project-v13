@@ -35,7 +35,7 @@ Implementation rule:
 | Client state | `zustand` | `5.x` | Lightweight state for UI/task state. |
 | Server state | `@tanstack/react-query` | `5.x` | Caching and mutation state for client-side data that cannot stay purely server-rendered. |
 | Forms | `react-hook-form` | `7.x` | Complex forms with low render overhead. |
-| Validation | `zod` | `4.x` | Shared schema validation for forms, API payloads, and AI contracts. |
+| Validation | `zod` | `4.x` | Shared schema validation for forms and API payloads. |
 | Charts | `recharts` | `3.x` | Progress charts and mock exam result visualization. |
 | Dates | `dayjs` | `1.x` | Date formatting, exam date, subscription date, and learning history display. |
 
@@ -46,6 +46,9 @@ Frontend rules:
 - Use Tailwind CSS only as a constrained utility layer. Do not let utility
   classes replace Ant Design components, theme tokens, or centralized theme
   decisions.
+- Tailwind theme values must come from the active Ant Design theme through a
+  CSS-variable bridge. Do not maintain an independent Tailwind palette, radius
+  scale, shadow scale, or font stack.
 - Keep theme configuration under `src/theme/`.
 - Use `ConfigProvider` at the app root.
 - Use Ant Design `App` provider for message, notification, and modal context.
@@ -105,7 +108,6 @@ actual versions into `package.json` and `pnpm-lock.yaml`.
 | `vitest` | `4.1.6` |
 | `playwright` | `1.60.0` |
 | `recharts` | `3.8.1` |
-| `ai` | `6.0.185` |
 | `lucide-react` | `1.16.0` |
 | `dayjs` | `1.11.20` |
 | `eslint` | `10.4.0` |

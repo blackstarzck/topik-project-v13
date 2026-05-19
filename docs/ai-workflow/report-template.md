@@ -5,6 +5,27 @@ workflow requires durable context. Keep small reports concise, but do not remove
 the evidence fields. Prefer tables, short status labels, and diagrams when they
 make the report easier to scan.
 
+Readability rule: do not pack long evidence values into one inline sentence.
+When a field has multiple file paths, commands, requirements, risks, or checks,
+format it as a vertical bullet list or a compact table. Keep inline text for
+single short values only.
+
+Preferred:
+
+```markdown
+Docs consulted:
+
+- `.agents/superpowers/skills/using-superpowers/SKILL.md`
+- `docs/agent-index.md`
+- `docs/spec.md`
+```
+
+Avoid:
+
+```markdown
+Docs consulted: `.agents/...`, `docs/agent-index.md`, `docs/spec.md`
+```
+
 ## 1. Status Dashboard
 
 | Field | Status |
@@ -44,6 +65,9 @@ flowchart LR
 ```
 
 ## 4. Docs Consulted
+
+Use vertical lists in the `Details` column when more than one file or
+requirement is present. Do not comma-pack long paths into a single line.
 
 | Type | Details |
 | --- | --- |

@@ -95,6 +95,7 @@ src/theme/
   create-theme.ts
   types.ts
   antdTheme.ts
+  tailwind-bridge.ts
   global/
     algorithms.ts
     shared-seed.ts
@@ -117,6 +118,11 @@ src/theme/
 - `src/theme/antdTheme.ts`
   - helper that exposes the default AntD theme config
   - acceptable for static use, but app runtime theme selection should use `getAppTheme`
+- `src/theme/tailwind-bridge.ts`
+  - maps the approved subset of active AntD tokens to project CSS variables that
+    Tailwind utilities may consume
+  - must not define a second brand palette, radius scale, shadow scale, or font
+    stack
 
 ### Theme assembly
 
@@ -127,6 +133,8 @@ src/theme/
   - builds the final `ThemeConfig` from shared rules plus a preset
   - merges global token values and component token values
   - carries optional preset-owned global styles into the active theme definition
+  - enables or preserves AntD CSS-variable output when supported by the chosen
+    AntD version
   - applies the light or dark AntD algorithm automatically
 
 ### Shared theme inputs
@@ -165,11 +173,69 @@ The runtime theme flow is:
 1. a preset such as `defaultThemePreset` defines optional appearance-specific overrides
 2. `createThemeFamily` builds final `ThemeConfig` objects for `light` and `dark`
 3. `registry.ts` exposes the available themes
-4. `main.tsx` calls `getAppTheme(themeName, appearance)`
+4. the app root calls `getAppTheme(themeName, appearance)`
 5. `ConfigProvider` receives `activeTheme.antd`
-6. new UI reads AntD tokens directly at render time
+6. the theme bridge exposes a small set of project CSS variables derived from
+   the active AntD tokens
+7. Tailwind utilities read only those project variables for colors, font,
+   radius, shadow, and spacing-like visual decisions
+8. new UI reads AntD tokens directly at render time when component logic needs
+   token values
 
 This gives the app one source of truth at runtime even though the files are split for maintainability.
+
+## AntD And Tailwind Synchronization
+
+Tailwind is a utility layer, not a parallel design system. The source of truth
+for visual decisions remains the active Ant Design theme.
+
+Synchronization rule:
+
+- AntD `theme.token` owns brand color, font family, radius, base surfaces,
+  semantic colors, shadows, and motion-level decisions.
+- AntD `theme.components` owns component-family customization such as Button,
+  Menu, Layout, Table, Tabs, Form, Drawer, and Modal adjustments.
+- `tailwind-bridge.ts` may expose only a small approved subset of resolved AntD
+  tokens as project CSS variables.
+- Tailwind configuration or CSS may alias utilities to those variables, but must
+  not contain copied hex colors, copied radius values, copied shadows, or a
+  separate font stack.
+- Tailwind classes are allowed for layout composition, responsive behavior,
+  width/height constraints, grid/flex helpers, and small spacing adjustments.
+- Tailwind classes should not be used to restyle AntD component internals when
+  an AntD prop, variant, token, or component token can express the change.
+
+Initial bridge targets:
+
+```css
+--app-color-primary: var(--ant-color-primary);
+--app-color-bg-layout: var(--ant-color-bg-layout);
+--app-color-bg-container: var(--ant-color-bg-container);
+--app-color-text: var(--ant-color-text);
+--app-color-text-secondary: var(--ant-color-text-secondary);
+--app-color-border: var(--ant-color-border);
+--app-radius: var(--ant-border-radius);
+--app-font-family: var(--ant-font-family);
+--app-shadow-elevated: var(--ant-box-shadow-secondary);
+```
+
+The exact AntD CSS variable names must be verified during the first app
+bootstrap against the installed AntD version. If a required token is not emitted
+as a CSS variable, expose it through the project bridge from the resolved
+`ThemeConfig` rather than hardcoding the value in Tailwind.
+
+Tailwind v4 setup should stay CSS-variable driven:
+
+- `src/styles/global.css` imports Tailwind once with `@import "tailwindcss";`
+- a project Tailwind theme layer may define app utilities that reference
+  `--app-*` variables
+- theme switching updates AntD and the bridge variables together through the app
+  root, so AntD components and Tailwind-authored layout surfaces change in the
+  same render path
+
+Do not introduce a large `tailwind.config` palette unless a future Tailwind
+version or build constraint requires it. If that becomes necessary, generate it
+from `src/theme/` tokens rather than hand-maintaining it.
 
 ## Overlay Surface Rule
 
@@ -332,6 +398,9 @@ Prefer this order:
 - Do not turn `registry.ts` into a long token file
 - Do not put all preset values back into one giant `themes.ts`
 - Do not duplicate the same color in three places without reason
+- Do not add visual values to Tailwind unless they reference the project
+  `--app-*` bridge variables or are layout-only values with no design-token
+  meaning
 - If a shared component token starts growing large, split it into per-component files under `src/theme/components/`
 - If a preset becomes large, keep its values inside the preset file instead of spreading them across random UI components
 - Do not add a preset override just to make Ant Design look the same as it already does by default
@@ -343,6 +412,10 @@ Before calling theme work complete, verify:
 - the app still works with stock Ant Design light and dark algorithms
 - global changes still come from AntD tokens
 - component-specific overrides still live in `theme.components`
+- Tailwind utilities consume project bridge variables instead of copied theme
+  values
+- AntD components and Tailwind-authored surfaces still match after switching
+  light/dark appearance
 - the default preset is still close to empty unless there is a documented reason otherwise
 - dark mode still uses AntD dark algorithm unless there is a documented reason otherwise
 - no new hardcoded color values were scattered into unrelated components

@@ -18,6 +18,10 @@ Use this checklist before calling UI work complete.
 - [ ] Hardcoded colors are rare and justified.
 - [ ] Component-specific styling uses component tokens where possible.
 - [ ] Local font is applied consistently.
+- [ ] Tailwind utilities read shared project theme variables, not a separate
+      Tailwind palette or copied token values.
+- [ ] AntD components and Tailwind-authored surfaces remain visually aligned in
+      light and dark appearances.
 
 ## Layout
 

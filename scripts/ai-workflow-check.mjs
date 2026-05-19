@@ -51,6 +51,9 @@ const REQUIRED_LEDGER_SECTIONS = [
 const IMPLEMENTATION_OR_WORKFLOW_PATTERNS = [
   /^scripts\//,
   /^\.github\//,
+  /^\.agents\//,
+  /^\.codex\//,
+  /^\.claude\//,
   /^\.claude\/settings(?:\.local)?\.json$/,
   /^AGENTS\.md$/,
   /^CLAUDE\.md$/,
@@ -183,6 +186,28 @@ async function validateLedger(root, ledgerPath, errors) {
   }
 }
 
+function checkAgentSkillMirrors(root, errors) {
+  const syncScript = join(root, "scripts", "sync-agent-skills.mjs");
+  if (!existsSync(syncScript)) {
+    return;
+  }
+
+  const result = spawnSync(process.execPath, [syncScript, "--check"], {
+    cwd: root,
+    encoding: "utf8",
+  });
+
+  if (result.status !== 0) {
+    const output = [result.stdout, result.stderr]
+      .filter(Boolean)
+      .join("\n")
+      .trim();
+    errors.push(
+      `agent skill mirrors are not in sync: ${output || "sync check failed"}`,
+    );
+  }
+}
+
 function needsLedger(changedFiles) {
   return changedFiles.some((file) => {
     const normalized = normalizePathForCheck(file);
@@ -203,6 +228,8 @@ export async function checkRepositoryState({
   );
   const errors = [];
   const warnings = [];
+
+  checkAgentSkillMirrors(resolvedRoot, errors);
 
   if (needsLedger(files)) {
     const changedLedgers = files.filter((file) => LEDGER_PATTERN.test(file));
