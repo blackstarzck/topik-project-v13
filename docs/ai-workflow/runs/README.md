@@ -1,15 +1,39 @@
-# AI Workflow Run Ledgers
+# Run Ledgers 안내
 
-Store context ledgers here as `YYYYMMDD-HHMM-task-slug.md`.
+이 폴더는 AI 작업일지를 저장하는 곳입니다.
+쉽게 말하면 "AI가 이번 작업에서 무엇을 읽고, 무엇을 결정하고, 무엇을 검증했는지 남기는 기록장"입니다.
 
-A run ledger is required for:
+## 언제 필요한가요?
 
-- Multi-agent work.
-- Implementation work.
-- UI, route, user-flow, or integration changes.
-- Net-new scope or doc conflicts.
-- Work likely to resume after context compaction, pause, or a new session.
+```mermaid
+flowchart TD
+    A["작업 시작"] --> B{"작업이 길거나 중요함?"}
+    B -->|"예"| C["run ledger 작성"]
+    B -->|"아니오"| D["최종 보고에 간단히 기록"]
+    C --> E["결정/변경/검증을 계속 업데이트"]
+    E --> F["완료 전 파일 상태와 대조"]
+```
 
-Use `../context-ledger-template.md` as the starting point.
+Run ledger가 필요한 경우:
 
-The ledger is the durable working memory for the main session. Update it after material decisions, delegation, child result packets, scope changes, and before final verification.
+| 상황 | 이유 |
+| --- | --- |
+| 멀티 에이전트 작업 | 여러 AI의 결과를 하나로 합쳐야 하기 때문입니다. |
+| 구현 작업 | 어떤 문서 기준으로 만들었는지 남겨야 합니다. |
+| UI, 라우트, 사용자 흐름 변경 | 화면과 흐름은 제품 방향에 큰 영향을 줍니다. |
+| 새 범위 또는 문서 충돌 | 사용자의 승인이나 문서 업데이트가 필요할 수 있습니다. |
+| 나중에 이어서 할 가능성이 있는 작업 | AI가 이전 맥락을 복원해야 합니다. |
+
+## 파일 이름 규칙
+
+```text
+YYYYMMDD-HHMM-task-slug.md
+```
+
+예시:
+
+```text
+20260519-1014-docs-readme-map.md
+```
+
+새 작업일지는 [../context-ledger-template.md](../context-ledger-template.md)를 복사해서 만듭니다.

@@ -4,10 +4,10 @@
 >
 > This PRD was written from direct observation of a legacy deployed HTML site.
 > Product behavior remains useful, but the URL examples in this file are not the
-> current React route paths used by the app in `src/App.tsx`.
+> current Next.js App Router paths that will be implemented under `src/app/`.
 >
-> When route names matter, use `docs/sitemap.md` together with the current app
-> router as the implementation reference.
+> When route names matter, use `docs/sitemap.md` until source exists; after
+> implementation starts, use it together with the `src/app/` route tree.
 
 확인 기준: 2026-04-22에 배포 사이트 `https://topik-ai-nqgl.vercel.app/home.html`를 Playwright MCP로 직접 탐색한 화면과 클릭 결과입니다.
 

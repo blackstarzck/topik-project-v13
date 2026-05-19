@@ -10,7 +10,7 @@ This project intentionally skips a fresh grill-me/domain-discovery step. The dom
 flowchart TD
     A["Task starts"] --> B["Run using-superpowers"]
     B --> C["Infer user goal"]
-    C --> D["Map goal to relevant docs"]
+    C --> D["Use docs/agent-index.md to map goal to docs"]
     D --> E["Read selected docs"]
     E --> F["Record Docs consulted"]
     F --> F2{"Context ledger required?"}
@@ -93,26 +93,9 @@ Every agent must begin by activating Superpowers:
 - Claude Code: invoke `using-superpowers`.
 - Codex: use native skill discovery when available; otherwise read `.codex/skills/using-superpowers/SKILL.md` enough to follow it.
 
-Then load the project source of truth. The agent must infer the user's goal, map that goal to relevant docs, read those docs, and record the result before planning. Use only the relevant files, but do not plan implementation without checking the docs that govern the requested surface:
+Then load the project source of truth through [docs/agent-index.md](agent-index.md). The agent must infer the user's goal, use the index to select the smallest required document set, read those docs, and record the result before planning. Do not plan implementation without checking the indexed docs that govern the requested surface.
 
-- Product requirements: `docs/prd.md`
-- Functional specification: `docs/spec.md`
-- Information architecture: `docs/ia.md`
-- Site map: `docs/sitemap.md`
-- User flows: `docs/flow/user-flow.md`
-- Design system guidance: `docs/ant-design/README.md` and the relevant files in `docs/ant-design/`
-- Page-level IA: `docs/IA/README.md` and the matching page folder under `docs/IA/`
-- Legacy or alternate IA pages when relevant: `docs/ia-pages/`
-
-Goal-to-doc mapping:
-
-- Product scope, user value, personas, monetization, or core product requirements: `docs/prd.md`
-- Functional behavior, validation, data handling, permissions, or acceptance details: `docs/spec.md`
-- Navigation, routes, page hierarchy, and information architecture: `docs/ia.md`, `docs/sitemap.md`
-- User journey, step order, transitions, entry/exit states, and lifecycle: `docs/flow/user-flow.md`. Use `docs/user-flow.md` only as legacy observation context.
-- Visual UI implementation, layout, component rules, theme tokens, motion, or Ant Design usage: `docs/ant-design/README.md` plus relevant `docs/ant-design/*.md`
-- Specific page or screen implementation: `docs/IA/README.md`, the matching `docs/IA/<page>/description.md`, and the matching `wireframe.png` when present
-- Legacy or alternate page notes: relevant files under `docs/ia-pages/`
+Do not duplicate the goal-to-doc mapping here. Keep the canonical routing table in [docs/agent-index.md](agent-index.md) so the workflow stays short and the index remains the single routing source.
 
 Required plan evidence:
 
@@ -121,6 +104,12 @@ Required plan evidence:
 - `Doc conflicts`: any mismatch between user request and docs, or `none`.
 - `Untouched docs`: relevant docs not read and why they were not needed.
 - `Context ledger`: path to the run ledger when required, or the reason it is not required.
+
+Machine-checkable evidence:
+
+- Before final reporting, run `node scripts/ai-workflow-check.mjs --repo .` when Node is available.
+- Pull requests run the same checker through `.github/workflows/ai-workflow-check.yml`.
+- The checker is not a substitute for judgment. It catches missing workflow evidence fields and stale ledger patterns; the agent still owns reading docs, running tests, and inspecting outputs.
 
 Then choose the smallest valid lane:
 
@@ -191,6 +180,8 @@ Allowed TDD exceptions:
 
 When an exception applies, the agent must state the exception and use the nearest practical verification, such as lint, typecheck, build, static inspection, or manual flow testing.
 
+The no-runnable-test-surface exception is temporary. Once either `package.json` or `src/` exists, behavior changes must not use this exception unless the agent can show that the relevant surface still has no executable test path. The first production setup that creates `package.json` or `src/` must include a test runner or an explicit documented reason why it cannot yet exist.
+
 ## 3. Use Codex And Claude Together
 
 When both Codex and Claude Code are available, use a two-agent handoff:
@@ -239,6 +230,14 @@ The ledger is required for:
 - UI, route, user-flow, or integration changes.
 - Any task with doc conflicts or net-new scope.
 - Any work likely to span multiple sessions or context compaction.
+
+Treat work as non-trivial, and therefore ledger-required, when any of these apply:
+
+- More than one tracked file is intentionally changed.
+- Any file under `scripts/`, `.github/`, `.claude/`, `docs/ai-workflow/`, or workflow-governing files such as `AGENTS.md`, `CLAUDE.md`, `docs/agent-index.md`, or this file changes.
+- A route, UI, auth, database, API, dependency, test strategy, deployment, or AI-service boundary changes.
+- The task uses a child agent, external reviewer, fallback path, or degraded-mode verification.
+- The agent needs to resume later or another agent could reasonably need the decision history.
 
 The ledger may be skipped only for tiny docs/config/non-behavioral edits. If skipped, the plan or final report must state why.
 
@@ -327,6 +326,15 @@ Review must check:
 - Error states, empty states, and edge cases are handled.
 - User-facing text and UI remain coherent.
 
+If an independent reviewer or GStack review is unavailable, record degraded mode and run an explicit self-review checklist before completion:
+
+- Scope: changed files match the accepted scope and no unrelated edits were introduced.
+- Docs: implementation still matches the consulted active docs.
+- Tests: the changed behavior is covered, or the TDD exception and substitute verification are documented.
+- Failure paths: error states, empty states, and fallback paths are considered.
+- Evidence: verification commands were run fresh and outputs were read.
+- Ledger: the run ledger is current and lists remaining risks.
+
 ## 5. QA Gate
 
 Use QA for user-facing, browser, interaction, or integration work:
@@ -351,6 +359,11 @@ Before saying done, run:
 - `verification-before-completion`
 - Focused tests for changed behavior.
 - Broader tests, lint, typecheck, or build when available.
+- `node scripts/ai-workflow-check.mjs --repo .` when Node is available, or document why the checker could not run.
+- Git publication decision gate:
+  - Read `docs/ai-workflow/git-publication-decision.md`.
+  - Choose exactly one outcome: `no-commit`, `local-commit`, `push-and-pr`, or `blocked`.
+  - Do not commit, push, or create a PR until the decision record is written in the final report and context ledger when required.
 - GStack ship gate for release-sized work:
   - Codex: `gstack-ship`
   - Claude Code: `ship`
@@ -362,6 +375,7 @@ Final response must follow `docs/ai-workflow/report-template.md` and include, at
 - Context ledger path when required.
 - Skills/workflow gates used.
 - Verification commands and results.
+- Git publication decision and next git action.
 - Fallback/degraded-mode status when applicable.
 - Known risks or skipped checks.
 

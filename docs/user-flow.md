@@ -7,7 +7,8 @@
 > - 정본 사용자 플로우: [`docs/flow/user-flow.md`](flow/user-flow.md)
 >   (`docs/IA/`의 32페이지 IA와 노드명이 1:1로 정합)
 > - 라우트: `docs/sitemap.md`의 Target React Route Map
-> - UI 구현 규칙: `docs/spec.md` + `docs/ant-design/`
+> - 구현 기준: `docs/spec.md`
+> - UI 구현 규칙: `docs/ant-design/`
 >
 > 이 파일은 제품 히스토리 컨텍스트(2026-04-22 관측)로만 보존합니다.
 
@@ -229,4 +230,3 @@
 - 내 서재의 문제 바구니는 드래그 동작이 핵심인데, 완전한 드래그 후 풀이 시작 흐름은 추가 확인이 필요합니다.
 - AI 튜터가 열려 있을 때 시험 화면의 OMR 버튼을 가리는 경우가 있었습니다.
 - 언어 전환 후에도 일부 학습 문장과 피드백 문장은 한국어로 남았습니다.
-

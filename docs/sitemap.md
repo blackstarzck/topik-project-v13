@@ -4,10 +4,13 @@
 >
 > 이 문서는 두 개의 라우트 맵을 분리해 보관합니다.
 >
-> 1. **Target React Route Map** — 현행 구현 목표. `docs/spec.md` §6과 정합.
+> 1. **Target React Route Map** — current route target. Use this document
+>    together with `docs/spec.md`.
 > 2. **Legacy HTML Route Map** — 2026-04-22 관측 기반 사이트맵. 제품 히스토리 컨텍스트로만 사용.
 >
-> `src/App.tsx`가 만들어지면 그 파일이 최종 구현 참조가 됩니다(현재는 pre-implementation 상태).
+> Do not use `src/App.tsx` as the route authority. Until source exists, this
+> document is the route authority; after implementation starts, the Next.js
+> `src/app/` route tree becomes the implementation reference.
 
 확인 기준: 2026-04-22에 배포 사이트를 Playwright MCP로 직접 탐색한 화면과 클릭 결과입니다.
 

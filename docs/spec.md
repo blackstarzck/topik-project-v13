@@ -1,239 +1,268 @@
-# TALKPIK AI Frontend Specification
+# TALKPIK AI Implementation Spec
 
-## Status
+> Status: single required entry point for implementation decisions
+>
+> Last updated: 2026-05-19
 
-이 저장소는 현재 **pre-implementation** 상태입니다. `src/`, `package.json` 등 코드
-산출물은 아직 생성되어 있지 않습니다. 따라서 이 문서는 "현재 코드"가 아닌
-**구현 시 따라야 하는 목표 스펙(target spec)**을 정의합니다.
+This is the canonical implementation spec for TALKPIK AI. Read this file first
+for any development, dependency, frontend, backend, auth, AI, deployment,
+environment, route, or test task. Then read only the matching detailed documents
+listed below.
 
-`src/` 트리가 만들어지는 시점부터 본 문서의 §4–§7 구조가 그대로 적용되어야 하며,
-그 시점 이후에는 `src/App.tsx`가 라우트의 최종 구현 참조가 됩니다.
+This repository is currently pre-implementation. There is no stable `src/` or
+`package.json` yet. Treat this document and the linked active docs as the target
+implementation contract until production source exists. After production source
+exists, reconcile accepted docs with current source before changing behavior.
 
-새 UI 작업에서는 이 파일과 `docs/ant-design/`을 active source of truth로 사용하세요.
+## Fixed Baseline
 
-Older references to `shadcn/ui`, `Tailwind CSS`, `Supanova`, or static `.html`
-routes are historical notes only. They may still appear in legacy observation
-docs, but they are not the implementation standard for new work.
+| Area | Fixed decision |
+| --- | --- |
+| Application framework | `Next.js App Router` |
+| UI runtime | `React` |
+| Language | `TypeScript` |
+| UI system | `Ant Design` with `ConfigProvider` and theme tokens |
+| Styling utilities | `Tailwind CSS` as a constrained utility layer |
+| Backend | `Supabase` |
+| Database | Supabase-hosted `Postgres` |
+| Auth | `Supabase Auth` |
+| Storage | `Supabase Storage` |
+| Deployment | `Vercel` |
+| Package manager | `pnpm` |
+| AI integration | Serverless service boundary; no direct browser-to-model calls |
+| Billing | Deferred; not part of the current fixed stack |
 
-## 1. Product Goal
+## Required Reading Map
 
-TALKPIK AI is a learning workspace for TOPIK preparation.
+Read this file first, then select the smallest matching set.
 
-The product is not a marketing landing page. It is a repeat-use study tool that
-must help the learner:
+| Work mentions | Also read |
+| --- | --- |
+| framework, package, dependency, library, UI stack, state, forms, validation, chart, test | `docs/development/stack.md` |
+| Supabase, database, auth, login, RLS, storage, profile, admin role, server key | `docs/development/backend-auth.md` |
+| AI, tutor, problem generation, feedback generation, model, prompt, async job | `docs/development/ai-boundary.md` |
+| Vercel, deploy, deployment, preview, production, environment variable, rollback, CI | `docs/development/deployment.md` |
+| billing, subscription, paywall, payment, Stripe, plan pricing | `docs/development/deferred-scope.md` |
+| page, route, navigation, user flow | `docs/sitemap.md`, `docs/ia.md`, `docs/flow/user-flow.md`, and matching `docs/IA/<page>/description.md` when page-specific |
+| visual UI, Ant Design component, theme, layout, motion | `docs/ant-design/README.md` and the matching Ant Design detail docs it routes to |
 
-- understand what to do next,
-- generate and solve problems quickly,
-- practice writing with draft safety,
-- review AI feedback and weak points,
-- revisit saved materials and vocabulary,
-- and move between tasks without losing context.
+Do not read every detailed document by default. Use this map to keep the context
+small and the implementation grounded.
 
-## 2. Current Frontend Stack
+## Source Structure
 
-The active frontend stack is:
-
-- `React` for page and component rendering.
-- `TypeScript` for typed component props, state, and domain models.
-- `Zustand` for shared client state such as user info, learning progress,
-  writing drafts, and current task state.
-- `Ant Design` as the primary UI component system.
-- `Ant Design theme tokens` and `ConfigProvider` for light/dark theme control.
-- Minimal project CSS for layout glue only, not for replacing Ant Design's
-  design system.
-
-## 3. UI Implementation Rules
-
-Use these rules for all new UI work:
-
-- Use Ant Design components before building custom UI.
-- Use Ant Design theme tokens before hardcoded colors, shadows, radii, or
-  spacing.
-- Keep theme decisions centralized under `src/theme/`.
-- Prefer page composition with Ant Design layout primitives such as `Layout`,
-  `Row`, `Col`, `Flex`, `Space`, `Card`, `Form`, `Table`, `Tabs`, `Drawer`,
-  `Modal`, `Descriptions`, `Statistic`, `Alert`, `Result`, and `Progress`.
-- Do not introduce deprecated Ant Design components in new UI work.
-- Include loading, empty, error, success, and disabled states.
-- Verify desktop and mobile layout before calling UI work complete.
-
-Detailed policy lives in:
-
-- `docs/ant-design/README.md`
-- `docs/ant-design/03-patterns-and-components.md`
-- `docs/ant-design/06-ai-development-workflow.md`
-- `docs/ant-design/07-review-checklist.md`
-- `docs/ant-design/08-theme-architecture.md`
-
-## 4. Target Source Structure
-
-`src/`가 생성되는 시점에는 다음 구조를 따라야 합니다 (현재는 비어 있음):
+Use Next.js App Router conventions once source exists.
 
 ```text
 src/
+  app/
+    layout.tsx
+    page.tsx
+    (workspace)/
+    api/
   components/
     ai-tutor/
     app/
     shared/
-  pages/
+  lib/
+    ai/
+    supabase/
+    validation/
   stores/
   styles/
   theme/
   types/
 ```
 
-Meaning of the main folders:
+Folder responsibilities:
 
+- `src/app/`: route tree, layouts, route handlers, loading/error boundaries, and
+  server actions where appropriate.
 - `src/components/app/`: app shell pieces such as sidebar, header, and settings.
 - `src/components/ai-tutor/`: AI tutor panel and related helper UI.
 - `src/components/shared/`: reusable UI blocks shared by multiple pages.
-- `src/pages/`: route-level screens that users navigate to directly.
-- `src/stores/`: Zustand stores, which are shared state containers.
-- `src/styles/`: minimal global CSS used only where component-level layout glue
-  is necessary.
+- `src/lib/`: Supabase clients, AI service helpers, validation schemas, and
+  server-only utilities.
+- `src/stores/`: focused Zustand stores for recoverable client interaction state.
+- `src/styles/`: Tailwind entrypoint and minimal global CSS used only where
+  layout glue is necessary.
 - `src/theme/`: Ant Design theme setup, token composition, and theme presets.
 - `src/types/`: shared TypeScript types.
 
-## 5. Target Shared State Model
+Do not use `src/App.tsx` as the route authority. The current route authority is
+`docs/sitemap.md` until source exists; after implementation starts, the Next.js
+`src/app/` route tree becomes the implementation reference.
 
-`src/stores/` 생성 시 다음 Zustand 스토어를 따라야 합니다:
+## Frontend Implementation Rules
 
-- `useUserStore`: learner profile, plan, language, and goal basics.
-- `useLearningStore`: dashboard learning metrics and current progress.
+- Use Ant Design components before building custom UI.
+- Use Ant Design theme tokens before hardcoded colors, shadows, radii, or spacing.
+- Use Tailwind CSS for constrained utility styling, responsive layout glue, and
+  small one-off adjustments when Ant Design components or tokens are not enough.
+- Do not use Tailwind as the design system, component library, or source of
+  brand tokens. Ant Design tokens remain the styling authority.
+- Keep theme decisions centralized under `src/theme/`.
+- Use `ConfigProvider` at the app root.
+- Use Ant Design `App` provider for message, notification, and modal context.
+- Prefer Ant Design layout and feedback primitives such as `Layout`, `Row`,
+  `Col`, `Flex`, `Space`, `Card`, `Form`, `Table`, `Tabs`, `Drawer`, `Modal`,
+  `Descriptions`, `Statistic`, `Alert`, `Result`, and `Progress`.
+- Do not introduce deprecated Ant Design components in new UI work.
+- Include loading, empty, error, success, and disabled states.
+- Verify desktop and mobile layout before calling UI work complete.
+- Keep route-level pages thin; domain logic belongs in focused helpers, stores,
+  server actions, route handlers, or API modules.
+- Do not introduce shadcn/ui, Chakra, MUI, Redux, or MobX without a written
+  stack-change decision and user approval or an updated spec.
+
+Detailed UI policy lives in `docs/ant-design/`.
+
+## State Management Model
+
+Use the smallest state owner that fits the data lifecycle:
+
+- Keep route and data fetching decisions in Next.js Server Components, route
+  handlers, or server actions where practical.
+- Use React local state for component-private UI state.
+- Use URL search params for shareable filters, tabs, pagination, or route-level
+  view state.
+- Use React Hook Form for form-local state and validation flow.
+- Use TanStack Query only for client-side server state that cannot stay purely
+  server-rendered, including cache, mutation, retry, and invalidation state.
+- Use Zustand only for client interaction state that benefits from local
+  recovery, cross-component coordination, or temporary UI continuity.
+- Do not duplicate server-derived data in Zustand unless the UI needs a
+  temporary editable draft or optimistic interaction state.
+
+Target stores:
+
+- `useUserStore`: learner profile display state, plan, language, and goal basics.
+- `useLearningStore`: dashboard learning metrics and current progress UI state.
 - `usePracticeStore`: reading/listening problem generation and solving state.
 - `useWritingStore`: writing setup, draft, autosave, and submission flow.
-- `useFeedbackStore`: writing feedback list and detail state.
+- `useFeedbackStore`: writing feedback list/detail UI state.
 - `useAiTutorStore`: AI tutor panel state and conversation context.
 - `useThemeStore`: light/dark theme preference.
 
-Store design rules:
+Draft-like user input must be recoverable. Long-form writing surfaces need
+autosave or clear draft-preservation cues.
 
-- Keep stores focused by product area.
-- Do not duplicate server-derived data unless the UI needs temporary local
-  interaction state.
-- Keep draft-like user input recoverable.
-- Keep route-level pages thin; state transitions belong in stores or focused
-  feature helpers.
+## Backend And Auth Rules
 
-## 6. Target Route Inventory
+- Use Supabase as the backend platform.
+- Use Supabase-hosted Postgres for relational data.
+- Use Supabase Auth for authentication.
+- Use Supabase Storage for user files or generated exports when storage is
+  required.
+- Enforce data access with RLS policies.
+- Keep server-only keys on the server. Never expose Supabase `service_role` or
+  other secrets in browser-visible variables.
+- Use browser-visible Supabase variables only for publishable configuration.
+- Read `docs/development/backend-auth.md` before implementing auth, RLS,
+  storage, profile, or admin-role behavior.
 
-`src/App.tsx`가 만들어지면 다음 라우트 셋을 등록해야 합니다.
-사이트맵의 표준 정본은 `docs/sitemap.md`의 Target React Route Map입니다.
+## AI Boundary Rules
 
-### Main workspace routes
+- Do not call model providers directly from browser code.
+- Route AI problem generation, AI tutor, and feedback generation through a
+  serverless service boundary.
+- Keep provider-specific details behind server-side modules or route handlers.
+- Validate AI request and response contracts with shared schemas where practical.
+- Use async jobs for long-running generation or feedback flows when a request
+  may exceed normal serverless response expectations.
+- Read `docs/development/ai-boundary.md` before implementing AI behavior.
 
-- `/` - home dashboard
-- `/home-v2` - alternate writing-focused dashboard variant
-- `/practice/create` - AI problem generation
-- `/practice/solve` - generated problem solving
-- `/writing/setup` - writing practice setup
-- `/writing/51` - writing practice for type 51
-- `/writing/52` - writing practice for type 52
-- `/writing/53` - writing practice for type 53
-- `/writing/54` - writing practice for type 54
+## Deployment And Environment Rules
 
-### Feedback and review routes
+- Deploy on Vercel.
+- Use `pnpm` and commit `pnpm-lock.yaml` once packages exist.
+- Configure Vercel project environments before sharing Preview links.
+- Keep secrets out of committed files.
+- Keep environment-variable names and visibility aligned with
+  `docs/development/deployment.md`.
+- Read `docs/development/deployment.md` before deployment, preview, production,
+  rollback, CI, or environment-variable work.
 
-- `/writing/feedback` - writing feedback list
-- `/writing/feedback/:id` - writing feedback detail
-- `/library` - saved problem library
-- `/vocabulary` - vocabulary review
+## Testing And Quality
 
-### Exam and support routes
+Once `package.json` exists, the implementation must provide scripts for:
 
-- `/mock/results` - mock exam result dashboard
-- `/mock/exam` - live mock exam mode
-- `/board` - notices and board content
-- `/profile` - profile and settings (X-05 / G-01)
+- `dev`
+- `build`
+- `start`
+- `lint`
+- `typecheck`
+- `test`
+- `test:e2e`
+- `format`
 
-### Commerce / growth / admin routes
+Follow the exact script expectations in `docs/development/stack.md` unless that
+file is updated by an approved stack-change decision.
 
-- `/paywall` - paywall (X-03)
-- `/subscription` - subscription management (X-04)
-- `/growth` - growth dashboard (X-02)
-- `/notifications` - notification settings (X-09)
-- `/admin/problems` - admin problem management (H-01)
-- `/admin/users` - admin user management (X-10)
-- `/admin/org` - organization admin (X-08)
+Before calling implementation work complete:
 
-If another document shows static routes such as `/home.html`, treat those as
-legacy observed-site references. Use `docs/sitemap.md` (Target React Route Map)
-and, once it exists, `src/App.tsx` for the current route map.
+- run the relevant focused tests,
+- run lint/typecheck/build when available and proportionate,
+- check desktop and mobile layout for UI work,
+- apply the Ant Design review checklist for UI work,
+- run browser or visual QA for user-facing flows,
+- and report what works, what does not work yet, and what risk remains.
 
-## 7. Target Page Inventory
+## Non-Negotiable Rules
 
-`src/pages/`에 생성될 라우트 스크린:
+- Do not skip this file for implementation work.
+- Do not add framework-level dependencies without a stack-change note and user
+  approval or an updated spec.
+- Do not add billing SDKs or payment flows unless billing scope is explicitly
+  reopened.
+- Do not couple UI directly to an AI model provider.
+- Do not expose secrets in browser-visible variables.
+- Do not share Preview links until Vercel environment variables are configured.
+- Do not treat legacy static `.html` route notes as current implementation
+  targets.
+- Do not silently invent product behavior. Use `docs/prd.md`, `docs/sitemap.md`,
+  `docs/ia.md`, `docs/flow/user-flow.md`, and matching IA page docs for product,
+  route, and flow requirements.
 
-- `HomePage.tsx`
-- `PracticeCreatePage.tsx`
-- `PracticeSolvePage.tsx`
-- `WritingSetupPage.tsx`
-- `WritingPracticePage.tsx`
-- `WritingFeedbackListPage.tsx`
-- `WritingFeedbackDetailPage.tsx`
-- `MockExamPage.tsx`
-- `LibraryPage.tsx`
-- `VocabularyPage.tsx`
-- `BoardPage.tsx`
-- `ProfileSettingsPage.tsx`
+## Implementation Start Checklist
 
-## 8. Core UX Expectations
+Before creating app code:
 
-Every major page should answer a clear user question:
+- Re-read this file.
+- Read only the matching detailed files from the Required Reading Map.
+- Re-read `docs/ai-development-workflow.md`.
+- Re-read `docs/ant-design/README.md` for UI work.
+- Use `docs/sitemap.md` as the route map until `src/app/` exists.
+- Create `package.json` with `pnpm`.
+- Pin versions through `pnpm-lock.yaml`.
+- Configure Supabase env variables with publishable keys only in browser-visible
+  variables.
+- Configure Vercel project environments before sharing Preview links.
+- Keep secrets out of committed files.
+- Create initial tests before non-trivial implementation unless a documented TDD
+  exception applies.
 
-- dashboard: "What should I do now?"
-- generation/setup pages: "What should I choose before I start?"
-- solving/writing pages: "What do I do right now?"
-- feedback/detail pages: "What happened, and what should I improve next?"
-- library/vocabulary pages: "What should I review or revisit?"
+## Detailed Development Docs
 
-Implementation expectations:
+- `docs/development/stack.md` - framework, packages, frontend stack, testing,
+  and package snapshot.
+- `docs/development/backend-auth.md` - Supabase, Auth, RLS, Storage, and Clerk
+  decision.
+- `docs/development/ai-boundary.md` - AI/problem generation ownership and
+  service contract boundary.
+- `docs/development/deployment.md` - Vercel environments, build settings,
+  deployment gates, and rollback.
+- `docs/development/deferred-scope.md` - billing and other deferred areas.
 
-- Keep primary task actions more visible than secondary actions.
-- Keep navigation stable across the workspace.
-- Do not let helper UI block critical actions.
-- Use predictable labels for TOPIK level, question type, writing type, score,
-  status, and review state.
-- Keep long-form writing input safe with draft preservation or autosave cues.
+## Relationship To Other Active Docs
 
-## 9. Theme And Styling Boundaries
+- `docs/prd.md` defines product scope and value.
+- `docs/sitemap.md` defines the target route map.
+- `docs/ia.md` and `docs/IA/` define information architecture and page-level
+  screen requirements.
+- `docs/flow/user-flow.md` defines user journey order and transitions.
+- `docs/ant-design/` defines UI implementation rules.
+- `docs/ai-development-workflow.md` defines AI-agent workflow gates.
 
-Theme and styling rules for this repository:
-
-- Ant Design is the first styling system.
-- `src/theme/` is the theme control point.
-- `global.css` must not become a second design system.
-- Visual styling should not be rebuilt with large custom wrappers when Ant
-  Design already provides the pattern.
-- Visual inline styles are still custom styling and should be minimized.
-
-Read `docs/ant-design/08-theme-architecture.md` before changing theme structure
-or token usage.
-
-## 10. Validation Before Completion
-
-Before calling frontend work complete:
-
-- run the relevant build or validation command,
-- check desktop layout,
-- check mobile layout,
-- apply `docs/ant-design/07-review-checklist.md`,
-- and report:
-  - what works,
-  - what does not work yet,
-  - what risk remains.
-
-## 11. Relationship To Legacy Docs
-
-These docs still matter, but they are not equal in role:
-
-- `docs/prd.md`
-- `docs/ia.md`
-- `docs/user-flow.md`
-- `docs/sitemap.md`
-- `docs/ia-pages/`
-
-Use them as product observation and route/reference context.
-
-For implementation choices such as component selection, theme usage, layout
-strategy, and UI review, follow this file plus `docs/ant-design/`.
+If this file conflicts with another active doc on implementation technology,
+stop and report the conflict before implementing.

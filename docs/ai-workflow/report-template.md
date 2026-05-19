@@ -24,6 +24,7 @@ Use this template for implementation plans, final reports, and handoffs when the
 - TDD status:
 - Review status:
 - QA status:
+- Workflow evidence check:
 - Fallback/degraded-mode status:
 
 ## Implementation Summary
@@ -47,8 +48,22 @@ Use this template for implementation plans, final reports, and handoffs when the
 - Commands or checks run:
 - Results:
 - Evidence:
+- AI workflow checker:
 - Ledger/file-state consistency check:
 - Skipped checks and reason:
+
+## Git Publication Decision
+
+- Decision: `no-commit`, `local-commit`, `push-and-pr`, or `blocked`.
+- Reason:
+- Branch:
+- Upstream:
+- Dirty scope:
+- Review status:
+- Verification status:
+- Ledger:
+- Fallback status:
+- Next git action:
 
 ## Fallbacks
 

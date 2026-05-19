@@ -1,0 +1,39 @@
+# <type>[optional scope][!]: <description>
+#
+# Required header format follows Conventional Commits:
+#   <type>[optional scope][!]: <description>
+#
+# Common types:
+#   feat      new user-facing or application behavior
+#   fix       bug fix
+#   docs      documentation-only change
+#   test      test-only change
+#   refactor  behavior-preserving code change
+#   perf      performance improvement
+#   build     build system or dependency change
+#   ci        CI configuration or pipeline change
+#   chore     maintenance task that does not fit another type
+#   style     formatting-only change
+#   revert    revert previous commit(s)
+#
+# Use ! or BREAKING CHANGE footer for breaking API/user-flow changes:
+#   feat(auth)!: remove legacy login flow
+#
+# Keep the subject concise. Prefer one intent, one commit.
+# Do not include unrelated files or generated local artifacts.
+
+# <optional body: why this change was made, constraints, approach, or decision rationale>
+
+# Required Lore trailers. Keep git-native trailer format.
+Constraint: <external or project constraint that shaped the decision>
+Rejected: <alternative considered> | <reason for rejection>
+Confidence: <low|medium|high>
+Scope-risk: <narrow|moderate|broad>
+Directive: <forward-looking warning for future modifiers>
+Tested: <what was verified>
+Not-tested: <known gaps in verification>
+
+# Publication trailers. Fill these after the Git Publication Decision Gate.
+Publication-decision: <no-commit|local-commit|push-and-pr|blocked>
+Review: <review gate used or reason not applicable>
+Ledger: <context ledger path or allowed lightweight exception>

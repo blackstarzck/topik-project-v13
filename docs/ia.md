@@ -98,4 +98,4 @@ Playwright MCP로 직접 탐색한 화면과 클릭 결과.
 - [현행 사용자 플로우](flow/user-flow.md)
 - [레거시 사용자 플로우 (관측)](user-flow.md)
 - [PRD](prd.md)
-- [Frontend Spec](spec.md)
+- [Implementation Spec](spec.md)
