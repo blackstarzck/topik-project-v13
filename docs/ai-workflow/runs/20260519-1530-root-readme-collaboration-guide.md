@@ -125,3 +125,13 @@ Not applicable.
 - Remaining risks: Larger product/IA docs such as `docs/prd.md`, `docs/sitemap.md`, `docs/ia.md`, and `docs/flow/user-flow.md` contain mojibake in places and may need a separate source-recovery pass. This task fixed the directly related root/docs entry guides only.
 - Assumptions: "기존 indexing한 부분" means the root README's `Document Map`/entry-point table should remain and be expanded, not removed.
 - Follow-up needed: Optional separate cleanup/recovery task for mojibake in larger historical/product docs.
+
+## Git Publication
+
+- Git publication decision: push-and-pr
+- Reason: User requested uploading the completed README collaboration guide work to git; work was committed on a feature branch rather than directly pushing `main`.
+- Branch: `docs/agent-skills-readme-guide-20260519`
+- Upstream: `origin/docs/agent-skills-readme-guide-20260519`
+- Commit: `d1473ea`
+- PR: `https://github.com/blackstarzck/topik-project-v13/pull/1`
+- Dirty scope note: unrelated local dirty files remain outside the commit and PR.

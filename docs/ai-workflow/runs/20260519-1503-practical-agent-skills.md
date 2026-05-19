@@ -165,3 +165,13 @@ Not applicable.
   - `deploy-to-vercel` and `vercel-cli-with-tokens` are side-effectful deployment skills; documentation requires explicit deployment scope before use.
 - Assumptions: "Mentioned skills" refers to the practical skill layer shown in the user's image: Next/React, Supabase/Postgres, Ant Design, Playwright/Vitest, and RHF/Zod.
 - Follow-up needed: none
+
+## Git Publication
+
+- Git publication decision: push-and-pr
+- Reason: User requested uploading the completed skill/documentation work to git; work was committed on a feature branch rather than directly pushing `main`.
+- Branch: `docs/agent-skills-readme-guide-20260519`
+- Upstream: `origin/docs/agent-skills-readme-guide-20260519`
+- Commit: `d1473ea`
+- PR: `https://github.com/blackstarzck/topik-project-v13/pull/1`
+- Dirty scope note: unrelated local dirty files remain outside the commit and PR.
