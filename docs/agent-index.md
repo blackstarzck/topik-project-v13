@@ -26,7 +26,7 @@ flowchart TD
 | `AGENT-00` | AI routing | [agent-index.md](agent-index.md) | Required AI document selection |
 | `FLOW-00` | AI workflow | [ai-development-workflow.md](ai-development-workflow.md) | Mandatory execution workflow |
 | `WF-00` | AI workflow folder | [ai-workflow/README.md](ai-workflow/README.md) | Ledgers, reports, packets, plans |
-| `HARNESS-00` | Harness and skills | [ai-workflow/harness-and-skills.md](ai-workflow/harness-and-skills.md) | GStack, Superpowers, host-specific skill names |
+| `HARNESS-00` | Harness and skills | [ai-workflow/harness-and-skills.md](ai-workflow/harness-and-skills.md) | TALKPIK, practical skills, GStack, Superpowers, host-specific skill names |
 | `PRODUCT-00` | Product requirements | [prd.md](prd.md) | Product scope, users, value, business rules |
 | `SPEC-00` | Implementation spec | [spec.md](spec.md) | Development baseline, behavior, validation, framework, backend, auth, AI boundary, deployment |
 | `DEV-10` | Development details | [development/README.md](development/README.md) | Detailed technical specs selected through `SPEC-00` |
@@ -42,7 +42,7 @@ flowchart TD
 | --- | --- | --- | --- |
 | Product scope, user value, roles, business direction | `PRODUCT-00` | `SPEC-00`, `JOURNEY-00` | Do not invent new product direction. |
 | Functional behavior, validation, data handling, acceptance criteria | `SPEC-00` | `PRODUCT-00`, `JOURNEY-00` | Use for implementation and tests. |
-| Framework, package, dependency, backend, auth, AI integration, deployment, env vars, deferred billing | `SPEC-00` | Matching `DEV-10` detail file | Start at `spec.md`; do not read all development details by default. |
+| Framework, package, dependency, backend, auth, deployment, env vars, deferred billing | `SPEC-00` | Matching `DEV-10` detail file | Start at `spec.md`; do not read all development details by default. |
 | Navigation, routes, page hierarchy | `IA-00` | `JOURNEY-00`, `IA-10` | Use Target React Route Map, not legacy route notes. |
 | User journey, screen order, transitions, entry/exit states | `JOURNEY-00` | `IA-10`, `SPEC-00` | `docs/user-flow.md` is legacy context only. |
 | Visual UI, layout, components, tokens, motion | `UI-00` | `IA-10`, `JOURNEY-00` | Run design review before user-facing implementation. |
@@ -58,7 +58,6 @@ Use this table only after reading [spec.md](spec.md).
 | --- | --- |
 | Frontend framework, package choice, runtime, UI library, forms, validation, charts, tests | [development/stack.md](development/stack.md) |
 | Supabase, Auth, Postgres, RLS, Storage, server-only keys | [development/backend-auth.md](development/backend-auth.md) |
-| AI tutor, problem generation, feedback generation, AI service contract, jobs, provider boundaries | [development/ai-boundary.md](development/ai-boundary.md) |
 | Vercel, environments, deployment gates, environment variables, rollback, CI, preview links | [development/deployment.md](development/deployment.md) |
 | Billing, subscription, paywall, payment provider, deferred scope | [development/deferred-scope.md](development/deferred-scope.md) |
 

@@ -1,8 +1,59 @@
 # Local AI harness installs and runtime state
-.agents/
+.omx/
+
+# AI folders are mostly local installs. TALKPIK and Superpowers skills are
+# authored once under .agents/ and host-specific mirrors are generated locally
+# by scripts/sync-agent-skills.mjs.
+.agents/*
+!.agents/README.md
+!.agents/skills/
+.agents/skills/*
+!.agents/skills/talkpik-*/
+!.agents/skills/talkpik-*/SKILL.md
+
+# Versioned practical skills shared by Codex and Claude. Keep full directories
+# because some external skills include scripts, helpers, or reference files.
+!.agents/skills/ant-design/
+!.agents/skills/ant-design/**
+!.agents/skills/deploy-to-vercel/
+!.agents/skills/deploy-to-vercel/**
+!.agents/skills/next-best-practices/
+!.agents/skills/next-best-practices/**
+!.agents/skills/next-cache-components/
+!.agents/skills/next-cache-components/**
+!.agents/skills/next-upgrade/
+!.agents/skills/next-upgrade/**
+!.agents/skills/playwright-skill/
+!.agents/skills/playwright-skill/**
+!.agents/skills/react-hook-form-zod/
+!.agents/skills/react-hook-form-zod/**
+!.agents/skills/supabase/
+!.agents/skills/supabase/**
+!.agents/skills/supabase-postgres-best-practices/
+!.agents/skills/supabase-postgres-best-practices/**
+!.agents/skills/vercel-cli-with-tokens/
+!.agents/skills/vercel-cli-with-tokens/**
+!.agents/skills/vercel-composition-patterns/
+!.agents/skills/vercel-composition-patterns/**
+!.agents/skills/vercel-react-best-practices/
+!.agents/skills/vercel-react-best-practices/**
+!.agents/skills/vercel-react-native-skills/
+!.agents/skills/vercel-react-native-skills/**
+!.agents/skills/vercel-react-view-transitions/
+!.agents/skills/vercel-react-view-transitions/**
+!.agents/skills/vitest-testing/
+!.agents/skills/vitest-testing/**
+!.agents/skills/web-design-guidelines/
+!.agents/skills/web-design-guidelines/**
+
+!.agents/superpowers/
+.agents/superpowers/*
+!.agents/superpowers/skills/
+.agents/superpowers/skills/*
+!.agents/superpowers/skills/*/
+!.agents/superpowers/skills/*/SKILL.md
 .claude/
 .codex/
-.omx/
 
 # Local/generated analysis artifacts
 harness-docs-analysis.html

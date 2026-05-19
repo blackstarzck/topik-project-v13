@@ -42,10 +42,10 @@ every document by default increases the chance of missing the important one.
 
 | Goal | Good request |
 | --- | --- |
-| Implement a feature | "`docs/spec.md` 기준으로 글쓰기 제출 흐름을 구현해줘." |
-| Check stack/auth/AI/deployment | "`docs/spec.md` 기준으로 Auth와 AI 경계를 검토해줘." |
-| Build a screen | "`docs/IA`와 `docs/ant-design` 기준으로 홈 대시보드를 만들어줘." |
-| Check user flow | "`docs/flow/user-flow.md` 기준으로 학습 플로우가 맞는지 봐줘." |
+| Implement a feature | "`docs/spec.md` 기준으로 쓰기 제출 흐름을 구현해줘. 관련 상세 문서도 먼저 확인해줘." |
+| Check stack/auth/AI/deployment | "`docs/spec.md` 기준으로 Auth와 AI 기능 경계가 맞는지 검토해줘." |
+| Build a screen | "`docs/IA`와 `docs/ant-design` 기준으로 대시보드 화면을 만들어줘." |
+| Check user flow | "`docs/flow/user-flow.md` 기준으로 학습 흐름이 자연스러운지 검토해줘." |
 | Write an AI work report | "`docs/ai-workflow` 기준으로 이번 작업 보고서를 작성해줘." |
 
 ## Active And Legacy Docs

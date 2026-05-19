@@ -1,6 +1,6 @@
 # AI Development Workflow
 
-This workflow is mandatory for AI agents working in this project. It combines the validated project docs, Superpowers for discipline and TDD, and GStack for plan review, code review, QA, and shipping gates.
+This workflow is mandatory for AI agents working in this project. It combines the validated project docs, Superpowers for discipline and TDD, project-local practical skills for implementation guidance, and GStack for plan review, code review, QA, and shipping gates.
 
 This project intentionally skips a fresh grill-me/domain-discovery step. The domain and product context already lives in `docs/`.
 
@@ -90,8 +90,12 @@ flowchart TD
 
 Every agent must begin by activating Superpowers:
 
-- Claude Code: invoke `using-superpowers`.
-- Codex: use native skill discovery when available; otherwise read `.codex/skills/using-superpowers/SKILL.md` enough to follow it.
+- Canonical source: `.agents/superpowers/skills/using-superpowers/SKILL.md`.
+- Claude Code: invoke `using-superpowers` after host mirrors are synced.
+- Codex: use native skill discovery when available after host mirrors are synced; otherwise read the canonical source enough to follow it.
+- Other hosts: read the canonical source and follow the closest equivalent workflow.
+
+If host-specific skill mirrors are missing or stale, run `node scripts/sync-agent-skills.mjs` and then retry host-native skill discovery. The `.codex/skills` and `.claude/skills` folders are runtime mirrors, not the source of truth.
 
 Then load the project source of truth through [docs/agent-index.md](agent-index.md). The agent must infer the user's goal, use the index to select the smallest required document set, read those docs, and record the result before planning. Do not plan implementation without checking the indexed docs that govern the requested surface.
 
@@ -109,6 +113,7 @@ Machine-checkable evidence:
 
 - Before final reporting, run `node scripts/ai-workflow-check.mjs --repo .` when Node is available.
 - Pull requests run the same checker through `.github/workflows/ai-workflow-check.yml`.
+- The checker also runs `node scripts/sync-agent-skills.mjs --check` when the sync script exists, so TALKPIK, practical development, and Superpowers host mirrors cannot drift silently.
 - The checker is not a substitute for judgment. It catches missing workflow evidence fields and stale ledger patterns; the agent still owns reading docs, running tests, and inspecting outputs.
 
 Then choose the smallest valid lane:
@@ -234,7 +239,7 @@ The ledger is required for:
 Treat work as non-trivial, and therefore ledger-required, when any of these apply:
 
 - More than one tracked file is intentionally changed.
-- Any file under `scripts/`, `.github/`, `.claude/`, `docs/ai-workflow/`, or workflow-governing files such as `AGENTS.md`, `CLAUDE.md`, `docs/agent-index.md`, or this file changes.
+- Any file under `scripts/`, `.github/`, `.agents/`, `.codex/`, `.claude/`, `docs/ai-workflow/`, or workflow-governing files such as `AGENTS.md`, `CLAUDE.md`, `docs/agent-index.md`, or this file changes.
 - A route, UI, auth, database, API, dependency, test strategy, deployment, or AI-service boundary changes.
 - The task uses a child agent, external reviewer, fallback path, or degraded-mode verification.
 - The agent needs to resume later or another agent could reasonably need the decision history.
