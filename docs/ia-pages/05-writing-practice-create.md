@@ -1,8 +1,8 @@
 # 쓰기 집중 연습 설정 IA
 
-URL: `/writing_practice_create.html`
+Legacy observed URL: `/writing_practice_create.html`
 
-현재 React route: `/writing/setup`
+Current route mapping: no standalone route. This setup is folded into `/practice/recommendations`, `/practice/problems`, and `/writing/51` to `/writing/54`.
 
 ## 화면 목적
 

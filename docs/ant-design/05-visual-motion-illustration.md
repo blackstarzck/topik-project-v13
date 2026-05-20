@@ -35,7 +35,7 @@ Motion should clarify change, not entertain.
 
 Good uses:
 
-- Drawer opening for AI tutor or OMR.
+- Drawer opening for OMR.
 - Step transition in setup flow.
 - Small loading transition while feedback is generated.
 - Hover/focus affordance on interactive cards.
@@ -84,4 +84,3 @@ When a visual example matters:
 4. Apply that text rule in code.
 
 Do not assume that links alone are enough for image-heavy design rules.
-

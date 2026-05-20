@@ -1,8 +1,8 @@
 # 단어장 IA
 
-URL: `/my_vocabulary.html`
+Legacy observed URL: `/my_vocabulary.html`
 
-현재 React route: `/vocabulary`
+Current route mapping: no standalone route. If retained, vocabulary belongs under `/library` as a sub-view or filter.
 
 ## 화면 목적
 
@@ -35,4 +35,3 @@ URL: `/my_vocabulary.html`
 ## 연결 화면
 
 - 내 서재
-- AI 튜터 단어 검색

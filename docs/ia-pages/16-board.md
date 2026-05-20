@@ -1,8 +1,8 @@
 # 게시판 IA
 
-URL: `/board.html`
+Legacy observed URL: `/board.html`
 
-현재 React route: `/board`
+Current route mapping: none. Board and notices are outside the current Paper route inventory.
 
 ## 화면 목적
 

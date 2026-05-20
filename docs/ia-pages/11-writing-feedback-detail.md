@@ -1,6 +1,6 @@
 # 쓰기 피드백 상세 IA
 
-URL 예:
+Legacy observed URL examples:
 
 - `/writing_feedback_detail_51.html`
 - `/writing_feedback_detail_52.html`
@@ -8,7 +8,7 @@ URL 예:
 - `/writing_feedback_detail_54.html`
 - `/writing_feedback_detail_54.html?type=retake`
 
-현재 React route: `/writing/feedback/:id`
+Current route mapping: `/writing/feedback/short/:id` for E-01 or `/writing/feedback/long/:id` for E-02.
 
 ## 화면 목적
 

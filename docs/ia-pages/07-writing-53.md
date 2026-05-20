@@ -1,8 +1,8 @@
 # 쓰기 연습 53번 IA
 
-URL: `/writing_53.html`
+Legacy observed URL: `/writing_53.html`
 
-현재 React route: `/writing/53`
+Current route mapping: `/writing/53` (D-03 Long-form writing 53).
 
 ## 화면 목적
 

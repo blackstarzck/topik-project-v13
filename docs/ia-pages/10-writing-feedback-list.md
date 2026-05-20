@@ -1,8 +1,8 @@
 # 쓰기 보관함 IA
 
-URL: `/writing_feedback_list.html`
+Legacy observed URL: `/writing_feedback_list.html`
 
-현재 React route: `/writing/feedback`
+Current route mapping: no standalone route. Feedback history belongs under `/library`; feedback details use `/writing/feedback/short/:id` or `/writing/feedback/long/:id`.
 
 ## 화면 목적
 

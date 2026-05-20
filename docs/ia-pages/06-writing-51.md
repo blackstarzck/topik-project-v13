@@ -1,8 +1,8 @@
 # 쓰기 연습 51번 IA
 
-URL: `/writing_51.html`
+Legacy observed URL: `/writing_51.html`
 
-현재 React route: `/writing/51`
+Current route mapping: `/writing/51` (D-01 Short-answer writing 51).
 
 ## 화면 목적
 

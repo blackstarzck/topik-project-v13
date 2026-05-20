@@ -1,8 +1,8 @@
 # 문제 풀이 IA
 
-URL 예: `/practice_solve.html?...`
+Legacy observed URL example: `/practice_solve.html?...`
 
-현재 React route: `/practice/solve`
+Current route mapping: `/practice/problems` (C-02 Problem list). Writing happens in D-01 to D-04 routes.
 
 ## 화면 목적
 

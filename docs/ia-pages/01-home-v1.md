@@ -1,8 +1,8 @@
 # 홈 V1 IA
 
-URL: `/home.html`
+Legacy observed URL: `/home.html`
 
-현재 React route: `/`
+Current route mapping: `/dashboard` (B-01 Home dashboard). `/` is now X-01 Product landing.
 
 ## 화면 목적
 

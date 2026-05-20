@@ -32,7 +32,7 @@ Use AntD system color semantics:
 - Success: correct answer, saved work, completed practice.
 - Warning: time pressure, incomplete required step, weak-point attention.
 - Error: failed submit, invalid answer, destructive action.
-- Info: neutral guidance, AI tutor note, system hint.
+- Info: neutral guidance and system hint.
 
 Rules:
 

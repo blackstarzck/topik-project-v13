@@ -36,7 +36,7 @@ Implementation rule:
 | Server state | `@tanstack/react-query` | `5.x` | Caching and mutation state for client-side data that cannot stay purely server-rendered. |
 | Forms | `react-hook-form` | `7.x` | Complex forms with low render overhead. |
 | Validation | `zod` | `4.x` | Shared schema validation for forms and API payloads. |
-| Charts | `recharts` | `3.x` | Progress charts and mock exam result visualization. |
+| Charts | `recharts` | `3.x` | Growth dashboard and learning progress visualization. Mock exam charts are future context unless matching IA/routes are reintroduced. |
 | Dates | `dayjs` | `1.x` | Date formatting, exam date, subscription date, and learning history display. |
 
 Frontend rules:

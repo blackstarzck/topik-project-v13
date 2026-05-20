@@ -1,8 +1,8 @@
 # 모의고사 결과 IA
 
-URL: `/mock_exam_results.html`
+Legacy observed URL: `/mock_exam_results.html`
 
-현재 React route: `/mock/results`
+Current route mapping: none. Mock exam screens are outside the current Paper route inventory.
 
 ## 화면 목적
 

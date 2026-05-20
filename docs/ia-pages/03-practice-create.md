@@ -1,8 +1,8 @@
 # AI 맞춤 문제 생성 IA
 
-URL: `/practice_create.html`
+Legacy observed URL: `/practice_create.html`
 
-현재 React route: `/practice/create`
+Current route mapping: `/practice/recommendations` (C-01 Problem type recommendations).
 
 ## 화면 목적
 

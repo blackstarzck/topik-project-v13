@@ -46,7 +46,6 @@ Use this checklist before calling UI work complete.
 - [ ] The page answers what the learner is doing now.
 - [ ] The page shows what changed after an action.
 - [ ] The page provides a next learning action.
-- [ ] AI tutor support does not hide critical controls.
 - [ ] Exam and writing workflows preserve user input.
 
 ## Accessibility

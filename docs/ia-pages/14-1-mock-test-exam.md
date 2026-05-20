@@ -1,8 +1,8 @@
 # 실전 모의고사 풀이 IA
 
-URL 예: `/mock_test_exam.html?...`
+Legacy observed URL example: `/mock_test_exam.html?...`
 
-현재 React route: `/mock/exam`
+Current route mapping: none. Mock exam screens are outside the current Paper route inventory.
 
 ## 화면 목적
 
@@ -31,7 +31,6 @@ URL 예: `/mock_test_exam.html?...`
 ## 확인된 동작
 
 - `답안지 (OMR)`를 누르면 번호별 답안 현황이 열립니다.
-- AI 튜터 패널이 열려 있으면 답안지 버튼을 가릴 수 있어 닫은 뒤 조작해야 했습니다.
 
 ## 연결 화면
 

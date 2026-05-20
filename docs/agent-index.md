@@ -83,7 +83,7 @@ If active and legacy docs conflict, active docs win. If active docs conflict wit
 
 ## Ledger Requirement Index
 
-Create or update a run ledger under `docs/ai-workflow/runs/` when any of these apply:
+Create or update a run ledger under `docs/ai-workflow/runs/YYYY/MM/DD/` when any of these apply:
 
 | Trigger | Required |
 | --- | --- |

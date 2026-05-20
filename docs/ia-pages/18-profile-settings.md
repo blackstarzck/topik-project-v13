@@ -1,8 +1,8 @@
 # 프로필 설정 IA
 
-URL: `/profile_settings.html`
+Legacy observed URL: `/profile_settings.html`
 
-현재 React route: `/profile`
+Current route mapping: split across `/profile`, `/settings/language`, `/settings/notifications`, and `/subscription`.
 
 ## 화면 목적
 

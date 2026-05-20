@@ -35,9 +35,27 @@ Use [README.md](README.md) and [docs/README.md](docs/README.md) for human-friend
 - Fallbacks do not weaken quality gates. Follow the fallback protocol in [docs/ai-development-workflow.md](docs/ai-development-workflow.md).
 - Fail closed for doc conflicts, missing approval, destructive actions, secret exposure risk, and security uncertainty.
 
+## Objectivity And Assumptions
+
+- Do not default to agreeing with the user. Evaluate requests objectively against
+  the active docs, current code, security constraints, and implementation risk.
+- If the user's request is incorrect, incomplete, risky, or conflicts with
+  active docs, state that clearly with concrete references.
+- Do not invent product behavior, architecture decisions, data rules, security
+  rules, UX flows, or business logic that are not present in active docs or
+  explicitly approved by the user.
+- When required behavior is missing from active docs, first ask a clarifying
+  question or propose a docs update / implementation brief with acceptance
+  criteria. Do not implement from assumption.
+- Reasonable implementation details may be inferred only when they are low-risk,
+  reversible, and directly implied by existing docs, code patterns, or tool
+  conventions.
+- When making any inference, state the inference and its basis before relying on
+  it for implementation.
+
 ## Context And Delegation
 
-- For non-trivial work, implementation work, UI/flow/integration changes, net-new scope, doc conflicts, multi-agent work, or work likely to resume later, create and maintain a context ledger under `docs/ai-workflow/runs/` from [docs/ai-workflow/context-ledger-template.md](docs/ai-workflow/context-ledger-template.md).
+- For non-trivial work, implementation work, UI/flow/integration changes, net-new scope, doc conflicts, multi-agent work, or work likely to resume later, create and maintain a context ledger under `docs/ai-workflow/runs/YYYY/MM/DD/` from [docs/ai-workflow/context-ledger-template.md](docs/ai-workflow/context-ledger-template.md).
 - Tiny docs/config/non-behavioral edits may skip the ledger only when there is no multi-agent work, no behavior change, no doc conflict, and no resume risk. State the exception in the final report.
 - In multi-agent work, the main session is the coordinator and durable context owner.
 - Child agents execute bounded slices only. They must not redefine product scope or rely on private context that is not reported back.

@@ -2,6 +2,13 @@
 
 This file applies Ant Design page patterns to the TALKPIK AI product structure.
 
+## Current Paper Scope
+
+The current route and screen inventory is `docs/sitemap.md` plus the 32 screens
+under `docs/IA/`. PRD references to standalone vocabulary, mock exam, board,
+and notice detail remain product context or future/deferred scope until matching
+IA screens and routes are added.
+
 ## Product Type
 
 TALKPIK AI is an enterprise-style learning workspace, not a landing page.
@@ -20,13 +27,10 @@ Use:
 - `Sider` or responsive drawer navigation
 - `Header`
 - `Content`
-- floating or docked AI tutor access
 
 Rules:
 
 - Navigation must remain predictable across all main pages.
-- The AI tutor must not cover exam-critical actions such as OMR, next, submit,
-  or end exam.
 - Language/profile controls should be stable and easy to find.
 
 ## Dashboard / Workbench
@@ -156,7 +160,11 @@ Rules:
 - Then show step-by-step or sentence-level corrections.
 - Provide next actions: rewrite, save, export, practice similar.
 
-## Mock Exam
+## Mock Exam (Future / Legacy)
+
+Mock exam screens are outside the current Paper route inventory. Use this
+pattern only if mock exam scope is reintroduced through `docs/IA` and
+`docs/sitemap.md`.
 
 Recommended components:
 
@@ -174,7 +182,11 @@ Rules:
 - OMR access must never hide submit/end controls.
 - Exam controls should be stable, not animated in distracting ways.
 
-## Vocabulary And Library
+## Library And Vocabulary Notes
+
+The current Paper route inventory includes `F-01 My library` at `/library`.
+Standalone vocabulary is legacy/future scope unless a dedicated IA screen and
+route are added.
 
 Recommended components:
 
@@ -192,7 +204,11 @@ Rules:
 - Filters should match learner mental models: level, type, tag, date, status.
 - Card view and list view may both exist, but state must remain consistent.
 
-## Board And Notices
+## Board And Notices (Future / Legacy)
+
+Board and notice detail screens are outside the current Paper route inventory.
+Use this pattern only if those screens are reintroduced through `docs/IA` and
+`docs/sitemap.md`.
 
 Recommended components:
 

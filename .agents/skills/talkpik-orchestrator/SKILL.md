@@ -63,7 +63,7 @@ Use these only after the applicable project skill above:
 
 ## Context Ledger
 
-Create or update a ledger under `docs/ai-workflow/runs/` when required by `docs/agent-index.md` or `docs/ai-development-workflow.md`. Workflow-governing skill changes, implementation work, UI, route, auth, database, deployment, or AI-service boundary work require a ledger.
+Create or update a ledger under `docs/ai-workflow/runs/YYYY/MM/DD/` when required by `docs/agent-index.md` or `docs/ai-development-workflow.md`. Workflow-governing skill changes, implementation work, UI, route, auth, database, deployment, or AI-service boundary work require a ledger.
 
 ## Stop Conditions
 

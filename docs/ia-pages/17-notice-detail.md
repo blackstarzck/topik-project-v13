@@ -1,8 +1,8 @@
 # 공지 상세 IA
 
-URL 예: `/notice_detail.html?id=n100`
+Legacy observed URL example: `/notice_detail.html?id=n100`
 
-현재 React route 상태: 전용 route 없음. 레거시 관찰 문서로만 유지.
+Current route mapping: none. Keep as legacy observation only.
 
 ## 화면 목적
 

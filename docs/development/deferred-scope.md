@@ -20,6 +20,11 @@ Current rule:
 PRD references to membership, payment, subscription, or paywall are retained as
 future product context, not current implementation requirements.
 
+The sitemap may include `/paywall` and `/subscription` as Paper-frame UI shells.
+Those routes do not reopen billing implementation scope: no billing SDK,
+payment provider selection, checkout, invoices, or real payment flows should be
+implemented until this file and the implementation spec are updated.
+
 ## Deferred Defaults
 
 | Deferred or rejected | Reason |

@@ -1,8 +1,8 @@
 # 실전 모의고사 생성 IA
 
-URL: `/mock_test_setup.html`
+Legacy observed URL: `/mock_test_setup.html`
 
-현재 React route 상태: 전용 route 없음. 레거시 관찰 문서로만 유지.
+Current route mapping: none. Keep as legacy observation only.
 
 ## 화면 목적
 

@@ -35,7 +35,7 @@ Use the smallest state owner that fits:
 
 ## Validation Rules
 
-- Use Zod for shared form, API, and AI contract validation where practical.
+- Use Zod for shared form and API validation where practical.
 - Keep schema files under `src/lib/validation/` or a similarly focused boundary.
 - Keep form validation behavior visible to the user with clear error states.
 

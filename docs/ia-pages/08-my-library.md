@@ -1,8 +1,8 @@
 # 내 서재 IA
 
-URL: `/my_library.html`
+Legacy observed URL: `/my_library.html`
 
-현재 React route: `/library`
+Current route mapping: `/library` (F-01 My library).
 
 ## 화면 목적
 

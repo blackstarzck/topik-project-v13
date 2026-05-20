@@ -70,7 +70,6 @@ For TALKPIK AI:
 
 - Show progress trends, weak points, saved work, retry paths, and next practice
   suggestions.
-- Make AI tutor history and reminders easy to revisit.
 - Let feedback connect to "practice again" or "review similar problem".
 - Keep feature discovery progressive. Do not show every advanced option at once.
 

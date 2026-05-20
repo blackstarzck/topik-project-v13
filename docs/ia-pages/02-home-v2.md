@@ -1,8 +1,8 @@
 # 홈 V2 IA
 
-URL: `/home_v2.html`
+Legacy observed URL: `/home_v2.html`
 
-현재 React route: `/home-v2`
+Current route mapping: `/dashboard` (legacy dashboard variant; no separate current route).
 
 ## 화면 목적
 
