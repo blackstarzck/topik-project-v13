@@ -46,7 +46,7 @@
 
 - Files expected to change:
   - `README.md`
-  - `docs/ai-workflow/runs/20260518-1702-readme-ai-workflow.md`
+  - `docs/ai-workflow/runs/2026/05/18/20260518-1702-readme-ai-workflow.md`
 - Files inspected:
   - `.codex/skills/using-superpowers/SKILL.md`
   - `.codex/skills/gstack-document-generate/SKILL.md`
@@ -57,7 +57,7 @@
   - `CLAUDE.md`
 - Files changed:
   - `README.md`
-  - `docs/ai-workflow/runs/20260518-1702-readme-ai-workflow.md`
+  - `docs/ai-workflow/runs/2026/05/18/20260518-1702-readme-ai-workflow.md`
 - Files explicitly not to touch:
   - Application source files, `.omx/`, installed skill folders.
 

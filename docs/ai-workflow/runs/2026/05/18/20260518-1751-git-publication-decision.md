@@ -54,7 +54,7 @@
   - `docs/ai-workflow/git-publication-decision.md`
   - `.gitmessage`
   - `.github/pull_request_template.md`
-  - `docs/ai-workflow/runs/20260518-1751-git-publication-decision.md`
+  - `docs/ai-workflow/runs/2026/05/18/20260518-1751-git-publication-decision.md`
 - Files inspected:
   - `AGENTS.md`
   - `docs/ai-development-workflow.md`
@@ -67,7 +67,7 @@
   - `docs/ai-workflow/git-publication-decision.md`
   - `.gitmessage`
   - `.github/pull_request_template.md`
-  - `docs/ai-workflow/runs/20260518-1751-git-publication-decision.md`
+  - `docs/ai-workflow/runs/2026/05/18/20260518-1751-git-publication-decision.md`
 - Files explicitly not to touch:
   - `workflow-fallback-analysis.html`
   - App/source files, because no app implementation is in scope.
@@ -90,7 +90,7 @@ Not applicable.
   - Confirm no app/test claims are made.
 - Checks run:
   - `git status --short --branch`
-  - `git diff -- docs/ai-development-workflow.md docs/ai-workflow/report-template.md docs/ai-workflow/git-publication-decision.md .gitmessage .github/pull_request_template.md docs/ai-workflow/runs/20260518-1751-git-publication-decision.md`
+  - `git diff -- docs/ai-development-workflow.md docs/ai-workflow/report-template.md docs/ai-workflow/git-publication-decision.md .gitmessage .github/pull_request_template.md docs/ai-workflow/runs/2026/05/18/20260518-1751-git-publication-decision.md`
   - `git diff --check`
   - `git config commit.template .gitmessage`
   - `git config --get commit.template`

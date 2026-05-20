@@ -62,7 +62,10 @@ const IMPLEMENTATION_OR_WORKFLOW_PATTERNS = [
   /^docs\/ai-workflow\//,
 ];
 
-const LEDGER_PATTERN = /^docs\/ai-workflow\/runs\/\d{8}-\d{4}-.+\.md$/;
+const LEDGER_PATTERN =
+  /^docs\/ai-workflow\/runs\/\d{4}\/\d{2}\/\d{2}\/\d{8}-\d{4}-.+\.md$/;
+const LEGACY_LEDGER_PATTERN =
+  /^docs\/ai-workflow\/runs\/\d{8}-\d{4}-.+\.md$/;
 
 function normalizePathForCheck(path) {
   return normalize(path).split(sep).join("/");
@@ -133,7 +136,7 @@ export function checkCommitMessage(message) {
 }
 
 async function readGitChangedFiles(root) {
-  const status = spawnSync("git", ["status", "--porcelain"], {
+  const status = spawnSync("git", ["status", "--porcelain", "--untracked-files=all"], {
     cwd: root,
     encoding: "utf8",
   });
@@ -157,10 +160,24 @@ async function findExistingLedgers(root) {
   const runsDir = join(root, "docs", "ai-workflow", "runs");
   if (!existsSync(runsDir)) return [];
 
-  const entries = await readdir(runsDir);
-  return entries
-    .filter((entry) => /^\d{8}-\d{4}-.+\.md$/.test(entry))
-    .map((entry) => normalizePathForCheck(join("docs", "ai-workflow", "runs", entry)));
+  async function collectLedgers(dir, relativeDir) {
+    const entries = await readdir(dir, { withFileTypes: true });
+    const ledgers = [];
+
+    for (const entry of entries) {
+      const absolutePath = join(dir, entry.name);
+      const relativePath = normalizePathForCheck(join(relativeDir, entry.name));
+      if (entry.isDirectory()) {
+        ledgers.push(...(await collectLedgers(absolutePath, relativePath)));
+      } else if (LEDGER_PATTERN.test(relativePath)) {
+        ledgers.push(relativePath);
+      }
+    }
+
+    return ledgers;
+  }
+
+  return collectLedgers(runsDir, normalizePathForCheck(join("docs", "ai-workflow", "runs")));
 }
 
 async function fileExists(root, relativePath) {
@@ -233,9 +250,22 @@ export async function checkRepositoryState({
 
   if (needsLedger(files)) {
     const changedLedgers = files.filter((file) => LEDGER_PATTERN.test(file));
+    const legacyLedgers = [];
+    for (const file of files) {
+      if (LEGACY_LEDGER_PATTERN.test(file) && (await fileExists(resolvedRoot, file))) {
+        legacyLedgers.push(file);
+      }
+    }
+
+    if (legacyLedgers.length > 0) {
+      errors.push(
+        "run ledgers must be saved under docs/ai-workflow/runs/YYYY/MM/DD/",
+      );
+    }
+
     if (changedLedgers.length === 0) {
       errors.push(
-        "implementation/config workflow changes require a run ledger in docs/ai-workflow/runs/",
+        "implementation/config workflow changes require a run ledger in docs/ai-workflow/runs/YYYY/MM/DD/",
       );
     }
 

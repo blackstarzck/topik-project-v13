@@ -78,7 +78,7 @@
   - `docs/sitemap.md`
   - `docs/user-flow.md`
   - `docs/ia.md`
-  - `docs/ai-workflow/runs/20260519-1042-spec-consolidation-consistency.md`
+  - `docs/ai-workflow/runs/2026/05/19/20260519-1042-spec-consolidation-consistency.md`
 - Files explicitly not to touch:
   - Wireframe image files.
   - Application source code; none exists yet.

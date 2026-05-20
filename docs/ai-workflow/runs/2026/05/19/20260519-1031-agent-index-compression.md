@@ -55,7 +55,7 @@
   - `docs/ai-development-workflow.md`
   - `docs/ai-workflow/README.md`
   - `docs/ai-workflow/harness-and-skills.md`
-  - `docs/ai-workflow/runs/20260519-1031-agent-index-compression.md`
+  - `docs/ai-workflow/runs/2026/05/19/20260519-1031-agent-index-compression.md`
 - Files inspected:
   - `docs/ai-development-workflow.md`
   - `docs/ai-workflow/agent-packets.md`
@@ -68,7 +68,7 @@
   - `docs/ai-development-workflow.md`
   - `docs/ai-workflow/README.md`
   - `docs/ai-workflow/harness-and-skills.md`
-  - `docs/ai-workflow/runs/20260519-1031-agent-index-compression.md`
+  - `docs/ai-workflow/runs/2026/05/19/20260519-1031-agent-index-compression.md`
 - Files explicitly not to touch:
   - Product specs and source implementation.
 

@@ -57,7 +57,7 @@
   - `docs/ai-workflow/context-ledger-template.md`
   - `docs/ai-workflow/agent-packets.md`
   - `docs/ai-workflow/runs/README.md`
-  - `docs/ai-workflow/runs/20260518-1658-context-management-hardening.md`
+  - `docs/ai-workflow/runs/2026/05/18/20260518-1658-context-management-hardening.md`
 - Files inspected:
   - Same as docs consulted, plus workflow template files.
 - Files changed:

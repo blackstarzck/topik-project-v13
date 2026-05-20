@@ -46,7 +46,7 @@
 
 - Files expected to change:
   - `docs/spec.md`
-  - `docs/ai-workflow/runs/20260519-1537-serverless-spec.md`
+  - `docs/ai-workflow/runs/2026/05/19/20260519-1537-serverless-spec.md`
 - Files inspected:
   - `.agents/superpowers/skills/using-superpowers/SKILL.md`
   - `docs/agent-index.md`
@@ -57,7 +57,7 @@
   - `docs/ai-workflow/context-ledger-template.md`
 - Files changed:
   - `docs/spec.md`
-  - `docs/ai-workflow/runs/20260519-1537-serverless-spec.md`
+  - `docs/ai-workflow/runs/2026/05/19/20260519-1537-serverless-spec.md`
 - Files explicitly not to touch:
   - Production source files, package files, deployment configuration, Supabase configuration.
 

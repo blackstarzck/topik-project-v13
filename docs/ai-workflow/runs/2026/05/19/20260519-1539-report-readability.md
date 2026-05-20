@@ -42,7 +42,7 @@
 
 - Files expected to change:
   - `docs/ai-workflow/report-template.md`
-  - `docs/ai-workflow/runs/20260519-1539-report-readability.md`
+  - `docs/ai-workflow/runs/2026/05/19/20260519-1539-report-readability.md`
 - Files inspected:
   - `.agents/superpowers/skills/using-superpowers/SKILL.md`
   - `docs/agent-index.md`
@@ -50,7 +50,7 @@
   - `docs/ai-workflow/report-template.md`
 - Files changed:
   - `docs/ai-workflow/report-template.md`
-  - `docs/ai-workflow/runs/20260519-1539-report-readability.md`
+  - `docs/ai-workflow/runs/2026/05/19/20260519-1539-report-readability.md`
 - Files explicitly not to touch:
   - Product spec, source code, scripts, and deployment configuration.
 

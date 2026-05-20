@@ -47,7 +47,7 @@
 
 - Files expected to change:
   - `docs/ai-workflow/report-template.md`
-  - `docs/ai-workflow/runs/20260519-1437-report-template-readability.md`
+  - `docs/ai-workflow/runs/2026/05/19/20260519-1437-report-template-readability.md`
 - Files inspected:
   - `.agents/superpowers/skills/using-superpowers/SKILL.md`
   - `.agents/skills/talkpik-quality-gate/SKILL.md`
@@ -57,7 +57,7 @@
   - `docs/ai-workflow/report-template.md`
 - Files changed:
   - `docs/ai-workflow/report-template.md`
-  - `docs/ai-workflow/runs/20260519-1437-report-template-readability.md`
+  - `docs/ai-workflow/runs/2026/05/19/20260519-1437-report-template-readability.md`
 - Files explicitly not to touch:
   - Product source files, package files, deployment settings, database files.
 

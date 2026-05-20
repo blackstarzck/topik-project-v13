@@ -49,7 +49,7 @@
   - `.agents/README.md`
   - `.gitignore`
   - `README.md`
-  - `docs/ai-workflow/runs/20260519-1441-agents-skills-readme.md`
+  - `docs/ai-workflow/runs/2026/05/19/20260519-1441-agents-skills-readme.md`
 - Files inspected:
   - `.agents/superpowers/skills/using-superpowers/SKILL.md`
   - `docs/agent-index.md`
@@ -60,7 +60,7 @@
   - `.agents/README.md`
   - `.gitignore`
   - `README.md`
-  - `docs/ai-workflow/runs/20260519-1441-agents-skills-readme.md`
+  - `docs/ai-workflow/runs/2026/05/19/20260519-1441-agents-skills-readme.md`
 - Files explicitly not to touch:
   - Product source files, package files, deployment settings, database files.
 

@@ -27,7 +27,7 @@
   - Context7 `/supabase/supabase`
   - Context7 `/vercel/ai`
 - Extracted requirements:
-  - Product includes TOPIK learning dashboard, AI-generated practice, writing practice/feedback, saved feedback, vocabulary review, mock exam results, notices/events, profile/settings, admin surfaces, and AI tutor access.
+  - Product includes TOPIK learning dashboard, AI-generated practice, writing practice/feedback, saved feedback, vocabulary review, mock exam results, notices/events, profile/settings, and admin surfaces.
   - Serverless architecture is required by the user.
   - Stack must support auth, relational learning data, writing submissions, AI feedback, saved drafts, files/PDF exports, multilingual UI, admin operations, and AI chat/tutor features.
 - Doc conflicts: none.
@@ -40,18 +40,18 @@
 | --- | --- | --- | --- |
 | 2026-05-19 08:34 | Recommend Next.js App Router as the frontend/full-stack framework. | It supports React UI, route handlers, server components/actions, and serverless deployment. | Next.js docs |
 | 2026-05-19 08:34 | Recommend Supabase as the primary serverless backend. | PRD requires auth, Postgres learning data, storage, realtime/admin surfaces, and RLS. | Supabase docs |
-| 2026-05-19 08:34 | Recommend Vercel AI SDK for AI generation and streaming. | PRD requires AI tutor, writing feedback, and generated practice flows. | Vercel AI SDK docs |
+| 2026-05-19 08:34 | Recommend Vercel AI SDK for AI generation and streaming. | PRD requires writing feedback and generated practice flows. | Vercel AI SDK docs |
 
 ## Active Files
 
 - Files expected to change:
-  - `docs/ai-workflow/runs/20260519-0834-serverless-dev-spec-recommendation.md`
+  - `docs/ai-workflow/runs/2026/05/19/20260519-0834-serverless-dev-spec-recommendation.md`
 - Files inspected:
   - `.codex/skills/using-superpowers/SKILL.md`
   - `docs/prd.md`
   - `docs/ai-development-workflow.md`
 - Files changed:
-  - `docs/ai-workflow/runs/20260519-0834-serverless-dev-spec-recommendation.md`
+  - `docs/ai-workflow/runs/2026/05/19/20260519-0834-serverless-dev-spec-recommendation.md`
 - Files explicitly not to touch:
   - App source files and product docs.
 

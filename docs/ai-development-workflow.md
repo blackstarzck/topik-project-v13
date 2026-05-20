@@ -14,7 +14,7 @@ flowchart TD
     D --> E["Read selected docs"]
     E --> F["Record Docs consulted"]
     F --> F2{"Context ledger required?"}
-    F2 -->|"Yes"| F3["Create or update docs/ai-workflow/runs ledger"]
+    F2 -->|"Yes"| F3["Create or update docs/ai-workflow/runs/YYYY/MM/DD ledger"]
     F2 -->|"No"| G{"Request covered by docs?"}
     F3 --> G
 
@@ -226,7 +226,7 @@ The main session must then integrate the result packet into the central context 
 
 ## 3c. Context Ledger
 
-For non-trivial work, create a run ledger under `docs/ai-workflow/runs/` using `docs/ai-workflow/context-ledger-template.md`. Name the file `YYYYMMDD-HHMM-task-slug.md`.
+For non-trivial work, create a run ledger under `docs/ai-workflow/runs/YYYY/MM/DD/` using `docs/ai-workflow/context-ledger-template.md`. Name the file `YYYYMMDD-HHMM-task-slug.md`.
 
 The ledger is required for:
 
@@ -269,7 +269,7 @@ When resuming work after a pause, context compaction, or a new agent session, re
 
 1. Read `AGENTS.md` or `CLAUDE.md`, depending on the host.
 2. Read `docs/ai-development-workflow.md`.
-3. Open the latest relevant run ledger in `docs/ai-workflow/runs/`.
+3. Open the latest relevant run ledger in `docs/ai-workflow/runs/YYYY/MM/DD/`.
 4. Re-read the ledger's `Docs consulted` files when they govern the next action.
 5. Inspect current file state for paths listed in the ledger.
 6. Resume from the ledger's `Next action` and `Verification state`.

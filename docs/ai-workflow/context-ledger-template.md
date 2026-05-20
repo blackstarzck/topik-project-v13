@@ -1,6 +1,6 @@
 # Context Ledger Template
 
-Copy this template to `docs/ai-workflow/runs/YYYYMMDD-HHMM-task-slug.md` for any work that requires durable context.
+Copy this template to `docs/ai-workflow/runs/YYYY/MM/DD/YYYYMMDD-HHMM-task-slug.md` for any work that requires durable context.
 
 ## Run Metadata
 

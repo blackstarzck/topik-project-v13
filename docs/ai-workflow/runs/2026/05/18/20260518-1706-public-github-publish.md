@@ -49,7 +49,7 @@
   - `.gitattributes`
   - `.gitignore`
   - `README.md`
-  - `docs/ai-workflow/runs/20260518-1706-public-github-publish.md`
+  - `docs/ai-workflow/runs/2026/05/18/20260518-1706-public-github-publish.md`
 - Files expected to publish:
   - `.gitattributes`
   - `.gitignore`

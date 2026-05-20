@@ -67,7 +67,7 @@
 ## Active Files
 
 - Files expected to change:
-  - docs/ai-workflow/runs/20260519-1116-ai-workflow-analysis.md
+  - docs/ai-workflow/runs/2026/05/19/20260519-1116-ai-workflow-analysis.md
   - docs/ai-workflow/plans/20260519-1132-ai-workflow-hardening.md
   - scripts/ai-workflow-check.mjs
   - scripts/ai-workflow-check.selftest.mjs
@@ -101,7 +101,7 @@
   - .codex/skills/verification-before-completion/SKILL.md
   - .codex/skills/requesting-code-review/SKILL.md
 - Files changed:
-  - docs/ai-workflow/runs/20260519-1116-ai-workflow-analysis.md
+  - docs/ai-workflow/runs/2026/05/19/20260519-1116-ai-workflow-analysis.md
   - docs/ai-workflow/plans/20260519-1132-ai-workflow-hardening.md
   - scripts/ai-workflow-check.mjs
   - scripts/ai-workflow-check.selftest.mjs

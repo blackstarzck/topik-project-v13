@@ -55,7 +55,7 @@
   - `docs/ai-development-workflow.md`
   - `docs/ai-workflow/report-template.md`
   - `docs/ai-workflow/context-ledger-template.md`
-  - `docs/ai-workflow/runs/20260518-1719-fallback-protocol.md`
+  - `docs/ai-workflow/runs/2026/05/18/20260518-1719-fallback-protocol.md`
 - Files inspected:
   - Same as docs consulted.
 - Files changed:

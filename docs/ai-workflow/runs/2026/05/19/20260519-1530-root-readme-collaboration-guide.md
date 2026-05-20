@@ -59,13 +59,13 @@
 - Files expected to change:
   - `README.md`
   - `docs/README.md`
-  - `docs/ai-workflow/runs/20260519-1530-root-readme-collaboration-guide.md`
+  - `docs/ai-workflow/runs/2026/05/19/20260519-1530-root-readme-collaboration-guide.md`
 - Files inspected:
   - listed under Docs Consulted
 - Files changed:
   - `README.md`
   - `docs/README.md`
-  - `docs/ai-workflow/runs/20260519-1530-root-readme-collaboration-guide.md`
+  - `docs/ai-workflow/runs/2026/05/19/20260519-1530-root-readme-collaboration-guide.md`
 - Files explicitly not to touch:
   - Production app source, package manifests, secrets, deployment config, unrelated existing dirty files.
 
@@ -88,10 +88,10 @@ Not applicable.
   - `node scripts/ai-workflow-check.mjs --repo .` passes.
 - Checks run:
   - `rg -n "湲|쒖|�|留|怨|瑜|濡" README.md docs/README.md`
-  - `git diff --check -- README.md docs/README.md docs/ai-workflow/runs/20260519-1530-root-readme-collaboration-guide.md`
+  - `git diff --check -- README.md docs/README.md docs/ai-workflow/runs/2026/05/19/20260519-1530-root-readme-collaboration-guide.md`
   - `node scripts/ai-workflow-check.mjs --repo .`
-  - `git status --short -- README.md docs/README.md docs/ai-workflow/runs/20260519-1530-root-readme-collaboration-guide.md`
-  - `git diff --stat -- README.md docs/README.md docs/ai-workflow/runs/20260519-1530-root-readme-collaboration-guide.md`
+  - `git status --short -- README.md docs/README.md docs/ai-workflow/runs/2026/05/19/20260519-1530-root-readme-collaboration-guide.md`
+  - `git diff --stat -- README.md docs/README.md docs/ai-workflow/runs/2026/05/19/20260519-1530-root-readme-collaboration-guide.md`
 - Latest results:
   - Root README now includes audience-specific project explanation, visual diagrams, collaboration guide, AI workflow guide, and the preserved `Document Map` section.
   - `docs/README.md` example requests were repaired to readable Korean.

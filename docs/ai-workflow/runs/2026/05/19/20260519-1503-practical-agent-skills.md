@@ -93,7 +93,7 @@
   - `docs/ai-workflow/harness-and-skills.md`
   - `docs/ai-workflow/report-template.md`
   - `scripts/sync-agent-skills.mjs`
-  - `docs/ai-workflow/runs/20260519-1503-practical-agent-skills.md`
+  - `docs/ai-workflow/runs/2026/05/19/20260519-1503-practical-agent-skills.md`
 - Files explicitly not to touch:
   - Production app source, package manifests, secrets, deployment config, unrelated existing dirty files.
 
@@ -127,7 +127,7 @@ Not applicable.
   - `node scripts/sync-agent-skills.mjs`
   - `node scripts/sync-agent-skills.mjs --check`
   - `node scripts/ai-workflow-check.mjs --repo .`
-  - `git diff --check -- .gitignore scripts/sync-agent-skills.mjs docs/agent-index.md docs/ai-development-workflow.md docs/ai-workflow/harness-and-skills.md docs/ai-workflow/report-template.md .agents/README.md .agents/skills/talkpik-orchestrator/SKILL.md docs/ai-workflow/runs/20260519-1503-practical-agent-skills.md`
+  - `git diff --check -- .gitignore scripts/sync-agent-skills.mjs docs/agent-index.md docs/ai-development-workflow.md docs/ai-workflow/harness-and-skills.md docs/ai-workflow/report-template.md .agents/README.md .agents/skills/talkpik-orchestrator/SKILL.md docs/ai-workflow/runs/2026/05/19/20260519-1503-practical-agent-skills.md`
   - Local risk search for `child_process`, token handling, and destructive shell patterns in high-caution skills.
 - Latest results:
   - Practical skills installed under `.agents/skills/`.

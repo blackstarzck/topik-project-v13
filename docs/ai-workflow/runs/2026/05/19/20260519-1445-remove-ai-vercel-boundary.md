@@ -86,7 +86,7 @@
   - `docs/development/stack.md`
   - `docs/ai-workflow/harness-and-skills.md`
   - `agent-tools-and-skills.html`
-  - `docs/ai-workflow/runs/20260519-1445-remove-ai-vercel-boundary.md`
+  - `docs/ai-workflow/runs/2026/05/19/20260519-1445-remove-ai-vercel-boundary.md`
 - Files explicitly not to touch:
   - Product-scope PRD/UI/IA docs unless required by direct reference cleanup.
 
@@ -108,7 +108,7 @@ Not applicable.
   - `node scripts/sync-agent-skills.mjs --check`
   - `node scripts/ai-workflow-check.mjs --repo .`
 - Checks run:
-  - `rg -n "talkpik-ai-vercel-boundary|docs/development/ai-boundary.md|development/ai-boundary.md|ai-boundary\\.md|Vercel AI SDK|AI SDK facade|AI integration|AI Boundary Rules|src/lib/ai|src/components/ai-tutor|useAiTutorStore" . -g "!docs/ai-workflow/runs/**"`
+  - `rg -n "talkpik-ai-vercel-boundary|docs/development/ai-boundary.md|development/ai-boundary.md|ai-boundary\\.md|Vercel AI SDK|AI SDK facade|AI integration|AI Boundary Rules|src/lib/ai" . -g "!docs/ai-workflow/runs/**"`
   - `node scripts/sync-agent-skills.mjs`
   - `node scripts/sync-agent-skills.mjs --check`
   - `node scripts/ai-workflow-check.mjs --repo .`

@@ -38,7 +38,7 @@ async function testPullRequestBodyRequiresEvidenceSections() {
     "Dirty scope: intended files only",
     "Review status: completed",
     "Verification status: passed",
-    "Ledger: docs/ai-workflow/runs/20260519-1116-ai-workflow-analysis.md",
+    "Ledger: docs/ai-workflow/runs/2026/05/19/20260519-1116-ai-workflow-analysis.md",
     "Fallback status: none",
     "Next git action: none",
     "## Risks And Skipped Checks",
@@ -88,6 +88,9 @@ async function testRepositoryStateRequiresLedgerWhenImplementationFilesChange() 
       "docs",
       "ai-workflow",
       "runs",
+      "2026",
+      "05",
+      "19",
       "20260519-1116-ai-workflow-analysis.md",
     );
     await writeFile(
@@ -101,7 +104,9 @@ async function testRepositoryStateRequiresLedgerWhenImplementationFilesChange() 
     ).catch(async (error) => {
       if (error.code !== "ENOENT") throw error;
       await import("node:fs/promises").then(({ mkdir }) =>
-        mkdir(join(root, "docs", "ai-workflow", "runs"), { recursive: true }),
+        mkdir(join(root, "docs", "ai-workflow", "runs", "2026", "05", "19"), {
+          recursive: true,
+        }),
       );
       await writeFile(
         ledgerPath,
@@ -119,10 +124,33 @@ async function testRepositoryStateRequiresLedgerWhenImplementationFilesChange() 
       changedFiles: [
         "scripts/ai-workflow-check.mjs",
         ".agents/superpowers/skills/using-superpowers/SKILL.md",
-        "docs/ai-workflow/runs/20260519-1116-ai-workflow-analysis.md",
+        "docs/ai-workflow/runs/2026/05/19/20260519-1116-ai-workflow-analysis.md",
       ],
     });
     assert.equal(withLedger.ok, true);
+
+    const legacyLedgerPath = join(
+      root,
+      "docs",
+      "ai-workflow",
+      "runs",
+      "20260519-1116-ai-workflow-analysis.md",
+    );
+    await writeFile(legacyLedgerPath, "# Legacy ledger\n");
+
+    const legacyLedger = await checkRepositoryState({
+      root,
+      changedFiles: [
+        "scripts/ai-workflow-check.mjs",
+        "docs/ai-workflow/runs/20260519-1116-ai-workflow-analysis.md",
+      ],
+    });
+    assert.equal(legacyLedger.ok, false);
+    assert.ok(
+      legacyLedger.errors.some((error) =>
+        error.includes("docs/ai-workflow/runs/YYYY/MM/DD/"),
+      ),
+    );
   });
 }
 
@@ -170,7 +198,7 @@ async function testCommitMessageRequiresLoreTrailers() {
     "Not-tested: GitHub Actions runtime not executed locally",
     "Publication-decision: local-commit",
     "Review: self-review",
-    "Ledger: docs/ai-workflow/runs/20260519-1116-ai-workflow-analysis.md",
+    "Ledger: docs/ai-workflow/runs/2026/05/19/20260519-1116-ai-workflow-analysis.md",
   ].join("\n");
 
   assert.equal(checkCommitMessage(validMessage).ok, true);

@@ -159,7 +159,7 @@ Tested: git diff --check
 Not-tested: App tests not runnable because package.json is not present
 Publication-decision: local-commit
 Review: self-review, docs-only workflow change
-Ledger: docs/ai-workflow/runs/20260518-1751-git-publication-decision.md
+Ledger: docs/ai-workflow/runs/2026/05/18/20260518-1751-git-publication-decision.md
 ```
 
 ## PR Body Convention

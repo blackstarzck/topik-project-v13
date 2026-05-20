@@ -49,7 +49,7 @@
 ## Task 4: Verify
 
 **Files:**
-- Update: `docs/ai-workflow/runs/20260519-1116-ai-workflow-analysis.md`
+- Update: `docs/ai-workflow/runs/2026/05/19/20260519-1116-ai-workflow-analysis.md`
 
 - [ ] Run the self-test.
 - [ ] Run the workflow checker against intended changed files and a filled PR-body fixture.

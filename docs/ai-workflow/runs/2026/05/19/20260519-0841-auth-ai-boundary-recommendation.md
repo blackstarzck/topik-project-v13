@@ -23,14 +23,14 @@
   - `docs/prd.md`
   - `docs/spec.md`
   - `docs/ai-development-workflow.md`
-  - `docs/ai-workflow/runs/20260519-0834-serverless-dev-spec-recommendation.md`
+  - `docs/ai-workflow/runs/2026/05/19/20260519-0834-serverless-dev-spec-recommendation.md`
 - External docs consulted:
   - Context7 `/clerk/clerk-docs`
   - Context7 `/supabase/supabase`
   - Supabase MCP docs search for Auth, Next.js SSR, and RLS
   - Supabase changelog search for auth/database changes
 - Extracted requirements:
-  - TALKPIK AI needs learner profile, plan, language, goals, learning progress, writing drafts, feedback, subscriptions, admin user management, and AI tutor/problem generation surfaces.
+  - TALKPIK AI needs learner profile, plan, language, goals, learning progress, writing drafts, feedback, subscriptions, admin user management, and problem generation surfaces.
   - The current frontend target stack includes React, TypeScript, Zustand, and Ant Design.
   - The earlier serverless recommendation selected Next.js, Supabase/Postgres, and Vercel AI SDK as the baseline.
   - User clarified that problem generation and AI-related work will later be coordinated with another department.
@@ -49,15 +49,15 @@
 ## Active Files
 
 - Files expected to change:
-  - `docs/ai-workflow/runs/20260519-0841-auth-ai-boundary-recommendation.md`
+  - `docs/ai-workflow/runs/2026/05/19/20260519-0841-auth-ai-boundary-recommendation.md`
 - Files inspected:
   - `.codex/skills/using-superpowers/SKILL.md`
   - `docs/prd.md`
   - `docs/spec.md`
   - `docs/ai-development-workflow.md`
-  - `docs/ai-workflow/runs/20260519-0834-serverless-dev-spec-recommendation.md`
+  - `docs/ai-workflow/runs/2026/05/19/20260519-0834-serverless-dev-spec-recommendation.md`
 - Files changed:
-  - `docs/ai-workflow/runs/20260519-0841-auth-ai-boundary-recommendation.md`
+  - `docs/ai-workflow/runs/2026/05/19/20260519-0841-auth-ai-boundary-recommendation.md`
 - Files explicitly not to touch:
   - App source files, PRD, spec, and schema files.
 

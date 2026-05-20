@@ -68,7 +68,7 @@
   - `AGENTS.md`
   - `docs/ai-development-workflow.md`
   - `docs/ai-workflow/harness-and-skills.md`
-  - `docs/ai-workflow/runs/20260519-1338-local-skill-pack.md`
+  - `docs/ai-workflow/runs/2026/05/19/20260519-1338-local-skill-pack.md`
 - Files inspected:
   - `.codex/skills/using-superpowers/SKILL.md`
   - `.codex/skills/writing-skills/SKILL.md`
@@ -110,7 +110,7 @@
   - `scripts/ai-workflow-check.selftest.mjs`
   - `docs/ai-development-workflow.md`
   - `docs/ai-workflow/harness-and-skills.md`
-  - `docs/ai-workflow/runs/20260519-1338-local-skill-pack.md`
+  - `docs/ai-workflow/runs/2026/05/19/20260519-1338-local-skill-pack.md`
   - Local generated mirrors under `.codex/skills/*` and `.claude/skills/*` are present but ignored by git.
 - Files explicitly not to touch:
   - Product source files, package files, deployment settings, database files.

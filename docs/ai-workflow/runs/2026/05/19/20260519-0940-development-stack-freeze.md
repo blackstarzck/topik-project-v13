@@ -30,8 +30,8 @@
   - `docs/ant-design/README.md`
   - `docs/ant-design/00-source-map.md`
   - `docs/ant-design/08-theme-architecture.md`
-  - `docs/ai-workflow/runs/20260519-0834-serverless-dev-spec-recommendation.md`
-  - `docs/ai-workflow/runs/20260519-0841-auth-ai-boundary-recommendation.md`
+  - `docs/ai-workflow/runs/2026/05/19/20260519-0834-serverless-dev-spec-recommendation.md`
+  - `docs/ai-workflow/runs/2026/05/19/20260519-0841-auth-ai-boundary-recommendation.md`
 - External docs consulted:
   - Context7 `/vercel/next.js`
   - Context7 `/supabase/supabase`
@@ -42,7 +42,7 @@
   - The project is serverless.
   - It is currently pre-implementation, with no `src/` or `package.json`.
   - Target UI stack already includes React, TypeScript, Zustand, Ant Design, ConfigProvider, and Ant Design tokens.
-  - Product requires learner accounts, profiles, goals, progress, problem solving, writing drafts, feedback, vocabulary, mock exams, notices, subscription/admin surfaces, AI tutor, and generated problem workflows.
+  - Product requires learner accounts, profiles, goals, progress, problem solving, writing drafts, feedback, vocabulary, mock exams, notices, subscription/admin surfaces, and generated problem workflows.
   - Authentication should default to Supabase Auth unless B2B/SSO requirements make Clerk necessary.
   - AI/problem generation must be isolated behind service contracts for later collaboration with another department.
 - Doc conflicts:
@@ -74,7 +74,7 @@
   - `docs/development/ai-boundary.md`
   - `docs/development/deployment.md`
   - `docs/development/deferred-scope.md`
-  - `docs/ai-workflow/runs/20260519-0940-development-stack-freeze.md`
+  - `docs/ai-workflow/runs/2026/05/19/20260519-0940-development-stack-freeze.md`
 - Files inspected:
   - `.codex/skills/using-superpowers/SKILL.md`
   - `.codex/skills/gstack/document-generate/SKILL.md`
@@ -83,8 +83,8 @@
   - `docs/ant-design/README.md`
   - `docs/ant-design/00-source-map.md`
   - `docs/ant-design/08-theme-architecture.md`
-  - `docs/ai-workflow/runs/20260519-0834-serverless-dev-spec-recommendation.md`
-  - `docs/ai-workflow/runs/20260519-0841-auth-ai-boundary-recommendation.md`
+  - `docs/ai-workflow/runs/2026/05/19/20260519-0834-serverless-dev-spec-recommendation.md`
+  - `docs/ai-workflow/runs/2026/05/19/20260519-0841-auth-ai-boundary-recommendation.md`
 - Files changed:
   - `AGENTS.md`
   - `docs/ai-development-workflow.md`
@@ -95,7 +95,7 @@
   - `docs/development/ai-boundary.md`
   - `docs/development/deployment.md`
   - `docs/development/deferred-scope.md`
-  - `docs/ai-workflow/runs/20260519-0940-development-stack-freeze.md`
+  - `docs/ai-workflow/runs/2026/05/19/20260519-0940-development-stack-freeze.md`
 - Files explicitly not to touch:
   - Application source and package files, because implementation has not started.
 
