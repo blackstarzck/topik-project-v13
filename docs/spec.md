@@ -40,6 +40,7 @@ Read this file first, then select the smallest matching set.
 | --- | --- |
 | framework, package, dependency, library, UI stack, state, forms, validation, chart, test | `docs/development/stack.md` |
 | Supabase, database, auth, login, RLS, storage, profile, admin role, server key | `docs/development/backend-auth.md` |
+| table, column, schema, migration, DDL, RLS policy SQL, index | `docs/development/database-schema.md` |
 | Vercel, deploy, deployment, preview, production, environment variable, rollback, CI | `docs/development/deployment.md` |
 | billing, subscription, paywall, payment, Stripe, plan pricing | `docs/development/deferred-scope.md` |
 | page, route, navigation, user flow | `docs/sitemap.md`, `docs/ia.md`, `docs/flow/user-flow.md`, and matching `docs/IA/<page>/description.md` when page-specific |
@@ -244,6 +245,8 @@ Before creating app code:
   and package snapshot.
 - `docs/development/backend-auth.md` - Supabase, Auth, RLS, Storage, and Clerk
   decision.
+- `docs/development/database-schema.md` - Tier 1 MVP table spec, RLS policy
+  patterns, ER diagram, and migration index for `supabase/migrations/`.
 - `docs/development/deployment.md` - Vercel environments, build settings,
   deployment gates, and rollback.
 - `docs/development/deferred-scope.md` - billing and other deferred areas.
