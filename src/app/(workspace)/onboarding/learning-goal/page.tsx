@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
-import { PlaceholderPage } from "@/components/shared/PlaceholderPage";
+import { LearningGoalForm } from "@/components/learning/LearningGoalForm";
+import { getLearningGoal } from "@/lib/learning/server";
+import { requireUser } from "@/lib/auth/session";
 
 export const metadata: Metadata = { title: "학습 목표 설정 — TALKPIK" };
 
-export default function OnboardingLearningGoalPage() {
+export default async function OnboardingLearningGoalPage() {
+  const user = await requireUser();
+  const goal = await getLearningGoal(user.id);
   return (
-    <PlaceholderPage
-      iaCode="A-03"
-      title="학습 목표 설정"
-      phaseHint="첫 실행 온보딩 폼은 Phase 4에서 채워집니다."
-    />
+    <main style={{ maxWidth: 640, margin: "0 auto" }}>
+      <LearningGoalForm userId={user.id} defaultValues={goal} />
+    </main>
   );
 }
