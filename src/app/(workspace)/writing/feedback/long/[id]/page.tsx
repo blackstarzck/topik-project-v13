@@ -1,5 +1,12 @@
 import type { Metadata } from "next";
-import { PlaceholderPage } from "@/components/shared/PlaceholderPage";
+import { notFound, redirect } from "next/navigation";
+import { FeedbackPageContent } from "@/components/feedback/FeedbackPageContent";
+import { requireUser } from "@/lib/auth/session";
+import {
+  getFeedbackBundle,
+  getSubmission,
+} from "@/lib/writing/server";
+import { isLongForm, type QuestionNo } from "@/lib/writing/types";
 
 export const metadata: Metadata = { title: "장문 피드백 — TALKPIK" };
 
@@ -9,11 +16,21 @@ export default async function LongFeedbackPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  await requireUser();
+  const submission = await getSubmission(id);
+  if (!submission) notFound();
+  if (!isLongForm(submission.question_no as QuestionNo)) {
+    redirect(`/writing/feedback/short/${id}`);
+  }
+  const bundle =
+    submission.feedback_status === "complete"
+      ? await getFeedbackBundle(id)
+      : null;
   return (
-    <PlaceholderPage
-      iaCode="E-02"
-      title={`장문 피드백 (id=${id})`}
-      phaseHint="피드백 데이터 fetch + id format validation은 Phase 5에서 채워집니다."
+    <FeedbackPageContent
+      submission={submission}
+      bundle={bundle}
+      withSentences
     />
   );
 }

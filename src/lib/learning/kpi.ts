@@ -1,5 +1,12 @@
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
 import type { SupabaseServerClient } from "../supabase/server";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+const KST = "Asia/Seoul";
 
 /**
  * Dashboard KPI summary for Phase 4. Calculated entirely from tables that
@@ -18,23 +25,20 @@ export type DashboardKpi = {
   recentFeedback: null;
 };
 
-// Phase 4 simplification: system-timezone day math (no dayjs timezone
-// plugin). On Vercel production (UTC) "today" is UTC-day, not KST-day —
-// KST users in the 00:00–09:00 KST window may see off-by-one for
-// `todayAttempts` and `streakDays`. Plan §Risks (RUN-04 / R-TZ) records
-// this as accepted-for-Phase-4. Phase 5 follow-up: enable
-// dayjs/plugin/timezone with fixed `Asia/Seoul` and recompute bounds.
+// Phase 5 R-TZ resolution: all day math runs in Asia/Seoul. On Vercel UTC
+// the bounds still represent KST midnight → midnight, so attempts in the
+// 00:00–09:00 KST window are bucketed to the correct KST day.
 
 function startOfToday(): dayjs.Dayjs {
-  return dayjs().startOf("day");
+  return dayjs().tz(KST).startOf("day");
 }
 
 function endOfToday(): dayjs.Dayjs {
-  return dayjs().endOf("day");
+  return dayjs().tz(KST).endOf("day");
 }
 
 function dayKey(iso: string): string {
-  return dayjs(iso).format("YYYY-MM-DD");
+  return dayjs(iso).tz(KST).format("YYYY-MM-DD");
 }
 
 export async function getDashboardKpi(
@@ -91,7 +95,7 @@ export async function getDashboardKpi(
 export function computeExamDaysLeft(examDate: string | null): number | null {
   if (!examDate) return null;
   const today = startOfToday();
-  const exam = dayjs(examDate).startOf("day");
+  const exam = dayjs.tz(examDate, KST).startOf("day");
   const diff = exam.diff(today, "day");
   return diff >= 0 ? diff : null;
 }

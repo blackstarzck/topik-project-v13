@@ -8,15 +8,21 @@
  *
  *     pnpm dlx supabase gen types typescript --local > src/lib/supabase/types.ts
  *
- * Until Supabase CLI is wired into CI, this file is a hand-aligned snapshot
- * limited to tables Phase 2 + Phase 3 + Phase 4 (Learning Core) actually
- * touch: `profiles`, `learning_goals`, `problems`, `problem_assets`,
- * `problem_attempts`, `recommendation_runs`, `recommendation_items`.
- * Other tables (writing_drafts, writing_submissions, writing_feedback,
- * feedback_dimension_scores, sentence_feedback, comparison_reports,
- * library_items, study_events, export_files, admin_audit_logs) exist in the
- * database but are not typed here; add them as Phase 5/6 consume them or
- * regenerate via `pnpm dlx supabase gen types typescript --local`.
+ * Until Supabase CLI is wired into CI, this file is a hand-aligned snapshot.
+ * As of Phase 5 it covers: `profiles`, `learning_goals`, `problems`,
+ * `problem_assets`, `problem_attempts`, `recommendation_runs`,
+ * `recommendation_items` (Phase 2–4) + `writing_drafts`,
+ * `writing_submissions`, `writing_feedback`, `feedback_dimension_scores`,
+ * `sentence_feedback`, `comparison_reports` (Phase 5).
+ * Other tables (library_items, study_events, export_files,
+ * admin_audit_logs) exist in the database but are not typed here; add them
+ * as Phase 6 consumes them or regenerate via
+ * `pnpm dlx supabase gen types typescript --local`.
+ *
+ * Fallback evidence: Supabase CLI requires docker for local stack — host
+ * environment lacks docker, so this file is hand-aligned against the
+ * canonical migration SQL (`supabase/migrations/202605201205*.sql`). Phase 6
+ * CI shall regenerate via the CLI and diff against this snapshot.
  *
  * Schema vs TS gaps (acceptable — same as `supabase gen types` output):
  * - SQL `smallint check (... in (51,52,53,54))` becomes `number`, not the
@@ -409,6 +415,349 @@ export interface Database {
             columns: ["problem_id"];
             isOneToOne: false;
             referencedRelation: "problems";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      writing_drafts: {
+        Row: {
+          id: string;
+          user_id: string;
+          problem_id: string;
+          question_no: number;
+          answer_text: string | null;
+          answer_json: Json | null;
+          char_count: number | null;
+          autosave_status:
+            | "clean"
+            | "dirty"
+            | "syncing"
+            | "failed"
+            | "superseded";
+          last_saved_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          problem_id: string;
+          question_no: number;
+          answer_text?: string | null;
+          answer_json?: Json | null;
+          char_count?: number | null;
+          autosave_status?:
+            | "clean"
+            | "dirty"
+            | "syncing"
+            | "failed"
+            | "superseded";
+          last_saved_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          problem_id?: string;
+          question_no?: number;
+          answer_text?: string | null;
+          answer_json?: Json | null;
+          char_count?: number | null;
+          autosave_status?:
+            | "clean"
+            | "dirty"
+            | "syncing"
+            | "failed"
+            | "superseded";
+          last_saved_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "writing_drafts_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "writing_drafts_problem_id_fkey";
+            columns: ["problem_id"];
+            isOneToOne: false;
+            referencedRelation: "problems";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      writing_submissions: {
+        Row: {
+          id: string;
+          user_id: string;
+          problem_id: string;
+          draft_id: string | null;
+          question_no: number;
+          answer_text: string;
+          answer_json: Json | null;
+          char_count: number;
+          submitted_at: string;
+          feedback_status: "pending" | "analyzing" | "complete" | "failed";
+          parent_submission_id: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          problem_id: string;
+          draft_id?: string | null;
+          question_no: number;
+          answer_text: string;
+          answer_json?: Json | null;
+          char_count: number;
+          submitted_at?: string;
+          feedback_status?:
+            | "pending"
+            | "analyzing"
+            | "complete"
+            | "failed";
+          parent_submission_id?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          problem_id?: string;
+          draft_id?: string | null;
+          question_no?: number;
+          answer_text?: string;
+          answer_json?: Json | null;
+          char_count?: number;
+          submitted_at?: string;
+          feedback_status?:
+            | "pending"
+            | "analyzing"
+            | "complete"
+            | "failed";
+          parent_submission_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "writing_submissions_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "writing_submissions_problem_id_fkey";
+            columns: ["problem_id"];
+            isOneToOne: false;
+            referencedRelation: "problems";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "writing_submissions_draft_id_fkey";
+            columns: ["draft_id"];
+            isOneToOne: false;
+            referencedRelation: "writing_drafts";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      writing_feedback: {
+        Row: {
+          submission_id: string;
+          user_id: string;
+          status: "partial" | "complete" | "failed";
+          score_total: number | null;
+          score_max: number | null;
+          overall_summary: string | null;
+          ai_model: string | null;
+          ai_model_version: string | null;
+          raw_ai_result: Json | null;
+          generated_at: string;
+        };
+        Insert: {
+          submission_id: string;
+          user_id: string;
+          status?: "partial" | "complete" | "failed";
+          score_total?: number | null;
+          score_max?: number | null;
+          overall_summary?: string | null;
+          ai_model?: string | null;
+          ai_model_version?: string | null;
+          raw_ai_result?: Json | null;
+          generated_at?: string;
+        };
+        Update: {
+          submission_id?: string;
+          user_id?: string;
+          status?: "partial" | "complete" | "failed";
+          score_total?: number | null;
+          score_max?: number | null;
+          overall_summary?: string | null;
+          ai_model?: string | null;
+          ai_model_version?: string | null;
+          raw_ai_result?: Json | null;
+          generated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "writing_feedback_submission_id_fkey";
+            columns: ["submission_id"];
+            isOneToOne: true;
+            referencedRelation: "writing_submissions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "writing_feedback_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      feedback_dimension_scores: {
+        Row: {
+          id: string;
+          submission_id: string;
+          user_id: string;
+          dimension:
+            | "grammar"
+            | "vocab"
+            | "structure"
+            | "content"
+            | "expression"
+            | "topic_fit";
+          score: number | null;
+          score_max: number | null;
+          summary: string | null;
+          weakness_level: number | null;
+        };
+        Insert: {
+          id?: string;
+          submission_id: string;
+          user_id: string;
+          dimension:
+            | "grammar"
+            | "vocab"
+            | "structure"
+            | "content"
+            | "expression"
+            | "topic_fit";
+          score?: number | null;
+          score_max?: number | null;
+          summary?: string | null;
+          weakness_level?: number | null;
+        };
+        Update: {
+          id?: string;
+          submission_id?: string;
+          user_id?: string;
+          dimension?:
+            | "grammar"
+            | "vocab"
+            | "structure"
+            | "content"
+            | "expression"
+            | "topic_fit";
+          score?: number | null;
+          score_max?: number | null;
+          summary?: string | null;
+          weakness_level?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "feedback_dimension_scores_submission_id_fkey";
+            columns: ["submission_id"];
+            isOneToOne: false;
+            referencedRelation: "writing_submissions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      sentence_feedback: {
+        Row: {
+          id: string;
+          submission_id: string;
+          user_id: string;
+          sentence_index: number;
+          original_text: string | null;
+          corrected_text: string | null;
+          comment: string | null;
+        };
+        Insert: {
+          id?: string;
+          submission_id: string;
+          user_id: string;
+          sentence_index: number;
+          original_text?: string | null;
+          corrected_text?: string | null;
+          comment?: string | null;
+        };
+        Update: {
+          id?: string;
+          submission_id?: string;
+          user_id?: string;
+          sentence_index?: number;
+          original_text?: string | null;
+          corrected_text?: string | null;
+          comment?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "sentence_feedback_submission_id_fkey";
+            columns: ["submission_id"];
+            isOneToOne: false;
+            referencedRelation: "writing_submissions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      comparison_reports: {
+        Row: {
+          id: string;
+          user_id: string;
+          current_submission_id: string;
+          previous_submission_id: string | null;
+          metrics: Json;
+          narrative: string | null;
+          ai_model: string | null;
+          generated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          current_submission_id: string;
+          previous_submission_id?: string | null;
+          metrics: Json;
+          narrative?: string | null;
+          ai_model?: string | null;
+          generated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          current_submission_id?: string;
+          previous_submission_id?: string | null;
+          metrics?: Json;
+          narrative?: string | null;
+          ai_model?: string | null;
+          generated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "comparison_reports_current_submission_id_fkey";
+            columns: ["current_submission_id"];
+            isOneToOne: false;
+            referencedRelation: "writing_submissions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "comparison_reports_previous_submission_id_fkey";
+            columns: ["previous_submission_id"];
+            isOneToOne: false;
+            referencedRelation: "writing_submissions";
             referencedColumns: ["id"];
           },
         ];
