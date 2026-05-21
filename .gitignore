@@ -72,6 +72,7 @@ coverage/
 .cache/
 .turbo/
 .vite/
+*.tsbuildinfo
 
 # Environment, credentials, and local secrets
 .env

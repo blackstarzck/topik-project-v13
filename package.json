@@ -16,6 +16,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "test:supabase:local": "cross-env SUPABASE_LOCAL_STACK=1 vitest run tests/integration/profile-trigger.test.ts tests/integration/rls-smoke.test.ts",
     "format": "prettier --check .",
     "format:write": "prettier --write ."
   },
@@ -41,6 +42,7 @@
     "@types/node": "^25.9.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "cross-env": "^7.0.3",
     "eslint": "^9.39.4",
     "eslint-config-next": "^16.2.6",
     "playwright": "^1.60.0",

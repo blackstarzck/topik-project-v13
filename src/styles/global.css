@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--app-color-bg-layout);
+  color: var(--app-color-text);
+  font-family: var(--app-font-family);
+}
+
+.app-theme-bridge {
+  min-height: 100vh;
+}
+
+.app-page {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 32px;
+}
+
+.app-welcome {
+  width: min(100%, 680px);
+  border: 1px solid var(--app-color-border);
+  border-radius: var(--app-radius);
+  background: var(--app-color-bg-container);
+  box-shadow: var(--app-shadow-elevated);
+  padding: 32px;
+}
+
+.app-kicker {
+  margin: 0 0 8px;
+  color: var(--app-color-primary);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.app-welcome h1 {
+  margin: 0;
+  font-size: 32px;
+  line-height: 1.25;
+}
+
+.app-welcome p:last-child {
+  margin: 16px 0 0;
+  color: var(--app-color-text-secondary);
+  font-size: 16px;
+  line-height: 1.7;
+}

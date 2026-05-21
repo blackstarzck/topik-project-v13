@@ -32,7 +32,7 @@ Use [README.md](README.md) and [docs/README.md](docs/README.md) for human-friend
 - No production code before a failing test, unless the task is docs-only, config-only, generated artifacts, or the project has no runnable test surface. Record the exception before editing.
 - For non-trivial implementation plans, run the required review gate before code changes.
 - For UI or user-facing flows, run design review before implementation and browser/visual QA before completion.
-- Fallbacks do not weaken quality gates. Follow the fallback protocol in [docs/ai-development-workflow.md](docs/ai-development-workflow.md).
+- Fallbacks do not weaken quality gates. Follow the fallback protocol in [docs/ai-workflow/fallback-and-recovery.md](docs/ai-workflow/fallback-and-recovery.md).
 - Fail closed for doc conflicts, missing approval, destructive actions, secret exposure risk, and security uncertainty.
 
 ## Objectivity And Assumptions
@@ -59,7 +59,7 @@ Use [README.md](README.md) and [docs/README.md](docs/README.md) for human-friend
 - Tiny docs/config/non-behavioral edits may skip the ledger only when there is no multi-agent work, no behavior change, no doc conflict, and no resume risk. State the exception in the final report.
 - In multi-agent work, the main session is the coordinator and durable context owner.
 - Child agents execute bounded slices only. They must not redefine product scope or rely on private context that is not reported back.
-- Use [docs/ai-workflow/agent-packets.md](docs/ai-workflow/agent-packets.md) for task packets and result packets.
+- Use [docs/ai-workflow/agent-packets.md](docs/ai-workflow/agent-packets.md) for task packets and result packets. Multi-agent / ledger / resume rules: [docs/ai-workflow/context-and-packets.md](docs/ai-workflow/context-and-packets.md).
 - Before completion, compare the ledger with current file state, child result packets, and verification output.
 
 ## Completion Gate
@@ -78,6 +78,11 @@ An AI agent may not claim done until all of these are true:
 ## Detailed References
 
 - AI document router: [docs/agent-index.md](docs/agent-index.md)
-- Full AI workflow: [docs/ai-development-workflow.md](docs/ai-development-workflow.md)
+- AI workflow entry point: [docs/ai-development-workflow.md](docs/ai-development-workflow.md)
+- Workflow sub-docs:
+  - Planning + Light Spec contract: [docs/ai-workflow/planning-contracts.md](docs/ai-workflow/planning-contracts.md)
+  - Ledger + multi-agent packets + resume: [docs/ai-workflow/context-and-packets.md](docs/ai-workflow/context-and-packets.md)
+  - Review gates (TDD / cross-model / plan-PASS / architecture / QA / finish): [docs/ai-workflow/review-gates.md](docs/ai-workflow/review-gates.md)
+  - Failure classes + fallback matrix: [docs/ai-workflow/fallback-and-recovery.md](docs/ai-workflow/fallback-and-recovery.md)
 - Harness and skill details: [docs/ai-workflow/harness-and-skills.md](docs/ai-workflow/harness-and-skills.md)
 - Human docs map: [docs/README.md](docs/README.md)

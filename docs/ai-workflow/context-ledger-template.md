@@ -59,6 +59,9 @@ Append each result packet or link to where it is recorded.
 - Latest results:
 - Known failures:
 - Skipped checks and reason:
+- Cross-model review: <reviewer name (e.g. "codex (gstack)"), or "degraded — <reason>" if unavailable>
+- Architecture Pass: <passed | failed | skipped — <reason>>  # required when ledger Status reaches `complete` for a phase
+- Light Spec: <docs/ai-workflow/light-specs/phase-{n}-{slug}.md>  # required when this ledger belongs to a phase (filename contains `phase-N` or body has `Phase: ...`)
 
 ## Fallback State
 

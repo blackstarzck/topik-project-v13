@@ -24,8 +24,9 @@ flowchart TD
 | `ROOT-00` | Human project map | [../README.md](../README.md) | Human-friendly project overview |
 | `DOCS-00` | Docs map | [README.md](README.md) | Human + AI navigation across `docs/` |
 | `AGENT-00` | AI routing | [agent-index.md](agent-index.md) | Required AI document selection |
-| `FLOW-00` | AI workflow | [ai-development-workflow.md](ai-development-workflow.md) | Mandatory execution workflow |
-| `WF-00` | AI workflow folder | [ai-workflow/README.md](ai-workflow/README.md) | Ledgers, reports, packets, plans |
+| `FLOW-00` | AI workflow entry | [ai-development-workflow.md](ai-development-workflow.md) | Entry point — 88-line index that links sub-docs |
+| `WF-00` | Workflow sub-docs | [ai-workflow/planning-contracts.md](ai-workflow/planning-contracts.md), [ai-workflow/context-and-packets.md](ai-workflow/context-and-packets.md), [ai-workflow/review-gates.md](ai-workflow/review-gates.md), [ai-workflow/fallback-and-recovery.md](ai-workflow/fallback-and-recovery.md) | Planning · ledger/packets · review gates · fallback matrix |
+| `WF-10` | Ledger/report templates | [ai-workflow/README.md](ai-workflow/README.md) | Ledgers, reports, packets, plans (folder map + templates) |
 | `HARNESS-00` | Harness and skills | [ai-workflow/harness-and-skills.md](ai-workflow/harness-and-skills.md) | TALKPIK, practical skills, GStack, Superpowers, host-specific skill names |
 | `PRODUCT-00` | Product requirements | [prd.md](prd.md) | Product scope, users, value, business rules |
 | `SPEC-00` | Implementation spec | [spec.md](spec.md) | Development baseline, behavior, validation, framework, backend, auth, AI boundary, deployment |

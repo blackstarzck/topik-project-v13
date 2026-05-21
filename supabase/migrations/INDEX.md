@@ -45,6 +45,14 @@
 
 근거 ledger: 동일 ledger의 `Round-2 (마이그레이션 보강)` 섹션
 
+#### 21 (수) — Phase 2 auth bootstrap trigger
+
+| # | timestamp | 파일 | 영역 |
+| ---:| --- | --- | --- |
+| 17 | `12:00:00` | [`20260521120000_auth_user_profile_bootstrap.sql`](./20260521120000_auth_user_profile_bootstrap.sql) | `auth.users → public.profiles` INSERT 트리거 (`121100:46` 주석의 self-inconsistency 해소) |
+
+근거 ledger: [`../../docs/ai-workflow/runs/2026/05/20/20260520-1800-phase-2-data-and-auth-foundation.md`](../../docs/ai-workflow/runs/2026/05/20/20260520-1800-phase-2-data-and-auth-foundation.md)
+
 ---
 
 ## 새 마이그레이션을 추가할 때
