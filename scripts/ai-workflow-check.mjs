@@ -65,6 +65,44 @@ const LIGHT_SPEC_SKIPPED_PATTERN = /^skipped\s*[—\-]\s*\S.*$/i;
 // "Y — reason" or "N — reason" (em-dash or hyphen, non-empty reason after)
 const SUBAGENT_CELL_PATTERN = /^[YN]\s*[—\-]\s*\S/;
 
+// Audience field: either inline "Audience: user · admin · both" (new standard)
+// or a "## Audience" section header (allowed for existing non-standard light specs).
+// See docs/ai-workflow/planning-contracts.md §1b.
+const AUDIENCE_FIELD_PATTERN = /^Audience:\s*\S+/im;
+const AUDIENCE_SECTION_PATTERN = /^##\s+Audience\s*$/im;
+
+// UI change detection patterns (UX/UI Consistency Pass — PR B).
+// If any changed file matches one of these (and not all changes are test-only),
+// the PR must produce a ledger with the 4-line UX/UI Consistency Pass evidence.
+// See docs/ai-workflow/review-gates.md §UX/UI Consistency Pass.
+const UI_CHANGE_PATTERNS = [
+  /^src\/app\//,
+  /^src\/components\//,
+  /^src\/features\//,
+  /^src\/lib\/ui\//,
+  /^src\/styles\//,
+  /\.css$/,
+  /\.scss$/,
+  /globals\.css$/i,
+  /theme/i,
+  /^tailwind\.config\./,
+  /^postcss\.config\./,
+  /^public\/icons\//,
+  /^public\/images\//,
+];
+const UI_TEST_ONLY_PATTERNS = [
+  /\.test\./,
+  /\.spec\./,
+  /\/__tests__\//,
+];
+const UXUI_PARENT_PATTERN = /^-\s+UX\/UI Consistency Pass:(.*)$/im;
+const UXUI_CHILD_PATTERNS = {
+  Tokens: /^\s*-\s+Tokens:(.*)$/im,
+  Components: /^\s*-\s+Components:(.*)$/im,
+  A11y: /^\s*-\s+A11y:(.*)$/im,
+  Responsive: /^\s*-\s+Responsive:(.*)$/im,
+};
+
 const IMPLEMENTATION_OR_WORKFLOW_PATTERNS = [
   /^scripts\//,
   /^\.github\//,
@@ -221,6 +259,26 @@ export function checkLedgerReviewer(text) {
   return okResult(errors);
 }
 
+export function checkUxuiConsistencyPass(text) {
+  const errors = [];
+  const parentMatch = text.match(UXUI_PARENT_PATTERN);
+  if (!parentMatch || !parentMatch[1] || parentMatch[1].trim().length === 0) {
+    errors.push(
+      "ledger missing 'UX/UI Consistency Pass:' parent field with non-empty value (required when changed files match UI patterns — see docs/ai-workflow/review-gates.md §UX/UI Consistency Pass)",
+    );
+    return okResult(errors);
+  }
+  for (const [name, pattern] of Object.entries(UXUI_CHILD_PATTERNS)) {
+    const m = text.match(pattern);
+    if (!m || !m[1] || m[1].trim().length === 0) {
+      errors.push(
+        `ledger UX/UI Consistency Pass missing '${name}:' sub-field with non-empty value`,
+      );
+    }
+  }
+  return okResult(errors);
+}
+
 export function checkLedgerArchitecturePass(text, phaseComplete = false) {
   const errors = [];
   if (phaseComplete) {
@@ -280,7 +338,22 @@ export async function checkLightSpecPresence(root, ledgerText, ledgerPath = "") 
   const exists = await fileExists(root, normalizedValue);
   if (!exists) {
     errors.push(`light spec file does not exist: ${normalizedValue}`);
+    return okResult(errors);
   }
+
+  // Audience field/section check (PR A extension):
+  // Every phase-scoped Light Spec must declare its audience so child agents
+  // and the Architecture Pass can verify the user/admin boundary.
+  const lsBody = await readFile(join(root, normalizedValue), "utf8");
+  if (
+    !AUDIENCE_FIELD_PATTERN.test(lsBody) &&
+    !AUDIENCE_SECTION_PATTERN.test(lsBody)
+  ) {
+    errors.push(
+      `light spec ${normalizedValue} missing required Audience — add "Audience: user · admin · both" inside Domain Boundary section OR a separate "## Audience" section (see docs/ai-workflow/planning-contracts.md §1b)`,
+    );
+  }
+
   return okResult(errors);
 }
 
@@ -466,6 +539,18 @@ function needsLedger(changedFiles) {
   });
 }
 
+// UI changes detected? returns true when at least one non-test file matches
+// a UI_CHANGE_PATTERN. PRs where ALL changed files are test-only are exempt.
+function needsUxuiConsistencyPass(changedFiles) {
+  const nonTestFiles = changedFiles.filter(
+    (file) =>
+      !UI_TEST_ONLY_PATTERNS.some((p) => p.test(normalizePathForCheck(file))),
+  );
+  return nonTestFiles.some((file) =>
+    UI_CHANGE_PATTERNS.some((p) => p.test(normalizePathForCheck(file))),
+  );
+}
+
 export async function checkRepositoryState({
   root = process.cwd(),
   changedFiles,
@@ -510,6 +595,30 @@ export async function checkRepositoryState({
       errors.push(
         "implementation/config workflow changes require a run ledger in docs/ai-workflow/runs/YYYY/MM/DD/",
       );
+    }
+  }
+
+  // UX/UI Consistency Pass — required when changed files match UI patterns
+  // and not all changes are test-only. At least one changed ledger must
+  // carry the 4-line evidence structure (parent + Tokens/Components/A11y/Responsive).
+  if (needsUxuiConsistencyPass(files) && changedLedgers.length > 0) {
+    let foundValidUxui = false;
+    const uxuiErrors = [];
+    for (const ledger of changedLedgers) {
+      if (!(await fileExists(resolvedRoot, ledger))) continue;
+      const lContent = await readFile(join(resolvedRoot, ledger), "utf8");
+      const ux = checkUxuiConsistencyPass(lContent);
+      if (ux.ok) {
+        foundValidUxui = true;
+        break;
+      }
+      for (const e of ux.errors) uxuiErrors.push(`${ledger}: ${e}`);
+    }
+    if (!foundValidUxui) {
+      errors.push(
+        "UI changes detected — at least one changed ledger must include valid UX/UI Consistency Pass evidence (parent field + Tokens/Components/A11y/Responsive sub-fields, all non-empty). See docs/ai-workflow/review-gates.md §UX/UI Consistency Pass",
+      );
+      for (const e of uxuiErrors) errors.push(e);
     }
   }
 
@@ -654,6 +763,13 @@ export const internals = {
   REQUIRED_LORE_TRAILERS,
   REQUIRED_LEDGER_SECTIONS,
   REQUIRED_PLAN_SECTIONS,
+  AUDIENCE_FIELD_PATTERN,
+  AUDIENCE_SECTION_PATTERN,
+  UI_CHANGE_PATTERNS,
+  UI_TEST_ONLY_PATTERNS,
+  UXUI_PARENT_PATTERN,
+  UXUI_CHILD_PATTERNS,
   needsLedger,
+  needsUxuiConsistencyPass,
   sectionContent,
 };

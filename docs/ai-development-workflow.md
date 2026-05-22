@@ -39,10 +39,20 @@ flowchart TD
 | Tiny docs/config, no behavior change | Lightweight Path below | this file §Lightweight |
 | Bug fix | `systematic-debugging` → TDD | [`review-gates.md`](ai-workflow/review-gates.md) |
 | Feature / behavior change | `writing-plans` → TDD → review gates | [`planning-contracts.md`](ai-workflow/planning-contracts.md), [`review-gates.md`](ai-workflow/review-gates.md) |
-| UI / user flow | `writing-plans` + design review → TDD → QA | same as above + design review |
+| UI / user flow | `writing-plans` + design review → TDD → UX/UI Consistency Pass → audience별 QA | same as above + design review; Audience rules 아래 참조; [`review-gates.md#uxui-consistency-pass`](ai-workflow/review-gates.md#uxui-consistency-pass) |
 | Net-new scope or doc pivot | `office-hours` + `brainstorming` → docs update proposal OR approved brief | [`planning-contracts.md`](ai-workflow/planning-contracts.md) |
 | Conflict with active docs | Stop. Report conflict with exact references. Do not implement. | this file §Mandatory Startup |
 | Multi-agent / phase work | Plan + Light Spec + Ledger + cross-model review | [`planning-contracts.md`](ai-workflow/planning-contracts.md), [`context-and-packets.md`](ai-workflow/context-and-packets.md) |
+
+### Audience rules (UI / user-flow 차선 + 모든 phase 작업에 적용)
+
+UI · 사용자 흐름 · phase 단위 작업은 시작 시점에 audience를 명시해야 한다. Audience 분류는 UI/권한 분기 한정 — 비대화형 시스템 작업(`cron`, `system`, `external partner` 등)은 별도 축으로 추후 도입한다.
+
+- **`user`**: 일반 사용자 화면. RLS는 `auth.uid()` 기반 자기 row 한정.
+- **`admin`**: 관리자 화면. `requirePlatformAdmin / requireContentAdmin / requireOrgAdmin` 같은 페이지 가드 의무 + 모든 권한 변경/발행 토글은 `admin_audit_logs` 기록 의무.
+- **`both`**: user/admin이 같은 phase에 들어감. user/admin **task를 각각의 행으로 분리**해 plan task table에 적고, 각 행에 자체 audience 명시. Light Spec에 user/admin 분기 폴더 경계(예: `src/app/admin/...` vs `src/app/library/...`)를 한 줄씩 명시.
+
+audience 명시·검증 지점: [`planning-contracts.md`](ai-workflow/planning-contracts.md) Light Spec Domain Boundary + task table audience 열, [`agent-packets.md`](ai-workflow/agent-packets.md) Task/Result Packet audience 필드, [`review-gates.md#architecture-pass`](ai-workflow/review-gates.md#architecture-pass) audience 경계 항목, [`fallback-and-recovery.md`](ai-workflow/fallback-and-recovery.md) audience-mismatch fail-closed.
 
 ## Core Invariants
 
@@ -52,6 +62,7 @@ These are mandatory for any non-lightweight change. **The linked sub-doc is the 
 - **Cross-model review is mandatory** for every code change and every non-trivial plan or doc change. When only one model is available, record `Cross-model review: degraded — <reason>` in the ledger. [`review-gates.md#cross-model-review`](ai-workflow/review-gates.md#cross-model-review).
 - **Plan-Review PASS Gate** — if a pre-implementation review (`plan-eng-review`, `codex consult`, etc) returns FAIL, revise the plan AND re-run the same review until PASS or until each remaining concern is recorded as "accepted with reason" in the ledger. [`review-gates.md#plan-review-pass-gate`](ai-workflow/review-gates.md).
 - **Architecture Pass** at phase completion: route handlers have no leaked business logic, folder/name boundaries match `docs/domain-glossary.md`, no single concept is implemented in two places. [`review-gates.md#architecture-pass`](ai-workflow/review-gates.md).
+- **UX/UI Consistency Pass** when changed files match UI patterns (`src/app/**`, `src/components/**`, `src/features/**`, `src/lib/ui/**`, `src/styles/**`, `*.css`, `theme*`, etc.). 4-line evidence(Tokens · Components · A11y · Responsive) in ledger, machine-checked. Test-only changes auto-exempt. [`review-gates.md#uxui-consistency-pass`](ai-workflow/review-gates.md).
 - **Light Spec + Out of Scope + Smallest Buildable Unit + Subagent-eligible column** are mandatory plan/light-spec sections, machine-checked by `scripts/ai-workflow-check.mjs`. [`planning-contracts.md`](ai-workflow/planning-contracts.md).
 - **Context ledger** is required for any non-trivial work (multi-file, implementation, UI/route/auth/database/API/dependency/test-strategy/AI-boundary change, multi-agent work, work likely to resume across sessions, **or any change to workflow-governing files — `AGENTS.md`, `CLAUDE.md`, `docs/agent-index.md`, `docs/ai-development-workflow.md`, files under `docs/ai-workflow/`, `scripts/`, `.github/`**). [`context-and-packets.md`](ai-workflow/context-and-packets.md).
 - **Fallback Protocol** — fallback never weakens a quality gate. Classify failures (fail-closed, degraded-mode, recover, retry-once, reassign) and record evidence in the ledger. [`fallback-and-recovery.md`](ai-workflow/fallback-and-recovery.md).

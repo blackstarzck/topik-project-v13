@@ -81,6 +81,17 @@ Tier 1 MVP의 나머지 sitemap-active routes(Admin × 3, Library + Export, Weak
 - `/practice/problems`의 retry modal (C-03 hosted)
 - `/settings/language` (G-01), `/settings/notifications` (X-09), `/profile` (X-05)
 
+## Audience
+
+`Audience: both` — user-facing (Library × 4 tabs, Weakness, Next problem, Retry modal, Settings × 3, Profile) + admin (H-01 content admin, X-08 org admin, X-10 platform admin).
+
+> Light Spec 표준 6섹션을 따르지 않는 phase ledger이므로 `Audience`를 별도 섹션으로 둠. 표준 6섹션을 따르는 신규 light spec은 [`planning-contracts.md`](../planning-contracts.md)의 Domain Boundary 안에 한 줄로 명시 (별도 섹션 허용 규칙 동일 문서 참조).
+
+- **User-facing 경계**: `src/app/library/...`, `src/app/practice/...`, `src/app/settings/...`, `src/app/profile/...`, `src/lib/library/`, `src/lib/settings/`, `src/lib/profile/`. RLS는 자기 row만(`auth.uid()`).
+- **Admin 경계**: `src/app/admin/{problems,org,users}/...`, `src/lib/admin/{server,queries,mutations,server-actions,types}.ts`, `src/lib/auth/admin-guard.ts`. RLS는 `private.is_{content,org,platform}_admin(uid)` 기반.
+- **경계 강제**: admin 라우트 진입에는 `requirePlatformAdmin / requireContentAdmin / requireOrgAdmin` 페이지 가드 의무. content_admin → platform_admin 권한 상승 금지(role change RPC 내부에서 정책 강제). 모든 admin role change/publish toggle은 `admin_audit_logs`에 기록.
+- **분기 검증**: `Architecture Pass`에서 user/admin 양쪽 폴더 boundary 각각 확인. 위험 패턴은 **admin RPC / SECURITY DEFINER 함수 / service role 호출이 user 라우트 코드 경로에서 직접 호출되거나, admin 라우트에서 페이지 가드(`requirePlatformAdmin/requireContentAdmin/requireOrgAdmin`)가 누락된 상태**다. user 폴더에 admin 권한 코드가 들어가 있어도 위 호출 경로가 없으면 무해하고, 반대로 admin 폴더라도 가드가 누락되면 RLS 우회. → 즉시 가드 추가/분리.
+
 ## State Model (light)
 
 - TanStack Query mutations: `useToggleProblemPublish`, `useChangeUserRole`, `useSaveLibraryItem`, `useDeleteLibraryItem`, `useUpdateProfile`, `useUpdateLocale`, `useUpdateNotificationPrefs`

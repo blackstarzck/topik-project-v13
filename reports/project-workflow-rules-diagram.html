@@ -1,0 +1,525 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>이 프로젝트의 AI 작업 규칙 — Mermaid 다이어그램</title>
+  <style>
+    :root {
+      --bg: #f6f7fa;
+      --panel: #ffffff;
+      --ink: #1d2733;
+      --muted: #6a7787;
+      --line: #e2e6ec;
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Noto Sans KR", "Apple SD Gothic Neo", Arial, sans-serif;
+      line-height: 1.65;
+      font-size: 16px;
+    }
+    header {
+      background: linear-gradient(135deg, #1d2733 0%, #2a3a4d 100%);
+      color: #fff;
+      padding: 44px 24px 36px;
+    }
+    h1 { margin: 0; font-size: clamp(24px, 3.4vw, 34px); line-height: 1.3; max-width: 880px; }
+    .lead { max-width: 820px; margin-top: 12px; color: #d8e3ef; font-size: 16px; }
+    main { max-width: 1180px; margin: 0 auto; padding: 28px 20px 56px; }
+    h2 { margin: 36px 0 0; font-size: 22px; }
+    h3 { margin: 8px 0 0; font-size: 16px; line-height: 1.4; }
+    p  { margin: 6px 0 0; }
+    .sub { color: var(--muted); font-size: 14px; margin-top: 6px; max-width: 760px; }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .legend .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 11px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-size: 13px;
+    }
+    .sw {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      display: inline-block;
+      border: 1px solid rgba(0,0,0,.1);
+    }
+
+    /* Mermaid 컨테이너 */
+    .diagram {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px 14px;
+      margin-top: 12px;
+      overflow-x: auto;
+    }
+    .diagram .mermaid {
+      text-align: center;
+      min-width: 700px;
+    }
+    .caption {
+      margin-top: 8px;
+      font-size: 13px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    /* 5대 원칙 — 가로 카드 */
+    .principles {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .principles .p {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-top: 5px solid #dc2626;
+      border-radius: 10px;
+      padding: 14px 12px;
+      text-align: center;
+    }
+    .principles .p .n {
+      display: inline-flex;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #dc2626;
+      color: #fff;
+      font-weight: 800;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+    .principles .p .t {
+      font-size: 13.5px;
+      line-height: 1.45;
+    }
+
+    /* 용어집 — 압축 */
+    .glossary {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px 18px;
+      margin-top: 12px;
+      background: #fafbfc;
+      border: 1px dashed var(--line);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+    }
+    .glossary .term {
+      font-size: 13.5px;
+      padding: 4px 0;
+    }
+    .glossary .term b { display: block; color: var(--ink); }
+    .glossary .term span { color: var(--muted); }
+
+    .meta-row {
+      margin-top: 18px;
+      font-size: 12.5px;
+      color: var(--muted);
+    }
+
+    code {
+      padding: 1px 5px;
+      border-radius: 4px;
+      background: #eef2f6;
+      color: #24313d;
+      font-family: "Cascadia Mono", Consolas, monospace;
+      font-size: .9em;
+    }
+
+    @media (max-width: 900px) {
+      .principles { grid-template-columns: 1fr 1fr; }
+      .glossary { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>이 프로젝트의 AI 작업 규칙 — Mermaid 다이어그램 3장</h1>
+    <p class="lead">전체 흐름 한 장 + 다른 AI 검토 한 장 + 막혔을 때 한 장. 텍스트는 보조 캡션만, 정보는 그림이 담당합니다.</p>
+  </header>
+
+  <main>
+
+    <section>
+      <h2>색이 뭘 가리키는지</h2>
+      <div class="legend">
+        <span class="chip"><span class="sw" style="background:#eaf3fb;border-color:#2563eb"></span> 일반 단계</span>
+        <span class="chip"><span class="sw" style="background:#fff7e6;border-color:#d97706"></span> 결정 / 분기</span>
+        <span class="chip"><span class="sw" style="background:#fdebea;border-color:#dc2626"></span> 즉시 중단</span>
+        <span class="chip"><span class="sw" style="background:#ecfdf3;border-color:#16a34a"></span> 통과 관문</span>
+        <span class="chip"><span class="sw" style="background:#f3eefa;border-color:#7c3aed"></span> 자동 점검 / 사용자 결정</span>
+      </div>
+    </section>
+
+    <!-- 다이어그램 1: 전체 흐름 -->
+    <section>
+      <h2>① 전체 워크플로 (작업 시작 → 마무리)</h2>
+      <p class="sub">모든 AI 작업은 위에서 아래로 이 흐름을 따라야 합니다. 가벼움 차선만 일부 단계 건너뜀.</p>
+      <div class="diagram">
+        <pre class="mermaid">
+flowchart TD
+  Start([작업 시작]):::start --> SP[1. using-superpowers 호출]
+  SP --> AI[2. agent-index 읽기]
+  AI --> CLS[3. 목적 분류 +<br/>필요 문서 선별]
+  CLS --> REC[4. Docs consulted 기록]
+
+  REC --> D1{현행 문서에<br/>들어가나?}:::dec
+  D1 -- 충돌 --> STOP1[즉시 중단<br/>사용자 보고]:::stop
+  D1 -- 새 영역 --> OH[office-hours +<br/>brainstorming]
+  OH --> APPR{사용자<br/>승인?}:::dec
+  APPR -- No --> STOP2[중단]:::stop
+  APPR -- Yes --> D2
+  D1 -- 들어감 --> D2
+
+  D2{어떤 차선?}:::dec
+  D2 -- 가벼움 --> LT[Lightweight path]:::light
+  D2 -- 버그 --> L_BUG[systematic-debugging]
+  D2 -- 새 기능 --> L_FEAT[writing-plans]
+  D2 -- UI/플로우 --> L_UI[writing-plans +<br/>design review]
+  D2 -- Phase 단위 --> L_PH[Light Spec 6섹션 +<br/>Plan + Ledger<br/>→ ④ 멀티 에이전트]
+
+  LT --> VLIGHT[좁은 검증<br/>lint/typecheck]:::gate
+  VLIGHT --> FIN
+
+  L_BUG --> LEDG[5. 작업 일지 작성<br/>3개 필수 섹션]
+  L_FEAT --> LEDG
+  L_UI --> LEDG
+  L_PH --> LEDG
+
+  LEDG --> PLAN[6. 계획서 작성<br/>Out of Scope +<br/>Smallest Buildable Unit]
+  PLAN --> PR{계획 사전 검토<br/>PASS?}:::dec
+  PR -- FAIL --> REV[모든 층 수정<br/>요약·표·세부·검증]
+  REV --> PR
+  PR -- PASS --> TDD[7. TDD 루프<br/>RED → GREEN → 정리]:::gate
+
+  TDD --> CMR{다른 AI<br/>검토?}:::dec
+  CMR -- PASS --> AP
+  CMR -- 리뷰어 없음 --> DEG[임시 통과<br/>사유 일지]:::auto
+  DEG --> AP
+  CMR -- 의견 갈림 --> DIS[5단계 합의 절차]
+  DIS --> USR[사용자 결정]:::auto
+  USR --> AP
+
+  AP{Phase 완료?<br/>UI 변경?}:::dec
+  AP -- Phase --> ARCH[구조 마무리 점검<br/>Architecture Pass]:::gate
+  AP -- UI --> QA[화면 QA<br/>로컬 실행 + 반응형]:::gate
+  AP -- 그 외 --> FIN
+  ARCH --> FIN
+  QA --> FIN
+
+  FIN[8. 마무리 관문<br/>자동 점검 PASS +<br/>Git 결정 + 보고서]:::gate
+  FIN --> Done([완료]):::done
+
+  classDef start fill:#1d2733,color:#fff,stroke:#1d2733
+  classDef done  fill:#16a34a,color:#fff,stroke:#16a34a
+  classDef stop  fill:#fdebea,stroke:#dc2626,color:#7a1d18
+  classDef gate  fill:#ecfdf3,stroke:#16a34a,color:#14633a
+  classDef dec   fill:#fff7e6,stroke:#d97706,color:#7a4a08
+  classDef auto  fill:#f3eefa,stroke:#7c3aed,color:#4b2c91
+  classDef light fill:#f1f5f9,stroke:#94a3b8,color:#334155
+        </pre>
+      </div>
+      <p class="caption">노랑 = 결정 지점, 빨강 = 즉시 중단, 초록 = 통과 관문, 보라 = 사용자 또는 자동 점검 개입.</p>
+    </section>
+
+    <!-- 다이어그램 2: 다른 AI 검토 sequence -->
+    <section>
+      <h2>② 다른 AI 검토 (Cross-model review) — 시간 순서</h2>
+      <p class="sub">한 AI가 짠 코드를 다른 AI가 검토하는 절차. 결과에 따라 분기되는 흐름을 시간 축으로 그렸습니다.</p>
+      <div class="diagram">
+        <pre class="mermaid">
+sequenceDiagram
+  autonumber
+  participant A as Implementer<br/>(Codex 또는 Claude)
+  participant R as Reviewer<br/>(다른 AI)
+  participant L as 작업 일지
+  participant U as 사용자
+
+  A->>R: 코드/계획 검토 요청
+  R-->>A: PASS · CONCERN · FAIL
+
+  alt PASS
+    A->>L: "Cross-model review: PASS" 기록
+    A->>A: 마무리 관문 진행
+  else CONCERN
+    A->>L: 우려 사항 + "수용 사유" 기록
+    A->>A: 마무리 관문 진행
+  else FAIL
+    Note over A,R: 라운드 시작 (기본 3 / 안내문 변경 4-5)
+    loop 라운드
+      A->>A: 모든 층 수정<br/>(요약·작업표·세부·검증)
+      A->>R: 같은 검토자에게 재검토 요청
+      R-->>A: PASS or FAIL
+    end
+    opt 5라운드 초과
+      A->>U: 사용자에게 올림 (escalate)
+      U-->>A: 결정
+      A->>L: 결정 + 사유 기록
+    end
+  end
+
+  Note over R: Reviewer 호출 자체가 불가하면<br/>"Cross-model review: degraded — 사유"<br/>를 일지에 기록하고 self-review로 진행
+        </pre>
+      </div>
+      <p class="caption">의견 갈리면 정량 기준 → 정성 trade-off → 사용자 escalate 순. 결정은 무조건 일지에 영구 기록.</p>
+    </section>
+
+    <!-- 다이어그램 3: Fallback 분류 state -->
+    <section>
+      <h2>③ 막혔을 때 5종 분류 (Fallback)</h2>
+      <p class="sub">정상 경로에서 무언가 막히면 우선 어느 종류의 막힘인지 분류해야 합니다. 분류에 따라 대응이 다릅니다.</p>
+      <div class="diagram">
+        <pre class="mermaid">
+stateDiagram-v2
+  direction LR
+  [*] --> Normal: 작업 진행
+  Normal --> Blocked: 막힘 발생
+
+  state Blocked {
+    [*] --> Classify
+    Classify --> FailClosed: 충돌·파괴·비밀 노출·<br/>보안 불확실·승인 누락
+    Classify --> Degraded:  도구·리뷰어·테스트러너 없음
+    Classify --> Recover:   컨텍스트 끊김·<br/>일지 stale
+    Classify --> RetryOnce: 일시적 네트워크·CLI 오류
+    Classify --> Reassign:  자식 AI 결과 없음·<br/>scope 충돌
+  }
+
+  FailClosed --> Stop: 즉시 중단<br/>사용자 결정 대기
+  Degraded   --> Normal: 사유 + 임시 절차<br/>일지 기록
+  Recover    --> Normal: 안내문·일지·문서<br/>다시 읽고 재구축
+  RetryOnce  --> Normal: 1회 재시도 성공
+  RetryOnce  --> Stop:   2회 실패
+  Reassign   --> Normal: 재위임 또는 부모가 회수
+
+  Stop --> [*]
+  Normal --> [*]: 작업 완료
+        </pre>
+      </div>
+      <p class="caption">Fail-closed 5종(충돌·파괴·비밀·보안·승인)은 무조건 즉시 중단. 나머지는 흔적을 남기고 정상 경로 복귀.</p>
+    </section>
+
+    <!-- 다이어그램 4: 멀티 에이전트 위임 사이클 -->
+    <section>
+      <h2>④ 멀티 에이전트 위임 — Main session ↔ Child agents</h2>
+      <p class="sub">
+        Phase 단위 큰 작업이나 독립 task가 2개 이상일 때 작동합니다. ①의 "Phase 단위" 차선에서 이쪽으로 빠집니다.
+        핵심 원칙: <strong>Main session이 모든 결정·일지의 유일한 소유자</strong>이고, 자식이 가진 hidden context는 신뢰하지 않습니다.
+        자식은 bounded task packet만 받고, 결과는 result packet으로 반환해야 합니다.
+      </p>
+
+      <h3 style="margin-top: 22px;">A. 전체 packet 사이클 — 작업 시작부터 마무리까지</h3>
+      <div class="diagram">
+        <pre class="mermaid">
+sequenceDiagram
+  autonumber
+  participant U as 사용자
+  participant M as Main session<br/>(coordinator · 일지 owner)
+  participant L as 작업 일지
+  participant CA as Child A<br/>(독립 write scope)
+  participant CB as Child B<br/>(다른 write scope)
+  participant R as Reviewer<br/>(다른 AI)
+
+  U->>M: 작업 요청
+  M->>L: 일지 생성 + 차선 결정
+  M->>M: 계획서 작성 (Out of Scope · SBU)<br/>작업표에 Subagent-eligible Y/N + 사유
+
+  par Y로 마크된 독립 작업 병렬 위임
+    M->>CA: Task Packet<br/>(범위·제약·검증·일지 경로 13필드)
+    M->>CB: Task Packet<br/>(다른 write scope)
+  and N 작업은 메인이 직접
+    M->>M: 단일 owner로 실행
+  end
+
+  par 자식 동시 작업
+    CA->>CA: 수신 범위 안에서만 작업
+    CA-->>M: Result Packet (12필드)
+  and
+    CB->>CB: 작업
+    CB-->>M: Result Packet
+  end
+
+  M->>M: Integration Checklist 5단계 (아래 C 참조)
+  alt 모든 체크 PASS
+    M->>L: 두 결과 + 통합 결정 기록
+  else 누락·충돌·실패
+    M->>M: Reassign 또는 메인이 직접 수정
+    M->>CA: (옵션) 재위임 Task Packet
+  end
+
+  M->>R: 통합 결과 검토 요청
+  R-->>M: PASS · CONCERN · FAIL
+  M->>L: Cross-model review 결과 기록
+  M->>U: 마무리 보고
+
+  Note over M,L: Main이 결과를 통합·기록하기 전에는<br/>"완료"라고 말할 수 없음.<br/>자식의 hidden context는 신뢰 X.
+        </pre>
+      </div>
+      <p class="caption">위임은 par/and 블록으로 병렬. 자식 결과가 없거나 scope 위반이면 alt 분기로 Reassign. 마무리 보고는 통합 끝난 뒤에만.</p>
+
+      <h3 style="margin-top: 22px;">B. 각 작업이 자식 위임 가능한가? — Subagent-eligible Y/N 결정 트리</h3>
+      <div class="diagram">
+        <pre class="mermaid">
+flowchart TD
+  T[계획서 작업표의 한 행]:::start --> Q1{독립적인<br/>write scope?}:::dec
+  Q1 -- No (같은 파일·심볼 공유) --> N[N + 사유<br/>단일 owner에 몰기]:::n
+  Q1 -- Yes --> Q2{검증이<br/>독립적으로 가능?}:::dec
+  Q2 -- No --> N
+  Q2 -- Yes --> Q3{결정이 다음<br/>task의 입력?}:::dec
+  Q3 -- Yes --> N
+  Q3 -- No --> Q4{RED 테스트 ↔<br/>GREEN 구현<br/>같이 묶임?}:::dec
+  Q4 -- Yes (export 이름·<br/>에러 문자열 공유) --> N
+  Q4 -- No --> Y[Y + 사유<br/>자식 위임 가능]:::y
+
+  classDef start fill:#1d2733,color:#fff,stroke:#1d2733
+  classDef dec   fill:#fff7e6,stroke:#d97706,color:#7a4a08
+  classDef y     fill:#ecfdf3,stroke:#16a34a,color:#14633a
+  classDef n     fill:#fff7e6,stroke:#d97706,color:#7a4a08
+        </pre>
+      </div>
+      <p class="caption">매 행마다 4단계 질문 → Y 또는 N + 사유. 사유 누락은 자동 점검(<code>ai-workflow-check.mjs</code>)이 FAIL로 잡습니다.</p>
+
+      <h3 style="margin-top: 22px;">C. Main session 통합 체크리스트 — Result Packet 받은 직후</h3>
+      <div class="diagram">
+        <pre class="mermaid">
+flowchart TD
+  RP[Result Packet 수신]:::start --> C1{결과 packet<br/>읽었나?}:::dec
+  C1 -- No --> S1[일지 업데이트 금지]:::stop
+  C1 -- Yes --> C2{변경 파일이<br/>위임 scope 안?}:::dec
+  C2 -- No --> ESC[scope 위반<br/>자식에게 사유 요청<br/>또는 Reassign]:::stop
+  C2 -- Yes --> C3{결정이 합의된<br/>docs · scope 호환?}:::dec
+  C3 -- No --> ESC
+  C3 -- Yes --> C4{"검증 출력을<br/>메인이 직접 확인?<br/>정확성 의존 시"}:::dec
+  C4 -- No --> CHK[메인이 검증 재실행]:::warn
+  CHK --> C5
+  C4 -- Yes --> C5{다른 자식과<br/>write scope 충돌?}:::dec
+  C5 -- Yes --> RES[병합 결정<br/>충돌 해소]:::warn
+  RES --> OK
+  C5 -- No --> OK[일지 업데이트<br/>다음 task 진행]:::ok
+
+  classDef start fill:#1d2733,color:#fff,stroke:#1d2733
+  classDef dec   fill:#fff7e6,stroke:#d97706,color:#7a4a08
+  classDef stop  fill:#fdebea,stroke:#dc2626,color:#7a1d18
+  classDef warn  fill:#fff7e6,stroke:#d97706,color:#7a4a08
+  classDef ok    fill:#ecfdf3,stroke:#16a34a,color:#14633a
+        </pre>
+      </div>
+      <p class="caption">메인은 자식의 검증 출력에 무조건 의존하지 않음. 정확성이 중요한 영역이면 메인이 같은 검증을 다시 실행해 확인.</p>
+
+      <h3 style="margin-top: 22px;">D. Child agent 입장에서 본 상태 머신</h3>
+      <div class="diagram">
+        <pre class="mermaid">
+stateDiagram-v2
+  direction LR
+  [*] --> Received: Task Packet 수신
+  Received --> Working: 범위 확인 + 시작
+  Working --> Returned: Result Packet 작성
+  Working --> Blocked: blocker 발견
+  Blocked --> Returned: blocker 명시한<br/>Result Packet 반환
+  Working --> Timeout: 응답 없음
+  Working --> ScopeConflict: 다른 자식과<br/>write scope 충돌
+
+  Returned --> Integrated: 메인 통합 체크 PASS
+  Returned --> Reassigned: scope 위반·정보 부족
+  Timeout --> Reassigned: 메인이 회수
+  ScopeConflict --> Reassigned
+
+  Reassigned --> Received: 새 Task Packet (tighter scope)
+  Integrated --> [*]
+        </pre>
+      </div>
+      <p class="caption">자식은 결과가 비더라도 blocker를 명시한 Result Packet은 꼭 반환해야 함. "조용한 실패(silent failure)" 금지.</p>
+    </section>
+
+    <section>
+      <h2>빠뜨리지 말아야 할 5가지</h2>
+      <div class="principles">
+        <div class="p"><span class="n">1</span><div class="t">다른 AI 검토 없이<br/>"끝"이라고 하지 말 것</div></div>
+        <div class="p"><span class="n">2</span><div class="t">안내문 · 스크립트 · CI<br/>건드리면 일지 동봉</div></div>
+        <div class="p"><span class="n">3</span><div class="t">새 영역은<br/>사용자 승인 전 코드 X</div></div>
+        <div class="p"><span class="n">4</span><div class="t">충돌·파괴·비밀·보안·승인 누락<br/>= 즉시 중단</div></div>
+        <div class="p"><span class="n">5</span><div class="t">작아 보여도<br/>워크플로 우회 금지</div></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>나오는 단어 풀이</h2>
+      <div class="glossary">
+        <div class="term"><b>차선 (lane)</b><span>작업 종류별 정해진 경로. 5개: 가벼움 · 버그 · 새 기능 · UI · Phase.</span></div>
+        <div class="term"><b>작업 일지 (ledger)</b><span>이번 작업을 누가/왜/어떻게 했는지 적은 파일. 안내문 건드리면 필수.</span></div>
+        <div class="term"><b>간단 명세서 (Light Spec)</b><span>Phase 시작 전 1쪽 명세 — 6섹션 필수.</span></div>
+        <div class="term"><b>계획 사전 검토 통과 관문</b><span>코드 짜기 전, 계획 자체를 다른 AI에게 검토받기.</span></div>
+        <div class="term"><b>TDD</b><span>실패 테스트 먼저 → 통과 → 정리. 예외 4종은 사유 기록.</span></div>
+        <div class="term"><b>다른 AI 검토 (Cross-model review)</b><span>한 AI가 짠 걸 다른 AI가 검토. 시야의 빈틈을 메우기 위함.</span></div>
+        <div class="term"><b>임시 통과 (degraded)</b><span>리뷰어 호출 불가 시 사유 적고 일단 통과하는 안전장치.</span></div>
+        <div class="term"><b>구조 마무리 점검 (Architecture Pass)</b><span>Phase 완료 시 로직 위치·폴더명·중복 마지막 점검.</span></div>
+        <div class="term"><b>화면 QA</b><span>UI 바뀌면 로컬 실행 + 클릭 + 반응형 직접 확인.</span></div>
+        <div class="term"><b>Git 공개 결정 4지선다</b><span>no-commit · local-commit · push-and-pr · blocked 중 명시.</span></div>
+        <div class="term"><b>Fail-closed</b><span>5가지 상황(충돌/파괴/비밀/보안/승인)에서 무조건 중단.</span></div>
+        <div class="term"><b>task / result packet</b><span>부모 AI ↔ 자식 AI 사이의 작업 명세와 결과 보고.</span></div>
+      </div>
+    </section>
+
+    <p class="meta-row">
+      출처: <code>AGENTS.md</code> · <code>docs/agent-index.md</code> · <code>docs/ai-development-workflow.md</code> ·
+      <code>docs/ai-workflow/{planning-contracts, review-gates, context-and-packets, fallback-and-recovery}.md</code> ·
+      <code>scripts/ai-workflow-check.mjs</code>.
+      다이어그램 렌더링: Mermaid 10 (CDN).
+    </p>
+
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'base',
+      themeVariables: {
+        fontFamily: '"Noto Sans KR","Apple SD Gothic Neo",Arial,sans-serif',
+        fontSize: '14px',
+        primaryColor: '#eaf3fb',
+        primaryTextColor: '#1d2733',
+        primaryBorderColor: '#2563eb',
+        lineColor: '#6a7787',
+        secondaryColor: '#fafbfc',
+        tertiaryColor: '#ffffff',
+        clusterBkg: '#fafbfc',
+        clusterBorder: '#cbd5e1',
+        edgeLabelBackground: '#ffffff'
+      },
+      flowchart: {
+        htmlLabels: true,
+        curve: 'basis',
+        nodeSpacing: 40,
+        rankSpacing: 50
+      },
+      sequence: {
+        diagramMarginX: 30,
+        diagramMarginY: 16,
+        boxMargin: 8,
+        noteMargin: 12,
+        messageMargin: 28,
+        mirrorActors: false
+      }
+    });
+  </script>
+</body>
+</html>

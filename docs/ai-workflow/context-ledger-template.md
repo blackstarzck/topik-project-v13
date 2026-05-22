@@ -62,6 +62,11 @@ Append each result packet or link to where it is recorded.
 - Cross-model review: <reviewer name (e.g. "codex (gstack)"), or "degraded — <reason>" if unavailable>
 - Architecture Pass: <passed | failed | skipped — <reason>>  # required when ledger Status reaches `complete` for a phase
 - Light Spec: <docs/ai-workflow/light-specs/phase-{n}-{slug}.md>  # required when this ledger belongs to a phase (filename contains `phase-N` or body has `Phase: ...`)
+- UX/UI Consistency Pass: <passed | failed | skipped — <reason>>  # required when changed files match UI patterns (see review-gates.md §UX/UI Consistency Pass). 4-line evidence structure mandatory:
+  - Tokens: <passed | failed | skipped — <reason>> | <evidence line: 정본 참조 + 검토 결과>
+  - Components: <passed | failed | skipped — <reason>> | <evidence line>
+  - A11y: <passed | failed | skipped — <reason>> | <evidence line: keyboard/focus/label/contrast 4가지 확인>
+  - Responsive: <passed | failed | skipped — <reason>> | <evidence line: 360/768/1280 breakpoint 확인>
 
 ## Fallback State
 

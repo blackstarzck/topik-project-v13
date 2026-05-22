@@ -14,7 +14,7 @@ Classify the failure first:
 
 | Failure class | Examples | Required response |
 | --- | --- | --- |
-| **Fail closed** | Doc conflict, destructive action, secret exposure risk, security uncertainty, missing user approval | Stop. Report the blocker, exact references, and what decision/input is needed. Do not implement. |
+| **Fail closed** | Doc conflict, destructive action, secret exposure risk, security uncertainty, missing user approval, **audience-mismatch** (Light Spec `Audience: user`인데 admin RPC/가드 호출이 필요해짐, 또는 `Audience: admin`인데 일반 사용자 RLS 경로를 건드림, 또는 child agent의 `Audience verified: no` 결과) | Stop. Report the blocker, exact references, and what decision/input is needed. Do not implement. |
 | **Degraded mode** | GStack unavailable, browser automation unavailable, test runner missing, only one AI available | Use the closest equivalent manual or local checklist. Record degraded mode and evidence in the ledger / final report. |
 | **Recover** | Context compaction, missing/stale ledger, interrupted session, child result missing context | Rebuild context from `AGENTS.md`/`CLAUDE.md`, [entry workflow doc](../ai-development-workflow.md), run ledger, consulted docs, and current files before continuing. |
 | **Retry once** | Transient network error, temporary CLI failure, flaky command | Retry once after checking the command and environment. If it fails again, stop and report the command, output, and next required action. |
@@ -58,6 +58,7 @@ Stop and request user input — do not implement — when any of these is true:
 - Security-relevant behavior is uncertain
 - A required user approval is missing
 - The plan-review PASS gate has not closed and the implementer is the same model that wrote the plan
+- **Audience-mismatch**: Light Spec `Audience` 값과 실제 작업이 필요로 하는 권한 모델이 어긋남 (예: `user` phase인데 admin guard 호출이 필요, `admin` phase인데 일반 사용자 RLS 경로를 만짐). 사용자가 audience 갱신을 승인하거나 작업을 다음 phase로 미루기 전까지 코드 변경 금지
 
 ## Related
 

@@ -42,7 +42,7 @@ Six required sections:
 2. **Out of Scope** — what is intentionally not built and why
 3. **Minimum Acceptable Behavior** — smallest set of conditions for "it works"
 4. **User Flow** — one-line entry-to-exit path, referencing `docs/flow/user-flow.md`
-5. **Domain Boundary** — domain handled and its target folder (`docs/domain-glossary.md`)
+5. **Domain Boundary** — domain handled, its target folder (`docs/domain-glossary.md`), and **`Audience: user · admin · both`** (이 phase 화면/권한 모델의 대상 — UI/권한 분기 한정. 비대화형 `cron · system · external partner`는 별도 축으로 추후 도입). `both`이면 user/admin 각각의 분기 경계와 대응 폴더(예: `src/app/admin/...` vs `src/app/library/...`, `src/lib/admin/`, `src/lib/auth/admin-guard.ts`)를 한 줄씩 명시한다. Audience 필드는 [`review-gates.md`](review-gates.md) Architecture Pass의 "audience 경계 = 코드 boundary 일치" 검증의 입력이 된다. **표준 6섹션을 따르지 않는 기존 light spec**(예: `phase-6-admin-library-hardening.md`)은 별도 `## Audience` 섹션으로 동일 정보를 표기해도 허용한다. 신규 light spec은 본 5번 항목 안에 한 줄로 명시할 것.
 6. **Success Criteria** — how the phase will be closed
 
 The corresponding ledger must reference it:
@@ -60,13 +60,14 @@ Every plan under `docs/ai-workflow/plans/` (other than `README.md` and `*-templa
 - `## Out of Scope — Intentional Cuts` — items intentionally excluded with reasons; forces subtraction discipline
 - `## Smallest Buildable Unit` — smallest slice of the plan that is independently buildable
 
-If a `## Tasks` section exists, its task table must include a `Subagent-eligible? (Y/N + reason)` column and every data row must give a `Y — <reason>` or `N — <reason>` value (em-dash or hyphen accepted).
+If a `## Tasks` section exists, its task table must include a `Subagent-eligible? (Y/N + reason)` column and every data row must give a `Y — <reason>` or `N — <reason>` value (em-dash or hyphen accepted). When the phase Audience is `both`, the table must also include an `Audience` column with `user | admin | both | n/a` per row so child agents receive the right boundary in their Task Packet. Phases whose Audience is `user` or `admin` (single-value) may omit the column.
 
 ```text
-| # | Task | Files | Subagent-eligible? (Y/N + reason) |
-| --- | --- | --- | --- |
-| 1 | DB schema | src/db/*.ts | Y — independent module |
-| 2 | UI wiring | src/app/*.tsx | N — depends on Task 1 result |
+| # | Task | Files | Audience | Subagent-eligible? (Y/N + reason) |
+| --- | --- | --- | --- | --- |
+| 1 | DB schema | src/db/*.ts | n/a | Y — independent module |
+| 2 | Admin role-change RPC | supabase/migrations/*.sql | admin | Y — server-only, isolated |
+| 3 | Library UI | src/app/library/*.tsx | user | N — depends on Task 1 result |
 ```
 
 Phase plans named `*-development-phases-and-bootstrap.md` are additionally checked: every Phase Contract row's `Completion Gate` cell must mention `Architecture Pass`. CI blocks PRs that violate any of the above.

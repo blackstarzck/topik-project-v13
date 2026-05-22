@@ -57,6 +57,20 @@ are the current baseline.
 | X-09 | Notification settings | `/settings/notifications` | page | Notification preferences. |
 | X-10 | Admin user management | `/admin/users` | page | Admin user/account management. |
 
+## Route Audience Map
+
+각 React route의 audience(UI/권한 분기) 분류. Light Spec의 `Audience` 필드, [`docs/agent-index.md`](agent-index.md) "Admin 화면" 라우팅 행, [`docs/ai-workflow/review-gates.md#architecture-pass`](ai-workflow/review-gates.md#architecture-pass)의 audience 경계 검증과 동일 분류.
+
+| Audience | Routes | Page guard / RLS 기반 |
+| --- | --- | --- |
+| **public** (인증 전) | `/`, `/sign-up`, `/login`, `/password-reset` | 없음 — 인증 미요구 |
+| **user** (인증된 일반 사용자) | `/onboarding/learning-goal`, `/dashboard`, `/practice/*` (recommendations, problems, weakness, next), `/writing/*` (51-54, feedback, reports), `/library`, `/settings/{language,notifications}`, `/profile`, `/growth`, `/paywall`, `/subscription` | 세션 인증 + `auth.uid()` 기반 자기 row RLS |
+| **admin** (역할 분리된 관리자) | `/admin/problems` (H-01, content admin), `/admin/org` (X-08, org admin), `/admin/users` (X-10, platform admin) | `requireContentAdmin / requireOrgAdmin / requirePlatformAdmin` 페이지 가드 + `private.is_{content,org,platform}_admin(uid)` 기반 RLS + 모든 권한 변경/발행 토글은 `admin_audit_logs` 기록 |
+
+`Audience: both`인 phase는 user 라우트와 admin 라우트를 동시에 다룬다. 그 경우 Light Spec과 plan task table의 각 task에 audience를 행별로 명시한다 ([`docs/ai-workflow/planning-contracts.md`](ai-workflow/planning-contracts.md)).
+
+비대화형 audience(`cron`, `system`, `external partner` 등)는 현재 라우트 매핑 범위 밖이며, 도입 시 별도 축으로 추가한다.
+
 ## Overlay And Modal Surfaces
 
 These screens are part of the Paper frame but should not become independent
