@@ -9,12 +9,7 @@ import {
   type SubmitWritingInput,
   type SubmitWritingResult,
 } from "./server-actions";
-import {
-  draftQueryKey,
-  feedbackBundleKey,
-  feedbackStatusKey,
-  submissionQueryKey,
-} from "./queries";
+import { draftQueryKey } from "./queries";
 import type { WritingDraftInsert, WritingDraftRow } from "./types";
 
 type BrowserClient = ReturnType<typeof createSupabaseBrowserClient>;
@@ -47,21 +42,14 @@ export function useUpsertDraft() {
   });
 }
 
+// Phase 6 R-DEAD-INVALIDATE: previously this mutation invalidated submission /
+// feedback bundle / feedback status keys keyed by the newly-minted submissionId.
+// Those keys have no mounted query at the time of invalidation (the caller
+// navigates to /feedback/[id] right after, and that page mounts fresh), so the
+// invalidations were dead. Drop them.
 export function useSubmitWriting() {
-  const qc = useQueryClient();
   return useMutation<SubmitWritingResult, Error, SubmitWritingInput>({
     mutationFn: (input) => submitWritingAction(input),
-    onSuccess: (result) => {
-      qc.invalidateQueries({
-        queryKey: submissionQueryKey(result.submissionId),
-      });
-      qc.invalidateQueries({
-        queryKey: feedbackBundleKey(result.submissionId),
-      });
-      qc.invalidateQueries({
-        queryKey: feedbackStatusKey(result.submissionId),
-      });
-    },
   });
 }
 

@@ -23,6 +23,43 @@ vi.mock("@/lib/auth/profile", () => ({
   },
 }));
 
+// Phase 6: admin pages now perform real Supabase fetches via the typed
+// server client. The gate-only matrix test does not care about the data
+// layer — short-circuit it so the assertions stay focused on redirect vs.
+// allow.
+vi.mock("@/lib/auth/session", () => ({
+  getCurrentUser: () => Promise.resolve({ id: "user-1" }),
+  requireUser: () => Promise.resolve({ id: "user-1" }),
+}));
+
+vi.mock("@/lib/supabase/server", () => ({
+  createSupabaseServerClient: vi.fn(async () => ({
+    from: () => ({
+      select: () => ({
+        order: () => Promise.resolve({ data: [], error: null }),
+        ilike: () => ({
+          order: () => Promise.resolve({ data: [], error: null }),
+        }),
+        eq: () => ({
+          order: () => Promise.resolve({ data: [], error: null }),
+        }),
+      }),
+    }),
+    rpc: () =>
+      Promise.resolve({
+        data: [
+          {
+            learner_count: 0,
+            active_7d_count: 0,
+            submissions_7d_count: 0,
+            recent_events: [],
+          },
+        ],
+        error: null,
+      }),
+  })),
+}));
+
 type Role = "learner" | "content_admin" | "org_admin" | "platform_admin";
 
 function makeProfile(app_role: Role) {

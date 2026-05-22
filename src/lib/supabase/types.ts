@@ -14,10 +14,12 @@
  * `recommendation_items` (Phase 2–4) + `writing_drafts`,
  * `writing_submissions`, `writing_feedback`, `feedback_dimension_scores`,
  * `sentence_feedback`, `comparison_reports` (Phase 5).
- * Other tables (library_items, study_events, export_files,
- * admin_audit_logs) exist in the database but are not typed here; add them
- * as Phase 6 consumes them or regenerate via
- * `pnpm dlx supabase gen types typescript --local`.
+ * Phase 6 extends the snapshot to cover `library_items`, `study_events`,
+ * `export_files`, `admin_audit_logs`, the new `profiles.notification_prefs`
+ * column, and the SECURITY DEFINER RPCs introduced in migration
+ * `20260521140000_phase_6_rpc_and_admin.sql` (`get_dashboard_kpi`,
+ * `get_admin_org_dashboard`, `admin_change_user_role`,
+ * `admin_toggle_problem_publish`).
  *
  * Fallback evidence: Supabase CLI requires docker for local stack — host
  * environment lacks docker, so this file is hand-aligned against the
@@ -62,6 +64,7 @@ export interface Database {
             | "platform_admin";
           plan_label: string;
           status: "active" | "blocked" | "deleted";
+          notification_prefs: Json;
           created_at: string;
           updated_at: string;
         };
@@ -78,6 +81,7 @@ export interface Database {
             | "platform_admin";
           plan_label?: string;
           status?: "active" | "blocked" | "deleted";
+          notification_prefs?: Json;
           created_at?: string;
           updated_at?: string;
         };
@@ -94,6 +98,7 @@ export interface Database {
             | "platform_admin";
           plan_label?: string;
           status?: "active" | "blocked" | "deleted";
+          notification_prefs?: Json;
           created_at?: string;
           updated_at?: string;
         };
@@ -762,9 +767,233 @@ export interface Database {
           },
         ];
       };
+      library_items: {
+        Row: {
+          id: string;
+          user_id: string;
+          item_type: "attempt" | "submission" | "report" | "export" | "problem";
+          attempt_id: string | null;
+          submission_id: string | null;
+          report_id: string | null;
+          export_id: string | null;
+          problem_id: string | null;
+          note: string | null;
+          tags: string[];
+          saved_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          item_type:
+            | "attempt"
+            | "submission"
+            | "report"
+            | "export"
+            | "problem";
+          attempt_id?: string | null;
+          submission_id?: string | null;
+          report_id?: string | null;
+          export_id?: string | null;
+          problem_id?: string | null;
+          note?: string | null;
+          tags?: string[];
+          saved_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          item_type?:
+            | "attempt"
+            | "submission"
+            | "report"
+            | "export"
+            | "problem";
+          attempt_id?: string | null;
+          submission_id?: string | null;
+          report_id?: string | null;
+          export_id?: string | null;
+          problem_id?: string | null;
+          note?: string | null;
+          tags?: string[];
+          saved_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "library_items_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      export_files: {
+        Row: {
+          id: string;
+          user_id: string;
+          source_type: "submission" | "report" | "library_selection";
+          source_id: string | null;
+          storage_path: string;
+          options: Json | null;
+          status: "queued" | "ready" | "failed";
+          created_at: string;
+          ready_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          source_type: "submission" | "report" | "library_selection";
+          source_id?: string | null;
+          storage_path: string;
+          options?: Json | null;
+          status?: "queued" | "ready" | "failed";
+          created_at?: string;
+          ready_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          source_type?: "submission" | "report" | "library_selection";
+          source_id?: string | null;
+          storage_path?: string;
+          options?: Json | null;
+          status?: "queued" | "ready" | "failed";
+          created_at?: string;
+          ready_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "export_files_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      study_events: {
+        Row: {
+          id: string;
+          user_id: string;
+          /**
+           * Frozen catalog (see library_events_exports.sql:118):
+           * 'practice_started' | 'attempt_submitted' | 'draft_autosaved' |
+           * 'submission_submitted' | 'feedback_viewed' | 'report_viewed' |
+           * 'recommendation_clicked' | 'export_downloaded'
+           * Column type stays `text` so future ledger additions don't break the
+           * snapshot; the enum lives in src/lib/events/study-events.ts.
+           */
+          event_type: string;
+          occurred_at: string;
+          problem_id: string | null;
+          submission_id: string | null;
+          attempt_id: string | null;
+          session_id: string | null;
+          payload: Json | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          event_type: string;
+          occurred_at?: string;
+          problem_id?: string | null;
+          submission_id?: string | null;
+          attempt_id?: string | null;
+          session_id?: string | null;
+          payload?: Json | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          event_type?: string;
+          occurred_at?: string;
+          problem_id?: string | null;
+          submission_id?: string | null;
+          attempt_id?: string | null;
+          session_id?: string | null;
+          payload?: Json | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "study_events_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      admin_audit_logs: {
+        Row: {
+          id: string;
+          admin_user_id: string;
+          action: string;
+          target_table: string;
+          target_id: string;
+          diff: Json | null;
+          payload: Json | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          admin_user_id: string;
+          action: string;
+          target_table: string;
+          target_id: string;
+          diff?: Json | null;
+          payload?: Json | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          admin_user_id?: string;
+          action?: string;
+          target_table?: string;
+          target_id?: string;
+          diff?: Json | null;
+          payload?: Json | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "admin_audit_logs_admin_user_id_fkey";
+            columns: ["admin_user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<never, never>;
-    Functions: Record<never, never>;
+    Functions: {
+      get_dashboard_kpi: {
+        Args: Record<string, never>;
+        Returns: {
+          today_attempts: number;
+          total_attempts: number;
+          exam_days_left: number | null;
+          streak_days: number;
+        }[];
+      };
+      get_admin_org_dashboard: {
+        Args: Record<string, never>;
+        Returns: {
+          learner_count: number;
+          active_7d_count: number;
+          submissions_7d_count: number;
+          recent_events: Json;
+        }[];
+      };
+      admin_change_user_role: {
+        Args: { target_id: string; new_role: string };
+        Returns: undefined;
+      };
+      admin_toggle_problem_publish: {
+        Args: { problem_id: string; new_status: string };
+        Returns: undefined;
+      };
+    };
     Enums: Record<never, never>;
     CompositeTypes: Record<never, never>;
   };

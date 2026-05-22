@@ -64,84 +64,40 @@ describe("computeStreakDays", () => {
   });
 });
 
-describe("getDashboardKpi", () => {
+describe("getDashboardKpi (Phase 6 RPC)", () => {
   function makeSupabase(opts: {
-    todayCount?: number | null;
-    totalCount?: number | null;
-    examDate?: string | null;
-    streakRows?: { started_at: string }[];
-    error?: string | null;
+    rpcData?: unknown;
+    rpcError?: string | null;
   }) {
+    let calledFn: string | null = null;
     return {
-      from: (table: string) => {
-        if (table === "problem_attempts") {
-          return {
-            select: (
-              _cols: string,
-              options?: { count?: string; head?: boolean },
-            ) => ({
-              eq: () => ({
-                gte: () => ({
-                  lte: () =>
-                    Promise.resolve({
-                      count: opts.todayCount ?? 0,
-                      error: opts.error
-                        ? { message: opts.error }
-                        : null,
-                    }),
-                }),
-                order: () => ({
-                  limit: () =>
-                    Promise.resolve({
-                      data: opts.streakRows ?? [],
-                      error: null,
-                    }),
-                }),
-                // bare .eq() chain for total-count path
-                then: undefined,
-                // fallback: returns count for total when head present
-                count: opts.totalCount ?? 0,
-                error: null,
-                // hack: provide the resolved value for total-count chain
-              }),
-              count: opts.totalCount ?? 0,
-              error: null,
-              _isHeadCount: Boolean(options?.head),
-            }),
-          };
-        }
-        if (table === "learning_goals") {
-          return {
-            select: () => ({
-              eq: () => ({
-                maybeSingle: () =>
-                  Promise.resolve({
-                    data: opts.examDate
-                      ? { exam_date: opts.examDate }
-                      : null,
-                    error: null,
-                  }),
-              }),
-            }),
-          };
-        }
-        throw new Error(`unexpected table: ${table}`);
+      rpc: (name: string) => {
+        calledFn = name;
+        return Promise.resolve({
+          data: opts.rpcData ?? null,
+          error: opts.rpcError ? { message: opts.rpcError } : null,
+        });
       },
+      __calledFn: () => calledFn,
     };
   }
 
-  it("returns all four KPI values + recentFeedback null", async () => {
+  it("calls get_dashboard_kpi RPC and maps every field", async () => {
     const supabase = makeSupabase({
-      todayCount: 3,
-      totalCount: 17,
-      examDate: TODAY.add(45, "day").format("YYYY-MM-DD"),
-      streakRows: [
-        { started_at: isoDaysAgo(0) },
-        { started_at: isoDaysAgo(1) },
+      rpcData: [
+        {
+          today_attempts: 3,
+          total_attempts: 17,
+          exam_days_left: 45,
+          streak_days: 2,
+        },
       ],
     });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const kpi = await getDashboardKpi("user-1", supabase as any);
+    expect((supabase as unknown as { __calledFn: () => string }).__calledFn()).toBe(
+      "get_dashboard_kpi",
+    );
     expect(kpi.todayAttempts).toBe(3);
     expect(kpi.totalAttempts).toBe(17);
     expect(kpi.examDaysLeft).toBe(45);
@@ -149,13 +105,41 @@ describe("getDashboardKpi", () => {
     expect(kpi.recentFeedback).toBe(null);
   });
 
-  it("returns zeros / nulls for a brand-new user", async () => {
-    const supabase = makeSupabase({});
+  it("returns zeros / nulls for a brand-new user (RPC returns null exam_days_left)", async () => {
+    const supabase = makeSupabase({
+      rpcData: [
+        {
+          today_attempts: 0,
+          total_attempts: 0,
+          exam_days_left: null,
+          streak_days: 0,
+        },
+      ],
+    });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const kpi = await getDashboardKpi("user-new", supabase as any);
     expect(kpi.todayAttempts).toBe(0);
     expect(kpi.totalAttempts).toBe(0);
     expect(kpi.examDaysLeft).toBe(null);
     expect(kpi.streakDays).toBe(0);
+  });
+
+  it("falls back to zeros when RPC returns null", async () => {
+    const supabase = makeSupabase({ rpcData: null });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const kpi = await getDashboardKpi("user-empty", supabase as any);
+    expect(kpi.todayAttempts).toBe(0);
+    expect(kpi.totalAttempts).toBe(0);
+    expect(kpi.examDaysLeft).toBe(null);
+    expect(kpi.streakDays).toBe(0);
+    expect(kpi.recentFeedback).toBe(null);
+  });
+
+  it("throws on RPC error", async () => {
+    const supabase = makeSupabase({ rpcError: "rpc broken" });
+    await expect(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      getDashboardKpi("user-x", supabase as any),
+    ).rejects.toThrow(/rpc broken/);
   });
 });

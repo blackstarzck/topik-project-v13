@@ -1,16 +1,24 @@
 import type { Metadata } from "next";
-import { PlaceholderPage } from "@/components/shared/PlaceholderPage";
-import { requireRole } from "@/lib/auth/profile";
+import { requireOrgAdmin } from "@/lib/auth/admin-guard";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { AdminOrgKpiCards } from "@/components/admin/AdminOrgKpiCards";
+import {
+  fromRpcRow,
+  type AdminOrgDashboardData,
+} from "@/lib/admin/org-dashboard";
 
 export const metadata: Metadata = { title: "기관 관리 — TALKPIK" };
 
 export default async function AdminOrgPage() {
-  await requireRole(["org_admin", "platform_admin"]);
+  await requireOrgAdmin();
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.rpc("get_admin_org_dashboard");
+  if (error) throw new Error(`Admin org dashboard: ${error.message}`);
+  const dash: AdminOrgDashboardData = fromRpcRow(data);
   return (
-    <PlaceholderPage
-      iaCode="X-08"
-      title="기관 관리 대시보드"
-      phaseHint="organization-admin 전용 대시보드는 Phase 6에서 채워집니다."
-    />
+    <main style={{ padding: 24 }}>
+      <h1>기관 관리</h1>
+      <AdminOrgKpiCards data={dash} />
+    </main>
   );
 }

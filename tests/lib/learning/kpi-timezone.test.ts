@@ -4,19 +4,16 @@ import {
   computeStreakDays,
 } from "../../../src/lib/learning/kpi";
 
-const REAL_DATE = Date;
-
-function freezeUtc(iso: string) {
-  const fixed = new REAL_DATE(iso);
-  vi.spyOn(Date, "now").mockReturnValue(fixed.valueOf());
-}
-
+// Use fake timers (not just Date.now spy) so dayjs internals that call
+// `new Date()` are also frozen. The prior Date.now spy left `new Date()`
+// returning real time, which broke once the wall clock crossed the test's
+// hard-coded date (Phase 6 verification, 2026-05-22 KST).
 beforeAll(() => {
-  freezeUtc("2026-05-20T22:30:00Z");
+  vi.useFakeTimers({ now: new Date("2026-05-20T22:30:00Z") });
 });
 
 afterAll(() => {
-  vi.restoreAllMocks();
+  vi.useRealTimers();
 });
 
 describe("KPI timezone — Asia/Seoul day boundary", () => {

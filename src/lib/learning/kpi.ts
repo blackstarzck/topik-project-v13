@@ -9,92 +9,68 @@ dayjs.extend(timezone);
 const KST = "Asia/Seoul";
 
 /**
- * Dashboard KPI summary for Phase 4. Calculated entirely from tables that
- * Phase 4 already types: `learning_goals`, `problem_attempts`. Placeholders
- * for future writing/feedback signals are intentional and stay null until
- * Phase 5 wires them in.
+ * Dashboard KPI summary. Phase 6 collapses the four fetches into a single
+ * `get_dashboard_kpi()` RPC that runs the same KST day-boundary math in SQL
+ * (see migration 20260521140000_phase_6_rpc_and_admin.sql §5). The `userId`
+ * parameter is retained for caller compatibility but is intentionally
+ * ignored — the RPC derives identity from `auth.uid()` to avoid cross-user
+ * leak (Codex Round 1 P1-1).
+ *
+ * The helper exports `computeExamDaysLeft` / `computeStreakDays` remain for
+ * tests that exercise the dayjs-based math directly; they are no longer used
+ * by `getDashboardKpi` itself.
  */
 export type DashboardKpi = {
   todayAttempts: number;
   totalAttempts: number;
   /** Days until `learning_goals.exam_date`. Null when no exam date set or date is in the past. */
   examDaysLeft: number | null;
-  /** Consecutive distinct dates with at least one attempt, ending today or yesterday. */
+  /** Consecutive distinct KST dates with at least one attempt, ending today or yesterday. */
   streakDays: number;
-  /** Placeholder — populated in Phase 5 when writing_feedback is typed. */
+  /** Placeholder — populated when writing_feedback signals are surfaced on the dashboard. */
   recentFeedback: null;
 };
 
-// Phase 5 R-TZ resolution: all day math runs in Asia/Seoul. On Vercel UTC
-// the bounds still represent KST midnight → midnight, so attempts in the
-// 00:00–09:00 KST window are bucketed to the correct KST day.
+export async function getDashboardKpi(
+  _userId: string,
+  supabase: SupabaseServerClient,
+): Promise<DashboardKpi> {
+  const { data, error } = await supabase.rpc("get_dashboard_kpi");
+  if (error) throw new Error(`KPI rpc: ${error.message}`);
 
-function startOfToday(): dayjs.Dayjs {
-  return dayjs().tz(KST).startOf("day");
+  // The RPC returns a single-row `setof record`. supabase-js shapes the
+  // payload as `Array<{...}>` for `returns table (...)` functions.
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row) {
+    return {
+      todayAttempts: 0,
+      totalAttempts: 0,
+      examDaysLeft: null,
+      streakDays: 0,
+      recentFeedback: null,
+    };
+  }
+
+  return {
+    todayAttempts: row.today_attempts ?? 0,
+    totalAttempts: row.total_attempts ?? 0,
+    examDaysLeft: row.exam_days_left ?? null,
+    streakDays: row.streak_days ?? 0,
+    recentFeedback: null,
+  };
 }
 
-function endOfToday(): dayjs.Dayjs {
-  return dayjs().tz(KST).endOf("day");
+function startOfTodayKst(): dayjs.Dayjs {
+  return dayjs().tz(KST).startOf("day");
 }
 
 function dayKey(iso: string): string {
   return dayjs(iso).tz(KST).format("YYYY-MM-DD");
 }
 
-export async function getDashboardKpi(
-  userId: string,
-  supabase: SupabaseServerClient,
-): Promise<DashboardKpi> {
-  const todayStart = startOfToday();
-  const todayEnd = endOfToday();
-
-  const { count: todayCount, error: todayErr } = await supabase
-    .from("problem_attempts")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", userId)
-    .gte("started_at", todayStart.toISOString())
-    .lte("started_at", todayEnd.toISOString());
-  if (todayErr) throw new Error(`KPI today attempts: ${todayErr.message}`);
-
-  const { count: totalCount, error: totalErr } = await supabase
-    .from("problem_attempts")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", userId);
-  if (totalErr) throw new Error(`KPI total attempts: ${totalErr.message}`);
-
-  const { data: goal, error: goalErr } = await supabase
-    .from("learning_goals")
-    .select("exam_date")
-    .eq("user_id", userId)
-    .maybeSingle();
-  if (goalErr) throw new Error(`KPI exam date: ${goalErr.message}`);
-
-  const examDaysLeft = computeExamDaysLeft(goal?.exam_date ?? null);
-
-  const { data: streakRows, error: streakErr } = await supabase
-    .from("problem_attempts")
-    .select("started_at")
-    .eq("user_id", userId)
-    .order("started_at", { ascending: false })
-    .limit(365);
-  if (streakErr) throw new Error(`KPI streak: ${streakErr.message}`);
-
-  const streakDays = computeStreakDays(
-    (streakRows ?? []).map((r) => r.started_at),
-  );
-
-  return {
-    todayAttempts: todayCount ?? 0,
-    totalAttempts: totalCount ?? 0,
-    examDaysLeft,
-    streakDays,
-    recentFeedback: null,
-  };
-}
-
 export function computeExamDaysLeft(examDate: string | null): number | null {
   if (!examDate) return null;
-  const today = startOfToday();
+  const today = startOfTodayKst();
   const exam = dayjs.tz(examDate, KST).startOf("day");
   const diff = exam.diff(today, "day");
   return diff >= 0 ? diff : null;
@@ -105,9 +81,8 @@ export function computeStreakDays(startedAtIsoList: readonly string[]): number {
   const days = Array.from(new Set(startedAtIsoList.map(dayKey))).sort(
     (a, b) => (a > b ? -1 : a < b ? 1 : 0),
   );
-  const today = startOfToday().format("YYYY-MM-DD");
-  const yesterday = startOfToday().subtract(1, "day").format("YYYY-MM-DD");
-  // Streak must end at today or yesterday — otherwise it's a stale streak.
+  const today = startOfTodayKst().format("YYYY-MM-DD");
+  const yesterday = startOfTodayKst().subtract(1, "day").format("YYYY-MM-DD");
   if (days[0] !== today && days[0] !== yesterday) return 0;
   let streak = 1;
   let cursor = dayjs(days[0]);

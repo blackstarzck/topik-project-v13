@@ -1,14 +1,22 @@
 import type { Metadata } from "next";
-import { PlaceholderPage } from "@/components/shared/PlaceholderPage";
+import { notFound } from "next/navigation";
+import { requireUser } from "@/lib/auth/session";
+import { getProfileSettings } from "@/lib/settings/server";
+import { NotificationPrefsForm } from "@/components/settings/NotificationPrefsForm";
 
 export const metadata: Metadata = { title: "알림 설정 — TALKPIK" };
 
-export default function NotificationsSettingsPage() {
+export default async function NotificationsSettingsPage() {
+  const user = await requireUser();
+  const settings = await getProfileSettings(user.id);
+  if (!settings) notFound();
   return (
-    <PlaceholderPage
-      iaCode="X-09"
-      title="알림 설정"
-      phaseHint="알림 채널 설정은 Phase 6에서 채워집니다."
-    />
+    <main style={{ padding: 24, maxWidth: 560 }}>
+      <h1>알림 설정</h1>
+      <NotificationPrefsForm
+        userId={user.id}
+        initialPrefs={settings.notification_prefs}
+      />
+    </main>
   );
 }

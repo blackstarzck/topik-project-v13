@@ -45,13 +45,19 @@
 
 근거 ledger: 동일 ledger의 `Round-2 (마이그레이션 보강)` 섹션
 
-#### 21 (수) — Phase 2 auth bootstrap trigger
+#### 21 (수) — Phase 2 auth bootstrap trigger + Phase 5 writing RPC + Phase 6 hardening
 
 | # | timestamp | 파일 | 영역 |
 | ---:| --- | --- | --- |
 | 17 | `12:00:00` | [`20260521120000_auth_user_profile_bootstrap.sql`](./20260521120000_auth_user_profile_bootstrap.sql) | `auth.users → public.profiles` INSERT 트리거 (`121100:46` 주석의 self-inconsistency 해소) |
+| 18 | `13:00:00` | [`20260521130000_phase_5_writing_rpc.sql`](./20260521130000_phase_5_writing_rpc.sql) | Phase 5 SECURITY DEFINER RPC: `submit_writing_with_feedback`, `create_comparison_report_with_metrics` |
+| 19 | `14:00:00` | [`20260521140000_phase_6_rpc_and_admin.sql`](./20260521140000_phase_6_rpc_and_admin.sql) | Phase 6: admin role helpers (`is_platform_admin/is_content_admin/is_org_admin`) + profile policy narrowing + writing_submissions explicit deny + `assert_submission_payload` validator + library/export/event ownership-strict RLS + `get_dashboard_kpi` + `admin_change_user_role` + `admin_toggle_problem_publish` + `submit_writing_with_feedback` validator hookup + `get_admin_org_dashboard` |
+| 20 | `14:10:00` | [`20260521141000_phase_6_notification_prefs.sql`](./20260521141000_phase_6_notification_prefs.sql) | Phase 6: `profiles.notification_prefs jsonb not null default '{}' + object check` |
 
-근거 ledger: [`../../docs/ai-workflow/runs/2026/05/20/20260520-1800-phase-2-data-and-auth-foundation.md`](../../docs/ai-workflow/runs/2026/05/20/20260520-1800-phase-2-data-and-auth-foundation.md)
+근거 ledger:
+- 17: [`../../docs/ai-workflow/runs/2026/05/20/20260520-1800-phase-2-data-and-auth-foundation.md`](../../docs/ai-workflow/runs/2026/05/20/20260520-1800-phase-2-data-and-auth-foundation.md)
+- 18: [`../../docs/ai-workflow/runs/2026/05/21/20260521-1700-phase-5-writing-feedback.md`](../../docs/ai-workflow/runs/2026/05/21/20260521-1700-phase-5-writing-feedback.md)
+- 19-20: [`../../docs/ai-workflow/runs/2026/05/21/20260521-1800-phase-6-admin-library-hardening.md`](../../docs/ai-workflow/runs/2026/05/21/20260521-1800-phase-6-admin-library-hardening.md)
 
 ---
 

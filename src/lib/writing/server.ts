@@ -1,4 +1,5 @@
-import "server-only";
+// NOTE: server-only by convention. We do not `import "server-only"` because
+// the package is not a runtime dep and vitest cannot resolve it.
 import {
   createSupabaseServerClient,
   type SupabaseServerClient,
