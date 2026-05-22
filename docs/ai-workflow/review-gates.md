@@ -184,6 +184,8 @@ UI 변경이 포함된 모든 작업에서 통과해야 한다.
 
 ## QA Gate
 
+> **Past failure case** — [`reports/phase-6-qa-gate-skipped-postmortem.html`](../../reports/phase-6-qa-gate-skipped-postmortem.html) (2026-05-22). 게이트는 있었으나 안 따른 결과 dev 서버가 HTTP 500을 내며 사용자에게 노출됨. 같은 패턴 재발 방지를 위해 본 §QA Gate에 enforcement 룰이 추가됨 (자동 검사: `scripts/ai-workflow-check.mjs`).
+
 Use QA for user-facing, browser, interaction, or integration work:
 
 - Codex: `gstack-qa` or `gstack-qa-only`
@@ -191,13 +193,41 @@ Use QA for user-facing, browser, interaction, or integration work:
 
 QA must include:
 
-- Starting the local app when applicable
+- **Starting the local app when applicable** — UI 변경이 포함된 작업은 dev 서버 부팅을 빠뜨릴 수 없다. vitest/typecheck/build 통과는 not sufficient.
 - Exercising the changed user path
 - Checking responsive layout when UI changed
 - Capturing failures as reproducible notes
 - Adding regression coverage when possible
 
-If browser automation is unavailable, state the blocker and run the closest alternative verification.
+### ledger 기록 형식 (의무)
+
+UI 변경 PR에서는 변경된 ledger에 `QA Gate:` 필드가 반드시 있어야 한다. 자동 검사가 강제. 형식:
+
+```
+- QA Gate: passed | failed | degraded — <blocker + alternative verification + residual risk> | skipped — <reason>
+```
+
+각 값의 의미:
+- **passed**: 로컬 앱 부팅 + 변경된 user path 직접 클릭 + 콘솔 에러 캡처 모두 완료.
+- **failed**: 실행 시도했으나 통과 못 함. 막힌 원인 명시.
+- **degraded**: 정상 실행 불가(예: 브라우저 자동화 없음, env dependency 결손, 원격 dependency 다운). `degraded` 단독은 불충분 — **반드시 (a) blocker (b) 대체 검증 수단 (c) 잔여 위험** 셋을 한 줄에 명시. release/phase 완료는 degraded면 원칙적으로 막힘(fail-closed). 사용자/owner가 명시 승인한 경우에만 진행 가능.
+- **skipped**: 변경이 UI를 건드리지 않는 경우(non-UI workflow/스크립트/문서). 사유 의무.
+
+### 자동 검사 (PR C — Enforcement)
+
+`scripts/ai-workflow-check.mjs`가 다음을 강제:
+
+- 변경 파일 중 UI 패턴(`src/app/**`, `src/components/**`, `src/features/**`, `src/lib/ui/**`, `src/styles/**`, `*.css`, `theme*` 등) 1개 이상 + test-only(`*.test.*`, `*.spec.*`, `__tests__/`)만이 아님 → 변경된 ledger 중 적어도 하나에 `QA Gate:` 필드 + 비어 있지 않은 값 필수.
+- `degraded` 단독(파이프 분리된 blocker/alternative/residual risk 명시 없음)은 FAIL.
+- `skipped`는 사유 필수.
+
+### release/phase 완료 가드
+
+phase ledger의 `Status: complete` 또는 phase plan의 final report 시점에 `QA Gate: degraded`가 있으면 자동 점검은 PASS 안 줌. 사용자/owner 승인 후 ledger에 "QA Gate degraded accepted by <owner> — <date>" 한 줄을 별도로 박아야 통과.
+
+### degraded 처리 정신
+
+`degraded`는 **통과권이 아니라 위험 라벨**이다. "기록하면 통과"가 아니라 "기록해서 위험을 숨길 수 없게 함" — 본 사고의 직접 교훈.
 
 ## Finish (review portion)
 

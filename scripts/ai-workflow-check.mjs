@@ -103,6 +103,19 @@ const UXUI_CHILD_PATTERNS = {
   Responsive: /^\s*-\s+Responsive:(.*)$/im,
 };
 
+// QA Gate field (PR C — Enforcement). Required when changed files match UI patterns.
+// Past failure case: reports/phase-6-qa-gate-skipped-postmortem.html.
+// See docs/ai-workflow/review-gates.md §QA Gate.
+const QA_GATE_PATTERN = /^-\s+QA Gate:(.*)$/im;
+const QA_GATE_DEGRADED_PATTERN =
+  /^-\s+QA Gate:\s*degraded(\b.*)?$/im;
+// degraded must contain pipe-separated triple (blocker | alternative | residual)
+const QA_GATE_DEGRADED_VALID_PATTERN =
+  /^-\s+QA Gate:\s*degraded\s+[—\-]\s*[^|]+\|[^|]+\|[^|]+$/im;
+// release/phase ledger acceptance line for degraded
+const QA_GATE_DEGRADED_ACCEPTED_PATTERN =
+  /QA Gate degraded accepted by\s+\S+/im;
+
 const IMPLEMENTATION_OR_WORKFLOW_PATTERNS = [
   /^scripts\//,
   /^\.github\//,
@@ -255,6 +268,37 @@ export function checkLedgerReviewer(text) {
     errors.push(
       "ledger missing 'Cross-model review:' field with non-empty value (use 'degraded — <reason>' if unavailable)",
     );
+  }
+  return okResult(errors);
+}
+
+export function checkQaGate(text, options = {}) {
+  const { phaseComplete = false } = options;
+  const errors = [];
+  const parentMatch = text.match(QA_GATE_PATTERN);
+  if (!parentMatch || !parentMatch[1] || parentMatch[1].trim().length === 0) {
+    errors.push(
+      "ledger missing 'QA Gate:' field (required when changed files match UI patterns — see docs/ai-workflow/review-gates.md §QA Gate). Past failure case: reports/phase-6-qa-gate-skipped-postmortem.html",
+    );
+    return okResult(errors);
+  }
+  const value = parentMatch[1].trim();
+  if (/^skipped$/i.test(value)) {
+    errors.push(
+      "QA Gate 'skipped' requires a reason ('skipped — <reason>')",
+    );
+  }
+  if (QA_GATE_DEGRADED_PATTERN.test(text)) {
+    if (!QA_GATE_DEGRADED_VALID_PATTERN.test(text)) {
+      errors.push(
+        "QA Gate 'degraded' must include pipe-separated triple: '<blocker> | <alternative verification> | <residual risk>'. degraded alone is not enough — see review-gates.md §QA Gate degraded 처리 정신",
+      );
+    }
+    if (phaseComplete && !QA_GATE_DEGRADED_ACCEPTED_PATTERN.test(text)) {
+      errors.push(
+        "phase-complete ledger with 'QA Gate: degraded' requires explicit owner acceptance line: 'QA Gate degraded accepted by <owner> — <date>' (fail-closed by default)",
+      );
+    }
   }
   return okResult(errors);
 }
@@ -622,6 +666,35 @@ export async function checkRepositoryState({
     }
   }
 
+  // QA Gate (PR C — Enforcement) — required when changed files match UI patterns
+  // (same detection as UX/UI Consistency Pass). At least one changed ledger must
+  // carry a non-empty 'QA Gate:' field. 'degraded' alone is insufficient —
+  // must include pipe-separated blocker/alternative/residual triple. Phase-complete
+  // ledgers with degraded require explicit owner acceptance.
+  if (needsUxuiConsistencyPass(files) && changedLedgers.length > 0) {
+    let foundValidQa = false;
+    const qaErrors = [];
+    for (const ledger of changedLedgers) {
+      if (!(await fileExists(resolvedRoot, ledger))) continue;
+      const lContent = await readFile(join(resolvedRoot, ledger), "utf8");
+      const phaseComplete =
+        detectPhaseLedger(lContent, ledger) &&
+        /Status:\s*complete/i.test(lContent);
+      const qa = checkQaGate(lContent, { phaseComplete });
+      if (qa.ok) {
+        foundValidQa = true;
+        break;
+      }
+      for (const e of qa.errors) qaErrors.push(`${ledger}: ${e}`);
+    }
+    if (!foundValidQa) {
+      errors.push(
+        "UI changes detected — at least one changed ledger must include valid 'QA Gate:' field (passed/failed/degraded with triple/skipped with reason). See docs/ai-workflow/review-gates.md §QA Gate. Past failure case: reports/phase-6-qa-gate-skipped-postmortem.html",
+      );
+      for (const e of qaErrors) errors.push(e);
+    }
+  }
+
   const existingLedgers = await findExistingLedgers(resolvedRoot);
   if (existingLedgers.length === 0) {
     warnings.push("no run ledgers found under docs/ai-workflow/runs/");
@@ -769,6 +842,10 @@ export const internals = {
   UI_TEST_ONLY_PATTERNS,
   UXUI_PARENT_PATTERN,
   UXUI_CHILD_PATTERNS,
+  QA_GATE_PATTERN,
+  QA_GATE_DEGRADED_PATTERN,
+  QA_GATE_DEGRADED_VALID_PATTERN,
+  QA_GATE_DEGRADED_ACCEPTED_PATTERN,
   needsLedger,
   needsUxuiConsistencyPass,
   sectionContent,

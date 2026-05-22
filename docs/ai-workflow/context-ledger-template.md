@@ -67,6 +67,7 @@ Append each result packet or link to where it is recorded.
   - Components: <passed | failed | skipped — <reason>> | <evidence line>
   - A11y: <passed | failed | skipped — <reason>> | <evidence line: keyboard/focus/label/contrast 4가지 확인>
   - Responsive: <passed | failed | skipped — <reason>> | <evidence line: 360/768/1280 breakpoint 확인>
+- QA Gate: <passed | failed | degraded — <blocker | alternative verification | residual risk> | skipped — <reason>>  # required when changed files match UI patterns (see review-gates.md §QA Gate). passed = 로컬 앱 부팅 + user path 직접 클릭 + 콘솔 에러 캡처 완료. degraded는 단독 불허 — blocker · 대체 검증 · 잔여 위험 세 항목 의무. release/phase complete + degraded이면 fail-closed (사용자/owner 명시 승인 시만 별도 한 줄 추가로 진행 가능).
 
 ## Fallback State
 

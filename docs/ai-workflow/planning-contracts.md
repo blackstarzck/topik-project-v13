@@ -29,6 +29,7 @@ Before any production code or non-trivial doc change, the plan (or short checkli
 - Test strategy
 - Known risks
 - Acceptance criteria
+- **Verification Strategy** — 적용 가능한 [`review-gates.md`](review-gates.md)의 모든 게이트(TDD · Cross-model review · Plan-Review PASS Gate · Code/Doc Review · Architecture Pass · **QA Gate** · UX/UI Consistency Pass · Finish)를 plan이 명시적으로 옮겨와야 한다. UI 작업이면 `QA Gate`를 빼면 안 된다 — 사고 사례: [`reports/phase-6-qa-gate-skipped-postmortem.html`](../../reports/phase-6-qa-gate-skipped-postmortem.html).
 
 For very small changes this can be a short checklist in the agent response. For larger work, save the plan under `docs/ai-workflow/plans/` and follow that folder's `README.md` for naming and required sections.
 
