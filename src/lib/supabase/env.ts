@@ -1,11 +1,25 @@
 import { z } from "zod";
 
+function isAllowedUrl(value: string): boolean {
+  if (value.startsWith("https://")) return true;
+  // Development-only exception for local Supabase. Production and test
+  // continue to require https. See Phase 7 Task 0.
+  if (process.env.NODE_ENV === "development") {
+    return (
+      value.startsWith("http://127.0.0.1") ||
+      value.startsWith("http://localhost")
+    );
+  }
+  return false;
+}
+
 const PublicEnvSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z
     .string()
     .url({ message: "NEXT_PUBLIC_SUPABASE_URL must be a valid URL" })
-    .refine((value) => value.startsWith("https://"), {
-      message: "NEXT_PUBLIC_SUPABASE_URL must use https",
+    .refine(isAllowedUrl, {
+      message:
+        "NEXT_PUBLIC_SUPABASE_URL must use https (or http://127.0.0.1 / http://localhost in development)",
     }),
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z
     .string()
