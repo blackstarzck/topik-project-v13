@@ -1,0 +1,145 @@
+import { describe, expect, it } from "vitest";
+
+import {
+  REASON_CONTENT,
+  isValidReason,
+  mapSupabaseErrorCode,
+  sanitizeNext,
+  sanitizeRetryAfterSeconds,
+  type AuthErrorReason,
+} from "../../../src/lib/auth/error-mapping";
+
+describe("mapSupabaseErrorCode", () => {
+  it("returns canonical reason for each Supabase error code", () => {
+    const canonical: AuthErrorReason[] = [
+      "otp_expired",
+      "flow_state_expired",
+      "flow_state_not_found",
+      "bad_code_verifier",
+      "user_not_found",
+      "over_email_send_rate_limit",
+      "over_request_rate_limit",
+      "email_not_confirmed",
+      "signup_disabled",
+      "access_denied",
+      "unknown",
+    ];
+    for (const code of canonical) {
+      expect(mapSupabaseErrorCode(code)).toBe(code);
+    }
+  });
+
+  it("falls back to 'unknown' for unsupported code", () => {
+    expect(mapSupabaseErrorCode("some_new_supabase_code")).toBe("unknown");
+    expect(mapSupabaseErrorCode("")).toBe("unknown");
+    expect(mapSupabaseErrorCode(null)).toBe("unknown");
+    expect(mapSupabaseErrorCode(undefined)).toBe("unknown");
+  });
+});
+
+describe("isValidReason", () => {
+  it("accepts canonical reasons", () => {
+    expect(isValidReason("otp_expired")).toBe(true);
+    expect(isValidReason("user_not_found")).toBe(true);
+  });
+  it("rejects non-canonical or empty", () => {
+    expect(isValidReason("invented_reason")).toBe(false);
+    expect(isValidReason("")).toBe(false);
+    expect(isValidReason(null)).toBe(false);
+  });
+});
+
+describe("REASON_CONTENT", () => {
+  it("covers every AuthErrorReason exactly once", () => {
+    const keys: AuthErrorReason[] = [
+      "otp_expired",
+      "flow_state_expired",
+      "flow_state_not_found",
+      "bad_code_verifier",
+      "user_not_found",
+      "over_email_send_rate_limit",
+      "over_request_rate_limit",
+      "email_not_confirmed",
+      "signup_disabled",
+      "access_denied",
+      "unknown",
+    ];
+    expect(Object.keys(REASON_CONTENT).sort()).toEqual([...keys].sort());
+  });
+
+  it("each entry has non-empty title and message", () => {
+    for (const key of Object.keys(REASON_CONTENT) as AuthErrorReason[]) {
+      const entry = REASON_CONTENT[key];
+      expect(entry.title.length).toBeGreaterThan(0);
+      expect(entry.message.length).toBeGreaterThan(0);
+      expect(entry.primary.label.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("user_not_found primary CTA points to signup (cleanup-deleted recovery path)", () => {
+    expect(REASON_CONTENT.user_not_found.primary.kind).toBe("signup");
+  });
+
+  it("rate-limit reasons have countdown enabled", () => {
+    expect(REASON_CONTENT.over_email_send_rate_limit.hasCountdown).toBe(true);
+    expect(REASON_CONTENT.over_request_rate_limit.hasCountdown).toBe(true);
+  });
+
+  it("resend-relevant reasons show editable email field", () => {
+    expect(REASON_CONTENT.otp_expired.showsEmailField).toBe(true);
+    expect(REASON_CONTENT.email_not_confirmed.showsEmailField).toBe(true);
+    expect(REASON_CONTENT.over_email_send_rate_limit.showsEmailField).toBe(true);
+  });
+});
+
+describe("sanitizeNext", () => {
+  it("accepts a relative path", () => {
+    expect(sanitizeNext("/dashboard")).toBe("/dashboard");
+    expect(sanitizeNext("/practice/problems")).toBe("/practice/problems");
+  });
+
+  it("falls back when not starting with /", () => {
+    expect(sanitizeNext("dashboard")).toBe("/dashboard");
+  });
+
+  it("rejects protocol-relative URL", () => {
+    expect(sanitizeNext("//evil.com")).toBe("/dashboard");
+  });
+
+  it("rejects absolute URL", () => {
+    expect(sanitizeNext("https://evil.com")).toBe("/dashboard");
+    expect(sanitizeNext("http://evil.com/dashboard")).toBe("/dashboard");
+  });
+
+  it("rejects javascript scheme", () => {
+    expect(sanitizeNext("javascript:alert(1)")).toBe("/dashboard");
+  });
+
+  it("uses custom fallback", () => {
+    expect(sanitizeNext(null, "/home")).toBe("/home");
+    expect(sanitizeNext("//evil", "/home")).toBe("/home");
+  });
+});
+
+describe("sanitizeRetryAfterSeconds", () => {
+  it("accepts positive integer within range", () => {
+    expect(sanitizeRetryAfterSeconds("60")).toBe(60);
+    expect(sanitizeRetryAfterSeconds("3600")).toBe(3600);
+    expect(sanitizeRetryAfterSeconds("1")).toBe(1);
+    expect(sanitizeRetryAfterSeconds("86400")).toBe(86400);
+  });
+
+  it("rejects out of range", () => {
+    expect(sanitizeRetryAfterSeconds("0")).toBeNull();
+    expect(sanitizeRetryAfterSeconds("-1")).toBeNull();
+    expect(sanitizeRetryAfterSeconds("86401")).toBeNull();
+  });
+
+  it("rejects non-integer", () => {
+    expect(sanitizeRetryAfterSeconds("60.5")).toBeNull();
+    expect(sanitizeRetryAfterSeconds("abc")).toBeNull();
+    expect(sanitizeRetryAfterSeconds("")).toBeNull();
+    expect(sanitizeRetryAfterSeconds(null)).toBeNull();
+    expect(sanitizeRetryAfterSeconds(undefined)).toBeNull();
+  });
+});
