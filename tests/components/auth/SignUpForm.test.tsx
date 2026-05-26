@@ -13,6 +13,7 @@ import type { ReactNode } from "react";
 
 const signUpMock = vi.fn();
 const resendMock = vi.fn();
+const pushMock = vi.fn();
 
 vi.mock("@/lib/supabase/browser", () => ({
   createSupabaseBrowserClient: () => ({
@@ -21,6 +22,10 @@ vi.mock("@/lib/supabase/browser", () => ({
       resend: (...args: unknown[]) => resendMock(...args),
     },
   }),
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: pushMock, replace: vi.fn(), refresh: vi.fn() }),
 }));
 
 import { SignUpForm } from "../../../src/components/auth/SignUpForm";
@@ -34,6 +39,7 @@ beforeEach(() => {
   signUpMock.mockResolvedValue({ error: null });
   resendMock.mockReset();
   resendMock.mockResolvedValue({ error: null });
+  pushMock.mockReset();
 
   vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://talkpik.example.com");
 
@@ -132,12 +138,13 @@ describe("SignUpForm", () => {
     const call = signUpMock.mock.calls[0][0];
     expect(call.email).toBe("valid@example.com");
     expect(call.password).toBe("password123");
+    // Phase 8-D: emailRedirectTo now points to /auth/callback?next=...
     expect(call.options.emailRedirectTo).toBe(
-      "https://talkpik.example.com/onboarding/learning-goal",
+      "https://talkpik.example.com/auth/callback?next=/onboarding/learning-goal",
     );
   });
 
-  it("shows email confirmation screen after successful sign-up", async () => {
+  it("redirects to /auth/verify-email after successful sign-up (Phase 8-D)", async () => {
     renderInApp(<SignUpForm />);
 
     fireEvent.change(screen.getByLabelText("이메일"), {
@@ -156,46 +163,10 @@ describe("SignUpForm", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText("이메일을 확인하세요")).toBeTruthy();
+      expect(pushMock).toHaveBeenCalledTimes(1);
     });
-    expect(
-      screen.getByRole("button", { name: "이메일 다시 보내기" }),
-    ).toBeTruthy();
-  });
-
-  it("calls supabase.auth.resend when 'resend' button clicked", async () => {
-    renderInApp(<SignUpForm />);
-
-    // submit first
-    fireEvent.change(screen.getByLabelText("이메일"), {
-      target: { value: "valid@example.com" },
-    });
-    fireEvent.change(screen.getByLabelText("비밀번호"), {
-      target: { value: "password123" },
-    });
-    fireEvent.change(screen.getByLabelText("비밀번호 확인"), {
-      target: { value: "password123" },
-    });
-    fireEvent.click(screen.getByRole("checkbox"));
-    await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "회원가입" }));
-    });
-    await waitFor(() =>
-      screen.getByRole("button", { name: "이메일 다시 보내기" }),
+    expect(pushMock.mock.calls[0][0]).toBe(
+      "/auth/verify-email?email=valid%40example.com",
     );
-
-    // click resend
-    await act(async () => {
-      fireEvent.click(
-        screen.getByRole("button", { name: "이메일 다시 보내기" }),
-      );
-    });
-
-    await waitFor(() => {
-      expect(resendMock).toHaveBeenCalledTimes(1);
-    });
-    const resendCall = resendMock.mock.calls[0][0];
-    expect(resendCall.type).toBe("signup");
-    expect(resendCall.email).toBe("valid@example.com");
   });
 });

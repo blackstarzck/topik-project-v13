@@ -27,6 +27,7 @@ vi.mock("@/lib/supabase/browser", () => ({
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: pushMock, replace: vi.fn(), refresh: vi.fn() }),
+  useSearchParams: () => ({ get: () => null }),
 }));
 
 import { LoginForm } from "../../../src/components/auth/LoginForm";
@@ -108,8 +109,9 @@ describe("LoginForm", () => {
     });
     const call = signInWithOtpMock.mock.calls[0][0];
     expect(call.email).toBe("u@example.com");
+    // Phase 8-D: magic-link redirect now flows through /auth/callback
     expect(call.options.emailRedirectTo).toBe(
-      "https://talkpik.example.com/dashboard",
+      "https://talkpik.example.com/auth/callback?next=/dashboard",
     );
   });
 

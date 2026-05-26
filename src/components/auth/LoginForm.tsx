@@ -1,15 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { App, Button, Form, Input, Segmented, Typography } from "antd";
+import { App, Alert, Button, Form, Input, Segmented, Typography } from "antd";
 import type { FormInstance } from "antd";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { buildAuthRedirectUrl } from "@/lib/auth/redirect-url";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 const { Paragraph, Title } = Typography;
+
+const SESSION_NOTICE: Record<string, string> = {
+  session_expired: "세션이 만료되어 로그아웃됐어요. 다시 로그인해주세요.",
+};
 
 type LoginMode = "password" | "magic-link";
 
@@ -19,6 +23,9 @@ type MagicLinkFields = { email: string };
 export function LoginForm() {
   const { message } = App.useApp();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const noticeReason = searchParams.get("reason");
+  const noticeText = noticeReason ? SESSION_NOTICE[noticeReason] : undefined;
   const [mode, setMode] = useState<LoginMode>("password");
   const [submitting, setSubmitting] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState<string | null>(null);
@@ -45,7 +52,9 @@ export function LoginForm() {
     const { error } = await supabase.auth.signInWithOtp({
       email: values.email,
       options: {
-        emailRedirectTo: buildAuthRedirectUrl("/dashboard"),
+        emailRedirectTo: buildAuthRedirectUrl(
+          "/auth/callback?next=/dashboard",
+        ),
       },
     });
     setSubmitting(false);
@@ -71,6 +80,15 @@ export function LoginForm() {
 
   return (
     <div>
+      {noticeText && (
+        <Alert
+          type="warning"
+          showIcon
+          message={noticeText}
+          style={{ marginBottom: 16 }}
+          data-testid="login-session-notice"
+        />
+      )}
       <Segmented
         block
         value={mode}

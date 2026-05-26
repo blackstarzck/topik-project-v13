@@ -1,6 +1,12 @@
 "use client";
 
+// Phase 7-B (original) + Phase 8-D (verify-email redirect)
+// - After successful sign-up, router.push('/auth/verify-email?email=...')
+//   instead of in-place "이메일 확인하세요" state. Verify page handles
+//   resend with 60s cooldown and survives reloads/deep-links.
+
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { App, Button, Checkbox, Form, Input, Typography } from "antd";
 
 import { buildAuthRedirectUrl } from "@/lib/auth/redirect-url";
@@ -16,74 +22,32 @@ type SignUpFields = {
   terms: boolean;
 };
 
-type Status =
-  | { kind: "idle" }
-  | { kind: "submitting" }
-  | { kind: "sent"; email: string }
-  | { kind: "resending"; email: string };
-
 export function SignUpForm() {
   const { message } = App.useApp();
-  const [status, setStatus] = useState<Status>({ kind: "idle" });
+  const router = useRouter();
+  const [submitting, setSubmitting] = useState(false);
   const [form] = Form.useForm<SignUpFields>();
 
   async function handleSignUp(values: SignUpFields) {
-    setStatus({ kind: "submitting" });
+    setSubmitting(true);
     const supabase = createSupabaseBrowserClient();
     const { error } = await supabase.auth.signUp({
       email: values.email,
       password: values.password,
       options: {
         data: values.displayName ? { display_name: values.displayName } : undefined,
-        emailRedirectTo: buildAuthRedirectUrl("/onboarding/learning-goal"),
+        emailRedirectTo: buildAuthRedirectUrl(
+          "/auth/callback?next=/onboarding/learning-goal",
+        ),
       },
     });
 
     if (error) {
-      setStatus({ kind: "idle" });
+      setSubmitting(false);
       message.error(`가입 실패: ${error.message}`);
       return;
     }
-    setStatus({ kind: "sent", email: values.email });
-  }
-
-  async function handleResend() {
-    if (status.kind !== "sent") return;
-    const currentEmail = status.email;
-    setStatus({ kind: "resending", email: currentEmail });
-    const supabase = createSupabaseBrowserClient();
-    const { error } = await supabase.auth.resend({
-      type: "signup",
-      email: status.email,
-      options: {
-        emailRedirectTo: buildAuthRedirectUrl("/onboarding/learning-goal"),
-      },
-    });
-    setStatus({ kind: "sent", email: status.email });
-    if (error) {
-      message.error(`재전송 실패: ${error.message}`);
-    } else {
-      message.success("이메일을 다시 보냈습니다.");
-    }
-  }
-
-  if (status.kind === "sent" || status.kind === "resending") {
-    return (
-      <div>
-        <Title level={3}>이메일을 확인하세요</Title>
-        <Paragraph>
-          <strong>{status.email}</strong> 로 확인 메일을 보냈습니다. 메일 안의
-          링크를 누르면 학습 목표 설정 화면으로 이동합니다.
-        </Paragraph>
-        <Button
-          type="default"
-          onClick={handleResend}
-          loading={status.kind === "resending"}
-        >
-          이메일 다시 보내기
-        </Button>
-      </div>
-    );
+    router.push(`/auth/verify-email?email=${encodeURIComponent(values.email)}`);
   }
 
   return (
@@ -158,7 +122,7 @@ export function SignUpForm() {
           type="primary"
           htmlType="submit"
           block
-          loading={status.kind === "submitting"}
+          loading={submitting}
         >
           회원가입
         </Button>
