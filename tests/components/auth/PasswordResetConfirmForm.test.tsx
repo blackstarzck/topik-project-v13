@@ -1,0 +1,104 @@
+// @vitest-environment jsdom
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
+import { App as AntdApp } from "antd";
+import type { ReactNode } from "react";
+
+const updateUserMock = vi.fn();
+const pushMock = vi.fn();
+
+vi.mock("@/lib/supabase/browser", () => ({
+  createSupabaseBrowserClient: () => ({
+    auth: {
+      updateUser: (...args: unknown[]) => updateUserMock(...args),
+    },
+  }),
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: pushMock, replace: vi.fn(), refresh: vi.fn() }),
+}));
+
+import { PasswordResetConfirmForm } from "../../../src/components/auth/PasswordResetConfirmForm";
+
+function renderInApp(node: ReactNode) {
+  return render(<AntdApp>{node}</AntdApp>);
+}
+
+beforeEach(() => {
+  updateUserMock.mockReset();
+  updateUserMock.mockResolvedValue({ error: null });
+  pushMock.mockReset();
+  if (!window.matchMedia) {
+    Object.defineProperty(window, "matchMedia", {
+      writable: true,
+      value: () => ({
+        matches: false,
+        media: "",
+        onchange: null,
+        addListener: () => undefined,
+        removeListener: () => undefined,
+        addEventListener: () => undefined,
+        removeEventListener: () => undefined,
+        dispatchEvent: () => false,
+      }),
+    });
+  }
+});
+
+afterEach(() => {
+  cleanup();
+});
+
+describe("PasswordResetConfirmForm", () => {
+  it("rejects mismatched password confirmation", async () => {
+    renderInApp(<PasswordResetConfirmForm />);
+
+    fireEvent.change(screen.getByLabelText("새 비밀번호"), {
+      target: { value: "newpass12" },
+    });
+    fireEvent.change(screen.getByLabelText("비밀번호 확인"), {
+      target: { value: "DIFFERENT" },
+    });
+
+    await act(async () => {
+      fireEvent.click(
+        screen.getByRole("button", { name: "비밀번호 변경" }),
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("비밀번호가 일치하지 않습니다")).toBeTruthy();
+    });
+    expect(updateUserMock).not.toHaveBeenCalled();
+  });
+
+  it("calls updateUser with new password on valid submit and redirects", async () => {
+    renderInApp(<PasswordResetConfirmForm />);
+
+    fireEvent.change(screen.getByLabelText("새 비밀번호"), {
+      target: { value: "newpass12" },
+    });
+    fireEvent.change(screen.getByLabelText("비밀번호 확인"), {
+      target: { value: "newpass12" },
+    });
+
+    await act(async () => {
+      fireEvent.click(
+        screen.getByRole("button", { name: "비밀번호 변경" }),
+      );
+    });
+
+    await waitFor(() => {
+      expect(updateUserMock).toHaveBeenCalledWith({ password: "newpass12" });
+    });
+    expect(pushMock).toHaveBeenCalledWith("/login");
+  });
+});

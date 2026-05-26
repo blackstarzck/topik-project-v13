@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
-export const metadata: Metadata = {
-  title: "로그인 — TALKPIK",
-};
+import { LoginForm } from "@/components/auth/LoginForm";
+
+export const metadata: Metadata = { title: "로그인 — TALKPIK" };
 
 export default function LoginPage() {
   return (
-    <main style={{ padding: "2rem", maxWidth: 480, margin: "0 auto" }}>
-      <h1 style={{ fontSize: "1.5rem", marginBottom: "1rem" }}>로그인</h1>
-      <p>로그인 UI는 다음 단계(Phase 3)에서 제공됩니다.</p>
-      <p style={{ marginTop: "1rem", color: "#666", fontSize: "0.875rem" }}>
-        이 경로는 보호 라우트의 redirect 대상 placeholder로 동작합니다.
+    <main style={{ padding: "2rem 1rem", maxWidth: 480, margin: "0 auto" }}>
+      <h1 style={{ textAlign: "center", fontSize: 24 }}>로그인</h1>
+      <LoginForm />
+      <p style={{ textAlign: "center", marginTop: 16 }}>
+        계정이 없으신가요? <Link href="/sign-up">회원가입</Link>
       </p>
     </main>
   );

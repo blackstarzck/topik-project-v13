@@ -1,14 +1,17 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+
+import { PasswordResetRequestForm } from "@/components/auth/PasswordResetRequestForm";
 
 export const metadata: Metadata = { title: "비밀번호 재설정 — TALKPIK" };
 
 export default function PasswordResetPage() {
   return (
-    <main style={{ padding: "2rem", maxWidth: 480, margin: "0 auto" }}>
-      <h1 style={{ fontSize: "1.5rem", marginBottom: "1rem" }}>비밀번호 재설정</h1>
-      <p>비밀번호 재설정 폼은 다음 단계에서 제공됩니다.</p>
-      <p style={{ marginTop: "1rem", color: "#666", fontSize: "0.875rem" }}>
-        X-06 placeholder. 공개 라우트.
+    <main style={{ padding: "2rem 1rem", maxWidth: 480, margin: "0 auto" }}>
+      <h1 style={{ textAlign: "center", fontSize: 24 }}>비밀번호 재설정</h1>
+      <PasswordResetRequestForm />
+      <p style={{ textAlign: "center", marginTop: 16 }}>
+        <Link href="/login">로그인으로 돌아가기</Link>
       </p>
     </main>
   );

@@ -1,14 +1,17 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+
+import { SignUpForm } from "@/components/auth/SignUpForm";
 
 export const metadata: Metadata = { title: "회원가입 — TALKPIK" };
 
 export default function SignUpPage() {
   return (
-    <main style={{ padding: "2rem", maxWidth: 480, margin: "0 auto" }}>
-      <h1 style={{ fontSize: "1.5rem", marginBottom: "1rem" }}>회원가입</h1>
-      <p>회원가입 폼은 다음 단계에서 제공됩니다.</p>
-      <p style={{ marginTop: "1rem", color: "#666", fontSize: "0.875rem" }}>
-        A-01 placeholder. 공개 라우트.
+    <main style={{ padding: "2rem 1rem", maxWidth: 480, margin: "0 auto" }}>
+      <h1 style={{ textAlign: "center", fontSize: 24 }}>회원가입</h1>
+      <SignUpForm />
+      <p style={{ textAlign: "center", marginTop: 16 }}>
+        이미 계정이 있으신가요? <Link href="/login">로그인</Link>
       </p>
     </main>
   );

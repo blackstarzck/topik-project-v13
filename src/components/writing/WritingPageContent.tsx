@@ -2,12 +2,15 @@ import { Empty } from "antd";
 import { QuestionPrompt } from "./QuestionPrompt";
 import { HelpPanel } from "./HelpPanel";
 import { WritingEditor } from "./WritingEditor";
+import { LongFormEditor } from "./LongFormEditor";
+import { isLongForm } from "@/lib/writing/types";
 import type { QuestionNo, WritingDraftRow } from "@/lib/writing/types";
+import type { WritingProblem } from "@/lib/writing/server";
 
 type Props = {
   questionNo: QuestionNo;
   userId: string;
-  problem: { id: string; title: string } | null;
+  problem: WritingProblem | null;
   draft: WritingDraftRow | null;
 };
 
@@ -28,14 +31,24 @@ export function WritingPageContent({
         <QuestionPrompt
           questionNo={questionNo}
           title={problem.title}
-          prompt={problem.title}
+          prompt={problem.prompt}
         />
-        <WritingEditor
-          userId={userId}
-          problemId={problem.id}
-          questionNo={questionNo}
-          initialDraft={draft}
-        />
+        {isLongForm(questionNo) ? (
+          <LongFormEditor
+            userId={userId}
+            problemId={problem.id}
+            questionNo={questionNo as 53 | 54}
+            initialDraft={draft}
+            problemMaterials={problem.materials}
+          />
+        ) : (
+          <WritingEditor
+            userId={userId}
+            problemId={problem.id}
+            questionNo={questionNo}
+            initialDraft={draft}
+          />
+        )}
       </div>
       <HelpPanel />
     </div>

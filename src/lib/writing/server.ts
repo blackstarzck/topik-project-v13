@@ -90,7 +90,19 @@ export async function getComparisonReport(
   return data;
 }
 
-export type WritingProblem = { id: string; title: string };
+// Phase 7 Task 3 (P0-3) — problem.materials shape for 53번 chart rendering.
+// Codex Round 1 P1-PLAN-3 required exposing materials in getWritingProblem.
+export type WritingProblemMaterials =
+  | { chart: { type: "bar" | "line" | "pie"; data: unknown[]; options?: Record<string, unknown> } }
+  | { text: string }
+  | null;
+
+export type WritingProblem = {
+  id: string;
+  title: string;
+  prompt: string;
+  materials: WritingProblemMaterials;
+};
 
 export async function getWritingProblem(
   questionNo: number,
@@ -100,7 +112,7 @@ export async function getWritingProblem(
   const supabase = await createClient();
   const base = supabase
     .from("problems")
-    .select("id, title")
+    .select("id, title, prompt, materials")
     .eq("domain", "writing")
     .eq("question_no", questionNo)
     .eq("publish_status", "published")
@@ -109,5 +121,12 @@ export async function getWritingProblem(
     ? await base.eq("id", problemId)
     : await base;
   if (error) throw new Error(`getWritingProblem: ${error.message}`);
-  return data?.[0] ?? null;
+  const row = data?.[0];
+  if (!row) return null;
+  return {
+    id: row.id,
+    title: row.title,
+    prompt: row.prompt,
+    materials: row.materials as WritingProblemMaterials,
+  };
 }

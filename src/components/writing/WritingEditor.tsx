@@ -13,8 +13,17 @@ import {
   type QuestionNo,
   type WritingDraftRow,
 } from "@/lib/writing/types";
+import {
+  getCharLimit,
+  isCountInRecommendedRange,
+  isCountSubmittable,
+} from "@/lib/writing/constants";
 import { AutosaveBadge } from "./AutosaveBadge";
 import { SubmissionConfirmModal } from "./SubmissionConfirmModal";
+import {
+  AutosaveWarningModal,
+  type WarningTrigger,
+} from "./AutosaveWarningModal";
 
 const { Text } = Typography;
 
@@ -25,8 +34,6 @@ type Props = {
   initialDraft: WritingDraftRow | null;
 };
 
-const MIN_CHARS_SHORT = 10;
-const MIN_CHARS_LONG = 200;
 const DEBOUNCE_MS = 2000;
 
 export function WritingEditor({
@@ -43,16 +50,21 @@ export function WritingEditor({
     initialDraft?.last_saved_at ?? null,
   );
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [warningTrigger, setWarningTrigger] = useState<WarningTrigger | null>(
+    null,
+  );
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveSeqRef = useRef(0);
   const upsert = useUpsertDraft();
   const submit = useSubmitWriting();
   const router = useRouter();
 
-  const minChars = isShortAnswer(questionNo)
-    ? MIN_CHARS_SHORT
-    : MIN_CHARS_LONG;
+  const limit = getCharLimit(questionNo);
   const charCount = useMemo(() => text.length, [text]);
+  const submittable = isCountSubmittable(charCount, questionNo);
+  const inRecommended = isCountInRecommendedRange(charCount, questionNo);
+  // Used by SubmissionConfirmModal "minimum to submit" line.
+  const minChars = limit.hardMin;
 
   useEffect(() => {
     return () => {
@@ -85,10 +97,7 @@ export function WritingEditor({
           onError: () => {
             if (seq !== saveSeqRef.current) return;
             setStatus("failed");
-            notification.error({
-              message: "자동 저장 실패",
-              description: "다시 시도하거나 새로 고침해 주세요.",
-            });
+            setWarningTrigger("save_failure");
           },
         },
       );
@@ -131,14 +140,20 @@ export function WritingEditor({
     <Space direction="vertical" size="middle" style={{ width: "100%" }}>
       <Space>
         <AutosaveBadge status={status} lastSavedAt={lastSavedAt} />
-        <Text type="secondary">
-          {charCount}자 · 최소 {minChars}자
+        <Text type={inRecommended ? "success" : "secondary"}>
+          {charCount} / {limit.hardMax}자{" "}
+          {limit.recommendedMin !== limit.hardMin ||
+          limit.recommendedMax !== limit.hardMax
+            ? `(권장 ${limit.recommendedMin}-${limit.recommendedMax}자)`
+            : `(최소 ${limit.hardMin}자)`}
+          {inRecommended ? " ✓" : ""}
         </Text>
       </Space>
       <Input.TextArea
         value={text}
         onChange={(e) => onChange(e.target.value)}
         autoSize={{ minRows: isShortAnswer(questionNo) ? 3 : 12 }}
+        maxLength={limit.hardMax}
         placeholder={
           isShortAnswer(questionNo)
             ? "답안을 짧고 명확하게 작성하세요."
@@ -149,7 +164,7 @@ export function WritingEditor({
       <button
         type="button"
         onClick={() => setConfirmOpen(true)}
-        disabled={charCount < minChars || submit.isPending}
+        disabled={!submittable || submit.isPending}
         style={{ alignSelf: "flex-start" }}
       >
         제출하기
@@ -161,6 +176,17 @@ export function WritingEditor({
         loading={submit.isPending}
         onConfirm={onConfirmSubmit}
         onCancel={() => setConfirmOpen(false)}
+      />
+      <AutosaveWarningModal
+        trigger={warningTrigger}
+        lastSavedAt={lastSavedAt}
+        retrying={upsert.isPending}
+        onKeep={() => setWarningTrigger(null)}
+        onRetry={() => {
+          setWarningTrigger(null);
+          scheduleSave(text);
+        }}
+        onProceed={() => setWarningTrigger(null)}
       />
     </Space>
   );
