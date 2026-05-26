@@ -18,6 +18,8 @@ export default defineConfig({
       ".claude/**",
       ".codex/**",
       ".next/**",
+      // Playwright e2e specs run via `pnpm exec playwright test`, not vitest.
+      "tests/e2e/**",
     ],
   },
 });

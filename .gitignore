@@ -59,6 +59,17 @@
 harness-docs-analysis.html
 workflow-evaluation.html
 
+# Implementation Coverage Audit (Plan 20260523) — analysis-only artifacts.
+# These paths hold secret/session/temp files during the audit execution; durable
+# outputs are promoted to reports/ before commit. See:
+#   docs/ai-workflow/plans/20260523-0100-implementation-coverage-audit.md (§4, §10 Task 0)
+scripts/audit-setup/
+tests/e2e/auth-state/
+screenshots/
+tests/e2e/coverage/failure-log.json
+analysis/
+.env.local.bak
+
 # Dependencies and build outputs
 node_modules/
 dist/
@@ -66,6 +77,10 @@ build/
 .next/
 out/
 coverage/
+# The `coverage/` rule above is for test coverage output (NYC/Vitest). Our
+# Playwright E2E specs happen to live under tests/e2e/coverage/ — unignore them.
+!tests/e2e/coverage/
+!tests/e2e/coverage/**
 
 # Logs and caches
 *.log
