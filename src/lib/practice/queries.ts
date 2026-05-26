@@ -5,9 +5,11 @@ import { createSupabaseBrowserClient } from "../supabase/browser";
 import {
   type ProblemListParams,
   type ProblemRow,
+  type ProblemRowWithState,
   type ProblemSort,
   type QuestionNo,
   type RecommendationCard,
+  type SolveState,
 } from "./types";
 
 type BrowserClient = ReturnType<typeof createSupabaseBrowserClient>;
@@ -46,6 +48,43 @@ export function pageRange(page: number, pageSize: number): {
   const from = (safePage - 1) * safeSize;
   const to = from + safeSize - 1;
   return { from, to };
+}
+
+// Phase 7-D Task 12 (P1-8) — user-side solve state + recommended map.
+// Round 2 fix (Codex P1): submissions에 id + submitted_at 추가로 latestSubmissionId 결정.
+async function fetchUserSolveMap(
+  supabase: BrowserClient,
+  userId: string,
+): Promise<{
+  solveStates: Map<string, SolveState>;
+  recommended: Set<string>;
+  latestSubmissionByProblem: Map<string, string>;
+}> {
+  const [drafts, subs, recs] = await Promise.all([
+    supabase.from("writing_drafts").select("problem_id").eq("user_id", userId),
+    // submitted_at desc → 첫 iteration이 최신. 동일 problem_id 후속 row는 무시.
+    supabase
+      .from("writing_submissions")
+      .select("id, problem_id, submitted_at")
+      .eq("user_id", userId)
+      .order("submitted_at", { ascending: false }),
+    supabase
+      .from("recommendation_items")
+      .select("problem_id")
+      .eq("user_id", userId)
+      .eq("status", "active"),
+  ]);
+  const solveStates = new Map<string, SolveState>();
+  const latestSubmissionByProblem = new Map<string, string>();
+  for (const r of drafts.data ?? []) solveStates.set(r.problem_id, "attempted");
+  for (const r of subs.data ?? []) {
+    solveStates.set(r.problem_id, "submitted"); // submission overrides attempted
+    if (!latestSubmissionByProblem.has(r.problem_id)) {
+      latestSubmissionByProblem.set(r.problem_id, r.id);
+    }
+  }
+  const recommended = new Set((recs.data ?? []).map((r) => r.problem_id));
+  return { solveStates, recommended, latestSubmissionByProblem };
 }
 
 export async function fetchProblemList(
@@ -89,6 +128,61 @@ export function useProblemList(params: ProblemListParams) {
   return useQuery({
     queryKey: problemListQueryKey(params),
     queryFn: () => fetchProblemList(params),
+    placeholderData: (previous) => previous,
+  });
+}
+
+// Phase 7-D Task 12 — Enriched list with user-side solveState + recommended.
+// Client-side post-filter for solveStatus / recommended (server-side filter
+// requires a SECURITY DEFINER RPC; deferred per Plan rev3 §10).
+export async function fetchUserProblemList(
+  params: ProblemListParams,
+  userId: string,
+  createClient: ClientFactory = createSupabaseBrowserClient,
+): Promise<{ rows: ProblemRowWithState[]; total: number }> {
+  const supabase = createClient();
+  const [base, userMap] = await Promise.all([
+    fetchProblemList(params, () => supabase),
+    fetchUserSolveMap(supabase, userId),
+  ]);
+  const enriched: ProblemRowWithState[] = base.rows.map((row) => ({
+    ...row,
+    solveState: userMap.solveStates.get(row.id) ?? "none",
+    recommended: userMap.recommended.has(row.id),
+    latestSubmissionId:
+      userMap.latestSubmissionByProblem.get(row.id) ?? null,
+  }));
+
+  let rows = enriched;
+  if (params.filter.recommended === true) {
+    rows = rows.filter((r) => r.recommended);
+  }
+  switch (params.filter.solveStatus) {
+    case "unsolved":
+      rows = rows.filter((r) => r.solveState === "none");
+      break;
+    case "inProgress":
+      rows = rows.filter((r) => r.solveState === "attempted");
+      break;
+    case "solved":
+      rows = rows.filter((r) => r.solveState === "submitted");
+      break;
+  }
+  // total은 server-side total (post-filter total은 client만 적용된 수치)
+  return { rows, total: base.total };
+}
+
+export function useUserProblemList(
+  params: ProblemListParams,
+  userId: string | null,
+) {
+  return useQuery({
+    queryKey: ["user-problem-list", userId, params] as const,
+    queryFn: () =>
+      userId
+        ? fetchUserProblemList(params, userId)
+        : Promise.resolve({ rows: [], total: 0 }),
+    enabled: userId !== null,
     placeholderData: (previous) => previous,
   });
 }

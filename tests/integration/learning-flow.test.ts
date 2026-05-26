@@ -33,9 +33,25 @@ vi.mock("@/lib/learning/kpi", () => ({
     }),
 }));
 
-vi.mock("@/lib/supabase/server", () => ({
-  createSupabaseServerClient: () => Promise.resolve({}),
-}));
+// Phase 7-D Task 11: DashboardPage now reads writing_feedback + writing_drafts
+// for RecentFeedback + Alerts cards. Mock returns chainable thenables.
+vi.mock("@/lib/supabase/server", () => {
+  const emptyChain = {
+    select: () => emptyChain,
+    eq: () => emptyChain,
+    order: () => emptyChain,
+    limit: () => Promise.resolve({ data: [], count: 0, error: null }),
+    head: () => Promise.resolve({ data: null, count: 0, error: null }),
+    then: (cb: (v: { data: unknown[]; count: number; error: null }) => unknown) =>
+      cb({ data: [], count: 0, error: null }),
+  };
+  return {
+    createSupabaseServerClient: () =>
+      Promise.resolve({
+        from: () => emptyChain,
+      }),
+  };
+});
 
 beforeEach(() => {
   vi.clearAllMocks();

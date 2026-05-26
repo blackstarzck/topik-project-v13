@@ -1,27 +1,17 @@
 "use client";
 
-import { Button, Card, Col, Empty, Progress, Row, Space, Typography } from "antd";
+import { Button, Card, Col, Empty, Row, Space, Typography } from "antd";
 import { useRouter } from "next/navigation";
 import { logStudyEvent } from "@/lib/events/study-events";
+import { DimensionTabs } from "./DimensionTabs";
+import { DiagnosticCard } from "./DiagnosticCard";
 
 const { Title, Paragraph, Text } = Typography;
-
-/**
- * Korean labels for the 6 weakness dimensions. The keys MUST stay in lockstep
- * with `WEAKNESS_DIMENSIONS` in `src/lib/practice/weakness.ts`.
- */
-const DIMENSION_LABELS: Record<string, string> = {
-  grammar: "문법",
-  vocab: "어휘",
-  structure: "구조",
-  content: "내용",
-  expression: "표현",
-  topic_fit: "주제 적합성",
-};
 
 type WeakDimensionProp = {
   dimension: string;
   averageScore: number;
+  sampleCount?: number;
 };
 
 type RecommendationProp = {
@@ -33,9 +23,15 @@ type RecommendationProp = {
 type Props = {
   weakDimensions: WeakDimensionProp[];
   recommendations: RecommendationProp[];
+  /** ISO timestamp for diagnostic refresh — Phase 7-D Task 7 */
+  updatedAt?: string | null;
 };
 
-export function WeaknessView({ weakDimensions, recommendations }: Props) {
+export function WeaknessView({
+  weakDimensions,
+  recommendations,
+  updatedAt,
+}: Props) {
   const router = useRouter();
 
   if (weakDimensions.length === 0) {
@@ -73,29 +69,15 @@ export function WeaknessView({ weakDimensions, recommendations }: Props) {
         </Paragraph>
       </div>
 
-      <Row gutter={[24, 24]}>
-        <Col xs={24} md={10}>
-          <Card title="약점 영역">
-            <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-              {weakDimensions.map((w) => {
-                const label = DIMENSION_LABELS[w.dimension] ?? w.dimension;
-                const percent = Math.round(w.averageScore * 100);
-                return (
-                  <div key={w.dimension}>
-                    <Text strong>{label}</Text>
-                    <Progress
-                      percent={percent}
-                      status={percent < 50 ? "exception" : "normal"}
-                      aria-label={`${label} 평균 점수`}
-                    />
-                  </div>
-                );
-              })}
-            </Space>
-          </Card>
-        </Col>
+      {/* Phase 7-D Task 7 — DiagnosticCard + DimensionTabs */}
+      <DiagnosticCard
+        weakDimensions={weakDimensions}
+        updatedAt={updatedAt ?? null}
+      />
+      <DimensionTabs dimensions={weakDimensions} />
 
-        <Col xs={24} md={14}>
+      <Row gutter={[24, 24]}>
+        <Col xs={24} md={24}>
           <Space direction="vertical" size="middle" style={{ width: "100%" }}>
             <Title level={4} style={{ marginBottom: 0 }}>
               추천 문제

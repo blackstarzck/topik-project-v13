@@ -1,27 +1,16 @@
 "use client";
 
-import { Alert, Card, Space, Spin } from "antd";
 import { useFeedbackStatus } from "@/lib/writing/queries";
+import { AnalysisLoadingModal } from "./AnalysisLoadingModal";
 
 type Props = { submissionId: string };
 
+/**
+ * Phase 7-D Task 8 (P1-4) — D-M2 wired via AnalysisLoadingModal.
+ * Spin + Alert만 있던 이전 단순 구조 → 캐릭터 + Steps 단계 인디케이터.
+ * useFeedbackStatus은 polling을 유지해 status 변화 시 부모가 다시 렌더.
+ */
 export function FeedbackPendingPanel({ submissionId }: Props) {
-  const q = useFeedbackStatus(submissionId);
-  return (
-    <Card>
-      <Space direction="vertical" align="center" style={{ width: "100%" }}>
-        <Spin size="large" />
-        <Alert
-          type="info"
-          message="AI 분석 중"
-          description={
-            q.data === "analyzing"
-              ? "조금만 더 기다려 주세요. 분석이 진행 중입니다."
-              : "분석을 시작했습니다. 자동으로 새로고침됩니다."
-          }
-          showIcon
-        />
-      </Space>
-    </Card>
-  );
+  useFeedbackStatus(submissionId);
+  return <AnalysisLoadingModal open />;
 }

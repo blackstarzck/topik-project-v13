@@ -195,3 +195,153 @@ function pickOne<T>(raw: T | T[] | null | undefined): T | null {
   if (Array.isArray(raw)) return raw[0] ?? null;
   return raw;
 }
+
+// Phase 7-D Task 6 (P1-2) — getNextProblemBundle.
+// IA spec (docs/IA/17-R-02-next-problem-recommendation/description.md) requires:
+//   - primary (existing getNextProblem result)
+//   - summary (recent submissions count + average score + weakest dimensions)
+//   - alternatives (3 problems user can pick instead)
+//
+// Tier 2 OOS-1 (real LLM) not required; signals come from existing tables
+// (writing_submissions, writing_feedback, feedback_dimension_scores,
+// recommendation_items, problems).
+
+export type SummarySignals = {
+  recentSubmissions: number;
+  averageScore: number | null;
+  weakestDimensions: { dimension: string; score: number }[];
+};
+
+export type AlternativeProblem = {
+  id: string;
+  title: string;
+  questionNo: number | null;
+  domain: string;
+  reason: string | null;
+};
+
+export type NextProblemBundle = {
+  primary: NextProblemSuggestion | null;
+  primaryTier: 1 | 2 | 3 | 4;
+  summary: SummarySignals;
+  alternatives: AlternativeProblem[];
+};
+
+async function fetchSummarySignals(
+  supabase: SupabaseServerClient,
+  userId: string,
+): Promise<SummarySignals> {
+  // Recent submissions count (last 30 days)
+  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const { count } = await supabase
+    .from("writing_submissions")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .gte("submitted_at", since);
+
+  // Average score
+  const { data: feedbacks } = await supabase
+    .from("writing_feedback")
+    .select("score_total")
+    .eq("user_id", userId)
+    .not("score_total", "is", null)
+    .order("generated_at", { ascending: false })
+    .limit(20);
+  const scores = (feedbacks ?? [])
+    .map((r) => r.score_total)
+    .filter((s): s is number => typeof s === "number");
+  const averageScore =
+    scores.length === 0
+      ? null
+      : scores.reduce((a, b) => a + b, 0) / scores.length;
+
+  // Weakest dimensions — average score per dimension across recent feedbacks,
+  // pick lowest 3
+  const { data: dims } = await supabase
+    .from("feedback_dimension_scores")
+    .select("dimension, score")
+    .eq("user_id", userId)
+    .not("score", "is", null);
+  const dimBuckets = new Map<string, number[]>();
+  for (const d of dims ?? []) {
+    if (typeof d.score !== "number") continue;
+    const arr = dimBuckets.get(d.dimension) ?? [];
+    arr.push(d.score);
+    dimBuckets.set(d.dimension, arr);
+  }
+  const dimAverages = Array.from(dimBuckets.entries()).map(([dim, arr]) => ({
+    dimension: dim,
+    score: arr.reduce((a, b) => a + b, 0) / arr.length,
+  }));
+  dimAverages.sort((a, b) => a.score - b.score);
+  const weakestDimensions = dimAverages.slice(0, 3);
+
+  return {
+    recentSubmissions: count ?? 0,
+    averageScore,
+    weakestDimensions,
+  };
+}
+
+async function fetchAlternatives(
+  supabase: SupabaseServerClient,
+  userId: string,
+  excludeId: string | null,
+): Promise<AlternativeProblem[]> {
+  // Pull next 3 active recommendations (rank 2-4) excluding primary id
+  const { data } = await supabase
+    .from("recommendation_items")
+    .select(
+      "problem_id, reason, problems!inner(id, title, domain, question_no)",
+    )
+    .eq("user_id", userId)
+    .eq("status", "active")
+    .order("rank", { ascending: true })
+    .limit(4);
+
+  return (data ?? [])
+    .flatMap((row) => {
+      const p = pickOne(row.problems as unknown);
+      if (!p || typeof p !== "object") return [];
+      const problem = p as ProblemSlice;
+      if (problem.id === excludeId) return [];
+      return [
+        {
+          id: problem.id,
+          title: problem.title,
+          questionNo: problem.question_no,
+          domain: problem.domain,
+          reason: row.reason ?? null,
+        } satisfies AlternativeProblem,
+      ];
+    })
+    .slice(0, 3);
+}
+
+export async function getNextProblemBundle(
+  userId: string,
+  createClient: ClientFactory = createSupabaseServerClient,
+): Promise<NextProblemBundle> {
+  const supabase = await createClient();
+  const next = await getNextProblem(userId, () => Promise.resolve(supabase));
+  const summary = await fetchSummarySignals(supabase, userId);
+  const alternatives = await fetchAlternatives(
+    supabase,
+    userId,
+    next?.problemId ?? null,
+  );
+  // primaryTier derived from next.source
+  const primaryTier: NextProblemBundle["primaryTier"] = !next
+    ? 4
+    : next.source === "recommendation"
+      ? 1
+      : next.source === "same_question_no"
+        ? 2
+        : 3;
+  return {
+    primary: next,
+    primaryTier,
+    summary,
+    alternatives,
+  };
+}

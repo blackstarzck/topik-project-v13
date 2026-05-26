@@ -5,32 +5,43 @@ import { useRouter } from "next/navigation";
 
 const { Paragraph } = Typography;
 
+/**
+ * Phase 7-D Task 5 (P1-1) — C-03 retry modal.
+ *
+ * Routes (현재 Tier 1 sitemap 정합):
+ * - 다시 풀기 → `/writing/[questionNo]?problem=[problemId]&fresh=1`
+ *   (sitemap.md line 36-39: D-01~04 글쓰기 라우트)
+ * - 결과 보기 (submission 있을 때) → `/writing/feedback/short/[submissionId]`
+ *   또는 `/writing/feedback/long/[submissionId]` (sitemap.md line 43-44)
+ * - 결과 보기 (attempt만) → `/practice/problems` 폴백 (현재 attempt 결과 단일 페이지 없음)
+ */
 type Props = {
   open: boolean;
   onClose: () => void;
   problemId: string;
-  /**
-   * True when there is a completed submission to view. Drives the "결과 보기"
-   * button to deep-link to the feedback page.
-   */
+  /** Phase 7-D Task 5 — 라우트 분기를 위해 question_no 필요. */
+  questionNo: number | null;
+  /** True when there is a completed submission to view. */
   hasSubmission: boolean;
-  /**
-   * True when there is an in-progress attempt but no submission yet. The
-   * "결과 보기" button is still shown but routes to the attempt-result page.
-   */
+  /** True when there is an in-progress attempt but no submission yet. */
   hasAttempt: boolean;
-  /**
-   * Optional submission id used by the "결과 보기" deep link when
-   * `hasSubmission` is true. When omitted but `hasSubmission` is true we fall
-   * back to the problem-keyed result route.
-   */
+  /** Submission id for deep link to feedback page when hasSubmission. */
   submissionId?: string;
 };
+
+function feedbackPathFor(questionNo: number | null, submissionId: string): string {
+  // Short answer (51/52) → short feedback. Long form (53/54) → long feedback.
+  if (questionNo === 51 || questionNo === 52) {
+    return `/writing/feedback/short/${submissionId}`;
+  }
+  return `/writing/feedback/long/${submissionId}`;
+}
 
 export function RetryModal({
   open,
   onClose,
   problemId,
+  questionNo,
   hasSubmission,
   hasAttempt,
   submissionId,
@@ -39,23 +50,26 @@ export function RetryModal({
 
   function handleRetry() {
     onClose();
-    router.push(`/practice/problems/${problemId}?fresh=1` as never);
+    // Writing routes are by question_no, not problemId. Pass problemId via
+    // ?problem= for the writing page to scope to the specific problem.
+    if (questionNo == null) {
+      router.push("/practice/problems" as never);
+      return;
+    }
+    router.push(
+      `/writing/${questionNo}?problem=${problemId}&fresh=1` as never,
+    );
   }
 
   function handleViewResult() {
     onClose();
     if (hasSubmission && submissionId) {
-      router.push(`/feedback/${submissionId}` as never);
+      router.push(feedbackPathFor(questionNo, submissionId) as never);
       return;
     }
-    if (hasSubmission) {
-      // submissionId not passed — fall back to the problem-keyed result route
-      // so the page can resolve the latest submission server-side.
-      router.push(`/practice/problems/${problemId}/result` as never);
-      return;
-    }
-    // hasAttempt only
-    router.push(`/practice/problems/${problemId}/result` as never);
+    // No submission id: fall back to problem list (no per-attempt result page
+    // exists in the current sitemap).
+    router.push("/practice/problems" as never);
   }
 
   const canViewResult = hasSubmission || hasAttempt;

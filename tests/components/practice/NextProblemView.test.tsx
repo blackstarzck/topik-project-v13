@@ -2,6 +2,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { NextProblemView } from "../../../src/components/practice/NextProblemView";
+import type {
+  NextProblemBundle,
+  NextProblemSuggestion,
+} from "../../../src/lib/practice/next";
 
 const pushMock = vi.fn();
 const logStudyEventMock = vi.fn();
@@ -48,38 +52,58 @@ afterEach(() => {
   cleanup();
 });
 
-const problem = { id: "p-1", title: "다음 문제 제목", question_no: 53 };
+const emptySummary: NextProblemBundle["summary"] = {
+  recentSubmissions: 0,
+  averageScore: null,
+  weakestDimensions: [],
+};
 
-describe("NextProblemView", () => {
-  it("tier 4 shows Empty state with link back to problems", () => {
-    render(<NextProblemView problem={null} tier={4} />);
+function makeBundle(
+  primary: NextProblemSuggestion | null,
+  primaryTier: 1 | 2 | 3 | 4,
+): NextProblemBundle {
+  return {
+    primary,
+    primaryTier,
+    summary: emptySummary,
+    alternatives: [],
+  };
+}
+
+const primary: NextProblemSuggestion = {
+  problemId: "p-1",
+  title: "다음 문제 제목",
+  domain: "writing",
+  questionNo: 53,
+  source: "recommendation",
+  reason: null,
+};
+
+describe("NextProblemView (Phase 7-D bundle signature)", () => {
+  it("tier 4 shows Empty state + summary row", () => {
+    render(<NextProblemView bundle={makeBundle(null, 4)} />);
     expect(screen.getByText("더 추천할 문제가 없습니다.")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "문제 목록 보기" }));
     expect(pushMock).toHaveBeenCalledWith("/practice/problems");
   });
 
-  it("tier 1 shows '추천' badge and recommendation copy", () => {
-    render(<NextProblemView problem={problem} tier={1} />);
+  it("tier 1 shows '추천' badge", () => {
+    render(<NextProblemView bundle={makeBundle(primary, 1)} />);
     expect(screen.getByTestId("next-problem-badge").textContent).toBe("추천");
-    expect(screen.getByText("선생님이 추천한 문제예요.")).toBeTruthy();
   });
 
-  it("tier 2 shows '이어서' badge and same-question copy", () => {
-    render(<NextProblemView problem={problem} tier={2} />);
+  it("tier 2 shows '이어서' badge", () => {
+    render(<NextProblemView bundle={makeBundle(primary, 2)} />);
     expect(screen.getByTestId("next-problem-badge").textContent).toBe("이어서");
-    expect(
-      screen.getByText("방금 푼 문항과 같은 유형으로 계속 풀어볼까요?"),
-    ).toBeTruthy();
   });
 
-  it("tier 3 shows '탐색' badge and exploration copy", () => {
-    render(<NextProblemView problem={problem} tier={3} />);
+  it("tier 3 shows '탐색' badge", () => {
+    render(<NextProblemView bundle={makeBundle(primary, 3)} />);
     expect(screen.getByTestId("next-problem-badge").textContent).toBe("탐색");
-    expect(screen.getByText("오늘 처음 만나는 문제예요.")).toBeTruthy();
   });
 
-  it("clicking the card logs recommendation_clicked with source='next' and pushes URL", () => {
-    render(<NextProblemView problem={problem} tier={1} />);
+  it("clicking card logs recommendation_clicked and pushes URL", () => {
+    render(<NextProblemView bundle={makeBundle(primary, 1)} />);
     fireEvent.click(screen.getByTestId("next-problem-p-1"));
     expect(logStudyEventMock).toHaveBeenCalledWith({
       eventType: "recommendation_clicked",

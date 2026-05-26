@@ -28,6 +28,14 @@ beforeEach(() => {
   pushMock.mockReset();
   logStudyEventMock.mockReset();
   // antd Modal/Tooltip stub for jsdom — matchMedia is not implemented.
+  // Phase 7-D Task 7: DimensionTabs uses Ant Design Tabs → ResizeObserver.
+  if (!(globalThis as Record<string, unknown>).ResizeObserver) {
+    (globalThis as Record<string, unknown>).ResizeObserver = class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    };
+  }
   if (!window.matchMedia) {
     Object.defineProperty(window, "matchMedia", {
       writable: true,
@@ -74,8 +82,10 @@ describe("WeaknessView", () => {
       />,
     );
 
-    expect(screen.getByText("문법")).toBeTruthy();
-    expect(screen.getByText("어휘")).toBeTruthy();
+    // Phase 7-D Task 7: "문법" / "어휘" appear in DiagnosticCard +
+    // DimensionTabs labels, so use getAllByText.
+    expect(screen.getAllByText(/문법/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/어휘/).length).toBeGreaterThan(0);
     expect(screen.getByText("어휘 연습 문제")).toBeTruthy();
   });
 

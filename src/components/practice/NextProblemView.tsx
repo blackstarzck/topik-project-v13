@@ -3,21 +3,11 @@
 import { Button, Card, Empty, Space, Tag, Typography } from "antd";
 import { useRouter } from "next/navigation";
 import { logStudyEvent } from "@/lib/events/study-events";
+import type { NextProblemBundle } from "@/lib/practice/next";
+import { SummaryCardRow } from "./SummaryCardRow";
+import { AlternativeCardsGrid } from "./AlternativeCardsGrid";
 
 const { Title, Paragraph, Text } = Typography;
-
-type Tier = 1 | 2 | 3 | 4;
-
-type Problem = {
-  id: string;
-  title: string;
-  question_no: number;
-};
-
-type Props = {
-  problem: Problem | null;
-  tier: Tier;
-};
 
 type TierMeta = {
   badge: string;
@@ -25,7 +15,7 @@ type TierMeta = {
   description: string;
 };
 
-const TIER_META: Record<Exclude<Tier, 4>, TierMeta> = {
+const TIER_META: Record<1 | 2 | 3, TierMeta> = {
   1: {
     badge: "추천",
     color: "gold",
@@ -43,36 +33,54 @@ const TIER_META: Record<Exclude<Tier, 4>, TierMeta> = {
   },
 };
 
-export function NextProblemView({ problem, tier }: Props) {
-  const router = useRouter();
+type Props = {
+  bundle: NextProblemBundle;
+};
 
-  if (tier === 4 || !problem) {
+export function NextProblemView({ bundle }: Props) {
+  const router = useRouter();
+  const { primary, primaryTier, summary, alternatives } = bundle;
+
+  function handleClick() {
+    if (!primary) return;
+    void logStudyEvent({
+      eventType: "recommendation_clicked",
+      problemId: primary.problemId,
+      payload: { source: "next" },
+    });
+    router.push(`/practice/problems/${primary.problemId}` as never);
+  }
+
+  if (primaryTier === 4 || !primary) {
     return (
-      <Empty description="더 추천할 문제가 없습니다.">
-        <Button
-          type="primary"
-          onClick={() => router.push("/practice/problems" as never)}
-        >
-          문제 목록 보기
-        </Button>
-      </Empty>
+      <Space direction="vertical" size="large" style={{ width: "100%" }}>
+        <SummaryCardRow
+          recentSubmissions={summary.recentSubmissions}
+          averageScore={summary.averageScore}
+          weakestDimensions={summary.weakestDimensions}
+        />
+        <Empty description="더 추천할 문제가 없습니다.">
+          <Button
+            type="primary"
+            onClick={() => router.push("/practice/problems" as never)}
+          >
+            문제 목록 보기
+          </Button>
+        </Empty>
+      </Space>
     );
   }
 
-  const meta = TIER_META[tier];
-
-  function handleClick() {
-    if (!problem) return;
-    void logStudyEvent({
-      eventType: "recommendation_clicked",
-      problemId: problem.id,
-      payload: { source: "next" },
-    });
-    router.push(`/practice/problems/${problem.id}` as never);
-  }
+  const meta = TIER_META[primaryTier];
 
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
+      <SummaryCardRow
+        recentSubmissions={summary.recentSubmissions}
+        averageScore={summary.averageScore}
+        weakestDimensions={summary.weakestDimensions}
+      />
+
       <div>
         <Title level={3} style={{ marginBottom: 4 }}>
           다음 문제
@@ -85,13 +93,13 @@ export function NextProblemView({ problem, tier }: Props) {
       <Card
         hoverable
         onClick={handleClick}
-        data-testid={`next-problem-${problem.id}`}
+        data-testid={`next-problem-${primary.problemId}`}
         title={
           <Space>
             <Tag color={meta.color} data-testid="next-problem-badge">
               {meta.badge}
             </Tag>
-            <span>{problem.question_no}번 문항</span>
+            <span>{primary.questionNo ?? "—"}번 문항</span>
           </Space>
         }
         extra={
@@ -102,15 +110,22 @@ export function NextProblemView({ problem, tier }: Props) {
       >
         <Space direction="vertical" size="small">
           <Text strong>
-            {problem.title.length > 48
-              ? `${problem.title.slice(0, 48)}…`
-              : problem.title}
+            {primary.title.length > 48
+              ? `${primary.title.slice(0, 48)}…`
+              : primary.title}
           </Text>
           <Paragraph type="secondary" style={{ margin: 0 }}>
             {meta.description}
           </Paragraph>
+          {primary.reason ? (
+            <Paragraph type="secondary" style={{ margin: 0 }}>
+              {primary.reason}
+            </Paragraph>
+          ) : null}
         </Space>
       </Card>
+
+      <AlternativeCardsGrid alternatives={alternatives} />
     </Space>
   );
 }

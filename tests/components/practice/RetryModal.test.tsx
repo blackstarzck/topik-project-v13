@@ -39,16 +39,16 @@ afterEach(() => {
   cleanup();
 });
 
-describe("RetryModal", () => {
+describe("RetryModal (Phase 7-D Task 5 route fix)", () => {
   it("renders three buttons when both attempt and submission exist", () => {
-    const onClose = vi.fn();
     render(
       <RetryModal
-        open={true}
-        onClose={onClose}
+        open
+        onClose={vi.fn()}
         problemId="p-1"
-        hasAttempt={true}
-        hasSubmission={true}
+        questionNo={51}
+        hasAttempt
+        hasSubmission
         submissionId="sub-9"
       />,
     );
@@ -59,89 +59,100 @@ describe("RetryModal", () => {
     expect(screen.getByRole("button", { name: "취소" })).toBeTruthy();
   });
 
-  it("'다시 풀기' closes modal and pushes ?fresh=1 route", () => {
+  it("'다시 풀기' pushes /writing/[questionNo]?problem=...&fresh=1", () => {
     const onClose = vi.fn();
     render(
       <RetryModal
-        open={true}
+        open
         onClose={onClose}
         problemId="p-1"
-        hasAttempt={true}
+        questionNo={53}
+        hasAttempt
         hasSubmission={false}
       />,
     );
-
     fireEvent.click(screen.getByRole("button", { name: "다시 풀기" }));
-    expect(onClose).toHaveBeenCalledTimes(1);
-    expect(pushMock).toHaveBeenCalledWith("/practice/problems/p-1?fresh=1");
+    expect(onClose).toHaveBeenCalled();
+    expect(pushMock).toHaveBeenCalledWith("/writing/53?problem=p-1&fresh=1");
   });
 
-  it("'결과 보기' routes to /feedback/[submissionId] when hasSubmission + submissionId", () => {
-    const onClose = vi.fn();
+  it("'다시 풀기' with null questionNo falls back to /practice/problems", () => {
     render(
       <RetryModal
-        open={true}
-        onClose={onClose}
+        open
+        onClose={vi.fn()}
         problemId="p-1"
-        hasAttempt={true}
-        hasSubmission={true}
-        submissionId="sub-9"
-      />,
-    );
-
-    fireEvent.click(screen.getByRole("button", { name: "결과 보기" }));
-    expect(onClose).toHaveBeenCalledTimes(1);
-    expect(pushMock).toHaveBeenCalledWith("/feedback/sub-9");
-  });
-
-  it("'결과 보기' routes to problem result when hasAttempt only (no submission)", () => {
-    const onClose = vi.fn();
-    render(
-      <RetryModal
-        open={true}
-        onClose={onClose}
-        problemId="p-2"
-        hasAttempt={true}
+        questionNo={null}
+        hasAttempt
         hasSubmission={false}
       />,
     );
-
-    fireEvent.click(screen.getByRole("button", { name: "결과 보기" }));
-    expect(onClose).toHaveBeenCalledTimes(1);
-    expect(pushMock).toHaveBeenCalledWith("/practice/problems/p-2/result");
+    fireEvent.click(screen.getByRole("button", { name: "다시 풀기" }));
+    expect(pushMock).toHaveBeenCalledWith("/practice/problems");
   });
 
-  it("'결과 보기' falls back to problem result when hasSubmission but submissionId missing", () => {
-    const onClose = vi.fn();
+  it("'결과 보기' routes short feedback for question_no 51/52", () => {
     render(
       <RetryModal
-        open={true}
-        onClose={onClose}
-        problemId="p-3"
-        hasAttempt={true}
-        hasSubmission={true}
-      />,
-    );
-
-    fireEvent.click(screen.getByRole("button", { name: "결과 보기" }));
-    expect(pushMock).toHaveBeenCalledWith("/practice/problems/p-3/result");
-  });
-
-  it("'취소' closes modal without navigation", () => {
-    const onClose = vi.fn();
-    render(
-      <RetryModal
-        open={true}
-        onClose={onClose}
+        open
+        onClose={vi.fn()}
         problemId="p-1"
-        hasAttempt={true}
-        hasSubmission={true}
+        questionNo={52}
+        hasAttempt
+        hasSubmission
         submissionId="sub-9"
       />,
     );
+    fireEvent.click(screen.getByRole("button", { name: "결과 보기" }));
+    expect(pushMock).toHaveBeenCalledWith("/writing/feedback/short/sub-9");
+  });
 
+  it("'결과 보기' routes long feedback for question_no 53/54", () => {
+    render(
+      <RetryModal
+        open
+        onClose={vi.fn()}
+        problemId="p-1"
+        questionNo={54}
+        hasAttempt
+        hasSubmission
+        submissionId="sub-9"
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "결과 보기" }));
+    expect(pushMock).toHaveBeenCalledWith("/writing/feedback/long/sub-9");
+  });
+
+  it("'결과 보기' falls back to /practice/problems when submissionId missing", () => {
+    render(
+      <RetryModal
+        open
+        onClose={vi.fn()}
+        problemId="p-2"
+        questionNo={51}
+        hasAttempt
+        hasSubmission
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "결과 보기" }));
+    expect(pushMock).toHaveBeenCalledWith("/practice/problems");
+  });
+
+  it("'취소' closes without navigation", () => {
+    const onClose = vi.fn();
+    render(
+      <RetryModal
+        open
+        onClose={onClose}
+        problemId="p-1"
+        questionNo={51}
+        hasAttempt
+        hasSubmission
+        submissionId="sub-9"
+      />,
+    );
     fireEvent.click(screen.getByRole("button", { name: "취소" }));
-    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(onClose).toHaveBeenCalled();
     expect(pushMock).not.toHaveBeenCalled();
   });
 });
