@@ -32,6 +32,8 @@ describe("getProfileSettings", () => {
     const row = {
       display_name: "Chan",
       nickname: "찬",
+      // Phase 7-E Task 10 — bio column.
+      bio: "TOPIK II 4급 목표로 학습 중입니다.",
       ui_locale: "ko" as const,
       notification_prefs: { weekly_summary: true, feedback_ready: false },
     };
@@ -43,9 +45,26 @@ describe("getProfileSettings", () => {
     expect(result).toEqual({
       display_name: "Chan",
       nickname: "찬",
+      bio: "TOPIK II 4급 목표로 학습 중입니다.",
       ui_locale: "ko",
       notification_prefs: { weekly_summary: true, feedback_ready: false },
     });
+  });
+
+  it("Phase 7-E Task 10 — returns bio as null when DB value is null", async () => {
+    const row = {
+      display_name: null,
+      nickname: null,
+      bio: null,
+      ui_locale: "ko" as const,
+      notification_prefs: {},
+    };
+    const result = await getProfileSettings(
+      "user-2",
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      async () => makeClient({ data: row }) as any,
+    );
+    expect(result?.bio).toBeNull();
   });
 
   it("coerces unknown / non-boolean notification_prefs keys away", async () => {

@@ -56,12 +56,20 @@ export async function updateProfile(
   createClient: ClientFactory = createSupabaseBrowserClient,
 ): Promise<void> {
   const supabase = createClient();
-  const patch: { display_name?: string | null; nickname?: string | null } = {};
+  const patch: {
+    display_name?: string | null;
+    nickname?: string | null;
+    bio?: string | null;
+  } = {};
   if (Object.prototype.hasOwnProperty.call(input, "display_name")) {
     patch.display_name = input.display_name ?? null;
   }
   if (Object.prototype.hasOwnProperty.call(input, "nickname")) {
     patch.nickname = input.nickname ?? null;
+  }
+  // Phase 7-E Task 10 (P1-6) — bio mutation.
+  if (Object.prototype.hasOwnProperty.call(input, "bio")) {
+    patch.bio = input.bio ?? null;
   }
   if (Object.keys(patch).length === 0) return;
   const { error } = await supabase

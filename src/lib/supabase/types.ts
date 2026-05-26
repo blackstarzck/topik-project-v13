@@ -65,6 +65,8 @@ export interface Database {
           plan_label: string;
           status: "active" | "blocked" | "deleted";
           notification_prefs: Json;
+          // Phase 7-E Task 10 — self-introduction (max 160 chars, CHECK constraint).
+          bio: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -82,6 +84,7 @@ export interface Database {
           plan_label?: string;
           status?: "active" | "blocked" | "deleted";
           notification_prefs?: Json;
+          bio?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -99,6 +102,7 @@ export interface Database {
           plan_label?: string;
           status?: "active" | "blocked" | "deleted";
           notification_prefs?: Json;
+          bio?: string | null;
           created_at?: string;
           updated_at?: string;
         };

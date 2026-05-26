@@ -70,6 +70,7 @@ function makeRow(overrides: Partial<AdminUserRow> = {}): AdminUserRow {
     plan_label: "free",
     status: "active",
     notification_prefs: {},
+    bio: null,
     created_at: "2026-05-21T00:00:00Z",
     updated_at: "2026-05-21T00:00:00Z",
     ...overrides,

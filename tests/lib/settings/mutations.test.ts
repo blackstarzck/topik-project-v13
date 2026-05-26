@@ -99,6 +99,30 @@ describe("updateProfile", () => {
     expect(calls[0].patch).toEqual({ nickname: null });
   });
 
+  it("Phase 7-E Task 10 — writes bio when provided", async () => {
+    const calls: UpdateCall[] = [];
+    await updateProfile(
+      "user-1",
+      { bio: "TOPIK II 4급 목표로 학습 중입니다." },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      () => makeClient({ onUpdate: (c) => calls.push(c) }) as any,
+    );
+    expect(calls[0].patch).toEqual({
+      bio: "TOPIK II 4급 목표로 학습 중입니다.",
+    });
+  });
+
+  it("Phase 7-E Task 10 — preserves explicit null bio (clear)", async () => {
+    const calls: UpdateCall[] = [];
+    await updateProfile(
+      "user-1",
+      { bio: null },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      () => makeClient({ onUpdate: (c) => calls.push(c) }) as any,
+    );
+    expect(calls[0].patch).toEqual({ bio: null });
+  });
+
   it("no-ops when no keys provided", async () => {
     const calls: UpdateCall[] = [];
     await updateProfile(

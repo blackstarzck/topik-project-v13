@@ -16,6 +16,8 @@ type Props = {
   initialProfile: {
     display_name: string | null;
     nickname: string | null;
+    // Phase 7-E Task 10 (P1-6) — bio (160자 자기소개).
+    bio: string | null;
   };
 };
 
@@ -44,11 +46,14 @@ export function ProfileForm({ userId, initialProfile }: Props) {
   const [nickname, setNickname] = useState<string>(
     initialProfile.nickname ?? "",
   );
+  const [bio, setBio] = useState<string>(initialProfile.bio ?? "");
 
   async function handleFinish() {
     const payload = {
       display_name: normalizeProfileField(displayName),
       nickname: normalizeProfileField(nickname),
+      // Phase 7-E Task 10 — bio (max 160 chars enforced by DB CHECK + form maxLength).
+      bio: normalizeProfileField(bio),
     };
     try {
       await mutation.mutateAsync(payload);
@@ -83,6 +88,18 @@ export function ProfileForm({ userId, initialProfile }: Props) {
           placeholder="다른 사용자에게 보여질 이름"
           maxLength={40}
           aria-label="닉네임"
+        />
+      </Form.Item>
+
+      {/* Phase 7-E Task 10 (P1-6) — bio (자기소개 160자). */}
+      <Form.Item label="자기소개" extra={`${bio.length}/160자`}>
+        <Input.TextArea
+          value={bio}
+          onChange={(e) => setBio(e.target.value)}
+          placeholder="간단한 자기소개 (160자 이내)"
+          maxLength={160}
+          autoSize={{ minRows: 2, maxRows: 4 }}
+          aria-label="자기소개"
         />
       </Form.Item>
 
