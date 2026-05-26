@@ -23,6 +23,12 @@ export const PUBLIC_PATHS = [
   "/sign-up",
   "/login",
   "/password-reset",
+  // Phase 8-D auth callback/error/verify-email — Codex Round 1 NF3.
+  // Without these, anonymous callback redirects to /login and the token
+  // exchange itself never runs, breaking the entire confirmation flow.
+  "/auth/callback",
+  "/auth/error",
+  "/auth/verify-email",
 ] as const;
 
 // ---------------------------------------------------------------------------

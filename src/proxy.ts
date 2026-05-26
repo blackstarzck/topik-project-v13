@@ -40,6 +40,12 @@ export async function proxy(request: NextRequest) {
   if (!isPublicPath(pathname) && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
+    // Phase 8-D: 만료된 Supabase 세션 쿠키가 붙어왔다면 session_expired reason 전달
+    // (사용자가 LoginForm 안내 Alert을 보게 됨). 처음부터 익명이면 reason 없이.
+    const hadStaleSession = request.cookies
+      .getAll()
+      .some((c) => c.name.startsWith("sb-") && c.name.endsWith("-auth-token"));
+    url.search = hadStaleSession ? "?reason=session_expired" : "";
     const redirectResponse = NextResponse.redirect(url);
     // Carry over cookies that supabase.auth.getUser() may have refreshed
     // or cleared. Without this, an expired refresh cookie would survive
