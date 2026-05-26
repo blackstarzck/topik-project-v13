@@ -59,6 +59,8 @@ flowchart LR
 | 확장 | 기관 관리자 대시보드 | [30 X-08 organization-admin-dashboard](./30-X-08-organization-admin-dashboard/description.md) |
 | 확장 | 알림 설정 | [31 X-09 notification-settings](./31-X-09-notification-settings/description.md) |
 | 확장 | 관리자 사용자 관리 | [32 X-10 admin-user-management](./32-X-10-admin-user-management/description.md) |
+| 확장 | 인증 에러 | [33 X-11 auth-error](./33-X-11-auth-error/description.md) |
+| 확장 | 인증 메일 확인 안내 | [34 X-12 auth-verify-email](./34-X-12-auth-verify-email/description.md) |
 
 ## AI에게 지시할 때
 

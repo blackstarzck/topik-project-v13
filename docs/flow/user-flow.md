@@ -159,4 +159,41 @@ flowchart TD
   H01 -. "필터/검색 / 테이블 선택 / 상세 승인 패널" .-> H01
   X10 -. "KPI/필터 / 검색 / 테이블 선택 / 일괄 액션" .-> X10
 
+  X11["33 X-11 인증 에러"]
+  X12["34 X-12 인증 메일 확인 안내"]
+  CB[["/auth/callback 라우트 핸들러"]]
+
+  A01 -->|"가입 직후"| X12
+  X12 -. "60초 cooldown 후 인증 메일 재전송" .-> X12
+  X12 -->|"이메일 링크 클릭"| CB
+  A02 -. "매직 링크 / 비밀번호 재설정 링크 클릭" .-> CB
+  X06 -. "재설정 링크" .-> CB
+
+  CB -->|"토큰 교환 성공: 학습자"| B01
+  CB -->|"토큰 교환 성공: 관리자"| X08
+  CB -->|"토큰 교환 실패"| X11
+
+  X11 -. "user_not_found → 다시 가입" .-> A01
+  X11 -. "otp_expired / email_not_confirmed → 재전송" .-> X12
+  X11 -. "flow_state_* / bad_code_verifier → 다시 시도" .-> A02
+  X11 -. "Retry-After 카운트다운 후 자동 활성" .-> X11
+
+  A02 -. "세션 만료 = ?reason=session_expired" .-> A02
+
 ```
+
+## 인증 콜백 / 에러 흐름 — 상세 시나리오
+
+위 다이어그램의 `CB` (`/auth/callback`)와 X-11/X-12는 cleanup 정책(30일 미인증 자동 삭제)과 함께 가야 의미가 있다. cleanup이 켜진 상태에서 사용자가 옛 인증 링크를 클릭하면 Supabase가 보낼 응답이 늘어나기 때문이다. 시나리오는 다음 다섯 가지.
+
+| # | 상황 | Supabase 응답 | UX 결과 |
+| --- | --- | --- | --- |
+| 1 | 정상 가입 직후 30분 안에 메일 클릭 | `verifyOtp` success | `next` 또는 `/dashboard`로 redirect |
+| 2 | 24h 토큰 만료 후 클릭 | `error.code = otp_expired` | X-11에서 "다시 인증 메일 받기" 안내 (이메일 prefill, 60초 cooldown) |
+| 3 | 30일 미인증 cleanup 후 옛 링크 클릭 | `error.code = user_not_found` | X-11에서 "다시 가입하기" primary CTA → A-01 |
+| 4 | 같은 메일 60초 이내 재전송 시도 | `error.code = over_email_send_rate_limit` + `Retry-After` 헤더 | X-11에서 `retry_after_seconds` 카운트다운, 다 끝나면 CTA 자동 활성 |
+| 5 | 다른 브라우저/기기에서 PKCE 토큰 검증 시도 | `error.code = bad_code_verifier` 또는 `flow_state_not_found` | X-11에서 "처음부터 다시" 안내, A-02 로그인으로 secondary |
+
+세션 만료(in-app JWT expiry)는 미들웨어에서 잡혀 `/login?reason=session_expired`로 친절 redirect한다. X-11/X-12를 거치지 않는다.
+
+`/auth/error`의 `reason` query는 Supabase 공식 `error.code` 11개 (`otp_expired`, `flow_state_expired`, `flow_state_not_found`, `bad_code_verifier`, `user_not_found`, `over_email_send_rate_limit`, `over_request_rate_limit`, `email_not_confirmed`, `signup_disabled`, `access_denied`, `unknown`)에 매핑된다. 자세한 메시지/CTA 표는 `docs/IA/33-X-11-auth-error/description.md` 참고.
