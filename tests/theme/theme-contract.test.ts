@@ -3,8 +3,14 @@ import {
   defaultAppearance,
   defaultThemeName,
   getAppTheme,
-  getResolvedBridgeVars,
+  getResolvedBridgeVarsByAppearance,
 } from "../../src/theme";
+
+// Phase 8 follow-up (2026-05-27) — antd v6.x compatibility fix:
+// `theme` namespace에 "use client" marker + transitive createContext 평가 문제로
+// server component에서 dynamic token 계산 불가. SSR fallback은 appearance 기반
+// hardcoded values를 사용한다. 본 contract test는 새 API
+// `getResolvedBridgeVarsByAppearance(appearance)`를 검증한다.
 
 describe("app theme contract", () => {
   test("exposes a default Ant Design theme with CSS variables enabled (key + prefix)", () => {
@@ -17,16 +23,15 @@ describe("app theme contract", () => {
     expect(theme.antd.token?.fontFamily).toContain("system-ui");
   });
 
-  test("getResolvedBridgeVars returns actual hex/px values — no var() chains", () => {
-    const theme = getAppTheme(defaultThemeName, defaultAppearance);
-    const vars = getResolvedBridgeVars(theme.antd);
+  test("getResolvedBridgeVarsByAppearance returns actual hex/px values — no var() chains", () => {
+    const vars = getResolvedBridgeVarsByAppearance(defaultAppearance);
 
     // Must NOT be var(--ant-*) chains
     Object.values(vars).forEach((value) => {
       expect(value).not.toMatch(/^var\(--ant-/);
     });
 
-    // Must be resolved actual values
+    // Must be resolved actual values (antd v6.4.3 default seed token 기반)
     expect(vars["--app-color-primary"]).toBe("#1677ff");
     expect(vars["--app-color-bg-container"]).toBe("#ffffff");
     expect(vars["--app-color-border"]).toBe("#d9d9d9");
@@ -35,11 +40,9 @@ describe("app theme contract", () => {
     expect(vars["--app-color-text"]).toMatch(/rgba?\(/);
   });
 
-  test("getResolvedBridgeVars dark appearance returns dark values", () => {
-    const darkTheme = getAppTheme(defaultThemeName, "dark");
-    const lightTheme = getAppTheme(defaultThemeName, "light");
-    const darkVars = getResolvedBridgeVars(darkTheme.antd);
-    const lightVars = getResolvedBridgeVars(lightTheme.antd);
+  test("getResolvedBridgeVarsByAppearance dark appearance returns dark values", () => {
+    const darkVars = getResolvedBridgeVarsByAppearance("dark");
+    const lightVars = getResolvedBridgeVarsByAppearance("light");
 
     // Dark mode background must not be white
     expect(darkVars["--app-color-bg-container"]).not.toBe("#ffffff");
@@ -53,9 +56,8 @@ describe("app theme contract", () => {
     });
   });
 
-  test("getResolvedBridgeVars covers all required bridge keys", () => {
-    const theme = getAppTheme(defaultThemeName, defaultAppearance);
-    const vars = getResolvedBridgeVars(theme.antd);
+  test("getResolvedBridgeVarsByAppearance covers all required bridge keys", () => {
+    const vars = getResolvedBridgeVarsByAppearance(defaultAppearance);
     const requiredKeys = [
       "--app-color-primary",
       "--app-color-bg-layout",

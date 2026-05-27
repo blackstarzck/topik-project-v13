@@ -14,7 +14,7 @@ import {
   defaultAppearance,
   defaultThemeName,
   getAppTheme,
-  getResolvedBridgeVars,
+  getResolvedBridgeVarsByAppearance,
 } from "@/theme";
 import type { AppThemeName, BuiltAppTheme, ThemeAppearance } from "@/theme";
 
@@ -72,15 +72,16 @@ export function ThemeProvider({
    */
   const applyVarsToDocument = useCallback(
     (nextAppearance: ThemeAppearance) => {
-      const nextTheme = getAppTheme(themeName, nextAppearance);
-      const vars = getResolvedBridgeVars(nextTheme.antd);
+      // antd v6.x 호환성: server-safe fallback. 동적 brand override가 생기면
+      // client 측 theme.useToken() hook 결과로 추가 update 필요.
+      const vars = getResolvedBridgeVarsByAppearance(nextAppearance);
       const el = document.documentElement;
       Object.entries(vars).forEach(([key, value]) => {
         el.style.setProperty(key, value);
       });
       el.style.setProperty("color-scheme", nextAppearance);
     },
-    [themeName],
+    [],
   );
 
   const setAppearance = useCallback(

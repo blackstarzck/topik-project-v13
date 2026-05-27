@@ -4,12 +4,10 @@ import { cookies } from "next/headers";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
 
 import { AppProviders } from "./providers";
-import {
-  defaultThemeName,
-  getAppTheme,
-  getResolvedBridgeVars,
-} from "@/theme";
-import type { ThemeAppearance } from "@/theme";
+// antd v6.x 호환성: @/theme barrel은 create-theme → "use client" algorithms.ts를
+// transitively pull한다. server layout은 server-safe 모듈만 직접 import.
+import { getResolvedBridgeVarsByAppearance } from "@/theme/tailwind-bridge";
+import type { ThemeAppearance } from "@/theme/types";
 import "../styles/global.css";
 
 export const metadata: Metadata = {
@@ -38,8 +36,11 @@ export default async function RootLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {
   const appearance = await resolveInitialAppearance();
-  const theme = getAppTheme(defaultThemeName, appearance);
-  const cssVars = getResolvedBridgeVars(theme.antd);
+  // antd v6.x 호환성: theme namespace는 client-only ("use client" + transitive
+  // createContext)이므로 server layout에서 import 자체 금지. SSR cssVars는 appearance
+  // 기반 hardcoded fallback만 사용. 동적 token은 client AppProviders → ThemeProvider →
+  // ConfigProvider hierarchy에서 처리 (현재 brand override 없음).
+  const cssVars = getResolvedBridgeVarsByAppearance(appearance);
 
   return (
     <html
