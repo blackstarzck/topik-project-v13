@@ -140,6 +140,42 @@ const PLAN_TEMPLATE_PATTERN = /\/(README|.*-template)\.md$/i;
 const PLAN_PHASE_PATTERN = /phase-(\d+)/;
 const LIGHT_SPEC_AUDIENCE_VALUE_PATTERN = /^Audience:\s*(\S+)/im;
 
+// Extracts Audience value from light spec body. Accepts two shapes:
+//   (A) inline:   "Audience: both"
+//   (B) section:  "## Audience\n\nAudience: both"   or   "## Audience\n\n`Audience: both`"
+// Returns lowercased value or null.
+function parseLightSpecAudience(body) {
+  // Shape A: inline
+  const inline = body.match(LIGHT_SPEC_AUDIENCE_VALUE_PATTERN);
+  if (inline) return inline[1].toLowerCase();
+
+  // Shape B: ## Audience section
+  const lines = body.split(/\r?\n/);
+  for (let i = 0; i < lines.length; i += 1) {
+    if (!/^##\s+Audience\s*$/i.test(lines[i])) continue;
+    // scan following lines for the value
+    for (let j = i + 1; j < lines.length; j += 1) {
+      const line = lines[j].trim();
+      if (line.length === 0) continue;
+      if (/^##\s+/.test(line)) break; // next section
+      // try to extract: value can be inline word, backtick-wrapped, or 'Audience: X' format
+      const m =
+        line.match(/`Audience:\s*([a-z\/]+)\s*`/i) ||  // `Audience: both`
+        line.match(/^Audience:\s*([a-z\/]+)/i) ||       // Audience: both
+        line.match(/^([a-z\/]+)\b/i);                   // bare 'both' or 'user (admin은 ...)'
+      if (m) {
+        const value = m[1].toLowerCase();
+        // sanity: only accept recognized values
+        if (/^(user|admin|both|n\/a)$/.test(value)) return value;
+      }
+      // first non-empty content line decides — break either way
+      break;
+    }
+    break;
+  }
+  return null;
+}
+
 function normalizePathForCheck(path) {
   return normalize(path).split(sep).join("/");
 }
@@ -625,10 +661,9 @@ async function resolvePlanAudienceFromLightSpec(root, planPath) {
     return { found: false, audience: null, missingLightSpec: true, phaseNum };
   }
   const body = await readFile(join(lightSpecsDir, match), "utf8");
-  const av = body.match(LIGHT_SPEC_AUDIENCE_VALUE_PATTERN);
   return {
     found: true,
-    audience: av ? av[1].toLowerCase() : null,
+    audience: parseLightSpecAudience(body),
     missingLightSpec: false,
     phaseNum,
   };

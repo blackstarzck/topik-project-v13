@@ -836,6 +836,52 @@ async function testPlanFailsClosedWhenLightSpecMissing() {
   });
 }
 
+async function testPlanRecognizesSectionStyleAudience() {
+  await withTempRepo(async (root) => {
+    await mkdir(join(root, "docs", "ai-workflow", "light-specs"), { recursive: true });
+    await mkdir(join(root, "docs", "ai-workflow", "plans"), { recursive: true });
+
+    // light spec with ## Audience section + backticked value (phase-6 pattern)
+    await writeFile(
+      join(root, "docs/ai-workflow/light-specs/phase-8-section-style.md"),
+      [
+        "# Phase 8",
+        "",
+        "## Domain Boundary",
+        "- some boundary",
+        "",
+        "## Audience",
+        "",
+        "`Audience: both`",
+        "",
+        "추가 설명: user는 X, admin은 Y",
+      ].join("\n"),
+    );
+
+    // plan WITHOUT Audience column
+    const planRel = "docs/ai-workflow/plans/20260601-phase-8-section-style.md";
+    await writeFile(
+      join(root, planRel),
+      [
+        "# Phase 8 Plan",
+        "## Out of Scope — Intentional Cuts",
+        "- x",
+        "## Smallest Buildable Unit",
+        "- y",
+        "## Tasks",
+        "| # | Task | Files | Subagent-eligible? (Y/N + reason) |",
+        "| --- | --- | --- | --- |",
+        "| 1 | foo | s | Y — independent |",
+      ].join("\n"),
+    );
+
+    const r = await checkRepositoryState({ root, changedFiles: [planRel] });
+    assert.equal(r.ok, false);
+    assert.ok(r.errors.some((e) => /Audience column/i.test(e)),
+      `phase-8 section-style 'both' must require Audience column. got: ${r.errors.join(" | ")}`);
+  });
+}
+
 async function testNonPhasePlanSkipsLightSpecCheck() {
   await withTempRepo(async (root) => {
     await mkdir(join(root, "docs", "ai-workflow", "plans"), { recursive: true });
@@ -897,5 +943,6 @@ await testPlanRequiresAudienceColumnWhenLightSpecIsBoth();
 await testPlanDoesNotRequireAudienceColumnWhenLightSpecIsSingle();
 await testPlanFailsClosedWhenLightSpecMissing();
 await testNonPhasePlanSkipsLightSpecCheck();
+await testPlanRecognizesSectionStyleAudience();
 
 console.log("ai-workflow-check self-test passed");
