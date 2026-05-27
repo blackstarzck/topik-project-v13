@@ -23,7 +23,17 @@ Copy this template to `docs/ai-workflow/runs/YYYY/MM/DD/YYYYMMDD-HHMM-task-slug.
 - Exact files read:
 - Extracted requirements:
 - Doc conflicts: `none` or list file references and conflict details.
+<!--
+required: 체커(scripts/ai-workflow-check.mjs)가 'Untouched relevant docs and reason:' 필드를 강제.
+허용 shape:
+  (A) same-line:   "- Untouched relevant docs and reason: none"
+  (B) header + indented bullets:
+        - Untouched relevant docs and reason:
+          - `docs/foo.md` — reason
+값을 채우지 않은 채 복사하면 체커가 FAIL합니다. 'none' 또는 'n/a'도 허용.
+-->
 - Untouched relevant docs and reason:
+  - 
 
 ## Decisions
 
@@ -59,6 +69,15 @@ Append each result packet or link to where it is recorded.
 - Latest results:
 - Known failures:
 - Skipped checks and reason:
+- Cross-model review: <reviewer name (e.g. "codex (gstack)"), or "degraded — <reason>" if unavailable>
+- Architecture Pass: <passed | failed | skipped — <reason>>  # required when ledger Status reaches `complete` for a phase
+- Light Spec: <docs/ai-workflow/light-specs/phase-{n}-{slug}.md>  # required when this ledger belongs to a phase (filename contains `phase-N` or body has `Phase: ...`)
+- UX/UI Consistency Pass: <passed | failed | skipped — <reason>>  # required when changed files match UI patterns (see review-gates.md §UX/UI Consistency Pass). 4-line evidence structure mandatory:
+  - Tokens: <passed | failed | skipped — <reason>> | <evidence line: 정본 참조 + 검토 결과>
+  - Components: <passed | failed | skipped — <reason>> | <evidence line>
+  - A11y: <passed | failed | skipped — <reason>> | <evidence line: keyboard/focus/label/contrast 4가지 확인>
+  - Responsive: <passed | failed | skipped — <reason>> | <evidence line: 360/768/1280 breakpoint 확인>
+- QA Gate: <passed | failed | degraded — <blocker | alternative verification | residual risk> | skipped — <reason>>  # required when changed files match UI patterns (see review-gates.md §QA Gate). passed = 로컬 앱 부팅 + user path 직접 클릭 + 콘솔 에러 캡처 완료. degraded는 단독 불허 — blocker · 대체 검증 · 잔여 위험 세 항목 의무. release/phase complete + degraded이면 fail-closed (사용자/owner 명시 승인 시만 별도 한 줄 추가로 진행 가능).
 
 ## Fallback State
 

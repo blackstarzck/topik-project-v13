@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+/*
+ * @theme inline bridges --app-* CSS variables (injected on <html> by layout.tsx)
+ * into Tailwind v4 utility classes.
+ *
+ * "inline" is required (not bare @theme) so Tailwind generates:
+ *   .text-primary { color: var(--app-color-primary) }  ← preserves runtime var
+ * instead of resolving the value at build time (which would break dark mode toggle).
+ */
+@theme inline {
+  --color-primary: var(--app-color-primary);
+  --color-background: var(--app-color-bg-container);
+  --color-surface: var(--app-color-bg-layout);
+  --color-text: var(--app-color-text);
+  --color-text-secondary: var(--app-color-text-secondary);
+  --color-border: var(--app-color-border);
+  --radius-default: var(--app-radius);
+  --font-sans: var(--app-font-family);
+  --shadow-elevated: var(--app-shadow-elevated);
+}
+
+/*
+ * color-scheme is now injected dynamically on <html> from layout.tsx.
+ * Removed hardcoded ":root { color-scheme: light }" — it would override dark mode.
+ */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--app-color-bg-layout);
+  color: var(--app-color-text);
+  font-family: var(--app-font-family);
+}
+
+.app-page {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 32px;
+}
+
+.app-welcome {
+  width: min(100%, 680px);
+  border: 1px solid var(--app-color-border);
+  border-radius: var(--app-radius);
+  background: var(--app-color-bg-container);
+  box-shadow: var(--app-shadow-elevated);
+  padding: 32px;
+}
+
+.app-kicker {
+  margin: 0 0 8px;
+  color: var(--app-color-primary);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.app-welcome h1 {
+  margin: 0;
+  font-size: 32px;
+  line-height: 1.25;
+}
+
+.app-welcome p:last-child {
+  margin: 16px 0 0;
+  color: var(--app-color-text-secondary);
+  font-size: 16px;
+  line-height: 1.7;
+}

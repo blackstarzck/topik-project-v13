@@ -175,14 +175,16 @@ The runtime theme flow is:
 3. `registry.ts` exposes the available themes
 4. the app root calls `getAppTheme(themeName, appearance)`
 5. `ConfigProvider` receives `activeTheme.antd`
-6. the theme bridge exposes a small set of project CSS variables derived from
-   the active AntD tokens
-7. Tailwind utilities read only those project variables for colors, font,
-   radius, shadow, and spacing-like visual decisions
+6. the theme bridge resolves AntD token values server-side and injects them as
+   `--app-*` CSS variables on the `html` element in `app/layout.tsx`
+7. Tailwind utilities read only those `--app-*` variables via `@theme inline`
+   in `src/styles/global.css`
 8. new UI reads AntD tokens directly at render time when component logic needs
    token values
 
-This gives the app one source of truth at runtime even though the files are split for maintainability.
+This gives the app one source of truth at runtime even though the files are split
+for maintainability. The `--app-*` variables on `html` ensure portal-rendered
+AntD components (Modal, Drawer, Notification) inherit the correct values.
 
 ## AntD And Tailwind Synchronization
 
@@ -205,37 +207,120 @@ Synchronization rule:
 - Tailwind classes should not be used to restyle AntD component internals when
   an AntD prop, variant, token, or component token can express the change.
 
-Initial bridge targets:
+### CSS Variable Architecture Contract
 
-```css
---app-color-primary: var(--ant-color-primary);
---app-color-bg-layout: var(--ant-color-bg-layout);
---app-color-bg-container: var(--ant-color-bg-container);
---app-color-text: var(--ant-color-text);
---app-color-text-secondary: var(--ant-color-text-secondary);
---app-color-border: var(--ant-color-border);
---app-radius: var(--ant-border-radius);
---app-font-family: var(--ant-font-family);
---app-shadow-elevated: var(--ant-box-shadow-secondary);
+> **Required reading gate.** Read this section before writing any `--app-*`
+> variable assignment. These constraints prevent two classes of silent production
+> bugs: portal color failures and SSR flash-of-unstyled-content.
+
+#### Rule 1 — Scope `--app-*` on `html` or `:root` only
+
+`--app-*` variables must be declared on `html` or `:root`. They must not be
+declared via `style={}` on any React component below `html`.
+
+AntD `Modal`, `Drawer`, `Notification`, and `Tooltip` render via portals that
+target `document.body` by default. Those portal elements sit outside any React
+component subtree. A `style={}` prop on a wrapper div creates a CSS inheritance
+boundary; portal-rendered content lives outside that boundary and receives no
+value for any variable declared only on the wrapper.
+
+Exception: `getContainer={false}` and custom `getContainer` props attach the
+overlay to the current DOM position instead of `body`. If every overlay in the
+project uses this prop, portal inheritance is not a concern. Do not rely on this
+exception unless it is explicitly documented per-component.
+
+```tsx
+/* REQUIRED — portals always inherit from html/root */
+// app/layout.tsx (server component)
+<html style={{ '--app-color-primary': resolvedToken.colorPrimary } as React.CSSProperties}>
 ```
 
-The exact AntD CSS variable names must be verified during the first app
-bootstrap against the installed AntD version. If a required token is not emitted
-as a CSS variable, expose it through the project bridge from the resolved
-`ThemeConfig` rather than hardcoding the value in Tailwind.
+#### Rule 2 — `--app-*` must hold resolved actual values, not CSS variable chains
 
-Tailwind v4 setup should stay CSS-variable driven:
+`--app-*` variables must hold resolved actual values (hex, px, font stack, or
+box-shadow value). They must not reference `--ant-*` via `var()`.
 
-- `src/styles/global.css` imports Tailwind once with `@import "tailwindcss";`
-- a project Tailwind theme layer may define app utilities that reference
-  `--app-*` variables
-- theme switching updates AntD and the bridge variables together through the app
-  root, so AntD components and Tailwind-authored layout surfaces change in the
-  same render path
+AntD CSS variables (`--ant-*`) are emitted by client-side JavaScript when
+`ConfigProvider` mounts. They do not exist in any CSS context during server-side
+rendering. A chain like `--app-color-primary: var(--ant-color-primary)` resolves
+to an empty/invalid value on the first server render, causing visible flash.
 
-Do not introduce a large `tailwind.config` palette unless a future Tailwind
-version or build constraint requires it. If that becomes necessary, generate it
-from `src/theme/` tokens rather than hand-maintaining it.
+```css
+/* PROHIBITED — --ant-* does not exist at SSR time */
+--app-color-primary: var(--ant-color-primary);
+
+/* REQUIRED — resolved actual value, safe at SSR */
+--app-color-primary: #1677ff;
+```
+
+Resolved values must be injected server-side. The recommended pattern is a
+server component in `app/layout.tsx` that reads a theme cookie via `cookies()`
+from `next/headers` and writes resolved token values to `<html style={...}>`.
+Note: calling `cookies()` makes the route dynamically rendered.
+
+When a docs or code change affects `--app-*` variable values, update
+`tests/theme/theme-contract.test.ts` in the same commit. A contract test that
+asserts a `var(--ant-*)` chain while the docs prohibit it is a contradiction that
+will mislead future agents.
+
+#### Rule 3 — Use `@theme inline` in Tailwind v4
+
+In Tailwind v4, `@theme { --color-x: var(--app-x) }` generates utilities that
+reference `var(--color-x)`, creating an extra indirection layer. Use
+`@theme inline` instead: it writes `var(--app-x)` directly into each generated
+utility class.
+
+```css
+/* REQUIRED in Tailwind v4 */
+@theme inline {
+  --color-primary: var(--app-color-primary);
+  /* produces: .bg-primary { background-color: var(--app-color-primary) } */
+}
+```
+
+#### Rule 4 — `cssVar.prefix` controls CSS variable names; `cssVar.key` does not
+
+In AntD v6, `cssVar.key` is a deduplication cache identifier only. It does not
+change generated CSS variable names. The prefix that produces `--ant-color-primary`
+is `cssVar.prefix`, which defaults to `ant`.
+
+To change variable names from `--ant-*` to a custom prefix, set
+`cssVar: { prefix: 'myapp', key: 'myapp' }` explicitly.
+
+#### Correct data flow (one direction only)
+
+```
+AntD design tokens
+  → resolved actual values  (server-side, from active ThemeConfig)
+  → --app-* on html element (app/layout.tsx via <html style={...}>)
+  → @theme inline           (src/styles/global.css)
+  → Tailwind utilities
+```
+
+#### Bridge targets
+
+The following `--app-*` variables are the approved bridge set. Each must hold a
+resolved actual value injected from `layout.tsx`:
+
+```
+--app-color-primary        resolved hex (e.g. #1677ff)
+--app-color-bg-layout      resolved hex
+--app-color-bg-container   resolved hex
+--app-color-text           resolved hex
+--app-color-text-secondary resolved hex
+--app-color-border         resolved hex
+--app-radius               resolved px (e.g. 6px)
+--app-font-family          resolved font stack
+--app-shadow-elevated      resolved box-shadow value
+```
+
+Generate these values from `src/theme/` token resolution at request time, not by
+hand. Do not add new bridge variables unless the token has a documented use in
+Tailwind utilities or plain CSS rules outside AntD components.
+
+Automated checks for the rules above are enforced by `scripts/ai-workflow-check.mjs`.
+When adding or changing `--app-*` declarations, run the checker before marking
+work complete.
 
 ## Overlay Surface Rule
 
@@ -406,6 +491,31 @@ Prefer this order:
 - Do not add a preset override just to make Ant Design look the same as it already does by default
 
 ## Review Checklist For Theme Changes
+
+### CSS Variable Gate (check these first)
+
+These items catch structural defects. Do not proceed to the remaining checklist
+until all of these pass.
+
+- [ ] All `--app-*` CSS variables are declared on `html` or `:root` (via
+      `app/layout.tsx`). No `--app-*` variable is set through `style={}` on a
+      React component.
+- [ ] No `--app-*` variable holds a `var(--ant-*)` chain. Every `--app-*`
+      variable holds a resolved actual value (hex, px, font stack, or
+      box-shadow).
+- [ ] Resolved `--app-*` values are injected server-side so they are present on
+      first render before any client JS runs.
+- [ ] `src/styles/global.css` uses `@theme inline { ... }` (not bare `@theme`)
+      for Tailwind v4 variable bridging.
+- [ ] Active theme appearance is stored in React state or context, not computed
+      at module level outside a React component.
+- [ ] `tests/theme/theme-contract.test.ts` is consistent with the current
+      `--app-*` values and data flow (no assertion of a `var(--ant-*)` chain if
+      the new architecture is in place).
+- [ ] Verified in a running build that a portal-rendered AntD component (Modal
+      or Drawer) displays the correct `--app-color-primary` color.
+
+### General Checks
 
 Before calling theme work complete, verify:
 

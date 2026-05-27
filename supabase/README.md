@@ -58,9 +58,11 @@ pnpm dlx supabase db reset
 # 원격 적용 (linked project)
 pnpm dlx supabase db push
 
-# TypeScript 타입 생성
-pnpm dlx supabase gen types typescript --local > src/types/database.ts
+# TypeScript 타입 생성 (정본 위치: src/lib/supabase/types.ts)
+pnpm dlx supabase gen types typescript --local > src/lib/supabase/types.ts
 ```
+
+> 생성된 타입은 `src/lib/supabase/types.ts`로 저장합니다. Supabase 클라이언트와 같은 폴더에 두어 응집도를 유지합니다. `src/types/`는 hand-written shared domain types 용도로 남깁니다.
 
 ## 새 마이그레이션 추가하기
 

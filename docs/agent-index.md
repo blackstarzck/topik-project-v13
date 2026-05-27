@@ -24,8 +24,9 @@ flowchart TD
 | `ROOT-00` | Human project map | [../README.md](../README.md) | Human-friendly project overview |
 | `DOCS-00` | Docs map | [README.md](README.md) | Human + AI navigation across `docs/` |
 | `AGENT-00` | AI routing | [agent-index.md](agent-index.md) | Required AI document selection |
-| `FLOW-00` | AI workflow | [ai-development-workflow.md](ai-development-workflow.md) | Mandatory execution workflow |
-| `WF-00` | AI workflow folder | [ai-workflow/README.md](ai-workflow/README.md) | Ledgers, reports, packets, plans |
+| `FLOW-00` | AI workflow entry | [ai-development-workflow.md](ai-development-workflow.md) | Entry point — 88-line index that links sub-docs |
+| `WF-00` | Workflow sub-docs | [ai-workflow/planning-contracts.md](ai-workflow/planning-contracts.md), [ai-workflow/context-and-packets.md](ai-workflow/context-and-packets.md), [ai-workflow/review-gates.md](ai-workflow/review-gates.md), [ai-workflow/fallback-and-recovery.md](ai-workflow/fallback-and-recovery.md) | Planning · ledger/packets · review gates · fallback matrix |
+| `WF-10` | Ledger/report templates | [ai-workflow/README.md](ai-workflow/README.md) | Ledgers, reports, packets, plans (folder map + templates) |
 | `HARNESS-00` | Harness and skills | [ai-workflow/harness-and-skills.md](ai-workflow/harness-and-skills.md) | TALKPIK, practical skills, GStack, Superpowers, host-specific skill names |
 | `PRODUCT-00` | Product requirements | [prd.md](prd.md) | Product scope, users, value, business rules |
 | `SPEC-00` | Implementation spec | [spec.md](spec.md) | Development baseline, behavior, validation, framework, backend, auth, AI boundary, deployment |
@@ -47,6 +48,7 @@ flowchart TD
 | User journey, screen order, transitions, entry/exit states | `JOURNEY-00` | `IA-10`, `SPEC-00` | `docs/user-flow.md` is legacy context only. |
 | Visual UI, layout, components, tokens, motion | `UI-00` | `IA-10`, `JOURNEY-00` | Run design review before user-facing implementation. |
 | Specific page or screen | `IA-10` matching page | `UI-00`, `JOURNEY-00`, `SPEC-00` | Read the matching `description.md` and inspect `wireframe.png`. |
+| Admin 화면 / 권한 / RBAC / audit log | `SPEC-00`, 해당 admin `IA-10`(`docs/IA/{21-H-01,30-X-08,32-X-10}-*`), `DEV-10`(backend-auth) | `JOURNEY-00`, `UI-00`, `docs/ai-workflow/light-specs/phase-6-admin-library-hardening.md` | Admin은 일반 사용자와 권한 모델·UI 분기·QA 시나리오가 다름. Plan/Light Spec에 `Audience: user/admin/both` 명시 필수. `Architecture Pass`에서 audience 경계 = 코드 boundary 일치 검증. |
 | AI workflow, context, reports, fallback, multi-agent work | `FLOW-00`, `WF-00` | `HARNESS-00` | Required for workflow or harness changes. |
 | Historical page composition | `LEGACY-00` | Active docs above | Reference only. Active docs win. |
 

@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Phase 3 — App Shell And IA Routes 완료 보고서</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #161a22; --panel-2: #1c212c; --border: #2a3140;
+    --text: #e7ecf3; --muted: #9aa3b2; --accent: #7cc4ff; --accent-2: #b48bff;
+    --warn: #ffb86b; --ok: #6ee7b7; --bad: #ff7a90;
+    --opus: #b48bff; --codex: #6ee7b7;
+  }
+  * { box-sizing: border-box; }
+  html, body { background: var(--bg); color: var(--text); margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo",
+      "Noto Sans KR", "Malgun Gothic", sans-serif;
+    font-size: 15px; line-height: 1.65; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 48px 28px 96px; }
+  header.hero { padding: 32px 32px 28px; border: 1px solid var(--border);
+    border-radius: 14px; background: linear-gradient(180deg, #1a1f2b 0%, #141822 100%); }
+  header.hero h1 { margin: 0 0 8px; font-size: 28px; letter-spacing: -0.01em; }
+  header.hero p.sub { margin: 0; color: var(--muted); font-size: 14px; }
+  header.hero .meta { margin-top: 18px; display: flex; flex-wrap: wrap; gap: 10px; }
+  .pill { font-size: 12px; padding: 4px 10px; border-radius: 999px;
+    border: 1px solid var(--border); color: var(--muted); background: #11141b; }
+  .pill.opus { color: var(--opus); border-color: rgba(180,139,255,0.4); }
+  .pill.codex { color: var(--codex); border-color: rgba(110,231,183,0.4); }
+  .pill.ok { color: var(--ok); border-color: rgba(110,231,183,0.4); }
+  .pill.warn { color: var(--warn); border-color: rgba(255,184,107,0.4); }
+  h2 { margin: 48px 0 16px; font-size: 22px; padding-bottom: 8px;
+    border-bottom: 1px solid var(--border); }
+  h3 { margin: 28px 0 10px; font-size: 17px; color: var(--accent); }
+  h4 { margin: 18px 0 8px; font-size: 14.5px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.06em; }
+  p { margin: 0 0 12px; }
+  ul, ol { margin: 0 0 14px; padding-left: 22px; }
+  li { margin-bottom: 6px; }
+  code, kbd { font-family: "JetBrains Mono", ui-monospace, Menlo, monospace;
+    background: #0c0f15; padding: 2px 6px; border-radius: 4px; font-size: 0.88em;
+    border: 1px solid var(--border); color: #d6e1f0; }
+  pre { background: #0c0f15; border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px 16px; overflow-x: auto;
+    font-family: "JetBrains Mono", ui-monospace, Menlo, monospace;
+    font-size: 13px; color: #cbd5e1; }
+  .panel { background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px 22px; margin: 14px 0 22px; }
+  .grid-2 { display: grid; gap: 18px; grid-template-columns: 1fr 1fr; }
+  @media (max-width: 920px) { .grid-2 { grid-template-columns: 1fr; } }
+  .card { border: 1px solid var(--border); border-radius: 10px;
+    background: var(--panel-2); padding: 18px 20px; }
+  .card.opus { border-top: 3px solid var(--opus); }
+  .card.codex { border-top: 3px solid var(--codex); }
+  .card h3 { margin-top: 0; color: var(--text); font-size: 15.5px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+    overflow: hidden; }
+  th, td { padding: 11px 14px; text-align: left; vertical-align: top;
+    border-bottom: 1px solid var(--border); }
+  th { background: #1b212d; font-weight: 600; color: var(--muted);
+    font-size: 12.5px; letter-spacing: 0.04em; text-transform: uppercase; }
+  tr:last-child td { border-bottom: none; }
+  .verdict-pass { color: var(--ok); font-weight: 700; }
+  .verdict-concern { color: var(--warn); font-weight: 700; }
+  .verdict-fail { color: var(--bad); font-weight: 700; }
+  .tag { display: inline-block; font-size: 11px; padding: 2px 8px;
+    border-radius: 999px; border: 1px solid var(--border); color: var(--muted);
+    margin-right: 6px; }
+  .tag.p1 { color: var(--bad); border-color: rgba(255,122,144,0.4); }
+  .tag.p2 { color: var(--warn); border-color: rgba(255,184,107,0.4); }
+  .tag.fix { color: var(--ok); border-color: rgba(110,231,183,0.4); }
+  .tag.defer { color: var(--accent); border-color: rgba(124,196,255,0.4); }
+  .verdict { background: linear-gradient(180deg, #182030 0%, #131722 100%);
+    border: 1px solid var(--border); border-left: 4px solid var(--accent);
+    border-radius: 10px; padding: 18px 22px; margin: 16px 0; }
+  .verdict h3 { margin-top: 0; color: var(--accent); }
+  .toc { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 8px; }
+  .toc a { color: var(--accent); text-decoration: none; padding: 8px 10px;
+    border: 1px solid var(--border); border-radius: 6px; background: var(--panel-2);
+    font-size: 13.5px; }
+  .toc a:hover { background: #222a38; }
+  footer { margin-top: 60px; color: var(--muted); font-size: 12.5px;
+    text-align: center; padding-top: 24px; border-top: 1px solid var(--border); }
+  .step { display: grid; grid-template-columns: 60px 1fr 110px;
+    column-gap: 14px; padding: 10px 14px; margin: 6px 0;
+    background: var(--panel-2); border: 1px solid var(--border);
+    border-radius: 8px; align-items: center; font-size: 13.5px; }
+  .step .n { font-family: "JetBrains Mono", ui-monospace, Menlo, monospace;
+    color: var(--accent); font-weight: 700; }
+  .step .status { text-align: right; font-size: 12px; }
+  .ok-line { color: var(--ok); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <h1>Phase 3 — App Shell And IA Routes 완료 보고서</h1>
+  <p class="sub">27 active sitemap route shell + Ant Design workspace 레이아웃 + role-aware navigation + App Router 경계 + 2단 admin role gate(layout learner-block + page requireRole) + Phase 2 이월(types regen + getCurrentProfile + requireRole). 16 task를 2차 cross-model review까지 끝낸 결과.</p>
+  <div class="meta">
+    <span class="pill">2026-05-21</span>
+    <span class="pill">topik-project/v13 · Phase 3</span>
+    <span class="pill opus">Opus 4.7</span>
+    <span class="pill codex">Codex GPT 5.5</span>
+    <span class="pill ok">test 98/98 PASS</span>
+    <span class="pill ok">build PASS</span>
+    <span class="pill ok">Architecture Pass</span>
+    <span class="pill warn">Git: no-commit (사용자 결정 대기)</span>
+  </div>
+</header>
+
+<h2 id="toc">목차</h2>
+<div class="toc">
+  <a href="#summary">1. 한 줄 요약</a>
+  <a href="#tasks">2. Task 16개 진행 매트릭스</a>
+  <a href="#files">3. 산출물</a>
+  <a href="#verification">4. 검증 증거</a>
+  <a href="#review">5. Cross-model review</a>
+  <a href="#fixes">6. 같은 PR fix 3건</a>
+  <a href="#defer">7. Phase 4 이월 4건</a>
+  <a href="#risks">8. 잔여 위험 + 다음 단계</a>
+</div>
+
+<h2 id="summary">1. 한 줄 요약</h2>
+<div class="verdict">
+  <h3>결론</h3>
+  <p><strong>Phase 3의 16개 task 모두 통과.</strong> 27개 active sitemap route가 thin placeholder로 응답하고, Ant Design workspace shell(Sider + Header + Content)이 role-aware navigation으로 동작하며, 2단 admin role gate(layout learner-block + page requireRole) 활성. 98 단위 테스트 PASS, build/lint/typecheck 모두 통과, 4-gate workflow checker 통과. Cross-model review에서 Opus가 P1 1건+P2 7건, Codex가 P2 8건을 잡았고 그 중 3건(P1 1+P2 2)을 같은 PR에서 fix, 4건은 Phase 4로 의식적 이월. 두 모델 모두 "substantially meets contract" 의견.</p>
+  <p style="margin-bottom:0">진행 중 Codex 사전 plan 리뷰가 admin role 매트릭스 오류(X-08은 org-admin-only)와 `/`, `/login` 누락을 사전 발견 → plan 단계에서 정정. <strong>Git publication decision: <code>no-commit</code></strong> — 사용자 검토 후 결정.</p>
+</div>
+
+<h2 id="tasks">2. Task 16개 진행 매트릭스</h2>
+<div class="panel">
+<div class="step"><span class="n">Task 1</span><span>types.ts에 learning_goals 추가 (CLI 부재 → manual hand-align)</span><span class="status ok-line">완료</span></div>
+<div class="step"><span class="n">Task 2</span><span>getCurrentProfile + requireRole helper — 5/5 PASS</span><span class="status ok-line">완료</span></div>
+<div class="step"><span class="n">Task 3</span><span>WorkspaceShell + SidebarNav(role-aware) + AppHeader</span><span class="status ok-line">완료</span></div>
+<div class="step"><span class="n">Task 4</span><span>PlaceholderPage / AppLoading / AppError / AppNotFound</span><span class="status ok-line">완료</span></div>
+<div class="step"><span class="n">Task 5</span><span>(workspace) layout + loading/error/not-found (force-dynamic)</span><span class="status ok-line">완료</span></div>
+<div class="step"><span class="n">Task 6</span><span>Dashboard(onboarding gate) + growth + library + profile</span><span class="status ok-line">완료</span></div>
+<div class="step"><span class="n">Task 7</span><span>settings/{language,notifications}</span><span class="status ok-line">완료</span></div>
+<div class="step"><span class="n">Task 8</span><span>practice/{recommendations,problems,next,weakness}</span><span class="status ok-line">완료</span></div>
+<div class="step"><span class="n">Task 9</span><span>writing/[questionId](51-54 validation) + feedback/{short,long}/[id] + reports/[id]/compare</span><span class="status ok-line">완료</span></div>
+<div class="step"><span class="n">Task 10</span><span>admin/layout(1차 gate) + admin/{problems,org,users,index}(2차 gate)</span><span class="status ok-line">완료</span></div>
+<div class="step"><span class="n">Task 11</span><span>onboarding/learning-goal + subscription + paywall</span><span class="status ok-line">완료</span></div>
+<div class="step"><span class="n">Task 12</span><span>sign-up + password-reset (공개 placeholder)</span><span class="status ok-line">완료</span></div>
+<div class="step"><span class="n">Task 13</span><span>route-matrix.test.ts(52) + admin-role-matrix.test.ts(21, fix 후)</span><span class="status ok-line">완료</span></div>
+<div class="step"><span class="n">Task 14</span><span>전체 검증 (test 98/98 / lint / typecheck / build / workflow check)</span><span class="status ok-line">PASS</span></div>
+<div class="step"><span class="n">Task 15</span><span>Architecture Pass (4 grep)</span><span class="status ok-line">passed</span></div>
+<div class="step"><span class="n">Task 16</span><span>Cross-model review (Opus + Codex 병렬, fix 후 양측 PASS)</span><span class="status ok-line">완료</span></div>
+</div>
+
+<h2 id="files">3. 산출물</h2>
+<div class="panel">
+<table>
+<thead><tr><th>분류</th><th>경로</th><th>역할</th></tr></thead>
+<tbody>
+  <tr><td><span class="tag">변경</span></td><td><code>src/lib/supabase/types.ts</code></td><td>learning_goals 테이블 type 추가</td></tr>
+  <tr><td><span class="tag">변경</span></td><td><code>src/lib/auth/profile.ts</code></td><td>getCurrentProfile + requireRole + getSessionAndProfile + roles re-export</td></tr>
+  <tr><td><span class="tag">변경</span></td><td><code>vitest.config.ts</code></td><td>@/* alias 추가 (test infra)</td></tr>
+  <tr><td><span class="tag fix">신규</span></td><td><code>src/lib/auth/roles.ts</code></td><td>client-safe AppRole + ADMIN_ROLES (서버 chain client bundle 누수 방지)</td></tr>
+  <tr><td><span class="tag fix">신규</span></td><td><code>src/components/app/WorkspaceShell.tsx</code></td><td>Layout(Sider+Header+Content) 컴포지션</td></tr>
+  <tr><td><span class="tag fix">신규</span></td><td><code>src/components/app/SidebarNav.tsx</code></td><td>role-aware 사이드바 메뉴</td></tr>
+  <tr><td><span class="tag fix">신규</span></td><td><code>src/components/app/AppHeader.tsx</code></td><td>앱 헤더 + 사용자 정보 placeholder</td></tr>
+  <tr><td><span class="tag fix">신규</span></td><td><code>src/components/shared/PlaceholderPage.tsx</code></td><td>IA 코드 + 제목 + phase hint 표시 카드</td></tr>
+  <tr><td><span class="tag fix">신규</span></td><td><code>src/components/shared/{AppLoading,AppError,AppNotFound}.tsx</code></td><td>경계 UI 공용</td></tr>
+  <tr><td><span class="tag fix">신규</span></td><td><code>src/app/(workspace)/{layout,loading,error,not-found}.tsx</code></td><td>workspace route group, force-dynamic</td></tr>
+  <tr><td><span class="tag fix">신규</span></td><td><code>src/app/(workspace)/dashboard/page.tsx</code></td><td>onboarding gate(learning_goals 미존재 시 /onboarding redirect)</td></tr>
+  <tr><td><span class="tag fix">신규</span></td><td><code>src/app/(workspace)/admin/{layout,page,problems/page,org/page,users/page}.tsx</code></td><td>2단 admin role gate</td></tr>
+  <tr><td><span class="tag fix">신규</span></td><td><code>src/app/(workspace)/{growth,library,profile,settings/*,practice/*,writing/*,onboarding/*,subscription,paywall}/page.tsx</code></td><td>15 placeholder page</td></tr>
+  <tr><td><span class="tag fix">신규</span></td><td><code>src/app/(workspace)/writing/{[questionId],feedback/short/[id],feedback/long/[id],reports/[id]/compare}/page.tsx</code></td><td>4 dynamic route stub</td></tr>
+  <tr><td><span class="tag fix">신규</span></td><td><code>src/app/{sign-up,password-reset}/page.tsx</code></td><td>공개 라우트 placeholder</td></tr>
+  <tr><td><span class="tag fix">신규</span></td><td><code>tests/lib/auth/profile-getCurrentProfile.test.ts</code></td><td>5 단위 케이스</td></tr>
+  <tr><td><span class="tag fix">신규</span></td><td><code>tests/integration/route-matrix.test.ts</code></td><td>52 케이스 (public allow + protected redirect + auth pass-through)</td></tr>
+  <tr><td><span class="tag fix">신규</span></td><td><code>tests/integration/admin-role-matrix.test.ts</code></td><td>21 케이스 (admin layout layer 1 + admin pages layer 2)</td></tr>
+  <tr><td><span class="tag fix">신규</span></td><td><code>docs/ai-workflow/light-specs/phase-3-app-shell-and-ia-routes.md</code></td><td>1쪽 light spec</td></tr>
+  <tr><td><span class="tag fix">신규</span></td><td><code>docs/ai-workflow/plans/20260521-phase-3-app-shell-and-ia-routes.md</code></td><td>plan (Codex 사전 리뷰 반영)</td></tr>
+  <tr><td><span class="tag fix">신규</span></td><td><code>docs/ai-workflow/runs/2026/05/21/20260521-1030-phase-3-app-shell-and-ia-routes.md</code></td><td>phase ledger (complete 상태)</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="verification">4. 검증 증거</h2>
+<div class="panel">
+<pre>$ pnpm test
+Test Files  8 passed | 2 skipped (10)
+     Tests  98 passed | 3 skipped (101)
+
+$ pnpm typecheck    # PASS
+$ pnpm lint         # PASS
+$ pnpm build        # PASS — 27 route + 4 공개 컴파일, middleware → Proxy
+$ node scripts/ai-workflow-check.mjs --repo .
+PASS repository state</pre>
+<h4>Architecture Pass — 4 grep</h4>
+<pre>A. src/app·src/components 어디에도 @supabase/* 직접 import: 0
+B. lib/supabase·lib/auth에 도메인 import 누수: 0
+C. admin role 체크: lib/auth/profile.ts(helper) + lib/auth/roles.ts(client-safe 상수)
+   + admin/* 4파일(2차 gate) + SidebarNav(메뉴 가시성 only) — 의도된 분리
+D. page.tsx에 antd 직접 import: 0 (providers.tsx에 ConfigProvider/AntdApp만)</pre>
+</div>
+
+<h2 id="review">5. Cross-model review 결과</h2>
+<div class="grid-2">
+  <div class="card opus">
+    <h3>Opus 4.7 — <span class="verdict-concern">CONCERN</span></h3>
+    <p>P1 1건 + P2 7건. "Phase 3 substantially meets its contract. The one P1 (admin gate test) is the only blocker; everything else is P2 advisory."</p>
+    <ul>
+      <li><strong>P1 #7</strong> — plan Task 13 Step 2가 명시한 admin role 매트릭스 검증 누락. route-matrix는 middleware pass-through만 확인, admin layout learner-block은 어디에서도 미검증. → 같은 PR fix</li>
+      <li>P2 #1 — Double getUser round-trip (layout이 getCurrentUser + getCurrentProfile 내부 재호출) → 같은 PR fix</li>
+      <li>P2 #2 — admin/layout이 "non-learner" loose, admin/page에 requireRole 없음 → 같은 PR fix</li>
+      <li>P2 #5 — SidebarNav vs sitemap.md vs route-matrix 3중 source-of-truth → Phase 4 이월</li>
+      <li>P2 #3, #4, #6, #8 — 의도된 placeholder phase scope 또는 일반 advisory</li>
+    </ul>
+  </div>
+  <div class="card codex">
+    <h3>Codex GPT 5.5 — <span class="verdict-concern">CONCERN</span></h3>
+    <p>P2 8건 (P1 없음). Non-findings: getUser() 적절, /login-something 누수 없음, dynamic route XSS 없음.</p>
+    <ul>
+      <li><strong>P2 #1</strong> — Double getUser → 같은 PR fix</li>
+      <li><strong>P2 #2</strong> — admin layer 1 gate "non-learner" + admin/page 미보호 → 같은 PR fix</li>
+      <li><strong>P2 #8</strong> — plan Task 13 Step 2 admin matrix 누락 (Opus와 동일) → 같은 PR fix</li>
+      <li>P2 #4 — paywall/subscription force-dynamic 비효율 → Phase 4 또는 billing 재개 시</li>
+      <li>P2 #5 — id format validation Phase 5 (의도)</li>
+      <li>P2 #6 — public routes 정적은 의도</li>
+      <li>P2 #3, #7 — minor advisory</li>
+    </ul>
+  </div>
+</div>
+
+<h3>두 모델 동시 발견 4건</h3>
+<div class="panel">
+<table>
+<thead><tr><th>주제</th><th>Opus</th><th>Codex</th><th>처리</th></tr></thead>
+<tbody>
+  <tr><td>admin gate test 누락 (plan Task 13 Step 2)</td><td>P1 #7</td><td>P2 #8</td><td><span class="tag fix">같은 PR fix</span> 21 케이스 admin-role-matrix.test.ts 추가</td></tr>
+  <tr><td>Double getUser round-trip</td><td>P2 #1</td><td>P2 #1</td><td><span class="tag fix">같은 PR fix</span> getSessionAndProfile helper로 1회로</td></tr>
+  <tr><td>admin layout "non-learner" loose</td><td>P2 #2</td><td>P2 #2</td><td><span class="tag fix">같은 PR fix</span> ADMIN_ROLES positive allowlist + admin/page에 requireRole</td></tr>
+  <tr><td>types.ts partial coverage</td><td>P2 #6</td><td>P2 #5</td><td><span class="tag defer">Phase 4 첫 task: supabase gen types regen</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="fixes">6. 같은 PR에서 fix한 3건</h2>
+<div class="panel">
+<table>
+<thead><tr><th>출처</th><th>변경 내용</th><th>위치</th></tr></thead>
+<tbody>
+  <tr><td><span class="tag p1">P1</span> Opus #7 + Codex #8</td><td>admin-role-matrix.test.ts 신규 — admin layout layer 1 + admin/{index,problems,org,users} layer 2 모두 검증 (21 케이스)</td><td><code>tests/integration/admin-role-matrix.test.ts</code></td></tr>
+  <tr><td><span class="tag p2">P2</span> 양측 #1</td><td>getSessionAndProfile helper 신설 → workspace layout이 1회 round-trip으로 user+profile 획득</td><td><code>src/lib/auth/profile.ts</code>, <code>src/app/(workspace)/layout.tsx</code></td></tr>
+  <tr><td><span class="tag p2">P2</span> 양측 #2</td><td>admin layout 게이트를 positive allowlist(ADMIN_ROLES)로 변경 + admin/page.tsx에 requireRole(ADMIN_ROLES) 추가 + ADMIN_ROLES/AppRole을 client-safe `src/lib/auth/roles.ts`로 분리(client bundle에 server chain 누수 방지)</td><td><code>src/lib/auth/roles.ts</code>(신규), <code>src/lib/auth/profile.ts</code>, <code>src/app/(workspace)/admin/{layout,page}.tsx</code>, <code>src/components/app/{SidebarNav,WorkspaceShell}.tsx</code></td></tr>
+</tbody>
+</table>
+<p>fix 후 재실행: test 98/98 PASS, build PASS, workflow checker PASS.</p>
+</div>
+
+<h2 id="defer">7. Phase 4로 이월된 4건</h2>
+<div class="panel">
+<table>
+<thead><tr><th>출처</th><th>이슈</th><th>이월 사유</th></tr></thead>
+<tbody>
+  <tr><td><span class="tag p2">P2</span> Opus #5</td><td>SidebarNav vs sitemap.md vs route-matrix.test 3중 source-of-truth</td><td>routes 상수 분리(예: src/lib/routes.ts) 가능하나 Phase 3 SBU에 핵심 아님. Phase 4 진입 시 정리.</td></tr>
+  <tr><td><span class="tag p2">P2</span> Codex #4</td><td>paywall/subscription이 force-dynamic 아래 불필요한 dynamic render</td><td>billing scope 재개 시 또는 Phase 4의 navigation 정비 시점에. 현재는 shell 일관성 유지가 우선.</td></tr>
+  <tr><td><span class="tag p2">P2</span> Codex #5</td><td>feedback/report dynamic id의 format validation</td><td>Phase 5 data fetch와 함께 도입(의도된 deferral, plan에 명시).</td></tr>
+  <tr><td><span class="tag p2">P2</span> 양측</td><td>types.ts 14 테이블 미정의(profiles + learning_goals만)</td><td>Phase 4 첫 task: `supabase gen types typescript --local`로 full regen. CLI 도입 후.</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="risks">8. 잔여 위험 + 다음 단계</h2>
+<div class="panel">
+<h4>잔여 위험</h4>
+<ul>
+  <li>Supabase CLI local stack 부재로 통합 테스트 2개(profile-trigger, rls-smoke from Phase 2) skip 상태. 머지 전 사용자가 1회 수동 실행 권장: <code>supabase start &amp;&amp; supabase db reset &amp;&amp; SUPABASE_LOCAL_STACK=1 pnpm test tests/integration/</code></li>
+  <li>Next.js 16의 "middleware" → "proxy" 컨벤션 deprecation warning (Phase 2부터 미해결). 동작 정상. 별도 PR로 rename.</li>
+  <li>Onboarding gate가 `/dashboard`에만 적용 — learner가 `/practice/*` 직접 진입하면 빈 placeholder 본다. 의도된 deferral이지만 Phase 4 real content 도입 전 정리 필요.</li>
+  <li>types.ts가 profiles + learning_goals만 정확. Phase 4 첫 fetch에서 missing 테이블 마주치면 type error. → Phase 4 첫 task로 처리.</li>
+</ul>
+<h4>다음 단계</h4>
+<ol>
+  <li><strong>사용자 결정</strong>: <code>local-commit</code> 또는 <code>push-and-pr</code>. Phase 2와 함께 한 PR로 묶을지 분할할지.</li>
+  <li><strong>(권장) 통합 테스트 1회 수동 실행</strong> — docker + supabase CLI 환경.</li>
+  <li><strong>Phase 4 진입 — Learning Core</strong>:
+    <ul>
+      <li>새 light spec: <code>docs/ai-workflow/light-specs/phase-4-learning-core.md</code></li>
+      <li>Phase 4 첫 task: types.ts full regen (Phase 3 이월분, supabase CLI 가능 시)</li>
+      <li>SidebarNav 3중 source-of-truth 정리 (Phase 3 이월분)</li>
+      <li>학습 데이터 fetch + TanStack Query 도입</li>
+      <li>dashboard / practice / writing 실 콘텐츠 채움</li>
+    </ul>
+  </li>
+  <li><strong>(병렬) 별도 PR</strong>: Next.js 16 middleware → proxy rename, @supabase/ssr cache headers(Phase 2 이월).</li>
+</ol>
+</div>
+
+<div class="verdict" style="border-left-color: var(--ok);">
+  <h3 style="color: var(--ok);">Phase 3 종료 상태</h3>
+  <p style="margin-bottom:0">16 task / ~40 파일 / 98 단위·통합 테스트 PASS / 4 grep Architecture Pass / Cross-model 양측 CONCERN→fix 적용 후 substantial PASS. ledger Status: complete. 4-gate workflow checker: PASS. <strong>Phase 4 진입 준비 완료.</strong></p>
+</div>
+
+<footer>
+  generated by Opus 4.7 · cross-reviewer: Codex CLI 0.128.0 (gpt-5.5) · ledger: <code>docs/ai-workflow/runs/2026/05/21/20260521-1030-phase-3-app-shell-and-ia-routes.md</code>
+</footer>
+
+</div>
+</body>
+</html>

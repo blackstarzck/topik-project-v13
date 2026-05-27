@@ -24,6 +24,18 @@ jobs:
         with:
           node-version: "22"
 
+      - name: Sync agent skill mirrors
+        run: node scripts/sync-agent-skills.mjs
+
+      - name: Run checker self-test
+        run: node scripts/ai-workflow-check.selftest.mjs
+
+      - name: Run UX/UI Consistency Pass fixture tests
+        run: node scripts/test-uxui-fixtures.mjs
+
+      - name: Run QA Gate fixture tests
+        run: node scripts/test-qa-gate-fixtures.mjs
+
       - name: Prepare workflow check inputs
         env:
           PR_BODY: ${{ github.event.pull_request.body }}

@@ -1,0 +1,110 @@
+# 인증 메일 확인 안내
+
+- Source: 34 X-12 인증 메일 확인 안내
+- Code: X-12
+- Wireframe: (해당 없음 — Codex 3-round 합의 spec 기반, wireframe.png 추후 추가)
+
+## Wireframe Number Map
+
+| No. | Area | Description |
+| --- | --- | --- |
+| 1 | 안내 카드 | 가입 직후 "받은편지함을 확인해주세요" 안내 중앙 카드. |
+| 2 | 이메일 표시 | 사용자가 가입한 이메일을 명확히 표시 (편집 가능한 form은 아님, 표시만). |
+| 3 | 인증 메일 재전송 버튼 | 60초 cooldown + Supabase same-user 한도 정렬. |
+| 4 | Cooldown 타이머 | 재전송 버튼 비활성 동안 남은 초 표시. |
+| 5 | 이메일 안 왔을 때 안내 | 스팸함 확인 / 다른 메일 입력 / 가입 페이지로 돌아가기 보조 액션. |
+| 6 | 도움말 링크 | 로그인 / 가입 / 홈 escape route. |
+
+## Detailed Description
+
+### 34 X-12 인증 메일 확인 안내
+
+1
+
+■ 안내 카드
+
+▣ 설명
+
+• 가입 직후 머무는 페이지. 새로고침/딥링크 후에도 동일 상태 유지.
+
+▣ 제약 조건: 카드 폭 360-520px, 마스코트/일러스트는 안내 카피를 가리지 않음.
+
+▣ 예외: 세션에 이메일 정보 없으면 `?email=` query 또는 입력 폼으로 fallback.
+
+2
+
+■ 이메일 표시
+
+▣ 설명
+
+• 사용자가 가입한 이메일을 표시. 폼이 아닌 정보 표시 영역.
+
+▣ 제약 조건: 마스킹 X (이미 본인 가입 직후라 표시 안전).
+
+▣ 예외: 세션/쿼리 이메일 모두 없으면 영역 자체 미표시.
+
+3
+
+■ 인증 메일 재전송 버튼
+
+▣ 설명
+
+• Supabase `auth.resend({ type: 'signup', email })` 호출. 60초 client cooldown.
+
+▣ 제약 조건: 60초 cooldown 동안 비활성. 서버가 429 + Retry-After 보내면 그 값으로 cooldown 갱신. 항상 보이는 이메일 input을 요구 (URL/세션만으로 fire-and-forget X — Codex C-ε 합의).
+
+▣ 예외: `over_email_send_rate_limit` 응답 시 `/auth/error?reason=over_email_send_rate_limit&retry_after_seconds=<n>`로 redirect 또는 인라인 안내.
+
+4
+
+■ Cooldown 타이머
+
+▣ 설명
+
+• 재전송 버튼 비활성 동안 남은 초/분 표시. Retry-After 헤더 기반.
+
+▣ 제약 조건: 1초마다 갱신. 0 도달 시 버튼 자동 활성.
+
+▣ 예외: 페이지 새로고침 시 cooldown 초기화 (60초 default 또는 last attempt timestamp 기반 계산).
+
+5
+
+■ 이메일 안 왔을 때 안내
+
+▣ 설명
+
+• "스팸함 확인" / "다른 이메일로 가입하기" / "받은편지함 열기" 보조 액션.
+
+▣ 제약 조건: secondary action, primary 재전송 버튼과 시각적 위계 구분.
+
+▣ 예외: 없음.
+
+6
+
+■ 도움말 링크
+
+▣ 설명
+
+• 로그인 / 가입 / 홈 escape route. 사용자가 인증을 포기해도 다음 행동 유도.
+
+▣ 제약 조건: 항상 노출.
+
+▣ 예외: 없음.
+
+화면 목적 / 분기 / 피드백 / 예외 상황
+
+목적
+
+가입 직후 사용자가 메일 인증을 완료하도록 안내하고 재전송 컨트롤을 제공한다.
+
+분기
+
+재전송 클릭 (60s cooldown) → Supabase resend API. 성공 → "메일을 다시 보냈어요" 토스트. 실패 → `/auth/error?reason=<code>`.
+
+피드백
+
+이메일 표시 + 재전송 버튼 상태 + Cooldown 카운트다운.
+
+예외
+
+재전송 한도 도달 (Supabase 시간당 2회 built-in SMTP) 시 친절한 안내 + 카운트다운.
