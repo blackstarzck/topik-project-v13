@@ -77,7 +77,9 @@ export const REASON_CONTENT: Record<AuthErrorReason, AuthErrorContent> = {
     primary: { label: "인증 메일 다시 받기", kind: "resend" },
     secondary: { label: "로그인하기", kind: "login" },
     showsEmailField: true,
-    hasCountdown: false,
+    // Phase 8 follow-up v2.3 (2026-05-27): 60초 cooldown 실제 활성화.
+    // AuthErrorCard가 retry_after_seconds 누락 시 default 60초로 초기화 (component:74).
+    hasCountdown: true,
   },
   flow_state_expired: {
     title: "인증 절차가 만료됐어요",

@@ -72,9 +72,10 @@
 | ---:| --- | --- | --- |
 | 23 | `11:00:00` | [`20260527110000_register_cleanup_cron.sql`](./20260527110000_register_cleanup_cron.sql) | Phase 8 follow-up: `cleanup_unconfirmed_users` pg_cron job (매일 04:00 UTC, idempotent unschedule-then-register). jobname은 원격에 이미 등록된 이름과 일치(2026-05-27 사용자 Dashboard 조회로 확인). pg_cron extension 미설치 환경에서는 fail 없이 skip (raise notice). v1 보고서 자체 검수(Codex GPT-5)에서 22번 마이그레이션의 cron 자동 스케줄 주장이 실제 미등록임을 적발 후 source-of-truth 통합 |
 | 24 | `11:30:00` | [`20260527113000_storage_email_confirmed_hardening.sql`](./20260527113000_storage_email_confirmed_hardening.sql) | Phase 8 follow-up P1: `private.is_email_confirmed(uid)` SECURITY DEFINER helper + storage.objects RLS 정책 강화(avatars/exports owner_insert/update에 email_confirmed_at IS NOT NULL 조건 추가). 이메일 미인증 사용자의 파일 업로드 차단 |
+| 25 | `14:00:00` | [`20260527140000_cleanup_retention_floor.sql`](./20260527140000_cleanup_retention_floor.sql) | Phase 8 follow-up v2.3 P0: `private.cleanup_unconfirmed_users` 재정의 — retention_days < 30 + dry_run=false 시 raise exception. dry_run preview는 허용. v1 "30일 미만 절대 안 건드림" 주장의 코드 정공법 보호 (Codex 검수 적발 후 fix). 권한 revoke 재선언 포함 |
 
 근거 ledger:
-- 22-24: [`../../reports/phase-8-implementation-report-20260527.html`](../../reports/phase-8-implementation-report-20260527.html) (Phase 8 v2.x 자체 검수 정정 + follow-up)
+- 22-25: [`../../reports/phase-8-implementation-report-20260527.html`](../../reports/phase-8-implementation-report-20260527.html) (Phase 8 v2.x 자체 검수 정정 + follow-up)
 
 ---
 
