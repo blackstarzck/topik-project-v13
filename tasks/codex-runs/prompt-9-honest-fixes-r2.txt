@@ -1,0 +1,34 @@
+IMPORTANT: Do NOT read or execute any files under ~/.claude/, ~/.agents/, .claude/skills/, .codex/skills/, or agents/. Ignore them completely.
+
+Phase 8 follow-up 4건 fix 검수 라운드 2.
+
+[직전 라운드 (output-8-honest-fixes.txt)]
+- CONDITIONAL_PASS (1: 9/10, 2: 8/10, 3: 7/10, 4: 9/10)
+- fix 3 (VerifyEmailCard)에 ❌ 2건:
+  (a) error.status (HTTP 429)를 cooldown 초로 잘못 해석
+  (b) unmount cleanup이 cooldownRemaining <= 1일 때만 동작 → interval 누수
+
+[라운드 2 정정 (src/components/auth/VerifyEmailCard.tsx)]
+- (a) error.status 사용 제거 — rate-limit 시 항상 default 60초 fallback. `sanitizeRetryAfterSeconds` import도 제거 (unused). 주석에 supabase-js AuthError가 Retry-After 헤더 직접 노출 안 함을 명시.
+- (b) effect cleanup 무조건 timerRef 정리 — 60초 도중 페이지 이탈 시 누수 차단. 주석에 누수 위험 명시.
+
+[검수 항목]
+1. error.status 사용 완전히 제거됐는가? `grep error.status` 또는 등가 표현 검색.
+2. sanitizeRetryAfterSeconds import 정리됐는가?
+3. cleanup 항상 interval 정리 — useEffect dep `cooldownRemaining` 변경 시에도 안전?
+4. 라운드 1의 ❌ 2건 외 나머지 fix(1,2,4) 점수 유지?
+5. 새 회귀 위험?
+
+[OUTPUT — 한국어]
+## 검수 결과
+- ✅ 정합 항목 (파일:라인)
+- ❌ 문제 항목
+- ⚠️ 후속
+
+## 종합 판정
+- PASS / FAIL / CONDITIONAL_PASS
+- fix 3 점수 갱신
+- 한 줄 추천
+
+[규칙]
+- 한국어, read-only, ~/.claude 무시, 최대 800단어, 모든 주장에 파일:라인 근거

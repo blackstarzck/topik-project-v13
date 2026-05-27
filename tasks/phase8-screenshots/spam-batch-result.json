@@ -1,0 +1,16 @@
+{
+  "allUrls": [
+    "https://fglggyfvzjdsbyckinqa.supabase.co/auth/v1/verify?token=dcc081ca1be82474c1507e83c61e323eaca33d45311f36e8742cc539&type=signup&redirect_to=http://localhost:3000"
+  ],
+  "results": [
+    {
+      "rewritten": "https://fglggyfvzjdsbyckinqa.supabase.co/auth/v1/verify?token=dcc081ca1be82474c1507e83c61e323eaca33d45311f36e8742cc539&type=signup&redirect_to=http%3A%2F%2F127.0.0.1%3A3000%2Fauth%2Fcallback%3Fnext%3D%2Fonboarding%2Flearning-goal",
+      "finalUrl": "http://localhost:3000/auth/error?reason=unknown#error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired&sb=",
+      "bodyHead": "처리 중 문제가 생겼어요\n잠시 후 다시 시도해주세요. 문제가 계속되면 지원 채널로 알려주세요.\n홈으로\n도움말\n홈으로 돌아가기",
+      "nav": [
+        "http://localhost:3000/auth/error?reason=unknown#error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired&sb=",
+        "http://localhost:3000/auth/error?reason=unknown#error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired&sb="
+      ]
+    }
+  ]
+}

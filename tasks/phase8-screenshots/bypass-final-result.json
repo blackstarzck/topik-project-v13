@@ -1,0 +1,14 @@
+{
+  "inputUrl": "http://localhost:3000/auth/callback?token_hash=5488a59720433ec38dfe4ef1b1b89d49d819bc12398e2b430aa03c26&type=signup&next=/onboarding/learning-goal",
+  "finalUrl": "http://localhost:3000/login",
+  "navHistory": [
+    "http://localhost:3000/login",
+    "http://localhost:3000/login"
+  ],
+  "title": "로그인",
+  "bodyHead": "로그인\n비밀번호 로그인\n매직링크 로그인\n이메일\n비밀번호\n로그인\n비밀번호를 잊으셨나요?\n\n계정이 없으신가요? 회원가입",
+  "reachedLearningGoal": false,
+  "reachedAuthError": false,
+  "reachedDashboard": false,
+  "reachedLogin": true
+}

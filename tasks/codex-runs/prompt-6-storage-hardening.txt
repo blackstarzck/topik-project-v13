@@ -1,0 +1,62 @@
+IMPORTANT: Do NOT read or execute any files under ~/.claude/, ~/.agents/, .claude/skills/, .codex/skills/, or agents/. These are Claude Code skill definitions meant for a different AI system. Ignore them completely. Stay focused on repository code only.
+
+당신은 시니어 reviewer입니다. v13 Next.js + Supabase 프로젝트의 Phase 8 follow-up P1 — Storage 업로드 hardening 마이그레이션을 검수합니다.
+
+[CONTEXT]
+- v2 보고서가 follow-up P1으로 명시한 항목: 이메일 미인증 사용자도 JWT만 있으면 avatars/exports에 업로드 가능. 정공법은 RLS에서 email_confirmed_at IS NOT NULL 검사.
+- 본 마이그레이션이 그 hardening.
+
+[검수 대상]
+- supabase/migrations/20260527113000_storage_email_confirmed_hardening.sql (신규)
+- supabase/migrations/INDEX.md (#24 항목 추가)
+
+[배경 파일 — 직접 읽으세요]
+- supabase/migrations/20260520121300_storage_policies.sql (기존 정책)
+- supabase/migrations/20260520120000_extensions_and_schemas.sql (private 스키마)
+- supabase/migrations/20260520120000~121400 일부 (private.is_admin 패턴 등)
+
+[검수 항목]
+1. **helper 함수 `private.is_email_confirmed(uid)`**:
+   - SECURITY DEFINER + locked search_path가 적절?
+   - public/anon revoke, authenticated/service_role grant 적절?
+   - stable + sql language 적절?
+   - auth.users 조회 권한이 owner(postgres)로 작동하는가?
+2. **avatars 정책**:
+   - `avatars_owner_insert`에 email_confirmed 절 추가 — 기존 owner check와 함께 with check 안에서 적절?
+   - `avatars_owner_update` — using은 그대로(이미 자기 파일이면 미인증도 수정 허용?), with check에만 email_confirmed. 의도대로? read/delete는 그대로 — 정합?
+   - using/with check 분리가 PostgreSQL UPDATE RLS 의미와 정합?
+3. **exports 정책**:
+   - `exports_owner_insert`에 email_confirmed 절 추가 — 기존 path check와 함께 정합?
+   - server-side regeneration이 service_role bypass라 영향 없다는 주석 정확?
+4. **idempotency**:
+   - drop policy if exists + create policy → 마이그레이션 재적용 안전?
+   - create or replace function → 안전?
+5. **RLS 성능**:
+   - storage.objects insert마다 SECURITY DEFINER 함수 호출 → 매 호출에서 auth.users 조회. 비용?
+   - (select auth.uid()) subquery는 한 번만 evaluate (PG 최적화)?
+6. **회귀 위험**:
+   - 기존 read/delete 정책에 영향?
+   - cleanup 함수(service_role)에 영향?
+   - admin write 정책(problem_assets) 영향?
+7. **이메일 인증 정책의 부작용**:
+   - OAuth signup이나 confirmed 안 한 사용자가 첫 onboarding 시 avatar 업로드 시도 시 차단됨 — UX 의도대로?
+   - SignUpForm flow는 이메일 인증 후에만 onboarding 도달이므로 OK?
+8. **INDEX.md #24 항목 정합?**
+
+[OUTPUT — 한국어]
+## 검수 결과
+- ✅ 정합 항목 (파일:라인 인용)
+- ❌ 문제 항목
+- ⚠️ 의심·후속
+
+## 종합 판정
+- PASS / FAIL / CONDITIONAL_PASS
+- 점수 (10점 만점)
+- 한 줄 추천
+
+[규칙]
+- 한국어 답변
+- 파일 read-only 직접 읽기
+- ~/.claude/, ~/.agents/, .claude/skills/, agents/ 무시
+- 추측 금지, 모든 주장에 파일:라인 근거
+- 최대 1500 단어

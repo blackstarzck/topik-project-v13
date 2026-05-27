@@ -1,0 +1,76 @@
+¼º°ø: PID 31872ÀÎ ÇÁ·Î¼¼½º(PID 45684ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 45684ÀÎ ÇÁ·Î¼¼½º(PID 27124ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 41960ÀÎ ÇÁ·Î¼¼½º(PID 27124ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 34828ÀÎ ÇÁ·Î¼¼½º(PID 43600ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 43600ÀÎ ÇÁ·Î¼¼½º(PID 41040ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 41040ÀÎ ÇÁ·Î¼¼½º(PID 44428ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 44428ÀÎ ÇÁ·Î¼¼½º(PID 27124ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 39788ÀÎ ÇÁ·Î¼¼½º(PID 45640ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 45640ÀÎ ÇÁ·Î¼¼½º(PID 27124ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 26196ÀÎ ÇÁ·Î¼¼½º(PID 42576ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 42576ÀÎ ÇÁ·Î¼¼½º(PID 8476ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 8476ÀÎ ÇÁ·Î¼¼½º(PID 36784ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 36784ÀÎ ÇÁ·Î¼¼½º(PID 44152ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 44152ÀÎ ÇÁ·Î¼¼½º(PID 27124ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 42648ÀÎ ÇÁ·Î¼¼½º(PID 27124ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 42400ÀÎ ÇÁ·Î¼¼½º(PID 27124ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 5776ÀÎ ÇÁ·Î¼¼½º(PID 27124ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 45132ÀÎ ÇÁ·Î¼¼½º(PID 41384ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 41384ÀÎ ÇÁ·Î¼¼½º(PID 37692ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 37692ÀÎ ÇÁ·Î¼¼½º(PID 35452ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 35452ÀÎ ÇÁ·Î¼¼½º(PID 30656ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 30656ÀÎ ÇÁ·Î¼¼½º(PID 27124ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 45688ÀÎ ÇÁ·Î¼¼½º(PID 43676ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 43676ÀÎ ÇÁ·Î¼¼½º(PID 4076ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 4076ÀÎ ÇÁ·Î¼¼½º(PID 30472ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 30472ÀÎ ÇÁ·Î¼¼½º(PID 27124ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 45336ÀÎ ÇÁ·Î¼¼½º(PID 27124ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+## ê²€ìˆ˜ ê²°ê³¼
+
+### âœ… ì •í•© í•­ëª©
+
+- `src/app/auth/callback/route.ts:56`ê°€ `GET(request: NextRequest)` Route Handlerë¡œ ì „í™˜ë¨. ì´ì „ `page.tsx`ì˜ Server Component ë Œë” ê²½ë¡œê°€ ì œê±°ë˜ì–´ P0 ì›ì¸ê³¼ ì§ì ‘ ë§ìŒ.
+- `verifyOtp` ì„±ê³µ ë’¤ `NextResponse.redirect(new URL(next, request.url))`ë¥¼ ë°˜í™˜í•¨: `src/app/auth/callback/route.ts:78-96`.  
+  ì‹¤ì œ ê²€ì¦ ì‚°ì¶œë¬¼ë„ `sbCookieReceived: true`, `finalUrl=/onboarding/learning-goal`: `tasks/phase8-screenshots/bypass-success-result.json:2-15`.
+- Supabase SSR helperëŠ” `getAll`/`setAll`ë¥¼ êµ¬í˜„í•¨: `src/lib/supabase/server.ts:11-24`. `@supabase/ssr`ë„ ì„œë²„ í´ë¼ì´ì–¸íŠ¸ì—ì„œ `setAll` êµ¬í˜„ ì‹¤íŒ¨ê°€ ì¸ì¦ ë¬¸ì œë¥¼ ë§Œë“ ë‹¤ê³  ëª…ì‹œ: `node_modules/@supabase/ssr/dist/main/createServerClient.d.ts:17-40`.
+- Next 16 íƒ€ì…ìƒ `cookies()` ë°˜í™˜ íƒ€ì…ì€ `set/delete`ë¥¼ í¬í•¨í•¨: `node_modules/next/dist/server/request/cookies.d.ts:1-2`, `node_modules/next/dist/server/web/spec-extension/adapters/request-cookies.d.ts:4-6`. ì¦‰ Route Handler/Server Action ê³„ì—´ì—ì„œëŠ” cookie write ê²½ë¡œê°€ ìˆìŒ.
+- `dynamic = "force-dynamic"` ìˆìŒ: `src/app/auth/callback/route.ts:29`. `docs/sitemap.md:59`ë„ callback route handlerì— ì´ ê°’ì„ ìš”êµ¬í•¨.
+- 4ë¶„ê¸° ìì²´ëŠ” êµ¬í˜„ë¨:
+  - provider error: `src/app/auth/callback/route.ts:61-70`
+  - `token_hash + type`: `src/app/auth/callback/route.ts:73-96`
+  - OAuth `code`: `src/app/auth/callback/route.ts:99-113`
+  - fragment fallback redirect: `src/app/auth/callback/route.ts:116-123`
+- fragment fallback pageëŠ” Server Componentê°€ client componentë¥¼ í˜¸ìŠ¤íŠ¸í•¨: `src/app/auth/callback-fragment/page.tsx:25-39`, client ì„ ì–¸ì€ `src/components/auth/CallbackFragmentFallback.tsx:1`.
+- fragment fallbackì€ `next`ë¥¼ sanitize í›„ ì „ë‹¬í•¨: `src/app/auth/callback-fragment/page.tsx:30-36`. clientëŠ” `setSession` ì„±ê³µ ë’¤ `router.replace(next)` ìˆ˜í–‰: `src/components/auth/CallbackFragmentFallback.tsx:51-68`.
+- middleware í†µê³¼ ê²½ë¡œëŠ” ë§ìŒ. `PUBLIC_PATHS`ì— `/auth/callback-fragment` ì¶”ê°€ë¨: `src/lib/routes.ts:29-31`, proxyëŠ” exact ë˜ëŠ” í•˜ìœ„ ê²½ë¡œ í—ˆìš©: `src/proxy.ts:7-10`.
+- open redirect ë°©ì–´ëŠ” ë™ì¼í•˜ê²Œ ì ìš©ë¨. `sanitizeNext`ëŠ” `/` ì‹œì‘ë§Œ í—ˆìš©í•˜ê³  `//`, `:`ë¥¼ ì°¨ë‹¨í•¨: `src/lib/auth/error-mapping.ts:165-170`.
+- verify type whitelistëŠ” `signup`, `recovery`, `email_change`, `email`: `src/app/auth/callback/route.ts:31-40`. ì´ì „ `page.tsx`ì™€ ë™ì¼í•œ ì˜ë„.
+- raw `error_description`ì€ UIë¡œ ë„˜ê¸°ì§€ ì•ŠìŒ. query provider errorëŠ” server logë§Œ: `src/app/auth/callback/route.ts:61-70`; fragment errorë„ `reason`ë§Œ ë„˜ê¹€: `src/components/auth/CallbackFragmentFallback.tsx:42-47`.
+
+### âŒ ë¬¸ì œ í•­ëª©
+
+- P0 ì°¨ë‹¨ ë¬¸ì œëŠ” ëª» ì°¾ì•˜ìŠµë‹ˆë‹¤. í˜„ì¬ ì¦ê±° ê¸°ì¤€ìœ¼ë¡œ â€œë©”ì¼ í´ë¦­ í›„ ì„¸ì…˜ ì¿ í‚¤ ë¯¸ë°œê¸‰â€ ë²„ê·¸ëŠ” Route Handler ì „í™˜ìœ¼ë¡œ í•´ê²°ëœ ìƒíƒœì…ë‹ˆë‹¤.
+
+### âš ï¸ ì˜ì‹¬Â·í›„ì†
+
+- `token_hash`ëŠ” ìˆëŠ”ë° `type=invalid`ì´ë©´ í˜„ì¬ëŠ” `verifyOtp`ë¥¼ íƒ€ì§€ ì•Šê³  fragment fallbackìœ¼ë¡œ ê°‘ë‹ˆë‹¤: `src/app/auth/callback/route.ts:78`, `src/app/auth/callback/route.ts:121-123`. ê¸°ëŠ¥ìƒ ìµœì¢… `/auth/error?reason=unknown`ìœ¼ë¡œ ê°ˆ ê°€ëŠ¥ì„±ì´ í¬ì§€ë§Œ, malformed callbackì„ fragment fallbackìœ¼ë¡œ ë¶„ë¥˜í•˜ëŠ” ê±´ ì• ë§¤í•©ë‹ˆë‹¤. ì§ì ‘ `/auth/error?reason=unknown` + logê°€ ë” ëª…í™•í•©ë‹ˆë‹¤.
+- `createSupabaseServerClient`ëŠ” Route Handlerì—ì„œë„ ì—¬ì „íˆ `try/catch`ë¡œ cookie set ì‹¤íŒ¨ë¥¼ ì‚¼í‚µë‹ˆë‹¤: `src/lib/supabase/server.ts:15-23`. ì´ë²ˆ curl/Playwright ì¦ê±°ëŠ” í†µê³¼ì§€ë§Œ, ë¯¸ë˜ íšŒê·€ ê°ì§€ëŠ” ì•½í•©ë‹ˆë‹¤.
+- `docs/sitemap.md` public ëª©ë¡ì—ëŠ” ì•„ì§ `/auth/callback-fragment`ê°€ ë¹ ì ¸ ìˆìŠµë‹ˆë‹¤: `docs/sitemap.md:70`. ì½”ë“œëŠ” ë§ì§€ë§Œ ë¬¸ì„œì™€ ì½”ë“œê°€ ì‚´ì§ ì–´ê¸‹ë‚¬ìŠµë‹ˆë‹¤.
+- ë³´ê³ ì„œ/ì‘ì—… ë¡œê·¸ì—ëŠ” ì´ì „ `callback/page.tsx` ì–¸ê¸‰ì´ ë‚¨ì•„ ìˆìŠµë‹ˆë‹¤: ì˜ˆ `reports/phase-8-implementation-report-20260527.html:440`, `tasks/codex-runs/output-1-auth-flow.txt:36-44`. ëŸ°íƒ€ì„ import ì”ì¡´ì€ `src/docs` ê²€ìƒ‰ì—ì„œ ëª» ì°¾ì•˜ìŠµë‹ˆë‹¤.
+- `retry_after_seconds` builderëŠ” ìˆì§€ë§Œ í˜„ì¬ callback ì‹¤íŒ¨ ê²½ë¡œëŠ” í•­ìƒ `null`ì„ ë„˜ê¹ë‹ˆë‹¤: `src/app/auth/callback/route.ts:43-52`, `src/app/auth/callback/route.ts:90-91`, `src/app/auth/callback/route.ts:109-110`. P0ì™€ ë³„ê°œë¡œ docsì˜ optional countdown ê¸°ëŒ€ì™€ëŠ” ì•„ì§ ê±°ë¦¬ ìˆìŠµë‹ˆë‹¤.
+- fragment retainì€ í‘œì¤€ ë™ì‘ ì „ì œì™€ Chromium Playwright ì¦ê±°ê°€ ìˆìŠµë‹ˆë‹¤: `tasks/phase8-screenshots/fragment-fallback-results.json:2-15`. Firefox/Safari ì‹¤ê¸°ê¸° ì¦ê±°ëŠ” ì´ ì‘ì—…íŠ¸ë¦¬ì—ì„œ ëª» ë´¤ìŠµë‹ˆë‹¤.
+
+## ì¢…í•© íŒì •
+
+**CONDITIONAL_PASS**
+
+**ì ìˆ˜: 8.5 / 10**
+
+**í•œ ì¤„ ì¶”ì²œ:** P0 cookie fixëŠ” í†µê³¼. ë‹¤ë§Œ invalid `type` ë¶„ê¸°ì™€ `/auth/callback-fragment` ë¬¸ì„œ ë°˜ì˜, cookie set ì‹¤íŒ¨ ê°ì§€ ë¡œê·¸ë¥¼ í›„ì†ìœ¼ë¡œ ì¡ëŠ” ê²Œ ì¢‹ìŠµë‹ˆë‹¤.
+
+Docs consulted: `docs/agent-index.md`, `docs/ai-development-workflow.md`, `docs/sitemap.md`, `docs/flow/user-flow.md`, `docs/IA/33-X-11-auth-error/description.md`, `docs/spec.md`, `docs/development/backend-auth.md`.  
+ìŠ¤í‚¬: ì‚¬ìš©ì ì§€ì‹œë¡œ `.codex/skills`, `.agents` ê³„ì—´ì€ ì½ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.
+¼º°ø: PID 35912ÀÎ ÇÁ·Î¼¼½º(PID 42280ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 42280ÀÎ ÇÁ·Î¼¼½º(PID 43476ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 43476ÀÎ ÇÁ·Î¼¼½º(PID 11532ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 11532ÀÎ ÇÁ·Î¼¼½º(PID 27124ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.

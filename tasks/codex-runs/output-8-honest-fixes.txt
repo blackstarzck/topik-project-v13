@@ -1,0 +1,120 @@
+¼º°ø: PID 37972ÀÎ ÇÁ·Î¼¼½º(PID 38516ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 38516ÀÎ ÇÁ·Î¼¼½º(PID 38800ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 29996ÀÎ ÇÁ·Î¼¼½º(PID 43648ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 43648ÀÎ ÇÁ·Î¼¼½º(PID 300ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 300ÀÎ ÇÁ·Î¼¼½º(PID 9476ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 9476ÀÎ ÇÁ·Î¼¼½º(PID 38800ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 44036ÀÎ ÇÁ·Î¼¼½º(PID 7488ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 7488ÀÎ ÇÁ·Î¼¼½º(PID 31672ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 31672ÀÎ ÇÁ·Î¼¼½º(PID 22408ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 22408ÀÎ ÇÁ·Î¼¼½º(PID 40384ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 40384ÀÎ ÇÁ·Î¼¼½º(PID 38800ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 45592ÀÎ ÇÁ·Î¼¼½º(PID 33964ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 33964ÀÎ ÇÁ·Î¼¼½º(PID 13912ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 13912ÀÎ ÇÁ·Î¼¼½º(PID 45184ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 45184ÀÎ ÇÁ·Î¼¼½º(PID 38800ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 9176ÀÎ ÇÁ·Î¼¼½º(PID 38800ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 38700ÀÎ ÇÁ·Î¼¼½º(PID 38800ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 31848ÀÎ ÇÁ·Î¼¼½º(PID 38800ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 29388ÀÎ ÇÁ·Î¼¼½º(PID 12552ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 12552ÀÎ ÇÁ·Î¼¼½º(PID 10052ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 10052ÀÎ ÇÁ·Î¼¼½º(PID 46004ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 46004ÀÎ ÇÁ·Î¼¼½º(PID 38800ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 34040ÀÎ ÇÁ·Î¼¼½º(PID 45268ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 45268ÀÎ ÇÁ·Î¼¼½º(PID 34584ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 34584ÀÎ ÇÁ·Î¼¼½º(PID 28796ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 28796ÀÎ ÇÁ·Î¼¼½º(PID 22148ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 22148ÀÎ ÇÁ·Î¼¼½º(PID 38800ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 35220ÀÎ ÇÁ·Î¼¼½º(PID 38800ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 36716ÀÎ ÇÁ·Î¼¼½º(PID 19252ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 19252ÀÎ ÇÁ·Î¼¼½º(PID 38800ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 16248ÀÎ ÇÁ·Î¼¼½º(PID 38800ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 14272ÀÎ ÇÁ·Î¼¼½º(PID 38800ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+## ê²€ìˆ˜ ê²°ê³¼
+
+Docs consulted: `docs/agent-index.md`, `docs/ai-development-workflow.md`, `docs/development/auth-overview.md`, `docs/IA/33-X-11-auth-error/description.md`, `docs/IA/34-X-12-auth-verify-email/description.md`, `docs/flow/user-flow.md`  
+ìŠ¤í‚¬ í´ë”ëŠ” ìš”ì²­ëŒ€ë¡œ ì—´ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.
+
+## fix 1 â€” cleanup retention floor
+
+âœ… ì •í•©
+- ì‹œê·¸ë‹ˆì²˜ëŠ” #22ì™€ ë™ì¼í•©ë‹ˆë‹¤: `retention_days int default 30`, `dry_run boolean default false`, `max_batch int default 1000` (`supabase/migrations/20260526180000_cleanup_unconfirmed_users.sql:22-29`, `supabase/migrations/20260527140000_cleanup_retention_floor.sql:17-24`).
+- ì‹¤ì œ ì‚­ì œëŠ” `retention_days < 30 and not dry_run`ì—ì„œ ë§‰í™ë‹ˆë‹¤ (`20260527140000_cleanup_retention_floor.sql:33-36`).
+- `dry_run=true`ëŠ” ì‚­ì œ ì „ì— countë§Œ ë°˜í™˜í•©ë‹ˆë‹¤ (`20260527140000_cleanup_retention_floor.sql:53-57`).
+- ê¸°ì¡´ `retention_days >= 1`, `max_batch >= 1` ë°©ì–´ê°€ ìœ ì§€ëìŠµë‹ˆë‹¤ (`20260527140000_cleanup_retention_floor.sql:30-38`).
+- `SECURITY DEFINER`ì™€ `search_path` ìœ ì§€ í™•ì¸ (`20260527140000_cleanup_retention_floor.sql:22-24`).
+- cron ê¸°ë³¸ í˜¸ì¶œì€ `select private.cleanup_unconfirmed_users()`ë¼ ê¸°ë³¸ 30ì¼ì„ ì”ë‹ˆë‹¤ (`20260527110000_register_cleanup_cron.sql:47-50`).
+- INDEX #25 ì¶”ê°€ í™•ì¸ (`supabase/migrations/INDEX.md:75`).
+
+âŒ ë¬¸ì œ
+- ì—†ìŒ.
+
+âš ï¸ í›„ì†
+- #25 ìì²´ì—ëŠ” `revoke all` ì¬ì„ ì–¸ì´ ì—†ìŠµë‹ˆë‹¤. #22ì—ëŠ” revokeê°€ ìˆìŠµë‹ˆë‹¤ (`20260526180000_cleanup_unconfirmed_users.sql:75-76`). ìˆœì°¨ ë§ˆì´ê·¸ë ˆì´ì…˜ì´ë©´ ê´œì°®ì§€ë§Œ, ì•ˆì „ ë¬¸ì„œí™”ë¥¼ ìœ„í•´ #25ì—ë„ ê¶Œí•œ ì˜ë„ë¥¼ ë‹¤ì‹œ ì“°ë©´ ë” ëª…í™•í•©ë‹ˆë‹¤.
+
+ì ìˆ˜: 9/10
+
+## fix 2 â€” otp_expired cooldown
+
+âœ… ì •í•©
+- `otp_expired.hasCountdown`ê°€ `true`ë¡œ ë°”ë€Œì—ˆìŠµë‹ˆë‹¤ (`src/lib/auth/error-mapping.ts:73-82`).
+- `AuthErrorCard`ëŠ” `retry_after_seconds`ê°€ ìˆìœ¼ë©´ ê·¸ ê°’ì„ ì“°ê³ , ì—†ìœ¼ë©´ 60ì´ˆë¥¼ ì”ë‹ˆë‹¤ (`src/components/auth/AuthErrorCard.tsx:69-75`).
+- `over_email_send_rate_limit`, `over_request_rate_limit`ëŠ” ê·¸ëŒ€ë¡œ countdown trueì…ë‹ˆë‹¤ (`src/lib/auth/error-mapping.ts:117-129`).
+- ë¬¸êµ¬ì˜ â€œ60ì´ˆâ€ì™€ ë™ì‘ì´ ë§ìŠµë‹ˆë‹¤ (`src/lib/auth/error-mapping.ts:75-82`).
+
+âŒ ë¬¸ì œ
+- callback routeì˜ `buildErrorUrl`ì€ `retry_after_seconds`ë¥¼ ë„£ì„ ìˆ˜ ìˆì§€ë§Œ (`src/app/auth/callback/route.ts:43-52`), ì‹¤ì œ í˜¸ì¶œë¶€ëŠ” ëª¨ë‘ `null`ì„ ë„˜ê¹ë‹ˆë‹¤ (`src/app/auth/callback/route.ts:68-70`, `99-101`, `118-120`). ì¦‰ â€œqueryê°€ ëª…ì‹œë˜ë©´ UI ìš°ì„  ì ìš©â€ì€ ë§ì§€ë§Œ, callbackì—ì„œ ê°’ì„ ì „ë‹¬í•˜ëŠ” ê²½ë¡œëŠ” ì•„ì§ ê»ë°ê¸°ì…ë‹ˆë‹¤.
+
+âš ï¸ í›„ì†
+- í…ŒìŠ¤íŠ¸ëŠ” rate-limit reasonë§Œ countdown trueë¥¼ ê²€ì¦í•©ë‹ˆë‹¤ (`tests/lib/auth/error-mapping.test.ts:84-87`). `otp_expired.hasCountdown === true` ì¼€ì´ìŠ¤ ì¶”ê°€ ê¶Œê³ .
+
+ì ìˆ˜: 8/10
+
+## fix 3 â€” VerifyEmailCard timestamp cooldown
+
+âœ… ì •í•©
+- keyëŠ” ëª…í™•í•©ë‹ˆë‹¤: `talkpik:verify-email:cooldown-until` (`src/components/auth/VerifyEmailCard.tsx:25-26`).
+- epoch msë¥¼ ì½ê³  `Math.ceil((until - Date.now()) / 1000)`ë¡œ ë‚¨ì€ ì´ˆë¥¼ ê³„ì‚°í•˜ë©°, 0 ì´í•˜ëŠ” 0 ì²˜ë¦¬í•©ë‹ˆë‹¤ (`src/components/auth/VerifyEmailCard.tsx:41-50`).
+- `localStorage` ì ‘ê·¼ì€ `typeof window`ì™€ `try/catch`ë¡œ ê°ìŒŒìŠµë‹ˆë‹¤ (`src/components/auth/VerifyEmailCard.tsx:41-52`, `56-67`, `71-77`).
+- mount í›„ ë³µì›ì´ë¼ SSR/hydration ìª½ì€ ì•ˆì „í•©ë‹ˆë‹¤ (`src/components/auth/VerifyEmailCard.tsx:87-95`).
+- tickì€ ë§¤ì´ˆ ì €ì¥ëœ ì¢…ë£Œ ì‹œê°ì„ ë‹¤ì‹œ ì½ìŠµë‹ˆë‹¤ (`src/components/auth/VerifyEmailCard.tsx:100-114`).
+- ì¢…ë£Œ ì‹œ cleanup í•©ë‹ˆë‹¤ (`src/components/auth/VerifyEmailCard.tsx:101-107`).
+- ë²„íŠ¼ê³¼ ì…ë ¥ disabledê°€ cooldownì— ì—°ê²°ë¼ ìˆìŠµë‹ˆë‹¤ (`src/components/auth/VerifyEmailCard.tsx:196`, `210-213`).
+
+âŒ ë¬¸ì œ
+- rate-limit ì—ëŸ¬ì—ì„œ `error.status`ë¥¼ cooldown ì´ˆë¡œ í•´ì„í•©ë‹ˆë‹¤ (`src/components/auth/VerifyEmailCard.tsx:152-158`). ê·¸ëŸ°ë° IAëŠ” â€œì„œë²„ê°€ 429 + Retry-Afterë¥¼ ë³´ë‚´ë©´ Retry-After ê°’ìœ¼ë¡œ ê°±ì‹ â€ì´ë¼ê³  ë˜ì–´ ìˆìŠµë‹ˆë‹¤ (`docs/IA/34-X-12-auth-verify-email/description.md:54`, `64`). ì§€ê¸ˆ ì½”ë“œëŠ” 429 ìƒíƒœë¥¼ 429ì´ˆë¡œ ì“¸ ìˆ˜ ìˆëŠ” ëª¨ì–‘ì…ë‹ˆë‹¤. ì´ê±´ ê³ ì³ì•¼ í•©ë‹ˆë‹¤.
+- unmount cleanupì´ `cooldownRemaining <= 1`ì¼ ë•Œë§Œ intervalì„ ì§€ì›ë‹ˆë‹¤ (`src/components/auth/VerifyEmailCard.tsx:116-121`). í˜ì´ì§€ë¥¼ 60ì´ˆ ì•ˆì— ë– ë‚˜ë©´ intervalì´ ë‚¨ì„ ìˆ˜ ìˆìŠµë‹ˆë‹¤.
+
+âš ï¸ í›„ì†
+- ë‹¨ì¼ keyë¼ ì´ë©”ì¼ë³„ cooldownì€ ì•„ë‹™ë‹ˆë‹¤ (`src/components/auth/VerifyEmailCard.tsx:26`). X-12ê°€ â€œ60ì´ˆ client cooldownâ€ì„ ìš”êµ¬í•˜ë¯€ë¡œ í° ì¶©ëŒì€ ì•„ë‹™ë‹ˆë‹¤ (`docs/development/auth-overview.md:178`).
+- localStorage ì‚­ì œë¡œ ìš°íšŒ ê°€ëŠ¥í•˜ì§€ë§Œ, ë¬¸ì„œìƒ ì§„ì§œ ë³´í˜¸ëŠ” Supabase rate-limitì…ë‹ˆë‹¤ (`docs/development/auth-overview.md:178-182`).
+
+ì ìˆ˜: 7/10
+
+## fix 4 â€” AuthErrorCard countdown text
+
+âœ… ì •í•©
+- `formatCountdown`ì€ `2ë¶„`, `1ë¶„ 59ì´ˆ`, `59ì´ˆ` í˜•íƒœë¥¼ ëª¨ë‘ ë§Œë“¤ ìˆ˜ ìˆìŠµë‹ˆë‹¤ (`src/components/auth/AuthErrorCard.tsx:31-38`).
+- countdown label ìƒì„± í™•ì¸ (`src/components/auth/AuthErrorCard.tsx:88-92`).
+- í™”ë©´ ë Œë” í™•ì¸ (`src/components/auth/AuthErrorCard.tsx:162-165`).
+
+âŒ ë¬¸ì œ
+- ì½”ë“œìƒ ë¬¸ì œ ì—†ìŒ.
+
+âš ï¸ í›„ì†
+- Playwrightê°€ ì •í™•íˆ â€œ2ë¶„â€ë§Œ ì°¾ìœ¼ë©´ 120ì´ˆì—ì„œ 119ì´ˆë¡œ ë‚´ë ¤ê°„ ë’¤ ì‹¤íŒ¨í•  ìˆ˜ ìˆìŠµë‹ˆë‹¤. ì½”ë“œ ê¸°ì¤€ìœ¼ë¡œëŠ” â€œ1ë¶„ 59ì´ˆâ€ í‘œì‹œê°€ ì •ìƒì…ë‹ˆë‹¤ (`src/components/auth/AuthErrorCard.tsx:31-38`, `88-92`).
+
+ì ìˆ˜: 9/10
+
+## ì¢…í•© íŒì •
+
+CONDITIONAL_PASS
+
+- fix 1: 9/10
+- fix 2: 8/10
+- fix 3: 7/10
+- fix 4: 9/10
+
+í•œ ì¤„ ì¶”ì²œ: fix 3ì˜ `error.status` ì´ˆ í•´ì„ê³¼ interval cleanupë§Œ ê³ ì¹˜ë©´ PASSë¡œ ì˜¬ë ¤ë„ ë©ë‹ˆë‹¤.
+
+ê²€ì¦ ë©”ëª¨: ì´ ê²€ìˆ˜ì—ì„œëŠ” í…ŒìŠ¤íŠ¸ë¥¼ ì¬ì‹¤í–‰í•˜ì§€ ì•Šê³  read-onlyë¡œ íŒŒì¼ë§Œ í™•ì¸í–ˆìŠµë‹ˆë‹¤. ë³´ê³ ì„œì—ëŠ” `453 vitest passed (3 skipped)`ê°€ ê¸°ë¡ë˜ì–´ ìˆìŠµë‹ˆë‹¤ (`reports/phase-8-followup-execution-20260527.html:581`).

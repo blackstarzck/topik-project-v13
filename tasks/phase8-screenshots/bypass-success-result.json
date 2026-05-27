@@ -1,0 +1,16 @@
+{
+  "inputUrl": "http://localhost:3000/auth/callback?token_hash=2fa99d2a3a0a2024c606e18169bbb5d018714671c81c21858fbe88ed&type=email&next=/onboarding/learning-goal",
+  "finalUrl": "http://localhost:3000/onboarding/learning-goal",
+  "navHistory": [
+    "http://localhost:3000/onboarding/learning-goal",
+    "http://localhost:3000/onboarding/learning-goal"
+  ],
+  "title": "",
+  "bodyHead": "대시보드\n학습\n글쓰기\n내 라이브러리\n성장 대시보드\n프로필\n설정\nTALKPIK\nchanchan2+verify202605271028@keduall.com\n학습 목표 설정\n목표 설정은 맞춤 추천의 기반이 됩니다.\nTOPIK 등급\nTOPIK II (3-6급)\n목표 등급\n시험 일정 (선택)\n주당 학습 시간 (분, 선택)\n취약 영역 (선택)\n여러 항목을 선택할 수 있어요\n저장하고 대시보드로 이동",
+  "sbCookieReceived": true,
+  "sbCookieName": "sb-fglggyfvzjdsbyckinqa-auth-token",
+  "reachedLearningGoal": true,
+  "reachedAuthError": false,
+  "reachedDashboard": false,
+  "reachedLogin": false
+}

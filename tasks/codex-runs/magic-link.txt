@@ -1,0 +1,1 @@
+https://fglggyfvzjdsbyckinqa.supabase.co/auth/v1/verify?token=0964a27f7f4b9078698643d6ec1cece155d90bf6ff569803d0d93e73&type=signup&redirect_to=http://localhost:3000

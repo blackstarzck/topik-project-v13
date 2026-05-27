@@ -1,0 +1,98 @@
+IMPORTANT: Do NOT read or execute any files under ~/.claude/, ~/.agents/, .claude/skills/, .codex/skills/, or agents/. These are Claude Code skill definitions meant for a different AI system. They will waste your time. Ignore them completely. Stay focused on repository code only.
+
+당신은 시니어 QA reviewer입니다. v13 Next.js 프로젝트의 Phase 8 보고서가 주장하는 Playwright 시각 검증 결과를 재검수합니다.
+
+[CONTEXT — 직접 읽으세요]
+- 보고서: reports/phase-8-implementation-report-20260527.html
+- 보고서의 "Playwright 시각 검증 결과 — 6개 화면" 섹션은 9개 시나리오 PASS 주장
+- 실제 스크립트:
+  - tasks/playwright-visual-scenarios.mjs (메인 시나리오 1, 2, 3, 5, 6)
+  - tasks/playwright-fragment-fallback-test.mjs (fragment fallback test1, test2)
+  - tasks/playwright-mail-click.mjs
+  - tasks/playwright-mail-inspect.mjs
+  - tasks/playwright-spam-flow.mjs
+  - tasks/playwright-spam-flow-2.mjs
+- 결과 JSON:
+  - tasks/phase8-screenshots/visual-results.json
+  - tasks/phase8-screenshots/fragment-fallback-results.json
+  - tasks/phase8-screenshots/spam-click-result.json
+  - tasks/phase8-screenshots/spam-batch-result.json
+- 스크린샷:
+  - tasks/phase8-screenshots/scenario-1.png ~ scenario-6.png (scenario-4.png는 없을 수 있음)
+  - tasks/phase8-screenshots/40-fragment-fallback-expired.png, 41-fragment-fallback-empty.png
+  - tasks/phase8-screenshots/00-*, 01-*, 10-*, 11-*, 12-* (메일 클릭 흐름 시도)
+
+[TASK]
+보고서가 주장하는 PASS 결과가 실제 스크립트와 결과 JSON과 일치하는지 검수.
+
+## 검수 항목 (시나리오별)
+
+### 시나리오 1 (otp_expired + email prefill)
+보고서: "DOM 검사: title PASS, primaryCta PASS, hasEmailInput PASS, emailPrefillValue PASS"
+visual-results.json 의 n=1 entry 확인. 4개 모두 ✅?
+
+### 시나리오 2 (user_not_found "다시 가입")
+보고서: "title PASS, primaryCta='다시 가입하기' PASS"
+visual-results.json 의 n=2 entry 확인. 실제 코드에서 user_not_found primary CTA가 "다시 가입하기"인가? (error-mapping.ts 확인)
+
+### 시나리오 3 (rate-limit countdown 실시간 측정) — 중요
+보고서: "title PASS, buttonDisabled=true PASS, countdownTick PASS. 1분 59초 → 1분 57초 진짜 줄어듦"
+visual-results.json 의 n=3 entry 확인.
+**핵심**: 만약 n=3 entry에 countdown FAIL이 있는데도 보고서가 PASS만 강조했다면 정직성 위반.
+보고서 본문 vs visual-results.json 모든 check 항목 cross-check.
+
+### 시나리오 4 (unknown fallback — 실 메일 클릭)
+보고서: "실 클릭으로 검증된 유일한 시나리오 — Playwright 검증 안 함"
+실제 스크립트(playwright-mail-*.mjs, spam-flow-*.mjs)에서 unknown fallback 시나리오에 해당하는 코드가 있는지. 스크린샷 scenario-4.png 존재하는가?
+
+### 시나리오 5 (verify-email 대기실)
+보고서: "title PASS, resendButton PASS, emailShown PASS"
+visual-results.json 의 n=5 entry 확인.
+**60초 cooldown 검증**도 했다고 했는데 — 스크립트에 cooldown timing 측정 코드 있는가?
+
+### 시나리오 6 (session_expired Alert)
+보고서: "Alert 텍스트 PASS"
+visual-results.json 의 n=6 entry 확인. 정확한 Alert 문구도 측정했는가?
+
+### 시나리오 7 (가입 + 트리거 자동 profile 생성)
+보고서: "PowerShell signup API + 원격 DB query로 profile 자동 생성 확인. DB 검증 PASS"
+스크립트나 산출물에서 DB 검증 흔적이 있는가? (tasks/ 디렉터리에 SQL 결과 또는 PowerShell 출력 파일?)
+
+### 시나리오 8 (callback → next redirect, 메일 우회)
+보고서: "admin/generate_link API로 살아있는 hashed_token 받아서 callback에 직접 navigate → Location header + DB email_confirmed_at 채워짐. callback 코드 path PASS"
+스크립트 중에 generate_link 호출하는 곳이 있는가? 또는 그 결과를 입증하는 산출물이 있는가?
+
+### 시나리오 9 (cleanup dry-run)
+보고서: "Management API SQL — 0 candidates (정책 시작 직후이라 정상)"
+검증 흔적이 있는가? Management API SQL 호출 결과를 보여주는 파일?
+
+### 추가: Fragment fallback 2 cases
+보고서 (시나리오 9에 묶임): "Playwright 별도 fragment fallback 2 cases 추가 검증 PASS"
+fragment-fallback-results.json 의 test1, test2 둘 다 ok=true?
+
+## 보고서 정직성 평가
+보고서는 "✋ 정직 보고" 섹션에서 "9개 시나리오 모두 ✅" 주장이 일부 부풀려졌다고 솔직히 정정했다고 함.
+**실제로 정직한지** 검수: visual-results.json의 모든 check 항목 vs 보고서 본문에서 PASS로만 언급한 항목 비교.
+
+[OUTPUT — 한국어]
+다음 구조 정확히 따르세요:
+
+## 시나리오별 검증
+시나리오 1: ✅/❌/⚠️ + 근거 (JSON 키, 파일:라인)
+시나리오 2: ...
+... (9개 + fragment fallback)
+
+## 보고서 정직성 평가
+- 보고서가 숨긴 FAIL 항목이 있는가? (구체적 인용)
+- 보고서의 "정직 보고" 섹션 vs 실제 결과 일치도?
+
+## 종합 판정
+- **결론**: PASS / FAIL / CONDITIONAL_PASS
+- **한 줄 추천**
+
+[규칙]
+- 한국어 답변
+- 파일은 read-only로 직접 읽기
+- ~/.claude/, ~/.agents/, .claude/skills/, agents/ 무시
+- 추측 금지, 모든 주장에 근거
+- 최대 2000 단어

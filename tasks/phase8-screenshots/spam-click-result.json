@@ -1,0 +1,10 @@
+{
+  "verifyUrl": "https://fglggyfvzjdsbyckinqa.supabase.co/auth/v1/verify?token=dcc081ca1be82474c1507e83c61e323eaca33d45311f36e8742cc539&type=signup&redirect_to=http://localhost:3000",
+  "finalUrl": "http://localhost:3000/#error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired&sb=",
+  "finalTitle": "TALKPIK AI · TOPIK 글쓰기 AI 학습",
+  "navHistory": [
+    "http://localhost:3000/#error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired&sb=",
+    "http://localhost:3000/#error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired&sb="
+  ],
+  "bodyTextHead": "TOPIK 글쓰기, AI와 함께 끝까지\n학습 목표를 정하고, 문제를 풀고, AI 피드백으로 약점을 좁히세요. TOPIK 51~54번 글쓰기 환경을 그대로 재현합니다.\n지금 가입하기\n로그인\n📊\n학습 대시보드\n목표 등급, 학습 시간, 약점 영역을 한 화면에서 확인합니다.\n✍️\nAI 글쓰기 피드백\nTOPIK 51~54번 글쓰기 환경 그대로. AI가 차원별 점수와 첨삭을 제공합니다.\n📚\n자료실\n저장한 문제, 제출 답안, 비교 보고서를 한 자리에서 관리합니다."
+}

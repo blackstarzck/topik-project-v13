@@ -1,0 +1,84 @@
+¼º°ø: PID 35900ÀÎ ÇÁ·Î¼¼½º(PID 19156ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 26488ÀÎ ÇÁ·Î¼¼½º(PID 19156ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 37580ÀÎ ÇÁ·Î¼¼½º(PID 35164ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 35164ÀÎ ÇÁ·Î¼¼½º(PID 19156ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 25000ÀÎ ÇÁ·Î¼¼½º(PID 17768ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 17768ÀÎ ÇÁ·Î¼¼½º(PID 19156ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 38488ÀÎ ÇÁ·Î¼¼½º(PID 33616ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 33616ÀÎ ÇÁ·Î¼¼½º(PID 9520ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 9520ÀÎ ÇÁ·Î¼¼½º(PID 33964ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 33964ÀÎ ÇÁ·Î¼¼½º(PID 19156ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 26940ÀÎ ÇÁ·Î¼¼½º(PID 19156ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 39152ÀÎ ÇÁ·Î¼¼½º(PID 19652ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 19652ÀÎ ÇÁ·Î¼¼½º(PID 18556ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 18556ÀÎ ÇÁ·Î¼¼½º(PID 5636ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 5636ÀÎ ÇÁ·Î¼¼½º(PID 19156ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 38748ÀÎ ÇÁ·Î¼¼½º(PID 23056ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 23056ÀÎ ÇÁ·Î¼¼½º(PID 23296ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 23296ÀÎ ÇÁ·Î¼¼½º(PID 23028ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 23028ÀÎ ÇÁ·Î¼¼½º(PID 19156ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 24496ÀÎ ÇÁ·Î¼¼½º(PID 27820ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 27820ÀÎ ÇÁ·Î¼¼½º(PID 20572ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 20572ÀÎ ÇÁ·Î¼¼½º(PID 22100ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 22100ÀÎ ÇÁ·Î¼¼½º(PID 32024ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 32024ÀÎ ÇÁ·Î¼¼½º(PID 19156ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 33088ÀÎ ÇÁ·Î¼¼½º(PID 19156ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 39884ÀÎ ÇÁ·Î¼¼½º(PID 19156ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 34352ÀÎ ÇÁ·Î¼¼½º(PID 13924ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 13924ÀÎ ÇÁ·Î¼¼½º(PID 31660ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 31660ÀÎ ÇÁ·Î¼¼½º(PID 39028ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 39028ÀÎ ÇÁ·Î¼¼½º(PID 38352ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 38352ÀÎ ÇÁ·Î¼¼½º(PID 19156ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 39800ÀÎ ÇÁ·Î¼¼½º(PID 19156ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+## 1. ë‹¤ì´ì–´ê·¸ë¨ ì •í•©ì„±
+
+- âœ… ì¼ì¹˜:
+  - `/auth/callback`ì€ `token_hash + type`ì´ë©´ `verifyOtp()`ë¥¼ íƒ„ë‹¤: `src/app/auth/callback/page.tsx:80`, `src/app/auth/callback/page.tsx:85`, `src/app/auth/callback/page.tsx:87`
+  - `code`ê°€ ìˆìœ¼ë©´ `exchangeCodeForSession()`ì„ íƒ„ë‹¤: `src/app/auth/callback/page.tsx:102`, `src/app/auth/callback/page.tsx:104`
+  - ê°€ì… ë©”ì¼ redirectëŠ” `/auth/callback?next=/onboarding/learning-goal`: `src/components/auth/SignUpForm.tsx:39`, `src/components/auth/SignUpForm.tsx:40`
+  - ë§¤ì§ë§í¬ redirectëŠ” `/auth/callback?next=/dashboard`: `src/components/auth/LoginForm.tsx:55`, `src/components/auth/LoginForm.tsx:56`
+  - `/auth/callback`, `/auth/error`, `/auth/verify-email`ì€ public allowlistì— ìˆìŒ: `src/lib/routes.ts:21`, `src/lib/routes.ts:29`, `src/lib/routes.ts:30`, `src/lib/routes.ts:31`
+
+- âŒ ë¶ˆì¼ì¹˜:
+  - ë³´ê³ ì„œ ë‹¤ì´ì–´ê·¸ë¨ì€ `CB_RESULT ì„±ê³µ -> /onboarding/learning-goal` ë‹¨ì¼ ë„ì°©ì§€ë¼ê³  ê·¸ë¦¼: `reports/phase-8-implementation-report-20260527.html:603`  
+    ì‹¤ì œëŠ” `next`ë¡œ ì´ë™í•˜ê³  ê¸°ë³¸ê°’ì€ `/dashboard`: `src/app/auth/callback/page.tsx:70`, `src/app/auth/callback/page.tsx:99`, `src/app/auth/callback/page.tsx:113`. ë§¤ì§ë§í¬ëŠ” `/dashboard`ê°€ ë§ë‹¤: `src/components/auth/LoginForm.tsx:56`
+  - ë¹„ë°€ë²ˆí˜¸ ì¬ì„¤ì • ë‹¤ì´ì–´ê·¸ë¨ì€ `RESET -> CB3 token_hash + type=recovery`ë¼ê³  ê·¸ë¦¼: `reports/phase-8-implementation-report-20260527.html:596`, `reports/phase-8-implementation-report-20260527.html:597`  
+    ì‹¤ì œ UIëŠ” `/auth/callback`ì´ ì•„ë‹ˆë¼ `/password-reset/confirm`ìœ¼ë¡œ ë³´ë‚¸ë‹¤: `src/components/auth/PasswordResetRequestForm.tsx:21`, `src/components/auth/PasswordResetRequestForm.tsx:22`
+  - ê°€ì… ì‹¤íŒ¨ â€œê°™ì€ ì´ë©”ì¼ ì¡´ì¬ -> í¼ ë‚´ inline ì—ëŸ¬â€ëŠ” ì‹¤ì œ ì½”ë“œì™€ ë‹¤ë¦„. ì‹¤ì œëŠ” AntD message toastë§Œ ë„ì›€: `src/components/auth/SignUpForm.tsx:45`, `src/components/auth/SignUpForm.tsx:47`
+  - `CLEANUP ë§¤ì¼ 04:00 UTC pg_cron ë“±ë¡`ì€ ë§ˆì´ê·¸ë ˆì´ì…˜ì— ì—†ìŒ. í•¨ìˆ˜ ì •ì˜ë§Œ ìˆìŒ: `supabase/migrations/20260526180000_cleanup_unconfirmed_users.sql:22`. `cron.schedule`, `pg_cron`, `0 4 * * *` ì—†ìŒ.
+  - â€œ30ì¼ ë¯¸ë§Œ ì ˆëŒ€ ì•ˆ ê±´ë“œë¦¼â€ë„ ê±°ì§“. ê¸°ë³¸ê°’ì€ 30ì´ì§€ë§Œ í˜¸ì¶œìê°€ `retention_days=1`ê¹Œì§€ ì¤„ì¼ ìˆ˜ ìˆìŒ: `supabase/migrations/20260526180000_cleanup_unconfirmed_users.sql:23`, `supabase/migrations/20260526180000_cleanup_unconfirmed_users.sql:35`
+
+- âš ï¸ ì˜ì‹¬:
+  - ë§¤ì§ë§í¬ê°€ ì‹¤ì œ Supabaseì—ì„œ í•­ìƒ `token_hash + type=email`ë¡œ ëŒì•„ì˜¨ë‹¤ëŠ” ê·¼ê±°ëŠ” ì½”ë“œì— ì—†ìŒ. ì½”ë“œëŠ” ì²˜ë¦¬ ê°€ëŠ¥í•˜ì§€ë§Œ ë°œì†¡ ìª½ì€ redirect URLë§Œ ì„¤ì •í•œë‹¤: `src/components/auth/LoginForm.tsx:52`, `src/components/auth/LoginForm.tsx:55`
+  - ì‚­ì œëœ ìœ ì €ì˜ ì˜› ë§í¬ê°€ ë°˜ë“œì‹œ `user_not_found`ë¡œ ê·€ê²°ëœë‹¤ëŠ” ë³´ì¥ì€ ë¡œì»¬ ì½”ë“œë§Œìœ¼ë¡œëŠ” í™•ì¸ ë¶ˆê°€. ì½”ë“œìƒ ë§¤í•‘ì€ ì¡´ì¬: `src/lib/auth/error-mapping.ts:29`, `src/lib/auth/error-mapping.ts:106`
+
+## 2. ì½”ë“œ/ë¡œì§ ì •í•©ì„±
+
+- âœ… ì¼ì¹˜:
+  - query `error_code`ëŠ” `/auth/error?reason=<mapped>`ë¡œ ê°: `src/app/auth/callback/page.tsx:73`, `src/app/auth/callback/page.tsx:75`, `src/app/auth/callback/page.tsx:77`
+  - fragment `error_code`ë„ ë§¤í•‘ í›„ `/auth/error`ë¡œ ê°: `src/components/auth/CallbackFragmentFallback.tsx:39`, `src/components/auth/CallbackFragmentFallback.tsx:42`, `src/components/auth/CallbackFragmentFallback.tsx:46`
+  - fragment `access_token + refresh_token`ì€ `setSession()` í›„ `next`ë¡œ ê°: `src/components/auth/CallbackFragmentFallback.tsx:51`, `src/components/auth/CallbackFragmentFallback.tsx:53`, `src/components/auth/CallbackFragmentFallback.tsx:67`
+  - ì‹¤ì œ reason ë§¤í•‘ì€ ì •í™•íˆ 11ê°œë‹¤: `src/lib/auth/error-mapping.ts:11`, `src/lib/auth/error-mapping.ts:24`, `src/lib/auth/error-mapping.ts:35`
+  - `AuthErrorCard`ëŠ” email query prefillì„ í•œë‹¤: `src/components/auth/AuthErrorCard.tsx:68`, `src/components/auth/AuthErrorCard.tsx:76`, `src/components/auth/AuthErrorCard.tsx:153`
+  - `retry_after_seconds` countdownê³¼ primary disabledëŠ” ìˆìŒ: `src/components/auth/AuthErrorCard.tsx:69`, `src/components/auth/AuthErrorCard.tsx:73`, `src/components/auth/AuthErrorCard.tsx:94`, `src/components/auth/AuthErrorCard.tsx:172`
+  - session ë§Œë£Œ redirectëŠ” stale Supabase cookieê°€ ìˆê³  userê°€ ì—†ì„ ë•Œ `/login?reason=session_expired`: `src/proxy.ts:40`, `src/proxy.ts:45`, `src/proxy.ts:48`
+  - cleanup í•¨ìˆ˜ëŠ” `dry_run`, `max_batch`, `retention_days` ì¸ìë¥¼ ê°€ì§„ë‹¤: `supabase/migrations/20260526180000_cleanup_unconfirmed_users.sql:22`, `supabase/migrations/20260526180000_cleanup_unconfirmed_users.sql:23`, `supabase/migrations/20260526180000_cleanup_unconfirmed_users.sql:24`, `supabase/migrations/20260526180000_cleanup_unconfirmed_users.sql:25`
+
+- âŒ ë¶ˆì¼ì¹˜:
+  - ìš”ì²­ì— ì–¸ê¸‰ëœ `weak_password`, `same_password`, `identity_already_exists`ëŠ” ì‹¤ì œ 11ê°œ ë§¤í•‘ì— ì—†ë‹¤. unknownìœ¼ë¡œ ë–¨ì–´ì§„ë‹¤: `src/lib/auth/error-mapping.ts:24`, `src/lib/auth/error-mapping.ts:40`, `src/lib/auth/error-mapping.ts:42`
+  - ì‹¤ì œ 11ê°œì—ëŠ” ëŒ€ì‹  `over_request_rate_limit`, `access_denied`ê°€ ìˆë‹¤: `src/lib/auth/error-mapping.ts:18`, `src/lib/auth/error-mapping.ts:21`
+  - callbackì˜ `retry_after_seconds` ì „ë‹¬ì€ ê»ë°ê¸°ë§Œ ìˆë‹¤. `buildErrorPath()`ëŠ” ë°›ì§€ë§Œ verify/exchange ì‹¤íŒ¨ì—ì„œëŠ” í•­ìƒ `null`ë§Œ ë„˜ê¸´ë‹¤: `src/app/auth/callback/page.tsx:49`, `src/app/auth/callback/page.tsx:97`, `src/app/auth/callback/page.tsx:111`
+  - `AuthErrorCard`ì˜ `otp_expired` ì¬ì „ì†¡ì€ ì„±ê³µ í›„ 60ì´ˆ cooldownì„ ê±¸ì§€ ì•ŠëŠ”ë‹¤. ì„±ê³µ ì‹œ messageë§Œ ë„ìš´ë‹¤: `src/components/auth/AuthErrorCard.tsx:123`. `otp_expired.hasCountdown`ë„ falseë‹¤: `src/lib/auth/error-mapping.ts:80`
+  - `VerifyEmailCard` cooldownì€ timestamp ë¹„êµê°€ ì•„ë‹ˆë‹¤. ë¡œì»¬ stateë¥¼ 1ì´ˆë§ˆë‹¤ ì¤„ì´ëŠ” ë°©ì‹ì´ë¼ ìƒˆë¡œê³ ì¹¨í•˜ë©´ ì´ˆê¸°í™”ëœë‹¤: `src/components/auth/VerifyEmailCard.tsx:39`, `src/components/auth/VerifyEmailCard.tsx:51`, `src/components/auth/VerifyEmailCard.tsx:102`
+  - rate-limit retry ì´ˆ ê³„ì‚°ì´ ì´ìƒí•˜ë‹¤. `VerifyEmailCard`ëŠ” Retry-After í—¤ë”ê°€ ì•„ë‹ˆë¼ `error.status`ë¥¼ ì´ˆì²˜ëŸ¼ ë„£ëŠ”ë‹¤: `src/components/auth/VerifyEmailCard.tsx:91`, `src/components/auth/VerifyEmailCard.tsx:93`
+  - `redirect-url.ts` ìì²´ëŠ” â€œ/ë¡œ ì‹œì‘í•˜ëŠ” ìƒëŒ€ê²½ë¡œë§Œ í—ˆìš©, // ì°¨ë‹¨â€ ë¡œì§ì´ ì•„ë‹ˆë‹¤. ê·¸ëƒ¥ slashë¥¼ ë¶™ì—¬ site URLê³¼ ì´ì–´ë¶™ì¸ë‹¤: `src/lib/auth/redirect-url.ts:9`, `src/lib/auth/redirect-url.ts:38`, `src/lib/auth/redirect-url.ts:40`. `//` ì°¨ë‹¨ì€ callback `next` sanitizerì—ë§Œ ìˆë‹¤: `src/lib/auth/error-mapping.ts:165`, `src/lib/auth/error-mapping.ts:168`
+  - cleanup SQLì€ `created_at < now() - retention_days` ì¡°ê±´ì€ ìˆì§€ë§Œ, retention_days ìµœì†Œê°’ì´ 1ì´ë¼ â€œ30ì¼ ë¯¸ë§Œ ì ˆëŒ€ ë³´í˜¸â€ëŠ” ì•„ë‹ˆë‹¤: `supabase/migrations/20260526180000_cleanup_unconfirmed_users.sql:35`, `supabase/migrations/20260526180000_cleanup_unconfirmed_users.sql:45`, `supabase/migrations/20260526180000_cleanup_unconfirmed_users.sql:46`
+
+- âš ï¸ ì˜ì‹¬:
+  - queryì— `error`ë§Œ ìˆê³  `error_code`ê°€ ì—†ìœ¼ë©´ callbackì€ ê·¸ ì˜¤ë¥˜ë¥¼ ì§ì ‘ ë§¤í•‘í•˜ì§€ ì•ŠëŠ”ë‹¤. `error_code`ë§Œ ë³¸ë‹¤: `src/app/auth/callback/page.tsx:73`
+  - `bad_code_verifier`ì˜ CTAëŠ” â€œì²˜ìŒë¶€í„° ë‹¤ì‹œâ€ì§€ë§Œ ì‹¤ì œ ì´ë™ì§€ëŠ” `/login`ì´ë‹¤: `src/lib/auth/error-mapping.ts:102`, `src/components/auth/AuthErrorCard.tsx:50`
+
+## 3. ì¢…í•© íŒì •
+
+- **ê²°ë¡ **: FAIL
+- **í•œ ì¤„ ì¶”ì²œ**: ë³´ê³ ì„œì—ì„œ `pg_cron ë“±ë¡`, `ë¹„ë°€ë²ˆí˜¸ ì¬ì„¤ì • -> /auth/callback`, `ì„±ê³µ ë„ì°©ì§€ ì „ë¶€ /onboarding`, `30ì¼ ë¯¸ë§Œ ì ˆëŒ€ ë³´í˜¸`, `otp_expired 60ì´ˆ cooldown`, `weak_password/same_password/identity_already_exists í¬í•¨` ì£¼ì¥ì„ ê³ ì¹˜ê±°ë‚˜ ì½”ë“œë¡œ ì‹¤ì œ êµ¬í˜„í•˜ì„¸ìš”.

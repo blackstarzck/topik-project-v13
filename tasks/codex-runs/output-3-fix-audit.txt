@@ -1,0 +1,59 @@
+����: PID 26644�� ���μ���(PID 30948�� �ڽ� ���μ���)�� ����Ǿ����ϴ�.
+����: PID 30948�� ���μ���(PID 40820�� �ڽ� ���μ���)�� ����Ǿ����ϴ�.
+����: PID 11896�� ���μ���(PID 40820�� �ڽ� ���μ���)�� ����Ǿ����ϴ�.
+����: PID 35204�� ���μ���(PID 40820�� �ڽ� ���μ���)�� ����Ǿ����ϴ�.
+����: PID 36948�� ���μ���(PID 36220�� �ڽ� ���μ���)�� ����Ǿ����ϴ�.
+����: PID 36220�� ���μ���(PID 32240�� �ڽ� ���μ���)�� ����Ǿ����ϴ�.
+����: PID 27280�� ���μ���(PID 40820�� �ڽ� ���μ���)�� ����Ǿ����ϴ�.
+����: PID 32528�� ���μ���(PID 27432�� �ڽ� ���μ���)�� ����Ǿ����ϴ�.
+����: PID 27432�� ���μ���(PID 29168�� �ڽ� ���μ���)�� ����Ǿ����ϴ�.
+����: PID 29168�� ���μ���(PID 16508�� �ڽ� ���μ���)�� ����Ǿ����ϴ�.
+����: PID 16508�� ���μ���(PID 7288�� �ڽ� ���μ���)�� ����Ǿ����ϴ�.
+����: PID 7288�� ���μ���(PID 40820�� �ڽ� ���μ���)�� ����Ǿ����ϴ�.
+����: PID 31060�� ���μ���(PID 40820�� �ڽ� ���μ���)�� ����Ǿ����ϴ�.
+## 1. antd 호환성 fix 검수
+
+### ✅ 정합 항목
+- 원인 진단은 맞습니다. `antd/es/index.js:1`, `antd/es/theme/index.js:1` 모두 `"use client"`이고, `antd/es/theme/context.js:13`에서 `React.createContext(...)`를 module top-level에서 만듭니다. 서버 컴포넌트에서 `antd` theme namespace를 평가하면 문제 날 수 있습니다.
+- `tailwind-bridge.ts` 자체는 런타임 `antd` import를 제거했습니다. 현재는 `import type { ThemeConfig } from "antd"`만 있고 값 import는 없습니다: `src/theme/tailwind-bridge.ts:17`.
+- light/dark 주요 색상 fallback은 대체로 antd 6.4.3 소스와 맞습니다. 예: seed `colorPrimary`는 `node_modules/antd/es/theme/themes/seed.js:23`, `borderRadius`는 `:52`, light neutral 값은 `default/colors.js:26-42`, dark neutral 값은 `dark/colors.js:28-44` 근거입니다.
+- `layout.tsx`는 appearance cookie를 읽고 `getResolvedBridgeVarsByAppearance(appearance)`를 `<html style>`에 넣습니다: `src/app/layout.tsx:31-50`.
+
+### ❌ 문제 항목
+- **서버 import 차단이 아직 불완전합니다.** `layout.tsx`가 여전히 `@/theme`에서 `getAppTheme`를 import하고 호출합니다: `src/app/layout.tsx:7-11`, `:41`. 이 경로는 `src/theme/index.ts:1-4` → `registry.ts:1` → `create-theme.ts:3` → `"use client"` `algorithms.ts:1,7,11-13`로 이어집니다. 즉 서버 layout이 아직 client-marked antd theme 경로를 밟습니다. 게다가 `theme` 변수는 사용되지 않습니다.
+- **기존 테스트와 backward compatibility가 깨져 있습니다.** `getResolvedBridgeVars(themeConfig)`는 deprecated라지만 항상 light만 반환합니다: `src/theme/tailwind-bridge.ts:69-72`. 그런데 테스트는 여전히 이 API로 dark 값을 검증합니다: `tests/theme/theme-contract.test.ts:38-49`. 현재 구현이면 dark도 `#FFFFFF`를 돌려 테스트가 실패합니다.
+- **hex 대소문자 때문에 기존 테스트도 실패합니다.** 테스트는 `#1677ff`, `#ffffff`, `#d9d9d9`를 `toBe`로 기대합니다: `tests/theme/theme-contract.test.ts:30-32`. 구현은 `#1677FF`, `#FFFFFF`, `#D9D9D9`입니다: `src/theme/tailwind-bridge.ts:30-35`.
+- **dark shadow fallback은 antd dark token과 불일치합니다.** 구현은 light/dark 모두 같은 검은 shadow를 씁니다: `src/theme/tailwind-bridge.ts:26-27`, `:38`, `:50`. 하지만 antd dark neutral은 `colorShadow`를 `rgba(255, 255, 255, 0.2)`로 둡니다: `node_modules/antd/es/theme/themes/dark/colors.js:20-23`, shadow alias는 이 값을 기반으로 계산합니다: `node_modules/antd/es/theme/util/alias.js:24-26`, `:121-125`.
+
+### ⚠️ 의심·후속 작업
+- 문서 계약과 충돌합니다. 문서는 bridge 값을 “request time token resolution”에서 만들라고 합니다: `docs/ant-design/08-theme-architecture.md:317-318`. 이번 hardcoded fallback은 현실적 우회지만, 예외 사유와 테스트 갱신이 필요합니다.
+- 현재 brand override는 없습니다. default preset은 비어 있습니다: `src/theme/presets/default.ts:7-10`, shared seed는 font만 덮습니다: `src/theme/global/shared-seed.ts:6-8`. 그래서 FOUC 위험은 “현재는 낮음, future preset 추가 시 높음”입니다.
+
+## 2. pg_cron 마이그레이션 검수
+
+### ✅ 정합 항목
+- idempotency 방향은 맞습니다. 기존 job을 `cron.job`에서 찾고: `supabase/migrations/20260527110000_register_cleanup_cron.sql:34-38`, 있으면 `cron.unschedule(v_jobid)` 후 재등록합니다: `:40-50`.
+- pg_cron 미설치 환경은 fail 없이 빠집니다. `pg_extension` 확인 후 notice + `return`: `:28-31`.
+- 스케줄 표현식은 `0 4 * * *`입니다: `:46-49`. Supabase 문서는 cron 예시를 GMT 기준으로 설명하고, Supabase DB 기본 timezone도 UTC라고 설명합니다. 근거: Supabase Cron quickstart, Supabase database configuration docs.
+- 함수 기본 인자 호출은 의도대로입니다. cron command는 `private.cleanup_unconfirmed_users()`이고: `:49`, 함수 default는 `retention_days=30`, `dry_run=false`, `max_batch=1000`입니다: `supabase/migrations/20260526180000_cleanup_unconfirmed_users.sql:22-25`.
+- 함수는 `SECURITY DEFINER` + locked `search_path`입니다: `20260526180000_cleanup_unconfirmed_users.sql:27-30`, public/anon/authenticated 실행권한도 revoke합니다: `:75-76`.
+
+### ❌ 문제 항목
+- 기능 자체의 치명 버그는 못 찾았습니다.
+
+### ⚠️ 의심·후속 작업
+- `pg_cron` extension을 직접 활성화하지 않습니다. 의도적으로 skip 설계한 것은 맞지만, fresh cloud DB에서 extension이 꺼져 있으면 job은 등록되지 않습니다: `20260527110000_register_cleanup_cron.sql:28-31`. 운영 체크가 필요합니다.
+- 마이그레이션 인덱스가 갱신되지 않았습니다. `supabase/migrations/INDEX.md`는 새 migration 추가 시 INDEX 갱신을 요구합니다: `supabase/migrations/INDEX.md:64-71`, `:80`. 현재 grep 결과 새 `20260527110000_register_cleanup_cron.sql` 항목은 없습니다.
+- 권한은 “마이그레이션이 postgres급 role로 실행된다”는 전제에 기대고 있습니다. 파일 주석도 이 전제를 적고 있습니다: `20260527110000_register_cleanup_cron.sql:15-17`. Supabase CLI/Cloud migration 경로에서는 보통 맞지만, 제한 role로 직접 적용하면 `cron.job` 조회나 `cron.schedule`에서 실패할 수 있습니다.
+
+## 3. 종합 판정
+
+- **결론**: **FAIL**
+- **antd fix 점수**: **5/10**  
+  원인 방향은 맞지만 서버 import 경로가 아직 남아 있고, 기존 테스트가 깨집니다.
+- **pg_cron fix 점수**: **8/10**  
+  기능 SQL은 대체로 맞습니다. 다만 extension 활성화 운영 확인과 migration index 누락이 남았습니다.
+- **한 줄 추천**: 머지 보류. 먼저 `layout.tsx`에서 `getAppTheme/@/theme` 서버 import를 제거하고, theme bridge 테스트를 새 API 기준으로 고친 뒤 머지하세요.
+
+Docs consulted: `docs/agent-index.md`, `docs/ai-development-workflow.md`, `docs/spec.md`, `docs/development/backend-auth.md`, `docs/ant-design/08-theme-architecture.md`, Supabase Cron docs, Supabase database timezone docs.  
+Context ledger: read-only 검수 요청이라 새 작업 일지는 만들지 않았습니다.

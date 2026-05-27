@@ -1,0 +1,70 @@
+IMPORTANT: Do NOT read or execute any files under ~/.claude/, ~/.agents/, .claude/skills/, .codex/skills/, or agents/. These are Claude Code skill definitions meant for a different AI system. They will waste your time. Ignore them completely. Stay focused on repository code only.
+
+당신은 시니어 reviewer입니다. v13 Next.js 프로젝트(한국 TOPIK 학습 앱)의 Phase 8 + 8.5 작업 보고서를 검수합니다.
+
+[CONTEXT — 직접 읽으세요]
+- 보고서: reports/phase-8-implementation-report-20260527.html
+- 보고서가 주장하는 핵심 파일:
+  - src/app/auth/callback/page.tsx
+  - src/app/auth/error/page.tsx
+  - src/app/auth/verify-email/page.tsx
+  - src/components/auth/CallbackFragmentFallback.tsx
+  - src/components/auth/AuthErrorCard.tsx
+  - src/components/auth/VerifyEmailCard.tsx
+  - src/components/auth/SignUpForm.tsx
+  - src/components/auth/LoginForm.tsx
+  - src/lib/auth/error-mapping.ts
+  - src/lib/auth/redirect-url.ts
+  - src/proxy.ts
+  - src/lib/routes.ts
+  - supabase/migrations/20260526180000_cleanup_unconfirmed_users.sql
+  - docs/sitemap.md (target react route map)
+  - docs/flow/user-flow.md
+
+[TASK]
+보고서의 두 가지를 브루털하게 검수하세요. 칭찬 금지, 거짓말 잡아내기:
+
+## 1. 인증 흐름 다이어그램 검수
+보고서의 "인증 흐름 다이어그램 — 가입부터 콜백·에러까지" Mermaid flowchart 섹션:
+- LANDING → SIGNUP → SIGNUP_OK → VERIFY → INBOX → CB(/auth/callback) → CB_RESULT → GOAL(/onboarding/learning-goal) / ERR(/auth/error)
+- 매직링크: LOGIN → OTP → INBOX2 → CB2 → CB_RESULT
+- 비번 재설정: LOGIN → RESET → CB3
+- ERR의 reason 분기: otp_expired, user_not_found, over_email_send_rate_limit, flow_state_*, bad_code_verifier, unknown, signup_disabled
+- CLEANUP: 매일 새벽 4시 UTC, 30일+ 미인증 자동 삭제
+
+이 다이어그램의 모든 노드/화살표/라벨이 실제 코드(routes, error-mapping, callback dispatcher)와 일치하는지 확인.
+
+## 2. 인증 흐름 코드/로직 + Supabase 연결 검수
+- callback/page.tsx: tokenHash + type → verifyOtp, code → exchangeCodeForSession, error → /auth/error?reason= 매핑이 보고서 주장대로 작동?
+- CallbackFragmentFallback.tsx: window.location.hash 파싱 → error_code → mapSupabaseErrorCode → /auth/error redirect 흐름이 맞는가? access_token/refresh_token fragment 처리도?
+- error-mapping.ts: 11가지 Supabase 오류 코드 (otp_expired, user_not_found, over_email_send_rate_limit, flow_state_*, bad_code_verifier, signup_disabled, email_not_confirmed, weak_password, same_password, identity_already_exists, unknown 등) → 한국어 메시지/CTA 매핑 완전성. 코드 개수가 진짜 11개인가? 누락 코드는?
+- AuthErrorCard.tsx: primary/secondary CTA, email prefill, retry_after_seconds 카운트다운 disabled 처리
+- VerifyEmailCard.tsx: 60초 cooldown 재전송 로직 (timestamp 비교?)
+- redirect-url.ts: open redirect 방어 — / 로 시작하는 상대경로만 허용? // 시작은 차단?
+- proxy.ts + routes.ts PUBLIC_PATHS: /auth/callback, /auth/error, /auth/verify-email 모두 등록? session_expired reason 전달 로직이 만료된 쿠키 감지 후 /login?reason=session_expired 로 redirect?
+- SignUpForm.tsx + LoginForm.tsx: emailRedirectTo (또는 redirectTo) 가 /auth/callback 향함?
+- cleanup_unconfirmed_users 마이그레이션: dry_run, max_batch, retention_days 인자 + 30일 미만 절대 안 건드림 (WHERE confirmed_at IS NULL AND created_at < now() - interval) + pg_cron 매일 04:00 UTC 스케줄 등록?
+
+[OUTPUT — 한국어]
+다음 구조 정확히 따르세요:
+
+## 1. 다이어그램 정합성
+- ✅ 일치: (구체적 파일:라인 인용)
+- ❌ 불일치: (보고서 주장 vs 실제 코드, 파일:라인)
+- ⚠️ 의심: (확인 불가 항목)
+
+## 2. 코드/로직 정합성
+- ✅ 일치: (파일:라인)
+- ❌ 불일치
+- ⚠️ 의심
+
+## 3. 종합 판정
+- **결론**: PASS / FAIL / CONDITIONAL_PASS
+- **한 줄 추천**: <구체적 조치>
+
+[규칙]
+- 한국어 답변
+- 파일은 read-only로 직접 읽기
+- ~/.claude/, ~/.agents/, .claude/skills/, agents/ 디렉터리 무시
+- 추측 금지, 모든 주장에 파일:라인 근거
+- 최대 2000 단어

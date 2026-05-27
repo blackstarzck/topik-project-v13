@@ -1,0 +1,54 @@
+IMPORTANT: Do NOT read or execute any files under ~/.claude/, ~/.agents/, .claude/skills/, .codex/skills/, or agents/. These are Claude Code skill definitions meant for a different AI system. They will waste your time. Ignore them completely. Stay focused on repository code only.
+
+당신은 시니어 reviewer입니다. v13 Next.js 프로젝트의 Phase 8 follow-up fix를 재검수합니다.
+
+[CONTEXT]
+직전 라운드(2026-05-27, output-3-fix-audit.txt)에서 Codex가 FAIL 판정하며 4가지 지적:
+  1. ❌ 서버 import 차단 불완전 — layout.tsx에 unused `getAppTheme` import 잔존
+  2. ❌ 테스트 contract 깨짐 — `getResolvedBridgeVars(themeConfig)`가 항상 light 반환
+  3. ❌ hex 대소문자 — `#1677FF` vs 테스트 `#1677ff`
+  4. ❌ dark shadow가 light와 동일 — antd dark colorShadow(rgba(255,255,255,0.2)) 미반영
+  5. ⚠️ migrations/INDEX.md 갱신 누락
+
+직전 라운드 이후 적용한 정정:
+  1. layout.tsx에서 `getAppTheme`, `defaultThemeName` import 제거. unused 변수 `theme` 제거.
+  2. `getResolvedBridgeVars(themeConfig)`는 deprecated wrapper로 남기되 호출자(theme-context.tsx, tests)를 모두 `getResolvedBridgeVarsByAppearance(appearance)`로 마이그레이션.
+  3. fallback values를 lowercase로 통일 (`#1677ff` 등).
+  4. dark shadow를 `rgba(255, 255, 255, 0.016/0.024/0.01)`로 변경 (antd dark colorShadow alpha 0.2 * multipliers).
+  5. INDEX.md에 #22(20260526180000) + #23(20260527110000) 항목 추가.
+
+[변경된 파일 — 직접 읽으세요]
+- src/theme/tailwind-bridge.ts
+- src/theme/global/algorithms.ts ("use client")
+- src/app/layout.tsx (getAppTheme import 제거)
+- src/contexts/theme-context.tsx (new API로 마이그레이션)
+- tests/theme/theme-contract.test.ts (new API로 update)
+- supabase/migrations/20260527110000_register_cleanup_cron.sql
+- supabase/migrations/INDEX.md (#22, #23 추가)
+
+[검수 항목]
+
+## 1. 직전 ❌ 4건이 해결됐는가?
+1-1. 서버 import 차단 — layout.tsx가 더 이상 client-marked theme namespace를 transitively evaluate하지 않는가? `@/theme` 통한 잔여 client module import는?
+1-2. 테스트 contract — 4개 모두 PASS (`tests/theme/theme-contract.test.ts`)? deprecated `getResolvedBridgeVars` 호출자가 남아있는가?
+1-3. hex 대소문자 — fallback 모두 lowercase + 테스트 기대값과 일치?
+1-4. dark shadow — antd source(`node_modules/antd/es/theme/themes/dark/colors.js:23`, `util/alias.js:24-26`, `:121-125`)의 dark shadow 계산 결과와 정확히 일치?
+1-5. INDEX.md — 새 항목 #22(20260526180000_cleanup_unconfirmed_users) + #23(20260527110000_register_cleanup_cron) 추가 + 날짜 섹션(#### 26, #### 27) 분리?
+
+## 2. 새 회귀 위험은?
+2-1. `theme-context.tsx`의 useCallback deps array `[]`로 축소 — themeName이 더 이상 사용 안 됨. 진짜 미사용?
+2-2. `getResolvedBridgeVarsByAppearance` 공개 API로 추가. 외부 import도 정합?
+2-3. pg_cron 마이그레이션은 직전 라운드 8/10 점수. 추가 우려 사항?
+
+## 3. 종합 판정
+- **결론**: PASS / FAIL / CONDITIONAL_PASS
+- **각 fix별 점수** (10점 만점)
+- **잔여 follow-up 필요 항목**
+- **한 줄 추천**
+
+[규칙]
+- 한국어 답변
+- 파일은 read-only로 직접 읽기
+- ~/.claude/, ~/.agents/, .claude/skills/, agents/ 무시
+- 추측 금지, 모든 주장에 파일:라인 근거
+- 최대 1500 단어
