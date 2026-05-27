@@ -739,6 +739,125 @@ async function testLightSpecPathMustBeUnderLightSpecsDirOrExplicitlySkipped() {
   });
 }
 
+async function testPlanRequiresAudienceColumnWhenLightSpecIsBoth() {
+  await withTempRepo(async (root) => {
+    await mkdir(join(root, "docs", "ai-workflow", "light-specs"), { recursive: true });
+    await mkdir(join(root, "docs", "ai-workflow", "plans"), { recursive: true });
+
+    // light spec with Audience: both
+    await writeFile(
+      join(root, "docs/ai-workflow/light-specs/phase-9-mixed.md"),
+      "# Phase 9\n\nAudience: both\n",
+    );
+
+    // plan WITHOUT Audience column
+    const planRel = "docs/ai-workflow/plans/20260601-phase-9-mixed.md";
+    await writeFile(
+      join(root, planRel),
+      [
+        "# Phase 9 Plan",
+        "## Out of Scope — Intentional Cuts",
+        "- x",
+        "## Smallest Buildable Unit",
+        "- y",
+        "## Tasks",
+        "| # | Task | Files | Subagent-eligible? (Y/N + reason) |",
+        "| --- | --- | --- | --- |",
+        "| 1 | foo | s | Y — independent |",
+      ].join("\n"),
+    );
+
+    const r = await checkRepositoryState({ root, changedFiles: [planRel] });
+    assert.equal(r.ok, false);
+    assert.ok(r.errors.some((e) => /Audience column/i.test(e)),
+      `expected Audience column error, got: ${r.errors.join(" | ")}`);
+  });
+}
+
+async function testPlanDoesNotRequireAudienceColumnWhenLightSpecIsSingle() {
+  await withTempRepo(async (root) => {
+    await mkdir(join(root, "docs", "ai-workflow", "light-specs"), { recursive: true });
+    await mkdir(join(root, "docs", "ai-workflow", "plans"), { recursive: true });
+
+    await writeFile(
+      join(root, "docs/ai-workflow/light-specs/phase-9-mixed.md"),
+      "# Phase 9\n\nAudience: user\n",
+    );
+    const planRel = "docs/ai-workflow/plans/20260601-phase-9-mixed.md";
+    await writeFile(
+      join(root, planRel),
+      [
+        "# Phase 9 Plan",
+        "## Out of Scope — Intentional Cuts",
+        "- x",
+        "## Smallest Buildable Unit",
+        "- y",
+        "## Tasks",
+        "| # | Task | Files | Subagent-eligible? (Y/N + reason) |",
+        "| --- | --- | --- | --- |",
+        "| 1 | foo | s | Y — independent |",
+      ].join("\n"),
+    );
+    const r = await checkRepositoryState({ root, changedFiles: [planRel] });
+    assert.ok(
+      !r.errors.some((e) => /Audience column/i.test(e)),
+      `single audience must not require Audience column: ${r.errors.join(" | ")}`,
+    );
+  });
+}
+
+async function testPlanFailsClosedWhenLightSpecMissing() {
+  await withTempRepo(async (root) => {
+    await mkdir(join(root, "docs", "ai-workflow", "light-specs"), { recursive: true });
+    await mkdir(join(root, "docs", "ai-workflow", "plans"), { recursive: true });
+
+    // NOTE: NO light spec written for phase-99
+    const planRel = "docs/ai-workflow/plans/20260601-phase-99-orphan.md";
+    await writeFile(
+      join(root, planRel),
+      [
+        "# Phase 99 Plan",
+        "## Out of Scope — Intentional Cuts",
+        "- x",
+        "## Smallest Buildable Unit",
+        "- y",
+        "## Tasks",
+        "| # | Task | Files | Subagent-eligible? (Y/N + reason) |",
+        "| --- | --- | --- | --- |",
+        "| 1 | foo | s | Y — independent |",
+      ].join("\n"),
+    );
+    const r = await checkRepositoryState({ root, changedFiles: [planRel] });
+    assert.equal(r.ok, false, "phase-N plan without matching light spec must fail");
+    assert.ok(
+      r.errors.some((e) => /phase 99.*light-specs.*phase-99/i.test(e)),
+      `expected missing-light-spec error for phase 99, got: ${r.errors.join(" | ")}`,
+    );
+  });
+}
+
+async function testNonPhasePlanSkipsLightSpecCheck() {
+  await withTempRepo(async (root) => {
+    await mkdir(join(root, "docs", "ai-workflow", "plans"), { recursive: true });
+    const planRel = "docs/ai-workflow/plans/20260601-1200-meta-workflow.md";
+    await writeFile(
+      join(root, planRel),
+      [
+        "# Meta Plan",
+        "## Out of Scope — Intentional Cuts",
+        "- x",
+        "## Smallest Buildable Unit",
+        "- y",
+      ].join("\n"),
+    );
+    const r = await checkRepositoryState({ root, changedFiles: [planRel] });
+    assert.ok(
+      !r.errors.some((e) => /light-specs/i.test(e)),
+      `non-phase plan must not raise missing-light-spec error: ${r.errors.join(" | ")}`,
+    );
+  });
+}
+
 async function testQaGateBareFailedRequiresReason() {
   const ledgerWithBareFailed = "- QA Gate: failed\n";
   const r = checkQaGate(ledgerWithBareFailed);
@@ -774,5 +893,9 @@ await testLightSpecPathMustBeUnderLightSpecsDirOrExplicitlySkipped();
 await testLedgerRequiresUntouchedRelevantDocs();
 await testUiChangeDetectionDoesNotMatchDocsOnlyPaths();
 await testQaGateBareFailedRequiresReason();
+await testPlanRequiresAudienceColumnWhenLightSpecIsBoth();
+await testPlanDoesNotRequireAudienceColumnWhenLightSpecIsSingle();
+await testPlanFailsClosedWhenLightSpecMissing();
+await testNonPhasePlanSkipsLightSpecCheck();
 
 console.log("ai-workflow-check self-test passed");

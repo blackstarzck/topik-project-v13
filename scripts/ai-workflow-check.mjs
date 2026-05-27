@@ -137,6 +137,8 @@ const LEGACY_LEDGER_PATTERN =
 const PLAN_FILE_PATTERN = /^docs\/ai-workflow\/plans\/.+\.md$/;
 const PHASE_PLAN_PATTERN = /development-phases-and-bootstrap\.md$/;
 const PLAN_TEMPLATE_PATTERN = /\/(README|.*-template)\.md$/i;
+const PLAN_PHASE_PATTERN = /phase-(\d+)/;
+const LIGHT_SPEC_AUDIENCE_VALUE_PATTERN = /^Audience:\s*(\S+)/im;
 
 function normalizePathForCheck(path) {
   return normalize(path).split(sep).join("/");
@@ -206,7 +208,8 @@ export function checkCommitMessage(message) {
   return okResult(errors);
 }
 
-export function checkPlanFile(text, path = "<plan>") {
+export function checkPlanFile(text, path = "<plan>", options = {}) {
+  const { requireAudienceColumn = false } = options;
   const errors = [];
 
   for (const section of REQUIRED_PLAN_SECTIONS) {
@@ -252,6 +255,31 @@ export function checkPlanFile(text, path = "<plan>") {
             errors.push(
               `plan ${path} task row ${rowNumber} Subagent-eligible cell must be 'Y — reason' or 'N — reason' (got: '${cell}')`,
             );
+          }
+        }
+      }
+
+      // Audience column required when phase Audience is 'both'
+      // (planning-contracts.md §Plan Template Contract L64).
+      if (requireAudienceColumn) {
+        const audienceColIdx = cols.findIndex((c) => /^audience$/i.test(c));
+        if (audienceColIdx === -1) {
+          errors.push(
+            `plan ${path} task table requires an Audience column (light spec phase Audience is 'both')`,
+          );
+        } else {
+          let aRowNum = 0;
+          for (let i = headerIdx + 2; i < lines.length; i += 1) {
+            const row = lines[i];
+            if (!/^\|/.test(row)) break;
+            aRowNum += 1;
+            const cells = row.split("|").slice(1, -1).map((c) => c.trim());
+            const cell = cells[audienceColIdx] ?? "";
+            if (!/^(user|admin|both|n\/a)$/i.test(cell)) {
+              errors.push(
+                `plan ${path} task row ${aRowNum} Audience cell must be one of 'user|admin|both|n/a' (got: '${cell}')`,
+              );
+            }
           }
         }
       }
@@ -576,6 +604,36 @@ async function validateLedger(root, ledgerPath, errors) {
   }
 }
 
+// Resolves the phase Audience from the matching light spec.
+// Returns: { found, audience, missingLightSpec, phaseNum }
+// fail-closed: phase-N plan with no matching light spec is treated as an error.
+async function resolvePlanAudienceFromLightSpec(root, planPath) {
+  const m = planPath.match(PLAN_PHASE_PATTERN);
+  if (!m) {
+    return { found: false, audience: null, missingLightSpec: false, phaseNum: null };
+  }
+  const phaseNum = m[1];
+  const lightSpecsDir = join(root, "docs", "ai-workflow", "light-specs");
+  if (!existsSync(lightSpecsDir)) {
+    return { found: false, audience: null, missingLightSpec: true, phaseNum };
+  }
+  const entries = await readdir(lightSpecsDir);
+  const match = entries.find((e) =>
+    new RegExp(`^phase-${phaseNum}[-_.]`).test(e),
+  );
+  if (!match) {
+    return { found: false, audience: null, missingLightSpec: true, phaseNum };
+  }
+  const body = await readFile(join(lightSpecsDir, match), "utf8");
+  const av = body.match(LIGHT_SPEC_AUDIENCE_VALUE_PATTERN);
+  return {
+    found: true,
+    audience: av ? av[1].toLowerCase() : null,
+    missingLightSpec: false,
+    phaseNum,
+  };
+}
+
 async function validatePlanFile(root, planPath, errors) {
   // Templates and READMEs in the plans dir document the rules; skip them.
   if (PLAN_TEMPLATE_PATTERN.test(planPath)) return;
@@ -585,7 +643,19 @@ async function validatePlanFile(root, planPath, errors) {
     return;
   }
   const content = await readFile(join(root, planPath), "utf8");
-  const result = checkPlanFile(content, planPath);
+
+  // Cross-validate against the matching light spec (planning-contracts.md §1b + L64).
+  // fail-closed: phase-N plan must have a matching docs/ai-workflow/light-specs/phase-N-*.md.
+  const resolved = await resolvePlanAudienceFromLightSpec(root, planPath);
+  if (resolved.missingLightSpec) {
+    errors.push(
+      `plan ${planPath}: references phase ${resolved.phaseNum} but no matching docs/ai-workflow/light-specs/phase-${resolved.phaseNum}-*.md exists (planning-contracts.md §1b)`,
+    );
+  }
+
+  const result = checkPlanFile(content, planPath, {
+    requireAudienceColumn: resolved.audience === "both",
+  });
   if (!result.ok) {
     for (const e of result.errors) errors.push(e);
   }
