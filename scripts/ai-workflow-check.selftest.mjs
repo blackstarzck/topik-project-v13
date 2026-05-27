@@ -566,6 +566,39 @@ async function testRepositoryStateForcesArchPassOnPhaseCompleteLedger() {
   });
 }
 
+async function testUiChangeDetectionDoesNotMatchDocsOnlyPaths() {
+  const checkerModule = await import("./ai-workflow-check.mjs");
+  const { needsUxuiConsistencyPass } = checkerModule.internals;
+
+  // docs path with "theme" must NOT trigger UI gate
+  assert.equal(
+    needsUxuiConsistencyPass(["docs/ant-design/08-theme-architecture.md"]),
+    false,
+    "docs path with 'theme' should not trigger UI gate",
+  );
+
+  // tasks/ path with "theme" must NOT trigger UI gate
+  assert.equal(
+    needsUxuiConsistencyPass(["tasks/theme-refactor-verify/foo.html"]),
+    false,
+    "tasks path with 'theme' should not trigger UI gate",
+  );
+
+  // src/theme/ — MUST trigger
+  assert.equal(
+    needsUxuiConsistencyPass(["src/theme/index.ts"]),
+    true,
+    "src/theme/ path should trigger UI gate",
+  );
+
+  // src/styles/ — still triggers (covered by another pattern)
+  assert.equal(
+    needsUxuiConsistencyPass(["src/styles/foo.css"]),
+    true,
+    "src/styles/ path should trigger UI gate via .css or src/styles pattern",
+  );
+}
+
 async function testLightSpecPathMustBeUnderLightSpecsDirOrExplicitlySkipped() {
   await withTempRepo(async (root) => {
     // phase ledger pointing outside light-specs dir → fail
@@ -638,5 +671,6 @@ await testRepositoryStateValidatesLedgerEvenWhenNoLedgerRequired();
 await testRepositoryStateDoesNotForceArchPassOnNonPhaseLedger();
 await testRepositoryStateForcesArchPassOnPhaseCompleteLedger();
 await testLightSpecPathMustBeUnderLightSpecsDirOrExplicitlySkipped();
+await testUiChangeDetectionDoesNotMatchDocsOnlyPaths();
 
 console.log("ai-workflow-check self-test passed");

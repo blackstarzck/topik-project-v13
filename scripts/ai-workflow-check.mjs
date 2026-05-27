@@ -84,7 +84,7 @@ const UI_CHANGE_PATTERNS = [
   /\.css$/,
   /\.scss$/,
   /globals\.css$/i,
-  /theme/i,
+  /^src\/theme\//,
   /^tailwind\.config\./,
   /^postcss\.config\./,
   /^public\/icons\//,
