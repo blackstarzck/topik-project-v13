@@ -1866,3 +1866,430 @@ hook: PostToolUse
 hook: PostToolUse Completed
 hook: PostToolUse Completed
 hook: PostToolUse Completed
+codex
+필수 워크플로 문서를 확인한 다음, README 문구와 링크/파일 존재 여부를 한 번에 대조하겠습니다. 여기서는 새 해석을 넓히지 않고 Round 1의 닫힘 여부만 봅니다.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -LiteralPath docs/ai-development-workflow.md' in C:\Users\admin\Desktop\workspace\topik-project\v13
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command '$i=0; Get-Content -LiteralPath README.md | ForEach-Object { $i++; if ($i -ge 38 -and $i -le 58) { '"'{0,4}: {1}' -f "'$i, $_ } }' in C:\Users\admin\Desktop\workspace\topik-project\v13
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command '$i=0; Get-Content -LiteralPath docs/development/README.md | ForEach-Object { $i++; if ($_ -match '"'Selection Map|Files|auth-overview|backend-auth|stack|deployment|deferred') { '{0,4}: {1}' -f "'$i, $_ } }' in C:\Users\admin\Desktop\workspace\topik-project\v13
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command '$i=0; Get-Content -LiteralPath docs/development/auth-overview.md | ForEach-Object { $i++; if ($i -le 120) { '"'{0,4}: {1}' -f "'$i, $_ } }' in C:\Users\admin\Desktop\workspace\topik-project\v13
+ succeeded in 663ms:
+# AI Development Workflow
+
+Entry point for every AI agent working in this repository. **Read this file first, then follow the links to the sub-doc that governs your current task.** Detailed rules live in the four sub-docs listed at the bottom ??they are not duplicated here.
+
+## Mandatory Startup
+
+1. Invoke `using-superpowers` (Claude Code) or read its canonical SKILL file (other hosts). If host mirrors are stale, run `node scripts/sync-agent-skills.mjs` and retry.
+2. Read [`docs/agent-index.md`](agent-index.md), classify your goal, and select the smallest matching docs.
+3. Record `Docs consulted`, `Extracted requirements`, `Doc conflicts`, `Untouched relevant docs`, and `Context ledger` in your plan or ledger.
+4. Run `node scripts/ai-workflow-check.mjs --repo .` before final reporting when Node is available. PRs run the same checker via `.github/workflows/ai-workflow-check.yml`.
+
+## Workflow Diagram
+
+```mermaid
+flowchart TD
+  A["Task starts"] --> B["Use Superpowers"]
+  B --> C["Read agent-index"]
+  C --> D["Select docs"]
+  D --> E["Record evidence"]
+  E --> F{"Covered by docs?"}
+  F -->|"No"| X["Proposal or approved brief"]
+  F -->|"Conflict"| Y["Stop with references"]
+  F -->|"Yes"| G{"Lane"}
+  G -->|"Tiny docs/config"| L["Lightweight path"]
+  G -->|"Implementation"| P["Plan + TDD"]
+  G -->|"UI/flow"| U["Plan + design QA"]
+  P --> R["Review gates"]
+  U --> R
+  L --> V["Narrow verification"]
+  R --> V
+  V --> W["Workflow checker"]
+  W --> Z["Final report"]
+```
+
+## Lane Selection
+
+| Work type | First action | Rules live in |
+| --- | --- | --- |
+| Tiny docs/config, no behavior change | Lightweight Path below | this file 짠Lightweight |
+| Bug fix | `systematic-debugging` ??TDD | [`review-gates.md`](ai-workflow/review-gates.md) |
+| Feature / behavior change | `writing-plans` ??TDD ??review gates | [`planning-contracts.md`](ai-workflow/planning-contracts.md), [`review-gates.md`](ai-workflow/review-gates.md) |
+| UI / user flow | `writing-plans` + design review ??TDD ??UX/UI Consistency Pass ??audience蹂?QA | same as above + design review; Audience rules ?꾨옒 李몄“; [`review-gates.md#uxui-consistency-pass`](ai-workflow/review-gates.md#uxui-consistency-pass) |
+| Net-new scope or doc pivot | `office-hours` + `brainstorming` ??docs update proposal OR approved brief | [`planning-contracts.md`](ai-workflow/planning-contracts.md) |
+| Conflict with active docs | Stop. Report conflict with exact references. Do not implement. | this file 짠Mandatory Startup |
+| Multi-agent / phase work | Plan + Light Spec + Ledger + cross-model review | [`planning-contracts.md`](ai-workflow/planning-contracts.md), [`context-and-packets.md`](ai-workflow/context-and-packets.md) |
+
+### Audience rules (UI / user-flow 李⑥꽑 + 紐⑤뱺 phase ?묒뾽???곸슜)
+
+UI 쨌 ?ъ슜???먮쫫 쨌 phase ?⑥쐞 ?묒뾽? ?쒖옉 ?쒖젏??audience瑜?紐낆떆?댁빞 ?쒕떎. Audience 遺꾨쪟??UI/沅뚰븳 遺꾧린 ?쒖젙 ??鍮꾨??뷀삎 ?쒖뒪???묒뾽(`cron`, `system`, `external partner` ??? 蹂꾨룄 異뺤쑝濡?異뷀썑 ?꾩엯?쒕떎.
+
+- **`user`**: ?쇰컲 ?ъ슜???붾㈃. RLS??`auth.uid()` 湲곕컲 ?먭린 row ?쒖젙.
+- **`admin`**: 愿由ъ옄 ?붾㈃. `requirePlatformAdmin / requireContentAdmin / requireOrgAdmin` 媛숈? ?섏씠吏 媛???섎Т + 紐⑤뱺 沅뚰븳 蹂寃?諛쒗뻾 ?좉?? `admin_audit_logs` 湲곕줉 ?섎Т.
+- **`both`**: user/admin??媛숈? phase???ㅼ뼱媛? user/admin **task瑜?媛곴컖???됱쑝濡?遺꾨━**??plan task table???곴퀬, 媛??됱뿉 ?먯껜 audience 紐낆떆. Light Spec??user/admin 遺꾧린 ?대뜑 寃쎄퀎(?? `src/app/admin/...` vs `src/app/library/...`)瑜???以꾩뵫 紐낆떆.
+
+audience 紐낆떆쨌寃利?吏?? [`planning-contracts.md`](ai-workflow/planning-contracts.md) Light Spec Domain Boundary + task table audience ?? [`agent-packets.md`](ai-workflow/agent-packets.md) Task/Result Packet audience ?꾨뱶, [`review-gates.md#architecture-pass`](ai-workflow/review-gates.md#architecture-pass) audience 寃쎄퀎 ??ぉ, [`fallback-and-recovery.md`](ai-workflow/fallback-and-recovery.md) audience-mismatch fail-closed.
+
+## Core Invariants
+
+These are mandatory for any non-lightweight change. **The linked sub-doc is the authoritative source** ??this list exists so an agent reading only the entry file does not miss them.
+
+- **TDD** (RED ??confirm fail ??GREEN ??confirm pass ??refactor while green). Allowed exceptions are docs-only, config-only, generated artifacts, or no runnable test surface. Full loop and exceptions: [`review-gates.md#tdd`](ai-workflow/review-gates.md).
+- **Cross-model review is mandatory** for every code change and every non-trivial plan or doc change. When only one model is available, record `Cross-model review: degraded ??<reason>` in the ledger. [`review-gates.md#cross-model-review`](ai-workflow/review-gates.md#cross-model-review).
+- **Plan-Review PASS Gate** ??if a pre-implementation review (`plan-eng-review`, `codex consult`, etc) returns FAIL, revise the plan AND re-run the same review until PASS or until each remaining concern is recorded as "accepted with reason" in the ledger. [`review-gates.md#plan-review-pass-gate`](ai-workflow/review-gates.md).
+- **Architecture Pass** at phase completion: route handlers have no leaked business logic, folder/name boundaries match `docs/domain-glossary.md`, no single concept is implemented in two places. [`review-gates.md#architecture-pass`](ai-workflow/review-gates.md).
+- **UX/UI Consistency Pass** when changed files match UI patterns (`src/app/**`, `src/components/**`, `src/features/**`, `src/lib/ui/**`, `src/styles/**`, `*.css`, `theme*`, etc.). 4-line evidence(Tokens 쨌 Components 쨌 A11y 쨌 Responsive) in ledger, machine-checked. Test-only changes auto-exempt. [`review-gates.md#uxui-consistency-pass`](ai-workflow/review-gates.md).
+- **CSS Variable Scoping Gate** when changed files include `src/theme/**`, `src/styles/**`, `app/layout.tsx`, or any file containing `--app-*` declarations: verify the five constraints in [`docs/ant-design/06-ai-development-workflow.md#css-variable-scoping`](ant-design/06-ai-development-workflow.md) and run `scripts/ai-workflow-check.mjs`. The gate is machine-enforced for the following patterns: `--app-*: var(--ant-*)` chains, bare `@theme {` without `inline`, and `getAppTheme` at module scope. [`docs/ant-design/08-theme-architecture.md#css-variable-architecture-contract`](ant-design/08-theme-architecture.md).
+- **Light Spec + Out of Scope + Smallest Buildable Unit + Subagent-eligible column** are mandatory plan/light-spec sections, machine-checked by `scripts/ai-workflow-check.mjs`. [`planning-contracts.md`](ai-workflow/planning-contracts.md).
+- **Context ledger** is required for any non-trivial work (multi-file, implementation, UI/route/auth/database/API/dependency/test-strategy/AI-boundary change, multi-agent work, work likely to resume across sessions, **or any change to workflow-governing files ??`AGENTS.md`, `CLAUDE.md`, `docs/agent-index.md`, `docs/ai-development-workflow.md`, files under `docs/ai-workflow/`, `scripts/`, `.github/`**). [`context-and-packets.md`](ai-workflow/context-and-packets.md).
+- **Fallback Protocol** ??fallback never weakens a quality gate. Classify failures (fail-closed, degraded-mode, recover, retry-once, reassign) and record evidence in the ledger. [`fallback-and-recovery.md`](ai-workflow/fallback-and-recovery.md).
+
+## Required Evidence (Before Final Report)
+
+- `Docs consulted` ??exact files read
+- `Extracted requirements` ??concrete requirements pulled from those files
+- `Doc conflicts` ??`none` or exact file references
+- `Untouched relevant docs` ??and why they were not read
+- `Context ledger` ??path or allowed lightweight exception
+- Verification commands run and results
+- Git publication decision per [`git-publication-decision.md`](ai-workflow/git-publication-decision.md)
+
+Final response must follow [`report-template.md`](ai-workflow/report-template.md).
+
+## Lightweight Path
+
+For a tiny docs/config/non-behavioral change with no multi-agent work, no UI/flow change, no doc conflict, and no resume risk:
+
+1. `using-superpowers`
+2. Skill applicability check
+3. Edit
+4. Narrowest relevant verification (lint/typecheck/inspection)
+5. Report checks and risks
+
+A context ledger may be skipped only if every condition above is satisfied. State the exception in the final report. This path is **not allowed for production behavior changes**.
+
+## Sub-docs (depth lives here)
+
+- [`docs/ai-workflow/planning-contracts.md`](ai-workflow/planning-contracts.md) ??Light Spec, Out of Scope/Intentional Cuts, Smallest Buildable Unit, Subagent-eligible column, task-table contract
+- [`docs/ai-workflow/context-and-packets.md`](ai-workflow/context-and-packets.md) ??Context ledger template, agent task/result packets, multi-agent integration, resume/compaction recovery
+- [`docs/ai-workflow/review-gates.md`](ai-workflow/review-gates.md) ??TDD loop, Cross-model review, Plan-Review PASS Gate, Architecture Pass, QA gate, finish gate
+- [`docs/ai-workflow/fallback-and-recovery.md`](ai-workflow/fallback-and-recovery.md) ??Failure classes, fallback matrix, degraded-mode reporting
+
+hook: PostToolUse
+ succeeded in 754ms:
+  38: | 紐⑥쓽怨좎궗 | ?ㅼ젣 ?쒗뿕泥섎읆 ?쒓컙???щ뒗 由ы뿀??|
+  39: 
+  40: ## ?꾩옱 ?곹깭
+  41: 
+  42: | ??ぉ | ?곹깭 |
+  43: | --- | --- |
+  44: | 援ы쁽 ?곹깭 | 湲곕컲 援ы쁽 吏꾪뻾 以???`src/` + `package.json` 議댁옱. App Router ?쇱슦??scaffold + ?몄쬆 ?먮쫫 + ?뚮쭏 ?쒖뒪??+ Supabase ?ㅽ궎留?RLS 留덉씠洹몃젅?댁뀡 ?꾨즺. ?곌린 ?쒖텧쨌?쇰뱶諛??붾㈃怨?mock ?쇰뱶諛?寃쎈줈???쇰? 援ы쁽?? ?ㅼ젣 LLM 湲곕컲 AI 泥⑥궘쨌臾몄젣 ?앹꽦? ?④퀎?곸쑝濡?異붽? 以? |
+  45: | ?꾩옱 湲곗? | `docs/`媛 ?쒗뭹, ?붾㈃, AI ?묒뾽 諛⑹떇??source of truth. ?몄쬆 ?곸뿭? 異붽?濡?[`docs/development/auth-overview.md`](./docs/development/auth-overview.md) 媛 肄붾뱶 + ?댁쁺 ?뺤콉 ?뺣낯. |
+  46: | 援ы쁽 諛⑹떇 | Next.js App Router 湲곕컲. ?몄쬆쨌?뚮쭏쨌DB ?ㅽ궎留덈뒗 援ы쁽?? ?숈뒿 湲곕뒫? ?④퀎??異붽?. |
+  47: | ?묒뾽 諛⑹떇 | ?щ엺怨?AI媛 媛숈? 臾몄꽌 ?명듃瑜??쎄퀬, 蹂寃?洹쇨굅? 寃利?寃곌낵瑜??④퉩?덈떎. |
+  48: 
+  49: 吏湲?????μ냼??怨⑥“? ?쇰? ?명봽??(?몄쬆, ?뚮쭏, DB ?ㅽ궎留?RLS) 媛 ?щ씪媛?怨듭궗?μ엯?덈떎. ?곌린 ?쒖텧쨌?쇰뱶諛??붾㈃怨?mock ?쇰뱶諛?寃쎈줈???쇰? ?щ씪媛붽퀬, ?ㅼ젣 LLM 泥⑥궘怨?臾몄젣 ?앹꽦? ?④퀎?곸쑝濡?異붽? 以묒엯?덈떎. ?몄쬆쨌蹂댁븞 ?곸뿭? 怨⑥“ + ?ㅻⅨ AI 寃?좉퉴吏 諛쏆? ?곹깭. 臾몄꽌媛 ?ъ쟾??source of truth ?쇰뒗 ?먯? 蹂?섏? ?딆뒿?덈떎.
+  50: 
+  51: ## 留뚮뱾怨??덈뒗 寃?
+  52: TALKPIK AI???듭떖 ?먮쫫? ?숈뒿?먯쓽 諛섎났 ?숈뒿?낅땲??
+  53: 
+  54: ```mermaid
+  55: flowchart TD
+  56:     A["1. 紐⑺몴 ?ㅼ젙"] --> B["2. ?ㅻ뒛???숈뒿 ?곹깭 ?뺤씤"]
+  57:     B --> C{"臾댁뾿???좉퉴?"}
+  58:     C -->|"?쎄린/?ｊ린"| D["AI 留욎땄 臾몄젣 ?앹꽦"]
+
+hook: PostToolUse
+ succeeded in 687ms:
+   9: ## Selection Map
+  15:     C -->|"framework / packages / tests / frontend libraries"| D["stack.md"]
+  16:     C -->|"Supabase / Auth / RLS / Storage"| E["backend-auth.md"]
+  17:     C -->|"login / signup / callback / error / operational policy"| AO["auth-overview.md"]
+  18:     C -->|"Vercel / env vars / deployment / rollback"| G["deployment.md"]
+  19:     C -->|"billing / subscription / paywall"| H["deferred-scope.md"]
+  22: ## Files
+  26: | [stack.md](./stack.md) | Framework, package, frontend stack, and test tooling. | Choosing or changing packages, scripts, frontend libraries, or test setup. |
+  27: | [backend-auth.md](./backend-auth.md) | Supabase, Auth, RLS, Storage, and server-only key rules. | Implementing login, database access, storage, profiles, or admin roles. |
+  28: | [auth-overview.md](./auth-overview.md) | Login, signup, callback, error pages mapped to code + IA, plus operational policy (cleanup cron, rate limits, env vars, role model). | Touching any auth surface, env vars (`NEXT_PUBLIC_SITE_URL`), or the unconfirmed-user cleanup policy. Read after `backend-auth.md`. |
+  29: | [deployment.md](./deployment.md) | Vercel environments, build settings, preview gates, rollback. | Working on preview links, production deploys, CI, env vars, or rollback. |
+  30: | [deferred-scope.md](./deferred-scope.md) | Billing and other deferred areas. | Discussing subscriptions, paywall, Stripe, pricing, or intentionally postponed features. |
+  36: - Billing remains deferred unless scope is explicitly reopened.
+
+hook: PostToolUse
+ succeeded in 756ms:
+   1: # ?몄쬆 ?쒕늿??蹂닿린 (濡쒓렇??쨌 ?뚯썝媛??쨌 肄쒕갚)
+   2: 
+   3: > Last updated: 2026-05-27
+   4: > ??臾몄꽌??TALKPIK AI ??**?몄쬆 ?먮쫫 + ?댁쁺 ?뺤콉 + 肄붾뱶 留ㅽ븨 + 愿由??ъ씤??* 瑜?> ???섏씠吏濡?紐⑥? ?뺣━蹂몄엯?덈떎. ???꾩엯 臾몄꽌媛 ?꾨땲???⑹뼱???덈뒗 ?뺣낯??臾띠?
+   5: > ?몃뜳??+ ?붿빟?낅땲?? ???먯꽭???댁슜? 媛??뱀뀡???쒖떆???뺣낯 留곹겕瑜??곕씪媛?몄슂.
+   6: 
+   7: > **二쇱쓽:** 猷⑦듃 `CLAUDE.md` ??pre-implementation ?쒓린??stale. ??臾몄꽌??2026-05-27 ?꾩옱 worktree 援ы쁽 湲곗?.
+   8: 
+   9: ## Docs consulted
+  10: 
+  11: | ?곸뿭 | ?뺣낯 ?꾩튂 |
+  12: | --- | --- |
+  13: | ?붾㈃ 紐낆꽭 (?뚯썝媛??濡쒓렇??肄쒕갚/?먮윭/硫붿씪 ?덈궡/鍮꾨?踰덊샇 ?ъ꽕?? | [`docs/IA/01-A-01-sign-up`](../IA/01-A-01-sign-up/description.md), [`02-A-02-login`](../IA/02-A-02-login/description.md), [`28-X-06-password-reset`](../IA/28-X-06-password-reset/description.md), [`33-X-11-auth-error`](../IA/33-X-11-auth-error/description.md), [`34-X-12-auth-verify-email`](../IA/34-X-12-auth-verify-email/description.md) |
+  14: | ?ъ슜???뚮줈??(?뺣낯) | [`docs/flow/user-flow.md`](../flow/user-flow.md) |
+  15: | 諛깆뿏??Auth ?뺤콉 | [`docs/development/backend-auth.md`](./backend-auth.md) |
+  16: | Auth 愿??留덉씠洹몃젅?댁뀡 | [`supabase/migrations/INDEX.md`](../../supabase/migrations/INDEX.md) (#17, #22, #23, #24) |
+  17: | ?섍꼍 蹂??| [`.env.example`](../../.env.example) |
+  18: 
+  19: ---
+  20: 
+  21: ## 1) ??以?寃곕줎
+  22: 
+  23: ?대찓??+ 鍮꾨?踰덊샇 / 留ㅼ쭅 留곹겕 / 鍮꾨?踰덊샇 ?ъ꽕???먮쫫 ?꾨? **Supabase Auth** ??怨녹뿉??泥섎━?섍퀬, **PKCE 肄쒕갚 (`/auth/callback`)** ?쇰줈 ?ㅼ뼱?ㅻ뒗 ?좏겙???쒕쾭?먯꽌
+  24: 援먰솚???ㅼ쓬 ?숈뒿??愿由ъ옄 ?쇱슦?몃줈 遺꾧린?쒗궓?? **`profiles` ???앹꽦쨌??븷 遺???誘몄씤利?怨꾩젙 ?뺣━** ???꾨? Postgres ?덉뿉???쇱뼱?쒕떎 (DB ?몃━嫄?+ SECURITY DEFINER
+  25: + pg_cron).
+  26: 
+  27: ---
+  28: 
+  29: ## 2) ??洹몃┝ ???ъ슜???먮쫫
+  30: 
+  31: ```mermaid
+  32: flowchart TD
+  33:   L["/ (?쒕뵫)"] -->|"?뚯썝媛??| S["/sign-up (A-01)"]
+  34:   L -->|"濡쒓렇??| LI["/login (A-02)"]
+  35:   S -->|"signUp ?깃났"| V["/auth/verify-email?email= (X-12)"]
+  36:   V -. "?ъ쟾??60s cooldown" .-> V
+  37:   V -->|"硫붿씪 留곹겕 ?대┃"| CB[["/auth/callback"]]
+  38:   LI -->|"鍮꾨?踰덊샇 濡쒓렇??| D["/dashboard"]
+  39:   LI -->|"留ㅼ쭅 留곹겕 諛쒖넚"| MAIL["硫붿씪 ?덈궡"]
+  40:   MAIL -->|"留곹겕 ?대┃"| CB
+  41:   LI -->|"鍮꾨?踰덊샇 ?딆쓬"| PR["/password-reset (X-06)"]
+  42:   PR -->|"?ъ꽕??硫붿씪"| CB
+  43:   CB -->|"verifyOtp/exchangeCodeForSession ?깃났: ?숈뒿??| D
+  44:   CB -->|"?깃났: 愿由ъ옄 (app_role)"| ADM["/admin/org (X-08)"]
+  45:   CB -->|"?ㅽ뙣"| E["/auth/error?reason= (X-11)"]
+  46:   E -. "otp_expired / email_not_confirmed" .-> V
+  47:   E -. "user_not_found" .-> S
+  48:   E -. "flow_state_* / bad_code_verifier" .-> LI
+  49:   E -. "rate-limit + retry_after_seconds 移댁슫?몃떎?? .-> E
+  50:   D -. "?몄뀡 留뚮즺" .-> LI
+  51: ```
+  52: 
+  53: > 吏꾩쭨 ?뺣낯 ?ㅼ씠?닿렇?⑥? [`docs/flow/user-flow.md`](../flow/user-flow.md). ??> ?ㅼ씠?닿렇?⑥? ?몄쬆 ?곸뿭留??섎씪???붿빟蹂?
+  54: 
+  55: ---
+  56: 
+  57: ## 3) ?붾㈃ ???쇱슦????肄붾뱶 留ㅽ븨
+  58: 
+  59: | IA 肄붾뱶 | ?붾㈃ ?대쫫 | Next.js ?쇱슦??| ?듭떖 而댄룷?뚰듃 |
+  60: | --- | --- | --- | --- |
+  61: | A-01 | ?뚯썝媛??| [`src/app/sign-up/page.tsx`](../../src/app/sign-up/page.tsx) | [`SignUpForm.tsx`](../../src/components/auth/SignUpForm.tsx) |
+  62: | A-02 | 濡쒓렇??(鍮꾨?踰덊샇 + 留ㅼ쭅 留곹겕 ?? | [`src/app/login/page.tsx`](../../src/app/login/page.tsx) | [`LoginForm.tsx`](../../src/components/auth/LoginForm.tsx) |
+  63: | X-06 | 鍮꾨?踰덊샇 ?ъ꽕???붿껌 | [`src/app/password-reset/page.tsx`](../../src/app/password-reset/page.tsx) | [`PasswordResetRequestForm.tsx`](../../src/components/auth/PasswordResetRequestForm.tsx) |
+  64: | X-06 | 鍮꾨?踰덊샇 ?ъ꽕???뺤젙 | [`src/app/password-reset/confirm/page.tsx`](../../src/app/password-reset/confirm/page.tsx) | [`PasswordResetConfirmForm.tsx`](../../src/components/auth/PasswordResetConfirmForm.tsx) |
+  65: | (?쇱슦?? | ?몄쬆 肄쒕갚 | [`src/app/auth/callback/route.ts`](../../src/app/auth/callback/route.ts) (Route Handler) + [`src/app/auth/callback-fragment/page.tsx`](../../src/app/auth/callback-fragment/page.tsx) | [`CallbackFragmentFallback.tsx`](../../src/components/auth/CallbackFragmentFallback.tsx) (fragment fallback ?섏씠吏?먯꽌 ?ъ슜) |
+  66: | X-11 | ?몄쬆 ?먮윭 | [`src/app/auth/error/page.tsx`](../../src/app/auth/error/page.tsx) | [`AuthErrorCard.tsx`](../../src/components/auth/AuthErrorCard.tsx) |
+  67: | X-12 | ?몄쬆 硫붿씪 ?뺤씤 ?덈궡 | [`src/app/auth/verify-email/page.tsx`](../../src/app/auth/verify-email/page.tsx) | [`VerifyEmailCard.tsx`](../../src/components/auth/VerifyEmailCard.tsx) |
+  68: 
+  69: ### ?몄쬆 ?꾩슦誘?(?쒕쾭 ?꾩슜)
+  70: 
+  71: | ?뚯씪 | ??븷 |
+  72: | --- | --- |
+  73: | [`src/lib/auth/session.ts`](../../src/lib/auth/session.ts) | `getCurrentUser()`, `requireUser()` ???몄뀡 媛뺤젣 |
+  74: | [`src/lib/auth/profile.ts`](../../src/lib/auth/profile.ts) | `getCurrentProfile()`, `bootstrapProfile()`, `requireRole()`, `getSessionAndProfile()` |
+  75: | [`src/lib/auth/admin-guard.ts`](../../src/lib/auth/admin-guard.ts) | `requirePlatformAdmin()`, `requireContentAdmin()`, `requireOrgAdmin()` |
+  76: | [`src/lib/auth/roles.ts`](../../src/lib/auth/roles.ts) | `AppRole` ???+ `ADMIN_ROLES` ?곸닔 (client-safe) |
+  77: | [`src/lib/auth/error-mapping.ts`](../../src/lib/auth/error-mapping.ts) | Supabase `error.code` ??canonical `reason` 留ㅽ븨, 硫붿떆吏/CTA ?뚯씠釉? `sanitizeNext`, `sanitizeRetryAfterSeconds`, `parseAuthFragment` |
+  78: | [`src/lib/auth/redirect-url.ts`](../../src/lib/auth/redirect-url.ts) | `buildAuthRedirectUrl()` ????긽 ?덈? URL, dev??`http://127.0.0.1:3000`, prod??`NEXT_PUBLIC_SITE_URL` ?꾩닔 |
+  79: | [`src/proxy.ts`](../../src/proxy.ts) | Next.js middleware. 鍮꾧났媛??쇱슦??anon ?묎렐 ??`/login` ?쇰줈 redirect. 留뚮즺 ?몄뀡 荑좏궎 ?덉쑝硫?`?reason=session_expired` |
+  80: | [`src/lib/routes.ts`](../../src/lib/routes.ts) | `PUBLIC_PATHS` (middleware ?덉슜 紐⑸줉) ??`/sign-up`, `/login`, `/password-reset`, `/auth/callback`, `/auth/error`, `/auth/verify-email` |
+  81: 
+  82: ---
+  83: 
+  84: ## 4) ?먮쫫蹂??곸꽭 ??"?대뵒??臾댁뾿???쇱뼱?섎뒗媛"
+  85: 
+  86: ### 4.1 ?뚯썝媛??(A-01 ??X-12 ??肄쒕갚 ??A-03)
+  87: 
+  88: 1. ???쒖텧 ??`supabase.auth.signUp({ email, password, options: { data: { display_name }, emailRedirectTo } })`
+  89: 2. ?깃났?섎㈃ 利됱떆 `router.push('/auth/verify-email?email=...')`
+  90: 3. X-12 ?섏씠吏?먯꽌 60珥?cooldown + `auth.resend({ type: 'signup' })` 濡??ъ쟾??4. ?ъ슜?먭? 硫붿씪 留곹겕 ?대┃ ??`/auth/callback?token_hash=...&type=signup&next=/onboarding/learning-goal`
+  91: 5. 肄쒕갚 ?쒕쾭?먯꽌 `verifyOtp({ token_hash, type })` ???깃났 ??`redirect(next)`, ?ㅽ뙣 ??`/auth/error?reason=<...>`
+  92: 6. `next` ??`sanitizeNext()` 濡??뺥솕 ???몃? URL, `//`, `:` ?ы븿 媛믪? `/dashboard` fallback
+  93: 7. **`profiles` ?됱? DB ?몃━嫄?`on_auth_user_created` 媛 ?먮룞 ?앹꽦** (留덉씠洹몃젅?댁뀡 #17). ?대씪?댁뼵??肄붾뱶??profiles INSERT 沅뚰븳???녿떎 (RLS).
+  94: 
+  95: ### 4.2 濡쒓렇??(A-02 ????쒕낫??/ 愿由ъ옄)
+  96: 
+  97: - **鍮꾨?踰덊샇**: `supabase.auth.signInWithPassword({ email, password })` ???깃났 ??`router.push('/dashboard')`
+  98: - **留ㅼ쭅 留곹겕**: `supabase.auth.signInWithOtp({ email, options: { emailRedirectTo } })` ??"?대찓?쇱쓣 ?뺤씤?섏꽭?? ?곹깭 ???ъ슜??硫붿씪 留곹겕 ?대┃ ??`/auth/callback?next=/dashboard`
+  99: - **鍮꾨?踰덊샇 ?ъ꽕??留곹겕**: 濡쒓렇?????섎떒 `/password-reset` 留곹겕
+ 100: - **?몄뀡 留뚮즺 ?덈궡**: middleware 媛 留뚮즺??`sb-*-auth-token` 荑좏궎瑜?媛먯??섎㈃ `/login?reason=session_expired` 濡?蹂대궡怨? `LoginForm` ???덈궡 Alert ?몄텧
+ 101: 
+ 102: ### 4.3 鍮꾨?踰덊샇 ?ъ꽕??(X-06)
+ 103: 
+ 104: 1. `/password-reset` ?먯꽌 ?대찓???낅젰 ??`supabase.auth.resetPasswordForEmail(email, { redirectTo: '/password-reset/confirm' })`
+ 105: 2. ?ъ슜?먭? 硫붿씪 留곹겕 ?대┃ ??Supabase verify endpoint (?먯껜 ?몄뒪?? ?먯꽌 ?좏겙 援먰솚 + recovery ?몄뀡 荑좏궎 set ??`redirectTo` 媛믪씤 `/password-reset/confirm` ?쇰줈 redirect. `/auth/callback` ? 誘멸꼍??([`PasswordResetRequestForm.tsx:22`](../../src/components/auth/PasswordResetRequestForm.tsx) ??`redirectTo` 媛 吏곸젒 confirm ?섏씠吏瑜?媛由ы궡)
+ 106: 3. ??鍮꾨?踰덊샇 ?낅젰 ??`supabase.auth.updateUser({ password })` ??"?ㅼ떆 濡쒓렇?? ?덈궡 ??`/login`
+ 107: 
+ 108: ### 4.4 肄쒕갚 遺꾧린 (`/auth/callback`)
+ 109: 
+ 110: Route Handler 媛 ?ㅼ쓬 ?쒖꽌濡?泥섎━?쒕떎 ([`src/app/auth/callback/route.ts`](../../src/app/auth/callback/route.ts)). server component ?????諛쒖깮??cookie silent-fail 臾몄젣 ?뚮Ц??Phase 8 follow-up P0 fix ?먯꽌 Route Handler 濡??꾪솚. ?먯꽭???ъ쑀??`route.ts:1-18` 二쇱꽍 李몄“:
+ 111: 
+ 112: | ?곗꽑?쒖쐞 | 議곌굔 | 泥섎━ |
+ 113: | --- | --- | --- |
+ 114: | 1 | `?error_code=` 媛 query ??諛뺥? ??(?쇰? OAuth 怨듦툒?? | `mapSupabaseErrorCode(code)` ??`/auth/error?reason=...` |
+ 115: | 2 | `?token_hash=` + `?type??signup,recovery,email_change,email}` | `verifyOtp({ token_hash, type })` ???깃났 `redirect(next)`, ?ㅽ뙣 `/auth/error` |
+ 116: | 3 | `?code=` (PKCE) | `exchangeCodeForSession(code)` ???깃났 `redirect(next)`, ?ㅽ뙣 `/auth/error` |
+ 117: | 4 | ??3 媛吏 紐⑤몢 ?놁쓬 (legacy implicit flow, `#access_token=??) | `CallbackFragmentFallback` ?대씪?댁뼵??而댄룷?뚰듃濡?fragment ?뚯떛 ??`setSession()` ?먮뒗 ?먮윭 redirect |
+ 118: 
+ 119: ### 4.5 ?몄쬆 ?먮윭 (X-11)
+ 120: 
+
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+codex
+방금 출력은 Windows 콘솔 인코딩 때문에 한글이 깨졌습니다. 같은 파일을 UTF-8 출력으로 다시 읽어 실제 문구를 확인하겠습니다.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command '[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new(); $OutputEncoding = [System.Text.UTF8Encoding]::new(); $i=0; Get-Content -LiteralPath README.md -Encoding UTF8 | ForEach-Object { $i++; if ($i -ge 40 -and $i -le 50) { '"'{0,4}: {1}' -f "'$i, $_ } }' in C:\Users\admin\Desktop\workspace\topik-project\v13
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command '[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new(); $OutputEncoding = [System.Text.UTF8Encoding]::new(); $i=0; Get-Content -LiteralPath docs/development/auth-overview.md -Encoding UTF8 | ForEach-Object { $i++; if ($i -le 80) { '"'{0,4}: {1}' -f "'$i, $_ } }' in C:\Users\admin\Desktop\workspace\topik-project\v13
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command '[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new(); $OutputEncoding = [System.Text.UTF8Encoding]::new(); $i=0; Get-Content -LiteralPath docs/development/README.md -Encoding UTF8 | ForEach-Object { $i++; if ($i -ge 9 -and $i -le 30) { '"'{0,4}: {1}' -f "'$i, $_ } }' in C:\Users\admin\Desktop\workspace\topik-project\v13
+ succeeded in 823ms:
+  40: 
+  41: ## 현재 상태
+  42: 
+  43: | 항목 | 상태 |
+  44: | --- | --- |
+  45: | 구현 상태 | 기반 구현 진행 중 — `src/` + `package.json` 존재. App Router 라우트 scaffold + 인증 흐름 + 테마 시스템 + Supabase 스키마/RLS 마이그레이션 완료. 쓰기 제출·피드백 화면과 mock 피드백 경로도 일부 구현됨. 실제 LLM 기반 AI 첨삭·문제 생성은 단계적으로 추가 중. |
+  46: | 현재 기준 | `docs/`가 제품, 화면, AI 작업 방식의 source of truth. 인증 영역은 추가로 [`docs/development/auth-overview.md`](./docs/development/auth-overview.md) 가 코드 + 운영 정책 정본. |
+  47: | 구현 방식 | Next.js App Router 기반. 인증·테마·DB 스키마는 구현됨, 학습 기능은 단계적 추가. |
+  48: | 협업 방식 | 사람과 AI가 같은 문서 세트를 읽고, 변경 근거와 검증 결과를 남깁니다. |
+  49: 
+  50: 지금 이 저장소는 골조와 일부 인프라 (인증, 테마, DB 스키마/RLS) 가 올라간 공사장입니다. 쓰기 제출·피드백 화면과 mock 피드백 경로는 일부 올라갔고, 실제 LLM 첨삭과 문제 생성은 단계적으로 추가 중입니다. 인증·보안 영역은 골조 + 다른 AI 검토까지 받은 상태. 문서가 여전히 source of truth 라는 점은 변하지 않습니다.
+
+hook: PostToolUse
+ succeeded in 841ms:
+   1: # 인증 한눈에 보기 (로그인 · 회원가입 · 콜백)
+   2: 
+   3: > Last updated: 2026-05-27
+   4: > 이 문서는 TALKPIK AI 의 **인증 흐름 + 운영 정책 + 코드 매핑 + 관리 포인트** 를
+   5: > 한 페이지로 모은 정리본입니다. 새 도입 문서가 아니라 흩어져 있는 정본을 묶은
+   6: > 인덱스 + 요약입니다. 더 자세한 내용은 각 섹션에 표시된 정본 링크를 따라가세요.
+   7: 
+   8: > **주의:** 루트 `CLAUDE.md` 의 pre-implementation 표기는 stale. 이 문서는 2026-05-27 현재 worktree 구현 기준.
+   9: 
+  10: ## Docs consulted
+  11: 
+  12: | 영역 | 정본 위치 |
+  13: | --- | --- |
+  14: | 화면 명세 (회원가입/로그인/콜백/에러/메일 안내/비밀번호 재설정) | [`docs/IA/01-A-01-sign-up`](../IA/01-A-01-sign-up/description.md), [`02-A-02-login`](../IA/02-A-02-login/description.md), [`28-X-06-password-reset`](../IA/28-X-06-password-reset/description.md), [`33-X-11-auth-error`](../IA/33-X-11-auth-error/description.md), [`34-X-12-auth-verify-email`](../IA/34-X-12-auth-verify-email/description.md) |
+  15: | 사용자 플로우 (정본) | [`docs/flow/user-flow.md`](../flow/user-flow.md) |
+  16: | 백엔드/Auth 정책 | [`docs/development/backend-auth.md`](./backend-auth.md) |
+  17: | Auth 관련 마이그레이션 | [`supabase/migrations/INDEX.md`](../../supabase/migrations/INDEX.md) (#17, #22, #23, #24) |
+  18: | 환경 변수 | [`.env.example`](../../.env.example) |
+  19: 
+  20: ---
+  21: 
+  22: ## 1) 한 줄 결론
+  23: 
+  24: 이메일 + 비밀번호 / 매직 링크 / 비밀번호 재설정 흐름 전부 **Supabase Auth** 한
+  25: 곳에서 처리하고, **PKCE 콜백 (`/auth/callback`)** 으로 들어오는 토큰을 서버에서
+  26: 교환한 다음 학습자/관리자 라우트로 분기시킨다. **`profiles` 행 생성·역할 부여·
+  27: 미인증 계정 정리** 는 전부 Postgres 안에서 일어난다 (DB 트리거 + SECURITY DEFINER
+  28: + pg_cron).
+  29: 
+  30: ---
+  31: 
+  32: ## 2) 큰 그림 — 사용자 흐름
+  33: 
+  34: ```mermaid
+  35: flowchart TD
+  36:   L["/ (랜딩)"] -->|"회원가입"| S["/sign-up (A-01)"]
+  37:   L -->|"로그인"| LI["/login (A-02)"]
+  38:   S -->|"signUp 성공"| V["/auth/verify-email?email= (X-12)"]
+  39:   V -. "재전송 60s cooldown" .-> V
+  40:   V -->|"메일 링크 클릭"| CB[["/auth/callback"]]
+  41:   LI -->|"비밀번호 로그인"| D["/dashboard"]
+  42:   LI -->|"매직 링크 발송"| MAIL["메일 안내"]
+  43:   MAIL -->|"링크 클릭"| CB
+  44:   LI -->|"비밀번호 잊음"| PR["/password-reset (X-06)"]
+  45:   PR -->|"재설정 메일"| CB
+  46:   CB -->|"verifyOtp/exchangeCodeForSession 성공: 학습자"| D
+  47:   CB -->|"성공: 관리자 (app_role)"| ADM["/admin/org (X-08)"]
+  48:   CB -->|"실패"| E["/auth/error?reason= (X-11)"]
+  49:   E -. "otp_expired / email_not_confirmed" .-> V
+  50:   E -. "user_not_found" .-> S
+  51:   E -. "flow_state_* / bad_code_verifier" .-> LI
+  52:   E -. "rate-limit + retry_after_seconds 카운트다운" .-> E
+  53:   D -. "세션 만료" .-> LI
+  54: ```
+  55: 
+  56: > 진짜 정본 다이어그램은 [`docs/flow/user-flow.md`](../flow/user-flow.md). 위
+  57: > 다이어그램은 인증 영역만 잘라낸 요약본.
+  58: 
+  59: ---
+  60: 
+  61: ## 3) 화면 ↔ 라우트 ↔ 코드 매핑
+  62: 
+  63: | IA 코드 | 화면 이름 | Next.js 라우트 | 핵심 컴포넌트 |
+  64: | --- | --- | --- | --- |
+  65: | A-01 | 회원가입 | [`src/app/sign-up/page.tsx`](../../src/app/sign-up/page.tsx) | [`SignUpForm.tsx`](../../src/components/auth/SignUpForm.tsx) |
+  66: | A-02 | 로그인 (비밀번호 + 매직 링크 탭) | [`src/app/login/page.tsx`](../../src/app/login/page.tsx) | [`LoginForm.tsx`](../../src/components/auth/LoginForm.tsx) |
+  67: | X-06 | 비밀번호 재설정 요청 | [`src/app/password-reset/page.tsx`](../../src/app/password-reset/page.tsx) | [`PasswordResetRequestForm.tsx`](../../src/components/auth/PasswordResetRequestForm.tsx) |
+  68: | X-06 | 비밀번호 재설정 확정 | [`src/app/password-reset/confirm/page.tsx`](../../src/app/password-reset/confirm/page.tsx) | [`PasswordResetConfirmForm.tsx`](../../src/components/auth/PasswordResetConfirmForm.tsx) |
+  69: | (라우트) | 인증 콜백 | [`src/app/auth/callback/route.ts`](../../src/app/auth/callback/route.ts) (Route Handler) + [`src/app/auth/callback-fragment/page.tsx`](../../src/app/auth/callback-fragment/page.tsx) | [`CallbackFragmentFallback.tsx`](../../src/components/auth/CallbackFragmentFallback.tsx) (fragment fallback 페이지에서 사용) |
+  70: | X-11 | 인증 에러 | [`src/app/auth/error/page.tsx`](../../src/app/auth/error/page.tsx) | [`AuthErrorCard.tsx`](../../src/components/auth/AuthErrorCard.tsx) |
+  71: | X-12 | 인증 메일 확인 안내 | [`src/app/auth/verify-email/page.tsx`](../../src/app/auth/verify-email/page.tsx) | [`VerifyEmailCard.tsx`](../../src/components/auth/VerifyEmailCard.tsx) |
+  72: 
+  73: ### 인증 도우미 (서버 전용)
+  74: 
+  75: | 파일 | 역할 |
+  76: | --- | --- |
+  77: | [`src/lib/auth/session.ts`](../../src/lib/auth/session.ts) | `getCurrentUser()`, `requireUser()` — 세션 강제 |
+  78: | [`src/lib/auth/profile.ts`](../../src/lib/auth/profile.ts) | `getCurrentProfile()`, `bootstrapProfile()`, `requireRole()`, `getSessionAndProfile()` |
+  79: | [`src/lib/auth/admin-guard.ts`](../../src/lib/auth/admin-guard.ts) | `requirePlatformAdmin()`, `requireContentAdmin()`, `requireOrgAdmin()` |
+  80: | [`src/lib/auth/roles.ts`](../../src/lib/auth/roles.ts) | `AppRole` 타입 + `ADMIN_ROLES` 상수 (client-safe) |
+
+hook: PostToolUse
+ succeeded in 875ms:
+   9: ## Selection Map
+  10: 
+  11: ```mermaid
+  12: flowchart TD
+  13:     A["Implementation question"] --> B["../spec.md"]
+  14:     B --> C{"What kind of detail is needed?"}
+  15:     C -->|"framework / packages / tests / frontend libraries"| D["stack.md"]
+  16:     C -->|"Supabase / Auth / RLS / Storage"| E["backend-auth.md"]
+  17:     C -->|"login / signup / callback / error / operational policy"| AO["auth-overview.md"]
+  18:     C -->|"Vercel / env vars / deployment / rollback"| G["deployment.md"]
+  19:     C -->|"billing / subscription / paywall"| H["deferred-scope.md"]
+  20: ```
+  21: 
+  22: ## Files
+  23: 
+  24: | File | Purpose | Use when |
+  25: | --- | --- | --- |
+  26: | [stack.md](./stack.md) | Framework, package, frontend stack, and test tooling. | Choosing or changing packages, scripts, frontend libraries, or test setup. |
+  27: | [backend-auth.md](./backend-auth.md) | Supabase, Auth, RLS, Storage, and server-only key rules. | Implementing login, database access, storage, profiles, or admin roles. |
+  28: | [auth-overview.md](./auth-overview.md) | Login, signup, callback, error pages mapped to code + IA, plus operational policy (cleanup cron, rate limits, env vars, role model). | Touching any auth surface, env vars (`NEXT_PUBLIC_SITE_URL`), or the unconfirmed-user cleanup policy. Read after `backend-auth.md`. |
+  29: | [deployment.md](./deployment.md) | Vercel environments, build settings, preview gates, rollback. | Working on preview links, production deploys, CI, env vars, or rollback. |
+  30: | [deferred-scope.md](./deferred-scope.md) | Billing and other deferred areas. | Discussing subscriptions, paywall, Stripe, pricing, or intentionally postponed features. |
+
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
