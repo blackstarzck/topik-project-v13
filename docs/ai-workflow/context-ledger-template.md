@@ -23,7 +23,17 @@ Copy this template to `docs/ai-workflow/runs/YYYY/MM/DD/YYYYMMDD-HHMM-task-slug.
 - Exact files read:
 - Extracted requirements:
 - Doc conflicts: `none` or list file references and conflict details.
-- Untouched relevant docs and reason:  # required — 체커가 강제. 'none' 또는 'n/a'도 허용. 'header + indented bullets' shape 가능.
+<!--
+required: 체커(scripts/ai-workflow-check.mjs)가 'Untouched relevant docs and reason:' 필드를 강제.
+허용 shape:
+  (A) same-line:   "- Untouched relevant docs and reason: none"
+  (B) header + indented bullets:
+        - Untouched relevant docs and reason:
+          - `docs/foo.md` — reason
+값을 채우지 않은 채 복사하면 체커가 FAIL합니다. 'none' 또는 'n/a'도 허용.
+-->
+- Untouched relevant docs and reason:
+  - 
 
 ## Decisions
 
