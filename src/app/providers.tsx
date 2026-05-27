@@ -1,23 +1,44 @@
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { App as AntdApp, ConfigProvider } from "antd";
 import { useState } from "react";
 
-import {
-  defaultAppearance,
-  defaultThemeName,
-  getAppTheme,
-  getTailwindBridgeVars,
-} from "@/theme";
+import { ThemeProvider, useTheme } from "@/contexts/theme-context";
+import type { ThemeAppearance } from "@/theme";
 
-const activeTheme = getAppTheme(defaultThemeName, defaultAppearance);
+// ---------------------------------------------------------------------------
+// Inner component: reads from ThemeContext, passes antd config to ConfigProvider.
+// Must be a child of ThemeProvider so useTheme() is available.
+// ---------------------------------------------------------------------------
 
-export function AppProviders({ children }: { children: ReactNode }) {
-  // One QueryClient per browser session (React 19 + Next.js 16 client component).
-  // staleTime 30s keeps fetches modest; refetchOnWindowFocus surfaces fresh
-  // data when users return to the tab. Adjust per-query as needed.
+function AntdConfiguredProviders({ children }: { children: ReactNode }) {
+  const { theme } = useTheme();
+  return (
+    <ConfigProvider theme={theme.antd}>
+      <AntdApp>{children}</AntdApp>
+    </ConfigProvider>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Main export
+// ---------------------------------------------------------------------------
+
+interface AppProvidersProps {
+  children: ReactNode;
+  /**
+   * Appearance resolved server-side from cookie.
+   * Passed to ThemeProvider as the initial seed — client owns state after mount.
+   */
+  initialAppearance?: ThemeAppearance;
+}
+
+export function AppProviders({
+  children,
+  initialAppearance = "light",
+}: AppProvidersProps) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -33,18 +54,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ConfigProvider theme={activeTheme.antd}>
-        <AntdApp>
-          <div
-            className="app-theme-bridge"
-            data-theme={activeTheme.name}
-            data-appearance={activeTheme.appearance}
-            style={getTailwindBridgeVars() as CSSProperties}
-          >
-            {children}
-          </div>
-        </AntdApp>
-      </ConfigProvider>
+      <ThemeProvider initialAppearance={initialAppearance}>
+        <AntdConfiguredProviders>{children}</AntdConfiguredProviders>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }
