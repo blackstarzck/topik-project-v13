@@ -23,7 +23,7 @@ Copy this template to `docs/ai-workflow/runs/YYYY/MM/DD/YYYYMMDD-HHMM-task-slug.
 - Exact files read:
 - Extracted requirements:
 - Doc conflicts: `none` or list file references and conflict details.
-- Untouched relevant docs and reason:
+- Untouched relevant docs and reason:  # required — 체커가 강제. 'none' 또는 'n/a'도 허용. 'header + indented bullets' shape 가능.
 
 ## Decisions
 

@@ -514,6 +514,48 @@ async function validateLedger(root, ledgerPath, errors) {
     for (const e of reviewer.errors) errors.push(`${ledgerPath}: ${e}`);
   }
 
+  // "Untouched relevant docs" must have non-empty content.
+  // Two valid shapes (see docs/ai-workflow/context-ledger-template.md):
+  //   (A) same-line: "- Untouched relevant docs and reason: none"
+  //   (B) header + indented bullets:
+  //       "- Untouched relevant docs and reason:"
+  //       "  - foo — reason"
+  // Empty (header colon followed by blank/non-indented line) fails.
+  const lines = content.split(/\r?\n/);
+  let untouchedOk = false;
+  let untouchedFound = false;
+  for (let i = 0; i < lines.length; i += 1) {
+    const m = lines[i].match(/^\s*-?\s*Untouched relevant docs[^:]*:\s*(.*)$/i);
+    if (!m) continue;
+    untouchedFound = true;
+    const inline = m[1].trim();
+    if (inline.length > 0) {
+      untouchedOk = true;
+      break;
+    }
+    // look forward for indented bullets / non-empty content lines
+    for (let j = i + 1; j < lines.length; j += 1) {
+      const next = lines[j];
+      if (next.trim().length === 0) continue;
+      // stop scan when next top-level item or new section starts
+      if (/^##\s+/.test(next)) break;
+      if (/^\S/.test(next)) break;   // non-indented → next field at same level
+      // indented non-empty line counts as content
+      untouchedOk = true;
+      break;
+    }
+    break;
+  }
+  if (!untouchedFound) {
+    errors.push(
+      `ledger ${ledgerPath}: missing 'Untouched relevant docs:' field (required per docs/agent-index.md §Output Requirement)`,
+    );
+  } else if (!untouchedOk) {
+    errors.push(
+      `ledger ${ledgerPath}: 'Untouched relevant docs:' field is empty (use 'none' or 'n/a' if intentional, or list with indented bullets)`,
+    );
+  }
+
   // Architecture Pass is required only for *phase* ledgers that have completed.
   // Non-phase complete ledgers (meta-workflow, docs-only, etc) are exempt.
   const isPhaseLedger = detectPhaseLedger(content, ledgerPath);

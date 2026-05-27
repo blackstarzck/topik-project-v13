@@ -107,6 +107,7 @@ async function testRepositoryStateRequiresLedgerWhenImplementationFilesChange() 
         "# Ledger",
         "## Docs Consulted",
         "- a doc",
+        "- Untouched relevant docs and reason: none",
         "## Verification State",
         "- Cross-model review: codex (gstack)",
         "## Ledger/File-State Consistency",
@@ -504,6 +505,7 @@ async function testRepositoryStateDoesNotForceArchPassOnNonPhaseLedger() {
         "- Status: complete",
         "## Docs Consulted",
         "- some doc",
+        "- Untouched relevant docs and reason: none",
         "## Verification State",
         "- Cross-model review: codex",
         "## Ledger/File-State Consistency",
@@ -563,6 +565,84 @@ async function testRepositoryStateForcesArchPassOnPhaseCompleteLedger() {
       r.errors.some((e) => /Architecture Pass/.test(e)),
       `expected Architecture Pass error: ${r.errors.join(" | ")}`,
     );
+  });
+}
+
+async function testLedgerRequiresUntouchedRelevantDocs() {
+  await withTempRepo(async (root) => {
+    await mkdir(join(root, "docs", "ai-workflow", "runs", "2026", "05", "27"), {
+      recursive: true,
+    });
+    const baseSections = [
+      "## Verification State",
+      "- Cross-model review: degraded — solo",
+      "## Ledger/File-State Consistency",
+      "- yes",
+    ].join("\n");
+
+    // (A) missing entirely → FAIL
+    const missingRel = "docs/ai-workflow/runs/2026/05/27/20260527-1200-missing.md";
+    await writeFile(
+      join(root, missingRel),
+      ["## Docs Consulted", "- Exact files read: a.md", baseSections].join("\n"),
+    );
+    const rMissing = await checkRepositoryState({ root, changedFiles: [missingRel] });
+    assert.equal(rMissing.ok, false);
+    assert.ok(rMissing.errors.some((e) => /Untouched relevant docs/i.test(e)),
+      `(A) missing must raise error, got: ${rMissing.errors.join(" | ")}`);
+
+    // (B) same-line value 'none' → must NOT raise Untouched error (other errors may exist)
+    const sameLineRel = "docs/ai-workflow/runs/2026/05/27/20260527-1201-same.md";
+    await writeFile(
+      join(root, sameLineRel),
+      [
+        "## Docs Consulted",
+        "- Exact files read: a.md",
+        "- Untouched relevant docs and reason: none",
+        baseSections,
+      ].join("\n"),
+    );
+    const rSame = await checkRepositoryState({ root, changedFiles: [sameLineRel] });
+    assert.ok(
+      !rSame.errors.some((e) => /Untouched relevant docs/i.test(e)),
+      `(B) same-line 'none' must not raise error: ${rSame.errors.join(" | ")}`,
+    );
+
+    // (C) header + indented bullets → must NOT raise Untouched error
+    const indentedRel = "docs/ai-workflow/runs/2026/05/27/20260527-1202-indent.md";
+    await writeFile(
+      join(root, indentedRel),
+      [
+        "## Docs Consulted",
+        "- Exact files read: a.md",
+        "- Untouched relevant docs and reason:",
+        "  - `docs/foo.md` — out of scope for this work",
+        "  - `docs/bar.md` — not relevant",
+        baseSections,
+      ].join("\n"),
+    );
+    const rIndent = await checkRepositoryState({ root, changedFiles: [indentedRel] });
+    assert.ok(
+      !rIndent.errors.some((e) => /Untouched relevant docs/i.test(e)),
+      `(C) indented bullets must not raise error: ${rIndent.errors.join(" | ")}`,
+    );
+
+    // (D) header with colon but no content → FAIL
+    const emptyHeaderRel = "docs/ai-workflow/runs/2026/05/27/20260527-1203-empty.md";
+    await writeFile(
+      join(root, emptyHeaderRel),
+      [
+        "## Docs Consulted",
+        "- Exact files read: a.md",
+        "- Untouched relevant docs and reason:",
+        "",
+        baseSections,
+      ].join("\n"),
+    );
+    const rEmpty = await checkRepositoryState({ root, changedFiles: [emptyHeaderRel] });
+    assert.equal(rEmpty.ok, false);
+    assert.ok(rEmpty.errors.some((e) => /Untouched relevant docs/i.test(e)),
+      `(D) empty header must raise error, got: ${rEmpty.errors.join(" | ")}`);
   });
 }
 
@@ -671,6 +751,7 @@ await testRepositoryStateValidatesLedgerEvenWhenNoLedgerRequired();
 await testRepositoryStateDoesNotForceArchPassOnNonPhaseLedger();
 await testRepositoryStateForcesArchPassOnPhaseCompleteLedger();
 await testLightSpecPathMustBeUnderLightSpecsDirOrExplicitlySkipped();
+await testLedgerRequiresUntouchedRelevantDocs();
 await testUiChangeDetectionDoesNotMatchDocsOnlyPaths();
 
 console.log("ai-workflow-check self-test passed");
