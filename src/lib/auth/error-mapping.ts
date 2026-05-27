@@ -180,3 +180,40 @@ export function sanitizeRetryAfterSeconds(value: string | null | undefined): num
   if (num < 1 || num > 86400) return null;
   return num;
 }
+
+// Phase 8.5 · Parse URL fragment from Supabase implicit flow.
+// Input examples:
+//   "#error=access_denied&error_code=otp_expired&error_description=..."
+//   "#access_token=...&refresh_token=...&token_type=bearer&type=signup"
+//   "" or "#"  → returns empty fields
+export type ParsedAuthFragment = {
+  errorCode: string | null;
+  errorDescription: string | null;
+  accessToken: string | null;
+  refreshToken: string | null;
+  tokenType: string | null;
+  type: string | null;
+};
+
+export function parseAuthFragment(hash: string | null | undefined): ParsedAuthFragment {
+  const empty: ParsedAuthFragment = {
+    errorCode: null,
+    errorDescription: null,
+    accessToken: null,
+    refreshToken: null,
+    tokenType: null,
+    type: null,
+  };
+  if (!hash) return empty;
+  const trimmed = hash.startsWith("#") ? hash.slice(1) : hash;
+  if (!trimmed) return empty;
+  const params = new URLSearchParams(trimmed);
+  return {
+    errorCode: params.get("error_code"),
+    errorDescription: params.get("error_description"),
+    accessToken: params.get("access_token"),
+    refreshToken: params.get("refresh_token"),
+    tokenType: params.get("token_type"),
+    type: params.get("type"),
+  };
+}

@@ -4,6 +4,7 @@ import {
   REASON_CONTENT,
   isValidReason,
   mapSupabaseErrorCode,
+  parseAuthFragment,
   sanitizeNext,
   sanitizeRetryAfterSeconds,
   type AuthErrorReason,
@@ -118,6 +119,40 @@ describe("sanitizeNext", () => {
   it("uses custom fallback", () => {
     expect(sanitizeNext(null, "/home")).toBe("/home");
     expect(sanitizeNext("//evil", "/home")).toBe("/home");
+  });
+});
+
+describe("parseAuthFragment (Phase 8.5)", () => {
+  it("parses error_code style fragment (Supabase implicit flow expired)", () => {
+    const r = parseAuthFragment(
+      "#error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired",
+    );
+    expect(r.errorCode).toBe("otp_expired");
+    expect(r.errorDescription).toBe("Email link is invalid or has expired");
+    expect(r.accessToken).toBeNull();
+  });
+
+  it("parses access_token style fragment (Supabase implicit flow success)", () => {
+    const r = parseAuthFragment(
+      "#access_token=abc.def.ghi&refresh_token=xyz123&token_type=bearer&type=signup",
+    );
+    expect(r.accessToken).toBe("abc.def.ghi");
+    expect(r.refreshToken).toBe("xyz123");
+    expect(r.tokenType).toBe("bearer");
+    expect(r.type).toBe("signup");
+    expect(r.errorCode).toBeNull();
+  });
+
+  it("handles leading # absent", () => {
+    const r = parseAuthFragment("error_code=signup_disabled");
+    expect(r.errorCode).toBe("signup_disabled");
+  });
+
+  it("handles empty / null / '#'", () => {
+    expect(parseAuthFragment("").errorCode).toBeNull();
+    expect(parseAuthFragment("#").errorCode).toBeNull();
+    expect(parseAuthFragment(null).errorCode).toBeNull();
+    expect(parseAuthFragment(undefined).errorCode).toBeNull();
   });
 });
 
