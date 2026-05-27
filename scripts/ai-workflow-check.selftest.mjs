@@ -419,7 +419,7 @@ async function testLightSpecPresenceCheckedForPhaseLedgers() {
     // light spec file present → OK
     await writeFile(
       join(root, "docs", "ai-workflow", "light-specs", "phase-4-learning-core.md"),
-      "# Phase 4 light spec\n",
+      "# Phase 4 light spec\n\nAudience: user\n",
     );
     const r4 = await checkLightSpecPresence(
       root,
@@ -427,6 +427,22 @@ async function testLightSpecPresenceCheckedForPhaseLedgers() {
       "docs/ai-workflow/runs/2026/05/20/20260520-1200-other.md",
     );
     assert.equal(r4.ok, true);
+
+    // Audience missing → fail (regression guard for the bug that broke self-test silently)
+    await writeFile(
+      join(root, "docs", "ai-workflow", "light-specs", "phase-5-no-audience.md"),
+      "# Phase 5 light spec (no audience)\n",
+    );
+    const r6 = await checkLightSpecPresence(
+      root,
+      [
+        "Phase: 5-no-audience",
+        "Light Spec: docs/ai-workflow/light-specs/phase-5-no-audience.md",
+      ].join("\n"),
+      "docs/ai-workflow/runs/2026/05/20/20260520-1200-other.md",
+    );
+    assert.equal(r6.ok, false);
+    assert.ok(r6.errors.some((e) => /Audience/i.test(e)));
 
     // non-phase ledger — OK regardless
     const nonPhaseBody = "## Task\n- Goal: docs touchup\n";
