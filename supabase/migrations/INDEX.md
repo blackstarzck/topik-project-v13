@@ -59,6 +59,23 @@
 - 18: [`../../docs/ai-workflow/runs/2026/05/21/20260521-1700-phase-5-writing-feedback.md`](../../docs/ai-workflow/runs/2026/05/21/20260521-1700-phase-5-writing-feedback.md)
 - 19-20: [`../../docs/ai-workflow/runs/2026/05/21/20260521-1800-phase-6-admin-library-hardening.md`](../../docs/ai-workflow/runs/2026/05/21/20260521-1800-phase-6-admin-library-hardening.md)
 
+#### 26 (화) — Phase 7 profile bio + Phase 8 cleanup 함수
+
+| # | timestamp | 파일 | 영역 |
+| ---:| --- | --- | --- |
+| 21 | `17:00:00` | [`20260526170000_phase_7_profile_bio.sql`](./20260526170000_phase_7_profile_bio.sql) | Phase 7: `profiles.bio` column |
+| 22 | `18:00:00` | [`20260526180000_cleanup_unconfirmed_users.sql`](./20260526180000_cleanup_unconfirmed_users.sql) | Phase 8: `private.cleanup_unconfirmed_users(retention_days, dry_run, max_batch)` SECURITY DEFINER 함수 (storage.objects + auth.users 정리, profiles는 FK CASCADE). pg_cron 자동 스케줄은 23번 마이그레이션에서 별도 등록 |
+
+#### 27 (수) — Phase 8 follow-up · pg_cron 자동 스케줄 + Storage hardening
+
+| # | timestamp | 파일 | 영역 |
+| ---:| --- | --- | --- |
+| 23 | `11:00:00` | [`20260527110000_register_cleanup_cron.sql`](./20260527110000_register_cleanup_cron.sql) | Phase 8 follow-up: `cleanup_unconfirmed_users` pg_cron job (매일 04:00 UTC, idempotent unschedule-then-register). jobname은 원격에 이미 등록된 이름과 일치(2026-05-27 사용자 Dashboard 조회로 확인). pg_cron extension 미설치 환경에서는 fail 없이 skip (raise notice). v1 보고서 자체 검수(Codex GPT-5)에서 22번 마이그레이션의 cron 자동 스케줄 주장이 실제 미등록임을 적발 후 source-of-truth 통합 |
+| 24 | `11:30:00` | [`20260527113000_storage_email_confirmed_hardening.sql`](./20260527113000_storage_email_confirmed_hardening.sql) | Phase 8 follow-up P1: `private.is_email_confirmed(uid)` SECURITY DEFINER helper + storage.objects RLS 정책 강화(avatars/exports owner_insert/update에 email_confirmed_at IS NOT NULL 조건 추가). 이메일 미인증 사용자의 파일 업로드 차단 |
+
+근거 ledger:
+- 22-24: [`../../reports/phase-8-implementation-report-20260527.html`](../../reports/phase-8-implementation-report-20260527.html) (Phase 8 v2.x 자체 검수 정정 + follow-up)
+
 ---
 
 ## 새 마이그레이션을 추가할 때
