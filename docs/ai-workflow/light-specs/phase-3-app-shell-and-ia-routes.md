@@ -53,15 +53,24 @@ Admin 메뉴 → role 체크 → admin이면 admin placeholder, 아니면 /dashb
 
 ## Domain Boundary
 
-Audience: user (사용자 워크스페이스 shell + 27 active route placeholder가 본체. Admin route는 placeholder + role gate helper만 — admin UI 본격 구현은 Phase 6.)
+Audience: both — Phase 3는 user workspace shell 본체와 동시에 admin route 진입 게이트(layout 1차 + page 2차)를 도입한다. admin UI 본격 구현은 Phase 6지만, **admin boundary는 이 Phase에서 처음 생긴다** (admin-guard helper + admin layout + 3 admin placeholder + role matrix).
+
+**user/admin 폴더 분리 (planning-contracts.md §1b "both" 요구사항):**
+
+- **user 분기**: `src/app/(workspace)/{dashboard,practice,writing,library,profile,growth,settings,subscription,paywall,onboarding}/`, `src/app/{sign-up,password-reset,login}/`, `src/components/app/` (workspace shell), `src/components/shared/` (placeholder/loading/error).
+- **admin 분기**: `src/app/(workspace)/admin/{layout,problems,org,users}.tsx`, `src/lib/auth/admin-guard.ts` (또는 `profile.ts`의 `requireRole`).
+- **공유 infra (audience n/a)**: `src/lib/supabase/types.ts`, `src/lib/auth/profile.ts`의 `getCurrentProfile()` 부분.
+
+> 정정 이력 (2026-05-27): 본 light spec은 처음에 `Audience: user`로 박혔으나 본문 §Core Functionality 6번이 admin role matrix를 명시하고 §Minimum Acceptable Behavior에도 admin redirect 룰이 있어 실제로는 admin boundary를 새로 도입한다. PR #6 (audit-fixes) 후속 정정에서 `both`로 수정. ledger: `docs/ai-workflow/runs/2026/05/27/20260527-0800-phase-3-audience-correction.md`.
 
 폴더(정본은 코드 폴더, `docs/domain-glossary.md` 참조):
 
 - `src/app/(workspace)/` — Next.js Route Group. 모든 보호 라우트의 부모 layout.
-- `src/app/(workspace)/{dashboard,practice,writing,library,profile,growth,settings,admin,subscription,paywall,onboarding}/` — 각 route 그룹과 placeholder page.
+- `src/app/(workspace)/{dashboard,practice,writing,library,profile,growth,settings,subscription,paywall,onboarding}/` — user 분기 route placeholder.
+- `src/app/(workspace)/admin/` — admin 분기 route + layout 게이트.
 - `src/components/app/` — workspace shell 컴포넌트(`SidebarNav`, `Header`, `Breadcrumb` 등).
 - `src/components/shared/` — placeholder, loading skeleton, error fallback 등 reusable UI.
-- `src/lib/auth/profile.ts` — `getCurrentProfile()` 분리 추가.
+- `src/lib/auth/profile.ts` — `getCurrentProfile()` 분리 + `requireRole(roles)` helper.
 - 손대지 않는 도메인: `src/learning/`, `src/writing/`, `src/feedback/` (아직 폴더 없음 — Phase 4+에서 생성).
 
 ## Success Criteria
