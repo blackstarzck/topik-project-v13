@@ -80,6 +80,7 @@ No child agents were used.
   - `docs/prd.md` contains mojibake Korean text, but the product structure and English headers were still usable.
 - Skipped checks and reason:
   - Application tests are not applicable because this is advisory/spec work only.
+- Cross-model review: degraded — historical, pre-rule (single-AI authored before 2026-05-21 cross-review rule was introduced)
 
 ## Fallback State
 

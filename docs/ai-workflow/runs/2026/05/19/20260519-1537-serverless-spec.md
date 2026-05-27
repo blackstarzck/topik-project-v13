@@ -90,6 +90,7 @@ Not applicable.
   - Initial workflow check failed because host skill mirrors were stale.
 - Skipped checks and reason:
   - No tests, lint, typecheck, build, or browser QA; this was a docs-only spec update.
+- Cross-model review: degraded — historical, pre-rule (single-AI authored before 2026-05-21 cross-review rule was introduced)
 
 ## Fallback State
 

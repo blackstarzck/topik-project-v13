@@ -100,6 +100,7 @@ Not applicable.
   - None yet.
 - Skipped checks and reason:
   - Build/test suite: skipped because this change is documentation-only and does not touch production code.
+- Cross-model review: degraded — historical, pre-rule (single-AI authored before 2026-05-21 cross-review rule was introduced)
 
 ## Fallback State
 

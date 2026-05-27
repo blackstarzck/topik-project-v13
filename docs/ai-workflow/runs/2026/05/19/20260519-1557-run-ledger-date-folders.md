@@ -109,6 +109,7 @@ Not applicable.
   - None yet.
 - Skipped checks and reason:
   - App tests may be outside this workflow-only scope.
+- Cross-model review: degraded — historical, pre-rule (single-AI authored before 2026-05-21 cross-review rule was introduced)
 
 ## Fallback State
 

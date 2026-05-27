@@ -85,6 +85,7 @@ Not applicable.
   - none.
 - Skipped checks and reason:
   - Tests, lint, typecheck, build, and browser QA are not applicable to this docs-only policy edit.
+- Cross-model review: degraded — historical, pre-rule (single-AI authored before 2026-05-21 cross-review rule was introduced)
 
 ## Fallback State
 

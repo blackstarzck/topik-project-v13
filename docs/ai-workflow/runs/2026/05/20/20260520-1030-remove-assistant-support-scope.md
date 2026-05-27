@@ -124,6 +124,7 @@ No child agents used.
   - First workflow check failed because this ledger lacked required template sections; this file was expanded to match the required structure.
 - Skipped checks and reason:
   - No application tests; this was a docs-only change in a pre-implementation repository.
+- Cross-model review: degraded — historical, pre-rule (single-AI authored before 2026-05-21 cross-review rule was introduced)
 
 ## Fallback State
 

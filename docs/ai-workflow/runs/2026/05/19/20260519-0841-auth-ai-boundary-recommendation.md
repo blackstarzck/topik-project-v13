@@ -84,6 +84,7 @@
   - None for the advisory task.
 - Skipped checks and reason:
   - Tests/build are not applicable because this is advisory/spec work only.
+- Cross-model review: degraded — historical, pre-rule (single-AI authored before 2026-05-21 cross-review rule was introduced)
 
 ## Fallback State
 

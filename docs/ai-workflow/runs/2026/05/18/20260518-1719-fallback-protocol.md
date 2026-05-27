@@ -97,6 +97,7 @@ No child agents were used.
   - No package test command is available because this is still a pre-implementation workspace without `package.json`.
 - Skipped checks and reason:
   - Application tests are not applicable to documentation-only workflow changes.
+- Cross-model review: degraded — historical, pre-rule (single-AI authored before 2026-05-21 cross-review rule was introduced)
 
 ## Fallback State
 

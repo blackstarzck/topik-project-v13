@@ -95,6 +95,7 @@ None.
   - Workflow checker passed: `PASS repository state`.
 - Known failures: none.
 - Skipped checks and reason: tests/lint/build not applicable because no application code or migrations changed.
+- Cross-model review: degraded — historical, pre-rule (single-AI authored before 2026-05-21 cross-review rule was introduced)
 
 ## Fallback State
 

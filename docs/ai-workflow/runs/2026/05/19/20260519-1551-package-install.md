@@ -132,6 +132,7 @@ Not applicable.
   - Local Node is `v22.16.0`, below documented `24.x`.
 - Skipped checks and reason:
   - App build/lint/typecheck/test may not be runnable until source/config files exist; run only proportionate checks for package installation.
+- Cross-model review: degraded — historical, pre-rule (single-AI authored before 2026-05-21 cross-review rule was introduced)
 
 ## Fallback State
 

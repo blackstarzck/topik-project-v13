@@ -138,6 +138,7 @@ None.
 - Latest results: Evidence gathered; Opus analysis cross-checked against repo state; workflow hardening implemented; all listed checks passed. Existing worktree contains unrelated modified/untracked files predating this analysis.
 - Known failures: none.
 - Skipped checks and reason: GitHub Actions runtime was not executed locally; it was checked by validating the same script and generated PR-body/changed-files fixtures.
+- Cross-model review: degraded — historical, pre-rule (single-AI authored before 2026-05-21 cross-review rule was introduced)
 
 ## Fallback State
 

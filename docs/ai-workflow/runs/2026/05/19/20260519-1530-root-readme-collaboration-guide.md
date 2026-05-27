@@ -102,6 +102,7 @@ Not applicable.
   - Initial `git diff --check` found trailing whitespace in `README.md`; fixed.
 - Skipped checks and reason:
   - App lint/typecheck/test/build: not applicable because this is docs-only and the project has no production app/package surface yet.
+- Cross-model review: degraded — historical, pre-rule (single-AI authored before 2026-05-21 cross-review rule was introduced)
 
 ## Fallback State
 

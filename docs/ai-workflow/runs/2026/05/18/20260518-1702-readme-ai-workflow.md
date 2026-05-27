@@ -99,6 +99,7 @@ No child agents were used.
   - Git status/diff is unavailable because this folder is not recognized as a Git repository.
 - Skipped checks and reason:
   - Application tests are not applicable to this docs-only change.
+- Cross-model review: degraded — historical, pre-rule (single-AI authored before 2026-05-21 cross-review rule was introduced)
 
 ## Ledger/File-State Consistency
 

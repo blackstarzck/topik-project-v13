@@ -139,6 +139,7 @@ Not applicable.
   - Initial `react-hook-form-zod` install attempt from `jezweb/claude-skills@react-hook-form-zod` failed because that repo did not contain a matching skill. Fallback source `ovachiever/droid-tings@react-hook-form-zod` installed successfully.
 - Skipped checks and reason:
   - App tests/lint/typecheck/build: no production app/package surface exists for this skill/documentation task.
+- Cross-model review: degraded — historical, pre-rule (single-AI authored before 2026-05-21 cross-review rule was introduced)
 
 ## Fallback State
 

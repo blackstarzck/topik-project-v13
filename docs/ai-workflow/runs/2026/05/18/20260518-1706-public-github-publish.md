@@ -115,6 +115,7 @@ No child agents were used.
   - None yet.
 - Skipped checks and reason:
   - Application tests are not available because `package.json` is absent.
+- Cross-model review: degraded — historical, pre-rule (single-AI authored before 2026-05-21 cross-review rule was introduced)
 
 ## Ledger/File-State Consistency
 

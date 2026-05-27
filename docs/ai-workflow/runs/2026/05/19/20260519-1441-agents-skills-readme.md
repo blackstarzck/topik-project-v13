@@ -95,6 +95,7 @@ Not applicable.
   - AI workflow check passed: `PASS repository state`.
 - Known failures: none.
 - Skipped checks and reason: No code tests required because this is documentation/navigation only.
+- Cross-model review: degraded — historical, pre-rule (single-AI authored before 2026-05-21 cross-review rule was introduced)
 
 ## Fallback State
 

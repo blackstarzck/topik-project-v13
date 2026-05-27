@@ -115,6 +115,7 @@ Not applicable.
   - none.
 - Skipped checks and reason:
   - Build/lint/typecheck/test remain out of scope because this task only aligns the runtime and the app source/config bootstrap is not yet present.
+- Cross-model review: degraded — historical, pre-rule (single-AI authored before 2026-05-21 cross-review rule was introduced)
 
 ## Fallback State
 

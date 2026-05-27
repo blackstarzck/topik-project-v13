@@ -120,6 +120,7 @@ Not applicable.
   - `git status` shows unrelated pre-existing dirty/untracked files outside this task scope, including `AGENTS.md`, `.github/`, and several AI workflow docs.
 - Skipped checks and reason:
   - No code tests required; documentation-only change.
+- Cross-model review: degraded — historical, pre-rule (single-AI authored before 2026-05-21 cross-review rule was introduced)
 
 ## Fallback State
 

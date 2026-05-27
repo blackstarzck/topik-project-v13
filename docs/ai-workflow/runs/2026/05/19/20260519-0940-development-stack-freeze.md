@@ -135,6 +135,7 @@
   - Initial npm version check used `&&`, which is invalid in this PowerShell version; recovered with a PowerShell loop.
 - Skipped checks and reason:
   - Build/test checks are not applicable because this is documentation-only.
+- Cross-model review: degraded — historical, pre-rule (single-AI authored before 2026-05-21 cross-review rule was introduced)
 
 ## Fallback State
 

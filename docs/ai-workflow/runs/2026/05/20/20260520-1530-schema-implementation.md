@@ -38,6 +38,7 @@
   - Tier 2 placeholder: **완전 보류**
   - PK 구현: **`gen_random_uuid()`** (uuidv7 확장 미사용, MVP 단계 단순성 우선)
   - 정본 문서명: **`database-schema.md`**
+- Untouched relevant docs and reason: none
 
 ## Decisions
 
@@ -105,6 +106,7 @@ None.
   - 함수 의존: `private.is_admin` (120900) → profiles (120100) 이전 정의. `supersede_active_draft` → writing_drafts (120400) 이전 정의. RLS 정책 (121100)은 함수 (120900) 이후 적용.
 - Latest results: 모든 정적 검토 통과. 17 테이블 / 17 RLS enable / 12 마이그레이션 파일 / 1 정본 문서 / 1 spec map 업데이트.
 - Skipped checks and reason: 실제 `psql`/Supabase 적용은 환경 미설치로 불가 — 작성된 SQL은 정적 검토만 수행. 실제 적용은 별도 ledger.
+- Cross-model review: degraded — historical, pre-rule (single-AI authored before 2026-05-21 cross-review rule was introduced)
 
 ## Fallback State
 

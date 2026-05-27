@@ -104,6 +104,7 @@ Not applicable.
   - none.
 - Skipped checks and reason:
   - App tests/lint/build are not runnable because the repository is pre-implementation and has no `package.json`.
+- Cross-model review: degraded — historical, pre-rule (single-AI authored before 2026-05-21 cross-review rule was introduced)
 
 ## Fallback State
 

@@ -30,6 +30,7 @@
   - `docs/development/deferred-scope.md`
   - `docs/IA/03/04/05/06/08/10/11/14/15/16/17/18/19/21/24/29/30/32` 폴더의 `description.md`
   - `.claude/skills/supabase-postgres-best-practices/SKILL.md` 및 references (Opus 에이전트)
+- Untouched relevant docs and reason: none
 
 ## Decisions
 
@@ -76,6 +77,7 @@
   - 두 sub-agent의 docs 인용 cross-check (IA 폴더 번호 일치, fixed baseline 일치).
 - Latest results: 두 제안 모두 fixed baseline(Supabase + RLS, billing deferred) 준수. Doc conflict 없음.
 - Skipped checks and reason: 실제 DDL 작성/실행/RLS 정책 SQL 검증은 본 task scope 밖. 다음 단계에서 별 ledger로 진행.
+- Cross-model review: degraded — historical, pre-rule (single-AI authored before 2026-05-21 cross-review rule was introduced)
 
 ## Fallback State
 

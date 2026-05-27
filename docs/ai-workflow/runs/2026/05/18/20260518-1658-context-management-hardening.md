@@ -101,6 +101,7 @@ No child agents were used.
 - Skipped checks and reason:
   - Unit/build tests skipped because `package.json` is absent and this is docs-only workflow work.
   - Git diff skipped because this folder is not a Git repo.
+- Cross-model review: degraded — historical, pre-rule (single-AI authored before 2026-05-21 cross-review rule was introduced)
 
 ## Ledger/File-State Consistency
 
