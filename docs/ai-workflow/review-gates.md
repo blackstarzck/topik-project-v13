@@ -242,6 +242,13 @@ Before saying done:
 
 Final response follows [`report-template.md`](report-template.md).
 
+### 로컬 vs CI checker 입력 차이 (운영 주의)
+
+- **로컬**: `node scripts/ai-workflow-check.mjs --repo .`는 `git status --porcelain --untracked-files=all` 결과를 사용. 즉 **working tree에 남아 있는 변경**만 봄. 커밋 직후에는 changed files가 빈 상태가 되므로 일부 검사가 트리거되지 않음.
+- **CI**: `.github/workflows/ai-workflow-check.yml`은 `git diff --name-only base..head` 결과를 `--changed-files`로 넘김. 즉 **PR 전체 diff**를 봄.
+- **결과**: 로컬에서 PASS인데 CI에서 FAIL이거나 그 반대인 경우가 발생 가능. **신뢰는 CI 결과 기준**. 로컬은 작업 중 빠른 피드백 용도.
+- **로컬에서 CI와 같은 입력을 보고 싶으면**: `git diff --name-only origin/main..HEAD > /tmp/changed.txt && node scripts/ai-workflow-check.mjs --repo . --changed-files /tmp/changed.txt`.
+
 ## Related
 
 - Plan and Light Spec that this gate reviews → [`planning-contracts.md`](planning-contracts.md)
