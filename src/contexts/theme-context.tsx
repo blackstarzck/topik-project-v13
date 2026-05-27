@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 import type { ReactNode } from "react";
@@ -60,7 +61,10 @@ export function ThemeProvider({
   const [appearance, setAppearanceState] =
     useState<ThemeAppearance>(initialAppearance);
 
-  const theme = getAppTheme(themeName, appearance);
+  const theme = useMemo(
+    () => getAppTheme(themeName, appearance),
+    [themeName, appearance],
+  );
 
   /**
    * Writes resolved --app-* CSS variables to <html> at runtime.
@@ -96,8 +100,13 @@ export function ThemeProvider({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // intentionally mount-only — appearance changes handled by setAppearance
 
+  const value = useMemo(
+    () => ({ theme, appearance, setAppearance }),
+    [theme, appearance, setAppearance],
+  );
+
   return (
-    <ThemeContext.Provider value={{ theme, appearance, setAppearance }}>
+    <ThemeContext.Provider value={value}>
       {children}
     </ThemeContext.Provider>
   );
