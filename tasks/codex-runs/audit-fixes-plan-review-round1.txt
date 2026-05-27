@@ -1,0 +1,90 @@
+¼º°ø: PID 43960ÀÎ ÇÁ·Î¼¼½º(PID 42424ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 42424ÀÎ ÇÁ·Î¼¼½º(PID 30736ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 30736ÀÎ ÇÁ·Î¼¼½º(PID 9600ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 9600ÀÎ ÇÁ·Î¼¼½º(PID 19560ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 26076ÀÎ ÇÁ·Î¼¼½º(PID 19560ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 42076ÀÎ ÇÁ·Î¼¼½º(PID 19560ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 6068ÀÎ ÇÁ·Î¼¼½º(PID 43324ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 43324ÀÎ ÇÁ·Î¼¼½º(PID 34944ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 34944ÀÎ ÇÁ·Î¼¼½º(PID 41852ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 41852ÀÎ ÇÁ·Î¼¼½º(PID 38856ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 38856ÀÎ ÇÁ·Î¼¼½º(PID 19560ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 25660ÀÎ ÇÁ·Î¼¼½º(PID 40184ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 40184ÀÎ ÇÁ·Î¼¼½º(PID 19560ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 36636ÀÎ ÇÁ·Î¼¼½º(PID 32032ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 32032ÀÎ ÇÁ·Î¼¼½º(PID 19560ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 40980ÀÎ ÇÁ·Î¼¼½º(PID 18756ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 18756ÀÎ ÇÁ·Î¼¼½º(PID 24288ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 24288ÀÎ ÇÁ·Î¼¼½º(PID 39284ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 39284ÀÎ ÇÁ·Î¼¼½º(PID 19560ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 35268ÀÎ ÇÁ·Î¼¼½º(PID 19560ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 43852ÀÎ ÇÁ·Î¼¼½º(PID 19560ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 41412ÀÎ ÇÁ·Î¼¼½º(PID 42436ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 42436ÀÎ ÇÁ·Î¼¼½º(PID 26256ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 26256ÀÎ ÇÁ·Î¼¼½º(PID 1692ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 1692ÀÎ ÇÁ·Î¼¼½º(PID 43364ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 43364ÀÎ ÇÁ·Î¼¼½º(PID 19560ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 41012ÀÎ ÇÁ·Î¼¼½º(PID 19560ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 42364ÀÎ ÇÁ·Î¼¼½º(PID 19560ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 30700ÀÎ ÇÁ·Î¼¼½º(PID 30588ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 30588ÀÎ ÇÁ·Î¼¼½º(PID 35612ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 35612ÀÎ ÇÁ·Î¼¼½º(PID 17452ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+¼º°ø: PID 17452ÀÎ ÇÁ·Î¼¼½º(PID 19560ÀÎ ÀÚ½Ä ÇÁ·Î¼¼½º)°¡ Á¾·áµÇ¾ú½À´Ï´Ù.
+VERDICT: FAIL
+SUMMARY: The plan is directionally strong, but it should not pass the Plan-Review gate yet. Two issues are blocking: Task 7â€™s proposed `Untouched relevant docs` regex would reject the projectâ€™s own ledger/template shape, and Task 4/5/9 are claimed as TDD tasks without RED steps or explicit TDD exceptions.
+
+### 1. TDD cycle integrity
+Verdict: FAIL
+Finding: `review-gates.md:11-18` requires RED before GREEN for code changes, while `review-gates.md:20-25` allows docs/config exceptions. The plan claims â€œTask 3-10 ëª¨ë‘ RED â†’ GREENâ€ at `docs/ai-workflow/plans/20260527-1500-ai-workflow-audit-fixes.md:918`, but Task 4 is CI config only with syntax validation, not RED (`...:249-287`), Task 5 is a rename/checker cleanup, not RED (`...:305-342`), and Task 9 is docs-only (`...:632-666`).
+Suggested fix: Change Verification Strategy line 918 to: `Task 3, 6, 7, 8, 10 follow RED â†’ GREEN. Tasks 4, 5, 9 are TDD exceptions under review-gates.md L20-25 and use substitute verification: YAML parse, checker run, and doc inspection.`
+
+### 2. Smallest Buildable Unit choice
+Verdict: PASS
+Finding: The SBU is explicitly â€œP0-1 + P0-2â€ at `...audit-fixes.md:49-56`. That is defensible: P0-1 fixes the broken selftest, while P0-2 makes CI run that selftest. Current CI only runs `ai-workflow-check.mjs` at `.github/workflows/ai-workflow-check.yml:36-41`, so merging P0-1 alone leaves the safety net absent.
+Suggested fix: None.
+
+### 3. Out of Scope completeness
+Verdict: CONCERN
+Finding: The plan cuts P2 items and broad migrations at `...audit-fixes.md:37-47`, which is mostly right. Missing cut: â€œdo not redesign the checkerâ€™s changed-file model beyond documenting local-vs-CI input divergence.â€ This matters because Task 9 documents the divergence (`...:632-649`) but the plan does not explicitly cut unifying local and CI behavior.
+Suggested fix: Add Out of Scope row: `Unifying local git-status checking with CI base..head diff semantics | P1-4 is documentation-only; changing checker input semantics is separate behavior work.`
+
+### 4. Subagent-eligible classification
+Verdict: PASS
+Finding: The table requires `Subagent-eligible?` per `planning-contracts.md:64`, and the plan includes it at `...audit-fixes.md:71-85`. Marking Tasks 6, 7, 8, and 10 as sequential is correct because they all touch `scripts/ai-workflow-check.mjs` and `scripts/ai-workflow-check.selftest.mjs` (`...:79-83`). Task 9 is independent docs and correctly marked Y at `...:82`.
+Suggested fix: Optional: note Task 4 may be implemented independently but must not be integrated before Task 3 is green.
+
+### 5. P1-2 regression risk
+Verdict: FAIL
+Finding: The claim â€œchanged ledgers onlyâ€ is accurate: `checkRepositoryState` filters changed ledgers at `scripts/ai-workflow-check.mjs:611-627`, so untouched historical ledgers are not scanned. But the proposed regex at `...audit-fixes.md:499-506` requires a same-line value after `Untouched relevant docs:`. The current ledger shape uses a heading line plus indented bullets at `docs/ai-workflow/runs/2026/05/27/20260527-1500-ai-workflow-audit-fixes.md:48-51`, and the template also has an empty same-line field at `docs/ai-workflow/context-ledger-template.md:21-27`. So Task 7 would break the planâ€™s own ledger/template pattern.
+Suggested fix: Replace the regex approach with section-aware parsing that accepts either same-line value or following indented bullets. Add positive tests for both shapes.
+
+### 6. P1-5 design soundness
+Verdict: CONCERN
+Finding: `existsSync` and `readdir` are already imported at `scripts/ai-workflow-check.mjs:3-4`, so imports are fine. The design silently returns `null` when no matching light spec exists (`...audit-fixes.md:754-763`), which means a `phase-N` plan can skip Audience enforcement entirely. That conflicts with the phase light spec requirement in `planning-contracts.md:38` and the Audience-column rule at `planning-contracts.md:64`.
+Suggested fix: Decide fail-closed behavior. Recommended: if a changed plan path contains `phase-N` and no matching `docs/ai-workflow/light-specs/phase-N-*` exists, emit an error unless the plan is explicitly classified as non-phase workflow/meta work.
+
+### 7. P0-3 risks
+Verdict: CONCERN
+Finding: The plan hard-codes rename to `20260526-1700-...` at `...audit-fixes.md:307-310` and acceptance criteria at `...:943`. The ledger body only has dates, not time, at `docs/ai-workflow/runs/2026/05/26/20260526-auth-error-callback-ux-review.md:5-7`; its Decisions table also has date only at `...:60-62`. The planâ€™s fallback to inspect `Created:`/`Updated:` cannot actually recover HHMM from current content.
+Suggested fix: Use `1200` or `0000` with an explicit ledger rationale, or derive from filesystem metadata if available and record the source. Do not hard-code `1700` as acceptance unless evidence supports it.
+
+### 8. Verification Strategy completeness
+Verdict: CONCERN
+Finding: The eight gates are listed at `...audit-fixes.md:912-925`, and Architecture Pass n/a is acceptable because `review-gates.md:103-119` applies to phase completion. Missing: direct verification for commit-message/Lore trailer enforcement despite acceptance criterion `...:947`; the plan never runs `node scripts/ai-workflow-check.mjs --commit-message`.
+Suggested fix: Add a Task 11 step that validates representative commit messages, or remove AC line 947 if commit-level checking is outside this plan.
+
+### 9. Acceptance Criteria measurability
+Verdict: CONCERN
+Finding: Most criteria are measurable at `...audit-fixes.md:936-947`. One is ambiguous: `test-qa-gate-fixtures.mjs` may be â€œ4/4 or 5/5â€ at `...:940`, depending on implementation choice. Acceptance criteria should be bind-test, not conditional.
+Suggested fix: Pick one path. Recommended: add the P1-3 fixture to `test-qa-gate-fixtures.mjs` and require `5/5 PASS`.
+
+### 10. Known Risks
+Verdict: FAIL
+Finding: R1-R6 are listed at `...audit-fixes.md:927-934`, but external Codex calls are core gates in Tasks 0, 2, and 12 (`...:93-103`, `...:137-158`, `...:884-908`). The ledger mentions Codex CLI failure fallback at `docs/ai-workflow/runs/2026/05/27/20260527-1500-ai-workflow-audit-fixes.md:111-112`, but the planâ€™s Known Risks does not cover CLI failure, unavailable command, or hang/timeout.
+Suggested fix: Add `R7: Codex consult/review unavailable or hangs â†’ use bounded timeout, capture stderr, record Cross-model review: degraded â€” <reason>, and stop for user escalation if Plan-Review PASS cannot be independently obtained.`
+
+## Cross-cutting concerns
+
+The main blocker is Task 7â€™s implementation shape. Fix that before re-review.
+
+Also update the plan so docs/config/rename tasks are explicitly TDD exceptions, not falsely counted as RED/GREEN. After those fixes, this likely moves from FAIL to CONCERN or PASS depending on the P1-5 fail-closed decision.

@@ -1,0 +1,736 @@
+diff --git a/.github/workflows/ai-workflow-check.yml b/.github/workflows/ai-workflow-check.yml
+index 7b86e41..c2904d9 100644
+--- a/.github/workflows/ai-workflow-check.yml
++++ b/.github/workflows/ai-workflow-check.yml
+@@ -24,6 +24,15 @@ jobs:
+         with:
+           node-version: "22"
+ 
++      - name: Run checker self-test
++        run: node scripts/ai-workflow-check.selftest.mjs
++
++      - name: Run UX/UI Consistency Pass fixture tests
++        run: node scripts/test-uxui-fixtures.mjs
++
++      - name: Run QA Gate fixture tests
++        run: node scripts/test-qa-gate-fixtures.mjs
++
+       - name: Prepare workflow check inputs
+         env:
+           PR_BODY: ${{ github.event.pull_request.body }}
+diff --git a/docs/ai-workflow/context-ledger-template.md b/docs/ai-workflow/context-ledger-template.md
+index 2f121e5..73a3d08 100644
+--- a/docs/ai-workflow/context-ledger-template.md
++++ b/docs/ai-workflow/context-ledger-template.md
+@@ -23,7 +23,7 @@ Copy this template to `docs/ai-workflow/runs/YYYY/MM/DD/YYYYMMDD-HHMM-task-slug.
+ - Exact files read:
+ - Extracted requirements:
+ - Doc conflicts: `none` or list file references and conflict details.
+-- Untouched relevant docs and reason:
++- Untouched relevant docs and reason:  # required — 체커가 강제. 'none' 또는 'n/a'도 허용. 'header + indented bullets' shape 가능.
+ 
+ ## Decisions
+ 
+diff --git a/docs/ai-workflow/fixtures/qa-gate/fx-05-failed-bare.md b/docs/ai-workflow/fixtures/qa-gate/fx-05-failed-bare.md
+new file mode 100644
+index 0000000..d48b05a
+--- /dev/null
++++ b/docs/ai-workflow/fixtures/qa-gate/fx-05-failed-bare.md
+@@ -0,0 +1,9 @@
++# Fixture — fx-05 FAIL (QA Gate: failed 단독 — 원인 명시 없음)
++
++failed만 적고 막힌 원인(blocker) 명시 없음. review-gates.md §QA Gate L212-213 직접 위반.
++
++- Cross-model review: passed
++- Architecture Pass: passed
++- QA Gate: failed
++
++(checker must require a reason after 'failed' — 'failed — <blocker>')
+diff --git a/docs/ai-workflow/review-gates.md b/docs/ai-workflow/review-gates.md
+index 454d97e..357e2fb 100644
+--- a/docs/ai-workflow/review-gates.md
++++ b/docs/ai-workflow/review-gates.md
+@@ -242,6 +242,13 @@ Before saying done:
+ 
+ Final response follows [`report-template.md`](report-template.md).
+ 
++### 로컬 vs CI checker 입력 차이 (운영 주의)
++
++- **로컬**: `node scripts/ai-workflow-check.mjs --repo .`는 `git status --porcelain --untracked-files=all` 결과를 사용. 즉 **working tree에 남아 있는 변경**만 봄. 커밋 직후에는 changed files가 빈 상태가 되므로 일부 검사가 트리거되지 않음.
++- **CI**: `.github/workflows/ai-workflow-check.yml`은 `git diff --name-only base..head` 결과를 `--changed-files`로 넘김. 즉 **PR 전체 diff**를 봄.
++- **결과**: 로컬에서 PASS인데 CI에서 FAIL이거나 그 반대인 경우가 발생 가능. **신뢰는 CI 결과 기준**. 로컬은 작업 중 빠른 피드백 용도.
++- **로컬에서 CI와 같은 입력을 보고 싶으면**: `git diff --name-only origin/main..HEAD > /tmp/changed.txt && node scripts/ai-workflow-check.mjs --repo . --changed-files /tmp/changed.txt`.
++
+ ## Related
+ 
+ - Plan and Light Spec that this gate reviews → [`planning-contracts.md`](planning-contracts.md)
+diff --git a/docs/ai-workflow/runs/2026/05/26/20260526-1745-auth-error-callback-ux-review.md b/docs/ai-workflow/runs/2026/05/26/20260526-1745-auth-error-callback-ux-review.md
+new file mode 100644
+index 0000000..95ff8d2
+--- /dev/null
++++ b/docs/ai-workflow/runs/2026/05/26/20260526-1745-auth-error-callback-ux-review.md
+@@ -0,0 +1,119 @@
++# Context Ledger
++
++## Run Metadata
++
++- Run id: 20260526-auth-error-callback-ux-review
++- Created: 2026-05-26
++- Updated: 2026-05-26
++- Main session owner: Codex
++- Host: Codex App
++- Status: complete
++
++## Task
++
++- User goal: Cross-model review Round 1 for the auth callback/error UX proposal that will be integrated into `reports/email-confirmation-policy-research-20260526.html`.
++- Accepted scope: Read-only proposal review, route catalog challenge, Supabase official-doc fact check, project-doc process check.
++- Out of scope: Code changes, docs integration, implementation.
++- Current next action: Return Round 1 verdict and findings.
++
++## Docs Consulted
++
++- Exact files read:
++  - `.agents/superpowers/skills/using-superpowers/SKILL.md`
++  - `docs/agent-index.md`
++  - `docs/ai-development-workflow.md`
++  - `CLAUDE.md`
++  - `.codex/skills/gstack/review/SKILL.md`
++  - `.codex/skills/gstack/design-review/SKILL.md`
++  - `.codex/skills/gstack/plan-design-review/SKILL.md`
++  - `docs/spec.md`
++  - `docs/development/backend-auth.md`
++  - `docs/sitemap.md`
++  - `docs/ia.md`
++  - `docs/IA/README.md`
++  - `docs/flow/user-flow.md`
++  - `reports/email-confirmation-policy-research-20260526.html`
++  - `src/components/auth/SignUpForm.tsx`
++  - `src/components/auth/LoginForm.tsx`
++  - `src/lib/auth/redirect-url.ts`
++  - `src/proxy.ts`
++  - `src/lib/routes.ts`
++- External URLs verified:
++  - `https://supabase.com/docs/guides/auth/server-side/advanced-guide`
++  - `https://supabase.com/docs/guides/auth/debugging/error-codes`
++  - `https://supabase.com/docs/guides/auth/rate-limits`
++  - `https://supabase.com/docs/reference/javascript/auth-resend`
++  - `https://supabase.com/docs/guides/auth/social-login/auth-google`
++  - `https://supabase.com/docs/guides/auth/sessions/pkce-flow`
++- Extracted requirements:
++  - `docs/spec.md` fixes Next.js App Router, Supabase Auth, `@supabase/ssr`, Ant Design, route-thin architecture, and no invented product behavior.
++  - `docs/development/backend-auth.md` requires Supabase Auth, server-only secrets, and `@supabase/ssr`.
++  - `docs/sitemap.md` is route authority; new production routes require updates to `docs/sitemap.md`, `docs/IA/README.md`, and `docs/flow/user-flow.md` together.
++  - `docs/flow/user-flow.md` has no auth callback/error/expired-link branch today.
++  - Current source has no `/auth/callback`, `/auth/error`, or auth error-code handling; sign-up and magic link already send absolute redirect URLs to app pages.
++- Doc conflicts: none for a docs proposal; implementation would require route-map updates before code.
++- Untouched relevant docs and reason:
++  - Page-specific sign-up/login/password-reset IA descriptions were not read because the requested output is a route/error proposal review, not screen implementation.
++
++## Decisions
++
++| Time | Decision | Reason | Source |
++| --- | --- | --- | --- |
++| 2026-05-26 | Treat proposal as CONCERN, not PASS. | Pattern is directionally right, but reason taxonomy, resend limits, callback shape, and docs process need changes. | Supabase docs + project route rules |
++
++## Active Files
++
++- Files expected to change: none
++- Files inspected: listed above
++- Files changed: `docs/ai-workflow/runs/2026/05/26/20260526-auth-error-callback-ux-review.md`
++- Files explicitly not to touch: source routes, HTML report
++
++## Agent Assignments
++
++| Agent | Role | Scope | Status | Packet location or summary |
++| --- | --- | --- | --- | --- |
++| n/a | n/a | Solo review | complete | Native subagents not used; task was bounded and source/docs lookup was sequential. |
++
++## Verification State
++
++- Required checks: Supabase doc fact check, project route/doc process check, source grep/read check.
++- Checks run:
++  - `rg --files src/app`
++  - `rg -n "auth/callback|auth/error|verify-email|expired|invalid.token|otp_expired|access_denied|error_code|error_description|signup_disabled|user_already_exists|over_email_send_rate_limit|magic|OAuth|oauth|session_expired|sign-out" src/app docs reports/email-confirmation-policy-research-20260526.html`
++  - Read selected source files and docs.
++  - Web-verified Supabase official docs listed above.
++- Latest results: No auth callback/error routes exist; Supabase docs support PKCE code exchange in a Route Handler and official error-code based handling.
++- Known failures: none
++- Skipped checks and reason: No test run; read-only review with no production behavior change.
++- Cross-model review: current answer is the requested Codex/GPT-5.5 outside review.
++- Architecture Pass: skipped, no implementation.
++- Light Spec: skipped, no implementation phase.
++- UX/UI Consistency Pass: skipped, no UI files changed.
++- QA Gate: skipped, no runnable UI change.
++
++## Fallback State
++
++- Normal path blocked: no
++- Failure class: none
++- Fallback used: none
++- Evidence collected: docs/source reads and official Supabase docs.
++- Completion allowed: yes
++- Remaining fallback risk: behavior of deleted-user callback response is untested against a live Supabase project.
++
++## Ledger/File-State Consistency
++
++- Files changed match accepted scope: yes
++- Docs consulted match implemented behavior: yes
++- Child result packets integrated: not applicable
++- Verification state current: yes
++- Remaining risks listed: yes
++
++## Risks And Follow-Up
++
++- Remaining risks:
++  - Need live test for deleted unconfirmed user clicking old link.
++  - Need implementation brief or docs update before code because routes are absent from route authority.
++- Assumptions:
++  - OAuth/Kakao remains out of current phase unless separately reopened.
++- Follow-up needed:
++  - Update proposal before integrating into the HTML report.
+diff --git a/scripts/ai-workflow-check.mjs b/scripts/ai-workflow-check.mjs
+index f033cad..6d0b8e0 100644
+--- a/scripts/ai-workflow-check.mjs
++++ b/scripts/ai-workflow-check.mjs
+@@ -84,7 +84,7 @@ const UI_CHANGE_PATTERNS = [
+   /\.css$/,
+   /\.scss$/,
+   /globals\.css$/i,
+-  /theme/i,
++  /^src\/theme\//,
+   /^tailwind\.config\./,
+   /^postcss\.config\./,
+   /^public\/icons\//,
+@@ -137,6 +137,8 @@ const LEGACY_LEDGER_PATTERN =
+ const PLAN_FILE_PATTERN = /^docs\/ai-workflow\/plans\/.+\.md$/;
+ const PHASE_PLAN_PATTERN = /development-phases-and-bootstrap\.md$/;
+ const PLAN_TEMPLATE_PATTERN = /\/(README|.*-template)\.md$/i;
++const PLAN_PHASE_PATTERN = /phase-(\d+)/;
++const LIGHT_SPEC_AUDIENCE_VALUE_PATTERN = /^Audience:\s*(\S+)/im;
+ 
+ function normalizePathForCheck(path) {
+   return normalize(path).split(sep).join("/");
+@@ -206,7 +208,8 @@ export function checkCommitMessage(message) {
+   return okResult(errors);
+ }
+ 
+-export function checkPlanFile(text, path = "<plan>") {
++export function checkPlanFile(text, path = "<plan>", options = {}) {
++  const { requireAudienceColumn = false } = options;
+   const errors = [];
+ 
+   for (const section of REQUIRED_PLAN_SECTIONS) {
+@@ -255,6 +258,31 @@ export function checkPlanFile(text, path = "<plan>") {
+           }
+         }
+       }
++
++      // Audience column required when phase Audience is 'both'
++      // (planning-contracts.md §Plan Template Contract L64).
++      if (requireAudienceColumn) {
++        const audienceColIdx = cols.findIndex((c) => /^audience$/i.test(c));
++        if (audienceColIdx === -1) {
++          errors.push(
++            `plan ${path} task table requires an Audience column (light spec phase Audience is 'both')`,
++          );
++        } else {
++          let aRowNum = 0;
++          for (let i = headerIdx + 2; i < lines.length; i += 1) {
++            const row = lines[i];
++            if (!/^\|/.test(row)) break;
++            aRowNum += 1;
++            const cells = row.split("|").slice(1, -1).map((c) => c.trim());
++            const cell = cells[audienceColIdx] ?? "";
++            if (!/^(user|admin|both|n\/a)$/i.test(cell)) {
++              errors.push(
++                `plan ${path} task row ${aRowNum} Audience cell must be one of 'user|admin|both|n/a' (got: '${cell}')`,
++              );
++            }
++          }
++        }
++      }
+     }
+   }
+ 
+@@ -288,6 +316,11 @@ export function checkQaGate(text, options = {}) {
+       "QA Gate 'skipped' requires a reason ('skipped — <reason>')",
+     );
+   }
++  if (/^failed$/i.test(value)) {
++    errors.push(
++      "QA Gate 'failed' requires a reason ('failed — <blocker>'). See review-gates.md §QA Gate.",
++    );
++  }
+   if (QA_GATE_DEGRADED_PATTERN.test(text)) {
+     if (!QA_GATE_DEGRADED_VALID_PATTERN.test(text)) {
+       errors.push(
+@@ -514,6 +547,48 @@ async function validateLedger(root, ledgerPath, errors) {
+     for (const e of reviewer.errors) errors.push(`${ledgerPath}: ${e}`);
+   }
+ 
++  // "Untouched relevant docs" must have non-empty content.
++  // Two valid shapes (see docs/ai-workflow/context-ledger-template.md):
++  //   (A) same-line: "- Untouched relevant docs and reason: none"
++  //   (B) header + indented bullets:
++  //       "- Untouched relevant docs and reason:"
++  //       "  - foo — reason"
++  // Empty (header colon followed by blank/non-indented line) fails.
++  const lines = content.split(/\r?\n/);
++  let untouchedOk = false;
++  let untouchedFound = false;
++  for (let i = 0; i < lines.length; i += 1) {
++    const m = lines[i].match(/^\s*-?\s*Untouched relevant docs[^:]*:\s*(.*)$/i);
++    if (!m) continue;
++    untouchedFound = true;
++    const inline = m[1].trim();
++    if (inline.length > 0) {
++      untouchedOk = true;
++      break;
++    }
++    // look forward for indented bullets / non-empty content lines
++    for (let j = i + 1; j < lines.length; j += 1) {
++      const next = lines[j];
++      if (next.trim().length === 0) continue;
++      // stop scan when next top-level item or new section starts
++      if (/^##\s+/.test(next)) break;
++      if (/^\S/.test(next)) break;   // non-indented → next field at same level
++      // indented non-empty line counts as content
++      untouchedOk = true;
++      break;
++    }
++    break;
++  }
++  if (!untouchedFound) {
++    errors.push(
++      `ledger ${ledgerPath}: missing 'Untouched relevant docs:' field (required per docs/agent-index.md §Output Requirement)`,
++    );
++  } else if (!untouchedOk) {
++    errors.push(
++      `ledger ${ledgerPath}: 'Untouched relevant docs:' field is empty (use 'none' or 'n/a' if intentional, or list with indented bullets)`,
++    );
++  }
++
+   // Architecture Pass is required only for *phase* ledgers that have completed.
+   // Non-phase complete ledgers (meta-workflow, docs-only, etc) are exempt.
+   const isPhaseLedger = detectPhaseLedger(content, ledgerPath);
+@@ -529,6 +604,36 @@ async function validateLedger(root, ledgerPath, errors) {
+   }
+ }
+ 
++// Resolves the phase Audience from the matching light spec.
++// Returns: { found, audience, missingLightSpec, phaseNum }
++// fail-closed: phase-N plan with no matching light spec is treated as an error.
++async function resolvePlanAudienceFromLightSpec(root, planPath) {
++  const m = planPath.match(PLAN_PHASE_PATTERN);
++  if (!m) {
++    return { found: false, audience: null, missingLightSpec: false, phaseNum: null };
++  }
++  const phaseNum = m[1];
++  const lightSpecsDir = join(root, "docs", "ai-workflow", "light-specs");
++  if (!existsSync(lightSpecsDir)) {
++    return { found: false, audience: null, missingLightSpec: true, phaseNum };
++  }
++  const entries = await readdir(lightSpecsDir);
++  const match = entries.find((e) =>
++    new RegExp(`^phase-${phaseNum}[-_.]`).test(e),
++  );
++  if (!match) {
++    return { found: false, audience: null, missingLightSpec: true, phaseNum };
++  }
++  const body = await readFile(join(lightSpecsDir, match), "utf8");
++  const av = body.match(LIGHT_SPEC_AUDIENCE_VALUE_PATTERN);
++  return {
++    found: true,
++    audience: av ? av[1].toLowerCase() : null,
++    missingLightSpec: false,
++    phaseNum,
++  };
++}
++
+ async function validatePlanFile(root, planPath, errors) {
+   // Templates and READMEs in the plans dir document the rules; skip them.
+   if (PLAN_TEMPLATE_PATTERN.test(planPath)) return;
+@@ -538,7 +643,19 @@ async function validatePlanFile(root, planPath, errors) {
+     return;
+   }
+   const content = await readFile(join(root, planPath), "utf8");
+-  const result = checkPlanFile(content, planPath);
++
++  // Cross-validate against the matching light spec (planning-contracts.md §1b + L64).
++  // fail-closed: phase-N plan must have a matching docs/ai-workflow/light-specs/phase-N-*.md.
++  const resolved = await resolvePlanAudienceFromLightSpec(root, planPath);
++  if (resolved.missingLightSpec) {
++    errors.push(
++      `plan ${planPath}: references phase ${resolved.phaseNum} but no matching docs/ai-workflow/light-specs/phase-${resolved.phaseNum}-*.md exists (planning-contracts.md §1b)`,
++    );
++  }
++
++  const result = checkPlanFile(content, planPath, {
++    requireAudienceColumn: resolved.audience === "both",
++  });
+   if (!result.ok) {
+     for (const e of result.errors) errors.push(e);
+   }
+diff --git a/scripts/ai-workflow-check.selftest.mjs b/scripts/ai-workflow-check.selftest.mjs
+index 1c1f984..2476517 100644
+--- a/scripts/ai-workflow-check.selftest.mjs
++++ b/scripts/ai-workflow-check.selftest.mjs
+@@ -11,6 +11,7 @@ import {
+   checkLedgerArchitecturePass,
+   checkPhasePlanArchitectureGate,
+   checkLightSpecPresence,
++  checkQaGate,
+ } from "./ai-workflow-check.mjs";
+ 
+ async function withTempRepo(testFn) {
+@@ -107,6 +108,7 @@ async function testRepositoryStateRequiresLedgerWhenImplementationFilesChange()
+         "# Ledger",
+         "## Docs Consulted",
+         "- a doc",
++        "- Untouched relevant docs and reason: none",
+         "## Verification State",
+         "- Cross-model review: codex (gstack)",
+         "## Ledger/File-State Consistency",
+@@ -419,7 +421,7 @@ async function testLightSpecPresenceCheckedForPhaseLedgers() {
+     // light spec file present → OK
+     await writeFile(
+       join(root, "docs", "ai-workflow", "light-specs", "phase-4-learning-core.md"),
+-      "# Phase 4 light spec\n",
++      "# Phase 4 light spec\n\nAudience: user\n",
+     );
+     const r4 = await checkLightSpecPresence(
+       root,
+@@ -428,6 +430,22 @@ async function testLightSpecPresenceCheckedForPhaseLedgers() {
+     );
+     assert.equal(r4.ok, true);
+ 
++    // Audience missing → fail (regression guard for the bug that broke self-test silently)
++    await writeFile(
++      join(root, "docs", "ai-workflow", "light-specs", "phase-5-no-audience.md"),
++      "# Phase 5 light spec (no audience)\n",
++    );
++    const r6 = await checkLightSpecPresence(
++      root,
++      [
++        "Phase: 5-no-audience",
++        "Light Spec: docs/ai-workflow/light-specs/phase-5-no-audience.md",
++      ].join("\n"),
++      "docs/ai-workflow/runs/2026/05/20/20260520-1200-other.md",
++    );
++    assert.equal(r6.ok, false);
++    assert.ok(r6.errors.some((e) => /Audience/i.test(e)));
++
+     // non-phase ledger — OK regardless
+     const nonPhaseBody = "## Task\n- Goal: docs touchup\n";
+     const r5 = await checkLightSpecPresence(
+@@ -488,6 +506,7 @@ async function testRepositoryStateDoesNotForceArchPassOnNonPhaseLedger() {
+         "- Status: complete",
+         "## Docs Consulted",
+         "- some doc",
++        "- Untouched relevant docs and reason: none",
+         "## Verification State",
+         "- Cross-model review: codex",
+         "## Ledger/File-State Consistency",
+@@ -550,6 +569,117 @@ async function testRepositoryStateForcesArchPassOnPhaseCompleteLedger() {
+   });
+ }
+ 
++async function testLedgerRequiresUntouchedRelevantDocs() {
++  await withTempRepo(async (root) => {
++    await mkdir(join(root, "docs", "ai-workflow", "runs", "2026", "05", "27"), {
++      recursive: true,
++    });
++    const baseSections = [
++      "## Verification State",
++      "- Cross-model review: degraded — solo",
++      "## Ledger/File-State Consistency",
++      "- yes",
++    ].join("\n");
++
++    // (A) missing entirely → FAIL
++    const missingRel = "docs/ai-workflow/runs/2026/05/27/20260527-1200-missing.md";
++    await writeFile(
++      join(root, missingRel),
++      ["## Docs Consulted", "- Exact files read: a.md", baseSections].join("\n"),
++    );
++    const rMissing = await checkRepositoryState({ root, changedFiles: [missingRel] });
++    assert.equal(rMissing.ok, false);
++    assert.ok(rMissing.errors.some((e) => /Untouched relevant docs/i.test(e)),
++      `(A) missing must raise error, got: ${rMissing.errors.join(" | ")}`);
++
++    // (B) same-line value 'none' → must NOT raise Untouched error (other errors may exist)
++    const sameLineRel = "docs/ai-workflow/runs/2026/05/27/20260527-1201-same.md";
++    await writeFile(
++      join(root, sameLineRel),
++      [
++        "## Docs Consulted",
++        "- Exact files read: a.md",
++        "- Untouched relevant docs and reason: none",
++        baseSections,
++      ].join("\n"),
++    );
++    const rSame = await checkRepositoryState({ root, changedFiles: [sameLineRel] });
++    assert.ok(
++      !rSame.errors.some((e) => /Untouched relevant docs/i.test(e)),
++      `(B) same-line 'none' must not raise error: ${rSame.errors.join(" | ")}`,
++    );
++
++    // (C) header + indented bullets → must NOT raise Untouched error
++    const indentedRel = "docs/ai-workflow/runs/2026/05/27/20260527-1202-indent.md";
++    await writeFile(
++      join(root, indentedRel),
++      [
++        "## Docs Consulted",
++        "- Exact files read: a.md",
++        "- Untouched relevant docs and reason:",
++        "  - `docs/foo.md` — out of scope for this work",
++        "  - `docs/bar.md` — not relevant",
++        baseSections,
++      ].join("\n"),
++    );
++    const rIndent = await checkRepositoryState({ root, changedFiles: [indentedRel] });
++    assert.ok(
++      !rIndent.errors.some((e) => /Untouched relevant docs/i.test(e)),
++      `(C) indented bullets must not raise error: ${rIndent.errors.join(" | ")}`,
++    );
++
++    // (D) header with colon but no content → FAIL
++    const emptyHeaderRel = "docs/ai-workflow/runs/2026/05/27/20260527-1203-empty.md";
++    await writeFile(
++      join(root, emptyHeaderRel),
++      [
++        "## Docs Consulted",
++        "- Exact files read: a.md",
++        "- Untouched relevant docs and reason:",
++        "",
++        baseSections,
++      ].join("\n"),
++    );
++    const rEmpty = await checkRepositoryState({ root, changedFiles: [emptyHeaderRel] });
++    assert.equal(rEmpty.ok, false);
++    assert.ok(rEmpty.errors.some((e) => /Untouched relevant docs/i.test(e)),
++      `(D) empty header must raise error, got: ${rEmpty.errors.join(" | ")}`);
++  });
++}
++
++async function testUiChangeDetectionDoesNotMatchDocsOnlyPaths() {
++  const checkerModule = await import("./ai-workflow-check.mjs");
++  const { needsUxuiConsistencyPass } = checkerModule.internals;
++
++  // docs path with "theme" must NOT trigger UI gate
++  assert.equal(
++    needsUxuiConsistencyPass(["docs/ant-design/08-theme-architecture.md"]),
++    false,
++    "docs path with 'theme' should not trigger UI gate",
++  );
++
++  // tasks/ path with "theme" must NOT trigger UI gate
++  assert.equal(
++    needsUxuiConsistencyPass(["tasks/theme-refactor-verify/foo.html"]),
++    false,
++    "tasks path with 'theme' should not trigger UI gate",
++  );
++
++  // src/theme/ — MUST trigger
++  assert.equal(
++    needsUxuiConsistencyPass(["src/theme/index.ts"]),
++    true,
++    "src/theme/ path should trigger UI gate",
++  );
++
++  // src/styles/ — still triggers (covered by another pattern)
++  assert.equal(
++    needsUxuiConsistencyPass(["src/styles/foo.css"]),
++    true,
++    "src/styles/ path should trigger UI gate via .css or src/styles pattern",
++  );
++}
++
+ async function testLightSpecPathMustBeUnderLightSpecsDirOrExplicitlySkipped() {
+   await withTempRepo(async (root) => {
+     // phase ledger pointing outside light-specs dir → fail
+@@ -609,6 +739,144 @@ async function testLightSpecPathMustBeUnderLightSpecsDirOrExplicitlySkipped() {
+   });
+ }
+ 
++async function testPlanRequiresAudienceColumnWhenLightSpecIsBoth() {
++  await withTempRepo(async (root) => {
++    await mkdir(join(root, "docs", "ai-workflow", "light-specs"), { recursive: true });
++    await mkdir(join(root, "docs", "ai-workflow", "plans"), { recursive: true });
++
++    // light spec with Audience: both
++    await writeFile(
++      join(root, "docs/ai-workflow/light-specs/phase-9-mixed.md"),
++      "# Phase 9\n\nAudience: both\n",
++    );
++
++    // plan WITHOUT Audience column
++    const planRel = "docs/ai-workflow/plans/20260601-phase-9-mixed.md";
++    await writeFile(
++      join(root, planRel),
++      [
++        "# Phase 9 Plan",
++        "## Out of Scope — Intentional Cuts",
++        "- x",
++        "## Smallest Buildable Unit",
++        "- y",
++        "## Tasks",
++        "| # | Task | Files | Subagent-eligible? (Y/N + reason) |",
++        "| --- | --- | --- | --- |",
++        "| 1 | foo | s | Y — independent |",
++      ].join("\n"),
++    );
++
++    const r = await checkRepositoryState({ root, changedFiles: [planRel] });
++    assert.equal(r.ok, false);
++    assert.ok(r.errors.some((e) => /Audience column/i.test(e)),
++      `expected Audience column error, got: ${r.errors.join(" | ")}`);
++  });
++}
++
++async function testPlanDoesNotRequireAudienceColumnWhenLightSpecIsSingle() {
++  await withTempRepo(async (root) => {
++    await mkdir(join(root, "docs", "ai-workflow", "light-specs"), { recursive: true });
++    await mkdir(join(root, "docs", "ai-workflow", "plans"), { recursive: true });
++
++    await writeFile(
++      join(root, "docs/ai-workflow/light-specs/phase-9-mixed.md"),
++      "# Phase 9\n\nAudience: user\n",
++    );
++    const planRel = "docs/ai-workflow/plans/20260601-phase-9-mixed.md";
++    await writeFile(
++      join(root, planRel),
++      [
++        "# Phase 9 Plan",
++        "## Out of Scope — Intentional Cuts",
++        "- x",
++        "## Smallest Buildable Unit",
++        "- y",
++        "## Tasks",
++        "| # | Task | Files | Subagent-eligible? (Y/N + reason) |",
++        "| --- | --- | --- | --- |",
++        "| 1 | foo | s | Y — independent |",
++      ].join("\n"),
++    );
++    const r = await checkRepositoryState({ root, changedFiles: [planRel] });
++    assert.ok(
++      !r.errors.some((e) => /Audience column/i.test(e)),
++      `single audience must not require Audience column: ${r.errors.join(" | ")}`,
++    );
++  });
++}
++
++async function testPlanFailsClosedWhenLightSpecMissing() {
++  await withTempRepo(async (root) => {
++    await mkdir(join(root, "docs", "ai-workflow", "light-specs"), { recursive: true });
++    await mkdir(join(root, "docs", "ai-workflow", "plans"), { recursive: true });
++
++    // NOTE: NO light spec written for phase-99
++    const planRel = "docs/ai-workflow/plans/20260601-phase-99-orphan.md";
++    await writeFile(
++      join(root, planRel),
++      [
++        "# Phase 99 Plan",
++        "## Out of Scope — Intentional Cuts",
++        "- x",
++        "## Smallest Buildable Unit",
++        "- y",
++        "## Tasks",
++        "| # | Task | Files | Subagent-eligible? (Y/N + reason) |",
++        "| --- | --- | --- | --- |",
++        "| 1 | foo | s | Y — independent |",
++      ].join("\n"),
++    );
++    const r = await checkRepositoryState({ root, changedFiles: [planRel] });
++    assert.equal(r.ok, false, "phase-N plan without matching light spec must fail");
++    assert.ok(
++      r.errors.some((e) => /phase 99.*light-specs.*phase-99/i.test(e)),
++      `expected missing-light-spec error for phase 99, got: ${r.errors.join(" | ")}`,
++    );
++  });
++}
++
++async function testNonPhasePlanSkipsLightSpecCheck() {
++  await withTempRepo(async (root) => {
++    await mkdir(join(root, "docs", "ai-workflow", "plans"), { recursive: true });
++    const planRel = "docs/ai-workflow/plans/20260601-1200-meta-workflow.md";
++    await writeFile(
++      join(root, planRel),
++      [
++        "# Meta Plan",
++        "## Out of Scope — Intentional Cuts",
++        "- x",
++        "## Smallest Buildable Unit",
++        "- y",
++      ].join("\n"),
++    );
++    const r = await checkRepositoryState({ root, changedFiles: [planRel] });
++    assert.ok(
++      !r.errors.some((e) => /light-specs/i.test(e)),
++      `non-phase plan must not raise missing-light-spec error: ${r.errors.join(" | ")}`,
++    );
++  });
++}
++
++async function testQaGateBareFailedRequiresReason() {
++  const ledgerWithBareFailed = "- QA Gate: failed\n";
++  const r = checkQaGate(ledgerWithBareFailed);
++  assert.equal(r.ok, false);
++  assert.ok(
++    r.errors.some((e) => /failed.*reason/i.test(e)),
++    `expected QA Gate failed reason error, got: ${r.errors.join(" | ")}`,
++  );
++
++  // sanity: 'failed — reason' must PASS
++  const ledgerWithReason = "- QA Gate: failed — dev server returned 500\n";
++  const r2 = checkQaGate(ledgerWithReason);
++  assert.equal(
++    r2.ok,
++    true,
++    `'failed — reason' must pass, got errors: ${r2.errors.join(" | ")}`,
++  );
++}
++
+ await testPullRequestBodyRequiresEvidenceSections();
+ await testRepositoryStateRequiresLedgerWhenImplementationFilesChange();
+ await testRepositoryStateRunsAgentSkillMirrorCheck();
+@@ -622,5 +890,12 @@ await testRepositoryStateValidatesLedgerEvenWhenNoLedgerRequired();
+ await testRepositoryStateDoesNotForceArchPassOnNonPhaseLedger();
+ await testRepositoryStateForcesArchPassOnPhaseCompleteLedger();
+ await testLightSpecPathMustBeUnderLightSpecsDirOrExplicitlySkipped();
++await testLedgerRequiresUntouchedRelevantDocs();
++await testUiChangeDetectionDoesNotMatchDocsOnlyPaths();
++await testQaGateBareFailedRequiresReason();
++await testPlanRequiresAudienceColumnWhenLightSpecIsBoth();
++await testPlanDoesNotRequireAudienceColumnWhenLightSpecIsSingle();
++await testPlanFailsClosedWhenLightSpecMissing();
++await testNonPhasePlanSkipsLightSpecCheck();
+ 
+ console.log("ai-workflow-check self-test passed");
+diff --git a/scripts/test-qa-gate-fixtures.mjs b/scripts/test-qa-gate-fixtures.mjs
+index d999896..64caa39 100644
+--- a/scripts/test-qa-gate-fixtures.mjs
++++ b/scripts/test-qa-gate-fixtures.mjs
+@@ -1,6 +1,6 @@
+ #!/usr/bin/env node
+ // PR C — QA Gate fixture 회귀 테스트.
+-// 4개 fixture: PASS / missing FAIL / degraded bare FAIL / degraded with triple PASS.
++// 5개 fixture: PASS / missing FAIL / degraded bare FAIL / degraded with triple PASS / failed bare FAIL.
+ 
+ import { readFile } from "node:fs/promises";
+ import { join, dirname, resolve } from "node:path";
+@@ -45,6 +45,13 @@ const cases = [
+     expectedNeedsUi: true,
+     expectedCheckOk: true,
+   },
++  {
++    file: "fx-05-failed-bare.md",
++    changedFiles: ["src/app/dashboard/page.tsx"],
++    expectedNeedsUi: true,
++    expectedCheckOk: false,
++    expectedErrorIncludes: "'failed' requires a reason",
++  },
+ ];
+ 
+ let failures = 0;

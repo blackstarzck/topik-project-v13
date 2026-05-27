@@ -1,0 +1,98 @@
+성공: PID 42256인 프로세스(PID 44628인 자식 프로세스)가 종료되었습니다.
+성공: PID 41756인 프로세스(PID 31572인 자식 프로세스)가 종료되었습니다.
+성공: PID 31572인 프로세스(PID 42196인 자식 프로세스)가 종료되었습니다.
+성공: PID 42196인 프로세스(PID 44828인 자식 프로세스)가 종료되었습니다.
+성공: PID 44828인 프로세스(PID 44628인 자식 프로세스)가 종료되었습니다.
+성공: PID 22772인 프로세스(PID 5644인 자식 프로세스)가 종료되었습니다.
+성공: PID 5644인 프로세스(PID 44628인 자식 프로세스)가 종료되었습니다.
+성공: PID 1484인 프로세스(PID 30172인 자식 프로세스)가 종료되었습니다.
+성공: PID 30172인 프로세스(PID 44628인 자식 프로세스)가 종료되었습니다.
+성공: PID 42024인 프로세스(PID 44628인 자식 프로세스)가 종료되었습니다.
+성공: PID 27240인 프로세스(PID 44628인 자식 프로세스)가 종료되었습니다.
+성공: PID 14312인 프로세스(PID 43620인 자식 프로세스)가 종료되었습니다.
+성공: PID 43620인 프로세스(PID 35980인 자식 프로세스)가 종료되었습니다.
+성공: PID 35980인 프로세스(PID 31620인 자식 프로세스)가 종료되었습니다.
+성공: PID 31620인 프로세스(PID 43360인 자식 프로세스)가 종료되었습니다.
+성공: PID 43360인 프로세스(PID 44628인 자식 프로세스)가 종료되었습니다.
+성공: PID 8968인 프로세스(PID 43188인 자식 프로세스)가 종료되었습니다.
+성공: PID 43188인 프로세스(PID 8220인 자식 프로세스)가 종료되었습니다.
+성공: PID 8220인 프로세스(PID 25692인 자식 프로세스)가 종료되었습니다.
+성공: PID 25692인 프로세스(PID 25652인 자식 프로세스)가 종료되었습니다.
+성공: PID 25652인 프로세스(PID 44628인 자식 프로세스)가 종료되었습니다.
+성공: PID 43080인 프로세스(PID 19560인 자식 프로세스)가 종료되었습니다.
+성공: PID 19560인 프로세스(PID 9760인 자식 프로세스)가 종료되었습니다.
+성공: PID 9760인 프로세스(PID 33892인 자식 프로세스)가 종료되었습니다.
+성공: PID 33892인 프로세스(PID 44628인 자식 프로세스)가 종료되었습니다.
+성공: PID 43948인 프로세스(PID 44628인 자식 프로세스)가 종료되었습니다.
+성공: PID 43636인 프로세스(PID 44628인 자식 프로세스)가 종료되었습니다.
+성공: PID 39036인 프로세스(PID 44544인 자식 프로세스)가 종료되었습니다.
+성공: PID 44544인 프로세스(PID 43820인 자식 프로세스)가 종료되었습니다.
+성공: PID 43820인 프로세스(PID 26380인 자식 프로세스)가 종료되었습니다.
+성공: PID 26380인 프로세스(PID 44628인 자식 프로세스)가 종료되었습니다.
+성공: PID 40120인 프로세스(PID 44628인 자식 프로세스)가 종료되었습니다.
+ROUND 2 VERDICT: CONCERN
+SUMMARY: The revision resolves the round-1 blockers in substance: TDD exceptions are now explicit, P1-2 no longer relies on the broken same-line regex, P1-5 is fail-closed, R7 is present, and acceptance criteria are measurable. One remaining engineering concern: Task 10 adds fail-closed missing-light-spec behavior but does not add a RED regression fixture for that branch.
+RESOLVED: 9/10
+NEW ISSUES: 0
+
+### 1. TDD cycle integrity
+Status: RESOLVED
+Evidence: `review-gates.md:20-27` allows docs/config/no-runnable-test exceptions with substitute verification. The revised plan now marks Task 4/5/9 as TDD exceptions and lists substitutes at `docs/ai-workflow/plans/20260527-1500-ai-workflow-audit-fixes.md:1064`.
+Remaining gap: none.
+
+### 2. Smallest Buildable Unit
+Status: RESOLVED
+Evidence: SBU remains `P0-1 + P0-2` at `docs/ai-workflow/plans/20260527-1500-ai-workflow-audit-fixes.md:50-57`, which still matches the original rationale.
+Remaining gap: none.
+
+### 3. Out of Scope
+Status: RESOLVED
+Evidence: The new explicit cut for local `git status` vs CI `base..head` unification is present at `docs/ai-workflow/plans/20260527-1500-ai-workflow-audit-fixes.md:43`.
+Remaining gap: none.
+
+### 4. Subagent-eligible
+Status: RESOLVED
+Evidence: The task table still includes `Subagent-eligible?` at `docs/ai-workflow/plans/20260527-1500-ai-workflow-audit-fixes.md:72-86`, satisfying `planning-contracts.md:64`.
+Remaining gap: none.
+
+### 5. P1-2 regression risk
+Status: RESOLVED
+Evidence: The revised parser accepts same-line values at `docs/ai-workflow/plans/20260527-1500-ai-workflow-audit-fixes.md:570-576` and header + indented content at `:578-587`. It rejects missing and empty fields at `:591-598`. The real ledger shape is header + indented bullets at `docs/ai-workflow/runs/2026/05/27/20260527-1500-ai-workflow-audit-fixes.md:48-51`; the template currently shows the empty placeholder shape at `docs/ai-workflow/context-ledger-template.md:21-27`.
+Remaining gap: none. Note: the parser treats any indented non-empty line as content, not strictly bullets, but that is acceptable for this gate.
+
+### 6. P1-5 design
+Status: PARTIALLY RESOLVED
+Evidence: The fail-closed branch now emits an error when a `phase-N` plan has no matching light spec at `docs/ai-workflow/plans/20260527-1500-ai-workflow-audit-fixes.md:905-910`. The slug regex `^phase-${phaseNum}[-_.]` at `:882` is precise enough: `phase-1` will not match `phase-12` because the next character must be `-`, `_`, or `.`.
+Remaining gap: Add a RED fixture for the missing-light-spec branch. Current Task 10 tests `Audience: both` requiring a column at `:804-840` and single-audience non-requirement at `:956-966`, but does not test `phase-N plan exists + no light spec`.
+
+### 7. P0-3 risks
+Status: RESOLVED
+Evidence: The hard-coded `1700` is gone. The plan now uses user-provided time, fs mtime, then `1200` sentinel with ledger rationale at `docs/ai-workflow/plans/20260527-1500-ai-workflow-audit-fixes.md:311-316` and `:327-336`.
+Remaining gap: none.
+
+### 8. Verification Strategy
+Status: RESOLVED
+Evidence: Task 11 now includes representative commit-message validation with `--commit-message` at `docs/ai-workflow/plans/20260527-1500-ai-workflow-audit-fixes.md:1009-1018`, and the AC repeats it at `:1096`.
+Remaining gap: none.
+
+### 9. Acceptance Criteria
+Status: RESOLVED
+Evidence: QA fixture acceptance is now pinned to `5/5 PASS` at `docs/ai-workflow/plans/20260527-1500-ai-workflow-audit-fixes.md:1091`, and the new `fx-05-failed-bare.md` fixture is specified at `:668-683`.
+Remaining gap: none.
+
+### 10. Known Risks
+Status: RESOLVED
+Evidence: R7 now covers Codex CLI failure/timeout/hang at `docs/ai-workflow/plans/20260527-1500-ai-workflow-audit-fixes.md:1081-1085`. It specifies 600s timeout, stderr capture to `tasks/codex-runs/`, degraded ledger recording, and explicitly forbids PASS on degraded-only.
+Remaining gap: none.
+
+## New Issues / Regressions
+
+No new blocking regressions found.
+
+Cross-cutting concern: Task 10 should add one missing-light-spec RED fixture before implementation. This is not a new design failure, but it matters because the newly added fail-closed behavior is workflow-governing code.
+
+## Final recommendation
+
+CONCERN: revise Task 10 with one additional RED/GREEN selftest for `phase-N` plan with no matching `docs/ai-workflow/light-specs/phase-N-*.md`, then proceed without needing a full round-3 unless the author changes more than that narrow test addition.
+
+Docs consulted: `using-superpowers`, `docs/agent-index.md`, `docs/ai-development-workflow.md`, `docs/ai-workflow/review-gates.md`, `docs/ai-workflow/planning-contracts.md`, `docs/ai-workflow/context-ledger-template.md`, revised plan, revised ledger, and round-1 review.
