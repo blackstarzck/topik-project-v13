@@ -99,24 +99,24 @@ Phase 3 신규/변경:
 
 ## Tasks
 
-| # | Task | Files | Subagent-eligible? (Y/N + reason) |
-| --- | --- | --- | --- |
-| 1 | types.ts regen (CLI 가능 시 17 마이그레이션 full regen, 부재 시 profiles+learning_goals minimum hand-align) | `src/lib/supabase/types.ts` | N — 후속 task가 새 타입에 의존하므로 main session이 직접 |
-| 2 | `getCurrentProfile()` 분리 + `requireRole(roles)` helper + 단위 테스트 (RED→GREEN) | `src/lib/auth/profile.ts`, `tests/lib/auth/profile-getCurrentProfile.test.ts` | N — `bootstrapProfile`과 같은 파일, 인터페이스 일관성 |
-| 3 | WorkspaceShell + Sidebar + Header 컴포넌트 | `src/components/app/{WorkspaceShell,SidebarNav,AppHeader}.tsx` | Y — 독립 UI 컴포넌트 모음 (Task 4의 PlaceholderPage 인터페이스에 의존하지 않음) |
-| 4 | shared UI primitives (PlaceholderPage, AppLoading, AppError, AppNotFound) | `src/components/shared/*.tsx` | Y — 독립. **Tasks 6-11의 prerequisite — Task 4의 PlaceholderPage props가 frozen된 후 6-11 시작.** |
-| 5 | `(workspace)` route group layout + loading/error/not-found (onboarding gate는 Task 6의 dashboard page에서) | `src/app/(workspace)/{layout,loading,error,not-found}.tsx` | N — Task 2·3·4 결과 사용 |
-| 6 | Dashboard(자체 onboarding gate) + growth + library + profile placeholder | `src/app/(workspace)/{dashboard,growth,library,profile}/page.tsx` | Y — Task 4 후 시작. dashboard만 learning_goals 조회 + redirect |
-| 7 | Settings (language, notifications) placeholder | `src/app/(workspace)/settings/{language,notifications}/page.tsx` | Y — Task 4 후 시작 |
-| 8 | Practice 그룹 placeholder (recommendations, problems, next, weakness) | `src/app/(workspace)/practice/{recommendations,problems,next,weakness}/page.tsx` | Y — Task 4 후 시작 |
-| 9 | Writing 그룹 placeholder + dynamic route stub. `[questionId]` 검증(51-54), feedback/report id 검증은 **Phase 5의 data fetch와 함께 도입** | `src/app/(workspace)/writing/[questionId]/page.tsx`, `src/app/(workspace)/writing/feedback/short/[id]/page.tsx`, `src/app/(workspace)/writing/feedback/long/[id]/page.tsx`, `src/app/(workspace)/writing/reports/[id]/compare/page.tsx` | Y — Task 4 후 시작 |
-| 10 | Admin layout 1차 게이트(learner 차단) + 3 admin placeholder(각자 `requireRole` 2차 게이트) | `src/app/(workspace)/admin/{layout,problems/page,org/page,users/page}.tsx` | N — Task 2의 `requireRole` helper에 강결합 |
-| 11 | Onboarding + subscription + paywall placeholder | `src/app/(workspace)/{onboarding/learning-goal,subscription,paywall}/page.tsx` | Y — Task 4 후 시작 |
-| 12 | 공개 라우트 placeholder (sign-up, password-reset) | `src/app/{sign-up,password-reset}/page.tsx` | Y — middleware의 public allowlist에 이미 들어 있음, page만 추가 |
-| 13 | route-matrix 통합 테스트 (모든 active route 응답 확인) | `tests/integration/route-matrix.test.ts` | Y — 모든 placeholder 완성 후 독립 검증 |
-| 14 | 전체 검증 (pnpm test/lint/typecheck/build) | (전체) | N — main session 종합 |
-| 15 | Architecture Pass | (전체 + ledger) | N — main session 판정 |
-| 16 | Cross-model review (Opus + Codex 병렬) | (전체 diff) | N — packet 작성/통합 |
+| # | Task | Files | Audience | Subagent-eligible? (Y/N + reason) |
+| --- | --- | --- | --- | --- |
+| 1 | types.ts regen (CLI 가능 시 17 마이그레이션 full regen, 부재 시 profiles+learning_goals minimum hand-align) | `src/lib/supabase/types.ts` | n/a | N — 후속 task가 새 타입에 의존하므로 main session이 직접 |
+| 2 | `getCurrentProfile()` 분리 + `requireRole(roles)` helper + 단위 테스트 (RED→GREEN) | `src/lib/auth/profile.ts`, `tests/lib/auth/profile-getCurrentProfile.test.ts` | both | N — `bootstrapProfile`과 같은 파일, 인터페이스 일관성 |
+| 3 | WorkspaceShell + Sidebar + Header 컴포넌트 | `src/components/app/{WorkspaceShell,SidebarNav,AppHeader}.tsx` | user | Y — 독립 UI 컴포넌트 모음 (Task 4의 PlaceholderPage 인터페이스에 의존하지 않음) |
+| 4 | shared UI primitives (PlaceholderPage, AppLoading, AppError, AppNotFound) | `src/components/shared/*.tsx` | both | Y — 독립. **Tasks 6-11의 prerequisite — Task 4의 PlaceholderPage props가 frozen된 후 6-11 시작.** |
+| 5 | `(workspace)` route group layout + loading/error/not-found (onboarding gate는 Task 6의 dashboard page에서) | `src/app/(workspace)/{layout,loading,error,not-found}.tsx` | user | N — Task 2·3·4 결과 사용 |
+| 6 | Dashboard(자체 onboarding gate) + growth + library + profile placeholder | `src/app/(workspace)/{dashboard,growth,library,profile}/page.tsx` | user | Y — Task 4 후 시작. dashboard만 learning_goals 조회 + redirect |
+| 7 | Settings (language, notifications) placeholder | `src/app/(workspace)/settings/{language,notifications}/page.tsx` | user | Y — Task 4 후 시작 |
+| 8 | Practice 그룹 placeholder (recommendations, problems, next, weakness) | `src/app/(workspace)/practice/{recommendations,problems,next,weakness}/page.tsx` | user | Y — Task 4 후 시작 |
+| 9 | Writing 그룹 placeholder + dynamic route stub. `[questionId]` 검증(51-54), feedback/report id 검증은 **Phase 5의 data fetch와 함께 도입** | `src/app/(workspace)/writing/[questionId]/page.tsx`, `src/app/(workspace)/writing/feedback/short/[id]/page.tsx`, `src/app/(workspace)/writing/feedback/long/[id]/page.tsx`, `src/app/(workspace)/writing/reports/[id]/compare/page.tsx` | user | Y — Task 4 후 시작 |
+| 10 | Admin layout 1차 게이트(learner 차단) + 3 admin placeholder(각자 `requireRole` 2차 게이트) | `src/app/(workspace)/admin/{layout,problems/page,org/page,users/page}.tsx` | admin | N — Task 2의 `requireRole` helper에 강결합 |
+| 11 | Onboarding + subscription + paywall placeholder | `src/app/(workspace)/{onboarding/learning-goal,subscription,paywall}/page.tsx` | user | Y — Task 4 후 시작 |
+| 12 | 공개 라우트 placeholder (sign-up, password-reset) | `src/app/{sign-up,password-reset}/page.tsx` | user | Y — middleware의 public allowlist에 이미 들어 있음, page만 추가 |
+| 13 | route-matrix 통합 테스트 (모든 active route 응답 확인) | `tests/integration/route-matrix.test.ts` | both | Y — 모든 placeholder 완성 후 독립 검증 |
+| 14 | 전체 검증 (pnpm test/lint/typecheck/build) | (전체) | n/a | N — main session 종합 |
+| 15 | Architecture Pass | (전체 + ledger) | n/a | N — main session 판정 |
+| 16 | Cross-model review (Opus + Codex 병렬) | (전체 diff) | n/a | N — packet 작성/통합 |
 
 ---
 
