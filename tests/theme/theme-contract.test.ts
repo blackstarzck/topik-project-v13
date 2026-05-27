@@ -3,30 +3,68 @@ import {
   defaultAppearance,
   defaultThemeName,
   getAppTheme,
-  getTailwindBridgeVars,
+  getResolvedBridgeVars,
 } from "../../src/theme";
 
 describe("app theme contract", () => {
-  test("exposes a default Ant Design theme with CSS variables enabled", () => {
+  test("exposes a default Ant Design theme with CSS variables enabled (key + prefix)", () => {
     const theme = getAppTheme(defaultThemeName, defaultAppearance);
 
     expect(theme.name).toBe("default");
     expect(theme.appearance).toBe("light");
-    expect(theme.antd.cssVar).toEqual({ key: "talkpik" });
+    // key = cache deduplication ID; prefix = CSS variable prefix (--ant-* by default)
+    expect(theme.antd.cssVar).toEqual({ key: "talkpik", prefix: "ant" });
     expect(theme.antd.token?.fontFamily).toContain("system-ui");
   });
 
-  test("maps the approved Tailwind bridge variables to Ant Design CSS variables", () => {
-    expect(getTailwindBridgeVars()).toEqual({
-      "--app-color-primary": "var(--ant-color-primary)",
-      "--app-color-bg-layout": "var(--ant-color-bg-layout)",
-      "--app-color-bg-container": "var(--ant-color-bg-container)",
-      "--app-color-text": "var(--ant-color-text)",
-      "--app-color-text-secondary": "var(--ant-color-text-secondary)",
-      "--app-color-border": "var(--ant-color-border)",
-      "--app-radius": "var(--ant-border-radius)",
-      "--app-font-family": "var(--ant-font-family)",
-      "--app-shadow-elevated": "var(--ant-box-shadow-secondary)",
+  test("getResolvedBridgeVars returns actual hex/px values — no var() chains", () => {
+    const theme = getAppTheme(defaultThemeName, defaultAppearance);
+    const vars = getResolvedBridgeVars(theme.antd);
+
+    // Must NOT be var(--ant-*) chains
+    Object.values(vars).forEach((value) => {
+      expect(value).not.toMatch(/^var\(--ant-/);
+    });
+
+    // Must be resolved actual values
+    expect(vars["--app-color-primary"]).toBe("#1677ff");
+    expect(vars["--app-color-bg-container"]).toBe("#ffffff");
+    expect(vars["--app-color-border"]).toBe("#d9d9d9");
+    expect(vars["--app-radius"]).toBe("6px");
+    // colorText is rgba
+    expect(vars["--app-color-text"]).toMatch(/rgba?\(/);
+  });
+
+  test("getResolvedBridgeVars dark appearance returns dark values", () => {
+    const theme = getAppTheme(defaultThemeName, "dark");
+    const vars = getResolvedBridgeVars(theme.antd);
+
+    // Dark mode background must not be white
+    expect(vars["--app-color-bg-container"]).not.toBe("#ffffff");
+    // All values still resolved, not var() chains
+    Object.values(vars).forEach((value) => {
+      expect(value).not.toMatch(/^var\(--ant-/);
+    });
+  });
+
+  test("getResolvedBridgeVars covers all required bridge keys", () => {
+    const theme = getAppTheme(defaultThemeName, defaultAppearance);
+    const vars = getResolvedBridgeVars(theme.antd);
+    const requiredKeys = [
+      "--app-color-primary",
+      "--app-color-bg-layout",
+      "--app-color-bg-container",
+      "--app-color-text",
+      "--app-color-text-secondary",
+      "--app-color-border",
+      "--app-radius",
+      "--app-font-family",
+      "--app-shadow-elevated",
+    ];
+
+    requiredKeys.forEach((key) => {
+      expect(vars).toHaveProperty(key);
+      expect(vars[key]).toBeTruthy();
     });
   });
 });

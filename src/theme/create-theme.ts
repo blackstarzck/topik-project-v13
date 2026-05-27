@@ -42,7 +42,7 @@ export function createTheme<Name extends string>(
     appearance,
     antd: {
       ...appearanceConfig,
-      cssVar: { key: "talkpik" },
+      cssVar: { key: "talkpik", prefix: "ant" },
       algorithm: normalizeAlgorithms(appearance, appearanceConfig.algorithm),
       token: {
         ...sharedSeedToken,
