@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // PR C — QA Gate fixture 회귀 테스트.
-// 4개 fixture: PASS / missing FAIL / degraded bare FAIL / degraded with triple PASS.
+// 5개 fixture: PASS / missing FAIL / degraded bare FAIL / degraded with triple PASS / failed bare FAIL.
 
 import { readFile } from "node:fs/promises";
 import { join, dirname, resolve } from "node:path";
@@ -44,6 +44,13 @@ const cases = [
     changedFiles: ["src/components/Profile.tsx"],
     expectedNeedsUi: true,
     expectedCheckOk: true,
+  },
+  {
+    file: "fx-05-failed-bare.md",
+    changedFiles: ["src/app/dashboard/page.tsx"],
+    expectedNeedsUi: true,
+    expectedCheckOk: false,
+    expectedErrorIncludes: "'failed' requires a reason",
   },
 ];
 

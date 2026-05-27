@@ -11,6 +11,7 @@ import {
   checkLedgerArchitecturePass,
   checkPhasePlanArchitectureGate,
   checkLightSpecPresence,
+  checkQaGate,
 } from "./ai-workflow-check.mjs";
 
 async function withTempRepo(testFn) {
@@ -738,6 +739,25 @@ async function testLightSpecPathMustBeUnderLightSpecsDirOrExplicitlySkipped() {
   });
 }
 
+async function testQaGateBareFailedRequiresReason() {
+  const ledgerWithBareFailed = "- QA Gate: failed\n";
+  const r = checkQaGate(ledgerWithBareFailed);
+  assert.equal(r.ok, false);
+  assert.ok(
+    r.errors.some((e) => /failed.*reason/i.test(e)),
+    `expected QA Gate failed reason error, got: ${r.errors.join(" | ")}`,
+  );
+
+  // sanity: 'failed — reason' must PASS
+  const ledgerWithReason = "- QA Gate: failed — dev server returned 500\n";
+  const r2 = checkQaGate(ledgerWithReason);
+  assert.equal(
+    r2.ok,
+    true,
+    `'failed — reason' must pass, got errors: ${r2.errors.join(" | ")}`,
+  );
+}
+
 await testPullRequestBodyRequiresEvidenceSections();
 await testRepositoryStateRequiresLedgerWhenImplementationFilesChange();
 await testRepositoryStateRunsAgentSkillMirrorCheck();
@@ -753,5 +773,6 @@ await testRepositoryStateForcesArchPassOnPhaseCompleteLedger();
 await testLightSpecPathMustBeUnderLightSpecsDirOrExplicitlySkipped();
 await testLedgerRequiresUntouchedRelevantDocs();
 await testUiChangeDetectionDoesNotMatchDocsOnlyPaths();
+await testQaGateBareFailedRequiresReason();
 
 console.log("ai-workflow-check self-test passed");

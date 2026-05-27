@@ -288,6 +288,11 @@ export function checkQaGate(text, options = {}) {
       "QA Gate 'skipped' requires a reason ('skipped — <reason>')",
     );
   }
+  if (/^failed$/i.test(value)) {
+    errors.push(
+      "QA Gate 'failed' requires a reason ('failed — <blocker>'). See review-gates.md §QA Gate.",
+    );
+  }
   if (QA_GATE_DEGRADED_PATTERN.test(text)) {
     if (!QA_GATE_DEGRADED_VALID_PATTERN.test(text)) {
       errors.push(
