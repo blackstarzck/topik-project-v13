@@ -36,13 +36,19 @@ describe("app theme contract", () => {
   });
 
   test("getResolvedBridgeVars dark appearance returns dark values", () => {
-    const theme = getAppTheme(defaultThemeName, "dark");
-    const vars = getResolvedBridgeVars(theme.antd);
+    const darkTheme = getAppTheme(defaultThemeName, "dark");
+    const lightTheme = getAppTheme(defaultThemeName, "light");
+    const darkVars = getResolvedBridgeVars(darkTheme.antd);
+    const lightVars = getResolvedBridgeVars(lightTheme.antd);
 
     // Dark mode background must not be white
-    expect(vars["--app-color-bg-container"]).not.toBe("#ffffff");
+    expect(darkVars["--app-color-bg-container"]).not.toBe("#ffffff");
+    // And must differ from light mode bg — catches "dark silently degraded to pale" regressions
+    expect(darkVars["--app-color-bg-container"]).not.toBe(
+      lightVars["--app-color-bg-container"],
+    );
     // All values still resolved, not var() chains
-    Object.values(vars).forEach((value) => {
+    Object.values(darkVars).forEach((value) => {
       expect(value).not.toMatch(/^var\(--ant-/);
     });
   });
