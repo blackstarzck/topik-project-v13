@@ -22,6 +22,18 @@ Use this checklist before calling UI work complete.
       Tailwind palette or copied token values.
 - [ ] AntD components and Tailwind-authored surfaces remain visually aligned in
       light and dark appearances.
+- [ ] `--app-*` CSS variables are declared on `html` or `:root`, not via
+      `style={}` on a wrapper component.
+- [ ] No `--app-*` variable holds a `var(--ant-*)` chain; each holds a resolved
+      actual value safe for SSR.
+- [ ] Resolved `--app-*` values are present on first render (injected from
+      `app/layout.tsx` server-side, not deferred to client JS).
+- [ ] Portal-rendered AntD surfaces (Modal, Drawer, Notification, Tooltip) have
+      been verified to display correct `--app-*` colors in a running build.
+- [ ] `src/styles/global.css` uses `@theme inline` (not bare `@theme`) for any
+      Tailwind v4 `--app-*` variable bridging.
+- [ ] Runtime theme or appearance switching uses React state or context, not a
+      module-level constant.
 
 ## Layout
 
