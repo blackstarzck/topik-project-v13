@@ -42,12 +42,12 @@ flowchart LR
 
 | 항목 | 상태 |
 | --- | --- |
-| 구현 상태 | 아직 pre-implementation 단계입니다. 안정적인 `src/` 또는 `package.json`이 없습니다. |
-| 현재 기준 | `docs/`가 제품, 화면, 기술, AI 작업 방식의 source of truth입니다. |
-| 구현 방식 | Next.js App Router 기반으로 새로 구현할 예정입니다. |
+| 구현 상태 | 기반 구현 진행 중 — `src/` + `package.json` 존재. App Router 라우트 scaffold + 인증 흐름 + 테마 시스템 + Supabase 스키마/RLS 마이그레이션 완료. 쓰기 제출·피드백 화면과 mock 피드백 경로도 일부 구현됨. 실제 LLM 기반 AI 첨삭·문제 생성은 단계적으로 추가 중. |
+| 현재 기준 | `docs/`가 제품, 화면, AI 작업 방식의 source of truth. 인증 영역은 추가로 [`docs/development/auth-overview.md`](./docs/development/auth-overview.md) 가 코드 + 운영 정책 정본. |
+| 구현 방식 | Next.js App Router 기반. 인증·테마·DB 스키마는 구현됨, 학습 기능은 단계적 추가. |
 | 협업 방식 | 사람과 AI가 같은 문서 세트를 읽고, 변경 근거와 검증 결과를 남깁니다. |
 
-지금 이 저장소는 완성된 앱이라기보다 "건축 설계도와 공사 규칙이 정리된 현장"에 가깝습니다. 코드를 쓰기 전에 어떤 집을 지을지, 어떤 재료를 쓸지, 누가 어떤 순서로 확인할지를 문서로 맞춰둔 상태입니다.
+지금 이 저장소는 골조와 일부 인프라 (인증, 테마, DB 스키마/RLS) 가 올라간 공사장입니다. 쓰기 제출·피드백 화면과 mock 피드백 경로는 일부 올라갔고, 실제 LLM 첨삭과 문제 생성은 단계적으로 추가 중입니다. 인증·보안 영역은 골조 + 다른 AI 검토까지 받은 상태. 문서가 여전히 source of truth 라는 점은 변하지 않습니다.
 
 ## 만들고 있는 것
 
@@ -165,7 +165,7 @@ flowchart TD
     D --> E["docs/IA/README.md<br/>화면별 설명과 와이어프레임"]
 ```
 
-주의: 일부 오래된 관찰 문서는 인코딩이 깨진 문장이 남아 있습니다. 구현 기준은 항상 `docs/spec.md`, `docs/sitemap.md`의 Target React Route Map, `docs/IA/`, `docs/flow/user-flow.md` 같은 active docs를 우선합니다.
+주의: 일부 오래된 관찰 문서는 인코딩이 깨진 문장이 남아 있습니다. 구현 기준은 항상 `docs/spec.md`, `docs/sitemap.md`의 Target React Route Map, `docs/IA/`, `docs/flow/user-flow.md` 같은 active docs를 우선합니다. 인증·로그인·회원가입 흐름의 코드 + 운영 정책 한 페이지 정리본은 [`docs/development/auth-overview.md`](./docs/development/auth-overview.md) 에 있습니다.
 
 ## 개발 협업자를 위한 읽는 순서
 
@@ -258,6 +258,7 @@ flowchart TD
 | AI-agent workflow, ledgers, reports | [docs/ai-workflow/README.md](./docs/ai-workflow/README.md) |
 | AI agent skills catalog and sync model | [.agents/README.md](./.agents/README.md) |
 | AI document routing | [docs/agent-index.md](./docs/agent-index.md) |
+| Auth flow, login/signup/callback/error pages, operational policy (cleanup cron, rate limits, env vars) | [docs/development/auth-overview.md](./docs/development/auth-overview.md) |
 
 ## 현재 기준 문서
 
@@ -269,6 +270,7 @@ flowchart TD
 | 사용자 흐름 | [docs/flow/user-flow.md](./docs/flow/user-flow.md) |
 | UI 규칙 | [docs/ant-design/README.md](./docs/ant-design/README.md) |
 | AI 협업 규칙 | [AGENTS.md](./AGENTS.md), [docs/agent-index.md](./docs/agent-index.md), [docs/ai-development-workflow.md](./docs/ai-development-workflow.md), [.agents/README.md](./.agents/README.md) |
+| 인증 흐름과 운영 정책 | [docs/development/auth-overview.md](./docs/development/auth-overview.md) |
 
 ## 운영 규칙
 

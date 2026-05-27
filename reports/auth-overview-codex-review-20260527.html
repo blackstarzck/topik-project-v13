@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<title>auth-overview.md Codex 검수 보고서 · 2026-05-27</title>
+<style>
+  :root { color-scheme: light; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif; max-width: 880px; margin: 2rem auto; padding: 0 1.25rem; line-height: 1.6; color: #1a1a1a; }
+  h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
+  h2 { font-size: 1.2rem; margin-top: 2rem; border-bottom: 1px solid #ddd; padding-bottom: 0.25rem; }
+  h3 { font-size: 1rem; margin-top: 1.5rem; }
+  .meta { color: #666; font-size: 0.9rem; margin-bottom: 1.5rem; }
+  .verdict { font-size: 1.3rem; font-weight: 700; padding: 0.75rem 1rem; border-radius: 8px; margin: 1rem 0 1.5rem; }
+  .verdict.fail { background: #fff1f0; color: #a8071a; border: 1px solid #ffa39e; }
+  .scoreboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin: 1rem 0 1.5rem; }
+  .card { padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #ddd; }
+  .card .label { font-size: 0.85rem; color: #666; }
+  .card .value { font-size: 1.5rem; font-weight: 700; margin-top: 0.25rem; }
+  .card.red { background: #fff1f0; border-color: #ffa39e; } .card.red .value { color: #a8071a; }
+  .card.yellow { background: #fffbe6; border-color: #ffe58f; } .card.yellow .value { color: #ad8b00; }
+  .card.green { background: #f6ffed; border-color: #b7eb8f; } .card.green .value { color: #237804; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+  th, td { border: 1px solid #ddd; padding: 0.5rem 0.75rem; text-align: left; vertical-align: top; }
+  th { background: #fafafa; font-weight: 600; }
+  code { background: #f4f4f4; padding: 0.1rem 0.35rem; border-radius: 4px; font-size: 0.92em; }
+  pre { background: #f4f4f4; padding: 0.75rem 1rem; border-radius: 6px; overflow-x: auto; }
+  .badge { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.78rem; font-weight: 700; }
+  .badge.fail { background: #fff1f0; color: #a8071a; border: 1px solid #ffa39e; }
+  .badge.concern { background: #fffbe6; color: #ad8b00; border: 1px solid #ffe58f; }
+  .badge.pass { background: #f6ffed; color: #237804; border: 1px solid #b7eb8f; }
+  .priority { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.78rem; font-weight: 700; margin-right: 0.4rem; }
+  .priority.p0 { background: #a8071a; color: #fff; }
+  .priority.p1 { background: #ad8b00; color: #fff; }
+  .priority.p2 { background: #555; color: #fff; }
+  .glossary dt { font-weight: 700; margin-top: 0.5rem; }
+  .glossary dd { margin-left: 1rem; color: #444; }
+  .note { background: #fffbe6; border-left: 4px solid #faad14; padding: 0.6rem 0.9rem; margin: 0.75rem 0; }
+</style>
+</head>
+<body>
+
+<h1>auth-overview.md Codex 검수 보고서</h1>
+<div class="meta">
+  대상: <code>docs/development/auth-overview.md</code> (Opus 4.7 작성 · 2026-05-27)<br>
+  검수자: GPT-5.5 (codex-cli 0.128.0, workspace-write sandbox, Round 1)<br>
+  Opus 사후 cross-check: 3건 핵심 적발 모두 직접 검증 — codex 가 맞고 문서가 틀림
+</div>
+
+<h2>① 한 줄 결론</h2>
+<div class="verdict fail">VERDICT: FAIL — 큰 방향은 맞지만, "정본 인덱스" 라고 부르기엔 코드와 어긋나는 핵심 항목이 3개 있다.</div>
+
+<p>가장 큰 문제: 제가 처음 읽었다고 믿었던 <code>src/app/auth/callback/page.tsx</code> 는 <b>실제로 존재하지 않습니다</b>. 진짜 파일은 Route Handler <code>src/app/auth/callback/route.ts</code> + 별도 <code>src/app/auth/callback-fragment/page.tsx</code> 입니다. 직접 Glob 으로 확인했고 commit 주석에 "Phase 8 follow-up P0 fix (2026-05-27): Route Handler 로 전환" 명시. 즉 문서가 옛 구조를 가리키고 있었음.</p>
+
+<h2>② 신호등 (10개 dimension)</h2>
+<div class="scoreboard">
+  <div class="card red"><div class="label">FAIL</div><div class="value">2</div></div>
+  <div class="card yellow"><div class="label">CONCERN</div><div class="value">5</div></div>
+  <div class="card green"><div class="label">PASS</div><div class="value">3</div></div>
+</div>
+
+<table>
+<thead><tr><th>#</th><th>차원</th><th>판정</th><th>한 줄 핵심</th></tr></thead>
+<tbody>
+  <tr><td>1</td><td>코드 참조 정확성</td><td><span class="badge fail">FAIL</span></td><td><code>callback/page.tsx</code> 라고 했지만 실제는 <code>callback/route.ts</code> + <code>callback-fragment/page.tsx</code></td></tr>
+  <tr><td>2</td><td>운영 정책 정확성</td><td><span class="badge concern">CONCERN</span></td><td>OTP 30/hour 는 Supabase 기본값 360/hour 와 다름. refresh token "60일 sliding" 은 공식 문서와 어긋남</td></tr>
+  <tr><td>3</td><td>11종 reason 표</td><td><span class="badge pass">PASS</span></td><td><code>REASON_CONTENT</code> 와 모든 행이 정확히 일치</td></tr>
+  <tr><td>4</td><td>Single Source of Truth 매트릭스</td><td><span class="badge concern">CONCERN</span></td><td>reason 추가 시 <code>tests/lib/auth/error-mapping.test.ts</code> 도 갱신해야 하는데 누락. 라우트 변경에 <code>tests/integration/route-matrix.test.ts</code> 도 누락</td></tr>
+  <tr><td>5</td><td>프로젝트 state 정직성</td><td><span class="badge concern">CONCERN</span></td><td>CLAUDE.md 의 "pre-implementation" 표기 ↔ 실제 <code>src/</code> 코드 존재 의 불일치 미언급</td></tr>
+  <tr><td>6</td><td>바이브 코더 vs 기술 균형</td><td><span class="badge pass">PASS</span></td><td>development/ 위치이므로 SECURITY DEFINER · RLS · pg_cron 용어 사용 OK. 용어집은 nice-to-have</td></tr>
+  <tr><td>7</td><td>누락 시나리오</td><td><span class="badge concern">CONCERN</span></td><td><code>email_change</code> 흐름, OAuth provider 에러, PKCE verifier 저장 위치, Redirect URL whitelist 불일치 시나리오 빠짐</td></tr>
+  <tr><td>8</td><td>디버깅 SQL 정확성</td><td><span class="badge concern">CONCERN</span></td><td>SQL 자체는 OK. 다만 §11 상단의 <code>supabase db remote commit --linked</code> 는 디버깅 명령 자리에 부적절 (스키마 변경 위험)</td></tr>
+  <tr><td>9</td><td>Mermaid 다이어그램</td><td><span class="badge pass">PASS</span></td><td><code>user-flow.md</code> 와 큰 충돌 없음. 단 reset 화살표는 실제 코드와 다름 (10번에서 다룸)</td></tr>
+  <tr><td>10</td><td>Cross-doc 충돌</td><td><span class="badge fail">FAIL</span></td><td>(a) reset 흐름이 <code>/auth/callback</code> 거치지 않음 — <code>redirectTo</code> 가 <code>/password-reset/confirm</code> 직행. (b) <code>NEXT_PUBLIC_SITE_URL</code> 이 <code>.env.example</code> 에 없는데 있다고 함. (c) PW max 64 가 IA 문서엔 있지만 실제 form 엔 없음</td></tr>
+</tbody>
+</table>
+
+<h2>③ 우선순위별 액션</h2>
+
+<h3><span class="priority p0">P0</span> 지금 당장 — 거짓 정보 정정 (3건)</h3>
+<table>
+<thead><tr><th>#</th><th>위치</th><th>현재 (틀림)</th><th>고쳐야 할 것</th></tr></thead>
+<tbody>
+  <tr>
+    <td>P0-1</td>
+    <td><code>auth-overview.md</code> §3 행 "인증 콜백", §4.4</td>
+    <td><code>src/app/auth/callback/page.tsx</code> + <code>CallbackFragmentFallback</code></td>
+    <td><code>src/app/auth/callback/route.ts</code> (Route Handler) + <code>src/app/auth/callback-fragment/page.tsx</code>. §4.4 의 "서버 컴포넌트" → "Route Handler". commit 주석에 따르면 Phase 8 follow-up P0 fix 로 전환된 이유는 <i>server component 에서 <code>cookieStore.set()</code> 이 silent fail → Set-Cookie 응답 헤더 미포함 → /onboarding 도착 시 미인증 상태로 /login 튕김</i> 이라는 실제 버그 수정. 이 사유도 함께 기록.</td>
+  </tr>
+  <tr>
+    <td>P0-2</td>
+    <td><code>auth-overview.md</code> §4.3 비밀번호 재설정 흐름</td>
+    <td>"메일 링크 클릭 → <code>/auth/callback</code> 거쳐 세션 확보 → <code>/password-reset/confirm</code>"</td>
+    <td>실제 <code>PasswordResetRequestForm.tsx:22</code> 의 <code>redirectTo: buildAuthRedirectUrl("/password-reset/confirm")</code>. Supabase verify endpoint 가 직접 <code>/password-reset/confirm</code> 으로 redirect (callback 미경유). 토큰 교환은 Supabase 측 verify endpoint 에서 처리. <code>§4.4</code> 콜백 처리 우선순위 표에서 <code>type=recovery</code> 행은 유지 (다른 흐름에서 들어올 수 있음).</td>
+  </tr>
+  <tr>
+    <td>P0-3</td>
+    <td><code>auth-overview.md</code> §7 환경 변수 표 1행</td>
+    <td><code>NEXT_PUBLIC_SITE_URL</code> 가 <code>.env.example</code> 에 있다고 표기</td>
+    <td><code>.env.example</code> 에는 없음 (라인 1-20 직접 확인). 두 가지 옵션: (1) <code>.env.example</code> 에 변수를 실제로 추가 (권장), (2) "현재 <code>.env.example</code> 에는 누락 — <code>redirect-url.ts</code> 가 production 에서 throw" 라고 정직하게 표기.</td>
+  </tr>
+</tbody>
+</table>
+
+<h3><span class="priority p1">P1</span> 이번 주 안에 — 정확도 보강 (4건)</h3>
+<table>
+<thead><tr><th>#</th><th>대상</th><th>수정 내용</th></tr></thead>
+<tbody>
+  <tr>
+    <td>P1-1</td>
+    <td>§6.3 Rate limit 표</td>
+    <td>"프로젝트 OTP 한도 30/hour (목표값)" → "Dashboard 에서 확인 필요. Supabase 공식 기본값: OTP 360/hour, custom SMTP 첫 시간 30/hour". 출처: <code>supabase.com/docs/guides/deployment/going-into-prod</code>.</td>
+  </tr>
+  <tr>
+    <td>P1-2</td>
+    <td>§9 Q5 세션 자동 로그아웃 주기</td>
+    <td>"refresh token: 60일 (sliding)" 은 공식 문서와 다름. 변경: "access token 기본 1시간. refresh token 은 기본 만료 없음 (1회 사용 회전). inactivity timeout 은 Dashboard Auth 설정값에 따름". 출처: <code>supabase.com/docs/guides/auth/sessions</code>.</td>
+  </tr>
+  <tr>
+    <td>P1-3</td>
+    <td>§10 Single Source of Truth 매트릭스</td>
+    <td>"새 ?reason= 추가" 행에 <code>tests/lib/auth/error-mapping.test.ts</code> 추가. "라우트 path 변경" 행에 <code>tests/integration/route-matrix.test.ts</code> + <code>docs/sitemap.md</code> auth callback row 추가.</td>
+  </tr>
+  <tr>
+    <td>P1-4</td>
+    <td>§11 빠른 디버깅 명령어</td>
+    <td>첫 코드 블록의 <code>supabase db remote commit --linked</code> 줄 삭제. 디버깅 명령 자리에 마이그레이션 생성 명령을 두면 위험. 대신 한 줄 "이미 <code>supabase link</code> 된 DB 에서 실행".</td>
+  </tr>
+</tbody>
+</table>
+
+<h3><span class="priority p2">P2</span> 여유 있을 때 — 완성도 (3건)</h3>
+<ul>
+  <li><b>누락 시나리오 추가</b>: 이메일 변경 (<code>type=email_change</code>) 흐름, magic link 만료, OAuth provider 에러 (<code>?error_code</code> in query), PKCE verifier 저장 위치, Redirect URL whitelist 와 <code>NEXT_PUBLIC_SITE_URL</code> 불일치 시 증상. §4 또는 새 §4.6 "기타 분기" 로.</li>
+  <li><b>프로젝트 state 정직성 메모</b>: 문서 상단에 "주의: 루트 CLAUDE.md 의 pre-implementation 표기는 stale. 이 문서는 2026-05-27 worktree 구현 기준" 한 줄 추가.</li>
+  <li><b>PW 길이 IA ↔ 코드 drift 명시</b>: IA A-01·X-06 은 PW 8-64자, 실제 폼은 <code>min: 8</code> only. 둘 중 하나로 통일하거나 §10 매트릭스에 drift 라고 기록.</li>
+</ul>
+
+<h2>④ Cross-cutting — 왜 이런 일이 발생했나</h2>
+
+<div class="note">
+<b>이 검수의 핵심 교훈:</b> Opus 4.7 이 첫 작성 시 <code>Read</code> 로 <code>src/app/auth/callback/page.tsx</code> 를 호출했고 "실제 파일 내용" 처럼 보이는 응답을 받았지만, 그 파일은 실제로 존재하지 않았다 (현재 commit 에는 <code>route.ts</code> + <code>callback-fragment/page.tsx</code> 만 있음). 도구가 stale cache 를 돌려줬거나 worktree state 가 그 시점에 달랐을 가능성. 사후 <code>Glob</code> + 실제 Read 로 verification 했을 때 비로소 드러남.
+</div>
+
+<p><b>Memory 항목 검증</b>: <code>feedback-report-honesty-cross-audit.md</code> ("자기 산출물 자체 평가는 confirmation bias") 가 이 케이스에도 그대로 적용됐다. 만약 Opus 가 자체 self-audit 만 했다면 <code>callback/page.tsx</code> 로 잘못 인지한 상태로 "검수 결과 OK" 라고 보고했을 것. Codex 의 독립 검증 (특히 ground-truth 파일 직접 grep) 이 이 거짓을 잡아냄.</p>
+
+<h2>⑤ 다음 라운드 전 권장 액션</h2>
+<ol>
+  <li>P0 3건을 먼저 한 번에 수정 (위 표대로).</li>
+  <li>수정 후 codex Round 2 를 callback/reset/env/rate-limit 4 항목만 집중 재검수.</li>
+  <li>P1·P2 는 Round 2 PASS 후 별도 PR.</li>
+</ol>
+
+<h2>⑥ 산출물 위치</h2>
+<table>
+<tbody>
+  <tr><td>검수 대상 문서</td><td><code>docs/development/auth-overview.md</code></td></tr>
+  <tr><td>Codex 프롬프트</td><td><code>tasks/codex-prompt-auth-overview-review-round1.md</code></td></tr>
+  <tr><td>Codex 원본 응답</td><td><code>tasks/codex-output-auth-overview-review-round1.md</code></td></tr>
+  <tr><td>본 보고서</td><td><code>reports/auth-overview-codex-review-20260527.html</code></td></tr>
+</tbody>
+</table>
+
+<h2>⑦ 용어집</h2>
+<dl class="glossary">
+  <dt>Route Handler</dt><dd>Next.js App Router 에서 HTTP 메서드 단위로 응답하는 서버 함수 (<code>route.ts</code>). <code>page.tsx</code> 와 달리 HTML 을 렌더하지 않고 <code>NextResponse</code> 를 반환. <code>cookies().set()</code> 호출이 응답 헤더에 실제로 emit 된다는 점이 server component 와의 결정적 차이.</dd>
+  <dt>PKCE</dt><dd>Proof Key for Code Exchange. OAuth 표준의 보안 강화 확장. 브라우저가 만든 secret 을 서버가 verify 하는 방식으로 "코드 가로채기" 방어. Supabase 가 기본으로 사용.</dd>
+  <dt>verifyOtp / exchangeCodeForSession</dt><dd>Supabase 가 메일 링크 / OAuth code 를 세션 쿠키로 교환하는 server API. 성공하면 <code>sb-*-auth-token</code> 쿠키 set.</dd>
+  <dt>silent fail (cookie set)</dt><dd><code>@supabase/ssr</code> 의 <code>createServerClient</code> 가 server component 에서 호출되면 <code>cookies().set()</code> 이 예외만 안 던지고 실제로는 응답 헤더에 안 박힘. 그래서 page.tsx 콜백은 "verifyOtp 는 성공했는데 다음 페이지에선 미인증" 으로 보임. P0 fix 의 근본 원인.</dd>
+  <dt>fragment fallback</dt><dd>옛 implicit flow 메일 링크는 토큰을 URL <code>#fragment</code> 에 박아 보냄. 서버는 fragment 를 읽을 수 없어 별도 client component 가 <code>window.location.hash</code> 를 파싱해 <code>setSession</code> 호출.</dd>
+  <dt>pg_cron</dt><dd>Postgres extension. <code>cron.schedule(jobname, schedule, command)</code> 로 SQL 자동 실행. 본 프로젝트는 매일 04:00 UTC 에 <code>cleanup_unconfirmed_users</code> 실행.</dd>
+  <dt>RLS (Row Level Security)</dt><dd>Postgres 의 행 단위 권한 정책. 본 프로젝트는 <code>auth.uid()</code> 기반으로 자기 데이터만 보이게 강제. <code>SECURITY DEFINER</code> 함수는 RLS bypass 가능.</dd>
+  <dt>cross-audit</dt><dd>다른 모델 (Codex GPT-5.5) 에게 독립적으로 검증받기. 자기 평가는 confirmation bias 에 약하다는 직접 교훈 (2026-05-27 memory).</dd>
+</dl>
+
+</body>
+</html>
