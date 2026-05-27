@@ -921,6 +921,57 @@ async function testNonPhasePlanSkipsLightSpecCheck() {
   });
 }
 
+async function testPlanAcceptsAllDashVariantsInOutOfScopeHeading() {
+  const variants = [
+    "## Out of Scope — Intentional Cuts",  // em-dash (canonical)
+    "## Out of Scope – Intentional Cuts",  // en-dash
+    "## Out of Scope - Intentional Cuts",  // hyphen
+  ];
+  for (const heading of variants) {
+    const plan = [
+      "# Plan",
+      heading,
+      "- something",
+      "## Smallest Buildable Unit",
+      "- something",
+    ].join("\n");
+    const r = checkPlanFile(plan, "test.md");
+    assert.ok(
+      r.ok || !r.errors.some((e) => /Out of Scope/i.test(e)),
+      `dash variant '${heading}' must be accepted, got errors: ${r.errors.join(" | ")}`,
+    );
+  }
+}
+
+async function testPhaseLedgerDetectionAnchorsToFilename() {
+  await withTempRepo(async (root) => {
+    await mkdir(join(root, "docs", "ai-workflow", "runs", "2026", "05", "27"), {
+      recursive: true,
+    });
+    // Slug accidentally contains "phase-3" but it's not a phase ledger
+    const ledgerRel = "docs/ai-workflow/runs/2026/05/27/20260527-1200-meta-audit-of-phase-3-issue.md";
+    await writeFile(
+      join(root, ledgerRel),
+      [
+        "# Meta audit (not phase work)",
+        "## Docs Consulted",
+        "- a",
+        "- Untouched relevant docs and reason: none",
+        "## Verification State",
+        "- Cross-model review: degraded — solo",
+        "## Ledger/File-State Consistency",
+        "- yes",
+      ].join("\n"),
+    );
+    const r = await checkRepositoryState({ root, changedFiles: [ledgerRel] });
+    // Must NOT raise phase-ledger-specific errors (Light Spec required, etc.)
+    assert.ok(
+      !r.errors.some((e) => /Light Spec/i.test(e)),
+      `non-phase ledger with 'phase-3' in slug must not be flagged as phase ledger: ${r.errors.join(" | ")}`,
+    );
+  });
+}
+
 async function testQaGateBareFailedRequiresReason() {
   const ledgerWithBareFailed = "- QA Gate: failed\n";
   const r = checkQaGate(ledgerWithBareFailed);
@@ -961,5 +1012,7 @@ await testPlanDoesNotRequireAudienceColumnWhenLightSpecIsSingle();
 await testPlanFailsClosedWhenLightSpecMissing();
 await testNonPhasePlanSkipsLightSpecCheck();
 await testPlanRecognizesSectionStyleAudience();
+await testPlanAcceptsAllDashVariantsInOutOfScopeHeading();
+await testPhaseLedgerDetectionAnchorsToFilename();
 
 console.log("ai-workflow-check self-test passed");

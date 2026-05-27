@@ -57,7 +57,10 @@ const SUBAGENT_COLUMN_PATTERN = /Subagent-eligible/i;
 const REVIEWER_LINE_PATTERN = /Cross-model review:\s*(.+?)\s*$/im;
 const ARCH_PASS_LINE_PATTERN = /Architecture Pass:\s*(.+?)\s*$/im;
 const PHASE_MARKER_LINE_PATTERN = /^[-\s]*Phase:\s*\S+/m;
-const PHASE_FILENAME_PATTERN = /phase-\d+/;
+// Match only the canonical phase ledger naming: <date>-<time>-phase-<N>-<slug>.md
+// (or non-dated phase plans like <date>-phase-<N>-<slug>.md for the plans/ folder).
+// Avoids false positives when "phase-N" appears mid-slug (e.g., "meta-audit-of-phase-3").
+const PHASE_FILENAME_PATTERN = /\/\d{8}(?:-\d{4})?-phase-\d+[-_.]/;
 const LIGHT_SPEC_LINE_PATTERN = /Light Spec:\s*(.+?)\s*$/im;
 const LIGHT_SPEC_VALID_PATH_PATTERN =
   /^docs\/ai-workflow\/light-specs\/.+\.md$/;
@@ -184,9 +187,18 @@ function okResult(errors = [], warnings = []) {
   return { ok: errors.length === 0, errors, warnings };
 }
 
+function normalizeDashes(s) {
+  // Treat hyphen, en-dash, em-dash as equivalent for section heading matching.
+  // Avoids the "type one wrong dash and the checker fails" footgun.
+  return s.replace(/[—–‐-]/g, "—");
+}
+
 function sectionContent(markdown, heading) {
   const lines = markdown.split(/\r?\n/);
-  const start = lines.findIndex((line) => line.trim() === heading);
+  const normalizedHeading = normalizeDashes(heading);
+  const start = lines.findIndex(
+    (line) => normalizeDashes(line.trim()) === normalizedHeading,
+  );
   if (start === -1) return null;
 
   const contentLines = [];
