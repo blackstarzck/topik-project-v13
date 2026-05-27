@@ -27,6 +27,7 @@ export const PUBLIC_PATHS = [
   // Without these, anonymous callback redirects to /login and the token
   // exchange itself never runs, breaking the entire confirmation flow.
   "/auth/callback",
+  "/auth/callback-fragment", // Phase 8 follow-up P0 (2026-05-27): implicit flow fragment fallback page
   "/auth/error",
   "/auth/verify-email",
 ] as const;
