@@ -30,6 +30,7 @@
   - `@supabase/ssr` 0.10.x 시그니처는 변경 전 라이브러리 docs 확인
   - paywall/subscription billing scope는 `deferred-scope.md` 그대로
 - Doc conflicts: none
+- Untouched relevant docs and reason: none
 
 ## Decisions
 

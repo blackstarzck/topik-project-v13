@@ -25,6 +25,7 @@
 - `supabase/README.md` (Supabase CLI 적용 명령)
 - `supabase/migrations/*.sql` 21개 (적용 대상)
 - Doc conflicts: none
+- Untouched relevant docs and reason: none
 
 ## Decisions
 

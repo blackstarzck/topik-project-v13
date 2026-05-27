@@ -27,6 +27,7 @@
 - `docs/ai-workflow/proposals/20260523-coverage-audit-fix-proposals.md` (P0-2/3/4 + P1-5 합의)
 - `docs/IA/{08,09,10,11,22}-{D-01,D-02,D-03,D-04,D-M3}/description.md`
 - 기존: `src/components/writing/WritingEditor.tsx`, `src/components/writing/AutosaveBadge.tsx`, `src/lib/writing/types.ts`, `src/lib/writing/server.ts`
+- Untouched relevant docs and reason: none
 
 ## Decisions
 

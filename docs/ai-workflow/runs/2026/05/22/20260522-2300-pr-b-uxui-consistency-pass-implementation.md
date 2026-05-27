@@ -33,6 +33,7 @@
   - `docs/ant-design/08-theme-architecture.md` (Tokens 정본)
 - 구조 참고: `docs/ai-workflow/review-gates.md` (Architecture Pass 패턴), `docs/ai-workflow/context-ledger-template.md`, `docs/ai-workflow/planning-contracts.md`
 - 직전 PR A: `docs/ai-workflow/runs/2026/05/22/20260522-1900-pr-a-extension-after-codex-review.md`
+- Untouched relevant docs and reason: none
 
 ## Decisions
 

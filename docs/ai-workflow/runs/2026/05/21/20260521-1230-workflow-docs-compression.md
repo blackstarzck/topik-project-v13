@@ -46,6 +46,7 @@
   - sub-doc는 깊은 룰 필요 시만 읽음
   - 룰 의미는 100% 보존 (분리만)
 - Doc conflicts: none
+- Untouched relevant docs and reason: none
 
 ## Collaboration Mode (Codex와 합의됨, Mode C 변형)
 

@@ -52,6 +52,8 @@ Login → /dashboard → (no goal) → /onboarding/learning-goal → 입력 → 
 
 ## Domain Boundary
 
+Audience: user (학습자 onboarding + dashboard + 추천/문제 목록 흐름. Admin 영역은 Phase 6.)
+
 폴더(정본은 코드 폴더, `docs/domain-glossary.md` 참조):
 
 - `src/lib/learning/` (신규) — `learning_goals` queries/mutations, KPI 집계 helpers

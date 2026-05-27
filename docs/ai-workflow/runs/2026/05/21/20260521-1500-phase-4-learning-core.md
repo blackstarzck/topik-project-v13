@@ -44,6 +44,7 @@
   - C-01 51/52/53/54 탭 + 추천 카드
   - C-02 필터/검색/정렬/페이지네이션 10/page
 - Doc conflicts: none
+- Untouched relevant docs and reason: none
 
 ## Decisions
 

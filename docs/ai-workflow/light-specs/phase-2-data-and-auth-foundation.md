@@ -48,6 +48,8 @@
 
 ## Domain Boundary
 
+Audience: user (인프라 레이어 — 익명/로그인 사용자 경계만 다룬다. Admin role gate는 Phase 3에서 도입.)
+
 폴더(정본은 코드 폴더 구조, `docs/domain-glossary.md` 참조):
 
 - `src/lib/supabase/` — env 검증, browser/server 클라이언트, generated types

@@ -90,6 +90,10 @@ Phase 5는 sitemap의 D/E/R 그룹(쓰기 + 피드백 + 비교 리포트) 4 rout
 - 기존 typed (Phase 4): problems(메타만), problem_attempts(미사용)
 - 신규 함수: `feedback-service.ts` (mock LLM), `comparison-service.ts` (metric 계산)
 
+## Audience
+
+Audience: user (학습자 쓰기 풀이 + 피드백 + 비교 리포트 흐름. Admin 영역 X-08/X-10 등은 Phase 6.)
+
 ## User Flow Anchor
 
 ```

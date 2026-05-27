@@ -28,6 +28,7 @@
   - Task 2 PASS: 32 행 매트릭스에 (IA ID, route + sitemap line, page.tsx 파일 경로, placeholder 감지 결과 + 매칭 텍스트, 정본 출처 file:line, 1차 신호등 등급) + 한 줄 결론. 최종 `reports/sbu-a-coverage-matrix-20260523.md`로 승격
   - SBU-A ledger: 본 파일. Docs Consulted file:line / Decisions / Verification State / Risks 모두 채움
 - Doc conflicts: none.
+- Untouched relevant docs and reason: none
 
 ## Decisions
 

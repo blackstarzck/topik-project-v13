@@ -53,6 +53,8 @@ Admin 메뉴 → role 체크 → admin이면 admin placeholder, 아니면 /dashb
 
 ## Domain Boundary
 
+Audience: user (사용자 워크스페이스 shell + 27 active route placeholder가 본체. Admin route는 placeholder + role gate helper만 — admin UI 본격 구현은 Phase 6.)
+
 폴더(정본은 코드 폴더, `docs/domain-glossary.md` 참조):
 
 - `src/app/(workspace)/` — Next.js Route Group. 모든 보호 라우트의 부모 layout.

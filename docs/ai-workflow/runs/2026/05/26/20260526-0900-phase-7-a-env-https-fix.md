@@ -23,6 +23,7 @@
 - `docs/ai-workflow/proposals/20260523-coverage-audit-fix-proposals.md` (P1-0 합의)
 - `src/lib/supabase/env.ts` (현재 https-only 코드)
 - `tests/lib/supabase/env.test.ts` (기존 5 테스트)
+- Untouched relevant docs and reason: none
 
 ## Decisions
 

@@ -43,6 +43,7 @@
   - Mock LLM 기반 deterministic feedback (Phase 6에서 server function으로 교체)
   - R-TZ resolution (Phase 4 follow-up)
 - Doc conflicts: none
+- Untouched relevant docs and reason: none
 
 ## Decisions
 

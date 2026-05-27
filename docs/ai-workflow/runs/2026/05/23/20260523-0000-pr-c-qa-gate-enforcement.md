@@ -31,6 +31,7 @@
 - Codex D안 결정 출력: `tasks/bec406j23.output` (59,282 tokens, gpt-5.5 medium reasoning)
 - 워크플로 거버닝: `docs/ai-workflow/review-gates.md` (§QA Gate 기존), `docs/ai-workflow/context-ledger-template.md`, `docs/ai-workflow/planning-contracts.md`, `scripts/ai-workflow-check.mjs`
 - 직전 PR A/B 컨텍스트: `docs/ai-workflow/runs/2026/05/22/20260522-{1700,1900,2300}-*.md`
+- Untouched relevant docs and reason: none
 
 ## Decisions
 

@@ -114,22 +114,22 @@ Phase 6는 Tier 1 MVP의 마지막 phase로, 누적된 hardening follow-ups를 �
 
 ## Tasks
 
-| # | Title | Status | Subagent-eligible? (Y/N + reason) |
-| --- | --- | --- | --- |
-| 0 | Hardening migration 140000 (admin helpers + RLS + RPC + KPI + admin RPCs) | pending | N — schema/security 변경 |
-| 0b | Notification prefs migration 141000 | pending | N — schema |
-| 1 | Hardening code (next.config.ts cache headers, kpi.ts RPC, mutations dead invalidate, admin-guard 분리) | pending | N — cross-phase contract |
-| 2 | types.ts 4 신규 테이블 + notification_prefs 컬럼 (fallback hand-align) | pending | N — shared snapshot |
-| 3 | src/lib/admin/ (server + queries + mutations + server-actions + types) | pending | Y — isolated domain |
-| 4 | src/lib/library/ (server + queries + mutations + types) | pending | Y — isolated |
-| 5 | src/lib/export/pdf-export.ts (browser print + study_event + options.source='browser_print') | pending | Y — pure helper |
-| 6 | src/lib/practice/{weakness,next}.ts (fallback 포함) | pending | Y — pure helpers |
-| 7 | src/lib/settings/ + src/lib/events/study-events.ts | pending | Y — pure |
-| 8 | UI components (admin × 3, library × 4, settings × 3, profile, retry/next/weakness views) | pending | Y — independent |
-| 9 | Pages (admin × 3, library, practice × 2, settings × 2, profile) | pending | N — RLS-bound fetch composition |
-| 10 | Integration tests (admin role change + library save + weakness aggregate + redirect matrix) | pending | N — multi-page |
-| 11 | Full verification (lint/test/build/checker) | pending | N — main session |
-| 12 | Cross-model review (Opus + Codex) | pending | N — main session |
+| # | Title | Status | Audience | Subagent-eligible? (Y/N + reason) |
+| --- | --- | --- | --- | --- |
+| 0 | Hardening migration 140000 (admin helpers + RLS + RPC + KPI + admin RPCs) | pending | both | N — schema/security 변경 |
+| 0b | Notification prefs migration 141000 | pending | user | N — schema |
+| 1 | Hardening code (next.config.ts cache headers, kpi.ts RPC, mutations dead invalidate, admin-guard 분리) | pending | both | N — cross-phase contract |
+| 2 | types.ts 4 신규 테이블 + notification_prefs 컬럼 (fallback hand-align) | pending | n/a | N — shared snapshot |
+| 3 | src/lib/admin/ (server + queries + mutations + server-actions + types) | pending | admin | Y — isolated domain |
+| 4 | src/lib/library/ (server + queries + mutations + types) | pending | user | Y — isolated |
+| 5 | src/lib/export/pdf-export.ts (browser print + study_event + options.source='browser_print') | pending | user | Y — pure helper |
+| 6 | src/lib/practice/{weakness,next}.ts (fallback 포함) | pending | user | Y — pure helpers |
+| 7 | src/lib/settings/ + src/lib/events/study-events.ts | pending | user | Y — pure |
+| 8 | UI components (admin × 3, library × 4, settings × 3, profile, retry/next/weakness views) | pending | both | Y — independent |
+| 9 | Pages (admin × 3, library, practice × 2, settings × 2, profile) | pending | both | N — RLS-bound fetch composition |
+| 10 | Integration tests (admin role change + library save + weakness aggregate + redirect matrix) | pending | both | N — multi-page |
+| 11 | Full verification (lint/test/build/checker) | pending | n/a | N — main session |
+| 12 | Cross-model review (Opus + Codex) | pending | n/a | N — main session |
 
 ---
 

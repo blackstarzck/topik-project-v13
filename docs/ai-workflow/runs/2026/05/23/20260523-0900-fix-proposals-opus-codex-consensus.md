@@ -31,6 +31,7 @@
 - `docs/IA/{N}/description.md` × 13건 해당 IA
 - `tasks/codex-post-audit-review-20260523.output` (Codex post-audit FN-1/2/3 추가 finding)
 - 본 user request
+- Untouched relevant docs and reason: none
 
 ## Decisions
 

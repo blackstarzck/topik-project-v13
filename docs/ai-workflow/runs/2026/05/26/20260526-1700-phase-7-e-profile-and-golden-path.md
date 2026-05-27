@@ -26,6 +26,7 @@
 - `docs/IA/27-X-05-profile-editing/description.md`
 - 기존: `src/components/profile/ProfileForm.tsx`, `src/lib/settings/{types,server,mutations}.ts`, `src/app/(workspace)/profile/page.tsx`
 - Plan rev3 Task 13 + 7-B/C/D 골든 패스 의존
+- Untouched relevant docs and reason: none
 
 ## Decisions
 

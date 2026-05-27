@@ -28,6 +28,7 @@
 - 직전 PR A 확장 ledger: `docs/ai-workflow/runs/2026/05/22/20260522-1900-pr-a-extension-after-codex-review.md`
 - `reports/pr-a-admin-audience-review.html` (체크리스트 ①-⑤)
 - Codex 출력: `tasks/byajmgagm.output` (28,003 tokens, gpt-5.5 medium reasoning)
+- Untouched relevant docs and reason: none
 
 ## Decisions
 

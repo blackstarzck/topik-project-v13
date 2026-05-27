@@ -29,6 +29,7 @@
 - `docs/ai-workflow/proposals/20260523-coverage-audit-fix-proposals.md`
 - `docs/IA/{07,17,29,13,04,06}/description.md`
 - 기존 컴포넌트: ProblemListView, ProblemRow, RetryModal, NextProblemView, WeaknessView, FeedbackPendingPanel, DashboardContent, ProblemListControls
+- Untouched relevant docs and reason: none
 
 ## Decisions
 

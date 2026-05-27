@@ -216,6 +216,7 @@ PASS Gate Round 5 결과: **PASS — 0 P1, 2 P2 advisory**. Round 4 신규 RPC +
   - study_events fire-and-forget logging 핵심 흐름 6종
   - admin_audit_logs 자동 기록 (모든 admin role/publish change)
 - Doc conflicts: none
+- Untouched relevant docs and reason: none
 
 ## Decisions
 
