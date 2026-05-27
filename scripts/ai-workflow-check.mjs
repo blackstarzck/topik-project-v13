@@ -609,7 +609,10 @@ async function validateLedger(root, ledgerPath, errors) {
       // stop scan when next top-level item or new section starts
       if (/^##\s+/.test(next)) break;
       if (/^\S/.test(next)) break;   // non-indented → next field at same level
-      // indented non-empty line counts as content
+      // indented — but reject empty bullet markers like '  - ' or '  -'
+      // (these can result from wholesale-copy of the template default).
+      const indented = next.trim();
+      if (/^-\s*$/.test(indented)) continue;  // empty bullet, keep scanning
       untouchedOk = true;
       break;
     }

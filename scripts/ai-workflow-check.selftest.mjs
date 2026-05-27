@@ -644,6 +644,23 @@ async function testLedgerRequiresUntouchedRelevantDocs() {
     assert.equal(rEmpty.ok, false);
     assert.ok(rEmpty.errors.some((e) => /Untouched relevant docs/i.test(e)),
       `(D) empty header must raise error, got: ${rEmpty.errors.join(" | ")}`);
+
+    // (E) header + empty bullet (wholesale-copy of template default) → FAIL
+    const emptyBulletRel = "docs/ai-workflow/runs/2026/05/27/20260527-1204-empty-bullet.md";
+    await writeFile(
+      join(root, emptyBulletRel),
+      [
+        "## Docs Consulted",
+        "- Exact files read: a.md",
+        "- Untouched relevant docs and reason:",
+        "  - ",
+        baseSections,
+      ].join("\n"),
+    );
+    const rEmptyBullet = await checkRepositoryState({ root, changedFiles: [emptyBulletRel] });
+    assert.equal(rEmptyBullet.ok, false);
+    assert.ok(rEmptyBullet.errors.some((e) => /Untouched relevant docs/i.test(e)),
+      `(E) empty bullet must raise error, got: ${rEmptyBullet.errors.join(" | ")}`);
   });
 }
 
