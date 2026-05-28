@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>IA 구현 검수 절차 쉬운 설명</title>
+  <link rel="icon" href="data:,">
+  <title>IA 구현 검수 실행 워크플로우</title>
   <style>
     :root {
       --bg: #f5f7fb;
@@ -150,44 +151,98 @@
       font-size: 14px;
     }
 
-    .flow {
+    .baseline-grid {
       display: grid;
-      grid-template-columns: repeat(9, 1fr);
-      gap: 10px;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
       margin-top: 18px;
     }
 
-    .step {
-      min-height: 136px;
-      padding: 16px 14px;
-      border-radius: 14px;
+    .workflow-diagram {
+      display: grid;
+      gap: 14px;
+      margin-top: 20px;
+    }
+
+    .diagram-row {
+      display: grid;
+      grid-template-columns: 1fr 42px 1fr 42px 1fr;
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .diagram-node {
+      min-height: 132px;
+      padding: 18px;
       border: 1px solid var(--line);
+      border-radius: 14px;
       background: #fff;
     }
 
-    .step b {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 30px;
-      height: 30px;
-      margin-bottom: 10px;
-      border-radius: 50%;
-      background: var(--blue);
-      color: #fff;
-      font-size: 14px;
-    }
-
-    .step span {
+    .diagram-node strong {
       display: block;
-      font-weight: 900;
+      margin-bottom: 8px;
+      font-size: 17px;
       line-height: 1.35;
     }
 
-    .step p {
+    .diagram-node small {
+      display: inline-block;
+      margin-bottom: 8px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: var(--blue);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .diagram-node p {
       color: var(--muted);
       font-size: 14px;
       line-height: 1.5;
+    }
+
+    .diagram-decision {
+      border-style: dashed;
+      border-color: #f59e0b;
+      background: #fff7ed;
+    }
+
+    .diagram-gate {
+      border-color: #bbf7d0;
+      background: #ecfdf3;
+    }
+
+    .diagram-output {
+      border-color: #bfdbfe;
+      background: #eff6ff;
+    }
+
+    .diagram-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--blue);
+      font-size: 28px;
+      font-weight: 900;
+    }
+
+    .diagram-arrow::before { content: "→"; }
+
+    .diagram-split {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    .loop-note {
+      padding: 16px 18px;
+      border: 1px dashed #94a3b8;
+      border-radius: 14px;
+      background: #f8fafc;
+      color: var(--muted);
+      font-size: 15px;
     }
 
     .phase-grid {
@@ -299,8 +354,15 @@
       .traffic-grid,
       .role-grid,
       .glossary,
-      .flow {
+      .baseline-grid,
+      .diagram-row,
+      .diagram-split {
         grid-template-columns: 1fr;
+      }
+
+      .diagram-arrow {
+        min-height: 28px;
+        transform: rotate(90deg);
       }
 
       .artifact {
@@ -312,10 +374,10 @@
 <body>
   <header>
     <div class="wrap">
-      <div class="eyebrow">비개발자용 설명서 · IA 구현 검수</div>
-      <h1>34개 화면이 “진짜 쓸 수 있는 상태인지” 확인하는 절차입니다</h1>
+      <div class="eyebrow">비개발자용 설명서 · IA 구현 검수 워크플로우</div>
+      <h1>34개 IA를 증거로 검수하고 최종 PASS를 스크립트로 막는 절차입니다</h1>
       <p class="lead">
-        이 문서는 TALKPIK AI의 화면, 팝업, 인증 처리 경로를 문서와 실제 구현 기준으로 점검하는 방법을 쉽게 풀어쓴 설명서입니다.
+        기준 문서의 실행 계획을 바탕으로, 문서 영수증부터 브라우저 증거, 보안 증거, 에이전트 검수, AI/사람 UX 판단, 최종 검증까지 한눈에 보이게 정리했습니다.
       </p>
     </div>
   </header>
@@ -325,15 +387,14 @@
       <article class="card">
         <h2>한 줄 결론</h2>
         <p>
-          단순히 “페이지가 열리는가?”를 보는 절차가 아닙니다.
-          사용자가 길을 잃지 않는지, 버튼이 맞는지, 뒤로가기가 안전한지,
-          모바일에서 깨지지 않는지, 정책을 과장하지 않는지까지 봅니다.
-          이제는 그 판단을 말로만 남기지 않고, 스크립트가 읽을 수 있는 증거로 남깁니다.
+          이 절차의 목표는 “현재 IA 화면, 팝업, 상태, 서버 경로가 실제로 쓸 수 있는 수준인지”를 증명하는 것입니다.
+          페이지가 열린다는 사실만으로는 부족합니다. 문서 기준, 화면 증거, 팝업 상태, 로그인과 권한, 뒤로가기와 직접 URL, 사람 판단이 필요한 UX까지 확인합니다.
+          마지막 PASS는 사람이 손으로 쓰는 값이 아니라 스크립트가 계산하고 검증하는 값입니다.
         </p>
         <div class="callout">
           <h3>비유하면 건물 완공 검사입니다</h3>
           <p>
-            문이 열리는지만 보면 부족합니다. 안내판, 비상구, 조명, 동선, 직원 전용 구역까지 봐야 “사용 가능”이라고 말할 수 있습니다.
+            문이 열리는지만 보면 부족합니다. 안내판, 비상구, 조명, 동선, 직원 전용 구역까지 봐야 “사용 가능”이라고 말할 수 있습니다. 이 문서는 그 검사를 빠짐없이 반복하는 순서표입니다.
           </p>
         </div>
       </article>
@@ -341,16 +402,14 @@
       <article class="card">
         <h2>이번 변경의 핵심</h2>
         <p>
-          이번 변경은 Phase 5만 바꾸는 일이 아닙니다.
-          전체 절차를 “스크립트가 검문하는 방식”으로 바꿉니다.
-          사람이 직접 PASS를 적는 대신, 각 단계가 JSON 증거를 남기고 마지막 스크립트가 통과 가능 여부를 확인합니다.
-          34개 IA는 한 사람이 한꺼번에 보는 방식이 아니라, 여러 에이전트가 묶음별로 나눠 보는 방식으로 바꿉니다.
+          핵심은 “실행 단위가 분리된, 증거 기반 검수 흐름”입니다.
+          먼저 34개 IA 명단과 문서 영수증을 만들고, 브라우저/팝업/보안 증거를 JSON으로 남깁니다.
+          그다음 증거 묶음을 고정한 뒤에만 IA 묶음 에이전트를 투입합니다.
+          에이전트는 PASS를 추천할 수 있지만 최종 PASS를 확정할 수는 없습니다.
         </p>
         <p>
-          Phase 5에서는 AI가 먼저 34개 IA를 훑고, 위험한 부분과 사람이 봐야 할 질문을 정리합니다.
-          그래서 앞 단계의 역할도 바뀝니다. Phase 2, 3, 4는 AI가 볼 수 있는
-          “증거 사진첩”을 만듭니다. 로딩, 빈 화면, 에러, 직접 URL, 뒤로가기,
-          복구 버튼까지 남겨야 AI 판단도 믿을 수 있습니다.
+          Phase 5에서는 AI가 먼저 UX 위험을 정리하고, 사람은 문구 자연스러움, 모바일 체감, 신뢰감, 정책성 문구처럼 판단이 필요한 부분을 확인합니다.
+          마지막 Phase 6에서 결과를 합치고 검증 스크립트가 빠진 증거, 섞인 실행 ID, 낡은 결과, AI가 대신 쓴 사람 확인을 막습니다.
         </p>
       </article>
     </section>
@@ -360,39 +419,129 @@
         <article class="score">
           <strong class="blue">34</strong>
           <small>현재 IA 항목</small>
-          <p>화면, 팝업, 상태 화면까지 검수 대상입니다.</p>
+          <p><code>docs/IA/README.md</code> 기준의 현재 검수 대상입니다.</p>
         </article>
         <article class="score">
-          <strong class="amber">스크립트</strong>
-          <small>자동 검문소</small>
-          <p>문서 영수증, 화면 증거, 보안 증거가 빠지면 통과를 막습니다.</p>
+          <strong class="amber">JSON</strong>
+          <small>최종 판정의 원본 증거</small>
+          <p>문서, 화면, 팝업, 보안 결과는 스크립트가 읽을 수 있어야 합니다.</p>
         </article>
         <article class="score">
-          <strong class="violet">묶음 검수</strong>
-          <small>여러 에이전트 분담</small>
-          <p>IA를 6개 안팎의 묶음으로 나눠 빠짐없이 살핍니다.</p>
+          <strong class="violet">6개</strong>
+          <small>기본 IA 묶음</small>
+          <p>공개/인증, 온보딩·대시보드, 작성, 피드백, 보관함/설정, 관리자 6개로 나눠 봅니다.</p>
         </article>
         <article class="score">
-          <strong class="green">AI+사람</strong>
-          <small>UX 최종 판단</small>
-          <p>AI가 먼저 위험을 찾고, 사람은 판단이 필요한 질문을 확인합니다.</p>
+          <strong class="green">검증</strong>
+          <small>PASS 차단 장치</small>
+          <p>증거 없는 PASS, 낡은 결과, AI가 대신 쓴 사람 확인을 마지막에 막습니다.</p>
         </article>
       </div>
     </section>
 
     <section class="card">
-      <h2>전체 흐름</h2>
-      <p>개발자가 아니어도 어느 단계에서 무엇을 확인하는지 볼 수 있도록 나눴습니다.</p>
-      <div class="flow">
-        <div class="step"><b>0</b><span>준비</span><p>기준 문서와 34개 IA 목록을 확인합니다.</p></div>
-        <div class="step"><b>0.5</b><span>문서 영수증</span><p>각 IA마다 어떤 문서를 읽었는지 흔적을 남깁니다.</p></div>
-        <div class="step"><b>1</b><span>목록화</span><p>검수할 화면, 팝업, 서버 경로를 한 장의 명단으로 만듭니다.</p></div>
-        <div class="step"><b>1.5</b><span>나눠 맡김</span><p>IA 묶음을 만들고 에이전트별 작업 지시서를 준비합니다.</p></div>
-        <div class="step"><b>2</b><span>화면 확인</span><p>브라우저로 실제 페이지가 열리고 보이는지 확인합니다.</p></div>
-        <div class="step"><b>3</b><span>팝업 확인</span><p>제출 확인, 저장 경고, 분석 로딩 같은 상태를 따로 봅니다.</p></div>
-        <div class="step"><b>4</b><span>접근 확인</span><p>로그인, 권한, 직접 URL, 뒤로가기, 새로고침을 점검합니다.</p></div>
-        <div class="step"><b>5</b><span>AI+사람 UX</span><p>AI가 먼저 보고, 사람이 판단이 필요한 부분을 최종 확인합니다.</p></div>
-        <div class="step"><b>6</b><span>리포트</span><p>PASS, FAIL, BLOCKED 같은 결과표로 모읍니다.</p></div>
+      <h2>현재 출발점</h2>
+      <p>실행 계획 문서가 잡고 있는 현재 상태입니다. 이 상태를 먼저 확인하고 나서 검수 자동화를 돌립니다.</p>
+      <div class="baseline-grid">
+        <article class="traffic info"><b class="blue">IA는 34개</b><p><code>docs/IA/README.md</code>는 34개 IA 폴더를 기준으로 봅니다. sitemap의 32개 표현은 구현 실패가 아니라 문서 틈으로 표시합니다.</p></article>
+        <article class="traffic warn"><b class="amber">E2E는 아직 27개 중심</b><p>현재 E2E 매트릭스는 32-route 시절 흔적이 있고, 보이는 IA route 중 일부가 빠져 있습니다.</p></article>
+        <article class="traffic warn"><b class="red">빠진 route 후보</b><p><code>C-03</code>, <code>D-M1</code>, <code>D-M2</code>, <code>D-M3</code>, <code>F-M1</code>, <code>X-11</code>, <code>X-12</code>를 추가 확인해야 합니다.</p></article>
+        <article class="traffic warn"><b class="red">인증 준비 파일 틈</b><p><code>/auth/sign-out</code> 서버 처리 경로와 <code>tests/e2e/auth-state/{role}.json</code> 준비 상태를 확인해야 합니다.</p></article>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>워크플로우 다이어그램</h2>
+      <p>핵심 순서는 “문서 기준 잡기 → 자동 증거 만들기 → 증거 묶음 고정 → 에이전트 검수 → AI/사람 UX 판단 → 최종 병합과 검증”입니다. 옆에는 늘 <b>흐름 감시관</b>이 함께 돌면서 단계 전환마다 “증거 없는 PASS”나 “이른 BLOCKED”를 막습니다.</p>
+      <div class="workflow-diagram" aria-label="IA 구현 검수 실행 워크플로우 다이어그램">
+        <div class="diagram-row">
+          <article class="diagram-node">
+            <small>Phase 0</small>
+            <strong>기준 문서와 실행 폴더 준비</strong>
+            <p><code>docs/sitemap.md</code>, <code>docs/IA/README.md</code>, user flow, PRD, spec 순서로 기준을 잡고 <code>reports/ia-verification/runs/&lt;runId&gt;</code>를 만듭니다.</p>
+          </article>
+          <div class="diagram-arrow" aria-hidden="true"></div>
+          <article class="diagram-node diagram-gate">
+            <small>Phase 0.5</small>
+            <strong>문서 영수증 Gate</strong>
+            <p>각 IA마다 읽은 문서, 뽑은 요구사항, 충돌 여부를 <code>doc-receipts.json</code>에 남깁니다. 영수증이 없으면 PASS는 막힙니다.</p>
+          </article>
+          <div class="diagram-arrow" aria-hidden="true"></div>
+          <article class="diagram-node">
+            <small>Phase 1</small>
+            <strong>IA 명단과 분담 계획 만들기</strong>
+            <p><code>ia-manifest.json</code>, <code>source-map-results.json</code>, <code>agent-dispatch-plan.json</code>을 준비합니다. 이때는 아직 에이전트를 투입하지 않습니다.</p>
+          </article>
+        </div>
+
+        <div class="diagram-row">
+          <article class="diagram-node">
+            <small>Phase 2</small>
+            <strong>브라우저 화면 증거</strong>
+            <p>페이지 route를 실제 브라우저에서 열고 모바일, 태블릿, 데스크톱, 빈 화면, 로딩, 에러 상태를 남깁니다.</p>
+          </article>
+          <div class="diagram-arrow" aria-hidden="true"></div>
+          <article class="diagram-node">
+            <small>Phase 3</small>
+            <strong>팝업과 화면 안 상태 증거</strong>
+            <p>모달, 토스트, 자동저장, 제출 확인, 내보내기, AI 분석 로딩처럼 host route 안에서 뜨는 상태를 확인합니다.</p>
+          </article>
+          <div class="diagram-arrow" aria-hidden="true"></div>
+          <article class="diagram-node">
+            <small>Phase 4</small>
+            <strong>보안과 이동 증거</strong>
+            <p>로그인 전후, role, owner id, 직접 URL, 새로고침, 로그아웃 뒤로가기, raw error 노출을 확인합니다.</p>
+          </article>
+        </div>
+
+        <div class="diagram-row">
+          <article class="diagram-node diagram-decision">
+            <small>Gate</small>
+            <strong>증거 묶음이 고정됐나?</strong>
+            <p><code>runId</code>, <code>sourceCommit</code>, <code>dirtyState</code>, <code>evidenceBundleId</code>가 맞는지 봅니다. 바뀐 입력은 낡은 증거로 처리합니다.</p>
+          </article>
+          <div class="diagram-arrow" aria-hidden="true"></div>
+          <article class="diagram-node">
+            <small>Dispatch</small>
+            <strong>IA 묶음 에이전트 투입</strong>
+            <p>필수 증거가 있거나 명확히 <code>BLOCKED</code>로 표시된 뒤에만 작업 지시서를 만들고 shard별 검수를 맡깁니다.</p>
+          </article>
+          <div class="diagram-arrow" aria-hidden="true"></div>
+          <article class="diagram-node">
+            <small>Phase 5</small>
+            <strong>AI-first UX와 사람 확인</strong>
+            <p>AI가 모든 IA의 UX 위험 카드를 만들고, 사람은 판단이 필요한 문구, 신뢰감, 모바일, 정책 질문을 확인합니다.</p>
+          </article>
+        </div>
+
+        <div class="diagram-row">
+          <article class="diagram-node diagram-output">
+            <small>Phase 6</small>
+            <strong>결과 병합</strong>
+            <p><code>pnpm test:ia:merge</code>로 모든 JSON 결과를 합쳐 <code>ia-implementation-audit.json</code>과 Markdown 리포트를 만듭니다.</p>
+          </article>
+          <div class="diagram-arrow" aria-hidden="true"></div>
+          <article class="diagram-node diagram-gate">
+            <small>Final Gate</small>
+            <strong>최종 검증</strong>
+            <p><code>pnpm test:ia:validate</code>가 증거 없는 PASS, 사람 확인 누락, 에이전트 결과 누락, 섞인 실행 ID를 막습니다.</p>
+          </article>
+          <div class="diagram-arrow" aria-hidden="true"></div>
+          <article class="diagram-node diagram-output">
+            <small>Done or Re-run</small>
+            <strong>최종 판정 또는 재실행</strong>
+            <p>상류 문서나 구현이 바뀌면 Phase 0.5~4를 다시 돌리고, 바뀐 IA는 Phase 5~6도 다시 돌립니다. 영향 받지 않은 IA만 옛 결과를 재사용할 수 있는데, 이때 <code>carryover-map.json</code>에 “어느 실행에서 가져왔는지”를 남기지 않으면 통과되지 않습니다.</p>
+          </article>
+        </div>
+        <div class="loop-note">
+          빠진 증거가 있으면 “대충 PASS”가 아니라 <code>BLOCKED</code>, <code>PARTIAL</code>, <code>FAIL</code>, <code>DOC-GAP</code>, <code>DEFERRED</code> 중 하나로 남기고 다시 실행합니다.
+        </div>
+        <div class="loop-note">
+          <b>흐름 감시관(audit flow monitor)</b>은 위 모든 단계와 나란히 흐르는 별도 트랙입니다. 단계가 넘어가기 전마다 “이 단계에 나와야 할 증거가 빠졌는지”, “이른 PASS/BLOCKED는 없는지”를 <code>audit-flow-monitor.json</code>에 기록합니다. 감시관은 검수원 자리를 차지하지 않습니다. 단, 동시에 IA 묶음 검수원과 같이 돌면 한 번에 돌리는 자식 에이전트가 6명을 넘지 않도록 검수원은 5명으로 줄입니다.
+        </div>
+        <div class="loop-note">
+          상류 문서나 코드가 바뀌면 영향받은 IA만 다시 돌립니다. 이때 옛 Phase 5 결과와 새 상류 증거를 섞지 못하도록 <code>carryover-map.json</code>에 “어떤 IA를 어느 실행에서 재사용했는지”를 남기고, 한 IA의 증거 묶음은 그 안에서 끝까지 일관되어야 합니다.
+        </div>
       </div>
     </section>
 
@@ -411,12 +560,13 @@
       <p>
         34개 IA를 한 에이전트가 전부 기억해서 보는 방식은 놓치기 쉽습니다.
         그래서 공개/인증, 온보딩, 작성, 피드백, 보관함/설정, 관리자/보안처럼 묶음을 나눕니다.
+        단, 브라우저, 팝업, 보안 증거가 준비되기 전에는 에이전트를 투입하지 않습니다.
         각 에이전트는 자기 묶음만 깊게 보고, 최종 판정은 진행 관리자와 스크립트가 합칩니다.
       </p>
       <div class="traffic-grid">
-        <article class="traffic info"><b class="blue">진행 관리자</b><p>누가 어떤 IA 묶음을 볼지 정하고, 충돌 난 결과를 정리합니다.</p></article>
-        <article class="traffic info"><b class="violet">IA 묶음 에이전트</b><p>담당 묶음의 문서, 화면 증거, UX 위험을 보고 결과 패킷을 냅니다.</p></article>
-        <article class="traffic warn"><b class="amber">최종 검증</b><p>에이전트가 PASS라고 해도 증거가 부족하면 최종 PASS가 되지 않습니다.</p></article>
+        <article class="traffic info"><b class="blue">진행 관리자</b><p>누가 어떤 IA 묶음을 볼지 정하고, 결과 패킷을 받아 출처 기록과 충돌을 남깁니다.</p></article>
+        <article class="traffic info"><b class="violet">IA 묶음 에이전트</b><p>담당 묶음의 문서, 화면 증거, UX 위험을 보고 추천 라벨과 JSON 결과를 냅니다.</p></article>
+        <article class="traffic warn"><b class="amber">최종 검증</b><p>에이전트 추천은 입력일 뿐입니다. 결과 패킷, 해시, 실행 출처, 기준 코드가 빠지면 PASS가 막힙니다.</p></article>
       </div>
     </section>
 
@@ -426,13 +576,13 @@
         <article class="phase">
           <span class="pill">Phase 0</span>
           <h3>먼저 기준표를 정합니다</h3>
-          <p><code>docs/sitemap.md</code>, <code>docs/IA/README.md</code>, <code>docs/flow/user-flow.md</code>를 기준으로 삼습니다.</p>
+          <p><code>docs/sitemap.md</code>, <code>docs/IA/README.md</code>, <code>docs/flow/user-flow.md</code>를 기준으로 삼습니다. 이때 <code>pnpm test</code>가 실패해도 무조건 막지 않고 “테스트 거리가 없어서”인지, “실제 코드가 깨졌는지”, “환경이 빠졌는지”를 네 가지 사유로 나눠 기록합니다. 진짜 코드 회귀(<code>fail-product-regression</code>)만 단계 진입을 막습니다.</p>
         </article>
 
         <article class="phase">
           <span class="pill">Phase 0.5</span>
           <h3>문서 읽기 영수증을 남깁니다</h3>
-          <p>각 IA마다 읽은 문서, 뽑은 요구사항, 문서 충돌 여부를 <code>doc-receipts.json</code>에 남깁니다. 이 영수증이 없으면 최종 통과가 안 됩니다.</p>
+          <p>각 IA마다 읽은 문서, 뽑은 요구사항, 문서 충돌 여부를 <code>doc-receipts.json</code>에 남깁니다. 영수증 뼈대는 <code>build-doc-receipts.mjs</code>가 IA 폴더·사이트맵·user-flow·PRD를 훑어 자동으로 만들고, 사람이 “요구사항” 칸을 채웁니다. <code>verify-doc-receipts.mjs</code>가 비어 있거나 description.md가 빠진 영수증을 막습니다. 이 영수증이 없으면 최종 통과가 안 됩니다.</p>
         </article>
 
         <article class="phase">
@@ -442,15 +592,15 @@
         </article>
 
         <article class="phase">
-          <span class="pill">Phase 1.5</span>
-          <h3>IA를 묶음으로 나눠 맡깁니다</h3>
-          <p><code>agent-dispatch-plan.json</code>으로 공개/인증, 작성, 피드백, 관리자/보안 같은 묶음을 만듭니다. 각 묶음은 작업 지시서와 결과 보고서를 남겨야 합니다.</p>
+          <span class="pill">Phase 1 dispatch plan</span>
+          <h3>IA를 묶음으로 나눌 계획만 먼저 만듭니다</h3>
+          <p><code>agent-dispatch-plan.json</code>으로 공개/인증, 온보딩·대시보드, 작성, 피드백, 보관함/설정, 관리자 6개 묶음을 정합니다. 이 단계는 분담표 준비이고, 실제 에이전트 투입은 증거 묶음이 고정된 뒤에 합니다. dispatch 검사는 화면 sync 검사(static)가 끝나지 않아도 돌릴 수 있습니다.</p>
         </article>
 
         <article class="phase">
           <span class="pill">Phase 2</span>
           <h3>브라우저로 화면을 엽니다</h3>
-          <p>모바일, 태블릿, 데스크톱 크기에서 제목과 주요 버튼이 보이는지 봅니다. 빈 화면, 에러, 로딩, 입력 안내 같은 상태도 AI가 볼 증거로 남깁니다.</p>
+          <p>모바일, 태블릿, 데스크톱 크기에서 제목과 주요 버튼이 보이는지 봅니다. 빈 화면, 에러, 로딩, 입력 안내 같은 상태도 AI가 볼 증거로 남깁니다. 권한 파일(<code>student</code>, <code>content_admin</code>, <code>org_admin</code>, <code>platform_admin</code>)이 부분만 준비되면 누락된 권한의 화면만 막고, 준비된 권한은 그대로 검사를 진행합니다.</p>
         </article>
 
         <article class="phase">
@@ -466,6 +616,18 @@
         </article>
 
         <article class="phase">
+          <span class="pill">Evidence freeze</span>
+          <h3>증거 묶음을 고정합니다</h3>
+          <p>이 단계가 “묶음 도장”을 찍습니다. <code>sourceCommit</code>(코드 시점)과 <code>dirtyState</code>(작업물이 깨끗한지 더러운지)는 자동으로, <code>evidenceBundleId</code>는 Phase 0.5~4 증거 줄의 해시로 한 번에 계산되어 Phase 5·6 줄에 똑같이 박힙니다. id 계산식이 미리 못 박혀 있어 병합기와 검증기가 서로 다르게 계산해서 거짓 통과·거짓 차단이 생기는 일을 막습니다.</p>
+        </article>
+
+        <article class="phase">
+          <span class="pill">Dispatch</span>
+          <h3>필요할 때만 IA 묶음 에이전트를 투입합니다</h3>
+          <p>필수 브라우저, 팝업, 보안 증거가 있거나 명확히 <code>BLOCKED</code>로 표시된 뒤에 작업 지시서를 보냅니다. 단일 세션으로 처리할 때도 같은 JSON 형식을 채웁니다.</p>
+        </article>
+
+        <article class="phase">
           <span class="pill">Phase 5</span>
           <h3>AI가 먼저 UX를 보고, 사람이 최종 확인합니다</h3>
           <p>AI는 앞 단계에서 모은 JSON 증거와 에이전트 결과 패킷을 읽고 모든 IA의 리뷰 카드를 만듭니다. 사람은 AI가 제시한 질문을 중심으로 최종 UX 판단을 합니다.</p>
@@ -476,6 +638,12 @@
             <li>에러가 “무슨 일 / 왜 문제 / 고치는 법”을 알려주는가?</li>
             <li>모바일, 키보드, 모달 포커스가 안전한가?</li>
           </ul>
+        </article>
+
+        <article class="phase">
+          <span class="pill">Phase 6</span>
+          <h3>최종 리포트를 만들고 검증합니다</h3>
+          <p><code>pnpm test:ia:merge</code>로 결과를 합치고 <code>pnpm test:ia:validate</code>로 최종 PASS가 가능한지 검사합니다. Markdown 설명은 JSON에 적힌 막힌 이유를 덮어쓸 수 없습니다.</p>
         </article>
       </div>
     </section>
@@ -500,20 +668,27 @@
       </p>
       <div class="role-grid">
         <article class="role"><strong>1. 진행 관리자</strong><p>IA를 묶음으로 나누고, 작업 지시서와 최종 병합을 책임집니다.</p></article>
-        <article class="role"><strong>2. 자동화 담당</strong><p>스크립트와 테스트로 문서, 화면, 보안 증거가 빠졌는지 확인합니다.</p></article>
-        <article class="role"><strong>3. IA 묶음 에이전트 1~6</strong><p>공개/인증, 작성, 피드백, 설정, 관리자처럼 나뉜 묶음을 동시에 봅니다.</p></article>
-        <article class="role"><strong>4. 재검토 에이전트</strong><p>서로 말이 다르거나 위험한 IA를 한 개씩 다시 확인합니다.</p></article>
-        <article class="role"><strong>5. AI UX 종합 리뷰어</strong><p>묶음 에이전트 결과와 화면 증거를 합쳐 UX 위험과 질문을 정리합니다.</p></article>
-        <article class="role"><strong>6. 사람 UX 리뷰어</strong><p>문구, 화면 이해도, 모바일 체감, 신뢰감처럼 사람 판단이 필요한 부분을 봅니다.</p></article>
-        <article class="role"><strong>7. 보안/데이터 에이전트</strong><p>권한, 세션, 다른 사람 데이터 노출, 관리자 접근을 깊게 봅니다.</p></article>
-        <article class="role"><strong>8. 운영/정책 에이전트</strong><p>결제, 알림, 개인정보, 오류 복구 문구가 문서와 맞는지 봅니다.</p></article>
-        <article class="role"><strong>9. 최종 검증 스크립트</strong><p>에이전트 추천이 아니라 JSON 증거 기준으로 최종 PASS를 막거나 허용합니다.</p></article>
+        <article class="role"><strong>2. 기획 검수자</strong><p>PRD, 사이트맵, IA 폴더, user-flow가 서로 맞는지 먼저 보고 충돌을 알립니다.</p></article>
+        <article class="role"><strong>3. 자동화 담당</strong><p>스크립트와 테스트로 문서, 화면, 보안 증거가 빠졌는지 확인합니다.</p></article>
+        <article class="role"><strong>4. 흐름 감시관</strong><p>단계 전환마다 “나와야 할 증거가 있는지”, “이른 PASS/BLOCKED는 없는지”를 별도 트랙에서 적습니다. 검수원 자리를 차지하지 않습니다.</p></article>
+        <article class="role"><strong>5. IA 묶음 에이전트 1~6</strong><p>공개/인증, 온보딩·대시보드, 작성, 피드백, 보관함/설정, 관리자 6개 묶음을 동시에 봅니다.</p></article>
+        <article class="role"><strong>6. 재검토 에이전트</strong><p>서로 말이 다르거나 위험한 IA를 한 개씩 다시 확인합니다.</p></article>
+        <article class="role"><strong>7. AI UX 종합 리뷰어</strong><p>묶음 에이전트 결과와 화면 증거를 합쳐 UX 위험과 질문을 정리합니다.</p></article>
+        <article class="role"><strong>8. 사람 UX 리뷰어</strong><p>문구, 화면 이해도, 모바일 체감, 신뢰감처럼 사람 판단이 필요한 부분을 봅니다.</p></article>
+        <article class="role"><strong>9. 보안/데이터 에이전트</strong><p>권한, 세션, 다른 사람 데이터 노출, 관리자 접근을 깊게 봅니다.</p></article>
+        <article class="role"><strong>10. 운영/정책 에이전트</strong><p>결제, 알림, 개인정보, 오류 복구 문구가 문서와 맞는지 봅니다.</p></article>
+        <article class="role"><strong>11. 최종 검증 스크립트</strong><p>에이전트 추천이 아니라 JSON 증거 기준으로 최종 PASS를 막거나 허용합니다.</p></article>
       </div>
     </section>
 
     <section class="card">
       <h2>최종 산출물</h2>
-      <div class="artifact"><code>doc-receipts.json</code><p>각 IA마다 어떤 문서를 읽고 어떤 요구사항을 뽑았는지 남긴 영수증입니다.</p></div>
+      <div class="artifact"><code>reports/ia-verification/runs/&lt;runId&gt;</code><p>한 번의 검수 실행이 쓰는 독립 폴더입니다. 진행 중인 실행은 <code>latest</code>에 직접 쓰지 않습니다.</p></div>
+      <div class="artifact"><code>reports/ia-verification/latest</code><p><code>test:ia:merge</code>와 <code>test:ia:validate</code>가 통과한 뒤에만 갱신하는 최신 결과 포인터입니다.</p></div>
+      <div class="artifact"><code>doc-receipts.json</code><p>각 IA마다 어떤 문서를 읽고 어떤 요구사항을 뽑았는지 남긴 영수증입니다. 뼈대는 <code>build-doc-receipts.mjs</code>가 자동으로 만듭니다.</p></div>
+      <div class="artifact"><code>build-doc-receipts.mjs</code><p>IA 폴더·사이트맵·user-flow·PRD를 훑어 영수증 뼈대를 자동 생성하는 스크립트입니다. 사람이 비어 있는 “요구사항” 칸만 채우게 만듭니다.</p></div>
+      <div class="artifact"><code>audit-flow-monitor.json</code><p>흐름 감시관이 단계 전환 때마다 “나와야 할 증거가 있는지”, “이른 PASS/BLOCKED는 없는지”를 기록하는 파일입니다. 최종 검증 스크립트가 이 파일도 함께 봅니다.</p></div>
+      <div class="artifact"><code>carryover-map.json</code><p>변경 안 된 IA의 결과를 옛 실행에서 가져올 때 “어느 실행에서, 어느 증거 묶음 id로, 왜” 가져왔는지를 남기는 파일입니다. 이 기록이 없으면 옛/새 증거 혼용으로 보고 통과를 막습니다.</p></div>
       <div class="artifact"><code>ia-manifest.json</code><p>검수할 34개 IA 항목을 스크립트가 읽을 수 있게 정리한 명단입니다.</p></div>
       <div class="artifact"><code>source-map-results.json</code><p>문서의 화면과 실제 코드 위치가 연결되는지 본 결과입니다.</p></div>
       <div class="artifact"><code>static-results.json</code><p>문서와 코드가 서로 맞는지 본 결과입니다.</p></div>
@@ -523,6 +698,7 @@
       <div class="artifact"><code>agent-dispatch-plan.json</code><p>어떤 IA 묶음을 어떤 에이전트가 볼지 정리한 분담표입니다.</p></div>
       <div class="artifact"><code>agent-packets/tasks/*.md</code><p>에이전트에게 주는 작업 지시서입니다. 읽을 문서, 볼 증거, 건드리면 안 되는 범위를 적습니다.</p></div>
       <div class="artifact"><code>agent-packets/results/*.md</code><p>에이전트가 돌려주는 결과 보고서입니다. 추천 라벨, 부족한 증거, 질문을 남깁니다.</p></div>
+      <div class="artifact"><code>agent-packets/results/*.json</code><p>에이전트 결과를 최종 병합기가 읽을 수 있게 만든 IA별 기계 판독 결과입니다.</p></div>
       <div class="artifact"><code>agent-integration-results.json</code><p>진행 관리자가 에이전트 결과를 받아들였는지, 되돌렸는지, 재검토로 보냈는지 남긴 파일입니다.</p></div>
       <div class="artifact"><code>ai-ux-review.json / .md</code><p>AI가 먼저 본 UX 준비도 카드입니다. JSON이 원본 증거이고 Markdown은 사람이 읽기 쉬운 설명입니다.</p></div>
       <div class="artifact"><code>manual-review.json / .md</code><p>사람이 최종 확인한 UX 판단 기록입니다.</p></div>
@@ -532,12 +708,14 @@
     </section>
 
     <section class="card">
-      <h2>최종 성적표는 네 칸으로 나눕니다</h2>
+      <h2>최종 성적표는 증거 칸을 분리합니다</h2>
       <div class="traffic-grid">
-        <article class="traffic info"><b class="blue">AI UX 결과</b><p>AI가 먼저 본 UX 준비 상태입니다.</p></article>
-        <article class="traffic info"><b class="violet">AI 확신도</b><p>AI 판단을 얼마나 믿을 수 있는지 표시합니다.</p></article>
-        <article class="traffic warn"><b class="amber">사람 확인</b><p>사람이 꼭 봐야 하는지, 이미 확인했는지 적습니다.</p></article>
-        <article class="traffic ok"><b class="green">최종 UX 결과</b><p>증거와 사람 판단을 합친 최종 결론입니다.</p></article>
+        <article class="traffic info"><b class="blue">기획/문서 결과</b><p>IA code, screen name, route, audience, 문서 영수증과 문서 충돌을 따로 둡니다.</p></article>
+        <article class="traffic info"><b class="violet">AI UX 결과</b><p>AI 판단, AI 확신도, AI가 사람에게 넘긴 질문을 분리합니다.</p></article>
+        <article class="traffic warn"><b class="amber">사람 확인</b><p>사람 확인이 필요한 항목과 실제 확인 여부를 JSON으로 남깁니다.</p></article>
+        <article class="traffic ok"><b class="green">개발/QA 증거</b><p>정적 검사, 브라우저, 팝업, 서버 처리 경로, 검수 증거를 분리합니다.</p></article>
+        <article class="traffic warn"><b class="red">보안/정책 결과</b><p>권한, 다른 사람 데이터 접근, 세션, 결제/알림 나중 범위를 따로 둡니다.</p></article>
+        <article class="traffic info"><b class="blue">최종 라벨</b><p>agent recommendation과 coordinator decision을 기록하되, final label은 병합 스크립트가 계산합니다.</p></article>
       </div>
     </section>
 
@@ -548,12 +726,21 @@
         <li>문서 영수증이 없으면 통과가 아닙니다.</li>
         <li>AI가 봤다고 사람 판단이 사라지는 것은 아닙니다.</li>
         <li>에이전트가 PASS라고 추천해도 최종 PASS가 아닙니다.</li>
+        <li>브라우저, 팝업, 보안 증거가 준비되기 전에는 IA 묶음 에이전트를 투입하지 않습니다.</li>
         <li>에이전트 결과 보고서가 없으면 해당 IA는 막힌 상태로 둡니다.</li>
+        <li>에이전트 결과에는 실행 출처, 기준 코드, 해시, 진행 관리자 결정이 남아야 합니다.</li>
         <li>스크린샷이나 브라우저 증거가 없으면 통과로 두지 않습니다.</li>
+        <li><code>runId</code>, <code>sourceCommit</code>, <code>evidenceBundleId</code>가 섞이면 PASS가 막힙니다.</li>
+        <li>진행 중인 실행은 <code>latest</code>에 직접 쓰지 않습니다.</li>
         <li>최종 PASS는 손으로 적는 값이 아니라 스크립트가 계산하고 검증하는 값입니다.</li>
         <li>Markdown 설명과 JSON 결과가 다르면 JSON과 검증 스크립트를 우선합니다.</li>
         <li>모달은 부품 파일만 보지 않고 실제 열리는 화면에서 확인합니다.</li>
         <li>결제와 알림처럼 아직 미룬 기능은 실제 동작하는 것처럼 말하면 안 됩니다.</li>
+        <li><b>흐름 감시관</b>이 매 단계 전환을 확인하지 않으면 다음 단계로 넘어갈 수 없습니다.</li>
+        <li><code>evidenceBundleId</code>는 Phase 0.5~4 증거 묶음의 해시로 자동 계산되어 Phase 5·6 줄에 박힙니다. 사람이 임의로 못 적습니다.</li>
+        <li><code>pnpm test</code>가 실패해도 무조건 막지 않습니다. “테스트 거리 없음·미구현·환경 부재”는 사유 기록 후 진행, “진짜 코드 회귀”만 단계를 막습니다.</li>
+        <li>변경 없는 IA를 옛 실행에서 가져올 때는 <code>carryover-map.json</code>에 출처를 남겨야 합니다.</li>
+        <li>권한 파일(student / 관리자 3종)이 부분만 준비됐을 때는 누락된 권한 시나리오만 막고 나머지는 진행합니다.</li>
       </ul>
     </section>
 
@@ -567,11 +754,19 @@
         <article class="term"><b>Direct URL</b><p>버튼을 누르지 않고 주소창으로 바로 들어오는 경우입니다.</p></article>
         <article class="term"><b>CTA</b><p>가장 중요한 행동 버튼입니다. 예: 제출하기, 시작하기.</p></article>
         <article class="term"><b>문서 영수증</b><p>어떤 문서를 읽고 어떤 요구사항을 뽑았는지 남긴 기록입니다.</p></article>
+        <article class="term"><b>Run ID</b><p>이번 검수 실행을 구분하는 이름입니다. 실행마다 독립 폴더를 씁니다.</p></article>
+        <article class="term"><b>Evidence bundle</b><p>브라우저, 팝업, 보안, 문서 영수증 같은 증거 묶음입니다.</p></article>
+        <article class="term"><b>Source commit</b><p>증거를 만들 때 기준이 된 코드 시점입니다. 코드가 바뀌면 예전 증거는 낡을 수 있습니다.</p></article>
         <article class="term"><b>IA 묶음</b><p>비슷한 화면을 한데 묶어 한 에이전트가 담당하게 만든 작은 검수 단위입니다.</p></article>
         <article class="term"><b>작업 지시서</b><p>에이전트에게 “이 문서와 이 증거를 보고, 이 범위만 확인해줘”라고 주는 안내서입니다.</p></article>
         <article class="term"><b>결과 패킷</b><p>에이전트가 검수 뒤에 돌려주는 보고서입니다. 추천 라벨과 부족한 증거가 들어갑니다.</p></article>
+        <article class="term"><b>출처 기록</b><p>결과가 어디서 왔는지 남기는 기록입니다. 에이전트 ID, 해시, 가져온 시점이 포함됩니다.</p></article>
         <article class="term"><b>JSON</b><p>스크립트가 읽기 쉬운 정리 파일입니다. 최종 검문소의 기준 자료입니다.</p></article>
         <article class="term"><b>검증 스크립트</b><p>빠진 증거나 잘못된 PASS를 자동으로 잡는 검사 프로그램입니다.</p></article>
+        <article class="term"><b>흐름 감시관 (audit flow monitor)</b><p>코디네이터가 단계를 제대로 넘기고 있는지 옆에서 확인하는 별도 트랙입니다. 검수원 자리는 차지하지 않고, 단계 전환마다 “필요 증거가 모였는지”, “이른 PASS/BLOCKED는 없는지”를 적습니다.</p></article>
+        <article class="term"><b>증거 묶음 id</b><p>한 실행에서 만든 Phase 0.5~4 증거 줄을 해시로 묶은 id입니다. Phase 5·6의 모든 줄이 같은 id여야 통과됩니다. 사람이 임의로 못 적습니다.</p></article>
+        <article class="term"><b>Carry-over</b><p>변경 영향 없는 IA의 결과를 옛 실행에서 그대로 가져오는 일입니다. 출처를 <code>carryover-map.json</code>에 남기지 않으면 옛/새 증거 혼용으로 보고 통과를 막습니다.</p></article>
+        <article class="term"><b>테스트 실패 4분류</b><p>Phase 0에서 <code>pnpm test</code>가 실패할 때 “테스트 거리 없음·미구현 상태·진짜 코드 회귀·환경 부재” 중 어느 것인지를 분류해 기록합니다. 진짜 코드 회귀만 단계를 막습니다.</p></article>
       </div>
     </section>
 

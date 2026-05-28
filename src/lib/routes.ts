@@ -30,6 +30,12 @@ export const PUBLIC_PATHS = [
   "/auth/callback-fragment", // Phase 8 follow-up P0 (2026-05-27): implicit flow fragment fallback page
   "/auth/error",
   "/auth/verify-email",
+  // Sign-out must be reachable without an active session — anonymous POST is
+  // idempotent (already signed out) and authenticated POST is the canonical
+  // logout path. Without this entry middleware redirects /auth/sign-out to
+  // /login, which (1) breaks the POST contract and (2) creates a paradox
+  // because the post-signout user is anonymous and would loop.
+  "/auth/sign-out",
 ] as const;
 
 // ---------------------------------------------------------------------------

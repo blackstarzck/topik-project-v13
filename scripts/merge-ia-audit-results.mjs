@@ -1,0 +1,162 @@
+#!/usr/bin/env node
+import { loadManifest, maybeReadJson, resolveAuditDir, statusSummary, writeJson, writeText } from "./audit-setup/ia-audit-lib.mjs";
+
+const auditDir = resolveAuditDir();
+const manifest = loadManifest(auditDir);
+
+const inputs = {
+  docReceipts: maybeReadJson(`${auditDir}/doc-receipts.json`),
+  docValidation: maybeReadJson(`${auditDir}/doc-receipt-validation-results.json`),
+  sourceMap: maybeReadJson(`${auditDir}/source-map-results.json`),
+  staticResults: maybeReadJson(`${auditDir}/static-results.json`),
+  browserResults: maybeReadJson(`${auditDir}/browser-results.json`),
+  hostedSurfaceResults: maybeReadJson(`${auditDir}/hosted-surface-results.json`),
+  securityNavigationResults: maybeReadJson(`${auditDir}/security-navigation-results.json`),
+  dispatchPlan: maybeReadJson(`${auditDir}/agent-dispatch-plan.json`),
+  agentIntegrationResults: maybeReadJson(`${auditDir}/agent-integration-results.json`),
+  aiUxReview: maybeReadJson(`${auditDir}/ai-ux-review.json`),
+  manualReview: maybeReadJson(`${auditDir}/manual-review.json`),
+};
+
+function rowsByCode(doc, key = "rows") {
+  return new Map((doc?.[key] ?? doc?.entries ?? []).map((row) => [row.iaCode, row]));
+}
+
+const maps = {
+  docValidation: rowsByCode(inputs.docValidation),
+  sourceMap: rowsByCode(inputs.sourceMap),
+  staticResults: rowsByCode(inputs.staticResults),
+  browserResults: rowsByCode(inputs.browserResults),
+  hostedSurfaceResults: rowsByCode(inputs.hostedSurfaceResults),
+  securityNavigationResults: rowsByCode(inputs.securityNavigationResults),
+  aiUxReview: rowsByCode(inputs.aiUxReview),
+  manualReview: rowsByCode(inputs.manualReview),
+};
+
+function missingEvidenceFor(entry) {
+  const missing = [];
+  if (!inputs.docReceipts) missing.push("missing doc-receipts.json");
+  if (!maps.docValidation.has(entry.iaCode)) missing.push("missing document receipt validation row");
+  if (!maps.sourceMap.has(entry.iaCode)) missing.push("missing source-map row");
+  if (!maps.staticResults.has(entry.iaCode)) missing.push("missing static-results row");
+  if (entry.requiredEvidenceInputs.includes("browser") && !maps.browserResults.has(entry.iaCode)) {
+    missing.push("missing browser-results row");
+  }
+  if (entry.requiredEvidenceInputs.includes("hosted-surface") && !maps.hostedSurfaceResults.has(entry.iaCode)) {
+    missing.push("missing hosted-surface-results row");
+  }
+  if (entry.requiredEvidenceInputs.includes("security-navigation") && !maps.securityNavigationResults.has(entry.iaCode)) {
+    missing.push("missing security-navigation-results row");
+  }
+  if (!inputs.dispatchPlan) missing.push("missing agent-dispatch-plan.json");
+  if (!inputs.agentIntegrationResults) missing.push("missing agent-integration-results.json");
+  if (!maps.aiUxReview.has(entry.iaCode)) missing.push("missing ai-ux-review row");
+  if (entry.requiredEvidenceInputs.includes("human-confirmation") && !maps.manualReview.has(entry.iaCode)) {
+    missing.push("missing manual-review row");
+  }
+  return missing;
+}
+
+function blockingReasonsFor(entry) {
+  const rows = [
+    maps.docValidation.get(entry.iaCode),
+    maps.sourceMap.get(entry.iaCode),
+    maps.staticResults.get(entry.iaCode),
+    maps.browserResults.get(entry.iaCode),
+    maps.hostedSurfaceResults.get(entry.iaCode),
+    maps.securityNavigationResults.get(entry.iaCode),
+    maps.aiUxReview.get(entry.iaCode),
+    maps.manualReview.get(entry.iaCode),
+  ].filter(Boolean);
+
+  return rows.flatMap((row) => row.blockingReasons ?? []);
+}
+
+function finalLabelFor(entry, topGaps, blockers) {
+  const sourceMapRow = maps.sourceMap.get(entry.iaCode);
+  const staticRow = maps.staticResults.get(entry.iaCode);
+  if (sourceMapRow?.status === "FAIL" || staticRow?.status === "FAIL") return "FAIL";
+  if (topGaps.length > 0 || blockers.length > 0) return "BLOCKED";
+  return "PASS";
+}
+
+const entries = manifest.entries.map((entry) => {
+  const topGaps = [...new Set([...missingEvidenceFor(entry), ...blockingReasonsFor(entry)])];
+  const blockers = topGaps.filter(Boolean);
+  const finalLabel = finalLabelFor(entry, topGaps, blockers);
+
+  return {
+    runId: manifest.runId,
+    sourceCommit: manifest.sourceCommit,
+    dirtyState: manifest.dirtyState,
+    evidenceBundleId: manifest.evidenceBundleId,
+    iaCode: entry.iaCode,
+    screenName: entry.screenName,
+    routeOrHostRoute: entry.routeOrHostRoute,
+    routeType: entry.routeType,
+    audience: entry.audience,
+    packs: entry.packs,
+    planningResult: maps.docValidation.get(entry.iaCode)?.status ?? "BLOCKED",
+    aiUxResult: maps.aiUxReview.get(entry.iaCode)?.status ?? "BLOCKED",
+    aiConfidence: maps.aiUxReview.get(entry.iaCode)?.confidence ?? "missing",
+    humanConfirmation: maps.manualReview.get(entry.iaCode)?.confirmationStatus ?? "missing",
+    finalUxUiResult: maps.manualReview.get(entry.iaCode)?.finalUxUiResult ?? "BLOCKED",
+    developmentResult: maps.sourceMap.get(entry.iaCode)?.status ?? "BLOCKED",
+    dataSecurityResult: maps.securityNavigationResults.get(entry.iaCode)?.status ?? "BLOCKED",
+    operationsResult: "BLOCKED",
+    policyResult: "BLOCKED",
+    qaEvidence: maps.browserResults.has(entry.iaCode) ? "present" : "missing",
+    shardId: findShardId(entry.iaCode),
+    agentRecommendation: "missing",
+    coordinatorDecision: "pending",
+    finalLabel,
+    topGaps,
+    nextOwnerOrReason: finalLabel === "PASS" ? "none" : "coordinator",
+    generatedBy: "merge-ia-audit-results.mjs",
+    generatedAt: new Date().toISOString(),
+  };
+});
+
+function findShardId(iaCode) {
+  const shard = inputs.dispatchPlan?.shards?.find((candidate) => candidate.iaCodes.includes(iaCode));
+  return shard?.shardId ?? "missing";
+}
+
+const audit = {
+  runId: manifest.runId,
+  sourceCommit: manifest.sourceCommit,
+  dirtyState: manifest.dirtyState,
+  evidenceBundleId: manifest.evidenceBundleId,
+  generatedBy: "merge-ia-audit-results.mjs",
+  generatedAt: new Date().toISOString(),
+  entries,
+  summary: {
+    totalIa: entries.length,
+    finalLabelCounts: statusSummary(entries.map((entry) => ({ status: entry.finalLabel }))),
+    missingInputs: Object.entries(inputs)
+      .filter(([, value]) => !value)
+      .map(([key]) => key),
+  },
+};
+
+writeJson(`${auditDir}/ia-implementation-audit.json`, audit);
+
+const reportLines = [
+  "# IA Implementation Audit",
+  "",
+  `- Run id: ${audit.runId}`,
+  `- Source commit: ${audit.sourceCommit}`,
+  `- Evidence bundle: ${audit.evidenceBundleId}`,
+  "",
+  "| IA | Screen | Route | Type | Audience | Final label | Top gaps |",
+  "| --- | --- | --- | --- | --- | --- | --- |",
+  ...entries.map((entry) => {
+    const gaps = entry.topGaps.length > 0 ? entry.topGaps.slice(0, 3).join("<br>") : "none";
+    return `| ${entry.iaCode} | ${entry.screenName} | \`${entry.routeOrHostRoute}\` | ${entry.routeType} | ${entry.audience} | ${entry.finalLabel} | ${gaps} |`;
+  }),
+  "",
+];
+
+writeText(`${auditDir}/ia-implementation-audit.md`, `${reportLines.join("\n")}\n`);
+
+console.log(`Wrote ${auditDir}/ia-implementation-audit.json and .md.`);

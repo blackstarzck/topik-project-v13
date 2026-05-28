@@ -49,6 +49,7 @@
 - **Coordinator:** owns source priority, run order, multi-agent dispatch, task packets, result packet integration, result labels, final report, and unresolved risk calls.
 - **Planning reviewer:** checks PRD, sitemap, IA docs, and flow alignment.
 - **Automation owner:** owns Node/Vitest/Playwright checks, script gates, JSON schemas, result merging, final report validation, and machine-readable outputs.
+- **Audit flow monitor:** watches the coordinator's run order, collector attempts, phase transitions, evidence/prose alignment, and premature `PASS` or `BLOCKED` decisions.
 - **IA shard reviewer:** owns one assigned IA shard, reads only the assigned docs/evidence, writes a result packet, and recommends but does not finalize labels.
 - **Reconciliation reviewer:** samples high-risk or disputed IA items after shard review and checks whether child-agent results conflict with JSON evidence.
 - **AI UX reviewer:** owns the first-pass IA-by-IA UX readiness review using `docs/ai-workflow/ia-ai-first-ux-review-checklist.md`.
@@ -79,6 +80,7 @@ names a source file outside the run directory.
 | IA manifest | `<auditDir>/ia-manifest.json` | Machine-readable IA inventory used by every later phase. |
 | Source map validator | `scripts/audit-setup/validate-ia-source-map.mjs` | Compare manifest entries against `src/app/**`, `src/components/**`, and route handlers. |
 | Source map result | `<auditDir>/source-map-results.json` | Machine-readable doc/code source-anchor result. |
+| Document receipt builder | `scripts/audit-setup/build-doc-receipts.mjs` | Generate the `<auditDir>/doc-receipts.json` skeleton from the 34 IA folders, sitemap routes, wireframe existence, required active docs, and shard placeholders. |
 | Document receipt validator | `scripts/audit-setup/verify-doc-receipts.mjs` | Verify that each IA item records active docs read and extracted requirements. |
 | Document receipts | `<auditDir>/doc-receipts.json` | Per-IA proof of active docs consulted, extracted requirements, and doc conflicts. |
 | IA static validator | `scripts/verify-ia-coverage.mjs` | Validate IA coverage using the manifest, source map, and document receipts. |
@@ -89,6 +91,8 @@ names a source file outside the run directory.
 | Security/navigation result | `<auditDir>/security-navigation-results.json` | Direct URL, role, owner, session, logout, and back/refresh checks. |
 | Agent dispatch planner | `scripts/audit-setup/build-agent-dispatch-plan.mjs` | Create and validate IA shard assignments from the manifest. |
 | Agent dispatch plan | `<auditDir>/agent-dispatch-plan.json` | IA shard assignment, concurrency limit, packet paths, and escalation rules. |
+| Audit flow monitor result | `<auditDir>/audit-flow-monitor.json` | Machine-readable checkpoints for run order, collector attempts, phase transitions, and premature `BLOCKED` or `PASS` checks. |
+| Audit flow monitor notes | `<auditDir>/audit-flow-monitor.md` | Human-readable monitor notes generated from or linked to `audit-flow-monitor.json`. |
 | Agent task packets | `<auditDir>/agent-packets/tasks/*.md` | Per-shard instructions prepared before delegated review starts. |
 | Agent result packets | `<auditDir>/agent-packets/results/*.md` | Per-shard result packets imported by the coordinator from child-agent responses. |
 | Agent IA result JSON | `<auditDir>/agent-packets/results/*.json` | Per-shard machine-readable IA result rows validated before integration. |
@@ -181,6 +185,92 @@ an invalid document receipt, missing browser/security evidence, unresolved
 blocking reasons, missing delegated result packet, unresolved agent conflict, or
 required human confirmation that is absent.
 
+Missing evidence may produce `BLOCKED`, but only after the relevant collector has
+been attempted at least once or the run records why that collector cannot run.
+Do not mark a whole phase or all IA rows `BLOCKED` only because one evidence
+class is absent. Collect available evidence first, separate unavailable evidence,
+and record the unavailable precondition in `audit-flow-monitor.json`.
+
+`audit-flow-monitor.json` must include, per checkpoint:
+
+- `runId`,
+- `phase`,
+- `expectedArtifacts`,
+- `collectorAttempts`,
+- `availableEvidenceCollected`,
+- `unavailableEvidence`,
+- `prematureBlockedCheck`,
+- `prematurePassCheck`,
+- `monitorStatus`,
+- `blockingReasons`,
+- `coordinatorResponse`,
+- `generatedAt`.
+
+Valid `monitorStatus` values are `PASS`, `CONCERN_ACCEPTED`, and `FAIL`.
+`FAIL` blocks the next phase transition until the coordinator either collects the
+missing available evidence or records a concrete impossible precondition.
+
+### Identifier Definitions
+
+Every script that writes JSON rows must compute these identifiers the same way.
+The merger and validator rely on byte-equality of the resulting strings, so
+ambiguous calculations would create false positives or false negatives at
+Phase 6.
+
+- `sourceCommit`: output of `git rev-parse HEAD` captured at collector start.
+- `dirtyState`: `clean` when `git status --porcelain --untracked-files=all`
+  is empty at collector start; otherwise `dirty`. Record the literal string.
+- `evidenceBundleId`: SHA-256 of the canonical Phase 0.5 to Phase 4 evidence
+  rows that feed a final label, sorted by `phase`, `iaCode`, and
+  `routeOrHostRoute`, excluding volatile fields (`generatedAt`,
+  `evidenceBundleId`) and excluding derived report files. The evidence freeze
+  step (see §13 step 11) computes this value once and writes it into every
+  downstream Phase 5 and Phase 6 row. Phase 0.5 to Phase 4 rows hold the
+  placeholder value `pre-freeze` until the freeze step rewrites them.
+- `resultPacketHash`: SHA-256 of the exact coordinator-imported result packet
+  payload. For JSON packets, hash canonical JSON (sorted keys, no insignificant
+  whitespace). For Markdown packets, hash the imported UTF-8 bytes and record
+  `hashInput: "markdown-bytes"`.
+
+### Audit Flow Monitor Contract
+
+Every IA audit run must have an audit flow monitor lane. Prefer an independent
+read-only child agent when the runtime permits it. If child agents are not
+available, the coordinator must run the same checklist in single-session mode and
+record `monitorMode: "single-session-degraded"` in `audit-flow-monitor.json`.
+
+`monitorMode` describes only the audit flow monitor lane. IA shard execution
+mode is recorded separately in `agent-dispatch-plan.json` and
+`agent-integration-results.json` through `delegationMode`, shard provenance,
+and single-session rows. If the monitor actor changes mid-run, record
+`monitorActorMode` per checkpoint rather than changing the global `monitorMode`
+to a synthetic value such as `mixed`.
+
+The monitor is read-only. It does not edit phase evidence and does not finalize
+labels. It checks whether the coordinator is following the plan before each
+phase transition.
+
+The monitor asks these questions at every checkpoint:
+
+- What artifact should this phase create?
+- Did the relevant collector run or get an explicit impossible-precondition row?
+- Did the collector write JSON, not only prose?
+- Are available and unavailable evidence separated?
+- Is any `BLOCKED` being assigned before collector attempts are recorded?
+- Is any `PASS` being assigned from prose, agent opinion, or incomplete JSON?
+- Did final merge use JSON evidence only?
+
+Collector-first examples:
+
+- Missing `doc-receipts.json`: run or create the document-receipt collector
+  before marking document evidence `BLOCKED`.
+- Missing auth storage states: still collect public-route browser evidence; mark
+  only protected or admin auth-state evidence `BLOCKED`.
+- Missing human confirmation: still run the AI UX review; mark only the required
+  human-confirmation field `BLOCKED`.
+- Missing browser evidence: attempt Playwright or record the environment blocker;
+  do not convert every route to `BLOCKED` without per-route attempt status.
+
 ### Multi-Agent Dispatch Contract
 
 Multi-agent review is part of the execution plan, not an optional side note. The
@@ -198,6 +288,19 @@ Dispatch planning and child-agent spawning are separate steps:
 
 Do not spawn IA shard reviewers before required browser, hosted-surface, and
 security/navigation evidence either exists or is explicitly labeled `BLOCKED`.
+That `BLOCKED` label must be backed by `audit-flow-monitor.json` showing the
+collector attempt or impossible precondition.
+
+The audit flow monitor is separate from IA shard review. It may run in parallel
+with the coordinator and automation owner, but it is not a primary IA shard and
+cannot replace shard review, security review, AI UX review, or human
+confirmation.
+
+The monitor lane sits outside the IA shard count, but it stays inside the
+global child-agent concurrency cap. When the monitor runs as an independent
+child agent concurrently with shard reviewers, run at most five IA shard agents
+at the same time, or run the monitor checkpoint before or after the six-shard
+batch. Do not exceed six concurrent child agents in total.
 
 Default IA shards:
 
@@ -344,16 +447,78 @@ Recommended package scripts when automation is implemented:
 
   If a command is unavailable, label automation evidence as `BLOCKED` and record the missing prerequisite.
 
+  If `pnpm test` fails, classify the root cause in
+  `audit-flow-monitor.json` before Phase 0.5:
+
+  - `fail-no-test-surface`: no runnable test files or no stable `src/` surface
+    exists for the tested area.
+  - `fail-known-preimplementation`: active docs explicitly mark the repo or the
+    tested surface as pre-implementation.
+  - `fail-product-regression`: tests execute against existing source and fail.
+  - `unavailable`: package manager, install, or runtime prerequisite is missing.
+
+  `fail-no-test-surface` and `fail-known-preimplementation` may proceed as
+  `CONCERN_ACCEPTED` only when the monitor records the root cause and the
+  narrower IA audit scripts (`pnpm test:ia:*`) are still runnable or explicitly
+  `BLOCKED`. `fail-product-regression` keeps the checkpoint `FAIL` unless the
+  failing tests are proven unrelated to the IA audit and that proof is
+  recorded.
+
+- [ ] **Step 0.5: Initialize audit flow monitor**
+
+  Create `<auditDir>/audit-flow-monitor.json` before Phase 0.5 starts.
+
+  Required initial fields:
+
+  - `runId`,
+  - `monitorMode`: `independent-agent` or `single-session-degraded`,
+  - `checkpoints`,
+  - `collectorFirstRule`: `enabled`,
+  - `currentPhase`: `Phase 0`,
+  - `monitorStatus`.
+
+  The first checkpoint must confirm that the run has an audit directory, a
+  source priority decision, IA count evidence, runnable-script evidence, and a
+  recorded monitor mode. Phase 0.5 cannot start until this checkpoint is `PASS`
+  or `CONCERN_ACCEPTED` with a coordinator reason.
+
 ## 6. Phase 0.5 - Document Receipt Gate
 
 This phase prevents agents from claiming they checked an IA item without
 recording the active documents that governed the judgment.
 
-- [ ] **Step 0.5.1: Create document receipt format**
+Before any document evidence is labeled `BLOCKED`, the coordinator must attempt
+the document receipt collector or record why the collector cannot run. A missing
+`doc-receipts.json` is a collector input gap, not proof that every IA item was
+checked. The monitor must record the attempted command, generated files, and
+remaining unavailable evidence.
 
-  Create `<auditDir>/doc-receipts.json`.
+- [ ] **Step 0.5.1: Generate document receipt skeleton**
 
-  Each IA item must include:
+  Create `scripts/audit-setup/build-doc-receipts.mjs`.
+
+  It must consume `docs/IA/README.md`, `docs/sitemap.md`,
+  `docs/flow/user-flow.md`, `docs/prd.md`, and the IA page description paths,
+  then emit `<auditDir>/doc-receipts.json` with one receipt skeleton per IA
+  item.
+
+  The builder may prefill IA code, screen name, route or host route, audience,
+  `docs/IA/<ia-folder>/description.md` path, wireframe path or unavailable
+  reason, required active docs, assigned shard, and task/result packet
+  placeholders. It must not invent extracted requirements; unknown requirement
+  fields stay `TODO` and the validator (Step 0.5.2) must fail until a reviewer
+  fills them from the active docs.
+
+  Add or confirm this package command before running the builder:
+
+  ```json
+  {
+    "test:ia:receipts": "node scripts/audit-setup/build-doc-receipts.mjs"
+  }
+  ```
+
+  After the builder runs, the resulting `<auditDir>/doc-receipts.json` must
+  contain one receipt per IA item. Each receipt must include:
 
   - IA code,
   - screen name,
@@ -532,6 +697,14 @@ recording the active documents that governed the judgment.
   - `ia-manifest.json`, `source-map-results.json`, and `static-results.json`
     all present.
 
+  `pnpm test:ia:dispatch` validates shard assignment and expected packet paths
+  only. It does not create final task packets and does not depend on
+  `static-results.json`. Final task packet dispatch happens after Phase 4
+  evidence freeze (see §13 step 11 and Phase 5 step 5.0). If the dispatch
+  builder is later changed to consume static evidence, move
+  `pnpm test:ia:static` before `pnpm test:ia:dispatch` in the command order
+  above.
+
 ## 8. Phase 2 - Browser Coverage Upgrade
 
 - [ ] **Step 2.1: Create E2E catalog**
@@ -587,6 +760,15 @@ recording the active documents that governed the judgment.
   - `tests/e2e/auth-state/platform_admin.json`
 
   If Supabase local setup is unavailable, browser checks that require auth stay `BLOCKED`.
+  This does not block public browser evidence. The run must still execute public
+  route checks and record protected/admin auth-state evidence separately as
+  `BLOCKED` with the missing storage-state precondition.
+
+  If storage states are partially available, continue all browser scenarios for
+  roles with valid state files. Mark only scenarios requiring a missing or
+  invalid role state as `BLOCKED`, and record the missing role in
+  `browser-results.json` under `roleStateStatus` (one entry per role:
+  `present`, `missing`, or `invalid`). Public-route checks must still run.
 
 - [ ] **Step 2.4: Run page browser matrix**
 
@@ -944,6 +1126,7 @@ standard.
   - `doc-receipts.json`,
   - `source-map-results.json`,
   - `static-results.json`,
+  - `audit-flow-monitor.json`,
   - `browser-results.json`,
   - `hosted-surface-results.json`,
   - `security-navigation-results.json`,
@@ -969,6 +1152,8 @@ standard.
 
   - `FAIL` beats `PARTIAL`.
   - `BLOCKED` blocks a final `PASS`.
+  - `BLOCKED` for missing evidence is valid only when the matching collector
+    attempt or impossible precondition appears in `audit-flow-monitor.json`.
   - missing or invalid document receipts block a final `PASS`.
   - missing required JSON rows block a final `PASS`.
   - missing delegated result packets block a final `PASS`.
@@ -1032,6 +1217,10 @@ standard.
     evidence,
   - an IA item has `PASS` while any phase result has unresolved
     `blockingReasons`,
+  - an IA item or phase has `BLOCKED` for missing evidence without a matching
+    collector attempt or impossible precondition in `audit-flow-monitor.json`,
+  - `audit-flow-monitor.json` has a `FAIL` checkpoint that was not resolved or
+    accepted with a coordinator reason,
   - AI confidence is `low` or `medium` and human confirmation is missing,
   - a modal, form, AI output, auth, billing, notification, admin, or
     policy-sensitive item has no human confirmation,
@@ -1060,30 +1249,61 @@ standard.
 Run the process in this order.
 
 1. Phase 0: preparation.
-2. Phase 0.5: document receipt gate.
-3. Phase 1: manifest, static sync, and agent dispatch plan with expected shard
+2. Initialize the audit flow monitor and record the first checkpoint.
+3. Phase 0.5: document receipt gate.
+4. Monitor checkpoint: document collector attempted, document receipt output or
+   impossible precondition recorded.
+5. Phase 1: manifest, static sync, and agent dispatch plan with expected shard
    assignments and expected packet paths only.
-4. Phase 2: page browser matrix.
-5. Phase 3: hosted surface checks.
-6. Phase 4: security, session, and external entry.
-7. Evidence bundle freeze: verify `runId`, `sourceCommit`, `dirtyState`, and
-   `evidenceBundleId`; mark missing inputs `BLOCKED`.
-8. Multi-agent dispatch decision: create task packets and spawn IA shard agents,
+6. Monitor checkpoint: static/source collectors attempted and JSON outputs
+   recorded.
+7. Phase 2: page browser matrix.
+8. Phase 3: hosted surface checks.
+9. Phase 4: security, session, and external entry.
+10. Monitor checkpoint: browser, hosted-surface, and security collectors
+    attempted; available evidence separated from unavailable evidence.
+11. Evidence bundle freeze: verify `runId`, `sourceCommit`, `dirtyState`, and
+   `evidenceBundleId`; mark missing inputs `BLOCKED` only when collector attempts
+   or impossible preconditions are recorded.
+12. Multi-agent dispatch decision: create task packets and spawn IA shard agents,
    or record `delegationMode: "single-session"` and write single-session IA
    result rows.
-9. Phase 5: IA shard result packets, IA result JSON import, AI-first UX/UI
+13. Monitor checkpoint: shard inputs, AI UX inputs, and human-confirmation gaps
+    are separated before Phase 5 result labels are merged.
+14. Phase 5: IA shard result packets, IA result JSON import, AI-first UX/UI
    review, and human confirmation.
-10. Phase 6: report assembly and final validation.
-11. Re-run Phase 0.5 to Phase 4 after any implementation or document-source fixes.
-12. Re-run Phase 5 only for changed pages, unresolved AI findings, unresolved
+15. Phase 6: report assembly and final validation.
+16. Re-run Phase 0.5 to Phase 4 after any implementation or document-source fixes.
+17. Re-run Phase 5 only for changed pages, unresolved AI findings, unresolved
     human judgments, or changed shard packets.
-13. Re-run Phase 6 after any upstream result changes.
+18. Re-run Phase 6 after any upstream result changes.
+
+### Partial Rerun Carry-Over Rule
+
+A Phase 5 row may be reused only when every Phase 0.5 to Phase 4 row feeding
+that same IA final label is either carried over from the same `sourceRunId`,
+`sourceCommit`, and `evidenceBundleId`, or the current run proves the upstream
+canonical row hashes are unchanged.
+
+Record reuse in `<auditDir>/carryover-map.json` with one entry per reused IA
+item containing `iaCode`, `carryoverFromRunId`, `sourceEvidenceBundleId`,
+`currentRunId`, `reuseReason`, and `upstreamRowHashStatus`.
+
+Do not merge an old Phase 5 row with newly generated upstream evidence for the
+same IA item. Mixed `runId` or `evidenceBundleId` values are allowed across
+different IA items in one report only when each IA item has an internally
+consistent evidence bundle and an explicit carry-over record. The final
+validator (`pnpm test:ia:validate`) must fail when any IA item mixes upstream
+runs without a matching `carryover-map.json` entry.
 
 ## 14. Completion Gate
 
 The IA implementation verification run is complete only when all are true.
 
 - All 34 IA entries appear in the manifest.
+- `audit-flow-monitor.json` exists and has no unresolved `FAIL` checkpoints.
+- Every final `BLOCKED` caused by missing evidence has a matching collector
+  attempt or impossible precondition in `audit-flow-monitor.json`.
 - `doc-receipts.json` exists and passes `pnpm test:ia:docs`.
 - `ia-manifest.json`, `source-map-results.json`, and `static-results.json` exist.
 - `agent-dispatch-plan.json` exists and assigns every IA item to exactly one shard.
@@ -1181,6 +1401,11 @@ The IA implementation verification run is complete only when all are true.
   a script or test gate, JSON output, `PASS` blocking rules, and a human-readable
   summary.
 - Document-read receipts are required before an IA item can receive final `PASS`.
+- Missing evidence may become `BLOCKED` only after the matching collector is
+  attempted or an impossible precondition is recorded.
+- Every IA verification run needs an audit flow monitor lane. If no independent
+  child agent is available, the coordinator must run the same monitor checklist
+  in `single-session-degraded` mode.
 - Final labels must be computed or validated by scripts, not handwritten in Markdown.
 - Every phase result should be machine-readable so the final report can be merged
   and validated.
@@ -1213,7 +1438,12 @@ The IA implementation verification run is complete only when all are true.
 
 ## 18. Untouched Relevant Docs
 
-- Individual `docs/IA/*/description.md` files were not fully read during this planning step because this plan defines the execution method. Execution Phase 5 reads each page document when that IA item is reviewed.
+- Individual `docs/IA/*/description.md` files were not fully read during this
+  planning step because this plan defines the execution method. During
+  execution, Phase 0.5 records each matching `description.md` path, existence,
+  receipt inclusion, and minimum extracted implementation requirements
+  (see Step 0.5.1 and Step 0.5.2). Phase 5 then rereads the full body for
+  rendered UX review and the no-pass checks in Step 5.3.
 - `docs/ant-design/README.md` should be read during Phase 5 before AI UX review and human UX/UI confirmation.
 
 ## 19. Context Ledger
