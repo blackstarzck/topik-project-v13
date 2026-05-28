@@ -4,7 +4,7 @@
 
 - Run id: 20260527-1600-auth-overview-codex-fix
 - Created: 2026-05-27 16:00 KST
-- Updated: 2026-05-27 17:45 KST
+- Updated: 2026-05-27 18:00 KST
 - Main session owner: Claude Opus 4.7 (1M context, claude-opus-4-7[1m])
 - Host: Claude Code (Windows 11 + PowerShell + bash 병행)
 - Status: complete
@@ -60,6 +60,12 @@
 | 2026-05-27 17:35 | 사용자가 작업 scope creep 지적, HTML status 보고서 (`reports/auth-overview-work-summary-20260527.html`) 제출 | "문서 만들어달라 했는데 많은 작업" — 정당한 피드백 | 사용자 메시지 |
 | 2026-05-27 17:40 | 사용자 결정: T6 적발 1 FAIL + 2 CONCERN 모두 정정 후 종료 | AskUserQuestion 응답 | 사용자 선택 |
 | 2026-05-27 17:45 | 3건 정정 완료 — (a) §7 line 219 에서 recovery 를 callback 경로에서 분리하고 `/password-reset/confirm` 직행 명시, (b) §7 표의 `NEXT_PUBLIC_SITE_URL` 비고에서 "E10 적용 후" 패치 흔적 제거, (c) `.env.example` 의 `ACCESS_TOKEN` 을 server-only 섹션으로 이동 + 설명 주석 추가. ledger Status: complete | 사용자 명시 GO | 본 plan §Acceptance Criteria |
+| 2026-05-27 17:42 | README.md + docs/development/README.md 의 7 edits 적용 (R1~R5 + D1~D2). auth-overview.md 반영 + stale "pre-implementation" 정정 | 사용자 follow-up 요청 ("README도 정합성 검수 + auth-overview 반영") | 본 plan scope 외 — 같은 ledger 에 추적 |
+| 2026-05-27 17:45 | Codex README consistency review Round 1 verdict: **FAIL** (#1 Validity) — "AI 첨삭 = 문서 단계" 가 실제 feedback 라우트/컴포넌트/mock 경로 존재와 어긋남 | `tasks/codex-output-readme-consistency-review.md` | `feedback-docs-only-gate-rightsizing` 룰 적용 — single-pass |
+| 2026-05-27 17:47 | Codex 권장 fix 그대로 적용 (line 45 + line 50 narrowing + "다른 AI 검토" 평이화) | ground-truth (feedback/short/[id]/page.tsx + FeedbackPageContent.tsx + feedback-service.ts) 직접 확인 | Codex output line 40, 50, 60 |
+| 2026-05-27 17:50 | Commit `5a00e1d` 생성 → branch `docs/auth-overview-consolidated-reference` (origin/main 기반) → push 완료 | 사용자 명시 "깃에 올려" 요청 | PR 링크: github.com/blackstarzck/topik-project-v13/pull/new/docs/auth-overview-consolidated-reference |
+| 2026-05-27 17:58 | 사용자 피드백: "FAIL 인데 어쩌라는거야" — 보고가 FAIL 을 *초기* verdict 가 아닌 *최종* verdict 처럼 표현해 혼동. 사용자 선택: Codex 재검수 1회로 PASS 확인 | AskUserQuestion 응답 | 보고 명확성 부족 자기반성 |
+| 2026-05-27 18:00 | Codex Round 2 verification verdict: **PASS** (Confidence: high). FAIL #1 closed, CONCERN #3 closed, CONCERN #5 closed, regression 없음 | `tasks/codex-output-readme-consistency-review-round2.md` | 최종 종결 |
 
 ## Active Files
 
