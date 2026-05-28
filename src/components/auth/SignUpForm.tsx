@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { App, Button, Checkbox, Form, Input, Typography } from "antd";
 
 import { buildAuthRedirectUrl } from "@/lib/auth/redirect-url";
+import { REASON_CONTENT, mapSupabaseErrorCode } from "@/lib/auth/error-mapping";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 const { Paragraph, Title } = Typography;
@@ -44,7 +45,7 @@ export function SignUpForm() {
 
     if (error) {
       setSubmitting(false);
-      message.error(`가입 실패: ${error.message}`);
+      message.error(`가입 실패: ${REASON_CONTENT[mapSupabaseErrorCode(error.code)].message}`);
       return;
     }
     router.push(`/auth/verify-email?email=${encodeURIComponent(values.email)}`);
@@ -74,6 +75,7 @@ export function SignUpForm() {
         rules={[
           { required: true, message: "비밀번호를 입력하세요" },
           { min: 8, message: "비밀번호는 8자 이상이어야 합니다" },
+          { max: 64, message: "비밀번호는 64자 이하여야 합니다" },
         ]}
       >
         <Input.Password autoComplete="new-password" />

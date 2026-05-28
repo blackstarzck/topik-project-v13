@@ -117,7 +117,7 @@ export function AuthErrorCard() {
         message.error("메일을 너무 많이 보냈어요. 잠시 후 다시 시도해주세요.");
         return;
       }
-      message.error(`재전송에 실패했어요: ${error.message}`);
+      message.error(`재전송에 실패했어요: ${REASON_CONTENT[mapSupabaseErrorCode(error.code)].message}`);
       return;
     }
     message.success("인증 메일을 다시 보냈어요. 받은편지함을 확인해주세요.");

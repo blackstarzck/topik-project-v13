@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { buildAuthRedirectUrl } from "@/lib/auth/redirect-url";
+import { REASON_CONTENT, mapSupabaseErrorCode } from "@/lib/auth/error-mapping";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 const { Paragraph, Title } = Typography;
@@ -40,7 +41,7 @@ export function LoginForm() {
     });
     setSubmitting(false);
     if (error) {
-      message.error(`로그인 실패: ${error.message}`);
+      message.error(`로그인 실패: ${REASON_CONTENT[mapSupabaseErrorCode(error.code)].message}`);
       return;
     }
     router.push("/dashboard");
@@ -59,7 +60,7 @@ export function LoginForm() {
     });
     setSubmitting(false);
     if (error) {
-      message.error(`매직링크 전송 실패: ${error.message}`);
+      message.error(`매직링크 전송 실패: ${REASON_CONTENT[mapSupabaseErrorCode(error.code)].message}`);
       return;
     }
     setMagicLinkSent(values.email);

@@ -18,7 +18,7 @@ import { App, Button, Card, Form, Input, Space, Typography } from "antd";
 
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { buildAuthRedirectUrl } from "@/lib/auth/redirect-url";
-import { mapSupabaseErrorCode } from "@/lib/auth/error-mapping";
+import { REASON_CONTENT, mapSupabaseErrorCode } from "@/lib/auth/error-mapping";
 
 const { Paragraph, Title, Text } = Typography;
 
@@ -157,7 +157,7 @@ export function VerifyEmailCard() {
         message.error("메일을 너무 많이 보냈어요. 잠시 후 다시 시도해주세요.");
         return;
       }
-      message.error(`재전송에 실패했어요: ${error.message}`);
+      message.error(`재전송에 실패했어요: ${REASON_CONTENT[mapSupabaseErrorCode(error.code)].message}`);
       return;
     }
     writeCooldownStart(COOLDOWN_DEFAULT_SECONDS);

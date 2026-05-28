@@ -4,6 +4,7 @@ import { useState } from "react";
 import { App, Button, Form, Input, Typography } from "antd";
 
 import { buildAuthRedirectUrl } from "@/lib/auth/redirect-url";
+import { REASON_CONTENT, mapSupabaseErrorCode } from "@/lib/auth/error-mapping";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 const { Paragraph, Title } = Typography;
@@ -23,7 +24,7 @@ export function PasswordResetRequestForm() {
     });
     setSubmitting(false);
     if (error) {
-      message.error(`전송 실패: ${error.message}`);
+      message.error(`전송 실패: ${REASON_CONTENT[mapSupabaseErrorCode(error.code)].message}`);
       return;
     }
     setSentTo(values.email);

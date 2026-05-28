@@ -293,7 +293,9 @@ Route Handler 가 다음 순서로 처리한다 ([`src/app/auth/callback/route.t
 | `app_role` 종류 변경 | [`src/lib/auth/roles.ts`](../../src/lib/auth/roles.ts), [`src/lib/auth/admin-guard.ts`](../../src/lib/auth/admin-guard.ts), 관련 RLS 마이그레이션, 본 문서 §6.5 |
 | `NEXT_PUBLIC_SITE_URL` 도메인 변경 | [`.env.example`](../../.env.example), Vercel env vars, Supabase Dashboard Redirect URLs, 이메일 템플릿 |
 
-**Known doc-↔-impl drift (2026-05-27)**: IA A-01 ([`description.md:58-60`](../IA/01-A-01-sign-up/description.md))·X-06 ([`description.md:52-54`](../IA/28-X-06-password-reset/description.md)) 는 PW 8-64자 명세. 실제 구현은 [`SignUpForm.tsx:71-77`](../../src/components/auth/SignUpForm.tsx), [`PasswordResetConfirmForm.tsx:43-49`](../../src/components/auth/PasswordResetConfirmForm.tsx) 의 `min: 8` only (max 미적용). 본 문서는 drift 사실만 기록 — 구현 통일 또는 명세 완화는 product 결정 후 별건 PR.
+**Resolved doc-↔-impl drift (2026-05-28)**: IA A-01 ([`description.md:58-60`](../IA/01-A-01-sign-up/description.md))·X-06 ([`description.md:52-54`](../IA/28-X-06-password-reset/description.md)) 의 PW 8-64자 명세와 실제 구현 (`SignUpForm.tsx` / `PasswordResetConfirmForm.tsx`) 의 `min:8` only 가 일치하지 않던 drift 가 정리됨. 사용자 결정 "코드를 docs에 맞춤" → 두 폼의 antd Form rules 에 `{ max: 64, message: "비밀번호는 64자 이하여야 합니다" }` 추가. description.md 는 그대로 유지.
+
+**Resolved raw error leak (2026-05-28)**: IA 검수 Phase 5 적발. 6개 폼/카드 (`SignUpForm`, `LoginForm`, `PasswordResetRequestForm`, `PasswordResetConfirmForm`, `VerifyEmailCard`, `AuthErrorCard`) 가 `message.error(`...: ${error.message}`)` 형태로 Supabase 의 raw `error.message` 를 그대로 토스트했음. 본 문서 §3 의 "raw Supabase `error_description` 은 절대 UI/URL 노출 금지" 정책 위반. 6개 위치 전부 `${REASON_CONTENT[mapSupabaseErrorCode(error.code)].message}` 매핑으로 교체.
 
 ---
 
