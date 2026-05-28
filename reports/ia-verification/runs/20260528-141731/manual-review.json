@@ -1,0 +1,151 @@
+{
+  "runId": "20260528-141731",
+  "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+  "dirtyState": "dirty",
+  "evidenceBundleId": "96e5d23b0ad1221f",
+  "generatedBy": "manual: Coordinator placeholder (AI session cannot satisfy human confirmation per Plan §11 Step 5.4)",
+  "generatedAt": "2026-05-28T06:25:30.000Z",
+  "reviewerNote": "Plan §11 Step 5.4 explicitly says: 'A human Markdown note without a matching JSON row cannot unblock final PASS. An AI-generated manual-review.json row or source: agent-note can record candidate questions, but it cannot satisfy required human confirmation or unblock final PASS.' This file therefore records the 6 reviewed-by-AI IA as awaiting human confirmation; the 28 BLOCKED-by-prior-phase IA are not yet candidates for human review.",
+  "rows": [
+    {
+      "iaCode": "X-01",
+      "aiUxReviewRowId": "X-01-card",
+      "humanReviewerName": null,
+      "humanReviewerRole": "to-be-assigned",
+      "reviewerType": "ai-generated",
+      "source": "agent-note",
+      "confirmationReference": null,
+      "confirmedTimestamp": null,
+      "confirmationStatus": "candidate-note-only",
+      "questionsReviewed": [
+        "랜딩 카피 톤: '무료 시작' vs '회원가입' vs '시작하기' 중 실제 사용 문구",
+        "로그인 사용자 진입 시 대시보드 CTA 분기 작동 여부",
+        "마스코트 이미지 fallback 동작"
+      ],
+      "finalUxResult": null,
+      "policyOrWordingConcerns": [],
+      "acceptedRisk": null,
+      "status": "BLOCKED",
+      "blockingReasons": [
+        "Human reviewer not yet assigned — Plan §11 5.4 prohibits AI-generated rows from satisfying required human confirmation."
+      ]
+    },
+    {
+      "iaCode": "A-01",
+      "aiUxReviewRowId": "A-01-card",
+      "humanReviewerName": null,
+      "humanReviewerRole": "to-be-assigned",
+      "reviewerType": "ai-generated",
+      "source": "agent-note",
+      "confirmationReference": null,
+      "confirmedTimestamp": null,
+      "confirmationStatus": "candidate-note-only",
+      "questionsReviewed": [
+        "PW max 길이 명세(64) vs 구현(no max) drift 처리 방향",
+        "약관 동의 체크박스 라벨 자연스러움 (한국어)",
+        "혜택 칩 3개 이하 / 칩 라벨 12자 제약 디자인 반영 여부"
+      ],
+      "finalUxResult": null,
+      "policyOrWordingConcerns": [
+        "Known DOC-GAP: PW max length drift between description.md and SignUpForm.tsx (auth-overview §10)"
+      ],
+      "acceptedRisk": null,
+      "status": "BLOCKED",
+      "blockingReasons": [
+        "Human reviewer not yet assigned.",
+        "Policy decision needed for PW max length drift (product decision required separately)."
+      ]
+    },
+    {
+      "iaCode": "A-02",
+      "aiUxReviewRowId": "A-02-card",
+      "humanReviewerName": null,
+      "humanReviewerRole": "to-be-assigned",
+      "reviewerType": "ai-generated",
+      "source": "agent-note",
+      "confirmationReference": null,
+      "confirmedTimestamp": null,
+      "confirmationStatus": "candidate-note-only",
+      "questionsReviewed": [
+        "매직 링크 탭 안내 카피 톤 (한국어 자연스러움)",
+        "?reason=session_expired Alert의 시각적 강조도",
+        "3회 실패 잠금 안내 카피"
+      ],
+      "finalUxResult": null,
+      "policyOrWordingConcerns": [],
+      "acceptedRisk": null,
+      "status": "BLOCKED",
+      "blockingReasons": ["Human reviewer not yet assigned."]
+    },
+    {
+      "iaCode": "X-06",
+      "aiUxReviewRowId": "X-06-card",
+      "humanReviewerName": null,
+      "humanReviewerRole": "to-be-assigned",
+      "reviewerType": "ai-generated",
+      "source": "agent-note",
+      "confirmationReference": null,
+      "confirmedTimestamp": null,
+      "confirmationStatus": "candidate-note-only",
+      "questionsReviewed": [
+        "비밀번호 재설정 보안 안내 카피 톤",
+        "재전송 cooldown 표기 방식"
+      ],
+      "finalUxResult": null,
+      "policyOrWordingConcerns": [
+        "Known DOC-GAP: PW max length drift in PasswordResetConfirmForm.tsx (auth-overview §10)"
+      ],
+      "acceptedRisk": null,
+      "status": "BLOCKED",
+      "blockingReasons": ["Human reviewer not yet assigned."]
+    },
+    {
+      "iaCode": "X-11",
+      "aiUxReviewRowId": "X-11-card",
+      "humanReviewerName": null,
+      "humanReviewerRole": "to-be-assigned",
+      "reviewerType": "ai-generated",
+      "source": "agent-note",
+      "confirmationReference": null,
+      "confirmedTimestamp": null,
+      "confirmationStatus": "candidate-note-only",
+      "questionsReviewed": [
+        "11개 reason 메시지 톤 일관성",
+        "?email= prefill 노출 적절성 (자기 이메일 확인 vs URL 변조 우려)",
+        "Rate-limit 카운트다운 분/초 명확성"
+      ],
+      "finalUxResult": null,
+      "policyOrWordingConcerns": [],
+      "acceptedRisk": null,
+      "status": "BLOCKED",
+      "blockingReasons": ["Human reviewer not yet assigned. AUTH evidence covers only 2/11 reasons — additional rendered evidence required before human review can fully evaluate."]
+    },
+    {
+      "iaCode": "X-12",
+      "aiUxReviewRowId": "X-12-card",
+      "humanReviewerName": null,
+      "humanReviewerRole": "to-be-assigned",
+      "reviewerType": "ai-generated",
+      "source": "agent-note",
+      "confirmationReference": null,
+      "confirmedTimestamp": null,
+      "confirmationStatus": "candidate-note-only",
+      "questionsReviewed": [
+        "Cooldown 표기 명확성",
+        "secondary action 시각적 위계 (primary 재전송 vs '스팸함 확인'/'다른 메일')",
+        "Built-in SMTP 2/hour 한도 안내 카피"
+      ],
+      "finalUxResult": null,
+      "policyOrWordingConcerns": [],
+      "acceptedRisk": null,
+      "status": "BLOCKED",
+      "blockingReasons": ["Human reviewer not yet assigned."]
+    }
+  ],
+  "summary": {
+    "totalRows": 6,
+    "statusCounts": {"BLOCKED": 6},
+    "humanProvenance": "absent — all 6 rows recorded by AI session as candidate notes only."
+  },
+  "status": "BLOCKED"
+}

@@ -1,0 +1,1782 @@
+{
+  "runId": "20260528-141731",
+  "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+  "dirtyState": "dirty",
+  "evidenceBundleId": "96e5d23b0ad1221f",
+  "generatedBy": "build-security-navigation-results.mjs",
+  "generatedAt": "2026-05-28T11:49:24.595Z",
+  "rows": [
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "auth-route-handler",
+      "caseId": "AUTH-RH-1",
+      "description": "callback with no token/code → fragment fallback",
+      "iaCode": null,
+      "actualOutcome": null,
+      "observedStatus": 307,
+      "observedFinalUrl": "http://localhost:3000/auth/callback-fragment?next=%2Fdashboard",
+      "authOverviewRequirementIds": [
+        "auth-overview §4.4 callback branch 4 (implicit fragment)"
+      ],
+      "backendAuthRequirementIds": [],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.592Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "auth-route-handler",
+      "caseId": "AUTH-RH-2",
+      "description": "external `next` is sanitized (no upstream leak)",
+      "iaCode": null,
+      "actualOutcome": null,
+      "observedStatus": 307,
+      "observedFinalUrl": "http://localhost:3000/auth/callback-fragment?next=%2Fdashboard",
+      "authOverviewRequirementIds": [
+        "auth-overview §4.1 `next` sanitizeNext fallback to /dashboard"
+      ],
+      "backendAuthRequirementIds": [],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.593Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "auth-route-handler",
+      "caseId": "AUTH-RH-3",
+      "description": "malformed type → safe unknown reason (not fragment fallback)",
+      "iaCode": null,
+      "actualOutcome": null,
+      "observedStatus": 307,
+      "observedFinalUrl": "http://localhost:3000/auth/error?reason=unknown",
+      "authOverviewRequirementIds": [
+        "auth-overview §4.4 callback branch 2a malformed type"
+      ],
+      "backendAuthRequirementIds": [],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.593Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "auth-route-handler",
+      "caseId": "AUTH-RH-4",
+      "description": "/auth/error without reason renders unknown fallback",
+      "iaCode": null,
+      "actualOutcome": null,
+      "observedStatus": 200,
+      "observedFinalUrl": "http://127.0.0.1:3000/auth/error",
+      "authOverviewRequirementIds": [
+        "auth-overview §5 unknown fallback"
+      ],
+      "backendAuthRequirementIds": [],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.593Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "auth-route-handler",
+      "caseId": "AUTH-RH-5",
+      "description": "sign-out GET rejects (CSRF protection — POST-only)",
+      "iaCode": null,
+      "actualOutcome": null,
+      "observedStatus": 405,
+      "observedFinalUrl": "POST",
+      "authOverviewRequirementIds": [
+        "sitemap.md auth sign-out row: route handler (POST)"
+      ],
+      "backendAuthRequirementIds": [],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.593Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "auth-route-handler",
+      "caseId": "AUTH-RH-6",
+      "description": "sign-out POST clears session and redirects to /login",
+      "iaCode": null,
+      "actualOutcome": null,
+      "observedStatus": 303,
+      "observedFinalUrl": "http://localhost:3000/login",
+      "authOverviewRequirementIds": [
+        "sitemap.md auth sign-out: 서버 사이드 세션 쿠키 정리"
+      ],
+      "backendAuthRequirementIds": [
+        "backend-auth.md: Supabase Auth signOut clears session cookies"
+      ],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.593Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "auth-route-handler",
+      "caseId": "AUTH-RH-7",
+      "description": "callback-fragment renders + does not echo tokens",
+      "iaCode": null,
+      "actualOutcome": null,
+      "observedStatus": 200,
+      "observedFinalUrl": "http://127.0.0.1:3000/auth/callback-fragment#access_token=fake&refresh_token=fake",
+      "authOverviewRequirementIds": [
+        "auth-overview §4.4 callback branch 4 (implicit flow)"
+      ],
+      "backendAuthRequirementIds": [],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.593Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "auth-route-handler",
+      "caseId": "AUTH-RH-1",
+      "description": "callback with no token/code → fragment fallback",
+      "iaCode": null,
+      "actualOutcome": null,
+      "observedStatus": 307,
+      "observedFinalUrl": "http://localhost:3000/auth/callback-fragment?next=%2Fdashboard",
+      "authOverviewRequirementIds": [
+        "auth-overview §4.4 callback branch 4 (implicit fragment)"
+      ],
+      "backendAuthRequirementIds": [],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.593Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "auth-route-handler",
+      "caseId": "AUTH-RH-2",
+      "description": "external `next` is sanitized (no upstream leak)",
+      "iaCode": null,
+      "actualOutcome": null,
+      "observedStatus": 307,
+      "observedFinalUrl": "http://localhost:3000/auth/callback-fragment?next=%2Fdashboard",
+      "authOverviewRequirementIds": [
+        "auth-overview §4.1 `next` sanitizeNext fallback to /dashboard"
+      ],
+      "backendAuthRequirementIds": [],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.593Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "auth-route-handler",
+      "caseId": "AUTH-RH-3",
+      "description": "malformed type → safe unknown reason (not fragment fallback)",
+      "iaCode": null,
+      "actualOutcome": null,
+      "observedStatus": 307,
+      "observedFinalUrl": "http://localhost:3000/auth/error?reason=unknown",
+      "authOverviewRequirementIds": [
+        "auth-overview §4.4 callback branch 2a malformed type"
+      ],
+      "backendAuthRequirementIds": [],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.593Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "auth-route-handler",
+      "caseId": "AUTH-RH-4",
+      "description": "/auth/error without reason renders unknown fallback",
+      "iaCode": null,
+      "actualOutcome": null,
+      "observedStatus": 200,
+      "observedFinalUrl": "http://127.0.0.1:3000/auth/error",
+      "authOverviewRequirementIds": [
+        "auth-overview §5 unknown fallback"
+      ],
+      "backendAuthRequirementIds": [],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.593Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "auth-route-handler",
+      "caseId": "AUTH-RH-5",
+      "description": "sign-out GET rejects (CSRF protection — POST-only)",
+      "iaCode": null,
+      "actualOutcome": null,
+      "observedStatus": 405,
+      "observedFinalUrl": "POST",
+      "authOverviewRequirementIds": [
+        "sitemap.md auth sign-out row: route handler (POST)"
+      ],
+      "backendAuthRequirementIds": [],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.593Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "auth-route-handler",
+      "caseId": "AUTH-RH-6",
+      "description": "sign-out POST clears session and redirects to /login",
+      "iaCode": null,
+      "actualOutcome": null,
+      "observedStatus": 303,
+      "observedFinalUrl": "http://localhost:3000/login",
+      "authOverviewRequirementIds": [
+        "sitemap.md auth sign-out: 서버 사이드 세션 쿠키 정리"
+      ],
+      "backendAuthRequirementIds": [
+        "backend-auth.md: Supabase Auth signOut clears session cookies"
+      ],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.593Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "auth-route-handler",
+      "caseId": "AUTH-RH-7",
+      "description": "callback-fragment renders + does not echo tokens",
+      "iaCode": null,
+      "actualOutcome": null,
+      "observedStatus": 200,
+      "observedFinalUrl": "http://127.0.0.1:3000/auth/callback-fragment#access_token=fake&refresh_token=fake",
+      "authOverviewRequirementIds": [
+        "auth-overview §4.4 callback branch 4 (implicit flow)"
+      ],
+      "backendAuthRequirementIds": [],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.593Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "auth-route-handler",
+      "caseId": "AUTH-RH-1",
+      "description": "callback with no token/code → fragment fallback",
+      "iaCode": null,
+      "actualOutcome": null,
+      "observedStatus": 307,
+      "observedFinalUrl": "http://localhost:3000/auth/callback-fragment?next=%2Fdashboard",
+      "authOverviewRequirementIds": [
+        "auth-overview §4.4 callback branch 4 (implicit fragment)"
+      ],
+      "backendAuthRequirementIds": [],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.593Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "auth-route-handler",
+      "caseId": "AUTH-RH-2",
+      "description": "external `next` is sanitized (no upstream leak)",
+      "iaCode": null,
+      "actualOutcome": null,
+      "observedStatus": 307,
+      "observedFinalUrl": "http://localhost:3000/auth/callback-fragment?next=%2Fdashboard",
+      "authOverviewRequirementIds": [
+        "auth-overview §4.1 `next` sanitizeNext fallback to /dashboard"
+      ],
+      "backendAuthRequirementIds": [],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.593Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "auth-route-handler",
+      "caseId": "AUTH-RH-3",
+      "description": "malformed type → safe unknown reason (not fragment fallback)",
+      "iaCode": null,
+      "actualOutcome": null,
+      "observedStatus": 307,
+      "observedFinalUrl": "http://localhost:3000/auth/error?reason=unknown",
+      "authOverviewRequirementIds": [
+        "auth-overview §4.4 callback branch 2a malformed type"
+      ],
+      "backendAuthRequirementIds": [],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.593Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "auth-route-handler",
+      "caseId": "AUTH-RH-4",
+      "description": "/auth/error without reason renders unknown fallback",
+      "iaCode": null,
+      "actualOutcome": null,
+      "observedStatus": 200,
+      "observedFinalUrl": "http://127.0.0.1:3000/auth/error",
+      "authOverviewRequirementIds": [
+        "auth-overview §5 unknown fallback"
+      ],
+      "backendAuthRequirementIds": [],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.593Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "auth-route-handler",
+      "caseId": "AUTH-RH-5",
+      "description": "sign-out GET rejects (CSRF protection — POST-only)",
+      "iaCode": null,
+      "actualOutcome": null,
+      "observedStatus": 405,
+      "observedFinalUrl": "POST",
+      "authOverviewRequirementIds": [
+        "sitemap.md auth sign-out row: route handler (POST)"
+      ],
+      "backendAuthRequirementIds": [],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.593Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "auth-route-handler",
+      "caseId": "AUTH-RH-6",
+      "description": "sign-out POST clears session and redirects to /login",
+      "iaCode": null,
+      "actualOutcome": null,
+      "observedStatus": 303,
+      "observedFinalUrl": "http://localhost:3000/login",
+      "authOverviewRequirementIds": [
+        "sitemap.md auth sign-out: 서버 사이드 세션 쿠키 정리"
+      ],
+      "backendAuthRequirementIds": [
+        "backend-auth.md: Supabase Auth signOut clears session cookies"
+      ],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.593Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "auth-route-handler",
+      "caseId": "AUTH-RH-7",
+      "description": "callback-fragment renders + does not echo tokens",
+      "iaCode": null,
+      "actualOutcome": null,
+      "observedStatus": 200,
+      "observedFinalUrl": "http://127.0.0.1:3000/auth/callback-fragment#access_token=fake&refresh_token=fake",
+      "authOverviewRequirementIds": [
+        "auth-overview §4.4 callback branch 4 (implicit flow)"
+      ],
+      "backendAuthRequirementIds": [],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.593Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-1",
+      "description": "Anon visitor → /dashboard redirects to /login",
+      "iaCode": null,
+      "actor": "anonymous",
+      "routeOrHostRoute": "/dashboard",
+      "expectedOutcome": "redirect to /login",
+      "actualOutcome": "final URL http://127.0.0.1:3000/login, status 200",
+      "observedFinalUrl": null,
+      "recoveryCopyExpected": "[object Object]",
+      "recoveryCopyObserved": "로그인비밀번호 로그인매직링크 로그인이메일비밀번호로그인비밀번호를 잊으셨나요?계정이 없으신가요? 회원가입self.__next_r=\"5t-Vz3aOetc-GKOHqofZZ\"(self.__next_f=self.__next_f||[]).push([0])self.__next_f.push([1,\"7:I[\\\"[project]/node_modules/.pnpm/next@1",
+      "safeReturnRoute": "/login",
+      "rawErrorExposureCheck": "no provider/token in URL",
+      "authOverviewRequirementIds": [
+        "auth-overview §4.2 middleware → /login fallback"
+      ],
+      "backendAuthRequirementIds": [],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.594Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-2",
+      "description": "Anon → /admin/* redirects to /login (not /admin guard 403 page)",
+      "iaCode": null,
+      "actor": "anonymous",
+      "routeOrHostRoute": "/admin/problems",
+      "expectedOutcome": "redirect to /login",
+      "actualOutcome": "final URL http://127.0.0.1:3000/login, status 200",
+      "observedFinalUrl": null,
+      "safeReturnRoute": "/login",
+      "rawErrorExposureCheck": "no admin role disclosure in URL",
+      "authOverviewRequirementIds": [
+        "auth-overview §6.5 admin role gating"
+      ],
+      "backendAuthRequirementIds": [
+        "backend-auth.md RLS: admin only via private.is_*_admin()"
+      ],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.594Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-3",
+      "description": "Idempotent sign-out + protected probe → /login (no auth side-effect leak)",
+      "iaCode": null,
+      "actor": "anonymous-post-signout",
+      "routeOrHostRoute": "/dashboard (after sign-out POST)",
+      "expectedOutcome": "redirect to /login",
+      "actualOutcome": "status 307, location /login",
+      "observedFinalUrl": null,
+      "safeReturnRoute": "/login",
+      "rawErrorExposureCheck": "no token leak",
+      "authOverviewRequirementIds": [
+        "sign-out idempotency"
+      ],
+      "backendAuthRequirementIds": [],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.594Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-4",
+      "description": "Anon → owner-bound URL → /login (auth precedes ownership check)",
+      "iaCode": null,
+      "actor": "anonymous",
+      "routeOrHostRoute": "/writing/feedback/short/00000000-0000-0000-0000-000000000000",
+      "expectedOutcome": "redirect to /login (do not leak whether id exists)",
+      "actualOutcome": "final URL http://127.0.0.1:3000/login, status 200",
+      "observedFinalUrl": null,
+      "safeReturnRoute": "/login",
+      "rawErrorExposureCheck": "no enumeration / no 404 leak",
+      "authOverviewRequirementIds": [
+        "auth check precedes RLS check"
+      ],
+      "backendAuthRequirementIds": [
+        "backend-auth.md owner-id RLS"
+      ],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.594Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-5",
+      "description": "/login?reason=session_expired renders user-facing alert",
+      "iaCode": null,
+      "actor": "anonymous-stale-cookie",
+      "routeOrHostRoute": "/login?reason=session_expired",
+      "expectedOutcome": "Alert with session-expired copy",
+      "actualOutcome": "matched",
+      "observedFinalUrl": null,
+      "recoveryCopyExpected": "[object Object]",
+      "recoveryCopyObserved": "로그인세션이 만료되어 로그아웃됐어요. 다시 로그인해주세요.비밀번호 로그인매직링크 로그인이메일비밀번호로그인비밀번호를 잊으셨나요?계정이 없으신가요? 회원가입self.__next_r=\"j_FHiZ40lrate-e8IPTk6\"(self.__next_f=self.__next_f||[]).push([0])self.__next_f.push([1,\"7:I[\\\"[proje",
+      "safeReturnRoute": "/login",
+      "rawErrorExposureCheck": "no raw Supabase error_description shown",
+      "authOverviewRequirementIds": [
+        "auth-overview §4.2 세션 만료 안내"
+      ],
+      "backendAuthRequirementIds": [],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.594Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-6",
+      "description": "/auth/error?reason=otp_expired renders mapped copy + CTAs",
+      "iaCode": null,
+      "actor": "anonymous",
+      "routeOrHostRoute": "/auth/error?reason=otp_expired",
+      "expectedOutcome": "Friendly 'link expired' message + resend CTA",
+      "actualOutcome": "rendered",
+      "observedFinalUrl": null,
+      "recoveryCopyExpected": "[object Object]",
+      "recoveryCopyObserved": "인증 링크가 만료됐어요이메일을 다시 입력하면 새 인증 메일을 보내드릴게요. 메일은 60초 안에 한 번만 보낼 수 있어요.이메일1분 후 다시 시도할 수 있어요인증 메일 다시 받기로그인하기홈으로 돌아가기self.__next_r=\"IEHbO56dMdjHL7jZvZQAw\"(self.__next_f=self.__next_f||[]).push([0])self.__ne",
+      "safeReturnRoute": "/auth/verify-email or /login",
+      "rawErrorExposureCheck": "no raw error_description",
+      "authOverviewRequirementIds": [
+        "auth-overview §5 otp_expired mapping"
+      ],
+      "backendAuthRequirementIds": [],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.594Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-7",
+      "description": "Browser back after sign-out does not bypass auth",
+      "iaCode": null,
+      "actor": "anonymous-post-signout",
+      "routeOrHostRoute": "/dashboard (back after sign-out)",
+      "expectedOutcome": "/dashboard → /login",
+      "actualOutcome": "final URL http://127.0.0.1:3000/login, status 200",
+      "observedFinalUrl": null,
+      "safeReturnRoute": "/login",
+      "rawErrorExposureCheck": "no session token in URL",
+      "authOverviewRequirementIds": [
+        "sign-out invalidates session"
+      ],
+      "backendAuthRequirementIds": [],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.594Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-8",
+      "description": "Student → /admin/problems must redirect with audit-safe message",
+      "iaCode": null,
+      "actor": "student",
+      "routeOrHostRoute": "/admin/problems",
+      "expectedOutcome": "redirect to /dashboard?error=forbidden",
+      "actualOutcome": null,
+      "observedFinalUrl": null,
+      "safeReturnRoute": "/dashboard",
+      "rawErrorExposureCheck": "verify no token/role disclosure",
+      "authOverviewRequirementIds": [
+        "auth-overview §6.5"
+      ],
+      "backendAuthRequirementIds": [
+        "backend-auth.md RLS"
+      ],
+      "status": "BLOCKED",
+      "blockingReasons": [
+        "Precondition not met: needs student storageState; also requires Supabase user with explicit non-admin role"
+      ],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.594Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-9",
+      "description": "Student → owner-id route with another user's :id must 404/forbidden, not data leak",
+      "iaCode": null,
+      "actor": "student",
+      "routeOrHostRoute": "/writing/feedback/short/cccccccc-3333-3333-3333-cccccccccccc",
+      "expectedOutcome": "404 or empty state — RLS denies other user's row",
+      "actualOutcome": null,
+      "observedFinalUrl": null,
+      "safeReturnRoute": "/login",
+      "rawErrorExposureCheck": "verify no token/role disclosure",
+      "authOverviewRequirementIds": [
+        "auth-overview §6.5"
+      ],
+      "backendAuthRequirementIds": [
+        "backend-auth.md RLS"
+      ],
+      "status": "BLOCKED",
+      "blockingReasons": [
+        "Precondition not met: needs student storageState + seeded feedback row owned by different user"
+      ],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.594Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-10",
+      "description": "Refresh during writing → autosave warning surface (D-M3)",
+      "iaCode": null,
+      "actor": "student",
+      "routeOrHostRoute": "/writing/53",
+      "expectedOutcome": "autosave state preserved; warning if dirty",
+      "actualOutcome": null,
+      "observedFinalUrl": null,
+      "safeReturnRoute": "/login",
+      "rawErrorExposureCheck": "verify no token/role disclosure",
+      "authOverviewRequirementIds": [
+        "auth-overview §6.5"
+      ],
+      "backendAuthRequirementIds": [
+        "backend-auth.md RLS"
+      ],
+      "status": "BLOCKED",
+      "blockingReasons": [
+        "Precondition not met: needs student storageState + ability to dirty form mid-load"
+      ],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.594Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-11",
+      "description": "Expired session → middleware /login?reason=session_expired",
+      "iaCode": null,
+      "actor": "student-expired",
+      "routeOrHostRoute": "/dashboard",
+      "expectedOutcome": "redirect to /login?reason=session_expired + Alert",
+      "actualOutcome": null,
+      "observedFinalUrl": null,
+      "safeReturnRoute": "/login",
+      "rawErrorExposureCheck": "verify no token/role disclosure",
+      "authOverviewRequirementIds": [
+        "auth-overview §6.5"
+      ],
+      "backendAuthRequirementIds": [
+        "backend-auth.md RLS"
+      ],
+      "status": "BLOCKED",
+      "blockingReasons": [
+        "Precondition not met: needs storageState with intentionally stale token (requires service_role to mint)"
+      ],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.595Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-12",
+      "description": "Org admin → /admin/users (platform_admin only) → /dashboard?error=forbidden",
+      "iaCode": null,
+      "actor": "org_admin",
+      "routeOrHostRoute": "/admin/users",
+      "expectedOutcome": "redirect to /dashboard?error=forbidden",
+      "actualOutcome": null,
+      "observedFinalUrl": null,
+      "safeReturnRoute": "/dashboard",
+      "rawErrorExposureCheck": "verify no token/role disclosure",
+      "authOverviewRequirementIds": [
+        "auth-overview §6.5"
+      ],
+      "backendAuthRequirementIds": [
+        "backend-auth.md RLS"
+      ],
+      "status": "BLOCKED",
+      "blockingReasons": [
+        "Precondition not met: needs org_admin storageState"
+      ],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.595Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-13",
+      "description": "Platform admin → /admin/users → 200",
+      "iaCode": null,
+      "actor": "platform_admin",
+      "routeOrHostRoute": "/admin/users",
+      "expectedOutcome": "renders admin user management",
+      "actualOutcome": null,
+      "observedFinalUrl": null,
+      "safeReturnRoute": "/dashboard",
+      "rawErrorExposureCheck": "verify no token/role disclosure",
+      "authOverviewRequirementIds": [
+        "auth-overview §6.5"
+      ],
+      "backendAuthRequirementIds": [
+        "backend-auth.md RLS"
+      ],
+      "status": "BLOCKED",
+      "blockingReasons": [
+        "Precondition not met: needs platform_admin storageState"
+      ],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.595Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-14",
+      "description": "Refresh after submit (writing/51) → submitted state preserved",
+      "iaCode": null,
+      "actor": "student",
+      "routeOrHostRoute": "/writing/51",
+      "expectedOutcome": "post-submit state stable on refresh; no re-submission",
+      "actualOutcome": null,
+      "observedFinalUrl": null,
+      "safeReturnRoute": "/login",
+      "rawErrorExposureCheck": "verify no token/role disclosure",
+      "authOverviewRequirementIds": [
+        "auth-overview §6.5"
+      ],
+      "backendAuthRequirementIds": [
+        "backend-auth.md RLS"
+      ],
+      "status": "BLOCKED",
+      "blockingReasons": [
+        "Precondition not met: needs student storageState + a seeded in-progress writing draft"
+      ],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.595Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-15",
+      "description": "Network failure during /writing/51 submit → retry surfaced",
+      "iaCode": null,
+      "actor": "student",
+      "routeOrHostRoute": "/writing/51",
+      "expectedOutcome": "retry CTA visible; answer text preserved",
+      "actualOutcome": null,
+      "observedFinalUrl": null,
+      "safeReturnRoute": "/login",
+      "rawErrorExposureCheck": "verify no token/role disclosure",
+      "authOverviewRequirementIds": [
+        "auth-overview §6.5"
+      ],
+      "backendAuthRequirementIds": [
+        "backend-auth.md RLS"
+      ],
+      "status": "BLOCKED",
+      "blockingReasons": [
+        "Precondition not met: needs student storageState + Playwright route-intercept to simulate network failure"
+      ],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.595Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-1",
+      "description": "Anon visitor → /dashboard redirects to /login",
+      "iaCode": null,
+      "actor": "anonymous",
+      "routeOrHostRoute": "/dashboard",
+      "expectedOutcome": "redirect to /login",
+      "actualOutcome": "final URL http://127.0.0.1:3000/login, status 200",
+      "observedFinalUrl": null,
+      "recoveryCopyExpected": "[object Object]",
+      "recoveryCopyObserved": "로그인비밀번호 로그인매직링크 로그인이메일비밀번호로그인비밀번호를 잊으셨나요?계정이 없으신가요? 회원가입self.__next_r=\"28Xrae_4Idpo9lHn6rO72\"(self.__next_f=self.__next_f||[]).push([0])self.__next_f.push([1,\"7:I[\\\"[project]/node_modules/.pnpm/next@1",
+      "safeReturnRoute": "/login",
+      "rawErrorExposureCheck": "no provider/token in URL",
+      "authOverviewRequirementIds": [
+        "auth-overview §4.2 middleware → /login fallback"
+      ],
+      "backendAuthRequirementIds": [],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.595Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-2",
+      "description": "Anon → /admin/* redirects to /login (not /admin guard 403 page)",
+      "iaCode": null,
+      "actor": "anonymous",
+      "routeOrHostRoute": "/admin/problems",
+      "expectedOutcome": "redirect to /login",
+      "actualOutcome": "final URL http://127.0.0.1:3000/login, status 200",
+      "observedFinalUrl": null,
+      "safeReturnRoute": "/login",
+      "rawErrorExposureCheck": "no admin role disclosure in URL",
+      "authOverviewRequirementIds": [
+        "auth-overview §6.5 admin role gating"
+      ],
+      "backendAuthRequirementIds": [
+        "backend-auth.md RLS: admin only via private.is_*_admin()"
+      ],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.595Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-3",
+      "description": "Idempotent sign-out + protected probe → /login (no auth side-effect leak)",
+      "iaCode": null,
+      "actor": "anonymous-post-signout",
+      "routeOrHostRoute": "/dashboard (after sign-out POST)",
+      "expectedOutcome": "redirect to /login",
+      "actualOutcome": "status 307, location /login",
+      "observedFinalUrl": null,
+      "safeReturnRoute": "/login",
+      "rawErrorExposureCheck": "no token leak",
+      "authOverviewRequirementIds": [
+        "sign-out idempotency"
+      ],
+      "backendAuthRequirementIds": [],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.595Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-4",
+      "description": "Anon → owner-bound URL → /login (auth precedes ownership check)",
+      "iaCode": null,
+      "actor": "anonymous",
+      "routeOrHostRoute": "/writing/feedback/short/00000000-0000-0000-0000-000000000000",
+      "expectedOutcome": "redirect to /login (do not leak whether id exists)",
+      "actualOutcome": "final URL http://127.0.0.1:3000/login, status 200",
+      "observedFinalUrl": null,
+      "safeReturnRoute": "/login",
+      "rawErrorExposureCheck": "no enumeration / no 404 leak",
+      "authOverviewRequirementIds": [
+        "auth check precedes RLS check"
+      ],
+      "backendAuthRequirementIds": [
+        "backend-auth.md owner-id RLS"
+      ],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.595Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-5",
+      "description": "/login?reason=session_expired renders user-facing alert",
+      "iaCode": null,
+      "actor": "anonymous-stale-cookie",
+      "routeOrHostRoute": "/login?reason=session_expired",
+      "expectedOutcome": "Alert with session-expired copy",
+      "actualOutcome": "matched",
+      "observedFinalUrl": null,
+      "recoveryCopyExpected": "[object Object]",
+      "recoveryCopyObserved": "로그인세션이 만료되어 로그아웃됐어요. 다시 로그인해주세요.비밀번호 로그인매직링크 로그인이메일비밀번호로그인비밀번호를 잊으셨나요?계정이 없으신가요? 회원가입self.__next_r=\"F8m_Ft6uyjH6RTulUC3f_\"(self.__next_f=self.__next_f||[]).push([0])self.__next_f.push([1,\"7:I[\\\"[proje",
+      "safeReturnRoute": "/login",
+      "rawErrorExposureCheck": "no raw Supabase error_description shown",
+      "authOverviewRequirementIds": [
+        "auth-overview §4.2 세션 만료 안내"
+      ],
+      "backendAuthRequirementIds": [],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.595Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-6",
+      "description": "/auth/error?reason=otp_expired renders mapped copy + CTAs",
+      "iaCode": null,
+      "actor": "anonymous",
+      "routeOrHostRoute": "/auth/error?reason=otp_expired",
+      "expectedOutcome": "Friendly 'link expired' message + resend CTA",
+      "actualOutcome": "rendered",
+      "observedFinalUrl": null,
+      "recoveryCopyExpected": "[object Object]",
+      "recoveryCopyObserved": "인증 링크가 만료됐어요이메일을 다시 입력하면 새 인증 메일을 보내드릴게요. 메일은 60초 안에 한 번만 보낼 수 있어요.이메일1분 후 다시 시도할 수 있어요인증 메일 다시 받기로그인하기홈으로 돌아가기self.__next_r=\"ow3uBdWc6ZsWRxePwtkEo\"(self.__next_f=self.__next_f||[]).push([0])self.__ne",
+      "safeReturnRoute": "/auth/verify-email or /login",
+      "rawErrorExposureCheck": "no raw error_description",
+      "authOverviewRequirementIds": [
+        "auth-overview §5 otp_expired mapping"
+      ],
+      "backendAuthRequirementIds": [],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.595Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-7",
+      "description": "Browser back after sign-out does not bypass auth",
+      "iaCode": null,
+      "actor": "anonymous-post-signout",
+      "routeOrHostRoute": "/dashboard (back after sign-out)",
+      "expectedOutcome": "/dashboard → /login",
+      "actualOutcome": "final URL http://127.0.0.1:3000/login, status 200",
+      "observedFinalUrl": null,
+      "safeReturnRoute": "/login",
+      "rawErrorExposureCheck": "no session token in URL",
+      "authOverviewRequirementIds": [
+        "sign-out invalidates session"
+      ],
+      "backendAuthRequirementIds": [],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.595Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-8",
+      "description": "Student → /admin/problems must redirect with audit-safe message",
+      "iaCode": null,
+      "actor": "student",
+      "routeOrHostRoute": "/admin/problems",
+      "expectedOutcome": "redirect to /dashboard?error=forbidden",
+      "actualOutcome": null,
+      "observedFinalUrl": null,
+      "safeReturnRoute": "/dashboard",
+      "rawErrorExposureCheck": "verify no token/role disclosure",
+      "authOverviewRequirementIds": [
+        "auth-overview §6.5"
+      ],
+      "backendAuthRequirementIds": [
+        "backend-auth.md RLS"
+      ],
+      "status": "BLOCKED",
+      "blockingReasons": [
+        "Precondition not met: needs student storageState; also requires Supabase user with explicit non-admin role"
+      ],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.595Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-9",
+      "description": "Student → owner-id route with another user's :id must 404/forbidden, not data leak",
+      "iaCode": null,
+      "actor": "student",
+      "routeOrHostRoute": "/writing/feedback/short/cccccccc-3333-3333-3333-cccccccccccc",
+      "expectedOutcome": "404 or empty state — RLS denies other user's row",
+      "actualOutcome": null,
+      "observedFinalUrl": null,
+      "safeReturnRoute": "/login",
+      "rawErrorExposureCheck": "verify no token/role disclosure",
+      "authOverviewRequirementIds": [
+        "auth-overview §6.5"
+      ],
+      "backendAuthRequirementIds": [
+        "backend-auth.md RLS"
+      ],
+      "status": "BLOCKED",
+      "blockingReasons": [
+        "Precondition not met: needs student storageState + seeded feedback row owned by different user"
+      ],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.595Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-10",
+      "description": "Refresh during writing → autosave warning surface (D-M3)",
+      "iaCode": null,
+      "actor": "student",
+      "routeOrHostRoute": "/writing/53",
+      "expectedOutcome": "autosave state preserved; warning if dirty",
+      "actualOutcome": null,
+      "observedFinalUrl": null,
+      "safeReturnRoute": "/login",
+      "rawErrorExposureCheck": "verify no token/role disclosure",
+      "authOverviewRequirementIds": [
+        "auth-overview §6.5"
+      ],
+      "backendAuthRequirementIds": [
+        "backend-auth.md RLS"
+      ],
+      "status": "BLOCKED",
+      "blockingReasons": [
+        "Precondition not met: needs student storageState + ability to dirty form mid-load"
+      ],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.595Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-11",
+      "description": "Expired session → middleware /login?reason=session_expired",
+      "iaCode": null,
+      "actor": "student-expired",
+      "routeOrHostRoute": "/dashboard",
+      "expectedOutcome": "redirect to /login?reason=session_expired + Alert",
+      "actualOutcome": null,
+      "observedFinalUrl": null,
+      "safeReturnRoute": "/login",
+      "rawErrorExposureCheck": "verify no token/role disclosure",
+      "authOverviewRequirementIds": [
+        "auth-overview §6.5"
+      ],
+      "backendAuthRequirementIds": [
+        "backend-auth.md RLS"
+      ],
+      "status": "BLOCKED",
+      "blockingReasons": [
+        "Precondition not met: needs storageState with intentionally stale token (requires service_role to mint)"
+      ],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.595Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-12",
+      "description": "Org admin → /admin/users (platform_admin only) → /dashboard?error=forbidden",
+      "iaCode": null,
+      "actor": "org_admin",
+      "routeOrHostRoute": "/admin/users",
+      "expectedOutcome": "redirect to /dashboard?error=forbidden",
+      "actualOutcome": null,
+      "observedFinalUrl": null,
+      "safeReturnRoute": "/dashboard",
+      "rawErrorExposureCheck": "verify no token/role disclosure",
+      "authOverviewRequirementIds": [
+        "auth-overview §6.5"
+      ],
+      "backendAuthRequirementIds": [
+        "backend-auth.md RLS"
+      ],
+      "status": "BLOCKED",
+      "blockingReasons": [
+        "Precondition not met: needs org_admin storageState"
+      ],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.595Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-13",
+      "description": "Platform admin → /admin/users → 200",
+      "iaCode": null,
+      "actor": "platform_admin",
+      "routeOrHostRoute": "/admin/users",
+      "expectedOutcome": "renders admin user management",
+      "actualOutcome": null,
+      "observedFinalUrl": null,
+      "safeReturnRoute": "/dashboard",
+      "rawErrorExposureCheck": "verify no token/role disclosure",
+      "authOverviewRequirementIds": [
+        "auth-overview §6.5"
+      ],
+      "backendAuthRequirementIds": [
+        "backend-auth.md RLS"
+      ],
+      "status": "BLOCKED",
+      "blockingReasons": [
+        "Precondition not met: needs platform_admin storageState"
+      ],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.595Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-14",
+      "description": "Refresh after submit (writing/51) → submitted state preserved",
+      "iaCode": null,
+      "actor": "student",
+      "routeOrHostRoute": "/writing/51",
+      "expectedOutcome": "post-submit state stable on refresh; no re-submission",
+      "actualOutcome": null,
+      "observedFinalUrl": null,
+      "safeReturnRoute": "/login",
+      "rawErrorExposureCheck": "verify no token/role disclosure",
+      "authOverviewRequirementIds": [
+        "auth-overview §6.5"
+      ],
+      "backendAuthRequirementIds": [
+        "backend-auth.md RLS"
+      ],
+      "status": "BLOCKED",
+      "blockingReasons": [
+        "Precondition not met: needs student storageState + a seeded in-progress writing draft"
+      ],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.595Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-15",
+      "description": "Network failure during /writing/51 submit → retry surfaced",
+      "iaCode": null,
+      "actor": "student",
+      "routeOrHostRoute": "/writing/51",
+      "expectedOutcome": "retry CTA visible; answer text preserved",
+      "actualOutcome": null,
+      "observedFinalUrl": null,
+      "safeReturnRoute": "/login",
+      "rawErrorExposureCheck": "verify no token/role disclosure",
+      "authOverviewRequirementIds": [
+        "auth-overview §6.5"
+      ],
+      "backendAuthRequirementIds": [
+        "backend-auth.md RLS"
+      ],
+      "status": "BLOCKED",
+      "blockingReasons": [
+        "Precondition not met: needs student storageState + Playwright route-intercept to simulate network failure"
+      ],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.595Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-1",
+      "description": "Anon visitor → /dashboard redirects to /login",
+      "iaCode": null,
+      "actor": "anonymous",
+      "routeOrHostRoute": "/dashboard",
+      "expectedOutcome": "redirect to /login",
+      "actualOutcome": "final URL http://127.0.0.1:3000/login, status 200",
+      "observedFinalUrl": null,
+      "recoveryCopyExpected": "[object Object]",
+      "recoveryCopyObserved": "로그인비밀번호 로그인매직링크 로그인이메일비밀번호로그인비밀번호를 잊으셨나요?계정이 없으신가요? 회원가입self.__next_r=\"wE7Ow-KheKfo0Q6kh2M_3\"(self.__next_f=self.__next_f||[]).push([0])self.__next_f.push([1,\"7:I[\\\"[project]/node_modules/.pnpm/next@1",
+      "safeReturnRoute": "/login",
+      "rawErrorExposureCheck": "no provider/token in URL",
+      "authOverviewRequirementIds": [
+        "auth-overview §4.2 middleware → /login fallback"
+      ],
+      "backendAuthRequirementIds": [],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.595Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-2",
+      "description": "Anon → /admin/* redirects to /login (not /admin guard 403 page)",
+      "iaCode": null,
+      "actor": "anonymous",
+      "routeOrHostRoute": "/admin/problems",
+      "expectedOutcome": "redirect to /login",
+      "actualOutcome": "final URL http://127.0.0.1:3000/login, status 200",
+      "observedFinalUrl": null,
+      "safeReturnRoute": "/login",
+      "rawErrorExposureCheck": "no admin role disclosure in URL",
+      "authOverviewRequirementIds": [
+        "auth-overview §6.5 admin role gating"
+      ],
+      "backendAuthRequirementIds": [
+        "backend-auth.md RLS: admin only via private.is_*_admin()"
+      ],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.595Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-3",
+      "description": "Idempotent sign-out + protected probe → /login (no auth side-effect leak)",
+      "iaCode": null,
+      "actor": "anonymous-post-signout",
+      "routeOrHostRoute": "/dashboard (after sign-out POST)",
+      "expectedOutcome": "redirect to /login",
+      "actualOutcome": "status 307, location /login",
+      "observedFinalUrl": null,
+      "safeReturnRoute": "/login",
+      "rawErrorExposureCheck": "no token leak",
+      "authOverviewRequirementIds": [
+        "sign-out idempotency"
+      ],
+      "backendAuthRequirementIds": [],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.595Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-4",
+      "description": "Anon → owner-bound URL → /login (auth precedes ownership check)",
+      "iaCode": null,
+      "actor": "anonymous",
+      "routeOrHostRoute": "/writing/feedback/short/00000000-0000-0000-0000-000000000000",
+      "expectedOutcome": "redirect to /login (do not leak whether id exists)",
+      "actualOutcome": "final URL http://127.0.0.1:3000/login, status 200",
+      "observedFinalUrl": null,
+      "safeReturnRoute": "/login",
+      "rawErrorExposureCheck": "no enumeration / no 404 leak",
+      "authOverviewRequirementIds": [
+        "auth check precedes RLS check"
+      ],
+      "backendAuthRequirementIds": [
+        "backend-auth.md owner-id RLS"
+      ],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.595Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-5",
+      "description": "/login?reason=session_expired renders user-facing alert",
+      "iaCode": null,
+      "actor": "anonymous-stale-cookie",
+      "routeOrHostRoute": "/login?reason=session_expired",
+      "expectedOutcome": "Alert with session-expired copy",
+      "actualOutcome": "matched",
+      "observedFinalUrl": null,
+      "recoveryCopyExpected": "[object Object]",
+      "recoveryCopyObserved": "로그인세션이 만료되어 로그아웃됐어요. 다시 로그인해주세요.비밀번호 로그인매직링크 로그인이메일비밀번호로그인비밀번호를 잊으셨나요?계정이 없으신가요? 회원가입self.__next_r=\"0gS3ha3ge9YKB5JmB2TXJ\"(self.__next_f=self.__next_f||[]).push([0])self.__next_f.push([1,\"7:I[\\\"[proje",
+      "safeReturnRoute": "/login",
+      "rawErrorExposureCheck": "no raw Supabase error_description shown",
+      "authOverviewRequirementIds": [
+        "auth-overview §4.2 세션 만료 안내"
+      ],
+      "backendAuthRequirementIds": [],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.595Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-6",
+      "description": "/auth/error?reason=otp_expired renders mapped copy + CTAs",
+      "iaCode": null,
+      "actor": "anonymous",
+      "routeOrHostRoute": "/auth/error?reason=otp_expired",
+      "expectedOutcome": "Friendly 'link expired' message + resend CTA",
+      "actualOutcome": "rendered",
+      "observedFinalUrl": null,
+      "recoveryCopyExpected": "[object Object]",
+      "recoveryCopyObserved": "인증 링크가 만료됐어요이메일을 다시 입력하면 새 인증 메일을 보내드릴게요. 메일은 60초 안에 한 번만 보낼 수 있어요.이메일1분 후 다시 시도할 수 있어요인증 메일 다시 받기로그인하기홈으로 돌아가기self.__next_r=\"0Lj9am_iBdXnFXzt2pJuo\"(self.__next_f=self.__next_f||[]).push([0])self.__ne",
+      "safeReturnRoute": "/auth/verify-email or /login",
+      "rawErrorExposureCheck": "no raw error_description",
+      "authOverviewRequirementIds": [
+        "auth-overview §5 otp_expired mapping"
+      ],
+      "backendAuthRequirementIds": [],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.595Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-7",
+      "description": "Browser back after sign-out does not bypass auth",
+      "iaCode": null,
+      "actor": "anonymous-post-signout",
+      "routeOrHostRoute": "/dashboard (back after sign-out)",
+      "expectedOutcome": "/dashboard → /login",
+      "actualOutcome": "final URL http://127.0.0.1:3000/login, status 200",
+      "observedFinalUrl": null,
+      "safeReturnRoute": "/login",
+      "rawErrorExposureCheck": "no session token in URL",
+      "authOverviewRequirementIds": [
+        "sign-out invalidates session"
+      ],
+      "backendAuthRequirementIds": [],
+      "status": "PASS",
+      "blockingReasons": [],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.595Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-8",
+      "description": "Student → /admin/problems must redirect with audit-safe message",
+      "iaCode": null,
+      "actor": "student",
+      "routeOrHostRoute": "/admin/problems",
+      "expectedOutcome": "redirect to /dashboard?error=forbidden",
+      "actualOutcome": null,
+      "observedFinalUrl": null,
+      "safeReturnRoute": "/dashboard",
+      "rawErrorExposureCheck": "verify no token/role disclosure",
+      "authOverviewRequirementIds": [
+        "auth-overview §6.5"
+      ],
+      "backendAuthRequirementIds": [
+        "backend-auth.md RLS"
+      ],
+      "status": "BLOCKED",
+      "blockingReasons": [
+        "Precondition not met: needs student storageState; also requires Supabase user with explicit non-admin role"
+      ],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.595Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-9",
+      "description": "Student → owner-id route with another user's :id must 404/forbidden, not data leak",
+      "iaCode": null,
+      "actor": "student",
+      "routeOrHostRoute": "/writing/feedback/short/cccccccc-3333-3333-3333-cccccccccccc",
+      "expectedOutcome": "404 or empty state — RLS denies other user's row",
+      "actualOutcome": null,
+      "observedFinalUrl": null,
+      "safeReturnRoute": "/login",
+      "rawErrorExposureCheck": "verify no token/role disclosure",
+      "authOverviewRequirementIds": [
+        "auth-overview §6.5"
+      ],
+      "backendAuthRequirementIds": [
+        "backend-auth.md RLS"
+      ],
+      "status": "BLOCKED",
+      "blockingReasons": [
+        "Precondition not met: needs student storageState + seeded feedback row owned by different user"
+      ],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.595Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-10",
+      "description": "Refresh during writing → autosave warning surface (D-M3)",
+      "iaCode": null,
+      "actor": "student",
+      "routeOrHostRoute": "/writing/53",
+      "expectedOutcome": "autosave state preserved; warning if dirty",
+      "actualOutcome": null,
+      "observedFinalUrl": null,
+      "safeReturnRoute": "/login",
+      "rawErrorExposureCheck": "verify no token/role disclosure",
+      "authOverviewRequirementIds": [
+        "auth-overview §6.5"
+      ],
+      "backendAuthRequirementIds": [
+        "backend-auth.md RLS"
+      ],
+      "status": "BLOCKED",
+      "blockingReasons": [
+        "Precondition not met: needs student storageState + ability to dirty form mid-load"
+      ],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.595Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-11",
+      "description": "Expired session → middleware /login?reason=session_expired",
+      "iaCode": null,
+      "actor": "student-expired",
+      "routeOrHostRoute": "/dashboard",
+      "expectedOutcome": "redirect to /login?reason=session_expired + Alert",
+      "actualOutcome": null,
+      "observedFinalUrl": null,
+      "safeReturnRoute": "/login",
+      "rawErrorExposureCheck": "verify no token/role disclosure",
+      "authOverviewRequirementIds": [
+        "auth-overview §6.5"
+      ],
+      "backendAuthRequirementIds": [
+        "backend-auth.md RLS"
+      ],
+      "status": "BLOCKED",
+      "blockingReasons": [
+        "Precondition not met: needs storageState with intentionally stale token (requires service_role to mint)"
+      ],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.595Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-12",
+      "description": "Org admin → /admin/users (platform_admin only) → /dashboard?error=forbidden",
+      "iaCode": null,
+      "actor": "org_admin",
+      "routeOrHostRoute": "/admin/users",
+      "expectedOutcome": "redirect to /dashboard?error=forbidden",
+      "actualOutcome": null,
+      "observedFinalUrl": null,
+      "safeReturnRoute": "/dashboard",
+      "rawErrorExposureCheck": "verify no token/role disclosure",
+      "authOverviewRequirementIds": [
+        "auth-overview §6.5"
+      ],
+      "backendAuthRequirementIds": [
+        "backend-auth.md RLS"
+      ],
+      "status": "BLOCKED",
+      "blockingReasons": [
+        "Precondition not met: needs org_admin storageState"
+      ],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.595Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-13",
+      "description": "Platform admin → /admin/users → 200",
+      "iaCode": null,
+      "actor": "platform_admin",
+      "routeOrHostRoute": "/admin/users",
+      "expectedOutcome": "renders admin user management",
+      "actualOutcome": null,
+      "observedFinalUrl": null,
+      "safeReturnRoute": "/dashboard",
+      "rawErrorExposureCheck": "verify no token/role disclosure",
+      "authOverviewRequirementIds": [
+        "auth-overview §6.5"
+      ],
+      "backendAuthRequirementIds": [
+        "backend-auth.md RLS"
+      ],
+      "status": "BLOCKED",
+      "blockingReasons": [
+        "Precondition not met: needs platform_admin storageState"
+      ],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.595Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-14",
+      "description": "Refresh after submit (writing/51) → submitted state preserved",
+      "iaCode": null,
+      "actor": "student",
+      "routeOrHostRoute": "/writing/51",
+      "expectedOutcome": "post-submit state stable on refresh; no re-submission",
+      "actualOutcome": null,
+      "observedFinalUrl": null,
+      "safeReturnRoute": "/login",
+      "rawErrorExposureCheck": "verify no token/role disclosure",
+      "authOverviewRequirementIds": [
+        "auth-overview §6.5"
+      ],
+      "backendAuthRequirementIds": [
+        "backend-auth.md RLS"
+      ],
+      "status": "BLOCKED",
+      "blockingReasons": [
+        "Precondition not met: needs student storageState + a seeded in-progress writing draft"
+      ],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.595Z"
+    },
+    {
+      "runId": "20260528-141731",
+      "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "96e5d23b0ad1221f",
+      "phase": "security-navigation",
+      "subPhase": "session-navigation",
+      "caseId": "SN-15",
+      "description": "Network failure during /writing/51 submit → retry surfaced",
+      "iaCode": null,
+      "actor": "student",
+      "routeOrHostRoute": "/writing/51",
+      "expectedOutcome": "retry CTA visible; answer text preserved",
+      "actualOutcome": null,
+      "observedFinalUrl": null,
+      "safeReturnRoute": "/login",
+      "rawErrorExposureCheck": "verify no token/role disclosure",
+      "authOverviewRequirementIds": [
+        "auth-overview §6.5"
+      ],
+      "backendAuthRequirementIds": [
+        "backend-auth.md RLS"
+      ],
+      "status": "BLOCKED",
+      "blockingReasons": [
+        "Precondition not met: needs student storageState + Playwright route-intercept to simulate network failure"
+      ],
+      "generatedBy": "build-security-navigation-results.mjs",
+      "generatedAt": "2026-05-28T11:49:24.595Z"
+    }
+  ],
+  "summary": {
+    "totalRows": 66,
+    "statusCounts": {
+      "PASS": 42,
+      "BLOCKED": 24
+    }
+  },
+  "status": "BLOCKED"
+}

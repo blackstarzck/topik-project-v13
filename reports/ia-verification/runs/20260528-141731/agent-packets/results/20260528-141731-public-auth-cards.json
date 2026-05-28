@@ -1,0 +1,229 @@
+[
+  {
+    "iaCode": "X-01",
+    "screenName": "Product landing",
+    "route": "/",
+    "audience": "public",
+    "wireframeStatus": "present",
+    "aiUxResult": "PARTIAL",
+    "confidence": "medium",
+    "humanConfirmation": "needs-human-judgment",
+    "findings": {
+      "pageJob": "partial — Hero H1 'TOPIK 글쓰기, AI와 함께 끝까지' + sub copy clearly state the product job, but page job is delivered only via two CTAs (가입 / 로그인) and 3 feature cards. wireframe ②~⑥ documents 헤더/내비, 마스코트, 제품 프리뷰. Implementation has no header/nav, no mascot, no product preview surface, no logged-in-user branch ('대시보드 CTA'). description.md exception 'logged-in user sees 대시보드 CTA' is not implemented.",
+      "entryContext": "clear — direct URL entry to '/' resolves cleanly, both CTAs are direct anchors.",
+      "primaryAction": "competing — two CTAs of comparable visual weight (지금 가입하기 primary, 로그인 secondary). description ③ specifies '대표 CTA 1개, 보조 링크 1개'. Two side-by-side antd buttons may read as parallel rather than primary/secondary on mobile. wireframe ③ '시작 CTA' is the single transformation point.",
+      "flowContinuity": "pass — /sign-up and /login both reachable per docs/flow/user-flow.md (X-01 → A-01 or A-02).",
+      "aiBehavior": "not applicable",
+      "formErrorUx": "not applicable",
+      "keyboardFocus": "low-confidence — visual focus indicators rely on antd defaults; not captured in evidence because browser nav timed out (cache/HMR). Needs manual keyboard sweep.",
+      "responsive": "low-confidence — screenshots exist at 360/768/1280 but were captured after navigation timeout (no visible H1 / no primaryCtaPresent in browser-results JSON). Cannot confirm 320–360 no horizontal scroll. Hero uses 'padding: 64px 16px' inline style which should be responsive but unverified.",
+      "policyTrustCopy": "pass — no overclaim. Marketing copy is generic ('AI 피드백으로 약점을 좁히세요'). No paywall/billing claims on landing."
+    },
+    "blockingReasons": [
+      "browser-results.json row for X-01 is PARTIAL (navigation timeout — visibleH1=null, primaryCtaPresent=null).",
+      "wireframe areas ① 헤더/내비, ④ 제품 프리뷰, ⑤ 마스코트 are not implemented (description.md gap).",
+      "description.md ① exception '로그인 사용자는 시작 대신 대시보드 CTA 표시' not implemented in src/app/page.tsx (no session check)."
+    ],
+    "evidenceReferences": [
+      "docs/IA/23-X-01-product-landing/description.md",
+      "docs/IA/23-X-01-product-landing/wireframe.png",
+      "src/app/page.tsx",
+      "src/components/landing/Hero.tsx",
+      "src/components/landing/FeatureCard.tsx",
+      "reports/ia-verification/runs/20260528-141731/source-map-results.json (X-01 PASS)",
+      "reports/ia-verification/runs/20260528-141731/browser-results.json (X-01 PARTIAL: navigation timeout)",
+      "reports/ia-verification/runs/20260528-141731/screenshots/coverage-X-01-{360,768,1280}.png",
+      "reports/ia-verification/runs/20260528-141731/doc-receipts.json"
+    ]
+  },
+  {
+    "iaCode": "A-01",
+    "screenName": "Sign-up",
+    "route": "/sign-up",
+    "audience": "public",
+    "wireframeStatus": "present",
+    "aiUxResult": "PARTIAL",
+    "confidence": "medium",
+    "humanConfirmation": "needs-human-judgment",
+    "findings": {
+      "pageJob": "pass — Page H1 '회원가입' is explicit. Bottom anchor offers '이미 계정이 있으신가요? 로그인'. Single user job is account creation.",
+      "entryContext": "pass — direct entry resolves; bottom Link → /login provides escape.",
+      "primaryAction": "pass — single primary antd Button ('회원가입') type=primary block. Disabled state via 'loading' during submit prevents double-submission per description ④.",
+      "flowContinuity": "pass — On signUp success, router.push('/auth/verify-email?email=...') matches auth-overview §4.1 and feeds X-12. Failure shows inline antd message.error. Per docs/flow/user-flow.md A-01 → X-12 → /auth/callback → A-03.",
+      "aiBehavior": "not applicable",
+      "formErrorUx": "partial — Email has type=email + required. Password has min:8 (DOC-GAP: description ③ specifies PW 8-64자 but max:64 NOT enforced — known drift recorded in docs/development/auth-overview.md §10 line 296). passwordConfirm matches via dependency validator. displayName description ③ specifies '이름 2-30자' but form has NO min/max length rule — second drift (not yet logged). terms checkbox required. Provider errors surface as `가입 실패: ${error.message}` which directly inlines raw Supabase error text into a toast — partial violation of description ③ '예외: 중복 이메일/형식 오류는 필드 하단에 표시' (it goes to a global message.error toast, not inline below the email field) and a soft violation of §6.9 'Raw provider errors are not shown to users'.",
+      "keyboardFocus": "low-confidence — antd Form provides default focus order. Not verified in browser evidence due to nav timeout.",
+      "responsive": "low-confidence — screenshots at 360/768/1280 exist but capture failed past nav timeout. maxWidth 480 centered should fit 360. Unverified.",
+      "policyTrustCopy": "partial — Terms checkbox requires '이용약관과 개인정보처리방침에 동의합니다' but no link is rendered to actual 약관/처리방침 pages. Policy/legal target pages are DEFERRED/DOC-GAP. Marketing benefit chips (description ② 마스코트/혜택) are absent."
+    },
+    "blockingReasons": [
+      "browser-results.json A-01 is PARTIAL (navigation timeout — formEvidenceRequired=true, authEvidenceRequired=true, policyEvidenceRequired=true uxStatesCaptured=[]).",
+      "Wireframe ② 마스코트/혜택 영역, ① 브랜드 메시지 area not implemented (page renders only H1 + form + login link).",
+      "Confirmed doc-↔-impl drift: PW max(64) not enforced — auth-overview §10 already logged this for A-01 and X-06.",
+      "Newly observed: displayName '2-30자' constraint from description ③ not enforced (no min/max rule)."
+    ],
+    "evidenceReferences": [
+      "docs/IA/01-A-01-sign-up/description.md",
+      "docs/IA/01-A-01-sign-up/wireframe.png",
+      "src/app/sign-up/page.tsx",
+      "src/components/auth/SignUpForm.tsx",
+      "docs/development/auth-overview.md §4.1, §10 (Known drift 2026-05-27)",
+      "reports/ia-verification/runs/20260528-141731/source-map-results.json (A-01 PASS)",
+      "reports/ia-verification/runs/20260528-141731/browser-results.json (A-01 PARTIAL)",
+      "reports/ia-verification/runs/20260528-141731/screenshots/coverage-A-01-{360,768,1280}.png",
+      "reports/ia-verification/runs/20260528-141731/security-navigation-results.json (BLOCKED — JSON variant missing; spec PASSed)"
+    ]
+  },
+  {
+    "iaCode": "A-02",
+    "screenName": "Login",
+    "route": "/login",
+    "audience": "public",
+    "wireframeStatus": "present",
+    "aiUxResult": "PARTIAL",
+    "confidence": "medium",
+    "humanConfirmation": "needs-human-judgment",
+    "findings": {
+      "pageJob": "pass — H1 '로그인'; single user job is existing-user authentication. Segmented control gives 비밀번호 로그인 / 매직링크 로그인.",
+      "entryContext": "pass — session_expired query is surfaced via SESSION_NOTICE Alert ('세션이 만료되어 로그아웃됐어요. 다시 로그인해주세요.') matching description ④ exception. data-testid=login-session-notice present.",
+      "primaryAction": "pass — single primary submit per mode ('로그인' or '로그인 링크 받기'). 'loading' flag blocks duplicate submission per description ④. '비밀번호를 잊으셨나요?' link is visible inline.",
+      "flowContinuity": "pass — Success → router.push('/dashboard'); magic-link → 'magicLinkSent' state with confirmation copy and reset CTA. Bottom anchor → /sign-up. Per docs/flow/user-flow.md A-02 → B-01 / X-06.",
+      "aiBehavior": "not applicable",
+      "formErrorUx": "partial — Email has type=email + required. Password field has only required rule — no min/max — description ③ specifies 'ID 4-80자, PW 8-64자, blur 후 형식 검증' but neither length constraint is enforced. Errors from signInWithPassword and signInWithOtp surface as `로그인 실패: ${error.message}` / `매직링크 전송 실패: ${error.message}` toasts which include raw Supabase message text — §6.9 'Raw provider errors are not shown to users' partial violation. Description ③ also requires '3회 실패 시 잠금 안내' which is NOT implemented client-side (lockout is server-side Supabase behavior, surfaced only via raw error).",
+      "keyboardFocus": "low-confidence — antd Form + Segmented should be keyboard-reachable; unverified by browser evidence.",
+      "responsive": "low-confidence — screenshots 360/768/1280 captured after nav timeout.",
+      "policyTrustCopy": "pass — No billing/policy overclaim on login screen."
+    },
+    "blockingReasons": [
+      "browser-results.json A-02 is PARTIAL (navigation timeout).",
+      "Wireframe ① 환영/브랜드 영역 and ② 마스코트 안내 not implemented (page is bare H1 + form + signup link).",
+      "Doc gap candidate: description ③ '4-80자 / PW 8-64자 / blur 후 형식 검증' not enforced in LoginForm.tsx.",
+      "Doc gap candidate: '3회 실패 시 잠금 안내' (description ③) is not a client-side UI — falls to raw Supabase error toast."
+    ],
+    "evidenceReferences": [
+      "docs/IA/02-A-02-login/description.md",
+      "docs/IA/02-A-02-login/wireframe.png",
+      "src/app/login/page.tsx",
+      "src/components/auth/LoginForm.tsx",
+      "docs/development/auth-overview.md §4.2",
+      "reports/ia-verification/runs/20260528-141731/source-map-results.json (A-02 PASS)",
+      "reports/ia-verification/runs/20260528-141731/browser-results.json (A-02 PARTIAL)",
+      "reports/ia-verification/runs/20260528-141731/screenshots/coverage-A-02-{360,768,1280}.png",
+      "reports/ia-verification/runs/20260528-141731/security-navigation-results.json (BLOCKED — JSON missing)"
+    ]
+  },
+  {
+    "iaCode": "X-06",
+    "screenName": "Password reset",
+    "route": "/password-reset",
+    "audience": "public",
+    "wireframeStatus": "present",
+    "aiUxResult": "PARTIAL",
+    "confidence": "medium",
+    "humanConfirmation": "needs-human-judgment",
+    "findings": {
+      "pageJob": "pass — H1 '비밀번호 재설정' on /password-reset. Sub flow on /password-reset/confirm renders 'PasswordResetConfirmForm' with H3 '새 비밀번호 설정'.",
+      "entryContext": "pass — /password-reset accepts direct URL; '로그인으로 돌아가기' anchor present.",
+      "primaryAction": "pass — Single primary 'loading'-guarded button per step ('재설정 링크 보내기' on request, '비밀번호 변경' on confirm). After resetPasswordForEmail success, in-page sentTo state renders confirmation copy.",
+      "flowContinuity": "pass — request → email → callback flow (resetPasswordForEmail uses redirectTo /password-reset/confirm). On confirm success router.push('/login'). Matches description '예외: 링크 만료 또는 세션 만료 시 재요청 화면으로 전환' — partially: the link-expired branch is implicit (callback would send user to /auth/error). description ⑥ '저장 실패/만료는 재시도와 링크 재발송 CTA 제공' — current Confirm form only shows a toast on failure, no explicit '링크 재발송' CTA in the UI.",
+      "aiBehavior": "not applicable",
+      "formErrorUx": "partial — Same drift as A-01: PW 8-64자 specified in description ③ but PasswordResetConfirmForm uses only min:8 (confirmed at lines 43-49). 'auth-overview.md §10' already records this drift. passwordConfirm match validator present. resetPasswordForEmail error and updateUser error are surfaced via message.error toast with raw error text — partial §6.9 violation.",
+      "keyboardFocus": "low-confidence — unverified in browser evidence.",
+      "responsive": "low-confidence — screenshots at 360/768/1280 captured after nav timeout. maxWidth 480.",
+      "policyTrustCopy": "partial — description ② '단계 표시' (이메일 확인 → 인증 코드 → 새 비밀번호 → 완료) is NOT implemented — no Steps/progress indicator on either page. description ⑤ 마스코트 absent. description ④ '안내 카피 ... 재전송 제한 중에는 남은 시간을 표시' (resend cooldown) NOT implemented on /password-reset (no cooldown UI on the request form)."
+    },
+    "blockingReasons": [
+      "browser-results.json X-06 is PARTIAL (navigation timeout).",
+      "Confirmed doc-↔-impl drift: PW max(64) not enforced — auth-overview §10 already logged.",
+      "Wireframe areas ② 단계 표시, ④ 안내 카피 (재전송 제한 시간 표시), ⑤ 마스코트, ⑥ 완료 CTA 재시도/재발송 분기 not implemented.",
+      "Request-side resend cooldown (description ④) absent from PasswordResetRequestForm."
+    ],
+    "evidenceReferences": [
+      "docs/IA/28-X-06-password-reset/description.md",
+      "docs/IA/28-X-06-password-reset/wireframe.png",
+      "src/app/password-reset/page.tsx",
+      "src/app/password-reset/confirm/page.tsx (referenced via redirectTo)",
+      "src/components/auth/PasswordResetRequestForm.tsx",
+      "src/components/auth/PasswordResetConfirmForm.tsx",
+      "docs/development/auth-overview.md §10 (Known drift)",
+      "reports/ia-verification/runs/20260528-141731/source-map-results.json (X-06 PASS)",
+      "reports/ia-verification/runs/20260528-141731/browser-results.json (X-06 PARTIAL)",
+      "reports/ia-verification/runs/20260528-141731/screenshots/coverage-X-06-{360,768,1280}.png"
+    ]
+  },
+  {
+    "iaCode": "X-11",
+    "screenName": "Auth error",
+    "route": "/auth/error",
+    "audience": "public",
+    "wireframeStatus": "missing",
+    "aiUxResult": "PARTIAL",
+    "confidence": "medium",
+    "humanConfirmation": "needs-human-judgment",
+    "findings": {
+      "pageJob": "pass — H3 dynamic title from REASON_CONTENT keyed by ?reason. Single job is to explain the failure and provide a next action.",
+      "entryContext": "pass — Page is built for direct entry from /auth/callback redirects. Reads `reason`, `email`, `retry_after_seconds` from URL. Unknown reason → mapSupabaseErrorCode fallback. data-testid `auth-error-card-${reason}` per-reason for verification.",
+      "primaryAction": "pass — Single primary Button + optional secondary Link. content.hasCountdown disables primary while remaining > 0 (description ④ 'rate-limit 카운트다운 중에는 CTA 비활성'). Resend reasons trigger handleResend with editable email (description ⑤ Codex C-ε rule).",
+      "flowContinuity": "pass — Always shows 'home' escape ('홈으로 돌아가기' bottom anchor) — description ⑥ '항상 최소 1개 escape route'. CTAs route to /sign-up, /login, /, /login.",
+      "aiBehavior": "not applicable",
+      "formErrorUx": "pass — Editable email input only shown when content.showsEmailField. Resend success triggers message.success; rate-limit hit forces 60s cooldown and message.error. Description §2 ② 'raw Supabase error_description은 절대 노출하지 않음 (서버 로그에만)' — verified: AuthErrorCard renders `content.message` from canonical REASON_CONTENT mapping, NOT raw error. console.error in callback Route Handler logs raw values server-side only (route.ts lines 64-67, 94-98, 113-117). PASS on raw-error suppression — this is the strongest UX guarantee in the shard.",
+      "keyboardFocus": "low-confidence — Card uses aria-live=\"polite\". Tab order should follow visual order: title, message, email input (when shown), primary, secondary, home link. Not verified live.",
+      "responsive": "low-confidence — screenshots at 360/768/1280 captured after timeout. Card maxWidth 520.",
+      "policyTrustCopy": "pass — Description §5 '안전한 next action' — covered. Security-critical: raw provider error text never reaches the UI (verified by code reading + by tests/lib/auth/error-mapping.test.ts existence per auth-overview §10 table)."
+    },
+    "blockingReasons": [
+      "browser-results.json X-11 is PARTIAL (navigation timeout — visibleH1=null).",
+      "wireframeStatus=missing per dispatch plan. Per task brief — treat as DOC-GAP candidate. NOT marking DOC-GAP because description.md ⑥-area spec IS comprehensive (11 reasons + countdown + email field + escape route), and a wireframe is not strictly necessary for a reason-driven error card.",
+      "Countdown formatCountdown only handles single-unit display ('5분', '30초', '5분 30초'); long Retry-After (>1h, up to 86400s) renders as '1440분' rather than '24시간' — minor UX/i18n smell, not a blocker.",
+      "Retry-After value comes only from URL `retry_after_seconds` query. Codex C-ε rule: the /auth/callback route handler doesn't forward Supabase Retry-After header values (route.ts buildErrorUrl passes null) — so countdown defaults to 60s. Description §4 spec says 'Supabase same-user OTP 한도 정렬'; gap is in callback not in error card."
+    ],
+    "evidenceReferences": [
+      "docs/IA/33-X-11-auth-error/description.md",
+      "src/app/auth/error/page.tsx",
+      "src/components/auth/AuthErrorCard.tsx",
+      "src/lib/auth/error-mapping.ts (REASON_CONTENT, mapSupabaseErrorCode, sanitizeRetryAfterSeconds — referenced)",
+      "src/app/auth/callback/route.ts (buildErrorUrl)",
+      "docs/development/auth-overview.md §5 (reason mapping table)",
+      "reports/ia-verification/runs/20260528-141731/source-map-results.json (X-11 PASS)",
+      "reports/ia-verification/runs/20260528-141731/browser-results.json (X-11 PARTIAL)",
+      "reports/ia-verification/runs/20260528-141731/screenshots/coverage-X-11-{360,768,1280}.png",
+      "reports/ia-verification/runs/20260528-141731/hosted-surface-results.json (status: BLOCKED — script parse failure, spec PASSed this session per task brief)"
+    ]
+  },
+  {
+    "iaCode": "X-12",
+    "screenName": "Auth verify-email",
+    "route": "/auth/verify-email",
+    "audience": "public",
+    "wireframeStatus": "missing",
+    "aiUxResult": "PARTIAL",
+    "confidence": "medium",
+    "humanConfirmation": "needs-human-judgment",
+    "findings": {
+      "pageJob": "pass — H3 '이메일을 확인해주세요' on direct entry. Single job is 'finish email verification or resend'.",
+      "entryContext": "pass — Reads `email` from URL ?email= query (description ① fallback 'session에 이메일 정보 없으면 ?email= query 또는 입력 폼으로 fallback'). Survives reloads via the same query, plus cooldown survives via localStorage (key 'talkpik:verify-email:cooldown-until') — explicitly designed against rate-limit bypass (Phase 8 follow-up v2.3 inline comments lines 8-12). STRONG behavior here.",
+      "primaryAction": "pass — Single primary '인증 메일 다시 보내기' Button. disabled={cooldownRemaining > 0}, loading={resending}. Description ③ '60초 client cooldown' implemented + extra robustness vs. reload.",
+      "flowContinuity": "pass — Bottom row gives 3 escapes: '로그인 페이지로', '다른 이메일로 가입', '홈으로'. Description ⑥ 'always exposed help links' — met.",
+      "aiBehavior": "not applicable",
+      "formErrorUx": "partial — Editable email input always present per description ③ ('항상 보이는 이메일 input을 요구 — URL/세션만으로 fire-and-forget X — Codex C-ε 합의'). Empty email → message.warning '이메일을 입력해주세요.'. Rate-limit hit → writeCooldownStart(60) + message.error. Other errors → `재전송에 실패했어요: ${error.message}` (raw Supabase message text in a toast — minor §6.9 partial). Description ③ also says 'over_email_send_rate_limit 응답 시 /auth/error?reason=over_email_send_rate_limit&retry_after_seconds=<n>로 redirect 또는 인라인 안내' — current implementation chose 'inline 안내' branch (cooldown + message.error), no redirect. Acceptable per spec OR branch.",
+      "keyboardFocus": "low-confidence — Card aria-live=\"polite\". Form input disabled during cooldown. Not verified live.",
+      "responsive": "low-confidence — screenshots at 360/768/1280 captured after nav timeout.",
+      "policyTrustCopy": "pass — No overclaim. Description §3 spec for cooldown precision was explicitly tightened in Phase 8 follow-up v2.3 (lines 151-154) — chose default 60s rather than mis-interpreting HTTP 429 as seconds. Conservative + correct."
+    },
+    "blockingReasons": [
+      "browser-results.json X-12 is PARTIAL (navigation timeout).",
+      "wireframeStatus=missing per dispatch plan. Same judgment as X-11: description.md is detailed enough (Codex 3-round consensus) that absence of wireframe is acceptable for an info+resend card. NOT marking DOC-GAP.",
+      "Cooldown formatCountdown identical to X-11 — fine for ≤60s default, untested for longer Retry-After values."
+    ],
+    "evidenceReferences": [
+      "docs/IA/34-X-12-auth-verify-email/description.md",
+      "src/app/auth/verify-email/page.tsx",
+      "src/components/auth/VerifyEmailCard.tsx",
+      "src/components/auth/SignUpForm.tsx lines 50 (signUp → push verify-email)",
+      "docs/development/auth-overview.md §4.1 (signup → verify-email flow)",
+      "reports/ia-verification/runs/20260528-141731/source-map-results.json (X-12 PASS)",
+      "reports/ia-verification/runs/20260528-141731/browser-results.json (X-12 PARTIAL)",
+      "reports/ia-verification/runs/20260528-141731/screenshots/coverage-X-12-{360,768,1280}.png"
+    ]
+  }
+]

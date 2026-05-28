@@ -1,0 +1,106 @@
+{
+  "runId": "20260528-112902",
+  "phase": "phase-1-setup",
+  "generatedBy": "codex",
+  "generatedAt": "2026-05-28T11:43:45+09:00",
+  "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+  "result": "BLOCKED",
+  "createdOrUpdatedAutomation": [
+    "scripts/audit-setup/ia-audit-lib.mjs",
+    "scripts/audit-setup/build-ia-manifest.mjs",
+    "scripts/audit-setup/verify-doc-receipts.mjs",
+    "scripts/audit-setup/validate-ia-source-map.mjs",
+    "scripts/audit-setup/build-agent-dispatch-plan.mjs",
+    "scripts/verify-ia-coverage.mjs",
+    "scripts/merge-ia-audit-results.mjs",
+    "scripts/validate-ia-audit-report.mjs",
+    "package.json test:ia:* commands",
+    ".gitignore exception for durable scripts/audit-setup/*.mjs scripts"
+  ],
+  "checks": [
+    {
+      "command": "pnpm exec vitest run tests/scripts/ia-audit-scripts.test.ts",
+      "status": "PASS",
+      "evidence": "1 test file passed, 3 tests passed"
+    },
+    {
+      "command": "pnpm test",
+      "status": "PASS",
+      "evidence": "66 test files passed, 2 skipped; 456 tests passed, 3 skipped"
+    },
+    {
+      "command": "pnpm test:ia:manifest",
+      "status": "PASS",
+      "evidence": "ia-manifest.json generated with 34 IA entries"
+    },
+    {
+      "command": "pnpm test:ia:source-map",
+      "status": "PASS",
+      "evidence": "34/34 IA source-map rows PASS; support route /auth/sign-out FAIL"
+    },
+    {
+      "command": "pnpm test:ia:dispatch",
+      "status": "PASS",
+      "evidence": "34 IA entries assigned exactly once across 6 shards"
+    },
+    {
+      "command": "pnpm test:ia:docs",
+      "status": "BLOCKED",
+      "evidence": "doc-receipt-validation-results.json generated; 34/34 rows BLOCKED because doc-receipts.json is missing"
+    },
+    {
+      "command": "pnpm test:ia:static",
+      "status": "BLOCKED",
+      "evidence": "static-results.json generated; 34/34 rows BLOCKED because document receipts are missing"
+    },
+    {
+      "command": "pnpm test:ia:merge",
+      "status": "PASS",
+      "evidence": "ia-implementation-audit.json and .md generated"
+    },
+    {
+      "command": "pnpm test:ia:validate",
+      "status": "PASS",
+      "evidence": "ia-implementation-audit-validation.json status PASS for non-PASS audit labels"
+    },
+    {
+      "command": "pnpm lint",
+      "status": "FAIL",
+      "evidence": "Existing React lint errors in dashboard page, VerifyEmailCard, and AnalysisLoadingModal; no new script lint errors reported"
+    },
+    {
+      "command": "pnpm exec tsc --noEmit --pretty false",
+      "status": "FAIL",
+      "evidence": "Existing tests/theme/theme-context.test.tsx implicit-any error remains after new test types were fixed"
+    }
+  ],
+  "auditSummary": {
+    "iaManifestEntries": 34,
+    "sourceMapIaPass": 34,
+    "supportRouteFailures": [
+      {
+        "routeOrHostRoute": "/auth/sign-out",
+        "reason": "No route handler source found for /auth/sign-out."
+      }
+    ],
+    "finalLabels": {
+      "BLOCKED": 34
+    },
+    "missingInputs": [
+      "docReceipts",
+      "browserResults",
+      "hostedSurfaceResults",
+      "securityNavigationResults",
+      "agentIntegrationResults",
+      "aiUxReview",
+      "manualReview"
+    ]
+  },
+  "nextExecutableSteps": [
+    "Create doc-receipts.json for all 34 IA entries.",
+    "Generate browser, hosted-surface, and security/navigation evidence.",
+    "Create agent result integration rows or explicitly record single-session integration.",
+    "Run AI UX review and collect real human confirmation where required.",
+    "Do not mark any IA item PASS until required JSON evidence exists."
+  ]
+}

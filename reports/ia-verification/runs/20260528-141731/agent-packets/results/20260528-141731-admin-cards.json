@@ -1,0 +1,201 @@
+[
+  {
+    "iaCode": "H-01",
+    "screenName": "Admin problem management",
+    "route": "/admin/problems",
+    "audience": "admin",
+    "aiUxResult": "PARTIAL",
+    "confidence": "low",
+    "humanConfirmation": "needs-human-judgment",
+    "findings": {
+      "pageJob": "clear-in-doc-unverified-in-render",
+      "entryContext": "clear-in-doc-unverified-in-render",
+      "primaryAction": "documented-as-publish-toggle-and-save",
+      "flowContinuity": "missing-evidence",
+      "aiBehavior": "not-applicable",
+      "formErrorUx": "missing-evidence",
+      "keyboardFocus": "missing-evidence",
+      "responsive": "missing-evidence",
+      "policyTrustCopy": "missing-evidence",
+      "rbacEnforcement": "code-present-no-runtime-evidence",
+      "rbacAllowedRoles": ["content_admin", "platform_admin"],
+      "rbacDeniedRoles": ["learner", "org_admin"],
+      "rbacEnforcementAnchors": [
+        "src/app/(workspace)/admin/layout.tsx (ADMIN_ROLES allowlist, redirect('/dashboard'))",
+        "src/app/(workspace)/admin/problems/page.tsx (await requireContentAdmin())",
+        "src/lib/auth/admin-guard.ts requireContentAdmin → redirect('/dashboard?error=forbidden')",
+        "src/lib/admin/server-actions.ts togglePublishAction RPC writes admin_audit_logs row"
+      ],
+      "auditCoverage": "RPC togglePublishAction documents admin_audit_logs write per comment in src/lib/admin/server-actions.ts §togglePublishAction; runtime audit-row evidence not collected",
+      "wireframe": "docs/IA/21-H-01-admin-problem-management/wireframe.png (present)",
+      "topGaps": [
+        "No rendered screenshot for /admin/problems at 360/768/1280 in screenshots/ (only public route shots present).",
+        "browser-results.json marks H-01 PARTIAL with 15s navigation timeout (dev server not bound when phase-2 ran).",
+        "session-navigation SN-8 (Student → /admin/problems forbidden) is a placeholder: no expect() assertion, only metadata attach + storageState-missing annotation.",
+        "Audit-log write claimed via server-action comments; no migration cross-check evidence collected this run.",
+        "Bulk action safety (multi-row publish/unpublish), edit-conflict modal, and admin-only mobile reflow not verified."
+      ],
+      "humanReviewerShouldInspect": [
+        "Whether the 우측 상세/설정 panel and the 문제 관리 테이블 keep readable hierarchy at 360px (Korean labels often wrap and break the action column).",
+        "Whether publish/unpublish CTAs are visually distinct from destructive actions per 'admin pages do not mix admin-only actions into normal learner flows' rule.",
+        "Whether 검수 충돌 / 저장 실패 messages stay under the 60-char limit promised by the description's §5.",
+        "Whether 'edit-on-conflict' confirms the active doc's exception (패널 상단 안내) instead of overwriting silently."
+      ]
+    },
+    "blockingReasons": [
+      "Phase 2 browser run produced navigation timeout — no rendered DOM, no visible H1, no primary-CTA match; status is PARTIAL not PASS.",
+      "Phase 4 security-navigation-results.json is BLOCKED (rows: 0); SN-8 (Student → /admin/problems) is a placeholder spec with no expect() — RBAC denial lane has no real assertion.",
+      "Hosted-surface results bundle has 0 rows (build script could not parse attachments).",
+      "Admin runtime audit-log evidence (verifying admin_audit_logs row appears after togglePublish) was not collected this session."
+    ],
+    "evidenceReferences": [
+      "docs/IA/21-H-01-admin-problem-management/description.md",
+      "docs/IA/21-H-01-admin-problem-management/wireframe.png",
+      "reports/ia-verification/runs/20260528-141731/source-map-results.json (H-01 PASS)",
+      "reports/ia-verification/runs/20260528-141731/doc-receipts.json (H-01 wireframe.status=present, 9 requirements)",
+      "reports/ia-verification/runs/20260528-141731/browser-results.json (H-01 PARTIAL, navigation timeout)",
+      "reports/ia-verification/runs/20260528-141731/security-navigation-results.json (BLOCKED, 0 rows)",
+      "reports/ia-verification/runs/20260528-141731/hosted-surface-results.json (0 rows)",
+      "src/app/(workspace)/admin/layout.tsx",
+      "src/app/(workspace)/admin/problems/page.tsx",
+      "src/lib/auth/admin-guard.ts",
+      "src/lib/admin/server-actions.ts",
+      "tests/e2e/coverage/session-navigation.spec.ts (SN-8 placeholder, lines 244-249, 309-340)",
+      "src/proxy.ts (anon→/login redirect; admin/role check NOT here — relies on layout)",
+      "src/lib/routes.ts (PROTECTED_ROUTE_CASES H-01 entry)"
+    ]
+  },
+  {
+    "iaCode": "X-08",
+    "screenName": "Organization admin dashboard",
+    "route": "/admin/org",
+    "audience": "admin",
+    "aiUxResult": "PARTIAL",
+    "confidence": "low",
+    "humanConfirmation": "needs-human-judgment",
+    "findings": {
+      "pageJob": "clear-in-doc-unverified-in-render",
+      "entryContext": "clear-in-doc-unverified-in-render",
+      "primaryAction": "documented-as-operational-card-CTA-과제생성/공지/리포트",
+      "flowContinuity": "missing-evidence",
+      "aiBehavior": "not-applicable",
+      "formErrorUx": "not-applicable",
+      "keyboardFocus": "missing-evidence",
+      "responsive": "missing-evidence",
+      "policyTrustCopy": "missing-evidence",
+      "rbacEnforcement": "code-present-no-runtime-evidence",
+      "rbacAllowedRoles": ["org_admin", "platform_admin"],
+      "rbacDeniedRoles": ["learner", "content_admin"],
+      "rbacEnforcementAnchors": [
+        "src/app/(workspace)/admin/layout.tsx (ADMIN_ROLES allowlist)",
+        "src/app/(workspace)/admin/org/page.tsx (await requireOrgAdmin())",
+        "src/lib/auth/admin-guard.ts requireOrgAdmin allows ['org_admin','platform_admin']",
+        "RPC get_admin_org_dashboard (server-side query — org-scoping responsibility delegated to RPC body, NOT verified at SQL level this run)"
+      ],
+      "orgScopeEnforcement": "claimed-via-rpc-not-verified",
+      "wireframe": "docs/IA/30-X-08-organization-admin-dashboard/wireframe.png (present)",
+      "topGaps": [
+        "No rendered screenshot for /admin/org at 360/768/1280.",
+        "browser-results.json marks X-08 PARTIAL with 15s navigation timeout (dev server not bound).",
+        "session-navigation SN-12 (Org admin → /admin/users forbidden) is placeholder only; the converse 'content_admin → /admin/org forbidden' is not covered at all in session-navigation.spec.ts.",
+        "Critical org-scope risk: get_admin_org_dashboard RPC is not inspected this run — no evidence that org_admin sees only their own org's KPI/user table rows. This is the canonical cross-org leak attack surface for X-08.",
+        "Cards 3 (operational actions) 권한별 노출 제어 is in description.md but no rendered evidence of role-gated card visibility.",
+        "Description §5 mandates 민감 정보 마스킹 in 상세 패널; no run-time PII evidence collected."
+      ],
+      "humanReviewerShouldInspect": [
+        "Whether the org_admin actually sees ONLY their org's users in the 사용자/과제 테이블 (X-08's ORG-SCOPE pack — the cross-org leak risk).",
+        "Whether the platform_admin (who also satisfies requireOrgAdmin) sees aggregated/all-org data, or whether the RPC filters to a single 'primary org' — currently ambiguous.",
+        "Whether content_admin gets redirected to /dashboard?error=forbidden when hitting /admin/org (not just learners).",
+        "Whether 운영 카드 (공지 발송 / 리포트 다운로드) accurately reflect deferred notification transport (X-09 transport-deferred policy must propagate here)."
+      ]
+    },
+    "blockingReasons": [
+      "Phase 2 browser run produced navigation timeout — PARTIAL, no rendered DOM evidence.",
+      "Phase 4 security-navigation-results.json BLOCKED (0 rows). Org-scope RBAC lane has no test (the closest, SN-12, is a placeholder for the inverse direction).",
+      "Cross-org data leak (the major X-08 risk) cannot be verified from this session's evidence; needs DB-level RLS test or org_admin storage state + seeded multi-org dataset.",
+      "No screenshot in screenshots/ for X-08."
+    ],
+    "evidenceReferences": [
+      "docs/IA/30-X-08-organization-admin-dashboard/description.md",
+      "docs/IA/30-X-08-organization-admin-dashboard/wireframe.png",
+      "reports/ia-verification/runs/20260528-141731/source-map-results.json (X-08 PASS)",
+      "reports/ia-verification/runs/20260528-141731/doc-receipts.json (X-08 wireframe.status=present, 9 requirements)",
+      "reports/ia-verification/runs/20260528-141731/browser-results.json (X-08 PARTIAL, navigation timeout)",
+      "reports/ia-verification/runs/20260528-141731/security-navigation-results.json (BLOCKED, 0 rows)",
+      "src/app/(workspace)/admin/layout.tsx",
+      "src/app/(workspace)/admin/org/page.tsx",
+      "src/lib/auth/admin-guard.ts (requireOrgAdmin)",
+      "src/lib/admin/org-dashboard.ts (fromRpcRow)",
+      "tests/e2e/coverage/session-navigation.spec.ts (SN-12 placeholder targets /admin/users, not /admin/org)"
+    ]
+  },
+  {
+    "iaCode": "X-10",
+    "screenName": "Admin user management",
+    "route": "/admin/users",
+    "audience": "admin",
+    "aiUxResult": "PARTIAL",
+    "confidence": "low",
+    "humanConfirmation": "needs-human-judgment",
+    "findings": {
+      "pageJob": "clear-in-doc-unverified-in-render",
+      "entryContext": "clear-in-doc-unverified-in-render",
+      "primaryAction": "documented-as-search/role-change/deactivate-via-bulk-actions",
+      "flowContinuity": "missing-evidence",
+      "aiBehavior": "not-applicable",
+      "formErrorUx": "missing-evidence",
+      "keyboardFocus": "missing-evidence",
+      "responsive": "missing-evidence",
+      "policyTrustCopy": "missing-evidence",
+      "rbacEnforcement": "code-present-strongest-of-three-no-runtime-evidence",
+      "rbacAllowedRoles": ["platform_admin"],
+      "rbacDeniedRoles": ["learner", "content_admin", "org_admin"],
+      "rbacEnforcementAnchors": [
+        "src/app/(workspace)/admin/layout.tsx (admin gate — broader than needed)",
+        "src/app/(workspace)/admin/users/page.tsx (await requirePlatformAdmin())",
+        "src/lib/auth/admin-guard.ts requirePlatformAdmin allows ONLY ['platform_admin']",
+        "src/lib/admin/server-actions.ts changeUserRoleAction → admin_change_user_role RPC (SECURITY DEFINER, writes admin_audit_logs)",
+        "supabase/migrations/20260520121400_profiles_protected_columns.sql (BEFORE UPDATE trigger trg_profiles_protect_columns — non-admins cannot change app_role/plan_label/status via direct UPDATE; raises 42501)"
+      ],
+      "privilegeElevationPath": "client UPDATE blocked by DB trigger; only admin_change_user_role SECURITY DEFINER RPC can mutate app_role (defense-in-depth: layout guard + page guard + RPC is_platform_admin check + audit log row)",
+      "auditCoverage": "claimed via server-actions.ts comment for both changeUserRoleAction and togglePublishAction; runtime audit-row presence not verified this session",
+      "wireframe": "docs/IA/32-X-10-admin-user-management/wireframe.png (present)",
+      "topGaps": [
+        "No rendered screenshot for /admin/users at 360/768/1280.",
+        "browser-results.json marks X-10 PARTIAL with 15s navigation timeout.",
+        "session-navigation SN-12 (org_admin → /admin/users forbidden) and SN-13 (platform_admin → /admin/users allowed) are BOTH placeholders with no expect() — the critical platform-admin-only enforcement has zero real test coverage this session.",
+        "description.md is silent on which role can elevate/demote roles — the implementation tightens to platform_admin only via requirePlatformAdmin, but the IA doc itself does not state this. Doc-gap candidate.",
+        "Bulk 일괄 액션 confirmation modal (위험 액션 확인 모달 필수) not verified at run time.",
+        "민감 정보 마스킹 in 상세 패널 (학습 기록 / 결제 상태) not verified.",
+        "description §6 says '삭제 대신 비활성화' — soft-delete contract not verified against implementation."
+      ],
+      "humanReviewerShouldInspect": [
+        "Whether the description.md should explicitly state platform_admin-only for role mutations (currently implied; implementation enforces; doc should match — DOC-GAP candidate).",
+        "Whether the role-change confirmation modal copy clearly tells the admin 'this will write to admin_audit_logs' (transparency).",
+        "Whether org_admin / content_admin actually hit /dashboard?error=forbidden (not a generic 'access denied' that could leak role-existence).",
+        "Whether the 6 wireframe regions (특히 일괄/상태 액션) keep readable order on mobile when there are 20 selected users.",
+        "Whether 차단/비활성 상태 배지 differ visually from active rows."
+      ]
+    },
+    "blockingReasons": [
+      "Phase 2 browser run produced navigation timeout — PARTIAL, no rendered DOM.",
+      "Phase 4 security-navigation-results.json BLOCKED (0 rows). SN-12/SN-13 covering the critical org_admin-denied / platform_admin-allowed split are placeholders with NO expect() assertion.",
+      "PRIVILEGE elevation path (admin_change_user_role RPC) and the DB-level protect_profile_columns trigger are present in source, but no runtime test in this session exercises the denied/allowed split or confirms the audit-log row.",
+      "Hosted-surface results have 0 rows — bulk-action confirmation modal trigger from /admin/users not validated."
+    ],
+    "evidenceReferences": [
+      "docs/IA/32-X-10-admin-user-management/description.md",
+      "docs/IA/32-X-10-admin-user-management/wireframe.png",
+      "reports/ia-verification/runs/20260528-141731/source-map-results.json (X-10 PASS)",
+      "reports/ia-verification/runs/20260528-141731/doc-receipts.json (X-10 wireframe.status=present, 10 requirements)",
+      "reports/ia-verification/runs/20260528-141731/browser-results.json (X-10 PARTIAL, navigation timeout; notes: 'Role changes via private.admin_change_user_role RPC only — client UPDATE blocked by migration #15')",
+      "reports/ia-verification/runs/20260528-141731/security-navigation-results.json (BLOCKED, 0 rows)",
+      "src/app/(workspace)/admin/layout.tsx",
+      "src/app/(workspace)/admin/users/page.tsx",
+      "src/lib/auth/admin-guard.ts (requirePlatformAdmin allows ONLY platform_admin)",
+      "src/lib/admin/server-actions.ts (changeUserRoleAction → admin_change_user_role RPC, audit log)",
+      "supabase/migrations/20260520121400_profiles_protected_columns.sql (trg_profiles_protect_columns — DB-level defense)",
+      "tests/e2e/coverage/session-navigation.spec.ts (SN-12, SN-13 placeholders, lines 276-290 + 309-340)"
+    ]
+  }
+]

@@ -1,0 +1,233 @@
+[
+  {
+    "iaCode": "F-01",
+    "screenName": "My library",
+    "route": "/library",
+    "audience": "user",
+    "aiUxResult": "PARTIAL",
+    "confidence": "medium",
+    "humanConfirmation": "needs-human-judgment",
+    "findings": {
+      "pageJob": "clear — implementation src/app/(workspace)/library/page.tsx renders heading '내 라이브러리' and a LibraryTabs component, but rendered browser evidence is unavailable so first-impression cannot be confirmed visually",
+      "entryContext": "unclear — direct URL entry (e.g. ?tab=invalid) handled by parseLibraryTab but no rendered evidence; sidebar entry path not visually verified",
+      "primaryAction": "missing-evidence — description.md requires search/filter, export/generate actions, list, right-side stats, pagination. Implementation has tabbed listing via LibraryTabs but description-mandated regions (검색/필터 #1, 우측 통계 #4, 페이지 이동 #5) cannot be verified without screenshot",
+      "flowContinuity": "unclear — F-01 hosts F-M1 PDF export modal trigger; hosted-surface evidence is 0 rows BLOCKED so trigger→modal flow not verified",
+      "aiBehavior": "not-applicable",
+      "formErrorUx": "not-applicable",
+      "keyboardFocus": "missing-evidence — no rendered evidence; LibraryTabs is antd Tabs (presumably keyboard-accessible) but unverified",
+      "responsive": "missing-evidence — 360/768/1280 screenshots all blocked by dev server timeouts",
+      "policyTrustCopy": "not-applicable for F-01 (owner-check is data-layer concern; covered separately)"
+    },
+    "blockingReasons": [
+      "browser-results.json row for F-01 is PARTIAL: navigation timeout to http://127.0.0.1:3000/library — no rendered screenshot, no visible-H1, no primary-CTA detection",
+      "hosted-surface-results.json is 0 rows BLOCKED — F-M1 trigger from /library not verified at host route",
+      "security-navigation-results.json is 0 rows BLOCKED — direct URL/invalid tab/wrong-owner data scenarios not exercised in this run",
+      "description.md mandates 5 regions (검색/필터, 내보내기, 목록, 우측 통계, 페이지 이동); only tabbed listing is visible in source — wireframe-vs-impl region map cannot be checked without screenshot"
+    ],
+    "evidenceReferences": [
+      "reports/ia-verification/runs/20260528-141731/source-map-results.json (F-01: PASS, src/app/(workspace)/library/page.tsx)",
+      "reports/ia-verification/runs/20260528-141731/browser-results.json (F-01 row: status PARTIAL, navigationFailureReason timeout)",
+      "reports/ia-verification/runs/20260528-141731/doc-receipts.json (F-01 receipt: filled)",
+      "docs/IA/18-F-01-my-library/description.md",
+      "src/app/(workspace)/library/page.tsx",
+      "src/components/library/ExportPdfButton.tsx"
+    ]
+  },
+  {
+    "iaCode": "F-M1",
+    "screenName": "PDF export modal",
+    "route": "hosted by /library, /writing/feedback/short/:id, /writing/feedback/long/:id, /writing/reports/:id/compare",
+    "audience": "user",
+    "aiUxResult": "FAIL",
+    "confidence": "medium",
+    "humanConfirmation": "needs-human-judgment",
+    "findings": {
+      "pageJob": "diverged — description.md ②③④ specifies a real modal with 파일명 입력 (1-60자), 옵션 선택, 미리보기, 내보내기 CTA. src/components/library/ExportPdfButton.tsx is a single button that calls window.print() via triggerPdfExport — there is no modal, no filename input, no preview pane, no option selection. This is a substantive UI gap vs the description, not just missing evidence.",
+      "entryContext": "ExportPdfButton confirms the trigger exists for sourceType submission|report, but the four host routes (/library, /writing/feedback/short/:id, /writing/feedback/long/:id, /writing/reports/:id/compare) have not all been verified to actually wire this button — hosted-surface lane is 0 rows",
+      "primaryAction": "different from description — implementation triggers browser print dialog directly. No 'PDF 생성 → 다운로드' two-step state machine. The success toast 'PDF 출력 대화상자가 열렸습니다.' partly disclaims this, but the description.md framing 'PDF 생성을 시작하고 다운로드 또는 저장을 제공' is not met.",
+      "flowContinuity": "unclear — fail-state recovery (description ④ 예외: 재시도와 문의 링크) is not implemented; only message.error toast",
+      "aiBehavior": "not-applicable",
+      "formErrorUx": "missing — no filename input, no validation, no preview-generation fallback",
+      "keyboardFocus": "missing-evidence — no modal exists, so modal focus trap requirement is moot, but the description-mandated modal behavior cannot be verified",
+      "responsive": "missing-evidence",
+      "policyTrustCopy": "not-applicable"
+    },
+    "blockingReasons": [
+      "hosted-surface-results.json is 0 rows BLOCKED — trigger/focus-entry/focus-return/Esc/cancel/backdrop behavior for F-M1 not verified at any of the 4 host routes",
+      "Implementation diverges from description.md — ExportPdfButton is print-dialog trigger, not a modal with filename/options/preview",
+      "browser-results.json F-M1 row PARTIAL due to /library navigation timeout"
+    ],
+    "evidenceReferences": [
+      "reports/ia-verification/runs/20260528-141731/source-map-results.json (F-M1: PASS, src/app/(workspace)/library/page.tsx + src/components/library/ExportPdfButton.tsx)",
+      "reports/ia-verification/runs/20260528-141731/browser-results.json (F-M1 row: status PARTIAL)",
+      "docs/IA/19-F-M1-pdf-export-modal/description.md (mandates 파일명 1-60자, 옵션, 미리보기, 다운로드 CTA)",
+      "src/components/library/ExportPdfButton.tsx (button-only implementation, no modal)",
+      "src/lib/export/pdf-export.ts (referenced by trigger)"
+    ]
+  },
+  {
+    "iaCode": "G-01",
+    "screenName": "Language settings",
+    "route": "/settings/language",
+    "audience": "user",
+    "aiUxResult": "PARTIAL",
+    "confidence": "medium",
+    "humanConfirmation": "needs-human-judgment",
+    "findings": {
+      "pageJob": "clear — heading '언어 설정' + LanguageForm with 3 radio options (ko/en/vi)",
+      "entryContext": "owner-bound — requireUser() + getProfileSettings(user.id) load only the current user's locale; RLS scoped per description ① 'auth.uid() 기반'",
+      "primaryAction": "clear — single 저장 button; description ⑥ 제약 '변경값 없으면 비활성' is NOT implemented (button is enabled even with no diff). Minor UX gap.",
+      "flowContinuity": "unclear — description ① 예외 '저장 전 이탈 시 변경사항 확인' (unsaved-changes warning) is NOT visible in current LanguageForm — uses message.success on save but no leave-confirmation",
+      "aiBehavior": "not-applicable",
+      "formErrorUx": "partial — error toast via App.message.error fires on failure; description mentions '미지원 언어 선택 시 비활성 및 지원 예정 안내' (③ ②) — only 3 supported locales rendered so this is moot",
+      "keyboardFocus": "missing-evidence — antd Radio.Group is keyboard-accessible but unverified",
+      "responsive": "missing-evidence (browser timeout)",
+      "policyTrustCopy": "COPY HONESTY RISK — copy says '변경사항이 즉시 반영됩니다.' (changes apply immediately) but the form comment in source explicitly says 'i18n message catalogs are OOS-7 (Phase 6 light spec); Phase 6 only persists the preference'. The DB write happens, but the UI does not actually re-render in the new language. Users will save and see no visible change — implied promise not delivered. This warrants FAIL on the copy lane, dragging the overall result toward PARTIAL/FAIL."
+    },
+    "blockingReasons": [
+      "browser-results.json G-01 row PARTIAL — no rendered screenshot, no save-success-state evidence",
+      "Copy '변경사항이 즉시 반영됩니다' implies live UI switch but i18n catalog is deferred — message overstates current capability",
+      "Description ⑥ 변경값 없으면 비활성 not implemented (button always enabled)",
+      "Description ① 저장 전 이탈 확인 not implemented",
+      "Description ② 즉시 미리보기 not implemented",
+      "Description ③ 학습 언어 선택, ④ 콘텐츠 설정, ⑤ 도움말 sections missing — only UI 언어 selector visible (light spec scope reduction documented in code comment but not surfaced to user)"
+    ],
+    "evidenceReferences": [
+      "reports/ia-verification/runs/20260528-141731/source-map-results.json (G-01: PASS, src/app/(workspace)/settings/language/page.tsx)",
+      "reports/ia-verification/runs/20260528-141731/browser-results.json (G-01 row: status PARTIAL)",
+      "docs/IA/20-G-01-language-settings/description.md (mandates 즉시 미리보기, 학습 언어, 콘텐츠 설정)",
+      "src/components/settings/LanguageForm.tsx (lines 26-32 comment confirms i18n catalogs OOS, lines 69-71 copy '변경사항이 즉시 반영됩니다')",
+      "src/app/(workspace)/settings/language/page.tsx"
+    ]
+  },
+  {
+    "iaCode": "X-03",
+    "screenName": "Paywall",
+    "route": "/paywall",
+    "audience": "user",
+    "aiUxResult": "DEFERRED",
+    "confidence": "high",
+    "humanConfirmation": "needs-human-judgment",
+    "findings": {
+      "pageJob": "clear shell — PlaceholderPage component renders Tag '[X-03]' + Title '구독 가입' + secondary text 'billing scope는 deferred-scope.md 기준으로 보류 상태입니다.' — copy explicitly discloses deferred state and points to the source-of-truth doc",
+      "entryContext": "shell — direct URL entry shows the deferred notice; no pricing/checkout/CTA exists to mislead",
+      "primaryAction": "intentionally absent — no 결제 주기 카드, no CTA, no 혜택 패널 (description ②③④⑤ all unimplemented). This matches docs/development/deferred-scope.md §Billing: 'sitemap may include /paywall and /subscription as Paper-frame UI shells. Those routes do not reopen billing implementation scope: no billing SDK, payment provider selection, checkout, invoices, or real payment flows should be implemented until this file and the implementation spec are updated.'",
+      "flowContinuity": "shell — no back-button context, no subscription-management redirect for existing subscribers (description ① 예외)",
+      "aiBehavior": "not-applicable",
+      "formErrorUx": "not-applicable",
+      "keyboardFocus": "trivial — only static card content; antd Card + Tag + Typography",
+      "responsive": "missing-evidence",
+      "policyTrustCopy": "PASS on honesty — copy 'billing scope는 deferred-scope.md 기준으로 보류 상태입니다' is direct, references the policy doc, and makes no claim about live billing. No pricing strings, no plan names, no 'subscribe' CTA. Honest about deferred state."
+    },
+    "blockingReasons": [
+      "Result label DEFERRED is appropriate per docs/development/deferred-scope.md — UI is intentionally shell-only and copy is honest about it",
+      "browser-results.json X-03 row PARTIAL — no rendered screenshot, but source inspection is sufficient to confirm shell-only state since PlaceholderPage is a 25-line static component"
+    ],
+    "evidenceReferences": [
+      "reports/ia-verification/runs/20260528-141731/source-map-results.json (X-03: PASS, src/app/(workspace)/paywall/page.tsx)",
+      "reports/ia-verification/runs/20260528-141731/browser-results.json (X-03 row: deferred=true, notes 'Billing implementation deferred')",
+      "docs/development/deferred-scope.md (§Billing — explicit policy permitting Paper-frame UI shells)",
+      "docs/IA/25-X-03-paywall/description.md",
+      "src/app/(workspace)/paywall/page.tsx (15 lines — PlaceholderPage wrapper)",
+      "src/components/shared/PlaceholderPage.tsx"
+    ]
+  },
+  {
+    "iaCode": "X-04",
+    "screenName": "Subscription management",
+    "route": "/subscription",
+    "audience": "user",
+    "aiUxResult": "DEFERRED",
+    "confidence": "high",
+    "humanConfirmation": "needs-human-judgment",
+    "findings": {
+      "pageJob": "clear shell — PlaceholderPage with Tag '[X-04]' + Title '구독 관리' + secondary text 'billing scope는 deferred-scope.md 기준으로 보류 상태입니다.'",
+      "entryContext": "shell — direct URL shows deferred notice; no plan summary, no payment history, no cancel CTA",
+      "primaryAction": "intentionally absent — description ②③④⑤ (현재 구독 요약, 변경/취소 액션, 결제 이력, 우측 도움말) all unimplemented. Matches deferred-scope.md §Billing policy.",
+      "flowContinuity": "shell — no plan-change/cancel flow exists, so no fail-state needed",
+      "aiBehavior": "not-applicable",
+      "formErrorUx": "not-applicable",
+      "keyboardFocus": "trivial",
+      "responsive": "missing-evidence",
+      "policyTrustCopy": "PASS on honesty — same template as X-03. No '다음 결제일', no 'cancel subscription' CTA, no 결제 이력 fake data. No risk of overpromising live billing."
+    },
+    "blockingReasons": [
+      "Result label DEFERRED appropriate per deferred-scope.md §Billing",
+      "browser-results.json X-04 row PARTIAL — no rendered screenshot, source inspection sufficient given 15-line shell"
+    ],
+    "evidenceReferences": [
+      "reports/ia-verification/runs/20260528-141731/source-map-results.json (X-04: PASS, src/app/(workspace)/subscription/page.tsx)",
+      "reports/ia-verification/runs/20260528-141731/browser-results.json (X-04 row: deferred=true)",
+      "docs/development/deferred-scope.md (§Billing)",
+      "docs/IA/26-X-04-subscription-management/description.md",
+      "src/app/(workspace)/subscription/page.tsx (15 lines)",
+      "src/components/shared/PlaceholderPage.tsx"
+    ]
+  },
+  {
+    "iaCode": "X-05",
+    "screenName": "Profile editing",
+    "route": "/profile",
+    "audience": "user",
+    "aiUxResult": "PARTIAL",
+    "confidence": "medium",
+    "humanConfirmation": "needs-human-judgment",
+    "findings": {
+      "pageJob": "clear — heading '프로필' + ProfileForm (이름/닉네임/자기소개) + ExamInfoCard (read-only) + StatusHelpCard",
+      "entryContext": "OWNER-CHECK confirmed in source — page calls requireUser() then getProfileSettings(user.id) + supabase.from('profiles').select(...).eq('id', user.id) — there is no :id URL param, route is /profile only, so other-user PII via direct URL is structurally impossible. RLS on profiles table provides defense in depth. This satisfies the OWNER-CHECK pack at the route level.",
+      "primaryAction": "clear — single 저장 button (description ⑤). Description ⑤ 제약 '변경값 없으면 비활성' is NOT implemented (button always enabled).",
+      "flowContinuity": "partial — message.success on save, message.error on failure. Description ① 예외 '재인증 필요 시 보안 안내' (re-auth required for sensitive edits) is not implemented. Description ① 제약 '저장 전 이탈 확인' (unsaved-changes warning) is not implemented.",
+      "aiBehavior": "not-applicable",
+      "formErrorUx": "partial — antd Form with maxLength validation (display_name 80, nickname 40, bio 160). Description ② 제약 '이름 2-30자, 닉네임 2-20자' does NOT match impl (80/40 — looser, but not a security issue). Description ③ 아바타 (avatar upload) is NOT implemented and copy '아바타 업로드는 다음 업데이트에서 지원됩니다' is HONEST about scope reduction. Description ② 예외 '중복 닉네임/이메일 변경 제한' field-level error display not verified.",
+      "keyboardFocus": "missing-evidence",
+      "responsive": "missing-evidence",
+      "policyTrustCopy": "PASS — '아바타 업로드는 다음 업데이트에서 지원됩니다' is honest deferred disclosure. No false-promise PII handling copy. Description ④ '도움말/상태 카드' (공개 범위, 데이터 활용) — StatusHelpCard exists but its copy not yet inspected in this lane."
+    },
+    "blockingReasons": [
+      "browser-results.json X-05 row PARTIAL — no rendered screenshot, no save-success state, no validation-error state",
+      "security-navigation-results.json 0 rows — wrong-owner scenario could not be exercised. However, route has no :id param so direct-URL PII leak is structurally prevented — recommend security lane records this as a structural-protection note rather than running test",
+      "Description vs impl gaps: name length 80 vs 30, no email field (description ②), no avatar (③), no 변경값 비활성 (⑤), no 이탈 확인 (①), no 재인증 (① 예외) — multiple unimplemented description regions"
+    ],
+    "evidenceReferences": [
+      "reports/ia-verification/runs/20260528-141731/source-map-results.json (X-05: PASS, src/app/(workspace)/profile/page.tsx)",
+      "reports/ia-verification/runs/20260528-141731/browser-results.json (X-05 row: status PARTIAL, packs PII/STORAGE)",
+      "docs/IA/27-X-05-profile-editing/description.md",
+      "src/app/(workspace)/profile/page.tsx (server component, requireUser + user.id-scoped queries)",
+      "src/components/profile/ProfileForm.tsx (display_name/nickname/bio only, lines 79/89/100 maxLength values)",
+      "src/components/profile/ExamInfoCard.tsx",
+      "src/components/profile/StatusHelpCard.tsx"
+    ]
+  },
+  {
+    "iaCode": "X-09",
+    "screenName": "Notification settings",
+    "route": "/settings/notifications",
+    "audience": "user",
+    "aiUxResult": "DEFERRED",
+    "confidence": "high",
+    "humanConfirmation": "needs-human-judgment",
+    "findings": {
+      "pageJob": "clear shell-with-persistence — heading '알림 설정' + 3 toggles (weekly_summary, feedback_ready, study_reminder) + explicit Alert disclosing deferred transport",
+      "entryContext": "owner-bound — requireUser() + getProfileSettings(user.id) — RLS scoped",
+      "primaryAction": "clear — 저장 button persists toggle state via useUpdateNotificationPrefs",
+      "flowContinuity": "partial — message.success/error toast on save. No 발송 이력 (description ④), no 미리보기 (description ④), no 채널 탭 (Email/Zalo — description ②)",
+      "aiBehavior": "not-applicable",
+      "formErrorUx": "partial — antd Switch with on/off labels; computeNotificationDiff is unit-tested logic",
+      "keyboardFocus": "missing-evidence — antd Switch is keyboard-accessible (Space toggles) but unverified",
+      "responsive": "missing-evidence",
+      "policyTrustCopy": "PASS — explicit info Alert '알림 전송 인프라는 곧 도입됩니다. 지금은 환경설정만 저장됩니다.' (notification transport infra is coming soon; for now only preferences are saved). This is exemplary honest TRANSPORT-DEFERRED disclosure — distinguishes 'we saved your preference' from 'we will send the notification'. No promise of live email/push delivery."
+    },
+    "blockingReasons": [
+      "Result label DEFERRED appropriate per TRANSPORT-DEFERRED pack — implementation shell + persistence + explicit disclosure matches the deferred pattern",
+      "browser-results.json X-09 row PARTIAL — no rendered screenshot",
+      "Description gaps: ② 알림 채널 탭 (Email/Zalo) not implemented; ④ 미리보기/발송 이력 not implemented. These are correctly omitted because transport is deferred — the implementation is a faithful shell-with-persistence pattern."
+    ],
+    "evidenceReferences": [
+      "reports/ia-verification/runs/20260528-141731/source-map-results.json (X-09: PASS, src/app/(workspace)/settings/notifications/page.tsx)",
+      "reports/ia-verification/runs/20260528-141731/browser-results.json (X-09 row: deferred=true, notes 'Notification transport deferred — UI copy must not imply live delivery')",
+      "docs/IA/31-X-09-notification-settings/description.md",
+      "src/components/settings/NotificationPrefsForm.tsx (line 101-105 honest deferred Alert)",
+      "src/app/(workspace)/settings/notifications/page.tsx"
+    ]
+  }
+]

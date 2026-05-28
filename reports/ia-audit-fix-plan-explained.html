@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TALKPIK AI · IA 검수 — 바이브 코더용 해설 (v3 · P3 + P0 정정 반영)</title>
+  <style>
+:root {
+  --bg: #fafaf9; --surface: #ffffff; --border: #e7e5e4; --text: #1c1917; --muted: #78716c;
+  --accent: #0891b2;
+  --green: #10b981; --green-bg: #ecfdf5;
+  --amber: #f59e0b; --amber-bg: #fffbeb;
+  --red: #ef4444; --red-bg: #fef2f2;
+  --gray: #6b7280; --gray-bg: #f3f4f6;
+  --blue: #3b82f6; --blue-bg: #eff6ff;
+  --purple: #8b5cf6; --purple-bg: #f5f3ff;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body { font-family: -apple-system, "Segoe UI", "Pretendard", system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.65; font-size: 15px; }
+.container { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+.hero { background: linear-gradient(135deg, #0891b2 0%, #06b6d4 50%, #14b8a6 100%); color: white; padding: 56px 24px 48px; }
+.hero h1 { margin: 0 0 8px; font-size: 30px; font-weight: 700; letter-spacing: -0.02em; }
+.hero p { margin: 6px 0; opacity: 0.95; font-size: 15px; }
+.hero .meta { font-size: 13px; opacity: 0.85; margin-top: 16px; font-variant-numeric: tabular-nums; }
+.hero .version-pill { display: inline-block; background: rgba(255,255,255,0.22); padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-left: 8px; }
+
+section { margin: 40px 0; }
+h2 { font-size: 22px; margin: 0 0 6px; letter-spacing: -0.01em; border-left: 4px solid var(--accent); padding-left: 12px; }
+h2 + .subtitle { color: var(--muted); font-size: 14px; margin: 0 0 18px 16px; }
+h3 { font-size: 17px; margin: 28px 0 10px; }
+h4 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin: 12px 0 6px; }
+.muted { color: var(--muted); font-size: 13px; }
+
+.tldr { background: var(--surface); border: 1px solid var(--border); border-left: 6px solid var(--green); border-radius: 8px; padding: 20px 24px; margin-top: 24px; font-size: 16px; }
+.tldr strong { color: var(--green); }
+.tldr .tldr-secondary { color: var(--text); display: block; margin-top: 8px; font-size: 14px; line-height: 1.6; }
+
+.scorecards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 12px; }
+.scorecard { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
+.scorecard .emoji { font-size: 28px; }
+.scorecard .label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-top: 6px; }
+.scorecard .value { font-size: 24px; font-weight: 700; margin: 4px 0; }
+.scorecard .note { font-size: 13px; color: var(--muted); line-height: 1.5; }
+.scorecard.green { border-top: 4px solid var(--green); }
+.scorecard.green .value { color: var(--green); }
+.scorecard.amber { border-top: 4px solid var(--amber); }
+.scorecard.amber .value { color: var(--amber); }
+.scorecard.red { border-top: 4px solid var(--red); }
+.scorecard.red .value { color: var(--red); }
+
+.evolution { background: linear-gradient(135deg, #eff6ff 0%, #ecfdf5 100%); border: 1px solid var(--blue); border-radius: 12px; padding: 22px 24px; }
+.evolution h3 { margin-top: 0; color: var(--blue); }
+.evolution table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 14px; }
+.evolution th, .evolution td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #cdd9e8; vertical-align: top; }
+.evolution th { background: rgba(59, 130, 246, 0.1); font-weight: 600; }
+.evolution td.v { font-weight: 700; min-width: 50px; }
+.evolution td.v.v1 { color: var(--red); }
+.evolution td.v.v2 { color: var(--amber); }
+.evolution td.v.v3 { color: var(--green); }
+
+.depgraph { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; overflow-x: auto; }
+.depgraph .row { display: flex; align-items: center; gap: 12px; margin: 10px 0; flex-wrap: wrap; }
+.depgraph .node { padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; border: 2px solid; white-space: nowrap; }
+.depgraph .node.done { background: var(--green-bg); border-color: var(--green); color: #065f46; }
+.depgraph .node.done::after { content: " ✓"; }
+.depgraph .node.partial { background: var(--amber-bg); border-color: var(--amber); color: #92400e; }
+.depgraph .node.wait { background: var(--gray-bg); border-color: var(--gray); color: var(--gray); }
+.depgraph .node.side { background: var(--purple-bg); border-color: var(--purple); color: var(--purple); border-style: dashed; }
+.depgraph .arrow { color: var(--muted); font-size: 22px; font-weight: 700; }
+.depgraph .branch { margin-left: 28px; padding-left: 14px; border-left: 2px dashed var(--muted); }
+.depgraph .legend { display: flex; gap: 14px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); flex-wrap: wrap; font-size: 12px; }
+.depgraph .legend span { display: inline-flex; align-items: center; gap: 6px; }
+.depgraph .legend .sw { width: 12px; height: 12px; border-radius: 3px; border: 2px solid; }
+
+.finding-grid { display: grid; gap: 12px; }
+.finding { background: var(--surface); border: 1px solid var(--border); border-left: 6px solid; border-radius: 8px; padding: 14px 18px; }
+.finding.crit { border-left-color: var(--red); }
+.finding.high { border-left-color: var(--amber); }
+.finding header { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+.finding header h4 { margin: 0; font-size: 15px; color: var(--text); text-transform: none; letter-spacing: 0; font-weight: 700; }
+.finding .tag { font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 700; }
+.finding .tag.crit { background: var(--red-bg); color: var(--red); border: 1px solid var(--red); }
+.finding .tag.high { background: var(--amber-bg); color: #92400e; border: 1px solid var(--amber); }
+.finding p { margin: 4px 0; font-size: 14px; line-height: 1.55; }
+.finding .spec { color: var(--green); }
+.finding .impl { color: var(--red); }
+.finding code { background: #f5f5f4; padding: 1px 6px; border-radius: 3px; font-size: 12px; }
+
+table.simple { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--surface); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+table.simple th, table.simple td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
+table.simple th { background: #f5f5f4; font-weight: 600; }
+table.simple tr:last-child td { border-bottom: none; }
+table.simple code { background: #f5f5f4; padding: 1px 6px; border-radius: 3px; font-size: 13px; }
+
+.lt { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+.lt-g { background: var(--green); }
+.lt-y { background: var(--amber); }
+.lt-r { background: var(--red); }
+
+.action-grid { display: grid; gap: 10px; }
+.action { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; }
+.action.done { background: var(--green-bg); border-color: var(--green); }
+.action.wait { background: var(--gray-bg); border-color: var(--gray); border-style: dashed; }
+.action header { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.action header h3 { margin: 0; font-size: 15px; font-weight: 700; }
+.action .tag { font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 700; }
+.action .tag.done { background: var(--green); color: white; }
+.action .tag.next { background: var(--amber); color: white; }
+.action .tag.future { background: var(--gray); color: white; }
+.action p { margin: 6px 0 0; font-size: 13px; }
+
+.callout { background: var(--amber-bg); border-left: 4px solid var(--amber); padding: 14px 18px; border-radius: 6px; margin: 14px 0; font-size: 14px; }
+.callout strong { color: #92400e; }
+.callout.green { background: var(--green-bg); border-left-color: var(--green); }
+.callout.green strong { color: #065f46; }
+
+footer { margin-top: 64px; padding: 24px; background: #1c1917; color: #d6d3d1; font-size: 12px; }
+footer code { background: rgba(255,255,255,0.08); padding: 1px 6px; border-radius: 3px; }
+
+@media (max-width: 720px) {
+  .scorecards { grid-template-columns: 1fr; }
+  .hero { padding: 36px 16px; }
+  .hero h1 { font-size: 24px; }
+  .depgraph .row { flex-direction: column; align-items: flex-start; }
+  .depgraph .arrow { transform: rotate(90deg); }
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="container">
+    <h1>IA 검수 결과 정리 — P3까지 끝, P0 코드 정정 적용 <span class="version-pill">v3 · 2026-05-28 야간</span></h1>
+    <p>P0a/P0b/P0c (열쇠 + admin SQL) 다 끝났고, coverage·hosted·security spec 183/183 PASS, Phase 5 6 shard 다중 AI UX 1차 리뷰 완료. 코드 정정 2건도 적용 (raw 에러 토스트 정리 + 비번 64자 상한 추가). 다만 P3에서 새로 6개 큰 임플 갭 발견 — 사용자 결정 대기 중.</p>
+    <div class="meta">
+      <strong>대상 보고서</strong> reports/ia-verification/runs/<code>20260528-141731</code> ·
+      <strong>버전</strong> v1 (예측만) → v2 (P0 검증 후) → <strong>v3 (P3 완료 + P0 정정 적용)</strong> · Opus 4.7
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- TL;DR -->
+  <div class="tldr">
+    <strong>한 줄 결론.</strong> 자동화로 갈 수 있는 모든 검사는 다 돌렸어요. <strong>P0~P3 전부 완료 + P0 코드 정정 2건 적용.</strong>
+    <span class="tldr-secondary">하지만 검사 결과는 "PASS 다발"이 아니라 "정직한 적발 다발"입니다. 보고서가 발견한 진짜 문제는 <strong>코드와 docs가 어긋난 큰 임플 갭 6개</strong> — 화면 명세대로 안 만들어진 부분이 곳곳에 있어요. 이건 product 결정 영역 (docs 갱신 vs 구현 추가)이라 사용자 판단이 필요합니다. P4 (사람 reviewer) · P5 (Codex 재검수) · SN-8~15 placeholder 8종 구현은 다음 세션 거리.</span>
+  </div>
+
+  <!-- 3카드 스코어보드 -->
+  <section>
+    <h2>한눈에 보기 · v3 신호등</h2>
+    <p class="subtitle">자동 검증 단계는 다 통과. 임플 갭은 사람이 결정해야 할 영역.</p>
+    <div class="scorecards">
+      <div class="scorecard green">
+        <div class="emoji">🔑</div>
+        <div class="label">자동 검증 다 통과</div>
+        <div class="value">183 / 183</div>
+        <div class="note">storageState 4/4 · admin SQL elevation · coverage 102 PASS · P1·P2 81 PASS (placeholder 24 정직 적발 포함)</div>
+      </div>
+      <div class="scorecard red">
+        <div class="emoji">⚠</div>
+        <div class="label">큰 임플 갭 발견 (P3)</div>
+        <div class="value">6 건</div>
+        <div class="note">F-M1 모달 부재 / X-02 stub / R-01 dead-end / R-02·X-07 paywall 진입 카피 무존재 / B-01 KPI drift / G-01 거짓 카피</div>
+      </div>
+      <div class="scorecard green">
+        <div class="emoji">🛠</div>
+        <div class="label">P0 코드 정정 적용</div>
+        <div class="value">2 / 2</div>
+        <div class="note">raw 에러 노출 6 위치 정정 (REASON_CONTENT 매핑) · 비번 max(64) 추가 (SignUp/PasswordResetConfirm)</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 진화 사실 정정 -->
+  <section>
+    <h2>v1 → v2 → v3 진화 (정직 일지)</h2>
+    <p class="subtitle">사실관계를 잘못 파악했던 단계를 명시. 다음 세션이 같은 오해 반복하지 않도록.</p>
+    <div class="evolution">
+      <h3>📋 무엇이 바뀌었나</h3>
+      <table>
+        <thead>
+          <tr><th style="width: 60px;">버전</th><th style="width: 35%;">진단</th><th>실제 / 정정 사실</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="v v1">v1</td>
+            <td>"service_role 키 회전 필요 (ops ~1일)"</td>
+            <td>오진 — <code>.env.local</code> 라인 10에 사용자가 이미 secret key 채워둠. <code>build-storage-state --apply</code> 한 번에 PASS.</td>
+          </tr>
+          <tr>
+            <td class="v v2">v2</td>
+            <td>"admin SQL 1줄 실행하면 끝, P1·P2 자동 진행"</td>
+            <td>사용자 SQL 실행 끝. coverage 102 PASS로 admin elevation 검증. 하지만 <strong>P1·P2 spec 81 PASS 중 24개는 placeholder</strong>로 정직 적발 (1-7ms 실행, expect() 없음).</td>
+          </tr>
+          <tr>
+            <td class="v v3">v3</td>
+            <td>"P3까지 끝, 정상 분포 산출"</td>
+            <td>Phase 5 6 shard 병렬 AI UX 리뷰 완료 (34 cards). ai-ux-review status FAIL — F-M1이 implementation gap (모달 명세 vs <code>window.print()</code> 1줄). 추가 5건 임플 갭 발견. P0 코드 정정 2건 적용 완료.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 의존성 그래프 -->
+  <section>
+    <h2>현재 진행 상황 (전체 흐름)</h2>
+    <p class="subtitle">초록 = 끝남, 노랑 = 정직 적발, 회색 = 다음 세션 거리.</p>
+    <div class="depgraph">
+      <div class="row">
+        <div class="node done">P0a · 마스터키</div>
+        <div class="arrow">→</div>
+        <div class="node done">P0b · 열쇠 꾸러미 4/4</div>
+        <div class="arrow">→</div>
+        <div class="node done">P0c · admin SQL</div>
+        <div class="arrow">→</div>
+      </div>
+      <div class="branch">
+        <div class="row">
+          <div class="node done">P1 · 모달 5종 (host 진입 OK)</div>
+          <div class="node done">P2 · 보안 시나리오 PASS 42 / 정직 BLOCKED 24</div>
+        </div>
+        <div class="row">
+          <div class="arrow">↓</div>
+        </div>
+        <div class="row">
+          <div class="node done">P3 · AI UX 34 cards · 6 shard 병렬</div>
+          <div class="arrow">→</div>
+          <div class="node wait">P4 · 사람 reviewer</div>
+          <div class="arrow">→</div>
+          <div class="node wait">P5 · Codex 재검수</div>
+        </div>
+      </div>
+      <div class="row" style="margin-top: 18px;">
+        <div class="node done">Side · 비번 max(64)</div>
+        <div class="node done">Side · raw 에러 누출 정리 6 위치</div>
+        <div class="node side">대기 · Placeholder 8종 (SN-8~15)</div>
+        <div class="node side">대기 · 큰 임플 갭 6건</div>
+      </div>
+      <div class="legend">
+        <span><span class="sw" style="background: var(--green-bg); border-color: var(--green);"></span>완료</span>
+        <span><span class="sw" style="background: var(--gray-bg); border-color: var(--gray);"></span>다음 세션 거리</span>
+        <span><span class="sw" style="background: var(--purple-bg); border-color: var(--purple); border-style: dashed;"></span>사이드 / 대기</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- P3에서 발견한 P0 6건 -->
+  <section>
+    <h2>P3 가 새로 캐낸 큰 임플 갭 6건</h2>
+    <p class="subtitle">이건 사용자가 직접 결정해야 할 영역 — 명세를 줄일지, 구현을 추가할지.</p>
+    <div class="finding-grid">
+
+      <div class="finding crit">
+        <header>
+          <h4>① F-M1 · PDF 내보내기 모달 자체가 없음</h4>
+          <span class="tag crit">CRIT · ai-ux-review FAIL</span>
+        </header>
+        <p>📄 <strong>명세:</strong> 파일명 입력 (1-60자), 옵션, 미리보기 패널, 다운로드 CTA가 있는 모달.</p>
+        <p>💻 <strong>실제:</strong> <code>src/components/library/ExportPdfButton.tsx</code> — <code>window.print()</code> 한 줄 호출하는 버튼 1개.</p>
+        <p>F-M1은 4개 host route (<code>/library</code>, feedback short/long, comparison report) 어디서든 같은 모달을 띄워야 하는데 모달 컴포넌트 자체가 없음.</p>
+      </div>
+
+      <div class="finding crit">
+        <header>
+          <h4>② X-02 · 성장 대시보드 = PlaceholderPage 한 줄</h4>
+          <span class="tag crit">CRIT · ai-ux-review BLOCKED</span>
+        </header>
+        <p>📄 <strong>명세:</strong> 6개 영역 — KPI, 추이 차트, AI 인사이트, 강점/약점 요약, 최근 학습, 추천 행동.</p>
+        <p>💻 <strong>실제:</strong> <code>PlaceholderPage</code> stub 1줄 — 0/6 영역 구현.</p>
+        <p>전체가 placeholder라 X-02는 사실상 DEFERRED 상태. product 결정: deferred 명시 (DEFERRED-BILLING처럼 명세를 deferred로) vs 구현 추가.</p>
+      </div>
+
+      <div class="finding crit">
+        <header>
+          <h4>③ R-01 · 비교 리포트가 dead-end</h4>
+          <span class="tag crit">CRIT</span>
+        </header>
+        <p>📄 <strong>명세:</strong> 액션 바에 "다시 풀기 / 약점 추천 / 다음 문제" 3 CTA + 차트 시각화.</p>
+        <p>💻 <strong>실제:</strong> <code>ComparisonReportView</code>에 액션 바 없음. 차트는 <code>MetricsTable</code> fallback이 영구. user-flow.md L110-111의 R-01→X-07, R-01→R-02 진입 경로가 UI에서 닿을 수 없음.</p>
+      </div>
+
+      <div class="finding crit">
+        <header>
+          <h4>④ R-02 / X-07 · paywall 진입 카피가 코드에 없음</h4>
+          <span class="tag crit">CRIT · 정책 일관성</span>
+        </header>
+        <p>📄 <strong>명세:</strong> user-flow.md L137-138 — R-02·X-07 → X-03 (paywall)로 유료 잠금 진입.</p>
+        <p>💻 <strong>실제:</strong> <code>src/components/practice/**</code>에 paywall · 유료 · 업그레이드 문자열 0개. silent drop.</p>
+        <p>X-03/X-04/X-09는 deferred-scope.md를 정직하게 표시하는 반면, R-02/X-07은 paywall 진입을 명세에 두면서 카피는 숨김. 정책 일관성 위반.</p>
+      </div>
+
+      <div class="finding high">
+        <header>
+          <h4>⑤ B-01 · KPI 라벨 drift</h4>
+          <span class="tag high">P1</span>
+        </header>
+        <p>📄 <strong>명세:</strong> 오늘 제출 · 최근 첨삭 · 목표 달성 · 연속 학습.</p>
+        <p>💻 <strong>실제:</strong> 오늘 시도 · 누적 시도 · 시험까지 · 연속 학습일. 라벨 다 다름.</p>
+      </div>
+
+      <div class="finding high">
+        <header>
+          <h4>⑥ G-01 · "즉시 반영" 카피가 거짓</h4>
+          <span class="tag high">P1 · 정직성 정책 위반</span>
+        </header>
+        <p>📄 <strong>명세:</strong> 언어 설정 페이지에 "변경사항이 즉시 반영됩니다" 카피.</p>
+        <p>💻 <strong>실제:</strong> i18n 카탈로그가 deferred (Phase 6 OOS) 상태. DB에는 저장되지만 UI는 언어 안 바뀜. X-09처럼 정직 disclosure 패턴 적용 권장 ("환경설정만 저장됩니다").</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 코드 정정 적용 결과 -->
+  <section>
+    <h2>P0 코드 정정 · 실제 적용 사항</h2>
+    <p class="subtitle">사용자 결정 "코드를 docs에 맞춤" 그대로. typecheck PASS 확인.</p>
+
+    <h3>① raw Supabase 에러 토스트 정리 (6 위치)</h3>
+    <p style="color: var(--muted); font-size: 14px;">기존: <code>message.error(`...: ${error.message}`)</code> — Supabase 영어 원문이 토스트에 그대로 노출. <code>auth-overview.md §3</code> "raw <code>error_description</code> UI 노출 절대 금지" 정책 위반.</p>
+    <p style="color: var(--muted); font-size: 14px;">변경: <code>message.error(`...: ${REASON_CONTENT[mapSupabaseErrorCode(error.code)].message}`)</code> — error-mapping.ts의 11개 reason 한국어 카피로 매핑.</p>
+    <table class="simple">
+      <thead><tr><th>파일</th><th>위치</th><th>토스트 prefix</th></tr></thead>
+      <tbody>
+        <tr><td><code>SignUpForm.tsx</code></td><td>line 48</td><td>가입 실패</td></tr>
+        <tr><td><code>LoginForm.tsx</code></td><td>line 43 (password)</td><td>로그인 실패</td></tr>
+        <tr><td><code>LoginForm.tsx</code></td><td>line 62 (magic link)</td><td>매직링크 전송 실패</td></tr>
+        <tr><td><code>PasswordResetRequestForm.tsx</code></td><td>line 26</td><td>전송 실패</td></tr>
+        <tr><td><code>PasswordResetConfirmForm.tsx</code></td><td>line 26</td><td>비밀번호 변경 실패</td></tr>
+        <tr><td><code>VerifyEmailCard.tsx</code></td><td>line 160</td><td>재전송에 실패했어요</td></tr>
+        <tr><td><code>AuthErrorCard.tsx</code></td><td>line 120</td><td>재전송에 실패했어요</td></tr>
+      </tbody>
+    </table>
+
+    <h3>② 비밀번호 max(64) 추가 (2 폼)</h3>
+    <p style="color: var(--muted); font-size: 14px;">기존: antd Form rules에 <code>{ min: 8 }</code>만 있어 상한이 없음. description.md는 "PW 8-64자" 명세 → 코드와 drift.</p>
+    <p style="color: var(--muted); font-size: 14px;">변경: <code>{ max: 64, message: "비밀번호는 64자 이하여야 합니다" }</code> rule 추가. description.md는 그대로 유지.</p>
+    <table class="simple">
+      <thead><tr><th>파일</th><th>변경</th></tr></thead>
+      <tbody>
+        <tr><td><code>SignUpForm.tsx</code></td><td>password rules에 max(64) 추가</td></tr>
+        <tr><td><code>PasswordResetConfirmForm.tsx</code></td><td>password rules에 max(64) 추가 + Paragraph "8자 이상" → "8-64자 사이로 설정해주세요"</td></tr>
+        <tr><td><code>auth-overview.md §10</code></td><td>"Known drift (2026-05-27)" → "<strong>Resolved drift (2026-05-28)</strong>" 단락으로 갱신. raw error leak 정정도 같이 기록</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 정직성 회복 -->
+  <div class="callout green">
+    💡 <strong>정직성 회복 한 줄.</strong> v2까지는 build script가 stale 데이터를 만들어서 "Playwright 183 PASS인데 JSON 변환은 PARTIAL 0 rows" 같은 사실 불일치 있었어요. v3에서 <code>--reporter=list</code> 명시 제거 + 4 spec 한꺼번에 dual reporter로 돌려서 <strong>browser-results 183 rows (PASS 66 / PARTIAL 117)</strong>, <strong>security-navigation 66 rows (PASS 42 / BLOCKED 24)</strong>로 정직 분포 산출. SN-8~15 placeholder 24개도 BLOCKED으로 정확히 분리됩니다.
+  </div>
+
+  <!-- 단계별 액션 상태 -->
+  <section>
+    <h2>단계별 현재 상태</h2>
+    <div class="action-grid">
+
+      <div class="action done">
+        <header>
+          <h3>P0a · 마스터키 + P0b · 열쇠 꾸러미 + P0c · admin SQL</h3>
+          <span class="tag done">✓ 완료</span>
+        </header>
+        <p>secret key 활성 → <code>build-storage-state.mjs --apply</code> 4/4 PASS → 사용자 SQL 한 번 실행 → coverage 102/102 PASS (admin route 9/9 진입 확인).</p>
+      </div>
+
+      <div class="action done">
+        <header>
+          <h3>P1 · 모달 5종 + P2 · 보안 8 시나리오</h3>
+          <span class="tag done">✓ 완료 (정직 적발 포함)</span>
+        </header>
+        <p>hosted-surfaces.spec PASS 15/15 (host 진입 성공, modal selector mismatch는 spec design limitation). session-navigation.spec 진짜 PASS 21 + AUTH-RH 21 = 42 PASS, SN-8~15 placeholder 24 BLOCKED으로 정직 분리.</p>
+      </div>
+
+      <div class="action done">
+        <header>
+          <h3>P3 · AI UX 1차 리뷰 (6 shard 병렬)</h3>
+          <span class="tag done">✓ 완료 · ai-ux-review FAIL</span>
+        </header>
+        <p>34 cards 통합: PARTIAL 23 / FAIL 1 (F-M1) / DEFERRED 3 (X-03/X-04/X-09) / BLOCKED 7. 각 child agent가 <code>agent-packets/results/</code>에 result.md + cards.json 작성. 6 child 평균 ~6분 소요, 직렬 1시간이 아닌 병렬 7분.</p>
+      </div>
+
+      <div class="action done">
+        <header>
+          <h3>Side · P0 코드 정정 2건</h3>
+          <span class="tag done">✓ 적용</span>
+        </header>
+        <p>raw error leak 6 위치 + 비번 max(64) 2 폼 정정. typecheck PASS (변경된 6 파일 에러 0). <code>auth-overview.md §10</code> Resolved 마킹.</p>
+      </div>
+
+      <div class="action wait">
+        <header>
+          <h3>P4 · 사람 reviewer 확인</h3>
+          <span class="tag future">대기 · 다음 세션</span>
+        </header>
+        <p>ai-ux-review.json의 34 cards 중 <code>needs-human-judgment</code>로 표시된 항목을 사람이 검토. modal · form · AI · auth · billing · notifications · admin · policy 카피 톤 판단. P3 결과 패킷이 이미 준비됨.</p>
+      </div>
+
+      <div class="action wait">
+        <header>
+          <h3>P5 · Codex cross-model 재검수</h3>
+          <span class="tag future">대기 · 다음 세션</span>
+        </header>
+        <p>receipt + plan + 본 v3 HTML 리포트를 Codex CLI에 입력 → 거짓 · 과장 · 누락 찾기 → <code>cross-model-review.md</code> 기록. v1 오진 사고가 정확히 이 단계가 더 일찍 들어왔어야 한 사례.</p>
+      </div>
+
+      <div class="action wait">
+        <header>
+          <h3>SN-8~15 placeholder 8종 실제 구현</h3>
+          <span class="tag future">대기 · 다음 세션</span>
+        </header>
+        <p>3종 (SN-8/12/13 admin gating)은 현재 fixture로 즉시 구현 가능. 5종은 추가 seed/fixture 필요 (만료 토큰 fixture, 남의 사용자 seed row, writing draft seed, Playwright route-intercept 등).</p>
+      </div>
+
+      <div class="action wait">
+        <header>
+          <h3>큰 임플 갭 6건 product 결정</h3>
+          <span class="tag future">대기 · 사용자 판단</span>
+        </header>
+        <p>F-M1 / X-02 / R-01 / R-02·X-07 / B-01 / G-01 각각에 대해 "명세를 줄일지 (docs 갱신)" vs "구현을 추가할지" 결정 필요. AI가 단독 결정 불가 — 비즈니스 우선순위 영역.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 위험 표 -->
+  <section>
+    <h2>위험 · 외부 차단 (v3 갱신)</h2>
+    <table class="simple">
+      <thead><tr><th>항목</th><th>v2 상태</th><th>v3 상태</th><th>대응</th></tr></thead>
+      <tbody>
+        <tr><td><strong>service_role 키</strong></td><td><span class="lt lt-g"></span>활성</td><td><span class="lt lt-g"></span>변함 없음</td><td>없음</td></tr>
+        <tr><td><strong>storage-state fixture</strong></td><td><span class="lt lt-g"></span>4/4 생성</td><td><span class="lt lt-g"></span>유지</td><td>없음</td></tr>
+        <tr><td><strong>admin role elevation</strong></td><td><span class="lt lt-y"></span>SQL 1줄 대기</td><td><span class="lt lt-g"></span>완료 (사용자 직접 실행)</td><td>없음</td></tr>
+        <tr><td><strong>placeholder 8종 (SN-8~15)</strong></td><td>(미인지)</td><td><span class="lt lt-y"></span>적발 — 24 BLOCKED rows</td><td>P0c 후 fixture로 즉시 구현 가능 3종 + 추가 seed 필요 5종</td></tr>
+        <tr><td><strong>build script attach 변환</strong></td><td><span class="lt lt-r"></span>0 rows BLOCKED</td><td><span class="lt lt-g"></span>183/15/66 rows 정직 분포</td><td>없음 (dual reporter config 활용)</td></tr>
+        <tr><td><strong>큰 임플 갭 6건</strong></td><td>(미발견)</td><td><span class="lt lt-r"></span>P3에서 적발</td><td>사용자 product 결정 필요</td></tr>
+        <tr><td><strong>raw error leak / PW max</strong></td><td><span class="lt lt-y"></span>알려진 drift</td><td><span class="lt lt-g"></span>정정 완료, typecheck PASS</td><td>commit/PR 결정 대기</td></tr>
+        <tr><td><strong>사람 reviewer 가용성</strong></td><td><span class="lt lt-r"></span>P4 시간 불확정</td><td><span class="lt lt-r"></span>변함 없음</td><td>P3 패킷 준비됨, 사람 시간 대기</td></tr>
+        <tr><td><strong>Codex 사용</strong></td><td><span class="lt lt-y"></span>미사용 (degraded)</td><td><span class="lt lt-y"></span>변함 없음</td><td>P5 단계에서 진입</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 산출물 -->
+  <section>
+    <h2>산출물 (v3 시점)</h2>
+    <table class="simple">
+      <thead><tr><th>산출물</th><th>위치</th><th>상태</th></tr></thead>
+      <tbody>
+        <tr><td>storage-state fixture 4개 (gitignored)</td><td><code>tests/e2e/auth-state/{4개}.json</code></td><td><span class="lt lt-g"></span>✓ 4/4 PASS</td></tr>
+        <tr><td>build summary</td><td><code>tests/e2e/auth-state/build-status.json</code></td><td><span class="lt lt-g"></span>✓ PASS</td></tr>
+        <tr><td>browser-results.json (실측 분포)</td><td><code>reports/ia-verification/runs/20260528-141731/</code></td><td><span class="lt lt-g"></span>183 rows · PASS 66 / PARTIAL 117</td></tr>
+        <tr><td>hosted-surface-results.json</td><td>위 디렉토리</td><td><span class="lt lt-y"></span>15 rows · BLOCKED 15 (selector best-effort)</td></tr>
+        <tr><td>security-navigation-results.json</td><td>위 디렉토리</td><td><span class="lt lt-g"></span>66 rows · PASS 42 / BLOCKED 24 placeholder</td></tr>
+        <tr><td>ai-ux-review.json (34 cards 통합)</td><td>위 디렉토리</td><td><span class="lt lt-r"></span>status FAIL (F-M1)</td></tr>
+        <tr><td>6 shard agent-packets (result.md + cards.json)</td><td>위 디렉토리 <code>agent-packets/results/</code></td><td><span class="lt lt-g"></span>12 파일 작성됨</td></tr>
+        <tr><td>ia-audit-report.html (HTML 자동 생성)</td><td>위 디렉토리</td><td><span class="lt lt-g"></span>169966 chars</td></tr>
+        <tr><td>v3 HTML 리포트 (이 문서)</td><td><code>reports/ia-audit-fix-plan-explained.html</code></td><td><span class="lt lt-g"></span>✓ 작성됨</td></tr>
+        <tr><td>P3 phase ledger</td><td><code>docs/ai-workflow/runs/2026/05/28/20260528-2100-ia-verification-phase-5-fixes.md</code></td><td><span class="lt lt-g"></span>✓ 작성됨</td></tr>
+        <tr><td>P0 코드 정정 (6 파일)</td><td><code>src/components/auth/*.tsx</code> + <code>auth-overview.md §10</code></td><td><span class="lt lt-g"></span>typecheck PASS</td></tr>
+        <tr><td>helper script</td><td><code>scripts/audit-setup/merge-shard-cards.mjs</code></td><td><span class="lt lt-g"></span>신규 (one-shot)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 다음 행동 -->
+  <section>
+    <h2>다음 세션에서 할 일</h2>
+    <p class="subtitle">우선순위는 사용자 결정. 일반적 추천 순서.</p>
+    <ol style="font-size: 14px; line-height: 1.7;">
+      <li><strong>큰 임플 갭 6건 product 결정</strong> — F-M1 (모달 만들지 vs 명세 줄일지), X-02 (성장 대시보드 deferred 명시), R-01 (action bar 추가 vs 명세 줄임), R-02/X-07 (paywall 카피 추가 vs 정책 일관성 정정), B-01 (KPI 라벨 통일 방향), G-01 (X-09 패턴 적용).</li>
+      <li><strong>P0 코드 정정 commit + PR</strong> — 작업 트리에 6 파일 변경 대기. 두 PR로 분리 권장: (PR-A) raw error leak + PW max(64) 통합, (PR-B) IA audit Phase 5 evidence + ledger.</li>
+      <li><strong>SN-8~15 placeholder 8종 구현</strong> — 3종 (admin gating)은 즉시, 5종은 추가 seed/fixture 작업.</li>
+      <li><strong>P4 사람 reviewer 확인</strong> — ai-ux-review.json의 needs-human-judgment 항목 분류.</li>
+      <li><strong>P5 Codex cross-model 재검수</strong> — receipt + plan + 본 HTML 리포트 통합 검수.</li>
+    </ol>
+  </section>
+
+  <!-- 용어집 -->
+  <section>
+    <h2>용어집</h2>
+    <table class="simple">
+      <thead><tr><th>용어</th><th>풀이</th></tr></thead>
+      <tbody>
+        <tr><td><strong>IA / BLOCKED / storageState / service_role / RLS / DOC-GAP / shard</strong></td><td>v1·v2 용어집 그대로 (이전 버전 참조).</td></tr>
+        <tr><td><strong>placeholder spec</strong></td><td>test가 PASS로 카운트되지만 실제 검증 (<code>expect()</code>) 코드는 없는 spec. <code>attach()</code> + annotation만 호출. 정직성 룰: 실행 시간이 1-7ms로 비정상이면 의심 필요.</td></tr>
+        <tr><td><strong>ai-ux-review.json</strong></td><td>Phase 5 산출물. 34 IA 각각의 AI UX 리뷰 카드 통합. 자동 PASS 부여 금지 (<code>phase5NoPassRuleApplied</code>).</td></tr>
+        <tr><td><strong>REASON_CONTENT</strong></td><td><code>src/lib/auth/error-mapping.ts</code>의 11개 reason → 한국어 카피 매핑. raw Supabase 에러를 사용자 노출용으로 변환.</td></tr>
+        <tr><td><strong>dual reporter</strong></td><td>Playwright config의 <code>reporter: [["list"], ["json", ...]]</code> 패턴. <code>--reporter</code> 옵션으로 override되니 명시하지 말 것 (v2 사고).</td></tr>
+        <tr><td><strong>HAX / PAIR</strong></td><td>Microsoft Human-AI Interaction Guidelines · Google People+AI Guidebook. AI behavior 검증 기준. AI 결과에 확신 표현 자제, uncertainty band 표시 등.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+</div>
+
+<footer>
+  <div class="container">
+    <p><strong>참조 문서</strong></p>
+    <ul>
+      <li>원본 자동 검수 보고서: <code>reports/ia-verification/runs/20260528-141731/ia-audit-report.html</code></li>
+      <li>v1 plan (영어 표준 어휘): <code>~/.claude/plans/keen-mixing-ritchie.md</code></li>
+      <li>P3 phase ledger: <code>docs/ai-workflow/runs/2026/05/28/20260528-2100-ia-verification-phase-5-fixes.md</code></li>
+      <li>6 shard child packets: <code>reports/ia-verification/runs/20260528-141731/agent-packets/results/*</code></li>
+      <li>실행 결과 JSON: <code>tests/e2e/auth-state/build-status.json</code>, 위 audit run dir 의 모든 phase JSON</li>
+      <li>워크플로 정본: <code>docs/ai-workflow/ia-implementation-verification-execution-plan.md</code></li>
+      <li>코드 정정: <code>src/components/auth/*.tsx</code> (6 파일), <code>docs/development/auth-overview.md §10</code></li>
+      <li>관련 메모리: <code>feedback-env-active-vs-rotation-comment</code>, <code>feedback-report-honesty-cross-audit</code></li>
+    </ul>
+    <p style="margin-top:16px;">작성: Claude Code (Opus 4.7) · v1 2026-05-28 plan-mode · v2 2026-05-28 (P0 실측 후) · v3 2026-05-28 21:30 KST (P3 완료 + P0 코드 정정 적용) · 톤 가이드: CLAUDE.md "Communication Style (Non-Negotiable)"</p>
+  </div>
+</footer>
+
+</body>
+</html>

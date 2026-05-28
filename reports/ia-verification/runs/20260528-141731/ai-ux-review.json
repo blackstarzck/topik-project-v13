@@ -1,0 +1,1780 @@
+{
+  "runId": "20260528-141731",
+  "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+  "dirtyState": "dirty",
+  "evidenceBundleId": "96e5d23b0ad1221f",
+  "generatedBy": "manual: Coordinator single-session-degraded AI UX review (Claude Code Opus 4.7)",
+  "generatedAt": "2026-05-28T11:49:24.712Z",
+  "delegationMode": "multi-agent-6-shard",
+  "checklist": "docs/ai-workflow/ia-ai-first-ux-review-checklist.md",
+  "reviewerNote": "AI first-pass UX review (Phase 5). 6 child agents dispatched in parallel via Agent tool, results merged from agent-packets/results/*-cards.json. Per phase5NoPassRuleApplied: no PASS labels until rendered evidence + human confirmation.",
+  "cards": [
+    {
+      "iaCode": "H-01",
+      "screenName": "Admin problem management",
+      "route": "/admin/problems",
+      "audience": "admin",
+      "aiUxResult": "PARTIAL",
+      "confidence": "low",
+      "humanConfirmation": "needs-human-judgment",
+      "findings": {
+        "pageJob": "clear-in-doc-unverified-in-render",
+        "entryContext": "clear-in-doc-unverified-in-render",
+        "primaryAction": "documented-as-publish-toggle-and-save",
+        "flowContinuity": "missing-evidence",
+        "aiBehavior": "not-applicable",
+        "formErrorUx": "missing-evidence",
+        "keyboardFocus": "missing-evidence",
+        "responsive": "missing-evidence",
+        "policyTrustCopy": "missing-evidence",
+        "rbacEnforcement": "code-present-no-runtime-evidence",
+        "rbacAllowedRoles": [
+          "content_admin",
+          "platform_admin"
+        ],
+        "rbacDeniedRoles": [
+          "learner",
+          "org_admin"
+        ],
+        "rbacEnforcementAnchors": [
+          "src/app/(workspace)/admin/layout.tsx (ADMIN_ROLES allowlist, redirect('/dashboard'))",
+          "src/app/(workspace)/admin/problems/page.tsx (await requireContentAdmin())",
+          "src/lib/auth/admin-guard.ts requireContentAdmin → redirect('/dashboard?error=forbidden')",
+          "src/lib/admin/server-actions.ts togglePublishAction RPC writes admin_audit_logs row"
+        ],
+        "auditCoverage": "RPC togglePublishAction documents admin_audit_logs write per comment in src/lib/admin/server-actions.ts §togglePublishAction; runtime audit-row evidence not collected",
+        "wireframe": "docs/IA/21-H-01-admin-problem-management/wireframe.png (present)",
+        "topGaps": [
+          "No rendered screenshot for /admin/problems at 360/768/1280 in screenshots/ (only public route shots present).",
+          "browser-results.json marks H-01 PARTIAL with 15s navigation timeout (dev server not bound when phase-2 ran).",
+          "session-navigation SN-8 (Student → /admin/problems forbidden) is a placeholder: no expect() assertion, only metadata attach + storageState-missing annotation.",
+          "Audit-log write claimed via server-action comments; no migration cross-check evidence collected this run.",
+          "Bulk action safety (multi-row publish/unpublish), edit-conflict modal, and admin-only mobile reflow not verified."
+        ],
+        "humanReviewerShouldInspect": [
+          "Whether the 우측 상세/설정 panel and the 문제 관리 테이블 keep readable hierarchy at 360px (Korean labels often wrap and break the action column).",
+          "Whether publish/unpublish CTAs are visually distinct from destructive actions per 'admin pages do not mix admin-only actions into normal learner flows' rule.",
+          "Whether 검수 충돌 / 저장 실패 messages stay under the 60-char limit promised by the description's §5.",
+          "Whether 'edit-on-conflict' confirms the active doc's exception (패널 상단 안내) instead of overwriting silently."
+        ]
+      },
+      "blockingReasons": [
+        "Phase 2 browser run produced navigation timeout — no rendered DOM, no visible H1, no primary-CTA match; status is PARTIAL not PASS.",
+        "Phase 4 security-navigation-results.json is BLOCKED (rows: 0); SN-8 (Student → /admin/problems) is a placeholder spec with no expect() — RBAC denial lane has no real assertion.",
+        "Hosted-surface results bundle has 0 rows (build script could not parse attachments).",
+        "Admin runtime audit-log evidence (verifying admin_audit_logs row appears after togglePublish) was not collected this session."
+      ],
+      "evidenceReferences": [
+        "docs/IA/21-H-01-admin-problem-management/description.md",
+        "docs/IA/21-H-01-admin-problem-management/wireframe.png",
+        "reports/ia-verification/runs/20260528-141731/source-map-results.json (H-01 PASS)",
+        "reports/ia-verification/runs/20260528-141731/doc-receipts.json (H-01 wireframe.status=present, 9 requirements)",
+        "reports/ia-verification/runs/20260528-141731/browser-results.json (H-01 PARTIAL, navigation timeout)",
+        "reports/ia-verification/runs/20260528-141731/security-navigation-results.json (BLOCKED, 0 rows)",
+        "reports/ia-verification/runs/20260528-141731/hosted-surface-results.json (0 rows)",
+        "src/app/(workspace)/admin/layout.tsx",
+        "src/app/(workspace)/admin/problems/page.tsx",
+        "src/lib/auth/admin-guard.ts",
+        "src/lib/admin/server-actions.ts",
+        "tests/e2e/coverage/session-navigation.spec.ts (SN-8 placeholder, lines 244-249, 309-340)",
+        "src/proxy.ts (anon→/login redirect; admin/role check NOT here — relies on layout)",
+        "src/lib/routes.ts (PROTECTED_ROUTE_CASES H-01 entry)"
+      ]
+    },
+    {
+      "iaCode": "X-08",
+      "screenName": "Organization admin dashboard",
+      "route": "/admin/org",
+      "audience": "admin",
+      "aiUxResult": "PARTIAL",
+      "confidence": "low",
+      "humanConfirmation": "needs-human-judgment",
+      "findings": {
+        "pageJob": "clear-in-doc-unverified-in-render",
+        "entryContext": "clear-in-doc-unverified-in-render",
+        "primaryAction": "documented-as-operational-card-CTA-과제생성/공지/리포트",
+        "flowContinuity": "missing-evidence",
+        "aiBehavior": "not-applicable",
+        "formErrorUx": "not-applicable",
+        "keyboardFocus": "missing-evidence",
+        "responsive": "missing-evidence",
+        "policyTrustCopy": "missing-evidence",
+        "rbacEnforcement": "code-present-no-runtime-evidence",
+        "rbacAllowedRoles": [
+          "org_admin",
+          "platform_admin"
+        ],
+        "rbacDeniedRoles": [
+          "learner",
+          "content_admin"
+        ],
+        "rbacEnforcementAnchors": [
+          "src/app/(workspace)/admin/layout.tsx (ADMIN_ROLES allowlist)",
+          "src/app/(workspace)/admin/org/page.tsx (await requireOrgAdmin())",
+          "src/lib/auth/admin-guard.ts requireOrgAdmin allows ['org_admin','platform_admin']",
+          "RPC get_admin_org_dashboard (server-side query — org-scoping responsibility delegated to RPC body, NOT verified at SQL level this run)"
+        ],
+        "orgScopeEnforcement": "claimed-via-rpc-not-verified",
+        "wireframe": "docs/IA/30-X-08-organization-admin-dashboard/wireframe.png (present)",
+        "topGaps": [
+          "No rendered screenshot for /admin/org at 360/768/1280.",
+          "browser-results.json marks X-08 PARTIAL with 15s navigation timeout (dev server not bound).",
+          "session-navigation SN-12 (Org admin → /admin/users forbidden) is placeholder only; the converse 'content_admin → /admin/org forbidden' is not covered at all in session-navigation.spec.ts.",
+          "Critical org-scope risk: get_admin_org_dashboard RPC is not inspected this run — no evidence that org_admin sees only their own org's KPI/user table rows. This is the canonical cross-org leak attack surface for X-08.",
+          "Cards 3 (operational actions) 권한별 노출 제어 is in description.md but no rendered evidence of role-gated card visibility.",
+          "Description §5 mandates 민감 정보 마스킹 in 상세 패널; no run-time PII evidence collected."
+        ],
+        "humanReviewerShouldInspect": [
+          "Whether the org_admin actually sees ONLY their org's users in the 사용자/과제 테이블 (X-08's ORG-SCOPE pack — the cross-org leak risk).",
+          "Whether the platform_admin (who also satisfies requireOrgAdmin) sees aggregated/all-org data, or whether the RPC filters to a single 'primary org' — currently ambiguous.",
+          "Whether content_admin gets redirected to /dashboard?error=forbidden when hitting /admin/org (not just learners).",
+          "Whether 운영 카드 (공지 발송 / 리포트 다운로드) accurately reflect deferred notification transport (X-09 transport-deferred policy must propagate here)."
+        ]
+      },
+      "blockingReasons": [
+        "Phase 2 browser run produced navigation timeout — PARTIAL, no rendered DOM evidence.",
+        "Phase 4 security-navigation-results.json BLOCKED (0 rows). Org-scope RBAC lane has no test (the closest, SN-12, is a placeholder for the inverse direction).",
+        "Cross-org data leak (the major X-08 risk) cannot be verified from this session's evidence; needs DB-level RLS test or org_admin storage state + seeded multi-org dataset.",
+        "No screenshot in screenshots/ for X-08."
+      ],
+      "evidenceReferences": [
+        "docs/IA/30-X-08-organization-admin-dashboard/description.md",
+        "docs/IA/30-X-08-organization-admin-dashboard/wireframe.png",
+        "reports/ia-verification/runs/20260528-141731/source-map-results.json (X-08 PASS)",
+        "reports/ia-verification/runs/20260528-141731/doc-receipts.json (X-08 wireframe.status=present, 9 requirements)",
+        "reports/ia-verification/runs/20260528-141731/browser-results.json (X-08 PARTIAL, navigation timeout)",
+        "reports/ia-verification/runs/20260528-141731/security-navigation-results.json (BLOCKED, 0 rows)",
+        "src/app/(workspace)/admin/layout.tsx",
+        "src/app/(workspace)/admin/org/page.tsx",
+        "src/lib/auth/admin-guard.ts (requireOrgAdmin)",
+        "src/lib/admin/org-dashboard.ts (fromRpcRow)",
+        "tests/e2e/coverage/session-navigation.spec.ts (SN-12 placeholder targets /admin/users, not /admin/org)"
+      ]
+    },
+    {
+      "iaCode": "X-10",
+      "screenName": "Admin user management",
+      "route": "/admin/users",
+      "audience": "admin",
+      "aiUxResult": "PARTIAL",
+      "confidence": "low",
+      "humanConfirmation": "needs-human-judgment",
+      "findings": {
+        "pageJob": "clear-in-doc-unverified-in-render",
+        "entryContext": "clear-in-doc-unverified-in-render",
+        "primaryAction": "documented-as-search/role-change/deactivate-via-bulk-actions",
+        "flowContinuity": "missing-evidence",
+        "aiBehavior": "not-applicable",
+        "formErrorUx": "missing-evidence",
+        "keyboardFocus": "missing-evidence",
+        "responsive": "missing-evidence",
+        "policyTrustCopy": "missing-evidence",
+        "rbacEnforcement": "code-present-strongest-of-three-no-runtime-evidence",
+        "rbacAllowedRoles": [
+          "platform_admin"
+        ],
+        "rbacDeniedRoles": [
+          "learner",
+          "content_admin",
+          "org_admin"
+        ],
+        "rbacEnforcementAnchors": [
+          "src/app/(workspace)/admin/layout.tsx (admin gate — broader than needed)",
+          "src/app/(workspace)/admin/users/page.tsx (await requirePlatformAdmin())",
+          "src/lib/auth/admin-guard.ts requirePlatformAdmin allows ONLY ['platform_admin']",
+          "src/lib/admin/server-actions.ts changeUserRoleAction → admin_change_user_role RPC (SECURITY DEFINER, writes admin_audit_logs)",
+          "supabase/migrations/20260520121400_profiles_protected_columns.sql (BEFORE UPDATE trigger trg_profiles_protect_columns — non-admins cannot change app_role/plan_label/status via direct UPDATE; raises 42501)"
+        ],
+        "privilegeElevationPath": "client UPDATE blocked by DB trigger; only admin_change_user_role SECURITY DEFINER RPC can mutate app_role (defense-in-depth: layout guard + page guard + RPC is_platform_admin check + audit log row)",
+        "auditCoverage": "claimed via server-actions.ts comment for both changeUserRoleAction and togglePublishAction; runtime audit-row presence not verified this session",
+        "wireframe": "docs/IA/32-X-10-admin-user-management/wireframe.png (present)",
+        "topGaps": [
+          "No rendered screenshot for /admin/users at 360/768/1280.",
+          "browser-results.json marks X-10 PARTIAL with 15s navigation timeout.",
+          "session-navigation SN-12 (org_admin → /admin/users forbidden) and SN-13 (platform_admin → /admin/users allowed) are BOTH placeholders with no expect() — the critical platform-admin-only enforcement has zero real test coverage this session.",
+          "description.md is silent on which role can elevate/demote roles — the implementation tightens to platform_admin only via requirePlatformAdmin, but the IA doc itself does not state this. Doc-gap candidate.",
+          "Bulk 일괄 액션 confirmation modal (위험 액션 확인 모달 필수) not verified at run time.",
+          "민감 정보 마스킹 in 상세 패널 (학습 기록 / 결제 상태) not verified.",
+          "description §6 says '삭제 대신 비활성화' — soft-delete contract not verified against implementation."
+        ],
+        "humanReviewerShouldInspect": [
+          "Whether the description.md should explicitly state platform_admin-only for role mutations (currently implied; implementation enforces; doc should match — DOC-GAP candidate).",
+          "Whether the role-change confirmation modal copy clearly tells the admin 'this will write to admin_audit_logs' (transparency).",
+          "Whether org_admin / content_admin actually hit /dashboard?error=forbidden (not a generic 'access denied' that could leak role-existence).",
+          "Whether the 6 wireframe regions (특히 일괄/상태 액션) keep readable order on mobile when there are 20 selected users.",
+          "Whether 차단/비활성 상태 배지 differ visually from active rows."
+        ]
+      },
+      "blockingReasons": [
+        "Phase 2 browser run produced navigation timeout — PARTIAL, no rendered DOM.",
+        "Phase 4 security-navigation-results.json BLOCKED (0 rows). SN-12/SN-13 covering the critical org_admin-denied / platform_admin-allowed split are placeholders with NO expect() assertion.",
+        "PRIVILEGE elevation path (admin_change_user_role RPC) and the DB-level protect_profile_columns trigger are present in source, but no runtime test in this session exercises the denied/allowed split or confirms the audit-log row.",
+        "Hosted-surface results have 0 rows — bulk-action confirmation modal trigger from /admin/users not validated."
+      ],
+      "evidenceReferences": [
+        "docs/IA/32-X-10-admin-user-management/description.md",
+        "docs/IA/32-X-10-admin-user-management/wireframe.png",
+        "reports/ia-verification/runs/20260528-141731/source-map-results.json (X-10 PASS)",
+        "reports/ia-verification/runs/20260528-141731/doc-receipts.json (X-10 wireframe.status=present, 10 requirements)",
+        "reports/ia-verification/runs/20260528-141731/browser-results.json (X-10 PARTIAL, navigation timeout; notes: 'Role changes via private.admin_change_user_role RPC only — client UPDATE blocked by migration #15')",
+        "reports/ia-verification/runs/20260528-141731/security-navigation-results.json (BLOCKED, 0 rows)",
+        "src/app/(workspace)/admin/layout.tsx",
+        "src/app/(workspace)/admin/users/page.tsx",
+        "src/lib/auth/admin-guard.ts (requirePlatformAdmin allows ONLY platform_admin)",
+        "src/lib/admin/server-actions.ts (changeUserRoleAction → admin_change_user_role RPC, audit log)",
+        "supabase/migrations/20260520121400_profiles_protected_columns.sql (trg_profiles_protect_columns — DB-level defense)",
+        "tests/e2e/coverage/session-navigation.spec.ts (SN-12, SN-13 placeholders, lines 276-290 + 309-340)"
+      ]
+    },
+    {
+      "iaCode": "E-01",
+      "screenName": "Short-answer feedback",
+      "route": "/writing/feedback/short/:id",
+      "audience": "user",
+      "aiUxResult": "PARTIAL",
+      "confidence": "medium",
+      "humanConfirmation": "needs-human-judgment",
+      "findings": {
+        "pageJob": "clear (heading '단답 피드백', FeedbackSummary 점수+총평 lays out description ① intent)",
+        "entryContext": "clear (server-side requireUser + getSubmission + isShortAnswer mismatch redirects to long route)",
+        "primaryAction": "competing (NextActionBar shows three equally-weighted buttons: 다시 풀기 / 다음 문제 / 비교 리포트. description ④ requires 주요 CTA 1개 + 보조 3개 이하; ant-design type=\"primary\" is set on 다시 풀기 but the other two are default — partial compliance)",
+        "flowContinuity": "partial (E-01 → R-02 next-problem path uses nextHref='/practice/recommendations' instead of '/practice/next'; user-flow.md L100 specifies E-01 → R-02 (/practice/next). 결과 저장(F-01) CTA from description ④ is absent)",
+        "aiBehavior": "partial (DimensionCardGrid shows score + summary but no 'AI generated' attribution or 'why' rationale per Microsoft HAX. No regenerate/report/dispute affordance. FeedbackSummary fallback copy '총평이 준비되는 중입니다' surfaces null state without explicit failure mode. description ② 예외 '분석 실패 항목은 회색 카드+재분석 안내' is partially met: opacity 0.55 grey card + 'analysis pending' but no re-analyze CTA)",
+        "formErrorUx": "not applicable",
+        "keyboardFocus": "missing evidence (no browser-results focus capture; navigation timed out)",
+        "responsive": "missing evidence (browser-results: navigationFailureReason timeout, uxStatesCaptured=[], no 360/768/1280 screenshots)",
+        "policyTrust": "pass (no raw provider errors observed in code; auth precedes RLS via requireUser+notFound)",
+        "rlsOwnerCheck": "BLOCKED (source uses requireUser + getSubmission then notFound on missing; tests/e2e/coverage/session-navigation.spec.ts SN-9 is the only RLS-other-user case but it is a placeholder — no actual expect() against another user's :id. security-navigation-results.json.status=BLOCKED, rows=[])"
+      },
+      "blockingReasons": [
+        "browser-results: navigation timeout to seeded id; no rendered evidence at 360/768/1280",
+        "security-navigation-results: 0 rows (BLOCKED) — RLS owner-check not exercised against real other-user fixture",
+        "SN-9 placeholder test has no expect() — does not constitute RLS evidence even if it runs"
+      ],
+      "evidenceReferences": [
+        "source-map-results.json E-01 row PASS → src/app/(workspace)/writing/feedback/short/[id]/page.tsx",
+        "src/components/feedback/FeedbackPageContent.tsx",
+        "src/components/feedback/NextActionBar.tsx",
+        "src/components/feedback/FeedbackSummary.tsx",
+        "src/components/feedback/DimensionCardGrid.tsx",
+        "docs/IA/14-E-01-short-answer-feedback/description.md",
+        "docs/flow/user-flow.md (E01 → R02)",
+        "browser-results.json E-01 row PARTIAL (timeout)",
+        "security-navigation-results.json status=BLOCKED, rows=[]",
+        "tests/e2e/coverage/session-navigation.spec.ts SN-9 (placeholder)"
+      ]
+    },
+    {
+      "iaCode": "E-02",
+      "screenName": "Long-form feedback",
+      "route": "/writing/feedback/long/:id",
+      "audience": "user",
+      "aiUxResult": "PARTIAL",
+      "confidence": "medium",
+      "humanConfirmation": "needs-human-judgment",
+      "findings": {
+        "pageJob": "clear (heading '장문 피드백', sentence-level diff via SentenceFeedbackList aligns with description ②)",
+        "entryContext": "clear (server-side requireUser + isLongForm mismatch redirects to short route)",
+        "primaryAction": "fail (description ④ requires 4 CTAs: 다시 작성 / PDF 저장 / 비교 리포트 / 다음 문제 추천. NextActionBar renders only 3 — PDF 저장 / F-M1 modal trigger is MISSING. Confirmed by grep: no 'PDF' or 'export' import in src/components/feedback/*)",
+        "flowContinuity": "partial (E-02 → R-02 nextHref points to /practice/recommendations, not /practice/next per user-flow.md L107. E-02 → F-M1 PDF flow is broken — no entry control)",
+        "aiBehavior": "partial (SentenceFeedbackList shows original/corrected/comment without explicit AI labelling or 'why corrected' rationale. description ② 예외 '첨삭 생성 실패 문장은 원문만 표시 + 재분석' — Empty fallback exists when rows=[], but per-sentence failure + retry is not differentiated)",
+        "formErrorUx": "not applicable",
+        "keyboardFocus": "missing evidence",
+        "responsive": "missing evidence (browser navigation timeout, no captured states)",
+        "policyTrust": "pass (no raw error exposure)",
+        "rlsOwnerCheck": "BLOCKED (same SN-9 placeholder gap)"
+      },
+      "blockingReasons": [
+        "Missing PDF/export CTA — fails description ④ requirement of 4 CTAs",
+        "browser-results timeout; no 360/768/1280 screenshots",
+        "security-navigation-results: 0 rows; SN-9 RLS test is placeholder"
+      ],
+      "evidenceReferences": [
+        "source-map-results.json E-02 row PASS → src/app/(workspace)/writing/feedback/long/[id]/page.tsx",
+        "src/components/feedback/FeedbackPageContent.tsx (no PDF integration)",
+        "src/components/feedback/NextActionBar.tsx (3 buttons only)",
+        "src/components/feedback/SentenceFeedbackList.tsx",
+        "docs/IA/15-E-02-long-form-feedback/description.md ④",
+        "docs/flow/user-flow.md L108 (E02 → FM1 PDF 저장)",
+        "browser-results.json E-02 row PARTIAL",
+        "security-navigation-results.json status=BLOCKED"
+      ]
+    },
+    {
+      "iaCode": "R-01",
+      "screenName": "Comparison report",
+      "route": "/writing/reports/:id/compare",
+      "audience": "user",
+      "aiUxResult": "PARTIAL",
+      "confidence": "low",
+      "humanConfirmation": "needs-human-judgment",
+      "findings": {
+        "pageJob": "clear (Title '비교 리포트', narrative + metrics + diff)",
+        "entryContext": "partial (server-side requireUser + getComparisonReport + notFound, but R-01 entry depends on NextActionBar's compare mutation flow — only entry is via E-01/E-02 button; direct URL with malformed id returns notFound which is acceptable)",
+        "primaryAction": "fail (description ⑤ requires 'CTA 3개 이하, 대표 CTA 1개, 중복 클릭 차단' — ComparisonReportView renders NO action bar at all. No 다시 풀기 / 약점 추천 / 다음 문제 CTAs. user-flow.md L110-111 (R01 → X07 약점 인사이트, R01 → R02 다음 문제) cannot be navigated from this page)",
+        "flowContinuity": "fail (no outbound navigation from R-01 — user is stuck after viewing report. Browser back is only return path)",
+        "aiBehavior": "partial (narrative is rendered as plain Paragraph with '—' fallback. description ④ requires '분석 요약 3줄 이하' — no length cap enforced in component. No 'why this delta' explanation tying narrative to metrics. No 재시도/regenerate affordance per description ④ 예외 '분석 생성 실패 시 핵심 지표만 남기고 재시도 제공')",
+        "formErrorUx": "not applicable",
+        "keyboardFocus": "missing evidence",
+        "responsive": "missing evidence (chart visualization concern: description ② '범례 5개 이하, 모바일은 가로 스크롤 또는 요약 차트' — MetricsTable is a flat table, no chart at all; description ② 예외 '차트 로드 실패 시 표 형태 대체' is permanent — chart never present)",
+        "policyTrust": "pass",
+        "rlsOwnerCheck": "BLOCKED (same SN-9 placeholder gap; OWNER-CHECK pack applies)"
+      },
+      "blockingReasons": [
+        "Critical UX gap: no action bar / outbound CTAs (description ⑤, user-flow L110-111)",
+        "No chart implementation (description ②) — MetricsTable is permanent fallback",
+        "No length cap on narrative (description ④ '3줄 이하')",
+        "browser-results timeout; no rendered states captured",
+        "security-navigation-results: 0 rows; SN-9 placeholder"
+      ],
+      "evidenceReferences": [
+        "source-map-results.json R-01 row PASS → src/app/(workspace)/writing/reports/[id]/compare/page.tsx",
+        "src/components/reports/ComparisonReportView.tsx (no action bar)",
+        "src/components/reports/MetricsTable.tsx (table only, no chart)",
+        "docs/IA/16-R-01-comparison-report/description.md ②④⑤",
+        "docs/flow/user-flow.md L110-111",
+        "browser-results.json R-01 row PARTIAL",
+        "security-navigation-results.json status=BLOCKED"
+      ]
+    },
+    {
+      "iaCode": "R-02",
+      "screenName": "Next problem recommendation",
+      "route": "/practice/next",
+      "audience": "user",
+      "aiUxResult": "PARTIAL",
+      "confidence": "medium",
+      "humanConfirmation": "needs-human-judgment",
+      "findings": {
+        "pageJob": "clear (heading '다음 문제', primary card + SummaryCardRow + AlternativeCardsGrid match description ①②③④)",
+        "entryContext": "clear (requireUser + getNextProblemBundle; empty-state with primaryTier===4 routes to /practice/problems via Empty CTA per description ② 예외 '추천 없음/문제 만료는 대안 카드로 포커스 이동')",
+        "primaryAction": "pass (Card 'extra' Button '시작하기' single primary CTA; description ④ 'CTA 클릭 후 중복 실행 차단' is partially handled by router.push but no explicit double-click guard)",
+        "flowContinuity": "pass (R-02 → C-02 /practice/problems via logStudyEvent + router.push, matches user-flow.md L114-115)",
+        "aiBehavior": "partial (TIER_META.description provides static rationale strings: '선생님이 추천한 문제예요' / '방금 푼 문항과 같은 유형으로...' — this satisfies Microsoft HAX 'why' partially but tier labels are generic, not tied to user's specific weakness. No regenerate/report affordance. primary.reason field is conditionally rendered if present — good)",
+        "formErrorUx": "not applicable",
+        "keyboardFocus": "missing evidence",
+        "responsive": "missing evidence (Col xs/md grid uses antd defaults — likely OK but no rendered proof)",
+        "policyTrust": "FAIL — PAYWALL-ENTRY pack not honored. doc-receipts.json R-02 extractedRequirements: '권한 잠금 카드는 비활성 + 업그레이드 안내; 유료 잠금은 X-03 paywall로 진입'. Grep across src/components/practice finds NO paywall/유료/업그레이드 string. user-flow.md L137 ('R02 -. 유료 잠금 진입 .-> X03') is unimplemented. DEFERRED-BILLING concern: if billing is deferred, copy must not imply real upgrade; if copy is missing, paywall-entry pack is silently dropped.",
+        "rlsOwnerCheck": "n/a (no :id; user-scoped via auth.uid())"
+      },
+      "blockingReasons": [
+        "PAYWALL-ENTRY pack not implemented (no premium-locked card state, no /paywall entry)",
+        "browser-results timeout; no rendered screenshots",
+        "AI rationale strings are tier-based, not personalized (HAX uncertainty hidden)"
+      ],
+      "evidenceReferences": [
+        "source-map-results.json R-02 row PASS → src/app/(workspace)/practice/next/page.tsx",
+        "src/components/practice/NextProblemView.tsx",
+        "src/components/practice/AlternativeCardsGrid.tsx (no locked state)",
+        "src/components/practice/SummaryCardRow.tsx",
+        "docs/IA/17-R-02-next-problem-recommendation/description.md ③ 예외",
+        "docs/flow/user-flow.md L137 (paywall entry)",
+        "doc-receipts.json R-02 extractedRequirements (paywall + DEFERRED-BILLING)",
+        "browser-results.json R-02 row PARTIAL"
+      ]
+    },
+    {
+      "iaCode": "X-07",
+      "screenName": "Weakness-based recommendations",
+      "route": "/practice/weakness",
+      "audience": "user",
+      "aiUxResult": "PARTIAL",
+      "confidence": "medium",
+      "humanConfirmation": "needs-human-judgment",
+      "findings": {
+        "pageJob": "clear (heading '약점 분석' + paragraph explains intent)",
+        "entryContext": "clear (requireUser + parallel weak dim + recs; entry from B-01/X-02/R-01 per user-flow.md L127)",
+        "primaryAction": "partial (description ⑥ '대표 CTA 1개' — WeaknessView shows multiple equal-weight Cards (recommendations) and Empty CTA fallback '문제 풀기'. No single primary CTA on the populated view)",
+        "flowContinuity": "pass (X-07 → C-02 via handleRecommendationClick logs event + router.push, matches user-flow.md L129)",
+        "aiBehavior": "fail (Microsoft HAX violations: DiagnosticCard says '평균 점수 X점' + generic '이 영역의 문제를 더 풀면 점수가 빠르게 오를 가능성이 있습니다' — confident phrasing of probabilistic claim without uncertainty band or sample-size confidence. No '왜 이 영역이 약점인지' evidence/example tied to user's actual answers per description ④ '약점 발생 이유, 예시 오류, 개선 전략'. InsightsBoard from description ④ does not exist in WeaknessView. Recommendations cards show no '추천 사유' per description ⑤ requirement '추천 사유 1줄')",
+        "formErrorUx": "not applicable",
+        "keyboardFocus": "missing evidence",
+        "responsive": "partial (Col xs={24} md={24} layout is desktop-first column stack — likely mobile-OK but description ① '모바일은 접힘 내비 사용' for sidebar nav is layout-level, not in scope of this view)",
+        "policyTrust": "FAIL — same paywall issue as R-02. description ① 예외 '유료 잠금이면 추천 본문 대신 업그레이드 안내'; description ⑤ 예외 '유료 잠금/자료 없음은 비활성 카드와 안내'. user-flow.md L138 ('X07 -. 유료 잠금 진입 .-> X03'). No paywall copy or locked-card state in WeaknessView. With DEFERRED-BILLING policy, either copy needs to be added (and policy says billing deferred) OR documented as out-of-scope; current state silently drops the requirement.",
+        "rlsOwnerCheck": "n/a (user-scoped, no :id)"
+      },
+      "blockingReasons": [
+        "Missing description ④ insights panel (reason/example/strategy)",
+        "Missing description ⑤ '추천 사유 1줄' per card",
+        "PAYWALL-ENTRY not implemented (description ① ⑤ 예외, user-flow L138)",
+        "AI confidence framing too strong — HAX guideline 11 violation",
+        "browser timeout; no rendered evidence"
+      ],
+      "evidenceReferences": [
+        "source-map-results.json X-07 row PASS → src/app/(workspace)/practice/weakness/page.tsx",
+        "src/components/practice/WeaknessView.tsx",
+        "src/components/practice/DiagnosticCard.tsx",
+        "src/components/practice/DimensionTabs.tsx",
+        "docs/IA/29-X-07-weakness-based-recommendations/description.md ④⑤ ① 예외",
+        "docs/flow/user-flow.md L127-138",
+        "doc-receipts.json X-07 extractedRequirements",
+        "browser-results.json X-07 row PARTIAL"
+      ]
+    },
+    {
+      "iaCode": "F-01",
+      "screenName": "My library",
+      "route": "/library",
+      "audience": "user",
+      "aiUxResult": "PARTIAL",
+      "confidence": "medium",
+      "humanConfirmation": "needs-human-judgment",
+      "findings": {
+        "pageJob": "clear — implementation src/app/(workspace)/library/page.tsx renders heading '내 라이브러리' and a LibraryTabs component, but rendered browser evidence is unavailable so first-impression cannot be confirmed visually",
+        "entryContext": "unclear — direct URL entry (e.g. ?tab=invalid) handled by parseLibraryTab but no rendered evidence; sidebar entry path not visually verified",
+        "primaryAction": "missing-evidence — description.md requires search/filter, export/generate actions, list, right-side stats, pagination. Implementation has tabbed listing via LibraryTabs but description-mandated regions (검색/필터 #1, 우측 통계 #4, 페이지 이동 #5) cannot be verified without screenshot",
+        "flowContinuity": "unclear — F-01 hosts F-M1 PDF export modal trigger; hosted-surface evidence is 0 rows BLOCKED so trigger→modal flow not verified",
+        "aiBehavior": "not-applicable",
+        "formErrorUx": "not-applicable",
+        "keyboardFocus": "missing-evidence — no rendered evidence; LibraryTabs is antd Tabs (presumably keyboard-accessible) but unverified",
+        "responsive": "missing-evidence — 360/768/1280 screenshots all blocked by dev server timeouts",
+        "policyTrustCopy": "not-applicable for F-01 (owner-check is data-layer concern; covered separately)"
+      },
+      "blockingReasons": [
+        "browser-results.json row for F-01 is PARTIAL: navigation timeout to http://127.0.0.1:3000/library — no rendered screenshot, no visible-H1, no primary-CTA detection",
+        "hosted-surface-results.json is 0 rows BLOCKED — F-M1 trigger from /library not verified at host route",
+        "security-navigation-results.json is 0 rows BLOCKED — direct URL/invalid tab/wrong-owner data scenarios not exercised in this run",
+        "description.md mandates 5 regions (검색/필터, 내보내기, 목록, 우측 통계, 페이지 이동); only tabbed listing is visible in source — wireframe-vs-impl region map cannot be checked without screenshot"
+      ],
+      "evidenceReferences": [
+        "reports/ia-verification/runs/20260528-141731/source-map-results.json (F-01: PASS, src/app/(workspace)/library/page.tsx)",
+        "reports/ia-verification/runs/20260528-141731/browser-results.json (F-01 row: status PARTIAL, navigationFailureReason timeout)",
+        "reports/ia-verification/runs/20260528-141731/doc-receipts.json (F-01 receipt: filled)",
+        "docs/IA/18-F-01-my-library/description.md",
+        "src/app/(workspace)/library/page.tsx",
+        "src/components/library/ExportPdfButton.tsx"
+      ]
+    },
+    {
+      "iaCode": "F-M1",
+      "screenName": "PDF export modal",
+      "route": "hosted by /library, /writing/feedback/short/:id, /writing/feedback/long/:id, /writing/reports/:id/compare",
+      "audience": "user",
+      "aiUxResult": "FAIL",
+      "confidence": "medium",
+      "humanConfirmation": "needs-human-judgment",
+      "findings": {
+        "pageJob": "diverged — description.md ②③④ specifies a real modal with 파일명 입력 (1-60자), 옵션 선택, 미리보기, 내보내기 CTA. src/components/library/ExportPdfButton.tsx is a single button that calls window.print() via triggerPdfExport — there is no modal, no filename input, no preview pane, no option selection. This is a substantive UI gap vs the description, not just missing evidence.",
+        "entryContext": "ExportPdfButton confirms the trigger exists for sourceType submission|report, but the four host routes (/library, /writing/feedback/short/:id, /writing/feedback/long/:id, /writing/reports/:id/compare) have not all been verified to actually wire this button — hosted-surface lane is 0 rows",
+        "primaryAction": "different from description — implementation triggers browser print dialog directly. No 'PDF 생성 → 다운로드' two-step state machine. The success toast 'PDF 출력 대화상자가 열렸습니다.' partly disclaims this, but the description.md framing 'PDF 생성을 시작하고 다운로드 또는 저장을 제공' is not met.",
+        "flowContinuity": "unclear — fail-state recovery (description ④ 예외: 재시도와 문의 링크) is not implemented; only message.error toast",
+        "aiBehavior": "not-applicable",
+        "formErrorUx": "missing — no filename input, no validation, no preview-generation fallback",
+        "keyboardFocus": "missing-evidence — no modal exists, so modal focus trap requirement is moot, but the description-mandated modal behavior cannot be verified",
+        "responsive": "missing-evidence",
+        "policyTrustCopy": "not-applicable"
+      },
+      "blockingReasons": [
+        "hosted-surface-results.json is 0 rows BLOCKED — trigger/focus-entry/focus-return/Esc/cancel/backdrop behavior for F-M1 not verified at any of the 4 host routes",
+        "Implementation diverges from description.md — ExportPdfButton is print-dialog trigger, not a modal with filename/options/preview",
+        "browser-results.json F-M1 row PARTIAL due to /library navigation timeout"
+      ],
+      "evidenceReferences": [
+        "reports/ia-verification/runs/20260528-141731/source-map-results.json (F-M1: PASS, src/app/(workspace)/library/page.tsx + src/components/library/ExportPdfButton.tsx)",
+        "reports/ia-verification/runs/20260528-141731/browser-results.json (F-M1 row: status PARTIAL)",
+        "docs/IA/19-F-M1-pdf-export-modal/description.md (mandates 파일명 1-60자, 옵션, 미리보기, 다운로드 CTA)",
+        "src/components/library/ExportPdfButton.tsx (button-only implementation, no modal)",
+        "src/lib/export/pdf-export.ts (referenced by trigger)"
+      ]
+    },
+    {
+      "iaCode": "G-01",
+      "screenName": "Language settings",
+      "route": "/settings/language",
+      "audience": "user",
+      "aiUxResult": "PARTIAL",
+      "confidence": "medium",
+      "humanConfirmation": "needs-human-judgment",
+      "findings": {
+        "pageJob": "clear — heading '언어 설정' + LanguageForm with 3 radio options (ko/en/vi)",
+        "entryContext": "owner-bound — requireUser() + getProfileSettings(user.id) load only the current user's locale; RLS scoped per description ① 'auth.uid() 기반'",
+        "primaryAction": "clear — single 저장 button; description ⑥ 제약 '변경값 없으면 비활성' is NOT implemented (button is enabled even with no diff). Minor UX gap.",
+        "flowContinuity": "unclear — description ① 예외 '저장 전 이탈 시 변경사항 확인' (unsaved-changes warning) is NOT visible in current LanguageForm — uses message.success on save but no leave-confirmation",
+        "aiBehavior": "not-applicable",
+        "formErrorUx": "partial — error toast via App.message.error fires on failure; description mentions '미지원 언어 선택 시 비활성 및 지원 예정 안내' (③ ②) — only 3 supported locales rendered so this is moot",
+        "keyboardFocus": "missing-evidence — antd Radio.Group is keyboard-accessible but unverified",
+        "responsive": "missing-evidence (browser timeout)",
+        "policyTrustCopy": "COPY HONESTY RISK — copy says '변경사항이 즉시 반영됩니다.' (changes apply immediately) but the form comment in source explicitly says 'i18n message catalogs are OOS-7 (Phase 6 light spec); Phase 6 only persists the preference'. The DB write happens, but the UI does not actually re-render in the new language. Users will save and see no visible change — implied promise not delivered. This warrants FAIL on the copy lane, dragging the overall result toward PARTIAL/FAIL."
+      },
+      "blockingReasons": [
+        "browser-results.json G-01 row PARTIAL — no rendered screenshot, no save-success-state evidence",
+        "Copy '변경사항이 즉시 반영됩니다' implies live UI switch but i18n catalog is deferred — message overstates current capability",
+        "Description ⑥ 변경값 없으면 비활성 not implemented (button always enabled)",
+        "Description ① 저장 전 이탈 확인 not implemented",
+        "Description ② 즉시 미리보기 not implemented",
+        "Description ③ 학습 언어 선택, ④ 콘텐츠 설정, ⑤ 도움말 sections missing — only UI 언어 selector visible (light spec scope reduction documented in code comment but not surfaced to user)"
+      ],
+      "evidenceReferences": [
+        "reports/ia-verification/runs/20260528-141731/source-map-results.json (G-01: PASS, src/app/(workspace)/settings/language/page.tsx)",
+        "reports/ia-verification/runs/20260528-141731/browser-results.json (G-01 row: status PARTIAL)",
+        "docs/IA/20-G-01-language-settings/description.md (mandates 즉시 미리보기, 학습 언어, 콘텐츠 설정)",
+        "src/components/settings/LanguageForm.tsx (lines 26-32 comment confirms i18n catalogs OOS, lines 69-71 copy '변경사항이 즉시 반영됩니다')",
+        "src/app/(workspace)/settings/language/page.tsx"
+      ]
+    },
+    {
+      "iaCode": "X-03",
+      "screenName": "Paywall",
+      "route": "/paywall",
+      "audience": "user",
+      "aiUxResult": "DEFERRED",
+      "confidence": "high",
+      "humanConfirmation": "needs-human-judgment",
+      "findings": {
+        "pageJob": "clear shell — PlaceholderPage component renders Tag '[X-03]' + Title '구독 가입' + secondary text 'billing scope는 deferred-scope.md 기준으로 보류 상태입니다.' — copy explicitly discloses deferred state and points to the source-of-truth doc",
+        "entryContext": "shell — direct URL entry shows the deferred notice; no pricing/checkout/CTA exists to mislead",
+        "primaryAction": "intentionally absent — no 결제 주기 카드, no CTA, no 혜택 패널 (description ②③④⑤ all unimplemented). This matches docs/development/deferred-scope.md §Billing: 'sitemap may include /paywall and /subscription as Paper-frame UI shells. Those routes do not reopen billing implementation scope: no billing SDK, payment provider selection, checkout, invoices, or real payment flows should be implemented until this file and the implementation spec are updated.'",
+        "flowContinuity": "shell — no back-button context, no subscription-management redirect for existing subscribers (description ① 예외)",
+        "aiBehavior": "not-applicable",
+        "formErrorUx": "not-applicable",
+        "keyboardFocus": "trivial — only static card content; antd Card + Tag + Typography",
+        "responsive": "missing-evidence",
+        "policyTrustCopy": "PASS on honesty — copy 'billing scope는 deferred-scope.md 기준으로 보류 상태입니다' is direct, references the policy doc, and makes no claim about live billing. No pricing strings, no plan names, no 'subscribe' CTA. Honest about deferred state."
+      },
+      "blockingReasons": [
+        "Result label DEFERRED is appropriate per docs/development/deferred-scope.md — UI is intentionally shell-only and copy is honest about it",
+        "browser-results.json X-03 row PARTIAL — no rendered screenshot, but source inspection is sufficient to confirm shell-only state since PlaceholderPage is a 25-line static component"
+      ],
+      "evidenceReferences": [
+        "reports/ia-verification/runs/20260528-141731/source-map-results.json (X-03: PASS, src/app/(workspace)/paywall/page.tsx)",
+        "reports/ia-verification/runs/20260528-141731/browser-results.json (X-03 row: deferred=true, notes 'Billing implementation deferred')",
+        "docs/development/deferred-scope.md (§Billing — explicit policy permitting Paper-frame UI shells)",
+        "docs/IA/25-X-03-paywall/description.md",
+        "src/app/(workspace)/paywall/page.tsx (15 lines — PlaceholderPage wrapper)",
+        "src/components/shared/PlaceholderPage.tsx"
+      ]
+    },
+    {
+      "iaCode": "X-04",
+      "screenName": "Subscription management",
+      "route": "/subscription",
+      "audience": "user",
+      "aiUxResult": "DEFERRED",
+      "confidence": "high",
+      "humanConfirmation": "needs-human-judgment",
+      "findings": {
+        "pageJob": "clear shell — PlaceholderPage with Tag '[X-04]' + Title '구독 관리' + secondary text 'billing scope는 deferred-scope.md 기준으로 보류 상태입니다.'",
+        "entryContext": "shell — direct URL shows deferred notice; no plan summary, no payment history, no cancel CTA",
+        "primaryAction": "intentionally absent — description ②③④⑤ (현재 구독 요약, 변경/취소 액션, 결제 이력, 우측 도움말) all unimplemented. Matches deferred-scope.md §Billing policy.",
+        "flowContinuity": "shell — no plan-change/cancel flow exists, so no fail-state needed",
+        "aiBehavior": "not-applicable",
+        "formErrorUx": "not-applicable",
+        "keyboardFocus": "trivial",
+        "responsive": "missing-evidence",
+        "policyTrustCopy": "PASS on honesty — same template as X-03. No '다음 결제일', no 'cancel subscription' CTA, no 결제 이력 fake data. No risk of overpromising live billing."
+      },
+      "blockingReasons": [
+        "Result label DEFERRED appropriate per deferred-scope.md §Billing",
+        "browser-results.json X-04 row PARTIAL — no rendered screenshot, source inspection sufficient given 15-line shell"
+      ],
+      "evidenceReferences": [
+        "reports/ia-verification/runs/20260528-141731/source-map-results.json (X-04: PASS, src/app/(workspace)/subscription/page.tsx)",
+        "reports/ia-verification/runs/20260528-141731/browser-results.json (X-04 row: deferred=true)",
+        "docs/development/deferred-scope.md (§Billing)",
+        "docs/IA/26-X-04-subscription-management/description.md",
+        "src/app/(workspace)/subscription/page.tsx (15 lines)",
+        "src/components/shared/PlaceholderPage.tsx"
+      ]
+    },
+    {
+      "iaCode": "X-05",
+      "screenName": "Profile editing",
+      "route": "/profile",
+      "audience": "user",
+      "aiUxResult": "PARTIAL",
+      "confidence": "medium",
+      "humanConfirmation": "needs-human-judgment",
+      "findings": {
+        "pageJob": "clear — heading '프로필' + ProfileForm (이름/닉네임/자기소개) + ExamInfoCard (read-only) + StatusHelpCard",
+        "entryContext": "OWNER-CHECK confirmed in source — page calls requireUser() then getProfileSettings(user.id) + supabase.from('profiles').select(...).eq('id', user.id) — there is no :id URL param, route is /profile only, so other-user PII via direct URL is structurally impossible. RLS on profiles table provides defense in depth. This satisfies the OWNER-CHECK pack at the route level.",
+        "primaryAction": "clear — single 저장 button (description ⑤). Description ⑤ 제약 '변경값 없으면 비활성' is NOT implemented (button always enabled).",
+        "flowContinuity": "partial — message.success on save, message.error on failure. Description ① 예외 '재인증 필요 시 보안 안내' (re-auth required for sensitive edits) is not implemented. Description ① 제약 '저장 전 이탈 확인' (unsaved-changes warning) is not implemented.",
+        "aiBehavior": "not-applicable",
+        "formErrorUx": "partial — antd Form with maxLength validation (display_name 80, nickname 40, bio 160). Description ② 제약 '이름 2-30자, 닉네임 2-20자' does NOT match impl (80/40 — looser, but not a security issue). Description ③ 아바타 (avatar upload) is NOT implemented and copy '아바타 업로드는 다음 업데이트에서 지원됩니다' is HONEST about scope reduction. Description ② 예외 '중복 닉네임/이메일 변경 제한' field-level error display not verified.",
+        "keyboardFocus": "missing-evidence",
+        "responsive": "missing-evidence",
+        "policyTrustCopy": "PASS — '아바타 업로드는 다음 업데이트에서 지원됩니다' is honest deferred disclosure. No false-promise PII handling copy. Description ④ '도움말/상태 카드' (공개 범위, 데이터 활용) — StatusHelpCard exists but its copy not yet inspected in this lane."
+      },
+      "blockingReasons": [
+        "browser-results.json X-05 row PARTIAL — no rendered screenshot, no save-success state, no validation-error state",
+        "security-navigation-results.json 0 rows — wrong-owner scenario could not be exercised. However, route has no :id param so direct-URL PII leak is structurally prevented — recommend security lane records this as a structural-protection note rather than running test",
+        "Description vs impl gaps: name length 80 vs 30, no email field (description ②), no avatar (③), no 변경값 비활성 (⑤), no 이탈 확인 (①), no 재인증 (① 예외) — multiple unimplemented description regions"
+      ],
+      "evidenceReferences": [
+        "reports/ia-verification/runs/20260528-141731/source-map-results.json (X-05: PASS, src/app/(workspace)/profile/page.tsx)",
+        "reports/ia-verification/runs/20260528-141731/browser-results.json (X-05 row: status PARTIAL, packs PII/STORAGE)",
+        "docs/IA/27-X-05-profile-editing/description.md",
+        "src/app/(workspace)/profile/page.tsx (server component, requireUser + user.id-scoped queries)",
+        "src/components/profile/ProfileForm.tsx (display_name/nickname/bio only, lines 79/89/100 maxLength values)",
+        "src/components/profile/ExamInfoCard.tsx",
+        "src/components/profile/StatusHelpCard.tsx"
+      ]
+    },
+    {
+      "iaCode": "X-09",
+      "screenName": "Notification settings",
+      "route": "/settings/notifications",
+      "audience": "user",
+      "aiUxResult": "DEFERRED",
+      "confidence": "high",
+      "humanConfirmation": "needs-human-judgment",
+      "findings": {
+        "pageJob": "clear shell-with-persistence — heading '알림 설정' + 3 toggles (weekly_summary, feedback_ready, study_reminder) + explicit Alert disclosing deferred transport",
+        "entryContext": "owner-bound — requireUser() + getProfileSettings(user.id) — RLS scoped",
+        "primaryAction": "clear — 저장 button persists toggle state via useUpdateNotificationPrefs",
+        "flowContinuity": "partial — message.success/error toast on save. No 발송 이력 (description ④), no 미리보기 (description ④), no 채널 탭 (Email/Zalo — description ②)",
+        "aiBehavior": "not-applicable",
+        "formErrorUx": "partial — antd Switch with on/off labels; computeNotificationDiff is unit-tested logic",
+        "keyboardFocus": "missing-evidence — antd Switch is keyboard-accessible (Space toggles) but unverified",
+        "responsive": "missing-evidence",
+        "policyTrustCopy": "PASS — explicit info Alert '알림 전송 인프라는 곧 도입됩니다. 지금은 환경설정만 저장됩니다.' (notification transport infra is coming soon; for now only preferences are saved). This is exemplary honest TRANSPORT-DEFERRED disclosure — distinguishes 'we saved your preference' from 'we will send the notification'. No promise of live email/push delivery."
+      },
+      "blockingReasons": [
+        "Result label DEFERRED appropriate per TRANSPORT-DEFERRED pack — implementation shell + persistence + explicit disclosure matches the deferred pattern",
+        "browser-results.json X-09 row PARTIAL — no rendered screenshot",
+        "Description gaps: ② 알림 채널 탭 (Email/Zalo) not implemented; ④ 미리보기/발송 이력 not implemented. These are correctly omitted because transport is deferred — the implementation is a faithful shell-with-persistence pattern."
+      ],
+      "evidenceReferences": [
+        "reports/ia-verification/runs/20260528-141731/source-map-results.json (X-09: PASS, src/app/(workspace)/settings/notifications/page.tsx)",
+        "reports/ia-verification/runs/20260528-141731/browser-results.json (X-09 row: deferred=true, notes 'Notification transport deferred — UI copy must not imply live delivery')",
+        "docs/IA/31-X-09-notification-settings/description.md",
+        "src/components/settings/NotificationPrefsForm.tsx (line 101-105 honest deferred Alert)",
+        "src/app/(workspace)/settings/notifications/page.tsx"
+      ]
+    },
+    {
+      "iaCode": "A-03",
+      "screenName": "Learning goal setup",
+      "route": "/onboarding/learning-goal",
+      "audience": "user",
+      "aiUxResult": "BLOCKED",
+      "confidence": "medium",
+      "humanConfirmation": "needs-human-judgment",
+      "findings": {
+        "pageJob": "clear in code (Title \"학습 목표 설정\"); no rendered evidence",
+        "entryContext": "clear via workspace session guard + user-flow A-01→A-03; direct-URL re-entry by already-onboarded user unverified",
+        "primaryAction": "clear — single primary submit button \"저장하고 대시보드로 이동\"",
+        "flowContinuity": "pass in code (router.push('/dashboard') on success); browser-back unverified",
+        "aiBehavior": "not-applicable (no AI surface on screen)",
+        "formErrorUx": "partial — zod schema validates required fields and past-date refinement; save-failure path surfaces raw err.message which may leak Supabase error text",
+        "keyboardFocus": "not-verified",
+        "responsive": "not-verified at 360/768/1280; container is maxWidth 640 with antd inputs at width 100%",
+        "policyTrustCopy": "not-applicable",
+        "iaWireframeFidelity": "partial — description §1 'onboarding step indicator' is not implemented in code; description §2 'mascot/guidance' is text-only (no mascot visual)"
+      },
+      "blockingReasons": [
+        "browser-results.json: page.goto Timeout 15000ms exceeded for /onboarding/learning-goal at 360/768/1280",
+        "screenshots/coverage-A-03-{360,768,1280}.png missing on disk",
+        "security-navigation-results.json BLOCKED (0 rows) — direct-URL, refresh, browser-back lanes unverified",
+        "form/error/loading/success rendered states not captured per checklist §6.5"
+      ],
+      "evidenceReferences": [
+        "reports/ia-verification/runs/20260528-141731/source-map-results.json (A-03 PASS)",
+        "reports/ia-verification/runs/20260528-141731/browser-results.json (A-03 PARTIAL — nav timeout)",
+        "reports/ia-verification/runs/20260528-141731/security-navigation-results.json (BLOCKED — 0 rows)",
+        "reports/ia-verification/runs/20260528-141731/doc-receipts.json (A-03 present)",
+        "reports/ia-verification/runs/20260528-141731/ai-ux-review.json (A-03 existing BLOCKED card)",
+        "docs/IA/03-A-03-learning-goal-setup/description.md",
+        "docs/sitemap.md (A-03 row, audience matrix)",
+        "docs/flow/user-flow.md (A-01→A-03→B-01 edge)",
+        "src/app/(workspace)/onboarding/learning-goal/page.tsx",
+        "src/components/learning/LearningGoalForm.tsx",
+        "src/app/(workspace)/layout.tsx"
+      ],
+      "humanReviewQuestions": [
+        "Is the missing 'onboarding step indicator' (description §1) an intentional trim or a real wireframe-fidelity gap?",
+        "Should /onboarding/learning-goal redirect to /dashboard when a user already has a learning_goal row, or stay in edit mode?",
+        "Does the antd notification.error description ever leak raw Supabase/Postgres error text on save failure?",
+        "Is the antd Select mode='multiple' weak-areas input usable on a 360px touch keyboard?"
+      ]
+    },
+    {
+      "iaCode": "B-01",
+      "screenName": "Home dashboard",
+      "route": "/dashboard",
+      "audience": "user",
+      "aiUxResult": "BLOCKED",
+      "confidence": "medium",
+      "humanConfirmation": "needs-human-judgment",
+      "findings": {
+        "pageJob": "clear in code; KpiSummary + recommendation card row + recent-feedback/alerts row",
+        "entryContext": "clear — workspace layout requireUser + page-level guard 'if (!goal) redirect(/onboarding/learning-goal)'",
+        "primaryAction": "partial — description §3 expects 3 card types (이어 풀 문제 / 추천 유형 / 최근 피드백); code renders only RecommendationCard (이어 풀 문제) + RecentFeedbackCard. 'Recommended type' card is missing",
+        "flowContinuity": "pass in code for implemented edges (RecommendationCard → /practice/recommendations, EmptyDashboard → /practice/recommendations); user-flow.md outgoing edges to F-01/X-02/X-09/G-01/X-05/X-04 depend on sidebar nav rendering, unverified",
+        "aiBehavior": "not-applicable (no AI-generated copy rendered directly on this page)",
+        "formErrorUx": "not-applicable",
+        "keyboardFocus": "not-verified",
+        "responsive": "not-verified; code uses antd Row gutter xs={12} md={6} for KPI and xs={24} md={16/8} for content rows",
+        "policyTrustCopy": "pass in code (no billing/notification claims surfaced)",
+        "iaWireframeFidelity": "partial — KPI label drift (description §2 says 오늘 제출/최근 첨삭/목표 달성/연속 학습; code shows 오늘 시도/누적 시도/시험까지/연속 학습일); '목표 달성' KPI missing; '추천 유형' card missing"
+      },
+      "blockingReasons": [
+        "browser-results.json: page.goto Timeout 15000ms exceeded for /dashboard at 360/768/1280",
+        "screenshots/coverage-B-01-{360,768,1280}.png missing on disk",
+        "security-navigation-results.json BLOCKED (0 rows)",
+        "empty-state, loading-state, alert-state rendered evidence missing per checklist §6.5"
+      ],
+      "evidenceReferences": [
+        "reports/ia-verification/runs/20260528-141731/source-map-results.json (B-01 PASS)",
+        "reports/ia-verification/runs/20260528-141731/browser-results.json (B-01 PARTIAL — nav timeout)",
+        "reports/ia-verification/runs/20260528-141731/security-navigation-results.json (BLOCKED — 0 rows)",
+        "reports/ia-verification/runs/20260528-141731/doc-receipts.json (B-01 present)",
+        "reports/ia-verification/runs/20260528-141731/ai-ux-review.json (B-01 existing BLOCKED card)",
+        "docs/IA/04-B-01-home-dashboard/description.md",
+        "docs/sitemap.md (B-01 row, audience matrix)",
+        "docs/flow/user-flow.md (B-01 outgoing edges to C-01/F-01/X-02/X-09/G-01/X-05/X-04)",
+        "src/app/(workspace)/dashboard/page.tsx",
+        "src/components/learning/DashboardContent.tsx",
+        "src/components/learning/KpiSummary.tsx",
+        "src/components/learning/EmptyDashboard.tsx"
+      ],
+      "humanReviewQuestions": [
+        "Should the KPI labels in KpiSummary.tsx be updated to match description.md §2, or should description.md be updated to reflect the current 'attempts + exam D-day + streak' framing?",
+        "Is the missing '추천 유형' card (description §3 requires 3 card types) a Phase 7 partial or a real omission?",
+        "Does the workspace sidebar (description §1) actually render '홈/문제 풀기/쓰기 연습/내 서재/성장 리포트/설정' in order with ≤10-char labels and an active-route highlight?",
+        "Is showing all-zero KPI strip above the empty-state CTA desirable, or should the KPI strip be hidden for first-use users?"
+      ]
+    },
+    {
+      "iaCode": "X-02",
+      "screenName": "Growth dashboard",
+      "route": "/growth",
+      "audience": "user",
+      "aiUxResult": "BLOCKED",
+      "confidence": "high",
+      "humanConfirmation": "needs-human-judgment",
+      "findings": {
+        "pageJob": "missing — implementation is a PlaceholderPage with phaseHint '진척/성장 분석 차트는 Phase 4에서 채워집니다'; description.md describes 6 substantive regions (sidebar, KPI, growth chart, weakness matrix, AI insights, bottom summary/recs)",
+        "entryContext": "workspace session guard applies; placeholder offers no contextual heading beyond the title 'X-02 성장 대시보드'",
+        "primaryAction": "missing — placeholder has no CTA",
+        "flowContinuity": "blocked — outgoing edges undefined in code; B-01→X-02 inbound is documented but not exercised",
+        "aiBehavior": "fail — description §5 specifies an AI insights surface ('AI가 학습 패턴과 최근 성과를 짧은 문장으로 해석') with checklist §6.4 obligations (label AI involvement, allow regenerate/dispute); none implemented",
+        "formErrorUx": "not-applicable",
+        "keyboardFocus": "not-verified (placeholder is trivial)",
+        "responsive": "trivially responsive (single card)",
+        "policyTrustCopy": "pass — placeholder makes no claims",
+        "iaWireframeFidelity": "fail — 0 of 6 description regions implemented"
+      },
+      "blockingReasons": [
+        "browser-results.json: page.goto Timeout 15000ms exceeded for /growth at 360/768/1280",
+        "screenshots/coverage-X-02-{360,768,1280}.png missing on disk",
+        "security-navigation-results.json BLOCKED (0 rows)",
+        "implementation is PlaceholderPage stub — 0 of 6 description.md regions implemented, so even with rendered evidence the AI UX review cannot mark anything past BLOCKED until product status (DEFERRED vs DOC-GAP) is decided"
+      ],
+      "evidenceReferences": [
+        "reports/ia-verification/runs/20260528-141731/source-map-results.json (X-02 PASS)",
+        "reports/ia-verification/runs/20260528-141731/browser-results.json (X-02 PARTIAL — nav timeout)",
+        "reports/ia-verification/runs/20260528-141731/security-navigation-results.json (BLOCKED — 0 rows)",
+        "reports/ia-verification/runs/20260528-141731/doc-receipts.json (X-02 present)",
+        "reports/ia-verification/runs/20260528-141731/ai-ux-review.json (X-02 existing BLOCKED card)",
+        "docs/IA/24-X-02-growth-dashboard/description.md",
+        "docs/sitemap.md (X-02 listed as user page)",
+        "docs/flow/user-flow.md (B-01 → X-02 edge)",
+        "src/app/(workspace)/growth/page.tsx",
+        "src/components/shared/PlaceholderPage.tsx"
+      ],
+      "humanReviewQuestions": [
+        "Should X-02 be relabeled DEFERRED to match the in-code phaseHint, or should description.md's 6-region scope be archived/trimmed (DOC-GAP)?",
+        "Is the placeholder copy 'Phase 4에서 채워집니다' still accurate at IA verification run-time (Phase 5)?",
+        "When the AI insights surface (description §5) is implemented, will it follow checklist §6.4 (label AI involvement, evidence/context, regenerate/dispute)?"
+      ]
+    },
+    {
+      "iaCode": "C-01",
+      "screenName": "Problem type recommendations",
+      "route": "/practice/recommendations",
+      "audience": "user",
+      "aiUxResult": "PARTIAL",
+      "confidence": "low",
+      "humanConfirmation": "needs-human-judgment",
+      "findings": {
+        "pageJob": "clear-from-docs",
+        "entryContext": "clear-from-docs",
+        "primaryAction": "missing-evidence",
+        "flowContinuity": "partial",
+        "aiBehavior": "missing-evidence",
+        "formErrorUx": "not-applicable",
+        "keyboardFocus": "missing-evidence",
+        "responsive": "missing-evidence",
+        "policyTrustCopy": "not-applicable",
+        "topGaps": [
+          "No rendered screenshot at any viewport (browser navigation timed out at 15s on /practice/recommendations).",
+          "AI behavior copy required (recommendation reasoning, retry on failed calc) cannot be verified without render.",
+          "Mobile sidebar collapsed-state behavior unverified."
+        ],
+        "humanReviewerShouldInspect": [
+          "Whether the recommended-card reasoning copy is plain and reviewable (Microsoft HAX G2-G4).",
+          "Whether fallback to direct-select card on recommend-calculation failure is visible to users.",
+          "Whether 4 type tabs (51/52/53/54) fit at 360px without horizontal cut."
+        ]
+      },
+      "blockingReasons": [
+        "browser-results.json: navigation timeout 15000ms on /practice/recommendations — no actual render captured.",
+        "screenshots/coverage-C-01-{360,768,1280}.png not present in run."
+      ],
+      "evidenceReferences": [
+        "docs/IA/05-C-01-problem-type-recommendations/description.md",
+        "reports/ia-verification/runs/20260528-141731/doc-receipts.json#C-01 (filled)",
+        "reports/ia-verification/runs/20260528-141731/source-map-results.json#C-01 (PASS, src/app/(workspace)/practice/recommendations/page.tsx)",
+        "reports/ia-verification/runs/20260528-141731/browser-results.json#C-01 (PARTIAL — navigation timeout, screenshot path declared but file absent)",
+        "reports/ia-verification/runs/20260528-141731/security-navigation-results.json (BLOCKED — 0 rows)"
+      ]
+    },
+    {
+      "iaCode": "C-02",
+      "screenName": "Problem list",
+      "route": "/practice/problems",
+      "audience": "user",
+      "aiUxResult": "PARTIAL",
+      "confidence": "low",
+      "humanConfirmation": "needs-human-judgment",
+      "findings": {
+        "pageJob": "clear-from-docs",
+        "entryContext": "clear-from-docs",
+        "primaryAction": "missing-evidence",
+        "flowContinuity": "partial",
+        "aiBehavior": "not-applicable",
+        "formErrorUx": "missing-evidence",
+        "keyboardFocus": "missing-evidence",
+        "responsive": "missing-evidence",
+        "policyTrustCopy": "not-applicable",
+        "topGaps": [
+          "DIRECT-ID pack: malformed/invalid/wrong-owner problem id entry path not exercised — security-navigation lane is 0 rows BLOCKED.",
+          "Filter combination empty-result CTA ('초기화') cannot be confirmed without render.",
+          "Search debounce 300ms + 2-40자 input validation messaging not captured."
+        ],
+        "humanReviewerShouldInspect": [
+          "What the user sees when entering /practice/problems with a malformed or expired problem id in query/anchor.",
+          "Whether the filter/sort chips are keyboard reachable and label-visible at 360px.",
+          "Whether the page communicates total result count and current page state plainly."
+        ]
+      },
+      "blockingReasons": [
+        "browser-results.json: navigation timeout 15000ms on /practice/problems.",
+        "security-navigation-results.json BLOCKED (0 rows) — DIRECT-ID malformed/owner checks unverified.",
+        "screenshots/coverage-C-02-*.png absent."
+      ],
+      "evidenceReferences": [
+        "docs/IA/06-C-02-problem-list/description.md",
+        "reports/ia-verification/runs/20260528-141731/doc-receipts.json#C-02 (filled)",
+        "reports/ia-verification/runs/20260528-141731/source-map-results.json#C-02 (PASS)",
+        "reports/ia-verification/runs/20260528-141731/browser-results.json#C-02 (PARTIAL)",
+        "reports/ia-verification/runs/20260528-141731/security-navigation-results.json (BLOCKED)"
+      ]
+    },
+    {
+      "iaCode": "C-03",
+      "screenName": "Retry modal",
+      "route": "hosted by /practice/problems",
+      "audience": "user",
+      "aiUxResult": "BLOCKED",
+      "confidence": "low",
+      "humanConfirmation": "not-ready",
+      "findings": {
+        "pageJob": "clear-from-docs",
+        "entryContext": "clear-from-docs",
+        "primaryAction": "missing-evidence",
+        "flowContinuity": "missing-evidence",
+        "aiBehavior": "not-applicable",
+        "formErrorUx": "missing-evidence",
+        "keyboardFocus": "missing-evidence",
+        "responsive": "missing-evidence",
+        "policyTrustCopy": "not-applicable",
+        "topGaps": [
+          "Hosted modal trigger from /practice/problems was not captured — hosted-surface-results.json has 0 rows (BLOCKED).",
+          "Background dim, scroll-lock, focus-trap, focus-return cannot be verified.",
+          "Expired-problem path (시작 → 만료 안내) not exercised.",
+          "Per checklist §9, hosted modals must not be PASSed when only the component file was inspected."
+        ],
+        "humanReviewerShouldInspect": [
+          "Whether opening the retry modal from a problem row moves focus into the modal and returns it on close.",
+          "Whether the default mode is pre-selected and the start CTA is disabled until selection.",
+          "Whether 시작 click is debounced (제약: 중복 실행 차단)."
+        ]
+      },
+      "blockingReasons": [
+        "hosted-surface-results.json BLOCKED (0 rows) — no modal trigger evidence captured.",
+        "browser-results.json#C-03 PARTIAL with navigation timeout on host route.",
+        "Phase 3 hosted-surfaces.spec exists (per browser-results.json notes) but did not emit data in this run."
+      ],
+      "evidenceReferences": [
+        "docs/IA/07-C-03-retry-modal/description.md",
+        "reports/ia-verification/runs/20260528-141731/doc-receipts.json#C-03 (filled)",
+        "reports/ia-verification/runs/20260528-141731/source-map-results.json#C-03 (PASS — src/components/practice/RetryModal.tsx)",
+        "reports/ia-verification/runs/20260528-141731/hosted-surface-results.json (BLOCKED — 0 rows)"
+      ]
+    },
+    {
+      "iaCode": "D-01",
+      "screenName": "Short-answer writing 51",
+      "route": "/writing/51",
+      "audience": "user",
+      "aiUxResult": "PARTIAL",
+      "confidence": "low",
+      "humanConfirmation": "needs-human-judgment",
+      "findings": {
+        "pageJob": "clear-from-docs",
+        "entryContext": "clear-from-docs",
+        "primaryAction": "missing-evidence",
+        "flowContinuity": "partial",
+        "aiBehavior": "not-applicable",
+        "formErrorUx": "missing-evidence",
+        "keyboardFocus": "missing-evidence",
+        "responsive": "missing-evidence",
+        "policyTrustCopy": "not-applicable",
+        "topGaps": [
+          "Autosave visible status (saved / saving / delayed / failed) not captured — formEvidenceRequired=true unmet.",
+          "Refresh-with-draft behavior unverified (REFRESH pack).",
+          "Browser-back from drafted form not verified (BACK pack).",
+          "10-120자 validation error rendering not captured."
+        ],
+        "humanReviewerShouldInspect": [
+          "Whether autosave timestamp (상대 시간) is readable and updates in real time.",
+          "Whether character-count under/over states show clearly under the field.",
+          "Whether image-load-failure shows alt-text and empty frame as specified."
+        ]
+      },
+      "blockingReasons": [
+        "browser-results.json#D-01: navigation timeout — no rendered screenshot at any viewport.",
+        "Autosave/refresh/back evidence flags required but uxStatesCaptured=[]."
+      ],
+      "evidenceReferences": [
+        "docs/IA/08-D-01-short-answer-writing-51/description.md",
+        "reports/ia-verification/runs/20260528-141731/source-map-results.json#D-01 (PASS)",
+        "reports/ia-verification/runs/20260528-141731/browser-results.json#D-01 (PARTIAL)",
+        "src/app/(workspace)/writing/[questionId]/page.tsx",
+        "src/components/writing/WritingPageContent.tsx",
+        "src/components/writing/AutosaveBadge.tsx"
+      ]
+    },
+    {
+      "iaCode": "D-02",
+      "screenName": "Answer writing 52",
+      "route": "/writing/52",
+      "audience": "user",
+      "aiUxResult": "PARTIAL",
+      "confidence": "low",
+      "humanConfirmation": "needs-human-judgment",
+      "findings": {
+        "pageJob": "clear-from-docs",
+        "entryContext": "clear-from-docs",
+        "primaryAction": "missing-evidence",
+        "flowContinuity": "partial",
+        "aiBehavior": "not-applicable",
+        "formErrorUx": "missing-evidence",
+        "keyboardFocus": "missing-evidence",
+        "responsive": "missing-evidence",
+        "policyTrustCopy": "not-applicable",
+        "topGaps": [
+          "임시 저장 vs 최종 제출 CTA 분리 표시 not visually verified.",
+          "Sidebar 이탈 → AutosaveWarning(D-M3) trigger not captured (hosted-surface BLOCKED).",
+          "조건/지문 로드 실패 시 제출 CTA 비활성 처리 unverified."
+        ],
+        "humanReviewerShouldInspect": [
+          "Whether 저장/제출 CTA labels read clearly to non-engineers ('저장' vs '제출' distinction in Korean).",
+          "Whether 조건 카드 충족도 표시가 실제로 user-actionable인지.",
+          "Whether 10-160자 글자수 실시간 표시가 모바일에서 가려지지 않는지."
+        ]
+      },
+      "blockingReasons": [
+        "browser-results.json#D-02: navigation timeout — uxStatesCaptured=[].",
+        "Sidebar-leave → D-M3 hosted modal trigger lane is 0 rows BLOCKED."
+      ],
+      "evidenceReferences": [
+        "docs/IA/09-D-02-answer-writing-52/description.md",
+        "reports/ia-verification/runs/20260528-141731/source-map-results.json#D-02 (PASS)",
+        "reports/ia-verification/runs/20260528-141731/browser-results.json#D-02 (PARTIAL)",
+        "src/app/(workspace)/writing/[questionId]/page.tsx",
+        "src/components/writing/SectionEditor.tsx"
+      ]
+    },
+    {
+      "iaCode": "D-03",
+      "screenName": "Long-form writing 53",
+      "route": "/writing/53",
+      "audience": "user",
+      "aiUxResult": "PARTIAL",
+      "confidence": "low",
+      "humanConfirmation": "needs-human-judgment",
+      "findings": {
+        "pageJob": "clear-from-docs",
+        "entryContext": "clear-from-docs",
+        "primaryAction": "missing-evidence",
+        "flowContinuity": "partial",
+        "aiBehavior": "not-applicable",
+        "formErrorUx": "missing-evidence",
+        "keyboardFocus": "missing-evidence",
+        "responsive": "missing-evidence",
+        "policyTrustCopy": "not-applicable",
+        "topGaps": [
+          "원고지 형식 에디터 (200-300자 권장, 최소 120자) — 문단 수 표시 unverified.",
+          "자료 카드 3개 이하 + 좌측 패널 + 본문 에디터 + 우측 평가 카드 — 1280px에서만 가능한 3-column layout. 360/768px 적응 not verified.",
+          "자동저장 실패 시 경고 색상 + 재시도 액션 표시 unverified.",
+          "자료 누락/이미지 실패 시 대체 텍스트 unverified."
+        ],
+        "humanReviewerShouldInspect": [
+          "Whether 3-column layout reflows acceptably to single-column at 360px (WCAG 2.2 Reflow).",
+          "Whether 평가 기준 카드 상태(충족/주의/미충족)가 색만이 아닌 텍스트/아이콘도 함께 보이는지.",
+          "Whether 그래프/자료 image confidence labelling matches docs."
+        ]
+      },
+      "blockingReasons": [
+        "browser-results.json#D-03: navigation timeout — no render captured.",
+        "Mobile/tablet adaptation of 3-column layout not screenshot-verified."
+      ],
+      "evidenceReferences": [
+        "docs/IA/10-D-03-long-form-writing-53/description.md",
+        "reports/ia-verification/runs/20260528-141731/source-map-results.json#D-03 (PASS)",
+        "reports/ia-verification/runs/20260528-141731/browser-results.json#D-03 (PARTIAL)",
+        "src/components/writing/LongFormEditor.tsx",
+        "src/components/writing/ManuscriptPreview.tsx"
+      ]
+    },
+    {
+      "iaCode": "D-04",
+      "screenName": "Essay writing 54",
+      "route": "/writing/54",
+      "audience": "user",
+      "aiUxResult": "PARTIAL",
+      "confidence": "low",
+      "humanConfirmation": "needs-human-judgment",
+      "findings": {
+        "pageJob": "clear-from-docs",
+        "entryContext": "clear-from-docs",
+        "primaryAction": "missing-evidence",
+        "flowContinuity": "partial",
+        "aiBehavior": "not-applicable",
+        "formErrorUx": "missing-evidence",
+        "keyboardFocus": "missing-evidence",
+        "responsive": "missing-evidence",
+        "policyTrustCopy": "partial",
+        "topGaps": [
+          "600-700자 권장 / 최소 300자 / 분량 부족 경고 모달 not verified.",
+          "'제출 후 수정 불가' irreversible-action copy not visually verified — checklist §6.4 says irreversible AI handoff must be reviewable.",
+          "조건 로드 실패 시 본문 작성/제출 잠금 처리 unverified.",
+          "우측 체크리스트 6개 이하 상태(완료/주의/미확인) unverified."
+        ],
+        "humanReviewerShouldInspect": [
+          "Whether '제출 후 수정 불가' warning is shown BEFORE the submission confirmation modal opens (not only inside D-M1).",
+          "Whether 분량 부족 경고 wording sounds helpful, not punishing (Korean tone).",
+          "Whether the rubric-summary 3 items are scannable."
+        ]
+      },
+      "blockingReasons": [
+        "browser-results.json#D-04: navigation timeout.",
+        "Irreversible-action copy at submit-time not captured visually."
+      ],
+      "evidenceReferences": [
+        "docs/IA/11-D-04-essay-writing-54/description.md",
+        "reports/ia-verification/runs/20260528-141731/source-map-results.json#D-04 (PASS)",
+        "reports/ia-verification/runs/20260528-141731/browser-results.json#D-04 (PARTIAL)",
+        "src/components/writing/EssayChecklist.tsx",
+        "src/components/writing/ChecklistRow.tsx"
+      ]
+    },
+    {
+      "iaCode": "D-M1",
+      "screenName": "Submission confirmation",
+      "route": "hosted by /writing/51,52,53,54",
+      "audience": "user",
+      "aiUxResult": "BLOCKED",
+      "confidence": "low",
+      "humanConfirmation": "not-ready",
+      "findings": {
+        "pageJob": "clear-from-docs",
+        "entryContext": "clear-from-docs",
+        "primaryAction": "missing-evidence",
+        "flowContinuity": "missing-evidence",
+        "aiBehavior": "missing-evidence",
+        "formErrorUx": "missing-evidence",
+        "keyboardFocus": "missing-evidence",
+        "responsive": "missing-evidence",
+        "policyTrustCopy": "missing-evidence",
+        "topGaps": [
+          "Hosted modal trigger from writing page never captured (hosted-surface-results.json 0 rows BLOCKED).",
+          "IRREVERSIBLE-ACTION pack: 동의 체크 + duplicate-submit prevention not visually verified.",
+          "취소 시 작성 화면 입력값 복구 not verified.",
+          "제출 실패 시 모달 유지 + 오류 원인 + 재시도 not verified.",
+          "Per checklist §9, must not be PASS when only component file was inspected."
+        ],
+        "humanReviewerShouldInspect": [
+          "Whether the '제출 후 AI 분석 시작' notice clearly signals where AI takes over (Microsoft HAX G1: make clear what the system can do).",
+          "Whether the consent checkbox copy is plain Korean and does not over-promise outcomes.",
+          "Whether 중복 제출 차단 produces a visible disabled state, not just a noop."
+        ]
+      },
+      "blockingReasons": [
+        "hosted-surface-results.json BLOCKED — 0 rows.",
+        "browser-results.json#D-M1 PARTIAL — navigation timeout on host route, modal trigger not exercised."
+      ],
+      "evidenceReferences": [
+        "docs/IA/12-D-M1-submission-confirmation-modal/description.md",
+        "reports/ia-verification/runs/20260528-141731/source-map-results.json#D-M1 (PASS — src/components/writing/SubmissionConfirmModal.tsx)",
+        "reports/ia-verification/runs/20260528-141731/hosted-surface-results.json (BLOCKED)"
+      ]
+    },
+    {
+      "iaCode": "D-M2",
+      "screenName": "AI analysis loading",
+      "route": "hosted by writing submission flow",
+      "audience": "user",
+      "aiUxResult": "BLOCKED",
+      "confidence": "low",
+      "humanConfirmation": "not-ready",
+      "findings": {
+        "pageJob": "clear-from-docs",
+        "entryContext": "clear-from-docs",
+        "primaryAction": "not-applicable",
+        "flowContinuity": "missing-evidence",
+        "aiBehavior": "missing-evidence",
+        "formErrorUx": "not-applicable",
+        "keyboardFocus": "missing-evidence",
+        "responsive": "missing-evidence",
+        "policyTrustCopy": "missing-evidence",
+        "topGaps": [
+          "Most policy-sensitive copy in shard: '예상 대기 시간', '10초 이상 지연 시 갱신', '분석 실패는 고객지원 링크' — none verified visually.",
+          "뒤로가기 시 분석 중단 경고 (irreversible AI-handoff) — checklist §6.4 'reject/retry/regenerate' path unverified.",
+          "Motion-reduced fallback (정적 이미지 대체) — accessibility WCAG concern unverified.",
+          "Hosted-surface lane is 0 rows BLOCKED; AI-OUTPUT pack browser screenshot absent."
+        ],
+        "humanReviewerShouldInspect": [
+          "Whether '예상 대기 시간' copy gives a real range and what happens when the range is exceeded (Google PAIR §explainability).",
+          "Whether the 4-step progress (문법/구성/표현/점수) accurately reflects backend state or is performative animation.",
+          "Whether '재시도 오류 / 분석 실패' surfaces a recovery path that doesn't lose the submitted answer.",
+          "Whether Korean copy on the loading screen avoids over-promising 'AI가 정확하게 분석합니다' framing."
+        ]
+      },
+      "blockingReasons": [
+        "hosted-surface-results.json BLOCKED — 0 rows.",
+        "browser-results.json#D-M2 PARTIAL — navigation timeout, no captured loading state screenshot.",
+        "Required AI-output evidence flag set but uxStatesCaptured=[]."
+      ],
+      "evidenceReferences": [
+        "docs/IA/13-D-M2-ai-analysis-loading/description.md",
+        "reports/ia-verification/runs/20260528-141731/source-map-results.json#D-M2 (PASS — src/components/feedback/AnalysisLoadingModal.tsx)",
+        "reports/ia-verification/runs/20260528-141731/browser-results.json#D-M2 (PARTIAL)",
+        "reports/ia-verification/runs/20260528-141731/hosted-surface-results.json (BLOCKED)",
+        "src/components/feedback/AnalysisCharacter.tsx"
+      ]
+    },
+    {
+      "iaCode": "D-M3",
+      "screenName": "Autosave warning",
+      "route": "hosted by /writing/51,52,53,54",
+      "audience": "user",
+      "aiUxResult": "BLOCKED",
+      "confidence": "low",
+      "humanConfirmation": "not-ready",
+      "findings": {
+        "pageJob": "clear-from-docs",
+        "entryContext": "clear-from-docs",
+        "primaryAction": "missing-evidence",
+        "flowContinuity": "missing-evidence",
+        "aiBehavior": "not-applicable",
+        "formErrorUx": "missing-evidence",
+        "keyboardFocus": "missing-evidence",
+        "responsive": "missing-evidence",
+        "policyTrustCopy": "missing-evidence",
+        "topGaps": [
+          "Hosted-surface lane BLOCKED — autosave-failure trigger (sidebar leave / network down) never exercised.",
+          "FAILURE + RECOVERY pack: 마지막 저장 시각, 복구 가능 여부, 임시 저장 상태 — copy not visually verified.",
+          "위험 CTA('끄기') confirm 문구 + 중복 클릭 차단 unverified.",
+          "Network-disconnect '복구 불가' branch unverified.",
+          "Per checklist §9, hosted modals must not be PASSed from component inspection alone."
+        ],
+        "humanReviewerShouldInspect": [
+          "Whether '끄기' (destructive) CTA visually outranks '취소' or matches risk hierarchy.",
+          "Whether the warning copy explains WHAT will be lost (글자 수, 단락) not just THAT data could be lost.",
+          "Whether the warning fires for true autosave failures vs. routine save delays (false-positive risk)."
+        ]
+      },
+      "blockingReasons": [
+        "hosted-surface-results.json BLOCKED — 0 rows.",
+        "browser-results.json#D-M3 PARTIAL — navigation timeout, error-state screenshot not produced.",
+        "Dispatch plan requiredEvidenceInputs includes 'hosted-surface' which is currently 0 rows."
+      ],
+      "evidenceReferences": [
+        "docs/IA/22-D-M3-autosave-warning/description.md",
+        "reports/ia-verification/runs/20260528-141731/source-map-results.json#D-M3 (PASS — src/components/writing/AutosaveWarningModal.tsx)",
+        "reports/ia-verification/runs/20260528-141731/browser-results.json#D-M3 (PARTIAL)",
+        "reports/ia-verification/runs/20260528-141731/hosted-surface-results.json (BLOCKED)"
+      ]
+    },
+    {
+      "iaCode": "X-01",
+      "screenName": "Product landing",
+      "route": "/",
+      "audience": "public",
+      "wireframeStatus": "present",
+      "aiUxResult": "PARTIAL",
+      "confidence": "medium",
+      "humanConfirmation": "needs-human-judgment",
+      "findings": {
+        "pageJob": "partial — Hero H1 'TOPIK 글쓰기, AI와 함께 끝까지' + sub copy clearly state the product job, but page job is delivered only via two CTAs (가입 / 로그인) and 3 feature cards. wireframe ②~⑥ documents 헤더/내비, 마스코트, 제품 프리뷰. Implementation has no header/nav, no mascot, no product preview surface, no logged-in-user branch ('대시보드 CTA'). description.md exception 'logged-in user sees 대시보드 CTA' is not implemented.",
+        "entryContext": "clear — direct URL entry to '/' resolves cleanly, both CTAs are direct anchors.",
+        "primaryAction": "competing — two CTAs of comparable visual weight (지금 가입하기 primary, 로그인 secondary). description ③ specifies '대표 CTA 1개, 보조 링크 1개'. Two side-by-side antd buttons may read as parallel rather than primary/secondary on mobile. wireframe ③ '시작 CTA' is the single transformation point.",
+        "flowContinuity": "pass — /sign-up and /login both reachable per docs/flow/user-flow.md (X-01 → A-01 or A-02).",
+        "aiBehavior": "not applicable",
+        "formErrorUx": "not applicable",
+        "keyboardFocus": "low-confidence — visual focus indicators rely on antd defaults; not captured in evidence because browser nav timed out (cache/HMR). Needs manual keyboard sweep.",
+        "responsive": "low-confidence — screenshots exist at 360/768/1280 but were captured after navigation timeout (no visible H1 / no primaryCtaPresent in browser-results JSON). Cannot confirm 320–360 no horizontal scroll. Hero uses 'padding: 64px 16px' inline style which should be responsive but unverified.",
+        "policyTrustCopy": "pass — no overclaim. Marketing copy is generic ('AI 피드백으로 약점을 좁히세요'). No paywall/billing claims on landing."
+      },
+      "blockingReasons": [
+        "browser-results.json row for X-01 is PARTIAL (navigation timeout — visibleH1=null, primaryCtaPresent=null).",
+        "wireframe areas ① 헤더/내비, ④ 제품 프리뷰, ⑤ 마스코트 are not implemented (description.md gap).",
+        "description.md ① exception '로그인 사용자는 시작 대신 대시보드 CTA 표시' not implemented in src/app/page.tsx (no session check)."
+      ],
+      "evidenceReferences": [
+        "docs/IA/23-X-01-product-landing/description.md",
+        "docs/IA/23-X-01-product-landing/wireframe.png",
+        "src/app/page.tsx",
+        "src/components/landing/Hero.tsx",
+        "src/components/landing/FeatureCard.tsx",
+        "reports/ia-verification/runs/20260528-141731/source-map-results.json (X-01 PASS)",
+        "reports/ia-verification/runs/20260528-141731/browser-results.json (X-01 PARTIAL: navigation timeout)",
+        "reports/ia-verification/runs/20260528-141731/screenshots/coverage-X-01-{360,768,1280}.png",
+        "reports/ia-verification/runs/20260528-141731/doc-receipts.json"
+      ]
+    },
+    {
+      "iaCode": "A-01",
+      "screenName": "Sign-up",
+      "route": "/sign-up",
+      "audience": "public",
+      "wireframeStatus": "present",
+      "aiUxResult": "PARTIAL",
+      "confidence": "medium",
+      "humanConfirmation": "needs-human-judgment",
+      "findings": {
+        "pageJob": "pass — Page H1 '회원가입' is explicit. Bottom anchor offers '이미 계정이 있으신가요? 로그인'. Single user job is account creation.",
+        "entryContext": "pass — direct entry resolves; bottom Link → /login provides escape.",
+        "primaryAction": "pass — single primary antd Button ('회원가입') type=primary block. Disabled state via 'loading' during submit prevents double-submission per description ④.",
+        "flowContinuity": "pass — On signUp success, router.push('/auth/verify-email?email=...') matches auth-overview §4.1 and feeds X-12. Failure shows inline antd message.error. Per docs/flow/user-flow.md A-01 → X-12 → /auth/callback → A-03.",
+        "aiBehavior": "not applicable",
+        "formErrorUx": "partial — Email has type=email + required. Password has min:8 (DOC-GAP: description ③ specifies PW 8-64자 but max:64 NOT enforced — known drift recorded in docs/development/auth-overview.md §10 line 296). passwordConfirm matches via dependency validator. displayName description ③ specifies '이름 2-30자' but form has NO min/max length rule — second drift (not yet logged). terms checkbox required. Provider errors surface as `가입 실패: ${error.message}` which directly inlines raw Supabase error text into a toast — partial violation of description ③ '예외: 중복 이메일/형식 오류는 필드 하단에 표시' (it goes to a global message.error toast, not inline below the email field) and a soft violation of §6.9 'Raw provider errors are not shown to users'.",
+        "keyboardFocus": "low-confidence — antd Form provides default focus order. Not verified in browser evidence due to nav timeout.",
+        "responsive": "low-confidence — screenshots at 360/768/1280 exist but capture failed past nav timeout. maxWidth 480 centered should fit 360. Unverified.",
+        "policyTrustCopy": "partial — Terms checkbox requires '이용약관과 개인정보처리방침에 동의합니다' but no link is rendered to actual 약관/처리방침 pages. Policy/legal target pages are DEFERRED/DOC-GAP. Marketing benefit chips (description ② 마스코트/혜택) are absent."
+      },
+      "blockingReasons": [
+        "browser-results.json A-01 is PARTIAL (navigation timeout — formEvidenceRequired=true, authEvidenceRequired=true, policyEvidenceRequired=true uxStatesCaptured=[]).",
+        "Wireframe ② 마스코트/혜택 영역, ① 브랜드 메시지 area not implemented (page renders only H1 + form + login link).",
+        "Confirmed doc-↔-impl drift: PW max(64) not enforced — auth-overview §10 already logged this for A-01 and X-06.",
+        "Newly observed: displayName '2-30자' constraint from description ③ not enforced (no min/max rule)."
+      ],
+      "evidenceReferences": [
+        "docs/IA/01-A-01-sign-up/description.md",
+        "docs/IA/01-A-01-sign-up/wireframe.png",
+        "src/app/sign-up/page.tsx",
+        "src/components/auth/SignUpForm.tsx",
+        "docs/development/auth-overview.md §4.1, §10 (Known drift 2026-05-27)",
+        "reports/ia-verification/runs/20260528-141731/source-map-results.json (A-01 PASS)",
+        "reports/ia-verification/runs/20260528-141731/browser-results.json (A-01 PARTIAL)",
+        "reports/ia-verification/runs/20260528-141731/screenshots/coverage-A-01-{360,768,1280}.png",
+        "reports/ia-verification/runs/20260528-141731/security-navigation-results.json (BLOCKED — JSON variant missing; spec PASSed)"
+      ]
+    },
+    {
+      "iaCode": "A-02",
+      "screenName": "Login",
+      "route": "/login",
+      "audience": "public",
+      "wireframeStatus": "present",
+      "aiUxResult": "PARTIAL",
+      "confidence": "medium",
+      "humanConfirmation": "needs-human-judgment",
+      "findings": {
+        "pageJob": "pass — H1 '로그인'; single user job is existing-user authentication. Segmented control gives 비밀번호 로그인 / 매직링크 로그인.",
+        "entryContext": "pass — session_expired query is surfaced via SESSION_NOTICE Alert ('세션이 만료되어 로그아웃됐어요. 다시 로그인해주세요.') matching description ④ exception. data-testid=login-session-notice present.",
+        "primaryAction": "pass — single primary submit per mode ('로그인' or '로그인 링크 받기'). 'loading' flag blocks duplicate submission per description ④. '비밀번호를 잊으셨나요?' link is visible inline.",
+        "flowContinuity": "pass — Success → router.push('/dashboard'); magic-link → 'magicLinkSent' state with confirmation copy and reset CTA. Bottom anchor → /sign-up. Per docs/flow/user-flow.md A-02 → B-01 / X-06.",
+        "aiBehavior": "not applicable",
+        "formErrorUx": "partial — Email has type=email + required. Password field has only required rule — no min/max — description ③ specifies 'ID 4-80자, PW 8-64자, blur 후 형식 검증' but neither length constraint is enforced. Errors from signInWithPassword and signInWithOtp surface as `로그인 실패: ${error.message}` / `매직링크 전송 실패: ${error.message}` toasts which include raw Supabase message text — §6.9 'Raw provider errors are not shown to users' partial violation. Description ③ also requires '3회 실패 시 잠금 안내' which is NOT implemented client-side (lockout is server-side Supabase behavior, surfaced only via raw error).",
+        "keyboardFocus": "low-confidence — antd Form + Segmented should be keyboard-reachable; unverified by browser evidence.",
+        "responsive": "low-confidence — screenshots 360/768/1280 captured after nav timeout.",
+        "policyTrustCopy": "pass — No billing/policy overclaim on login screen."
+      },
+      "blockingReasons": [
+        "browser-results.json A-02 is PARTIAL (navigation timeout).",
+        "Wireframe ① 환영/브랜드 영역 and ② 마스코트 안내 not implemented (page is bare H1 + form + signup link).",
+        "Doc gap candidate: description ③ '4-80자 / PW 8-64자 / blur 후 형식 검증' not enforced in LoginForm.tsx.",
+        "Doc gap candidate: '3회 실패 시 잠금 안내' (description ③) is not a client-side UI — falls to raw Supabase error toast."
+      ],
+      "evidenceReferences": [
+        "docs/IA/02-A-02-login/description.md",
+        "docs/IA/02-A-02-login/wireframe.png",
+        "src/app/login/page.tsx",
+        "src/components/auth/LoginForm.tsx",
+        "docs/development/auth-overview.md §4.2",
+        "reports/ia-verification/runs/20260528-141731/source-map-results.json (A-02 PASS)",
+        "reports/ia-verification/runs/20260528-141731/browser-results.json (A-02 PARTIAL)",
+        "reports/ia-verification/runs/20260528-141731/screenshots/coverage-A-02-{360,768,1280}.png",
+        "reports/ia-verification/runs/20260528-141731/security-navigation-results.json (BLOCKED — JSON missing)"
+      ]
+    },
+    {
+      "iaCode": "X-06",
+      "screenName": "Password reset",
+      "route": "/password-reset",
+      "audience": "public",
+      "wireframeStatus": "present",
+      "aiUxResult": "PARTIAL",
+      "confidence": "medium",
+      "humanConfirmation": "needs-human-judgment",
+      "findings": {
+        "pageJob": "pass — H1 '비밀번호 재설정' on /password-reset. Sub flow on /password-reset/confirm renders 'PasswordResetConfirmForm' with H3 '새 비밀번호 설정'.",
+        "entryContext": "pass — /password-reset accepts direct URL; '로그인으로 돌아가기' anchor present.",
+        "primaryAction": "pass — Single primary 'loading'-guarded button per step ('재설정 링크 보내기' on request, '비밀번호 변경' on confirm). After resetPasswordForEmail success, in-page sentTo state renders confirmation copy.",
+        "flowContinuity": "pass — request → email → callback flow (resetPasswordForEmail uses redirectTo /password-reset/confirm). On confirm success router.push('/login'). Matches description '예외: 링크 만료 또는 세션 만료 시 재요청 화면으로 전환' — partially: the link-expired branch is implicit (callback would send user to /auth/error). description ⑥ '저장 실패/만료는 재시도와 링크 재발송 CTA 제공' — current Confirm form only shows a toast on failure, no explicit '링크 재발송' CTA in the UI.",
+        "aiBehavior": "not applicable",
+        "formErrorUx": "partial — Same drift as A-01: PW 8-64자 specified in description ③ but PasswordResetConfirmForm uses only min:8 (confirmed at lines 43-49). 'auth-overview.md §10' already records this drift. passwordConfirm match validator present. resetPasswordForEmail error and updateUser error are surfaced via message.error toast with raw error text — partial §6.9 violation.",
+        "keyboardFocus": "low-confidence — unverified in browser evidence.",
+        "responsive": "low-confidence — screenshots at 360/768/1280 captured after nav timeout. maxWidth 480.",
+        "policyTrustCopy": "partial — description ② '단계 표시' (이메일 확인 → 인증 코드 → 새 비밀번호 → 완료) is NOT implemented — no Steps/progress indicator on either page. description ⑤ 마스코트 absent. description ④ '안내 카피 ... 재전송 제한 중에는 남은 시간을 표시' (resend cooldown) NOT implemented on /password-reset (no cooldown UI on the request form)."
+      },
+      "blockingReasons": [
+        "browser-results.json X-06 is PARTIAL (navigation timeout).",
+        "Confirmed doc-↔-impl drift: PW max(64) not enforced — auth-overview §10 already logged.",
+        "Wireframe areas ② 단계 표시, ④ 안내 카피 (재전송 제한 시간 표시), ⑤ 마스코트, ⑥ 완료 CTA 재시도/재발송 분기 not implemented.",
+        "Request-side resend cooldown (description ④) absent from PasswordResetRequestForm."
+      ],
+      "evidenceReferences": [
+        "docs/IA/28-X-06-password-reset/description.md",
+        "docs/IA/28-X-06-password-reset/wireframe.png",
+        "src/app/password-reset/page.tsx",
+        "src/app/password-reset/confirm/page.tsx (referenced via redirectTo)",
+        "src/components/auth/PasswordResetRequestForm.tsx",
+        "src/components/auth/PasswordResetConfirmForm.tsx",
+        "docs/development/auth-overview.md §10 (Known drift)",
+        "reports/ia-verification/runs/20260528-141731/source-map-results.json (X-06 PASS)",
+        "reports/ia-verification/runs/20260528-141731/browser-results.json (X-06 PARTIAL)",
+        "reports/ia-verification/runs/20260528-141731/screenshots/coverage-X-06-{360,768,1280}.png"
+      ]
+    },
+    {
+      "iaCode": "X-11",
+      "screenName": "Auth error",
+      "route": "/auth/error",
+      "audience": "public",
+      "wireframeStatus": "missing",
+      "aiUxResult": "PARTIAL",
+      "confidence": "medium",
+      "humanConfirmation": "needs-human-judgment",
+      "findings": {
+        "pageJob": "pass — H3 dynamic title from REASON_CONTENT keyed by ?reason. Single job is to explain the failure and provide a next action.",
+        "entryContext": "pass — Page is built for direct entry from /auth/callback redirects. Reads `reason`, `email`, `retry_after_seconds` from URL. Unknown reason → mapSupabaseErrorCode fallback. data-testid `auth-error-card-${reason}` per-reason for verification.",
+        "primaryAction": "pass — Single primary Button + optional secondary Link. content.hasCountdown disables primary while remaining > 0 (description ④ 'rate-limit 카운트다운 중에는 CTA 비활성'). Resend reasons trigger handleResend with editable email (description ⑤ Codex C-ε rule).",
+        "flowContinuity": "pass — Always shows 'home' escape ('홈으로 돌아가기' bottom anchor) — description ⑥ '항상 최소 1개 escape route'. CTAs route to /sign-up, /login, /, /login.",
+        "aiBehavior": "not applicable",
+        "formErrorUx": "pass — Editable email input only shown when content.showsEmailField. Resend success triggers message.success; rate-limit hit forces 60s cooldown and message.error. Description §2 ② 'raw Supabase error_description은 절대 노출하지 않음 (서버 로그에만)' — verified: AuthErrorCard renders `content.message` from canonical REASON_CONTENT mapping, NOT raw error. console.error in callback Route Handler logs raw values server-side only (route.ts lines 64-67, 94-98, 113-117). PASS on raw-error suppression — this is the strongest UX guarantee in the shard.",
+        "keyboardFocus": "low-confidence — Card uses aria-live=\"polite\". Tab order should follow visual order: title, message, email input (when shown), primary, secondary, home link. Not verified live.",
+        "responsive": "low-confidence — screenshots at 360/768/1280 captured after timeout. Card maxWidth 520.",
+        "policyTrustCopy": "pass — Description §5 '안전한 next action' — covered. Security-critical: raw provider error text never reaches the UI (verified by code reading + by tests/lib/auth/error-mapping.test.ts existence per auth-overview §10 table)."
+      },
+      "blockingReasons": [
+        "browser-results.json X-11 is PARTIAL (navigation timeout — visibleH1=null).",
+        "wireframeStatus=missing per dispatch plan. Per task brief — treat as DOC-GAP candidate. NOT marking DOC-GAP because description.md ⑥-area spec IS comprehensive (11 reasons + countdown + email field + escape route), and a wireframe is not strictly necessary for a reason-driven error card.",
+        "Countdown formatCountdown only handles single-unit display ('5분', '30초', '5분 30초'); long Retry-After (>1h, up to 86400s) renders as '1440분' rather than '24시간' — minor UX/i18n smell, not a blocker.",
+        "Retry-After value comes only from URL `retry_after_seconds` query. Codex C-ε rule: the /auth/callback route handler doesn't forward Supabase Retry-After header values (route.ts buildErrorUrl passes null) — so countdown defaults to 60s. Description §4 spec says 'Supabase same-user OTP 한도 정렬'; gap is in callback not in error card."
+      ],
+      "evidenceReferences": [
+        "docs/IA/33-X-11-auth-error/description.md",
+        "src/app/auth/error/page.tsx",
+        "src/components/auth/AuthErrorCard.tsx",
+        "src/lib/auth/error-mapping.ts (REASON_CONTENT, mapSupabaseErrorCode, sanitizeRetryAfterSeconds — referenced)",
+        "src/app/auth/callback/route.ts (buildErrorUrl)",
+        "docs/development/auth-overview.md §5 (reason mapping table)",
+        "reports/ia-verification/runs/20260528-141731/source-map-results.json (X-11 PASS)",
+        "reports/ia-verification/runs/20260528-141731/browser-results.json (X-11 PARTIAL)",
+        "reports/ia-verification/runs/20260528-141731/screenshots/coverage-X-11-{360,768,1280}.png",
+        "reports/ia-verification/runs/20260528-141731/hosted-surface-results.json (status: BLOCKED — script parse failure, spec PASSed this session per task brief)"
+      ]
+    },
+    {
+      "iaCode": "X-12",
+      "screenName": "Auth verify-email",
+      "route": "/auth/verify-email",
+      "audience": "public",
+      "wireframeStatus": "missing",
+      "aiUxResult": "PARTIAL",
+      "confidence": "medium",
+      "humanConfirmation": "needs-human-judgment",
+      "findings": {
+        "pageJob": "pass — H3 '이메일을 확인해주세요' on direct entry. Single job is 'finish email verification or resend'.",
+        "entryContext": "pass — Reads `email` from URL ?email= query (description ① fallback 'session에 이메일 정보 없으면 ?email= query 또는 입력 폼으로 fallback'). Survives reloads via the same query, plus cooldown survives via localStorage (key 'talkpik:verify-email:cooldown-until') — explicitly designed against rate-limit bypass (Phase 8 follow-up v2.3 inline comments lines 8-12). STRONG behavior here.",
+        "primaryAction": "pass — Single primary '인증 메일 다시 보내기' Button. disabled={cooldownRemaining > 0}, loading={resending}. Description ③ '60초 client cooldown' implemented + extra robustness vs. reload.",
+        "flowContinuity": "pass — Bottom row gives 3 escapes: '로그인 페이지로', '다른 이메일로 가입', '홈으로'. Description ⑥ 'always exposed help links' — met.",
+        "aiBehavior": "not applicable",
+        "formErrorUx": "partial — Editable email input always present per description ③ ('항상 보이는 이메일 input을 요구 — URL/세션만으로 fire-and-forget X — Codex C-ε 합의'). Empty email → message.warning '이메일을 입력해주세요.'. Rate-limit hit → writeCooldownStart(60) + message.error. Other errors → `재전송에 실패했어요: ${error.message}` (raw Supabase message text in a toast — minor §6.9 partial). Description ③ also says 'over_email_send_rate_limit 응답 시 /auth/error?reason=over_email_send_rate_limit&retry_after_seconds=<n>로 redirect 또는 인라인 안내' — current implementation chose 'inline 안내' branch (cooldown + message.error), no redirect. Acceptable per spec OR branch.",
+        "keyboardFocus": "low-confidence — Card aria-live=\"polite\". Form input disabled during cooldown. Not verified live.",
+        "responsive": "low-confidence — screenshots at 360/768/1280 captured after nav timeout.",
+        "policyTrustCopy": "pass — No overclaim. Description §3 spec for cooldown precision was explicitly tightened in Phase 8 follow-up v2.3 (lines 151-154) — chose default 60s rather than mis-interpreting HTTP 429 as seconds. Conservative + correct."
+      },
+      "blockingReasons": [
+        "browser-results.json X-12 is PARTIAL (navigation timeout).",
+        "wireframeStatus=missing per dispatch plan. Same judgment as X-11: description.md is detailed enough (Codex 3-round consensus) that absence of wireframe is acceptable for an info+resend card. NOT marking DOC-GAP.",
+        "Cooldown formatCountdown identical to X-11 — fine for ≤60s default, untested for longer Retry-After values."
+      ],
+      "evidenceReferences": [
+        "docs/IA/34-X-12-auth-verify-email/description.md",
+        "src/app/auth/verify-email/page.tsx",
+        "src/components/auth/VerifyEmailCard.tsx",
+        "src/components/auth/SignUpForm.tsx lines 50 (signUp → push verify-email)",
+        "docs/development/auth-overview.md §4.1 (signup → verify-email flow)",
+        "reports/ia-verification/runs/20260528-141731/source-map-results.json (X-12 PASS)",
+        "reports/ia-verification/runs/20260528-141731/browser-results.json (X-12 PARTIAL)",
+        "reports/ia-verification/runs/20260528-141731/screenshots/coverage-X-12-{360,768,1280}.png"
+      ]
+    }
+  ],
+  "blockedCards": [
+    {
+      "iaCode": "F-M1",
+      "screenName": "PDF export modal",
+      "route": "hosted by /library, /writing/feedback/short/:id, /writing/feedback/long/:id, /writing/reports/:id/compare",
+      "audience": "user",
+      "aiUxResult": "FAIL",
+      "confidence": "medium",
+      "humanConfirmation": "needs-human-judgment",
+      "findings": {
+        "pageJob": "diverged — description.md ②③④ specifies a real modal with 파일명 입력 (1-60자), 옵션 선택, 미리보기, 내보내기 CTA. src/components/library/ExportPdfButton.tsx is a single button that calls window.print() via triggerPdfExport — there is no modal, no filename input, no preview pane, no option selection. This is a substantive UI gap vs the description, not just missing evidence.",
+        "entryContext": "ExportPdfButton confirms the trigger exists for sourceType submission|report, but the four host routes (/library, /writing/feedback/short/:id, /writing/feedback/long/:id, /writing/reports/:id/compare) have not all been verified to actually wire this button — hosted-surface lane is 0 rows",
+        "primaryAction": "different from description — implementation triggers browser print dialog directly. No 'PDF 생성 → 다운로드' two-step state machine. The success toast 'PDF 출력 대화상자가 열렸습니다.' partly disclaims this, but the description.md framing 'PDF 생성을 시작하고 다운로드 또는 저장을 제공' is not met.",
+        "flowContinuity": "unclear — fail-state recovery (description ④ 예외: 재시도와 문의 링크) is not implemented; only message.error toast",
+        "aiBehavior": "not-applicable",
+        "formErrorUx": "missing — no filename input, no validation, no preview-generation fallback",
+        "keyboardFocus": "missing-evidence — no modal exists, so modal focus trap requirement is moot, but the description-mandated modal behavior cannot be verified",
+        "responsive": "missing-evidence",
+        "policyTrustCopy": "not-applicable"
+      },
+      "blockingReasons": [
+        "hosted-surface-results.json is 0 rows BLOCKED — trigger/focus-entry/focus-return/Esc/cancel/backdrop behavior for F-M1 not verified at any of the 4 host routes",
+        "Implementation diverges from description.md — ExportPdfButton is print-dialog trigger, not a modal with filename/options/preview",
+        "browser-results.json F-M1 row PARTIAL due to /library navigation timeout"
+      ],
+      "evidenceReferences": [
+        "reports/ia-verification/runs/20260528-141731/source-map-results.json (F-M1: PASS, src/app/(workspace)/library/page.tsx + src/components/library/ExportPdfButton.tsx)",
+        "reports/ia-verification/runs/20260528-141731/browser-results.json (F-M1 row: status PARTIAL)",
+        "docs/IA/19-F-M1-pdf-export-modal/description.md (mandates 파일명 1-60자, 옵션, 미리보기, 다운로드 CTA)",
+        "src/components/library/ExportPdfButton.tsx (button-only implementation, no modal)",
+        "src/lib/export/pdf-export.ts (referenced by trigger)"
+      ]
+    },
+    {
+      "iaCode": "A-03",
+      "screenName": "Learning goal setup",
+      "route": "/onboarding/learning-goal",
+      "audience": "user",
+      "aiUxResult": "BLOCKED",
+      "confidence": "medium",
+      "humanConfirmation": "needs-human-judgment",
+      "findings": {
+        "pageJob": "clear in code (Title \"학습 목표 설정\"); no rendered evidence",
+        "entryContext": "clear via workspace session guard + user-flow A-01→A-03; direct-URL re-entry by already-onboarded user unverified",
+        "primaryAction": "clear — single primary submit button \"저장하고 대시보드로 이동\"",
+        "flowContinuity": "pass in code (router.push('/dashboard') on success); browser-back unverified",
+        "aiBehavior": "not-applicable (no AI surface on screen)",
+        "formErrorUx": "partial — zod schema validates required fields and past-date refinement; save-failure path surfaces raw err.message which may leak Supabase error text",
+        "keyboardFocus": "not-verified",
+        "responsive": "not-verified at 360/768/1280; container is maxWidth 640 with antd inputs at width 100%",
+        "policyTrustCopy": "not-applicable",
+        "iaWireframeFidelity": "partial — description §1 'onboarding step indicator' is not implemented in code; description §2 'mascot/guidance' is text-only (no mascot visual)"
+      },
+      "blockingReasons": [
+        "browser-results.json: page.goto Timeout 15000ms exceeded for /onboarding/learning-goal at 360/768/1280",
+        "screenshots/coverage-A-03-{360,768,1280}.png missing on disk",
+        "security-navigation-results.json BLOCKED (0 rows) — direct-URL, refresh, browser-back lanes unverified",
+        "form/error/loading/success rendered states not captured per checklist §6.5"
+      ],
+      "evidenceReferences": [
+        "reports/ia-verification/runs/20260528-141731/source-map-results.json (A-03 PASS)",
+        "reports/ia-verification/runs/20260528-141731/browser-results.json (A-03 PARTIAL — nav timeout)",
+        "reports/ia-verification/runs/20260528-141731/security-navigation-results.json (BLOCKED — 0 rows)",
+        "reports/ia-verification/runs/20260528-141731/doc-receipts.json (A-03 present)",
+        "reports/ia-verification/runs/20260528-141731/ai-ux-review.json (A-03 existing BLOCKED card)",
+        "docs/IA/03-A-03-learning-goal-setup/description.md",
+        "docs/sitemap.md (A-03 row, audience matrix)",
+        "docs/flow/user-flow.md (A-01→A-03→B-01 edge)",
+        "src/app/(workspace)/onboarding/learning-goal/page.tsx",
+        "src/components/learning/LearningGoalForm.tsx",
+        "src/app/(workspace)/layout.tsx"
+      ],
+      "humanReviewQuestions": [
+        "Is the missing 'onboarding step indicator' (description §1) an intentional trim or a real wireframe-fidelity gap?",
+        "Should /onboarding/learning-goal redirect to /dashboard when a user already has a learning_goal row, or stay in edit mode?",
+        "Does the antd notification.error description ever leak raw Supabase/Postgres error text on save failure?",
+        "Is the antd Select mode='multiple' weak-areas input usable on a 360px touch keyboard?"
+      ]
+    },
+    {
+      "iaCode": "B-01",
+      "screenName": "Home dashboard",
+      "route": "/dashboard",
+      "audience": "user",
+      "aiUxResult": "BLOCKED",
+      "confidence": "medium",
+      "humanConfirmation": "needs-human-judgment",
+      "findings": {
+        "pageJob": "clear in code; KpiSummary + recommendation card row + recent-feedback/alerts row",
+        "entryContext": "clear — workspace layout requireUser + page-level guard 'if (!goal) redirect(/onboarding/learning-goal)'",
+        "primaryAction": "partial — description §3 expects 3 card types (이어 풀 문제 / 추천 유형 / 최근 피드백); code renders only RecommendationCard (이어 풀 문제) + RecentFeedbackCard. 'Recommended type' card is missing",
+        "flowContinuity": "pass in code for implemented edges (RecommendationCard → /practice/recommendations, EmptyDashboard → /practice/recommendations); user-flow.md outgoing edges to F-01/X-02/X-09/G-01/X-05/X-04 depend on sidebar nav rendering, unverified",
+        "aiBehavior": "not-applicable (no AI-generated copy rendered directly on this page)",
+        "formErrorUx": "not-applicable",
+        "keyboardFocus": "not-verified",
+        "responsive": "not-verified; code uses antd Row gutter xs={12} md={6} for KPI and xs={24} md={16/8} for content rows",
+        "policyTrustCopy": "pass in code (no billing/notification claims surfaced)",
+        "iaWireframeFidelity": "partial — KPI label drift (description §2 says 오늘 제출/최근 첨삭/목표 달성/연속 학습; code shows 오늘 시도/누적 시도/시험까지/연속 학습일); '목표 달성' KPI missing; '추천 유형' card missing"
+      },
+      "blockingReasons": [
+        "browser-results.json: page.goto Timeout 15000ms exceeded for /dashboard at 360/768/1280",
+        "screenshots/coverage-B-01-{360,768,1280}.png missing on disk",
+        "security-navigation-results.json BLOCKED (0 rows)",
+        "empty-state, loading-state, alert-state rendered evidence missing per checklist §6.5"
+      ],
+      "evidenceReferences": [
+        "reports/ia-verification/runs/20260528-141731/source-map-results.json (B-01 PASS)",
+        "reports/ia-verification/runs/20260528-141731/browser-results.json (B-01 PARTIAL — nav timeout)",
+        "reports/ia-verification/runs/20260528-141731/security-navigation-results.json (BLOCKED — 0 rows)",
+        "reports/ia-verification/runs/20260528-141731/doc-receipts.json (B-01 present)",
+        "reports/ia-verification/runs/20260528-141731/ai-ux-review.json (B-01 existing BLOCKED card)",
+        "docs/IA/04-B-01-home-dashboard/description.md",
+        "docs/sitemap.md (B-01 row, audience matrix)",
+        "docs/flow/user-flow.md (B-01 outgoing edges to C-01/F-01/X-02/X-09/G-01/X-05/X-04)",
+        "src/app/(workspace)/dashboard/page.tsx",
+        "src/components/learning/DashboardContent.tsx",
+        "src/components/learning/KpiSummary.tsx",
+        "src/components/learning/EmptyDashboard.tsx"
+      ],
+      "humanReviewQuestions": [
+        "Should the KPI labels in KpiSummary.tsx be updated to match description.md §2, or should description.md be updated to reflect the current 'attempts + exam D-day + streak' framing?",
+        "Is the missing '추천 유형' card (description §3 requires 3 card types) a Phase 7 partial or a real omission?",
+        "Does the workspace sidebar (description §1) actually render '홈/문제 풀기/쓰기 연습/내 서재/성장 리포트/설정' in order with ≤10-char labels and an active-route highlight?",
+        "Is showing all-zero KPI strip above the empty-state CTA desirable, or should the KPI strip be hidden for first-use users?"
+      ]
+    },
+    {
+      "iaCode": "X-02",
+      "screenName": "Growth dashboard",
+      "route": "/growth",
+      "audience": "user",
+      "aiUxResult": "BLOCKED",
+      "confidence": "high",
+      "humanConfirmation": "needs-human-judgment",
+      "findings": {
+        "pageJob": "missing — implementation is a PlaceholderPage with phaseHint '진척/성장 분석 차트는 Phase 4에서 채워집니다'; description.md describes 6 substantive regions (sidebar, KPI, growth chart, weakness matrix, AI insights, bottom summary/recs)",
+        "entryContext": "workspace session guard applies; placeholder offers no contextual heading beyond the title 'X-02 성장 대시보드'",
+        "primaryAction": "missing — placeholder has no CTA",
+        "flowContinuity": "blocked — outgoing edges undefined in code; B-01→X-02 inbound is documented but not exercised",
+        "aiBehavior": "fail — description §5 specifies an AI insights surface ('AI가 학습 패턴과 최근 성과를 짧은 문장으로 해석') with checklist §6.4 obligations (label AI involvement, allow regenerate/dispute); none implemented",
+        "formErrorUx": "not-applicable",
+        "keyboardFocus": "not-verified (placeholder is trivial)",
+        "responsive": "trivially responsive (single card)",
+        "policyTrustCopy": "pass — placeholder makes no claims",
+        "iaWireframeFidelity": "fail — 0 of 6 description regions implemented"
+      },
+      "blockingReasons": [
+        "browser-results.json: page.goto Timeout 15000ms exceeded for /growth at 360/768/1280",
+        "screenshots/coverage-X-02-{360,768,1280}.png missing on disk",
+        "security-navigation-results.json BLOCKED (0 rows)",
+        "implementation is PlaceholderPage stub — 0 of 6 description.md regions implemented, so even with rendered evidence the AI UX review cannot mark anything past BLOCKED until product status (DEFERRED vs DOC-GAP) is decided"
+      ],
+      "evidenceReferences": [
+        "reports/ia-verification/runs/20260528-141731/source-map-results.json (X-02 PASS)",
+        "reports/ia-verification/runs/20260528-141731/browser-results.json (X-02 PARTIAL — nav timeout)",
+        "reports/ia-verification/runs/20260528-141731/security-navigation-results.json (BLOCKED — 0 rows)",
+        "reports/ia-verification/runs/20260528-141731/doc-receipts.json (X-02 present)",
+        "reports/ia-verification/runs/20260528-141731/ai-ux-review.json (X-02 existing BLOCKED card)",
+        "docs/IA/24-X-02-growth-dashboard/description.md",
+        "docs/sitemap.md (X-02 listed as user page)",
+        "docs/flow/user-flow.md (B-01 → X-02 edge)",
+        "src/app/(workspace)/growth/page.tsx",
+        "src/components/shared/PlaceholderPage.tsx"
+      ],
+      "humanReviewQuestions": [
+        "Should X-02 be relabeled DEFERRED to match the in-code phaseHint, or should description.md's 6-region scope be archived/trimmed (DOC-GAP)?",
+        "Is the placeholder copy 'Phase 4에서 채워집니다' still accurate at IA verification run-time (Phase 5)?",
+        "When the AI insights surface (description §5) is implemented, will it follow checklist §6.4 (label AI involvement, evidence/context, regenerate/dispute)?"
+      ]
+    },
+    {
+      "iaCode": "C-03",
+      "screenName": "Retry modal",
+      "route": "hosted by /practice/problems",
+      "audience": "user",
+      "aiUxResult": "BLOCKED",
+      "confidence": "low",
+      "humanConfirmation": "not-ready",
+      "findings": {
+        "pageJob": "clear-from-docs",
+        "entryContext": "clear-from-docs",
+        "primaryAction": "missing-evidence",
+        "flowContinuity": "missing-evidence",
+        "aiBehavior": "not-applicable",
+        "formErrorUx": "missing-evidence",
+        "keyboardFocus": "missing-evidence",
+        "responsive": "missing-evidence",
+        "policyTrustCopy": "not-applicable",
+        "topGaps": [
+          "Hosted modal trigger from /practice/problems was not captured — hosted-surface-results.json has 0 rows (BLOCKED).",
+          "Background dim, scroll-lock, focus-trap, focus-return cannot be verified.",
+          "Expired-problem path (시작 → 만료 안내) not exercised.",
+          "Per checklist §9, hosted modals must not be PASSed when only the component file was inspected."
+        ],
+        "humanReviewerShouldInspect": [
+          "Whether opening the retry modal from a problem row moves focus into the modal and returns it on close.",
+          "Whether the default mode is pre-selected and the start CTA is disabled until selection.",
+          "Whether 시작 click is debounced (제약: 중복 실행 차단)."
+        ]
+      },
+      "blockingReasons": [
+        "hosted-surface-results.json BLOCKED (0 rows) — no modal trigger evidence captured.",
+        "browser-results.json#C-03 PARTIAL with navigation timeout on host route.",
+        "Phase 3 hosted-surfaces.spec exists (per browser-results.json notes) but did not emit data in this run."
+      ],
+      "evidenceReferences": [
+        "docs/IA/07-C-03-retry-modal/description.md",
+        "reports/ia-verification/runs/20260528-141731/doc-receipts.json#C-03 (filled)",
+        "reports/ia-verification/runs/20260528-141731/source-map-results.json#C-03 (PASS — src/components/practice/RetryModal.tsx)",
+        "reports/ia-verification/runs/20260528-141731/hosted-surface-results.json (BLOCKED — 0 rows)"
+      ]
+    },
+    {
+      "iaCode": "D-M1",
+      "screenName": "Submission confirmation",
+      "route": "hosted by /writing/51,52,53,54",
+      "audience": "user",
+      "aiUxResult": "BLOCKED",
+      "confidence": "low",
+      "humanConfirmation": "not-ready",
+      "findings": {
+        "pageJob": "clear-from-docs",
+        "entryContext": "clear-from-docs",
+        "primaryAction": "missing-evidence",
+        "flowContinuity": "missing-evidence",
+        "aiBehavior": "missing-evidence",
+        "formErrorUx": "missing-evidence",
+        "keyboardFocus": "missing-evidence",
+        "responsive": "missing-evidence",
+        "policyTrustCopy": "missing-evidence",
+        "topGaps": [
+          "Hosted modal trigger from writing page never captured (hosted-surface-results.json 0 rows BLOCKED).",
+          "IRREVERSIBLE-ACTION pack: 동의 체크 + duplicate-submit prevention not visually verified.",
+          "취소 시 작성 화면 입력값 복구 not verified.",
+          "제출 실패 시 모달 유지 + 오류 원인 + 재시도 not verified.",
+          "Per checklist §9, must not be PASS when only component file was inspected."
+        ],
+        "humanReviewerShouldInspect": [
+          "Whether the '제출 후 AI 분석 시작' notice clearly signals where AI takes over (Microsoft HAX G1: make clear what the system can do).",
+          "Whether the consent checkbox copy is plain Korean and does not over-promise outcomes.",
+          "Whether 중복 제출 차단 produces a visible disabled state, not just a noop."
+        ]
+      },
+      "blockingReasons": [
+        "hosted-surface-results.json BLOCKED — 0 rows.",
+        "browser-results.json#D-M1 PARTIAL — navigation timeout on host route, modal trigger not exercised."
+      ],
+      "evidenceReferences": [
+        "docs/IA/12-D-M1-submission-confirmation-modal/description.md",
+        "reports/ia-verification/runs/20260528-141731/source-map-results.json#D-M1 (PASS — src/components/writing/SubmissionConfirmModal.tsx)",
+        "reports/ia-verification/runs/20260528-141731/hosted-surface-results.json (BLOCKED)"
+      ]
+    },
+    {
+      "iaCode": "D-M2",
+      "screenName": "AI analysis loading",
+      "route": "hosted by writing submission flow",
+      "audience": "user",
+      "aiUxResult": "BLOCKED",
+      "confidence": "low",
+      "humanConfirmation": "not-ready",
+      "findings": {
+        "pageJob": "clear-from-docs",
+        "entryContext": "clear-from-docs",
+        "primaryAction": "not-applicable",
+        "flowContinuity": "missing-evidence",
+        "aiBehavior": "missing-evidence",
+        "formErrorUx": "not-applicable",
+        "keyboardFocus": "missing-evidence",
+        "responsive": "missing-evidence",
+        "policyTrustCopy": "missing-evidence",
+        "topGaps": [
+          "Most policy-sensitive copy in shard: '예상 대기 시간', '10초 이상 지연 시 갱신', '분석 실패는 고객지원 링크' — none verified visually.",
+          "뒤로가기 시 분석 중단 경고 (irreversible AI-handoff) — checklist §6.4 'reject/retry/regenerate' path unverified.",
+          "Motion-reduced fallback (정적 이미지 대체) — accessibility WCAG concern unverified.",
+          "Hosted-surface lane is 0 rows BLOCKED; AI-OUTPUT pack browser screenshot absent."
+        ],
+        "humanReviewerShouldInspect": [
+          "Whether '예상 대기 시간' copy gives a real range and what happens when the range is exceeded (Google PAIR §explainability).",
+          "Whether the 4-step progress (문법/구성/표현/점수) accurately reflects backend state or is performative animation.",
+          "Whether '재시도 오류 / 분석 실패' surfaces a recovery path that doesn't lose the submitted answer.",
+          "Whether Korean copy on the loading screen avoids over-promising 'AI가 정확하게 분석합니다' framing."
+        ]
+      },
+      "blockingReasons": [
+        "hosted-surface-results.json BLOCKED — 0 rows.",
+        "browser-results.json#D-M2 PARTIAL — navigation timeout, no captured loading state screenshot.",
+        "Required AI-output evidence flag set but uxStatesCaptured=[]."
+      ],
+      "evidenceReferences": [
+        "docs/IA/13-D-M2-ai-analysis-loading/description.md",
+        "reports/ia-verification/runs/20260528-141731/source-map-results.json#D-M2 (PASS — src/components/feedback/AnalysisLoadingModal.tsx)",
+        "reports/ia-verification/runs/20260528-141731/browser-results.json#D-M2 (PARTIAL)",
+        "reports/ia-verification/runs/20260528-141731/hosted-surface-results.json (BLOCKED)",
+        "src/components/feedback/AnalysisCharacter.tsx"
+      ]
+    },
+    {
+      "iaCode": "D-M3",
+      "screenName": "Autosave warning",
+      "route": "hosted by /writing/51,52,53,54",
+      "audience": "user",
+      "aiUxResult": "BLOCKED",
+      "confidence": "low",
+      "humanConfirmation": "not-ready",
+      "findings": {
+        "pageJob": "clear-from-docs",
+        "entryContext": "clear-from-docs",
+        "primaryAction": "missing-evidence",
+        "flowContinuity": "missing-evidence",
+        "aiBehavior": "not-applicable",
+        "formErrorUx": "missing-evidence",
+        "keyboardFocus": "missing-evidence",
+        "responsive": "missing-evidence",
+        "policyTrustCopy": "missing-evidence",
+        "topGaps": [
+          "Hosted-surface lane BLOCKED — autosave-failure trigger (sidebar leave / network down) never exercised.",
+          "FAILURE + RECOVERY pack: 마지막 저장 시각, 복구 가능 여부, 임시 저장 상태 — copy not visually verified.",
+          "위험 CTA('끄기') confirm 문구 + 중복 클릭 차단 unverified.",
+          "Network-disconnect '복구 불가' branch unverified.",
+          "Per checklist §9, hosted modals must not be PASSed from component inspection alone."
+        ],
+        "humanReviewerShouldInspect": [
+          "Whether '끄기' (destructive) CTA visually outranks '취소' or matches risk hierarchy.",
+          "Whether the warning copy explains WHAT will be lost (글자 수, 단락) not just THAT data could be lost.",
+          "Whether the warning fires for true autosave failures vs. routine save delays (false-positive risk)."
+        ]
+      },
+      "blockingReasons": [
+        "hosted-surface-results.json BLOCKED — 0 rows.",
+        "browser-results.json#D-M3 PARTIAL — navigation timeout, error-state screenshot not produced.",
+        "Dispatch plan requiredEvidenceInputs includes 'hosted-surface' which is currently 0 rows."
+      ],
+      "evidenceReferences": [
+        "docs/IA/22-D-M3-autosave-warning/description.md",
+        "reports/ia-verification/runs/20260528-141731/source-map-results.json#D-M3 (PASS — src/components/writing/AutosaveWarningModal.tsx)",
+        "reports/ia-verification/runs/20260528-141731/browser-results.json#D-M3 (PARTIAL)",
+        "reports/ia-verification/runs/20260528-141731/hosted-surface-results.json (BLOCKED)"
+      ]
+    }
+  ],
+  "summary": {
+    "PARTIAL": 23,
+    "FAIL": 1,
+    "DEFERRED": 3,
+    "BLOCKED": 7
+  },
+  "status": "FAIL",
+  "phase5NoPassRuleApplied": "Per Plan §11 Step 5.3, no IA received PASS. PARTIAL labels reflect rendered-evidence-present + missing-interaction-evidence + human-confirmation-needed. BLOCKED labels reflect concrete collector preconditions."
+}
