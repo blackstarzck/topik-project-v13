@@ -63,7 +63,9 @@ workflow-evaluation.html
 # These paths hold secret/session/temp files during the audit execution; durable
 # outputs are promoted to reports/ before commit. See:
 #   docs/ai-workflow/plans/20260523-0100-implementation-coverage-audit.md (§4, §10 Task 0)
-scripts/audit-setup/
+scripts/audit-setup/*
+!scripts/audit-setup/
+!scripts/audit-setup/*.mjs
 tests/e2e/auth-state/
 screenshots/
 tests/e2e/coverage/failure-log.json

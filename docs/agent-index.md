@@ -61,6 +61,7 @@ Use this table only after reading [spec.md](spec.md).
 | Frontend framework, package choice, runtime, UI library, forms, validation, charts, tests | [development/stack.md](development/stack.md) |
 | Supabase, Auth, Postgres, RLS, Storage, server-only keys | [development/backend-auth.md](development/backend-auth.md) |
 | Vercel, environments, deployment gates, environment variables, rollback, CI, preview links | [development/deployment.md](development/deployment.md) |
+| dev/prod 분리, Supabase 프로젝트 운영, 키 회전, 마이그레이션 prod 적용, audit 가드, 사고 대응 플레이북 | [development/environments.md](development/environments.md) |
 | Billing, subscription, paywall, payment provider, deferred scope | [development/deferred-scope.md](development/deferred-scope.md) |
 
 ## Active Vs Legacy Rule
