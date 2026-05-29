@@ -4,7 +4,7 @@
   "dirtyState": "dirty",
   "evidenceBundleId": "96e5d23b0ad1221f",
   "generatedBy": "merge-ia-audit-results.mjs",
-  "generatedAt": "2026-05-29T04:04:34.786Z",
+  "generatedAt": "2026-05-29T04:47:43.270Z",
   "entries": [
     {
       "runId": "20260528-141731",
@@ -47,7 +47,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:04:34.786Z"
+      "generatedAt": "2026-05-29T04:47:43.269Z"
     },
     {
       "runId": "20260528-141731",
@@ -90,7 +90,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:04:34.786Z"
+      "generatedAt": "2026-05-29T04:47:43.270Z"
     },
     {
       "runId": "20260528-141731",
@@ -134,7 +134,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:04:34.786Z"
+      "generatedAt": "2026-05-29T04:47:43.270Z"
     },
     {
       "runId": "20260528-141731",
@@ -179,7 +179,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:04:34.786Z"
+      "generatedAt": "2026-05-29T04:47:43.270Z"
     },
     {
       "runId": "20260528-141731",
@@ -214,14 +214,14 @@
       "topGaps": [
         "missing security-navigation-results row",
         "missing agent-integration-results.json",
-        "6 console/page errors captured",
+        "7 console/page errors captured",
         "Primary CTA matching /(시작|선택|문제\\s*풀기)/i not visible",
         "browser-results.json: navigation timeout 15000ms on /practice/recommendations — no actual render captured.",
         "screenshots/coverage-C-01-{360,768,1280}.png not present in run."
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:04:34.786Z"
+      "generatedAt": "2026-05-29T04:47:43.270Z"
     },
     {
       "runId": "20260528-141731",
@@ -265,7 +265,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:04:34.786Z"
+      "generatedAt": "2026-05-29T04:47:43.270Z"
     },
     {
       "runId": "20260528-141731",
@@ -301,7 +301,7 @@
         "missing security-navigation-results row",
         "missing agent-integration-results.json",
         "missing manual-review row",
-        "2 console/page errors captured",
+        "1 console/page errors captured",
         "Modal trigger did not fire OR modal never became visible — selectors are heuristic; Phase 5 reviewer must verify against actual UI source.",
         "hosted-surface-results.json BLOCKED (0 rows) — no modal trigger evidence captured.",
         "browser-results.json#C-03 PARTIAL with navigation timeout on host route.",
@@ -309,7 +309,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:04:34.786Z"
+      "generatedAt": "2026-05-29T04:47:43.270Z"
     },
     {
       "runId": "20260528-141731",
@@ -353,7 +353,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:04:34.786Z"
+      "generatedAt": "2026-05-29T04:47:43.270Z"
     },
     {
       "runId": "20260528-141731",
@@ -397,7 +397,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:04:34.786Z"
+      "generatedAt": "2026-05-29T04:47:43.270Z"
     },
     {
       "runId": "20260528-141731",
@@ -441,7 +441,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:04:34.786Z"
+      "generatedAt": "2026-05-29T04:47:43.270Z"
     },
     {
       "runId": "20260528-141731",
@@ -478,14 +478,14 @@
       "topGaps": [
         "missing security-navigation-results row",
         "missing agent-integration-results.json",
-        "6 console/page errors captured",
+        "7 console/page errors captured",
         "Primary CTA matching /(제출|저장|submit)/i not visible",
         "browser-results.json#D-04: navigation timeout.",
         "Irreversible-action copy at submit-time not captured visually."
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:04:34.786Z"
+      "generatedAt": "2026-05-29T04:47:43.270Z"
     },
     {
       "runId": "20260528-141731",
@@ -520,14 +520,14 @@
         "missing security-navigation-results row",
         "missing agent-integration-results.json",
         "missing manual-review row",
-        "2 console/page errors captured",
+        "1 console/page errors captured",
         "Modal trigger did not fire OR modal never became visible — selectors are heuristic; Phase 5 reviewer must verify against actual UI source.",
         "hosted-surface-results.json BLOCKED — 0 rows.",
         "browser-results.json#D-M1 PARTIAL — navigation timeout on host route, modal trigger not exercised."
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:04:34.786Z"
+      "generatedAt": "2026-05-29T04:47:43.270Z"
     },
     {
       "runId": "20260528-141731",
@@ -562,7 +562,7 @@
       "topGaps": [
         "missing security-navigation-results row",
         "missing agent-integration-results.json",
-        "2 console/page errors captured",
+        "3 console/page errors captured",
         "Modal trigger did not fire OR modal never became visible — selectors are heuristic; Phase 5 reviewer must verify against actual UI source.",
         "hosted-surface-results.json BLOCKED — 0 rows.",
         "browser-results.json#D-M2 PARTIAL — navigation timeout, no captured loading state screenshot.",
@@ -570,7 +570,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:04:34.786Z"
+      "generatedAt": "2026-05-29T04:47:43.270Z"
     },
     {
       "runId": "20260528-141731",
@@ -614,7 +614,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:04:34.786Z"
+      "generatedAt": "2026-05-29T04:47:43.270Z"
     },
     {
       "runId": "20260528-141731",
@@ -658,7 +658,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:04:34.786Z"
+      "generatedAt": "2026-05-29T04:47:43.270Z"
     },
     {
       "runId": "20260528-141731",
@@ -704,7 +704,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:04:34.786Z"
+      "generatedAt": "2026-05-29T04:47:43.270Z"
     },
     {
       "runId": "20260528-141731",
@@ -739,14 +739,14 @@
       "topGaps": [
         "missing security-navigation-results row",
         "missing agent-integration-results.json",
-        "1 console/page errors captured",
+        "2 console/page errors captured",
         "PAYWALL-ENTRY pack not implemented (no premium-locked card state, no /paywall entry)",
         "browser-results timeout; no rendered screenshots",
         "AI rationale strings are tier-based, not personalized (HAX uncertainty hidden)"
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:04:34.786Z"
+      "generatedAt": "2026-05-29T04:47:43.270Z"
     },
     {
       "runId": "20260528-141731",
@@ -792,7 +792,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:04:34.786Z"
+      "generatedAt": "2026-05-29T04:47:43.270Z"
     },
     {
       "runId": "20260528-141731",
@@ -829,7 +829,7 @@
         "missing security-navigation-results row",
         "missing agent-integration-results.json",
         "missing manual-review row",
-        "2 console/page errors captured",
+        "5 console/page errors captured",
         "Modal trigger did not fire OR modal never became visible — selectors are heuristic; Phase 5 reviewer must verify against actual UI source.",
         "hosted-surface-results.json is 0 rows BLOCKED — trigger/focus-entry/focus-return/Esc/cancel/backdrop behavior for F-M1 not verified at any of the 4 host routes",
         "Implementation diverges from description.md — ExportPdfButton is print-dialog trigger, not a modal with filename/options/preview",
@@ -837,7 +837,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:04:34.786Z"
+      "generatedAt": "2026-05-29T04:47:43.270Z"
     },
     {
       "runId": "20260528-141731",
@@ -883,7 +883,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:04:34.786Z"
+      "generatedAt": "2026-05-29T04:47:43.270Z"
     },
     {
       "runId": "20260528-141731",
@@ -919,7 +919,7 @@
         "missing security-navigation-results row",
         "missing agent-integration-results.json",
         "missing manual-review row",
-        "1 console/page errors captured",
+        "2 console/page errors captured",
         "Primary CTA matching /(저장|승인|발행|편집)/i not visible",
         "Phase 2 browser run produced navigation timeout — no rendered DOM, no visible H1, no primary-CTA match; status is PARTIAL not PASS.",
         "Phase 4 security-navigation-results.json is BLOCKED (rows: 0); SN-8 (Student → /admin/problems) is a placeholder spec with no expect() — RBAC denial lane has no real assertion.",
@@ -928,7 +928,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:04:34.786Z"
+      "generatedAt": "2026-05-29T04:47:43.270Z"
     },
     {
       "runId": "20260528-141731",
@@ -963,7 +963,7 @@
       "topGaps": [
         "missing security-navigation-results row",
         "missing agent-integration-results.json",
-        "2 console/page errors captured",
+        "1 console/page errors captured",
         "Modal trigger did not fire OR modal never became visible — selectors are heuristic; Phase 5 reviewer must verify against actual UI source.",
         "hosted-surface-results.json BLOCKED — 0 rows.",
         "browser-results.json#D-M3 PARTIAL — navigation timeout, error-state screenshot not produced.",
@@ -971,7 +971,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:04:34.786Z"
+      "generatedAt": "2026-05-29T04:47:43.270Z"
     },
     {
       "runId": "20260528-141731",
@@ -1006,14 +1006,13 @@
       "topGaps": [
         "missing agent-integration-results.json",
         "1 console/page errors captured",
-        "Primary CTA matching /(무료\\s*시작|시작하기|회원가입)/i not visible",
         "browser-results.json row for X-01 is PARTIAL (navigation timeout — visibleH1=null, primaryCtaPresent=null).",
         "wireframe areas ① 헤더/내비, ④ 제품 프리뷰, ⑤ 마스코트 are not implemented (description.md gap).",
         "description.md ① exception '로그인 사용자는 시작 대신 대시보드 CTA 표시' not implemented in src/app/page.tsx (no session check)."
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:04:34.786Z"
+      "generatedAt": "2026-05-29T04:47:43.270Z"
     },
     {
       "runId": "20260528-141731",
@@ -1057,7 +1056,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:04:34.786Z"
+      "generatedAt": "2026-05-29T04:47:43.270Z"
     },
     {
       "runId": "20260528-141731",
@@ -1100,7 +1099,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:04:34.786Z"
+      "generatedAt": "2026-05-29T04:47:43.270Z"
     },
     {
       "runId": "20260528-141731",
@@ -1143,7 +1142,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:04:34.786Z"
+      "generatedAt": "2026-05-29T04:47:43.270Z"
     },
     {
       "runId": "20260528-141731",
@@ -1186,7 +1185,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:04:34.786Z"
+      "generatedAt": "2026-05-29T04:47:43.270Z"
     },
     {
       "runId": "20260528-141731",
@@ -1229,7 +1228,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:04:34.786Z"
+      "generatedAt": "2026-05-29T04:47:43.270Z"
     },
     {
       "runId": "20260528-141731",
@@ -1275,7 +1274,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:04:34.786Z"
+      "generatedAt": "2026-05-29T04:47:43.270Z"
     },
     {
       "runId": "20260528-141731",
@@ -1320,7 +1319,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:04:34.786Z"
+      "generatedAt": "2026-05-29T04:47:43.270Z"
     },
     {
       "runId": "20260528-141731",
@@ -1363,7 +1362,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:04:34.786Z"
+      "generatedAt": "2026-05-29T04:47:43.270Z"
     },
     {
       "runId": "20260528-141731",
@@ -1400,7 +1399,7 @@
         "missing security-navigation-results row",
         "missing agent-integration-results.json",
         "missing manual-review row",
-        "2 console/page errors captured",
+        "1 console/page errors captured",
         "Phase 2 browser run produced navigation timeout — PARTIAL, no rendered DOM.",
         "Phase 4 security-navigation-results.json BLOCKED (0 rows). SN-12/SN-13 covering the critical org_admin-denied / platform_admin-allowed split are placeholders with NO expect() assertion.",
         "PRIVILEGE elevation path (admin_change_user_role RPC) and the DB-level protect_profile_columns trigger are present in source, but no runtime test in this session exercises the denied/allowed split or confirms the audit-log row.",
@@ -1408,7 +1407,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:04:34.786Z"
+      "generatedAt": "2026-05-29T04:47:43.270Z"
     },
     {
       "runId": "20260528-141731",
@@ -1444,7 +1443,7 @@
       "topGaps": [
         "missing security-navigation-results row",
         "missing agent-integration-results.json",
-        "7 console/page errors captured",
+        "1 console/page errors captured",
         "browser-results.json X-11 is PARTIAL (navigation timeout — visibleH1=null).",
         "wireframeStatus=missing per dispatch plan. Per task brief — treat as DOC-GAP candidate. NOT marking DOC-GAP because description.md ⑥-area spec IS comprehensive (11 reasons + countdown + email field + escape route), and a wireframe is not strictly necessary for a reason-driven error card.",
         "Countdown formatCountdown only handles single-unit display ('5분', '30초', '5분 30초'); long Retry-After (>1h, up to 86400s) renders as '1440분' rather than '24시간' — minor UX/i18n smell, not a blocker.",
@@ -1452,7 +1451,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:04:34.786Z"
+      "generatedAt": "2026-05-29T04:47:43.270Z"
     },
     {
       "runId": "20260528-141731",
@@ -1488,12 +1487,13 @@
       "topGaps": [
         "missing security-navigation-results row",
         "missing agent-integration-results.json",
-        "7 console/page errors captured",
+        "1 console/page errors captured",
+        "Heading \"이메일 인증\" did not match expected pattern /(인증\\s*메일|확인|verify)/i",
         "browser-results.json X-12 is PARTIAL (navigation timeout)."
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:04:34.786Z"
+      "generatedAt": "2026-05-29T04:47:43.270Z"
     }
   ],
   "summary": {
