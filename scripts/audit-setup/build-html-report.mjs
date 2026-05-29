@@ -358,6 +358,80 @@ function renderHero() {
   `;
 }
 
+function oneLineConclusion() {
+  const total = manifest.entries.length;
+  const finalCounts = (finalAudit.entries ?? []).reduce((acc, e) => {
+    acc[e.finalLabel] = (acc[e.finalLabel] ?? 0) + 1;
+    return acc;
+  }, {});
+  const byAudience = { public: { PASS: 0, BLOCKED: 0, total: 0 }, user: { PASS: 0, BLOCKED: 0, total: 0 }, admin: { PASS: 0, BLOCKED: 0, total: 0 } };
+  for (const e of finalAudit.entries ?? []) {
+    const bucket = byAudience[e.audience] ?? null;
+    if (!bucket) continue;
+    bucket.total += 1;
+    if (e.finalLabel === "PASS") bucket.PASS += 1;
+    if (e.finalLabel === "BLOCKED") bucket.BLOCKED += 1;
+  }
+  const segments = [
+    `전체 ${total} IA — ${Object.entries(finalCounts).map(([k, v]) => `${k} ${v}`).join(" · ")}`,
+  ];
+  const audienceParts = [];
+  if (byAudience.public.total) audienceParts.push(`public ${byAudience.public.PASS}/${byAudience.public.total} PASS`);
+  if (byAudience.user.total) audienceParts.push(`user ${byAudience.user.PASS}/${byAudience.user.total} PASS`);
+  if (byAudience.admin.total) audienceParts.push(`admin ${byAudience.admin.PASS}/${byAudience.admin.total} PASS`);
+  if (audienceParts.length) segments.push(audienceParts.join(" · "));
+
+  // BLOCKED 가 있으면 dominant 사유 한 줄 추가.
+  if ((finalCounts.BLOCKED ?? 0) > 0) {
+    const reasonHist = {};
+    for (const e of (finalAudit.entries ?? []).filter((x) => x.finalLabel === "BLOCKED")) {
+      for (const gap of e.topGaps ?? []) {
+        let key = "IA-별 특정 findings";
+        if (/missing manual-review/.test(gap)) key = "cross-audit 미실시";
+        else if (/Primary CTA matching/.test(gap)) key = "CTA regex 미스";
+        else if (/Heading "/.test(gap)) key = "heading regex 미스";
+        else if (/Modal trigger/.test(gap)) key = "모달 trigger 실패";
+        else if (/screenshots\/coverage-.*(missing|absent|not present)/.test(gap)) key = "screenshot 미캡처";
+        else if (/hosted-surface-results\.json BLOCKED/.test(gap)) key = "hosted-surface 미수집";
+        else if (/security-navigation-results\.json BLOCKED/.test(gap)) key = "security-nav per-IA 미수집";
+        else if (/rendered states not captured|rendered evidence missing/.test(gap)) key = "UX states 미캡처";
+        else if (/not implemented/.test(gap)) key = "실제 spec gap";
+        else if (/Doc gap candidate/.test(gap)) key = "DOC-GAP candidate";
+        reasonHist[key] = (reasonHist[key] ?? 0) + 1;
+      }
+    }
+    const topReasons = Object.entries(reasonHist).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k, v]) => `${k} ${v}`);
+    if (topReasons.length) segments.push(`BLOCKED 주요 사유: ${topReasons.join(" · ")}`);
+  }
+
+  return segments.join(". ") + ". 카테고리별 다음 작업은 페이지 하단 표 참조.";
+}
+
+function browserPartialNote(brRes) {
+  // PARTIAL 의 dominant 사유를 카테고리화해서 자동 note 생성.
+  const partial = (brRes?.rows ?? []).filter((r) => r.status === "PARTIAL");
+  if (partial.length === 0) return "PARTIAL 행 없음.";
+  const categoryHits = { heading: 0, cta: 0, errors: 0, modal: 0, other: 0 };
+  for (const r of partial) {
+    for (const reason of r.blockingReasons ?? []) {
+      if (/Heading "[^"]*" did not match/.test(reason)) categoryHits.heading += 1;
+      else if (/Primary CTA matching/.test(reason)) categoryHits.cta += 1;
+      else if (/console\/page errors captured/.test(reason)) categoryHits.errors += 1;
+      else if (/Modal trigger did not fire/.test(reason)) categoryHits.modal += 1;
+      else categoryHits.other += 1;
+    }
+  }
+  const labels = Object.entries(categoryHits)
+    .filter(([, v]) => v > 0)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([k, v]) => {
+      const label = { heading: "h1 패턴 미스", cta: "CTA 패턴 미스", errors: "콘솔 에러", modal: "모달 trigger 실패", other: "기타" }[k];
+      return `${label} ${v}`;
+    });
+  return `주요 사유: ${labels.join(" · ")}`;
+}
+
 function renderExecutiveSummary() {
   const total = manifest.entries.length;
   const finalCounts = (finalAudit.entries ?? []).reduce((acc, e) => {
@@ -382,7 +456,7 @@ function renderExecutiveSummary() {
           <div class="scorecard amber">
             <div class="label">Browser PARTIAL</div>
             <div class="value">${browserPartial}</div>
-            <div class="note">Public 18 (heading PASS / CTA heuristic 부분 미스 / HMR 잡음)</div>
+            <div class="note">${esc(browserPartialNote(browserRes))}</div>
           </div>
           <div class="scorecard gray">
             <div class="label">Browser BLOCKED</div>
@@ -708,55 +782,129 @@ function renderKnownIssues() {
 }
 
 function renderNextActions() {
-  const items = [
+  // 데이터 기반 동적 도출:
+  // BLOCKED IA 의 topGaps 를 카테고리화 → 가장 많이 등장하는 카테고리부터 P1, P2... 로 정렬.
+  // 이미 완료된 작업은 자동 제외 (BLOCKED IA 가 없으면 그 카테고리는 안 나옴).
+  const blockedEntries = (finalAudit.entries ?? []).filter((e) => e.finalLabel === "BLOCKED");
+  if (blockedEntries.length === 0) {
+    return `
+      <section>
+        <div class="container">
+          <h2>다음 작업</h2>
+          <p class="muted">모든 IA 가 PASS 또는 PASS-anchored. 다음 작업 자동 도출 안 됨 — 정성적 backlog 는 별도 ledger 참고.</p>
+        </div>
+      </section>
+    `;
+  }
+
+  // 카테고리 별 IA 모으기.
+  const categories = [
     {
-      priority: "P0",
-      what: "SUPABASE_SERVICE_ROLE_KEY 회전 + build-storage-state.mjs --apply 본체 구현",
-      blocks: "Phase 2 protected 84 row · Phase 3 hosted-surface 5 row · Phase 4 authenticated 8 row · Phase 5 AI UX 28 IA",
-      effort: "Ops + ~1일",
+      key: "manual-review",
+      match: (gap) => /missing manual-review row/.test(gap),
+      label: "Cross-audit + codex 위임 확장",
+      what: "BLOCKED IA 들에 대해 reviewer A + reviewer B + codex 위임 실행 (현재 6 public 만 cover)",
+      effort: "IA 당 ~10분 multi-agent, 총 ~3-4시간 (28 IA 기준)",
     },
     {
-      priority: "P1",
-      what: "Phase 3 hosted-surfaces 실제 trigger 증거 수집 + selectors 정확도 확인",
-      blocks: "5 모달 IA (C-03/D-M1/D-M2/D-M3/F-M1) PASS 가능성",
-      effort: "P0 후 ~3시간",
+      key: "primary-cta",
+      match: (gap) => /Primary CTA matching .*not visible/.test(gap),
+      label: "Catalog primary CTA regex 정밀화",
+      what: "ia-catalog.ts 의 expectedPrimaryCta regex 가 실제 구현 라벨과 어긋난 IA 정렬",
+      effort: "IA 당 ~10분, 총 ~2-3시간",
     },
     {
-      priority: "P2",
-      what: "Phase 4 authenticated 8 시나리오 실행 (admin role gating · owner-id RLS · refresh after submit · expired session · network failure)",
-      blocks: "owner-id IA (E-01/E-02/R-01) + admin IA (H-01/X-08/X-10) PASS",
-      effort: "P0 후 ~4시간",
+      key: "heading-mismatch",
+      match: (gap) => /Heading "[^"]*" did not match expected pattern/.test(gap),
+      label: "Catalog heading regex 정밀화",
+      what: "ia-catalog.ts 의 expectedHeadingPattern 이 실제 h1 과 어긋난 IA 정렬",
+      effort: "IA 당 ~5분, 총 ~1시간",
     },
     {
-      priority: "P3",
-      what: "Phase 5 multi-agent dispatch (6 shard 병렬) + 28 BLOCKED IA AI UX 리뷰",
-      blocks: "사람 확인 진입 조건",
-      effort: "Phase 2-4 후 ~6시간 (child agents 병렬)",
+      key: "modal-trigger",
+      match: (gap) => /Modal trigger did not fire/.test(gap),
+      label: "Hosted modal trigger selectors 보강",
+      what: "hosted-surfaces.spec.ts 의 modal 진입 heuristic selectors 가 못 잡은 IA",
+      effort: "IA 당 ~30분 (실제 UI source 검증 포함)",
     },
     {
-      priority: "P4",
-      what: "사람 reviewer 확인 (modal/form/AI/auth/billing/notifications/admin/policy IA)",
-      blocks: "Final PASS 게이트 (AI 세션 대체 불가)",
-      effort: "AI 리뷰 후 ~사람 리뷰 시간",
+      key: "screenshot-missing",
+      match: (gap) => /screenshots\/coverage-.*missing on disk|screenshots\/coverage-.*absent|screenshots\/coverage-.*not present/.test(gap),
+      label: "Screenshot 캡처 로직 점검",
+      what: "Playwright coverage spec 의 screenshot 단계가 일부 IA 에 안 동작 — Page 별 로직 점검",
+      effort: "~1-2시간",
     },
     {
-      priority: "P5",
-      what: "Codex cross-model review of receipts + plan + report",
-      blocks: "보고서 신뢰도 향상 (degraded → full)",
-      effort: "~1시간",
+      key: "hosted-surface-rows",
+      match: (gap) => /hosted-surface-results\.json BLOCKED/.test(gap),
+      label: "Hosted-surface 결과 수집",
+      what: "hosted-surfaces.spec.ts 가 modal trigger 후 실제 modal 진입 + focus return 등을 수집해야 하는데 빈 row. spec 보강 후 재실행 필요.",
+      effort: "~2-3시간",
+    },
+    {
+      key: "security-nav-rows",
+      match: (gap) => /security-navigation-results\.json BLOCKED/.test(gap),
+      label: "Security-navigation per-IA 매핑",
+      what: "session-navigation tests 는 route-level (SN-*, AUTH-RH-*) 이라 iaCode=null. IA 별 어느 시나리오가 cover 하는지 매핑 필요.",
+      effort: "~1-2시간",
+    },
+    {
+      key: "ux-states",
+      match: (gap) => /rendered states not captured|rendered evidence missing/.test(gap),
+      label: "UX states 캡처 보강",
+      what: "checklist §6.5 가 요구하는 loading/empty/error/success state evidence 가 coverage spec 에서 안 잡힘. interaction 시나리오 추가 필요.",
+      effort: "IA 당 ~20분",
+    },
+    {
+      key: "spec-gap",
+      match: (gap) => /not implemented in src\/|pack not implemented/.test(gap),
+      label: "실제 spec gap product 결정",
+      what: "코드에 누락된 명세 사항 — 명세를 줄일지 vs 구현 추가할지 product 결정 필요",
+      effort: "IA 당 별도 PR + 결정 회의",
+    },
+    {
+      key: "doc-gap-candidate",
+      match: (gap) => /Doc gap candidate:/.test(gap),
+      label: "DOC-GAP candidate 정리",
+      what: "cross-audit 가 candidate 로 표시한 spec drift — 정정 방향 product 결정",
+      effort: "IA 당 ~30분 review + docs PR",
     },
   ];
+
+  const items = [];
+  for (const cat of categories) {
+    const matchingIas = blockedEntries
+      .filter((e) => e.topGaps.some((g) => cat.match(g)))
+      .map((e) => e.iaCode);
+    if (matchingIas.length === 0) continue;
+    items.push({
+      what: cat.label,
+      detail: cat.what,
+      blocks: `${matchingIas.length} IA: ${matchingIas.slice(0, 8).join(", ")}${matchingIas.length > 8 ? `, +${matchingIas.length - 8}` : ""}`,
+      effort: cat.effort,
+    });
+  }
+
+  // 우선순위: 영향 IA 수가 많은 것부터 P1, P2...
+  items.sort((a, b) => {
+    const aCount = parseInt(a.blocks.match(/^(\d+) IA/)?.[1] ?? "0", 10);
+    const bCount = parseInt(b.blocks.match(/^(\d+) IA/)?.[1] ?? "0", 10);
+    return bCount - aCount;
+  });
+  items.forEach((it, idx) => { it.priority = `P${idx + 1}`; });
+
   return `
     <section>
       <div class="container">
-        <h2>다음 작업 (우선순위 + 의존성)</h2>
+        <h2>다음 작업 (BLOCKED IA topGaps 카테고리에서 자동 도출)</h2>
+        <p class="muted">우선순위는 영향 IA 수 기준 자동 정렬. 이미 완료된 작업(예: service_role 회전, codex 위임 6 public) 은 BLOCKED 가 사라져서 자동 제외.</p>
         <table class="simple">
-          <thead><tr><th>우선</th><th>할 일</th><th>차단 영역</th><th>소요</th></tr></thead>
+          <thead><tr><th>우선</th><th>할 일</th><th>차단 영역</th><th>예상 소요</th></tr></thead>
           <tbody>
             ${items
               .map(
                 (i) =>
-                  `<tr><td><strong>${esc(i.priority)}</strong></td><td>${esc(i.what)}</td><td><span class="muted">${esc(i.blocks)}</span></td><td>${esc(i.effort)}</td></tr>`,
+                  `<tr><td><strong>${esc(i.priority)}</strong></td><td><strong>${esc(i.what)}</strong><br><span class="muted" style="font-size:12px;">${esc(i.detail)}</span></td><td><span class="muted">${esc(i.blocks)}</span></td><td>${esc(i.effort)}</td></tr>`,
               )
               .join("")}
           </tbody>
@@ -773,7 +921,7 @@ function renderGlossary() {
     ["storageState", "Playwright 테스트에서 로그인 세션을 흉내내는 쿠키/스토리지 파일"],
     ["host route", "모달이 호스팅되는 부모 페이지 (예: C-03 retry 모달은 /practice/problems가 host)"],
     ["RLS (Row Level Security)", "Postgres에서 행 단위 권한 — 사용자가 자기 row만 보게 강제"],
-    ["service_role", "Supabase의 admin 권한 키 — 클라이언트 코드에 절대 노출 금지, 회전 필수"],
+    ["service_role", "Supabase의 admin 권한 키 — 클라이언트 코드에 절대 노출 금지. 노출됐을 때 회전 필수 (rotate); 이 audit 의 secret key 는 dev 한정 .env.local 에서 활성 상태"],
     ["DOC-GAP", "문서 명세와 실제 코드가 다른 상태 — 의도된 drift이거나 product 결정 필요"],
     ["BLOCKED", "증거 수집을 시도했으나 사전 조건(precondition) 부재로 진행 불가"],
     ["Phase 5 AI-first", "AI가 1차로 34 IA 전부 훑고, 사람이 판단 필요한 항목만 골라주는 흐름"],
@@ -825,7 +973,7 @@ const html = `<!DOCTYPE html>
   ${renderHero()}
   <div class="container">
     <div class="card" style="margin-top:24px;">
-      <strong>한 줄 결론.</strong> 34개 IA에 대해 Phase 0 ~ Phase 5 일부까지 진행. 문서 receipt 34/34 PASS, 브라우저 public 18/18 PARTIAL, 보안 14/22 PASS, AI UX public 6/6 reviewed. 최종 라벨은 34 BLOCKED인데 이건 Phase 2 protected + Phase 5 사람 확인이 외부 차단(service_role 회전 + 사람 reviewer)에 묶여서 그래.
+      <strong>한 줄 결론.</strong> ${oneLineConclusion()}
     </div>
   </div>
   ${renderExecutiveSummary()}

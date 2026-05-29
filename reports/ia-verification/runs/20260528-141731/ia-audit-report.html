@@ -150,7 +150,7 @@ footer a:hover { text-decoration: underline; }
           <strong>Run ID</strong> 20260528-141731 ·
           <strong>Source commit</strong> b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff ·
           <strong>Evidence bundle</strong> 96e5d23b0ad1221f ·
-          <strong>Generated</strong> 2026-05-29T04:55:42.177Z
+          <strong>Generated</strong> 2026-05-29T05:07:46.555Z
         </div>
         <div class="status-line">
           최종 라벨 분포 <span class="b b-blocked">PASS: 6</span> <span class="b b-blocked">BLOCKED: 28</span>
@@ -160,7 +160,7 @@ footer a:hover { text-decoration: underline; }
   
   <div class="container">
     <div class="card" style="margin-top:24px;">
-      <strong>한 줄 결론.</strong> 34개 IA에 대해 Phase 0 ~ Phase 5 일부까지 진행. 문서 receipt 34/34 PASS, 브라우저 public 18/18 PARTIAL, 보안 14/22 PASS, AI UX public 6/6 reviewed. 최종 라벨은 34 BLOCKED인데 이건 Phase 2 protected + Phase 5 사람 확인이 외부 차단(service_role 회전 + 사람 reviewer)에 묶여서 그래.
+      <strong>한 줄 결론.</strong> 전체 34 IA — PASS 6 · BLOCKED 28. public 6/6 PASS · user 0/25 PASS · admin 0/3 PASS. BLOCKED 주요 사유: IA-별 특정 findings 43 · CTA regex 미스 17 · cross-audit 미실시 13. 카테고리별 다음 작업은 페이지 하단 표 참조.
     </div>
   </div>
   
@@ -177,7 +177,7 @@ footer a:hover { text-decoration: underline; }
           <div class="scorecard amber">
             <div class="label">Browser PARTIAL</div>
             <div class="value">54</div>
-            <div class="note">Public 18 (heading PASS / CTA heuristic 부분 미스 / HMR 잡음)</div>
+            <div class="note">주요 사유: CTA 패턴 미스 51 · h1 패턴 미스 6</div>
           </div>
           <div class="scorecard gray">
             <div class="label">Browser BLOCKED</div>
@@ -2343,11 +2343,12 @@ footer a:hover { text-decoration: underline; }
   
     <section>
       <div class="container">
-        <h2>다음 작업 (우선순위 + 의존성)</h2>
+        <h2>다음 작업 (BLOCKED IA topGaps 카테고리에서 자동 도출)</h2>
+        <p class="muted">우선순위는 영향 IA 수 기준 자동 정렬. 이미 완료된 작업(예: service_role 회전, codex 위임 6 public) 은 BLOCKED 가 사라져서 자동 제외.</p>
         <table class="simple">
-          <thead><tr><th>우선</th><th>할 일</th><th>차단 영역</th><th>소요</th></tr></thead>
+          <thead><tr><th>우선</th><th>할 일</th><th>차단 영역</th><th>예상 소요</th></tr></thead>
           <tbody>
-            <tr><td><strong>P0</strong></td><td>SUPABASE_SERVICE_ROLE_KEY 회전 + build-storage-state.mjs --apply 본체 구현</td><td><span class="muted">Phase 2 protected 84 row · Phase 3 hosted-surface 5 row · Phase 4 authenticated 8 row · Phase 5 AI UX 28 IA</span></td><td>Ops + ~1일</td></tr><tr><td><strong>P1</strong></td><td>Phase 3 hosted-surfaces 실제 trigger 증거 수집 + selectors 정확도 확인</td><td><span class="muted">5 모달 IA (C-03/D-M1/D-M2/D-M3/F-M1) PASS 가능성</span></td><td>P0 후 ~3시간</td></tr><tr><td><strong>P2</strong></td><td>Phase 4 authenticated 8 시나리오 실행 (admin role gating · owner-id RLS · refresh after submit · expired session · network failure)</td><td><span class="muted">owner-id IA (E-01/E-02/R-01) + admin IA (H-01/X-08/X-10) PASS</span></td><td>P0 후 ~4시간</td></tr><tr><td><strong>P3</strong></td><td>Phase 5 multi-agent dispatch (6 shard 병렬) + 28 BLOCKED IA AI UX 리뷰</td><td><span class="muted">사람 확인 진입 조건</span></td><td>Phase 2-4 후 ~6시간 (child agents 병렬)</td></tr><tr><td><strong>P4</strong></td><td>사람 reviewer 확인 (modal/form/AI/auth/billing/notifications/admin/policy IA)</td><td><span class="muted">Final PASS 게이트 (AI 세션 대체 불가)</span></td><td>AI 리뷰 후 ~사람 리뷰 시간</td></tr><tr><td><strong>P5</strong></td><td>Codex cross-model review of receipts + plan + report</td><td><span class="muted">보고서 신뢰도 향상 (degraded → full)</span></td><td>~1시간</td></tr>
+            <tr><td><strong>P1</strong></td><td><strong>Catalog primary CTA regex 정밀화</strong><br><span class="muted" style="font-size:12px;">ia-catalog.ts 의 expectedPrimaryCta regex 가 실제 구현 라벨과 어긋난 IA 정렬</span></td><td><span class="muted">17 IA: B-01, C-01, C-02, D-01, D-02, D-03, D-04, E-01, +9</span></td><td>IA 당 ~10분, 총 ~2-3시간</td></tr><tr><td><strong>P2</strong></td><td><strong>Cross-audit + codex 위임 확장</strong><br><span class="muted" style="font-size:12px;">BLOCKED IA 들에 대해 reviewer A + reviewer B + codex 위임 실행 (현재 6 public 만 cover)</span></td><td><span class="muted">13 IA: A-03, C-03, D-M1, F-M1, G-01, H-01, X-03, X-04, +5</span></td><td>IA 당 ~10분 multi-agent, 총 ~3-4시간 (28 IA 기준)</td></tr><tr><td><strong>P3</strong></td><td><strong>Security-navigation per-IA 매핑</strong><br><span class="muted" style="font-size:12px;">session-navigation tests 는 route-level (SN-*, AUTH-RH-*) 이라 iaCode=null. IA 별 어느 시나리오가 cover 하는지 매핑 필요.</span></td><td><span class="muted">6 IA: A-03, B-01, C-02, X-02, X-08, X-10</span></td><td>~1-2시간</td></tr><tr><td><strong>P4</strong></td><td><strong>Hosted modal trigger selectors 보강</strong><br><span class="muted" style="font-size:12px;">hosted-surfaces.spec.ts 의 modal 진입 heuristic selectors 가 못 잡은 IA</span></td><td><span class="muted">5 IA: C-03, D-M1, D-M2, F-M1, D-M3</span></td><td>IA 당 ~30분 (실제 UI source 검증 포함)</td></tr><tr><td><strong>P5</strong></td><td><strong>Screenshot 캡처 로직 점검</strong><br><span class="muted" style="font-size:12px;">Playwright coverage spec 의 screenshot 단계가 일부 IA 에 안 동작 — Page 별 로직 점검</span></td><td><span class="muted">5 IA: A-03, B-01, C-01, C-02, X-02</span></td><td>~1-2시간</td></tr><tr><td><strong>P6</strong></td><td><strong>Hosted-surface 결과 수집</strong><br><span class="muted" style="font-size:12px;">hosted-surfaces.spec.ts 가 modal trigger 후 실제 modal 진입 + focus return 등을 수집해야 하는데 빈 row. spec 보강 후 재실행 필요.</span></td><td><span class="muted">4 IA: C-03, D-M1, D-M2, D-M3</span></td><td>~2-3시간</td></tr><tr><td><strong>P7</strong></td><td><strong>UX states 캡처 보강</strong><br><span class="muted" style="font-size:12px;">checklist §6.5 가 요구하는 loading/empty/error/success state evidence 가 coverage spec 에서 안 잡힘. interaction 시나리오 추가 필요.</span></td><td><span class="muted">2 IA: A-03, B-01</span></td><td>IA 당 ~20분</td></tr><tr><td><strong>P8</strong></td><td><strong>Catalog heading regex 정밀화</strong><br><span class="muted" style="font-size:12px;">ia-catalog.ts 의 expectedHeadingPattern 이 실제 h1 과 어긋난 IA 정렬</span></td><td><span class="muted">1 IA: F-01</span></td><td>IA 당 ~5분, 총 ~1시간</td></tr><tr><td><strong>P9</strong></td><td><strong>실제 spec gap product 결정</strong><br><span class="muted" style="font-size:12px;">코드에 누락된 명세 사항 — 명세를 줄일지 vs 구현 추가할지 product 결정 필요</span></td><td><span class="muted">1 IA: R-02</span></td><td>IA 당 별도 PR + 결정 회의</td></tr>
           </tbody>
         </table>
       </div>
@@ -2360,7 +2361,7 @@ footer a:hover { text-decoration: underline; }
         <table class="simple">
           <thead><tr><th>용어</th><th>풀이</th></tr></thead>
           <tbody>
-            <tr><td><strong>IA (Information Architecture)</strong></td><td>화면 구조와 화면별 요구사항 — 이 프로젝트는 34개 IA를 가짐</td></tr><tr><td><strong>doc-receipt</strong></td><td>각 IA마다 어떤 docs를 읽고 어떤 요구사항을 뽑았는지 기록한 증거 JSON</td></tr><tr><td><strong>storageState</strong></td><td>Playwright 테스트에서 로그인 세션을 흉내내는 쿠키/스토리지 파일</td></tr><tr><td><strong>host route</strong></td><td>모달이 호스팅되는 부모 페이지 (예: C-03 retry 모달은 /practice/problems가 host)</td></tr><tr><td><strong>RLS (Row Level Security)</strong></td><td>Postgres에서 행 단위 권한 — 사용자가 자기 row만 보게 강제</td></tr><tr><td><strong>service_role</strong></td><td>Supabase의 admin 권한 키 — 클라이언트 코드에 절대 노출 금지, 회전 필수</td></tr><tr><td><strong>DOC-GAP</strong></td><td>문서 명세와 실제 코드가 다른 상태 — 의도된 drift이거나 product 결정 필요</td></tr><tr><td><strong>BLOCKED</strong></td><td>증거 수집을 시도했으나 사전 조건(precondition) 부재로 진행 불가</td></tr><tr><td><strong>Phase 5 AI-first</strong></td><td>AI가 1차로 34 IA 전부 훑고, 사람이 판단 필요한 항목만 골라주는 흐름</td></tr><tr><td><strong>evidenceBundleId</strong></td><td>한 run의 모든 증거를 묶어 식별하는 hash — 다른 run 증거 섞이지 않게 보장</td></tr>
+            <tr><td><strong>IA (Information Architecture)</strong></td><td>화면 구조와 화면별 요구사항 — 이 프로젝트는 34개 IA를 가짐</td></tr><tr><td><strong>doc-receipt</strong></td><td>각 IA마다 어떤 docs를 읽고 어떤 요구사항을 뽑았는지 기록한 증거 JSON</td></tr><tr><td><strong>storageState</strong></td><td>Playwright 테스트에서 로그인 세션을 흉내내는 쿠키/스토리지 파일</td></tr><tr><td><strong>host route</strong></td><td>모달이 호스팅되는 부모 페이지 (예: C-03 retry 모달은 /practice/problems가 host)</td></tr><tr><td><strong>RLS (Row Level Security)</strong></td><td>Postgres에서 행 단위 권한 — 사용자가 자기 row만 보게 강제</td></tr><tr><td><strong>service_role</strong></td><td>Supabase의 admin 권한 키 — 클라이언트 코드에 절대 노출 금지. 노출됐을 때 회전 필수 (rotate); 이 audit 의 secret key 는 dev 한정 .env.local 에서 활성 상태</td></tr><tr><td><strong>DOC-GAP</strong></td><td>문서 명세와 실제 코드가 다른 상태 — 의도된 drift이거나 product 결정 필요</td></tr><tr><td><strong>BLOCKED</strong></td><td>증거 수집을 시도했으나 사전 조건(precondition) 부재로 진행 불가</td></tr><tr><td><strong>Phase 5 AI-first</strong></td><td>AI가 1차로 34 IA 전부 훑고, 사람이 판단 필요한 항목만 골라주는 흐름</td></tr><tr><td><strong>evidenceBundleId</strong></td><td>한 run의 모든 증거를 묶어 식별하는 hash — 다른 run 증거 섞이지 않게 보장</td></tr>
           </tbody>
         </table>
       </div>
@@ -2375,7 +2376,7 @@ footer a:hover { text-decoration: underline; }
           <li>Run ledger: <code>docs/ai-workflow/runs/2026/05/28/20260528-1417-ia-verification-phase-0.5.md</code> · <code>docs/ai-workflow/runs/2026/05/28/20260528-1530-ia-verification-phase-2.md</code></li>
           <li>Plan: <code>docs/ai-workflow/ia-implementation-verification-execution-plan.md</code></li>
         </ul>
-        <p class="muted" style="margin-top:16px;">생성: build-html-report.mjs · 2026-05-29T04:55:42.181Z</p>
+        <p class="muted" style="margin-top:16px;">생성: build-html-report.mjs · 2026-05-29T05:07:46.561Z</p>
       </div>
     </footer>
   
