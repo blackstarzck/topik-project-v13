@@ -176,6 +176,10 @@ export function VerifyEmailCard() {
           메일이 보이지 않으면 스팸함도 확인해주세요.
         </Paragraph>
 
+        <Text type="secondary">
+          메일이 자주 발송되면 몇 분 후 다시 시도해주세요.
+        </Text>
+
         {emailFromQuery && (
           <Text type="secondary">
             가입 이메일: <strong>{emailFromQuery}</strong>

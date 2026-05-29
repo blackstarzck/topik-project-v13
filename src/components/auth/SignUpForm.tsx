@@ -19,7 +19,7 @@ type SignUpFields = {
   email: string;
   password: string;
   passwordConfirm: string;
-  displayName?: string;
+  displayName: string;
   terms: boolean;
 };
 
@@ -36,7 +36,7 @@ export function SignUpForm() {
       email: values.email,
       password: values.password,
       options: {
-        data: values.displayName ? { display_name: values.displayName } : undefined,
+        data: { display_name: values.displayName },
         emailRedirectTo: buildAuthRedirectUrl(
           "/auth/callback?next=/onboarding/learning-goal",
         ),
@@ -100,7 +100,15 @@ export function SignUpForm() {
         <Input.Password autoComplete="new-password" />
       </Form.Item>
 
-      <Form.Item label="이름 (선택)" name="displayName">
+      <Form.Item
+        label="이름"
+        name="displayName"
+        rules={[
+          { required: true, message: "이름을 입력하세요" },
+          { min: 2, message: "이름은 2자 이상이어야 합니다" },
+          { max: 30, message: "이름은 30자 이하여야 합니다" },
+        ]}
+      >
         <Input autoComplete="name" placeholder="홍길동" />
       </Form.Item>
 

@@ -21,7 +21,7 @@ export function Hero() {
       <Space size="middle" style={{ marginTop: 24 }}>
         <Link href="/sign-up">
           <Button type="primary" size="large">
-            지금 가입하기
+            무료 시작
           </Button>
         </Link>
         <Link href="/login">
