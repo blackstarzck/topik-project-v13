@@ -52,6 +52,22 @@ function collectAnnotations(test) {
   return last?.annotations ?? [];
 }
 
+// Errors that are Next.js dev-mode artifacts (HMR websocket failures because
+// Playwright doesn't keep the HMR connection open) and not real product errors.
+// They flood the count and create noise blockers. Filtered here so the "errors
+// captured" reason only fires for actual page/app errors.
+function isDevModeNoise(errorText) {
+  const text = String(errorText);
+  if (/WebSocket connection to '.*\/_next\/webpack-hmr/.test(text)) return true;
+  if (/Error during WebSocket handshake/.test(text)) return true;
+  return false;
+}
+
+function realErrorCount(errors) {
+  if (!Array.isArray(errors)) return 0;
+  return errors.filter((e) => !isDevModeNoise(e)).length;
+}
+
 function rowStatus(meta, annotations) {
   if (!meta) return { status: "BLOCKED", reasons: ["Missing audit-meta attachment"] };
   const reasons = [];
@@ -65,8 +81,9 @@ function rowStatus(meta, annotations) {
     if (typeof meta.status === "number" && meta.status >= 500) {
       reasons.push(`HTTP ${meta.status}`);
     }
-    if (meta.errors && meta.errors.length > 0) {
-      reasons.push(`${meta.errors.length} console/page errors captured`);
+    const realErrors = realErrorCount(meta.errors);
+    if (realErrors > 0) {
+      reasons.push(`${realErrors} console/page errors captured (excluding ${(meta.errors?.length ?? 0) - realErrors} HMR/dev-mode noise)`);
     }
     if (meta.expectedHeadingPattern && meta.headingMatch === false) {
       reasons.push(`Heading "${meta.visibleH1}" did not match expected pattern ${meta.expectedHeadingPattern}`);

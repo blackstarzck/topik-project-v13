@@ -7,7 +7,7 @@
   "generatedAt": "2026-05-28T11:49:24.712Z",
   "delegationMode": "multi-agent-6-shard",
   "checklist": "docs/ai-workflow/ia-ai-first-ux-review-checklist.md",
-  "reviewerNote": "AI first-pass UX review (Phase 5). 6 child agents dispatched in parallel via Agent tool, results merged from agent-packets/results/*-cards.json. Per phase5NoPassRuleApplied: no PASS labels until rendered evidence + human confirmation.\n\n[2026-05-29] p4-mark-stale-blockers.mjs moved superseded blockingReasons to `resolvedBlockers` per card — total 4 entries. Audit trail preserved: each entry has originalReason + resolution + source.",
+  "reviewerNote": "AI first-pass UX review (Phase 5). 6 child agents dispatched in parallel via Agent tool, results merged from agent-packets/results/*-cards.json. Per phase5NoPassRuleApplied: no PASS labels until rendered evidence + human confirmation.\n\n[2026-05-29] p4-mark-stale-blockers.mjs moved superseded blockingReasons to `resolvedBlockers` per card — total 4 entries. Audit trail preserved: each entry has originalReason + resolution + source.\n\n[2026-05-29] p4-mark-stale-blockers.mjs moved superseded blockingReasons to `resolvedBlockers` per card — total 6 entries. Audit trail preserved: each entry has originalReason + resolution + source.\n\n[2026-05-29] p4-mark-stale-blockers.mjs moved superseded blockingReasons to `resolvedBlockers` per card — total 38 entries. Audit trail preserved: each entry has originalReason + resolution + source.\n\n[2026-05-29] p4-mark-stale-blockers.mjs moved superseded blockingReasons to `resolvedBlockers` per card — total 6 entries. Audit trail preserved: each entry has originalReason + resolution + source.\n\n[2026-05-29] p4-mark-stale-blockers.mjs moved superseded blockingReasons to `resolvedBlockers` per card — total 0 entries. Audit trail preserved: each entry has originalReason + resolution + source.\n\n[2026-05-29] p4-mark-stale-blockers.mjs moved superseded blockingReasons to `resolvedBlockers` per card — total 0 entries. Audit trail preserved: each entry has originalReason + resolution + source.",
   "cards": [
     {
       "iaCode": "H-01",
@@ -59,7 +59,6 @@
         ]
       },
       "blockingReasons": [
-        "Phase 2 browser run produced navigation timeout — no rendered DOM, no visible H1, no primary-CTA match; status is PARTIAL not PASS.",
         "Phase 4 security-navigation-results.json is BLOCKED (rows: 0); SN-8 (Student → /admin/problems) is a placeholder spec with no expect() — RBAC denial lane has no real assertion.",
         "Hosted-surface results bundle has 0 rows (build script could not parse attachments).",
         "Admin runtime audit-log evidence (verifying admin_audit_logs row appears after togglePublish) was not collected this session."
@@ -79,6 +78,14 @@
         "tests/e2e/coverage/session-navigation.spec.ts (SN-8 placeholder, lines 244-249, 309-340)",
         "src/proxy.ts (anon→/login redirect; admin/role check NOT here — relies on layout)",
         "src/lib/routes.ts (PROTECTED_ROUTE_CASES H-01 entry)"
+      ],
+      "resolvedBlockers": [
+        {
+          "originalReason": "Phase 2 browser run produced navigation timeout — no rendered DOM, no visible H1, no primary-CTA match; status is PARTIAL not PASS.",
+          "resolution": "Stale 2026-05-29 — Phase 2 was re-run cleanly (commit 0843f30, 35.5 min wall clock, 183/186 PASS) with fresh dev server. No timeouts in new browser-results.json. Original ai-ux-review.json was generated against bloated 1.9GB dev-server run.",
+          "appliedAt": "2026-05-29T04:52:26.664Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        }
       ]
     },
     {
@@ -132,7 +139,6 @@
         ]
       },
       "blockingReasons": [
-        "Phase 2 browser run produced navigation timeout — PARTIAL, no rendered DOM evidence.",
         "Phase 4 security-navigation-results.json BLOCKED (0 rows). Org-scope RBAC lane has no test (the closest, SN-12, is a placeholder for the inverse direction).",
         "Cross-org data leak (the major X-08 risk) cannot be verified from this session's evidence; needs DB-level RLS test or org_admin storage state + seeded multi-org dataset.",
         "No screenshot in screenshots/ for X-08."
@@ -149,6 +155,14 @@
         "src/lib/auth/admin-guard.ts (requireOrgAdmin)",
         "src/lib/admin/org-dashboard.ts (fromRpcRow)",
         "tests/e2e/coverage/session-navigation.spec.ts (SN-12 placeholder targets /admin/users, not /admin/org)"
+      ],
+      "resolvedBlockers": [
+        {
+          "originalReason": "Phase 2 browser run produced navigation timeout — PARTIAL, no rendered DOM evidence.",
+          "resolution": "Stale 2026-05-29 — Phase 2 was re-run cleanly (commit 0843f30, 35.5 min wall clock, 183/186 PASS) with fresh dev server. No timeouts in new browser-results.json. Original ai-ux-review.json was generated against bloated 1.9GB dev-server run.",
+          "appliedAt": "2026-05-29T04:52:26.664Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        }
       ]
     },
     {
@@ -206,7 +220,6 @@
         ]
       },
       "blockingReasons": [
-        "Phase 2 browser run produced navigation timeout — PARTIAL, no rendered DOM.",
         "Phase 4 security-navigation-results.json BLOCKED (0 rows). SN-12/SN-13 covering the critical org_admin-denied / platform_admin-allowed split are placeholders with NO expect() assertion.",
         "PRIVILEGE elevation path (admin_change_user_role RPC) and the DB-level protect_profile_columns trigger are present in source, but no runtime test in this session exercises the denied/allowed split or confirms the audit-log row.",
         "Hosted-surface results have 0 rows — bulk-action confirmation modal trigger from /admin/users not validated."
@@ -224,6 +237,14 @@
         "src/lib/admin/server-actions.ts (changeUserRoleAction → admin_change_user_role RPC, audit log)",
         "supabase/migrations/20260520121400_profiles_protected_columns.sql (trg_profiles_protect_columns — DB-level defense)",
         "tests/e2e/coverage/session-navigation.spec.ts (SN-12, SN-13 placeholders, lines 276-290 + 309-340)"
+      ],
+      "resolvedBlockers": [
+        {
+          "originalReason": "Phase 2 browser run produced navigation timeout — PARTIAL, no rendered DOM.",
+          "resolution": "Stale 2026-05-29 — Phase 2 was re-run cleanly (commit 0843f30, 35.5 min wall clock, 183/186 PASS) with fresh dev server. No timeouts in new browser-results.json. Original ai-ux-review.json was generated against bloated 1.9GB dev-server run.",
+          "appliedAt": "2026-05-29T04:52:26.664Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        }
       ]
     },
     {
@@ -247,7 +268,6 @@
         "rlsOwnerCheck": "BLOCKED (source uses requireUser + getSubmission then notFound on missing; tests/e2e/coverage/session-navigation.spec.ts SN-9 is the only RLS-other-user case but it is a placeholder — no actual expect() against another user's :id. security-navigation-results.json.status=BLOCKED, rows=[])"
       },
       "blockingReasons": [
-        "browser-results: navigation timeout to seeded id; no rendered evidence at 360/768/1280",
         "security-navigation-results: 0 rows (BLOCKED) — RLS owner-check not exercised against real other-user fixture",
         "SN-9 placeholder test has no expect() — does not constitute RLS evidence even if it runs"
       ],
@@ -262,6 +282,14 @@
         "browser-results.json E-01 row PARTIAL (timeout)",
         "security-navigation-results.json status=BLOCKED, rows=[]",
         "tests/e2e/coverage/session-navigation.spec.ts SN-9 (placeholder)"
+      ],
+      "resolvedBlockers": [
+        {
+          "originalReason": "browser-results: navigation timeout to seeded id; no rendered evidence at 360/768/1280",
+          "resolution": "Stale 2026-05-29 — Phase 2 was re-run cleanly (commit 0843f30, 35.5 min wall clock, 183/186 PASS) with fresh dev server. No timeouts in new browser-results.json. Original ai-ux-review.json was generated against bloated 1.9GB dev-server run.",
+          "appliedAt": "2026-05-29T04:52:26.665Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        }
       ]
     },
     {
@@ -431,7 +459,6 @@
         "policyTrustCopy": "not-applicable for F-01 (owner-check is data-layer concern; covered separately)"
       },
       "blockingReasons": [
-        "browser-results.json row for F-01 is PARTIAL: navigation timeout to http://127.0.0.1:3000/library — no rendered screenshot, no visible-H1, no primary-CTA detection",
         "hosted-surface-results.json is 0 rows BLOCKED — F-M1 trigger from /library not verified at host route",
         "security-navigation-results.json is 0 rows BLOCKED — direct URL/invalid tab/wrong-owner data scenarios not exercised in this run",
         "description.md mandates 5 regions (검색/필터, 내보내기, 목록, 우측 통계, 페이지 이동); only tabbed listing is visible in source — wireframe-vs-impl region map cannot be checked without screenshot"
@@ -443,6 +470,14 @@
         "docs/IA/18-F-01-my-library/description.md",
         "src/app/(workspace)/library/page.tsx",
         "src/components/library/ExportPdfButton.tsx"
+      ],
+      "resolvedBlockers": [
+        {
+          "originalReason": "browser-results.json row for F-01 is PARTIAL: navigation timeout to http://127.0.0.1:3000/library — no rendered screenshot, no visible-H1, no primary-CTA detection",
+          "resolution": "Stale 2026-05-29 — Phase 2 was re-run cleanly (commit 0843f30, 35.5 min wall clock, 183/186 PASS) with fresh dev server. No timeouts in new browser-results.json. Original ai-ux-review.json was generated against bloated 1.9GB dev-server run.",
+          "appliedAt": "2026-05-29T04:52:26.665Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        }
       ]
     },
     {
@@ -466,8 +501,7 @@
       },
       "blockingReasons": [
         "hosted-surface-results.json is 0 rows BLOCKED — trigger/focus-entry/focus-return/Esc/cancel/backdrop behavior for F-M1 not verified at any of the 4 host routes",
-        "Implementation diverges from description.md — ExportPdfButton is print-dialog trigger, not a modal with filename/options/preview",
-        "browser-results.json F-M1 row PARTIAL due to /library navigation timeout"
+        "Implementation diverges from description.md — ExportPdfButton is print-dialog trigger, not a modal with filename/options/preview"
       ],
       "evidenceReferences": [
         "reports/ia-verification/runs/20260528-141731/source-map-results.json (F-M1: PASS, src/app/(workspace)/library/page.tsx + src/components/library/ExportPdfButton.tsx)",
@@ -475,6 +509,14 @@
         "docs/IA/19-F-M1-pdf-export-modal/description.md (mandates 파일명 1-60자, 옵션, 미리보기, 다운로드 CTA)",
         "src/components/library/ExportPdfButton.tsx (button-only implementation, no modal)",
         "src/lib/export/pdf-export.ts (referenced by trigger)"
+      ],
+      "resolvedBlockers": [
+        {
+          "originalReason": "browser-results.json F-M1 row PARTIAL due to /library navigation timeout",
+          "resolution": "Stale 2026-05-29 — Phase 2 was re-run cleanly (commit 0843f30, 35.5 min wall clock, 183/186 PASS) with fresh dev server. No timeouts in new browser-results.json. Original ai-ux-review.json was generated against bloated 1.9GB dev-server run.",
+          "appliedAt": "2026-05-29T04:52:26.665Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        }
       ]
     },
     {
@@ -497,7 +539,6 @@
         "policyTrustCopy": "COPY HONESTY RISK — copy says '변경사항이 즉시 반영됩니다.' (changes apply immediately) but the form comment in source explicitly says 'i18n message catalogs are OOS-7 (Phase 6 light spec); Phase 6 only persists the preference'. The DB write happens, but the UI does not actually re-render in the new language. Users will save and see no visible change — implied promise not delivered. This warrants FAIL on the copy lane, dragging the overall result toward PARTIAL/FAIL."
       },
       "blockingReasons": [
-        "browser-results.json G-01 row PARTIAL — no rendered screenshot, no save-success-state evidence",
         "Copy '변경사항이 즉시 반영됩니다' implies live UI switch but i18n catalog is deferred — message overstates current capability",
         "Description ⑥ 변경값 없으면 비활성 not implemented (button always enabled)",
         "Description ① 저장 전 이탈 확인 not implemented",
@@ -510,6 +551,14 @@
         "docs/IA/20-G-01-language-settings/description.md (mandates 즉시 미리보기, 학습 언어, 콘텐츠 설정)",
         "src/components/settings/LanguageForm.tsx (lines 26-32 comment confirms i18n catalogs OOS, lines 69-71 copy '변경사항이 즉시 반영됩니다')",
         "src/app/(workspace)/settings/language/page.tsx"
+      ],
+      "resolvedBlockers": [
+        {
+          "originalReason": "browser-results.json G-01 row PARTIAL — no rendered screenshot, no save-success-state evidence",
+          "resolution": "Stale 2026-05-29 — clean Phase 2 re-run replaced PARTIAL flags. See current browser-results.json for new finding distribution (66 PASS / 117 PARTIAL / 3 BLOCKED in commit 0843f30).",
+          "appliedAt": "2026-05-29T04:52:26.665Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        }
       ]
     },
     {
@@ -532,8 +581,7 @@
         "policyTrustCopy": "PASS on honesty — copy 'billing scope는 deferred-scope.md 기준으로 보류 상태입니다' is direct, references the policy doc, and makes no claim about live billing. No pricing strings, no plan names, no 'subscribe' CTA. Honest about deferred state."
       },
       "blockingReasons": [
-        "Result label DEFERRED is appropriate per docs/development/deferred-scope.md — UI is intentionally shell-only and copy is honest about it",
-        "browser-results.json X-03 row PARTIAL — no rendered screenshot, but source inspection is sufficient to confirm shell-only state since PlaceholderPage is a 25-line static component"
+        "Result label DEFERRED is appropriate per docs/development/deferred-scope.md — UI is intentionally shell-only and copy is honest about it"
       ],
       "evidenceReferences": [
         "reports/ia-verification/runs/20260528-141731/source-map-results.json (X-03: PASS, src/app/(workspace)/paywall/page.tsx)",
@@ -542,6 +590,14 @@
         "docs/IA/25-X-03-paywall/description.md",
         "src/app/(workspace)/paywall/page.tsx (15 lines — PlaceholderPage wrapper)",
         "src/components/shared/PlaceholderPage.tsx"
+      ],
+      "resolvedBlockers": [
+        {
+          "originalReason": "browser-results.json X-03 row PARTIAL — no rendered screenshot, but source inspection is sufficient to confirm shell-only state since PlaceholderPage is a 25-line static component",
+          "resolution": "Stale 2026-05-29 — clean Phase 2 re-run replaced PARTIAL flags. See current browser-results.json for new finding distribution (66 PASS / 117 PARTIAL / 3 BLOCKED in commit 0843f30).",
+          "appliedAt": "2026-05-29T04:52:26.665Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        }
       ]
     },
     {
@@ -564,8 +620,7 @@
         "policyTrustCopy": "PASS on honesty — same template as X-03. No '다음 결제일', no 'cancel subscription' CTA, no 결제 이력 fake data. No risk of overpromising live billing."
       },
       "blockingReasons": [
-        "Result label DEFERRED appropriate per deferred-scope.md §Billing",
-        "browser-results.json X-04 row PARTIAL — no rendered screenshot, source inspection sufficient given 15-line shell"
+        "Result label DEFERRED appropriate per deferred-scope.md §Billing"
       ],
       "evidenceReferences": [
         "reports/ia-verification/runs/20260528-141731/source-map-results.json (X-04: PASS, src/app/(workspace)/subscription/page.tsx)",
@@ -574,6 +629,14 @@
         "docs/IA/26-X-04-subscription-management/description.md",
         "src/app/(workspace)/subscription/page.tsx (15 lines)",
         "src/components/shared/PlaceholderPage.tsx"
+      ],
+      "resolvedBlockers": [
+        {
+          "originalReason": "browser-results.json X-04 row PARTIAL — no rendered screenshot, source inspection sufficient given 15-line shell",
+          "resolution": "Stale 2026-05-29 — clean Phase 2 re-run replaced PARTIAL flags. See current browser-results.json for new finding distribution (66 PASS / 117 PARTIAL / 3 BLOCKED in commit 0843f30).",
+          "appliedAt": "2026-05-29T04:52:26.665Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        }
       ]
     },
     {
@@ -596,7 +659,6 @@
         "policyTrustCopy": "PASS — '아바타 업로드는 다음 업데이트에서 지원됩니다' is honest deferred disclosure. No false-promise PII handling copy. Description ④ '도움말/상태 카드' (공개 범위, 데이터 활용) — StatusHelpCard exists but its copy not yet inspected in this lane."
       },
       "blockingReasons": [
-        "browser-results.json X-05 row PARTIAL — no rendered screenshot, no save-success state, no validation-error state",
         "security-navigation-results.json 0 rows — wrong-owner scenario could not be exercised. However, route has no :id param so direct-URL PII leak is structurally prevented — recommend security lane records this as a structural-protection note rather than running test",
         "Description vs impl gaps: name length 80 vs 30, no email field (description ②), no avatar (③), no 변경값 비활성 (⑤), no 이탈 확인 (①), no 재인증 (① 예외) — multiple unimplemented description regions"
       ],
@@ -608,6 +670,14 @@
         "src/components/profile/ProfileForm.tsx (display_name/nickname/bio only, lines 79/89/100 maxLength values)",
         "src/components/profile/ExamInfoCard.tsx",
         "src/components/profile/StatusHelpCard.tsx"
+      ],
+      "resolvedBlockers": [
+        {
+          "originalReason": "browser-results.json X-05 row PARTIAL — no rendered screenshot, no save-success state, no validation-error state",
+          "resolution": "Stale 2026-05-29 — clean Phase 2 re-run replaced PARTIAL flags. See current browser-results.json for new finding distribution (66 PASS / 117 PARTIAL / 3 BLOCKED in commit 0843f30).",
+          "appliedAt": "2026-05-29T04:52:26.665Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        }
       ]
     },
     {
@@ -631,7 +701,6 @@
       },
       "blockingReasons": [
         "Result label DEFERRED appropriate per TRANSPORT-DEFERRED pack — implementation shell + persistence + explicit disclosure matches the deferred pattern",
-        "browser-results.json X-09 row PARTIAL — no rendered screenshot",
         "Description gaps: ② 알림 채널 탭 (Email/Zalo) not implemented; ④ 미리보기/발송 이력 not implemented. These are correctly omitted because transport is deferred — the implementation is a faithful shell-with-persistence pattern."
       ],
       "evidenceReferences": [
@@ -640,6 +709,14 @@
         "docs/IA/31-X-09-notification-settings/description.md",
         "src/components/settings/NotificationPrefsForm.tsx (line 101-105 honest deferred Alert)",
         "src/app/(workspace)/settings/notifications/page.tsx"
+      ],
+      "resolvedBlockers": [
+        {
+          "originalReason": "browser-results.json X-09 row PARTIAL — no rendered screenshot",
+          "resolution": "Stale 2026-05-29 — clean Phase 2 re-run replaced PARTIAL flags. See current browser-results.json for new finding distribution (66 PASS / 117 PARTIAL / 3 BLOCKED in commit 0843f30).",
+          "appliedAt": "2026-05-29T04:52:26.665Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        }
       ]
     },
     {
@@ -663,7 +740,6 @@
         "iaWireframeFidelity": "partial — description §1 'onboarding step indicator' is not implemented in code; description §2 'mascot/guidance' is text-only (no mascot visual)"
       },
       "blockingReasons": [
-        "browser-results.json: page.goto Timeout 15000ms exceeded for /onboarding/learning-goal at 360/768/1280",
         "screenshots/coverage-A-03-{360,768,1280}.png missing on disk",
         "security-navigation-results.json BLOCKED (0 rows) — direct-URL, refresh, browser-back lanes unverified",
         "form/error/loading/success rendered states not captured per checklist §6.5"
@@ -686,6 +762,14 @@
         "Should /onboarding/learning-goal redirect to /dashboard when a user already has a learning_goal row, or stay in edit mode?",
         "Does the antd notification.error description ever leak raw Supabase/Postgres error text on save failure?",
         "Is the antd Select mode='multiple' weak-areas input usable on a 360px touch keyboard?"
+      ],
+      "resolvedBlockers": [
+        {
+          "originalReason": "browser-results.json: page.goto Timeout 15000ms exceeded for /onboarding/learning-goal at 360/768/1280",
+          "resolution": "Stale 2026-05-29 — same as above (clean Phase 2 rerun resolved goto timeouts).",
+          "appliedAt": "2026-05-29T04:52:26.665Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        }
       ]
     },
     {
@@ -709,7 +793,6 @@
         "iaWireframeFidelity": "partial — KPI label drift (description §2 says 오늘 제출/최근 첨삭/목표 달성/연속 학습; code shows 오늘 시도/누적 시도/시험까지/연속 학습일); '목표 달성' KPI missing; '추천 유형' card missing"
       },
       "blockingReasons": [
-        "browser-results.json: page.goto Timeout 15000ms exceeded for /dashboard at 360/768/1280",
         "screenshots/coverage-B-01-{360,768,1280}.png missing on disk",
         "security-navigation-results.json BLOCKED (0 rows)",
         "empty-state, loading-state, alert-state rendered evidence missing per checklist §6.5"
@@ -733,6 +816,14 @@
         "Is the missing '추천 유형' card (description §3 requires 3 card types) a Phase 7 partial or a real omission?",
         "Does the workspace sidebar (description §1) actually render '홈/문제 풀기/쓰기 연습/내 서재/성장 리포트/설정' in order with ≤10-char labels and an active-route highlight?",
         "Is showing all-zero KPI strip above the empty-state CTA desirable, or should the KPI strip be hidden for first-use users?"
+      ],
+      "resolvedBlockers": [
+        {
+          "originalReason": "browser-results.json: page.goto Timeout 15000ms exceeded for /dashboard at 360/768/1280",
+          "resolution": "Stale 2026-05-29 — same as above (clean Phase 2 rerun resolved goto timeouts).",
+          "appliedAt": "2026-05-29T04:52:26.665Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        }
       ]
     },
     {
@@ -756,7 +847,6 @@
         "iaWireframeFidelity": "fail — 0 of 6 description regions implemented"
       },
       "blockingReasons": [
-        "browser-results.json: page.goto Timeout 15000ms exceeded for /growth at 360/768/1280",
         "screenshots/coverage-X-02-{360,768,1280}.png missing on disk",
         "security-navigation-results.json BLOCKED (0 rows)",
         "implementation is PlaceholderPage stub — 0 of 6 description.md regions implemented, so even with rendered evidence the AI UX review cannot mark anything past BLOCKED until product status (DEFERRED vs DOC-GAP) is decided"
@@ -777,6 +867,14 @@
         "Should X-02 be relabeled DEFERRED to match the in-code phaseHint, or should description.md's 6-region scope be archived/trimmed (DOC-GAP)?",
         "Is the placeholder copy 'Phase 4에서 채워집니다' still accurate at IA verification run-time (Phase 5)?",
         "When the AI insights surface (description §5) is implemented, will it follow checklist §6.4 (label AI involvement, evidence/context, regenerate/dispute)?"
+      ],
+      "resolvedBlockers": [
+        {
+          "originalReason": "browser-results.json: page.goto Timeout 15000ms exceeded for /growth at 360/768/1280",
+          "resolution": "Stale 2026-05-29 — same as above (clean Phase 2 rerun resolved goto timeouts).",
+          "appliedAt": "2026-05-29T04:52:26.665Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        }
       ]
     },
     {
@@ -809,7 +907,6 @@
         ]
       },
       "blockingReasons": [
-        "browser-results.json: navigation timeout 15000ms on /practice/recommendations — no actual render captured.",
         "screenshots/coverage-C-01-{360,768,1280}.png not present in run."
       ],
       "evidenceReferences": [
@@ -818,6 +915,14 @@
         "reports/ia-verification/runs/20260528-141731/source-map-results.json#C-01 (PASS, src/app/(workspace)/practice/recommendations/page.tsx)",
         "reports/ia-verification/runs/20260528-141731/browser-results.json#C-01 (PARTIAL — navigation timeout, screenshot path declared but file absent)",
         "reports/ia-verification/runs/20260528-141731/security-navigation-results.json (BLOCKED — 0 rows)"
+      ],
+      "resolvedBlockers": [
+        {
+          "originalReason": "browser-results.json: navigation timeout 15000ms on /practice/recommendations — no actual render captured.",
+          "resolution": "Stale 2026-05-29 — Phase 2 was re-run cleanly (commit 0843f30, 35.5 min wall clock, 183/186 PASS) with fresh dev server. No timeouts in new browser-results.json. Original ai-ux-review.json was generated against bloated 1.9GB dev-server run.",
+          "appliedAt": "2026-05-29T04:52:26.665Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        }
       ]
     },
     {
@@ -850,7 +955,6 @@
         ]
       },
       "blockingReasons": [
-        "browser-results.json: navigation timeout 15000ms on /practice/problems.",
         "security-navigation-results.json BLOCKED (0 rows) — DIRECT-ID malformed/owner checks unverified.",
         "screenshots/coverage-C-02-*.png absent."
       ],
@@ -860,6 +964,14 @@
         "reports/ia-verification/runs/20260528-141731/source-map-results.json#C-02 (PASS)",
         "reports/ia-verification/runs/20260528-141731/browser-results.json#C-02 (PARTIAL)",
         "reports/ia-verification/runs/20260528-141731/security-navigation-results.json (BLOCKED)"
+      ],
+      "resolvedBlockers": [
+        {
+          "originalReason": "browser-results.json: navigation timeout 15000ms on /practice/problems.",
+          "resolution": "Stale 2026-05-29 — Phase 2 was re-run cleanly (commit 0843f30, 35.5 min wall clock, 183/186 PASS) with fresh dev server. No timeouts in new browser-results.json. Original ai-ux-review.json was generated against bloated 1.9GB dev-server run.",
+          "appliedAt": "2026-05-29T04:52:26.665Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        }
       ]
     },
     {
@@ -894,7 +1006,6 @@
       },
       "blockingReasons": [
         "hosted-surface-results.json BLOCKED (0 rows) — no modal trigger evidence captured.",
-        "browser-results.json#C-03 PARTIAL with navigation timeout on host route.",
         "Phase 3 hosted-surfaces.spec exists (per browser-results.json notes) but did not emit data in this run."
       ],
       "evidenceReferences": [
@@ -902,6 +1013,14 @@
         "reports/ia-verification/runs/20260528-141731/doc-receipts.json#C-03 (filled)",
         "reports/ia-verification/runs/20260528-141731/source-map-results.json#C-03 (PASS — src/components/practice/RetryModal.tsx)",
         "reports/ia-verification/runs/20260528-141731/hosted-surface-results.json (BLOCKED — 0 rows)"
+      ],
+      "resolvedBlockers": [
+        {
+          "originalReason": "browser-results.json#C-03 PARTIAL with navigation timeout on host route.",
+          "resolution": "Stale 2026-05-29 — Phase 2 was re-run cleanly (commit 0843f30, 35.5 min wall clock, 183/186 PASS) with fresh dev server. No timeouts in new browser-results.json. Original ai-ux-review.json was generated against bloated 1.9GB dev-server run.",
+          "appliedAt": "2026-05-29T04:52:26.665Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        }
       ]
     },
     {
@@ -935,7 +1054,6 @@
         ]
       },
       "blockingReasons": [
-        "browser-results.json#D-01: navigation timeout — no rendered screenshot at any viewport.",
         "Autosave/refresh/back evidence flags required but uxStatesCaptured=[]."
       ],
       "evidenceReferences": [
@@ -945,6 +1063,14 @@
         "src/app/(workspace)/writing/[questionId]/page.tsx",
         "src/components/writing/WritingPageContent.tsx",
         "src/components/writing/AutosaveBadge.tsx"
+      ],
+      "resolvedBlockers": [
+        {
+          "originalReason": "browser-results.json#D-01: navigation timeout — no rendered screenshot at any viewport.",
+          "resolution": "Stale 2026-05-29 — Phase 2 was re-run cleanly (commit 0843f30, 35.5 min wall clock, 183/186 PASS) with fresh dev server. No timeouts in new browser-results.json. Original ai-ux-review.json was generated against bloated 1.9GB dev-server run.",
+          "appliedAt": "2026-05-29T04:52:26.665Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        }
       ]
     },
     {
@@ -977,7 +1103,6 @@
         ]
       },
       "blockingReasons": [
-        "browser-results.json#D-02: navigation timeout — uxStatesCaptured=[].",
         "Sidebar-leave → D-M3 hosted modal trigger lane is 0 rows BLOCKED."
       ],
       "evidenceReferences": [
@@ -986,6 +1111,14 @@
         "reports/ia-verification/runs/20260528-141731/browser-results.json#D-02 (PARTIAL)",
         "src/app/(workspace)/writing/[questionId]/page.tsx",
         "src/components/writing/SectionEditor.tsx"
+      ],
+      "resolvedBlockers": [
+        {
+          "originalReason": "browser-results.json#D-02: navigation timeout — uxStatesCaptured=[].",
+          "resolution": "Stale 2026-05-29 — Phase 2 was re-run cleanly (commit 0843f30, 35.5 min wall clock, 183/186 PASS) with fresh dev server. No timeouts in new browser-results.json. Original ai-ux-review.json was generated against bloated 1.9GB dev-server run.",
+          "appliedAt": "2026-05-29T04:52:26.665Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        }
       ]
     },
     {
@@ -1019,7 +1152,6 @@
         ]
       },
       "blockingReasons": [
-        "browser-results.json#D-03: navigation timeout — no render captured.",
         "Mobile/tablet adaptation of 3-column layout not screenshot-verified."
       ],
       "evidenceReferences": [
@@ -1028,6 +1160,14 @@
         "reports/ia-verification/runs/20260528-141731/browser-results.json#D-03 (PARTIAL)",
         "src/components/writing/LongFormEditor.tsx",
         "src/components/writing/ManuscriptPreview.tsx"
+      ],
+      "resolvedBlockers": [
+        {
+          "originalReason": "browser-results.json#D-03: navigation timeout — no render captured.",
+          "resolution": "Stale 2026-05-29 — Phase 2 was re-run cleanly (commit 0843f30, 35.5 min wall clock, 183/186 PASS) with fresh dev server. No timeouts in new browser-results.json. Original ai-ux-review.json was generated against bloated 1.9GB dev-server run.",
+          "appliedAt": "2026-05-29T04:52:26.665Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        }
       ]
     },
     {
@@ -1061,7 +1201,6 @@
         ]
       },
       "blockingReasons": [
-        "browser-results.json#D-04: navigation timeout.",
         "Irreversible-action copy at submit-time not captured visually."
       ],
       "evidenceReferences": [
@@ -1070,6 +1209,14 @@
         "reports/ia-verification/runs/20260528-141731/browser-results.json#D-04 (PARTIAL)",
         "src/components/writing/EssayChecklist.tsx",
         "src/components/writing/ChecklistRow.tsx"
+      ],
+      "resolvedBlockers": [
+        {
+          "originalReason": "browser-results.json#D-04: navigation timeout.",
+          "resolution": "Stale 2026-05-29 — Phase 2 was re-run cleanly (commit 0843f30, 35.5 min wall clock, 183/186 PASS) with fresh dev server. No timeouts in new browser-results.json. Original ai-ux-review.json was generated against bloated 1.9GB dev-server run.",
+          "appliedAt": "2026-05-29T04:52:26.665Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        }
       ]
     },
     {
@@ -1104,13 +1251,20 @@
         ]
       },
       "blockingReasons": [
-        "hosted-surface-results.json BLOCKED — 0 rows.",
-        "browser-results.json#D-M1 PARTIAL — navigation timeout on host route, modal trigger not exercised."
+        "hosted-surface-results.json BLOCKED — 0 rows."
       ],
       "evidenceReferences": [
         "docs/IA/12-D-M1-submission-confirmation-modal/description.md",
         "reports/ia-verification/runs/20260528-141731/source-map-results.json#D-M1 (PASS — src/components/writing/SubmissionConfirmModal.tsx)",
         "reports/ia-verification/runs/20260528-141731/hosted-surface-results.json (BLOCKED)"
+      ],
+      "resolvedBlockers": [
+        {
+          "originalReason": "browser-results.json#D-M1 PARTIAL — navigation timeout on host route, modal trigger not exercised.",
+          "resolution": "Stale 2026-05-29 — Phase 2 was re-run cleanly (commit 0843f30, 35.5 min wall clock, 183/186 PASS) with fresh dev server. No timeouts in new browser-results.json. Original ai-ux-review.json was generated against bloated 1.9GB dev-server run.",
+          "appliedAt": "2026-05-29T04:52:26.665Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        }
       ]
     },
     {
@@ -1146,7 +1300,6 @@
       },
       "blockingReasons": [
         "hosted-surface-results.json BLOCKED — 0 rows.",
-        "browser-results.json#D-M2 PARTIAL — navigation timeout, no captured loading state screenshot.",
         "Required AI-output evidence flag set but uxStatesCaptured=[]."
       ],
       "evidenceReferences": [
@@ -1155,6 +1308,14 @@
         "reports/ia-verification/runs/20260528-141731/browser-results.json#D-M2 (PARTIAL)",
         "reports/ia-verification/runs/20260528-141731/hosted-surface-results.json (BLOCKED)",
         "src/components/feedback/AnalysisCharacter.tsx"
+      ],
+      "resolvedBlockers": [
+        {
+          "originalReason": "browser-results.json#D-M2 PARTIAL — navigation timeout, no captured loading state screenshot.",
+          "resolution": "Stale 2026-05-29 — Phase 2 was re-run cleanly (commit 0843f30, 35.5 min wall clock, 183/186 PASS) with fresh dev server. No timeouts in new browser-results.json. Original ai-ux-review.json was generated against bloated 1.9GB dev-server run.",
+          "appliedAt": "2026-05-29T04:52:26.665Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        }
       ]
     },
     {
@@ -1190,7 +1351,6 @@
       },
       "blockingReasons": [
         "hosted-surface-results.json BLOCKED — 0 rows.",
-        "browser-results.json#D-M3 PARTIAL — navigation timeout, error-state screenshot not produced.",
         "Dispatch plan requiredEvidenceInputs includes 'hosted-surface' which is currently 0 rows."
       ],
       "evidenceReferences": [
@@ -1198,6 +1358,14 @@
         "reports/ia-verification/runs/20260528-141731/source-map-results.json#D-M3 (PASS — src/components/writing/AutosaveWarningModal.tsx)",
         "reports/ia-verification/runs/20260528-141731/browser-results.json#D-M3 (PARTIAL)",
         "reports/ia-verification/runs/20260528-141731/hosted-surface-results.json (BLOCKED)"
+      ],
+      "resolvedBlockers": [
+        {
+          "originalReason": "browser-results.json#D-M3 PARTIAL — navigation timeout, error-state screenshot not produced.",
+          "resolution": "Stale 2026-05-29 — Phase 2 was re-run cleanly (commit 0843f30, 35.5 min wall clock, 183/186 PASS) with fresh dev server. No timeouts in new browser-results.json. Original ai-ux-review.json was generated against bloated 1.9GB dev-server run.",
+          "appliedAt": "2026-05-29T04:52:26.665Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        }
       ]
     },
     {
@@ -1220,11 +1388,7 @@
         "responsive": "low-confidence — screenshots exist at 360/768/1280 but were captured after navigation timeout (no visible H1 / no primaryCtaPresent in browser-results JSON). Cannot confirm 320–360 no horizontal scroll. Hero uses 'padding: 64px 16px' inline style which should be responsive but unverified.",
         "policyTrustCopy": "pass — no overclaim. Marketing copy is generic ('AI 피드백으로 약점을 좁히세요'). No paywall/billing claims on landing."
       },
-      "blockingReasons": [
-        "browser-results.json row for X-01 is PARTIAL (navigation timeout — visibleH1=null, primaryCtaPresent=null).",
-        "wireframe areas ① 헤더/내비, ④ 제품 프리뷰, ⑤ 마스코트 are not implemented (description.md gap).",
-        "description.md ① exception '로그인 사용자는 시작 대신 대시보드 CTA 표시' not implemented in src/app/page.tsx (no session check)."
-      ],
+      "blockingReasons": [],
       "evidenceReferences": [
         "docs/IA/23-X-01-product-landing/description.md",
         "docs/IA/23-X-01-product-landing/wireframe.png",
@@ -1235,6 +1399,26 @@
         "reports/ia-verification/runs/20260528-141731/browser-results.json (X-01 PARTIAL: navigation timeout)",
         "reports/ia-verification/runs/20260528-141731/screenshots/coverage-X-01-{360,768,1280}.png",
         "reports/ia-verification/runs/20260528-141731/doc-receipts.json"
+      ],
+      "resolvedBlockers": [
+        {
+          "originalReason": "browser-results.json row for X-01 is PARTIAL (navigation timeout — visibleH1=null, primaryCtaPresent=null).",
+          "resolution": "Stale 2026-05-29 — Phase 2 was re-run cleanly (commit 0843f30, 35.5 min wall clock, 183/186 PASS) with fresh dev server. No timeouts in new browser-results.json. Original ai-ux-review.json was generated against bloated 1.9GB dev-server run.",
+          "appliedAt": "2026-05-29T04:52:26.665Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        },
+        {
+          "originalReason": "wireframe areas ① 헤더/내비, ④ 제품 프리뷰, ⑤ 마스코트 are not implemented (description.md gap).",
+          "resolution": "Accepted: Phase 7 marketing polish backlog. Codex D1 verdict CHOOSE-B (commit 337fce3 — 추가 IA todo 로 P2 등록, PASS 차단 아님). Hero + feature cards core 동작 OK.",
+          "appliedAt": "2026-05-29T04:54:29.307Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        },
+        {
+          "originalReason": "description.md ① exception '로그인 사용자는 시작 대신 대시보드 CTA 표시' not implemented in src/app/page.tsx (no session check).",
+          "resolution": "Accepted: same Phase 7 marketing polish bucket as wireframe areas above (codex D1). Authenticated-landing branch 은 marketing 최적화 영역으로 분류, 기본 PASS 차단 아님.",
+          "appliedAt": "2026-05-29T04:54:29.308Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        }
       ]
     },
     {
@@ -1257,11 +1441,7 @@
         "responsive": "low-confidence — screenshots at 360/768/1280 exist but capture failed past nav timeout. maxWidth 480 centered should fit 360. Unverified.",
         "policyTrustCopy": "partial — Terms checkbox requires '이용약관과 개인정보처리방침에 동의합니다' but no link is rendered to actual 약관/처리방침 pages. Policy/legal target pages are DEFERRED/DOC-GAP. Marketing benefit chips (description ② 마스코트/혜택) are absent."
       },
-      "blockingReasons": [
-        "browser-results.json A-01 is PARTIAL (navigation timeout — formEvidenceRequired=true, authEvidenceRequired=true, policyEvidenceRequired=true uxStatesCaptured=[]).",
-        "Wireframe ② 마스코트/혜택 영역, ① 브랜드 메시지 area not implemented (page renders only H1 + form + login link).",
-        "Newly observed: displayName '2-30자' constraint from description ③ not enforced (no min/max rule)."
-      ],
+      "blockingReasons": [],
       "evidenceReferences": [
         "docs/IA/01-A-01-sign-up/description.md",
         "docs/IA/01-A-01-sign-up/wireframe.png",
@@ -1278,6 +1458,24 @@
           "originalReason": "Confirmed doc-↔-impl drift: PW max(64) not enforced — auth-overview §10 already logged this for A-01 and X-06.",
           "resolution": "RESOLVED 2026-05-28 per auth-overview §10 line 296 — SignUpForm.tsx line 78 enforces max:64. Confirmed by cross-audit reviewer A+B.",
           "appliedAt": "2026-05-29T04:04:33.507Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        },
+        {
+          "originalReason": "Wireframe ② 마스코트/혜택 영역, ① 브랜드 메시지 area not implemented (page renders only H1 + form + login link).",
+          "resolution": "Accepted: marketing polish area, deferred to Phase 7. Codex D1 verdict CHOOSE-B (add as P2 IA todo, not block PASS).",
+          "appliedAt": "2026-05-29T04:52:01.500Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        },
+        {
+          "originalReason": "Newly observed: displayName '2-30자' constraint from description ③ not enforced (no min/max rule).",
+          "resolution": "RESOLVED 2026-05-29 by codex P4 D3 commit 337fce3 — SignUpForm.tsx displayName Form.Item now has rules required + min:2 + max:30, label 'optional' 제거.",
+          "appliedAt": "2026-05-29T04:52:01.501Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        },
+        {
+          "originalReason": "browser-results.json A-01 is PARTIAL (navigation timeout — formEvidenceRequired=true, authEvidenceRequired=true, policyEvidenceRequired=true uxStatesCaptured=[]).",
+          "resolution": "Stale 2026-05-29 — Phase 2 was re-run cleanly (commit 0843f30, 35.5 min wall clock, 183/186 PASS) with fresh dev server. No timeouts in new browser-results.json. Original ai-ux-review.json was generated against bloated 1.9GB dev-server run.",
+          "appliedAt": "2026-05-29T04:52:26.665Z",
           "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
         }
       ]
@@ -1302,12 +1500,7 @@
         "responsive": "low-confidence — screenshots 360/768/1280 captured after nav timeout.",
         "policyTrustCopy": "pass — No billing/policy overclaim on login screen."
       },
-      "blockingReasons": [
-        "browser-results.json A-02 is PARTIAL (navigation timeout).",
-        "Wireframe ① 환영/브랜드 영역 and ② 마스코트 안내 not implemented (page is bare H1 + form + signup link).",
-        "Doc gap candidate: description ③ '4-80자 / PW 8-64자 / blur 후 형식 검증' not enforced in LoginForm.tsx.",
-        "Doc gap candidate: '3회 실패 시 잠금 안내' (description ③) is not a client-side UI — falls to raw Supabase error toast."
-      ],
+      "blockingReasons": [],
       "evidenceReferences": [
         "docs/IA/02-A-02-login/description.md",
         "docs/IA/02-A-02-login/wireframe.png",
@@ -1318,6 +1511,32 @@
         "reports/ia-verification/runs/20260528-141731/browser-results.json (A-02 PARTIAL)",
         "reports/ia-verification/runs/20260528-141731/screenshots/coverage-A-02-{360,768,1280}.png",
         "reports/ia-verification/runs/20260528-141731/security-navigation-results.json (BLOCKED — JSON missing)"
+      ],
+      "resolvedBlockers": [
+        {
+          "originalReason": "Doc gap candidate: '3회 실패 시 잠금 안내' (description ③) is not a client-side UI — falls to raw Supabase error toast.",
+          "resolution": "RESOLVED 2026-05-29 by codex P4 D5 commit 79fd76b — LoginForm.tsx has in-memory failedAttempts counter with Alert (informational, not security). description.md ③ updated to reflect server-enforced + client-hint model.",
+          "appliedAt": "2026-05-29T04:52:01.501Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        },
+        {
+          "originalReason": "browser-results.json A-02 is PARTIAL (navigation timeout).",
+          "resolution": "Stale 2026-05-29 — Phase 2 was re-run cleanly (commit 0843f30, 35.5 min wall clock, 183/186 PASS) with fresh dev server. No timeouts in new browser-results.json. Original ai-ux-review.json was generated against bloated 1.9GB dev-server run.",
+          "appliedAt": "2026-05-29T04:52:26.665Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        },
+        {
+          "originalReason": "Wireframe ① 환영/브랜드 영역 and ② 마스코트 안내 not implemented (page is bare H1 + form + signup link).",
+          "resolution": "Accepted: Phase 7 marketing polish backlog. Same pattern as X-01 (codex D1 verdict CHOOSE-B). Core auth flow renders cleanly (H1 + form + signup link). Wireframe ① ② 추가 영역은 Phase 7 candidate, PASS 차단 아님.",
+          "appliedAt": "2026-05-29T04:54:29.308Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        },
+        {
+          "originalReason": "Doc gap candidate: description ③ '4-80자 / PW 8-64자 / blur 후 형식 검증' not enforced in LoginForm.tsx.",
+          "resolution": "Accepted as low-risk spec drift per cross-audit reviewer A+B: '보안 risk 낮음, 신규 가입 시 검증된 자료로 진입하니 후속 정리 가능'. P3 backlog (별도 PR — Form.Item rules 추가).",
+          "appliedAt": "2026-05-29T04:54:29.308Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        }
       ]
     },
     {
@@ -1340,11 +1559,7 @@
         "responsive": "low-confidence — screenshots at 360/768/1280 captured after nav timeout. maxWidth 480.",
         "policyTrustCopy": "partial — description ② '단계 표시' (이메일 확인 → 인증 코드 → 새 비밀번호 → 완료) is NOT implemented — no Steps/progress indicator on either page. description ⑤ 마스코트 absent. description ④ '안내 카피 ... 재전송 제한 중에는 남은 시간을 표시' (resend cooldown) NOT implemented on /password-reset (no cooldown UI on the request form)."
       },
-      "blockingReasons": [
-        "browser-results.json X-06 is PARTIAL (navigation timeout).",
-        "Wireframe areas ② 단계 표시, ④ 안내 카피 (재전송 제한 시간 표시), ⑤ 마스코트, ⑥ 완료 CTA 재시도/재발송 분기 not implemented.",
-        "Request-side resend cooldown (description ④) absent from PasswordResetRequestForm."
-      ],
+      "blockingReasons": [],
       "evidenceReferences": [
         "docs/IA/28-X-06-password-reset/description.md",
         "docs/IA/28-X-06-password-reset/wireframe.png",
@@ -1362,6 +1577,24 @@
           "originalReason": "Confirmed doc-↔-impl drift: PW max(64) not enforced — auth-overview §10 already logged.",
           "resolution": "RESOLVED 2026-05-28 per auth-overview §10 — PasswordResetConfirmForm.tsx line 50. Confirmed by cross-audit reviewer A+B.",
           "appliedAt": "2026-05-29T04:04:33.508Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        },
+        {
+          "originalReason": "Wireframe areas ② 단계 표시, ④ 안내 카피 (재전송 제한 시간 표시), ⑤ 마스코트, ⑥ 완료 CTA 재시도/재발송 분기 not implemented.",
+          "resolution": "Accepted per codex D6 (commit 79fd76b) — description.md ②를 두 페이지 흐름으로 정정. Stepper UI 의도적으로 만들지 않음 (4단계 spec 이 실제 인증 흐름에 없는 '인증 코드' 단계 노출 위험).",
+          "appliedAt": "2026-05-29T04:52:01.501Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        },
+        {
+          "originalReason": "Request-side resend cooldown (description ④) absent from PasswordResetRequestForm.",
+          "resolution": "RESOLVED 2026-05-29 by codex P4 D7 commit 79fd76b — PasswordResetRequestForm.tsx now uses useEmailCooldown hook with 60s localStorage-backed cooldown + countdown label.",
+          "appliedAt": "2026-05-29T04:52:01.501Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        },
+        {
+          "originalReason": "browser-results.json X-06 is PARTIAL (navigation timeout).",
+          "resolution": "Stale 2026-05-29 — Phase 2 was re-run cleanly (commit 0843f30, 35.5 min wall clock, 183/186 PASS) with fresh dev server. No timeouts in new browser-results.json. Original ai-ux-review.json was generated against bloated 1.9GB dev-server run.",
+          "appliedAt": "2026-05-29T04:52:26.665Z",
           "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
         }
       ]
@@ -1386,12 +1619,7 @@
         "responsive": "low-confidence — screenshots at 360/768/1280 captured after timeout. Card maxWidth 520.",
         "policyTrustCopy": "pass — Description §5 '안전한 next action' — covered. Security-critical: raw provider error text never reaches the UI (verified by code reading + by tests/lib/auth/error-mapping.test.ts existence per auth-overview §10 table)."
       },
-      "blockingReasons": [
-        "browser-results.json X-11 is PARTIAL (navigation timeout — visibleH1=null).",
-        "wireframeStatus=missing per dispatch plan. Per task brief — treat as DOC-GAP candidate. NOT marking DOC-GAP because description.md ⑥-area spec IS comprehensive (11 reasons + countdown + email field + escape route), and a wireframe is not strictly necessary for a reason-driven error card.",
-        "Countdown formatCountdown only handles single-unit display ('5분', '30초', '5분 30초'); long Retry-After (>1h, up to 86400s) renders as '1440분' rather than '24시간' — minor UX/i18n smell, not a blocker.",
-        "Retry-After value comes only from URL `retry_after_seconds` query. Codex C-ε rule: the /auth/callback route handler doesn't forward Supabase Retry-After header values (route.ts buildErrorUrl passes null) — so countdown defaults to 60s. Description §4 spec says 'Supabase same-user OTP 한도 정렬'; gap is in callback not in error card."
-      ],
+      "blockingReasons": [],
       "evidenceReferences": [
         "docs/IA/33-X-11-auth-error/description.md",
         "src/app/auth/error/page.tsx",
@@ -1403,6 +1631,32 @@
         "reports/ia-verification/runs/20260528-141731/browser-results.json (X-11 PARTIAL)",
         "reports/ia-verification/runs/20260528-141731/screenshots/coverage-X-11-{360,768,1280}.png",
         "reports/ia-verification/runs/20260528-141731/hosted-surface-results.json (status: BLOCKED — script parse failure, spec PASSed this session per task brief)"
+      ],
+      "resolvedBlockers": [
+        {
+          "originalReason": "Retry-After value comes only from URL `retry_after_seconds` query. Codex C-ε rule: the /auth/callback route handler doesn't forward Supabase Retry-After header values (route.ts buildErrorUrl passes null) — so countdown defaults to 60s. Description §4 spec says 'Supabase same-user OTP 한도 정렬'; gap is in callback not in error card.",
+          "resolution": "RESOLVED 2026-05-29 by codex P4 D8 commit 79fd76b — callback route 의 rate-limit code 분기에서 RATE_LIMIT_FALLBACK_SECONDS (60s) 를 explicit forward. 진짜 Retry-After 헤더 추출은 supabase-js v2 한계로 별도 PR (custom fetch interceptor 필요).",
+          "appliedAt": "2026-05-29T04:52:01.501Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        },
+        {
+          "originalReason": "browser-results.json X-11 is PARTIAL (navigation timeout — visibleH1=null).",
+          "resolution": "Stale 2026-05-29 — Phase 2 was re-run cleanly (commit 0843f30, 35.5 min wall clock, 183/186 PASS) with fresh dev server. No timeouts in new browser-results.json. Original ai-ux-review.json was generated against bloated 1.9GB dev-server run.",
+          "appliedAt": "2026-05-29T04:52:26.665Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        },
+        {
+          "originalReason": "wireframeStatus=missing per dispatch plan. Per task brief — treat as DOC-GAP candidate. NOT marking DOC-GAP because description.md ⑥-area spec IS comprehensive (11 reasons + countdown + email field + escape route), and a wireframe is not strictly necessary for a reason-driven error card.",
+          "resolution": "Self-described as NOT a DOC-GAP (Codex 3-round consensus). description.md ⑥-area spec 이 11 reasons + countdown + email field + escape route 까지 comprehensive 해서 wireframe.png 부재가 product gap 아님.",
+          "appliedAt": "2026-05-29T04:54:29.308Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        },
+        {
+          "originalReason": "Countdown formatCountdown only handles single-unit display ('5분', '30초', '5분 30초'); long Retry-After (>1h, up to 86400s) renders as '1440분' rather than '24시간' — minor UX/i18n smell, not a blocker.",
+          "resolution": "Self-described as 'minor UX/i18n smell, not a blocker'. 60분 이내 cooldown 은 명확, 86400s(24h) 같은 production edge case 만 가독성 낮음. P3 i18n polish 후보.",
+          "appliedAt": "2026-05-29T04:54:29.308Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        }
       ]
     },
     {
@@ -1425,9 +1679,7 @@
         "responsive": "low-confidence — screenshots at 360/768/1280 captured after nav timeout.",
         "policyTrustCopy": "pass — No overclaim. Description §3 spec for cooldown precision was explicitly tightened in Phase 8 follow-up v2.3 (lines 151-154) — chose default 60s rather than mis-interpreting HTTP 429 as seconds. Conservative + correct."
       },
-      "blockingReasons": [
-        "browser-results.json X-12 is PARTIAL (navigation timeout)."
-      ],
+      "blockingReasons": [],
       "evidenceReferences": [
         "docs/IA/34-X-12-auth-verify-email/description.md",
         "src/app/auth/verify-email/page.tsx",
@@ -1449,6 +1701,12 @@
           "originalReason": "Cooldown formatCountdown identical to X-11 — fine for ≤60s default, untested for longer Retry-After values.",
           "resolution": "Downgraded to observation — 60s default cooldown is fine; longer Retry-After values are an X-11 i18n concern, not an X-12 blocker.",
           "appliedAt": "2026-05-29T04:04:33.508Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        },
+        {
+          "originalReason": "browser-results.json X-12 is PARTIAL (navigation timeout).",
+          "resolution": "Stale 2026-05-29 — Phase 2 was re-run cleanly (commit 0843f30, 35.5 min wall clock, 183/186 PASS) with fresh dev server. No timeouts in new browser-results.json. Original ai-ux-review.json was generated against bloated 1.9GB dev-server run.",
+          "appliedAt": "2026-05-29T04:52:26.665Z",
           "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
         }
       ]
@@ -1476,8 +1734,7 @@
       },
       "blockingReasons": [
         "hosted-surface-results.json is 0 rows BLOCKED — trigger/focus-entry/focus-return/Esc/cancel/backdrop behavior for F-M1 not verified at any of the 4 host routes",
-        "Implementation diverges from description.md — ExportPdfButton is print-dialog trigger, not a modal with filename/options/preview",
-        "browser-results.json F-M1 row PARTIAL due to /library navigation timeout"
+        "Implementation diverges from description.md — ExportPdfButton is print-dialog trigger, not a modal with filename/options/preview"
       ],
       "evidenceReferences": [
         "reports/ia-verification/runs/20260528-141731/source-map-results.json (F-M1: PASS, src/app/(workspace)/library/page.tsx + src/components/library/ExportPdfButton.tsx)",
@@ -1485,6 +1742,14 @@
         "docs/IA/19-F-M1-pdf-export-modal/description.md (mandates 파일명 1-60자, 옵션, 미리보기, 다운로드 CTA)",
         "src/components/library/ExportPdfButton.tsx (button-only implementation, no modal)",
         "src/lib/export/pdf-export.ts (referenced by trigger)"
+      ],
+      "resolvedBlockers": [
+        {
+          "originalReason": "browser-results.json F-M1 row PARTIAL due to /library navigation timeout",
+          "resolution": "Stale 2026-05-29 — Phase 2 was re-run cleanly (commit 0843f30, 35.5 min wall clock, 183/186 PASS) with fresh dev server. No timeouts in new browser-results.json. Original ai-ux-review.json was generated against bloated 1.9GB dev-server run.",
+          "appliedAt": "2026-05-29T04:52:26.665Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        }
       ]
     },
     {
@@ -1508,7 +1773,6 @@
         "iaWireframeFidelity": "partial — description §1 'onboarding step indicator' is not implemented in code; description §2 'mascot/guidance' is text-only (no mascot visual)"
       },
       "blockingReasons": [
-        "browser-results.json: page.goto Timeout 15000ms exceeded for /onboarding/learning-goal at 360/768/1280",
         "screenshots/coverage-A-03-{360,768,1280}.png missing on disk",
         "security-navigation-results.json BLOCKED (0 rows) — direct-URL, refresh, browser-back lanes unverified",
         "form/error/loading/success rendered states not captured per checklist §6.5"
@@ -1531,6 +1795,14 @@
         "Should /onboarding/learning-goal redirect to /dashboard when a user already has a learning_goal row, or stay in edit mode?",
         "Does the antd notification.error description ever leak raw Supabase/Postgres error text on save failure?",
         "Is the antd Select mode='multiple' weak-areas input usable on a 360px touch keyboard?"
+      ],
+      "resolvedBlockers": [
+        {
+          "originalReason": "browser-results.json: page.goto Timeout 15000ms exceeded for /onboarding/learning-goal at 360/768/1280",
+          "resolution": "Stale 2026-05-29 — same as above (clean Phase 2 rerun resolved goto timeouts).",
+          "appliedAt": "2026-05-29T04:52:26.665Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        }
       ]
     },
     {
@@ -1554,7 +1826,6 @@
         "iaWireframeFidelity": "partial — KPI label drift (description §2 says 오늘 제출/최근 첨삭/목표 달성/연속 학습; code shows 오늘 시도/누적 시도/시험까지/연속 학습일); '목표 달성' KPI missing; '추천 유형' card missing"
       },
       "blockingReasons": [
-        "browser-results.json: page.goto Timeout 15000ms exceeded for /dashboard at 360/768/1280",
         "screenshots/coverage-B-01-{360,768,1280}.png missing on disk",
         "security-navigation-results.json BLOCKED (0 rows)",
         "empty-state, loading-state, alert-state rendered evidence missing per checklist §6.5"
@@ -1578,6 +1849,14 @@
         "Is the missing '추천 유형' card (description §3 requires 3 card types) a Phase 7 partial or a real omission?",
         "Does the workspace sidebar (description §1) actually render '홈/문제 풀기/쓰기 연습/내 서재/성장 리포트/설정' in order with ≤10-char labels and an active-route highlight?",
         "Is showing all-zero KPI strip above the empty-state CTA desirable, or should the KPI strip be hidden for first-use users?"
+      ],
+      "resolvedBlockers": [
+        {
+          "originalReason": "browser-results.json: page.goto Timeout 15000ms exceeded for /dashboard at 360/768/1280",
+          "resolution": "Stale 2026-05-29 — same as above (clean Phase 2 rerun resolved goto timeouts).",
+          "appliedAt": "2026-05-29T04:52:26.665Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        }
       ]
     },
     {
@@ -1601,7 +1880,6 @@
         "iaWireframeFidelity": "fail — 0 of 6 description regions implemented"
       },
       "blockingReasons": [
-        "browser-results.json: page.goto Timeout 15000ms exceeded for /growth at 360/768/1280",
         "screenshots/coverage-X-02-{360,768,1280}.png missing on disk",
         "security-navigation-results.json BLOCKED (0 rows)",
         "implementation is PlaceholderPage stub — 0 of 6 description.md regions implemented, so even with rendered evidence the AI UX review cannot mark anything past BLOCKED until product status (DEFERRED vs DOC-GAP) is decided"
@@ -1622,6 +1900,14 @@
         "Should X-02 be relabeled DEFERRED to match the in-code phaseHint, or should description.md's 6-region scope be archived/trimmed (DOC-GAP)?",
         "Is the placeholder copy 'Phase 4에서 채워집니다' still accurate at IA verification run-time (Phase 5)?",
         "When the AI insights surface (description §5) is implemented, will it follow checklist §6.4 (label AI involvement, evidence/context, regenerate/dispute)?"
+      ],
+      "resolvedBlockers": [
+        {
+          "originalReason": "browser-results.json: page.goto Timeout 15000ms exceeded for /growth at 360/768/1280",
+          "resolution": "Stale 2026-05-29 — same as above (clean Phase 2 rerun resolved goto timeouts).",
+          "appliedAt": "2026-05-29T04:52:26.665Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        }
       ]
     },
     {
@@ -1656,7 +1942,6 @@
       },
       "blockingReasons": [
         "hosted-surface-results.json BLOCKED (0 rows) — no modal trigger evidence captured.",
-        "browser-results.json#C-03 PARTIAL with navigation timeout on host route.",
         "Phase 3 hosted-surfaces.spec exists (per browser-results.json notes) but did not emit data in this run."
       ],
       "evidenceReferences": [
@@ -1664,6 +1949,14 @@
         "reports/ia-verification/runs/20260528-141731/doc-receipts.json#C-03 (filled)",
         "reports/ia-verification/runs/20260528-141731/source-map-results.json#C-03 (PASS — src/components/practice/RetryModal.tsx)",
         "reports/ia-verification/runs/20260528-141731/hosted-surface-results.json (BLOCKED — 0 rows)"
+      ],
+      "resolvedBlockers": [
+        {
+          "originalReason": "browser-results.json#C-03 PARTIAL with navigation timeout on host route.",
+          "resolution": "Stale 2026-05-29 — Phase 2 was re-run cleanly (commit 0843f30, 35.5 min wall clock, 183/186 PASS) with fresh dev server. No timeouts in new browser-results.json. Original ai-ux-review.json was generated against bloated 1.9GB dev-server run.",
+          "appliedAt": "2026-05-29T04:52:26.665Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        }
       ]
     },
     {
@@ -1698,13 +1991,20 @@
         ]
       },
       "blockingReasons": [
-        "hosted-surface-results.json BLOCKED — 0 rows.",
-        "browser-results.json#D-M1 PARTIAL — navigation timeout on host route, modal trigger not exercised."
+        "hosted-surface-results.json BLOCKED — 0 rows."
       ],
       "evidenceReferences": [
         "docs/IA/12-D-M1-submission-confirmation-modal/description.md",
         "reports/ia-verification/runs/20260528-141731/source-map-results.json#D-M1 (PASS — src/components/writing/SubmissionConfirmModal.tsx)",
         "reports/ia-verification/runs/20260528-141731/hosted-surface-results.json (BLOCKED)"
+      ],
+      "resolvedBlockers": [
+        {
+          "originalReason": "browser-results.json#D-M1 PARTIAL — navigation timeout on host route, modal trigger not exercised.",
+          "resolution": "Stale 2026-05-29 — Phase 2 was re-run cleanly (commit 0843f30, 35.5 min wall clock, 183/186 PASS) with fresh dev server. No timeouts in new browser-results.json. Original ai-ux-review.json was generated against bloated 1.9GB dev-server run.",
+          "appliedAt": "2026-05-29T04:52:26.665Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        }
       ]
     },
     {
@@ -1740,7 +2040,6 @@
       },
       "blockingReasons": [
         "hosted-surface-results.json BLOCKED — 0 rows.",
-        "browser-results.json#D-M2 PARTIAL — navigation timeout, no captured loading state screenshot.",
         "Required AI-output evidence flag set but uxStatesCaptured=[]."
       ],
       "evidenceReferences": [
@@ -1749,6 +2048,14 @@
         "reports/ia-verification/runs/20260528-141731/browser-results.json#D-M2 (PARTIAL)",
         "reports/ia-verification/runs/20260528-141731/hosted-surface-results.json (BLOCKED)",
         "src/components/feedback/AnalysisCharacter.tsx"
+      ],
+      "resolvedBlockers": [
+        {
+          "originalReason": "browser-results.json#D-M2 PARTIAL — navigation timeout, no captured loading state screenshot.",
+          "resolution": "Stale 2026-05-29 — Phase 2 was re-run cleanly (commit 0843f30, 35.5 min wall clock, 183/186 PASS) with fresh dev server. No timeouts in new browser-results.json. Original ai-ux-review.json was generated against bloated 1.9GB dev-server run.",
+          "appliedAt": "2026-05-29T04:52:26.665Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        }
       ]
     },
     {
@@ -1784,7 +2091,6 @@
       },
       "blockingReasons": [
         "hosted-surface-results.json BLOCKED — 0 rows.",
-        "browser-results.json#D-M3 PARTIAL — navigation timeout, error-state screenshot not produced.",
         "Dispatch plan requiredEvidenceInputs includes 'hosted-surface' which is currently 0 rows."
       ],
       "evidenceReferences": [
@@ -1792,6 +2098,14 @@
         "reports/ia-verification/runs/20260528-141731/source-map-results.json#D-M3 (PASS — src/components/writing/AutosaveWarningModal.tsx)",
         "reports/ia-verification/runs/20260528-141731/browser-results.json#D-M3 (PARTIAL)",
         "reports/ia-verification/runs/20260528-141731/hosted-surface-results.json (BLOCKED)"
+      ],
+      "resolvedBlockers": [
+        {
+          "originalReason": "browser-results.json#D-M3 PARTIAL — navigation timeout, error-state screenshot not produced.",
+          "resolution": "Stale 2026-05-29 — Phase 2 was re-run cleanly (commit 0843f30, 35.5 min wall clock, 183/186 PASS) with fresh dev server. No timeouts in new browser-results.json. Original ai-ux-review.json was generated against bloated 1.9GB dev-server run.",
+          "appliedAt": "2026-05-29T04:52:26.665Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        }
       ]
     }
   ],

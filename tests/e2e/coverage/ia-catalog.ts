@@ -204,7 +204,7 @@ export const IA_CATALOG: IaCatalogEntry[] = [
     audience: "public",
     packs: ["CORE", "FORM", "AUTH", "EMAIL", "RATE-LIMIT"],
     fixtureIdType: "none",
-    expectedHeadingPattern: /(인증\s*메일|확인|verify)/i,
+    expectedHeadingPattern: /(이메일\s*인증|인증\s*메일|확인|verify)/i,
     expectedPrimaryCta: /(재전송|보내기|resend|다시)/i,
     uxStatesRequired: ["default", "loading", "disabled", "error", "success"],
     formEvidenceRequired: true,

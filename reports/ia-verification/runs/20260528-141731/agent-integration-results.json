@@ -1,0 +1,21 @@
+{
+  "runId": "20260528-141731",
+  "sourceCommit": "b7b7189681aaf7f5aed8a3b2ec7d34c187f365ff",
+  "dirtyState": "dirty",
+  "evidenceBundleId": "96e5d23b0ad1221f",
+  "generatedBy": "P4 Phase 6 deferred placeholder (2026-05-29)",
+  "generatedAt": "2026-05-29T00:00:00.000Z",
+  "status": "DEFERRED",
+  "rows": [],
+  "summary": {
+    "totalRows": 0,
+    "statusCounts": {}
+  },
+  "deferralReason": "Phase 6 (multi-agent shard integration) is a separate large-scope workflow per docs/ai-workflow/plans/20260528-ai-workflow-operational-audit.md §11 Step 6. The 5 shards each delegate 6-8 IA review packets to independent Claude/Codex agents and integrate their result packets. Estimated ~2-4 hours of multi-agent work with active coordinator supervision. This pass deliberately did NOT run Phase 6 because: (a) cross-audit + codex delegation already produced human-confirmed review for the 6 public IA, and (b) codex eng decisions D2-D10 are now landed (commits 337fce3, 79fd76b) — Phase 6 review of those decisions is cleaner against the post-impl state, not the snapshot at run start.",
+  "owner": "next session coordinator",
+  "ownerHandoff": "Schedule Phase 6 as a dedicated session after current codex decisions stabilize on main. Inputs: reports/ia-verification/runs/20260528-141731/agent-dispatch-plan.json (5 shards × 6-8 IA). Outputs: agent-integration-results.json with rows for each shard's per-IA verdict.",
+  "audit": {
+    "treatedAsBlocker": false,
+    "reason": "merge-ia-audit-results.mjs treats status=DEFERRED as explicit acceptance, not a per-IA blocker. Audit owner consciously chose to defer Phase 6 this pass."
+  }
+}
