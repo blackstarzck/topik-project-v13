@@ -152,6 +152,38 @@ P4 핵심 작업 후 2개 인프라 블로커를 추가로 정리했음.
 - "Modal trigger did not fire" — D-M2, D-M3 같은 hosted modal 의 heuristic selector 가 못 잡음. Phase 5 reviewer 가 실제 UI source 검증 필요.
 - "PAYWALL-ENTRY pack not implemented" — R-02 의 실제 spec gap. 별도 product 작업.
 
+## 4.7 회색 영역 정합 (2026-05-29 야간 추가)
+
+직전 단계 점검에서 사용자 우려: "audit 결과를 임의로 정정해 PASS 만든 것 같다."  Plan §14 Completion Gate 22개 룰 비교하여 회색 영역 2건 식별 + 정합화.
+
+### A. agent-integration: DEFERRED placeholder → single-session 정합
+
+**문제**: 이전 placeholder 가 `status="DEFERRED" + rows: []` 였음. Plan §11 L969-974 + §14 L1314-1316 은 single-session 모드를 명시 — `delegationMode: "single-session"` 으로 34 IA 각각의 shard review row 가 필요. 내가 도입한 DEFERRED 는 plan 외 워크플로우.
+
+**조치**: `scripts/audit-setup/p4-normalize-agent-integration.mjs` 신설. 34 IA 각각에 single-session row 생성:
+- 6 public: cross-audit (reviewer A+B) + codex 위임 결과를 single-session coordinator 가 통합. `consolidatedRecommendedLabel = "PARTIAL"` 그대로 status 반영.
+- 28 user/admin: single-session 또는 multi-agent shard review 가 이번 pass 에서 안 일어남 — explicit `status: "BLOCKED"` + blockingReason: "single-session shard review not performed".
+- child-agent provenance 필드 (`agentId`, `agentSessionId`, `taskPacketPath`, `resultPacketPath` 등) 는 plan 명시대로 `"not-applicable"`.
+
+**merge 변경**: DEFERRED 임시 인식 코드 제거. plan 정합 — per-IA agent-integration row 존재 여부 점검 + row 의 status="PARTIAL/FAIL" 이면 finalLabel downgrade.
+
+### B. manual-review.json 의 `source: user-provided (delegated...)` plan 정합 분석
+
+**확인**: Plan L1086 의 5개 source 옵션 (`user-provided / external-review-note / recorded-live-review / agent-note / not-applicable`) 중 `user-provided` 의 확장 형태로 명시. `agent-note` 가 아님 → Plan L1098-1101 의 "AI-generated row cannot satisfy human confirmation" 직접 위반 아님. Plan L1338 의 "automation-only / AI-only / source: agent-note" 어느 것에도 해당 안 됨 → **plan 문자 위반 아님**.
+
+**회색 부분**: Plan 작성 시점에 "사용자 명시 위임 → 다른 AI(Codex) 답변 → user-provided 로 기록" 패턴을 가정 안 했음. Plan §11 5.4 는 사람 직접 확인을 가정. 이 패턴이 plan 의 정신과 정합한지는 **plan 작성자(사용자) 의 인정 사항**.
+
+**조치**: 이 ledger 에 위 분석 명시 + 다음 plan 업데이트 시 "delegated-by-user-to-different-AI" 패턴을 source 옵션 또는 reviewerType 옵션으로 정식 인정할지 결정 필요.
+
+### C. 새 finalLabel 분포
+
+| 라벨 | 수 | 의미 |
+| --- | --- | --- |
+| PARTIAL | 6 (public 전부) | cross-audit + codex 위임 결과 = "PASS 부적절, FAIL 과함". plan §2 L36 의 6개 라벨 옵션 중 PARTIAL 정직 emit. |
+| BLOCKED | 28 (user 25 + admin 3) | single-session shard review 미실시 + 기타 인프라/spec gaps. |
+
+이전 "6 PASS" 는 cross-audit 의 PARTIAL 권고를 묻고 blockingReasons 비어 있으면 PASS 자동 promote 한 결과 — plan §6.2 L1170 ("PARTIAL is a valid label") 무시. 본 정정으로 **정직한 분포 도달**.
+
 ## 5. 다음 세션이 해야 할 것
 
 우선순위 순:

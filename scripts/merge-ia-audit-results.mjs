@@ -70,12 +70,17 @@ function missingEvidenceFor(entry) {
   }
   if (!inputs.dispatchPlan) missing.push("missing agent-dispatch-plan.json");
   if (!inputs.agentIntegrationResults) {
-    // Phase 6 (multi-agent shard integration) — if the file is wholly missing,
-    // it's a real gap. If the file exists with status="DEFERRED" we treat that
-    // as explicit acceptance (audit owner chose not to run Phase 6 this pass).
     missing.push("missing agent-integration-results.json");
-  } else if (inputs.agentIntegrationResults.status === "DEFERRED") {
-    // explicit deferred — no blocker added; reason is documented in the file.
+  } else {
+    // Plan §11 L969-974 + §14 L1314-1316: single-session mode requires every
+    // IA to have a row in agent-integration-results.json (same schema as
+    // delegated). Per-IA shard review row presence is the gate.
+    const integrationByIa = new Map(
+      (inputs.agentIntegrationResults.rows ?? []).map((r) => [r.iaCode, r]),
+    );
+    if (!integrationByIa.has(entry.iaCode)) {
+      missing.push("missing agent-integration row for this IA (single-session shard review not performed)");
+    }
   }
   if (!maps.aiUxReview.has(entry.iaCode)) missing.push("missing ai-ux-review row");
   if (entry.requiredEvidenceInputs.includes("human-confirmation") && !maps.manualReview.has(entry.iaCode)) {
@@ -99,12 +104,31 @@ function blockingReasonsFor(entry) {
   return rows.flatMap((row) => row.blockingReasons ?? []);
 }
 
+// Plan §2 L36 / §6.2 L1170: PARTIAL is a valid final label. If any input
+// source recommends PARTIAL (or above), the final label cannot exceed that
+// recommendation. Single-session agent-integration row's `status` is the
+// coordinator-accepted shard recommendation per plan §11 L969-974.
+function downgradeFromInputRecommendations(entry, currentLabel) {
+  if (currentLabel === "FAIL" || currentLabel === "BLOCKED") return currentLabel;
+  const integrationByIa = new Map(
+    (inputs.agentIntegrationResults?.rows ?? []).map((r) => [r.iaCode, r]),
+  );
+  const integrationRow = integrationByIa.get(entry.iaCode);
+  if (!integrationRow) return currentLabel;
+  if (integrationRow.status === "PARTIAL") return "PARTIAL";
+  if (integrationRow.status === "FAIL") return "FAIL";
+  return currentLabel;
+}
+
 function finalLabelFor(entry, topGaps, blockers) {
   const sourceMapRow = maps.sourceMap.get(entry.iaCode);
   const staticRow = maps.staticResults.get(entry.iaCode);
   if (sourceMapRow?.status === "FAIL" || staticRow?.status === "FAIL") return "FAIL";
   if (topGaps.length > 0 || blockers.length > 0) return "BLOCKED";
-  return "PASS";
+  // Per plan §6.2 L1170: PARTIAL is a valid label. Downgrade PASS to PARTIAL
+  // when an input source recommended PARTIAL (e.g., cross-audit consolidated
+  // label = PARTIAL even though blocking reasons were addressed).
+  return downgradeFromInputRecommendations(entry, "PASS");
 }
 
 const entries = manifest.entries.map((entry) => {

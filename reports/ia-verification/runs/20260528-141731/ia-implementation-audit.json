@@ -4,7 +4,7 @@
   "dirtyState": "dirty",
   "evidenceBundleId": "96e5d23b0ad1221f",
   "generatedBy": "merge-ia-audit-results.mjs",
-  "generatedAt": "2026-05-29T04:55:28.494Z",
+  "generatedAt": "2026-05-29T05:59:44.792Z",
   "entries": [
     {
       "runId": "20260528-141731",
@@ -36,11 +36,11 @@
       "shardId": "public-auth",
       "agentRecommendation": "missing",
       "coordinatorDecision": "pending",
-      "finalLabel": "PASS",
+      "finalLabel": "PARTIAL",
       "topGaps": [],
-      "nextOwnerOrReason": "none",
+      "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:55:28.493Z"
+      "generatedAt": "2026-05-29T05:59:44.791Z"
     },
     {
       "runId": "20260528-141731",
@@ -71,11 +71,11 @@
       "shardId": "public-auth",
       "agentRecommendation": "missing",
       "coordinatorDecision": "pending",
-      "finalLabel": "PASS",
+      "finalLabel": "PARTIAL",
       "topGaps": [],
-      "nextOwnerOrReason": "none",
+      "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:55:28.494Z"
+      "generatedAt": "2026-05-29T05:59:44.791Z"
     },
     {
       "runId": "20260528-141731",
@@ -115,7 +115,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:55:28.494Z"
+      "generatedAt": "2026-05-29T05:59:44.791Z"
     },
     {
       "runId": "20260528-141731",
@@ -156,7 +156,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:55:28.494Z"
+      "generatedAt": "2026-05-29T05:59:44.791Z"
     },
     {
       "runId": "20260528-141731",
@@ -194,7 +194,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:55:28.494Z"
+      "generatedAt": "2026-05-29T05:59:44.791Z"
     },
     {
       "runId": "20260528-141731",
@@ -234,7 +234,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:55:28.494Z"
+      "generatedAt": "2026-05-29T05:59:44.791Z"
     },
     {
       "runId": "20260528-141731",
@@ -274,7 +274,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:55:28.494Z"
+      "generatedAt": "2026-05-29T05:59:44.791Z"
     },
     {
       "runId": "20260528-141731",
@@ -314,7 +314,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:55:28.494Z"
+      "generatedAt": "2026-05-29T05:59:44.791Z"
     },
     {
       "runId": "20260528-141731",
@@ -354,7 +354,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:55:28.494Z"
+      "generatedAt": "2026-05-29T05:59:44.791Z"
     },
     {
       "runId": "20260528-141731",
@@ -394,7 +394,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:55:28.494Z"
+      "generatedAt": "2026-05-29T05:59:44.791Z"
     },
     {
       "runId": "20260528-141731",
@@ -434,7 +434,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:55:28.494Z"
+      "generatedAt": "2026-05-29T05:59:44.791Z"
     },
     {
       "runId": "20260528-141731",
@@ -472,7 +472,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:55:28.494Z"
+      "generatedAt": "2026-05-29T05:59:44.791Z"
     },
     {
       "runId": "20260528-141731",
@@ -511,7 +511,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:55:28.494Z"
+      "generatedAt": "2026-05-29T05:59:44.791Z"
     },
     {
       "runId": "20260528-141731",
@@ -551,7 +551,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:55:28.494Z"
+      "generatedAt": "2026-05-29T05:59:44.791Z"
     },
     {
       "runId": "20260528-141731",
@@ -592,7 +592,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:55:28.494Z"
+      "generatedAt": "2026-05-29T05:59:44.791Z"
     },
     {
       "runId": "20260528-141731",
@@ -635,7 +635,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:55:28.494Z"
+      "generatedAt": "2026-05-29T05:59:44.791Z"
     },
     {
       "runId": "20260528-141731",
@@ -674,7 +674,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:55:28.494Z"
+      "generatedAt": "2026-05-29T05:59:44.791Z"
     },
     {
       "runId": "20260528-141731",
@@ -716,7 +716,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:55:28.494Z"
+      "generatedAt": "2026-05-29T05:59:44.792Z"
     },
     {
       "runId": "20260528-141731",
@@ -757,7 +757,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:55:28.494Z"
+      "generatedAt": "2026-05-29T05:59:44.792Z"
     },
     {
       "runId": "20260528-141731",
@@ -799,7 +799,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:55:28.494Z"
+      "generatedAt": "2026-05-29T05:59:44.792Z"
     },
     {
       "runId": "20260528-141731",
@@ -840,7 +840,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:55:28.494Z"
+      "generatedAt": "2026-05-29T05:59:44.792Z"
     },
     {
       "runId": "20260528-141731",
@@ -879,7 +879,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:55:28.494Z"
+      "generatedAt": "2026-05-29T05:59:44.792Z"
     },
     {
       "runId": "20260528-141731",
@@ -910,11 +910,11 @@
       "shardId": "public-auth",
       "agentRecommendation": "missing",
       "coordinatorDecision": "pending",
-      "finalLabel": "PASS",
+      "finalLabel": "PARTIAL",
       "topGaps": [],
-      "nextOwnerOrReason": "none",
+      "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:55:28.494Z"
+      "generatedAt": "2026-05-29T05:59:44.792Z"
     },
     {
       "runId": "20260528-141731",
@@ -954,7 +954,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:55:28.494Z"
+      "generatedAt": "2026-05-29T05:59:44.792Z"
     },
     {
       "runId": "20260528-141731",
@@ -993,7 +993,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:55:28.494Z"
+      "generatedAt": "2026-05-29T05:59:44.792Z"
     },
     {
       "runId": "20260528-141731",
@@ -1032,7 +1032,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:55:28.494Z"
+      "generatedAt": "2026-05-29T05:59:44.792Z"
     },
     {
       "runId": "20260528-141731",
@@ -1071,7 +1071,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:55:28.494Z"
+      "generatedAt": "2026-05-29T05:59:44.792Z"
     },
     {
       "runId": "20260528-141731",
@@ -1103,11 +1103,11 @@
       "shardId": "public-auth",
       "agentRecommendation": "missing",
       "coordinatorDecision": "pending",
-      "finalLabel": "PASS",
+      "finalLabel": "PARTIAL",
       "topGaps": [],
-      "nextOwnerOrReason": "none",
+      "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:55:28.494Z"
+      "generatedAt": "2026-05-29T05:59:44.792Z"
     },
     {
       "runId": "20260528-141731",
@@ -1150,7 +1150,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:55:28.494Z"
+      "generatedAt": "2026-05-29T05:59:44.792Z"
     },
     {
       "runId": "20260528-141731",
@@ -1191,7 +1191,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:55:28.494Z"
+      "generatedAt": "2026-05-29T05:59:44.792Z"
     },
     {
       "runId": "20260528-141731",
@@ -1230,7 +1230,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:55:28.494Z"
+      "generatedAt": "2026-05-29T05:59:44.792Z"
     },
     {
       "runId": "20260528-141731",
@@ -1271,7 +1271,7 @@
       ],
       "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:55:28.494Z"
+      "generatedAt": "2026-05-29T05:59:44.792Z"
     },
     {
       "runId": "20260528-141731",
@@ -1303,11 +1303,11 @@
       "shardId": "public-auth",
       "agentRecommendation": "missing",
       "coordinatorDecision": "pending",
-      "finalLabel": "PASS",
+      "finalLabel": "PARTIAL",
       "topGaps": [],
-      "nextOwnerOrReason": "none",
+      "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:55:28.494Z"
+      "generatedAt": "2026-05-29T05:59:44.792Z"
     },
     {
       "runId": "20260528-141731",
@@ -1339,17 +1339,17 @@
       "shardId": "public-auth",
       "agentRecommendation": "missing",
       "coordinatorDecision": "pending",
-      "finalLabel": "PASS",
+      "finalLabel": "PARTIAL",
       "topGaps": [],
-      "nextOwnerOrReason": "none",
+      "nextOwnerOrReason": "coordinator",
       "generatedBy": "merge-ia-audit-results.mjs",
-      "generatedAt": "2026-05-29T04:55:28.494Z"
+      "generatedAt": "2026-05-29T05:59:44.792Z"
     }
   ],
   "summary": {
     "totalIa": 34,
     "finalLabelCounts": {
-      "PASS": 6,
+      "PARTIAL": 6,
       "BLOCKED": 28
     },
     "missingInputs": []

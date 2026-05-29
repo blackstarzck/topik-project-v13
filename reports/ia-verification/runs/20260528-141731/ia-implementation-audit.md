@@ -6,8 +6,8 @@
 
 | IA | Screen | Route | Type | Audience | Final label | Top gaps |
 | --- | --- | --- | --- | --- | --- | --- |
-| A-01 | Sign-up | `/sign-up` | page | public | PASS | none |
-| A-02 | Login | `/login` | page | public | PASS | none |
+| A-01 | Sign-up | `/sign-up` | page | public | PARTIAL | none |
+| A-02 | Login | `/login` | page | public | PARTIAL | none |
 | A-03 | Learning goal setup | `/onboarding/learning-goal` | page | user | BLOCKED | missing manual-review row<br>screenshots/coverage-A-03-{360,768,1280}.png missing on disk<br>security-navigation-results.json BLOCKED (0 rows) — direct-URL, refresh, browser-back lanes unverified |
 | B-01 | Home dashboard | `/dashboard` | page | user | BLOCKED | Primary CTA matching /(학습\s*시작|쓰기\s*연습|이어하기|시작)/i not visible<br>screenshots/coverage-B-01-{360,768,1280}.png missing on disk<br>security-navigation-results.json BLOCKED (0 rows) |
 | C-01 | Problem type recommendations | `/practice/recommendations` | page | user | BLOCKED | Primary CTA matching /(시작|선택|문제\s*풀기)/i not visible<br>screenshots/coverage-C-01-{360,768,1280}.png not present in run. |
@@ -28,16 +28,16 @@
 | G-01 | Language settings | `/settings/language` | page | user | BLOCKED | missing manual-review row<br>Copy '변경사항이 즉시 반영됩니다' implies live UI switch but i18n catalog is deferred — message overstates current capability<br>Description ⑥ 변경값 없으면 비활성 not implemented (button always enabled) |
 | H-01 | Admin problem management | `/admin/problems` | page | admin | BLOCKED | missing manual-review row<br>Primary CTA matching /(저장|승인|발행|편집)/i not visible<br>Phase 4 security-navigation-results.json is BLOCKED (rows: 0); SN-8 (Student → /admin/problems) is a placeholder spec with no expect() — RBAC denial lane has no real assertion. |
 | D-M3 | Autosave warning | `/writing/51, /writing/52, /writing/53, /writing/54` | autosave failure, delay, or conflicting save state. | user | BLOCKED | Modal trigger did not fire OR modal never became visible — selectors are heuristic; Phase 5 reviewer must verify against actual UI source.<br>hosted-surface-results.json BLOCKED — 0 rows.<br>Dispatch plan requiredEvidenceInputs includes 'hosted-surface' which is currently 0 rows. |
-| X-01 | Product landing | `/` | page | public | PASS | none |
+| X-01 | Product landing | `/` | page | public | PARTIAL | none |
 | X-02 | Growth dashboard | `/growth` | page | user | BLOCKED | Primary CTA matching /(추천|개선|상세|확인|학습)/i not visible<br>screenshots/coverage-X-02-{360,768,1280}.png missing on disk<br>security-navigation-results.json BLOCKED (0 rows) |
 | X-03 | Paywall | `/paywall` | page | user | BLOCKED | missing manual-review row<br>Primary CTA matching /(구독|시작|선택|체험)/i not visible<br>Result label DEFERRED is appropriate per docs/development/deferred-scope.md — UI is intentionally shell-only and copy is honest about it |
 | X-04 | Subscription management | `/subscription` | page | user | BLOCKED | missing manual-review row<br>Primary CTA matching /(변경|취소|관리|결제)/i not visible<br>Result label DEFERRED appropriate per deferred-scope.md §Billing |
 | X-05 | Profile editing | `/profile` | page | user | BLOCKED | missing manual-review row<br>security-navigation-results.json 0 rows — wrong-owner scenario could not be exercised. However, route has no :id param so direct-URL PII leak is structurally prevented — recommend security lane records this as a structural-protection note rather than running test<br>Description vs impl gaps: name length 80 vs 30, no email field (description ②), no avatar (③), no 변경값 비활성 (⑤), no 이탈 확인 (①), no 재인증 (① 예외) — multiple unimplemented description regions |
-| X-06 | Password reset | `/password-reset` | page | public | PASS | none |
+| X-06 | Password reset | `/password-reset` | page | public | PARTIAL | none |
 | X-07 | Weakness-based recommendations | `/practice/weakness` | page | user | BLOCKED | missing manual-review row<br>Primary CTA matching /(시작|선택|연습)/i not visible<br>Missing description ④ insights panel (reason/example/strategy) |
 | X-08 | Organization admin dashboard | `/admin/org` | page | admin | BLOCKED | missing manual-review row<br>Primary CTA matching /(생성|발송|다운로드|관리)/i not visible<br>Phase 4 security-navigation-results.json BLOCKED (0 rows). Org-scope RBAC lane has no test (the closest, SN-12, is a placeholder for the inverse direction). |
 | X-09 | Notification settings | `/settings/notifications` | page | user | BLOCKED | missing manual-review row<br>Result label DEFERRED appropriate per TRANSPORT-DEFERRED pack — implementation shell + persistence + explicit disclosure matches the deferred pattern<br>Description gaps: ② 알림 채널 탭 (Email/Zalo) not implemented; ④ 미리보기/발송 이력 not implemented. These are correctly omitted because transport is deferred — the implementation is a faithful shell-with-persistence pattern. |
 | X-10 | Admin user management | `/admin/users` | page | admin | BLOCKED | missing manual-review row<br>Phase 4 security-navigation-results.json BLOCKED (0 rows). SN-12/SN-13 covering the critical org_admin-denied / platform_admin-allowed split are placeholders with NO expect() assertion.<br>PRIVILEGE elevation path (admin_change_user_role RPC) and the DB-level protect_profile_columns trigger are present in source, but no runtime test in this session exercises the denied/allowed split or confirms the audit-log row. |
-| X-11 | Auth error | `/auth/error` | page | public | PASS | none |
-| X-12 | Auth verify-email | `/auth/verify-email` | page | public | PASS | none |
+| X-11 | Auth error | `/auth/error` | page | public | PARTIAL | none |
+| X-12 | Auth verify-email | `/auth/verify-email` | page | public | PARTIAL | none |
 
