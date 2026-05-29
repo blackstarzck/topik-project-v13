@@ -1,0 +1,74 @@
+{
+  "startedAt": "2026-05-29T02:40:04.490Z",
+  "decisions": [
+    {
+      "id": "D1",
+      "iaCode": "X-01",
+      "status": "SKIPPED-EXISTS",
+      "path": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\ai-workflow\\runs\\2026\\05\\29\\p4-codex-delegation\\D1-wireframe-4-areas-defer.md"
+    },
+    {
+      "id": "D2",
+      "iaCode": "X-01",
+      "status": "SKIPPED-EXISTS",
+      "path": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\ai-workflow\\runs\\2026\\05\\29\\p4-codex-delegation\\D2-cta-copy-alignment.md"
+    },
+    {
+      "id": "D3",
+      "iaCode": "A-01",
+      "status": "SKIPPED-EXISTS",
+      "path": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\ai-workflow\\runs\\2026\\05\\29\\p4-codex-delegation\\D3-displayname-required-vs-optional.md"
+    },
+    {
+      "id": "D4",
+      "iaCode": "A-01",
+      "status": "SKIPPED-EXISTS",
+      "path": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\ai-workflow\\runs\\2026\\05\\29\\p4-codex-delegation\\D4-terms-policy-page.md"
+    },
+    {
+      "id": "D5",
+      "iaCode": "A-02",
+      "status": "SKIPPED-EXISTS",
+      "path": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\ai-workflow\\runs\\2026\\05\\29\\p4-codex-delegation\\D5-lockout-spec-clarify.md"
+    },
+    {
+      "id": "D6",
+      "iaCode": "X-06",
+      "status": "SKIPPED-EXISTS",
+      "path": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\ai-workflow\\runs\\2026\\05\\29\\p4-codex-delegation\\D6-stepper-defer.md"
+    },
+    {
+      "id": "D7",
+      "iaCode": "X-06",
+      "status": "PASS",
+      "elapsedMs": 74879,
+      "path": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\ai-workflow\\runs\\2026\\05\\29\\p4-codex-delegation\\D7-cooldown-port-from-x12.md",
+      "timedOut": false
+    },
+    {
+      "id": "D8",
+      "iaCode": "X-11",
+      "status": "PASS",
+      "elapsedMs": 85837,
+      "path": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\ai-workflow\\runs\\2026\\05\\29\\p4-codex-delegation\\D8-callback-retry-after-forward-fix.md",
+      "timedOut": false
+    },
+    {
+      "id": "D9",
+      "iaCode": "X-11",
+      "status": "PASS",
+      "elapsedMs": 60352,
+      "path": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\ai-workflow\\runs\\2026\\05\\29\\p4-codex-delegation\\D9-h1-promotion.md",
+      "timedOut": false
+    },
+    {
+      "id": "D10",
+      "iaCode": "X-12",
+      "status": "PASS",
+      "elapsedMs": 45131,
+      "path": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\ai-workflow\\runs\\2026\\05\\29\\p4-codex-delegation\\D10-smtp-rate-limit-copy.md",
+      "timedOut": false
+    }
+  ],
+  "completedAt": "2026-05-29T02:44:30.695Z"
+}

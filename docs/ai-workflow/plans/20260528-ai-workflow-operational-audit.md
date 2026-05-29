@@ -21,6 +21,7 @@
 - `docs/ai-workflow/context-and-packets.md`
 - `docs/ai-workflow/review-gates.md`
 - `docs/ai-workflow/fallback-and-recovery.md`
+- `docs/ai-workflow/harness-and-skills.md`
 - `docs/ai-workflow/report-template.md`
 - `docs/ai-workflow/agent-packets.md`
 - `docs/ai-workflow/git-publication-decision.md`
@@ -39,6 +40,7 @@
 - A `## Tasks` table must include `Subagent-eligible? (Y/N + reason)` and every row must state `Y — <reason>` or `N — <reason>`.
 - Multi-agent work must use task/result packets and integrate the results into the central ledger.
 - Cross-model review is required for non-trivial plans/doc changes; if unavailable, record degraded mode with a reason.
+- Host execution differs: Codex uses `.codex/skills` and Codex GStack skill names such as `gstack-review`, while Claude Code uses `.claude/skills` and Claude skill names such as `review`.
 - `node scripts/ai-workflow-check.mjs --repo .` is required before final reporting when Node is available.
 - CI-style validation uses `--changed-files`; local `--repo .` alone is not enough to prove PR behavior.
 - UI QA can be skipped for this non-UI audit only if the audit still verifies that UI-change QA/UX gates are enforced by docs and checker logic.
@@ -56,6 +58,23 @@
 ## Problem Statement
 
 The repository has an AI workflow entry point and several enforcement scripts. A successful audit must prove more than "the current repo passes": it must show that the workflow is understandable to agents, that automatic checks catch expected omissions, that manual gates are visible, and that fallback/degraded paths do not weaken quality gates.
+
+## Host Execution Matrix
+
+This audit must verify both the shared workflow contract and the host-specific execution paths.
+
+| Area | Codex local baseline | Claude Code baseline | Audit expectation |
+| --- | --- | --- | --- |
+| Startup skill | Use native skill discovery when available; otherwise read `.agents/superpowers/skills/using-superpowers/SKILL.md` | Invoke `using-superpowers` after mirrors are synced | Both paths must satisfy Mandatory Startup before planning, editing, or reporting |
+| Skill mirror | `.codex/skills/` generated from `.agents` | `.claude/skills/` generated from `.agents` | `node scripts/sync-agent-skills.mjs --check` must pass or degraded mode must be recorded |
+| Review gate | `gstack-review` or equivalent Codex review path | `review` or equivalent Claude review path | True cross-model review pairs Codex implementer with Claude reviewer, or records degraded mode |
+| Plan review | `gstack-plan-eng-review`, `gstack-plan-design-review`, `gstack-plan-ceo-review` | `plan-eng-review`, `plan-design-review`, `plan-ceo-review` | FAIL requires revision and same-reviewer re-review until PASS or accepted CONCERN |
+| QA gate | `gstack-qa` / `gstack-qa-only`, or local Browser/Playwright fallback when appropriate | `qa` / `qa-only` | UI work needs app boot and changed path exercise, not only typecheck/build |
+| Ship gate | `gstack-ship` for release-sized Codex work | `ship` for release-sized Claude work | Release-sized work must use the matching host gate or record degraded fallback |
+| Delegation | Codex native subagents with task/result packets | Claude Task tool or equivalent with task/result packets | Child agents are execution surfaces; the main session owns durable ledger integration |
+| Fallback | Record unavailable host capability as degraded and run equivalent local checklist | Same | Fallback never weakens a quality gate |
+
+Host parity does not mean identical commands. It means each host can follow the same repository contract with its own skill names, tool surface, packet format, and fallback record.
 
 ## Files Likely To Change During The Audit
 
@@ -101,10 +120,11 @@ This proves that the saved audit artifacts satisfy the current machine-checked w
 | 2 | Extract workflow acceptance checklist | docs listed above | n/a | Y - read-only checklist review |
 | 3 | Map docs claims to checker enforcement | `scripts/ai-workflow-check.mjs`, workflow docs | n/a | Y - independent static audit |
 | 4 | Verify existing checker self-tests and fixtures | `scripts/ai-workflow-check.selftest.mjs`, fixture scripts | n/a | Y - command/output verification slice |
-| 5 | Run CI-style changed-file simulations | OS temp or disposable copy/worktree | n/a | N - tightly coupled to verification evidence and cleanup |
-| 6 | Multi-agent review and debate | task/result packets in ledger | n/a | N - coordinator must integrate all packets |
-| 7 | Tie-break unresolved disagreements | ledger decisions section | n/a | Y - independent critic/verifier can advise |
-| 8 | Write final report and Git publication decision | run ledger, optional report artifact | n/a | N - final accountability belongs to main session |
+| 5 | Compare Codex vs Claude execution paths | `docs/ai-workflow/harness-and-skills.md`, host skill mirrors | n/a | Y - read-only host parity audit |
+| 6 | Run CI-style changed-file simulations | OS temp or disposable copy/worktree | n/a | N - tightly coupled to verification evidence and cleanup |
+| 7 | Multi-agent review and debate | task/result packets in ledger | n/a | N - coordinator must integrate all packets |
+| 8 | Tie-break unresolved disagreements | ledger decisions section | n/a | Y - independent critic/verifier can advise |
+| 9 | Write final report and Git publication decision | run ledger, optional report artifact | n/a | N - final accountability belongs to main session |
 
 ## Execution Steps
 
@@ -145,7 +165,23 @@ This proves that the saved audit artifacts satisfy the current machine-checked w
 
   Expected: all commands exit 0. If a command fails, classify via `fallback-and-recovery.md` and do not claim the workflow works.
 
-- [ ] **Step 5: Verify negative and CI-style cases**
+- [ ] **Step 5: Verify host execution parity**
+
+  Compare Codex and Claude Code execution paths from `docs/ai-workflow/harness-and-skills.md`.
+
+  Required checks:
+
+  - Codex startup path is explicit.
+  - Claude Code startup path is explicit.
+  - Codex/Claude review skill names are mapped.
+  - Codex/Claude plan-review skill names are mapped.
+  - Codex/Claude QA and ship skill names are mapped.
+  - Cross-model review is defined as a real different-model/host pairing, not same-model subagents.
+  - Missing host capability routes to degraded fallback with evidence.
+
+  Expected: the final report can state whether each host can execute the same repository workflow without guessing command names or review gates.
+
+- [ ] **Step 6: Verify negative and CI-style cases**
 
   Use OS temp or a disposable copy/worktree to check that failures occur for:
 
@@ -160,19 +196,19 @@ This proves that the saved audit artifacts satisfy the current machine-checked w
 
   Expected: each negative case fails for the expected reason.
 
-- [ ] **Step 6: Dispatch independent reviewers**
+- [ ] **Step 7: Dispatch independent reviewers**
 
   Send task packets with `Audience: n/a`, exact read scope, no write scope, expected result packet format, and ledger path.
 
   Expected: every child response is a result packet and is integrated into the ledger.
 
-- [ ] **Step 7: Resolve debate and tie-break**
+- [ ] **Step 8: Resolve debate and tie-break**
 
   Apply quantitative evidence first. For unresolved qualitative disagreements, request an independent critic/verifier. If a commitment-level decision remains, record A/B options and escalate to the user.
 
   Expected: tie-break advice never overrides active docs or user authority.
 
-- [ ] **Step 8: Final report and publication decision**
+- [ ] **Step 9: Final report and publication decision**
 
   Fill the report-template sections in the ledger or a separate report artifact. Record:
 
@@ -197,6 +233,7 @@ This proves that the saved audit artifacts satisfy the current machine-checked w
 - Cross-model review: required for the full audit; if only Codex-local reviewers are available, record degraded mode with reason.
 - Plan-Review PASS Gate: required before executing the full audit if a reviewer returns FAIL.
 - Code/Doc Review: required before claiming the audit result complete.
+- Host execution parity: required; Codex and Claude Code paths must be checked separately against `docs/ai-workflow/harness-and-skills.md`.
 - Architecture Pass: not applicable unless the audit becomes phase completion work.
 - UX/UI Consistency Pass: skipped for this non-UI plan save; full audit still verifies UI gate enforcement through changed-file simulation.
 - QA Gate: skipped for this non-UI plan save; full audit still verifies QA Gate enforcement through changed-file simulation.
@@ -207,4 +244,5 @@ This proves that the saved audit artifacts satisfy the current machine-checked w
 - The repository already has unrelated dirty and untracked files; the audit must isolate intended artifacts in its dirty-scope record.
 - Local `--repo .` checks use working-tree state, while CI uses PR diff; both paths must be verified.
 - Same-model subagents do not satisfy true cross-model review; this must be recorded as degraded unless another model/host reviews.
+- Codex and Claude Code use different skill names and tool surfaces; the audit must verify both rather than assuming one host's commands transfer to the other.
 - A checker PASS can create false confidence if manual gates are not audited.

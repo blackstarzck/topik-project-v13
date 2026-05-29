@@ -4,7 +4,7 @@
 
 - Run id: 20260528-2105-ai-workflow-operational-audit
 - Created: 2026-05-28 21:05 KST
-- Updated: 2026-05-28 21:05 KST
+- Updated: 2026-05-29 KST
 - Main session owner: Codex
 - Host: Codex
 - Status: complete
@@ -28,6 +28,7 @@
   - `docs/ai-workflow/context-and-packets.md`
   - `docs/ai-workflow/review-gates.md`
   - `docs/ai-workflow/fallback-and-recovery.md`
+  - `docs/ai-workflow/harness-and-skills.md`
   - `docs/ai-workflow/report-template.md`
   - `docs/ai-workflow/agent-packets.md`
   - `docs/ai-workflow/git-publication-decision.md`
@@ -45,6 +46,7 @@
   - Task tables need `Subagent-eligible? (Y/N + reason)` values.
   - Multi-agent work needs task/result packets and ledger integration.
   - Cross-model review is required, or degraded mode must be recorded.
+  - Codex and Claude Code have different host skill mirrors, startup paths, and GStack skill names; the audit plan must verify both execution paths.
   - Final verification needs `node scripts/ai-workflow-check.mjs --repo .` when Node is available.
   - Git publication decision must be recorded before commit/push/PR.
 - Doc conflicts: none blocking. Stale-doc risk recorded: `AGENTS.md` says the project is pre-implementation, but current local state has `package.json` and `src/`.
@@ -58,6 +60,7 @@
 | 2026-05-28 21:05 KST | Save durable audit artifacts instead of chat-only output | Prior plan, review, consensus, and tie-break agreed the audit is non-lightweight | User request + prior proposed plan |
 | 2026-05-28 21:05 KST | Limit this turn to plan + ledger save | User asked to save the plan, not execute the full audit | User request |
 | 2026-05-28 21:05 KST | Use `no-commit` as publication decision | User did not ask for commit/push/PR and worktree has unrelated dirty scope | `docs/ai-workflow/git-publication-decision.md` |
+| 2026-05-29 KST | Add Codex vs Claude Code execution-path audit | User identified that each host likely has different execution criteria and commands; `harness-and-skills.md` confirms host-specific startup, review, QA, and ship names | User request + `docs/ai-workflow/harness-and-skills.md` |
 
 ## Active Files
 
@@ -74,6 +77,7 @@
   - `docs/ai-workflow/context-and-packets.md`
   - `docs/ai-workflow/review-gates.md`
   - `docs/ai-workflow/fallback-and-recovery.md`
+  - `docs/ai-workflow/harness-and-skills.md`
   - `docs/ai-workflow/report-template.md`
   - `docs/ai-workflow/agent-packets.md`
   - `docs/ai-workflow/git-publication-decision.md`
@@ -112,8 +116,10 @@
   - `node scripts/test-qa-gate-fixtures.mjs` - PASS, 5/5 fixtures.
   - `node scripts/ai-workflow-check.mjs --repo .` - FAIL because of unrelated pre-existing untracked ledger `docs/ai-workflow/runs/2026/05/28/20260528-2100-ia-verification-phase-5-fixes.md` missing `## Ledger/File-State Consistency`.
   - `node scripts/ai-workflow-check.mjs --repo . --changed-files <temp list with intended plan+ledger>` - PASS.
+  - `node scripts/ai-workflow-check.mjs --repo . --changed-files <temp list with intended plan+ledger>` - PASS after 2026-05-29 host execution matrix update.
+  - `git diff --check -- docs/ai-workflow/plans/20260528-ai-workflow-operational-audit.md docs/ai-workflow/runs/2026/05/28/20260528-2105-ai-workflow-operational-audit.md` - PASS.
 - Latest results:
-  - Intended save artifacts pass checker validation with explicit `--changed-files`.
+  - Intended save artifacts pass checker validation with explicit `--changed-files` after the host execution matrix update.
   - Full working-tree checker is blocked by an unrelated pre-existing untracked ledger outside this task's accepted scope.
 - Known failures:
   - Full `--repo .` repository state check fails on unrelated file `docs/ai-workflow/runs/2026/05/28/20260528-2100-ia-verification-phase-5-fixes.md`.
@@ -152,6 +158,7 @@
 - Remaining risks:
   - Existing worktree has many unrelated modified/untracked files.
   - Saved plan is an execution plan, not proof that the full audit has been performed.
+  - Codex/Claude host parity is now in scope for the future audit, but not executed yet.
   - True cross-model review remains degraded until another model/host reviews.
 - Assumptions:
   - User wanted local file persistence, not commit/push/PR.
