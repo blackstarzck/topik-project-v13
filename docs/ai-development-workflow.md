@@ -6,8 +6,10 @@ Entry point for every AI agent working in this repository. **Read this file firs
 
 1. Invoke `using-superpowers` (Claude Code) or read its canonical SKILL file (other hosts). If host mirrors are stale, run `node scripts/sync-agent-skills.mjs` and retry.
 2. Read [`docs/agent-index.md`](agent-index.md), classify your goal, and select the smallest matching docs.
-3. Record `Docs consulted`, `Extracted requirements`, `Doc conflicts`, `Untouched relevant docs`, and `Context ledger` in your plan or ledger.
-4. Run `node scripts/ai-workflow-check.mjs --repo .` before final reporting when Node is available. PRs run the same checker via `.github/workflows/ai-workflow-check.yml`.
+3. Read [`docs/user-communication-style.md`](user-communication-style.md). This is mandatory for every user-facing reply, plan, report, handoff, review, and summary.
+4. For any user-facing report, status update, review report, comparison report, handoff, or completion summary, read and follow [`docs/report-writing-template.md`](report-writing-template.md).
+5. Record `Docs consulted`, `Extracted requirements`, `Doc conflicts`, `Untouched relevant docs`, and `Context ledger` in your plan or ledger.
+6. Run `node scripts/ai-workflow-check.mjs --repo .` before final reporting when Node is available. PRs run the same checker via `.github/workflows/ai-workflow-check.yml`.
 
 ## Workflow Diagram
 
@@ -75,6 +77,7 @@ These are mandatory for any non-lightweight change. **The linked sub-doc is the 
 - `Doc conflicts` — `none` or exact file references
 - `Untouched relevant docs` — and why they were not read
 - `Context ledger` — path or allowed lightweight exception
+- User-facing report shape follows [`docs/report-writing-template.md`](report-writing-template.md)
 - Verification commands run and results
 - Git publication decision per [`git-publication-decision.md`](ai-workflow/git-publication-decision.md)
 

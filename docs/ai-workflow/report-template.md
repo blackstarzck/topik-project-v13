@@ -5,6 +5,12 @@ workflow requires durable context. Keep small reports concise, but do not remove
 the evidence fields. Prefer tables, short status labels, and diagrams when they
 make the report easier to scan.
 
+For user-facing reports, first follow the easy-to-read shape in
+[`docs/report-writing-template.md`](../report-writing-template.md), then keep the
+required evidence fields from this document. In short: the report-writing
+template controls presentation, and this file controls required workflow
+evidence.
+
 Readability rule: do not pack long evidence values into one inline sentence.
 When a field has multiple file paths, commands, requirements, risks, or checks,
 format it as a vertical bullet list or a compact table. Keep inline text for

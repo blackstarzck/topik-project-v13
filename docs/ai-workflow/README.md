@@ -50,3 +50,10 @@ AI 작업은 말로만 주고받으면 중간에 맥락이 흐려질 수 있습�
 > Codex가 구현하고 Claude Code가 리뷰하는 방식으로 agent packet을 만들어줘.
 
 > 완료 보고는 `docs/ai-workflow/report-template.md` 형식으로 해줘.
+## IA Remediation Docs
+
+| Document | Use |
+| --- | --- |
+| [ia-remediation-multi-agent-execution-plan.md](./ia-remediation-multi-agent-execution-plan.md) | Separate execution plan for fixing IA/page audit findings after verification. |
+| [ia-specialist-checklists/README.md](./ia-specialist-checklists/README.md) | Specialist review criteria used by IA execution agents. |
+| [ia-review-profiles/README.md](./ia-review-profiles/README.md) | IA-to-specialist and IA-to-pack routing map. |
