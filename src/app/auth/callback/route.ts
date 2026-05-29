@@ -22,9 +22,30 @@ import type { NextRequest } from "next/server";
 
 import {
   mapSupabaseErrorCode,
+  RATE_LIMIT_FALLBACK_SECONDS,
   sanitizeNext,
+  type AuthErrorReason,
 } from "@/lib/auth/error-mapping";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+
+// Codex P4 D8 (2026-05-29): Forward Supabase Retry-After to retry_after_seconds query.
+//
+// 한계: supabase-js v2 의 AuthError 는 response headers 를 노출 안 함 (status / code /
+// message 만). 따라서 callback route 에서 진짜 Retry-After 헤더 값을 추출할 방법이
+// 직접적으로는 없음. 정확한 forward 가 필요하면 createSupabaseServerClient 단계에서
+// custom fetch (intercept fn) 를 끼워 response.headers.get("Retry-After") 를 capture
+// 한 뒤 thread-local 비슷한 채널로 전달해야 함. 큰 변경이라 별도 PR.
+//
+// 현재 fix: rate-limit 계열 error code (`over_email_send_rate_limit`,
+// `over_request_rate_limit`) 일 때 callback 에서 RATE_LIMIT_FALLBACK_SECONDS (60s)
+// 를 명시 forward. 이전엔 항상 null 이라 X-11 AuthErrorCard 의 implicit default 가
+// 받아주는 구조였음 — 의도가 호출자에서 explicit 해짐.
+function rateLimitFallback(reason: AuthErrorReason): number | null {
+  if (reason === "over_email_send_rate_limit" || reason === "over_request_rate_limit") {
+    return RATE_LIMIT_FALLBACK_SECONDS;
+  }
+  return null;
+}
 
 export const dynamic = "force-dynamic";
 
@@ -66,7 +87,11 @@ export async function GET(request: NextRequest) {
       errorDescription,
     });
     return NextResponse.redirect(
-      buildErrorUrl(request, mapSupabaseErrorCode(errorCode), null),
+      buildErrorUrl(
+        request,
+        mapSupabaseErrorCode(errorCode),
+        rateLimitFallback(mapSupabaseErrorCode(errorCode)),
+      ),
     );
   }
 
@@ -97,7 +122,11 @@ export async function GET(request: NextRequest) {
         status: error.status,
       });
       return NextResponse.redirect(
-        buildErrorUrl(request, mapSupabaseErrorCode(error.code), null),
+        buildErrorUrl(
+        request,
+        mapSupabaseErrorCode(error.code),
+        rateLimitFallback(mapSupabaseErrorCode(error.code)),
+      ),
       );
     }
     // 세션 쿠키는 createSupabaseServerClient의 setAll callback이 cookies().set으로
@@ -116,7 +145,11 @@ export async function GET(request: NextRequest) {
         status: error.status,
       });
       return NextResponse.redirect(
-        buildErrorUrl(request, mapSupabaseErrorCode(error.code), null),
+        buildErrorUrl(
+        request,
+        mapSupabaseErrorCode(error.code),
+        rateLimitFallback(mapSupabaseErrorCode(error.code)),
+      ),
       );
     }
     return NextResponse.redirect(new URL(next, request.url));

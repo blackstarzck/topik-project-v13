@@ -172,6 +172,15 @@ export function sanitizeNext(value: string | null | undefined, fallback = "/dash
   return value;
 }
 
+// Default short cooldown when we know it's a rate-limit-class error but
+// can't read the real Retry-After header. supabase-js v2 AuthError exposes
+// status only (no response headers), so callback route can't extract the
+// real Retry-After. AuthErrorCard already falls back to 60s when the
+// retry_after_seconds query is missing; we re-use the same number here so
+// the contract is explicit at the source (callback) rather than implicit
+// at the card.
+export const RATE_LIMIT_FALLBACK_SECONDS = 60;
+
 // Retry-After header value (seconds) sanitizer.
 // Accept: positive integer 1..86400
 // Reject: NaN, negative, > 86400, decimal

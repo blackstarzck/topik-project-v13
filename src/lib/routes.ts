@@ -36,6 +36,11 @@ export const PUBLIC_PATHS = [
   // /login, which (1) breaks the POST contract and (2) creates a paradox
   // because the post-signout user is anonymous and would loop.
   "/auth/sign-out",
+  // Codex P4 D4 (2026-05-29): /sign-up 체크박스에서 동의 대상으로 anchor 링크.
+  // 동의 강제는 받지만 정책 페이지를 anonymous 가 못 보면 dark-pattern. legal
+  // placeholder 페이지이지만 reachable 해야 함.
+  "/terms",
+  "/privacy",
 ] as const;
 
 // ---------------------------------------------------------------------------

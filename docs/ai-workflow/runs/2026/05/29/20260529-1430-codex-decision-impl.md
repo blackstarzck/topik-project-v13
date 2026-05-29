@@ -1,4 +1,4 @@
-# Codex 결정 구현 — 1차 배치 (D9 / D2 / D10 / D6 / D3)
+# Codex 결정 구현 — 1차 + 2차 배치 (D2 / D3 / D4 / D5 / D6 / D7 / D8 / D9 / D10)
 
 - Run start: 2026-05-29 14:30 (KST)
 - Predecessor: `20260529-1105-p4-handoff.md` (codex 위임 완료) + `phase-5-cross-audit-results.md` (cross-audit + 인프라 정리)
@@ -30,7 +30,16 @@ P4 codex 위임 10건 중, 변경 범위가 작고 cross-audit 합의가 명확�
 | D6 | docs/IA/28-X-06-password-reset/description.md (단계 표시 부분) | docs | N — 1 section 수정 |
 | D3 | src/components/auth/SignUpForm.tsx (line 103) | code | N — Form.Item rules + label |
 
-2차 배치(다음 세션 후보): D4 (/terms /privacy 페이지 신설), D5 (lockout spec + LoginForm 카운터), D7 (cooldown port from X-12), D8 (callback Retry-After forward).
+2차 배치 (이번 세션 후속) — D4 / D5 / D7 / D8:
+
+| ID | 변경 위치 | 종류 |
+| --- | --- | --- |
+| D4 | src/app/terms/page.tsx + src/app/privacy/page.tsx (신설) + src/components/auth/SignUpForm.tsx (체크박스 anchor) + src/lib/routes.ts (PUBLIC_PATHS 추가) | code |
+| D5 | src/components/auth/LoginForm.tsx (실패 카운터 UX 힌트) + docs/IA/02-A-02-login/description.md (잠금 spec 정정) | code + docs |
+| D7 | src/lib/auth/use-email-cooldown.ts (신설 hook) + src/components/auth/PasswordResetRequestForm.tsx (적용) | code |
+| D8 | src/lib/auth/error-mapping.ts (RATE_LIMIT_FALLBACK_SECONDS export) + src/app/auth/callback/route.ts (rateLimitFallback + 2 call sites) | code |
+
+D8 한계 (정직 보고): supabase-js v2 의 AuthError 는 response headers 를 노출 안 함. 진짜 Retry-After 헤더 forward 는 custom fetch interceptor 가 필요한데 별도 PR 범위. 현 fix 는 rate-limit code 일 때 60s default 를 호출자(callback) 에서 explicit forward — 이전엔 항상 null 이라 AuthErrorCard 의 implicit default 가 받아주는 구조. 동작 변화는 미세 (X-11 카드 카운트다운이 명시적 60s 시작) 이지만 의도가 코드에 드러남.
 
 ## Write scope
 
@@ -55,7 +64,19 @@ P4 codex 위임 10건 중, 변경 범위가 작고 cross-audit 합의가 명확�
 - 가능하면 dev server 띄워 4 페이지 (/, /auth/error, /auth/verify-email, /sign-up) 스모크 확인.
 - 기존 vitest / playwright suite 가 깨지는지 확인 (특히 ia-catalog regex 변동 없으므로 OK 예상).
 
-## Verification result (2026-05-29 15:00 KST)
+## Verification result — 2차 배치 (2026-05-29 KST)
+
+- `pnpm tsc --noEmit`: 동일 pre-existing 2 errors. 신규 없음.
+- `pnpm vitest run tests/integration/route-matrix.test.ts`: **59/59 PASS** (PUBLIC_PATHS iter 가 /terms /privacy 도 자동 cover).
+- `pnpm vitest run tests/scripts/ia-audit-scripts.test.ts`: **4/4 PASS**.
+- Dev server smoke (PID 45052, HMR):
+  - `GET /terms` → 200 + `이용약관` 본문 ✓
+  - `GET /privacy` → 200 + `개인정보처리방침` 본문 ✓
+  - `GET /sign-up` → 체크박스 라벨에 `<a target="_blank" href="/terms">이용약관</a>` + `<a href="/privacy">개인정보처리방침</a>` 두 링크 ✓
+  - `GET /password-reset` → 200 (cooldown 0 상태) ✓
+  - `GET /login` → 200 (실패 카운터는 interaction 후 visible)
+
+## Verification result — 1차 배치 (2026-05-29 15:00 KST)
 
 - `pnpm tsc --noEmit`: pre-existing 2 errors (`coverage-matrix.spec.ts` FixtureIdType, `theme-context.test.tsx` Binding element). Stash diff 확인 — 이번 변경과 무관.
 - Dev server (PID 45052, 사용자 기존 인스턴스, HMR 활성) 에 5건 변경 모두 반영됨:

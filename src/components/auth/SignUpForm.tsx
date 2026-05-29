@@ -6,6 +6,7 @@
 //   resend with 60s cooldown and survives reloads/deep-links.
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { App, Button, Checkbox, Form, Input, Typography } from "antd";
 
@@ -124,7 +125,26 @@ export function SignUpForm() {
           },
         ]}
       >
-        <Checkbox>이용약관과 개인정보처리방침에 동의합니다</Checkbox>
+        <Checkbox>
+          <Link
+            href="/terms"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(event) => event.stopPropagation()}
+          >
+            이용약관
+          </Link>
+          과{" "}
+          <Link
+            href="/privacy"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(event) => event.stopPropagation()}
+          >
+            개인정보처리방침
+          </Link>
+          에 동의합니다
+        </Checkbox>
       </Form.Item>
 
       <Form.Item>

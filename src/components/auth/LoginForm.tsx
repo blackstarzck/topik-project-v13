@@ -21,6 +21,11 @@ type LoginMode = "password" | "magic-link";
 type PasswordFields = { email: string; password: string };
 type MagicLinkFields = { email: string };
 
+// Codex P4 D5 결정: 잠금은 서버 강제 (Supabase over_request_rate_limit → X-11 카드).
+// 클라이언트는 보안 장치가 아닌 사용자 안내용 실패 카운터만 둠. 우회 가능해도 보안에
+// 영향 없음. 사용자가 "다시 시도해도 안 될 수 있다" 는 신호를 미리 받게 함.
+const FAILED_ATTEMPTS_HINT_THRESHOLD = 3;
+
 export function LoginForm() {
   const { message } = App.useApp();
   const router = useRouter();
@@ -30,6 +35,7 @@ export function LoginForm() {
   const [mode, setMode] = useState<LoginMode>("password");
   const [submitting, setSubmitting] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState<string | null>(null);
+  const [failedAttempts, setFailedAttempts] = useState(0);
   const [form] = Form.useForm<PasswordFields | MagicLinkFields>();
 
   async function handlePasswordLogin(values: PasswordFields) {
@@ -41,9 +47,11 @@ export function LoginForm() {
     });
     setSubmitting(false);
     if (error) {
+      setFailedAttempts((prev) => prev + 1);
       message.error(`로그인 실패: ${REASON_CONTENT[mapSupabaseErrorCode(error.code)].message}`);
       return;
     }
+    setFailedAttempts(0);
     router.push("/dashboard");
   }
 
@@ -90,12 +98,22 @@ export function LoginForm() {
           data-testid="login-session-notice"
         />
       )}
+      {failedAttempts >= FAILED_ATTEMPTS_HINT_THRESHOLD && (
+        <Alert
+          type="info"
+          showIcon
+          message="여러 번 시도하셨어요. 잠시 후 다시 시도해주세요. 서버에서 짧은 시간 동안 추가 시도를 막을 수 있어요."
+          style={{ marginBottom: 16 }}
+          data-testid="login-failed-hint"
+        />
+      )}
       <Segmented
         block
         value={mode}
         onChange={(v) => {
           setMode(v as LoginMode);
           form.resetFields();
+          setFailedAttempts(0);
         }}
         options={[
           { label: "비밀번호 로그인", value: "password" },
