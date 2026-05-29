@@ -7,7 +7,7 @@
   "generatedAt": "2026-05-28T11:49:24.712Z",
   "delegationMode": "multi-agent-6-shard",
   "checklist": "docs/ai-workflow/ia-ai-first-ux-review-checklist.md",
-  "reviewerNote": "AI first-pass UX review (Phase 5). 6 child agents dispatched in parallel via Agent tool, results merged from agent-packets/results/*-cards.json. Per phase5NoPassRuleApplied: no PASS labels until rendered evidence + human confirmation.",
+  "reviewerNote": "AI first-pass UX review (Phase 5). 6 child agents dispatched in parallel via Agent tool, results merged from agent-packets/results/*-cards.json. Per phase5NoPassRuleApplied: no PASS labels until rendered evidence + human confirmation.\n\n[2026-05-29] p4-mark-stale-blockers.mjs moved superseded blockingReasons to `resolvedBlockers` per card — total 4 entries. Audit trail preserved: each entry has originalReason + resolution + source.",
   "cards": [
     {
       "iaCode": "H-01",
@@ -1260,7 +1260,6 @@
       "blockingReasons": [
         "browser-results.json A-01 is PARTIAL (navigation timeout — formEvidenceRequired=true, authEvidenceRequired=true, policyEvidenceRequired=true uxStatesCaptured=[]).",
         "Wireframe ② 마스코트/혜택 영역, ① 브랜드 메시지 area not implemented (page renders only H1 + form + login link).",
-        "Confirmed doc-↔-impl drift: PW max(64) not enforced — auth-overview §10 already logged this for A-01 and X-06.",
         "Newly observed: displayName '2-30자' constraint from description ③ not enforced (no min/max rule)."
       ],
       "evidenceReferences": [
@@ -1273,6 +1272,14 @@
         "reports/ia-verification/runs/20260528-141731/browser-results.json (A-01 PARTIAL)",
         "reports/ia-verification/runs/20260528-141731/screenshots/coverage-A-01-{360,768,1280}.png",
         "reports/ia-verification/runs/20260528-141731/security-navigation-results.json (BLOCKED — JSON variant missing; spec PASSed)"
+      ],
+      "resolvedBlockers": [
+        {
+          "originalReason": "Confirmed doc-↔-impl drift: PW max(64) not enforced — auth-overview §10 already logged this for A-01 and X-06.",
+          "resolution": "RESOLVED 2026-05-28 per auth-overview §10 line 296 — SignUpForm.tsx line 78 enforces max:64. Confirmed by cross-audit reviewer A+B.",
+          "appliedAt": "2026-05-29T04:04:33.507Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        }
       ]
     },
     {
@@ -1335,7 +1342,6 @@
       },
       "blockingReasons": [
         "browser-results.json X-06 is PARTIAL (navigation timeout).",
-        "Confirmed doc-↔-impl drift: PW max(64) not enforced — auth-overview §10 already logged.",
         "Wireframe areas ② 단계 표시, ④ 안내 카피 (재전송 제한 시간 표시), ⑤ 마스코트, ⑥ 완료 CTA 재시도/재발송 분기 not implemented.",
         "Request-side resend cooldown (description ④) absent from PasswordResetRequestForm."
       ],
@@ -1350,6 +1356,14 @@
         "reports/ia-verification/runs/20260528-141731/source-map-results.json (X-06 PASS)",
         "reports/ia-verification/runs/20260528-141731/browser-results.json (X-06 PARTIAL)",
         "reports/ia-verification/runs/20260528-141731/screenshots/coverage-X-06-{360,768,1280}.png"
+      ],
+      "resolvedBlockers": [
+        {
+          "originalReason": "Confirmed doc-↔-impl drift: PW max(64) not enforced — auth-overview §10 already logged.",
+          "resolution": "RESOLVED 2026-05-28 per auth-overview §10 — PasswordResetConfirmForm.tsx line 50. Confirmed by cross-audit reviewer A+B.",
+          "appliedAt": "2026-05-29T04:04:33.508Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        }
       ]
     },
     {
@@ -1412,9 +1426,7 @@
         "policyTrustCopy": "pass — No overclaim. Description §3 spec for cooldown precision was explicitly tightened in Phase 8 follow-up v2.3 (lines 151-154) — chose default 60s rather than mis-interpreting HTTP 429 as seconds. Conservative + correct."
       },
       "blockingReasons": [
-        "browser-results.json X-12 is PARTIAL (navigation timeout).",
-        "wireframeStatus=missing per dispatch plan. Same judgment as X-11: description.md is detailed enough (Codex 3-round consensus) that absence of wireframe is acceptable for an info+resend card. NOT marking DOC-GAP.",
-        "Cooldown formatCountdown identical to X-11 — fine for ≤60s default, untested for longer Retry-After values."
+        "browser-results.json X-12 is PARTIAL (navigation timeout)."
       ],
       "evidenceReferences": [
         "docs/IA/34-X-12-auth-verify-email/description.md",
@@ -1425,6 +1437,20 @@
         "reports/ia-verification/runs/20260528-141731/source-map-results.json (X-12 PASS)",
         "reports/ia-verification/runs/20260528-141731/browser-results.json (X-12 PARTIAL)",
         "reports/ia-verification/runs/20260528-141731/screenshots/coverage-X-12-{360,768,1280}.png"
+      ],
+      "resolvedBlockers": [
+        {
+          "originalReason": "wireframeStatus=missing per dispatch plan. Same judgment as X-11: description.md is detailed enough (Codex 3-round consensus) that absence of wireframe is acceptable for an info+resend card. NOT marking DOC-GAP.",
+          "resolution": "Downgraded to observation per Codex 3-round consensus (cross-audit): description.md is detailed enough for an info+resend card; wireframe absence is acceptable. NOT a DOC-GAP.",
+          "appliedAt": "2026-05-29T04:04:33.508Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        },
+        {
+          "originalReason": "Cooldown formatCountdown identical to X-11 — fine for ≤60s default, untested for longer Retry-After values.",
+          "resolution": "Downgraded to observation — 60s default cooldown is fine; longer Retry-After values are an X-11 i18n concern, not an X-12 blocker.",
+          "appliedAt": "2026-05-29T04:04:33.508Z",
+          "source": "p4-mark-stale-blockers.mjs (cross-audit + auth-overview §10 evidence)"
+        }
       ]
     }
   ],

@@ -77,6 +77,33 @@
 | user (25) | nav, learn, write, profile, settings 등 | + browser-results row 없음 (Phase 2 storage-state 미완성) |
 | admin (3) | content/org/platform admin | + 모든 protected 게이트 미수행 |
 
+## 4.5 인프라 정리 (이번 세션 추가 분)
+
+P4 핵심 작업 후 2개 인프라 블로커를 추가로 정리했음.
+
+### A. `ai-ux-review.json` 스키마 mismatch 픽스
+- `scripts/merge-ia-audit-results.mjs`: `rowsByCode` 옆에 `aiUxRowsByCode` 신설. `cards + blockedCards` union 으로 읽고 `aiUxResult` → `status` alias.
+- 효과: 34 IA 전부 `missing ai-ux-review row` topGap 사라짐.
+
+### B. Cross-audit 가 RESOLVED 로 확정한 stale blockers 정리
+- `scripts/audit-setup/p4-mark-stale-blockers.mjs`: ai-ux-review.json 카드의 PW max(64) drift (A-01, X-06) + X-12 wireframe/cooldown 관찰 항목 → `resolvedBlockers` 로 이동. 삭제 아닌 audit trail 보존.
+- 효과: 4건 stale blockingReasons 이동, 카드별 `resolvedBlockers` 에 originalReason + resolution + source 모두 기록.
+
+### C. 결과 비교
+
+| IA | 픽스 전 gaps | 픽스 후 gaps | 남은 주요 블로커 카테고리 |
+| --- | --- | --- | --- |
+| A-01 | 4 | 6 | infra(3) + 실제 product gap(3) |
+| A-02 | 4 | 7 | infra(3) + 실제 product gap(4) |
+| X-01 | 4 | 6 | infra(2) + 실제 product gap(4) |
+| X-06 | 4 | 6 | infra(3) + 실제 product gap(3) |
+| X-11 | 4 | 7 | infra(3) + 실제 product gap(4) |
+| X-12 | 4 | 4 | infra(3) + 실제 product gap(1) |
+
+**총 gap 수는 오히려 증가**한 것처럼 보이지만, 그건 픽스 이전엔 ai-ux-review.json 자체를 못 읽어 모든 cross-audit/원본 findings 가 "missing row" 한 줄로 압축됐기 때문임. 픽스 후엔 실제 findings 가 surface 돼 honest 한 분포가 됨.
+
+**최종 finalLabel: 여전히 34 BLOCKED** — 남은 블로커는 (i) Phase 6 agent-integration 미실행, (ii) public 6개의 security-navigation row 누락, (iii) Phase 2 dev-server 1.9GB 잔재로 인한 navigation timeout + console error, (iv) codex 가 결정한 product/eng gap (eng 작업 필요).
+
 ## 5. 다음 세션이 해야 할 것
 
 우선순위 순:

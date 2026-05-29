@@ -22,6 +22,19 @@ function rowsByCode(doc, key = "rows") {
   return new Map((doc?.[key] ?? doc?.entries ?? []).map((row) => [row.iaCode, row]));
 }
 
+function aiUxRowsByCode(doc) {
+  // ai-ux-review.json uses cards + blockedCards (not rows/entries) and stores
+  // its label in `aiUxResult` rather than `status`. Merge expects {status,
+  // confidence, blockingReasons}, so we union both lists and alias the label.
+  const combined = [...(doc?.cards ?? []), ...(doc?.blockedCards ?? [])];
+  return new Map(
+    combined.map((card) => [
+      card.iaCode,
+      { ...card, status: card.status ?? card.aiUxResult ?? "BLOCKED" },
+    ]),
+  );
+}
+
 const maps = {
   docValidation: rowsByCode(inputs.docValidation),
   sourceMap: rowsByCode(inputs.sourceMap),
@@ -29,7 +42,7 @@ const maps = {
   browserResults: rowsByCode(inputs.browserResults),
   hostedSurfaceResults: rowsByCode(inputs.hostedSurfaceResults),
   securityNavigationResults: rowsByCode(inputs.securityNavigationResults),
-  aiUxReview: rowsByCode(inputs.aiUxReview),
+  aiUxReview: aiUxRowsByCode(inputs.aiUxReview),
   manualReview: rowsByCode(inputs.manualReview),
 };
 
