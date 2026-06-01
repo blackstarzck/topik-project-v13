@@ -27,6 +27,8 @@
     "test:ia:source-map": "node scripts/audit-setup/validate-ia-source-map.mjs",
     "test:ia:dispatch": "node scripts/audit-setup/build-agent-dispatch-plan.mjs",
     "test:ia:static": "node scripts/verify-ia-coverage.mjs",
+    "test:ia:seed-plan": "node scripts/audit-setup/build-seed-data-plan.mjs",
+    "test:ia:seed": "node scripts/audit-setup/verify-seed-data.mjs",
     "test:e2e:ia": "playwright test tests/e2e/coverage",
     "test:ia:merge": "node scripts/merge-ia-audit-results.mjs",
     "test:ia:validate": "node scripts/validate-ia-audit-report.mjs",
