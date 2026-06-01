@@ -34,6 +34,7 @@ export default async function ProfilePage() {
           <Space direction="vertical" size="middle" style={{ width: "100%" }}>
             <ProfileForm
               userId={user.id}
+              accountEmail={user.email ?? null}
               initialProfile={{
                 display_name: settings.display_name,
                 nickname: settings.nickname,

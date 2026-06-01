@@ -27,8 +27,7 @@ vi.mock("@/lib/events/study-events", () => ({
 beforeEach(() => {
   pushMock.mockReset();
   logStudyEventMock.mockReset();
-  // antd Modal/Tooltip stub for jsdom — matchMedia is not implemented.
-  // Phase 7-D Task 7: DimensionTabs uses Ant Design Tabs → ResizeObserver.
+  // Ant Design Tabs uses ResizeObserver and matchMedia, which jsdom does not provide.
   if (!(globalThis as Record<string, unknown>).ResizeObserver) {
     (globalThis as Record<string, unknown>).ResizeObserver = class {
       observe() {}
@@ -82,8 +81,6 @@ describe("WeaknessView", () => {
       />,
     );
 
-    // Phase 7-D Task 7: "문법" / "어휘" appear in DiagnosticCard +
-    // DimensionTabs labels, so use getAllByText.
     expect(screen.getAllByText(/문법/).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/어휘/).length).toBeGreaterThan(0);
     expect(screen.getByText("어휘 연습 문제")).toBeTruthy();
@@ -109,5 +106,104 @@ describe("WeaknessView", () => {
       payload: { source: "weakness" },
     });
     expect(pushMock).toHaveBeenCalledWith("/practice/problems/prob-42");
+  });
+
+  it("surfaces cautious weakness insights, recommendation reasons, primary start action, and deferred paywall entry", () => {
+    render(
+      <WeaknessView
+        weakDimensions={[
+          { dimension: "grammar", averageScore: 0.36 },
+          { dimension: "vocab", averageScore: 0.62 },
+        ]}
+        recommendations={[
+          {
+            problem_id: "prob-88",
+            title: "시제와 연결어 복습",
+            question_no: 88,
+            reason: "최근 답안에서 시제 연결이 자주 흔들렸어요.",
+            source: "recommendation",
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getByText("약점 인사이트")).toBeTruthy();
+    expect(screen.getByText("왜 이 영역을 먼저 보나요?")).toBeTruthy();
+    expect(screen.getByText("자주 보이는 예")).toBeTruthy();
+    expect(screen.getByText("연습 전략")).toBeTruthy();
+    expect(
+      screen.getByText(/최근 답안에서 보이는 경향을 바탕으로 추정한 안내예요/),
+    ).toBeTruthy();
+
+    expect(
+      screen.getByText("최근 답안에서 시제 연결이 자주 흔들렸어요."),
+    ).toBeTruthy();
+    expect(screen.getByText("추천 근거")).toBeTruthy();
+
+    const startButton = screen.getByRole("button", { name: /추천 학습 시작/ });
+    expect(startButton.className).toContain("ant-btn-primary");
+    fireEvent.click(startButton);
+    expect(logStudyEventMock).toHaveBeenCalledWith({
+      eventType: "recommendation_clicked",
+      problemId: "prob-88",
+      payload: { source: "weakness" },
+    });
+    expect(pushMock).toHaveBeenCalledWith("/practice/problems/prob-88");
+
+    expect(screen.getByText("더 깊은 추천 보기")).toBeTruthy();
+    expect(
+      screen.getByText(
+        /결제 기능은 아직 준비 중이라 실제 결제나 구독은 진행되지 않아요/,
+      ),
+    ).toBeTruthy();
+  });
+
+  it("shows a fallback reason when a tag-based recommendation has no stored reason", () => {
+    render(
+      <WeaknessView
+        weakDimensions={[{ dimension: "grammar", averageScore: 0.36 }]}
+        recommendations={[
+          {
+            problem_id: "prob-99",
+            title: "문법 태그 복습",
+            question_no: 99,
+            reason: null,
+            source: "tag_fallback",
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getByText("약점 태그 기반")).toBeTruthy();
+    expect(
+      screen.getByText("문법 영역과 관련된 문항이라 우선 추천합니다."),
+    ).toBeTruthy();
+  });
+
+  it("keeps recommendation card title and reason within IA display limits", () => {
+    render(
+      <WeaknessView
+        weakDimensions={[{ dimension: "grammar", averageScore: 0.36 }]}
+        recommendations={[
+          {
+            problem_id: "prob-100",
+            title: "12345678901234567890123456789",
+            question_no: 100,
+            reason: "긴 추천 이유도 카드 안에서는 한 줄로만 표시합니다.",
+            source: "recommendation",
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getByText("1234567890123456789012345678...")).toBeTruthy();
+    expect(screen.queryByText("12345678901234567890123456789")).toBeNull();
+
+    const reason = screen.getByText(
+      "긴 추천 이유도 카드 안에서는 한 줄로만 표시합니다.",
+    ) as HTMLElement;
+    expect(reason.style.whiteSpace).toBe("nowrap");
+    expect(reason.style.textOverflow).toBe("ellipsis");
+    expect(reason.style.overflow).toBe("hidden");
   });
 });

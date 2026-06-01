@@ -23,8 +23,39 @@ import {
   normalizeProfileField,
 } from "../../../src/components/profile/ProfileForm";
 
+const blankProfile = { display_name: null, nickname: null, bio: null };
+
 function renderInApp(node: ReactNode) {
   return render(<AntdApp>{node}</AntdApp>);
+}
+
+function renderProfileForm(
+  props: Partial<Parameters<typeof ProfileForm>[0]> = {},
+) {
+  return renderInApp(
+    <ProfileForm
+      userId="user-1"
+      accountEmail="learner@example.com"
+      initialProfile={blankProfile}
+      {...props}
+    />,
+  );
+}
+
+function renderProfileFormWithNavigation(
+  props: Partial<Parameters<typeof ProfileForm>[0]> = {},
+) {
+  return renderInApp(
+    <>
+      <a href="/dashboard">대시보드로 이동</a>
+      <ProfileForm
+        userId="user-1"
+        accountEmail="learner@example.com"
+        initialProfile={blankProfile}
+        {...props}
+      />
+    </>,
+  );
 }
 
 beforeEach(() => {
@@ -37,7 +68,6 @@ beforeEach(() => {
     isPending: false,
   });
 
-  // Phase 7-E Task 10: bio TextArea uses Ant Design which expects ResizeObserver.
   if (!(globalThis as Record<string, unknown>).ResizeObserver) {
     (globalThis as Record<string, unknown>).ResizeObserver = class {
       observe() {}
@@ -85,36 +115,24 @@ function submitForm(container: HTMLElement) {
 }
 
 describe("ProfileForm", () => {
-  it("submits null for both fields when initial values are blank and user does not type", async () => {
-    const { container } = renderInApp(
-      <ProfileForm
-        userId="user-1"
-        initialProfile={{ display_name: null, nickname: null, bio: null }}
-      />,
-    );
+  it("keeps Save disabled and does not submit when profile fields are unchanged", async () => {
+    const { container } = renderProfileForm();
+
+    const saveButton = screen.getByRole("button", { name: "프로필 저장" });
+    expect((saveButton as HTMLButtonElement).disabled).toBe(true);
 
     await act(async () => {
       submitForm(container);
     });
 
-    await waitFor(() => {
-      expect(mutateAsyncMock).toHaveBeenCalledTimes(1);
-    });
     expect(useUpdateProfileMock).toHaveBeenCalledWith("user-1");
-    expect(mutateAsyncMock).toHaveBeenCalledWith({
-      display_name: null,
-      nickname: null,
-      bio: null,
-    });
+    expect(mutateAsyncMock).not.toHaveBeenCalled();
   });
 
   it("submits null when the user clears an existing value to empty string", async () => {
-    const { container } = renderInApp(
-      <ProfileForm
-        userId="user-1"
-        initialProfile={{ display_name: "Chan", nickname: "chan-k", bio: null }}
-      />,
-    );
+    const { container } = renderProfileForm({
+      initialProfile: { display_name: "Chan", nickname: "chan-k", bio: null },
+    });
 
     const nameInput = screen.getByLabelText("이름") as HTMLInputElement;
     fireEvent.change(nameInput, { target: { value: "" } });
@@ -132,13 +150,8 @@ describe("ProfileForm", () => {
     });
   });
 
-  it("submits trimmed values for both fields", async () => {
-    const { container } = renderInApp(
-      <ProfileForm
-        userId="user-1"
-        initialProfile={{ display_name: null, nickname: null, bio: null }}
-      />,
-    );
+  it("submits trimmed values for display name and nickname", async () => {
+    const { container } = renderProfileForm();
 
     const nameInput = screen.getByLabelText("이름") as HTMLInputElement;
     const nickInput = screen.getByLabelText("닉네임") as HTMLInputElement;
@@ -159,19 +172,12 @@ describe("ProfileForm", () => {
     });
   });
 
-  // Phase 7-E Task 10 (P1-6) — bio input + maxLength enforcement.
-
   it("submits bio (trimmed) when user types into the bio textarea", async () => {
-    const { container } = renderInApp(
-      <ProfileForm
-        userId="user-1"
-        initialProfile={{ display_name: null, nickname: null, bio: null }}
-      />,
-    );
+    const { container } = renderProfileForm();
 
     const bioInput = screen.getByLabelText("자기소개") as HTMLTextAreaElement;
     fireEvent.change(bioInput, {
-      target: { value: "  TOPIK II 4급 목표  " },
+      target: { value: "  TOPIK II grade 4 goal  " },
     });
 
     await act(async () => {
@@ -182,39 +188,111 @@ describe("ProfileForm", () => {
       expect(mutateAsyncMock).toHaveBeenCalledWith({
         display_name: null,
         nickname: null,
-        bio: "TOPIK II 4급 목표",
+        bio: "TOPIK II grade 4 goal",
       });
     });
   });
 
-  it("bio textarea enforces 160-char maxLength via the DOM attribute", () => {
-    renderInApp(
-      <ProfileForm
-        userId="user-1"
-        initialProfile={{ display_name: null, nickname: null, bio: null }}
-      />,
-    );
+  it("matches IA field length limits", () => {
+    renderProfileForm();
 
+    const nameInput = screen.getByLabelText("이름") as HTMLInputElement;
+    const nickInput = screen.getByLabelText("닉네임") as HTMLInputElement;
     const bioInput = screen.getByLabelText("자기소개") as HTMLTextAreaElement;
-    // Ant Design Input.TextArea propagates `maxLength` to the underlying
-    // textarea. We assert the attribute rather than try to type 161 chars
-    // (jsdom would not block input even if maxLength existed).
+
+    expect(nameInput.maxLength).toBe(30);
+    expect(nickInput.maxLength).toBe(20);
     expect(bioInput.maxLength).toBe(160);
+  });
+
+  it("blocks one-character display name and nickname values", async () => {
+    const { container } = renderProfileForm();
+
+    const nameInput = screen.getByLabelText("이름") as HTMLInputElement;
+    fireEvent.change(nameInput, { target: { value: "A" } });
+
+    expect(screen.getByText("이름은 2자 이상 입력해 주세요.")).toBeTruthy();
+    expect(
+      (screen.getByRole("button", { name: "프로필 저장" }) as HTMLButtonElement)
+        .disabled,
+    ).toBe(true);
+
+    await act(async () => {
+      submitForm(container);
+    });
+    expect(mutateAsyncMock).not.toHaveBeenCalled();
+
+    fireEvent.change(nameInput, { target: { value: "An" } });
+    const nickInput = screen.getByLabelText("닉네임") as HTMLInputElement;
+    fireEvent.change(nickInput, { target: { value: "B" } });
+
+    expect(screen.getByText("닉네임은 2자 이상 입력해 주세요.")).toBeTruthy();
+    expect(
+      (screen.getByRole("button", { name: "프로필 저장" }) as HTMLButtonElement)
+        .disabled,
+    ).toBe(true);
   });
 
   it("renders existing bio value from initialProfile", () => {
     const existing = "TOPIK 시험을 6개월 준비 중이에요.";
-    renderInApp(
-      <ProfileForm
-        userId="user-1"
-        initialProfile={{
-          display_name: null,
-          nickname: null,
-          bio: existing,
-        }}
-      />,
-    );
+    renderProfileForm({
+      initialProfile: {
+        display_name: null,
+        nickname: null,
+        bio: existing,
+      },
+    });
+
     const bioInput = screen.getByLabelText("자기소개") as HTMLTextAreaElement;
     expect(bioInput.value).toBe(existing);
+  });
+
+  it("renders account identity and an honest avatar state", () => {
+    renderProfileForm({ accountEmail: "learner@example.com" });
+
+    const emailInput = screen.getByLabelText("이메일") as HTMLInputElement;
+    expect(emailInput.value).toBe("learner@example.com");
+    expect(emailInput.readOnly).toBe(true);
+    expect(screen.getByText("프로필 이미지")).toBeTruthy();
+    expect(
+      screen.getByText(/이미지 업로드는 아직 활성화되지 않았습니다/),
+    ).toBeTruthy();
+    expect(screen.getByText(/재로그인이 필요할 수 있습니다/)).toBeTruthy();
+  });
+
+  it("enables Save only after a dirty edit and protects browser leave", () => {
+    renderProfileForm({
+      initialProfile: { display_name: "Chan", nickname: "chan-k", bio: null },
+    });
+
+    const saveButton = screen.getByRole("button", { name: "프로필 저장" });
+    expect((saveButton as HTMLButtonElement).disabled).toBe(true);
+
+    const nameInput = screen.getByLabelText("이름") as HTMLInputElement;
+    fireEvent.change(nameInput, { target: { value: "Chan Kim" } });
+
+    expect((saveButton as HTMLButtonElement).disabled).toBe(false);
+    const event = new Event("beforeunload", { cancelable: true });
+    window.dispatchEvent(event);
+
+    expect(event.defaultPrevented).toBe(true);
+  });
+
+  it("asks before internal navigation while profile edits are dirty", () => {
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
+    renderProfileFormWithNavigation({
+      initialProfile: { display_name: "Chan", nickname: "chan-k", bio: null },
+    });
+
+    const nameInput = screen.getByLabelText("이름") as HTMLInputElement;
+    fireEvent.change(nameInput, { target: { value: "Chan Kim" } });
+
+    const link = screen.getByRole("link", { name: "대시보드로 이동" });
+    expect(fireEvent.click(link)).toBe(false);
+    expect(confirmSpy).toHaveBeenCalledWith(
+      "저장하지 않은 변경사항이 있습니다. 페이지를 떠나시겠어요?",
+    );
+
+    confirmSpy.mockRestore();
   });
 });

@@ -42,7 +42,8 @@ function viewportTag(viewport: { width: number; height: number } | null): string
 function targetUrl(entry: IaCatalogEntry): string | null {
   if (entry.routeType === "page") {
     if (entry.fixtureIdType === "none") return entry.routeOrHostRoute;
-    const uuid = FIXTURE_UUIDS[entry.fixtureIdType];
+    const fixtureIdType = entry.fixtureIdType;
+    const uuid = FIXTURE_UUIDS[fixtureIdType];
     if (!uuid) return null;
     return entry.routeOrHostRoute.replace(":id", uuid);
   }
@@ -50,7 +51,11 @@ function targetUrl(entry: IaCatalogEntry): string | null {
   if (entry.hostRoutes && entry.hostRoutes.length > 0) {
     const firstHost = entry.hostRoutes[0];
     if (firstHost.includes(":id")) {
-      const uuid = FIXTURE_UUIDS[entry.fixtureIdType] ?? FIXTURE_UUIDS["uuid-owner"];
+      const uuid =
+        entry.fixtureIdType === "none"
+          ? FIXTURE_UUIDS["uuid-owner"]
+          : (FIXTURE_UUIDS[entry.fixtureIdType] ??
+            FIXTURE_UUIDS["uuid-owner"]);
       return firstHost.replace(":id", uuid);
     }
     return firstHost;

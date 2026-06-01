@@ -26,6 +26,8 @@ export default async function PracticeWeaknessPage() {
           problem_id: r.problemId,
           title: r.title,
           question_no: r.questionNo ?? 0,
+          reason: r.reason,
+          source: r.source,
         }))}
       />
     </main>
