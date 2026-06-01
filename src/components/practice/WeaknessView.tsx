@@ -18,6 +18,7 @@ import { DiagnosticCard } from "./DiagnosticCard";
 
 const { Title, Paragraph, Text } = Typography;
 const RECOMMENDATION_TITLE_MAX_LENGTH = 28;
+const RECOMMENDATION_CARD_LIMIT = 4;
 
 type WeakDimensionProp = {
   dimension: string;
@@ -44,7 +45,9 @@ const DIMENSION_LABELS: Record<string, string> = {
   grammar: "문법",
   vocab: "어휘",
   structure: "구성",
-  topic: "주제 적합성",
+  content: "내용",
+  expression: "표현",
+  topic_fit: "주제 적합성",
 };
 
 const DIMENSION_INSIGHTS: Record<
@@ -70,7 +73,18 @@ const DIMENSION_INSIGHTS: Record<
       "도입, 근거, 마무리의 순서가 바뀌거나 한 문단에 여러 생각이 섞일 수 있어요.",
     strategy: "문장을 쓰기 전에 핵심 주장 1개와 근거 2개를 먼저 적어 보세요.",
   },
-  topic: {
+  content: {
+    why: "내용이 부족하면 주장에 힘이 실리지 않아 점수로 이어지기 어려울 수 있어요.",
+    example: "예시나 근거 없이 같은 말을 반복하는 경우가 보일 수 있어요.",
+    strategy: "추천 문제에서 주장마다 예시를 하나씩 붙이는 연습을 해 보세요.",
+  },
+  expression: {
+    why: "표현이 단조로우면 같은 뜻을 다양하게 전달하기 어려울 수 있어요.",
+    example:
+      "비슷한 표현을 반복하거나 연결이 어색해지는 경우가 있을 수 있어요.",
+    strategy: "추천 문제를 풀며 대체 표현을 두 개씩 함께 적어 보세요.",
+  },
+  topic_fit: {
     why: "주제에서 벗어나면 문장이 맞아도 점수로 이어지기 어려울 수 있어요.",
     example:
       "질문이 요구한 조건보다 배경 설명이 길어지는 경우가 있을 수 있어요.",
@@ -135,6 +149,10 @@ export function WeaknessView({
     ? (DIMENSION_INSIGHTS[leadingWeakDimension.dimension] ??
       getFallbackInsight())
     : null;
+  const visibleRecommendations = recommendations.slice(
+    0,
+    RECOMMENDATION_CARD_LIMIT,
+  );
 
   if (weakDimensions.length === 0) {
     return (
@@ -220,7 +238,7 @@ export function WeaknessView({
               <Empty description="추천 문제가 아직 없습니다." />
             ) : (
               <Row gutter={[16, 16]}>
-                {recommendations.map((rec) => (
+                {visibleRecommendations.map((rec) => (
                   <Col key={rec.problem_id} xs={24}>
                     <Card
                       hoverable

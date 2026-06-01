@@ -206,4 +206,67 @@ describe("WeaknessView", () => {
     expect(reason.style.textOverflow).toBe("ellipsis");
     expect(reason.style.overflow).toBe("hidden");
   });
+
+  // Regression: the data layer (src/lib/practice/weakness.ts WEAKNESS_DIMENSIONS)
+  // emits `content`, `expression`, and `topic_fit`. The view's dimension-label
+  // map must cover all of them, or the raw English key leaks into the insight
+  // Alert and the tag-fallback reason (inconsistent with DiagnosticCard /
+  // DimensionTabs which render the Korean label for the same dimension).
+  it.each([
+    ["topic_fit", "주제 적합성"],
+    ["content", "내용"],
+    ["expression", "표현"],
+  ])(
+    "renders the Korean dimension label for a %s leading weakness instead of the raw key",
+    (dimension, label) => {
+      render(
+        <WeaknessView
+          weakDimensions={[{ dimension, averageScore: 0.3 }]}
+          recommendations={[
+            {
+              problem_id: "prob-dim",
+              title: "차원 라벨 확인 문제",
+              question_no: 1,
+              reason: null,
+              source: "tag_fallback",
+            },
+          ]}
+        />,
+      );
+
+      // Insight Alert headline must use the Korean label, never the raw key.
+      expect(
+        screen.getByText(`${label} 영역을 먼저 볼 수 있어요.`),
+      ).toBeTruthy();
+      // tag_fallback reason must also use the Korean label.
+      expect(
+        screen.getByText(`${label} 영역과 관련된 문항이라 우선 추천합니다.`),
+      ).toBeTruthy();
+      // The raw English dimension key must never reach the user.
+      expect(screen.queryAllByText(new RegExp(dimension)).length).toBe(0);
+    },
+  );
+
+  // IA X-07 §5: "카드 4개 이하". Defensive cap so an over-long upstream list
+  // never blows past the spec, independent of server-side limiting.
+  it("caps recommendation cards at the IA limit of 4", () => {
+    render(
+      <WeaknessView
+        weakDimensions={[{ dimension: "grammar", averageScore: 0.3 }]}
+        recommendations={Array.from({ length: 5 }, (_, i) => ({
+          problem_id: `prob-${i + 1}`,
+          title: `추천 문제 ${i + 1}`,
+          question_no: i + 1,
+          reason: null,
+          source: "recommendation" as const,
+        }))}
+      />,
+    );
+
+    expect(screen.getByTestId("weakness-rec-prob-4")).toBeTruthy();
+    expect(screen.queryByTestId("weakness-rec-prob-5")).toBeNull();
+    expect(
+      screen.getAllByRole("button", { name: /추천 학습 시작/ }),
+    ).toHaveLength(4);
+  });
 });
