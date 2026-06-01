@@ -32,6 +32,7 @@
     "test:e2e:ia": "playwright test tests/e2e/coverage",
     "test:ia:merge": "node scripts/merge-ia-audit-results.mjs",
     "test:ia:validate": "node scripts/validate-ia-audit-report.mjs",
+    "test:wireframe:data-map": "node scripts/audit-setup/build-wireframe-data-inventory.mjs",
     "test:supabase:local": "cross-env SUPABASE_LOCAL_STACK=1 vitest run tests/integration/profile-trigger.test.ts tests/integration/rls-smoke.test.ts",
     "format": "prettier --check .",
     "format:write": "prettier --write ."
