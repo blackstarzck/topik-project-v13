@@ -153,7 +153,7 @@ export const REASON_CONTENT: Record<AuthErrorReason, AuthErrorContent> = {
   },
   unknown: {
     title: "처리 중 문제가 생겼어요",
-    message: "잠시 후 다시 시도해주세요. 문제가 계속되면 지원 채널로 알려주세요.",
+    message: "잠시 후 다시 시도해주세요. 문제가 계속되면 잠시 뒤 다시 시도해주세요.",
     primary: { label: "홈으로", kind: "home" },
     secondary: { label: "도움말", kind: "help" },
     showsEmailField: false,

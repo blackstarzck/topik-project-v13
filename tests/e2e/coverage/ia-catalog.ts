@@ -182,6 +182,9 @@ export const IA_CATALOG: IaCatalogEntry[] = [
     packs: ["CORE", "AUTH", "TOKEN", "RATE-LIMIT", "SECURITY", "POLICY"],
     fixtureIdType: "none",
     expectedHeadingPattern: /(인증|에러|오류|error|만료|확인)/i,
+    // Primary CTA + honest escape row (로그인·가입·홈). The misleading '도움말'
+    // affordance was removed — there is no help/support surface (deferred), so
+    // do NOT assert a 도움말 link/button here.
     expectedPrimaryCta: /(다시|재전송|가입|로그인|홈|retry)/i,
     uxStatesRequired: ["default", "loading", "error", "disabled"],
     formEvidenceRequired: true,
@@ -192,7 +195,7 @@ export const IA_CATALOG: IaCatalogEntry[] = [
     authEvidenceRequired: true,
     adminEvidenceRequired: false,
     deferred: false,
-    notes: "Must test ?reason= variants per 11 canonical Supabase error codes (Phase 4 session-navigation will exhaust them; Phase 2 covers default + one reason).",
+    notes: "Must test ?reason= variants per 11 canonical Supabase error codes (Phase 4 session-navigation will exhaust them; Phase 2 covers default + one reason). Card renders primary CTA + honest escape row (로그인·가입·홈); '도움말' affordance removed (no help/support surface) — do not assert 도움말.",
   },
   {
     iaCode: "X-12",
@@ -254,7 +257,8 @@ export const IA_CATALOG: IaCatalogEntry[] = [
     packs: ["CORE", "RECOMMEND"],
     fixtureIdType: "none",
     expectedHeadingPattern: /(대시보드|홈|dashboard|home)/i,
-    expectedPrimaryCta: /(학습\s*시작|쓰기\s*연습|이어하기|시작)/i,
+    // Broadened to also accept the in-card recommendation CTA '이어 풀기'.
+    expectedPrimaryCta: /(학습\s*시작|쓰기\s*연습|이어하기|이어\s*풀기|시작)/i,
     uxStatesRequired: ["default", "loading", "empty", "error"],
     formEvidenceRequired: false,
     aiOutputEvidenceRequired: false,
@@ -302,7 +306,8 @@ export const IA_CATALOG: IaCatalogEntry[] = [
     packs: ["CORE", "RECOMMEND"],
     fixtureIdType: "none",
     expectedHeadingPattern: /(추천|문제\s*유형|recommend)/i,
-    expectedPrimaryCta: /(시작|선택|문제\s*풀기)/i,
+    // Broadened to also accept '풀기' / '이어 풀기'.
+    expectedPrimaryCta: /(시작|선택|문제\s*풀기|이어\s*풀기|풀기)/i,
     uxStatesRequired: ["default", "loading", "empty", "error"],
     formEvidenceRequired: false,
     aiOutputEvidenceRequired: true,
@@ -682,7 +687,12 @@ export const IA_CATALOG: IaCatalogEntry[] = [
   },
   {
     iaCode: "F-M1",
-    screenName: "PDF export modal",
+    // Browser-print MVP supersede (coordinator decision): Phase 6 PDF export is
+    // window.print() via src/lib/export/pdf-export.ts triggered by a per-row
+    // 'PDF로 내보내기' button. There is intentionally NO antd Modal, no consent
+    // checkbox, and no filename field — those belong to the deferred stored-file
+    // export queue (see docs/development/deferred-scope.md OOS F-M1).
+    screenName: "PDF export (browser-print MVP)",
     manifestRowId: id("F-M1"),
     documentReceiptId: id("F-M1"),
     routeOrHostRoute: "hosted by /library + feedback/report routes",
@@ -692,15 +702,16 @@ export const IA_CATALOG: IaCatalogEntry[] = [
       "/writing/feedback/long/:id",
       "/writing/reports/:id/compare",
     ],
-    routeType: "hosted modal",
+    routeType: "hosted state",
     audience: "user",
     authStateRole: "student",
-    packs: ["CORE", "MODAL"],
+    packs: ["CORE"],
     fixtureIdType: "uuid-owner",
     expectedHeadingPattern: /(PDF|내보내기|export)/i,
+    // Per-row 'PDF로 내보내기' button satisfies this; no modal/consent/filename.
     expectedPrimaryCta: /(내보내기|다운로드|export|download)/i,
     uxStatesRequired: ["default", "loading", "error", "disabled"],
-    formEvidenceRequired: true,
+    formEvidenceRequired: false,
     aiOutputEvidenceRequired: false,
     policyEvidenceRequired: false,
     billingEvidenceRequired: false,
@@ -708,6 +719,7 @@ export const IA_CATALOG: IaCatalogEntry[] = [
     authEvidenceRequired: false,
     adminEvidenceRequired: false,
     deferred: false,
+    notes: "Browser-print MVP — window.print() via src/lib/export/pdf-export.ts; no antd Modal/consent/filename. Stored downloadable-file export deferred (deferred-scope.md OOS F-M1).",
   },
   {
     iaCode: "G-01",

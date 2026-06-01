@@ -22,25 +22,25 @@ type Props = {
 /**
  * Phase 7-D Task 8 (P1-4) — D-M2 AI 분석 로딩 모달.
  *
- * IA spec(docs/IA/13-D-M2-ai-analysis-loading/description.md): 캐릭터 + 단계
+ * IA spec(docs/Wireframe/13-D-M2-ai-analysis-loading/description.md): 캐릭터 + 단계
  * 인디케이터 + 메시지. 실 LLM은 Tier 2 OOS-1; 본 컴포넌트는 fixture timer로
  * step 시뮬레이션. 실제 LLM 통합 후엔 server-pushed step을 받게 교체 가능.
  */
 export function AnalysisLoadingModal({ open }: Props) {
+  if (!open) return null;
+
+  return <AnalysisLoadingModalContent />;
+}
+
+function AnalysisLoadingModalContent() {
   const [step, setStep] = useState(0);
 
   useEffect(() => {
-    if (!open) {
-      setStep(0);
-      return;
-    }
     const interval = setInterval(() => {
       setStep((s) => Math.min(s + 1, STEPS.length - 1));
     }, 800);
     return () => clearInterval(interval);
-  }, [open]);
-
-  if (!open) return null;
+  }, []);
 
   return (
     <Card style={{ maxWidth: 480, margin: "0 auto" }}>

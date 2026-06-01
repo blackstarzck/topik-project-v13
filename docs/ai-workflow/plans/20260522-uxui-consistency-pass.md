@@ -21,7 +21,7 @@ PR A로 audience(user/admin/both) 워크플로 분기가 정착됐다. 그러나
   - 4개 체크(Tokens / Components / A11y / Responsive) 각각 **정본 문서 경로 + 최소 PASS 기준 + skipped 허용 사유 목록** 명시.
   - 게이트 위치 명확화: UI 구현 완료 후, browser/visual QA 전 사전 점검. Architecture Pass와 차이(visual/system consistency vs code boundary/audience) 한 문단.
   - 기존 `QA Gate`의 "responsive layout when UI changed"와의 경계(QA는 실행 검증, UX/UI Pass는 사전 일관성 점검) 한 문단.
-- `docs/ai-workflow/context-ledger-template.md`의 `## Verification State`에 4줄 증거 구조 필드:
+- `docs/ai-workflow/templates/context-ledger-template.md`의 `## Verification State`에 4줄 증거 구조 필드:
   ```
   - UX/UI Consistency Pass: passed | failed | skipped — <reason>
     - Tokens: passed | failed | skipped — <reason> | <근거 1줄: 정본 문서 + 검토 결과>
@@ -54,7 +54,7 @@ PR A로 audience(user/admin/both) 워크플로 분기가 정착됐다. 그러나
   - `docs/ant-design/08-theme-architecture.md` (테마 아키텍처 — Tokens 체크 정본)
 - 워크플로 구조 참고:
   - `docs/ai-workflow/review-gates.md` (Architecture Pass · QA Gate와의 경계)
-  - `docs/ai-workflow/context-ledger-template.md` (필드 추가 위치)
+  - `docs/ai-workflow/templates/context-ledger-template.md` (필드 추가 위치)
   - `docs/ai-workflow/planning-contracts.md` (게이트와 Light Spec 연결)
   - `scripts/ai-workflow-check.mjs` (Audience 자동 검사 패턴 참고)
 - 직전 결정 기록:
@@ -88,7 +88,7 @@ PR A로 audience(user/admin/both) 워크플로 분기가 정착됐다. 그러나
 | # | Task | Files | Audience | Subagent-eligible? (Y/N + reason) |
 | --- | --- | --- | --- | --- |
 | 1 | `## UX/UI Consistency Pass` 섹션 정의 — 4개 체크 × (정본 경로 + 최소 PASS 기준 + skipped 허용 사유) + 게이트 위치 + QA/Architecture Pass와의 경계 | `docs/ai-workflow/review-gates.md` | n/a | N — 다른 task와 용어 일관성 필요, 단일 owner |
-| 2 | ledger 템플릿에 4줄 증거 구조 필드 추가 + 예시 | `docs/ai-workflow/context-ledger-template.md` | n/a | N — Task 1의 표현과 정확히 일치해야, 단일 owner |
+| 2 | ledger 템플릿에 4줄 증거 구조 필드 추가 + 예시 | `docs/ai-workflow/templates/context-ledger-template.md` | n/a | N — Task 1의 표현과 정확히 일치해야, 단일 owner |
 | 3 | `ai-workflow-check.mjs`에 UI 감지 패턴 확장 + UX/UI Consistency Pass 4줄 증거 형식 자동 검사 + test/types-only 면제 룰 | `scripts/ai-workflow-check.mjs` | n/a | N — Task 1/2 값 형식에 강하게 의존 |
 | 4 | fixture-based 회귀 — `docs/ai-workflow/fixtures/uxui-consistency-pass/` 아래 5개 fixture (PASS 1, FAIL 3, exempt 1) + checker가 각 fixture에 대해 예상 결과 내는지 확인 | `docs/ai-workflow/fixtures/uxui-consistency-pass/*.md`, (선택) `scripts/test-uxui-fixtures.mjs` | n/a | Y — Task 1-3 완료 후 독립 적용 |
 | 5 | `ai-development-workflow.md` Core Invariants에 한 줄 + Lane Selection의 UI/flow 행에 게이트 참조 추가 | `docs/ai-development-workflow.md` | n/a | Y — Task 1 완료 후 단순 추가 |

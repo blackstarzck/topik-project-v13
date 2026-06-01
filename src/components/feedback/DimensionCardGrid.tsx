@@ -1,3 +1,5 @@
+"use client";
+
 import { Card, Col, Row, Tag, Typography } from "antd";
 import {
   FEEDBACK_DIMENSIONS,

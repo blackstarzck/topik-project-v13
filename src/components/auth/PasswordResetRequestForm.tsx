@@ -62,6 +62,14 @@ export function PasswordResetRequestForm() {
           <strong>{sentTo}</strong> 로 비밀번호 재설정 링크를 보냈습니다. 메일
           안의 링크를 누르면 새 비밀번호 설정 화면으로 이동합니다.
         </Paragraph>
+        {/* description §4: 링크 만료/재전송 안내. 서버의 정확한 만료 시각은
+            클라이언트에 없어 가짜 절대 시간을 만들지 않고 상대 시간만 안내. */}
+        <Paragraph>
+          <Text type="secondary">
+            보안을 위해 링크는 약 1시간 후 만료돼요. 만료되면 이 화면에서 다시
+            보낼 수 있어요.
+          </Text>
+        </Paragraph>
         {cooldown.countdownLabel && (
           <Text type="secondary" data-testid="password-reset-countdown">
             {cooldown.countdownLabel}

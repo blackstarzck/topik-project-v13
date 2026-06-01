@@ -1,0 +1,42 @@
+{
+  "iaCode": "X-07",
+  "screenName": "Weakness-based recommendations",
+  "route": "/practice/weakness",
+  "audience": "user",
+  "aiUxResult": "PARTIAL",
+  "status": "PARTIAL",
+  "confidence": "high",
+  "gptAdjudication": "needs-adjudication",
+  "humanConfirmation": "pending-adjudication",
+  "findings": {
+    "pageJob": "Clear: H1 '약점 보강' rendered; intro paragraph explains the screen. Diagnostic card + dimension tabs + insight + recommendation cards map to description regions 2-6. Strong fidelity.",
+    "entryContext": "Auth-gated. Empty gate: <5 submissions -> '글쓰기를 5건 이상 제출하면 약점 분석이 활성화됩니다' with 문제 풀기 CTA (matches '답안 부족' exception). Good first-use handling.",
+    "primaryAction": "Per recommendation card: single '추천 학습 시작' primary button (stopPropagation guard) routing to /practice/problems/<id>; representative CTA per description region 6. Cards capped at 4 (RECOMMENDATION_CARD_LIMIT).",
+    "flowContinuity": "Recommendation click logs study event and routes to problem; empty state routes to problem list -> not stuck.",
+    "aiBehavior": "Exemplary AI honesty: insight Alert explicitly says '최근 답안에서 보이는 경향을 바탕으로 추정한 안내예요. 실제 약점은 다음 연습 결과에 따라 달라질 수 있습니다.' — uncertainty is surfaced, not hidden. Recommendation reason + source tag (추천 근거 / 약점 태그 기반) make AI output reviewable.",
+    "formErrorUx": "Not a form. Recommendation-empty -> Empty('추천 문제가 아직 없습니다'). Reason text truncated with title tooltip. Reasonable.",
+    "keyboardFocus": "antd Tabs/Card/Button keyboard reachable; card onClick duplicated by inner button with stopPropagation. No rendered focus-order evidence.",
+    "responsive": "HTTP 200 at 360/768/1280; description requires collapsed mobile nav + responsive Col (xs24). No retained screenshot to confirm tab/card mobile reflow.",
+    "policyTrust": "HONEST deferred-billing copy: '결제 기능은 아직 준비 중이라 실제 결제나 구독은 진행되지 않아요' on the '더 깊은 추천 보기' card linking to /paywall — no live-payment overclaim. Matches X-03/X-04 deferral honesty requirement."
+  },
+  "topGaps": [
+    "No retained rendered screenshot for X-07 in run dir -> visual/mobile layout unconfirmed (blocks PASS per section 9).",
+    "human-confirmation evidence input is required for X-07 but not present in this digest run.",
+    "Mobile collapsed-nav + dimension-tab reflow unverified."
+  ],
+  "blockingReasons": [],
+  "gptQuestions": [
+    "약점 인사이트 Alert의 '추정' 고지 톤이 학습자에게 신뢰를 주면서도 과신을 막는 적절한 한국어 카피인지 판정.",
+    "'더 깊은 추천 보기' 카드의 결제 미연동(deferred) 고지가 충분히 정직하고 오해 소지가 없는지(/paywall 이동 포함).",
+    "모바일에서 DimensionTabs + 추천 카드 + 인사이트 3열이 가독성 있게 접히는지(렌더 증거 필요)."
+  ],
+  "evidenceReferences": [
+    "digest ia.X-07 (prod HTTP 200 on 360/768/1280; browser status PASS; visibleH1='약점 보강'; primaryCtaPresent=true; requiredEvidence includes human-confirmation)",
+    "seed: feedback_dimension_scores=30, writing_submissions=5 (weak-dimension analysis can activate)",
+    "source: src/app/(workspace)/practice/weakness/page.tsx (getWeakDimensions + getWeaknessRecommendations)",
+    "source: WeaknessView.tsx (DiagnosticCard + DimensionTabs + 약점 인사이트 Alert + 추천 문제 cards + deferred-billing card + Empty gate)"
+  ],
+  "resolvedBlockers": [],
+  "screenshotsViewed": [],
+  "shardId": "feedback-reports-recommendations"
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Card, Input, Space, Tabs, Typography, notification } from "antd";
+import { Button, Card, Input, Space, Tabs, Typography, notification } from "antd";
 import { useRouter } from "next/navigation";
 
 import {
@@ -29,6 +29,10 @@ import { SubmissionConfirmModal } from "./SubmissionConfirmModal";
 import { SectionEditor } from "./SectionEditor";
 import { ManuscriptPreview } from "./ManuscriptPreview";
 import { EssayChecklist } from "./EssayChecklist";
+import {
+  AutosaveWarningModal,
+  type WarningTrigger,
+} from "./AutosaveWarningModal";
 
 const { Text, Title } = Typography;
 
@@ -124,6 +128,9 @@ export function LongFormEditor({
     initialDraft?.last_saved_at ?? null,
   );
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [warningTrigger, setWarningTrigger] = useState<WarningTrigger | null>(
+    null,
+  );
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveSeqRef = useRef(0);
   const upsert = useUpsertDraft();
@@ -149,6 +156,20 @@ export function LongFormEditor({
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
   }, []);
+
+  // D-M3 / description.md §1 예외 — 저장되지 않은 변경(또는 저장 실패)이 있는 상태에서
+  // 새로 고침/탭 닫기 시 브라우저 이탈 경고로 손실을 방지. 장문(53/54)은 손실 위험이
+  // 가장 크므로 단답 에디터와 동일하게 가드한다.
+  useEffect(() => {
+    const hasUnsaved = status === "dirty" || status === "failed";
+    if (!hasUnsaved) return;
+    function onBeforeUnload(e: BeforeUnloadEvent) {
+      e.preventDefault();
+      e.returnValue = "";
+    }
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [status]);
 
   function buildAnswerJson(): LongFormDraftJson {
     if (questionNo === 53) {
@@ -191,10 +212,9 @@ export function LongFormEditor({
           onError: () => {
             if (seq !== saveSeqRef.current) return;
             setStatus("failed");
-            notification.error({
-              message: "자동 저장 실패",
-              description: "다시 시도하거나 새로 고침해 주세요.",
-            });
+            // D-M3 / description.md §1 예외 — 토스트 대신 복구 가능한 경고 모달
+            // (마지막 저장 시각 + 다시 시도 + 답안 복사 안내)을 띄운다.
+            setWarningTrigger("save_failure");
           },
         },
       );
@@ -240,6 +260,12 @@ export function LongFormEditor({
     scheduleSave(nextJson, nextState.text);
   }
 
+  // D-M3 retry — 현재 작성 상태 스냅샷으로 자동 저장을 다시 시도.
+  function retrySaveNow() {
+    setWarningTrigger(null);
+    scheduleSave(buildAnswerJson(), combinedText);
+  }
+
   function onConfirmSubmit() {
     submit.mutate(
       {
@@ -260,9 +286,11 @@ export function LongFormEditor({
           router.push(`/writing/feedback/long/${result.submissionId}`);
         },
         onError: (e) => {
+          // description.md §4 예외 — 제출 실패 시 확인 모달을 유지(닫지 않음)하여
+          // '제출' 버튼으로 바로 다시 시도할 수 있게 한다.
           notification.error({
             message: "제출 실패",
-            description: e.message,
+            description: `${e.message} — 확인 창의 '제출'을 눌러 다시 시도하거나, 작성한 답안을 복사해 두세요.`,
           });
         },
       },
@@ -335,7 +363,9 @@ export function LongFormEditor({
           style={{
             display: "grid",
             gap: 16,
-            gridTemplateColumns: "1fr 320px",
+            // 반응형: 좁은 화면에서는 본문/체크리스트가 1열로 쌓이고, 넓을 때만
+            // 2열(본문 + 320px 체크리스트). 고정 폭의 360px 가로 넘침 해소.
+            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
           }}
         >
           <Card>
@@ -357,21 +387,31 @@ export function LongFormEditor({
         </div>
       )}
 
-      <button
-        type="button"
+      <Button
+        type="primary"
         onClick={() => setConfirmOpen(true)}
         disabled={!submittable || submit.isPending}
         style={{ alignSelf: "flex-start" }}
       >
         제출하기
-      </button>
+      </Button>
       <SubmissionConfirmModal
         open={confirmOpen}
         charCount={charCount}
         minChars={limit.hardMin}
+        questionNo={questionNo}
+        lastSavedAt={lastSavedAt}
         loading={submit.isPending}
         onConfirm={onConfirmSubmit}
         onCancel={() => setConfirmOpen(false)}
+      />
+      <AutosaveWarningModal
+        trigger={warningTrigger}
+        lastSavedAt={lastSavedAt}
+        retrying={upsert.isPending}
+        onKeep={() => setWarningTrigger(null)}
+        onRetry={retrySaveNow}
+        onProceed={() => setWarningTrigger(null)}
       />
     </Space>
   );

@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { Space } from "antd";
 import {
   DashboardContent,
 } from "@/components/learning/DashboardContent";
+import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import type { RecentFeedbackItem } from "@/components/learning/RecentFeedbackCard";
 import type { DashboardAlert } from "@/components/learning/AlertsCard";
 import { requireUser } from "@/lib/auth/session";
@@ -11,6 +13,17 @@ import { getLearningGoal } from "@/lib/learning/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "대시보드 — TALKPIK" };
+
+const DAY_MS = 1000 * 60 * 60 * 24;
+
+function getCurrentTimeMs(): number {
+  return Date.now();
+}
+
+function getExamDday(examDate: string, nowMs: number): number {
+  const examMs = new Date(examDate).getTime();
+  return Math.ceil((examMs - nowMs) / DAY_MS);
+}
 
 export default async function DashboardPage() {
   const user = await requireUser();
@@ -49,9 +62,9 @@ export default async function DashboardPage() {
 
   // In-app alerts — exam D-day + dirty drafts. Tier 2 OOS-9 transport 없이.
   const alerts: DashboardAlert[] = [];
+  const nowMs = getCurrentTimeMs();
   if (goal.exam_date) {
-    const examMs = new Date(goal.exam_date).getTime();
-    const dDay = Math.ceil((examMs - Date.now()) / (1000 * 60 * 60 * 24));
+    const dDay = getExamDday(goal.exam_date, nowMs);
     if (dDay >= 0 && dDay <= 30) {
       alerts.push({
         id: "exam-dday",
@@ -76,11 +89,14 @@ export default async function DashboardPage() {
   }
 
   return (
-    <DashboardContent
-      goal={goal}
-      kpi={kpi}
-      recentFeedbacks={recentFeedbacks}
-      alerts={alerts}
-    />
+    <Space direction="vertical" size="large" style={{ width: "100%" }}>
+      <DashboardHeader />
+      <DashboardContent
+        goal={goal}
+        kpi={kpi}
+        recentFeedbacks={recentFeedbacks}
+        alerts={alerts}
+      />
+    </Space>
   );
 }

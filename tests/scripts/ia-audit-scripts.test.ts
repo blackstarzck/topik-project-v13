@@ -73,6 +73,7 @@ describe("IA audit setup scripts", () => {
       );
       expect(new Set(manifest.entries.map((entry) => entry.iaCode)).size).toBe(34);
       expect(manifest.entries.every((entry) => entry.descriptionPath.endsWith("description.md"))).toBe(true);
+      expect(manifest.entries.every((entry) => entry.descriptionPath.startsWith("docs/Wireframe/"))).toBe(true);
       expect(manifest.supportSurfaces.map((surface) => surface.routeOrHostRoute)).toEqual(
         expect.arrayContaining(["/auth/callback", "/auth/sign-out"]),
       );

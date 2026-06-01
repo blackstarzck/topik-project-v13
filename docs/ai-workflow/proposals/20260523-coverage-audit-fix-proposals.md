@@ -148,7 +148,7 @@ Codex 권고: `hardMin/hardMax/recommendedMin/recommendedMax` 분리:
 - 53: hard **120-300**, recommended **200-300**
 - 54: hard **300-700**, recommended **600-700**
 
-근거: `docs/IA/08~11/description.md` (각 IA가 "분석 가능한 최소"와 "권장 최소"를 구분)
+근거: `docs/Wireframe/08~11/description.md` (각 IA가 "분석 가능한 최소"와 "권장 최소"를 구분)
 
 ### 최종 합의 (rev1)
 
@@ -301,7 +301,7 @@ A안이 단순하고 spec과 정확히 일치.
 
 Codex 권고: per-item status를 `complete / warning / unchecked` 3-state로. 단순 boolean 안 됨.
 
-근거: `docs/IA/11-D-04-essay-writing-54/description.md:50`
+근거: `docs/Wireframe/11-D-04-essay-writing-54/description.md:50`
 
 ### 최종 합의 (rev1)
 
@@ -585,7 +585,7 @@ Codex 권고: trigger를 3 가지로 확장:
 
 Actions: keep autosave / retry+save now / proceed-with-risk 3가지.
 
-근거: `docs/IA/22-D-M3-autosave-warning/description.md:12, 13, 61, 73`
+근거: `docs/Wireframe/22-D-M3-autosave-warning/description.md:12, 13, 61, 73`
 
 ### 최종 합의 (rev1)
 

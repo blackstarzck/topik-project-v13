@@ -16,7 +16,7 @@
 - `docs/development/stack.md` (TanStack Query 5.x 확정)
 - `docs/development/backend-auth.md` (RLS 정책 그대로 사용)
 - `docs/sitemap.md` (B-01, A-03, C-01, C-02 라우트)
-- `docs/IA/{04-B-01,03-A-03,05-C-01,06-C-02}/description.md` (UI 요구사항)
+- `docs/Wireframe/{04-B-01,03-A-03,05-C-01,06-C-02}/description.md` (UI 요구사항)
 - `docs/flow/user-flow.md` (학습 흐름)
 - `docs/ai-workflow/light-specs/phase-4-learning-core.md` (이 phase의 의도)
 - `docs/ai-workflow/runs/2026/05/21/20260521-1200-residual-risks-cleanup.md` (Phase 3 carry-forward)

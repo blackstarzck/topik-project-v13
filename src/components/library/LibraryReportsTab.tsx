@@ -1,6 +1,6 @@
 "use client";
 
-import { Alert, Empty, List, Space, Spin, Typography } from "antd";
+import { Alert, Button, Empty, List, Space, Spin, Typography } from "antd";
 import Link from "next/link";
 
 import { useLibraryItems } from "@/lib/library/queries";
@@ -8,11 +8,14 @@ import type { LibraryItemView, LibraryReportView } from "@/lib/library/types";
 
 import { ExportPdfButton } from "./ExportPdfButton";
 import { LibraryItemRow } from "./LibraryItemRow";
+import { matchesLibrarySearch } from "./library-tab-url";
 
 const { Text, Paragraph } = Typography;
 
 type Props = {
   initialItems: LibraryReportView[];
+  searchTerm?: string;
+  onResetSearch?: () => void;
 };
 
 function isReport(item: LibraryItemView): item is LibraryReportView {
@@ -23,10 +26,21 @@ function formatDate(iso: string): string {
   return iso.slice(0, 16).replace("T", " ");
 }
 
-export function LibraryReportsTab({ initialItems }: Props) {
+export function LibraryReportsTab({
+  initialItems,
+  searchTerm = "",
+  onResetSearch,
+}: Props) {
   const query = useLibraryItems("reports");
-  const items: LibraryReportView[] = (query.data ?? initialItems).filter(
+  const allItems: LibraryReportView[] = (query.data ?? initialItems).filter(
     isReport,
+  );
+  const items = allItems.filter((i) =>
+    matchesLibrarySearch(searchTerm, [
+      "비교 리포트",
+      i.narrative_excerpt,
+      ...i.tags,
+    ]),
   );
 
   if (query.isLoading && (query.data ?? []).length === 0 && initialItems.length === 0) {
@@ -44,7 +58,18 @@ export function LibraryReportsTab({ initialItems }: Props) {
     );
   }
   if (items.length === 0) {
-    return <Empty description="비교 리포트가 없습니다." />;
+    const searching = searchTerm.trim().length > 0;
+    return (
+      <Empty
+        description={
+          searching ? "검색 결과가 없습니다." : "비교 리포트가 없습니다."
+        }
+      >
+        {searching && onResetSearch ? (
+          <Button onClick={onResetSearch}>필터 초기화</Button>
+        ) : null}
+      </Empty>
+    );
   }
 
   return (

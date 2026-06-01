@@ -27,13 +27,14 @@ flowchart TD
 | `FLOW-00` | AI workflow entry | [ai-development-workflow.md](ai-development-workflow.md) | Entry point — 88-line index that links sub-docs |
 | `WF-00` | Workflow sub-docs | [ai-workflow/planning-contracts.md](ai-workflow/planning-contracts.md), [ai-workflow/context-and-packets.md](ai-workflow/context-and-packets.md), [ai-workflow/review-gates.md](ai-workflow/review-gates.md), [ai-workflow/fallback-and-recovery.md](ai-workflow/fallback-and-recovery.md) | Planning · ledger/packets · review gates · fallback matrix |
 | `WF-10` | Ledger/report templates | [ai-workflow/README.md](ai-workflow/README.md) | Ledgers, reports, packets, plans (folder map + templates) |
-| `HARNESS-00` | Harness and skills | [ai-workflow/harness-and-skills.md](ai-workflow/harness-and-skills.md) | TALKPIK, practical skills, GStack, Superpowers, host-specific skill names |
+| `PLAN-00` | AI execution plans | [ai-execution-plans/README.md](ai-execution-plans/README.md) | Task-specific execution plans for Codex/Claude; start at the plan README and read only matching phase files |
+| `HARNESS-00` | Harness and skills | [ai-workflow/reference/harness-and-skills.md](ai-workflow/reference/harness-and-skills.md) | TALKPIK, practical skills, GStack, Superpowers, host-specific skill names |
 | `PRODUCT-00` | Product requirements | [prd.md](prd.md) | Product scope, users, value, business rules |
 | `SPEC-00` | Implementation spec | [spec.md](spec.md) | Development baseline, behavior, validation, framework, backend, auth, AI boundary, deployment |
 | `DEV-10` | Development details | [development/README.md](development/README.md) | Detailed technical specs selected through `SPEC-00` |
 | `UI-00` | Design system | [ant-design/README.md](ant-design/README.md) | UI implementation, tokens, components, motion |
 | `IA-00` | Information architecture | [ia.md](ia.md), [sitemap.md](sitemap.md) | Page hierarchy, routes, navigation |
-| `IA-10` | Screen specs | [IA/README.md](IA/README.md) | Specific page descriptions and wireframes |
+| `IA-10` | Screen specs | [Wireframe/README.md](Wireframe/README.md) | Specific page descriptions and wireframes |
 | `JOURNEY-00` | User journey | [flow/user-flow.md](flow/user-flow.md) | Step order, transitions, entry/exit states |
 | `LEGACY-00` | Legacy observations | [ia-pages/README.md](ia-pages/README.md), [user-flow.md](user-flow.md) | Historical context only |
 
@@ -48,8 +49,9 @@ flowchart TD
 | User journey, screen order, transitions, entry/exit states | `JOURNEY-00` | `IA-10`, `SPEC-00` | `docs/user-flow.md` is legacy context only. |
 | Visual UI, layout, components, tokens, motion | `UI-00` | `IA-10`, `JOURNEY-00` | Run design review before user-facing implementation. |
 | Specific page or screen | `IA-10` matching page | `UI-00`, `JOURNEY-00`, `SPEC-00` | Read the matching `description.md` and inspect `wireframe.png`. |
-| Admin 화면 / 권한 / RBAC / audit log | `SPEC-00`, 해당 admin `IA-10`(`docs/IA/{21-H-01,30-X-08,32-X-10}-*`), `DEV-10`(backend-auth) | `JOURNEY-00`, `UI-00`, `docs/ai-workflow/light-specs/phase-6-admin-library-hardening.md` | Admin은 일반 사용자와 권한 모델·UI 분기·QA 시나리오가 다름. Plan/Light Spec에 `Audience: user/admin/both` 명시 필수. `Architecture Pass`에서 audience 경계 = 코드 boundary 일치 검증. |
+| Admin 화면 / 권한 / RBAC / audit log | `SPEC-00`, 해당 admin `IA-10`(`docs/Wireframe/{21-H-01,30-X-08,32-X-10}-*`), `DEV-10`(backend-auth) | `JOURNEY-00`, `UI-00`, `docs/ai-workflow/light-specs/phase-6-admin-library-hardening.md` | Admin은 일반 사용자와 권한 모델·UI 분기·QA 시나리오가 다름. Plan/Light Spec에 `Audience: user/admin/both` 명시 필수. `Architecture Pass`에서 audience 경계 = 코드 boundary 일치 검증. |
 | AI workflow, context, reports, fallback, multi-agent work | `FLOW-00`, `WF-00` | `HARNESS-00` | Required for workflow or harness changes. |
+| Long AI execution plan, audit run, remediation run, or phase-by-phase agent work | `PLAN-00` | `FLOW-00`, `WF-00`, active product/spec/IA docs named by the plan | Execution plans guide agent procedure only. Product behavior still comes from active docs. |
 | Historical page composition | `LEGACY-00` | Active docs above | Reference only. Active docs win. |
 
 ## Development Detail Routing
@@ -73,7 +75,7 @@ Active docs govern implementation, QA, and review:
 - [ant-design/README.md](ant-design/README.md)
 - [sitemap.md](sitemap.md) Target React Route Map
 - [ia.md](ia.md)
-- [IA/README.md](IA/README.md) and matching `docs/IA/<page>/description.md`
+- [Wireframe/README.md](Wireframe/README.md) and matching `docs/Wireframe/<page>/description.md`
 - [flow/user-flow.md](flow/user-flow.md)
 
 Legacy docs are reference only:
@@ -98,7 +100,7 @@ Create or update a run ledger under `docs/ai-workflow/runs/YYYY/MM/DD/` when any
 | Work likely to resume later | Yes |
 | Tiny docs/config-only edit with no behavior change, no conflict, no multi-agent work, no resume risk | May skip with reason |
 
-Use [ai-workflow/context-ledger-template.md](ai-workflow/context-ledger-template.md).
+Use [ai-workflow/templates/context-ledger-template.md](ai-workflow/templates/context-ledger-template.md).
 
 For consistency, classify the work as non-trivial when it changes workflow-governing files, automation, scripts, CI, routes, UI, auth, database, API, dependencies, deployment behavior, test strategy, or AI-service boundaries. Multi-file changes are non-trivial by default unless they are purely mechanical docs/config updates and the final report states the lightweight exception.
 

@@ -1,0 +1,262 @@
+{
+  "shardId": "feedback-reports-recommendations",
+  "cards": [
+    {
+      "iaCode": "E-01",
+      "aiUxResult": "BLOCKED",
+      "confidence": "medium",
+      "gptAdjudication": "needs-adjudication",
+      "recommendedLabel": "BLOCKED",
+      "evidenceUsed": [
+        "digest ia.E-01 (prod HTTP 200 on 360/768/1280; browser status PARTIAL; visibleH1=null; primaryCtaPresent=false; blockingReason: primary CTA /(다시 풀기|저장|next|다음)/ not visible)",
+        "securityScenarios: /writing/feedback/short/<nil-uuid> -> redirect /login PASS (no id leak); /writing/feedback/short/<other-user-uuid> -> BLOCKED (needs student storageState + wrong-owner seeded row)",
+        "seed: deferred 'wrong-owner / owner-:id rows (E-01/E-02/R-01)'; writing_feedback=5 but owner-:id binding for the tested route id unverified",
+        "source: src/app/(workspace)/writing/feedback/short/[id]/page.tsx (requireUser -> getSubmission -> notFound on null -> FeedbackPageContent)",
+        "source: FeedbackPageContent.tsx (renders FeedbackPendingPanel/AnalysisLoadingModal when feedback_status!=='complete' || !bundle)",
+        "source: FeedbackSummary.tsx, DimensionCardGrid.tsx, NextActionBar.tsx"
+      ],
+      "findings": {
+        "pageJob": "clear in source: 점수/총평 요약(FeedbackSummary), 항목별 카드(DimensionCardGrid, 6 dims with grey-card null fallback), CTA bar. Job = 단답 결과+개선 포인트. Not directly verifiable on render because the tested :id likely fell into the pending/AnalysisLoadingModal branch (visibleH1=null, no CTA) or owner-:id row not seeded.",
+        "entryContext": "Direct-URL safe: logged-out -> redirect /login without leaking id existence (security PASS). Invalid/non-owner id -> getSubmission null -> notFound(). Acceptable outcomes confirmed in source + security rows.",
+        "primaryAction": "Source defines primary CTA '다시 풀기' (type=primary) + 다음 문제 + 비교 리포트 in NextActionBar, with duplicate-click guard (busy/isPending). Harness reported CTA NOT visible -> consistent with pending-panel render, NOT a missing-CTA defect in the complete-state branch.",
+        "flowContinuity": "Retry href to /writing/<questionNo>, next to /practice/recommendations, compare creates report then routes to /writing/reports/<id>/compare. Return paths exist. Continuity for the complete state unverified on render.",
+        "aiBehavior": "Score+summary framed as '총평', dimension cards show per-dimension scores; null/failed dimensions degrade to grey opacity-0.55 card with '분석 대기 중'. No explicit AI-uncertainty/limitation disclaimer or dispute/report path on this surface -> reviewability of AI feedback partially weak.",
+        "formErrorUx": "Not a form. Compare-CTA failure surfaces antd notification.error with provider message string (e.message) -> potential raw-error leak risk to verify. Pending state uses AnalysisLoadingModal.",
+        "keyboardFocus": "antd Button/Card primitives are keyboard reachable by default, but no rendered focus-order evidence captured; AnalysisLoadingModal focus behavior unverified.",
+        "responsive": "HTTP 200 at 360/768/1280 and DimensionCardGrid uses responsive Col (xs24/md12/lg8). No retained screenshot for E-01 in this run dir -> visual reflow unverified.",
+        "policyTrust": "Logged-out redirect does not leak id existence (good). No deferred-scope copy on this surface."
+      },
+      "topGaps": [
+        "Region 3 '추천 학습 카드' from description.md is absent in FeedbackPageContent (only summary + dimension grid + CTA bar) — wireframe-fidelity gap.",
+        "Owner-:id RLS isolation unverified: wrong-owner row not seeded, so cannot confirm another user's feedback is denied (security row BLOCKED).",
+        "Actual complete-state feedback content for a specific :id not rendered (harness landed on pending/empty render: visibleH1=null, no CTA); no retained screenshot for E-01.",
+        "Compare-CTA error path surfaces raw e.message in notification — possible provider-error leak."
+      ],
+      "blockingReasons": [
+        "Wrong-owner / owner-:id rows not seeded -> owner-id RLS isolation genuinely unverifiable.",
+        "Tested :id did not render a complete feedback bundle (pending/empty branch), so score/dimension/CTA content is not confirmed on real render.",
+        "No retained rendered screenshot for E-01 in run dir (section 9 no-PASS)."
+      ],
+      "gptQuestions": [
+        "단답 피드백에 description.md region 3(추천 학습 카드)가 빠진 것이 의도적 supersede인지, 누락인지 IA 정본 기준으로 판정.",
+        "비교 리포트 생성 실패 시 notification.error description에 원본 e.message를 그대로 노출하는 것이 정책상 허용되는 사용자 친화 카피인지(원본 제공자 오류 노출 금지 규칙).",
+        "AI 총평/항목 점수에 '학습 보조이며 확정 점수가 아님' 류의 한계 고지나 이의제기 경로가 필요한지(6.4 기준)."
+      ],
+      "docsConsulted": [
+        "docs/ai-workflow/ia-ai-first-ux-review-checklist.md",
+        "docs/IA/14-E-01-short-answer-feedback/description.md",
+        "reports/ia-verification/runs/20260601-120308/phase5-evidence-digest.json"
+      ],
+      "sourceFiles": [
+        "src/app/(workspace)/writing/feedback/short/[id]/page.tsx",
+        "src/components/feedback/FeedbackPageContent.tsx",
+        "src/components/feedback/FeedbackSummary.tsx",
+        "src/components/feedback/DimensionCardGrid.tsx",
+        "src/components/feedback/NextActionBar.tsx",
+        "src/components/feedback/FeedbackPendingPanel.tsx",
+        "src/lib/writing/server.ts"
+      ],
+      "screenshotsViewed": [],
+      "__shard": "feedback-reports-recommendations"
+    },
+    {
+      "iaCode": "E-02",
+      "aiUxResult": "BLOCKED",
+      "confidence": "medium",
+      "gptAdjudication": "needs-adjudication",
+      "recommendedLabel": "BLOCKED",
+      "evidenceUsed": [
+        "digest ia.E-02 (prod HTTP 200 on 360/768/1280; browser status PARTIAL; visibleH1=null; primaryCtaPresent=false; blockingReason: CTA /(다시 작성|PDF|비교|next)/ not visible)",
+        "seed: deferred owner-:id rows (E-02); writing_feedback=5 but route-id ownership/feedback_status unverified",
+        "source: src/app/(workspace)/writing/feedback/long/[id]/page.tsx (withSentences=true -> SentenceFeedbackList)",
+        "source: FeedbackPageContent.tsx, SentenceFeedbackList branch, NextActionBar.tsx"
+      ],
+      "findings": {
+        "pageJob": "Source = long-form 문장별 첨삭(SentenceFeedbackList) + 점수 요약 + dimension panel + CTA. Matches description (장문 첨삭+추천). Not rendered to complete state for tested :id (pending/empty branch: visibleH1=null).",
+        "entryContext": "Direct URL: short-vs-long mismatch self-corrects via redirect to short route when isLongForm false. Logged-out -> /login (no id leak). null submission -> notFound(). Safe outcomes confirmed in source.",
+        "primaryAction": "NextActionBar primary '다시 풀기' + 다음 문제 + 비교 리포트; description region 4 also lists 'PDF 저장' which is NOT present in NextActionBar -> missing PDF action on long-form feedback. CTA not visible on render = pending branch.",
+        "flowContinuity": "Retry/next/compare routes wired; compare routes to R-01. Return paths exist. Complete-state continuity unverified on render.",
+        "aiBehavior": "Sentence-level 첨삭 + dimension scores present in source. Same as E-01: no explicit AI-limitation/dispute copy on surface. Per-sentence failure handling (description exception: 원문만 표시+재분석) not confirmed on render.",
+        "formErrorUx": "Not a form. PDF-failure toast + 대체 저장 안내 specified in description region 4 exception but PDF action itself absent in NextActionBar -> exception path unimplemented here.",
+        "keyboardFocus": "antd primitives keyboard reachable; SentenceFeedbackList interactivity + '더보기' (5 sentences) focus order unverified (no render evidence).",
+        "responsive": "HTTP 200 at all 3 viewports; description requires mobile tab/stack for actions. No retained E-02 screenshot -> mobile action layout unverified.",
+        "policyTrust": "Logged-out no-leak redirect good; no deferred-scope copy."
+      },
+      "topGaps": [
+        "description region 4 lists 'PDF 저장' as a bottom action but NextActionBar has no PDF/export control on long-form feedback — missing required action (or supersede must be documented).",
+        "Owner-:id RLS isolation unverified (wrong-owner row not seeded).",
+        "Complete-state long-form content (문장별 첨삭, 상세 피드백 패널) not rendered for a real :id (pending/empty branch); no retained screenshot.",
+        "Per-sentence analysis-failure fallback and mobile tab/stack action layout unverified."
+      ],
+      "blockingReasons": [
+        "Wrong-owner / owner-:id rows not seeded -> owner-id RLS isolation unverifiable.",
+        "Tested :id did not render a complete feedback bundle (no H1/CTA captured).",
+        "No retained rendered screenshot for E-02 (section 9 no-PASS)."
+      ],
+      "gptQuestions": [
+        "장문 피드백 하단 액션에 description의 'PDF 저장'이 빠진 것이 의도적인지, F-M1(PDF export)로 대체 의도인지 IA 기준 판정.",
+        "장문 첨삭 결과를 '확정 점수'가 아니라 'AI 학습 보조'로 인지시키는 한계 고지/이의제기 경로 필요 여부.",
+        "모바일에서 첨삭 5개+더보기와 하단 4개 액션의 탭/스택 전환이 실제로 가독성 있게 동작하는지(렌더 증거 필요)."
+      ],
+      "docsConsulted": [
+        "docs/ai-workflow/ia-ai-first-ux-review-checklist.md",
+        "docs/IA/15-E-02-long-form-feedback/description.md",
+        "reports/ia-verification/runs/20260601-120308/phase5-evidence-digest.json"
+      ],
+      "sourceFiles": [
+        "src/app/(workspace)/writing/feedback/long/[id]/page.tsx",
+        "src/components/feedback/FeedbackPageContent.tsx",
+        "src/components/feedback/NextActionBar.tsx",
+        "src/lib/writing/server.ts"
+      ],
+      "screenshotsViewed": [],
+      "__shard": "feedback-reports-recommendations"
+    },
+    {
+      "iaCode": "R-01",
+      "aiUxResult": "PARTIAL",
+      "confidence": "medium",
+      "gptAdjudication": "needs-adjudication",
+      "recommendedLabel": "BLOCKED",
+      "evidenceUsed": [
+        "digest ia.R-01 (prod HTTP 200 on 360/768/1280; browser status PARTIAL; visibleH1=null; primaryCtaPresent=false; blockingReason: CTA /(다음|시작|개선|약점)/ not visible)",
+        "seed: deferred owner-:id rows (R-01)",
+        "source: src/app/(workspace)/writing/reports/[id]/compare/page.tsx (getComparisonReport -> notFound on null)",
+        "source: ComparisonReportView.tsx (narrative card + MetricsTable + SubmissionDiffPanel)",
+        "source: MetricsTable.tsx (renders an antd Table, no chart; 'no_previous' -> Empty single-result fallback)"
+      ],
+      "findings": {
+        "pageJob": "Goal = 이전/현재 비교. Source renders narrative summary + 비교 지표 Table + diff panel. Single-result fallback (no_previous -> Empty) matches description exception. Job partially met.",
+        "entryContext": "Direct URL: logged-out -> /login; null report -> notFound; missing current -> notFound. Safe. Owner-id isolation via RLS unverified.",
+        "primaryAction": "description region 5 '다음 CTA (다시 풀기/약점 추천/다음 문제, 대표 CTA 1개)' is ENTIRELY ABSENT from ComparisonReportView — the harness CTA miss is a REAL gap, not a heuristic false-negative. User can read the comparison but has no on-screen onward path.",
+        "flowContinuity": "Because region-5 CTA is missing, the comparison report is a flow dead-end (relies on sidebar/back only). Fails 'users can return to next task without being stuck' partially.",
+        "aiBehavior": "Narrative is AI-generated ('AI가 두 답안의 차이와 개선 원인을 설명') but rendered as a plain Paragraph with no AI attribution, no 'why this comparison', no limitation/uncertainty copy, and no regenerate/retry on analysis failure (description exception: 분석 생성 실패 시 재시도). AI-behavior coverage weak.",
+        "formErrorUx": "Not a form. Chart-load-failure -> table fallback specified in description region 2; implementation already uses a table only (no chart), so the documented '점수 그래프' visualization is missing rather than gracefully degraded.",
+        "keyboardFocus": "antd Table/Card keyboard reachable; no rendered focus evidence.",
+        "responsive": "HTTP 200 at 360/768/1280; description requires mobile 가로 스크롤/요약 차트 for the chart — moot since no chart exists. Table mobile readability unverified (no retained screenshot).",
+        "policyTrust": "No policy/deferred copy; AI narrative trust framing missing."
+      },
+      "topGaps": [
+        "Region 5 '다음 CTA' (대표 CTA + 다시 풀기/약점 추천/다음 문제) missing -> report is a flow dead-end.",
+        "Region 2 '점수 그래프' (chart visualization) not implemented — only a metrics Table; documented chart + mobile chart behavior absent.",
+        "AI narrative lacks AI attribution, reasoning context, and analysis-failure retry (description exception).",
+        "Owner-:id RLS isolation unverified (wrong-owner row not seeded); no retained R-01 screenshot."
+      ],
+      "blockingReasons": [
+        "Wrong-owner / owner-:id rows not seeded -> owner-id RLS isolation unverifiable.",
+        "No retained rendered screenshot for R-01 (section 9 no-PASS).",
+        "Comparison content for a real :id not rendered to a populated state (visibleH1/CTA null)."
+      ],
+      "gptQuestions": [
+        "비교 리포트에 description region 5 '다음 CTA'가 완전히 빠져 화면이 플로우 막다른 길이 되는 점 — P0 결함인지, 사이드바 내비로 충분한지 판정.",
+        "region 2 '점수 그래프'를 Table만으로 대체한 것이 의도적 supersede인지, 차트 누락인지 IA 기준 판정.",
+        "AI 비교 요약 narrative에 AI 출처 표시/판단 근거/재시도 경로가 필요한지(6.4)."
+      ],
+      "docsConsulted": [
+        "docs/ai-workflow/ia-ai-first-ux-review-checklist.md",
+        "docs/IA/16-R-01-comparison-report/description.md",
+        "reports/ia-verification/runs/20260601-120308/phase5-evidence-digest.json"
+      ],
+      "sourceFiles": [
+        "src/app/(workspace)/writing/reports/[id]/compare/page.tsx",
+        "src/components/reports/ComparisonReportView.tsx",
+        "src/components/reports/MetricsTable.tsx",
+        "src/lib/writing/server.ts"
+      ],
+      "screenshotsViewed": [],
+      "__shard": "feedback-reports-recommendations"
+    },
+    {
+      "iaCode": "R-02",
+      "aiUxResult": "PARTIAL",
+      "confidence": "high",
+      "gptAdjudication": "needs-adjudication",
+      "recommendedLabel": "PARTIAL",
+      "evidenceUsed": [
+        "digest ia.R-02 (prod HTTP 200 on 360/768/1280; browser status PASS; visibleH1='다음 문제'; primaryCtaPresent=true; uxStates=[default])",
+        "seed: recommendation_runs=1, recommendation_items=2 (recommendation populated for student@audit.local)",
+        "source: src/app/(workspace)/practice/next/page.tsx (requireUser -> getNextProblemBundle)",
+        "source: NextProblemView.tsx (SummaryCardRow + tiered primary card + AlternativeCardsGrid + Empty fallback)"
+      ],
+      "findings": {
+        "pageJob": "Clear: H1 '다음 문제' rendered. Summary cards (recent/avg/weakest) + single highlighted recommended problem + alternatives, matching description regions 1-4. Good.",
+        "entryContext": "Auth-gated (requireUser). Bundle computed from user history. Direct URL meaningful.",
+        "primaryAction": "Single dominant CTA '시작하기' on the highlighted card (primaryCtaPresent=true confirmed by harness), with duplicate-run guard via router.push; tier badge + reason shown. Matches 'representative recommendation 1개' constraint.",
+        "flowContinuity": "Starts at /practice/problems/<id>; empty/tier-4 state offers '문제 목록 보기' so user is never stuck. Logs recommendation_clicked study event.",
+        "aiBehavior": "Strong: AI recommendation is labeled with tier badges (추천/이어서/탐색) and plain-Korean reasons ('선생님이 추천한 문제예요' etc.) + per-problem reason text -> the why is visible and user retains choice via alternatives. No overclaim of certainty.",
+        "formErrorUx": "Not a form. Empty state ('더 추천할 문제가 없습니다') has a next action. No explicit start-failure error path observed (description exception: 시작 실패 시 CTA 비활성/오류) -> minor gap.",
+        "keyboardFocus": "antd Card hoverable+onClick plus an explicit Button '시작하기' (button is keyboard-focusable; the whole-card onClick is a redundant mouse affordance). Reasonable, but card-level click without keyboard handler is a minor a11y note. No rendered focus evidence.",
+        "responsive": "HTTP 200 at 360/768/1280; AlternativeCardsGrid + SummaryCardRow responsive. No retained screenshot to confirm mobile reflow.",
+        "policyTrust": "No deferred/billing copy on this surface; R-02 PAYWALL-ENTRY pack not exercised here (no paywall copy present)."
+      },
+      "topGaps": [
+        "No retained rendered screenshot for R-02 in run dir -> cannot confirm visual layout/mobile reflow (blocks PASS per section 9).",
+        "Start-failure exception (CTA 비활성/오류 표시) not evidenced.",
+        "Whole-card onClick lacks an explicit keyboard handler (button covers it, minor a11y)."
+      ],
+      "blockingReasons": [],
+      "gptQuestions": [
+        "추천 근거 카피(tier 배지 + 이유)가 '추정/보조'임을 충분히 전달하는지, 과신 표현은 없는지 한국어 톤 판정.",
+        "추천 문제 시작 실패 시 CTA 비활성/오류 노출 경로가 필요한지(description 예외).",
+        "카드 전체 onClick + 별도 시작 버튼 구조가 키보드/스크린리더에서 혼란 없는지."
+      ],
+      "docsConsulted": [
+        "docs/ai-workflow/ia-ai-first-ux-review-checklist.md",
+        "docs/IA/17-R-02-next-problem-recommendation/description.md",
+        "reports/ia-verification/runs/20260601-120308/phase5-evidence-digest.json"
+      ],
+      "sourceFiles": [
+        "src/app/(workspace)/practice/next/page.tsx",
+        "src/components/practice/NextProblemView.tsx"
+      ],
+      "screenshotsViewed": [],
+      "__shard": "feedback-reports-recommendations"
+    },
+    {
+      "iaCode": "X-07",
+      "aiUxResult": "PARTIAL",
+      "confidence": "high",
+      "gptAdjudication": "needs-adjudication",
+      "recommendedLabel": "PARTIAL",
+      "evidenceUsed": [
+        "digest ia.X-07 (prod HTTP 200 on 360/768/1280; browser status PASS; visibleH1='약점 보강'; primaryCtaPresent=true; requiredEvidence includes human-confirmation)",
+        "seed: feedback_dimension_scores=30, writing_submissions=5 (weak-dimension analysis can activate)",
+        "source: src/app/(workspace)/practice/weakness/page.tsx (getWeakDimensions + getWeaknessRecommendations)",
+        "source: WeaknessView.tsx (DiagnosticCard + DimensionTabs + 약점 인사이트 Alert + 추천 문제 cards + deferred-billing card + Empty gate)"
+      ],
+      "findings": {
+        "pageJob": "Clear: H1 '약점 보강' rendered; intro paragraph explains the screen. Diagnostic card + dimension tabs + insight + recommendation cards map to description regions 2-6. Strong fidelity.",
+        "entryContext": "Auth-gated. Empty gate: <5 submissions -> '글쓰기를 5건 이상 제출하면 약점 분석이 활성화됩니다' with 문제 풀기 CTA (matches '답안 부족' exception). Good first-use handling.",
+        "primaryAction": "Per recommendation card: single '추천 학습 시작' primary button (stopPropagation guard) routing to /practice/problems/<id>; representative CTA per description region 6. Cards capped at 4 (RECOMMENDATION_CARD_LIMIT).",
+        "flowContinuity": "Recommendation click logs study event and routes to problem; empty state routes to problem list -> not stuck.",
+        "aiBehavior": "Exemplary AI honesty: insight Alert explicitly says '최근 답안에서 보이는 경향을 바탕으로 추정한 안내예요. 실제 약점은 다음 연습 결과에 따라 달라질 수 있습니다.' — uncertainty is surfaced, not hidden. Recommendation reason + source tag (추천 근거 / 약점 태그 기반) make AI output reviewable.",
+        "formErrorUx": "Not a form. Recommendation-empty -> Empty('추천 문제가 아직 없습니다'). Reason text truncated with title tooltip. Reasonable.",
+        "keyboardFocus": "antd Tabs/Card/Button keyboard reachable; card onClick duplicated by inner button with stopPropagation. No rendered focus-order evidence.",
+        "responsive": "HTTP 200 at 360/768/1280; description requires collapsed mobile nav + responsive Col (xs24). No retained screenshot to confirm tab/card mobile reflow.",
+        "policyTrust": "HONEST deferred-billing copy: '결제 기능은 아직 준비 중이라 실제 결제나 구독은 진행되지 않아요' on the '더 깊은 추천 보기' card linking to /paywall — no live-payment overclaim. Matches X-03/X-04 deferral honesty requirement."
+      },
+      "topGaps": [
+        "No retained rendered screenshot for X-07 in run dir -> visual/mobile layout unconfirmed (blocks PASS per section 9).",
+        "human-confirmation evidence input is required for X-07 but not present in this digest run.",
+        "Mobile collapsed-nav + dimension-tab reflow unverified."
+      ],
+      "blockingReasons": [],
+      "gptQuestions": [
+        "약점 인사이트 Alert의 '추정' 고지 톤이 학습자에게 신뢰를 주면서도 과신을 막는 적절한 한국어 카피인지 판정.",
+        "'더 깊은 추천 보기' 카드의 결제 미연동(deferred) 고지가 충분히 정직하고 오해 소지가 없는지(/paywall 이동 포함).",
+        "모바일에서 DimensionTabs + 추천 카드 + 인사이트 3열이 가독성 있게 접히는지(렌더 증거 필요)."
+      ],
+      "docsConsulted": [
+        "docs/ai-workflow/ia-ai-first-ux-review-checklist.md",
+        "docs/IA/29-X-07-weakness-based-recommendations/description.md",
+        "reports/ia-verification/runs/20260601-120308/phase5-evidence-digest.json"
+      ],
+      "sourceFiles": [
+        "src/app/(workspace)/practice/weakness/page.tsx",
+        "src/components/practice/WeaknessView.tsx"
+      ],
+      "screenshotsViewed": [],
+      "__shard": "feedback-reports-recommendations"
+    }
+  ]
+}

@@ -20,7 +20,13 @@ export default async function PracticeWeaknessPage() {
       <WeaknessView
         weakDimensions={dimSummaries.map((d) => ({
           dimension: d.dimension,
-          averageScore: d.avgScore,
+          // getWeakDimensions returns avgScore normalized to 0..1 so different
+          // score_max ranges compare fairly. The UI (DiagnosticCard / DimensionTabs)
+          // renders this as "평균 점수 N점" and a Progress percent on a 0..100 scale,
+          // so a raw 0..1 value would show as 0~1점 / a near-empty bar. Convert to
+          // a 0..100 percentage here at the presentation boundary.
+          averageScore: Math.round(d.avgScore * 100),
+          sampleCount: d.sampleCount,
         }))}
         recommendations={recs.map((r) => ({
           problem_id: r.problemId,

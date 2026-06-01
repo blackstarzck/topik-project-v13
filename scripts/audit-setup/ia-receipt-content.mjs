@@ -1,5 +1,5 @@
 // Per-IA receipt content extracted by Coordinator from active docs:
-//   - docs/IA/<NN>-<code>-<slug>/description.md
+//   - docs/Wireframe/<NN>-<code>-<slug>/description.md
 //   - docs/sitemap.md (Target React Route Map + Route Audience Map + Overlay/Modal Surfaces)
 //   - docs/flow/user-flow.md (Mermaid + auth callback scenarios)
 //   - docs/prd.md (§ requirements + acceptance criteria)

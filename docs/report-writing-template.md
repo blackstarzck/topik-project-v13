@@ -106,7 +106,7 @@ Include only the fields that matter for the report:
 - Remaining risks
 - Follow-up needed
 
-For developer workflow reports, preserve the required evidence fields from [`docs/ai-workflow/report-template.md`](ai-workflow/report-template.md).
+For developer workflow reports, preserve the required evidence fields from [`docs/ai-workflow/templates/report-template.md`](ai-workflow/templates/report-template.md).
 
 ## 6. Glossary
 

@@ -1,0 +1,27 @@
+{
+  "generatedAt": "2026-05-29T09:54:44.226Z",
+  "results": [
+    {
+      "name": "profile",
+      "url": "http://127.0.0.1:3000/profile",
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:3000/profile",
+      "title": "프로필 — TALKPIK | TALKPIK AI",
+      "h1": "프로필",
+      "errors": [],
+      "screenshot": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\reports\\ia-verification\\runs\\20260528-141731\\screenshots\\remediation-qa/profile-1280.png",
+      "bodyText": "대시보드\n학습\n글쓰기\n내 라이브러리\n성장 대시보드\n프로필\n설정\nTALKPIK\nstudent@audit.local\n프로필\n이메일\n이름\n닉네임\n자기소개\n0/160자\nS\n프로필 이미지\n이미지 업로드는 아직 활성화되지 않았습니다. 저장소 업로드가 구현되고 검증되기 전까지 현재 이니셜을 표시합니다.\n보안 안내\n계정 식별 정보 변경이나 이미지 업로드는 저장 전 재로그인이 필요할 수 있습니다.\n저장\n목표 시험\n아직 목표를 설정하지 않았어요.\n목표 설정하기\n계정 상태\n역할 학습자플랜 free\n가입일 2026. 5. 28.\n알림 설정 · 언어 설정\n회원 탈퇴는 다음 업데이트에서 지원됩니다."
+    },
+    {
+      "name": "weakness",
+      "url": "http://127.0.0.1:3000/practice/weakness",
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:3000/practice/weakness",
+      "title": "약점 보강 — TALKPIK | TALKPIK AI",
+      "h1": "약점 보강",
+      "errors": [],
+      "screenshot": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\reports\\ia-verification\\runs\\20260528-141731\\screenshots\\remediation-qa/weakness-1280.png",
+      "bodyText": "대시보드\n학습\n글쓰기\n내 라이브러리\n성장 대시보드\n프로필\n설정\nTALKPIK\nstudent@audit.local\n약점 보강\n글쓰기를 5건 이상 제출하면 약점 분석이 활성화됩니다.\n문제 풀기"
+    }
+  ]
+}

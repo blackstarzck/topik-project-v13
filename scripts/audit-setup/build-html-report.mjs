@@ -124,6 +124,25 @@ for (const r of secNavRes?.rows ?? []) {
   }
 }
 
+// --- Global security/navigation status -------------------------------------
+// Security rows are scenario-keyed (logout redirect, wrong-owner id, expired
+// session, admin RBAC, ...), NOT IA-keyed, so the per-IA heatmap cannot attach
+// them by iaCode. Compute one run-global status and show it for IA whose
+// profile requires security-navigation evidence (n/a otherwise).
+function aggregateStatus(rows) {
+  if (!rows || rows.length === 0) return "n/a";
+  if (rows.some((r) => r.status === "FAIL")) return "FAIL";
+  if (rows.every((r) => r.status === "PASS")) return "PASS";
+  if (rows.every((r) => r.status === "BLOCKED")) return "BLOCKED";
+  return "PARTIAL";
+}
+const allSecRows = secNavRes?.rows ?? [];
+const globalSecStatus = aggregateStatus(allSecRows);
+const secReqByCode = new Map();
+for (const e of manifest.entries ?? []) {
+  secReqByCode.set(e.iaCode, (e.requiredEvidenceInputs ?? []).includes("security-navigation"));
+}
+
 const aiUxByCode = new Map();
 for (const c of aiUx?.cards ?? []) aiUxByCode.set(c.iaCode, c);
 const aiUxBlocked = new Map();
@@ -157,11 +176,11 @@ function iaPhaseStatus(iaCode) {
   }
 
   function snStatus() {
-    if (sn.length === 0) return "n/a";
-    if (sn.every((r) => r.status === "PASS")) return "PASS";
-    if (sn.every((r) => r.status === "BLOCKED")) return "BLOCKED";
-    if (sn.some((r) => r.status === "FAIL")) return "FAIL";
-    return "PARTIAL";
+    if (sn.length > 0) return aggregateStatus(sn); // per-IA rows if ever present
+    // Security evidence is run-global (scenario-keyed). Show the global status
+    // for IA that require it; n/a for IA whose profile does not.
+    if (secReqByCode.get(iaCode) && allSecRows.length > 0) return globalSecStatus;
+    return "n/a";
   }
 
   return {
@@ -170,7 +189,9 @@ function iaPhaseStatus(iaCode) {
     browser: brStatus(),
     hostedSurface: ho?.status ?? "n/a",
     securityNavigation: snStatus(),
-    aiUxReview: ai?.result ?? aiBlocked?.result ?? "n/a",
+    // ai-ux cards store the label in `aiUxResult` (mirrored to `status`); the
+    // old code read `.result`, which does not exist -> always n/a.
+    aiUxReview: ai?.aiUxResult ?? ai?.status ?? aiBlocked?.aiUxResult ?? aiBlocked?.status ?? "n/a",
     humanConfirmation: man?.status ?? "n/a",
     finalLabel: fin?.finalLabel ?? "n/a",
   };
@@ -548,11 +569,49 @@ function renderHeatmap() {
     })
     .join("");
 
+  const secPass = allSecRows.filter((r) => r.status === "PASS").length;
+  const secBlk = allSecRows.length - secPass;
+  const secReasons = {};
+  for (const r of allSecRows) {
+    if (r.status === "PASS") continue;
+    const reason = String(r.blockingReasons?.[0] ?? "");
+    let key = "기타 precondition";
+    if (/admin|RBAC|role|platform_admin|org_admin/i.test(reason)) key = "admin 역할 미승격";
+    else if (/owner|wrong-?owner|소유/i.test(reason)) key = "owner/wrong-owner 행 미시드";
+    else if (/token|stale|expired|service_role/i.test(reason)) key = "만료/stale 토큰 (service_role 필요)";
+    else if (/network|intercept/i.test(reason)) key = "네트워크 실패 가로채기 미구현";
+    else if (/storageState|seed|precondition/i.test(reason)) key = "storageState/seed precondition";
+    secReasons[key] = (secReasons[key] ?? 0) + 1;
+  }
+  const secReasonRows = Object.entries(secReasons)
+    .sort((a, b) => b[1] - a[1])
+    .map(([k, v]) => `<li>${esc(k)}: <strong>${v}</strong>건</li>`)
+    .join("");
+
   return `
     <section>
       <div class="container">
         <h2>34 IA × 8 페이즈 커버리지 히트맵</h2>
         <p class="muted">셀에 마우스를 올리면 각 페이즈 상태가 보입니다. ✓ PASS · △ PARTIAL · ✗ FAIL · ■ BLOCKED · ? DOC-GAP · — DEFERRED</p>
+        <details class="card" style="margin:12px 0;padding:12px 16px;">
+          <summary style="cursor:pointer;font-weight:600;">컬럼이 무엇인지 / 회색(n/a)이 무슨 뜻인지</summary>
+          <ul class="bullets" style="margin-top:8px;">
+            <li><strong>문서</strong> · 문서 receipt: 해당 화면이 어떤 active 문서를 근거로 검수됐는지 기록.</li>
+            <li><strong>소스</strong> · 소스맵: 화면 → 실제 코드 파일 매핑 존재 여부.</li>
+            <li><strong>Browser</strong>: 실제 렌더 증거(HTTP 상태 · H1 · 주 CTA · 스크린샷, 360/768/1280).</li>
+            <li><strong>모달</strong> · 호스티드 모달 동작: 모달이 <em>없는</em> 페이지는 n/a가 정상. 모달이 있는 5개(C-03, D-M1~3, F-M1)만 평가하며, 테스트의 모달 트리거가 휴리스틱이라 자동으로 못 띄운 건 BLOCKED로 표시됩니다.</li>
+            <li><strong>보안</strong> · 보안·세션·권한·네비게이션: 증거가 <em>화면별이 아니라 run 전역(시나리오 단위)</em>입니다. 그래서 보안이 필요한 IA 칸에는 동일한 <em>전역 상태</em>를 표시하고, 필요 없는 IA는 n/a입니다. 상세는 아래 "전역 보안·세션 증거"를 보세요.</li>
+            <li><strong>AI UX</strong>: AI 1차 UX 리뷰 — 34개 전부 수행됨.</li>
+            <li><strong>사람</strong>: 독립 판정(GPT-5.5 미가용 시 별도 세션 Claude) 결과.</li>
+            <li><strong>최종</strong>: 위 증거를 merge 스크립트가 합쳐 계산한 최종 라벨.</li>
+          </ul>
+          <p class="muted" style="margin-top:6px;">회색(n/a) = "그 화면엔 해당 없음" 또는 "전역 증거라 페이지별 칸에 안 붙음"이지, 보통 "작업 안 함"이 아닙니다.</p>
+        </details>
+        <div class="card" style="margin:12px 0;padding:12px 16px;">
+          <h3 style="margin:0 0 8px;">전역 보안·세션 증거 (시나리오 단위, 페이지별 아님)</h3>
+          <p>전체 ${allSecRows.length}건 · <strong style="color:var(--pass)">PASS ${secPass}</strong> · <strong style="color:var(--blocked)">BLOCKED ${secBlk}</strong> · 종합 ${statusBadge(globalSecStatus)}</p>
+          ${secBlk > 0 ? `<strong>BLOCKED 사유 분류</strong><ul class="bullets">${secReasonRows}</ul><p class="muted">대부분 "제품 결함"이 아니라 테스트 셋업(픽스처·권한) 부족입니다: admin 역할 미승격, owner 데이터 미시드, 만료 토큰 발급 권한(service_role) 없음, 네트워크 실패 가로채기 미구현.</p>` : ""}
+        </div>
         <div class="heatmap card">
           <table>
             <thead>
@@ -617,13 +676,13 @@ function renderIaCard(entry) {
   const aiBlock = aiCard
     ? `
       <div class="section-block">
-        <h4>AI UX 리뷰 (${esc(aiCard.result)} · 신뢰도 ${esc(aiCard.confidence)} · 사람확인 ${esc(aiCard.humanConfirmation)})</h4>
+        <h4>AI UX 리뷰 (${esc(aiCard.aiUxResult ?? aiCard.status)} · 신뢰도 ${esc(aiCard.confidence)} · 사람확인 ${esc(aiCard.humanConfirmation)})</h4>
         <strong>Top gaps</strong>${listRows(aiCard.topGaps, (t) => `<li>${esc(t)}</li>`)}
-        <strong>사람 리뷰어가 확인할 질문</strong>${listRows(aiCard.humanReviewerQuestions, (q) => `<li>${esc(q)}</li>`)}
+        <strong>판정자가 확인할 질문</strong>${listRows(aiCard.gptQuestions ?? aiCard.humanReviewerQuestions, (q) => `<li>${esc(q)}</li>`)}
       </div>
     `
     : aiBlk
-      ? `<div class="section-block"><h4>AI UX 리뷰</h4>${statusBadge(aiBlk.result)} <span class="muted">${esc(aiBlk.blockingReasons?.[0] ?? "")}</span></div>`
+      ? `<div class="section-block"><h4>AI UX 리뷰</h4>${statusBadge(aiBlk.aiUxResult ?? aiBlk.status)} <span class="muted">${esc(aiBlk.blockingReasons?.[0] ?? "")}</span></div>`
       : "";
 
   const hostedBlock = hosted

@@ -21,10 +21,10 @@
 - `docs/ai-workflow/context-and-packets.md`
 - `docs/ai-workflow/review-gates.md`
 - `docs/ai-workflow/fallback-and-recovery.md`
-- `docs/ai-workflow/harness-and-skills.md`
-- `docs/ai-workflow/report-template.md`
-- `docs/ai-workflow/agent-packets.md`
-- `docs/ai-workflow/git-publication-decision.md`
+- `docs/ai-workflow/reference/harness-and-skills.md`
+- `docs/ai-workflow/templates/report-template.md`
+- `docs/ai-workflow/contracts/agent-packets.md`
+- `docs/ai-workflow/gates/git-publication-decision.md`
 - `docs/ai-workflow/plans/README.md`
 - `.github/workflows/ai-workflow-check.yml`
 - `scripts/ai-workflow-check.mjs`
@@ -44,7 +44,7 @@
 - `node scripts/ai-workflow-check.mjs --repo .` is required before final reporting when Node is available.
 - CI-style validation uses `--changed-files`; local `--repo .` alone is not enough to prove PR behavior.
 - UI QA can be skipped for this non-UI audit only if the audit still verifies that UI-change QA/UX gates are enforced by docs and checker logic.
-- Final reporting must follow `docs/ai-workflow/report-template.md` and include a Git publication decision.
+- Final reporting must follow `docs/ai-workflow/templates/report-template.md` and include a Git publication decision.
 
 ## Doc Conflicts
 
@@ -110,7 +110,7 @@ This proves that the saved audit artifacts satisfy the current machine-checked w
 - CI-style `--changed-files` behavior is tested, not inferred from local `--repo .`.
 - Multi-agent review uses task/result packets and ledger integration.
 - Plan-review, cross-model review, fallback, QA/UX, and Git publication gates are recorded explicitly.
-- Final output follows `docs/ai-workflow/report-template.md`.
+- Final output follows `docs/ai-workflow/templates/report-template.md`.
 
 ## Tasks
 
@@ -120,7 +120,7 @@ This proves that the saved audit artifacts satisfy the current machine-checked w
 | 2 | Extract workflow acceptance checklist | docs listed above | n/a | Y - read-only checklist review |
 | 3 | Map docs claims to checker enforcement | `scripts/ai-workflow-check.mjs`, workflow docs | n/a | Y - independent static audit |
 | 4 | Verify existing checker self-tests and fixtures | `scripts/ai-workflow-check.selftest.mjs`, fixture scripts | n/a | Y - command/output verification slice |
-| 5 | Compare Codex vs Claude execution paths | `docs/ai-workflow/harness-and-skills.md`, host skill mirrors | n/a | Y - read-only host parity audit |
+| 5 | Compare Codex vs Claude execution paths | `docs/ai-workflow/reference/harness-and-skills.md`, host skill mirrors | n/a | Y - read-only host parity audit |
 | 6 | Run CI-style changed-file simulations | OS temp or disposable copy/worktree | n/a | N - tightly coupled to verification evidence and cleanup |
 | 7 | Multi-agent review and debate | task/result packets in ledger | n/a | N - coordinator must integrate all packets |
 | 8 | Tie-break unresolved disagreements | ledger decisions section | n/a | Y - independent critic/verifier can advise |
@@ -167,7 +167,7 @@ This proves that the saved audit artifacts satisfy the current machine-checked w
 
 - [ ] **Step 5: Verify host execution parity**
 
-  Compare Codex and Claude Code execution paths from `docs/ai-workflow/harness-and-skills.md`.
+  Compare Codex and Claude Code execution paths from `docs/ai-workflow/reference/harness-and-skills.md`.
 
   Required checks:
 
@@ -233,7 +233,7 @@ This proves that the saved audit artifacts satisfy the current machine-checked w
 - Cross-model review: required for the full audit; if only Codex-local reviewers are available, record degraded mode with reason.
 - Plan-Review PASS Gate: required before executing the full audit if a reviewer returns FAIL.
 - Code/Doc Review: required before claiming the audit result complete.
-- Host execution parity: required; Codex and Claude Code paths must be checked separately against `docs/ai-workflow/harness-and-skills.md`.
+- Host execution parity: required; Codex and Claude Code paths must be checked separately against `docs/ai-workflow/reference/harness-and-skills.md`.
 - Architecture Pass: not applicable unless the audit becomes phase completion work.
 - UX/UI Consistency Pass: skipped for this non-UI plan save; full audit still verifies UI gate enforcement through changed-file simulation.
 - QA Gate: skipped for this non-UI plan save; full audit still verifies QA Gate enforcement through changed-file simulation.

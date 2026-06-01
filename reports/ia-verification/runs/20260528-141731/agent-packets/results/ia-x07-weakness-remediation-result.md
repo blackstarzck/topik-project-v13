@@ -1,0 +1,92 @@
+## Result Packet
+
+- Agent: ia-worker-x07-weakness
+- Role: execution worker
+- Objective completed: yes
+- Audience verified: yes - changed code is limited to the user-facing `/practice/weakness` view and route props; no admin, billing provider, or security boundary code was changed.
+- Files inspected:
+  - `.agents/superpowers/skills/using-superpowers/SKILL.md`
+  - `.codex/skills/test-driven-development/SKILL.md`
+  - `docs/agent-index.md`
+  - `docs/user-communication-style.md`
+  - `docs/ai-development-workflow.md`
+  - `docs/IA/29-X-07-weakness-based-recommendations/description.md`
+  - `docs/ai-workflow/agent-packets.md`
+  - `docs/development/deferred-scope.md`
+  - `docs/spec.md`
+  - `docs/report-writing-template.md`
+  - `docs/ai-workflow/report-template.md`
+  - `reports/ia-verification/runs/20260528-141731/agent-packets/tasks/ia-x07-weakness.md`
+  - `reports/ia-verification/runs/20260528-141731/write-lock-registry.json`
+  - `src/components/practice/WeaknessView.tsx`
+  - `src/app/(workspace)/practice/weakness/page.tsx`
+  - `tests/components/practice/WeaknessView.test.tsx`
+  - `package.json`
+  - `tsconfig.json`
+- Files changed:
+  - `src/components/practice/WeaknessView.tsx`
+  - `src/app/(workspace)/practice/weakness/page.tsx`
+  - `tests/components/practice/WeaknessView.test.tsx`
+  - `reports/ia-verification/runs/20260528-141731/agent-packets/results/ia-x07-weakness-remediation-result.md`
+- Decisions made:
+  - Passed `reason` and `source` from `getWeaknessRecommendations` through the route into `WeaknessView`.
+  - Rendered a cautious leading-dimension insight panel with why/example/strategy copy.
+  - Rendered per-card recommendation reasons with source labels.
+  - Added a visible primary `추천 학습 시작` button that reuses the existing recommendation click logging and navigation behavior.
+  - Added a deferred deeper-recommendation entry that explicitly says real payment/subscription is not active yet and points only to the existing `/paywall` shell.
+  - Avoided deterministic AI-confidence copy by using "추정" and "달라질 수 있습니다."
+- Tests/checks run:
+  - Write-lock preimage check: `Get-FileHash -Algorithm SHA256 src/components/practice/WeaknessView.tsx, 'src/app/(workspace)/practice/weakness/page.tsx', tests/components/practice/WeaknessView.test.tsx`
+  - RED: `pnpm vitest run tests/components/practice/WeaknessView.test.tsx`
+  - GREEN: `pnpm vitest run tests/components/practice/WeaknessView.test.tsx`
+  - Typecheck: `pnpm typecheck`
+  - Lint: `pnpm exec eslint src/components/practice/WeaknessView.tsx "src/app/(workspace)/practice/weakness/page.tsx" tests/components/practice/WeaknessView.test.tsx`
+  - Format check before formatting: `pnpm exec prettier --check src/components/practice/WeaknessView.tsx "src/app/(workspace)/practice/weakness/page.tsx" tests/components/practice/WeaknessView.test.tsx`
+  - Format write: `pnpm exec prettier --write src/components/practice/WeaknessView.tsx "src/app/(workspace)/practice/weakness/page.tsx" tests/components/practice/WeaknessView.test.tsx`
+  - Focused test after formatting: `pnpm vitest run tests/components/practice/WeaknessView.test.tsx`
+  - Scoped lint after formatting: `pnpm exec eslint src/components/practice/WeaknessView.tsx "src/app/(workspace)/practice/weakness/page.tsx" tests/components/practice/WeaknessView.test.tsx`
+  - Scoped format after formatting: `pnpm exec prettier --check src/components/practice/WeaknessView.tsx "src/app/(workspace)/practice/weakness/page.tsx" tests/components/practice/WeaknessView.test.tsx`
+  - Diff whitespace: `git diff --check -- src/components/practice/WeaknessView.tsx "src/app/(workspace)/practice/weakness/page.tsx" tests/components/practice/WeaknessView.test.tsx`
+  - Workflow checker: `node scripts/ai-workflow-check.mjs --repo .`
+- Results:
+  - Write-lock preimage check: passed; the three X-07 source/test hashes matched the lock registry before edits.
+  - RED: failed as expected, 1 failed / 3 passed; missing `약점 인사이트`.
+  - GREEN: passed, 4 passed / 0 failed.
+  - Typecheck: failed due out-of-scope existing errors in `tests/e2e/coverage/coverage-matrix.spec.ts(53,20)` and `tests/theme/theme-context.test.tsx(77,40)`.
+  - Scoped lint: passed.
+  - Scoped format: passed after formatter.
+  - Diff whitespace: passed.
+  - Workflow checker: failed due out-of-scope existing ledger gap in `docs/ai-workflow/runs/2026/05/29/20260529-1831-ia-remediation-x05-x07.md` and UI QA/ledger fields; not edited because it is outside this packet write scope.
+- Blockers:
+  - Full typecheck is blocked by unrelated files outside packet scope:
+    - `tests/e2e/coverage/coverage-matrix.spec.ts(53,20)` indexes fixture IDs where `none` is not present.
+    - `tests/theme/theme-context.test.tsx(77,40)` has implicit `any` for destructured `key`.
+  - Workflow checker is blocked by the shared remediation ledger outside this packet write scope:
+    - missing `Untouched relevant docs:`
+    - missing UX/UI Consistency Pass evidence
+    - missing QA Gate field
+  - Browser-rendered evidence remains degraded because the packet reported previous browser timeout and this worker did not reopen the browser gate.
+  - Billing/provider closure remains out of scope; no billing provider implementation evidence was produced.
+- Assumptions:
+  - The existing `/paywall` shell is the allowed deferred paywall surface referenced by the packet and deferred-scope docs.
+  - Recommendation `source` values are limited to the existing `getWeaknessRecommendations` union: `recommendation` and `tag_fallback`.
+- Scope concerns:
+  - None inside the X-07 source/test files.
+  - Did not edit billing/provider files, unrelated practice files, dirty e2e coverage artifacts, or the shared ledger.
+- Recommended follow-up:
+  - Coordinator should resolve or assign the out-of-scope typecheck failures.
+  - Coordinator should update the shared ledger fields required by `ai-workflow-check`.
+  - A browser/visual QA lane should rerun `/practice/weakness` evidence before upgrading the browser gate.
+- Context ledger updates needed:
+  - Add this result packet path and verification summary to `docs/ai-workflow/runs/2026/05/29/20260529-1831-ia-remediation-x05-x07.md`.
+  - Add UX/UI Consistency Pass and QA Gate status there, or keep those gates degraded with exact evidence.
+
+## Coordinator Addendum
+
+- Applied after code review:
+  - Recommendation titles now truncate at 28 characters.
+  - Recommendation reason text is constrained to one visual line with ellipsis styling.
+- Coordinator verification:
+  - `pnpm vitest run tests/components/profile/ProfileForm.test.tsx tests/components/practice/WeaknessView.test.tsx` passed with 18 tests after review fixes.
+  - `pnpm typecheck` passed.
+  - `node scripts/ai-workflow-check.mjs --repo .` passed.

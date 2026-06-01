@@ -18,7 +18,7 @@ type Props = {
 
 /**
  * Phase 7-D Task 11 (P1-7) — B-01 최근 피드백 카드.
- * IA spec: docs/IA/04-B-01-home-dashboard/description.md 추가 항목.
+ * IA spec: docs/Wireframe/04-B-01-home-dashboard/description.md 추가 항목.
  * 최근 3건 표시 + 상세 페이지 링크.
  */
 export function RecentFeedbackCard({ items }: Props) {

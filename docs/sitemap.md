@@ -5,19 +5,19 @@
 > This document is the route authority until production source exists. The route
 > map below is aligned to the Paper wireframe frame
 > `01KQ6XQSNNNXSXWR2H4Q6SMMN3/1-0/4R1-0` and the current IA set in
-> [docs/IA/README.md](./IA/README.md).
+> [docs/Wireframe/README.md](./Wireframe/README.md).
 
 ## Source Order
 
 Use these documents together when implementing or reviewing page coverage:
 
 1. [docs/sitemap.md](./sitemap.md) - route authority and page connection map.
-2. [docs/IA/README.md](./IA/README.md) - current 32-screen IA inventory, with one `description.md` and one `wireframe.png` per screen.
+2. [docs/Wireframe/README.md](./Wireframe/README.md) - current 32-screen IA inventory, with one `description.md` and one `wireframe.png` per screen.
 3. [docs/flow/user-flow.md](./flow/user-flow.md) - user flow and screen dependency order.
 4. [docs/ia-pages/README.md](./ia-pages/README.md) - legacy observed HTML crosswalk only.
 
 Do not use the legacy `docs/ia-pages` files as the current screen inventory. They
-remain useful for historical UI observations, but the Paper frame and `docs/IA`
+remain useful for historical UI observations, but the Paper frame and `docs/Wireframe`
 are the current baseline.
 
 ## Target React Route Map
@@ -181,13 +181,13 @@ new implementation targets unless they map to a current Paper/IA screen.
 
 ## Coverage Rules
 
-- Every Paper frame screen listed in `docs/IA/README.md` must appear in the
+- Every Paper frame screen listed in `docs/Wireframe/README.md` must appear in the
   Target React Route Map, either as a page route or as a hosted modal/state.
 - New production routes must not be added from legacy `docs/ia-pages` alone.
 - `/paywall` and `/subscription` do not reopen billing implementation scope.
   Billing SDKs, payment provider choice, and real payment flows remain governed
   by `docs/development/deferred-scope.md`.
-- If a route changes, update this file, `docs/IA/README.md`, and
+- If a route changes, update this file, `docs/Wireframe/README.md`, and
   `docs/flow/user-flow.md` together.
 - Modal IA codes should stay hosted by their parent routes unless there is a
   product or implementation reason to deep-link them.

@@ -4,7 +4,7 @@ import { listLibraryItems } from "@/lib/library/server";
 import { parseLibraryTab } from "@/components/library/library-tab-url";
 import { LibraryTabs } from "@/components/library/LibraryTabs";
 
-export const metadata: Metadata = { title: "내 라이브러리 — TALKPIK" };
+export const metadata: Metadata = { title: "내 서재 — TALKPIK" };
 
 type Props = { searchParams: Promise<{ tab?: string }> };
 
@@ -15,7 +15,7 @@ export default async function LibraryPage({ searchParams }: Props) {
   const initialItems = await listLibraryItems(user.id, activeTab);
   return (
     <main style={{ padding: 24 }}>
-      <h1>내 라이브러리</h1>
+      <h1>내 서재</h1>
       <LibraryTabs activeTab={activeTab} initialItems={initialItems} />
     </main>
   );

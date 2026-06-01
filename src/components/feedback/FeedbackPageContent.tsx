@@ -1,6 +1,7 @@
 import { Space } from "antd";
 import { DimensionCardGrid } from "./DimensionCardGrid";
 import { FeedbackPendingPanel } from "./FeedbackPendingPanel";
+import { FeedbackRecommendationCard } from "./FeedbackRecommendationCard";
 import { FeedbackSummary } from "./FeedbackSummary";
 import { NextActionBar } from "./NextActionBar";
 import { SentenceFeedbackList } from "./SentenceFeedbackList";
@@ -28,10 +29,13 @@ export function FeedbackPageContent({
       <FeedbackSummary feedback={bundle.feedback} />
       <DimensionCardGrid rows={bundle.dimensions} />
       {withSentences ? <SentenceFeedbackList rows={bundle.sentences} /> : null}
+      <FeedbackRecommendationCard />
       <NextActionBar
         submissionId={submission.id}
         retryHref={`/writing/${submission.question_no}?problem=${submission.problem_id}`}
         nextHref="/practice/recommendations"
+        withPdf={withSentences}
+        retryLabel={withSentences ? "다시 작성" : "다시 풀기"}
       />
     </Space>
   );

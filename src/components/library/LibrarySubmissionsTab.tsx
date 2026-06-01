@@ -1,6 +1,6 @@
 "use client";
 
-import { Alert, Empty, List, Space, Spin, Tag, Typography } from "antd";
+import { Alert, Button, Empty, List, Space, Spin, Tag, Typography } from "antd";
 import Link from "next/link";
 
 import { useLibraryItems } from "@/lib/library/queries";
@@ -8,11 +8,14 @@ import type { LibraryItemView, LibrarySubmissionView } from "@/lib/library/types
 
 import { ExportPdfButton } from "./ExportPdfButton";
 import { LibraryItemRow } from "./LibraryItemRow";
+import { matchesLibrarySearch } from "./library-tab-url";
 
 const { Text } = Typography;
 
 type Props = {
   initialItems: LibrarySubmissionView[];
+  searchTerm?: string;
+  onResetSearch?: () => void;
 };
 
 function isSubmission(item: LibraryItemView): item is LibrarySubmissionView {
@@ -25,10 +28,21 @@ function formatDate(iso: string): string {
   return iso.slice(0, 16).replace("T", " ");
 }
 
-export function LibrarySubmissionsTab({ initialItems }: Props) {
+export function LibrarySubmissionsTab({
+  initialItems,
+  searchTerm = "",
+  onResetSearch,
+}: Props) {
   const query = useLibraryItems("submissions");
-  const items: LibrarySubmissionView[] = (query.data ?? initialItems).filter(
+  const allItems: LibrarySubmissionView[] = (query.data ?? initialItems).filter(
     isSubmission,
+  );
+  const items = allItems.filter((i) =>
+    matchesLibrarySearch(searchTerm, [
+      `문제 ${i.problem_id.slice(0, 8)}`,
+      i.problem_id,
+      ...i.tags,
+    ]),
   );
 
   if (query.isLoading && (query.data ?? []).length === 0 && initialItems.length === 0) {
@@ -46,7 +60,18 @@ export function LibrarySubmissionsTab({ initialItems }: Props) {
     );
   }
   if (items.length === 0) {
-    return <Empty description="저장한 답안이 없습니다." />;
+    const searching = searchTerm.trim().length > 0;
+    return (
+      <Empty
+        description={
+          searching ? "검색 결과가 없습니다." : "저장한 답안이 없습니다."
+        }
+      >
+        {searching && onResetSearch ? (
+          <Button onClick={onResetSearch}>필터 초기화</Button>
+        ) : null}
+      </Empty>
+    );
   }
 
   return (

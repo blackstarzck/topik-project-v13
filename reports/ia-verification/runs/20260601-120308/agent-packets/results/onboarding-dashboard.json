@@ -1,0 +1,157 @@
+{
+  "shardId": "onboarding-dashboard",
+  "cards": [
+    {
+      "iaCode": "A-03",
+      "aiUxResult": "PARTIAL",
+      "confidence": "medium",
+      "gptAdjudication": "needs-adjudication",
+      "recommendedLabel": "PARTIAL",
+      "evidenceUsed": [
+        "phase5-evidence-digest.json ia.A-03 (browser PASS, 3 viewports HTTP 200, primaryCtaPresent=true, errorsSample=[])",
+        "browser-results.json A-03 rows 360/768/1280: finalUrl stayed on /onboarding/learning-goal (not bounced to /login) => authenticated render confirmed; 0 errors each",
+        "src/app/(workspace)/onboarding/learning-goal/page.tsx (requireUser + getLearningGoal + LearningGoalForm)",
+        "src/components/learning/LearningGoalForm.tsx (labels, required markers, zod validation, notifications)",
+        "docs/Wireframe/03-A-03-learning-goal-setup/description.md",
+        "run ledger 20260601-1203 line 93: 'A-03 missing on-disk screenshot'"
+      ],
+      "findings": {
+        "pageJob": "clear — H3 '학습 목표 설정' + subtext '목표 설정은 맞춤 추천의 기반이 됩니다.' states a single onboarding job (set goal -> save -> dashboard). Matches description.md purpose.",
+        "entryContext": "clear — authenticated entry rendered the form on all 3 viewports; requireUser would have redirected to /login if unauthenticated, and it did not. Onboarding-step indicator (description area 1) not separately evidenced; only 'default' UX state captured.",
+        "primaryAction": "clear — single primary block button '저장하고 대시보드로 이동' (type=primary, htmlType=submit). No competing CTA. CTA-present heuristic matched.",
+        "flowContinuity": "pass (source-level) — on success router.push('/dashboard'); on failure stays on screen with retry notification. Browser back/refresh-with-dirty-form not captured (only default state).",
+        "aiBehavior": "not applicable — no AI output on this onboarding form.",
+        "formErrorUx": "partial — visible labels, required flags on TOPIK 등급/목표 등급, optional fields labeled '(선택)', past-date blocked via disabledDate + zod message '과거 날짜는 선택할 수 없습니다.', save-fail notification. But error/disabled/success/loading states were NOT visually captured (uxStatesCaptured=['default'] only).",
+        "keyboardFocus": "not verified — antd Form/Select/DatePicker/InputNumber are keyboard-capable in source, but no keyboard/focus evidence collected.",
+        "responsive": "pass — HTTP 200 + render at 360/768/1280; maxWidth 640 centered container. No on-disk screenshot to visually confirm overflow/touch-target.",
+        "policyTrust": "not applicable — no policy/billing/notification claims on this screen."
+      },
+      "topGaps": [
+        "On-disk screenshot for A-03 was not captured (ledger line 93) — render confirmed via finalUrl/CTA/0-errors metadata but no PNG for visual spot-check, so cannot fully verify visual hierarchy/overflow/touch targets.",
+        "Only 'default' UX state captured; loading/error/success/disabled states (and onboarding step indicator from description area 1) unverified.",
+        "Keyboard/focus order and refresh-with-dirty-form behavior not exercised."
+      ],
+      "blockingReasons": [],
+      "gptQuestions": [
+        "A-03 has no on-disk screenshot this run; is the metadata-only render evidence (authenticated finalUrl + CTA present + 0 console errors x3 viewports) sufficient for PARTIAL, or must a visual capture be required before any PASS?",
+        "Does the form satisfy GOV.UK question-page error UX given that the disabled-state and error-state were never visually captured (only the zod message and disabledDate exist in source)?",
+        "Is the missing onboarding step/progress indicator (description.md area 1) a documented requirement gap or acceptably superseded by the single-step form?"
+      ],
+      "docsConsulted": [
+        "docs/ai-workflow/ia-ai-first-ux-review-checklist.md",
+        "docs/Wireframe/03-A-03-learning-goal-setup/description.md",
+        "docs/ai-workflow/runs/2026/06/01/20260601-1203-ia-full-audit-run.md"
+      ],
+      "sourceFiles": [
+        "src/app/(workspace)/onboarding/learning-goal/page.tsx",
+        "src/components/learning/LearningGoalForm.tsx",
+        "src/lib/auth/session.ts"
+      ],
+      "screenshotsViewed": []
+    },
+    {
+      "iaCode": "B-01",
+      "aiUxResult": "BLOCKED",
+      "confidence": "high",
+      "gptAdjudication": "needs-adjudication",
+      "recommendedLabel": "BLOCKED",
+      "evidenceUsed": [
+        "browser-results.json B-01 rows: 360 finalUrl=/onboarding/learning-goal, 1280 finalUrl=/onboarding/learning-goal, 768 finalUrl=/dashboard (CTA false) — 2 of 3 viewports REDIRECTED away from /dashboard",
+        "src/app/(workspace)/dashboard/page.tsx line 28-29: const goal = await getLearningGoal(user.id); if(!goal) redirect('/onboarding/learning-goal')",
+        "phase5-evidence-digest.json seed: actors=['student@audit.local:learner']; no learning_goal seeded",
+        "src/components/learning/DashboardContent.tsx (KpiSummary + RecommendationCard '이어 풀 문제' + RecentFeedback + Alerts) and EmptyDashboard.tsx",
+        "run ledger 20260601-1203 line 76: 'B-01 no-goal-seed' listed as a genuine BLOCKED precondition",
+        "digest blockingReasons: 'Primary CTA ... not visible' (heuristic miss caused by the redirect, not a dashboard defect)"
+      ],
+      "findings": {
+        "pageJob": "missing evidence — the dashboard did not render on 2/3 viewports because the seeded learner has no learning goal, so requireUser passes but getLearningGoal()==null triggers redirect to /onboarding/learning-goal. The page job ('현재 학습 상태 + 다음 행동 요약') could not be observed.",
+        "entryContext": "blocked — the route is guarded twice (auth ok, then goal-gate). Without a seeded goal the dashboard is unreachable in this run.",
+        "primaryAction": "missing evidence — the documented main card '이어 풀 문제' (RecommendationCard ctaHref=/practice/recommendations) exists in source but never rendered; the 768 case that reached /dashboard fell to EmptyDashboard (CTA '추천 문제 보기'), not the populated dashboard. The digest 'CTA not visible' is a redirect/empty-state artifact, not a real missing CTA.",
+        "flowContinuity": "cannot assess — dashboard-to-task navigation never exercised because the dashboard did not render.",
+        "aiBehavior": "not applicable for the shell, but recommendation-reason copy ('최근 학습 흐름을 따라가는 추천이에요') unverified at runtime.",
+        "formErrorUx": "not applicable.",
+        "keyboardFocus": "not verified — page not rendered.",
+        "responsive": "not assessable — what rendered was the onboarding form (360/1280) or empty dashboard (768), not the populated dashboard layout.",
+        "policyTrust": "not applicable."
+      },
+      "topGaps": [
+        "Genuine BLOCKED precondition: no learning_goal row seeded for student@audit.local, so the dashboard guard (redirect to /onboarding/learning-goal) prevents the dashboard from rendering on 2/3 viewports.",
+        "The one viewport (768) that reached /dashboard showed EmptyDashboard (empty KPI), so the populated KPI/RecommendationCard/RecentFeedback/Alerts layout was never observed.",
+        "digest PARTIAL + 'CTA not visible' is misleading — it reflects the redirect/empty state, not a verified dashboard render; B-01 must be re-collected with a seeded goal (and seeded attempts/feedback) before any PASS/PARTIAL."
+      ],
+      "blockingReasons": [
+        "Seed gap: student@audit.local has no learning_goal row; dashboard page redirects to /onboarding/learning-goal when goal is null (src/app/(workspace)/dashboard/page.tsx:29).",
+        "No populated-dashboard evidence: KPI cards, '이어 풀 문제' recommendation, RecentFeedback, and Alerts never rendered (requires seeded goal + attempts + feedback rows).",
+        "No on-disk B-01 screenshot of the actual dashboard state."
+      ],
+      "gptQuestions": [
+        "B-01 redirected to /onboarding/learning-goal on 360/1280 and hit EmptyDashboard on 768 because no learning_goal was seeded — confirm this is a BLOCKED seed precondition (not a dashboard PARTIAL/FAIL), and require a populated re-collect (goal + attempts + feedback) before grading dashboard UX.",
+        "Is the goal-gate redirect (dashboard -> /onboarding/learning-goal for users without a goal) the intended flow per docs/flow/user-flow.md, and should that redirect itself be evidenced as a PASS sub-behavior?",
+        "What seed fixtures (learning_goal, writing attempts, writing_feedback rows) are required so the populated dashboard with the '이어 풀 문제' CTA and KPI cards can be verified?"
+      ],
+      "docsConsulted": [
+        "docs/ai-workflow/ia-ai-first-ux-review-checklist.md",
+        "docs/Wireframe/04-B-01-home-dashboard/description.md",
+        "docs/ai-workflow/runs/2026/06/01/20260601-1203-ia-full-audit-run.md"
+      ],
+      "sourceFiles": [
+        "src/app/(workspace)/dashboard/page.tsx",
+        "src/components/learning/DashboardContent.tsx",
+        "src/components/learning/EmptyDashboard.tsx",
+        "src/components/learning/RecommendationCard.tsx",
+        "src/lib/auth/session.ts"
+      ],
+      "screenshotsViewed": []
+    },
+    {
+      "iaCode": "X-02",
+      "aiUxResult": "DEFERRED",
+      "confidence": "high",
+      "gptAdjudication": "needs-adjudication",
+      "recommendedLabel": "DEFERRED",
+      "evidenceUsed": [
+        "src/app/(workspace)/growth/page.tsx — returns <PlaceholderPage iaCode='X-02' title='성장 대시보드' phaseHint='진척/성장 분석 차트는 Phase 4에서 채워집니다.'/>",
+        "src/components/shared/PlaceholderPage.tsx — Card with IA Tag + Title + secondary Paragraph phase hint; no fabricated KPI/chart/AI insight UI",
+        "browser-results.json X-02 rows: all 3 viewports finalUrl=/growth, HTTP 200, 0 errors (React #130 gone post-fix); primaryCtaPresent=false because it is a deferred shell",
+        "docs/ai-workflow/light-specs/phase-4-learning-core.md:23 'Growth dashboard 실 데이터 (X-02) | growth 분석은 Phase 5/6'",
+        "docs/ai-workflow/light-specs/phase-5-writing-feedback.md:28 'X-02 | growth dashboard | Phase 6'",
+        "docs/ai-workflow/plans/20260521-phase-5-writing-feedback.md:55 'X-02 | /growth | Phase 6 | (not yet created — defer)'",
+        "docs/Wireframe/24-X-02-growth-dashboard/description.md (target spec for the eventual full screen)"
+      ],
+      "findings": {
+        "pageJob": "honest-deferred — the shell shows IA code 'X-02' + title '성장 대시보드' + a phase hint that the analytics are not yet built. It does not pretend to be the full growth dashboard described in description.md (KPI/chart/weakness matrix/AI insight).",
+        "entryContext": "clear-as-placeholder — authenticated user reaching /growth sees a card explaining the feature is coming in a later phase. No misleading partial data.",
+        "primaryAction": "none expected — a deferred placeholder has no primary CTA; the digest 'CTA not visible' is expected for a shell, not a defect.",
+        "flowContinuity": "acceptable — workspace shell/sidebar still wraps the page (route renders inside (workspace) layout); user is not stuck and can navigate away via the sidebar.",
+        "aiBehavior": "not applicable now — the documented '인사이트 (AI 해석)' (description area 5) is part of the deferred Phase 5/6 scope and is correctly absent, not faked.",
+        "formErrorUx": "not applicable.",
+        "keyboardFocus": "not separately verified, but the placeholder is static content (Card/Tag/Title/Paragraph) with no interactive controls to trap focus.",
+        "responsive": "pass at the shell level — HTTP 200 render at 360/768/1280, single Card; no chart/table overflow risk since no data UI exists yet.",
+        "policyTrust": "pass — copy does not overclaim. The only nit: phaseHint text says 'Phase 4' while planning docs defer growth analytics to Phase 5/6 — a minor internal-phase-label mismatch, not a user-facing overclaim."
+      },
+      "topGaps": [
+        "phaseHint copy says '...Phase 4에서 채워집니다' but active light-specs/plans defer growth analytics to Phase 5/6 — internal phase-label inconsistency (cosmetic, user reads it only as 'coming later').",
+        "When the real screen is built (Phase 5/6), description.md areas 2-6 (KPI cards, growth chart, weakness matrix, AI insight, bottom recommendations) must be implemented and re-reviewed; this card only certifies the honest deferred shell.",
+        "No on-disk screenshot captured for X-02 this run (render confirmed via browser metadata: /growth, 200, 0 errors)."
+      ],
+      "blockingReasons": [],
+      "gptQuestions": [
+        "X-02 /growth renders an honest PlaceholderPage and active docs (phase-4/phase-5 light-specs + phase-5 plan) explicitly defer growth analytics to Phase 5/6 — confirm DEFERRED is correct here and that the prior shard's FAIL label was an artifact of the now-fixed React #130 (post-fix: 0 console errors).",
+        "Is the placeholder phaseHint wording 'Phase 4' (vs docs' Phase 5/6) acceptable as deferred-scope copy, or should it be corrected to avoid an internal phase-label mismatch?"
+      ],
+      "docsConsulted": [
+        "docs/ai-workflow/ia-ai-first-ux-review-checklist.md",
+        "docs/Wireframe/24-X-02-growth-dashboard/description.md",
+        "docs/development/deferred-scope.md",
+        "docs/ai-workflow/light-specs/phase-4-learning-core.md",
+        "docs/ai-workflow/light-specs/phase-5-writing-feedback.md",
+        "docs/ai-workflow/plans/20260521-phase-5-writing-feedback.md"
+      ],
+      "sourceFiles": [
+        "src/app/(workspace)/growth/page.tsx",
+        "src/components/shared/PlaceholderPage.tsx"
+      ],
+      "screenshotsViewed": []
+    }
+  ]
+}

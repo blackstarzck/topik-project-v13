@@ -8,11 +8,14 @@ import { useLibraryItems } from "@/lib/library/queries";
 import type { LibraryExportView, LibraryItemView } from "@/lib/library/types";
 
 import { LibraryItemRow } from "./LibraryItemRow";
+import { matchesLibrarySearch } from "./library-tab-url";
 
 const { Text } = Typography;
 
 type Props = {
   initialItems: LibraryExportView[];
+  searchTerm?: string;
+  onResetSearch?: () => void;
 };
 
 function isExport(item: LibraryItemView): item is LibraryExportView {
@@ -121,10 +124,21 @@ function DownloadButton() {
   );
 }
 
-export function LibraryExportsTab({ initialItems }: Props) {
+export function LibraryExportsTab({
+  initialItems,
+  searchTerm = "",
+  onResetSearch,
+}: Props) {
   const query = useLibraryItems("exports");
-  const items: LibraryExportView[] = (query.data ?? initialItems).filter(
+  const allItems: LibraryExportView[] = (query.data ?? initialItems).filter(
     isExport,
+  );
+  const items = allItems.filter((i) =>
+    matchesLibrarySearch(searchTerm, [
+      exportSourceLabel(i.source_type),
+      i.storage_path,
+      ...i.tags,
+    ]),
   );
 
   if (query.isLoading && (query.data ?? []).length === 0 && initialItems.length === 0) {
@@ -142,7 +156,18 @@ export function LibraryExportsTab({ initialItems }: Props) {
     );
   }
   if (items.length === 0) {
-    return <Empty description="내보내기 기록이 없습니다." />;
+    const searching = searchTerm.trim().length > 0;
+    return (
+      <Empty
+        description={
+          searching ? "검색 결과가 없습니다." : "내보내기 기록이 없습니다."
+        }
+      >
+        {searching && onResetSearch ? (
+          <Button onClick={onResetSearch}>필터 초기화</Button>
+        ) : null}
+      </Empty>
+    );
   }
 
   return (

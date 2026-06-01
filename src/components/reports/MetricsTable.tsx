@@ -1,3 +1,5 @@
+"use client";
+
 import { Card, Empty, Table, Typography } from "antd";
 import type { ComparisonMetrics } from "@/lib/writing/comparison-service";
 

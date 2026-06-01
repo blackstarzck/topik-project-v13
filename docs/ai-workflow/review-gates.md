@@ -237,10 +237,10 @@ Before saying done:
 - Run focused tests for changed behavior
 - Run broader tests, lint, typecheck, or build when available
 - Run `node scripts/ai-workflow-check.mjs --repo .` when Node is available, or document why the checker could not run
-- Process the Git publication decision per [`git-publication-decision.md`](git-publication-decision.md): pick exactly `no-commit`, `local-commit`, `push-and-pr`, or `blocked` and record it in the final report and ledger
+- Process the Git publication decision per [`gates/git-publication-decision.md`](gates/git-publication-decision.md): pick exactly `no-commit`, `local-commit`, `push-and-pr`, or `blocked` and record it in the final report and ledger
 - For release-sized work, run `ship` (Claude) / `gstack-ship` (Codex)
 
-Final response follows [`report-template.md`](report-template.md).
+Final response follows [`templates/report-template.md`](templates/report-template.md).
 
 ### 로컬 vs CI checker 입력 차이 (운영 주의)
 

@@ -23,8 +23,8 @@
 - `docs/development/auth-overview.md` — 정정 대상
 - `docs/ai-workflow/planning-contracts.md` — plan 필수 섹션 (Out of Scope, SBU, Subagent-eligible)
 - `docs/ai-workflow/review-gates.md` — TDD `Documentation-only` 예외, Plan-Review PASS Gate, Round-cap, Disagreement resolution
-- `docs/ai-workflow/agent-packets.md` — subagent 호출 시 packet 템플릿
-- `docs/ai-workflow/context-ledger-template.md` — ledger 필수 필드
+- `docs/ai-workflow/contracts/agent-packets.md` — subagent 호출 시 packet 템플릿
+- `docs/ai-workflow/templates/context-ledger-template.md` — ledger 필수 필드
 - `src/app/auth/callback/route.ts` + `src/app/auth/callback-fragment/page.tsx` — P0-1 ground truth
 - `src/components/auth/PasswordResetRequestForm.tsx:21-23` — P0-2 ground truth
 - `.env.example` 1-20 — P0-3 ground truth (NEXT_PUBLIC_SITE_URL 부재 확인)
@@ -40,7 +40,7 @@
 **Doc conflicts:** `CLAUDE.md:11-15` 의 "pre-implementation" 표기가 stale (실제 `src/` 구현 존재). 본 plan 은 auth-overview.md 상단에 "현재 worktree 기준" 한 줄로 우회 (CLAUDE.md 자체 수정은 별건).
 
 **Untouched relevant docs:**
-- `docs/IA/01-A-01-sign-up/description.md`, `28-X-06-password-reset/description.md` — PW 8-64자 명세. 본 plan 의 P2-3 가 drift 명시만 함. IA 명세 자체 수정 (PW max 구현 또는 명세 수정 통일) 은 별건 작업.
+- `docs/Wireframe/01-A-01-sign-up/description.md`, `28-X-06-password-reset/description.md` — PW 8-64자 명세. 본 plan 의 P2-3 가 drift 명시만 함. IA 명세 자체 수정 (PW max 구현 또는 명세 수정 통일) 은 별건 작업.
 - `docs/flow/user-flow.md` — 본 plan 은 auth-overview.md 의 mermaid 요약만 정정. user-flow.md 정본 변경 없음.
 - `docs/development/backend-auth.md` — 백엔드 stack 정본. 본 plan 과 무관.
 
@@ -187,7 +187,7 @@ codex exec --sandbox workspace-write \
 - Extracted requirements: Edit-by-Edit Table 의 **E1·E2·E3·E4·E5·E6·E7·E8·E8b·E9·E11 — 총 11 edit** 정확히 적용. E8 과 E8b 는 §10 SSoT 매트릭스의 *서로 다른 행* 을 수정하는 별도 edit (E8 = "새 ?reason= 추가" 행, E8b = "라우트 path 변경" 행). E10 은 본 packet scope 아님 — T4b 가 처리.
 - Exact read scope: 본 plan, codex output, auth-overview.md, src/app/auth/callback/route.ts, src/components/auth/PasswordResetRequestForm.tsx, src/components/auth/SignUpForm.tsx (cross-check 용)
 - Exact write scope: docs/development/auth-overview.md
-- Files not to touch: .env.example, src/**, supabase/**, docs/IA/**, docs/flow/**, CLAUDE.md, tests/**, 다른 docs/development/*.md
+- Files not to touch: .env.example, src/**, supabase/**, docs/Wireframe/**, docs/flow/**, CLAUDE.md, tests/**, 다른 docs/development/*.md
 - Constraints:
   - 단일 edit 당 정확한 Edit tool old_string/new_string 사용
   - 한국어 톤은 기존 문서와 동일 (development/ 위치이므로 엔지니어 어휘 허용)

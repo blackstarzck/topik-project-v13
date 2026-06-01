@@ -74,7 +74,7 @@ export function AdminProblemTable({ initialRows }: Props) {
         value == null ? "—" : <Tag>{value}번</Tag>,
     },
     {
-      title: "공개 상태",
+      title: "발행 상태",
       dataIndex: "publish_status",
       key: "publish_status",
       width: 160,
@@ -100,7 +100,11 @@ export function AdminProblemTable({ initialRows }: Props) {
       dataIndex: "updated_at",
       key: "updated_at",
       width: 120,
-      render: (value: string) => formatDate(value),
+      // suppressHydrationWarning: toLocaleDateString('ko-KR') can differ between
+      // server and client (locale/timezone) → React #418. Suppress the mismatch.
+      render: (value: string) => (
+        <span suppressHydrationWarning>{formatDate(value)}</span>
+      ),
     },
   ];
 
@@ -144,6 +148,9 @@ export function AdminProblemTable({ initialRows }: Props) {
         loading={query.isFetching}
         pagination={{ pageSize: 20 }}
         size="middle"
+        locale={{
+          emptyText: "조건에 맞는 문제가 없어요. 필터를 변경해 보세요.",
+        }}
       />
     </Space>
   );

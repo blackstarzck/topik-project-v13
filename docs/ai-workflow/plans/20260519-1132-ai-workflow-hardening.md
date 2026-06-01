@@ -8,6 +8,16 @@
 
 **Tech Stack:** Node.js ESM, GitHub Actions, Markdown workflow docs.
 
+## Out of Scope — Intentional Cuts
+
+- Do not redesign the full AI workflow document set in this hardening pass.
+- Do not introduce external dependencies or a package manager requirement.
+- Do not change product behavior or implementation architecture.
+
+## Smallest Buildable Unit
+
+Add a dependency-free workflow checker, wire it into the pull request evidence path, and document the required verification fields.
+
 ---
 
 ## Task 1: Add Checker Test And Implementation
@@ -37,8 +47,8 @@
 **Files:**
 - Modify: `docs/ai-development-workflow.md`
 - Modify: `docs/agent-index.md`
-- Modify: `docs/ai-workflow/git-publication-decision.md`
-- Modify: `docs/ai-workflow/report-template.md`
+- Modify: `docs/ai-workflow/gates/git-publication-decision.md`
+- Modify: `docs/ai-workflow/templates/report-template.md`
 
 - [x] Document the machine-checkable evidence gate.
 - [x] Narrow the no-runnable-test-surface TDD exception after `src/` or `package.json` exists.

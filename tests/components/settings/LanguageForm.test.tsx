@@ -87,8 +87,9 @@ describe("LanguageForm", () => {
       <LanguageForm userId="user-1" initialLocale="ko" />,
     );
 
-    // Pick the English radio.
-    const englishRadio = screen.getByLabelText("English") as HTMLInputElement;
+    // Pick the English radio. G-01 appends the native language name in
+    // parentheses ("English (English)"), so match a stable substring.
+    const englishRadio = screen.getByLabelText(/English/) as HTMLInputElement;
     fireEvent.click(englishRadio);
 
     await act(async () => {
@@ -106,7 +107,8 @@ describe("LanguageForm", () => {
       <LanguageForm userId="user-2" initialLocale="ko" />,
     );
 
-    fireEvent.click(screen.getByLabelText("Tiếng Việt"));
+    // G-01: label is now "Tiếng Việt (Vietnamese)" — match a substring.
+    fireEvent.click(screen.getByLabelText(/Tiếng Việt/));
     await act(async () => {
       submitForm(container);
     });

@@ -46,6 +46,9 @@ function ctaHref(kind: AuthErrorCtaKind): string {
     case "home":
       return "/";
     case "help":
+      // No dedicated help/support surface exists yet (deferred). Help is not a
+      // standalone CTA here — see the honest escape-route row below. We keep a
+      // home fallback only so a stray help kind never dead-ends.
       return "/";
     case "retry":
       return "/login";
@@ -53,6 +56,15 @@ function ctaHref(kind: AuthErrorCtaKind): string {
       return "/sign-up";
   }
 }
+
+// description §6 escape routes: 로그인 / 가입 / 홈 — 항상 노출, 최소 1개 escape.
+// "도움말" 라벨은 실제 도움말/지원 화면이 없어 misleading 이므로 제거하고,
+// 실제 목적지가 있는 정직한 링크만 노출한다.
+const ESCAPE_LINKS: { href: string; label: string; kind: AuthErrorCtaKind }[] = [
+  { href: "/login", label: "로그인", kind: "login" },
+  { href: "/sign-up", label: "가입", kind: "signup" },
+  { href: "/", label: "홈", kind: "home" },
+];
 
 export function AuthErrorCard() {
   const { message } = App.useApp();
@@ -176,7 +188,10 @@ export function AuthErrorCard() {
           >
             {content.primary.label}
           </Button>
-          {content.secondary && (
+          {/* description §3: primary 1 + secondary <=1. "help" kind은 실제
+              도움말 화면이 없어 misleading 이므로 secondary 버튼으로 렌더하지
+              않는다 (대신 아래 정직한 escape-route 행으로 안내). */}
+          {content.secondary && content.secondary.kind !== "help" && (
             <Link href={ctaHref(content.secondary.kind)} legacyBehavior>
               <Button type="link" block data-testid="auth-error-secondary">
                 {content.secondary.label}
@@ -185,8 +200,24 @@ export function AuthErrorCard() {
           )}
         </Space>
 
-        <Paragraph style={{ marginBottom: 0, textAlign: "center" }}>
-          <Link href="/">홈으로 돌아가기</Link>
+        {/* §6 escape routes — primary/secondary와 같은 목적지(href)는 제외해
+            한 화면에 같은 곳으로 가는 affordance가 중복되지 않게 한다. */}
+        <Paragraph
+          style={{ marginBottom: 0, textAlign: "center" }}
+          data-testid="auth-error-escape"
+        >
+          {ESCAPE_LINKS.filter((link) => {
+            const usedHrefs = [
+              ctaHref(content.primary.kind),
+              content.secondary ? ctaHref(content.secondary.kind) : null,
+            ];
+            return !usedHrefs.includes(link.href);
+          }).map((link, index, visible) => (
+            <span key={link.href}>
+              <Link href={link.href}>{link.label}</Link>
+              {index < visible.length - 1 ? " · " : null}
+            </span>
+          ))}
         </Paragraph>
       </Space>
     </Card>

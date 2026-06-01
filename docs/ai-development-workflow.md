@@ -54,7 +54,7 @@ UI · 사용자 흐름 · phase 단위 작업은 시작 시점에 audience를 �
 - **`admin`**: 관리자 화면. `requirePlatformAdmin / requireContentAdmin / requireOrgAdmin` 같은 페이지 가드 의무 + 모든 권한 변경/발행 토글은 `admin_audit_logs` 기록 의무.
 - **`both`**: user/admin이 같은 phase에 들어감. user/admin **task를 각각의 행으로 분리**해 plan task table에 적고, 각 행에 자체 audience 명시. Light Spec에 user/admin 분기 폴더 경계(예: `src/app/admin/...` vs `src/app/library/...`)를 한 줄씩 명시.
 
-audience 명시·검증 지점: [`planning-contracts.md`](ai-workflow/planning-contracts.md) Light Spec Domain Boundary + task table audience 열, [`agent-packets.md`](ai-workflow/agent-packets.md) Task/Result Packet audience 필드, [`review-gates.md#architecture-pass`](ai-workflow/review-gates.md#architecture-pass) audience 경계 항목, [`fallback-and-recovery.md`](ai-workflow/fallback-and-recovery.md) audience-mismatch fail-closed.
+audience 명시·검증 지점: [`planning-contracts.md`](ai-workflow/planning-contracts.md) Light Spec Domain Boundary + task table audience 열, [`agent-packets.md`](ai-workflow/contracts/agent-packets.md) Task/Result Packet audience 필드, [`review-gates.md#architecture-pass`](ai-workflow/review-gates.md#architecture-pass) audience 경계 항목, [`fallback-and-recovery.md`](ai-workflow/fallback-and-recovery.md) audience-mismatch fail-closed.
 
 ## Core Invariants
 
@@ -79,9 +79,9 @@ These are mandatory for any non-lightweight change. **The linked sub-doc is the 
 - `Context ledger` — path or allowed lightweight exception
 - User-facing report shape follows [`docs/report-writing-template.md`](report-writing-template.md)
 - Verification commands run and results
-- Git publication decision per [`git-publication-decision.md`](ai-workflow/git-publication-decision.md)
+- Git publication decision per [`git-publication-decision.md`](ai-workflow/gates/git-publication-decision.md)
 
-Final response must follow [`report-template.md`](ai-workflow/report-template.md).
+Final response must follow [`report-template.md`](ai-workflow/templates/report-template.md).
 
 ## Lightweight Path
 

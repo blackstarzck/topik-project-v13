@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Input, Space, Typography, notification } from "antd";
+import { Button, Input, Space, Typography, notification } from "antd";
 import { useRouter } from "next/navigation";
 import {
   useSubmitWriting,
@@ -72,6 +72,19 @@ export function WritingEditor({
     };
   }, []);
 
+  // D-M3 / description.md §1 예외 — 저장되지 않은 변경이 있는 상태에서 새로 고침/
+  // 탭 닫기 시 브라우저 기본 이탈 경고를 띄워 작성 내용 손실을 방지.
+  useEffect(() => {
+    const hasUnsaved = status === "dirty" || status === "failed";
+    if (!hasUnsaved) return;
+    function onBeforeUnload(e: BeforeUnloadEvent) {
+      e.preventDefault();
+      e.returnValue = "";
+    }
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [status]);
+
   function scheduleSave(next: string) {
     if (status !== "syncing") setStatus("dirty");
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -127,9 +140,11 @@ export function WritingEditor({
           router.push(next);
         },
         onError: (e) => {
+          // description.md §4 예외 — 제출 실패 시 확인 모달을 유지하여 '제출'로
+          // 바로 다시 시도할 수 있게 한다.
           notification.error({
             message: "제출 실패",
-            description: e.message,
+            description: `${e.message} — 확인 창의 '제출'을 눌러 다시 시도하거나, 작성한 답안을 복사해 두세요.`,
           });
         },
       },
@@ -161,18 +176,20 @@ export function WritingEditor({
         }
         disabled={submit.isPending}
       />
-      <button
-        type="button"
+      <Button
+        type="primary"
         onClick={() => setConfirmOpen(true)}
         disabled={!submittable || submit.isPending}
         style={{ alignSelf: "flex-start" }}
       >
         제출하기
-      </button>
+      </Button>
       <SubmissionConfirmModal
         open={confirmOpen}
         charCount={charCount}
         minChars={minChars}
+        questionNo={questionNo}
+        lastSavedAt={lastSavedAt}
         loading={submit.isPending}
         onConfirm={onConfirmSubmit}
         onCancel={() => setConfirmOpen(false)}

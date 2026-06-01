@@ -246,7 +246,7 @@ export function ProfileForm({ userId, accountEmail, initialProfile }: Props) {
           type="info"
           showIcon
           message="보안 안내"
-          description="계정 식별 정보 변경이나 이미지 업로드는 저장 전 재로그인이 필요할 수 있습니다."
+          description="이메일 등 계정 식별 정보 변경은 향후 재인증이 필요할 수 있습니다. 이름·닉네임·자기소개 변경은 바로 저장됩니다."
         />
       </section>
 

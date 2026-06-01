@@ -1,4 +1,4 @@
-import { Empty } from "antd";
+import { Col, Empty, Row } from "antd";
 import { QuestionPrompt } from "./QuestionPrompt";
 import { HelpPanel } from "./HelpPanel";
 import { WritingEditor } from "./WritingEditor";
@@ -26,31 +26,37 @@ export function WritingPageContent({
     );
   }
   return (
-    <div style={{ display: "grid", gap: 16, gridTemplateColumns: "1fr 280px" }}>
-      <div style={{ display: "grid", gap: 16 }}>
-        <QuestionPrompt
-          questionNo={questionNo}
-          title={problem.title}
-          prompt={problem.prompt}
-        />
-        {isLongForm(questionNo) ? (
-          <LongFormEditor
-            userId={userId}
-            problemId={problem.id}
-            questionNo={questionNo as 53 | 54}
-            initialDraft={draft}
-            problemMaterials={problem.materials}
-          />
-        ) : (
-          <WritingEditor
-            userId={userId}
-            problemId={problem.id}
+    // 반응형: 모바일(xs/sm)에서는 본문→도움말이 세로로 쌓이고, lg 이상에서만
+    // 좌(본문)/우(도움말) 2단으로 배치한다. 고정 폭 grid의 360px 가로 넘침 해소.
+    <Row gutter={[16, 16]}>
+      <Col xs={24} lg={17}>
+        <div style={{ display: "grid", gap: 16 }}>
+          <QuestionPrompt
             questionNo={questionNo}
-            initialDraft={draft}
+            title={problem.title}
+            prompt={problem.prompt}
           />
-        )}
-      </div>
-      <HelpPanel />
-    </div>
+          {isLongForm(questionNo) ? (
+            <LongFormEditor
+              userId={userId}
+              problemId={problem.id}
+              questionNo={questionNo as 53 | 54}
+              initialDraft={draft}
+              problemMaterials={problem.materials}
+            />
+          ) : (
+            <WritingEditor
+              userId={userId}
+              problemId={problem.id}
+              questionNo={questionNo}
+              initialDraft={draft}
+            />
+          )}
+        </div>
+      </Col>
+      <Col xs={24} lg={7}>
+        <HelpPanel />
+      </Col>
+    </Row>
   );
 }

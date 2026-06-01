@@ -1,0 +1,168 @@
+{
+  "shardId": "admin",
+  "cards": [
+    {
+      "iaCode": "H-01",
+      "aiUxResult": "BLOCKED",
+      "confidence": "high",
+      "gptAdjudication": "needs-adjudication",
+      "recommendedLabel": "BLOCKED",
+      "evidenceUsed": [
+        "phase5-evidence-digest.json ia.H-01 (browser PARTIAL, httpStatus 200, visibleH1 '문제 관리', primaryCtaPresent false, errors [])",
+        "browser-results.json H-01 row + roleStateStatus (content_admin/org_admin/platform_admin all 'missing')",
+        "tests/e2e/auth-state/build-status.json postSeedNote: all 4 storageState files carry app_role='learner'; admin elevation SQL never run",
+        "seed.deferred: 'admin actors + app_role elevation'",
+        "securityScenarios: BLOCKED 'needs content_admin/platform_admin storageState'",
+        "src/app/(workspace)/admin/problems/page.tsx (requireContentAdmin guard)",
+        "src/lib/auth/admin-guard.ts (redirects non-admin to /dashboard?error=forbidden)",
+        "src/components/admin/AdminProblemTable.tsx + AdminProblemPublishToggle"
+      ],
+      "findings": {
+        "pageJob": "clear in source — search/manage/approve problems with KPI/filter + per-row publish toggle + review status; matches description.md regions, but page-job cannot be confirmed rendered because no real admin session reached it.",
+        "entryContext": "missing evidence — route guarded by requireContentAdmin; the captured session was a learner, so a real content_admin entry was never exercised.",
+        "primaryAction": "present in source — primary action is the per-row publish toggle (draft/published/archived) via AdminProblemPublishToggle; digest 'primaryCtaPresent:false' is a heuristic regex false-negative (/(저장|승인|발행|편집)/), not a real missing CTA.",
+        "flowContinuity": "missing evidence — forbidden-redirect path exists in guard, but admin-allowed flow + admin_audit_logs write on publish toggle is unverified at runtime.",
+        "aiBehavior": "not applicable — no AI output on this screen.",
+        "formErrorUx": "partial — AdminProblemTable has an error Alert ('문제 목록을 불러오지 못했어요') and loading state, but error/empty/loading/disabled states were not captured (uxStatesCaptured: default only).",
+        "keyboardFocus": "missing evidence — antd Select/Table/toggle are keyboard-reachable in source, but no rendered admin page exists to verify focus order.",
+        "responsive": "missing evidence — digest lists 360/768/1280 screenshot paths, but NO admin screenshots exist on disk (only A-01/A-02/X-01/X-06/X-11/X-12 captured). Mobile table readability unverified.",
+        "policyTrust": "partial — admin-only route correctly isolated from learner flow via role guard; deferred-scope.md does NOT defer admin, so this is expected to be a real screen (not a placeholder). Audit-log policy ('admin_audit_logs must record permission/publish toggles') unverified."
+      },
+      "topGaps": [
+        "Admin-ALLOWED RBAC path UNVERIFIED: all admin storageStates are app_role='learner' (elevation SQL never run) → guard would redirect to /dashboard?error=forbidden; digest 200+H1 is not trustworthy admin evidence.",
+        "No admin screenshot artifacts exist on disk despite digest listing them — responsive/mobile-table readability cannot be confirmed.",
+        "Per-row publish toggle and admin_audit_logs write were never exercised by a real admin session; CTA-regex miss is a false-negative but underlying action is still unverified at runtime."
+      ],
+      "blockingReasons": [
+        "Admin RBAC precondition not met: content_admin storageState carries app_role='learner' (build-status.json postSeedNote), elevation SQL not applied → admin-allowed render unverified",
+        "No rendered admin screenshot evidence on disk for H-01 at any viewport"
+      ],
+      "gptQuestions": [
+        "Should H-01 stay BLOCKED until the manualSqlForAdminRoles elevation is applied and coverage-matrix is re-run with a genuine content_admin session, or can source review alone support a PARTIAL?",
+        "Does the digest's HTTP 200 + visibleH1 '문제 관리' for a learner-role storageState indicate the admin guard is NOT enforcing (a security regression), or did the harness fabricate/carry-over the row? Confirm whether requireContentAdmin actually redirected.",
+        "Is the per-row publish toggle (AdminProblemPublishToggle) the intended primary action for this screen, making the CTA-regex miss a safe false-negative?"
+      ],
+      "docsConsulted": [
+        "docs/Wireframe/21-H-01-admin-problem-management/description.md",
+        "docs/development/deferred-scope.md",
+        "docs/ai-workflow/ia-ai-first-ux-review-checklist.md (6.1-6.9, 9, Admin pack)"
+      ],
+      "sourceFiles": [
+        "src/app/(workspace)/admin/problems/page.tsx",
+        "src/lib/auth/admin-guard.ts",
+        "src/components/admin/AdminProblemTable.tsx",
+        "tests/e2e/auth-state/build-status.json"
+      ],
+      "screenshotsViewed": []
+    },
+    {
+      "iaCode": "X-08",
+      "aiUxResult": "BLOCKED",
+      "confidence": "high",
+      "gptAdjudication": "needs-adjudication",
+      "recommendedLabel": "BLOCKED",
+      "evidenceUsed": [
+        "phase5-evidence-digest.json ia.X-08 (browser PARTIAL, httpStatus 200, visibleH1 '기관 관리', primaryCtaPresent false, errorsSample: React #418)",
+        "browser-results.json X-08 row (errors: 'Minified React error #418') + roleStateStatus all 'missing'",
+        "tests/e2e/auth-state/build-status.json postSeedNote: org_admin storageState app_role='learner'",
+        "securityScenarios: BLOCKED 'needs org_admin storageState'",
+        "src/app/(workspace)/admin/org/page.tsx (requireOrgAdmin guard, get_admin_org_dashboard RPC)",
+        "src/components/admin/AdminOrgKpiCards.tsx (KPI cards + recent-events table, toLocaleString('ko-KR'))"
+      ],
+      "findings": {
+        "pageJob": "clear in source — org KPI summary (learner count, 7d active, 7d submissions) + recent learning-events audit table; matches description.md, but never confirmed rendered for a real org_admin.",
+        "entryContext": "missing evidence — requireOrgAdmin guard; captured session was learner so org_admin entry not exercised; description's '기관 없음/권한 없음 → 접근 제한' branch unverified.",
+        "primaryAction": "this screen is a dashboard (KPI + audit table) with no single hard CTA; description's '운영 카드' (과제 생성/공지 발송/리포트 다운로드) is NOT present in AdminOrgKpiCards source — operations cards appear to be missing vs description region 3. CTA-regex miss is partly real (operational cards absent), not purely heuristic.",
+        "flowContinuity": "missing evidence — admin-allowed flow unverified; no return/empty/error path captured.",
+        "aiBehavior": "not applicable — no AI output.",
+        "formErrorUx": "not applicable for forms; the page throws on RPC error (page.tsx throws on supabase.rpc error) rather than rendering a recoverable error state — surfaces as a hard error boundary, not graceful empty/retry per description '데이터 없음 → 온보딩 안내'.",
+        "keyboardFocus": "missing evidence — no rendered admin page to verify.",
+        "responsive": "missing evidence — no X-08 screenshots on disk; KpiCard uses responsive Col xs=24 md=8 in source but mobile order/readability unverified.",
+        "policyTrust": "partial — recent-events table masks user_id (slice 0,8) and truncates payload; admin route isolated via guard. But payload JSON.stringify in an audit table risks leaking sensitive data — needs review."
+      },
+      "topGaps": [
+        "Admin-ALLOWED RBAC path UNVERIFIED: org_admin storageState is app_role='learner' → requireOrgAdmin would redirect; 200+H1 not trustworthy admin evidence; no screenshots on disk.",
+        "Residual non-#130 defect: React #418 (text-content hydration mismatch) on this route — almost certainly toLocaleString('ko-KR') datetime formatting differing server vs client in AdminOrgKpiCards; a real (low-severity) hydration bug to fix.",
+        "Description region 3 '운영 카드' (과제 생성/공지 발송/리포트 다운로드) appears missing in AdminOrgKpiCards — possible IA-fidelity gap, and RPC-error path throws instead of graceful empty/retry."
+      ],
+      "blockingReasons": [
+        "Admin RBAC precondition not met: org_admin storageState carries app_role='learner', elevation SQL not applied → admin-allowed render unverified",
+        "No rendered admin screenshot evidence on disk for X-08 at any viewport"
+      ],
+      "gptQuestions": [
+        "Confirm the React #418 root cause: is it toLocaleString('ko-KR') in AdminOrgKpiCards (server/client locale/timezone hydration mismatch)? Should this block the page or be a P1 fix?",
+        "Are the description's '운영 카드' operations (과제 생성/공지 발송/리포트 다운로드) intentionally deferred, or is their absence in AdminOrgKpiCards an IA-fidelity FAIL?",
+        "Is throwing on supabase.rpc error (hard error boundary) acceptable, or must X-08 render the description's '데이터 없음 → 온보딩 안내' / 재시도 empty-state instead?",
+        "Same RBAC trust question as H-01: did requireOrgAdmin actually redirect the learner session, or is the 200+H1 row not real?"
+      ],
+      "docsConsulted": [
+        "docs/Wireframe/30-X-08-organization-admin-dashboard/description.md",
+        "docs/development/deferred-scope.md",
+        "docs/ai-workflow/ia-ai-first-ux-review-checklist.md (6.1-6.9, 9, Admin pack)"
+      ],
+      "sourceFiles": [
+        "src/app/(workspace)/admin/org/page.tsx",
+        "src/lib/auth/admin-guard.ts",
+        "src/components/admin/AdminOrgKpiCards.tsx",
+        "tests/e2e/auth-state/build-status.json"
+      ],
+      "screenshotsViewed": []
+    },
+    {
+      "iaCode": "X-10",
+      "aiUxResult": "BLOCKED",
+      "confidence": "high",
+      "gptAdjudication": "needs-adjudication",
+      "recommendedLabel": "BLOCKED",
+      "evidenceUsed": [
+        "phase5-evidence-digest.json ia.X-10 (browser PASS, httpStatus 200, visibleH1 '사용자 관리', primaryCtaPresent true, errors [])",
+        "browser-results.json X-10 row (notes: 'Role changes via private.admin_change_user_role RPC only — client UPDATE blocked by migration #15') + roleStateStatus all 'missing'",
+        "tests/e2e/auth-state/build-status.json postSeedNote: platform_admin storageState app_role='learner'",
+        "seed.deferred: 'wrong-owner / owner-:id rows (E-01/E-02/R-01/X-10)' + 'admin actors + app_role elevation'",
+        "securityScenarios: BLOCKED 'needs platform_admin storageState'",
+        "src/app/(workspace)/admin/users/page.tsx (requirePlatformAdmin)",
+        "src/components/admin/AdminUserTable.tsx (search/role/status filters, '역할 변경' button) + AdminUserRoleMenu.tsx (confirm modal, RPC mutation, ID masking)"
+      ],
+      "findings": {
+        "pageJob": "clear in source — search/filter users, view detail, change role via confirm modal; strongest of the three admin screens and matches description.md regions. But page-job not confirmed rendered for a real platform_admin.",
+        "entryContext": "missing evidence — requirePlatformAdmin guard; captured session was learner so platform_admin entry not exercised.",
+        "primaryAction": "present and matched — '역할 변경' button per row opens AdminUserRoleMenu; digest primaryCtaPresent:true. This is a clean primary action.",
+        "flowContinuity": "missing evidence — admin-allowed flow + role-change RPC round trip unverified; search-no-results / '필터 초기화' empty path not captured.",
+        "aiBehavior": "not applicable — no AI output.",
+        "formErrorUx": "good in source — AdminUserRoleMenu is a confirm modal for the danger action (role change), with okText '변경'/cancelText '취소', loading/disabled during pending, same-role no-op guard, and error Alert ('역할 변경에 실패했어요'); but modal open/focus and failure state were not exercised at runtime (uxStatesCaptured: default only).",
+        "keyboardFocus": "missing evidence — antd Modal/Select/Input.Search/Table keyboard-reachable in source; modal focus-trap/return-focus not verified because no rendered admin session.",
+        "responsive": "missing evidence — no X-10 screenshots on disk despite digest listing 360/768/1280; description requires '20개/페이지, 긴 이메일 말줄임, 가로 스크롤' — mobile table readability unverified.",
+        "policyTrust": "good in source — IDs masked (slice 0,8), client UPDATE blocked (RPC-only via migration #15), delete replaced by deactivate, danger actions gated by confirm modal; PII masking and bulk-action safety not verified at runtime, and owner-scoped RLS rows not seeded."
+      },
+      "topGaps": [
+        "Admin-ALLOWED RBAC path UNVERIFIED: platform_admin storageState is app_role='learner' → requirePlatformAdmin would redirect; the PASS row's 200+H1 is not trustworthy admin evidence; no X-10 screenshots on disk.",
+        "Owner / wrong-owner rows NOT seeded (X-10 in seed.deferred) → role-change-on-wrong-target RLS and PII-masking edge behavior unverified.",
+        "AdminUserRoleMenu confirm modal (danger action) open/focus/return-focus and failure-recovery never exercised by a real admin session — modal a11y and bulk-action safety unverified."
+      ],
+      "blockingReasons": [
+        "Admin RBAC precondition not met: platform_admin storageState carries app_role='learner', elevation SQL not applied → admin-allowed render (incl. the PASS row) unverified",
+        "No rendered admin screenshot evidence on disk for X-10 at any viewport",
+        "Owner-id / wrong-owner RLS fixtures not seeded for X-10 (seed.deferred)"
+      ],
+      "gptQuestions": [
+        "The digest marks X-10 browser PASS, but the platform_admin storageState is app_role='learner' and no screenshot exists — should this PASS be downgraded to BLOCKED pending a genuine platform_admin re-run? (Recommend yes.)",
+        "Does requirePlatformAdmin actually redirect the learner session? If the page rendered '사용자 관리' under a learner session, that is a privilege-escalation security regression — please confirm guard enforcement.",
+        "Confirm RPC-only role change (private.admin_change_user_role, client UPDATE blocked by migration #15) is enforced and audited, and that AdminUserRoleMenu confirm modal traps/returns focus for a11y once an admin session is available.",
+        "With wrong-owner rows unseeded, how should the adjudicator treat PII masking and role-change-target-validation — defer to a follow-up seeded run?"
+      ],
+      "docsConsulted": [
+        "docs/Wireframe/32-X-10-admin-user-management/description.md",
+        "docs/development/deferred-scope.md",
+        "docs/ai-workflow/ia-ai-first-ux-review-checklist.md (6.1-6.9, 9, Admin pack)"
+      ],
+      "sourceFiles": [
+        "src/app/(workspace)/admin/users/page.tsx",
+        "src/lib/auth/admin-guard.ts",
+        "src/components/admin/AdminUserTable.tsx",
+        "src/components/admin/AdminUserRoleMenu.tsx",
+        "tests/e2e/auth-state/build-status.json"
+      ],
+      "screenshotsViewed": []
+    }
+  ]
+}

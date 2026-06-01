@@ -1,0 +1,36 @@
+## Task Packet
+
+- Agent: tiebreaker
+- Role: independent tie-breaker reviewer
+- Objective: Decide the final patch scope after the coordinator and two independent reviewers mostly agreed but ranked some items differently.
+- Audience: n/a
+- Accepted scope: Read-only decision review for `docs/ai-execution-plans/ia-remediation-multi-agent/`.
+- Out of scope: Editing files, changing product behavior, running remediation, or adding scripts.
+- Docs consulted:
+  - `docs/ai-execution-plans/ia-remediation-multi-agent/**`
+  - `docs/ai-workflow/runs/2026/06/01/agent-packets/results/ia-remediation-plan-reviewer-a-result.md`
+  - `docs/ai-workflow/runs/2026/06/01/agent-packets/results/ia-remediation-plan-reviewer-b-result.md`
+  - `docs/ai-workflow/runs/2026/06/01/20260601-1038-ia-remediation-plan-review.md`
+- Extracted requirements:
+  - The split plan must be executable by isolated agents reading only the matching file.
+  - The coordinator must be able to store and audit queue lifecycle, lane, cross-IA, reconciliation, write-lock, handoff, and verifier state.
+  - Current-run missing prerequisites should be distinguished from plan-design defects.
+- Exact read scope:
+  - Target split plan folder.
+  - This run ledger and result packet summaries.
+- Exact write scope: none.
+- Files not to touch:
+  - All project files. This is read-only.
+- Constraints:
+  - Decide which findings must be patched now.
+  - Decide whether legacy artifact migration/reset belongs in this patch.
+  - Decide whether flow-edge guidance needs document wording changes now or should remain a blocker note.
+  - Ground decision in execution risk.
+- Required verification:
+  - Review the two result packets and target docs.
+  - Return a final patch decision list: must patch / should patch / leave as current-run blocker.
+- Expected output:
+  - Result packet with tie-break decisions and rationale.
+  - Minimal patch order.
+  - Any item the coordinator should not change.
+- Context ledger path: `docs/ai-workflow/runs/2026/06/01/20260601-1038-ia-remediation-plan-review.md`

@@ -1,0 +1,2382 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TALKPIK AI · IA 구현 검수 리포트 (20260601-120308)</title>
+  <style>
+:root {
+  --bg: #fafaf9; --surface: #ffffff; --border: #e7e5e4; --text: #1c1917; --muted: #78716c;
+  --accent: #0891b2;
+  --pass: #10b981; --pass-bg: #ecfdf5;
+  --partial: #f59e0b; --partial-bg: #fffbeb;
+  --fail: #ef4444; --fail-bg: #fef2f2;
+  --blocked: #6b7280; --blocked-bg: #f3f4f6;
+  --docgap: #3b82f6; --docgap-bg: #eff6ff;
+  --deferred: #8b5cf6; --deferred-bg: #f5f3ff;
+  --na: #d6d3d1; --na-bg: #f5f5f4;
+  --aud-public: #14b8a6; --aud-user: #2563eb; --aud-admin: #dc2626;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body { font-family: -apple-system, "Segoe UI", "Pretendard", system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.55; font-size: 15px; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+.hero { background: linear-gradient(135deg, #0891b2 0%, #06b6d4 50%, #14b8a6 100%); color: white; padding: 48px 24px; }
+.hero h1 { margin: 0 0 8px; font-size: 32px; font-weight: 700; letter-spacing: -0.02em; }
+.hero p { margin: 4px 0; opacity: 0.95; font-size: 15px; }
+.hero .meta { font-size: 13px; opacity: 0.85; margin-top: 16px; font-variant-numeric: tabular-nums; }
+.hero .status-line { margin-top: 16px; font-size: 14px; }
+.hero .status-line .b { background: rgba(255,255,255,0.2); color: white; border-color: rgba(255,255,255,0.4); }
+section { margin: 40px 0; }
+h2 { font-size: 22px; margin: 0 0 16px; letter-spacing: -0.01em; border-left: 4px solid var(--accent); padding-left: 12px; }
+h3 { font-size: 17px; margin: 24px 0 12px; }
+.muted { color: var(--muted); font-size: 13px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+
+/* Scorecards */
+.scorecards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.scorecard { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+.scorecard .label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+.scorecard .value { font-size: 28px; font-weight: 700; margin: 4px 0; }
+.scorecard .note { font-size: 12px; color: var(--muted); }
+.scorecard.green .value { color: var(--pass); }
+.scorecard.amber .value { color: var(--partial); }
+.scorecard.gray .value { color: var(--blocked); }
+.scorecard.red .value { color: var(--fail); }
+
+/* Badges */
+.b { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; border: 1px solid; vertical-align: middle; }
+.b-pass { color: var(--pass); background: var(--pass-bg); border-color: var(--pass); }
+.b-partial { color: var(--partial); background: var(--partial-bg); border-color: var(--partial); }
+.b-fail { color: var(--fail); background: var(--fail-bg); border-color: var(--fail); }
+.b-blocked { color: var(--blocked); background: var(--blocked-bg); border-color: var(--blocked); }
+.b-docgap { color: var(--docgap); background: var(--docgap-bg); border-color: var(--docgap); }
+.b-deferred { color: var(--deferred); background: var(--deferred-bg); border-color: var(--deferred); }
+.b-na { color: var(--muted); background: var(--na-bg); border-color: var(--na); }
+.b-aud-public { color: var(--aud-public); background: #ccfbf1; border-color: var(--aud-public); }
+.b-aud-user { color: var(--aud-user); background: #dbeafe; border-color: var(--aud-user); }
+.b-aud-admin { color: var(--aud-admin); background: #fee2e2; border-color: var(--aud-admin); }
+
+/* Phase timeline */
+.timeline { display: flex; align-items: stretch; gap: 8px; overflow-x: auto; }
+.timeline .step { flex: 1 1 0; min-width: 110px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center; position: relative; }
+.timeline .step .num { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.timeline .step .name { font-weight: 600; font-size: 14px; margin: 4px 0 6px; }
+.timeline .step.s-pass { border-top: 3px solid var(--pass); }
+.timeline .step.s-partial { border-top: 3px solid var(--partial); }
+.timeline .step.s-blocked { border-top: 3px solid var(--blocked); }
+.timeline .step.s-fail { border-top: 3px solid var(--fail); }
+
+/* Heatmap */
+.heatmap { overflow-x: auto; }
+.heatmap table { border-collapse: collapse; width: 100%; font-size: 12px; }
+.heatmap th, .heatmap td { padding: 6px 8px; text-align: center; border: 1px solid var(--border); }
+.heatmap th { background: #f5f5f4; font-weight: 600; text-align: left; }
+.heatmap th.col { writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap; min-width: 32px; padding: 8px 4px; }
+.heatmap td.cell { padding: 0; height: 28px; width: 28px; min-width: 28px; }
+.heatmap td.cell .dot { display: block; width: 24px; height: 24px; margin: 2px auto; border-radius: 4px; line-height: 24px; font-size: 11px; font-weight: 700; color: white; }
+.heatmap td.cell.pass .dot { background: var(--pass); }
+.heatmap td.cell.partial .dot { background: var(--partial); }
+.heatmap td.cell.fail .dot { background: var(--fail); }
+.heatmap td.cell.blocked .dot { background: var(--blocked); }
+.heatmap td.cell.docgap .dot { background: var(--docgap); }
+.heatmap td.cell.deferred .dot { background: var(--deferred); }
+.heatmap td.cell.na .dot { background: var(--na); color: #57534e; }
+.heatmap td.ia-label { text-align: left; font-weight: 600; min-width: 140px; }
+.heatmap td.ia-label small { color: var(--muted); font-weight: 400; }
+
+/* IA cards */
+.ia-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
+.ia-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+.ia-card h3 { margin: 0 0 6px; font-size: 16px; }
+.ia-card .ia-code { font-family: ui-monospace, monospace; font-size: 13px; color: var(--muted); font-weight: 500; }
+.ia-card .route { font-family: ui-monospace, monospace; font-size: 12px; color: var(--muted); display: block; margin: 6px 0; word-break: break-all; }
+.ia-card .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.ia-card .phase-strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin: 10px 0; }
+.ia-card .phase-strip .ps { background: var(--na-bg); padding: 4px 0; text-align: center; font-size: 10px; font-weight: 600; border-radius: 2px; color: var(--muted); }
+.ia-card .phase-strip .ps.pass { background: var(--pass); color: white; }
+.ia-card .phase-strip .ps.partial { background: var(--partial); color: white; }
+.ia-card .phase-strip .ps.fail { background: var(--fail); color: white; }
+.ia-card .phase-strip .ps.blocked { background: var(--blocked); color: white; }
+.ia-card .phase-strip .ps.docgap { background: var(--docgap); color: white; }
+.ia-card .phase-strip .ps.deferred { background: var(--deferred); color: white; }
+.ia-card details { margin-top: 8px; border-top: 1px dashed var(--border); padding-top: 8px; }
+.ia-card details summary { cursor: pointer; font-size: 13px; font-weight: 600; padding: 4px 0; user-select: none; list-style: none; }
+.ia-card details summary::before { content: "▶ "; transition: transform 0.15s; display: inline-block; color: var(--accent); }
+.ia-card details[open] summary::before { transform: rotate(90deg); }
+.ia-card .section-block { padding: 8px 0 12px; }
+.ia-card .section-block h4 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin: 8px 0 4px; }
+.bullets { margin: 4px 0 8px 18px; padding: 0; font-size: 13px; }
+.bullets li { margin: 2px 0; }
+.shots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 8px; }
+.shots a { display: block; border: 1px solid var(--border); border-radius: 4px; padding: 4px; text-align: center; font-size: 11px; text-decoration: none; color: var(--muted); }
+.shots img { width: 100%; height: 60px; object-fit: cover; border-radius: 2px; display: block; margin-bottom: 4px; }
+
+/* Filter bar */
+.filter-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; padding: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; }
+.filter-bar label { font-size: 13px; cursor: pointer; user-select: none; padding: 4px 10px; border: 1px solid var(--border); border-radius: 16px; }
+.filter-bar input { display: none; }
+.filter-bar input:checked + span { background: var(--accent); color: white; padding: 4px 10px; border-radius: 16px; margin: -4px -10px; }
+
+/* Issues + actions tables */
+table.simple { width: 100%; border-collapse: collapse; font-size: 13px; background: var(--surface); border-radius: 8px; overflow: hidden; }
+table.simple th, table.simple td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
+table.simple th { background: #f5f5f4; font-weight: 600; }
+table.simple tr:last-child td { border-bottom: none; }
+
+/* Footer */
+footer { margin-top: 64px; padding: 24px; background: #1c1917; color: #d6d3d1; font-size: 12px; }
+footer a { color: #67e8f9; text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+
+/* Responsive */
+@media (max-width: 700px) {
+  .scorecards { grid-template-columns: 1fr 1fr; }
+  .ia-grid { grid-template-columns: 1fr; }
+  .timeline { flex-direction: column; }
+  .hero { padding: 32px 16px; }
+  .hero h1 { font-size: 24px; }
+  .heatmap th.col { writing-mode: horizontal-tb; transform: none; font-size: 10px; min-width: auto; }
+}
+</style>
+</head>
+<body>
+
+    <div class="hero">
+      <div class="container">
+        <h1>TALKPIK AI · IA 구현 검수 리포트</h1>
+        <p>34개 IA(정보 구조) 페이지에 대한 자동·반자동 검수 결과를 한 화면에 정리한 보고서입니다.</p>
+        <div class="meta">
+          <strong>Run ID</strong> 20260601-120308 ·
+          <strong>Source commit</strong> 8aa9594ffe760b3f279c0d79f8039524082849d6 ·
+          <strong>Evidence bundle</strong> d5ba82a8d0232a96 ·
+          <strong>Generated</strong> 2026-06-01T07:43:34.010Z
+        </div>
+        <div class="status-line">
+          최종 라벨 분포 <span class="b b-blocked">PARTIAL: 14</span> <span class="b b-blocked">BLOCKED: 20</span>
+        </div>
+      </div>
+    </div>
+
+  <div class="container">
+    <div class="card" style="margin-top:24px;">
+      <strong>한 줄 결론.</strong> 전체 34 IA — PARTIAL 14 · BLOCKED 20. public 0/6 PASS · user 0/25 PASS · admin 0/3 PASS. BLOCKED 주요 사유: IA-별 특정 findings 47 · CTA regex 미스 11 · 모달 trigger 실패 4. 카테고리별 다음 작업은 페이지 하단 표 참조.
+    </div>
+  </div>
+
+    <section>
+      <div class="container">
+        <h2>한눈에 보기</h2>
+        <p class="muted">검수는 7단계 (Phase 0~6)로 나뉘어 진행됩니다. 각 페이즈는 별도 증거(문서 receipt / 소스 매핑 / 브라우저 / 호스팅 모달 / 보안·세션 / AI UX 리뷰 / 사람 확인)를 모은 뒤 마지막에 최종 라벨을 계산합니다.</p>
+        <div class="scorecards">
+          <div class="scorecard green">
+            <div class="label">문서 receipt PASS</div>
+            <div class="value">34 / 34</div>
+            <div class="note">34개 IA 전부 active docs에서 추출한 요구사항 채워짐 (Phase 0.5)</div>
+          </div>
+          <div class="scorecard amber">
+            <div class="label">Browser PARTIAL</div>
+            <div class="value">36</div>
+            <div class="note">주요 사유: CTA 패턴 미스 33 · h1 패턴 미스 6 · 콘솔 에러 3</div>
+          </div>
+          <div class="scorecard gray">
+            <div class="label">Browser BLOCKED</div>
+            <div class="value">0</div>
+            <div class="note">Protected/Admin storageState 부재로 차단</div>
+          </div>
+          <div class="scorecard green">
+            <div class="label">보안·세션 PASS</div>
+            <div class="value">42 / 66</div>
+            <div class="note">/auth/sign-out, callback sanitize, session_expired 등 (Phase 4)</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <section>
+      <div class="container">
+        <h2>페이즈 진행 현황</h2>
+        <p class="muted">초록: 정상 통과 · 노랑: 부분 통과(monitor가 사유 인정) · 회색: 차단 / 미진행</p>
+        <div class="timeline">
+
+                <div class="step s-blocked">
+                  <div class="num">Phase 0</div>
+                  <div class="name">준비</div>
+                  <span class="b b-blocked">BLOCKED</span>
+                </div>
+                <div class="step s-blocked">
+                  <div class="num">Phase 0.5</div>
+                  <div class="name">문서 receipt</div>
+                  <span class="b b-blocked">BLOCKED</span>
+                </div>
+                <div class="step s-blocked">
+                  <div class="num">Phase 1</div>
+                  <div class="name">manifest</div>
+                  <span class="b b-blocked">BLOCKED</span>
+                </div>
+                <div class="step s-blocked">
+                  <div class="num">Phase 2</div>
+                  <div class="name">browser</div>
+                  <span class="b b-blocked">BLOCKED</span>
+                </div>
+                <div class="step s-blocked">
+                  <div class="num">Phase 3</div>
+                  <div class="name">hosted-surface</div>
+                  <span class="b b-blocked">BLOCKED</span>
+                </div>
+                <div class="step s-blocked">
+                  <div class="num">Phase 4</div>
+                  <div class="name">보안·세션</div>
+                  <span class="b b-blocked">BLOCKED</span>
+                </div>
+                <div class="step s-blocked">
+                  <div class="num">Phase 5</div>
+                  <div class="name">AI UX 리뷰</div>
+                  <span class="b b-blocked">BLOCKED</span>
+                </div>
+                <div class="step s-blocked">
+                  <div class="num">Phase 6</div>
+                  <div class="name">최종 종합</div>
+                  <span class="b b-blocked">BLOCKED</span>
+                </div>
+        </div>
+      </div>
+    </section>
+
+
+    <section>
+      <div class="container">
+        <h2>34 IA × 8 페이즈 커버리지 히트맵</h2>
+        <p class="muted">셀에 마우스를 올리면 각 페이즈 상태가 보입니다. ✓ PASS · △ PARTIAL · ✗ FAIL · ■ BLOCKED · ? DOC-GAP · — DEFERRED</p>
+        <details class="card" style="margin:12px 0;padding:12px 16px;">
+          <summary style="cursor:pointer;font-weight:600;">컬럼이 무엇인지 / 회색(n/a)이 무슨 뜻인지</summary>
+          <ul class="bullets" style="margin-top:8px;">
+            <li><strong>문서</strong> · 문서 receipt: 해당 화면이 어떤 active 문서를 근거로 검수됐는지 기록.</li>
+            <li><strong>소스</strong> · 소스맵: 화면 → 실제 코드 파일 매핑 존재 여부.</li>
+            <li><strong>Browser</strong>: 실제 렌더 증거(HTTP 상태 · H1 · 주 CTA · 스크린샷, 360/768/1280).</li>
+            <li><strong>모달</strong> · 호스티드 모달 동작: 모달이 <em>없는</em> 페이지는 n/a가 정상. 모달이 있는 5개(C-03, D-M1~3, F-M1)만 평가하며, 테스트의 모달 트리거가 휴리스틱이라 자동으로 못 띄운 건 BLOCKED로 표시됩니다.</li>
+            <li><strong>보안</strong> · 보안·세션·권한·네비게이션: 증거가 <em>화면별이 아니라 run 전역(시나리오 단위)</em>입니다. 그래서 보안이 필요한 IA 칸에는 동일한 <em>전역 상태</em>를 표시하고, 필요 없는 IA는 n/a입니다. 상세는 아래 "전역 보안·세션 증거"를 보세요.</li>
+            <li><strong>AI UX</strong>: AI 1차 UX 리뷰 — 34개 전부 수행됨.</li>
+            <li><strong>사람</strong>: 독립 판정(GPT-5.5 미가용 시 별도 세션 Claude) 결과.</li>
+            <li><strong>최종</strong>: 위 증거를 merge 스크립트가 합쳐 계산한 최종 라벨.</li>
+          </ul>
+          <p class="muted" style="margin-top:6px;">회색(n/a) = "그 화면엔 해당 없음" 또는 "전역 증거라 페이지별 칸에 안 붙음"이지, 보통 "작업 안 함"이 아닙니다.</p>
+        </details>
+        <div class="card" style="margin:12px 0;padding:12px 16px;">
+          <h3 style="margin:0 0 8px;">전역 보안·세션 증거 (시나리오 단위, 페이지별 아님)</h3>
+          <p>전체 66건 · <strong style="color:var(--pass)">PASS 42</strong> · <strong style="color:var(--blocked)">BLOCKED 24</strong> · 종합 <span class="b b-partial">PARTIAL</span></p>
+          <strong>BLOCKED 사유 분류</strong><ul class="bullets"><li>admin 역할 미승격: <strong>12</strong>건</li><li>storageState/seed precondition: <strong>9</strong>건</li><li>네트워크 실패 가로채기 미구현: <strong>3</strong>건</li></ul><p class="muted">대부분 "제품 결함"이 아니라 테스트 셋업(픽스처·권한) 부족입니다: admin 역할 미승격, owner 데이터 미시드, 만료 토큰 발급 권한(service_role) 없음, 네트워크 실패 가로채기 미구현.</p>
+        </div>
+        <div class="heatmap card">
+          <table>
+            <thead>
+              <tr>
+                <th>IA</th>
+                <th class="col">문서</th><th class="col">소스</th><th class="col">Browser</th><th class="col">모달</th><th class="col">보안</th><th class="col">AI UX</th><th class="col">사람</th><th class="col">최종</th>
+              </tr>
+            </thead>
+            <tbody>
+        <tr>
+          <td class="ia-label">A-01 <small>Sign-up</small></td>
+          <td class="cell pass" title="문서: PASS"><span class="dot">✓</span></td><td class="cell pass" title="소스: PASS"><span class="dot">✓</span></td><td class="cell pass" title="Browser: PASS"><span class="dot">✓</span></td><td class="cell na" title="모달: n/a"><span class="dot"> </span></td><td class="cell partial" title="보안: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="AI UX: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="사람: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="최종: PARTIAL"><span class="dot">△</span></td>
+        </tr>
+
+        <tr>
+          <td class="ia-label">A-02 <small>Login</small></td>
+          <td class="cell pass" title="문서: PASS"><span class="dot">✓</span></td><td class="cell pass" title="소스: PASS"><span class="dot">✓</span></td><td class="cell pass" title="Browser: PASS"><span class="dot">✓</span></td><td class="cell na" title="모달: n/a"><span class="dot"> </span></td><td class="cell partial" title="보안: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="AI UX: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="사람: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="최종: PARTIAL"><span class="dot">△</span></td>
+        </tr>
+
+        <tr>
+          <td class="ia-label">A-03 <small>Learning goal setup</small></td>
+          <td class="cell pass" title="문서: PASS"><span class="dot">✓</span></td><td class="cell pass" title="소스: PASS"><span class="dot">✓</span></td><td class="cell pass" title="Browser: PASS"><span class="dot">✓</span></td><td class="cell na" title="모달: n/a"><span class="dot"> </span></td><td class="cell partial" title="보안: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="AI UX: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="사람: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="최종: PARTIAL"><span class="dot">△</span></td>
+        </tr>
+
+        <tr>
+          <td class="ia-label">B-01 <small>Home dashboard</small></td>
+          <td class="cell pass" title="문서: PASS"><span class="dot">✓</span></td><td class="cell pass" title="소스: PASS"><span class="dot">✓</span></td><td class="cell partial" title="Browser: PARTIAL"><span class="dot">△</span></td><td class="cell na" title="모달: n/a"><span class="dot"> </span></td><td class="cell partial" title="보안: PARTIAL"><span class="dot">△</span></td><td class="cell blocked" title="AI UX: BLOCKED"><span class="dot">■</span></td><td class="cell na" title="사람: n/a"><span class="dot"> </span></td><td class="cell blocked" title="최종: BLOCKED"><span class="dot">■</span></td>
+        </tr>
+
+        <tr>
+          <td class="ia-label">C-01 <small>Problem type recommendations</small></td>
+          <td class="cell pass" title="문서: PASS"><span class="dot">✓</span></td><td class="cell pass" title="소스: PASS"><span class="dot">✓</span></td><td class="cell partial" title="Browser: PARTIAL"><span class="dot">△</span></td><td class="cell na" title="모달: n/a"><span class="dot"> </span></td><td class="cell partial" title="보안: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="AI UX: PARTIAL"><span class="dot">△</span></td><td class="cell na" title="사람: n/a"><span class="dot"> </span></td><td class="cell blocked" title="최종: BLOCKED"><span class="dot">■</span></td>
+        </tr>
+
+        <tr>
+          <td class="ia-label">C-02 <small>Problem list</small></td>
+          <td class="cell pass" title="문서: PASS"><span class="dot">✓</span></td><td class="cell pass" title="소스: PASS"><span class="dot">✓</span></td><td class="cell pass" title="Browser: PASS"><span class="dot">✓</span></td><td class="cell na" title="모달: n/a"><span class="dot"> </span></td><td class="cell partial" title="보안: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="AI UX: PARTIAL"><span class="dot">△</span></td><td class="cell na" title="사람: n/a"><span class="dot"> </span></td><td class="cell partial" title="최종: PARTIAL"><span class="dot">△</span></td>
+        </tr>
+
+        <tr>
+          <td class="ia-label">C-03 <small>Retry modal</small></td>
+          <td class="cell pass" title="문서: PASS"><span class="dot">✓</span></td><td class="cell pass" title="소스: PASS"><span class="dot">✓</span></td><td class="cell pass" title="Browser: PASS"><span class="dot">✓</span></td><td class="cell partial" title="모달: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="보안: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="AI UX: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="사람: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="최종: PARTIAL"><span class="dot">△</span></td>
+        </tr>
+
+        <tr>
+          <td class="ia-label">D-01 <small>Short-answer writing 51</small></td>
+          <td class="cell pass" title="문서: PASS"><span class="dot">✓</span></td><td class="cell pass" title="소스: PASS"><span class="dot">✓</span></td><td class="cell pass" title="Browser: PASS"><span class="dot">✓</span></td><td class="cell na" title="모달: n/a"><span class="dot"> </span></td><td class="cell partial" title="보안: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="AI UX: PARTIAL"><span class="dot">△</span></td><td class="cell na" title="사람: n/a"><span class="dot"> </span></td><td class="cell partial" title="최종: PARTIAL"><span class="dot">△</span></td>
+        </tr>
+
+        <tr>
+          <td class="ia-label">D-02 <small>Answer writing 52</small></td>
+          <td class="cell pass" title="문서: PASS"><span class="dot">✓</span></td><td class="cell pass" title="소스: PASS"><span class="dot">✓</span></td><td class="cell pass" title="Browser: PASS"><span class="dot">✓</span></td><td class="cell na" title="모달: n/a"><span class="dot"> </span></td><td class="cell partial" title="보안: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="AI UX: PARTIAL"><span class="dot">△</span></td><td class="cell na" title="사람: n/a"><span class="dot"> </span></td><td class="cell partial" title="최종: PARTIAL"><span class="dot">△</span></td>
+        </tr>
+
+        <tr>
+          <td class="ia-label">D-03 <small>Long-form writing 53</small></td>
+          <td class="cell pass" title="문서: PASS"><span class="dot">✓</span></td><td class="cell pass" title="소스: PASS"><span class="dot">✓</span></td><td class="cell pass" title="Browser: PASS"><span class="dot">✓</span></td><td class="cell na" title="모달: n/a"><span class="dot"> </span></td><td class="cell partial" title="보안: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="AI UX: PARTIAL"><span class="dot">△</span></td><td class="cell na" title="사람: n/a"><span class="dot"> </span></td><td class="cell partial" title="최종: PARTIAL"><span class="dot">△</span></td>
+        </tr>
+
+        <tr>
+          <td class="ia-label">D-04 <small>Essay writing 54</small></td>
+          <td class="cell pass" title="문서: PASS"><span class="dot">✓</span></td><td class="cell pass" title="소스: PASS"><span class="dot">✓</span></td><td class="cell pass" title="Browser: PASS"><span class="dot">✓</span></td><td class="cell na" title="모달: n/a"><span class="dot"> </span></td><td class="cell partial" title="보안: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="AI UX: PARTIAL"><span class="dot">△</span></td><td class="cell na" title="사람: n/a"><span class="dot"> </span></td><td class="cell partial" title="최종: PARTIAL"><span class="dot">△</span></td>
+        </tr>
+
+        <tr>
+          <td class="ia-label">D-M1 <small>Submission confirmation</small></td>
+          <td class="cell pass" title="문서: PASS"><span class="dot">✓</span></td><td class="cell pass" title="소스: PASS"><span class="dot">✓</span></td><td class="cell pass" title="Browser: PASS"><span class="dot">✓</span></td><td class="cell blocked" title="모달: BLOCKED"><span class="dot">■</span></td><td class="cell partial" title="보안: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="AI UX: PARTIAL"><span class="dot">△</span></td><td class="cell blocked" title="사람: BLOCKED"><span class="dot">■</span></td><td class="cell blocked" title="최종: BLOCKED"><span class="dot">■</span></td>
+        </tr>
+
+        <tr>
+          <td class="ia-label">D-M2 <small>AI analysis loading</small></td>
+          <td class="cell pass" title="문서: PASS"><span class="dot">✓</span></td><td class="cell pass" title="소스: PASS"><span class="dot">✓</span></td><td class="cell pass" title="Browser: PASS"><span class="dot">✓</span></td><td class="cell blocked" title="모달: BLOCKED"><span class="dot">■</span></td><td class="cell partial" title="보안: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="AI UX: PARTIAL"><span class="dot">△</span></td><td class="cell na" title="사람: n/a"><span class="dot"> </span></td><td class="cell blocked" title="최종: BLOCKED"><span class="dot">■</span></td>
+        </tr>
+
+        <tr>
+          <td class="ia-label">E-01 <small>Short-answer feedback</small></td>
+          <td class="cell pass" title="문서: PASS"><span class="dot">✓</span></td><td class="cell pass" title="소스: PASS"><span class="dot">✓</span></td><td class="cell partial" title="Browser: PARTIAL"><span class="dot">△</span></td><td class="cell na" title="모달: n/a"><span class="dot"> </span></td><td class="cell partial" title="보안: PARTIAL"><span class="dot">△</span></td><td class="cell blocked" title="AI UX: BLOCKED"><span class="dot">■</span></td><td class="cell na" title="사람: n/a"><span class="dot"> </span></td><td class="cell blocked" title="최종: BLOCKED"><span class="dot">■</span></td>
+        </tr>
+
+        <tr>
+          <td class="ia-label">E-02 <small>Long-form feedback</small></td>
+          <td class="cell pass" title="문서: PASS"><span class="dot">✓</span></td><td class="cell pass" title="소스: PASS"><span class="dot">✓</span></td><td class="cell partial" title="Browser: PARTIAL"><span class="dot">△</span></td><td class="cell na" title="모달: n/a"><span class="dot"> </span></td><td class="cell partial" title="보안: PARTIAL"><span class="dot">△</span></td><td class="cell blocked" title="AI UX: BLOCKED"><span class="dot">■</span></td><td class="cell na" title="사람: n/a"><span class="dot"> </span></td><td class="cell blocked" title="최종: BLOCKED"><span class="dot">■</span></td>
+        </tr>
+
+        <tr>
+          <td class="ia-label">R-01 <small>Comparison report</small></td>
+          <td class="cell pass" title="문서: PASS"><span class="dot">✓</span></td><td class="cell pass" title="소스: PASS"><span class="dot">✓</span></td><td class="cell partial" title="Browser: PARTIAL"><span class="dot">△</span></td><td class="cell na" title="모달: n/a"><span class="dot"> </span></td><td class="cell partial" title="보안: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="AI UX: PARTIAL"><span class="dot">△</span></td><td class="cell na" title="사람: n/a"><span class="dot"> </span></td><td class="cell blocked" title="최종: BLOCKED"><span class="dot">■</span></td>
+        </tr>
+
+        <tr>
+          <td class="ia-label">R-02 <small>Next problem recommendation</small></td>
+          <td class="cell pass" title="문서: PASS"><span class="dot">✓</span></td><td class="cell pass" title="소스: PASS"><span class="dot">✓</span></td><td class="cell pass" title="Browser: PASS"><span class="dot">✓</span></td><td class="cell na" title="모달: n/a"><span class="dot"> </span></td><td class="cell partial" title="보안: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="AI UX: PARTIAL"><span class="dot">△</span></td><td class="cell na" title="사람: n/a"><span class="dot"> </span></td><td class="cell partial" title="최종: PARTIAL"><span class="dot">△</span></td>
+        </tr>
+
+        <tr>
+          <td class="ia-label">F-01 <small>My library</small></td>
+          <td class="cell pass" title="문서: PASS"><span class="dot">✓</span></td><td class="cell pass" title="소스: PASS"><span class="dot">✓</span></td><td class="cell partial" title="Browser: PARTIAL"><span class="dot">△</span></td><td class="cell na" title="모달: n/a"><span class="dot"> </span></td><td class="cell partial" title="보안: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="AI UX: PARTIAL"><span class="dot">△</span></td><td class="cell na" title="사람: n/a"><span class="dot"> </span></td><td class="cell blocked" title="최종: BLOCKED"><span class="dot">■</span></td>
+        </tr>
+
+        <tr>
+          <td class="ia-label">F-M1 <small>PDF export modal</small></td>
+          <td class="cell pass" title="문서: PASS"><span class="dot">✓</span></td><td class="cell pass" title="소스: PASS"><span class="dot">✓</span></td><td class="cell partial" title="Browser: PARTIAL"><span class="dot">△</span></td><td class="cell blocked" title="모달: BLOCKED"><span class="dot">■</span></td><td class="cell partial" title="보안: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="AI UX: PARTIAL"><span class="dot">△</span></td><td class="cell fail" title="사람: FAIL"><span class="dot">✗</span></td><td class="cell blocked" title="최종: BLOCKED"><span class="dot">■</span></td>
+        </tr>
+
+        <tr>
+          <td class="ia-label">G-01 <small>Language settings</small></td>
+          <td class="cell pass" title="문서: PASS"><span class="dot">✓</span></td><td class="cell pass" title="소스: PASS"><span class="dot">✓</span></td><td class="cell pass" title="Browser: PASS"><span class="dot">✓</span></td><td class="cell na" title="모달: n/a"><span class="dot"> </span></td><td class="cell partial" title="보안: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="AI UX: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="사람: PARTIAL"><span class="dot">△</span></td><td class="cell blocked" title="최종: BLOCKED"><span class="dot">■</span></td>
+        </tr>
+
+        <tr>
+          <td class="ia-label">H-01 <small>Admin problem management</small></td>
+          <td class="cell pass" title="문서: PASS"><span class="dot">✓</span></td><td class="cell pass" title="소스: PASS"><span class="dot">✓</span></td><td class="cell partial" title="Browser: PARTIAL"><span class="dot">△</span></td><td class="cell na" title="모달: n/a"><span class="dot"> </span></td><td class="cell partial" title="보안: PARTIAL"><span class="dot">△</span></td><td class="cell blocked" title="AI UX: BLOCKED"><span class="dot">■</span></td><td class="cell blocked" title="사람: BLOCKED"><span class="dot">■</span></td><td class="cell blocked" title="최종: BLOCKED"><span class="dot">■</span></td>
+        </tr>
+
+        <tr>
+          <td class="ia-label">D-M3 <small>Autosave warning</small></td>
+          <td class="cell pass" title="문서: PASS"><span class="dot">✓</span></td><td class="cell pass" title="소스: PASS"><span class="dot">✓</span></td><td class="cell pass" title="Browser: PASS"><span class="dot">✓</span></td><td class="cell blocked" title="모달: BLOCKED"><span class="dot">■</span></td><td class="cell partial" title="보안: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="AI UX: PARTIAL"><span class="dot">△</span></td><td class="cell na" title="사람: n/a"><span class="dot"> </span></td><td class="cell blocked" title="최종: BLOCKED"><span class="dot">■</span></td>
+        </tr>
+
+        <tr>
+          <td class="ia-label">X-01 <small>Product landing</small></td>
+          <td class="cell pass" title="문서: PASS"><span class="dot">✓</span></td><td class="cell pass" title="소스: PASS"><span class="dot">✓</span></td><td class="cell pass" title="Browser: PASS"><span class="dot">✓</span></td><td class="cell na" title="모달: n/a"><span class="dot"> </span></td><td class="cell na" title="보안: n/a"><span class="dot"> </span></td><td class="cell partial" title="AI UX: PARTIAL"><span class="dot">△</span></td><td class="cell na" title="사람: n/a"><span class="dot"> </span></td><td class="cell partial" title="최종: PARTIAL"><span class="dot">△</span></td>
+        </tr>
+
+        <tr>
+          <td class="ia-label">X-02 <small>Growth dashboard</small></td>
+          <td class="cell pass" title="문서: PASS"><span class="dot">✓</span></td><td class="cell pass" title="소스: PASS"><span class="dot">✓</span></td><td class="cell partial" title="Browser: PARTIAL"><span class="dot">△</span></td><td class="cell na" title="모달: n/a"><span class="dot"> </span></td><td class="cell partial" title="보안: PARTIAL"><span class="dot">△</span></td><td class="cell deferred" title="AI UX: DEFERRED"><span class="dot">—</span></td><td class="cell na" title="사람: n/a"><span class="dot"> </span></td><td class="cell blocked" title="최종: BLOCKED"><span class="dot">■</span></td>
+        </tr>
+
+        <tr>
+          <td class="ia-label">X-03 <small>Paywall</small></td>
+          <td class="cell pass" title="문서: PASS"><span class="dot">✓</span></td><td class="cell pass" title="소스: PASS"><span class="dot">✓</span></td><td class="cell partial" title="Browser: PARTIAL"><span class="dot">△</span></td><td class="cell na" title="모달: n/a"><span class="dot"> </span></td><td class="cell partial" title="보안: PARTIAL"><span class="dot">△</span></td><td class="cell deferred" title="AI UX: DEFERRED"><span class="dot">—</span></td><td class="cell deferred" title="사람: DEFERRED"><span class="dot">—</span></td><td class="cell blocked" title="최종: BLOCKED"><span class="dot">■</span></td>
+        </tr>
+
+        <tr>
+          <td class="ia-label">X-04 <small>Subscription management</small></td>
+          <td class="cell pass" title="문서: PASS"><span class="dot">✓</span></td><td class="cell pass" title="소스: PASS"><span class="dot">✓</span></td><td class="cell partial" title="Browser: PARTIAL"><span class="dot">△</span></td><td class="cell na" title="모달: n/a"><span class="dot"> </span></td><td class="cell partial" title="보안: PARTIAL"><span class="dot">△</span></td><td class="cell deferred" title="AI UX: DEFERRED"><span class="dot">—</span></td><td class="cell deferred" title="사람: DEFERRED"><span class="dot">—</span></td><td class="cell blocked" title="최종: BLOCKED"><span class="dot">■</span></td>
+        </tr>
+
+        <tr>
+          <td class="ia-label">X-05 <small>Profile editing</small></td>
+          <td class="cell pass" title="문서: PASS"><span class="dot">✓</span></td><td class="cell pass" title="소스: PASS"><span class="dot">✓</span></td><td class="cell pass" title="Browser: PASS"><span class="dot">✓</span></td><td class="cell na" title="모달: n/a"><span class="dot"> </span></td><td class="cell partial" title="보안: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="AI UX: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="사람: PARTIAL"><span class="dot">△</span></td><td class="cell blocked" title="최종: BLOCKED"><span class="dot">■</span></td>
+        </tr>
+
+        <tr>
+          <td class="ia-label">X-06 <small>Password reset</small></td>
+          <td class="cell pass" title="문서: PASS"><span class="dot">✓</span></td><td class="cell pass" title="소스: PASS"><span class="dot">✓</span></td><td class="cell pass" title="Browser: PASS"><span class="dot">✓</span></td><td class="cell na" title="모달: n/a"><span class="dot"> </span></td><td class="cell partial" title="보안: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="AI UX: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="사람: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="최종: PARTIAL"><span class="dot">△</span></td>
+        </tr>
+
+        <tr>
+          <td class="ia-label">X-07 <small>Weakness-based recommendations</small></td>
+          <td class="cell pass" title="문서: PASS"><span class="dot">✓</span></td><td class="cell pass" title="소스: PASS"><span class="dot">✓</span></td><td class="cell pass" title="Browser: PASS"><span class="dot">✓</span></td><td class="cell na" title="모달: n/a"><span class="dot"> </span></td><td class="cell partial" title="보안: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="AI UX: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="사람: PARTIAL"><span class="dot">△</span></td><td class="cell blocked" title="최종: BLOCKED"><span class="dot">■</span></td>
+        </tr>
+
+        <tr>
+          <td class="ia-label">X-08 <small>Organization admin dashboard</small></td>
+          <td class="cell pass" title="문서: PASS"><span class="dot">✓</span></td><td class="cell pass" title="소스: PASS"><span class="dot">✓</span></td><td class="cell partial" title="Browser: PARTIAL"><span class="dot">△</span></td><td class="cell na" title="모달: n/a"><span class="dot"> </span></td><td class="cell partial" title="보안: PARTIAL"><span class="dot">△</span></td><td class="cell blocked" title="AI UX: BLOCKED"><span class="dot">■</span></td><td class="cell blocked" title="사람: BLOCKED"><span class="dot">■</span></td><td class="cell blocked" title="최종: BLOCKED"><span class="dot">■</span></td>
+        </tr>
+
+        <tr>
+          <td class="ia-label">X-09 <small>Notification settings</small></td>
+          <td class="cell pass" title="문서: PASS"><span class="dot">✓</span></td><td class="cell pass" title="소스: PASS"><span class="dot">✓</span></td><td class="cell pass" title="Browser: PASS"><span class="dot">✓</span></td><td class="cell na" title="모달: n/a"><span class="dot"> </span></td><td class="cell partial" title="보안: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="AI UX: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="사람: PARTIAL"><span class="dot">△</span></td><td class="cell blocked" title="최종: BLOCKED"><span class="dot">■</span></td>
+        </tr>
+
+        <tr>
+          <td class="ia-label">X-10 <small>Admin user management</small></td>
+          <td class="cell pass" title="문서: PASS"><span class="dot">✓</span></td><td class="cell pass" title="소스: PASS"><span class="dot">✓</span></td><td class="cell pass" title="Browser: PASS"><span class="dot">✓</span></td><td class="cell na" title="모달: n/a"><span class="dot"> </span></td><td class="cell partial" title="보안: PARTIAL"><span class="dot">△</span></td><td class="cell blocked" title="AI UX: BLOCKED"><span class="dot">■</span></td><td class="cell blocked" title="사람: BLOCKED"><span class="dot">■</span></td><td class="cell blocked" title="최종: BLOCKED"><span class="dot">■</span></td>
+        </tr>
+
+        <tr>
+          <td class="ia-label">X-11 <small>Auth error</small></td>
+          <td class="cell pass" title="문서: PASS"><span class="dot">✓</span></td><td class="cell pass" title="소스: PASS"><span class="dot">✓</span></td><td class="cell pass" title="Browser: PASS"><span class="dot">✓</span></td><td class="cell na" title="모달: n/a"><span class="dot"> </span></td><td class="cell partial" title="보안: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="AI UX: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="사람: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="최종: PARTIAL"><span class="dot">△</span></td>
+        </tr>
+
+        <tr>
+          <td class="ia-label">X-12 <small>Auth verify-email</small></td>
+          <td class="cell pass" title="문서: PASS"><span class="dot">✓</span></td><td class="cell pass" title="소스: PASS"><span class="dot">✓</span></td><td class="cell pass" title="Browser: PASS"><span class="dot">✓</span></td><td class="cell na" title="모달: n/a"><span class="dot"> </span></td><td class="cell partial" title="보안: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="AI UX: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="사람: PARTIAL"><span class="dot">△</span></td><td class="cell partial" title="최종: PARTIAL"><span class="dot">△</span></td>
+        </tr>
+      </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+
+    <section>
+      <div class="container">
+        <h2>34 IA 상세 카드</h2>
+        <p class="muted">카드 안의 "요구사항 + 검증 상세"를 클릭하면 추출된 요구사항·증거·갭이 펼쳐집니다.</p>
+        <div class="filter-bar">
+          <strong style="font-size:13px;margin-right:8px;">필터:</strong>
+          <label><input type="checkbox" value="PASS"><span class="b b-pass">PASS</span></label><label><input type="checkbox" value="PARTIAL"><span class="b b-partial">PARTIAL</span></label><label><input type="checkbox" value="BLOCKED"><span class="b b-blocked">BLOCKED</span></label><label><input type="checkbox" value="FAIL"><span class="b b-fail">FAIL</span></label><label><input type="checkbox" value="aud-public"><span class="b b-aud-public">public</span></label><label><input type="checkbox" value="aud-user"><span class="b b-aud-user">user</span></label><label><input type="checkbox" value="aud-admin"><span class="b b-aud-admin">admin</span></label>
+        </div>
+        <div class="ia-grid">
+
+    <div class="ia-card" data-final="PARTIAL" data-audience="public">
+      <div class="ia-code">A-01</div>
+      <h3>Sign-up</h3>
+      <span class="route">/sign-up</span>
+      <div class="chips">
+        <span class="b b-aud-public">public</span>
+        <span class="b b-blocked">page</span>
+        <span class="b b-partial">PARTIAL</span>
+      </div>
+      <div class="phase-strip" title="페이즈별 상태 (DOC / SRC / BR / MDL / SEC / AI / HUM)"><span class="ps pass" title="DOC: PASS">DOC</span><span class="ps pass" title="SRC: PASS">SRC</span><span class="ps pass" title="BR: PASS">BR</span><span class="ps " title="MDL: n/a">MDL</span><span class="ps partial" title="SEC: PARTIAL">SEC</span><span class="ps partial" title="AI: PARTIAL">AI</span><span class="ps partial" title="HUM: PARTIAL">HUM</span></div>
+      <details>
+        <summary>요구사항 + 검증 상세 (8개 요구사항)</summary>
+        <div class="section-block">
+          <h4>Sitemap 요구</h4>
+          <p style="font-size:13px;margin:4px 0">Route &#39;/sign-up&#39; page. Account creation. Audience public (sitemap.md).</p>
+        </div>
+        <div class="section-block">
+          <h4>User flow 위치</h4>
+          <p style="font-size:13px;margin:4px 0"><strong>이전:</strong> X-01 product landing &#39;무료 시작&#39; (또는 A-02 로그인 &#39;회원가입&#39;)<br><strong>다음:</strong> X-12 verify-email (가입 직후) → /auth/callback → A-03 학습 목표 설정</p>
+        </div>
+        <div class="section-block">
+          <h4>PRD 연결</h4>
+          <p style="font-size:13px;margin:4px 0">auth-overview §4.1 회원가입 흐름; PRD §1·§3 신규 사용자 가입 진입점.</p>
+        </div>
+        <div class="section-block">
+          <h4>추출된 요구사항 (8)</h4>
+          <ul class="bullets"><li>Supabase Auth signUp 호출 후 즉시 /auth/verify-email?email=...로 router.push (auth-overview §4.1).</li><li>이름 2-30자, 이메일 80자 이하, 비밀번호 8-64자 (description ③ 제약 조건).</li><li>필수값 충족 전 가입 CTA 비활성; 클릭 후 중복 CTA 차단 (④).</li><li>중복 이메일/형식 오류는 해당 필드 하단 인라인 안내; raw provider 오류 노출 금지 (③ 예외).</li><li>혜택 칩 3개 이하, 칩 라벨 12자 이하; 이미지 로드 실패 시 기본 캐릭터로 fallback (②).</li><li>profiles 행 생성은 DB trigger on_auth_user_created가 담당 — 클라이언트는 profiles INSERT 권한 없음 (auth-overview §4.1).</li><li>네트워크/인증 메일 실패, 소셜 취소는 인라인 안내 (④ 예외).</li><li>emailRedirectTo는 buildAuthRedirectUrl() — 항상 절대 URL, NEXT_PUBLIC_SITE_URL 필수 (auth-overview §3).</li></ul>
+        </div>
+        <div class="section-block"><h4><span class="b b-docgap">DOC-GAP</span> 문서 충돌</h4><p style="font-size:13px;margin:4px 0">DOC-GAP: description.md ③는 PW 8-64자 명세지만 SignUpForm.tsx는 min:8만 적용 (max 미적용) — auth-overview §10 &#39;Known doc-↔-impl drift&#39;에 기록됨.</p></div>
+
+      <div class="section-block">
+        <h4>브라우저 검증 (3 viewport)</h4>
+        <ul class="bullets"><li><span class="b b-pass">PASS</span> <strong>360px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>768px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>1280px</strong> · HTTP 200 · <span class="muted">정상</span></li></ul>
+      </div>
+
+
+
+
+      <div class="section-block">
+        <h4>AI UX 리뷰 (PARTIAL · 신뢰도 high · 사람확인 pending-adjudication)</h4>
+        <strong>Top gaps</strong><ul class="bullets"><li>Only default state rendered; duplicate-email, email-format, password-strength, and email-send-failure inline states are source-present but not visually verified this run.</li><li>Description §4 mentions social login as a branch; implementation has email-only signup (no social buttons) — possible IA deviation to confirm.</li><li>Required-before-enable CTA (description §4: &#39;필수값 충족 전 비활성&#39;) — implementation gates via onFinish validation rather than disabling the button until valid.</li></ul>
+        <strong>판정자가 확인할 질문</strong><ul class="bullets"><li>Is the absence of social-login (description §4 mentions 소셜 로그인) an intended scope cut or a real IA gap?</li><li>Do the Korean validation messages (&#39;비밀번호는 8자 이상이어야 합니다&#39;, &#39;비밀번호가 일치하지 않습니다&#39;) sound natural and field-specific enough?</li><li>Is gating submission via validation (CTA stays enabled, validates on submit) acceptable vs the documented &#39;disable until required filled&#39; rule?</li></ul>
+      </div>
+
+        <div class="section-block">
+          <h4>최종 라벨 + Top gaps</h4>
+          <span class="b b-partial">PARTIAL</span> <em class='muted'>없음</em>
+        </div>
+
+        <div class="section-block">
+          <h4>스크린샷 (Public IA, 3 viewport)</h4>
+          <div class="shots">
+            <a href="screenshots/coverage-A-01-360.png" target="_blank"><img src="screenshots/coverage-A-01-360.png" alt="A-01 360"><span>360px</span></a><a href="screenshots/coverage-A-01-768.png" target="_blank"><img src="screenshots/coverage-A-01-768.png" alt="A-01 768"><span>768px</span></a><a href="screenshots/coverage-A-01-1280.png" target="_blank"><img src="screenshots/coverage-A-01-1280.png" alt="A-01 1280"><span>1280px</span></a>
+          </div>
+        </div>
+
+      </details>
+    </div>
+
+    <div class="ia-card" data-final="PARTIAL" data-audience="public">
+      <div class="ia-code">A-02</div>
+      <h3>Login</h3>
+      <span class="route">/login</span>
+      <div class="chips">
+        <span class="b b-aud-public">public</span>
+        <span class="b b-blocked">page</span>
+        <span class="b b-partial">PARTIAL</span>
+      </div>
+      <div class="phase-strip" title="페이즈별 상태 (DOC / SRC / BR / MDL / SEC / AI / HUM)"><span class="ps pass" title="DOC: PASS">DOC</span><span class="ps pass" title="SRC: PASS">SRC</span><span class="ps pass" title="BR: PASS">BR</span><span class="ps " title="MDL: n/a">MDL</span><span class="ps partial" title="SEC: PARTIAL">SEC</span><span class="ps partial" title="AI: PARTIAL">AI</span><span class="ps partial" title="HUM: PARTIAL">HUM</span></div>
+      <details>
+        <summary>요구사항 + 검증 상세 (8개 요구사항)</summary>
+        <div class="section-block">
+          <h4>Sitemap 요구</h4>
+          <p style="font-size:13px;margin:4px 0">Route &#39;/login&#39; page. Existing user entry. Audience public (sitemap.md).</p>
+        </div>
+        <div class="section-block">
+          <h4>User flow 위치</h4>
+          <p style="font-size:13px;margin:4px 0"><strong>이전:</strong> X-01 product landing &#39;로그인&#39; 또는 A-01 sign-up 화면 링크<br><strong>다음:</strong> B-01 dashboard (학습자) | X-08 admin org (관리자) | X-06 password-reset (계정 찾기) | /auth/callback (매직 링크)</p>
+        </div>
+        <div class="section-block">
+          <h4>PRD 연결</h4>
+          <p style="font-size:13px;margin:4px 0">auth-overview §4.2; PRD §3 대상 사용자 재방문 진입.</p>
+        </div>
+        <div class="section-block">
+          <h4>추출된 요구사항 (8)</h4>
+          <ul class="bullets"><li>비밀번호 로그인: signInWithPassword → 성공 시 /dashboard 또는 관리자 라우트로 분기 (auth-overview §4.2).</li><li>매직 링크 로그인: signInWithOtp → &#39;이메일을 확인하세요&#39; 상태 → 사용자 클릭 시 /auth/callback?next=/dashboard 진입.</li><li>ID 4-80자, 비밀번호 8-64자, blur 후 형식 검증 (description ③).</li><li>필수값 충족 전 CTA 비활성; 3회 실패 시 잠금 안내 (③ 예외).</li><li>?reason=session_expired query 감지 시 LoginForm이 안내 Alert 노출 (auth-overview §4.2 세션 만료 안내).</li><li>휴면/탈퇴/서버 오류/세션 만료는 인라인 안내; raw 오류 노출 금지 (④ 예외).</li><li>회원가입/계정 찾기 보조 링크는 항상 노출하여 사용자 escape route 제공 (④).</li><li>Audience public: middleware PUBLIC_PATHS에 포함되어야 함.</li></ul>
+        </div>
+
+
+      <div class="section-block">
+        <h4>브라우저 검증 (3 viewport)</h4>
+        <ul class="bullets"><li><span class="b b-pass">PASS</span> <strong>360px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>768px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>1280px</strong> · HTTP 200 · <span class="muted">정상</span></li></ul>
+      </div>
+
+
+
+
+      <div class="section-block">
+        <h4>AI UX 리뷰 (PARTIAL · 신뢰도 high · 사람확인 pending-adjudication)</h4>
+        <strong>Top gaps</strong><ul class="bullets"><li>Locked/rate-limited and login-failure rendered states not captured (source-present only).</li><li>Dormant/withdrawn-account and server-error inline branches (description §4 예외) not visually verified.</li><li>Failed-attempts counter resets on tab switch — acceptable as UX hint, but worth confirming the copy does not imply a hard lock.</li></ul>
+        <strong>판정자가 확인할 질문</strong><ul class="bullets"><li>Does the failed-attempts hint copy clearly read as &#39;server may temporarily block&#39; (UX hint) rather than implying the client locked the account?</li><li>Is the session-expired Alert (&#39;세션이 만료되어 로그아웃됐어요. 다시 로그인해주세요.&#39;) reassuring and natural in tone?</li><li>Are two login modes (비밀번호 / 매직링크) via Segmented clear and not confusing for a first-time returning user on mobile?</li></ul>
+      </div>
+
+        <div class="section-block">
+          <h4>최종 라벨 + Top gaps</h4>
+          <span class="b b-partial">PARTIAL</span> <em class='muted'>없음</em>
+        </div>
+
+        <div class="section-block">
+          <h4>스크린샷 (Public IA, 3 viewport)</h4>
+          <div class="shots">
+            <a href="screenshots/coverage-A-02-360.png" target="_blank"><img src="screenshots/coverage-A-02-360.png" alt="A-02 360"><span>360px</span></a><a href="screenshots/coverage-A-02-768.png" target="_blank"><img src="screenshots/coverage-A-02-768.png" alt="A-02 768"><span>768px</span></a><a href="screenshots/coverage-A-02-1280.png" target="_blank"><img src="screenshots/coverage-A-02-1280.png" alt="A-02 1280"><span>1280px</span></a>
+          </div>
+        </div>
+
+      </details>
+    </div>
+
+    <div class="ia-card" data-final="PARTIAL" data-audience="user">
+      <div class="ia-code">A-03</div>
+      <h3>Learning goal setup</h3>
+      <span class="route">/onboarding/learning-goal</span>
+      <div class="chips">
+        <span class="b b-aud-user">user</span>
+        <span class="b b-blocked">page</span>
+        <span class="b b-partial">PARTIAL</span>
+      </div>
+      <div class="phase-strip" title="페이즈별 상태 (DOC / SRC / BR / MDL / SEC / AI / HUM)"><span class="ps pass" title="DOC: PASS">DOC</span><span class="ps pass" title="SRC: PASS">SRC</span><span class="ps pass" title="BR: PASS">BR</span><span class="ps " title="MDL: n/a">MDL</span><span class="ps partial" title="SEC: PARTIAL">SEC</span><span class="ps partial" title="AI: PARTIAL">AI</span><span class="ps partial" title="HUM: PARTIAL">HUM</span></div>
+      <details>
+        <summary>요구사항 + 검증 상세 (8개 요구사항)</summary>
+        <div class="section-block">
+          <h4>Sitemap 요구</h4>
+          <p style="font-size:13px;margin:4px 0">Route &#39;/onboarding/learning-goal&#39; page. First-run onboarding before the dashboard. Audience user.</p>
+        </div>
+        <div class="section-block">
+          <h4>User flow 위치</h4>
+          <p style="font-size:13px;margin:4px 0"><strong>이전:</strong> A-01 가입 직후 또는 /auth/callback 성공 (이메일 링크 next=/onboarding/learning-goal)<br><strong>다음:</strong> B-01 home dashboard (다음 단계 / 건너뛰기)</p>
+        </div>
+        <div class="section-block">
+          <h4>PRD 연결</h4>
+          <p style="font-size:13px;margin:4px 0">PRD §2 제품 목표 + §7.14 프로필 설정 일부 — 학습 목표 저장으로 추천 기준 구성.</p>
+        </div>
+        <div class="section-block">
+          <h4>추출된 요구사항 (8)</h4>
+          <ul class="bullets"><li>단계명 12자 이하, 전체 단계 수/현재 단계 항상 병기 (description ①).</li><li>안내 카피 80자/2줄, 다국어 확장 30% 허용 (②).</li><li>목표 급수·시험일·언어 필수, 과거 날짜 선택 금지 (③).</li><li>미지원 급수/저장 실패는 항목 하단에 안내 (③ 예외).</li><li>필수값 누락 시 다음 CTA 비활성; 클릭 후 로딩 고정으로 중복 방지 (④).</li><li>저장 실패 시 화면 유지 + 재시도 토스트; 사용자 입력값 보존 (④ 예외).</li><li>건너뛰기 분기 허용 (사용자 플로우 &#39;A-03 → B-01 건너뛰기&#39;).</li><li>Audience user: 인증된 사용자 RLS (auth.uid() 기반 자기 row).</li></ul>
+        </div>
+
+
+      <div class="section-block">
+        <h4>브라우저 검증 (3 viewport)</h4>
+        <ul class="bullets"><li><span class="b b-pass">PASS</span> <strong>360px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>768px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>1280px</strong> · HTTP 200 · <span class="muted">정상</span></li></ul>
+      </div>
+
+
+
+
+      <div class="section-block">
+        <h4>AI UX 리뷰 (PARTIAL · 신뢰도 medium · 사람확인 pending-adjudication)</h4>
+        <strong>Top gaps</strong><ul class="bullets"><li>On-disk screenshot for A-03 was not captured (ledger line 93) — render confirmed via finalUrl/CTA/0-errors metadata but no PNG for visual spot-check, so cannot fully verify visual hierarchy/overflow/touch targets.</li><li>Only &#39;default&#39; UX state captured; loading/error/success/disabled states (and onboarding step indicator from description area 1) unverified.</li><li>Keyboard/focus order and refresh-with-dirty-form behavior not exercised.</li></ul>
+        <strong>판정자가 확인할 질문</strong><ul class="bullets"><li>A-03 has no on-disk screenshot this run; is the metadata-only render evidence (authenticated finalUrl + CTA present + 0 console errors x3 viewports) sufficient for PARTIAL, or must a visual capture be required before any PASS?</li><li>Does the form satisfy GOV.UK question-page error UX given that the disabled-state and error-state were never visually captured (only the zod message and disabledDate exist in source)?</li><li>Is the missing onboarding step/progress indicator (description.md area 1) a documented requirement gap or acceptably superseded by the single-step form?</li></ul>
+      </div>
+
+        <div class="section-block">
+          <h4>최종 라벨 + Top gaps</h4>
+          <span class="b b-partial">PARTIAL</span> <em class='muted'>없음</em>
+        </div>
+
+      </details>
+    </div>
+
+    <div class="ia-card" data-final="BLOCKED" data-audience="user">
+      <div class="ia-code">B-01</div>
+      <h3>Home dashboard</h3>
+      <span class="route">/dashboard</span>
+      <div class="chips">
+        <span class="b b-aud-user">user</span>
+        <span class="b b-blocked">page</span>
+        <span class="b b-blocked">BLOCKED</span>
+      </div>
+      <div class="phase-strip" title="페이즈별 상태 (DOC / SRC / BR / MDL / SEC / AI / HUM)"><span class="ps pass" title="DOC: PASS">DOC</span><span class="ps pass" title="SRC: PASS">SRC</span><span class="ps partial" title="BR: PARTIAL">BR</span><span class="ps " title="MDL: n/a">MDL</span><span class="ps partial" title="SEC: PARTIAL">SEC</span><span class="ps blocked" title="AI: BLOCKED">AI</span><span class="ps " title="HUM: n/a">HUM</span></div>
+      <details>
+        <summary>요구사항 + 검증 상세 (9개 요구사항)</summary>
+        <div class="section-block">
+          <h4>Sitemap 요구</h4>
+          <p style="font-size:13px;margin:4px 0">Route &#39;/dashboard&#39; page. Authenticated learning dashboard. Audience user.</p>
+        </div>
+        <div class="section-block">
+          <h4>User flow 위치</h4>
+          <p style="font-size:13px;margin:4px 0"><strong>이전:</strong> A-02 login 성공 (학습자) | A-03 학습 목표 완료/건너뛰기 | /auth/callback 학습자 성공<br><strong>다음:</strong> C-01 추천 학습 | F-01 내 서재 | X-02 성장 | X-09 알림 | G-01 언어 | X-05 프로필 | X-04 멤버십</p>
+        </div>
+        <div class="section-block">
+          <h4>PRD 연결</h4>
+          <p style="font-size:13px;margin:4px 0">PRD §7.1 홈 대시보드 — 사용자명/플랜·목표 급수·시험일까지 남은 날짜·KPI 요약 한 화면.</p>
+        </div>
+        <div class="section-block">
+          <h4>추출된 요구사항 (9)</h4>
+          <ul class="bullets"><li>사이드 내비 6개 고정 (홈/문제 풀기/쓰기 연습/내 서재/성장 리포트/설정) (description ①).</li><li>활성 메뉴 1개만 표시; 권한 잠금 메뉴는 비활성 스타일 + 잠금 사유 (① 예외).</li><li>KPI 4개 이하, 수치 라벨 1줄, 업데이트 시각 표시 (②).</li><li>신규 사용자는 0값 대신 시작 유도 문구 (② 예외).</li><li>추천/진행 카드는 기본 3개/최대 5개, 카드 제목 28자·본문 2줄 (③).</li><li>추천 없음/최근 기록 없음은 빈 상태 카드로 대체 (③ 예외).</li><li>일정/알림 항목 5개 이하, 날짜 표기는 로케일 기준; 로드 실패 시 재시도 + 설정 이동 CTA (④).</li><li>auth.uid() 기반 RLS로 자기 row 한정 데이터만 노출 (sitemap.md Route Audience Map; backend-auth.md).</li><li>PRD 수용 기준: &#39;듣기/읽기 집중&#39;, &#39;쓰기 집중 연습&#39;, &#39;이어하기&#39;, &#39;WEAK POINT&#39;, &#39;더보기&#39; 각 카드는 연결 화면으로 이동해야 함.</li></ul>
+        </div>
+
+
+      <div class="section-block">
+        <h4>브라우저 검증 (3 viewport)</h4>
+        <ul class="bullets"><li><span class="b b-partial">PARTIAL</span> <strong>360px</strong> · HTTP 200 · Primary CTA matching /(학습\s*시작|쓰기\s*연습|이어하기|시작)/i not visible</li><li><span class="b b-partial">PARTIAL</span> <strong>768px</strong> · HTTP 200 · Primary CTA matching /(학습\s*시작|쓰기\s*연습|이어하기|시작)/i not visible</li><li><span class="b b-partial">PARTIAL</span> <strong>1280px</strong> · HTTP 200 · Primary CTA matching /(학습\s*시작|쓰기\s*연습|이어하기|시작)/i not visible</li></ul>
+      </div>
+
+
+
+        <div class="section-block"><h4>AI UX 리뷰</h4><span class="b b-blocked">BLOCKED</span> <span class="muted">Seed gap: student@audit.local has no learning_goal row; dashboard page redirects to /onboarding/learning-goal when goal is null (src/app/(workspace)/dashboard/page.tsx:29).</span></div>
+        <div class="section-block">
+          <h4>최종 라벨 + Top gaps</h4>
+          <span class="b b-blocked">BLOCKED</span> <ul class="bullets"><li>Primary CTA matching /(학습\s*시작|쓰기\s*연습|이어하기|시작)/i not visible</li><li>Seed gap: student@audit.local has no learning_goal row; dashboard page redirects to /onboarding/learning-goal when goal is null (src/app/(workspace)/dashboard/page.tsx:29).</li><li>No populated-dashboard evidence: KPI cards, &#39;이어 풀 문제&#39; recommendation, RecentFeedback, and Alerts never rendered (requires seeded goal + attempts + feedback rows).</li><li>No on-disk B-01 screenshot of the actual dashboard state.</li></ul>
+        </div>
+
+      </details>
+    </div>
+
+    <div class="ia-card" data-final="BLOCKED" data-audience="user">
+      <div class="ia-code">C-01</div>
+      <h3>Problem type recommendations</h3>
+      <span class="route">/practice/recommendations</span>
+      <div class="chips">
+        <span class="b b-aud-user">user</span>
+        <span class="b b-blocked">page</span>
+        <span class="b b-blocked">BLOCKED</span>
+      </div>
+      <div class="phase-strip" title="페이즈별 상태 (DOC / SRC / BR / MDL / SEC / AI / HUM)"><span class="ps pass" title="DOC: PASS">DOC</span><span class="ps pass" title="SRC: PASS">SRC</span><span class="ps partial" title="BR: PARTIAL">BR</span><span class="ps " title="MDL: n/a">MDL</span><span class="ps partial" title="SEC: PARTIAL">SEC</span><span class="ps partial" title="AI: PARTIAL">AI</span><span class="ps " title="HUM: n/a">HUM</span></div>
+      <details>
+        <summary>요구사항 + 검증 상세 (8개 요구사항)</summary>
+        <div class="section-block">
+          <h4>Sitemap 요구</h4>
+          <p style="font-size:13px;margin:4px 0">Route &#39;/practice/recommendations&#39; page. Recommends writing/problem types. Audience user.</p>
+        </div>
+        <div class="section-block">
+          <h4>User flow 위치</h4>
+          <p style="font-size:13px;margin:4px 0"><strong>이전:</strong> B-01 dashboard &#39;추천 학습&#39;<br><strong>다음:</strong> C-02 문제 목록 (카드 선택 / 추천 유형 시작) — &#39;필터 변경&#39;은 self-loop</p>
+        </div>
+        <div class="section-block">
+          <h4>PRD 연결</h4>
+          <p style="font-size:13px;margin:4px 0">PRD §7.5 쓰기 집중 연습 설정 — 51/52/53/54 유형 선택 + 추천 기준.</p>
+        </div>
+        <div class="section-block">
+          <h4>추출된 요구사항 (8)</h4>
+          <ul class="bullets"><li>51/52/53/54번 유형 탭 4개 고정, 탭 라벨 10자 이하, 가로 스크롤 허용 (description ②).</li><li>대표 추천 1개 카드, 제목 32자, 추천 사유 2줄 이하 (③).</li><li>추천 계산 실패 시 직접 선택 카드 + 재시도 CTA로 fallback (③ 예외).</li><li>유형별 카드 최대 4개, 카드 설명 60자 이하, 선택 상태 명확화 (④).</li><li>권한 잠금 유형은 선택 불가 + 잠금 배지 (② 예외).</li><li>이용 불가 유형은 비활성 카드 + 안내 툴팁 (④ 예외).</li><li>터치 영역 44px 이상, 모바일은 햄버거 메뉴로 접고 현재 위치만 표시 (① 예외).</li><li>PRD 수용 기준: &#39;문제 유형을 선택하지 않고 생성하면 알림으로 선택을 요구&#39; (§7.3).</li></ul>
+        </div>
+
+
+      <div class="section-block">
+        <h4>브라우저 검증 (3 viewport)</h4>
+        <ul class="bullets"><li><span class="b b-partial">PARTIAL</span> <strong>360px</strong> · HTTP 200 · Primary CTA matching /(시작|선택|문제\s*풀기)/i not visible</li><li><span class="b b-partial">PARTIAL</span> <strong>768px</strong> · HTTP 200 · Primary CTA matching /(시작|선택|문제\s*풀기)/i not visible</li><li><span class="b b-partial">PARTIAL</span> <strong>1280px</strong> · HTTP 200 · Primary CTA matching /(시작|선택|문제\s*풀기)/i not visible</li></ul>
+      </div>
+
+
+
+
+      <div class="section-block">
+        <h4>AI UX 리뷰 (PARTIAL · 신뢰도 medium · 사람확인 not-required)</h4>
+        <strong>Top gaps</strong><ul class="bullets"><li>Empty/first-use state (current seed has no recommendations) shows no actionable CTA — only guidance text; description.md expects a path to direct type selection</li><li>AI involvement not explicitly labeled and no user control to reject/regenerate recommendation</li><li>No screenshot artifact exists for C-01 in this run — rendered CTA/heading cannot be pixel-verified</li></ul>
+        <strong>판정자가 확인할 질문</strong><ul class="bullets"><li>Is the recommendation empty-state acceptable as a non-action guidance card, or does C-01 description.md require an explicit &#39;직접 선택&#39; CTA in the empty state?</li><li>Does &#39;이어 풀기&#39; read as the correct primary CTA for a fresh recommendation, or does it imply resuming prior work?</li><li>Should AI-derived recommendations be explicitly labeled as AI and offer a regenerate/dismiss control per checklist 6.4?</li></ul>
+      </div>
+
+        <div class="section-block">
+          <h4>최종 라벨 + Top gaps</h4>
+          <span class="b b-blocked">BLOCKED</span> <ul class="bullets"><li>Primary CTA matching /(시작|선택|문제\s*풀기)/i not visible</li></ul>
+        </div>
+
+      </details>
+    </div>
+
+    <div class="ia-card" data-final="PARTIAL" data-audience="user">
+      <div class="ia-code">C-02</div>
+      <h3>Problem list</h3>
+      <span class="route">/practice/problems</span>
+      <div class="chips">
+        <span class="b b-aud-user">user</span>
+        <span class="b b-blocked">page</span>
+        <span class="b b-partial">PARTIAL</span>
+      </div>
+      <div class="phase-strip" title="페이즈별 상태 (DOC / SRC / BR / MDL / SEC / AI / HUM)"><span class="ps pass" title="DOC: PASS">DOC</span><span class="ps pass" title="SRC: PASS">SRC</span><span class="ps pass" title="BR: PASS">BR</span><span class="ps " title="MDL: n/a">MDL</span><span class="ps partial" title="SEC: PARTIAL">SEC</span><span class="ps partial" title="AI: PARTIAL">AI</span><span class="ps " title="HUM: n/a">HUM</span></div>
+      <details>
+        <summary>요구사항 + 검증 상세 (8개 요구사항)</summary>
+        <div class="section-block">
+          <h4>Sitemap 요구</h4>
+          <p style="font-size:13px;margin:4px 0">Route &#39;/practice/problems&#39; page. Problem candidates after recommendation/filtering. Audience user. Hosts C-03 modal.</p>
+        </div>
+        <div class="section-block">
+          <h4>User flow 위치</h4>
+          <p style="font-size:13px;margin:4px 0"><strong>이전:</strong> C-01 추천 선택 | R-02 다음 문제 추천 &#39;추천 시작/카드 선택&#39; | X-07 약점 추천 &#39;추천 문제 시작&#39;<br><strong>다음:</strong> C-03 다시 풀기 모달 (상세 보기/문제 선택) → D-01/D-02/D-03/D-04 작성 시작</p>
+        </div>
+        <div class="section-block">
+          <h4>PRD 연결</h4>
+          <p style="font-size:13px;margin:4px 0">PRD §7.5 쓰기 연습 설정 + §7.6 쓰기 연습 진입 — 문제 탐색·필터·정렬·페이지 이동.</p>
+        </div>
+        <div class="section-block">
+          <h4>추출된 요구사항 (8)</h4>
+          <ul class="bullets"><li>필터 동시 사용 가능, 선택 칩 5개 이하 표시 (description ②).</li><li>조합 결과 없음은 빈 결과 화면 + 초기화 CTA (② 예외).</li><li>검색어 2-40자, 정렬 1개 선택, debounce 300ms (③).</li><li>10개/페이지, 행 제목 32자, 상태 배지 1개 우선 표시 (④).</li><li>페이지 버튼 5개, 총 건수는 목록 상단/하단에 표시 (⑤).</li><li>첫/마지막 페이지에서 이전/다음 버튼 비활성 (⑤ 예외).</li><li>비공개/만료 문제는 행 비활성 + 사유 표시 (④ 예외).</li><li>C-03 retry modal을 hosting (sitemap.md Overlay/Modal Surfaces).</li></ul>
+        </div>
+
+
+      <div class="section-block">
+        <h4>브라우저 검증 (3 viewport)</h4>
+        <ul class="bullets"><li><span class="b b-pass">PASS</span> <strong>360px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>768px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>1280px</strong> · HTTP 200 · <span class="muted">정상</span></li></ul>
+      </div>
+
+
+
+
+      <div class="section-block">
+        <h4>AI UX 리뷰 (PARTIAL · 신뢰도 medium · 사람확인 not-required)</h4>
+        <strong>Top gaps</strong><ul class="bullets"><li>No screenshot artifact exists for C-02 — mobile list readability and filter-chip overflow cannot be pixel-verified</li><li>Search invalid/금칙어 inline-guidance exception (description.md §3 예외) not evidenced</li><li>Keyboard/focus order across tabs→filters→list→pagination not verified</li></ul>
+        <strong>판정자가 확인할 질문</strong><ul class="bullets"><li>Does the problem list remain readable at 360px with status badges and start actions per checklist 6.8 (no screenshot to confirm)?</li><li>Is list state (filters/sort/page) correctly restored on browser back and refresh given router.replace usage?</li></ul>
+      </div>
+
+        <div class="section-block">
+          <h4>최종 라벨 + Top gaps</h4>
+          <span class="b b-partial">PARTIAL</span> <em class='muted'>없음</em>
+        </div>
+
+      </details>
+    </div>
+
+    <div class="ia-card" data-final="PARTIAL" data-audience="user">
+      <div class="ia-code">C-03</div>
+      <h3>Retry modal</h3>
+      <span class="route">/practice/problems</span>
+      <div class="chips">
+        <span class="b b-aud-user">user</span>
+        <span class="b b-blocked">user chooses to solve a previously attempted or retry-eligible problem.</span>
+        <span class="b b-partial">PARTIAL</span>
+      </div>
+      <div class="phase-strip" title="페이즈별 상태 (DOC / SRC / BR / MDL / SEC / AI / HUM)"><span class="ps pass" title="DOC: PASS">DOC</span><span class="ps pass" title="SRC: PASS">SRC</span><span class="ps pass" title="BR: PASS">BR</span><span class="ps partial" title="MDL: PARTIAL">MDL</span><span class="ps partial" title="SEC: PARTIAL">SEC</span><span class="ps partial" title="AI: PARTIAL">AI</span><span class="ps partial" title="HUM: PARTIAL">HUM</span></div>
+      <details>
+        <summary>요구사항 + 검증 상세 (8개 요구사항)</summary>
+        <div class="section-block">
+          <h4>Sitemap 요구</h4>
+          <p style="font-size:13px;margin:4px 0">Hosted modal on &#39;/practice/problems&#39;. Triggered when user chooses to solve a previously attempted or retry-eligible problem.</p>
+        </div>
+        <div class="section-block">
+          <h4>User flow 위치</h4>
+          <p style="font-size:13px;margin:4px 0"><strong>이전:</strong> C-02 문제 목록 행 선택<br><strong>다음:</strong> D-01 (시작:51) | D-02 (시작:52) | D-03 (시작:53) | D-04 (시작:54) | C-02 (취소)</p>
+        </div>
+        <div class="section-block">
+          <h4>PRD 연결</h4>
+          <p style="font-size:13px;margin:4px 0">PRD §7.6 쓰기 연습 진입 — 재풀이 조건 확인 후 학습 시작.</p>
+        </div>
+        <div class="section-block">
+          <h4>추출된 요구사항 (8)</h4>
+          <ul class="bullets"><li>배경은 dim 처리, 스크롤 잠금, 포커스는 모달 내부 고정 (description ①).</li><li>배경 클릭 닫기는 위험 상태에서는 비활성 (① 예외).</li><li>모달 제목 28자, 요약 3항목 이하, 긴 제목 말줄임 (②).</li><li>재풀이 모드 3개 이하, 하나는 기본 선택, 선택 전 시작 비활성 (③).</li><li>CTA 2개 고정 (취소/시작); 시작 클릭 후 중복 실행 차단 (④).</li><li>문제 만료 시 시작 대신 만료 안내 + 닫기만 제공 (② 예외).</li><li>시작 실패 시 모달 유지 + 오류 + 재시도 버튼 (④ 예외).</li><li>Hosted surface: trigger·focus entry/return·Esc/cancel/backdrop은 host route /practice/problems에서 검증 (Phase 3 hosted-surface-results 대상).</li></ul>
+        </div>
+
+
+      <div class="section-block">
+        <h4>브라우저 검증 (3 viewport)</h4>
+        <ul class="bullets"><li><span class="b b-pass">PASS</span> <strong>360px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>768px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>1280px</strong> · HTTP 200 · <span class="muted">정상</span></li></ul>
+      </div>
+
+
+      <div class="section-block">
+        <h4>호스팅 모달 검증</h4>
+        <span class="b b-partial">PARTIAL</span>
+        <ul class="bullets">
+          <li>Trigger fired: ✓</li>
+          <li>Surface opened: ✓</li>
+          <li>Focus entry: inside-modal</li>
+          <li>Esc close: esc-closed</li>
+        </ul>
+        <em class='muted'>없음</em>
+      </div>
+
+
+
+      <div class="section-block">
+        <h4>AI UX 리뷰 (PARTIAL · 신뢰도 medium · 사람확인 pending-adjudication)</h4>
+        <strong>Top gaps</strong><ul class="bullets"><li>Documented &#39;재풀이 모드 선택&#39; (새 답안/이전 답안 기반/힌트 포함) region from description.md §3 is NOT present — modal only offers retry vs view-result</li><li>Start-failure handling (description §4 예외: keep modal + error + retry) missing — navigation has no failure path</li><li>Modal trigger is heuristic in hosted test; per checklist §9 a hosted modal cannot PASS without confirmed host-route open + focus evidence</li></ul>
+        <strong>판정자가 확인할 질문</strong><ul class="bullets"><li>Is omitting the documented &#39;재풀이 모드 선택&#39; (3 modes) acceptable, or is it a FAIL against C-03 description.md §3?</li><li>Should &#39;시작 실패&#39; keep the modal open with an error + retry per description §4 instead of an unguarded router.push?</li><li>On modal open, does focus move into the modal and return to the triggering row control on close (no focus evidence captured)?</li></ul>
+      </div>
+
+        <div class="section-block">
+          <h4>최종 라벨 + Top gaps</h4>
+          <span class="b b-partial">PARTIAL</span> <em class='muted'>없음</em>
+        </div>
+
+      </details>
+    </div>
+
+    <div class="ia-card" data-final="PARTIAL" data-audience="user">
+      <div class="ia-code">D-01</div>
+      <h3>Short-answer writing 51</h3>
+      <span class="route">/writing/51</span>
+      <div class="chips">
+        <span class="b b-aud-user">user</span>
+        <span class="b b-blocked">page</span>
+        <span class="b b-partial">PARTIAL</span>
+      </div>
+      <div class="phase-strip" title="페이즈별 상태 (DOC / SRC / BR / MDL / SEC / AI / HUM)"><span class="ps pass" title="DOC: PASS">DOC</span><span class="ps pass" title="SRC: PASS">SRC</span><span class="ps pass" title="BR: PASS">BR</span><span class="ps " title="MDL: n/a">MDL</span><span class="ps partial" title="SEC: PARTIAL">SEC</span><span class="ps partial" title="AI: PARTIAL">AI</span><span class="ps " title="HUM: n/a">HUM</span></div>
+      <details>
+        <summary>요구사항 + 검증 상세 (8개 요구사항)</summary>
+        <div class="section-block">
+          <h4>Sitemap 요구</h4>
+          <p style="font-size:13px;margin:4px 0">Route &#39;/writing/51&#39; page. TOPIK writing question 51. Audience user. Hosts D-M1, D-M3.</p>
+        </div>
+        <div class="section-block">
+          <h4>User flow 위치</h4>
+          <p style="font-size:13px;margin:4px 0"><strong>이전:</strong> C-02 문제 목록 또는 C-03 모달 → &#39;시작:51&#39;<br><strong>다음:</strong> D-M1 제출 확인 (제출) | D-M3 자동저장 경고 | C-02 (저장 안 함)</p>
+        </div>
+        <div class="section-block">
+          <h4>PRD 연결</h4>
+          <p style="font-size:13px;margin:4px 0">PRD §7.6 쓰기 연습; 51번은 ㉠/㉡ 빈칸 탭과 단답형.</p>
+        </div>
+        <div class="section-block">
+          <h4>추출된 요구사항 (8)</h4>
+          <ul class="bullets"><li>자동저장 상태 표시; 제출 전 D-M1 확인 모달 필수 (description ①).</li><li>답안 10-120자, blur+제출 검증, 글자수 실시간 표시 (④).</li><li>글자수 미달/초과는 입력창 하단 즉시 표시 (④ 예외).</li><li>지문 3줄 우선, 긴 문항은 접기 없이 영역 확장 (②).</li><li>참고 이미지 비율 유지, 캡션 40자 이하, 확대 보기 지원; 로드 실패 시 대체 텍스트 (③).</li><li>우측 도움말 카드 3개 이하, 제목 16자/본문 2줄 제한 (⑤).</li><li>저장 실패/네트워크 오류 시 상태 배지 + 재시도; 작성 내용 보존 (① 예외).</li><li>자동저장 실패는 D-M3 hosted modal 호출 (sitemap.md Overlay/Modal Surfaces).</li></ul>
+        </div>
+
+
+      <div class="section-block">
+        <h4>브라우저 검증 (3 viewport)</h4>
+        <ul class="bullets"><li><span class="b b-pass">PASS</span> <strong>360px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>768px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>1280px</strong> · HTTP 200 · <span class="muted">정상</span></li></ul>
+      </div>
+
+
+
+
+      <div class="section-block">
+        <h4>AI UX 리뷰 (PARTIAL · 신뢰도 medium · 사람확인 not-required)</h4>
+        <strong>Top gaps</strong><ul class="bullets"><li>Layout grid &#39;1fr 280px&#39; has no responsive breakpoint — likely mobile overflow at 360px (checklist 6.8); unverified without screenshot</li><li>우측 도움말 (description.md §5) is permanently the empty placeholder — documented region present but never populated</li><li>No browser-back / unsaved-dirty navigation guard; only debounced autosave protects draft</li></ul>
+        <strong>판정자가 확인할 질문</strong><ul class="bullets"><li>At 360px does the fixed &#39;1fr 280px&#39; grid cause horizontal overflow or hide the answer input/submit (no screenshot captured)?</li><li>Is a permanently-empty 도움말 panel acceptable for D-01 §5, or should it be hidden when no tips exist?</li><li>Is loss of pre-debounce dirty input on refresh/back acceptable given autosave, or does description require an exit warning?</li></ul>
+      </div>
+
+        <div class="section-block">
+          <h4>최종 라벨 + Top gaps</h4>
+          <span class="b b-partial">PARTIAL</span> <em class='muted'>없음</em>
+        </div>
+
+      </details>
+    </div>
+
+    <div class="ia-card" data-final="PARTIAL" data-audience="user">
+      <div class="ia-code">D-02</div>
+      <h3>Answer writing 52</h3>
+      <span class="route">/writing/52</span>
+      <div class="chips">
+        <span class="b b-aud-user">user</span>
+        <span class="b b-blocked">page</span>
+        <span class="b b-partial">PARTIAL</span>
+      </div>
+      <div class="phase-strip" title="페이즈별 상태 (DOC / SRC / BR / MDL / SEC / AI / HUM)"><span class="ps pass" title="DOC: PASS">DOC</span><span class="ps pass" title="SRC: PASS">SRC</span><span class="ps pass" title="BR: PASS">BR</span><span class="ps " title="MDL: n/a">MDL</span><span class="ps partial" title="SEC: PARTIAL">SEC</span><span class="ps partial" title="AI: PARTIAL">AI</span><span class="ps " title="HUM: n/a">HUM</span></div>
+      <details>
+        <summary>요구사항 + 검증 상세 (8개 요구사항)</summary>
+        <div class="section-block">
+          <h4>Sitemap 요구</h4>
+          <p style="font-size:13px;margin:4px 0">Route &#39;/writing/52&#39; page. TOPIK writing question 52. Audience user. Hosts D-M1, D-M3.</p>
+        </div>
+        <div class="section-block">
+          <h4>User flow 위치</h4>
+          <p style="font-size:13px;margin:4px 0"><strong>이전:</strong> C-02 또는 C-03 → &#39;시작:52&#39;<br><strong>다음:</strong> D-M1 제출 확인 → D-M2 분석 → E-01/E-02 | D-M3 자동저장 경고</p>
+        </div>
+        <div class="section-block">
+          <h4>PRD 연결</h4>
+          <p style="font-size:13px;margin:4px 0">PRD §7.6 쓰기 연습 — 52번은 문장형 단답.</p>
+        </div>
+        <div class="section-block">
+          <h4>추출된 요구사항 (8)</h4>
+          <ul class="bullets"><li>답안 10-160자, 글자수 실시간 표시, blur+제출 검증 (description ③).</li><li>지문 3줄, 조건 4개 이하, 핵심 조건은 항상 노출 (②).</li><li>조건 누락/로드 실패 시 제출 CTA 비활성 + 재시도 (② 예외).</li><li>도움말 카드 3개 이하, 본문 2줄 제한 (④).</li><li>임시 저장/최종 제출 CTA 분리; 제출 클릭 후 중복 제출 차단 (⑤).</li><li>이탈 시 자동저장 경고 모달(D-M3) 호출 (① 예외).</li><li>네트워크 오류/저장 실패 시 현재 작성 내용 보존 (⑤ 예외).</li><li>도움말 로드 실패 시 접힘 + 재시도 링크 (④ 예외).</li></ul>
+        </div>
+
+
+      <div class="section-block">
+        <h4>브라우저 검증 (3 viewport)</h4>
+        <ul class="bullets"><li><span class="b b-pass">PASS</span> <strong>360px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>768px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>1280px</strong> · HTTP 200 · <span class="muted">정상</span></li></ul>
+      </div>
+
+
+
+
+      <div class="section-block">
+        <h4>AI UX 리뷰 (PARTIAL · 신뢰도 medium · 사람확인 not-required)</h4>
+        <strong>Top gaps</strong><ul class="bullets"><li>Documented exit/navigation autosave-warning modal (description §1 예외) NOT wired — exit_with_dirty trigger is dead code</li><li>Separate 임시저장 vs 제출 CTA (description §5) not present — only autosave + 제출하기</li><li>Fixed-grid mobile overflow risk; no D-02 screenshot to verify</li></ul>
+        <strong>판정자가 확인할 질문</strong><ul class="bullets"><li>Is the missing exit/navigation autosave-warning modal (description §1 예외) a PARTIAL gap or a FAIL for D-02?</li><li>Does autosave adequately substitute for the documented explicit 임시저장 CTA in description §5?</li><li>Does the &#39;1fr 280px&#39; layout reflow safely at 360px (no screenshot)?</li></ul>
+      </div>
+
+        <div class="section-block">
+          <h4>최종 라벨 + Top gaps</h4>
+          <span class="b b-partial">PARTIAL</span> <em class='muted'>없음</em>
+        </div>
+
+      </details>
+    </div>
+
+    <div class="ia-card" data-final="PARTIAL" data-audience="user">
+      <div class="ia-code">D-03</div>
+      <h3>Long-form writing 53</h3>
+      <span class="route">/writing/53</span>
+      <div class="chips">
+        <span class="b b-aud-user">user</span>
+        <span class="b b-blocked">page</span>
+        <span class="b b-partial">PARTIAL</span>
+      </div>
+      <div class="phase-strip" title="페이즈별 상태 (DOC / SRC / BR / MDL / SEC / AI / HUM)"><span class="ps pass" title="DOC: PASS">DOC</span><span class="ps pass" title="SRC: PASS">SRC</span><span class="ps pass" title="BR: PASS">BR</span><span class="ps " title="MDL: n/a">MDL</span><span class="ps partial" title="SEC: PARTIAL">SEC</span><span class="ps partial" title="AI: PARTIAL">AI</span><span class="ps " title="HUM: n/a">HUM</span></div>
+      <details>
+        <summary>요구사항 + 검증 상세 (8개 요구사항)</summary>
+        <div class="section-block">
+          <h4>Sitemap 요구</h4>
+          <p style="font-size:13px;margin:4px 0">Route &#39;/writing/53&#39; page. TOPIK writing question 53. Audience user. Hosts D-M1, D-M3.</p>
+        </div>
+        <div class="section-block">
+          <h4>User flow 위치</h4>
+          <p style="font-size:13px;margin:4px 0"><strong>이전:</strong> C-02 또는 C-03 → &#39;시작:53&#39; | E-02 &#39;다시 작성:53&#39;<br><strong>다음:</strong> D-M1 제출 확인 → D-M2 → E-02 | D-M3 자동저장 경고</p>
+        </div>
+        <div class="section-block">
+          <h4>PRD 연결</h4>
+          <p style="font-size:13px;margin:4px 0">PRD §7.6 쓰기 연습 — 53번은 도입/전개/마무리 + 원고지 미리보기.</p>
+        </div>
+        <div class="section-block">
+          <h4>추출된 요구사항 (8)</h4>
+          <ul class="bullets"><li>본문 200-300자 권장, 최소 120자; 문단 수 표시 (description ③).</li><li>자료 카드 3개 이하, 제목 24자, 긴 자료는 내부 스크롤 (②).</li><li>평가 기준 항목 5개 이하; 충족/주의/미충족 상태 표시 (④).</li><li>자동저장 시각은 상대 시간; 저장 실패는 경고 색상 + 재시도 (⑤).</li><li>글자수 부족/초과는 제출 전 모달 + 필드 하단 표시 (③ 예외).</li><li>기준 계산 실패 시 수동 체크 안내로 대체 (④ 예외).</li><li>이탈/저장 실패 상태에서는 이탈 확인 모달 강제 표시 (① 예외).</li><li>PRD 수용 기준: &#39;사용자가 53번을 선택하면 53번 문제 생성하기 버튼이 활성화&#39;·&#39;원고지 미리보기와 원고지 수정&#39; (§7.5·§7.6).</li></ul>
+        </div>
+
+
+      <div class="section-block">
+        <h4>브라우저 검증 (3 viewport)</h4>
+        <ul class="bullets"><li><span class="b b-pass">PASS</span> <strong>360px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>768px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>1280px</strong> · HTTP 200 · <span class="muted">정상</span></li></ul>
+      </div>
+
+
+
+
+      <div class="section-block">
+        <h4>AI UX 리뷰 (PARTIAL · 신뢰도 medium · 사람확인 not-required)</h4>
+        <strong>Top gaps</strong><ul class="bullets"><li>AutosaveWarningModal NOT rendered in LongFormEditor — description §1 예외 (forced exit-confirm on save failure) and D-M3 autosave warning are unmet for 53; only a toast</li><li>평가 기준 카드 (description §4: 조건 충족/평가 기준/자료 반영 상태) not evidenced in the 53 render path</li><li>Fixed-grid mobile reflow unverified; no D-03 screenshot</li></ul>
+        <strong>판정자가 확인할 질문</strong><ul class="bullets"><li>Is the absence of any autosave-warning/exit-confirm modal in LongFormEditor (description §1 예외 강제 표시) a FAIL for D-03 save-failure recovery?</li><li>Is the 평가 기준 카드 (description §4) present in the 53 layout, or missing (no screenshot to confirm)?</li><li>Does &#39;1fr 280px&#39; + 3-tab section editor reflow usably at 360px?</li></ul>
+      </div>
+
+        <div class="section-block">
+          <h4>최종 라벨 + Top gaps</h4>
+          <span class="b b-partial">PARTIAL</span> <em class='muted'>없음</em>
+        </div>
+
+      </details>
+    </div>
+
+    <div class="ia-card" data-final="PARTIAL" data-audience="user">
+      <div class="ia-code">D-04</div>
+      <h3>Essay writing 54</h3>
+      <span class="route">/writing/54</span>
+      <div class="chips">
+        <span class="b b-aud-user">user</span>
+        <span class="b b-blocked">page</span>
+        <span class="b b-partial">PARTIAL</span>
+      </div>
+      <div class="phase-strip" title="페이즈별 상태 (DOC / SRC / BR / MDL / SEC / AI / HUM)"><span class="ps pass" title="DOC: PASS">DOC</span><span class="ps pass" title="SRC: PASS">SRC</span><span class="ps pass" title="BR: PASS">BR</span><span class="ps " title="MDL: n/a">MDL</span><span class="ps partial" title="SEC: PARTIAL">SEC</span><span class="ps partial" title="AI: PARTIAL">AI</span><span class="ps " title="HUM: n/a">HUM</span></div>
+      <details>
+        <summary>요구사항 + 검증 상세 (8개 요구사항)</summary>
+        <div class="section-block">
+          <h4>Sitemap 요구</h4>
+          <p style="font-size:13px;margin:4px 0">Route &#39;/writing/54&#39; page. TOPIK writing question 54. Audience user. Hosts D-M1, D-M3.</p>
+        </div>
+        <div class="section-block">
+          <h4>User flow 위치</h4>
+          <p style="font-size:13px;margin:4px 0"><strong>이전:</strong> C-02 또는 C-03 → &#39;시작:54&#39; | E-02 &#39;다시 작성:54&#39;<br><strong>다음:</strong> D-M1 제출 확인 → D-M2 → E-02 | D-M3 자동저장 경고</p>
+        </div>
+        <div class="section-block">
+          <h4>PRD 연결</h4>
+          <p style="font-size:13px;margin:4px 0">PRD §7.6 쓰기 연습 — 54번은 에세이형, 600-700자 권장.</p>
+        </div>
+        <div class="section-block">
+          <h4>추출된 요구사항 (8)</h4>
+          <ul class="bullets"><li>본문 600-700자 권장, 최소 300자; 문단 구분 표시 (description ②).</li><li>조건 5개 이하, 주제문 2줄, 루브릭 요약 3항목 (①).</li><li>조건 로드 실패 시 본문 작성 + 제출 잠금 (① 예외).</li><li>체크리스트 6개 이하, 상태는 완료/주의/미확인 표시 (③).</li><li>위험 CTA는 확인 모달 필수, 제출 후 수정 불가 안내 (④).</li><li>제출 실패 시 답안 보존, 재시도 + 문의 링크 제공 (④ 예외).</li><li>분량 부족/저장 실패/이탈은 경고 모달로 안내 (② 예외).</li><li>체크리스트 계산 실패 시 수동 확인 안내로 대체 (③ 예외).</li></ul>
+        </div>
+
+
+      <div class="section-block">
+        <h4>브라우저 검증 (3 viewport)</h4>
+        <ul class="bullets"><li><span class="b b-pass">PASS</span> <strong>360px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>768px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>1280px</strong> · HTTP 200 · <span class="muted">정상</span></li></ul>
+      </div>
+
+
+
+
+      <div class="section-block">
+        <h4>AI UX 리뷰 (PARTIAL · 신뢰도 medium · 사람확인 not-required)</h4>
+        <strong>Top gaps</strong><ul class="bullets"><li>No exit/autosave-warning modal in LongFormEditor — description §2/§4 이탈/저장실패 경고 모달 unmet for 54</li><li>Submit-failure path lacks documented 재시도 + 문의 링크 (description §4 예외) — only a toast</li><li>Nested fixed grids (&#39;1fr 280px&#39; outer, &#39;1fr 320px&#39; inner) — strong mobile overflow risk; no D-04 screenshot to verify</li></ul>
+        <strong>판정자가 확인할 질문</strong><ul class="bullets"><li>Is the missing exit/save-failure warning modal (description §2/§4) a FAIL for D-04, given 600-700자 essays carry high data-loss cost?</li><li>Should submit failure surface the documented 재시도 + 문의 링크 instead of a transient toast?</li><li>Do the nested 1fr 320px / 1fr 280px grids reflow safely at 360px (no screenshot)?</li></ul>
+      </div>
+
+        <div class="section-block">
+          <h4>최종 라벨 + Top gaps</h4>
+          <span class="b b-partial">PARTIAL</span> <em class='muted'>없음</em>
+        </div>
+
+      </details>
+    </div>
+
+    <div class="ia-card" data-final="BLOCKED" data-audience="user">
+      <div class="ia-code">D-M1</div>
+      <h3>Submission confirmation</h3>
+      <span class="route">/writing/51, /writing/52, /writing/53, /writing/54</span>
+      <div class="chips">
+        <span class="b b-aud-user">user</span>
+        <span class="b b-blocked">user submits a writing answer.</span>
+        <span class="b b-blocked">BLOCKED</span>
+      </div>
+      <div class="phase-strip" title="페이즈별 상태 (DOC / SRC / BR / MDL / SEC / AI / HUM)"><span class="ps pass" title="DOC: PASS">DOC</span><span class="ps pass" title="SRC: PASS">SRC</span><span class="ps pass" title="BR: PASS">BR</span><span class="ps blocked" title="MDL: BLOCKED">MDL</span><span class="ps partial" title="SEC: PARTIAL">SEC</span><span class="ps partial" title="AI: PARTIAL">AI</span><span class="ps blocked" title="HUM: BLOCKED">HUM</span></div>
+      <details>
+        <summary>요구사항 + 검증 상세 (8개 요구사항)</summary>
+        <div class="section-block">
+          <h4>Sitemap 요구</h4>
+          <p style="font-size:13px;margin:4px 0">Hosted modal on &#39;/writing/51..54&#39;. Confirm before final submission.</p>
+        </div>
+        <div class="section-block">
+          <h4>User flow 위치</h4>
+          <p style="font-size:13px;margin:4px 0"><strong>이전:</strong> D-01/D-02/D-03/D-04 &#39;제출&#39; 클릭<br><strong>다음:</strong> D-M2 AI 분석 로딩 (확인 CTA) | 원 작성 화면 D-01..D-04 (취소)</p>
+        </div>
+        <div class="section-block">
+          <h4>PRD 연결</h4>
+          <p style="font-size:13px;margin:4px 0">PRD §7.6 쓰기 안전장치 + §7.8 쓰기 피드백 진입 — 오제출 방지.</p>
+        </div>
+        <div class="section-block">
+          <h4>추출된 요구사항 (8)</h4>
+          <ul class="bullets"><li>배경 dim, 스크롤 잠금, 모달 외 포커스 차단 (description ①).</li><li>요약 3항목, 각 항목 24자 이하; 긴 답안은 글자수만 표시 (②).</li><li>주의 문구 80자/2줄 + 동의 체크 리마인더 (③).</li><li>CTA 2개 동일 폭 (취소/제출), 제출 클릭 후 중복 제출 차단 (④).</li><li>취소 시 작성 화면 상태와 입력값 그대로 복구 (① 예외).</li><li>제출 실패 시 모달 유지 + 오류 원인 + 재시도 (④ 예외).</li><li>요약 생성 실패 시 문제유형/글자수 최소 정보만 표시 (② 예외).</li><li>Hosted surface: trigger은 host route /writing/51..54 4곳 모두에서 검증 (Phase 3 대상).</li></ul>
+        </div>
+
+
+      <div class="section-block">
+        <h4>브라우저 검증 (3 viewport)</h4>
+        <ul class="bullets"><li><span class="b b-pass">PASS</span> <strong>360px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>768px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>1280px</strong> · HTTP 200 · <span class="muted">정상</span></li></ul>
+      </div>
+
+
+      <div class="section-block">
+        <h4>호스팅 모달 검증</h4>
+        <span class="b b-blocked">BLOCKED</span>
+        <ul class="bullets">
+          <li>Trigger fired: ✗</li>
+          <li>Surface opened: ✗</li>
+          <li>Focus entry: —</li>
+          <li>Esc close: —</li>
+        </ul>
+        <ul class="bullets"><li>Modal trigger did not fire OR modal never became visible — selectors are heuristic; Phase 5 reviewer must verify against actual UI source.</li></ul>
+      </div>
+
+
+
+      <div class="section-block">
+        <h4>AI UX 리뷰 (PARTIAL · 신뢰도 medium · 사람확인 pending-adjudication)</h4>
+        <strong>Top gaps</strong><ul class="bullets"><li>Hosted-surface BLOCKED: modal open from host route not auto-confirmed (heuristic selector) — checklist §9 caps this at PARTIAL</li><li>Documented 동의 체크 (consent checkbox, description §3) absent</li><li>제출 요약 reduced to char-count line; 저장 시각/제출 대상 summary (description §2) not shown; submit-failure is a toast not in-modal error+retry</li></ul>
+        <strong>판정자가 확인할 질문</strong><ul class="bullets"><li>On the host writing route, does 제출하기 open SubmissionConfirmModal, trap focus, and return focus to the trigger on cancel (hosted test was BLOCKED)?</li><li>Is the missing 동의 체크 (description §3) and reduced 제출 요약 acceptable, or a FAIL against D-M1?</li><li>Should submit failure render an in-modal error + retry (description §4) rather than a toast that closes context?</li></ul>
+      </div>
+
+        <div class="section-block">
+          <h4>최종 라벨 + Top gaps</h4>
+          <span class="b b-blocked">BLOCKED</span> <ul class="bullets"><li>Modal trigger did not fire OR modal never became visible — selectors are heuristic; Phase 5 reviewer must verify against actual UI source.</li><li>Missing data precondition: no writing_problems row seeded for question 51 (seed-results.json seeded submissions/feedback only). /writing/51 renders &lt;Empty&gt; with no editor and no 제출하기 trigger.</li><li>Hosted-surface BLOCKED: triggerFired=false, surfaceOpened=false; no focus/keyboard/dup-prevention/failure-retry evidence captured.</li><li>No rendered screenshot on disk (hosted-D-M1-open.png referenced in JSON but absent; only 18 coverage shots exist) — §9 forbids PASS and the surface was never exercised.</li></ul>
+        </div>
+
+      </details>
+    </div>
+
+    <div class="ia-card" data-final="BLOCKED" data-audience="user">
+      <div class="ia-code">D-M2</div>
+      <h3>AI analysis loading</h3>
+      <span class="route">writing submission flow</span>
+      <div class="chips">
+        <span class="b b-aud-user">user</span>
+        <span class="b b-blocked">submission accepted and feedback/report generation is pending.</span>
+        <span class="b b-blocked">BLOCKED</span>
+      </div>
+      <div class="phase-strip" title="페이즈별 상태 (DOC / SRC / BR / MDL / SEC / AI / HUM)"><span class="ps pass" title="DOC: PASS">DOC</span><span class="ps pass" title="SRC: PASS">SRC</span><span class="ps pass" title="BR: PASS">BR</span><span class="ps blocked" title="MDL: BLOCKED">MDL</span><span class="ps partial" title="SEC: PARTIAL">SEC</span><span class="ps partial" title="AI: PARTIAL">AI</span><span class="ps " title="HUM: n/a">HUM</span></div>
+      <details>
+        <summary>요구사항 + 검증 상세 (8개 요구사항)</summary>
+        <div class="section-block">
+          <h4>Sitemap 요구</h4>
+          <p style="font-size:13px;margin:4px 0">Hosted modal/state on writing submission flow. Transitional analysis state after submit.</p>
+        </div>
+        <div class="section-block">
+          <h4>User flow 위치</h4>
+          <p style="font-size:13px;margin:4px 0"><strong>이전:</strong> D-M1 제출 확인 → &#39;확인 CTA&#39;<br><strong>다음:</strong> E-01 단답 피드백 (분석 완료: 단답) | E-02 장문 피드백 (분석 완료: 장문) | self-loop (대기 유지)</p>
+        </div>
+        <div class="section-block">
+          <h4>PRD 연결</h4>
+          <p style="font-size:13px;margin:4px 0">PRD §7.8 쓰기 피드백 — 분석 시작·진행 상태 안내.</p>
+        </div>
+        <div class="section-block">
+          <h4>추출된 요구사항 (8)</h4>
+          <ul class="bullets"><li>배경 답안 화면 읽기 전용 + 입력/CTA 비활성, dim 유지 (description ①).</li><li>애니메이션 1개 핵심 루프, 텍스트를 가리지 않음; 모션 비활성 설정 시 정적 이미지로 대체 (②).</li><li>단계 4개 이하, 현재 단계만 강조, 예상 시간 범위 표시 (③).</li><li>메시지 60자 이하, 2줄 제한; 10초 이상 지연 시 갱신 (④).</li><li>분석 지연 시 지연 안내 + 재시도 가능 시점 표시 (③ 예외).</li><li>재시도 오류/분석 실패는 오류 상태 + 고객지원 링크 (④ 예외).</li><li>뒤로가기 시 분석 중단 경고 (① 예외).</li><li>Hosted surface: host는 writing submission flow (D-01..D-04 + D-M1 → D-M2).</li></ul>
+        </div>
+
+
+      <div class="section-block">
+        <h4>브라우저 검증 (3 viewport)</h4>
+        <ul class="bullets"><li><span class="b b-pass">PASS</span> <strong>360px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>768px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>1280px</strong> · HTTP 200 · <span class="muted">정상</span></li></ul>
+      </div>
+
+
+      <div class="section-block">
+        <h4>호스팅 모달 검증</h4>
+        <span class="b b-blocked">BLOCKED</span>
+        <ul class="bullets">
+          <li>Trigger fired: ✗</li>
+          <li>Surface opened: ✗</li>
+          <li>Focus entry: —</li>
+          <li>Esc close: —</li>
+        </ul>
+        <ul class="bullets"><li>Modal trigger did not fire OR modal never became visible — selectors are heuristic; Phase 5 reviewer must verify against actual UI source.</li></ul>
+      </div>
+
+
+
+      <div class="section-block">
+        <h4>AI UX 리뷰 (PARTIAL · 신뢰도 medium · 사람확인 not-required)</h4>
+        <strong>Top gaps</strong><ul class="bullets"><li>Implemented as a standalone Card, not an overlay modal — description §1 dim-background/answer-context + 뒤로가기 중단 경고 unmet</li><li>Step progress is a fixture 800ms timer (not real analysis) and analysis-delay/failure/고객지원 states (description §3/§4 예외) are absent — risk of overclaiming progress</li><li>Hosted-surface BLOCKED; host-route open not confirmed — checklist §9 caps at PARTIAL</li></ul>
+        <strong>판정자가 확인할 질문</strong><ul class="bullets"><li>Does D-M2 require an overlay over the submitted-answer screen with 뒤로가기 중단 경고 (description §1), or is a standalone loading Card on the feedback route acceptable?</li><li>Are fixture-timer step indicators misleading users about real AI progress (checklist 6.4 uncertainty), and is the missing delay/failure/고객지원 state (description §3/§4) a FAIL?</li><li>Where exactly does this surface appear in the post-submit flow, and is the transition from D-M1 confirm → D-M2 loading continuous?</li></ul>
+      </div>
+
+        <div class="section-block">
+          <h4>최종 라벨 + Top gaps</h4>
+          <span class="b b-blocked">BLOCKED</span> <ul class="bullets"><li>Modal trigger did not fire OR modal never became visible — selectors are heuristic; Phase 5 reviewer must verify against actual UI source.</li></ul>
+        </div>
+
+      </details>
+    </div>
+
+    <div class="ia-card" data-final="BLOCKED" data-audience="user">
+      <div class="ia-code">E-01</div>
+      <h3>Short-answer feedback</h3>
+      <span class="route">/writing/feedback/short/:id</span>
+      <div class="chips">
+        <span class="b b-aud-user">user</span>
+        <span class="b b-blocked">page</span>
+        <span class="b b-blocked">BLOCKED</span>
+      </div>
+      <div class="phase-strip" title="페이즈별 상태 (DOC / SRC / BR / MDL / SEC / AI / HUM)"><span class="ps pass" title="DOC: PASS">DOC</span><span class="ps pass" title="SRC: PASS">SRC</span><span class="ps partial" title="BR: PARTIAL">BR</span><span class="ps " title="MDL: n/a">MDL</span><span class="ps partial" title="SEC: PARTIAL">SEC</span><span class="ps blocked" title="AI: BLOCKED">AI</span><span class="ps " title="HUM: n/a">HUM</span></div>
+      <details>
+        <summary>요구사항 + 검증 상세 (9개 요구사항)</summary>
+        <div class="section-block">
+          <h4>Sitemap 요구</h4>
+          <p style="font-size:13px;margin:4px 0">Route &#39;/writing/feedback/short/:id&#39; page. Feedback for short-answer submissions. Audience user. Owner-id RLS.</p>
+        </div>
+        <div class="section-block">
+          <h4>User flow 위치</h4>
+          <p style="font-size:13px;margin:4px 0"><strong>이전:</strong> D-M2 분석 완료 (단답)<br><strong>다음:</strong> C-03 다시 풀기 | R-02 다음 문제 추천 | R-01 비교 리포트 | F-01 (결과 저장)</p>
+        </div>
+        <div class="section-block">
+          <h4>PRD 연결</h4>
+          <p style="font-size:13px;margin:4px 0">PRD §7.8 쓰기 피드백 상세 — 점수·총평·항목별 피드백·후속 행동.</p>
+        </div>
+        <div class="section-block">
+          <h4>추출된 요구사항 (9)</h4>
+          <ul class="bullets"><li>총평 3줄 이하, 점수는 한 화면 첫 영역 우선 노출 (description ①).</li><li>항목별 카드 4개 이하, 제목 14자, 본문 2줄 제한 (②).</li><li>추천 학습 카드 3개 이하, 제목 28자, 추천 사유 1줄 (③).</li><li>주요 CTA 1개 + 보조 CTA 3개 이하, 중복 클릭 차단 (④).</li><li>부분 피드백이면 가능한 항목만 표시 + 누락 사유 (① 예외).</li><li>분석 실패 항목은 회색 카드 + 재분석 안내 (② 예외).</li><li>다음 문제 없음은 직접 문제 목록 CTA로 대체 (③ 예외).</li><li>저장 실패/권한 잠금은 해당 CTA 옆 상태 표시 (④ 예외).</li><li>Owner-id RLS: auth.uid()=:id 매칭, 타 사용자 :id 접근은 차단/에러 (security-navigation-results 검증 대상).</li></ul>
+        </div>
+
+
+      <div class="section-block">
+        <h4>브라우저 검증 (3 viewport)</h4>
+        <ul class="bullets"><li><span class="b b-partial">PARTIAL</span> <strong>360px</strong> · HTTP 200 · Primary CTA matching /(다시\s*풀기|저장|next|다음)/i not visible</li><li><span class="b b-partial">PARTIAL</span> <strong>768px</strong> · HTTP 200 · Primary CTA matching /(다시\s*풀기|저장|next|다음)/i not visible</li><li><span class="b b-partial">PARTIAL</span> <strong>1280px</strong> · HTTP 200 · Primary CTA matching /(다시\s*풀기|저장|next|다음)/i not visible</li></ul>
+      </div>
+
+
+
+        <div class="section-block"><h4>AI UX 리뷰</h4><span class="b b-blocked">BLOCKED</span> <span class="muted">Wrong-owner / owner-:id rows not seeded -&gt; owner-id RLS isolation genuinely unverifiable.</span></div>
+        <div class="section-block">
+          <h4>최종 라벨 + Top gaps</h4>
+          <span class="b b-blocked">BLOCKED</span> <ul class="bullets"><li>Primary CTA matching /(다시\s*풀기|저장|next|다음)/i not visible</li><li>Wrong-owner / owner-:id rows not seeded -&gt; owner-id RLS isolation genuinely unverifiable.</li><li>Tested :id did not render a complete feedback bundle (pending/empty branch), so score/dimension/CTA content is not confirmed on real render.</li><li>No retained rendered screenshot for E-01 in run dir (section 9 no-PASS).</li></ul>
+        </div>
+
+      </details>
+    </div>
+
+    <div class="ia-card" data-final="BLOCKED" data-audience="user">
+      <div class="ia-code">E-02</div>
+      <h3>Long-form feedback</h3>
+      <span class="route">/writing/feedback/long/:id</span>
+      <div class="chips">
+        <span class="b b-aud-user">user</span>
+        <span class="b b-blocked">page</span>
+        <span class="b b-blocked">BLOCKED</span>
+      </div>
+      <div class="phase-strip" title="페이즈별 상태 (DOC / SRC / BR / MDL / SEC / AI / HUM)"><span class="ps pass" title="DOC: PASS">DOC</span><span class="ps pass" title="SRC: PASS">SRC</span><span class="ps partial" title="BR: PARTIAL">BR</span><span class="ps " title="MDL: n/a">MDL</span><span class="ps partial" title="SEC: PARTIAL">SEC</span><span class="ps blocked" title="AI: BLOCKED">AI</span><span class="ps " title="HUM: n/a">HUM</span></div>
+      <details>
+        <summary>요구사항 + 검증 상세 (9개 요구사항)</summary>
+        <div class="section-block">
+          <h4>Sitemap 요구</h4>
+          <p style="font-size:13px;margin:4px 0">Route &#39;/writing/feedback/long/:id&#39; page. Feedback for long-form/essay submissions. Audience user. Owner-id RLS.</p>
+        </div>
+        <div class="section-block">
+          <h4>User flow 위치</h4>
+          <p style="font-size:13px;margin:4px 0"><strong>이전:</strong> D-M2 분석 완료 (장문)<br><strong>다음:</strong> D-03/D-04 다시 작성 | R-01 비교 리포트 | R-02 다음 문제 추천 | F-M1 PDF 저장</p>
+        </div>
+        <div class="section-block">
+          <h4>PRD 연결</h4>
+          <p style="font-size:13px;margin:4px 0">PRD §7.8 쓰기 피드백 상세 — 장문 문장 단위 첨삭 + 상세 평가.</p>
+        </div>
+        <div class="section-block">
+          <h4>추출된 요구사항 (9)</h4>
+          <ul class="bullets"><li>상단 요약 4항목 이하, 총평 3줄, 긴 문장 말줄임 (description ①).</li><li>원문 답안은 줄바꿈 보존; 문장별 첨삭 5개 후 더보기 (②).</li><li>평가 항목 5개 이하, 각 항목 본문 2줄 우선 (③).</li><li>CTA 4개 이하 (다시 작성/PDF/비교 리포트/다음 문제); 모바일은 탭/스택 전환 (④).</li><li>점수 산출 실패 시 총평 대신 분석 실패 안내 (① 예외).</li><li>첨삭 생성 실패 문장은 원문만 표시 + 재분석 (② 예외).</li><li>추천 없음/항목 누락은 빈 상태 + 보완 안내 (③ 예외).</li><li>PDF 실패/권한 잠금은 토스트 + 대체 저장 안내 (④ 예외); 유료 잠금 시 F-M1 → X-03 paywall.</li><li>Owner-id RLS 검증 대상.</li></ul>
+        </div>
+
+
+      <div class="section-block">
+        <h4>브라우저 검증 (3 viewport)</h4>
+        <ul class="bullets"><li><span class="b b-partial">PARTIAL</span> <strong>360px</strong> · HTTP 200 · Primary CTA matching /(다시\s*작성|PDF|비교|next)/i not visible</li><li><span class="b b-partial">PARTIAL</span> <strong>768px</strong> · HTTP 200 · Primary CTA matching /(다시\s*작성|PDF|비교|next)/i not visible</li><li><span class="b b-partial">PARTIAL</span> <strong>1280px</strong> · HTTP 200 · Primary CTA matching /(다시\s*작성|PDF|비교|next)/i not visible</li></ul>
+      </div>
+
+
+
+        <div class="section-block"><h4>AI UX 리뷰</h4><span class="b b-blocked">BLOCKED</span> <span class="muted">Wrong-owner / owner-:id rows not seeded -&gt; owner-id RLS isolation unverifiable.</span></div>
+        <div class="section-block">
+          <h4>최종 라벨 + Top gaps</h4>
+          <span class="b b-blocked">BLOCKED</span> <ul class="bullets"><li>Primary CTA matching /(다시\s*작성|PDF|비교|next)/i not visible</li><li>Wrong-owner / owner-:id rows not seeded -&gt; owner-id RLS isolation unverifiable.</li><li>Tested :id did not render a complete feedback bundle (no H1/CTA captured).</li><li>No retained rendered screenshot for E-02 (section 9 no-PASS).</li></ul>
+        </div>
+
+      </details>
+    </div>
+
+    <div class="ia-card" data-final="BLOCKED" data-audience="user">
+      <div class="ia-code">R-01</div>
+      <h3>Comparison report</h3>
+      <span class="route">/writing/reports/:id/compare</span>
+      <div class="chips">
+        <span class="b b-aud-user">user</span>
+        <span class="b b-blocked">page</span>
+        <span class="b b-blocked">BLOCKED</span>
+      </div>
+      <div class="phase-strip" title="페이즈별 상태 (DOC / SRC / BR / MDL / SEC / AI / HUM)"><span class="ps pass" title="DOC: PASS">DOC</span><span class="ps pass" title="SRC: PASS">SRC</span><span class="ps partial" title="BR: PARTIAL">BR</span><span class="ps " title="MDL: n/a">MDL</span><span class="ps partial" title="SEC: PARTIAL">SEC</span><span class="ps partial" title="AI: PARTIAL">AI</span><span class="ps " title="HUM: n/a">HUM</span></div>
+      <details>
+        <summary>요구사항 + 검증 상세 (9개 요구사항)</summary>
+        <div class="section-block">
+          <h4>Sitemap 요구</h4>
+          <p style="font-size:13px;margin:4px 0">Route &#39;/writing/reports/:id/compare&#39; page. Compares current and previous submissions. Audience user. Owner-id RLS.</p>
+        </div>
+        <div class="section-block">
+          <h4>User flow 위치</h4>
+          <p style="font-size:13px;margin:4px 0"><strong>이전:</strong> E-01 / E-02 &#39;비교 리포트&#39; CTA<br><strong>다음:</strong> X-07 약점 인사이트 | R-02 다음 문제 | F-M1 PDF (유료 잠금 시 X-03 paywall)</p>
+        </div>
+        <div class="section-block">
+          <h4>PRD 연결</h4>
+          <p style="font-size:13px;margin:4px 0">PRD §7.8 쓰기 피드백 + 성과 비교 — 이전/현재 답안 변화 시각화.</p>
+        </div>
+        <div class="section-block">
+          <h4>추출된 요구사항 (9)</h4>
+          <ul class="bullets"><li>비교 대상 2개 기본 / 5개 최대; KPI 라벨 1줄 (description ①).</li><li>차트 범례 5개 이하; 모바일은 가로 스크롤 또는 요약 차트 (②).</li><li>항목별 카드 4개 이하, 변화값은 상승/하락/유지 (③).</li><li>분석 요약 3줄 이하, 실제 비교 문구 기준 검수 (④).</li><li>CTA 3개 이하, 대표 CTA 1개, 중복 클릭 차단 (⑤).</li><li>비교 데이터 부족 시 단일 결과 요약으로 대체 (① 예외).</li><li>차트 로드 실패 시 표 형태 대체 + 재시도 (② 예외).</li><li>추천 없음/권한 잠금은 비활성 CTA + 사유 (⑤ 예외).</li><li>Owner-id RLS 검증 대상.</li></ul>
+        </div>
+
+
+      <div class="section-block">
+        <h4>브라우저 검증 (3 viewport)</h4>
+        <ul class="bullets"><li><span class="b b-partial">PARTIAL</span> <strong>360px</strong> · HTTP 200 · Primary CTA matching /(다음|시작|개선|약점)/i not visible</li><li><span class="b b-partial">PARTIAL</span> <strong>768px</strong> · HTTP 200 · Primary CTA matching /(다음|시작|개선|약점)/i not visible</li><li><span class="b b-partial">PARTIAL</span> <strong>1280px</strong> · HTTP 200 · Primary CTA matching /(다음|시작|개선|약점)/i not visible</li></ul>
+      </div>
+
+
+
+
+      <div class="section-block">
+        <h4>AI UX 리뷰 (PARTIAL · 신뢰도 medium · 사람확인 not-required)</h4>
+        <strong>Top gaps</strong><ul class="bullets"><li>Region 5 &#39;다음 CTA&#39; (대표 CTA + 다시 풀기/약점 추천/다음 문제) missing -&gt; report is a flow dead-end.</li><li>Region 2 &#39;점수 그래프&#39; (chart visualization) not implemented — only a metrics Table; documented chart + mobile chart behavior absent.</li><li>AI narrative lacks AI attribution, reasoning context, and analysis-failure retry (description exception).</li><li>Owner-:id RLS isolation unverified (wrong-owner row not seeded); no retained R-01 screenshot.</li></ul>
+        <strong>판정자가 확인할 질문</strong><ul class="bullets"><li>비교 리포트에 description region 5 &#39;다음 CTA&#39;가 완전히 빠져 화면이 플로우 막다른 길이 되는 점 — P0 결함인지, 사이드바 내비로 충분한지 판정.</li><li>region 2 &#39;점수 그래프&#39;를 Table만으로 대체한 것이 의도적 supersede인지, 차트 누락인지 IA 기준 판정.</li><li>AI 비교 요약 narrative에 AI 출처 표시/판단 근거/재시도 경로가 필요한지(6.4).</li></ul>
+      </div>
+
+        <div class="section-block">
+          <h4>최종 라벨 + Top gaps</h4>
+          <span class="b b-blocked">BLOCKED</span> <ul class="bullets"><li>Primary CTA matching /(다음|시작|개선|약점)/i not visible</li><li>Wrong-owner / owner-:id rows not seeded -&gt; owner-id RLS isolation unverifiable.</li><li>No retained rendered screenshot for R-01 (section 9 no-PASS).</li><li>Comparison content for a real :id not rendered to a populated state (visibleH1/CTA null).</li></ul>
+        </div>
+
+      </details>
+    </div>
+
+    <div class="ia-card" data-final="PARTIAL" data-audience="user">
+      <div class="ia-code">R-02</div>
+      <h3>Next problem recommendation</h3>
+      <span class="route">/practice/next</span>
+      <div class="chips">
+        <span class="b b-aud-user">user</span>
+        <span class="b b-blocked">page</span>
+        <span class="b b-partial">PARTIAL</span>
+      </div>
+      <div class="phase-strip" title="페이즈별 상태 (DOC / SRC / BR / MDL / SEC / AI / HUM)"><span class="ps pass" title="DOC: PASS">DOC</span><span class="ps pass" title="SRC: PASS">SRC</span><span class="ps pass" title="BR: PASS">BR</span><span class="ps " title="MDL: n/a">MDL</span><span class="ps partial" title="SEC: PARTIAL">SEC</span><span class="ps partial" title="AI: PARTIAL">AI</span><span class="ps " title="HUM: n/a">HUM</span></div>
+      <details>
+        <summary>요구사항 + 검증 상세 (8개 요구사항)</summary>
+        <div class="section-block">
+          <h4>Sitemap 요구</h4>
+          <p style="font-size:13px;margin:4px 0">Route &#39;/practice/next&#39; page. Recommends the next problem after feedback/reporting. Audience user.</p>
+        </div>
+        <div class="section-block">
+          <h4>User flow 위치</h4>
+          <p style="font-size:13px;margin:4px 0"><strong>이전:</strong> E-01/E-02 &#39;다음 문제 추천&#39; | R-01 &#39;다음 문제&#39; CTA<br><strong>다음:</strong> C-02 문제 목록 (추천 시작/카드 선택/목록 탐색) | X-03 paywall (유료 잠금)</p>
+        </div>
+        <div class="section-block">
+          <h4>PRD 연결</h4>
+          <p style="font-size:13px;margin:4px 0">PRD §7.5 학습 추천 + §7.6 쓰기 연습 진입.</p>
+        </div>
+        <div class="section-block">
+          <h4>추출된 요구사항 (8)</h4>
+          <ul class="bullets"><li>성과 요약 카드 3개 이하, 제목 18자, 수치 1줄 (description ①).</li><li>대표 추천 1개, 이유 2줄, 난이도/시간 배지 필수 (②).</li><li>대안 카드 3개 이하, 제목 28자, 설명 2줄 (③).</li><li>선택 요약 1줄 + 학습 시작 CTA; 중복 실행 차단 (④).</li><li>분석 결과 없음은 추천 기준 설명 + 재분석 CTA (① 예외).</li><li>추천 없음/문제 만료는 대안 카드로 포커스 이동 (② 예외).</li><li>권한 잠금 카드는 비활성 + 업그레이드 안내; 유료 잠금은 X-03 paywall로 진입 (③ 예외).</li><li>선택 문제 없음/시작 실패는 CTA 비활성 + 오류 표시 (④ 예외).</li></ul>
+        </div>
+
+
+      <div class="section-block">
+        <h4>브라우저 검증 (3 viewport)</h4>
+        <ul class="bullets"><li><span class="b b-pass">PASS</span> <strong>360px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>768px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>1280px</strong> · HTTP 200 · <span class="muted">정상</span></li></ul>
+      </div>
+
+
+
+
+      <div class="section-block">
+        <h4>AI UX 리뷰 (PARTIAL · 신뢰도 high · 사람확인 not-required)</h4>
+        <strong>Top gaps</strong><ul class="bullets"><li>No retained rendered screenshot for R-02 in run dir -&gt; cannot confirm visual layout/mobile reflow (blocks PASS per section 9).</li><li>Start-failure exception (CTA 비활성/오류 표시) not evidenced.</li><li>Whole-card onClick lacks an explicit keyboard handler (button covers it, minor a11y).</li></ul>
+        <strong>판정자가 확인할 질문</strong><ul class="bullets"><li>추천 근거 카피(tier 배지 + 이유)가 &#39;추정/보조&#39;임을 충분히 전달하는지, 과신 표현은 없는지 한국어 톤 판정.</li><li>추천 문제 시작 실패 시 CTA 비활성/오류 노출 경로가 필요한지(description 예외).</li><li>카드 전체 onClick + 별도 시작 버튼 구조가 키보드/스크린리더에서 혼란 없는지.</li></ul>
+      </div>
+
+        <div class="section-block">
+          <h4>최종 라벨 + Top gaps</h4>
+          <span class="b b-partial">PARTIAL</span> <em class='muted'>없음</em>
+        </div>
+
+      </details>
+    </div>
+
+    <div class="ia-card" data-final="BLOCKED" data-audience="user">
+      <div class="ia-code">F-01</div>
+      <h3>My library</h3>
+      <span class="route">/library</span>
+      <div class="chips">
+        <span class="b b-aud-user">user</span>
+        <span class="b b-blocked">page</span>
+        <span class="b b-blocked">BLOCKED</span>
+      </div>
+      <div class="phase-strip" title="페이즈별 상태 (DOC / SRC / BR / MDL / SEC / AI / HUM)"><span class="ps pass" title="DOC: PASS">DOC</span><span class="ps pass" title="SRC: PASS">SRC</span><span class="ps partial" title="BR: PARTIAL">BR</span><span class="ps " title="MDL: n/a">MDL</span><span class="ps partial" title="SEC: PARTIAL">SEC</span><span class="ps partial" title="AI: PARTIAL">AI</span><span class="ps " title="HUM: n/a">HUM</span></div>
+      <details>
+        <summary>요구사항 + 검증 상세 (10개 요구사항)</summary>
+        <div class="section-block">
+          <h4>Sitemap 요구</h4>
+          <p style="font-size:13px;margin:4px 0">Route &#39;/library&#39; page. Saved work, feedback history, exports, study records. Audience user. Hosts F-M1.</p>
+        </div>
+        <div class="section-block">
+          <h4>User flow 위치</h4>
+          <p style="font-size:13px;margin:4px 0"><strong>이전:</strong> B-01 dashboard &#39;최근 첨삭&#39; | E-01/E-02 &#39;결과 저장&#39;<br><strong>다음:</strong> F-M1 PDF 내보내기 모달 (PDF 내보내기) | self-loop (검색/행 선택/상세 패널/저장 해제)</p>
+        </div>
+        <div class="section-block">
+          <h4>PRD 연결</h4>
+          <p style="font-size:13px;margin:4px 0">PRD §7.7 쓰기 보관함 + §7.9 내 서재 — 저장 답안 필터·검색·페이지·내보내기.</p>
+        </div>
+        <div class="section-block">
+          <h4>추출된 요구사항 (10)</h4>
+          <ul class="bullets"><li>검색어 2-40자, 필터 동시 사용, 결과 수 상단 표시 (description ①).</li><li>10개/페이지, 제목 32자, 미리보기 2줄, 상태 배지 1개 (③).</li><li>통계 카드 3개 이하, 수치 라벨 1줄, 최근 갱신일 표시 (④).</li><li>내보내기 액션 3개 이하, 선택 항목 필요, 클릭 후 로딩 표시 (②).</li><li>빈 서재는 첫 저장 유도 + 문제 풀기 CTA (③ 예외).</li><li>데이터 없음은 통계 대신 복습 시작 안내 (④ 예외).</li><li>선택 없음/권한 없음/PDF 실패는 버튼 주변 인라인 안내 (② 예외).</li><li>페이지 버튼 5개, 모바일은 이전/다음만 (⑤).</li><li>Owner-id RLS — 자기 저장 데이터만 노출.</li><li>Hosts F-M1 PDF 모달.</li></ul>
+        </div>
+
+
+      <div class="section-block">
+        <h4>브라우저 검증 (3 viewport)</h4>
+        <ul class="bullets"><li><span class="b b-partial">PARTIAL</span> <strong>360px</strong> · HTTP 200 · Heading &quot;내 라이브러리&quot; did not match expected pattern /(서재|library|보관|저장)/i</li><li><span class="b b-partial">PARTIAL</span> <strong>768px</strong> · HTTP 200 · Heading &quot;내 라이브러리&quot; did not match expected pattern /(서재|library|보관|저장)/i</li><li><span class="b b-partial">PARTIAL</span> <strong>1280px</strong> · HTTP 200 · Heading &quot;내 라이브러리&quot; did not match expected pattern /(서재|library|보관|저장)/i</li></ul>
+      </div>
+
+
+
+
+      <div class="section-block">
+        <h4>AI UX 리뷰 (PARTIAL · 신뢰도 medium · 사람확인 not-required)</h4>
+        <strong>Top gaps</strong><ul class="bullets"><li>Documented regions 검색/필터(1), 우측 통계(4), 페이지 이동(5) are not evidenced in source/render — implemented as a 4-tab list instead of the documented search/filter + stats + pagination layout (possible wireframe deviation, not marked superseded)</li><li>OWNER-CHECK: wrong-owner / owner-:id rows not seeded, so RLS cross-user isolation for /library is unverified (BLOCKED precondition for the security claim)</li><li>No rendered screenshot for F-01 in this bundle (digest lists paths but files absent), so mobile reflow + keyboard/focus could not be spot-checked</li><li>Refresh/back and filter-state preservation not verified</li></ul>
+        <strong>판정자가 확인할 질문</strong><ul class="bullets"><li>Is the 4-tab implementation (저장 답안/비교 리포트/저장 문제/내보내기) an acceptable supersede of the documented 검색/필터 + 우측 통계 + 페이지네이션 layout, or a fidelity gap that should block PASS?</li><li>Given wrong-owner rows are not seeded, can /library OWNER-CHECK be accepted on RLS-source reasoning (user.id-scoped query + RLS id=auth.uid) or must it stay BLOCKED until a cross-user fixture exists?</li><li>Is the absence of an explicit search/filter input (description 제약: 검색어 2-40자, 결과 수 상단 표시) a P1 gap for a &#39;library&#39; job?</li></ul>
+      </div>
+
+        <div class="section-block">
+          <h4>최종 라벨 + Top gaps</h4>
+          <span class="b b-blocked">BLOCKED</span> <ul class="bullets"><li>Heading &quot;내 라이브러리&quot; did not match expected pattern /(서재|library|보관|저장)/i</li><li>Primary CTA matching /(저장|PDF|상세|export)/i not visible</li><li>wrong-owner storageState + seeded other-user library row not available — OWNER-CHECK unverified</li></ul>
+        </div>
+
+      </details>
+    </div>
+
+    <div class="ia-card" data-final="BLOCKED" data-audience="user">
+      <div class="ia-code">F-M1</div>
+      <h3>PDF export modal</h3>
+      <span class="route">/library, /writing/feedback/short/:id, /writing/feedback/long/:id, /writing/reports/:id/compare</span>
+      <div class="chips">
+        <span class="b b-aud-user">user</span>
+        <span class="b b-blocked">user exports feedback or report content.</span>
+        <span class="b b-blocked">BLOCKED</span>
+      </div>
+      <div class="phase-strip" title="페이즈별 상태 (DOC / SRC / BR / MDL / SEC / AI / HUM)"><span class="ps pass" title="DOC: PASS">DOC</span><span class="ps pass" title="SRC: PASS">SRC</span><span class="ps partial" title="BR: PARTIAL">BR</span><span class="ps blocked" title="MDL: BLOCKED">MDL</span><span class="ps partial" title="SEC: PARTIAL">SEC</span><span class="ps partial" title="AI: PARTIAL">AI</span><span class="ps fail" title="HUM: FAIL">HUM</span></div>
+      <details>
+        <summary>요구사항 + 검증 상세 (8개 요구사항)</summary>
+        <div class="section-block">
+          <h4>Sitemap 요구</h4>
+          <p style="font-size:13px;margin:4px 0">Hosted modal on &#39;/library&#39;, &#39;/writing/feedback/short/:id&#39;, &#39;/writing/feedback/long/:id&#39;, &#39;/writing/reports/:id/compare&#39;. Exports a selected result/report.</p>
+        </div>
+        <div class="section-block">
+          <h4>User flow 위치</h4>
+          <p style="font-size:13px;margin:4px 0"><strong>이전:</strong> F-01 &#39;PDF 내보내기&#39; | E-02 &#39;PDF 저장&#39; | R-01 / E-01 등 host route trigger<br><strong>다음:</strong> F-01 (다운로드 완료/닫기) | X-03 paywall (유료 잠금 진입)</p>
+        </div>
+        <div class="section-block">
+          <h4>PRD 연결</h4>
+          <p style="font-size:13px;margin:4px 0">PRD §7.8 쓰기 피드백 + §7.9 내 서재 — PDF 내보내기 옵션 + 다운로드.</p>
+        </div>
+        <div class="section-block">
+          <h4>추출된 요구사항 (8)</h4>
+          <ul class="bullets"><li>배경 dim, 선택 항목 유지, 목록 스크롤 잠금 (description ①).</li><li>파일명 1-60자, 옵션 항목 6개 이하, 개인정보 확인 필수 (②).</li><li>미리보기 1페이지 축약; 긴 답안은 일부만 표시 (③).</li><li>생성 중 CTA 비활성, 완료 후 다운로드 CTA 1개 (④).</li><li>선택 항목 사라지면 모달 대신 오류 안내 (① 예외).</li><li>권한 없음/선택 없음/생성 실패는 모달 내부 인라인 안내 + 재시도 (② / ④ 예외).</li><li>유료 잠금 진입 시 X-03 paywall로 라우팅 (user-flow.md &#39;유료 잠금 진입&#39;).</li><li>Hosted surface: host route 4곳 (/library, /writing/feedback/short/:id, /writing/feedback/long/:id, /writing/reports/:id/compare) 각각에서 trigger·focus·duplicate-action prevention 검증 (Phase 3 대상).</li></ul>
+        </div>
+
+
+      <div class="section-block">
+        <h4>브라우저 검증 (3 viewport)</h4>
+        <ul class="bullets"><li><span class="b b-partial">PARTIAL</span> <strong>360px</strong> · HTTP 200 · Heading &quot;내 라이브러리&quot; did not match expected pattern /(PDF|내보내기|export)/i</li><li><span class="b b-partial">PARTIAL</span> <strong>768px</strong> · HTTP 200 · Heading &quot;내 라이브러리&quot; did not match expected pattern /(PDF|내보내기|export)/i</li><li><span class="b b-partial">PARTIAL</span> <strong>1280px</strong> · HTTP 200 · Heading &quot;내 라이브러리&quot; did not match expected pattern /(PDF|내보내기|export)/i</li></ul>
+      </div>
+
+
+      <div class="section-block">
+        <h4>호스팅 모달 검증</h4>
+        <span class="b b-blocked">BLOCKED</span>
+        <ul class="bullets">
+          <li>Trigger fired: ✗</li>
+          <li>Surface opened: ✗</li>
+          <li>Focus entry: —</li>
+          <li>Esc close: —</li>
+        </ul>
+        <ul class="bullets"><li>Modal trigger did not fire OR modal never became visible — selectors are heuristic; Phase 5 reviewer must verify against actual UI source.</li></ul>
+      </div>
+
+
+
+      <div class="section-block">
+        <h4>AI UX 리뷰 (PARTIAL · 신뢰도 low · 사람확인 pending-adjudication)</h4>
+        <strong>Top gaps</strong><ul class="bullets"><li>Implementation has NO export modal — it is a direct window.print() button (Tier-1 MVP per pdf-export.ts / OOS-6). The documented F-M1 modal (options, filename 1-60자, preview, 개인정보 확인, download CTA) is not built — this is a PDF-modal vs browser-print mismatch (checklist 6.x Library/Export pack explicitly flags this)</li><li>Hosted-modal open/focus from host route was NOT verified (heuristic selector did not fire) — per checklist §9, an unverified hosted-modal trigger cannot be PASS</li><li>Documented 개인정보 확인 필수 consent gate before export is missing</li><li>No rendered screenshot for F-M1 in this bundle</li></ul>
+        <strong>판정자가 확인할 질문</strong><ul class="bullets"><li>Is the browser-print one-click button an accepted MVP supersede of the documented F-M1 options/preview modal, given pdf-export.ts cites OOS-6 (no queue worker) — or is the missing modal (filename validation, 개인정보 확인, preview, failure-retry) a FAIL-level fidelity gap?</li><li>Does the missing &#39;개인정보 확인 필수&#39; consent step before PDF export create a privacy/policy concern that should block PASS?</li><li>Should F-M1 be relabeled to reflect &#39;documented modal not implemented&#39; rather than PARTIAL, since the modal surface is absent rather than merely unverified?</li></ul>
+      </div>
+
+        <div class="section-block">
+          <h4>최종 라벨 + Top gaps</h4>
+          <span class="b b-blocked">BLOCKED</span> <ul class="bullets"><li>Heading &quot;내 라이브러리&quot; did not match expected pattern /(PDF|내보내기|export)/i</li><li>Modal trigger did not fire OR modal never became visible — selectors are heuristic; Phase 5 reviewer must verify against actual UI source.</li><li>Hosted modal trigger did not fire from host route; no rendered modal evidence</li><li>Documented modal does not exist in source — only a print button — so &#39;modal&#39; behavior is structurally absent</li><li>Documented F-M1 modal surface does not exist in source — only a one-click window.print() button (verified: zero Modal components in src/components/library).</li><li>Mandatory &#39;개인정보 확인 필수&#39; consent gate and filename-validation / preview / failure-retry flow are all absent vs description.md.</li><li>Needs follow-up: either implement the documented modal scaffold (options + preview + privacy consent + retry) OR record an explicit supersede in deferred-scope.md / implementation spec relabeling F-M1 to browser-print MVP.</li></ul>
+        </div>
+
+      </details>
+    </div>
+
+    <div class="ia-card" data-final="BLOCKED" data-audience="user">
+      <div class="ia-code">G-01</div>
+      <h3>Language settings</h3>
+      <span class="route">/settings/language</span>
+      <div class="chips">
+        <span class="b b-aud-user">user</span>
+        <span class="b b-blocked">page</span>
+        <span class="b b-blocked">BLOCKED</span>
+      </div>
+      <div class="phase-strip" title="페이즈별 상태 (DOC / SRC / BR / MDL / SEC / AI / HUM)"><span class="ps pass" title="DOC: PASS">DOC</span><span class="ps pass" title="SRC: PASS">SRC</span><span class="ps pass" title="BR: PASS">BR</span><span class="ps " title="MDL: n/a">MDL</span><span class="ps partial" title="SEC: PARTIAL">SEC</span><span class="ps partial" title="AI: PARTIAL">AI</span><span class="ps partial" title="HUM: PARTIAL">HUM</span></div>
+      <details>
+        <summary>요구사항 + 검증 상세 (10개 요구사항)</summary>
+        <div class="section-block">
+          <h4>Sitemap 요구</h4>
+          <p style="font-size:13px;margin:4px 0">Route &#39;/settings/language&#39; page. App language settings. Audience user.</p>
+        </div>
+        <div class="section-block">
+          <h4>User flow 위치</h4>
+          <p style="font-size:13px;margin:4px 0"><strong>이전:</strong> B-01 dashboard &#39;설정&#39; | X-05 프로필 편집<br><strong>다음:</strong> B-01 (저장 후 복귀) | X-04 멤버십 / 결제 (멤버십 진입)</p>
+        </div>
+        <div class="section-block">
+          <h4>PRD 연결</h4>
+          <p style="font-size:13px;margin:4px 0">PRD §8 다국어 (한국어/베트남어/영어) + §7.14 프로필 설정.</p>
+        </div>
+        <div class="section-block">
+          <h4>추출된 요구사항 (10)</h4>
+          <ul class="bullets"><li>UI 언어 옵션 6개 이하, 원어 병기, 즉시 미리보기 (description ②).</li><li>학습 언어는 번역 문구 30% 확장 허용; 실제 다국어 문구로 검수 (③).</li><li>콘텐츠 옵션 그룹 3개 이하; 선택값은 저장 전까지 임시 상태 (④).</li><li>도움말 3항목 이하, 각 항목 60자 이하 (⑤).</li><li>변경값 없으면 저장 CTA 비활성; 저장 중 중복 클릭 차단 (⑥).</li><li>미지원 언어는 비활성 + 지원 예정 안내 (② 예외).</li><li>번역 없음은 기본 언어 + 안내 배지 (③ 예외).</li><li>옵션 충돌 시 저장 전 경고 + 추천값 복원 (④ 예외).</li><li>저장 실패/세션 만료는 토스트 + 재로그인 안내 (⑥ 예외).</li><li>저장 전 이탈 시 변경사항 확인 모달 (① 예외).</li></ul>
+        </div>
+
+
+      <div class="section-block">
+        <h4>브라우저 검증 (3 viewport)</h4>
+        <ul class="bullets"><li><span class="b b-pass">PASS</span> <strong>360px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>768px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>1280px</strong> · HTTP 200 · <span class="muted">정상</span></li></ul>
+      </div>
+
+
+
+
+      <div class="section-block">
+        <h4>AI UX 리뷰 (PARTIAL · 신뢰도 medium · 사람확인 pending-adjudication)</h4>
+        <strong>Top gaps</strong><ul class="bullets"><li>Copy &#39;변경사항이 즉시 반영됩니다&#39; implies the UI re-translates immediately, but i18n catalogs are deferred (OOS-7) — only the preference is saved; possible mild overclaim per checklist 6.9</li><li>Documented regions missing: 학습 언어 선택(3), 콘텐츠 설정(4 — 피드백 표시/예문 난이도/해설 길이), 도움말(5 — impact scope), 미지원 언어 비활성 안내(2 예외). Only the UI-locale radio is implemented</li><li>No unsaved-changes leave guard (description 제약: 저장 전 이탈 시 변경사항 확인) — present in ProfileForm but absent here</li><li>No rendered screenshot for G-01 in this bundle</li></ul>
+        <strong>판정자가 확인할 질문</strong><ul class="bullets"><li>Is &#39;UI 언어 radio only&#39; an acceptable Phase-6 supersede of the documented G-01 (UI 언어 + 학습 언어 + 콘텐츠 설정 + 도움말), or are the missing groups a fidelity gap that should hold at PARTIAL?</li><li>Does &#39;변경사항이 즉시 반영됩니다&#39; overclaim given i18n catalogs are OOS-7 (preference saved but UI not actually re-translated)? Should the copy be softened?</li><li>Is the missing unsaved-changes leave guard (documented 제약) a P1 UX gap for a settings form?</li></ul>
+      </div>
+
+        <div class="section-block">
+          <h4>최종 라벨 + Top gaps</h4>
+          <span class="b b-blocked">BLOCKED</span> <ul class="bullets"><li>Honesty: &#39;i즉시 반영&#39; copy overclaims immediate UI re-translation while i18n is OOS-7 — should be reworded before PASS.</li><li>Missing documented unsaved-leave guard.</li><li>Documented 학습 언어 / 콘텐츠 설정 / 도움말 / 미지원-언어 안내 regions not implemented.</li></ul>
+        </div>
+
+      </details>
+    </div>
+
+    <div class="ia-card" data-final="BLOCKED" data-audience="admin">
+      <div class="ia-code">H-01</div>
+      <h3>Admin problem management</h3>
+      <span class="route">/admin/problems</span>
+      <div class="chips">
+        <span class="b b-aud-admin">admin</span>
+        <span class="b b-blocked">page</span>
+        <span class="b b-blocked">BLOCKED</span>
+      </div>
+      <div class="phase-strip" title="페이즈별 상태 (DOC / SRC / BR / MDL / SEC / AI / HUM)"><span class="ps pass" title="DOC: PASS">DOC</span><span class="ps pass" title="SRC: PASS">SRC</span><span class="ps partial" title="BR: PARTIAL">BR</span><span class="ps " title="MDL: n/a">MDL</span><span class="ps partial" title="SEC: PARTIAL">SEC</span><span class="ps blocked" title="AI: BLOCKED">AI</span><span class="ps blocked" title="HUM: BLOCKED">HUM</span></div>
+      <details>
+        <summary>요구사항 + 검증 상세 (9개 요구사항)</summary>
+        <div class="section-block">
+          <h4>Sitemap 요구</h4>
+          <p style="font-size:13px;margin:4px 0">Route &#39;/admin/problems&#39; page. Problem/content management. Audience admin (content_admin). requireContentAdmin guard + admin_audit_logs.</p>
+        </div>
+        <div class="section-block">
+          <h4>User flow 위치</h4>
+          <p style="font-size:13px;margin:4px 0"><strong>이전:</strong> X-08 organization admin &#39;운영 카드 / 문제 관리&#39;<br><strong>다음:</strong> X-10 사용자 관리 | X-08 (admin 대시보드)</p>
+        </div>
+        <div class="section-block">
+          <h4>PRD 연결</h4>
+          <p style="font-size:13px;margin:4px 0">PRD §3 보조 사용자 (콘텐츠 운영자) + §7.14 콘텐츠 관리.</p>
+        </div>
+        <div class="section-block">
+          <h4>추출된 요구사항 (9)</h4>
+          <ul class="bullets"><li>관리자 역할에서만 노출 (description ①); requireContentAdmin guard + private.is_content_admin RLS (backend-auth.md + auth-overview §6.5).</li><li>권한 변경/발행 토글은 admin_audit_logs 기록 의무 (sitemap Route Audience Map admin 행).</li><li>KPI 4개 이하, 필터+정렬 동시 사용 (②).</li><li>테이블 20개/페이지, 페이지 버튼 7개, 긴 제목 말줄임 (③).</li><li>비공개/검수 충돌 행은 상태 배지 + 편집 제한 (③ 예외).</li><li>수정 권한 필요, 저장 전 변경 항목 표시, 삭제는 확인 모달 (④).</li><li>저장 실패/동시 수정 충돌은 패널 상단 안내 (④ 예외).</li><li>상태 메시지 60자 이하, 완료/오류/로딩 구분 (⑤).</li><li>비인가 시 /dashboard?error=forbidden redirect (admin-guard.ts).</li></ul>
+        </div>
+
+
+      <div class="section-block">
+        <h4>브라우저 검증 (3 viewport)</h4>
+        <ul class="bullets"><li><span class="b b-partial">PARTIAL</span> <strong>360px</strong> · HTTP 200 · Primary CTA matching /(저장|승인|발행|편집)/i not visible</li><li><span class="b b-partial">PARTIAL</span> <strong>768px</strong> · HTTP 200 · Primary CTA matching /(저장|승인|발행|편집)/i not visible</li><li><span class="b b-partial">PARTIAL</span> <strong>1280px</strong> · HTTP 200 · Primary CTA matching /(저장|승인|발행|편집)/i not visible</li></ul>
+      </div>
+
+
+
+        <div class="section-block"><h4>AI UX 리뷰</h4><span class="b b-blocked">BLOCKED</span> <span class="muted">Admin RBAC precondition not met: content_admin storageState carries app_role=&#39;learner&#39; (build-status.json postSeedNote), elevation SQL not applied → admin-allowed render unverified</span></div>
+        <div class="section-block">
+          <h4>최종 라벨 + Top gaps</h4>
+          <span class="b b-blocked">BLOCKED</span> <ul class="bullets"><li>Primary CTA matching /(저장|승인|발행|편집)/i not visible</li><li>Admin RBAC precondition not met: content_admin storageState carries app_role=&#39;learner&#39; (build-status.json postSeedNote), elevation SQL not applied → admin-allowed render unverified</li><li>No rendered admin screenshot evidence on disk for H-01 at any viewport</li><li>Admin-ALLOWED RBAC path UNVERIFIED: content_admin storageState carries app_role=&#39;learner&#39; (build-status.json postSeedNote); manualSqlForAdminRoles elevation never applied → a genuine content_admin render was never exercised.</li><li>No rendered admin screenshot evidence on disk for H-01 at any viewport (directory holds 18 non-admin files only); coverage browser row is a heuristic, not a verified render.</li><li>Re-run required: apply admin role elevation SQL, re-capture coverage-matrix + security-navigation SN-8 (student forbidden) with a real content_admin session, and exercise the publish toggle + admin_audit_logs write.</li></ul>
+        </div>
+
+      </details>
+    </div>
+
+    <div class="ia-card" data-final="BLOCKED" data-audience="user">
+      <div class="ia-code">D-M3</div>
+      <h3>Autosave warning</h3>
+      <span class="route">/writing/51, /writing/52, /writing/53, /writing/54</span>
+      <div class="chips">
+        <span class="b b-aud-user">user</span>
+        <span class="b b-blocked">autosave failure, delay, or conflicting save state.</span>
+        <span class="b b-blocked">BLOCKED</span>
+      </div>
+      <div class="phase-strip" title="페이즈별 상태 (DOC / SRC / BR / MDL / SEC / AI / HUM)"><span class="ps pass" title="DOC: PASS">DOC</span><span class="ps pass" title="SRC: PASS">SRC</span><span class="ps pass" title="BR: PASS">BR</span><span class="ps blocked" title="MDL: BLOCKED">MDL</span><span class="ps partial" title="SEC: PARTIAL">SEC</span><span class="ps partial" title="AI: PARTIAL">AI</span><span class="ps " title="HUM: n/a">HUM</span></div>
+      <details>
+        <summary>요구사항 + 검증 상세 (8개 요구사항)</summary>
+        <div class="section-block">
+          <h4>Sitemap 요구</h4>
+          <p style="font-size:13px;margin:4px 0">Hosted modal/toast on &#39;/writing/51..54&#39;. Warns about autosave state while writing.</p>
+        </div>
+        <div class="section-block">
+          <h4>User flow 위치</h4>
+          <p style="font-size:13px;margin:4px 0"><strong>이전:</strong> D-01/D-02/D-03/D-04 작성 중 자동저장 실패·지연·이탈<br><strong>다음:</strong> 원 작성 화면 D-01..D-04 (취소/저장 후 이동) | C-02 (저장 안 함)</p>
+        </div>
+        <div class="section-block">
+          <h4>PRD 연결</h4>
+          <p style="font-size:13px;margin:4px 0">PRD §7.6 쓰기 안전장치 — 자동저장 + 저장 상태 표시 + 이탈 방지.</p>
+        </div>
+        <div class="section-block">
+          <h4>추출된 요구사항 (8)</h4>
+          <ul class="bullets"><li>배경 dim, 입력 잠금, 현재 작성 내용 보존 (description ①).</li><li>경고 색상은 위험 상태에만 사용, 아이콘 1개 고정 (②).</li><li>안내 제목 24자, 본문 80자/2줄, 손실 범위 명시 (③).</li><li>저장 시각 필수; 복구 상태는 가능/불가/확인중으로 표시 (④).</li><li>위험 CTA (끄기)는 확인성 문구 + 중복 클릭 차단 (⑤).</li><li>네트워크 끊김/복구 불가는 별도 경고 문구 (③ 예외).</li><li>저장 정보 없음은 &#39;복구 불가&#39; + 도움말 링크 (④ 예외).</li><li>Hosted surface: D-01..D-04 4개 host 모두에서 검증 (Phase 3 대상).</li></ul>
+        </div>
+
+
+      <div class="section-block">
+        <h4>브라우저 검증 (3 viewport)</h4>
+        <ul class="bullets"><li><span class="b b-pass">PASS</span> <strong>360px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>768px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>1280px</strong> · HTTP 200 · <span class="muted">정상</span></li></ul>
+      </div>
+
+
+      <div class="section-block">
+        <h4>호스팅 모달 검증</h4>
+        <span class="b b-blocked">BLOCKED</span>
+        <ul class="bullets">
+          <li>Trigger fired: ✗</li>
+          <li>Surface opened: ✗</li>
+          <li>Focus entry: —</li>
+          <li>Esc close: —</li>
+        </ul>
+        <ul class="bullets"><li>Modal trigger did not fire OR modal never became visible — selectors are heuristic; Phase 5 reviewer must verify against actual UI source.</li></ul>
+      </div>
+
+
+
+      <div class="section-block">
+        <h4>AI UX 리뷰 (PARTIAL · 신뢰도 medium · 사람확인 not-required)</h4>
+        <strong>Top gaps</strong><ul class="bullets"><li>exit_with_dirty and disable_attempt triggers are DEAD CODE — never invoked; documented navigation-exit and autosave-disable warnings (description §1/§5) are not reachable</li><li>LongFormEditor (53/54) does not render AutosaveWarningModal at all — no autosave warning for long-form/essay</li><li>복구 가능 여부 state (가능/불가/확인중, description §4) not modeled; hosted-surface BLOCKED so live open unverified</li></ul>
+        <strong>판정자가 확인할 질문</strong><ul class="bullets"><li>Given exit_with_dirty/disable_attempt are dead code and 53/54 lack the modal entirely, is D-M3 a PARTIAL (save_failure path works for 51/52) or a FAIL against description coverage?</li><li>Does description.md require the recovery-status indicator (가능/불가/확인중, §4) that is currently only a last-saved timestamp?</li><li>On a real autosave failure, does the modal open over the writing route and trap focus (hosted test was BLOCKED)?</li></ul>
+      </div>
+
+        <div class="section-block">
+          <h4>최종 라벨 + Top gaps</h4>
+          <span class="b b-blocked">BLOCKED</span> <ul class="bullets"><li>Modal trigger did not fire OR modal never became visible — selectors are heuristic; Phase 5 reviewer must verify against actual UI source.</li></ul>
+        </div>
+
+      </details>
+    </div>
+
+    <div class="ia-card" data-final="PARTIAL" data-audience="public">
+      <div class="ia-code">X-01</div>
+      <h3>Product landing</h3>
+      <span class="route">/</span>
+      <div class="chips">
+        <span class="b b-aud-public">public</span>
+        <span class="b b-blocked">page</span>
+        <span class="b b-partial">PARTIAL</span>
+      </div>
+      <div class="phase-strip" title="페이즈별 상태 (DOC / SRC / BR / MDL / SEC / AI / HUM)"><span class="ps pass" title="DOC: PASS">DOC</span><span class="ps pass" title="SRC: PASS">SRC</span><span class="ps pass" title="BR: PASS">BR</span><span class="ps " title="MDL: n/a">MDL</span><span class="ps " title="SEC: n/a">SEC</span><span class="ps partial" title="AI: PARTIAL">AI</span><span class="ps " title="HUM: n/a">HUM</span></div>
+      <details>
+        <summary>요구사항 + 검증 상세 (8개 요구사항)</summary>
+        <div class="section-block">
+          <h4>Sitemap 요구</h4>
+          <p style="font-size:13px;margin:4px 0">Route &#39;/&#39; page. Public entry point. Links to sign-up and login (docs/sitemap.md Target React Route Map).</p>
+        </div>
+        <div class="section-block">
+          <h4>User flow 위치</h4>
+          <p style="font-size:13px;margin:4px 0"><strong>이전:</strong> (entry point — direct URL or external link)<br><strong>다음:</strong> A-01 sign-up (무료 시작) 또는 A-02 login</p>
+        </div>
+        <div class="section-block">
+          <h4>PRD 연결</h4>
+          <p style="font-size:13px;margin:4px 0">PRD §1 제품 개요 + §5 정보 구조 Depth 0 홈; 랜딩 UX는 Paper frame X-01 기준이며 prod 첫 진입점.</p>
+        </div>
+        <div class="section-block">
+          <h4>추출된 요구사항 (8)</h4>
+          <ul class="bullets"><li>헤더 메뉴 4개 이하, 로고 클릭은 랜딩 상단으로 이동한다 (description.md ①).</li><li>H1 36자 이내, 서브 카피 2줄 이내로 제품 약속을 첫 화면에 노출한다 (②).</li><li>대표 CTA 1개(무료 시작/회원가입) + 보조 링크 1개; 클릭 후 중복 이동 차단 (③).</li><li>로그인 사용자가 진입하면 시작 CTA 대신 대시보드 CTA로 분기한다 (① 예외).</li><li>제품 프리뷰 이미지 3장 이하, 실제 화면 기반 문구만 사용 (④).</li><li>기능 카드 4개 이하, 제목 14자/설명 2줄 제한, 모바일은 단일 컬럼 (⑥).</li><li>마스코트는 첫 화면 CTA와 겹치지 않고 대체 텍스트가 필수 (⑤).</li><li>Audience public: middleware PUBLIC_PATHS에 포함되어 anon 접근 허용 (sitemap Route Audience Map).</li></ul>
+        </div>
+
+
+      <div class="section-block">
+        <h4>브라우저 검증 (3 viewport)</h4>
+        <ul class="bullets"><li><span class="b b-pass">PASS</span> <strong>360px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>768px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>1280px</strong> · HTTP 200 · <span class="muted">정상</span></li></ul>
+      </div>
+
+
+
+
+      <div class="section-block">
+        <h4>AI UX 리뷰 (PARTIAL · 신뢰도 high · 사람확인 not-required)</h4>
+        <strong>Top gaps</strong><ul class="bullets"><li>Logged-in CTA branch (대시보드) from IA §1/§3 exception is unimplemented — Hero always shows 무료 시작/로그인.</li><li>Description names 4 features (AI 첨삭, 실전 문제, 성장 리포트, 라이브러리) but only 3 cards render (학습 대시보드 / AI 글쓰기 피드백 / 자료실); &#39;실전 문제&#39;·&#39;성장 리포트&#39; are not surfaced as cards.</li><li>Only default state captured; no separate evidence for image-load-failure mascot fallback (description §5).</li></ul>
+        <strong>판정자가 확인할 질문</strong><ul class="bullets"><li>Is the missing logged-in 대시보드 CTA branch a real UX gap for a returning authenticated user landing on /, or acceptable since they are normally redirected?</li><li>Does the H1 &#39;TOPIK 글쓰기, AI와 함께 끝까지&#39; read as a natural, compelling Korean value promise within the 36-char constraint?</li><li>Is reducing the documented 4 features to 3 landing cards acceptable, or does it under-sell &#39;실전 문제&#39; and &#39;성장 리포트&#39;?</li></ul>
+      </div>
+
+        <div class="section-block">
+          <h4>최종 라벨 + Top gaps</h4>
+          <span class="b b-partial">PARTIAL</span> <em class='muted'>없음</em>
+        </div>
+
+        <div class="section-block">
+          <h4>스크린샷 (Public IA, 3 viewport)</h4>
+          <div class="shots">
+            <a href="screenshots/coverage-X-01-360.png" target="_blank"><img src="screenshots/coverage-X-01-360.png" alt="X-01 360"><span>360px</span></a><a href="screenshots/coverage-X-01-768.png" target="_blank"><img src="screenshots/coverage-X-01-768.png" alt="X-01 768"><span>768px</span></a><a href="screenshots/coverage-X-01-1280.png" target="_blank"><img src="screenshots/coverage-X-01-1280.png" alt="X-01 1280"><span>1280px</span></a>
+          </div>
+        </div>
+
+      </details>
+    </div>
+
+    <div class="ia-card" data-final="BLOCKED" data-audience="user">
+      <div class="ia-code">X-02</div>
+      <h3>Growth dashboard</h3>
+      <span class="route">/growth</span>
+      <div class="chips">
+        <span class="b b-aud-user">user</span>
+        <span class="b b-blocked">page</span>
+        <span class="b b-blocked">BLOCKED</span>
+      </div>
+      <div class="phase-strip" title="페이즈별 상태 (DOC / SRC / BR / MDL / SEC / AI / HUM)"><span class="ps pass" title="DOC: PASS">DOC</span><span class="ps pass" title="SRC: PASS">SRC</span><span class="ps partial" title="BR: PARTIAL">BR</span><span class="ps " title="MDL: n/a">MDL</span><span class="ps partial" title="SEC: PARTIAL">SEC</span><span class="ps deferred" title="AI: DEFERRED">AI</span><span class="ps " title="HUM: n/a">HUM</span></div>
+      <details>
+        <summary>요구사항 + 검증 상세 (8개 요구사항)</summary>
+        <div class="section-block">
+          <h4>Sitemap 요구</h4>
+          <p style="font-size:13px;margin:4px 0">Route &#39;/growth&#39; page. Progress and growth analytics. Audience user.</p>
+        </div>
+        <div class="section-block">
+          <h4>User flow 위치</h4>
+          <p style="font-size:13px;margin:4px 0"><strong>이전:</strong> B-01 dashboard &#39;목표/성장 카드&#39;<br><strong>다음:</strong> X-07 약점 기반 추천 (추천 액션 선택)</p>
+        </div>
+        <div class="section-block">
+          <h4>PRD 연결</h4>
+          <p style="font-size:13px;margin:4px 0">PRD §9 학습 데이터 (학습 시간/푼 문제 수/영역별 점수); §7.1 홈 대시보드 성장 카드 확장.</p>
+        </div>
+        <div class="section-block">
+          <h4>추출된 요구사항 (8)</h4>
+          <ul class="bullets"><li>KPI 4개 고정 (평균 점수/풀이 수/개선률/목표 달성률); 수치/증감/기간 동일 순서 (description ②).</li><li>기간 필터 4개 이하, 차트 범례 5개 이하 (③).</li><li>약점 영역 6개 이하; 색상만으로 의미 전달 금지 (접근성, ④).</li><li>인사이트 3개 이하, 문장 60자 이하, 실제 수치 근거 포함 (⑤).</li><li>추천 5개 이하; 320px 이하는 단일 컬럼 (⑥).</li><li>목표 없음/데이터 없음은 설정 유도 카드로 대체 (② 예외).</li><li>차트 로드 실패 시 재시도 버튼; 인사이트 생성 실패는 학습 팁으로 대체 (③·⑤ 예외).</li><li>권한 없는 리포트는 잠금 + 업그레이드 CTA (① 예외); 유료 잠금 진입 시 X-03 paywall로 라우팅.</li></ul>
+        </div>
+
+
+      <div class="section-block">
+        <h4>브라우저 검증 (3 viewport)</h4>
+        <ul class="bullets"><li><span class="b b-partial">PARTIAL</span> <strong>360px</strong> · HTTP 200 · Primary CTA matching /(추천|개선|상세|확인|학습)/i not visible</li><li><span class="b b-partial">PARTIAL</span> <strong>768px</strong> · HTTP 200 · Primary CTA matching /(추천|개선|상세|확인|학습)/i not visible</li><li><span class="b b-partial">PARTIAL</span> <strong>1280px</strong> · HTTP 200 · Primary CTA matching /(추천|개선|상세|확인|학습)/i not visible</li></ul>
+      </div>
+
+
+
+
+      <div class="section-block">
+        <h4>AI UX 리뷰 (DEFERRED · 신뢰도 high · 사람확인 not-required)</h4>
+        <strong>Top gaps</strong><ul class="bullets"><li>phaseHint copy says &#39;...Phase 4에서 채워집니다&#39; but active light-specs/plans defer growth analytics to Phase 5/6 — internal phase-label inconsistency (cosmetic, user reads it only as &#39;coming later&#39;).</li><li>When the real screen is built (Phase 5/6), description.md areas 2-6 (KPI cards, growth chart, weakness matrix, AI insight, bottom recommendations) must be implemented and re-reviewed; this card only certifies the honest deferred shell.</li><li>No on-disk screenshot captured for X-02 this run (render confirmed via browser metadata: /growth, 200, 0 errors).</li></ul>
+        <strong>판정자가 확인할 질문</strong><ul class="bullets"><li>X-02 /growth renders an honest PlaceholderPage and active docs (phase-4/phase-5 light-specs + phase-5 plan) explicitly defer growth analytics to Phase 5/6 — confirm DEFERRED is correct here and that the prior shard&#39;s FAIL label was an artifact of the now-fixed React #130 (post-fix: 0 console errors).</li><li>Is the placeholder phaseHint wording &#39;Phase 4&#39; (vs docs&#39; Phase 5/6) acceptable as deferred-scope copy, or should it be corrected to avoid an internal phase-label mismatch?</li></ul>
+      </div>
+
+        <div class="section-block">
+          <h4>최종 라벨 + Top gaps</h4>
+          <span class="b b-blocked">BLOCKED</span> <ul class="bullets"><li>Primary CTA matching /(추천|개선|상세|확인|학습)/i not visible</li></ul>
+        </div>
+
+      </details>
+    </div>
+
+    <div class="ia-card" data-final="BLOCKED" data-audience="user">
+      <div class="ia-code">X-03</div>
+      <h3>Paywall</h3>
+      <span class="route">/paywall</span>
+      <div class="chips">
+        <span class="b b-aud-user">user</span>
+        <span class="b b-blocked">page</span>
+        <span class="b b-blocked">BLOCKED</span>
+      </div>
+      <div class="phase-strip" title="페이즈별 상태 (DOC / SRC / BR / MDL / SEC / AI / HUM)"><span class="ps pass" title="DOC: PASS">DOC</span><span class="ps pass" title="SRC: PASS">SRC</span><span class="ps partial" title="BR: PARTIAL">BR</span><span class="ps " title="MDL: n/a">MDL</span><span class="ps partial" title="SEC: PARTIAL">SEC</span><span class="ps deferred" title="AI: DEFERRED">AI</span><span class="ps deferred" title="HUM: DEFERRED">HUM</span></div>
+      <details>
+        <summary>요구사항 + 검증 상세 (9개 요구사항)</summary>
+        <div class="section-block">
+          <h4>Sitemap 요구</h4>
+          <p style="font-size:13px;margin:4px 0">Route &#39;/paywall&#39; page. Paywall/plan-selection shell. Payment provider integration is deferred (sitemap.md note + deferred-scope.md §Billing).</p>
+        </div>
+        <div class="section-block">
+          <h4>User flow 위치</h4>
+          <p style="font-size:13px;margin:4px 0"><strong>이전:</strong> R-02 / R-01 / X-07 / F-M1 &#39;유료 잠금 진입&#39; (user-flow.md &#39;유료 잠금 진입&#39; edges)<br><strong>다음:</strong> X-04 구독 관리 (구독 CTA / 결제 완료) | B-01 (결제 완료 후 학습 복귀)</p>
+        </div>
+        <div class="section-block">
+          <h4>PRD 연결</h4>
+          <p style="font-size:13px;margin:4px 0">PRD §3 사용자 가치 + §7.14 멤버십; deferred-scope.md §Billing — Paper-frame UI shell만 구현.</p>
+        </div>
+        <div class="section-block">
+          <h4>추출된 요구사항 (9)</h4>
+          <ul class="bullets"><li>Paper-frame UI shell만 구현; billing SDK·payment provider 통합 deferred (deferred-scope.md §Billing).</li><li>Stripe/Lemon Squeezy/Paddle/Toss 등 provider 선택은 별도 stack-change 결정 필요.</li><li>결제 카드 3개 고정 (월/분기/연), 혜택 4개 이하, 추천 배지 1개 (description ②).</li><li>카드별 CTA 1개, 선택 후 중복 클릭 차단, 로딩 표시 (③).</li><li>혜택 항목 4개 이하, 항목명 18자, 지원 문의 CTA 1개 (④).</li><li>안내 4항목 이하; 정책 링크는 외부 이동 표시 (⑤).</li><li>기존 구독자는 결제 선택 대신 X-04 구독 관리로 유도 (① 예외).</li><li>결제 실패/미지원 수단/중복 구독은 버튼 하단 안내 (③ 예외) — 실제 결제 로직 없음 시 정책 카피만.</li><li>구독 라벨이 필요하면 로컬 fixture 또는 단순 profile 필드 placeholder만 사용 (deferred-scope.md).</li></ul>
+        </div>
+        <div class="section-block"><h4><span class="b b-docgap">DOC-GAP</span> 문서 충돌</h4><p style="font-size:13px;margin:4px 0">none — deferred-scope.md가 paywall UI shell 허용을 명시.</p></div>
+
+      <div class="section-block">
+        <h4>브라우저 검증 (3 viewport)</h4>
+        <ul class="bullets"><li><span class="b b-partial">PARTIAL</span> <strong>360px</strong> · HTTP 200 · Primary CTA matching /(구독|시작|선택|체험)/i not visible</li><li><span class="b b-partial">PARTIAL</span> <strong>768px</strong> · HTTP 200 · Primary CTA matching /(구독|시작|선택|체험)/i not visible</li><li><span class="b b-partial">PARTIAL</span> <strong>1280px</strong> · HTTP 200 · Primary CTA matching /(구독|시작|선택|체험)/i not visible</li></ul>
+      </div>
+
+
+
+
+      <div class="section-block">
+        <h4>AI UX 리뷰 (DEFERRED · 신뢰도 high · 사람확인 pending-adjudication)</h4>
+        <strong>Top gaps</strong><ul class="bullets"><li>Honest deferred placeholder; the documented full paywall (3-column billing cards, CTA, benefits, refund/tax info) is intentionally not built per deferred-scope.md — no action needed while billing stays deferred</li></ul>
+        <strong>판정자가 확인할 질문</strong><ul class="bullets"><li>Confirm DEFERRED is the correct terminal label (vs PARTIAL): deferred-scope.md explicitly defers billing and the placeholder copy does not overclaim — this should require no further adjudication.</li></ul>
+      </div>
+
+        <div class="section-block">
+          <h4>최종 라벨 + Top gaps</h4>
+          <span class="b b-blocked">BLOCKED</span> <ul class="bullets"><li>Primary CTA matching /(구독|시작|선택|체험)/i not visible</li></ul>
+        </div>
+
+      </details>
+    </div>
+
+    <div class="ia-card" data-final="BLOCKED" data-audience="user">
+      <div class="ia-code">X-04</div>
+      <h3>Subscription management</h3>
+      <span class="route">/subscription</span>
+      <div class="chips">
+        <span class="b b-aud-user">user</span>
+        <span class="b b-blocked">page</span>
+        <span class="b b-blocked">BLOCKED</span>
+      </div>
+      <div class="phase-strip" title="페이즈별 상태 (DOC / SRC / BR / MDL / SEC / AI / HUM)"><span class="ps pass" title="DOC: PASS">DOC</span><span class="ps pass" title="SRC: PASS">SRC</span><span class="ps partial" title="BR: PARTIAL">BR</span><span class="ps " title="MDL: n/a">MDL</span><span class="ps partial" title="SEC: PARTIAL">SEC</span><span class="ps deferred" title="AI: DEFERRED">AI</span><span class="ps deferred" title="HUM: DEFERRED">HUM</span></div>
+      <details>
+        <summary>요구사항 + 검증 상세 (9개 요구사항)</summary>
+        <div class="section-block">
+          <h4>Sitemap 요구</h4>
+          <p style="font-size:13px;margin:4px 0">Route &#39;/subscription&#39; page. Subscription status shell. Billing implementation deferred (deferred-scope.md §Billing).</p>
+        </div>
+        <div class="section-block">
+          <h4>User flow 위치</h4>
+          <p style="font-size:13px;margin:4px 0"><strong>이전:</strong> B-01 &#39;멤버십/구독 관리&#39; | G-01/X-05 &#39;멤버십/결제 진입&#39; | X-03 &#39;구독 CTA/결제 완료&#39;<br><strong>다음:</strong> X-03 paywall (플랜 변경)</p>
+        </div>
+        <div class="section-block">
+          <h4>PRD 연결</h4>
+          <p style="font-size:13px;margin:4px 0">PRD §7.14 프로필 설정 멤버십 탭; deferred-scope.md §Billing.</p>
+        </div>
+        <div class="section-block">
+          <h4>추출된 요구사항 (9)</h4>
+          <ul class="bullets"><li>Paper-frame UI shell만 구현; 실제 결제·환불·결제수단 로직 deferred.</li><li>현재 구독 요약 4항목 이하, 날짜 로케일 형식, 금액 통화 병기 (description ②).</li><li>취소/변경은 정책 모달 필수, 위험 CTA는 별도 스타일 (③).</li><li>결제 이력 10개/페이지, 금액·상태 고정 열, 영수증 링크 1개 (④).</li><li>도움말 4항목 이하, 정책 문구 2줄 제한 (⑤).</li><li>구독 없음/결제 실패는 별도 배지 (② 예외).</li><li>취소 예약/변경 불가 기간은 비활성 + 사유 (③ 예외).</li><li>미로그인/세션 만료는 로그인 리다이렉트 (① 예외).</li><li>이력 조회 실패는 빈 표 + 재시도 (④ 예외).</li></ul>
+        </div>
+        <div class="section-block"><h4><span class="b b-docgap">DOC-GAP</span> 문서 충돌</h4><p style="font-size:13px;margin:4px 0">none — deferred-scope.md가 subscription shell 허용을 명시.</p></div>
+
+      <div class="section-block">
+        <h4>브라우저 검증 (3 viewport)</h4>
+        <ul class="bullets"><li><span class="b b-partial">PARTIAL</span> <strong>360px</strong> · HTTP 200 · Primary CTA matching /(변경|취소|관리|결제)/i not visible</li><li><span class="b b-partial">PARTIAL</span> <strong>768px</strong> · HTTP 200 · Primary CTA matching /(변경|취소|관리|결제)/i not visible</li><li><span class="b b-partial">PARTIAL</span> <strong>1280px</strong> · HTTP 200 · Primary CTA matching /(변경|취소|관리|결제)/i not visible</li></ul>
+      </div>
+
+
+
+
+      <div class="section-block">
+        <h4>AI UX 리뷰 (DEFERRED · 신뢰도 high · 사람확인 pending-adjudication)</h4>
+        <strong>Top gaps</strong><ul class="bullets"><li>Honest deferred placeholder; the documented subscription summary / change-cancel / payment-history table is intentionally not built per deferred-scope.md — no action needed while billing stays deferred</li></ul>
+        <strong>판정자가 확인할 질문</strong><ul class="bullets"><li>Confirm DEFERRED is correct: deferred-scope.md explicitly defers subscription/payment-history; placeholder copy does not overclaim a live subscription, so no further adjudication should be needed.</li></ul>
+      </div>
+
+        <div class="section-block">
+          <h4>최종 라벨 + Top gaps</h4>
+          <span class="b b-blocked">BLOCKED</span> <ul class="bullets"><li>Primary CTA matching /(변경|취소|관리|결제)/i not visible</li></ul>
+        </div>
+
+      </details>
+    </div>
+
+    <div class="ia-card" data-final="BLOCKED" data-audience="user">
+      <div class="ia-code">X-05</div>
+      <h3>Profile editing</h3>
+      <span class="route">/profile</span>
+      <div class="chips">
+        <span class="b b-aud-user">user</span>
+        <span class="b b-blocked">page</span>
+        <span class="b b-blocked">BLOCKED</span>
+      </div>
+      <div class="phase-strip" title="페이즈별 상태 (DOC / SRC / BR / MDL / SEC / AI / HUM)"><span class="ps pass" title="DOC: PASS">DOC</span><span class="ps pass" title="SRC: PASS">SRC</span><span class="ps pass" title="BR: PASS">BR</span><span class="ps " title="MDL: n/a">MDL</span><span class="ps partial" title="SEC: PARTIAL">SEC</span><span class="ps partial" title="AI: PARTIAL">AI</span><span class="ps partial" title="HUM: PARTIAL">HUM</span></div>
+      <details>
+        <summary>요구사항 + 검증 상세 (10개 요구사항)</summary>
+        <div class="section-block">
+          <h4>Sitemap 요구</h4>
+          <p style="font-size:13px;margin:4px 0">Route &#39;/profile&#39; page. User profile editing. Audience user.</p>
+        </div>
+        <div class="section-block">
+          <h4>User flow 위치</h4>
+          <p style="font-size:13px;margin:4px 0"><strong>이전:</strong> B-01 dashboard &#39;프로필 편집&#39;<br><strong>다음:</strong> G-01 언어 설정 | X-09 알림 설정 | X-04 멤버십/결제 진입</p>
+        </div>
+        <div class="section-block">
+          <h4>PRD 연결</h4>
+          <p style="font-size:13px;margin:4px 0">PRD §7.14 프로필 설정 — 기본 프로필 / 학습 목표 / 멤버십 / 계정 보안 탭.</p>
+        </div>
+        <div class="section-block">
+          <h4>추출된 요구사항 (10)</h4>
+          <ul class="bullets"><li>이름 2-30자, 닉네임 2-20자, 자기소개 160자 이하 (description ②).</li><li>아바타 이미지 5MB 이하, jpg/png 허용, 정사각형 크롭 제공 (③).</li><li>도움말 카드 3개 이하, 안내문 2줄, 공개 상태 배지 필수 (④).</li><li>변경값 없으면 저장 CTA 비활성; 저장 중 중복 클릭 차단 (⑤).</li><li>중복 닉네임/이메일 변경 제한은 필드 하단 표시 (② 예외).</li><li>업로드 실패/부적합 파일은 즉시 오류 + 재선택 (③ 예외).</li><li>정책 미동의/데이터 활용 제한은 별도 경고 (④ 예외).</li><li>저장 실패/재인증 필요 시 입력값 보존 + 안내 (⑤ 예외).</li><li>재인증 필요 시 보안 안내 우선 표시 (① 예외).</li><li>Storage upload는 email_confirmed 사용자만 허용 (private.is_email_confirmed RLS, auth-overview §6.2).</li></ul>
+        </div>
+
+
+      <div class="section-block">
+        <h4>브라우저 검증 (3 viewport)</h4>
+        <ul class="bullets"><li><span class="b b-pass">PASS</span> <strong>360px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>768px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>1280px</strong> · HTTP 200 · <span class="muted">정상</span></li></ul>
+      </div>
+
+
+
+
+      <div class="section-block">
+        <h4>AI UX 리뷰 (PARTIAL · 신뢰도 medium · 사람확인 pending-adjudication)</h4>
+        <strong>Top gaps</strong><ul class="bullets"><li>OWNER-CHECK / PII isolation: wrong-owner storageState + other-user profile row not seeded, so RLS cross-user protection is unverified (BLOCKED precondition)</li><li>Avatar upload is intentionally disabled (honest &#39;not yet activated&#39; notice) — documented region 3 (5MB jpg/png + crop) not implemented; acceptable-deferred but a fidelity note</li><li>No rendered screenshot for X-05 in this bundle — mobile reflow + keyboard/focus not spot-checked</li></ul>
+        <strong>판정자가 확인할 질문</strong><ul class="bullets"><li>Can /profile PII OWNER-CHECK be accepted on source reasoning (requireUser + .eq(&#39;id&#39;, user.id) + RLS id=auth.uid) without a wrong-owner fixture, or must it stay BLOCKED for the security claim?</li><li>Is the deferred avatar upload (honest notice, no broken control) acceptable for PARTIAL, and is the &#39;재로그인이 필요할 수 있습니다&#39; re-auth copy accurate vs the actual save path (which does not appear to force re-auth)?</li><li>Is the unsaved-leave guard (beforeunload + anchor intercept) sufficient, given it does not intercept router.push from non-anchor controls?</li></ul>
+      </div>
+
+        <div class="section-block">
+          <h4>최종 라벨 + Top gaps</h4>
+          <span class="b b-blocked">BLOCKED</span> <ul class="bullets"><li>wrong-owner storageState + seeded other-user profile not available — PII OWNER-CHECK unverified</li><li>OWNER-CHECK / PII cross-user RLS isolation unverified (wrong-owner storageState + other-user profile row not seeded) — security follow-up required before a security-level PASS.</li><li>Avatar upload (doc §3) not implemented (honest deferred notice).</li><li>Re-auth copy (&#39;재로그인이 필요할 수 있습니다&#39;) is speculative vs the actual save path; verify/tighten.</li></ul>
+        </div>
+
+      </details>
+    </div>
+
+    <div class="ia-card" data-final="PARTIAL" data-audience="public">
+      <div class="ia-code">X-06</div>
+      <h3>Password reset</h3>
+      <span class="route">/password-reset</span>
+      <div class="chips">
+        <span class="b b-aud-public">public</span>
+        <span class="b b-blocked">page</span>
+        <span class="b b-partial">PARTIAL</span>
+      </div>
+      <div class="phase-strip" title="페이즈별 상태 (DOC / SRC / BR / MDL / SEC / AI / HUM)"><span class="ps pass" title="DOC: PASS">DOC</span><span class="ps pass" title="SRC: PASS">SRC</span><span class="ps pass" title="BR: PASS">BR</span><span class="ps " title="MDL: n/a">MDL</span><span class="ps partial" title="SEC: PARTIAL">SEC</span><span class="ps partial" title="AI: PARTIAL">AI</span><span class="ps partial" title="HUM: PARTIAL">HUM</span></div>
+      <details>
+        <summary>요구사항 + 검증 상세 (8개 요구사항)</summary>
+        <div class="section-block">
+          <h4>Sitemap 요구</h4>
+          <p style="font-size:13px;margin:4px 0">Route &#39;/password-reset&#39; page. Password recovery flow. Audience public.</p>
+        </div>
+        <div class="section-block">
+          <h4>User flow 위치</h4>
+          <p style="font-size:13px;margin:4px 0"><strong>이전:</strong> A-02 login &#39;계정 찾기&#39;<br><strong>다음:</strong> /auth/callback 우회 → /password-reset/confirm 직행 → A-02 (비밀번호 변경 완료/로그인 복귀)</p>
+        </div>
+        <div class="section-block">
+          <h4>PRD 연결</h4>
+          <p style="font-size:13px;margin:4px 0">auth-overview §4.3 비밀번호 재설정; PRD §7.14 계정 보안.</p>
+        </div>
+        <div class="section-block">
+          <h4>추출된 요구사항 (8)</h4>
+          <ul class="bullets"><li>Supabase auth.resetPasswordForEmail({ redirectTo: &#39;/password-reset/confirm&#39; }) 호출 (auth-overview §4.3).</li><li>재설정 링크는 /auth/callback 미경유; redirectTo가 confirm 페이지를 직접 가리킴 (Supabase verify endpoint가 직접 처리).</li><li>새 비밀번호 8-64자, 규칙 실시간 검증, 확인값 일치 검사 (description ③ 제약).</li><li>안내문 80자/2줄, 만료 시간은 절대/상대 시간 병기 (④).</li><li>재전송 제한 중에는 남은 시간 표시; 재요청 제한 정책 (⑥).</li><li>성공 후 재로그인 필요 안내, 클릭 후 중복 제출 차단 (⑥).</li><li>저장 실패/만료는 재시도 + 링크 재발송 CTA (⑥ 예외).</li><li>Audience public: middleware PUBLIC_PATHS 포함 필수.</li></ul>
+        </div>
+        <div class="section-block"><h4><span class="b b-docgap">DOC-GAP</span> 문서 충돌</h4><p style="font-size:13px;margin:4px 0">DOC-GAP: description.md ③는 PW 8-64자, PasswordResetConfirmForm.tsx는 min:8 only (max 미적용) — auth-overview §10에 &#39;Known doc-↔-impl drift&#39; 기록.</p></div>
+
+      <div class="section-block">
+        <h4>브라우저 검증 (3 viewport)</h4>
+        <ul class="bullets"><li><span class="b b-pass">PASS</span> <strong>360px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>768px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>1280px</strong> · HTTP 200 · <span class="muted">정상</span></li></ul>
+      </div>
+
+
+
+
+      <div class="section-block">
+        <h4>AI UX 리뷰 (PARTIAL · 신뢰도 high · 사람확인 pending-adjudication)</h4>
+        <strong>Top gaps</strong><ul class="bullets"><li>Only the request page (step 1) default state captured; /password-reset/confirm new-password step, link-expired, and save-failure states not visually verified this run.</li><li>Description §4 expects link-expiry absolute+relative time display; request-page success copy does not yet show an expiry time (may live on confirm page).</li><li>Mascot region (description §5) not present/verified.</li></ul>
+        <strong>판정자가 확인할 질문</strong><ul class="bullets"><li>Does the header-copy-only flow indication (no Stepper, per D6 decision) give the user enough sense of &#39;where am I in the reset flow&#39;?</li><li>Is the success copy (&#39;… 로 비밀번호 재설정 링크를 보냈습니다. 메일 안의 링크를 누르면 …&#39;) clear about the next physical step (check email, click link)?</li><li>Should link-expiry timing be surfaced on the request confirmation, or is it acceptable to defer it to the confirm page?</li></ul>
+      </div>
+
+        <div class="section-block">
+          <h4>최종 라벨 + Top gaps</h4>
+          <span class="b b-partial">PARTIAL</span> <em class='muted'>없음</em>
+        </div>
+
+        <div class="section-block">
+          <h4>스크린샷 (Public IA, 3 viewport)</h4>
+          <div class="shots">
+            <a href="screenshots/coverage-X-06-360.png" target="_blank"><img src="screenshots/coverage-X-06-360.png" alt="X-06 360"><span>360px</span></a><a href="screenshots/coverage-X-06-768.png" target="_blank"><img src="screenshots/coverage-X-06-768.png" alt="X-06 768"><span>768px</span></a><a href="screenshots/coverage-X-06-1280.png" target="_blank"><img src="screenshots/coverage-X-06-1280.png" alt="X-06 1280"><span>1280px</span></a>
+          </div>
+        </div>
+
+      </details>
+    </div>
+
+    <div class="ia-card" data-final="BLOCKED" data-audience="user">
+      <div class="ia-code">X-07</div>
+      <h3>Weakness-based recommendations</h3>
+      <span class="route">/practice/weakness</span>
+      <div class="chips">
+        <span class="b b-aud-user">user</span>
+        <span class="b b-blocked">page</span>
+        <span class="b b-blocked">BLOCKED</span>
+      </div>
+      <div class="phase-strip" title="페이즈별 상태 (DOC / SRC / BR / MDL / SEC / AI / HUM)"><span class="ps pass" title="DOC: PASS">DOC</span><span class="ps pass" title="SRC: PASS">SRC</span><span class="ps pass" title="BR: PASS">BR</span><span class="ps " title="MDL: n/a">MDL</span><span class="ps partial" title="SEC: PARTIAL">SEC</span><span class="ps partial" title="AI: PARTIAL">AI</span><span class="ps partial" title="HUM: PARTIAL">HUM</span></div>
+      <details>
+        <summary>요구사항 + 검증 상세 (9개 요구사항)</summary>
+        <div class="section-block">
+          <h4>Sitemap 요구</h4>
+          <p style="font-size:13px;margin:4px 0">Route &#39;/practice/weakness&#39; page. Recommendations based on weak areas. Audience user.</p>
+        </div>
+        <div class="section-block">
+          <h4>User flow 위치</h4>
+          <p style="font-size:13px;margin:4px 0"><strong>이전:</strong> B-01 dashboard | X-02 성장 &#39;추천 액션 선택&#39; | R-01 &#39;약점 인사이트&#39;<br><strong>다음:</strong> C-02 문제 목록 (추천 문제 시작) | X-03 paywall (유료 잠금 진입)</p>
+        </div>
+        <div class="section-block">
+          <h4>PRD 연결</h4>
+          <p style="font-size:13px;margin:4px 0">PRD §7.5 학습 추천 — 약점 기반 맞춤 학습.</p>
+        </div>
+        <div class="section-block">
+          <h4>추출된 요구사항 (9)</h4>
+          <ul class="bullets"><li>탭 4개 (문법/어휘/구성/주제 적합성), 탭 라벨 10자 이하, 선택 탭 1개만 활성 (description ②).</li><li>진단 카드 제목 28자, 근거 2줄, 최근 답안 날짜 표시 (③).</li><li>인사이트 3개 이하, 각 문장 60자 이하 (④).</li><li>추천 카드 4개 이하, 제목 28자, 추천 사유 1줄 (⑤).</li><li>대표 CTA 1개, 클릭 후 중복 실행 차단 (⑥).</li><li>답안 부족 탭은 비활성 + 필요한 답안 수 표시 (② 예외).</li><li>추천 없음/분석 실패는 빈 상태 + 다시 분석 CTA (③ 예외).</li><li>유료 잠금이면 본문 대신 업그레이드 안내; X-03 paywall로 진입 (① 예외, user-flow.md &#39;유료 잠금 진입&#39;).</li><li>시작 실패/선택 없음은 CTA 비활성 + 오류 (⑥ 예외).</li></ul>
+        </div>
+
+
+      <div class="section-block">
+        <h4>브라우저 검증 (3 viewport)</h4>
+        <ul class="bullets"><li><span class="b b-pass">PASS</span> <strong>360px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>768px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>1280px</strong> · HTTP 200 · <span class="muted">정상</span></li></ul>
+      </div>
+
+
+
+
+      <div class="section-block">
+        <h4>AI UX 리뷰 (PARTIAL · 신뢰도 high · 사람확인 pending-adjudication)</h4>
+        <strong>Top gaps</strong><ul class="bullets"><li>No retained rendered screenshot for X-07 in run dir -&gt; visual/mobile layout unconfirmed (blocks PASS per section 9).</li><li>human-confirmation evidence input is required for X-07 but not present in this digest run.</li><li>Mobile collapsed-nav + dimension-tab reflow unverified.</li></ul>
+        <strong>판정자가 확인할 질문</strong><ul class="bullets"><li>약점 인사이트 Alert의 &#39;추정&#39; 고지 톤이 학습자에게 신뢰를 주면서도 과신을 막는 적절한 한국어 카피인지 판정.</li><li>&#39;더 깊은 추천 보기&#39; 카드의 결제 미연동(deferred) 고지가 충분히 정직하고 오해 소지가 없는지(/paywall 이동 포함).</li><li>모바일에서 DimensionTabs + 추천 카드 + 인사이트 3열이 가독성 있게 접히는지(렌더 증거 필요).</li></ul>
+      </div>
+
+        <div class="section-block">
+          <h4>최종 라벨 + Top gaps</h4>
+          <span class="b b-blocked">BLOCKED</span> <ul class="bullets"><li>렌더 스크린샷 파일(coverage-X-07-360/768/1280.png)이 run 디렉터리에 부재 → 시각/모바일 레이아웃 및 점수 표시 미확인, IA rubric §9에 따라 PASS 차단.</li><li>human-confirmation 증거 미제출 → PASS 승격 보류.</li></ul>
+        </div>
+
+      </details>
+    </div>
+
+    <div class="ia-card" data-final="BLOCKED" data-audience="admin">
+      <div class="ia-code">X-08</div>
+      <h3>Organization admin dashboard</h3>
+      <span class="route">/admin/org</span>
+      <div class="chips">
+        <span class="b b-aud-admin">admin</span>
+        <span class="b b-blocked">page</span>
+        <span class="b b-blocked">BLOCKED</span>
+      </div>
+      <div class="phase-strip" title="페이즈별 상태 (DOC / SRC / BR / MDL / SEC / AI / HUM)"><span class="ps pass" title="DOC: PASS">DOC</span><span class="ps pass" title="SRC: PASS">SRC</span><span class="ps partial" title="BR: PARTIAL">BR</span><span class="ps " title="MDL: n/a">MDL</span><span class="ps partial" title="SEC: PARTIAL">SEC</span><span class="ps blocked" title="AI: BLOCKED">AI</span><span class="ps blocked" title="HUM: BLOCKED">HUM</span></div>
+      <details>
+        <summary>요구사항 + 검증 상세 (9개 요구사항)</summary>
+        <div class="section-block">
+          <h4>Sitemap 요구</h4>
+          <p style="font-size:13px;margin:4px 0">Route &#39;/admin/org&#39; page. Institution-level admin overview. Audience admin (org_admin). requireOrgAdmin guard.</p>
+        </div>
+        <div class="section-block">
+          <h4>User flow 위치</h4>
+          <p style="font-size:13px;margin:4px 0"><strong>이전:</strong> A-02 login 성공 (관리자) | /auth/callback 토큰 교환 성공 (관리자)<br><strong>다음:</strong> H-01 문제 관리 | X-10 사용자 관리 | X-09 알림 설정</p>
+        </div>
+        <div class="section-block">
+          <h4>PRD 연결</h4>
+          <p style="font-size:13px;margin:4px 0">PRD §3 보조 사용자 — 기관 관리자 운영.</p>
+        </div>
+        <div class="section-block">
+          <h4>추출된 요구사항 (9)</h4>
+          <ul class="bullets"><li>org_admin 역할 전용; requireOrgAdmin guard + private.is_org_admin RLS (auth-overview §6.5).</li><li>권한 변경/발행 토글 admin_audit_logs 기록 의무 (sitemap admin 행).</li><li>KPI 4개 (학습자/제출률/평균/활성), 수치/기간/증감 동일 순서, 로딩 스켈레톤 제공 (description ②).</li><li>운영 카드 3개 이하, 카드 CTA 1개, 권한별 노출 제어 (③).</li><li>테이블 15개/페이지, 필터 동시 사용, 가로 스크롤 허용 (④).</li><li>상세 액션 4개 이하, 민감 정보 마스킹 (⑤).</li><li>데이터 없음은 0 대신 온보딩 안내로 대체 (② 예외).</li><li>기관 없음/권한 없음은 접근 제한 화면으로 전환 (① 예외).</li><li>권한 없음/일괄 처리 실패는 카드 내부 사유 표시 (③ 예외).</li></ul>
+        </div>
+
+
+      <div class="section-block">
+        <h4>브라우저 검증 (3 viewport)</h4>
+        <ul class="bullets"><li><span class="b b-partial">PARTIAL</span> <strong>360px</strong> · HTTP 200 · 1 console/page errors captured (excluding 0 HMR/dev-mode noise)</li><li><span class="b b-partial">PARTIAL</span> <strong>768px</strong> · HTTP 200 · 1 console/page errors captured (excluding 0 HMR/dev-mode noise)</li><li><span class="b b-partial">PARTIAL</span> <strong>1280px</strong> · HTTP 200 · 1 console/page errors captured (excluding 0 HMR/dev-mode noise)</li></ul>
+      </div>
+
+
+
+        <div class="section-block"><h4>AI UX 리뷰</h4><span class="b b-blocked">BLOCKED</span> <span class="muted">Admin RBAC precondition not met: org_admin storageState carries app_role=&#39;learner&#39;, elevation SQL not applied → admin-allowed render unverified</span></div>
+        <div class="section-block">
+          <h4>최종 라벨 + Top gaps</h4>
+          <span class="b b-blocked">BLOCKED</span> <ul class="bullets"><li>1 console/page errors captured (excluding 0 HMR/dev-mode noise)</li><li>Primary CTA matching /(생성|발송|다운로드|관리)/i not visible</li><li>Admin RBAC precondition not met: org_admin storageState carries app_role=&#39;learner&#39;, elevation SQL not applied → admin-allowed render unverified</li><li>No rendered admin screenshot evidence on disk for X-08 at any viewport</li><li>Admin-ALLOWED RBAC path UNVERIFIED: org_admin storageState carries app_role=&#39;learner&#39;; elevation SQL not applied → admin-allowed render never exercised; no X-08 screenshot on disk.</li><li>Residual non-#130 defect: React #418 hydration mismatch fires on this route (toLocaleString(&#39;ko-KR&#39;) in AdminOrgKpiCards) — must be fixed as P1 (suppressHydrationWarning or stable server-side formatting) and re-verified.</li><li>Re-run required AND IA-fidelity remediation: after role elevation, decide whether &#39;운영 카드&#39;/user table/detail panel are in scope (admin is not deferred) and either build them or record an explicit, approved partial-scope note; convert the RPC throw to a graceful empty/retry state.</li></ul>
+        </div>
+
+      </details>
+    </div>
+
+    <div class="ia-card" data-final="BLOCKED" data-audience="user">
+      <div class="ia-code">X-09</div>
+      <h3>Notification settings</h3>
+      <span class="route">/settings/notifications</span>
+      <div class="chips">
+        <span class="b b-aud-user">user</span>
+        <span class="b b-blocked">page</span>
+        <span class="b b-blocked">BLOCKED</span>
+      </div>
+      <div class="phase-strip" title="페이즈별 상태 (DOC / SRC / BR / MDL / SEC / AI / HUM)"><span class="ps pass" title="DOC: PASS">DOC</span><span class="ps pass" title="SRC: PASS">SRC</span><span class="ps pass" title="BR: PASS">BR</span><span class="ps " title="MDL: n/a">MDL</span><span class="ps partial" title="SEC: PARTIAL">SEC</span><span class="ps partial" title="AI: PARTIAL">AI</span><span class="ps partial" title="HUM: PARTIAL">HUM</span></div>
+      <details>
+        <summary>요구사항 + 검증 상세 (10개 요구사항)</summary>
+        <div class="section-block">
+          <h4>Sitemap 요구</h4>
+          <p style="font-size:13px;margin:4px 0">Route &#39;/settings/notifications&#39; page. Notification preferences. Audience user. NOTE: notification transport implementation deferred.</p>
+        </div>
+        <div class="section-block">
+          <h4>User flow 위치</h4>
+          <p style="font-size:13px;margin:4px 0"><strong>이전:</strong> B-01 dashboard &#39;알림&#39; | X-05 프로필 편집 | X-08 admin &#39;알림 설정&#39;<br><strong>다음:</strong> B-01 (저장 후 복귀)</p>
+        </div>
+        <div class="section-block">
+          <h4>PRD 연결</h4>
+          <p style="font-size:13px;margin:4px 0">PRD §7.1 + §7.14 — 알림 채널/조건 설정; 실제 발송 transport는 deferred.</p>
+        </div>
+        <div class="section-block">
+          <h4>추출된 요구사항 (10)</h4>
+          <ul class="bullets"><li>채널 3개 이하 (이메일/Zalo/둘 다), 선택 탭 1개; 미연동 채널은 비활성 (description ②).</li><li>시간 HH:mm 형식, 주기 5개 이하; off 채널 설정 비활성 (③).</li><li>미리보기 1개, 예시 문구 80자/2줄, 발송 이력 5개 (④).</li><li>변경값 없으면 저장 CTA 비활성; 저장 중 중복 클릭 차단 (⑤).</li><li>수신 권한 없음은 본문에 권한 안내 우선 표시 (① 예외).</li><li>채널 미연동/수신동의 없음은 탭 하단 안내 (② 예외).</li><li>시간대 오류/권한 없음은 항목 하단 표시 (③ 예외).</li><li>발송 실패/미리보기 실패는 재시도 + 채널 설정 링크 (④ 예외).</li><li>저장 실패/권한 없음은 토스트 + 항목별 오류 (⑤ 예외).</li><li>Notification transport (실제 이메일/푸시 발송)는 deferred — UI copy가 live 발송을 implies 하지 않아야 함.</li></ul>
+        </div>
+
+
+      <div class="section-block">
+        <h4>브라우저 검증 (3 viewport)</h4>
+        <ul class="bullets"><li><span class="b b-pass">PASS</span> <strong>360px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>768px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>1280px</strong> · HTTP 200 · <span class="muted">정상</span></li></ul>
+      </div>
+
+
+
+
+      <div class="section-block">
+        <h4>AI UX 리뷰 (PARTIAL · 신뢰도 medium · 사람확인 pending-adjudication)</h4>
+        <strong>Top gaps</strong><ul class="bullets"><li>Documented regions missing: 알림 채널 탭(이메일/Zalo 연동, 2), 알림 조건 입력(리마인더 시간 HH:mm/주기, 3), 미리보기/도움말(4). Implementation is 3 boolean toggles only — significant fidelity gap vs the documented channel+condition+preview screen (though transport copy is honest)</li><li>No unsaved-changes leave guard (documented 제약: 변경값 존재 시 이탈 확인)</li><li>No rendered screenshot for X-09 in this bundle</li></ul>
+        <strong>판정자가 확인할 질문</strong><ul class="bullets"><li>Is &#39;3 boolean toggles + honest transport-deferred notice&#39; an acceptable Phase-6 supersede of the documented X-09 (channel tabs 이메일/Zalo + reminder-time inputs + preview/help), or is the reduced scope a fidelity gap that should hold at PARTIAL/lower?</li><li>Is the missing unsaved-changes leave guard a P1 gap for a settings form that mutates preferences?</li><li>Confirm the transport-deferred Alert copy is sufficient and prominent enough to avoid implying real delivery.</li></ul>
+      </div>
+
+        <div class="section-block">
+          <h4>최종 라벨 + Top gaps</h4>
+          <span class="b b-blocked">BLOCKED</span> <ul class="bullets"><li>Documented channel tabs (이메일/Zalo), reminder-time inputs (HH:mm), and preview/help regions not implemented — only 3 boolean toggles.</li><li>Missing documented unsaved-changes leave guard.</li><li>Transport actually deferred (no delivery infra) — correctly disclosed, but the screen remains feature-incomplete vs the documented spec.</li></ul>
+        </div>
+
+      </details>
+    </div>
+
+    <div class="ia-card" data-final="BLOCKED" data-audience="admin">
+      <div class="ia-code">X-10</div>
+      <h3>Admin user management</h3>
+      <span class="route">/admin/users</span>
+      <div class="chips">
+        <span class="b b-aud-admin">admin</span>
+        <span class="b b-blocked">page</span>
+        <span class="b b-blocked">BLOCKED</span>
+      </div>
+      <div class="phase-strip" title="페이즈별 상태 (DOC / SRC / BR / MDL / SEC / AI / HUM)"><span class="ps pass" title="DOC: PASS">DOC</span><span class="ps pass" title="SRC: PASS">SRC</span><span class="ps pass" title="BR: PASS">BR</span><span class="ps " title="MDL: n/a">MDL</span><span class="ps partial" title="SEC: PARTIAL">SEC</span><span class="ps blocked" title="AI: BLOCKED">AI</span><span class="ps blocked" title="HUM: BLOCKED">HUM</span></div>
+      <details>
+        <summary>요구사항 + 검증 상세 (10개 요구사항)</summary>
+        <div class="section-block">
+          <h4>Sitemap 요구</h4>
+          <p style="font-size:13px;margin:4px 0">Route &#39;/admin/users&#39; page. Admin user/account management. Audience admin (platform_admin). requirePlatformAdmin guard.</p>
+        </div>
+        <div class="section-block">
+          <h4>User flow 위치</h4>
+          <p style="font-size:13px;margin:4px 0"><strong>이전:</strong> X-08 admin org &#39;KPI/운영 카드&#39; 또는 &#39;사용자 관리&#39;<br><strong>다음:</strong> X-08 admin (back) | 상세 패널 — 사용자 학습/결제/소속/권한 확인</p>
+        </div>
+        <div class="section-block">
+          <h4>PRD 연결</h4>
+          <p style="font-size:13px;margin:4px 0">PRD §3 보조 사용자 — 플랫폼 운영자 사용자 관리.</p>
+        </div>
+        <div class="section-block">
+          <h4>추출된 요구사항 (10)</h4>
+          <ul class="bullets"><li>platform_admin 역할 전용; requirePlatformAdmin guard (auth-overview §6.5).</li><li>역할 변경은 private.admin_change_user_role RPC만 허용 (SECURITY DEFINER, 클라이언트 직접 UPDATE 차단; 마이그레이션 #15 보호 트리거).</li><li>권한 변경 admin_audit_logs 기록 의무.</li><li>KPI 4개, 필터 5개 이하, 결과 수 상단 표시 (description ②).</li><li>검색 2-60자, 정렬 1개, 개인정보 일부 마스킹 (③).</li><li>테이블 20개/페이지, 행 선택 단일/다중 지원 (④).</li><li>선택 사용자 필요, 민감 정보 마스킹, 액션 로그 표시 (⑤).</li><li>삭제 대신 비활성화; 위험 액션은 확인 모달 필수 (⑥).</li><li>권한 충돌/세션 만료/사용자 삭제됨은 패널 잠금 + 접근 제한 안내 (① / ⑤ 예외).</li><li>일괄 처리 실패/권한 충돌은 실패 행 목록으로 안내 (⑥ 예외).</li></ul>
+        </div>
+
+
+      <div class="section-block">
+        <h4>브라우저 검증 (3 viewport)</h4>
+        <ul class="bullets"><li><span class="b b-pass">PASS</span> <strong>360px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>768px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>1280px</strong> · HTTP 200 · <span class="muted">정상</span></li></ul>
+      </div>
+
+
+
+        <div class="section-block"><h4>AI UX 리뷰</h4><span class="b b-blocked">BLOCKED</span> <span class="muted">Admin RBAC precondition not met: platform_admin storageState carries app_role=&#39;learner&#39;, elevation SQL not applied → admin-allowed render (incl. the PASS row) unverified</span></div>
+        <div class="section-block">
+          <h4>최종 라벨 + Top gaps</h4>
+          <span class="b b-blocked">BLOCKED</span> <ul class="bullets"><li>Admin RBAC precondition not met: platform_admin storageState carries app_role=&#39;learner&#39;, elevation SQL not applied → admin-allowed render (incl. the PASS row) unverified</li><li>No rendered admin screenshot evidence on disk for X-10 at any viewport</li><li>Owner-id / wrong-owner RLS fixtures not seeded for X-10 (seed.deferred)</li><li>Admin-ALLOWED RBAC path UNVERIFIED: platform_admin storageState carries app_role=&#39;learner&#39;; elevation SQL not applied → the &#39;PASS&#39; render is not a verified platform_admin render; no X-10 screenshot on disk.</li><li>Owner-id / wrong-owner RLS fixtures not seeded (seed.deferred) → role-change target validation and PII-masking edge behavior cannot be confirmed.</li><li>Re-run required: apply role elevation + seed owner/wrong-owner rows, then verify the role-change RPC round trip, confirm-modal focus trap/return-focus, failure-recovery Alert, and re-check formatDate for any hydration mismatch under populated rows.</li></ul>
+        </div>
+
+      </details>
+    </div>
+
+    <div class="ia-card" data-final="PARTIAL" data-audience="public">
+      <div class="ia-code">X-11</div>
+      <h3>Auth error</h3>
+      <span class="route">/auth/error</span>
+      <div class="chips">
+        <span class="b b-aud-public">public</span>
+        <span class="b b-blocked">page</span>
+        <span class="b b-partial">PARTIAL</span>
+      </div>
+      <div class="phase-strip" title="페이즈별 상태 (DOC / SRC / BR / MDL / SEC / AI / HUM)"><span class="ps pass" title="DOC: PASS">DOC</span><span class="ps pass" title="SRC: PASS">SRC</span><span class="ps pass" title="BR: PASS">BR</span><span class="ps " title="MDL: n/a">MDL</span><span class="ps partial" title="SEC: PARTIAL">SEC</span><span class="ps partial" title="AI: PARTIAL">AI</span><span class="ps partial" title="HUM: PARTIAL">HUM</span></div>
+      <details>
+        <summary>요구사항 + 검증 상세 (9개 요구사항)</summary>
+        <div class="section-block">
+          <h4>Sitemap 요구</h4>
+          <p style="font-size:13px;margin:4px 0">Route &#39;/auth/error&#39; page. Audience public. 11 canonical Supabase error.code reasons (otp_expired, flow_state_expired, flow_state_not_found, bad_code_verifier, user_not_found, over_email_send_rate_limit, over_request_rate_limit, email_not_confirmed, signup_disabled, access_denied, unknown).</p>
+        </div>
+        <div class="section-block">
+          <h4>User flow 위치</h4>
+          <p style="font-size:13px;margin:4px 0"><strong>이전:</strong> /auth/callback 토큰 교환 실패 (verifyOtp/exchangeCodeForSession/setSession 모두 실패 경로)<br><strong>다음:</strong> A-01 가입 (user_not_found) | X-12 verify-email (otp_expired/email_not_confirmed) | A-02 login (flow_state_*/bad_code_verifier) | Retry-After 카운트다운 자동 재활성 (rate-limit 계열)</p>
+        </div>
+        <div class="section-block">
+          <h4>PRD 연결</h4>
+          <p style="font-size:13px;margin:4px 0">auth-overview §5 — 11종 reason 메시지·CTA 표; description.md가 Codex 3-round 합의 spec.</p>
+        </div>
+        <div class="section-block">
+          <h4>추출된 요구사항 (9)</h4>
+          <ul class="bullets"><li>reason query는 11개 canonical만 허용; 매핑되지 않으면 unknown fallback (description ②, auth-overview §5).</li><li>메시지 80자/2줄, 따뜻하고 평이한 일반 사용자 톤 (②).</li><li>raw Supabase error_description은 절대 URL/UI 노출 금지 — 서버 로그(console.error)에만 (②, auth-overview §4.5).</li><li>primary CTA 1개 + secondary 1개 이하; 중복 제출 차단 (③).</li><li>Retry-After 카운트다운: retry_after_seconds 1-86400 정수만 통과 (sanitizeRetryAfterSeconds), 값 없으면 60초 fallback, 음수/비숫자도 60초 fallback (④).</li><li>rate-limit 카운트다운 중에는 CTA 비활성; 카운트다운 종료 시 자동 활성 (③).</li><li>?email= prefill은 untrusted: 가시·편집 가능한 input의 초기값으로만 사용, 자동 resend 금지 (⑤).</li><li>보조 escape route (로그인/가입/홈/도움말) 최소 1개 항상 노출, 키보드 접근성 확보 (⑥).</li><li>카드 폭 360-520px, 모바일/데스크톱 동일 레이아웃 (①).</li></ul>
+        </div>
+
+
+      <div class="section-block">
+        <h4>브라우저 검증 (3 viewport)</h4>
+        <ul class="bullets"><li><span class="b b-pass">PASS</span> <strong>360px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>768px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>1280px</strong> · HTTP 200 · <span class="muted">정상</span></li></ul>
+      </div>
+
+
+
+
+      <div class="section-block">
+        <h4>AI UX 리뷰 (PARTIAL · 신뢰도 medium · 사람확인 pending-adjudication)</h4>
+        <strong>Top gaps</strong><ul class="bullets"><li>Only the UNKNOWN fallback was rendered; the 10 reason-specific states (countdown, email-prefill, resend, signup, retry) are source-present but visually UNVERIFIED.</li><li>UNKNOWN card shows redundant home affordances (primary 홈으로 button + 홈으로 돌아가기 link), exceeding the documented &#39;primary 1 + secondary ≤1&#39; on that state.</li><li>wireframe.png is &#39;missing&#39; (intentional — spec is Codex-consensus based), so wireframe-fidelity comparison is copy/spec only.</li></ul>
+        <strong>판정자가 확인할 질문</strong><ul class="bullets"><li>On the UNKNOWN state, is the doubled home escape (button &#39;홈으로&#39; + link &#39;홈으로 돌아가기&#39;) redundant/confusing, or acceptable as a safety net?</li><li>Are the 11 reason messages (e.g. &#39;user_not_found: 오래 비활성화된 계정은 자동으로 정리됐어요…&#39;) accurate, warm, and not alarming for general users?</li><li>Does the rate-limit countdown copy (&#39;… 후 다시 시도할 수 있어요&#39;) read naturally and set correct expectations?</li><li>Is suppressing raw error_description while still giving an actionable reason the right trust/security balance for this audience?</li></ul>
+      </div>
+
+        <div class="section-block">
+          <h4>최종 라벨 + Top gaps</h4>
+          <span class="b b-partial">PARTIAL</span> <em class='muted'>없음</em>
+        </div>
+
+        <div class="section-block">
+          <h4>스크린샷 (Public IA, 3 viewport)</h4>
+          <div class="shots">
+            <a href="screenshots/coverage-X-11-360.png" target="_blank"><img src="screenshots/coverage-X-11-360.png" alt="X-11 360"><span>360px</span></a><a href="screenshots/coverage-X-11-768.png" target="_blank"><img src="screenshots/coverage-X-11-768.png" alt="X-11 768"><span>768px</span></a><a href="screenshots/coverage-X-11-1280.png" target="_blank"><img src="screenshots/coverage-X-11-1280.png" alt="X-11 1280"><span>1280px</span></a>
+          </div>
+        </div>
+
+      </details>
+    </div>
+
+    <div class="ia-card" data-final="PARTIAL" data-audience="public">
+      <div class="ia-code">X-12</div>
+      <h3>Auth verify-email</h3>
+      <span class="route">/auth/verify-email</span>
+      <div class="chips">
+        <span class="b b-aud-public">public</span>
+        <span class="b b-blocked">page</span>
+        <span class="b b-partial">PARTIAL</span>
+      </div>
+      <div class="phase-strip" title="페이즈별 상태 (DOC / SRC / BR / MDL / SEC / AI / HUM)"><span class="ps pass" title="DOC: PASS">DOC</span><span class="ps pass" title="SRC: PASS">SRC</span><span class="ps pass" title="BR: PASS">BR</span><span class="ps " title="MDL: n/a">MDL</span><span class="ps partial" title="SEC: PARTIAL">SEC</span><span class="ps partial" title="AI: PARTIAL">AI</span><span class="ps partial" title="HUM: PARTIAL">HUM</span></div>
+      <details>
+        <summary>요구사항 + 검증 상세 (9개 요구사항)</summary>
+        <div class="section-block">
+          <h4>Sitemap 요구</h4>
+          <p style="font-size:13px;margin:4px 0">Route &#39;/auth/verify-email&#39; page. Audience public. 가입 직후 60초 cooldown 재전송 + Supabase rate-limit 정렬.</p>
+        </div>
+        <div class="section-block">
+          <h4>User flow 위치</h4>
+          <p style="font-size:13px;margin:4px 0"><strong>이전:</strong> A-01 가입 직후 router.push(&#39;/auth/verify-email?email=...&#39;)<br><strong>다음:</strong> /auth/callback (이메일 링크 클릭) → 성공 시 next 또는 /dashboard | 60초 cooldown 후 재전송 self-loop | 도움말 escape (A-02/A-01/홈)</p>
+        </div>
+        <div class="section-block">
+          <h4>PRD 연결</h4>
+          <p style="font-size:13px;margin:4px 0">auth-overview §4.1 회원가입 + §6.3 Rate limit·cooldown.</p>
+        </div>
+        <div class="section-block">
+          <h4>추출된 요구사항 (9)</h4>
+          <ul class="bullets"><li>Supabase auth.resend({ type: &#39;signup&#39;, email }) 호출; 60초 client cooldown (description ③).</li><li>서버 429 + Retry-After 응답 시 그 값으로 cooldown 갱신 (③).</li><li>항상 보이는 이메일 input을 요구 — URL/세션만으로 fire-and-forget 금지 (Codex C-ε 합의, ③ 제약).</li><li>Cooldown 타이머 1초마다 갱신; 0 도달 시 버튼 자동 활성 (④).</li><li>페이지 새로고침 시 cooldown 초기화 (60초 default 또는 last attempt timestamp 기반).</li><li>over_email_send_rate_limit 응답 시 /auth/error?reason=over_email_send_rate_limit&amp;retry_after_seconds=&lt;n&gt; redirect 또는 인라인 안내 (③ 예외).</li><li>Rate limit 한도: same-user OTP 60초, 프로젝트 OTP 30/hour ramp-up, built-in SMTP 2/hour (auth-overview §6.3).</li><li>이메일 표시는 마스킹 X (본인 가입 직후라 안전); 세션/쿼리 이메일 모두 없으면 영역 미표시 (②).</li><li>딥링크/새로고침 후에도 동일 상태 유지 (①).</li></ul>
+        </div>
+
+
+      <div class="section-block">
+        <h4>브라우저 검증 (3 viewport)</h4>
+        <ul class="bullets"><li><span class="b b-pass">PASS</span> <strong>360px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>768px</strong> · HTTP 200 · <span class="muted">정상</span></li><li><span class="b b-pass">PASS</span> <strong>1280px</strong> · HTTP 200 · <span class="muted">정상</span></li></ul>
+      </div>
+
+
+
+
+      <div class="section-block">
+        <h4>AI UX 리뷰 (PARTIAL · 신뢰도 medium · 사람확인 pending-adjudication)</h4>
+        <strong>Top gaps</strong><ul class="bullets"><li>Only the default state rendered; active cooldown countdown, resend-success toast, and rate-limit redirect states are source-present but visually UNVERIFIED.</li><li>Description §1 says page should survive without ?email via session fallback; this client component reads only ?email query (no session email) so deep-link without ?email shows no email + still allows manual entry — confirm acceptable.</li><li>wireframe.png &#39;missing&#39; (intentional spec); fidelity is copy/spec-based only.</li></ul>
+        <strong>판정자가 확인할 질문</strong><ul class="bullets"><li>Is the resend cooldown UX (button disabled + &#39;… 후 다시 보낼 수 있어요&#39;, surviving refresh) clear enough that users understand why resend is temporarily blocked?</li><li>Does the guidance copy (&#39;가입을 마무리하려면 받은편지함의 인증 메일에서 링크를 눌러주세요. 메일이 보이지 않으면 스팸함도 확인해주세요.&#39;) read naturally and reduce abandonment?</li><li>Is requiring a visible editable email input before resend (no URL-only fire) the right anti-abuse + UX trade-off on mobile?</li><li>When no ?email is present, is offering only a manual email field (no session-derived email) an acceptable fallback?</li></ul>
+      </div>
+
+        <div class="section-block">
+          <h4>최종 라벨 + Top gaps</h4>
+          <span class="b b-partial">PARTIAL</span> <em class='muted'>없음</em>
+        </div>
+
+        <div class="section-block">
+          <h4>스크린샷 (Public IA, 3 viewport)</h4>
+          <div class="shots">
+            <a href="screenshots/coverage-X-12-360.png" target="_blank"><img src="screenshots/coverage-X-12-360.png" alt="X-12 360"><span>360px</span></a><a href="screenshots/coverage-X-12-768.png" target="_blank"><img src="screenshots/coverage-X-12-768.png" alt="X-12 768"><span>768px</span></a><a href="screenshots/coverage-X-12-1280.png" target="_blank"><img src="screenshots/coverage-X-12-1280.png" alt="X-12 1280"><span>1280px</span></a>
+          </div>
+        </div>
+
+      </details>
+    </div>
+
+        </div>
+      </div>
+    </section>
+
+
+    <section>
+      <div class="container">
+        <h2>알려진 이슈</h2>
+        <p class="muted">검수 중 발견된 문서/코드 drift 및 환경적 잡음을 정직 기록합니다.</p>
+        <h3>DOC-GAP (문서 ↔ 코드 drift)</h3>
+        <table class="simple">
+          <thead><tr><th>IA</th><th>설명</th><th>처리 방향</th></tr></thead>
+          <tbody>
+            <tr><td><strong>A-01</strong><br><span class="muted">Sign-up</span></td><td>DOC-GAP: description.md ③는 PW 8-64자 명세지만 SignUpForm.tsx는 min:8만 적용 (max 미적용) — auth-overview §10 &#39;Known doc-↔-impl drift&#39;에 기록됨.</td><td><span class="muted">Product 결정 후 별건 PR</span></td></tr><tr><td><strong>X-03</strong><br><span class="muted">Paywall</span></td><td>none — deferred-scope.md가 paywall UI shell 허용을 명시.</td><td><span class="muted">Product 결정 후 별건 PR</span></td></tr><tr><td><strong>X-04</strong><br><span class="muted">Subscription management</span></td><td>none — deferred-scope.md가 subscription shell 허용을 명시.</td><td><span class="muted">Product 결정 후 별건 PR</span></td></tr><tr><td><strong>X-06</strong><br><span class="muted">Password reset</span></td><td>DOC-GAP: description.md ③는 PW 8-64자, PasswordResetConfirmForm.tsx는 min:8 only (max 미적용) — auth-overview §10에 &#39;Known doc-↔-impl drift&#39; 기록.</td><td><span class="muted">Product 결정 후 별건 PR</span></td></tr>
+          </tbody>
+        </table>
+        <h3>환경적 잡음 (Known noise — product defect 아님)</h3>
+        <table class="simple">
+          <thead><tr><th>Phase</th><th>유형</th><th>원인</th><th>분류</th></tr></thead>
+          <tbody>
+
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+
+    <section>
+      <div class="container">
+        <h2>다음 작업 (BLOCKED IA topGaps 카테고리에서 자동 도출)</h2>
+        <p class="muted">우선순위는 영향 IA 수 기준 자동 정렬. 이미 완료된 작업(예: service_role 회전, codex 위임 6 public) 은 BLOCKED 가 사라져서 자동 제외.</p>
+        <table class="simple">
+          <thead><tr><th>우선</th><th>할 일</th><th>차단 영역</th><th>예상 소요</th></tr></thead>
+          <tbody>
+            <tr><td><strong>P1</strong></td><td><strong>Catalog primary CTA regex 정밀화</strong><br><span class="muted" style="font-size:12px;">ia-catalog.ts 의 expectedPrimaryCta regex 가 실제 구현 라벨과 어긋난 IA 정렬</span></td><td><span class="muted">11 IA: B-01, C-01, E-01, E-02, R-01, F-01, H-01, X-02, +3</span></td><td>IA 당 ~10분, 총 ~2-3시간</td></tr><tr><td><strong>P2</strong></td><td><strong>Hosted modal trigger selectors 보강</strong><br><span class="muted" style="font-size:12px;">hosted-surfaces.spec.ts 의 modal 진입 heuristic selectors 가 못 잡은 IA</span></td><td><span class="muted">4 IA: D-M1, D-M2, F-M1, D-M3</span></td><td>IA 당 ~30분 (실제 UI source 검증 포함)</td></tr><tr><td><strong>P3</strong></td><td><strong>Catalog heading regex 정밀화</strong><br><span class="muted" style="font-size:12px;">ia-catalog.ts 의 expectedHeadingPattern 이 실제 h1 과 어긋난 IA 정렬</span></td><td><span class="muted">2 IA: F-01, F-M1</span></td><td>IA 당 ~5분, 총 ~1시간</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+
+    <section>
+      <div class="container">
+        <h2>용어집</h2>
+        <table class="simple">
+          <thead><tr><th>용어</th><th>풀이</th></tr></thead>
+          <tbody>
+            <tr><td><strong>IA (Information Architecture)</strong></td><td>화면 구조와 화면별 요구사항 — 이 프로젝트는 34개 IA를 가짐</td></tr><tr><td><strong>doc-receipt</strong></td><td>각 IA마다 어떤 docs를 읽고 어떤 요구사항을 뽑았는지 기록한 증거 JSON</td></tr><tr><td><strong>storageState</strong></td><td>Playwright 테스트에서 로그인 세션을 흉내내는 쿠키/스토리지 파일</td></tr><tr><td><strong>host route</strong></td><td>모달이 호스팅되는 부모 페이지 (예: C-03 retry 모달은 /practice/problems가 host)</td></tr><tr><td><strong>RLS (Row Level Security)</strong></td><td>Postgres에서 행 단위 권한 — 사용자가 자기 row만 보게 강제</td></tr><tr><td><strong>service_role</strong></td><td>Supabase의 admin 권한 키 — 클라이언트 코드에 절대 노출 금지. 노출됐을 때 회전 필수 (rotate); 이 audit 의 secret key 는 dev 한정 .env.local 에서 활성 상태</td></tr><tr><td><strong>DOC-GAP</strong></td><td>문서 명세와 실제 코드가 다른 상태 — 의도된 drift이거나 product 결정 필요</td></tr><tr><td><strong>BLOCKED</strong></td><td>증거 수집을 시도했으나 사전 조건(precondition) 부재로 진행 불가</td></tr><tr><td><strong>Phase 5 AI-first</strong></td><td>AI가 1차로 34 IA 전부 훑고, 사람이 판단 필요한 항목만 골라주는 흐름</td></tr><tr><td><strong>evidenceBundleId</strong></td><td>한 run의 모든 증거를 묶어 식별하는 hash — 다른 run 증거 섞이지 않게 보장</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+
+    <footer>
+      <div class="container">
+        <p><strong>산출물 경로</strong></p>
+        <ul>
+          <li>Audit dir: <code>reports/ia-verification/runs/20260601-120308</code></li>
+          <li>Run ledger: <code>docs/ai-workflow/runs/2026/05/28/20260528-1417-ia-verification-phase-0.5.md</code> · <code>docs/ai-workflow/runs/2026/05/28/20260528-1530-ia-verification-phase-2.md</code></li>
+          <li>Plan: <code>docs/ai-workflow/ia-implementation-verification-execution-plan.md</code></li>
+        </ul>
+        <p class="muted" style="margin-top:16px;">생성: build-html-report.mjs · 2026-06-01T07:43:34.019Z</p>
+      </div>
+    </footer>
+
+  <script>
+function applyFilter() {
+  const checked = Array.from(document.querySelectorAll('.filter-bar input:checked')).map(i => i.value);
+  const cards = document.querySelectorAll('.ia-card');
+  cards.forEach(card => {
+    const final = card.dataset.final;
+    const aud = card.dataset.audience;
+    const matches = (checked.length === 0)
+      || checked.includes(final)
+      || checked.includes('aud-' + aud);
+    card.style.display = matches ? '' : 'none';
+  });
+}
+document.querySelectorAll('.filter-bar input').forEach(i => i.addEventListener('change', applyFilter));
+</script>
+</body>
+</html>

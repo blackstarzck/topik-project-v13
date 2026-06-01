@@ -1,0 +1,45 @@
+{
+  "screenName": "Weakness-based recommendations",
+  "route": "/practice/weakness",
+  "routeType": "page",
+  "audience": "user",
+  "packs": [
+    "CORE",
+    "DATA",
+    "RECOMMENDATION",
+    "EMPTY"
+  ],
+  "requiredEvidenceInputs": [
+    "document-receipt",
+    "source-map",
+    "browser",
+    "security-navigation",
+    "ai-ux-review",
+    "human-confirmation"
+  ],
+  "descriptionPath": "docs/IA/29-X-07-weakness-based-recommendations/description.md",
+  "wireframeStatus": "present",
+  "browser": {
+    "statuses": [
+      "PASS"
+    ],
+    "blockingReasons": [],
+    "httpByViewport": {
+      "360": 200,
+      "768": 200,
+      "1280": 200
+    },
+    "visibleH1": "약점 보강",
+    "primaryCtaPresent": true,
+    "screenshots": [
+      "screenshots\\coverage-X-07-360.png",
+      "screenshots\\coverage-X-07-768.png",
+      "screenshots\\coverage-X-07-1280.png"
+    ],
+    "errorsSample": [],
+    "uxStatesCaptured": [
+      "default"
+    ]
+  },
+  "hostedSurface": null
+}

@@ -14,7 +14,7 @@ import { buildAuthRedirectUrl } from "@/lib/auth/redirect-url";
 import { REASON_CONTENT, mapSupabaseErrorCode } from "@/lib/auth/error-mapping";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
-const { Paragraph, Title } = Typography;
+const { Paragraph } = Typography;
 
 type SignUpFields = {
   email: string;
@@ -59,12 +59,26 @@ export function SignUpForm() {
       onFinish={handleSignUp}
       requiredMark={false}
     >
+      {/* description §3 입력 순서: 이름, 이메일, 비밀번호 */}
+      <Form.Item
+        label="이름"
+        name="displayName"
+        rules={[
+          { required: true, message: "이름을 입력하세요" },
+          { min: 2, message: "이름은 2자 이상이어야 합니다" },
+          { max: 30, message: "이름은 30자 이하여야 합니다" },
+        ]}
+      >
+        <Input autoComplete="name" placeholder="홍길동" />
+      </Form.Item>
+
       <Form.Item
         label="이메일"
         name="email"
         rules={[
           { required: true, message: "이메일을 입력하세요" },
           { type: "email", message: "올바른 이메일 형식이 아닙니다" },
+          { max: 80, message: "이메일은 80자 이하여야 합니다" },
         ]}
       >
         <Input autoComplete="email" placeholder="you@example.com" />
@@ -102,18 +116,6 @@ export function SignUpForm() {
       </Form.Item>
 
       <Form.Item
-        label="이름"
-        name="displayName"
-        rules={[
-          { required: true, message: "이름을 입력하세요" },
-          { min: 2, message: "이름은 2자 이상이어야 합니다" },
-          { max: 30, message: "이름은 30자 이하여야 합니다" },
-        ]}
-      >
-        <Input autoComplete="name" placeholder="홍길동" />
-      </Form.Item>
-
-      <Form.Item
         name="terms"
         valuePropName="checked"
         rules={[
@@ -147,7 +149,7 @@ export function SignUpForm() {
         </Checkbox>
       </Form.Item>
 
-      <Form.Item>
+      <Form.Item style={{ marginBottom: 8 }}>
         <Button
           type="primary"
           htmlType="submit"
@@ -157,6 +159,16 @@ export function SignUpForm() {
           회원가입
         </Button>
       </Form.Item>
+
+      {/* description §4 소셜 로그인: 현재 이메일 가입만 제공. 가짜 버튼 대신
+          준비 중 상태를 정직하게 안내 (deferred — no provider wired). */}
+      <Paragraph
+        type="secondary"
+        style={{ textAlign: "center", fontSize: 13, marginBottom: 0 }}
+      >
+        소셜 로그인(구글·카카오 등)은 준비 중이에요. 지금은 이메일로 가입할 수
+        있어요.
+      </Paragraph>
     </Form>
   );
 }

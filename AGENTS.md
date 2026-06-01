@@ -4,9 +4,15 @@ This file is the short, mandatory contract for every AI agent working in this re
 
 ## Project State
 
-This repository is currently pre-implementation. There is no stable `src/` or `package.json` yet. Treat `docs/` as the source of truth for what must be built.
+This repository now has a foundation implementation. `src/` and `package.json`
+exist, with the Next.js App Router scaffold, Supabase/auth/theme foundations,
+and some learning and feedback surfaces already started.
 
-After production source exists, current source code and accepted docs must be reconciled before implementation. Do not silently invent product behavior.
+Treat `docs/` as the source of truth for product intent, architecture decisions,
+workflow rules, quality gates, and intended behavior. Treat current source as
+the implementation reference for behavior that already exists. Before changing
+behavior, reconcile current source code with accepted docs. Do not silently
+invent product behavior.
 
 ## Mandatory Startup
 
@@ -57,11 +63,11 @@ Use [README.md](README.md) and [docs/README.md](docs/README.md) for human-friend
 
 ## Context And Delegation
 
-- For non-trivial work, implementation work, UI/flow/integration changes, net-new scope, doc conflicts, multi-agent work, or work likely to resume later, create and maintain a context ledger under `docs/ai-workflow/runs/YYYY/MM/DD/` from [docs/ai-workflow/context-ledger-template.md](docs/ai-workflow/context-ledger-template.md).
+- For non-trivial work, implementation work, UI/flow/integration changes, net-new scope, doc conflicts, multi-agent work, or work likely to resume later, create and maintain a context ledger under `docs/ai-workflow/runs/YYYY/MM/DD/` from [docs/ai-workflow/templates/context-ledger-template.md](docs/ai-workflow/templates/context-ledger-template.md).
 - Tiny docs/config/non-behavioral edits may skip the ledger only when there is no multi-agent work, no behavior change, no doc conflict, and no resume risk. State the exception in the final report.
 - In multi-agent work, the main session is the coordinator and durable context owner.
 - Child agents execute bounded slices only. They must not redefine product scope or rely on private context that is not reported back.
-- Use [docs/ai-workflow/agent-packets.md](docs/ai-workflow/agent-packets.md) for task packets and result packets. Multi-agent / ledger / resume rules: [docs/ai-workflow/context-and-packets.md](docs/ai-workflow/context-and-packets.md).
+- Use [docs/ai-workflow/contracts/agent-packets.md](docs/ai-workflow/contracts/agent-packets.md) for task packets and result packets. Multi-agent / ledger / resume rules: [docs/ai-workflow/context-and-packets.md](docs/ai-workflow/context-and-packets.md).
 - Before completion, compare the ledger with current file state, child result packets, and verification output.
 
 ## Completion Gate
@@ -70,7 +76,7 @@ An AI agent may not claim done until all of these are true:
 
 - Relevant skills were used or explicitly ruled out with a reason.
 - Required docs from [docs/agent-index.md](docs/agent-index.md) were read and listed.
-- The final report follows [docs/ai-workflow/report-template.md](docs/ai-workflow/report-template.md).
+- The final report follows [docs/ai-workflow/templates/report-template.md](docs/ai-workflow/templates/report-template.md).
 - A required context ledger exists and is current, or the allowed lightweight exception is stated.
 - Tests or equivalent verification were run and read.
 - Any fallback/degraded-mode path is documented with evidence and remaining risk.
@@ -86,5 +92,5 @@ An AI agent may not claim done until all of these are true:
   - Ledger + multi-agent packets + resume: [docs/ai-workflow/context-and-packets.md](docs/ai-workflow/context-and-packets.md)
   - Review gates (TDD / cross-model / plan-PASS / architecture / QA / finish): [docs/ai-workflow/review-gates.md](docs/ai-workflow/review-gates.md)
   - Failure classes + fallback matrix: [docs/ai-workflow/fallback-and-recovery.md](docs/ai-workflow/fallback-and-recovery.md)
-- Harness and skill details: [docs/ai-workflow/harness-and-skills.md](docs/ai-workflow/harness-and-skills.md)
+- Harness and skill details: [docs/ai-workflow/reference/harness-and-skills.md](docs/ai-workflow/reference/harness-and-skills.md)
 - Human docs map: [docs/README.md](docs/README.md)

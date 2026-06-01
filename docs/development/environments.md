@@ -347,6 +347,11 @@ function classifyTargetEnv() {
 | `prod` 또는 `unknown-treat-as-prod` | 🚫 **REFUSED** | 2 |
 | 위 + `--i-know-this-is-prod-and-want-to-seed-anyway` 플래그 | ✅ 진행 (build-status.json에 기록) | (정상 흐름) |
 
+IA audit caveat: this break-glass flag is not valid for IA implementation
+verification seed-data, storage-state, or audit evidence. Any IA audit artifact
+produced with a production or unknown-target override is non-audit evidence and
+blocks final `PASS`.
+
 verbose flag 이름은 일부러 길게 — 우연한 prod 실행 방지. **prod에 대고 이 플래그를 절대 쓰지 마세요.** dev에서 라벨 분류가 헷갈릴 때 일회용 비상 탈출구 용도일 뿐.
 
 ---

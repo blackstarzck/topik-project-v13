@@ -5,7 +5,7 @@ This file applies Ant Design page patterns to the TALKPIK AI product structure.
 ## Current Paper Scope
 
 The current route and screen inventory is `docs/sitemap.md` plus the 32 screens
-under `docs/IA/`. PRD references to standalone vocabulary, mock exam, board,
+under `docs/Wireframe/`. PRD references to standalone vocabulary, mock exam, board,
 and notice detail remain product context or future/deferred scope until matching
 IA screens and routes are added.
 
@@ -163,7 +163,7 @@ Rules:
 ## Mock Exam (Future / Legacy)
 
 Mock exam screens are outside the current Paper route inventory. Use this
-pattern only if mock exam scope is reintroduced through `docs/IA` and
+pattern only if mock exam scope is reintroduced through `docs/Wireframe` and
 `docs/sitemap.md`.
 
 Recommended components:
@@ -207,7 +207,7 @@ Rules:
 ## Board And Notices (Future / Legacy)
 
 Board and notice detail screens are outside the current Paper route inventory.
-Use this pattern only if those screens are reintroduced through `docs/IA` and
+Use this pattern only if those screens are reintroduced through `docs/Wireframe` and
 `docs/sitemap.md`.
 
 Recommended components:

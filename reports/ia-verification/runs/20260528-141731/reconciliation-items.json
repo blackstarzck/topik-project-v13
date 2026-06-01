@@ -1,0 +1,77 @@
+{
+  "runId": "20260528-141731",
+  "updatedAt": "2026-05-29T09:33:27.517Z",
+  "source": "coordinator metadata preflight",
+  "items": [
+    {
+      "id": "RC-C-03-hosted-profile",
+      "iaCode": "C-03",
+      "field": "routeType",
+      "auditValue": "user chooses to solve a previously attempted or retry-eligible problem.",
+      "profileValue": "hosted modal",
+      "status": "accepted",
+      "effect": "Do not dispatch hosted modal remediation until metadata is reconciled.",
+      "priority": "P1",
+      "owner": "coordinator",
+      "createdAt": "2026-05-29T09:33:27.517Z",
+      "agingDueAt": "2026-05-30T00:00:00+09:00",
+      "closureRequiredBeforePass": true
+    },
+    {
+      "id": "RC-D-M1-hosted-profile",
+      "iaCode": "D-M1",
+      "field": "routeOrHostRoute/routeType",
+      "auditValue": "user submits a writing answer.",
+      "profileValue": "hosted by writing submission flow / hosted modal",
+      "status": "accepted",
+      "effect": "Do not close D-M1 from component-only evidence.",
+      "priority": "P1",
+      "owner": "coordinator",
+      "createdAt": "2026-05-29T09:33:27.517Z",
+      "agingDueAt": "2026-05-30T00:00:00+09:00",
+      "closureRequiredBeforePass": true
+    },
+    {
+      "id": "RC-D-M2-hosted-profile",
+      "iaCode": "D-M2",
+      "field": "routeOrHostRoute/routeType",
+      "auditValue": "submission accepted and feedback/report generation is pending.",
+      "profileValue": "hosted by writing submission flow / modal/state",
+      "status": "accepted",
+      "effect": "Do not dispatch until host route and trigger are reconciled.",
+      "priority": "P1",
+      "owner": "coordinator",
+      "createdAt": "2026-05-29T09:33:27.517Z",
+      "agingDueAt": "2026-05-30T00:00:00+09:00",
+      "closureRequiredBeforePass": true
+    },
+    {
+      "id": "RC-F-M1-hosted-profile",
+      "iaCode": "F-M1",
+      "field": "routeOrHostRoute/routeType",
+      "auditValue": "user exports feedback or report content.",
+      "profileValue": "hosted by feedback/report/library export routes / hosted modal",
+      "status": "accepted",
+      "effect": "Do not close F-M1 until doc-vs-implementation conflict is resolved.",
+      "priority": "P0",
+      "owner": "coordinator",
+      "createdAt": "2026-05-29T09:33:27.517Z",
+      "agingDueAt": "2026-05-30T00:00:00+09:00",
+      "closureRequiredBeforePass": true
+    },
+    {
+      "id": "RC-D-M3-hosted-profile",
+      "iaCode": "D-M3",
+      "field": "routeOrHostRoute/routeType",
+      "auditValue": "autosave failure, delay, or conflicting save state.",
+      "profileValue": "hosted by writing routes / modal/toast",
+      "status": "accepted",
+      "effect": "Do not close D-M3 without hosted-surface evidence.",
+      "priority": "P1",
+      "owner": "coordinator",
+      "createdAt": "2026-05-29T09:33:27.517Z",
+      "agingDueAt": "2026-05-30T00:00:00+09:00",
+      "closureRequiredBeforePass": true
+    }
+  ]
+}

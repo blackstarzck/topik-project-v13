@@ -1,0 +1,3404 @@
+Reading additional input from stdin...
+OpenAI Codex v0.128.0 (research preview)
+--------
+workdir: C:\Users\admin\Desktop\workspace\topik-project\v13
+model: gpt-5.5
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 019e809c-6116-7b83-9c14-b81fc824cc4b
+--------
+user
+IMPORTANT: Do NOT read or execute any files under ~/.claude/, ~/.agents/, .claude/skills/, or agents/. Do NOT read the ledger, run-state JSON, handoff, or result-packet files under reports/ia-verification/ or docs/ai-workflow/runs/ — they contain prior review conclusions that would bias this clean-room review. The ONLY file under reports/ you may read is the diff named below. Do NOT modify any files.
+
+You are an independent reviewer giving a brutally honest second opinion on a bounded diff.
+
+Read this diff (the complete scope of your review):
+  reports/ia-verification/runs/20260528-141731/agent-packets/tasks/phase-1-review-input.diff
+
+For requirements context you MAY also read:
+  docs/IA/27-X-05-profile-editing/description.md                 (X-05 = /profile spec)
+  docs/IA/29-X-07-weakness-based-recommendations/description.md  (X-07 = /practice/weakness spec)
+  and the full current source of the 6 files shown in the diff.
+
+X-05 = /profile profile editing. X-07 = /practice/weakness weakness-based recommendations.
+
+Produce output under these EXACT headers:
+1. VERDICT: PASS or FAIL  (FAIL only if >=1 [P1] blocking correctness/security/contract bug)
+2. BLOCKING [P1]: each as file:line - problem - why it matters - suggested fix. "none" if none.
+3. NON-BLOCKING [P2]: advisory. "none" if none.
+4. HONESTY AUDIT: does any user-facing copy / AI-confidence framing / recommendation "reason" / paywall text claim more than the code or data supports? Flag overclaiming.
+5. TEST COVERAGE: do the changed tests cover the changed behavior? Name gaps.
+
+Out of scope (do not comment on): copy rewrites, feature expansion, billing/auth/server boundaries, files outside the diff.
+2026-06-01T00:36:39.292742Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer resource_metadata=\"https://mcp.figma.com/.well-known/oauth-protected-resource\",scope=\"mcp:connect\",authorization_uri=\"https://api.figma.com/.well-known/oauth-authorization-server\"" })
+2026-06-01T00:36:39.495525Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Auth(TokenRefreshFailed("Server returned error response: invalid_grant: Invalid refresh token"))
+2026-06-01T00:36:40.832805Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://127.0.0.1:29979/mcp)")))
+hook: SessionStart
+hook: SessionStart Completed
+hook: UserPromptSubmit
+hook: UserPromptSubmit Completed
+codex
+I’ll keep this as a clean-room bounded review: only the named diff, the two allowed IA specs, and the current source files that the diff itself names. I won’t modify files or inspect prior ledger/result artifacts.
+hook: PreToolUse
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "Get-Content -Raw -LiteralPath 'reports/ia-verification/runs/20260528-141731/agent-packets/tasks/phase-1-review-input.diff'" in C:\Users\admin\Desktop\workspace\topik-project\v13
+ succeeded in 826ms:
+diff --git a/src/app/(workspace)/practice/weakness/page.tsx b/src/app/(workspace)/practice/weakness/page.tsx
+index d8b322f..df8600c 100644
+--- a/src/app/(workspace)/practice/weakness/page.tsx
++++ b/src/app/(workspace)/practice/weakness/page.tsx
+@@ -26,6 +26,8 @@ export default async function PracticeWeaknessPage() {
+           problem_id: r.problemId,
+           title: r.title,
+           question_no: r.questionNo ?? 0,
++          reason: r.reason,
++          source: r.source,
+         }))}
+       />
+     </main>
+diff --git a/src/app/(workspace)/profile/page.tsx b/src/app/(workspace)/profile/page.tsx
+index 6c911eb..3228022 100644
+--- a/src/app/(workspace)/profile/page.tsx
++++ b/src/app/(workspace)/profile/page.tsx
+@@ -34,6 +34,7 @@ export default async function ProfilePage() {
+           <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+             <ProfileForm
+               userId={user.id}
++              accountEmail={user.email ?? null}
+               initialProfile={{
+                 display_name: settings.display_name,
+                 nickname: settings.nickname,
+diff --git a/src/components/practice/WeaknessView.tsx b/src/components/practice/WeaknessView.tsx
+index f2ebd70..2ee46ea 100644
+--- a/src/components/practice/WeaknessView.tsx
++++ b/src/components/practice/WeaknessView.tsx
+@@ -1,12 +1,23 @@
+ "use client";
+
+-import { Button, Card, Col, Empty, Row, Space, Typography } from "antd";
++import {
++  Alert,
++  Button,
++  Card,
++  Col,
++  Empty,
++  Row,
++  Space,
++  Tag,
++  Typography,
++} from "antd";
+ import { useRouter } from "next/navigation";
+ import { logStudyEvent } from "@/lib/events/study-events";
+ import { DimensionTabs } from "./DimensionTabs";
+ import { DiagnosticCard } from "./DiagnosticCard";
+
+ const { Title, Paragraph, Text } = Typography;
++const RECOMMENDATION_TITLE_MAX_LENGTH = 28;
+
+ type WeakDimensionProp = {
+   dimension: string;
+@@ -18,27 +29,116 @@ type RecommendationProp = {
+   problem_id: string;
+   title: string;
+   question_no: number;
++  reason?: string | null;
++  source?: "recommendation" | "tag_fallback";
+ };
+
+ type Props = {
+   weakDimensions: WeakDimensionProp[];
+   recommendations: RecommendationProp[];
+-  /** ISO timestamp for diagnostic refresh ??Phase 7-D Task 7 */
++  /** ISO timestamp for diagnostic refresh - Phase 7-D Task 7 */
+   updatedAt?: string | null;
+ };
+
++const DIMENSION_LABELS: Record<string, string> = {
++  grammar: "ë¬¸ë²•",
++  vocab: "?´íœ˜",
++  structure: "êµ¬ì„±",
++  topic: "ì£¼ì œ ?í•©??,
++};
++
++const DIMENSION_INSIGHTS: Record<
++  string,
++  { why: string; example: string; strategy: string }
++> = {
++  grammar: {
++    why: "ë¬¸ìž¥ ê·œì¹™???”ë“¤ë¦¬ë©´ ì¢‹ì? ?ê°?????•í™•?˜ê²Œ ?„ë‹¬?????ˆì–´??",
++    example:
++      "?œì œ, ì¡°ì‚¬, ?°ê²°?´ê? ?µì•ˆ ?ˆì—???žì´??ê²½ìš°ê°€ ?ì£¼ ë³´ì¼ ???ˆì–´??",
++    strategy:
++      "ì§§ì? ë¬¸ìž¥?¼ë¡œ ê³ ì³ ?°ê³ , ê°™ì? ?œí˜„???¤ë¥¸ ?œì œë¡??¤ì‹œ ??ë³´ì„¸??",
++  },
++  vocab: {
++    why: "?¨ì–´ ? íƒ??ì¢ìœ¼ë©?ê°™ì? ?˜ë?ë¥?ë°˜ë³µ?˜ê²Œ ?˜ì–´ ?µì•ˆ???¤ë“?¥ì´ ?½í•´ì§????ˆì–´??",
++    example:
++      "?¬ìš´ ?¨ì–´ë§?ë°˜ë³µ?˜ê±°??ë¬¸ë§¥????ë§žëŠ” ?œí˜„??ê³ ë¥´??ê²½ìš°ê°€ ?ˆì„ ???ˆì–´??",
++    strategy: "ì¶”ì²œ ë¬¸ì œë¥??€ë©?ë¹„ìŠ·???»ì˜ ?œí˜„??2ê°œì”© ?¨ê»˜ ?•ë¦¬??ë³´ì„¸??",
++  },
++  structure: {
++    why: "êµ¬ì„±???íŠ¸?¬ì?ë©?ì£¼ìž¥ê³?ê·¼ê±°??ê´€ê³„ê? ?½ëŠ” ?¬ëžŒ?ê²Œ ??ë¶„ëª…?´ì§ˆ ???ˆì–´??",
++    example:
++      "?„ìž…, ê·¼ê±°, ë§ˆë¬´ë¦¬ì˜ ?œì„œê°€ ë°”ë€Œê±°????ë¬¸ë‹¨???¬ëŸ¬ ?ê°???žì¼ ???ˆì–´??",
++    strategy: "ë¬¸ìž¥???°ê¸° ?„ì— ?µì‹¬ ì£¼ìž¥ 1ê°œì? ê·¼ê±° 2ê°œë? ë¨¼ì? ?ì–´ ë³´ì„¸??",
++  },
++  topic: {
++    why: "ì£¼ì œ?ì„œ ë²—ì–´?˜ë©´ ë¬¸ìž¥??ë§žì•„???ìˆ˜ë¡??´ì–´ì§€ê¸??´ë ¤?????ˆì–´??",
++    example:
++      "ì§ˆë¬¸???”êµ¬??ì¡°ê±´ë³´ë‹¤ ë°°ê²½ ?¤ëª…??ê¸¸ì–´ì§€??ê²½ìš°ê°€ ?ˆì„ ???ˆì–´??",
++    strategy:
++      "ë¬¸ì œë¥??¤ì‹œ ?½ê³  ?„ìˆ˜ ì¡°ê±´??ì²´í¬?????µì•ˆ??ì§§ê²Œ ?¤ë“¬??ë³´ì„¸??",
++  },
++};
++
++function getDimensionLabel(dimension: string) {
++  return DIMENSION_LABELS[dimension] ?? dimension;
++}
++
++function getLeadingWeakDimension(dimensions: WeakDimensionProp[]) {
++  return [...dimensions].sort((a, b) => a.averageScore - b.averageScore)[0];
++}
++
++function getFallbackInsight() {
++  return {
++    why: "ìµœê·¼ ?µì•ˆ?ì„œ ??²Œ ?˜ì˜¨ ?ì—­?´ë¼ ë¨¼ì? ?•ì¸?˜ë©´ ?„ì????????ˆì–´??",
++    example: "ê°™ì? ? í˜•???¤ìˆ˜ê°€ ë°˜ë³µ?˜ëŠ”ì§€ ?´íŽ´ë³??„ìš”ê°€ ?ˆì–´??",
++    strategy: "ì¶”ì²œ ë¬¸ì œë¥??€ê³??µì•ˆ????ë²???ê³ ì³ ??ë³´ì„¸??",
++  };
++}
++
++function getRecommendationSourceLabel(source?: RecommendationProp["source"]) {
++  if (source === "tag_fallback") {
++    return "?½ì  ?œê·¸ ê¸°ë°˜";
++  }
++  return "ì¶”ì²œ ê·¼ê±°";
++}
++
++function getRecommendationReason(
++  rec: RecommendationProp,
++  leadingWeakLabel: string,
++) {
++  const explicitReason = rec.reason?.trim();
++  if (explicitReason) return explicitReason;
++
++  if (rec.source === "tag_fallback") {
++    return `${leadingWeakLabel || "?½ì "} ?ì—­ê³?ê´€?¨ëœ ë¬¸í•­?´ë¼ ?°ì„  ì¶”ì²œ?©ë‹ˆ??`;
++  }
++
++  return "ìµœê·¼ ?½ì  ë¶„ì„ê³?ê²¹ì¹˜??ë¬¸ì œ???°ì„  ?°ìŠµ?????ˆì–´??";
++}
++
++function truncateRecommendationTitle(title: string) {
++  if (title.length <= RECOMMENDATION_TITLE_MAX_LENGTH) return title;
++  return `${title.slice(0, RECOMMENDATION_TITLE_MAX_LENGTH)}...`;
++}
++
+ export function WeaknessView({
+   weakDimensions,
+   recommendations,
+   updatedAt,
+ }: Props) {
+   const router = useRouter();
++  const leadingWeakDimension = getLeadingWeakDimension(weakDimensions);
++  const leadingWeakLabel = leadingWeakDimension
++    ? getDimensionLabel(leadingWeakDimension.dimension)
++    : "";
++  const leadingInsight = leadingWeakDimension
++    ? (DIMENSION_INSIGHTS[leadingWeakDimension.dimension] ??
++      getFallbackInsight())
++    : null;
+
+   if (weakDimensions.length === 0) {
+     return (
+-      <Empty
+-        description="ê¸€?°ê¸°ë¥?5ê±??´ìƒ ?œì¶œ?˜ë©´ ?½ì  ë¶„ì„???œì„±?”ë©?ˆë‹¤."
+-      >
++      <Empty description="ê¸€?°ê¸°ë¥?5ê±??´ìƒ ?œì¶œ?˜ë©´ ?½ì  ë¶„ì„???œì„±?”ë©?ˆë‹¤.">
+         <Button
+           type="primary"
+           onClick={() => router.push("/practice/problems" as never)}
+@@ -65,17 +165,51 @@ export function WeaknessView({
+           ?½ì  ë¶„ì„
+         </Title>
+         <Paragraph type="secondary" style={{ margin: 0 }}>
+-          ìµœê·¼ ê¸€?°ê¸° ê²°ê³¼ë¥?ë°”íƒ•?¼ë¡œ ë³´ì™„???„ìš”???ì—­ê³?ì¶”ì²œ ë¬¸ì œë¥??ˆë‚´?©ë‹ˆ??
++          ìµœê·¼ ê¸€?°ê¸° ê²°ê³¼ë¥?ë°”íƒ•?¼ë¡œ ë³´ì™„???„ìš”???ì—­ê³?ì¶”ì²œ ë¬¸ì œë¥?+          ?ˆë‚´?©ë‹ˆ??
+         </Paragraph>
+       </div>
+
+-      {/* Phase 7-D Task 7 ??DiagnosticCard + DimensionTabs */}
++      {/* Phase 7-D Task 7 - DiagnosticCard + DimensionTabs */}
+       <DiagnosticCard
+         weakDimensions={weakDimensions}
+         updatedAt={updatedAt ?? null}
+       />
+       <DimensionTabs dimensions={weakDimensions} />
+
++      {leadingWeakDimension && leadingInsight ? (
++        <Card title="?½ì  ?¸ì‚¬?´íŠ¸">
++          <Space direction="vertical" size="middle" style={{ width: "100%" }}>
++            <Alert
++              showIcon
++              type="info"
++              message={`${leadingWeakLabel} ?ì—­??ë¨¼ì? ë³????ˆì–´??`}
++              description="ìµœê·¼ ?µì•ˆ?ì„œ ë³´ì´??ê²½í–¥??ë°”íƒ•?¼ë¡œ ì¶”ì •???ˆë‚´?ˆìš”. ?¤ì œ ?½ì ?€ ?¤ìŒ ?°ìŠµ ê²°ê³¼???°ë¼ ?¬ë¼ì§????ˆìŠµ?ˆë‹¤."
++            />
++            <Row gutter={[16, 16]}>
++              <Col xs={24} md={8}>
++                <Space direction="vertical" size={4}>
++                  <Text strong>?????ì—­??ë¨¼ì? ë³´ë‚˜??</Text>
++                  <Text type="secondary">{leadingInsight.why}</Text>
++                </Space>
++              </Col>
++              <Col xs={24} md={8}>
++                <Space direction="vertical" size={4}>
++                  <Text strong>?ì£¼ ë³´ì´????/Text>
++                  <Text type="secondary">{leadingInsight.example}</Text>
++                </Space>
++              </Col>
++              <Col xs={24} md={8}>
++                <Space direction="vertical" size={4}>
++                  <Text strong>?°ìŠµ ?„ëžµ</Text>
++                  <Text type="secondary">{leadingInsight.strategy}</Text>
++                </Space>
++              </Col>
++            </Row>
++          </Space>
++        </Card>
++      ) : null}
++
+       <Row gutter={[24, 24]}>
+         <Col xs={24} md={24}>
+           <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+@@ -93,19 +227,63 @@ export function WeaknessView({
+                       onClick={() => handleRecommendationClick(rec)}
+                       data-testid={`weakness-rec-${rec.problem_id}`}
+                     >
+-                      <Space direction="vertical" size={4}>
++                      <Space
++                        direction="vertical"
++                        size="small"
++                        style={{ width: "100%" }}
++                      >
+                         <Text type="secondary">{rec.question_no}ë²?ë¬¸í•­</Text>
+-                        <Text strong>
+-                          {rec.title.length > 32
+-                            ? `${rec.title.slice(0, 32)}??
+-                            : rec.title}
++                        <Text strong title={rec.title}>
++                          {truncateRecommendationTitle(rec.title)}
+                         </Text>
++                        <Space direction="vertical" size={2}>
++                          <Tag color="blue">
++                            {getRecommendationSourceLabel(rec.source)}
++                          </Tag>
++                          <Text
++                            type="secondary"
++                            title={getRecommendationReason(
++                              rec,
++                              leadingWeakLabel,
++                            )}
++                            style={{
++                              display: "block",
++                              maxWidth: "100%",
++                              overflow: "hidden",
++                              textOverflow: "ellipsis",
++                              whiteSpace: "nowrap",
++                            }}
++                          >
++                            {getRecommendationReason(rec, leadingWeakLabel)}
++                          </Text>
++                        </Space>
++                        <Button
++                          type="primary"
++                          onClick={(event) => {
++                            event.stopPropagation();
++                            handleRecommendationClick(rec);
++                          }}
++                        >
++                          ì¶”ì²œ ?™ìŠµ ?œìž‘
++                        </Button>
+                       </Space>
+                     </Card>
+                   </Col>
+                 ))}
+               </Row>
+             )}
++            <Card>
++              <Space direction="vertical" size={8}>
++                <Text strong>??ê¹Šì? ì¶”ì²œ ë³´ê¸°</Text>
++                <Text type="secondary">
++                  ???ì„¸??ì¶”ì²œ ?”ë©´?€ ì¤€ë¹?ì¤‘ìž…?ˆë‹¤. ê²°ì œ ê¸°ëŠ¥?€ ?„ì§ ì¤€ë¹?+                  ì¤‘ì´???¤ì œ ê²°ì œ??êµ¬ë…?€ ì§„í–‰?˜ì? ?Šì•„??
++                </Text>
++                <Button onClick={() => router.push("/paywall" as never)}>
++                  ?ˆë‚´ ?”ë©´ ë³´ê¸°
++                </Button>
++              </Space>
++            </Card>
+           </Space>
+         </Col>
+       </Row>
+diff --git a/src/components/profile/ProfileForm.tsx b/src/components/profile/ProfileForm.tsx
+index 27112d6..bba7ee8 100644
+--- a/src/components/profile/ProfileForm.tsx
++++ b/src/components/profile/ProfileForm.tsx
+@@ -1,44 +1,71 @@
+ "use client";
+
+-import { App, Button, Form, Input, Typography } from "antd";
+-import { useState } from "react";
++import { Alert, App, Avatar, Button, Form, Input, Typography } from "antd";
++import { useEffect, useMemo, useState } from "react";
+
+ import { useUpdateProfile } from "@/lib/settings/mutations";
+
+ const { Paragraph } = Typography;
+
++const PROFILE_NAME_MIN_LENGTH = 2;
++const UNSAVED_PROFILE_LEAVE_MESSAGE =
++  "?€?¥í•˜ì§€ ?Šì? ë³€ê²½ì‚¬??´ ?ˆìŠµ?ˆë‹¤. ?˜ì´ì§€ë¥?? ë‚˜?œê² ?´ìš”?";
++
++type ProfileDraft = {
++  display_name: string | null;
++  nickname: string | null;
++  bio: string | null;
++};
++
+ type Props = {
+   /**
+-   * See `LanguageForm` for the rationale on accepting `userId` as a prop ??+   * See `LanguageForm` for the rationale on accepting `userId` as a prop:
+    * `useUpdateProfile` is per-user and the data layer is read-only.
+    */
+   userId: string;
+-  initialProfile: {
+-    display_name: string | null;
+-    nickname: string | null;
+-    // Phase 7-E Task 10 (P1-6) ??bio (160???ê¸°?Œê°œ).
+-    bio: string | null;
+-  };
++  accountEmail: string | null;
++  initialProfile: ProfileDraft;
+ };
+
+ /**
+  * Trim user input and collapse empty strings to `null` so the DB sees an
+- * explicit field clear. Exported for direct unit testing ??the form
+- * onSubmit pipes raw inputs through this helper before invoking the
+- * mutation.
++ * explicit field clear. Exported for direct unit testing.
+  */
+ export function normalizeProfileField(value: string): string | null {
+   const trimmed = value.trim();
+   return trimmed.length === 0 ? null : trimmed;
+ }
+
++function normalizeProfileDraft(profile: ProfileDraft): ProfileDraft {
++  return {
++    display_name: normalizeProfileField(profile.display_name ?? ""),
++    nickname: normalizeProfileField(profile.nickname ?? ""),
++    bio: normalizeProfileField(profile.bio ?? ""),
++  };
++}
++
++function profilesEqual(left: ProfileDraft, right: ProfileDraft) {
++  return (
++    left.display_name === right.display_name &&
++    left.nickname === right.nickname &&
++    left.bio === right.bio
++  );
++}
++
++function isTooShortProfileField(value: string | null) {
++  return value !== null && value.length < PROFILE_NAME_MIN_LENGTH;
++}
++
+ /**
+- * `/profile` form (X-05). Two optional text inputs: display_name + nickname.
+- * Avatar upload is OOS for Phase 6 (Plan rev4 / light spec).
++ * `/profile` form (X-05). Avatar upload is intentionally shown as unavailable
++ * until storage/upload behavior is implemented and verified.
+  */
+-export function ProfileForm({ userId, initialProfile }: Props) {
++export function ProfileForm({ userId, accountEmail, initialProfile }: Props) {
+   const { message } = App.useApp();
+   const mutation = useUpdateProfile(userId);
++  const [savedProfile, setSavedProfile] = useState<ProfileDraft>(() =>
++    normalizeProfileDraft(initialProfile),
++  );
+
+   const [displayName, setDisplayName] = useState<string>(
+     initialProfile.display_name ?? "",
+@@ -48,20 +75,97 @@ export function ProfileForm({ userId, initialProfile }: Props) {
+   );
+   const [bio, setBio] = useState<string>(initialProfile.bio ?? "");
+
+-  async function handleFinish() {
+-    const payload = {
+-      display_name: normalizeProfileField(displayName),
+-      nickname: normalizeProfileField(nickname),
+-      // Phase 7-E Task 10 ??bio (max 160 chars enforced by DB CHECK + form maxLength).
+-      bio: normalizeProfileField(bio),
++  const draftProfile = useMemo(
++    () =>
++      normalizeProfileDraft({
++        display_name: displayName,
++        nickname,
++        bio,
++      }),
++    [bio, displayName, nickname],
++  );
++  const isDirty = !profilesEqual(draftProfile, savedProfile);
++  const displayNameTooShort = isTooShortProfileField(draftProfile.display_name);
++  const nicknameTooShort = isTooShortProfileField(draftProfile.nickname);
++  const validationError = displayNameTooShort
++    ? "?´ë¦„?€ 2???´ìƒ ?…ë ¥??ì£¼ì„¸??"
++    : nicknameTooShort
++      ? "?‰ë„¤?„ì? 2???´ìƒ ?…ë ¥??ì£¼ì„¸??"
++      : null;
++  const canSubmit = isDirty && !validationError;
++  const avatarInitial =
++    (draftProfile.display_name ?? draftProfile.nickname ?? accountEmail ?? "?")
++      .trim()
++      .charAt(0)
++      .toUpperCase() || "?";
++
++  useEffect(() => {
++    if (!isDirty) return;
++
++    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
++      event.preventDefault();
++      event.returnValue = "";
+     };
++
++    const handleDocumentClick = (event: MouseEvent) => {
++      if (
++        event.defaultPrevented ||
++        event.button !== 0 ||
++        event.metaKey ||
++        event.ctrlKey ||
++        event.shiftKey ||
++        event.altKey
++      ) {
++        return;
++      }
++
++      const target = event.target instanceof Element ? event.target : null;
++      const anchor = target?.closest("a[href]");
++      if (!(anchor instanceof HTMLAnchorElement)) return;
++      if (anchor.target && anchor.target !== "_self") return;
++      if (anchor.hasAttribute("download")) return;
++
++      const rawHref = anchor.getAttribute("href");
++      if (!rawHref || rawHref.startsWith("#")) return;
++
++      let url: URL;
++      try {
++        url = new URL(anchor.href, window.location.href);
++      } catch {
++        return;
++      }
++
++      if (url.origin !== window.location.origin) return;
++      if (url.href === window.location.href) return;
++
++      if (!window.confirm(UNSAVED_PROFILE_LEAVE_MESSAGE)) {
++        event.preventDefault();
++        event.stopPropagation();
++        event.stopImmediatePropagation();
++      }
++    };
++
++    window.addEventListener("beforeunload", handleBeforeUnload);
++    document.addEventListener("click", handleDocumentClick, true);
++    return () => {
++      window.removeEventListener("beforeunload", handleBeforeUnload);
++      document.removeEventListener("click", handleDocumentClick, true);
++    };
++  }, [isDirty]);
++
++  async function handleFinish() {
++    if (!isDirty) return;
++    if (validationError) {
++      message.error(validationError);
++      return;
++    }
++
+     try {
+-      await mutation.mutateAsync(payload);
++      await mutation.mutateAsync(draftProfile);
++      setSavedProfile(draftProfile);
+       message.success("?„ë¡œ?„ì´ ?€?¥ë˜?ˆìŠµ?ˆë‹¤.");
+     } catch (err) {
+-      message.error(
+-        err instanceof Error ? err.message : "?€?¥ì— ?¤íŒ¨?ˆì–´??",
+-      );
++      message.error(err instanceof Error ? err.message : "?€?¥ì— ?¤íŒ¨?ˆì–´??");
+     }
+   }
+
+@@ -71,31 +175,49 @@ export function ProfileForm({ userId, initialProfile }: Props) {
+       onFinish={handleFinish}
+       disabled={mutation.isPending}
+     >
+-      <Form.Item label="?´ë¦„">
++      <Form.Item label="?´ë©”??>
++        <Input
++          value={accountEmail ?? ""}
++          readOnly
++          placeholder="?±ë¡???´ë©”???†ìŒ"
++          aria-label="?´ë©”??
++        />
++      </Form.Item>
++
++      <Form.Item
++        label="?´ë¦„"
++        validateStatus={displayNameTooShort ? "error" : undefined}
++        help={
++          displayNameTooShort ? "?´ë¦„?€ 2???´ìƒ ?…ë ¥??ì£¼ì„¸??" : undefined
++        }
++      >
+         <Input
+           value={displayName}
+-          onChange={(e) => setDisplayName(e.target.value)}
++          onChange={(event) => setDisplayName(event.target.value)}
+           placeholder="?¤ëª… ?ëŠ” ?œì‹œ ?´ë¦„"
+-          maxLength={80}
++          maxLength={30}
+           aria-label="?´ë¦„"
+         />
+       </Form.Item>
+
+-      <Form.Item label="?‰ë„¤??>
++      <Form.Item
++        label="?‰ë„¤??
++        validateStatus={nicknameTooShort ? "error" : undefined}
++        help={nicknameTooShort ? "?‰ë„¤?„ì? 2???´ìƒ ?…ë ¥??ì£¼ì„¸??" : undefined}
++      >
+         <Input
+           value={nickname}
+-          onChange={(e) => setNickname(e.target.value)}
++          onChange={(event) => setNickname(event.target.value)}
+           placeholder="?¤ë¥¸ ?¬ìš©?ì—ê²?ë³´ì—¬ì§??´ë¦„"
+-          maxLength={40}
++          maxLength={20}
+           aria-label="?‰ë„¤??
+         />
+       </Form.Item>
+
+-      {/* Phase 7-E Task 10 (P1-6) ??bio (?ê¸°?Œê°œ 160??. */}
+       <Form.Item label="?ê¸°?Œê°œ" extra={`${bio.length}/160??}>
+         <Input.TextArea
+           value={bio}
+-          onChange={(e) => setBio(e.target.value)}
++          onChange={(event) => setBio(event.target.value)}
+           placeholder="ê°„ë‹¨???ê¸°?Œê°œ (160???´ë‚´)"
+           maxLength={160}
+           autoSize={{ minRows: 2, maxRows: 4 }}
+@@ -103,15 +225,38 @@ export function ProfileForm({ userId, initialProfile }: Props) {
+         />
+       </Form.Item>
+
+-      <Paragraph type="secondary" style={{ marginBottom: 12 }}>
+-        ?„ë°”?€ ?…ë¡œ?œëŠ” ?¤ìŒ ?…ë°?´íŠ¸?ì„œ ì§€?ë©?ˆë‹¤.
+-      </Paragraph>
++      <section
++        aria-label="?„ë¡œ???´ë?ì§€ ?ì—­"
++        style={{
++          border: "1px solid var(--ant-color-border)",
++          borderRadius: 8,
++          marginBottom: 16,
++          padding: 16,
++        }}
++      >
++        <Avatar size={56}>{avatarInitial}</Avatar>
++        <Paragraph strong style={{ marginTop: 12, marginBottom: 4 }}>
++          ?„ë¡œ???´ë?ì§€
++        </Paragraph>
++        <Paragraph type="secondary" style={{ marginBottom: 12 }}>
++          ?´ë?ì§€ ?…ë¡œ?œëŠ” ?„ì§ ?œì„±?”ë˜ì§€ ?Šì•˜?µë‹ˆ?? ?€?¥ì†Œ ?…ë¡œ?œê? êµ¬í˜„?˜ê³ 
++          ê²€ì¦ë˜ê¸??„ê¹Œì§€ ?„ìž¬ ?´ë‹ˆ?œì„ ?œì‹œ?©ë‹ˆ??
++        </Paragraph>
++        <Alert
++          type="info"
++          showIcon
++          message="ë³´ì•ˆ ?ˆë‚´"
++          description="ê³„ì • ?ë³„ ?•ë³´ ë³€ê²½ì´???´ë?ì§€ ?…ë¡œ?œëŠ” ?€?????¬ë¡œê·¸ì¸???„ìš”?????ˆìŠµ?ˆë‹¤."
++        />
++      </section>
+
+       <Form.Item>
+         <Button
+           type="primary"
+           htmlType="submit"
+           loading={mutation.isPending}
++          disabled={!canSubmit || mutation.isPending}
++          aria-label="?„ë¡œ???€??
+         >
+           ?€??         </Button>
+diff --git a/tests/components/practice/WeaknessView.test.tsx b/tests/components/practice/WeaknessView.test.tsx
+index 392a849..a82ae27 100644
+--- a/tests/components/practice/WeaknessView.test.tsx
++++ b/tests/components/practice/WeaknessView.test.tsx
+@@ -27,8 +27,7 @@ vi.mock("@/lib/events/study-events", () => ({
+ beforeEach(() => {
+   pushMock.mockReset();
+   logStudyEventMock.mockReset();
+-  // antd Modal/Tooltip stub for jsdom ??matchMedia is not implemented.
+-  // Phase 7-D Task 7: DimensionTabs uses Ant Design Tabs ??ResizeObserver.
++  // Ant Design Tabs uses ResizeObserver and matchMedia, which jsdom does not provide.
+   if (!(globalThis as Record<string, unknown>).ResizeObserver) {
+     (globalThis as Record<string, unknown>).ResizeObserver = class {
+       observe() {}
+@@ -82,8 +81,6 @@ describe("WeaknessView", () => {
+       />,
+     );
+
+-    // Phase 7-D Task 7: "ë¬¸ë²•" / "?´íœ˜" appear in DiagnosticCard +
+-    // DimensionTabs labels, so use getAllByText.
+     expect(screen.getAllByText(/ë¬¸ë²•/).length).toBeGreaterThan(0);
+     expect(screen.getAllByText(/?´íœ˜/).length).toBeGreaterThan(0);
+     expect(screen.getByText("?´íœ˜ ?°ìŠµ ë¬¸ì œ")).toBeTruthy();
+@@ -110,4 +107,103 @@ describe("WeaknessView", () => {
+     });
+     expect(pushMock).toHaveBeenCalledWith("/practice/problems/prob-42");
+   });
++
++  it("surfaces cautious weakness insights, recommendation reasons, primary start action, and deferred paywall entry", () => {
++    render(
++      <WeaknessView
++        weakDimensions={[
++          { dimension: "grammar", averageScore: 0.36 },
++          { dimension: "vocab", averageScore: 0.62 },
++        ]}
++        recommendations={[
++          {
++            problem_id: "prob-88",
++            title: "?œì œ?€ ?°ê²°??ë³µìŠµ",
++            question_no: 88,
++            reason: "ìµœê·¼ ?µì•ˆ?ì„œ ?œì œ ?°ê²°???ì£¼ ?”ë“¤?¸ì–´??",
++            source: "recommendation",
++          },
++        ]}
++      />,
++    );
++
++    expect(screen.getByText("?½ì  ?¸ì‚¬?´íŠ¸")).toBeTruthy();
++    expect(screen.getByText("?????ì—­??ë¨¼ì? ë³´ë‚˜??")).toBeTruthy();
++    expect(screen.getByText("?ì£¼ ë³´ì´????)).toBeTruthy();
++    expect(screen.getByText("?°ìŠµ ?„ëžµ")).toBeTruthy();
++    expect(
++      screen.getByText(/ìµœê·¼ ?µì•ˆ?ì„œ ë³´ì´??ê²½í–¥??ë°”íƒ•?¼ë¡œ ì¶”ì •???ˆë‚´?ˆìš”/),
++    ).toBeTruthy();
++
++    expect(
++      screen.getByText("ìµœê·¼ ?µì•ˆ?ì„œ ?œì œ ?°ê²°???ì£¼ ?”ë“¤?¸ì–´??"),
++    ).toBeTruthy();
++    expect(screen.getByText("ì¶”ì²œ ê·¼ê±°")).toBeTruthy();
++
++    const startButton = screen.getByRole("button", { name: /ì¶”ì²œ ?™ìŠµ ?œìž‘/ });
++    expect(startButton.className).toContain("ant-btn-primary");
++    fireEvent.click(startButton);
++    expect(logStudyEventMock).toHaveBeenCalledWith({
++      eventType: "recommendation_clicked",
++      problemId: "prob-88",
++      payload: { source: "weakness" },
++    });
++    expect(pushMock).toHaveBeenCalledWith("/practice/problems/prob-88");
++
++    expect(screen.getByText("??ê¹Šì? ì¶”ì²œ ë³´ê¸°")).toBeTruthy();
++    expect(
++      screen.getByText(
++        /ê²°ì œ ê¸°ëŠ¥?€ ?„ì§ ì¤€ë¹?ì¤‘ì´???¤ì œ ê²°ì œ??êµ¬ë…?€ ì§„í–‰?˜ì? ?Šì•„??,
++      ),
++    ).toBeTruthy();
++  });
++
++  it("shows a fallback reason when a tag-based recommendation has no stored reason", () => {
++    render(
++      <WeaknessView
++        weakDimensions={[{ dimension: "grammar", averageScore: 0.36 }]}
++        recommendations={[
++          {
++            problem_id: "prob-99",
++            title: "ë¬¸ë²• ?œê·¸ ë³µìŠµ",
++            question_no: 99,
++            reason: null,
++            source: "tag_fallback",
++          },
++        ]}
++      />,
++    );
++
++    expect(screen.getByText("?½ì  ?œê·¸ ê¸°ë°˜")).toBeTruthy();
++    expect(
++      screen.getByText("ë¬¸ë²• ?ì—­ê³?ê´€?¨ëœ ë¬¸í•­?´ë¼ ?°ì„  ì¶”ì²œ?©ë‹ˆ??"),
++    ).toBeTruthy();
++  });
++
++  it("keeps recommendation card title and reason within IA display limits", () => {
++    render(
++      <WeaknessView
++        weakDimensions={[{ dimension: "grammar", averageScore: 0.36 }]}
++        recommendations={[
++          {
++            problem_id: "prob-100",
++            title: "12345678901234567890123456789",
++            question_no: 100,
++            reason: "ê¸?ì¶”ì²œ ?´ìœ ??ì¹´ë“œ ?ˆì—?œëŠ” ??ì¤„ë¡œë§??œì‹œ?©ë‹ˆ??",
++            source: "recommendation",
++          },
++        ]}
++      />,
++    );
++
++    expect(screen.getByText("1234567890123456789012345678...")).toBeTruthy();
++    expect(screen.queryByText("12345678901234567890123456789")).toBeNull();
++
++    const reason = screen.getByText(
++      "ê¸?ì¶”ì²œ ?´ìœ ??ì¹´ë“œ ?ˆì—?œëŠ” ??ì¤„ë¡œë§??œì‹œ?©ë‹ˆ??",
++    ) as HTMLElement;
++    expect(reason.style.whiteSpace).toBe("nowrap");
++    expect(reason.style.textOverflow).toBe("ellipsis");
++    expect(reason.style.overflow).toBe("hidden");
++  });
+ });
+diff --git a/tests/components/profile/ProfileForm.test.tsx b/tests/components/profile/ProfileForm.test.tsx
+index 9925174..4ced85f 100644
+--- a/tests/components/profile/ProfileForm.test.tsx
++++ b/tests/components/profile/ProfileForm.test.tsx
+@@ -23,10 +23,41 @@ import {
+   normalizeProfileField,
+ } from "../../../src/components/profile/ProfileForm";
+
++const blankProfile = { display_name: null, nickname: null, bio: null };
++
+ function renderInApp(node: ReactNode) {
+   return render(<AntdApp>{node}</AntdApp>);
+ }
+
++function renderProfileForm(
++  props: Partial<Parameters<typeof ProfileForm>[0]> = {},
++) {
++  return renderInApp(
++    <ProfileForm
++      userId="user-1"
++      accountEmail="learner@example.com"
++      initialProfile={blankProfile}
++      {...props}
++    />,
++  );
++}
++
++function renderProfileFormWithNavigation(
++  props: Partial<Parameters<typeof ProfileForm>[0]> = {},
++) {
++  return renderInApp(
++    <>
++      <a href="/dashboard">?€?œë³´?œë¡œ ?´ë™</a>
++      <ProfileForm
++        userId="user-1"
++        accountEmail="learner@example.com"
++        initialProfile={blankProfile}
++        {...props}
++      />
++    </>,
++  );
++}
++
+ beforeEach(() => {
+   mutateAsyncMock.mockReset();
+   mutateAsyncMock.mockResolvedValue(undefined);
+@@ -37,7 +68,6 @@ beforeEach(() => {
+     isPending: false,
+   });
+
+-  // Phase 7-E Task 10: bio TextArea uses Ant Design which expects ResizeObserver.
+   if (!(globalThis as Record<string, unknown>).ResizeObserver) {
+     (globalThis as Record<string, unknown>).ResizeObserver = class {
+       observe() {}
+@@ -85,36 +115,24 @@ function submitForm(container: HTMLElement) {
+ }
+
+ describe("ProfileForm", () => {
+-  it("submits null for both fields when initial values are blank and user does not type", async () => {
+-    const { container } = renderInApp(
+-      <ProfileForm
+-        userId="user-1"
+-        initialProfile={{ display_name: null, nickname: null, bio: null }}
+-      />,
+-    );
++  it("keeps Save disabled and does not submit when profile fields are unchanged", async () => {
++    const { container } = renderProfileForm();
++
++    const saveButton = screen.getByRole("button", { name: "?„ë¡œ???€?? });
++    expect((saveButton as HTMLButtonElement).disabled).toBe(true);
+
+     await act(async () => {
+       submitForm(container);
+     });
+
+-    await waitFor(() => {
+-      expect(mutateAsyncMock).toHaveBeenCalledTimes(1);
+-    });
+     expect(useUpdateProfileMock).toHaveBeenCalledWith("user-1");
+-    expect(mutateAsyncMock).toHaveBeenCalledWith({
+-      display_name: null,
+-      nickname: null,
+-      bio: null,
+-    });
++    expect(mutateAsyncMock).not.toHaveBeenCalled();
+   });
+
+   it("submits null when the user clears an existing value to empty string", async () => {
+-    const { container } = renderInApp(
+-      <ProfileForm
+-        userId="user-1"
+-        initialProfile={{ display_name: "Chan", nickname: "chan-k", bio: null }}
+-      />,
+-    );
++    const { container } = renderProfileForm({
++      initialProfile: { display_name: "Chan", nickname: "chan-k", bio: null },
++    });
+
+     const nameInput = screen.getByLabelText("?´ë¦„") as HTMLInputElement;
+     fireEvent.change(nameInput, { target: { value: "" } });
+@@ -132,13 +150,8 @@ describe("ProfileForm", () => {
+     });
+   });
+
+-  it("submits trimmed values for both fields", async () => {
+-    const { container } = renderInApp(
+-      <ProfileForm
+-        userId="user-1"
+-        initialProfile={{ display_name: null, nickname: null, bio: null }}
+-      />,
+-    );
++  it("submits trimmed values for display name and nickname", async () => {
++    const { container } = renderProfileForm();
+
+     const nameInput = screen.getByLabelText("?´ë¦„") as HTMLInputElement;
+     const nickInput = screen.getByLabelText("?‰ë„¤??) as HTMLInputElement;
+@@ -159,19 +172,12 @@ describe("ProfileForm", () => {
+     });
+   });
+
+-  // Phase 7-E Task 10 (P1-6) ??bio input + maxLength enforcement.
+-
+   it("submits bio (trimmed) when user types into the bio textarea", async () => {
+-    const { container } = renderInApp(
+-      <ProfileForm
+-        userId="user-1"
+-        initialProfile={{ display_name: null, nickname: null, bio: null }}
+-      />,
+-    );
++    const { container } = renderProfileForm();
+
+     const bioInput = screen.getByLabelText("?ê¸°?Œê°œ") as HTMLTextAreaElement;
+     fireEvent.change(bioInput, {
+-      target: { value: "  TOPIK II 4ê¸?ëª©í‘œ  " },
++      target: { value: "  TOPIK II grade 4 goal  " },
+     });
+
+     await act(async () => {
+@@ -182,39 +188,111 @@ describe("ProfileForm", () => {
+       expect(mutateAsyncMock).toHaveBeenCalledWith({
+         display_name: null,
+         nickname: null,
+-        bio: "TOPIK II 4ê¸?ëª©í‘œ",
++        bio: "TOPIK II grade 4 goal",
+       });
+     });
+   });
+
+-  it("bio textarea enforces 160-char maxLength via the DOM attribute", () => {
+-    renderInApp(
+-      <ProfileForm
+-        userId="user-1"
+-        initialProfile={{ display_name: null, nickname: null, bio: null }}
+-      />,
+-    );
++  it("matches IA field length limits", () => {
++    renderProfileForm();
+
++    const nameInput = screen.getByLabelText("?´ë¦„") as HTMLInputElement;
++    const nickInput = screen.getByLabelText("?‰ë„¤??) as HTMLInputElement;
+     const bioInput = screen.getByLabelText("?ê¸°?Œê°œ") as HTMLTextAreaElement;
+-    // Ant Design Input.TextArea propagates `maxLength` to the underlying
+-    // textarea. We assert the attribute rather than try to type 161 chars
+-    // (jsdom would not block input even if maxLength existed).
++
++    expect(nameInput.maxLength).toBe(30);
++    expect(nickInput.maxLength).toBe(20);
+     expect(bioInput.maxLength).toBe(160);
+   });
+
++  it("blocks one-character display name and nickname values", async () => {
++    const { container } = renderProfileForm();
++
++    const nameInput = screen.getByLabelText("?´ë¦„") as HTMLInputElement;
++    fireEvent.change(nameInput, { target: { value: "A" } });
++
++    expect(screen.getByText("?´ë¦„?€ 2???´ìƒ ?…ë ¥??ì£¼ì„¸??")).toBeTruthy();
++    expect(
++      (screen.getByRole("button", { name: "?„ë¡œ???€?? }) as HTMLButtonElement)
++        .disabled,
++    ).toBe(true);
++
++    await act(async () => {
++      submitForm(container);
++    });
++    expect(mutateAsyncMock).not.toHaveBeenCalled();
++
++    fireEvent.change(nameInput, { target: { value: "An" } });
++    const nickInput = screen.getByLabelText("?‰ë„¤??) as HTMLInputElement;
++    fireEvent.change(nickInput, { target: { value: "B" } });
++
++    expect(screen.getByText("?‰ë„¤?„ì? 2???´ìƒ ?…ë ¥??ì£¼ì„¸??")).toBeTruthy();
++    expect(
++      (screen.getByRole("button", { name: "?„ë¡œ???€?? }) as HTMLButtonElement)
++        .disabled,
++    ).toBe(true);
++  });
++
+   it("renders existing bio value from initialProfile", () => {
+     const existing = "TOPIK ?œí—˜??6ê°œì›” ì¤€ë¹?ì¤‘ì´?ìš”.";
+-    renderInApp(
+-      <ProfileForm
+-        userId="user-1"
+-        initialProfile={{
+-          display_name: null,
+-          nickname: null,
+-          bio: existing,
+-        }}
+-      />,
+-    );
++    renderProfileForm({
++      initialProfile: {
++        display_name: null,
++        nickname: null,
++        bio: existing,
++      },
++    });
++
+     const bioInput = screen.getByLabelText("?ê¸°?Œê°œ") as HTMLTextAreaElement;
+     expect(bioInput.value).toBe(existing);
+   });
++
++  it("renders account identity and an honest avatar state", () => {
++    renderProfileForm({ accountEmail: "learner@example.com" });
++
++    const emailInput = screen.getByLabelText("?´ë©”??) as HTMLInputElement;
++    expect(emailInput.value).toBe("learner@example.com");
++    expect(emailInput.readOnly).toBe(true);
++    expect(screen.getByText("?„ë¡œ???´ë?ì§€")).toBeTruthy();
++    expect(
++      screen.getByText(/?´ë?ì§€ ?…ë¡œ?œëŠ” ?„ì§ ?œì„±?”ë˜ì§€ ?Šì•˜?µë‹ˆ??),
++    ).toBeTruthy();
++    expect(screen.getByText(/?¬ë¡œê·¸ì¸???„ìš”?????ˆìŠµ?ˆë‹¤/)).toBeTruthy();
++  });
++
++  it("enables Save only after a dirty edit and protects browser leave", () => {
++    renderProfileForm({
++      initialProfile: { display_name: "Chan", nickname: "chan-k", bio: null },
++    });
++
++    const saveButton = screen.getByRole("button", { name: "?„ë¡œ???€?? });
++    expect((saveButton as HTMLButtonElement).disabled).toBe(true);
++
++    const nameInput = screen.getByLabelText("?´ë¦„") as HTMLInputElement;
++    fireEvent.change(nameInput, { target: { value: "Chan Kim" } });
++
++    expect((saveButton as HTMLButtonElement).disabled).toBe(false);
++    const event = new Event("beforeunload", { cancelable: true });
++    window.dispatchEvent(event);
++
++    expect(event.defaultPrevented).toBe(true);
++  });
++
++  it("asks before internal navigation while profile edits are dirty", () => {
++    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
++    renderProfileFormWithNavigation({
++      initialProfile: { display_name: "Chan", nickname: "chan-k", bio: null },
++    });
++
++    const nameInput = screen.getByLabelText("?´ë¦„") as HTMLInputElement;
++    fireEvent.change(nameInput, { target: { value: "Chan Kim" } });
++
++    const link = screen.getByRole("link", { name: "?€?œë³´?œë¡œ ?´ë™" });
++    expect(fireEvent.click(link)).toBe(false);
++    expect(confirmSpy).toHaveBeenCalledWith(
++      "?€?¥í•˜ì§€ ?Šì? ë³€ê²½ì‚¬??´ ?ˆìŠµ?ˆë‹¤. ?˜ì´ì§€ë¥?? ë‚˜?œê² ?´ìš”?",
++    );
++
++    confirmSpy.mockRestore();
++  });
+ });
+
+¼Ó¼ºÀ» ¼³Á¤ÇÒ ¼ö ¾ø½À´Ï´Ù. ¼Ó¼º ¼³Á¤Àº ÀÌ ¾ð¾î ¸ðµåÀÇ ÇÙ½É À¯Çü¿¡ ´ëÇØ¼­¸¸ Áö¿øµË´Ï´Ù.
+À§Ä¡ ÁÙ:1 ¹®ÀÚ:1
++ [Console]::OutputEncoding=[System.Text.Encoding]::UTF8;
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidOperation: (:) [], RuntimeException
+    + FullyQualifiedErrorId : PropertySetterNotSupportedInConstrainedLanguage
+
+
+hook: PostToolUse
+hook: PostToolUse Completed
+codex
+The diff itself shows six touched files. I’m now reading only those current files plus the two allowed IA descriptions so line references and contract checks are based on the actual current source.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "Get-Content -Raw -LiteralPath 'docs/IA/27-X-05-profile-editing/description.md'" in C:\Users\admin\Desktop\workspace\topik-project\v13
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "Get-Content -Raw -LiteralPath 'docs/IA/29-X-07-weakness-based-recommendations/description.md'" in C:\Users\admin\Desktop\workspace\topik-project\v13
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "Get-Content -Raw -LiteralPath 'src/components/profile/ProfileForm.tsx'" in C:\Users\admin\Desktop\workspace\topik-project\v13
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "Get-Content -Raw -LiteralPath 'src/components/practice/WeaknessView.tsx'" in C:\Users\admin\Desktop\workspace\topik-project\v13
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "Get-Content -Raw -LiteralPath 'src/app/(workspace)/profile/page.tsx'" in C:\Users\admin\Desktop\workspace\topik-project\v13
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "Get-Content -Raw -LiteralPath 'src/app/(workspace)/practice/weakness/page.tsx'" in C:\Users\admin\Desktop\workspace\topik-project\v13
+ succeeded in 781ms:
+# ?½ì  ê¸°ë°˜ ì¶”ì²œ
+
+- Source: 29 X-07 ?½ì  ê¸°ë°˜ ì¶”ì²œ
+- Code: X-07
+- Wireframe: ![?½ì  ê¸°ë°˜ ì¶”ì²œ wireframe](./wireframe.png)
+
+## Wireframe Number Map
+
+| No. | Area | Description |
+| --- | --- | --- |
+| 1 | ?™ìŠµ???¬ì´???´ë¹„ | ?½ì  ì¶”ì²œ ?”ë©´?ì„œ???™ìŠµ??ë©”ë‰´?€ ?„ìž¬ ?„ì¹˜ë¥?? ì??? |
+| 2 | ?½ì  ??| ë¬¸ë²•, ?´íœ˜, êµ¬ì„±, ì£¼ì œ ?í•©?????½ì  ? í˜•???„í™˜?? |
+| 3 | ?µì‹¬ ì§„ë‹¨ ì¹´ë“œ | ?°ì„  ê°œì„ ?´ì•¼ ???½ì ê³?ê·¼ê±°ë¥??¬ê²Œ ë³´ì—¬ì¤? |
+| 4 | ?¸ì‚¬?´íŠ¸ ë³´ì¡° | ?½ì  ë°œìƒ ?´ìœ , ?ˆì‹œ ?¤ë¥˜, ê°œì„  ?„ëžµ??ì§§ê²Œ ë³´ì™„?? |
+| 5 | ì¶”ì²œ ?™ìŠµ ì¹´ë“œ | ?½ì ??ë§žëŠ” ë¬¸ì œ, ë³µìŠµ ?ë£Œ, ?œí˜„ ?°ìŠµ??ì¶”ì²œ?? |
+| 6 | ?œìž‘ CTA | ? íƒ ì¶”ì²œ ?™ìŠµ??ë°”ë¡œ ?œìž‘?˜ê±°??ë¬¸ì œ ëª©ë¡?¼ë¡œ ?´ë™?? |
+
+## Detailed Description
+
+### 29 X-07 ?½ì  ê¸°ë°˜ ì¶”ì²œ
+
+1
+
+???™ìŠµ???¬ì´???´ë¹„
+
+???¤ëª…
+
+???½ì  ì¶”ì²œ ?”ë©´?ì„œ???™ìŠµ??ë©”ë‰´?€ ?„ìž¬ ?„ì¹˜ë¥?? ì???
+
+???œì•½ ì¡°ê±´: ?±ìž¥/ì¶”ì²œ ê´€??ë©”ë‰´ ?œì„±, ëª¨ë°”?¼ì? ?‘íž˜ ?´ë¹„ ?¬ìš©.
+
+???ˆì™¸: ? ë£Œ ? ê¸ˆ?´ë©´ ì¶”ì²œ ë³¸ë¬¸ ?€???…ê·¸?ˆì´???ˆë‚´ ?œì‹œ.
+
+2
+
+???½ì  ??
+
+???¤ëª…
+
+??ë¬¸ë²•, ?´íœ˜, êµ¬ì„±, ì£¼ì œ ?í•©?????½ì  ? í˜•???„í™˜??
+
+???œì•½ ì¡°ê±´: ??4ê°? ???¼ë²¨ 10???´í•˜, ? íƒ ??1ê°œë§Œ ?œì„±.
+
+???ˆì™¸: ?µì•ˆ ë¶€ì¡???? ë¹„í™œ??ë°??„ìš”???µì•ˆ ???œì‹œ.
+
+3
+
+???µì‹¬ ì§„ë‹¨ ì¹´ë“œ
+
+???¤ëª…
+
+???°ì„  ê°œì„ ?´ì•¼ ???½ì ê³?ê·¼ê±°ë¥??¬ê²Œ ë³´ì—¬ì¤?
+
+???œì•½ ì¡°ê±´: ì§„ë‹¨ ?œëª© 28?? ê·¼ê±° 2ì¤? ìµœê·¼ ?µì•ˆ ? ì§œ ?œì‹œ.
+
+???ˆì™¸: ì¶”ì²œ ?†ìŒ/ë¶„ì„ ?¤íŒ¨??ë¹??íƒœ?€ ?¤ì‹œ ë¶„ì„ CTA ?œì‹œ.
+
+4
+
+???¸ì‚¬?´íŠ¸ ë³´ì¡°
+
+???¤ëª…
+
+???½ì  ë°œìƒ ?´ìœ , ?ˆì‹œ ?¤ë¥˜, ê°œì„  ?„ëžµ??ì§§ê²Œ ë³´ì™„??
+
+???œì•½ ì¡°ê±´: ?¸ì‚¬?´íŠ¸ 3ê°??´í•˜, ê°?ë¬¸ìž¥ 60???´í•˜.
+
+???ˆì™¸: ?¸ì‚¬?´íŠ¸ ë¶€ì¡????¼ë°˜ ?™ìŠµ ?ìœ¼ë¡??€ì²?
+
+5
+
+??ì¶”ì²œ ?™ìŠµ ì¹´ë“œ
+
+???¤ëª…
+
+???½ì ??ë§žëŠ” ë¬¸ì œ, ë³µìŠµ ?ë£Œ, ?œí˜„ ?°ìŠµ??ì¶”ì²œ??
+
+???œì•½ ì¡°ê±´: ì¹´ë“œ 4ê°??´í•˜, ?œëª© 28?? ì¶”ì²œ ?¬ìœ  1ì¤?
+
+???ˆì™¸: ? ë£Œ ? ê¸ˆ/?ë£Œ ?†ìŒ?€ ë¹„í™œ??ì¹´ë“œ?€ ?ˆë‚´ ?œì‹œ.
+
+6
+
+???œìž‘ CTA
+
+???¤ëª…
+
+??? íƒ ì¶”ì²œ ?™ìŠµ??ë°”ë¡œ ?œìž‘?˜ê±°??ë¬¸ì œ ëª©ë¡?¼ë¡œ ?´ë™??
+
+???œì•½ ì¡°ê±´: ?€??CTA 1ê°? ?´ë¦­ ??ì¤‘ë³µ ?¤í–‰ ì°¨ë‹¨.
+
+???ˆì™¸: ?œìž‘ ?¤íŒ¨/? íƒ ?†ìŒ?€ CTA ë¹„í™œ?±ê³¼ ?¤ë¥˜ ?œì‹œ.
+
+?”ë©´ ëª©ì  / ë¶„ê¸° / ?¼ë“œë°?/ ?ˆì™¸ ?í™©
+
+ëª©ì 
+
+?½ì  ?ì—­ë³?ë§žì¶¤ ë¬¸ì œ?€ ë³µìŠµ ì¹´ë“œë¥??œê³µ?œë‹¤.
+
+ë¶„ê¸°
+
+??ë³€ê²? ì¶”ì²œ ë¬¸ì œ ?œìž‘, ?¸ì‚¬?´íŠ¸ ?•ì¸.
+
+?¼ë“œë°?
+
+?œì„± ?? ì¶”ì²œ ê·¼ê±°, ?œìž‘ ?íƒœ ?œì‹œ.
+
+?ˆì™¸
+
+?ˆì™¸: ?µì•ˆ ë¶€ì¡? ì¶”ì²œ ?†ìŒ, ? ë£Œ ? ê¸ˆ.
+
+¼Ó¼ºÀ» ¼³Á¤ÇÒ ¼ö ¾ø½À´Ï´Ù. ¼Ó¼º ¼³Á¤Àº ÀÌ ¾ð¾î ¸ðµåÀÇ ÇÙ½É À¯Çü¿¡ ´ëÇØ¼­¸¸ Áö¿øµË´Ï´Ù.
+À§Ä¡ ÁÙ:1 ¹®ÀÚ:1
++ [Console]::OutputEncoding=[System.Text.Encoding]::UTF8;
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidOperation: (:) [], RuntimeException
+    + FullyQualifiedErrorId : PropertySetterNotSupportedInConstrainedLanguage
+
+
+hook: PostToolUse
+ succeeded in 834ms:
+# ?„ë¡œ???¸ì§‘
+
+- Source: 27 X-05 ?„ë¡œ???¸ì§‘
+- Code: X-05
+- Wireframe: ![?„ë¡œ???¸ì§‘ wireframe](./wireframe.png)
+
+## Wireframe Number Map
+
+| No. | Area | Description |
+| --- | --- | --- |
+| 1 | ?™ìŠµ???¬ì´???´ë¹„ | ?„ë¡œ???¸ì§‘ ì¤‘ì—???™ìŠµ???±ì˜ ?„ìž¬ ?„ì¹˜ë¥?? ì??? |
+| 2 | ê°œì¸?•ë³´ ?…ë ¥ ??| ?´ë¦„, ?‰ë„¤?? ?´ë©”?? ëª©í‘œ ?œí—˜ ?•ë³´ ??ê¸°ë³¸ ?•ë³´ë¥??˜ì •?? |
+| 3 | ?„ë°”?€ ?ì—­ | ?¬ìš©???´ë?ì§€ ?ëŠ” ê¸°ë³¸ ìºë¦­?°ë? ?±ë¡/ë³€ê²½í•˜???ì—­. |
+| 4 | ?„ì?ë§??íƒœ ì¹´ë“œ | ê³µê°œ ë²”ìœ„, ?°ì´???œìš©, ?™ìŠµ ëª©í‘œ ë°˜ì˜ ?¬ë?ë¥??ˆë‚´?? |
+| 5 | ?€??CTA | ë³€ê²½ëœ ?„ë¡œ???•ë³´ë¥??€?¥í•˜??ì£??¡ì…˜ ë²„íŠ¼. |
+
+## Detailed Description
+
+### 27 X-05 ?„ë¡œ???¸ì§‘
+
+1
+
+???™ìŠµ???¬ì´???´ë¹„
+
+???¤ëª…
+
+???„ë¡œ???¸ì§‘ ì¤‘ì—???™ìŠµ???±ì˜ ?„ìž¬ ?„ì¹˜ë¥?? ì???
+
+???œì•½ ì¡°ê±´: ?¤ì •/?„ë¡œ??ë©”ë‰´ ?œì„±, ?€?????´íƒˆ ?•ì¸ ?ìš©.
+
+???ˆì™¸: ?¬ì¸ì¦??„ìš” ???„ë¡œ???…ë ¥ ??ë³´ì•ˆ ?ˆë‚´ ?œì‹œ.
+
+2
+
+??ê°œì¸?•ë³´ ?…ë ¥ ??
+
+???¤ëª…
+
+???´ë¦„, ?‰ë„¤?? ?´ë©”?? ëª©í‘œ ?œí—˜ ?•ë³´ ??ê¸°ë³¸ ?•ë³´ë¥??˜ì •??
+
+???œì•½ ì¡°ê±´: ?´ë¦„ 2-30?? ?‰ë„¤??2-20?? ?ê¸°?Œê°œ 160???´í•˜.
+
+???ˆì™¸: ì¤‘ë³µ ?‰ë„¤???´ë©”??ë³€ê²??œí•œ?€ ?„ë“œ ?˜ë‹¨???œì‹œ.
+
+3
+
+???„ë°”?€ ?ì—­
+
+???¤ëª…
+
+???¬ìš©???´ë?ì§€ ?ëŠ” ê¸°ë³¸ ìºë¦­?°ë? ?±ë¡/ë³€ê²½í•˜???ì—­.
+
+???œì•½ ì¡°ê±´: ?´ë?ì§€ 5MB ?´í•˜, jpg/png ?ˆìš©, ?•ì‚¬ê°í˜• ?¬ë¡­ ?œê³µ.
+
+???ˆì™¸: ?…ë¡œ???¤íŒ¨/ë¶€?í•© ?Œì¼?€ ì¦‰ì‹œ ?¤ë¥˜?€ ?¬ì„ ???œê³µ.
+
+4
+
+???„ì?ë§??íƒœ ì¹´ë“œ
+
+???¤ëª…
+
+??ê³µê°œ ë²”ìœ„, ?°ì´???œìš©, ?™ìŠµ ëª©í‘œ ë°˜ì˜ ?¬ë?ë¥??ˆë‚´??
+
+???œì•½ ì¡°ê±´: ì¹´ë“œ 3ê°??´í•˜, ?ˆë‚´ë¬?2ì¤? ê³µê°œ ?íƒœ ë°°ì? ?„ìˆ˜.
+
+???ˆì™¸: ?•ì±… ë¯¸ë™???°ì´???œìš© ?œí•œ?€ ë³„ë„ ê²½ê³  ?œì‹œ.
+
+5
+
+???€??CTA
+
+???¤ëª…
+
+??ë³€ê²½ëœ ?„ë¡œ???•ë³´ë¥??€?¥í•˜??ì£??¡ì…˜ ë²„íŠ¼.
+
+???œì•½ ì¡°ê±´: ë³€ê²½ê°’ ?†ìœ¼ë©?ë¹„í™œ?? ?€??ì¤?ì¤‘ë³µ ?´ë¦­ ì°¨ë‹¨.
+
+???ˆì™¸: ?€???¤íŒ¨/?¬ì¸ì¦??„ìš” ???„ìž¬ ?…ë ¥ê°’ì„ ë³´ì¡´?˜ê³  ?ˆë‚´.
+
+?”ë©´ ëª©ì  / ë¶„ê¸° / ?¼ë“œë°?/ ?ˆì™¸ ?í™©
+
+ëª©ì 
+
+?¬ìš©??ê¸°ë³¸ ?•ë³´?€ ?„ë¡œ???´ë?ì§€ë¥??˜ì •?œë‹¤.
+
+ë¶„ê¸°
+
+?…ë ¥ ?˜ì •, ?´ë?ì§€ ë³€ê²? ?€??
+
+?¼ë“œë°?
+
+?„ë“œ ê²€ì¦? ?´ë?ì§€ ?…ë¡œ?? ?€???„ë£Œ ?œì‹œ.
+
+?ˆì™¸
+
+?ˆì™¸: ?¬ì¸ì¦??„ìš”, ?…ë¡œ???¤íŒ¨, ?€???¤íŒ¨.
+
+¼Ó¼ºÀ» ¼³Á¤ÇÒ ¼ö ¾ø½À´Ï´Ù. ¼Ó¼º ¼³Á¤Àº ÀÌ ¾ð¾î ¸ðµåÀÇ ÇÙ½É À¯Çü¿¡ ´ëÇØ¼­¸¸ Áö¿øµË´Ï´Ù.
+À§Ä¡ ÁÙ:1 ¹®ÀÚ:1
++ [Console]::OutputEncoding=[System.Text.Encoding]::UTF8;
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidOperation: (:) [], RuntimeException
+    + FullyQualifiedErrorId : PropertySetterNotSupportedInConstrainedLanguage
+
+
+hook: PostToolUse
+ succeeded in 926ms:
+"use client";
+
+import { Alert, App, Avatar, Button, Form, Input, Typography } from "antd";
+import { useEffect, useMemo, useState } from "react";
+
+import { useUpdateProfile } from "@/lib/settings/mutations";
+
+const { Paragraph } = Typography;
+
+const PROFILE_NAME_MIN_LENGTH = 2;
+const UNSAVED_PROFILE_LEAVE_MESSAGE =
+  "?€?¥í•˜ì§€ ?Šì? ë³€ê²½ì‚¬??´ ?ˆìŠµ?ˆë‹¤. ?˜ì´ì§€ë¥?? ë‚˜?œê² ?´ìš”?";
+
+type ProfileDraft = {
+  display_name: string | null;
+  nickname: string | null;
+  bio: string | null;
+};
+
+type Props = {
+  /**
+   * See `LanguageForm` for the rationale on accepting `userId` as a prop:
+   * `useUpdateProfile` is per-user and the data layer is read-only.
+   */
+  userId: string;
+  accountEmail: string | null;
+  initialProfile: ProfileDraft;
+};
+
+/**
+ * Trim user input and collapse empty strings to `null` so the DB sees an
+ * explicit field clear. Exported for direct unit testing.
+ */
+export function normalizeProfileField(value: string): string | null {
+  const trimmed = value.trim();
+  return trimmed.length === 0 ? null : trimmed;
+}
+
+function normalizeProfileDraft(profile: ProfileDraft): ProfileDraft {
+  return {
+    display_name: normalizeProfileField(profile.display_name ?? ""),
+    nickname: normalizeProfileField(profile.nickname ?? ""),
+    bio: normalizeProfileField(profile.bio ?? ""),
+  };
+}
+
+function profilesEqual(left: ProfileDraft, right: ProfileDraft) {
+  return (
+    left.display_name === right.display_name &&
+    left.nickname === right.nickname &&
+    left.bio === right.bio
+  );
+}
+
+function isTooShortProfileField(value: string | null) {
+  return value !== null && value.length < PROFILE_NAME_MIN_LENGTH;
+}
+
+/**
+ * `/profile` form (X-05). Avatar upload is intentionally shown as unavailable
+ * until storage/upload behavior is implemented and verified.
+ */
+export function ProfileForm({ userId, accountEmail, initialProfile }: Props) {
+  const { message } = App.useApp();
+  const mutation = useUpdateProfile(userId);
+  const [savedProfile, setSavedProfile] = useState<ProfileDraft>(() =>
+    normalizeProfileDraft(initialProfile),
+  );
+
+  const [displayName, setDisplayName] = useState<string>(
+    initialProfile.display_name ?? "",
+  );
+  const [nickname, setNickname] = useState<string>(
+    initialProfile.nickname ?? "",
+  );
+  const [bio, setBio] = useState<string>(initialProfile.bio ?? "");
+
+  const draftProfile = useMemo(
+    () =>
+      normalizeProfileDraft({
+        display_name: displayName,
+        nickname,
+        bio,
+      }),
+    [bio, displayName, nickname],
+  );
+  const isDirty = !profilesEqual(draftProfile, savedProfile);
+  const displayNameTooShort = isTooShortProfileField(draftProfile.display_name);
+  const nicknameTooShort = isTooShortProfileField(draftProfile.nickname);
+  const validationError = displayNameTooShort
+    ? "?´ë¦„?€ 2???´ìƒ ?…ë ¥??ì£¼ì„¸??"
+    : nicknameTooShort
+      ? "?‰ë„¤?„ì? 2???´ìƒ ?…ë ¥??ì£¼ì„¸??"
+      : null;
+  const canSubmit = isDirty && !validationError;
+  const avatarInitial =
+    (draftProfile.display_name ?? draftProfile.nickname ?? accountEmail ?? "?")
+      .trim()
+      .charAt(0)
+      .toUpperCase() || "?";
+
+  useEffect(() => {
+    if (!isDirty) return;
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+
+    const handleDocumentClick = (event: MouseEvent) => {
+      if (
+        event.defaultPrevented ||
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey
+      ) {
+        return;
+      }
+
+      const target = event.target instanceof Element ? event.target : null;
+      const anchor = target?.closest("a[href]");
+      if (!(anchor instanceof HTMLAnchorElement)) return;
+      if (anchor.target && anchor.target !== "_self") return;
+      if (anchor.hasAttribute("download")) return;
+
+      const rawHref = anchor.getAttribute("href");
+      if (!rawHref || rawHref.startsWith("#")) return;
+
+      let url: URL;
+      try {
+        url = new URL(anchor.href, window.location.href);
+      } catch {
+        return;
+      }
+
+      if (url.origin !== window.location.origin) return;
+      if (url.href === window.location.href) return;
+
+      if (!window.confirm(UNSAVED_PROFILE_LEAVE_MESSAGE)) {
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    document.addEventListener("click", handleDocumentClick, true);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      document.removeEventListener("click", handleDocumentClick, true);
+    };
+  }, [isDirty]);
+
+  async function handleFinish() {
+    if (!isDirty) return;
+    if (validationError) {
+      message.error(validationError);
+      return;
+    }
+
+    try {
+      await mutation.mutateAsync(draftProfile);
+      setSavedProfile(draftProfile);
+      message.success("?„ë¡œ?„ì´ ?€?¥ë˜?ˆìŠµ?ˆë‹¤.");
+    } catch (err) {
+      message.error(err instanceof Error ? err.message : "?€?¥ì— ?¤íŒ¨?ˆì–´??");
+    }
+  }
+
+  return (
+    <Form
+      layout="vertical"
+      onFinish={handleFinish}
+      disabled={mutation.isPending}
+    >
+      <Form.Item label="?´ë©”??>
+        <Input
+          value={accountEmail ?? ""}
+          readOnly
+          placeholder="?±ë¡???´ë©”???†ìŒ"
+          aria-label="?´ë©”??
+        />
+      </Form.Item>
+
+      <Form.Item
+        label="?´ë¦„"
+        validateStatus={displayNameTooShort ? "error" : undefined}
+        help={
+          displayNameTooShort ? "?´ë¦„?€ 2???´ìƒ ?…ë ¥??ì£¼ì„¸??" : undefined
+        }
+      >
+        <Input
+          value={displayName}
+          onChange={(event) => setDisplayName(event.target.value)}
+          placeholder="?¤ëª… ?ëŠ” ?œì‹œ ?´ë¦„"
+          maxLength={30}
+          aria-label="?´ë¦„"
+        />
+      </Form.Item>
+
+      <Form.Item
+        label="?‰ë„¤??
+        validateStatus={nicknameTooShort ? "error" : undefined}
+        help={nicknameTooShort ? "?‰ë„¤?„ì? 2???´ìƒ ?…ë ¥??ì£¼ì„¸??" : undefined}
+      >
+        <Input
+          value={nickname}
+          onChange={(event) => setNickname(event.target.value)}
+          placeholder="?¤ë¥¸ ?¬ìš©?ì—ê²?ë³´ì—¬ì§??´ë¦„"
+          maxLength={20}
+          aria-label="?‰ë„¤??
+        />
+      </Form.Item>
+
+      <Form.Item label="?ê¸°?Œê°œ" extra={`${bio.length}/160??}>
+        <Input.TextArea
+          value={bio}
+          onChange={(event) => setBio(event.target.value)}
+          placeholder="ê°„ë‹¨???ê¸°?Œê°œ (160???´ë‚´)"
+          maxLength={160}
+          autoSize={{ minRows: 2, maxRows: 4 }}
+          aria-label="?ê¸°?Œê°œ"
+        />
+      </Form.Item>
+
+      <section
+        aria-label="?„ë¡œ???´ë?ì§€ ?ì—­"
+        style={{
+          border: "1px solid var(--ant-color-border)",
+          borderRadius: 8,
+          marginBottom: 16,
+          padding: 16,
+        }}
+      >
+        <Avatar size={56}>{avatarInitial}</Avatar>
+        <Paragraph strong style={{ marginTop: 12, marginBottom: 4 }}>
+          ?„ë¡œ???´ë?ì§€
+        </Paragraph>
+        <Paragraph type="secondary" style={{ marginBottom: 12 }}>
+          ?´ë?ì§€ ?…ë¡œ?œëŠ” ?„ì§ ?œì„±?”ë˜ì§€ ?Šì•˜?µë‹ˆ?? ?€?¥ì†Œ ?…ë¡œ?œê? êµ¬í˜„?˜ê³ 
+          ê²€ì¦ë˜ê¸??„ê¹Œì§€ ?„ìž¬ ?´ë‹ˆ?œì„ ?œì‹œ?©ë‹ˆ??
+        </Paragraph>
+        <Alert
+          type="info"
+          showIcon
+          message="ë³´ì•ˆ ?ˆë‚´"
+          description="ê³„ì • ?ë³„ ?•ë³´ ë³€ê²½ì´???´ë?ì§€ ?…ë¡œ?œëŠ” ?€?????¬ë¡œê·¸ì¸???„ìš”?????ˆìŠµ?ˆë‹¤."
+        />
+      </section>
+
+      <Form.Item>
+        <Button
+          type="primary"
+          htmlType="submit"
+          loading={mutation.isPending}
+          disabled={!canSubmit || mutation.isPending}
+          aria-label="?„ë¡œ???€??
+        >
+          ?€??        </Button>
+      </Form.Item>
+    </Form>
+  );
+}
+
+¼Ó¼ºÀ» ¼³Á¤ÇÒ ¼ö ¾ø½À´Ï´Ù. ¼Ó¼º ¼³Á¤Àº ÀÌ ¾ð¾î ¸ðµåÀÇ ÇÙ½É À¯Çü¿¡ ´ëÇØ¼­¸¸ Áö¿øµË´Ï´Ù.
+À§Ä¡ ÁÙ:1 ¹®ÀÚ:1
++ [Console]::OutputEncoding=[System.Text.Encoding]::UTF8;
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidOperation: (:) [], RuntimeException
+    + FullyQualifiedErrorId : PropertySetterNotSupportedInConstrainedLanguage
+
+
+hook: PostToolUse
+ succeeded in 941ms:
+"use client";
+
+import {
+  Alert,
+  Button,
+  Card,
+  Col,
+  Empty,
+  Row,
+  Space,
+  Tag,
+  Typography,
+} from "antd";
+import { useRouter } from "next/navigation";
+import { logStudyEvent } from "@/lib/events/study-events";
+import { DimensionTabs } from "./DimensionTabs";
+import { DiagnosticCard } from "./DiagnosticCard";
+
+const { Title, Paragraph, Text } = Typography;
+const RECOMMENDATION_TITLE_MAX_LENGTH = 28;
+
+type WeakDimensionProp = {
+  dimension: string;
+  averageScore: number;
+  sampleCount?: number;
+};
+
+type RecommendationProp = {
+  problem_id: string;
+  title: string;
+  question_no: number;
+  reason?: string | null;
+  source?: "recommendation" | "tag_fallback";
+};
+
+type Props = {
+  weakDimensions: WeakDimensionProp[];
+  recommendations: RecommendationProp[];
+  /** ISO timestamp for diagnostic refresh - Phase 7-D Task 7 */
+  updatedAt?: string | null;
+};
+
+const DIMENSION_LABELS: Record<string, string> = {
+  grammar: "氍鸽矔",
+  vocab: "?错湗",
+  structure: "甑劚",
+  topic: "欤检牅 ?來暕??,
+};
+
+const DIMENSION_INSIGHTS: Record<
+  string,
+  { why: string; example: string; strategy: string }
+> = {
+  grammar: {
+    why: "氍胳灔 攴滌箼???旊摛毽┐ 膦嬱? ?濌皝?????曧檿?橁矊 ?勲嫭?????堨柎??",
+    example:
+      "?滌牅, 臁办偓, ?瓣舶?搓? ?奠晥 ?堨棎???烄澊??瓴届毎臧€ ?愳＜ 氤挫澕 ???堨柎??",
+    strategy:
+      "歆ъ? 氍胳灔?茧 瓿犾硱 ?瓣碃, 臧欖? ?滍槃???るジ ?滌牅搿??れ嫓 ??氤挫劯??",
+  },
+  vocab: {
+    why: "?柎 ?犿儩??膦侅溂氅?臧欖? ?橂?毳?氚橂车?橁矊 ?橃柎 ?奠晥???る摑?レ澊 ?巾暣歆????堨柎??",
+    example:
+      "?毚 ?柎毵?氚橂车?橁卑??氍鸽Д????毵炿姅 ?滍槃??瓿犽ゴ??瓴届毎臧€ ?堨潉 ???堨柎??",
+    strategy: "於旍矞 氍胳牅毳??€氅?牍勳姺???混潣 ?滍槃??2臧滌敥 ?粯 ?曤Μ??氤挫劯??",
+  },
+  structure: {
+    why: "甑劚???愴姼??氅?欤检灔瓿?攴缄卑??甏€瓿勱? ?诫姅 ?瀸?愱矊 ??攵勲獏?挫 ???堨柎??",
+    example:
+      "?勳瀰, 攴缄卑, 毵堧毽潣 ?滌劀臧€ 氚旊€岅卑????氍鸽嫧???煬 ?濌皝???烄澕 ???堨柎??",
+    strategy: "氍胳灔???瓣赴 ?勳棎 ?奠嫭 欤检灔 1臧滌? 攴缄卑 2臧滊? 毹检? ?侅柎 氤挫劯??",
+  },
+  topic: {
+    why: "欤检牅?愳劀 氩楈柎?橂┐ 氍胳灔??毵烄晞???愳垬搿??挫柎歆€旮??措牑?????堨柎??",
+    example:
+      "歆堧???旉惮??臁瓣贝氤措嫟 氚瓣步 ?る獏??旮胳柎歆€??瓴届毎臧€ ?堨潉 ???堨柎??",
+    strategy:
+      "氍胳牅毳??れ嫓 ?疥碃 ?勳垬 臁瓣贝??觳错伂?????奠晥??歆ш矊 ?る摤??氤挫劯??",
+  },
+};
+
+function getDimensionLabel(dimension: string) {
+  return DIMENSION_LABELS[dimension] ?? dimension;
+}
+
+function getLeadingWeakDimension(dimensions: WeakDimensionProp[]) {
+  return [...dimensions].sort((a, b) => a.averageScore - b.averageScore)[0];
+}
+
+function getFallbackInsight() {
+  return {
+    why: "斓滉芳 ?奠晥?愳劀 ??矊 ?橃槰 ?侅棴?措澕 毹检? ?曥澑?橂┐ ?勳????????堨柎??",
+    example: "臧欖? ?犿槙???れ垬臧€ 氚橂车?橂姅歆€ ?错幋氤??勳殧臧€ ?堨柎??",
+    strategy: "於旍矞 氍胳牅毳??€瓿??奠晥????氩???瓿犾硱 ??氤挫劯??",
+  };
+}
+
+function getRecommendationSourceLabel(source?: RecommendationProp["source"]) {
+  if (source === "tag_fallback") {
+    return "?届爯 ?滉犯 旮半皹";
+  }
+  return "於旍矞 攴缄卑";
+}
+
+function getRecommendationReason(
+  rec: RecommendationProp,
+  leadingWeakLabel: string,
+) {
+  const explicitReason = rec.reason?.trim();
+  if (explicitReason) return explicitReason;
+
+  if (rec.source === "tag_fallback") {
+    return `${leadingWeakLabel || "?届爯"} ?侅棴瓿?甏€?悳 氍疙暛?措澕 ?办劆 於旍矞?╇媹??`;
+  }
+
+  return "斓滉芳 ?届爯 攵勳劃瓿?瓴轨箻??氍胳牅???办劆 ?办姷?????堨柎??";
+}
+
+function truncateRecommendationTitle(title: string) {
+  if (title.length <= RECOMMENDATION_TITLE_MAX_LENGTH) return title;
+  return `${title.slice(0, RECOMMENDATION_TITLE_MAX_LENGTH)}...`;
+}
+
+export function WeaknessView({
+  weakDimensions,
+  recommendations,
+  updatedAt,
+}: Props) {
+  const router = useRouter();
+  const leadingWeakDimension = getLeadingWeakDimension(weakDimensions);
+  const leadingWeakLabel = leadingWeakDimension
+    ? getDimensionLabel(leadingWeakDimension.dimension)
+    : "";
+  const leadingInsight = leadingWeakDimension
+    ? (DIMENSION_INSIGHTS[leadingWeakDimension.dimension] ??
+      getFallbackInsight())
+    : null;
+
+  if (weakDimensions.length === 0) {
+    return (
+      <Empty description="旮€?瓣赴毳?5瓯??挫儊 ?滌稖?橂┐ ?届爯 攵勳劃???滌劚?旊惄?堧嫟.">
+        <Button
+          type="primary"
+          onClick={() => router.push("/practice/problems" as never)}
+        >
+          氍胳牅 ?€旮?        </Button>
+      </Empty>
+    );
+  }
+
+  function handleRecommendationClick(rec: RecommendationProp) {
+    void logStudyEvent({
+      eventType: "recommendation_clicked",
+      problemId: rec.problem_id,
+      payload: { source: "weakness" },
+    });
+    router.push(`/practice/problems/${rec.problem_id}` as never);
+  }
+
+  return (
+    <Space direction="vertical" size="large" style={{ width: "100%" }}>
+      <div>
+        <Title level={3} style={{ marginBottom: 4 }}>
+          ?届爯 攵勳劃
+        </Title>
+        <Paragraph type="secondary" style={{ margin: 0 }}>
+          斓滉芳 旮€?瓣赴 瓴瓣臣毳?氚旐儠?茧 氤挫檮???勳殧???侅棴瓿?於旍矞 氍胳牅毳?          ?堧偞?╇媹??
+        </Paragraph>
+      </div>
+
+      {/* Phase 7-D Task 7 - DiagnosticCard + DimensionTabs */}
+      <DiagnosticCard
+        weakDimensions={weakDimensions}
+        updatedAt={updatedAt ?? null}
+      />
+      <DimensionTabs dimensions={weakDimensions} />
+
+      {leadingWeakDimension && leadingInsight ? (
+        <Card title="?届爯 ?胳偓?错姼">
+          <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+            <Alert
+              showIcon
+              type="info"
+              message={`${leadingWeakLabel} ?侅棴??毹检? 氤????堨柎??`}
+              description="斓滉芳 ?奠晥?愳劀 氤挫澊??瓴巾枼??氚旐儠?茧 於旍爼???堧偞?堨殧. ?れ牅 ?届爯?€ ?れ潓 ?办姷 瓴瓣臣???半澕 ?澕歆????堨姷?堧嫟."
+            />
+            <Row gutter={[16, 16]}>
+              <Col xs={24} md={8}>
+                <Space direction="vertical" size={4}>
+                  <Text strong>?????侅棴??毹检? 氤措倶??</Text>
+                  <Text type="secondary">{leadingInsight.why}</Text>
+                </Space>
+              </Col>
+              <Col xs={24} md={8}>
+                <Space direction="vertical" size={4}>
+                  <Text strong>?愳＜ 氤挫澊????/Text>
+                  <Text type="secondary">{leadingInsight.example}</Text>
+                </Space>
+              </Col>
+              <Col xs={24} md={8}>
+                <Space direction="vertical" size={4}>
+                  <Text strong>?办姷 ?勲灥</Text>
+                  <Text type="secondary">{leadingInsight.strategy}</Text>
+                </Space>
+              </Col>
+            </Row>
+          </Space>
+        </Card>
+      ) : null}
+
+      <Row gutter={[24, 24]}>
+        <Col xs={24} md={24}>
+          <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+            <Title level={4} style={{ marginBottom: 0 }}>
+              於旍矞 氍胳牅
+            </Title>
+            {recommendations.length === 0 ? (
+              <Empty description="於旍矞 氍胳牅臧€ ?勳 ?嗢姷?堧嫟." />
+            ) : (
+              <Row gutter={[16, 16]}>
+                {recommendations.map((rec) => (
+                  <Col key={rec.problem_id} xs={24}>
+                    <Card
+                      hoverable
+                      onClick={() => handleRecommendationClick(rec)}
+                      data-testid={`weakness-rec-${rec.problem_id}`}
+                    >
+                      <Space
+                        direction="vertical"
+                        size="small"
+                        style={{ width: "100%" }}
+                      >
+                        <Text type="secondary">{rec.question_no}氩?氍疙暛</Text>
+                        <Text strong title={rec.title}>
+                          {truncateRecommendationTitle(rec.title)}
+                        </Text>
+                        <Space direction="vertical" size={2}>
+                          <Tag color="blue">
+                            {getRecommendationSourceLabel(rec.source)}
+                          </Tag>
+                          <Text
+                            type="secondary"
+                            title={getRecommendationReason(
+                              rec,
+                              leadingWeakLabel,
+                            )}
+                            style={{
+                              display: "block",
+                              maxWidth: "100%",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {getRecommendationReason(rec, leadingWeakLabel)}
+                          </Text>
+                        </Space>
+                        <Button
+                          type="primary"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            handleRecommendationClick(rec);
+                          }}
+                        >
+                          於旍矞 ?欖姷 ?滌瀾
+                        </Button>
+                      </Space>
+                    </Card>
+                  </Col>
+                ))}
+              </Row>
+            )}
+            <Card>
+              <Space direction="vertical" size={8}>
+                <Text strong>??旯婌? 於旍矞 氤搓赴</Text>
+                <Text type="secondary">
+                  ???愳劯??於旍矞 ?旊┐?€ 欷€牍?欷戩瀰?堧嫟. 瓴办牅 旮半姤?€ ?勳 欷€牍?                  欷戩澊???れ牅 瓴办牅??甑弲?€ 歆勴枆?橃? ?婌晞??
+                </Text>
+                <Button onClick={() => router.push("/paywall" as never)}>
+                  ?堧偞 ?旊┐ 氤搓赴
+                </Button>
+              </Space>
+            </Card>
+          </Space>
+        </Col>
+      </Row>
+    </Space>
+  );
+}
+
+加己阑 汲沥且 荐 绝嚼聪促. 加己 汲沥篮 捞 攫绢 葛靛狼 琴缴 蜡屈俊 措秦辑父 瘤盔邓聪促.
+困摹 临:1 巩磊:1
++ [Console]::OutputEncoding=[System.Text.Encoding]::UTF8;
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidOperation: (:) [], RuntimeException
+    + FullyQualifiedErrorId : PropertySetterNotSupportedInConstrainedLanguage
+
+
+hook: PostToolUse
+ succeeded in 1039ms:
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { Col, Row, Space } from "antd";
+import { requireUser } from "@/lib/auth/session";
+import { getProfileSettings } from "@/lib/settings/server";
+import { getLearningGoal } from "@/lib/learning/server";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { ProfileForm } from "@/components/profile/ProfileForm";
+import { ExamInfoCard } from "@/components/profile/ExamInfoCard";
+import { StatusHelpCard } from "@/components/profile/StatusHelpCard";
+
+export const metadata: Metadata = { title: "?꾨줈????TALKPIK" };
+
+export default async function ProfilePage() {
+  const user = await requireUser();
+  const settings = await getProfileSettings(user.id);
+  if (!settings) notFound();
+
+  // Phase 7-E Task 10 (P1-6) ??exam info from learning_goals (reuse, no duplicate
+  // state) + status meta from profiles row (created_at + app_role + plan_label).
+  const goal = await getLearningGoal(user.id);
+  const supabase = await createSupabaseServerClient();
+  const { data: profileMeta } = await supabase
+    .from("profiles")
+    .select("created_at, app_role, plan_label")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  return (
+    <main style={{ padding: 24, maxWidth: 960, margin: "0 auto" }}>
+      <h1>?꾨줈??/h1>
+      <Row gutter={[16, 16]}>
+        <Col xs={24} md={14}>
+          <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+            <ProfileForm
+              userId={user.id}
+              accountEmail={user.email ?? null}
+              initialProfile={{
+                display_name: settings.display_name,
+                nickname: settings.nickname,
+                bio: settings.bio,
+              }}
+            />
+          </Space>
+        </Col>
+        <Col xs={24} md={10}>
+          <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+            <ExamInfoCard
+              goal={
+                goal
+                  ? {
+                      topik_level: goal.topik_level,
+                      target_grade: goal.target_grade,
+                      exam_date: goal.exam_date,
+                    }
+                  : null
+              }
+            />
+            {profileMeta ? (
+              <StatusHelpCard
+                joinedAt={profileMeta.created_at}
+                appRole={profileMeta.app_role}
+                planLabel={profileMeta.plan_label}
+              />
+            ) : null}
+          </Space>
+        </Col>
+      </Row>
+    </main>
+  );
+}
+
+속성을 설정할 수 없습니다. 속성 설정은 이 언어 모드의 핵심 유형에 대해서만 지원됩니다.
+위치 줄:1 문자:1
++ [Console]::OutputEncoding=[System.Text.Encoding]::UTF8;
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidOperation: (:) [], RuntimeException
+    + FullyQualifiedErrorId : PropertySetterNotSupportedInConstrainedLanguage
+
+
+hook: PostToolUse
+ succeeded in 1139ms:
+import type { Metadata } from "next";
+import { requireUser } from "@/lib/auth/session";
+import {
+  getWeakDimensions,
+  getWeaknessRecommendations,
+} from "@/lib/practice/weakness";
+import { WeaknessView } from "@/components/practice/WeaknessView";
+
+export const metadata: Metadata = { title: "?쎌젏 蹂닿컯 ??TALKPIK" };
+
+export default async function PracticeWeaknessPage() {
+  const user = await requireUser();
+  const [dimSummaries, recs] = await Promise.all([
+    getWeakDimensions(user.id),
+    getWeaknessRecommendations(user.id),
+  ]);
+  return (
+    <main style={{ padding: 24 }}>
+      <h1>?쎌젏 蹂닿컯</h1>
+      <WeaknessView
+        weakDimensions={dimSummaries.map((d) => ({
+          dimension: d.dimension,
+          averageScore: d.avgScore,
+        }))}
+        recommendations={recs.map((r) => ({
+          problem_id: r.problemId,
+          title: r.title,
+          question_no: r.questionNo ?? 0,
+          reason: r.reason,
+          source: r.source,
+        }))}
+      />
+    </main>
+  );
+}
+
+속성을 설정할 수 없습니다. 속성 설정은 이 언어 모드의 핵심 유형에 대해서만 지원됩니다.
+위치 줄:1 문자:1
++ [Console]::OutputEncoding=[System.Text.Encoding]::UTF8;
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidOperation: (:) [], RuntimeException
+    + FullyQualifiedErrorId : PropertySetterNotSupportedInConstrainedLanguage
+
+
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command '$i=0; Get-Content -LiteralPath '"'src/components/practice/WeaknessView.tsx' | ForEach-Object { "'$i++; '"'{0,4}: {1}' -f "'$i, $_ }' in C:\Users\admin\Desktop\workspace\topik-project\v13
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command '$i=0; Get-Content -LiteralPath '"'src/components/profile/ProfileForm.tsx' | ForEach-Object { "'$i++; '"'{0,4}: {1}' -f "'$i, $_ }' in C:\Users\admin\Desktop\workspace\topik-project\v13
+ declined in 0ms:
+`"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command '$i=0; Get-Content -LiteralPath '"'src/components/practice/WeaknessView.tsx' | ForEach-Object { "'$i++; '"'{0,4}: {1}' -f "'$i, $_ }'` rejected: blocked by policy
+ declined in 0ms:
+`"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command '$i=0; Get-Content -LiteralPath '"'src/components/profile/ProfileForm.tsx' | ForEach-Object { "'$i++; '"'{0,4}: {1}' -f "'$i, $_ }'` rejected: blocked by policy
+2026-06-01T00:37:32.161004Z ERROR codex_core::tools::router: error=`"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command '$i=0; Get-Content -LiteralPath '"'src/components/practice/WeaknessView.tsx' | ForEach-Object { "'$i++; '"'{0,4}: {1}' -f "'$i, $_ }'` rejected: blocked by policy
+2026-06-01T00:37:32.161440Z ERROR codex_core::tools::router: error=`"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command '$i=0; Get-Content -LiteralPath '"'src/components/profile/ProfileForm.tsx' | ForEach-Object { "'$i++; '"'{0,4}: {1}' -f "'$i, $_ }'` rejected: blocked by policy
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command '$i=0; Get-Content -LiteralPath '"'tests/components/practice/WeaknessView.test.tsx' | ForEach-Object { "'$i++; '"'{0,4}: {1}' -f "'$i, $_ }' in C:\Users\admin\Desktop\workspace\topik-project\v13
+ declined in 0ms:
+2026-06-01T00:37:32.163453Z ERROR codex_core::tools::router: error=`"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command '$i=0; Get-Content -LiteralPath '"'tests/components/practice/WeaknessView.test.tsx' | ForEach-Object { "'$i++; '"'{0,4}: {1}' -f "'$i, $_ }'` rejected: blocked by policy
+`"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command '$i=0; Get-Content -LiteralPath '"'tests/components/practice/WeaknessView.test.tsx' | ForEach-Object { "'$i++; '"'{0,4}: {1}' -f "'$i, $_ }'` rejected: blocked by policy
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command '$i=0; Get-Content -LiteralPath '"'tests/components/profile/ProfileForm.test.tsx' | ForEach-Object { "'$i++; '"'{0,4}: {1}' -f "'$i, $_ }' in C:\Users\admin\Desktop\workspace\topik-project\v13
+2026-06-01T00:37:32.166075Z ERROR codex_core::tools::router: error=`"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command '$i=0; Get-Content -LiteralPath '"'tests/components/profile/ProfileForm.test.tsx' | ForEach-Object { "'$i++; '"'{0,4}: {1}' -f "'$i, $_ }'` rejected: blocked by policy
+ declined in 0ms:
+`"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command '$i=0; Get-Content -LiteralPath '"'tests/components/profile/ProfileForm.test.tsx' | ForEach-Object { "'$i++; '"'{0,4}: {1}' -f "'$i, $_ }'` rejected: blocked by policy
+codex
+The current source appears to contain parse-level breakage in the touched components and tests. I’m grabbing line-numbered snippets now so the review can cite exact locations instead of relying on the diff hunk offsets.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+2026-06-01T00:37:42.735231Z ERROR codex_core::tools::router: error=`"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'cmd /c findstr /n "''^" "src'"\\components\\practice\\WeaknessView.tsx\""` rejected: blocked by policy
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'cmd /c findstr /n "''^" "src'"\\components\\practice\\WeaknessView.tsx\"" in C:\Users\admin\Desktop\workspace\topik-project\v13
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'cmd /c findstr /n "''^" "tests'"\\components\\profile\\ProfileForm.test.tsx\"" in C:\Users\admin\Desktop\workspace\topik-project\v13
+ declined in 0ms:
+`"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'cmd /c findstr /n "''^" "src'"\\components\\practice\\WeaknessView.tsx\""` rejected: blocked by policy
+ declined in 0ms:
+`"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'cmd /c findstr /n "''^" "tests'"\\components\\profile\\ProfileForm.test.tsx\""` rejected: blocked by policy
+2026-06-01T00:37:42.735997Z ERROR codex_core::tools::router: error=`"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'cmd /c findstr /n "''^" "tests'"\\components\\profile\\ProfileForm.test.tsx\""` rejected: blocked by policy
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'cmd /c findstr /n "''^" "src'"\\components\\profile\\ProfileForm.tsx\"" in C:\Users\admin\Desktop\workspace\topik-project\v13
+2026-06-01T00:37:42.746070Z ERROR codex_core::tools::router: error=`"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'cmd /c findstr /n "''^" "src'"\\components\\profile\\ProfileForm.tsx\""` rejected: blocked by policy
+ declined in 0ms:
+`"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'cmd /c findstr /n "''^" "src'"\\components\\profile\\ProfileForm.tsx\""` rejected: blocked by policy
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'cmd /c findstr /n "''^" "tests'"\\components\\practice\\WeaknessView.test.tsx\"" in C:\Users\admin\Desktop\workspace\topik-project\v13
+ declined in 0ms:
+`"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'cmd /c findstr /n "''^" "tests'"\\components\\practice\\WeaknessView.test.tsx\""` rejected: blocked by policy
+2026-06-01T00:37:42.759131Z ERROR codex_core::tools::router: error=`"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'cmd /c findstr /n "''^" "tests'"\\components\\practice\\WeaknessView.test.tsx\""` rejected: blocked by policy
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'rg -n ".*" src/components/profile/ProfileForm.tsx' in C:\Users\admin\Desktop\workspace\topik-project\v13
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'rg -n ".*" src/components/practice/WeaknessView.tsx' in C:\Users\admin\Desktop\workspace\topik-project\v13
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'rg -n ".*" tests/components/profile/ProfileForm.test.tsx' in C:\Users\admin\Desktop\workspace\topik-project\v13
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'rg -n ".*" tests/components/practice/WeaknessView.test.tsx' in C:\Users\admin\Desktop\workspace\topik-project\v13
+ succeeded in 1173ms:
+1:// @vitest-environment jsdom
+2:import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+3:import {
+4:  act,
+5:  cleanup,
+6:  fireEvent,
+7:  render,
+8:  screen,
+9:  waitFor,
+10:} from "@testing-library/react";
+11:import { App as AntdApp } from "antd";
+12:import type { ReactNode } from "react";
+13:
+14:const mutateAsyncMock = vi.fn();
+15:const useUpdateProfileMock = vi.fn();
+16:
+17:vi.mock("@/lib/settings/mutations", () => ({
+18:  useUpdateProfile: (...args: unknown[]) => useUpdateProfileMock(...args),
+19:}));
+20:
+21:import {
+22:  ProfileForm,
+23:  normalizeProfileField,
+24:} from "../../../src/components/profile/ProfileForm";
+25:
+26:const blankProfile = { display_name: null, nickname: null, bio: null };
+27:
+28:function renderInApp(node: ReactNode) {
+29:  return render(<AntdApp>{node}</AntdApp>);
+30:}
+31:
+32:function renderProfileForm(
+33:  props: Partial<Parameters<typeof ProfileForm>[0]> = {},
+34:) {
+35:  return renderInApp(
+36:    <ProfileForm
+37:      userId="user-1"
+38:      accountEmail="learner@example.com"
+39:      initialProfile={blankProfile}
+40:      {...props}
+41:    />,
+42:  );
+43:}
+44:
+45:function renderProfileFormWithNavigation(
+46:  props: Partial<Parameters<typeof ProfileForm>[0]> = {},
+47:) {
+48:  return renderInApp(
+49:    <>
+50:      <a href="/dashboard">ëŒ€ì‹œë³´ë“œë¡œ ì´ë™</a>
+51:      <ProfileForm
+52:        userId="user-1"
+53:        accountEmail="learner@example.com"
+54:        initialProfile={blankProfile}
+55:        {...props}
+56:      />
+57:    </>,
+58:  );
+59:}
+60:
+61:beforeEach(() => {
+62:  mutateAsyncMock.mockReset();
+63:  mutateAsyncMock.mockResolvedValue(undefined);
+64:  useUpdateProfileMock.mockReset();
+65:  useUpdateProfileMock.mockReturnValue({
+66:    mutate: vi.fn(),
+67:    mutateAsync: mutateAsyncMock,
+68:    isPending: false,
+69:  });
+70:
+71:  if (!(globalThis as Record<string, unknown>).ResizeObserver) {
+72:    (globalThis as Record<string, unknown>).ResizeObserver = class {
+73:      observe() {}
+74:      unobserve() {}
+75:      disconnect() {}
+76:    };
+77:  }
+78:  if (!window.matchMedia) {
+79:    Object.defineProperty(window, "matchMedia", {
+80:      writable: true,
+81:      value: (query: string) => ({
+82:        matches: false,
+83:        media: query,
+84:        onchange: null,
+85:        addListener: () => undefined,
+86:        removeListener: () => undefined,
+87:        addEventListener: () => undefined,
+88:        removeEventListener: () => undefined,
+89:        dispatchEvent: () => false,
+90:      }),
+91:    });
+92:  }
+93:});
+94:
+95:afterEach(() => {
+96:  cleanup();
+97:});
+98:
+99:describe("normalizeProfileField (pure helper)", () => {
+100:  it("returns null for empty strings", () => {
+101:    expect(normalizeProfileField("")).toBeNull();
+102:    expect(normalizeProfileField("   ")).toBeNull();
+103:  });
+104:
+105:  it("trims whitespace and returns the value", () => {
+106:    expect(normalizeProfileField("  Chan  ")).toBe("Chan");
+107:    expect(normalizeProfileField("Tester")).toBe("Tester");
+108:  });
+109:});
+110:
+111:function submitForm(container: HTMLElement) {
+112:  const form = container.querySelector("form");
+113:  if (!form) throw new Error("form element not found");
+114:  fireEvent.submit(form);
+115:}
+116:
+117:describe("ProfileForm", () => {
+118:  it("keeps Save disabled and does not submit when profile fields are unchanged", async () => {
+119:    const { container } = renderProfileForm();
+120:
+121:    const saveButton = screen.getByRole("button", { name: "í”„ë¡œí•„ ì €ìž¥" });
+122:    expect((saveButton as HTMLButtonElement).disabled).toBe(true);
+123:
+124:    await act(async () => {
+125:      submitForm(container);
+126:    });
+127:
+128:    expect(useUpdateProfileMock).toHaveBeenCalledWith("user-1");
+129:    expect(mutateAsyncMock).not.toHaveBeenCalled();
+130:  });
+131:
+132:  it("submits null when the user clears an existing value to empty string", async () => {
+133:    const { container } = renderProfileForm({
+134:      initialProfile: { display_name: "Chan", nickname: "chan-k", bio: null },
+135:    });
+136:
+137:    const nameInput = screen.getByLabelText("ì´ë¦„") as HTMLInputElement;
+138:    fireEvent.change(nameInput, { target: { value: "" } });
+139:
+140:    await act(async () => {
+141:      submitForm(container);
+142:    });
+143:
+144:    await waitFor(() => {
+145:      expect(mutateAsyncMock).toHaveBeenCalledWith({
+146:        display_name: null,
+147:        nickname: "chan-k",
+148:        bio: null,
+149:      });
+150:    });
+151:  });
+152:
+153:  it("submits trimmed values for display name and nickname", async () => {
+154:    const { container } = renderProfileForm();
+155:
+156:    const nameInput = screen.getByLabelText("ì´ë¦„") as HTMLInputElement;
+157:    const nickInput = screen.getByLabelText("ë‹‰ë„¤ìž„") as HTMLInputElement;
+158:
+159:    fireEvent.change(nameInput, { target: { value: "  Chan  " } });
+160:    fireEvent.change(nickInput, { target: { value: "tester" } });
+161:
+162:    await act(async () => {
+163:      submitForm(container);
+164:    });
+165:
+166:    await waitFor(() => {
+167:      expect(mutateAsyncMock).toHaveBeenCalledWith({
+168:        display_name: "Chan",
+169:        nickname: "tester",
+170:        bio: null,
+171:      });
+172:    });
+173:  });
+174:
+175:  it("submits bio (trimmed) when user types into the bio textarea", async () => {
+176:    const { container } = renderProfileForm();
+177:
+178:    const bioInput = screen.getByLabelText("ìžê¸°ì†Œê°œ") as HTMLTextAreaElement;
+179:    fireEvent.change(bioInput, {
+180:      target: { value: "  TOPIK II grade 4 goal  " },
+181:    });
+182:
+183:    await act(async () => {
+184:      submitForm(container);
+185:    });
+186:
+187:    await waitFor(() => {
+188:      expect(mutateAsyncMock).toHaveBeenCalledWith({
+189:        display_name: null,
+190:        nickname: null,
+191:        bio: "TOPIK II grade 4 goal",
+192:      });
+193:    });
+194:  });
+195:
+196:  it("matches IA field length limits", () => {
+197:    renderProfileForm();
+198:
+199:    const nameInput = screen.getByLabelText("ì´ë¦„") as HTMLInputElement;
+200:    const nickInput = screen.getByLabelText("ë‹‰ë„¤ìž„") as HTMLInputElement;
+201:    const bioInput = screen.getByLabelText("ìžê¸°ì†Œê°œ") as HTMLTextAreaElement;
+202:
+203:    expect(nameInput.maxLength).toBe(30);
+204:    expect(nickInput.maxLength).toBe(20);
+205:    expect(bioInput.maxLength).toBe(160);
+206:  });
+207:
+208:  it("blocks one-character display name and nickname values", async () => {
+209:    const { container } = renderProfileForm();
+210:
+211:    const nameInput = screen.getByLabelText("ì´ë¦„") as HTMLInputElement;
+212:    fireEvent.change(nameInput, { target: { value: "A" } });
+213:
+214:    expect(screen.getByText("ì´ë¦„ì€ 2ìž ì´ìƒ ìž…ë ¥í•´ ì£¼ì„¸ìš”.")).toBeTruthy();
+215:    expect(
+216:      (screen.getByRole("button", { name: "í”„ë¡œí•„ ì €ìž¥" }) as HTMLButtonElement)
+217:        .disabled,
+218:    ).toBe(true);
+219:
+220:    await act(async () => {
+221:      submitForm(container);
+222:    });
+223:    expect(mutateAsyncMock).not.toHaveBeenCalled();
+224:
+225:    fireEvent.change(nameInput, { target: { value: "An" } });
+226:    const nickInput = screen.getByLabelText("ë‹‰ë„¤ìž„") as HTMLInputElement;
+227:    fireEvent.change(nickInput, { target: { value: "B" } });
+228:
+229:    expect(screen.getByText("ë‹‰ë„¤ìž„ì€ 2ìž ì´ìƒ ìž…ë ¥í•´ ì£¼ì„¸ìš”.")).toBeTruthy();
+230:    expect(
+231:      (screen.getByRole("button", { name: "í”„ë¡œí•„ ì €ìž¥" }) as HTMLButtonElement)
+232:        .disabled,
+233:    ).toBe(true);
+234:  });
+235:
+236:  it("renders existing bio value from initialProfile", () => {
+237:    const existing = "TOPIK ì‹œí—˜ì„ 6ê°œì›” ì¤€ë¹„ ì¤‘ì´ì—ìš”.";
+238:    renderProfileForm({
+239:      initialProfile: {
+240:        display_name: null,
+241:        nickname: null,
+242:        bio: existing,
+243:      },
+244:    });
+245:
+246:    const bioInput = screen.getByLabelText("ìžê¸°ì†Œê°œ") as HTMLTextAreaElement;
+247:    expect(bioInput.value).toBe(existing);
+248:  });
+249:
+250:  it("renders account identity and an honest avatar state", () => {
+251:    renderProfileForm({ accountEmail: "learner@example.com" });
+252:
+253:    const emailInput = screen.getByLabelText("ì´ë©”ì¼") as HTMLInputElement;
+254:    expect(emailInput.value).toBe("learner@example.com");
+255:    expect(emailInput.readOnly).toBe(true);
+256:    expect(screen.getByText("í”„ë¡œí•„ ì´ë¯¸ì§€")).toBeTruthy();
+257:    expect(
+258:      screen.getByText(/ì´ë¯¸ì§€ ì—…ë¡œë“œëŠ” ì•„ì§ í™œì„±í™”ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤/),
+259:    ).toBeTruthy();
+260:    expect(screen.getByText(/ìž¬ë¡œê·¸ì¸ì´ í•„ìš”í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤/)).toBeTruthy();
+261:  });
+262:
+263:  it("enables Save only after a dirty edit and protects browser leave", () => {
+264:    renderProfileForm({
+265:      initialProfile: { display_name: "Chan", nickname: "chan-k", bio: null },
+266:    });
+267:
+268:    const saveButton = screen.getByRole("button", { name: "í”„ë¡œí•„ ì €ìž¥" });
+269:    expect((saveButton as HTMLButtonElement).disabled).toBe(true);
+270:
+271:    const nameInput = screen.getByLabelText("ì´ë¦„") as HTMLInputElement;
+272:    fireEvent.change(nameInput, { target: { value: "Chan Kim" } });
+273:
+274:    expect((saveButton as HTMLButtonElement).disabled).toBe(false);
+275:    const event = new Event("beforeunload", { cancelable: true });
+276:    window.dispatchEvent(event);
+277:
+278:    expect(event.defaultPrevented).toBe(true);
+279:  });
+280:
+281:  it("asks before internal navigation while profile edits are dirty", () => {
+282:    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
+283:    renderProfileFormWithNavigation({
+284:      initialProfile: { display_name: "Chan", nickname: "chan-k", bio: null },
+285:    });
+286:
+287:    const nameInput = screen.getByLabelText("ì´ë¦„") as HTMLInputElement;
+288:    fireEvent.change(nameInput, { target: { value: "Chan Kim" } });
+289:
+290:    const link = screen.getByRole("link", { name: "ëŒ€ì‹œë³´ë“œë¡œ ì´ë™" });
+291:    expect(fireEvent.click(link)).toBe(false);
+292:    expect(confirmSpy).toHaveBeenCalledWith(
+293:      "ì €ìž¥í•˜ì§€ ì•Šì€ ë³€ê²½ì‚¬í•­ì´ ìžˆìŠµë‹ˆë‹¤. íŽ˜ì´ì§€ë¥¼ ë– ë‚˜ì‹œê² ì–´ìš”?",
+294:    );
+295:
+296:    confirmSpy.mockRestore();
+297:  });
+298:});
+¼Ó¼ºÀ» ¼³Á¤ÇÒ ¼ö ¾ø½À´Ï´Ù. ¼Ó¼º ¼³Á¤Àº ÀÌ ¾ð¾î ¸ðµåÀÇ ÇÙ½É À¯Çü¿¡ ´ëÇØ¼­¸¸ Áö¿øµË´Ï´Ù.
+À§Ä¡ ÁÙ:1 ¹®ÀÚ:1
++ [Console]::OutputEncoding=[System.Text.Encoding]::UTF8;
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidOperation: (:) [], RuntimeException
+    + FullyQualifiedErrorId : PropertySetterNotSupportedInConstrainedLanguage
+
+
+ succeeded in 1174ms:
+1:"use client";
+2:
+3:import {
+4:  Alert,
+5:  Button,
+6:  Card,
+7:  Col,
+8:  Empty,
+9:  Row,
+10:  Space,
+11:  Tag,
+12:  Typography,
+13:} from "antd";
+14:import { useRouter } from "next/navigation";
+15:import { logStudyEvent } from "@/lib/events/study-events";
+16:import { DimensionTabs } from "./DimensionTabs";
+17:import { DiagnosticCard } from "./DiagnosticCard";
+18:
+19:const { Title, Paragraph, Text } = Typography;
+20:const RECOMMENDATION_TITLE_MAX_LENGTH = 28;
+21:
+22:type WeakDimensionProp = {
+23:  dimension: string;
+24:  averageScore: number;
+25:  sampleCount?: number;
+26:};
+27:
+28:type RecommendationProp = {
+29:  problem_id: string;
+30:  title: string;
+31:  question_no: number;
+32:  reason?: string | null;
+33:  source?: "recommendation" | "tag_fallback";
+34:};
+35:
+36:type Props = {
+37:  weakDimensions: WeakDimensionProp[];
+38:  recommendations: RecommendationProp[];
+39:  /** ISO timestamp for diagnostic refresh - Phase 7-D Task 7 */
+40:  updatedAt?: string | null;
+41:};
+42:
+43:const DIMENSION_LABELS: Record<string, string> = {
+44:  grammar: "ë¬¸ë²•",
+45:  vocab: "ì–´íœ˜",
+46:  structure: "êµ¬ì„±",
+47:  topic: "ì£¼ì œ ì í•©ì„±",
+48:};
+49:
+50:const DIMENSION_INSIGHTS: Record<
+51:  string,
+52:  { why: string; example: string; strategy: string }
+53:> = {
+54:  grammar: {
+55:    why: "ë¬¸ìž¥ ê·œì¹™ì´ í”ë“¤ë¦¬ë©´ ì¢‹ì€ ìƒê°ë„ ëœ ì •í™•í•˜ê²Œ ì „ë‹¬ë  ìˆ˜ ìžˆì–´ìš”.",
+56:    example:
+57:      "ì‹œì œ, ì¡°ì‚¬, ì—°ê²°ì–´ê°€ ë‹µì•ˆ ì•ˆì—ì„œ ì„žì´ëŠ” ê²½ìš°ê°€ ìžì£¼ ë³´ì¼ ìˆ˜ ìžˆì–´ìš”.",
+58:    strategy:
+59:      "ì§§ì€ ë¬¸ìž¥ìœ¼ë¡œ ê³ ì³ ì“°ê³ , ê°™ì€ í‘œí˜„ì„ ë‹¤ë¥¸ ì‹œì œë¡œ ë‹¤ì‹œ ì¨ ë³´ì„¸ìš”.",
+60:  },
+61:  vocab: {
+62:    why: "ë‹¨ì–´ ì„ íƒì´ ì¢ìœ¼ë©´ ê°™ì€ ì˜ë¯¸ë¥¼ ë°˜ë³µí•˜ê²Œ ë˜ì–´ ë‹µì•ˆì˜ ì„¤ë“ë ¥ì´ ì•½í•´ì§ˆ ìˆ˜ ìžˆì–´ìš”.",
+63:    example:
+64:      "ì‰¬ìš´ ë‹¨ì–´ë§Œ ë°˜ë³µí•˜ê±°ë‚˜ ë¬¸ë§¥ì— ëœ ë§žëŠ” í‘œí˜„ì„ ê³ ë¥´ëŠ” ê²½ìš°ê°€ ìžˆì„ ìˆ˜ ìžˆì–´ìš”.",
+65:    strategy: "ì¶”ì²œ ë¬¸ì œë¥¼ í’€ë©° ë¹„ìŠ·í•œ ëœ»ì˜ í‘œí˜„ì„ 2ê°œì”© í•¨ê»˜ ì •ë¦¬í•´ ë³´ì„¸ìš”.",
+66:  },
+67:  structure: {
+68:    why: "êµ¬ì„±ì´ ííŠ¸ëŸ¬ì§€ë©´ ì£¼ìž¥ê³¼ ê·¼ê±°ì˜ ê´€ê³„ê°€ ì½ëŠ” ì‚¬ëžŒì—ê²Œ ëœ ë¶„ëª…í•´ì§ˆ ìˆ˜ ìžˆì–´ìš”.",
+69:    example:
+70:      "ë„ìž…, ê·¼ê±°, ë§ˆë¬´ë¦¬ì˜ ìˆœì„œê°€ ë°”ë€Œê±°ë‚˜ í•œ ë¬¸ë‹¨ì— ì—¬ëŸ¬ ìƒê°ì´ ì„žì¼ ìˆ˜ ìžˆì–´ìš”.",
+71:    strategy: "ë¬¸ìž¥ì„ ì“°ê¸° ì „ì— í•µì‹¬ ì£¼ìž¥ 1ê°œì™€ ê·¼ê±° 2ê°œë¥¼ ë¨¼ì € ì ì–´ ë³´ì„¸ìš”.",
+72:  },
+73:  topic: {
+74:    why: "ì£¼ì œì—ì„œ ë²—ì–´ë‚˜ë©´ ë¬¸ìž¥ì´ ë§žì•„ë„ ì ìˆ˜ë¡œ ì´ì–´ì§€ê¸° ì–´ë ¤ìš¸ ìˆ˜ ìžˆì–´ìš”.",
+75:    example:
+76:      "ì§ˆë¬¸ì´ ìš”êµ¬í•œ ì¡°ê±´ë³´ë‹¤ ë°°ê²½ ì„¤ëª…ì´ ê¸¸ì–´ì§€ëŠ” ê²½ìš°ê°€ ìžˆì„ ìˆ˜ ìžˆì–´ìš”.",
+77:    strategy:
+78:      "ë¬¸ì œë¥¼ ë‹¤ì‹œ ì½ê³  í•„ìˆ˜ ì¡°ê±´ì„ ì²´í¬í•œ ë’¤ ë‹µì•ˆì„ ì§§ê²Œ ë‹¤ë“¬ì–´ ë³´ì„¸ìš”.",
+79:  },
+80:};
+81:
+82:function getDimensionLabel(dimension: string) {
+83:  return DIMENSION_LABELS[dimension] ?? dimension;
+84:}
+85:
+86:function getLeadingWeakDimension(dimensions: WeakDimensionProp[]) {
+87:  return [...dimensions].sort((a, b) => a.averageScore - b.averageScore)[0];
+88:}
+89:
+90:function getFallbackInsight() {
+91:  return {
+92:    why: "ìµœê·¼ ë‹µì•ˆì—ì„œ ë‚®ê²Œ ë‚˜ì˜¨ ì˜ì—­ì´ë¼ ë¨¼ì € í™•ì¸í•˜ë©´ ë„ì›€ì´ ë  ìˆ˜ ìžˆì–´ìš”.",
+93:    example: "ê°™ì€ ìœ í˜•ì˜ ì‹¤ìˆ˜ê°€ ë°˜ë³µë˜ëŠ”ì§€ ì‚´íŽ´ë³¼ í•„ìš”ê°€ ìžˆì–´ìš”.",
+94:    strategy: "ì¶”ì²œ ë¬¸ì œë¥¼ í’€ê³  ë‹µì•ˆì„ í•œ ë²ˆ ë” ê³ ì³ ì¨ ë³´ì„¸ìš”.",
+95:  };
+96:}
+97:
+98:function getRecommendationSourceLabel(source?: RecommendationProp["source"]) {
+99:  if (source === "tag_fallback") {
+100:    return "ì•½ì  íƒœê·¸ ê¸°ë°˜";
+101:  }
+102:  return "ì¶”ì²œ ê·¼ê±°";
+103:}
+104:
+105:function getRecommendationReason(
+106:  rec: RecommendationProp,
+107:  leadingWeakLabel: string,
+108:) {
+109:  const explicitReason = rec.reason?.trim();
+110:  if (explicitReason) return explicitReason;
+111:
+112:  if (rec.source === "tag_fallback") {
+113:    return `${leadingWeakLabel || "ì•½ì "} ì˜ì—­ê³¼ ê´€ë ¨ëœ ë¬¸í•­ì´ë¼ ìš°ì„  ì¶”ì²œí•©ë‹ˆë‹¤.`;
+114:  }
+115:
+116:  return "ìµœê·¼ ì•½ì  ë¶„ì„ê³¼ ê²¹ì¹˜ëŠ” ë¬¸ì œë¼ ìš°ì„  ì—°ìŠµí•  ìˆ˜ ìžˆì–´ìš”.";
+117:}
+118:
+119:function truncateRecommendationTitle(title: string) {
+120:  if (title.length <= RECOMMENDATION_TITLE_MAX_LENGTH) return title;
+121:  return `${title.slice(0, RECOMMENDATION_TITLE_MAX_LENGTH)}...`;
+122:}
+123:
+124:export function WeaknessView({
+125:  weakDimensions,
+126:  recommendations,
+127:  updatedAt,
+128:}: Props) {
+129:  const router = useRouter();
+130:  const leadingWeakDimension = getLeadingWeakDimension(weakDimensions);
+131:  const leadingWeakLabel = leadingWeakDimension
+132:    ? getDimensionLabel(leadingWeakDimension.dimension)
+133:    : "";
+134:  const leadingInsight = leadingWeakDimension
+135:    ? (DIMENSION_INSIGHTS[leadingWeakDimension.dimension] ??
+136:      getFallbackInsight())
+137:    : null;
+138:
+139:  if (weakDimensions.length === 0) {
+140:    return (
+141:      <Empty description="ê¸€ì“°ê¸°ë¥¼ 5ê±´ ì´ìƒ ì œì¶œí•˜ë©´ ì•½ì  ë¶„ì„ì´ í™œì„±í™”ë©ë‹ˆë‹¤.">
+142:        <Button
+143:          type="primary"
+144:          onClick={() => router.push("/practice/problems" as never)}
+145:        >
+146:          ë¬¸ì œ í’€ê¸°
+147:        </Button>
+148:      </Empty>
+149:    );
+150:  }
+151:
+152:  function handleRecommendationClick(rec: RecommendationProp) {
+153:    void logStudyEvent({
+154:      eventType: "recommendation_clicked",
+155:      problemId: rec.problem_id,
+156:      payload: { source: "weakness" },
+157:    });
+158:    router.push(`/practice/problems/${rec.problem_id}` as never);
+159:  }
+160:
+161:  return (
+162:    <Space direction="vertical" size="large" style={{ width: "100%" }}>
+163:      <div>
+164:        <Title level={3} style={{ marginBottom: 4 }}>
+165:          ì•½ì  ë¶„ì„
+166:        </Title>
+167:        <Paragraph type="secondary" style={{ margin: 0 }}>
+168:          ìµœê·¼ ê¸€ì“°ê¸° ê²°ê³¼ë¥¼ ë°”íƒ•ìœ¼ë¡œ ë³´ì™„ì´ í•„ìš”í•œ ì˜ì—­ê³¼ ì¶”ì²œ ë¬¸ì œë¥¼
+169:          ì•ˆë‚´í•©ë‹ˆë‹¤.
+170:        </Paragraph>
+171:      </div>
+172:
+173:      {/* Phase 7-D Task 7 - DiagnosticCard + DimensionTabs */}
+174:      <DiagnosticCard
+175:        weakDimensions={weakDimensions}
+176:        updatedAt={updatedAt ?? null}
+177:      />
+178:      <DimensionTabs dimensions={weakDimensions} />
+179:
+180:      {leadingWeakDimension && leadingInsight ? (
+181:        <Card title="ì•½ì  ì¸ì‚¬ì´íŠ¸">
+182:          <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+183:            <Alert
+184:              showIcon
+185:              type="info"
+186:              message={`${leadingWeakLabel} ì˜ì—­ì„ ë¨¼ì € ë³¼ ìˆ˜ ìžˆì–´ìš”.`}
+187:              description="ìµœê·¼ ë‹µì•ˆì—ì„œ ë³´ì´ëŠ” ê²½í–¥ì„ ë°”íƒ•ìœ¼ë¡œ ì¶”ì •í•œ ì•ˆë‚´ì˜ˆìš”. ì‹¤ì œ ì•½ì ì€ ë‹¤ìŒ ì—°ìŠµ ê²°ê³¼ì— ë”°ë¼ ë‹¬ë¼ì§ˆ ìˆ˜ ìžˆìŠµë‹ˆë‹¤."
+188:            />
+189:            <Row gutter={[16, 16]}>
+190:              <Col xs={24} md={8}>
+191:                <Space direction="vertical" size={4}>
+192:                  <Text strong>ì™œ ì´ ì˜ì—­ì„ ë¨¼ì € ë³´ë‚˜ìš”?</Text>
+193:                  <Text type="secondary">{leadingInsight.why}</Text>
+194:                </Space>
+195:              </Col>
+196:              <Col xs={24} md={8}>
+197:                <Space direction="vertical" size={4}>
+198:                  <Text strong>ìžì£¼ ë³´ì´ëŠ” ì˜ˆ</Text>
+199:                  <Text type="secondary">{leadingInsight.example}</Text>
+200:                </Space>
+201:              </Col>
+202:              <Col xs={24} md={8}>
+203:                <Space direction="vertical" size={4}>
+204:                  <Text strong>ì—°ìŠµ ì „ëžµ</Text>
+205:                  <Text type="secondary">{leadingInsight.strategy}</Text>
+206:                </Space>
+207:              </Col>
+208:            </Row>
+209:          </Space>
+210:        </Card>
+211:      ) : null}
+212:
+213:      <Row gutter={[24, 24]}>
+214:        <Col xs={24} md={24}>
+215:          <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+216:            <Title level={4} style={{ marginBottom: 0 }}>
+217:              ì¶”ì²œ ë¬¸ì œ
+218:            </Title>
+219:            {recommendations.length === 0 ? (
+220:              <Empty description="ì¶”ì²œ ë¬¸ì œê°€ ì•„ì§ ì—†ìŠµë‹ˆë‹¤." />
+221:            ) : (
+222:              <Row gutter={[16, 16]}>
+223:                {recommendations.map((rec) => (
+224:                  <Col key={rec.problem_id} xs={24}>
+225:                    <Card
+226:                      hoverable
+227:                      onClick={() => handleRecommendationClick(rec)}
+228:                      data-testid={`weakness-rec-${rec.problem_id}`}
+229:                    >
+230:                      <Space
+231:                        direction="vertical"
+232:                        size="small"
+233:                        style={{ width: "100%" }}
+234:                      >
+235:                        <Text type="secondary">{rec.question_no}ë²ˆ ë¬¸í•­</Text>
+236:                        <Text strong title={rec.title}>
+237:                          {truncateRecommendationTitle(rec.title)}
+238:                        </Text>
+239:                        <Space direction="vertical" size={2}>
+240:                          <Tag color="blue">
+241:                            {getRecommendationSourceLabel(rec.source)}
+242:                          </Tag>
+243:                          <Text
+244:                            type="secondary"
+245:                            title={getRecommendationReason(
+246:                              rec,
+247:                              leadingWeakLabel,
+248:                            )}
+249:                            style={{
+250:                              display: "block",
+251:                              maxWidth: "100%",
+252:                              overflow: "hidden",
+253:                              textOverflow: "ellipsis",
+254:                              whiteSpace: "nowrap",
+255:                            }}
+256:                          >
+257:                            {getRecommendationReason(rec, leadingWeakLabel)}
+258:                          </Text>
+259:                        </Space>
+260:                        <Button
+261:                          type="primary"
+262:                          onClick={(event) => {
+263:                            event.stopPropagation();
+264:                            handleRecommendationClick(rec);
+265:                          }}
+266:                        >
+267:                          ì¶”ì²œ í•™ìŠµ ì‹œìž‘
+268:                        </Button>
+269:                      </Space>
+270:                    </Card>
+271:                  </Col>
+272:                ))}
+273:              </Row>
+274:            )}
+275:            <Card>
+276:              <Space direction="vertical" size={8}>
+277:                <Text strong>ë” ê¹Šì€ ì¶”ì²œ ë³´ê¸°</Text>
+278:                <Text type="secondary">
+279:                  ë” ìžì„¸í•œ ì¶”ì²œ í™”ë©´ì€ ì¤€ë¹„ ì¤‘ìž…ë‹ˆë‹¤. ê²°ì œ ê¸°ëŠ¥ì€ ì•„ì§ ì¤€ë¹„
+280:                  ì¤‘ì´ë¼ ì‹¤ì œ ê²°ì œë‚˜ êµ¬ë…ì€ ì§„í–‰ë˜ì§€ ì•Šì•„ìš”.
+281:                </Text>
+282:                <Button onClick={() => router.push("/paywall" as never)}>
+283:                  ì•ˆë‚´ í™”ë©´ ë³´ê¸°
+284:                </Button>
+285:              </Space>
+286:            </Card>
+287:          </Space>
+288:        </Col>
+289:      </Row>
+290:    </Space>
+291:  );
+292:}
+¼Ó¼ºÀ» ¼³Á¤ÇÒ ¼ö ¾ø½À´Ï´Ù. ¼Ó¼º ¼³Á¤Àº ÀÌ ¾ð¾î ¸ðµåÀÇ ÇÙ½É À¯Çü¿¡ ´ëÇØ¼­¸¸ Áö¿øµË´Ï´Ù.
+À§Ä¡ ÁÙ:1 ¹®ÀÚ:1
++ [Console]::OutputEncoding=[System.Text.Encoding]::UTF8;
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidOperation: (:) [], RuntimeException
+    + FullyQualifiedErrorId : PropertySetterNotSupportedInConstrainedLanguage
+
+
+hook: PostToolUse
+hook: PostToolUse
+ succeeded in 1191ms:
+1:// @vitest-environment jsdom
+2:import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+3:import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+4:import { WeaknessView } from "../../../src/components/practice/WeaknessView";
+5:
+6:const pushMock = vi.fn();
+7:const logStudyEventMock = vi.fn();
+8:
+9:vi.mock("next/navigation", () => ({
+10:  useRouter: () => ({
+11:    push: pushMock,
+12:    replace: vi.fn(),
+13:    back: vi.fn(),
+14:    forward: vi.fn(),
+15:    refresh: vi.fn(),
+16:    prefetch: vi.fn(),
+17:  }),
+18:}));
+19:
+20:vi.mock("@/lib/events/study-events", () => ({
+21:  logStudyEvent: (...args: unknown[]) => {
+22:    logStudyEventMock(...args);
+23:    return Promise.resolve();
+24:  },
+25:}));
+26:
+27:beforeEach(() => {
+28:  pushMock.mockReset();
+29:  logStudyEventMock.mockReset();
+30:  // Ant Design Tabs uses ResizeObserver and matchMedia, which jsdom does not provide.
+31:  if (!(globalThis as Record<string, unknown>).ResizeObserver) {
+32:    (globalThis as Record<string, unknown>).ResizeObserver = class {
+33:      observe() {}
+34:      unobserve() {}
+35:      disconnect() {}
+36:    };
+37:  }
+38:  if (!window.matchMedia) {
+39:    Object.defineProperty(window, "matchMedia", {
+40:      writable: true,
+41:      value: (query: string) => ({
+42:        matches: false,
+43:        media: query,
+44:        onchange: null,
+45:        addListener: () => undefined,
+46:        removeListener: () => undefined,
+47:        addEventListener: () => undefined,
+48:        removeEventListener: () => undefined,
+49:        dispatchEvent: () => false,
+50:      }),
+51:    });
+52:  }
+53:});
+54:
+55:afterEach(() => {
+56:  cleanup();
+57:});
+58:
+59:describe("WeaknessView", () => {
+60:  it("renders the empty-state CTA when weakDimensions is empty", () => {
+61:    render(<WeaknessView weakDimensions={[]} recommendations={[]} />);
+62:
+63:    expect(
+64:      screen.getByText("ê¸€ì“°ê¸°ë¥¼ 5ê±´ ì´ìƒ ì œì¶œí•˜ë©´ ì•½ì  ë¶„ì„ì´ í™œì„±í™”ë©ë‹ˆë‹¤."),
+65:    ).toBeTruthy();
+66:    const cta = screen.getByRole("button", { name: "ë¬¸ì œ í’€ê¸°" });
+67:    fireEvent.click(cta);
+68:    expect(pushMock).toHaveBeenCalledWith("/practice/problems");
+69:  });
+70:
+71:  it("renders weak dimensions and recommendation cards", () => {
+72:    render(
+73:      <WeaknessView
+74:        weakDimensions={[
+75:          { dimension: "grammar", averageScore: 0.4 },
+76:          { dimension: "vocab", averageScore: 0.55 },
+77:        ]}
+78:        recommendations={[
+79:          { problem_id: "p-1", title: "ì–´íœ˜ ì—°ìŠµ ë¬¸ì œ", question_no: 51 },
+80:        ]}
+81:      />,
+82:    );
+83:
+84:    expect(screen.getAllByText(/ë¬¸ë²•/).length).toBeGreaterThan(0);
+85:    expect(screen.getAllByText(/ì–´íœ˜/).length).toBeGreaterThan(0);
+86:    expect(screen.getByText("ì–´íœ˜ ì—°ìŠµ ë¬¸ì œ")).toBeTruthy();
+87:  });
+88:
+89:  it("logs recommendation_clicked and pushes the problem URL on rec card click", () => {
+90:    render(
+91:      <WeaknessView
+92:        weakDimensions={[{ dimension: "grammar", averageScore: 0.3 }]}
+93:        recommendations={[
+94:          { problem_id: "prob-42", title: "ì¶”ì²œ ë¬¸ì œ", question_no: 52 },
+95:        ]}
+96:      />,
+97:    );
+98:
+99:    const card = screen.getByTestId("weakness-rec-prob-42");
+100:    fireEvent.click(card);
+101:
+102:    expect(logStudyEventMock).toHaveBeenCalledTimes(1);
+103:    expect(logStudyEventMock).toHaveBeenCalledWith({
+104:      eventType: "recommendation_clicked",
+105:      problemId: "prob-42",
+106:      payload: { source: "weakness" },
+107:    });
+108:    expect(pushMock).toHaveBeenCalledWith("/practice/problems/prob-42");
+109:  });
+110:
+111:  it("surfaces cautious weakness insights, recommendation reasons, primary start action, and deferred paywall entry", () => {
+112:    render(
+113:      <WeaknessView
+114:        weakDimensions={[
+115:          { dimension: "grammar", averageScore: 0.36 },
+116:          { dimension: "vocab", averageScore: 0.62 },
+117:        ]}
+118:        recommendations={[
+119:          {
+120:            problem_id: "prob-88",
+121:            title: "ì‹œì œì™€ ì—°ê²°ì–´ ë³µìŠµ",
+122:            question_no: 88,
+123:            reason: "ìµœê·¼ ë‹µì•ˆì—ì„œ ì‹œì œ ì—°ê²°ì´ ìžì£¼ í”ë“¤ë ¸ì–´ìš”.",
+124:            source: "recommendation",
+125:          },
+126:        ]}
+127:      />,
+128:    );
+129:
+130:    expect(screen.getByText("ì•½ì  ì¸ì‚¬ì´íŠ¸")).toBeTruthy();
+131:    expect(screen.getByText("ì™œ ì´ ì˜ì—­ì„ ë¨¼ì € ë³´ë‚˜ìš”?")).toBeTruthy();
+132:    expect(screen.getByText("ìžì£¼ ë³´ì´ëŠ” ì˜ˆ")).toBeTruthy();
+133:    expect(screen.getByText("ì—°ìŠµ ì „ëžµ")).toBeTruthy();
+134:    expect(
+135:      screen.getByText(/ìµœê·¼ ë‹µì•ˆì—ì„œ ë³´ì´ëŠ” ê²½í–¥ì„ ë°”íƒ•ìœ¼ë¡œ ì¶”ì •í•œ ì•ˆë‚´ì˜ˆìš”/),
+136:    ).toBeTruthy();
+137:
+138:    expect(
+139:      screen.getByText("ìµœê·¼ ë‹µì•ˆì—ì„œ ì‹œì œ ì—°ê²°ì´ ìžì£¼ í”ë“¤ë ¸ì–´ìš”."),
+140:    ).toBeTruthy();
+141:    expect(screen.getByText("ì¶”ì²œ ê·¼ê±°")).toBeTruthy();
+142:
+143:    const startButton = screen.getByRole("button", { name: /ì¶”ì²œ í•™ìŠµ ì‹œìž‘/ });
+144:    expect(startButton.className).toContain("ant-btn-primary");
+145:    fireEvent.click(startButton);
+146:    expect(logStudyEventMock).toHaveBeenCalledWith({
+147:      eventType: "recommendation_clicked",
+148:      problemId: "prob-88",
+149:      payload: { source: "weakness" },
+150:    });
+151:    expect(pushMock).toHaveBeenCalledWith("/practice/problems/prob-88");
+152:
+153:    expect(screen.getByText("ë” ê¹Šì€ ì¶”ì²œ ë³´ê¸°")).toBeTruthy();
+154:    expect(
+155:      screen.getByText(
+156:        /ê²°ì œ ê¸°ëŠ¥ì€ ì•„ì§ ì¤€ë¹„ ì¤‘ì´ë¼ ì‹¤ì œ ê²°ì œë‚˜ êµ¬ë…ì€ ì§„í–‰ë˜ì§€ ì•Šì•„ìš”/,
+157:      ),
+158:    ).toBeTruthy();
+159:  });
+160:
+161:  it("shows a fallback reason when a tag-based recommendation has no stored reason", () => {
+162:    render(
+163:      <WeaknessView
+164:        weakDimensions={[{ dimension: "grammar", averageScore: 0.36 }]}
+165:        recommendations={[
+166:          {
+167:            problem_id: "prob-99",
+168:            title: "ë¬¸ë²• íƒœê·¸ ë³µìŠµ",
+169:            question_no: 99,
+170:            reason: null,
+171:            source: "tag_fallback",
+172:          },
+173:        ]}
+174:      />,
+175:    );
+176:
+177:    expect(screen.getByText("ì•½ì  íƒœê·¸ ê¸°ë°˜")).toBeTruthy();
+178:    expect(
+179:      screen.getByText("ë¬¸ë²• ì˜ì—­ê³¼ ê´€ë ¨ëœ ë¬¸í•­ì´ë¼ ìš°ì„  ì¶”ì²œí•©ë‹ˆë‹¤."),
+180:    ).toBeTruthy();
+181:  });
+182:
+183:  it("keeps recommendation card title and reason within IA display limits", () => {
+184:    render(
+185:      <WeaknessView
+186:        weakDimensions={[{ dimension: "grammar", averageScore: 0.36 }]}
+187:        recommendations={[
+188:          {
+189:            problem_id: "prob-100",
+190:            title: "12345678901234567890123456789",
+191:            question_no: 100,
+192:            reason: "ê¸´ ì¶”ì²œ ì´ìœ ë„ ì¹´ë“œ ì•ˆì—ì„œëŠ” í•œ ì¤„ë¡œë§Œ í‘œì‹œí•©ë‹ˆë‹¤.",
+193:            source: "recommendation",
+194:          },
+195:        ]}
+196:      />,
+197:    );
+198:
+199:    expect(screen.getByText("1234567890123456789012345678...")).toBeTruthy();
+200:    expect(screen.queryByText("12345678901234567890123456789")).toBeNull();
+201:
+202:    const reason = screen.getByText(
+203:      "ê¸´ ì¶”ì²œ ì´ìœ ë„ ì¹´ë“œ ì•ˆì—ì„œëŠ” í•œ ì¤„ë¡œë§Œ í‘œì‹œí•©ë‹ˆë‹¤.",
+204:    ) as HTMLElement;
+205:    expect(reason.style.whiteSpace).toBe("nowrap");
+206:    expect(reason.style.textOverflow).toBe("ellipsis");
+207:    expect(reason.style.overflow).toBe("hidden");
+208:  });
+209:});
+¼Ó¼ºÀ» ¼³Á¤ÇÒ ¼ö ¾ø½À´Ï´Ù. ¼Ó¼º ¼³Á¤Àº ÀÌ ¾ð¾î ¸ðµåÀÇ ÇÙ½É À¯Çü¿¡ ´ëÇØ¼­¸¸ Áö¿øµË´Ï´Ù.
+À§Ä¡ ÁÙ:1 ¹®ÀÚ:1
++ [Console]::OutputEncoding=[System.Text.Encoding]::UTF8;
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidOperation: (:) [], RuntimeException
+    + FullyQualifiedErrorId : PropertySetterNotSupportedInConstrainedLanguage
+
+
+ succeeded in 1225ms:
+1:"use client";
+2:
+3:import { Alert, App, Avatar, Button, Form, Input, Typography } from "antd";
+4:import { useEffect, useMemo, useState } from "react";
+5:
+6:import { useUpdateProfile } from "@/lib/settings/mutations";
+7:
+8:const { Paragraph } = Typography;
+9:
+10:const PROFILE_NAME_MIN_LENGTH = 2;
+11:const UNSAVED_PROFILE_LEAVE_MESSAGE =
+12:  "ì €ìž¥í•˜ì§€ ì•Šì€ ë³€ê²½ì‚¬í•­ì´ ìžˆìŠµë‹ˆë‹¤. íŽ˜ì´ì§€ë¥¼ ë– ë‚˜ì‹œê² ì–´ìš”?";
+13:
+14:type ProfileDraft = {
+15:  display_name: string | null;
+16:  nickname: string | null;
+17:  bio: string | null;
+18:};
+19:
+20:type Props = {
+21:  /**
+22:   * See `LanguageForm` for the rationale on accepting `userId` as a prop:
+23:   * `useUpdateProfile` is per-user and the data layer is read-only.
+24:   */
+25:  userId: string;
+26:  accountEmail: string | null;
+27:  initialProfile: ProfileDraft;
+28:};
+29:
+30:/**
+31: * Trim user input and collapse empty strings to `null` so the DB sees an
+32: * explicit field clear. Exported for direct unit testing.
+33: */
+34:export function normalizeProfileField(value: string): string | null {
+35:  const trimmed = value.trim();
+36:  return trimmed.length === 0 ? null : trimmed;
+37:}
+38:
+39:function normalizeProfileDraft(profile: ProfileDraft): ProfileDraft {
+40:  return {
+41:    display_name: normalizeProfileField(profile.display_name ?? ""),
+42:    nickname: normalizeProfileField(profile.nickname ?? ""),
+43:    bio: normalizeProfileField(profile.bio ?? ""),
+44:  };
+45:}
+46:
+47:function profilesEqual(left: ProfileDraft, right: ProfileDraft) {
+48:  return (
+49:    left.display_name === right.display_name &&
+50:    left.nickname === right.nickname &&
+51:    left.bio === right.bio
+52:  );
+53:}
+54:
+55:function isTooShortProfileField(value: string | null) {
+56:  return value !== null && value.length < PROFILE_NAME_MIN_LENGTH;
+57:}
+58:
+59:/**
+60: * `/profile` form (X-05). Avatar upload is intentionally shown as unavailable
+61: * until storage/upload behavior is implemented and verified.
+62: */
+63:export function ProfileForm({ userId, accountEmail, initialProfile }: Props) {
+64:  const { message } = App.useApp();
+65:  const mutation = useUpdateProfile(userId);
+66:  const [savedProfile, setSavedProfile] = useState<ProfileDraft>(() =>
+67:    normalizeProfileDraft(initialProfile),
+68:  );
+69:
+70:  const [displayName, setDisplayName] = useState<string>(
+71:    initialProfile.display_name ?? "",
+72:  );
+73:  const [nickname, setNickname] = useState<string>(
+74:    initialProfile.nickname ?? "",
+75:  );
+76:  const [bio, setBio] = useState<string>(initialProfile.bio ?? "");
+77:
+78:  const draftProfile = useMemo(
+79:    () =>
+80:      normalizeProfileDraft({
+81:        display_name: displayName,
+82:        nickname,
+83:        bio,
+84:      }),
+85:    [bio, displayName, nickname],
+86:  );
+87:  const isDirty = !profilesEqual(draftProfile, savedProfile);
+88:  const displayNameTooShort = isTooShortProfileField(draftProfile.display_name);
+89:  const nicknameTooShort = isTooShortProfileField(draftProfile.nickname);
+90:  const validationError = displayNameTooShort
+91:    ? "ì´ë¦„ì€ 2ìž ì´ìƒ ìž…ë ¥í•´ ì£¼ì„¸ìš”."
+92:    : nicknameTooShort
+93:      ? "ë‹‰ë„¤ìž„ì€ 2ìž ì´ìƒ ìž…ë ¥í•´ ì£¼ì„¸ìš”."
+94:      : null;
+95:  const canSubmit = isDirty && !validationError;
+96:  const avatarInitial =
+97:    (draftProfile.display_name ?? draftProfile.nickname ?? accountEmail ?? "?")
+98:      .trim()
+99:      .charAt(0)
+100:      .toUpperCase() || "?";
+101:
+102:  useEffect(() => {
+103:    if (!isDirty) return;
+104:
+105:    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+106:      event.preventDefault();
+107:      event.returnValue = "";
+108:    };
+109:
+110:    const handleDocumentClick = (event: MouseEvent) => {
+111:      if (
+112:        event.defaultPrevented ||
+113:        event.button !== 0 ||
+114:        event.metaKey ||
+115:        event.ctrlKey ||
+116:        event.shiftKey ||
+117:        event.altKey
+118:      ) {
+119:        return;
+120:      }
+121:
+122:      const target = event.target instanceof Element ? event.target : null;
+123:      const anchor = target?.closest("a[href]");
+124:      if (!(anchor instanceof HTMLAnchorElement)) return;
+125:      if (anchor.target && anchor.target !== "_self") return;
+126:      if (anchor.hasAttribute("download")) return;
+127:
+128:      const rawHref = anchor.getAttribute("href");
+129:      if (!rawHref || rawHref.startsWith("#")) return;
+130:
+131:      let url: URL;
+132:      try {
+133:        url = new URL(anchor.href, window.location.href);
+134:      } catch {
+135:        return;
+136:      }
+137:
+138:      if (url.origin !== window.location.origin) return;
+139:      if (url.href === window.location.href) return;
+140:
+141:      if (!window.confirm(UNSAVED_PROFILE_LEAVE_MESSAGE)) {
+142:        event.preventDefault();
+143:        event.stopPropagation();
+144:        event.stopImmediatePropagation();
+145:      }
+146:    };
+147:
+148:    window.addEventListener("beforeunload", handleBeforeUnload);
+149:    document.addEventListener("click", handleDocumentClick, true);
+150:    return () => {
+151:      window.removeEventListener("beforeunload", handleBeforeUnload);
+152:      document.removeEventListener("click", handleDocumentClick, true);
+153:    };
+154:  }, [isDirty]);
+155:
+156:  async function handleFinish() {
+157:    if (!isDirty) return;
+158:    if (validationError) {
+159:      message.error(validationError);
+160:      return;
+161:    }
+162:
+163:    try {
+164:      await mutation.mutateAsync(draftProfile);
+165:      setSavedProfile(draftProfile);
+166:      message.success("í”„ë¡œí•„ì´ ì €ìž¥ë˜ì—ˆìŠµë‹ˆë‹¤.");
+167:    } catch (err) {
+168:      message.error(err instanceof Error ? err.message : "ì €ìž¥ì— ì‹¤íŒ¨í–ˆì–´ìš”.");
+169:    }
+170:  }
+171:
+172:  return (
+173:    <Form
+174:      layout="vertical"
+175:      onFinish={handleFinish}
+176:      disabled={mutation.isPending}
+177:    >
+178:      <Form.Item label="ì´ë©”ì¼">
+179:        <Input
+180:          value={accountEmail ?? ""}
+181:          readOnly
+182:          placeholder="ë“±ë¡ëœ ì´ë©”ì¼ ì—†ìŒ"
+183:          aria-label="ì´ë©”ì¼"
+184:        />
+185:      </Form.Item>
+186:
+187:      <Form.Item
+188:        label="ì´ë¦„"
+189:        validateStatus={displayNameTooShort ? "error" : undefined}
+190:        help={
+191:          displayNameTooShort ? "ì´ë¦„ì€ 2ìž ì´ìƒ ìž…ë ¥í•´ ì£¼ì„¸ìš”." : undefined
+192:        }
+193:      >
+194:        <Input
+195:          value={displayName}
+196:          onChange={(event) => setDisplayName(event.target.value)}
+197:          placeholder="ì‹¤ëª… ë˜ëŠ” í‘œì‹œ ì´ë¦„"
+198:          maxLength={30}
+199:          aria-label="ì´ë¦„"
+200:        />
+201:      </Form.Item>
+202:
+203:      <Form.Item
+204:        label="ë‹‰ë„¤ìž„"
+205:        validateStatus={nicknameTooShort ? "error" : undefined}
+206:        help={nicknameTooShort ? "ë‹‰ë„¤ìž„ì€ 2ìž ì´ìƒ ìž…ë ¥í•´ ì£¼ì„¸ìš”." : undefined}
+207:      >
+208:        <Input
+209:          value={nickname}
+210:          onChange={(event) => setNickname(event.target.value)}
+211:          placeholder="ë‹¤ë¥¸ ì‚¬ìš©ìžì—ê²Œ ë³´ì—¬ì§ˆ ì´ë¦„"
+212:          maxLength={20}
+213:          aria-label="ë‹‰ë„¤ìž„"
+214:        />
+215:      </Form.Item>
+216:
+217:      <Form.Item label="ìžê¸°ì†Œê°œ" extra={`${bio.length}/160ìž`}>
+218:        <Input.TextArea
+219:          value={bio}
+220:          onChange={(event) => setBio(event.target.value)}
+221:          placeholder="ê°„ë‹¨í•œ ìžê¸°ì†Œê°œ (160ìž ì´ë‚´)"
+222:          maxLength={160}
+223:          autoSize={{ minRows: 2, maxRows: 4 }}
+224:          aria-label="ìžê¸°ì†Œê°œ"
+225:        />
+226:      </Form.Item>
+227:
+228:      <section
+229:        aria-label="í”„ë¡œí•„ ì´ë¯¸ì§€ ì˜ì—­"
+230:        style={{
+231:          border: "1px solid var(--ant-color-border)",
+232:          borderRadius: 8,
+233:          marginBottom: 16,
+234:          padding: 16,
+235:        }}
+236:      >
+237:        <Avatar size={56}>{avatarInitial}</Avatar>
+238:        <Paragraph strong style={{ marginTop: 12, marginBottom: 4 }}>
+239:          í”„ë¡œí•„ ì´ë¯¸ì§€
+240:        </Paragraph>
+241:        <Paragraph type="secondary" style={{ marginBottom: 12 }}>
+242:          ì´ë¯¸ì§€ ì—…ë¡œë“œëŠ” ì•„ì§ í™œì„±í™”ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤. ì €ìž¥ì†Œ ì—…ë¡œë“œê°€ êµ¬í˜„ë˜ê³ 
+243:          ê²€ì¦ë˜ê¸° ì „ê¹Œì§€ í˜„ìž¬ ì´ë‹ˆì…œì„ í‘œì‹œí•©ë‹ˆë‹¤.
+244:        </Paragraph>
+245:        <Alert
+246:          type="info"
+247:          showIcon
+248:          message="ë³´ì•ˆ ì•ˆë‚´"
+249:          description="ê³„ì • ì‹ë³„ ì •ë³´ ë³€ê²½ì´ë‚˜ ì´ë¯¸ì§€ ì—…ë¡œë“œëŠ” ì €ìž¥ ì „ ìž¬ë¡œê·¸ì¸ì´ í•„ìš”í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤."
+250:        />
+251:      </section>
+252:
+253:      <Form.Item>
+254:        <Button
+255:          type="primary"
+256:          htmlType="submit"
+257:          loading={mutation.isPending}
+258:          disabled={!canSubmit || mutation.isPending}
+259:          aria-label="í”„ë¡œí•„ ì €ìž¥"
+260:        >
+261:          ì €ìž¥
+262:        </Button>
+263:      </Form.Item>
+264:    </Form>
+265:  );
+266:}
+¼Ó¼ºÀ» ¼³Á¤ÇÒ ¼ö ¾ø½À´Ï´Ù. ¼Ó¼º ¼³Á¤Àº ÀÌ ¾ð¾î ¸ðµåÀÇ ÇÙ½É À¯Çü¿¡ ´ëÇØ¼­¸¸ Áö¿øµË´Ï´Ù.
+À§Ä¡ ÁÙ:1 ¹®ÀÚ:1
++ [Console]::OutputEncoding=[System.Text.Encoding]::UTF8;
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidOperation: (:) [], RuntimeException
+    + FullyQualifiedErrorId : PropertySetterNotSupportedInConstrainedLanguage
+
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'rg -n ".*" "src/app/(workspace)/profile/page.tsx"' in C:\Users\admin\Desktop\workspace\topik-project\v13
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'rg -n ".*" "src/app/(workspace)/practice/weakness/page.tsx"' in C:\Users\admin\Desktop\workspace\topik-project\v13
+ succeeded in 557ms:
+1:import type { Metadata } from "next";
+2:import { notFound } from "next/navigation";
+3:import { Col, Row, Space } from "antd";
+4:import { requireUser } from "@/lib/auth/session";
+5:import { getProfileSettings } from "@/lib/settings/server";
+6:import { getLearningGoal } from "@/lib/learning/server";
+7:import { createSupabaseServerClient } from "@/lib/supabase/server";
+8:import { ProfileForm } from "@/components/profile/ProfileForm";
+9:import { ExamInfoCard } from "@/components/profile/ExamInfoCard";
+10:import { StatusHelpCard } from "@/components/profile/StatusHelpCard";
+11:
+12:export const metadata: Metadata = { title: "í”„ë¡œí•„ â€” TALKPIK" };
+13:
+14:export default async function ProfilePage() {
+15:  const user = await requireUser();
+16:  const settings = await getProfileSettings(user.id);
+17:  if (!settings) notFound();
+18:
+19:  // Phase 7-E Task 10 (P1-6) â€” exam info from learning_goals (reuse, no duplicate
+20:  // state) + status meta from profiles row (created_at + app_role + plan_label).
+21:  const goal = await getLearningGoal(user.id);
+22:  const supabase = await createSupabaseServerClient();
+23:  const { data: profileMeta } = await supabase
+24:    .from("profiles")
+25:    .select("created_at, app_role, plan_label")
+26:    .eq("id", user.id)
+27:    .maybeSingle();
+28:
+29:  return (
+30:    <main style={{ padding: 24, maxWidth: 960, margin: "0 auto" }}>
+31:      <h1>í”„ë¡œí•„</h1>
+32:      <Row gutter={[16, 16]}>
+33:        <Col xs={24} md={14}>
+34:          <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+35:            <ProfileForm
+36:              userId={user.id}
+37:              accountEmail={user.email ?? null}
+38:              initialProfile={{
+39:                display_name: settings.display_name,
+40:                nickname: settings.nickname,
+41:                bio: settings.bio,
+42:              }}
+43:            />
+44:          </Space>
+45:        </Col>
+46:        <Col xs={24} md={10}>
+47:          <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+48:            <ExamInfoCard
+49:              goal={
+50:                goal
+51:                  ? {
+52:                      topik_level: goal.topik_level,
+53:                      target_grade: goal.target_grade,
+54:                      exam_date: goal.exam_date,
+55:                    }
+56:                  : null
+57:              }
+58:            />
+59:            {profileMeta ? (
+60:              <StatusHelpCard
+61:                joinedAt={profileMeta.created_at}
+62:                appRole={profileMeta.app_role}
+63:                planLabel={profileMeta.plan_label}
+64:              />
+65:            ) : null}
+66:          </Space>
+67:        </Col>
+68:      </Row>
+69:    </main>
+70:  );
+71:}
+¼Ó¼ºÀ» ¼³Á¤ÇÒ ¼ö ¾ø½À´Ï´Ù. ¼Ó¼º ¼³Á¤Àº ÀÌ ¾ð¾î ¸ðµåÀÇ ÇÙ½É À¯Çü¿¡ ´ëÇØ¼­¸¸ Áö¿øµË´Ï´Ù.
+À§Ä¡ ÁÙ:1 ¹®ÀÚ:1
++ [Console]::OutputEncoding=[System.Text.Encoding]::UTF8;
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidOperation: (:) [], RuntimeException
+    + FullyQualifiedErrorId : PropertySetterNotSupportedInConstrainedLanguage
+
+
+hook: PostToolUse
+ succeeded in 574ms:
+1:import type { Metadata } from "next";
+2:import { requireUser } from "@/lib/auth/session";
+3:import {
+4:  getWeakDimensions,
+5:  getWeaknessRecommendations,
+6:} from "@/lib/practice/weakness";
+7:import { WeaknessView } from "@/components/practice/WeaknessView";
+8:
+9:export const metadata: Metadata = { title: "ì•½ì  ë³´ê°• â€” TALKPIK" };
+10:
+11:export default async function PracticeWeaknessPage() {
+12:  const user = await requireUser();
+13:  const [dimSummaries, recs] = await Promise.all([
+14:    getWeakDimensions(user.id),
+15:    getWeaknessRecommendations(user.id),
+16:  ]);
+17:  return (
+18:    <main style={{ padding: 24 }}>
+19:      <h1>ì•½ì  ë³´ê°•</h1>
+20:      <WeaknessView
+21:        weakDimensions={dimSummaries.map((d) => ({
+22:          dimension: d.dimension,
+23:          averageScore: d.avgScore,
+24:        }))}
+25:        recommendations={recs.map((r) => ({
+26:          problem_id: r.problemId,
+27:          title: r.title,
+28:          question_no: r.questionNo ?? 0,
+29:          reason: r.reason,
+30:          source: r.source,
+31:        }))}
+32:      />
+33:    </main>
+34:  );
+35:}
+¼Ó¼ºÀ» ¼³Á¤ÇÒ ¼ö ¾ø½À´Ï´Ù. ¼Ó¼º ¼³Á¤Àº ÀÌ ¾ð¾î ¸ðµåÀÇ ÇÙ½É À¯Çü¿¡ ´ëÇØ¼­¸¸ Áö¿øµË´Ï´Ù.
+À§Ä¡ ÁÙ:1 ¹®ÀÚ:1
++ [Console]::OutputEncoding=[System.Text.Encoding]::UTF8;
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidOperation: (:) [], RuntimeException
+    + FullyQualifiedErrorId : PropertySetterNotSupportedInConstrainedLanguage
+
+
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+codex
+1. VERDICT: FAIL
+
+2. BLOCKING [P1]:
+src/components/profile/ProfileForm.tsx:102 - Unsaved-leave protection misses browser Back/Forward and programmatic client navigation - X-05 requires leave confirmation for edited profile state, but this only covers `beforeunload` and captured anchor clicks, so a dirty form can still be lost through SPA history navigation - add a guarded `popstate`/route-transition strategy or an app-level navigation blocker, and test the dirty browser-back path.
+
+3. NON-BLOCKING [P2]:
+src/components/practice/WeaknessView.tsx:119 - Title truncation displays 28 chars plus `...`, so visible text exceeds X-07’s 28-char card title limit; fix by CSS ellipsis or truncating to 25 plus ellipsis.
+
+src/components/practice/WeaknessView.tsx:223 - The component renders every recommendation it receives; X-07 caps recommendation cards at 4. Either defensively slice to 4 here or document/test that the server always enforces it.
+
+src/components/profile/ProfileForm.tsx:164 - After saving trimmed values, raw input text can still include surrounding spaces while Save becomes disabled because `savedProfile` is normalized. Consider updating visible field state to the saved normalized values after mutation success.
+
+4. HONESTY AUDIT:
+src/components/practice/WeaknessView.tsx:116 - The generic fallback reason says the problem “overlaps recent weakness analysis” when no stored reason exists. That is only honest if upstream guarantees `source: "recommendation"` always means score-analysis overlap. Otherwise use a more neutral fallback.
+
+The dimension insight copy is cautious enough because it frames the insight as estimated and variable. The paywall copy appears appropriately non-committal.
+
+5. TEST COVERAGE:
+Changed tests cover basic rendering, explicit/fallback recommendation reasons, CTA click routing, profile dirty submit blocking, min lengths, `beforeunload`, and anchor-click confirmation.
+
+Gaps: no browser Back/Forward dirty-leave test, no programmatic navigation test, no post-save dirty reset/visible normalization test, no >4 recommendations test, and the title-length test currently blesses the 28-plus-ellipsis overflow. I did not run the suite; this was a clean-room source/diff review only.
+hook: Stop
+hook: Stop Completed
+����: PID 5680�� ���μ���(PID 48636�� �ڽ� ���μ���)�� ����Ǿ����ϴ�.
+����: PID 38652�� ���μ���(PID 13124�� �ڽ� ���μ���)�� ����Ǿ����ϴ�.
+����: PID 13124�� ���μ���(PID 54408�� �ڽ� ���μ���)�� ����Ǿ����ϴ�.
+����: PID 54408�� ���μ���(PID 38160�� �ڽ� ���μ���)�� ����Ǿ����ϴ�.
+����: PID 38160�� ���μ���(PID 44216�� �ڽ� ���μ���)�� ����Ǿ����ϴ�.
+����: PID 44216�� ���μ���(PID 48636�� �ڽ� ���μ���)�� ����Ǿ����ϴ�.
+����: PID 30912�� ���μ���(PID 48636�� �ڽ� ���μ���)�� ����Ǿ����ϴ�.
+����: PID 57432�� ���μ���(PID 48636�� �ڽ� ���μ���)�� ����Ǿ����ϴ�.
+����: PID 56328�� ���μ���(PID 38252�� �ڽ� ���μ���)�� ����Ǿ����ϴ�.
+����: PID 38252�� ���μ���(PID 48636�� �ڽ� ���μ���)�� ����Ǿ����ϴ�.
+����: PID 49832�� ���μ���(PID 48636�� �ڽ� ���μ���)�� ����Ǿ����ϴ�.
+����: PID 17768�� ���μ���(PID 52036�� �ڽ� ���μ���)�� ����Ǿ����ϴ�.
+����: PID 52036�� ���μ���(PID 48636�� �ڽ� ���μ���)�� ����Ǿ����ϴ�.
+����: PID 18900�� ���μ���(PID 23024�� �ڽ� ���μ���)�� ����Ǿ����ϴ�.
+����: PID 23024�� ���μ���(PID 50348�� �ڽ� ���μ���)�� ����Ǿ����ϴ�.
+����: PID 50348�� ���μ���(PID 36156�� �ڽ� ���μ���)�� ����Ǿ����ϴ�.
+����: PID 36156�� ���μ���(PID 54604�� �ڽ� ���μ���)�� ����Ǿ����ϴ�.
+����: PID 54604�� ���μ���(PID 48636�� �ڽ� ���μ���)�� ����Ǿ����ϴ�.
+tokens used
+125,161
+1. VERDICT: FAIL
+
+2. BLOCKING [P1]:
+src/components/profile/ProfileForm.tsx:102 - Unsaved-leave protection misses browser Back/Forward and programmatic client navigation - X-05 requires leave confirmation for edited profile state, but this only covers `beforeunload` and captured anchor clicks, so a dirty form can still be lost through SPA history navigation - add a guarded `popstate`/route-transition strategy or an app-level navigation blocker, and test the dirty browser-back path.
+
+3. NON-BLOCKING [P2]:
+src/components/practice/WeaknessView.tsx:119 - Title truncation displays 28 chars plus `...`, so visible text exceeds X-07’s 28-char card title limit; fix by CSS ellipsis or truncating to 25 plus ellipsis.
+
+src/components/practice/WeaknessView.tsx:223 - The component renders every recommendation it receives; X-07 caps recommendation cards at 4. Either defensively slice to 4 here or document/test that the server always enforces it.
+
+src/components/profile/ProfileForm.tsx:164 - After saving trimmed values, raw input text can still include surrounding spaces while Save becomes disabled because `savedProfile` is normalized. Consider updating visible field state to the saved normalized values after mutation success.
+
+4. HONESTY AUDIT:
+src/components/practice/WeaknessView.tsx:116 - The generic fallback reason says the problem “overlaps recent weakness analysis” when no stored reason exists. That is only honest if upstream guarantees `source: "recommendation"` always means score-analysis overlap. Otherwise use a more neutral fallback.
+
+The dimension insight copy is cautious enough because it frames the insight as estimated and variable. The paywall copy appears appropriately non-committal.
+
+5. TEST COVERAGE:
+Changed tests cover basic rendering, explicit/fallback recommendation reasons, CTA click routing, profile dirty submit blocking, min lengths, `beforeunload`, and anchor-click confirmation.
+
+Gaps: no browser Back/Forward dirty-leave test, no programmatic navigation test, no post-save dirty reset/visible normalization test, no >4 recommendations test, and the title-length test currently blesses the 28-plus-ellipsis overflow. I did not run the suite; this was a clean-room source/diff review only.
+����: ���μ��� "47200"��(��) ã�� �� �����ϴ�.
+����: ���μ��� "14024"��(��) ã�� �� �����ϴ�.
+����: ���μ��� "28856"��(��) ã�� �� �����ϴ�.
+����: ���μ��� "39408"��(��) ã�� �� �����ϴ�.

@@ -31,6 +31,12 @@ function renderInApp(node: ReactNode) {
 beforeEach(() => {
   resetPasswordForEmailMock.mockReset();
   resetPasswordForEmailMock.mockResolvedValue({ error: null });
+  // The form's 60s send-cooldown persists to localStorage (keyed by
+  // talkpik:password-reset:cooldown-until). Without clearing it, the cooldown
+  // started by the first test leaks into the next test, leaving the submit
+  // button disabled so handleSubmit early-returns and the success state never
+  // renders. Clear it for a clean per-test cooldown state.
+  window.localStorage.clear();
   vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://talkpik.example.com");
   if (!window.matchMedia) {
     Object.defineProperty(window, "matchMedia", {

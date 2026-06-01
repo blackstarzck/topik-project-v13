@@ -1,0 +1,148 @@
+{
+  "runId": "20260601-120308",
+  "monitorMode": "single-session-degraded",
+  "monitorModeReason": "Deterministic script phases (0-4) were run and verified by the coordinator in single session. No independent read-only monitor child agent was spawned for phases 0-4; the coordinator ran the monitor checklist itself. Phase 5 uses independent child agents for shard review and adjudication.",
+  "collectorFirstRule": "enabled",
+  "currentPhase": "evidence-freeze -> Phase 5",
+  "sourceCommit": "8aa9594ffe760b3f279c0d79f8039524082849d6",
+  "dirtyState": "dirty",
+  "evidenceBundleId": "d5ba82a8d0232a96",
+  "evidenceBundleIdCaveat": "Coarse run fingerprint (runId+sourceCommit+dirtyState) per current ia-audit-lib helper, NOT the canonical Phase0.5-Phase4 row-hash defined in plan 01. All phase-evidence files share this id, so within-run consistency holds, but this id does not by itself prove upstream rows were unchanged. Recorded as known automation gap.",
+  "monitorStatus": "CONCERN_ACCEPTED",
+  "prodRecollectionSupersession": {
+    "note": "Phase 2-4 browser/hosted/security evidence was RE-COLLECTED against a production build (next start -p 3100) after the initial dev-server run showed load-degradation navigation timeouts. The prod re-collection supersedes the dev run for browser/hosted/security results and the Phase 5 cards/adjudication were re-run on it.",
+    "corrections": [
+      "CORRECTION: the earlier 'REAL DEFECT: /writing/51..54 HTTP 500' was a DEV-MODE-ONLY artifact. On the production build D-01..D-04 return HTTP 200 across all viewports. The 500 is NOT a production defect.",
+      "navigation timeouts: 360/768/1280 = 1/17/28 (dev) -> 0/0/0 (prod). Contamination removed.",
+      "security-navigation: 39 rows / 15 PASS (dev) -> 66 rows / 42 PASS (prod). The 24 BLOCKED preconditions persist (admin app_role not elevated; owner/wrong-owner not seeded; stale-token; network-intercept).",
+      "hosted-surface: 0 rows (dev) -> 15 rows (prod). C-03 retry modal opened (PARTIAL); D-M1/D-M2/D-M3/F-M1 modal trigger did not auto-fire (heuristic selectors)."
+    ],
+    "realProductionDefect": {
+      "finding": "Minified React error #130 (element type is invalid -> a component resolves to undefined) is emitted at runtime in the PRODUCTION build on 10 IA: D-01, D-02, D-03, D-04, D-M1, D-M2, D-M3, X-02, X-03, X-04 (writing flow + growth/paywall/subscription). X-08 (admin org) emits a Server Components render error. Landing X-01 and auth pages are clean. This is a genuine client-side render defect (likely one shared workspace/writing/chart component or dynamic import resolving undefined). Fixing is out of audit scope; recorded as the headline real finding (supersedes the dev-only 500).",
+      "mergeImpact": "merge-ia-audit-results.mjs treats the React #130 console.error as a browser blockingReason, so D-01..D-04, D-M1..D-M3, X-02, X-03, X-04, X-08 are mechanically BLOCKED on legitimate grounds."
+    },
+    "ctaHeuristicFalseNegatives": "merge also BLOCKs B-01, C-01, E-01, E-02, R-01, F-01, F-M1, H-01 on 'primary CTA/heading regex not matched'. Shard reviewers verified via source/screenshot that the CTAs/headings DO exist (e.g. F-01 heading '내 라이브러리' vs regex expecting 서재/library; B-01 '이어 풀 문제' vs regex expecting 시작). These are tooling measurement false-negatives, not product defects.",
+    "finalLabelSets": {
+      "mechanicalMerge": "9 PARTIAL / 25 BLOCKED",
+      "aiJudgment": "27 PARTIAL / 1 FAIL (X-02) / 6 BLOCKED (B-01 seed, E-01/E-02 owner-seed, H-01/X-08/X-10 admin-not-elevated)",
+      "interpretation": "AI judgment is the readiness signal; mechanical merge is a conservative lower bound that BLOCKs on (a) the real React #130 error (legitimate) and (b) CTA/heading regex false-negatives (tooling artifact)."
+    }
+  },
+  "checkpoints": [
+    {
+      "phase": "Phase 0 - preparation",
+      "expectedArtifacts": ["audit dir", "source priority decision", "IA count evidence", "runnable-script evidence", "monitor mode"],
+      "collectorAttempts": ["Get-Date runId", "New-Item auditDir", "git rev-parse HEAD", "git status --porcelain", "Get-ChildItem docs/IA", "pnpm --version", "pnpm test (vitest run)"],
+      "availableEvidenceCollected": ["runId=20260601-120308", "auditDir created", "HEAD=8aa9594", "dirtyState=dirty (114 entries)", "IA count=34 (expected 34)", "node v24.15.0 / pnpm 11.1.3", "tests/scripts/ia-audit-scripts.test.ts PASS"],
+      "unavailableEvidence": [],
+      "pnpmTestClassification": "fail-product-regression",
+      "prematureBlockedCheck": "pass - no premature BLOCKED",
+      "prematurePassCheck": "pass - no premature PASS",
+      "monitorStatus": "CONCERN_ACCEPTED",
+      "blockingReasons": ["pnpm test: 3-5 flaky auth-component test failures (SignUpForm x2, PasswordResetRequestForm) - failure count varied 5 then 3 across two runs (timing/flaky)."],
+      "coordinatorResponse": "Failures are NOT dismissed as unrelated: they touch IA A-01 (sign-up) and X-06 (password reset) and are carried forward as negative evidence that prevents final PASS for A-01/X-06. The narrow IA audit collectors (test:ia:*) and tests/scripts/ia-audit-scripts.test.ts are green, so the 34-IA audit proceeds (collector-first); blocking the whole run on flaky auth tests would contradict the collector-first principle.",
+      "generatedAt": "2026-06-01T03:04:00.000Z"
+    },
+    {
+      "phase": "Phase 0.5 - document receipt gate",
+      "expectedArtifacts": ["doc-receipts.json", "doc-receipt-validation-results.json"],
+      "collectorAttempts": ["pnpm test:ia:receipts --audit-dir", "pnpm test:ia:docs --audit-dir"],
+      "availableEvidenceCollected": ["doc-receipts.json with 34 receipts (coordinator-filled, extractedRequirements TODO=0)", "document receipt validation PASS"],
+      "unavailableEvidence": [],
+      "prematureBlockedCheck": "pass",
+      "prematurePassCheck": "pass",
+      "monitorStatus": "PASS",
+      "blockingReasons": [],
+      "coordinatorResponse": "Builder ia-receipt-content.mjs pre-fills extracted requirements from active docs; validator passed. Gate satisfied.",
+      "generatedAt": "2026-06-01T03:05:30.000Z"
+    },
+    {
+      "phase": "Phase 1 - manifest / static sync / dispatch plan",
+      "expectedArtifacts": ["ia-manifest.json", "source-map-results.json", "agent-dispatch-plan.json", "static-results.json"],
+      "collectorAttempts": ["pnpm test:ia:manifest", "pnpm test:ia:source-map", "pnpm test:ia:dispatch", "pnpm test:ia:static"],
+      "availableEvidenceCollected": ["manifest 34 IA", "source-map 34/34 PASS (every IA has a source anchor)", "agent-dispatch-plan 6 shards, all 34 IA assigned 1:1, all subagentEligible", "static coverage PASS", "X-11 and X-12 present"],
+      "unavailableEvidence": [],
+      "prematureBlockedCheck": "pass",
+      "prematurePassCheck": "pass - static PASS is doc/code sync only, not behavior PASS",
+      "monitorStatus": "PASS",
+      "blockingReasons": [],
+      "coordinatorResponse": "All static/source collectors produced JSON; no failure caused only by legacy route notes.",
+      "generatedAt": "2026-06-01T03:06:30.000Z"
+    },
+    {
+      "phase": "Phase 1.5 - Supabase seed data gate",
+      "expectedArtifacts": ["seed-plan.json", "seed-results.json"],
+      "collectorAttempts": ["pnpm test:ia:seed-plan", "pnpm test:ia:seed (dry-run)", "pnpm test:ia:seed --apply"],
+      "availableEvidenceCollected": ["seed-plan: total=34 seedAllowed=28 publicSkipped=6 target=dev", "seed-results seedStatus=PASS seedRunId=seed-20260601-120308", "seeded learner actor student@audit.local + X-07 data (writing_submissions 5, feedback 5, dimension_scores 30, recommendation 1+2)"],
+      "unavailableEvidence": [
+        "admin actors app_role elevation (deferred: owned by build-storage-state.mjs + manual SQL; profiles protect trigger blocks direct UPDATE)",
+        "wrong-owner / owner-:id rows for E-01/E-02/R-01/X-10 (deferred this round)"
+      ],
+      "prematureBlockedCheck": "pass - only seed-dependent admin/owner scenarios marked unavailable; public + learner X-07 scenarios collected",
+      "prematurePassCheck": "pass - seed is setup evidence only",
+      "monitorStatus": "CONCERN_ACCEPTED",
+      "blockingReasons": [
+        "Seed verifier is narrower than full plan (known automation gap): admin app_role elevation and owner/wrong-owner rows deferred.",
+        "Seed target is the REMOTE project fglggyfvzjdsbyckinqa.supabase.co classified explicitlyDev=true; allowed by contract but recorded as a target-classification risk (not local 127.0.0.1 stack)."
+      ],
+      "coordinatorResponse": "Seed collector attempted and applied against a dev-classified target. Admin-role and owner-id scenarios that depend on un-seeded data are carried as BLOCKED preconditions into Phase 4 / Phase 5, not silently passed.",
+      "generatedAt": "2026-06-01T03:11:00.000Z"
+    },
+    {
+      "phase": "Phase 2/3/4 - browser, hosted-surface, security/navigation",
+      "expectedArtifacts": ["browser-results.json", "hosted-surface-results.json", "security-navigation-results.json", "107 screenshots", "4 role storageStates"],
+      "collectorAttempts": [
+        "pnpm test:ia:storage-state --apply (4/4 roles captured)",
+        "playwright coverage-matrix.spec.ts (102 tests)",
+        "pnpm test:ia:browser-results",
+        "playwright hosted-surfaces.spec.ts",
+        "pnpm test:ia:hosted-surface-results",
+        "playwright session-navigation.spec.ts + auth-route-handlers.spec.ts",
+        "pnpm test:ia:security-navigation-results"
+      ],
+      "availableEvidenceCollected": [
+        "browser-results: 102 rows (27 PASS / 75 PARTIAL, 0 BLOCKED), screenshots 360/768/1280 written to repo-root screenshots/ (107 png)",
+        "6 IA with no blocking browser row: X-01, A-01, A-02, X-06, X-11, X-12",
+        "security-navigation-results: 39 rows (15 PASS / 24 BLOCKED)",
+        "4 role storageStates captured (student + 3 admin sessions)"
+      ],
+      "unavailableEvidence": [
+        "hosted-surface-results: 0 rows - hosted-surfaces.spec page.goto timed out (15s) on host routes /writing/51 and /practice/problems (cascade of writing-route HTTP 500). D-M3 hosted-surface evidence BLOCKED.",
+        "security-navigation 24 BLOCKED rows: needs student/admin storageState with real non-admin/admin role, seeded wrong-owner feedback row, stale-token session (service_role mint), seeded draft, network-failure intercept.",
+        "admin RBAC 'allowed' path: 3 admin storageStates have profiles.app_role='learner' (NOT elevated; manualSqlForAdminRoles not run by coordinator). Admin-allowed evidence BLOCKED; learner-denied path testable.",
+        "screenshot image files exist but build-browser-results reported roleStateStatus=missing for all roles (builder false-report; row-level storageStateMissing=false and protected screenshots present confirm auth worked)."
+      ],
+      "findings": [
+        "REAL DEFECT: /writing/51..54 (D-01..D-04) returned HTTP 500 at the 360 AND 768 viewports (i.e. when the dev server was still fresh, not a late-run timeout) with 'Jest worker child process exceptions'. Fresh unauthenticated probe returns HTTP 307 (auth redirect). Likely SSR runtime error when expected question/draft data is absent, or a dev-mode SSR crash. Cascaded into hosted-surface modal IAs (D-M1/D-M2/D-M3) and retry modal (C-03). Fixing is out of audit scope; recorded as a genuine blocking finding (distinct from the degradation noise below).",
+        "RUN-INFRASTRUCTURE DEGRADATION (critical for label interpretation): navigation 'page.goto Timeout 15000ms' rows escalated by viewport in run order: 360=1, 768=17, 1280=28 (Playwright runs project-by-project: mobile-360 first while server fresh, desktop-1280 last while server degraded). Post-run idle latency probe: / = 9.8s, /login = 10s, redirects ~5s. Conclusion: most 768/1280 timeouts are dev-server slowdown under sustained load + Next.js dev on-demand compilation, NOT product defects. Pages like A-03/B-01/C-01/X-02/F-01 returned HTTP 200 + rendered + screenshotted at 360 (and often 768) and only timed out at the last viewport.",
+        "MERGE CONTAMINATION: merge-ia-audit-results.mjs maps one browser row per IA = the LAST viewport row (1280). Because 28 IA have a 1280 navigation-timeout blockingReason, the mechanical final label is BLOCKED for 28 IA even where 360/768 evidence is clean. The reliable readiness signal is therefore the AI UX review + independent adjudication (which used the clean 360 screenshots + source), not the mechanical merge label. Final report must present both and explain this.",
+        "HEURISTIC SUSPECT: B-01, X-02, C-01, C-02 and others were also flagged 'primary CTA regex not visible'; shard reviewers verified several against screenshots and downgraded to PARTIAL/FAIL rather than treating the regex miss as a real blocker."
+      ],
+      "prematureBlockedCheck": "pass - per-route/per-scenario attempt status recorded; not all-BLOCKED",
+      "prematurePassCheck": "pass",
+      "monitorStatus": "CONCERN_ACCEPTED",
+      "blockingReasons": [
+        "hosted-surface-results 0 rows (collector attempted, host-route goto timeouts).",
+        "24 security-navigation scenarios BLOCKED on seed/role/token/network preconditions.",
+        "writing-route HTTP 500 finding."
+      ],
+      "coordinatorResponse": "Available evidence (browser rows + screenshots + 15 passing security rows) collected and separated from unavailable evidence (hosted-surface rows, 24 precondition-blocked security scenarios, admin-allowed path). Each unavailable class has a recorded collector attempt or impossible precondition. Phase 5 proceeds with shard review on the collected evidence; seed/role/hosted gaps flow into per-IA labels.",
+      "generatedAt": "2026-06-01T04:30:30.000Z"
+    },
+    {
+      "phase": "Evidence freeze (pre-Phase 5)",
+      "expectedArtifacts": ["consistent runId/sourceCommit/dirtyState/evidenceBundleId across phase JSON"],
+      "collectorAttempts": ["compared evidenceBundleId across doc-receipts/source-map/static/browser/hosted/security/manifest/dispatch"],
+      "availableEvidenceCollected": ["all phase-evidence files share sourceCommit=8aa9594, dirtyState=dirty, evidenceBundleId=d5ba82a8d0232a96"],
+      "unavailableEvidence": ["canonical Phase0.5-Phase4 row-hash freeze (current helper uses coarse fingerprint only)"],
+      "prematureBlockedCheck": "pass",
+      "prematurePassCheck": "pass",
+      "monitorStatus": "CONCERN_ACCEPTED",
+      "blockingReasons": ["evidenceBundleId is a coarse fingerprint, not the canonical row hash (known automation gap)."],
+      "coordinatorResponse": "Within-run evidence consistency confirmed. dirtyState=dirty is recorded; any final PASS must be read with the dirty-tree caveat. Proceeding to Phase 5.",
+      "generatedAt": "2026-06-01T04:35:00.000Z"
+    }
+  ],
+  "generatedBy": "coordinator (Claude Opus 4.8) single-session-degraded monitor",
+  "generatedAt": "2026-06-01T04:35:00.000Z"
+}

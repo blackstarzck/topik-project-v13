@@ -14,7 +14,7 @@
 
 - `AGENTS.md` — "no fresh grill-me for covered scope" 규칙 유지 확인
 - `docs/ai-development-workflow.md` — 기존 워크플로우 전체 구조와 fallback matrix
-- `docs/ai-workflow/context-ledger-template.md` — ledger 필수 섹션 확인
+- `docs/ai-workflow/templates/context-ledger-template.md` — ledger 필수 섹션 확인
 - `scripts/ai-workflow-check.mjs` — 검사기 함수 시그니처와 export 패턴
 - `scripts/ai-workflow-check.selftest.mjs` — 단위 테스트 패턴(`withTempRepo`)
 - `docs/ai-workflow/plans/20260520-development-phases-and-bootstrap.md` — Phase Contract 표 구조 (Architecture Pass 항목 삽입 위치)
@@ -25,7 +25,7 @@
 | 제외 항목 | 이유 |
 | --- | --- |
 | `AGENTS.md`의 "no fresh grill-me" 규칙 수정 | 사용자 결정으로 covered scope 정책 유지 |
-| 신규 `docs/domain/` 디렉토리 신설 | 정본이 `docs/IA`, `docs/prd.md`와 중복되어 동기화 깨질 위험 |
+| 신규 `docs/domain/` 디렉토리 신설 | 정본이 `docs/Wireframe`, `docs/prd.md`와 중복되어 동기화 깨질 위험 |
 | 신규 `plan-review-template.md` | 기존 `plan-eng-review` 스킬이 동일 역할 |
 | `.claude/settings.json` hook 추가 | 사용자 답변 — 이번 PR은 "문서 + 스크립트 + CI"까지만. hook은 향후 별도 검토 |
 | Light Spec을 모든 작업에 의무화 | phase 단위 작업에서만 의무. tiny docs/config 변경은 lightweight path 유지 |
@@ -40,7 +40,7 @@
 
 | Path | Responsibility |
 | --- | --- |
-| `docs/domain-glossary.md` (신규) | 도메인 용어 단일 진입점. 정의 중복 없이 `docs/prd.md`, `docs/IA/*`, `docs/flow/user-flow.md`의 정본 위치로 라우팅. 모듈 경계는 코드 폴더 구조가 정본임을 명시. |
+| `docs/domain-glossary.md` (신규) | 도메인 용어 단일 진입점. 정의 중복 없이 `docs/prd.md`, `docs/Wireframe/*`, `docs/flow/user-flow.md`의 정본 위치로 라우팅. 모듈 경계는 코드 폴더 구조가 정본임을 명시. |
 | `docs/ai-workflow/light-specs/README.md` (신규) | 라이트 스펙 6섹션 가이드(핵심 기능 / 제외 기능 / 최소 동작 / 사용자 흐름 / 도메인 경계 / 성공 조건). 작성 시점·파일명 규칙·1쪽 분량 제약 명시. |
 | `docs/ai-workflow/plans/README.md` (신규 또는 갱신) | Plan 템플릿 필수 섹션: `## Docs Consulted`, `## Out of Scope — Intentional Cuts`, `## Smallest Buildable Unit`, `## File Structure`, task 표 컬럼에 `Subagent-eligible? (Y/N + reason)` 필수. |
 | `docs/ai-development-workflow.md` (변경) | "1b. Light Spec 작성" 절 추가, "3. Use Codex And Claude Together"의 "가용 시" 표현을 "기본 의무, 부재 시 degraded 명시"로 강화, implementation 절에 "Subagent-eligible=Y task는 task packet으로 분산"을 명시, Phase Completion Gate에 "Architecture Pass" 추가 안내. |
@@ -57,7 +57,7 @@
 | 3 | 리뷰 반영 (필요 시 plan 보강) | plan md | N — 리뷰 결과에 따라 main session 직접 |
 | 4 | 검사기 RED: selftest에 7+게이트 위반 fixture 추가 (Codex 리뷰 반영) | `scripts/ai-workflow-check.selftest.mjs` | N — Task 5와 export 이름/에러 문자열로 강결합. 단일 owner 순차 |
 | 5 | 검사기 GREEN: 5개 새 검사 함수 + dispatch 로직 구현 (의미 강화) | `scripts/ai-workflow-check.mjs` | N — Task 4와 묶음 |
-| 5b | context-ledger-template.md에 Cross-model review / Architecture Pass placeholder 추가 (Codex P1-D 반영) | `docs/ai-workflow/context-ledger-template.md` | Y — 독립 문서, 다른 파일과 독립 |
+| 5b | context-ledger-template.md에 Cross-model review / Architecture Pass placeholder 추가 (Codex P1-D 반영) | `docs/ai-workflow/templates/context-ledger-template.md` | Y — 독립 문서, 다른 파일과 독립 |
 | 6 | 신규 문서 2개 작성 | `docs/domain-glossary.md`, `docs/ai-workflow/light-specs/README.md` | Y — 독립 문서, 다른 파일 의존 없음 |
 | 7 | Plans README 작성(또는 갱신) | `docs/ai-workflow/plans/README.md` | Y — 독립 문서 |
 | 8 | `ai-development-workflow.md` 4부분 보강 | `docs/ai-development-workflow.md` | N — 다른 변경과 정합성 동시 점검 필요 |
@@ -411,8 +411,8 @@ git commit -m "feat(workflow): add 4-gate enforcement checks to ai-workflow-chec
 
 | 용어 | 정본 위치 | 한 줄 요약 |
 | --- | --- | --- |
-| 학습 목표 | docs/IA/learning-goals/description.md | … |
-| 문제 풀이 | docs/IA/problem-solving/description.md | … |
+| 학습 목표 | docs/Wireframe/learning-goals/description.md | … |
+| 문제 풀이 | docs/Wireframe/problem-solving/description.md | … |
 | ... | ... | ... |
 
 ## 모듈 경계
@@ -581,7 +581,7 @@ packet 내용:
 
 ### 반영 사항 (변경 1: 신규 문서)
 
-`docs/ai-workflow/context-ledger-template.md`를 변경 파일에 추가. 두 줄을 새로 의무 항목으로 박는다:
+`docs/ai-workflow/templates/context-ledger-template.md`를 변경 파일에 추가. 두 줄을 새로 의무 항목으로 박는다:
 
 ```
 ## Verification State

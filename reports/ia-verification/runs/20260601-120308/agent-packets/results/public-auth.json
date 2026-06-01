@@ -1,0 +1,292 @@
+{
+  "shardId": "public-auth",
+  "cards": [
+    {
+      "iaCode": "X-01",
+      "aiUxResult": "PARTIAL",
+      "confidence": "high",
+      "gptAdjudication": "needs-adjudication",
+      "recommendedLabel": "PARTIAL",
+      "evidenceUsed": [
+        "phase5-evidence-digest.json ia.X-01 (HTTP 200 @360/768/1280, visibleH1 'TOPIK 글쓰기, AI와 함께 끝까지', primaryCtaPresent true, no errors)",
+        "screenshots/coverage-X-01-1280.png (Hero + 무료 시작/로그인 CTA + 3 feature cards)",
+        "screenshots/coverage-X-01-360.png (clean reflow, no horizontal overflow)"
+      ],
+      "findings": {
+        "pageJob": "clear — Hero headline + subcopy state the TOPIK-writing AI value and lead to 무료 시작.",
+        "entryContext": "clear — public landing renders standalone from direct URL; H1 explains the product.",
+        "primaryAction": "clear — single primary '무료 시작' + secondary '로그인', no competing CTA.",
+        "flowContinuity": "partial — Hero is static and always shows 무료 시작/로그인; the documented exception (logged-in user should see a 대시보드 CTA, description §1/§3) is NOT implemented in src/components/landing/Hero.tsx.",
+        "aiBehavior": "not applicable — marketing copy only; 'AI 글쓰기 피드백' card describes the feature, no live AI output on this page.",
+        "formErrorUx": "not applicable — no form on landing.",
+        "keyboardFocus": "pass (visual) — antd Buttons wrapped in next/link are keyboard reachable; focus order top-to-bottom. Not interaction-tested.",
+        "responsive": "pass — 360 reflows to single column, cards stack, no overflow; 1280 shows 3-up grid.",
+        "policyTrust": "pass — no billing/notification overclaim; copy is honest about reproducing TOPIK 51~54 environment."
+      },
+      "topGaps": [
+        "Logged-in CTA branch (대시보드) from IA §1/§3 exception is unimplemented — Hero always shows 무료 시작/로그인.",
+        "Description names 4 features (AI 첨삭, 실전 문제, 성장 리포트, 라이브러리) but only 3 cards render (학습 대시보드 / AI 글쓰기 피드백 / 자료실); '실전 문제'·'성장 리포트' are not surfaced as cards.",
+        "Only default state captured; no separate evidence for image-load-failure mascot fallback (description §5)."
+      ],
+      "blockingReasons": [],
+      "gptQuestions": [
+        "Is the missing logged-in 대시보드 CTA branch a real UX gap for a returning authenticated user landing on /, or acceptable since they are normally redirected?",
+        "Does the H1 'TOPIK 글쓰기, AI와 함께 끝까지' read as a natural, compelling Korean value promise within the 36-char constraint?",
+        "Is reducing the documented 4 features to 3 landing cards acceptable, or does it under-sell '실전 문제' and '성장 리포트'?"
+      ],
+      "docsConsulted": [
+        "docs/IA/23-X-01-product-landing/description.md",
+        "docs/ai-workflow/ia-ai-first-ux-review-checklist.md (6.1, 6.2, 6.8, 6.9)"
+      ],
+      "sourceFiles": [
+        "src/app/page.tsx",
+        "src/components/landing/Hero.tsx",
+        "src/components/landing/FeatureCard.tsx (referenced)"
+      ],
+      "screenshotsViewed": [
+        "screenshots/coverage-X-01-1280.png",
+        "screenshots/coverage-X-01-360.png"
+      ],
+      "__shard": "public-auth"
+    },
+    {
+      "iaCode": "A-01",
+      "aiUxResult": "PARTIAL",
+      "confidence": "high",
+      "gptAdjudication": "needs-adjudication",
+      "recommendedLabel": "PARTIAL",
+      "evidenceUsed": [
+        "phase5-evidence-digest.json ia.A-01 (HTTP 200 @360/768/1280, visibleH1 '회원가입', primaryCtaPresent true, no errors)",
+        "screenshots/coverage-A-01-1280.png and -360.png (email/password/confirm/name fields, terms checkbox with 이용약관·개인정보처리방침 links, 회원가입 CTA, 로그인 link)",
+        "src/components/auth/SignUpForm.tsx (validation rules, terms gating, raw-error suppression, dup-submit loading, redirect to verify-email)"
+      ],
+      "findings": {
+        "pageJob": "clear — '회원가입' heading and account-creation form; one job.",
+        "entryContext": "clear — standalone public route; '이미 계정이 있으신가요? 로그인' offers the alternate path.",
+        "primaryAction": "clear — single '회원가입' primary; no competing CTA.",
+        "aiBehavior": "not applicable.",
+        "flowContinuity": "pass — success routes to /auth/verify-email?email=…; failure stays in place with inline message; 로그인 escape present.",
+        "formErrorUx": "pass (source-verified) — required/email/min-max rules on all fields, password-confirm match validator, terms-required validator; raw Supabase errors mapped via REASON_CONTENT (no raw error_description). Duplicate-email and email-send-failure error states were NOT rendered in this run (only default captured).",
+        "keyboardFocus": "pass (visual/source) — antd Form fields with visible labels (이메일/비밀번호/비밀번호 확인/이름), password reveal toggle, terms links stopPropagation. Not interaction-tested.",
+        "responsive": "pass — 360 single column, labels above inputs, no overflow.",
+        "policyTrust": "pass — terms/privacy links open /terms and /privacy in new tab; no policy overclaim."
+      },
+      "topGaps": [
+        "Only default state rendered; duplicate-email, email-format, password-strength, and email-send-failure inline states are source-present but not visually verified this run.",
+        "Description §4 mentions social login as a branch; implementation has email-only signup (no social buttons) — possible IA deviation to confirm.",
+        "Required-before-enable CTA (description §4: '필수값 충족 전 비활성') — implementation gates via onFinish validation rather than disabling the button until valid."
+      ],
+      "blockingReasons": [],
+      "gptQuestions": [
+        "Is the absence of social-login (description §4 mentions 소셜 로그인) an intended scope cut or a real IA gap?",
+        "Do the Korean validation messages ('비밀번호는 8자 이상이어야 합니다', '비밀번호가 일치하지 않습니다') sound natural and field-specific enough?",
+        "Is gating submission via validation (CTA stays enabled, validates on submit) acceptable vs the documented 'disable until required filled' rule?"
+      ],
+      "docsConsulted": [
+        "docs/IA/01-A-01-sign-up/description.md",
+        "docs/ai-workflow/ia-ai-first-ux-review-checklist.md (6.1, 6.5, 6.6, 6.9)"
+      ],
+      "sourceFiles": [
+        "src/app/sign-up/page.tsx",
+        "src/components/auth/SignUpForm.tsx",
+        "src/lib/auth/error-mapping.ts"
+      ],
+      "screenshotsViewed": [
+        "screenshots/coverage-A-01-1280.png",
+        "screenshots/coverage-A-01-360.png"
+      ],
+      "__shard": "public-auth"
+    },
+    {
+      "iaCode": "A-02",
+      "aiUxResult": "PARTIAL",
+      "confidence": "high",
+      "gptAdjudication": "needs-adjudication",
+      "recommendedLabel": "PARTIAL",
+      "evidenceUsed": [
+        "phase5-evidence-digest.json ia.A-02 (HTTP 200 @360/768/1280, visibleH1 '로그인', primaryCtaPresent true, no errors)",
+        "screenshots/coverage-A-02-1280.png (비밀번호/매직링크 Segmented tabs, email+password, 로그인 CTA, 비밀번호 찾기 + 회원가입 links)",
+        "src/components/auth/LoginForm.tsx (session-expired Alert, failed-attempts UX hint, raw-error suppression, dup-submit loading)"
+      ],
+      "findings": {
+        "pageJob": "clear — '로그인' heading; authenticate and route to /dashboard.",
+        "entryContext": "clear — standalone; ?reason=session_expired renders a warning Alert; account-find and signup links present.",
+        "primaryAction": "clear — single '로그인' primary per tab; no competing CTA.",
+        "aiBehavior": "not applicable.",
+        "flowContinuity": "pass — success router.push('/dashboard'); magic-link shows '이메일을 확인하세요' state with retry; session-expired Alert wired from query.",
+        "formErrorUx": "pass (source-verified) — field validation, REASON_CONTENT mapping (no raw provider errors). Failed-attempts ≥3 shows an honest UX-only hint ('서버에서 짧은 시간 동안 추가 시도를 막을 수 있어요') that correctly does NOT claim a client-side lockout — matches description §3 / Codex D5. Error/locked states not rendered this run.",
+        "keyboardFocus": "pass (visual/source) — labeled fields, password reveal, Segmented tab switch resets fields. Not interaction-tested.",
+        "responsive": "pass — 1280 centered card; 360 reflows (per digest 200 across viewports).",
+        "policyTrust": "pass — lockout copy is honest about server-enforced rate-limit; no overclaim of a client security guarantee."
+      },
+      "topGaps": [
+        "Locked/rate-limited and login-failure rendered states not captured (source-present only).",
+        "Dormant/withdrawn-account and server-error inline branches (description §4 예외) not visually verified.",
+        "Failed-attempts counter resets on tab switch — acceptable as UX hint, but worth confirming the copy does not imply a hard lock."
+      ],
+      "blockingReasons": [],
+      "gptQuestions": [
+        "Does the failed-attempts hint copy clearly read as 'server may temporarily block' (UX hint) rather than implying the client locked the account?",
+        "Is the session-expired Alert ('세션이 만료되어 로그아웃됐어요. 다시 로그인해주세요.') reassuring and natural in tone?",
+        "Are two login modes (비밀번호 / 매직링크) via Segmented clear and not confusing for a first-time returning user on mobile?"
+      ],
+      "docsConsulted": [
+        "docs/IA/02-A-02-login/description.md",
+        "docs/ai-workflow/ia-ai-first-ux-review-checklist.md (6.1, 6.3, 6.5, 6.6, 6.9)"
+      ],
+      "sourceFiles": [
+        "src/app/login/page.tsx",
+        "src/components/auth/LoginForm.tsx",
+        "src/lib/auth/error-mapping.ts"
+      ],
+      "screenshotsViewed": [
+        "screenshots/coverage-A-02-1280.png"
+      ],
+      "__shard": "public-auth"
+    },
+    {
+      "iaCode": "X-06",
+      "aiUxResult": "PARTIAL",
+      "confidence": "high",
+      "gptAdjudication": "needs-adjudication",
+      "recommendedLabel": "PARTIAL",
+      "evidenceUsed": [
+        "phase5-evidence-digest.json ia.X-06 (HTTP 200 @360/768/1280, visibleH1 '비밀번호 재설정', primaryCtaPresent true, no errors)",
+        "screenshots/coverage-X-06-1280.png (이메일 입력 + 재설정 링크 보내기 CTA + 로그인으로 돌아가기 link + guidance copy)",
+        "src/components/auth/PasswordResetRequestForm.tsx (cooldown, success state, raw-error suppression, dup-submit gating)"
+      ],
+      "findings": {
+        "pageJob": "clear — '비밀번호 재설정' request step; header copy explains the email-link flow (description §2: no Stepper, header copy is the location cue).",
+        "entryContext": "clear — standalone public route; 로그인으로 돌아가기 escape present.",
+        "primaryAction": "clear — single '재설정 링크 보내기'; no competing CTA.",
+        "aiBehavior": "not applicable.",
+        "flowContinuity": "pass — on success shows '이메일을 확인하세요' confirmation with the sent address and a cooldown label; the confirm step lives at /password-reset/confirm (two-page flow per description §2).",
+        "formErrorUx": "pass (source-verified) — email required/format validation, cooldown disables input+CTA, rate-limit mapped to friendly copy; raw errors suppressed. Expired-link and save-failure states (confirm page) not in this run.",
+        "keyboardFocus": "pass (visual/source) — labeled email input, single CTA, disabled state during cooldown. Not interaction-tested.",
+        "responsive": "pass — centered card, HTTP 200 across viewports.",
+        "policyTrust": "pass — copy honestly describes link delivery; cooldown countdown shown to set expectations."
+      },
+      "topGaps": [
+        "Only the request page (step 1) default state captured; /password-reset/confirm new-password step, link-expired, and save-failure states not visually verified this run.",
+        "Description §4 expects link-expiry absolute+relative time display; request-page success copy does not yet show an expiry time (may live on confirm page).",
+        "Mascot region (description §5) not present/verified."
+      ],
+      "blockingReasons": [],
+      "gptQuestions": [
+        "Does the header-copy-only flow indication (no Stepper, per D6 decision) give the user enough sense of 'where am I in the reset flow'?",
+        "Is the success copy ('… 로 비밀번호 재설정 링크를 보냈습니다. 메일 안의 링크를 누르면 …') clear about the next physical step (check email, click link)?",
+        "Should link-expiry timing be surfaced on the request confirmation, or is it acceptable to defer it to the confirm page?"
+      ],
+      "docsConsulted": [
+        "docs/IA/28-X-06-password-reset/description.md",
+        "docs/ai-workflow/ia-ai-first-ux-review-checklist.md (6.1, 6.5, 6.6, 6.9)"
+      ],
+      "sourceFiles": [
+        "src/app/password-reset/page.tsx",
+        "src/components/auth/PasswordResetRequestForm.tsx",
+        "src/lib/auth/error-mapping.ts"
+      ],
+      "screenshotsViewed": [
+        "screenshots/coverage-X-06-1280.png"
+      ],
+      "__shard": "public-auth"
+    },
+    {
+      "iaCode": "X-11",
+      "aiUxResult": "PARTIAL",
+      "confidence": "medium",
+      "gptAdjudication": "needs-adjudication",
+      "recommendedLabel": "PARTIAL",
+      "evidenceUsed": [
+        "phase5-evidence-digest.json ia.X-11 (HTTP 200 @360/768/1280, visibleH1 '인증 오류' (sr-only), primaryCtaPresent true, no errors; wireframeStatus 'missing')",
+        "screenshots/coverage-X-11-1280.png (UNKNOWN-reason fallback card: '처리 중 문제가 생겼어요' + 홈으로 + 도움말 + 홈으로 돌아가기)",
+        "src/components/auth/AuthErrorCard.tsx + src/lib/auth/error-mapping.ts (11-reason table, retry-after countdown, email prefill, raw-error suppression)"
+      ],
+      "findings": {
+        "pageJob": "clear (source) — reason-aware auth-failure card with per-reason message + CTA; sr-only h1 '인증 오류' + visible Title from REASON_CONTENT.",
+        "entryContext": "clear — ?reason missing falls back to 'unknown'; always offers at least one escape (홈/도움말).",
+        "primaryAction": "partial — per-reason primary+secondary is well-specified in source, but the rendered UNKNOWN screenshot shows a primary '홈으로' button AND a near-duplicate '홈으로 돌아가기' link plus '도움말' — three escape affordances, two of which both go to /, slightly diluting the single-primary intent (description §3: primary 1 + secondary ≤1).",
+        "aiBehavior": "not applicable.",
+        "flowContinuity": "pass (source) — reasons route correctly (resend→email field, retry→/login, signup→/sign-up, rate-limit→countdown then auto-enable); always an escape route.",
+        "formErrorUx": "pass (source) — raw Supabase error_description never surfaced (mapped to canonical Korean), retry_after sanitized 1..86400 with 60s fallback, email prefill requires explicit user submit (no fire-and-forget). NOT visually verified: countdown state, email-prefill field, resend reasons (only unknown captured).",
+        "keyboardFocus": "pass (visual) — card buttons/links keyboard reachable, aria-live polite on card. Not interaction-tested.",
+        "responsive": "pass — HTTP 200 across viewports; card maxWidth 520 centers.",
+        "policyTrust": "pass — strong: raw provider errors suppressed, safe next actions given (checklist 6.9 auth-error requirement met in source)."
+      },
+      "topGaps": [
+        "Only the UNKNOWN fallback was rendered; the 10 reason-specific states (countdown, email-prefill, resend, signup, retry) are source-present but visually UNVERIFIED.",
+        "UNKNOWN card shows redundant home affordances (primary 홈으로 button + 홈으로 돌아가기 link), exceeding the documented 'primary 1 + secondary ≤1' on that state.",
+        "wireframe.png is 'missing' (intentional — spec is Codex-consensus based), so wireframe-fidelity comparison is copy/spec only."
+      ],
+      "blockingReasons": [],
+      "gptQuestions": [
+        "On the UNKNOWN state, is the doubled home escape (button '홈으로' + link '홈으로 돌아가기') redundant/confusing, or acceptable as a safety net?",
+        "Are the 11 reason messages (e.g. 'user_not_found: 오래 비활성화된 계정은 자동으로 정리됐어요…') accurate, warm, and not alarming for general users?",
+        "Does the rate-limit countdown copy ('… 후 다시 시도할 수 있어요') read naturally and set correct expectations?",
+        "Is suppressing raw error_description while still giving an actionable reason the right trust/security balance for this audience?"
+      ],
+      "docsConsulted": [
+        "docs/IA/33-X-11-auth-error/description.md",
+        "docs/ai-workflow/ia-ai-first-ux-review-checklist.md (6.1, 6.3, 6.5, 6.9)"
+      ],
+      "sourceFiles": [
+        "src/app/auth/error/page.tsx",
+        "src/components/auth/AuthErrorCard.tsx",
+        "src/lib/auth/error-mapping.ts"
+      ],
+      "screenshotsViewed": [
+        "screenshots/coverage-X-11-1280.png"
+      ],
+      "__shard": "public-auth"
+    },
+    {
+      "iaCode": "X-12",
+      "aiUxResult": "PARTIAL",
+      "confidence": "medium",
+      "gptAdjudication": "needs-adjudication",
+      "recommendedLabel": "PARTIAL",
+      "evidenceUsed": [
+        "phase5-evidence-digest.json ia.X-12 (HTTP 200 @360/768/1280, visibleH1 '이메일 인증' (sr-only), primaryCtaPresent true, no errors; wireframeStatus 'missing')",
+        "screenshots/coverage-X-12-1280.png and -360.png ('이메일을 확인해주세요' card + guidance + email input + 인증 메일 다시 보내기 + 로그인/가입/홈 escape links)",
+        "src/components/auth/VerifyEmailCard.tsx (localStorage cooldown survives reload, visible email input required, rate-limit handling, raw-error suppression)"
+      ],
+      "findings": {
+        "pageJob": "clear — post-signup 'check your email' landing with resend control; persists across reload via ?email and localStorage cooldown.",
+        "entryContext": "clear — standalone; shows 가입 이메일 when ?email present; escape links 로그인/가입/홈 always shown.",
+        "primaryAction": "clear — single '인증 메일 다시 보내기' primary; secondary escape links visually de-emphasized.",
+        "aiBehavior": "not applicable.",
+        "flowContinuity": "pass (source) — resend success toast, rate-limit sets 60s cooldown, cooldown restored from localStorage on refresh (fixes prior reset-on-refresh limit bypass per v2.3 note).",
+        "formErrorUx": "pass (source) — visible editable email input required (no fire-and-forget), empty-email warning, raw errors mapped to friendly Korean. NOT visually verified: active cooldown timer state and resend-success/rate-limit states (only default captured).",
+        "keyboardFocus": "pass (visual) — labeled email input, single primary button, aria-live polite card; input disabled during cooldown. Not interaction-tested.",
+        "responsive": "pass — 360 reflows cleanly, escape links wrap without overflow; 1280 centered card.",
+        "policyTrust": "pass — copy honest about resend limits ('메일이 자주 발송되면 몇 분 후 다시 시도해주세요'); no email-delivery overclaim."
+      },
+      "topGaps": [
+        "Only the default state rendered; active cooldown countdown, resend-success toast, and rate-limit redirect states are source-present but visually UNVERIFIED.",
+        "Description §1 says page should survive without ?email via session fallback; this client component reads only ?email query (no session email) so deep-link without ?email shows no email + still allows manual entry — confirm acceptable.",
+        "wireframe.png 'missing' (intentional spec); fidelity is copy/spec-based only."
+      ],
+      "blockingReasons": [],
+      "gptQuestions": [
+        "Is the resend cooldown UX (button disabled + '… 후 다시 보낼 수 있어요', surviving refresh) clear enough that users understand why resend is temporarily blocked?",
+        "Does the guidance copy ('가입을 마무리하려면 받은편지함의 인증 메일에서 링크를 눌러주세요. 메일이 보이지 않으면 스팸함도 확인해주세요.') read naturally and reduce abandonment?",
+        "Is requiring a visible editable email input before resend (no URL-only fire) the right anti-abuse + UX trade-off on mobile?",
+        "When no ?email is present, is offering only a manual email field (no session-derived email) an acceptable fallback?"
+      ],
+      "docsConsulted": [
+        "docs/IA/34-X-12-auth-verify-email/description.md",
+        "docs/ai-workflow/ia-ai-first-ux-review-checklist.md (6.1, 6.3, 6.5, 6.6, 6.9)"
+      ],
+      "sourceFiles": [
+        "src/app/auth/verify-email/page.tsx",
+        "src/components/auth/VerifyEmailCard.tsx",
+        "src/lib/auth/error-mapping.ts"
+      ],
+      "screenshotsViewed": [
+        "screenshots/coverage-X-12-1280.png",
+        "screenshots/coverage-X-12-360.png"
+      ],
+      "__shard": "public-auth"
+    }
+  ]
+}

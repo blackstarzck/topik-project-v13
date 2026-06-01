@@ -1,0 +1,60 @@
+{
+  "generatedAt": "2026-06-01T01:47:37.259Z",
+  "base": "http://127.0.0.1:3000",
+  "route": "/practice/weakness",
+  "actor": "student@audit.local",
+  "overall": "PASS",
+  "results": [
+    {
+      "width": 360,
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:3000/practice/weakness",
+      "screenshot": "reports/ia-verification/runs/20260528-141731/screenshots/phase-1-qa/weakness-360.png",
+      "pass": true,
+      "assertions": {
+        "onWeakness": true,
+        "insightPanel": true,
+        "topicFitKorean": true,
+        "noRawEnglishKey": true,
+        "startCta": true,
+        "recTitle": true
+      },
+      "consoleErrorCount": 2,
+      "bodyTextSnippet": "대시보드\n학습\n글쓰기\n내 라이브러리\n성장 대시보드\n프로필\n설정\nTALKPIK\nstudent@audit.local\n약점 보강\n약점 분석\n최근 글쓰기 결과를 바탕으로 보완이 필요한 영역과 추천 문제를 안내합니다.\n가장 보강이 필요한 영역\n주제 적합성 평균 점수 0점.\n이 영역의 문제를 더 풀면 점수가 빠르게 오를 가능성이 있습니다. 아래 차원별 진행을 확인하고 추천 문제를 풀어보세요.\n주제 적합성\n내용\n0점\n주제 적합성 평균 점수 0점\n약점 인사이트\n주제 적합성 영역을 먼저 볼 수 있어요.\n최근 답안에서 보이는 경향을 바탕으로 추정한 안내예요. 실제 약점은 다음 연습 결과에 따라 달라질 수 있습니다.\n왜 이 영역을 먼저 보나요?\n주제에서 벗어나면 문장이 맞아도 점수로 이어지기 어려울 수 있어요.\n자주 보이는 예\n질문이 요구한 조건보다 배경 설명이 길어지는 경우가 있을 수 있어요.\n연습 전략\n문제를 다시 읽고 필수 조건을 체크한 뒤 답안을 짧게 다듬어 보세요.\n추천 문제\n52번 문항\nTO"
+    },
+    {
+      "width": 768,
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:3000/practice/weakness",
+      "screenshot": "reports/ia-verification/runs/20260528-141731/screenshots/phase-1-qa/weakness-768.png",
+      "pass": true,
+      "assertions": {
+        "onWeakness": true,
+        "insightPanel": true,
+        "topicFitKorean": true,
+        "noRawEnglishKey": true,
+        "startCta": true,
+        "recTitle": true
+      },
+      "consoleErrorCount": 2,
+      "bodyTextSnippet": "대시보드\n학습\n글쓰기\n내 라이브러리\n성장 대시보드\n프로필\n설정\nTALKPIK\nstudent@audit.local\n약점 보강\n약점 분석\n최근 글쓰기 결과를 바탕으로 보완이 필요한 영역과 추천 문제를 안내합니다.\n가장 보강이 필요한 영역\n주제 적합성 평균 점수 0점.\n이 영역의 문제를 더 풀면 점수가 빠르게 오를 가능성이 있습니다. 아래 차원별 진행을 확인하고 추천 문제를 풀어보세요.\n주제 적합성\n내용\n0점\n주제 적합성 평균 점수 0점\n약점 인사이트\n주제 적합성 영역을 먼저 볼 수 있어요.\n최근 답안에서 보이는 경향을 바탕으로 추정한 안내예요. 실제 약점은 다음 연습 결과에 따라 달라질 수 있습니다.\n왜 이 영역을 먼저 보나요?\n주제에서 벗어나면 문장이 맞아도 점수로 이어지기 어려울 수 있어요.\n자주 보이는 예\n질문이 요구한 조건보다 배경 설명이 길어지는 경우가 있을 수 있어요.\n연습 전략\n문제를 다시 읽고 필수 조건을 체크한 뒤 답안을 짧게 다듬어 보세요.\n추천 문제\n52번 문항\nTO"
+    },
+    {
+      "width": 1280,
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:3000/practice/weakness",
+      "screenshot": "reports/ia-verification/runs/20260528-141731/screenshots/phase-1-qa/weakness-1280.png",
+      "pass": true,
+      "assertions": {
+        "onWeakness": true,
+        "insightPanel": true,
+        "topicFitKorean": true,
+        "noRawEnglishKey": true,
+        "startCta": true,
+        "recTitle": true
+      },
+      "consoleErrorCount": 2,
+      "bodyTextSnippet": "대시보드\n학습\n글쓰기\n내 라이브러리\n성장 대시보드\n프로필\n설정\nTALKPIK\nstudent@audit.local\n약점 보강\n약점 분석\n최근 글쓰기 결과를 바탕으로 보완이 필요한 영역과 추천 문제를 안내합니다.\n가장 보강이 필요한 영역\n주제 적합성 평균 점수 0점.\n이 영역의 문제를 더 풀면 점수가 빠르게 오를 가능성이 있습니다. 아래 차원별 진행을 확인하고 추천 문제를 풀어보세요.\n주제 적합성\n내용\n0점\n주제 적합성 평균 점수 0점\n약점 인사이트\n주제 적합성 영역을 먼저 볼 수 있어요.\n최근 답안에서 보이는 경향을 바탕으로 추정한 안내예요. 실제 약점은 다음 연습 결과에 따라 달라질 수 있습니다.\n왜 이 영역을 먼저 보나요?\n주제에서 벗어나면 문장이 맞아도 점수로 이어지기 어려울 수 있어요.\n자주 보이는 예\n질문이 요구한 조건보다 배경 설명이 길어지는 경우가 있을 수 있어요.\n연습 전략\n문제를 다시 읽고 필수 조건을 체크한 뒤 답안을 짧게 다듬어 보세요.\n추천 문제\n52번 문항\nTO"
+    }
+  ]
+}

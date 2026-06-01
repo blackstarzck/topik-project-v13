@@ -32,6 +32,7 @@ export default async function CompareReportPage({
       narrative={report.narrative}
       currentText={current.answer_text}
       previousText={previous?.answer_text ?? null}
+      retryHref={`/writing/${current.question_no}?problem=${current.problem_id}`}
     />
   );
 }

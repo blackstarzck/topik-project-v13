@@ -10,7 +10,7 @@ Phase 5는 쓰기 풀이→채점→비교의 종단 흐름을 RLS 안에서 한
 
 - `docs/spec.md` §State Management (useWritingStore/useFeedbackStore 의도) + §Persistence (autosave 정책)
 - `docs/sitemap.md` Lines 36-45 (D-01~D-04, E-01/E-02, R-01)
-- `docs/IA/{08-D-01,09-D-02,10-D-03,11-D-04,14-E-01,15-E-02,16-R-01}/description.md`
+- `docs/Wireframe/{08-D-01,09-D-02,10-D-03,11-D-04,14-E-01,15-E-02,16-R-01}/description.md`
 - `docs/flow/user-flow.md` (writing 흐름 anchor)
 - `supabase/migrations/20260520120400_writing.sql` + `20260520120500_feedback.sql` (테이블 + 인덱스)
 - `supabase/migrations/20260520121100_rls_policies.sql` (writing 6 테이블 RLS — owner-only `for all using (user_id = auth.uid())`)

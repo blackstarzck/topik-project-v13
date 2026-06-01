@@ -20,7 +20,7 @@
 
 ## Tier 분리
 
-- **Tier 1 (MVP)** — 본 문서에서 DDL 정의. 현재 `docs/IA/` 32 화면 + `docs/sitemap.md` Target Route Map 범위.
+- **Tier 1 (MVP)** — 본 문서에서 DDL 정의. 현재 `docs/Wireframe/` 32 화면 + `docs/sitemap.md` Target Route Map 범위.
 - **Tier 2 (Deferred)** — DDL 미작성, 본 문서 후반부에서 placeholder 설명만. IA/sitemap 확정 후 별도 마이그레이션으로 추가.
 
 ---
@@ -638,7 +638,7 @@ IA/sitemap 확정 또는 PRD MVP 범위 변경 전까지 DDL을 만들지 않습
 | **Organizations** | `organizations(id, name, status)`, `organization_memberships(org_id, user_id, role)` | X-08 기관 관리자 IA + sitemap route 확정 후 |
 | **Assignments** | `assignments(org_id, problem_id, title, due_at)`, `assignment_submissions(assignment_id, user_id, submission_id)` | organizations 도입 후 |
 | **Notifications** | `notification_preferences(user_id, channel, enabled, settings)` | X-09 알림 PRD 우선순위 격상 후 |
-| **모의고사** | `mock_exams`, `mock_exam_sessions`, `mock_exam_answers`, `mock_exam_results` | `docs/IA/`에 모의고사 화면 + `docs/sitemap.md` route 추가 후 |
+| **모의고사** | `mock_exams`, `mock_exam_sessions`, `mock_exam_answers`, `mock_exam_results` | `docs/Wireframe/`에 모의고사 화면 + `docs/sitemap.md` route 추가 후 |
 | **게시판/공지** | `notices`, `events`, `notice_views` | IA/sitemap 추가 후 |
 | **단어장** | `vocab_entries`, `user_vocab` | `/library` 하위가 아닌 standalone 화면 IA 추가 후 |
 | **배지/XP** | `badges`, `user_badges`, `xp_events` | PRD 7.14 우선순위 격상 후 |

@@ -1,0 +1,40 @@
+{
+  "seedRunId": "seed-20260601-120308",
+  "runId": "20260601-120308",
+  "sourceCommit": "8aa9594ffe760b3f279c0d79f8039524082849d6",
+  "dirtyState": "dirty",
+  "targetEnvironment": "https://fglggyfvzjdsbyckinqa.supabase.co",
+  "targetClassification": "dev",
+  "seedMode": "apply",
+  "seedPlanPresent": true,
+  "seededActors": [
+    {
+      "email": "student@audit.local",
+      "id": "4d447f42-7e82-4afd-937c-864b1af92ff7",
+      "created": false,
+      "appRole": "learner"
+    }
+  ],
+  "seededRows": {
+    "writing_submissions": 5,
+    "writing_feedback": 5,
+    "feedback_dimension_scores": 30,
+    "recommendation_runs": 1,
+    "recommendation_items": 2
+  },
+  "seedPreconditions": "student@audit.local",
+  "seedStatus": "PASS",
+  "seedBlockingReasons": [],
+  "deferredScenarios": [
+    {
+      "scenario": "admin actors + app_role elevation",
+      "reason": "owned by build-storage-state.mjs + manual SQL (profiles protect trigger); out of WS2 scope"
+    },
+    {
+      "scenario": "wrong-owner / owner-:id rows (E-01/E-02/R-01/X-10)",
+      "reason": "deferred — not required for X-07 unblock this round"
+    }
+  ],
+  "generatedBy": "verify-seed-data.mjs",
+  "generatedAt": "2026-06-01T03:08:34.677Z"
+}

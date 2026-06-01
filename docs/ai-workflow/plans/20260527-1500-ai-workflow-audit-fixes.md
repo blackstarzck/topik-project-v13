@@ -23,7 +23,7 @@
 - `scripts/ai-workflow-check.selftest.mjs` — `withTempRepo` 헬퍼, 기존 fixture 패턴 (특히 line 419-429의 깨진 fixture)
 - `scripts/test-uxui-fixtures.mjs`, `scripts/test-qa-gate-fixtures.mjs` — CI에 추가할 fixture runner
 - `.github/workflows/ai-workflow-check.yml` — 현재 CI step 구조
-- `docs/ai-workflow/context-ledger-template.md` — 템플릿이 "Untouched relevant docs"를 bullet 형태로 명시함을 확인
+- `docs/ai-workflow/templates/context-ledger-template.md` — 템플릿이 "Untouched relevant docs"를 bullet 형태로 명시함을 확인
 - `docs/ai-workflow/plans/README.md` + `20260520-workflow-4gate-enforcement.md` — plan 파일 스타일 레퍼런스
 - `reports/ai-workflow-audit-20260527.html` — 본 plan의 입력 보고서
 
@@ -31,7 +31,7 @@
 
 **Untouched relevant docs:**
 - `docs/ant-design/*.md` — UI 게이트 정본. P1-1이 UI 게이트 *발동 조건*만 좁히고 게이트 *내용*은 안 건드리므로 미참조. Codex 리뷰에서 필요시 펼침.
-- `docs/IA/*`, `docs/prd.md`, `docs/spec.md` — 제품/IA 정본. 본 작업과 무관.
+- `docs/Wireframe/*`, `docs/prd.md`, `docs/spec.md` — 제품/IA 정본. 본 작업과 무관.
 - `docs/development/*.md` — 백엔드/스택 정본. 본 작업과 무관.
 
 ## Out of Scope — Intentional Cuts
@@ -65,7 +65,7 @@
 | `.github/workflows/ai-workflow-check.yml` | self-test + UX/UI fixture + QA Gate fixture step 3개 추가 | 변경 |
 | `docs/ai-workflow/runs/2026/05/26/20260526-auth-error-callback-ux-review.md` | 파일명을 `20260526-1700-auth-error-callback-ux-review.md`로 변경 (시간 17:00로 가정 — 사용자 확인 필요) | rename |
 | `docs/ai-workflow/review-gates.md` | §Finish 절에 "로컬 checker(`git status`)와 CI checker(`git diff base..head`) 입력 차이" 한 단락 추가 | 변경 |
-| (선택) `docs/ai-workflow/context-ledger-template.md` | `Untouched relevant docs` bullet이 필수임을 주석으로 명시 (P1-2 동반) | 변경 |
+| (선택) `docs/ai-workflow/templates/context-ledger-template.md` | `Untouched relevant docs` bullet이 필수임을 주석으로 명시 (P1-2 동반) | 변경 |
 
 ## Tasks
 
@@ -458,7 +458,7 @@ Ledger: docs/ai-workflow/runs/2026/05/27/20260527-1500-ai-workflow-audit-fixes.m
 **Files:**
 - Modify: `scripts/ai-workflow-check.mjs` (`validateLedger` 또는 별도 함수)
 - Modify: `scripts/ai-workflow-check.selftest.mjs`
-- Modify: `docs/ai-workflow/context-ledger-template.md` (코멘트 추가)
+- Modify: `docs/ai-workflow/templates/context-ledger-template.md` (코멘트 추가)
 
 **문제:** 세 곳(`ai-development-workflow.md` L76, `agent-index.md` L113, `report-template.md`)에서 "Untouched relevant docs"를 필수 evidence로 명시. 체커는 무검사.
 
@@ -619,7 +619,7 @@ node scripts/ai-workflow-check.mjs --repo .
 
 - [ ] **Step 5: 템플릿에 코멘트 추가**
 
-`docs/ai-workflow/context-ledger-template.md` line 26 옆에 주석:
+`docs/ai-workflow/templates/context-ledger-template.md` line 26 옆에 주석:
 
 ```markdown
 - Untouched relevant docs and reason:  # required — 체커가 강제. 'none' 또는 'n/a'도 허용.
@@ -628,7 +628,7 @@ node scripts/ai-workflow-check.mjs --repo .
 - [ ] **Step 6: 커밋**
 
 ```bash
-git add scripts/ai-workflow-check.mjs scripts/ai-workflow-check.selftest.mjs docs/ai-workflow/context-ledger-template.md
+git add scripts/ai-workflow-check.mjs scripts/ai-workflow-check.selftest.mjs docs/ai-workflow/templates/context-ledger-template.md
 git commit -m "feat(workflow): enforce 'Untouched relevant docs' field in ledger
 
 Constraint: agent-index.md §Output Requirement + ai-development-workflow.md §Required Evidence + report-template.md 모두 'Untouched relevant docs'를 필수로 명시
@@ -1125,7 +1125,7 @@ git diff origin/main..HEAD -- \
   scripts/ai-workflow-check.selftest.mjs \
   .github/workflows/ai-workflow-check.yml \
   docs/ai-workflow/review-gates.md \
-  docs/ai-workflow/context-ledger-template.md \
+  docs/ai-workflow/templates/context-ledger-template.md \
   > /tmp/audit-fixes.diff
 codex review --diff /tmp/audit-fixes.diff \
   --prompt "이 diff는 ai-workflow-audit-fixes plan의 구현 결과다. (1) 각 변경이 plan과 일치하는가, (2) 회귀 위험이 있는가, (3) 빠뜨린 edge case가 있는가."

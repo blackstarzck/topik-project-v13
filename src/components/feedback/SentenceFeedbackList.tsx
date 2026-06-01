@@ -1,3 +1,5 @@
+"use client";
+
 import { Card, Empty, List, Typography } from "antd";
 import type { SentenceFeedbackRow } from "@/lib/writing/types";
 

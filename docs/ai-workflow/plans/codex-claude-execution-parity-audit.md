@@ -30,10 +30,10 @@
 - `docs/ai-workflow/context-and-packets.md`
 - `docs/ai-workflow/review-gates.md`
 - `docs/ai-workflow/fallback-and-recovery.md`
-- `docs/ai-workflow/harness-and-skills.md`
-- `docs/ai-workflow/agent-packets.md`
-- `docs/ai-workflow/context-ledger-template.md`
-- `docs/ai-workflow/report-template.md`
+- `docs/ai-workflow/reference/harness-and-skills.md`
+- `docs/ai-workflow/contracts/agent-packets.md`
+- `docs/ai-workflow/templates/context-ledger-template.md`
+- `docs/ai-workflow/templates/report-template.md`
 - `AGENTS.md`
 - `CLAUDE.md`
 - `scripts/sync-agent-skills.mjs`
@@ -137,7 +137,7 @@ This slice is complete without fixing any defect it finds.
 | 1 | Create audit run ledger | `docs/ai-workflow/runs/2026/05/28/` | N - main session owns durable context |
 | 2 | Re-collect previous audit evidence | `docs/ai-workflow/runs/**`, `reports/**` | Y - read-only evidence search |
 | 3 | Check canonical skill mirror sync | `.agents/**`, `.codex/skills/**`, `.claude/skills/**`, `scripts/sync-agent-skills.mjs` | Y - read-only command and inspection |
-| 4 | Verify GStack mapping table | `.codex/skills/gstack-*`, `.claude/skills/*`, `docs/ai-workflow/harness-and-skills.md` | Y - isolated read-only mapping review |
+| 4 | Verify GStack mapping table | `.codex/skills/gstack-*`, `.claude/skills/*`, `docs/ai-workflow/reference/harness-and-skills.md` | Y - isolated read-only mapping review |
 | 5 | Compare startup and fail-closed instructions | `AGENTS.md`, `CLAUDE.md`, `docs/ai-development-workflow.md` | Y - read-only semantic comparison |
 | 6 | Classify host permission risks | `.claude/settings.local.json`, `.codex/**` | Y - read-only settings classification |
 | 7 | Run workflow verification commands | scripts and repo status | N - main session should read and integrate all outputs |

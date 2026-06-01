@@ -1,7 +1,7 @@
 # TALKPIK AI 사용자 플로우 (현행)
 
-이 문서는 `docs/IA/`의 32개 페이지 IA와 연동된 **현행 사용자 플로우**입니다.
-노드명은 `docs/IA/{...}/description.md`의 `Source` 값과 일치합니다(참조 규칙: `docs/IA/README.md`).
+이 문서는 `docs/Wireframe/`의 32개 페이지 IA와 연동된 **현행 사용자 플로우**입니다.
+노드명은 `docs/Wireframe/{...}/description.md`의 `Source` 값과 일치합니다(참조 규칙: `docs/Wireframe/README.md`).
 
 레거시 관측 흐름은 `docs/user-flow.md`에 별도 보관되어 있습니다. 새 구현/QA는 본 문서를 정본으로 사용합니다.
 
@@ -196,4 +196,4 @@ flowchart TD
 
 세션 만료(in-app JWT expiry)는 미들웨어에서 잡혀 `/login?reason=session_expired`로 친절 redirect한다. X-11/X-12를 거치지 않는다.
 
-`/auth/error`의 `reason` query는 Supabase 공식 `error.code` 11개 (`otp_expired`, `flow_state_expired`, `flow_state_not_found`, `bad_code_verifier`, `user_not_found`, `over_email_send_rate_limit`, `over_request_rate_limit`, `email_not_confirmed`, `signup_disabled`, `access_denied`, `unknown`)에 매핑된다. 자세한 메시지/CTA 표는 `docs/IA/33-X-11-auth-error/description.md` 참고.
+`/auth/error`의 `reason` query는 Supabase 공식 `error.code` 11개 (`otp_expired`, `flow_state_expired`, `flow_state_not_found`, `bad_code_verifier`, `user_not_found`, `over_email_send_rate_limit`, `over_request_rate_limit`, `email_not_confirmed`, `signup_disabled`, `access_denied`, `unknown`)에 매핑된다. 자세한 메시지/CTA 표는 `docs/Wireframe/33-X-11-auth-error/description.md` 참고.

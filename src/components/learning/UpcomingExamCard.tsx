@@ -1,3 +1,5 @@
+"use client";
+
 import { Card, Statistic, Typography } from "antd";
 import dayjs from "dayjs";
 

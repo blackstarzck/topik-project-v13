@@ -47,4 +47,4 @@ ledger의 `## Verification State`에서 다음 한 줄로 가리킵니다:
 - 워크플로우: [docs/ai-development-workflow.md](../../ai-development-workflow.md)
 - Plan 템플릿: [docs/ai-workflow/plans/README.md](../plans/README.md)
 - 도메인 라우팅: [docs/domain-glossary.md](../../domain-glossary.md)
-- Ledger 템플릿: [docs/ai-workflow/context-ledger-template.md](../context-ledger-template.md)
+- Ledger 템플릿: [docs/ai-workflow/templates/context-ledger-template.md](../templates/context-ledger-template.md)

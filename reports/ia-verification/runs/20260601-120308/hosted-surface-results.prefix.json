@@ -1,0 +1,540 @@
+{
+  "runId": "20260601-120308",
+  "sourceCommit": "8aa9594ffe760b3f279c0d79f8039524082849d6",
+  "dirtyState": "dirty",
+  "evidenceBundleId": "d5ba82a8d0232a96",
+  "generatedBy": "build-hosted-surface-results.mjs",
+  "generatedAt": "2026-06-01T05:39:33.174Z",
+  "rows": [
+    {
+      "runId": "20260601-120308",
+      "sourceCommit": "8aa9594ffe760b3f279c0d79f8039524082849d6",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "d5ba82a8d0232a96",
+      "phase": "hosted-surface",
+      "iaCode": "C-03",
+      "screenName": "C-03 Retry modal (host: /practice/problems)",
+      "hostRoute": "/practice/problems",
+      "finalUrl": "http://127.0.0.1:3100/practice/problems",
+      "triggerSelector": "button:has-text('다시 풀기'), button:has-text('상세'), a:has-text('풀기')",
+      "triggerCopyExpected": "[object Object]",
+      "triggerFired": true,
+      "surfaceOpened": true,
+      "hostBeforeScreenshot": "screenshots\\hosted-C-03-host-before.png",
+      "surfaceOpenScreenshot": "screenshots\\hosted-C-03-open.png",
+      "surfaceClosedScreenshot": "screenshots\\hosted-C-03-closed.png",
+      "focusEntryResult": "inside-modal",
+      "focusReturnResult": "evaluation-failed",
+      "keyboardCloseResult": "esc-closed",
+      "duplicateActionPreventionResult": "evaluation-failed: locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button:has-text(\\'시작\\'), button:has-text(\\'확인\\')').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"ant-btn css-ypkju9 talkpik ant-btn-primary ant-btn-color-primary ant-btn-variant-solid\">…</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div class=\"ant-modal-wrap\">…</div> from <div>…</div> subtree intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div class=\"ant-modal-wrap\">…</div> from <div>…</div> subtree intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    19 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is visible, enabled and stable\u001b[22m\n\u001b[2m       - scrolling into view if needed\u001b[22m\n\u001b[2m       - done scrolling\u001b[22m\n\u001b[2m       - <div class=\"ant-modal-wrap\">…</div> from <div>…</div> subtree intercepts pointer events\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n",
+      "failureRetryResult": null,
+      "mobileViewportUsed": {
+        "width": 360,
+        "height": 720
+      },
+      "errors": [],
+      "status": "PARTIAL",
+      "blockingReasons": [],
+      "generatedBy": "build-hosted-surface-results.mjs",
+      "generatedAt": "2026-06-01T05:39:33.173Z"
+    },
+    {
+      "runId": "20260601-120308",
+      "sourceCommit": "8aa9594ffe760b3f279c0d79f8039524082849d6",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "d5ba82a8d0232a96",
+      "phase": "hosted-surface",
+      "iaCode": "D-M1",
+      "screenName": "D-M1 Submission confirmation (host: /writing/51)",
+      "hostRoute": "/writing/51",
+      "finalUrl": "http://127.0.0.1:3100/writing/51",
+      "triggerSelector": "button:has-text('제출'), button[type='submit']",
+      "triggerCopyExpected": "[object Object]",
+      "triggerFired": false,
+      "surfaceOpened": false,
+      "hostBeforeScreenshot": "screenshots\\hosted-D-M1-host-before.png",
+      "surfaceOpenScreenshot": null,
+      "surfaceClosedScreenshot": null,
+      "focusEntryResult": null,
+      "focusReturnResult": null,
+      "keyboardCloseResult": null,
+      "duplicateActionPreventionResult": null,
+      "failureRetryResult": null,
+      "mobileViewportUsed": {
+        "width": 360,
+        "height": 720
+      },
+      "errors": [
+        "console.error: Error: Minified React error #130; visit https://react.dev/errors/130?args[]=undefined&args[]= for the full message or use the non-minified dev environment for full errors and additional helpful warnings.\n    at rS (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:38836)\n    at d (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:48440)\n    at http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:51058\n    at i (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:51351)\n    at http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:52437\n    at o$ (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:74677)\n    at iu (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:91454)\n    at sd (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:131936)\n    at http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:131781\n    at sf (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:131789)"
+      ],
+      "status": "BLOCKED",
+      "blockingReasons": [
+        "Modal trigger did not fire OR modal never became visible — selectors are heuristic; Phase 5 reviewer must verify against actual UI source."
+      ],
+      "generatedBy": "build-hosted-surface-results.mjs",
+      "generatedAt": "2026-06-01T05:39:33.174Z"
+    },
+    {
+      "runId": "20260601-120308",
+      "sourceCommit": "8aa9594ffe760b3f279c0d79f8039524082849d6",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "d5ba82a8d0232a96",
+      "phase": "hosted-surface",
+      "iaCode": "D-M2",
+      "screenName": "D-M2 AI analysis loading (host: /writing/51)",
+      "hostRoute": "/writing/51",
+      "finalUrl": "http://127.0.0.1:3100/writing/51",
+      "triggerSelector": "(handled inline — D-M2 is a transitional loading state, not a click-triggered modal)",
+      "triggerCopyExpected": "[object Object]",
+      "triggerFired": false,
+      "surfaceOpened": false,
+      "hostBeforeScreenshot": "screenshots\\hosted-D-M2-host-before.png",
+      "surfaceOpenScreenshot": null,
+      "surfaceClosedScreenshot": null,
+      "focusEntryResult": null,
+      "focusReturnResult": null,
+      "keyboardCloseResult": null,
+      "duplicateActionPreventionResult": null,
+      "failureRetryResult": "needs-explicit-network-failure-simulation (not implemented in Phase 3 spec)",
+      "mobileViewportUsed": {
+        "width": 360,
+        "height": 720
+      },
+      "errors": [
+        "console.error: Error: Minified React error #130; visit https://react.dev/errors/130?args[]=undefined&args[]= for the full message or use the non-minified dev environment for full errors and additional helpful warnings.\n    at rS (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:38836)\n    at d (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:48440)\n    at http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:51058\n    at i (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:51351)\n    at http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:52437\n    at o$ (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:74677)\n    at iu (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:91454)\n    at sd (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:131936)\n    at http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:131781\n    at sf (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:131789)"
+      ],
+      "status": "BLOCKED",
+      "blockingReasons": [
+        "Modal trigger did not fire OR modal never became visible — selectors are heuristic; Phase 5 reviewer must verify against actual UI source."
+      ],
+      "generatedBy": "build-hosted-surface-results.mjs",
+      "generatedAt": "2026-06-01T05:39:33.174Z"
+    },
+    {
+      "runId": "20260601-120308",
+      "sourceCommit": "8aa9594ffe760b3f279c0d79f8039524082849d6",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "d5ba82a8d0232a96",
+      "phase": "hosted-surface",
+      "iaCode": "D-M3",
+      "screenName": "D-M3 Autosave warning (host: /writing/51)",
+      "hostRoute": "/writing/51",
+      "finalUrl": "http://127.0.0.1:3100/writing/51",
+      "triggerSelector": "(triggered by autosave failure — simulate via offline + edit)",
+      "triggerCopyExpected": "[object Object]",
+      "triggerFired": false,
+      "surfaceOpened": false,
+      "hostBeforeScreenshot": "screenshots\\hosted-D-M3-host-before.png",
+      "surfaceOpenScreenshot": null,
+      "surfaceClosedScreenshot": null,
+      "focusEntryResult": null,
+      "focusReturnResult": null,
+      "keyboardCloseResult": null,
+      "duplicateActionPreventionResult": null,
+      "failureRetryResult": "needs-explicit-network-failure-simulation (not implemented in Phase 3 spec)",
+      "mobileViewportUsed": {
+        "width": 360,
+        "height": 720
+      },
+      "errors": [
+        "console.error: Error: Minified React error #130; visit https://react.dev/errors/130?args[]=undefined&args[]= for the full message or use the non-minified dev environment for full errors and additional helpful warnings.\n    at rS (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:38836)\n    at d (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:48440)\n    at http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:51058\n    at i (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:51351)\n    at http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:52437\n    at o$ (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:74677)\n    at iu (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:91454)\n    at sd (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:131936)\n    at http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:131781\n    at sf (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:131789)"
+      ],
+      "status": "BLOCKED",
+      "blockingReasons": [
+        "Modal trigger did not fire OR modal never became visible — selectors are heuristic; Phase 5 reviewer must verify against actual UI source."
+      ],
+      "generatedBy": "build-hosted-surface-results.mjs",
+      "generatedAt": "2026-06-01T05:39:33.174Z"
+    },
+    {
+      "runId": "20260601-120308",
+      "sourceCommit": "8aa9594ffe760b3f279c0d79f8039524082849d6",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "d5ba82a8d0232a96",
+      "phase": "hosted-surface",
+      "iaCode": "F-M1",
+      "screenName": "F-M1 PDF export modal (host: /library)",
+      "hostRoute": "/library",
+      "finalUrl": "http://127.0.0.1:3100/library",
+      "triggerSelector": "button:has-text('PDF'), button:has-text('내보내기'), button:has-text('Export')",
+      "triggerCopyExpected": "[object Object]",
+      "triggerFired": false,
+      "surfaceOpened": false,
+      "hostBeforeScreenshot": "screenshots\\hosted-F-M1-host-before.png",
+      "surfaceOpenScreenshot": null,
+      "surfaceClosedScreenshot": null,
+      "focusEntryResult": null,
+      "focusReturnResult": null,
+      "keyboardCloseResult": null,
+      "duplicateActionPreventionResult": null,
+      "failureRetryResult": "needs-explicit-network-failure-simulation (not implemented in Phase 3 spec)",
+      "mobileViewportUsed": {
+        "width": 360,
+        "height": 720
+      },
+      "errors": [],
+      "status": "BLOCKED",
+      "blockingReasons": [
+        "Modal trigger did not fire OR modal never became visible — selectors are heuristic; Phase 5 reviewer must verify against actual UI source."
+      ],
+      "generatedBy": "build-hosted-surface-results.mjs",
+      "generatedAt": "2026-06-01T05:39:33.174Z"
+    },
+    {
+      "runId": "20260601-120308",
+      "sourceCommit": "8aa9594ffe760b3f279c0d79f8039524082849d6",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "d5ba82a8d0232a96",
+      "phase": "hosted-surface",
+      "iaCode": "C-03",
+      "screenName": "C-03 Retry modal (host: /practice/problems)",
+      "hostRoute": "/practice/problems",
+      "finalUrl": "http://127.0.0.1:3100/practice/problems",
+      "triggerSelector": "button:has-text('다시 풀기'), button:has-text('상세'), a:has-text('풀기')",
+      "triggerCopyExpected": "[object Object]",
+      "triggerFired": true,
+      "surfaceOpened": true,
+      "hostBeforeScreenshot": "screenshots\\hosted-C-03-host-before.png",
+      "surfaceOpenScreenshot": "screenshots\\hosted-C-03-open.png",
+      "surfaceClosedScreenshot": "screenshots\\hosted-C-03-closed.png",
+      "focusEntryResult": "inside-modal",
+      "focusReturnResult": "evaluation-failed",
+      "keyboardCloseResult": "esc-closed",
+      "duplicateActionPreventionResult": "evaluation-failed: locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button:has-text(\\'시작\\'), button:has-text(\\'확인\\')').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"ant-btn css-ypkju9 talkpik ant-btn-primary ant-btn-color-primary ant-btn-variant-solid\">…</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div class=\"ant-modal-wrap\">…</div> from <div>…</div> subtree intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div class=\"ant-modal-wrap\">…</div> from <div>…</div> subtree intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    19 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is visible, enabled and stable\u001b[22m\n\u001b[2m       - scrolling into view if needed\u001b[22m\n\u001b[2m       - done scrolling\u001b[22m\n\u001b[2m       - <div class=\"ant-modal-wrap\">…</div> from <div>…</div> subtree intercepts pointer events\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n",
+      "failureRetryResult": null,
+      "mobileViewportUsed": {
+        "width": 360,
+        "height": 720
+      },
+      "errors": [],
+      "status": "PARTIAL",
+      "blockingReasons": [],
+      "generatedBy": "build-hosted-surface-results.mjs",
+      "generatedAt": "2026-06-01T05:39:33.174Z"
+    },
+    {
+      "runId": "20260601-120308",
+      "sourceCommit": "8aa9594ffe760b3f279c0d79f8039524082849d6",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "d5ba82a8d0232a96",
+      "phase": "hosted-surface",
+      "iaCode": "D-M1",
+      "screenName": "D-M1 Submission confirmation (host: /writing/51)",
+      "hostRoute": "/writing/51",
+      "finalUrl": "http://127.0.0.1:3100/writing/51",
+      "triggerSelector": "button:has-text('제출'), button[type='submit']",
+      "triggerCopyExpected": "[object Object]",
+      "triggerFired": false,
+      "surfaceOpened": false,
+      "hostBeforeScreenshot": "screenshots\\hosted-D-M1-host-before.png",
+      "surfaceOpenScreenshot": null,
+      "surfaceClosedScreenshot": null,
+      "focusEntryResult": null,
+      "focusReturnResult": null,
+      "keyboardCloseResult": null,
+      "duplicateActionPreventionResult": null,
+      "failureRetryResult": null,
+      "mobileViewportUsed": {
+        "width": 360,
+        "height": 720
+      },
+      "errors": [
+        "console.error: Error: Minified React error #130; visit https://react.dev/errors/130?args[]=undefined&args[]= for the full message or use the non-minified dev environment for full errors and additional helpful warnings.\n    at rS (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:38836)\n    at d (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:48440)\n    at http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:51058\n    at i (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:51351)\n    at http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:52437\n    at o$ (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:74677)\n    at iu (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:91454)\n    at sd (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:131936)\n    at http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:131781\n    at sf (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:131789)"
+      ],
+      "status": "BLOCKED",
+      "blockingReasons": [
+        "Modal trigger did not fire OR modal never became visible — selectors are heuristic; Phase 5 reviewer must verify against actual UI source."
+      ],
+      "generatedBy": "build-hosted-surface-results.mjs",
+      "generatedAt": "2026-06-01T05:39:33.174Z"
+    },
+    {
+      "runId": "20260601-120308",
+      "sourceCommit": "8aa9594ffe760b3f279c0d79f8039524082849d6",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "d5ba82a8d0232a96",
+      "phase": "hosted-surface",
+      "iaCode": "D-M2",
+      "screenName": "D-M2 AI analysis loading (host: /writing/51)",
+      "hostRoute": "/writing/51",
+      "finalUrl": "http://127.0.0.1:3100/writing/51",
+      "triggerSelector": "(handled inline — D-M2 is a transitional loading state, not a click-triggered modal)",
+      "triggerCopyExpected": "[object Object]",
+      "triggerFired": false,
+      "surfaceOpened": false,
+      "hostBeforeScreenshot": "screenshots\\hosted-D-M2-host-before.png",
+      "surfaceOpenScreenshot": null,
+      "surfaceClosedScreenshot": null,
+      "focusEntryResult": null,
+      "focusReturnResult": null,
+      "keyboardCloseResult": null,
+      "duplicateActionPreventionResult": null,
+      "failureRetryResult": "needs-explicit-network-failure-simulation (not implemented in Phase 3 spec)",
+      "mobileViewportUsed": {
+        "width": 360,
+        "height": 720
+      },
+      "errors": [
+        "console.error: Error: Minified React error #130; visit https://react.dev/errors/130?args[]=undefined&args[]= for the full message or use the non-minified dev environment for full errors and additional helpful warnings.\n    at rS (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:38836)\n    at d (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:48440)\n    at http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:51058\n    at i (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:51351)\n    at http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:52437\n    at o$ (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:74677)\n    at iu (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:91454)\n    at sd (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:131936)\n    at http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:131781\n    at sf (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:131789)"
+      ],
+      "status": "BLOCKED",
+      "blockingReasons": [
+        "Modal trigger did not fire OR modal never became visible — selectors are heuristic; Phase 5 reviewer must verify against actual UI source."
+      ],
+      "generatedBy": "build-hosted-surface-results.mjs",
+      "generatedAt": "2026-06-01T05:39:33.174Z"
+    },
+    {
+      "runId": "20260601-120308",
+      "sourceCommit": "8aa9594ffe760b3f279c0d79f8039524082849d6",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "d5ba82a8d0232a96",
+      "phase": "hosted-surface",
+      "iaCode": "D-M3",
+      "screenName": "D-M3 Autosave warning (host: /writing/51)",
+      "hostRoute": "/writing/51",
+      "finalUrl": "http://127.0.0.1:3100/writing/51",
+      "triggerSelector": "(triggered by autosave failure — simulate via offline + edit)",
+      "triggerCopyExpected": "[object Object]",
+      "triggerFired": false,
+      "surfaceOpened": false,
+      "hostBeforeScreenshot": "screenshots\\hosted-D-M3-host-before.png",
+      "surfaceOpenScreenshot": null,
+      "surfaceClosedScreenshot": null,
+      "focusEntryResult": null,
+      "focusReturnResult": null,
+      "keyboardCloseResult": null,
+      "duplicateActionPreventionResult": null,
+      "failureRetryResult": "needs-explicit-network-failure-simulation (not implemented in Phase 3 spec)",
+      "mobileViewportUsed": {
+        "width": 360,
+        "height": 720
+      },
+      "errors": [
+        "console.error: Error: Minified React error #130; visit https://react.dev/errors/130?args[]=undefined&args[]= for the full message or use the non-minified dev environment for full errors and additional helpful warnings.\n    at rS (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:38836)\n    at d (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:48440)\n    at http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:51058\n    at i (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:51351)\n    at http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:52437\n    at o$ (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:74677)\n    at iu (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:91454)\n    at sd (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:131936)\n    at http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:131781\n    at sf (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:131789)"
+      ],
+      "status": "BLOCKED",
+      "blockingReasons": [
+        "Modal trigger did not fire OR modal never became visible — selectors are heuristic; Phase 5 reviewer must verify against actual UI source."
+      ],
+      "generatedBy": "build-hosted-surface-results.mjs",
+      "generatedAt": "2026-06-01T05:39:33.174Z"
+    },
+    {
+      "runId": "20260601-120308",
+      "sourceCommit": "8aa9594ffe760b3f279c0d79f8039524082849d6",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "d5ba82a8d0232a96",
+      "phase": "hosted-surface",
+      "iaCode": "F-M1",
+      "screenName": "F-M1 PDF export modal (host: /library)",
+      "hostRoute": "/library",
+      "finalUrl": "http://127.0.0.1:3100/library",
+      "triggerSelector": "button:has-text('PDF'), button:has-text('내보내기'), button:has-text('Export')",
+      "triggerCopyExpected": "[object Object]",
+      "triggerFired": false,
+      "surfaceOpened": false,
+      "hostBeforeScreenshot": "screenshots\\hosted-F-M1-host-before.png",
+      "surfaceOpenScreenshot": null,
+      "surfaceClosedScreenshot": null,
+      "focusEntryResult": null,
+      "focusReturnResult": null,
+      "keyboardCloseResult": null,
+      "duplicateActionPreventionResult": null,
+      "failureRetryResult": "needs-explicit-network-failure-simulation (not implemented in Phase 3 spec)",
+      "mobileViewportUsed": {
+        "width": 360,
+        "height": 720
+      },
+      "errors": [],
+      "status": "BLOCKED",
+      "blockingReasons": [
+        "Modal trigger did not fire OR modal never became visible — selectors are heuristic; Phase 5 reviewer must verify against actual UI source."
+      ],
+      "generatedBy": "build-hosted-surface-results.mjs",
+      "generatedAt": "2026-06-01T05:39:33.174Z"
+    },
+    {
+      "runId": "20260601-120308",
+      "sourceCommit": "8aa9594ffe760b3f279c0d79f8039524082849d6",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "d5ba82a8d0232a96",
+      "phase": "hosted-surface",
+      "iaCode": "C-03",
+      "screenName": "C-03 Retry modal (host: /practice/problems)",
+      "hostRoute": "/practice/problems",
+      "finalUrl": "http://127.0.0.1:3100/practice/problems",
+      "triggerSelector": "button:has-text('다시 풀기'), button:has-text('상세'), a:has-text('풀기')",
+      "triggerCopyExpected": "[object Object]",
+      "triggerFired": true,
+      "surfaceOpened": true,
+      "hostBeforeScreenshot": "screenshots\\hosted-C-03-host-before.png",
+      "surfaceOpenScreenshot": "screenshots\\hosted-C-03-open.png",
+      "surfaceClosedScreenshot": "screenshots\\hosted-C-03-closed.png",
+      "focusEntryResult": "inside-modal",
+      "focusReturnResult": "evaluation-failed",
+      "keyboardCloseResult": "esc-closed",
+      "duplicateActionPreventionResult": "evaluation-failed: locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button:has-text(\\'시작\\'), button:has-text(\\'확인\\')').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"ant-btn css-ypkju9 talkpik ant-btn-primary ant-btn-color-primary ant-btn-variant-solid\">…</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div class=\"ant-modal-wrap\">…</div> from <div>…</div> subtree intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div class=\"ant-modal-wrap\">…</div> from <div>…</div> subtree intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    19 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is visible, enabled and stable\u001b[22m\n\u001b[2m       - scrolling into view if needed\u001b[22m\n\u001b[2m       - done scrolling\u001b[22m\n\u001b[2m       - <div class=\"ant-modal-wrap\">…</div> from <div>…</div> subtree intercepts pointer events\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n",
+      "failureRetryResult": null,
+      "mobileViewportUsed": {
+        "width": 360,
+        "height": 720
+      },
+      "errors": [],
+      "status": "PARTIAL",
+      "blockingReasons": [],
+      "generatedBy": "build-hosted-surface-results.mjs",
+      "generatedAt": "2026-06-01T05:39:33.174Z"
+    },
+    {
+      "runId": "20260601-120308",
+      "sourceCommit": "8aa9594ffe760b3f279c0d79f8039524082849d6",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "d5ba82a8d0232a96",
+      "phase": "hosted-surface",
+      "iaCode": "D-M1",
+      "screenName": "D-M1 Submission confirmation (host: /writing/51)",
+      "hostRoute": "/writing/51",
+      "finalUrl": "http://127.0.0.1:3100/writing/51",
+      "triggerSelector": "button:has-text('제출'), button[type='submit']",
+      "triggerCopyExpected": "[object Object]",
+      "triggerFired": false,
+      "surfaceOpened": false,
+      "hostBeforeScreenshot": "screenshots\\hosted-D-M1-host-before.png",
+      "surfaceOpenScreenshot": null,
+      "surfaceClosedScreenshot": null,
+      "focusEntryResult": null,
+      "focusReturnResult": null,
+      "keyboardCloseResult": null,
+      "duplicateActionPreventionResult": null,
+      "failureRetryResult": null,
+      "mobileViewportUsed": {
+        "width": 360,
+        "height": 720
+      },
+      "errors": [
+        "console.error: Error: Minified React error #130; visit https://react.dev/errors/130?args[]=undefined&args[]= for the full message or use the non-minified dev environment for full errors and additional helpful warnings.\n    at rS (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:38836)\n    at d (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:48440)\n    at http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:51058\n    at i (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:51351)\n    at http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:52437\n    at o$ (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:74677)\n    at iu (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:91454)\n    at sd (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:131936)\n    at http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:131781\n    at sf (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:131789)"
+      ],
+      "status": "BLOCKED",
+      "blockingReasons": [
+        "Modal trigger did not fire OR modal never became visible — selectors are heuristic; Phase 5 reviewer must verify against actual UI source."
+      ],
+      "generatedBy": "build-hosted-surface-results.mjs",
+      "generatedAt": "2026-06-01T05:39:33.174Z"
+    },
+    {
+      "runId": "20260601-120308",
+      "sourceCommit": "8aa9594ffe760b3f279c0d79f8039524082849d6",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "d5ba82a8d0232a96",
+      "phase": "hosted-surface",
+      "iaCode": "D-M2",
+      "screenName": "D-M2 AI analysis loading (host: /writing/51)",
+      "hostRoute": "/writing/51",
+      "finalUrl": "http://127.0.0.1:3100/writing/51",
+      "triggerSelector": "(handled inline — D-M2 is a transitional loading state, not a click-triggered modal)",
+      "triggerCopyExpected": "[object Object]",
+      "triggerFired": false,
+      "surfaceOpened": false,
+      "hostBeforeScreenshot": "screenshots\\hosted-D-M2-host-before.png",
+      "surfaceOpenScreenshot": null,
+      "surfaceClosedScreenshot": null,
+      "focusEntryResult": null,
+      "focusReturnResult": null,
+      "keyboardCloseResult": null,
+      "duplicateActionPreventionResult": null,
+      "failureRetryResult": "needs-explicit-network-failure-simulation (not implemented in Phase 3 spec)",
+      "mobileViewportUsed": {
+        "width": 360,
+        "height": 720
+      },
+      "errors": [
+        "console.error: Error: Minified React error #130; visit https://react.dev/errors/130?args[]=undefined&args[]= for the full message or use the non-minified dev environment for full errors and additional helpful warnings.\n    at rS (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:38836)\n    at d (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:48440)\n    at http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:51058\n    at i (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:51351)\n    at http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:52437\n    at o$ (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:74677)\n    at iu (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:91454)\n    at sd (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:131936)\n    at http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:131781\n    at sf (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:131789)"
+      ],
+      "status": "BLOCKED",
+      "blockingReasons": [
+        "Modal trigger did not fire OR modal never became visible — selectors are heuristic; Phase 5 reviewer must verify against actual UI source."
+      ],
+      "generatedBy": "build-hosted-surface-results.mjs",
+      "generatedAt": "2026-06-01T05:39:33.174Z"
+    },
+    {
+      "runId": "20260601-120308",
+      "sourceCommit": "8aa9594ffe760b3f279c0d79f8039524082849d6",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "d5ba82a8d0232a96",
+      "phase": "hosted-surface",
+      "iaCode": "D-M3",
+      "screenName": "D-M3 Autosave warning (host: /writing/51)",
+      "hostRoute": "/writing/51",
+      "finalUrl": "http://127.0.0.1:3100/writing/51",
+      "triggerSelector": "(triggered by autosave failure — simulate via offline + edit)",
+      "triggerCopyExpected": "[object Object]",
+      "triggerFired": false,
+      "surfaceOpened": false,
+      "hostBeforeScreenshot": "screenshots\\hosted-D-M3-host-before.png",
+      "surfaceOpenScreenshot": null,
+      "surfaceClosedScreenshot": null,
+      "focusEntryResult": null,
+      "focusReturnResult": null,
+      "keyboardCloseResult": null,
+      "duplicateActionPreventionResult": null,
+      "failureRetryResult": "needs-explicit-network-failure-simulation (not implemented in Phase 3 spec)",
+      "mobileViewportUsed": {
+        "width": 360,
+        "height": 720
+      },
+      "errors": [
+        "console.error: Error: Minified React error #130; visit https://react.dev/errors/130?args[]=undefined&args[]= for the full message or use the non-minified dev environment for full errors and additional helpful warnings.\n    at rS (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:38836)\n    at d (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:48440)\n    at http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:51058\n    at i (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:51351)\n    at http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:52437\n    at o$ (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:74677)\n    at iu (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:91454)\n    at sd (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:131936)\n    at http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:131781\n    at sf (http://127.0.0.1:3100/_next/static/chunks/12h~~woy8zq19.js:1:131789)"
+      ],
+      "status": "BLOCKED",
+      "blockingReasons": [
+        "Modal trigger did not fire OR modal never became visible — selectors are heuristic; Phase 5 reviewer must verify against actual UI source."
+      ],
+      "generatedBy": "build-hosted-surface-results.mjs",
+      "generatedAt": "2026-06-01T05:39:33.174Z"
+    },
+    {
+      "runId": "20260601-120308",
+      "sourceCommit": "8aa9594ffe760b3f279c0d79f8039524082849d6",
+      "dirtyState": "dirty",
+      "evidenceBundleId": "d5ba82a8d0232a96",
+      "phase": "hosted-surface",
+      "iaCode": "F-M1",
+      "screenName": "F-M1 PDF export modal (host: /library)",
+      "hostRoute": "/library",
+      "finalUrl": "http://127.0.0.1:3100/library",
+      "triggerSelector": "button:has-text('PDF'), button:has-text('내보내기'), button:has-text('Export')",
+      "triggerCopyExpected": "[object Object]",
+      "triggerFired": false,
+      "surfaceOpened": false,
+      "hostBeforeScreenshot": "screenshots\\hosted-F-M1-host-before.png",
+      "surfaceOpenScreenshot": null,
+      "surfaceClosedScreenshot": null,
+      "focusEntryResult": null,
+      "focusReturnResult": null,
+      "keyboardCloseResult": null,
+      "duplicateActionPreventionResult": null,
+      "failureRetryResult": "needs-explicit-network-failure-simulation (not implemented in Phase 3 spec)",
+      "mobileViewportUsed": {
+        "width": 360,
+        "height": 720
+      },
+      "errors": [],
+      "status": "BLOCKED",
+      "blockingReasons": [
+        "Modal trigger did not fire OR modal never became visible — selectors are heuristic; Phase 5 reviewer must verify against actual UI source."
+      ],
+      "generatedBy": "build-hosted-surface-results.mjs",
+      "generatedAt": "2026-06-01T05:39:33.174Z"
+    }
+  ],
+  "summary": {
+    "totalRows": 15,
+    "statusCounts": {
+      "PARTIAL": 3,
+      "BLOCKED": 12
+    }
+  },
+  "status": "BLOCKED"
+}

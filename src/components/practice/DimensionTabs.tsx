@@ -25,7 +25,7 @@ type Props = {
 
 /**
  * Phase 7-D Task 7 (P1-3) — X-07 dimension tabs.
- * IA spec: docs/IA/29-X-07-weakness-based-recommendations/description.md.
+ * IA spec: docs/Wireframe/29-X-07-weakness-based-recommendations/description.md.
  * 각 차원 진행 상태 + 평균 점수 + 데이터 부족 시 안내.
  */
 export function DimensionTabs({ dimensions }: Props) {

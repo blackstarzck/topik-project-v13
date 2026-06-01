@@ -1,9 +1,13 @@
 "use client";
 
-import { Button, Modal, Space, Typography } from "antd";
+import { Alert, Button, Modal, Radio, Space, Tooltip, Typography } from "antd";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
-const { Paragraph } = Typography;
+const { Paragraph, Text } = Typography;
+
+/** 재풀이 모드 — description.md §3 (새 답안 / 이전 답안 기반 / 힌트 포함). */
+type RetryMode = "fresh" | "resume" | "hint";
 
 /**
  * Phase 7-D Task 5 (P1-1) — C-03 retry modal.
@@ -47,18 +51,34 @@ export function RetryModal({
   submissionId,
 }: Props) {
   const router = useRouter();
+  // description.md §3: 하나는 기본 선택. 이전 답안이 있으면 '이어서'를 기본값으로.
+  // RetryModal 은 ProblemListView 에서 retryTarget 별로 조건부 마운트되므로,
+  // 대상이 바뀌면 컴포넌트가 새로 마운트되어 아래 초기값으로 자동 리셋된다.
+  const [mode, setMode] = useState<RetryMode>(hasAttempt ? "resume" : "fresh");
+  const [starting, setStarting] = useState(false);
+  const [startError, setStartError] = useState<string | null>(null);
 
-  function handleRetry() {
-    onClose();
-    // Writing routes are by question_no, not problemId. Pass problemId via
-    // ?problem= for the writing page to scope to the specific problem.
+  function handleStart() {
+    // description.md §4: 시작 클릭 후 중복 실행 차단.
+    if (starting) return;
+    setStartError(null);
     if (questionNo == null) {
-      router.push("/practice/problems" as never);
+      // 라우트 분기 불가 — 시작 실패로 처리하고 모달 유지 (description.md §4 예외).
+      setStartError("문제 유형 정보를 찾을 수 없어 시작할 수 없어요. 잠시 후 다시 시도해 주세요.");
       return;
     }
-    router.push(
-      `/writing/${questionNo}?problem=${problemId}&fresh=1` as never,
-    );
+    setStarting(true);
+    try {
+      // 새 답안(fresh)은 fresh=1, 이어서(resume)는 저장된 draft를 그대로 로드.
+      const freshParam = mode === "fresh" ? "&fresh=1" : "";
+      router.push(
+        `/writing/${questionNo}?problem=${problemId}${freshParam}` as never,
+      );
+    } catch {
+      // 내비게이션 실패 시 모달 유지 + 오류/재시도 (description.md §4 예외).
+      setStarting(false);
+      setStartError("풀이 화면을 여는 중 문제가 발생했어요. 다시 시도해 주세요.");
+    }
   }
 
   function handleViewResult() {
@@ -82,21 +102,61 @@ export function RetryModal({
       footer={null}
       destroyOnHidden
     >
-      <Paragraph type="secondary" style={{ marginBottom: 16 }}>
-        이 문제에 대한 이전 기록을 찾았습니다. 어떻게 할까요?
+      <Paragraph type="secondary" style={{ marginBottom: 12 }}>
+        이 문제에 대한 이전 기록을 찾았습니다. 어떻게 시작할까요?
       </Paragraph>
+
+      {/* description.md §3 — 재풀이 모드 선택 (기본 선택 1개, 선택 전 시작 비활성 아님: 항상 기본값 존재) */}
+      <Radio.Group
+        value={mode}
+        onChange={(e) => setMode(e.target.value as RetryMode)}
+        style={{ width: "100%", marginBottom: 16 }}
+      >
+        <Space direction="vertical" style={{ width: "100%" }}>
+          <Radio value="fresh">
+            새 답안으로 시작{" "}
+            <Text type="secondary">— 처음부터 다시 작성</Text>
+          </Radio>
+          <Radio value="resume" disabled={!hasAttempt}>
+            이전 답안 이어서{" "}
+            <Text type="secondary">
+              {hasAttempt ? "— 저장된 작성 내용에서 계속" : "— 이어서 풀 답안이 없어요"}
+            </Text>
+          </Radio>
+          {/* 힌트 포함 모드는 아직 준비 중 (deferred) — 비활성 + 정직한 안내. */}
+          <Tooltip title="힌트 포함 모드는 준비 중이에요.">
+            <Radio value="hint" disabled>
+              힌트 포함 <Text type="secondary">— 준비 중</Text>
+            </Radio>
+          </Tooltip>
+        </Space>
+      </Radio.Group>
+
+      {startError ? (
+        // description.md §4 예외 — 시작 실패 시 모달 유지, 오류 + 재시도.
+        <Alert
+          type="error"
+          showIcon
+          style={{ marginBottom: 12 }}
+          message="시작하지 못했어요"
+          description={startError}
+        />
+      ) : null}
+
       <Space direction="vertical" size="small" style={{ width: "100%" }}>
-        <Button type="primary" block onClick={handleRetry}>
-          다시 풀기
-        </Button>
         <Button
+          type="primary"
           block
-          onClick={handleViewResult}
-          disabled={!canViewResult}
+          onClick={handleStart}
+          loading={starting}
+          disabled={starting}
         >
+          {startError ? "다시 시도" : "시작"}
+        </Button>
+        <Button block onClick={handleViewResult} disabled={!canViewResult}>
           결과 보기
         </Button>
-        <Button type="text" block onClick={onClose}>
+        <Button type="text" block onClick={onClose} disabled={starting}>
           취소
         </Button>
       </Space>

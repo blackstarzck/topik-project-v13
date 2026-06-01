@@ -24,13 +24,16 @@ flowchart TD
 | [context-and-packets.md](./context-and-packets.md) | Context ledger 룰, 멀티 에이전트 packet, resume/compaction 복구. | 긴 작업 / 다중 에이전트 / 세션 재개 |
 | [review-gates.md](./review-gates.md) | TDD / Cross-model review / Plan-Review PASS Gate / Architecture Pass / QA / Finish. | 리뷰 게이트 직전 |
 | [fallback-and-recovery.md](./fallback-and-recovery.md) | 실패 분류 + fallback matrix + degraded mode 기록 룰. | 도구 부재, 권한 막힘, 외부 의존 실패 |
-| [agent-packets.md](./agent-packets.md) | 여러 AI에게 일을 나눠줄 때 쓰는 작업지시서 양식. | Codex와 Claude Code를 같이 쓰거나 하위 에이전트를 만들 때 |
-| [context-ledger-template.md](./context-ledger-template.md) | 긴 작업의 작업일지 양식. | 작업 시작 시 ledger 생성할 때 |
-| [harness-and-skills.md](./harness-and-skills.md) | GStack, Superpowers, Codex, Claude Code의 skill 이름과 harness 구조. | AI 실행 환경이나 skill 라우팅을 점검할 때 |
-| [report-template.md](./report-template.md) | AI가 마지막에 보고할 때 쓰는 양식. | 작업 완료 보고를 표준화할 때 |
-| [git-publication-decision.md](./git-publication-decision.md) | GitHub 공개 저장소 관련 결정 기록. | 저장소 공개/배포 이력을 확인할 때 |
+| [contracts/agent-packets.md](./contracts/agent-packets.md) | 여러 AI에게 일을 나눠줄 때 쓰는 작업지시서 계약. | Codex와 Claude Code를 같이 쓰거나 하위 에이전트를 만들 때 |
+| [templates/context-ledger-template.md](./templates/context-ledger-template.md) | 긴 작업의 작업일지 양식. | 작업 시작 시 ledger 생성할 때 |
+| [reference/harness-and-skills.md](./reference/harness-and-skills.md) | GStack, Superpowers, Codex, Claude Code의 skill 이름과 harness 구조. | AI 실행 환경이나 skill 라우팅을 점검할 때 |
+| [templates/report-template.md](./templates/report-template.md) | AI가 마지막에 보고할 때 쓰는 양식. | 작업 완료 보고를 표준화할 때 |
+| [gates/git-publication-decision.md](./gates/git-publication-decision.md) | GitHub 공개 저장소 관련 결정 기록. | 저장소 공개/배포 이력을 확인할 때 |
 | [plans/README.md](./plans/README.md) | 큰 계획 문서를 넣는 곳의 안내서. | 실행 전 계획을 파일로 남길 때 |
 | [runs/README.md](./runs/README.md) | 실제 작업일지를 넣는 곳의 안내서. | 작업별 진행 기록을 찾을 때 |
+| [../ai-execution-plans/README.md](../ai-execution-plans/README.md) | 긴 AI 실행 계획을 작업/단계별로 나눈 안내서. | Codex/Claude가 긴 계획서 전체를 읽지 않고 필요한 부분만 골라야 할 때 |
+| [ia-page-implementation-verification.md](./ia-page-implementation-verification.md) | IA 구현 검수 자동화가 직접 읽는 절차 문서. | IA audit 스크립트나 검수 계획이 요구할 때 |
+| [ia-ai-first-ux-review-checklist.md](./ia-ai-first-ux-review-checklist.md) | IA UX 검수에 쓰는 AI 우선 체크리스트. | IA audit의 AI UX 리뷰 단계에서 |
 
 ## 비개발자를 위한 이해
 
@@ -49,11 +52,14 @@ AI 작업은 말로만 주고받으면 중간에 맥락이 흐려질 수 있습�
 
 > Codex가 구현하고 Claude Code가 리뷰하는 방식으로 agent packet을 만들어줘.
 
-> 완료 보고는 `docs/ai-workflow/report-template.md` 형식으로 해줘.
+> 완료 보고는 `docs/ai-workflow/templates/report-template.md` 형식으로 해줘.
+
+> 긴 실행 계획서는 `docs/ai-execution-plans` README에서 필요한 단계 문서만 골라 읽어줘.
+
 ## IA Remediation Docs
 
 | Document | Use |
 | --- | --- |
-| [ia-remediation-multi-agent-execution-plan.md](./ia-remediation-multi-agent-execution-plan.md) | Separate execution plan for fixing IA/page audit findings after verification. |
-| [ia-specialist-checklists/README.md](./ia-specialist-checklists/README.md) | Specialist review criteria used by IA execution agents. |
-| [ia-review-profiles/README.md](./ia-review-profiles/README.md) | IA-to-specialist and IA-to-pack routing map. |
+| [../ai-execution-plans/ia-remediation-multi-agent/README.md](../ai-execution-plans/ia-remediation-multi-agent/README.md) | Split execution plan for fixing IA/page audit findings after verification. The old workflow path remains a short compatibility pointer. |
+| [../ai-execution-plans/ia-remediation-multi-agent/specialist-checklists/README.md](../ai-execution-plans/ia-remediation-multi-agent/specialist-checklists/README.md) | Specialist review criteria used by IA execution agents. |
+| [../ai-execution-plans/ia-remediation-multi-agent/review-profiles/README.md](../ai-execution-plans/ia-remediation-multi-agent/review-profiles/README.md) | IA-to-specialist and IA-to-pack routing map. |

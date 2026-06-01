@@ -1,0 +1,1918 @@
+{
+  "runId": "20260601-120308",
+  "sourceCommit": "8aa9594ffe760b3f279c0d79f8039524082849d6",
+  "dirtyState": "dirty",
+  "evidenceBundleId": "d5ba82a8d0232a96",
+  "collectionContext": "POST React #130 FIX (added use client to 11 antd-compound components). Re-collected browser+hosted on the fixed PRODUCTION build (port 3100). React #130 fully eliminated (0 rows). security-navigation + seed carried over from the pre-fix prod run (auth/RLS unaffected by the UI fix).",
+  "globalSecuritySummary": {
+    "total": 66,
+    "pass": 42,
+    "blocked": 24
+  },
+  "securityScenarios": [
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "BLOCKED",
+      "block": "Precondition not met: needs student storageState; also requires Supabase user with explicit non-admin role"
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "BLOCKED",
+      "block": "Precondition not met: needs student storageState + seeded feedback row owned by different user"
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "BLOCKED",
+      "block": "Precondition not met: needs student storageState + ability to dirty form mid-load"
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "BLOCKED",
+      "block": "Precondition not met: needs storageState with intentionally stale token (requires service_role to mint)"
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "BLOCKED",
+      "block": "Precondition not met: needs org_admin storageState"
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "BLOCKED",
+      "block": "Precondition not met: needs platform_admin storageState"
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "BLOCKED",
+      "block": "Precondition not met: needs student storageState + a seeded in-progress writing draft"
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "BLOCKED",
+      "block": "Precondition not met: needs student storageState + Playwright route-intercept to simulate network failure"
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "BLOCKED",
+      "block": "Precondition not met: needs student storageState; also requires Supabase user with explicit non-admin role"
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "BLOCKED",
+      "block": "Precondition not met: needs student storageState + seeded feedback row owned by different user"
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "BLOCKED",
+      "block": "Precondition not met: needs student storageState + ability to dirty form mid-load"
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "BLOCKED",
+      "block": "Precondition not met: needs storageState with intentionally stale token (requires service_role to mint)"
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "BLOCKED",
+      "block": "Precondition not met: needs org_admin storageState"
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "BLOCKED",
+      "block": "Precondition not met: needs platform_admin storageState"
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "BLOCKED",
+      "block": "Precondition not met: needs student storageState + a seeded in-progress writing draft"
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "BLOCKED",
+      "block": "Precondition not met: needs student storageState + Playwright route-intercept to simulate network failure"
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "PASS",
+      "block": null
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "BLOCKED",
+      "block": "Precondition not met: needs student storageState; also requires Supabase user with explicit non-admin role"
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "BLOCKED",
+      "block": "Precondition not met: needs student storageState + seeded feedback row owned by different user"
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "BLOCKED",
+      "block": "Precondition not met: needs student storageState + ability to dirty form mid-load"
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "BLOCKED",
+      "block": "Precondition not met: needs storageState with intentionally stale token (requires service_role to mint)"
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "BLOCKED",
+      "block": "Precondition not met: needs org_admin storageState"
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "BLOCKED",
+      "block": "Precondition not met: needs platform_admin storageState"
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "BLOCKED",
+      "block": "Precondition not met: needs student storageState + a seeded in-progress writing draft"
+    },
+    {
+      "scenario": "?",
+      "iaCode": null,
+      "status": "BLOCKED",
+      "block": "Precondition not met: needs student storageState + Playwright route-intercept to simulate network failure"
+    }
+  ],
+  "hostedSurface": {
+    "rows": 15,
+    "byIa": {
+      "C-03": {
+        "status": "PARTIAL",
+        "block": null
+      },
+      "D-M1": {
+        "status": "BLOCKED",
+        "block": "Modal trigger did not fire OR modal never became visible — selectors are heuristic; Phase 5 reviewer must verify against actual UI source."
+      },
+      "D-M2": {
+        "status": "BLOCKED",
+        "block": "Modal trigger did not fire OR modal never became visible — selectors are heuristic; Phase 5 reviewer must verify against actual UI source."
+      },
+      "D-M3": {
+        "status": "BLOCKED",
+        "block": "Modal trigger did not fire OR modal never became visible — selectors are heuristic; Phase 5 reviewer must verify against actual UI source."
+      },
+      "F-M1": {
+        "status": "BLOCKED",
+        "block": "Modal trigger did not fire OR modal never became visible — selectors are heuristic; Phase 5 reviewer must verify against actual UI source."
+      }
+    },
+    "note": "C-03 retry modal opened (PARTIAL). D-M1/D-M2/D-M3/F-M1 modal trigger did not auto-fire (heuristic selector; modals exist in source)."
+  },
+  "seed": {
+    "seedRunId": "seed-20260601-120308",
+    "status": "PASS",
+    "actors": [
+      "student@audit.local:learner"
+    ],
+    "deferred": [
+      "admin actors + app_role elevation",
+      "wrong-owner / owner-:id rows (E-01/E-02/R-01/X-10)"
+    ]
+  },
+  "ia": {
+    "A-01": {
+      "screenName": "Sign-up",
+      "route": "/sign-up",
+      "routeType": "page",
+      "audience": "public",
+      "packs": [
+        "CORE",
+        "FORM",
+        "AUTH",
+        "EMAIL",
+        "POLICY"
+      ],
+      "requiredEvidenceInputs": [
+        "document-receipt",
+        "source-map",
+        "browser",
+        "security-navigation",
+        "ai-ux-review",
+        "human-confirmation"
+      ],
+      "descriptionPath": "docs/Wireframe/01-A-01-sign-up/description.md",
+      "wireframeStatus": "present",
+      "browser": {
+        "statuses": [
+          "PASS"
+        ],
+        "blockingReasons": [],
+        "httpByViewport": {
+          "360": 200,
+          "768": 200,
+          "1280": 200
+        },
+        "visibleH1": "회원가입",
+        "primaryCtaPresent": true,
+        "screenshots": [
+          "screenshots\\coverage-A-01-360.png",
+          "screenshots\\coverage-A-01-768.png",
+          "screenshots\\coverage-A-01-1280.png"
+        ],
+        "errorsSample": []
+      },
+      "hostedSurface": null
+    },
+    "A-02": {
+      "screenName": "Login",
+      "route": "/login",
+      "routeType": "page",
+      "audience": "public",
+      "packs": [
+        "CORE",
+        "FORM",
+        "AUTH",
+        "SESSION"
+      ],
+      "requiredEvidenceInputs": [
+        "document-receipt",
+        "source-map",
+        "browser",
+        "security-navigation",
+        "ai-ux-review",
+        "human-confirmation"
+      ],
+      "descriptionPath": "docs/Wireframe/02-A-02-login/description.md",
+      "wireframeStatus": "present",
+      "browser": {
+        "statuses": [
+          "PASS"
+        ],
+        "blockingReasons": [],
+        "httpByViewport": {
+          "360": 200,
+          "768": 200,
+          "1280": 200
+        },
+        "visibleH1": "로그인",
+        "primaryCtaPresent": true,
+        "screenshots": [
+          "screenshots\\coverage-A-02-360.png",
+          "screenshots\\coverage-A-02-768.png",
+          "screenshots\\coverage-A-02-1280.png"
+        ],
+        "errorsSample": []
+      },
+      "hostedSurface": null
+    },
+    "A-03": {
+      "screenName": "Learning goal setup",
+      "route": "/onboarding/learning-goal",
+      "routeType": "page",
+      "audience": "user",
+      "packs": [
+        "CORE",
+        "FORM",
+        "GUARD",
+        "ONBOARDING"
+      ],
+      "requiredEvidenceInputs": [
+        "document-receipt",
+        "source-map",
+        "browser",
+        "security-navigation",
+        "ai-ux-review",
+        "human-confirmation"
+      ],
+      "descriptionPath": "docs/Wireframe/03-A-03-learning-goal-setup/description.md",
+      "wireframeStatus": "present",
+      "browser": {
+        "statuses": [
+          "PASS"
+        ],
+        "blockingReasons": [],
+        "httpByViewport": {
+          "360": 200,
+          "768": 200,
+          "1280": 200
+        },
+        "visibleH1": null,
+        "primaryCtaPresent": true,
+        "screenshots": [
+          "screenshots\\coverage-A-03-360.png",
+          "screenshots\\coverage-A-03-768.png",
+          "screenshots\\coverage-A-03-1280.png"
+        ],
+        "errorsSample": []
+      },
+      "hostedSurface": null
+    },
+    "B-01": {
+      "screenName": "Home dashboard",
+      "route": "/dashboard",
+      "routeType": "page",
+      "audience": "user",
+      "packs": [
+        "CORE",
+        "GUARD",
+        "DATA",
+        "EMPTY",
+        "NAV"
+      ],
+      "requiredEvidenceInputs": [
+        "document-receipt",
+        "source-map",
+        "browser",
+        "security-navigation",
+        "ai-ux-review"
+      ],
+      "descriptionPath": "docs/Wireframe/04-B-01-home-dashboard/description.md",
+      "wireframeStatus": "present",
+      "browser": {
+        "statuses": [
+          "PARTIAL"
+        ],
+        "blockingReasons": [
+          "Primary CTA matching /(학습\\s*시작|쓰기\\s*연습|이어하기|시작)/i not visible"
+        ],
+        "httpByViewport": {
+          "360": 200,
+          "768": 200,
+          "1280": 200
+        },
+        "visibleH1": null,
+        "primaryCtaPresent": false,
+        "screenshots": [
+          "screenshots\\coverage-B-01-360.png",
+          "screenshots\\coverage-B-01-768.png",
+          "screenshots\\coverage-B-01-1280.png"
+        ],
+        "errorsSample": []
+      },
+      "hostedSurface": null
+    },
+    "C-01": {
+      "screenName": "Problem type recommendations",
+      "route": "/practice/recommendations",
+      "routeType": "page",
+      "audience": "user",
+      "packs": [
+        "CORE",
+        "GUARD",
+        "DATA",
+        "FILTER"
+      ],
+      "requiredEvidenceInputs": [
+        "document-receipt",
+        "source-map",
+        "browser",
+        "security-navigation",
+        "ai-ux-review"
+      ],
+      "descriptionPath": "docs/Wireframe/05-C-01-problem-type-recommendations/description.md",
+      "wireframeStatus": "present",
+      "browser": {
+        "statuses": [
+          "PARTIAL"
+        ],
+        "blockingReasons": [
+          "Primary CTA matching /(시작|선택|문제\\s*풀기)/i not visible"
+        ],
+        "httpByViewport": {
+          "360": 200,
+          "768": 200,
+          "1280": 200
+        },
+        "visibleH1": null,
+        "primaryCtaPresent": false,
+        "screenshots": [
+          "screenshots\\coverage-C-01-360.png",
+          "screenshots\\coverage-C-01-768.png",
+          "screenshots\\coverage-C-01-1280.png"
+        ],
+        "errorsSample": []
+      },
+      "hostedSurface": null
+    },
+    "C-02": {
+      "screenName": "Problem list",
+      "route": "/practice/problems",
+      "routeType": "page",
+      "audience": "user",
+      "packs": [
+        "CORE",
+        "GUARD",
+        "DATA",
+        "FILTER",
+        "DIRECT-ID"
+      ],
+      "requiredEvidenceInputs": [
+        "document-receipt",
+        "source-map",
+        "browser",
+        "security-navigation",
+        "ai-ux-review"
+      ],
+      "descriptionPath": "docs/Wireframe/06-C-02-problem-list/description.md",
+      "wireframeStatus": "present",
+      "browser": {
+        "statuses": [
+          "PASS"
+        ],
+        "blockingReasons": [],
+        "httpByViewport": {
+          "360": 200,
+          "768": 200,
+          "1280": 200
+        },
+        "visibleH1": null,
+        "primaryCtaPresent": true,
+        "screenshots": [
+          "screenshots\\coverage-C-02-360.png",
+          "screenshots\\coverage-C-02-768.png",
+          "screenshots\\coverage-C-02-1280.png"
+        ],
+        "errorsSample": []
+      },
+      "hostedSurface": null
+    },
+    "C-03": {
+      "screenName": "Retry modal",
+      "route": "/practice/problems",
+      "routeType": "user chooses to solve a previously attempted or retry-eligible problem.",
+      "audience": "user",
+      "packs": [
+        "CORE",
+        "MODAL",
+        "BACK",
+        "STATE"
+      ],
+      "requiredEvidenceInputs": [
+        "document-receipt",
+        "source-map",
+        "security-navigation",
+        "ai-ux-review",
+        "human-confirmation"
+      ],
+      "descriptionPath": "docs/Wireframe/07-C-03-retry-modal/description.md",
+      "wireframeStatus": "present",
+      "browser": {
+        "statuses": [
+          "PASS"
+        ],
+        "blockingReasons": [],
+        "httpByViewport": {
+          "360": 200,
+          "768": 200,
+          "1280": 200
+        },
+        "visibleH1": null,
+        "primaryCtaPresent": false,
+        "screenshots": [
+          "screenshots\\coverage-C-03-360.png",
+          "screenshots\\coverage-C-03-768.png",
+          "screenshots\\coverage-C-03-1280.png"
+        ],
+        "errorsSample": []
+      },
+      "hostedSurface": {
+        "status": "PARTIAL",
+        "block": null
+      }
+    },
+    "D-01": {
+      "screenName": "Short-answer writing 51",
+      "route": "/writing/51",
+      "routeType": "page",
+      "audience": "user",
+      "packs": [
+        "CORE",
+        "WRITE",
+        "AUTOSAVE",
+        "SUBMIT",
+        "BACK",
+        "REFRESH"
+      ],
+      "requiredEvidenceInputs": [
+        "document-receipt",
+        "source-map",
+        "browser",
+        "security-navigation",
+        "ai-ux-review"
+      ],
+      "descriptionPath": "docs/Wireframe/08-D-01-short-answer-writing-51/description.md",
+      "wireframeStatus": "present",
+      "browser": {
+        "statuses": [
+          "PASS"
+        ],
+        "blockingReasons": [],
+        "httpByViewport": {
+          "360": 200,
+          "768": 200,
+          "1280": 200
+        },
+        "visibleH1": null,
+        "primaryCtaPresent": true,
+        "screenshots": [
+          "screenshots\\coverage-D-01-360.png",
+          "screenshots\\coverage-D-01-768.png",
+          "screenshots\\coverage-D-01-1280.png"
+        ],
+        "errorsSample": []
+      },
+      "hostedSurface": null
+    },
+    "D-02": {
+      "screenName": "Answer writing 52",
+      "route": "/writing/52",
+      "routeType": "page",
+      "audience": "user",
+      "packs": [
+        "CORE",
+        "WRITE",
+        "AUTOSAVE",
+        "SUBMIT",
+        "BACK",
+        "REFRESH"
+      ],
+      "requiredEvidenceInputs": [
+        "document-receipt",
+        "source-map",
+        "browser",
+        "security-navigation",
+        "ai-ux-review"
+      ],
+      "descriptionPath": "docs/Wireframe/09-D-02-answer-writing-52/description.md",
+      "wireframeStatus": "present",
+      "browser": {
+        "statuses": [
+          "PASS"
+        ],
+        "blockingReasons": [],
+        "httpByViewport": {
+          "360": 200,
+          "768": 200,
+          "1280": 200
+        },
+        "visibleH1": null,
+        "primaryCtaPresent": true,
+        "screenshots": [
+          "screenshots\\coverage-D-02-360.png",
+          "screenshots\\coverage-D-02-768.png",
+          "screenshots\\coverage-D-02-1280.png"
+        ],
+        "errorsSample": []
+      },
+      "hostedSurface": null
+    },
+    "D-03": {
+      "screenName": "Long-form writing 53",
+      "route": "/writing/53",
+      "routeType": "page",
+      "audience": "user",
+      "packs": [
+        "CORE",
+        "WRITE",
+        "AUTOSAVE",
+        "SUBMIT",
+        "BACK",
+        "REFRESH"
+      ],
+      "requiredEvidenceInputs": [
+        "document-receipt",
+        "source-map",
+        "browser",
+        "security-navigation",
+        "ai-ux-review"
+      ],
+      "descriptionPath": "docs/Wireframe/10-D-03-long-form-writing-53/description.md",
+      "wireframeStatus": "present",
+      "browser": {
+        "statuses": [
+          "PASS"
+        ],
+        "blockingReasons": [],
+        "httpByViewport": {
+          "360": 200,
+          "768": 200,
+          "1280": 200
+        },
+        "visibleH1": null,
+        "primaryCtaPresent": true,
+        "screenshots": [
+          "screenshots\\coverage-D-03-360.png",
+          "screenshots\\coverage-D-03-768.png",
+          "screenshots\\coverage-D-03-1280.png"
+        ],
+        "errorsSample": []
+      },
+      "hostedSurface": null
+    },
+    "D-04": {
+      "screenName": "Essay writing 54",
+      "route": "/writing/54",
+      "routeType": "page",
+      "audience": "user",
+      "packs": [
+        "CORE",
+        "WRITE",
+        "AUTOSAVE",
+        "SUBMIT",
+        "BACK",
+        "REFRESH"
+      ],
+      "requiredEvidenceInputs": [
+        "document-receipt",
+        "source-map",
+        "browser",
+        "security-navigation",
+        "ai-ux-review"
+      ],
+      "descriptionPath": "docs/Wireframe/11-D-04-essay-writing-54/description.md",
+      "wireframeStatus": "present",
+      "browser": {
+        "statuses": [
+          "PASS"
+        ],
+        "blockingReasons": [],
+        "httpByViewport": {
+          "360": 200,
+          "768": 200,
+          "1280": 200
+        },
+        "visibleH1": null,
+        "primaryCtaPresent": true,
+        "screenshots": [
+          "screenshots\\coverage-D-04-360.png",
+          "screenshots\\coverage-D-04-768.png",
+          "screenshots\\coverage-D-04-1280.png"
+        ],
+        "errorsSample": []
+      },
+      "hostedSurface": null
+    },
+    "D-M1": {
+      "screenName": "Submission confirmation",
+      "route": "/writing/51, /writing/52, /writing/53, /writing/54",
+      "routeType": "user submits a writing answer.",
+      "audience": "user",
+      "packs": [
+        "CORE",
+        "MODAL",
+        "IRREVERSIBLE-ACTION"
+      ],
+      "requiredEvidenceInputs": [
+        "document-receipt",
+        "source-map",
+        "security-navigation",
+        "ai-ux-review",
+        "human-confirmation"
+      ],
+      "descriptionPath": "docs/Wireframe/12-D-M1-submission-confirmation-modal/description.md",
+      "wireframeStatus": "present",
+      "browser": {
+        "statuses": [
+          "PASS"
+        ],
+        "blockingReasons": [],
+        "httpByViewport": {
+          "360": 200,
+          "768": 200,
+          "1280": 200
+        },
+        "visibleH1": null,
+        "primaryCtaPresent": false,
+        "screenshots": [
+          "screenshots\\coverage-D-M1-360.png",
+          "screenshots\\coverage-D-M1-768.png",
+          "screenshots\\coverage-D-M1-1280.png"
+        ],
+        "errorsSample": []
+      },
+      "hostedSurface": {
+        "status": "BLOCKED",
+        "block": "Modal trigger did not fire OR modal never became visible — selectors are heuristic; Phase 5 reviewer must verify against actual UI source."
+      }
+    },
+    "D-M2": {
+      "screenName": "AI analysis loading",
+      "route": "writing submission flow",
+      "routeType": "submission accepted and feedback/report generation is pending.",
+      "audience": "user",
+      "packs": [
+        "CORE",
+        "LOADING",
+        "ASYNC",
+        "OPS"
+      ],
+      "requiredEvidenceInputs": [
+        "document-receipt",
+        "source-map",
+        "security-navigation",
+        "ai-ux-review"
+      ],
+      "descriptionPath": "docs/Wireframe/13-D-M2-ai-analysis-loading/description.md",
+      "wireframeStatus": "present",
+      "browser": {
+        "statuses": [
+          "PASS"
+        ],
+        "blockingReasons": [],
+        "httpByViewport": {
+          "360": 200,
+          "768": 200,
+          "1280": 200
+        },
+        "visibleH1": null,
+        "primaryCtaPresent": false,
+        "screenshots": [
+          "screenshots\\coverage-D-M2-360.png",
+          "screenshots\\coverage-D-M2-768.png",
+          "screenshots\\coverage-D-M2-1280.png"
+        ],
+        "errorsSample": []
+      },
+      "hostedSurface": {
+        "status": "BLOCKED",
+        "block": "Modal trigger did not fire OR modal never became visible — selectors are heuristic; Phase 5 reviewer must verify against actual UI source."
+      }
+    },
+    "E-01": {
+      "screenName": "Short-answer feedback",
+      "route": "/writing/feedback/short/:id",
+      "routeType": "page",
+      "audience": "user",
+      "packs": [
+        "CORE",
+        "DATA",
+        "OWNER-CHECK",
+        "DIRECT-ID",
+        "EXPORT"
+      ],
+      "requiredEvidenceInputs": [
+        "document-receipt",
+        "source-map",
+        "browser",
+        "security-navigation",
+        "ai-ux-review"
+      ],
+      "descriptionPath": "docs/Wireframe/14-E-01-short-answer-feedback/description.md",
+      "wireframeStatus": "present",
+      "browser": {
+        "statuses": [
+          "PARTIAL"
+        ],
+        "blockingReasons": [
+          "Primary CTA matching /(다시\\s*풀기|저장|next|다음)/i not visible"
+        ],
+        "httpByViewport": {
+          "360": 200,
+          "768": 200,
+          "1280": 200
+        },
+        "visibleH1": null,
+        "primaryCtaPresent": false,
+        "screenshots": [
+          "screenshots\\coverage-E-01-360.png",
+          "screenshots\\coverage-E-01-768.png",
+          "screenshots\\coverage-E-01-1280.png"
+        ],
+        "errorsSample": []
+      },
+      "hostedSurface": null
+    },
+    "E-02": {
+      "screenName": "Long-form feedback",
+      "route": "/writing/feedback/long/:id",
+      "routeType": "page",
+      "audience": "user",
+      "packs": [
+        "CORE",
+        "DATA",
+        "OWNER-CHECK",
+        "DIRECT-ID",
+        "EXPORT"
+      ],
+      "requiredEvidenceInputs": [
+        "document-receipt",
+        "source-map",
+        "browser",
+        "security-navigation",
+        "ai-ux-review"
+      ],
+      "descriptionPath": "docs/Wireframe/15-E-02-long-form-feedback/description.md",
+      "wireframeStatus": "present",
+      "browser": {
+        "statuses": [
+          "PARTIAL"
+        ],
+        "blockingReasons": [
+          "Primary CTA matching /(다시\\s*작성|PDF|비교|next)/i not visible"
+        ],
+        "httpByViewport": {
+          "360": 200,
+          "768": 200,
+          "1280": 200
+        },
+        "visibleH1": null,
+        "primaryCtaPresent": false,
+        "screenshots": [
+          "screenshots\\coverage-E-02-360.png",
+          "screenshots\\coverage-E-02-768.png",
+          "screenshots\\coverage-E-02-1280.png"
+        ],
+        "errorsSample": []
+      },
+      "hostedSurface": null
+    },
+    "R-01": {
+      "screenName": "Comparison report",
+      "route": "/writing/reports/:id/compare",
+      "routeType": "page",
+      "audience": "user",
+      "packs": [
+        "CORE",
+        "DATA",
+        "CHART",
+        "OWNER-CHECK",
+        "EXPORT"
+      ],
+      "requiredEvidenceInputs": [
+        "document-receipt",
+        "source-map",
+        "browser",
+        "security-navigation",
+        "ai-ux-review"
+      ],
+      "descriptionPath": "docs/Wireframe/16-R-01-comparison-report/description.md",
+      "wireframeStatus": "present",
+      "browser": {
+        "statuses": [
+          "PARTIAL"
+        ],
+        "blockingReasons": [
+          "Primary CTA matching /(다음|시작|개선|약점)/i not visible"
+        ],
+        "httpByViewport": {
+          "360": 200,
+          "768": 200,
+          "1280": 200
+        },
+        "visibleH1": null,
+        "primaryCtaPresent": false,
+        "screenshots": [
+          "screenshots\\coverage-R-01-360.png",
+          "screenshots\\coverage-R-01-768.png",
+          "screenshots\\coverage-R-01-1280.png"
+        ],
+        "errorsSample": []
+      },
+      "hostedSurface": null
+    },
+    "R-02": {
+      "screenName": "Next problem recommendation",
+      "route": "/practice/next",
+      "routeType": "page",
+      "audience": "user",
+      "packs": [
+        "CORE",
+        "DATA",
+        "EMPTY",
+        "PAYWALL-ENTRY"
+      ],
+      "requiredEvidenceInputs": [
+        "document-receipt",
+        "source-map",
+        "browser",
+        "security-navigation",
+        "ai-ux-review"
+      ],
+      "descriptionPath": "docs/Wireframe/17-R-02-next-problem-recommendation/description.md",
+      "wireframeStatus": "present",
+      "browser": {
+        "statuses": [
+          "PASS"
+        ],
+        "blockingReasons": [],
+        "httpByViewport": {
+          "360": 200,
+          "768": 200,
+          "1280": 200
+        },
+        "visibleH1": "다음 문제",
+        "primaryCtaPresent": true,
+        "screenshots": [
+          "screenshots\\coverage-R-02-360.png",
+          "screenshots\\coverage-R-02-768.png",
+          "screenshots\\coverage-R-02-1280.png"
+        ],
+        "errorsSample": []
+      },
+      "hostedSurface": null
+    },
+    "F-01": {
+      "screenName": "My library",
+      "route": "/library",
+      "routeType": "page",
+      "audience": "user",
+      "packs": [
+        "CORE",
+        "DATA",
+        "OWNER-CHECK",
+        "SEARCH",
+        "EXPORT"
+      ],
+      "requiredEvidenceInputs": [
+        "document-receipt",
+        "source-map",
+        "browser",
+        "security-navigation",
+        "ai-ux-review"
+      ],
+      "descriptionPath": "docs/Wireframe/18-F-01-my-library/description.md",
+      "wireframeStatus": "present",
+      "browser": {
+        "statuses": [
+          "PARTIAL"
+        ],
+        "blockingReasons": [
+          "Heading \"내 라이브러리\" did not match expected pattern /(서재|library|보관|저장)/i",
+          "Primary CTA matching /(저장|PDF|상세|export)/i not visible"
+        ],
+        "httpByViewport": {
+          "360": 200,
+          "768": 200,
+          "1280": 200
+        },
+        "visibleH1": "내 라이브러리",
+        "primaryCtaPresent": false,
+        "screenshots": [
+          "screenshots\\coverage-F-01-360.png",
+          "screenshots\\coverage-F-01-768.png",
+          "screenshots\\coverage-F-01-1280.png"
+        ],
+        "errorsSample": []
+      },
+      "hostedSurface": null
+    },
+    "F-M1": {
+      "screenName": "PDF export modal",
+      "route": "/library, /writing/feedback/short/:id, /writing/feedback/long/:id, /writing/reports/:id/compare",
+      "routeType": "user exports feedback or report content.",
+      "audience": "user",
+      "packs": [
+        "CORE",
+        "MODAL",
+        "EXPORT",
+        "STORAGE",
+        "FAILURE"
+      ],
+      "requiredEvidenceInputs": [
+        "document-receipt",
+        "source-map",
+        "security-navigation",
+        "ai-ux-review",
+        "human-confirmation"
+      ],
+      "descriptionPath": "docs/Wireframe/19-F-M1-pdf-export-modal/description.md",
+      "wireframeStatus": "present",
+      "browser": {
+        "statuses": [
+          "PARTIAL"
+        ],
+        "blockingReasons": [
+          "Heading \"내 라이브러리\" did not match expected pattern /(PDF|내보내기|export)/i"
+        ],
+        "httpByViewport": {
+          "360": 200,
+          "768": 200,
+          "1280": 200
+        },
+        "visibleH1": "내 라이브러리",
+        "primaryCtaPresent": false,
+        "screenshots": [
+          "screenshots\\coverage-F-M1-360.png",
+          "screenshots\\coverage-F-M1-768.png",
+          "screenshots\\coverage-F-M1-1280.png"
+        ],
+        "errorsSample": []
+      },
+      "hostedSurface": {
+        "status": "BLOCKED",
+        "block": "Modal trigger did not fire OR modal never became visible — selectors are heuristic; Phase 5 reviewer must verify against actual UI source."
+      }
+    },
+    "G-01": {
+      "screenName": "Language settings",
+      "route": "/settings/language",
+      "routeType": "page",
+      "audience": "user",
+      "packs": [
+        "CORE",
+        "POLICY",
+        "PERSISTENCE",
+        "I18N"
+      ],
+      "requiredEvidenceInputs": [
+        "document-receipt",
+        "source-map",
+        "browser",
+        "security-navigation",
+        "ai-ux-review",
+        "human-confirmation"
+      ],
+      "descriptionPath": "docs/Wireframe/20-G-01-language-settings/description.md",
+      "wireframeStatus": "present",
+      "browser": {
+        "statuses": [
+          "PASS"
+        ],
+        "blockingReasons": [],
+        "httpByViewport": {
+          "360": 200,
+          "768": 200,
+          "1280": 200
+        },
+        "visibleH1": "언어 설정",
+        "primaryCtaPresent": true,
+        "screenshots": [
+          "screenshots\\coverage-G-01-360.png",
+          "screenshots\\coverage-G-01-768.png",
+          "screenshots\\coverage-G-01-1280.png"
+        ],
+        "errorsSample": []
+      },
+      "hostedSurface": null
+    },
+    "H-01": {
+      "screenName": "Admin problem management",
+      "route": "/admin/problems",
+      "routeType": "page",
+      "audience": "admin",
+      "packs": [
+        "CORE",
+        "ADMIN",
+        "RBAC",
+        "AUDIT"
+      ],
+      "requiredEvidenceInputs": [
+        "document-receipt",
+        "source-map",
+        "browser",
+        "security-navigation",
+        "ai-ux-review",
+        "human-confirmation"
+      ],
+      "descriptionPath": "docs/Wireframe/21-H-01-admin-problem-management/description.md",
+      "wireframeStatus": "present",
+      "browser": {
+        "statuses": [
+          "PARTIAL"
+        ],
+        "blockingReasons": [
+          "Primary CTA matching /(저장|승인|발행|편집)/i not visible"
+        ],
+        "httpByViewport": {
+          "360": 200,
+          "768": 200,
+          "1280": 200
+        },
+        "visibleH1": "문제 관리",
+        "primaryCtaPresent": false,
+        "screenshots": [
+          "screenshots\\coverage-H-01-360.png",
+          "screenshots\\coverage-H-01-768.png",
+          "screenshots\\coverage-H-01-1280.png"
+        ],
+        "errorsSample": []
+      },
+      "hostedSurface": null
+    },
+    "D-M3": {
+      "screenName": "Autosave warning",
+      "route": "/writing/51, /writing/52, /writing/53, /writing/54",
+      "routeType": "autosave failure, delay, or conflicting save state.",
+      "audience": "user",
+      "packs": [
+        "CORE",
+        "AUTOSAVE",
+        "FAILURE",
+        "RECOVERY"
+      ],
+      "requiredEvidenceInputs": [
+        "document-receipt",
+        "source-map",
+        "hosted-surface",
+        "security-navigation",
+        "ai-ux-review"
+      ],
+      "descriptionPath": "docs/Wireframe/22-D-M3-autosave-warning/description.md",
+      "wireframeStatus": "present",
+      "browser": {
+        "statuses": [
+          "PASS"
+        ],
+        "blockingReasons": [],
+        "httpByViewport": {
+          "360": 200,
+          "768": 200,
+          "1280": 200
+        },
+        "visibleH1": null,
+        "primaryCtaPresent": false,
+        "screenshots": [
+          "screenshots\\coverage-D-M3-360.png",
+          "screenshots\\coverage-D-M3-768.png",
+          "screenshots\\coverage-D-M3-1280.png"
+        ],
+        "errorsSample": []
+      },
+      "hostedSurface": {
+        "status": "BLOCKED",
+        "block": "Modal trigger did not fire OR modal never became visible — selectors are heuristic; Phase 5 reviewer must verify against actual UI source."
+      }
+    },
+    "X-01": {
+      "screenName": "Product landing",
+      "route": "/",
+      "routeType": "page",
+      "audience": "public",
+      "packs": [
+        "CORE",
+        "PUBLIC",
+        "ENTRY",
+        "COPY-POLICY"
+      ],
+      "requiredEvidenceInputs": [
+        "document-receipt",
+        "source-map",
+        "browser",
+        "ai-ux-review"
+      ],
+      "descriptionPath": "docs/Wireframe/23-X-01-product-landing/description.md",
+      "wireframeStatus": "present",
+      "browser": {
+        "statuses": [
+          "PASS"
+        ],
+        "blockingReasons": [],
+        "httpByViewport": {
+          "360": 200,
+          "768": 200,
+          "1280": 200
+        },
+        "visibleH1": "TOPIK 글쓰기, AI와 함께 끝까지",
+        "primaryCtaPresent": true,
+        "screenshots": [
+          "screenshots\\coverage-X-01-360.png",
+          "screenshots\\coverage-X-01-768.png",
+          "screenshots\\coverage-X-01-1280.png"
+        ],
+        "errorsSample": []
+      },
+      "hostedSurface": null
+    },
+    "X-02": {
+      "screenName": "Growth dashboard",
+      "route": "/growth",
+      "routeType": "page",
+      "audience": "user",
+      "packs": [
+        "CORE",
+        "DATA",
+        "CHART",
+        "EMPTY"
+      ],
+      "requiredEvidenceInputs": [
+        "document-receipt",
+        "source-map",
+        "browser",
+        "security-navigation",
+        "ai-ux-review"
+      ],
+      "descriptionPath": "docs/Wireframe/24-X-02-growth-dashboard/description.md",
+      "wireframeStatus": "present",
+      "browser": {
+        "statuses": [
+          "PARTIAL"
+        ],
+        "blockingReasons": [
+          "Primary CTA matching /(추천|개선|상세|확인|학습)/i not visible"
+        ],
+        "httpByViewport": {
+          "360": 200,
+          "768": 200,
+          "1280": 200
+        },
+        "visibleH1": null,
+        "primaryCtaPresent": false,
+        "screenshots": [
+          "screenshots\\coverage-X-02-360.png",
+          "screenshots\\coverage-X-02-768.png",
+          "screenshots\\coverage-X-02-1280.png"
+        ],
+        "errorsSample": []
+      },
+      "hostedSurface": null
+    },
+    "X-03": {
+      "screenName": "Paywall",
+      "route": "/paywall",
+      "routeType": "page",
+      "audience": "user",
+      "packs": [
+        "CORE",
+        "POLICY",
+        "DEFERRED-BILLING",
+        "BACK"
+      ],
+      "requiredEvidenceInputs": [
+        "document-receipt",
+        "source-map",
+        "browser",
+        "security-navigation",
+        "ai-ux-review",
+        "human-confirmation"
+      ],
+      "descriptionPath": "docs/Wireframe/25-X-03-paywall/description.md",
+      "wireframeStatus": "present",
+      "browser": {
+        "statuses": [
+          "PARTIAL"
+        ],
+        "blockingReasons": [
+          "Primary CTA matching /(구독|시작|선택|체험)/i not visible"
+        ],
+        "httpByViewport": {
+          "360": 200,
+          "768": 200,
+          "1280": 200
+        },
+        "visibleH1": null,
+        "primaryCtaPresent": false,
+        "screenshots": [
+          "screenshots\\coverage-X-03-360.png",
+          "screenshots\\coverage-X-03-768.png",
+          "screenshots\\coverage-X-03-1280.png"
+        ],
+        "errorsSample": []
+      },
+      "hostedSurface": null
+    },
+    "X-04": {
+      "screenName": "Subscription management",
+      "route": "/subscription",
+      "routeType": "page",
+      "audience": "user",
+      "packs": [
+        "CORE",
+        "POLICY",
+        "DEFERRED-BILLING",
+        "DATA"
+      ],
+      "requiredEvidenceInputs": [
+        "document-receipt",
+        "source-map",
+        "browser",
+        "security-navigation",
+        "ai-ux-review",
+        "human-confirmation"
+      ],
+      "descriptionPath": "docs/Wireframe/26-X-04-subscription-management/description.md",
+      "wireframeStatus": "present",
+      "browser": {
+        "statuses": [
+          "PARTIAL"
+        ],
+        "blockingReasons": [
+          "Primary CTA matching /(변경|취소|관리|결제)/i not visible"
+        ],
+        "httpByViewport": {
+          "360": 200,
+          "768": 200,
+          "1280": 200
+        },
+        "visibleH1": null,
+        "primaryCtaPresent": false,
+        "screenshots": [
+          "screenshots\\coverage-X-04-360.png",
+          "screenshots\\coverage-X-04-768.png",
+          "screenshots\\coverage-X-04-1280.png"
+        ],
+        "errorsSample": []
+      },
+      "hostedSurface": null
+    },
+    "X-05": {
+      "screenName": "Profile editing",
+      "route": "/profile",
+      "routeType": "page",
+      "audience": "user",
+      "packs": [
+        "CORE",
+        "FORM",
+        "PII",
+        "OWNER-CHECK"
+      ],
+      "requiredEvidenceInputs": [
+        "document-receipt",
+        "source-map",
+        "browser",
+        "security-navigation",
+        "ai-ux-review",
+        "human-confirmation"
+      ],
+      "descriptionPath": "docs/Wireframe/27-X-05-profile-editing/description.md",
+      "wireframeStatus": "present",
+      "browser": {
+        "statuses": [
+          "PASS"
+        ],
+        "blockingReasons": [],
+        "httpByViewport": {
+          "360": 200,
+          "768": 200,
+          "1280": 200
+        },
+        "visibleH1": "프로필",
+        "primaryCtaPresent": true,
+        "screenshots": [
+          "screenshots\\coverage-X-05-360.png",
+          "screenshots\\coverage-X-05-768.png",
+          "screenshots\\coverage-X-05-1280.png"
+        ],
+        "errorsSample": []
+      },
+      "hostedSurface": null
+    },
+    "X-06": {
+      "screenName": "Password reset",
+      "route": "/password-reset",
+      "routeType": "page",
+      "audience": "public",
+      "packs": [
+        "CORE",
+        "FORM",
+        "AUTH",
+        "EMAIL",
+        "TOKEN"
+      ],
+      "requiredEvidenceInputs": [
+        "document-receipt",
+        "source-map",
+        "browser",
+        "security-navigation",
+        "ai-ux-review",
+        "human-confirmation"
+      ],
+      "descriptionPath": "docs/Wireframe/28-X-06-password-reset/description.md",
+      "wireframeStatus": "present",
+      "browser": {
+        "statuses": [
+          "PASS"
+        ],
+        "blockingReasons": [],
+        "httpByViewport": {
+          "360": 200,
+          "768": 200,
+          "1280": 200
+        },
+        "visibleH1": "비밀번호 재설정",
+        "primaryCtaPresent": true,
+        "screenshots": [
+          "screenshots\\coverage-X-06-360.png",
+          "screenshots\\coverage-X-06-768.png",
+          "screenshots\\coverage-X-06-1280.png"
+        ],
+        "errorsSample": []
+      },
+      "hostedSurface": null
+    },
+    "X-07": {
+      "screenName": "Weakness-based recommendations",
+      "route": "/practice/weakness",
+      "routeType": "page",
+      "audience": "user",
+      "packs": [
+        "CORE",
+        "DATA",
+        "RECOMMENDATION",
+        "EMPTY"
+      ],
+      "requiredEvidenceInputs": [
+        "document-receipt",
+        "source-map",
+        "browser",
+        "security-navigation",
+        "ai-ux-review",
+        "human-confirmation"
+      ],
+      "descriptionPath": "docs/Wireframe/29-X-07-weakness-based-recommendations/description.md",
+      "wireframeStatus": "present",
+      "browser": {
+        "statuses": [
+          "PASS"
+        ],
+        "blockingReasons": [],
+        "httpByViewport": {
+          "360": 200,
+          "768": 200,
+          "1280": 200
+        },
+        "visibleH1": "약점 보강",
+        "primaryCtaPresent": true,
+        "screenshots": [
+          "screenshots\\coverage-X-07-360.png",
+          "screenshots\\coverage-X-07-768.png",
+          "screenshots\\coverage-X-07-1280.png"
+        ],
+        "errorsSample": []
+      },
+      "hostedSurface": null
+    },
+    "X-08": {
+      "screenName": "Organization admin dashboard",
+      "route": "/admin/org",
+      "routeType": "page",
+      "audience": "admin",
+      "packs": [
+        "CORE",
+        "ADMIN",
+        "RBAC",
+        "ORG-SCOPE"
+      ],
+      "requiredEvidenceInputs": [
+        "document-receipt",
+        "source-map",
+        "browser",
+        "security-navigation",
+        "ai-ux-review",
+        "human-confirmation"
+      ],
+      "descriptionPath": "docs/Wireframe/30-X-08-organization-admin-dashboard/description.md",
+      "wireframeStatus": "present",
+      "browser": {
+        "statuses": [
+          "PARTIAL"
+        ],
+        "blockingReasons": [
+          "1 console/page errors captured (excluding 0 HMR/dev-mode noise)",
+          "Primary CTA matching /(생성|발송|다운로드|관리)/i not visible"
+        ],
+        "httpByViewport": {
+          "360": 200,
+          "768": 200,
+          "1280": 200
+        },
+        "visibleH1": "기관 관리",
+        "primaryCtaPresent": false,
+        "screenshots": [
+          "screenshots\\coverage-X-08-360.png",
+          "screenshots\\coverage-X-08-768.png",
+          "screenshots\\coverage-X-08-1280.png"
+        ],
+        "errorsSample": [
+          "pageerror: Minified React error #418; visit https://react.dev/errors/418?args[]=text&args[]= for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
+        ]
+      },
+      "hostedSurface": null
+    },
+    "X-09": {
+      "screenName": "Notification settings",
+      "route": "/settings/notifications",
+      "routeType": "page",
+      "audience": "user",
+      "packs": [
+        "CORE",
+        "POLICY",
+        "PERSISTENCE",
+        "TRANSPORT-DEFERRED"
+      ],
+      "requiredEvidenceInputs": [
+        "document-receipt",
+        "source-map",
+        "browser",
+        "security-navigation",
+        "ai-ux-review",
+        "human-confirmation"
+      ],
+      "descriptionPath": "docs/Wireframe/31-X-09-notification-settings/description.md",
+      "wireframeStatus": "present",
+      "browser": {
+        "statuses": [
+          "PASS"
+        ],
+        "blockingReasons": [],
+        "httpByViewport": {
+          "360": 200,
+          "768": 200,
+          "1280": 200
+        },
+        "visibleH1": "알림 설정",
+        "primaryCtaPresent": true,
+        "screenshots": [
+          "screenshots\\coverage-X-09-360.png",
+          "screenshots\\coverage-X-09-768.png",
+          "screenshots\\coverage-X-09-1280.png"
+        ],
+        "errorsSample": []
+      },
+      "hostedSurface": null
+    },
+    "X-10": {
+      "screenName": "Admin user management",
+      "route": "/admin/users",
+      "routeType": "page",
+      "audience": "admin",
+      "packs": [
+        "CORE",
+        "ADMIN",
+        "RBAC",
+        "AUDIT",
+        "PRIVILEGE"
+      ],
+      "requiredEvidenceInputs": [
+        "document-receipt",
+        "source-map",
+        "browser",
+        "security-navigation",
+        "ai-ux-review",
+        "human-confirmation"
+      ],
+      "descriptionPath": "docs/Wireframe/32-X-10-admin-user-management/description.md",
+      "wireframeStatus": "present",
+      "browser": {
+        "statuses": [
+          "PASS"
+        ],
+        "blockingReasons": [],
+        "httpByViewport": {
+          "360": 200,
+          "768": 200,
+          "1280": 200
+        },
+        "visibleH1": "사용자 관리",
+        "primaryCtaPresent": true,
+        "screenshots": [
+          "screenshots\\coverage-X-10-360.png",
+          "screenshots\\coverage-X-10-768.png",
+          "screenshots\\coverage-X-10-1280.png"
+        ],
+        "errorsSample": []
+      },
+      "hostedSurface": null
+    },
+    "X-11": {
+      "screenName": "Auth error",
+      "route": "/auth/error",
+      "routeType": "page",
+      "audience": "public",
+      "packs": [
+        "CORE",
+        "AUTH",
+        "ERROR-REASON",
+        "RATE-LIMIT",
+        "SECURITY"
+      ],
+      "requiredEvidenceInputs": [
+        "document-receipt",
+        "source-map",
+        "browser",
+        "security-navigation",
+        "ai-ux-review",
+        "human-confirmation"
+      ],
+      "descriptionPath": "docs/Wireframe/33-X-11-auth-error/description.md",
+      "wireframeStatus": "missing",
+      "browser": {
+        "statuses": [
+          "PASS"
+        ],
+        "blockingReasons": [],
+        "httpByViewport": {
+          "360": 200,
+          "768": 200,
+          "1280": 200
+        },
+        "visibleH1": "인증 오류",
+        "primaryCtaPresent": true,
+        "screenshots": [
+          "screenshots\\coverage-X-11-360.png",
+          "screenshots\\coverage-X-11-768.png",
+          "screenshots\\coverage-X-11-1280.png"
+        ],
+        "errorsSample": []
+      },
+      "hostedSurface": null
+    },
+    "X-12": {
+      "screenName": "Auth verify-email",
+      "route": "/auth/verify-email",
+      "routeType": "page",
+      "audience": "public",
+      "packs": [
+        "CORE",
+        "AUTH",
+        "EMAIL",
+        "COOLDOWN",
+        "RETRY"
+      ],
+      "requiredEvidenceInputs": [
+        "document-receipt",
+        "source-map",
+        "browser",
+        "security-navigation",
+        "ai-ux-review",
+        "human-confirmation"
+      ],
+      "descriptionPath": "docs/Wireframe/34-X-12-auth-verify-email/description.md",
+      "wireframeStatus": "missing",
+      "browser": {
+        "statuses": [
+          "PASS"
+        ],
+        "blockingReasons": [],
+        "httpByViewport": {
+          "360": 200,
+          "768": 200,
+          "1280": 200
+        },
+        "visibleH1": "이메일 인증",
+        "primaryCtaPresent": true,
+        "screenshots": [
+          "screenshots\\coverage-X-12-360.png",
+          "screenshots\\coverage-X-12-768.png",
+          "screenshots\\coverage-X-12-1280.png"
+        ],
+        "errorsSample": []
+      },
+      "hostedSurface": null
+    }
+  }
+}

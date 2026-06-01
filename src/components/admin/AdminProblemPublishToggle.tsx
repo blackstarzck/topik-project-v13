@@ -30,7 +30,7 @@ export function AdminProblemPublishToggle({ row }: Props) {
   return (
     <Space size="small" align="center">
       <Select<PublishStatus>
-        aria-label="공개 상태 변경"
+        aria-label="발행 상태 변경"
         value={row.publish_status}
         style={{ width: 110 }}
         disabled={mutation.isPending}

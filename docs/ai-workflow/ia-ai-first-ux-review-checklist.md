@@ -3,21 +3,21 @@
 > Use this checklist during Phase 5 of
 > `docs/ai-workflow/ia-implementation-verification-execution-plan.md`.
 > It is a first-pass UX readiness filter for all 34 IA items. It does not
-> replace final human UX judgment.
+> replace independent GPT-5.5 adjudication.
 
 ## 1. Purpose
 
 AI-first UX review answers this question:
 
-> Is this IA item ready for a human UX reviewer, and what should the human focus on?
+> Is this IA item ready for independent GPT-5.5 adjudication, and what should the adjudicator focus on?
 
 The AI reviewer must check evidence, compare the page against the IA documents,
 and flag obvious UX, accessibility, navigation, policy, and AI-behavior risks.
 
 The AI reviewer must not mark an IA item `PASS` from code inspection or HTTP
 status alone. A final `PASS` needs rendered evidence and either high-confidence
-AI review plus human confirmation, or a recorded reason why human confirmation is
-not needed for that specific item.
+AI review plus independent GPT-5.5 adjudication, or a recorded reason why
+adjudication is not needed for that specific item.
 
 ## 2. Required Inputs
 
@@ -25,9 +25,9 @@ Read these before reviewing any IA item:
 
 - `docs/ai-workflow/ia-implementation-verification-execution-plan.md`
 - `docs/ai-workflow/ia-page-implementation-verification.md`
-- `docs/IA/README.md`
-- matching `docs/IA/<ia-folder>/description.md`
-- matching `docs/IA/<ia-folder>/wireframe.png`, when available
+- `docs/Wireframe/README.md`
+- matching `docs/Wireframe/<ia-folder>/description.md`
+- matching `docs/Wireframe/<ia-folder>/wireframe.png`, when available
 - `docs/sitemap.md`
 - `docs/flow/user-flow.md`
 - `docs/prd.md`
@@ -79,7 +79,7 @@ Use the same final label vocabulary as the execution plan.
 
 Use this extra Phase 5 field:
 
-- `Human confirmation`: `ready`, `needs-human-judgment`, `not-ready`.
+- `GPT-5.5 adjudication`: `ready`, `needs-adjudication`, `not-ready`.
 
 ## 5. IA Review Card Template
 
@@ -92,7 +92,7 @@ Create one card per IA item in
 - Route or host route: `/writing/51`
 - Route type: `page`
 - Audience: `user`
-- IA source: `docs/IA/08-D-01-short-answer-writing-51/description.md`
+- IA source: `docs/Wireframe/08-D-01-short-answer-writing-51/description.md`
 - Implementation anchors:
   - `src/app/(workspace)/writing/[questionId]/page.tsx`
   - `src/components/writing/WritingEditor.tsx`
@@ -106,7 +106,7 @@ Create one card per IA item in
   - error/empty/loading state:
 - AI UX result: `PARTIAL`
 - Confidence: `medium`
-- Human confirmation: `needs-human-judgment`
+- GPT-5.5 adjudication: `needs-adjudication`
 
 AI findings:
 - Page job: clear / unclear / missing evidence
@@ -123,7 +123,7 @@ Top gaps:
 - Focus skips autosave state before submit CTA.
 - Refresh after draft input is not verified.
 
-Human reviewer should inspect:
+GPT-5.5 adjudicator should inspect:
 - Whether the writing guide feels helpful or distracting on mobile.
 - Whether the Korean error copy sounds natural.
 ```
@@ -317,7 +317,7 @@ Use these anchors during Phase 5. They are not a complete implementation map;
 they are the current starting points for evidence collection.
 
 - Route authority: `docs/sitemap.md`
-- IA inventory: `docs/IA/README.md`
+- IA inventory: `docs/Wireframe/README.md`
 - User flow: `docs/flow/user-flow.md`
 - Sidebar/protected-route source: `src/lib/routes.ts`
 - Auth guard and route exposure: `src/proxy.ts`
@@ -378,12 +378,12 @@ Inputs:
 Return one IA review card with:
 - AI UX result: PASS/PARTIAL/FAIL/BLOCKED/DOC-GAP/DEFERRED
 - Confidence: high/medium/low
-- Human confirmation: ready/needs-human-judgment/not-ready
+- GPT-5.5 adjudication: ready/needs-adjudication/not-ready
 - Evidence used
 - Findings grouped by page job, entry context, primary action, flow continuity,
   AI behavior, form/error UX, keyboard/focus, responsive, policy/trust
 - Top gaps
-- Exact human review questions
+- Exact GPT-5.5 adjudication questions
 - Screenshot or browser evidence still needed
 
 Rules:
@@ -393,9 +393,9 @@ Rules:
 - Mark unavailable auth/data/env prerequisites as BLOCKED.
 ```
 
-## 11. Human Confirmation Rule
+## 11. GPT-5.5 Adjudication Rule
 
-AI-first review is the filter. Human confirmation is still required when:
+AI-first review is the filter. Independent GPT-5.5 adjudication is required when:
 
 - confidence is `low` or `medium`,
 - result is `PARTIAL`, `FAIL`, `BLOCKED`, or `DOC-GAP`,
@@ -404,5 +404,7 @@ AI-first review is the filter. Human confirmation is still required when:
 - the AI flags visual hierarchy, wording, tone, perceived trust, or mobile
   readability as a judgment question.
 
-The human reviewer should not repeat every mechanical check. They should inspect
-the questions and risks that the AI card surfaces.
+The GPT-5.5 adjudicator should not repeat every mechanical check. It should
+inspect the questions and risks that the AI card surfaces, challenge unsupported
+claims, and return a machine-readable adjudication row that cites the evidence it
+accepted or rejected.

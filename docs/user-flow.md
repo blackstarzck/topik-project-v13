@@ -5,7 +5,7 @@
 > **이 문서는 레거시 관측 흐름입니다. 새 구현/QA/리뷰에서는 정본이 아닙니다.**
 >
 > - 정본 사용자 플로우: [`docs/flow/user-flow.md`](flow/user-flow.md)
->   (`docs/IA/`의 32페이지 IA와 노드명이 1:1로 정합)
+>   (`docs/Wireframe/`의 32페이지 IA와 노드명이 1:1로 정합)
 > - 라우트: `docs/sitemap.md`의 Target React Route Map
 > - 구현 기준: `docs/spec.md`
 > - UI 구현 규칙: `docs/ant-design/`

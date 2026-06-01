@@ -78,7 +78,7 @@ for (const entry of MANIFEST.entries ?? []) {
       ...baseRow,
       reviewerActor: "coordinator (single-session) with cross-audit by 2 sub-agents + codex delegation",
       docsConsulted: [
-        `docs/IA/${entry.iaCode}-*/description.md`,
+        `docs/Wireframe/${entry.iaCode}-*/description.md`,
         "manual-review.json (cross-audit + codex delegated decisions)",
       ],
       extractedRequirements: "see manual-review.json " + iaCode + " row",

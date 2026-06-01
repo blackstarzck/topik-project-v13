@@ -8,26 +8,26 @@ Architecture의 줄임말로, 각 화면이 어떤 영역으로 구성되고 사
 
 | 산출물 | 위치 | 역할 | 우선순위 |
 | --- | --- | --- | --- |
-| 페이지별 IA (현행) | `docs/IA/{순번}-{코드}-{slug}/description.md` + `wireframe.png` | 32개 페이지의 와이어프레임 + 상세 영역 맵 | **현행 정본** |
+| 페이지별 IA (현행) | `docs/Wireframe/{순번}-{코드}-{slug}/description.md` + `wireframe.png` | 32개 페이지의 와이어프레임 + 상세 영역 맵 | **현행 정본** |
 | 페이지별 화면 구성 (레거시 관측) | `docs/ia-pages/*.md` | 2026-04-22 배포 HTML 사이트의 화면 영역 관측 기록 | 참고용 레거시 |
 
 두 산출물은 시점과 목적이 다릅니다.
 
-- `docs/IA/`는 새로 만들 화면의 **목표 IA**입니다(쓰기 51/52/53/54, 페이월, 구독,
+- `docs/Wireframe/`는 새로 만들 화면의 **목표 IA**입니다(쓰기 51/52/53/54, 페이월, 구독,
   관리자, 기관 관리자, 약점 기반 추천 등을 포함).
 - `docs/ia-pages/`는 레거시 HTML 사이트가 실제 어떻게 구성되어 있었는지의
   **관측 기록**입니다(단어장, 게시판 등 현행 IA에 1:1 대응되지 않는 영역도 포함).
 
-구현/QA/리뷰는 `docs/IA/`를 정본으로 사용하고, `docs/ia-pages/`는 보조 컨텍스트로만
-참조합니다. 사용자 플로우는 `docs/flow/user-flow.md`가 정본이며 `docs/IA/`의
+구현/QA/리뷰는 `docs/Wireframe/`를 정본으로 사용하고, `docs/ia-pages/`는 보조 컨텍스트로만
+참조합니다. 사용자 플로우는 `docs/flow/user-flow.md`가 정본이며 `docs/Wireframe/`의
 `Source` 값과 노드명이 1:1 대응됩니다.
 
 ## 현행 페이지별 IA (정본)
 
-전체 32페이지의 목록은 `docs/IA/README.md`에서 관리합니다.
+전체 32페이지의 목록은 `docs/Wireframe/README.md`에서 관리합니다.
 
-- 인덱스: [`docs/IA/README.md`](IA/README.md)
-- 정합성 분석 리포트: [`docs/IA/analysis-report.md`](IA/analysis-report.md)
+- 인덱스: [`docs/Wireframe/README.md`](Wireframe/README.md)
+- 정합성 분석 리포트: [`docs/Wireframe/analysis-report.md`](Wireframe/analysis-report.md)
 - 연동된 사용자 플로우: [`docs/flow/user-flow.md`](flow/user-flow.md)
 
 페이지 그룹:

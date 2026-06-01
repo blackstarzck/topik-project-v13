@@ -117,6 +117,12 @@ describe("SignUpForm", () => {
   it("calls supabase.auth.signUp with emailRedirectTo on valid submit", async () => {
     renderInApp(<SignUpForm />);
 
+    // A-01 reordered fields to 이름→이메일→비밀번호→비밀번호 확인 and made
+    // 이름(displayName) a required field, so it must be filled for the form to
+    // pass validation and call signUp.
+    fireEvent.change(screen.getByLabelText("이름"), {
+      target: { value: "홍길동" },
+    });
     fireEvent.change(screen.getByLabelText("이메일"), {
       target: { value: "valid@example.com" },
     });
@@ -147,6 +153,10 @@ describe("SignUpForm", () => {
   it("redirects to /auth/verify-email after successful sign-up (Phase 8-D)", async () => {
     renderInApp(<SignUpForm />);
 
+    // A-01: 이름(displayName) is required — fill it so submit succeeds.
+    fireEvent.change(screen.getByLabelText("이름"), {
+      target: { value: "홍길동" },
+    });
     fireEvent.change(screen.getByLabelText("이메일"), {
       target: { value: "valid@example.com" },
     });

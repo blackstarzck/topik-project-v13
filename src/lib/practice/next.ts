@@ -197,7 +197,7 @@ function pickOne<T>(raw: T | T[] | null | undefined): T | null {
 }
 
 // Phase 7-D Task 6 (P1-2) — getNextProblemBundle.
-// IA spec (docs/IA/17-R-02-next-problem-recommendation/description.md) requires:
+// IA spec (docs/Wireframe/17-R-02-next-problem-recommendation/description.md) requires:
 //   - primary (existing getNextProblem result)
 //   - summary (recent submissions count + average score + weakest dimensions)
 //   - alternatives (3 problems user can pick instead)

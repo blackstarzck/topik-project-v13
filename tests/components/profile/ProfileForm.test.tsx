@@ -257,7 +257,12 @@ describe("ProfileForm", () => {
     expect(
       screen.getByText(/이미지 업로드는 아직 활성화되지 않았습니다/),
     ).toBeTruthy();
-    expect(screen.getByText(/재로그인이 필요할 수 있습니다/)).toBeTruthy();
+    expect(
+      screen.getByText(/계정 식별 정보 변경은 향후 재인증이 필요할 수 있습니다/),
+    ).toBeTruthy();
+    expect(
+      screen.getByText(/이름·닉네임·자기소개 변경은 바로 저장됩니다/),
+    ).toBeTruthy();
   });
 
   it("enables Save only after a dirty edit and protects browser leave", () => {

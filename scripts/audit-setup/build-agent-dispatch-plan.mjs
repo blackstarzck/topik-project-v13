@@ -69,7 +69,7 @@ const shards = shardDefinitions.map((definition, index) => {
       "docs/sitemap.md",
       "docs/flow/user-flow.md",
       "docs/prd.md",
-      "assigned docs/IA/*/description.md files only",
+      "assigned docs/Wireframe/*/description.md files only",
       `${auditDir}/ia-manifest.json`,
       `${auditDir}/source-map-results.json`,
       `${auditDir}/static-results.json when available`,
@@ -81,7 +81,7 @@ const shards = shardDefinitions.map((definition, index) => {
       `${auditDir}/agent-packets/results/${manifest.runId}-${definition.shardId}-*.md`,
       `${auditDir}/agent-packets/results/${manifest.runId}-${definition.shardId}-*.json`,
     ],
-    filesNotToTouch: ["src/**", "docs/IA/**", "reports/ia-verification/latest"],
+    filesNotToTouch: ["src/**", "docs/Wireframe/**", "reports/ia-verification/latest"],
     taskPacketPath: `${auditDir}/agent-packets/tasks/${manifest.runId}-${definition.shardId}.md`,
     resultPacketPath: `${auditDir}/agent-packets/results/${manifest.runId}-${definition.shardId}-result.md`,
     requiredJsonEvidenceInputs: [

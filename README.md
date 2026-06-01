@@ -139,7 +139,7 @@ AI에게 긴 명령을 한 번에 던지기보다, 문서와 검증 조건을 �
 | 하고 싶은 일 | 좋은 요청 예시 |
 | --- | --- |
 | 기능 만들기 | "`docs/spec.md`와 `docs/agent-index.md`를 먼저 읽고, 쓰기 제출 흐름을 구현 계획으로 정리한 뒤 진행해줘." |
-| 화면 만들기 | "`docs/IA/README.md`와 `docs/ant-design/README.md` 기준으로 대시보드 화면을 구현해줘. 모바일/데스크톱 검증도 포함해줘." |
+| 화면 만들기 | "`docs/Wireframe/README.md`와 `docs/ant-design/README.md` 기준으로 대시보드 화면을 구현해줘. 모바일/데스크톱 검증도 포함해줘." |
 | 기술 결정 확인 | "`docs/spec.md` 기준으로 Supabase Auth와 AI 기능의 경계가 맞는지 검토해줘." |
 | 문서 정리 | "루트 README를 비개발자도 이해할 수 있게 고치고, 다른 문서와 충돌이 있으면 같이 보고해줘." |
 | 리뷰 요청 | "이번 변경이 `docs/ai-development-workflow.md`의 완료 조건을 만족하는지 리뷰해줘." |
@@ -162,10 +162,10 @@ flowchart TD
     A["이 README"] --> B["docs/prd.md<br/>무엇을 왜 만드는가"]
     B --> C["docs/sitemap.md<br/>어떤 화면이 있는가"]
     C --> D["docs/flow/user-flow.md<br/>사용자가 어떤 순서로 움직이는가"]
-    D --> E["docs/IA/README.md<br/>화면별 설명과 와이어프레임"]
+    D --> E["docs/Wireframe/README.md<br/>화면별 설명과 와이어프레임"]
 ```
 
-주의: 일부 오래된 관찰 문서는 인코딩이 깨진 문장이 남아 있습니다. 구현 기준은 항상 `docs/spec.md`, `docs/sitemap.md`의 Target React Route Map, `docs/IA/`, `docs/flow/user-flow.md` 같은 active docs를 우선합니다. 인증·로그인·회원가입 흐름의 코드 + 운영 정책 한 페이지 정리본은 [`docs/development/auth-overview.md`](./docs/development/auth-overview.md) 에 있습니다.
+주의: 일부 오래된 관찰 문서는 인코딩이 깨진 문장이 남아 있습니다. 구현 기준은 항상 `docs/spec.md`, `docs/sitemap.md`의 Target React Route Map, `docs/Wireframe/`, `docs/flow/user-flow.md` 같은 active docs를 우선합니다. 인증·로그인·회원가입 흐름의 코드 + 운영 정책 한 페이지 정리본은 [`docs/development/auth-overview.md`](./docs/development/auth-overview.md) 에 있습니다.
 
 ## 개발 협업자를 위한 읽는 순서
 
@@ -175,7 +175,7 @@ flowchart TD
     B --> C{"작업 종류"}
     C -->|"제품/범위"| D["docs/prd.md"]
     C -->|"기술/구현"| E["docs/spec.md"]
-    C -->|"화면/라우트"| F["docs/sitemap.md + docs/ia.md + docs/IA/"]
+    C -->|"화면/라우트"| F["docs/sitemap.md + docs/ia.md + docs/Wireframe/"]
     C -->|"UI"| G["docs/ant-design/README.md"]
     C -->|"AI 작업 방식"| H["docs/ai-development-workflow.md"]
     E --> I["필요한 development 상세 문서"]
@@ -237,7 +237,7 @@ flowchart TD
     B --> C["docs/spec.md<br/>Implementation spec"]
     B --> D["docs/prd.md<br/>Product requirements"]
     B --> E["docs/sitemap.md + docs/ia.md<br/>Routes and IA"]
-    B --> F["docs/IA/README.md<br/>Screen specs"]
+    B --> F["docs/Wireframe/README.md<br/>Screen specs"]
     B --> G["docs/ant-design/README.md<br/>UI rules"]
     B --> H["docs/flow/README.md<br/>User journey"]
     B --> I["docs/ai-workflow/README.md<br/>AI workflow"]
@@ -252,7 +252,7 @@ flowchart TD
 | Implementation stack, dependencies, backend, auth, AI boundary, deployment, environment variables, testing | [docs/spec.md](./docs/spec.md) |
 | Product scope, user value, business rules | [docs/prd.md](./docs/prd.md) |
 | Routes and navigation | [docs/sitemap.md](./docs/sitemap.md), [docs/ia.md](./docs/ia.md) |
-| Specific screen requirements | [docs/IA/README.md](./docs/IA/README.md) |
+| Specific screen requirements | [docs/Wireframe/README.md](./docs/Wireframe/README.md) |
 | UI system, Ant Design patterns, theme rules | [docs/ant-design/README.md](./docs/ant-design/README.md) |
 | User journey and transitions | [docs/flow/README.md](./docs/flow/README.md) |
 | AI-agent workflow, ledgers, reports | [docs/ai-workflow/README.md](./docs/ai-workflow/README.md) |
@@ -266,7 +266,7 @@ flowchart TD
 | --- | --- |
 | 단일 구현 기준 | [docs/spec.md](./docs/spec.md) |
 | 제품 목적과 범위 | [docs/prd.md](./docs/prd.md) |
-| 화면과 라우트 | [docs/sitemap.md](./docs/sitemap.md), [docs/ia.md](./docs/ia.md), [docs/IA/README.md](./docs/IA/README.md) |
+| 화면과 라우트 | [docs/sitemap.md](./docs/sitemap.md), [docs/ia.md](./docs/ia.md), [docs/Wireframe/README.md](./docs/Wireframe/README.md) |
 | 사용자 흐름 | [docs/flow/user-flow.md](./docs/flow/user-flow.md) |
 | UI 규칙 | [docs/ant-design/README.md](./docs/ant-design/README.md) |
 | AI 협업 규칙 | [AGENTS.md](./AGENTS.md), [docs/agent-index.md](./docs/agent-index.md), [docs/ai-development-workflow.md](./docs/ai-development-workflow.md), [.agents/README.md](./.agents/README.md) |

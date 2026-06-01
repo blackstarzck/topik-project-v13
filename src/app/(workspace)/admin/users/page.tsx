@@ -11,6 +11,9 @@ export default async function AdminUsersPage() {
   return (
     <main style={{ padding: 24 }}>
       <h1>사용자 관리</h1>
+      <p style={{ marginTop: 0, color: "rgba(0,0,0,0.65)" }}>
+        사용자를 검색하고 권한과 상태를 변경합니다.
+      </p>
       <AdminUserTable initialRows={initialRows} />
     </main>
   );

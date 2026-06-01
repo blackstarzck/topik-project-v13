@@ -1,6 +1,6 @@
 "use client";
 
-import { Alert, Button, Input, Select, Space, Table, Tag } from "antd";
+import { Alert, Button, Empty, Input, Select, Space, Table, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useEffect, useMemo, useState } from "react";
 import { useAdminUsers } from "@/lib/admin/queries";
@@ -68,6 +68,18 @@ export function AdminUserTable({ initialRows }: Props) {
     return baseRows.filter((r) => r.status === statusFilter);
   }, [baseRows, statusFilter]);
 
+  const hasActiveFilter =
+    searchInput.trim().length > 0 ||
+    filter.search != null ||
+    filter.role != null ||
+    statusFilter !== "all";
+
+  function resetFilters() {
+    setSearchInput("");
+    setFilter({});
+    setStatusFilter("all");
+  }
+
   const columns: ColumnsType<AdminUserRow> = [
     {
       title: "ID",
@@ -116,7 +128,11 @@ export function AdminUserTable({ initialRows }: Props) {
       title: "가입일",
       dataIndex: "created_at",
       key: "created_at",
-      render: (value: string) => formatDate(value),
+      // suppressHydrationWarning: toLocaleDateString('ko-KR') can differ between
+      // server and client (locale/timezone) → React #418. Suppress the mismatch.
+      render: (value: string) => (
+        <span suppressHydrationWarning>{formatDate(value)}</span>
+      ),
     },
     {
       title: "작업",
@@ -190,6 +206,20 @@ export function AdminUserTable({ initialRows }: Props) {
         loading={query.isFetching}
         pagination={{ pageSize: 20 }}
         size="middle"
+        locale={{
+          emptyText: hasActiveFilter ? (
+            <Empty
+              description="검색 결과가 없어요."
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+            >
+              <Button size="small" onClick={resetFilters}>
+                필터 초기화
+              </Button>
+            </Empty>
+          ) : (
+            "표시할 사용자가 없어요."
+          ),
+        }}
       />
 
       {editingRow ? (

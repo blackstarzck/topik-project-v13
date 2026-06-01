@@ -1,0 +1,115 @@
+{
+  "schemaVersion": "1.0.0",
+  "runId": "20260601-120308",
+  "generatedAt": "2026-06-01T08:01:21Z",
+  "sourceCommit": "b45530ebf15423ac30ba9329a6f9cad63671d1b4",
+  "fixtureSourceCommit": "b45530ebf15423ac30ba9329a6f9cad63671d1b4",
+  "environment": "dev",
+  "supabaseProjectRef": "fglggyfvzjdsbyckinqa",
+  "supabaseEnvLabel": "dev",
+  "productionAllowed": false,
+  "mutationAllowed": true,
+  "mutationAuthorization": "User AskUserQuestion 2026-06-01 '허용 — 시드+권한 승격'. Env verified SUPABASE_ENV_LABEL=dev; prod Supabase project not created (docs/development/environments.md §10).",
+  "credentialsUsed": "service-role (dev Secret API key, sb_secret_*) — type only, no secret value stored",
+  "serviceRoleUse": "scoped: dev-only fixture seeding + one-time profiles.app_role elevation; justification recorded below",
+  "serviceRoleUseJustification": "Admin RBAC fixtures require profiles.app_role elevation which is guarded by a protect trigger; elevation needs service-role + briefly disabling the trigger on dev only, then re-enabling.",
+  "productionSafetyDisposition": "dev — SUPABASE_ENV_LABEL=dev + cloud ref fglggyfvzjdsbyckinqa is the app-under-test target (seed-results.targetClassification: dev); prod project does not exist.",
+  "seedCommand": "node scripts/audit-setup/build-seed-data-plan.mjs (plan) + seed apply path; node scripts/audit-setup/build-storage-state.mjs --apply (storage states + admin actors)",
+  "verifyCommand": "node scripts/audit-setup/verify-seed-data.mjs",
+  "cleanupCommand": "scoped delete by seedBatchId; cleanup_unconfirmed_users_daily pg_cron handles stale audit users after 30d",
+  "rollbackOrResetBoundary": "All seeded rows tagged with seedBatchId seed-20260601-1701. Reset = delete rows by seedBatchId + revert profiles.app_role to 'learner' for audit admin actors + RE-ENABLE the profiles protect trigger (must be verified re-enabled before run closeout). No prod impact (prod project absent).",
+  "seedBatchId": "seed-20260601-1701",
+  "fixtureExpiresAt": "2026-07-01T00:00:00Z",
+  "seededUsers": [
+    { "email": "student@audit.local", "id": "4d447f42-7e82-4afd-937c-864b1af92ff7", "appRole": "learner", "status": "verified_existing" }
+  ],
+  "storageStatePaths": ["tests/e2e/.auth/* (built by build-storage-state.mjs --apply on dev)"],
+  "authStates": ["logged-out", "valid-learner", "stale/expired-token (for X-06/X-11/X-12 negative cases)"],
+  "rows": {
+    "verified_existing": {
+      "writing_submissions": 5,
+      "writing_feedback": 5,
+      "feedback_dimension_scores": 30,
+      "recommendation_runs": 1,
+      "recommendation_items": 2
+    },
+    "planned_this_run": {
+      "learning_goals": "1 row for student@audit.local (target TOPIK level + exam date) -> unblocks B-01 populated dashboard + A-03 resume/complete states",
+      "writing_problems": "rows for questions 51,52,53,54 -> unblocks D-01..D-04 editor render + D-M1 submission-confirm trigger",
+      "owner_negative": "1 second non-admin learner (owner2@audit.local) + own feedback/report/library/profile rows that student must NOT read -> E-01/E-02/R-01/F-01/X-05/X-10 wrong-owner RLS",
+      "admin_audit_logs": "row(s) proving an admin action (publish toggle, role change) for H-01/X-10 audit-log-evidence"
+    }
+  },
+  "storageObjects": ["own avatar path (X-05, optional)", "own generated-export path (F-01/F-M1)"],
+  "ownerScopeFixtures": ["student@audit.local owns the existing submissions/feedback/recommendation rows", "owner2@audit.local owns a disjoint set"],
+  "adminRbacFixtures": [
+    { "actor": "content_admin@audit.local", "userId": "19c87b53-7165-4a1d-8072-d34675cb587b", "targetRole": "content_admin", "unblocks": ["H-01"], "status": "verified", "verifiedAt": "2026-06-01T08:22:00Z" },
+    { "actor": "org_admin@audit.local", "userId": "3bb2a898-4665-4f79-a1a9-6a11ab19b798", "targetRole": "org_admin", "unblocks": ["X-08"], "status": "verified", "verifiedAt": "2026-06-01T08:22:00Z" },
+    { "actor": "platform_admin@audit.local", "userId": "1384e5be-d7e6-47f9-bbb7-af3fecb3e6df", "targetRole": "platform_admin", "unblocks": ["X-10"], "status": "verified", "verifiedAt": "2026-06-01T08:22:00Z" }
+  ],
+  "adminRbacVerification": {
+    "method": "read-only SELECT id,app_role FROM public.profiles via service-role",
+    "script": "reports/ia-verification/runs/20260601-120308/_verify-admin-roles.mjs",
+    "result": "ELEVATION_VERIFIED",
+    "verifiedAt": "2026-06-01T08:22:00Z",
+    "note": "User ran build-storage-state.mjs --apply (created 4 users; storageState capture FAILED because dev server :3000 was down) then ran the elevation SQL in the dev Dashboard SQL Editor. Roles confirmed elevated; profiles protect trigger re-enabled by the committed transaction. storageState recapture still pending (needs dev/prod server) for admin-render Playwright evidence."
+  },
+  "dataFixtureVerification": {
+    "method": "service-role upsert + read-only verify via _seed-dev-fixtures.mjs (dev-only guard SUPABASE_ENV_LABEL=dev)",
+    "script": "reports/ia-verification/runs/20260601-120308/_seed-dev-fixtures.mjs",
+    "seededAt": "2026-06-01T08:30:00Z",
+    "result": "DATA_FIXTURES_SEEDED",
+    "verified": {
+      "problems_51_54_published": "4/4",
+      "student_learning_goal": "1 row (TOPIK_II, target_grade 4, is_active true)"
+    },
+    "unblocks": ["B-01", "A-03", "D-01", "D-02", "D-03", "D-04", "D-M1"],
+    "note": "Cloud dev DB was missing supabase/seed.sql domain rows (seed.sql is local-reset only) and had no learning_goals row. Both now present + verified. Owner-negative (2nd learner + cross rows) still pending."
+  },
+  "wrongOwnerCases": [
+    { "case": "student reads owner2 feedback/report/library/profile -> must be denied by RLS", "appliesTo": ["E-01", "E-02", "R-01", "F-01", "X-05", "X-10"], "status": "planned", "note": "Do NOT use an admin account as the wrong-owner stand-in (fixtures contract)." }
+  ],
+  "authNegativeFixtures": ["expired/malformed token states for X-06 token-expiry + X-11/X-12 auth-error/cooldown"],
+  "storageFixtures": ["wrong-owner export denial for F-01/F-M1"],
+  "rlsCases": [
+    "owner-allowed read for student@audit.local",
+    "wrong-owner denial: student vs owner2 rows (E-01/E-02/R-01/F-01/X-05)",
+    "admin vertical denial: learner forbidden on /admin/* (SN-8)",
+    "privilege-escalation denial: non-platform_admin cannot change roles (X-10)"
+  ],
+  "adminAuditFixtures": ["append-only admin_audit_logs row for publish toggle (H-01) and role change (X-10)"],
+  "deferredScopeGuards": [
+    "X-03/X-04: profile plan_label or local UI fixture only — NO provider row/checkout/invoice/SDK fixture",
+    "X-08: only implemented Tier1/admin profile data — do NOT create organizations/membership tables unless docs updated first",
+    "X-09: preference UI uses local/implemented persistence only — do NOT seed email/SMS/push transport rows"
+  ],
+  "iaEvidenceMap": {
+    "B-01": ["learning_goals", "writing_submissions", "writing_feedback", "recommendation_items"],
+    "A-03": ["learning_goals"],
+    "D-01": ["writing_problems(51)"], "D-02": ["writing_problems(52)"], "D-03": ["writing_problems(53)"], "D-04": ["writing_problems(54)"],
+    "D-M1": ["writing_problems(51..54)"],
+    "E-01": ["writing_feedback(owner)", "wrong-owner denial"], "E-02": ["writing_feedback(owner,long)", "wrong-owner denial"],
+    "R-01": ["report(owner)", "wrong-owner denial"],
+    "F-01": ["library(owner)", "wrong-owner library row"],
+    "X-05": ["profile(owner)", "wrong-owner profile row"],
+    "H-01": ["content_admin elevation", "admin_audit_logs"],
+    "X-08": ["org_admin elevation"],
+    "X-10": ["platform_admin elevation", "wrong-owner rows", "admin_audit_logs", "privilege-escalation denial"]
+  },
+  "evidencePaths": ["reports/ia-verification/runs/20260601-120308/seed-results.json (existing)", "(to be regenerated after Phase 1 seed)"],
+  "commandOutputFiles": ["reports/ia-verification/runs/20260601-120308/seed-results.json"],
+  "fixtureFreshnessCheckedAt": "2026-06-01T08:01:21Z",
+  "fixtureSeedStatus": {
+    "existing-learner-data": "verified_existing",
+    "learning_goals": "seeded_for_run",
+    "writing_problems": "seeded_for_run",
+    "owner-negative": "planned",
+    "admin-rbac-elevation": "verified_for_run",
+    "admin-audit": "planned"
+  },
+  "limitations": [
+    "Seeding not yet executed — this manifest is the authorized Phase 1 plan. fixtureSeedStatus flips to seeded_for_run / verified_existing only after verify-seed-data.mjs output is attached.",
+    "Manifest stores credential TYPE only; never secret values.",
+    "profiles protect trigger must be confirmed RE-ENABLED before run closeout (see rollbackOrResetBoundary)."
+  ]
+}

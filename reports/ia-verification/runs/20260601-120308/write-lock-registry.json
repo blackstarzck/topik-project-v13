@@ -1,0 +1,144 @@
+{
+  "schemaVersion": "1.0.0",
+  "runId": "20260601-120308",
+  "createdAt": "2026-06-01T08:01:21Z",
+  "updatedAt": "2026-06-01T08:01:21Z",
+  "coordinatorOwner": "Claude (Opus 4.8) main session",
+  "locks": [
+    {
+      "lockId": "lock-public-auth",
+      "clusterId": "public-auth",
+      "owner": null,
+      "status": "available",
+      "iaCodes": ["X-01", "A-01", "A-02", "X-06", "X-11", "X-12"],
+      "routeOrHostRoute": "/, /sign-up, /login, /password-reset, /auth/error, /auth/verify-email",
+      "paths": [
+        "src/app/page.tsx",
+        "src/app/sign-up/**",
+        "src/app/login/**",
+        "src/app/password-reset/**",
+        "src/app/auth/error/**",
+        "src/app/auth/verify-email/**",
+        "src/app/auth/callback-fragment/**",
+        "src/app/terms/**",
+        "src/app/privacy/**",
+        "src/components/auth/**"
+      ],
+      "claimedAt": null,
+      "releasedAt": null,
+      "preimageHashes": {}
+    },
+    {
+      "lockId": "lock-onboarding-dashboard",
+      "clusterId": "onboarding-dashboard",
+      "owner": null,
+      "status": "available",
+      "iaCodes": ["A-03", "B-01", "X-02"],
+      "routeOrHostRoute": "/onboarding/learning-goal, /dashboard, /growth",
+      "paths": [
+        "src/app/(workspace)/onboarding/learning-goal/**",
+        "src/app/(workspace)/dashboard/**",
+        "src/app/(workspace)/growth/**",
+        "src/components/dashboard/**",
+        "src/components/growth/**"
+      ],
+      "claimedAt": null,
+      "releasedAt": null,
+      "preimageHashes": {}
+    },
+    {
+      "lockId": "lock-practice-writing",
+      "clusterId": "practice-writing",
+      "owner": null,
+      "status": "available",
+      "iaCodes": ["C-01", "C-02", "C-03", "D-01", "D-02", "D-03", "D-04", "D-M1", "D-M2", "D-M3"],
+      "routeOrHostRoute": "/practice/recommendations, /practice/problems, /writing/[questionId] (+ hosted D-M1/D-M2/D-M3)",
+      "paths": [
+        "src/app/(workspace)/practice/recommendations/**",
+        "src/app/(workspace)/practice/problems/**",
+        "src/app/(workspace)/writing/[questionId]/**",
+        "src/components/writing/**",
+        "src/components/practice/**"
+      ],
+      "clusterNote": "Hosted modals D-M1/D-M2/D-M3 are owned by the writing routes; single lock prevents concurrent writers.",
+      "claimedAt": null,
+      "releasedAt": null,
+      "preimageHashes": {}
+    },
+    {
+      "lockId": "lock-feedback-reports-recommendations",
+      "clusterId": "feedback-reports-recommendations",
+      "owner": null,
+      "status": "available",
+      "iaCodes": ["E-01", "E-02", "R-01", "R-02", "X-07"],
+      "routeOrHostRoute": "/writing/feedback/short/:id, /writing/feedback/long/:id, /writing/reports/:id/compare, /practice/next, /practice/weakness",
+      "paths": [
+        "src/app/(workspace)/writing/feedback/short/[id]/**",
+        "src/app/(workspace)/writing/feedback/long/[id]/**",
+        "src/app/(workspace)/writing/reports/[id]/compare/**",
+        "src/app/(workspace)/practice/next/**",
+        "src/app/(workspace)/practice/weakness/**",
+        "src/components/feedback/**",
+        "src/components/reports/**"
+      ],
+      "claimedAt": null,
+      "releasedAt": null,
+      "preimageHashes": {}
+    },
+    {
+      "lockId": "lock-library-settings-billing",
+      "clusterId": "library-settings-billing",
+      "owner": null,
+      "status": "available",
+      "iaCodes": ["F-01", "F-M1", "G-01", "X-03", "X-04", "X-05", "X-09"],
+      "routeOrHostRoute": "/library (+ hosted F-M1), /settings/language, /settings/notifications, /paywall, /subscription, /profile",
+      "paths": [
+        "src/app/(workspace)/library/**",
+        "src/app/(workspace)/settings/language/**",
+        "src/app/(workspace)/settings/notifications/**",
+        "src/app/(workspace)/paywall/**",
+        "src/app/(workspace)/subscription/**",
+        "src/app/(workspace)/profile/**",
+        "src/components/library/**",
+        "src/components/settings/**"
+      ],
+      "clusterNote": "F-M1 export modal is hosted by /library AND feedback/report routes -> see cross-ia ci-export-cluster before editing shared export components.",
+      "claimedAt": null,
+      "releasedAt": null,
+      "preimageHashes": {}
+    },
+    {
+      "lockId": "lock-admin",
+      "clusterId": "admin",
+      "owner": null,
+      "status": "available",
+      "iaCodes": ["H-01", "X-08", "X-10"],
+      "routeOrHostRoute": "/admin/problems, /admin/org, /admin/users",
+      "paths": [
+        "src/app/(workspace)/admin/problems/**",
+        "src/app/(workspace)/admin/org/**",
+        "src/app/(workspace)/admin/users/**",
+        "src/app/(workspace)/admin/page.tsx",
+        "src/components/admin/**"
+      ],
+      "claimedAt": null,
+      "releasedAt": null,
+      "preimageHashes": {}
+    },
+    {
+      "lockId": "lock-shared-test-catalog",
+      "clusterId": "shared-test-catalog",
+      "owner": "coordinator",
+      "status": "coordinator-reserved",
+      "iaCodes": ["F-01", "B-01", "C-01", "E-01", "E-02", "R-01", "H-01", "X-02", "X-08"],
+      "routeOrHostRoute": "n/a (shared test fixture)",
+      "paths": [
+        "tests/e2e/coverage/ia-catalog.ts"
+      ],
+      "clusterNote": "Shared test file. Coordinator-owned per write-conflict rules: CTA/heading regex false-negative fixes (Phase 1b) must not be edited by shard agents.",
+      "claimedAt": "2026-06-01T08:01:21Z",
+      "releasedAt": null,
+      "preimageHashes": {}
+    }
+  ]
+}

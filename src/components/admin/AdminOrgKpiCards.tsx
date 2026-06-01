@@ -1,5 +1,8 @@
-import { Card, Col, Row, Space, Statistic, Table, Typography } from "antd";
+"use client";
+
+import { Card, Col, Empty, Row, Space, Statistic, Table, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
+import { AdminOrgOperationsCards } from "./AdminOrgOperationsCards";
 
 const { Title } = Typography;
 
@@ -43,17 +46,18 @@ function formatDateTime(iso: string): string {
   }
 }
 
-function truncate(value: string, max: number): string {
-  return value.length > max ? `${value.slice(0, max)}…` : value;
-}
-
+/**
+ * region 5 "민감 정보 마스킹": audit/event payload may carry free-form fields.
+ * We do NOT dump the raw JSON (could leak emails, answers, tokens). Instead we
+ * show only the safe top-level key names so an admin can see the shape without
+ * exposing values.
+ */
 function summarizePayload(payload: unknown): string {
-  if (payload == null) return "—";
-  try {
-    return truncate(JSON.stringify(payload), 80);
-  } catch {
-    return "—";
-  }
+  if (payload == null || typeof payload !== "object") return "—";
+  const keys = Object.keys(payload as Record<string, unknown>);
+  if (keys.length === 0) return "—";
+  const shown = keys.slice(0, 4).join(", ");
+  return keys.length > 4 ? `${shown}, …` : shown;
 }
 
 export function AdminOrgKpiCards({ data }: Props) {
@@ -71,7 +75,12 @@ export function AdminOrgKpiCards({ data }: Props) {
       dataIndex: "occurred_at",
       key: "occurred_at",
       width: 200,
-      render: (value: string) => formatDateTime(value),
+      // suppressHydrationWarning: toLocaleString('ko-KR') can differ between the
+      // server render and the client (locale/timezone) → React #418. The text
+      // is informational, so suppress the mismatch warning rather than block.
+      render: (value: string) => (
+        <span suppressHydrationWarning>{formatDateTime(value)}</span>
+      ),
     },
     {
       title: "사용자",
@@ -99,6 +108,12 @@ export function AdminOrgKpiCards({ data }: Props) {
     },
   ];
 
+  const hasAnyActivity =
+    data.learner_count > 0 ||
+    data.active_7d_count > 0 ||
+    data.submissions_7d_count > 0 ||
+    events.length > 0;
+
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
       <Row gutter={[16, 16]}>
@@ -125,19 +140,28 @@ export function AdminOrgKpiCards({ data }: Props) {
         </Col>
       </Row>
 
+      <AdminOrgOperationsCards />
+
       <Card size="small">
         <Title level={5} style={{ marginTop: 0 }}>
           최근 학습 이벤트
         </Title>
-        <Table<AdminRecentEvent>
-          rowKey={(record, index) =>
-            `${record.event_type}-${record.occurred_at}-${index ?? 0}`
-          }
-          columns={columns}
-          dataSource={events}
-          pagination={{ pageSize: 10 }}
-          size="small"
-        />
+        {hasAnyActivity ? (
+          <Table<AdminRecentEvent>
+            rowKey={(record, index) =>
+              `${record.event_type}-${record.occurred_at}-${index ?? 0}`
+            }
+            columns={columns}
+            dataSource={events}
+            pagination={{ pageSize: 10 }}
+            size="small"
+          />
+        ) : (
+          <Empty
+            description="아직 기관 활동 데이터가 없어요. 학습자가 문제를 풀면 여기에 활동이 표시됩니다."
+            style={{ padding: "2rem 1rem" }}
+          />
+        )}
       </Card>
     </Space>
   );

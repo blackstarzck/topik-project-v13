@@ -596,7 +596,7 @@ async function validateLedger(root, ledgerPath, errors) {
   }
 
   // "Untouched relevant docs" must have non-empty content.
-  // Two valid shapes (see docs/ai-workflow/context-ledger-template.md):
+  // Two valid shapes (see docs/ai-workflow/templates/context-ledger-template.md):
   //   (A) same-line: "- Untouched relevant docs and reason: none"
   //   (B) header + indented bullets:
   //       "- Untouched relevant docs and reason:"

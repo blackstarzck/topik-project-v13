@@ -81,15 +81,10 @@ export function VerifyEmailCard() {
 
   const [emailValue, setEmailValue] = useState(emailFromQuery);
   const [resending, setResending] = useState(false);
-  // SSR-safe 초기값 0. 마운트 후 useEffect에서 localStorage 복원.
-  const [cooldownRemaining, setCooldownRemaining] = useState(0);
+  const [cooldownRemaining, setCooldownRemaining] = useState(() =>
+    readCooldownRemaining(),
+  );
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  // 마운트 시 localStorage에서 cooldown 복원 — 새로고침/탭 재방문에도 cooldown 유지.
-  useEffect(() => {
-    const initial = readCooldownRemaining();
-    if (initial > 0) setCooldownRemaining(initial);
-  }, []);
 
   // tick + 종료 시 localStorage cleanup. tick 자체는 localStorage의 until 기준으로
   // 다시 계산 → drift / 백그라운드 탭 보정.

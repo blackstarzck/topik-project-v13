@@ -7,21 +7,31 @@ import { useLibraryItems } from "@/lib/library/queries";
 import type { LibraryItemView, LibraryProblemView } from "@/lib/library/types";
 
 import { LibraryItemRow } from "./LibraryItemRow";
+import { matchesLibrarySearch } from "./library-tab-url";
 
 const { Text } = Typography;
 
 type Props = {
   initialItems: LibraryProblemView[];
+  searchTerm?: string;
+  onResetSearch?: () => void;
 };
 
 function isProblem(item: LibraryItemView): item is LibraryProblemView {
   return item.kind === "problem";
 }
 
-export function LibrarySavedProblemsTab({ initialItems }: Props) {
+export function LibrarySavedProblemsTab({
+  initialItems,
+  searchTerm = "",
+  onResetSearch,
+}: Props) {
   const query = useLibraryItems("problems");
-  const items: LibraryProblemView[] = (query.data ?? initialItems).filter(
+  const allItems: LibraryProblemView[] = (query.data ?? initialItems).filter(
     isProblem,
+  );
+  const items = allItems.filter((i) =>
+    matchesLibrarySearch(searchTerm, [i.title, ...i.tags]),
   );
 
   if (query.isLoading && (query.data ?? []).length === 0 && initialItems.length === 0) {
@@ -39,7 +49,18 @@ export function LibrarySavedProblemsTab({ initialItems }: Props) {
     );
   }
   if (items.length === 0) {
-    return <Empty description="저장한 문제가 없습니다." />;
+    const searching = searchTerm.trim().length > 0;
+    return (
+      <Empty
+        description={
+          searching ? "검색 결과가 없습니다." : "저장한 문제가 없습니다."
+        }
+      >
+        {searching && onResetSearch ? (
+          <Button onClick={onResetSearch}>필터 초기화</Button>
+        ) : null}
+      </Empty>
+    );
   }
 
   return (

@@ -12,7 +12,7 @@
 > Route/IA scope note (2026-05-20): the current Paper frame and
 > `docs/sitemap.md` route inventory do not include standalone routes or screens
 > for vocabulary, mock exam, board, or notice detail. Those PRD references
-> remain product context or future/deferred scope until matching `docs/IA`
+> remain product context or future/deferred scope until matching `docs/Wireframe`
 > screens and sitemap routes are added.
 
 확인 기준: 2026-04-22에 배포 사이트 `https://topik-ai-nqgl.vercel.app/home.html`를 Playwright MCP로 직접 탐색한 화면과 클릭 결과입니다.
@@ -128,7 +128,7 @@ TALKPIK AI는 TOPIK 한국어능력시험 학습자를 위한 AI 기반 학습 �
 
 ### 모의고사 플로우 (Future / 별도 IA 필요)
 
-현재 Paper 32-screen route inventory에는 모의고사 화면이 없습니다. 이 플로우는 제품 맥락으로 보존하되, 구현하려면 `docs/IA` 화면과 `docs/sitemap.md` route를 먼저 추가해야 합니다.
+현재 Paper 32-screen route inventory에는 모의고사 화면이 없습니다. 이 플로우는 제품 맥락으로 보존하되, 구현하려면 `docs/Wireframe` 화면과 `docs/sitemap.md` route를 먼저 추가해야 합니다.
 
 1. 사용자는 `모의고사 결과`에서 최근 성적과 추이를 확인한다.
 2. `새 모의고사 응시`를 누른다.
@@ -291,7 +291,7 @@ TALKPIK AI는 TOPIK 한국어능력시험 학습자를 위한 AI 기반 학습 �
 
 ### 7.11 모의고사 결과 (Future / 별도 IA 필요)
 
-현재 Paper 32-screen route inventory에는 모의고사 결과 route가 없습니다. 구현 전 `docs/IA`와 `docs/sitemap.md`에 화면과 route를 먼저 추가해야 합니다.
+현재 Paper 32-screen route inventory에는 모의고사 결과 route가 없습니다. 구현 전 `docs/Wireframe`와 `docs/sitemap.md`에 화면과 route를 먼저 추가해야 합니다.
 
 #### 요구사항
 
@@ -307,7 +307,7 @@ TALKPIK AI는 TOPIK 한국어능력시험 학습자를 위한 AI 기반 학습 �
 
 ### 7.12 실전 모의고사 (Future / 별도 IA 필요)
 
-현재 Paper 32-screen route inventory에는 실전 모의고사 route가 없습니다. 구현 전 `docs/IA`와 `docs/sitemap.md`에 화면과 route를 먼저 추가해야 합니다.
+현재 Paper 32-screen route inventory에는 실전 모의고사 route가 없습니다. 구현 전 `docs/Wireframe`와 `docs/sitemap.md`에 화면과 route를 먼저 추가해야 합니다.
 
 #### 요구사항
 
@@ -325,7 +325,7 @@ TALKPIK AI는 TOPIK 한국어능력시험 학습자를 위한 AI 기반 학습 �
 
 ### 7.13 게시판 (Future / 별도 IA 필요)
 
-현재 Paper 32-screen route inventory에는 게시판이나 공지 상세 route가 없습니다. 구현 전 `docs/IA`와 `docs/sitemap.md`에 화면과 route를 먼저 추가해야 합니다.
+현재 Paper 32-screen route inventory에는 게시판이나 공지 상세 route가 없습니다. 구현 전 `docs/Wireframe`와 `docs/sitemap.md`에 화면과 route를 먼저 추가해야 합니다.
 
 #### 요구사항
 

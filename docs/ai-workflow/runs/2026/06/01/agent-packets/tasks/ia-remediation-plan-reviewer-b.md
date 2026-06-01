@@ -1,0 +1,44 @@
+## Task Packet
+
+- Agent: reviewer-b
+- Role: independent execution-feasibility reviewer
+- Objective: Review the entire split IA remediation plan for logical consistency, executable state machines, fallback safety, and missing schemas.
+- Audience: n/a
+- Accepted scope: Read-only review of `docs/ai-execution-plans/ia-remediation-multi-agent/` as an operational plan.
+- Out of scope: Editing files, running remediation, changing product requirements, or evaluating individual IA page behavior.
+- Docs consulted:
+  - `.agents/superpowers/skills/using-superpowers/SKILL.md`
+  - `docs/agent-index.md`
+  - `docs/ai-development-workflow.md`
+  - `docs/ai-workflow/planning-contracts.md`
+  - `docs/ai-workflow/context-and-packets.md`
+  - `docs/ai-workflow/review-gates.md`
+  - `docs/ai-workflow/fallback-and-recovery.md`
+  - `docs/ai-workflow/agent-packets.md`
+  - `docs/ai-execution-plans/README.md`
+  - `docs/ai-execution-plans/ia-remediation-multi-agent/**`
+- Extracted requirements:
+  - The coordinator must own durable run state, dispatch, handoff, and final verification.
+  - Tool and fixture fallbacks must be command-specific and fail closed when evidence is missing.
+  - Agent packets must contain enough detail for isolated sessions to execute without inherited context.
+- Exact read scope:
+  - `docs/ai-execution-plans/ia-remediation-multi-agent/**`
+  - Workflow docs listed above.
+  - `package.json`
+  - `reports/ia-verification/runs/20260528-141731/remediation-run-state.json`, if present.
+- Exact write scope: none.
+- Files not to touch:
+  - All project files. This is read-only.
+- Constraints:
+  - Focus on execution feasibility rather than wording polish.
+  - Identify concrete schema gaps or contradictions that would block a coordinator.
+  - Ground findings in file paths and line references where possible.
+- Required verification:
+  - Check artifact schemas for run-state, write-lock, reconciliation, cross-IA, handoff, task packet, result packet, fixture, and manual fallback records.
+  - Check whether current repo prerequisites match the plan's declared verification commands.
+  - Check whether split-file reading rules leave any required instructions stranded in adjacent files.
+- Expected output:
+  - Result packet with PASS/CONCERN/FAIL for overall feasibility.
+  - Top findings ranked P1/P2/P3.
+  - Recommended minimal patch set.
+- Context ledger path: `docs/ai-workflow/runs/2026/06/01/20260601-1038-ia-remediation-plan-review.md`

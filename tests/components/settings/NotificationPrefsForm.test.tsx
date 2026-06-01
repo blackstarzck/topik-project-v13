@@ -144,7 +144,7 @@ describe("NotificationPrefsForm", () => {
     );
     expect(
       screen.getByText(
-        "알림 전송 인프라는 곧 도입됩니다. 지금은 환경설정만 저장됩니다.",
+        "알림 전송 인프라는 준비 중입니다. 지금은 알림 조건(켜짐/꺼짐)만 저장되며, 실제 알림은 발송되지 않습니다.",
       ),
     ).toBeTruthy();
   });

@@ -11,7 +11,7 @@
 
 | 영역 | 정본 위치 |
 | --- | --- |
-| 화면 명세 (회원가입/로그인/콜백/에러/메일 안내/비밀번호 재설정) | [`docs/IA/01-A-01-sign-up`](../IA/01-A-01-sign-up/description.md), [`02-A-02-login`](../IA/02-A-02-login/description.md), [`28-X-06-password-reset`](../IA/28-X-06-password-reset/description.md), [`33-X-11-auth-error`](../IA/33-X-11-auth-error/description.md), [`34-X-12-auth-verify-email`](../IA/34-X-12-auth-verify-email/description.md) |
+| 화면 명세 (회원가입/로그인/콜백/에러/메일 안내/비밀번호 재설정) | [`docs/Wireframe/01-A-01-sign-up`](../Wireframe/01-A-01-sign-up/description.md), [`02-A-02-login`](../Wireframe/02-A-02-login/description.md), [`28-X-06-password-reset`](../Wireframe/28-X-06-password-reset/description.md), [`33-X-11-auth-error`](../Wireframe/33-X-11-auth-error/description.md), [`34-X-12-auth-verify-email`](../Wireframe/34-X-12-auth-verify-email/description.md) |
 | 사용자 플로우 (정본) | [`docs/flow/user-flow.md`](../flow/user-flow.md) |
 | 백엔드/Auth 정책 | [`docs/development/backend-auth.md`](./backend-auth.md) |
 | Auth 관련 마이그레이션 | [`supabase/migrations/INDEX.md`](../../supabase/migrations/INDEX.md) (#17, #22, #23, #24) |
@@ -148,7 +148,7 @@ Route Handler 가 다음 순서로 처리한다 ([`src/app/auth/callback/route.t
 | `unknown` | 처리 중 문제가 생겼어요 | 홈으로 | 도움말 | X | X |
 
 > reason 정본은 Supabase 공식 [error codes](https://supabase.com/docs/guides/auth/debugging/error-codes).
-> 화면 명세는 [`docs/IA/33-X-11-auth-error/description.md`](../IA/33-X-11-auth-error/description.md).
+> 화면 명세는 [`docs/Wireframe/33-X-11-auth-error/description.md`](../Wireframe/33-X-11-auth-error/description.md).
 
 ---
 
@@ -287,13 +287,13 @@ Route Handler 가 다음 순서로 처리한다 ([`src/app/auth/callback/route.t
 | 변경 내용 | 함께 갱신할 곳 |
 | --- | --- |
 | 라우트 path 변경 | [`docs/sitemap.md`](../sitemap.md), [`src/lib/routes.ts`](../../src/lib/routes.ts), [`docs/flow/user-flow.md`](../flow/user-flow.md), 해당 IA `description.md`, [`tests/integration/route-matrix.test.ts`](../../tests/integration/route-matrix.test.ts), [`docs/sitemap.md`](../sitemap.md) (auth callback rows) |
-| 새 `?reason=` 추가 | [`src/lib/auth/error-mapping.ts`](../../src/lib/auth/error-mapping.ts) (`AuthErrorReason`, `SUPPORTED_REASONS`, `REASON_CONTENT`), [`docs/IA/33-X-11-auth-error/description.md`](../IA/33-X-11-auth-error/description.md), 본 문서 §5, [`tests/lib/auth/error-mapping.test.ts`](../../tests/lib/auth/error-mapping.test.ts) |
+| 새 `?reason=` 추가 | [`src/lib/auth/error-mapping.ts`](../../src/lib/auth/error-mapping.ts) (`AuthErrorReason`, `SUPPORTED_REASONS`, `REASON_CONTENT`), [`docs/Wireframe/33-X-11-auth-error/description.md`](../Wireframe/33-X-11-auth-error/description.md), 본 문서 §5, [`tests/lib/auth/error-mapping.test.ts`](../../tests/lib/auth/error-mapping.test.ts) |
 | cleanup 주기/조건 변경 | [`20260526180000_cleanup_unconfirmed_users.sql`](../../supabase/migrations/20260526180000_cleanup_unconfirmed_users.sql), [cron 등록 마이그레이션](../../supabase/migrations/20260527110000_register_cleanup_cron.sql), [`docs/development/database-schema.md`](./database-schema.md), 본 문서 §6.1 |
-| 새 IA 화면 추가 | [`docs/IA/README.md`](../IA/README.md), [`docs/sitemap.md`](../sitemap.md), [`docs/flow/user-flow.md`](../flow/user-flow.md), 새 폴더 `description.md` + `wireframe.png` |
+| 새 IA 화면 추가 | [`docs/Wireframe/README.md`](../Wireframe/README.md), [`docs/sitemap.md`](../sitemap.md), [`docs/flow/user-flow.md`](../flow/user-flow.md), 새 폴더 `description.md` + `wireframe.png` |
 | `app_role` 종류 변경 | [`src/lib/auth/roles.ts`](../../src/lib/auth/roles.ts), [`src/lib/auth/admin-guard.ts`](../../src/lib/auth/admin-guard.ts), 관련 RLS 마이그레이션, 본 문서 §6.5 |
 | `NEXT_PUBLIC_SITE_URL` 도메인 변경 | [`.env.example`](../../.env.example), Vercel env vars, Supabase Dashboard Redirect URLs, 이메일 템플릿 |
 
-**Resolved doc-↔-impl drift (2026-05-28)**: IA A-01 ([`description.md:58-60`](../IA/01-A-01-sign-up/description.md))·X-06 ([`description.md:52-54`](../IA/28-X-06-password-reset/description.md)) 의 PW 8-64자 명세와 실제 구현 (`SignUpForm.tsx` / `PasswordResetConfirmForm.tsx`) 의 `min:8` only 가 일치하지 않던 drift 가 정리됨. 사용자 결정 "코드를 docs에 맞춤" → 두 폼의 antd Form rules 에 `{ max: 64, message: "비밀번호는 64자 이하여야 합니다" }` 추가. description.md 는 그대로 유지.
+**Resolved doc-↔-impl drift (2026-05-28)**: IA A-01 ([`description.md:58-60`](../Wireframe/01-A-01-sign-up/description.md))·X-06 ([`description.md:52-54`](../Wireframe/28-X-06-password-reset/description.md)) 의 PW 8-64자 명세와 실제 구현 (`SignUpForm.tsx` / `PasswordResetConfirmForm.tsx`) 의 `min:8` only 가 일치하지 않던 drift 가 정리됨. 사용자 결정 "코드를 docs에 맞춤" → 두 폼의 antd Form rules 에 `{ max: 64, message: "비밀번호는 64자 이하여야 합니다" }` 추가. description.md 는 그대로 유지.
 
 **Resolved raw error leak (2026-05-28)**: IA 검수 Phase 5 적발. 6개 폼/카드 (`SignUpForm`, `LoginForm`, `PasswordResetRequestForm`, `PasswordResetConfirmForm`, `VerifyEmailCard`, `AuthErrorCard`) 가 `message.error(`...: ${error.message}`)` 형태로 Supabase 의 raw `error.message` 를 그대로 토스트했음. 본 문서 §3 의 "raw Supabase `error_description` 은 절대 UI/URL 노출 금지" 정책 위반. 6개 위치 전부 `${REASON_CONTENT[mapSupabaseErrorCode(error.code)].message}` 매핑으로 교체.
 

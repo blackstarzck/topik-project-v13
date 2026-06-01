@@ -1,6 +1,6 @@
 -- =====================================================================
 -- Phase 7-E · Task 10 (P1-6) · profiles.bio column
--- IA: docs/IA/27-X-05-profile-editing/description.md (160자 자기소개)
+-- IA: docs/Wireframe/27-X-05-profile-editing/description.md (160자 자기소개)
 -- =====================================================================
 --
 -- Bio is a short self-introduction (max 160 chars per IA spec). The column

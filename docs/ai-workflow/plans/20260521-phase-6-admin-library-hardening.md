@@ -36,7 +36,7 @@ Phase 6는 Tier 1 MVP의 마지막 phase로, 누적된 hardening follow-ups를 �
 
 - `docs/spec.md` §State Management, §Persistence
 - `docs/sitemap.md` Lines 50-58 (H/X/F/G/X-* 미완 routes)
-- `docs/IA/*` (admin/library/weakness/next/settings 각 폴더)
+- `docs/Wireframe/*` (admin/library/weakness/next/settings 각 폴더)
 - `docs/flow/user-flow.md` (admin/library 흐름)
 - `supabase/migrations/{20260520120700_library_events_exports,20260520120800_audit,20260520120900_functions,20260520121100_rls_policies}.sql`
 - `supabase/migrations/20260521130000_phase_5_writing_rpc.sql` (Phase 5 RPC — Phase 6에서 hardening)

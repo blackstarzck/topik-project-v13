@@ -15,15 +15,19 @@ export default async function WritingQuestionPage({
   searchParams,
 }: {
   params: Promise<{ questionId: string }>;
-  searchParams: Promise<{ problem?: string }>;
+  searchParams: Promise<{ problem?: string; fresh?: string }>;
 }) {
   const { questionId } = await params;
   const qn = Number(questionId);
   if (!isQuestionNo(qn)) notFound();
   const user = await requireUser();
-  const { problem: problemId } = await searchParams;
+  const { problem: problemId, fresh } = await searchParams;
   const problem = await getWritingProblem(qn, problemId);
-  const draft = problem ? await getActiveDraft(user.id, problem.id) : null;
+  // C-03 재풀이 모드 "새 답안으로 시작" (fresh=1): 저장된 draft를 불러오지 않고
+  // 빈 에디터로 시작. fresh 미지정이면 기존 작성 내용을 이어서 로드한다.
+  const startFresh = fresh === "1";
+  const draft =
+    problem && !startFresh ? await getActiveDraft(user.id, problem.id) : null;
   return (
     <WritingPageContent
       questionNo={qn}

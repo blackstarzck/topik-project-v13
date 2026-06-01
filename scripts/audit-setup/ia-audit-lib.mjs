@@ -131,7 +131,7 @@ export function splitMarkdownRow(line) {
 }
 
 export function parseIaInventory() {
-  const readme = readText("docs/IA/README.md");
+  const readme = readText("docs/Wireframe/README.md");
   const entries = [];
   const seen = new Set();
   const linkPattern = /\]\(\.\/([^/]+)\/description\.md\)/g;
@@ -148,9 +148,9 @@ export function parseIaInventory() {
     seen.add(iaCode);
     entries.push({
       iaCode,
-      iaFolder: `docs/IA/${folder}`,
-      descriptionPath: `docs/IA/${folder}/description.md`,
-      wireframePath: `docs/IA/${folder}/wireframe.png`,
+      iaFolder: `docs/Wireframe/${folder}`,
+      descriptionPath: `docs/Wireframe/${folder}/description.md`,
+      wireframePath: `docs/Wireframe/${folder}/wireframe.png`,
     });
   }
 
@@ -306,7 +306,7 @@ export function buildManifest(auditDir = resolveAuditDir()) {
     generatedAt: generatedAt(),
     sourceDocs: [
       "docs/sitemap.md",
-      "docs/IA/README.md",
+      "docs/Wireframe/README.md",
       "docs/ai-workflow/ia-page-implementation-verification.md",
     ],
     entries,
@@ -323,8 +323,8 @@ export function buildManifest(auditDir = resolveAuditDir()) {
     summary: {
       totalIa: entries.length,
       docGapNotes: [
-        "docs/sitemap.md source-order prose still says docs/IA/README.md is the current 32-screen IA inventory.",
-        "docs/IA/README.md currently lists 34 IA entries.",
+        "docs/sitemap.md source-order prose still says docs/Wireframe/README.md is the current 32-screen IA inventory.",
+        "docs/Wireframe/README.md currently lists 34 IA entries.",
       ],
     },
   };

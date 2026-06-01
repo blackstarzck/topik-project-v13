@@ -8,12 +8,12 @@
 
 | 용어 | 정본 위치 | 한 줄 안내 |
 | --- | --- | --- |
-| 학습 목표 (Learning Goal) | [docs/IA/learning-goals/description.md](IA/learning-goals/description.md) | 사용자가 설정하는 학습 단위 목표. 정의는 정본 참조. |
-| 문제 풀이 (Problem Solving) | [docs/IA/problem-solving/description.md](IA/problem-solving/description.md) | 문제 출제→풀이→채점 흐름의 도메인 표현. |
-| 문제 추천 (Problem Recommendation) | [docs/IA/problem-recommendation/description.md](IA/problem-recommendation/description.md) | 사용자 상태에 따른 문제 추천 규칙. |
-| 시도 (Attempt) | [docs/IA/attempt/description.md](IA/attempt/description.md) | 사용자의 문제 풀이 시도 단위. |
-| 글쓰기 (Writing) | [docs/IA/writing/description.md](IA/writing/description.md) | 단답·장문 작성 도메인. |
-| 피드백 (Feedback) | [docs/IA/feedback/description.md](IA/feedback/description.md) | 작성 결과에 대한 평가/비교 도메인. |
+| 학습 목표 (Learning Goal) | [docs/Wireframe/learning-goals/description.md](Wireframe/learning-goals/description.md) | 사용자가 설정하는 학습 단위 목표. 정의는 정본 참조. |
+| 문제 풀이 (Problem Solving) | [docs/Wireframe/problem-solving/description.md](Wireframe/problem-solving/description.md) | 문제 출제→풀이→채점 흐름의 도메인 표현. |
+| 문제 추천 (Problem Recommendation) | [docs/Wireframe/problem-recommendation/description.md](Wireframe/problem-recommendation/description.md) | 사용자 상태에 따른 문제 추천 규칙. |
+| 시도 (Attempt) | [docs/Wireframe/attempt/description.md](Wireframe/attempt/description.md) | 사용자의 문제 풀이 시도 단위. |
+| 글쓰기 (Writing) | [docs/Wireframe/writing/description.md](Wireframe/writing/description.md) | 단답·장문 작성 도메인. |
+| 피드백 (Feedback) | [docs/Wireframe/feedback/description.md](Wireframe/feedback/description.md) | 작성 결과에 대한 평가/비교 도메인. |
 | 사용자 흐름 (User Flow) | [docs/flow/user-flow.md](flow/user-flow.md) | 화면 간 사용자 이동의 정본. |
 | 라우트 (Route) | [docs/sitemap.md](sitemap.md) | Target React Route Map의 라우트 정의. |
 | 제품 요구사항 (PRD) | [docs/prd.md](prd.md) | 제품 의도와 비기능 요구의 정본. |
@@ -39,5 +39,5 @@
 ## 관련 파일
 
 - 사용자 흐름 정본: [docs/flow/user-flow.md](flow/user-flow.md)
-- IA 분석: [docs/IA/analysis-report.md](IA/analysis-report.md)
+- IA 분석: [docs/Wireframe/analysis-report.md](Wireframe/analysis-report.md)
 - AI 워크플로우: [docs/ai-development-workflow.md](ai-development-workflow.md)

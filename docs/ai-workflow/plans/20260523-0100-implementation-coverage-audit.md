@@ -16,7 +16,7 @@
 
 사용자 요청 원문:
 
-> "docs/IA와 docs/ia-pages, docs/prd.md, docs/flow, docs/user-flow.md 등 이 프로젝트 개발을 위해 참고한 문서들을 다시 바라보고 **현재 구현이 안 됐거나 잘못됐거나 부족한 부분**을 찾고 보고서를 만들어. 정확한 분석을 위해 **직접 각 페이지를 브라우저에 띄워보기도** 해야 할 거야."
+> "docs/Wireframe와 docs/ia-pages, docs/prd.md, docs/flow, docs/user-flow.md 등 이 프로젝트 개발을 위해 참고한 문서들을 다시 바라보고 **현재 구현이 안 됐거나 잘못됐거나 부족한 부분**을 찾고 보고서를 만들어. 정확한 분석을 위해 **직접 각 페이지를 브라우저에 띄워보기도** 해야 할 거야."
 
 배경 (현재 발견된 신호 — 본 plan을 트리거한 사고):
 
@@ -31,8 +31,8 @@
 
 ## 2. Accepted Scope
 
-- **분석 범위**: docs/sitemap.md Target React Route Map의 32개 active 라우트 = docs/IA/01~32 한 페이지씩 + 모달 5개 (C-03, D-M1, D-M2, D-M3, F-M1).
-- **정본 docs**: docs/sitemap.md, docs/IA/{N}/description.md (×32), docs/prd.md (Future scope 제외 부분), docs/flow/user-flow.md, docs/spec.md, docs/ant-design/* (검사 항목 기반).
+- **분석 범위**: docs/sitemap.md Target React Route Map의 32개 active 라우트 = docs/Wireframe/01~32 한 페이지씩 + 모달 5개 (C-03, D-M1, D-M2, D-M3, F-M1).
+- **정본 docs**: docs/sitemap.md, docs/Wireframe/{N}/description.md (×32), docs/prd.md (Future scope 제외 부분), docs/flow/user-flow.md, docs/spec.md, docs/ant-design/* (검사 항목 기반).
 - **레거시 (참고만)**: docs/ia-pages/*, docs/user-flow.md — 정본 충돌 발견 시 정본 우선, "doc 자체 모호함" finding으로 분류.
 - **검증 매체**: (a) 코드 정적 read (src/app/**, src/components/**, src/lib/**), (b) 정본 docs 정적 read, (c) **브라우저 동작 확인** (dev 서버 + 로컬 Supabase + 시드 사용자), (d) 3개 breakpoint 반응형 매트릭스 (360/768/1280).
 - **산출물**: HTML 보고서 1건 + ledger 1건 + (선택) Phase 7 후보 plan 시드 1건.
@@ -60,7 +60,7 @@ rev1의 3-way 분할은 SBU-B에서 시크릿/세션 artifact를 만들고 clean
 **원칙**: SBU-A는 외부 의존 0의 정적 분석이라 독립 PR 가능. **SBU-B와 SBU-C는 단일 비공개 실행 슬라이스**로 묶이며, 모든 cleanup(secret/session artifact 삭제 + .gitignore 재확인)이 완료된 **이후에만** 그 슬라이스에서 산출물 PR을 생성한다. PR 분할은 산출물 차원에서만 (보고서 PR ≠ 분석 코드).
 
 **SBU-A (독립 PR — 정적 매핑만, 외부 의존 0)**:
-- Scope: Task 2만. docs/IA × 32 + src/app/** + src/components/** 정적 read만으로 가능
+- Scope: Task 2만. docs/Wireframe × 32 + src/app/** + src/components/** 정적 read만으로 가능
 - 외부 의존: 없음. Docker 미설치, Supabase 미부팅 환경에서도 즉시 실행 가능
 - 산출물: `analysis/coverage-matrix.md` 32 행 × (route / 페이지 파일 존재 / placeholder 텍스트 감지 / 정본 출처) + 한 줄 결론
 - PR 생성: 즉시 가능 (산출물만, 코드 변경 없음)
@@ -95,7 +95,7 @@ rev1의 3-way 분할은 SBU-B에서 시크릿/세션 artifact를 만들고 clean
 
 ### 5.2 Page-Level Implementation (페이지 구현 깊이)
 
-- 정본: `docs/IA/{N}/description.md` 의 "이 화면에 어떤 영역/버튼/정보/상태가 있어야 하는가"
+- 정본: `docs/Wireframe/{N}/description.md` 의 "이 화면에 어떤 영역/버튼/정보/상태가 있어야 하는가"
 - 검증: 페이지 컴포넌트 + import한 sub-component 트리 read → description.md의 각 요구사항이 (a) DOM에 실재 (b) 빈 컴포넌트만 (c) placeholder 텍스트 (d) 누락 중 어느 쪽인가
 - 결과: 요구사항별 PASS/PARTIAL/PLACEHOLDER/MISSING + 비율 점수 (예: 7/10 항목 PASS)
 
@@ -107,7 +107,7 @@ rev1의 3-way 분할은 SBU-B에서 시크릿/세션 artifact를 만들고 clean
 
 ### 5.4 Browser Reality (실제 동작)
 
-- 정본: docs/flow/user-flow.md 에서 해당 페이지의 이전/다음 화면 + docs/IA 의 user action
+- 정본: docs/flow/user-flow.md 에서 해당 페이지의 이전/다음 화면 + docs/Wireframe 의 user action
 - 검증: dev 서버에서 시드 사용자로 로그인 → 해당 URL 진입 → IA의 핵심 user action 1~3개 직접 클릭/입력 → 콘솔 에러 캡처 + 다음 화면 도달 여부 확인
 - 결과: WORKS / BREAKS — <에러 요약> / BLOCKED — <차단 사유>
 
@@ -280,7 +280,7 @@ rev1의 3-way 분할은 SBU-B에서 시크릿/세션 artifact를 만들고 clean
 | --- | --- | --- | --- | --- | --- |
 | 0 | **Pre-Task** — `.gitignore` 사전 갱신 (`scripts/audit-setup/`, `tests/e2e/auth-state/`, `screenshots/`, `tests/e2e/coverage/failure-log.json`, `analysis/`, `.env.local.bak`) — SBU-A PR 또는 별도 small PR | `.gitignore` — **durable** (modify) | n/a | A | N — 환경 안전 사전 작업, main session |
 | 1 | Setup: Supabase 로컬 부팅 + Auth Admin API 시드 + Playwright storageState (라우트 없음) | `supabase/config.toml` — **durable** (new, 향후 dev 환경에서도 유용), `supabase/seed.sql` — **durable** (new, 도메인 row only, auth.users 안 건드림 — dev 시드로 재사용 가능), `scripts/audit-setup/seed-dev-users.mjs` — **delete** (Task 7), `scripts/audit-setup/build-storage-state.mjs` — **delete** (Task 7), `tests/e2e/auth-state/*.json` — **gitignore + delete** (Task 7), `.env.local.bak` — **gitignore + delete** (Task 7) | both | B+C | N — 사용자 docker 확인 + service role key 필요, main session이 직접 |
-| 2 | 32-페이지 정본 vs 코드 라우트 매핑 표 (**SBU-A 1차 산출물**) | `analysis/coverage-matrix.md` — **gitignore + promote** (작업 중엔 gitignored, SBU-A PR 직전에 승격), `reports/sbu-a-coverage-matrix-20260523.md` — **durable** (SBU-A PR commit 대상) | both | A | Y — Explore 서브에이전트로 docs/IA/* 32 페이지 + src/app/** 동시 read 후 표 생성. 외부 의존 없음 |
+| 2 | 32-페이지 정본 vs 코드 라우트 매핑 표 (**SBU-A 1차 산출물**) | `analysis/coverage-matrix.md` — **gitignore + promote** (작업 중엔 gitignored, SBU-A PR 직전에 승격), `reports/sbu-a-coverage-matrix-20260523.md` — **durable** (SBU-A PR commit 대상) | both | A | Y — Explore 서브에이전트로 docs/Wireframe/* 32 페이지 + src/app/** 동시 read 후 표 생성. 외부 의존 없음 |
 | 3a-1 | Batch 1 — Public landing + Auth (비로그인 진입점) 차원 1-3+5 매트릭스 | `analysis/batch-1a-public.md` — **gitignore + Task 6에 통합 + delete** | both | B+C | Y — 라우트 4개 (X-01, A-01, A-02, X-06). audience는 contract 허용값 `both` 사용 — 비로그인 + 인증 후 처리 양쪽 분석 |
 | 3a-2 | Batch 1 — Onboarding 차원 1-3+5 매트릭스 | `analysis/batch-1b-onboarding.md` — **gitignore + Task 6에 통합 + delete** | user | B+C | Y — 라우트 1개 (A-03), 인증 후 진입 |
 | 3b | Batch 2 — Learning core 차원 1-3+5 매트릭스 | `analysis/batch-2-learning.md` — **gitignore + Task 6에 통합 + delete** | user | B+C | Y — 라우트 7개 (B-01, C-01, C-02, C-03, R-02, X-02, X-07) |
@@ -295,7 +295,7 @@ rev1의 3-way 분할은 SBU-B에서 시크릿/세션 artifact를 만들고 clean
 
 ## 11. Smallest Buildable Unit — Restated (rev3 — §4와 일치)
 
-**SBU-A = Task 2 단독** — docs/IA × 32 + src/app/** 정적 read만으로 가능, **외부 의존 0**. Docker/Supabase 미부팅 환경에서도 즉시 실행되어 32-라우트 매핑 표를 산출. 이 표 단독으로 "어느 라우트가 살아있고 어느 것이 placeholder/누락인가" 결정 가능. SBU-A는 산출물만의 독립 PR.
+**SBU-A = Task 2 단독** — docs/Wireframe × 32 + src/app/** 정적 read만으로 가능, **외부 의존 0**. Docker/Supabase 미부팅 환경에서도 즉시 실행되어 32-라우트 매핑 표를 산출. 이 표 단독으로 "어느 라우트가 살아있고 어느 것이 placeholder/누락인가" 결정 가능. SBU-A는 산출물만의 독립 PR.
 
 SBU-A 완료 후 **SBU-B+C 단일 비공개 실행 슬라이스**로 진행 (브라우저 검증 + 보고서 + cleanup + cross-review). 본 슬라이스는 Task 1~6 진행 중 commit/PR 생성 금지, Task 7 cleanup + Finish **4중** 검증 PASS 후에만 PR 생성. **본 분할의 핵심**: SBU-A는 사용자가 docker를 켜기 전에도 1차 산출물 제공 가능, SBU-B+C는 시크릿/세션 artifact가 PR 사이에 누출되지 않도록 단일 슬라이스. Codex Round 1 P2-1 + Round 2 NF-P1-1 + Round 3 NF3-P1-1 반영.
 
@@ -550,8 +550,8 @@ Reviewer: codex-cli 0.128.0, exec mode. Output: `tasks/codex-output-pre-plan-rev
 | Doc | 본 plan에서의 역할 |
 | --- | --- |
 | `docs/sitemap.md` | 32 active routes Target React Route Map (line 23-58), Audience 분류 (line 64-68), Legacy 매핑 (line 146-165) |
-| `docs/IA/README.md` | 32 페이지 인덱스 + 단계 분류 (line 30-61) |
-| `docs/IA/{N}/description.md` × 32 | 페이지별 영역/버튼/정보/상태 정본 |
+| `docs/Wireframe/README.md` | 32 페이지 인덱스 + 단계 분류 (line 30-61) |
+| `docs/Wireframe/{N}/description.md` × 32 | 페이지별 영역/버튼/정보/상태 정본 |
 | `docs/prd.md` | 7. 기능 요구사항 + 12. MVP 범위 + Future scope 경계 |
 | `docs/spec.md` | Fixed Baseline + Required Reading Map |
 | `docs/flow/user-flow.md` | 현행 사용자 플로우 정본 |

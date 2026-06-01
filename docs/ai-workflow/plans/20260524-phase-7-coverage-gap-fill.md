@@ -24,7 +24,7 @@ Implementation Coverage Audit이 발견한 P0 5 + P1 8 = 13건 finding 모두 �
 
 - `reports/implementation-coverage-audit-20260523.html` (audit 보고서 + §11 합의서)
 - `docs/ai-workflow/proposals/20260523-coverage-audit-fix-proposals.md` (13건 합의 — 본 plan의 task spec 출처)
-- `docs/IA/{NN-IA-id}/description.md` × 13건 해당 IA
+- `docs/Wireframe/{NN-IA-id}/description.md` × 13건 해당 IA
 - `docs/spec.md` (Fixed Baseline + Required Reading Map)
 - `docs/development/database-schema.md` (profiles bio 추가 위치)
 - `docs/development/backend-auth.md` (Supabase Auth 흐름)

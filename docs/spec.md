@@ -2,17 +2,22 @@
 
 > Status: single required entry point for implementation decisions
 >
-> Last updated: 2026-05-19
+> Last updated: 2026-06-01
 
 This is the canonical implementation spec for TALKPIK AI. Read this file first
 for any development, dependency, frontend, backend, auth, AI, deployment,
 environment, route, or test task. Then read only the matching detailed documents
 listed below.
 
-This repository is currently pre-implementation. There is no stable `src/` or
-`package.json` yet. Treat this document and the linked active docs as the target
-implementation contract until production source exists. After production source
-exists, reconcile accepted docs with current source before changing behavior.
+This repository now has a foundation implementation. `src/` and `package.json`
+exist, with the Next.js App Router scaffold, Supabase/auth/theme foundations, and
+some learning and feedback surfaces already started.
+
+Treat this document and the linked active docs as the target implementation
+contract for intended behavior. Treat current source as the implementation
+reference for behavior that already exists. Before changing behavior, reconcile
+accepted docs with current source. If source and accepted docs disagree, stop and
+report the exact conflict before implementing.
 
 ## Fixed Baseline
 
@@ -43,7 +48,7 @@ Read this file first, then select the smallest matching set.
 | table, column, schema, migration, DDL, RLS policy SQL, index | `docs/development/database-schema.md` |
 | Vercel, deploy, deployment, preview, production, environment variable, rollback, CI | `docs/development/deployment.md` |
 | billing, subscription, paywall, payment, Stripe, plan pricing | `docs/development/deferred-scope.md` |
-| page, route, navigation, user flow | `docs/sitemap.md`, `docs/ia.md`, `docs/flow/user-flow.md`, and matching `docs/IA/<page>/description.md` when page-specific |
+| page, route, navigation, user flow | `docs/sitemap.md`, `docs/ia.md`, `docs/flow/user-flow.md`, and matching `docs/Wireframe/<page>/description.md` when page-specific |
 | visual UI, Ant Design component, theme, layout, motion | `docs/ant-design/README.md` and the matching Ant Design detail docs it routes to |
 
 Do not read every detailed document by default. Use this map to keep the context
@@ -51,7 +56,7 @@ small and the implementation grounded.
 
 ## Source Structure
 
-Use Next.js App Router conventions once source exists.
+Use Next.js App Router conventions for source code.
 
 ```text
 src/
@@ -86,9 +91,9 @@ Folder responsibilities:
   the Tailwind token bridge.
 - `src/types/`: shared TypeScript types.
 
-Do not use `src/App.tsx` as the route authority. The current route authority is
-`docs/sitemap.md` until source exists; after implementation starts, the Next.js
-`src/app/` route tree becomes the implementation reference.
+Do not use `src/App.tsx` as the route authority. `docs/sitemap.md` remains the
+product route map, and the Next.js `src/app/` route tree is the current
+implementation reference. Reconcile both before route changes.
 
 ## Frontend Implementation Rules
 
@@ -183,7 +188,7 @@ autosave or clear draft-preservation cues.
 
 ## Testing And Quality
 
-Once `package.json` exists, the implementation must provide scripts for:
+The implementation must provide scripts for:
 
 - `dev`
 - `build`
@@ -221,17 +226,17 @@ Before calling implementation work complete:
   `docs/ia.md`, `docs/flow/user-flow.md`, and matching IA page docs for product,
   route, and flow requirements.
 
-## Implementation Start Checklist
+## Implementation Change Checklist
 
-Before creating app code:
+Before changing app code or adding a new implementation surface:
 
 - Re-read this file.
 - Read only the matching detailed files from the Required Reading Map.
 - Re-read `docs/ai-development-workflow.md`.
 - Re-read `docs/ant-design/README.md` for UI work.
-- Use `docs/sitemap.md` as the route map until `src/app/` exists.
-- Create `package.json` with `pnpm`.
-- Pin versions through `pnpm-lock.yaml`.
+- Use `docs/sitemap.md` as the product route map and reconcile it with
+  `src/app/`.
+- Keep `package.json` and `pnpm-lock.yaml` aligned.
 - Configure Supabase env variables with publishable keys only in browser-visible
   variables.
 - Configure Vercel project environments before sharing Preview links.
@@ -255,7 +260,7 @@ Before creating app code:
 
 - `docs/prd.md` defines product scope and value.
 - `docs/sitemap.md` defines the target route map.
-- `docs/ia.md` and `docs/IA/` define information architecture and page-level
+- `docs/ia.md` and `docs/Wireframe/` define information architecture and page-level
   screen requirements.
 - `docs/flow/user-flow.md` defines user journey order and transitions.
 - `docs/ant-design/` defines UI implementation rules.

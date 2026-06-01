@@ -8,7 +8,7 @@ This sub-doc owns §3b (Multi-Agent Context Management), §3c (Context Ledger), 
 
 The main session is the coordinator and durable context owner. Child agents are execution surfaces, not the source of truth.
 
-Before spawning or asking another agent to work, the main session must prepare a task packet using [`agent-packets.md`](agent-packets.md):
+Before spawning or asking another agent to work, the main session must prepare a task packet using [`contracts/agent-packets.md`](contracts/agent-packets.md):
 
 - User goal and accepted scope
 - Docs consulted and extracted requirements
@@ -33,7 +33,7 @@ Subagent dispatch is driven by the plan's task table. Each task row declares `Su
 
 ## Context Ledger
 
-For non-trivial work, create a run ledger under `docs/ai-workflow/runs/YYYY/MM/DD/` using [`context-ledger-template.md`](context-ledger-template.md). Name the file `YYYYMMDD-HHMM-task-slug.md`.
+For non-trivial work, create a run ledger under `docs/ai-workflow/runs/YYYY/MM/DD/` using [`templates/context-ledger-template.md`](templates/context-ledger-template.md). Name the file `YYYYMMDD-HHMM-task-slug.md`.
 
 ### When a ledger is required
 
@@ -87,7 +87,7 @@ When resuming work after a pause, context compaction, or a new agent session, re
 5. Inspect current file state for paths listed in the ledger
 6. Resume from the ledger's `Next action` and `Verification state`
 
-If a required ledger is missing, report `context ledger missing`, create one from [`context-ledger-template.md`](context-ledger-template.md), reconstruct the known state from docs and current files, then continue.
+If a required ledger is missing, report `context ledger missing`, create one from [`templates/context-ledger-template.md`](templates/context-ledger-template.md), reconstruct the known state from docs and current files, then continue.
 
 ## Related
 

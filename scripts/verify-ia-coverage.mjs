@@ -35,7 +35,7 @@ function staticRow(entry) {
     routeOrHostRoute: entry.routeOrHostRoute,
     routeType: entry.routeType,
     audience: entry.audience,
-    docsConsulted: ["docs/sitemap.md", "docs/IA/README.md", entry.descriptionPath],
+    docsConsulted: ["docs/sitemap.md", "docs/Wireframe/README.md", entry.descriptionPath],
     extractedRequirements: [`${entry.iaCode} requires source-map and document-receipt evidence before static PASS.`],
     evidence: [
       { type: "source-map-row", status: sourceRow?.status ?? "missing" },

@@ -41,3 +41,25 @@ export function buildLibraryTabUrl(
   const qs = sp.toString();
   return qs.length > 0 ? `/library?${qs}` : "/library";
 }
+
+/**
+ * Client-side search matcher for the library list (F-01 region 1, 검색/필터).
+ *
+ * Phase 6 search is in-memory over the already-fetched rows — there is no
+ * server-side full-text search yet. An empty/whitespace term matches every
+ * row (the search box clears back to the full list). Matching is
+ * case-insensitive over the supplied haystack fields (title + tags).
+ *
+ * Kept as a pure helper so each tab can reuse it and vitest can verify the
+ * contract without rendering antd.
+ */
+export function matchesLibrarySearch(
+  term: string,
+  haystacks: Array<string | null | undefined>,
+): boolean {
+  const needle = term.trim().toLowerCase();
+  if (needle.length === 0) return true;
+  return haystacks.some(
+    (h) => typeof h === "string" && h.toLowerCase().includes(needle),
+  );
+}

@@ -64,7 +64,7 @@ function sourceRowForIa(entry) {
     routeOrHostRoute: entry.routeOrHostRoute,
     routeType: entry.routeType,
     audience: entry.audience,
-    docsConsulted: ["docs/sitemap.md", "docs/IA/README.md"],
+    docsConsulted: ["docs/sitemap.md", "docs/Wireframe/README.md"],
     extractedRequirements: [`${entry.iaCode} maps to ${entry.routeOrHostRoute} as ${entry.routeType}.`],
     evidence: sourceFiles.map((file) => ({ type: "source-file", path: file })),
     status,

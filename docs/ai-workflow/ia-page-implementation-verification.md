@@ -14,7 +14,7 @@ Use documents in this order.
 
 1. `docs/sitemap.md`
    - Route, audience, route type, modal host, and current route authority.
-2. `docs/IA/README.md` and each `docs/IA/*/description.md`
+2. `docs/Wireframe/README.md` and each `docs/Wireframe/*/description.md`
    - Current IA inventory and page-level screen requirements.
 3. `docs/flow/user-flow.md`
    - Current user journey, transitions, entry and exit states.
@@ -29,7 +29,7 @@ If active docs disagree, record `DOC-GAP`.
 
 Known current doc drift:
 
-- `docs/IA/README.md` lists 34 IA entries.
+- `docs/Wireframe/README.md` lists 34 IA entries.
 - Some prose still says 32 screens.
 - Treat the actual IA inventory and sitemap route table as the working source.
 - Record stale 32-screen wording as `DOC-GAP`, not implementation failure.
@@ -308,7 +308,7 @@ Create or update automation only after writing the failing check first.
 
 Minimum static checks:
 
-- IA inventory count is derived from `docs/IA/README.md`.
+- IA inventory count is derived from `docs/Wireframe/README.md`.
 - No test or script hardcodes 32 as the current IA count.
 - Every IA code maps to `docs/sitemap.md`.
 - Every sitemap page route maps to source route coverage.
@@ -337,16 +337,16 @@ Minimum report fields:
 - Required packs
 - Implementation evidence
 - Test evidence
-- Manual evidence
+- GPT-5.5 adjudication evidence
 - Label
 - Gaps
 - Follow-up owner or reason
 
-## 11. Manual Review Procedure
+## 11. GPT-5.5 Adjudication Procedure
 
-Manual review is required for judgment-heavy checks.
+Independent GPT-5.5 adjudication is required for judgment-heavy checks.
 
-Use manual review for:
+Use GPT-5.5 adjudication for:
 
 - Whether page copy matches the product promise.
 - Whether a user understands what to do next.
@@ -356,9 +356,9 @@ Use manual review for:
 - Whether deferred billing or notification behavior is overpromised.
 - Whether a chart or recommendation is meaningful.
 
-Manual review must record evidence:
+GPT-5.5 adjudication must record evidence:
 
-- Reviewer
+- Adjudicator model and role
 - Date
 - IA code
 - Scenario tested
@@ -377,7 +377,8 @@ Do not call the IA implementation coverage complete unless all are true.
 - Auth, admin, owner, and session boundaries are checked where relevant.
 - Deferred billing and notification transport are not treated as implemented features.
 - Static checks and browser checks are separated.
-- Human-review-only judgments are not auto-marked `PASS`.
+- GPT-5.5-adjudicated judgments are not auto-marked `PASS` without matching
+  evidence.
 - Report includes evidence and remaining gaps.
 
 ## 13. Output Example
@@ -406,13 +407,13 @@ Do not call the IA implementation coverage complete unless all are true.
 - `docs/agent-index.md`
 - `docs/prd.md`
 - `docs/sitemap.md`
-- `docs/IA/README.md`
+- `docs/Wireframe/README.md`
 - `docs/flow/user-flow.md`
 - `docs/user-flow.md`
 - `docs/spec.md`
 - `docs/development/deferred-scope.md`
-- `docs/ai-workflow/context-ledger-template.md`
-- `docs/ai-workflow/report-template.md`
+- `docs/ai-workflow/templates/context-ledger-template.md`
+- `docs/ai-workflow/templates/report-template.md`
 
 ## 15. Glossary
 

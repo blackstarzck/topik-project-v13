@@ -23,7 +23,7 @@ const DIMENSION_LABELS: Record<string, string> = {
 
 /**
  * Phase 7-D Task 6 (P1-2) — R-02 summary row.
- * IA: docs/IA/17-R-02-next-problem-recommendation/description.md.
+ * IA: docs/Wireframe/17-R-02-next-problem-recommendation/description.md.
  * 3-column: 최근 제출 수 / 평균 점수 / 약점 dimension top 3.
  */
 export function SummaryCardRow({

@@ -54,12 +54,13 @@ describe("RetryModal (Phase 7-D Task 5 route fix)", () => {
     );
 
     expect(screen.getByText("이전 풀이가 있어요")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "다시 풀기" })).toBeTruthy();
+    // C-03 upgrade: primary CTA label is now '시작' (was '다시 풀기').
+    expect(screen.getByRole("button", { name: "시작" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "결과 보기" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "취소" })).toBeTruthy();
   });
 
-  it("'다시 풀기' pushes /writing/[questionNo]?problem=...&fresh=1", () => {
+  it("'시작' in fresh mode pushes /writing/[questionNo]?problem=...&fresh=1", () => {
     const onClose = vi.fn();
     render(
       <RetryModal
@@ -71,12 +72,15 @@ describe("RetryModal (Phase 7-D Task 5 route fix)", () => {
         hasSubmission={false}
       />,
     );
-    fireEvent.click(screen.getByRole("button", { name: "다시 풀기" }));
-    expect(onClose).toHaveBeenCalled();
+    // C-03 adds a 재풀이 모드 Radio.Group; default for hasAttempt is 'resume'.
+    // Select '새 답안으로 시작' (fresh) so the route carries &fresh=1.
+    fireEvent.click(screen.getByRole("radio", { name: /새 답안으로 시작/ }));
+    fireEvent.click(screen.getByRole("button", { name: "시작" }));
+    // handleStart no longer calls onClose; the route push drives the transition.
     expect(pushMock).toHaveBeenCalledWith("/writing/53?problem=p-1&fresh=1");
   });
 
-  it("'다시 풀기' with null questionNo falls back to /practice/problems", () => {
+  it("'시작' with null questionNo shows a recoverable start-failure alert (keeps modal open, no push)", () => {
     render(
       <RetryModal
         open
@@ -87,8 +91,15 @@ describe("RetryModal (Phase 7-D Task 5 route fix)", () => {
         hasSubmission={false}
       />,
     );
-    fireEvent.click(screen.getByRole("button", { name: "다시 풀기" }));
-    expect(pushMock).toHaveBeenCalledWith("/practice/problems");
+    fireEvent.click(screen.getByRole("button", { name: "시작" }));
+    // C-03: null questionNo is now a recoverable start failure — inline error
+    // Alert + modal stays open, instead of silently pushing to /practice/problems.
+    expect(
+      screen.getByText(
+        "문제 유형 정보를 찾을 수 없어 시작할 수 없어요. 잠시 후 다시 시도해 주세요.",
+      ),
+    ).toBeTruthy();
+    expect(pushMock).not.toHaveBeenCalled();
   });
 
   it("'결과 보기' routes short feedback for question_no 51/52", () => {

@@ -73,13 +73,8 @@ export function useEmailCooldown(
   storageKey: string,
   defaultSeconds: number = DEFAULT_COOLDOWN_SECONDS,
 ): EmailCooldown {
-  const [remaining, setRemaining] = useState(0);
+  const [remaining, setRemaining] = useState(() => readRemaining(storageKey));
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  useEffect(() => {
-    const initial = readRemaining(storageKey);
-    if (initial > 0) setRemaining(initial);
-  }, [storageKey]);
 
   useEffect(() => {
     if (remaining <= 0) {
