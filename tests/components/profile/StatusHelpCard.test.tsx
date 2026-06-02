@@ -1,14 +1,27 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
+import { NextIntlClientProvider } from "next-intl";
+import type { ReactElement } from "react";
 
 import { StatusHelpCard } from "../../../src/components/profile/StatusHelpCard";
+import koMessages from "../../../messages/ko.json";
 
 afterEach(() => cleanup());
 
+// StatusHelpCard calls useTranslations (next-intl), so it must render inside a
+// NextIntlClientProvider against the real ko catalog.
+function renderCard(ui: ReactElement) {
+  return render(
+    <NextIntlClientProvider locale="ko" messages={koMessages}>
+      {ui}
+    </NextIntlClientProvider>,
+  );
+}
+
 describe("StatusHelpCard (Phase 7-E Task 10)", () => {
   it("renders role label, plan, and join date", () => {
-    render(
+    renderCard(
       <StatusHelpCard
         joinedAt="2026-05-22T07:27:40.629953Z"
         appRole="learner"
@@ -21,7 +34,7 @@ describe("StatusHelpCard (Phase 7-E Task 10)", () => {
   });
 
   it("renders Korean role label for admin trio", () => {
-    render(
+    renderCard(
       <StatusHelpCard
         joinedAt="2026-05-22T00:00:00Z"
         appRole="content_admin"
@@ -32,7 +45,7 @@ describe("StatusHelpCard (Phase 7-E Task 10)", () => {
   });
 
   it("links to settings/notifications and settings/language", () => {
-    render(
+    renderCard(
       <StatusHelpCard
         joinedAt="2026-05-22T00:00:00Z"
         appRole="learner"
@@ -46,7 +59,7 @@ describe("StatusHelpCard (Phase 7-E Task 10)", () => {
   });
 
   it("falls back to raw role string for unknown role", () => {
-    render(
+    renderCard(
       <StatusHelpCard
         joinedAt="2026-05-22T00:00:00Z"
         appRole="some_future_role"

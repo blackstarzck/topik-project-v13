@@ -187,12 +187,20 @@ export function planFeatureList(features: unknown): string[] {
     .filter((f) => !f.startsWith("__seed"));
 }
 
-const CADENCE_LABELS: Record<PlanCadence, string> = {
-  monthly: "월간",
-  quarterly: "분기",
-  yearly: "연간",
+// i18n: 이 모듈은 컴포넌트가 아니라 useTranslations를 쓸 수 없다(wave-2/3
+// key-expose 선례). 결제 주기 라벨(월간/분기/연간)은 카탈로그 키 이름만
+// 노출하고, 실제 문구는 렌더 컴포넌트가 t(`cadence.${key}`)로 해석한다.
+const CADENCE_LABEL_KEYS: Record<PlanCadence, PlanCadence> = {
+  monthly: "monthly",
+  quarterly: "quarterly",
+  yearly: "yearly",
 };
 
-export function cadenceLabel(cadence: PlanCadence): string {
-  return CADENCE_LABELS[cadence] ?? cadence;
+/**
+ * Catalog sub-key for a billing cadence (e.g. "monthly"). The rendering shell
+ * resolves it via its own `cadence.*` namespace. Falls back to the raw cadence
+ * string for any unknown value so the caller still has a stable key.
+ */
+export function cadenceLabelKey(cadence: PlanCadence): string {
+  return CADENCE_LABEL_KEYS[cadence] ?? cadence;
 }

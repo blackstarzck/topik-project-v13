@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { App, Button, Space, Typography } from "antd";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useSaveLearningGoal } from "@/lib/learning/mutations";
 
@@ -32,6 +33,7 @@ export function OnboardingNavCta({
   userId,
   previousHref = "/auth/verify-email",
 }: Props) {
+  const t = useTranslations("onboarding.nav");
   const router = useRouter();
   const { message } = App.useApp();
   const mutation = useSaveLearningGoal();
@@ -51,14 +53,13 @@ export function OnboardingNavCta({
         weak_areas: [],
         is_active: true,
       });
-      message.success("기본 목표로 시작했어요. 설정에서 언제든 바꿀 수 있어요.");
+      message.success(t("skipSuccess"));
       router.push("/dashboard");
     } catch (err) {
       // 예외: 저장 실패 시 현재 화면 유지 후 재시도 안내(토스트 + 인라인).
-      const detail =
-        err instanceof Error ? err.message : "잠시 후 다시 시도해 주세요.";
+      const detail = err instanceof Error ? err.message : t("retryHint");
       setSkipError(detail);
-      message.error("건너뛰기에 실패했어요. 다시 시도해 주세요.");
+      message.error(t("skipFailedToast"));
     }
   };
 
@@ -66,15 +67,15 @@ export function OnboardingNavCta({
     <Space direction="vertical" size="small" style={{ width: "100%" }}>
       <Space style={{ width: "100%", justifyContent: "space-between" }} wrap>
         <Button onClick={() => router.push(previousHref as never)}>
-          이전 단계 수정
+          {t("previous")}
         </Button>
         <Button type="link" onClick={handleSkip} loading={mutation.isPending}>
-          건너뛰기
+          {t("skip")}
         </Button>
       </Space>
       {skipError ? (
         <Text type="danger" style={{ fontSize: 12 }}>
-          건너뛰기 저장 실패: {skipError}
+          {t("skipFailedInline", { detail: skipError })}
         </Text>
       ) : null}
     </Space>

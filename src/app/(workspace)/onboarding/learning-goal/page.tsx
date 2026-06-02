@@ -1,12 +1,16 @@
 import type { Metadata } from "next";
 import { Space } from "antd";
+import { getTranslations } from "next-intl/server";
 import { LearningGoalForm } from "@/components/learning/LearningGoalForm";
 import { getLearningGoal } from "@/lib/learning/server";
 import { requireUser } from "@/lib/auth/session";
 import { OnboardingSteps } from "./OnboardingSteps";
 import { OnboardingNavCta } from "./OnboardingNavCta";
 
-export const metadata: Metadata = { title: "학습 목표 설정 — TALKPIK" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("onboarding.page");
+  return { title: t("metaTitle") };
+}
 
 export default async function OnboardingLearningGoalPage() {
   const user = await requireUser();

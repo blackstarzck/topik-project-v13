@@ -18,6 +18,7 @@ import {
   Typography,
 } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
+import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 
 import {
@@ -38,32 +39,34 @@ import {
 
 const { Text } = Typography;
 
-const UNSAVED_NOTIFICATION_LEAVE_MESSAGE =
-  "저장하지 않은 변경사항이 있습니다. 페이지를 떠나시겠어요?";
-
-const PREF_LABELS: Record<NotificationPrefKey, string> = {
-  weekly_summary: "주간 학습 요약",
-  feedback_ready: "피드백 준비 완료 알림",
-  study_reminder: "학습 리마인더",
+// i18n: 모듈 상수는 useTranslations를 쓸 수 없다(wave-2/3 key-expose 선례).
+// 라벨은 카탈로그 키 이름만 보관하고, 실제 문구는 컴포넌트가
+// t(`pref.${key}`) / t(`weekday.${key}`) / t(`logStatus.${key}`)로 해석한다.
+const PREF_LABEL_KEYS: Record<NotificationPrefKey, string> = {
+  weekly_summary: "weeklySummary",
+  feedback_ready: "feedbackReady",
+  study_reminder: "studyReminder",
 };
 
-const WEEKDAYS: { value: number; label: string }[] = [
-  { value: 1, label: "월" },
-  { value: 2, label: "화" },
-  { value: 3, label: "수" },
-  { value: 4, label: "목" },
-  { value: 5, label: "금" },
-  { value: 6, label: "토" },
-  { value: 0, label: "일" },
+// 요일 토글 — value는 JS Date 요일 인덱스(0=일), labelKey는 카탈로그 키.
+const WEEKDAYS: { value: number; labelKey: string }[] = [
+  { value: 1, labelKey: "mon" },
+  { value: 2, labelKey: "tue" },
+  { value: 3, labelKey: "wed" },
+  { value: 4, labelKey: "thu" },
+  { value: 5, labelKey: "fri" },
+  { value: 6, labelKey: "sat" },
+  { value: 0, labelKey: "sun" },
 ];
 
-const LOG_STATUS_META: Record<
+// 발송 이력 status enum → 카탈로그 키 + 배지 색(enum 값은 그대로 유지).
+const LOG_STATUS_BADGE_META: Record<
   NotificationLogEntry["status"],
-  { label: string; color: string }
+  { labelKey: string; color: string }
 > = {
-  sent: { label: "발송됨", color: "green" },
-  failed: { label: "실패", color: "red" },
-  pending: { label: "대기", color: "blue" },
+  sent: { labelKey: "sent", color: "green" },
+  failed: { labelKey: "failed", color: "red" },
+  pending: { labelKey: "pending", color: "blue" },
 };
 
 type Props = {
@@ -140,6 +143,8 @@ function timeStringToDayjs(value: string | null): Dayjs | null {
  * - REAL SEND is an external stub (no transport) — preview/log only.
  */
 export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
+  const t = useTranslations("settings.notifications");
+  const tCommon = useTranslations("common");
   const { message } = App.useApp();
   const prefsMutation = useUpdateNotificationPrefs(userId);
 
@@ -183,17 +188,14 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
         if (cancelled) return;
         setSettingsLoad({
           status: "error",
-          message:
-            err instanceof Error
-              ? err.message
-              : "알림 설정을 불러오지 못했어요.",
+          message: err instanceof Error ? err.message : t("loadError"),
         });
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [userId]);
+  }, [userId, t]);
 
   const prefsDirty = NOTIFICATION_PREF_KEYS.some(
     (key) => (values[key] ?? false) !== (initialPrefs[key] ?? false),
@@ -268,7 +270,7 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
       if (url.origin !== window.location.origin) return;
       if (url.href === window.location.href) return;
 
-      if (!window.confirm(UNSAVED_NOTIFICATION_LEAVE_MESSAGE)) {
+      if (!window.confirm(t("unsavedLeave"))) {
         event.preventDefault();
         event.stopPropagation();
         event.stopImmediatePropagation();
@@ -281,7 +283,7 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
       window.removeEventListener("beforeunload", handleBeforeUnload);
       document.removeEventListener("click", handleDocumentClick, true);
     };
-  }, [isDirty]);
+  }, [isDirty, t]);
 
   async function handleFinish() {
     setSaving(true);
@@ -295,31 +297,34 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
         await upsertNotificationSettings(userId, settings);
         setSavedSettings(settings);
       }
-      message.success("알림 설정이 저장되었습니다.");
+      message.success(t("saveSuccess"));
     } catch (err) {
-      message.error(err instanceof Error ? err.message : "저장에 실패했어요.");
+      message.error(err instanceof Error ? err.message : t("saveError"));
     } finally {
       setSaving(false);
     }
   }
 
   const reminderPreview = reminderTime
-    ? `매일 ${reminderTime.format("HH:mm")} (${settings.timezone})에 학습 리마인더를 보낼 예정입니다.`
-    : "학습 리마인더 시간을 설정하면 발송 예시가 표시됩니다.";
+    ? t("previewScheduled", {
+        time: reminderTime.format("HH:mm"),
+        timezone: settings.timezone,
+      })
+    : t("previewEmpty");
 
   const channelTabs = [
     {
       key: "email",
-      label: "이메일",
+      label: t("channel.emailTab"),
       children: (
         <Space direction="vertical" size={8} style={{ width: "100%" }}>
           <Checkbox
             checked={settings.channels.email}
             onChange={(e) => setChannel("email", e.target.checked)}
           >
-            이메일 알림 받기
+            {t("channel.emailReceive")}
           </Checkbox>
-          <Text type="secondary">가입 이메일로 알림을 받습니다.</Text>
+          <Text type="secondary">{t("channel.emailHint")}</Text>
         </Space>
       ),
     },
@@ -328,7 +333,7 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
       label: (
         <Space size={4}>
           Zalo
-          <Tag>미연동</Tag>
+          <Tag>{t("channel.notConnected")}</Tag>
         </Space>
       ),
       children: (
@@ -337,30 +342,28 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
             checked={settings.channels.zalo}
             onChange={(e) => setChannel("zalo", e.target.checked)}
           >
-            Zalo 알림 받기
+            {t("channel.zaloReceive")}
           </Checkbox>
-          <Text type="secondary">
-            Zalo 연동(실제 발송)은 준비 중입니다. 지금은 수신 설정만 저장돼요.
-          </Text>
+          <Text type="secondary">{t("channel.zaloHint")}</Text>
         </Space>
       ),
     },
     {
       key: "both",
-      label: "둘 다",
+      label: t("channel.bothTab"),
       children: (
         <Space direction="vertical" size={8} style={{ width: "100%" }}>
           <Checkbox
             checked={settings.channels.email}
             onChange={(e) => setChannel("email", e.target.checked)}
           >
-            이메일 알림 받기
+            {t("channel.emailReceive")}
           </Checkbox>
           <Checkbox
             checked={settings.channels.zalo}
             onChange={(e) => setChannel("zalo", e.target.checked)}
           >
-            Zalo 알림 받기 (연동 예정)
+            {t("channel.zaloReceivePending")}
           </Checkbox>
         </Space>
       ),
@@ -374,7 +377,7 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
           <Alert
             type="error"
             showIcon
-            message="알림 설정을 불러오지 못했어요"
+            message={t("loadErrorTitle")}
             description={settingsLoad.message}
           />
         ) : null}
@@ -384,13 +387,13 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
           <Alert
             type="warning"
             showIcon
-            message="수신 중인 알림 채널이 없습니다"
-            description="아래에서 이메일 또는 Zalo 채널을 켜야 리마인더를 받을 수 있어요."
+            message={t("noChannel.title")}
+            description={t("noChannel.body")}
           />
         ) : null}
 
         {/* Region 2: 알림 채널 탭 (이메일 / Zalo / 둘 다) */}
-        <Card size="small" title="알림 채널">
+        <Card size="small" title={t("channel.cardTitle")}>
           {settingsLoad.status === "loading" ? (
             <Skeleton active paragraph={{ rows: 2 }} />
           ) : (
@@ -403,26 +406,31 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
         </Card>
 
         {/* Region 3: 알림 조건 입력 */}
-        <Card size="small" title="알림 조건">
+        <Card size="small" title={t("condition.cardTitle")}>
           <Space direction="vertical" size="middle" style={{ width: "100%" }}>
             {/* Boolean conditions persist to profiles.notification_prefs and do
                 not depend on the async notification_settings load. */}
-            {NOTIFICATION_PREF_KEYS.map((key) => (
-              <Form.Item
-                key={key}
-                label={PREF_LABELS[key]}
-                style={{ marginBottom: 0 }}
-              >
-                <Switch
-                  checked={values[key] ?? false}
-                  onChange={(checked) => setKey(key, checked)}
-                  aria-label={PREF_LABELS[key]}
-                />
-                <Text type="secondary" style={{ marginLeft: 12 }}>
-                  {values[key] ? "켜짐" : "꺼짐"}
-                </Text>
-              </Form.Item>
-            ))}
+            {NOTIFICATION_PREF_KEYS.map((key) => {
+              const prefLabel = t(
+                `pref.${PREF_LABEL_KEYS[key]}` as Parameters<typeof t>[0],
+              );
+              return (
+                <Form.Item
+                  key={key}
+                  label={prefLabel}
+                  style={{ marginBottom: 0 }}
+                >
+                  <Switch
+                    checked={values[key] ?? false}
+                    onChange={(checked) => setKey(key, checked)}
+                    aria-label={prefLabel}
+                  />
+                  <Text type="secondary" style={{ marginLeft: 12 }}>
+                    {values[key] ? t("condition.on") : t("condition.off")}
+                  </Text>
+                </Form.Item>
+              );
+            })}
 
             {/* Schedule (time/days) needs the loaded notification_settings. */}
             {settingsLoad.status === "loading" ? (
@@ -430,12 +438,10 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
             ) : (
               <>
                 <Form.Item
-                  label="리마인더 시간 (HH:mm)"
+                  label={t("condition.reminderTimeLabel")}
                   style={{ marginBottom: 0 }}
                   extra={
-                    anyChannelOn
-                      ? undefined
-                      : "수신 채널을 켜면 리마인더 시간을 설정할 수 있어요."
+                    anyChannelOn ? undefined : t("condition.reminderTimeExtra")
                   }
                 >
                   <TimePicker
@@ -450,11 +456,14 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
                     format="HH:mm"
                     minuteStep={5}
                     placeholder="HH:mm"
-                    aria-label="리마인더 시간"
+                    aria-label={t("condition.reminderTimeAria")}
                   />
                 </Form.Item>
 
-                <Form.Item label="리마인더 요일" style={{ marginBottom: 0 }}>
+                <Form.Item
+                  label={t("condition.reminderDaysLabel")}
+                  style={{ marginBottom: 0 }}
+                >
                   <Space wrap>
                     {WEEKDAYS.map((d) => (
                       <Tag.CheckableTag
@@ -467,7 +476,7 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
                             : { opacity: 0.5, cursor: "not-allowed" }
                         }
                       >
-                        {d.label}
+                        {t(`weekday.${d.labelKey}` as Parameters<typeof t>[0])}
                       </Tag.CheckableTag>
                     ))}
                   </Space>
@@ -478,17 +487,17 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
         </Card>
 
         {/* Region 4: 미리보기 / 발송 이력 */}
-        <Card size="small" title="미리보기">
+        <Card size="small" title={t("preview.cardTitle")}>
           <Text type="secondary">{reminderPreview}</Text>
         </Card>
 
-        <Card size="small" title="발송 이력 (최근 5건)">
+        <Card size="small" title={t("history.cardTitle")}>
           {settingsLoad.status === "loading" ? (
             <Skeleton active paragraph={{ rows: 2 }} />
           ) : log.length === 0 ? (
             <Empty
               image={Empty.PRESENTED_IMAGE_SIMPLE}
-              description="아직 발송된 알림이 없습니다."
+              description={t("history.empty")}
             />
           ) : (
             <List
@@ -497,8 +506,10 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
               renderItem={(entry) => (
                 <List.Item>
                   <Space>
-                    <Tag color={LOG_STATUS_META[entry.status].color}>
-                      {LOG_STATUS_META[entry.status].label}
+                    <Tag color={LOG_STATUS_BADGE_META[entry.status].color}>
+                      {t(
+                        `logStatus.${LOG_STATUS_BADGE_META[entry.status].labelKey}` as Parameters<typeof t>[0],
+                      )}
                     </Tag>
                     <Text>{entry.channel}</Text>
                     <Text type="secondary">{entry.template_key}</Text>
@@ -514,11 +525,7 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
           )}
         </Card>
 
-        <Alert
-          type="info"
-          showIcon
-          message="실제 알림 발송 연동은 준비 중입니다. 지금은 수신 채널·조건·시간이 저장되며, 발송 이력은 발송이 시작되면 채워집니다."
-        />
+        <Alert type="info" showIcon message={t("deferredNotice")} />
 
         {/* Region 5: 저장 CTA (변경값 없으면 비활성, 저장 중 중복 클릭 차단) */}
         <Form.Item style={{ marginBottom: 0 }}>
@@ -528,7 +535,7 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
             loading={saving}
             disabled={!isDirty || saving || settingsLoad.status !== "ready"}
           >
-            저장
+            {tCommon("save")}
           </Button>
         </Form.Item>
       </Space>

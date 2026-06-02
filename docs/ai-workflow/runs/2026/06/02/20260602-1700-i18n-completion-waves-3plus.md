@@ -1,4 +1,4 @@
-# Context Ledger — i18n completion (waves 3+) — finish user-facing string migration
+﻿# Context Ledger — i18n completion (waves 3+) — finish user-facing string migration
 
 ## Run Metadata
 
@@ -65,6 +65,7 @@
 | 2026-06-02T18:10Z | WAVE 4 (library+growth) DONE + GREEN | 1 Workflow, 2 parallel agents. library 140 keys / 10 comp + 1 page + library-enrich-data (statusBadge→{labelKey,color}); growth 72 keys / 4 comp + insights.ts (key-expose) + 1 page. 212 keys merged (catalog 748→960 ×3, parity). 3 new chrome tests + ExportPdfButton test updated. Verified: typecheck 0 (no extra casts needed — agents applied them), lint 0 err, test 542 pass/3 skip; scan clean (only review-set-data.ts 2 guards); ko verbatim confirmed (20 strings); en/vi reviewed (ICU + next-intl rich-text `<plan>` tag preserved across locales). | this run |
 | 2026-06-02T18:10Z | FIX wave-3 regression: 4 Chrome tests imported ephemeral messages/_staging/ | ReportsChrome (committed in a4ecf2a) + GrowthChrome/LibraryChrome/ExportPdfButton imported `messages/_staging/<x>.json` (the agents' "flatten staged leaves" test pattern). Staging is deleted before commit → committed test referenced a missing file (wave-3 a4ecf2a left ReportsChrome broken-in-isolation; only undetected because I deleted staging AFTER the wave-3 test run). FIX: repoint all 4 tests to the merged `messages/ko.json`. PROCESS FIX: now delete staging BEFORE the full-test gate (not after), so a staging dependency fails the gate. Verified test 542 pass with staging absent. | this run |
 | 2026-06-02T18:10Z | Keep review-set-data.ts 2 Korean Error throws | "선택한 항목이 없습니다"/"로그인이 필요합니다" are defensive guards in a non-component data module; practically unreachable (create button disabled when nothing selected; RLS+requireUser gate auth server-side). Surfaced only via err.message fallback. Externalizing (sentinel error + component t()) is wasted effort on dead paths. Flagged, left. | agent flag + coordinator |
+| 2026-06-02T18:40Z | WAVE 5 (profile + settings/subscription/paywall + learning/onboarding) DONE + GREEN | 1 Workflow, 3 parallel agents. profile 70 keys; settings/subscription/paywall 139 (settings.notifications + subscription + paywall; billing-data cadenceLabel→cadenceLabelKey key-expose); learning-onboarding 46 (dashboard.recentFeedback/upcomingExam extend existing dashboard ns + new onboarding ns; avatar-upload + zod-message + weak-area key-expose). 255 keys merged (catalog 960→1216 ×3, parity). Tests all read messages/ko.json (staging-import lesson held — 0 staging refs). Reused common.save/cancel. typecheck 0 (all casts applied by agents), lint 0 err, test 555 pass/3 skip (staging deleted FIRST). scan clean (only the 4 orphans + G-01 language-page false-positive). ko verbatim confirmed (17 strings). en/vi reviewed, high quality, ICU preserved. PURE string externalization — no subscription/payment/profile status/enum/plan VALUE changed (shared-entity semantics intact; consistency-safe). | this run |
 
 ## Active Files
 
@@ -114,6 +115,13 @@
   ICU + rich-text tags preserved; vi flagged (~22 keys: library.pdf.*, growth.insights.*, etc.).
   Also repaired the wave-3 ReportsChrome staging-import regression (+3 other wave-4 tests) → all
   read messages/ko.json now.
+- **Wave 5 result (2026-06-02): typecheck 0, lint 0 err, test 80 files / 555 pass / 3 skip (staging
+  deleted before test). Catalog 1216 strings ×3 (parity, no empties).** profile/settings/
+  subscription/paywall/onboarding + dashboard learning-cards fully migrated; only the 4 learning
+  orphans (skipped) + G-01 language-page false-positive remain. ko verbatim (17 strings). en/vi
+  reviewed; vi flagged (~20 keys: subscription.policy.*, paywall.*, onboarding.goalForm.*, etc.).
+  Consistency-safe: no shared-entity (subscriptions/payment_history/profiles) enum/status/plan
+  value changed — pure string externalization.
 - Cross-model review: codex N/A for Korean copy on Windows (`codex-review-mojibake-windows`) →
   coordinator (Claude) reviewed ko-verbatim (objective string check) + en/vi accuracy.
 - QA Gate: degraded — no dev server/browser in coordinator env (`feedback-ui-completion-requires-dev-server`) | full unit suite 530 passed/3 skipped incl. the wave-3 writing/feedback/reports chrome tests rendering via `renderWithIntl` on the ko baseline + catalog-parity test (ko/en/vi identical key sets, no empties) + independent ko-verbatim string check (34 strings byte-for-byte) + scan-unmigrated (no live Korean except justified) | live-browser en/vi rendering + runtime locale switch on writing/feedback/reports screens UNVERIFIED — defer to evidence phase (boot server, switch locale, confirm render + no hydration mismatch); vi long-copy keys need native review.
@@ -149,3 +157,4 @@
 - DEFERRED with AI-integration phase: `src/lib/writing/feedback-service.ts` +
   `comparison-service.ts` (service-layer Korean prose generators) — localize via locale-aware
   generation when the real AI feedback lands, NOT via static catalog.
+

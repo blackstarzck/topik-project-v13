@@ -1,14 +1,28 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
+import { App as AntdApp } from "antd";
+import { NextIntlClientProvider } from "next-intl";
+import type { ReactElement } from "react";
 
 import { ExamInfoCard } from "../../../src/components/profile/ExamInfoCard";
+import koMessages from "../../../messages/ko.json";
 
 afterEach(() => cleanup());
 
+// ExamInfoCard calls useTranslations (next-intl) + App.useApp() (antd), so it must
+// render inside both providers, against the real ko catalog.
+function renderCard(ui: ReactElement) {
+  return render(
+    <NextIntlClientProvider locale="ko" messages={koMessages}>
+      <AntdApp>{ui}</AntdApp>
+    </NextIntlClientProvider>,
+  );
+}
+
 describe("ExamInfoCard (Phase 7-E Task 10)", () => {
   it("renders empty state with link to onboarding when goal is null", () => {
-    render(<ExamInfoCard goal={null} />);
+    renderCard(<ExamInfoCard goal={null} />);
     expect(screen.getByText("아직 목표를 설정하지 않았어요.")).toBeTruthy();
     const link = screen.getByText("목표 설정하기");
     expect(link.closest("a")?.getAttribute("href")).toBe(
@@ -17,7 +31,7 @@ describe("ExamInfoCard (Phase 7-E Task 10)", () => {
   });
 
   it("renders TOPIK II + target grade + exam date when goal exists", () => {
-    render(
+    renderCard(
       <ExamInfoCard
         goal={{
           topik_level: "TOPIK_II",
@@ -33,7 +47,7 @@ describe("ExamInfoCard (Phase 7-E Task 10)", () => {
   });
 
   it("falls back gracefully when exam_date is null", () => {
-    render(
+    renderCard(
       <ExamInfoCard
         goal={{
           topik_level: "TOPIK_I",

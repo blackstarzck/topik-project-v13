@@ -9,7 +9,10 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { App as AntdApp } from "antd";
+import { NextIntlClientProvider } from "next-intl";
 import type { ReactNode } from "react";
+
+import koMessages from "../../../messages/ko.json";
 
 const mutateAsyncMock = vi.fn();
 const useUpdateProfileMock = vi.fn();
@@ -25,8 +28,15 @@ import {
 
 const blankProfile = { display_name: null, nickname: null, bio: null };
 
+// Components now call next-intl's useTranslations, so they must render inside a
+// NextIntlClientProvider. Render against the real ko catalog (same Korean strings
+// the assertions match) — never the ephemeral messages/_staging/ dir.
 function renderInApp(node: ReactNode) {
-  return render(<AntdApp>{node}</AntdApp>);
+  return render(
+    <NextIntlClientProvider locale="ko" messages={koMessages}>
+      <AntdApp>{node}</AntdApp>
+    </NextIntlClientProvider>,
+  );
 }
 
 function renderProfileForm(

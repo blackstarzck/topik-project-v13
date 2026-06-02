@@ -1,6 +1,7 @@
 "use client";
 
 import { Card, Empty, List, Tag, Typography } from "antd";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 const { Text } = Typography;
@@ -22,10 +23,11 @@ type Props = {
  * 최근 3건 표시 + 상세 페이지 링크.
  */
 export function RecentFeedbackCard({ items }: Props) {
+  const t = useTranslations("dashboard.recentFeedback");
   return (
-    <Card title="최근 피드백">
+    <Card title={t("title")}>
       {items.length === 0 ? (
-        <Empty description="아직 받은 피드백이 없어요. 글쓰기를 제출해 보세요." />
+        <Empty description={t("empty")} />
       ) : (
         <List
           dataSource={items.slice(0, 3)}
@@ -37,17 +39,21 @@ export function RecentFeedbackCard({ items }: Props) {
                   key="view"
                   href={`/writing/feedback/long/${item.submissionId}` as never}
                 >
-                  보기
+                  {t("view")}
                 </Link>,
               ]}
             >
-              <Tag>{item.questionNo != null ? `${item.questionNo}번` : "—"}</Tag>
+              <Tag>
+                {item.questionNo != null
+                  ? t("questionNo", { no: item.questionNo })
+                  : "—"}
+              </Tag>
               <span style={{ marginLeft: 8 }}>
-                점수{" "}
+                {t("scoreLabel")}{" "}
                 <strong>
                   {item.scoreTotal != null
-                    ? Math.round(item.scoreTotal) + "점"
-                    : "대기"}
+                    ? t("scoreValue", { score: Math.round(item.scoreTotal) })
+                    : t("scorePending")}
                 </strong>
               </span>
               <Text type="secondary" style={{ marginLeft: 12, fontSize: 12 }}>

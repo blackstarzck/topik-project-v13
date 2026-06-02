@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { PaywallShell } from "@/components/settings/PaywallShell";
 
-export const metadata: Metadata = { title: "구독 가입 — TALKPIK" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("paywall");
+  return { title: t("metaTitle") };
+}
 
 export default function PaywallPage() {
   return <PaywallShell />;

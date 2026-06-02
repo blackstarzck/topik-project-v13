@@ -11,6 +11,7 @@ import {
   Typography,
 } from "antd";
 import dayjs from "dayjs";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -20,16 +21,22 @@ import type { Tables } from "@/lib/supabase/types";
 
 const { Title, Paragraph } = Typography;
 
-const WEAK_AREA_OPTIONS = [
-  { value: "vocabulary", label: "어휘" },
-  { value: "grammar", label: "문법" },
-  { value: "reading-comprehension", label: "읽기 이해" },
-  { value: "listening-comprehension", label: "듣기 이해" },
-  { value: "essay-thesis", label: "논술 주제" },
-  { value: "essay-structure", label: "논술 구조" },
-  { value: "short-answer", label: "단답 작성" },
-  { value: "long-form-cohesion", label: "장문 결속" },
-];
+// 취약 영역 value 는 데이터 키(불변), 라벨 문구는 onboarding.goalForm.weakAreas.*
+// 카탈로그에서 t()로 해석한다(컴포넌트가 아닌 module scope 라 키만 보관).
+const WEAK_AREA_VALUES = [
+  "vocabulary",
+  "grammar",
+  "reading-comprehension",
+  "listening-comprehension",
+  "essay-thesis",
+  "essay-structure",
+  "short-answer",
+  "long-form-cohesion",
+] as const;
+
+// exam_date refine 가 내보내는 안정적 에러 키. zod 는 module scope 라 t()를 쓸 수
+// 없으므로 키만 내보내고, 렌더 시 onboarding.goalForm.errors.* 로 해석한다.
+const EXAM_DATE_PAST_ERROR = "examDatePast";
 
 // TOPIK 등급별로 실제 지원하는 목표 급수 범위. 이 범위를 벗어나면
 // "미지원 급수"로 보고 해당 항목 하단에 안내한다 (Area 3 예외).
@@ -47,7 +54,7 @@ const schema = z.object({
     .nullable()
     .refine(
       (v) => !v || !dayjs(v).startOf("day").isBefore(dayjs().startOf("day")),
-      "과거 날짜는 선택할 수 없습니다.",
+      EXAM_DATE_PAST_ERROR,
     ),
   weekly_goal_minutes: z.number().int().min(15).max(2000).optional().nullable(),
   weak_areas: z.array(z.string()).default([]),
@@ -66,9 +73,24 @@ type Props = {
 };
 
 export function LearningGoalForm({ userId, defaultValues }: Props) {
+  const t = useTranslations("onboarding.goalForm");
   const router = useRouter();
   const { notification } = App.useApp();
   const mutation = useSaveLearningGoal();
+
+  // value 는 데이터 키 고정, 라벨만 카탈로그에서 해석한다. 동적 키라 캐스트 필요.
+  const weakAreaOptions = WEAK_AREA_VALUES.map((value) => ({
+    value,
+    label: t(`weakAreas.${value}` as Parameters<typeof t>[0]),
+  }));
+
+  // zod 가 내보낸 에러 메시지를 항목 하단 문구로 변환한다. 우리가 내보낸 안정적
+  // 키(EXAM_DATE_PAST_ERROR)는 onboarding.goalForm.errors.* 로 해석하고, 그 외
+  // zod 기본 메시지는 일반 형식 오류 문구로 대체한다.
+  const resolveIssueMessage = (message: string) =>
+    message === EXAM_DATE_PAST_ERROR
+      ? t("errors.examDatePast")
+      : t("errors.invalidField");
 
   // Area 3 예외(미지원 급수 / 저장 실패 등)는 글로벌 알림이 아니라 해당 항목
   // 하단에 인라인으로 안내한다. 성공 안내만 글로벌 알림을 유지한다.
@@ -104,7 +126,7 @@ export function LearningGoalForm({ userId, defaultValues }: Props) {
         if (typeof path !== "string") continue;
         const key = path as FieldErrorKey;
         if (nextErrors[key] === undefined) {
-          nextErrors[key] = issue.message;
+          nextErrors[key] = resolveIssueMessage(issue.message);
         }
       }
       setFieldErrors(nextErrors);
@@ -115,9 +137,11 @@ export function LearningGoalForm({ userId, defaultValues }: Props) {
     // 목표 등급 항목 하단에 안내한다.
     const supported = SUPPORTED_GRADES[parsed.data.topik_level];
     if (!supported.includes(parsed.data.target_grade)) {
-      const range = `${supported[0]}-${supported[supported.length - 1]}급`;
       setFieldErrors({
-        target_grade: `선택한 등급에서는 ${range}만 지원해요. 목표 급수를 다시 확인해주세요.`,
+        target_grade: t("errors.unsupportedGrade", {
+          min: supported[0],
+          max: supported[supported.length - 1],
+        }),
       });
       return;
     }
@@ -133,15 +157,15 @@ export function LearningGoalForm({ userId, defaultValues }: Props) {
         weak_areas: parsed.data.weak_areas,
         is_active: true,
       });
-      notification.success({ message: "학습 목표가 저장되었어요" });
+      notification.success({ message: t("saveSuccess") });
       router.push("/dashboard");
     } catch (err) {
       // 저장 실패는 현재 화면을 유지하고 항목 하단에 재시도 안내를 남긴다.
       setFieldErrors({
         __save:
           err instanceof Error
-            ? `저장에 실패했어요. ${err.message} 잠시 후 다시 시도해주세요.`
-            : "저장에 실패했어요. 잠시 후 다시 시도해주세요.",
+            ? t("errors.saveFailedDetail", { detail: err.message })
+            : t("errors.saveFailed"),
       });
     }
   });
@@ -150,10 +174,10 @@ export function LearningGoalForm({ userId, defaultValues }: Props) {
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
       <div>
         <Title level={3} style={{ marginBottom: 4 }}>
-          학습 목표 설정
+          {t("heading")}
         </Title>
         <Paragraph type="secondary" style={{ margin: 0 }}>
-          목표 설정은 맞춤 추천의 기반이 됩니다.
+          {t("subheading")}
         </Paragraph>
       </div>
 
@@ -163,7 +187,7 @@ export function LearningGoalForm({ userId, defaultValues }: Props) {
           name="topik_level"
           render={({ field }) => (
             <Form.Item
-              label="TOPIK 등급"
+              label={t("topikLevelLabel")}
               required
               validateStatus={fieldErrors.topik_level ? "error" : undefined}
               help={fieldErrors.topik_level}
@@ -178,8 +202,8 @@ export function LearningGoalForm({ userId, defaultValues }: Props) {
                   clearFieldError("target_grade");
                 }}
                 options={[
-                  { value: "TOPIK_I", label: "TOPIK I (1-2급)" },
-                  { value: "TOPIK_II", label: "TOPIK II (3-6급)" },
+                  { value: "TOPIK_I", label: t("topikLevelOptionI") },
+                  { value: "TOPIK_II", label: t("topikLevelOptionII") },
                 ]}
               />
             </Form.Item>
@@ -191,7 +215,7 @@ export function LearningGoalForm({ userId, defaultValues }: Props) {
           name="target_grade"
           render={({ field }) => (
             <Form.Item
-              label="목표 등급"
+              label={t("targetGradeLabel")}
               required
               validateStatus={fieldErrors.target_grade ? "error" : undefined}
               help={fieldErrors.target_grade}
@@ -215,7 +239,7 @@ export function LearningGoalForm({ userId, defaultValues }: Props) {
           name="exam_date"
           render={({ field }) => (
             <Form.Item
-              label="시험 일정 (선택)"
+              label={t("examDateLabel")}
               validateStatus={fieldErrors.exam_date ? "error" : undefined}
               help={fieldErrors.exam_date}
             >
@@ -237,7 +261,7 @@ export function LearningGoalForm({ userId, defaultValues }: Props) {
           name="weekly_goal_minutes"
           render={({ field }) => (
             <Form.Item
-              label="주당 학습 시간 (분, 선택)"
+              label={t("weeklyMinutesLabel")}
               validateStatus={
                 fieldErrors.weekly_goal_minutes ? "error" : undefined
               }
@@ -263,7 +287,7 @@ export function LearningGoalForm({ userId, defaultValues }: Props) {
           name="weak_areas"
           render={({ field }) => (
             <Form.Item
-              label="취약 영역 (선택)"
+              label={t("weakAreasLabel")}
               validateStatus={fieldErrors.weak_areas ? "error" : undefined}
               help={fieldErrors.weak_areas}
             >
@@ -271,8 +295,8 @@ export function LearningGoalForm({ userId, defaultValues }: Props) {
                 {...field}
                 mode="multiple"
                 allowClear
-                options={WEAK_AREA_OPTIONS}
-                placeholder="여러 항목을 선택할 수 있어요"
+                options={weakAreaOptions}
+                placeholder={t("weakAreasPlaceholder")}
                 onChange={(value) => {
                   field.onChange(value);
                   clearFieldError("weak_areas");
@@ -292,7 +316,7 @@ export function LearningGoalForm({ userId, defaultValues }: Props) {
             block
             loading={mutation.isPending}
           >
-            저장하고 대시보드로 이동
+            {t("submit")}
           </Button>
         </Form.Item>
       </Form>

@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { SubscriptionShell } from "@/components/settings/SubscriptionShell";
 
-export const metadata: Metadata = { title: "구독 관리 — TALKPIK" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("subscription");
+  return { title: t("metaTitle") };
+}
 
 export default function SubscriptionPage() {
   return <SubscriptionShell />;

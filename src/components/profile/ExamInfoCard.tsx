@@ -14,6 +14,7 @@ import {
   Typography,
 } from "antd";
 import dayjs from "dayjs";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -61,6 +62,8 @@ function topikLabel(level: TopikLevel): string {
  */
 export function ExamInfoCard({ userId, goal }: Props) {
   const { message } = App.useApp();
+  const t = useTranslations("profile.exam");
+  const tCommon = useTranslations("common");
   const editable = Boolean(userId);
 
   const [view, setView] = useState<ExamGoal | null>(goal);
@@ -93,8 +96,12 @@ export function ExamInfoCard({ userId, goal }: Props) {
     // 미지원 급수 검증 (Area 3 예외 규칙 재사용).
     const supported = SUPPORTED_GRADES[level];
     if (!supported.includes(grade)) {
-      const range = `${supported[0]}-${supported[supported.length - 1]}급`;
-      setGradeError(`선택한 등급에서는 ${range}만 지원해요.`);
+      // ICU 리프로 등급 범위를 만들어 다시 ICU 메시지에 주입한다(문자열 연결 금지).
+      const range = t("gradeRange", {
+        from: supported[0],
+        to: supported[supported.length - 1],
+      });
+      setGradeError(t("gradeUnsupported", { range }));
       return;
     }
     setGradeError(null);
@@ -118,11 +125,11 @@ export function ExamInfoCard({ userId, goal }: Props) {
         weak_areas: view?.weak_areas ?? [],
       });
       setEditing(false);
-      message.success("목표 시험 정보를 저장했어요.");
+      message.success(t("saveSuccess"));
     } catch (err) {
-      message.error(
-        err instanceof Error ? err.message : "목표 저장에 실패했어요.",
-      );
+      // err.message 는 데이터 계층(saveLearningGoal, src/lib/learning)에서 온
+      // 서비스 메시지이므로 그대로 노출하고, 없으면 기본 저장 실패 문구로 대체.
+      message.error(err instanceof Error ? err.message : t("saveError"));
     } finally {
       setSaving(false);
     }
@@ -131,9 +138,9 @@ export function ExamInfoCard({ userId, goal }: Props) {
   // Edit mode: inline form (X-05 region 2).
   if (editable && editing) {
     return (
-      <Card title="목표 시험">
+      <Card title={t("cardTitle")}>
         <Form layout="vertical" disabled={saving}>
-          <Form.Item label="TOPIK 등급" required style={{ marginBottom: 12 }}>
+          <Form.Item label={t("levelLabel")} required style={{ marginBottom: 12 }}>
             <Select<TopikLevel>
               value={level}
               onChange={(v) => {
@@ -141,14 +148,14 @@ export function ExamInfoCard({ userId, goal }: Props) {
                 setGradeError(null);
               }}
               options={[
-                { value: "TOPIK_I", label: "TOPIK I (1-2급)" },
-                { value: "TOPIK_II", label: "TOPIK II (3-6급)" },
+                { value: "TOPIK_I", label: t("levelOptionI") },
+                { value: "TOPIK_II", label: t("levelOptionII") },
               ]}
-              aria-label="TOPIK 등급"
+              aria-label={t("levelLabel")}
             />
           </Form.Item>
           <Form.Item
-            label="목표 등급"
+            label={t("targetGradeLabel")}
             required
             validateStatus={gradeError ? "error" : undefined}
             help={gradeError ?? undefined}
@@ -163,24 +170,24 @@ export function ExamInfoCard({ userId, goal }: Props) {
                 setGrade(typeof v === "number" ? v : 1);
                 setGradeError(null);
               }}
-              aria-label="목표 등급"
+              aria-label={t("targetGradeLabel")}
             />
           </Form.Item>
-          <Form.Item label="시험 일정 (선택)" style={{ marginBottom: 16 }}>
+          <Form.Item label={t("examDateLabel")} style={{ marginBottom: 16 }}>
             <DatePicker
               value={examDate ? dayjs(examDate) : null}
               onChange={(d) => setExamDate(d ? d.format("YYYY-MM-DD") : null)}
               disabledDate={(d) => d.isBefore(dayjs().startOf("day"))}
               style={{ width: "100%" }}
-              aria-label="시험 일정"
+              aria-label={t("examDateAriaLabel")}
             />
           </Form.Item>
           <Space>
             <Button type="primary" loading={saving} onClick={handleSave}>
-              저장
+              {tCommon("save")}
             </Button>
             <Button onClick={cancelEdit} disabled={saving}>
-              취소
+              {tCommon("cancel")}
             </Button>
           </Space>
         </Form>
@@ -191,47 +198,47 @@ export function ExamInfoCard({ userId, goal }: Props) {
   // View mode.
   return (
     <Card
-      title="목표 시험"
+      title={t("cardTitle")}
       extra={
         editable && view ? (
           <Button type="link" size="small" onClick={startEdit}>
-            수정
+            {t("editCta")}
           </Button>
         ) : null
       }
     >
       {!view ? (
         <Empty
-          description="아직 목표를 설정하지 않았어요."
+          description={t("emptyDescription")}
           imageStyle={{ display: "none" }}
         >
           {editable ? (
             <Button type="primary" onClick={startEdit}>
-              목표 설정하기
+              {t("setGoalCta")}
             </Button>
           ) : (
-            <Link href="/onboarding/learning-goal">목표 설정하기</Link>
+            <Link href="/onboarding/learning-goal">{t("setGoalCta")}</Link>
           )}
         </Empty>
       ) : (
         <>
           <Paragraph>
             <Tag color="blue">{topikLabel(view.topik_level)}</Tag>
-            <Text strong> 목표 {view.target_grade}급</Text>
+            <Text strong> {t("targetGradeValue", { grade: view.target_grade })}</Text>
           </Paragraph>
           {view.exam_date ? (
             <Paragraph>
-              <Text>시험일: </Text>
+              <Text>{t("examDatePrefix")}</Text>
               <Text strong>
                 {new Date(view.exam_date).toLocaleDateString("ko-KR")}
               </Text>
             </Paragraph>
           ) : (
-            <Paragraph type="secondary">시험일이 설정되지 않았습니다.</Paragraph>
+            <Paragraph type="secondary">{t("examDateUnset")}</Paragraph>
           )}
           <Paragraph style={{ marginBottom: 0 }}>
             <Link href="/onboarding/learning-goal">
-              주당 학습 시간·취약 영역까지 변경하기
+              {t("moreSettingsLink")}
             </Link>
           </Paragraph>
         </>

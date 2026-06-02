@@ -9,7 +9,10 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { App as AntdApp } from "antd";
+import { NextIntlClientProvider } from "next-intl";
 import type { ReactNode } from "react";
+
+import koMessages from "../../../messages/ko.json";
 
 const mutateAsyncMock = vi.fn();
 const useUpdateNotificationPrefsMock = vi.fn();
@@ -24,8 +27,17 @@ import {
   computeNotificationDiff,
 } from "../../../src/components/settings/NotificationPrefsForm";
 
+// NotificationPrefsForm now uses next-intl's useTranslations, so it must render
+// inside a NextIntlClientProvider. We supply the baseline (ko) catalog — the
+// same Korean strings the assertions below match (e.g. the deferred-delivery
+// notice and the switch aria-labels). The settings.notifications.* catalog is
+// merged into messages/ko.json by the coordinator before commit.
 function renderInApp(node: ReactNode) {
-  return render(<AntdApp>{node}</AntdApp>);
+  return render(
+    <NextIntlClientProvider locale="ko" messages={koMessages}>
+      <AntdApp>{node}</AntdApp>
+    </NextIntlClientProvider>,
+  );
 }
 
 beforeEach(() => {

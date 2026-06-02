@@ -1,10 +1,12 @@
 "use client";
 
 import { Alert, App, Avatar, Button, Form, Input, Space, Typography } from "antd";
+import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useUpdateProfile } from "@/lib/settings/mutations";
 import {
+  AvatarError,
   avatarPublicUrl,
   squareCropImage,
   uploadAvatar,
@@ -14,8 +16,6 @@ import {
 const { Paragraph } = Typography;
 
 const PROFILE_NAME_MIN_LENGTH = 2;
-const UNSAVED_PROFILE_LEAVE_MESSAGE =
-  "저장하지 않은 변경사항이 있습니다. 페이지를 떠나시겠어요?";
 
 type ProfileDraft = {
   display_name: string | null;
@@ -89,6 +89,9 @@ export function ProfileForm({
   initialAvatarPath = null,
 }: Props) {
   const { message } = App.useApp();
+  const t = useTranslations("profile.form");
+  const tAvatar = useTranslations("profile.avatar");
+  const tCommon = useTranslations("common");
   const mutation = useUpdateProfile(userId);
   const [savedProfile, setSavedProfile] = useState<ProfileDraft>(() =>
     normalizeProfileDraft(initialProfile),
@@ -118,7 +121,9 @@ export function ProfileForm({
 
     const validation = validateAvatarFile(file);
     if (!validation.ok) {
-      setAvatarError(validation.message);
+      setAvatarError(
+        tAvatar(validation.messageKey as Parameters<typeof tAvatar>[0]),
+      );
       return;
     }
 
@@ -128,10 +133,14 @@ export function ProfileForm({
       const result = await uploadAvatar(userId, blob, ext);
       setAvatarPath(result.path);
       setAvatarUrl(result.publicUrl);
-      message.success("프로필 이미지를 업데이트했어요.");
+      message.success(tAvatar("uploadSuccess"));
     } catch (err) {
+      // AvatarError는 카탈로그 키를 들고 오므로 t()로 해석하고, 그 외(Supabase 등
+      // 서비스 계층 에러)는 기본 업로드 실패 문구로 대체한다.
       setAvatarError(
-        err instanceof Error ? err.message : "이미지 업로드에 실패했어요.",
+        err instanceof AvatarError
+          ? tAvatar(err.messageKey as Parameters<typeof tAvatar>[0])
+          : tAvatar("uploadFailed"),
       );
     } finally {
       setAvatarUploading(false);
@@ -159,9 +168,9 @@ export function ProfileForm({
   const displayNameTooShort = isTooShortProfileField(draftProfile.display_name);
   const nicknameTooShort = isTooShortProfileField(draftProfile.nickname);
   const validationError = displayNameTooShort
-    ? "이름은 2자 이상 입력해 주세요."
+    ? t("nameTooShort")
     : nicknameTooShort
-      ? "닉네임은 2자 이상 입력해 주세요."
+      ? t("nicknameTooShort")
       : null;
   const canSubmit = isDirty && !validationError;
   const avatarInitial =
@@ -209,7 +218,7 @@ export function ProfileForm({
       if (url.origin !== window.location.origin) return;
       if (url.href === window.location.href) return;
 
-      if (!window.confirm(UNSAVED_PROFILE_LEAVE_MESSAGE)) {
+      if (!window.confirm(t("unsavedLeavePrompt"))) {
         event.preventDefault();
         event.stopPropagation();
         event.stopImmediatePropagation();
@@ -222,7 +231,7 @@ export function ProfileForm({
       window.removeEventListener("beforeunload", handleBeforeUnload);
       document.removeEventListener("click", handleDocumentClick, true);
     };
-  }, [isDirty]);
+  }, [isDirty, t]);
 
   async function handleFinish() {
     if (!isDirty) return;
@@ -234,9 +243,11 @@ export function ProfileForm({
     try {
       await mutation.mutateAsync(draftProfile);
       setSavedProfile(draftProfile);
-      message.success("프로필이 저장되었습니다.");
+      message.success(t("saveSuccess"));
     } catch (err) {
-      message.error(err instanceof Error ? err.message : "저장에 실패했어요.");
+      // err.message 는 데이터 계층(useUpdateProfile, src/lib/settings)에서 온
+      // 서비스 메시지이므로 그대로 노출하고, 없으면 기본 저장 실패 문구로 대체.
+      message.error(err instanceof Error ? err.message : t("saveError"));
     }
   }
 
@@ -247,64 +258,58 @@ export function ProfileForm({
       disabled={mutation.isPending}
     >
       <Form.Item
-        label="이메일"
-        extra="이메일 변경은 재인증이 필요하며, 보안상 일정 기간 내 변경 횟수가 제한됩니다."
+        label={t("emailLabel")}
+        extra={t("emailExtra")}
       >
         <Input
           value={accountEmail ?? ""}
           readOnly
-          placeholder="등록된 이메일 없음"
-          aria-label="이메일"
+          placeholder={t("emailPlaceholder")}
+          aria-label={t("emailLabel")}
         />
       </Form.Item>
 
       <Form.Item
-        label="이름"
+        label={t("nameLabel")}
         validateStatus={displayNameTooShort ? "error" : undefined}
-        help={
-          displayNameTooShort ? "이름은 2자 이상 입력해 주세요." : undefined
-        }
+        help={displayNameTooShort ? t("nameTooShort") : undefined}
       >
         <Input
           value={displayName}
           onChange={(event) => setDisplayName(event.target.value)}
-          placeholder="실명 또는 표시 이름"
+          placeholder={t("namePlaceholder")}
           maxLength={30}
-          aria-label="이름"
+          aria-label={t("nameLabel")}
         />
       </Form.Item>
 
       <Form.Item
-        label="닉네임"
+        label={t("nicknameLabel")}
         validateStatus={nicknameTooShort ? "error" : undefined}
-        help={
-          nicknameTooShort
-            ? "닉네임은 2자 이상 입력해 주세요."
-            : "이미 사용 중인 닉네임이면 저장 시 안내됩니다."
-        }
+        help={nicknameTooShort ? t("nicknameTooShort") : t("nicknameHelp")}
       >
         <Input
           value={nickname}
           onChange={(event) => setNickname(event.target.value)}
-          placeholder="다른 사용자에게 보여질 이름"
+          placeholder={t("nicknamePlaceholder")}
           maxLength={20}
-          aria-label="닉네임"
+          aria-label={t("nicknameLabel")}
         />
       </Form.Item>
 
-      <Form.Item label="자기소개" extra={`${bio.length}/160자`}>
+      <Form.Item label={t("bioLabel")} extra={t("bioCount", { count: bio.length })}>
         <Input.TextArea
           value={bio}
           onChange={(event) => setBio(event.target.value)}
-          placeholder="간단한 자기소개 (160자 이내)"
+          placeholder={t("bioPlaceholder")}
           maxLength={160}
           autoSize={{ minRows: 2, maxRows: 4 }}
-          aria-label="자기소개"
+          aria-label={t("bioLabel")}
         />
       </Form.Item>
 
       <section
-        aria-label="프로필 이미지 영역"
+        aria-label={tAvatar("regionAriaLabel")}
         style={{
           border: "1px solid var(--ant-color-border)",
           borderRadius: 8,
@@ -314,31 +319,31 @@ export function ProfileForm({
       >
         <Space align="start" size="middle">
           {avatarUrl ? (
-            <Avatar size={56} src={avatarUrl} alt="프로필 이미지" />
+            <Avatar size={56} src={avatarUrl} alt={tAvatar("imageAlt")} />
           ) : (
             <Avatar size={56}>{avatarInitial}</Avatar>
           )}
           <div>
             <Paragraph strong style={{ marginTop: 0, marginBottom: 4 }}>
-              프로필 이미지
+              {tAvatar("title")}
             </Paragraph>
             <Paragraph type="secondary" style={{ marginBottom: 8 }}>
-              JPG 또는 PNG, 5MB 이하. 정사각형으로 자동 자릅니다.
+              {tAvatar("constraints")}
             </Paragraph>
             <input
               ref={fileInputRef}
               type="file"
               accept="image/jpeg,image/png"
               style={{ display: "none" }}
-              aria-label="프로필 이미지 파일 선택"
+              aria-label={tAvatar("fileInputAriaLabel")}
               onChange={handleAvatarSelect}
             />
             <Button
               onClick={() => fileInputRef.current?.click()}
               loading={avatarUploading}
-              aria-label="이미지 업로드"
+              aria-label={tAvatar("uploadAriaLabel")}
             >
-              {avatarUploading ? "업로드 중..." : "이미지 변경"}
+              {avatarUploading ? tAvatar("uploading") : tAvatar("changeImage")}
             </Button>
           </div>
         </Space>
@@ -350,7 +355,7 @@ export function ProfileForm({
             message={avatarError}
             action={
               <Button size="small" onClick={() => fileInputRef.current?.click()}>
-                다시 선택
+                {tAvatar("reselect")}
               </Button>
             }
           />
@@ -359,8 +364,8 @@ export function ProfileForm({
           style={{ marginTop: 12 }}
           type="info"
           showIcon
-          message="보안 안내"
-          description="이메일 등 계정 식별 정보 변경은 향후 재인증이 필요할 수 있습니다. 이름·닉네임·자기소개 변경은 바로 저장됩니다."
+          message={tAvatar("securityNoticeTitle")}
+          description={tAvatar("securityNoticeDescription")}
         />
       </section>
 
@@ -370,9 +375,9 @@ export function ProfileForm({
           htmlType="submit"
           loading={mutation.isPending}
           disabled={!canSubmit || mutation.isPending}
-          aria-label="프로필 저장"
+          aria-label={t("saveAriaLabel")}
         >
-          저장
+          {tCommon("save")}
         </Button>
       </Form.Item>
     </Form>

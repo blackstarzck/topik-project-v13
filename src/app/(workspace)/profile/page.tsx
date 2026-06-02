@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Col, Row, Space } from "antd";
 import { requireUser } from "@/lib/auth/session";
@@ -9,9 +10,13 @@ import { ProfileForm } from "@/components/profile/ProfileForm";
 import { ExamInfoCard } from "@/components/profile/ExamInfoCard";
 import { StatusHelpCard } from "@/components/profile/StatusHelpCard";
 
-export const metadata: Metadata = { title: "프로필 — TALKPIK" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("profile.page");
+  return { title: t("metaTitle") };
+}
 
 export default async function ProfilePage() {
+  const t = await getTranslations("profile.page");
   const user = await requireUser();
   const settings = await getProfileSettings(user.id);
   if (!settings) notFound();
@@ -28,7 +33,7 @@ export default async function ProfilePage() {
 
   return (
     <main style={{ padding: 24, maxWidth: 960, margin: "0 auto" }}>
-      <h1>프로필</h1>
+      <h1>{t("heading")}</h1>
       <Row gutter={[16, 16]}>
         <Col xs={24} md={14}>
           <Space direction="vertical" size="middle" style={{ width: "100%" }}>

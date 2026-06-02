@@ -17,12 +17,13 @@ import {
   Typography,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import {
-  cadenceLabel,
+  cadenceLabelKey,
   fetchActivePlans,
   fetchMySubscription,
   fetchPaymentHistory,
@@ -37,25 +38,27 @@ const { Title, Paragraph, Text } = Typography;
 const SUPPORT_EMAIL = "support@talkpik.example";
 const PAGE_SIZE = 10;
 
-const STATUS_META: Record<
+// i18n: 상태/결제 enum 값은 카탈로그 키 이름 + 배지 색만 보관하고(공유 엔티티
+// 의미를 바꾸지 않음), 한글 라벨은 렌더 시 t(`status.${key}`)로 해석한다.
+const STATUS_BADGE_META: Record<
   Subscription["status"],
-  { label: string; color: string }
+  { labelKey: string; color: string }
 > = {
-  active: { label: "이용 중", color: "green" },
-  trialing: { label: "체험 중", color: "blue" },
-  past_due: { label: "결제 실패", color: "red" },
-  canceled: { label: "해지됨", color: "default" },
-  paused: { label: "일시정지", color: "orange" },
+  active: { labelKey: "active", color: "green" },
+  trialing: { labelKey: "trialing", color: "blue" },
+  past_due: { labelKey: "pastDue", color: "red" },
+  canceled: { labelKey: "canceled", color: "default" },
+  paused: { labelKey: "paused", color: "orange" },
 };
 
-const PAYMENT_STATUS_META: Record<
+const PAYMENT_STATUS_BADGE_META: Record<
   PaymentRecord["status"],
-  { label: string; color: string }
+  { labelKey: string; color: string }
 > = {
-  paid: { label: "결제 완료", color: "green" },
-  failed: { label: "결제 실패", color: "red" },
-  refunded: { label: "환불", color: "default" },
-  pending: { label: "처리 중", color: "blue" },
+  paid: { labelKey: "paid", color: "green" },
+  failed: { labelKey: "failed", color: "red" },
+  refunded: { labelKey: "refunded", color: "default" },
+  pending: { labelKey: "pending", color: "blue" },
 };
 
 type SubState =
@@ -94,6 +97,7 @@ function formatDate(iso: string | null): string {
  * - Region 5 (우측 도움말): policy + 고객지원 CTA.
  */
 export function SubscriptionShell() {
+  const t = useTranslations("subscription");
   const router = useRouter();
   const { message } = App.useApp();
   const [sub, setSub] = useState<SubState>({ status: "loading" });
@@ -121,11 +125,10 @@ export function SubscriptionShell() {
     } catch (err) {
       setSub({
         status: "error",
-        message:
-          err instanceof Error ? err.message : "구독 정보를 불러오지 못했어요.",
+        message: err instanceof Error ? err.message : t("subscriptionLoadError"),
       });
     }
-  }, []);
+  }, [t]);
 
   const loadHistory = useCallback(async (pageIndex: number) => {
     try {
@@ -134,11 +137,10 @@ export function SubscriptionShell() {
     } catch (err) {
       setHistory({
         status: "error",
-        message:
-          err instanceof Error ? err.message : "결제 이력을 불러오지 못했어요.",
+        message: err instanceof Error ? err.message : t("historyLoadError"),
       });
     }
-  }, []);
+  }, [t]);
 
   // 재시도 버튼/이벤트에서 즉시 로딩 표시 후 다시 불러온다.
   const reloadSubscription = useCallback(() => {
@@ -170,35 +172,39 @@ export function SubscriptionShell() {
 
   const columns: ColumnsType<PaymentRecord> = [
     {
-      title: "결제일",
+      title: t("history.colDate"),
       dataIndex: "paid_at",
       key: "paid_at",
       render: (value: string | null, row) => formatDate(value ?? row.created_at),
     },
     {
-      title: "금액",
+      title: t("history.colAmount"),
       dataIndex: "amount_cents",
       key: "amount_cents",
       align: "right",
       render: (cents: number, row) => formatAmountCents(cents, row.currency),
     },
     {
-      title: "상태",
+      title: t("history.colStatus"),
       dataIndex: "status",
       key: "status",
       render: (status: PaymentRecord["status"]) => {
-        const meta = PAYMENT_STATUS_META[status];
-        return <Tag color={meta.color}>{meta.label}</Tag>;
+        const meta = PAYMENT_STATUS_BADGE_META[status];
+        return (
+          <Tag color={meta.color}>
+            {t(`paymentStatus.${meta.labelKey}` as Parameters<typeof t>[0])}
+          </Tag>
+        );
       },
     },
     {
-      title: "영수증",
+      title: t("history.colReceipt"),
       dataIndex: "receipt_url",
       key: "receipt_url",
       render: (url: string | null) =>
         url ? (
           <a href={url} target="_blank" rel="noreferrer">
-            영수증
+            {t("history.receiptLink")}
           </a>
         ) : (
           <Text type="secondary">—</Text>
@@ -209,28 +215,30 @@ export function SubscriptionShell() {
   function confirmPolicy() {
     setPolicyModal(null);
     // EXTERNAL STUB: no billing provider. Honest 연동 예정 feedback.
-    message.info("결제 연동이 완료되면 이 작업을 바로 처리할 수 있어요. (연동 예정)");
+    message.info(t("policy.stubInfo"));
   }
 
+  // 정책 모달 카피. 제목/본문/확인 라벨은 카탈로그 키로 해석하고, danger 여부만
+  // 여기서 결정한다(취소는 danger 스타일).
   const policyCopy: Record<
     NonNullable<typeof policyModal>,
-    { title: string; body: string; danger?: boolean; okText: string }
+    { titleKey: string; bodyKey: string; okKey: string; danger?: boolean }
   > = {
     change: {
-      title: "플랜 변경 정책",
-      body: "플랜 변경 시 남은 결제 기간은 일할 계산되어 다음 청구에 반영됩니다. 변경은 결제 연동 완료 후 적용됩니다.",
-      okText: "확인했어요",
+      titleKey: "policy.change.title",
+      bodyKey: "policy.change.body",
+      okKey: "policy.change.ok",
     },
     payment_method: {
-      title: "결제수단 변경",
-      body: "등록된 결제수단을 변경할 수 있습니다. 변경 즉시 다음 결제부터 새 수단이 사용됩니다. 결제 연동 완료 후 제공됩니다.",
-      okText: "확인했어요",
+      titleKey: "policy.paymentMethod.title",
+      bodyKey: "policy.paymentMethod.body",
+      okKey: "policy.paymentMethod.ok",
     },
     cancel: {
-      title: "구독 취소 정책",
-      body: "지금 취소해도 현재 결제 기간이 끝날 때까지는 모든 혜택을 유지합니다. 환불은 결제 후 7일 이내에만 가능합니다. 이 작업은 되돌릴 수 없어요.",
+      titleKey: "policy.cancel.title",
+      bodyKey: "policy.cancel.body",
+      okKey: "policy.cancel.ok",
       danger: true,
-      okText: "취소 진행",
     },
   };
 
@@ -241,11 +249,11 @@ export function SubscriptionShell() {
           <Space>
             <Tag>X-04</Tag>
             <Title level={3} style={{ margin: 0 }}>
-              구독 관리
+              {t("heading")}
             </Title>
           </Space>
           <Paragraph type="secondary" style={{ marginTop: 8, marginBottom: 0 }}>
-            현재 구독 상태와 결제 이력을 확인하고 관리하세요.
+            {t("subheading")}
           </Paragraph>
         </div>
 
@@ -253,32 +261,30 @@ export function SubscriptionShell() {
           <Col xs={24} md={15}>
             <Space direction="vertical" size="middle" style={{ width: "100%" }}>
               {/* Region 2: 현재 구독 요약 */}
-              <Card title="현재 구독">
+              <Card title={t("current.title")}>
                 {sub.status === "loading" ? (
                   <Skeleton active paragraph={{ rows: 2 }} />
                 ) : sub.status === "error" ? (
                   <Alert
                     type="error"
                     showIcon
-                    message="구독 정보를 불러오지 못했어요"
+                    message={t("current.errorTitle")}
                     description={sub.message}
                     action={
                       <Button size="small" onClick={reloadSubscription}>
-                        다시 시도
+                        {t("retry")}
                       </Button>
                     }
                   />
                 ) : sub.subscription === null ? (
                   <Space direction="vertical" size={8} style={{ width: "100%" }}>
                     <Space>
-                      <Text type="secondary">상태</Text>
-                      <Tag>구독 없음</Tag>
+                      <Text type="secondary">{t("current.statusLabel")}</Text>
+                      <Tag>{t("current.noSubBadge")}</Tag>
                     </Space>
-                    <Text type="secondary">
-                      현재 이용 중인 유료 구독이 없습니다.
-                    </Text>
+                    <Text type="secondary">{t("current.noSubBody")}</Text>
                     <Link href="/paywall">
-                      <Button type="primary">구독 시작하기</Button>
+                      <Button type="primary">{t("current.startCta")}</Button>
                     </Link>
                   </Space>
                 ) : (
@@ -288,29 +294,39 @@ export function SubscriptionShell() {
                     items={[
                       {
                         key: "status",
-                        label: "상태",
+                        label: t("current.statusLabel"),
                         children: (
-                          <Tag color={STATUS_META[sub.subscription.status].color}>
-                            {STATUS_META[sub.subscription.status].label}
+                          <Tag
+                            color={STATUS_BADGE_META[sub.subscription.status].color}
+                          >
+                            {t(
+                              `status.${STATUS_BADGE_META[sub.subscription.status].labelKey}` as Parameters<typeof t>[0],
+                            )}
                           </Tag>
                         ),
                       },
                       {
                         key: "plan",
-                        label: "플랜",
+                        label: t("current.planLabel"),
                         children: sub.planName ?? "—",
                       },
                       {
                         key: "cadence",
-                        label: "결제 주기",
-                        children: cadenceLabel(sub.subscription.billing_cadence),
+                        label: t("current.cadenceLabel"),
+                        children: t(
+                          `cadence.${cadenceLabelKey(sub.subscription.billing_cadence)}` as Parameters<typeof t>[0],
+                        ),
                       },
                       {
                         key: "next",
-                        label: "다음 결제일",
+                        label: t("current.nextBillingLabel"),
                         children:
                           sub.subscription.cancel_at != null
-                            ? `${formatDate(sub.subscription.current_period_end)} 이후 해지 예정`
+                            ? t("current.cancelScheduled", {
+                                date: formatDate(
+                                  sub.subscription.current_period_end,
+                                ),
+                              })
                             : formatDate(sub.subscription.current_period_end),
                       },
                     ]}
@@ -320,34 +336,33 @@ export function SubscriptionShell() {
 
               {/* Region 3: 변경/취소 액션 (external stubs + policy modal) */}
               {sub.status === "ready" && sub.subscription !== null ? (
-                <Card title="구독 변경">
+                <Card title={t("change.title")}>
                   <Space wrap>
                     <Button onClick={() => setPolicyModal("change")}>
-                      플랜 변경
+                      {t("change.changePlan")}
                     </Button>
                     <Button onClick={() => setPolicyModal("payment_method")}>
-                      결제수단 변경
+                      {t("change.changePaymentMethod")}
                     </Button>
                     <Button danger onClick={() => setPolicyModal("cancel")}>
-                      구독 취소
+                      {t("change.cancel")}
                     </Button>
                   </Space>
                   <Paragraph
                     type="secondary"
                     style={{ marginTop: 12, marginBottom: 0, fontSize: 12 }}
                   >
-                    변경·취소는 정책 확인 후 진행되며, 결제 연동 완료 시 즉시
-                    반영됩니다.
+                    {t("change.note")}
                   </Paragraph>
                 </Card>
               ) : null}
 
               {/* Region 4: 결제 이력 */}
-              <Card title="결제 이력">
+              <Card title={t("history.title")}>
                 {history.status === "error" ? (
                   <Result
                     status="warning"
-                    title="결제 이력을 불러오지 못했어요"
+                    title={t("history.errorTitle")}
                     subTitle={history.message}
                     extra={
                       <Button
@@ -357,7 +372,7 @@ export function SubscriptionShell() {
                           void loadHistory(page);
                         }}
                       >
-                        다시 시도
+                        {t("retry")}
                       </Button>
                     }
                   />
@@ -370,7 +385,7 @@ export function SubscriptionShell() {
                     dataSource={
                       history.status === "ready" ? history.rows : []
                     }
-                    locale={{ emptyText: "결제 이력이 없습니다." }}
+                    locale={{ emptyText: t("history.empty") }}
                     pagination={{
                       current: page + 1,
                       pageSize: PAGE_SIZE,
@@ -389,33 +404,33 @@ export function SubscriptionShell() {
 
           {/* Region 5: 우측 도움말 */}
           <Col xs={24} md={9}>
-            <Card title="도움말">
+            <Card title={t("help.title")}>
               <Space direction="vertical" size={10} style={{ width: "100%" }}>
                 <div>
-                  <Text strong>구독 변경 정책</Text>
+                  <Text strong>{t("help.changePolicyTitle")}</Text>
                   <Paragraph type="secondary" style={{ marginBottom: 0 }}>
-                    변경 시 남은 기간은 일할 계산되어 반영됩니다.
+                    {t("help.changePolicyBody")}
                   </Paragraph>
                 </div>
                 <div>
-                  <Text strong>환불 기준</Text>
+                  <Text strong>{t("help.refundTitle")}</Text>
                   <Paragraph type="secondary" style={{ marginBottom: 0 }}>
-                    결제 후 7일 이내, 미사용 시 환불 가능합니다.
+                    {t("help.refundBody")}
                   </Paragraph>
                 </div>
                 <div>
-                  <Text strong>플랜 차이</Text>
+                  <Text strong>{t("help.planDiffTitle")}</Text>
                   <Paragraph type="secondary" style={{ marginBottom: 0 }}>
-                    플랜별 혜택은 구독 시작 화면에서 비교할 수 있어요.
+                    {t("help.planDiffBody")}
                   </Paragraph>
                 </div>
                 <Button
                   block
                   href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(
-                    "구독 관련 문의",
+                    t("help.contactSubject"),
                   )}`}
                 >
-                  고객지원 문의
+                  {t("help.contactCta")}
                 </Button>
               </Space>
             </Card>
@@ -424,19 +439,27 @@ export function SubscriptionShell() {
 
         <Space>
           <Link href="/paywall">
-            <Button>구독 시작 화면</Button>
+            <Button>{t("startScreenCta")}</Button>
           </Link>
           <Button type="link" onClick={() => router.back()}>
-            뒤로 가기
+            {t("backCta")}
           </Button>
         </Space>
       </Space>
 
       <Modal
         open={policyModal !== null}
-        title={policyModal ? policyCopy[policyModal].title : ""}
-        okText={policyModal ? policyCopy[policyModal].okText : "확인"}
-        cancelText="닫기"
+        title={
+          policyModal
+            ? t(policyCopy[policyModal].titleKey as Parameters<typeof t>[0])
+            : ""
+        }
+        okText={
+          policyModal
+            ? t(policyCopy[policyModal].okKey as Parameters<typeof t>[0])
+            : t("modalDefaultOk")
+        }
+        cancelText={t("modalClose")}
         okButtonProps={
           policyModal && policyCopy[policyModal].danger
             ? { danger: true }
@@ -446,7 +469,9 @@ export function SubscriptionShell() {
         onCancel={() => setPolicyModal(null)}
       >
         <Paragraph style={{ marginBottom: 0 }}>
-          {policyModal ? policyCopy[policyModal].body : ""}
+          {policyModal
+            ? t(policyCopy[policyModal].bodyKey as Parameters<typeof t>[0])
+            : ""}
         </Paragraph>
       </Modal>
     </main>

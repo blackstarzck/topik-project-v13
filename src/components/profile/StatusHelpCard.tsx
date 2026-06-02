@@ -1,6 +1,7 @@
 "use client";
 
 import { Alert, Card, Divider, Tag, Typography } from "antd";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 const { Text, Paragraph } = Typography;
@@ -15,12 +16,14 @@ type Props = {
   policyAgreed?: boolean;
 };
 
-const ROLE_LABELS: Record<string, string> = {
-  learner: "학습자",
-  content_admin: "콘텐츠 관리자",
-  org_admin: "기관 관리자",
-  platform_admin: "플랫폼 관리자",
-};
+// 라벨 문구는 profile.status.role.* 카탈로그 키로 해석한다. 알 수 없는 역할 코드는
+// 카탈로그에 없으므로 raw 코드를 그대로 노출한다(향후 역할 호환).
+const KNOWN_ROLE_KEYS = [
+  "learner",
+  "content_admin",
+  "org_admin",
+  "platform_admin",
+] as const;
 
 /**
  * Phase 7-E Task 10 (P1-6) — 상태/도움 카드.
@@ -33,49 +36,54 @@ export function StatusHelpCard({
   visibility = "private",
   policyAgreed = true,
 }: Props) {
-  const roleLabel = ROLE_LABELS[appRole] ?? appRole;
+  const t = useTranslations("profile.status");
+  // 동적 키라 strict 타이핑이 bare string 을 거부하므로 캐스트한다. 미지원 역할은
+  // 카탈로그 키가 없으므로 raw appRole 로 대체.
+  const roleLabel = (KNOWN_ROLE_KEYS as readonly string[]).includes(appRole)
+    ? t(`role.${appRole}` as Parameters<typeof t>[0])
+    : appRole;
   return (
-    <Card title="계정 상태">
+    <Card title={t("cardTitle")}>
       {/* X-05 region 4 예외: 정책 미동의 경고 */}
       {!policyAgreed ? (
         <Alert
           type="warning"
           showIcon
           style={{ marginBottom: 12 }}
-          message="개인정보 처리방침에 동의가 필요해요"
-          description="동의 전까지 일부 데이터 활용 기능이 제한됩니다."
+          message={t("policyWarningTitle")}
+          description={t("policyWarningDescription")}
         />
       ) : null}
       <Paragraph>
-        <Text type="secondary">공개 범위 </Text>
+        <Text type="secondary">{t("visibilityLabel")}</Text>
         <Tag color={visibility === "public" ? "green" : "default"}>
-          {visibility === "public" ? "공개" : "비공개"}
+          {visibility === "public" ? t("visibilityPublic") : t("visibilityPrivate")}
         </Tag>
       </Paragraph>
       <Paragraph>
-        <Text type="secondary">역할 </Text>
+        <Text type="secondary">{t("roleLabelPrefix")}</Text>
         <Tag>{roleLabel}</Tag>
-        <Text type="secondary" style={{ marginLeft: 12 }}>플랜 </Text>
+        <Text type="secondary" style={{ marginLeft: 12 }}>{t("planLabelPrefix")}</Text>
         <Tag color="gold">{planLabel}</Tag>
       </Paragraph>
       <Paragraph>
-        <Text type="secondary">가입일 </Text>
+        <Text type="secondary">{t("joinedLabelPrefix")}</Text>
         <Text strong>{new Date(joinedAt).toLocaleDateString("ko-KR")}</Text>
       </Paragraph>
       <Paragraph style={{ marginBottom: 0 }}>
         <Text type="secondary" style={{ fontSize: 12 }}>
-          학습 목표는 프로필에 반영되어 추천·리포트에 사용됩니다.
+          {t("goalNote")}
         </Text>
       </Paragraph>
       <Divider />
       <Paragraph>
-        <Link href="/settings/notifications">알림 설정</Link>
+        <Link href="/settings/notifications">{t("notificationsLink")}</Link>
         <Text type="secondary"> · </Text>
-        <Link href="/settings/language">언어 설정</Link>
+        <Link href="/settings/language">{t("languageLink")}</Link>
       </Paragraph>
       <Paragraph style={{ marginBottom: 0 }}>
         <Text type="secondary" style={{ fontSize: 12 }}>
-          회원 탈퇴는 다음 업데이트에서 지원됩니다.
+          {t("withdrawalNote")}
         </Text>
       </Paragraph>
     </Card>

@@ -92,6 +92,68 @@
       "saveSuccess": "Đã lưu cài đặt ngôn ngữ và nội dung của bạn.",
       "saveError": "Không thể lưu cài đặt của bạn.",
       "learningSettingsLoadError": "Không tải được cài đặt nội dung."
+    },
+    "notifications": {
+      "metaTitle": "Cài đặt thông báo — TALKPIK",
+      "pageHeading": "Cài đặt thông báo",
+      "loadError": "Không thể tải cài đặt thông báo của bạn.",
+      "loadErrorTitle": "Không thể tải cài đặt thông báo của bạn",
+      "unsavedLeave": "Bạn có thay đổi chưa lưu. Bạn có chắc muốn rời khỏi trang này?",
+      "saveSuccess": "Đã lưu cài đặt thông báo của bạn.",
+      "saveError": "Lưu thất bại.",
+      "previewScheduled": "Chúng tôi sẽ gửi lời nhắc học tập mỗi ngày lúc {time} ({timezone}).",
+      "previewEmpty": "Đặt giờ nhắc học tập để xem ví dụ về nội dung sẽ được gửi.",
+      "deferredNotice": "Việc gửi thông báo thực tế vẫn đang được thiết lập. Hiện tại kênh, điều kiện và thời gian của bạn được lưu lại, và nhật ký gửi sẽ được điền khi bắt đầu gửi.",
+      "noChannel": {
+        "title": "Chưa bật kênh thông báo nào",
+        "body": "Bật kênh email hoặc Zalo bên dưới để nhận lời nhắc."
+      },
+      "channel": {
+        "cardTitle": "Kênh thông báo",
+        "emailTab": "Email",
+        "emailReceive": "Nhận thông báo qua email",
+        "emailHint": "Thông báo được gửi đến email đăng ký của bạn.",
+        "notConnected": "Chưa kết nối",
+        "zaloReceive": "Nhận thông báo qua Zalo",
+        "zaloHint": "Tích hợp Zalo (gửi thực tế) vẫn đang được chuẩn bị. Hiện tại chỉ lưu tùy chọn nhận của bạn.",
+        "bothTab": "Cả hai",
+        "zaloReceivePending": "Nhận thông báo qua Zalo (sắp tích hợp)"
+      },
+      "condition": {
+        "cardTitle": "Điều kiện thông báo",
+        "on": "Bật",
+        "off": "Tắt",
+        "reminderTimeLabel": "Giờ nhắc (HH:mm)",
+        "reminderTimeExtra": "Bật một kênh nhận để đặt giờ nhắc.",
+        "reminderTimeAria": "Giờ nhắc",
+        "reminderDaysLabel": "Các ngày nhắc"
+      },
+      "pref": {
+        "weeklySummary": "Tóm tắt học tập hằng tuần",
+        "feedbackReady": "Thông báo phản hồi đã sẵn sàng",
+        "studyReminder": "Lời nhắc học tập"
+      },
+      "weekday": {
+        "mon": "T2",
+        "tue": "T3",
+        "wed": "T4",
+        "thu": "T5",
+        "fri": "T6",
+        "sat": "T7",
+        "sun": "CN"
+      },
+      "preview": {
+        "cardTitle": "Xem trước"
+      },
+      "history": {
+        "cardTitle": "Lịch sử gửi (5 mục gần nhất)",
+        "empty": "Chưa có thông báo nào được gửi."
+      },
+      "logStatus": {
+        "sent": "Đã gửi",
+        "failed": "Thất bại",
+        "pending": "Đang chờ"
+      }
     }
   },
   "auth": {
@@ -309,6 +371,20 @@
       "retry": "Thử lại",
       "goToSettings": "Đến cài đặt thông báo",
       "empty": "Không có thông báo mới."
+    },
+    "recentFeedback": {
+      "title": "Phản hồi gần đây",
+      "empty": "Chưa có phản hồi nào. Hãy nộp một bài viết để bắt đầu.",
+      "view": "Xem",
+      "questionNo": "Câu {no}",
+      "scoreLabel": "Điểm",
+      "scoreValue": "{score} điểm",
+      "scorePending": "Đang chờ"
+    },
+    "upcomingExam": {
+      "title": "Kỳ thi sắp tới",
+      "daysLeft": "Số ngày còn lại: D-{days}",
+      "daysLeftToday": "Số ngày còn lại: hôm nay"
     }
   },
   "practice": {
@@ -1165,6 +1241,272 @@
       "export": "Xuất PDF",
       "printDialogOpened": "Hộp thoại in PDF đã mở.",
       "generateFailed": "Không thể tạo PDF."
+    }
+  },
+  "onboarding": {
+    "page": {
+      "metaTitle": "Thiết lập mục tiêu học tập — TALKPIK"
+    },
+    "steps": {
+      "counter": "Bước {current}/{total}",
+      "labels": {
+        "createAccount": "Tạo tài khoản",
+        "verifyEmail": "Xác minh email",
+        "learningGoal": "Mục tiêu học tập"
+      }
+    },
+    "goalForm": {
+      "heading": "Thiết lập mục tiêu học tập",
+      "subheading": "Mục tiêu của bạn là cơ sở cho các đề xuất được cá nhân hóa.",
+      "topikLevelLabel": "Cấp độ TOPIK",
+      "topikLevelOptionI": "TOPIK I (cấp 1-2)",
+      "topikLevelOptionII": "TOPIK II (cấp 3-6)",
+      "targetGradeLabel": "Cấp độ mục tiêu",
+      "examDateLabel": "Ngày thi (tùy chọn)",
+      "weeklyMinutesLabel": "Thời gian học hàng tuần (phút, tùy chọn)",
+      "weakAreasLabel": "Lĩnh vực còn yếu (tùy chọn)",
+      "weakAreasPlaceholder": "Bạn có thể chọn nhiều mục",
+      "weakAreas": {
+        "vocabulary": "Từ vựng",
+        "grammar": "Ngữ pháp",
+        "reading-comprehension": "Đọc hiểu",
+        "listening-comprehension": "Nghe hiểu",
+        "essay-thesis": "Luận điểm bài luận",
+        "essay-structure": "Cấu trúc bài luận",
+        "short-answer": "Viết câu trả lời ngắn",
+        "long-form-cohesion": "Tính liên kết bài dài"
+      },
+      "submit": "Lưu và đến bảng điều khiển",
+      "saveSuccess": "Mục tiêu học tập của bạn đã được lưu",
+      "errors": {
+        "examDatePast": "Bạn không thể chọn ngày trong quá khứ.",
+        "invalidField": "Vui lòng kiểm tra lại thông tin đã nhập.",
+        "unsupportedGrade": "Cấp độ đã chọn chỉ hỗ trợ cấp {min}-{max}. Vui lòng kiểm tra lại cấp độ mục tiêu của bạn.",
+        "saveFailed": "Lưu không thành công. Vui lòng thử lại sau giây lát.",
+        "saveFailedDetail": "Lưu không thành công. {detail} Vui lòng thử lại sau giây lát."
+      }
+    },
+    "nav": {
+      "previous": "Chỉnh sửa bước trước",
+      "skip": "Bỏ qua",
+      "skipSuccess": "Đã bắt đầu với mục tiêu mặc định. Bạn có thể thay đổi bất cứ lúc nào trong cài đặt.",
+      "skipFailedToast": "Bỏ qua không thành công. Vui lòng thử lại.",
+      "skipFailedInline": "Lưu khi bỏ qua không thành công: {detail}",
+      "retryHint": "Vui lòng thử lại sau giây lát."
+    }
+  },
+  "profile": {
+    "page": {
+      "metaTitle": "Hồ sơ — TALKPIK",
+      "heading": "Hồ sơ"
+    },
+    "form": {
+      "emailLabel": "Email",
+      "emailExtra": "Việc thay đổi email cần xác minh lại và vì lý do bảo mật, số lần thay đổi trong một khoảng thời gian bị giới hạn.",
+      "emailPlaceholder": "Chưa đăng ký email",
+      "nameLabel": "Tên",
+      "nameTooShort": "Vui lòng nhập tên có ít nhất 2 ký tự.",
+      "namePlaceholder": "Tên thật hoặc tên hiển thị",
+      "nicknameLabel": "Biệt danh",
+      "nicknameTooShort": "Vui lòng nhập biệt danh có ít nhất 2 ký tự.",
+      "nicknameHelp": "Nếu biệt danh đã được sử dụng, bạn sẽ được thông báo khi lưu.",
+      "nicknamePlaceholder": "Tên hiển thị cho người dùng khác",
+      "bioLabel": "Giới thiệu bản thân",
+      "bioCount": "{count}/160 ký tự",
+      "bioPlaceholder": "Giới thiệu ngắn gọn (tối đa 160 ký tự)",
+      "saveAriaLabel": "Lưu hồ sơ",
+      "saveSuccess": "Hồ sơ của bạn đã được lưu.",
+      "saveError": "Lưu thất bại.",
+      "unsavedLeavePrompt": "Bạn có thay đổi chưa lưu. Bạn có muốn rời khỏi trang này không?"
+    },
+    "avatar": {
+      "regionAriaLabel": "Khu vực ảnh hồ sơ",
+      "imageAlt": "Ảnh hồ sơ",
+      "title": "Ảnh hồ sơ",
+      "constraints": "JPG hoặc PNG, tối đa 5MB. Tự động cắt thành hình vuông.",
+      "fileInputAriaLabel": "Chọn tệp ảnh hồ sơ",
+      "uploadAriaLabel": "Tải ảnh lên",
+      "uploading": "Đang tải lên...",
+      "changeImage": "Đổi ảnh",
+      "reselect": "Chọn lại",
+      "uploadSuccess": "Ảnh hồ sơ của bạn đã được cập nhật.",
+      "uploadFailed": "Tải ảnh lên thất bại.",
+      "invalidType": "Chỉ có thể tải lên ảnh JPG hoặc PNG.",
+      "tooLarge": "Kích thước ảnh phải từ 5MB trở xuống.",
+      "convertFailed": "Chuyển đổi ảnh thất bại.",
+      "securityNoticeTitle": "Thông báo bảo mật",
+      "securityNoticeDescription": "Việc thay đổi thông tin định danh tài khoản như email có thể cần xác minh lại sau này. Thay đổi tên, biệt danh và phần giới thiệu được lưu ngay lập tức."
+    },
+    "exam": {
+      "cardTitle": "Kỳ thi mục tiêu",
+      "levelLabel": "Cấp độ TOPIK",
+      "levelOptionI": "TOPIK I (cấp 1-2)",
+      "levelOptionII": "TOPIK II (cấp 3-6)",
+      "targetGradeLabel": "Cấp độ mục tiêu",
+      "gradeUnsupported": "Chỉ hỗ trợ {range} cho cấp độ đã chọn.",
+      "gradeRange": "cấp {from}-{to}",
+      "examDateLabel": "Ngày thi (tùy chọn)",
+      "examDateAriaLabel": "Ngày thi",
+      "saveSuccess": "Thông tin kỳ thi mục tiêu của bạn đã được lưu.",
+      "saveError": "Lưu mục tiêu thất bại.",
+      "editCta": "Chỉnh sửa",
+      "emptyDescription": "Bạn chưa đặt mục tiêu.",
+      "setGoalCta": "Đặt mục tiêu",
+      "targetGradeValue": "Mục tiêu cấp {grade}",
+      "examDatePrefix": "Ngày thi: ",
+      "examDateUnset": "Chưa đặt ngày thi.",
+      "moreSettingsLink": "Thay đổi cả thời gian học hàng tuần và các lĩnh vực yếu"
+    },
+    "status": {
+      "cardTitle": "Trạng thái tài khoản",
+      "policyWarningTitle": "Bạn cần đồng ý với chính sách bảo mật",
+      "policyWarningDescription": "Cho đến khi bạn đồng ý, một số tính năng sử dụng dữ liệu sẽ bị hạn chế.",
+      "visibilityLabel": "Phạm vi công khai ",
+      "visibilityPublic": "Công khai",
+      "visibilityPrivate": "Riêng tư",
+      "roleLabelPrefix": "Vai trò ",
+      "planLabelPrefix": "Gói ",
+      "joinedLabelPrefix": "Ngày tham gia ",
+      "goalNote": "Mục tiêu học tập được phản ánh trong hồ sơ và dùng cho đề xuất và báo cáo.",
+      "notificationsLink": "Cài đặt thông báo",
+      "languageLink": "Cài đặt ngôn ngữ",
+      "withdrawalNote": "Việc xóa tài khoản sẽ được hỗ trợ trong bản cập nhật sau.",
+      "role": {
+        "learner": "Người học",
+        "content_admin": "Quản trị nội dung",
+        "org_admin": "Quản trị tổ chức",
+        "platform_admin": "Quản trị nền tảng"
+      }
+    }
+  },
+  "subscription": {
+    "metaTitle": "Quản lý gói đăng ký — TALKPIK",
+    "heading": "Quản lý gói đăng ký",
+    "subheading": "Kiểm tra và quản lý trạng thái gói đăng ký hiện tại cùng lịch sử thanh toán của bạn.",
+    "retry": "Thử lại",
+    "backCta": "Quay lại",
+    "startScreenCta": "Màn hình bắt đầu đăng ký",
+    "modalDefaultOk": "Đồng ý",
+    "modalClose": "Đóng",
+    "subscriptionLoadError": "Không thể tải thông tin gói đăng ký của bạn.",
+    "historyLoadError": "Không thể tải lịch sử thanh toán của bạn.",
+    "status": {
+      "active": "Đang dùng",
+      "trialing": "Đang dùng thử",
+      "pastDue": "Thanh toán thất bại",
+      "canceled": "Đã hủy",
+      "paused": "Tạm dừng"
+    },
+    "paymentStatus": {
+      "paid": "Đã thanh toán",
+      "failed": "Thanh toán thất bại",
+      "refunded": "Đã hoàn tiền",
+      "pending": "Đang xử lý"
+    },
+    "cadence": {
+      "monthly": "Hằng tháng",
+      "quarterly": "Hằng quý",
+      "yearly": "Hằng năm"
+    },
+    "current": {
+      "title": "Gói đăng ký hiện tại",
+      "errorTitle": "Không thể tải thông tin gói đăng ký của bạn",
+      "statusLabel": "Trạng thái",
+      "noSubBadge": "Không có gói",
+      "noSubBody": "Bạn chưa có gói đăng ký trả phí nào đang hoạt động.",
+      "startCta": "Bắt đầu đăng ký",
+      "planLabel": "Gói",
+      "cadenceLabel": "Chu kỳ thanh toán",
+      "nextBillingLabel": "Ngày thanh toán tiếp theo",
+      "cancelScheduled": "Dự kiến hủy sau {date}"
+    },
+    "change": {
+      "title": "Thay đổi gói đăng ký",
+      "changePlan": "Đổi gói",
+      "changePaymentMethod": "Đổi phương thức thanh toán",
+      "cancel": "Hủy gói đăng ký",
+      "note": "Việc thay đổi và hủy được thực hiện sau khi bạn xác nhận chính sách, và có hiệu lực ngay khi hoàn tất tích hợp thanh toán."
+    },
+    "history": {
+      "title": "Lịch sử thanh toán",
+      "errorTitle": "Không thể tải lịch sử thanh toán của bạn",
+      "empty": "Không có lịch sử thanh toán.",
+      "colDate": "Ngày thanh toán",
+      "colAmount": "Số tiền",
+      "colStatus": "Trạng thái",
+      "colReceipt": "Biên lai",
+      "receiptLink": "Biên lai"
+    },
+    "help": {
+      "title": "Trợ giúp",
+      "changePolicyTitle": "Chính sách thay đổi gói",
+      "changePolicyBody": "Khi bạn đổi gói, thời gian còn lại được tính theo tỷ lệ và áp dụng.",
+      "refundTitle": "Tiêu chí hoàn tiền",
+      "refundBody": "Có thể hoàn tiền trong vòng 7 ngày kể từ khi thanh toán nếu chưa sử dụng.",
+      "planDiffTitle": "Khác biệt giữa các gói",
+      "planDiffBody": "Bạn có thể so sánh quyền lợi của từng gói tại màn hình bắt đầu đăng ký.",
+      "contactSubject": "Yêu cầu hỗ trợ về gói đăng ký",
+      "contactCta": "Liên hệ hỗ trợ"
+    },
+    "policy": {
+      "stubInfo": "Khi hoàn tất tích hợp thanh toán, bạn sẽ có thể xử lý việc này ngay. (Sắp ra mắt)",
+      "change": {
+        "title": "Chính sách đổi gói",
+        "body": "Khi đổi gói, thời gian thanh toán còn lại được tính theo tỷ lệ và áp dụng vào hóa đơn tiếp theo. Thay đổi có hiệu lực sau khi hoàn tất tích hợp thanh toán.",
+        "ok": "Đã hiểu"
+      },
+      "paymentMethod": {
+        "title": "Đổi phương thức thanh toán",
+        "body": "Bạn có thể thay đổi phương thức thanh toán đã đăng ký. Phương thức mới sẽ được dùng từ lần thanh toán tiếp theo. Tính năng này sẽ có sau khi hoàn tất tích hợp thanh toán.",
+        "ok": "Đã hiểu"
+      },
+      "cancel": {
+        "title": "Chính sách hủy gói đăng ký",
+        "body": "Dù hủy ngay bây giờ, bạn vẫn giữ mọi quyền lợi cho đến hết chu kỳ thanh toán hiện tại. Chỉ có thể hoàn tiền trong vòng 7 ngày kể từ khi thanh toán. Thao tác này không thể hoàn tác.",
+        "ok": "Tiến hành hủy"
+      }
+    }
+  },
+  "paywall": {
+    "metaTitle": "Đăng ký gói — TALKPIK",
+    "heading": "Bắt đầu đăng ký",
+    "subheading": "So sánh các chu kỳ thanh toán và chọn một gói đăng ký. Bạn có thể xem giá và quyền lợi trong các thẻ bên dưới.",
+    "retry": "Thử lại",
+    "backCta": "Quay lại",
+    "loadError": "Không thể tải thông tin gói.",
+    "errorTitle": "Không thể tải thông tin gói",
+    "goToManage": "Đến phần quản lý gói đăng ký",
+    "viewManageCta": "Xem quản lý gói đăng ký",
+    "checkoutStubInfo": "Tích hợp thanh toán đang được chuẩn bị. Khi kết nối xong phương thức thanh toán, bạn sẽ có thể bắt đầu đăng ký ngay từ nút này.",
+    "recommendedBadge": "Đề xuất",
+    "cadence": {
+      "monthly": "Hằng tháng",
+      "quarterly": "Hằng quý",
+      "yearly": "Hằng năm"
+    },
+    "cadenceBilling": "Thanh toán {cadence}",
+    "selectCta": "Chọn gói {cadence}",
+    "benefitsFallback": "Khi đăng ký, bạn có thể dùng tất cả tính năng cốt lõi.",
+    "stubNote": "Đang chuẩn bị tích hợp thanh toán · chưa có thanh toán thực tế nào được xử lý.",
+    "noPlans": {
+      "title": "Hiện chưa có gói nào để giới thiệu.",
+      "body": "Khi các gói sẵn sàng, bạn có thể xem giá và quyền lợi trên màn hình này."
+    },
+    "benefits": {
+      "title": "Quyền lợi gói đăng ký",
+      "item1": "· Phản hồi viết bằng AI không giới hạn",
+      "item2": "· Câu hỏi đề xuất dựa trên điểm yếu",
+      "item3": "· Báo cáo tiến bộ chi tiết",
+      "item4": "· Xuất PDF đề thi thử",
+      "contactSubject": "Yêu cầu hỗ trợ về quyền lợi gói đăng ký",
+      "contactCta": "Liên hệ hỗ trợ"
+    },
+    "paymentInfo": {
+      "title": "Thông tin thanh toán",
+      "item1": "· Có thể yêu cầu hoàn tiền trong vòng 7 ngày kể từ khi thanh toán",
+      "item2": "· Hỗ trợ xuất hóa đơn thuế",
+      "item3": "· Thanh toán an toàn (sắp tích hợp)",
+      "item4": "· Đối với gói cho tổ chức hoặc nhóm, vui lòng liên hệ riêng"
     }
   }
 }

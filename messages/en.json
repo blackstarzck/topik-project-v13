@@ -92,6 +92,68 @@
       "saveSuccess": "Your language and content settings were saved.",
       "saveError": "Couldn't save your settings.",
       "learningSettingsLoadError": "Couldn't load your content settings."
+    },
+    "notifications": {
+      "metaTitle": "Notification settings — TALKPIK",
+      "pageHeading": "Notification settings",
+      "loadError": "We couldn't load your notification settings.",
+      "loadErrorTitle": "We couldn't load your notification settings",
+      "unsavedLeave": "You have unsaved changes. Are you sure you want to leave this page?",
+      "saveSuccess": "Your notification settings have been saved.",
+      "saveError": "Saving failed.",
+      "previewScheduled": "We'll send a study reminder every day at {time} ({timezone}).",
+      "previewEmpty": "Set a study reminder time to see a sample of what we'll send.",
+      "deferredNotice": "Actual notification delivery is still being set up. For now your channels, conditions, and time are saved, and the delivery log fills in once sending begins.",
+      "noChannel": {
+        "title": "No notification channel is turned on",
+        "body": "Turn on the email or Zalo channel below to receive reminders."
+      },
+      "channel": {
+        "cardTitle": "Notification channels",
+        "emailTab": "Email",
+        "emailReceive": "Receive email notifications",
+        "emailHint": "Notifications are sent to your sign-up email.",
+        "notConnected": "Not connected",
+        "zaloReceive": "Receive Zalo notifications",
+        "zaloHint": "Zalo integration (actual delivery) is still being prepared. For now only your receive preference is saved.",
+        "bothTab": "Both",
+        "zaloReceivePending": "Receive Zalo notifications (integration coming soon)"
+      },
+      "condition": {
+        "cardTitle": "Notification conditions",
+        "on": "On",
+        "off": "Off",
+        "reminderTimeLabel": "Reminder time (HH:mm)",
+        "reminderTimeExtra": "Turn on a receive channel to set a reminder time.",
+        "reminderTimeAria": "Reminder time",
+        "reminderDaysLabel": "Reminder days"
+      },
+      "pref": {
+        "weeklySummary": "Weekly study summary",
+        "feedbackReady": "Feedback ready notification",
+        "studyReminder": "Study reminder"
+      },
+      "weekday": {
+        "mon": "Mon",
+        "tue": "Tue",
+        "wed": "Wed",
+        "thu": "Thu",
+        "fri": "Fri",
+        "sat": "Sat",
+        "sun": "Sun"
+      },
+      "preview": {
+        "cardTitle": "Preview"
+      },
+      "history": {
+        "cardTitle": "Delivery history (latest 5)",
+        "empty": "No notifications have been sent yet."
+      },
+      "logStatus": {
+        "sent": "Sent",
+        "failed": "Failed",
+        "pending": "Pending"
+      }
     }
   },
   "auth": {
@@ -309,6 +371,20 @@
       "retry": "Retry",
       "goToSettings": "Go to alert settings",
       "empty": "No new alerts."
+    },
+    "recentFeedback": {
+      "title": "Recent feedback",
+      "empty": "No feedback yet. Submit a writing piece to get started.",
+      "view": "View",
+      "questionNo": "No. {no}",
+      "scoreLabel": "Score",
+      "scoreValue": "{score} pts",
+      "scorePending": "Pending"
+    },
+    "upcomingExam": {
+      "title": "Upcoming exam",
+      "daysLeft": "Days left: D-{days}",
+      "daysLeftToday": "Days left: today"
     }
   },
   "practice": {
@@ -1165,6 +1241,272 @@
       "export": "Export PDF",
       "printDialogOpened": "The PDF print dialog has opened.",
       "generateFailed": "Failed to generate the PDF."
+    }
+  },
+  "onboarding": {
+    "page": {
+      "metaTitle": "Set learning goal — TALKPIK"
+    },
+    "steps": {
+      "counter": "Step {current}/{total}",
+      "labels": {
+        "createAccount": "Create account",
+        "verifyEmail": "Verify email",
+        "learningGoal": "Learning goal"
+      }
+    },
+    "goalForm": {
+      "heading": "Set your learning goal",
+      "subheading": "Your goal is the basis for personalized recommendations.",
+      "topikLevelLabel": "TOPIK level",
+      "topikLevelOptionI": "TOPIK I (levels 1-2)",
+      "topikLevelOptionII": "TOPIK II (levels 3-6)",
+      "targetGradeLabel": "Target grade",
+      "examDateLabel": "Exam date (optional)",
+      "weeklyMinutesLabel": "Weekly study time (minutes, optional)",
+      "weakAreasLabel": "Weak areas (optional)",
+      "weakAreasPlaceholder": "You can select multiple items",
+      "weakAreas": {
+        "vocabulary": "Vocabulary",
+        "grammar": "Grammar",
+        "reading-comprehension": "Reading comprehension",
+        "listening-comprehension": "Listening comprehension",
+        "essay-thesis": "Essay thesis",
+        "essay-structure": "Essay structure",
+        "short-answer": "Short-answer writing",
+        "long-form-cohesion": "Long-form cohesion"
+      },
+      "submit": "Save and go to dashboard",
+      "saveSuccess": "Your learning goal has been saved",
+      "errors": {
+        "examDatePast": "You can't select a past date.",
+        "invalidField": "Please check your input again.",
+        "unsupportedGrade": "The selected level only supports grades {min}-{max}. Please check your target grade again.",
+        "saveFailed": "Saving failed. Please try again in a moment.",
+        "saveFailedDetail": "Saving failed. {detail} Please try again in a moment."
+      }
+    },
+    "nav": {
+      "previous": "Edit previous step",
+      "skip": "Skip",
+      "skipSuccess": "Started with a default goal. You can change it anytime in settings.",
+      "skipFailedToast": "Skip failed. Please try again.",
+      "skipFailedInline": "Skip save failed: {detail}",
+      "retryHint": "Please try again in a moment."
+    }
+  },
+  "profile": {
+    "page": {
+      "metaTitle": "Profile — TALKPIK",
+      "heading": "Profile"
+    },
+    "form": {
+      "emailLabel": "Email",
+      "emailExtra": "Changing your email requires re-verification, and for security the number of changes within a period is limited.",
+      "emailPlaceholder": "No email registered",
+      "nameLabel": "Name",
+      "nameTooShort": "Please enter at least 2 characters for your name.",
+      "namePlaceholder": "Real name or display name",
+      "nicknameLabel": "Nickname",
+      "nicknameTooShort": "Please enter at least 2 characters for your nickname.",
+      "nicknameHelp": "If the nickname is already taken, you will be notified when saving.",
+      "nicknamePlaceholder": "The name shown to other users",
+      "bioLabel": "About me",
+      "bioCount": "{count}/160 chars",
+      "bioPlaceholder": "A short introduction (up to 160 characters)",
+      "saveAriaLabel": "Save profile",
+      "saveSuccess": "Your profile has been saved.",
+      "saveError": "Saving failed.",
+      "unsavedLeavePrompt": "You have unsaved changes. Do you want to leave this page?"
+    },
+    "avatar": {
+      "regionAriaLabel": "Profile image area",
+      "imageAlt": "Profile image",
+      "title": "Profile image",
+      "constraints": "JPG or PNG, up to 5MB. Automatically cropped to a square.",
+      "fileInputAriaLabel": "Select profile image file",
+      "uploadAriaLabel": "Upload image",
+      "uploading": "Uploading...",
+      "changeImage": "Change image",
+      "reselect": "Reselect",
+      "uploadSuccess": "Your profile image has been updated.",
+      "uploadFailed": "Image upload failed.",
+      "invalidType": "Only JPG or PNG images can be uploaded.",
+      "tooLarge": "The image must be 5MB or smaller.",
+      "convertFailed": "Image conversion failed.",
+      "securityNoticeTitle": "Security notice",
+      "securityNoticeDescription": "Changing account identity info such as your email may require re-verification later. Name, nickname, and about-me changes are saved immediately."
+    },
+    "exam": {
+      "cardTitle": "Target exam",
+      "levelLabel": "TOPIK level",
+      "levelOptionI": "TOPIK I (grades 1-2)",
+      "levelOptionII": "TOPIK II (grades 3-6)",
+      "targetGradeLabel": "Target grade",
+      "gradeUnsupported": "Only {range} is supported for the selected level.",
+      "gradeRange": "grades {from}-{to}",
+      "examDateLabel": "Exam date (optional)",
+      "examDateAriaLabel": "Exam date",
+      "saveSuccess": "Your target exam info has been saved.",
+      "saveError": "Saving the goal failed.",
+      "editCta": "Edit",
+      "emptyDescription": "You haven't set a goal yet.",
+      "setGoalCta": "Set a goal",
+      "targetGradeValue": "Target grade {grade}",
+      "examDatePrefix": "Exam date: ",
+      "examDateUnset": "No exam date has been set.",
+      "moreSettingsLink": "Also change weekly study time and weak areas"
+    },
+    "status": {
+      "cardTitle": "Account status",
+      "policyWarningTitle": "You need to agree to the privacy policy",
+      "policyWarningDescription": "Until you agree, some data-use features are limited.",
+      "visibilityLabel": "Visibility ",
+      "visibilityPublic": "Public",
+      "visibilityPrivate": "Private",
+      "roleLabelPrefix": "Role ",
+      "planLabelPrefix": "Plan ",
+      "joinedLabelPrefix": "Joined ",
+      "goalNote": "Your learning goal is reflected in your profile and used for recommendations and reports.",
+      "notificationsLink": "Notification settings",
+      "languageLink": "Language settings",
+      "withdrawalNote": "Account deletion will be supported in a future update.",
+      "role": {
+        "learner": "Learner",
+        "content_admin": "Content admin",
+        "org_admin": "Organization admin",
+        "platform_admin": "Platform admin"
+      }
+    }
+  },
+  "subscription": {
+    "metaTitle": "Manage subscription — TALKPIK",
+    "heading": "Manage subscription",
+    "subheading": "Check and manage your current subscription status and payment history.",
+    "retry": "Try again",
+    "backCta": "Go back",
+    "startScreenCta": "Subscription start screen",
+    "modalDefaultOk": "OK",
+    "modalClose": "Close",
+    "subscriptionLoadError": "We couldn't load your subscription details.",
+    "historyLoadError": "We couldn't load your payment history.",
+    "status": {
+      "active": "Active",
+      "trialing": "Trialing",
+      "pastDue": "Payment failed",
+      "canceled": "Canceled",
+      "paused": "Paused"
+    },
+    "paymentStatus": {
+      "paid": "Paid",
+      "failed": "Payment failed",
+      "refunded": "Refunded",
+      "pending": "Processing"
+    },
+    "cadence": {
+      "monthly": "Monthly",
+      "quarterly": "Quarterly",
+      "yearly": "Yearly"
+    },
+    "current": {
+      "title": "Current subscription",
+      "errorTitle": "We couldn't load your subscription details",
+      "statusLabel": "Status",
+      "noSubBadge": "No subscription",
+      "noSubBody": "You don't have an active paid subscription.",
+      "startCta": "Start a subscription",
+      "planLabel": "Plan",
+      "cadenceLabel": "Billing cycle",
+      "nextBillingLabel": "Next billing date",
+      "cancelScheduled": "Cancellation scheduled after {date}"
+    },
+    "change": {
+      "title": "Change subscription",
+      "changePlan": "Change plan",
+      "changePaymentMethod": "Change payment method",
+      "cancel": "Cancel subscription",
+      "note": "Changes and cancellations proceed after you confirm the policy, and take effect immediately once billing integration is complete."
+    },
+    "history": {
+      "title": "Payment history",
+      "errorTitle": "We couldn't load your payment history",
+      "empty": "No payment history.",
+      "colDate": "Payment date",
+      "colAmount": "Amount",
+      "colStatus": "Status",
+      "colReceipt": "Receipt",
+      "receiptLink": "Receipt"
+    },
+    "help": {
+      "title": "Help",
+      "changePolicyTitle": "Subscription change policy",
+      "changePolicyBody": "When you change plans, the remaining period is prorated and applied.",
+      "refundTitle": "Refund criteria",
+      "refundBody": "Refunds are available within 7 days of payment if unused.",
+      "planDiffTitle": "Plan differences",
+      "planDiffBody": "You can compare the benefits of each plan on the subscription start screen.",
+      "contactSubject": "Subscription inquiry",
+      "contactCta": "Contact support"
+    },
+    "policy": {
+      "stubInfo": "Once billing integration is complete, you'll be able to handle this right away. (Coming soon)",
+      "change": {
+        "title": "Plan change policy",
+        "body": "When you change plans, the remaining billing period is prorated and applied to your next invoice. Changes take effect after billing integration is complete.",
+        "ok": "Got it"
+      },
+      "paymentMethod": {
+        "title": "Change payment method",
+        "body": "You can change your registered payment method. The new method will be used from your next payment. This will be available after billing integration is complete.",
+        "ok": "Got it"
+      },
+      "cancel": {
+        "title": "Subscription cancellation policy",
+        "body": "Even if you cancel now, you keep all benefits until the end of the current billing period. Refunds are only possible within 7 days of payment. This action cannot be undone.",
+        "ok": "Proceed with cancellation"
+      }
+    }
+  },
+  "paywall": {
+    "metaTitle": "Subscribe — TALKPIK",
+    "heading": "Start a subscription",
+    "subheading": "Compare billing cycles and pick one subscription. You can see prices and benefits in the cards below.",
+    "retry": "Try again",
+    "backCta": "Go back",
+    "loadError": "We couldn't load the plan details.",
+    "errorTitle": "We couldn't load the plan details",
+    "goToManage": "Go to subscription management",
+    "viewManageCta": "View subscription management",
+    "checkoutStubInfo": "Billing integration is being prepared. Once payment methods are connected, you'll be able to start a subscription right from this button.",
+    "recommendedBadge": "Recommended",
+    "cadence": {
+      "monthly": "Monthly",
+      "quarterly": "Quarterly",
+      "yearly": "Yearly"
+    },
+    "cadenceBilling": "{cadence} billing",
+    "selectCta": "Choose {cadence} subscription",
+    "benefitsFallback": "With a subscription you can use all the core features.",
+    "stubNote": "Billing integration in progress · no actual payment is processed yet.",
+    "noPlans": {
+      "title": "There are no plans available right now.",
+      "body": "Once plans are ready, you can check prices and benefits on this screen."
+    },
+    "benefits": {
+      "title": "Subscription benefits",
+      "item1": "· Unlimited AI writing feedback",
+      "item2": "· Weakness-based recommended questions",
+      "item3": "· Detailed growth report",
+      "item4": "· Mock exam PDF export",
+      "contactSubject": "Subscription benefits inquiry",
+      "contactCta": "Contact support"
+    },
+    "paymentInfo": {
+      "title": "Payment information",
+      "item1": "· Refunds can be requested within 7 days of payment",
+      "item2": "· Tax invoice issuance supported",
+      "item3": "· Secure payment (integration coming soon)",
+      "item4": "· For institutional or group subscriptions, please contact us separately"
     }
   }
 }

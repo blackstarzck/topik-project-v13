@@ -13,12 +13,13 @@ import {
   Tag,
   Typography,
 } from "antd";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import {
-  cadenceLabel,
+  cadenceLabelKey,
   fetchActivePlans,
   fetchMySubscription,
   formatPlanPrice,
@@ -50,6 +51,7 @@ type LoadState =
  *   subscription row, we redirect to /subscription.
  */
 export function PaywallShell() {
+  const t = useTranslations("paywall");
   const router = useRouter();
   const { message } = App.useApp();
   const [state, setState] = useState<LoadState>({ status: "loading" });
@@ -74,14 +76,14 @@ export function PaywallShell() {
         if (cancelled) return;
         setState({
           status: "error",
-          message: err instanceof Error ? err.message : "플랜 정보를 불러오지 못했어요.",
+          message: err instanceof Error ? err.message : t("loadError"),
         });
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [router]);
+  }, [router, t]);
 
   // Stable ordering: recommended card highlighted, but column order keeps the
   // cheapest-first sort already applied by fetchActivePlans.
@@ -97,9 +99,7 @@ export function PaywallShell() {
     setSelecting(plan.plan_key);
     window.setTimeout(() => {
       setSelecting(null);
-      message.info(
-        "결제 연동은 준비 중입니다. 결제 수단 연동이 완료되면 이 버튼에서 바로 구독을 시작할 수 있어요.",
-      );
+      message.info(t("checkoutStubInfo"));
     }, 350);
   }
 
@@ -111,12 +111,11 @@ export function PaywallShell() {
           <Space>
             <Tag>X-03</Tag>
             <Title level={3} style={{ margin: 0 }}>
-              구독 시작하기
+              {t("heading")}
             </Title>
           </Space>
           <Paragraph type="secondary" style={{ marginTop: 8, marginBottom: 0 }}>
-            결제 주기를 비교하고 하나의 구독을 선택하세요. 가격과 혜택은 아래
-            카드에서 확인할 수 있어요.
+            {t("subheading")}
           </Paragraph>
         </div>
 
@@ -127,15 +126,15 @@ export function PaywallShell() {
         ) : state.status === "error" ? (
           <Result
             status="warning"
-            title="플랜 정보를 불러오지 못했어요"
+            title={t("errorTitle")}
             subTitle={state.message}
             extra={
               <Space>
                 <Button type="primary" onClick={() => router.refresh()}>
-                  다시 시도
+                  {t("retry")}
                 </Button>
                 <Link href="/subscription">
-                  <Button>구독 관리로 이동</Button>
+                  <Button>{t("goToManage")}</Button>
                 </Link>
               </Space>
             }
@@ -147,8 +146,8 @@ export function PaywallShell() {
               <Alert
                 type="info"
                 showIcon
-                message="현재 안내 가능한 플랜이 없습니다."
-                description="플랜이 준비되면 이 화면에서 가격과 혜택을 확인할 수 있어요."
+                message={t("noPlans.title")}
+                description={t("noPlans.body")}
               />
             ) : (
               <Row gutter={[16, 16]} align="stretch">
@@ -166,7 +165,7 @@ export function PaywallShell() {
                           <Space>
                             <Text strong>{plan.name}</Text>
                             {plan.recommended ? (
-                              <Tag color="blue">추천</Tag>
+                              <Tag color="blue">{t("recommendedBadge")}</Tag>
                             ) : null}
                           </Space>
                         }
@@ -181,7 +180,11 @@ export function PaywallShell() {
                               {formatPlanPrice(plan)}
                             </Title>
                             <Text type="secondary">
-                              {cadenceLabel(plan.cadence)} 결제
+                              {t("cadenceBilling", {
+                                cadence: t(
+                                  `cadence.${cadenceLabelKey(plan.cadence)}` as Parameters<typeof t>[0],
+                                ),
+                              })}
                             </Text>
                           </div>
                           {benefits.length > 0 ? (
@@ -194,7 +197,7 @@ export function PaywallShell() {
                             </ul>
                           ) : (
                             <Text type="secondary">
-                              구독 시 핵심 기능을 모두 이용할 수 있어요.
+                              {t("benefitsFallback")}
                             </Text>
                           )}
                           {/* Region 3: 결제 주기 선택 CTA (external stub) */}
@@ -204,13 +207,17 @@ export function PaywallShell() {
                             loading={selecting === plan.plan_key}
                             onClick={() => handleSelect(plan)}
                           >
-                            {cadenceLabel(plan.cadence)} 구독 선택
+                            {t("selectCta", {
+                              cadence: t(
+                                `cadence.${cadenceLabelKey(plan.cadence)}` as Parameters<typeof t>[0],
+                              ),
+                            })}
                           </Button>
                           <Text
                             type="secondary"
                             style={{ fontSize: 12 }}
                           >
-                            결제 연동 준비 중 · 아직 실제 결제는 진행되지 않아요.
+                            {t("stubNote")}
                           </Text>
                         </Space>
                       </Card>
@@ -223,23 +230,23 @@ export function PaywallShell() {
             <Row gutter={[16, 16]}>
               {/* Region 4: 혜택/지원 패널 */}
               <Col xs={24} md={14}>
-                <Card title="구독 혜택">
+                <Card title={t("benefits.title")}>
                   <Space
                     direction="vertical"
                     size={4}
                     style={{ width: "100%" }}
                   >
-                    <Text>· AI 작문 첨삭 무제한</Text>
-                    <Text>· 약점 기반 추천 문제</Text>
-                    <Text>· 상세 성장 리포트</Text>
-                    <Text>· 모의고사 PDF 내보내기</Text>
+                    <Text>{t("benefits.item1")}</Text>
+                    <Text>{t("benefits.item2")}</Text>
+                    <Text>{t("benefits.item3")}</Text>
+                    <Text>{t("benefits.item4")}</Text>
                     <div style={{ marginTop: 8 }}>
                       <Button
                         href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(
-                          "구독 혜택 문의",
+                          t("benefits.contactSubject"),
                         )}`}
                       >
-                        지원 문의
+                        {t("benefits.contactCta")}
                       </Button>
                     </div>
                   </Space>
@@ -248,16 +255,16 @@ export function PaywallShell() {
 
               {/* Region 5: 결제 보조 정보 */}
               <Col xs={24} md={10}>
-                <Card title="결제 안내">
+                <Card title={t("paymentInfo.title")}>
                   <Space
                     direction="vertical"
                     size={4}
                     style={{ width: "100%" }}
                   >
-                    <Text type="secondary">· 환불은 결제 후 7일 이내 신청 가능</Text>
-                    <Text type="secondary">· 세금계산서 발행 지원</Text>
-                    <Text type="secondary">· 안전한 결제 (연동 예정)</Text>
-                    <Text type="secondary">· 기관 단체 구독은 별도 문의</Text>
+                    <Text type="secondary">{t("paymentInfo.item1")}</Text>
+                    <Text type="secondary">{t("paymentInfo.item2")}</Text>
+                    <Text type="secondary">{t("paymentInfo.item3")}</Text>
+                    <Text type="secondary">{t("paymentInfo.item4")}</Text>
                   </Space>
                 </Card>
               </Col>
@@ -265,10 +272,10 @@ export function PaywallShell() {
 
             <Space>
               <Link href="/subscription">
-                <Button>구독 관리 보기</Button>
+                <Button>{t("viewManageCta")}</Button>
               </Link>
               <Button type="link" onClick={() => router.back()}>
-                뒤로 가기
+                {t("backCta")}
               </Button>
             </Space>
           </>
