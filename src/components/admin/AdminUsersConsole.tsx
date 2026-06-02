@@ -19,6 +19,9 @@ import type { ColumnsType, TableRowSelection } from "antd/es/table/interface";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { changeUserRoleAction } from "@/lib/admin/server-actions";
+import { ROLE_OPTIONS } from "@/lib/admin/types";
+import type { AppRole } from "@/lib/auth/roles";
 import {
   USER_SORT_OPTIONS,
   fetchAdminUserDirectory,
@@ -70,6 +73,42 @@ function userDirectoryKey(params: {
   return ["admin-users", "directory", params] as const;
 }
 
+/** One row's outcome after a bulk action settles. */
+export type BulkOutcome = {
+  id: string;
+  name: string;
+  ok: boolean;
+  /** Failure reason (already trimmed to a friendly length); only set when !ok. */
+  reason?: string;
+};
+
+export type BulkFailedRow = { id: string; name: string; reason: string };
+
+/**
+ * Pure partition of settled bulk outcomes into a success count + a failed-row
+ * list (region 6 예외: "일괄 처리 실패/권한 충돌은 실패 행 목록으로 안내").
+ * Kept side-effect free so it is unit-testable without rendering antd.
+ */
+export function summarizeBulkOutcomes(outcomes: BulkOutcome[]): {
+  succeeded: number;
+  failed: BulkFailedRow[];
+} {
+  const failed: BulkFailedRow[] = [];
+  let succeeded = 0;
+  for (const o of outcomes) {
+    if (o.ok) {
+      succeeded += 1;
+    } else {
+      failed.push({
+        id: o.id,
+        name: o.name,
+        reason: o.reason && o.reason.trim().length > 0 ? o.reason : "알 수 없는 오류",
+      });
+    }
+  }
+  return { succeeded, failed };
+}
+
 export function AdminUsersConsole() {
   const { message } = App.useApp();
   const qc = useQueryClient();
@@ -88,9 +127,9 @@ export function AdminUsersConsole() {
 
   const [searchError, setSearchError] = useState<string | null>(null);
   const [bulkBusy, setBulkBusy] = useState(false);
-  const [failedRows, setFailedRows] = useState<
-    { id: string; name: string; reason: string }[]
-  >([]);
+  const [failedRows, setFailedRows] = useState<BulkFailedRow[]>([]);
+  const [roleBulkOpen, setRoleBulkOpen] = useState(false);
+  const [bulkRole, setBulkRole] = useState<AppRole>("learner");
 
   // Debounce search → server filter, with 2–60 char validation (region 3).
   useEffect(() => {
@@ -130,8 +169,9 @@ export function AdminUsersConsole() {
   const total = Number(rows[0]?.total_count ?? 0);
   const hasSearch = search.length > 0;
 
-  // blocked/deleted rows are gated from multi-select (region 4 예외).
-  const selectableRow = (r: AdminUserDirectoryRow) => r.status === "active";
+  // Deleted rows are gated from multi-select (region 4 예외: 차단/비활성 사용자는
+  // 액션 제한). active + blocked rows stay selectable so bulk reactivation works.
+  const selectableRow = (r: AdminUserDirectoryRow) => r.status !== "deleted";
 
   const rowSelection: TableRowSelection<AdminUserDirectoryRow> = {
     selectedRowKeys: selectedKeys,
@@ -171,43 +211,111 @@ export function AdminUsersConsole() {
     await query.refetch();
   }
 
+  const rowName = (row: AdminUserDirectoryRow) =>
+    row.display_name ?? maskEmail(row.email);
+
+  /**
+   * Run one async action per selected row, collecting per-row outcomes, then
+   * partition them with the pure helper. The caller's `apply` is responsible
+   * for the actual mutation (status via admin-rpc, role via server action).
+   * Self-action refusals (admin_set_user_status rejects the caller's own row)
+   * surface as a failed-row entry rather than being swallowed.
+   */
+  async function runBulk(
+    rowsToApply: AdminUserDirectoryRow[],
+    successVerb: string,
+    apply: (row: AdminUserDirectoryRow) => Promise<void>,
+  ) {
+    if (rowsToApply.length === 0) return;
+    setBulkBusy(true);
+    setFailedRows([]);
+    const outcomes: BulkOutcome[] = [];
+    for (const row of rowsToApply) {
+      try {
+        await apply(row);
+        outcomes.push({ id: row.user_id, name: rowName(row), ok: true });
+      } catch (err) {
+        outcomes.push({
+          id: row.user_id,
+          name: rowName(row),
+          ok: false,
+          reason: err instanceof Error ? err.message : undefined,
+        });
+      }
+    }
+    const { succeeded, failed } = summarizeBulkOutcomes(outcomes);
+    setBulkBusy(false);
+    setFailedRows(failed);
+    setSelectedKeys([]);
+    await refreshAll();
+    if (failed.length === 0) {
+      message.success(`${succeeded}명 ${successVerb} 완료`);
+    } else if (succeeded === 0) {
+      message.error(`모두 실패: ${failed.length}건. 아래 목록을 확인하세요.`);
+    } else {
+      message.warning(
+        `${succeeded}명 ${successVerb}, ${failed.length}건 실패. 아래 목록을 확인하세요.`,
+      );
+    }
+  }
+
   function confirmBulkDeactivate() {
     if (selectedRows.length === 0) return;
+    const targets = selectedRows.filter((r) => r.status !== "blocked");
+    if (targets.length === 0) {
+      message.info("선택한 사용자는 이미 모두 차단 상태예요.");
+      return;
+    }
+    const client = createSupabaseBrowserClient();
     Modal.confirm({
       title: "일괄 비활성화(차단)",
-      content: `선택한 ${selectedRows.length}명을 차단할까요? 삭제가 아닌 상태 변경이며 되돌릴 수 있어요.`,
+      content: `선택한 ${targets.length}명을 차단할까요? 삭제가 아닌 상태 변경이며 되돌릴 수 있어요. (본인 계정은 차단할 수 없어 실패 목록에 표시될 수 있어요.)`,
       okText: "차단",
       okButtonProps: { danger: true },
       cancelText: "취소",
-      onOk: async () => {
-        setBulkBusy(true);
-        setFailedRows([]);
-        const failures: { id: string; name: string; reason: string }[] = [];
-        const client = createSupabaseBrowserClient();
-        for (const row of selectedRows) {
-          try {
-            await setUserStatus(client, row.user_id, "blocked");
-          } catch (err) {
-            failures.push({
-              id: row.user_id,
-              name: row.display_name ?? maskEmail(row.email),
-              reason: err instanceof Error ? err.message : "알 수 없는 오류",
-            });
-          }
-        }
-        setBulkBusy(false);
-        setFailedRows(failures);
-        setSelectedKeys([]);
-        await refreshAll();
-        if (failures.length === 0) {
-          message.success(`${selectedRows.length}명을 차단했어요.`);
-        } else {
-          message.warning(
-            `일부 실패: ${failures.length}건. 아래 목록을 확인하세요.`,
-          );
-        }
-      },
+      onOk: () =>
+        runBulk(targets, "차단", (row) =>
+          setUserStatus(client, row.user_id, "blocked"),
+        ),
     });
+  }
+
+  function confirmBulkReactivate() {
+    if (selectedRows.length === 0) return;
+    const targets = selectedRows.filter((r) => r.status === "blocked");
+    if (targets.length === 0) {
+      message.info("선택한 사용자 중 차단 상태가 없어요.");
+      return;
+    }
+    const client = createSupabaseBrowserClient();
+    Modal.confirm({
+      title: "일괄 재활성화",
+      content: `선택한 ${targets.length}명의 차단을 해제할까요?`,
+      okText: "재활성화",
+      cancelText: "취소",
+      onOk: () =>
+        runBulk(targets, "재활성화", (row) =>
+          setUserStatus(client, row.user_id, "active"),
+        ),
+    });
+  }
+
+  function confirmBulkRole() {
+    if (selectedRows.length === 0) return;
+    // Snapshot the rows + chosen role at confirm time.
+    const targets = selectedRows.filter((r) => r.app_role !== bulkRole);
+    setRoleBulkOpen(false);
+    if (targets.length === 0) {
+      message.info(
+        `선택한 사용자는 이미 모두 "${ROLE_LABEL[bulkRole] ?? bulkRole}" 권한이에요.`,
+      );
+      return;
+    }
+    void runBulk(targets, "권한 변경", (row) =>
+      changeUserRoleAction({ targetId: row.user_id, newRole: bulkRole }).then(
+        () => undefined,
+      ),
+    );
   }
 
   const columns: ColumnsType<AdminUserDirectoryRow> = [
@@ -248,6 +356,20 @@ export function AdminUsersConsole() {
       key: "app_role",
       width: 130,
       render: (value: string) => <Tag>{ROLE_LABEL[value] ?? value}</Tag>,
+    },
+    {
+      title: "기관 소속",
+      dataIndex: "org_names",
+      key: "org_names",
+      width: 160,
+      render: (value: string | null) =>
+        value && value.trim().length > 0 ? (
+          <Tooltip title={value}>
+            <span>{ellipsis(value, 24)}</span>
+          </Tooltip>
+        ) : (
+          <Text type="secondary">—</Text>
+        ),
     },
     {
       title: "최근 활동",
@@ -293,10 +415,10 @@ export function AdminUsersConsole() {
       <Space wrap size="middle" style={{ width: "100%" }}>
         <Input.Search
           aria-label="사용자 검색"
-          placeholder="이름 또는 이메일 (2–60자)"
+          placeholder="이름, 이메일, 기관명, 사용자 ID (2–60자)"
           allowClear
           status={searchError ? "error" : undefined}
-          style={{ width: 280 }}
+          style={{ width: 340 }}
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
         />
@@ -337,13 +459,33 @@ export function AdminUsersConsole() {
 
       {/* region 6 — bulk/status actions. */}
       <Space wrap>
+        <Text type="secondary">선택 {selectedRows.length}명</Text>
+        <Button
+          disabled={selectedRows.length === 0 || bulkBusy}
+          loading={bulkBusy}
+          onClick={() => {
+            setBulkRole(
+              (selectedRows[0]?.app_role as AppRole) ?? "learner",
+            );
+            setRoleBulkOpen(true);
+          }}
+        >
+          권한 변경
+        </Button>
         <Button
           danger
           disabled={selectedRows.length === 0}
           loading={bulkBusy}
           onClick={confirmBulkDeactivate}
         >
-          선택 비활성화 ({selectedRows.length})
+          선택 비활성화 (차단)
+        </Button>
+        <Button
+          disabled={selectedRows.length === 0}
+          loading={bulkBusy}
+          onClick={confirmBulkReactivate}
+        >
+          선택 재활성화
         </Button>
         <Tooltip title="알림 발송(이메일/푸시)은 발송 인프라 연동 예정입니다.">
           <Button disabled>
@@ -441,6 +583,42 @@ export function AdminUsersConsole() {
         onClose={() => setAuditOpen(false)}
         title="관리자 변경 이력"
       />
+
+      {/* region 6 — bulk role change (위험 액션 → 확인 모달 필수). */}
+      <Modal
+        title="선택 사용자 권한 일괄 변경"
+        open={roleBulkOpen}
+        onOk={confirmBulkRole}
+        onCancel={() => {
+          if (!bulkBusy) setRoleBulkOpen(false);
+        }}
+        okText="권한 변경"
+        cancelText="취소"
+        okButtonProps={{ danger: true, loading: bulkBusy }}
+        cancelButtonProps={{ disabled: bulkBusy }}
+        destroyOnHidden
+      >
+        <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+          <Text>
+            선택한 <Text strong>{selectedRows.length}명</Text>의 권한을 아래
+            역할로 변경할까요? 이미 같은 권한인 사용자는 건너뜁니다.
+          </Text>
+          <Select<AppRole>
+            aria-label="일괄 적용 역할 선택"
+            value={bulkRole}
+            style={{ width: "100%" }}
+            disabled={bulkBusy}
+            onChange={setBulkRole}
+            options={ROLE_OPTIONS.map((r) => ({
+              value: r,
+              label: ROLE_LABEL[r] ?? r,
+            }))}
+          />
+          <Text type="secondary">
+            본인 또는 보호된 계정 등 변경이 거부되면 실패 목록으로 안내됩니다.
+          </Text>
+        </Space>
+      </Modal>
     </Space>
   );
 }
