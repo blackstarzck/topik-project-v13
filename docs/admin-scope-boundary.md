@@ -70,11 +70,26 @@ Verified state so the next session does not have to re-derive it:
 
 ## Admin documentation (the reference for the LATER sync)
 
-- In this repo: `docs/Wireframe/21-H-01-admin-problem-management/`,
-  `30-X-08-organization-admin-dashboard/`, `32-X-10-admin-user-management/`,
-  `37-X-15-admin-index/` (each has `description.md` + `functional-spec.md`).
-- Fuller admin spec (schema / features / purpose / expected pages) lives with the
-  **separate admin implementation folder**. _Path: TBD — fill in when known._
+- **Admin implementation + its source-of-truth docs live in a separate repo:
+  `C:\Users\admin\Desktop\workspace\topik-ai`** (a Vite + React + AntD admin
+  console; separate git repo; NOT Next.js). It covers a MUCH broader admin domain
+  than v13's user scope: Dashboard, Users, Community, Message, Operation, Commerce,
+  Assessment, Content, Analytics, System.
+- Key admin SoT docs there (read-only reference for the sync):
+  - `docs/architecture/admin-overview.md` — top-level SoT (terms, menu/routes, roles, stack).
+  - `docs/specs/admin-data-contract.md` — entity / table-candidate / field / enum / status
+    naming contract. NB: admin has NO real migrations — this candidate contract is the
+    admin-side schema reference.
+  - `docs/specs/admin-data-usage-map.md` — **B2C (user-facing) exposure map** (admin's own
+    view of which admin data surfaces to users).
+  - `docs/page-sync/*.md` — per-admin-page sync docs, explicitly written to align with
+    user-screen development (each lists related admin/user pages + CRUD candidates).
+  - `docs/specs/admin-page-gap-register.md`, `admin-action-log.md` (audit Target contract).
+- In THIS repo, the admin wireframes are `docs/Wireframe/{21-H-01,30-X-08,32-X-10,37-X-15}/`.
+- Reconciliation axis: admin = documented *candidate contract* (no real DB); v13 = concrete
+  `supabase/migrations`. The LATER sync aligns the two for OVERLAPPING entities only
+  (users/profiles, assessment/problems+writing, etc.) — see the cross-app consistency doc
+  when it exists.
 
 ## History note
 
