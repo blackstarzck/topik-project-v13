@@ -57,7 +57,10 @@ export function RecentFeedbackCard({ items }: Props) {
                 </strong>
               </span>
               <Text type="secondary" style={{ marginLeft: 12, fontSize: 12 }}>
-                {new Date(item.generatedAt).toLocaleDateString("ko-KR")}
+                {/* Pin tz so SSR/client render the same date string (no React #418). */}
+                {new Date(item.generatedAt).toLocaleDateString("ko-KR", {
+                  timeZone: "Asia/Seoul",
+                })}
               </Text>
             </List.Item>
           )}

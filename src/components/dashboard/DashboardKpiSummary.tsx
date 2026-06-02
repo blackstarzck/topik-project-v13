@@ -38,7 +38,15 @@ export function DashboardKpiSummary({ kpi }: Props) {
     kpi.streakDays === 0 &&
     kpi.recentFeedbackCount === 0;
 
+  // SSR/client hydration must produce the IDENTICAL string or React #418 fires.
+  // Two ICU traps: (1) timezone — pin Asia/Seoul (KST is canonical for this
+  // Korea-centric TOPIK app) so the value doesn't depend on the runtime tz;
+  // (2) day-period — Node's ICU renders the ko-KR AM/PM marker as "PM"/"AM"
+  // while the browser renders "오후"/"오전", so force 24-hour (hour12: false) to
+  // drop the day-period entirely. Result is deterministic across server+client.
   const updatedLabel = new Date(kpi.updatedAt).toLocaleString("ko-KR", {
+    timeZone: "Asia/Seoul",
+    hour12: false,
     month: "numeric",
     day: "numeric",
     hour: "2-digit",

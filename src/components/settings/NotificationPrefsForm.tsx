@@ -514,9 +514,14 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
                     <Text>{entry.channel}</Text>
                     <Text type="secondary">{entry.template_key}</Text>
                     <Text type="secondary">
+                      {/* Pin tz + 24h: Node vs browser ICU render the ko-KR
+                          day-period differently ("PM"/"오후") → React #418. */}
                       {new Date(
                         entry.sent_at ?? entry.created_at,
-                      ).toLocaleString("ko-KR")}
+                      ).toLocaleString("ko-KR", {
+                        timeZone: "Asia/Seoul",
+                        hour12: false,
+                      })}
                     </Text>
                   </Space>
                 </List.Item>

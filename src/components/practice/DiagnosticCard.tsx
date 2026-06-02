@@ -95,7 +95,12 @@ export function DiagnosticCard({ weakDimensions, updatedAt, failed }: Props) {
       {updatedAt ? (
         <Text type="secondary" style={{ fontSize: 12 }}>
           {t("diagnosticUpdated", {
-            date: new Date(updatedAt).toLocaleString("ko-KR"),
+            // Pin tz + 24h so SSR (Node) and client (browser) ICU agree — Node
+            // renders the ko-KR day-period as "PM" vs browser "오후" → React #418.
+            date: new Date(updatedAt).toLocaleString("ko-KR", {
+              timeZone: "Asia/Seoul",
+              hour12: false,
+            }),
           })}
         </Text>
       ) : null}

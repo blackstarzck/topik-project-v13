@@ -175,6 +175,42 @@
   - A11y: aria-labels + messages externalized to `t()` with identical ko text; no regression.
   - Responsive: unchanged (no layout/style edits).
 
+## Verification Phase — real-browser QA + hydration fix (2026-06-02, post-completion)
+
+Owner reported a runtime error at `/` ("useTranslations ... NextIntlClientProvider not found")
+and asked for full-scope Playwright verification. Outcome:
+
+- **The reported error was NOT an i18n code bug.** A verification-phase `pnpm build` overwrote the
+  shared `.next/` while the owner's `next dev` (Turbopack) server was live → mixed `.next` (prod
+  `BUILD_ID`/manifests + stale `turbopack-*.js`) → `/_next/static/chunks/*` 500 → broken hydration
+  surfaced as the next-intl context error. Memory `project-pnpm-build-clobbers-dev-server`. Recovery
+  = stop dev → `rm -rf .next` → `pnpm dev`. Prod (separate port) was clean, proving the code.
+- **Browser QA (Playwright, prod `pnpm start`):**
+  - PUBLIC routes (`/`, `/login`, `/sign-up`, `/password-reset`, `/privacy`, `/terms`) × ko/en/vi =
+    **18/18**: correct-language render, `<html lang>` switches via `NEXT_LOCALE` cookie, 0 errors.
+  - AUTHED workspace routes (student session, profile `ui_locale` flipped en/vi via service role,
+    restored to ko after): **11/11 in en AND 11/11 in vi** — dashboard/practice/writing/library/
+    growth/profile/settings/subscription/paywall/onboarding all render in the right language, 0 errors.
+  - Translation completeness static check: of 1318 leaves, only `settings.language.optionKo`
+    ("한국어 (Korean)") is intentionally ko in en/vi → zero accidental untranslated strings.
+- **FOUND + FIXED a real (pre-existing) hydration bug — React #418 on `/dashboard`:** the KPI
+  "업데이트: {time}" formatted via `toLocaleString("ko-KR", {hour…})`. Node's ICU renders the ko-KR
+  day-period as "PM"/"AM" while the browser renders "오후"/"오전" → text mismatch. ALSO timezone-
+  dependent. Fix: pin `timeZone: "Asia/Seoul"` + `hour12: false` (24h, no day-period) → deterministic
+  across server+client. Verified: `/dashboard` now 0 errors in ko AND en. NOT introduced by the i18n
+  string work (the date calls were unchanged by it). Files: `DashboardKpiSummary.tsx`,
+  `RecentFeedbackCard.tsx` (tz pin; date-only), and preventively the same proven pattern in
+  `DiagnosticCard.tsx` + `NotificationPrefsForm.tsx` (conditional renders, not browser-reproduced).
+- Seed-data note: dashboard recommendation RSC prefetches 404 on problem UUIDs not in the test DB
+  (`33333333…`, `22222222…`) — environment data gap, not a code bug.
+
+- QA Gate (this verification phase): **PASSED (browser-verified)** | Playwright over prod build:
+  public 18/18 (ko/en/vi) + authed 11/11 (en) + 11/11 (vi), 0 page/console/5xx errors after the
+  #418 fix; typecheck 0, lint 0 err, unit test 570 pass/3 skip | RESIDUAL: live locale-switch via the
+  in-app settings UI (router.refresh path) was exercised via cookie/profile, not the Save button;
+  vi copy + legal copy still need native/legal review; the owner's own `next dev` needs the `.next`
+  recovery (couldn't restart their process from here).
+
 ## Ledger/File-State Consistency
 
 - Files changed match accepted scope: yes. Wave 3 = 32 source files (writing/feedback/reports
