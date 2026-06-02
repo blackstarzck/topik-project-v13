@@ -9,9 +9,12 @@
 - Host: Claude Code
 - Parent run: `docs/ai-workflow/runs/2026/06/01/20260601-1701-ia-remediation-full-ceremony.md`
 - Resume source: `reports/ia-verification/runs/20260601-120308/handoffs/20260602-RESUME-fresh-session.md`
-- Status: Phase A landed (4c41921). Phase B (admin) BUILT then REVERTED per owner scope
-  correction — admin is OUT OF SCOPE for this repo (see `docs/admin-scope-boundary.md`).
-  Phase C (i18n) deferred. Net active deliverables: Phase A + admin scope-boundary directive.
+- Status: paused — resume via `reports/ia-verification/runs/20260601-120308/handoffs/20260602-RESUME-2-scope-corrected-i18n.md`.
+  Net deliverables this session: (1) cleanup `4c41921`; (2) admin OUT-OF-SCOPE boundary +
+  consistency METHOD pinned (`20f8b0d`/`fd91474`/`4b28335`) — Phase B admin build was reverted
+  (`f9eee78`); (3) i18n waves 1-2 done (auth/dashboard/practice, `45a3f02`/`c83c789`). GREEN at
+  `c83c789` (typecheck 0, lint 0 err, 509 tests pass). ACTIVE next = i18n wave 3 (writing/
+  feedback/reports + library + growth + ...). Admin = frozen/out-of-scope.
 
 ## Task
 
