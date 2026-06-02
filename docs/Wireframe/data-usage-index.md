@@ -6,9 +6,9 @@
 
 - Pages: 39
 - Tables: 17
-- RPC/functions: 18
+- RPC/functions: 19
 - Storage buckets: 3
-- Page data links: 125
+- Page data links: 126
 - Unclassified DB objects: 0
 
 ## admin_audit_logs
@@ -206,6 +206,12 @@
 | --- | --- | --- | --- | --- | --- |
 | A-01 | Sign-up | rpc | - | trigger | auth.users 생성 후 public.profiles를 보강한다. |
 | X-12 | Auth verify-email | rpc | - | trigger | 가입 직후 프로필 row 생성을 보장한다. |
+
+## public.list_user_problems
+
+| IA | Screen | Type | Columns/fields | Usage | Page feature |
+| --- | --- | --- | --- | --- | --- |
+| C-02 | Problem list | rpc | `filter` jsonb(domain/topik_level/question_no/difficulty/status/search), `sort`, `page`, `page_size` → rows + `total_count` | rpc | 필터·정렬·페이지에 맞는 문제 목록과 정확한 총 건수를 SQL에서 계산한다. SECURITY INVOKER라 호출자 RLS(auth.uid()) 범위에서 실행된다. |
 
 ## public.submit_writing_with_feedback
 

@@ -26,6 +26,7 @@
 
 ## 현재 구현 상태
 
+- 문제 목록은 `list_user_problems` RPC(SECURITY INVOKER)로 조회한다. 상태 필터(풀이완료/시도/미시도)와 총 건수를 SQL에서 계산하므로 필터된 결과의 페이지 번호가 정확하다.
 - problem_assets와 문제 공개 상태가 표시 규칙에 포함된다.
 - 실제 구현 여부는 `src/**`, IA 감사 산출물, 이 문서의 DB 근거를 함께 확인한다.
 
@@ -42,6 +43,7 @@
 
 | 테이블/버킷/RPC | 컬럼/필드 | 사용 방식 | 화면 기능 | 권한/RLS | 근거 | 불확실성 |
 | --- | --- | --- | --- | --- | --- | --- |
+| `list_user_problems` (RPC) | `filter`(domain/topik_level/question_no/difficulty/status/search), `sort`, `page`, `page_size` → rows + `total_count` | read (rpc) | 문제 목록의 필터·정렬·페이지네이션과 정확한 총 건수 계산. 풀이/제출 상태를 함께 반환해 카드 상태·재도전 딥링크에 쓴다. | SECURITY INVOKER — 호출자 RLS(auth.uid()) 범위에서 실행 | `supabase/migrations/20260602120400_admin_and_user_rpcs.sql`<br>`src/components/practice/problem-list-data.ts` | none |
 | `problems` | `id`, `domain`, `question_no`, `topik_level`, `difficulty`, `title`, `prompt`, `tags`, `publish_status`, `visibility` | read | 문제 목록, 필터, 정렬, 상세 진입에 사용한다. | authenticated user; auth.uid() owner RLS where user-owned | `src/lib/admin/queries.ts`<br>`src/lib/admin/server.ts`<br>`src/lib/library/queries.ts`<br>`src/lib/library/server.ts`<br>`src/lib/practice/next.ts` | none |
 | `problem_assets` | `problem_id`, `storage_path`, `asset_type`, `sort_order` | read | 문제 자료 이미지/오디오를 연결한다. | authenticated user; auth.uid() owner RLS where user-owned | `supabase/migrations/20260520120200_problems.sql` | none |
 | `problem_attempts` | `problem_id`, `status`, `is_correct`, `bookmarked`, `time_spent_seconds` | read/write | 풀이 이력, 재도전, 북마크 상태에 사용한다. | authenticated user; auth.uid() owner RLS where user-owned | `src/lib/practice/next.ts`<br>`supabase/migrations/20260520120300_attempts.sql`<br>`tests/integration/rls-smoke.test.ts` | none |
@@ -69,6 +71,8 @@
 - Evidence: `src/lib/practice/queries.ts`
 - Evidence: `src/lib/practice/weakness.ts`
 - Evidence: `src/lib/writing/server.ts`
+- Evidence: `src/components/practice/problem-list-data.ts`
+- Evidence: `supabase/migrations/20260602120400_admin_and_user_rpcs.sql`
 - Evidence: `supabase/migrations/20260520120200_problems.sql`
 - Evidence: `supabase/migrations/20260520120300_attempts.sql`
 - Evidence: `tests/integration/rls-smoke.test.ts`

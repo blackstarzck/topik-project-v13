@@ -12,6 +12,15 @@ export default defineConfig({
   },
   test: {
     setupFiles: ["./tests/setup.ts"],
+    // Integration tests dynamically import full server-component module graphs
+    // (antd + page + all deps) and render them. Under parallel worker load —
+    // e.g. consecutive full-suite runs or CI contention — that import+render
+    // occasionally exceeds the vitest 5s default, producing flaky ~5007ms
+    // timeouts in otherwise-passing tests (observed across writing-flow /
+    // learning-flow / admin-role-matrix, only on a load-saturated run). The
+    // headroom removes the false positive without masking a real deadlock,
+    // which would still hang to this ceiling.
+    testTimeout: 20000,
     include: ["tests/**/*.{test,spec}.{ts,tsx}"],
     exclude: [
       "node_modules/**",
