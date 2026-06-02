@@ -9,6 +9,19 @@ This project has project-local installs only:
 
 At the start of every conversation or task, invoke `using-superpowers`. Before work begins, check the relevant GStack and Superpowers skills. For GStack in Claude Code, use the short skill names such as `office-hours`, `plan-eng-review`, `review`, `qa`, and `ship`.
 
+## Scope Boundary — Admin (READ FIRST)
+
+**This repo is the USER-FACING app. Do NOT build, extend, or "remediate" admin
+features here right now.** Admin (IA codes **H-01, X-08, X-10, X-15**) has a
+separate source-of-truth implementation in a different local folder; the data
+schema was designed admin-first, so **user-facing screens reconcile TO the
+existing schema** (do not add admin-oriented schema/migrations). Admin ↔ this-repo
+sync is a deliberate LATER phase, after user-facing screens are complete, using
+the existing admin docs. **This directive supersedes any handoff / IA-audit text
+that lists admin screens as in-scope.** Do not delete the existing admin code
+either (it is a self-contained, frozen island). Full detail + the current
+admin-code investigation: [`docs/admin-scope-boundary.md`](docs/admin-scope-boundary.md).
+
 ## Project State
 
 This repository now has a foundation implementation. `src/` and `package.json`

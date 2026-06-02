@@ -9,7 +9,9 @@
 - Host: Claude Code
 - Parent run: `docs/ai-workflow/runs/2026/06/01/20260601-1701-ia-remediation-full-ceremony.md`
 - Resume source: `reports/ia-verification/runs/20260601-120308/handoffs/20260602-RESUME-fresh-session.md`
-- Status: in_progress
+- Status: Phase A landed (4c41921). Phase B (admin) BUILT then REVERTED per owner scope
+  correction — admin is OUT OF SCOPE for this repo (see `docs/admin-scope-boundary.md`).
+  Phase C (i18n) deferred. Net active deliverables: Phase A + admin scope-boundary directive.
 
 ## Task
 
@@ -64,6 +66,12 @@
 | 2026-06-02T13:20Z | Phase A: 2 doc edits applied (list_user_problems) | data-usage-index RPC count 18→19 + page-data-links 125→126 + new `public.list_user_problems` section; C-02 functional-spec DB-table row + 구현상태 note + 2 Evidence lines | `problem-list-data.ts`, migration 20260602120400 |
 | 2026-06-02T13:30Z | Flaky test ROOT CAUSE = load-induced timeout, NOT unhandled rejection (handoff misdiagnosed) | Reproduced on pass 3/4: 3 unrelated files (writing-flow/learning-flow/admin-role-matrix) ALL timed out at ~5007ms simultaneously. `learning-flow > redirects when no goal` has only immediately-resolved mocks yet timed out at 5s → only possible via worker event-loop starvation under parallel load, not a logic bug. Matches memory lesson `project-ia-audit-dev-server-degradation`. | repro loop bx9q64ne5 |
 | 2026-06-02T13:35Z | Fix = vitest `testTimeout: 20000` (was 5s default) | Heavy integration tests import full server-component module graphs + render under parallel load; 5s too tight. 20s removes false positive WITHOUT masking a real deadlock (which would still hang to ceiling). Verified: 6/6 clean passes post-fix (vs 1/4 fail pre-fix), +earlier 4-pass repro = 10 post-fix passes, 0 recurrence. | repro loop behf8x8i7 |
+| 2026-06-02T13:40Z | Phase A committed (4c41921) | clean verified unit (typecheck 0/lint 0/502 pass) | git |
+| 2026-06-02T14:xx | Phase B (admin X-08/X-10 migration + wiring) BUILT then committed (0ac3c9c) | followed handoff roadmap + docs/Wireframe X-08/X-10 + prior-session "full build incl org tables" mandate; codex SQL review (no P1); regression (create_organization unclassified) caught + fixed | this run |
+| 2026-06-02T15:00Z | **SCOPE CORRECTION (owner): admin is OUT OF SCOPE for this repo** | Owner: real admin is implemented in a SEPARATE local folder; schema was admin-first; this repo = user-facing, screens reconcile TO the schema; admin↔repo sync is a LATER phase using existing admin docs. Supersedes handoff/IA-audit "full build incl admin". | user |
+| 2026-06-02T15:05Z | Phase B REVERTED (0ac3c9c → revert f9eee78); migration never applied | Phase B was admin extension + admin-oriented migration = directly against the corrected scope. Revert is safe (admin is a self-contained island; Phase A untouched). Post-revert verified GREEN (typecheck 0, 502 pass = exact Phase A state). | this run |
+| 2026-06-02T15:10Z | Admin code investigation → direction = FREEZE (don't extend, don't delete) | grep: ZERO non-admin src imports `@/components/admin`/`@/lib/admin`/admin-guard → UI/lib/routes are a self-contained island. Admin SCHEMA (profiles.app_role / admin_audit_logs / private.is_*_admin) is foundational/shared → cannot remove. App side-nav links admin routes (role-gated) → if ever removed, drop nav entries too. Recent NET-NEW org schema (20260602120300, applied to dev by prior session) is unused by user features → review during sync phase. | this run |
+| 2026-06-02T15:15Z | Directive EMBEDDED in project | New `docs/admin-scope-boundary.md` (full detail + investigation) + CLAUDE.md "Scope Boundary — Admin (READ FIRST)" + AGENTS.md Non-Negotiable Rules bullet + memory `project-admin-scope-boundary`. | this run |
 
 ## Active Files
 
@@ -88,6 +96,20 @@
   Deletions orphaned nothing (typecheck clean).
 - Cross-model review: pending (Claude reviewer for Korean-copy-touching i18n per
   `codex-review-mojibake-windows`; codex acceptable for ASCII SQL/test-infra).
+
+## Ledger/File-State Consistency
+
+- Files changed match accepted scope: yes. Phase A (cleanup) landed (4c41921). Phase B (admin
+  X-08/X-10 + migration) was built (0ac3c9c) then REVERTED (f9eee78) per the owner scope
+  correction; admin migration was never applied. Admin scope-boundary directive added
+  (CLAUDE.md / AGENTS.md / `docs/admin-scope-boundary.md`).
+- Docs consulted match implemented behavior: yes (Phase A doc edits reflect list_user_problems;
+  admin investigation reflects verified coupling state).
+- Child result packets integrated: yes — the two Phase B wiring agents' packets were reviewed,
+  cross-checked (live X-10 surface confirmed = AdminUsersConsole), verified GREEN, committed,
+  then the whole commit reverted on scope correction.
+- Verification state current: yes — post-revert typecheck 0, lint 0 errors, test 502 passed/3 skipped.
+- Remaining risks listed: yes.
 
 ## Risks And Follow-Up
 

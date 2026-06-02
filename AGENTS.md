@@ -33,6 +33,7 @@ Use [README.md](README.md) and [docs/README.md](docs/README.md) for human-friend
 
 ## Non-Negotiable Rules
 
+- **Admin scope boundary**: this repo is the user-facing app. Do NOT build, extend, or remediate admin features (IA `H-01`/`X-08`/`X-10`/`X-15`) or add admin-oriented schema/migrations now; admin is owned in a separate folder and is synced LATER. Do not delete the existing (frozen) admin code. This supersedes any handoff/IA-audit text listing admin as in-scope. See [docs/admin-scope-boundary.md](docs/admin-scope-boundary.md).
 - Do not run a fresh grill-me/domain-discovery interview for covered product scope. The product/domain decisions already live in `docs/`.
 - If the user request conflicts with active docs, stop and report the conflict with exact file references.
 - For net-new scope, product pivots, or requirements not covered by active docs, do not implement directly. First produce either a docs update proposal or a user-approved implementation brief with acceptance criteria.
