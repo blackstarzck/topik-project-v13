@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Card, Empty, Space, Tag, Typography } from "antd";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 const { Paragraph, Text } = Typography;
@@ -36,10 +37,12 @@ type Props = {
   alternatives: DashboardAlternative[];
 };
 
-const SOURCE_LABEL: Record<DashboardPrimary["source"], string> = {
-  recommendation: "맞춤 추천",
-  same_question_no: "이어서 같은 유형",
-  random: "오늘의 추천",
+// 출처(source) → 카탈로그 키 매핑. 모듈 스코프라 t()를 호출할 수 없으므로
+// 안정적인 키만 보관하고, 컴포넌트에서 t(SOURCE_LABEL_KEY[source])로 해석한다.
+const SOURCE_LABEL_KEY: Record<DashboardPrimary["source"], string> = {
+  recommendation: "sourceRecommendation",
+  same_question_no: "sourceSameQuestionNo",
+  random: "sourceRandom",
 };
 
 function truncate(title: string, max = 28): string {
@@ -47,18 +50,21 @@ function truncate(title: string, max = 28): string {
 }
 
 export function DashboardRecommendations({ primary, alternatives }: Props) {
+  const t = useTranslations("dashboard.recommendations");
   // 기본 3개/최대 5개: primary 1 + alternatives 최대 4 → 총 5개 이하.
   const altList = alternatives.slice(0, 4);
 
   return (
     <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-      <Card title="이어 풀 문제">
+      <Card title={t("continueCardTitle")}>
         {primary ? (
           <Space direction="vertical" size="small" style={{ width: "100%" }}>
             <Space size={8} wrap>
-              <Tag color="geekblue">{SOURCE_LABEL[primary.source]}</Tag>
+              <Tag color="geekblue">
+                {t(SOURCE_LABEL_KEY[primary.source] as Parameters<typeof t>[0])}
+              </Tag>
               {primary.questionNo != null ? (
-                <Tag>{primary.questionNo}번 문항</Tag>
+                <Tag>{t("questionNoTag", { questionNo: primary.questionNo })}</Tag>
               ) : null}
             </Space>
             <Text strong>{truncate(primary.title)}</Text>
@@ -72,27 +78,27 @@ export function DashboardRecommendations({ primary, alternatives }: Props) {
               </Paragraph>
             ) : (
               <Paragraph type="secondary" style={{ margin: 0 }}>
-                최근 학습 흐름을 따라가는 추천이에요.
+                {t("defaultReason")}
               </Paragraph>
             )}
             <Link href={`/practice/problems/${primary.problemId}` as never}>
               <Button type="primary" block>
-                이어 풀기
+                {t("continueButton")}
               </Button>
             </Link>
           </Space>
         ) : (
-          <Empty description="이어 풀 문제가 아직 없어요. 추천에서 새 문제를 골라보세요.">
+          <Empty description={t("continueEmpty")}>
             <Link href="/practice/recommendations">
-              <Button type="primary">추천 보기</Button>
+              <Button type="primary">{t("viewRecommendations")}</Button>
             </Link>
           </Empty>
         )}
       </Card>
 
-      <Card title="추천 유형">
+      <Card title={t("typesCardTitle")}>
         {altList.length === 0 ? (
-          <Empty description="추천 유형이 아직 없어요. 글쓰기를 제출하면 맞춤 추천이 생겨요." />
+          <Empty description={t("typesEmpty")} />
         ) : (
           <Space direction="vertical" size="small" style={{ width: "100%" }}>
             {altList.map((alt) => (
@@ -104,13 +110,13 @@ export function DashboardRecommendations({ primary, alternatives }: Props) {
                   <Space direction="vertical" size={2}>
                     <Tag color="blue">
                       {alt.questionNo != null
-                        ? `${alt.questionNo}번 문항`
-                        : "추천"}
+                        ? t("questionNoTag", { questionNo: alt.questionNo })
+                        : t("recommendTag")}
                     </Tag>
                     <Text strong>{truncate(alt.title)}</Text>
                   </Space>
                   <Link href={`/practice/problems/${alt.problemId}` as never}>
-                    <Button>풀기</Button>
+                    <Button>{t("solveButton")}</Button>
                   </Link>
                 </Space>
               </Card>

@@ -1,13 +1,14 @@
 "use client";
 
 import { Input, Select, Space, Switch, Typography } from "antd";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import type {
   ProblemFilter,
   ProblemSort,
   SolveStatusFilter,
 } from "@/lib/practice/types";
-import { validateSearch } from "./problem-list-data";
+import { validateSearch, type SearchReasonKey } from "./problem-list-data";
 
 const { Text } = Typography;
 
@@ -24,19 +25,24 @@ export function ProblemListControls({
   onFilterChange,
   onSortChange,
 }: Props) {
+  const t = useTranslations("practice.problems");
   const [searchInput, setSearchInput] = useState(filter.search ?? "");
   // description.md §3 예외 — 금칙어/길이 오류는 검색창 하단에 안내.
-  const [searchError, setSearchError] = useState<string | null>(null);
+  // i18n: validateSearch (data module) returns a stable reasonKey; resolve it
+  // here against the practice.problems namespace.
+  const [searchErrorKey, setSearchErrorKey] = useState<SearchReasonKey | null>(
+    null,
+  );
 
   useEffect(() => {
     const handle = window.setTimeout(() => {
       const result = validateSearch(searchInput);
       if (!result.ok) {
         // 유효하지 않은 검색어는 커밋하지 않고 하단 안내만 표시 (§3).
-        setSearchError(result.reason);
+        setSearchErrorKey(result.reasonKey);
         return;
       }
-      setSearchError(null);
+      setSearchErrorKey(null);
       if ((filter.search ?? "") !== result.value) {
         onFilterChange({ ...filter, search: result.value });
       }
@@ -49,20 +55,20 @@ export function ProblemListControls({
     <Space wrap size="middle" style={{ width: "100%" }} align="start">
       <div>
         <Input.Search
-          placeholder="제목 또는 키워드 (2-40자)"
+          placeholder={t("searchPlaceholder")}
           allowClear
-          status={searchError ? "error" : undefined}
+          status={searchErrorKey ? "error" : undefined}
           style={{ width: 240 }}
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
-          aria-label="문제 검색"
+          aria-label={t("searchAria")}
         />
-        {searchError ? (
+        {searchErrorKey ? (
           <Text
             type="danger"
             style={{ display: "block", fontSize: 12, marginTop: 4 }}
           >
-            {searchError}
+            {t(searchErrorKey)}
           </Text>
         ) : null}
       </div>
@@ -76,10 +82,10 @@ export function ProblemListControls({
           })
         }
         options={[
-          { value: "any", label: "난이도 전체" },
+          { value: "any", label: t("difficultyAll") },
           ...Array.from({ length: 5 }, (_, i) => ({
             value: String(i + 1),
-            label: `난이도 ${i + 1}`,
+            label: t("difficultyLevel", { level: i + 1 }),
           })),
         ]}
       />
@@ -88,17 +94,17 @@ export function ProblemListControls({
         style={{ width: 160 }}
         onChange={(value) => onSortChange(value as ProblemSort)}
         options={[
-          { value: "newest", label: "최신순" },
-          { value: "oldest", label: "오래된순" },
-          { value: "difficulty-asc", label: "난이도 낮은순" },
-          { value: "difficulty-desc", label: "난이도 높은순" },
+          { value: "newest", label: t("sortNewest") },
+          { value: "oldest", label: t("sortOldest") },
+          { value: "difficulty-asc", label: t("sortDifficultyAsc") },
+          { value: "difficulty-desc", label: t("sortDifficultyDesc") },
         ]}
       />
       {/* Phase 7-D Task 12 (P1-8) — IA 4 filter 완전화 */}
       <Select
         value={filter.solveStatus ?? "all"}
         style={{ width: 140 }}
-        aria-label="풀이 상태 필터"
+        aria-label={t("solveStatusAria")}
         onChange={(value) =>
           onFilterChange({
             ...filter,
@@ -106,10 +112,10 @@ export function ProblemListControls({
           })
         }
         options={[
-          { value: "all", label: "풀이 전체" },
-          { value: "unsolved", label: "안 풀음" },
-          { value: "inProgress", label: "진행 중" },
-          { value: "solved", label: "완료" },
+          { value: "all", label: t("solveAll") },
+          { value: "unsolved", label: t("solveUnsolved") },
+          { value: "inProgress", label: t("solveInProgress") },
+          { value: "solved", label: t("solveSolved") },
         ]}
       />
       <Space size={6}>
@@ -118,9 +124,9 @@ export function ProblemListControls({
           onChange={(checked) =>
             onFilterChange({ ...filter, recommended: checked })
           }
-          aria-label="추천 문제만 보기"
+          aria-label={t("recommendedOnlyAria")}
         />
-        <Text>추천만</Text>
+        <Text>{t("recommendedOnly")}</Text>
       </Space>
     </Space>
   );

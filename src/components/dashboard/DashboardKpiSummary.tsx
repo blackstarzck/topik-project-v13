@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Card, Col, Row, Space, Statistic, Typography } from "antd";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 const { Text } = Typography;
@@ -30,6 +31,7 @@ type Props = {
 };
 
 export function DashboardKpiSummary({ kpi }: Props) {
+  const t = useTranslations("dashboard.kpi");
   const isNewUser =
     kpi.todayAttempts === 0 &&
     kpi.totalAttempts === 0 &&
@@ -53,14 +55,11 @@ export function DashboardKpiSummary({ kpi }: Props) {
           style={{ width: "100%", textAlign: "center" }}
         >
           <Text strong style={{ fontSize: 16 }}>
-            첫 학습을 시작해 볼까요?
+            {t("newUserTitle")}
           </Text>
-          <Text type="secondary">
-            문제를 풀고 글쓰기를 제출하면 오늘 제출·최근 첨삭·목표 달성 지표가
-            여기에 채워져요.
-          </Text>
+          <Text type="secondary">{t("newUserBody")}</Text>
           <Link href="/practice/recommendations">
-            <Button type="primary">추천 문제로 시작하기</Button>
+            <Button type="primary">{t("newUserCta")}</Button>
           </Link>
         </Space>
       </Card>
@@ -72,22 +71,26 @@ export function DashboardKpiSummary({ kpi }: Props) {
       <Row gutter={[16, 16]}>
         <Col xs={12} md={6}>
           <Card size="small" style={{ height: "100%" }}>
-            <Statistic title="오늘 제출" value={kpi.todayAttempts} suffix="회" />
-          </Card>
-        </Col>
-        <Col xs={12} md={6}>
-          <Card size="small" style={{ height: "100%" }}>
             <Statistic
-              title="최근 첨삭"
-              value={kpi.recentFeedbackCount}
-              suffix="건"
+              title={t("todaySubmissionsTitle")}
+              value={kpi.todayAttempts}
+              suffix={t("todaySubmissionsSuffix")}
             />
           </Card>
         </Col>
         <Col xs={12} md={6}>
           <Card size="small" style={{ height: "100%" }}>
             <Statistic
-              title="목표 달성"
+              title={t("recentFeedbackTitle")}
+              value={kpi.recentFeedbackCount}
+              suffix={t("recentFeedbackSuffix")}
+            />
+          </Card>
+        </Col>
+        <Col xs={12} md={6}>
+          <Card size="small" style={{ height: "100%" }}>
+            <Statistic
+              title={t("goalAchievementTitle")}
               value={kpi.goalAchievementPct != null ? kpi.goalAchievementPct : "—"}
               suffix={kpi.goalAchievementPct != null ? "%" : undefined}
             />
@@ -95,12 +98,16 @@ export function DashboardKpiSummary({ kpi }: Props) {
         </Col>
         <Col xs={12} md={6}>
           <Card size="small" style={{ height: "100%" }}>
-            <Statistic title="연속 학습" value={kpi.streakDays} suffix="일" />
+            <Statistic
+              title={t("streakTitle")}
+              value={kpi.streakDays}
+              suffix={t("streakSuffix")}
+            />
           </Card>
         </Col>
       </Row>
       <Text type="secondary" style={{ fontSize: 12 }}>
-        업데이트: {updatedLabel} 기준
+        {t("updatedAt", { time: updatedLabel })}
       </Text>
     </Space>
   );

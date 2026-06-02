@@ -204,23 +204,35 @@ const FORBIDDEN_SEARCH_PATTERNS: RegExp[] = [
   /[<>]/,
 ];
 
+/**
+ * i18n: this is a "use client" data/hook module, NOT a React component, so it
+ * cannot call `useTranslations`. Instead of returning a localized string,
+ * `validateSearch` returns a stable `reasonKey` that the consuming component
+ * (ProblemListControls) resolves via `t(reasonKey)` against the
+ * `practice.problems` namespace. The key set is fixed below.
+ */
+export type SearchReasonKey =
+  | "searchTooShort"
+  | "searchTooLong"
+  | "searchForbidden";
+
 export type SearchValidation =
   | { ok: true; value: string }
-  | { ok: false; reason: string };
+  | { ok: false; reasonKey: SearchReasonKey };
 
 export function validateSearch(raw: string): SearchValidation {
   const value = raw.trim();
   if (value.length === 0) return { ok: true, value: "" };
   if (value.length < 2) {
-    return { ok: false, reason: "검색어는 2자 이상 입력해 주세요." };
+    return { ok: false, reasonKey: "searchTooShort" };
   }
   if (value.length > 40) {
-    return { ok: false, reason: "검색어는 40자 이하로 입력해 주세요." };
+    return { ok: false, reasonKey: "searchTooLong" };
   }
   if (FORBIDDEN_SEARCH_PATTERNS.some((re) => re.test(value))) {
     return {
       ok: false,
-      reason: "사용할 수 없는 문자가 포함되어 있어요. 제목·키워드만 입력해 주세요.",
+      reasonKey: "searchForbidden",
     };
   }
   return { ok: true, value };

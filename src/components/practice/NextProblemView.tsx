@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Card, Empty, Space, Tag, Typography } from "antd";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { logStudyEvent } from "@/lib/events/study-events";
@@ -11,50 +12,24 @@ import { AlternativeCardsGrid } from "./AlternativeCardsGrid";
 
 const { Title, Paragraph, Text } = Typography;
 
-type TierMeta = {
-  badge: string;
-  color: string;
-  description: string;
+/** tier → { badge key, color, description key } in the practice.next namespace. */
+const TIER_META: Record<
+  1 | 2 | 3,
+  { badgeKey: string; color: string; descriptionKey: string }
+> = {
+  1: { badgeKey: "tier1Badge", color: "gold", descriptionKey: "tier1Desc" },
+  2: { badgeKey: "tier2Badge", color: "blue", descriptionKey: "tier2Desc" },
+  3: { badgeKey: "tier3Badge", color: "green", descriptionKey: "tier3Desc" },
 };
 
-const TIER_META: Record<1 | 2 | 3, TierMeta> = {
-  1: {
-    badge: "추천",
-    color: "gold",
-    description: "선생님이 추천한 문제예요.",
-  },
-  2: {
-    badge: "이어서",
-    color: "blue",
-    description: "방금 푼 문항과 같은 유형으로 계속 풀어볼까요?",
-  },
-  3: {
-    badge: "탐색",
-    color: "green",
-    description: "오늘 처음 만나는 문제예요.",
-  },
-};
-
-const QUESTION_TYPE_LABELS: Record<number, string> = {
-  51: "51번 단답",
-  52: "52번 문장 완성",
-  53: "53번 장문",
-  54: "54번 에세이",
-};
-
-function questionTypeLabel(questionNo: number | null | undefined): string | null {
-  if (questionNo == null) return null;
-  return QUESTION_TYPE_LABELS[questionNo] ?? `${questionNo}번 문항`;
-}
-
-/** problems.difficulty (1..5 가정) → 한국어 라벨. null → null. */
-function difficultyLabel(difficulty: number | null | undefined): string | null {
+/** maps difficulty (1..5) to a practice.common translation key. */
+function difficultyKey(difficulty: number | null | undefined): string | null {
   if (difficulty == null) return null;
-  if (difficulty <= 1) return "쉬움";
-  if (difficulty === 2) return "조금 쉬움";
-  if (difficulty === 3) return "보통";
-  if (difficulty === 4) return "조금 어려움";
-  return "어려움";
+  if (difficulty <= 1) return "difficultyVeryEasy";
+  if (difficulty === 2) return "difficultyEasy";
+  if (difficulty === 3) return "difficultyNormal";
+  if (difficulty === 4) return "difficultyHardish";
+  return "difficultyHard";
 }
 
 type Props = {
@@ -70,8 +45,21 @@ type SelectedTarget = {
 };
 
 export function NextProblemView({ bundle }: Props) {
+  const t = useTranslations("practice.next");
+  const tCommon = useTranslations("practice.common");
   const router = useRouter();
   const { primary, primaryTier, summary, alternatives } = bundle;
+
+  // 51/52/53/54 → detailed label; other → "N번 문항" fallback (practice.common).
+  function questionTypeLabel(
+    questionNo: number | null | undefined,
+  ): string | null {
+    if (questionNo == null) return null;
+    if (questionNo === 51 || questionNo === 52 || questionNo === 53 || questionNo === 54) {
+      return tCommon(`questionType${questionNo}`);
+    }
+    return tCommon("questionItem", { no: questionNo });
+  }
 
   // 대표 추천이 있으면 기본 선택은 대표. 없으면(만료/없음) 첫 unlocked 대안으로 포커스.
   const firstUnlockedAlt = alternatives.find((a) => !a.locked) ?? null;
@@ -148,12 +136,12 @@ export function NextProblemView({ bundle }: Props) {
           estimatedMinutes={primary?.estimatedMinutes ?? null}
           recommendedType={recommendedType}
         />
-        <Empty description="더 추천할 문제가 없습니다.">
+        <Empty description={t("emptyNoMore")}>
           <Button
             type="primary"
             onClick={() => router.push("/practice/problems" as never)}
           >
-            문제 목록 보기
+            {t("viewProblemList")}
           </Button>
         </Empty>
       </Space>
@@ -161,12 +149,18 @@ export function NextProblemView({ bundle }: Props) {
   }
 
   const meta = primary ? TIER_META[primaryTier as 1 | 2 | 3] : null;
-  const reason = primary?.reason ?? meta?.description ?? null;
-  const diffLabel = difficultyLabel(primary?.difficulty);
+  const reason =
+    primary?.reason ??
+    (meta ? t(meta.descriptionKey as Parameters<typeof t>[0]) : null) ??
+    null;
+  const diffKey = difficultyKey(primary?.difficulty);
+  const diffLabel = diffKey
+    ? tCommon(diffKey as Parameters<typeof tCommon>[0])
+    : null;
   const estMinutes = primary?.estimatedMinutes ?? null;
   const selectionLabel = selected
-    ? `${questionTypeLabel(selected.questionNo) ?? "선택한 문제"}${
-        selected.source === "next_alternative" ? " (대안)" : ""
+    ? `${questionTypeLabel(selected.questionNo) ?? t("selectedProblem")}${
+        selected.source === "next_alternative" ? ` ${t("alternativeSuffix")}` : ""
       }`
     : null;
 
@@ -188,10 +182,10 @@ export function NextProblemView({ bundle }: Props) {
         <>
           <div>
             <Title level={3} style={{ marginBottom: 4 }}>
-              다음 문제
+              {t("heading")}
             </Title>
             <Paragraph type="secondary" style={{ margin: 0 }}>
-              이어 풀기 좋은 문제를 추천해 드릴게요.
+              {t("subtitle")}
             </Paragraph>
           </div>
 
@@ -207,9 +201,13 @@ export function NextProblemView({ bundle }: Props) {
             title={
               <Space wrap>
                 <Tag color={meta.color} data-testid="next-problem-badge">
-                  {meta.badge}
+                  {t(meta.badgeKey as Parameters<typeof t>[0])}
                 </Tag>
-                <span>{primary.questionNo ?? "—"}번 문항</span>
+                <span>
+                  {primary.questionNo != null
+                    ? tCommon("questionItem", { no: primary.questionNo })
+                    : tCommon("questionItemUnknown")}
+                </span>
               </Space>
             }
             extra={
@@ -221,7 +219,7 @@ export function NextProblemView({ bundle }: Props) {
                   handleStart(primaryTarget() ?? undefined);
                 }}
               >
-                시작하기
+                {t("startProblem")}
               </Button>
             }
           >
@@ -229,10 +227,17 @@ export function NextProblemView({ bundle }: Props) {
               {/* R-02 §2 제약 — 난이도/시간 배지 필수. */}
               <Space wrap data-testid="next-problem-badges">
                 <Tag color="purple">
-                  난이도: {diffLabel ?? "정보 없음"}
+                  {t("difficultyBadge", {
+                    value: diffLabel ?? t("noInfo"),
+                  })}
                 </Tag>
                 <Tag color="cyan">
-                  예상 시간: {estMinutes != null ? `${estMinutes}분` : "정보 없음"}
+                  {t("estimatedTimeBadge", {
+                    value:
+                      estMinutes != null
+                        ? tCommon("minutes", { minutes: estMinutes })
+                        : t("noInfo"),
+                  })}
                 </Tag>
               </Space>
               <Text strong>
@@ -258,10 +263,10 @@ export function NextProblemView({ bundle }: Props) {
         // primary 만료/없음 → 대안에 포커스했음을 안내.
         <div>
           <Title level={3} style={{ marginBottom: 4 }}>
-            다음 문제
+            {t("heading")}
           </Title>
           <Paragraph type="secondary" style={{ margin: 0 }}>
-            대표 추천 문제가 만료되어 아래 대안 중에서 골라드렸어요.
+            {t("primaryExpired")}
           </Paragraph>
         </div>
       )}
@@ -292,8 +297,8 @@ export function NextProblemView({ bundle }: Props) {
       >
         <Text style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {selectionLabel
-            ? `선택: ${selectionLabel}`
-            : "시작할 문제를 선택하세요"}
+            ? t("selectionLabel", { selection: selectionLabel })
+            : t("selectionPrompt")}
         </Text>
         <Button
           type="primary"
@@ -303,7 +308,7 @@ export function NextProblemView({ bundle }: Props) {
           onClick={() => handleStart()}
           data-testid="next-start-cta"
         >
-          학습 시작
+          {t("startLearning")}
         </Button>
       </div>
     </Space>

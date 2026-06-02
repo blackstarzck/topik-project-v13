@@ -1,6 +1,7 @@
 "use client";
 
 import { Alert, Button, Card, Empty, Space } from "antd";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -24,15 +25,16 @@ type Props = {
  * 예외: 알림 로드 실패 시 재시도와 설정 이동 CTA 제공.
  */
 export function DashboardAlertsCard({ alerts, loadFailed = false }: Props) {
+  const t = useTranslations("dashboard.alerts");
   const router = useRouter();
 
   return (
     <Card
-      title="알림"
+      title={t("cardTitle")}
       extra={
         <Link href="/settings/notifications">
           <Button type="link" size="small">
-            알림 설정
+            {t("settingsLink")}
           </Button>
         </Link>
       }
@@ -42,20 +44,20 @@ export function DashboardAlertsCard({ alerts, loadFailed = false }: Props) {
           <Alert
             type="warning"
             showIcon
-            message="알림을 불러오지 못했어요."
-            description="잠시 후 다시 시도하거나 알림 설정을 확인해 주세요."
+            message={t("loadFailedMessage")}
+            description={t("loadFailedDescription")}
           />
           <Space wrap>
             <Button type="primary" onClick={() => router.refresh()}>
-              다시 시도
+              {t("retry")}
             </Button>
             <Link href="/settings/notifications">
-              <Button>알림 설정으로 이동</Button>
+              <Button>{t("goToSettings")}</Button>
             </Link>
           </Space>
         </Space>
       ) : alerts.length === 0 ? (
-        <Empty description="새 알림이 없어요." />
+        <Empty description={t("empty")} />
       ) : (
         <Space direction="vertical" style={{ width: "100%" }}>
           {alerts.slice(0, 5).map((a) => (

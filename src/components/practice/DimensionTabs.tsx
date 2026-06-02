@@ -1,16 +1,18 @@
 "use client";
 
 import { Card, Empty, Progress, Tabs, Tag, Typography } from "antd";
+import { useTranslations } from "next-intl";
 
 const { Text, Paragraph } = Typography;
 
-const DIMENSION_LABELS: Record<string, string> = {
-  grammar: "문법",
-  vocab: "어휘",
-  structure: "구성",
-  content: "내용",
-  expression: "표현",
-  topic_fit: "주제 적합성",
+/** dimension → practice.common label key. */
+const DIMENSION_LABEL_KEYS: Record<string, string> = {
+  grammar: "dimGrammar",
+  vocab: "dimVocab",
+  structure: "dimStructure",
+  content: "dimContent",
+  expression: "dimExpression",
+  topic_fit: "dimTopicFit",
 };
 
 type WeakDimension = {
@@ -49,44 +51,60 @@ function statusFor(score: number) {
  * 제약: 탭 4개, 선택 탭 1개만 활성. 예외: 답안 부족 탭은 비활성 및 필요한 답안 수 표시.
  */
 export function DimensionTabs({ dimensions, tabSummaries }: Props) {
+  const t = useTranslations("practice.weakness");
+  const tCommon = useTranslations("practice.common");
+
+  function dimensionLabel(dimension: string) {
+    return DIMENSION_LABEL_KEYS[dimension]
+      ? tCommon(DIMENSION_LABEL_KEYS[dimension] as Parameters<typeof tCommon>[0])
+      : dimension;
+  }
+
   // Preferred path — all 4 tabs (incl. disabled under-sampled ones).
   if (tabSummaries && tabSummaries.length > 0) {
-    const firstReady = tabSummaries.find((t) => t.ready);
-    const items = tabSummaries.map((t) => {
-      const label = DIMENSION_LABELS[t.dimension] ?? t.dimension;
-      if (!t.ready) {
+    const firstReady = tabSummaries.find((s) => s.ready);
+    const items = tabSummaries.map((s) => {
+      const label = dimensionLabel(s.dimension);
+      if (!s.ready) {
         return {
-          key: t.dimension,
+          key: s.dimension,
           // 비활성 탭 — 필요한 답안 수 표시 (X-07 §2 예외).
-          label: `${label} (답안 ${t.neededAnswerCount}개 더 필요)`,
+          label: t("tabNeedMore", { label, needed: s.neededAnswerCount }),
           disabled: true,
           children: (
             <Card>
               <Empty
-                description={`${label} 분석에는 답안이 ${t.neededAnswerCount}개 더 필요해요. (현재 ${t.sampleCount}개)`}
+                description={t("tabNeedMoreDescription", {
+                  label,
+                  needed: s.neededAnswerCount,
+                  current: s.sampleCount,
+                })}
               />
             </Card>
           ),
         };
       }
-      const score = t.avgScore ?? 0;
+      const score = s.avgScore ?? 0;
       const intStatus = statusFor(score);
       return {
-        key: t.dimension,
+        key: s.dimension,
         label,
         children: (
           <Card>
             <Progress
               percent={Math.round(score)}
               status={intStatus}
-              format={(p) => `${p}점`}
+              format={(p) => tCommon("score", { score: p ?? 0 })}
             />
             <Paragraph style={{ marginTop: 12 }}>
-              <Text strong>{label}</Text> 평균 점수{" "}
+              <Text strong>{label}</Text> {t("averageScoreInline")}{" "}
               <Tag color={intStatus === "exception" ? "red" : "blue"}>
-                {Math.round(score)}점
+                {tCommon("score", { score: Math.round(score) })}
               </Tag>
-              <Text type="secondary"> · {t.sampleCount}개 표본</Text>
+              <Text type="secondary">
+                {" "}
+                · {t("sampleCount", { count: s.sampleCount })}
+              </Text>
             </Paragraph>
           </Card>
         ),
@@ -101,13 +119,13 @@ export function DimensionTabs({ dimensions, tabSummaries }: Props) {
   if (dimensions.length === 0) {
     return (
       <Card>
-        <Empty description="평가된 차원이 아직 없습니다. 글쓰기를 제출하면 차원별 점수가 누적됩니다." />
+        <Empty description={t("tabsEmpty")} />
       </Card>
     );
   }
 
   const items = dimensions.map((d) => {
-    const label = DIMENSION_LABELS[d.dimension] ?? d.dimension;
+    const label = dimensionLabel(d.dimension);
     const intStatus = statusFor(d.averageScore);
 
     return {
@@ -118,15 +136,18 @@ export function DimensionTabs({ dimensions, tabSummaries }: Props) {
           <Progress
             percent={Math.round(d.averageScore)}
             status={intStatus}
-            format={(p) => `${p}점`}
+            format={(p) => tCommon("score", { score: p ?? 0 })}
           />
           <Paragraph style={{ marginTop: 12 }}>
-            <Text strong>{label}</Text> 평균 점수{" "}
+            <Text strong>{label}</Text> {t("averageScoreInline")}{" "}
             <Tag color={intStatus === "exception" ? "red" : "blue"}>
-              {Math.round(d.averageScore)}점
+              {tCommon("score", { score: Math.round(d.averageScore) })}
             </Tag>
             {d.sampleCount != null ? (
-              <Text type="secondary"> · {d.sampleCount}개 표본</Text>
+              <Text type="secondary">
+                {" "}
+                · {t("sampleCount", { count: d.sampleCount })}
+              </Text>
             ) : null}
           </Paragraph>
         </Card>

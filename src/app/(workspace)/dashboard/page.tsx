@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { Space } from "antd";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
@@ -12,7 +13,10 @@ import { getLearningGoal } from "@/lib/learning/server";
 import { getNextProblemBundle } from "@/lib/practice/next";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "대시보드 — TALKPIK" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("dashboard.page");
+  return { title: t("metaTitle") };
+}
 
 const DAY_MS = 1000 * 60 * 60 * 24;
 const PASSING_SCORE = 60; // 등급 통과 기준선(정직: 추정치)
@@ -30,6 +34,7 @@ function getRequestNowMs(): number {
 }
 
 export default async function DashboardPage() {
+  const t = await getTranslations("dashboard.page");
   const user = await requireUser();
   const goal = await getLearningGoal(user.id);
   if (!goal) redirect("/onboarding/learning-goal");
@@ -105,8 +110,8 @@ export default async function DashboardPage() {
       alerts.push({
         id: "exam-dday",
         level: dDay <= 7 ? "warning" : "info",
-        title: `시험 D-${dDay}`,
-        description: `목표 시험일까지 ${dDay}일 남았습니다.`,
+        title: t("examDdayTitle", { days: dDay }),
+        description: t("examDdayDescription", { days: dDay }),
       });
     }
   }
@@ -121,8 +126,8 @@ export default async function DashboardPage() {
       alerts.push({
         id: "dirty-drafts",
         level: "info",
-        title: "작성 중인 답안",
-        description: `완성하지 않은 답안 ${dirtyDraftCount}건이 있습니다.`,
+        title: t("dirtyDraftsTitle"),
+        description: t("dirtyDraftsDescription", { count: dirtyDraftCount ?? 0 }),
       });
     }
   } catch {

@@ -1,6 +1,7 @@
 "use client";
 
 import { Alert, Button, Empty, List, Space, Spin, Typography } from "antd";
+import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import {
@@ -63,6 +64,7 @@ type Props = {
 };
 
 export function ProblemListView({ userId }: Props) {
+  const t = useTranslations("practice.problems");
   const router = useRouter();
   const params = useSearchParams();
   const [retryTarget, setRetryTarget] = useState<UserProblemRow | null>(null);
@@ -141,14 +143,14 @@ export function ProblemListView({ userId }: Props) {
     total > 0 ? (
       // §5 — 총 건수는 목록 상단/하단에 표시.
       <Text type="secondary">
-        총 {total}개 중 {rangeStart}-{rangeEnd}개 표시
+        {t("totalRange", { total, start: rangeStart, end: rangeEnd })}
       </Text>
     ) : null;
 
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
       <Title level={3} style={{ marginBottom: 0 }}>
-        문제 목록
+        {t("heading")}
       </Title>
 
       <ProblemTypeTabs
@@ -183,11 +185,11 @@ export function ProblemListView({ userId }: Props) {
         <Alert
           type="error"
           showIcon
-          message="문제 목록을 불러오지 못했어요"
+          message={t("loadErrorTitle")}
           description={list.error instanceof Error ? list.error.message : ""}
           action={
             <Button size="small" onClick={() => list.refetch()}>
-              다시 시도
+              {t("retry")}
             </Button>
           }
         />
@@ -228,8 +230,8 @@ export function ProblemListView({ userId }: Props) {
         </>
       ) : (
         // §2 예외 — 조합 결과 없음: 빈 결과 + 초기화 CTA.
-        <Empty description="조건에 맞는 문제가 없어요. 필터를 조정하거나 초기화해 보세요.">
-          <Button onClick={resetAll}>필터 초기화</Button>
+        <Empty description={t("emptyDescription")}>
+          <Button onClick={resetAll}>{t("resetFilters")}</Button>
         </Empty>
       )}
 

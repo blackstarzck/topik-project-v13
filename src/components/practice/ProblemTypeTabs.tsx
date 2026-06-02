@@ -1,6 +1,7 @@
 "use client";
 
 import { Tabs } from "antd";
+import { useTranslations } from "next-intl";
 import { QUESTION_NOS, type QuestionNo } from "@/lib/practice/types";
 
 type Props = {
@@ -14,6 +15,7 @@ type Props = {
 };
 
 export function ProblemTypeTabs({ active, onChange, lockedTypes }: Props) {
+  const t = useTranslations("practice.common");
   return (
     <Tabs
       activeKey={active != null ? String(active) : "all"}
@@ -22,7 +24,7 @@ export function ProblemTypeTabs({ active, onChange, lockedTypes }: Props) {
         else onChange(Number(key) as QuestionNo);
       }}
       items={[
-        { key: "all", label: "전체" },
+        { key: "all", label: t("typeTabAll") },
         ...QUESTION_NOS.map((n) => {
           const locked = lockedTypes?.has(n) ?? false;
           return {
@@ -30,9 +32,11 @@ export function ProblemTypeTabs({ active, onChange, lockedTypes }: Props) {
             disabled: locked,
             label: locked ? (
               // 아이콘 의존성 없이 텍스트 자물쇠 기호로 잠금 표시 (a11y: aria-label).
-              <span aria-label={`${n}번 잠김`}>{n}번 🔒</span>
+              <span aria-label={t("typeTabLockedAria", { no: n })}>
+                {t("typeTabLocked", { no: n })}
+              </span>
             ) : (
-              `${n}번`
+              t("questionNo", { no: n })
             ),
           };
         }),

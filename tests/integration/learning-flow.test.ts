@@ -13,6 +13,15 @@ vi.mock("next/navigation", () => ({
   redirect: helpers.redirectMock,
 }));
 
+// The dashboard page is a server component that calls next-intl's
+// getTranslations; in the jsdom test env next-intl resolves to its client build
+// where getTranslations throws. The page render path doesn't assert translated
+// text here, so echo the key.
+vi.mock("next-intl/server", () => ({
+  getTranslations: async () => (key: string) => key,
+  getLocale: async () => "ko",
+}));
+
 vi.mock("@/lib/auth/session", () => ({
   requireUser: () => helpers.requireUserMock(),
 }));

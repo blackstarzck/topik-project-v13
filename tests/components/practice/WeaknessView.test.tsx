@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, screen } from "@testing-library/react";
+import { renderWithIntl } from "../../test-utils/renderWithIntl";
 import { WeaknessView } from "../../../src/components/practice/WeaknessView";
 
 const pushMock = vi.fn();
@@ -58,7 +59,7 @@ afterEach(() => {
 
 describe("WeaknessView", () => {
   it("renders the empty-state CTA when weakDimensions is empty", () => {
-    render(<WeaknessView weakDimensions={[]} recommendations={[]} />);
+    renderWithIntl(<WeaknessView weakDimensions={[]} recommendations={[]} />);
 
     expect(
       screen.getByText("글쓰기를 5건 이상 제출하면 약점 분석이 활성화됩니다."),
@@ -69,7 +70,7 @@ describe("WeaknessView", () => {
   });
 
   it("renders weak dimensions and recommendation cards", () => {
-    render(
+    renderWithIntl(
       <WeaknessView
         weakDimensions={[
           { dimension: "grammar", averageScore: 0.4 },
@@ -87,7 +88,7 @@ describe("WeaknessView", () => {
   });
 
   it("logs recommendation_clicked and pushes the problem URL on rec card click", () => {
-    render(
+    renderWithIntl(
       <WeaknessView
         weakDimensions={[{ dimension: "grammar", averageScore: 0.3 }]}
         recommendations={[
@@ -109,7 +110,7 @@ describe("WeaknessView", () => {
   });
 
   it("surfaces cautious weakness insights, recommendation reasons, primary start action, and deferred paywall entry", () => {
-    render(
+    renderWithIntl(
       <WeaknessView
         weakDimensions={[
           { dimension: "grammar", averageScore: 0.36 },
@@ -159,7 +160,7 @@ describe("WeaknessView", () => {
   });
 
   it("shows a fallback reason when a tag-based recommendation has no stored reason", () => {
-    render(
+    renderWithIntl(
       <WeaknessView
         weakDimensions={[{ dimension: "grammar", averageScore: 0.36 }]}
         recommendations={[
@@ -181,7 +182,7 @@ describe("WeaknessView", () => {
   });
 
   it("keeps recommendation card title and reason within IA display limits", () => {
-    render(
+    renderWithIntl(
       <WeaknessView
         weakDimensions={[{ dimension: "grammar", averageScore: 0.36 }]}
         recommendations={[
@@ -219,7 +220,7 @@ describe("WeaknessView", () => {
   ])(
     "renders the Korean dimension label for a %s leading weakness instead of the raw key",
     (dimension, label) => {
-      render(
+      renderWithIntl(
         <WeaknessView
           weakDimensions={[{ dimension, averageScore: 0.3 }]}
           recommendations={[
@@ -250,7 +251,7 @@ describe("WeaknessView", () => {
   // IA X-07 §5: "카드 4개 이하". Defensive cap so an over-long upstream list
   // never blows past the spec, independent of server-side limiting.
   it("caps recommendation cards at the IA limit of 4", () => {
-    render(
+    renderWithIntl(
       <WeaknessView
         weakDimensions={[{ dimension: "grammar", averageScore: 0.3 }]}
         recommendations={Array.from({ length: 5 }, (_, i) => ({

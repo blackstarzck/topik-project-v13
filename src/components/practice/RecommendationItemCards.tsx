@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Card, Space, Tag, Typography } from "antd";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import type { RecommendationItemCard } from "./recommendations-data";
 
@@ -12,15 +13,16 @@ function ctaHref(card: RecommendationItemCard): string {
 
 /** C-01 §3 — 취약 태그 근거 (recommendation_items.weakness_tags). */
 function WeaknessTags({ tags }: { tags: string[] }) {
+  const t = useTranslations("practice.recommendations");
   if (tags.length === 0) return null;
   return (
     <Space size={4} wrap style={{ marginTop: 8 }}>
       <Text type="secondary" style={{ fontSize: 12 }}>
-        보완 포인트
+        {t("weaknessTagsLabel")}
       </Text>
-      {tags.slice(0, 4).map((t) => (
-        <Tag key={t} color="volcano">
-          {t}
+      {tags.slice(0, 4).map((tag) => (
+        <Tag key={tag} color="volcano">
+          {tag}
         </Tag>
       ))}
     </Space>
@@ -35,6 +37,8 @@ export function PrimaryRecommendationCard({
 }: {
   card: RecommendationItemCard;
 }) {
+  const t = useTranslations("practice.recommendations");
+  const tCommon = useTranslations("practice.common");
   const title =
     card.title.length > 32 ? `${card.title.slice(0, 32)}…` : card.title;
   return (
@@ -42,13 +46,17 @@ export function PrimaryRecommendationCard({
       style={{ borderColor: "#1677ff", borderWidth: 2 }}
       title={
         <Space>
-          <Tag color="blue">대표 추천</Tag>
-          {card.questionNo ? <Tag>{card.questionNo}번</Tag> : null}
+          <Tag color="blue">{t("primaryBadge")}</Tag>
+          {card.questionNo ? (
+            <Tag>{tCommon("questionNo", { no: card.questionNo })}</Tag>
+          ) : null}
         </Space>
       }
       extra={
         card.estimatedMinutes ? (
-          <Tag color="geekblue">{card.estimatedMinutes}분</Tag>
+          <Tag color="geekblue">
+            {tCommon("minutes", { minutes: card.estimatedMinutes })}
+          </Tag>
         ) : null
       }
     >
@@ -68,7 +76,7 @@ export function PrimaryRecommendationCard({
       <div style={{ marginTop: 16 }}>
         <Link href={ctaHref(card) as never}>
           <Button type="primary" size="large" block>
-            이 문제부터 시작하기
+            {t("startFromThis")}
           </Button>
         </Link>
       </div>
@@ -82,15 +90,23 @@ export function SecondaryRecommendationCard({
 }: {
   card: RecommendationItemCard;
 }) {
+  const t = useTranslations("practice.recommendations");
+  const tCommon = useTranslations("practice.common");
   const title =
     card.title.length > 32 ? `${card.title.slice(0, 32)}…` : card.title;
   return (
     <Card
       size="small"
-      title={card.questionNo ? `${card.questionNo}번` : "추천"}
+      title={
+        card.questionNo
+          ? tCommon("questionNo", { no: card.questionNo })
+          : t("recommendationFallback")
+      }
       extra={
         card.estimatedMinutes ? (
-          <Tag color="blue">{card.estimatedMinutes}분</Tag>
+          <Tag color="blue">
+            {tCommon("minutes", { minutes: card.estimatedMinutes })}
+          </Tag>
         ) : null
       }
     >
@@ -107,7 +123,7 @@ export function SecondaryRecommendationCard({
       <WeaknessTags tags={card.weaknessTags} />
       <div style={{ marginTop: 12 }}>
         <Link href={ctaHref(card) as never}>
-          <Button block>이어 풀기</Button>
+          <Button block>{t("continueProblem")}</Button>
         </Link>
       </div>
     </Card>

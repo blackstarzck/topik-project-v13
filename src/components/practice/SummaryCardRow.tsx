@@ -1,6 +1,7 @@
 "use client";
 
 import { Card, Col, Row, Statistic, Tag, Typography } from "antd";
+import { useTranslations } from "next-intl";
 
 const { Text } = Typography;
 
@@ -19,13 +20,14 @@ type Props = {
   recommendedType?: string | null;
 };
 
-const DIMENSION_LABELS: Record<string, string> = {
-  grammar: "문법",
-  vocab: "어휘",
-  structure: "구성",
-  content: "내용",
-  expression: "표현",
-  topic_fit: "주제 적합성",
+/** dimension → practice.common label key. */
+const DIMENSION_LABEL_KEYS: Record<string, string> = {
+  grammar: "dimGrammar",
+  vocab: "dimVocab",
+  structure: "dimStructure",
+  content: "dimContent",
+  expression: "dimExpression",
+  topic_fit: "dimTopicFit",
 };
 
 /**
@@ -41,35 +43,48 @@ export function SummaryCardRow({
   estimatedMinutes,
   recommendedType,
 }: Props) {
+  const t = useTranslations("practice.next");
+  const tCommon = useTranslations("practice.common");
   return (
     <Row gutter={16} data-testid="summary-card-row">
       <Col xs={24} md={8}>
         <Card>
-          <Text type="secondary">완료 문제의 약점</Text>
+          <Text type="secondary">{t("summaryWeaknessTitle")}</Text>
           <div style={{ marginTop: 8 }}>
             {weakestDimensions.length === 0 ? (
-              <Text>충분한 데이터가 없습니다</Text>
+              <Text>{t("summaryNotEnoughData")}</Text>
             ) : (
               weakestDimensions.slice(0, 3).map((d) => (
                 <Tag key={d.dimension} color="red">
-                  {DIMENSION_LABELS[d.dimension] ?? d.dimension}{" "}
-                  {Math.round(d.score)}점
+                  {DIMENSION_LABEL_KEYS[d.dimension]
+                    ? tCommon(
+                        DIMENSION_LABEL_KEYS[d.dimension] as Parameters<
+                          typeof tCommon
+                        >[0],
+                      )
+                    : d.dimension}{" "}
+                  {tCommon("score", { score: Math.round(d.score) })}
                 </Tag>
               ))
             )}
           </div>
           <Text type="secondary" style={{ fontSize: 12 }}>
-            최근 제출 {recentSubmissions}건 · 평균{" "}
-            {averageScore != null ? `${averageScore.toFixed(1)}점` : "데이터 부족"}
+            {t("summaryRecentAverage", {
+              count: recentSubmissions,
+              average:
+                averageScore != null
+                  ? tCommon("score", { score: averageScore.toFixed(1) })
+                  : t("summaryDataShort"),
+            })}
           </Text>
         </Card>
       </Col>
       <Col xs={24} md={8}>
         <Card>
-          <Text type="secondary">다음 추천 유형</Text>
+          <Text type="secondary">{t("summaryNextTypeTitle")}</Text>
           <div style={{ marginTop: 8 }}>
             <Text strong style={{ fontSize: 18 }}>
-              {recommendedType ?? "추천 준비 중"}
+              {recommendedType ?? t("summaryTypePending")}
             </Text>
           </div>
         </Card>
@@ -77,9 +92,9 @@ export function SummaryCardRow({
       <Col xs={24} md={8}>
         <Card>
           <Statistic
-            title="예상 학습 시간"
+            title={t("summaryEstimatedTime")}
             value={estimatedMinutes ?? 0}
-            suffix={estimatedMinutes != null ? "분" : "정보 없음"}
+            suffix={estimatedMinutes != null ? tCommon("minuteSuffix") : t("noInfo")}
           />
         </Card>
       </Col>

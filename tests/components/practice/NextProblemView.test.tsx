@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, screen } from "@testing-library/react";
+import { renderWithIntl } from "../../test-utils/renderWithIntl";
 import { NextProblemView } from "../../../src/components/practice/NextProblemView";
 import type {
   NextProblemBundle,
@@ -81,29 +82,29 @@ const primary: NextProblemSuggestion = {
 
 describe("NextProblemView (Phase 7-D bundle signature)", () => {
   it("tier 4 shows Empty state + summary row", () => {
-    render(<NextProblemView bundle={makeBundle(null, 4)} />);
+    renderWithIntl(<NextProblemView bundle={makeBundle(null, 4)} />);
     expect(screen.getByText("더 추천할 문제가 없습니다.")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "문제 목록 보기" }));
     expect(pushMock).toHaveBeenCalledWith("/practice/problems");
   });
 
   it("tier 1 shows '추천' badge", () => {
-    render(<NextProblemView bundle={makeBundle(primary, 1)} />);
+    renderWithIntl(<NextProblemView bundle={makeBundle(primary, 1)} />);
     expect(screen.getByTestId("next-problem-badge").textContent).toBe("추천");
   });
 
   it("tier 2 shows '이어서' badge", () => {
-    render(<NextProblemView bundle={makeBundle(primary, 2)} />);
+    renderWithIntl(<NextProblemView bundle={makeBundle(primary, 2)} />);
     expect(screen.getByTestId("next-problem-badge").textContent).toBe("이어서");
   });
 
   it("tier 3 shows '탐색' badge", () => {
-    render(<NextProblemView bundle={makeBundle(primary, 3)} />);
+    renderWithIntl(<NextProblemView bundle={makeBundle(primary, 3)} />);
     expect(screen.getByTestId("next-problem-badge").textContent).toBe("탐색");
   });
 
   it("clicking card logs recommendation_clicked and pushes URL", () => {
-    render(<NextProblemView bundle={makeBundle(primary, 1)} />);
+    renderWithIntl(<NextProblemView bundle={makeBundle(primary, 1)} />);
     fireEvent.click(screen.getByTestId("next-problem-p-1"));
     expect(logStudyEventMock).toHaveBeenCalledWith({
       eventType: "recommendation_clicked",

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Badge, Button, List, Space, Tag, Tooltip, Typography } from "antd";
+import { useTranslations } from "next-intl";
 import type { ProblemRow as ProblemRowData } from "@/lib/practice/types";
 
 const { Text } = Typography;
@@ -18,15 +19,26 @@ type Props = {
   lastAttemptAt?: string | null;
 };
 
-function relativeDay(iso: string | null | undefined): string | null {
+/**
+ * i18n: returns a structured descriptor instead of a localized string so the
+ * component can resolve it via `t()`. `absolute` carries a pre-formatted date
+ * for the >=7 days branch (locale-specific formatting stays in the helper).
+ */
+type RelativeDay =
+  | { kind: "today" }
+  | { kind: "yesterday" }
+  | { kind: "daysAgo"; days: number }
+  | { kind: "absolute"; text: string };
+
+function relativeDay(iso: string | null | undefined): RelativeDay | null {
   if (!iso) return null;
   const then = new Date(iso).getTime();
   if (Number.isNaN(then)) return null;
   const days = Math.floor((Date.now() - then) / (24 * 60 * 60 * 1000));
-  if (days <= 0) return "오늘";
-  if (days === 1) return "어제";
-  if (days < 7) return `${days}일 전`;
-  return new Date(iso).toLocaleDateString("ko-KR");
+  if (days <= 0) return { kind: "today" };
+  if (days === 1) return { kind: "yesterday" };
+  if (days < 7) return { kind: "daysAgo", days };
+  return { kind: "absolute", text: new Date(iso).toLocaleDateString("ko-KR") };
 }
 
 export function ProblemRow({
@@ -36,9 +48,20 @@ export function ProblemRow({
   attemptCount = 0,
   lastAttemptAt,
 }: Props) {
+  const t = useTranslations("practice.problems");
+  const tCommon = useTranslations("practice.common");
   const disabled = row.publish_status !== "published";
   const hasPriorWork = solveState !== "none";
-  const lastLabel = relativeDay(lastAttemptAt);
+  const rel = relativeDay(lastAttemptAt);
+  const lastLabel = rel
+    ? rel.kind === "today"
+      ? tCommon("dayToday")
+      : rel.kind === "yesterday"
+        ? tCommon("dayYesterday")
+        : rel.kind === "daysAgo"
+          ? tCommon("daysAgo", { days: rel.days })
+          : rel.text
+    : null;
 
   return (
     <List.Item
@@ -49,7 +72,7 @@ export function ProblemRow({
             onClick={() => onRetryClick(row.id)}
             disabled={disabled}
           >
-            다시 풀기
+            {t("retryAttempt")}
           </Button>
         ) : (
           <Link
@@ -61,7 +84,7 @@ export function ProblemRow({
             }
           >
             <Button type="primary" disabled={disabled}>
-              시작하기
+              {t("startProblem")}
             </Button>
           </Link>
         ),
@@ -70,33 +93,42 @@ export function ProblemRow({
       <List.Item.Meta
         title={
           <Space wrap>
-            {row.question_no ? <Tag>{row.question_no}번</Tag> : null}
+            {row.question_no ? (
+              <Tag>{tCommon("questionNo", { no: row.question_no })}</Tag>
+            ) : null}
             <span>
               {row.title.length > 32
                 ? `${row.title.slice(0, 32)}…`
                 : row.title}
             </span>
             {solveState === "submitted" ? (
-              <Tag color="green">완료</Tag>
+              <Tag color="green">{t("solveSolved")}</Tag>
             ) : solveState === "attempted" ? (
-              <Tag color="orange">진행 중</Tag>
+              <Tag color="orange">{t("solveInProgress")}</Tag>
             ) : null}
           </Space>
         }
         description={
           <Space size="small" wrap>
             {row.difficulty != null ? (
-              <Tag color="blue">난이도 {row.difficulty}</Tag>
+              <Tag color="blue">
+                {tCommon("difficultyValue", { level: row.difficulty })}
+              </Tag>
             ) : null}
             <Badge
               status={disabled ? "default" : "success"}
-              text={disabled ? "비공개" : "공개"}
+              text={disabled ? t("statusUnpublished") : t("statusPublished")}
             />
             {/* C-02 — 풀이 이력 (problem_attempts.attempt_count + 마지막 시도). */}
             {attemptCount > 0 ? (
-              <Tooltip title={lastLabel ? `마지막 시도: ${lastLabel}` : undefined}>
+              <Tooltip
+                title={
+                  lastLabel ? t("lastAttempt", { date: lastLabel }) : undefined
+                }
+              >
                 <Text type="secondary" style={{ fontSize: 12 }}>
-                  시도 {attemptCount}회{lastLabel ? ` · ${lastLabel}` : ""}
+                  {t("attemptCount", { count: attemptCount })}
+                  {lastLabel ? ` · ${lastLabel}` : ""}
                 </Text>
               </Tooltip>
             ) : null}

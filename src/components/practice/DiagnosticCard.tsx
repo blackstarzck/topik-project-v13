@@ -1,17 +1,19 @@
 "use client";
 
 import { Button, Card, Empty, Space, Tag, Typography } from "antd";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 
 const { Text, Title, Paragraph } = Typography;
 
-const DIMENSION_LABELS: Record<string, string> = {
-  grammar: "문법",
-  vocab: "어휘",
-  structure: "구성",
-  content: "내용",
-  expression: "표현",
-  topic_fit: "주제 적합성",
+/** dimension → practice.common label key. */
+const DIMENSION_LABEL_KEYS: Record<string, string> = {
+  grammar: "dimGrammar",
+  vocab: "dimVocab",
+  structure: "dimStructure",
+  content: "dimContent",
+  expression: "dimExpression",
+  topic_fit: "dimTopicFit",
 };
 
 type WeakDimension = {
@@ -39,17 +41,15 @@ type Props = {
  * 예외(§3): 추천 없음/분석 실패는 빈 상태와 다시 분석 CTA 표시.
  */
 export function DiagnosticCard({ weakDimensions, updatedAt, failed }: Props) {
+  const t = useTranslations("practice.weakness");
+  const tCommon = useTranslations("practice.common");
   const router = useRouter();
 
   if (weakDimensions.length === 0) {
     return (
       <Card data-testid="diagnostic-empty">
         <Empty
-          description={
-            failed
-              ? "약점 분석을 만들지 못했어요. 답안을 더 제출한 뒤 다시 분석해 주세요."
-              : "아직 분석할 데이터가 부족해요. 글쓰기를 제출하면 약점이 점점 명확해집니다."
-          }
+          description={failed ? t("diagnosticFailed") : t("diagnosticNoData")}
         >
           <Space direction="vertical" size="small">
             <Button
@@ -57,10 +57,10 @@ export function DiagnosticCard({ weakDimensions, updatedAt, failed }: Props) {
               onClick={() => router.push("/practice/problems" as never)}
               data-testid="diagnostic-reanalyze"
             >
-              다시 분석하기
+              {t("reanalyze")}
             </Button>
             <Text type="secondary" style={{ fontSize: 12 }}>
-              새 답안을 제출하면 다음 분석 때 약점이 자동으로 갱신돼요.
+              {t("reanalyzeNote")}
             </Text>
           </Space>
         </Empty>
@@ -69,26 +69,34 @@ export function DiagnosticCard({ weakDimensions, updatedAt, failed }: Props) {
   }
 
   const primary = weakDimensions[0];
-  const label = DIMENSION_LABELS[primary.dimension] ?? primary.dimension;
+  const label = DIMENSION_LABEL_KEYS[primary.dimension]
+    ? tCommon(
+        DIMENSION_LABEL_KEYS[primary.dimension] as Parameters<typeof tCommon>[0],
+      )
+    : primary.dimension;
 
   return (
     <Card>
-      <Title level={5}>가장 보강이 필요한 영역</Title>
+      <Title level={5}>{t("diagnosticTopTitle")}</Title>
       <Paragraph>
         <Tag color="red" style={{ fontSize: 14, padding: "4px 8px" }}>
           {label}
         </Tag>
-        <Text> 평균 점수 {Math.round(primary.averageScore)}점.</Text>
+        <Text>
+          {" "}
+          {t("diagnosticAverage", {
+            score: Math.round(primary.averageScore),
+          })}
+        </Text>
       </Paragraph>
       <Paragraph>
-        <Text type="secondary">
-          이 영역의 문제를 더 풀면 점수가 빠르게 오를 가능성이 있습니다. 아래
-          차원별 진행을 확인하고 추천 문제를 풀어보세요.
-        </Text>
+        <Text type="secondary">{t("diagnosticBody")}</Text>
       </Paragraph>
       {updatedAt ? (
         <Text type="secondary" style={{ fontSize: 12 }}>
-          분석 갱신: {new Date(updatedAt).toLocaleString("ko-KR")}
+          {t("diagnosticUpdated", {
+            date: new Date(updatedAt).toLocaleString("ko-KR"),
+          })}
         </Text>
       ) : null}
     </Card>

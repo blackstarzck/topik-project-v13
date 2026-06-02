@@ -78,6 +78,9 @@
 | 2026-06-02T16:05Z | i18n parallel-merge infra: shared test helper + staging-merge script | `tests/test-utils/renderWithIntl.tsx` (NextIntlClientProvider ko + antd App) so migrated component tests render without bespoke wrappers. `scripts/i18n/merge-staging.mjs` (coordinator merges per-cluster `messages/_staging/<x>.json` {ko,en,vi} leaves into the 3 catalogs; fails closed on malformed leaf). Lets cluster agents edit only their own source/tests + stage their catalog → no single-file write-conflict. | this run |
 | 2026-06-02T16:20Z | i18n WAVE 1 (auth) DONE + GREEN | 1 agent (wf wohpo6p28): 15 source/page files + 4 tests → t()/getTranslations + generateMetadata; 144 new auth.* keys (10 screens) staged + merged (catalog 83→227 strings ×3, parity held); reused common.login/signUp. Verified: typecheck 0, lint 0 errors (auth/new-script files warning-free), test 502 passed/3 skipped. Korean copy reviewed by coordinator (codex N/A for Korean per `codex-review-mojibake-windows`): ko verbatim, en/vi natural/accurate. staging dir deleted (not committed); next-env.d.ts autogen flip reverted. | this run |
 | 2026-06-02T16:20Z | KNOWN GAP (auth not 100%): 3 cross-cutting libs still Korean | `src/lib/auth/error-mapping.ts` (REASON_CONTENT — error-card body + {message} toasts), `src/components/auth/password-strength.ts` (now display-dead labels), `src/lib/auth/use-email-cooldown.ts` (countdown label) were OUT of the auth-component write scope → still literal Korean. Follow-up: migrate error-mapping.ts so the error card + toasts localize. | agent packet |
+| 2026-06-02T16:50Z | i18n WAVE 2 (dashboard + practice) — 2 parallel agents (wf wlnnd8m5t) | dashboard: 5 src + page + 1 new test, 39 keys; practice: 21 src (16 comp + 2 data + 4 pages) + 3 tests, 210 keys; reused common.start/cancel. Merged 39+210 → catalogs 227→476 (×3, parity). validateSearch refactored to reasonKey (data module can't call useTranslations). | this run |
+| 2026-06-02T16:55Z | Coordinator fixes after merge (agents couldn't self-typecheck) | (1) 14 dynamic-key call sites (`t(map[var])` / template-literal keys) failed next-intl strict typing → cast `as Parameters<typeof t>[0]` across NextProblemView/SummaryCardRow/WeaknessView/DashboardRecommendations/AlternativeCardsGrid/DiagnosticCard/DimensionTabs/FilterChips (keys valid in catalog, runtime-safe). (2) dashboard test imported the staging file → refactored to `renderWithIntl` (dashboard now in committed ko catalog). | this run |
+| 2026-06-02T16:55Z | First `${d}` workflow attempt failed (ReferenceError) | agent prompt string had `${d}` inside a JS template literal → interpolation error, 0 agents ran. Rewrote without `${}`. Lesson: escape/avoid `$` in Workflow agent-prompt template literals. | wf w5tndqoiw |
 
 ## Active Files
 
@@ -107,6 +110,12 @@
 - i18n wave 1 result (2026-06-02): typecheck 0, lint 0 errors (changed auth files + new
   scripts/i18n + tests/test-utils are all warning-free; the 20th warning is pre-existing in
   untouched `scripts/audit-setup/p4-codex-delegation.mjs`), test 502 passed / 3 skipped.
+- i18n wave 2 result (dashboard + practice, 2026-06-02): typecheck 0 (after 14 dynamic-key
+  casts), lint 0 errors (no new warnings), test 509 passed / 3 skipped (+7 new dashboard
+  tests). Catalog 476 strings ×3 (parity). learning-flow integration test gained a
+  `next-intl/server` mock (dashboard page is now a getTranslations server component). Korean
+  spot-checked (ko verbatim, ICU preserved, en/vi natural; practice insight copy medium-vi
+  per agent — flagged for native review). next-env.d.ts clean. staging deleted (not committed).
 - QA Gate: degraded — no dev server/browser in coordinator env (`feedback-ui-completion-requires-dev-server`) | full unit suite 502 passed/3 skipped incl. the 4 auth component tests rendering via `renderWithIntl` on the ko baseline + i18n catalog-parity test (ko/en/vi identical key sets, no empties); ko strings verbatim so ko render is byte-identical to pre-migration | live-browser en/vi rendering + runtime locale switch on auth screens UNVERIFIED — defer to evidence phase (boot server, switch locale, confirm render + no hydration mismatch).
 - UX/UI Consistency Pass: passed — i18n string externalization only (Korean literals → `t()` resolving to identical ko text); no visual/layout change.
   - Tokens: unchanged (no theme/token/CSS edits in this wave).

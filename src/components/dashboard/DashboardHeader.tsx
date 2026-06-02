@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Space, Typography } from "antd";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 const { Title, Paragraph } = Typography;
@@ -12,6 +13,7 @@ const { Title, Paragraph } = Typography;
  * has one clear forward action that points at the practice/recommendation flow.
  */
 export function DashboardHeader() {
+  const t = useTranslations("dashboard.header");
   return (
     <Space
       align="start"
@@ -20,15 +22,15 @@ export function DashboardHeader() {
     >
       <div>
         <Title level={3} style={{ marginBottom: 4 }}>
-          홈 대시보드
+          {t("title")}
         </Title>
         <Paragraph type="secondary" style={{ margin: 0 }}>
-          오늘의 학습 상태와 다음 할 일을 한눈에 확인하세요.
+          {t("subtitle")}
         </Paragraph>
       </div>
       <Link href="/practice/recommendations">
         <Button type="primary" size="large">
-          학습 시작
+          {t("startCta")}
         </Button>
       </Link>
     </Space>

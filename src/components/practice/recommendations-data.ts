@@ -20,13 +20,6 @@ import { QUESTION_NOS, type QuestionNo } from "@/lib/practice/types";
  *   3) 대표 추천(rank 1) vs 나머지 분리 — 화면에서 1개를 크게 노출.
  */
 
-const TYPE_LABELS: Record<QuestionNo, string> = {
-  51: "51번 단답",
-  52: "52번 문장 완성",
-  53: "53번 장문",
-  54: "54번 에세이",
-};
-
 export type RecommendationRunSummary = {
   reasonSummary: string | null;
   sourceType: string;
@@ -159,8 +152,9 @@ export function useRecommendationBundle(questionNo: QuestionNo | null) {
   });
 }
 
-export function questionTypeLabel(qn: QuestionNo): string {
-  return TYPE_LABELS[qn];
-}
-
-export { TYPE_LABELS };
+/**
+ * i18n: question-type labels are no longer stored as Korean strings in this
+ * data module. The detailed label for each question number lives in the
+ * `practice.common.questionType{51|52|53|54}` catalog and is resolved by the
+ * consuming components (e.g. TypeSelectCards) via `useTranslations`.
+ */

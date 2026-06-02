@@ -11,6 +11,7 @@ import {
   Tooltip,
   Typography,
 } from "antd";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -64,15 +65,26 @@ function feedbackPathFor(questionNo: number | null, submissionId: string): strin
   return `/writing/feedback/long/${submissionId}`;
 }
 
-function relativeDay(iso: string | null | undefined): string | null {
+/**
+ * i18n: returns a structured descriptor (resolved via `t()` in the component)
+ * instead of a localized string. `absolute` keeps locale-specific date
+ * formatting in the helper for the >=7 days branch.
+ */
+type RelativeDay =
+  | { kind: "today" }
+  | { kind: "yesterday" }
+  | { kind: "daysAgo"; days: number }
+  | { kind: "absolute"; text: string };
+
+function relativeDay(iso: string | null | undefined): RelativeDay | null {
   if (!iso) return null;
-  const t = new Date(iso).getTime();
-  if (Number.isNaN(t)) return null;
-  const days = Math.floor((Date.now() - t) / (24 * 60 * 60 * 1000));
-  if (days <= 0) return "오늘";
-  if (days === 1) return "어제";
-  if (days < 7) return `${days}일 전`;
-  return new Date(iso).toLocaleDateString("ko-KR");
+  const ms = new Date(iso).getTime();
+  if (Number.isNaN(ms)) return null;
+  const days = Math.floor((Date.now() - ms) / (24 * 60 * 60 * 1000));
+  if (days <= 0) return { kind: "today" };
+  if (days === 1) return { kind: "yesterday" };
+  if (days < 7) return { kind: "daysAgo", days };
+  return { kind: "absolute", text: new Date(iso).toLocaleDateString("ko-KR") };
 }
 
 export function RetryModal({
@@ -88,19 +100,24 @@ export function RetryModal({
   submissionId,
   expired = false,
 }: Props) {
+  const t = useTranslations("practice.retry");
+  const tCommon = useTranslations("practice.common");
+  const tActions = useTranslations("common");
   const router = useRouter();
   const [mode, setMode] = useState<RetryMode>(hasAttempt ? "resume" : "fresh");
   const [starting, setStarting] = useState(false);
-  const [startError, setStartError] = useState<string | null>(null);
+  // i18n: store an error KEY (not a localized string) so the message resolves
+  // through the practice.retry namespace at render time.
+  const [startErrorKey, setStartErrorKey] = useState<
+    "startMissingType" | "startOpenFailed" | null
+  >(null);
 
   function handleStart() {
     // §4 — 시작 클릭 후 중복 실행 차단.
     if (starting) return;
-    setStartError(null);
+    setStartErrorKey(null);
     if (questionNo == null) {
-      setStartError(
-        "문제 유형 정보를 찾을 수 없어 시작할 수 없어요. 잠시 후 다시 시도해 주세요.",
-      );
+      setStartErrorKey("startMissingType");
       return;
     }
     setStarting(true);
@@ -111,7 +128,7 @@ export function RetryModal({
       );
     } catch {
       setStarting(false);
-      setStartError("풀이 화면을 여는 중 문제가 발생했어요. 다시 시도해 주세요.");
+      setStartErrorKey("startOpenFailed");
     }
   }
 
@@ -126,26 +143,41 @@ export function RetryModal({
   }
 
   const canViewResult = hasSubmission;
-  const lastLabel = relativeDay(lastAttemptAt);
+  const rel = relativeDay(lastAttemptAt);
+  const lastLabel = rel
+    ? rel.kind === "today"
+      ? tCommon("dayToday")
+      : rel.kind === "yesterday"
+        ? tCommon("dayYesterday")
+        : rel.kind === "daysAgo"
+          ? tCommon("daysAgo", { days: rel.days })
+          : rel.text
+    : null;
 
   // §2 — 이전 풀이 상태 요약 라벨.
   const statusLabel = hasSubmission
-    ? "제출 완료"
+    ? t("statusSubmitted")
     : hasAttempt
-      ? "작성 중(임시 저장)"
-      : "기록 없음";
+      ? t("statusDrafting")
+      : t("statusNone");
 
   const summary = (
     <Descriptions size="small" column={1} bordered style={{ marginBottom: 16 }}>
-      <Descriptions.Item label="문제">
-        {(problemTitle ?? "선택한 문제").slice(0, 28)}
+      <Descriptions.Item label={t("summaryProblem")}>
+        {(problemTitle ?? t("summaryFallbackProblem")).slice(0, 28)}
       </Descriptions.Item>
-      <Descriptions.Item label="유형">
-        {questionNo ? <Tag>{questionNo}번</Tag> : "—"}
+      <Descriptions.Item label={t("summaryType")}>
+        {questionNo ? (
+          <Tag>{tCommon("questionNo", { no: questionNo })}</Tag>
+        ) : (
+          "—"
+        )}
       </Descriptions.Item>
-      <Descriptions.Item label="이전 상태">
+      <Descriptions.Item label={t("summaryPreviousStatus")}>
         {statusLabel}
-        {attemptCount > 0 ? ` · 시도 ${attemptCount}회` : ""}
+        {attemptCount > 0
+          ? ` · ${tCommon("attemptCount", { count: attemptCount })}`
+          : ""}
         {lastLabel ? ` · ${lastLabel}` : ""}
       </Descriptions.Item>
     </Descriptions>
@@ -160,7 +192,7 @@ export function RetryModal({
       <Modal
         open={open}
         onCancel={onClose}
-        title="다시 풀 수 없는 문제예요"
+        title={t("expiredTitle")}
         footer={null}
         maskClosable
         destroyOnHidden
@@ -170,11 +202,11 @@ export function RetryModal({
           type="warning"
           showIcon
           style={{ marginBottom: 12 }}
-          message="이 문제는 만료되어 더 이상 풀 수 없어요."
-          description="다른 문제를 골라 학습을 이어가 보세요."
+          message={t("expiredMessage")}
+          description={t("expiredDescription")}
         />
         <Button block onClick={onClose}>
-          닫기
+          {t("close")}
         </Button>
       </Modal>
     );
@@ -184,7 +216,7 @@ export function RetryModal({
     <Modal
       open={open}
       onCancel={risky ? undefined : onClose}
-      title="이전 풀이가 있어요"
+      title={t("title")}
       footer={null}
       maskClosable={!risky}
       keyboard={!risky}
@@ -193,7 +225,7 @@ export function RetryModal({
       {summary}
 
       <Paragraph type="secondary" style={{ marginBottom: 12 }}>
-        이 문제에 대한 이전 기록을 찾았습니다. 어떻게 시작할까요?
+        {t("intro")}
       </Paragraph>
 
       {/* §3 — 재풀이 모드 선택 (기본 선택 1개 항상 존재). */}
@@ -204,33 +236,32 @@ export function RetryModal({
       >
         <Space direction="vertical" style={{ width: "100%" }}>
           <Radio value="fresh">
-            새 답안으로 시작 <Text type="secondary">— 처음부터 다시 작성</Text>
+            {t("modeFresh")}{" "}
+            <Text type="secondary">{t("modeFreshHint")}</Text>
           </Radio>
           <Radio value="resume" disabled={!hasAttempt}>
-            이전 답안 이어서{" "}
+            {t("modeResume")}{" "}
             <Text type="secondary">
-              {hasAttempt
-                ? "— 저장된 작성 내용에서 계속"
-                : "— 이어서 풀 답안이 없어요"}
+              {hasAttempt ? t("modeResumeHint") : t("modeResumeNone")}
             </Text>
           </Radio>
           {/* 힌트 포함 모드는 아직 준비 중(deferred) — 비활성 + 정직한 안내. */}
-          <Tooltip title="힌트 포함 모드는 준비 중이에요.">
+          <Tooltip title={t("modeHintTooltip")}>
             <Radio value="hint" disabled>
-              힌트 포함 <Text type="secondary">— 준비 중</Text>
+              {t("modeHint")} <Text type="secondary">{t("modeHintHint")}</Text>
             </Radio>
           </Tooltip>
         </Space>
       </Radio.Group>
 
-      {startError ? (
+      {startErrorKey ? (
         // §4 예외 — 시작 실패 시 모달 유지, 오류 + 재시도.
         <Alert
           type="error"
           showIcon
           style={{ marginBottom: 12 }}
-          message="진행하지 못했어요"
-          description={startError}
+          message={t("startFailedTitle")}
+          description={t(startErrorKey)}
         />
       ) : null}
 
@@ -242,13 +273,13 @@ export function RetryModal({
           loading={starting}
           disabled={risky}
         >
-          {startError ? "다시 시도" : "시작"}
+          {startErrorKey ? t("retry") : tActions("start")}
         </Button>
         <Button block onClick={handleViewResult} disabled={!canViewResult || risky}>
-          결과 보기
+          {t("viewResult")}
         </Button>
         <Button type="text" block onClick={onClose} disabled={risky}>
-          취소
+          {tActions("cancel")}
         </Button>
       </Space>
     </Modal>

@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Card, Col, Empty, Row, Space, Tag, Typography } from "antd";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 
 const { Text, Title } = Typography;
@@ -30,13 +31,14 @@ type Props = {
   onSelect?: (alt: AlternativeProblem) => void;
 };
 
-function difficultyLabel(difficulty: number | null | undefined): string | null {
+/** maps difficulty (1..5) to a practice.common translation key. */
+function difficultyKey(difficulty: number | null | undefined): string | null {
   if (difficulty == null) return null;
-  if (difficulty <= 1) return "쉬움";
-  if (difficulty === 2) return "조금 쉬움";
-  if (difficulty === 3) return "보통";
-  if (difficulty === 4) return "조금 어려움";
-  return "어려움";
+  if (difficulty <= 1) return "difficultyVeryEasy";
+  if (difficulty === 2) return "difficultyEasy";
+  if (difficulty === 3) return "difficultyNormal";
+  if (difficulty === 4) return "difficultyHardish";
+  return "difficultyHard";
 }
 
 /**
@@ -49,23 +51,28 @@ export function AlternativeCardsGrid({
   selectedId,
   onSelect,
 }: Props) {
+  const t = useTranslations("practice.next");
+  const tCommon = useTranslations("practice.common");
   const router = useRouter();
 
   if (alternatives.length === 0) {
     return (
       <div>
-        <Title level={5}>다른 추천</Title>
-        <Empty description="추가로 추천할 문제가 없어요." />
+        <Title level={5}>{t("alternativesTitle")}</Title>
+        <Empty description={t("alternativesEmpty")} />
       </div>
     );
   }
 
   return (
     <div>
-      <Title level={5}>다른 추천</Title>
+      <Title level={5}>{t("alternativesTitle")}</Title>
       <Row gutter={[12, 12]}>
         {alternatives.slice(0, 3).map((a) => {
-          const diffLabel = difficultyLabel(a.difficulty);
+          const diffKey = difficultyKey(a.difficulty);
+          const diffLabel = diffKey
+            ? tCommon(diffKey as Parameters<typeof tCommon>[0])
+            : null;
           if (a.locked) {
             return (
               <Col key={a.id} xs={24} md={8}>
@@ -76,7 +83,9 @@ export function AlternativeCardsGrid({
                     <Space>
                       <span aria-hidden>🔒</span>
                       <Tag color="default">
-                        {a.questionNo != null ? `${a.questionNo}번` : a.domain}
+                        {a.questionNo != null
+                          ? tCommon("questionNo", { no: a.questionNo })
+                          : a.domain}
                       </Tag>
                     </Space>
                   }
@@ -86,14 +95,12 @@ export function AlternativeCardsGrid({
                     size="small"
                     style={{ width: "100%" }}
                   >
-                    <Text type="secondary">
-                      이 추천은 유료 플랜에서 열려요.
-                    </Text>
+                    <Text type="secondary">{t("lockedNotice")}</Text>
                     <Button
                       size="small"
                       onClick={() => router.push("/paywall" as never)}
                     >
-                      업그레이드 안내
+                      {t("upgradeInfo")}
                     </Button>
                   </Space>
                 </Card>
@@ -123,11 +130,15 @@ export function AlternativeCardsGrid({
                 title={
                   <Space wrap>
                     <Tag color="default">
-                      {a.questionNo != null ? `${a.questionNo}번` : a.domain}
+                      {a.questionNo != null
+                        ? tCommon("questionNo", { no: a.questionNo })
+                        : a.domain}
                     </Tag>
                     {diffLabel ? <Tag color="purple">{diffLabel}</Tag> : null}
                     {a.estimatedMinutes != null ? (
-                      <Tag color="cyan">{a.estimatedMinutes}분</Tag>
+                      <Tag color="cyan">
+                        {tCommon("minutes", { minutes: a.estimatedMinutes })}
+                      </Tag>
                     ) : null}
                   </Space>
                 }

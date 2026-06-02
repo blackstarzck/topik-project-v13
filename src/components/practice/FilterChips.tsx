@@ -1,21 +1,24 @@
 "use client";
 
 import { Button, Space, Tag, Typography } from "antd";
+import { useTranslations } from "next-intl";
 import type { ProblemFilter, ProblemSort } from "@/lib/practice/types";
 
 const { Text } = Typography;
 
-const SOLVE_LABELS: Record<string, string> = {
-  unsolved: "안 풀음",
-  inProgress: "진행 중",
-  solved: "완료",
+/** Maps a solveStatus value to its `practice.problems` translation key. */
+const SOLVE_LABEL_KEYS: Record<string, string> = {
+  unsolved: "solveUnsolved",
+  inProgress: "solveInProgress",
+  solved: "solveSolved",
 };
 
-const SORT_LABELS: Record<ProblemSort, string> = {
-  newest: "최신순",
-  oldest: "오래된순",
-  "difficulty-asc": "난이도 낮은순",
-  "difficulty-desc": "난이도 높은순",
+/** Maps a sort value to its `practice.problems` translation key. */
+const SORT_LABEL_KEYS: Record<ProblemSort, string> = {
+  newest: "sortNewest",
+  oldest: "sortOldest",
+  "difficulty-asc": "sortDifficultyAsc",
+  "difficulty-desc": "sortDifficultyDesc",
 };
 
 type Chip = { key: string; label: string; onClose: () => void };
@@ -39,47 +42,51 @@ export function FilterChips({
   onSortChange,
   onReset,
 }: Props) {
+  const t = useTranslations("practice.problems");
+  const tCommon = useTranslations("practice.common");
   const chips: Chip[] = [];
 
   if (filter.questionNo != null) {
     chips.push({
       key: "type",
-      label: `${filter.questionNo}번`,
+      label: tCommon("questionNo", { no: filter.questionNo }),
       onClose: () => onFilterChange({ ...filter, questionNo: null }),
     });
   }
   if (filter.difficulty != null) {
     chips.push({
       key: "difficulty",
-      label: `난이도 ${filter.difficulty}`,
+      label: tCommon("difficultyValue", { level: filter.difficulty }),
       onClose: () => onFilterChange({ ...filter, difficulty: null }),
     });
   }
   if (filter.solveStatus && filter.solveStatus !== "all") {
     chips.push({
       key: "solve",
-      label: SOLVE_LABELS[filter.solveStatus] ?? filter.solveStatus,
+      label: SOLVE_LABEL_KEYS[filter.solveStatus]
+        ? t(SOLVE_LABEL_KEYS[filter.solveStatus] as Parameters<typeof t>[0])
+        : filter.solveStatus,
       onClose: () => onFilterChange({ ...filter, solveStatus: "all" }),
     });
   }
   if (filter.recommended === true) {
     chips.push({
       key: "recommended",
-      label: "추천만",
+      label: t("recommendedOnly"),
       onClose: () => onFilterChange({ ...filter, recommended: false }),
     });
   }
   if (filter.search && filter.search.trim().length > 0) {
     chips.push({
       key: "search",
-      label: `검색: ${filter.search.trim()}`,
+      label: t("searchChip", { query: filter.search.trim() }),
       onClose: () => onFilterChange({ ...filter, search: "" }),
     });
   }
   if (sort !== "newest") {
     chips.push({
       key: "sort",
-      label: SORT_LABELS[sort],
+      label: t(SORT_LABEL_KEYS[sort] as Parameters<typeof t>[0]),
       onClose: () => onSortChange("newest"),
     });
   }
@@ -93,7 +100,7 @@ export function FilterChips({
   return (
     <Space wrap size={4} align="center">
       <Text type="secondary" style={{ fontSize: 12 }}>
-        적용된 필터
+        {t("appliedFilters")}
       </Text>
       {visible.map((c) => (
         <Tag key={c.key} closable onClose={c.onClose} color="blue">
@@ -102,7 +109,7 @@ export function FilterChips({
       ))}
       {overflow > 0 ? <Tag>+{overflow}</Tag> : null}
       <Button size="small" type="link" onClick={onReset}>
-        전체 초기화
+        {t("resetAll")}
       </Button>
     </Space>
   );

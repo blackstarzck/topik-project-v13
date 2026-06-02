@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { requireUser } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -9,7 +10,10 @@ import {
 } from "@/lib/practice/weakness";
 import { WeaknessView } from "@/components/practice/WeaknessView";
 
-export const metadata: Metadata = { title: "약점 보강 — TALKPIK" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("practice.weakness");
+  return { title: t("metaTitle") };
+}
 
 /** 유료에 해당하는 plan_label (growth 페이지와 동일 기준). */
 const PAID_PLAN_LABELS = new Set([
@@ -33,6 +37,7 @@ function isLocked(planLabel: string | null): boolean {
  * 잠금 판정은 growth 페이지와 동일하게 profiles.plan_label 기준.
  */
 export default async function PracticeWeaknessPage() {
+  const t = await getTranslations("practice.weakness");
   const user = await requireUser();
   const supabase = await createSupabaseServerClient();
 
@@ -49,7 +54,7 @@ export default async function PracticeWeaknessPage() {
   if (isLocked(planLabel)) {
     return (
       <main style={{ padding: 24, maxWidth: 560, margin: "0 auto" }}>
-        <h1>약점 보강</h1>
+        <h1>{t("pageTitle")}</h1>
         <div
           style={{
             border: "1px solid #f0f0f0",
@@ -61,13 +66,9 @@ export default async function PracticeWeaknessPage() {
           <div style={{ fontSize: 40 }} aria-hidden>
             🔒
           </div>
-          <h2 style={{ marginTop: 8 }}>
-            약점 기반 맞춤 추천은 유료 플랜 전용이에요
-          </h2>
+          <h2 style={{ marginTop: 8 }}>{t("lockTitle")}</h2>
           <p style={{ color: "rgba(0,0,0,0.45)" }}>
-            현재 플랜: {planLabel ?? "무료"}. 이 플랜에서는 약점 진단과 맞춤
-            추천이 잠겨 있어요. 업그레이드하면 영역별 진단과 추천 문제가 모두
-            열립니다.
+            {t("lockBody", { plan: planLabel ?? t("planFree") })}
           </p>
           <div
             style={{
@@ -87,7 +88,7 @@ export default async function PracticeWeaknessPage() {
                 borderRadius: 6,
               }}
             >
-              플랜 업그레이드
+              {t("upgradePlan")}
             </Link>
             <Link
               href="/practice/problems"
@@ -97,7 +98,7 @@ export default async function PracticeWeaknessPage() {
                 borderRadius: 6,
               }}
             >
-              문제 목록 보기
+              {t("viewProblemList")}
             </Link>
           </div>
         </div>
@@ -122,7 +123,7 @@ export default async function PracticeWeaknessPage() {
 
   return (
     <main style={{ padding: 24 }}>
-      <h1>약점 보강</h1>
+      <h1>{t("pageTitle")}</h1>
       <WeaknessView
         weakDimensions={dimSummaries.map((d) => ({
           dimension: d.dimension,

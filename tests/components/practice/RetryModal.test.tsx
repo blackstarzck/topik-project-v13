@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, screen } from "@testing-library/react";
+import { renderWithIntl } from "../../test-utils/renderWithIntl";
 import { RetryModal } from "../../../src/components/practice/RetryModal";
 
 const pushMock = vi.fn();
@@ -41,7 +42,7 @@ afterEach(() => {
 
 describe("RetryModal (Phase 7-D Task 5 route fix)", () => {
   it("renders three buttons when both attempt and submission exist", () => {
-    render(
+    renderWithIntl(
       <RetryModal
         open
         onClose={vi.fn()}
@@ -62,7 +63,7 @@ describe("RetryModal (Phase 7-D Task 5 route fix)", () => {
 
   it("'시작' in fresh mode pushes /writing/[questionNo]?problem=...&fresh=1", () => {
     const onClose = vi.fn();
-    render(
+    renderWithIntl(
       <RetryModal
         open
         onClose={onClose}
@@ -81,7 +82,7 @@ describe("RetryModal (Phase 7-D Task 5 route fix)", () => {
   });
 
   it("'시작' with null questionNo shows a recoverable start-failure alert (keeps modal open, no push)", () => {
-    render(
+    renderWithIntl(
       <RetryModal
         open
         onClose={vi.fn()}
@@ -103,7 +104,7 @@ describe("RetryModal (Phase 7-D Task 5 route fix)", () => {
   });
 
   it("'결과 보기' routes short feedback for question_no 51/52", () => {
-    render(
+    renderWithIntl(
       <RetryModal
         open
         onClose={vi.fn()}
@@ -119,7 +120,7 @@ describe("RetryModal (Phase 7-D Task 5 route fix)", () => {
   });
 
   it("'결과 보기' routes long feedback for question_no 53/54", () => {
-    render(
+    renderWithIntl(
       <RetryModal
         open
         onClose={vi.fn()}
@@ -135,7 +136,7 @@ describe("RetryModal (Phase 7-D Task 5 route fix)", () => {
   });
 
   it("'결과 보기' falls back to /practice/problems when submissionId missing", () => {
-    render(
+    renderWithIntl(
       <RetryModal
         open
         onClose={vi.fn()}
@@ -151,7 +152,7 @@ describe("RetryModal (Phase 7-D Task 5 route fix)", () => {
 
   it("'취소' closes without navigation", () => {
     const onClose = vi.fn();
-    render(
+    renderWithIntl(
       <RetryModal
         open
         onClose={onClose}
