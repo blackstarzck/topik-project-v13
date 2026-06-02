@@ -1,15 +1,19 @@
 "use client";
 
-import { Layout, Space, Typography } from "antd";
+import { Button, Layout, Space, Typography } from "antd";
+import { Menu as MenuIcon } from "lucide-react";
 
 const { Header } = Layout;
 const { Title, Text } = Typography;
 
 type Props = {
   email?: string | null;
+  /** 모바일에서만 햄버거 토글을 보여 준다(area 1 제약: 모바일은 햄버거로 전환). */
+  showMenuToggle?: boolean;
+  onMenuToggle?: () => void;
 };
 
-export function AppHeader({ email }: Props) {
+export function AppHeader({ email, showMenuToggle, onMenuToggle }: Props) {
   return (
     <Header
       style={{
@@ -21,9 +25,19 @@ export function AppHeader({ email }: Props) {
         borderBottom: "1px solid var(--app-border, #f0f0f0)",
       }}
     >
-      <Title level={4} style={{ margin: 0 }}>
-        TALKPIK
-      </Title>
+      <Space size={12} align="center">
+        {showMenuToggle ? (
+          <Button
+            type="text"
+            aria-label="메뉴 열기"
+            onClick={onMenuToggle}
+            icon={<MenuIcon aria-hidden size={20} />}
+          />
+        ) : null}
+        <Title level={4} style={{ margin: 0 }}>
+          TALKPIK
+        </Title>
+      </Space>
       <Space>
         {email ? <Text type="secondary">{email}</Text> : null}
       </Space>

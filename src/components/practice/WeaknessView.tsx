@@ -12,8 +12,10 @@ import {
   Typography,
 } from "antd";
 import { useRouter } from "next/navigation";
+import { useRef, useState } from "react";
 import { logStudyEvent } from "@/lib/events/study-events";
-import { DimensionTabs } from "./DimensionTabs";
+import { consumeRecommendationItem } from "@/lib/practice/consume";
+import { DimensionTabs, type DimensionTabSummaryProp } from "./DimensionTabs";
 import { DiagnosticCard } from "./DiagnosticCard";
 
 const { Title, Paragraph, Text } = Typography;
@@ -32,6 +34,10 @@ type RecommendationProp = {
   question_no: number;
   reason?: string | null;
   source?: "recommendation" | "tag_fallback";
+  /** recommendation_items.id — for consume-on-start (RLS owner-update). */
+  item_id?: string | null;
+  /** X-07 §5 예외 — 유료 잠금 카드(비활성 + 업그레이드 안내). */
+  locked?: boolean;
 };
 
 type Props = {
@@ -39,6 +45,8 @@ type Props = {
   recommendations: RecommendationProp[];
   /** ISO timestamp for diagnostic refresh - Phase 7-D Task 7 */
   updatedAt?: string | null;
+  /** X-07 §2 — all-four-tab summaries (incl. disabled under-sampled). */
+  tabSummaries?: DimensionTabSummaryProp[];
 };
 
 const DIMENSION_LABELS: Record<string, string> = {
@@ -139,8 +147,12 @@ export function WeaknessView({
   weakDimensions,
   recommendations,
   updatedAt,
+  tabSummaries,
 }: Props) {
   const router = useRouter();
+  // dup-click guard: once a start has been kicked off, ignore further clicks.
+  const startedRef = useRef(false);
+  const [startingId, setStartingId] = useState<string | null>(null);
   const leadingWeakDimension = getLeadingWeakDimension(weakDimensions);
   const leadingWeakLabel = leadingWeakDimension
     ? getDimensionLabel(leadingWeakDimension.dimension)
@@ -168,11 +180,20 @@ export function WeaknessView({
   }
 
   function handleRecommendationClick(rec: RecommendationProp) {
+    if (rec.locked) {
+      router.push("/paywall" as never);
+      return;
+    }
+    if (startedRef.current) return; // 중복 실행 차단
+    startedRef.current = true;
+    setStartingId(rec.problem_id);
     void logStudyEvent({
       eventType: "recommendation_clicked",
       problemId: rec.problem_id,
       payload: { source: "weakness" },
     });
+    // recommendation_items.status='consumed' (RLS owner-update, fire-and-forget).
+    void consumeRecommendationItem(rec.item_id ?? null);
     router.push(`/practice/problems/${rec.problem_id}` as never);
   }
 
@@ -193,7 +214,7 @@ export function WeaknessView({
         weakDimensions={weakDimensions}
         updatedAt={updatedAt ?? null}
       />
-      <DimensionTabs dimensions={weakDimensions} />
+      <DimensionTabs dimensions={weakDimensions} tabSummaries={tabSummaries} />
 
       {leadingWeakDimension && leadingInsight ? (
         <Card title="약점 인사이트">
@@ -241,49 +262,85 @@ export function WeaknessView({
                 {visibleRecommendations.map((rec) => (
                   <Col key={rec.problem_id} xs={24}>
                     <Card
-                      hoverable
-                      onClick={() => handleRecommendationClick(rec)}
+                      hoverable={!rec.locked}
+                      onClick={
+                        rec.locked
+                          ? undefined
+                          : () => handleRecommendationClick(rec)
+                      }
                       data-testid={`weakness-rec-${rec.problem_id}`}
+                      style={
+                        rec.locked
+                          ? { opacity: 0.7, background: "#fafafa" }
+                          : undefined
+                      }
                     >
                       <Space
                         direction="vertical"
                         size="small"
                         style={{ width: "100%" }}
                       >
-                        <Text type="secondary">{rec.question_no}번 문항</Text>
+                        <Text type="secondary">
+                          {rec.locked ? "🔒 " : ""}
+                          {rec.question_no}번 문항
+                        </Text>
                         <Text strong title={rec.title}>
                           {truncateRecommendationTitle(rec.title)}
                         </Text>
-                        <Space direction="vertical" size={2}>
-                          <Tag color="blue">
-                            {getRecommendationSourceLabel(rec.source)}
-                          </Tag>
-                          <Text
-                            type="secondary"
-                            title={getRecommendationReason(
-                              rec,
-                              leadingWeakLabel,
-                            )}
-                            style={{
-                              display: "block",
-                              maxWidth: "100%",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {getRecommendationReason(rec, leadingWeakLabel)}
-                          </Text>
-                        </Space>
-                        <Button
-                          type="primary"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            handleRecommendationClick(rec);
-                          }}
-                        >
-                          추천 학습 시작
-                        </Button>
+                        {rec.locked ? (
+                          <Space direction="vertical" size={4}>
+                            <Text type="secondary">
+                              이 추천은 유료 플랜에서 열려요.
+                            </Text>
+                            <Button
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                router.push("/paywall" as never);
+                              }}
+                              data-testid={`weakness-rec-upgrade-${rec.problem_id}`}
+                            >
+                              업그레이드 안내
+                            </Button>
+                          </Space>
+                        ) : (
+                          <>
+                            <Space direction="vertical" size={2}>
+                              <Tag color="blue">
+                                {getRecommendationSourceLabel(rec.source)}
+                              </Tag>
+                              <Text
+                                type="secondary"
+                                title={getRecommendationReason(
+                                  rec,
+                                  leadingWeakLabel,
+                                )}
+                                style={{
+                                  display: "block",
+                                  maxWidth: "100%",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                {getRecommendationReason(rec, leadingWeakLabel)}
+                              </Text>
+                            </Space>
+                            <Button
+                              type="primary"
+                              disabled={
+                                startingId != null &&
+                                startingId !== rec.problem_id
+                              }
+                              loading={startingId === rec.problem_id}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                handleRecommendationClick(rec);
+                              }}
+                            >
+                              추천 학습 시작
+                            </Button>
+                          </>
+                        )}
                       </Space>
                     </Card>
                   </Col>

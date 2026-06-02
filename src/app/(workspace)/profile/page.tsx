@@ -47,12 +47,15 @@ export default async function ProfilePage() {
         <Col xs={24} md={10}>
           <Space direction="vertical" size="middle" style={{ width: "100%" }}>
             <ExamInfoCard
+              userId={user.id}
               goal={
                 goal
                   ? {
                       topik_level: goal.topik_level,
                       target_grade: goal.target_grade,
                       exam_date: goal.exam_date,
+                      weekly_goal_minutes: goal.weekly_goal_minutes,
+                      weak_areas: goal.weak_areas,
                     }
                   : null
               }

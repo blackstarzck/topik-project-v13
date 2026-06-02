@@ -3,6 +3,7 @@ import Link from "next/link";
 import { requireUser } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
+  getDimensionTabSummaries,
   getWeakDimensions,
   getWeaknessRecommendations,
 } from "@/lib/practice/weakness";
@@ -104,8 +105,10 @@ export default async function PracticeWeaknessPage() {
     );
   }
 
-  const [dimSummaries, recs, lastFeedback] = await Promise.all([
+  const [dimSummaries, tabSummaries, recs, lastFeedback] = await Promise.all([
     getWeakDimensions(user.id),
+    // X-07 §2 — all four weakness tabs (incl. disabled under-sampled).
+    getDimensionTabSummaries(user.id),
     getWeaknessRecommendations(user.id),
     // 진단 카드의 "최근 답안 날짜" (description region 3 제약).
     supabase
@@ -137,6 +140,17 @@ export default async function PracticeWeaknessPage() {
           question_no: r.questionNo ?? 0,
           reason: r.reason,
           source: r.source,
+          item_id: r.itemId ?? null,
+          // 이 페이지는 region-1 예외로 무료 사용자를 통째로 차단하므로
+          // 여기 도달한 사용자는 모두 유료다 → 개별 카드 잠금 없음.
+          locked: false,
+        }))}
+        tabSummaries={tabSummaries.map((t) => ({
+          dimension: t.dimension,
+          avgScore: t.avgScore,
+          sampleCount: t.sampleCount,
+          ready: t.ready,
+          neededAnswerCount: t.neededAnswerCount,
         }))}
         updatedAt={lastFeedback.data?.generated_at ?? null}
       />

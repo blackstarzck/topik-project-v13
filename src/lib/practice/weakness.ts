@@ -49,6 +49,29 @@ export type WeakDimensionSummary = {
   sampleCount: number;
 };
 
+/**
+ * X-07 §2 (탭 4개) — the four weakness tabs the screen always shows, in spec
+ * order: 문법 / 어휘 / 구성 / 주제 적합성. Even dimensions that haven't cleared
+ * the sample gate render as a disabled tab with the remaining-answer count.
+ */
+export const DIMENSION_TAB_ORDER = [
+  "grammar",
+  "vocab",
+  "structure",
+  "topic_fit",
+] as const satisfies readonly WeaknessDimension[];
+
+export type DimensionTabSummary = {
+  dimension: WeaknessDimension;
+  /** avg score on a 0..100 scale (normalized across score_max), or null when no samples. */
+  avgScore: number | null;
+  sampleCount: number;
+  /** True once sampleCount >= threshold (tab is interactive). */
+  ready: boolean;
+  /** How many more scored answers are needed to clear the gate (0 when ready). */
+  neededAnswerCount: number;
+};
+
 export type WeaknessRecommendation = {
   problemId: Tables<"problems">["id"];
   title: Tables<"problems">["title"];
@@ -57,6 +80,14 @@ export type WeaknessRecommendation = {
   rank: number | null;
   reason: string | null;
   source: "recommendation" | "tag_fallback";
+  /**
+   * recommendation_items.id when source === "recommendation" — used by the
+   * view to flip the row to status='consumed' on start (RLS owner-update).
+   * Absent for tag_fallback (no backing recommendation row).
+   */
+  itemId?: string | null;
+  /** recommendation_items.estimated_minutes (optional). */
+  estimatedMinutes?: number | null;
 };
 
 type DimensionScoreSlice = Pick<
@@ -120,11 +151,68 @@ export async function getWeakDimensions(
   return eligible.slice(0, 2);
 }
 
+/**
+ * X-07 §2 — summaries for ALL FOUR weakness tabs (not just the ones that
+ * cleared the gate). Under-sampled dimensions come back with `ready=false`
+ * and a `neededAnswerCount` so the tab can render disabled with "N개 답안 더
+ * 필요" guidance. Dimensions with zero samples report `avgScore=null` and the
+ * full `threshold` as the needed count.
+ *
+ * Same RLS contract / normalization as `getWeakDimensions` (owner-scoped
+ * read, score normalized to 0..1 against score_max, then surfaced 0..100).
+ */
+export async function getDimensionTabSummaries(
+  userId: string,
+  threshold = 5,
+  createClient: ClientFactory = createSupabaseServerClient,
+): Promise<DimensionTabSummary[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("feedback_dimension_scores")
+    .select("dimension, score, score_max")
+    .eq("user_id", userId);
+  if (error) throw new Error(`getDimensionTabSummaries: ${error.message}`);
+
+  const rows = (data ?? []) as DimensionScoreSlice[];
+  const buckets = new Map<
+    WeaknessDimension,
+    { sumNorm: number; count: number }
+  >();
+  for (const row of rows) {
+    if (!isWeaknessDimension(row.dimension)) continue;
+    if (row.score == null) continue;
+    const max =
+      row.score_max != null && row.score_max > 0 ? row.score_max : 100;
+    const normalized = row.score / max;
+    const slot = buckets.get(row.dimension) ?? { sumNorm: 0, count: 0 };
+    slot.sumNorm += normalized;
+    slot.count += 1;
+    buckets.set(row.dimension, slot);
+  }
+
+  return DIMENSION_TAB_ORDER.map((dimension) => {
+    const slot = buckets.get(dimension);
+    const sampleCount = slot?.count ?? 0;
+    const ready = sampleCount >= threshold;
+    return {
+      dimension,
+      avgScore:
+        slot && slot.count > 0
+          ? Math.round((slot.sumNorm / slot.count) * 100)
+          : null,
+      sampleCount,
+      ready,
+      neededAnswerCount: ready ? 0 : Math.max(0, threshold - sampleCount),
+    } satisfies DimensionTabSummary;
+  });
+}
+
 type RecommendationItemJoined = {
   id: string;
   problem_id: string;
   rank: number;
   reason: string | null;
+  estimated_minutes: number | null;
   weakness_tags: string[] | null;
   recommendation_runs: {
     expires_at: string | null;
@@ -158,7 +246,7 @@ export async function getWeaknessRecommendations(
   const { data: itemsData, error: itemsError } = await supabase
     .from("recommendation_items")
     .select(
-      "id, problem_id, rank, reason, weakness_tags," +
+      "id, problem_id, rank, reason, estimated_minutes, weakness_tags," +
         " recommendation_runs!inner(expires_at)," +
         " problems!inner(id, title, domain, question_no, publish_status)",
     )
@@ -187,6 +275,8 @@ export async function getWeaknessRecommendations(
       rank: row.rank,
       reason: row.reason,
       source: "recommendation",
+      itemId: row.id ?? undefined,
+      estimatedMinutes: row.estimated_minutes ?? undefined,
     });
   }
   if (fromItems.length > 0) return fromItems.slice(0, 3);

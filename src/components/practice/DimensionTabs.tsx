@@ -19,16 +19,85 @@ type WeakDimension = {
   sampleCount?: number;
 };
 
-type Props = {
-  dimensions: WeakDimension[];
+/** X-07 §2 — full tab summary incl. under-sampled (disabled) dimensions. */
+export type DimensionTabSummaryProp = {
+  dimension: string;
+  avgScore: number | null;
+  sampleCount: number;
+  ready: boolean;
+  neededAnswerCount: number;
 };
+
+type Props = {
+  /** Legacy: weak dimensions only (kept for back-compat with existing callers/tests). */
+  dimensions: WeakDimension[];
+  /**
+   * Phase 7-D follow-up (X-07 §2) — when provided, render ALL FOUR tabs
+   * (문법/어휘/구성/주제 적합성) including under-sampled ones as disabled tabs
+   * with the remaining-answer count. Takes precedence over `dimensions`.
+   */
+  tabSummaries?: DimensionTabSummaryProp[];
+};
+
+function statusFor(score: number) {
+  return score >= 70 ? "success" : score >= 50 ? "normal" : "exception";
+}
 
 /**
  * Phase 7-D Task 7 (P1-3) — X-07 dimension tabs.
- * IA spec: docs/Wireframe/29-X-07-weakness-based-recommendations/description.md.
- * 각 차원 진행 상태 + 평균 점수 + 데이터 부족 시 안내.
+ * IA spec: docs/Wireframe/29-X-07-weakness-based-recommendations/description.md §2.
+ * 제약: 탭 4개, 선택 탭 1개만 활성. 예외: 답안 부족 탭은 비활성 및 필요한 답안 수 표시.
  */
-export function DimensionTabs({ dimensions }: Props) {
+export function DimensionTabs({ dimensions, tabSummaries }: Props) {
+  // Preferred path — all 4 tabs (incl. disabled under-sampled ones).
+  if (tabSummaries && tabSummaries.length > 0) {
+    const firstReady = tabSummaries.find((t) => t.ready);
+    const items = tabSummaries.map((t) => {
+      const label = DIMENSION_LABELS[t.dimension] ?? t.dimension;
+      if (!t.ready) {
+        return {
+          key: t.dimension,
+          // 비활성 탭 — 필요한 답안 수 표시 (X-07 §2 예외).
+          label: `${label} (답안 ${t.neededAnswerCount}개 더 필요)`,
+          disabled: true,
+          children: (
+            <Card>
+              <Empty
+                description={`${label} 분석에는 답안이 ${t.neededAnswerCount}개 더 필요해요. (현재 ${t.sampleCount}개)`}
+              />
+            </Card>
+          ),
+        };
+      }
+      const score = t.avgScore ?? 0;
+      const intStatus = statusFor(score);
+      return {
+        key: t.dimension,
+        label,
+        children: (
+          <Card>
+            <Progress
+              percent={Math.round(score)}
+              status={intStatus}
+              format={(p) => `${p}점`}
+            />
+            <Paragraph style={{ marginTop: 12 }}>
+              <Text strong>{label}</Text> 평균 점수{" "}
+              <Tag color={intStatus === "exception" ? "red" : "blue"}>
+                {Math.round(score)}점
+              </Tag>
+              <Text type="secondary"> · {t.sampleCount}개 표본</Text>
+            </Paragraph>
+          </Card>
+        ),
+      };
+    });
+    return (
+      <Tabs items={items} defaultActiveKey={firstReady?.dimension} />
+    );
+  }
+
+  // Legacy fallback — weak dimensions only.
   if (dimensions.length === 0) {
     return (
       <Card>
@@ -39,12 +108,7 @@ export function DimensionTabs({ dimensions }: Props) {
 
   const items = dimensions.map((d) => {
     const label = DIMENSION_LABELS[d.dimension] ?? d.dimension;
-    const intStatus =
-      d.averageScore >= 70
-        ? "success"
-        : d.averageScore >= 50
-          ? "normal"
-          : "exception";
+    const intStatus = statusFor(d.averageScore);
 
     return {
       key: d.dimension,

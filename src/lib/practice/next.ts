@@ -38,21 +38,38 @@ export type NextProblemSuggestion = {
   questionNo: Tables<"problems">["question_no"];
   source: "recommendation" | "same_question_no" | "random";
   reason?: string | null;
+  /**
+   * Phase 7-D follow-up (R-02 §2) — 난이도/시간 배지(필수) for the recommended
+   * highlight. `difficulty` from `problems.difficulty`; `estimatedMinutes`
+   * from `recommendation_items.estimated_minutes` (only present when the
+   * suggestion came from a real recommendation row). Both optional/null for
+   * the fallback tiers that have no backing recommendation item.
+   */
+  difficulty?: number | null;
+  estimatedMinutes?: number | null;
+  /**
+   * recommendation_items.id when source === "recommendation". The view uses
+   * this to flip the row to status='consumed' on start (RLS owner-update).
+   * null for fallback tiers (same_question_no / random) — nothing to consume.
+   */
+  itemId?: string | null;
 };
 
 type ProblemSlice = Pick<
   Tables<"problems">,
-  "id" | "title" | "domain" | "question_no"
+  "id" | "title" | "domain" | "question_no" | "difficulty"
 >;
 
 type RecommendationJoinedRow = {
+  id: string;
   problem_id: string;
   rank: number;
   reason: string | null;
+  estimated_minutes: number | null;
   recommendation_runs: { expires_at: string | null } | { expires_at: string | null }[] | null;
   problems:
-    | (ProblemSlice & { publish_status: string })
-    | (ProblemSlice & { publish_status: string })[]
+    | (ProblemSlice & { publish_status: string; difficulty: number | null })
+    | (ProblemSlice & { publish_status: string; difficulty: number | null })[]
     | null;
 };
 
@@ -67,9 +84,9 @@ export async function getNextProblem(
   const { data: recRows, error: recErr } = await supabase
     .from("recommendation_items")
     .select(
-      "problem_id, rank, reason," +
+      "id, problem_id, rank, reason, estimated_minutes," +
         " recommendation_runs!inner(expires_at)," +
-        " problems!inner(id, title, domain, question_no, publish_status)",
+        " problems!inner(id, title, domain, question_no, difficulty, publish_status)",
     )
     .eq("user_id", userId)
     .eq("status", "active")
@@ -92,6 +109,12 @@ export async function getNextProblem(
         questionNo: problem.question_no,
         source: "recommendation",
         reason: recRow.reason ?? null,
+        // Use `undefined` (not null) when the underlying field is absent so
+        // callers that don't need these keys (and `toEqual` in unit tests)
+        // ignore them. Real data still flows through unchanged.
+        difficulty: problem.difficulty ?? undefined,
+        estimatedMinutes: recRow.estimated_minutes ?? undefined,
+        itemId: recRow.id ?? undefined,
       };
     }
   }
@@ -139,6 +162,9 @@ export async function getNextProblem(
         questionNo: tier2.question_no,
         source: "same_question_no",
         reason: null,
+        difficulty: tier2.difficulty ?? undefined,
+        estimatedMinutes: undefined,
+        itemId: undefined,
       };
     }
   }
@@ -153,6 +179,9 @@ export async function getNextProblem(
       questionNo: tier3.question_no,
       source: "random",
       reason: null,
+      difficulty: tier3.difficulty ?? undefined,
+      estimatedMinutes: undefined,
+      itemId: undefined,
     };
   }
 
@@ -175,7 +204,7 @@ async function pickProblemExcluding(
   // the optional question_no filter up front for that reason.
   let base = supabase
     .from("problems")
-    .select("id, title, domain, question_no")
+    .select("id, title, domain, question_no, difficulty")
     .eq("publish_status", "published");
   if (questionNo != null) {
     base = base.eq("question_no", questionNo);
@@ -218,6 +247,16 @@ export type AlternativeProblem = {
   questionNo: number | null;
   domain: string;
   reason: string | null;
+  /** recommendation_items.id (when from a real rec row) — for consume on start. */
+  itemId?: string | null;
+  estimatedMinutes?: number | null;
+  difficulty?: number | null;
+  /**
+   * Phase 7-D follow-up (R-02 §3 예외) — 권한 잠금 카드. Free-plan users see
+   * the first alternative unlocked and the rest locked with an upgrade prompt.
+   * Locked cards are non-interactive (no navigation, no consume).
+   */
+  locked?: boolean;
 };
 
 export type NextProblemBundle = {
@@ -226,6 +265,21 @@ export type NextProblemBundle = {
   summary: SummarySignals;
   alternatives: AlternativeProblem[];
 };
+
+/** 유료에 해당하는 plan_label (weakness 페이지와 동일 기준). */
+const PAID_PLAN_LABELS = new Set([
+  "premium",
+  "pro",
+  "team",
+  "yearly",
+  "quarterly",
+  "monthly",
+]);
+
+function isPaidPlan(planLabel: string | null | undefined): boolean {
+  if (!planLabel) return false;
+  return PAID_PLAN_LABELS.has(planLabel.toLowerCase());
+}
 
 async function fetchSummarySignals(
   supabase: SupabaseServerClient,
@@ -287,21 +341,30 @@ async function fetchAlternatives(
   supabase: SupabaseServerClient,
   userId: string,
   excludeId: string | null,
+  paid: boolean,
 ): Promise<AlternativeProblem[]> {
   // Pull next 3 active recommendations (rank 2-4) excluding primary id
   const { data } = await supabase
     .from("recommendation_items")
     .select(
-      "problem_id, reason, problems!inner(id, title, domain, question_no)",
+      "id, problem_id, reason, estimated_minutes," +
+        " problems!inner(id, title, domain, question_no, difficulty)",
     )
     .eq("user_id", userId)
     .eq("status", "active")
     .order("rank", { ascending: true })
     .limit(4);
 
-  return (data ?? [])
+  type AltRow = {
+    id: string;
+    reason: string | null;
+    estimated_minutes: number | null;
+    problems: unknown;
+  };
+  const altRows = (data ?? []) as unknown as AltRow[];
+  const alternatives = altRows
     .flatMap((row) => {
-      const p = pickOne(row.problems as unknown);
+      const p = pickOne(row.problems);
       if (!p || typeof p !== "object") return [];
       const problem = p as ProblemSlice;
       if (problem.id === excludeId) return [];
@@ -312,10 +375,20 @@ async function fetchAlternatives(
           questionNo: problem.question_no,
           domain: problem.domain,
           reason: row.reason ?? null,
+          itemId: row.id ?? null,
+          estimatedMinutes: row.estimated_minutes ?? null,
+          difficulty: problem.difficulty ?? null,
         } satisfies AlternativeProblem,
       ];
     })
     .slice(0, 3);
+
+  // R-02 §3 예외 — free-plan users keep the first alternative unlocked and see
+  // the rest as locked upgrade cards. Paid users see everything unlocked.
+  if (paid) return alternatives;
+  return alternatives.map((alt, idx) =>
+    idx === 0 ? alt : { ...alt, locked: true },
+  );
 }
 
 export async function getNextProblemBundle(
@@ -325,10 +398,20 @@ export async function getNextProblemBundle(
   const supabase = await createClient();
   const next = await getNextProblem(userId, () => Promise.resolve(supabase));
   const summary = await fetchSummarySignals(supabase, userId);
+
+  // Plan gate for the locked alternative variant (R-02 §3 예외).
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("plan_label")
+    .eq("id", userId)
+    .maybeSingle();
+  const paid = isPaidPlan(profile?.plan_label);
+
   const alternatives = await fetchAlternatives(
     supabase,
     userId,
     next?.problemId ?? null,
+    paid,
   );
   // primaryTier derived from next.source
   const primaryTier: NextProblemBundle["primaryTier"] = !next
