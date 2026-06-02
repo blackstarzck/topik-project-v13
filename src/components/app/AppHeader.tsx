@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Layout, Space, Typography } from "antd";
+import { useTranslations } from "next-intl";
 import { Menu as MenuIcon } from "lucide-react";
 
 const { Header } = Layout;
@@ -14,6 +15,7 @@ type Props = {
 };
 
 export function AppHeader({ email, showMenuToggle, onMenuToggle }: Props) {
+  const t = useTranslations("app");
   return (
     <Header
       style={{
@@ -29,13 +31,13 @@ export function AppHeader({ email, showMenuToggle, onMenuToggle }: Props) {
         {showMenuToggle ? (
           <Button
             type="text"
-            aria-label="메뉴 열기"
+            aria-label={t("openMenu")}
             onClick={onMenuToggle}
             icon={<MenuIcon aria-hidden size={20} />}
           />
         ) : null}
         <Title level={4} style={{ margin: 0 }}>
-          TALKPIK
+          {t("brand")}
         </Title>
       </Space>
       <Space>

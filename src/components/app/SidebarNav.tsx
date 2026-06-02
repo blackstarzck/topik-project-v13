@@ -1,6 +1,7 @@
 "use client";
 
 import { Menu, Tag, Tooltip, type MenuProps } from "antd";
+import { useTranslations } from "next-intl";
 import { Lock } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useMemo } from "react";
@@ -23,6 +24,16 @@ type Props = {
 };
 
 type MenuItems = MenuProps["items"];
+
+/**
+ * Translator scoped to the `nav` message namespace. next-intl's type
+ * augmentation narrows the accepted key to the known `nav` keys, so we derive
+ * the exact translator + key types here. The sidebar data module carries
+ * `labelKey`/lock values as plain `string` (it must stay i18n-import-free, see
+ * routes.ts), so we cast those strings to `NavKey` at the single call site.
+ */
+type NavTranslate = ReturnType<typeof useTranslations<"nav">>;
+type NavKey = Parameters<NavTranslate>[0];
 
 /**
  * B-01 area 1 예외 — 권한/플랜 잠금 메뉴는 숨기거나 활성화하지 않고
@@ -48,33 +59,40 @@ function lockedLeafLabel(label: string, reason: string) {
   );
 }
 
-function buildLeaf(leaf: SidebarLeaf, locks: SidebarLockMap) {
-  const reason = locks[leaf.key];
-  if (reason) {
+function buildLeaf(leaf: SidebarLeaf, locks: SidebarLockMap, t: NavTranslate) {
+  const label = t(leaf.labelKey as NavKey);
+  const lockKey = locks[leaf.key];
+  if (lockKey) {
+    const reason = t(lockKey as NavKey);
     return {
       key: leaf.key,
-      label: lockedLeafLabel(leaf.label, reason),
+      label: lockedLeafLabel(label, reason),
       disabled: true,
-      title: `${leaf.label} (${reason})`,
+      title: `${label} (${reason})`,
     };
   }
-  return { key: leaf.key, label: leaf.label };
+  return { key: leaf.key, label };
 }
 
-function buildItem(item: SidebarItem, locks: SidebarLockMap): NonNullable<MenuItems>[number] {
+function buildItem(
+  item: SidebarItem,
+  locks: SidebarLockMap,
+  t: NavTranslate,
+): NonNullable<MenuItems>[number] {
   if ("children" in item) {
     return {
       key: item.key,
-      label: item.label,
-      children: item.children.map((child) => buildLeaf(child, locks)),
+      label: t(item.labelKey as NavKey),
+      children: item.children.map((child) => buildLeaf(child, locks, t)),
     };
   }
-  return buildLeaf(item, locks);
+  return buildLeaf(item, locks, t);
 }
 
 export function SidebarNav({ role, planLabel, onNavigate }: Props) {
   const pathname = usePathname();
   const router = useRouter();
+  const t = useTranslations("nav");
   const isAdmin = ADMIN_ROLES.includes(role);
 
   const locks = useMemo<SidebarLockMap>(
@@ -86,8 +104,8 @@ export function SidebarNav({ role, planLabel, onNavigate }: Props) {
     const source: readonly SidebarItem[] = isAdmin
       ? [...SIDEBAR_ITEMS, SIDEBAR_ADMIN_SECTION]
       : SIDEBAR_ITEMS;
-    return source.map((item) => buildItem(item, locks));
-  }, [isAdmin, locks]);
+    return source.map((item) => buildItem(item, locks, t));
+  }, [isAdmin, locks, t]);
 
   // 현재 위치 표시 — 정확 일치 우선, 없으면 가장 긴 접두 일치(중첩 라우트).
   const selectedKey = useMemo(() => {

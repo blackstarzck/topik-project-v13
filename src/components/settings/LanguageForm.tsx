@@ -12,8 +12,15 @@ import {
   Space,
   Typography,
 } from "antd";
+import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import {
+  LOCALE_COOKIE,
+  LOCALE_COOKIE_MAX_AGE,
+  type Locale,
+} from "@/i18n/locales";
 import { useUpdateLocale } from "@/lib/settings/mutations";
 import {
   CONTENT_PREF_DEFAULTS,
@@ -42,11 +49,6 @@ function contentPrefsEqual(a: ContentPrefs, b: ContentPrefs): boolean {
   );
 }
 
-const UNSAVED_LANGUAGE_LEAVE_MESSAGE =
-  "저장하지 않은 변경사항이 있습니다. 페이지를 떠나시겠어요?";
-
-type Locale = "ko" | "en" | "vi";
-
 type Props = {
   /**
    * Authenticated user id. The settings mutation hooks are scoped per-user
@@ -62,13 +64,20 @@ type Props = {
 
 /**
  * `/settings/language` form (G-01). Single radio group for the three
- * supported UI locales. The label list is hard-coded — i18n message
- * catalogs are OOS-7 (Phase 6 light spec); Phase 6 only persists the
- * preference. The selected locale takes effect on next render after the
- * profile-settings query revalidates (handled by the mutation hook's
- * `onSuccess` invalidation).
+ * supported UI locales.
+ *
+ * i18n (G-01 foundation): on save we persist `profiles.ui_locale` (existing
+ * mutation) AND write the `NEXT_LOCALE` cookie, then `router.refresh()`. The
+ * cookie is the resolver's fallback for the just-saved value before the next
+ * auth round-trip re-reads the DB row, and `router.refresh()` re-runs the
+ * server render so the active locale (and the migrated UI surfaces) switch
+ * immediately. The remaining (not-yet-migrated) screen text still renders in
+ * its source language until migrated — see `coverageNote` copy.
  */
 export function LanguageForm({ userId, initialLocale }: Props) {
+  const t = useTranslations("settings.language");
+  const tCommon = useTranslations("common");
+  const router = useRouter();
   const { message } = App.useApp();
   const mutation = useUpdateLocale(userId);
   const [savedLocale, setSavedLocale] = useState<Locale>(initialLocale);
@@ -106,14 +115,14 @@ export function LanguageForm({ userId, initialLocale }: Props) {
           message:
             err instanceof Error
               ? err.message
-              : "콘텐츠 설정을 불러오지 못했어요.",
+              : t("learningSettingsLoadError"),
         });
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [userId]);
+  }, [userId, t]);
 
   const conflict = detectContentPrefConflict(contentPrefs);
 
@@ -174,7 +183,7 @@ export function LanguageForm({ userId, initialLocale }: Props) {
       if (url.origin !== window.location.origin) return;
       if (url.href === window.location.href) return;
 
-      if (!window.confirm(UNSAVED_LANGUAGE_LEAVE_MESSAGE)) {
+      if (!window.confirm(t("unsavedLeave"))) {
         event.preventDefault();
         event.stopPropagation();
         event.stopImmediatePropagation();
@@ -187,10 +196,11 @@ export function LanguageForm({ userId, initialLocale }: Props) {
       window.removeEventListener("beforeunload", handleBeforeUnload);
       document.removeEventListener("click", handleDocumentClick, true);
     };
-  }, [isDirty]);
+  }, [isDirty, t]);
 
   async function handleFinish() {
     setSaving(true);
+    const localeChanged = uiLocaleDirty;
     try {
       // Always persist the UI locale on submit (idempotent) so the submit
       // contract stays simple and predictable.
@@ -204,11 +214,19 @@ export function LanguageForm({ userId, initialLocale }: Props) {
         setSavedLearningLocale(learningLocale);
         setSavedContentPrefs(contentPrefs);
       }
-      message.success("언어·콘텐츠 설정이 저장되었습니다.");
+      message.success(t("saveSuccess"));
+
+      // i18n (G-01): make the new UI locale take effect immediately. The
+      // server resolver reads profiles.ui_locale first, but the just-written
+      // value may not be visible on the very next render (auth/RLS round-trip),
+      // so we also set the NEXT_LOCALE cookie as the authoritative fallback,
+      // then refresh so the server re-renders with the new locale + catalog.
+      if (localeChanged && typeof document !== "undefined") {
+        document.cookie = `${LOCALE_COOKIE}=${locale}; path=/; max-age=${LOCALE_COOKIE_MAX_AGE}; SameSite=Lax`;
+        router.refresh();
+      }
     } catch (err) {
-      message.error(
-        err instanceof Error ? err.message : "설정 저장에 실패했어요.",
-      );
+      message.error(err instanceof Error ? err.message : t("saveError"));
     } finally {
       setSaving(false);
     }
@@ -218,44 +236,40 @@ export function LanguageForm({ userId, initialLocale }: Props) {
     <Form layout="vertical" onFinish={handleFinish} disabled={saving}>
       <Space direction="vertical" size="middle" style={{ width: "100%" }}>
         {/* Region 2: UI 언어 선택 */}
-        <Form.Item label="UI 언어" required style={{ marginBottom: 0 }}>
+        <Form.Item label={t("uiLanguageLabel")} required style={{ marginBottom: 0 }}>
           <Radio.Group
             value={locale}
             onChange={(e) => setLocale(e.target.value as Locale)}
-            aria-label="UI 언어"
+            aria-label={t("uiLanguageLabel")}
           >
             <Space direction="vertical">
-              <Radio value="ko">한국어 (Korean)</Radio>
-              <Radio value="en">English (English)</Radio>
-              <Radio value="vi">Tiếng Việt (Vietnamese)</Radio>
+              <Radio value="ko">{t("optionKo")}</Radio>
+              <Radio value="en">{t("optionEn")}</Radio>
+              <Radio value="vi">{t("optionVi")}</Radio>
             </Space>
           </Radio.Group>
         </Form.Item>
 
         <Paragraph type="secondary" style={{ marginBottom: 0 }}>
-          <Text type="secondary">
-            선택한 UI 언어는 저장하면 환경설정에 반영됩니다. 화면 문구 전체
-            번역(다국어 메시지)은 준비 중이라 일부 화면은 아직 한국어로
-            표시될 수 있어요.
-          </Text>
+          <Text type="secondary">{t("coverageNote")}</Text>
         </Paragraph>
 
         {/* Region 3: 학습 언어 선택 (설명·예시·번역 보조 기준 언어) */}
-        <Card size="small" title="학습 언어">
+        <Card size="small" title={t("learningCardTitle")}>
           {contentLoad.status === "loading" ? (
             <Skeleton active paragraph={{ rows: 2 }} />
           ) : contentLoad.status === "error" ? (
             <Alert
               type="error"
               showIcon
-              message="학습 설정을 불러오지 못했어요"
+              message={t("learningLoadError")}
               description={contentLoad.message}
             />
           ) : (
             <Form.Item
-              label="설명·예시·번역 보조 기준 언어"
+              label={t("learningFieldLabel")}
               style={{ marginBottom: 0 }}
-              extra="미설정 시 UI 언어를 따릅니다. 일부 언어는 번역이 없어 기본 언어로 표시될 수 있어요."
+              extra={t("learningFieldExtra")}
             >
               <Radio.Group
                 value={learningLocale ?? "follow"}
@@ -263,13 +277,13 @@ export function LanguageForm({ userId, initialLocale }: Props) {
                   const v = e.target.value as LearningLocale | "follow";
                   setLearningLocale(v === "follow" ? null : v);
                 }}
-                aria-label="학습 언어"
+                aria-label={t("learningCardTitle")}
               >
                 <Space direction="vertical">
-                  <Radio value="follow">UI 언어 따르기</Radio>
-                  <Radio value="ko">한국어 (Korean)</Radio>
-                  <Radio value="en">English (English)</Radio>
-                  <Radio value="vi">Tiếng Việt (Vietnamese)</Radio>
+                  <Radio value="follow">{t("learningFollow")}</Radio>
+                  <Radio value="ko">{t("optionKo")}</Radio>
+                  <Radio value="en">{t("optionEn")}</Radio>
+                  <Radio value="vi">{t("optionVi")}</Radio>
                 </Space>
               </Radio.Group>
             </Form.Item>
@@ -277,19 +291,19 @@ export function LanguageForm({ userId, initialLocale }: Props) {
         </Card>
 
         {/* Region 4: 콘텐츠 설정 (피드백 표시 · 예문 난이도 · 해설 길이) */}
-        <Card size="small" title="콘텐츠 설정">
+        <Card size="small" title={t("contentCardTitle")}>
           {contentLoad.status === "loading" ? (
             <Skeleton active paragraph={{ rows: 3 }} />
           ) : contentLoad.status === "error" ? (
             <Alert
               type="error"
               showIcon
-              message="콘텐츠 설정을 불러오지 못했어요"
+              message={t("contentLoadError")}
               description={contentLoad.message}
             />
           ) : (
             <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-              <Form.Item label="피드백 표시" style={{ marginBottom: 0 }}>
+              <Form.Item label={t("feedbackDisplayLabel")} style={{ marginBottom: 0 }}>
                 <Segmented
                   value={
                     contentPrefs.feedback_display ??
@@ -299,12 +313,12 @@ export function LanguageForm({ userId, initialLocale }: Props) {
                     setPref("feedback_display", v as "full" | "summary")
                   }
                   options={[
-                    { label: "자세히", value: "full" },
-                    { label: "요약", value: "summary" },
+                    { label: t("feedbackFull"), value: "full" },
+                    { label: t("feedbackSummary"), value: "summary" },
                   ]}
                 />
               </Form.Item>
-              <Form.Item label="예문 난이도" style={{ marginBottom: 0 }}>
+              <Form.Item label={t("exampleDifficultyLabel")} style={{ marginBottom: 0 }}>
                 <Segmented
                   value={
                     contentPrefs.example_difficulty ??
@@ -317,13 +331,13 @@ export function LanguageForm({ userId, initialLocale }: Props) {
                     )
                   }
                   options={[
-                    { label: "쉬움", value: "easy" },
-                    { label: "보통", value: "standard" },
-                    { label: "어려움", value: "hard" },
+                    { label: t("difficultyEasy"), value: "easy" },
+                    { label: t("difficultyStandard"), value: "standard" },
+                    { label: t("difficultyHard"), value: "hard" },
                   ]}
                 />
               </Form.Item>
-              <Form.Item label="해설 길이" style={{ marginBottom: 0 }}>
+              <Form.Item label={t("explanationLengthLabel")} style={{ marginBottom: 0 }}>
                 <Segmented
                   value={
                     contentPrefs.explanation_length ??
@@ -336,9 +350,9 @@ export function LanguageForm({ userId, initialLocale }: Props) {
                     )
                   }
                   options={[
-                    { label: "짧게", value: "short" },
-                    { label: "보통", value: "standard" },
-                    { label: "자세히", value: "detailed" },
+                    { label: t("explanationShort"), value: "short" },
+                    { label: t("explanationStandard"), value: "standard" },
+                    { label: t("explanationDetailed"), value: "detailed" },
                   ]}
                 />
               </Form.Item>
@@ -348,11 +362,11 @@ export function LanguageForm({ userId, initialLocale }: Props) {
                 <Alert
                   type="warning"
                   showIcon
-                  message="설정이 서로 충돌해요"
-                  description="요약 피드백과 자세한 해설은 함께 쓰기 어려운 조합이에요. 추천값으로 되돌릴 수 있어요."
+                  message={t("conflictTitle")}
+                  description={t("conflictDescription")}
                   action={
                     <Button size="small" onClick={restoreRecommended}>
-                      추천값 복원
+                      {t("restoreRecommended")}
                     </Button>
                   }
                 />
@@ -362,32 +376,22 @@ export function LanguageForm({ userId, initialLocale }: Props) {
         </Card>
 
         {/* Region 5: 도움말 (언어 설정 영향 범위 안내) */}
-        <Card size="small" title="도움말">
+        <Card size="small" title={t("helpCardTitle")}>
           <ul style={{ margin: 0, paddingLeft: 18 }}>
             <li>
-              <Text type="secondary">
-                UI 언어는 메뉴·버튼 등 인터페이스 문구에 적용됩니다.
-              </Text>
+              <Text type="secondary">{t("helpUiScope")}</Text>
             </li>
             <li>
-              <Text type="secondary">
-                학습 언어·콘텐츠 설정은 첨삭·예문·해설 표시에 반영됩니다.
-              </Text>
+              <Text type="secondary">{t("helpLearningScope")}</Text>
             </li>
             <li>
-              <Text type="secondary">
-                화면 문구 전체 번역(다국어 메시지)은 순차적으로 적용됩니다.
-              </Text>
+              <Text type="secondary">{t("helpIncremental")}</Text>
             </li>
           </ul>
         </Card>
 
         {/* Region 2 예외: 미지원 언어 안내 */}
-        <Alert
-          type="info"
-          showIcon
-          message="현재 한국어·English·Tiếng Việt를 지원합니다. 그 외 언어는 지원 예정입니다."
-        />
+        <Alert type="info" showIcon message={t("unsupportedNotice")} />
 
         {/* Region 6: 저장 (변경값 없으면 비활성, 저장 중 중복 클릭 차단) */}
         <Form.Item style={{ marginBottom: 0 }}>
@@ -397,7 +401,7 @@ export function LanguageForm({ userId, initialLocale }: Props) {
             loading={saving}
             disabled={!isDirty || saving}
           >
-            저장
+            {tCommon("save")}
           </Button>
         </Form.Item>
       </Space>

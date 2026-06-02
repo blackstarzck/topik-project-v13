@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { cookies } from "next/headers";
+import { getMessages } from "next-intl/server";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
 
+import { resolveLocale } from "@/i18n/request";
 import { AppProviders } from "./providers";
 // antd v6.x 호환성: @/theme barrel은 create-theme → "use client" algorithms.ts를
 // transitively pull한다. server layout은 server-safe 모듈만 직접 import.
@@ -36,6 +38,12 @@ export default async function RootLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {
   const appearance = await resolveInitialAppearance();
+  // i18n (G-01): resolve the active locale (profiles.ui_locale → NEXT_LOCALE
+  // cookie → 'ko') and load its message catalog. Both <html lang> and the
+  // client provider read the SAME resolved locale so SSR and hydration agree.
+  // getMessages() reads the same getRequestConfig as the rest of next-intl.
+  const locale = await resolveLocale();
+  const messages = await getMessages();
   // antd v6.x 호환성: theme namespace는 client-only ("use client" + transitive
   // createContext)이므로 server layout에서 import 자체 금지. SSR cssVars는 appearance
   // 기반 hardcoded fallback만 사용. 동적 token은 client AppProviders → ThemeProvider →
@@ -44,7 +52,7 @@ export default async function RootLayout({
 
   return (
     <html
-      lang="ko"
+      lang={locale}
       style={{ ...cssVars, colorScheme: appearance } as React.CSSProperties}
     >
       <body>
@@ -54,7 +62,13 @@ export default async function RootLayout({
          * See: https://ant.design/docs/react/use-with-next
          */}
         <AntdRegistry>
-          <AppProviders initialAppearance={appearance}>{children}</AppProviders>
+          <AppProviders
+            initialAppearance={appearance}
+            locale={locale}
+            messages={messages}
+          >
+            {children}
+          </AppProviders>
         </AntdRegistry>
       </body>
     </html>

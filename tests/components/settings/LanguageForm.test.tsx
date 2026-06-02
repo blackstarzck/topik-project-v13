@@ -9,7 +9,10 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { App as AntdApp } from "antd";
+import { NextIntlClientProvider } from "next-intl";
 import type { ReactNode } from "react";
+
+import koMessages from "../../../messages/ko.json";
 
 const mutateAsyncMock = vi.fn();
 const useUpdateLocaleMock = vi.fn();
@@ -18,15 +21,30 @@ vi.mock("@/lib/settings/mutations", () => ({
   useUpdateLocale: (...args: unknown[]) => useUpdateLocaleMock(...args),
 }));
 
+// next/navigation: LanguageForm now calls useRouter().refresh() after a
+// locale change to make the new UI language take effect immediately.
+const refreshMock = vi.fn();
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: refreshMock }),
+}));
+
 import { LanguageForm } from "../../../src/components/settings/LanguageForm";
 
+// LanguageForm now uses next-intl's useTranslations, so it must render inside
+// a NextIntlClientProvider. We supply the baseline (ko) catalog — the same
+// Korean strings the assertions below match (e.g. "English (English)").
 function renderInApp(node: ReactNode) {
-  return render(<AntdApp>{node}</AntdApp>);
+  return render(
+    <NextIntlClientProvider locale="ko" messages={koMessages}>
+      <AntdApp>{node}</AntdApp>
+    </NextIntlClientProvider>,
+  );
 }
 
 beforeEach(() => {
   mutateAsyncMock.mockReset();
   mutateAsyncMock.mockResolvedValue(undefined);
+  refreshMock.mockReset();
   useUpdateLocaleMock.mockReset();
   useUpdateLocaleMock.mockReturnValue({
     mutate: vi.fn(),

@@ -18,10 +18,33 @@ vi.mock("@ant-design/nextjs-registry", () => ({
   AntdRegistry: ({ children }: { children: React.ReactNode }) => children,
 }));
 
-// Mock providers to capture the initialAppearance prop without rendering
+// i18n (G-01): the root layout resolves a locale and loads its message
+// catalog. Mock both so this test stays a focused appearance/locale-threading
+// check — locale resolution itself is covered by the i18n request-config tests.
+const resolveLocaleMock = vi.fn();
+vi.mock("../../src/i18n/request", () => ({
+  resolveLocale: () => resolveLocaleMock(),
+}));
+vi.mock("next-intl/server", () => ({
+  getMessages: vi.fn(async () => ({})),
+}));
+
+// Mock providers to capture the initialAppearance + locale props without rendering
 vi.mock("../../src/app/providers", () => ({
-  AppProviders: ({ initialAppearance, children }: { initialAppearance?: string; children: React.ReactNode }) =>
-    React.createElement("div", { "data-initial-appearance": initialAppearance }, children),
+  AppProviders: ({
+    initialAppearance,
+    locale,
+    children,
+  }: {
+    initialAppearance?: string;
+    locale?: string;
+    children: React.ReactNode;
+  }) =>
+    React.createElement(
+      "div",
+      { "data-initial-appearance": initialAppearance, "data-locale": locale },
+      children,
+    ),
 }));
 
 import { cookies } from "next/headers";
@@ -30,7 +53,11 @@ import RootLayout from "../../src/app/layout";
 type AnyElement = React.ReactElement<Record<string, unknown>>;
 
 describe("RootLayout hydration consistency", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // Default: locale resolves to the baseline unless a test overrides it.
+    resolveLocaleMock.mockResolvedValue("ko");
+  });
 
   function mockCookie(value: string | undefined) {
     vi.mocked(cookies).mockResolvedValue({
@@ -45,21 +72,23 @@ describe("RootLayout hydration consistency", () => {
     mockCookie(cookieValue);
     const element = await RootLayout({ children: React.createElement("span") }) as AnyElement;
 
-    // Structure: <html style={...}><body>{...AppProviders mock...}</body></html>
+    // Structure: <html lang style={...}><body>{...AppProviders mock...}</body></html>
     const htmlStyle = element.props.style as Record<string, string>;
     const colorScheme = htmlStyle.colorScheme as string;
     const bgContainer = htmlStyle["--app-color-bg-container"] as string;
+    const lang = element.props.lang as string;
 
     // Navigate: <html> → <body> → <AntdRegistry> → <AppProviders>
     // Components are NOT rendered when calling RootLayout directly, so each
-    // child remains a JSX element. We read props.initialAppearance straight
-    // off the AppProviders JSX element (mocks only matter on actual render).
+    // child remains a JSX element. We read props.initialAppearance / locale
+    // straight off the AppProviders JSX element (mocks only matter on render).
     const body = element.props.children as AnyElement;
     const antdRegistryEl = body.props.children as AnyElement;
     const appProvidersEl = antdRegistryEl.props.children as AnyElement;
     const initialAppearance = appProvidersEl.props.initialAppearance as string;
+    const locale = appProvidersEl.props.locale as string;
 
-    return { colorScheme, bgContainer, initialAppearance };
+    return { colorScheme, bgContainer, initialAppearance, lang, locale };
   }
 
   test("dark cookie → html colorScheme=dark AND AppProviders initialAppearance=dark", async () => {
@@ -87,5 +116,23 @@ describe("RootLayout hydration consistency", () => {
     expect(colorScheme).toBe("light");
     expect(bgContainer).toBe("#ffffff");
     expect(initialAppearance).toBe("light");
+  });
+
+  // i18n (G-01): the resolved locale must drive BOTH <html lang> and the
+  // client provider's locale prop, so SSR and hydration agree on the language.
+  test("resolved locale → html lang AND AppProviders locale match", async () => {
+    resolveLocaleMock.mockResolvedValue("en");
+    const { lang, locale } = await getLayoutAndProviderProps(undefined);
+
+    expect(lang).toBe("en");
+    expect(locale).toBe("en");
+  });
+
+  test("baseline locale → html lang=ko", async () => {
+    resolveLocaleMock.mockResolvedValue("ko");
+    const { lang, locale } = await getLayoutAndProviderProps(undefined);
+
+    expect(lang).toBe("ko");
+    expect(locale).toBe("ko");
   });
 });

@@ -1,4 +1,10 @@
 import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
+
+// i18n (G-01): user-preference / cookie locale — NO URL routing. The plugin
+// only needs to know where the request config lives; locale resolution itself
+// happens in src/i18n/request.ts (profiles.ui_locale → NEXT_LOCALE cookie → ko).
+const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
 
@@ -43,4 +49,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

@@ -90,10 +90,17 @@ export const PROTECTED_ROUTE_CASES: readonly ProtectedRouteCase[] = [
 // ---------------------------------------------------------------------------
 // SIDEBAR_ITEMS / SIDEBAR_ADMIN_SECTION — SidebarNav menu structure
 // ---------------------------------------------------------------------------
-export type SidebarLeaf = { key: string; label: string };
+/**
+ * i18n (G-01): `labelKey` is a message key under the `nav` namespace. The
+ * client `SidebarNav` translates it via `useTranslations("nav")`. `label`
+ * remains as the Korean baseline so this server-importable data module reads
+ * sensibly and any non-i18n consumer keeps a usable string.
+ */
+export type SidebarLeaf = { key: string; label: string; labelKey: string };
 export type SidebarGroup = {
   key: string;
   label: string;
+  labelKey: string;
   children: SidebarLeaf[];
 };
 export type SidebarItem = SidebarLeaf | SidebarGroup;
@@ -103,36 +110,39 @@ export type SidebarItem = SidebarLeaf | SidebarGroup;
  * with `/` are click-navigable; group keys are non-path identifiers.
  */
 export const SIDEBAR_ITEMS: readonly SidebarItem[] = [
-  { key: "/dashboard", label: "대시보드" },
+  { key: "/dashboard", label: "대시보드", labelKey: "dashboard" },
   {
     key: "practice",
     label: "학습",
+    labelKey: "practice",
     children: [
-      { key: "/practice/recommendations", label: "추천" },
-      { key: "/practice/problems", label: "문제 풀이" },
-      { key: "/practice/next", label: "다음 문제" },
-      { key: "/practice/weakness", label: "약점 보강" },
+      { key: "/practice/recommendations", label: "추천", labelKey: "practiceRecommendations" },
+      { key: "/practice/problems", label: "문제 풀이", labelKey: "practiceProblems" },
+      { key: "/practice/next", label: "다음 문제", labelKey: "practiceNext" },
+      { key: "/practice/weakness", label: "약점 보강", labelKey: "practiceWeakness" },
     ],
   },
   {
     key: "writing",
     label: "글쓰기",
+    labelKey: "writing",
     children: [
-      { key: "/writing/51", label: "51 단답" },
-      { key: "/writing/52", label: "52 답변" },
-      { key: "/writing/53", label: "53 장문" },
-      { key: "/writing/54", label: "54 에세이" },
+      { key: "/writing/51", label: "51 단답", labelKey: "writing51" },
+      { key: "/writing/52", label: "52 답변", labelKey: "writing52" },
+      { key: "/writing/53", label: "53 장문", labelKey: "writing53" },
+      { key: "/writing/54", label: "54 에세이", labelKey: "writing54" },
     ],
   },
-  { key: "/library", label: "내 라이브러리" },
-  { key: "/growth", label: "성장 대시보드" },
-  { key: "/profile", label: "프로필" },
+  { key: "/library", label: "내 라이브러리", labelKey: "library" },
+  { key: "/growth", label: "성장 대시보드", labelKey: "growth" },
+  { key: "/profile", label: "프로필", labelKey: "profile" },
   {
     key: "settings",
     label: "설정",
+    labelKey: "settings",
     children: [
-      { key: "/settings/language", label: "언어" },
-      { key: "/settings/notifications", label: "알림" },
+      { key: "/settings/language", label: "언어", labelKey: "settingsLanguage" },
+      { key: "/settings/notifications", label: "알림", labelKey: "settingsNotifications" },
     ],
   },
 ];
@@ -144,10 +154,11 @@ export const SIDEBAR_ITEMS: readonly SidebarItem[] = [
 export const SIDEBAR_ADMIN_SECTION: SidebarGroup = {
   key: "admin",
   label: "관리",
+  labelKey: "admin",
   children: [
-    { key: "/admin/problems", label: "문제 관리" },
-    { key: "/admin/org", label: "기관 관리" },
-    { key: "/admin/users", label: "사용자 관리" },
+    { key: "/admin/problems", label: "문제 관리", labelKey: "adminProblems" },
+    { key: "/admin/org", label: "기관 관리", labelKey: "adminOrg" },
+    { key: "/admin/users", label: "사용자 관리", labelKey: "adminUsers" },
   ],
 };
 
@@ -183,12 +194,19 @@ export function isPaidPlan(planLabel: string | null | undefined): boolean {
   return PAID_PLAN_LABELS.has(planLabel.toLowerCase());
 }
 
-/** 잠금 사유를 키별로 매핑. 비어 있으면 해당 메뉴는 잠겨 있지 않다. */
+/**
+ * 잠금 사유를 키별로 매핑. 비어 있으면 해당 메뉴는 잠겨 있지 않다.
+ *
+ * i18n (G-01): the value is a message KEY under the `nav` namespace (e.g.
+ * `lockPaidOnly`), not a literal string. `SidebarNav` (client) translates it
+ * so this pure data module stays free of any i18n import (it is also imported
+ * from server/middleware contexts).
+ */
 export type SidebarLockMap = Readonly<Record<string, string>>;
 
 /**
- * 현재 사용자(role/plan)에게 잠겨야 하는 사이드바 leaf 키 → 사유 매핑을 만든다.
- * `SidebarNav` 는 이 맵을 읽어 해당 leaf 를 disabled + 사유로 렌더한다.
+ * 현재 사용자(role/plan)에게 잠겨야 하는 사이드바 leaf 키 → 사유 메시지 키 매핑.
+ * `SidebarNav` 는 이 맵을 읽어 해당 leaf 를 disabled + (번역된) 사유로 렌더한다.
  */
 export function computeSidebarLocks(args: {
   role: AppRole;
@@ -197,7 +215,7 @@ export function computeSidebarLocks(args: {
   const locks: Record<string, string> = {};
   // 무료 플랜: 성장 대시보드 상세 리포트는 유료 전용(X-02). 메뉴는 보이되 잠금.
   if (!isPaidPlan(args.planLabel)) {
-    locks["/growth"] = "유료 플랜 전용";
+    locks["/growth"] = "lockPaidOnly";
   }
   return locks;
 }

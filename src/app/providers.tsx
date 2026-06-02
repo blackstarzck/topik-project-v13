@@ -3,9 +3,11 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { App as AntdApp, ConfigProvider } from "antd";
+import { NextIntlClientProvider, type AbstractIntlMessages } from "next-intl";
 import { useState } from "react";
 
 import { ThemeProvider, useTheme } from "@/contexts/theme-context";
+import type { Locale } from "@/i18n/locales";
 import type { ThemeAppearance } from "@/theme";
 
 // ---------------------------------------------------------------------------
@@ -33,11 +35,22 @@ interface AppProvidersProps {
    * Passed to ThemeProvider as the initial seed — client owns state after mount.
    */
   initialAppearance?: ThemeAppearance;
+  /**
+   * i18n (G-01): the active locale + its message catalog, both resolved
+   * server-side (profiles.ui_locale → NEXT_LOCALE cookie → 'ko'). Wrapping the
+   * tree in NextIntlClientProvider here — INSIDE the client AppProviders rather
+   * than the root-layout RSC — keeps the layout JSX tree unchanged (the
+   * layout-hydration test navigates html→body→AntdRegistry→AppProviders).
+   */
+  locale?: Locale;
+  messages?: AbstractIntlMessages;
 }
 
 export function AppProviders({
   children,
   initialAppearance = "light",
+  locale = "ko",
+  messages,
 }: AppProvidersProps) {
   const [queryClient] = useState(
     () =>
@@ -53,10 +66,12 @@ export function AppProviders({
   );
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider initialAppearance={initialAppearance}>
-        <AntdConfiguredProviders>{children}</AntdConfiguredProviders>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <NextIntlClientProvider locale={locale} messages={messages}>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider initialAppearance={initialAppearance}>
+          <AntdConfiguredProviders>{children}</AntdConfiguredProviders>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </NextIntlClientProvider>
   );
 }

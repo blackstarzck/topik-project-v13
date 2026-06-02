@@ -46,6 +46,7 @@
     "dayjs": "^1.11.20",
     "lucide-react": "^1.16.0",
     "next": "^16.2.6",
+    "next-intl": "^4.13.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-hook-form": "^7.76.0",

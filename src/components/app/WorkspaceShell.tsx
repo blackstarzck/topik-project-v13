@@ -1,6 +1,7 @@
 "use client";
 
 import { Drawer, Grid, Layout } from "antd";
+import { useTranslations } from "next-intl";
 import { useState, type ReactNode } from "react";
 import type { AppRole } from "@/lib/auth/roles";
 import { AppHeader } from "./AppHeader";
@@ -27,6 +28,7 @@ type Props = {
  * 두고, 누르면 antd Drawer 로 동일한 SidebarNav 를 띄운다(현재 위치 표시 포함).
  */
 export function WorkspaceShell({ role, email, planLabel, children }: Props) {
+  const t = useTranslations("app");
   const screens = useBreakpoint();
   // antd Grid 의 md(>=768) 가 true 면 데스크톱. SSR 첫 렌더에서는 screens 가 비어
   // 있을 수 있으므로 md 가 명시적으로 false 일 때만 모바일로 본다.
@@ -63,7 +65,7 @@ export function WorkspaceShell({ role, email, planLabel, children }: Props) {
         open={showDrawer}
         onClose={() => setDrawerOpen(false)}
         styles={{ body: { padding: 0 } }}
-        title="메뉴"
+        title={t("menu")}
       >
         <SidebarNav
           role={role}

@@ -10,15 +10,16 @@
 // default with no client session round-trip.
 
 import { Button, Space } from "antd";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 
-type NavItem = { label: string; href: string };
+type NavItem = { labelKey: "navFeatures" | "navPreview" | "navTerms"; href: string };
 
 // 제약: 메뉴 4개 이하.
 const NAV_ITEMS: NavItem[] = [
-  { label: "기능", href: "#features" },
-  { label: "미리보기", href: "#preview" },
-  { label: "이용약관", href: "/terms" },
+  { labelKey: "navFeatures", href: "#features" },
+  { labelKey: "navPreview", href: "#preview" },
+  { labelKey: "navTerms", href: "/terms" },
 ];
 
 type Props = {
@@ -26,6 +27,7 @@ type Props = {
 };
 
 export function LandingHeader({ isAuthenticated }: Props) {
+  const t = useTranslations("landing");
   return (
     <header
       style={{
@@ -47,12 +49,12 @@ export function LandingHeader({ isAuthenticated }: Props) {
           color: "inherit",
           textDecoration: "none",
         }}
-        aria-label="TALKPIK 홈 상단으로 이동"
+        aria-label={t("logoAria")}
       >
         TALKPIK<span style={{ color: "#1677ff" }}> AI</span>
       </a>
 
-      <nav aria-label="주요 메뉴">
+      <nav aria-label={t("navAria")}>
         <Space size="large" wrap>
           {NAV_ITEMS.map((item) =>
             item.href.startsWith("#") ? (
@@ -61,7 +63,7 @@ export function LandingHeader({ isAuthenticated }: Props) {
                 href={item.href}
                 style={{ color: "inherit", textDecoration: "none" }}
               >
-                {item.label}
+                {t(item.labelKey)}
               </a>
             ) : (
               <Link
@@ -69,7 +71,7 @@ export function LandingHeader({ isAuthenticated }: Props) {
                 href={item.href}
                 style={{ color: "inherit", textDecoration: "none" }}
               >
-                {item.label}
+                {t(item.labelKey)}
               </Link>
             ),
           )}
@@ -79,15 +81,15 @@ export function LandingHeader({ isAuthenticated }: Props) {
       {/* 예외: 로그인 사용자는 대시보드 CTA */}
       {isAuthenticated ? (
         <Link href="/dashboard">
-          <Button type="primary">대시보드</Button>
+          <Button type="primary">{t("ctaDashboard")}</Button>
         </Link>
       ) : (
         <Space>
           <Link href="/login">
-            <Button>로그인</Button>
+            <Button>{t("ctaLogin")}</Button>
           </Link>
           <Link href="/sign-up">
-            <Button type="primary">무료 시작</Button>
+            <Button type="primary">{t("ctaSignUp")}</Button>
           </Link>
         </Space>
       )}

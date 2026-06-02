@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button, Space, Typography } from "antd";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 
 import { AuthMascot } from "@/components/auth/AuthMascot";
@@ -17,6 +18,7 @@ type HeroProps = {
 };
 
 export function Hero({ isAuthenticated = false }: HeroProps) {
+  const t = useTranslations("landing");
   const router = useRouter();
   // §3 제약: "클릭 후 중복 이동 차단" — once a primary CTA is pressed we lock
   // it so a double-click can't fire a second navigation.
@@ -43,12 +45,9 @@ export function Hero({ isAuthenticated = false }: HeroProps) {
         size={64}
       />
       <Title level={1} style={{ marginTop: 16 }}>
-        TOPIK 글쓰기, AI와 함께 끝까지
+        {t("heroTitle")}
       </Title>
-      <Paragraph style={{ fontSize: 18 }}>
-        학습 목표를 정하고, 문제를 풀고, AI 피드백으로 약점을 좁히세요. TOPIK
-        51~54번 글쓰기 환경을 그대로 재현합니다.
-      </Paragraph>
+      <Paragraph style={{ fontSize: 18 }}>{t("heroBody")}</Paragraph>
       {isAuthenticated ? (
         <Space size="middle" style={{ marginTop: 24 }}>
           <Button
@@ -57,7 +56,7 @@ export function Hero({ isAuthenticated = false }: HeroProps) {
             loading={navigating}
             onClick={() => go("/dashboard")}
           >
-            대시보드로 이동
+            {t("heroCtaDashboard")}
           </Button>
         </Space>
       ) : (
@@ -68,14 +67,14 @@ export function Hero({ isAuthenticated = false }: HeroProps) {
             loading={navigating}
             onClick={() => go("/sign-up")}
           >
-            무료 시작
+            {t("heroCtaSignUp")}
           </Button>
           <Button
             size="large"
             disabled={navigating}
             onClick={() => go("/login")}
           >
-            로그인
+            {t("heroCtaLogin")}
           </Button>
         </Space>
       )}
