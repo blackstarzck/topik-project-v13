@@ -146,6 +146,93 @@ export const iaReceiptContent = {
     docConflicts: "none",
   },
 
+  "X-13": {
+    sitemapRequirement: "Route '/terms' page. Public legal placeholder. Added after the existing 34 Wireframe screens from codebase route coverage.",
+    userFlowContext: {
+      previous: "X-01 product landing or A-01 sign-up legal links",
+      next: "X-14 privacy policy, X-01 home, or A-01 sign-up",
+    },
+    prdRequirement: "Policy/legal support route for sign-up consent. Formal legal copy remains pre-production work.",
+    extractedRequirements: [
+      "Must explicitly state it was added after the existing 34 Wireframe screens.",
+      "Must be public and reachable without a session.",
+      "Must disclose that current terms are temporary placeholder copy before formal legal publication.",
+      "Must link to X-14 privacy policy and provide escape links to home/sign-up.",
+      "Must not invent a production support channel or finalized legal commitment.",
+    ],
+    docConflicts: "none",
+  },
+
+  "X-14": {
+    sitemapRequirement: "Route '/privacy' page. Public privacy placeholder. Added after the existing 34 Wireframe screens from codebase route coverage.",
+    userFlowContext: {
+      previous: "X-13 terms or A-01 sign-up legal links",
+      next: "X-13 terms, X-01 home, or A-01 sign-up",
+    },
+    prdRequirement: "Policy support route for privacy-sensitive learning data and AI feedback behavior.",
+    extractedRequirements: [
+      "Must explicitly state it was added after the existing 34 Wireframe screens.",
+      "Must be public and reachable without a session.",
+      "Must summarize collected items, purpose, retention, and third-party/external LLM transfer limits.",
+      "Must disclose placeholder status before formal privacy/legal review.",
+      "Must not read or expose user-specific data.",
+    ],
+    docConflicts: "none",
+  },
+
+  "X-15": {
+    sitemapRequirement: "Route '/admin' page. Admin root placeholder and hub. Added after the existing 34 Wireframe screens from codebase route coverage.",
+    userFlowContext: {
+      previous: "A-02 admin login or direct admin URL",
+      next: "H-01 admin problem management, X-08 organization admin dashboard, or X-10 admin user management",
+    },
+    prdRequirement: "Admin surface entry must fail closed and route admin users to scoped management areas.",
+    extractedRequirements: [
+      "Must explicitly state it was added after the existing 34 Wireframe screens.",
+      "Must require an admin role via ADMIN_ROLES/requireRole guard.",
+      "Non-admin or missing profile access must redirect away from the admin section.",
+      "Must show a placeholder/hub state rather than exposing a blank page.",
+      "Must not perform direct mutations; therefore admin_audit_logs are not required for the root page itself.",
+    ],
+    docConflicts: "none",
+  },
+
+  "X-16": {
+    sitemapRequirement: "Route '/password-reset/confirm' page. Public new-password form reached from password recovery email. Added after the existing 34 Wireframe screens from codebase route coverage.",
+    userFlowContext: {
+      previous: "X-06 password reset request email link",
+      next: "A-02 login after successful password update or X-06 request page when link/session fails",
+    },
+    prdRequirement: "Auth recovery flow must let users set a new password and recover from expired links without raw provider error exposure.",
+    extractedRequirements: [
+      "Must explicitly state it was added after the existing 34 Wireframe screens.",
+      "Must validate required password fields, 8-64 character length, and confirmation match.",
+      "Must call Supabase Auth updateUser for the new password.",
+      "Success must route users back to login.",
+      "Failure must keep the user on the page and offer a /password-reset link to request a new recovery email.",
+      "Raw provider errors and tokens must not be shown in UI.",
+    ],
+    docConflicts: "none",
+  },
+
+  "X-17": {
+    sitemapRequirement: "Route '/auth/callback-fragment' page. Public implicit auth fragment handler. Added after the existing 34 Wireframe screens from codebase route coverage.",
+    userFlowContext: {
+      previous: "/auth/callback route handler redirect for query-less implicit flow callbacks",
+      next: "sanitized next route after setSession success or X-11 auth error after failure",
+    },
+    prdRequirement: "Auth callback behavior must safely handle fragment tokens that server route handlers cannot read.",
+    extractedRequirements: [
+      "Must explicitly state it was added after the existing 34 Wireframe screens.",
+      "Must parse window.location.hash only on the client.",
+      "error_code must map to canonical X-11 reason values.",
+      "access_token and refresh_token must be used only for Supabase Auth setSession and never rendered.",
+      "next must be sanitized to relative-only navigation.",
+      "Missing or malformed fragment must route to /auth/error?reason=unknown.",
+    ],
+    docConflicts: "none",
+  },
+
   "A-03": {
     sitemapRequirement: "Route '/onboarding/learning-goal' page. First-run onboarding before the dashboard. Audience user.",
     userFlowContext: {

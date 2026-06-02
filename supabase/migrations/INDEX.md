@@ -77,6 +77,22 @@
 근거 ledger:
 - 22-25: [`../../reports/phase-8-implementation-report-20260527.html`](../../reports/phase-8-implementation-report-20260527.html) (Phase 8 v2.x 자체 검수 정정 + follow-up)
 
+### 06 — June
+
+#### 02 (화) — Conformance: billing / notifications / settings / admin RPC + 조직(net-new)
+
+> ⚠ 본 5개 마이그레이션은 **작성만 완료** 상태이며 coordinator 검토·적용 전입니다. 특히 26번(`org.sql`)은 Tier 1 MVP 스키마에 없던 **net-new scope**라 적용 전 IA 스펙 대조 확인 필요.
+
+| # | timestamp | 파일 | 영역 |
+| ---:| --- | --- | --- |
+| 26 | `12:00:00` | [`20260602120000_handle_new_user_display_name.sql`](./20260602120000_handle_new_user_display_name.sql) | `handle_new_user()` 재정의 — `profiles.display_name` 를 `raw_user_meta_data->>'display_name'` (nullif empty) 로 시드. 트리거 바인딩 idempotent 재선언 |
+| 27 | `12:01:00` | [`20260602120100_billing.sql`](./20260602120100_billing.sql) | `subscription_plans`(public read), `subscriptions`(owner read + platform_admin read), `payment_history`(owner read) + RLS + updated_at 트리거 + 예시 플랜 3종 seed (월/분기/연, KRW placeholder, `__seed` 태그) |
+| 28 | `12:02:00` | [`20260602120200_notifications_and_settings.sql`](./20260602120200_notifications_and_settings.sql) | `notification_settings`(owner-all), `notification_log`(owner read) + `profiles.learning_locale`/`profiles.content_prefs` 컬럼(G-01). 기존 `notification_prefs` 3-boolean 유지 |
+| 29 | `12:03:00` | [`20260602120300_org.sql`](./20260602120300_org.sql) | **NET-NEW**: `organizations`, `org_members`, `assignments`, `assignment_submissions` + `private.is_org_member/is_org_manager` 헬퍼 + org-scoped RLS (X-08/X-10) |
+| 30 | `12:04:00` | [`20260602120400_admin_and_user_rpcs.sql`](./20260602120400_admin_and_user_rpcs.sql) | Admin RPC: `get_admin_users`, `get_admin_user_stats`, `admin_set_user_status`, `admin_update_problem`, `admin_delete_problem`, `admin_add_problem_asset`, `admin_remove_problem_asset`, `get_admin_audit_logs` + `get_admin_org_dashboard` 확장(drop→recreate, 4→6 컬럼 additive) + `list_user_problems`(C-02, SECURITY INVOKER) |
+
+근거 ledger: (coordinator 적용 시 `docs/ai-workflow/runs/2026/06/02/` 에 추가 예정)
+
 ---
 
 ## 새 마이그레이션을 추가할 때

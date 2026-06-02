@@ -48,7 +48,7 @@ if (!manifest || !finalAudit) {
 // ---------------------------------------------------------------------------
 const reportScreenshotDir = join(REPO_ROOT, auditDir, "screenshots");
 mkdirSync(reportScreenshotDir, { recursive: true });
-const PUBLIC_IA = ["X-01", "A-01", "A-02", "X-06", "X-11", "X-12"];
+const PUBLIC_IA = ["X-01", "X-13", "X-14", "A-01", "A-02", "X-06", "X-16", "X-11", "X-12", "X-17"];
 const VIEWPORTS = ["360", "768", "1280"];
 const copiedScreenshots = new Map();
 for (const ia of PUBLIC_IA) {
@@ -364,7 +364,7 @@ function renderHero() {
     <div class="hero">
       <div class="container">
         <h1>TALKPIK AI · IA 구현 검수 리포트</h1>
-        <p>34개 IA(정보 구조) 페이지에 대한 자동·반자동 검수 결과를 한 화면에 정리한 보고서입니다.</p>
+        <p>${esc(manifest.entries.length)}개 IA(정보 구조) 페이지에 대한 자동·반자동 검수 결과를 한 화면에 정리한 보고서입니다.</p>
         <div class="meta">
           <strong>Run ID</strong> ${esc(manifest.runId)} ·
           <strong>Source commit</strong> ${esc(manifest.sourceCommit)} ·
@@ -472,7 +472,7 @@ function renderExecutiveSummary() {
           <div class="scorecard green">
             <div class="label">문서 receipt PASS</div>
             <div class="value">${docPass} / ${total}</div>
-            <div class="note">34개 IA 전부 active docs에서 추출한 요구사항 채워짐 (Phase 0.5)</div>
+            <div class="note">${esc(manifest.entries.length)}개 IA 전부 active docs에서 추출한 요구사항 채워짐 (Phase 0.5)</div>
           </div>
           <div class="scorecard amber">
             <div class="label">Browser PARTIAL</div>
@@ -591,7 +591,7 @@ function renderHeatmap() {
   return `
     <section>
       <div class="container">
-        <h2>34 IA × 8 페이즈 커버리지 히트맵</h2>
+        <h2>${esc(manifest.entries.length)} IA × 8 페이즈 커버리지 히트맵</h2>
         <p class="muted">셀에 마우스를 올리면 각 페이즈 상태가 보입니다. ✓ PASS · △ PARTIAL · ✗ FAIL · ■ BLOCKED · ? DOC-GAP · — DEFERRED</p>
         <details class="card" style="margin:12px 0;padding:12px 16px;">
           <summary style="cursor:pointer;font-weight:600;">컬럼이 무엇인지 / 회색(n/a)이 무슨 뜻인지</summary>
@@ -601,7 +601,7 @@ function renderHeatmap() {
             <li><strong>Browser</strong>: 실제 렌더 증거(HTTP 상태 · H1 · 주 CTA · 스크린샷, 360/768/1280).</li>
             <li><strong>모달</strong> · 호스티드 모달 동작: 모달이 <em>없는</em> 페이지는 n/a가 정상. 모달이 있는 5개(C-03, D-M1~3, F-M1)만 평가하며, 테스트의 모달 트리거가 휴리스틱이라 자동으로 못 띄운 건 BLOCKED로 표시됩니다.</li>
             <li><strong>보안</strong> · 보안·세션·권한·네비게이션: 증거가 <em>화면별이 아니라 run 전역(시나리오 단위)</em>입니다. 그래서 보안이 필요한 IA 칸에는 동일한 <em>전역 상태</em>를 표시하고, 필요 없는 IA는 n/a입니다. 상세는 아래 "전역 보안·세션 증거"를 보세요.</li>
-            <li><strong>AI UX</strong>: AI 1차 UX 리뷰 — 34개 전부 수행됨.</li>
+            <li><strong>AI UX</strong>: AI 1차 UX 리뷰 — ${esc(manifest.entries.length)}개 전부 수행됨.</li>
             <li><strong>사람</strong>: 독립 판정(GPT-5.5 미가용 시 별도 세션 Claude) 결과.</li>
             <li><strong>최종</strong>: 위 증거를 merge 스크립트가 합쳐 계산한 최종 라벨.</li>
           </ul>
@@ -789,7 +789,7 @@ function renderIaSection() {
   return `
     <section>
       <div class="container">
-        <h2>34 IA 상세 카드</h2>
+        <h2>${esc(manifest.entries.length)} IA 상세 카드</h2>
         <p class="muted">카드 안의 "요구사항 + 검증 상세"를 클릭하면 추출된 요구사항·증거·갭이 펼쳐집니다.</p>
         <div class="filter-bar">
           <strong style="font-size:13px;margin-right:8px;">필터:</strong>
@@ -975,7 +975,7 @@ function renderNextActions() {
 
 function renderGlossary() {
   const terms = [
-    ["IA (Information Architecture)", "화면 구조와 화면별 요구사항 — 이 프로젝트는 34개 IA를 가짐"],
+    ["IA (Information Architecture)", `화면 구조와 화면별 요구사항 — 이 프로젝트는 ${manifest.entries.length}개 IA를 가짐`],
     ["doc-receipt", "각 IA마다 어떤 docs를 읽고 어떤 요구사항을 뽑았는지 기록한 증거 JSON"],
     ["storageState", "Playwright 테스트에서 로그인 세션을 흉내내는 쿠키/스토리지 파일"],
     ["host route", "모달이 호스팅되는 부모 페이지 (예: C-03 retry 모달은 /practice/problems가 host)"],
@@ -983,7 +983,7 @@ function renderGlossary() {
     ["service_role", "Supabase의 admin 권한 키 — 클라이언트 코드에 절대 노출 금지. 노출됐을 때 회전 필수 (rotate); 이 audit 의 secret key 는 dev 한정 .env.local 에서 활성 상태"],
     ["DOC-GAP", "문서 명세와 실제 코드가 다른 상태 — 의도된 drift이거나 product 결정 필요"],
     ["BLOCKED", "증거 수집을 시도했으나 사전 조건(precondition) 부재로 진행 불가"],
-    ["Phase 5 AI-first", "AI가 1차로 34 IA 전부 훑고, 사람이 판단 필요한 항목만 골라주는 흐름"],
+    ["Phase 5 AI-first", `AI가 1차로 ${manifest.entries.length} IA 전부 훑고, 사람이 판단 필요한 항목만 골라주는 흐름`],
     ["evidenceBundleId", "한 run의 모든 증거를 묶어 식별하는 hash — 다른 run 증거 섞이지 않게 보장"],
   ];
   return `

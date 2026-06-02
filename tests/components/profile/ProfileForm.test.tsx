@@ -247,16 +247,26 @@ describe("ProfileForm", () => {
     expect(bioInput.value).toBe(existing);
   });
 
-  it("renders account identity and an honest avatar state", () => {
+  it("renders account identity and a real avatar upload area", () => {
     renderProfileForm({ accountEmail: "learner@example.com" });
 
     const emailInput = screen.getByLabelText("이메일") as HTMLInputElement;
     expect(emailInput.value).toBe("learner@example.com");
     expect(emailInput.readOnly).toBe(true);
     expect(screen.getByText("프로필 이미지")).toBeTruthy();
+    // X-05: avatar upload is now a real Supabase Storage upload (owner-scoped),
+    // replacing the earlier "deferred" honest-notice. The upload affordance and
+    // its constraints (JPG/PNG, 5MB, square crop) must be shown.
     expect(
-      screen.getByText(/이미지 업로드는 아직 활성화되지 않았습니다/),
+      screen.getByText(/JPG 또는 PNG, 5MB 이하/),
     ).toBeTruthy();
+    expect(
+      screen.getByLabelText("이미지 업로드"),
+    ).toBeTruthy();
+    expect(
+      screen.getByLabelText("프로필 이미지 파일 선택"),
+    ).toBeTruthy();
+    // The account-identity / PII re-auth notice remains.
     expect(
       screen.getByText(/계정 식별 정보 변경은 향후 재인증이 필요할 수 있습니다/),
     ).toBeTruthy();

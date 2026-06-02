@@ -12,7 +12,7 @@
 Use these documents together when implementing or reviewing page coverage:
 
 1. [docs/sitemap.md](./sitemap.md) - route authority and page connection map.
-2. [docs/Wireframe/README.md](./Wireframe/README.md) - current 32-screen IA inventory, with one `description.md` and one `wireframe.png` per screen.
+2. [docs/Wireframe/README.md](./Wireframe/README.md) - current 39-screen IA inventory: the existing 34 Wireframe entries plus 5 codebase-added screens, with one `description.md` and one `functional-spec.md` per screen.
 3. [docs/flow/user-flow.md](./flow/user-flow.md) - user flow and screen dependency order.
 4. [docs/ia-pages/README.md](./ia-pages/README.md) - legacy observed HTML crosswalk only.
 
@@ -25,9 +25,12 @@ are the current baseline.
 | IA | Screen | React route | Route type | Notes |
 | --- | --- | --- | --- | --- |
 | X-01 | Product landing | `/` | page | Public entry point. Links to sign-up and login. |
+| X-13 | Terms | `/terms` | page | Public legal placeholder. Added after the existing 34 Wireframe screens from codebase route coverage. |
+| X-14 | Privacy policy | `/privacy` | page | Public privacy placeholder. Added after the existing 34 Wireframe screens from codebase route coverage. |
 | A-01 | Sign-up | `/sign-up` | page | Account creation. |
 | A-02 | Login | `/login` | page | Existing user entry. |
 | X-06 | Password reset | `/password-reset` | page | Password recovery flow. |
+| X-16 | Password reset confirm | `/password-reset/confirm` | page | New-password form reached from password recovery email. Added after the existing 34 Wireframe screens from codebase route coverage. |
 | A-03 | Learning goal setup | `/onboarding/learning-goal` | page | First-run onboarding before the dashboard. |
 | B-01 | Home dashboard | `/dashboard` | page | Authenticated learning dashboard. |
 | C-01 | Problem type recommendations | `/practice/recommendations` | page | Recommends writing/problem types. |
@@ -47,6 +50,7 @@ are the current baseline.
 | F-01 | My library | `/library` | page | Saved work, feedback history, exports, and study records. |
 | F-M1 | PDF export modal | hosted by `/library`, feedback, and report routes | modal | Exports a selected result/report. |
 | G-01 | Language settings | `/settings/language` | page | App language settings. |
+| X-15 | Admin index | `/admin` | page | Admin root placeholder and hub. Added after the existing 34 Wireframe screens from codebase route coverage. |
 | H-01 | Admin problem management | `/admin/problems` | page | Problem/content management. |
 | X-02 | Growth dashboard | `/growth` | page | Progress and growth analytics. |
 | X-03 | Paywall | `/paywall` | page | Paywall/plan-selection shell. Payment provider integration is deferred. |
@@ -57,9 +61,9 @@ are the current baseline.
 | X-09 | Notification settings | `/settings/notifications` | page | Notification preferences. |
 | X-10 | Admin user management | `/admin/users` | page | Admin user/account management. |
 | —    | Auth callback | `/auth/callback` | route handler | Token-hash → `verifyOtp` 분기, code → `exchangeCodeForSession`. `next` query는 relative-only. 성공 시 `next` 또는 `/dashboard`로 redirect, 실패 시 `/auth/error?reason=<canonical>&retry_after_seconds=<n?>`로 redirect. raw `error_description`은 서버 로그에만. `export const dynamic = 'force-dynamic'`. **Phase 8 follow-up P0 fix(2026-05-27)**: page → Route Handler 전환 (Server Component cookies.set silent fail로 Set-Cookie 미발급되던 production 버그 해결). |
-| —    | Auth callback fragment | `/auth/callback-fragment` | page | Implicit flow #fragment 처리. Route Handler가 query 없는 callback 요청을 이리 redirect → 브라우저가 RFC 7231로 fragment retain → client component `CallbackFragmentFallback`이 `window.location.hash` 파싱 → 정확한 `/auth/error?reason=…` 또는 `setSession` 후 `router.replace(next)`. |
 | X-11 | Auth error | `/auth/error` | page | 11개 Supabase `error.code` 기반 reason 분기 (`otp_expired`, `flow_state_expired`, `flow_state_not_found`, `bad_code_verifier`, `user_not_found`, `over_email_send_rate_limit`, `over_request_rate_limit`, `email_not_confirmed`, `signup_disabled`, `access_denied`, `unknown`). rate-limit 계열은 `retry_after_seconds` countdown. Email prefill query는 untrusted (가시·편집 가능 input). |
 | X-12 | Auth verify-email | `/auth/verify-email` | page | 가입 직후 인증 메일 발송 안내 + 60초 cooldown 재전송 (Supabase same-user 60s + project 30/hour OTP + 빌트인 SMTP 2/hour 한도). |
+| X-17 | Auth callback fragment | `/auth/callback-fragment` | page | Implicit flow #fragment 처리. Route Handler가 query 없는 callback 요청을 이리 redirect → 브라우저가 RFC 7231로 fragment retain → client component `CallbackFragmentFallback`이 `window.location.hash` 파싱 → 정확한 `/auth/error?reason=…` 또는 `setSession` 후 `router.replace(next)`. Added after the existing 34 Wireframe screens from codebase route coverage. |
 | —    | Auth sign-out | `/auth/sign-out` | route handler (POST) | 서버 사이드 세션 쿠키 정리. 본 phase 카탈로그만, 코드 도입은 후속 작업. |
 
 ## Route Audience Map
@@ -68,9 +72,9 @@ are the current baseline.
 
 | Audience | Routes | Page guard / RLS 기반 |
 | --- | --- | --- |
-| **public** (인증 전) | `/`, `/sign-up`, `/login`, `/password-reset`, `/auth/callback`, `/auth/callback-fragment`, `/auth/error`, `/auth/verify-email` | 없음 — 인증 미요구. middleware `PUBLIC_PATHS`에 명시 포함 필수 (없으면 익명 callback이 `/login`으로 튕겨 토큰 교환 자체가 실패) |
+| **public** (인증 전) | `/`, `/terms`, `/privacy`, `/sign-up`, `/login`, `/password-reset`, `/password-reset/confirm`, `/auth/callback`, `/auth/callback-fragment`, `/auth/error`, `/auth/verify-email` | 없음 — 인증 미요구. middleware `PUBLIC_PATHS`에 명시 포함 필수 (없으면 익명 callback이 `/login`으로 튕겨 토큰 교환 자체가 실패) |
 | **user** (인증된 일반 사용자) | `/onboarding/learning-goal`, `/dashboard`, `/practice/*` (recommendations, problems, weakness, next), `/writing/*` (51-54, feedback, reports), `/library`, `/settings/{language,notifications}`, `/profile`, `/growth`, `/paywall`, `/subscription` | 세션 인증 + `auth.uid()` 기반 자기 row RLS |
-| **admin** (역할 분리된 관리자) | `/admin/problems` (H-01, content admin), `/admin/org` (X-08, org admin), `/admin/users` (X-10, platform admin) | `requireContentAdmin / requireOrgAdmin / requirePlatformAdmin` 페이지 가드 + `private.is_{content,org,platform}_admin(uid)` 기반 RLS + 모든 권한 변경/발행 토글은 `admin_audit_logs` 기록 |
+| **admin** (역할 분리된 관리자) | `/admin` (X-15, admin root), `/admin/problems` (H-01, content admin), `/admin/org` (X-08, org admin), `/admin/users` (X-10, platform admin) | `requireContentAdmin / requireOrgAdmin / requirePlatformAdmin` 페이지 가드 + `private.is_{content,org,platform}_admin(uid)` 기반 RLS + 모든 권한 변경/발행 토글은 `admin_audit_logs` 기록. `/admin` root는 직접 변경 action이 없어 audit 대상이 아니다. |
 
 `Audience: both`인 phase는 user 라우트와 admin 라우트를 동시에 다룬다. 그 경우 Light Spec과 plan task table의 각 task에 audience를 행별로 명시한다 ([`docs/ai-workflow/planning-contracts.md`](ai-workflow/planning-contracts.md)).
 
@@ -95,8 +99,13 @@ top-level routes unless implementation constraints require it.
 flowchart TD
   LANDING["X-01 Product landing\n/"] --> SIGNUP["A-01 Sign-up\n/sign-up"]
   LANDING --> LOGIN["A-02 Login\n/login"]
+  LANDING -. "legal links" .-> TERMS["X-13 Terms\n/terms"]
+  TERMS -. "privacy" .-> PRIVACY["X-14 Privacy policy\n/privacy"]
   LOGIN --> RESET["X-06 Password reset\n/password-reset"]
+  RESET --> RESET_CONFIRM["X-16 Password reset confirm\n/password-reset/confirm"]
+  RESET_CONFIRM --> LOGIN
   SIGNUP --> GOAL["A-03 Learning goal setup\n/onboarding/learning-goal"]
+  SIGNUP -. "terms/privacy" .-> TERMS
   LOGIN --> DASH["B-01 Home dashboard\n/dashboard"]
   GOAL --> DASH
 
@@ -138,14 +147,18 @@ flowchart TD
   PROFILE --> SUBSCRIPTION["X-04 Subscription management\n/subscription"]
   SUBSCRIPTION --> PAYWALL["X-03 Paywall\n/paywall"]
 
-  DASH --> ADMIN_PROBLEMS["H-01 Admin problem management\n/admin/problems"]
+  DASH --> ADMIN_INDEX["X-15 Admin index\n/admin"]
+  ADMIN_INDEX --> ADMIN_PROBLEMS["H-01 Admin problem management\n/admin/problems"]
   ADMIN_PROBLEMS --> ADMIN_ORG["X-08 Organization admin dashboard\n/admin/org"]
   ADMIN_ORG --> ADMIN_USERS["X-10 Admin user management\n/admin/users"]
 
   SIGNUP --> VERIFY["X-12 Auth verify-email\n/auth/verify-email"]
   VERIFY -. "이메일 링크 클릭" .-> CB["Auth callback\n/auth/callback"]
   LOGIN -. "매직 링크" .-> CB
-  RESET -. "재설정 링크" .-> CB
+  RESET -. "legacy/error callback" .-> CB
+  CB -. "implicit fragment fallback" .-> CBF["X-17 Auth callback fragment\n/auth/callback-fragment"]
+  CBF -->|"성공"| DASH
+  CBF -->|"실패"| ERR
   CB -->|"성공"| DASH
   CB -->|"실패"| ERR["X-11 Auth error\n/auth/error"]
   ERR -. "user_not_found" .-> SIGNUP

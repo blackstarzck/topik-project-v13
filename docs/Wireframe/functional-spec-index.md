@@ -1,6 +1,6 @@
 # Wireframe Functional Spec Index
 
-이 문서는 34개 Wireframe 페이지의 기능명세 문서와 DB 사용 명세를 한곳에서 찾기 위한 인덱스입니다.
+이 문서는 39개 Wireframe 페이지의 기능명세 문서와 DB 사용 명세를 한곳에서 찾기 위한 인덱스입니다.
 
 ## 기준
 
@@ -47,9 +47,13 @@
 | X-10 | Admin user management | `/admin/users` | admin | 4 | [functional-spec.md](./32-X-10-admin-user-management/functional-spec.md) |
 | X-11 | Auth error | `/auth/error` | public | 1 | [functional-spec.md](./33-X-11-auth-error/functional-spec.md) |
 | X-12 | Auth verify-email | `/auth/verify-email` | public | 2 | [functional-spec.md](./34-X-12-auth-verify-email/functional-spec.md) |
+| X-13 | Terms | `/terms` | public | 0 | [functional-spec.md](./35-X-13-terms/functional-spec.md) |
+| X-14 | Privacy policy | `/privacy` | public | 0 | [functional-spec.md](./36-X-14-privacy-policy/functional-spec.md) |
+| X-15 | Admin index | `/admin` | admin | 4 | [functional-spec.md](./37-X-15-admin-index/functional-spec.md) |
+| X-16 | Password reset confirm | `/password-reset/confirm` | public | 0 | [functional-spec.md](./38-X-16-password-reset-confirm/functional-spec.md) |
+| X-17 | Auth callback fragment | `/auth/callback-fragment` | public | 0 | [functional-spec.md](./39-X-17-auth-callback-fragment/functional-spec.md) |
 
 ## Known Document Conflicts
 
-- wireframe-count-prose: `docs/sitemap.md` prose says 32-screen IA inventory, but current Wireframe inventory has 34 folders.
 - database-schema-drift: `docs/development/database-schema.md` does not fully reflect the later migration set now present under `supabase/migrations/`.
 - stale-ia-paths-in-audit-output: Latest IA audit artifacts still contain legacy `docs/IA/...` strings; current docs use `docs/Wireframe/...`.

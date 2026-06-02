@@ -46,6 +46,7 @@ const PAGE_DATA_BLUEPRINTS = {
     table("problems", ["id", "domain", "question_no", "topik_level", "difficulty", "tags"], "read", "추천 문제 후보를 조회한다."),
   ],
   "C-02": [
+    rpc("public.list_user_problems", "rpc", "사용자 문제 목록(필터/정렬/시도 상태 포함)을 제공한다."),
     table("problems", ["id", "domain", "question_no", "topik_level", "difficulty", "title", "prompt", "tags", "publish_status", "visibility"], "read", "문제 목록, 필터, 정렬, 상세 진입에 사용한다."),
     table("problem_assets", ["problem_id", "storage_path", "asset_type", "sort_order"], "read", "문제 자료 이미지/오디오를 연결한다."),
     table("problem_attempts", ["problem_id", "status", "is_correct", "bookmarked", "time_spent_seconds"], "read/write", "풀이 이력, 재도전, 북마크 상태에 사용한다."),
@@ -111,6 +112,10 @@ const PAGE_DATA_BLUEPRINTS = {
     table("problem_assets", ["problem_id", "storage_path", "asset_type", "sort_order"], "read/write", "문제 첨부 자료 관리에 사용한다."),
     table("admin_audit_logs", ["admin_user_id", "action", "target_table", "target_id", "diff", "payload"], "write/read", "관리자 변경 이력을 남긴다."),
     rpc("public.admin_toggle_problem_publish", "rpc", "문제 공개/비공개 전환을 감사 로그와 함께 처리한다."),
+    rpc("public.admin_update_problem", "rpc", "문제 본문/메타 수정을 감사 로그와 함께 처리한다."),
+    rpc("public.admin_delete_problem", "rpc", "문제 삭제를 감사 로그와 함께 처리한다."),
+    rpc("public.admin_add_problem_asset", "rpc", "문제 첨부 자료 추가를 처리한다."),
+    rpc("public.admin_remove_problem_asset", "rpc", "문제 첨부 자료 삭제를 처리한다."),
     rpc("private.is_content_admin", "RLS helper", "콘텐츠 관리자 권한 확인에 사용한다."),
     storage("problem-assets", "read/write", "문제 자료 파일 업로드와 공개 읽기에 사용한다."),
   ],
@@ -126,9 +131,14 @@ const PAGE_DATA_BLUEPRINTS = {
   ],
   "X-03": [
     table("profiles", ["plan_label", "status"], "read", "현재 플랜과 접근 제한 안내에 사용한다."),
+    table("subscription_plans", ["plan_key", "name", "price_cents", "cadence", "active"], "read", "페이월에 표시할 활성 플랜 목록을 불러온다."),
+    table("subscriptions", ["status", "plan_key"], "read", "이미 구독 중인 사용자는 구독 관리로 보낸다."),
   ],
   "X-04": [
-    table("profiles", ["plan_label", "status"], "read", "구독 상태 셸 화면에 사용한다. 실제 결제 테이블은 아직 없다."),
+    table("profiles", ["plan_label", "status"], "read", "구독 상태 셸 화면에 사용한다."),
+    table("subscriptions", ["status", "plan_key", "current_period_end", "cancel_at"], "read", "현재 구독 상태 요약에 사용한다."),
+    table("subscription_plans", ["plan_key", "name"], "read", "구독한 플랜의 표시 이름을 보강한다."),
+    table("payment_history", ["amount_cents", "currency", "status", "paid_at", "receipt_url"], "read", "결제 이력 표에 사용한다."),
   ],
   "X-05": [
     table("profiles", ["display_name", "nickname", "avatar_path", "bio", "ui_locale", "plan_label", "status"], "read/write", "프로필 편집, 160자 자기소개, 아바타 경로에 사용한다."),
@@ -149,15 +159,25 @@ const PAGE_DATA_BLUEPRINTS = {
     table("profiles", ["app_role", "plan_label", "status"], "read", "조직/권한 대시보드의 사용자 집계에 사용한다."),
     table("study_events", ["event_type", "occurred_at", "payload"], "derived-read", "기관 단위 활동 집계에 사용한다."),
     table("admin_audit_logs", ["admin_user_id", "action", "target_table", "created_at"], "read", "최근 관리자 활동 표시에 사용한다."),
+    table("organizations", ["id", "name", "created_at"], "read", "기관 디렉터리와 대시보드 헤더에 사용한다."),
+    table("org_members", ["org_id", "user_id", "role"], "read", "기관별 구성원과 역할 집계에 사용한다."),
+    table("assignments", ["id", "org_id", "title", "problem_id", "due_at"], "read", "기관 과제 목록과 생성에 사용한다."),
+    table("assignment_submissions", ["assignment_id", "user_id", "submission_id", "status", "submitted_at"], "read", "과제 제출률과 학습자별 상태에 사용한다."),
     rpc("private.is_org_admin", "RLS helper", "기관 관리자 권한 확인에 사용한다."),
   ],
   "X-09": [
     table("profiles", ["notification_prefs"], "read/write", "알림 채널과 조건 설정을 JSON object로 저장한다."),
+    table("notification_settings", ["reminder_time", "reminder_days", "channels", "timezone"], "read/write", "리마인더 시간/요일과 채널 토글을 저장한다(profiles.notification_prefs 보강)."),
+    table("notification_log", ["channel", "template_key", "status", "sent_at"], "read", "최근 알림 발송 이력을 표시한다. 발송 자체는 service_role 담당."),
   ],
   "X-10": [
     table("profiles", ["id", "display_name", "email", "app_role", "plan_label", "status", "created_at"], "read/write", "관리자 사용자 목록, 역할/상태 변경에 사용한다."),
     table("admin_audit_logs", ["admin_user_id", "action", "target_table", "target_id", "diff"], "write/read", "관리자 권한 변경 이력을 남긴다."),
     rpc("public.admin_change_user_role", "rpc", "사용자 역할 변경을 서버 측 검증과 감사 로그로 처리한다."),
+    rpc("public.get_admin_users", "rpc", "관리자 사용자 목록(검색/필터/페이지네이션)을 제공한다."),
+    rpc("public.get_admin_user_stats", "rpc", "사용자 콘솔 상단 KPI 집계를 제공한다."),
+    rpc("public.admin_set_user_status", "rpc", "사용자 상태(활성/정지 등) 변경을 감사 로그와 함께 처리한다."),
+    rpc("public.get_admin_audit_logs", "rpc", "사용자 상세의 최근 관리자 변경 이력을 제공한다."),
     rpc("private.is_platform_admin", "RLS helper", "플랫폼 관리자 권한 확인에 사용한다."),
   ],
   "X-11": [
@@ -166,6 +186,12 @@ const PAGE_DATA_BLUEPRINTS = {
   "X-12": [
     table("profiles", ["id", "email", "status"], "read", "가입 직후 이메일 인증 안내와 인증 상태 확인에 연결된다."),
     rpc("public.handle_new_user", "trigger", "가입 직후 프로필 row 생성을 보장한다."),
+  ],
+  "X-15": [
+    table("profiles", ["id", "app_role", "status"], "read", "관리자 root 접근 권한 확인에 사용한다."),
+    rpc("private.is_content_admin", "RLS helper", "하위 콘텐츠 관리자 route의 권한 확인에 사용한다."),
+    rpc("private.is_org_admin", "RLS helper", "하위 기관 관리자 route의 권한 확인에 사용한다."),
+    rpc("private.is_platform_admin", "RLS helper", "하위 플랫폼 관리자 route의 권한 확인에 사용한다."),
   ],
 };
 
@@ -204,6 +230,11 @@ const PAGE_SPEC_OVERRIDES = {
   "X-10": spec("관리자 사용자 관리", "플랫폼 관리자가 사용자 상태와 역할을 관리한다.", ["사용자 목록", "역할 변경", "상태 표시", "감사 로그"], ["권한 없음, 보호 컬럼 직접 변경 차단"], ["admin_change_user_role RPC와 admin_audit_logs가 필수다."]),
   "X-11": spec("인증 오류", "Supabase 인증 실패 이유를 안전한 문구와 재시도 행동으로 안내한다.", ["오류 이유 분기", "재시도 CTA", "카운트다운", "로그인/가입 이동"], ["raw error 노출 금지, rate limit"], ["query reason은 신뢰하지 않고 canonical reason만 표시한다."]),
   "X-12": spec("이메일 인증 안내", "가입 직후 이메일 확인과 재발송 제한을 안내한다.", ["인증 메일 안내", "재발송", "cooldown", "로그인 복귀"], ["메일 미도착, rate limit, 이미 인증됨"], ["handle_new_user trigger와 profile 상태를 함께 고려한다."]),
+  "X-13": spec("이용약관", "회원가입 약관 동의 대상 문서를 공개 route로 제공한다.", ["임시 약관 안내", "서비스 성격 요약", "개인정보처리방침 링크", "홈/가입 복귀"], ["정식 약관 미게시", "운영 문의 채널 미확정"], ["기존 34개 Wireframe 이후 코드베이스 기준으로 추가된 화면이다. 직접 DB 의존은 없다."]),
+  "X-14": spec("개인정보처리방침", "회원가입 및 서비스 이용 전 개인정보 처리 범위를 공개 route로 안내한다.", ["임시 개인정보 안내", "수집 항목", "이용 목적", "외부 LLM 전송 고지", "관련 링크"], ["정식 처리방침 미게시", "동의/삭제 요청 흐름 미확정"], ["기존 34개 Wireframe 이후 코드베이스 기준으로 추가된 화면이다. 직접 DB 의존은 없다."]),
+  "X-15": spec("관리자 인덱스", "관리자가 /admin으로 직접 진입했을 때 안전한 상위 허브와 안내 상태를 제공한다.", ["관리자 placeholder", "role guard", "하위 관리 화면 이동 맥락"], ["권한 없음, 프로필 읽기 실패"], ["기존 34개 Wireframe 이후 코드베이스 기준으로 추가된 화면이다. 직접 변경 action은 없어 admin_audit_logs 대상이 아니다."]),
+  "X-16": spec("새 비밀번호 설정", "비밀번호 재설정 링크를 받은 사용자가 새 비밀번호를 저장하고 로그인으로 복귀하게 한다.", ["새 비밀번호", "비밀번호 확인", "8-64자 검증", "비밀번호 변경", "재설정 링크 재요청"], ["링크 만료, recovery session 없음, provider 오류"], ["기존 34개 Wireframe 이후 코드베이스 기준으로 추가된 화면이다. Supabase Auth updateUser 중심이며 앱 DB 직접 의존은 없다."]),
+  "X-17": spec("인증 콜백 fragment 처리", "Supabase implicit flow URL fragment를 browser에서 안전하게 처리해 세션을 설정하거나 인증 오류로 이동시킨다.", ["fragment 파싱", "setSession", "canonical error redirect", "relative next sanitization", "처리 상태 표시"], ["fragment 없음, setSession 실패, open redirect 차단"], ["기존 34개 Wireframe 이후 코드베이스 기준으로 추가된 화면이다. Supabase Auth setSession 중심이며 앱 DB 직접 의존은 없다."]),
 };
 
 function table(name, columns, usage, pageFeature) {
@@ -557,8 +588,12 @@ function permissionFor(page, link) {
 }
 
 function uncertaintyFor(iaCode, link) {
-  if (["X-03", "X-04"].includes(iaCode)) return "Billing table is deferred; only profiles.plan_label/status is current evidence.";
-  if (iaCode === "X-08") return "Dedicated organization tables are not present in current migrations.";
+  if (["X-03", "X-04"].includes(iaCode) && ["subscriptions", "subscription_plans", "payment_history"].includes(link.objectName)) {
+    return "Billing tables exist but writes come from the billing service (service_role); no payment provider is wired yet.";
+  }
+  if (iaCode === "X-09" && ["notification_settings", "notification_log"].includes(link.objectName)) {
+    return "Notification transport (email/push) is deferred; only preference persistence + a service-written log exist.";
+  }
   if (iaCode === "X-09") return "Notification transport is deferred; only preference persistence is current evidence.";
   if (link.usage.includes("derived")) return "Derived usage inferred from current source/domain docs.";
   return "none";
@@ -604,7 +639,9 @@ function classifyDbObject(object) {
       object.objectName.includes("touch_updated_at") ||
       object.objectName.includes("supersede_active_draft") ||
       object.objectName.includes("assert_submission_payload") ||
-      object.objectName.includes("is_admin")
+      object.objectName.includes("is_admin") ||
+      object.objectName.includes("is_org_member") ||
+      object.objectName.includes("is_org_manager")
     ) {
       return "infrastructure/security";
     }
@@ -635,7 +672,7 @@ function detectDocConflicts(pages, migrations) {
   if (sitemap.includes("current 32-screen IA inventory") && pages.length !== 32) {
     conflicts.push({
       id: "wireframe-count-prose",
-      detail: "`docs/sitemap.md` prose says 32-screen IA inventory, but current Wireframe inventory has 34 folders.",
+      detail: `\`docs/sitemap.md\` prose says 32-screen IA inventory, but current Wireframe inventory has ${pages.length} folders.`,
       evidence: ["docs/sitemap.md", "docs/Wireframe/README.md"],
     });
   }
@@ -790,7 +827,7 @@ function renderFunctionalSpecIndex(inventory) {
 
   return `# Wireframe Functional Spec Index
 
-이 문서는 34개 Wireframe 페이지의 기능명세 문서와 DB 사용 명세를 한곳에서 찾기 위한 인덱스입니다.
+이 문서는 ${inventory.summary.pageCount}개 Wireframe 페이지의 기능명세 문서와 DB 사용 명세를 한곳에서 찾기 위한 인덱스입니다.
 
 ## 기준
 
@@ -872,10 +909,11 @@ function permissionSummary(page) {
 
 function gapLinesFor(page) {
   const gaps = [];
-  if (["X-03", "X-04"].includes(page.iaCode)) gaps.push("- Billing 전용 테이블과 결제 연동은 현재 migration에 없으므로 deferred scope로 기록한다.");
-  if (page.iaCode === "X-08") gaps.push("- 조직/기관 전용 테이블은 현재 migration에 없고 RPC 기반 집계만 확인된다.");
-  if (page.iaCode === "X-09") gaps.push("- 실제 이메일/푸시 발송 transport는 구현 범위 밖이고 preference 저장만 확인된다.");
-  if (["X-01", "X-06", "X-11", "X-12"].includes(page.iaCode)) gaps.push("- Auth 중심 화면은 Supabase Auth 동작과 UI 상태 연결을 함께 확인해야 한다.");
+  if (["X-03", "X-04"].includes(page.iaCode)) gaps.push("- Billing 테이블(subscriptions/subscription_plans/payment_history)은 있으나 실제 결제 provider 연동은 아직 없고 쓰기는 service_role 담당이다.");
+  if (page.iaCode === "X-08") gaps.push("- 조직/기관 테이블(organizations/org_members/assignments/assignment_submissions)은 추가되었고, 집계 RPC와 함께 사용된다. 운영 연동(과제 알림 등)은 후속 범위다.");
+  if (page.iaCode === "X-09") gaps.push("- 실제 이메일/푸시 발송 transport는 구현 범위 밖이고 preference 저장 + service가 쓰는 발송 로그만 확인된다.");
+  if (["X-01", "X-06", "X-11", "X-12", "X-16", "X-17"].includes(page.iaCode)) gaps.push("- Auth 중심 화면은 Supabase Auth 동작과 UI 상태 연결을 함께 확인해야 한다.");
+  if (["X-13", "X-14"].includes(page.iaCode)) gaps.push("- 정식 legal/policy 문서는 운영 전 법무/개인정보 검토로 교체해야 한다.");
   if (gaps.length === 0) gaps.push("- 현재 확인된 gap은 DB/source inventory 기준으로 문서에 기록된 항목뿐이다.");
   return gaps.join("\n");
 }

@@ -6,8 +6,8 @@ const manifest = buildManifest(auditDir);
 
 writeJson(`${auditDir}/ia-manifest.json`, manifest);
 
-if (manifest.entries.length !== 34) {
-  console.error(`Expected 34 IA entries, found ${manifest.entries.length}.`);
+if (manifest.entries.length !== 39) {
+  console.error(`Expected 39 IA entries, found ${manifest.entries.length}.`);
   process.exit(1);
 }
 

@@ -1,12 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Button, Input, Space, Typography, notification } from "antd";
+import { Button, Input, Space, Typography } from "antd";
 import { useRouter } from "next/navigation";
-import {
-  useSubmitWriting,
-  useUpsertDraft,
-} from "@/lib/writing/mutations";
+import { useSubmitWriting, useUpsertDraft } from "@/lib/writing/mutations";
+import { logStudyEvent } from "@/lib/events/study-events";
 import {
   isShortAnswer,
   type AutosaveStatus,
@@ -19,6 +17,7 @@ import {
   isCountSubmittable,
 } from "@/lib/writing/constants";
 import { AutosaveBadge } from "./AutosaveBadge";
+import { ConditionsPanel, type ProblemRubric } from "./ConditionsPanel";
 import { SubmissionConfirmModal } from "./SubmissionConfirmModal";
 import {
   AutosaveWarningModal,
@@ -32,6 +31,7 @@ type Props = {
   problemId: string;
   questionNo: QuestionNo;
   initialDraft: WritingDraftRow | null;
+  rubric?: ProblemRubric;
 };
 
 const DEBOUNCE_MS = 2000;
@@ -41,6 +41,7 @@ export function WritingEditor({
   problemId,
   questionNo,
   initialDraft,
+  rubric = null,
 }: Props) {
   const [text, setText] = useState(initialDraft?.answer_text ?? "");
   const [status, setStatus] = useState<AutosaveStatus>(
@@ -53,6 +54,11 @@ export function WritingEditor({
   const [warningTrigger, setWarningTrigger] = useState<WarningTrigger | null>(
     null,
   );
+  // D-01/D-02 §4 — blur 검증 메시지(글자수 미달/초과 즉시 안내).
+  const [blurNotice, setBlurNotice] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  // D-M3 §5 — 자동 저장 on/off. 끄면 수동 임시 저장만 가능.
+  const [autosaveEnabled, setAutosaveEnabled] = useState(true);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveSeqRef = useRef(0);
   const upsert = useUpsertDraft();
@@ -63,8 +69,17 @@ export function WritingEditor({
   const charCount = useMemo(() => text.length, [text]);
   const submittable = isCountSubmittable(charCount, questionNo);
   const inRecommended = isCountInRecommendedRange(charCount, questionNo);
-  // Used by SubmissionConfirmModal "minimum to submit" line.
   const minChars = limit.hardMin;
+
+  // D §study_events — 작성 시작(practice_started) 1회 기록.
+  useEffect(() => {
+    void logStudyEvent({
+      eventType: "practice_started",
+      problemId,
+      payload: { question_no: questionNo },
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -72,8 +87,8 @@ export function WritingEditor({
     };
   }, []);
 
-  // D-M3 / description.md §1 예외 — 저장되지 않은 변경이 있는 상태에서 새로 고침/
-  // 탭 닫기 시 브라우저 기본 이탈 경고를 띄워 작성 내용 손실을 방지.
+  // D-M3 / §1 예외 — 저장되지 않은 변경 상태에서 새로 고침/탭 닫기 시 브라우저
+  // 기본 이탈 경고로 손실 방지.
   useEffect(() => {
     const hasUnsaved = status === "dirty" || status === "failed";
     if (!hasUnsaved) return;
@@ -85,44 +100,89 @@ export function WritingEditor({
     return () => window.removeEventListener("beforeunload", onBeforeUnload);
   }, [status]);
 
+  function persist(next: string, isManual: boolean) {
+    setStatus("syncing");
+    const seq = ++saveSeqRef.current;
+    upsert.mutate(
+      {
+        user_id: userId,
+        problem_id: problemId,
+        question_no: questionNo,
+        answer_text: next,
+        char_count: next.length,
+        autosave_status: "clean",
+        last_saved_at: new Date().toISOString(),
+      },
+      {
+        onSuccess: (row) => {
+          if (seq !== saveSeqRef.current) return;
+          setStatus("clean");
+          setLastSavedAt(row.last_saved_at ?? null);
+          // D §study_events — 자동저장 성공 기록(수동 저장 제외).
+          if (!isManual) {
+            void logStudyEvent({
+              eventType: "draft_autosaved",
+              problemId,
+              payload: { question_no: questionNo, char_count: next.length },
+            });
+          }
+        },
+        onError: () => {
+          if (seq !== saveSeqRef.current) return;
+          setStatus("failed");
+          setWarningTrigger("save_failure");
+        },
+      },
+    );
+  }
+
   function scheduleSave(next: string) {
+    // D-M3 §5 — 자동 저장이 꺼져 있으면 dirty 표시만 하고 자동 저장은 안 한다.
+    if (!autosaveEnabled) {
+      setStatus("dirty");
+      return;
+    }
     if (status !== "syncing") setStatus("dirty");
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      setStatus("syncing");
-      const seq = ++saveSeqRef.current;
-      upsert.mutate(
-        {
-          user_id: userId,
-          problem_id: problemId,
-          question_no: questionNo,
-          answer_text: next,
-          char_count: next.length,
-          autosave_status: "clean",
-          last_saved_at: new Date().toISOString(),
-        },
-        {
-          onSuccess: (row) => {
-            if (seq !== saveSeqRef.current) return; // stale response
-            setStatus("clean");
-            setLastSavedAt(row.last_saved_at ?? null);
-          },
-          onError: () => {
-            if (seq !== saveSeqRef.current) return;
-            setStatus("failed");
-            setWarningTrigger("save_failure");
-          },
-        },
-      );
-    }, DEBOUNCE_MS);
+    debounceRef.current = setTimeout(() => persist(next, false), DEBOUNCE_MS);
   }
 
   function onChange(next: string) {
     setText(next);
+    setBlurNotice(null);
     scheduleSave(next);
   }
 
+  // D-M3 §5 — '자동 저장 끄기' CTA → disable_attempt 경고. 사용자가 위험을
+  // 인지하고 진행(onProceed)하면 자동 저장을 끈다. 실패 없이 즉시 적용되지만
+  // 켜기 토글은 항상 가능.
+  function onToggleAutosave() {
+    if (autosaveEnabled) {
+      setWarningTrigger("disable_attempt");
+    } else {
+      setAutosaveEnabled(true);
+    }
+  }
+
+  // D §5 — 임시 저장(수동)과 제출을 분리. 디바운스를 건너뛰고 즉시 저장.
+  function onManualSave() {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    persist(text, true);
+  }
+
+  function onBlurValidate() {
+    if (text.length === 0) return;
+    if (charCount < minChars) {
+      setBlurNotice(`최소 ${minChars}자가 필요해요. (현재 ${charCount}자)`);
+    } else if (charCount > limit.hardMax) {
+      setBlurNotice(`최대 ${limit.hardMax}자를 넘었어요. (현재 ${charCount}자)`);
+    } else {
+      setBlurNotice(null);
+    }
+  }
+
   function onConfirmSubmit() {
+    setSubmitError(null);
     submit.mutate(
       {
         draft_id: initialDraft?.id ?? null,
@@ -134,18 +194,21 @@ export function WritingEditor({
       {
         onSuccess: (result) => {
           setConfirmOpen(false);
+          void logStudyEvent({
+            eventType: "submission_submitted",
+            problemId,
+            submissionId: result.submissionId,
+            payload: { question_no: questionNo, char_count: charCount },
+          });
           const next = isShortAnswer(result.questionNo)
             ? `/writing/feedback/short/${result.submissionId}`
             : `/writing/feedback/long/${result.submissionId}`;
           router.push(next);
         },
         onError: (e) => {
-          // description.md §4 예외 — 제출 실패 시 확인 모달을 유지하여 '제출'로
-          // 바로 다시 시도할 수 있게 한다.
-          notification.error({
-            message: "제출 실패",
-            description: `${e.message} — 확인 창의 '제출'을 눌러 다시 시도하거나, 작성한 답안을 복사해 두세요.`,
-          });
+          // D-M1 §4 예외 — 제출 실패 시 확인 모달을 유지하고 모달 안에서 원인 +
+          // 재시도 노출(닫지 않는다).
+          setSubmitError(e.message);
         },
       },
     );
@@ -153,7 +216,12 @@ export function WritingEditor({
 
   return (
     <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-      <Space>
+      {/* D-02 §2 — 작성 조건 카드 (52번만; 51번은 지문 자체가 조건). */}
+      {questionNo === 52 ? (
+        <ConditionsPanel questionNo={52} rubric={rubric} />
+      ) : null}
+
+      <Space wrap>
         <AutosaveBadge status={status} lastSavedAt={lastSavedAt} />
         <Text type={inRecommended ? "success" : "secondary"}>
           {charCount} / {limit.hardMax}자{" "}
@@ -163,10 +231,20 @@ export function WritingEditor({
             : `(최소 ${limit.hardMin}자)`}
           {inRecommended ? " ✓" : ""}
         </Text>
+        {/* D-M3 §5 — 자동 저장 끄기/켜기 CTA. */}
+        <Button size="small" type="link" onClick={onToggleAutosave}>
+          {autosaveEnabled ? "자동 저장 끄기" : "자동 저장 켜기"}
+        </Button>
       </Space>
+      {!autosaveEnabled ? (
+        <Text type="warning" style={{ fontSize: 12 }}>
+          자동 저장이 꺼져 있어요. 변경 후 직접 임시 저장을 눌러 주세요.
+        </Text>
+      ) : null}
       <Input.TextArea
         value={text}
         onChange={(e) => onChange(e.target.value)}
+        onBlur={onBlurValidate}
         autoSize={{ minRows: isShortAnswer(questionNo) ? 3 : 12 }}
         maxLength={limit.hardMax}
         placeholder={
@@ -176,14 +254,31 @@ export function WritingEditor({
         }
         disabled={submit.isPending}
       />
-      <Button
-        type="primary"
-        onClick={() => setConfirmOpen(true)}
-        disabled={!submittable || submit.isPending}
-        style={{ alignSelf: "flex-start" }}
-      >
-        제출하기
-      </Button>
+      {/* §4 예외 — 글자수 미달/초과 blur 즉시 안내. */}
+      {blurNotice ? (
+        <Text type="danger" style={{ fontSize: 12 }}>
+          {blurNotice}
+        </Text>
+      ) : null}
+
+      {/* D §5 — 3-way: 임시 저장(수동) / 제출. (자동 저장은 상단 배지로 상시 노출) */}
+      <Space>
+        <Button
+          onClick={onManualSave}
+          loading={status === "syncing" && upsert.isPending}
+          disabled={submit.isPending || text.length === 0}
+        >
+          임시 저장
+        </Button>
+        <Button
+          type="primary"
+          onClick={() => setConfirmOpen(true)}
+          disabled={!submittable || submit.isPending}
+        >
+          제출하기
+        </Button>
+      </Space>
+
       <SubmissionConfirmModal
         open={confirmOpen}
         charCount={charCount}
@@ -191,8 +286,12 @@ export function WritingEditor({
         questionNo={questionNo}
         lastSavedAt={lastSavedAt}
         loading={submit.isPending}
+        submitError={submitError}
         onConfirm={onConfirmSubmit}
-        onCancel={() => setConfirmOpen(false)}
+        onCancel={() => {
+          setSubmitError(null);
+          setConfirmOpen(false);
+        }}
       />
       <AutosaveWarningModal
         trigger={warningTrigger}
@@ -201,9 +300,17 @@ export function WritingEditor({
         onKeep={() => setWarningTrigger(null)}
         onRetry={() => {
           setWarningTrigger(null);
-          scheduleSave(text);
+          // 자동 저장이 꺼져 있더라도 '지금 다시 시도'는 즉시 저장한다.
+          if (debounceRef.current) clearTimeout(debounceRef.current);
+          persist(text, false);
         }}
-        onProceed={() => setWarningTrigger(null)}
+        onProceed={() => {
+          // disable_attempt 의 '위험을 알지만 끄기' → 자동 저장 끄기 확정.
+          if (warningTrigger === "disable_attempt") {
+            setAutosaveEnabled(false);
+          }
+          setWarningTrigger(null);
+        }}
       />
     </Space>
   );

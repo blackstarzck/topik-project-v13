@@ -1,28 +1,32 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Space } from "antd";
-import {
-  DashboardContent,
-} from "@/components/learning/DashboardContent";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import { DashboardBody } from "@/components/dashboard/DashboardBody";
 import type { RecentFeedbackItem } from "@/components/learning/RecentFeedbackCard";
-import type { DashboardAlert } from "@/components/learning/AlertsCard";
+import type { DashboardAlertItem } from "@/components/dashboard/DashboardAlertsCard";
+import type { DashboardPrimary, DashboardAlternative } from "@/components/dashboard/DashboardRecommendations";
 import { requireUser } from "@/lib/auth/session";
 import { getDashboardKpi } from "@/lib/learning/kpi";
 import { getLearningGoal } from "@/lib/learning/server";
+import { getNextProblemBundle } from "@/lib/practice/next";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "대시보드 — TALKPIK" };
 
 const DAY_MS = 1000 * 60 * 60 * 24;
-
-function getCurrentTimeMs(): number {
-  return Date.now();
-}
+const PASSING_SCORE = 60; // 등급 통과 기준선(정직: 추정치)
 
 function getExamDday(examDate: string, nowMs: number): number {
   const examMs = new Date(examDate).getTime();
   return Math.ceil((examMs - nowMs) / DAY_MS);
+}
+
+// 요청 시점의 현재 시각(ms). 컴포넌트 렌더 본문에서 Date.now()를 직접 부르면
+// purity 규칙에 걸리므로(불순 함수), 별도 헬퍼로 분리해 한 번만 읽는다.
+// growth/page.tsx의 loadGrowthData 패턴과 동일.
+function getRequestNowMs(): number {
+  return Date.now();
 }
 
 export default async function DashboardPage() {
@@ -32,8 +36,27 @@ export default async function DashboardPage() {
   const supabase = await createSupabaseServerClient();
   const kpi = await getDashboardKpi(user.id, supabase);
 
-  // Phase 7-D Task 11 (P1-7) — RecentFeedback fetch with single join query
-  // for question_no context (Codex P2-1 fix; Plan rev3 R-5 N+1 avoidance).
+  // area 3 추천/진행 카드 — 실제 추천 데이터(recommendation_items 기반 bundle).
+  const bundle = await getNextProblemBundle(user.id, () =>
+    Promise.resolve(supabase),
+  );
+  const primary: DashboardPrimary | null = bundle.primary
+    ? {
+        problemId: bundle.primary.problemId,
+        title: bundle.primary.title,
+        questionNo: bundle.primary.questionNo,
+        reason: bundle.primary.reason ?? null,
+        source: bundle.primary.source,
+      }
+    : null;
+  const alternatives: DashboardAlternative[] = bundle.alternatives.map((a) => ({
+    problemId: a.id,
+    title: a.title,
+    questionNo: a.questionNo,
+    reason: a.reason,
+  }));
+
+  // 최근 첨삭(받은 피드백) — KPI 타일 + 카드. single join query for question_no.
   const { data: feedbacks } = await supabase
     .from("writing_feedback")
     .select(
@@ -41,28 +64,41 @@ export default async function DashboardPage() {
     )
     .eq("user_id", user.id)
     .order("generated_at", { ascending: false })
-    .limit(3);
+    .limit(20);
 
-  const recentFeedbacks: RecentFeedbackItem[] = (feedbacks ?? []).map((f) => {
-    // Embedded relation: writing_submissions is 1:1 keyed by submission_id PK,
-    // but PostgREST may return as array or object — normalize either way.
-    const sub = (f as { writing_submissions: unknown }).writing_submissions;
-    const subObj = Array.isArray(sub) ? sub[0] : sub;
-    const questionNo =
-      subObj && typeof subObj === "object" && "question_no" in subObj
-        ? ((subObj as { question_no: number | null }).question_no ?? null)
-        : null;
-    return {
-      submissionId: f.submission_id,
-      questionNo,
-      scoreTotal: f.score_total,
-      generatedAt: f.generated_at,
-    };
-  });
+  const feedbackRows = feedbacks ?? [];
+  const recentFeedbacks: RecentFeedbackItem[] = feedbackRows
+    .slice(0, 3)
+    .map((f) => {
+      const sub = (f as { writing_submissions: unknown }).writing_submissions;
+      const subObj = Array.isArray(sub) ? sub[0] : sub;
+      const questionNo =
+        subObj && typeof subObj === "object" && "question_no" in subObj
+          ? ((subObj as { question_no: number | null }).question_no ?? null)
+          : null;
+      return {
+        submissionId: f.submission_id,
+        questionNo,
+        scoreTotal: f.score_total,
+        generatedAt: f.generated_at,
+      };
+    });
 
-  // In-app alerts — exam D-day + dirty drafts. Tier 2 OOS-9 transport 없이.
-  const alerts: DashboardAlert[] = [];
-  const nowMs = getCurrentTimeMs();
+  // 목표 달성률 — 최근 평균 점수 / 통과 기준선. 목표 없으면 위에서 redirect 됨.
+  const scores = feedbackRows
+    .map((f) => f.score_total)
+    .filter((s): s is number => typeof s === "number");
+  const avgScore =
+    scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : null;
+  const goalAchievementPct =
+    avgScore != null
+      ? Math.min(100, Math.round((avgScore / PASSING_SCORE) * 100))
+      : null;
+
+  // area 4 — in-app alerts. 로드 실패는 try/catch 로 감지해 재시도/설정 CTA.
+  const alerts: DashboardAlertItem[] = [];
+  let alertsLoadFailed = false;
+  const nowMs = getRequestNowMs();
   if (goal.exam_date) {
     const dDay = getExamDday(goal.exam_date, nowMs);
     if (dDay >= 0 && dDay <= 30) {
@@ -74,28 +110,45 @@ export default async function DashboardPage() {
       });
     }
   }
-  const { count: dirtyDraftCount } = await supabase
-    .from("writing_drafts")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", user.id)
-    .eq("autosave_status", "dirty");
-  if ((dirtyDraftCount ?? 0) > 0) {
-    alerts.push({
-      id: "dirty-drafts",
-      level: "info",
-      title: "작성 중인 답안",
-      description: `완성하지 않은 답안 ${dirtyDraftCount}건이 있습니다.`,
-    });
+  try {
+    const { count: dirtyDraftCount, error } = await supabase
+      .from("writing_drafts")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("autosave_status", "dirty");
+    if (error) throw error;
+    if ((dirtyDraftCount ?? 0) > 0) {
+      alerts.push({
+        id: "dirty-drafts",
+        level: "info",
+        title: "작성 중인 답안",
+        description: `완성하지 않은 답안 ${dirtyDraftCount}건이 있습니다.`,
+      });
+    }
+  } catch {
+    alertsLoadFailed = true;
   }
+
+  const kpiData = {
+    todayAttempts: kpi.todayAttempts,
+    totalAttempts: kpi.totalAttempts,
+    recentFeedbackCount: feedbackRows.length,
+    goalAchievementPct,
+    streakDays: kpi.streakDays,
+    updatedAt: new Date(nowMs).toISOString(),
+  };
 
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
       <DashboardHeader />
-      <DashboardContent
-        goal={goal}
-        kpi={kpi}
+      <DashboardBody
+        kpi={kpiData}
+        examDate={goal.exam_date}
+        primary={primary}
+        alternatives={alternatives}
         recentFeedbacks={recentFeedbacks}
         alerts={alerts}
+        alertsLoadFailed={alertsLoadFailed}
       />
     </Space>
   );

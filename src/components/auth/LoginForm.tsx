@@ -12,8 +12,44 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 const { Paragraph, Title } = Typography;
 
-const SESSION_NOTICE: Record<string, string> = {
-  session_expired: "세션이 만료되어 로그아웃됐어요. 다시 로그인해주세요.",
+// description §1 예외 + §4 예외: 세션 만료 / 휴면 / 탈퇴 등은 인라인 안내(Alert)로.
+// reason query 로 진입했을 때 보여줄 안내 문구 + 안내 톤(type).
+type NoticeTone = "warning" | "info" | "error";
+type StatusNotice = { tone: NoticeTone; text: string };
+
+const REASON_NOTICE: Record<string, StatusNotice> = {
+  session_expired: {
+    tone: "warning",
+    text: "세션이 만료되어 로그아웃됐어요. 다시 로그인해주세요.",
+  },
+  dormant: {
+    tone: "info",
+    text: "오랜만이에요! 휴면 상태였던 계정이에요. 로그인하면 다시 활성화돼요.",
+  },
+  withdrawn: {
+    tone: "error",
+    text: "탈퇴 처리된 계정이에요. 다시 이용하시려면 새로 가입해주세요.",
+  },
+};
+
+// 서버에서 받은 인증 실패 코드를 "필드 하단 인라인 오류"로 보여줄지,
+// "카드 상단 인라인 안내(Alert)"로 보여줄지 분류한다 (description §3 vs §4).
+const FIELD_LEVEL_CODES = new Set([
+  "invalid_credentials",
+  "invalid_login_credentials",
+  "validation_failed",
+]);
+
+const STATUS_NOTICE_BY_CODE: Record<string, StatusNotice> = {
+  email_not_confirmed: {
+    tone: "warning",
+    text: "이메일 인증이 아직 완료되지 않았어요. 받은편지함의 인증 메일을 확인해주세요.",
+  },
+  user_banned: {
+    tone: "error",
+    text: "이용이 제한된 계정이에요. 자세한 내용은 고객센터로 문의해주세요.",
+  },
+  // 서버/네트워크 계열은 별도 분기에서 처리하지만, 명시적 fallback 도 준비.
 };
 
 type LoginMode = "password" | "magic-link";
@@ -31,24 +67,65 @@ export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const noticeReason = searchParams.get("reason");
-  const noticeText = noticeReason ? SESSION_NOTICE[noticeReason] : undefined;
+  // §1/§4 예외: reason query 기반 인라인 안내 (세션 만료/휴면/탈퇴).
+  const queryNotice = noticeReason ? REASON_NOTICE[noticeReason] : undefined;
   const [mode, setMode] = useState<LoginMode>("password");
   const [submitting, setSubmitting] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState<string | null>(null);
   const [failedAttempts, setFailedAttempts] = useState(0);
+  // 로그인 시도 후 서버가 돌려준 상태성 오류(휴면/미인증/서버오류)를 위한 인라인 안내.
+  const [statusNotice, setStatusNotice] = useState<StatusNotice | null>(null);
   const [form] = Form.useForm<PasswordFields | MagicLinkFields>();
+
+  // 화면 상단에 노출할 최종 안내: 시도 후 statusNotice가 query 안내보다 우선.
+  const activeNotice = statusNotice ?? queryNotice ?? null;
 
   async function handlePasswordLogin(values: PasswordFields) {
     setSubmitting(true);
+    setStatusNotice(null);
     const supabase = createSupabaseBrowserClient();
-    const { error } = await supabase.auth.signInWithPassword({
-      email: values.email,
-      password: values.password,
-    });
+    let result: Awaited<ReturnType<typeof supabase.auth.signInWithPassword>>;
+    try {
+      result = await supabase.auth.signInWithPassword({
+        email: values.email,
+        password: values.password,
+      });
+    } catch {
+      // 네트워크/서버 오류 — §4 예외: 서버 오류 인라인 안내.
+      setSubmitting(false);
+      setFailedAttempts((prev) => prev + 1);
+      setStatusNotice({
+        tone: "error",
+        text: "지금 로그인 서버에 연결할 수 없어요. 잠시 후 다시 시도해주세요.",
+      });
+      return;
+    }
+    const { error } = result;
     setSubmitting(false);
     if (error) {
       setFailedAttempts((prev) => prev + 1);
-      message.error(`로그인 실패: ${REASON_CONTENT[mapSupabaseErrorCode(error.code)].message}`);
+      const code = error.code ?? "";
+      // §4: 휴면/탈퇴/미인증/제한 등 상태성 오류는 카드 상단 인라인 안내로.
+      const statusMatch = STATUS_NOTICE_BY_CODE[code];
+      if (statusMatch) {
+        setStatusNotice(statusMatch);
+        return;
+      }
+      // §3: 잘못된 자격 증명은 필드 하단 인라인 오류로.
+      if (!code || FIELD_LEVEL_CODES.has(code)) {
+        form.setFields([
+          {
+            name: "password",
+            errors: ["이메일 또는 비밀번호가 올바르지 않아요."],
+          },
+        ]);
+        return;
+      }
+      // 그 외(서버측 알 수 없는 오류)는 상단 인라인 안내.
+      setStatusNotice({
+        tone: "error",
+        text: REASON_CONTENT[mapSupabaseErrorCode(code)].message,
+      });
       return;
     }
     setFailedAttempts(0);
@@ -89,11 +166,11 @@ export function LoginForm() {
 
   return (
     <div>
-      {noticeText && (
+      {activeNotice && (
         <Alert
-          type="warning"
+          type={activeNotice.tone}
           showIcon
-          message={noticeText}
+          message={activeNotice.text}
           style={{ marginBottom: 16 }}
           data-testid="login-session-notice"
         />
@@ -114,6 +191,7 @@ export function LoginForm() {
           setMode(v as LoginMode);
           form.resetFields();
           setFailedAttempts(0);
+          setStatusNotice(null);
         }}
         options={[
           { label: "비밀번호 로그인", value: "password" },

@@ -8,8 +8,8 @@ const shardDefinitions = [
   {
     shardId: "public-auth",
     name: "Public/Auth shard",
-    iaCodes: ["X-01", "A-01", "A-02", "X-06", "X-11", "X-12"],
-    roleFocus: "Public entry, authentication pages, auth callback support routes.",
+    iaCodes: ["X-01", "X-13", "X-14", "A-01", "A-02", "X-06", "X-16", "X-11", "X-12", "X-17"],
+    roleFocus: "Public entry, legal/policy pages, authentication pages, auth callback support routes.",
     crossCuttingEvidenceLanes: ["security-navigation", "policy"],
   },
   {
@@ -43,7 +43,7 @@ const shardDefinitions = [
   {
     shardId: "admin",
     name: "Admin shard",
-    iaCodes: ["H-01", "X-08", "X-10"],
+    iaCodes: ["X-15", "H-01", "X-08", "X-10"],
     roleFocus: "Admin role boundaries, RBAC, audit-sensitive admin surfaces.",
     crossCuttingEvidenceLanes: ["security-navigation", "policy"],
   },

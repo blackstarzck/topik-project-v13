@@ -6,6 +6,7 @@ import {
   Card,
   Col,
   Empty,
+  List,
   Progress,
   Row,
   Space,
@@ -14,6 +15,10 @@ import {
   Typography,
 } from "antd";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { GrowthTrendChart, type GrowthTrendPoint } from "./GrowthTrendChart";
+import { GrowthLockedReport } from "./GrowthLockedReport";
+import { buildGrowthInsights } from "./insights";
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -39,10 +44,21 @@ export type GrowthRecommendation = {
   questionNo: number | null;
 };
 
+export type GrowthRecentCompleted = {
+  submissionId: string;
+  questionNo: number | null;
+  scoreTotal: number | null;
+  generatedAt: string;
+};
+
 export type GrowthKpi = {
+  /** 0~100 정규화 평균 점수, null이면 미설정. */
+  averageScore: number | null;
   totalAttempts: number;
-  totalFeedback: number;
-  goalAchieved: boolean;
+  /** 개선률(%) — 최근 절반 vs 이전 절반 점수 변화, null이면 비교 불가. */
+  improvementPct: number | null;
+  /** 목표 달성률(%) — 목표 등급 대비, null이면 목표 없음. */
+  goalAchievementPct: number | null;
   goalLabel: string;
 };
 
@@ -50,31 +66,71 @@ export type GrowthDashboardProps = {
   kpi: GrowthKpi;
   weakDimensions: GrowthWeakDimension[];
   recommendations: GrowthRecommendation[];
+  trendPoints: GrowthTrendPoint[];
+  recentCompleted: GrowthRecentCompleted[];
+  /** 연속 학습일 (인사이트 근거). */
+  streakDays: number;
+  /** 최근 풀이 수 (인사이트 근거). */
+  recentVolume: number;
   /** True when no goal row exists — KPI/matrix swap to a setup-prompt card. */
   hasGoal: boolean;
+  /** 무료 플랜이면 상세 리포트 잠금. */
+  reportLocked: boolean;
+  planLabel: string | null;
 };
 
 function dimensionLabel(dimension: string) {
   return DIMENSION_LABELS[dimension] ?? dimension;
 }
 
+function deltaSuffix(pct: number | null): {
+  text: string;
+  color: string | undefined;
+} {
+  if (pct == null) return { text: "비교 데이터 부족", color: undefined };
+  if (pct > 0) return { text: `▲ ${Math.round(pct)}%`, color: "#3f8600" };
+  if (pct < 0) return { text: `▼ ${Math.abs(Math.round(pct))}%`, color: "#cf1322" };
+  return { text: "변화 없음", color: undefined };
+}
+
 /**
- * X-02 성장 대시보드 — honest shell.
+ * X-02 성장 대시보드.
  *
- * Time-series 성장 차트(description.md area 3)는 아직 준비 중이라 실제 차트 대신
- * 정직한 "준비 중" 안내와 재시도 동선을 보여준다(과대광고 금지). KPI/약점
- * 매트릭스/추천은 이미 수집된 feedback·recommendation 데이터에서 파생한다.
- * 색상만으로 의미를 전달하지 않도록 수치 라벨을 함께 노출한다(area 4 제약).
+ * - area 2 KPI 카드 4개 고정: 평균 점수 / 풀이 수 / 개선률 / 목표 달성률.
+ *   수치·증감·기간을 같은 순서로 표시(제약 조건). 데이터 없음/목표 없음은
+ *   설정 유도 카드로 대체.
+ * - area 3 성장 차트: recharts 시계열(점수·풀이량), 기간 필터 4개·범례 2개.
+ * - area 4 약점 매트릭스: 색상만으로 의미 전달 금지 → 수치 라벨 병기.
+ * - area 5 인사이트: 실제 수치 근거, 3개 이하·60자 이하(insights.ts).
+ * - area 6 하단 요약/추천: 최근 완료 문제 + 다음 추천(5개 이하).
+ * - area 1 예외: 무료 플랜은 상세 리포트 잠금 + 업그레이드 CTA.
  */
 export function GrowthDashboard({
   kpi,
   weakDimensions,
   recommendations,
+  trendPoints,
+  recentCompleted,
+  streakDays,
+  recentVolume,
   hasGoal,
+  reportLocked,
+  planLabel,
 }: GrowthDashboardProps) {
+  const router = useRouter();
   const sortedWeak = [...weakDimensions].sort((a, b) => a.avgScore - b.avgScore);
   const leading = sortedWeak[0];
   const leadingLabel = leading ? dimensionLabel(leading.dimension) : null;
+
+  const insights = buildGrowthInsights({
+    averageScore: kpi.averageScore,
+    recentVolume,
+    scoreDeltaPct: kpi.improvementPct,
+    weakestDimensionLabel: leadingLabel,
+    streakDays,
+  });
+
+  const improvement = deltaSuffix(kpi.improvementPct);
 
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
@@ -83,149 +139,221 @@ export function GrowthDashboard({
           성장 대시보드
         </Title>
         <Paragraph type="secondary" style={{ margin: 0 }}>
-          최근 학습 결과를 바탕으로 성장 지표와 약점을 정리했어요. 자세한 추세
-          차트는 준비 중입니다.
+          최근 학습 결과를 바탕으로 성장 지표와 약점을 정리했어요.
         </Paragraph>
       </div>
 
-      {/* area 2 — KPI 카드. 목표 없음/데이터 없음은 설정 유도로 대체. */}
-      {hasGoal ? (
-        <Row gutter={[16, 16]}>
-          <Col xs={12} md={6}>
-            <Card size="small" style={{ height: "100%" }}>
-              <Statistic
-                title="누적 풀이"
-                value={kpi.totalAttempts}
-                suffix="회"
-              />
-            </Card>
-          </Col>
-          <Col xs={12} md={6}>
-            <Card size="small" style={{ height: "100%" }}>
-              <Statistic
-                title="받은 피드백"
-                value={kpi.totalFeedback}
-                suffix="건"
-              />
-            </Card>
-          </Col>
-          <Col xs={12} md={6}>
-            <Card size="small" style={{ height: "100%" }}>
-              <Statistic
-                title="약점 분석"
-                value={weakDimensions.length}
-                suffix="개 영역"
-              />
-            </Card>
-          </Col>
-          <Col xs={12} md={6}>
-            <Card size="small" style={{ height: "100%" }}>
-              <Statistic title="목표" value={kpi.goalLabel} />
-            </Card>
-          </Col>
-        </Row>
-      ) : (
+      {/* area 1 예외 — 권한 없는 리포트 잠금 + 업그레이드 CTA. */}
+      {reportLocked ? (
         <Card>
-          <Empty description="학습 목표가 아직 없어요. 목표를 설정하면 성장 지표가 채워집니다.">
-            <Link href="/onboarding/learning-goal">
-              <Button type="primary">목표 설정하기</Button>
-            </Link>
-          </Empty>
+          <GrowthLockedReport planLabel={planLabel} />
         </Card>
-      )}
-
-      {/* area 3 — 성장 차트. 아직 미구현이라 정직한 준비-중 안내 + 재시도 동선. */}
-      <Card title="성장 추세 차트">
-        <Alert
-          type="info"
-          showIcon
-          message="추세 차트는 준비 중입니다."
-          description="점수·풀이량 추세 그래프는 다음 업데이트에서 제공돼요. 지금은 아래 약점 분석과 추천으로 다음 학습을 이어갈 수 있어요."
-        />
-      </Card>
-
-      {/* area 4 — 약점 매트릭스. 색상만으로 의미 전달 금지 → 수치 라벨 병기. */}
-      <Card title="약점 매트릭스">
-        {weakDimensions.length === 0 ? (
-          <Empty description="글쓰기를 더 제출하면 약점 분석이 채워져요.">
-            <Link href="/practice/problems">
-              <Button type="primary">학습 시작</Button>
-            </Link>
-          </Empty>
-        ) : (
-          <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-            {sortedWeak.map((w) => {
-              const percent = Math.round(w.avgScore * 100);
-              return (
-                <div key={w.dimension}>
-                  <Space style={{ width: "100%", justifyContent: "space-between" }}>
-                    <Text strong>{dimensionLabel(w.dimension)}</Text>
-                    <Text type="secondary">
-                      {percent}점 · {w.sampleCount}건
-                    </Text>
-                  </Space>
-                  <Progress
-                    percent={percent}
-                    showInfo={false}
-                    status={percent < 60 ? "exception" : "normal"}
+      ) : (
+        <>
+          {/* area 2 — KPI 카드 4개 고정. 목표/데이터 없음은 설정 유도. */}
+          {hasGoal ? (
+            <Row gutter={[16, 16]}>
+              <Col xs={12} md={6}>
+                <Card size="small" style={{ height: "100%" }}>
+                  <Statistic
+                    title="평균 점수"
+                    value={kpi.averageScore != null ? Math.round(kpi.averageScore) : "—"}
+                    suffix={kpi.averageScore != null ? "점" : undefined}
                   />
-                </div>
-              );
-            })}
-          </Space>
-        )}
-      </Card>
+                  <Text type="secondary" style={{ fontSize: 12 }}>
+                    100점 만점 기준
+                  </Text>
+                </Card>
+              </Col>
+              <Col xs={12} md={6}>
+                <Card size="small" style={{ height: "100%" }}>
+                  <Statistic title="풀이 수" value={kpi.totalAttempts} suffix="회" />
+                  <Text type="secondary" style={{ fontSize: 12 }}>
+                    누적 기준
+                  </Text>
+                </Card>
+              </Col>
+              <Col xs={12} md={6}>
+                <Card size="small" style={{ height: "100%" }}>
+                  <Statistic
+                    title="개선률"
+                    value={improvement.text}
+                    valueStyle={improvement.color ? { color: improvement.color } : undefined}
+                  />
+                  <Text type="secondary" style={{ fontSize: 12 }}>
+                    최근 vs 이전
+                  </Text>
+                </Card>
+              </Col>
+              <Col xs={12} md={6}>
+                <Card size="small" style={{ height: "100%" }}>
+                  <Statistic
+                    title="목표 달성률"
+                    value={kpi.goalAchievementPct != null ? kpi.goalAchievementPct : "—"}
+                    suffix={kpi.goalAchievementPct != null ? "%" : undefined}
+                  />
+                  <Text type="secondary" style={{ fontSize: 12 }}>
+                    목표 {kpi.goalLabel}
+                  </Text>
+                </Card>
+              </Col>
+            </Row>
+          ) : (
+            <Card>
+              <Empty description="학습 목표가 아직 없어요. 목표를 설정하면 성장 지표가 채워집니다.">
+                <Link href="/onboarding/learning-goal">
+                  <Button type="primary">목표 설정하기</Button>
+                </Link>
+              </Empty>
+            </Card>
+          )}
 
-      {/* area 5 — 인사이트. 실패 시 기본 학습 팁으로 대체(정직 안내). */}
-      <Card title="인사이트">
-        {leadingLabel ? (
-          <Alert
-            type="info"
-            showIcon
-            message={`${leadingLabel} 영역을 먼저 보완하면 도움이 될 수 있어요.`}
-            description="최근 답안에서 낮게 나온 영역을 바탕으로 추정한 안내예요. 실제 약점은 다음 연습 결과에 따라 달라질 수 있습니다."
-          />
-        ) : (
-          <Alert
-            type="info"
-            showIcon
-            message="학습 팁"
-            description="짧게 자주 쓰는 연습이 점수 향상에 가장 도움이 됩니다. 추천 문제부터 시작해 보세요."
-          />
-        )}
-      </Card>
+          {/* area 3 — 성장 차트(recharts 시계열). */}
+          <GrowthTrendChart points={trendPoints} onRetry={() => router.refresh()} />
 
-      {/* area 6 — 하단 요약/추천. 추천 없음이면 문제 목록 CTA만. */}
-      <Card title="다음 추천 문제">
-        {recommendations.length === 0 ? (
-          <Empty description="추천 문제가 아직 없어요.">
-            <Link href="/practice/problems">
-              <Button type="primary">문제 목록 보기</Button>
-            </Link>
-          </Empty>
-        ) : (
-          <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-            {recommendations.slice(0, 5).map((rec) => (
-              <Card key={rec.problemId} size="small">
-                <Space
-                  style={{ width: "100%", justifyContent: "space-between" }}
-                  wrap
-                >
-                  <Space direction="vertical" size={2}>
-                    <Tag color="blue">
-                      {rec.questionNo != null ? `${rec.questionNo}번 문항` : "추천"}
-                    </Tag>
-                    <Text strong>{rec.title}</Text>
-                  </Space>
-                  <Link href={`/practice/problems/${rec.problemId}` as never}>
-                    <Button type="primary">추천 학습 시작</Button>
-                  </Link>
-                </Space>
+          {/* area 4 — 약점 매트릭스. 색상만으로 의미 전달 금지 → 수치 라벨 병기. */}
+          <Card title="약점 매트릭스">
+            {weakDimensions.length === 0 ? (
+              <Empty description="글쓰기를 더 제출하면 약점 분석이 채워져요. 지금은 최근 답안 기준으로 안내해요.">
+                <Link href="/practice/problems">
+                  <Button type="primary">학습 시작</Button>
+                </Link>
+              </Empty>
+            ) : (
+              <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+                {sortedWeak.slice(0, 6).map((w) => {
+                  const percent = Math.round(w.avgScore * 100);
+                  return (
+                    <div key={w.dimension}>
+                      <Space
+                        style={{ width: "100%", justifyContent: "space-between" }}
+                      >
+                        <Text strong>{dimensionLabel(w.dimension)}</Text>
+                        <Text type="secondary">
+                          {percent}점 · {w.sampleCount}건
+                        </Text>
+                      </Space>
+                      <Progress
+                        percent={percent}
+                        showInfo={false}
+                        status={percent < 60 ? "exception" : "normal"}
+                      />
+                    </div>
+                  );
+                })}
+              </Space>
+            )}
+          </Card>
+
+          {/* area 5 — 인사이트. 실제 수치 근거(insights.ts), 3개 이하·60자 이하. */}
+          <Card title="인사이트">
+            <Space direction="vertical" size="small" style={{ width: "100%" }}>
+              {insights.map((sentence, idx) => (
+                <Alert
+                  key={idx}
+                  type="info"
+                  showIcon
+                  message={sentence}
+                />
+              ))}
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                실제 점수·풀이 기록에서 계산한 요약이에요. 약점은 다음 연습 결과에
+                따라 달라질 수 있습니다.
+              </Text>
+            </Space>
+          </Card>
+
+          {/* area 6 — 하단 요약/추천. 추천 없음이면 최근 완료 요약 + 문제 목록 CTA만. */}
+          <Row gutter={[16, 16]}>
+            <Col xs={24} md={12}>
+              <Card title="최근 완료 문제">
+                {recentCompleted.length === 0 ? (
+                  <Empty description="아직 완료한 문제가 없어요." />
+                ) : (
+                  <List
+                    size="small"
+                    dataSource={recentCompleted.slice(0, 5)}
+                    renderItem={(item) => (
+                      <List.Item
+                        key={item.submissionId}
+                        actions={[
+                          <Link
+                            key="view"
+                            href={`/writing/feedback/long/${item.submissionId}` as never}
+                          >
+                            보기
+                          </Link>,
+                        ]}
+                      >
+                        <Tag>
+                          {item.questionNo != null ? `${item.questionNo}번` : "—"}
+                        </Tag>
+                        <span style={{ marginLeft: 8 }}>
+                          점수{" "}
+                          <strong>
+                            {item.scoreTotal != null
+                              ? `${Math.round(item.scoreTotal)}점`
+                              : "대기"}
+                          </strong>
+                        </span>
+                        <Text
+                          type="secondary"
+                          style={{ marginLeft: 12, fontSize: 12 }}
+                        >
+                          {new Date(item.generatedAt).toLocaleDateString("ko-KR")}
+                        </Text>
+                      </List.Item>
+                    )}
+                  />
+                )}
               </Card>
-            ))}
-          </Space>
-        )}
-      </Card>
+            </Col>
+            <Col xs={24} md={12}>
+              <Card title="다음 추천 문제">
+                {recommendations.length === 0 ? (
+                  <Empty description="추천 문제가 아직 없어요.">
+                    <Link href="/practice/problems">
+                      <Button type="primary">문제 목록 보기</Button>
+                    </Link>
+                  </Empty>
+                ) : (
+                  <Space
+                    direction="vertical"
+                    size="middle"
+                    style={{ width: "100%" }}
+                  >
+                    {recommendations.slice(0, 5).map((rec) => (
+                      <Card key={rec.problemId} size="small">
+                        <Space
+                          style={{
+                            width: "100%",
+                            justifyContent: "space-between",
+                          }}
+                          wrap
+                        >
+                          <Space direction="vertical" size={2}>
+                            <Tag color="blue">
+                              {rec.questionNo != null
+                                ? `${rec.questionNo}번 문항`
+                                : "추천"}
+                            </Tag>
+                            <Text strong>{rec.title}</Text>
+                          </Space>
+                          <Link
+                            href={`/practice/problems/${rec.problemId}` as never}
+                          >
+                            <Button type="primary">추천 학습 시작</Button>
+                          </Link>
+                        </Space>
+                      </Card>
+                    ))}
+                  </Space>
+                )}
+              </Card>
+            </Col>
+          </Row>
+        </>
+      )}
     </Space>
   );
 }

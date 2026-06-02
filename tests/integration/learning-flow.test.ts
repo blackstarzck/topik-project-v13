@@ -33,17 +33,28 @@ vi.mock("@/lib/learning/kpi", () => ({
     }),
 }));
 
-// Phase 7-D Task 11: DashboardPage now reads writing_feedback + writing_drafts
-// for RecentFeedback + Alerts cards. Mock returns chainable thenables.
+// DashboardPage reads writing_feedback + writing_drafts for RecentFeedback +
+// Alerts cards AND (recommendation build) getNextProblemBundle, which queries
+// recommendation_items/runs via .or()/.filter()/.not()/.gte(). The mock makes
+// every PostgREST builder method chainable and the chain itself thenable, so
+// awaiting at any point resolves to an empty result set (no recommendation,
+// no feedback, no drafts). This keeps the dashboard render path exercised end
+// to end without a live DB.
 vi.mock("@/lib/supabase/server", () => {
+  const result = { data: [] as unknown[], count: 0, error: null };
   const emptyChain = {
     select: () => emptyChain,
     eq: () => emptyChain,
+    or: () => emptyChain,
+    filter: () => emptyChain,
+    not: () => emptyChain,
+    gte: () => emptyChain,
     order: () => emptyChain,
-    limit: () => Promise.resolve({ data: [], count: 0, error: null }),
-    head: () => Promise.resolve({ data: null, count: 0, error: null }),
-    then: (cb: (v: { data: unknown[]; count: number; error: null }) => unknown) =>
-      cb({ data: [], count: 0, error: null }),
+    limit: () => emptyChain,
+    head: () => emptyChain,
+    maybeSingle: () => Promise.resolve({ data: null, error: null }),
+    single: () => Promise.resolve({ data: null, error: null }),
+    then: (cb: (v: typeof result) => unknown) => cb(result),
   };
   return {
     createSupabaseServerClient: () =>

@@ -1,8 +1,27 @@
 "use client";
 
-import { Card, Col, Empty, Row, Space, Statistic, Table, Typography } from "antd";
+import {
+  Button,
+  Card,
+  Col,
+  Empty,
+  Row,
+  Space,
+  Statistic,
+  Table,
+  Typography,
+} from "antd";
 import type { ColumnsType } from "antd/es/table";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { AdminOrgOperationsCards } from "./AdminOrgOperationsCards";
+import { AdminOrgPerUserTable } from "./AdminOrgPerUserTable";
+import { AdminAuditLogDrawer } from "./AdminAuditLogDrawer";
+import type {
+  AdminOrgDashboardExtended,
+  AdminOrgRecentEvent,
+} from "./admin-rpc";
+import { formatDateTime, shortId, summarizePayload } from "./format";
 
 const { Title } = Typography;
 
@@ -10,74 +29,51 @@ type KpiCardProps = {
   title: string;
   value: number | string;
   suffix?: string;
+  highlight?: boolean;
 };
 
-function KpiCard({ title, value, suffix }: KpiCardProps) {
+function KpiCard({ title, value, suffix, highlight }: KpiCardProps) {
   return (
     <Card size="small" style={{ height: "100%" }}>
-      <Statistic title={title} value={value} suffix={suffix} />
+      <Statistic
+        title={title}
+        value={value}
+        suffix={suffix}
+        valueStyle={highlight ? { color: "#1677ff" } : undefined}
+      />
     </Card>
   );
 }
 
-type AdminRecentEvent = {
-  event_type: string;
-  occurred_at: string;
-  user_id: string | null;
-  payload: unknown;
-};
-
-type AdminOrgDashboardData = {
-  learner_count: number;
-  active_7d_count: number;
-  submissions_7d_count: number;
-  recent_events: AdminRecentEvent[];
-};
-
 type Props = {
-  data: AdminOrgDashboardData;
+  data: AdminOrgDashboardExtended;
+  /** Server-side reload (router.refresh) for empty/retry. */
+  onRetry?: () => void;
 };
-
-function formatDateTime(iso: string): string {
-  try {
-    return new Date(iso).toLocaleString("ko-KR");
-  } catch {
-    return iso;
-  }
-}
 
 /**
- * region 5 "민감 정보 마스킹": audit/event payload may carry free-form fields.
- * We do NOT dump the raw JSON (could leak emails, answers, tokens). Instead we
- * show only the safe top-level key names so an admin can see the shape without
- * exposing values.
+ * X-08 — 기관 관리자 대시보드 본문.
+ *
+ * regions: KPI 현황 (2, 4 KPIs incl. 평균 점수) · 운영 카드 (3) · 사용자/과제
+ * 테이블 (4) · 우측 상세 패널 (5, in the per-user table) · 최근 활동 + 감사 로그.
+ *
+ * NOTE: 과제 제출률(assignment-rate) KPI 는 assignments 기반 집계 RPC 가 아직
+ * 없어 평균 점수(avg_writing_score)로 4번째 KPI 를 채운다. 제출률 KPI 는 후속
+ * RPC 확장 대상(remaining)이다.
  */
-function summarizePayload(payload: unknown): string {
-  if (payload == null || typeof payload !== "object") return "—";
-  const keys = Object.keys(payload as Record<string, unknown>);
-  if (keys.length === 0) return "—";
-  const shown = keys.slice(0, 4).join(", ");
-  return keys.length > 4 ? `${shown}, …` : shown;
-}
-
-export function AdminOrgKpiCards({ data }: Props) {
+export function AdminOrgKpiCards({ data, onRetry }: Props) {
+  const router = useRouter();
+  const [auditOpen, setAuditOpen] = useState(false);
+  const refresh = onRetry ?? (() => router.refresh());
   const events = Array.isArray(data.recent_events) ? data.recent_events : [];
 
-  const columns: ColumnsType<AdminRecentEvent> = [
-    {
-      title: "이벤트",
-      dataIndex: "event_type",
-      key: "event_type",
-      width: 200,
-    },
+  const columns: ColumnsType<AdminOrgRecentEvent> = [
+    { title: "이벤트", dataIndex: "event_type", key: "event_type", width: 200 },
     {
       title: "발생 시각",
       dataIndex: "occurred_at",
       key: "occurred_at",
       width: 200,
-      // suppressHydrationWarning: toLocaleString('ko-KR') can differ between the
-      // server render and the client (locale/timezone) → React #418. The text
-      // is informational, so suppress the mismatch warning rather than block.
       render: (value: string) => (
         <span suppressHydrationWarning>{formatDateTime(value)}</span>
       ),
@@ -87,14 +83,11 @@ export function AdminOrgKpiCards({ data }: Props) {
       dataIndex: "user_id",
       key: "user_id",
       width: 120,
-      render: (value: string | null) =>
-        value ? (
-          <span style={{ fontFamily: "monospace", fontSize: 12 }}>
-            {value.slice(0, 8)}…
-          </span>
-        ) : (
-          "—"
-        ),
+      render: (value: string | null) => (
+        <span style={{ fontFamily: "monospace", fontSize: 12 }}>
+          {shortId(value)}
+        </span>
+      ),
     },
     {
       title: "페이로드",
@@ -108,61 +101,94 @@ export function AdminOrgKpiCards({ data }: Props) {
     },
   ];
 
-  const hasAnyActivity =
-    data.learner_count > 0 ||
-    data.active_7d_count > 0 ||
-    data.submissions_7d_count > 0 ||
-    events.length > 0;
+  // 예외 (region 2): 데이터 없음은 0 대신 온보딩 안내로 대체.
+  const isEmpty =
+    data.learner_count === 0 &&
+    data.active_7d_count === 0 &&
+    data.submissions_7d_count === 0 &&
+    events.length === 0 &&
+    data.per_user.length === 0;
+
+  if (isEmpty) {
+    return (
+      <Space direction="vertical" size="large" style={{ width: "100%" }}>
+        <Empty description="아직 기관 학습 데이터가 없어요. 학습자가 가입하고 문제를 풀면 KPI와 활동이 채워집니다.">
+          <Button onClick={refresh}>새로고침</Button>
+        </Empty>
+        <AdminOrgOperationsCards />
+      </Space>
+    );
+  }
 
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
       <Row gutter={[16, 16]}>
-        <Col xs={24} md={8}>
-          <KpiCard
-            title="전체 학습자"
-            value={data.learner_count}
-            suffix="명"
-          />
+        <Col xs={12} md={6}>
+          <KpiCard title="전체 학습자" value={data.learner_count} suffix="명" />
         </Col>
-        <Col xs={24} md={8}>
+        <Col xs={12} md={6}>
           <KpiCard
             title="최근 7일 활성"
             value={data.active_7d_count}
             suffix="명"
           />
         </Col>
-        <Col xs={24} md={8}>
+        <Col xs={12} md={6}>
           <KpiCard
             title="최근 7일 제출"
             value={data.submissions_7d_count}
             suffix="건"
           />
         </Col>
+        <Col xs={12} md={6}>
+          <KpiCard
+            title="평균 점수"
+            value={data.avg_writing_score == null ? "—" : data.avg_writing_score}
+            suffix={data.avg_writing_score == null ? "" : "점"}
+            highlight
+          />
+        </Col>
       </Row>
 
       <AdminOrgOperationsCards />
 
+      <AdminOrgPerUserTable rows={data.per_user} onRetry={refresh} />
+
       <Card size="small">
-        <Title level={5} style={{ marginTop: 0 }}>
-          최근 학습 이벤트
-        </Title>
-        {hasAnyActivity ? (
-          <Table<AdminRecentEvent>
-            rowKey={(record, index) =>
-              `${record.event_type}-${record.occurred_at}-${index ?? 0}`
-            }
-            columns={columns}
-            dataSource={events}
-            pagination={{ pageSize: 10 }}
-            size="small"
-          />
-        ) : (
-          <Empty
-            description="아직 기관 활동 데이터가 없어요. 학습자가 문제를 풀면 여기에 활동이 표시됩니다."
-            style={{ padding: "2rem 1rem" }}
-          />
-        )}
+        <Space
+          style={{ width: "100%", justifyContent: "space-between" }}
+          align="center"
+        >
+          <Title level={5} style={{ margin: 0 }}>
+            최근 학습 이벤트
+          </Title>
+          <Button size="small" onClick={() => setAuditOpen(true)}>
+            관리자 변경 이력
+          </Button>
+        </Space>
+        <div style={{ marginTop: 12 }}>
+          {events.length > 0 ? (
+            <Table<AdminOrgRecentEvent>
+              rowKey={(record, index) =>
+                `${record.event_type}-${record.occurred_at}-${index ?? 0}`
+              }
+              columns={columns}
+              dataSource={events}
+              pagination={{ pageSize: 10 }}
+              size="small"
+              scroll={{ x: 640 }}
+            />
+          ) : (
+            <Empty description="아직 기관 활동 데이터가 없어요." />
+          )}
+        </div>
       </Card>
+
+      <AdminAuditLogDrawer
+        open={auditOpen}
+        onClose={() => setAuditOpen(false)}
+        title="관리자 변경 이력"
+      />
     </Space>
   );
 }

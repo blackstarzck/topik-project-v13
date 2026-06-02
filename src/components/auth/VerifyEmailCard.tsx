@@ -14,13 +14,34 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { App, Button, Card, Form, Input, Space, Typography } from "antd";
+import { App, Button, Card, Divider, Form, Input, Space, Typography } from "antd";
 
+import { AuthMascot } from "@/components/auth/AuthMascot";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { buildAuthRedirectUrl } from "@/lib/auth/redirect-url";
 import { REASON_CONTENT, mapSupabaseErrorCode } from "@/lib/auth/error-mapping";
 
 const { Paragraph, Title, Text } = Typography;
+
+// X-12 §5: "받은편지함 열기" — 이메일 도메인별 웹메일 받은편지함 바로가기.
+// 매핑에 없는 도메인이면 null (그 경우 버튼 대신 안내 문구만 노출).
+const WEBMAIL_INBOX: Record<string, string> = {
+  "gmail.com": "https://mail.google.com/mail/u/0/#inbox",
+  "naver.com": "https://mail.naver.com",
+  "daum.net": "https://mail.daum.net",
+  "hanmail.net": "https://mail.daum.net",
+  "kakao.com": "https://mail.kakao.com",
+  "outlook.com": "https://outlook.live.com/mail/0/inbox",
+  "hotmail.com": "https://outlook.live.com/mail/0/inbox",
+  "yahoo.com": "https://mail.yahoo.com",
+  "icloud.com": "https://www.icloud.com/mail",
+};
+
+function inboxUrlForEmail(email: string): string | null {
+  const domain = email.split("@")[1]?.toLowerCase().trim();
+  if (!domain) return null;
+  return WEBMAIL_INBOX[domain] ?? null;
+}
 
 const COOLDOWN_DEFAULT_SECONDS = 60;
 const COOLDOWN_STORAGE_KEY = "talkpik:verify-email:cooldown-until";
@@ -163,6 +184,8 @@ export function VerifyEmailCard() {
   return (
     <Card style={{ maxWidth: 520, margin: "0 auto" }} aria-live="polite">
       <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+        {/* §1 마스코트/일러스트 — 안내 카피를 가리지 않게 상단, 대체 텍스트 필수 */}
+        <AuthMascot alt="TALKPIK 학습 도우미 캐릭터" emoji="📬" size={48} />
         <Title level={3} style={{ marginBottom: 0 }}>
           이메일을 확인해주세요
         </Title>
@@ -212,6 +235,42 @@ export function VerifyEmailCard() {
           인증 메일 다시 보내기
         </Button>
 
+        {/* §5 이메일 안 왔을 때 안내 — primary 재전송과 시각적 위계 구분(secondary).
+            스팸함 확인 / 받은편지함 열기 / 다른 이메일로 가입하기. */}
+        <Divider style={{ margin: "4px 0" }} />
+        <div data-testid="verify-email-help">
+          <Text strong style={{ fontSize: 13 }}>
+            이메일이 안 왔나요?
+          </Text>
+          <Paragraph
+            type="secondary"
+            style={{ margin: "4px 0 8px", fontSize: 13 }}
+          >
+            메일이 도착하기까지 1~2분 걸릴 수 있어요. 먼저 스팸함(정크 메일함)을
+            확인해주세요.
+          </Paragraph>
+          <Space size="small" wrap>
+            {(() => {
+              const inboxUrl = inboxUrlForEmail(emailValue || emailFromQuery);
+              return inboxUrl ? (
+                <Button
+                  size="small"
+                  href={inboxUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid="verify-email-open-inbox"
+                >
+                  받은편지함 열기
+                </Button>
+              ) : null;
+            })()}
+            <Link href="/sign-up">
+              <Button size="small">다른 이메일로 가입하기</Button>
+            </Link>
+          </Space>
+        </div>
+
+        {/* §6 도움말/escape route — 항상 노출 */}
         <Paragraph style={{ marginBottom: 0, textAlign: "center" }}>
           <Link href="/login">로그인 페이지로</Link>
           {" · "}

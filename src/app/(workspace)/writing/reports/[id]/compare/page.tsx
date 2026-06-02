@@ -1,14 +1,37 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ComparisonReportView } from "@/components/reports/ComparisonReportView";
+import type { ChartDatum } from "@/components/reports/ScoreComparisonChart";
 import { requireUser } from "@/lib/auth/session";
 import {
   getComparisonReport,
+  getFeedbackBundle,
   getSubmission,
 } from "@/lib/writing/server";
 import type { ComparisonMetrics } from "@/lib/writing/comparison-service";
+import {
+  FEEDBACK_DIMENSIONS,
+  type FeedbackDimensionScoreRow,
+} from "@/lib/writing/types";
 
 export const metadata: Metadata = { title: "비교 리포트 — TALKPIK" };
+
+/** dimension → 0..100 정규화 점수 맵. score_max 차이를 보정한다. */
+function normalizedScores(
+  dims: FeedbackDimensionScoreRow[],
+): Record<string, number | null> {
+  const map: Record<string, number | null> = {};
+  for (const dim of FEEDBACK_DIMENSIONS) {
+    const row = dims.find((d) => d.dimension === dim);
+    if (!row || row.score === null) {
+      map[dim] = null;
+      continue;
+    }
+    const max = row.score_max && row.score_max > 0 ? row.score_max : 100;
+    map[dim] = Math.round((row.score / max) * 100);
+  }
+  return map;
+}
 
 export default async function CompareReportPage({
   params,
@@ -19,6 +42,7 @@ export default async function CompareReportPage({
   await requireUser();
   const report = await getComparisonReport(id);
   if (!report) notFound();
+
   const [current, previous] = await Promise.all([
     getSubmission(report.current_submission_id),
     report.previous_submission_id
@@ -26,13 +50,37 @@ export default async function CompareReportPage({
       : Promise.resolve(null),
   ]);
   if (!current) notFound();
+
+  // 차트/항목 카드용 실제 점수 — 현재/이전 dimension bundle을 정규화한다.
+  const [currentBundle, previousBundle] = await Promise.all([
+    getFeedbackBundle(current.id),
+    previous ? getFeedbackBundle(previous.id) : Promise.resolve(null),
+  ]);
+
+  const metrics = report.metrics as unknown as ComparisonMetrics;
+  const hasPrevious = !metrics.no_previous && previous !== null;
+
+  const currentNorm = normalizedScores(currentBundle?.dimensions ?? []);
+  const previousNorm = normalizedScores(previousBundle?.dimensions ?? []);
+
+  const chartData: ChartDatum[] = FEEDBACK_DIMENSIONS.map((dim) => ({
+    dimension: dim,
+    current: currentNorm[dim] ?? null,
+    previous: hasPrevious ? (previousNorm[dim] ?? null) : null,
+  })).filter((d) => d.current !== null || d.previous !== null);
+
   return (
     <ComparisonReportView
-      metrics={report.metrics as unknown as ComparisonMetrics}
+      metrics={metrics}
       narrative={report.narrative}
       currentText={current.answer_text}
       previousText={previous?.answer_text ?? null}
       retryHref={`/writing/${current.question_no}?problem=${current.problem_id}`}
+      reportId={report.id}
+      currentScore={currentBundle?.feedback.score_total ?? null}
+      chartData={chartData}
+      currentNorm={currentNorm}
+      hasPrevious={hasPrevious}
     />
   );
 }

@@ -252,10 +252,11 @@ export function normalizeRouteType(value) {
 }
 
 export function inferAudience({ iaCode, routeOrHostRoute, packs }) {
-  const publicCodes = new Set(["X-01", "A-01", "A-02", "X-06", "X-11", "X-12"]);
+  const publicCodes = new Set(["X-01", "A-01", "A-02", "X-06", "X-11", "X-12", "X-13", "X-14", "X-16", "X-17"]);
   if (publicCodes.has(iaCode)) return "public";
+  if (packs.includes("PUBLIC")) return "public";
   if (routeOrHostRoute.includes("/auth/")) return "public";
-  if (routeOrHostRoute.includes("/admin/") || packs.includes("ADMIN") || packs.includes("RBAC")) return "admin";
+  if (routeOrHostRoute === "/admin" || routeOrHostRoute.includes("/admin/") || packs.includes("ADMIN") || packs.includes("RBAC")) return "admin";
   return "user";
 }
 
@@ -323,8 +324,7 @@ export function buildManifest(auditDir = resolveAuditDir()) {
     summary: {
       totalIa: entries.length,
       docGapNotes: [
-        "docs/sitemap.md source-order prose still says docs/Wireframe/README.md is the current 32-screen IA inventory.",
-        "docs/Wireframe/README.md currently lists 34 IA entries.",
+        "docs/Wireframe/README.md currently lists 39 IA entries, including five codebase-added screens after the existing 34.",
       ],
     },
   };

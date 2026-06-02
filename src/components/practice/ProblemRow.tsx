@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Badge, Button, List, Space, Tag } from "antd";
+import { Badge, Button, List, Space, Tag, Tooltip, Typography } from "antd";
 import type { ProblemRow as ProblemRowData } from "@/lib/practice/types";
+
+const { Text } = Typography;
 
 type Props = {
   row: ProblemRowData;
@@ -10,11 +12,33 @@ type Props = {
   onRetryClick?: (problemId: string) => void;
   /** Phase 7-D Task 12: 풀이 상태 — solved일 때 retry 버튼 표시. */
   solveState?: "none" | "attempted" | "submitted";
+  /** C-02 — 풀이 이력: 시도 횟수(problem_attempts). */
+  attemptCount?: number;
+  /** C-02 — 풀이 이력: 마지막 시도 시각(ISO). */
+  lastAttemptAt?: string | null;
 };
 
-export function ProblemRow({ row, onRetryClick, solveState = "none" }: Props) {
+function relativeDay(iso: string | null | undefined): string | null {
+  if (!iso) return null;
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return null;
+  const days = Math.floor((Date.now() - then) / (24 * 60 * 60 * 1000));
+  if (days <= 0) return "오늘";
+  if (days === 1) return "어제";
+  if (days < 7) return `${days}일 전`;
+  return new Date(iso).toLocaleDateString("ko-KR");
+}
+
+export function ProblemRow({
+  row,
+  onRetryClick,
+  solveState = "none",
+  attemptCount = 0,
+  lastAttemptAt,
+}: Props) {
   const disabled = row.publish_status !== "published";
   const hasPriorWork = solveState !== "none";
+  const lastLabel = relativeDay(lastAttemptAt);
 
   return (
     <List.Item
@@ -45,7 +69,7 @@ export function ProblemRow({ row, onRetryClick, solveState = "none" }: Props) {
     >
       <List.Item.Meta
         title={
-          <Space>
+          <Space wrap>
             {row.question_no ? <Tag>{row.question_no}번</Tag> : null}
             <span>
               {row.title.length > 32
@@ -60,7 +84,7 @@ export function ProblemRow({ row, onRetryClick, solveState = "none" }: Props) {
           </Space>
         }
         description={
-          <Space size="small">
+          <Space size="small" wrap>
             {row.difficulty != null ? (
               <Tag color="blue">난이도 {row.difficulty}</Tag>
             ) : null}
@@ -68,6 +92,14 @@ export function ProblemRow({ row, onRetryClick, solveState = "none" }: Props) {
               status={disabled ? "default" : "success"}
               text={disabled ? "비공개" : "공개"}
             />
+            {/* C-02 — 풀이 이력 (problem_attempts.attempt_count + 마지막 시도). */}
+            {attemptCount > 0 ? (
+              <Tooltip title={lastLabel ? `마지막 시도: ${lastLabel}` : undefined}>
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                  시도 {attemptCount}회{lastLabel ? ` · ${lastLabel}` : ""}
+                </Text>
+              </Tooltip>
+            ) : null}
           </Space>
         }
       />

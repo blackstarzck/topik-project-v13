@@ -2,7 +2,7 @@
 // Plan §8 Step 2.2.
 //
 // Imports tests/e2e/coverage/ia-catalog.ts as the single source of truth for
-// 34 IA entries (page + hosted-modal + hosted-state). For hosted surfaces this
+// 39 IA entries (page + hosted-modal + hosted-state). For hosted surfaces this
 // spec only covers the HOST route (initial render); Phase 3
 // (hosted-surfaces.spec.ts) covers actual modal triggering, focus return, and
 // duplicate-action prevention.

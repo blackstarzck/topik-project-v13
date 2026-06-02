@@ -4,11 +4,11 @@
 
 ## Summary
 
-- Pages: 34
+- Pages: 39
 - Tables: 17
 - RPC/functions: 18
 - Storage buckets: 3
-- Page data links: 121
+- Page data links: 125
 - Unclassified DB objects: 0
 
 ## admin_audit_logs
@@ -80,18 +80,21 @@
 | IA | Screen | Type | Columns/fields | Usage | Page feature |
 | --- | --- | --- | --- | --- | --- |
 | H-01 | Admin problem management | rpc | - | RLS helper | 콘텐츠 관리자 권한 확인에 사용한다. |
+| X-15 | Admin index | rpc | - | RLS helper | 하위 콘텐츠 관리자 route의 권한 확인에 사용한다. |
 
 ## private.is_org_admin
 
 | IA | Screen | Type | Columns/fields | Usage | Page feature |
 | --- | --- | --- | --- | --- | --- |
 | X-08 | Organization admin dashboard | rpc | - | RLS helper | 기관 관리자 권한 확인에 사용한다. |
+| X-15 | Admin index | rpc | - | RLS helper | 하위 기관 관리자 route의 권한 확인에 사용한다. |
 
 ## private.is_platform_admin
 
 | IA | Screen | Type | Columns/fields | Usage | Page feature |
 | --- | --- | --- | --- | --- | --- |
 | X-10 | Admin user management | rpc | - | RLS helper | 플랫폼 관리자 권한 확인에 사용한다. |
+| X-15 | Admin index | rpc | - | RLS helper | 하위 플랫폼 관리자 route의 권한 확인에 사용한다. |
 
 ## private.protect_profile_columns
 
@@ -164,6 +167,7 @@
 | X-10 | Admin user management | table | `id`, `display_name`, `email`, `app_role`, `plan_label`, `status`, `created_at` | read/write | 관리자 사용자 목록, 역할/상태 변경에 사용한다. |
 | X-11 | Auth error | table | `id`, `status` | read | 인증 오류 후 계정 상태 안내와 재시도 분기에 연결될 수 있다. |
 | X-12 | Auth verify-email | table | `id`, `email`, `status` | read | 가입 직후 이메일 인증 안내와 인증 상태 확인에 연결된다. |
+| X-15 | Admin index | table | `id`, `app_role`, `status` | read | 관리자 root 접근 권한 확인에 사용한다. |
 
 ## public.admin_change_user_role
 
@@ -305,6 +309,5 @@
 
 ## Document Conflicts
 
-- wireframe-count-prose: `docs/sitemap.md` prose says 32-screen IA inventory, but current Wireframe inventory has 34 folders.
 - database-schema-drift: `docs/development/database-schema.md` does not fully reflect the later migration set now present under `supabase/migrations/`.
 - stale-ia-paths-in-audit-output: Latest IA audit artifacts still contain legacy `docs/IA/...` strings; current docs use `docs/Wireframe/...`.

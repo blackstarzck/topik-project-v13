@@ -16,6 +16,11 @@ type Props = {
   questionNo?: number;
   /** D-M1 제출 요약 — 마지막 자동 저장 시각(ISO). */
   lastSavedAt?: string | null;
+  /**
+   * D-M1 §4 예외 — 제출 실패 원인. 값이 있으면 모달을 유지(닫지 않음)하고
+   * 모달 안에서 오류 + 재시도(제출 버튼)를 노출한다.
+   */
+  submitError?: string | null;
 };
 
 export function SubmissionConfirmModal({
@@ -27,10 +32,10 @@ export function SubmissionConfirmModal({
   onCancel,
   questionNo,
   lastSavedAt,
+  submitError,
 }: Props) {
   const enough = charCount >= minChars;
-  // description.md §3 — 동의 체크. Modal destroyOnClose 로 닫힐 때 언마운트되어
-  // 다시 열면 useState 초기값(false)으로 자동 초기화된다.
+  // §3 — 동의 체크. destroyOnClose 로 닫힐 때 언마운트되어 다시 열면 false 로 초기화.
   const [agreed, setAgreed] = useState(false);
 
   const savedLabel = lastSavedAt
@@ -43,12 +48,15 @@ export function SubmissionConfirmModal({
       open={open}
       onOk={onConfirm}
       onCancel={onCancel}
-      okText="제출"
+      okText={submitError ? "다시 제출" : "제출"}
       cancelText="취소"
       okButtonProps={{ disabled: !enough || !agreed || loading, loading }}
-      destroyOnClose
+      // §4 — 제출 처리 중에는 배경 클릭/ESC 로 닫히지 않게(중복/오작동 방지).
+      maskClosable={!loading}
+      keyboard={!loading}
+      destroyOnHidden
     >
-      {/* description.md §2 제출 요약 — 문제 유형 / 답안 길이 / 저장 시각 (3항목). */}
+      {/* §2 제출 요약 — 문제 유형 / 답안 길이 / 저장 시각 (3항목). */}
       <Descriptions size="small" column={1} bordered style={{ marginBottom: 12 }}>
         {questionNo ? (
           <Descriptions.Item label="문제 유형">{questionNo}번</Descriptions.Item>
@@ -76,11 +84,19 @@ export function SubmissionConfirmModal({
         />
       ) : null}
 
-      {/* description.md §3 — 동의 체크. 체크 전에는 제출 비활성. */}
-      <Checkbox
-        checked={agreed}
-        onChange={(e) => setAgreed(e.target.checked)}
-      >
+      {/* §4 예외 — 제출 실패 시 모달 유지 + 원인 + 재시도 안내. */}
+      {submitError ? (
+        <Alert
+          type="error"
+          showIcon
+          style={{ marginBottom: 12 }}
+          message="제출하지 못했어요"
+          description={`${submitError} — '다시 제출'을 눌러 재시도하거나, 작성한 답안을 복사해 두세요.`}
+        />
+      ) : null}
+
+      {/* §3 — 동의 체크. 체크 전에는 제출 비활성. */}
+      <Checkbox checked={agreed} onChange={(e) => setAgreed(e.target.checked)}>
         제출 후 수정할 수 없음을 확인했어요.
       </Checkbox>
     </Modal>

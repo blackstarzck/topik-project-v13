@@ -56,7 +56,7 @@ function readJson<T>(path: string): T {
 }
 
 describe("IA audit setup scripts", () => {
-  it("builds a 34-entry IA manifest, validates source anchors, and plans one shard owner per IA item", () => {
+  it("builds a 39-entry IA manifest, validates source anchors, and plans one shard owner per IA item", () => {
     const auditDir = mkdtempSync(join(tmpdir(), "ia-audit-"));
 
     try {
@@ -67,11 +67,11 @@ describe("IA audit setup scripts", () => {
       expect(existsSync(manifestPath)).toBe(true);
 
       const manifest = readJson<{ entries: ManifestEntry[]; supportSurfaces: SupportSurface[] }>(manifestPath);
-      expect(manifest.entries).toHaveLength(34);
+      expect(manifest.entries).toHaveLength(39);
       expect(manifest.entries.map((entry) => entry.iaCode)).toEqual(
-        expect.arrayContaining(["X-11", "X-12", "D-M3", "F-M1"]),
+        expect.arrayContaining(["X-11", "X-12", "X-13", "X-14", "X-15", "X-16", "X-17", "D-M3", "F-M1"]),
       );
-      expect(new Set(manifest.entries.map((entry) => entry.iaCode)).size).toBe(34);
+      expect(new Set(manifest.entries.map((entry) => entry.iaCode)).size).toBe(39);
       expect(manifest.entries.every((entry) => entry.descriptionPath.endsWith("description.md"))).toBe(true);
       expect(manifest.entries.every((entry) => entry.descriptionPath.startsWith("docs/Wireframe/"))).toBe(true);
       expect(manifest.supportSurfaces.map((surface) => surface.routeOrHostRoute)).toEqual(
@@ -86,10 +86,11 @@ describe("IA audit setup scripts", () => {
         supportRows: SourceMapRow[];
         summary: { totalIa: number };
       }>(join(auditDir, "source-map-results.json"));
-      expect(sourceMap.rows.filter((row) => row.kind === "ia")).toHaveLength(34);
-      expect(sourceMap.summary.totalIa).toBe(34);
+      expect(sourceMap.rows.filter((row) => row.kind === "ia")).toHaveLength(39);
+      expect(sourceMap.summary.totalIa).toBe(39);
       expect(sourceMap.rows.find((row) => row.iaCode === "X-01")?.status).toBe("PASS");
       expect(sourceMap.rows.find((row) => row.iaCode === "X-11")?.status).toBe("PASS");
+      expect(sourceMap.rows.find((row) => row.iaCode === "X-17")?.status).toBe("PASS");
       // /auth/sign-out route handler was implemented in this run; previous
       // version of the test expected FAIL because the handler was missing.
       expect(sourceMap.supportRows.find((row) => row.routeOrHostRoute === "/auth/sign-out")?.status).toBe("PASS");
@@ -99,8 +100,8 @@ describe("IA audit setup scripts", () => {
 
       const dispatch = readJson<{ shards: DispatchShard[] }>(join(auditDir, "agent-dispatch-plan.json"));
       const assignedCodes = dispatch.shards.flatMap((shard) => shard.iaCodes);
-      expect(assignedCodes).toHaveLength(34);
-      expect(new Set(assignedCodes).size).toBe(34);
+      expect(assignedCodes).toHaveLength(39);
+      expect(new Set(assignedCodes).size).toBe(39);
       expect(dispatch.shards.every((shard) => shard.subagentEligible.value === true)).toBe(true);
     } finally {
       rmSync(auditDir, { recursive: true, force: true });
@@ -121,14 +122,14 @@ describe("IA audit setup scripts", () => {
         join(auditDir, "doc-receipt-validation-results.json"),
       );
       expect(results.status).toBe("BLOCKED");
-      expect(results.rows).toHaveLength(34);
+      expect(results.rows).toHaveLength(39);
       expect(results.rows.every((row) => row.status === "BLOCKED")).toBe(true);
     } finally {
       rmSync(auditDir, { recursive: true, force: true });
     }
   });
 
-  it("builds a 34-entry doc-receipts skeleton that the validator then fails by design until extractedRequirements are filled", () => {
+  it("builds a 39-entry doc-receipts skeleton that the validator then fails by design until extractedRequirements are filled", () => {
     const auditDir = mkdtempSync(join(tmpdir(), "ia-audit-"));
 
     try {
@@ -159,8 +160,8 @@ describe("IA audit setup scripts", () => {
         }>;
       }>(receiptsPath);
 
-      expect(receiptsDoc.receipts).toHaveLength(34);
-      expect(new Set(receiptsDoc.receipts.map((r) => r.iaCode)).size).toBe(34);
+      expect(receiptsDoc.receipts).toHaveLength(39);
+      expect(new Set(receiptsDoc.receipts.map((r) => r.iaCode)).size).toBe(39);
 
       for (const receipt of receiptsDoc.receipts) {
         expect(receipt.extractedRequirements).toEqual([]);
@@ -186,7 +187,7 @@ describe("IA audit setup scripts", () => {
         rows: Array<{ status: string; blockingReasons: string[] }>;
       }>(join(auditDir, "doc-receipt-validation-results.json"));
       expect(validatorResult.status).toBe("FAIL");
-      expect(validatorResult.rows).toHaveLength(34);
+      expect(validatorResult.rows).toHaveLength(39);
       expect(validatorResult.rows.every((row) => row.status === "FAIL")).toBe(true);
       expect(
         validatorResult.rows.every((row) =>
@@ -215,7 +216,7 @@ describe("IA audit setup scripts", () => {
       expect(mergeRun.status, mergeRun.stderr || mergeRun.stdout).toBe(0);
 
       const audit = readJson<{ entries: AuditEntry[] }>(join(auditDir, "ia-implementation-audit.json"));
-      expect(audit.entries).toHaveLength(34);
+      expect(audit.entries).toHaveLength(39);
       expect(audit.entries.every((entry) => entry.finalLabel !== "PASS")).toBe(true);
       expect(audit.entries.some((entry) => entry.topGaps.includes("missing doc-receipts.json"))).toBe(true);
 

@@ -29,10 +29,11 @@ If active docs disagree, record `DOC-GAP`.
 
 Known current doc drift:
 
-- `docs/Wireframe/README.md` lists 34 IA entries.
-- Some prose still says 32 screens.
+- `docs/Wireframe/README.md` lists 39 IA entries.
+- Five entries, X-13 through X-17, were added after the existing 34 Wireframe screens from codebase route coverage.
+- Some historical prose still says 32 or 34 screens.
 - Treat the actual IA inventory and sitemap route table as the working source.
-- Record stale 32-screen wording as `DOC-GAP`, not implementation failure.
+- Record stale 32/34-screen wording as `DOC-GAP`, not implementation failure.
 
 ## 3. Evidence Sources
 
@@ -199,9 +200,12 @@ For hosted modals and states, run the equivalent host-route trigger scenario.
 | IA | Route or Host | Type | Required Packs |
 | --- | --- | --- | --- |
 | X-01 Product landing | `/` | page | CORE, PUBLIC, ENTRY, COPY-POLICY |
+| X-13 Terms | `/terms` | page | CORE, PUBLIC, POLICY |
+| X-14 Privacy policy | `/privacy` | page | CORE, PUBLIC, POLICY, PII |
 | A-01 Sign-up | `/sign-up` | page | CORE, FORM, AUTH, EMAIL, POLICY |
 | A-02 Login | `/login` | page | CORE, FORM, AUTH, SESSION |
 | X-06 Password reset | `/password-reset` | page | CORE, FORM, AUTH, EMAIL, TOKEN |
+| X-16 Password reset confirm | `/password-reset/confirm` | page | CORE, FORM, AUTH, TOKEN, SECURITY |
 | A-03 Learning goal setup | `/onboarding/learning-goal` | page | CORE, FORM, GUARD, ONBOARDING |
 | B-01 Home dashboard | `/dashboard` | page | CORE, GUARD, DATA, EMPTY, NAV |
 | C-01 Problem type recommendations | `/practice/recommendations` | page | CORE, GUARD, DATA, FILTER |
@@ -221,6 +225,7 @@ For hosted modals and states, run the equivalent host-route trigger scenario.
 | F-01 My library | `/library` | page | CORE, DATA, OWNER-CHECK, SEARCH, EXPORT |
 | F-M1 PDF export modal | library, feedback, report routes | hosted modal | CORE, MODAL, EXPORT, STORAGE, FAILURE |
 | G-01 Language settings | `/settings/language` | page | CORE, POLICY, PERSISTENCE, I18N |
+| X-15 Admin index | `/admin` | page | CORE, ADMIN, RBAC |
 | H-01 Admin problem management | `/admin/problems` | page | CORE, ADMIN, RBAC, AUDIT |
 | X-02 Growth dashboard | `/growth` | page | CORE, DATA, CHART, EMPTY |
 | X-03 Paywall | `/paywall` | page | CORE, POLICY, DEFERRED-BILLING, BACK |
@@ -232,13 +237,13 @@ For hosted modals and states, run the equivalent host-route trigger scenario.
 | X-10 Admin user management | `/admin/users` | page | CORE, ADMIN, RBAC, AUDIT, PRIVILEGE |
 | X-11 Auth error | `/auth/error` | page | CORE, AUTH, ERROR-REASON, RATE-LIMIT, SECURITY |
 | X-12 Auth verify-email | `/auth/verify-email` | page | CORE, AUTH, EMAIL, COOLDOWN, RETRY |
+| X-17 Auth callback fragment | `/auth/callback-fragment` | page | CORE, AUTH, FRAGMENT, CLIENT-SESSION, TOKEN, SECURITY |
 
 Route handler support checks:
 
 | Route | Type | Required Packs |
 | --- | --- | --- |
 | `/auth/callback` | route handler | AUTH, TOKEN, NEXT-URL, RAW-ERROR-BLOCK |
-| `/auth/callback-fragment` | page | AUTH, FRAGMENT, CLIENT-SESSION |
 | `/auth/sign-out` | route handler | AUTH, SESSION-END, BACK-BUTTON |
 
 ## 9. Pack Definitions
@@ -370,7 +375,7 @@ GPT-5.5 adjudication must record evidence:
 
 Do not call the IA implementation coverage complete unless all are true.
 
-- All 34 IA entries are inventoried.
+- All 39 IA entries are inventoried.
 - Route type is assigned for every IA entry.
 - Current route/audience mapping is checked.
 - Direct URL and browser back scenarios are covered or marked with a label.

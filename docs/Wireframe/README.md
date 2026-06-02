@@ -5,11 +5,15 @@
 이 폴더는 TALKPIK AI의 화면 설계서 모음입니다.
 IA는 Information Architecture의 줄임말이고, 쉽게 말하면 "앱 화면의 구조와 화면 안에 무엇이 들어가는지"를 정리한 문서입니다.
 
-각 화면 폴더에는 보통 두 가지가 있습니다.
+현재 목록은 기존 34개 Wireframe 화면에 코드베이스 기준으로 발견된 추가 화면 5개를 더한 39개 화면입니다.
+35-39번 화면은 기존 34개 이후 추가된 화면이며, 각 문서에도 이 사실을 명시했습니다.
+
+각 화면 폴더에는 보통 세 가지가 있습니다.
 
 | 파일 | 의미 |
 | --- | --- |
 | `description.md` | 화면에 어떤 영역, 버튼, 정보, 상태가 있어야 하는지 설명합니다. |
+| `functional-spec.md` | 화면의 목적, 기능, 상태/오류/권한, DB 사용 근거를 설명합니다. |
 | `wireframe.png` | 화면의 대략적인 배치 그림입니다. |
 
 ## Flow와 IA의 관계
@@ -63,6 +67,13 @@ flowchart LR
 | 확장 | 관리자 사용자 관리 | [32 X-10 admin-user-management](./32-X-10-admin-user-management/description.md) |
 | 확장 | 인증 에러 | [33 X-11 auth-error](./33-X-11-auth-error/description.md) |
 | 확장 | 인증 메일 확인 안내 | [34 X-12 auth-verify-email](./34-X-12-auth-verify-email/description.md) |
+| 추가 화면 | 이용약관 | [35 X-13 terms](./35-X-13-terms/description.md) |
+| 추가 화면 | 개인정보처리방침 | [36 X-14 privacy-policy](./36-X-14-privacy-policy/description.md) |
+| 추가 화면 | 관리자 인덱스 | [37 X-15 admin-index](./37-X-15-admin-index/description.md) |
+| 추가 화면 | 새 비밀번호 설정 | [38 X-16 password-reset-confirm](./38-X-16-password-reset-confirm/description.md) |
+| 추가 화면 | 인증 콜백 fragment 처리 | [39 X-17 auth-callback-fragment](./39-X-17-auth-callback-fragment/description.md) |
+
+> 35-39번은 기존 34개 Wireframe 이후 코드베이스 기준으로 추가된 화면입니다.
 
 ## AI에게 지시할 때
 

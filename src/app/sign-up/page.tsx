@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { AuthMascot } from "@/components/auth/AuthMascot";
 import { SignUpForm } from "@/components/auth/SignUpForm";
 
 export const metadata: Metadata = { title: "회원가입 — TALKPIK" };
@@ -21,12 +22,10 @@ const chipStyle: React.CSSProperties = {
 export default function SignUpPage() {
   return (
     <main style={{ padding: "2rem 1rem", maxWidth: 480, margin: "0 auto" }}>
-      {/* description §1 브랜드 메시지 + §2 마스코트/혜택 영역. 이미지 대신
-          텍스트 마스코트로 대체 — §2 예외(이미지 실패 시 기본 캐릭터)와 호환. */}
+      {/* description §1 브랜드 메시지 + §2 마스코트/혜택 영역. AuthMascot은
+          이미지 실패 시 기본 캐릭터(이모지)로 자동 대체 — §2 예외와 호환. */}
       <section style={{ textAlign: "center", marginBottom: 24 }}>
-        <div aria-hidden="true" style={{ fontSize: 40, lineHeight: 1 }}>
-          ✏️
-        </div>
+        <AuthMascot alt="TALKPIK 학습 도우미 캐릭터" emoji="✏️" size={44} />
         <h1 style={{ fontSize: 24, margin: "8px 0 4px" }}>회원가입</h1>
         <p style={{ color: "#595959", margin: "0 0 12px", fontSize: 14 }}>
           TOPIK 글쓰기, AI 첨삭으로 더 빠르게. 부담 없이 무료로 시작해보세요.

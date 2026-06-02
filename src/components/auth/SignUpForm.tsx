@@ -13,8 +13,18 @@ import { App, Button, Checkbox, Form, Input, Typography } from "antd";
 import { buildAuthRedirectUrl } from "@/lib/auth/redirect-url";
 import { REASON_CONTENT, mapSupabaseErrorCode } from "@/lib/auth/error-mapping";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { PasswordStrengthMeter } from "@/components/auth/PasswordStrengthMeter";
 
 const { Paragraph } = Typography;
+
+// description §3 예외: "중복 이메일/형식 오류는 필드 하단에 표시함."
+// Supabase가 가입 중복을 알리는 error.code 들. 이 코드는 토스트가 아니라
+// 이메일 필드 하단 인라인 오류로 보여준다.
+const DUPLICATE_EMAIL_CODES = new Set([
+  "user_already_exists",
+  "email_exists",
+  "email_address_already_in_use",
+]);
 
 type SignUpFields = {
   email: string;
@@ -28,6 +38,8 @@ export function SignUpForm() {
   const { message } = App.useApp();
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
+  // password-strength meter는 실시간으로 입력값을 추적해야 하므로 watch.
+  const [passwordValue, setPasswordValue] = useState("");
   const [form] = Form.useForm<SignUpFields>();
 
   async function handleSignUp(values: SignUpFields) {
@@ -46,6 +58,16 @@ export function SignUpForm() {
 
     if (error) {
       setSubmitting(false);
+      // §3 예외: 중복 이메일은 토스트가 아니라 이메일 필드 하단 인라인 오류로.
+      if (error.code && DUPLICATE_EMAIL_CODES.has(error.code)) {
+        form.setFields([
+          {
+            name: "email",
+            errors: ["이미 가입된 이메일이에요. 로그인하거나 다른 이메일을 사용해주세요."],
+          },
+        ]);
+        return;
+      }
       message.error(`가입 실패: ${REASON_CONTENT[mapSupabaseErrorCode(error.code)].message}`);
       return;
     }
@@ -81,7 +103,16 @@ export function SignUpForm() {
           { max: 80, message: "이메일은 80자 이하여야 합니다" },
         ]}
       >
-        <Input autoComplete="email" placeholder="you@example.com" />
+        <Input
+          autoComplete="email"
+          placeholder="you@example.com"
+          // 사용자가 이메일을 고치면 직전 "중복 이메일" 서버 오류는 지운다.
+          onChange={() => {
+            if (form.getFieldError("email").length > 0) {
+              form.setFields([{ name: "email", errors: [] }]);
+            }
+          }}
+        />
       </Form.Item>
 
       <Form.Item
@@ -93,8 +124,14 @@ export function SignUpForm() {
           { max: 64, message: "비밀번호는 64자 이하여야 합니다" },
         ]}
       >
-        <Input.Password autoComplete="new-password" />
+        <Input.Password
+          autoComplete="new-password"
+          onChange={(event) => setPasswordValue(event.target.value)}
+        />
       </Form.Item>
+
+      {/* A-01 피드백: 비밀번호 강도 실시간 표시 */}
+      <PasswordStrengthMeter password={passwordValue} />
 
       <Form.Item
         label="비밀번호 확인"

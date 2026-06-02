@@ -23,6 +23,7 @@ export const PUBLIC_PATHS = [
   "/sign-up",
   "/login",
   "/password-reset",
+  "/password-reset/confirm",
   // Phase 8-D auth callback/error/verify-email — Codex Round 1 NF3.
   // Without these, anonymous callback redirects to /login and the token
   // exchange itself never runs, breaking the entire confirmation flow.
@@ -75,7 +76,7 @@ export const PROTECTED_ROUTE_CASES: readonly ProtectedRouteCase[] = [
   { path: "/writing/feedback/short/abc-id", iaCode: "E-01" },
   { path: "/writing/feedback/long/abc-id", iaCode: "E-02" },
   { path: "/writing/reports/abc-id/compare", iaCode: "R-01" },
-  { path: "/admin", iaCode: "admin-index" },
+  { path: "/admin", iaCode: "X-15" },
   { path: "/admin/problems", iaCode: "H-01" },
   { path: "/admin/org", iaCode: "X-08" },
   { path: "/admin/users", iaCode: "X-10" },

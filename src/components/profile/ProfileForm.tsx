@@ -1,9 +1,15 @@
 "use client";
 
-import { Alert, App, Avatar, Button, Form, Input, Typography } from "antd";
-import { useEffect, useMemo, useState } from "react";
+import { Alert, App, Avatar, Button, Form, Input, Space, Typography } from "antd";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useUpdateProfile } from "@/lib/settings/mutations";
+import {
+  avatarPublicUrl,
+  squareCropImage,
+  uploadAvatar,
+  validateAvatarFile,
+} from "./avatar-upload";
 
 const { Paragraph } = Typography;
 
@@ -25,6 +31,8 @@ type Props = {
   userId: string;
   accountEmail: string | null;
   initialProfile: ProfileDraft;
+  /** Current avatar storage path (avatars bucket). Optional. */
+  initialAvatarPath?: string | null;
 };
 
 /**
@@ -57,15 +65,78 @@ function isTooShortProfileField(value: string | null) {
 }
 
 /**
+ * Resolve a saved avatar path to its public URL, swallowing env-not-configured
+ * errors (SSR/tests) so render/initialization never throws. Browser-only call
+ * lives behind this guard.
+ */
+function safeAvatarUrl(path: string | null): string | null {
+  if (!path) return null;
+  try {
+    return avatarPublicUrl(path);
+  } catch {
+    return null;
+  }
+}
+
+/**
  * `/profile` form (X-05). Avatar upload is intentionally shown as unavailable
  * until storage/upload behavior is implemented and verified.
  */
-export function ProfileForm({ userId, accountEmail, initialProfile }: Props) {
+export function ProfileForm({
+  userId,
+  accountEmail,
+  initialProfile,
+  initialAvatarPath = null,
+}: Props) {
   const { message } = App.useApp();
   const mutation = useUpdateProfile(userId);
   const [savedProfile, setSavedProfile] = useState<ProfileDraft>(() =>
     normalizeProfileDraft(initialProfile),
   );
+
+  // X-05 region 3 (아바타): real upload to the avatars bucket. Preview URL is
+  // derived lazily on first selection so render never touches the client.
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  // 저장된 아바타의 public URL은 lazy initializer에서 한 번 안전하게 계산한다
+  // (effect 안에서 setState 동기 호출 금지). 업로드 성공 시에는
+  // handleAvatarSelect가 path와 url을 함께 갱신한다.
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(() =>
+    safeAvatarUrl(initialAvatarPath),
+  );
+  const [avatarPath, setAvatarPath] = useState<string | null>(initialAvatarPath);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+
+  async function handleAvatarSelect(
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) {
+    const file = event.target.files?.[0];
+    // reset so re-selecting the same file fires change again.
+    event.target.value = "";
+    if (!file) return;
+    setAvatarError(null);
+
+    const validation = validateAvatarFile(file);
+    if (!validation.ok) {
+      setAvatarError(validation.message);
+      return;
+    }
+
+    setAvatarUploading(true);
+    try {
+      const { blob, ext } = await squareCropImage(file);
+      const result = await uploadAvatar(userId, blob, ext);
+      setAvatarPath(result.path);
+      setAvatarUrl(result.publicUrl);
+      message.success("프로필 이미지를 업데이트했어요.");
+    } catch (err) {
+      setAvatarError(
+        err instanceof Error ? err.message : "이미지 업로드에 실패했어요.",
+      );
+    } finally {
+      setAvatarUploading(false);
+    }
+  }
 
   const [displayName, setDisplayName] = useState<string>(
     initialProfile.display_name ?? "",
@@ -175,7 +246,10 @@ export function ProfileForm({ userId, accountEmail, initialProfile }: Props) {
       onFinish={handleFinish}
       disabled={mutation.isPending}
     >
-      <Form.Item label="이메일">
+      <Form.Item
+        label="이메일"
+        extra="이메일 변경은 재인증이 필요하며, 보안상 일정 기간 내 변경 횟수가 제한됩니다."
+      >
         <Input
           value={accountEmail ?? ""}
           readOnly
@@ -203,7 +277,11 @@ export function ProfileForm({ userId, accountEmail, initialProfile }: Props) {
       <Form.Item
         label="닉네임"
         validateStatus={nicknameTooShort ? "error" : undefined}
-        help={nicknameTooShort ? "닉네임은 2자 이상 입력해 주세요." : undefined}
+        help={
+          nicknameTooShort
+            ? "닉네임은 2자 이상 입력해 주세요."
+            : "이미 사용 중인 닉네임이면 저장 시 안내됩니다."
+        }
       >
         <Input
           value={nickname}
@@ -234,15 +312,51 @@ export function ProfileForm({ userId, accountEmail, initialProfile }: Props) {
           padding: 16,
         }}
       >
-        <Avatar size={56}>{avatarInitial}</Avatar>
-        <Paragraph strong style={{ marginTop: 12, marginBottom: 4 }}>
-          프로필 이미지
-        </Paragraph>
-        <Paragraph type="secondary" style={{ marginBottom: 12 }}>
-          이미지 업로드는 아직 활성화되지 않았습니다. 저장소 업로드가 구현되고
-          검증되기 전까지 현재 이니셜을 표시합니다.
-        </Paragraph>
+        <Space align="start" size="middle">
+          {avatarUrl ? (
+            <Avatar size={56} src={avatarUrl} alt="프로필 이미지" />
+          ) : (
+            <Avatar size={56}>{avatarInitial}</Avatar>
+          )}
+          <div>
+            <Paragraph strong style={{ marginTop: 0, marginBottom: 4 }}>
+              프로필 이미지
+            </Paragraph>
+            <Paragraph type="secondary" style={{ marginBottom: 8 }}>
+              JPG 또는 PNG, 5MB 이하. 정사각형으로 자동 자릅니다.
+            </Paragraph>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png"
+              style={{ display: "none" }}
+              aria-label="프로필 이미지 파일 선택"
+              onChange={handleAvatarSelect}
+            />
+            <Button
+              onClick={() => fileInputRef.current?.click()}
+              loading={avatarUploading}
+              aria-label="이미지 업로드"
+            >
+              {avatarUploading ? "업로드 중..." : "이미지 변경"}
+            </Button>
+          </div>
+        </Space>
+        {avatarError ? (
+          <Alert
+            type="error"
+            showIcon
+            style={{ marginTop: 12 }}
+            message={avatarError}
+            action={
+              <Button size="small" onClick={() => fileInputRef.current?.click()}>
+                다시 선택
+              </Button>
+            }
+          />
+        ) : null}
         <Alert
+          style={{ marginTop: 12 }}
           type="info"
           showIcon
           message="보안 안내"

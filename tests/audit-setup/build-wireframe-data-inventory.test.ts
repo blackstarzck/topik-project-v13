@@ -64,7 +64,7 @@ function readJson<T>(path: string): T {
 }
 
 describe("wireframe data inventory", () => {
-  it("extracts migrations, source DB usage, and page data links for all 34 Wireframe pages", () => {
+  it("extracts migrations, source DB usage, and page data links for all 39 Wireframe pages", () => {
     const auditDir = mkdtempSync(join(tmpdir(), "wireframe-data-"));
 
     try {
@@ -75,14 +75,20 @@ describe("wireframe data inventory", () => {
       expect(existsSync(inventoryPath)).toBe(true);
 
       const inventory = readJson<Inventory>(inventoryPath);
-      expect(inventory.summary.pageCount).toBe(34);
-      expect(inventory.pages).toHaveLength(34);
-      expect(new Set(inventory.pages.map((page) => page.iaCode)).size).toBe(34);
+      expect(inventory.summary.pageCount).toBe(39);
+      expect(inventory.pages).toHaveLength(39);
+      expect(new Set(inventory.pages.map((page) => page.iaCode)).size).toBe(39);
       expect(
         inventory.pages.find((page) => page.iaCode === "X-09"),
       ).toMatchObject({
         routeOrHostRoute: "/settings/notifications",
         audience: "user",
+      });
+      expect(
+        inventory.pages.find((page) => page.iaCode === "X-17"),
+      ).toMatchObject({
+        routeOrHostRoute: "/auth/callback-fragment",
+        audience: "public",
       });
 
       const profiles = inventory.dbObjects.tables.find(
@@ -196,10 +202,7 @@ describe("wireframe data inventory", () => {
       );
       expect(inventory.summary.unclassifiedDbObjectCount).toBe(0);
       expect(inventory.docConflicts.map((conflict) => conflict.id)).toEqual(
-        expect.arrayContaining([
-          "wireframe-count-prose",
-          "database-schema-drift",
-        ]),
+        expect.arrayContaining(["database-schema-drift"]),
       );
     } finally {
       rmSync(auditDir, { recursive: true, force: true });

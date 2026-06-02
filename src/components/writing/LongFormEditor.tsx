@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Button, Card, Input, Space, Tabs, Typography, notification } from "antd";
+import { Button, Card, Input, Space, Tabs, Typography } from "antd";
 import { useRouter } from "next/navigation";
 
 import {
   useSubmitWriting,
   useUpsertDraft,
 } from "@/lib/writing/mutations";
+import { logStudyEvent } from "@/lib/events/study-events";
 import {
   combine53Sections,
   emptyChecklist,
@@ -25,6 +26,7 @@ import {
 } from "@/lib/writing/constants";
 import type { WritingProblemMaterials } from "@/lib/writing/server";
 import { AutosaveBadge } from "./AutosaveBadge";
+import { ConditionsPanel, type ProblemRubric } from "./ConditionsPanel";
 import { SubmissionConfirmModal } from "./SubmissionConfirmModal";
 import { SectionEditor } from "./SectionEditor";
 import { ManuscriptPreview } from "./ManuscriptPreview";
@@ -42,6 +44,7 @@ type Props = {
   questionNo: 53 | 54;
   initialDraft: WritingDraftRow | null;
   problemMaterials: WritingProblemMaterials;
+  rubric?: ProblemRubric;
 };
 
 const DEBOUNCE_MS = 2000;
@@ -114,6 +117,7 @@ export function LongFormEditor({
   questionNo,
   initialDraft,
   problemMaterials,
+  rubric = null,
 }: Props) {
   const [state53, setState53] = useState<Question53State>(() =>
     readInitial53(initialDraft),
@@ -131,11 +135,24 @@ export function LongFormEditor({
   const [warningTrigger, setWarningTrigger] = useState<WarningTrigger | null>(
     null,
   );
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  // D-M3 §5 — 자동 저장 on/off.
+  const [autosaveEnabled, setAutosaveEnabled] = useState(true);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveSeqRef = useRef(0);
   const upsert = useUpsertDraft();
   const submit = useSubmitWriting();
   const router = useRouter();
+
+  // D §study_events — 작성 시작(practice_started) 1회 기록.
+  useEffect(() => {
+    void logStudyEvent({
+      eventType: "practice_started",
+      problemId,
+      payload: { question_no: questionNo },
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const limit = getCharLimit(questionNo);
 
@@ -186,39 +203,75 @@ export function LongFormEditor({
   // capture (Codex Round 1 P1-1). React setState is async; calling
   // scheduleSave() right after setStateXX(...) would otherwise read pre-update
   // combinedText / buildAnswerJson() and persist obsolete data.
+  function persist(
+    nextJson: LongFormDraftJson,
+    nextText: string,
+    isManual: boolean,
+  ) {
+    setStatus("syncing");
+    const seq = ++saveSeqRef.current;
+    upsert.mutate(
+      {
+        user_id: userId,
+        problem_id: problemId,
+        question_no: questionNo,
+        answer_text: nextText,
+        answer_json: JSON.parse(JSON.stringify(nextJson)),
+        char_count: nextText.length,
+        autosave_status: "clean",
+        last_saved_at: new Date().toISOString(),
+      },
+      {
+        onSuccess: (row) => {
+          if (seq !== saveSeqRef.current) return;
+          setStatus("clean");
+          setLastSavedAt(row.last_saved_at ?? null);
+          // D §study_events — 자동저장 성공 기록(수동 저장 제외).
+          if (!isManual) {
+            void logStudyEvent({
+              eventType: "draft_autosaved",
+              problemId,
+              payload: { question_no: questionNo, char_count: nextText.length },
+            });
+          }
+        },
+        onError: () => {
+          if (seq !== saveSeqRef.current) return;
+          setStatus("failed");
+          // D-M3 / §1 예외 — 토스트 대신 복구 가능한 경고 모달.
+          setWarningTrigger("save_failure");
+        },
+      },
+    );
+  }
+
   function scheduleSave(nextJson: LongFormDraftJson, nextText: string) {
+    // D-M3 §5 — 자동 저장 꺼짐: dirty 표시만, 자동 저장은 안 함.
+    if (!autosaveEnabled) {
+      setStatus("dirty");
+      return;
+    }
     if (status !== "syncing") setStatus("dirty");
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      setStatus("syncing");
-      const seq = ++saveSeqRef.current;
-      upsert.mutate(
-        {
-          user_id: userId,
-          problem_id: problemId,
-          question_no: questionNo,
-          answer_text: nextText,
-          answer_json: JSON.parse(JSON.stringify(nextJson)),
-          char_count: nextText.length,
-          autosave_status: "clean",
-          last_saved_at: new Date().toISOString(),
-        },
-        {
-          onSuccess: (row) => {
-            if (seq !== saveSeqRef.current) return;
-            setStatus("clean");
-            setLastSavedAt(row.last_saved_at ?? null);
-          },
-          onError: () => {
-            if (seq !== saveSeqRef.current) return;
-            setStatus("failed");
-            // D-M3 / description.md §1 예외 — 토스트 대신 복구 가능한 경고 모달
-            // (마지막 저장 시각 + 다시 시도 + 답안 복사 안내)을 띄운다.
-            setWarningTrigger("save_failure");
-          },
-        },
-      );
-    }, DEBOUNCE_MS);
+    debounceRef.current = setTimeout(
+      () => persist(nextJson, nextText, false),
+      DEBOUNCE_MS,
+    );
+  }
+
+  // D §5 — 수동 임시 저장(디바운스 건너뜀, 즉시 저장).
+  function onManualSave() {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    persist(buildAnswerJson(), combinedText, true);
+  }
+
+  // D-M3 §5 — 자동 저장 끄기/켜기.
+  function onToggleAutosave() {
+    if (autosaveEnabled) {
+      setWarningTrigger("disable_attempt");
+    } else {
+      setAutosaveEnabled(true);
+    }
   }
 
   function onSection53Change(key: keyof Question53State, next: string) {
@@ -260,13 +313,23 @@ export function LongFormEditor({
     scheduleSave(nextJson, nextState.text);
   }
 
-  // D-M3 retry — 현재 작성 상태 스냅샷으로 자동 저장을 다시 시도.
+  // D-M3 retry — 현재 작성 상태 스냅샷으로 저장을 다시 시도(자동저장 off 여도 즉시 저장).
   function retrySaveNow() {
     setWarningTrigger(null);
-    scheduleSave(buildAnswerJson(), combinedText);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    persist(buildAnswerJson(), combinedText, false);
+  }
+
+  // disable_attempt 의 '위험을 알지만 끄기' 처리.
+  function onWarningProceed() {
+    if (warningTrigger === "disable_attempt") {
+      setAutosaveEnabled(false);
+    }
+    setWarningTrigger(null);
   }
 
   function onConfirmSubmit() {
+    setSubmitError(null);
     submit.mutate(
       {
         draft_id: initialDraft?.id ?? null,
@@ -274,24 +337,25 @@ export function LongFormEditor({
         question_no: questionNo,
         answer_text: combinedText,
         // Persist long-form sections / checklist alongside flattened answer_text
-        // (Codex Round 1 P1-3). submitWritingAction (server-actions.ts) accepts
-        // answer_json; without it 53 sections / 54 checklist are not saved to
-        // writing_submissions.
+        // (Codex Round 1 P1-3).
         answer_json: JSON.parse(JSON.stringify(buildAnswerJson())),
         char_count: charCount,
       },
       {
         onSuccess: (result) => {
           setConfirmOpen(false);
+          void logStudyEvent({
+            eventType: "submission_submitted",
+            problemId,
+            submissionId: result.submissionId,
+            payload: { question_no: questionNo, char_count: charCount },
+          });
           router.push(`/writing/feedback/long/${result.submissionId}`);
         },
         onError: (e) => {
-          // description.md §4 예외 — 제출 실패 시 확인 모달을 유지(닫지 않음)하여
-          // '제출' 버튼으로 바로 다시 시도할 수 있게 한다.
-          notification.error({
-            message: "제출 실패",
-            description: `${e.message} — 확인 창의 '제출'을 눌러 다시 시도하거나, 작성한 답안을 복사해 두세요.`,
-          });
+          // D-M1 §4 예외 — 제출 실패 시 확인 모달을 유지하고 모달 안에서 원인 +
+          // 재시도 노출(닫지 않는다).
+          setSubmitError(e.message);
         },
       },
     );
@@ -306,10 +370,22 @@ export function LongFormEditor({
 
   return (
     <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-      <Space>
+      {/* D-03 평가 기준 / D-04 조건·루브릭 카드 (problems.rubric). */}
+      <ConditionsPanel questionNo={questionNo} rubric={rubric} />
+
+      <Space wrap>
         <AutosaveBadge status={status} lastSavedAt={lastSavedAt} />
         {charCountUI}
+        {/* D-M3 §5 — 자동 저장 끄기/켜기 CTA. */}
+        <Button size="small" type="link" onClick={onToggleAutosave}>
+          {autosaveEnabled ? "자동 저장 끄기" : "자동 저장 켜기"}
+        </Button>
       </Space>
+      {!autosaveEnabled ? (
+        <Text type="warning" style={{ fontSize: 12 }}>
+          자동 저장이 꺼져 있어요. 변경 후 직접 임시 저장을 눌러 주세요.
+        </Text>
+      ) : null}
 
       <MaterialsPanel materials={problemMaterials} />
 
@@ -387,14 +463,23 @@ export function LongFormEditor({
         </div>
       )}
 
-      <Button
-        type="primary"
-        onClick={() => setConfirmOpen(true)}
-        disabled={!submittable || submit.isPending}
-        style={{ alignSelf: "flex-start" }}
-      >
-        제출하기
-      </Button>
+      {/* D §5 — 자동저장(상단 배지) / 수동 임시저장 / 최종 제출 3-way 분리. */}
+      <Space style={{ alignSelf: "flex-start" }}>
+        <Button
+          onClick={onManualSave}
+          loading={status === "syncing" && upsert.isPending}
+          disabled={submit.isPending || combinedText.length === 0}
+        >
+          임시 저장
+        </Button>
+        <Button
+          type="primary"
+          onClick={() => setConfirmOpen(true)}
+          disabled={!submittable || submit.isPending}
+        >
+          제출하기
+        </Button>
+      </Space>
       <SubmissionConfirmModal
         open={confirmOpen}
         charCount={charCount}
@@ -402,8 +487,12 @@ export function LongFormEditor({
         questionNo={questionNo}
         lastSavedAt={lastSavedAt}
         loading={submit.isPending}
+        submitError={submitError}
         onConfirm={onConfirmSubmit}
-        onCancel={() => setConfirmOpen(false)}
+        onCancel={() => {
+          setSubmitError(null);
+          setConfirmOpen(false);
+        }}
       />
       <AutosaveWarningModal
         trigger={warningTrigger}
@@ -411,7 +500,7 @@ export function LongFormEditor({
         retrying={upsert.isPending}
         onKeep={() => setWarningTrigger(null)}
         onRetry={retrySaveNow}
-        onProceed={() => setWarningTrigger(null)}
+        onProceed={onWarningProceed}
       />
     </Space>
   );

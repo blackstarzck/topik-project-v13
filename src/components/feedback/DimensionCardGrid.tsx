@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, Col, Row, Tag, Typography } from "antd";
+import { Button, Card, Col, Row, Tag, Typography } from "antd";
 import {
   FEEDBACK_DIMENSIONS,
   type FeedbackDimensionKey,
@@ -18,27 +18,88 @@ const LABELS: Record<FeedbackDimensionKey, string> = {
   topic_fit: "주제 적합도",
 };
 
-type Props = { rows: FeedbackDimensionScoreRow[] };
+type Props = {
+  rows: FeedbackDimensionScoreRow[];
+  /**
+   * 표시할 최대 카드 수. E-01 단답 description region 2 제약은 "카드 4개 이하".
+   * 미지정 시 전체 6개 차원을 표시(장문은 상세 패널과 함께 모두 노출).
+   */
+  maxCards?: number;
+  /** 분석 실패 항목의 재분석 안내 클릭(있을 때만 버튼 노출). */
+  onReanalyze?: () => void;
+};
 
-export function DimensionCardGrid({ rows }: Props) {
+/**
+ * E-01/E-02 항목별 피드백 카드 (description region 2).
+ * 제약: 카드 제목 14자, 본문 2줄.
+ * 예외: 분석 실패 항목(점수 없음)은 회색 카드와 재분석 안내 표시.
+ */
+export function DimensionCardGrid({ rows, maxCards, onReanalyze }: Props) {
   const byDim = new Map(rows.map((r) => [r.dimension, r] as const));
+  // maxCards가 있으면 점수가 있는 차원을 우선 노출하고 나머지로 채운다.
+  const ordered = maxCards
+    ? [...FEEDBACK_DIMENSIONS].sort((a, b) => {
+        const sa = byDim.get(a)?.score ?? null;
+        const sb = byDim.get(b)?.score ?? null;
+        if (sa === null && sb !== null) return 1;
+        if (sa !== null && sb === null) return -1;
+        return 0;
+      })
+    : FEEDBACK_DIMENSIONS;
+  const visible = maxCards ? ordered.slice(0, maxCards) : ordered;
+
   return (
     <Row gutter={[12, 12]}>
-      {FEEDBACK_DIMENSIONS.map((dim) => {
+      {visible.map((dim) => {
         const row = byDim.get(dim);
         const score = row?.score ?? null;
-        const tone = score === null ? "default" : score >= 80 ? "green" : score >= 65 ? "gold" : "red";
+        const failed = score === null;
+        const tone = failed
+          ? "default"
+          : score >= 80
+            ? "green"
+            : score >= 65
+              ? "gold"
+              : "red";
         return (
           <Col key={dim} xs={24} md={12} lg={8}>
             <Card
               size="small"
-              style={score === null ? { opacity: 0.55 } : undefined}
+              style={failed ? { opacity: 0.6, background: "#fafafa" } : undefined}
             >
               <Text strong>{LABELS[dim]}</Text>
               <div style={{ marginTop: 4 }}>
-                <Tag color={tone}>{score ?? "—"} / {row?.score_max ?? 100}</Tag>
+                <Tag color={tone}>
+                  {score ?? "—"} / {row?.score_max ?? 100}
+                </Tag>
               </div>
-              <Text type="secondary">{row?.summary ?? "분석 대기 중"}</Text>
+              {failed ? (
+                <div>
+                  <Text type="secondary" style={{ fontSize: 12 }}>
+                    이 항목은 분석에 실패했어요.
+                  </Text>
+                  {onReanalyze ? (
+                    <div style={{ marginTop: 4 }}>
+                      <Button size="small" type="link" onClick={onReanalyze} style={{ padding: 0 }}>
+                        다시 분석하기
+                      </Button>
+                    </div>
+                  ) : null}
+                </div>
+              ) : (
+                <Text
+                  type="secondary"
+                  title={row?.summary ?? undefined}
+                  style={{
+                    display: "-webkit-box",
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                  }}
+                >
+                  {row?.summary ?? "요약 없음"}
+                </Text>
+              )}
             </Card>
           </Col>
         );

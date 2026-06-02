@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, Divider, Tag, Typography } from "antd";
+import { Alert, Card, Divider, Tag, Typography } from "antd";
 import Link from "next/link";
 
 const { Text, Paragraph } = Typography;
@@ -9,6 +9,10 @@ type Props = {
   joinedAt: string;
   appRole: string;
   planLabel: string;
+  /** X-05 region 4 — profile visibility badge. Defaults to private. */
+  visibility?: "public" | "private";
+  /** X-05 region 4 예외 — surface a warning when policy not agreed. */
+  policyAgreed?: boolean;
 };
 
 const ROLE_LABELS: Record<string, string> = {
@@ -20,12 +24,34 @@ const ROLE_LABELS: Record<string, string> = {
 
 /**
  * Phase 7-E Task 10 (P1-6) — 상태/도움 카드.
- * 계정 상태 + 가입일 + 도움말 + 향후 탈퇴 진입점 (실제 탈퇴는 Tier 2).
+ * X-05 region 4: 공개 범위 배지 + 데이터 활용/정책 동의 안내 + 학습 목표 반영.
  */
-export function StatusHelpCard({ joinedAt, appRole, planLabel }: Props) {
+export function StatusHelpCard({
+  joinedAt,
+  appRole,
+  planLabel,
+  visibility = "private",
+  policyAgreed = true,
+}: Props) {
   const roleLabel = ROLE_LABELS[appRole] ?? appRole;
   return (
     <Card title="계정 상태">
+      {/* X-05 region 4 예외: 정책 미동의 경고 */}
+      {!policyAgreed ? (
+        <Alert
+          type="warning"
+          showIcon
+          style={{ marginBottom: 12 }}
+          message="개인정보 처리방침에 동의가 필요해요"
+          description="동의 전까지 일부 데이터 활용 기능이 제한됩니다."
+        />
+      ) : null}
+      <Paragraph>
+        <Text type="secondary">공개 범위 </Text>
+        <Tag color={visibility === "public" ? "green" : "default"}>
+          {visibility === "public" ? "공개" : "비공개"}
+        </Tag>
+      </Paragraph>
       <Paragraph>
         <Text type="secondary">역할 </Text>
         <Tag>{roleLabel}</Tag>
@@ -35,6 +61,11 @@ export function StatusHelpCard({ joinedAt, appRole, planLabel }: Props) {
       <Paragraph>
         <Text type="secondary">가입일 </Text>
         <Text strong>{new Date(joinedAt).toLocaleDateString("ko-KR")}</Text>
+      </Paragraph>
+      <Paragraph style={{ marginBottom: 0 }}>
+        <Text type="secondary" style={{ fontSize: 12 }}>
+          학습 목표는 프로필에 반영되어 추천·리포트에 사용됩니다.
+        </Text>
       </Paragraph>
       <Divider />
       <Paragraph>

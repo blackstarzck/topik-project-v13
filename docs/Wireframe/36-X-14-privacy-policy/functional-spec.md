@@ -1,0 +1,64 @@
+# X-14 개인정보처리방침 기능명세
+
+> 이 화면은 기존 34개 Wireframe 이후 코드베이스 기준으로 추가된 화면입니다.
+
+## 화면 목적
+
+회원가입 및 서비스 이용 전 개인정보 처리 범위를 확인할 수 있는 공개 route를 제공한다. 현재는 정식 개인정보보호 검토 전 placeholder다.
+
+## 진입/이탈 흐름
+
+- Route: `/privacy`
+- Route type: page
+- Audience: public
+- 진입: 회원가입 동의 라벨, X-13 이용약관, 직접 URL.
+- 이탈: `/terms`, `/`, `/sign-up`.
+
+## 주요 기능
+
+- 임시 개인정보처리방침 안내
+- 수집 항목/이용 목적/보관 기간/제3자 제공 범위 요약
+- 외부 LLM 전송 가능성 고지
+- 관련 법적 문서와 가입/홈 링크 제공
+
+## 상태/오류/권한
+
+- 세션 없이 접근 가능해야 한다.
+- 직접 DB 읽기/쓰기를 하지 않는다.
+- 개인정보 민감 copy는 구현된 범위만 말하고 미확정 정책을 단정하지 않는다.
+
+## 현재 구현 상태
+
+- `src/app/privacy/page.tsx`가 placeholder 페이지를 렌더링한다.
+- `src/lib/routes.ts`의 `PUBLIC_PATHS`에 `/privacy`가 포함되어야 한다.
+- 정식 처리방침과 알림/재동의 운영 절차는 아직 확정되지 않았다.
+
+## 미구현/불일치
+
+- 정식 개인정보처리방침 문안은 아직 없다.
+- 정책 버전, 동의 이력, 데이터 삭제 요청 흐름은 현재 별도 기능으로 구현되어 있지 않다.
+
+## 추가 발견 후보
+
+- 개인정보 처리방침 versioning과 consent log가 필요하면 별도 DB 설계가 필요하다.
+- 외부 LLM 제공자별 보관 정책을 정식 문서에 연결해야 한다.
+
+## DB 데이터 사용 명세
+
+| 테이블/버킷/RPC | 컬럼/필드 | 사용 방식 | 화면 기능 | 권한/RLS | 근거 | 불확실성 |
+| --- | --- | --- | --- | --- | --- | --- |
+| - | - | - | 현재 직접 DB 사용 근거 없음 | public route | `src/app/privacy/page.tsx` | 정책 동의/삭제 요청 저장은 미정 |
+
+## 수용 기준
+
+- 기존 34개 Wireframe 이후 추가된 코드 기준 화면임을 명시한다.
+- `/privacy`는 세션 없이 열리고 사용자별 데이터를 조회하지 않는다.
+- 수집 항목, 이용 목적, 보관 기간, 외부 LLM 전송 가능성이 placeholder 범위 안에서 드러난다.
+- `/terms`, `/`, `/sign-up` 이동 링크가 유지된다.
+
+## 검증 근거
+
+- Description: `docs/Wireframe/36-X-14-privacy-policy/description.md`
+- Route map: `docs/sitemap.md`
+- Source: `src/app/privacy/page.tsx`
+- Route allowlist: `src/lib/routes.ts`

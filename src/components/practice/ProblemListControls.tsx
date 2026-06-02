@@ -7,6 +7,7 @@ import type {
   ProblemSort,
   SolveStatusFilter,
 } from "@/lib/practice/types";
+import { validateSearch } from "./problem-list-data";
 
 const { Text } = Typography;
 
@@ -24,11 +25,20 @@ export function ProblemListControls({
   onSortChange,
 }: Props) {
   const [searchInput, setSearchInput] = useState(filter.search ?? "");
+  // description.md §3 예외 — 금칙어/길이 오류는 검색창 하단에 안내.
+  const [searchError, setSearchError] = useState<string | null>(null);
 
   useEffect(() => {
     const handle = window.setTimeout(() => {
-      if ((filter.search ?? "") !== searchInput) {
-        onFilterChange({ ...filter, search: searchInput });
+      const result = validateSearch(searchInput);
+      if (!result.ok) {
+        // 유효하지 않은 검색어는 커밋하지 않고 하단 안내만 표시 (§3).
+        setSearchError(result.reason);
+        return;
+      }
+      setSearchError(null);
+      if ((filter.search ?? "") !== result.value) {
+        onFilterChange({ ...filter, search: result.value });
       }
     }, 300);
     return () => window.clearTimeout(handle);
@@ -36,14 +46,26 @@ export function ProblemListControls({
   }, [searchInput]);
 
   return (
-    <Space wrap size="middle" style={{ width: "100%" }}>
-      <Input.Search
-        placeholder="제목 또는 키워드"
-        allowClear
-        style={{ width: 240 }}
-        value={searchInput}
-        onChange={(e) => setSearchInput(e.target.value)}
-      />
+    <Space wrap size="middle" style={{ width: "100%" }} align="start">
+      <div>
+        <Input.Search
+          placeholder="제목 또는 키워드 (2-40자)"
+          allowClear
+          status={searchError ? "error" : undefined}
+          style={{ width: 240 }}
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          aria-label="문제 검색"
+        />
+        {searchError ? (
+          <Text
+            type="danger"
+            style={{ display: "block", fontSize: 12, marginTop: 4 }}
+          >
+            {searchError}
+          </Text>
+        ) : null}
+      </div>
       <Select
         value={filter.difficulty ?? "any"}
         style={{ width: 140 }}

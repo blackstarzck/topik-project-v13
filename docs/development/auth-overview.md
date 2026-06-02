@@ -1,6 +1,6 @@
 # 인증 한눈에 보기 (로그인 · 회원가입 · 콜백)
 
-> Last updated: 2026-05-27
+> Last updated: 2026-06-01
 > 이 문서는 TALKPIK AI 의 **인증 흐름 + 운영 정책 + 코드 매핑 + 관리 포인트** 를
 > 한 페이지로 모은 정리본입니다. 새 도입 문서가 아니라 흩어져 있는 정본을 묶은
 > 인덱스 + 요약입니다. 더 자세한 내용은 각 섹션에 표시된 정본 링크를 따라가세요.
@@ -11,7 +11,7 @@
 
 | 영역 | 정본 위치 |
 | --- | --- |
-| 화면 명세 (회원가입/로그인/콜백/에러/메일 안내/비밀번호 재설정) | [`docs/Wireframe/01-A-01-sign-up`](../Wireframe/01-A-01-sign-up/description.md), [`02-A-02-login`](../Wireframe/02-A-02-login/description.md), [`28-X-06-password-reset`](../Wireframe/28-X-06-password-reset/description.md), [`33-X-11-auth-error`](../Wireframe/33-X-11-auth-error/description.md), [`34-X-12-auth-verify-email`](../Wireframe/34-X-12-auth-verify-email/description.md) |
+| 화면 명세 (회원가입/로그인/콜백/에러/메일 안내/비밀번호 재설정) | [`docs/Wireframe/01-A-01-sign-up`](../Wireframe/01-A-01-sign-up/description.md), [`02-A-02-login`](../Wireframe/02-A-02-login/description.md), [`28-X-06-password-reset`](../Wireframe/28-X-06-password-reset/description.md), [`38-X-16-password-reset-confirm`](../Wireframe/38-X-16-password-reset-confirm/description.md), [`33-X-11-auth-error`](../Wireframe/33-X-11-auth-error/description.md), [`34-X-12-auth-verify-email`](../Wireframe/34-X-12-auth-verify-email/description.md), [`39-X-17-auth-callback-fragment`](../Wireframe/39-X-17-auth-callback-fragment/description.md) |
 | 사용자 플로우 (정본) | [`docs/flow/user-flow.md`](../flow/user-flow.md) |
 | 백엔드/Auth 정책 | [`docs/development/backend-auth.md`](./backend-auth.md) |
 | Auth 관련 마이그레이션 | [`supabase/migrations/INDEX.md`](../../supabase/migrations/INDEX.md) (#17, #22, #23, #24) |
@@ -42,7 +42,11 @@ flowchart TD
   LI -->|"매직 링크 발송"| MAIL["메일 안내"]
   MAIL -->|"링크 클릭"| CB
   LI -->|"비밀번호 잊음"| PR["/password-reset (X-06)"]
-  PR -->|"재설정 메일"| CB
+  PR -->|"재설정 메일"| PRC["/password-reset/confirm (X-16)"]
+  PRC -->|"변경 완료"| LI
+  CB -. "query 없는 implicit fragment" .-> CBF["/auth/callback-fragment (X-17)"]
+  CBF -->|"setSession 성공"| D
+  CBF -->|"실패"| E
   CB -->|"verifyOtp/exchangeCodeForSession 성공: 학습자"| D
   CB -->|"성공: 관리자 (app_role)"| ADM["/admin/org (X-08)"]
   CB -->|"실패"| E["/auth/error?reason= (X-11)"]
@@ -65,8 +69,9 @@ flowchart TD
 | A-01 | 회원가입 | [`src/app/sign-up/page.tsx`](../../src/app/sign-up/page.tsx) | [`SignUpForm.tsx`](../../src/components/auth/SignUpForm.tsx) |
 | A-02 | 로그인 (비밀번호 + 매직 링크 탭) | [`src/app/login/page.tsx`](../../src/app/login/page.tsx) | [`LoginForm.tsx`](../../src/components/auth/LoginForm.tsx) |
 | X-06 | 비밀번호 재설정 요청 | [`src/app/password-reset/page.tsx`](../../src/app/password-reset/page.tsx) | [`PasswordResetRequestForm.tsx`](../../src/components/auth/PasswordResetRequestForm.tsx) |
-| X-06 | 비밀번호 재설정 확정 | [`src/app/password-reset/confirm/page.tsx`](../../src/app/password-reset/confirm/page.tsx) | [`PasswordResetConfirmForm.tsx`](../../src/components/auth/PasswordResetConfirmForm.tsx) |
-| (라우트) | 인증 콜백 | [`src/app/auth/callback/route.ts`](../../src/app/auth/callback/route.ts) (Route Handler) + [`src/app/auth/callback-fragment/page.tsx`](../../src/app/auth/callback-fragment/page.tsx) | [`CallbackFragmentFallback.tsx`](../../src/components/auth/CallbackFragmentFallback.tsx) (fragment fallback 페이지에서 사용) |
+| X-16 | 비밀번호 재설정 확정 | [`src/app/password-reset/confirm/page.tsx`](../../src/app/password-reset/confirm/page.tsx) | [`PasswordResetConfirmForm.tsx`](../../src/components/auth/PasswordResetConfirmForm.tsx) |
+| (라우트) | 인증 콜백 | [`src/app/auth/callback/route.ts`](../../src/app/auth/callback/route.ts) (Route Handler) | 서버 route handler |
+| X-17 | 인증 콜백 fragment 처리 | [`src/app/auth/callback-fragment/page.tsx`](../../src/app/auth/callback-fragment/page.tsx) | [`CallbackFragmentFallback.tsx`](../../src/components/auth/CallbackFragmentFallback.tsx) |
 | X-11 | 인증 에러 | [`src/app/auth/error/page.tsx`](../../src/app/auth/error/page.tsx) | [`AuthErrorCard.tsx`](../../src/components/auth/AuthErrorCard.tsx) |
 | X-12 | 인증 메일 확인 안내 | [`src/app/auth/verify-email/page.tsx`](../../src/app/auth/verify-email/page.tsx) | [`VerifyEmailCard.tsx`](../../src/components/auth/VerifyEmailCard.tsx) |
 
@@ -81,7 +86,7 @@ flowchart TD
 | [`src/lib/auth/error-mapping.ts`](../../src/lib/auth/error-mapping.ts) | Supabase `error.code` → canonical `reason` 매핑, 메시지/CTA 테이블, `sanitizeNext`, `sanitizeRetryAfterSeconds`, `parseAuthFragment` |
 | [`src/lib/auth/redirect-url.ts`](../../src/lib/auth/redirect-url.ts) | `buildAuthRedirectUrl()` — 항상 절대 URL, dev는 `http://127.0.0.1:3000`, prod는 `NEXT_PUBLIC_SITE_URL` 필수 |
 | [`src/proxy.ts`](../../src/proxy.ts) | Next.js middleware. 비공개 라우트 anon 접근 시 `/login` 으로 redirect. 만료 세션 쿠키 있으면 `?reason=session_expired` |
-| [`src/lib/routes.ts`](../../src/lib/routes.ts) | `PUBLIC_PATHS` (middleware 허용 목록) — `/sign-up`, `/login`, `/password-reset`, `/auth/callback`, `/auth/error`, `/auth/verify-email` |
+| [`src/lib/routes.ts`](../../src/lib/routes.ts) | `PUBLIC_PATHS` (middleware 허용 목록) — `/sign-up`, `/login`, `/password-reset`, `/password-reset/confirm`, `/auth/callback`, `/auth/callback-fragment`, `/auth/error`, `/auth/verify-email`, `/terms`, `/privacy` |
 
 ---
 

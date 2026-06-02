@@ -3,19 +3,25 @@ import { requireOrgAdmin } from "@/lib/auth/admin-guard";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { AdminOrgKpiCards } from "@/components/admin/AdminOrgKpiCards";
 import { AdminOrgLoadError } from "@/components/admin/AdminOrgLoadError";
-import {
-  fromRpcRow,
-  type AdminOrgDashboardData,
-} from "@/lib/admin/org-dashboard";
+import { parseOrgDashboardExtended } from "@/components/admin/admin-rpc";
 
 export const metadata: Metadata = { title: "기관 관리 — TALKPIK" };
 
 export default async function AdminOrgPage() {
   await requireOrgAdmin();
   const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase.rpc("get_admin_org_dashboard");
-  // Graceful failure (description region 2 예외): render a recoverable
-  // retry state instead of throwing into the hard error boundary.
+  // The generated types snapshot is stale for the extended return shape, so we
+  // call the RPC untyped and re-impose types via parseOrgDashboardExtended.
+  const { data, error } = await (
+    supabase as unknown as {
+      rpc: (
+        name: string,
+      ) => Promise<{ data: unknown; error: { message: string } | null }>;
+    }
+  ).rpc("get_admin_org_dashboard");
+
+  // Graceful failure (description region 2 예외): render a recoverable retry
+  // state instead of throwing into the hard error boundary.
   if (error) {
     return (
       <main style={{ padding: 24 }}>
@@ -27,7 +33,8 @@ export default async function AdminOrgPage() {
       </main>
     );
   }
-  const dash: AdminOrgDashboardData = fromRpcRow(data);
+
+  const dash = parseOrgDashboardExtended(data);
   return (
     <main style={{ padding: 24 }}>
       <h1>기관 관리</h1>

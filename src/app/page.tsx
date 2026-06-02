@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 
 import { FeatureCard } from "@/components/landing/FeatureCard";
 import { Hero } from "@/components/landing/Hero";
+import { LandingHeader } from "@/components/landing/LandingHeader";
+import { ProductPreview } from "@/components/landing/ProductPreview";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
@@ -27,30 +29,37 @@ export default async function HomePage() {
 
   return (
     <main style={{ maxWidth: 1080, margin: "0 auto", padding: "0 16px 64px" }}>
+      {/* §1 헤더/내비 — 로고 + 메뉴(4개 이하) + auth-aware CTA */}
+      <LandingHeader isAuthenticated={Boolean(user)} />
+      {/* §2 히어로 카피 + §3 시작 CTA + §5 마스코트 */}
       <Hero isAuthenticated={Boolean(user)} />
-      {/* description §6: 4개 이하 카드 — AI 첨삭 / 실전 문제 / 성장 리포트 / 라이브러리 */}
-      <div style={featureGridStyle}>
-        <FeatureCard
-          emoji="✍️"
-          title="AI 첨삭"
-          description="TOPIK 51~54번 글쓰기 환경 그대로. AI가 차원별 점수와 첨삭을 제공합니다."
-        />
-        <FeatureCard
-          emoji="📝"
-          title="실전 문제"
-          description="51~54번 유형별 실전 문제로 시험과 같은 조건에서 글쓰기를 연습합니다."
-        />
-        <FeatureCard
-          emoji="📈"
-          title="성장 리포트"
-          description="제출 답안을 비교해 점수 변화와 약점 영역을 한눈에 확인합니다."
-        />
-        <FeatureCard
-          emoji="📚"
-          title="라이브러리"
-          description="저장한 문제, 제출 답안, 비교 보고서를 한 자리에서 관리합니다."
-        />
-      </div>
+      {/* §6: 4개 이하 카드 — AI 첨삭 / 실전 문제 / 성장 리포트 / 라이브러리 */}
+      <section id="features">
+        <div style={featureGridStyle}>
+          <FeatureCard
+            emoji="✍️"
+            title="AI 첨삭"
+            description="TOPIK 51~54번 글쓰기 환경 그대로. AI가 차원별 점수와 첨삭을 제공합니다."
+          />
+          <FeatureCard
+            emoji="📝"
+            title="실전 문제"
+            description="51~54번 유형별 실전 문제로 시험과 같은 조건에서 글쓰기를 연습합니다."
+          />
+          <FeatureCard
+            emoji="📈"
+            title="성장 리포트"
+            description="제출 답안을 비교해 점수 변화와 약점 영역을 한눈에 확인합니다."
+          />
+          <FeatureCard
+            emoji="📚"
+            title="라이브러리"
+            description="저장한 문제, 제출 답안, 비교 보고서를 한 자리에서 관리합니다."
+          />
+        </div>
+      </section>
+      {/* §4 제품 프리뷰 — 3장 이하, 이미지 실패 시 요약 카드 fallback */}
+      <ProductPreview />
     </main>
   );
 }

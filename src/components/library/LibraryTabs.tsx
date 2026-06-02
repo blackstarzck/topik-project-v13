@@ -1,8 +1,8 @@
 "use client";
 
-import { Alert, Input, Space, Tabs, Typography } from "antd";
+import { App, Button, Card, Input, Space, Tabs, Tag, Typography } from "antd";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import type { LibraryItemView, LibraryTab } from "@/lib/library/types";
 
@@ -10,6 +10,8 @@ import { LibraryExportsTab } from "./LibraryExportsTab";
 import { LibraryReportsTab } from "./LibraryReportsTab";
 import { LibrarySavedProblemsTab } from "./LibrarySavedProblemsTab";
 import { LibrarySubmissionsTab } from "./LibrarySubmissionsTab";
+import { PdfExportModal, type ExportSelectionItem } from "./PdfExportModal";
+import { createReviewSet } from "./review-set-data";
 import { buildLibraryTabUrl, isLibraryTab } from "./library-tab-url";
 
 const { Text } = Typography;
@@ -51,11 +53,38 @@ function pickExports(items: LibraryItemView[]) {
 export function LibraryTabs({ activeTab, initialItems }: Props) {
   const router = useRouter();
   const params = useSearchParams();
+  const { message } = App.useApp();
 
   // F-01 region 1 (검색/필터): in-memory search over the already-fetched rows.
   // Phase 6 has no server-side library search, so this filters client-side by
   // title/tags. Each tab applies `matchesLibrarySearch` against this term.
   const [searchTerm, setSearchTerm] = useState("");
+
+  // F-01 region 2 (내보내기/생성 액션): selection lifted from the submissions
+  // tab drives the PDF export modal (F-M1) and the 복습 세트 생성 action.
+  const [selection, setSelection] = useState<ExportSelectionItem[]>([]);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [reviewPending, setReviewPending] = useState(false);
+
+  const handleSelectionChange = useCallback((items: ExportSelectionItem[]) => {
+    setSelection(items);
+  }, []);
+
+  async function handleCreateReviewSet() {
+    setReviewPending(true);
+    try {
+      await createReviewSet(selection.map((s) => s.itemId));
+      message.success(
+        `복습 세트를 만들었어요. (${selection.length}개 항목)`,
+      );
+    } catch (err) {
+      message.error(
+        err instanceof Error ? err.message : "복습 세트 생성에 실패했어요.",
+      );
+    } finally {
+      setReviewPending(false);
+    }
+  }
 
   // Server-rendered initial items hydrate only the active tab. The other
   // three tabs start empty and rely on `useLibraryItems(tab)` to fetch on
@@ -92,6 +121,7 @@ export function LibraryTabs({ activeTab, initialItems }: Props) {
           initialItems={submissionsInitial}
           searchTerm={searchTerm}
           onResetSearch={() => setSearchTerm("")}
+          onSelectionChange={handleSelectionChange}
         />
       ),
     },
@@ -140,23 +170,45 @@ export function LibraryTabs({ activeTab, initialItems }: Props) {
         aria-label="서재 검색"
         style={{ maxWidth: 360 }}
       />
-      {/* F-01 region 2 (내보내기/생성 액션): top-level guidance for the
-          per-row PDF 내보내기 action. Phase 6 export is browser-print (F-M1
-          superseded to a print MVP), so this region honestly points at the
-          per-row "PDF로 내보내기" buttons rather than promising a bulk modal. */}
-      <Alert
-        type="info"
-        showIcon
-        message="PDF로 내보내기"
-        description={
-          <Text type="secondary">
-            저장한 답안·리포트는 각 항목의 &ldquo;PDF로 내보내기&rdquo; 버튼으로
-            브라우저 인쇄를 통해 PDF로 저장할 수 있어요. 여러 항목 묶음 내보내기는
-            준비 중입니다.
-          </Text>
-        }
-      />
+
+      {/* F-01 region 2 (내보내기/생성 액션): selection-driven actions. The
+          submissions tab lifts its current selection; these actions apply to
+          저장 답안 선택. 액션 3개 이하: PDF 내보내기 / 복습 세트 생성 / 선택 해제.
+          선택 없음은 버튼 비활성으로 안내한다. */}
+      <Card size="small">
+        <Space wrap>
+          <Tag color={selection.length > 0 ? "blue" : "default"}>
+            선택 {selection.length}개
+          </Tag>
+          <Button
+            type="primary"
+            disabled={selection.length === 0}
+            onClick={() => setExportOpen(true)}
+          >
+            PDF로 내보내기
+          </Button>
+          <Button
+            disabled={selection.length === 0}
+            loading={reviewPending}
+            onClick={handleCreateReviewSet}
+          >
+            복습 세트로 생성
+          </Button>
+          {selection.length === 0 ? (
+            <Text type="secondary">
+              저장 답안 탭에서 항목을 선택하면 내보내기·복습 세트를 만들 수 있어요.
+            </Text>
+          ) : null}
+        </Space>
+      </Card>
+
       <Tabs activeKey={activeTab} onChange={handleChange} items={items} />
+
+      <PdfExportModal
+        open={exportOpen}
+        onClose={() => setExportOpen(false)}
+        selection={selection}
+      />
     </Space>
   );
 }

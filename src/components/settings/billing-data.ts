@@ -1,0 +1,198 @@
+"use client";
+
+/**
+ * Shard-local billing data access (X-03 / X-04).
+ *
+ * WHY THIS FILE EXISTS (and not `src/lib/billing/*`):
+ * The conformance migrations `20260602120100_billing.sql` added
+ * `subscription_plans`, `subscriptions`, and `payment_history`, but the
+ * hand-aligned `src/lib/supabase/types.ts` snapshot has NOT yet been
+ * regenerated to include them (that file is owned by the coordinator's
+ * shared-infra workstream — see proposedCatalogChanges). To wire REAL data
+ * now without editing shared files, this module declares the row shapes
+ * locally and narrows the base browser client at the call site via a tightly
+ * scoped cast. Once `types.ts` is regenerated the casts can be dropped.
+ *
+ * RLS contract (see migration):
+ *   - subscription_plans : authenticated may SELECT active plans.
+ *   - subscriptions      : owner-only SELECT (writes via billing service).
+ *   - payment_history    : owner-only SELECT.
+ */
+
+import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+
+export type PlanCadence = "monthly" | "quarterly" | "yearly";
+
+export type SubscriptionPlan = {
+  plan_key: string;
+  name: string;
+  cadence: PlanCadence;
+  price_cents: number;
+  currency: string;
+  features: unknown;
+  recommended: boolean;
+  active: boolean;
+};
+
+export type SubscriptionStatus =
+  | "active"
+  | "canceled"
+  | "past_due"
+  | "trialing"
+  | "paused";
+
+export type Subscription = {
+  id: string;
+  user_id: string;
+  plan_key: string | null;
+  billing_cadence: PlanCadence;
+  status: SubscriptionStatus;
+  current_period_start: string | null;
+  current_period_end: string | null;
+  cancel_at: string | null;
+  provider: string | null;
+  provider_subscription_id: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PaymentStatus = "paid" | "failed" | "refunded" | "pending";
+
+export type PaymentRecord = {
+  id: string;
+  user_id: string;
+  subscription_id: string | null;
+  amount_cents: number;
+  currency: string;
+  status: PaymentStatus;
+  receipt_url: string | null;
+  paid_at: string | null;
+  created_at: string;
+};
+
+// Narrow, file-scoped untyped accessor. The base client is fully typed for
+// the known schema; we only loosen it for these three not-yet-in-snapshot
+// tables. `unknown`-returning so each caller asserts the row shape it expects.
+type UntypedTable = {
+  select: (cols?: string) => UntypedQuery;
+};
+type UntypedQuery = {
+  eq: (col: string, val: unknown) => UntypedQuery;
+  in: (col: string, vals: unknown[]) => UntypedQuery;
+  order: (col: string, opts?: { ascending?: boolean }) => UntypedQuery;
+  range: (from: number, to: number) => UntypedQuery;
+  limit: (n: number) => UntypedQuery;
+  maybeSingle: () => Promise<{ data: unknown; error: { message: string } | null }>;
+  then: PromiseLike<{
+    data: unknown;
+    error: { message: string } | null;
+    count: number | null;
+  }>["then"];
+};
+
+function rawTable(name: string): UntypedTable {
+  const supabase = createSupabaseBrowserClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (supabase as any).from(name) as UntypedTable;
+}
+
+/** Active plans for the paywall, cheapest-cadence first. */
+export async function fetchActivePlans(): Promise<SubscriptionPlan[]> {
+  const res = await rawTable("subscription_plans")
+    .select(
+      "plan_key, name, cadence, price_cents, currency, features, recommended, active",
+    )
+    .eq("active", true)
+    .order("price_cents", { ascending: true });
+  if (res.error) throw new Error(res.error.message);
+  return (res.data as SubscriptionPlan[] | null) ?? [];
+}
+
+/** Caller's current subscription (or null when none / RLS-filtered). */
+export async function fetchMySubscription(): Promise<Subscription | null> {
+  const res = await rawTable("subscriptions")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (res.error) throw new Error(res.error.message);
+  return (res.data as Subscription | null) ?? null;
+}
+
+export type PaymentPage = {
+  rows: PaymentRecord[];
+  total: number;
+};
+
+/** Owner payment history, newest first, 10/page (X-04 region 4). */
+export async function fetchPaymentHistory(
+  page: number,
+  pageSize = 10,
+): Promise<PaymentPage> {
+  const from = page * pageSize;
+  const to = from + pageSize - 1;
+  const supabase = createSupabaseBrowserClient();
+  // count needs a separate option object only available on the typed builder;
+  // use the loosened accessor with an explicit count select.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const builder = (supabase as any)
+    .from("payment_history")
+    .select("*", { count: "exact" })
+    .order("paid_at", { ascending: false, nullsFirst: false })
+    .range(from, to);
+  const res = (await builder) as {
+    data: PaymentRecord[] | null;
+    error: { message: string } | null;
+    count: number | null;
+  };
+  if (res.error) throw new Error(res.error.message);
+  return { rows: res.data ?? [], total: res.count ?? 0 };
+}
+
+/**
+ * Render a price_cents value (KRW * 100 per seed) as a localized currency
+ * string. KRW has no minor unit, so we divide by 100 then format whole won.
+ */
+export function formatPlanPrice(plan: SubscriptionPlan): string {
+  const amount = plan.price_cents / 100;
+  try {
+    return new Intl.NumberFormat("ko-KR", {
+      style: "currency",
+      currency: plan.currency,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  } catch {
+    return `${amount.toLocaleString("ko-KR")} ${plan.currency}`;
+  }
+}
+
+export function formatAmountCents(cents: number, currency: string): string {
+  const amount = cents / 100;
+  try {
+    return new Intl.NumberFormat("ko-KR", {
+      style: "currency",
+      currency,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  } catch {
+    return `${amount.toLocaleString("ko-KR")} ${currency}`;
+  }
+}
+
+/** Drop the internal seed marker tag from a features jsonb array. */
+export function planFeatureList(features: unknown): string[] {
+  if (!Array.isArray(features)) return [];
+  return features
+    .filter((f): f is string => typeof f === "string")
+    .filter((f) => !f.startsWith("__seed"));
+}
+
+const CADENCE_LABELS: Record<PlanCadence, string> = {
+  monthly: "월간",
+  quarterly: "분기",
+  yearly: "연간",
+};
+
+export function cadenceLabel(cadence: PlanCadence): string {
+  return CADENCE_LABELS[cadence] ?? cadence;
+}

@@ -142,9 +142,12 @@ describe("NotificationPrefsForm", () => {
     renderInApp(
       <NotificationPrefsForm userId="user-1" initialPrefs={{}} />,
     );
+    // X-09: transport is still deferred — only the receive channels/conditions/
+    // time are persisted; actual delivery is not wired. Copy updated by the
+    // X-09 build to reflect the richer settings (channels + schedule + log).
     expect(
       screen.getByText(
-        "알림 전송 인프라는 준비 중입니다. 지금은 알림 조건(켜짐/꺼짐)만 저장되며, 실제 알림은 발송되지 않습니다.",
+        "실제 알림 발송 연동은 준비 중입니다. 지금은 수신 채널·조건·시간이 저장되며, 발송 이력은 발송이 시작되면 채워집니다.",
       ),
     ).toBeTruthy();
   });

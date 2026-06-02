@@ -1,15 +1,19 @@
 "use client";
 
-import { Alert, Button, Col, Empty, Row, Space, Spin, Typography } from "antd";
+import { Alert, Button, Col, Divider, Empty, Row, Space, Spin, Typography } from "antd";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo } from "react";
-import { RecommendationCard } from "@/components/learning/RecommendationCard";
-import { useProblemRecommendations } from "@/lib/practice/queries";
 import { isValidQuestionNo, type QuestionNo } from "@/lib/practice/types";
 import { ProblemTypeTabs } from "./ProblemTypeTabs";
+import { TypeSelectCards } from "./TypeSelectCards";
+import {
+  PrimaryRecommendationCard,
+  SecondaryRecommendationCard,
+} from "./RecommendationItemCards";
+import { useRecommendationBundle } from "./recommendations-data";
 
-const { Title, Paragraph } = Typography;
+const { Title, Paragraph, Text } = Typography;
 
 export function RecommendationsView() {
   const router = useRouter();
@@ -22,14 +26,20 @@ export function RecommendationsView() {
     return isValidQuestionNo(parsed) ? parsed : null;
   }, [params]);
 
-  const recs = useProblemRecommendations(active);
+  const bundle = useRecommendationBundle(active);
 
   function updateType(next: QuestionNo | null) {
     const search = new URLSearchParams(params.toString());
     if (next == null) search.delete("type");
     else search.set("type", String(next));
-    router.replace(`/practice/recommendations${search.size ? `?${search.toString()}` : ""}` as never);
+    router.replace(
+      `/practice/recommendations${search.size ? `?${search.toString()}` : ""}` as never,
+    );
   }
+
+  const items = bundle.data?.items ?? [];
+  const primary = items[0] ?? null;
+  const rest = items.slice(1);
 
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
@@ -42,54 +52,80 @@ export function RecommendationsView() {
         </Paragraph>
       </div>
 
+      {/* C-01 §2 — 유형 탭. 권한 잠금 유형이 생기면 lockedTypes로 잠금 배지 표시. */}
       <ProblemTypeTabs active={active} onChange={updateType} />
 
-      {recs.isLoading ? (
-        <Spin tip="추천을 불러오는 중이에요" />
-      ) : recs.error ? (
-        // description.md §3 예외: 추천 계산 실패 시 직접 선택 카드와 재시도 제공.
+      {/* C-01 §3 — 추천 사유: recommendation_runs.reason_summary (run-level 근거). */}
+      {bundle.data?.run?.reasonSummary ? (
         <Alert
-          type="error"
-          message="추천을 불러오지 못했어요"
-          description={recs.error instanceof Error ? recs.error.message : ""}
-          action={
-            <Space direction="vertical">
-              <Button size="small" onClick={() => recs.refetch()}>
+          type="info"
+          showIcon
+          message="이렇게 추천했어요"
+          description={bundle.data.run.reasonSummary}
+        />
+      ) : null}
+
+      {bundle.isLoading ? (
+        <Spin tip="추천을 불러오는 중이에요">
+          <div style={{ minHeight: 80 }} />
+        </Spin>
+      ) : bundle.error ? (
+        // §3 예외 — 추천 계산 실패 시 직접 선택 카드와 재시도 제공.
+        <>
+          <Alert
+            type="error"
+            showIcon
+            message="추천을 불러오지 못했어요"
+            description={
+              bundle.error instanceof Error ? bundle.error.message : ""
+            }
+            action={
+              <Button size="small" onClick={() => bundle.refetch()}>
                 다시 시도
               </Button>
-              <Link href={"/practice/problems" as never}>
-                <Button size="small" type="primary">
-                  문제 풀기 시작
-                </Button>
-              </Link>
-            </Space>
-          }
-        />
-      ) : recs.data && recs.data.length > 0 ? (
-        <Row gutter={[16, 16]}>
-          {recs.data.map((card) => (
-            <Col key={card.itemId} xs={24} md={12}>
-              <RecommendationCard
-                title={card.title}
-                reason={card.reason}
-                estimatedMinutes={card.estimatedMinutes}
-                ctaHref={
-                  card.questionNo
-                    ? `/writing/${card.questionNo}`
-                    : "/practice/problems"
-                }
-              />
-            </Col>
-          ))}
-        </Row>
+            }
+          />
+          <TypeSelectCards />
+        </>
+      ) : items.length > 0 ? (
+        <>
+          {/* §3 — 대표 추천 1개를 크게. */}
+          {primary ? <PrimaryRecommendationCard card={primary} /> : null}
+
+          {rest.length > 0 ? (
+            <div>
+              <Title level={5} style={{ marginBottom: 8 }}>
+                다른 추천
+              </Title>
+              <Row gutter={[12, 12]}>
+                {rest.map((card) => (
+                  <Col key={card.itemId} xs={24} md={12}>
+                    <SecondaryRecommendationCard card={card} />
+                  </Col>
+                ))}
+              </Row>
+            </div>
+          ) : null}
+
+          <Divider style={{ margin: "8px 0" }} />
+          {/* §4 — 추천 외 직접 선택 카드. */}
+          <TypeSelectCards />
+        </>
       ) : (
-        // description.md 피드백: 빈 결과 안내 + 직접 유형 선택 시작 동선.
-        <Empty description="아직 추천할 문제가 없어요. 직접 유형을 골라 시작해 보세요.">
-          <Link href={"/practice/problems" as never}>
-            <Button type="primary">문제 풀기 시작</Button>
-          </Link>
-        </Empty>
+        // 피드백 — 빈 결과 안내 + 직접 유형 선택 동선(§4 카드).
+        <>
+          <Empty description="아직 추천할 문제가 없어요. 아래에서 유형을 직접 골라 시작해 보세요.">
+            <Link href={"/practice/problems" as never}>
+              <Button type="primary">문제 목록 보기</Button>
+            </Link>
+          </Empty>
+          <TypeSelectCards />
+        </>
       )}
+
+      <Text type="secondary" style={{ fontSize: 12 }}>
+        추천은 최근 풀이와 취약 영역 분석을 바탕으로 갱신돼요.
+      </Text>
     </Space>
   );
 }

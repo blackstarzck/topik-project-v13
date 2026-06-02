@@ -22,7 +22,7 @@ export default async function ProfilePage() {
   const supabase = await createSupabaseServerClient();
   const { data: profileMeta } = await supabase
     .from("profiles")
-    .select("created_at, app_role, plan_label")
+    .select("created_at, app_role, plan_label, avatar_path")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -35,6 +35,7 @@ export default async function ProfilePage() {
             <ProfileForm
               userId={user.id}
               accountEmail={user.email ?? null}
+              initialAvatarPath={profileMeta?.avatar_path ?? null}
               initialProfile={{
                 display_name: settings.display_name,
                 nickname: settings.nickname,

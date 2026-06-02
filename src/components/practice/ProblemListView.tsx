@@ -1,24 +1,27 @@
 "use client";
 
-import { Alert, Empty, List, Space, Spin, Typography } from "antd";
+import { Alert, Button, Empty, List, Space, Spin, Typography } from "antd";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
-import { useUserProblemList } from "@/lib/practice/queries";
 import {
   isValidQuestionNo,
   type ProblemFilter,
-  type ProblemRowWithState,
   type ProblemSort,
   type QuestionNo,
   type SolveStatusFilter,
 } from "@/lib/practice/types";
+import { FilterChips } from "./FilterChips";
 import { ProblemListControls } from "./ProblemListControls";
 import { ProblemListPagination } from "./ProblemListPagination";
 import { ProblemRow } from "./ProblemRow";
 import { ProblemTypeTabs } from "./ProblemTypeTabs";
 import { RetryModal } from "./RetryModal";
+import {
+  useUserProblemsRpc,
+  type UserProblemRow,
+} from "./problem-list-data";
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 const PAGE_SIZE = 10;
 const VALID_SORTS: readonly ProblemSort[] = [
@@ -48,23 +51,21 @@ function parseSort(raw: string | null): ProblemSort {
   return "newest";
 }
 
-type Props = {
-  /** Server-fetched user id for solve-state join (Phase 7-D Task 12). */
-  userId: string;
-};
-
 function parseSolveStatus(raw: string | null): SolveStatusFilter | undefined {
   if (!raw) return undefined;
   if (raw === "unsolved" || raw === "inProgress" || raw === "solved") return raw;
   return undefined;
 }
 
+type Props = {
+  /** Server-fetched user id (also resolved by the RPC via auth.uid()). */
+  userId: string;
+};
+
 export function ProblemListView({ userId }: Props) {
   const router = useRouter();
   const params = useSearchParams();
-  const [retryTarget, setRetryTarget] = useState<ProblemRowWithState | null>(
-    null,
-  );
+  const [retryTarget, setRetryTarget] = useState<UserProblemRow | null>(null);
 
   const filter = useMemo<ProblemFilter>(
     () => ({
@@ -84,7 +85,9 @@ export function ProblemListView({ userId }: Props) {
   }, [params]);
 
   function pushParams(next: URLSearchParams) {
-    router.replace(`/practice/problems${next.size ? `?${next.toString()}` : ""}` as never);
+    router.replace(
+      `/practice/problems${next.size ? `?${next.toString()}` : ""}` as never,
+    );
   }
 
   function commitFilter(next: ProblemFilter) {
@@ -93,7 +96,8 @@ export function ProblemListView({ userId }: Props) {
     if (next.difficulty != null) sp.set("difficulty", String(next.difficulty));
     if (next.search && next.search.length > 0) sp.set("q", next.search);
     if (next.recommended === true) sp.set("recommended", "1");
-    if (next.solveStatus && next.solveStatus !== "all") sp.set("solve", next.solveStatus);
+    if (next.solveStatus && next.solveStatus !== "all")
+      sp.set("solve", next.solveStatus);
     if (sort !== "newest") sp.set("sort", sort);
     sp.set("page", "1");
     pushParams(sp);
@@ -113,15 +117,33 @@ export function ProblemListView({ userId }: Props) {
     pushParams(sp);
   }
 
-  const list = useUserProblemList(
-    {
-      filter,
-      sort,
-      page,
-      pageSize: PAGE_SIZE,
-    },
-    userId,
+  function resetAll() {
+    pushParams(new URLSearchParams());
+  }
+
+  // C-02 §5 — list_user_problems RPC: 필터 적용 후 정확한 total_count + 페이지.
+  // 추천만(recommended) 필터는 RPC가 직접 지원하지 않아 클라이언트에서 제외하지
+  // 않는다(별도 추천 화면 C-01에서 다룸). 여기서는 RPC가 지원하는 필터만 적용.
+  const rpcParams = useMemo(
+    // userId is included for per-user react-query cache isolation; the RPC
+    // itself scopes by auth.uid().
+    () => ({ filter, sort, page, pageSize: PAGE_SIZE, userId }),
+    [filter, sort, page, userId],
   );
+  const list = useUserProblemsRpc(rpcParams);
+
+  const total = list.data?.total ?? 0;
+  const rows = list.data?.rows ?? [];
+  const rangeStart = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const rangeEnd = Math.min(page * PAGE_SIZE, total);
+
+  const totalLabel =
+    total > 0 ? (
+      // §5 — 총 건수는 목록 상단/하단에 표시.
+      <Text type="secondary">
+        총 {total}개 중 {rangeStart}-{rangeEnd}개 표시
+      </Text>
+    ) : null;
 
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
@@ -141,47 +163,88 @@ export function ProblemListView({ userId }: Props) {
         onSortChange={commitSort}
       />
 
+      <FilterChips
+        filter={filter}
+        sort={sort}
+        onFilterChange={commitFilter}
+        onSortChange={commitSort}
+        onReset={resetAll}
+      />
+
+      {/* §5 상단 총 건수 */}
+      {totalLabel}
+
       {list.isLoading ? (
-        <Spin />
+        <Spin>
+          <div style={{ minHeight: 80 }} />
+        </Spin>
       ) : list.error ? (
+        // §예외 — 로딩 실패.
         <Alert
           type="error"
+          showIcon
           message="문제 목록을 불러오지 못했어요"
           description={list.error instanceof Error ? list.error.message : ""}
+          action={
+            <Button size="small" onClick={() => list.refetch()}>
+              다시 시도
+            </Button>
+          }
         />
-      ) : list.data && list.data.rows.length > 0 ? (
+      ) : rows.length > 0 ? (
         <>
           <List
-            dataSource={list.data.rows}
+            dataSource={rows}
             renderItem={(row) => (
               <ProblemRow
-                key={row.id}
-                row={row}
+                key={row.problemId}
+                row={{
+                  id: row.problemId,
+                  domain: row.domain as never,
+                  question_no: row.questionNo,
+                  topik_level: row.topikLevel ?? 0,
+                  difficulty: row.difficulty,
+                  title: row.title,
+                  publish_status: "published",
+                  review_status: "approved",
+                  tags: row.tags,
+                  updated_at: row.createdAt,
+                }}
                 solveState={row.solveState}
+                attemptCount={row.attemptCount}
+                lastAttemptAt={row.lastAttemptAt}
                 onRetryClick={() => setRetryTarget(row)}
               />
             )}
           />
+          {/* §5 하단 총 건수 + 페이지 이동 */}
+          {totalLabel}
           <ProblemListPagination
             current={page}
-            total={list.data.total}
+            total={total}
             pageSize={PAGE_SIZE}
             onChange={commitPage}
           />
         </>
       ) : (
-        <Empty description="조건에 맞는 문제가 없어요. 필터를 조정해보세요." />
+        // §2 예외 — 조합 결과 없음: 빈 결과 + 초기화 CTA.
+        <Empty description="조건에 맞는 문제가 없어요. 필터를 조정하거나 초기화해 보세요.">
+          <Button onClick={resetAll}>필터 초기화</Button>
+        </Empty>
       )}
 
       {retryTarget ? (
         <RetryModal
           open
           onClose={() => setRetryTarget(null)}
-          problemId={retryTarget.id}
-          questionNo={retryTarget.question_no}
-          submissionId={retryTarget.latestSubmissionId ?? undefined}
+          problemId={retryTarget.problemId}
+          problemTitle={retryTarget.title}
+          questionNo={retryTarget.questionNo}
+          attemptCount={retryTarget.attemptCount}
+          lastAttemptAt={retryTarget.lastAttemptAt}
           hasSubmission={retryTarget.solveState === "submitted"}
           hasAttempt={retryTarget.solveState === "attempted"}
+          submissionId={retryTarget.latestSubmissionId ?? undefined}
         />
       ) : null}
     </Space>

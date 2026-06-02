@@ -1,8 +1,11 @@
-import { Col, Empty, Row } from "antd";
+import { Button, Col, Empty, Row, Space } from "antd";
+import Link from "next/link";
 import { QuestionPrompt } from "./QuestionPrompt";
 import { HelpPanel } from "./HelpPanel";
+import { ReferenceMaterials, type ProblemAsset } from "./ReferenceMaterials";
 import { WritingEditor } from "./WritingEditor";
 import { LongFormEditor } from "./LongFormEditor";
+import type { ProblemRubric } from "./ConditionsPanel";
 import { isLongForm } from "@/lib/writing/types";
 import type { QuestionNo, WritingDraftRow } from "@/lib/writing/types";
 import type { WritingProblem } from "@/lib/writing/server";
@@ -12,6 +15,8 @@ type Props = {
   userId: string;
   problem: WritingProblem | null;
   draft: WritingDraftRow | null;
+  assets?: ProblemAsset[];
+  rubric?: ProblemRubric;
 };
 
 export function WritingPageContent({
@@ -19,15 +24,29 @@ export function WritingPageContent({
   userId,
   problem,
   draft,
+  assets = [],
+  rubric = null,
 }: Props) {
   if (!problem) {
+    // D-01 §2 예외 — 지문 로드 실패/문제 없음: 재시도 + 문제 목록 복귀 동선.
     return (
-      <Empty description={`${questionNo}번 문제가 아직 준비되지 않았습니다.`} />
+      <Empty
+        description={`${questionNo}번 문제 지문을 불러오지 못했어요.`}
+      >
+        <Space>
+          <Link href={`/writing/${questionNo}` as never}>
+            <Button type="primary">다시 시도</Button>
+          </Link>
+          <Link href={"/practice/problems" as never}>
+            <Button>문제 목록으로</Button>
+          </Link>
+        </Space>
+      </Empty>
     );
   }
   return (
     // 반응형: 모바일(xs/sm)에서는 본문→도움말이 세로로 쌓이고, lg 이상에서만
-    // 좌(본문)/우(도움말) 2단으로 배치한다. 고정 폭 grid의 360px 가로 넘침 해소.
+    // 좌(본문)/우(도움말) 2단으로 배치한다.
     <Row gutter={[16, 16]}>
       <Col xs={24} lg={17}>
         <div style={{ display: "grid", gap: 16 }}>
@@ -36,6 +55,8 @@ export function WritingPageContent({
             title={problem.title}
             prompt={problem.prompt}
           />
+          {/* D §3 — 참고 이미지/자료 영역 (자료 없으면 null). */}
+          <ReferenceMaterials assets={assets} />
           {isLongForm(questionNo) ? (
             <LongFormEditor
               userId={userId}
@@ -43,6 +64,7 @@ export function WritingPageContent({
               questionNo={questionNo as 53 | 54}
               initialDraft={draft}
               problemMaterials={problem.materials}
+              rubric={rubric}
             />
           ) : (
             <WritingEditor
@@ -50,12 +72,13 @@ export function WritingPageContent({
               problemId={problem.id}
               questionNo={questionNo}
               initialDraft={draft}
+              rubric={rubric}
             />
           )}
         </div>
       </Col>
       <Col xs={24} lg={7}>
-        <HelpPanel />
+        <HelpPanel questionNo={questionNo} />
       </Col>
     </Row>
   );
