@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button, Card, Input, Space, Tabs, Typography } from "antd";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 
 import {
@@ -90,20 +91,22 @@ function MaterialsPanel({
 }: {
   materials: WritingProblemMaterials;
 }) {
+  const t = useTranslations("writing.editor");
   if (!materials) return null;
   if ("text" in materials) {
     return (
-      <Card title="문제 자료">
+      <Card title={t("materialsTitle")}>
         <Text>{materials.text}</Text>
       </Card>
     );
   }
   if ("chart" in materials) {
     return (
-      <Card title={`문제 자료 (${materials.chart.type})`}>
+      <Card title={t("materialsChartTitle", { type: materials.chart.type })}>
         <Text type="secondary">
-          [차트] 데이터 {materials.chart.data.length}건 — 실 차트 렌더링은
-          Tier 2 OOS-2 Realtime/차트 라이브러리 통합 후
+          {t("materialsChartPlaceholder", {
+            count: materials.chart.data.length,
+          })}
         </Text>
       </Card>
     );
@@ -119,6 +122,7 @@ export function LongFormEditor({
   problemMaterials,
   rubric = null,
 }: Props) {
+  const t = useTranslations("writing.editor");
   const [state53, setState53] = useState<Question53State>(() =>
     readInitial53(initialDraft),
   );
@@ -363,8 +367,12 @@ export function LongFormEditor({
 
   const charCountUI = (
     <Text type={inRecommended ? "success" : "secondary"}>
-      {charCount} / {limit.hardMax}자 (권장 {limit.recommendedMin}-
-      {limit.recommendedMax}자){inRecommended ? " ✓" : ""}
+      {t("charCount", { charCount, hardMax: limit.hardMax })}{" "}
+      {t("recommendedRange", {
+        min: limit.recommendedMin,
+        max: limit.recommendedMax,
+      })}
+      {inRecommended ? " ✓" : ""}
     </Text>
   );
 
@@ -378,12 +386,12 @@ export function LongFormEditor({
         {charCountUI}
         {/* D-M3 §5 — 자동 저장 끄기/켜기 CTA. */}
         <Button size="small" type="link" onClick={onToggleAutosave}>
-          {autosaveEnabled ? "자동 저장 끄기" : "자동 저장 켜기"}
+          {autosaveEnabled ? t("autosaveOff") : t("autosaveOn")}
         </Button>
       </Space>
       {!autosaveEnabled ? (
         <Text type="warning" style={{ fontSize: 12 }}>
-          자동 저장이 꺼져 있어요. 변경 후 직접 임시 저장을 눌러 주세요.
+          {t("autosaveDisabledNotice")}
         </Text>
       ) : null}
 
@@ -395,38 +403,38 @@ export function LongFormEditor({
             items={[
               {
                 key: "intro",
-                label: "도입",
+                label: t("tab53Intro"),
                 children: (
                   <SectionEditor
-                    label="도입 — 주제 소개"
+                    label={t("section53IntroLabel")}
                     value={state53.intro}
                     onChange={(v) => onSection53Change("intro", v)}
-                    placeholder="주제를 한두 문장으로 소개하세요."
+                    placeholder={t("section53IntroPlaceholder")}
                   />
                 ),
               },
               {
                 key: "body",
-                label: "전개",
+                label: t("tab53Body"),
                 children: (
                   <SectionEditor
-                    label="전개 — 자료 분석"
+                    label={t("section53BodyLabel")}
                     value={state53.body}
                     onChange={(v) => onSection53Change("body", v)}
-                    placeholder="자료를 근거로 변화/대비를 설명하세요."
+                    placeholder={t("section53BodyPlaceholder")}
                     minRows={6}
                   />
                 ),
               },
               {
                 key: "conclusion",
-                label: "마무리",
+                label: t("tab53Conclusion"),
                 children: (
                   <SectionEditor
-                    label="마무리 — 정리"
+                    label={t("section53ConclusionLabel")}
                     value={state53.conclusion}
                     onChange={(v) => onSection53Change("conclusion", v)}
-                    placeholder="정리와 자기 의견을 짧게 마무리하세요."
+                    placeholder={t("section53ConclusionPlaceholder")}
                   />
                 ),
               },
@@ -445,14 +453,14 @@ export function LongFormEditor({
           }}
         >
           <Card>
-            <Title level={5}>본문 작성</Title>
+            <Title level={5}>{t("essayBodyTitle")}</Title>
             <Input.TextArea
-              aria-label="에세이 본문"
+              aria-label={t("essayBodyAria")}
               value={state54.text}
               onChange={(e) => onText54Change(e.target.value)}
               autoSize={{ minRows: 12 }}
               maxLength={limit.hardMax}
-              placeholder="600~700자 분량의 에세이를 작성하세요."
+              placeholder={t("essayBodyPlaceholder")}
               disabled={submit.isPending}
             />
           </Card>
@@ -470,14 +478,14 @@ export function LongFormEditor({
           loading={status === "syncing" && upsert.isPending}
           disabled={submit.isPending || combinedText.length === 0}
         >
-          임시 저장
+          {t("saveDraft")}
         </Button>
         <Button
           type="primary"
           onClick={() => setConfirmOpen(true)}
           disabled={!submittable || submit.isPending}
         >
-          제출하기
+          {t("submit")}
         </Button>
       </Space>
       <SubmissionConfirmModal

@@ -550,5 +550,355 @@
       "retry": "다시 시도",
       "viewResult": "결과 보기"
     }
+  },
+  "feedback": {
+    "recommendations": {
+      "cardTitle": "추천 학습",
+      "intro": "이번 답안에서 보강하면 좋은 영역을 추천해요.",
+      "emptyDescription": "이번 답안에서는 추천할 약점 영역을 찾지 못했어요.",
+      "viewProblemList": "문제 목록 보기",
+      "label": {
+        "grammar": "문법",
+        "vocab": "어휘",
+        "structure": "구성",
+        "content": "내용",
+        "expression": "표현",
+        "topic_fit": "주제 적합성"
+      },
+      "reco": {
+        "grammar": {
+          "title": "문법 집중 연습",
+          "reason": "문법 정확도를 높이면 점수가 빠르게 오를 수 있어요."
+        },
+        "vocab": {
+          "title": "어휘 다듬기 연습",
+          "reason": "표현을 다양하게 쓰면 설득력이 올라가요."
+        },
+        "structure": {
+          "title": "글 구성 연습",
+          "reason": "주장과 근거 순서를 정리하면 글이 또렷해져요."
+        },
+        "content": {
+          "title": "내용 보강 연습",
+          "reason": "예시와 근거를 더하면 주장에 힘이 실려요."
+        },
+        "expression": {
+          "title": "표현력 연습",
+          "reason": "같은 뜻을 여러 방식으로 쓰는 연습이 도움이 돼요."
+        },
+        "topic_fit": {
+          "title": "주제 적합성 연습",
+          "reason": "질문 조건을 다시 확인하면 점수로 이어지기 쉬워요."
+        }
+      }
+    },
+    "analysis": {
+      "title": "AI가 답안을 분석하고 있어요",
+      "autoMoveNote": "분석이 끝나면 자동으로 결과 화면으로 이동합니다. 보통 몇 초에서 1분 정도 걸려요.",
+      "cancelButton": "분석 중단하고 나가기",
+      "cancelConfirm": "분석이 아직 진행 중이에요. 지금 나가면 분석이 중단될 수 있어요. 나가시겠어요?",
+      "slowTitle": "분석이 평소보다 오래 걸리고 있어요",
+      "slowDescription": "잠시만 더 기다려 주세요. {retryAt} 이후에도 끝나지 않으면 다시 시도할 수 있어요.",
+      "failedTitle": "분석에 실패했어요",
+      "failedDescription": "일시적인 문제로 첨삭을 만들지 못했어요. 잠시 후 다시 시도하거나 도움이 필요하면 고객지원에 알려 주세요.",
+      "retryButton": "다시 분석하기",
+      "supportButton": "고객지원 문의",
+      "supportAlert": "고객지원 연결은 준비 중이에요. 문제가 계속되면 설정 > 도움말을 확인해 주세요.",
+      "completeTitle": "분석이 끝났어요",
+      "completeDescription": "결과 화면으로 이동합니다.",
+      "characterAria": "AI가 답안을 분석하는 중",
+      "characterCaption": "AI가 답안을 살펴보는 중...",
+      "steps": {
+        "grammarTitle": "문법 분석",
+        "grammarDescription": "문법 패턴과 어미 사용을 확인 중.",
+        "structureTitle": "구성 분석",
+        "structureDescription": "문단 구성과 흐름을 확인 중.",
+        "expressionTitle": "표현 분석",
+        "expressionDescription": "어휘와 표현을 다듬는 중.",
+        "scoreTitle": "점수 산출",
+        "scoreDescription": "영역별 점수를 계산 중."
+      }
+    },
+    "detail": {
+      "cardTitle": "상세 피드백",
+      "emptyDescription": "세부 평가가 아직 준비되지 않았어요. 다시 분석하면 항목별 상세 평가를 볼 수 있어요.",
+      "expandSymbol": "더보기",
+      "itemSummaryFallback": "이 항목의 상세 평가가 비어 있어요. 다음 답안에서 더 자세한 평가를 받을 수 있어요.",
+      "label": {
+        "structure": "구조",
+        "content": "논리",
+        "vocab": "어휘",
+        "grammar": "문법",
+        "topic_fit": "주제 적합성"
+      }
+    },
+    "dimensions": {
+      "label": {
+        "grammar": "문법",
+        "vocab": "어휘",
+        "structure": "구성",
+        "content": "내용",
+        "expression": "표현",
+        "topic_fit": "주제 적합도"
+      },
+      "failedText": "이 항목은 분석에 실패했어요.",
+      "reanalyze": "다시 분석하기",
+      "summaryFallback": "요약 없음"
+    },
+    "summary": {
+      "scoreTitle": "총평 점수",
+      "overallFallback": "총평이 준비되는 중입니다.",
+      "scoreFailedTitle": "점수를 산출하지 못했어요",
+      "scoreFailedDescription": "이번 답안은 점수 계산에 실패했어요. 아래 분석 결과만 참고하거나, 다시 분석을 시도해 주세요."
+    },
+    "actions": {
+      "retryDefault": "다시 풀기",
+      "retryWriting": "다시 작성",
+      "nextProblem": "다음 문제",
+      "savePdf": "PDF 저장",
+      "compareReport": "비교 리포트",
+      "compareFailedTitle": "비교 리포트 생성 실패",
+      "pdfSuccess": "PDF 출력 대화상자가 열렸습니다.",
+      "pdfFailedTitle": "PDF 저장에 실패했어요",
+      "pdfFailedDescription": "내 보관함에서 다시 저장해 보세요.",
+      "save": {
+        "lockedTooltip": "이 답안은 보기 전용이라 보관함에 저장할 수 없어요.",
+        "lockedButton": "보관함 저장 (잠금)",
+        "saved": "보관함에 저장됨",
+        "save": "보관함 저장",
+        "saveSuccess": "보관함에 저장했어요.",
+        "deniedTitle": "저장 권한이 없어요",
+        "deniedDescription": "내 답안만 보관함에 저장할 수 있어요. 권한을 확인해 주세요.",
+        "failedTitle": "보관함 저장에 실패했어요",
+        "failedDescription": "잠시 후 다시 시도하거나 내 보관함에서 저장해 주세요."
+      }
+    },
+    "sentence": {
+      "cardTitle": "문장별 첨삭",
+      "emptyDescription": "문장별 첨삭이 없습니다.",
+      "failTag": "첨삭 생성 실패",
+      "reanalyze": "다시 분석하기",
+      "showMore": "더보기 ({count}개)"
+    },
+    "page": {
+      "loadFailedTitle": "피드백을 불러오지 못했어요",
+      "loadFailedDescription": "잠시 후 다시 시도하거나 화면을 새로고침해 주세요.",
+      "partialTitle": "일부 분석만 완료됐어요",
+      "partialDescription": "이번 답안은 일부 항목만 분석됐어요. 아래는 완료된 결과예요. 누락된 항목은 다시 분석하면 채워질 수 있어요."
+    }
+  },
+  "reports": {
+    "page": {
+      "metaTitle": "비교 리포트 — TALKPIK"
+    },
+    "dimensions": {
+      "grammar": "문법",
+      "vocab": "어휘",
+      "structure": "구성",
+      "content": "내용",
+      "expression": "표현",
+      "topic_fit": "주제 적합성"
+    },
+    "chart": {
+      "title": "항목별 점수 비교",
+      "tableTitle": "항목별 점수 (표)",
+      "viewAsTable": "표로 보기",
+      "colDimension": "항목",
+      "seriesPrevious": "이전",
+      "seriesCurrent": "현재",
+      "scorePoint": "{value}점",
+      "emptyChart": "항목별 점수 데이터가 없어 그래프를 그릴 수 없어요."
+    },
+    "cards": {
+      "titleScores": "항목별 점수",
+      "titleChange": "항목별 변화",
+      "trendUp": "상승",
+      "trendDown": "하락",
+      "trendHold": "유지",
+      "scorePoint": "{value}점",
+      "emptyCurrent": "비교할 항목 점수가 없어요.",
+      "emptyChange": "항목별 변화를 계산할 수 없어요."
+    },
+    "kpi": {
+      "currentTotal": "현재 총점",
+      "improvement": "개선 폭",
+      "changedDimensions": "변화한 항목",
+      "suffixPoint": "점",
+      "suffixCount": "개",
+      "noComparison": "비교 대상 없음",
+      "singleResult": "단일 결과",
+      "emptyScore": "이번 답안의 점수를 산출하지 못해 KPI를 계산할 수 없어요."
+    },
+    "diff": {
+      "currentAnswer": "이번 답안",
+      "previousAnswer": "이전 답안",
+      "noPreviousAnswer": "이전 답안 없음"
+    },
+    "comparison": {
+      "heading": "비교 리포트",
+      "share": "공유",
+      "shareTitle": "TALKPIK 비교 리포트",
+      "shareCopied": "링크를 복사했어요.",
+      "shareLink": "공유 링크",
+      "narrativeFailedTitle": "요약을 생성하지 못했어요",
+      "narrativeFailedDescription": "요약 생성에 실패했어요. 위의 KPI와 아래 지표로 변화를 확인하거나 다시 시도해 주세요.",
+      "narrativeDisclaimer": "요약은 AI가 두 답안을 비교해 자동으로 작성한 안내예요.",
+      "retry": "다시 시도",
+      "nextLearningTitle": "다음 학습 이어가기",
+      "nextProblem": "다음 문제",
+      "weaknessDisabledTooltip": "비교할 이전 답안이 쌓이면 약점 추천을 볼 수 있어요.",
+      "weaknessDisabled": "약점 추천 (데이터 부족)",
+      "weaknessView": "약점 추천 보기",
+      "retryProblem": "다시 풀기"
+    }
+  },
+  "writing": {
+    "page": {
+      "metaTitle": "쓰기 — TALKPIK",
+      "metaTitleFeedbackLong": "장문 피드백 — TALKPIK",
+      "metaTitleFeedbackShort": "단답 피드백 — TALKPIK",
+      "problemLoadFailed": "{questionNo}번 문제 지문을 불러오지 못했어요.",
+      "retry": "다시 시도",
+      "toProblemList": "문제 목록으로"
+    },
+    "prompt": {
+      "heading": "{questionNo}번 — {title}"
+    },
+    "editor": {
+      "materialsTitle": "문제 자료",
+      "materialsChartTitle": "문제 자료 ({type})",
+      "materialsChartPlaceholder": "[차트] 데이터 {count}건 — 실 차트 렌더링은 Tier 2 OOS-2 Realtime/차트 라이브러리 통합 후",
+      "charCount": "{charCount} / {hardMax}자",
+      "recommendedRange": "(권장 {min}-{max}자)",
+      "minOnly": "(최소 {min}자)",
+      "autosaveOff": "자동 저장 끄기",
+      "autosaveOn": "자동 저장 켜기",
+      "autosaveDisabledNotice": "자동 저장이 꺼져 있어요. 변경 후 직접 임시 저장을 눌러 주세요.",
+      "placeholderShort": "답안을 짧고 명확하게 작성하세요.",
+      "placeholderLong": "글의 구조를 갖춰 문장을 작성하세요.",
+      "blurTooShort": "최소 {minChars}자가 필요해요. (현재 {charCount}자)",
+      "blurTooLong": "최대 {hardMax}자를 넘었어요. (현재 {charCount}자)",
+      "saveDraft": "임시 저장",
+      "submit": "제출하기",
+      "tab53Intro": "도입",
+      "tab53Body": "전개",
+      "tab53Conclusion": "마무리",
+      "section53IntroLabel": "도입 — 주제 소개",
+      "section53IntroPlaceholder": "주제를 한두 문장으로 소개하세요.",
+      "section53BodyLabel": "전개 — 자료 분석",
+      "section53BodyPlaceholder": "자료를 근거로 변화/대비를 설명하세요.",
+      "section53ConclusionLabel": "마무리 — 정리",
+      "section53ConclusionPlaceholder": "정리와 자기 의견을 짧게 마무리하세요.",
+      "essayBodyTitle": "본문 작성",
+      "essayBodyAria": "에세이 본문",
+      "essayBodyPlaceholder": "600~700자 분량의 에세이를 작성하세요.",
+      "manuscriptTitle": "원고지 미리보기",
+      "manuscriptPerLine": "한 줄 {charsPerLine}자 기준"
+    },
+    "autosave": {
+      "statusClean": "저장됨",
+      "statusDirty": "저장 대기",
+      "statusSyncing": "저장 중",
+      "statusFailed": "저장 실패",
+      "statusSuperseded": "제출됨",
+      "warnBadge": "주의",
+      "warnSaveFailureTitle": "자동 저장 실패",
+      "warnSaveFailureBody": "현재 작성 중인 답안이 저장되지 않을 수 있어요. 다시 시도하거나, 답안을 복사해두는 것을 권장합니다.",
+      "warnSaveFailureWarn": "네트워크가 끊겼다면 복구가 안 될 수 있어요.",
+      "warnDisableTitle": "자동 저장을 끄시겠어요?",
+      "warnDisableBody": "자동 저장을 끄면 작성 중인 답안이 새로 고침이나 페이지 이동 시 사라질 수 있어요.",
+      "warnExitTitle": "저장되지 않은 변경 사항",
+      "warnExitBody": "저장되지 않은 변경 사항이 있어요. 페이지를 나가면 작성 내용이 사라집니다.",
+      "recoveryPossible": "복구 가능",
+      "recoveryChecking": "확인 중",
+      "recoveryImpossible": "복구 불가",
+      "noSaveRecord": "저장 기록 없음",
+      "lastSavedLabel": "마지막 저장:",
+      "recoveryStateLabel": "복구 상태",
+      "noBackup": "복구할 수 있는 임시 저장본이 없어요.",
+      "backupHelpLink": "저장/복구 도움말 보기",
+      "keepAutosave": "자동 저장 유지",
+      "retryDisabledFallback": "(대신 자동 저장 유지)",
+      "retryNow": "지금 다시 시도",
+      "proceedDisable": "위험을 알지만 끄기",
+      "proceedAnyway": "위험을 알지만 진행"
+    },
+    "submit": {
+      "title": "답안을 제출하시겠어요?",
+      "ok": "제출",
+      "okRetry": "다시 제출",
+      "noSaveRecord": "자동 저장 기록 없음",
+      "questionTypeLabel": "문제 유형",
+      "questionNoValue": "{questionNo}번",
+      "answerLengthLabel": "답안 길이",
+      "charCountValue": "{charCount}자",
+      "minCharsHint": "(최소 {minChars}자)",
+      "lastSavedLabel": "마지막 저장",
+      "submitNotice": "제출 후에는 답안을 수정할 수 없고, 자동으로 AI 분석이 시작됩니다. 분석에는 잠시 대기 시간이 걸릴 수 있어요.",
+      "notEnoughChars": "아직 최소 글자 수({minChars}자)에 도달하지 않았어요.",
+      "submitFailedTitle": "제출하지 못했어요",
+      "submitFailedDescription": "{submitError} — '다시 제출'을 눌러 재시도하거나, 작성한 답안을 복사해 두세요.",
+      "agreeNoEdit": "제출 후 수정할 수 없음을 확인했어요."
+    },
+    "conditions": {
+      "title52": "작성 조건",
+      "title53": "평가 기준",
+      "title54": "조건 · 루브릭",
+      "manualNote52": "이 문제의 조건 정보를 불러오지 못했어요. 지문의 빈칸 조건을 직접 확인하며 작성해 주세요.",
+      "manualNote53": "평가 기준을 불러오지 못했어요. 자료 반영·문단 구성·분량을 스스로 점검하며 작성해 주세요.",
+      "manualNote54": "루브릭을 불러오지 못했어요. 서론·본론·결론 구조와 근거를 직접 점검하며 작성해 주세요.",
+      "manualCheck": "수동으로 확인해 주세요",
+      "conditionsLabel": "작성 조건",
+      "criteriaLabel": "평가 기준",
+      "required": "필수",
+      "weightSuffix": " ({weight}점)"
+    },
+    "checklist": {
+      "cardTitle": "작성 체크리스트",
+      "statusUnchecked": "⚪ 아직",
+      "statusWarning": "🟡 부분",
+      "statusComplete": "🟢 완료",
+      "labelIntro": "서론 — 주제 소개 + 자기 입장",
+      "labelBody": "본론 — 근거 + 사례",
+      "labelConclusion": "결론 — 본인 입장 재정리",
+      "labelEvidence": "근거 — 통계 / 사례 / 경험",
+      "labelConnectors": "연결어 — 그러나 / 따라서 / 또한 등",
+      "labelTopicFit": "주제 일치 — 출제 의도와 부합"
+    },
+    "reference": {
+      "cardTitle": "참고 자료",
+      "altImage": "문제 참고 이미지",
+      "altAudio": "문제 참고 음성",
+      "imageLoadFailed": "이미지를 불러오지 못했어요. ({alt})",
+      "zoom": "확대 보기"
+    },
+    "help": {
+      "empty": "이 유형의 작성 팁이 아직 없어요.",
+      "viewRecommendations": "추천 문제 보기",
+      "tips51_0Title": "빈칸 호응",
+      "tips51_0Body": "앞뒤 문장과 자연스럽게 이어지는 한 문장을 만드세요.",
+      "tips51_1Title": "격식 일치",
+      "tips51_1Body": "지문이 격식체면 답안도 -습니다/-ㅂ니다로 맞추세요.",
+      "tips51_2Title": "군더더기 X",
+      "tips51_2Body": "불필요한 수식어 없이 핵심만 간결하게 쓰세요.",
+      "tips52_0Title": "두 빈칸 연결",
+      "tips52_0Body": "두 빈칸이 한 흐름이 되도록 접속 표현을 맞추세요.",
+      "tips52_1Title": "문장 호응",
+      "tips52_1Body": "주어와 서술어, 시제가 어긋나지 않게 점검하세요.",
+      "tips52_2Title": "지시어 주의",
+      "tips52_2Body": "이/그/저 같은 지시어가 가리키는 대상을 분명히 하세요.",
+      "tips53_0Title": "자료 반영",
+      "tips53_0Body": "그래프·표의 수치 변화를 근거로 직접 인용하세요.",
+      "tips53_1Title": "문단 구성",
+      "tips53_1Body": "도입-전개-마무리 3단 구조로 나눠 작성하세요.",
+      "tips53_2Title": "분량 관리",
+      "tips53_2Body": "200~300자 안에서 핵심만 담아 마무리하세요.",
+      "tips54_0Title": "입장 명확",
+      "tips54_0Body": "서론에서 본인 입장을 분명하게 밝히세요.",
+      "tips54_1Title": "근거 2개+",
+      "tips54_1Body": "본론은 서로 다른 근거 2개 이상으로 뒷받침하세요.",
+      "tips54_2Title": "연결 표현",
+      "tips54_2Body": "그러나·따라서·또한으로 문단을 매끄럽게 이으세요."
+    }
   }
 }

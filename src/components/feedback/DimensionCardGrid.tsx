@@ -1,22 +1,13 @@
 "use client";
 
 import { Button, Card, Col, Row, Tag, Typography } from "antd";
+import { useTranslations } from "next-intl";
 import {
   FEEDBACK_DIMENSIONS,
-  type FeedbackDimensionKey,
   type FeedbackDimensionScoreRow,
 } from "@/lib/writing/types";
 
 const { Text } = Typography;
-
-const LABELS: Record<FeedbackDimensionKey, string> = {
-  grammar: "문법",
-  vocab: "어휘",
-  structure: "구성",
-  content: "내용",
-  expression: "표현",
-  topic_fit: "주제 적합도",
-};
 
 type Props = {
   rows: FeedbackDimensionScoreRow[];
@@ -35,6 +26,7 @@ type Props = {
  * 예외: 분석 실패 항목(점수 없음)은 회색 카드와 재분석 안내 표시.
  */
 export function DimensionCardGrid({ rows, maxCards, onReanalyze }: Props) {
+  const t = useTranslations("feedback.dimensions");
   const byDim = new Map(rows.map((r) => [r.dimension, r] as const));
   // maxCards가 있으면 점수가 있는 차원을 우선 노출하고 나머지로 채운다.
   const ordered = maxCards
@@ -67,7 +59,7 @@ export function DimensionCardGrid({ rows, maxCards, onReanalyze }: Props) {
               size="small"
               style={failed ? { opacity: 0.6, background: "#fafafa" } : undefined}
             >
-              <Text strong>{LABELS[dim]}</Text>
+              <Text strong>{t(`label.${dim}`)}</Text>
               <div style={{ marginTop: 4 }}>
                 <Tag color={tone}>
                   {score ?? "—"} / {row?.score_max ?? 100}
@@ -76,12 +68,12 @@ export function DimensionCardGrid({ rows, maxCards, onReanalyze }: Props) {
               {failed ? (
                 <div>
                   <Text type="secondary" style={{ fontSize: 12 }}>
-                    이 항목은 분석에 실패했어요.
+                    {t("failedText")}
                   </Text>
                   {onReanalyze ? (
                     <div style={{ marginTop: 4 }}>
                       <Button size="small" type="link" onClick={onReanalyze} style={{ padding: 0 }}>
-                        다시 분석하기
+                        {t("reanalyze")}
                       </Button>
                     </div>
                   ) : null}
@@ -97,7 +89,7 @@ export function DimensionCardGrid({ rows, maxCards, onReanalyze }: Props) {
                     overflow: "hidden",
                   }}
                 >
-                  {row?.summary ?? "요약 없음"}
+                  {row?.summary ?? t("summaryFallback")}
                 </Text>
               )}
             </Card>

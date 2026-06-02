@@ -1,6 +1,7 @@
 "use client";
 
 import { Card } from "antd";
+import { useTranslations } from "next-intl";
 
 import {
   ESSAY_CHECKLIST_KEYS,
@@ -14,22 +15,25 @@ type Props = {
   onChange: (key: EssayChecklistKey, next: ChecklistItemStatus) => void;
 };
 
-const LABELS: Record<EssayChecklistKey, string> = {
-  intro: "서론 — 주제 소개 + 자기 입장",
-  body: "본론 — 근거 + 사례",
-  conclusion: "결론 — 본인 입장 재정리",
-  evidence: "근거 — 통계 / 사례 / 경험",
-  connectors: "연결어 — 그러나 / 따라서 / 또한 등",
-  topic_fit: "주제 일치 — 출제 의도와 부합",
+// EssayChecklistKey → 카탈로그 라벨 키 매핑. next-intl 타입은 동적 문자열을
+// 좁히지 못하므로 키 매핑을 명시해 둔다.
+const LABEL_KEYS: Record<EssayChecklistKey, string> = {
+  intro: "labelIntro",
+  body: "labelBody",
+  conclusion: "labelConclusion",
+  evidence: "labelEvidence",
+  connectors: "labelConnectors",
+  topic_fit: "labelTopicFit",
 };
 
 export function EssayChecklist({ status, onChange }: Props) {
+  const t = useTranslations("writing.checklist");
   return (
-    <Card title="작성 체크리스트">
+    <Card title={t("cardTitle")}>
       {ESSAY_CHECKLIST_KEYS.map((key) => (
         <ChecklistRow
           key={key}
-          label={LABELS[key]}
+          label={t(LABEL_KEYS[key] as never)}
           status={status[key] ?? "unchecked"}
           onChange={(next) => onChange(key, next)}
         />

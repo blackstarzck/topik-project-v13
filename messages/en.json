@@ -550,5 +550,355 @@
       "retry": "Retry",
       "viewResult": "View result"
     }
+  },
+  "feedback": {
+    "recommendations": {
+      "cardTitle": "Recommended practice",
+      "intro": "Here are the areas worth strengthening from this answer.",
+      "emptyDescription": "We couldn't find a weak area to recommend from this answer.",
+      "viewProblemList": "View problem list",
+      "label": {
+        "grammar": "Grammar",
+        "vocab": "Vocabulary",
+        "structure": "Structure",
+        "content": "Content",
+        "expression": "Expression",
+        "topic_fit": "Topic relevance"
+      },
+      "reco": {
+        "grammar": {
+          "title": "Focused grammar practice",
+          "reason": "Improving grammar accuracy can raise your score quickly."
+        },
+        "vocab": {
+          "title": "Vocabulary refinement practice",
+          "reason": "Using varied expressions makes your writing more persuasive."
+        },
+        "structure": {
+          "title": "Essay structure practice",
+          "reason": "Organizing claims and evidence makes your writing clearer."
+        },
+        "content": {
+          "title": "Content enrichment practice",
+          "reason": "Adding examples and evidence strengthens your argument."
+        },
+        "expression": {
+          "title": "Expression practice",
+          "reason": "Practicing different ways to say the same idea helps."
+        },
+        "topic_fit": {
+          "title": "Topic relevance practice",
+          "reason": "Rechecking the question's requirements makes it easier to earn points."
+        }
+      }
+    },
+    "analysis": {
+      "title": "AI is analyzing your answer",
+      "autoMoveNote": "You'll move to the results screen automatically when analysis finishes. It usually takes a few seconds to a minute.",
+      "cancelButton": "Stop analysis and leave",
+      "cancelConfirm": "Analysis is still in progress. Leaving now may interrupt it. Do you want to leave?",
+      "slowTitle": "Analysis is taking longer than usual",
+      "slowDescription": "Please wait a little longer. If it isn't done after {retryAt}, you can try again.",
+      "failedTitle": "Analysis failed",
+      "failedDescription": "A temporary issue prevented us from generating feedback. Please try again shortly, or contact support if you need help.",
+      "retryButton": "Analyze again",
+      "supportButton": "Contact support",
+      "supportAlert": "Support contact is coming soon. If the problem continues, check Settings > Help.",
+      "completeTitle": "Analysis complete",
+      "completeDescription": "Moving to the results screen.",
+      "characterAria": "AI is analyzing the answer",
+      "characterCaption": "AI is reviewing your answer...",
+      "steps": {
+        "grammarTitle": "Grammar analysis",
+        "grammarDescription": "Checking grammar patterns and verb-ending usage.",
+        "structureTitle": "Structure analysis",
+        "structureDescription": "Checking paragraph structure and flow.",
+        "expressionTitle": "Expression analysis",
+        "expressionDescription": "Refining vocabulary and expression.",
+        "scoreTitle": "Scoring",
+        "scoreDescription": "Calculating scores for each area."
+      }
+    },
+    "detail": {
+      "cardTitle": "Detailed feedback",
+      "emptyDescription": "Detailed evaluation isn't ready yet. Analyze again to see per-item detail.",
+      "expandSymbol": "More",
+      "itemSummaryFallback": "Detailed evaluation for this item is empty. You can get a more detailed review on your next answer.",
+      "label": {
+        "structure": "Structure",
+        "content": "Logic",
+        "vocab": "Vocabulary",
+        "grammar": "Grammar",
+        "topic_fit": "Topic relevance"
+      }
+    },
+    "dimensions": {
+      "label": {
+        "grammar": "Grammar",
+        "vocab": "Vocabulary",
+        "structure": "Structure",
+        "content": "Content",
+        "expression": "Expression",
+        "topic_fit": "Topic relevance"
+      },
+      "failedText": "This item failed to analyze.",
+      "reanalyze": "Analyze again",
+      "summaryFallback": "No summary"
+    },
+    "summary": {
+      "scoreTitle": "Overall score",
+      "overallFallback": "The overall review is being prepared.",
+      "scoreFailedTitle": "We couldn't calculate a score",
+      "scoreFailedDescription": "Scoring failed for this answer. Refer to the analysis below, or try analyzing again."
+    },
+    "actions": {
+      "retryDefault": "Try again",
+      "retryWriting": "Rewrite",
+      "nextProblem": "Next problem",
+      "savePdf": "Save PDF",
+      "compareReport": "Comparison report",
+      "compareFailedTitle": "Failed to create comparison report",
+      "pdfSuccess": "The PDF print dialog has opened.",
+      "pdfFailedTitle": "Failed to save PDF",
+      "pdfFailedDescription": "Try saving again from My Library.",
+      "save": {
+        "lockedTooltip": "This answer is view-only and can't be saved to your library.",
+        "lockedButton": "Save to library (locked)",
+        "saved": "Saved to library",
+        "save": "Save to library",
+        "saveSuccess": "Saved to your library.",
+        "deniedTitle": "You don't have permission to save",
+        "deniedDescription": "You can only save your own answers to the library. Please check your permissions.",
+        "failedTitle": "Failed to save to library",
+        "failedDescription": "Try again shortly, or save it from My Library."
+      }
+    },
+    "sentence": {
+      "cardTitle": "Sentence-by-sentence feedback",
+      "emptyDescription": "No sentence-by-sentence feedback.",
+      "failTag": "Feedback generation failed",
+      "reanalyze": "Analyze again",
+      "showMore": "Show more ({count})"
+    },
+    "page": {
+      "loadFailedTitle": "Couldn't load feedback",
+      "loadFailedDescription": "Try again shortly, or refresh the screen.",
+      "partialTitle": "Only part of the analysis is complete",
+      "partialDescription": "Only some items were analyzed for this answer. The completed results are below. Missing items can be filled in by analyzing again."
+    }
+  },
+  "reports": {
+    "page": {
+      "metaTitle": "Comparison report — TALKPIK"
+    },
+    "dimensions": {
+      "grammar": "Grammar",
+      "vocab": "Vocabulary",
+      "structure": "Structure",
+      "content": "Content",
+      "expression": "Expression",
+      "topic_fit": "Topic relevance"
+    },
+    "chart": {
+      "title": "Score comparison by category",
+      "tableTitle": "Scores by category (table)",
+      "viewAsTable": "View as table",
+      "colDimension": "Category",
+      "seriesPrevious": "Previous",
+      "seriesCurrent": "Current",
+      "scorePoint": "{value} pts",
+      "emptyChart": "There is no per-category score data, so the chart cannot be drawn."
+    },
+    "cards": {
+      "titleScores": "Scores by category",
+      "titleChange": "Change by category",
+      "trendUp": "Up",
+      "trendDown": "Down",
+      "trendHold": "Same",
+      "scorePoint": "{value} pts",
+      "emptyCurrent": "There are no category scores to compare.",
+      "emptyChange": "Per-category change cannot be calculated."
+    },
+    "kpi": {
+      "currentTotal": "Current total",
+      "improvement": "Improvement",
+      "changedDimensions": "Changed categories",
+      "suffixPoint": "pts",
+      "suffixCount": "categories",
+      "noComparison": "Nothing to compare",
+      "singleResult": "Single result",
+      "emptyScore": "We couldn't score this answer, so the KPIs can't be calculated."
+    },
+    "diff": {
+      "currentAnswer": "Current answer",
+      "previousAnswer": "Previous answer",
+      "noPreviousAnswer": "No previous answer"
+    },
+    "comparison": {
+      "heading": "Comparison report",
+      "share": "Share",
+      "shareTitle": "TALKPIK comparison report",
+      "shareCopied": "Link copied.",
+      "shareLink": "Share link",
+      "narrativeFailedTitle": "We couldn't generate the summary",
+      "narrativeFailedDescription": "Summary generation failed. Check the change using the KPIs above and the metrics below, or try again.",
+      "narrativeDisclaimer": "The summary is generated automatically by AI comparing the two answers.",
+      "retry": "Try again",
+      "nextLearningTitle": "Continue learning",
+      "nextProblem": "Next problem",
+      "weaknessDisabledTooltip": "Once you have previous answers to compare, weakness recommendations will be available.",
+      "weaknessDisabled": "Weakness recommendations (not enough data)",
+      "weaknessView": "View weakness recommendations",
+      "retryProblem": "Retry"
+    }
+  },
+  "writing": {
+    "page": {
+      "metaTitle": "Writing — TALKPIK",
+      "metaTitleFeedbackLong": "Long-form Feedback — TALKPIK",
+      "metaTitleFeedbackShort": "Short-answer Feedback — TALKPIK",
+      "problemLoadFailed": "Could not load the prompt for question {questionNo}.",
+      "retry": "Try again",
+      "toProblemList": "To problem list"
+    },
+    "prompt": {
+      "heading": "Q{questionNo} — {title}"
+    },
+    "editor": {
+      "materialsTitle": "Problem materials",
+      "materialsChartTitle": "Problem materials ({type})",
+      "materialsChartPlaceholder": "[Chart] {count} data points — actual chart rendering comes after Tier 2 OOS-2 Realtime / chart library integration",
+      "charCount": "{charCount} / {hardMax} chars",
+      "recommendedRange": "(recommended {min}-{max} chars)",
+      "minOnly": "(minimum {min} chars)",
+      "autosaveOff": "Turn off autosave",
+      "autosaveOn": "Turn on autosave",
+      "autosaveDisabledNotice": "Autosave is off. After making changes, press Save draft yourself.",
+      "placeholderShort": "Write your answer short and clear.",
+      "placeholderLong": "Write sentences with a clear structure.",
+      "blurTooShort": "At least {minChars} characters are required. (currently {charCount})",
+      "blurTooLong": "You exceeded the maximum of {hardMax} characters. (currently {charCount})",
+      "saveDraft": "Save draft",
+      "submit": "Submit",
+      "tab53Intro": "Intro",
+      "tab53Body": "Body",
+      "tab53Conclusion": "Conclusion",
+      "section53IntroLabel": "Intro — introduce the topic",
+      "section53IntroPlaceholder": "Introduce the topic in one or two sentences.",
+      "section53BodyLabel": "Body — analyze the materials",
+      "section53BodyPlaceholder": "Explain the changes/contrasts based on the materials.",
+      "section53ConclusionLabel": "Conclusion — wrap up",
+      "section53ConclusionPlaceholder": "Briefly wrap up with a summary and your opinion.",
+      "essayBodyTitle": "Write the essay",
+      "essayBodyAria": "Essay body",
+      "essayBodyPlaceholder": "Write an essay of about 600-700 characters.",
+      "manuscriptTitle": "Manuscript grid preview",
+      "manuscriptPerLine": "{charsPerLine} characters per line"
+    },
+    "autosave": {
+      "statusClean": "Saved",
+      "statusDirty": "Save pending",
+      "statusSyncing": "Saving",
+      "statusFailed": "Save failed",
+      "statusSuperseded": "Submitted",
+      "warnBadge": "Caution",
+      "warnSaveFailureTitle": "Autosave failed",
+      "warnSaveFailureBody": "Your current answer may not be saved. We recommend retrying or copying your answer somewhere safe.",
+      "warnSaveFailureWarn": "If your network is down, recovery may not be possible.",
+      "warnDisableTitle": "Turn off autosave?",
+      "warnDisableBody": "If you turn off autosave, your in-progress answer may be lost when you refresh or leave the page.",
+      "warnExitTitle": "Unsaved changes",
+      "warnExitBody": "You have unsaved changes. If you leave the page, your writing will be lost.",
+      "recoveryPossible": "Recoverable",
+      "recoveryChecking": "Checking",
+      "recoveryImpossible": "Not recoverable",
+      "noSaveRecord": "No save record",
+      "lastSavedLabel": "Last saved:",
+      "recoveryStateLabel": "Recovery status",
+      "noBackup": "There is no draft available to recover.",
+      "backupHelpLink": "See save/recovery help",
+      "keepAutosave": "Keep autosave on",
+      "retryDisabledFallback": "(keep autosave on instead)",
+      "retryNow": "Retry now",
+      "proceedDisable": "Turn off, I understand the risk",
+      "proceedAnyway": "Proceed, I understand the risk"
+    },
+    "submit": {
+      "title": "Submit your answer?",
+      "ok": "Submit",
+      "okRetry": "Submit again",
+      "noSaveRecord": "No autosave record",
+      "questionTypeLabel": "Question type",
+      "questionNoValue": "No. {questionNo}",
+      "answerLengthLabel": "Answer length",
+      "charCountValue": "{charCount} chars",
+      "minCharsHint": "(minimum {minChars} chars)",
+      "lastSavedLabel": "Last saved",
+      "submitNotice": "After submitting, you cannot edit your answer, and AI analysis starts automatically. The analysis may take a short while.",
+      "notEnoughChars": "You haven't reached the minimum character count ({minChars}) yet.",
+      "submitFailedTitle": "Could not submit",
+      "submitFailedDescription": "{submitError} — press 'Submit again' to retry, or copy your answer somewhere safe.",
+      "agreeNoEdit": "I understand I cannot edit after submitting."
+    },
+    "conditions": {
+      "title52": "Writing conditions",
+      "title53": "Evaluation criteria",
+      "title54": "Conditions · Rubric",
+      "manualNote52": "Could not load the conditions for this question. Please check the blank conditions in the prompt yourself as you write.",
+      "manualNote53": "Could not load the evaluation criteria. Please self-check use of materials, paragraph structure, and length as you write.",
+      "manualNote54": "Could not load the rubric. Please self-check your intro/body/conclusion structure and evidence as you write.",
+      "manualCheck": "Please check manually",
+      "conditionsLabel": "Writing conditions",
+      "criteriaLabel": "Evaluation criteria",
+      "required": "Required",
+      "weightSuffix": " ({weight} pts)"
+    },
+    "checklist": {
+      "cardTitle": "Writing checklist",
+      "statusUnchecked": "⚪ Not yet",
+      "statusWarning": "🟡 Partial",
+      "statusComplete": "🟢 Done",
+      "labelIntro": "Intro — introduce topic + your stance",
+      "labelBody": "Body — evidence + examples",
+      "labelConclusion": "Conclusion — restate your stance",
+      "labelEvidence": "Evidence — statistics / examples / experience",
+      "labelConnectors": "Connectors — however / therefore / also, etc.",
+      "labelTopicFit": "Topic fit — matches the prompt's intent"
+    },
+    "reference": {
+      "cardTitle": "Reference materials",
+      "altImage": "Problem reference image",
+      "altAudio": "Problem reference audio",
+      "imageLoadFailed": "Could not load the image. ({alt})",
+      "zoom": "Zoom in"
+    },
+    "help": {
+      "empty": "There are no writing tips for this type yet.",
+      "viewRecommendations": "See recommended problems",
+      "tips51_0Title": "Blank coherence",
+      "tips51_0Body": "Write a single sentence that flows naturally with the surrounding ones.",
+      "tips51_1Title": "Match formality",
+      "tips51_1Body": "If the prompt is formal, match it with the formal -습니다/-ㅂ니다 endings.",
+      "tips51_2Title": "No filler",
+      "tips51_2Body": "Write only the essentials concisely, without unnecessary modifiers.",
+      "tips52_0Title": "Connect both blanks",
+      "tips52_0Body": "Align your connecting expressions so the two blanks form one flow.",
+      "tips52_1Title": "Sentence agreement",
+      "tips52_1Body": "Check that subject, predicate, and tense all agree.",
+      "tips52_2Title": "Watch demonstratives",
+      "tips52_2Body": "Make clear what demonstratives like this/that/those refer to.",
+      "tips53_0Title": "Reflect the data",
+      "tips53_0Body": "Cite the numerical changes in the graph/table directly as evidence.",
+      "tips53_1Title": "Paragraph structure",
+      "tips53_1Body": "Write in a three-part structure: intro, body, conclusion.",
+      "tips53_2Title": "Manage length",
+      "tips53_2Body": "Wrap up with just the essentials within 200-300 characters.",
+      "tips54_0Title": "Clear stance",
+      "tips54_0Body": "State your stance clearly in the introduction.",
+      "tips54_1Title": "2+ pieces of evidence",
+      "tips54_1Body": "Support the body with two or more distinct pieces of evidence.",
+      "tips54_2Title": "Connecting expressions",
+      "tips54_2Body": "Link paragraphs smoothly with however, therefore, and also."
+    }
   }
 }

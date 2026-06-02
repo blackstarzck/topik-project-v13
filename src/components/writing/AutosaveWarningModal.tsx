@@ -2,8 +2,11 @@
 
 import Link from "next/link";
 import { Alert, Button, Descriptions, Modal, Space, Tag, Typography } from "antd";
+import { useTranslations } from "next-intl";
 
 const { Paragraph, Text } = Typography;
+
+type WarningTranslate = ReturnType<typeof useTranslations<"writing.autosave">>;
 
 export type WarningTrigger =
   | "save_failure"
@@ -29,35 +32,36 @@ type Props = {
 
 function describeTrigger(
   trigger: WarningTrigger,
+  t: WarningTranslate,
 ): { title: string; body: string; warn?: string } {
   switch (trigger) {
     case "save_failure":
       return {
-        title: "자동 저장 실패",
-        body: "현재 작성 중인 답안이 저장되지 않을 수 있어요. 다시 시도하거나, 답안을 복사해두는 것을 권장합니다.",
-        warn: "네트워크가 끊겼다면 복구가 안 될 수 있어요.",
+        title: t("warnSaveFailureTitle"),
+        body: t("warnSaveFailureBody"),
+        warn: t("warnSaveFailureWarn"),
       };
     case "disable_attempt":
       return {
-        title: "자동 저장을 끄시겠어요?",
-        body: "자동 저장을 끄면 작성 중인 답안이 새로 고침이나 페이지 이동 시 사라질 수 있어요.",
+        title: t("warnDisableTitle"),
+        body: t("warnDisableBody"),
       };
     case "exit_with_dirty":
       return {
-        title: "저장되지 않은 변경 사항",
-        body: "저장되지 않은 변경 사항이 있어요. 페이지를 나가면 작성 내용이 사라집니다.",
+        title: t("warnExitTitle"),
+        body: t("warnExitBody"),
       };
   }
 }
 
-function recoveryTag(state: RecoveryState) {
+function recoveryTag(state: RecoveryState, t: WarningTranslate) {
   switch (state) {
     case "possible":
-      return <Tag color="success">복구 가능</Tag>;
+      return <Tag color="success">{t("recoveryPossible")}</Tag>;
     case "checking":
-      return <Tag color="processing">확인 중</Tag>;
+      return <Tag color="processing">{t("recoveryChecking")}</Tag>;
     case "impossible":
-      return <Tag color="error">복구 불가</Tag>;
+      return <Tag color="error">{t("recoveryImpossible")}</Tag>;
   }
 }
 
@@ -70,8 +74,9 @@ export function AutosaveWarningModal({
   onRetry,
   onProceed,
 }: Props) {
+  const t = useTranslations("writing.autosave");
   if (!trigger) return null;
-  const { title, body, warn } = describeTrigger(trigger);
+  const { title, body, warn } = describeTrigger(trigger, t);
 
   // §4 — recoveryState 미지정 시 저장 기록으로 추정.
   const recovery: RecoveryState =
@@ -79,7 +84,7 @@ export function AutosaveWarningModal({
 
   const savedLabel = lastSavedAt
     ? new Date(lastSavedAt).toLocaleString("ko-KR")
-    : "저장 기록 없음";
+    : t("noSaveRecord");
 
   return (
     <Modal
@@ -87,7 +92,7 @@ export function AutosaveWarningModal({
       // §2 예외 — 경고 아이콘 로드 실패 대비: 아이콘 대신 텍스트 배지를 제목에 둔다.
       title={
         <span>
-          <Tag color="warning">주의</Tag> {title}
+          <Tag color="warning">{t("warnBadge")}</Tag> {title}
         </span>
       }
       closable={false}
@@ -114,23 +119,23 @@ export function AutosaveWarningModal({
         colon={false}
         style={{ marginBottom: 12 }}
       >
-        <Descriptions.Item label="마지막 저장:">{savedLabel}</Descriptions.Item>
-        <Descriptions.Item label="복구 상태">
-          {recoveryTag(recovery)}
+        <Descriptions.Item label={t("lastSavedLabel")}>{savedLabel}</Descriptions.Item>
+        <Descriptions.Item label={t("recoveryStateLabel")}>
+          {recoveryTag(recovery, t)}
         </Descriptions.Item>
       </Descriptions>
 
       {/* §4 예외 — 저장 정보 없음/복구 불가 시 도움말 링크. */}
       {recovery === "impossible" ? (
         <Paragraph type="secondary" style={{ fontSize: 12 }}>
-          복구할 수 있는 임시 저장본이 없어요.{" "}
-          <Link href={"/library" as never}>저장/복구 도움말 보기</Link>
+          {t("noBackup")}{" "}
+          <Link href={"/library" as never}>{t("backupHelpLink")}</Link>
         </Paragraph>
       ) : null}
 
       <Space direction="vertical" style={{ width: "100%" }}>
         <Button block onClick={onKeep}>
-          자동 저장 유지
+          {t("keepAutosave")}
         </Button>
         <Button
           block
@@ -140,14 +145,14 @@ export function AutosaveWarningModal({
           disabled={trigger === "disable_attempt"}
         >
           {trigger === "disable_attempt"
-            ? "(대신 자동 저장 유지)"
-            : "지금 다시 시도"}
+            ? t("retryDisabledFallback")
+            : t("retryNow")}
         </Button>
         <Button block danger onClick={onProceed}>
           <Text type="danger">
             {trigger === "disable_attempt"
-              ? "위험을 알지만 끄기"
-              : "위험을 알지만 진행"}
+              ? t("proceedDisable")
+              : t("proceedAnyway")}
           </Text>
         </Button>
       </Space>

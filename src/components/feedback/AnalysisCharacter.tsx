@@ -1,6 +1,7 @@
 "use client";
 
 import { Typography } from "antd";
+import { useTranslations } from "next-intl";
 
 const { Text } = Typography;
 
@@ -24,6 +25,7 @@ type Props = {
  * 예외: 모션 비활성 설정 시 정적 이미지로 대체.
  */
 export function AnalysisCharacter({ step, reduceMotion }: Props) {
+  const t = useTranslations("feedback.analysis");
   const frame = reduceMotion ? STATIC_FRAME : FRAMES[step % FRAMES.length];
   return (
     <div
@@ -32,7 +34,7 @@ export function AnalysisCharacter({ step, reduceMotion }: Props) {
         textAlign: "center",
         lineHeight: 1.4,
       }}
-      aria-label="AI가 답안을 분석하는 중"
+      aria-label={t("characterAria")}
       role="img"
     >
       <div
@@ -45,7 +47,7 @@ export function AnalysisCharacter({ step, reduceMotion }: Props) {
         {frame}
       </div>
       <Text type="secondary" style={{ fontSize: 14 }}>
-        AI가 답안을 살펴보는 중...
+        {t("characterCaption")}
       </Text>
       {reduceMotion ? null : (
         <style>{`@keyframes talkpik-analysis-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}`}</style>

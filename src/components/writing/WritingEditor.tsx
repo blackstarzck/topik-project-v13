@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button, Input, Space, Typography } from "antd";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useSubmitWriting, useUpsertDraft } from "@/lib/writing/mutations";
 import { logStudyEvent } from "@/lib/events/study-events";
@@ -43,6 +44,7 @@ export function WritingEditor({
   initialDraft,
   rubric = null,
 }: Props) {
+  const t = useTranslations("writing.editor");
   const [text, setText] = useState(initialDraft?.answer_text ?? "");
   const [status, setStatus] = useState<AutosaveStatus>(
     initialDraft?.autosave_status ?? "clean",
@@ -173,9 +175,9 @@ export function WritingEditor({
   function onBlurValidate() {
     if (text.length === 0) return;
     if (charCount < minChars) {
-      setBlurNotice(`최소 ${minChars}자가 필요해요. (현재 ${charCount}자)`);
+      setBlurNotice(t("blurTooShort", { minChars, charCount }));
     } else if (charCount > limit.hardMax) {
-      setBlurNotice(`최대 ${limit.hardMax}자를 넘었어요. (현재 ${charCount}자)`);
+      setBlurNotice(t("blurTooLong", { hardMax: limit.hardMax, charCount }));
     } else {
       setBlurNotice(null);
     }
@@ -224,21 +226,24 @@ export function WritingEditor({
       <Space wrap>
         <AutosaveBadge status={status} lastSavedAt={lastSavedAt} />
         <Text type={inRecommended ? "success" : "secondary"}>
-          {charCount} / {limit.hardMax}자{" "}
+          {t("charCount", { charCount, hardMax: limit.hardMax })}{" "}
           {limit.recommendedMin !== limit.hardMin ||
           limit.recommendedMax !== limit.hardMax
-            ? `(권장 ${limit.recommendedMin}-${limit.recommendedMax}자)`
-            : `(최소 ${limit.hardMin}자)`}
+            ? t("recommendedRange", {
+                min: limit.recommendedMin,
+                max: limit.recommendedMax,
+              })
+            : t("minOnly", { min: limit.hardMin })}
           {inRecommended ? " ✓" : ""}
         </Text>
         {/* D-M3 §5 — 자동 저장 끄기/켜기 CTA. */}
         <Button size="small" type="link" onClick={onToggleAutosave}>
-          {autosaveEnabled ? "자동 저장 끄기" : "자동 저장 켜기"}
+          {autosaveEnabled ? t("autosaveOff") : t("autosaveOn")}
         </Button>
       </Space>
       {!autosaveEnabled ? (
         <Text type="warning" style={{ fontSize: 12 }}>
-          자동 저장이 꺼져 있어요. 변경 후 직접 임시 저장을 눌러 주세요.
+          {t("autosaveDisabledNotice")}
         </Text>
       ) : null}
       <Input.TextArea
@@ -249,8 +254,8 @@ export function WritingEditor({
         maxLength={limit.hardMax}
         placeholder={
           isShortAnswer(questionNo)
-            ? "답안을 짧고 명확하게 작성하세요."
-            : "글의 구조를 갖춰 문장을 작성하세요."
+            ? t("placeholderShort")
+            : t("placeholderLong")
         }
         disabled={submit.isPending}
       />
@@ -268,14 +273,14 @@ export function WritingEditor({
           loading={status === "syncing" && upsert.isPending}
           disabled={submit.isPending || text.length === 0}
         >
-          임시 저장
+          {t("saveDraft")}
         </Button>
         <Button
           type="primary"
           onClick={() => setConfirmOpen(true)}
           disabled={!submittable || submit.isPending}
         >
-          제출하기
+          {t("submit")}
         </Button>
       </Space>
 

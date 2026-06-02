@@ -1,6 +1,7 @@
 "use client";
 
 import { Card, Col, Empty, Row, Statistic, Typography } from "antd";
+import { useTranslations } from "next-intl";
 
 const { Text } = Typography;
 
@@ -26,10 +27,12 @@ export function ComparisonKpiBlock({
   changedDimensions,
   hasPrevious,
 }: Props) {
+  const t = useTranslations("reports.kpi");
+
   if (currentScore === null) {
     return (
       <Card>
-        <Empty description="이번 답안의 점수를 산출하지 못해 KPI를 계산할 수 없어요." />
+        <Empty description={t("emptyScore")} />
       </Card>
     );
   }
@@ -47,12 +50,16 @@ export function ComparisonKpiBlock({
     <Card>
       <Row gutter={[16, 16]}>
         <Col xs={24} md={8}>
-          <Statistic title="현재 총점" value={currentScore} suffix="점" />
+          <Statistic
+            title={t("currentTotal")}
+            value={currentScore}
+            suffix={t("suffixPoint")}
+          />
         </Col>
         <Col xs={24} md={8}>
           {hasPrevious && scoreDelta !== null ? (
             <Statistic
-              title="개선 폭"
+              title={t("improvement")}
               value={Math.abs(scoreDelta)}
               precision={1}
               valueStyle={{ color: deltaColor }}
@@ -61,15 +68,15 @@ export function ComparisonKpiBlock({
                   {scoreDelta > 0 ? "▲" : scoreDelta < 0 ? "▼" : "—"}
                 </span>
               }
-              suffix="점"
+              suffix={t("suffixPoint")}
             />
           ) : (
             <Statistic
-              title="개선 폭"
+              title={t("improvement")}
               value="—"
               formatter={() => (
                 <Text type="secondary" style={{ fontSize: 16 }}>
-                  비교 대상 없음
+                  {t("noComparison")}
                 </Text>
               )}
             />
@@ -77,15 +84,15 @@ export function ComparisonKpiBlock({
         </Col>
         <Col xs={24} md={8}>
           <Statistic
-            title="변화한 항목"
+            title={t("changedDimensions")}
             value={hasPrevious ? changedDimensions : 0}
-            suffix={hasPrevious ? "개" : ""}
+            suffix={hasPrevious ? t("suffixCount") : ""}
             formatter={
               hasPrevious
                 ? undefined
                 : () => (
                     <Text type="secondary" style={{ fontSize: 16 }}>
-                      단일 결과
+                      {t("singleResult")}
                     </Text>
                   )
             }

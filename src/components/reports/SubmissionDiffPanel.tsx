@@ -1,6 +1,7 @@
 "use client";
 
 import { Card, Col, Empty, Row, Typography } from "antd";
+import { useTranslations } from "next-intl";
 
 const { Paragraph, Title } = Typography;
 
@@ -10,11 +11,12 @@ type Props = {
 };
 
 export function SubmissionDiffPanel({ currentText, previousText }: Props) {
+  const t = useTranslations("reports.diff");
   return (
     <Row gutter={[12, 12]}>
       <Col xs={24} md={12}>
         <Card size="small">
-          <Title level={5}>이번 답안</Title>
+          <Title level={5}>{t("currentAnswer")}</Title>
           <Paragraph style={{ whiteSpace: "pre-line" }}>
             {currentText || "—"}
           </Paragraph>
@@ -22,13 +24,13 @@ export function SubmissionDiffPanel({ currentText, previousText }: Props) {
       </Col>
       <Col xs={24} md={12}>
         <Card size="small">
-          <Title level={5}>이전 답안</Title>
+          <Title level={5}>{t("previousAnswer")}</Title>
           {previousText ? (
             <Paragraph style={{ whiteSpace: "pre-line" }}>
               {previousText}
             </Paragraph>
           ) : (
-            <Empty description="이전 답안 없음" />
+            <Empty description={t("noPreviousAnswer")} />
           )}
         </Card>
       </Col>

@@ -1,6 +1,7 @@
 "use client";
 
 import { Alert, Space } from "antd";
+import { useTranslations } from "next-intl";
 import { DetailedFeedbackPanel } from "./DetailedFeedbackPanel";
 import { DimensionCardGrid } from "./DimensionCardGrid";
 import { FeedbackPendingPanel } from "./FeedbackPendingPanel";
@@ -44,6 +45,8 @@ export function FeedbackPageContent({
   userId,
   saveLocked = false,
 }: Props) {
+  const t = useTranslations("feedback.page");
+  const tActions = useTranslations("feedback.actions");
   const router = useRouter();
   const status = submission.feedback_status;
 
@@ -76,8 +79,8 @@ export function FeedbackPageContent({
       <Alert
         type="info"
         showIcon
-        message="피드백을 불러오지 못했어요"
-        description="잠시 후 다시 시도하거나 화면을 새로고침해 주세요."
+        message={t("loadFailedTitle")}
+        description={t("loadFailedDescription")}
       />
     );
   }
@@ -92,8 +95,8 @@ export function FeedbackPageContent({
         <Alert
           type="warning"
           showIcon
-          message="일부 분석만 완료됐어요"
-          description="이번 답안은 일부 항목만 분석됐어요. 아래는 완료된 결과예요. 누락된 항목은 다시 분석하면 채워질 수 있어요."
+          message={t("partialTitle")}
+          description={t("partialDescription")}
         />
       ) : null}
 
@@ -121,7 +124,9 @@ export function FeedbackPageContent({
         retryHref={`/writing/${submission.question_no}?problem=${submission.problem_id}`}
         nextHref="/practice/next"
         withPdf
-        retryLabel={withSentences ? "다시 작성" : "다시 풀기"}
+        retryLabel={
+          withSentences ? tActions("retryWriting") : tActions("retryDefault")
+        }
         saveLocked={saveLocked}
       />
     </Space>

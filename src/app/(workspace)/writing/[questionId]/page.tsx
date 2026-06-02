@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { WritingPageContent } from "@/components/writing/WritingPageContent";
 import type { ProblemAsset } from "@/components/writing/ReferenceMaterials";
@@ -8,7 +9,10 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getActiveDraft, getWritingProblem } from "@/lib/writing/server";
 import { isQuestionNo } from "@/lib/writing/types";
 
-export const metadata: Metadata = { title: "쓰기 — TALKPIK" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("writing.page");
+  return { title: t("metaTitle") };
+}
 
 const PROBLEM_ASSETS_BUCKET = "problem-assets";
 

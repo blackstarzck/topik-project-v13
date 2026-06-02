@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Card, Empty, Image, Space, Typography } from "antd";
+import { useTranslations } from "next-intl";
 
 const { Text } = Typography;
 
@@ -27,10 +28,11 @@ type Props = {
  * - 오디오: <audio> controls (준비된 자료가 있을 때만).
  */
 export function ReferenceMaterials({ assets, captions }: Props) {
+  const t = useTranslations("writing.reference");
   if (assets.length === 0) return null;
 
   return (
-    <Card size="small" title="참고 자료">
+    <Card size="small" title={t("cardTitle")}>
       <Space direction="vertical" size="middle" style={{ width: "100%" }}>
         {assets.map((asset) => (
           <AssetView
@@ -44,11 +46,6 @@ export function ReferenceMaterials({ assets, captions }: Props) {
   );
 }
 
-function altTextFor(asset: ProblemAsset, caption?: string): string {
-  if (caption && caption.length > 0) return caption.slice(0, 40);
-  return asset.assetType === "image" ? "문제 참고 이미지" : "문제 참고 음성";
-}
-
 function AssetView({
   asset,
   caption,
@@ -56,8 +53,15 @@ function AssetView({
   asset: ProblemAsset;
   caption?: string;
 }) {
+  const t = useTranslations("writing.reference");
   const [failed, setFailed] = useState(false);
-  const alt = altTextFor(asset, caption);
+  // 캡션이 있으면 alt 로 사용(40자 제한), 없으면 유형별 기본 대체 텍스트.
+  const alt =
+    caption && caption.length > 0
+      ? caption.slice(0, 40)
+      : asset.assetType === "image"
+        ? t("altImage")
+        : t("altAudio");
 
   if (asset.assetType === "audio") {
     return (
@@ -86,7 +90,7 @@ function AssetView({
       >
         <Empty
           image={Empty.PRESENTED_IMAGE_SIMPLE}
-          description={`이미지를 불러오지 못했어요. (${alt})`}
+          description={t("imageLoadFailed", { alt })}
         />
       </div>
     );
@@ -99,7 +103,7 @@ function AssetView({
         alt={alt}
         style={{ maxWidth: "100%", height: "auto" }}
         onError={() => setFailed(true)}
-        preview={{ mask: "확대 보기" }}
+        preview={{ mask: t("zoom") }}
       />
       {caption ? (
         <Text type="secondary" style={{ display: "block", fontSize: 12 }}>

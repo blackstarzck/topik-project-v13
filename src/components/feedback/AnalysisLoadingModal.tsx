@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Button, Card, Space, Steps, Typography } from "antd";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 
 import { AnalysisCharacter } from "./AnalysisCharacter";
@@ -12,13 +13,9 @@ const { Paragraph, Text, Title } = Typography;
  * D-M2 분석 진행 단계 (description region 3).
  * 제약: 단계 4개 이하, 현재 단계만 강조, 예상 시간 범위 표시.
  * 문법 → 구성 → 표현 → 점수 산출 (functional-spec 주요 기능 순서).
+ * 단계 라벨은 카탈로그(feedback.analysis.steps)에서 t()로 해석한다.
  */
-const STEPS = [
-  { title: "문법 분석", description: "문법 패턴과 어미 사용을 확인 중." },
-  { title: "구성 분석", description: "문단 구성과 흐름을 확인 중." },
-  { title: "표현 분석", description: "어휘와 표현을 다듬는 중." },
-  { title: "점수 산출", description: "영역별 점수를 계산 중." },
-];
+const STEP_KEYS = ["grammar", "structure", "expression", "score"] as const;
 
 /** description region 4: 10초 이상 지연 시 안내 갱신. */
 const SLOW_NOTICE_MS = 10_000;
@@ -116,6 +113,7 @@ function AnalysisLoadingModalContent({
     Props,
     "completeHref" | "onComplete" | "reduceMotion" | "onCancel" | "onRetry"
   >) {
+  const t = useTranslations("feedback.analysis");
   const router = useRouter();
   const reduced = useReducedMotion(reduceMotion);
   const [autoStep, setAutoStep] = useState(0);
@@ -127,14 +125,14 @@ function AnalysisLoadingModalContent({
   const active = status === "pending" || status === "analyzing";
 
   // reduced-motion이면 마지막 단계를 정적으로 고정한다(렌더 중 파생, effect+setState 아님).
-  const step = reduced ? STEPS.length - 1 : autoStep;
+  const step = reduced ? STEP_KEYS.length - 1 : autoStep;
 
   // 단계 자동 진행 — '점수 산출'(마지막) 직전까지만 자동 전진하고 멈춘다.
   // reduced-motion이면 위에서 정적 고정하므로 타이머를 돌리지 않는다.
   useEffect(() => {
     if (!active || reduced) return;
     const interval = setInterval(() => {
-      setAutoStep((s) => Math.min(s + 1, STEPS.length - 1));
+      setAutoStep((s) => Math.min(s + 1, STEP_KEYS.length - 1));
     }, STEP_ADVANCE_MS);
     return () => clearInterval(interval);
   }, [active, reduced]);
@@ -156,9 +154,7 @@ function AnalysisLoadingModalContent({
 
   function handleCancel() {
     // description region 1 예외: 뒤로가기 시 분석 중단 경고.
-    const ok = window.confirm(
-      "분석이 아직 진행 중이에요. 지금 나가면 분석이 중단될 수 있어요. 나가시겠어요?",
-    );
+    const ok = window.confirm(t("cancelConfirm"));
     if (!ok) return;
     if (onCancel) onCancel();
     else router.back();
@@ -181,24 +177,18 @@ function AnalysisLoadingModalContent({
         <Alert
           type="error"
           showIcon
-          message="분석에 실패했어요"
-          description="일시적인 문제로 첨삭을 만들지 못했어요. 잠시 후 다시 시도하거나 도움이 필요하면 고객지원에 알려 주세요."
+          message={t("failedTitle")}
+          description={t("failedDescription")}
         />
         <Space wrap style={{ marginTop: 16 }}>
           {onRetry ? (
             <Button type="primary" onClick={onRetry}>
-              다시 분석하기
+              {t("retryButton")}
             </Button>
           ) : null}
           {/* 고객지원 연동 예정 — 실제 채널 연결 전까지 안내만. */}
-          <Button
-            onClick={() =>
-              window.alert(
-                "고객지원 연결은 준비 중이에요. 문제가 계속되면 설정 > 도움말을 확인해 주세요.",
-              )
-            }
-          >
-            고객지원 문의
+          <Button onClick={() => window.alert(t("supportAlert"))}>
+            {t("supportButton")}
           </Button>
         </Space>
       </Card>
@@ -212,8 +202,8 @@ function AnalysisLoadingModalContent({
         <Alert
           type="success"
           showIcon
-          message="분석이 끝났어요"
-          description="결과 화면으로 이동합니다."
+          message={t("completeTitle")}
+          description={t("completeDescription")}
         />
       </Card>
     );
@@ -222,34 +212,34 @@ function AnalysisLoadingModalContent({
   return (
     <Card style={{ maxWidth: 480, margin: "0 auto" }}>
       <Title level={5} style={{ marginTop: 0, textAlign: "center" }}>
-        AI가 답안을 분석하고 있어요
+        {t("title")}
       </Title>
       <AnalysisCharacter step={step} reduceMotion={reduced} />
       <Steps
         size="small"
         current={step}
         direction="vertical"
-        items={STEPS.map((s) => ({ title: s.title, description: s.description }))}
+        items={STEP_KEYS.map((k) => ({
+          title: t(`steps.${k}Title`),
+          description: t(`steps.${k}Description`),
+        }))}
         style={{ marginTop: 16 }}
       />
       <Paragraph style={{ marginTop: 16, marginBottom: 0 }}>
-        <Text type="secondary">
-          분석이 끝나면 자동으로 결과 화면으로 이동합니다. 보통 몇 초에서 1분 정도
-          걸려요.
-        </Text>
+        <Text type="secondary">{t("autoMoveNote")}</Text>
       </Paragraph>
       {slow ? (
         <Alert
           type="warning"
           showIcon
           style={{ marginTop: 12 }}
-          message="분석이 평소보다 오래 걸리고 있어요"
-          description={`잠시만 더 기다려 주세요. ${retryAt} 이후에도 끝나지 않으면 다시 시도할 수 있어요.`}
+          message={t("slowTitle")}
+          description={t("slowDescription", { retryAt })}
         />
       ) : null}
       <div style={{ marginTop: 12, textAlign: "center" }}>
         <Button type="text" onClick={handleCancel}>
-          분석 중단하고 나가기
+          {t("cancelButton")}
         </Button>
       </div>
     </Card>

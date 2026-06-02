@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { ComparisonReportView } from "@/components/reports/ComparisonReportView";
 import type { ChartDatum } from "@/components/reports/ScoreComparisonChart";
@@ -14,7 +15,10 @@ import {
   type FeedbackDimensionScoreRow,
 } from "@/lib/writing/types";
 
-export const metadata: Metadata = { title: "비교 리포트 — TALKPIK" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("reports.page");
+  return { title: t("metaTitle") };
+}
 
 /** dimension → 0..100 정규화 점수 맵. score_max 차이를 보정한다. */
 function normalizedScores(

@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Space, notification } from "antd";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { triggerPdfExport } from "@/lib/export/pdf-export";
@@ -20,7 +21,9 @@ type Props = {
   withPdf?: boolean;
   /**
    * 주요 CTA 라벨. E-01 단답 = "다시 풀기", E-02 장문 = "다시 작성"
-   * (description region 4 wording differs per surface).
+   * (description region 4 wording differs per surface). 미지정 시
+   * feedback.actions.retryDefault로 해석한다. 호출부에서 t()로 해석한 문구를
+   * 넘기면 그대로 사용(번역 키 캐스트 회피).
    */
   retryLabel?: string;
   /** 보관함 저장 권한 잠금 (보기 전용 공유 등). */
@@ -42,14 +45,16 @@ export function NextActionBar({
   retryHref,
   nextHref,
   withPdf = true,
-  retryLabel = "다시 풀기",
+  retryLabel,
   saveLocked = false,
   alreadySaved = false,
 }: Props) {
+  const t = useTranslations("feedback.actions");
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [pdfBusy, setPdfBusy] = useState(false);
   const compare = useCreateComparisonReport();
+  const resolvedRetryLabel = retryLabel ?? t("retryDefault");
 
   function onCompare() {
     if (busy || compare.isPending) return; // 중복 클릭 차단
@@ -63,7 +68,7 @@ export function NextActionBar({
         onError: (e) => {
           setBusy(false);
           notification.error({
-            message: "비교 리포트 생성 실패",
+            message: t("compareFailedTitle"),
             description: e.message,
           });
         },
@@ -76,11 +81,11 @@ export function NextActionBar({
     setPdfBusy(true);
     try {
       await triggerPdfExport({ sourceType: "submission", sourceId: submissionId });
-      notification.success({ message: "PDF 출력 대화상자가 열렸습니다." });
+      notification.success({ message: t("pdfSuccess") });
     } catch {
       notification.error({
-        message: "PDF 저장에 실패했어요",
-        description: "내 보관함에서 다시 저장해 보세요.",
+        message: t("pdfFailedTitle"),
+        description: t("pdfFailedDescription"),
       });
     } finally {
       setPdfBusy(false);
@@ -90,9 +95,9 @@ export function NextActionBar({
   return (
     <Space wrap size={[8, 8]} style={{ width: "100%" }}>
       <Button type="primary" onClick={() => router.push(retryHref)}>
-        {retryLabel}
+        {resolvedRetryLabel}
       </Button>
-      <Button onClick={() => router.push(nextHref)}>다음 문제</Button>
+      <Button onClick={() => router.push(nextHref)}>{t("nextProblem")}</Button>
       <SaveToLibraryButton
         submissionId={submissionId}
         userId={userId}
@@ -101,11 +106,11 @@ export function NextActionBar({
       />
       {withPdf ? (
         <Button onClick={onPdf} loading={pdfBusy}>
-          PDF 저장
+          {t("savePdf")}
         </Button>
       ) : null}
       <Button onClick={onCompare} loading={compare.isPending || busy}>
-        비교 리포트
+        {t("compareReport")}
       </Button>
     </Space>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { Segmented, Space, Typography } from "antd";
+import { useTranslations } from "next-intl";
 
 import type { ChecklistItemStatus } from "@/lib/writing/types";
 
@@ -12,13 +13,13 @@ type Props = {
   onChange: (next: ChecklistItemStatus) => void;
 };
 
-const OPTIONS: { label: string; value: ChecklistItemStatus }[] = [
-  { label: "⚪ 아직", value: "unchecked" },
-  { label: "🟡 부분", value: "warning" },
-  { label: "🟢 완료", value: "complete" },
-];
-
 export function ChecklistRow({ label, status, onChange }: Props) {
+  const t = useTranslations("writing.checklist");
+  const OPTIONS: { label: string; value: ChecklistItemStatus }[] = [
+    { label: t("statusUnchecked"), value: "unchecked" },
+    { label: t("statusWarning"), value: "warning" },
+    { label: t("statusComplete"), value: "complete" },
+  ];
   return (
     <Space
       direction="vertical"

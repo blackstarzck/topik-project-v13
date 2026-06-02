@@ -1,6 +1,7 @@
 "use client";
 
 import { Typography } from "antd";
+import { useTranslations } from "next-intl";
 
 const { Text, Title } = Typography;
 
@@ -16,6 +17,7 @@ type Props = {
  * upstream sections.
  */
 export function ManuscriptPreview({ text, charsPerLine = 20 }: Props) {
+  const t = useTranslations("writing.editor");
   const lines: string[][] = [];
   const chars = Array.from(text); // grapheme-safe enough for KO
   for (let i = 0; i < chars.length; i += charsPerLine) {
@@ -27,9 +29,9 @@ export function ManuscriptPreview({ text, charsPerLine = 20 }: Props) {
   }
 
   return (
-    <div aria-label="원고지 미리보기">
-      <Title level={5}>원고지 미리보기</Title>
-      <Text type="secondary">한 줄 {charsPerLine}자 기준</Text>
+    <div aria-label={t("manuscriptTitle")}>
+      <Title level={5}>{t("manuscriptTitle")}</Title>
+      <Text type="secondary">{t("manuscriptPerLine", { charsPerLine })}</Text>
       <div
         style={{
           marginTop: 8,

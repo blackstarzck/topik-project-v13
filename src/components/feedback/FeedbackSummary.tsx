@@ -1,6 +1,7 @@
 "use client";
 
 import { Alert, Card, Statistic, Typography } from "antd";
+import { useTranslations } from "next-intl";
 import type { WritingFeedbackRow } from "@/lib/writing/types";
 
 const { Paragraph } = Typography;
@@ -14,6 +15,7 @@ type Props = { feedback: WritingFeedbackRow };
  *       분석 실패 안내를 표시한다.
  */
 export function FeedbackSummary({ feedback }: Props) {
+  const t = useTranslations("feedback.summary");
   const score = feedback.score_total ?? null;
   const max = feedback.score_max ?? 100;
   const scoreFailed = feedback.status === "failed" || score === null;
@@ -24,8 +26,8 @@ export function FeedbackSummary({ feedback }: Props) {
         <Alert
           type="warning"
           showIcon
-          message="점수를 산출하지 못했어요"
-          description="이번 답안은 점수 계산에 실패했어요. 아래 분석 결과만 참고하거나, 다시 분석을 시도해 주세요."
+          message={t("scoreFailedTitle")}
+          description={t("scoreFailedDescription")}
         />
       </Card>
     );
@@ -33,13 +35,13 @@ export function FeedbackSummary({ feedback }: Props) {
 
   return (
     <Card>
-      <Statistic title="총평 점수" value={score} suffix={`/ ${max}`} />
+      <Statistic title={t("scoreTitle")} value={score} suffix={`/ ${max}`} />
       <Paragraph
         type="secondary"
         style={{ marginTop: 12, marginBottom: 0 }}
         ellipsis={{ rows: 3 }}
       >
-        {feedback.overall_summary ?? "총평이 준비되는 중입니다."}
+        {feedback.overall_summary ?? t("overallFallback")}
       </Paragraph>
     </Card>
   );

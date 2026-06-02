@@ -1,50 +1,11 @@
 "use client";
 
 import { Button, Card, Col, Empty, Row, Space, Tag, Typography } from "antd";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import type { FeedbackDimensionScoreRow } from "@/lib/writing/types";
 
 const { Paragraph, Text, Title } = Typography;
-
-/** 추천 사유 1줄(description region 3 제약). 제목은 28자 이하로 고정. */
-const DIMENSION_RECO: Record<
-  FeedbackDimensionScoreRow["dimension"],
-  { title: string; reason: string }
-> = {
-  grammar: {
-    title: "문법 집중 연습",
-    reason: "문법 정확도를 높이면 점수가 빠르게 오를 수 있어요.",
-  },
-  vocab: {
-    title: "어휘 다듬기 연습",
-    reason: "표현을 다양하게 쓰면 설득력이 올라가요.",
-  },
-  structure: {
-    title: "글 구성 연습",
-    reason: "주장과 근거 순서를 정리하면 글이 또렷해져요.",
-  },
-  content: {
-    title: "내용 보강 연습",
-    reason: "예시와 근거를 더하면 주장에 힘이 실려요.",
-  },
-  expression: {
-    title: "표현력 연습",
-    reason: "같은 뜻을 여러 방식으로 쓰는 연습이 도움이 돼요.",
-  },
-  topic_fit: {
-    title: "주제 적합성 연습",
-    reason: "질문 조건을 다시 확인하면 점수로 이어지기 쉬워요.",
-  },
-};
-
-const DIMENSION_LABEL: Record<FeedbackDimensionScoreRow["dimension"], string> = {
-  grammar: "문법",
-  vocab: "어휘",
-  structure: "구성",
-  content: "내용",
-  expression: "표현",
-  topic_fit: "주제 적합성",
-};
 
 type Props = {
   /** 이번 제출의 영역별 점수. weakness 순으로 정렬해 상위 3개를 카드로 만든다. */
@@ -58,8 +19,10 @@ type Props = {
  *
  * 답안의 약점(낮은 점수 또는 weakness_level 높음)을 근거로 실제 추천 카드를
  * 만든다. 카드 클릭은 약점 기반 추천 화면으로 연결한다(추천 엔진 본문은 X-07).
+ * 추천 사유 1줄(description region 3 제약). 제목은 28자 이하로 고정.
  */
 export function FeedbackRecommendationCards({ dimensions }: Props) {
+  const t = useTranslations("feedback.recommendations");
   const router = useRouter();
 
   // 약점 순 정렬: weakness_level 높은 순 → 점수 낮은 순. 점수가 있는 것만.
@@ -77,14 +40,14 @@ export function FeedbackRecommendationCards({ dimensions }: Props) {
     return (
       <Card>
         <Title level={5} style={{ marginTop: 0 }}>
-          추천 학습
+          {t("cardTitle")}
         </Title>
-        <Empty description="이번 답안에서는 추천할 약점 영역을 찾지 못했어요.">
+        <Empty description={t("emptyDescription")}>
           <Button
             type="primary"
             onClick={() => router.push("/practice/problems")}
           >
-            문제 목록 보기
+            {t("viewProblemList")}
           </Button>
         </Empty>
       </Card>
@@ -94,14 +57,15 @@ export function FeedbackRecommendationCards({ dimensions }: Props) {
   return (
     <Card>
       <Title level={5} style={{ marginTop: 0 }}>
-        추천 학습
+        {t("cardTitle")}
       </Title>
       <Paragraph type="secondary" style={{ marginBottom: 12 }}>
-        이번 답안에서 보강하면 좋은 영역을 추천해요.
+        {t("intro")}
       </Paragraph>
       <Row gutter={[12, 12]}>
         {ranked.map((d) => {
-          const reco = DIMENSION_RECO[d.dimension];
+          const recoTitle = t(`reco.${d.dimension}.title`);
+          const recoReason = t(`reco.${d.dimension}.reason`);
           return (
             <Col key={d.dimension} xs={24} md={8}>
               <Card
@@ -114,8 +78,8 @@ export function FeedbackRecommendationCards({ dimensions }: Props) {
                 style={{ height: "100%" }}
               >
                 <Space direction="vertical" size={4} style={{ width: "100%" }}>
-                  <Tag color="blue">{DIMENSION_LABEL[d.dimension]}</Tag>
-                  <Text strong>{reco.title}</Text>
+                  <Tag color="blue">{t(`label.${d.dimension}`)}</Tag>
+                  <Text strong>{recoTitle}</Text>
                   <Text
                     type="secondary"
                     style={{
@@ -124,9 +88,9 @@ export function FeedbackRecommendationCards({ dimensions }: Props) {
                       textOverflow: "ellipsis",
                       whiteSpace: "nowrap",
                     }}
-                    title={reco.reason}
+                    title={recoReason}
                   >
-                    {reco.reason}
+                    {recoReason}
                   </Text>
                 </Space>
               </Card>

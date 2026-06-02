@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button, Card, Empty, Space, Table, Typography } from "antd";
+import { useTranslations } from "next-intl";
 import {
   Bar,
   BarChart,
@@ -15,14 +16,15 @@ import {
 
 const { Title } = Typography;
 
-const DIMENSION_LABELS: Record<string, string> = {
-  grammar: "문법",
-  vocab: "어휘",
-  structure: "구성",
-  content: "내용",
-  expression: "표현",
-  topic_fit: "주제 적합성",
-};
+// dimension 코드 → reports.dimensions 카탈로그 키. 라벨 문구는 t()로 해석한다.
+const DIMENSION_KEYS = [
+  "grammar",
+  "vocab",
+  "structure",
+  "content",
+  "expression",
+  "topic_fit",
+] as const;
 
 export type ChartDatum = {
   dimension: string;
@@ -47,27 +49,38 @@ type Props = {
  * 비면 빈 상태를 보여준다.
  */
 export function ScoreComparisonChart({ data, hasPrevious }: Props) {
+  const t = useTranslations("reports.chart");
+  const tDim = useTranslations("reports.dimensions");
   const [tableFallback, setTableFallback] = useState(false);
+
+  // dimension 코드를 카탈로그 라벨로. 알 수 없는 코드는 코드 그대로 폴백.
+  const dimLabel = (code: string) =>
+    (DIMENSION_KEYS as readonly string[]).includes(code)
+      ? tDim(code as (typeof DIMENSION_KEYS)[number])
+      : code;
+  // 점수 포맷("{value}점"). null이면 대시.
+  const fmt = (v: number | null) =>
+    v === null ? "—" : t("scorePoint", { value: v });
 
   if (data.length === 0) {
     return (
       <Card>
-        <Empty description="항목별 점수 데이터가 없어 그래프를 그릴 수 없어요." />
+        <Empty description={t("emptyChart")} />
       </Card>
     );
   }
 
   const chartData = data.map((d) => ({
-    name: DIMENSION_LABELS[d.dimension] ?? d.dimension,
-    이전: d.previous,
-    현재: d.current,
+    name: dimLabel(d.dimension),
+    previous: d.previous,
+    current: d.current,
   }));
 
   if (tableFallback) {
     return (
       <Card>
         <Title level={5} style={{ marginTop: 0 }}>
-          항목별 점수 (표)
+          {t("tableTitle")}
         </Title>
         <Table
           dataSource={data.map((d) => ({ key: d.dimension, ...d }))}
@@ -75,14 +88,14 @@ export function ScoreComparisonChart({ data, hasPrevious }: Props) {
           size="small"
           columns={[
             {
-              title: "항목",
+              title: t("colDimension"),
               dataIndex: "dimension",
-              render: (v: string) => DIMENSION_LABELS[v] ?? v,
+              render: (v: string) => dimLabel(v),
             },
             ...(hasPrevious
-              ? [{ title: "이전", dataIndex: "previous", render: fmt }]
+              ? [{ title: t("seriesPrevious"), dataIndex: "previous", render: fmt }]
               : []),
-            { title: "현재", dataIndex: "current", render: fmt },
+            { title: t("seriesCurrent"), dataIndex: "current", render: fmt },
           ]}
         />
       </Card>
@@ -93,16 +106,21 @@ export function ScoreComparisonChart({ data, hasPrevious }: Props) {
     <Card>
       <Space style={{ width: "100%", justifyContent: "space-between" }}>
         <Title level={5} style={{ marginTop: 0 }}>
-          항목별 점수 비교
+          {t("title")}
         </Title>
         <Button size="small" type="link" onClick={() => setTableFallback(true)}>
-          표로 보기
+          {t("viewAsTable")}
         </Button>
       </Space>
       {/* 모바일 가로 스크롤 대비 최소 너비 확보. */}
       <div style={{ width: "100%", overflowX: "auto" }}>
         <div style={{ minWidth: 360, height: 280 }}>
-          <ChartBody chartData={chartData} hasPrevious={hasPrevious} />
+          <ChartBody
+            chartData={chartData}
+            hasPrevious={hasPrevious}
+            previousLabel={t("seriesPrevious")}
+            currentLabel={t("seriesCurrent")}
+          />
         </div>
       </div>
     </Card>
@@ -112,13 +130,18 @@ export function ScoreComparisonChart({ data, hasPrevious }: Props) {
 function ChartBody({
   chartData,
   hasPrevious,
+  previousLabel,
+  currentLabel,
 }: {
-  chartData: { name: string; 이전: number | null; 현재: number | null }[];
+  chartData: { name: string; previous: number | null; current: number | null }[];
   hasPrevious: boolean;
+  previousLabel: string;
+  currentLabel: string;
 }) {
   // JSX를 try/catch로 감싸도 React는 렌더를 지연 처리해 실제 렌더 오류를 잡지
   // 못한다. 차트 렌더 실패 시 복구 경로는 위의 '표로 보기'(tableFallback)이며,
-  // 그래서 여기서는 차트만 반환한다.
+  // 그래서 여기서는 차트만 반환한다. dataKey는 안정적 영문 키로 두고, 범례
+  // 라벨은 name 프로퍼티로 해석한 문구를 전달한다.
   return (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart data={chartData} margin={{ top: 8, right: 8, left: -16, bottom: 8 }}>
@@ -127,13 +150,11 @@ function ChartBody({
         <YAxis domain={[0, 100]} fontSize={12} />
         <Tooltip />
         <Legend />
-        {hasPrevious ? <Bar dataKey="이전" fill="#bfbfbf" /> : null}
-        <Bar dataKey="현재" fill="#1677ff" />
+        {hasPrevious ? (
+          <Bar dataKey="previous" name={previousLabel} fill="#bfbfbf" />
+        ) : null}
+        <Bar dataKey="current" name={currentLabel} fill="#1677ff" />
       </BarChart>
     </ResponsiveContainer>
   );
-}
-
-function fmt(v: number | null) {
-  return v === null ? "—" : `${v}점`;
 }

@@ -1,4 +1,5 @@
 import { Button, Col, Empty, Row, Space } from "antd";
+import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { QuestionPrompt } from "./QuestionPrompt";
 import { HelpPanel } from "./HelpPanel";
@@ -19,7 +20,7 @@ type Props = {
   rubric?: ProblemRubric;
 };
 
-export function WritingPageContent({
+export async function WritingPageContent({
   questionNo,
   userId,
   problem,
@@ -27,18 +28,17 @@ export function WritingPageContent({
   assets = [],
   rubric = null,
 }: Props) {
+  const t = await getTranslations("writing.page");
   if (!problem) {
     // D-01 §2 예외 — 지문 로드 실패/문제 없음: 재시도 + 문제 목록 복귀 동선.
     return (
-      <Empty
-        description={`${questionNo}번 문제 지문을 불러오지 못했어요.`}
-      >
+      <Empty description={t("problemLoadFailed", { questionNo })}>
         <Space>
           <Link href={`/writing/${questionNo}` as never}>
-            <Button type="primary">다시 시도</Button>
+            <Button type="primary">{t("retry")}</Button>
           </Link>
           <Link href={"/practice/problems" as never}>
-            <Button>문제 목록으로</Button>
+            <Button>{t("toProblemList")}</Button>
           </Link>
         </Space>
       </Empty>

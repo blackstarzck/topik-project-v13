@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Card, Empty, List, Space, Tag, Typography } from "antd";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import type { SentenceFeedbackRow } from "@/lib/writing/types";
 
@@ -21,12 +22,13 @@ type Props = {
  *       재분석을 제공한다.
  */
 export function SentenceFeedbackList({ rows, onReanalyze }: Props) {
+  const t = useTranslations("feedback.sentence");
   const [expanded, setExpanded] = useState(false);
 
   if (rows.length === 0) {
     return (
-      <Card size="small" title="문장별 첨삭">
-        <Empty description="문장별 첨삭이 없습니다." />
+      <Card size="small" title={t("cardTitle")}>
+        <Empty description={t("emptyDescription")} />
       </Card>
     );
   }
@@ -35,7 +37,7 @@ export function SentenceFeedbackList({ rows, onReanalyze }: Props) {
   const hiddenCount = rows.length - visible.length;
 
   return (
-    <Card title="문장별 첨삭" size="small">
+    <Card title={t("cardTitle")} size="small">
       <List
         dataSource={visible}
         renderItem={(r) => {
@@ -56,7 +58,7 @@ export function SentenceFeedbackList({ rows, onReanalyze }: Props) {
                 {failed ? (
                   <div style={{ marginTop: 4 }}>
                     <Space size={8} wrap>
-                      <Tag color="default">첨삭 생성 실패</Tag>
+                      <Tag color="default">{t("failTag")}</Tag>
                       {onReanalyze ? (
                         <Button
                           size="small"
@@ -64,7 +66,7 @@ export function SentenceFeedbackList({ rows, onReanalyze }: Props) {
                           style={{ padding: 0 }}
                           onClick={onReanalyze}
                         >
-                          다시 분석하기
+                          {t("reanalyze")}
                         </Button>
                       ) : null}
                     </Space>
@@ -91,7 +93,7 @@ export function SentenceFeedbackList({ rows, onReanalyze }: Props) {
       {hiddenCount > 0 ? (
         <div style={{ textAlign: "center", marginTop: 8 }}>
           <Button type="link" onClick={() => setExpanded(true)}>
-            더보기 ({hiddenCount}개)
+            {t("showMore", { count: hiddenCount })}
           </Button>
         </div>
       ) : null}

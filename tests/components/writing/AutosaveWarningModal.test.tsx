@@ -1,12 +1,8 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-} from "@testing-library/react";
+import { cleanup, fireEvent, screen } from "@testing-library/react";
 
+import { renderWithIntl } from "../../test-utils/renderWithIntl";
 import { AutosaveWarningModal } from "../../../src/components/writing/AutosaveWarningModal";
 
 beforeEach(() => {
@@ -31,7 +27,7 @@ afterEach(() => cleanup());
 
 describe("AutosaveWarningModal", () => {
   it("renders nothing when trigger is null", () => {
-    const { container } = render(
+    const { container } = renderWithIntl(
       <AutosaveWarningModal
         trigger={null}
         lastSavedAt={null}
@@ -44,7 +40,7 @@ describe("AutosaveWarningModal", () => {
   });
 
   it("save_failure trigger shows failure title + last-saved time", () => {
-    render(
+    renderWithIntl(
       <AutosaveWarningModal
         trigger="save_failure"
         lastSavedAt="2026-05-26T08:30:00Z"
@@ -59,7 +55,7 @@ describe("AutosaveWarningModal", () => {
 
   it("disable_attempt trigger disables retry button", () => {
     const onRetry = vi.fn();
-    render(
+    renderWithIntl(
       <AutosaveWarningModal
         trigger="disable_attempt"
         lastSavedAt={null}
@@ -76,7 +72,7 @@ describe("AutosaveWarningModal", () => {
 
   it("exit_with_dirty trigger shows exit warning + invokes onProceed", () => {
     const onProceed = vi.fn();
-    render(
+    renderWithIntl(
       <AutosaveWarningModal
         trigger="exit_with_dirty"
         lastSavedAt={null}
@@ -95,7 +91,7 @@ describe("AutosaveWarningModal", () => {
 
   it("save_failure: clicking '지금 다시 시도' fires onRetry", () => {
     const onRetry = vi.fn();
-    render(
+    renderWithIntl(
       <AutosaveWarningModal
         trigger="save_failure"
         lastSavedAt={null}
@@ -110,7 +106,7 @@ describe("AutosaveWarningModal", () => {
 
   it("any trigger: clicking '자동 저장 유지' fires onKeep", () => {
     const onKeep = vi.fn();
-    render(
+    renderWithIntl(
       <AutosaveWarningModal
         trigger="save_failure"
         lastSavedAt={null}

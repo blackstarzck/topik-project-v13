@@ -2,6 +2,7 @@
 
 import { Alert, Button, Card, Space, Tooltip, Typography, notification } from "antd";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import type { ComparisonMetrics } from "@/lib/writing/comparison-service";
 import { logStudyEvent } from "@/lib/events/study-events";
@@ -38,6 +39,7 @@ export function ComparisonReportView({
   currentNorm,
   hasPrevious,
 }: Props) {
+  const t = useTranslations("reports.comparison");
   const router = useRouter();
   const [sharing, setSharing] = useState(false);
 
@@ -68,16 +70,16 @@ export function ComparisonReportView({
         typeof window !== "undefined" ? window.location.href : "";
       // 외부 공유 채널 연동 예정 — 우선 OS 공유 시트/클립보드로 정직하게 처리.
       if (typeof navigator !== "undefined" && navigator.share) {
-        await navigator.share({ title: "TALKPIK 비교 리포트", url });
+        await navigator.share({ title: t("shareTitle"), url });
       } else if (
         typeof navigator !== "undefined" &&
         navigator.clipboard
       ) {
         await navigator.clipboard.writeText(url);
-        notification.success({ message: "링크를 복사했어요." });
+        notification.success({ message: t("shareCopied") });
       } else {
         notification.info({
-          message: "공유 링크",
+          message: t("shareLink"),
           description: url,
         });
       }
@@ -92,10 +94,10 @@ export function ComparisonReportView({
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <Title level={4} style={{ margin: 0 }}>
-          비교 리포트
+          {t("heading")}
         </Title>
         <Button onClick={onShare} loading={sharing}>
-          공유
+          {t("share")}
         </Button>
       </div>
 
@@ -113,21 +115,23 @@ export function ComparisonReportView({
           <Alert
             type="warning"
             showIcon
-            message="요약을 생성하지 못했어요"
-            description="요약 생성에 실패했어요. 위의 KPI와 아래 지표로 변화를 확인하거나 다시 시도해 주세요."
+            message={t("narrativeFailedTitle")}
+            description={t("narrativeFailedDescription")}
             action={
               <Button size="small" onClick={() => router.refresh()}>
-                다시 시도
+                {t("retry")}
               </Button>
             }
           />
         ) : (
           <>
+            {/* narrative 본문은 comparison-service.generateNarrative()가
+                생성하는 서비스 계층 문구라 여기서 외부화하지 않는다. */}
             <Paragraph style={{ marginBottom: 8 }} ellipsis={{ rows: 3 }}>
               {narrative}
             </Paragraph>
             <Text type="secondary" style={{ fontSize: 12 }}>
-              요약은 AI가 두 답안을 비교해 자동으로 작성한 안내예요.
+              {t("narrativeDisclaimer")}
             </Text>
           </>
         )}
@@ -148,23 +152,23 @@ export function ComparisonReportView({
       {/* region 5 — 다음 CTA (대표 CTA 1개 + 후속 학습 경로, 중복 클릭 차단). */}
       <Card>
         <Title level={5} style={{ marginTop: 0 }}>
-          다음 학습 이어가기
+          {t("nextLearningTitle")}
         </Title>
         <Space wrap>
           <Button type="primary" onClick={() => router.push("/practice/next")}>
-            다음 문제
+            {t("nextProblem")}
           </Button>
           {weaknessDisabled ? (
-            <Tooltip title="비교할 이전 답안이 쌓이면 약점 추천을 볼 수 있어요.">
-              <Button disabled>약점 추천 (데이터 부족)</Button>
+            <Tooltip title={t("weaknessDisabledTooltip")}>
+              <Button disabled>{t("weaknessDisabled")}</Button>
             </Tooltip>
           ) : (
             <Button onClick={() => router.push("/practice/weakness")}>
-              약점 추천 보기
+              {t("weaknessView")}
             </Button>
           )}
           {retryHref ? (
-            <Button onClick={() => router.push(retryHref)}>다시 풀기</Button>
+            <Button onClick={() => router.push(retryHref)}>{t("retryProblem")}</Button>
           ) : null}
         </Space>
       </Card>

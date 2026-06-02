@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { notFound, redirect } from "next/navigation";
 import { FeedbackPageContent } from "@/components/feedback/FeedbackPageContent";
 import { requireUser } from "@/lib/auth/session";
 import { getFeedbackBundle, getSubmission } from "@/lib/writing/server";
 import { isLongForm, type QuestionNo } from "@/lib/writing/types";
 
-export const metadata: Metadata = { title: "장문 피드백 — TALKPIK" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("writing.page");
+  return { title: t("metaTitleFeedbackLong") };
+}
 
 export default async function LongFeedbackPage({
   params,

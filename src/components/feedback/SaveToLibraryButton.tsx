@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Tooltip, notification } from "antd";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useSaveLibraryItem } from "@/lib/library/mutations";
 
@@ -32,13 +33,14 @@ export function SaveToLibraryButton({
   initiallySaved = false,
   permissionLocked = false,
 }: Props) {
+  const t = useTranslations("feedback.actions.save");
   const save = useSaveLibraryItem();
   const [saved, setSaved] = useState(initiallySaved);
 
   if (permissionLocked) {
     return (
-      <Tooltip title="이 답안은 보기 전용이라 보관함에 저장할 수 없어요.">
-        <Button disabled>보관함 저장 (잠금)</Button>
+      <Tooltip title={t("lockedTooltip")}>
+        <Button disabled>{t("lockedButton")}</Button>
       </Tooltip>
     );
   }
@@ -50,22 +52,20 @@ export function SaveToLibraryButton({
       {
         onSuccess: () => {
           setSaved(true);
-          notification.success({ message: "보관함에 저장했어요." });
+          notification.success({ message: t("saveSuccess") });
         },
         onError: (e: unknown) => {
           const err = e as { code?: string; message?: string };
           if (err.code && RLS_DENIED.has(err.code)) {
             notification.error({
-              message: "저장 권한이 없어요",
-              description:
-                "내 답안만 보관함에 저장할 수 있어요. 권한을 확인해 주세요.",
+              message: t("deniedTitle"),
+              description: t("deniedDescription"),
             });
             return;
           }
           notification.error({
-            message: "보관함 저장에 실패했어요",
-            description:
-              err.message ?? "잠시 후 다시 시도하거나 내 보관함에서 저장해 주세요.",
+            message: t("failedTitle"),
+            description: err.message ?? t("failedDescription"),
           });
         },
       },
@@ -74,7 +74,7 @@ export function SaveToLibraryButton({
 
   return (
     <Button onClick={onSave} loading={save.isPending} disabled={saved}>
-      {saved ? "보관함에 저장됨" : "보관함 저장"}
+      {saved ? t("saved") : t("save")}
     </Button>
   );
 }

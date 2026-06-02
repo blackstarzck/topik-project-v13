@@ -550,5 +550,355 @@
       "retry": "Thử lại",
       "viewResult": "Xem kết quả"
     }
+  },
+  "feedback": {
+    "recommendations": {
+      "cardTitle": "Luyện tập đề xuất",
+      "intro": "Đây là những phần nên cải thiện dựa trên bài làm này.",
+      "emptyDescription": "Không tìm thấy phần yếu nào để đề xuất từ bài làm này.",
+      "viewProblemList": "Xem danh sách câu hỏi",
+      "label": {
+        "grammar": "Ngữ pháp",
+        "vocab": "Từ vựng",
+        "structure": "Bố cục",
+        "content": "Nội dung",
+        "expression": "Diễn đạt",
+        "topic_fit": "Mức độ phù hợp chủ đề"
+      },
+      "reco": {
+        "grammar": {
+          "title": "Luyện ngữ pháp tập trung",
+          "reason": "Cải thiện độ chính xác ngữ pháp có thể giúp điểm tăng nhanh."
+        },
+        "vocab": {
+          "title": "Luyện trau chuốt từ vựng",
+          "reason": "Dùng cách diễn đạt đa dạng giúp bài viết thuyết phục hơn."
+        },
+        "structure": {
+          "title": "Luyện bố cục bài viết",
+          "reason": "Sắp xếp luận điểm và dẫn chứng giúp bài viết rõ ràng hơn."
+        },
+        "content": {
+          "title": "Luyện bổ sung nội dung",
+          "reason": "Thêm ví dụ và dẫn chứng làm luận điểm thuyết phục hơn."
+        },
+        "expression": {
+          "title": "Luyện khả năng diễn đạt",
+          "reason": "Luyện diễn đạt cùng một ý theo nhiều cách sẽ hữu ích."
+        },
+        "topic_fit": {
+          "title": "Luyện mức độ phù hợp chủ đề",
+          "reason": "Kiểm tra lại yêu cầu của đề giúp dễ ghi điểm hơn."
+        }
+      }
+    },
+    "analysis": {
+      "title": "AI đang phân tích bài làm của bạn",
+      "autoMoveNote": "Bạn sẽ tự động chuyển sang màn hình kết quả khi phân tích xong. Thường mất từ vài giây đến một phút.",
+      "cancelButton": "Dừng phân tích và thoát",
+      "cancelConfirm": "Phân tích vẫn đang diễn ra. Thoát bây giờ có thể làm gián đoạn. Bạn có muốn thoát không?",
+      "slowTitle": "Phân tích đang mất nhiều thời gian hơn bình thường",
+      "slowDescription": "Vui lòng đợi thêm một chút. Nếu sau {retryAt} vẫn chưa xong, bạn có thể thử lại.",
+      "failedTitle": "Phân tích thất bại",
+      "failedDescription": "Sự cố tạm thời khiến không thể tạo nhận xét. Vui lòng thử lại sau, hoặc liên hệ hỗ trợ nếu cần.",
+      "retryButton": "Phân tích lại",
+      "supportButton": "Liên hệ hỗ trợ",
+      "supportAlert": "Kết nối hỗ trợ đang được chuẩn bị. Nếu sự cố vẫn tiếp diễn, hãy xem Cài đặt > Trợ giúp.",
+      "completeTitle": "Phân tích hoàn tất",
+      "completeDescription": "Đang chuyển sang màn hình kết quả.",
+      "characterAria": "AI đang phân tích bài làm",
+      "characterCaption": "AI đang xem xét bài làm của bạn...",
+      "steps": {
+        "grammarTitle": "Phân tích ngữ pháp",
+        "grammarDescription": "Đang kiểm tra mẫu ngữ pháp và cách dùng đuôi từ.",
+        "structureTitle": "Phân tích bố cục",
+        "structureDescription": "Đang kiểm tra bố cục đoạn văn và mạch văn.",
+        "expressionTitle": "Phân tích diễn đạt",
+        "expressionDescription": "Đang trau chuốt từ vựng và cách diễn đạt.",
+        "scoreTitle": "Tính điểm",
+        "scoreDescription": "Đang tính điểm cho từng phần."
+      }
+    },
+    "detail": {
+      "cardTitle": "Nhận xét chi tiết",
+      "emptyDescription": "Đánh giá chi tiết chưa sẵn sàng. Phân tích lại để xem chi tiết từng mục.",
+      "expandSymbol": "Xem thêm",
+      "itemSummaryFallback": "Đánh giá chi tiết cho mục này đang trống. Bạn có thể nhận đánh giá chi tiết hơn ở bài làm sau.",
+      "label": {
+        "structure": "Cấu trúc",
+        "content": "Logic",
+        "vocab": "Từ vựng",
+        "grammar": "Ngữ pháp",
+        "topic_fit": "Mức độ phù hợp chủ đề"
+      }
+    },
+    "dimensions": {
+      "label": {
+        "grammar": "Ngữ pháp",
+        "vocab": "Từ vựng",
+        "structure": "Bố cục",
+        "content": "Nội dung",
+        "expression": "Diễn đạt",
+        "topic_fit": "Mức độ phù hợp chủ đề"
+      },
+      "failedText": "Mục này phân tích thất bại.",
+      "reanalyze": "Phân tích lại",
+      "summaryFallback": "Không có tóm tắt"
+    },
+    "summary": {
+      "scoreTitle": "Điểm tổng quan",
+      "overallFallback": "Nhận xét tổng quan đang được chuẩn bị.",
+      "scoreFailedTitle": "Không thể tính điểm",
+      "scoreFailedDescription": "Việc tính điểm cho bài làm này thất bại. Hãy tham khảo phần phân tích bên dưới, hoặc thử phân tích lại."
+    },
+    "actions": {
+      "retryDefault": "Làm lại",
+      "retryWriting": "Viết lại",
+      "nextProblem": "Câu hỏi tiếp theo",
+      "savePdf": "Lưu PDF",
+      "compareReport": "Báo cáo so sánh",
+      "compareFailedTitle": "Tạo báo cáo so sánh thất bại",
+      "pdfSuccess": "Hộp thoại in PDF đã mở.",
+      "pdfFailedTitle": "Lưu PDF thất bại",
+      "pdfFailedDescription": "Hãy thử lưu lại từ Thư viện của tôi.",
+      "save": {
+        "lockedTooltip": "Bài làm này chỉ để xem nên không thể lưu vào thư viện.",
+        "lockedButton": "Lưu vào thư viện (đã khóa)",
+        "saved": "Đã lưu vào thư viện",
+        "save": "Lưu vào thư viện",
+        "saveSuccess": "Đã lưu vào thư viện của bạn.",
+        "deniedTitle": "Bạn không có quyền lưu",
+        "deniedDescription": "Bạn chỉ có thể lưu bài làm của mình vào thư viện. Vui lòng kiểm tra quyền.",
+        "failedTitle": "Lưu vào thư viện thất bại",
+        "failedDescription": "Hãy thử lại sau, hoặc lưu từ Thư viện của tôi."
+      }
+    },
+    "sentence": {
+      "cardTitle": "Nhận xét theo từng câu",
+      "emptyDescription": "Không có nhận xét theo từng câu.",
+      "failTag": "Tạo nhận xét thất bại",
+      "reanalyze": "Phân tích lại",
+      "showMore": "Xem thêm ({count})"
+    },
+    "page": {
+      "loadFailedTitle": "Không thể tải nhận xét",
+      "loadFailedDescription": "Hãy thử lại sau, hoặc làm mới màn hình.",
+      "partialTitle": "Chỉ một phần phân tích hoàn tất",
+      "partialDescription": "Chỉ một số mục của bài làm này được phân tích. Kết quả đã hoàn tất ở bên dưới. Các mục còn thiếu có thể được bổ sung khi phân tích lại."
+    }
+  },
+  "reports": {
+    "page": {
+      "metaTitle": "Báo cáo so sánh — TALKPIK"
+    },
+    "dimensions": {
+      "grammar": "Ngữ pháp",
+      "vocab": "Từ vựng",
+      "structure": "Bố cục",
+      "content": "Nội dung",
+      "expression": "Diễn đạt",
+      "topic_fit": "Mức độ phù hợp chủ đề"
+    },
+    "chart": {
+      "title": "So sánh điểm theo từng mục",
+      "tableTitle": "Điểm theo từng mục (bảng)",
+      "viewAsTable": "Xem dạng bảng",
+      "colDimension": "Mục",
+      "seriesPrevious": "Trước",
+      "seriesCurrent": "Hiện tại",
+      "scorePoint": "{value} điểm",
+      "emptyChart": "Không có dữ liệu điểm theo từng mục nên không thể vẽ biểu đồ."
+    },
+    "cards": {
+      "titleScores": "Điểm theo từng mục",
+      "titleChange": "Thay đổi theo từng mục",
+      "trendUp": "Tăng",
+      "trendDown": "Giảm",
+      "trendHold": "Giữ nguyên",
+      "scorePoint": "{value} điểm",
+      "emptyCurrent": "Không có điểm theo mục để so sánh.",
+      "emptyChange": "Không thể tính toán thay đổi theo từng mục."
+    },
+    "kpi": {
+      "currentTotal": "Tổng điểm hiện tại",
+      "improvement": "Mức cải thiện",
+      "changedDimensions": "Mục đã thay đổi",
+      "suffixPoint": "điểm",
+      "suffixCount": "mục",
+      "noComparison": "Không có đối tượng so sánh",
+      "singleResult": "Kết quả đơn lẻ",
+      "emptyScore": "Không thể chấm điểm bài làm này nên không tính được KPI."
+    },
+    "diff": {
+      "currentAnswer": "Bài làm hiện tại",
+      "previousAnswer": "Bài làm trước",
+      "noPreviousAnswer": "Không có bài làm trước"
+    },
+    "comparison": {
+      "heading": "Báo cáo so sánh",
+      "share": "Chia sẻ",
+      "shareTitle": "Báo cáo so sánh TALKPIK",
+      "shareCopied": "Đã sao chép liên kết.",
+      "shareLink": "Liên kết chia sẻ",
+      "narrativeFailedTitle": "Không thể tạo phần tóm tắt",
+      "narrativeFailedDescription": "Tạo tóm tắt thất bại. Hãy kiểm tra thay đổi qua KPI ở trên và các chỉ số bên dưới, hoặc thử lại.",
+      "narrativeDisclaimer": "Phần tóm tắt do AI tự động tạo ra bằng cách so sánh hai bài làm.",
+      "retry": "Thử lại",
+      "nextLearningTitle": "Tiếp tục học",
+      "nextProblem": "Câu hỏi tiếp theo",
+      "weaknessDisabledTooltip": "Khi đã có các bài làm trước để so sánh, bạn sẽ xem được gợi ý điểm yếu.",
+      "weaknessDisabled": "Gợi ý điểm yếu (thiếu dữ liệu)",
+      "weaknessView": "Xem gợi ý điểm yếu",
+      "retryProblem": "Làm lại"
+    }
+  },
+  "writing": {
+    "page": {
+      "metaTitle": "Viết — TALKPIK",
+      "metaTitleFeedbackLong": "Phản hồi bài dài — TALKPIK",
+      "metaTitleFeedbackShort": "Phản hồi câu trả lời ngắn — TALKPIK",
+      "problemLoadFailed": "Không thể tải đề bài cho câu hỏi số {questionNo}.",
+      "retry": "Thử lại",
+      "toProblemList": "Đến danh sách câu hỏi"
+    },
+    "prompt": {
+      "heading": "Câu {questionNo} — {title}"
+    },
+    "editor": {
+      "materialsTitle": "Tài liệu đề bài",
+      "materialsChartTitle": "Tài liệu đề bài ({type})",
+      "materialsChartPlaceholder": "[Biểu đồ] {count} điểm dữ liệu — biểu đồ thực sẽ hiển thị sau khi tích hợp thư viện Realtime/biểu đồ Tier 2 OOS-2",
+      "charCount": "{charCount} / {hardMax} ký tự",
+      "recommendedRange": "(khuyến nghị {min}-{max} ký tự)",
+      "minOnly": "(tối thiểu {min} ký tự)",
+      "autosaveOff": "Tắt tự động lưu",
+      "autosaveOn": "Bật tự động lưu",
+      "autosaveDisabledNotice": "Tự động lưu đang tắt. Sau khi thay đổi, hãy tự nhấn Lưu nháp.",
+      "placeholderShort": "Hãy viết câu trả lời ngắn gọn và rõ ràng.",
+      "placeholderLong": "Hãy viết câu văn có cấu trúc rõ ràng.",
+      "blurTooShort": "Cần ít nhất {minChars} ký tự. (hiện tại {charCount})",
+      "blurTooLong": "Bạn đã vượt quá tối đa {hardMax} ký tự. (hiện tại {charCount})",
+      "saveDraft": "Lưu nháp",
+      "submit": "Nộp bài",
+      "tab53Intro": "Mở bài",
+      "tab53Body": "Thân bài",
+      "tab53Conclusion": "Kết bài",
+      "section53IntroLabel": "Mở bài — giới thiệu chủ đề",
+      "section53IntroPlaceholder": "Giới thiệu chủ đề trong một hoặc hai câu.",
+      "section53BodyLabel": "Thân bài — phân tích tài liệu",
+      "section53BodyPlaceholder": "Giải thích sự thay đổi/so sánh dựa trên tài liệu.",
+      "section53ConclusionLabel": "Kết bài — tổng kết",
+      "section53ConclusionPlaceholder": "Tổng kết ngắn gọn kèm ý kiến của bạn.",
+      "essayBodyTitle": "Viết bài luận",
+      "essayBodyAria": "Nội dung bài luận",
+      "essayBodyPlaceholder": "Hãy viết bài luận khoảng 600-700 ký tự.",
+      "manuscriptTitle": "Xem trước ô viết",
+      "manuscriptPerLine": "{charsPerLine} ký tự mỗi dòng"
+    },
+    "autosave": {
+      "statusClean": "Đã lưu",
+      "statusDirty": "Chờ lưu",
+      "statusSyncing": "Đang lưu",
+      "statusFailed": "Lưu thất bại",
+      "statusSuperseded": "Đã nộp",
+      "warnBadge": "Lưu ý",
+      "warnSaveFailureTitle": "Tự động lưu thất bại",
+      "warnSaveFailureBody": "Câu trả lời bạn đang viết có thể không được lưu. Bạn nên thử lại hoặc sao chép câu trả lời để dự phòng.",
+      "warnSaveFailureWarn": "Nếu mất kết nối mạng, có thể sẽ không khôi phục được.",
+      "warnDisableTitle": "Tắt tự động lưu?",
+      "warnDisableBody": "Nếu tắt tự động lưu, câu trả lời đang viết có thể mất khi bạn tải lại hoặc rời trang.",
+      "warnExitTitle": "Thay đổi chưa lưu",
+      "warnExitBody": "Bạn có thay đổi chưa lưu. Nếu rời trang, nội dung viết sẽ bị mất.",
+      "recoveryPossible": "Có thể khôi phục",
+      "recoveryChecking": "Đang kiểm tra",
+      "recoveryImpossible": "Không thể khôi phục",
+      "noSaveRecord": "Không có bản lưu",
+      "lastSavedLabel": "Lưu lần cuối:",
+      "recoveryStateLabel": "Trạng thái khôi phục",
+      "noBackup": "Không có bản nháp nào để khôi phục.",
+      "backupHelpLink": "Xem trợ giúp lưu/khôi phục",
+      "keepAutosave": "Giữ tự động lưu",
+      "retryDisabledFallback": "(thay vào đó giữ tự động lưu)",
+      "retryNow": "Thử lại ngay",
+      "proceedDisable": "Tôi hiểu rủi ro, vẫn tắt",
+      "proceedAnyway": "Tôi hiểu rủi ro, vẫn tiếp tục"
+    },
+    "submit": {
+      "title": "Nộp câu trả lời?",
+      "ok": "Nộp",
+      "okRetry": "Nộp lại",
+      "noSaveRecord": "Không có bản tự động lưu",
+      "questionTypeLabel": "Loại câu hỏi",
+      "questionNoValue": "Số {questionNo}",
+      "answerLengthLabel": "Độ dài câu trả lời",
+      "charCountValue": "{charCount} ký tự",
+      "minCharsHint": "(tối thiểu {minChars} ký tự)",
+      "lastSavedLabel": "Lưu lần cuối",
+      "submitNotice": "Sau khi nộp, bạn không thể chỉnh sửa câu trả lời và phân tích AI sẽ tự động bắt đầu. Quá trình phân tích có thể mất một lúc.",
+      "notEnoughChars": "Bạn vẫn chưa đạt số ký tự tối thiểu ({minChars}).",
+      "submitFailedTitle": "Không thể nộp bài",
+      "submitFailedDescription": "{submitError} — nhấn 'Nộp lại' để thử lại, hoặc sao chép câu trả lời để dự phòng.",
+      "agreeNoEdit": "Tôi hiểu rằng không thể chỉnh sửa sau khi nộp."
+    },
+    "conditions": {
+      "title52": "Điều kiện viết",
+      "title53": "Tiêu chí đánh giá",
+      "title54": "Điều kiện · Tiêu chí chấm",
+      "manualNote52": "Không thể tải điều kiện của câu hỏi này. Hãy tự kiểm tra điều kiện chỗ trống trong đề khi viết.",
+      "manualNote53": "Không thể tải tiêu chí đánh giá. Hãy tự kiểm tra việc dùng tài liệu, bố cục đoạn văn và độ dài khi viết.",
+      "manualNote54": "Không thể tải tiêu chí chấm. Hãy tự kiểm tra cấu trúc mở bài/thân bài/kết bài và luận cứ khi viết.",
+      "manualCheck": "Vui lòng tự kiểm tra",
+      "conditionsLabel": "Điều kiện viết",
+      "criteriaLabel": "Tiêu chí đánh giá",
+      "required": "Bắt buộc",
+      "weightSuffix": " ({weight} điểm)"
+    },
+    "checklist": {
+      "cardTitle": "Danh sách kiểm tra khi viết",
+      "statusUnchecked": "⚪ Chưa",
+      "statusWarning": "🟡 Một phần",
+      "statusComplete": "🟢 Hoàn thành",
+      "labelIntro": "Mở bài — giới thiệu chủ đề + lập trường",
+      "labelBody": "Thân bài — luận cứ + ví dụ",
+      "labelConclusion": "Kết bài — khẳng định lại lập trường",
+      "labelEvidence": "Luận cứ — thống kê / ví dụ / kinh nghiệm",
+      "labelConnectors": "Từ nối — tuy nhiên / do đó / ngoài ra, v.v.",
+      "labelTopicFit": "Bám chủ đề — phù hợp ý đồ đề bài"
+    },
+    "reference": {
+      "cardTitle": "Tài liệu tham khảo",
+      "altImage": "Hình ảnh tham khảo của đề",
+      "altAudio": "Âm thanh tham khảo của đề",
+      "imageLoadFailed": "Không thể tải hình ảnh. ({alt})",
+      "zoom": "Phóng to"
+    },
+    "help": {
+      "empty": "Chưa có mẹo viết cho dạng này.",
+      "viewRecommendations": "Xem câu hỏi gợi ý",
+      "tips51_0Title": "Liên kết chỗ trống",
+      "tips51_0Body": "Viết một câu nối tự nhiên với các câu trước và sau.",
+      "tips51_1Title": "Đồng nhất văn phong",
+      "tips51_1Body": "Nếu đề dùng văn trang trọng, hãy dùng đuôi -습니다/-ㅂ니다 tương ứng.",
+      "tips51_2Title": "Không thừa thãi",
+      "tips51_2Body": "Chỉ viết ý chính ngắn gọn, không thêm từ bổ nghĩa thừa.",
+      "tips52_0Title": "Nối hai chỗ trống",
+      "tips52_0Body": "Chọn từ nối phù hợp để hai chỗ trống tạo thành một mạch văn.",
+      "tips52_1Title": "Hô ứng câu",
+      "tips52_1Body": "Kiểm tra chủ ngữ, vị ngữ và thì không bị lệch nhau.",
+      "tips52_2Title": "Lưu ý từ chỉ định",
+      "tips52_2Body": "Làm rõ đối tượng mà các từ chỉ định như này/đó/kia ám chỉ.",
+      "tips53_0Title": "Phản ánh dữ liệu",
+      "tips53_0Body": "Trích dẫn trực tiếp sự thay đổi số liệu trong biểu đồ/bảng làm luận cứ.",
+      "tips53_1Title": "Bố cục đoạn văn",
+      "tips53_1Body": "Viết theo cấu trúc ba phần: mở bài, thân bài, kết bài.",
+      "tips53_2Title": "Quản lý độ dài",
+      "tips53_2Body": "Kết thúc chỉ với ý chính trong khoảng 200-300 ký tự.",
+      "tips54_0Title": "Lập trường rõ ràng",
+      "tips54_0Body": "Nêu rõ lập trường của bạn ngay ở mở bài.",
+      "tips54_1Title": "Từ 2 luận cứ",
+      "tips54_1Body": "Củng cố thân bài bằng từ hai luận cứ khác nhau trở lên.",
+      "tips54_2Title": "Cách diễn đạt nối",
+      "tips54_2Body": "Nối các đoạn mượt mà bằng tuy nhiên, do đó, ngoài ra."
+    }
   }
 }

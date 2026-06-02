@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Alert, Checkbox, Descriptions, Modal, Typography } from "antd";
+import { useTranslations } from "next-intl";
 
 const { Paragraph, Text } = Typography;
 
@@ -34,22 +35,24 @@ export function SubmissionConfirmModal({
   lastSavedAt,
   submitError,
 }: Props) {
+  const t = useTranslations("writing.submit");
+  const tCommon = useTranslations("common");
   const enough = charCount >= minChars;
   // §3 — 동의 체크. destroyOnClose 로 닫힐 때 언마운트되어 다시 열면 false 로 초기화.
   const [agreed, setAgreed] = useState(false);
 
   const savedLabel = lastSavedAt
     ? new Date(lastSavedAt).toLocaleString("ko-KR")
-    : "자동 저장 기록 없음";
+    : t("noSaveRecord");
 
   return (
     <Modal
-      title="답안을 제출하시겠어요?"
+      title={t("title")}
       open={open}
       onOk={onConfirm}
       onCancel={onCancel}
-      okText={submitError ? "다시 제출" : "제출"}
-      cancelText="취소"
+      okText={submitError ? t("okRetry") : t("ok")}
+      cancelText={tCommon("cancel")}
       okButtonProps={{ disabled: !enough || !agreed || loading, loading }}
       // §4 — 제출 처리 중에는 배경 클릭/ESC 로 닫히지 않게(중복/오작동 방지).
       maskClosable={!loading}
@@ -59,28 +62,27 @@ export function SubmissionConfirmModal({
       {/* §2 제출 요약 — 문제 유형 / 답안 길이 / 저장 시각 (3항목). */}
       <Descriptions size="small" column={1} bordered style={{ marginBottom: 12 }}>
         {questionNo ? (
-          <Descriptions.Item label="문제 유형">{questionNo}번</Descriptions.Item>
+          <Descriptions.Item label={t("questionTypeLabel")}>
+            {t("questionNoValue", { questionNo })}
+          </Descriptions.Item>
         ) : null}
-        <Descriptions.Item label="답안 길이">
+        <Descriptions.Item label={t("answerLengthLabel")}>
           <Text strong type={enough ? "success" : "danger"}>
-            {charCount}자
+            {t("charCountValue", { charCount })}
           </Text>{" "}
-          (최소 {minChars}자)
+          {t("minCharsHint", { minChars })}
         </Descriptions.Item>
-        <Descriptions.Item label="마지막 저장">{savedLabel}</Descriptions.Item>
+        <Descriptions.Item label={t("lastSavedLabel")}>{savedLabel}</Descriptions.Item>
       </Descriptions>
 
-      <Paragraph>
-        제출 후에는 답안을 수정할 수 없고, 자동으로 AI 분석이 시작됩니다. 분석에는
-        잠시 대기 시간이 걸릴 수 있어요.
-      </Paragraph>
+      <Paragraph>{t("submitNotice")}</Paragraph>
 
       {!enough ? (
         <Alert
           type="warning"
           showIcon
           style={{ marginBottom: 12 }}
-          message={`아직 최소 글자 수(${minChars}자)에 도달하지 않았어요.`}
+          message={t("notEnoughChars", { minChars })}
         />
       ) : null}
 
@@ -90,14 +92,14 @@ export function SubmissionConfirmModal({
           type="error"
           showIcon
           style={{ marginBottom: 12 }}
-          message="제출하지 못했어요"
-          description={`${submitError} — '다시 제출'을 눌러 재시도하거나, 작성한 답안을 복사해 두세요.`}
+          message={t("submitFailedTitle")}
+          description={t("submitFailedDescription", { submitError })}
         />
       ) : null}
 
       {/* §3 — 동의 체크. 체크 전에는 제출 비활성. */}
       <Checkbox checked={agreed} onChange={(e) => setAgreed(e.target.checked)}>
-        제출 후 수정할 수 없음을 확인했어요.
+        {t("agreeNoEdit")}
       </Checkbox>
     </Modal>
   );
