@@ -10,6 +10,7 @@ import {
   Space,
   Tag,
 } from "antd";
+import { useTranslations } from "next-intl";
 import { useState, type ReactNode } from "react";
 
 import {
@@ -48,6 +49,7 @@ export function LibraryItemRow({
   tags,
   trailingActions = [],
 }: Props) {
+  const t = useTranslations("library.item");
   const { message } = App.useApp();
   const updateTags = useUpdateItemTags();
   const deleteItem = useDeleteLibraryItem();
@@ -65,11 +67,11 @@ export function LibraryItemRow({
       {
         onSuccess: () => {
           setPopoverOpen(false);
-          message.success("태그를 저장했어요.");
+          message.success(t("tagsSaved"));
         },
         onError: (err) => {
           message.error(
-            err instanceof Error ? err.message : "태그 저장에 실패했어요.",
+            err instanceof Error ? err.message : t("tagsSaveFailed"),
           );
         },
       },
@@ -80,10 +82,10 @@ export function LibraryItemRow({
     deleteItem.mutate(
       { itemId, tab },
       {
-        onSuccess: () => message.success("라이브러리에서 삭제했어요."),
+        onSuccess: () => message.success(t("deleted")),
         onError: (err) =>
           message.error(
-            err instanceof Error ? err.message : "삭제에 실패했어요.",
+            err instanceof Error ? err.message : t("deleteFailed"),
           ),
       },
     );
@@ -106,14 +108,14 @@ export function LibraryItemRow({
         if (next) setDraftTags(tags.join(", "));
       }}
       trigger="click"
-      title="태그 편집"
+      title={t("editTags")}
       content={
         <Space direction="vertical" style={{ width: 220 }} size="small">
           <Input
             value={draftTags}
             onChange={(e) => setDraftTags(e.target.value)}
-            placeholder="쉼표로 구분 (예: 작문, 53번)"
-            aria-label="태그 입력"
+            placeholder={t("tagsInputPlaceholder")}
+            aria-label={t("tagsInputAriaLabel")}
           />
           <Space>
             <Button
@@ -122,30 +124,30 @@ export function LibraryItemRow({
               loading={updateTags.isPending}
               onClick={commitTags}
             >
-              저장
+              {t("save")}
             </Button>
             <Button size="small" onClick={() => setPopoverOpen(false)}>
-              취소
+              {t("cancel")}
             </Button>
           </Space>
         </Space>
       }
     >
-      <Button size="small">태그 편집</Button>
+      <Button size="small">{t("editTags")}</Button>
     </Popover>
   );
 
   const deleteConfirm = (
     <Popconfirm
-      title="삭제하시겠어요?"
-      description="라이브러리 항목을 삭제합니다. 원본 자료는 유지돼요."
-      okText="삭제"
-      cancelText="취소"
+      title={t("deleteConfirmTitle")}
+      description={t("deleteConfirmDescription")}
+      okText={t("delete")}
+      cancelText={t("cancel")}
       okButtonProps={{ danger: true, loading: deleteItem.isPending }}
       onConfirm={handleDelete}
     >
       <Button size="small" danger>
-        삭제
+        {t("delete")}
       </Button>
     </Popconfirm>
   );

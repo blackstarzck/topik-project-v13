@@ -14,6 +14,7 @@ import {
   Tag,
   Typography,
 } from "antd";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { GrowthTrendChart, type GrowthTrendPoint } from "./GrowthTrendChart";
@@ -22,14 +23,16 @@ import { buildGrowthInsights } from "./insights";
 
 const { Title, Paragraph, Text } = Typography;
 
-const DIMENSION_LABELS: Record<string, string> = {
-  grammar: "문법",
-  vocab: "어휘",
-  structure: "구성",
-  content: "내용",
-  expression: "표현",
-  topic_fit: "주제 적합성",
-};
+// dimension 코드 목록. 라벨 문구는 growth.dashboard.dimension.* 카탈로그에서
+// t()로 해석한다(색상만으로 의미 전달 금지 → 한글 라벨 병기).
+const DIMENSION_KEYS = [
+  "grammar",
+  "vocab",
+  "structure",
+  "content",
+  "expression",
+  "topic_fit",
+] as const;
 
 export type GrowthWeakDimension = {
   dimension: string;
@@ -79,19 +82,10 @@ export type GrowthDashboardProps = {
   planLabel: string | null;
 };
 
-function dimensionLabel(dimension: string) {
-  return DIMENSION_LABELS[dimension] ?? dimension;
-}
-
-function deltaSuffix(pct: number | null): {
-  text: string;
-  color: string | undefined;
-} {
-  if (pct == null) return { text: "비교 데이터 부족", color: undefined };
-  if (pct > 0) return { text: `▲ ${Math.round(pct)}%`, color: "#3f8600" };
-  if (pct < 0) return { text: `▼ ${Math.abs(Math.round(pct))}%`, color: "#cf1322" };
-  return { text: "변화 없음", color: undefined };
-}
+// next-intl 키 타입을 growth.dashboard 네임스페이스로 좁힌다. 동적 dimension 키
+// (t(`dimension.${code}`))는 strict 타이핑이 bare string 을 거부하므로 호출부에서
+// 캐스트한다.
+type DashboardTranslate = ReturnType<typeof useTranslations<"growth.dashboard">>;
 
 /**
  * X-02 성장 대시보드.
@@ -117,7 +111,35 @@ export function GrowthDashboard({
   reportLocked,
   planLabel,
 }: GrowthDashboardProps) {
+  const t = useTranslations("growth.dashboard");
+  const tInsights = useTranslations("growth.insights");
   const router = useRouter();
+
+  // dimension 코드를 카탈로그 라벨로. 동적 키라 캐스트가 필요하다.
+  const dimensionLabel = (dimension: string) =>
+    (DIMENSION_KEYS as readonly string[]).includes(dimension)
+      ? t(`dimension.${dimension}` as Parameters<DashboardTranslate>[0])
+      : dimension;
+
+  // 개선률 KPI 표시 텍스트 + 색상. ICU 리프로 부호/퍼센트를 해석한다.
+  const deltaSuffix = (
+    pct: number | null,
+  ): { text: string; color: string | undefined } => {
+    if (pct == null)
+      return { text: t("kpi.improvementNoData"), color: undefined };
+    if (pct > 0)
+      return {
+        text: t("kpi.improvementUp", { pct: Math.round(pct) }),
+        color: "#3f8600",
+      };
+    if (pct < 0)
+      return {
+        text: t("kpi.improvementDown", { pct: Math.abs(Math.round(pct)) }),
+        color: "#cf1322",
+      };
+    return { text: t("kpi.improvementNone"), color: undefined };
+  };
+
   const sortedWeak = [...weakDimensions].sort((a, b) => a.avgScore - b.avgScore);
   const leading = sortedWeak[0];
   const leadingLabel = leading ? dimensionLabel(leading.dimension) : null;
@@ -136,10 +158,10 @@ export function GrowthDashboard({
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
       <div>
         <Title level={3} style={{ marginBottom: 4 }}>
-          성장 대시보드
+          {t("heading")}
         </Title>
         <Paragraph type="secondary" style={{ margin: 0 }}>
-          최근 학습 결과를 바탕으로 성장 지표와 약점을 정리했어요.
+          {t("subheading")}
         </Paragraph>
       </div>
 
@@ -156,53 +178,57 @@ export function GrowthDashboard({
               <Col xs={12} md={6}>
                 <Card size="small" style={{ height: "100%" }}>
                   <Statistic
-                    title="평균 점수"
+                    title={t("kpi.averageScore")}
                     value={kpi.averageScore != null ? Math.round(kpi.averageScore) : "—"}
-                    suffix={kpi.averageScore != null ? "점" : undefined}
+                    suffix={kpi.averageScore != null ? t("kpi.pointSuffix") : undefined}
                   />
                   <Text type="secondary" style={{ fontSize: 12 }}>
-                    100점 만점 기준
-                  </Text>
-                </Card>
-              </Col>
-              <Col xs={12} md={6}>
-                <Card size="small" style={{ height: "100%" }}>
-                  <Statistic title="풀이 수" value={kpi.totalAttempts} suffix="회" />
-                  <Text type="secondary" style={{ fontSize: 12 }}>
-                    누적 기준
+                    {t("kpi.averageScoreHint")}
                   </Text>
                 </Card>
               </Col>
               <Col xs={12} md={6}>
                 <Card size="small" style={{ height: "100%" }}>
                   <Statistic
-                    title="개선률"
+                    title={t("kpi.attempts")}
+                    value={kpi.totalAttempts}
+                    suffix={t("kpi.attemptsSuffix")}
+                  />
+                  <Text type="secondary" style={{ fontSize: 12 }}>
+                    {t("kpi.attemptsHint")}
+                  </Text>
+                </Card>
+              </Col>
+              <Col xs={12} md={6}>
+                <Card size="small" style={{ height: "100%" }}>
+                  <Statistic
+                    title={t("kpi.improvement")}
                     value={improvement.text}
                     valueStyle={improvement.color ? { color: improvement.color } : undefined}
                   />
                   <Text type="secondary" style={{ fontSize: 12 }}>
-                    최근 vs 이전
+                    {t("kpi.improvementHint")}
                   </Text>
                 </Card>
               </Col>
               <Col xs={12} md={6}>
                 <Card size="small" style={{ height: "100%" }}>
                   <Statistic
-                    title="목표 달성률"
+                    title={t("kpi.goalAchievement")}
                     value={kpi.goalAchievementPct != null ? kpi.goalAchievementPct : "—"}
                     suffix={kpi.goalAchievementPct != null ? "%" : undefined}
                   />
                   <Text type="secondary" style={{ fontSize: 12 }}>
-                    목표 {kpi.goalLabel}
+                    {t("kpi.goalLabel", { goal: kpi.goalLabel })}
                   </Text>
                 </Card>
               </Col>
             </Row>
           ) : (
             <Card>
-              <Empty description="학습 목표가 아직 없어요. 목표를 설정하면 성장 지표가 채워집니다.">
+              <Empty description={t("noGoal.description")}>
                 <Link href="/onboarding/learning-goal">
-                  <Button type="primary">목표 설정하기</Button>
+                  <Button type="primary">{t("noGoal.cta")}</Button>
                 </Link>
               </Empty>
             </Card>
@@ -212,11 +238,11 @@ export function GrowthDashboard({
           <GrowthTrendChart points={trendPoints} onRetry={() => router.refresh()} />
 
           {/* area 4 — 약점 매트릭스. 색상만으로 의미 전달 금지 → 수치 라벨 병기. */}
-          <Card title="약점 매트릭스">
+          <Card title={t("weakness.title")}>
             {weakDimensions.length === 0 ? (
-              <Empty description="글쓰기를 더 제출하면 약점 분석이 채워져요. 지금은 최근 답안 기준으로 안내해요.">
+              <Empty description={t("weakness.empty")}>
                 <Link href="/practice/problems">
-                  <Button type="primary">학습 시작</Button>
+                  <Button type="primary">{t("weakness.startCta")}</Button>
                 </Link>
               </Empty>
             ) : (
@@ -230,7 +256,10 @@ export function GrowthDashboard({
                       >
                         <Text strong>{dimensionLabel(w.dimension)}</Text>
                         <Text type="secondary">
-                          {percent}점 · {w.sampleCount}건
+                          {t("weakness.scoreSample", {
+                            score: percent,
+                            count: w.sampleCount,
+                          })}
                         </Text>
                       </Space>
                       <Progress
@@ -245,20 +274,23 @@ export function GrowthDashboard({
             )}
           </Card>
 
-          {/* area 5 — 인사이트. 실제 수치 근거(insights.ts), 3개 이하·60자 이하. */}
-          <Card title="인사이트">
+          {/* area 5 — 인사이트. 실제 수치 근거(insights.ts), 3개 이하·60자 이하.
+              insights.ts 가 키+ICU 변수만 만들고, 여기서 t()로 문구를 해석한다. */}
+          <Card title={t("insights.title")}>
             <Space direction="vertical" size="small" style={{ width: "100%" }}>
-              {insights.map((sentence, idx) => (
+              {insights.map((insight, idx) => (
                 <Alert
                   key={idx}
                   type="info"
                   showIcon
-                  message={sentence}
+                  message={tInsights(
+                    insight.key as Parameters<typeof tInsights>[0],
+                    insight.values,
+                  )}
                 />
               ))}
               <Text type="secondary" style={{ fontSize: 12 }}>
-                실제 점수·풀이 기록에서 계산한 요약이에요. 약점은 다음 연습 결과에
-                따라 달라질 수 있습니다.
+                {t("insights.disclaimer")}
               </Text>
             </Space>
           </Card>
@@ -266,9 +298,9 @@ export function GrowthDashboard({
           {/* area 6 — 하단 요약/추천. 추천 없음이면 최근 완료 요약 + 문제 목록 CTA만. */}
           <Row gutter={[16, 16]}>
             <Col xs={24} md={12}>
-              <Card title="최근 완료 문제">
+              <Card title={t("recent.title")}>
                 {recentCompleted.length === 0 ? (
-                  <Empty description="아직 완료한 문제가 없어요." />
+                  <Empty description={t("recent.empty")} />
                 ) : (
                   <List
                     size="small"
@@ -281,19 +313,23 @@ export function GrowthDashboard({
                             key="view"
                             href={`/writing/feedback/long/${item.submissionId}` as never}
                           >
-                            보기
+                            {t("recent.view")}
                           </Link>,
                         ]}
                       >
                         <Tag>
-                          {item.questionNo != null ? `${item.questionNo}번` : "—"}
+                          {item.questionNo != null
+                            ? t("recent.questionNo", { no: item.questionNo })
+                            : "—"}
                         </Tag>
                         <span style={{ marginLeft: 8 }}>
-                          점수{" "}
+                          {t("recent.scoreLabel")}{" "}
                           <strong>
                             {item.scoreTotal != null
-                              ? `${Math.round(item.scoreTotal)}점`
-                              : "대기"}
+                              ? t("recent.scoreValue", {
+                                  score: Math.round(item.scoreTotal),
+                                })
+                              : t("recent.scorePending")}
                           </strong>
                         </span>
                         <Text
@@ -309,11 +345,11 @@ export function GrowthDashboard({
               </Card>
             </Col>
             <Col xs={24} md={12}>
-              <Card title="다음 추천 문제">
+              <Card title={t("recommend.title")}>
                 {recommendations.length === 0 ? (
-                  <Empty description="추천 문제가 아직 없어요.">
+                  <Empty description={t("recommend.empty")}>
                     <Link href="/practice/problems">
-                      <Button type="primary">문제 목록 보기</Button>
+                      <Button type="primary">{t("recommend.listCta")}</Button>
                     </Link>
                   </Empty>
                 ) : (
@@ -334,15 +370,19 @@ export function GrowthDashboard({
                           <Space direction="vertical" size={2}>
                             <Tag color="blue">
                               {rec.questionNo != null
-                                ? `${rec.questionNo}번 문항`
-                                : "추천"}
+                                ? t("recommend.questionNo", {
+                                    no: rec.questionNo,
+                                  })
+                                : t("recommend.questionFallback")}
                             </Tag>
                             <Text strong>{rec.title}</Text>
                           </Space>
                           <Link
                             href={`/practice/problems/${rec.problemId}` as never}
                           >
-                            <Button type="primary">추천 학습 시작</Button>
+                            <Button type="primary">
+                              {t("recommend.startCta")}
+                            </Button>
                           </Link>
                         </Space>
                       </Card>

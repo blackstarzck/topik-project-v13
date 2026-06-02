@@ -900,5 +900,271 @@
       "tips54_2Title": "Connecting expressions",
       "tips54_2Body": "Link paragraphs smoothly with however, therefore, and also."
     }
+  },
+  "growth": {
+    "page": {
+      "metaTitle": "Growth Dashboard — TALKPIK",
+      "goalGrade": "Level {grade}",
+      "goalUnset": "Not set"
+    },
+    "dashboard": {
+      "heading": "Growth Dashboard",
+      "subheading": "Here's a summary of your growth metrics and weak areas based on recent study results.",
+      "dimension": {
+        "grammar": "Grammar",
+        "vocab": "Vocabulary",
+        "structure": "Structure",
+        "content": "Content",
+        "expression": "Expression",
+        "topic_fit": "Topic Fit"
+      },
+      "kpi": {
+        "averageScore": "Average score",
+        "pointSuffix": "pts",
+        "averageScoreHint": "Out of 100",
+        "attempts": "Attempts",
+        "attemptsSuffix": "times",
+        "attemptsHint": "Cumulative total",
+        "improvement": "Improvement",
+        "improvementHint": "Recent vs. earlier",
+        "improvementUp": "▲ {pct}%",
+        "improvementDown": "▼ {pct}%",
+        "improvementNoData": "Not enough data to compare",
+        "improvementNone": "No change",
+        "goalAchievement": "Goal progress",
+        "goalLabel": "Goal: {goal}"
+      },
+      "noGoal": {
+        "description": "You don't have a study goal yet. Set a goal to start filling in your growth metrics.",
+        "cta": "Set a goal"
+      },
+      "weakness": {
+        "title": "Weakness matrix",
+        "empty": "Submit more writing to fill in your weakness analysis. For now, this reflects your recent answers.",
+        "startCta": "Start studying",
+        "scoreSample": "{score} pts · {count} samples"
+      },
+      "insights": {
+        "title": "Insights",
+        "disclaimer": "This summary is calculated from your actual scores and practice records. Weak areas may change with future practice."
+      },
+      "recent": {
+        "title": "Recently completed",
+        "empty": "You haven't completed any questions yet.",
+        "view": "View",
+        "questionNo": "No. {no}",
+        "scoreLabel": "Score",
+        "scoreValue": "{score} pts",
+        "scorePending": "Pending"
+      },
+      "recommend": {
+        "title": "Recommended next",
+        "empty": "No recommended questions yet.",
+        "listCta": "Browse questions",
+        "questionNo": "Question {no}",
+        "questionFallback": "Recommended",
+        "startCta": "Start recommended"
+      }
+    },
+    "trend": {
+      "title": "Growth trend chart",
+      "period": {
+        "7d": "7 days",
+        "30d": "30 days",
+        "90d": "90 days",
+        "all": "All"
+      },
+      "empty": "There's no study history to chart a trend yet. Submit writing to fill in score and volume trends.",
+      "retry": "Try again",
+      "noRecord": "No record",
+      "seriesScore": "Average score",
+      "seriesVolume": "Attempts",
+      "legendHelp": "The blue line is the average score (left axis, out of 100); the green line is the number of attempts (right axis). Days with no score connect across, and days with no attempts show as 0."
+    },
+    "locked": {
+      "title": "Detailed growth reports are for paid plans only",
+      "freePlan": "Free",
+      "body": "On your current plan (<plan></plan>) you can only see basic metrics. Upgrade to unlock the trend chart, weakness matrix, and personalized insights.",
+      "upgradeCta": "Upgrade plan",
+      "manageCta": "Manage subscription"
+    },
+    "error": {
+      "title": "We couldn't load your growth metrics.",
+      "subTitle": "Please try again in a moment. If the problem persists, refresh the page.",
+      "retry": "Try again"
+    },
+    "insights": {
+      "scoreUp": "Your recent average score rose {pct}% from before.",
+      "scoreDown": "Your recent average score dropped {pct}% from before.",
+      "weakestDimension": "Your '{dimension}' score is the lowest.",
+      "recentVolume": "You've built up {count} recent attempts.",
+      "averageScore": "You've averaged {score} points so far.",
+      "streak": "You've studied {days} days in a row.",
+      "defaultTip": "Short, frequent writing practice helps your score the most."
+    }
+  },
+  "library": {
+    "page": {
+      "metaTitle": "My Library — TALKPIK",
+      "heading": "My Library"
+    },
+    "tabs": {
+      "submissions": "Saved Answers",
+      "reports": "Comparison Reports",
+      "problems": "Saved Questions",
+      "exports": "Exports",
+      "searchPlaceholder": "Search by title or tag (2+ chars)",
+      "searchAriaLabel": "Search library",
+      "selectionCount": "{count} selected",
+      "exportPdf": "Export as PDF",
+      "createReviewSet": "Create Review Set",
+      "selectionHint": "Select items in the Saved Answers tab to export or build a review set.",
+      "reviewSetCreated": "Review set created ({count} items).",
+      "reviewSetFailed": "Failed to create the review set."
+    },
+    "submissions": {
+      "loadError": "Could not load your saved answers",
+      "statusFilterAriaLabel": "Status filter",
+      "statusAll": "All statuses",
+      "statusComplete": "Analysis complete",
+      "statusAnalyzing": "Analyzing",
+      "statusPending": "Pending analysis",
+      "statusFailed": "Analysis failed",
+      "periodFilterAriaLabel": "Date range filter",
+      "resultCount": "{count} results",
+      "emptySearch": "No results found.",
+      "emptyNoItems": "No saved answers yet.",
+      "resetFilter": "Reset filters",
+      "goToPractice": "Go practice",
+      "selectForExportAriaLabel": "Select for export",
+      "problemTitle": "Question {id}",
+      "scoreWithMax": "{total}/{max} pts",
+      "scoreNoMax": "{total} pts",
+      "charCount": "{count} chars",
+      "totalCount": "{count} total"
+    },
+    "reports": {
+      "loadError": "Could not load comparison reports",
+      "emptySearch": "No results found.",
+      "emptyNoItems": "No comparison reports.",
+      "resetFilter": "Reset filters",
+      "title": "Comparison Report",
+      "searchLabel": "Comparison report"
+    },
+    "saved": {
+      "loadError": "Could not load your saved questions",
+      "emptySearch": "No results found.",
+      "emptyNoItems": "No saved questions.",
+      "resetFilter": "Reset filters",
+      "retry": "Solve again"
+    },
+    "exports": {
+      "loadError": "Could not load export history",
+      "emptySearch": "No results found.",
+      "emptyNoItems": "No export history.",
+      "resetFilter": "Reset filters",
+      "sourceSubmission": "Answer export",
+      "sourceReport": "Comparison report export",
+      "sourceLibrarySelection": "Library bundle export",
+      "sourceDefault": "Export",
+      "statusReady": "Ready",
+      "statusFailed": "Failed",
+      "statusPending": "Pending",
+      "browserPrintTag": "Browser print",
+      "reprint": "Print again",
+      "download": "Download",
+      "printDialogOpened": "The PDF print dialog has opened.",
+      "reprintFailed": "Failed to print again."
+    },
+    "stats": {
+      "title": "Library Stats",
+      "emptyDescription": "You haven't saved anything yet.",
+      "goToPractice": "Go practice",
+      "savedCount": "Saved",
+      "avgScore": "Average score",
+      "reviewCount": "Reviews",
+      "suffixCount": "items",
+      "suffixPoint": "pts",
+      "weakestLabel": "Weakest area ",
+      "weakestNeedData": "More data is needed for analysis",
+      "continueReview": "Continue reviewing",
+      "noUpdate": "No update history",
+      "lastUpdated": "Updated {date}",
+      "dimensions": {
+        "grammar": "Grammar",
+        "vocab": "Vocabulary",
+        "structure": "Structure",
+        "content": "Content",
+        "expression": "Expression",
+        "topic_fit": "Topic fit"
+      }
+    },
+    "item": {
+      "editTags": "Edit tags",
+      "tagsInputPlaceholder": "Separate with commas (e.g. Writing, No. 53)",
+      "tagsInputAriaLabel": "Tag input",
+      "save": "Save",
+      "cancel": "Cancel",
+      "deleteConfirmTitle": "Delete this?",
+      "deleteConfirmDescription": "This removes the library item. The original material is kept.",
+      "delete": "Delete",
+      "tagsSaved": "Tags saved.",
+      "tagsSaveFailed": "Failed to save tags.",
+      "deleted": "Removed from your library.",
+      "deleteFailed": "Failed to delete."
+    },
+    "exportButton": {
+      "label": "Export as PDF",
+      "exporting": "Exporting...",
+      "printDialogOpened": "The PDF print dialog has opened.",
+      "exportFailed": "Failed to export the PDF."
+    },
+    "pdf": {
+      "modalTitle": "Export as PDF",
+      "filenameDefault": "my-library-export",
+      "filenameEmptyError": "Please enter a file name.",
+      "filenameTooLongError": "The file name must be {max} characters or fewer.",
+      "selectionLostTitle": "Can't find the selected items",
+      "selectionLostSubtitle": "The selection was cleared or the items were deleted. Please select again from the list.",
+      "backToList": "Back to list",
+      "tooManyTitle": "You can export up to {max} at a time",
+      "tooManyDescription": "{count} are currently selected. Please reduce your selection.",
+      "filenameLabel": "File name",
+      "filenameAriaLabel": "File name",
+      "filenameCount": "{count}/{max} chars",
+      "includeLabel": "Include",
+      "includeAnswers": "Include my answers",
+      "includeFeedback": "Include AI feedback",
+      "sortLabel": "Sort",
+      "sortRecent": "Most recently saved",
+      "sortOldest": "Oldest first",
+      "sortTitle": "By title",
+      "formatLabel": "File format",
+      "privacyConfirm": "I understand the exported file may contain personal learning data.",
+      "previewLabel": "Preview",
+      "previewFailedTitle": "Couldn't generate a preview",
+      "previewSummary": "{count} items to export · Answers {answers} · Feedback {feedback}",
+      "included": "Included",
+      "excluded": "Excluded",
+      "regeneratePreview": "Regenerate preview",
+      "previewAriaLabel": "PDF preview",
+      "previewSubtitle": "TALKPIK My Library · {count} items",
+      "previewAnswerTag": " · Answer",
+      "previewFeedbackTag": " · Feedback",
+      "previewMore": "…and {count} more (long answers are truncated)",
+      "errorTitle": "Failed to generate the PDF",
+      "retry": "Retry",
+      "contact": "Contact us",
+      "contactSubject": "PDF export error",
+      "doneTitle": "PDF ready to print",
+      "doneDescription": "In the browser print dialog, choose “Save as PDF” to save.",
+      "reprint": "Print again",
+      "downloadStored": "Download saved file (coming soon)",
+      "close": "Close",
+      "generating": "Generating...",
+      "export": "Export PDF",
+      "printDialogOpened": "The PDF print dialog has opened.",
+      "generateFailed": "Failed to generate the PDF."
+    }
   }
 }

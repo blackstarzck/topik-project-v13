@@ -1,6 +1,7 @@
 "use client";
 
 import { Alert, App, Badge, Button, Empty, List, Space, Spin, Tag, Typography } from "antd";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { triggerPdfExport } from "@/lib/export/pdf-export";
@@ -41,18 +42,21 @@ export function isBrowserPrintExport(item: LibraryExportView): boolean {
   return false;
 }
 
-function exportSourceLabel(
+// i18n: 라벨 문구는 library.exports.* 카탈로그 키로 노출하고, 렌더 컴포넌트가
+// t()로 해석한다(컴포넌트가 아닌 헬퍼는 useTranslations 불가). 동적 키이므로
+// 호출부에서 `as Parameters<typeof t>[0]` 캐스트가 필요하다.
+function exportSourceLabelKey(
   source: LibraryExportView["source_type"],
 ): string {
   switch (source) {
     case "submission":
-      return "답안 내보내기";
+      return "sourceSubmission";
     case "report":
-      return "비교 리포트 내보내기";
+      return "sourceReport";
     case "library_selection":
-      return "라이브러리 묶음 내보내기";
+      return "sourceLibrarySelection";
     default:
-      return "내보내기";
+      return "sourceDefault";
   }
 }
 
@@ -64,10 +68,10 @@ function statusBadgeStatus(
   return "processing";
 }
 
-function statusLabel(status: LibraryExportView["status"]): string {
-  if (status === "ready") return "준비됨";
-  if (status === "failed") return "실패";
-  return "대기 중";
+function statusLabelKey(status: LibraryExportView["status"]): string {
+  if (status === "ready") return "statusReady";
+  if (status === "failed") return "statusFailed";
+  return "statusPending";
 }
 
 type RetryButtonProps = {
@@ -75,6 +79,7 @@ type RetryButtonProps = {
 };
 
 function RetryPrintButton({ item }: RetryButtonProps) {
+  const t = useTranslations("library.exports");
   const { message } = App.useApp();
   const [pending, setPending] = useState(false);
 
@@ -97,10 +102,10 @@ function RetryPrintButton({ item }: RetryButtonProps) {
         sourceType: item.source_type as "submission" | "report",
         sourceId,
       });
-      message.success("PDF 출력 대화상자가 열렸습니다.");
+      message.success(t("printDialogOpened"));
     } catch (err) {
       message.error(
-        err instanceof Error ? err.message : "다시 인쇄에 실패했어요.",
+        err instanceof Error ? err.message : t("reprintFailed"),
       );
     } finally {
       setPending(false);
@@ -109,7 +114,7 @@ function RetryPrintButton({ item }: RetryButtonProps) {
 
   return (
     <Button size="small" onClick={handleClick} loading={pending} disabled={!reprintable}>
-      다시 인쇄
+      {t("reprint")}
     </Button>
   );
 }
@@ -117,9 +122,10 @@ function RetryPrintButton({ item }: RetryButtonProps) {
 function DownloadButton() {
   // Phase 6 has no real download URL — see OOS-6. Render the affordance as
   // a disabled button so the UX hints at the future state without misleading.
+  const t = useTranslations("library.exports");
   return (
     <Button size="small" disabled>
-      다운로드
+      {t("download")}
     </Button>
   );
 }
@@ -129,13 +135,14 @@ export function LibraryExportsTab({
   searchTerm = "",
   onResetSearch,
 }: Props) {
+  const t = useTranslations("library.exports");
   const query = useLibraryItems("exports");
   const allItems: LibraryExportView[] = (query.data ?? initialItems).filter(
     isExport,
   );
   const items = allItems.filter((i) =>
     matchesLibrarySearch(searchTerm, [
-      exportSourceLabel(i.source_type),
+      t(exportSourceLabelKey(i.source_type) as Parameters<typeof t>[0]),
       i.storage_path,
       ...i.tags,
     ]),
@@ -148,7 +155,7 @@ export function LibraryExportsTab({
     return (
       <Alert
         type="error"
-        message="내보내기 기록을 불러오지 못했어요"
+        message={t("loadError")}
         description={
           query.error instanceof Error ? query.error.message : undefined
         }
@@ -159,12 +166,10 @@ export function LibraryExportsTab({
     const searching = searchTerm.trim().length > 0;
     return (
       <Empty
-        description={
-          searching ? "검색 결과가 없습니다." : "내보내기 기록이 없습니다."
-        }
+        description={searching ? t("emptySearch") : t("emptyNoItems")}
       >
         {searching && onResetSearch ? (
-          <Button onClick={onResetSearch}>필터 초기화</Button>
+          <Button onClick={onResetSearch}>{t("resetFilter")}</Button>
         ) : null}
       </Empty>
     );
@@ -190,13 +195,15 @@ export function LibraryExportsTab({
             ]}
           >
             <Space direction="vertical" size={4} style={{ width: "100%" }}>
-              <Text strong>{exportSourceLabel(item.source_type)}</Text>
+              <Text strong>
+                {t(exportSourceLabelKey(item.source_type) as Parameters<typeof t>[0])}
+              </Text>
               <Space size="small" wrap>
                 <Badge
                   status={statusBadgeStatus(item.status)}
-                  text={statusLabel(item.status)}
+                  text={t(statusLabelKey(item.status) as Parameters<typeof t>[0])}
                 />
-                {isPrint ? <Tag color="geekblue">브라우저 인쇄</Tag> : null}
+                {isPrint ? <Tag color="geekblue">{t("browserPrintTag")}</Tag> : null}
                 <Text type="secondary">{item.storage_path}</Text>
               </Space>
             </Space>

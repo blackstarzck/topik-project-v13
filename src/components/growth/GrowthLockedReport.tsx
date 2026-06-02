@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Result, Space, Tag, Typography } from "antd";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 const { Paragraph } = Typography;
@@ -13,28 +14,29 @@ const { Paragraph } = Typography;
  * 사유를 텍스트로 명시(색상만으로 의미 전달 금지).
  */
 export function GrowthLockedReport({ planLabel }: { planLabel: string | null }) {
+  const t = useTranslations("growth.locked");
+  // planLabel 이 없으면 "무료" 로 표시. Tag 는 rich 청크로 본문 안에 끼워 넣는다.
+  const planText = planLabel ?? t("freePlan");
   return (
     <Result
       icon={<span style={{ fontSize: 40 }} aria-hidden>🔒</span>}
-      title="상세 성장 리포트는 유료 플랜 전용이에요"
+      title={t("title")}
       subTitle={
         <Space direction="vertical" size={4} style={{ width: "100%" }}>
           <Paragraph type="secondary" style={{ margin: 0 }}>
-            현재 플랜
-            {": "}
-            <Tag>{planLabel ?? "무료"}</Tag>
-            에서는 기본 지표만 볼 수 있어요. 업그레이드하면 추세 차트와 약점
-            매트릭스, 맞춤 인사이트가 모두 열립니다.
+            {t.rich("body", {
+              plan: () => <Tag>{planText}</Tag>,
+            })}
           </Paragraph>
         </Space>
       }
       extra={
         <Space wrap>
           <Link href="/paywall">
-            <Button type="primary">플랜 업그레이드</Button>
+            <Button type="primary">{t("upgradeCta")}</Button>
           </Link>
           <Link href="/subscription">
-            <Button>구독 관리</Button>
+            <Button>{t("manageCta")}</Button>
           </Link>
         </Space>
       }

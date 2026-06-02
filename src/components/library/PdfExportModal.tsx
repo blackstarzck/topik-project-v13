@@ -14,6 +14,7 @@ import {
   Space,
   Typography,
 } from "antd";
+import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
 import { triggerPdfExport } from "@/lib/export/pdf-export";
@@ -67,6 +68,7 @@ type PreviewState = "ok" | "failed";
  * row. Stored-file download (generated-exports bucket) is honestly 준비 중.
  */
 export function PdfExportModal({ open, onClose, selection }: Props) {
+  const t = useTranslations("library.pdf");
   // Modal 셸은 항상 마운트 상태로 두되, 본문은 open될 때마다 새 key로 새로
   // 마운트한다 → effect+setState로 초기화하지 않고도 transient 상태가 깨끗하게
   // 리셋된다(React "reset state with a key" 권장 패턴). destroyOnClose가
@@ -75,7 +77,7 @@ export function PdfExportModal({ open, onClose, selection }: Props) {
     <Modal
       open={open}
       onCancel={onClose}
-      title="PDF로 내보내기"
+      title={t("modalTitle")}
       width={680}
       maskClosable={false}
       footer={null}
@@ -95,9 +97,10 @@ function PdfExportModalBody({
   onClose: () => void;
   selection: ExportSelectionItem[];
 }) {
+  const t = useTranslations("library.pdf");
   const { message } = App.useApp();
 
-  const [filename, setFilename] = useState("내서재-내보내기");
+  const [filename, setFilename] = useState(t("filenameDefault"));
   const [sortOrder, setSortOrder] = useState<SortOrder>("saved_desc");
   const [includeAnswers, setIncludeAnswers] = useState(true);
   const [includeFeedback, setIncludeFeedback] = useState(true);
@@ -111,11 +114,11 @@ function PdfExportModalBody({
 
   const filenameError = useMemo(() => {
     const trimmed = filename.trim();
-    if (trimmed.length === 0) return "파일명을 입력해 주세요.";
+    if (trimmed.length === 0) return t("filenameEmptyError");
     if (trimmed.length > FILENAME_MAX)
-      return `파일명은 ${FILENAME_MAX}자 이하여야 해요.`;
+      return t("filenameTooLongError", { max: FILENAME_MAX });
     return null;
-  }, [filename]);
+  }, [filename, t]);
 
   const previewItems = useMemo(() => {
     const items = [...selection].slice(0, MAX_ITEMS);
@@ -142,12 +145,12 @@ function PdfExportModalBody({
         sourceId: null,
       });
       setGen({ phase: "done", exportId: result.exportId });
-      message.success("PDF 출력 대화상자가 열렸습니다.");
+      message.success(t("printDialogOpened"));
     } catch (err) {
       setGen({
         phase: "error",
         message:
-          err instanceof Error ? err.message : "PDF 생성에 실패했어요.",
+          err instanceof Error ? err.message : t("generateFailed"),
       });
     }
   }
@@ -158,11 +161,11 @@ function PdfExportModalBody({
         // Region 1 예외: 선택 항목이 사라짐.
         <Result
           status="warning"
-          title="선택한 항목을 찾을 수 없어요"
-          subTitle="선택이 해제되었거나 항목이 삭제되었습니다. 목록에서 다시 선택해 주세요."
+          title={t("selectionLostTitle")}
+          subTitle={t("selectionLostSubtitle")}
           extra={
             <Button type="primary" onClick={onClose}>
-              목록으로 돌아가기
+              {t("backToList")}
             </Button>
           }
         />
@@ -172,58 +175,64 @@ function PdfExportModalBody({
             <Alert
               type="warning"
               showIcon
-              message={`한 번에 ${MAX_ITEMS}개까지 내보낼 수 있어요`}
-              description={`현재 ${selection.length}개가 선택되어 있습니다. 선택을 줄여 주세요.`}
+              message={t("tooManyTitle", { max: MAX_ITEMS })}
+              description={t("tooManyDescription", { count: selection.length })}
             />
           ) : null}
 
           {/* Region 2: PDF 옵션 */}
           <Form layout="vertical">
             <Form.Item
-              label="파일명"
+              label={t("filenameLabel")}
               required
               validateStatus={filenameError ? "error" : undefined}
-              help={filenameError ?? `${filename.trim().length}/${FILENAME_MAX}자`}
+              help={
+                filenameError ??
+                t("filenameCount", {
+                  count: filename.trim().length,
+                  max: FILENAME_MAX,
+                })
+              }
               style={{ marginBottom: 12 }}
             >
               <Input
                 value={filename}
                 onChange={(e) => setFilename(e.target.value)}
                 maxLength={FILENAME_MAX}
-                aria-label="파일명"
+                aria-label={t("filenameAriaLabel")}
                 addonAfter=".pdf"
               />
             </Form.Item>
 
-            <Form.Item label="포함 항목" style={{ marginBottom: 12 }}>
+            <Form.Item label={t("includeLabel")} style={{ marginBottom: 12 }}>
               <Space direction="vertical">
                 <Checkbox
                   checked={includeAnswers}
                   onChange={(e) => setIncludeAnswers(e.target.checked)}
                 >
-                  내 답안 포함
+                  {t("includeAnswers")}
                 </Checkbox>
                 <Checkbox
                   checked={includeFeedback}
                   onChange={(e) => setIncludeFeedback(e.target.checked)}
                 >
-                  AI 피드백 포함
+                  {t("includeFeedback")}
                 </Checkbox>
               </Space>
             </Form.Item>
 
-            <Form.Item label="정렬" style={{ marginBottom: 12 }}>
+            <Form.Item label={t("sortLabel")} style={{ marginBottom: 12 }}>
               <Radio.Group
                 value={sortOrder}
                 onChange={(e) => setSortOrder(e.target.value as SortOrder)}
               >
-                <Radio value="saved_desc">최근 저장순</Radio>
-                <Radio value="saved_asc">오래된순</Radio>
-                <Radio value="title">제목순</Radio>
+                <Radio value="saved_desc">{t("sortRecent")}</Radio>
+                <Radio value="saved_asc">{t("sortOldest")}</Radio>
+                <Radio value="title">{t("sortTitle")}</Radio>
               </Radio.Group>
             </Form.Item>
 
-            <Form.Item label="파일 형식" style={{ marginBottom: 12 }}>
+            <Form.Item label={t("formatLabel")} style={{ marginBottom: 12 }}>
               <Radio.Group value={format}>
                 <Radio value="pdf">PDF</Radio>
               </Radio.Group>
@@ -235,7 +244,7 @@ function PdfExportModalBody({
                 checked={privacyConfirmed}
                 onChange={(e) => setPrivacyConfirmed(e.target.checked)}
               >
-                내보내는 파일에 개인 학습 정보가 포함될 수 있음을 확인했습니다.
+                {t("privacyConfirm")}
               </Checkbox>
             </Form.Item>
           </Form>
@@ -244,22 +253,28 @@ function PdfExportModalBody({
 
           {/* Region 3: 미리보기 (1페이지 축약) */}
           <div>
-            <Text strong>미리보기</Text>
+            <Text strong>{t("previewLabel")}</Text>
             {preview === "failed" ? (
               <Alert
                 style={{ marginTop: 8 }}
                 type="warning"
                 showIcon
-                message="미리보기를 만들지 못했어요"
+                message={t("previewFailedTitle")}
                 description={
                   <Space direction="vertical">
                     <Text type="secondary">
-                      {`내보낼 항목 ${previewItems.length}개 · 답안 ${
-                        includeAnswers ? "포함" : "제외"
-                      } · 피드백 ${includeFeedback ? "포함" : "제외"}`}
+                      {t("previewSummary", {
+                        count: previewItems.length,
+                        answers: includeAnswers
+                          ? t("included")
+                          : t("excluded"),
+                        feedback: includeFeedback
+                          ? t("included")
+                          : t("excluded"),
+                      })}
                     </Text>
                     <Button size="small" onClick={() => setPreview("ok")}>
-                      미리보기 재생성
+                      {t("regeneratePreview")}
                     </Button>
                   </Space>
                 }
@@ -274,31 +289,32 @@ function PdfExportModalBody({
                   maxHeight: 220,
                   overflow: "hidden",
                 }}
-                aria-label="PDF 미리보기"
+                aria-label={t("previewAriaLabel")}
               >
                 <Title level={5} style={{ marginTop: 0 }}>
-                  {filename.trim() || "내서재-내보내기"}
+                  {filename.trim() || t("filenameDefault")}
                 </Title>
                 <Paragraph type="secondary" style={{ marginBottom: 8 }}>
-                  TALKPIK 내 서재 · {previewItems.length}개 항목
+                  {t("previewSubtitle", { count: previewItems.length })}
                 </Paragraph>
                 <ol style={{ margin: 0, paddingLeft: 18 }}>
                   {previewItems.map((it) => (
                     <li key={it.itemId}>
                       <Text>{it.title}</Text>
                       {includeAnswers ? (
-                        <Text type="secondary"> · 답안</Text>
+                        <Text type="secondary">{t("previewAnswerTag")}</Text>
                       ) : null}
                       {includeFeedback ? (
-                        <Text type="secondary"> · 피드백</Text>
+                        <Text type="secondary">{t("previewFeedbackTag")}</Text>
                       ) : null}
                     </li>
                   ))}
                 </ol>
                 {selection.length > previewItems.length ? (
                   <Text type="secondary">
-                    …외 {selection.length - previewItems.length}개 (긴 답안은
-                    일부만 표시)
+                    {t("previewMore", {
+                      count: selection.length - previewItems.length,
+                    })}
                   </Text>
                 ) : null}
               </div>
@@ -310,19 +326,21 @@ function PdfExportModalBody({
             <Alert
               type="error"
               showIcon
-              message="PDF 생성에 실패했어요"
+              message={t("errorTitle")}
               description={
                 <Space direction="vertical">
                   <Text type="secondary">{gen.message}</Text>
                   <Space>
                     <Button size="small" type="primary" onClick={handleExport}>
-                      다시 시도
+                      {t("retry")}
                     </Button>
                     <Button
                       size="small"
-                      href="mailto:support@talkpik.example?subject=PDF 내보내기 오류"
+                      href={`mailto:support@talkpik.example?subject=${encodeURIComponent(
+                        t("contactSubject"),
+                      )}`}
                     >
-                      문의하기
+                      {t("contact")}
                     </Button>
                   </Space>
                 </Space>
@@ -332,19 +350,16 @@ function PdfExportModalBody({
             <Alert
               type="success"
               showIcon
-              message="PDF 출력 준비 완료"
+              message={t("doneTitle")}
               description={
                 <Space direction="vertical">
-                  <Text type="secondary">
-                    브라우저 인쇄 대화상자에서 &ldquo;PDF로 저장&rdquo;을 선택해
-                    저장하세요.
-                  </Text>
+                  <Text type="secondary">{t("doneDescription")}</Text>
                   <Space>
                     <Button size="small" type="primary" onClick={handleExport}>
-                      다시 인쇄
+                      {t("reprint")}
                     </Button>
                     <Button size="small" disabled>
-                      저장된 파일 다운로드 (준비 중)
+                      {t("downloadStored")}
                     </Button>
                   </Space>
                 </Space>
@@ -353,14 +368,14 @@ function PdfExportModalBody({
           ) : null}
 
           <Space style={{ justifyContent: "flex-end", width: "100%" }}>
-            <Button onClick={onClose}>닫기</Button>
+            <Button onClick={onClose}>{t("close")}</Button>
             <Button
               type="primary"
               loading={gen.phase === "generating"}
               disabled={!canExport}
               onClick={handleExport}
             >
-              {gen.phase === "generating" ? "생성 중..." : "PDF 내보내기"}
+              {gen.phase === "generating" ? t("generating") : t("export")}
             </Button>
           </Space>
         </Space>

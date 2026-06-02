@@ -900,5 +900,271 @@
       "tips54_2Title": "Cách diễn đạt nối",
       "tips54_2Body": "Nối các đoạn mượt mà bằng tuy nhiên, do đó, ngoài ra."
     }
+  },
+  "growth": {
+    "page": {
+      "metaTitle": "Bảng theo dõi tiến bộ — TALKPIK",
+      "goalGrade": "Cấp {grade}",
+      "goalUnset": "Chưa đặt"
+    },
+    "dashboard": {
+      "heading": "Bảng theo dõi tiến bộ",
+      "subheading": "Đây là tóm tắt các chỉ số tiến bộ và điểm yếu dựa trên kết quả học gần đây của bạn.",
+      "dimension": {
+        "grammar": "Ngữ pháp",
+        "vocab": "Từ vựng",
+        "structure": "Bố cục",
+        "content": "Nội dung",
+        "expression": "Diễn đạt",
+        "topic_fit": "Độ phù hợp chủ đề"
+      },
+      "kpi": {
+        "averageScore": "Điểm trung bình",
+        "pointSuffix": "điểm",
+        "averageScoreHint": "Trên thang điểm 100",
+        "attempts": "Số lần làm",
+        "attemptsSuffix": "lần",
+        "attemptsHint": "Tổng tích lũy",
+        "improvement": "Mức cải thiện",
+        "improvementHint": "Gần đây so với trước",
+        "improvementUp": "▲ {pct}%",
+        "improvementDown": "▼ {pct}%",
+        "improvementNoData": "Chưa đủ dữ liệu để so sánh",
+        "improvementNone": "Không thay đổi",
+        "goalAchievement": "Tiến độ mục tiêu",
+        "goalLabel": "Mục tiêu: {goal}"
+      },
+      "noGoal": {
+        "description": "Bạn chưa có mục tiêu học tập. Hãy đặt mục tiêu để bắt đầu điền các chỉ số tiến bộ.",
+        "cta": "Đặt mục tiêu"
+      },
+      "weakness": {
+        "title": "Ma trận điểm yếu",
+        "empty": "Hãy nộp thêm bài viết để hoàn thiện phân tích điểm yếu. Hiện tại nội dung dựa trên các bài gần đây.",
+        "startCta": "Bắt đầu học",
+        "scoreSample": "{score} điểm · {count} mẫu"
+      },
+      "insights": {
+        "title": "Phân tích",
+        "disclaimer": "Tóm tắt này được tính từ điểm số và lịch sử luyện tập thực tế của bạn. Điểm yếu có thể thay đổi theo kết quả luyện tập sau này."
+      },
+      "recent": {
+        "title": "Vừa hoàn thành",
+        "empty": "Bạn chưa hoàn thành câu hỏi nào.",
+        "view": "Xem",
+        "questionNo": "Câu {no}",
+        "scoreLabel": "Điểm",
+        "scoreValue": "{score} điểm",
+        "scorePending": "Đang chờ"
+      },
+      "recommend": {
+        "title": "Gợi ý tiếp theo",
+        "empty": "Chưa có câu hỏi gợi ý.",
+        "listCta": "Xem danh sách câu hỏi",
+        "questionNo": "Câu {no}",
+        "questionFallback": "Gợi ý",
+        "startCta": "Bắt đầu bài gợi ý"
+      }
+    },
+    "trend": {
+      "title": "Biểu đồ xu hướng tiến bộ",
+      "period": {
+        "7d": "7 ngày",
+        "30d": "30 ngày",
+        "90d": "90 ngày",
+        "all": "Tất cả"
+      },
+      "empty": "Chưa có lịch sử học để vẽ xu hướng. Hãy nộp bài viết để hoàn thiện xu hướng điểm số và số lần làm.",
+      "retry": "Thử lại",
+      "noRecord": "Không có dữ liệu",
+      "seriesScore": "Điểm trung bình",
+      "seriesVolume": "Số lần làm",
+      "legendHelp": "Đường màu xanh dương là điểm trung bình (trục trái, thang 100); đường màu xanh lá là số lần làm (trục phải). Ngày không có điểm sẽ nối liền đường, ngày không làm bài hiển thị là 0."
+    },
+    "locked": {
+      "title": "Báo cáo tiến bộ chi tiết chỉ dành cho gói trả phí",
+      "freePlan": "Miễn phí",
+      "body": "Với gói hiện tại (<plan></plan>), bạn chỉ xem được các chỉ số cơ bản. Nâng cấp để mở khóa biểu đồ xu hướng, ma trận điểm yếu và phân tích cá nhân hóa.",
+      "upgradeCta": "Nâng cấp gói",
+      "manageCta": "Quản lý đăng ký"
+    },
+    "error": {
+      "title": "Không thể tải các chỉ số tiến bộ của bạn.",
+      "subTitle": "Vui lòng thử lại sau giây lát. Nếu vẫn lỗi, hãy làm mới trang.",
+      "retry": "Thử lại"
+    },
+    "insights": {
+      "scoreUp": "Điểm trung bình gần đây tăng {pct}% so với trước.",
+      "scoreDown": "Điểm trung bình gần đây giảm {pct}% so với trước.",
+      "weakestDimension": "Điểm '{dimension}' của bạn thấp nhất.",
+      "recentVolume": "Bạn đã tích lũy {count} lần làm gần đây.",
+      "averageScore": "Đến nay bạn đạt trung bình {score} điểm.",
+      "streak": "Bạn đã học {days} ngày liên tiếp.",
+      "defaultTip": "Luyện viết ngắn và thường xuyên giúp cải thiện điểm số nhiều nhất."
+    }
+  },
+  "library": {
+    "page": {
+      "metaTitle": "Thư viện của tôi — TALKPIK",
+      "heading": "Thư viện của tôi"
+    },
+    "tabs": {
+      "submissions": "Bài làm đã lưu",
+      "reports": "Báo cáo so sánh",
+      "problems": "Câu hỏi đã lưu",
+      "exports": "Xuất file",
+      "searchPlaceholder": "Tìm theo tiêu đề hoặc thẻ (từ 2 ký tự)",
+      "searchAriaLabel": "Tìm trong thư viện",
+      "selectionCount": "Đã chọn {count}",
+      "exportPdf": "Xuất PDF",
+      "createReviewSet": "Tạo bộ ôn tập",
+      "selectionHint": "Chọn mục trong tab Bài làm đã lưu để xuất file hoặc tạo bộ ôn tập.",
+      "reviewSetCreated": "Đã tạo bộ ôn tập ({count} mục).",
+      "reviewSetFailed": "Không thể tạo bộ ôn tập."
+    },
+    "submissions": {
+      "loadError": "Không thể tải bài làm đã lưu của bạn",
+      "statusFilterAriaLabel": "Bộ lọc trạng thái",
+      "statusAll": "Tất cả trạng thái",
+      "statusComplete": "Đã phân tích xong",
+      "statusAnalyzing": "Đang phân tích",
+      "statusPending": "Chờ phân tích",
+      "statusFailed": "Phân tích thất bại",
+      "periodFilterAriaLabel": "Bộ lọc khoảng thời gian",
+      "resultCount": "{count} kết quả",
+      "emptySearch": "Không tìm thấy kết quả.",
+      "emptyNoItems": "Chưa có bài làm nào được lưu.",
+      "resetFilter": "Đặt lại bộ lọc",
+      "goToPractice": "Đi luyện tập",
+      "selectForExportAriaLabel": "Chọn để xuất",
+      "problemTitle": "Câu hỏi {id}",
+      "scoreWithMax": "{total}/{max} điểm",
+      "scoreNoMax": "{total} điểm",
+      "charCount": "{count} ký tự",
+      "totalCount": "Tổng {count}"
+    },
+    "reports": {
+      "loadError": "Không thể tải báo cáo so sánh",
+      "emptySearch": "Không tìm thấy kết quả.",
+      "emptyNoItems": "Chưa có báo cáo so sánh.",
+      "resetFilter": "Đặt lại bộ lọc",
+      "title": "Báo cáo so sánh",
+      "searchLabel": "Báo cáo so sánh"
+    },
+    "saved": {
+      "loadError": "Không thể tải câu hỏi đã lưu của bạn",
+      "emptySearch": "Không tìm thấy kết quả.",
+      "emptyNoItems": "Chưa có câu hỏi nào được lưu.",
+      "resetFilter": "Đặt lại bộ lọc",
+      "retry": "Làm lại"
+    },
+    "exports": {
+      "loadError": "Không thể tải lịch sử xuất file",
+      "emptySearch": "Không tìm thấy kết quả.",
+      "emptyNoItems": "Chưa có lịch sử xuất file.",
+      "resetFilter": "Đặt lại bộ lọc",
+      "sourceSubmission": "Xuất bài làm",
+      "sourceReport": "Xuất báo cáo so sánh",
+      "sourceLibrarySelection": "Xuất gói thư viện",
+      "sourceDefault": "Xuất file",
+      "statusReady": "Sẵn sàng",
+      "statusFailed": "Thất bại",
+      "statusPending": "Đang chờ",
+      "browserPrintTag": "In từ trình duyệt",
+      "reprint": "In lại",
+      "download": "Tải xuống",
+      "printDialogOpened": "Hộp thoại in PDF đã mở.",
+      "reprintFailed": "Không thể in lại."
+    },
+    "stats": {
+      "title": "Thống kê thư viện",
+      "emptyDescription": "Bạn chưa lưu tài liệu nào.",
+      "goToPractice": "Đi luyện tập",
+      "savedCount": "Đã lưu",
+      "avgScore": "Điểm trung bình",
+      "reviewCount": "Ôn tập",
+      "suffixCount": "mục",
+      "suffixPoint": "điểm",
+      "weakestLabel": "Mảng yếu nhất ",
+      "weakestNeedData": "Cần thêm dữ liệu để phân tích",
+      "continueReview": "Tiếp tục ôn tập",
+      "noUpdate": "Chưa có lịch sử cập nhật",
+      "lastUpdated": "Cập nhật {date}",
+      "dimensions": {
+        "grammar": "Ngữ pháp",
+        "vocab": "Từ vựng",
+        "structure": "Bố cục",
+        "content": "Nội dung",
+        "expression": "Diễn đạt",
+        "topic_fit": "Độ phù hợp chủ đề"
+      }
+    },
+    "item": {
+      "editTags": "Sửa thẻ",
+      "tagsInputPlaceholder": "Phân tách bằng dấu phẩy (vd: Viết, Câu 53)",
+      "tagsInputAriaLabel": "Nhập thẻ",
+      "save": "Lưu",
+      "cancel": "Hủy",
+      "deleteConfirmTitle": "Xóa mục này?",
+      "deleteConfirmDescription": "Thao tác này xóa mục khỏi thư viện. Tài liệu gốc vẫn được giữ lại.",
+      "delete": "Xóa",
+      "tagsSaved": "Đã lưu thẻ.",
+      "tagsSaveFailed": "Không thể lưu thẻ.",
+      "deleted": "Đã xóa khỏi thư viện.",
+      "deleteFailed": "Không thể xóa."
+    },
+    "exportButton": {
+      "label": "Xuất PDF",
+      "exporting": "Đang xuất...",
+      "printDialogOpened": "Hộp thoại in PDF đã mở.",
+      "exportFailed": "Không thể xuất PDF."
+    },
+    "pdf": {
+      "modalTitle": "Xuất PDF",
+      "filenameDefault": "thu-vien-cua-toi-xuat",
+      "filenameEmptyError": "Vui lòng nhập tên file.",
+      "filenameTooLongError": "Tên file phải có tối đa {max} ký tự.",
+      "selectionLostTitle": "Không tìm thấy mục đã chọn",
+      "selectionLostSubtitle": "Lựa chọn đã bị bỏ hoặc mục đã bị xóa. Vui lòng chọn lại từ danh sách.",
+      "backToList": "Quay lại danh sách",
+      "tooManyTitle": "Bạn có thể xuất tối đa {max} mục mỗi lần",
+      "tooManyDescription": "Hiện đang chọn {count} mục. Vui lòng giảm bớt lựa chọn.",
+      "filenameLabel": "Tên file",
+      "filenameAriaLabel": "Tên file",
+      "filenameCount": "{count}/{max} ký tự",
+      "includeLabel": "Bao gồm",
+      "includeAnswers": "Bao gồm bài làm của tôi",
+      "includeFeedback": "Bao gồm phản hồi AI",
+      "sortLabel": "Sắp xếp",
+      "sortRecent": "Lưu gần nhất",
+      "sortOldest": "Cũ nhất trước",
+      "sortTitle": "Theo tiêu đề",
+      "formatLabel": "Định dạng file",
+      "privacyConfirm": "Tôi hiểu rằng file xuất ra có thể chứa dữ liệu học tập cá nhân.",
+      "previewLabel": "Xem trước",
+      "previewFailedTitle": "Không thể tạo bản xem trước",
+      "previewSummary": "{count} mục để xuất · Bài làm {answers} · Phản hồi {feedback}",
+      "included": "Có",
+      "excluded": "Không",
+      "regeneratePreview": "Tạo lại bản xem trước",
+      "previewAriaLabel": "Xem trước PDF",
+      "previewSubtitle": "TALKPIK Thư viện của tôi · {count} mục",
+      "previewAnswerTag": " · Bài làm",
+      "previewFeedbackTag": " · Phản hồi",
+      "previewMore": "…và {count} mục khác (bài làm dài sẽ bị cắt bớt)",
+      "errorTitle": "Không thể tạo PDF",
+      "retry": "Thử lại",
+      "contact": "Liên hệ",
+      "contactSubject": "Lỗi xuất PDF",
+      "doneTitle": "PDF sẵn sàng để in",
+      "doneDescription": "Trong hộp thoại in của trình duyệt, chọn “Lưu thành PDF” để lưu.",
+      "reprint": "In lại",
+      "downloadStored": "Tải file đã lưu (sắp ra mắt)",
+      "close": "Đóng",
+      "generating": "Đang tạo...",
+      "export": "Xuất PDF",
+      "printDialogOpened": "Hộp thoại in PDF đã mở.",
+      "generateFailed": "Không thể tạo PDF."
+    }
   }
 }

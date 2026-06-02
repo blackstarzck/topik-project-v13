@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { requireUser } from "@/lib/auth/session";
 import {
   createSupabaseServerClient,
@@ -17,7 +18,10 @@ import {
 import { GrowthLoadError } from "@/components/growth/GrowthLoadError";
 import type { GrowthTrendPoint } from "@/components/growth/GrowthTrendChart";
 
-export const metadata: Metadata = { title: "성장 대시보드 — TALKPIK" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("growth.page");
+  return { title: t("metaTitle") };
+}
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -102,6 +106,9 @@ function computeImprovementPct(feedbacks: FeedbackPoint[]): number | null {
 async function loadGrowthData(
   userId: string,
   supabase: SupabaseServerClient,
+  // goalLabel 문구 해석기. 컴포넌트가 아니므로 useTranslations 를 못 쓰고,
+  // 서버 컴포넌트에서 받은 getTranslations("growth.page") 결과를 주입받는다.
+  formatGoalLabel: (targetGrade: number | null) => string,
 ): Promise<GrowthDashboardProps | null> {
   try {
     const sinceIso = new Date(Date.now() - 90 * DAY_MS).toISOString();
@@ -202,7 +209,7 @@ async function loadGrowthData(
         totalAttempts: kpi.totalAttempts,
         improvementPct,
         goalAchievementPct,
-        goalLabel: goal ? `${goal.target_grade}급` : "미설정",
+        goalLabel: formatGoalLabel(goal ? goal.target_grade : null),
       },
       weakDimensions: weak.map((w) => ({
         dimension: w.dimension,
@@ -226,7 +233,13 @@ async function loadGrowthData(
 export default async function GrowthPage() {
   const user = await requireUser();
   const supabase = await createSupabaseServerClient();
-  const data = await loadGrowthData(user.id, supabase);
+  const t = await getTranslations("growth.page");
+  // 목표 등급 라벨: 목표가 있으면 "N급", 없으면 "미설정". ICU 리프로 해석한다.
+  const formatGoalLabel = (targetGrade: number | null) =>
+    targetGrade != null
+      ? t("goalGrade", { grade: targetGrade })
+      : t("goalUnset");
+  const data = await loadGrowthData(user.id, supabase, formatGoalLabel);
 
   if (!data) return <GrowthLoadError />;
 

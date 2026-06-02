@@ -1,6 +1,7 @@
 "use client";
 
 import { App, Button, Card, Input, Space, Tabs, Tag, Typography } from "antd";
+import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
 
@@ -19,13 +20,6 @@ const { Text } = Typography;
 type Props = {
   activeTab: LibraryTab;
   initialItems: LibraryItemView[];
-};
-
-const TAB_LABELS: Record<LibraryTab, string> = {
-  submissions: "저장 답안",
-  reports: "비교 리포트",
-  problems: "저장 문제",
-  exports: "내보내기",
 };
 
 function pickSubmissions(items: LibraryItemView[]) {
@@ -51,6 +45,7 @@ function pickExports(items: LibraryItemView[]) {
 }
 
 export function LibraryTabs({ activeTab, initialItems }: Props) {
+  const t = useTranslations("library.tabs");
   const router = useRouter();
   const params = useSearchParams();
   const { message } = App.useApp();
@@ -74,12 +69,10 @@ export function LibraryTabs({ activeTab, initialItems }: Props) {
     setReviewPending(true);
     try {
       await createReviewSet(selection.map((s) => s.itemId));
-      message.success(
-        `복습 세트를 만들었어요. (${selection.length}개 항목)`,
-      );
+      message.success(t("reviewSetCreated", { count: selection.length }));
     } catch (err) {
       message.error(
-        err instanceof Error ? err.message : "복습 세트 생성에 실패했어요.",
+        err instanceof Error ? err.message : t("reviewSetFailed"),
       );
     } finally {
       setReviewPending(false);
@@ -115,7 +108,7 @@ export function LibraryTabs({ activeTab, initialItems }: Props) {
   const items = [
     {
       key: "submissions" satisfies LibraryTab,
-      label: TAB_LABELS.submissions,
+      label: t("submissions"),
       children: (
         <LibrarySubmissionsTab
           initialItems={submissionsInitial}
@@ -127,7 +120,7 @@ export function LibraryTabs({ activeTab, initialItems }: Props) {
     },
     {
       key: "reports" satisfies LibraryTab,
-      label: TAB_LABELS.reports,
+      label: t("reports"),
       children: (
         <LibraryReportsTab
           initialItems={reportsInitial}
@@ -138,7 +131,7 @@ export function LibraryTabs({ activeTab, initialItems }: Props) {
     },
     {
       key: "problems" satisfies LibraryTab,
-      label: TAB_LABELS.problems,
+      label: t("problems"),
       children: (
         <LibrarySavedProblemsTab
           initialItems={problemsInitial}
@@ -149,7 +142,7 @@ export function LibraryTabs({ activeTab, initialItems }: Props) {
     },
     {
       key: "exports" satisfies LibraryTab,
-      label: TAB_LABELS.exports,
+      label: t("exports"),
       children: (
         <LibraryExportsTab
           initialItems={exportsInitial}
@@ -166,8 +159,8 @@ export function LibraryTabs({ activeTab, initialItems }: Props) {
         allowClear
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
-        placeholder="제목·태그로 검색 (2자 이상)"
-        aria-label="서재 검색"
+        placeholder={t("searchPlaceholder")}
+        aria-label={t("searchAriaLabel")}
         style={{ maxWidth: 360 }}
       />
 
@@ -178,26 +171,24 @@ export function LibraryTabs({ activeTab, initialItems }: Props) {
       <Card size="small">
         <Space wrap>
           <Tag color={selection.length > 0 ? "blue" : "default"}>
-            선택 {selection.length}개
+            {t("selectionCount", { count: selection.length })}
           </Tag>
           <Button
             type="primary"
             disabled={selection.length === 0}
             onClick={() => setExportOpen(true)}
           >
-            PDF로 내보내기
+            {t("exportPdf")}
           </Button>
           <Button
             disabled={selection.length === 0}
             loading={reviewPending}
             onClick={handleCreateReviewSet}
           >
-            복습 세트로 생성
+            {t("createReviewSet")}
           </Button>
           {selection.length === 0 ? (
-            <Text type="secondary">
-              저장 답안 탭에서 항목을 선택하면 내보내기·복습 세트를 만들 수 있어요.
-            </Text>
+            <Text type="secondary">{t("selectionHint")}</Text>
           ) : null}
         </Space>
       </Card>

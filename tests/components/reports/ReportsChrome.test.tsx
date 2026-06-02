@@ -9,33 +9,11 @@ import { ComparisonKpiBlock } from "../../../src/components/reports/ComparisonKp
 import { DimensionComparisonCards } from "../../../src/components/reports/DimensionComparisonCards";
 import { ScoreComparisonChart } from "../../../src/components/reports/ScoreComparisonChart";
 import { SubmissionDiffPanel } from "../../../src/components/reports/SubmissionDiffPanel";
-import stagingReports from "../../../messages/_staging/reports.json";
+import koMessages from "../../../messages/ko.json";
 
-// The `reports.*` catalog lives in messages/_staging/reports.json until the
-// coordinator merges it into messages/{ko,en,vi}.json. So this test builds its
-// own ko message tree from the staged leaves ({ ko, en, vi }) and feeds it to
-// NextIntlClientProvider — independent of merge timing, and asserting the
-// VERBATIM Korean keeps these green before and after the merge.
-type StagedLeaf = { ko: string; en: string; vi: string };
-type StagedNode = StagedLeaf | { [k: string]: StagedNode };
-
-function isLeaf(node: StagedNode): node is StagedLeaf {
-  return typeof (node as StagedLeaf).ko === "string";
-}
-
-function toKo(node: StagedNode): unknown {
-  if (isLeaf(node)) return node.ko;
-  const out: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(node)) {
-    out[key] = toKo(value as StagedNode);
-  }
-  return out;
-}
-
-const koMessages = toKo(stagingReports as unknown as StagedNode) as Record<
-  string,
-  unknown
->;
+// The `reports.*` catalog is now merged into messages/ko.json. We render against
+// the real ko catalog (the same Korean strings the assertions match), so these
+// stay green without depending on the ephemeral messages/_staging/ dir.
 
 function renderReports(ui: ReactElement) {
   return render(

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Alert, Button, Card, Empty, Radio, Space, Typography } from "antd";
+import { useTranslations } from "next-intl";
 import {
   CartesianGrid,
   Legend,
@@ -42,11 +43,16 @@ export type GrowthTrendPoint = {
 
 export type GrowthTrendPeriod = "7d" | "30d" | "90d" | "all";
 
-const PERIOD_OPTIONS: { label: string; value: GrowthTrendPeriod; days: number | null }[] = [
-  { label: "7일", value: "7d", days: 7 },
-  { label: "30일", value: "30d", days: 30 },
-  { label: "90일", value: "90d", days: 90 },
-  { label: "전체", value: "all", days: null },
+// 기간 필터 옵션. 라벨 문구는 growth.trend.period.* 카탈로그에서 t()로 해석한다.
+const PERIOD_OPTIONS: {
+  labelKey: "7d" | "30d" | "90d" | "all";
+  value: GrowthTrendPeriod;
+  days: number | null;
+}[] = [
+  { labelKey: "7d", value: "7d", days: 7 },
+  { labelKey: "30d", value: "30d", days: 30 },
+  { labelKey: "90d", value: "90d", days: 90 },
+  { labelKey: "all", value: "all", days: null },
 ];
 
 type Props = {
@@ -63,6 +69,7 @@ function formatShortDate(date: string): string {
 }
 
 export function GrowthTrendChart({ points, onRetry }: Props) {
+  const t = useTranslations("growth.trend");
   const [period, setPeriod] = useState<GrowthTrendPeriod>("30d");
   // 기준 시각은 마운트 시점에 한 번만 고정한다. 렌더 본문에서 Date.now()를
   // 직접 부르면 불순(impure)해 재렌더마다 결과가 흔들리므로 lazy initializer로 캡처.
@@ -79,7 +86,7 @@ export function GrowthTrendChart({ points, onRetry }: Props) {
 
   return (
     <Card
-      title="성장 추세 차트"
+      title={t("title")}
       extra={
         <Radio.Group
           size="small"
@@ -88,16 +95,16 @@ export function GrowthTrendChart({ points, onRetry }: Props) {
           value={period}
           onChange={(e) => setPeriod(e.target.value as GrowthTrendPeriod)}
           options={PERIOD_OPTIONS.map((o) => ({
-            label: o.label,
+            label: t(`period.${o.labelKey}` as Parameters<typeof t>[0]),
             value: o.value,
           }))}
         />
       }
     >
       {!hasData ? (
-        <Empty description="아직 추세를 그릴 학습 기록이 없어요. 글쓰기를 제출하면 점수·풀이량 추세가 채워집니다.">
+        <Empty description={t("empty")}>
           {onRetry ? (
-            <Button onClick={onRetry}>다시 시도</Button>
+            <Button onClick={onRetry}>{t("retry")}</Button>
           ) : null}
         </Empty>
       ) : (
@@ -131,7 +138,7 @@ export function GrowthTrendChart({ points, onRetry }: Props) {
                 <Tooltip
                   labelFormatter={(label) => `${label}`}
                   formatter={(value, name) => {
-                    if (value == null) return ["기록 없음", name as string];
+                    if (value == null) return [t("noRecord"), name as string];
                     return [value as number, name as string];
                   }}
                 />
@@ -140,7 +147,7 @@ export function GrowthTrendChart({ points, onRetry }: Props) {
                   yAxisId="score"
                   type="monotone"
                   dataKey="score"
-                  name="평균 점수"
+                  name={t("seriesScore")}
                   stroke="#1677ff"
                   strokeWidth={2}
                   dot={{ r: 2 }}
@@ -150,7 +157,7 @@ export function GrowthTrendChart({ points, onRetry }: Props) {
                   yAxisId="volume"
                   type="monotone"
                   dataKey="volume"
-                  name="풀이 수"
+                  name={t("seriesVolume")}
                   stroke="#52c41a"
                   strokeWidth={2}
                   dot={{ r: 2 }}
@@ -163,9 +170,7 @@ export function GrowthTrendChart({ points, onRetry }: Props) {
             showIcon
             message={
               <Text type="secondary" style={{ fontSize: 12 }}>
-                파란선은 평균 점수(왼쪽 축, 100점 만점), 초록선은 풀이 수(오른쪽
-                축)예요. 점수가 없는 날은 선이 이어지며, 풀이가 없는 날은 0으로
-                표시됩니다.
+                {t("legendHelp")}
               </Text>
             }
           />

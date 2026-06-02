@@ -900,5 +900,271 @@
       "tips54_2Title": "연결 표현",
       "tips54_2Body": "그러나·따라서·또한으로 문단을 매끄럽게 이으세요."
     }
+  },
+  "growth": {
+    "page": {
+      "metaTitle": "성장 대시보드 — TALKPIK",
+      "goalGrade": "{grade}급",
+      "goalUnset": "미설정"
+    },
+    "dashboard": {
+      "heading": "성장 대시보드",
+      "subheading": "최근 학습 결과를 바탕으로 성장 지표와 약점을 정리했어요.",
+      "dimension": {
+        "grammar": "문법",
+        "vocab": "어휘",
+        "structure": "구성",
+        "content": "내용",
+        "expression": "표현",
+        "topic_fit": "주제 적합성"
+      },
+      "kpi": {
+        "averageScore": "평균 점수",
+        "pointSuffix": "점",
+        "averageScoreHint": "100점 만점 기준",
+        "attempts": "풀이 수",
+        "attemptsSuffix": "회",
+        "attemptsHint": "누적 기준",
+        "improvement": "개선률",
+        "improvementHint": "최근 vs 이전",
+        "improvementUp": "▲ {pct}%",
+        "improvementDown": "▼ {pct}%",
+        "improvementNoData": "비교 데이터 부족",
+        "improvementNone": "변화 없음",
+        "goalAchievement": "목표 달성률",
+        "goalLabel": "목표 {goal}"
+      },
+      "noGoal": {
+        "description": "학습 목표가 아직 없어요. 목표를 설정하면 성장 지표가 채워집니다.",
+        "cta": "목표 설정하기"
+      },
+      "weakness": {
+        "title": "약점 매트릭스",
+        "empty": "글쓰기를 더 제출하면 약점 분석이 채워져요. 지금은 최근 답안 기준으로 안내해요.",
+        "startCta": "학습 시작",
+        "scoreSample": "{score}점 · {count}건"
+      },
+      "insights": {
+        "title": "인사이트",
+        "disclaimer": "실제 점수·풀이 기록에서 계산한 요약이에요. 약점은 다음 연습 결과에 따라 달라질 수 있습니다."
+      },
+      "recent": {
+        "title": "최근 완료 문제",
+        "empty": "아직 완료한 문제가 없어요.",
+        "view": "보기",
+        "questionNo": "{no}번",
+        "scoreLabel": "점수",
+        "scoreValue": "{score}점",
+        "scorePending": "대기"
+      },
+      "recommend": {
+        "title": "다음 추천 문제",
+        "empty": "추천 문제가 아직 없어요.",
+        "listCta": "문제 목록 보기",
+        "questionNo": "{no}번 문항",
+        "questionFallback": "추천",
+        "startCta": "추천 학습 시작"
+      }
+    },
+    "trend": {
+      "title": "성장 추세 차트",
+      "period": {
+        "7d": "7일",
+        "30d": "30일",
+        "90d": "90일",
+        "all": "전체"
+      },
+      "empty": "아직 추세를 그릴 학습 기록이 없어요. 글쓰기를 제출하면 점수·풀이량 추세가 채워집니다.",
+      "retry": "다시 시도",
+      "noRecord": "기록 없음",
+      "seriesScore": "평균 점수",
+      "seriesVolume": "풀이 수",
+      "legendHelp": "파란선은 평균 점수(왼쪽 축, 100점 만점), 초록선은 풀이 수(오른쪽 축)예요. 점수가 없는 날은 선이 이어지며, 풀이가 없는 날은 0으로 표시됩니다."
+    },
+    "locked": {
+      "title": "상세 성장 리포트는 유료 플랜 전용이에요",
+      "freePlan": "무료",
+      "body": "현재 플랜: <plan></plan> 에서는 기본 지표만 볼 수 있어요. 업그레이드하면 추세 차트와 약점 매트릭스, 맞춤 인사이트가 모두 열립니다.",
+      "upgradeCta": "플랜 업그레이드",
+      "manageCta": "구독 관리"
+    },
+    "error": {
+      "title": "성장 지표를 불러오지 못했어요.",
+      "subTitle": "잠시 후 다시 시도해 주세요. 문제가 계속되면 새로고침해 주세요.",
+      "retry": "다시 시도"
+    },
+    "insights": {
+      "scoreUp": "최근 평균 점수가 이전보다 {pct}% 올랐어요.",
+      "scoreDown": "최근 평균 점수가 이전보다 {pct}% 내렸어요.",
+      "weakestDimension": "'{dimension}' 영역 점수가 가장 낮아요.",
+      "recentVolume": "최근 {count}회 풀이 기록이 쌓였어요.",
+      "averageScore": "지금까지 평균 {score}점을 받았어요.",
+      "streak": "{days}일 연속으로 학습하고 있어요.",
+      "defaultTip": "짧게 자주 쓰는 연습이 점수 향상에 가장 도움이 됩니다."
+    }
+  },
+  "library": {
+    "page": {
+      "metaTitle": "내 서재 — TALKPIK",
+      "heading": "내 서재"
+    },
+    "tabs": {
+      "submissions": "저장 답안",
+      "reports": "비교 리포트",
+      "problems": "저장 문제",
+      "exports": "내보내기",
+      "searchPlaceholder": "제목·태그로 검색 (2자 이상)",
+      "searchAriaLabel": "서재 검색",
+      "selectionCount": "선택 {count}개",
+      "exportPdf": "PDF로 내보내기",
+      "createReviewSet": "복습 세트로 생성",
+      "selectionHint": "저장 답안 탭에서 항목을 선택하면 내보내기·복습 세트를 만들 수 있어요.",
+      "reviewSetCreated": "복습 세트를 만들었어요. ({count}개 항목)",
+      "reviewSetFailed": "복습 세트 생성에 실패했어요."
+    },
+    "submissions": {
+      "loadError": "저장한 답안을 불러오지 못했어요",
+      "statusFilterAriaLabel": "상태 필터",
+      "statusAll": "전체 상태",
+      "statusComplete": "분석 완료",
+      "statusAnalyzing": "분석 중",
+      "statusPending": "분석 대기",
+      "statusFailed": "분석 실패",
+      "periodFilterAriaLabel": "기간 필터",
+      "resultCount": "검색 결과 {count}건",
+      "emptySearch": "검색 결과가 없습니다.",
+      "emptyNoItems": "저장한 답안이 없습니다.",
+      "resetFilter": "필터 초기화",
+      "goToPractice": "문제 풀러 가기",
+      "selectForExportAriaLabel": "내보내기 선택",
+      "problemTitle": "문제 {id}",
+      "scoreWithMax": "{total}/{max}점",
+      "scoreNoMax": "{total}점",
+      "charCount": "{count}자",
+      "totalCount": "총 {count}건"
+    },
+    "reports": {
+      "loadError": "비교 리포트를 불러오지 못했어요",
+      "emptySearch": "검색 결과가 없습니다.",
+      "emptyNoItems": "비교 리포트가 없습니다.",
+      "resetFilter": "필터 초기화",
+      "title": "비교 리포트",
+      "searchLabel": "비교 리포트"
+    },
+    "saved": {
+      "loadError": "저장한 문제를 불러오지 못했어요",
+      "emptySearch": "검색 결과가 없습니다.",
+      "emptyNoItems": "저장한 문제가 없습니다.",
+      "resetFilter": "필터 초기화",
+      "retry": "다시 풀기"
+    },
+    "exports": {
+      "loadError": "내보내기 기록을 불러오지 못했어요",
+      "emptySearch": "검색 결과가 없습니다.",
+      "emptyNoItems": "내보내기 기록이 없습니다.",
+      "resetFilter": "필터 초기화",
+      "sourceSubmission": "답안 내보내기",
+      "sourceReport": "비교 리포트 내보내기",
+      "sourceLibrarySelection": "라이브러리 묶음 내보내기",
+      "sourceDefault": "내보내기",
+      "statusReady": "준비됨",
+      "statusFailed": "실패",
+      "statusPending": "대기 중",
+      "browserPrintTag": "브라우저 인쇄",
+      "reprint": "다시 인쇄",
+      "download": "다운로드",
+      "printDialogOpened": "PDF 출력 대화상자가 열렸습니다.",
+      "reprintFailed": "다시 인쇄에 실패했어요."
+    },
+    "stats": {
+      "title": "내 서재 통계",
+      "emptyDescription": "아직 저장한 자료가 없어요.",
+      "goToPractice": "문제 풀러 가기",
+      "savedCount": "저장 수",
+      "avgScore": "평균 점수",
+      "reviewCount": "복습 현황",
+      "suffixCount": "건",
+      "suffixPoint": "점",
+      "weakestLabel": "취약 유형 ",
+      "weakestNeedData": "분석을 위한 데이터가 더 필요해요",
+      "continueReview": "복습 이어가기",
+      "noUpdate": "갱신 기록 없음",
+      "lastUpdated": "최근 갱신 {date}",
+      "dimensions": {
+        "grammar": "문법",
+        "vocab": "어휘",
+        "structure": "구성",
+        "content": "내용",
+        "expression": "표현",
+        "topic_fit": "주제 적합도"
+      }
+    },
+    "item": {
+      "editTags": "태그 편집",
+      "tagsInputPlaceholder": "쉼표로 구분 (예: 작문, 53번)",
+      "tagsInputAriaLabel": "태그 입력",
+      "save": "저장",
+      "cancel": "취소",
+      "deleteConfirmTitle": "삭제하시겠어요?",
+      "deleteConfirmDescription": "라이브러리 항목을 삭제합니다. 원본 자료는 유지돼요.",
+      "delete": "삭제",
+      "tagsSaved": "태그를 저장했어요.",
+      "tagsSaveFailed": "태그 저장에 실패했어요.",
+      "deleted": "라이브러리에서 삭제했어요.",
+      "deleteFailed": "삭제에 실패했어요."
+    },
+    "exportButton": {
+      "label": "PDF로 내보내기",
+      "exporting": "내보내는 중...",
+      "printDialogOpened": "PDF 출력 대화상자가 열렸습니다.",
+      "exportFailed": "PDF 내보내기에 실패했어요."
+    },
+    "pdf": {
+      "modalTitle": "PDF로 내보내기",
+      "filenameDefault": "내서재-내보내기",
+      "filenameEmptyError": "파일명을 입력해 주세요.",
+      "filenameTooLongError": "파일명은 {max}자 이하여야 해요.",
+      "selectionLostTitle": "선택한 항목을 찾을 수 없어요",
+      "selectionLostSubtitle": "선택이 해제되었거나 항목이 삭제되었습니다. 목록에서 다시 선택해 주세요.",
+      "backToList": "목록으로 돌아가기",
+      "tooManyTitle": "한 번에 {max}개까지 내보낼 수 있어요",
+      "tooManyDescription": "현재 {count}개가 선택되어 있습니다. 선택을 줄여 주세요.",
+      "filenameLabel": "파일명",
+      "filenameAriaLabel": "파일명",
+      "filenameCount": "{count}/{max}자",
+      "includeLabel": "포함 항목",
+      "includeAnswers": "내 답안 포함",
+      "includeFeedback": "AI 피드백 포함",
+      "sortLabel": "정렬",
+      "sortRecent": "최근 저장순",
+      "sortOldest": "오래된순",
+      "sortTitle": "제목순",
+      "formatLabel": "파일 형식",
+      "privacyConfirm": "내보내는 파일에 개인 학습 정보가 포함될 수 있음을 확인했습니다.",
+      "previewLabel": "미리보기",
+      "previewFailedTitle": "미리보기를 만들지 못했어요",
+      "previewSummary": "내보낼 항목 {count}개 · 답안 {answers} · 피드백 {feedback}",
+      "included": "포함",
+      "excluded": "제외",
+      "regeneratePreview": "미리보기 재생성",
+      "previewAriaLabel": "PDF 미리보기",
+      "previewSubtitle": "TALKPIK 내 서재 · {count}개 항목",
+      "previewAnswerTag": " · 답안",
+      "previewFeedbackTag": " · 피드백",
+      "previewMore": "…외 {count}개 (긴 답안은 일부만 표시)",
+      "errorTitle": "PDF 생성에 실패했어요",
+      "retry": "다시 시도",
+      "contact": "문의하기",
+      "contactSubject": "PDF 내보내기 오류",
+      "doneTitle": "PDF 출력 준비 완료",
+      "doneDescription": "브라우저 인쇄 대화상자에서 “PDF로 저장”을 선택해 저장하세요.",
+      "reprint": "다시 인쇄",
+      "downloadStored": "저장된 파일 다운로드 (준비 중)",
+      "close": "닫기",
+      "generating": "생성 중...",
+      "export": "PDF 내보내기",
+      "printDialogOpened": "PDF 출력 대화상자가 열렸습니다.",
+      "generateFailed": "PDF 생성에 실패했어요."
+    }
   }
 }

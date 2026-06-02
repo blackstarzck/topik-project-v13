@@ -55,18 +55,21 @@ export async function fetchSubmissionEnrichment(
   return out;
 }
 
-const STATUS_LABELS: Record<
+// i18n: 이 모듈은 컴포넌트가 아니라 useTranslations를 쓸 수 없다. 라벨 문구는
+// library.submissions.* 카탈로그 키로 노출하고, 렌더 컴포넌트가 t()로 해석한다
+// (wave-2/3 key-expose 패턴). 여기서는 카탈로그 키 + 배지 색만 보관한다.
+const STATUS_BADGES: Record<
   SubmissionEnrichment["feedbackStatus"],
-  { label: string; color: string }
+  { labelKey: string; color: string }
 > = {
-  pending: { label: "분석 대기", color: "default" },
-  analyzing: { label: "분석 중", color: "blue" },
-  complete: { label: "분석 완료", color: "green" },
-  failed: { label: "분석 실패", color: "red" },
+  pending: { labelKey: "statusPending", color: "default" },
+  analyzing: { labelKey: "statusAnalyzing", color: "blue" },
+  complete: { labelKey: "statusComplete", color: "green" },
+  failed: { labelKey: "statusFailed", color: "red" },
 };
 
 export function statusBadge(status: SubmissionEnrichment["feedbackStatus"]) {
-  return STATUS_LABELS[status] ?? STATUS_LABELS.pending;
+  return STATUS_BADGES[status] ?? STATUS_BADGES.pending;
 }
 
 /** Title <= 32 chars (F-01 row constraint). */

@@ -1,6 +1,7 @@
 "use client";
 
 import { Alert, Button, Empty, List, Space, Spin, Typography } from "antd";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 import { useLibraryItems } from "@/lib/library/queries";
@@ -26,6 +27,7 @@ export function LibrarySavedProblemsTab({
   searchTerm = "",
   onResetSearch,
 }: Props) {
+  const t = useTranslations("library.saved");
   const query = useLibraryItems("problems");
   const allItems: LibraryProblemView[] = (query.data ?? initialItems).filter(
     isProblem,
@@ -41,7 +43,7 @@ export function LibrarySavedProblemsTab({
     return (
       <Alert
         type="error"
-        message="저장한 문제를 불러오지 못했어요"
+        message={t("loadError")}
         description={
           query.error instanceof Error ? query.error.message : undefined
         }
@@ -52,12 +54,10 @@ export function LibrarySavedProblemsTab({
     const searching = searchTerm.trim().length > 0;
     return (
       <Empty
-        description={
-          searching ? "검색 결과가 없습니다." : "저장한 문제가 없습니다."
-        }
+        description={searching ? t("emptySearch") : t("emptyNoItems")}
       >
         {searching && onResetSearch ? (
-          <Button onClick={onResetSearch}>필터 초기화</Button>
+          <Button onClick={onResetSearch}>{t("resetFilter")}</Button>
         ) : null}
       </Empty>
     );
@@ -78,7 +78,7 @@ export function LibrarySavedProblemsTab({
               href={`/practice/problems/${item.id}` as never}
             >
               <Button type="primary" size="small">
-                다시 풀기
+                {t("retry")}
               </Button>
             </Link>,
           ]}

@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Result } from "antd";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 
 /**
@@ -8,15 +9,16 @@ import { useRouter } from "next/navigation";
  * 사용자를 막다른 길에 두지 않도록 정직한 안내 + 다시 시도 동선을 노출한다.
  */
 export function GrowthLoadError() {
+  const t = useTranslations("growth.error");
   const router = useRouter();
   return (
     <Result
       status="warning"
-      title="성장 지표를 불러오지 못했어요."
-      subTitle="잠시 후 다시 시도해 주세요. 문제가 계속되면 새로고침해 주세요."
+      title={t("title")}
+      subTitle={t("subTitle")}
       extra={
         <Button type="primary" onClick={() => router.refresh()}>
-          다시 시도
+          {t("retry")}
         </Button>
       }
     />

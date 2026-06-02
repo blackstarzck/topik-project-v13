@@ -15,6 +15,7 @@ import {
   Typography,
 } from "antd";
 import type { Dayjs } from "dayjs";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
@@ -75,6 +76,7 @@ export function LibrarySubmissionsTab({
   onResetSearch,
   onSelectionChange,
 }: Props) {
+  const t = useTranslations("library.submissions");
   const query = useLibraryItems("submissions");
   const allItems: LibrarySubmissionView[] = (query.data ?? initialItems).filter(
     isSubmission,
@@ -114,7 +116,7 @@ export function LibrarySubmissionsTab({
     return allItems.filter((i) => {
       if (
         !matchesLibrarySearch(searchTerm, [
-          `문제 ${i.problem_id.slice(0, 8)}`,
+          t("problemTitle", { id: i.problem_id.slice(0, 8) }),
           i.problem_id,
           enrich.get(i.id)?.summary,
           ...i.tags,
@@ -133,7 +135,7 @@ export function LibrarySubmissionsTab({
       }
       return true;
     });
-  }, [allItems, searchTerm, statusFilter, range, enrich]);
+  }, [allItems, searchTerm, statusFilter, range, enrich, t]);
 
   // Clamp the page when the filtered set shrinks.
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
@@ -151,10 +153,10 @@ export function LibrarySubmissionsTab({
       .filter((i) => selected.has(i.item_id) && validIds.has(i.item_id))
       .map((i) => ({
         itemId: i.item_id,
-        title: `문제 ${i.problem_id.slice(0, 8)}`,
+        title: t("problemTitle", { id: i.problem_id.slice(0, 8) }),
       }));
     onSelectionChange(items);
-  }, [selected, filtered, onSelectionChange]);
+  }, [selected, filtered, onSelectionChange, t]);
 
   function toggle(itemId: string, checked: boolean) {
     setSelected((prev) => {
@@ -176,7 +178,7 @@ export function LibrarySubmissionsTab({
     return (
       <Alert
         type="error"
-        message="저장한 답안을 불러오지 못했어요"
+        message={t("loadError")}
         description={
           query.error instanceof Error ? query.error.message : undefined
         }
@@ -200,13 +202,13 @@ export function LibrarySubmissionsTab({
             setPage(1);
           }}
           style={{ minWidth: 140 }}
-          aria-label="상태 필터"
+          aria-label={t("statusFilterAriaLabel")}
           options={[
-            { value: "all", label: "전체 상태" },
-            { value: "complete", label: "분석 완료" },
-            { value: "analyzing", label: "분석 중" },
-            { value: "pending", label: "분석 대기" },
-            { value: "failed", label: "분석 실패" },
+            { value: "all", label: t("statusAll") },
+            { value: "complete", label: t("statusComplete") },
+            { value: "analyzing", label: t("statusAnalyzing") },
+            { value: "pending", label: t("statusPending") },
+            { value: "failed", label: t("statusFailed") },
           ]}
         />
         <RangePicker
@@ -215,16 +217,14 @@ export function LibrarySubmissionsTab({
             setRange(v as [Dayjs | null, Dayjs | null] | null);
             setPage(1);
           }}
-          aria-label="기간 필터"
+          aria-label={t("periodFilterAriaLabel")}
         />
-        <Text type="secondary">검색 결과 {filtered.length}건</Text>
+        <Text type="secondary">{t("resultCount", { count: filtered.length })}</Text>
       </Space>
 
       {pageItems.length === 0 ? (
         <Empty
-          description={
-            searching ? "검색 결과가 없습니다." : "저장한 답안이 없습니다."
-          }
+          description={searching ? t("emptySearch") : t("emptyNoItems")}
         >
           {searching ? (
             <Button
@@ -234,10 +234,10 @@ export function LibrarySubmissionsTab({
                 onResetSearch?.();
               }}
             >
-              필터 초기화
+              {t("resetFilter")}
             </Button>
           ) : (
-            <Link href="/practice">문제 풀러 가기</Link>
+            <Link href="/practice">{t("goToPractice")}</Link>
           )}
         </Empty>
       ) : (
@@ -258,7 +258,7 @@ export function LibrarySubmissionsTab({
                       key="select"
                       checked={selected.has(item.item_id)}
                       onChange={(e) => toggle(item.item_id, e.target.checked)}
-                      aria-label="내보내기 선택"
+                      aria-label={t("selectForExportAriaLabel")}
                     />,
                     <ExportPdfButton
                       key="export"
@@ -273,14 +273,24 @@ export function LibrarySubmissionsTab({
                         href={`/practice/problems/${item.problem_id}` as never}
                       >
                         <Text strong>
-                          {clampTitle(`문제 ${item.problem_id.slice(0, 8)}`)}
+                          {clampTitle(
+                            t("problemTitle", {
+                              id: item.problem_id.slice(0, 8),
+                            }),
+                          )}
                         </Text>
                       </Link>
-                      <Tag color={badge.color}>{badge.label}</Tag>
+                      <Tag color={badge.color}>
+                        {t(badge.labelKey as Parameters<typeof t>[0])}
+                      </Tag>
                       {meta?.scoreTotal != null ? (
                         <Tag color="geekblue">
-                          {meta.scoreTotal}
-                          {meta.scoreMax != null ? `/${meta.scoreMax}` : ""}점
+                          {meta.scoreMax != null
+                            ? t("scoreWithMax", {
+                                total: meta.scoreTotal,
+                                max: meta.scoreMax,
+                              })
+                            : t("scoreNoMax", { total: meta.scoreTotal })}
                         </Tag>
                       ) : null}
                     </Space>
@@ -294,7 +304,7 @@ export function LibrarySubmissionsTab({
                       </Paragraph>
                     ) : null}
                     <Space size="small" wrap>
-                      <Tag>{item.char_count}자</Tag>
+                      <Tag>{t("charCount", { count: item.char_count })}</Tag>
                       <Text type="secondary">{formatDate(item.submitted_at)}</Text>
                     </Space>
                   </Space>
@@ -310,7 +320,7 @@ export function LibrarySubmissionsTab({
               pageSize={PAGE_SIZE}
               total={filtered.length}
               showSizeChanger={false}
-              showTotal={(total) => `총 ${total}건`}
+              showTotal={(total) => t("totalCount", { count: total })}
               onChange={(p) => setPage(p)}
               responsive
             />

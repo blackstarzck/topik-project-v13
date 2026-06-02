@@ -1,18 +1,20 @@
 "use client";
 
 import { Card, Empty, Space, Statistic, Tag, Typography } from "antd";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 const { Text } = Typography;
 
-const DIMENSION_LABELS: Record<string, string> = {
-  grammar: "문법",
-  vocab: "어휘",
-  structure: "구성",
-  content: "내용",
-  expression: "표현",
-  topic_fit: "주제 적합도",
-};
+// dimension 코드 → library.stats.dimensions 카탈로그 키. 문구는 t()로 해석한다.
+const DIMENSION_KEYS = [
+  "grammar",
+  "vocab",
+  "structure",
+  "content",
+  "expression",
+  "topic_fit",
+] as const;
 
 export type LibraryStats = {
   /** Total saved library items (all tabs). */
@@ -31,31 +33,42 @@ type Props = {
   stats: LibraryStats;
 };
 
-function formatUpdated(iso: string | null): string {
-  if (!iso) return "갱신 기록 없음";
-  try {
-    return `최근 갱신 ${new Date(iso).toLocaleDateString("ko-KR")}`;
-  } catch {
-    return "갱신 기록 없음";
-  }
-}
-
 /**
  * F-01 region 4 (우측 통계): 저장 수 / 평균 점수 / 취약 유형 / 복습 현황 +
  * last-updated. Constraint: 통계 카드 3개 이하 per group, 수치 라벨 1줄.
  * Exception (데이터 없음): show a 복습 시작 안내 instead of empty numbers.
  */
 export function LibraryStatsPanel({ stats }: Props) {
+  const t = useTranslations("library.stats");
+  const tDim = useTranslations("library.stats.dimensions");
   const empty = stats.savedCount === 0;
+
+  // last-updated 라인: ISO를 ko-KR 날짜로 포맷해 "최근 갱신 {date}"로 보여준다.
+  function formatUpdated(iso: string | null): string {
+    if (!iso) return t("noUpdate");
+    try {
+      return t("lastUpdated", {
+        date: new Date(iso).toLocaleDateString("ko-KR"),
+      });
+    } catch {
+      return t("noUpdate");
+    }
+  }
+
+  // dimension 코드를 카탈로그 라벨로. 알 수 없는 코드는 코드 그대로 폴백.
+  const dimLabel = (code: string) =>
+    (DIMENSION_KEYS as readonly string[]).includes(code)
+      ? tDim(code as (typeof DIMENSION_KEYS)[number])
+      : code;
 
   if (empty) {
     return (
-      <Card title="내 서재 통계">
+      <Card title={t("title")}>
         <Empty
           image={Empty.PRESENTED_IMAGE_SIMPLE}
-          description="아직 저장한 자료가 없어요."
+          description={t("emptyDescription")}
         >
-          <Link href="/practice">문제 풀러 가기</Link>
+          <Link href="/practice">{t("goToPractice")}</Link>
         </Empty>
       </Card>
     );
@@ -63,7 +76,7 @@ export function LibraryStatsPanel({ stats }: Props) {
 
   return (
     <Card
-      title="내 서재 통계"
+      title={t("title")}
       extra={
         <Text type="secondary" style={{ fontSize: 12 }}>
           {formatUpdated(stats.lastUpdated)}
@@ -72,26 +85,31 @@ export function LibraryStatsPanel({ stats }: Props) {
     >
       <Space direction="vertical" size="middle" style={{ width: "100%" }}>
         <Space size="large" wrap>
-          <Statistic title="저장 수" value={stats.savedCount} suffix="건" />
           <Statistic
-            title="평균 점수"
-            value={stats.avgScore != null ? stats.avgScore : "—"}
-            suffix={stats.avgScore != null ? "점" : undefined}
+            title={t("savedCount")}
+            value={stats.savedCount}
+            suffix={t("suffixCount")}
           />
-          <Statistic title="복습 현황" value={stats.reviewCount} suffix="건" />
+          <Statistic
+            title={t("avgScore")}
+            value={stats.avgScore != null ? stats.avgScore : "—"}
+            suffix={stats.avgScore != null ? t("suffixPoint") : undefined}
+          />
+          <Statistic
+            title={t("reviewCount")}
+            value={stats.reviewCount}
+            suffix={t("suffixCount")}
+          />
         </Space>
         <div>
-          <Text type="secondary">취약 유형 </Text>
+          <Text type="secondary">{t("weakestLabel")}</Text>
           {stats.weakestDimension ? (
-            <Tag color="volcano">
-              {DIMENSION_LABELS[stats.weakestDimension] ??
-                stats.weakestDimension}
-            </Tag>
+            <Tag color="volcano">{dimLabel(stats.weakestDimension)}</Tag>
           ) : (
-            <Text type="secondary">분석을 위한 데이터가 더 필요해요</Text>
+            <Text type="secondary">{t("weakestNeedData")}</Text>
           )}
         </div>
-        <Link href="/practice">복습 이어가기</Link>
+        <Link href="/practice">{t("continueReview")}</Link>
       </Space>
     </Card>
   );

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Col, Row } from "antd";
+import { getTranslations } from "next-intl/server";
 import { requireUser } from "@/lib/auth/session";
 import { listLibraryItems } from "@/lib/library/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -10,7 +11,10 @@ import {
   type LibraryStats,
 } from "@/components/library/LibraryStatsPanel";
 
-export const metadata: Metadata = { title: "내 서재 — TALKPIK" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("library.page");
+  return { title: t("metaTitle") };
+}
 
 type Props = { searchParams: Promise<{ tab?: string }> };
 
@@ -91,6 +95,7 @@ export default async function LibraryPage({ searchParams }: Props) {
   const user = await requireUser();
   const sp = await searchParams;
   const activeTab = parseLibraryTab(sp.tab);
+  const t = await getTranslations("library.page");
   const [initialItems, stats] = await Promise.all([
     listLibraryItems(user.id, activeTab),
     computeLibraryStats(user.id),
@@ -98,7 +103,7 @@ export default async function LibraryPage({ searchParams }: Props) {
 
   return (
     <main style={{ padding: 24, maxWidth: 1200, margin: "0 auto" }}>
-      <h1>내 서재</h1>
+      <h1>{t("heading")}</h1>
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={16}>
           <LibraryTabs activeTab={activeTab} initialItems={initialItems} />

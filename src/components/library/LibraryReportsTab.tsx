@@ -1,6 +1,7 @@
 "use client";
 
 import { Alert, Button, Empty, List, Space, Spin, Typography } from "antd";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 import { useLibraryItems } from "@/lib/library/queries";
@@ -31,13 +32,14 @@ export function LibraryReportsTab({
   searchTerm = "",
   onResetSearch,
 }: Props) {
+  const t = useTranslations("library.reports");
   const query = useLibraryItems("reports");
   const allItems: LibraryReportView[] = (query.data ?? initialItems).filter(
     isReport,
   );
   const items = allItems.filter((i) =>
     matchesLibrarySearch(searchTerm, [
-      "비교 리포트",
+      t("searchLabel"),
       i.narrative_excerpt,
       ...i.tags,
     ]),
@@ -50,7 +52,7 @@ export function LibraryReportsTab({
     return (
       <Alert
         type="error"
-        message="비교 리포트를 불러오지 못했어요"
+        message={t("loadError")}
         description={
           query.error instanceof Error ? query.error.message : undefined
         }
@@ -61,12 +63,10 @@ export function LibraryReportsTab({
     const searching = searchTerm.trim().length > 0;
     return (
       <Empty
-        description={
-          searching ? "검색 결과가 없습니다." : "비교 리포트가 없습니다."
-        }
+        description={searching ? t("emptySearch") : t("emptyNoItems")}
       >
         {searching && onResetSearch ? (
-          <Button onClick={onResetSearch}>필터 초기화</Button>
+          <Button onClick={onResetSearch}>{t("resetFilter")}</Button>
         ) : null}
       </Empty>
     );
@@ -91,7 +91,7 @@ export function LibraryReportsTab({
         >
           <Space direction="vertical" size={4} style={{ width: "100%" }}>
             <Link href={`/writing/reports/${item.id}/compare` as never}>
-              <Text strong>비교 리포트</Text>
+              <Text strong>{t("title")}</Text>
             </Link>
             <Text type="secondary">{formatDate(item.generated_at)}</Text>
             {item.narrative_excerpt ? (
