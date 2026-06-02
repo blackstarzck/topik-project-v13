@@ -73,5 +73,36 @@ Owner sequence was "finish i18n → reconciliation". i18n is done. Reconciliatio
 - i18n infra: `scripts/i18n/{merge-staging,scan-unmigrated}.mjs`, `tests/test-utils/renderWithIntl.tsx`,
   `tests/lib/i18n/{catalog-parity,locale-resolution,locale-render}.test.tsx`, `src/i18n/*`, `messages/*`.
 - Auto-memories: `project-admin-scope-boundary`, `project-i18n-migration-progress` (now: all clusters
-  done + 5 gotchas), `project-integration-test-load-timeout-flake`, `project-antd-compound-server-component-react130`,
-  `codex-review-mojibake-windows`, `feedback-ui-completion-requires-dev-server`, `feedback-report-honesty-cross-audit`.
+  done + 5 gotchas), `project-pnpm-build-clobbers-dev-server` (NEW), `project-integration-test-load-timeout-flake`,
+  `project-antd-compound-server-component-react130`, `codex-review-mojibake-windows`,
+  `feedback-ui-completion-requires-dev-server`, `feedback-report-honesty-cross-audit`.
+
+## 7. UPDATE — browser verification DONE (2026-06-02, post-handoff)
+
+Owner reported a runtime error at `/` ("useTranslations ... NextIntlClientProvider not found") and
+asked for full-scope Playwright verification. Findings:
+
+- **ROOT CAUSE of the error = NOT an i18n bug.** A verification-phase `pnpm build` had overwritten the
+  shared `.next/` while the owner's `next dev` (Turbopack) server was running → `.next` mixed state
+  (prod `BUILD_ID`/manifests + stale `turbopack-*.js`) → `/_next/static/chunks/*` 500 → broken
+  hydration surfaced as the next-intl context error. See memory `project-pnpm-build-clobbers-dev-server`.
+  **Recovery: stop the dev server → `rm -rf .next` → `pnpm dev`.** (Not yet executed — owner's dev
+  server was still live; don't `rm .next` under a running dev server.)
+- **PROD is clean (proven):** `pnpm build` + `pnpm start` on a separate port → Playwright over all
+  PUBLIC routes (`/`, `/login`, `/sign-up`, `/password-reset`, `/privacy`, `/terms`) × **ko/en/vi**
+  = **18/18 pass**: correct-language render, `<html lang>` switches via `NEXT_LOCALE` cookie, 0
+  page/console/5xx errors. This is the first real-browser proof the locale switch works end-to-end.
+- **Authed workspace routes (student session `tests/e2e/auth-state/student.json`, valid until Jun 8):**
+  15/17 render 200 clean. `/dashboard` + `/library` also render fully (200, full content) — earlier
+  "timeout" was just `networkidle` never settling (RSC prefetches). Authed pages render in **ko**
+  because the test profile's `ui_locale` overrides the cookie (`resolveLocale`: profile → cookie → ko);
+  to browser-verify en/vi on authed screens, set the test profile's `ui_locale` (service-role) or use
+  a profile with `ui_locale=null`.
+- **Two SEPARATE, PRE-EXISTING findings (NOT from i18n string work, NOT yet fixed):**
+  1. `/dashboard` React #418 hydration mismatch — from `toLocaleDateString('ko-KR')` in
+     `RecentFeedbackCard`/`UpcomingExamCard` (server/client timezone). i18n waves left these date
+     calls unchanged. Fix candidate: format dates deterministically (fixed tz/locale) or render
+     client-only.
+  2. Dashboard recommendation RSC prefetches 404 on problem UUIDs (`33333333…`, `22222222…`) and a
+     `/practice` link — seed-data gaps in the test DB, not code bugs.
+- New committed regression test: `tests/lib/i18n/locale-render.test.tsx` (en/vi actually render).
