@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 
 import { VerifyEmailCard } from "@/components/auth/VerifyEmailCard";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "이메일 인증 — TALKPIK" };
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("auth.verifyEmail");
+  return { title: t("metaTitle") };
+}
 
 const srOnlyStyle: React.CSSProperties = {
   position: "absolute",
@@ -18,10 +23,11 @@ const srOnlyStyle: React.CSSProperties = {
   border: 0,
 };
 
-export default function VerifyEmailPage() {
+export default async function VerifyEmailPage() {
+  const t = await getTranslations("auth.verifyEmail");
   return (
     <main style={{ padding: "2.5rem 1rem", maxWidth: 640, margin: "0 auto" }}>
-      <h1 style={srOnlyStyle}>이메일 인증</h1>
+      <h1 style={srOnlyStyle}>{t("srHeading")}</h1>
       <Suspense fallback={null}>
         <VerifyEmailCard />
       </Suspense>

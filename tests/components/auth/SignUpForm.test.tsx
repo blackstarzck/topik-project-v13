@@ -4,12 +4,11 @@ import {
   act,
   cleanup,
   fireEvent,
-  render,
   screen,
   waitFor,
 } from "@testing-library/react";
-import { App as AntdApp } from "antd";
-import type { ReactNode } from "react";
+
+import { renderWithIntl } from "../../test-utils/renderWithIntl";
 
 const signUpMock = vi.fn();
 const resendMock = vi.fn();
@@ -30,9 +29,9 @@ vi.mock("next/navigation", () => ({
 
 import { SignUpForm } from "../../../src/components/auth/SignUpForm";
 
-function renderInApp(node: ReactNode) {
-  return render(<AntdApp>{node}</AntdApp>);
-}
+// SignUpForm now uses next-intl's useTranslations — render inside the shared
+// intl + antd App wrapper (baseline ko catalog, matching the assertions).
+const renderInApp = renderWithIntl;
 
 beforeEach(() => {
   signUpMock.mockReset();
@@ -42,22 +41,6 @@ beforeEach(() => {
   pushMock.mockReset();
 
   vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://talkpik.example.com");
-
-  if (!window.matchMedia) {
-    Object.defineProperty(window, "matchMedia", {
-      writable: true,
-      value: (query: string) => ({
-        matches: false,
-        media: query,
-        onchange: null,
-        addListener: () => undefined,
-        removeListener: () => undefined,
-        addEventListener: () => undefined,
-        removeEventListener: () => undefined,
-        dispatchEvent: () => false,
-      }),
-    });
-  }
 });
 
 afterEach(() => {

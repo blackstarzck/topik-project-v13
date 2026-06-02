@@ -9,6 +9,7 @@
 // (Codex C-ε rule: no fire-and-forget from URL alone).
 
 import { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { App, Button, Card, Form, Input, Space, Typography } from "antd";
@@ -28,13 +29,20 @@ import {
 
 const { Paragraph, Title, Text } = Typography;
 
-function formatCountdown(totalSeconds: number): string {
-  if (totalSeconds <= 0) return "0초";
+// Countdown formatter — phrases are pulled from the shared `auth.countdown.*`
+// catalog so minutes/seconds render correctly per locale.
+type CountdownTranslate = ReturnType<typeof useTranslations<"auth.countdown">>;
+
+function formatCountdown(
+  totalSeconds: number,
+  tc: CountdownTranslate,
+): string {
+  if (totalSeconds <= 0) return tc("zero");
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
-  if (minutes === 0) return `${seconds}초`;
-  if (seconds === 0) return `${minutes}분`;
-  return `${minutes}분 ${seconds}초`;
+  if (minutes === 0) return tc("seconds", { seconds });
+  if (seconds === 0) return tc("minutes", { minutes });
+  return tc("minutesSeconds", { minutes, seconds });
 }
 
 function ctaHref(kind: AuthErrorCtaKind): string {
@@ -59,14 +67,21 @@ function ctaHref(kind: AuthErrorCtaKind): string {
 
 // description §6 escape routes: 로그인 / 가입 / 홈 — 항상 노출, 최소 1개 escape.
 // "도움말" 라벨은 실제 도움말/지원 화면이 없어 misleading 이므로 제거하고,
-// 실제 목적지가 있는 정직한 링크만 노출한다.
-const ESCAPE_LINKS: { href: string; label: string; kind: AuthErrorCtaKind }[] = [
-  { href: "/login", label: "로그인", kind: "login" },
-  { href: "/sign-up", label: "가입", kind: "signup" },
-  { href: "/", label: "홈", kind: "home" },
+// 실제 목적지가 있는 정직한 링크만 노출한다. i18n: 라벨은 auth.error.escape*
+// 키로 보관하고 렌더 시점에 t()로 해석한다.
+const ESCAPE_LINKS: {
+  href: string;
+  labelKey: "escapeLogin" | "escapeSignUp" | "escapeHome";
+  kind: AuthErrorCtaKind;
+}[] = [
+  { href: "/login", labelKey: "escapeLogin", kind: "login" },
+  { href: "/sign-up", labelKey: "escapeSignUp", kind: "signup" },
+  { href: "/", labelKey: "escapeHome", kind: "home" },
 ];
 
 export function AuthErrorCard() {
+  const t = useTranslations("auth.error");
+  const tc = useTranslations("auth.countdown");
   const { message } = App.useApp();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -99,9 +114,9 @@ export function AuthErrorCard() {
 
   const countdownLabel = useMemo(() => {
     if (remaining === null) return null;
-    if (remaining <= 0) return "지금 다시 시도할 수 있어요";
-    return `${formatCountdown(remaining)} 후 다시 시도할 수 있어요`;
-  }, [remaining]);
+    if (remaining <= 0) return t("countdownReady");
+    return t("countdownWaiting", { label: formatCountdown(remaining, tc) });
+  }, [remaining, t, tc]);
 
   const primaryDisabled =
     content.hasCountdown && remaining !== null && remaining > 0;
@@ -109,7 +124,7 @@ export function AuthErrorCard() {
   async function handleResend() {
     const trimmed = emailValue.trim();
     if (!trimmed) {
-      message.warning("이메일을 입력해주세요.");
+      message.warning(t("emailRequiredWarning"));
       return;
     }
     setResending(true);
@@ -126,13 +141,17 @@ export function AuthErrorCard() {
       const code = mapSupabaseErrorCode(error.code);
       if (code === "over_email_send_rate_limit" || code === "over_request_rate_limit") {
         setRemaining(60);
-        message.error("메일을 너무 많이 보냈어요. 잠시 후 다시 시도해주세요.");
+        message.error(t("resendRateLimited"));
         return;
       }
-      message.error(`재전송에 실패했어요: ${REASON_CONTENT[mapSupabaseErrorCode(error.code)].message}`);
+      message.error(
+        t("resendFailed", {
+          message: REASON_CONTENT[mapSupabaseErrorCode(error.code)].message,
+        }),
+      );
       return;
     }
-    message.success("인증 메일을 다시 보냈어요. 받은편지함을 확인해주세요.");
+    message.success(t("resendSuccess"));
   }
 
   function handlePrimaryClick(cta: AuthErrorCta) {
@@ -158,13 +177,13 @@ export function AuthErrorCard() {
 
         {content.showsEmailField && (
           <Form layout="vertical">
-            <Form.Item label="이메일" htmlFor="auth-error-email">
+            <Form.Item label={t("emailLabel")} htmlFor="auth-error-email">
               <Input
                 id="auth-error-email"
                 type="email"
                 value={emailValue}
                 onChange={(event) => setEmailValue(event.target.value)}
-                placeholder="가입한 이메일을 입력해주세요"
+                placeholder={t("emailPlaceholder")}
                 autoComplete="email"
               />
             </Form.Item>
@@ -214,7 +233,7 @@ export function AuthErrorCard() {
             return !usedHrefs.includes(link.href);
           }).map((link, index, visible) => (
             <span key={link.href}>
-              <Link href={link.href}>{link.label}</Link>
+              <Link href={link.href}>{t(link.labelKey)}</Link>
               {index < visible.length - 1 ? " · " : null}
             </span>
           ))}

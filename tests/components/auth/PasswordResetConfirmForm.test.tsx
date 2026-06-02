@@ -4,12 +4,11 @@ import {
   act,
   cleanup,
   fireEvent,
-  render,
   screen,
   waitFor,
 } from "@testing-library/react";
-import { App as AntdApp } from "antd";
-import type { ReactNode } from "react";
+
+import { renderWithIntl } from "../../test-utils/renderWithIntl";
 
 const updateUserMock = vi.fn();
 const pushMock = vi.fn();
@@ -28,29 +27,15 @@ vi.mock("next/navigation", () => ({
 
 import { PasswordResetConfirmForm } from "../../../src/components/auth/PasswordResetConfirmForm";
 
-function renderInApp(node: ReactNode) {
-  return render(<AntdApp>{node}</AntdApp>);
-}
+// PasswordResetConfirmForm now uses next-intl's useTranslations / useLocale —
+// render inside the shared intl + antd App wrapper (baseline ko catalog,
+// matching the Korean assertions below; locale=ko also drives formatAbsolute).
+const renderInApp = renderWithIntl;
 
 beforeEach(() => {
   updateUserMock.mockReset();
   updateUserMock.mockResolvedValue({ error: null });
   pushMock.mockReset();
-  if (!window.matchMedia) {
-    Object.defineProperty(window, "matchMedia", {
-      writable: true,
-      value: () => ({
-        matches: false,
-        media: "",
-        onchange: null,
-        addListener: () => undefined,
-        removeListener: () => undefined,
-        addEventListener: () => undefined,
-        removeEventListener: () => undefined,
-        dispatchEvent: () => false,
-      }),
-    });
-  }
 });
 
 afterEach(() => {

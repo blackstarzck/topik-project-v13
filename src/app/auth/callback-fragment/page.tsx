@@ -9,13 +9,18 @@
 // Spec: docs/Wireframe/33-X-11-auth-error/description.md (implicit flow fragment fallback)
 
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 
 import { CallbackFragmentFallback } from "@/components/auth/CallbackFragmentFallback";
 import { sanitizeNext } from "@/lib/auth/error-mapping";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "인증 확인 중 — TALKPIK" };
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("auth.callback");
+  return { title: t("metaTitle") };
+}
 
 const srOnlyStyle: React.CSSProperties = {
   position: "absolute",
@@ -43,10 +48,11 @@ export default async function CallbackFragmentPage({
 }) {
   const params = await searchParams;
   const next = sanitizeNext(pickFirst(params.next));
+  const t = await getTranslations("auth.callback");
 
   return (
     <main style={{ padding: "2.5rem 1rem", maxWidth: 640, margin: "0 auto" }}>
-      <h1 style={srOnlyStyle}>인증 확인 중</h1>
+      <h1 style={srOnlyStyle}>{t("srHeading")}</h1>
       <Suspense fallback={null}>
         <CallbackFragmentFallback next={next} />
       </Suspense>

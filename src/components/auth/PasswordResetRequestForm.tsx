@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { App, Button, Form, Input, Typography } from "antd";
+import { useTranslations } from "next-intl";
 
 import { buildAuthRedirectUrl } from "@/lib/auth/redirect-url";
 import { REASON_CONTENT, mapSupabaseErrorCode } from "@/lib/auth/error-mapping";
@@ -21,6 +22,7 @@ type Fields = { email: string };
 const COOLDOWN_STORAGE_KEY = "talkpik:password-reset:cooldown-until";
 
 export function PasswordResetRequestForm() {
+  const t = useTranslations("auth.passwordReset");
   const { message } = App.useApp();
   const [submitting, setSubmitting] = useState(false);
   const [sentTo, setSentTo] = useState<string | null>(null);
@@ -44,10 +46,10 @@ export function PasswordResetRequestForm() {
         code === "over_request_rate_limit"
       ) {
         cooldown.start();
-        message.error("메일을 너무 많이 보냈어요. 잠시 후 다시 시도해주세요.");
+        message.error(t("rateLimited"));
         return;
       }
-      message.error(`전송 실패: ${REASON_CONTENT[code].message}`);
+      message.error(t("sendFailed", { message: REASON_CONTENT[code].message }));
       return;
     }
     cooldown.start();
@@ -57,18 +59,17 @@ export function PasswordResetRequestForm() {
   if (sentTo) {
     return (
       <div>
-        <Title level={3}>이메일을 확인하세요</Title>
+        <Title level={3}>{t("sentTitle")}</Title>
         <Paragraph>
-          <strong>{sentTo}</strong> 로 비밀번호 재설정 링크를 보냈습니다. 메일
-          안의 링크를 누르면 새 비밀번호 설정 화면으로 이동합니다.
+          {t.rich("sentBody", {
+            email: sentTo,
+            strong: (chunks) => <strong>{chunks}</strong>,
+          })}
         </Paragraph>
         {/* description §4: 링크 만료/재전송 안내. 서버의 정확한 만료 시각은
             클라이언트에 없어 가짜 절대 시간을 만들지 않고 상대 시간만 안내. */}
         <Paragraph>
-          <Text type="secondary">
-            보안을 위해 링크는 약 1시간 후 만료돼요. 만료되면 이 화면에서 다시
-            보낼 수 있어요.
-          </Text>
+          <Text type="secondary">{t("sentExpiryNote")}</Text>
         </Paragraph>
         {cooldown.countdownLabel && (
           <Text type="secondary" data-testid="password-reset-countdown">
@@ -81,15 +82,13 @@ export function PasswordResetRequestForm() {
 
   return (
     <Form layout="vertical" onFinish={handleSubmit} requiredMark={false}>
-      <Paragraph>
-        가입하신 이메일을 입력하시면 비밀번호 재설정 링크를 보내드립니다.
-      </Paragraph>
+      <Paragraph>{t("intro")}</Paragraph>
       <Form.Item
-        label="이메일"
+        label={t("emailLabel")}
         name="email"
         rules={[
-          { required: true, message: "이메일을 입력하세요" },
-          { type: "email", message: "올바른 이메일 형식이 아닙니다" },
+          { required: true, message: t("emailRequired") },
+          { type: "email", message: t("emailInvalid") },
         ]}
       >
         <Input autoComplete="email" disabled={cooldown.remaining > 0} />
@@ -109,7 +108,7 @@ export function PasswordResetRequestForm() {
           loading={submitting}
           disabled={cooldown.remaining > 0}
         >
-          재설정 링크 보내기
+          {t("submit")}
         </Button>
       </Form.Item>
     </Form>

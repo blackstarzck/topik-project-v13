@@ -8,13 +8,39 @@
 // password-strength.ts so it can be unit-tested without a DOM.
 
 import { Typography } from "antd";
+import { useTranslations } from "next-intl";
 
 import {
   evaluatePasswordStrength,
   type PasswordRule,
+  type PasswordRuleKey,
+  type PasswordStrengthLevel,
 } from "./password-strength";
 
 const { Text } = Typography;
+
+// i18n: scoring stays language-free in password-strength.ts; the meter resolves
+// display copy here by keying off the level / rule keys.
+const LEVEL_LABEL_KEY: Record<
+  PasswordStrengthLevel,
+  "levelWeak" | "levelFair" | "levelGood" | "levelStrong"
+> = {
+  weak: "levelWeak",
+  fair: "levelFair",
+  good: "levelGood",
+  strong: "levelStrong",
+};
+
+const RULE_LABEL_KEY: Record<
+  PasswordRuleKey,
+  "ruleLength" | "ruleLowercase" | "ruleUppercase" | "ruleNumber" | "ruleSymbol"
+> = {
+  length: "ruleLength",
+  lowercase: "ruleLowercase",
+  uppercase: "ruleUppercase",
+  number: "ruleNumber",
+  symbol: "ruleSymbol",
+};
 
 type Props = {
   password: string;
@@ -31,6 +57,7 @@ export function PasswordStrengthMeter({
   showWhenEmpty = false,
   showRules = true,
 }: Props) {
+  const t = useTranslations("auth.strength");
   const strength = evaluatePasswordStrength(password);
 
   if (!password && !showWhenEmpty) return null;
@@ -60,7 +87,7 @@ export function PasswordStrengthMeter({
       </div>
       <div style={{ marginTop: 4 }}>
         <Text style={{ fontSize: 12, color: strength.color }}>
-          비밀번호 강도: {strength.levelLabel}
+          {t("label", { level: t(LEVEL_LABEL_KEY[strength.level]) })}
         </Text>
       </div>
       {showRules ? (
@@ -82,7 +109,7 @@ export function PasswordStrengthMeter({
                 color: rule.met ? "#52c41a" : "#8c8c8c",
               }}
             >
-              {rule.met ? "✓" : "○"} {rule.label}
+              {rule.met ? "✓" : "○"} {t(RULE_LABEL_KEY[rule.key])}
             </li>
           ))}
         </ul>

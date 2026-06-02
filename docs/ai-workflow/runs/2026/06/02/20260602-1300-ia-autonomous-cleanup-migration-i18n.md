@@ -74,6 +74,10 @@
 | 2026-06-02T15:15Z | Directive EMBEDDED in project | New `docs/admin-scope-boundary.md` (full detail + investigation) + CLAUDE.md "Scope Boundary — Admin (READ FIRST)" + AGENTS.md Non-Negotiable Rules bullet + memory `project-admin-scope-boundary`. | this run |
 | 2026-06-02T15:30Z | Admin repo located + reconned: `C:\Users\admin\Desktop\workspace\topik-ai` | Vite+React+AntD admin console (separate git repo, NOT Next, NO supabase/migrations). Rich SoT docs: `docs/specs/admin-data-contract.md` (candidate entity/field/enum contract = admin schema reference), `admin-data-usage-map.md` (B2C exposure map), `docs/page-sync/*` (per-page, built to sync with user-screen dev), gap-register, admin-overview. Admin domain ≫ v13 (Users/Community/Message/Commerce/Assessment/Content/System). Path recorded in admin-scope-boundary.md (fd91474). | recon |
 | 2026-06-02T15:40Z | Consistency METHOD = pin now, build artifact LATER (owner choice "방식·핀만 지금 확정") | Owner asked how to do user↔admin reconciliation + whether a high-importance consistency doc is right. Agreed yes; refined: mirror admin's existing docs (don't reinvent), living doc not post-hoc. Owner chose to pin the method+importance now and build the actual artifact when user-screen work starts. Created `docs/user-admin-consistency-method.md` + CLAUDE.md "Data Consistency (User ↔ Admin)" pin. Artifact `docs/user-admin-data-consistency.md` deferred. | user |
+| 2026-06-02T16:00Z | RESUME prior in-flight work = i18n (owner "응, i18n 마무리") | Of the autonomous-progress lane: cleanup done, admin reverted/out-of-scope, i18n was the only unfinished user-facing thread. Resume i18n in waves, user-facing clusters only (admin cluster EXCLUDED per scope boundary), ko verbatim + en + vi (vi machine-gen, flagged). Multi-session. | user |
+| 2026-06-02T16:05Z | i18n parallel-merge infra: shared test helper + staging-merge script | `tests/test-utils/renderWithIntl.tsx` (NextIntlClientProvider ko + antd App) so migrated component tests render without bespoke wrappers. `scripts/i18n/merge-staging.mjs` (coordinator merges per-cluster `messages/_staging/<x>.json` {ko,en,vi} leaves into the 3 catalogs; fails closed on malformed leaf). Lets cluster agents edit only their own source/tests + stage their catalog → no single-file write-conflict. | this run |
+| 2026-06-02T16:20Z | i18n WAVE 1 (auth) DONE + GREEN | 1 agent (wf wohpo6p28): 15 source/page files + 4 tests → t()/getTranslations + generateMetadata; 144 new auth.* keys (10 screens) staged + merged (catalog 83→227 strings ×3, parity held); reused common.login/signUp. Verified: typecheck 0, lint 0 errors (auth/new-script files warning-free), test 502 passed/3 skipped. Korean copy reviewed by coordinator (codex N/A for Korean per `codex-review-mojibake-windows`): ko verbatim, en/vi natural/accurate. staging dir deleted (not committed); next-env.d.ts autogen flip reverted. | this run |
+| 2026-06-02T16:20Z | KNOWN GAP (auth not 100%): 3 cross-cutting libs still Korean | `src/lib/auth/error-mapping.ts` (REASON_CONTENT — error-card body + {message} toasts), `src/components/auth/password-strength.ts` (now display-dead labels), `src/lib/auth/use-email-cooldown.ts` (countdown label) were OUT of the auth-component write scope → still literal Korean. Follow-up: migrate error-mapping.ts so the error card + toasts localize. | agent packet |
 
 ## Active Files
 
@@ -96,8 +100,19 @@
 - Phase A result (2026-06-02): typecheck 0, lint 0 errors (19 pre-existing warnings),
   test 71 files / 502 passed / 3 skipped. Flaky-test fix verified by 6/6 clean repro passes.
   Deletions orphaned nothing (typecheck clean).
-- Cross-model review: pending (Claude reviewer for Korean-copy-touching i18n per
-  `codex-review-mojibake-windows`; codex acceptable for ASCII SQL/test-infra).
+- Cross-model review: i18n wave 1 (auth) Korean copy reviewed by the coordinator (Claude)
+  per `codex-review-mojibake-windows` (codex cannot judge Korean on Windows) — ko verbatim
+  vs source confirmed, en/vi spot-checked natural/accurate. Phase B SQL had codex review
+  (now reverted). 
+- i18n wave 1 result (2026-06-02): typecheck 0, lint 0 errors (changed auth files + new
+  scripts/i18n + tests/test-utils are all warning-free; the 20th warning is pre-existing in
+  untouched `scripts/audit-setup/p4-codex-delegation.mjs`), test 502 passed / 3 skipped.
+- QA Gate: degraded — no dev server/browser in coordinator env (`feedback-ui-completion-requires-dev-server`) | full unit suite 502 passed/3 skipped incl. the 4 auth component tests rendering via `renderWithIntl` on the ko baseline + i18n catalog-parity test (ko/en/vi identical key sets, no empties); ko strings verbatim so ko render is byte-identical to pre-migration | live-browser en/vi rendering + runtime locale switch on auth screens UNVERIFIED — defer to evidence phase (boot server, switch locale, confirm render + no hydration mismatch).
+- UX/UI Consistency Pass: passed — i18n string externalization only (Korean literals → `t()` resolving to identical ko text); no visual/layout change.
+  - Tokens: unchanged (no theme/token/CSS edits in this wave).
+  - Components: unchanged (antd components + DOM structure identical; only string literals → `t()`/`getTranslations`; every `"use client"` preserved).
+  - A11y: aria-labels + form messages externalized to `t()` with identical ko text; no a11y regression.
+  - Responsive: unchanged (no layout/style edits).
 
 ## Ledger/File-State Consistency
 

@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 
 import { PasswordResetConfirmForm } from "@/components/auth/PasswordResetConfirmForm";
 
-export const metadata: Metadata = { title: "새 비밀번호 설정 — TALKPIK" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("auth.passwordResetConfirm");
+  return { title: t("metaTitle") };
+}
 
 export default function PasswordResetConfirmPage() {
   return (

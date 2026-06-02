@@ -4,12 +4,11 @@ import {
   act,
   cleanup,
   fireEvent,
-  render,
   screen,
   waitFor,
 } from "@testing-library/react";
-import { App as AntdApp } from "antd";
-import type { ReactNode } from "react";
+
+import { renderWithIntl } from "../../test-utils/renderWithIntl";
 
 const signInWithPasswordMock = vi.fn();
 const signInWithOtpMock = vi.fn();
@@ -32,9 +31,10 @@ vi.mock("next/navigation", () => ({
 
 import { LoginForm } from "../../../src/components/auth/LoginForm";
 
-function renderInApp(node: ReactNode) {
-  return render(<AntdApp>{node}</AntdApp>);
-}
+// LoginForm now uses next-intl's useTranslations, so it must render inside a
+// NextIntlClientProvider. renderWithIntl wraps the baseline (ko) catalog — the
+// same Korean strings the assertions below match — plus antd's App.
+const renderInApp = renderWithIntl;
 
 beforeEach(() => {
   signInWithPasswordMock.mockReset();
@@ -43,22 +43,6 @@ beforeEach(() => {
   signInWithOtpMock.mockResolvedValue({ error: null });
   pushMock.mockReset();
   vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://talkpik.example.com");
-
-  if (!window.matchMedia) {
-    Object.defineProperty(window, "matchMedia", {
-      writable: true,
-      value: (query: string) => ({
-        matches: false,
-        media: query,
-        onchange: null,
-        addListener: () => undefined,
-        removeListener: () => undefined,
-        addEventListener: () => undefined,
-        removeEventListener: () => undefined,
-        dispatchEvent: () => false,
-      }),
-    });
-  }
 });
 
 afterEach(() => {

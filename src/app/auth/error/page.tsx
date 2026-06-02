@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 
 import { AuthErrorCard } from "@/components/auth/AuthErrorCard";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "인증 오류 — TALKPIK" };
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("auth.error");
+  return { title: t("metaTitle") };
+}
 
 const srOnlyStyle: React.CSSProperties = {
   position: "absolute",
@@ -18,10 +23,11 @@ const srOnlyStyle: React.CSSProperties = {
   border: 0,
 };
 
-export default function AuthErrorPage() {
+export default async function AuthErrorPage() {
+  const t = await getTranslations("auth.error");
   return (
     <main style={{ padding: "2.5rem 1rem", maxWidth: 640, margin: "0 auto" }}>
-      <h1 style={srOnlyStyle}>인증 오류</h1>
+      <h1 style={srOnlyStyle}>{t("srHeading")}</h1>
       <Suspense fallback={null}>
         <AuthErrorCard />
       </Suspense>

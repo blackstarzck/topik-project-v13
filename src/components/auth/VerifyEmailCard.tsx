@@ -12,6 +12,7 @@
 // 시 cooldown 초기화 = 한도 우회 가능했음 (Codex 검수 적발).
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { App, Button, Card, Divider, Form, Input, Space, Typography } from "antd";
@@ -46,13 +47,20 @@ function inboxUrlForEmail(email: string): string | null {
 const COOLDOWN_DEFAULT_SECONDS = 60;
 const COOLDOWN_STORAGE_KEY = "talkpik:verify-email:cooldown-until";
 
-function formatCountdown(totalSeconds: number): string {
-  if (totalSeconds <= 0) return "0초";
+// Countdown formatter — phrases come from the shared `auth.countdown.*`
+// catalog so minutes/seconds render correctly per locale.
+type CountdownTranslate = ReturnType<typeof useTranslations<"auth.countdown">>;
+
+function formatCountdown(
+  totalSeconds: number,
+  tc: CountdownTranslate,
+): string {
+  if (totalSeconds <= 0) return tc("zero");
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
-  if (minutes === 0) return `${seconds}초`;
-  if (seconds === 0) return `${minutes}분`;
-  return `${minutes}분 ${seconds}초`;
+  if (minutes === 0) return tc("seconds", { seconds });
+  if (seconds === 0) return tc("minutes", { minutes });
+  return tc("minutesSeconds", { minutes, seconds });
 }
 
 /** localStorage에서 cooldown 종료 시각(epoch ms)을 읽어 남은 초로 변환. SSR-safe. */
@@ -96,6 +104,8 @@ function clearCooldown(): void {
 }
 
 export function VerifyEmailCard() {
+  const t = useTranslations("auth.verifyEmail");
+  const tc = useTranslations("auth.countdown");
   const { message } = App.useApp();
   const searchParams = useSearchParams();
   const emailFromQuery = searchParams.get("email") ?? "";
@@ -137,13 +147,15 @@ export function VerifyEmailCard() {
 
   const countdownLabel = useMemo(() => {
     if (cooldownRemaining <= 0) return null;
-    return `${formatCountdown(cooldownRemaining)} 후 다시 보낼 수 있어요`;
-  }, [cooldownRemaining]);
+    return t("resendCountdown", {
+      label: formatCountdown(cooldownRemaining, tc),
+    });
+  }, [cooldownRemaining, t, tc]);
 
   async function handleResend() {
     const trimmed = emailValue.trim();
     if (!trimmed) {
-      message.warning("이메일을 입력해주세요.");
+      message.warning(t("emailRequiredWarning"));
       return;
     }
     if (cooldownRemaining > 0) return;
@@ -170,48 +182,47 @@ export function VerifyEmailCard() {
         // Retry-After 값이 필요하면 callback layer에서 query로 받아 처리.
         writeCooldownStart(COOLDOWN_DEFAULT_SECONDS);
         setCooldownRemaining(COOLDOWN_DEFAULT_SECONDS);
-        message.error("메일을 너무 많이 보냈어요. 잠시 후 다시 시도해주세요.");
+        message.error(t("resendRateLimited"));
         return;
       }
-      message.error(`재전송에 실패했어요: ${REASON_CONTENT[mapSupabaseErrorCode(error.code)].message}`);
+      message.error(
+        t("resendFailed", {
+          message: REASON_CONTENT[mapSupabaseErrorCode(error.code)].message,
+        }),
+      );
       return;
     }
     writeCooldownStart(COOLDOWN_DEFAULT_SECONDS);
     setCooldownRemaining(COOLDOWN_DEFAULT_SECONDS);
-    message.success("인증 메일을 다시 보냈어요. 받은편지함을 확인해주세요.");
+    message.success(t("resendSuccess"));
   }
 
   return (
     <Card style={{ maxWidth: 520, margin: "0 auto" }} aria-live="polite">
       <Space direction="vertical" size="middle" style={{ width: "100%" }}>
         {/* §1 마스코트/일러스트 — 안내 카피를 가리지 않게 상단, 대체 텍스트 필수 */}
-        <AuthMascot alt="TALKPIK 학습 도우미 캐릭터" emoji="📬" size={48} />
+        <AuthMascot alt={t("mascotAlt")} emoji="📬" size={48} />
         <Title level={3} style={{ marginBottom: 0 }}>
-          이메일을 확인해주세요
+          {t("title")}
         </Title>
-        <Paragraph style={{ marginBottom: 0 }}>
-          가입을 마무리하려면 받은편지함의 인증 메일에서 링크를 눌러주세요.
-          메일이 보이지 않으면 스팸함도 확인해주세요.
-        </Paragraph>
+        <Paragraph style={{ marginBottom: 0 }}>{t("body")}</Paragraph>
 
-        <Text type="secondary">
-          메일이 자주 발송되면 몇 분 후 다시 시도해주세요.
-        </Text>
+        <Text type="secondary">{t("frequentNote")}</Text>
 
         {emailFromQuery && (
           <Text type="secondary">
-            가입 이메일: <strong>{emailFromQuery}</strong>
+            {t("signupEmailPrefix")} <strong>{emailFromQuery}</strong>
           </Text>
         )}
 
         <Form layout="vertical">
-          <Form.Item label="다른 이메일로 다시 보내려면" htmlFor="verify-email-input">
+          <Form.Item label={t("resendOtherLabel")} htmlFor="verify-email-input">
             <Input
               id="verify-email-input"
               type="email"
               value={emailValue}
               onChange={(event) => setEmailValue(event.target.value)}
-              placeholder="가입한 이메일을 입력해주세요"
+              placeholder={t("emailPlaceholder")}
               autoComplete="email"
               disabled={cooldownRemaining > 0 || resending}
             />
@@ -232,7 +243,7 @@ export function VerifyEmailCard() {
           onClick={() => void handleResend()}
           data-testid="verify-email-resend"
         >
-          인증 메일 다시 보내기
+          {t("resend")}
         </Button>
 
         {/* §5 이메일 안 왔을 때 안내 — primary 재전송과 시각적 위계 구분(secondary).
@@ -240,14 +251,13 @@ export function VerifyEmailCard() {
         <Divider style={{ margin: "4px 0" }} />
         <div data-testid="verify-email-help">
           <Text strong style={{ fontSize: 13 }}>
-            이메일이 안 왔나요?
+            {t("noEmailHeading")}
           </Text>
           <Paragraph
             type="secondary"
             style={{ margin: "4px 0 8px", fontSize: 13 }}
           >
-            메일이 도착하기까지 1~2분 걸릴 수 있어요. 먼저 스팸함(정크 메일함)을
-            확인해주세요.
+            {t("noEmailBody")}
           </Paragraph>
           <Space size="small" wrap>
             {(() => {
@@ -260,23 +270,23 @@ export function VerifyEmailCard() {
                   rel="noopener noreferrer"
                   data-testid="verify-email-open-inbox"
                 >
-                  받은편지함 열기
+                  {t("openInbox")}
                 </Button>
               ) : null;
             })()}
             <Link href="/sign-up">
-              <Button size="small">다른 이메일로 가입하기</Button>
+              <Button size="small">{t("signUpDifferentEmail")}</Button>
             </Link>
           </Space>
         </div>
 
         {/* §6 도움말/escape route — 항상 노출 */}
         <Paragraph style={{ marginBottom: 0, textAlign: "center" }}>
-          <Link href="/login">로그인 페이지로</Link>
+          <Link href="/login">{t("escapeToLogin")}</Link>
           {" · "}
-          <Link href="/sign-up">다른 이메일로 가입</Link>
+          <Link href="/sign-up">{t("escapeSignUp")}</Link>
           {" · "}
-          <Link href="/">홈으로</Link>
+          <Link href="/">{t("escapeHome")}</Link>
         </Paragraph>
       </Space>
     </Card>

@@ -4,12 +4,11 @@ import {
   act,
   cleanup,
   fireEvent,
-  render,
   screen,
   waitFor,
 } from "@testing-library/react";
-import { App as AntdApp } from "antd";
-import type { ReactNode } from "react";
+
+import { renderWithIntl } from "../../test-utils/renderWithIntl";
 
 const resetPasswordForEmailMock = vi.fn();
 
@@ -24,9 +23,10 @@ vi.mock("@/lib/supabase/browser", () => ({
 
 import { PasswordResetRequestForm } from "../../../src/components/auth/PasswordResetRequestForm";
 
-function renderInApp(node: ReactNode) {
-  return render(<AntdApp>{node}</AntdApp>);
-}
+// PasswordResetRequestForm now uses next-intl's useTranslations — render inside
+// the shared intl + antd App wrapper (baseline ko catalog, matching the
+// Korean assertions below).
+const renderInApp = renderWithIntl;
 
 beforeEach(() => {
   resetPasswordForEmailMock.mockReset();
@@ -38,21 +38,6 @@ beforeEach(() => {
   // renders. Clear it for a clean per-test cooldown state.
   window.localStorage.clear();
   vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://talkpik.example.com");
-  if (!window.matchMedia) {
-    Object.defineProperty(window, "matchMedia", {
-      writable: true,
-      value: () => ({
-        matches: false,
-        media: "",
-        onchange: null,
-        addListener: () => undefined,
-        removeListener: () => undefined,
-        addEventListener: () => undefined,
-        removeEventListener: () => undefined,
-        dispatchEvent: () => false,
-      }),
-    });
-  }
 });
 
 afterEach(() => {

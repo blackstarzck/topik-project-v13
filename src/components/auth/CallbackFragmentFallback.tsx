@@ -18,6 +18,7 @@
 // 50-200ms it takes to parse and redirect.
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Card, Spin, Typography } from "antd";
 
@@ -30,6 +31,7 @@ import {
 const { Paragraph } = Typography;
 
 export function CallbackFragmentFallback({ next }: { next: string }) {
+  const t = useTranslations("auth.callback");
   const router = useRouter();
   const [status, setStatus] = useState<"checking" | "redirecting">("checking");
 
@@ -88,7 +90,7 @@ export function CallbackFragmentFallback({ next }: { next: string }) {
     >
       <Spin />
       <Paragraph style={{ marginTop: 16, marginBottom: 0 }}>
-        {status === "checking" ? "인증을 확인 중이에요…" : "이동 중이에요…"}
+        {status === "checking" ? t("checking") : t("redirecting")}
       </Paragraph>
     </Card>
   );

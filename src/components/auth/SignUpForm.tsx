@@ -6,6 +6,7 @@
 //   resend with 60s cooldown and survives reloads/deep-links.
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { App, Button, Checkbox, Form, Input, Typography } from "antd";
@@ -35,6 +36,7 @@ type SignUpFields = {
 };
 
 export function SignUpForm() {
+  const t = useTranslations("auth.signUp");
   const { message } = App.useApp();
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
@@ -63,12 +65,16 @@ export function SignUpForm() {
         form.setFields([
           {
             name: "email",
-            errors: ["이미 가입된 이메일이에요. 로그인하거나 다른 이메일을 사용해주세요."],
+            errors: [t("emailDuplicate")],
           },
         ]);
         return;
       }
-      message.error(`가입 실패: ${REASON_CONTENT[mapSupabaseErrorCode(error.code)].message}`);
+      message.error(
+        t("signUpFailed", {
+          message: REASON_CONTENT[mapSupabaseErrorCode(error.code)].message,
+        }),
+      );
       return;
     }
     router.push(`/auth/verify-email?email=${encodeURIComponent(values.email)}`);
@@ -83,24 +89,24 @@ export function SignUpForm() {
     >
       {/* description §3 입력 순서: 이름, 이메일, 비밀번호 */}
       <Form.Item
-        label="이름"
+        label={t("nameLabel")}
         name="displayName"
         rules={[
-          { required: true, message: "이름을 입력하세요" },
-          { min: 2, message: "이름은 2자 이상이어야 합니다" },
-          { max: 30, message: "이름은 30자 이하여야 합니다" },
+          { required: true, message: t("nameRequired") },
+          { min: 2, message: t("nameMin") },
+          { max: 30, message: t("nameMax") },
         ]}
       >
-        <Input autoComplete="name" placeholder="홍길동" />
+        <Input autoComplete="name" placeholder={t("namePlaceholder")} />
       </Form.Item>
 
       <Form.Item
-        label="이메일"
+        label={t("emailLabel")}
         name="email"
         rules={[
-          { required: true, message: "이메일을 입력하세요" },
-          { type: "email", message: "올바른 이메일 형식이 아닙니다" },
-          { max: 80, message: "이메일은 80자 이하여야 합니다" },
+          { required: true, message: t("emailRequired") },
+          { type: "email", message: t("emailInvalid") },
+          { max: 80, message: t("emailMax") },
         ]}
       >
         <Input
@@ -116,12 +122,12 @@ export function SignUpForm() {
       </Form.Item>
 
       <Form.Item
-        label="비밀번호"
+        label={t("passwordLabel")}
         name="password"
         rules={[
-          { required: true, message: "비밀번호를 입력하세요" },
-          { min: 8, message: "비밀번호는 8자 이상이어야 합니다" },
-          { max: 64, message: "비밀번호는 64자 이하여야 합니다" },
+          { required: true, message: t("passwordRequired") },
+          { min: 8, message: t("passwordMin") },
+          { max: 64, message: t("passwordMax") },
         ]}
       >
         <Input.Password
@@ -134,17 +140,17 @@ export function SignUpForm() {
       <PasswordStrengthMeter password={passwordValue} />
 
       <Form.Item
-        label="비밀번호 확인"
+        label={t("passwordConfirmLabel")}
         name="passwordConfirm"
         dependencies={["password"]}
         rules={[
-          { required: true, message: "비밀번호를 다시 입력하세요" },
+          { required: true, message: t("passwordConfirmRequired") },
           ({ getFieldValue }) => ({
             validator(_, value) {
               if (!value || getFieldValue("password") === value) {
                 return Promise.resolve();
               }
-              return Promise.reject(new Error("비밀번호가 일치하지 않습니다"));
+              return Promise.reject(new Error(t("passwordMismatch")));
             },
           }),
         ]}
@@ -160,29 +166,33 @@ export function SignUpForm() {
             validator: (_, value) =>
               value
                 ? Promise.resolve()
-                : Promise.reject(new Error("이용약관에 동의해주세요")),
+                : Promise.reject(new Error(t("termsRequired"))),
           },
         ]}
       >
         <Checkbox>
-          <Link
-            href="/terms"
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(event) => event.stopPropagation()}
-          >
-            이용약관
-          </Link>
-          과{" "}
-          <Link
-            href="/privacy"
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(event) => event.stopPropagation()}
-          >
-            개인정보처리방침
-          </Link>
-          에 동의합니다
+          {t.rich("termsAgreement", {
+            terms: (chunks) => (
+              <Link
+                href="/terms"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(event) => event.stopPropagation()}
+              >
+                {chunks}
+              </Link>
+            ),
+            privacy: (chunks) => (
+              <Link
+                href="/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(event) => event.stopPropagation()}
+              >
+                {chunks}
+              </Link>
+            ),
+          })}
         </Checkbox>
       </Form.Item>
 
@@ -193,7 +203,7 @@ export function SignUpForm() {
           block
           loading={submitting}
         >
-          회원가입
+          {t("submit")}
         </Button>
       </Form.Item>
 
@@ -203,8 +213,7 @@ export function SignUpForm() {
         type="secondary"
         style={{ textAlign: "center", fontSize: 13, marginBottom: 0 }}
       >
-        소셜 로그인(구글·카카오 등)은 준비 중이에요. 지금은 이메일로 가입할 수
-        있어요.
+        {t("socialNotice")}
       </Paragraph>
     </Form>
   );
