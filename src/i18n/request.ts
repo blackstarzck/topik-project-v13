@@ -5,6 +5,7 @@ import { getCurrentProfile } from "@/lib/auth/profile";
 import {
   asLocale,
   DEFAULT_LOCALE,
+  DEFAULT_TIME_ZONE,
   LOCALE_COOKIE,
   type Locale,
 } from "./locales";
@@ -57,5 +58,11 @@ export async function resolveLocale(): Promise<Locale> {
 export default getRequestConfig(async () => {
   const locale = await resolveLocale();
   const messages = (await import(`../../messages/${locale}.json`)).default;
-  return { locale, messages };
+  // A global timeZone is REQUIRED by next-intl: without it, time-aware formatting
+  // falls back to the runtime's timezone, which differs between the server (often
+  // UTC) and the client → markup mismatch. next-intl surfaces this as an
+  // ENVIRONMENT_FALLBACK error at the first useTranslations() call (in dev this
+  // can fail the server render → client fallback → "NextIntlClientProvider context
+  // not found"). KST is canonical for this Korea-centric TOPIK app.
+  return { locale, messages, timeZone: DEFAULT_TIME_ZONE };
 });

@@ -17,6 +17,15 @@ export type Locale = (typeof LOCALES)[number];
 /** Baseline locale — used as the final fallback when nothing else resolves. */
 export const DEFAULT_LOCALE: Locale = "ko";
 
+/**
+ * Global time zone for next-intl. REQUIRED: without it, next-intl throws
+ * ENVIRONMENT_FALLBACK and time-aware formatting falls back to the runtime's
+ * timezone, which differs server (UTC) vs client → hydration mismatch. Must be
+ * passed to BOTH `getRequestConfig` (server) and `NextIntlClientProvider`
+ * (client). KST is canonical for this Korea-centric TOPIK app.
+ */
+export const DEFAULT_TIME_ZONE = "Asia/Seoul";
+
 /** Cookie name read by the locale resolver as the anonymous / just-saved fallback. */
 export const LOCALE_COOKIE = "NEXT_LOCALE";
 

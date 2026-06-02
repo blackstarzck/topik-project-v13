@@ -7,7 +7,7 @@ import { NextIntlClientProvider, type AbstractIntlMessages } from "next-intl";
 import { useState } from "react";
 
 import { ThemeProvider, useTheme } from "@/contexts/theme-context";
-import type { Locale } from "@/i18n/locales";
+import { DEFAULT_TIME_ZONE, type Locale } from "@/i18n/locales";
 import type { ThemeAppearance } from "@/theme";
 
 // ---------------------------------------------------------------------------
@@ -66,7 +66,11 @@ export function AppProviders({
   );
 
   return (
-    <NextIntlClientProvider locale={locale} messages={messages}>
+    <NextIntlClientProvider
+      locale={locale}
+      messages={messages}
+      timeZone={DEFAULT_TIME_ZONE}
+    >
       <QueryClientProvider client={queryClient}>
         <ThemeProvider initialAppearance={initialAppearance}>
           <AntdConfiguredProviders>{children}</AntdConfiguredProviders>

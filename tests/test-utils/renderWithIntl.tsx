@@ -4,7 +4,11 @@ import { NextIntlClientProvider } from "next-intl";
 import type { ReactElement, ReactNode } from "react";
 
 import koMessages from "../../messages/ko.json";
-import { DEFAULT_LOCALE, type Locale } from "../../src/i18n/locales";
+import {
+  DEFAULT_LOCALE,
+  DEFAULT_TIME_ZONE,
+  type Locale,
+} from "../../src/i18n/locales";
 
 /**
  * Shared render helper for i18n-migrated component tests.
@@ -24,7 +28,11 @@ export function renderWithIntl(
   { locale = DEFAULT_LOCALE }: { locale?: Locale } = {},
 ) {
   return render(
-    <NextIntlClientProvider locale={locale} messages={koMessages}>
+    <NextIntlClientProvider
+      locale={locale}
+      messages={koMessages}
+      timeZone={DEFAULT_TIME_ZONE}
+    >
       <AntdApp>{ui}</AntdApp>
     </NextIntlClientProvider>,
   );
@@ -33,7 +41,11 @@ export function renderWithIntl(
 /** Wrapper component form, for cases that need a custom `render` call. */
 export function IntlAntdWrapper({ children }: { children: ReactNode }) {
   return (
-    <NextIntlClientProvider locale={DEFAULT_LOCALE} messages={koMessages}>
+    <NextIntlClientProvider
+      locale={DEFAULT_LOCALE}
+      messages={koMessages}
+      timeZone={DEFAULT_TIME_ZONE}
+    >
       <AntdApp>{children}</AntdApp>
     </NextIntlClientProvider>
   );

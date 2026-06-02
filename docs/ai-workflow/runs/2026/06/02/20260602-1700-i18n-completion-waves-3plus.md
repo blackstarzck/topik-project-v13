@@ -211,6 +211,35 @@ and asked for full-scope Playwright verification. Outcome:
   vi copy + legal copy still need native/legal review; the owner's own `next dev` needs the `.next`
   recovery (couldn't restart their process from here).
 
+## Root-cause CORRECTION — the `/` error was a missing next-intl global `timeZone` (2026-06-02)
+
+After the owner pasted the actual dev stack trace (`LandingHeader.tsx:30` ← `HomePage`, Next 16.2.6
+Turbopack), a clean dev reproduction (own `next dev`, fresh `.next`, server log captured) showed the
+REAL server-side error:
+
+> `Error: ENVIRONMENT_FALLBACK: There is no \`timeZone\` configured ... Consider adding a global default`
+> `at LandingHeader (src/components/landing/LandingHeader.tsx:30:28)`
+
+- **Root cause:** next-intl v4 requires a global `timeZone`. Without it, it throws ENVIRONMENT_FALLBACK
+  at the first `useTranslations()` call. In dev/Turbopack this failed the landing server render →
+  React client-fallback → the surfaced "NextIntlClientProvider context not found" (matches hint #1).
+  Prod only WARNED (my earlier prod QA returned 200), which is why prod QA masked it — and why my
+  first theory (the `.next` clobber) was incomplete. The clobber was a real but secondary/compounding
+  factor; the durable bug is the missing `timeZone`.
+- **Fix:** add a shared `DEFAULT_TIME_ZONE = "Asia/Seoul"` (`src/i18n/locales.ts`) and pass it to BOTH
+  `getRequestConfig` (`src/i18n/request.ts`, server formatters) AND `NextIntlClientProvider`
+  (`src/app/providers.tsx`, client formatters). Also mirrored in `tests/test-utils/renderWithIntl.tsx`.
+  Server config alone was NOT enough — the client provider also needs it (that's why ENVIRONMENT_FALLBACK
+  persisted until providers.tsx was fixed).
+- **Verified (clean dev, Turbopack — the owner's environment):** fresh dev-server log shows
+  ENVIRONMENT_FALLBACK count = 0; Playwright over the dev server: `/`, `/login`, `/sign-up`, `/privacy`
+  all HTTP 200, lang=ko, ZERO page/console errors. typecheck 0, lint 0 err, unit test 570 pass/3 skip.
+- **Owner recovery (their current clobbered dev state):** still `Remove-Item -Recurse -Force .next` +
+  `pnpm dev` once, to clear the prior mixed `.next`; the code fix prevents the error recurring.
+- The earlier per-component `toLocaleString` tz+hour12 fixes (commit b9f2fa7) remain valid and
+  complementary: those address RAW `new Date().toLocaleString()` (which ignores next-intl config); the
+  global `timeZone` covers next-intl's own formatters.
+
 ## Ledger/File-State Consistency
 
 - Files changed match accepted scope: yes. Wave 3 = 32 source files (writing/feedback/reports
