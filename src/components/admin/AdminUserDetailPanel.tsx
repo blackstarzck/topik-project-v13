@@ -166,11 +166,6 @@ export function AdminUserDetailPanel({
             <Descriptions.Item label="결제 등급">
               <Tag>{row.plan_label ?? "free"}</Tag>
             </Descriptions.Item>
-            <Descriptions.Item label="기관 소속">
-              {row.org_names && row.org_names.trim().length > 0
-                ? row.org_names
-                : "소속 없음"}
-            </Descriptions.Item>
             <Descriptions.Item label="학습 기록(제출)">
               {row.submission_count}건
             </Descriptions.Item>

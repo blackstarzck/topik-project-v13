@@ -54,8 +54,6 @@ export type AdminUserDirectoryRow = {
   last_activity: string | null;
   last_sign_in_at: string | null;
   created_at: string;
-  /** X-10 기관 소속 — comma-joined org names the user belongs to (migration 20260602120500). */
-  org_names: string | null;
   total_count: number;
 };
 
@@ -107,8 +105,6 @@ export type AdminOrgDashboardExtended = {
   recent_events: AdminOrgRecentEvent[];
   avg_writing_score: number | null;
   per_user: AdminOrgPerUserRow[];
-  /** X-08 region 2 "과제 제출률" — submitted/reviewed over all, 0-100 %, null when none (migration 20260602120500). */
-  assignment_submission_rate: number | null;
 };
 
 export type AdminAssignmentRow = {
@@ -290,10 +286,6 @@ export function parseOrgDashboardExtended(
     per_user: Array.isArray(r.per_user)
       ? (r.per_user as AdminOrgPerUserRow[])
       : [],
-    assignment_submission_rate:
-      r.assignment_submission_rate == null
-        ? null
-        : Number(r.assignment_submission_rate),
   };
 }
 
@@ -347,21 +339,4 @@ export async function createAssignment(
     .single();
   if (error) throw new Error(error.message ?? String(error));
   return data as AdminAssignmentRow;
-}
-
-/**
- * Bootstrap org creation (migration 20260602120500 `create_organization`).
- * The org RLS write policy requires is_org_manager, which a brand-new org has
- * no member for; this SECURITY DEFINER RPC creates the org + the caller's owner
- * membership atomically and returns the new org id.
- */
-export async function createOrganization(
-  client: AnyClient,
-  name: string,
-): Promise<string> {
-  const { data, error } = await rpcSurface(client).rpc("create_organization", {
-    p_name: name,
-  });
-  if (error) throw new Error(error.message ?? String(error));
-  return String(data ?? "");
 }

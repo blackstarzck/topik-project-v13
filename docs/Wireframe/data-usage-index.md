@@ -6,9 +6,9 @@
 
 - Pages: 39
 - Tables: 17
-- RPC/functions: 20
+- RPC/functions: 19
 - Storage buckets: 3
-- Page data links: 127
+- Page data links: 126
 - Unclassified DB objects: 0
 
 ## admin_audit_logs
@@ -187,17 +187,11 @@
 | --- | --- | --- | --- | --- | --- |
 | R-01 | Comparison report | rpc | - | rpc | 현재 제출과 이전 제출 비교 리포트를 생성한다. |
 
-## public.create_organization
-
-| IA | Screen | Type | Columns/fields | Usage | Page feature |
-| --- | --- | --- | --- | --- | --- |
-| X-08 | Organization admin dashboard | rpc | `p_name` → org id | rpc | 기관 부트스트랩(첫 조직 생성 + 호출자 owner 멤버십)을 원자적으로 처리한다. SECURITY DEFINER라 org RLS의 첫 삽입 차단을 우회한다. |
-
 ## public.get_admin_org_dashboard
 
 | IA | Screen | Type | Columns/fields | Usage | Page feature |
 | --- | --- | --- | --- | --- | --- |
-| X-08 | Organization admin dashboard | rpc | - | rpc | 기관 관리자 대시보드 KPI를 제공한다(학습자 수·과제 제출률·평균 점수·활성 사용자 수). |
+| X-08 | Organization admin dashboard | rpc | - | rpc | 기관 관리자 대시보드 KPI를 제공한다. |
 
 ## public.get_dashboard_kpi
 

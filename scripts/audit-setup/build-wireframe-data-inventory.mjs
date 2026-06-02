@@ -156,7 +156,6 @@ const PAGE_DATA_BLUEPRINTS = {
   ],
   "X-08": [
     rpc("public.get_admin_org_dashboard", "rpc", "기관 관리자 대시보드 KPI를 제공한다."),
-    rpc("public.create_organization", "rpc", "기관 부트스트랩(첫 조직 생성 + 소유자 멤버십)을 처리한다."),
     table("profiles", ["app_role", "plan_label", "status"], "read", "조직/권한 대시보드의 사용자 집계에 사용한다."),
     table("study_events", ["event_type", "occurred_at", "payload"], "derived-read", "기관 단위 활동 집계에 사용한다."),
     table("admin_audit_logs", ["admin_user_id", "action", "target_table", "created_at"], "read", "최근 관리자 활동 표시에 사용한다."),

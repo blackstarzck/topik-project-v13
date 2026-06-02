@@ -54,17 +54,12 @@ type Props = {
 /**
  * X-08 — 기관 관리자 대시보드 본문.
  *
- * regions: KPI 현황 (2, 4 KPIs in spec order) · 운영 카드 (3) · 사용자/과제
+ * regions: KPI 현황 (2, 4 KPIs incl. 평균 점수) · 운영 카드 (3) · 사용자/과제
  * 테이블 (4) · 우측 상세 패널 (5, in the per-user table) · 최근 활동 + 감사 로그.
  *
- * KPI order (description.md region 2): (1) 학습자 수 = learner_count,
- * (2) 과제 제출률 = assignment_submission_rate (0-100 number | null),
- * (3) 평균 점수 = avg_writing_score, (4) 활성 사용자 수 = active_7d_count.
- *
- * NOTE: assignment_submission_rate is served by the extended
- * get_admin_org_dashboard RPC (migration 20260602120500). Until that migration
- * is applied the field is null, so we render "—" (no suffix) — same graceful
- * fallback as avg_writing_score.
+ * NOTE: 과제 제출률(assignment-rate) KPI 는 assignments 기반 집계 RPC 가 아직
+ * 없어 평균 점수(avg_writing_score)로 4번째 KPI 를 채운다. 제출률 KPI 는 후속
+ * RPC 확장 대상(remaining)이다.
  */
 export function AdminOrgKpiCards({ data, onRetry }: Props) {
   const router = useRouter();
@@ -129,17 +124,20 @@ export function AdminOrgKpiCards({ data, onRetry }: Props) {
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
       <Row gutter={[16, 16]}>
         <Col xs={12} md={6}>
-          <KpiCard title="학습자 수" value={data.learner_count} suffix="명" />
+          <KpiCard title="전체 학습자" value={data.learner_count} suffix="명" />
         </Col>
         <Col xs={12} md={6}>
           <KpiCard
-            title="과제 제출률"
-            value={
-              data.assignment_submission_rate == null
-                ? "—"
-                : data.assignment_submission_rate
-            }
-            suffix={data.assignment_submission_rate == null ? "" : "%"}
+            title="최근 7일 활성"
+            value={data.active_7d_count}
+            suffix="명"
+          />
+        </Col>
+        <Col xs={12} md={6}>
+          <KpiCard
+            title="최근 7일 제출"
+            value={data.submissions_7d_count}
+            suffix="건"
           />
         </Col>
         <Col xs={12} md={6}>
@@ -148,13 +146,6 @@ export function AdminOrgKpiCards({ data, onRetry }: Props) {
             value={data.avg_writing_score == null ? "—" : data.avg_writing_score}
             suffix={data.avg_writing_score == null ? "" : "점"}
             highlight
-          />
-        </Col>
-        <Col xs={12} md={6}>
-          <KpiCard
-            title="활성 사용자 수"
-            value={data.active_7d_count}
-            suffix="명"
           />
         </Col>
       </Row>
