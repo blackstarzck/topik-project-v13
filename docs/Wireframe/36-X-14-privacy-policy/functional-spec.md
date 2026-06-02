@@ -29,8 +29,10 @@
 
 ## 현재 구현 상태
 
-- `src/app/privacy/page.tsx`가 placeholder 페이지를 렌더링한다.
-- `src/lib/routes.ts`의 `PUBLIC_PATHS`에 `/privacy`가 포함되어야 한다.
+- `src/app/privacy/page.tsx`가 placeholder 페이지를 렌더링한다. 5개 영역(제목 / 임시 안내 / 처리 항목 요약 / 갱신 안내 / 관련 링크)을 description 매핑과 1:1로 표시한다.
+- 데이터 읽기/쓰기가 없는 server component이며, antd 컴포넌트를 쓰지 않으므로 `"use client"`가 필요 없다(정적 legal 페이지 house convention — home/terms 와 동일).
+- `src/lib/routes.ts`의 `PUBLIC_PATHS`에 `/privacy`가 포함되어 anonymous 접근이 허용된다.
+- `/sign-up` 동의 체크박스 라벨이 `target="_blank"`로 본 페이지를 연다(`src/components/auth/SignUpForm.tsx`).
 - 정식 처리방침과 알림/재동의 운영 절차는 아직 확정되지 않았다.
 
 ## 미구현/불일치
@@ -54,6 +56,7 @@
 - 기존 34개 Wireframe 이후 추가된 코드 기준 화면임을 명시한다.
 - `/privacy`는 세션 없이 열리고 사용자별 데이터를 조회하지 않는다.
 - 수집 항목, 이용 목적, 보관 기간, 외부 LLM 전송 가능성이 placeholder 범위 안에서 드러난다.
+- 정식 게시 시 갱신 및 가입자 안내 예정임을 별도 안내로 표시한다.
 - `/terms`, `/`, `/sign-up` 이동 링크가 유지된다.
 
 ## 검증 근거

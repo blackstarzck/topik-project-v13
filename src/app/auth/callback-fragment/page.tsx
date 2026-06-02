@@ -8,12 +8,26 @@
 //
 // Spec: docs/Wireframe/33-X-11-auth-error/description.md (implicit flow fragment fallback)
 
+import type { Metadata } from "next";
 import { Suspense } from "react";
 
 import { CallbackFragmentFallback } from "@/components/auth/CallbackFragmentFallback";
 import { sanitizeNext } from "@/lib/auth/error-mapping";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = { title: "인증 확인 중 — TALKPIK" };
+
+const srOnlyStyle: React.CSSProperties = {
+  position: "absolute",
+  width: 1,
+  height: 1,
+  padding: 0,
+  margin: -1,
+  overflow: "hidden",
+  clip: "rect(0, 0, 0, 0)",
+  whiteSpace: "nowrap",
+  border: 0,
+};
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -32,6 +46,7 @@ export default async function CallbackFragmentPage({
 
   return (
     <main style={{ padding: "2.5rem 1rem", maxWidth: 640, margin: "0 auto" }}>
+      <h1 style={srOnlyStyle}>인증 확인 중</h1>
       <Suspense fallback={null}>
         <CallbackFragmentFallback next={next} />
       </Suspense>

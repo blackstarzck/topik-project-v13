@@ -9,11 +9,11 @@
 
 | No. | Area | Description |
 | --- | --- | --- |
-| 1 | Callback container | 공개 callback support page의 중앙 카드 영역을 제공한다. |
-| 2 | Spinner | fragment 파싱과 session 설정 중 spinner를 표시한다. |
-| 3 | Status text | "인증을 확인 중이에요..." 또는 "이동 중이에요..." 상태 문구를 표시한다. |
-| 4 | Fragment parser | URL hash의 `error_code`, `access_token`, `refresh_token`을 browser에서만 읽는다. |
-| 5 | Safe redirect | 성공 시 sanitized `next`, 실패 시 `/auth/error?reason=...`으로 이동한다. |
+| 1 | Callback container | 공개 callback support page의 중앙 카드 영역. SR 전용 제목과 `role="status"` aria-live 영역으로 상태를 알린다. |
+| 2 | Spinner | fragment 파싱과 session 설정 중 antd `Spin`을 표시한다. |
+| 3 | Status text | "인증을 확인 중이에요…"(처리 중) 또는 "이동 중이에요…"(redirect 직전) 상태 문구를 표시한다. |
+| 4 | Fragment parser | URL hash의 `error_code`, `access_token`, `refresh_token`을 browser에서만 읽는다(`parseAuthFragment`). |
+| 5 | Safe redirect | 성공 시 sanitized `next`, 실패 시 `/auth/error?reason=...`으로 `router.replace` 이동한다. |
 
 ## Detailed Description
 
@@ -31,10 +31,10 @@
 ■ 보안 처리
 
 ▣ 설명
-• `#error_code`가 있으면 canonical reason으로 매핑해 X-11 `/auth/error`로 이동한다.
-• `#access_token`과 `#refresh_token`이 있으면 `supabase.auth.setSession`을 호출한다.
-• `next`는 `sanitizeNext`를 통과한 relative URL만 허용한다.
-• token이나 raw error description을 화면에 표시하지 않는다.
+• `#error_code`가 있으면 `mapSupabaseErrorCode`로 canonical reason에 매핑해 X-11 `/auth/error?reason=...`로 이동한다.
+• `#access_token`과 `#refresh_token`이 모두 있으면 browser supabase client의 `auth.setSession`을 호출한다.
+• `next`는 page 진입 시 server에서 `sanitizeNext`를 통과한 relative URL만 component로 전달한다(기본값 `/dashboard`).
+• token, refresh token, raw error description을 화면이나 URL에 표시하지 않는다.
 
 3
 ■ 실패 처리
@@ -49,18 +49,20 @@ Supabase implicit flow 또는 오래된 인증 링크의 URL fragment를 안전�
 
 ## 분기
 
-- 진입: `/auth/callback` route handler가 query 없는 callback을 `/auth/callback-fragment`로 redirect.
-- 성공: sanitized `next` 또는 기본 목적지.
-- 실패: `/auth/error?reason=<canonical>`.
-- fragment 없음: `/auth/error?reason=unknown`.
+- 진입: `/auth/callback` route handler가 query(`token_hash`/`code`/`error_code`) 없는 callback을 `next`를 query로 붙여 `/auth/callback-fragment`로 redirect. 브라우저가 RFC 7231에 따라 fragment를 새 location에 보존한다.
+- loading: mount 직후 fragment를 파싱하고 `setSession`을 호출하는 동안 spinner + "인증을 확인 중이에요…".
+- success-redirect: `setSession` 성공 시 sanitized `next`(기본 `/dashboard`)로 이동.
+- error-reason: `#error_code` 또는 `setSession` 실패 시 `/auth/error?reason=<canonical>`로 이동.
+- missing-fragment: token도 error도 없으면 `/auth/error?reason=unknown`으로 이동.
 
 ## 피드백
 
-- 처리 중: "인증을 확인 중이에요..."
-- redirect 직전: "이동 중이에요..."
+- 처리 중: "인증을 확인 중이에요…"
+- redirect 직전(success/error/missing 공통): "이동 중이에요…"
 - 세부 provider 오류나 token 값은 보여주지 않는다.
 
 ## 예외 상황
 
-- 이 페이지는 브라우저 전용 token 처리를 하므로 server-side 렌더에서 fragment를 읽으려 하지 않는다.
-- `next` open redirect는 허용하지 않는다.
+- 이 페이지는 브라우저 전용 token 처리를 하므로 server-side 렌더에서 fragment를 읽으려 하지 않는다(`"use client"` component가 mount 후 `window.location.hash` 파싱).
+- `next` open redirect는 허용하지 않는다(`//`, 절대 URL, scheme 포함 값은 `/dashboard`로 fallback).
+- `setSession` 실패는 console error로만 기록하고 UI에는 canonical reason 화면으로만 연결한다.

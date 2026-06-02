@@ -11,15 +11,16 @@
 - Route: `/terms`
 - Route type: page
 - Audience: public
-- 진입: 회원가입 약관 동의 라벨 또는 직접 URL.
+- 진입: 회원가입 약관 동의 라벨(새 탭), 랜딩 헤더 "이용약관" 메뉴, 직접 URL.
 - 이탈: `/`, `/sign-up`, `/privacy`.
 
 ## 주요 기능
 
-- 임시 이용약관 안내
-- 서비스 성격과 데이터 사용 목적 요약
-- 개인정보처리방침 링크
-- 홈/회원가입 복귀 링크
+- 임시 이용약관 placeholder 안내 (정식 약관 미확정 명시)
+- 서비스 성격과 학습 데이터 사용 목적 요약
+- 개인정보처리방침(`/privacy`) 링크
+- 운영 문의 채널 부재 안내 (꾸며내지 않음)
+- 홈/회원가입/개인정보처리방침 escape 링크
 
 ## 상태/오류/권한
 
@@ -29,9 +30,10 @@
 
 ## 현재 구현 상태
 
-- `src/app/terms/page.tsx`가 placeholder 페이지를 렌더링한다.
-- `src/lib/routes.ts`의 `PUBLIC_PATHS`에 `/terms`가 포함되어야 한다.
-- 정식 약관 내용과 운영 문의 채널은 아직 확정되지 않았다.
+- `src/app/terms/page.tsx`(server)가 antd Typography/Card 기반 placeholder를 렌더링한다.
+- `src/lib/routes.ts`의 `PUBLIC_PATHS`에 `/terms`가 이미 포함되어 세션 없이 접근 가능하다.
+- 사이트맵의 sibling legal 화면 `/privacy`(X-14)와 동일한 단일 컬럼 레이아웃·톤을 공유한다.
+- 정식 약관 내용과 운영 문의 채널은 아직 확정되지 않았다 (placeholder 명시 유지).
 
 ## 미구현/불일치
 
@@ -55,10 +57,13 @@
 - `/terms`는 세션 없이 열리고 raw auth/provider 오류나 사용자 데이터를 노출하지 않는다.
 - placeholder 상태와 정식 약관 미확정 상태를 사용자에게 숨기지 않는다.
 - `/privacy`, `/`, `/sign-up` 이동 링크가 유지된다.
+- 회원가입 동의 라벨과 랜딩 헤더 양쪽 진입점에서 `/terms`가 reachable 하다.
 
 ## 검증 근거
 
 - Description: `docs/Wireframe/35-X-13-terms/description.md`
 - Route map: `docs/sitemap.md`
 - Source: `src/app/terms/page.tsx`
-- Route allowlist: `src/lib/routes.ts`
+- Route allowlist: `src/lib/routes.ts` (`PUBLIC_PATHS`에 `/terms` 포함)
+- 진입점: `src/components/auth/SignUpForm.tsx` (동의 라벨), `src/components/landing/LandingHeader.tsx` (헤더 메뉴)
+- Sibling legal 화면: `src/app/privacy/page.tsx` (X-14, 동일 레이아웃 기준)

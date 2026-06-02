@@ -26,14 +26,16 @@ Supabase implicit flow의 URL fragment를 browser에서 파싱해 세션을 설�
 ## 상태/오류/권한
 
 - public route로 열려야 한다.
+- 4개 상태: loading(spinner) / success-redirect / error-reason redirect / missing-fragment redirect.
 - token과 refresh token은 UI에 표시하지 않는다.
 - provider raw error는 URL/UI에 노출하지 않고 canonical reason으로만 연결한다.
-- `next`는 open redirect가 되지 않도록 `sanitizeNext`를 통과해야 한다.
+- `next`는 open redirect가 되지 않도록 page 진입 시 server에서 `sanitizeNext`를 통과한다.
 
 ## 현재 구현 상태
 
-- `src/app/auth/callback-fragment/page.tsx`가 `CallbackFragmentFallback`을 렌더링한다.
-- `CallbackFragmentFallback`이 `parseAuthFragment`, `mapSupabaseErrorCode`, `supabase.auth.setSession`, `router.replace`를 사용한다.
+- `src/app/auth/callback-fragment/page.tsx`가 `metadata` 제목과 SR 전용 `<h1>`을 두고 `Suspense`로 `CallbackFragmentFallback`을 렌더링한다. `next`는 server에서 `sanitizeNext`로 정리해 prop으로 전달한다.
+- `CallbackFragmentFallback`(`"use client"`)이 mount 시 `parseAuthFragment`, `mapSupabaseErrorCode`, browser `supabase.auth.setSession`, `router.replace`를 사용해 자동 분기한다.
+- 상태 카드는 `role="status"` + `aria-live="polite"`로 처리/이동 상태를 알린다.
 - `export const dynamic = "force-dynamic"`으로 callback support page를 동적으로 처리한다.
 
 ## 미구현/불일치
@@ -58,7 +60,8 @@ Supabase implicit flow의 URL fragment를 browser에서 파싱해 세션을 설�
 - `/auth/callback-fragment`가 X-17 standalone IA page로 추적된다.
 - fragment token과 raw provider 오류가 UI/URL에 노출되지 않는다.
 - `next`는 relative-only sanitization을 거친다.
-- 성공/실패/unknown fragment 분기가 X-11 또는 target route로 연결된다.
+- loading / success-redirect / error-reason / missing-fragment 4개 상태가 각각 spinner 또는 X-11/target route로 연결된다.
+- 상태 카드가 SR에 announce되도록 `role="status"` aria-live 영역을 제공한다.
 
 ## 검증 근거
 

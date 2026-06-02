@@ -80,7 +80,12 @@ export function CallbackFragmentFallback({ next }: { next: string }) {
   }, [next, router]);
 
   return (
-    <Card style={{ maxWidth: 480, margin: "0 auto", textAlign: "center" }} aria-live="polite">
+    <Card
+      style={{ maxWidth: 480, margin: "0 auto", textAlign: "center" }}
+      role="status"
+      aria-live="polite"
+      data-testid="callback-fragment-status"
+    >
       <Spin />
       <Paragraph style={{ marginTop: 16, marginBottom: 0 }}>
         {status === "checking" ? "인증을 확인 중이에요…" : "이동 중이에요…"}
