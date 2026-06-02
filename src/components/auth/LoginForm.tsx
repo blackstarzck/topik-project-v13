@@ -8,7 +8,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { buildAuthRedirectUrl } from "@/lib/auth/redirect-url";
-import { REASON_CONTENT, mapSupabaseErrorCode } from "@/lib/auth/error-mapping";
+import { mapSupabaseErrorCode } from "@/lib/auth/error-mapping";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 const { Paragraph, Title } = Typography;
@@ -59,6 +59,8 @@ const FAILED_ATTEMPTS_HINT_THRESHOLD = 3;
 
 export function LoginForm() {
   const t = useTranslations("auth.login");
+  // Cross-namespace: server auth-failure copy lives under `auth.error.<reason>.message`.
+  const te = useTranslations("auth.error");
   const { message } = App.useApp();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -115,9 +117,10 @@ export function LoginForm() {
         return;
       }
       // 그 외(서버측 알 수 없는 오류)는 상단 인라인 안내.
+      const reason = mapSupabaseErrorCode(code);
       setStatusNotice({
         tone: "error",
-        text: REASON_CONTENT[mapSupabaseErrorCode(code)].message,
+        text: te(`${reason}.message` as Parameters<typeof te>[0]),
       });
       return;
     }
@@ -138,9 +141,10 @@ export function LoginForm() {
     });
     setSubmitting(false);
     if (error) {
+      const reason = mapSupabaseErrorCode(error.code);
       message.error(
         t("magicLinkSendFailed", {
-          message: REASON_CONTENT[mapSupabaseErrorCode(error.code)].message,
+          message: te(`${reason}.message` as Parameters<typeof te>[0]),
         }),
       );
       return;

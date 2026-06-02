@@ -17,30 +17,25 @@ export type PasswordRuleKey =
   | "number"
   | "symbol";
 
+// i18n: this module is not a component and cannot call useTranslations, so it
+// carries NO display copy. Each rule exposes only its locale-free `key`; the
+// rendering component (PasswordStrengthMeter) maps that key to the
+// `auth.strength.rule*` catalog and resolves the label via t().
 export type PasswordRule = {
   key: PasswordRuleKey;
-  label: string;
   met: boolean;
 };
 
 export type PasswordStrength = {
   /** 0-4 score used to size the meter. */
   score: number;
+  /** Locale-free level key; the meter resolves the label via auth.strength.level*. */
   level: PasswordStrengthLevel;
-  /** Korean label for the level. */
-  levelLabel: string;
   /** antd-compatible status color hint. */
   color: string;
   rules: PasswordRule[];
   /** True when the password satisfies the 8-64 length policy. */
   meetsPolicy: boolean;
-};
-
-const LEVEL_LABEL: Record<PasswordStrengthLevel, string> = {
-  weak: "약함",
-  fair: "보통",
-  good: "양호",
-  strong: "강함",
 };
 
 const LEVEL_COLOR: Record<PasswordStrengthLevel, string> = {
@@ -56,15 +51,11 @@ export function evaluatePasswordStrength(
   const value = password ?? "";
 
   const rules: PasswordRule[] = [
-    { key: "length", label: "8자 이상", met: value.length >= 8 },
-    { key: "lowercase", label: "영문 소문자", met: /[a-z]/.test(value) },
-    { key: "uppercase", label: "영문 대문자", met: /[A-Z]/.test(value) },
-    { key: "number", label: "숫자", met: /[0-9]/.test(value) },
-    {
-      key: "symbol",
-      label: "특수문자",
-      met: /[^A-Za-z0-9]/.test(value),
-    },
+    { key: "length", met: value.length >= 8 },
+    { key: "lowercase", met: /[a-z]/.test(value) },
+    { key: "uppercase", met: /[A-Z]/.test(value) },
+    { key: "number", met: /[0-9]/.test(value) },
+    { key: "symbol", met: /[^A-Za-z0-9]/.test(value) },
   ];
 
   // Score: 1 point per satisfied character-class rule (length excluded from
@@ -92,7 +83,6 @@ export function evaluatePasswordStrength(
   return {
     score,
     level,
-    levelLabel: LEVEL_LABEL[level],
     color: LEVEL_COLOR[level],
     rules,
     meetsPolicy,

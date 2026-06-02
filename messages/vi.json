@@ -52,7 +52,33 @@
     "heroBody": "Đặt mục tiêu học tập, luyện bài và thu hẹp điểm yếu nhờ phản hồi của AI. Chúng tôi tái hiện chính xác môi trường viết TOPIK câu 51–54.",
     "heroCtaDashboard": "Tới bảng điều khiển",
     "heroCtaSignUp": "Bắt đầu miễn phí",
-    "heroCtaLogin": "Đăng nhập"
+    "heroCtaLogin": "Đăng nhập",
+    "preview": {
+      "sectionTitle": "Xem trước khi bắt đầu",
+      "sectionBody": "Xem màn hình bảng điều khiển, phản hồi và báo cáo thực tế đúng như khi sử dụng.",
+      "imageAlt": "Xem trước màn hình {title}",
+      "dashboardBadge": "📊 Bảng điều khiển",
+      "dashboardTitle": "Toàn cảnh tình hình học tập",
+      "dashboardSummary": "Xem ngay mục tiêu hôm nay, bài nộp gần đây và câu hỏi gợi ý tại trang chủ.",
+      "feedbackBadge": "✍️ Phản hồi AI",
+      "feedbackTitle": "Nhận xét theo từng tiêu chí",
+      "feedbackSummary": "Nhận điểm theo từng tiêu chí nội dung, triển khai, từ vựng, ngữ pháp và nhận xét cho từng câu.",
+      "reportBadge": "📈 Báo cáo tiến bộ",
+      "reportTitle": "So sánh thay đổi điểm số",
+      "reportSummary": "So sánh với bài làm trước để xem thay đổi điểm và điểm yếu qua biểu đồ."
+    },
+    "features": {
+      "correctionTitle": "Nhận xét AI",
+      "correctionDescription": "Môi trường viết câu 51–54 của TOPIK đúng như thật. AI cung cấp điểm và nhận xét theo từng tiêu chí.",
+      "practiceTitle": "Đề luyện thực chiến",
+      "practiceDescription": "Luyện viết trong điều kiện như thi thật với đề thực chiến theo từng dạng câu 51–54.",
+      "reportTitle": "Báo cáo tiến bộ",
+      "reportDescription": "So sánh các bài đã nộp để xem thay đổi điểm và điểm yếu trong nháy mắt.",
+      "libraryTitle": "Thư viện",
+      "libraryDescription": "Quản lý câu hỏi đã lưu, bài đã nộp và báo cáo so sánh ở cùng một nơi."
+    },
+    "metaTitle": "TALKPIK AI · Học viết TOPIK cùng AI",
+    "heroMascotAlt": "Nhân vật trợ lý học tập TALKPIK"
   },
   "settings": {
     "language": {
@@ -91,7 +117,8 @@
       "unsavedLeave": "Bạn có thay đổi chưa lưu. Bạn có muốn rời khỏi trang này không?",
       "saveSuccess": "Đã lưu cài đặt ngôn ngữ và nội dung của bạn.",
       "saveError": "Không thể lưu cài đặt của bạn.",
-      "learningSettingsLoadError": "Không tải được cài đặt nội dung."
+      "learningSettingsLoadError": "Không tải được cài đặt nội dung.",
+      "metaTitle": "Cài đặt ngôn ngữ — TALKPIK"
     },
     "notifications": {
       "metaTitle": "Cài đặt thông báo — TALKPIK",
@@ -291,7 +318,69 @@
       "countdownWaiting": "Bạn có thể thử lại sau {label}",
       "escapeLogin": "Đăng nhập",
       "escapeSignUp": "Đăng ký",
-      "escapeHome": "Trang chủ"
+      "escapeHome": "Trang chủ",
+      "otp_expired": {
+        "title": "Liên kết xác minh của bạn đã hết hạn",
+        "message": "Nhập lại email của bạn và chúng tôi sẽ gửi một email xác minh mới. Chúng tôi chỉ có thể gửi một email mỗi 60 giây.",
+        "primaryLabel": "Gửi lại email xác minh",
+        "secondaryLabel": "Đăng nhập"
+      },
+      "flow_state_expired": {
+        "title": "Phiên xác minh của bạn đã hết hạn",
+        "message": "Quá trình này mất hơi lâu. Vui lòng bắt đầu lại từ đầu.",
+        "primaryLabel": "Thử lại",
+        "secondaryLabel": "Đăng nhập"
+      },
+      "flow_state_not_found": {
+        "title": "Chúng tôi không tìm thấy yêu cầu xác minh của bạn",
+        "message": "Liên kết này có thể đã được bắt đầu trên một thiết bị hoặc trình duyệt khác. Vui lòng bắt đầu lại trong trình duyệt bạn đang dùng.",
+        "primaryLabel": "Thử lại",
+        "secondaryLabel": "Trợ giúp"
+      },
+      "bad_code_verifier": {
+        "title": "Xác minh bảo mật thất bại",
+        "message": "Vui lòng hoàn tất quá trình trong cùng trình duyệt mà bạn đã bắt đầu xác minh.",
+        "primaryLabel": "Bắt đầu lại"
+      },
+      "user_not_found": {
+        "title": "Tài khoản này không còn tồn tại",
+        "message": "Các tài khoản không hoạt động lâu sẽ được tự động dọn dẹp. Chỉ cần đăng ký lại là bạn có thể sử dụng ngay.",
+        "primaryLabel": "Đăng ký lại",
+        "secondaryLabel": "Đăng nhập"
+      },
+      "over_email_send_rate_limit": {
+        "title": "Đã gửi quá nhiều email",
+        "message": "Vui lòng thử lại sau ít phút. Bạn có thể gửi lại khi thời gian còn lại kết thúc.",
+        "primaryLabel": "Thử lại sau ít phút"
+      },
+      "over_request_rate_limit": {
+        "title": "Quá nhiều yêu cầu",
+        "message": "Vui lòng thử lại sau ít phút.",
+        "primaryLabel": "Thử lại sau ít phút"
+      },
+      "email_not_confirmed": {
+        "title": "Email của bạn vẫn chưa được xác minh",
+        "message": "Vui lòng kiểm tra hộp thư đến để tìm email xác minh. Nếu không thấy, bạn có thể gửi lại.",
+        "primaryLabel": "Gửi lại email xác minh",
+        "secondaryLabel": "Đăng nhập"
+      },
+      "signup_disabled": {
+        "title": "Việc đăng ký mới tạm thời bị tạm dừng",
+        "message": "Vui lòng thử lại sau ít phút. Xin lỗi vì sự bất tiện này.",
+        "primaryLabel": "Về trang chủ"
+      },
+      "access_denied": {
+        "title": "Xác minh đã bị từ chối",
+        "message": "Để thử lại, vui lòng đến trang đăng ký hoặc đăng nhập.",
+        "primaryLabel": "Đăng ký lại",
+        "secondaryLabel": "Đăng nhập"
+      },
+      "unknown": {
+        "title": "Đã xảy ra sự cố",
+        "message": "Vui lòng thử lại sau ít phút. Nếu sự cố vẫn tiếp diễn, hãy thử lại sau một lúc.",
+        "primaryLabel": "Về trang chủ",
+        "secondaryLabel": "Trợ giúp"
+      }
     },
     "callback": {
       "metaTitle": "Đang xác minh — TALKPIK",
@@ -320,6 +409,9 @@
     "mascot": {
       "loginAlt": "Nhân vật trợ lý học tập TALKPIK",
       "signUpAlt": "Nhân vật trợ lý học tập TALKPIK"
+    },
+    "cooldown": {
+      "label": "Bạn có thể gửi lại sau {label}"
     }
   },
   "dashboard": {
@@ -1507,6 +1599,60 @@
       "item2": "· Hỗ trợ xuất hóa đơn thuế",
       "item3": "· Thanh toán an toàn (sắp tích hợp)",
       "item4": "· Đối với gói cho tổ chức hoặc nhóm, vui lòng liên hệ riêng"
+    }
+  },
+  "legal": {
+    "terms": {
+      "metaTitle": "Điều khoản dịch vụ — TALKPIK",
+      "heading": "Điều khoản dịch vụ",
+      "intro": "Trang này là thông báo điều khoản tạm thời cho dịch vụ TALKPIK AI. Điều khoản dịch vụ chính thức sẽ được công bố riêng trước khi ra mắt, và tại thời điểm đó trang này sẽ được cập nhật thành điều khoản chính thức.",
+      "placeholderNotice": "Nội dung hiện tại là bản tạm thời đang chờ rà soát pháp lý và không phải là thỏa thuận có hiệu lực pháp lý chính thức.",
+      "summaryTitle": "Thông báo tạm thời",
+      "summaryTool": "Dịch vụ này là công cụ hỗ trợ luyện viết TOPIK.",
+      "summaryDataUse": "Dữ liệu học tập chỉ được sử dụng cho mục đích cải thiện chất lượng học tập.",
+      "summaryPrivacy": "Về cách xử lý thông tin cá nhân, vui lòng xem trang <privacyLink>Chính sách bảo mật</privacyLink>.",
+      "summaryConsent": "Khi điều khoản chính thức được công bố, chúng tôi sẽ yêu cầu đồng ý lại khi đăng ký. Hiện tại, việc đăng ký được xem là đồng ý với thông báo tạm thời này.",
+      "contactTitle": "Liên hệ",
+      "contactBody": "Chưa có kênh hỗ trợ khách hàng riêng cho đến khi điều khoản chính thức được công bố. Nếu bạn gặp sự cố xác thực khi sử dụng dịch vụ sau khi đăng ký, vui lòng làm theo hướng dẫn trên trang lỗi xác thực.",
+      "shortcutsLabel": "Lối tắt: ",
+      "linkHome": "Trang chủ",
+      "linkBackToSignUp": "Quay lại đăng ký",
+      "linkPrivacy": "Chính sách bảo mật"
+    },
+    "privacy": {
+      "metaTitle": "Chính sách bảo mật — TALKPIK",
+      "heading": "Chính sách bảo mật",
+      "intro": "Trang này là thông báo tạm thời về việc xử lý thông tin cá nhân của TALKPIK AI. Chính sách bảo mật chính thức sẽ phản ánh việc tuân thủ Luật Bảo vệ Thông tin Cá nhân của Hàn Quốc và được công bố riêng trước khi ra mắt.",
+      "summaryTitle": "Tóm tắt việc xử lý (tạm thời)",
+      "summaryCollect": "<strong>Dữ liệu thu thập:</strong> email, tên, nhật ký hoạt động học tập, bài viết nộp, kết quả đánh giá.",
+      "summaryPurpose": "<strong>Mục đích sử dụng:</strong> nhận dạng tài khoản, theo dõi tiến độ học tập, cải thiện chất lượng phản hồi AI.",
+      "summaryRetention": "<strong>Thời gian lưu trữ:</strong> bị hủy ngay khi rút khỏi tài khoản. Thống kê học tập có thể được lưu giữ ở dạng ẩn danh sau khi loại bỏ thông tin nhận dạng.",
+      "summaryThirdParty": "<strong>Chia sẻ với bên thứ ba:</strong> không có. Tuy nhiên, khi gọi mô hình AI, nội dung bài viết nộp được truyền tạm thời đến nhà cung cấp LLM bên ngoài (chính sách lưu trữ sau khi mô hình phản hồi tuân theo điều khoản của nhà cung cấp mô hình).",
+      "summaryScopeNote": "Phạm vi trên chỉ giới hạn ở việc xử lý như đã triển khai hiện tại. Cho đến khi rà soát chính thức, chúng tôi không đưa ra cam kết dứt khoát về thời gian lưu trữ hay lời hứa chia sẻ mới với bên thứ ba.",
+      "updateTitle": "Thông báo cập nhật",
+      "updateBody": "Khi chính sách bảo mật chính thức được công bố, trang này sẽ được cập nhật và các thay đổi sẽ được thông báo riêng cho người dùng đã đăng ký.",
+      "relatedLabel": "Liên quan: ",
+      "linkTerms": "Điều khoản dịch vụ",
+      "linkHome": "Trang chủ",
+      "linkSignUp": "Đăng ký"
+    }
+  },
+  "shared": {
+    "error": {
+      "title": "Đã xảy ra sự cố",
+      "subTitle": "Vui lòng thử lại.",
+      "retry": "Thử lại"
+    },
+    "notFound": {
+      "title": "Không tìm thấy trang",
+      "subTitle": "Trang bạn yêu cầu không tồn tại hoặc đã được di chuyển.",
+      "backToDashboard": "Đi tới bảng điều khiển"
+    },
+    "loading": {
+      "tip": "Đang tải..."
+    },
+    "unsavedGuard": {
+      "message": "Bạn có những thay đổi chưa được lưu. Nếu rời khỏi trang này, nội dung bạn đã nhập có thể bị mất. Bạn có muốn rời đi không?"
     }
   }
 }

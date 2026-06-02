@@ -12,14 +12,20 @@
 
 import { useState } from "react";
 import { Card, Typography } from "antd";
+import { useTranslations } from "next-intl";
 
 const { Title, Paragraph, Text } = Typography;
 
+// i18n: 문구는 landing.preview.* 카탈로그에서 t()로 해석한다. 데이터 배열은
+// 카탈로그 키 이름만 보관하고, 렌더 컴포넌트가 t(key)로 실제 문구를 만든다.
+type PreviewTranslate = ReturnType<typeof useTranslations<"landing.preview">>;
+type PreviewKey = Parameters<PreviewTranslate>[0];
+
 type Preview = {
   key: string;
-  badge: string;
-  title: string;
-  summary: string;
+  badgeKey: PreviewKey;
+  titleKey: PreviewKey;
+  summaryKey: PreviewKey;
   imageSrc?: string;
 };
 
@@ -27,25 +33,25 @@ type Preview = {
 const PREVIEWS: Preview[] = [
   {
     key: "dashboard",
-    badge: "📊 대시보드",
-    title: "학습 현황 한눈에",
-    summary: "오늘의 목표, 최근 제출, 추천 문제를 홈에서 바로 확인합니다.",
+    badgeKey: "dashboardBadge",
+    titleKey: "dashboardTitle",
+    summaryKey: "dashboardSummary",
   },
   {
     key: "feedback",
-    badge: "✍️ AI 피드백",
-    title: "차원별 첨삭",
-    summary: "내용·전개·어휘·문법 차원별 점수와 문장 단위 코멘트를 받습니다.",
+    badgeKey: "feedbackBadge",
+    titleKey: "feedbackTitle",
+    summaryKey: "feedbackSummary",
   },
   {
     key: "report",
-    badge: "📈 성장 리포트",
-    title: "점수 변화 비교",
-    summary: "이전 답안과 비교해 점수 변화와 약점 영역을 그래프로 봅니다.",
+    badgeKey: "reportBadge",
+    titleKey: "reportTitle",
+    summaryKey: "reportSummary",
   },
 ];
 
-function PreviewMock({ badge }: Pick<Preview, "badge">) {
+function PreviewMock({ badge }: { badge: string }) {
   return (
     <div
       style={{
@@ -81,16 +87,25 @@ function PreviewMock({ badge }: Pick<Preview, "badge">) {
   );
 }
 
-function PreviewImage({ preview }: { preview: Preview }) {
+function PreviewImage({
+  preview,
+  badge,
+  title,
+}: {
+  preview: Preview;
+  badge: string;
+  title: string;
+}) {
+  const t = useTranslations("landing.preview");
   const [failed, setFailed] = useState(false);
   if (!preview.imageSrc || failed) {
-    return <PreviewMock {...preview} />;
+    return <PreviewMock badge={badge} />;
   }
   return (
     // eslint-disable-next-line @next/next/no-img-element -- runtime asset w/ onError fallback to summary
     <img
       src={preview.imageSrc}
-      alt={`${preview.title} 화면 미리보기`}
+      alt={t("imageAlt", { title })}
       style={{ width: "100%", borderRadius: 8, display: "block" }}
       onError={() => setFailed(true)}
     />
@@ -105,26 +120,34 @@ const gridStyle: React.CSSProperties = {
 };
 
 export function ProductPreview() {
+  const t = useTranslations("landing.preview");
   return (
     <section id="preview" style={{ marginTop: 64 }}>
       <Title level={2} style={{ textAlign: "center" }}>
-        써보기 전에 미리 보기
+        {t("sectionTitle")}
       </Title>
       <Paragraph type="secondary" style={{ textAlign: "center" }}>
-        실제 화면 그대로의 대시보드, 피드백, 리포트를 확인해보세요.
+        {t("sectionBody")}
       </Paragraph>
       <div style={gridStyle}>
-        {PREVIEWS.map((preview) => (
-          <Card key={preview.key} size="small">
-            <PreviewImage preview={preview} />
-            <Title level={5} style={{ marginTop: 12, marginBottom: 4 }}>
-              {preview.title}
-            </Title>
-            <Paragraph type="secondary" style={{ marginBottom: 0, fontSize: 13 }}>
-              {preview.summary}
-            </Paragraph>
-          </Card>
-        ))}
+        {PREVIEWS.map((preview) => {
+          const badge = t(preview.badgeKey);
+          const title = t(preview.titleKey);
+          return (
+            <Card key={preview.key} size="small">
+              <PreviewImage preview={preview} badge={badge} title={title} />
+              <Title level={5} style={{ marginTop: 12, marginBottom: 4 }}>
+                {title}
+              </Title>
+              <Paragraph
+                type="secondary"
+                style={{ marginBottom: 0, fontSize: 13 }}
+              >
+                {t(preview.summaryKey)}
+              </Paragraph>
+            </Card>
+          );
+        })}
       </div>
     </section>
   );

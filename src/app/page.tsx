@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 
 import { FeatureCard } from "@/components/landing/FeatureCard";
 import { Hero } from "@/components/landing/Hero";
@@ -6,9 +7,10 @@ import { LandingHeader } from "@/components/landing/LandingHeader";
 import { ProductPreview } from "@/components/landing/ProductPreview";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export const metadata: Metadata = {
-  title: "TALKPIK AI · TOPIK 글쓰기 AI 학습",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("landing");
+  return { title: t("metaTitle") };
+}
 
 // Plain CSS grid keeps this page a Server Component (no antd Row/Col import).
 // See Codex P2-01 (Phase 7-B post-impl review 2026-05-26).
@@ -26,6 +28,9 @@ export default async function HomePage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  // §6 기능 카드 문구는 landing.features.* 카탈로그에서 서버측 getTranslations로
+  // 해석해 FeatureCard(범용 컴포넌트)에 props로 전달한다.
+  const t = await getTranslations("landing.features");
 
   return (
     <main style={{ maxWidth: 1080, margin: "0 auto", padding: "0 16px 64px" }}>
@@ -38,23 +43,23 @@ export default async function HomePage() {
         <div style={featureGridStyle}>
           <FeatureCard
             emoji="✍️"
-            title="AI 첨삭"
-            description="TOPIK 51~54번 글쓰기 환경 그대로. AI가 차원별 점수와 첨삭을 제공합니다."
+            title={t("correctionTitle")}
+            description={t("correctionDescription")}
           />
           <FeatureCard
             emoji="📝"
-            title="실전 문제"
-            description="51~54번 유형별 실전 문제로 시험과 같은 조건에서 글쓰기를 연습합니다."
+            title={t("practiceTitle")}
+            description={t("practiceDescription")}
           />
           <FeatureCard
             emoji="📈"
-            title="성장 리포트"
-            description="제출 답안을 비교해 점수 변화와 약점 영역을 한눈에 확인합니다."
+            title={t("reportTitle")}
+            description={t("reportDescription")}
           />
           <FeatureCard
             emoji="📚"
-            title="라이브러리"
-            description="저장한 문제, 제출 답안, 비교 보고서를 한 자리에서 관리합니다."
+            title={t("libraryTitle")}
+            description={t("libraryDescription")}
           />
         </div>
       </section>

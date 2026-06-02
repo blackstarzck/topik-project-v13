@@ -5,7 +5,10 @@ import { requireUser } from "@/lib/auth/session";
 import { getProfileSettings } from "@/lib/settings/server";
 import { LanguageForm } from "@/components/settings/LanguageForm";
 
-export const metadata: Metadata = { title: "언어 설정 — TALKPIK" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("settings.language");
+  return { title: t("metaTitle") };
+}
 
 export default async function LanguageSettingsPage() {
   const user = await requireUser();

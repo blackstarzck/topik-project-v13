@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 
 import { TermsContent } from "@/components/legal/TermsContent";
 
@@ -7,7 +8,10 @@ import { TermsContent } from "@/components/legal/TermsContent";
 // legal placeholder. 정식 법무 검토 약관은 운영 진입 전 별도 작업으로 게시.
 // PUBLIC_PATHS(/terms)로 세션 없이 접근 가능 (src/lib/routes.ts).
 
-export const metadata: Metadata = { title: "이용약관 — TALKPIK" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("legal.terms");
+  return { title: t("metaTitle") };
+}
 
 export default function TermsPage() {
   return (

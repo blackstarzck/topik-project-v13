@@ -20,7 +20,7 @@ import { App, Button, Card, Divider, Form, Input, Space, Typography } from "antd
 import { AuthMascot } from "@/components/auth/AuthMascot";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { buildAuthRedirectUrl } from "@/lib/auth/redirect-url";
-import { REASON_CONTENT, mapSupabaseErrorCode } from "@/lib/auth/error-mapping";
+import { mapSupabaseErrorCode } from "@/lib/auth/error-mapping";
 
 const { Paragraph, Title, Text } = Typography;
 
@@ -106,6 +106,8 @@ function clearCooldown(): void {
 export function VerifyEmailCard() {
   const t = useTranslations("auth.verifyEmail");
   const tc = useTranslations("auth.countdown");
+  // Cross-namespace: server resend-failure copy lives under `auth.error.<reason>.message`.
+  const te = useTranslations("auth.error");
   const { message } = App.useApp();
   const searchParams = useSearchParams();
   const emailFromQuery = searchParams.get("email") ?? "";
@@ -187,7 +189,7 @@ export function VerifyEmailCard() {
       }
       message.error(
         t("resendFailed", {
-          message: REASON_CONTENT[mapSupabaseErrorCode(error.code)].message,
+          message: te(`${code}.message` as Parameters<typeof te>[0]),
         }),
       );
       return;

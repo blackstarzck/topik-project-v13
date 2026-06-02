@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Result } from "antd";
+import { useTranslations } from "next-intl";
 
 type Props = {
   error?: Error;
@@ -8,15 +9,16 @@ type Props = {
 };
 
 export function AppError({ error, reset }: Props) {
+  const t = useTranslations("shared.error");
   return (
     <Result
       status="error"
-      title="문제가 발생했어요"
-      subTitle={error?.message ?? "다시 시도해 주세요."}
+      title={t("title")}
+      subTitle={error?.message ?? t("subTitle")}
       extra={
         reset ? (
           <Button type="primary" onClick={reset}>
-            다시 시도
+            {t("retry")}
           </Button>
         ) : null
       }

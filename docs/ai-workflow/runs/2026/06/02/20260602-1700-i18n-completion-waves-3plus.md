@@ -9,8 +9,11 @@
 - Host: Claude Code
 - Parent run: `docs/ai-workflow/runs/2026/06/02/20260602-1300-ia-autonomous-cleanup-migration-i18n.md`
 - Resume source: `reports/ia-verification/runs/20260601-120308/handoffs/20260602-RESUME-2-scope-corrected-i18n.md`
-- Status: in progress — executing remaining i18n waves (writing/feedback/reports → library/growth →
-  profile/settings/learning → auth-lib/landing/shared/legal). Admin EXCLUDED (out of scope).
+- Status: COMPLETE — waves 3-6 done (writing/feedback/reports → library/growth →
+  profile/settings/learning → auth-lib/landing/shared/legal). All in-scope user-facing UI chrome
+  migrated to next-intl (ko/en/vi); catalog 1318 strings ×3 (parity). Admin EXCLUDED (out of scope).
+  Remaining live Korean is all accounted-for/justified (see Final Completeness Accounting).
+  Deferred to evidence phase: live-browser en/vi render + locale switch (no dev server here).
 
 ## Task
 
@@ -67,6 +70,19 @@
 | 2026-06-02T18:10Z | Keep review-set-data.ts 2 Korean Error throws | "선택한 항목이 없습니다"/"로그인이 필요합니다" are defensive guards in a non-component data module; practically unreachable (create button disabled when nothing selected; RLS+requireUser gate auth server-side). Surfaced only via err.message fallback. Externalizing (sentinel error + component t()) is wasted effort on dead paths. Flagged, left. | agent flag + coordinator |
 | 2026-06-02T18:40Z | WAVE 5 (profile + settings/subscription/paywall + learning/onboarding) DONE + GREEN | 1 Workflow, 3 parallel agents. profile 70 keys; settings/subscription/paywall 139 (settings.notifications + subscription + paywall; billing-data cadenceLabel→cadenceLabelKey key-expose); learning-onboarding 46 (dashboard.recentFeedback/upcomingExam extend existing dashboard ns + new onboarding ns; avatar-upload + zod-message + weak-area key-expose). 255 keys merged (catalog 960→1216 ×3, parity). Tests all read messages/ko.json (staging-import lesson held — 0 staging refs). Reused common.save/cancel. typecheck 0 (all casts applied by agents), lint 0 err, test 555 pass/3 skip (staging deleted FIRST). scan clean (only the 4 orphans + G-01 language-page false-positive). ko verbatim confirmed (17 strings). en/vi reviewed, high quality, ICU preserved. PURE string externalization — no subscription/payment/profile status/enum/plan VALUE changed (shared-entity semantics intact; consistency-safe). | this run |
 
+| 2026-06-02T19:10Z | WAVE 6 (FINAL: auth-lib + landing + shared + legal) DONE + GREEN | 1 Workflow, 4 parallel agents. auth-lib 41 keys (REASON_CONTENT → locale-free data + auth.error.<reason>.*; 5 message consumers updated; use-email-cooldown label→auth.cooldown.label; password-strength dead duplicate labels REMOVED — live labels already in auth.strength.* from wave 1; updated error-mapping.test.ts). landing 21 (ProductPreview + page.tsx generateMetadata; FeatureCard had no Korean). shared 8 (shared.error/notFound/loading/unsavedGuard; AppNotFound+AppLoading converted server→client). legal 30 (legal.terms.*/privacy.*; ALL flagged for legal+native review). 100 keys merged. | this run |
+| 2026-06-02T19:15Z | FINAL completeness scan caught 2 real misses from wave-1/G-01 "DONE" | (1) `Hero.tsx` hardcoded `alt="TALKPIK 학습 도우미 캐릭터"` (a11y) → `t("heroMascotAlt")`; (2) `settings/language/page.tsx` static `metadata.title:"언어 설정 — TALKPIK"` → async `generateMetadata()` + `settings.language.metaTitle`. Added 2 keys ×3 locales. Confirms value of the full-repo scan over trusting prior "DONE". Catalog 1216→1318 ×3. | full-repo scan |
+| 2026-06-02T19:15Z | NOTE: shared agent made AppNotFound+AppLoading client components | The ONLY non-"string-literal→t()" change in the whole effort: AppNotFound.tsx + AppLoading.tsx went server→client ("use client" + useTranslations), matching AppError (already client). Valid (client comps render fine as not-found UI / loading Suspense fallback); typecheck + tests green; aligns with the antd-compound-in-server-component React #130 caution. Runtime render of /not-found + loading deferred to evidence phase. | agent + coordinator |
+
+## Final Completeness Accounting (whole-repo scan after wave 6)
+
+36 files still contain live Korean — EVERY one accounted for:
+- **24 admin files** (`src/components/admin/*`, `src/app/(workspace)/admin/*`) — OUT OF SCOPE (frozen per `docs/admin-scope-boundary.md`).
+- **2 service-layer content generators** (`src/lib/writing/feedback-service.ts`, `comparison-service.ts`) — DEFERRED to AI-integration (locale-aware generation, not static catalog).
+- **4 dead orphans** (`learning/{KpiSummary,AlertsCard,EmptyDashboard,RecommendationCard}`) — no importers; future cleanup, not i18n.
+- **4 justified non-UI**: `lib/routes.ts` (dead `label:` fields; live nav uses `labelKey`+t()), `writing/ConditionsPanel.tsx` (dead formatter fallback + Korean DB-field accessors 조건/평가기준), `library/review-set-data.ts` (2 unreachable guard Errors), `hooks/useUnsavedChangesGuard.ts` (DEFAULT_MESSAGE fallback; ZERO callers; key exposed for future use).
+- = ALL in-scope user-facing UI chrome is migrated. No unjustified Korean remains.
+
 ## Active Files
 
 - In-scope clusters (migrate; disjoint agent write-paths):
@@ -122,6 +138,16 @@
   reviewed; vi flagged (~20 keys: subscription.policy.*, paywall.*, onboarding.goalForm.*, etc.).
   Consistency-safe: no shared-entity (subscriptions/payment_history/profiles) enum/status/plan
   value changed — pure string externalization.
+- **Wave 6 result — FINAL (2026-06-02): typecheck 0, lint 0 err, test 83 files / 566 pass / 3 skip.
+  Catalog 1318 strings ×3 (parity, no empties).** auth-lib/landing/shared/legal migrated + 2 G-01
+  misses fixed (Hero alt, language metaTitle). Fixed 1 test bug: TermsContent.test.tsx missing
+  `afterEach(cleanup)` → DOM accumulation across same-component renders (added cleanup). ko verbatim
+  (the 1 verifier miss was removal of dead duplicate password-strength labels, fully covered by
+  auth.strength.* from wave 1). en/vi reviewed, high quality (incl. accurate legal-reference
+  phrasing). vi flagged: all legal.* body copy + auth.error.* longer messages (~30 keys).
+- **LEGAL flag (strong): all `legal.terms.*` / `legal.privacy.*` en+vi need HUMAN/LEGAL review
+  before launch** — these are non-binding placeholders, but machine-translated legal-style copy
+  must not ship unreviewed.
 - Cross-model review: codex N/A for Korean copy on Windows (`codex-review-mojibake-windows`) →
   coordinator (Claude) reviewed ko-verbatim (objective string check) + en/vi accuracy.
 - QA Gate: degraded — no dev server/browser in coordinator env (`feedback-ui-completion-requires-dev-server`) | full unit suite 530 passed/3 skipped incl. the wave-3 writing/feedback/reports chrome tests rendering via `renderWithIntl` on the ko baseline + catalog-parity test (ko/en/vi identical key sets, no empties) + independent ko-verbatim string check (34 strings byte-for-byte) + scan-unmigrated (no live Korean except justified) | live-browser en/vi rendering + runtime locale switch on writing/feedback/reports screens UNVERIFIED — defer to evidence phase (boot server, switch locale, confirm render + no hydration mismatch); vi long-copy keys need native review.

@@ -46,6 +46,15 @@ export type UnsavedChangesGuardOptions = {
   onConfirmLeave?: () => boolean;
 };
 
+/**
+ * i18n: 이 모듈은 훅이라 useTranslations 를 호출할 수 없다(렌더 컴포넌트만 가능).
+ * 따라서 confirm 다이얼로그 문구는 카탈로그 키로 노출하고, 호출하는 컴포넌트가
+ * t(SHARED_UNSAVED_GUARD_MESSAGE_KEY) 로 해석해 `message` 로 넘긴다. 아래 literal
+ * 은 message 도 onConfirmLeave 도 안 준 호출자를 위한 브라우저-native 최후 폴백일
+ * 뿐이며, 정상 경로에서는 항상 해석된 message 가 우선한다.
+ */
+export const SHARED_UNSAVED_GUARD_MESSAGE_KEY = "shared.unsavedGuard.message";
+
 const DEFAULT_MESSAGE =
   "저장되지 않은 변경 사항이 있어요. 페이지를 나가면 작성 내용이 사라질 수 있어요. 나가시겠어요?";
 

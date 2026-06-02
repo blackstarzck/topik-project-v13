@@ -1,6 +1,11 @@
-import { Spin } from "antd";
+"use client";
 
-export function AppLoading({ tip = "불러오는 중..." }: { tip?: string }) {
+import { Spin } from "antd";
+import { useTranslations } from "next-intl";
+
+export function AppLoading({ tip }: { tip?: string }) {
+  const t = useTranslations("shared.loading");
+  // tip 미지정 시 카탈로그 기본 문구로 폴백(호출자가 명시한 tip 은 그대로 존중).
   return (
     <div
       style={{
@@ -10,7 +15,7 @@ export function AppLoading({ tip = "불러오는 중..." }: { tip?: string }) {
         padding: "4rem 1rem",
       }}
     >
-      <Spin tip={tip} size="large" />
+      <Spin tip={tip ?? t("tip")} size="large" />
     </div>
   );
 }

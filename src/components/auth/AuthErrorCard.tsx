@@ -92,6 +92,13 @@ export function AuthErrorCard() {
     : mapSupabaseErrorCode(reasonParam);
   const content: AuthErrorContent = REASON_CONTENT[reason];
 
+  // Per-reason copy lives in the `auth.error.<reason>.*` catalog; resolve it
+  // with a dynamic-key t() (cast required because the key is computed).
+  type ErrorKey = Parameters<typeof t>[0];
+  const reasonTitle = t(`${reason}.title` as ErrorKey);
+  const reasonMessage = t(`${reason}.message` as ErrorKey);
+  const reasonPrimaryLabel = t(`${reason}.primaryLabel` as ErrorKey);
+
   const emailFromQuery = searchParams.get("email") ?? "";
   const initialRetryAfter = sanitizeRetryAfterSeconds(
     searchParams.get("retry_after_seconds"),
@@ -144,9 +151,10 @@ export function AuthErrorCard() {
         message.error(t("resendRateLimited"));
         return;
       }
+      const failedReason = mapSupabaseErrorCode(error.code);
       message.error(
         t("resendFailed", {
-          message: REASON_CONTENT[mapSupabaseErrorCode(error.code)].message,
+          message: t(`${failedReason}.message` as Parameters<typeof t>[0]),
         }),
       );
       return;
@@ -171,9 +179,9 @@ export function AuthErrorCard() {
     >
       <Space direction="vertical" size="middle" style={{ width: "100%" }}>
         <Title level={3} style={{ marginBottom: 0 }}>
-          {content.title}
+          {reasonTitle}
         </Title>
-        <Paragraph style={{ marginBottom: 0 }}>{content.message}</Paragraph>
+        <Paragraph style={{ marginBottom: 0 }}>{reasonMessage}</Paragraph>
 
         {content.showsEmailField && (
           <Form layout="vertical">
@@ -205,7 +213,7 @@ export function AuthErrorCard() {
             onClick={() => handlePrimaryClick(content.primary)}
             data-testid="auth-error-primary"
           >
-            {content.primary.label}
+            {reasonPrimaryLabel}
           </Button>
           {/* description §3: primary 1 + secondary <=1. "help" kind은 실제
               도움말 화면이 없어 misleading 이므로 secondary 버튼으로 렌더하지
@@ -213,7 +221,7 @@ export function AuthErrorCard() {
           {content.secondary && content.secondary.kind !== "help" && (
             <Link href={ctaHref(content.secondary.kind)} legacyBehavior>
               <Button type="link" block data-testid="auth-error-secondary">
-                {content.secondary.label}
+                {t(`${reason}.secondaryLabel` as Parameters<typeof t>[0])}
               </Button>
             </Link>
           )}

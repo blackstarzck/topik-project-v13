@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 
 import { AuthMascot } from "@/components/auth/AuthMascot";
 import { PasswordStrengthMeter } from "@/components/auth/PasswordStrengthMeter";
-import { REASON_CONTENT, mapSupabaseErrorCode } from "@/lib/auth/error-mapping";
+import { mapSupabaseErrorCode } from "@/lib/auth/error-mapping";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 const { Paragraph, Title, Text } = Typography;
@@ -30,6 +30,8 @@ function formatAbsolute(date: Date, locale: string): string {
 
 export function PasswordResetConfirmForm() {
   const t = useTranslations("auth.passwordResetConfirm");
+  // Cross-namespace: server change-failure copy lives under `auth.error.<reason>.message`.
+  const te = useTranslations("auth.error");
   const locale = useLocale();
   const { message } = App.useApp();
   const router = useRouter();
@@ -56,9 +58,10 @@ export function PasswordResetConfirmForm() {
     setSubmitting(false);
     if (error) {
       // raw provider error_description은 노출하지 않고 매핑된 메시지만 사용.
+      const reason = mapSupabaseErrorCode(error.code);
       message.error(
         t("changeFailed", {
-          message: REASON_CONTENT[mapSupabaseErrorCode(error.code)].message,
+          message: te(`${reason}.message` as Parameters<typeof te>[0]),
         }),
       );
       setSaveFailed(true);

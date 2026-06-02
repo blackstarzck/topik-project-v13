@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation";
 import { App, Button, Checkbox, Form, Input, Typography } from "antd";
 
 import { buildAuthRedirectUrl } from "@/lib/auth/redirect-url";
-import { REASON_CONTENT, mapSupabaseErrorCode } from "@/lib/auth/error-mapping";
+import { mapSupabaseErrorCode } from "@/lib/auth/error-mapping";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { PasswordStrengthMeter } from "@/components/auth/PasswordStrengthMeter";
 
@@ -37,6 +37,8 @@ type SignUpFields = {
 
 export function SignUpForm() {
   const t = useTranslations("auth.signUp");
+  // Cross-namespace: server sign-up failure copy lives under `auth.error.<reason>.message`.
+  const te = useTranslations("auth.error");
   const { message } = App.useApp();
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
@@ -70,9 +72,10 @@ export function SignUpForm() {
         ]);
         return;
       }
+      const reason = mapSupabaseErrorCode(error.code);
       message.error(
         t("signUpFailed", {
-          message: REASON_CONTENT[mapSupabaseErrorCode(error.code)].message,
+          message: te(`${reason}.message` as Parameters<typeof te>[0]),
         }),
       );
       return;

@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { App, Button, Form, Input, Typography } from "antd";
 import { useTranslations } from "next-intl";
 
 import { buildAuthRedirectUrl } from "@/lib/auth/redirect-url";
-import { REASON_CONTENT, mapSupabaseErrorCode } from "@/lib/auth/error-mapping";
+import { mapSupabaseErrorCode } from "@/lib/auth/error-mapping";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import {
   DEFAULT_COOLDOWN_SECONDS,
@@ -16,6 +16,20 @@ const { Paragraph, Text, Title } = Typography;
 
 type Fields = { email: string };
 
+// Cooldown label formatter — duration phrases come from the shared
+// `auth.countdown.*` catalog, wrapped by `auth.cooldown.label` so the resend
+// reminder ("…후 다시 보낼 수 있어요") renders correctly per locale.
+type CountdownTranslate = ReturnType<typeof useTranslations<"auth.countdown">>;
+
+function formatCountdown(totalSeconds: number, tc: CountdownTranslate): string {
+  if (totalSeconds <= 0) return tc("zero");
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  if (minutes === 0) return tc("seconds", { seconds });
+  if (seconds === 0) return tc("minutes", { minutes });
+  return tc("minutesSeconds", { minutes, seconds });
+}
+
 // Codex P4 D7 — X-12 cooldown 패턴 이식. localStorage 기반 60초 cooldown,
 // 새로고침에도 유지. rate-limit (over_email_send_rate_limit / over_request_rate_limit)
 // 도 동일 cooldown 적용해서 사용자가 "왜 안 보내지는지" 즉시 파악 가능.
@@ -23,6 +37,10 @@ const COOLDOWN_STORAGE_KEY = "talkpik:password-reset:cooldown-until";
 
 export function PasswordResetRequestForm() {
   const t = useTranslations("auth.passwordReset");
+  // Cross-namespace: server send-failure copy lives under `auth.error.<reason>.message`.
+  const te = useTranslations("auth.error");
+  const tc = useTranslations("auth.countdown");
+  const tcd = useTranslations("auth.cooldown");
   const { message } = App.useApp();
   const [submitting, setSubmitting] = useState(false);
   const [sentTo, setSentTo] = useState<string | null>(null);
@@ -30,6 +48,13 @@ export function PasswordResetRequestForm() {
     COOLDOWN_STORAGE_KEY,
     DEFAULT_COOLDOWN_SECONDS,
   );
+
+  // Resend reminder label, formatted from the raw remaining seconds the hook
+  // exposes. null while no cooldown is active.
+  const countdownLabel = useMemo(() => {
+    if (cooldown.remaining <= 0) return null;
+    return tcd("label", { label: formatCountdown(cooldown.remaining, tc) });
+  }, [cooldown.remaining, tc, tcd]);
 
   async function handleSubmit(values: Fields) {
     if (cooldown.remaining > 0) return;
@@ -49,7 +74,11 @@ export function PasswordResetRequestForm() {
         message.error(t("rateLimited"));
         return;
       }
-      message.error(t("sendFailed", { message: REASON_CONTENT[code].message }));
+      message.error(
+        t("sendFailed", {
+          message: te(`${code}.message` as Parameters<typeof te>[0]),
+        }),
+      );
       return;
     }
     cooldown.start();
@@ -71,9 +100,9 @@ export function PasswordResetRequestForm() {
         <Paragraph>
           <Text type="secondary">{t("sentExpiryNote")}</Text>
         </Paragraph>
-        {cooldown.countdownLabel && (
+        {countdownLabel && (
           <Text type="secondary" data-testid="password-reset-countdown">
-            {cooldown.countdownLabel}
+            {countdownLabel}
           </Text>
         )}
       </div>
@@ -93,10 +122,10 @@ export function PasswordResetRequestForm() {
       >
         <Input autoComplete="email" disabled={cooldown.remaining > 0} />
       </Form.Item>
-      {cooldown.countdownLabel && (
+      {countdownLabel && (
         <Paragraph style={{ marginBottom: 12 }}>
           <Text type="secondary" data-testid="password-reset-countdown">
-            {cooldown.countdownLabel}
+            {countdownLabel}
           </Text>
         </Paragraph>
       )}

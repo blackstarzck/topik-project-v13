@@ -55,14 +55,19 @@ export type AuthErrorCtaKind =
   | "home"
   | "help";
 
+// i18n: CTA carries only the routing `kind`. The display label is resolved by
+// the consuming component via t(`error.${reason}.primaryLabel` / `secondaryLabel`)
+// — see AuthErrorCard. No copy lives in this module.
 export type AuthErrorCta = {
-  label: string;
   kind: AuthErrorCtaKind;
 };
 
+// i18n: title / message / CTA labels are NOT stored here. They live in the
+// `auth.error.<reason>.*` catalog (title / message / primaryLabel / secondaryLabel)
+// and the consuming component resolves them with a dynamic-key t() call. This
+// module cannot call useTranslations, so it only keeps the locale-free shape:
+// CTA kinds (for routing) + boolean flags (field/countdown behavior).
 export type AuthErrorContent = {
-  title: string;
-  message: string;
   primary: AuthErrorCta;
   secondary?: AuthErrorCta;
   showsEmailField: boolean;
@@ -71,91 +76,66 @@ export type AuthErrorContent = {
 
 export const REASON_CONTENT: Record<AuthErrorReason, AuthErrorContent> = {
   otp_expired: {
-    title: "인증 링크가 만료됐어요",
-    message:
-      "이메일을 다시 입력하면 새 인증 메일을 보내드릴게요. 메일은 60초 안에 한 번만 보낼 수 있어요.",
-    primary: { label: "인증 메일 다시 받기", kind: "resend" },
-    secondary: { label: "로그인하기", kind: "login" },
+    primary: { kind: "resend" },
+    secondary: { kind: "login" },
     showsEmailField: true,
     // Phase 8 follow-up v2.3 (2026-05-27): 60초 cooldown 실제 활성화.
     // AuthErrorCard가 retry_after_seconds 누락 시 default 60초로 초기화 (component:74).
     hasCountdown: true,
   },
   flow_state_expired: {
-    title: "인증 절차가 만료됐어요",
-    message: "조금 오래 걸렸어요. 처음부터 다시 시도해주세요.",
-    primary: { label: "다시 시도하기", kind: "retry" },
-    secondary: { label: "로그인하기", kind: "login" },
+    primary: { kind: "retry" },
+    secondary: { kind: "login" },
     showsEmailField: false,
     hasCountdown: false,
   },
   flow_state_not_found: {
-    title: "인증 요청을 찾을 수 없어요",
-    message:
-      "다른 기기나 브라우저에서 시작한 링크일 수 있어요. 지금 사용하는 브라우저에서 처음부터 다시 시도해주세요.",
-    primary: { label: "다시 시도하기", kind: "retry" },
-    secondary: { label: "도움말", kind: "help" },
+    primary: { kind: "retry" },
+    secondary: { kind: "help" },
     showsEmailField: false,
     hasCountdown: false,
   },
   bad_code_verifier: {
-    title: "보안 검증에 실패했어요",
-    message: "처음 인증을 시작한 브라우저에서 끝까지 진행해주세요.",
-    primary: { label: "처음부터 다시", kind: "retry" },
+    primary: { kind: "retry" },
     showsEmailField: false,
     hasCountdown: false,
   },
   user_not_found: {
-    title: "이 계정은 더 이상 존재하지 않아요",
-    message:
-      "오래 비활성화된 계정은 자동으로 정리됐어요. 다시 가입하시면 바로 사용할 수 있어요.",
-    primary: { label: "다시 가입하기", kind: "signup" },
-    secondary: { label: "로그인하기", kind: "login" },
+    primary: { kind: "signup" },
+    secondary: { kind: "login" },
     showsEmailField: false,
     hasCountdown: false,
   },
   over_email_send_rate_limit: {
-    title: "메일을 너무 많이 보냈어요",
-    message: "잠시 후 다시 시도해주세요. 남은 시간이 끝나면 자동으로 다시 보낼 수 있어요.",
-    primary: { label: "잠시 후 다시 시도", kind: "resend" },
+    primary: { kind: "resend" },
     showsEmailField: true,
     hasCountdown: true,
   },
   over_request_rate_limit: {
-    title: "요청이 너무 많아요",
-    message: "잠시 후 다시 시도해주세요.",
-    primary: { label: "잠시 후 다시 시도", kind: "retry" },
+    primary: { kind: "retry" },
     showsEmailField: false,
     hasCountdown: true,
   },
   email_not_confirmed: {
-    title: "이메일 인증이 아직 완료되지 않았어요",
-    message: "받은편지함에서 인증 메일을 확인해주세요. 메일이 보이지 않으면 다시 받을 수 있어요.",
-    primary: { label: "인증 메일 다시 받기", kind: "resend" },
-    secondary: { label: "로그인하기", kind: "login" },
+    primary: { kind: "resend" },
+    secondary: { kind: "login" },
     showsEmailField: true,
     hasCountdown: false,
   },
   signup_disabled: {
-    title: "현재 신규 가입이 일시 중단됐어요",
-    message: "잠시 후 다시 시도해주세요. 불편을 드려 죄송합니다.",
-    primary: { label: "홈으로", kind: "home" },
+    primary: { kind: "home" },
     showsEmailField: false,
     hasCountdown: false,
   },
   access_denied: {
-    title: "인증이 거부됐어요",
-    message: "다시 시도하시려면 가입 또는 로그인 페이지로 이동해주세요.",
-    primary: { label: "다시 가입하기", kind: "signup" },
-    secondary: { label: "로그인하기", kind: "login" },
+    primary: { kind: "signup" },
+    secondary: { kind: "login" },
     showsEmailField: false,
     hasCountdown: false,
   },
   unknown: {
-    title: "처리 중 문제가 생겼어요",
-    message: "잠시 후 다시 시도해주세요. 문제가 계속되면 잠시 뒤 다시 시도해주세요.",
-    primary: { label: "홈으로", kind: "home" },
-    secondary: { label: "도움말", kind: "help" },
+    primary: { kind: "home" },
+    secondary: { kind: "help" },
     showsEmailField: false,
     hasCountdown: false,
   },

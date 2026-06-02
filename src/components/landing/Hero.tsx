@@ -40,7 +40,7 @@ export function Hero({ isAuthenticated = false }: HeroProps) {
     >
       {/* §5 마스코트 — 첫 화면 CTA와 겹치지 않게 카피 위에 배치, 대체 텍스트 필수 */}
       <AuthMascot
-        alt="TALKPIK 학습 도우미 캐릭터"
+        alt={t("heroMascotAlt")}
         emoji="🐥"
         size={64}
       />

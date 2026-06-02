@@ -52,7 +52,33 @@
     "heroBody": "Set a study goal, work through problems, and narrow your weak spots with AI feedback. We recreate the TOPIK questions 51–54 writing environment exactly.",
     "heroCtaDashboard": "Go to dashboard",
     "heroCtaSignUp": "Get started free",
-    "heroCtaLogin": "Log in"
+    "heroCtaLogin": "Log in",
+    "preview": {
+      "sectionTitle": "Take a look before you start",
+      "sectionBody": "See the real dashboard, feedback, and report screens just as they are.",
+      "imageAlt": "{title} screen preview",
+      "dashboardBadge": "📊 Dashboard",
+      "dashboardTitle": "Your learning status at a glance",
+      "dashboardSummary": "Check today's goal, recent submissions, and recommended questions right on the home screen.",
+      "feedbackBadge": "✍️ AI feedback",
+      "feedbackTitle": "Feedback by dimension",
+      "feedbackSummary": "Get scores by content, structure, vocabulary, and grammar, plus comments on each sentence.",
+      "reportBadge": "📈 Growth report",
+      "reportTitle": "Compare score changes",
+      "reportSummary": "Compare with your previous answers to view score changes and weak areas as a graph."
+    },
+    "features": {
+      "correctionTitle": "AI feedback",
+      "correctionDescription": "The exact TOPIK questions 51–54 writing environment. AI provides scores and feedback by dimension.",
+      "practiceTitle": "Real practice questions",
+      "practiceDescription": "Practice writing under exam-like conditions with real questions for each type from 51 to 54.",
+      "reportTitle": "Growth report",
+      "reportDescription": "Compare your submitted answers to see score changes and weak areas at a glance.",
+      "libraryTitle": "Library",
+      "libraryDescription": "Manage your saved questions, submitted answers, and comparison reports all in one place."
+    },
+    "metaTitle": "TALKPIK AI · AI-powered TOPIK writing practice",
+    "heroMascotAlt": "TALKPIK learning helper character"
   },
   "settings": {
     "language": {
@@ -91,7 +117,8 @@
       "unsavedLeave": "You have unsaved changes. Do you want to leave this page?",
       "saveSuccess": "Your language and content settings were saved.",
       "saveError": "Couldn't save your settings.",
-      "learningSettingsLoadError": "Couldn't load your content settings."
+      "learningSettingsLoadError": "Couldn't load your content settings.",
+      "metaTitle": "Language settings — TALKPIK"
     },
     "notifications": {
       "metaTitle": "Notification settings — TALKPIK",
@@ -291,7 +318,69 @@
       "countdownWaiting": "You can try again in {label}",
       "escapeLogin": "Log in",
       "escapeSignUp": "Sign up",
-      "escapeHome": "Home"
+      "escapeHome": "Home",
+      "otp_expired": {
+        "title": "Your verification link has expired",
+        "message": "Enter your email again and we'll send a new verification message. We can only send one email every 60 seconds.",
+        "primaryLabel": "Resend verification email",
+        "secondaryLabel": "Log in"
+      },
+      "flow_state_expired": {
+        "title": "Your verification session has expired",
+        "message": "It took a little too long. Please start over from the beginning.",
+        "primaryLabel": "Try again",
+        "secondaryLabel": "Log in"
+      },
+      "flow_state_not_found": {
+        "title": "We couldn't find your verification request",
+        "message": "This link may have been started on a different device or browser. Please start over in the browser you're using now.",
+        "primaryLabel": "Try again",
+        "secondaryLabel": "Help"
+      },
+      "bad_code_verifier": {
+        "title": "Security verification failed",
+        "message": "Please complete the process in the same browser where you started verification.",
+        "primaryLabel": "Start over"
+      },
+      "user_not_found": {
+        "title": "This account no longer exists",
+        "message": "Long-inactive accounts are cleaned up automatically. Just sign up again and you can use it right away.",
+        "primaryLabel": "Sign up again",
+        "secondaryLabel": "Log in"
+      },
+      "over_email_send_rate_limit": {
+        "title": "Too many emails sent",
+        "message": "Please try again in a little while. You can resend automatically once the remaining time is up.",
+        "primaryLabel": "Try again shortly"
+      },
+      "over_request_rate_limit": {
+        "title": "Too many requests",
+        "message": "Please try again in a little while.",
+        "primaryLabel": "Try again shortly"
+      },
+      "email_not_confirmed": {
+        "title": "Your email isn't verified yet",
+        "message": "Please check your inbox for the verification email. If you don't see it, you can resend it.",
+        "primaryLabel": "Resend verification email",
+        "secondaryLabel": "Log in"
+      },
+      "signup_disabled": {
+        "title": "New sign-ups are temporarily paused",
+        "message": "Please try again in a little while. Sorry for the inconvenience.",
+        "primaryLabel": "Go home"
+      },
+      "access_denied": {
+        "title": "Verification was denied",
+        "message": "To try again, please go to the sign-up or log-in page.",
+        "primaryLabel": "Sign up again",
+        "secondaryLabel": "Log in"
+      },
+      "unknown": {
+        "title": "Something went wrong",
+        "message": "Please try again in a little while. If the problem continues, try again after a short break.",
+        "primaryLabel": "Go home",
+        "secondaryLabel": "Help"
+      }
     },
     "callback": {
       "metaTitle": "Verifying — TALKPIK",
@@ -320,6 +409,9 @@
     "mascot": {
       "loginAlt": "TALKPIK study helper character",
       "signUpAlt": "TALKPIK study helper character"
+    },
+    "cooldown": {
+      "label": "You can resend in {label}"
     }
   },
   "dashboard": {
@@ -1507,6 +1599,60 @@
       "item2": "· Tax invoice issuance supported",
       "item3": "· Secure payment (integration coming soon)",
       "item4": "· For institutional or group subscriptions, please contact us separately"
+    }
+  },
+  "legal": {
+    "terms": {
+      "metaTitle": "Terms of Service — TALKPIK",
+      "heading": "Terms of Service",
+      "intro": "This page is a provisional notice of terms for the TALKPIK AI service. The formal terms of service will be published separately before launch, at which point this page will be updated to the official terms.",
+      "placeholderNotice": "The current text is a placeholder pending legal review and is not a finalized, legally binding agreement.",
+      "summaryTitle": "Provisional notice",
+      "summaryTool": "This service is a tool that supports TOPIK writing practice.",
+      "summaryDataUse": "Learning data is used only to improve the quality of learning.",
+      "summaryPrivacy": "For how personal data is handled, please see the <privacyLink>Privacy Policy</privacyLink> page.",
+      "summaryConsent": "Once the formal terms are published, consent will be requested again at sign-up. For now, signing up is treated as consent to this provisional notice.",
+      "contactTitle": "Contact",
+      "contactBody": "No separate customer support channel is available until the formal terms are published. If you run into an authentication issue while using the service after signing up, please follow the guidance on the authentication error page.",
+      "shortcutsLabel": "Shortcuts: ",
+      "linkHome": "Home",
+      "linkBackToSignUp": "Back to sign-up",
+      "linkPrivacy": "Privacy Policy"
+    },
+    "privacy": {
+      "metaTitle": "Privacy Policy — TALKPIK",
+      "heading": "Privacy Policy",
+      "intro": "This page is a provisional notice on personal data handling for TALKPIK AI. The formal privacy policy will reflect compliance with Korea's Personal Information Protection Act and be published separately before launch.",
+      "summaryTitle": "Summary of processing (provisional)",
+      "summaryCollect": "<strong>Data collected:</strong> email, name, learning activity logs, writing submissions, evaluation results.",
+      "summaryPurpose": "<strong>Purpose of use:</strong> account identification, tracking learning progress, improving AI feedback quality.",
+      "summaryRetention": "<strong>Retention period:</strong> destroyed immediately upon account withdrawal. Learning statistics may be retained in anonymized form after identifying information is removed.",
+      "summaryThirdParty": "<strong>Third-party sharing:</strong> none. However, when an AI model is called, the body of a writing submission is transiently transmitted to an external LLM provider (the retention policy after the model responds is governed by the model provider's terms).",
+      "summaryScopeNote": "The scope above is limited to processing as currently implemented. Until the formal review, we make no definitive retention-period commitments or new third-party sharing promises.",
+      "updateTitle": "Update notice",
+      "updateBody": "When the formal privacy policy is published, this page will be updated, and the changes will be notified separately to registered users.",
+      "relatedLabel": "Related: ",
+      "linkTerms": "Terms of Service",
+      "linkHome": "Home",
+      "linkSignUp": "Sign up"
+    }
+  },
+  "shared": {
+    "error": {
+      "title": "Something went wrong",
+      "subTitle": "Please try again.",
+      "retry": "Try again"
+    },
+    "notFound": {
+      "title": "Page not found",
+      "subTitle": "The requested page does not exist or has been moved.",
+      "backToDashboard": "Go to dashboard"
+    },
+    "loading": {
+      "tip": "Loading..."
+    },
+    "unsavedGuard": {
+      "message": "You have unsaved changes. If you leave this page, your work may be lost. Do you want to leave?"
     }
   }
 }

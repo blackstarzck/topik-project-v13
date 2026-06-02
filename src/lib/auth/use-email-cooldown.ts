@@ -10,18 +10,9 @@
 // - SSR-safe: window 가드 + 마운트 후 useEffect 에서 복원.
 // - 백그라운드 탭 drift 보정: setInterval tick 마다 localStorage 의 until 으로 다시 계산.
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export const DEFAULT_COOLDOWN_SECONDS = 60;
-
-function formatCountdown(totalSeconds: number): string {
-  if (totalSeconds <= 0) return "0초";
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  if (minutes === 0) return `${seconds}초`;
-  if (seconds === 0) return `${minutes}분`;
-  return `${minutes}분 ${seconds}초`;
-}
 
 function readRemaining(storageKey: string): number {
   if (typeof window === "undefined") return 0;
@@ -60,13 +51,14 @@ function clearStorage(storageKey: string): void {
   }
 }
 
+// i18n: the hook intentionally exposes only the raw `remaining` seconds. The
+// display label ("5분 30초 후 다시 보낼 수 있어요") is locale-specific copy, so
+// the consuming component formats it via t() (auth.countdown.* + auth.cooldown.label).
 export type EmailCooldown = {
   /** 남은 초. 0 이면 cooldown 없음. */
   remaining: number;
   /** cooldown 시작. seconds 미지정 시 default 60초. */
   start: (seconds?: number) => void;
-  /** 화면에 표시할 카운트다운 라벨 ("5분 30초 후 다시 보낼 수 있어요"). cooldown 없으면 null. */
-  countdownLabel: string | null;
 };
 
 export function useEmailCooldown(
@@ -105,10 +97,5 @@ export function useEmailCooldown(
     setRemaining(value);
   }
 
-  const countdownLabel = useMemo(() => {
-    if (remaining <= 0) return null;
-    return `${formatCountdown(remaining)} 후 다시 보낼 수 있어요`;
-  }, [remaining]);
-
-  return { remaining, start, countdownLabel };
+  return { remaining, start };
 }

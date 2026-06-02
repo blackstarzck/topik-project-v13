@@ -68,12 +68,18 @@ describe("REASON_CONTENT", () => {
     expect(Object.keys(REASON_CONTENT).sort()).toEqual([...keys].sort());
   });
 
-  it("each entry has non-empty title and message", () => {
+  // i18n: title / message / CTA labels moved to the `auth.error.<reason>.*`
+  // catalog (resolved by the component). REASON_CONTENT now holds only the
+  // locale-free shape, so the contract test asserts that shape instead of copy.
+  it("each entry has a routing kind on its primary CTA and boolean flags", () => {
     for (const key of Object.keys(REASON_CONTENT) as AuthErrorReason[]) {
       const entry = REASON_CONTENT[key];
-      expect(entry.title.length).toBeGreaterThan(0);
-      expect(entry.message.length).toBeGreaterThan(0);
-      expect(entry.primary.label.length).toBeGreaterThan(0);
+      expect(entry.primary.kind.length).toBeGreaterThan(0);
+      if (entry.secondary) {
+        expect(entry.secondary.kind.length).toBeGreaterThan(0);
+      }
+      expect(typeof entry.showsEmailField).toBe("boolean");
+      expect(typeof entry.hasCountdown).toBe("boolean");
     }
   });
 
