@@ -22,6 +22,21 @@ that lists admin screens as in-scope.** Do not delete the existing admin code
 either (it is a self-contained, frozen island). Full detail + the current
 admin-code investigation: [`docs/admin-scope-boundary.md`](docs/admin-scope-boundary.md).
 
+## Data Consistency (User ↔ Admin) — high importance
+
+The data schema was designed **admin-first** (admin app: `topik-ai`). User-facing
+screens must reconcile TO the existing schema, and user/admin views of the same
+data must agree on field meanings, status/enum values, and ownership. **Before
+building or changing any user screen that reads/writes a SHARED entity**
+(profiles/users, problems/question-bank, writing submissions/feedback, billing,
+etc.), consult the method in
+[`docs/user-admin-consistency-method.md`](docs/user-admin-consistency-method.md)
+(and the artifact `docs/user-admin-data-consistency.md` once it exists). Anchor
+naming on `topik-ai/docs/specs/admin-data-contract.md`. Do NOT add admin-oriented
+schema to make a user screen work — reconcile the screen to the schema and escalate
+real schema gaps. (The filled consistency artifact is built when reconciliation
+work starts, not pre-emptively.)
+
 ## Project State
 
 This repository now has a foundation implementation. `src/` and `package.json`
