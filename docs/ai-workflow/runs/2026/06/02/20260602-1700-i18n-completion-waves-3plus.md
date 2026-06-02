@@ -148,6 +148,21 @@
 - **LEGAL flag (strong): all `legal.terms.*` / `legal.privacy.*` en+vi need HUMAN/LEGAL review
   before launch** — these are non-binding placeholders, but machine-translated legal-style copy
   must not ship unreviewed.
+- **VERIFICATION PHASE (owner chose "검증 단계 먼저", 2026-06-02) — pushed as far as the no-browser
+  env allows:**
+  1. **Prod build `pnpm build` → exit 0**: ALL routes compile for production (writing/feedback/
+     reports/library/growth/profile/settings/subscription/paywall/onboarding/privacy/terms/…). No
+     prod-only RSC/React #130 error — validates the migration + the AppNotFound/AppLoading
+     server→client conversion.
+  2. **Translation-completeness static check**: of 1318 leaves, exactly **1** en/vi value still
+     contains Hangul and equals ko — `settings.language.optionKo = "한국어 (Korean)"`, which is
+     CORRECT (Korean option shown in its own script in every locale). ⇒ zero accidental
+     untranslated strings; en/vi content completeness is real, not just key-parity.
+  3. **Locale-render smoke test** (`tests/lib/i18n/locale-render.test.tsx`, 4/4): AppError +
+     AppNotFound render in en AND vi and the ko baseline string is ABSENT when switched — proves
+     next-intl actually resolves+renders the en/vi catalogs at render time (not just parity).
+  - STILL DEFERRED (needs running server / humans): live-browser locale switch (router.refresh +
+    `<html lang>` + no hydration mismatch); vi native review; legal en+vi legal review.
 - Cross-model review: codex N/A for Korean copy on Windows (`codex-review-mojibake-windows`) →
   coordinator (Claude) reviewed ko-verbatim (objective string check) + en/vi accuracy.
 - QA Gate: degraded — no dev server/browser in coordinator env (`feedback-ui-completion-requires-dev-server`) | full unit suite 530 passed/3 skipped incl. the wave-3 writing/feedback/reports chrome tests rendering via `renderWithIntl` on the ko baseline + catalog-parity test (ko/en/vi identical key sets, no empties) + independent ko-verbatim string check (34 strings byte-for-byte) + scan-unmigrated (no live Korean except justified) | live-browser en/vi rendering + runtime locale switch on writing/feedback/reports screens UNVERIFIED — defer to evidence phase (boot server, switch locale, confirm render + no hydration mismatch); vi long-copy keys need native review.
