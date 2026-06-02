@@ -92,6 +92,16 @@ Do not bypass the workflow because the task looks small. Use the lightweight pat
 
 Use Korean by default for user-facing replies. Write for non-developers and vibe coders: short sentences, concrete wording, and plain Korean before expert terms. Follow `docs/user-communication-style.md` and `docs/report-writing-template.md`.
 
+When explaining development status to the user, follow this format:
+
+1. 한 줄 요약: 비개발자도 이해할 수 있게 말한다.
+2. 사용자가 겪는 현상: 화면에서 실제로 어떤 문제가 보이는지 설명한다.
+3. 쉬운 원인: 기술 용어 없이 비유나 일상어로 설명한다.
+4. 개발자용 원인: 필요한 경우에만 괄호로 짧게 덧붙인다.
+5. 해결 방법: 지금 어떤 작업을 할 건지 단계별로 말한다.
+6. 영향 범위: 로그인, 회원가입, 결제 등 어떤 기능에 영향이 있는지 말한다.
+7. 내가 확인할 것: 사용자가 직접 확인해야 할 게 있으면 알려준다.
+
 When a workflow term is needed in a user-facing reply, explain it in Korean first and include the original term in parentheses when helpful. Examples:
 
 - foundation implementation: 기반 구현
