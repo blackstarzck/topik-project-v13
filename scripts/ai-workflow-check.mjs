@@ -2,7 +2,7 @@
 
 import { existsSync } from "node:fs";
 import { readdir, readFile, stat } from "node:fs/promises";
-import { join, normalize, resolve, sep } from "node:path";
+import { join, normalize, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 
@@ -177,6 +177,269 @@ function parseLightSpecAudience(body) {
     break;
   }
   return null;
+}
+
+// CSS Variable Scoping Gate — allowlist arm (PLAN §Phase 1 #7·#8,
+// docs/ant-design/08-theme-architecture.md "Bridge targets").
+// Only these 9 `--app-*` names are approved. Any other `--app-*` name in source
+// is a defect: it has no server-side injection on <html>, so it falls back to
+// its CSS default (e.g. `--app-bg, #fff`) and breaks dark mode silently.
+const APPROVED_APP_VARS = new Set([
+  "--app-color-primary",
+  "--app-color-bg-layout",
+  "--app-color-bg-container",
+  "--app-color-text",
+  "--app-color-text-secondary",
+  "--app-color-border",
+  "--app-radius",
+  "--app-font-family",
+  "--app-shadow-elevated",
+]);
+
+const APP_VAR_PATTERN = /--app-[a-z0-9-]+/g;
+const APP_VAR_SCAN_EXTENSIONS = new Set([
+  ".ts",
+  ".tsx",
+  ".js",
+  ".jsx",
+  ".mjs",
+  ".cjs",
+  ".css",
+  ".scss",
+]);
+
+// Pure: return the distinct non-approved `--app-*` names found in `text`
+// (first-seen order). Exported for unit testing.
+export function checkAppVarUsage(text) {
+  const found = [];
+  const seen = new Set();
+  const matches = text.match(APP_VAR_PATTERN) ?? [];
+  for (const name of matches) {
+    if (APPROVED_APP_VARS.has(name)) continue;
+    if (seen.has(name)) continue;
+    seen.add(name);
+    found.push(name);
+  }
+  return found;
+}
+
+// JS-family source files where an inline `--app-*` DECLARATION (a quoted object
+// key in a style={} prop) violates 08 Rule 1 — `--app-*` may only be declared on
+// html/:root, never via style={} on a component below html. `var(--app-*)`
+// consumption is fine; only the `"--app-*":` declaration form is flagged.
+const APP_VAR_DECL_EXEMPT = new Set([
+  // The bridge-definition module legitimately defines the resolved --app-* values
+  // that app/layout.tsx injects onto <html>.
+  "src/theme/tailwind-bridge.ts",
+]);
+const JS_FAMILY_EXTENSIONS = new Set([
+  ".ts",
+  ".tsx",
+  ".js",
+  ".jsx",
+  ".mjs",
+  ".cjs",
+]);
+
+// Pure: return distinct `--app-*` names DECLARED as a quoted object key in `text`
+// (e.g. `style={{ "--app-color-primary": "#fff" }}`). Exported for unit testing.
+export function checkInlineAppVarDeclaration(text) {
+  const seen = new Set();
+  for (const match of text.matchAll(/["'](--app-[a-z0-9-]+)["']\s*:/g)) {
+    seen.add(match[1]);
+  }
+  return [...seen];
+}
+
+// M2 — RSC compound-render guard (PLAN.md §"use client" #14, 08-theme-architecture).
+// Route special files render in a React Server Component context unless they
+// declare "use client". An antd compound subcomponent accessed off an antd
+// client-reference import (e.g. `<Skeleton.Button>`) is `undefined` in an RSC, so
+// rendering it crashes at runtime ("Element type is invalid"). This is the exact
+// `loading.tsx` #5 defect. Narrow by design (gpt-5.5 review): only PascalCase JSX
+// member renders of an antd VALUE import, only in non-"use client" files. Hooks
+// (lowercase `.useX`), `import type`, type/config member access, and plain
+// `<Antd/>` renders are NOT flagged.
+const RSC_ENTRY_PATTERN =
+  /^src\/app\/(?:.*\/)?(?:page|layout|loading|error|not-found|template)\.tsx$/;
+
+export function checkRscCompoundRender(text) {
+  // Client components are exempt (the compound resolves normally there).
+  if (/^\s*["']use client["']/m.test(text)) return [];
+  // Value imports from "antd" only (skip `import type { ... }`).
+  const antd = new Set();
+  for (const m of text.matchAll(/import\s+\{([^}]*)\}\s+from\s+["']antd["']/g)) {
+    for (const raw of m[1].split(",")) {
+      const name = raw.trim().split(/\s+as\s+/).pop()?.trim();
+      if (name) antd.add(name);
+    }
+  }
+  if (antd.size === 0) return [];
+  // JSX member render `<Namespace.Member` where Namespace is an antd import and
+  // Member is PascalCase (a component, not a `use*` hook).
+  const found = new Set();
+  for (const m of text.matchAll(/<([A-Z][A-Za-z0-9]*)\.([A-Z][A-Za-z0-9]*)\b/g)) {
+    if (antd.has(m[1])) found.add(`${m[1]}.${m[2]}`);
+  }
+  return [...found];
+}
+
+// M3 — report = evidence (PLAN.md §강제성 M3; A0-(3)/(5)). The dev-smoke (M1)
+// artifact decides whether routes were verified — not a hand-written claim.
+// FAILs when the smoke did not boot, when a required route was not actually
+// tested (coverage gap), or when the artifact is stale (built at a commit other
+// than HEAD — a stale artifact cannot back a current "verified" claim).
+//
+// @param {{ booted?: boolean, headSha?: string, requiredRoutes?: string[], testedRoutes?: string[] }} artifact
+// @param {string} [currentHeadSha]
+// @returns {{ ok: boolean, reasons: string[] }}
+const normalizeRoute = (r) => String(r).replace(/\/+$/, "") || "/";
+
+export function checkSmokeCoverage(artifact, currentHeadSha) {
+  if (!artifact || typeof artifact !== "object") {
+    return { ok: false, reasons: ["no dev-smoke artifact"] };
+  }
+  const reasons = [];
+  // booted must be strictly true — a non-boolean truthy value is a malformed
+  // claim (cross-audit P2).
+  if (artifact.booted !== true) reasons.push("dev-mode smoke did not boot");
+
+  // requiredRoutes must be a non-empty array — empty/missing means nothing was
+  // verified and is treated as a (likely under-declared) failure, not a pass
+  // (cross-audit P1: vacuous pass).
+  const required = Array.isArray(artifact.requiredRoutes)
+    ? artifact.requiredRoutes
+    : null;
+  if (!required) {
+    reasons.push("malformed artifact: requiredRoutes missing or not an array");
+  } else if (required.length === 0) {
+    reasons.push(
+      "artifact declares 0 required routes — nothing verified (suspect under-declared scope)",
+    );
+  }
+
+  const tested = new Set(
+    (Array.isArray(artifact.testedRoutes) ? artifact.testedRoutes : []).map(
+      normalizeRoute,
+    ),
+  );
+  // Cross-check perRouteResult: a route is NOT covered if its recorded result is
+  // failing/fatal/4xx, even if it appears in testedRoutes (cross-audit P1).
+  const failed = new Set();
+  if (Array.isArray(artifact.perRouteResult)) {
+    for (const r of artifact.perRouteResult) {
+      if (!r || typeof r !== "object") continue;
+      if (
+        r.fatal === true ||
+        r.ok === false ||
+        (typeof r.status === "number" && r.status >= 400)
+      ) {
+        failed.add(normalizeRoute(r.route));
+      }
+    }
+  }
+  if (required) {
+    const reqNorm = required.map(normalizeRoute);
+    const missing = reqNorm.filter((r) => !tested.has(r));
+    if (missing.length) {
+      reasons.push(`uncovered required routes: ${missing.join(", ")}`);
+    }
+    const failedRequired = reqNorm.filter((r) => failed.has(r));
+    if (failedRequired.length) {
+      reasons.push(
+        `required routes with a failing/fatal result: ${failedRequired.join(", ")}`,
+      );
+    }
+  }
+
+  // Freshness is fail-closed: a missing artifact headSha or an unknown current
+  // HEAD means we cannot prove the artifact reflects the code under review
+  // (cross-audit P1/P2).
+  if (!artifact.headSha) {
+    reasons.push("artifact missing headSha — cannot verify freshness");
+  } else if (!currentHeadSha) {
+    reasons.push("cannot determine current HEAD — freshness unverifiable");
+  } else if (artifact.headSha !== currentHeadSha) {
+    reasons.push(
+      `stale artifact: built at ${artifact.headSha}, HEAD is ${currentHeadSha}`,
+    );
+  }
+  return { ok: reasons.length === 0, reasons };
+}
+
+// M4 — inline-style delta guard (PLAN.md §강제성 M4). New inline numeric literals
+// for layout/spacing props should be design tokens/constants, not magic numbers.
+// Only layout/spacing props are guarded (opacity/zIndex/flex* are intentionally
+// exempt). String values and token/constant references are fine. A line-level
+// `// ai-check: allow-inline-number <reason>` comment is the escape hatch. Run
+// against DIFF-ADDED lines so the 119 pre-existing inline-styled components are
+// not flagged — only newly introduced literals.
+const GUARDED_STYLE_PROPS = [
+  "width",
+  "height",
+  "minWidth",
+  "maxWidth",
+  "minHeight",
+  "maxHeight",
+  "padding",
+  "paddingTop",
+  "paddingRight",
+  "paddingBottom",
+  "paddingLeft",
+  "paddingInline",
+  "paddingBlock",
+  "margin",
+  "marginTop",
+  "marginRight",
+  "marginBottom",
+  "marginLeft",
+  "marginInline",
+  "marginBlock",
+  "gap",
+  "rowGap",
+  "columnGap",
+  "borderRadius",
+  "top",
+  "right",
+  "bottom",
+  "left",
+  "inset",
+];
+const GUARDED_PROP_RE = new RegExp(
+  "\\b(" + GUARDED_STYLE_PROPS.join("|") + ")\\s*:",
+  "g",
+);
+const INLINE_NUMBER_ALLOW = /ai-check:\s*allow-inline-number/;
+
+// Remove line/block comments and string-literal contents so guarded props that
+// appear inside comments or strings are not flagged (cross-audit P1 false-pos).
+function stripCommentsAndStrings(line) {
+  return line
+    .replace(/\/\/.*$/, "")
+    .replace(/\/\*.*?\*\//g, "")
+    .replace(/"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`/g, '""');
+}
+
+export function checkInlineStyleNumbers(text) {
+  const findings = [];
+  for (const rawLine of String(text).split(/\r?\n/)) {
+    if (INLINE_NUMBER_ALLOW.test(rawLine)) continue; // documented escape hatch
+    const line = stripCommentsAndStrings(rawLine);
+    for (const m of line.matchAll(GUARDED_PROP_RE)) {
+      const prop = m[1];
+      const rest = line.slice(m.index + m[0].length);
+      const end = rest.search(/[,;}]/);
+      const value = end === -1 ? rest : rest.slice(0, end);
+      // Bare numeric literals in the value — catches `width: 64` AND expression
+      // forms like `width: collapsed ? 64 : 240` (cross-audit P1). A leading
+      // `(?<![\w.])` / trailing `(?![\w.])` avoids digits glued to a unit or
+      // identifier (e.g. `100px`, `token2`, `1.5` stays one literal).
+      for (const numM of value.matchAll(/(?<![\w.])-?\d+(?:\.\d+)?(?![\w.])/g)) {
+        findings.push(`${prop}:${numM[0].trim()}`);
+      }
+    }
+  }
+  return findings;
 }
 
 function normalizePathForCheck(path) {
@@ -577,6 +840,60 @@ async function fileExists(root, relativePath) {
   }
 }
 
+// Walk src/ and flag any non-approved `--app-*` CSS variable (see APPROVED_APP_VARS).
+async function checkAppVarAllowlist(root) {
+  const errors = [];
+  const srcDir = join(root, "src");
+  if (!existsSync(srcDir)) return okResult(errors);
+
+  async function walk(dir) {
+    const entries = await readdir(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const absolutePath = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        await walk(absolutePath);
+        continue;
+      }
+      const dot = entry.name.lastIndexOf(".");
+      const ext = dot === -1 ? "" : entry.name.slice(dot);
+      if (!APP_VAR_SCAN_EXTENSIONS.has(ext)) continue;
+
+      const content = await readFile(absolutePath, "utf8");
+      const lines = content.split(/\r?\n/);
+      const relPath = normalizePathForCheck(relative(root, absolutePath));
+      const checkDeclarations =
+        JS_FAMILY_EXTENSIONS.has(ext) && !APP_VAR_DECL_EXEMPT.has(relPath);
+      for (let i = 0; i < lines.length; i += 1) {
+        for (const name of checkAppVarUsage(lines[i])) {
+          errors.push(
+            `non-approved CSS variable '${name}' at ${relPath}:${i + 1} — only the 9 approved --app-* bridge vars are allowed (see docs/ant-design/08-theme-architecture.md "Bridge targets"). Use an approved --app-* name or an AntD token.`,
+          );
+        }
+        if (checkDeclarations) {
+          for (const name of checkInlineAppVarDeclaration(lines[i])) {
+            errors.push(
+              `inline --app-* declaration '${name}' at ${relPath}:${i + 1} — --app-* must be declared only on html/:root (08 Rule 1), not via style={} on a component. Consume it with var(${name}) and inject the value server-side in app/layout.tsx.`,
+            );
+          }
+        }
+      }
+
+      // M2 — RSC compound-render guard (route special files only; narrow scope).
+      if (RSC_ENTRY_PATTERN.test(relPath)) {
+        for (const finding of checkRscCompoundRender(content)) {
+          const idx = lines.findIndex((l) => l.includes(`<${finding}`));
+          errors.push(
+            `antd compound '${finding}' rendered in a server component at ${relPath}${idx >= 0 ? `:${idx + 1}` : ""} — antd compound subcomponents are undefined in a React Server Component (runtime "Element type is invalid"). Add "use client" to this file or avoid the compound (PLAN.md §"use client" #14, docs/ant-design/08).`,
+          );
+        }
+      }
+    }
+  }
+
+  await walk(srcDir);
+  return okResult(errors);
+}
+
 async function validateLedger(root, ledgerPath, errors) {
   if (!(await fileExists(root, ledgerPath))) {
     errors.push(`ledger path does not exist: ${ledgerPath}`);
@@ -862,6 +1179,12 @@ export async function checkRepositoryState({
     }
   }
 
+  // CSS Variable Scoping Gate — allowlist arm: no non-approved --app-* in src/.
+  const appVarResult = await checkAppVarAllowlist(resolvedRoot);
+  if (!appVarResult.ok) {
+    for (const e of appVarResult.errors) errors.push(e);
+  }
+
   const existingLedgers = await findExistingLedgers(resolvedRoot);
   if (existingLedgers.length === 0) {
     warnings.push("no run ledgers found under docs/ai-workflow/runs/");
@@ -881,6 +1204,10 @@ function parseArgs(argv) {
     commitMessagePath: null,
     changedFilesPath: null,
     checkRepo: false,
+    checkSmoke: false,
+    smokeArtifactPath: null,
+    checkInlineStyles: false,
+    baseRef: null,
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -892,6 +1219,19 @@ function parseArgs(argv) {
         options.root = next;
         index += 1;
       }
+    } else if (arg === "--check-smoke") {
+      // M3 — validate the M1 dev-smoke artifact (coverage + freshness).
+      options.checkSmoke = true;
+      const next = argv[index + 1];
+      if (next && !next.startsWith("--")) {
+        options.smokeArtifactPath = next;
+        index += 1;
+      }
+    } else if (arg === "--check-inline-styles") {
+      // M4 — inline-style delta guard over diff-added lines + new files.
+      options.checkInlineStyles = true;
+    } else if (arg === "--base") {
+      options.baseRef = argv[++index];
     } else if (arg === "--pr-body") {
       options.prBodyPath = argv[++index];
     } else if (arg === "--commit-message") {
@@ -907,6 +1247,8 @@ function parseArgs(argv) {
 
   if (
     !options.checkRepo &&
+    !options.checkSmoke &&
+    !options.checkInlineStyles &&
     !options.prBodyPath &&
     !options.commitMessagePath &&
     !options.help
@@ -968,6 +1310,86 @@ async function main() {
     });
   }
 
+  if (options.checkSmoke) {
+    const artifactPath =
+      options.smokeArtifactPath ??
+      join(options.root, "docs/ui-redesign/pilot-shots/smoke-result.json");
+    let result;
+    if (!existsSync(artifactPath)) {
+      result = {
+        ok: false,
+        errors: [
+          `dev-smoke artifact not found: ${artifactPath} (run scripts/dev-route-smoke.mjs)`,
+        ],
+        warnings: [],
+      };
+    } else {
+      const artifact = JSON.parse(await readFile(artifactPath, "utf8"));
+      const head = spawnSync("git", ["rev-parse", "--short", "HEAD"], {
+        cwd: options.root,
+        encoding: "utf8",
+      });
+      const headSha = head.status === 0 ? head.stdout.trim() : null;
+      const cov = checkSmokeCoverage(artifact, headSha);
+      result = { ok: cov.ok, errors: cov.ok ? [] : cov.reasons, warnings: [] };
+    }
+    results.push({ label: "dev-smoke coverage (M3)", result });
+  }
+
+  if (options.checkInlineStyles) {
+    const errors = [];
+    // Diff-added lines on tracked files.
+    // Scoped to src/** — inline-style magic numbers are an app/component-source
+    // concern; scripts and test fixtures legitimately contain example numbers.
+    const inSrc = (p) => p && /^src\//.test(p) && /\.(tsx?|jsx?)$/.test(p);
+    // Default to diffing against HEAD so STAGED (git add'd but uncommitted) magic
+    // numbers are seen too — `git diff` alone shows only unstaged (cross-audit P1).
+    const diffArgs = ["diff", "--unified=0", options.baseRef ?? "HEAD"];
+    diffArgs.push("--", "src");
+    const diff = spawnSync("git", diffArgs, {
+      cwd: options.root,
+      encoding: "utf8",
+    });
+    let currentFile = null;
+    for (const line of (diff.stdout ?? "").split(/\r?\n/)) {
+      if (line.startsWith("+++ ")) {
+        currentFile = line.slice(4).replace(/^b\//, "");
+        continue;
+      }
+      if (line.startsWith("+") && !line.startsWith("+++") && inSrc(currentFile)) {
+        for (const f of checkInlineStyleNumbers(line.slice(1))) {
+          errors.push(`${currentFile}: new inline ${f}`);
+        }
+      }
+    }
+    // Untracked new files — entire content is "added".
+    const untracked = spawnSync(
+      "git",
+      ["ls-files", "--others", "--exclude-standard", "--", "src"],
+      { cwd: options.root, encoding: "utf8" },
+    );
+    for (const rel of (untracked.stdout ?? "").split(/\r?\n/).map((s) => s.trim()).filter(inSrc)) {
+      try {
+        const content = await readFile(join(options.root, rel), "utf8");
+        for (const f of checkInlineStyleNumbers(content)) {
+          errors.push(`${rel}: new inline ${f}`);
+        }
+      } catch {
+        // unreadable — skip
+      }
+    }
+    const hint =
+      "use a design token/constant, or add `// ai-check: allow-inline-number <reason>` on the line";
+    results.push({
+      label: "inline-style delta (M4)",
+      result: {
+        ok: errors.length === 0,
+        errors: errors.length ? [...errors, `(${hint})`] : [],
+        warnings: [],
+      },
+    });
+  }
+
   let exitCode = 0;
   for (const { label, result } of results) {
     if (result.ok) {
@@ -998,6 +1420,12 @@ if (executedPath === currentPath) {
 }
 
 export const internals = {
+  APPROVED_APP_VARS,
+  checkAppVarUsage,
+  checkInlineAppVarDeclaration,
+  checkRscCompoundRender,
+  checkSmokeCoverage,
+  checkInlineStyleNumbers,
   REQUIRED_PR_SECTIONS,
   REQUIRED_GIT_DECISION_FIELDS,
   REQUIRED_LORE_TRAILERS,

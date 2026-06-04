@@ -9,6 +9,7 @@
   },
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node scripts/build-preflight.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",

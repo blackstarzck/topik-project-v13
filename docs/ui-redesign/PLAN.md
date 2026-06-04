@@ -49,26 +49,23 @@
 | 게이트 | 무엇을 관찰 | 구현 위치 | 상태 |
 |---|---|---|---|
 | **M2** RSC 복합렌더 가드 | 서버(RSC) 라우트 특수파일에서 antd 복합 하위(`Skeleton.Button` 등) JSX 렌더 적발. 훅(`.useX`)·`import type`·plain `<Antd/>`·`"use client"` 파일 제외 | `scripts/ai-workflow-check.mjs` `checkRscCompoundRender()` (스코프 `RSC_ENTRY_PATTERN`) | **구현·증명됨** |
-| **M5** 빌드 위생 사전점검 | `pnpm dev` 살아있을 때 `pnpm build` 거부/경고 | `scripts/`(예정) | TODO |
-| **M1** 개발-모드 스모크 | 인증 세션 시드 + `pnpm dev` 부팅 + 도출된 실제 라우트(`/`·`/login`·인증 `/dashboard`+`loading.tsx`) 360/768/1280 콘솔/런타임/스크린샷 → 산출물 저장 | `scripts/dev-route-smoke.mjs`(신규) | TODO |
-| **M3** 보고=증거 | 검증 섹션을 M1 산출물에서 생성, `testedRoutes ⊊ requiredRoutes`면 FAIL, 손으로 쓴 "검증함" 금지 | `scripts/ai-workflow-check.mjs` | TODO |
-| **C1** 라우트 도출 | `git diff`→필요 라우트(특수파일+공유컴포넌트 역참조) | `scripts/derive-smoke-routes.mjs`(신규) | TODO |
-| **M4** 인라인-스타일 델타 가드 | 터치 파일 신규 인라인 숫자 리터럴(`width/height/padding*/margin*/gap/borderRadius/inset`)만; 토큰/상수·`opacity/zIndex/flex*` 면제; `// ai-check: allow-inline-number <사유>` 탈출구 | `scripts/ai-workflow-check.mjs` | TODO |
+| **M5** 빌드 위생 사전점검 | `pnpm dev` 살아있을 때 `pnpm build` 거부/경고(포트 프로브; `--force`/`AI_BUILD_PREFLIGHT_FORCE=1` 탈출구) | `scripts/build-preflight.mjs` + `package.json` `prebuild` 배선 | **구현·증명됨** |
+| **M1** 개발-모드 스모크 | 기존 dev 재사용 또는 부팅 + 도출/명시 라우트(인증 세션 storageState) 콘솔·런타임(#5 시그니처)·스크린샷 → 아티팩트(`requiredRoutes/testedRoutes/perRouteResult`) | `scripts/dev-route-smoke.mjs` (`--routes`/`--base`/`--viewports`) | **구현·증명됨** (실제 인증 `/dashboard` #5 재검증 ✅) |
+| **M3** 보고=증거 | M1 아티팩트 검증: `testedRoutes ⊊ requiredRoutes`·미부팅·**stale(headSha≠HEAD)** → FAIL | `scripts/ai-workflow-check.mjs` `checkSmokeCoverage()` + `--check-smoke` | **구현·증명됨** |
+| **C1** 라우트 도출 | `git diff`→필요 라우트(특수파일+임포트그래프 역참조); admin/동적은 사유와 함께 제외 | `scripts/derive-smoke-routes.mjs` (`--base`) | **구현·증명됨** |
+| **M4** 인라인-스타일 델타 가드 | 터치 파일 **신규** 인라인 숫자(`width/height/padding*/margin*/gap/borderRadius/inset`); `src/` 한정·델타(추가줄+신규파일)·토큰/상수·`opacity/zIndex/flex*` 면제·`// ai-check: allow-inline-number <사유>` 탈출구 | `scripts/ai-workflow-check.mjs` `checkInlineStyleNumbers()` + `--check-inline-styles` | **구현·증명됨** |
 
 > **통합 게이트(완료 잠금)** = `pnpm test`·`lint`·`typecheck`·(clean)`build` + `node scripts/ai-workflow-check.mjs --repo .`
 > + **C1 도출 → 개발-모드 스모크(M1)** + admin diff 빈 출력. 이 명령의 **종료코드**가 완료를 잠근다(A0-(2)).
 >
-> ⚠️ **현재 강제 작동 = M2 하나뿐.** M1·M3·M4·M5·C1은 **구현 전까지 no-op(빈 통과)** 이라, 통합 게이트가
-> 종료코드 0을 내도 그 게이트들이 구현되기 전에는 "완료 잠금"이 실질 작동하지 않는다. **실행 전제:** 이 5개가
-> 구현·증명된 뒤에야 §실행 체크리스트(특히 Phase 2 자동 완료 게이트)를 **완료로 간주**할 수 있다 — 게이트 구현은
-> 핸드오프 **B단계** 몫이다.
-> - **구현 순서(의존성 위상순, 싸고-바인딩 먼저):** **M5 → M2(완료) → C1 → M1 → M3 → M4.** (C1이 M1·M3의
->   입력이므로 C1을 먼저 둔다. C1 미구현 동안 M1은 하드 폴백 `/`·`/login`·`/dashboard`로 동작.)
-> - **validate-the-validator(GREEN 인정 조건):** 각 게이트는 **고의로 깨진 입력을 FAIL로 적발하는 음성 케이스
->   테스트 ≥1개**를 동반해야 인정. 특히 **M3**는 "라우트 누락 산출물 FAIL" + "생성 블록 밖 수기 '검증함' FAIL"
->   두 케이스, **M4**는 면제·탈출구 오작동 적발 케이스를 박는다.
-> - **CI 단서:** `.github/workflows/` 반영은 후속 **D단계** 산출물이며, 그 전까지 A0-(2)의 강제는 **로컬 통합
->   게이트 종료코드로만** 성립한다.
+> ✅ **전 게이트(M2·M5·C1·M1·M3·M4) 구현·증명 완료** (B단계, 위상순 M5→M2→C1→M1→M3→M4). 통합 게이트의
+> "완료 잠금"이 실제로 작동한다. 단위테스트 68개 GREEN + 각 게이트 validate-the-validator 증명.
+> - **남은 격차(정직):** (a) **CI 배선은 D단계** — 그 전까지 A0-(2)의 강제는 로컬 통합 게이트 종료코드로만 성립.
+>   (b) M3는 **신선도**를 강제하므로 코드 변경(커밋)으로 HEAD가 바뀌면 M1 스모크를 **재실행**해야 통과(설계대로).
+>   (c) M4가 적발한 **신규 인라인 5건**(login·loading·dev-preview)은 **B3 토큰화(C단계)** 백로그.
+> - **validate-the-validator(전 게이트 증명):** M2=현 `loading.tsx` `Skeleton.Button` 적발; M5=리스너 포트 BLOCK(exit 2);
+>   C1=공유컴포넌트→역참조 라우트; M1=#5 시그니처 FATAL + 실제 `/dashboard` 무에러 렌더; M3=라우트누락·stale FAIL;
+>   M4=신규 인라인 적발·면제/JSX-attr/탈출구 비적발.
 
 ---
 
@@ -287,6 +284,8 @@ Architecture Pass · 08 Review Checklist · **기계 게이트 M1–M5/C1**(§�
 - **판정:** 1·2차 모두 NEEDS_REVISION → (반영 후) 실행 준비 완료.
 - **v3.3:** 본 문서를 **AI 자동검수 전용 실행 문서**로 고정하고, 실행 범위·완료 조건·Gates 요약·타이브레이크 문구를 자동 완료 기준에 맞춰 정리함.
 - **v4.0(1차 실행 실패 교훈):** 1차 파일럿이 "74/74 검증완료"로 보고됐으나 실제 `pnpm dev`에서 결함 발견(`loading.tsx` RSC 런타임 #5, antd v6 deprecation, 인라인 미정리; 검증을 prod·jsdom·dev-preview로만 함). 근본 원인 = **선택적 읽기/이행 + 그걸 잡을 기계 게이트 부재**. 보완: **§강제성(A0)** 신설(판정=기계 현실관찰·완료=게이트 종료코드/CI·보고=게이트 출력 사본) + 명세 결함 7건을 현실-관찰 게이트(M1 개발-모드 스모크·M2 RSC 가드·M3 보고=증거·M4 인라인 델타·M5 빌드 위생·C1 라우트 도출)로 전환 + validate-the-validator. gpt-5.5(codex) 적대적 렌즈 3 + 합의 1로 검증된 마스터 플랜 반영. **게이트 전환은 설계 완료**이고 구현은 **M2만 완료·증명**(M1·M3·M4·M5·C1은 §강제성 게이트 표 순서대로 구현 예정). 의도적 정정·보강 2건 기록: 결함 #2 귀속을 마스터의 **M1→C1**(라우트 도출 책임=C1)로 정정, M1 스모크 뷰포트를 **360/1280→360/768/1280**(태블릿 보강). v4 본문 강화는 Claude 독립 리뷰어 4명(결함커버리지·내부정합성·충실성·완전성)의 적대적 교차검수로 P1 7건·P2 일부 반영.
+- **v4.1(B단계 — 게이트 구현 완료):** 설계만 있던 게이트를 실제 코드로 구현(전부 TDD RED→GREEN + validate-the-validator). 신규: `scripts/build-preflight.mjs`(M5, `prebuild` 배선), `scripts/derive-smoke-routes.mjs`(C1), `scripts/dev-route-smoke.mjs`(M1); 확장: `scripts/ai-workflow-check.mjs`에 `checkSmokeCoverage`(M3, `--check-smoke`)·`checkInlineStyleNumbers`(M4, `--check-inline-styles`). 단위테스트 68 GREEN. **M1이 실제 인증 `/dashboard`를 dev로 렌더해 #5 무재발 확정**(핸드오프가 미완이라던 검증). M4가 신규 인라인 5건 적발 = B3(C단계) 백로그. 잔여: CI 배선(D), B2/B3(C).
+- **v4.2(B단계 — 게이트 적대적 교차검수 + 보강):** Claude 독립 리뷰어 4명이 게이트 코드를 적대 검수 → **22건(P0 1·P1 11·P2 10)**. 자기 단위테스트는 통과했지만 실제 목적에 구멍 발견 → 리뷰어 repro를 테스트로 박아 TDD로 수정(단위테스트 **90 GREEN**). 수정: **M5** 단일포트 3000→다중포트(3000-3003·3100)+IPv4/IPv6+포트검증/크래시가드(P0/P1); **C1** 사이드이펙트 `import "x"`(global.css 등)·`.css` 해석→CSS-only 변경 진공통과 제거(P1)+중첩레이아웃 서브트리 스코프(P2); **M1** dev 에러 오버레이(200 위장) DOM 탐지→fatal(P1)+React #130 시그니처+Fast Refresh 정밀화+0-visit fail-closed; **M3** 빈/누락 requiredRoutes·headSha 누락·HEAD 미상·실패 perRoute 전부 fail-closed+슬래시 정규화(P1×4); **M4** 삼항/표현식 값 적발+주석/문자열 false-positive 제거+staged(HEAD 대비) 포함(P1×3). **의도적 미수정(정직):** CI 배선(D단계), M3의 독립 재유도 교차검증(좁은 `--routes` under-declare 방어는 부분만)·M1 재사용 서버 buildId 검증·M5 비-dev 리스너 구분은 후속 hardening으로 기록.
 
 ## 부록 B — DESIGN.md Stitch 골격 (이 형태 그대로 작성)
 
