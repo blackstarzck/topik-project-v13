@@ -20,11 +20,11 @@
 | C-01 | Problem type recommendations | `/practice/recommendations` | user | 4 | [functional-spec.md](./05-C-01-problem-type-recommendations/functional-spec.md) |
 | C-02 | Problem list | `/practice/problems` | user | 4 | [functional-spec.md](./06-C-02-problem-list/functional-spec.md) |
 | C-03 | Retry modal | `/practice/problems` | user | 2 | [functional-spec.md](./07-C-03-retry-modal/functional-spec.md) |
-| D-01 | Short-answer writing 51 | `/writing/51` | user | 5 | [functional-spec.md](./08-D-01-short-answer-writing-51/functional-spec.md) |
-| D-02 | Answer writing 52 | `/writing/52` | user | 5 | [functional-spec.md](./09-D-02-answer-writing-52/functional-spec.md) |
-| D-03 | Long-form writing 53 | `/writing/53` | user | 5 | [functional-spec.md](./10-D-03-long-form-writing-53/functional-spec.md) |
-| D-04 | Essay writing 54 | `/writing/54` | user | 5 | [functional-spec.md](./11-D-04-essay-writing-54/functional-spec.md) |
-| D-M1 | Submission confirmation | `/writing/51, /writing/52, /writing/53, /writing/54` | user | 3 | [functional-spec.md](./12-D-M1-submission-confirmation-modal/functional-spec.md) |
+| D-01 | Short-answer writing 51 | `/writing/short-answer-writing-51` | user | 5 | [functional-spec.md](./08-D-01-short-answer-writing-51/functional-spec.md) |
+| D-02 | Answer writing 52 | `/writing/answer-writing-52` | user | 5 | [functional-spec.md](./09-D-02-answer-writing-52/functional-spec.md) |
+| D-03 | Long-form writing 53 | `/writing/long-form-writing-53` | user | 5 | [functional-spec.md](./10-D-03-long-form-writing-53/functional-spec.md) |
+| D-04 | Essay writing 54 | `/writing/essay-writing-54` | user | 5 | [functional-spec.md](./11-D-04-essay-writing-54/functional-spec.md) |
+| D-M1 | Submission confirmation | `/writing/short-answer-writing-51, /writing/answer-writing-52, /writing/long-form-writing-53, /writing/essay-writing-54` | user | 3 | [functional-spec.md](./12-D-M1-submission-confirmation-modal/functional-spec.md) |
 | D-M2 | AI analysis loading | `writing submission flow` | user | 3 | [functional-spec.md](./13-D-M2-ai-analysis-loading/functional-spec.md) |
 | E-01 | Short-answer feedback | `/writing/feedback/short/:id` | user | 7 | [functional-spec.md](./14-E-01-short-answer-feedback/functional-spec.md) |
 | E-02 | Long-form feedback | `/writing/feedback/long/:id` | user | 7 | [functional-spec.md](./15-E-02-long-form-feedback/functional-spec.md) |
@@ -34,7 +34,7 @@
 | F-M1 | PDF export modal | `/library, /writing/feedback/short/:id, /writing/feedback/long/:id, /writing/reports/:id/compare` | user | 3 | [functional-spec.md](./19-F-M1-pdf-export-modal/functional-spec.md) |
 | G-01 | Language settings | `/settings/language` | user | 1 | [functional-spec.md](./20-G-01-language-settings/functional-spec.md) |
 | H-01 | Admin problem management | `/admin/problems` | admin | 6 | [functional-spec.md](./21-H-01-admin-problem-management/functional-spec.md) |
-| D-M3 | Autosave warning | `/writing/51, /writing/52, /writing/53, /writing/54` | user | 2 | [functional-spec.md](./22-D-M3-autosave-warning/functional-spec.md) |
+| D-M3 | Autosave warning | `/writing/short-answer-writing-51, /writing/answer-writing-52, /writing/long-form-writing-53, /writing/essay-writing-54` | user | 2 | [functional-spec.md](./22-D-M3-autosave-warning/functional-spec.md) |
 | X-01 | Product landing | `/` | public | 1 | [functional-spec.md](./23-X-01-product-landing/functional-spec.md) |
 | X-02 | Growth dashboard | `/growth` | user | 5 | [functional-spec.md](./24-X-02-growth-dashboard/functional-spec.md) |
 | X-03 | Paywall | `/paywall` | user | 1 | [functional-spec.md](./25-X-03-paywall/functional-spec.md) |

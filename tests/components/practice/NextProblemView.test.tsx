@@ -111,6 +111,8 @@ describe("NextProblemView (Phase 7-D bundle signature)", () => {
       problemId: "p-1",
       payload: { source: "next" },
     });
-    expect(pushMock).toHaveBeenCalledWith("/writing/53?problem=p-1");
+    expect(pushMock).toHaveBeenCalledWith(
+      "/writing/long-form-writing-53?problem=p-1",
+    );
   });
 });

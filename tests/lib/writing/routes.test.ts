@@ -5,7 +5,7 @@ import { writingProblemHref } from "@/lib/writing/routes";
 describe("writing route helpers", () => {
   it("builds a specific writing page URL for valid TOPIK writing question numbers", () => {
     expect(writingProblemHref({ questionNo: 53, problemId: "problem-1" })).toBe(
-      "/writing/53?problem=problem-1",
+      "/writing/long-form-writing-53?problem=problem-1",
     );
   });
 
@@ -21,6 +21,6 @@ describe("writing route helpers", () => {
   it("preserves the fresh retry flag", () => {
     expect(
       writingProblemHref({ questionNo: 52, problemId: "problem-1", fresh: true }),
-    ).toBe("/writing/52?problem=problem-1&fresh=1");
+    ).toBe("/writing/answer-writing-52?problem=problem-1&fresh=1");
   });
 });

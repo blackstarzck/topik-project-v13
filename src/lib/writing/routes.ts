@@ -1,4 +1,21 @@
-import { isQuestionNo } from "./types";
+import { isQuestionNo, type QuestionNo } from "./types";
+
+export const WRITING_ROUTE_SEGMENTS: Record<QuestionNo, string> = {
+  51: "short-answer-writing-51",
+  52: "answer-writing-52",
+  53: "long-form-writing-53",
+  54: "essay-writing-54",
+};
+
+export function writingQuestionHref(
+  questionNo: number | null | undefined,
+): string {
+  if (!isQuestionNo(questionNo)) {
+    return "/practice/problems";
+  }
+
+  return `/writing/${WRITING_ROUTE_SEGMENTS[questionNo]}`;
+}
 
 export function writingProblemHref({
   questionNo,
@@ -14,5 +31,5 @@ export function writingProblemHref({
   }
 
   const freshParam = fresh ? "&fresh=1" : "";
-  return `/writing/${questionNo}?problem=${encodeURIComponent(problemId)}${freshParam}`;
+  return `${writingQuestionHref(questionNo)}?problem=${encodeURIComponent(problemId)}${freshParam}`;
 }

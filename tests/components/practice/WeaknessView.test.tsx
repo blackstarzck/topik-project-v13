@@ -106,7 +106,9 @@ describe("WeaknessView", () => {
       problemId: "prob-42",
       payload: { source: "weakness" },
     });
-    expect(pushMock).toHaveBeenCalledWith("/writing/52?problem=prob-42");
+    expect(pushMock).toHaveBeenCalledWith(
+      "/writing/answer-writing-52?problem=prob-42",
+    );
   });
 
   it("surfaces cautious weakness insights, recommendation reasons, primary start action, and deferred paywall entry", () => {

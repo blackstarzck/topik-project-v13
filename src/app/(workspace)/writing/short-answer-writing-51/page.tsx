@@ -6,10 +6,10 @@ import {
 
 export { generateWritingQuestionMetadata as generateMetadata };
 
-export default function Writing53Page({
+export default function ShortAnswerWriting51Page({
   searchParams,
 }: {
   searchParams: WritingQuestionSearchParams;
 }) {
-  return renderWritingQuestionPage(53, searchParams);
+  return renderWritingQuestionPage(51, searchParams);
 }

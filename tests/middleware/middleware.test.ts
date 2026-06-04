@@ -37,9 +37,11 @@ describe("middleware route protection", () => {
     expect(response.headers.get("location")).toContain("/login");
   });
 
-  it("redirects anon user from /writing/51 to /login", async () => {
+  it("redirects anon user from a writing route to /login", async () => {
     mockGetUser.mockResolvedValue({ data: { user: null }, error: null });
-    const response = await callMiddleware("http://localhost/writing/51");
+    const response = await callMiddleware(
+      "http://localhost/writing/short-answer-writing-51",
+    );
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toContain("/login");
   });

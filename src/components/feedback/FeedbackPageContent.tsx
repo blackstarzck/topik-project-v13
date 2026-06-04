@@ -14,6 +14,7 @@ import type {
   FeedbackBundle,
   WritingSubmissionRow,
 } from "@/lib/writing/types";
+import { writingProblemHref } from "@/lib/writing/routes";
 
 type Props = {
   submission: WritingSubmissionRow;
@@ -121,7 +122,10 @@ export function FeedbackPageContent({
       <NextActionBar
         submissionId={submission.id}
         userId={userId}
-        retryHref={`/writing/${submission.question_no}?problem=${submission.problem_id}`}
+        retryHref={writingProblemHref({
+          questionNo: submission.question_no,
+          problemId: submission.problem_id,
+        })}
         nextHref="/practice/next"
         withPdf
         retryLabel={

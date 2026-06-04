@@ -7,6 +7,7 @@ import { ReferenceMaterials, type ProblemAsset } from "./ReferenceMaterials";
 import { WritingEditor } from "./WritingEditor";
 import { LongFormEditor } from "./LongFormEditor";
 import type { ProblemRubric } from "./ConditionsPanel";
+import { writingQuestionHref } from "@/lib/writing/routes";
 import { isLongForm } from "@/lib/writing/types";
 import type { QuestionNo, WritingDraftRow } from "@/lib/writing/types";
 import type { WritingProblem } from "@/lib/writing/server";
@@ -34,7 +35,7 @@ export async function WritingPageContent({
     return (
       <Empty description={t("problemLoadFailed", { questionNo })}>
         <Space>
-          <Link href={`/writing/${questionNo}` as never}>
+          <Link href={writingQuestionHref(questionNo) as never}>
             <Button type="primary">{t("retry")}</Button>
           </Link>
           <Link href={"/practice/problems" as never}>

@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { AppCard } from "@/components/shared/AppCard";
 import { QUESTION_NOS, type QuestionNo } from "@/lib/practice/types";
+import { writingQuestionHref } from "@/lib/writing/routes";
 
 const { Text, Title } = Typography;
 
@@ -61,7 +62,7 @@ export function TypeSelectCards({ lockedTypes }: Props) {
                 </Tooltip>
               ) : (
                 <Link
-                  href={`/writing/${qn}` as never}
+                  href={writingQuestionHref(qn) as never}
                   aria-label={t("typeStartAria", { type: typeLabel })}
                 >
                   {card}

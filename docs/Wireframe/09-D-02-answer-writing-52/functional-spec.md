@@ -6,7 +6,7 @@
 
 ## 진입/이탈 흐름
 
-- Route: `/writing/52`
+- Route: `/writing/answer-writing-52`
 - Route type: page
 - Audience: user
 - 기준 흐름: `docs/flow/user-flow.md`의 IA 순서를 따른다.

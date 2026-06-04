@@ -69,14 +69,18 @@ afterEach(() => {
 
 describe("writing flow — route guards", () => {
   const writingPages = {
-    51: () => import("../../src/app/(workspace)/writing/51/page"),
-    52: () => import("../../src/app/(workspace)/writing/52/page"),
-    53: () => import("../../src/app/(workspace)/writing/53/page"),
-    54: () => import("../../src/app/(workspace)/writing/54/page"),
+    51: () =>
+      import("../../src/app/(workspace)/writing/short-answer-writing-51/page"),
+    52: () =>
+      import("../../src/app/(workspace)/writing/answer-writing-52/page"),
+    53: () =>
+      import("../../src/app/(workspace)/writing/long-form-writing-53/page"),
+    54: () =>
+      import("../../src/app/(workspace)/writing/essay-writing-54/page"),
   } as const;
 
   it.each([51, 52, 53, 54] as const)(
-    "/writing/%i uses its own static page",
+    "/writing route for question %i uses its own static Wireframe-slug page",
     async (questionNo) => {
       helpers.getWritingProblemMock.mockResolvedValue(null);
       const page = await writingPages[questionNo]();

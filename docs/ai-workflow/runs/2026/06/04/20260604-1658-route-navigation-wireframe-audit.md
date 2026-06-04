@@ -14,7 +14,7 @@
 - User goal: Compare implemented routes/navigation with `docs/Wireframe/`, remove `/dev-preview/dashboard`, split the four Wireframe writing pages into separate pages, and reset broken navigation paths.
 - Accepted scope:
   - Remove the dev preview dashboard route and public allow-list entry.
-  - Replace the prior dynamic `/writing/[questionId]` page with static `/writing/51`, `/writing/52`, `/writing/53`, `/writing/54` page files.
+  - Replace the prior dynamic `/writing/[questionId]` page with static `/writing/short-answer-writing-51`, `/writing/answer-writing-52`, `/writing/long-form-writing-53`, `/writing/essay-writing-54` page files.
   - Keep shared writing page loading behavior in a common local helper.
   - Replace generated `/practice/problems/:id` navigation targets with `/writing/{questionNo}?problem={problemId}` when the writing question number is valid, or `/practice/problems` as a safe fallback.
   - Replace bare `/practice` library CTAs with `/practice/problems`.
@@ -50,9 +50,9 @@
   - `docs/ui-redesign/PLAN.md`
 - Extracted requirements:
   - `docs/sitemap.md` is the route authority.
-  - Wireframe D-01, D-02, D-03, D-04 are separate user-facing pages: `/writing/51`, `/writing/52`, `/writing/53`, `/writing/54`.
+  - Wireframe D-01, D-02, D-03, D-04 are separate user-facing pages: `/writing/short-answer-writing-51`, `/writing/answer-writing-52`, `/writing/long-form-writing-53`, `/writing/essay-writing-54`.
   - C-02 problem list is `/practice/problems`; C-03 retry modal is hosted by the problem list and opens writing/feedback routes, not `/practice/problems/:id`.
-  - Query variants like `/writing/53?problem=...` are variants of the documented writing page route, not separate pages.
+  - Query variants like `/writing/long-form-writing-53?problem=...` are variants of the documented writing page route, not separate pages.
   - Dev preview scaffolding is not part of the active Wireframe route set.
 - Doc conflicts:
   - Source drift found: `/dev-preview/dashboard`, `/practice/problems/:id`, and `/practice` existed in source/navigation but not in active Wireframe/sitemap route definitions.
@@ -75,10 +75,10 @@
   - Removed `src/app/dev-preview/dashboard/page.tsx`
   - Removed `src/app/(workspace)/writing/[questionId]/page.tsx`
   - Added `src/app/(workspace)/writing/_components/WritingQuestionRoute.tsx`
-  - Added `src/app/(workspace)/writing/51/page.tsx`
-  - Added `src/app/(workspace)/writing/52/page.tsx`
-  - Added `src/app/(workspace)/writing/53/page.tsx`
-  - Added `src/app/(workspace)/writing/54/page.tsx`
+  - Added `src/app/(workspace)/writing/short-answer-writing-51/page.tsx`
+  - Added `src/app/(workspace)/writing/answer-writing-52/page.tsx`
+  - Added `src/app/(workspace)/writing/long-form-writing-53/page.tsx`
+  - Added `src/app/(workspace)/writing/essay-writing-54/page.tsx`
 - Navigation/data files changed:
   - `src/lib/routes.ts`
   - `src/lib/writing/routes.ts`
@@ -119,24 +119,24 @@
   - `pnpm vitest run tests\integration\route-matrix.test.ts --testNamePattern "dev preview"` failed while `/dev-preview` remained public.
   - `pnpm vitest run tests\scripts\no-dev-preview-route.test.ts` failed while the dev preview page existed.
   - `pnpm vitest run tests\scripts\writing-static-routes.test.ts` failed while static writing pages were absent and `[questionId]` still existed.
-  - `pnpm vitest run tests\integration\writing-flow.test.ts --testNamePattern "static page"` failed while `/writing/51..54/page.tsx` modules did not exist.
+  - `pnpm vitest run tests\integration\writing-flow.test.ts --testNamePattern "static page"` failed while the Wireframe-slug writing page modules did not exist.
   - `pnpm vitest run tests\lib\writing\routes.test.ts` failed while `src/lib/writing/routes.ts` did not exist.
   - `pnpm vitest run tests\scripts\no-practice-problem-detail-route.test.ts` failed with seven `/practice/problems/:id` source offenders.
   - `pnpm vitest run tests\components\practice\NextProblemView.test.tsx tests\components\practice\WeaknessView.test.tsx` failed on old `/practice/problems/:id` expectations.
 - Final checks run:
-  - `pnpm vitest run tests\integration\writing-flow.test.ts tests\integration\route-matrix.test.ts tests\integration\library-flow.test.ts tests\scripts\derive-smoke-routes.test.ts tests\scripts\no-dev-preview-route.test.ts tests\scripts\writing-static-routes.test.ts tests\scripts\no-practice-problem-detail-route.test.ts tests\lib\writing\routes.test.ts tests\components\practice\NextProblemView.test.tsx tests\components\practice\WeaknessView.test.tsx tests\components\practice\RetryModal.test.tsx tests\components\dashboard\DashboardComponents.test.tsx tests\components\library\LibraryChrome.test.tsx`
+  - `pnpm vitest run tests\integration\writing-flow.test.ts tests\integration\route-matrix.test.ts tests\integration\library-flow.test.ts tests\scripts\derive-smoke-routes.test.ts tests\scripts\no-dev-preview-route.test.ts tests\scripts\writing-static-routes.test.ts tests\scripts\no-practice-problem-detail-route.test.ts tests\lib\writing\routes.test.ts tests\components\practice\NextProblemView.test.tsx tests\components\practice\WeaknessView.test.tsx tests\components\practice\RetryModal.test.tsx tests\components\dashboard\DashboardComponents.test.tsx tests\components\library\LibraryChrome.test.tsx tests\middleware\middleware.test.ts`
   - `pnpm typecheck`
   - `pnpm lint`
   - `node scripts\ai-workflow-check.mjs --repo .`
   - Node route inventory over `src/app`
-  - Node fetch smoke against existing dev server for `/writing/51`, `/writing/52`, `/writing/53`, `/writing/54`, `/dev-preview/dashboard`, `/practice/problems/prob-42`
+  - Node fetch smoke against existing dev server for the four Wireframe-slug writing routes, plus old dev-preview and broken practice detail samples.
 - Latest results:
-  - Targeted Vitest: 13 files, 130 tests passed.
+  - Targeted Vitest: 14 files, 136 tests passed.
   - Typecheck: passed.
   - Lint: passed with 21 warnings, all pre-existing outside this change set.
   - Workflow checker: PASS repository state.
-  - Route inventory now includes `/writing/51`, `/writing/52`, `/writing/53`, `/writing/54`, and no `/dev-preview/dashboard` or `/practice/problems/:id` page.
-  - Dev server smoke: `/writing/51..54` returned `307 /login` for anonymous access, which is expected for protected routes.
+  - Route inventory now includes `/writing/short-answer-writing-51`, `/writing/answer-writing-52`, `/writing/long-form-writing-53`, `/writing/essay-writing-54`, and no `/dev-preview/dashboard` or `/practice/problems/:id` page.
+  - Dev server smoke: all four Wireframe-slug writing routes returned `307 /login` for anonymous access, which is expected for protected routes.
 - Known failures:
   - `pnpm build` was blocked by `scripts/build-preflight.mjs` because a dev server was already alive on port 3000. The guard explicitly warns that building in that state can corrupt `.next`, so no forced build was run.
 - Browser QA:
@@ -182,10 +182,10 @@ page /settings/notifications
 page /sign-up
 page /subscription
 page /terms
-page /writing/51
-page /writing/52
-page /writing/53
-page /writing/54
+page /writing/short-answer-writing-51
+page /writing/answer-writing-52
+page /writing/long-form-writing-53
+page /writing/essay-writing-54
 page /writing/feedback/long/:id
 page /writing/feedback/short/:id
 page /writing/reports/:id/compare
@@ -195,12 +195,12 @@ page /writing/reports/:id/compare
 
 | Wireframe folder name, code prefix removed | Implemented route |
 | --- | --- |
-| `short-answer-writing-51` | `/writing/51` |
-| `answer-writing-52` | `/writing/52` |
-| `long-form-writing-53` | `/writing/53` |
-| `essay-writing-54` | `/writing/54` |
+| `short-answer-writing-51` | `/writing/short-answer-writing-51` |
+| `answer-writing-52` | `/writing/answer-writing-52` |
+| `long-form-writing-53` | `/writing/long-form-writing-53` |
+| `essay-writing-54` | `/writing/essay-writing-54` |
 | `problem-list` | `/practice/problems` |
-| `retry-modal` | hosted by `/practice/problems` and links to `/writing/{questionNo}?problem={problemId}` |
+| `retry-modal` | hosted by `/practice/problems` and links to `/writing/{wireframeSlug}?problem={problemId}` |
 
 ## Fallback State
 
@@ -230,5 +230,5 @@ page /writing/reports/:id/compare
   - Existing lint warnings remain outside this change set.
 - Assumptions:
   - `docs/sitemap.md` remains the route authority.
-  - `/writing/{questionNo}?problem=...` is the correct selected-problem deep link because D-01..D-04 are the real writing page routes and C-03 already uses that pattern.
+  - `/writing/{wireframeSlug}?problem=...` is the correct selected-problem deep link because D-01..D-04 are the real writing page routes and C-03 now uses that pattern.
   - Invalid or missing question numbers should fall back to `/practice/problems` to avoid generating another 404 route.

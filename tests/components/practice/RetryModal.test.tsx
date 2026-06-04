@@ -61,7 +61,7 @@ describe("RetryModal (Phase 7-D Task 5 route fix)", () => {
     expect(screen.getByRole("button", { name: "취소" })).toBeTruthy();
   });
 
-  it("'시작' in fresh mode pushes /writing/[questionNo]?problem=...&fresh=1", () => {
+  it("'시작' in fresh mode pushes the Wireframe-slug writing route with problem and fresh params", () => {
     const onClose = vi.fn();
     renderWithIntl(
       <RetryModal
@@ -78,7 +78,9 @@ describe("RetryModal (Phase 7-D Task 5 route fix)", () => {
     fireEvent.click(screen.getByRole("radio", { name: /새 답안으로 시작/ }));
     fireEvent.click(screen.getByRole("button", { name: "시작" }));
     // handleStart no longer calls onClose; the route push drives the transition.
-    expect(pushMock).toHaveBeenCalledWith("/writing/53?problem=p-1&fresh=1");
+    expect(pushMock).toHaveBeenCalledWith(
+      "/writing/long-form-writing-53?problem=p-1&fresh=1",
+    );
   });
 
   it("'시작' with null questionNo shows a recoverable start-failure alert (keeps modal open, no push)", () => {

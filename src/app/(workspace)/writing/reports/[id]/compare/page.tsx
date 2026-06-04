@@ -14,6 +14,7 @@ import {
   FEEDBACK_DIMENSIONS,
   type FeedbackDimensionScoreRow,
 } from "@/lib/writing/types";
+import { writingProblemHref } from "@/lib/writing/routes";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("reports.page");
@@ -79,7 +80,10 @@ export default async function CompareReportPage({
       narrative={report.narrative}
       currentText={current.answer_text}
       previousText={previous?.answer_text ?? null}
-      retryHref={`/writing/${current.question_no}?problem=${current.problem_id}`}
+      retryHref={writingProblemHref({
+        questionNo: current.question_no,
+        problemId: current.problem_id,
+      })}
       reportId={report.id}
       currentScore={currentBundle?.feedback.score_total ?? null}
       chartData={chartData}

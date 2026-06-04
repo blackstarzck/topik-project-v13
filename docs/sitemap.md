@@ -36,11 +36,11 @@ are the current baseline.
 | C-01 | Problem type recommendations | `/practice/recommendations` | page | Recommends writing/problem types. |
 | C-02 | Problem list | `/practice/problems` | page | Problem candidates after recommendation/filtering. |
 | C-03 | Retry modal | hosted by `/practice/problems` | modal | Retry/continue decision over the problem list context. |
-| D-01 | Short-answer writing 51 | `/writing/51` | page | TOPIK writing question 51. |
-| D-02 | Answer writing 52 | `/writing/52` | page | TOPIK writing question 52. |
-| D-03 | Long-form writing 53 | `/writing/53` | page | TOPIK writing question 53. |
-| D-04 | Essay writing 54 | `/writing/54` | page | TOPIK writing question 54. |
-| D-M1 | Submission confirmation | hosted by `/writing/51`, `/writing/52`, `/writing/53`, `/writing/54` | modal | Confirm before final submission. |
+| D-01 | Short-answer writing 51 | `/writing/short-answer-writing-51` | page | TOPIK writing question 51. |
+| D-02 | Answer writing 52 | `/writing/answer-writing-52` | page | TOPIK writing question 52. |
+| D-03 | Long-form writing 53 | `/writing/long-form-writing-53` | page | TOPIK writing question 53. |
+| D-04 | Essay writing 54 | `/writing/essay-writing-54` | page | TOPIK writing question 54. |
+| D-M1 | Submission confirmation | hosted by `/writing/short-answer-writing-51`, `/writing/answer-writing-52`, `/writing/long-form-writing-53`, `/writing/essay-writing-54` | modal | Confirm before final submission. |
 | D-M2 | AI analysis loading | hosted by writing submission flow | modal/state | Transitional analysis state after submit. |
 | D-M3 | Autosave warning | hosted by writing routes | modal/toast | Warns about autosave state while writing. |
 | E-01 | Short-answer feedback | `/writing/feedback/short/:id` | page | Feedback for short-answer submissions. |
@@ -88,9 +88,9 @@ top-level routes unless implementation constraints require it.
 | IA | Surface | Host route(s) | Trigger |
 | --- | --- | --- | --- |
 | C-03 | Retry modal | `/practice/problems` | User chooses to solve a previously attempted or retry-eligible problem. |
-| D-M1 | Submission confirmation | `/writing/51`, `/writing/52`, `/writing/53`, `/writing/54` | User submits a writing answer. |
+| D-M1 | Submission confirmation | `/writing/short-answer-writing-51`, `/writing/answer-writing-52`, `/writing/long-form-writing-53`, `/writing/essay-writing-54` | User submits a writing answer. |
 | D-M2 | AI analysis loading | writing submission flow | Submission accepted and feedback/report generation is pending. |
-| D-M3 | Autosave warning | `/writing/51`, `/writing/52`, `/writing/53`, `/writing/54` | Autosave failure, delay, or conflicting save state. |
+| D-M3 | Autosave warning | `/writing/short-answer-writing-51`, `/writing/answer-writing-52`, `/writing/long-form-writing-53`, `/writing/essay-writing-54` | Autosave failure, delay, or conflicting save state. |
 | F-M1 | PDF export modal | `/library`, `/writing/feedback/short/:id`, `/writing/feedback/long/:id`, `/writing/reports/:id/compare` | User exports feedback or report content. |
 
 ## Main Flow
@@ -113,10 +113,10 @@ flowchart TD
   REC --> LIST["C-02 Problem list\n/practice/problems"]
   LIST --> RETRY["C-03 Retry modal"]
 
-  LIST --> W51["D-01 Writing 51\n/writing/51"]
-  LIST --> W52["D-02 Writing 52\n/writing/52"]
-  LIST --> W53["D-03 Writing 53\n/writing/53"]
-  LIST --> W54["D-04 Writing 54\n/writing/54"]
+  LIST --> W51["D-01 Writing 51\n/writing/short-answer-writing-51"]
+  LIST --> W52["D-02 Writing 52\n/writing/answer-writing-52"]
+  LIST --> W53["D-03 Writing 53\n/writing/long-form-writing-53"]
+  LIST --> W54["D-04 Writing 54\n/writing/essay-writing-54"]
 
   W51 --> SUBMIT["D-M1 Submission confirmation"]
   W52 --> SUBMIT
@@ -178,8 +178,8 @@ new implementation targets unless they map to a current Paper/IA screen.
 | `/practice_create.html` | `/practice/recommendations` | Replaced by C-01. |
 | `/practice_solve.html` | `/practice/problems` | Replaced by C-02 problem list plus D-01 to D-04 writing routes. |
 | `/writing_practice_create.html` | `/practice/recommendations` | Legacy setup folded into recommendation/list flow. |
-| `/writing_51.html` | `/writing/51` | Current D-01. |
-| `/writing_53.html` | `/writing/53` | Current D-03. |
+| `/writing_51.html` | `/writing/short-answer-writing-51` | Current D-01. |
+| `/writing_53.html` | `/writing/long-form-writing-53` | Current D-03. |
 | `/my_library.html` | `/library` | Current F-01. |
 | `/my_vocabulary.html` | `/library` | No standalone Paper route; treat as library content/filter if retained. |
 | `/writing_feedback_list.html` | `/library` | No standalone Paper route; feedback history belongs in library. |
