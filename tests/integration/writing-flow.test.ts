@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const helpers = vi.hoisted(() => ({
   requireUserMock: vi.fn(),
+  getWritingProblemMock: vi.fn(),
   getSubmissionMock: vi.fn(),
   getFeedbackBundleMock: vi.fn(),
   getComparisonReportMock: vi.fn(),
@@ -24,6 +25,8 @@ vi.mock("@/lib/auth/session", () => ({
 }));
 
 vi.mock("@/lib/writing/server", () => ({
+  getWritingProblem: (...args: unknown[]) =>
+    helpers.getWritingProblemMock(...args),
   getSubmission: (id: string) => helpers.getSubmissionMock(id),
   getFeedbackBundle: (id: string) => helpers.getFeedbackBundleMock(id),
   getComparisonReport: (id: string) => helpers.getComparisonReportMock(id),
@@ -65,17 +68,29 @@ afterEach(() => {
 });
 
 describe("writing flow — route guards", () => {
-  it("/writing/[questionId] notFound when questionId=99", async () => {
-    const page = await import(
-      "../../src/app/(workspace)/writing/[questionId]/page"
-    );
-    await expect(
-      page.default({
-        params: Promise.resolve({ questionId: "99" }),
+  const writingPages = {
+    51: () => import("../../src/app/(workspace)/writing/51/page"),
+    52: () => import("../../src/app/(workspace)/writing/52/page"),
+    53: () => import("../../src/app/(workspace)/writing/53/page"),
+    54: () => import("../../src/app/(workspace)/writing/54/page"),
+  } as const;
+
+  it.each([51, 52, 53, 54] as const)(
+    "/writing/%i uses its own static page",
+    async (questionNo) => {
+      helpers.getWritingProblemMock.mockResolvedValue(null);
+      const page = await writingPages[questionNo]();
+      const el = await page.default({
         searchParams: Promise.resolve({}),
-      }),
-    ).rejects.toThrow("NOT_FOUND");
-  });
+      });
+
+      expect(el).toBeTruthy();
+      expect(helpers.getWritingProblemMock).toHaveBeenCalledWith(
+        questionNo,
+        undefined,
+      );
+    },
+  );
 
   it("/writing/feedback/short redirects to long for question 53", async () => {
     helpers.getSubmissionMock.mockResolvedValue({

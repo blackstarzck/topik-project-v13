@@ -34,6 +34,16 @@ import { PROTECTED_ROUTE_CASES, PUBLIC_PATHS } from "../../src/lib/routes";
 const PROTECTED_PATHS = PROTECTED_ROUTE_CASES.map((c) => c.path);
 
 describe("route matrix — anonymous context", () => {
+  it("does not expose the old dev preview route to anonymous users", async () => {
+    expect(PUBLIC_PATHS).not.toContain("/dev-preview");
+
+    mockGetUser.mockResolvedValue({ data: { user: null }, error: null });
+    const response = await callMiddleware("http://localhost/dev-preview/dashboard");
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toContain("/login");
+  });
+
   for (const path of PUBLIC_PATHS) {
     it(`allows anon to access ${path}`, async () => {
       mockGetUser.mockResolvedValue({ data: { user: null }, error: null });

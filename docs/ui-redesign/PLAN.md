@@ -260,7 +260,7 @@ antdPath/sourceFile/bridge는 **부록 B 동반 표**에. `bridge`는 승인 9�
   - **DoD(M4):** 터치한 파일에 **신규 인라인 숫자 리터럴**(`width/height/padding*/margin*/gap/borderRadius/inset`) 0. 토큰/상수 사용·`opacity/zIndex/flex*` 면제·`// ai-check: allow-inline-number <사유>` 탈출구. **M4가 diff를 파싱해 기계 적발**(손으로 "정리함" 금지).
   - **DoD(M6):** 터치한 user-facing 파일(admin 제외)에 **신규 antd 폐기 문법** 0(`<Space direction>`·`bodyStyle/headStyle`·`Tabs.TabPane`·`dropdownClassName`). 6.x 대체(`orientation`/`styles.*`/`items`/`popupClassName`) 사용·`// ai-check: allow-antd-deprecated <사유>` 탈출구. **M6가 diff를 파싱해 기계 적발**(손으로 "마이그레이션함" 금지).
 - [ ] **대시보드 스켈레톤**: `src/app/(workspace)/dashboard/loading.tsx`(레이아웃 맞춤 antd `Skeleton`, CLS 예약). **복합 antd(`Skeleton.Button` 등)를 렌더하므로 맨 위 `"use client"` 필수**(§공통 #14) — **M2 가드가 누락 시 FAIL**.
-- [ ] **QA 픽스처(#13 확정)**: dev 프리뷰 라우트 `src/app/dev-preview/dashboard/page.tsx` — 대시보드 표현 컴포넌트를 **픽스처 props·무인증**으로 렌더(실데이터/Supabase 불필요). 파일럿 스캐폴딩(네비 미연결, 확장 전 제거/플래그). **단, 이것은 보조 픽스처일 뿐 검증 대상이 아니다 — 검증은 아래 실제 라우트 스모크(M1)로 한다.**
+- [x] **QA 픽스처 제거(2026-06-04)**: 기존 dev 프리뷰 라우트 `src/app/dev-preview/dashboard/page.tsx`는 제거됨. 검증은 아래 실제 라우트 스모크(M1)로 한다.
 - [ ] **(자동 완료 게이트, #1·A0):** **M5 사전점검(dev 미실행 확인) →** focused `pnpm vitest run` → `pnpm lint` → `pnpm typecheck` → **(clean) `pnpm build`** → `node scripts/ai-workflow-check.mjs --repo . --check-inline-styles --check-antd-deprecations`(**M2(--repo)·M4·M6 arm 작동**; M3는 `--check-smoke`로 합류 — §강제성 게이트 표) → parity 테스트, 전부 GREEN. 그 후 **C1으로 변경분에서 라우트 도출 → 개발 모드(`pnpm dev`) 스모크(M1)** — prod·dev-preview가 아니라 도출된 **실제 라우트**(C1 미구현 시 하드 폴백 `/`·`/login`·`/dashboard`):
   - 대상 라우트: `/`, `/login`, **인증 `/dashboard`(그 `loading.tsx` 포함)** — 인증은 storage-state 세션 시드. (prod는 dev 경고를 숨기므로 금지; dev-preview는 실제 대시보드가 아님.)
   - 각 라우트 360/768/1280: **콘솔 에러 0, 런타임 오버레이 없음**, 가로 스크롤 없음, `loading.tsx` 정상 렌더(undefined-element 크래시 없음)
@@ -286,7 +286,7 @@ antdPath/sourceFile/bridge는 **부록 B 동반 표**에. `bridge`는 승인 9�
 | `src/components/landing/LandingHeader.tsx` | must (edit) | var 정리(이름 교체만) |
 | `src/components/shared/{AppCard,AppDrawer,PageContainer,PageHeader,PublicShell}.tsx` | must (new) | Phase 1 |
 | `src/app/(workspace)/dashboard/loading.tsx` | must (new) | Phase 2 스켈레톤 |
-| `src/app/dev-preview/dashboard/page.tsx` | **conditional** (scaffold·검증 비대상) | QA 픽스처 — 네비 미연결, 확장 전 제거/플래그 |
+| `src/app/dev-preview/dashboard/page.tsx` | **removed** | QA 픽스처 제거 완료(2026-06-04). 실제 라우트 스모크로 대체 |
 | 로그인/대시보드 화면·컴포넌트 | must (edit) | Phase 2 allowlist |
 | `src/theme/presets/default.ts` | **conditional** | 글로벌 변경(분기 2) 시에만 |
 | `src/theme/tokens/brand-tokens.ts` | **conditional (new)** | 분기 2 시에만 |
@@ -316,7 +316,7 @@ Architecture Pass · 08 Review Checklist · **기계 게이트 M1–M5/C1**(§�
 - 변화 미미 → 컴포넌트 토큰·간격·셸 버그 + 전/후 스크린샷; 약하면 분기 2(절제된 정제)로 승격.
 - prod-only React #130 → "use client" 규칙 + prod build.
 - i18n/한글 assert → 구조부품 카피 없음 + role/key 테스트.
-- dev-preview 라우트 누수 → 네비 미연결 + 확장 전 제거/플래그.
+- dev-preview 라우트 누수 → 제거 완료(2026-06-04). 실제 라우트 스모크로 대체.
 
 ## 타이브레이크 결정 (확정)
 

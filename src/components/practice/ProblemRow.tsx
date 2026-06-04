@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Badge, Button, List, Space, Tag, Tooltip, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import type { ProblemRow as ProblemRowData } from "@/lib/practice/types";
+import { writingProblemHref } from "@/lib/writing/routes";
 
 const { Text } = Typography;
 
@@ -78,9 +79,10 @@ export function ProblemRow({
           <Link
             key="start"
             href={
-              row.question_no
-                ? (`/writing/${row.question_no}` as never)
-                : "#"
+              writingProblemHref({
+                questionNo: row.question_no,
+                problemId: row.id,
+              }) as never
             }
           >
             <Button type="primary" disabled={disabled}>

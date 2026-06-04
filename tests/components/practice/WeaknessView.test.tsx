@@ -106,7 +106,7 @@ describe("WeaknessView", () => {
       problemId: "prob-42",
       payload: { source: "weakness" },
     });
-    expect(pushMock).toHaveBeenCalledWith("/practice/problems/prob-42");
+    expect(pushMock).toHaveBeenCalledWith("/writing/52?problem=prob-42");
   });
 
   it("surfaces cautious weakness insights, recommendation reasons, primary start action, and deferred paywall entry", () => {
@@ -149,7 +149,7 @@ describe("WeaknessView", () => {
       problemId: "prob-88",
       payload: { source: "weakness" },
     });
-    expect(pushMock).toHaveBeenCalledWith("/practice/problems/prob-88");
+    expect(pushMock).toHaveBeenCalledWith("/practice/problems");
 
     expect(screen.getByText("더 깊은 추천 보기")).toBeTruthy();
     expect(

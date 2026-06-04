@@ -68,7 +68,7 @@ export function LibraryStatsPanel({ stats }: Props) {
           image={Empty.PRESENTED_IMAGE_SIMPLE}
           description={t("emptyDescription")}
         >
-          <Link href="/practice">{t("goToPractice")}</Link>
+          <Link href="/practice/problems">{t("goToPractice")}</Link>
         </Empty>
       </Card>
     );
@@ -109,7 +109,7 @@ export function LibraryStatsPanel({ stats }: Props) {
             <Text type="secondary">{t("weakestNeedData")}</Text>
           )}
         </div>
-        <Link href="/practice">{t("continueReview")}</Link>
+        <Link href="/practice/problems">{t("continueReview")}</Link>
       </Space>
     </Card>
   );

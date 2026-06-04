@@ -6,6 +6,7 @@ import Link from "next/link";
 
 import { useLibraryItems } from "@/lib/library/queries";
 import type { LibraryItemView, LibraryProblemView } from "@/lib/library/types";
+import { writingProblemHref } from "@/lib/writing/routes";
 
 import { LibraryItemRow } from "./LibraryItemRow";
 import { matchesLibrarySearch } from "./library-tab-url";
@@ -75,7 +76,12 @@ export function LibrarySavedProblemsTab({
           trailingActions={[
             <Link
               key="retry"
-              href={`/practice/problems/${item.id}` as never}
+              href={
+                writingProblemHref({
+                  questionNo: item.question_no,
+                  problemId: item.id,
+                }) as never
+              }
             >
               <Button type="primary" size="small">
                 {t("retry")}

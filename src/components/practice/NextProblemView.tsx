@@ -7,6 +7,7 @@ import { useRef, useState } from "react";
 import { logStudyEvent } from "@/lib/events/study-events";
 import { consumeRecommendationItem } from "@/lib/practice/consume";
 import type { AlternativeProblem, NextProblemBundle } from "@/lib/practice/next";
+import { writingProblemHref } from "@/lib/writing/routes";
 import { SummaryCardRow } from "./SummaryCardRow";
 import { AlternativeCardsGrid } from "./AlternativeCardsGrid";
 
@@ -112,7 +113,12 @@ export function NextProblemView({ bundle }: Props) {
     });
     // recommendation_items.status='consumed' (RLS owner-update, fire-and-forget).
     void consumeRecommendationItem(t.itemId ?? null);
-    router.push(`/practice/problems/${t.problemId}` as never);
+    router.push(
+      writingProblemHref({
+        questionNo: t.questionNo,
+        problemId: t.problemId,
+      }) as never,
+    );
   }
 
   function primaryTarget(): SelectedTarget | null {

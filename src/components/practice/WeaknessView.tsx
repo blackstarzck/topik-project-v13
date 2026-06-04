@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { logStudyEvent } from "@/lib/events/study-events";
 import { consumeRecommendationItem } from "@/lib/practice/consume";
+import { writingProblemHref } from "@/lib/writing/routes";
 import { DimensionTabs, type DimensionTabSummaryProp } from "./DimensionTabs";
 import { DiagnosticCard } from "./DiagnosticCard";
 
@@ -170,7 +171,12 @@ export function WeaknessView({
     });
     // recommendation_items.status='consumed' (RLS owner-update, fire-and-forget).
     void consumeRecommendationItem(rec.item_id ?? null);
-    router.push(`/practice/problems/${rec.problem_id}` as never);
+    router.push(
+      writingProblemHref({
+        questionNo: rec.question_no,
+        problemId: rec.problem_id,
+      }) as never,
+    );
   }
 
   return (

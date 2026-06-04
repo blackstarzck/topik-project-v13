@@ -3,6 +3,7 @@
 import { Button, Card, Col, Empty, Row, Space, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import { writingProblemHref } from "@/lib/writing/routes";
 
 const { Text, Title } = Typography;
 
@@ -112,7 +113,12 @@ export function AlternativeCardsGrid({
             if (onSelect) {
               onSelect(a);
             } else {
-              router.push(`/practice/problems/${a.id}` as never);
+              router.push(
+                writingProblemHref({
+                  questionNo: a.questionNo,
+                  problemId: a.id,
+                }) as never,
+              );
             }
           };
 

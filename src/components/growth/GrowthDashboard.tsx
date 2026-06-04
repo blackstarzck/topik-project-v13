@@ -17,6 +17,7 @@ import {
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { writingProblemHref } from "@/lib/writing/routes";
 import { GrowthTrendChart, type GrowthTrendPoint } from "./GrowthTrendChart";
 import { GrowthLockedReport } from "./GrowthLockedReport";
 import { buildGrowthInsights } from "./insights";
@@ -378,7 +379,12 @@ export function GrowthDashboard({
                             <Text strong>{rec.title}</Text>
                           </Space>
                           <Link
-                            href={`/practice/problems/${rec.problemId}` as never}
+                            href={
+                              writingProblemHref({
+                                questionNo: rec.questionNo,
+                                problemId: rec.problemId,
+                              }) as never
+                            }
                           >
                             <Button type="primary">
                               {t("recommend.startCta")}

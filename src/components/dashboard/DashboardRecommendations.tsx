@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 import { AppCard } from "@/components/shared/AppCard";
+import { writingProblemHref } from "@/lib/writing/routes";
 
 const { Paragraph, Text } = Typography;
 
@@ -83,7 +84,14 @@ export function DashboardRecommendations({ primary, alternatives }: Props) {
                 {t("defaultReason")}
               </Paragraph>
             )}
-            <Link href={`/practice/problems/${primary.problemId}` as never}>
+            <Link
+              href={
+                writingProblemHref({
+                  questionNo: primary.questionNo,
+                  problemId: primary.problemId,
+                }) as never
+              }
+            >
               <Button type="primary" block>
                 {t("continueButton")}
               </Button>
@@ -117,7 +125,14 @@ export function DashboardRecommendations({ primary, alternatives }: Props) {
                     </Tag>
                     <Text strong>{truncate(alt.title)}</Text>
                   </Space>
-                  <Link href={`/practice/problems/${alt.problemId}` as never}>
+                  <Link
+                    href={
+                      writingProblemHref({
+                        questionNo: alt.questionNo,
+                        problemId: alt.problemId,
+                      }) as never
+                    }
+                  >
                     <Button>{t("solveButton")}</Button>
                   </Link>
                 </Space>

@@ -43,6 +43,7 @@ export type LibrarySubmissionView = {
   /** Underlying `writing_submissions.id`. */
   id: string;
   problem_id: string;
+  question_no: number | null;
   submitted_at: string;
   char_count: number;
   /** `library_items.id` — the saved-ledger row, used for delete/tag mutations. */
@@ -66,6 +67,7 @@ export type LibraryProblemView = {
   /** Underlying `problems.id`. */
   id: string;
   title: string;
+  question_no: number | null;
   item_id: string;
   tags: string[];
 };

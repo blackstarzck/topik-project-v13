@@ -64,7 +64,7 @@ async function joinSubmissions(
   if (ids.length === 0) return [];
   const { data, error } = await supabase
     .from("writing_submissions")
-    .select("id, problem_id, submitted_at, char_count")
+    .select("id, problem_id, question_no, submitted_at, char_count")
     .in("id", ids);
   if (error) throw error;
   const byId = new Map((data ?? []).map((row) => [row.id, row]));
@@ -77,6 +77,7 @@ async function joinSubmissions(
       kind: "submission",
       id: sub.id,
       problem_id: sub.problem_id,
+      question_no: typeof sub.question_no === "number" ? sub.question_no : null,
       submitted_at: sub.submitted_at,
       char_count: sub.char_count,
       item_id: item.id,
@@ -123,7 +124,7 @@ async function joinProblems(
   if (ids.length === 0) return [];
   const { data, error } = await supabase
     .from("problems")
-    .select("id, title")
+    .select("id, title, question_no")
     .in("id", ids);
   if (error) throw error;
   const byId = new Map((data ?? []).map((row) => [row.id, row]));
@@ -136,6 +137,7 @@ async function joinProblems(
       kind: "problem",
       id: prob.id,
       title: prob.title,
+      question_no: typeof prob.question_no === "number" ? prob.question_no : null,
       item_id: item.id,
       tags: item.tags,
     });

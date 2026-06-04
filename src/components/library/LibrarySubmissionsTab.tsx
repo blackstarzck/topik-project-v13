@@ -24,6 +24,7 @@ import type {
   LibraryItemView,
   LibrarySubmissionView,
 } from "@/lib/library/types";
+import { writingProblemHref } from "@/lib/writing/routes";
 
 import { ExportPdfButton } from "./ExportPdfButton";
 import { LibraryItemRow } from "./LibraryItemRow";
@@ -237,7 +238,7 @@ export function LibrarySubmissionsTab({
               {t("resetFilter")}
             </Button>
           ) : (
-            <Link href="/practice">{t("goToPractice")}</Link>
+            <Link href="/practice/problems">{t("goToPractice")}</Link>
           )}
         </Empty>
       ) : (
@@ -270,7 +271,12 @@ export function LibrarySubmissionsTab({
                   <Space direction="vertical" size={2} style={{ width: "100%" }}>
                     <Space size="small" wrap>
                       <Link
-                        href={`/practice/problems/${item.problem_id}` as never}
+                        href={
+                          writingProblemHref({
+                            questionNo: item.question_no,
+                            problemId: item.problem_id,
+                          }) as never
+                        }
                       >
                         <Text strong>
                           {clampTitle(

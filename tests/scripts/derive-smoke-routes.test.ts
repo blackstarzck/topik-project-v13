@@ -60,8 +60,8 @@ describe("routeForSpecialFile — special file path → route segment", () => {
 
   test("deeper non-grouped page keeps its path", () => {
     expect(
-      routeForSpecialFile("src/app/dev-preview/dashboard/page.tsx"),
-    ).toEqual({ segment: "/dev-preview/dashboard", special: "page" });
+      routeForSpecialFile("src/app/account/security/page.tsx"),
+    ).toEqual({ segment: "/account/security", special: "page" });
   });
 
   test("group-level layout maps to the stripped segment", () => {
@@ -167,12 +167,12 @@ describe("deriveRequiredRoutes — changed files → required smoke routes", () 
   test("excludes dynamic-segment routes and records the reason", () => {
     const result = deriveRequiredRoutes({
       changedFiles: ["src/app/layout.tsx"],
-      pageRoutes: ["/", "/writing/[questionId]"],
+      pageRoutes: ["/", "/writing/feedback/[id]"],
       reverseRefs: {},
     });
     expect(result.requiredRoutes).toEqual(["/"]);
     expect(result.excludedRoutes).toContainEqual({
-      route: "/writing/[questionId]",
+      route: "/writing/feedback/[id]",
       reason: "dynamic-segment",
     });
   });
