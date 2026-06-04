@@ -1,5 +1,9 @@
 # HANDOFF — UI Redesign Expansion (Wireframe pages)
 
+> ⛔ **SUPERSEDED (2026-06-04 19:45).** This was the cluster-2→3 snapshot. The current resume guide
+> (clusters 1–4 done, next = cluster 5 library) is **`20260604-1945-handoff-ui-redesign-resume.md`** — read that instead.
+> Kept for history only.
+
 > **Read this first when resuming the Wireframe design-system expansion in a new session.**
 > Created 2026-06-04 18:30 (+09:00) · Owner: Claude Code (Opus 4.8). Branch: `docs/auth-overview-consolidated-reference`.
 
