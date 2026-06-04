@@ -8,7 +8,6 @@ import {
   Divider,
   Form,
   Input,
-  Modal,
   Radio,
   Result,
   Space,
@@ -17,6 +16,7 @@ import {
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
+import { AppModal } from "@/components/shared/AppModal";
 import { triggerPdfExport } from "@/lib/export/pdf-export";
 
 const { Text, Title, Paragraph } = Typography;
@@ -74,7 +74,7 @@ export function PdfExportModal({ open, onClose, selection }: Props) {
   // 리셋된다(React "reset state with a key" 권장 패턴). destroyOnClose가
   // 닫힐 때 본문을 언마운트하므로 다음 open 시 기본 state로 시작한다.
   return (
-    <Modal
+    <AppModal
       open={open}
       onCancel={onClose}
       title={t("modalTitle")}
@@ -86,7 +86,7 @@ export function PdfExportModal({ open, onClose, selection }: Props) {
       {open ? (
         <PdfExportModalBody onClose={onClose} selection={selection} />
       ) : null}
-    </Modal>
+    </AppModal>
   );
 }
 

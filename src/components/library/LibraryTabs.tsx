@@ -1,10 +1,11 @@
 "use client";
 
-import { App, Button, Card, Input, Space, Tabs, Tag, Typography } from "antd";
+import { App, Button, Input, Space, Tabs, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
 
+import { AppCard } from "@/components/shared/AppCard";
 import type { LibraryItemView, LibraryTab } from "@/lib/library/types";
 
 import { LibraryExportsTab } from "./LibraryExportsTab";
@@ -168,7 +169,7 @@ export function LibraryTabs({ activeTab, initialItems }: Props) {
           submissions tab lifts its current selection; these actions apply to
           저장 답안 선택. 액션 3개 이하: PDF 내보내기 / 복습 세트 생성 / 선택 해제.
           선택 없음은 버튼 비활성으로 안내한다. */}
-      <Card size="small">
+      <AppCard size="small">
         <Space wrap>
           <Tag color={selection.length > 0 ? "blue" : "default"}>
             {t("selectionCount", { count: selection.length })}
@@ -191,7 +192,7 @@ export function LibraryTabs({ activeTab, initialItems }: Props) {
             <Text type="secondary">{t("selectionHint")}</Text>
           ) : null}
         </Space>
-      </Card>
+      </AppCard>
 
       <Tabs activeKey={activeTab} onChange={handleChange} items={items} />
 

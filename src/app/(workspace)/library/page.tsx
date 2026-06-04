@@ -10,6 +10,16 @@ import {
   LibraryStatsPanel,
   type LibraryStats,
 } from "@/components/library/LibraryStatsPanel";
+import { PageHeader } from "@/components/shared/PageHeader";
+
+// F-01 content-width constraint. The duplicate <main> landmark + its centering
+// hack are dropped (WorkspaceShell's Layout.Content already renders <main> and
+// provides the page padding); only the reading-width cap is kept, hoisted to a
+// module const so the M4 inline-number gate stays green.
+const LIBRARY_CONTENT_STYLE = {
+  maxWidth: 1200, // ai-check: allow-inline-number off-scale reading-width cap (px)
+  marginInline: "auto",
+} as const;
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("library.page");
@@ -102,8 +112,8 @@ export default async function LibraryPage({ searchParams }: Props) {
   ]);
 
   return (
-    <main style={{ padding: 24, maxWidth: 1200, margin: "0 auto" }}>
-      <h1>{t("heading")}</h1>
+    <div style={LIBRARY_CONTENT_STYLE}>
+      <PageHeader title={t("heading")} />
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={16}>
           <LibraryTabs activeTab={activeTab} initialItems={initialItems} />
@@ -112,6 +122,6 @@ export default async function LibraryPage({ searchParams }: Props) {
           <LibraryStatsPanel stats={stats} />
         </Col>
       </Row>
-    </main>
+    </div>
   );
 }

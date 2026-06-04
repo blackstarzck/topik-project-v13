@@ -1,8 +1,10 @@
 "use client";
 
-import { Card, Empty, Space, Statistic, Tag, Typography } from "antd";
+import { Empty, Space, Statistic, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
+
+import { AppCard } from "@/components/shared/AppCard";
 
 const { Text } = Typography;
 
@@ -63,19 +65,19 @@ export function LibraryStatsPanel({ stats }: Props) {
 
   if (empty) {
     return (
-      <Card title={t("title")}>
+      <AppCard title={t("title")}>
         <Empty
           image={Empty.PRESENTED_IMAGE_SIMPLE}
           description={t("emptyDescription")}
         >
           <Link href="/practice/problems">{t("goToPractice")}</Link>
         </Empty>
-      </Card>
+      </AppCard>
     );
   }
 
   return (
-    <Card
+    <AppCard
       title={t("title")}
       extra={
         <Text type="secondary" style={{ fontSize: 12 }}>
@@ -111,6 +113,6 @@ export function LibraryStatsPanel({ stats }: Props) {
         </div>
         <Link href="/practice/problems">{t("continueReview")}</Link>
       </Space>
-    </Card>
+    </AppCard>
   );
 }
