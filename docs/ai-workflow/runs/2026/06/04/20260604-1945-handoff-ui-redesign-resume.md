@@ -4,6 +4,26 @@
 > Created 2026-06-04 19:45 (+09:00) · Owner: Claude Code (Opus 4.8, 1M). Branch: `docs/auth-overview-consolidated-reference`.
 > **Supersedes** `20260604-1830-handoff-ui-redesign-expansion.md` (that one was the cluster-2→3 snapshot).
 
+## ⚠️ CRITICAL UPDATE (2026-06-04 ~21:35) — read before resuming
+
+1. **The M1 dev-smoke was SSR-ONLY (no client hydration) for the entire pilot + clusters 1-5.** Root cause: Next 16
+   blocks `/_next/*` dev resources from `127.0.0.1` (default allows only `localhost`), and the smoke navigates via
+   `127.0.0.1` → client components never hydrated under smoke. **Fixed** in `next.config.ts` →
+   `allowedDevOrigins: ["127.0.0.1"]` (commit `f9ef7b6`). Now the smoke hydrates and actually exercises client behaviour.
+   Ledger: `20260604-2130-shell-hydration-smoke-harness-fix.md`.
+2. **The "@360 WorkspaceShell sidebar doesn't collapse" was a NON-BUG** — a pure artifact of the SSR-only smoke. With
+   hydration unblocked, the ORIGINAL shell collapses correctly at ≤360 (hamburger + drawer). WorkspaceShell was NOT
+   changed. (The earlier "fix the shell" plan is superseded.)
+3. **Hydrated re-verification surfaced a REAL `/library` "Maximum update depth exceeded" render loop** — confounded by
+   a concurrent **Codex antd-deprecation codemod** (~50 UNCOMMITTED `src/components` files in the shared worktree).
+   Attribution + fix deferred until Codex lands.
+4. **ROLLOUT IS PAUSED (GPT-5.5 decision)** until the concurrent Codex sweep is committed/stopped/reverted/isolated —
+   it collides with cluster 6 (growth) files and pollutes shared-tree verification. **A `.smoke-skip` sentinel is
+   active** (Codex's dirty UI would otherwise block turn-end); **remove it** once Codex lands + `/library` re-smokes clean.
+5. **Decisions are delegated to GPT-5.5 (codex)** per user directive; **human/visual review is delegated to GPT-5.5**
+   with screenshots attached (`codex exec -i <route>-{360,768,1280}.png ...`). When resuming, re-verify clusters 1-5
+   under the now-hydrating smoke (their changes were SSR-safe wrapper swaps → low risk, but client behaviour is now testable).
+
 ## TL;DR (resume in 60s)
 
 - **Goal (`/goal`):** apply the validated pilot design system to every user-facing screen in `docs/Wireframe/`,
