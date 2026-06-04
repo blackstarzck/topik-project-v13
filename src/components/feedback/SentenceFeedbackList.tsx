@@ -1,7 +1,8 @@
 "use client";
 
-import { Button, Card, Empty, List, Space, Tag, Typography } from "antd";
+import { Button, Empty, List, Space, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
+import { AppCard } from "@/components/shared/AppCard";
 import { useState } from "react";
 import type { SentenceFeedbackRow } from "@/lib/writing/types";
 
@@ -27,9 +28,9 @@ export function SentenceFeedbackList({ rows, onReanalyze }: Props) {
 
   if (rows.length === 0) {
     return (
-      <Card size="small" title={t("cardTitle")}>
+      <AppCard size="small" title={t("cardTitle")}>
         <Empty description={t("emptyDescription")} />
-      </Card>
+      </AppCard>
     );
   }
 
@@ -37,7 +38,7 @@ export function SentenceFeedbackList({ rows, onReanalyze }: Props) {
   const hiddenCount = rows.length - visible.length;
 
   return (
-    <Card title={t("cardTitle")} size="small">
+    <AppCard title={t("cardTitle")} size="small">
       <List
         dataSource={visible}
         renderItem={(r) => {
@@ -97,6 +98,6 @@ export function SentenceFeedbackList({ rows, onReanalyze }: Props) {
           </Button>
         </div>
       ) : null}
-    </Card>
+    </AppCard>
   );
 }

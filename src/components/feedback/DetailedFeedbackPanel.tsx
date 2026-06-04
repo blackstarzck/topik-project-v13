@@ -1,7 +1,8 @@
 "use client";
 
-import { Card, Collapse, Empty, Progress, Space, Tag, Typography } from "antd";
+import { Collapse, Empty, Progress, Space, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
+import { AppCard } from "@/components/shared/AppCard";
 import type { FeedbackDimensionScoreRow } from "@/lib/writing/types";
 
 const { Paragraph, Text } = Typography;
@@ -19,6 +20,9 @@ const DETAIL_DIMENSION_KEYS: FeedbackDimensionScoreRow["dimension"][] = [
   "topic_fit",
 ];
 
+// 카드 본문 상단 패딩 0 — Collapse가 카드 상단에 붙도록(의도적 flush, antd 6.x styles API).
+const DETAIL_CARD_STYLES = { body: { paddingTop: 0 } } as const; // ai-check: allow-inline-number 0 = 의도적 flush
+
 type Props = {
   dimensions: FeedbackDimensionScoreRow[];
 };
@@ -35,9 +39,9 @@ export function DetailedFeedbackPanel({ dimensions }: Props) {
 
   if (available.length === 0) {
     return (
-      <Card title={t("cardTitle")}>
+      <AppCard title={t("cardTitle")}>
         <Empty description={t("emptyDescription")} />
-      </Card>
+      </AppCard>
     );
   }
 
@@ -79,12 +83,12 @@ export function DetailedFeedbackPanel({ dimensions }: Props) {
   });
 
   return (
-    <Card title={t("cardTitle")} styles={{ body: { paddingTop: 0 } }}>
+    <AppCard title={t("cardTitle")} styles={DETAIL_CARD_STYLES}>
       <Collapse
         ghost
         items={items}
         defaultActiveKey={available.length > 0 ? [available[0]] : []}
       />
-    </Card>
+    </AppCard>
   );
 }

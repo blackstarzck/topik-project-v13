@@ -1,7 +1,8 @@
 "use client";
 
-import { Button, Card, Col, Row, Tag, Typography } from "antd";
+import { Button, Col, Row, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
+import { AppCard } from "@/components/shared/AppCard";
 import {
   FEEDBACK_DIMENSIONS,
   type FeedbackDimensionScoreRow,
@@ -55,7 +56,7 @@ export function DimensionCardGrid({ rows, maxCards, onReanalyze }: Props) {
               : "red";
         return (
           <Col key={dim} xs={24} md={12} lg={8}>
-            <Card
+            <AppCard
               size="small"
               style={failed ? { opacity: 0.6, background: "#fafafa" } : undefined}
             >
@@ -92,7 +93,7 @@ export function DimensionCardGrid({ rows, maxCards, onReanalyze }: Props) {
                   {row?.summary ?? t("summaryFallback")}
                 </Text>
               )}
-            </Card>
+            </AppCard>
           </Col>
         );
       })}

@@ -1,7 +1,8 @@
 "use client";
 
-import { Card, Col, Row, Statistic, Tag, Typography } from "antd";
+import { Col, Row, Statistic, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
+import { AppCard } from "@/components/shared/AppCard";
 
 const { Text } = Typography;
 
@@ -48,7 +49,7 @@ export function SummaryCardRow({
   return (
     <Row gutter={16} data-testid="summary-card-row">
       <Col xs={24} md={8}>
-        <Card>
+        <AppCard>
           <Text type="secondary">{t("summaryWeaknessTitle")}</Text>
           <div style={{ marginTop: 8 }}>
             {weakestDimensions.length === 0 ? (
@@ -77,26 +78,26 @@ export function SummaryCardRow({
                   : t("summaryDataShort"),
             })}
           </Text>
-        </Card>
+        </AppCard>
       </Col>
       <Col xs={24} md={8}>
-        <Card>
+        <AppCard>
           <Text type="secondary">{t("summaryNextTypeTitle")}</Text>
           <div style={{ marginTop: 8 }}>
             <Text strong style={{ fontSize: 18 }}>
               {recommendedType ?? t("summaryTypePending")}
             </Text>
           </div>
-        </Card>
+        </AppCard>
       </Col>
       <Col xs={24} md={8}>
-        <Card>
+        <AppCard>
           <Statistic
             title={t("summaryEstimatedTime")}
             value={estimatedMinutes ?? 0}
             suffix={estimatedMinutes != null ? tCommon("minuteSuffix") : t("noInfo")}
           />
-        </Card>
+        </AppCard>
       </Col>
     </Row>
   );

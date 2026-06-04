@@ -1,7 +1,8 @@
 "use client";
 
-import { Alert, Card, Statistic, Typography } from "antd";
+import { Alert, Statistic, Typography } from "antd";
 import { useTranslations } from "next-intl";
+import { AppCard } from "@/components/shared/AppCard";
 import type { WritingFeedbackRow } from "@/lib/writing/types";
 
 const { Paragraph } = Typography;
@@ -22,19 +23,19 @@ export function FeedbackSummary({ feedback }: Props) {
 
   if (scoreFailed) {
     return (
-      <Card>
+      <AppCard>
         <Alert
           type="warning"
           showIcon
           message={t("scoreFailedTitle")}
           description={t("scoreFailedDescription")}
         />
-      </Card>
+      </AppCard>
     );
   }
 
   return (
-    <Card>
+    <AppCard>
       <Statistic title={t("scoreTitle")} value={score} suffix={`/ ${max}`} />
       <Paragraph
         type="secondary"
@@ -43,6 +44,6 @@ export function FeedbackSummary({ feedback }: Props) {
       >
         {feedback.overall_summary ?? t("overallFallback")}
       </Paragraph>
-    </Card>
+    </AppCard>
   );
 }

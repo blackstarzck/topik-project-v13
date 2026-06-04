@@ -1,7 +1,8 @@
 "use client";
 
-import { Card, Col, Empty, Row, Statistic, Typography } from "antd";
+import { Col, Empty, Row, Statistic, Typography } from "antd";
 import { useTranslations } from "next-intl";
+import { AppCard } from "@/components/shared/AppCard";
 
 const { Text } = Typography;
 
@@ -31,9 +32,9 @@ export function ComparisonKpiBlock({
 
   if (currentScore === null) {
     return (
-      <Card>
+      <AppCard>
         <Empty description={t("emptyScore")} />
-      </Card>
+      </AppCard>
     );
   }
 
@@ -47,7 +48,7 @@ export function ComparisonKpiBlock({
           : undefined;
 
   return (
-    <Card>
+    <AppCard>
       <Row gutter={[16, 16]}>
         <Col xs={24} md={8}>
           <Statistic
@@ -99,6 +100,6 @@ export function ComparisonKpiBlock({
           />
         </Col>
       </Row>
-    </Card>
+    </AppCard>
   );
 }

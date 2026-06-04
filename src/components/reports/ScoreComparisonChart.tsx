@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Card, Empty, Space, Table, Typography } from "antd";
+import { Button, Empty, Space, Table, Typography } from "antd";
+import { AppCard } from "@/components/shared/AppCard";
 import { useTranslations } from "next-intl";
 import {
   Bar,
@@ -64,9 +65,9 @@ export function ScoreComparisonChart({ data, hasPrevious }: Props) {
 
   if (data.length === 0) {
     return (
-      <Card>
+      <AppCard>
         <Empty description={t("emptyChart")} />
-      </Card>
+      </AppCard>
     );
   }
 
@@ -78,7 +79,7 @@ export function ScoreComparisonChart({ data, hasPrevious }: Props) {
 
   if (tableFallback) {
     return (
-      <Card>
+      <AppCard>
         <Title level={5} style={{ marginTop: 0 }}>
           {t("tableTitle")}
         </Title>
@@ -98,12 +99,12 @@ export function ScoreComparisonChart({ data, hasPrevious }: Props) {
             { title: t("seriesCurrent"), dataIndex: "current", render: fmt },
           ]}
         />
-      </Card>
+      </AppCard>
     );
   }
 
   return (
-    <Card>
+    <AppCard>
       <Space style={{ width: "100%", justifyContent: "space-between" }}>
         <Title level={5} style={{ marginTop: 0 }}>
           {t("title")}
@@ -123,7 +124,7 @@ export function ScoreComparisonChart({ data, hasPrevious }: Props) {
           />
         </div>
       </div>
-    </Card>
+    </AppCard>
   );
 }
 

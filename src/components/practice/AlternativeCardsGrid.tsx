@@ -1,8 +1,9 @@
 "use client";
 
-import { Button, Card, Col, Empty, Row, Space, Tag, Typography } from "antd";
+import { Button, Col, Empty, Row, Space, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import { AppCard } from "@/components/shared/AppCard";
 import { writingProblemHref } from "@/lib/writing/routes";
 
 const { Text, Title } = Typography;
@@ -77,7 +78,7 @@ export function AlternativeCardsGrid({
           if (a.locked) {
             return (
               <Col key={a.id} xs={24} md={8}>
-                <Card
+                <AppCard
                   data-testid={`alt-locked-${a.id}`}
                   style={{ opacity: 0.7, background: "#fafafa" }}
                   title={
@@ -104,7 +105,7 @@ export function AlternativeCardsGrid({
                       {t("upgradeInfo")}
                     </Button>
                   </Space>
-                </Card>
+                </AppCard>
               </Col>
             );
           }
@@ -124,7 +125,7 @@ export function AlternativeCardsGrid({
 
           return (
             <Col key={a.id} xs={24} md={8}>
-              <Card
+              <AppCard
                 hoverable
                 onClick={handleClick}
                 data-testid={`alt-${a.id}`}
@@ -163,7 +164,7 @@ export function AlternativeCardsGrid({
                     </Typography.Paragraph>
                   </div>
                 ) : null}
-              </Card>
+              </AppCard>
             </Col>
           );
         })}

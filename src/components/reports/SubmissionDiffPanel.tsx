@@ -1,7 +1,8 @@
 "use client";
 
-import { Card, Col, Empty, Row, Typography } from "antd";
+import { Col, Empty, Row, Typography } from "antd";
 import { useTranslations } from "next-intl";
+import { AppCard } from "@/components/shared/AppCard";
 
 const { Paragraph, Title } = Typography;
 
@@ -15,15 +16,15 @@ export function SubmissionDiffPanel({ currentText, previousText }: Props) {
   return (
     <Row gutter={[12, 12]}>
       <Col xs={24} md={12}>
-        <Card size="small">
+        <AppCard size="small">
           <Title level={5}>{t("currentAnswer")}</Title>
           <Paragraph style={{ whiteSpace: "pre-line" }}>
             {currentText || "—"}
           </Paragraph>
-        </Card>
+        </AppCard>
       </Col>
       <Col xs={24} md={12}>
-        <Card size="small">
+        <AppCard size="small">
           <Title level={5}>{t("previousAnswer")}</Title>
           {previousText ? (
             <Paragraph style={{ whiteSpace: "pre-line" }}>
@@ -32,7 +33,7 @@ export function SubmissionDiffPanel({ currentText, previousText }: Props) {
           ) : (
             <Empty description={t("noPreviousAnswer")} />
           )}
-        </Card>
+        </AppCard>
       </Col>
     </Row>
   );

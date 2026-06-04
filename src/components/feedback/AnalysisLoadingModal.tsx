@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Alert, Button, Card, Space, Steps, Typography } from "antd";
+import { Alert, Button, Space, Steps, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 
+import { AppCard } from "@/components/shared/AppCard";
 import { AnalysisCharacter } from "./AnalysisCharacter";
 
 const { Paragraph, Text, Title } = Typography;
@@ -21,6 +22,9 @@ const STEP_KEYS = ["grammar", "structure", "expression", "score"] as const;
 const SLOW_NOTICE_MS = 10_000;
 /** 단계가 자동으로 넘어가는 간격 (점수 산출 단계에서 멈춤). */
 const STEP_ADVANCE_MS = 1_600;
+
+/** D-M2 분석 카드 폭 — 본문 중앙 정렬. 480 = 콘텐츠 max-width(SPACING 스케일 밖 디자인 값). */
+const CENTERED_CARD_STYLE = { maxWidth: 480, margin: "0 auto" } as const; // ai-check: allow-inline-number 480 = 디자인 값
 
 export type AnalysisPhase = "pending" | "analyzing" | "complete" | "failed";
 
@@ -173,7 +177,7 @@ function AnalysisLoadingModalContent({
   // 분석 실패 상태 — 무한 로딩 STOP, 오류 + 고객지원 링크(stub) + 재시도.
   if (status === "failed") {
     return (
-      <Card style={{ maxWidth: 480, margin: "0 auto" }}>
+      <AppCard style={CENTERED_CARD_STYLE}>
         <Alert
           type="error"
           showIcon
@@ -191,26 +195,26 @@ function AnalysisLoadingModalContent({
             {t("supportButton")}
           </Button>
         </Space>
-      </Card>
+      </AppCard>
     );
   }
 
   // 완료 상태 — completeHref 미지정 시(레거시) 안내만 표시.
   if (status === "complete") {
     return (
-      <Card style={{ maxWidth: 480, margin: "0 auto" }}>
+      <AppCard style={CENTERED_CARD_STYLE}>
         <Alert
           type="success"
           showIcon
           message={t("completeTitle")}
           description={t("completeDescription")}
         />
-      </Card>
+      </AppCard>
     );
   }
 
   return (
-    <Card style={{ maxWidth: 480, margin: "0 auto" }}>
+    <AppCard style={CENTERED_CARD_STYLE}>
       <Title level={5} style={{ marginTop: 0, textAlign: "center" }}>
         {t("title")}
       </Title>
@@ -242,6 +246,6 @@ function AnalysisLoadingModalContent({
           {t("cancelButton")}
         </Button>
       </div>
-    </Card>
+    </AppCard>
   );
 }

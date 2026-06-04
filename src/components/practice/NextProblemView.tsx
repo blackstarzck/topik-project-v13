@@ -1,7 +1,8 @@
 "use client";
 
-import { Button, Card, Empty, Space, Tag, Typography } from "antd";
+import { Button, Empty, Space, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
+import { AppCard } from "@/components/shared/AppCard";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { logStudyEvent } from "@/lib/events/study-events";
@@ -195,7 +196,7 @@ export function NextProblemView({ bundle }: Props) {
             </Paragraph>
           </div>
 
-          <Card
+          <AppCard
             hoverable
             onClick={() => handleStart(primaryTarget() ?? undefined)}
             data-testid={`next-problem-${primary.problemId}`}
@@ -263,7 +264,7 @@ export function NextProblemView({ bundle }: Props) {
                 </Paragraph>
               ) : null}
             </Space>
-          </Card>
+          </AppCard>
         </>
       ) : (
         // primary 만료/없음 → 대안에 포커스했음을 안내.

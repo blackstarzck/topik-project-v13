@@ -1,8 +1,9 @@
 "use client";
 
-import { Button, Card, Col, Empty, Row, Space, Tag, Typography } from "antd";
+import { Button, Col, Empty, Row, Space, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import { AppCard } from "@/components/shared/AppCard";
 import type { FeedbackDimensionScoreRow } from "@/lib/writing/types";
 
 const { Paragraph, Text, Title } = Typography;
@@ -38,7 +39,7 @@ export function FeedbackRecommendationCards({ dimensions }: Props) {
   if (ranked.length === 0) {
     // description region 3 예외 — 추천 없음은 문제 목록 CTA로 대체.
     return (
-      <Card>
+      <AppCard>
         <Title level={5} style={{ marginTop: 0 }}>
           {t("cardTitle")}
         </Title>
@@ -50,12 +51,12 @@ export function FeedbackRecommendationCards({ dimensions }: Props) {
             {t("viewProblemList")}
           </Button>
         </Empty>
-      </Card>
+      </AppCard>
     );
   }
 
   return (
-    <Card>
+    <AppCard>
       <Title level={5} style={{ marginTop: 0 }}>
         {t("cardTitle")}
       </Title>
@@ -68,7 +69,7 @@ export function FeedbackRecommendationCards({ dimensions }: Props) {
           const recoReason = t(`reco.${d.dimension}.reason`);
           return (
             <Col key={d.dimension} xs={24} md={8}>
-              <Card
+              <AppCard
                 size="small"
                 hoverable
                 onClick={() =>
@@ -93,11 +94,11 @@ export function FeedbackRecommendationCards({ dimensions }: Props) {
                     {recoReason}
                   </Text>
                 </Space>
-              </Card>
+              </AppCard>
             </Col>
           );
         })}
       </Row>
-    </Card>
+    </AppCard>
   );
 }

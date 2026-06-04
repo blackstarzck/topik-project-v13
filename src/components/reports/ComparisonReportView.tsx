@@ -1,7 +1,8 @@
 "use client";
 
-import { Alert, Button, Card, Space, Tooltip, Typography, notification } from "antd";
+import { Alert, Button, Space, Tooltip, Typography, notification } from "antd";
 import { useEffect, useState } from "react";
+import { AppCard } from "@/components/shared/AppCard";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import type { ComparisonMetrics } from "@/lib/writing/comparison-service";
@@ -110,7 +111,7 @@ export function ComparisonReportView({
       />
 
       {/* region 4 — 분석 요약 (3줄 이하 + 실패 폴백). */}
-      <Card>
+      <AppCard>
         {narrativeFailed ? (
           <Alert
             type="warning"
@@ -135,7 +136,7 @@ export function ComparisonReportView({
             </Text>
           </>
         )}
-      </Card>
+      </AppCard>
 
       {/* region 2 — 점수 그래프 (recharts + 표 폴백). */}
       <ScoreComparisonChart data={chartData} hasPrevious={hasPrevious} />
@@ -150,7 +151,7 @@ export function ComparisonReportView({
       <SubmissionDiffPanel currentText={currentText} previousText={previousText} />
 
       {/* region 5 — 다음 CTA (대표 CTA 1개 + 후속 학습 경로, 중복 클릭 차단). */}
-      <Card>
+      <AppCard>
         <Title level={5} style={{ marginTop: 0 }}>
           {t("nextLearningTitle")}
         </Title>
@@ -171,7 +172,7 @@ export function ComparisonReportView({
             <Button onClick={() => router.push(retryHref)}>{t("retryProblem")}</Button>
           ) : null}
         </Space>
-      </Card>
+      </AppCard>
     </Space>
   );
 }

@@ -1,7 +1,8 @@
 "use client";
 
-import { Card, Col, Empty, Row, Tag, Typography } from "antd";
+import { Col, Empty, Row, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
+import { AppCard } from "@/components/shared/AppCard";
 
 const { Text } = Typography;
 
@@ -73,28 +74,28 @@ export function DimensionComparisonCards({
     const entries = Object.entries(currentScores ?? {}).slice(0, MAX_CARDS);
     if (entries.length === 0) {
       return (
-        <Card>
+        <AppCard>
           <Empty description={t("emptyCurrent")} />
-        </Card>
+        </AppCard>
       );
     }
     return (
-      <Card title={t("titleScores")}>
+      <AppCard title={t("titleScores")}>
         <Row gutter={[12, 12]}>
           {entries.map(([dim, score]) => (
             <Col key={dim} xs={12} md={6}>
-              <Card size="small">
+              <AppCard size="small">
                 <Text strong>{dimLabel(dim)}</Text>
                 <div style={{ marginTop: 4 }}>
                   <Tag color="blue">
                     {score === null ? "—" : t("scorePoint", { value: score })}
                   </Tag>
                 </div>
-              </Card>
+              </AppCard>
             </Col>
           ))}
         </Row>
-      </Card>
+      </AppCard>
     );
   }
 
@@ -105,20 +106,20 @@ export function DimensionComparisonCards({
 
   if (sorted.length === 0) {
     return (
-      <Card>
+      <AppCard>
         <Empty description={t("emptyChange")} />
-      </Card>
+      </AppCard>
     );
   }
 
   return (
-    <Card title={t("titleChange")}>
+    <AppCard title={t("titleChange")}>
       <Row gutter={[12, 12]}>
         {sorted.map(([dim, delta]) => {
           const trend = trendOf(delta);
           return (
             <Col key={dim} xs={12} md={6}>
-              <Card size="small">
+              <AppCard size="small">
                 <Text strong>{dimLabel(dim)}</Text>
                 <div style={{ marginTop: 4 }}>
                   <Tag color={TREND_COLOR[trend]}>
@@ -128,11 +129,11 @@ export function DimensionComparisonCards({
                       : ""}
                   </Tag>
                 </div>
-              </Card>
+              </AppCard>
             </Col>
           );
         })}
       </Row>
-    </Card>
+    </AppCard>
   );
 }
