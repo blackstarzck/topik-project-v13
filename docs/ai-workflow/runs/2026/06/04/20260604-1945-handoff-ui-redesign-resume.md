@@ -14,15 +14,15 @@
 2. **The "@360 WorkspaceShell sidebar doesn't collapse" was a NON-BUG** — a pure artifact of the SSR-only smoke. With
    hydration unblocked, the ORIGINAL shell collapses correctly at ≤360 (hamburger + drawer). WorkspaceShell was NOT
    changed. (The earlier "fix the shell" plan is superseded.)
-3. **Hydrated re-verification surfaced a REAL `/library` "Maximum update depth exceeded" render loop** — confounded by
-   a concurrent **Codex antd-deprecation codemod** (~50 UNCOMMITTED `src/components` files in the shared worktree).
-   Attribution + fix deferred until Codex lands.
-4. **ROLLOUT IS PAUSED (GPT-5.5 decision)** until the concurrent Codex sweep is committed/stopped/reverted/isolated —
-   it collides with cluster 6 (growth) files and pollutes shared-tree verification. **A `.smoke-skip` sentinel is
-   active** (Codex's dirty UI would otherwise block turn-end); **remove it** once Codex lands + `/library` re-smokes clean.
+3. ✅ **FIXED — `/library` "Maximum update depth exceeded" render loop** (real pre-existing bug, masked by the
+   SSR-only smoke). `LibrarySubmissionsTab`: `allItems` recomputed every render → `filtered` useMemo → selection-lift
+   useEffect looped. Fix `useMemo(allItems,[query.data,initialItems])` (`6ad6494`) + regression test (`273fd5b`).
+4. ✅ **RESOLVED — collision cleared.** The concurrent Codex antd sweep (~50 files) was committed at the user's
+   request (`b67ad3b`). `.smoke-skip` removed; gate restored. **Clusters 1-5 re-verified clean under hydration**
+   (28-route re-smoke, 0 errors, `1a2ff05`). **Rollout RESUMING at cluster 6 (growth).**
 5. **Decisions are delegated to GPT-5.5 (codex)** per user directive; **human/visual review is delegated to GPT-5.5**
-   with screenshots attached (`codex exec -i <route>-{360,768,1280}.png ...`). When resuming, re-verify clusters 1-5
-   under the now-hydrating smoke (their changes were SSR-safe wrapper swaps → low risk, but client behaviour is now testable).
+   with screenshots attached (`codex exec -i <route>-{360,768,1280}.png ...`). The smoke now HYDRATES, so per-cluster
+   M1 actually exercises client behaviour (watch consoleErrors for "Maximum update depth"/antd-deprecation).
 
 ## TL;DR (resume in 60s)
 
