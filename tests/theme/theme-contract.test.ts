@@ -56,6 +56,18 @@ describe("app theme contract", () => {
     });
   });
 
+  test("flattens button drop shadows via shared component tokens (calm, not game-like)", () => {
+    // DESIGN.md → Components: button-primary has no drop shadow. Branch 1 keeps
+    // all 9 global tokens at AntD defaults; this is a component-scoped refinement
+    // that must flow through createTheme into BOTH appearances.
+    for (const appearance of ["light", "dark"] as const) {
+      const built = getAppTheme(defaultThemeName, appearance);
+      expect(built.antd.components?.Button?.primaryShadow).toBe("none");
+      expect(built.antd.components?.Button?.defaultShadow).toBe("none");
+      expect(built.antd.components?.Button?.dangerShadow).toBe("none");
+    }
+  });
+
   test("getResolvedBridgeVarsByAppearance covers all required bridge keys", () => {
     const vars = getResolvedBridgeVarsByAppearance(defaultAppearance);
     const requiredKeys = [

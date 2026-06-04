@@ -36,7 +36,7 @@ export function LandingHeader({ isAuthenticated }: Props) {
         justifyContent: "space-between",
         gap: 16,
         padding: "16px 0",
-        borderBottom: "1px solid var(--app-border, #f0f0f0)",
+        borderBottom: "1px solid var(--app-color-border)",
         flexWrap: "wrap",
       }}
     >

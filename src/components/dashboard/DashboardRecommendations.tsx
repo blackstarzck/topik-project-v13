@@ -1,8 +1,10 @@
 "use client";
 
-import { Button, Card, Empty, Space, Tag, Typography } from "antd";
+import { Button, Empty, Space, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
+
+import { AppCard } from "@/components/shared/AppCard";
 
 const { Paragraph, Text } = Typography;
 
@@ -55,10 +57,10 @@ export function DashboardRecommendations({ primary, alternatives }: Props) {
   const altList = alternatives.slice(0, 4);
 
   return (
-    <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-      <Card title={t("continueCardTitle")}>
+    <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+      <AppCard title={t("continueCardTitle")}>
         {primary ? (
-          <Space direction="vertical" size="small" style={{ width: "100%" }}>
+          <Space orientation="vertical" size="small" style={{ width: "100%" }}>
             <Space size={8} wrap>
               <Tag color="geekblue">
                 {t(SOURCE_LABEL_KEY[primary.source] as Parameters<typeof t>[0])}
@@ -94,20 +96,20 @@ export function DashboardRecommendations({ primary, alternatives }: Props) {
             </Link>
           </Empty>
         )}
-      </Card>
+      </AppCard>
 
-      <Card title={t("typesCardTitle")}>
+      <AppCard title={t("typesCardTitle")}>
         {altList.length === 0 ? (
           <Empty description={t("typesEmpty")} />
         ) : (
-          <Space direction="vertical" size="small" style={{ width: "100%" }}>
+          <Space orientation="vertical" size="small" style={{ width: "100%" }}>
             {altList.map((alt) => (
-              <Card key={alt.problemId} size="small">
+              <div key={alt.problemId} className="app-card-compact">
                 <Space
                   style={{ width: "100%", justifyContent: "space-between" }}
                   wrap
                 >
-                  <Space direction="vertical" size={2}>
+                  <Space orientation="vertical" size={2}>
                     <Tag color="blue">
                       {alt.questionNo != null
                         ? t("questionNoTag", { questionNo: alt.questionNo })
@@ -119,11 +121,11 @@ export function DashboardRecommendations({ primary, alternatives }: Props) {
                     <Button>{t("solveButton")}</Button>
                   </Link>
                 </Space>
-              </Card>
+              </div>
             ))}
           </Space>
         )}
-      </Card>
+      </AppCard>
     </Space>
   );
 }

@@ -1,9 +1,10 @@
 "use client";
 
-import { Drawer, Grid, Layout } from "antd";
+import { Grid, Layout } from "antd";
 import { useTranslations } from "next-intl";
 import { useState, type ReactNode } from "react";
 import type { AppRole } from "@/lib/auth/roles";
+import { AppDrawer } from "@/components/shared/AppDrawer";
 import { AppHeader } from "./AppHeader";
 import { SidebarNav } from "./SidebarNav";
 
@@ -46,7 +47,7 @@ export function WorkspaceShell({ role, email, planLabel, children }: Props) {
         collapsedWidth={0}
         width={240}
         trigger={null}
-        style={{ background: "var(--app-bg, #fff)" }}
+        style={{ background: "var(--app-color-bg-container)" }}
       >
         <SidebarNav role={role} planLabel={planLabel} />
       </Sider>
@@ -59,9 +60,9 @@ export function WorkspaceShell({ role, email, planLabel, children }: Props) {
         <Content style={{ padding: 24 }}>{children}</Content>
       </Layout>
 
-      <Drawer
+      <AppDrawer
         placement="left"
-        width={240}
+        size={240}
         open={showDrawer}
         onClose={() => setDrawerOpen(false)}
         styles={{ body: { padding: 0 } }}
@@ -72,7 +73,7 @@ export function WorkspaceShell({ role, email, planLabel, children }: Props) {
           planLabel={planLabel}
           onNavigate={() => setDrawerOpen(false)}
         />
-      </Drawer>
+      </AppDrawer>
     </Layout>
   );
 }

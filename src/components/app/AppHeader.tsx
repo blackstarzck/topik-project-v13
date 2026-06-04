@@ -19,12 +19,12 @@ export function AppHeader({ email, showMenuToggle, onMenuToggle }: Props) {
   return (
     <Header
       style={{
-        background: "var(--app-bg, #fff)",
+        background: "var(--app-color-bg-container)",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
         padding: "0 24px",
-        borderBottom: "1px solid var(--app-border, #f0f0f0)",
+        borderBottom: "1px solid var(--app-color-border)",
       }}
     >
       <Space size={12} align="center">

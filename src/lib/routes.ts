@@ -44,6 +44,11 @@ export const PUBLIC_PATHS = [
   // placeholder 페이지이지만 reachable 해야 함.
   "/terms",
   "/privacy",
+  // PILOT QA SCAFFOLDING (UI redesign pilot, 2026-06-02): no-auth dashboard
+  // preview route used by the pilot Playwright pass (renders presentation
+  // components with fixture props, no Supabase). Not navigation-linked and
+  // noindexed. Remove or feature-flag before cluster expansion.
+  "/dev-preview",
 ] as const;
 
 // ---------------------------------------------------------------------------

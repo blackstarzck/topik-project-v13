@@ -1,9 +1,19 @@
 # Theme Architecture
 
-> Status (2026-05-18)
+> Status (2026-06-02)
 >
-> 이 저장소는 현재 pre-implementation 상태이며 `src/`가 아직 없습니다.
-> 본 문서는 `src/theme/`이 생성될 때 따라야 할 **목표 테마 구조**를 정의합니다.
+> `src/theme/`는 이미 구현되어 있습니다(아래 "Current Theme Folder" 참고). 본 문서는
+> 그 구현이 따라야 하는 **테마 구조 계약**을 정의합니다.
+>
+> 시각 기준(색·타이포·간격·컴포넌트 토큰의 의도와 실제 값)의 단일 출처는 저장소 루트
+> [`DESIGN.md`](../../DESIGN.md)(Stitch 포맷)입니다. 역할 분담: 본 문서는 그 값이
+> `src/theme/`와 `--app-*` 브릿지에 **어떻게 바인딩되는지**(구조)를 정의하고, `DESIGN.md`는
+> **무엇을 어떤 값으로** 정하는지(의도·값)를 정의합니다.
+>
+> 파일럿(로그인+대시보드)은 **최소 위험 분기**를 따라 9개 글로벌 브릿지 토큰을 AntD
+> 기본값으로 유지합니다. 글로벌 토큰을 실제로 바꿀 때만 `src/theme/presets/default.ts`에
+> 토큰별 사유와 함께 override를 추가합니다. 그 전까지 default preset 이 비어 있는 상태가
+> 정상입니다(아래 "Theme presets" 규칙과 일관).
 
 This file explains how theme configuration is organized in the TALKPIK AI codebase.
 

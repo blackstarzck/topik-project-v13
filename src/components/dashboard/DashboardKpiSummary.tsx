@@ -1,8 +1,10 @@
 "use client";
 
-import { Button, Card, Col, Row, Space, Statistic, Typography } from "antd";
+import { Button, Col, Row, Space, Statistic, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
+
+import { AppCard } from "@/components/shared/AppCard";
 
 const { Text } = Typography;
 
@@ -56,9 +58,9 @@ export function DashboardKpiSummary({ kpi }: Props) {
   if (isNewUser) {
     // 예외: 신규 사용자는 0값 대신 시작 유도 문구.
     return (
-      <Card>
+      <AppCard>
         <Space
-          direction="vertical"
+          orientation="vertical"
           size="small"
           style={{ width: "100%", textAlign: "center" }}
         >
@@ -70,48 +72,48 @@ export function DashboardKpiSummary({ kpi }: Props) {
             <Button type="primary">{t("newUserCta")}</Button>
           </Link>
         </Space>
-      </Card>
+      </AppCard>
     );
   }
 
   return (
-    <Space direction="vertical" size={8} style={{ width: "100%" }}>
+    <Space orientation="vertical" size={8} style={{ width: "100%" }}>
       <Row gutter={[16, 16]}>
         <Col xs={12} md={6}>
-          <Card size="small" style={{ height: "100%" }}>
+          <AppCard size="small" style={{ height: "100%" }}>
             <Statistic
               title={t("todaySubmissionsTitle")}
               value={kpi.todayAttempts}
               suffix={t("todaySubmissionsSuffix")}
             />
-          </Card>
+          </AppCard>
         </Col>
         <Col xs={12} md={6}>
-          <Card size="small" style={{ height: "100%" }}>
+          <AppCard size="small" style={{ height: "100%" }}>
             <Statistic
               title={t("recentFeedbackTitle")}
               value={kpi.recentFeedbackCount}
               suffix={t("recentFeedbackSuffix")}
             />
-          </Card>
+          </AppCard>
         </Col>
         <Col xs={12} md={6}>
-          <Card size="small" style={{ height: "100%" }}>
+          <AppCard size="small" style={{ height: "100%" }}>
             <Statistic
               title={t("goalAchievementTitle")}
               value={kpi.goalAchievementPct != null ? kpi.goalAchievementPct : "—"}
               suffix={kpi.goalAchievementPct != null ? "%" : undefined}
             />
-          </Card>
+          </AppCard>
         </Col>
         <Col xs={12} md={6}>
-          <Card size="small" style={{ height: "100%" }}>
+          <AppCard size="small" style={{ height: "100%" }}>
             <Statistic
               title={t("streakTitle")}
               value={kpi.streakDays}
               suffix={t("streakSuffix")}
             />
-          </Card>
+          </AppCard>
         </Col>
       </Row>
       <Text type="secondary" style={{ fontSize: 12 }}>

@@ -1,9 +1,11 @@
 "use client";
 
-import { Alert, Button, Card, Empty, Space } from "antd";
+import { Alert, Button, Empty, Space } from "antd";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+
+import { AppCard } from "@/components/shared/AppCard";
 
 export type DashboardAlertItem = {
   id: string;
@@ -29,7 +31,7 @@ export function DashboardAlertsCard({ alerts, loadFailed = false }: Props) {
   const router = useRouter();
 
   return (
-    <Card
+    <AppCard
       title={t("cardTitle")}
       extra={
         <Link href="/settings/notifications">
@@ -40,7 +42,7 @@ export function DashboardAlertsCard({ alerts, loadFailed = false }: Props) {
       }
     >
       {loadFailed ? (
-        <Space direction="vertical" size="small" style={{ width: "100%" }}>
+        <Space orientation="vertical" size="small" style={{ width: "100%" }}>
           <Alert
             type="warning"
             showIcon
@@ -59,7 +61,7 @@ export function DashboardAlertsCard({ alerts, loadFailed = false }: Props) {
       ) : alerts.length === 0 ? (
         <Empty description={t("empty")} />
       ) : (
-        <Space direction="vertical" style={{ width: "100%" }}>
+        <Space orientation="vertical" style={{ width: "100%" }}>
           {alerts.slice(0, 5).map((a) => (
             <Alert
               key={a.id}
@@ -71,6 +73,6 @@ export function DashboardAlertsCard({ alerts, loadFailed = false }: Props) {
           ))}
         </Space>
       )}
-    </Card>
+    </AppCard>
   );
 }

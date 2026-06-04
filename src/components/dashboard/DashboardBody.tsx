@@ -48,7 +48,7 @@ export function DashboardBody({
   alertsLoadFailed,
 }: Props) {
   return (
-    <Space direction="vertical" size="large" style={{ width: "100%" }}>
+    <Space orientation="vertical" size="large" style={{ width: "100%" }}>
       <DashboardKpiSummary kpi={kpi} />
 
       <Row gutter={[16, 16]}>
@@ -59,7 +59,7 @@ export function DashboardBody({
           />
         </Col>
         <Col xs={24} md={8}>
-          <Space direction="vertical" size="large" style={{ width: "100%" }}>
+          <Space orientation="vertical" size="large" style={{ width: "100%" }}>
             <UpcomingExamCard examDate={examDate} />
             <DashboardAlertsCard
               alerts={alerts}
