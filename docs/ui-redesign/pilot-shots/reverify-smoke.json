@@ -1,0 +1,233 @@
+{
+  "baseSha": null,
+  "headSha": "ba994b8",
+  "booted": true,
+  "reused": true,
+  "changedFiles": [],
+  "requiredRoutes": [
+    "/dashboard",
+    "/library",
+    "/writing/short-answer-writing-51",
+    "/writing/feedback/short/a0d17000-0000-4000-8000-000000000051"
+  ],
+  "excludedRoutes": [],
+  "overApproximated": false,
+  "testedRoutes": [
+    "/dashboard",
+    "/writing/feedback/short/a0d17000-0000-4000-8000-000000000051"
+  ],
+  "viewports": [
+    360,
+    768,
+    1280
+  ],
+  "storageStatePath": "tests/e2e/auth-state/student.json",
+  "perRouteResult": [
+    {
+      "route": "/dashboard",
+      "viewport": 360,
+      "status": 200,
+      "finalPath": "/dashboard",
+      "overlayText": "",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "docs\\ui-redesign\\pilot-shots\\reverify\\dashboard-360.png",
+      "ok": true,
+      "fatal": false,
+      "redirected": false,
+      "reasons": []
+    },
+    {
+      "route": "/dashboard",
+      "viewport": 768,
+      "status": 200,
+      "finalPath": "/dashboard",
+      "overlayText": "",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "docs\\ui-redesign\\pilot-shots\\reverify\\dashboard-768.png",
+      "ok": true,
+      "fatal": false,
+      "redirected": false,
+      "reasons": []
+    },
+    {
+      "route": "/dashboard",
+      "viewport": 1280,
+      "status": 200,
+      "finalPath": "/dashboard",
+      "overlayText": "",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "docs\\ui-redesign\\pilot-shots\\reverify\\dashboard-1280.png",
+      "ok": true,
+      "fatal": false,
+      "redirected": false,
+      "reasons": []
+    },
+    {
+      "route": "/library",
+      "viewport": 360,
+      "status": 200,
+      "finalPath": "/library",
+      "overlayText": "",
+      "consoleErrors": [
+        "Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.",
+        "Warning: [antd: Modal] `maskClosable` is deprecated. Please use `mask.closable` instead.",
+        "Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render."
+      ],
+      "pageErrors": [],
+      "screenshot": "docs\\ui-redesign\\pilot-shots\\reverify\\library-360.png",
+      "ok": false,
+      "fatal": false,
+      "redirected": false,
+      "reasons": [
+        "console: Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.",
+        "console: Warning: [antd: Modal] `maskClosable` is deprecated. Please use `mask.closable` instead.",
+        "console: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render."
+      ]
+    },
+    {
+      "route": "/library",
+      "viewport": 768,
+      "status": 200,
+      "finalPath": "/library",
+      "overlayText": "",
+      "consoleErrors": [
+        "Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.",
+        "Warning: [antd: Modal] `maskClosable` is deprecated. Please use `mask.closable` instead.",
+        "Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.",
+        "Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render."
+      ],
+      "pageErrors": [],
+      "screenshot": "docs\\ui-redesign\\pilot-shots\\reverify\\library-768.png",
+      "ok": false,
+      "fatal": false,
+      "redirected": false,
+      "reasons": [
+        "console: Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.",
+        "console: Warning: [antd: Modal] `maskClosable` is deprecated. Please use `mask.closable` instead.",
+        "console: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.",
+        "console: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render."
+      ]
+    },
+    {
+      "route": "/library",
+      "viewport": 1280,
+      "status": 200,
+      "finalPath": "/library",
+      "overlayText": "",
+      "consoleErrors": [
+        "Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.",
+        "Warning: [antd: Modal] `maskClosable` is deprecated. Please use `mask.closable` instead.",
+        "Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render."
+      ],
+      "pageErrors": [],
+      "screenshot": "docs\\ui-redesign\\pilot-shots\\reverify\\library-1280.png",
+      "ok": false,
+      "fatal": false,
+      "redirected": false,
+      "reasons": [
+        "console: Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.",
+        "console: Warning: [antd: Modal] `maskClosable` is deprecated. Please use `mask.closable` instead.",
+        "console: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render."
+      ]
+    },
+    {
+      "route": "/writing/short-answer-writing-51",
+      "viewport": 360,
+      "status": 200,
+      "finalPath": "/writing/short-answer-writing-51",
+      "overlayText": "",
+      "consoleErrors": [
+        "Warning: [antd: Modal] `maskClosable` is deprecated. Please use `mask.closable` instead."
+      ],
+      "pageErrors": [],
+      "screenshot": "docs\\ui-redesign\\pilot-shots\\reverify\\writing_short_answer_writing_51-360.png",
+      "ok": false,
+      "fatal": false,
+      "redirected": false,
+      "reasons": [
+        "console: Warning: [antd: Modal] `maskClosable` is deprecated. Please use `mask.closable` instead."
+      ]
+    },
+    {
+      "route": "/writing/short-answer-writing-51",
+      "viewport": 768,
+      "status": 200,
+      "finalPath": "/writing/short-answer-writing-51",
+      "overlayText": "",
+      "consoleErrors": [
+        "Warning: [antd: Modal] `maskClosable` is deprecated. Please use `mask.closable` instead."
+      ],
+      "pageErrors": [],
+      "screenshot": "docs\\ui-redesign\\pilot-shots\\reverify\\writing_short_answer_writing_51-768.png",
+      "ok": false,
+      "fatal": false,
+      "redirected": false,
+      "reasons": [
+        "console: Warning: [antd: Modal] `maskClosable` is deprecated. Please use `mask.closable` instead."
+      ]
+    },
+    {
+      "route": "/writing/short-answer-writing-51",
+      "viewport": 1280,
+      "status": 200,
+      "finalPath": "/writing/short-answer-writing-51",
+      "overlayText": "",
+      "consoleErrors": [
+        "Warning: [antd: Modal] `maskClosable` is deprecated. Please use `mask.closable` instead."
+      ],
+      "pageErrors": [],
+      "screenshot": "docs\\ui-redesign\\pilot-shots\\reverify\\writing_short_answer_writing_51-1280.png",
+      "ok": false,
+      "fatal": false,
+      "redirected": false,
+      "reasons": [
+        "console: Warning: [antd: Modal] `maskClosable` is deprecated. Please use `mask.closable` instead."
+      ]
+    },
+    {
+      "route": "/writing/feedback/short/a0d17000-0000-4000-8000-000000000051",
+      "viewport": 360,
+      "status": 200,
+      "finalPath": "/writing/feedback/short/a0d17000-0000-4000-8000-000000000051",
+      "overlayText": "",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "docs\\ui-redesign\\pilot-shots\\reverify\\writing_feedback_short_a0d17000_0000_4000_8000_000000000051-360.png",
+      "ok": true,
+      "fatal": false,
+      "redirected": false,
+      "reasons": []
+    },
+    {
+      "route": "/writing/feedback/short/a0d17000-0000-4000-8000-000000000051",
+      "viewport": 768,
+      "status": 200,
+      "finalPath": "/writing/feedback/short/a0d17000-0000-4000-8000-000000000051",
+      "overlayText": "",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "docs\\ui-redesign\\pilot-shots\\reverify\\writing_feedback_short_a0d17000_0000_4000_8000_000000000051-768.png",
+      "ok": true,
+      "fatal": false,
+      "redirected": false,
+      "reasons": []
+    },
+    {
+      "route": "/writing/feedback/short/a0d17000-0000-4000-8000-000000000051",
+      "viewport": 1280,
+      "status": 200,
+      "finalPath": "/writing/feedback/short/a0d17000-0000-4000-8000-000000000051",
+      "overlayText": "",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "docs\\ui-redesign\\pilot-shots\\reverify\\writing_feedback_short_a0d17000_0000_4000_8000_000000000051-1280.png",
+      "ok": true,
+      "fatal": false,
+      "redirected": false,
+      "reasons": []
+    }
+  ]
+}
