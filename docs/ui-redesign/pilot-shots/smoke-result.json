@@ -1,26 +1,18 @@
 {
   "baseSha": null,
-  "headSha": "c29f48b",
+  "headSha": "b5b345e",
   "booted": true,
   "reused": true,
   "changedFiles": [],
   "requiredRoutes": [
-    "/sign-up",
-    "/password-reset",
-    "/password-reset/confirm",
-    "/auth/error",
-    "/auth/verify-email",
-    "/onboarding/learning-goal"
+    "/practice/recommendations",
+    "/practice/problems"
   ],
   "excludedRoutes": [],
   "overApproximated": false,
   "testedRoutes": [
-    "/auth/error",
-    "/auth/verify-email",
-    "/onboarding/learning-goal",
-    "/password-reset",
-    "/password-reset/confirm",
-    "/sign-up"
+    "/practice/problems",
+    "/practice/recommendations"
   ],
   "viewports": [
     360,
@@ -30,306 +22,102 @@
   "storageStatePath": "tests/e2e/auth-state/student.json",
   "perRouteResult": [
     {
-      "route": "/sign-up",
+      "route": "/practice/recommendations",
       "viewport": 360,
       "status": 200,
-      "finalPath": "/sign-up",
+      "finalPath": "/practice/recommendations",
       "overlayText": "",
       "consoleErrors": [
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=-V75pM20F1HAUqW9mgtqI' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE",
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=-V75pM20F1HAUqW9mgtqI' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=0eiKBBKsrzgTHhRn0Q-ax' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE",
+        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=0eiKBBKsrzgTHhRn0Q-ax' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
       ],
       "pageErrors": [],
-      "screenshot": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\ui-redesign\\pilot-shots\\sign_up-360.png",
+      "screenshot": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\ui-redesign\\pilot-shots\\practice_recommendations-360.png",
       "ok": true,
       "fatal": false,
       "redirected": false,
       "reasons": []
     },
     {
-      "route": "/sign-up",
+      "route": "/practice/recommendations",
       "viewport": 768,
       "status": 200,
-      "finalPath": "/sign-up",
+      "finalPath": "/practice/recommendations",
       "overlayText": "",
       "consoleErrors": [
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=wJ_EUQ6ODmsDbVx3oM92C' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE",
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=wJ_EUQ6ODmsDbVx3oM92C' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=qn55U9nLS0GSdp4E7KbF7' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE",
+        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=qn55U9nLS0GSdp4E7KbF7' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
       ],
       "pageErrors": [],
-      "screenshot": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\ui-redesign\\pilot-shots\\sign_up-768.png",
+      "screenshot": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\ui-redesign\\pilot-shots\\practice_recommendations-768.png",
       "ok": true,
       "fatal": false,
       "redirected": false,
       "reasons": []
     },
     {
-      "route": "/sign-up",
+      "route": "/practice/recommendations",
       "viewport": 1280,
       "status": 200,
-      "finalPath": "/sign-up",
+      "finalPath": "/practice/recommendations",
       "overlayText": "",
       "consoleErrors": [
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=PiXloQ38S52kd1OjQvPSM' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE",
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=PiXloQ38S52kd1OjQvPSM' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=kc3fBmMvsG6afNgRnwijz' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE",
+        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=kc3fBmMvsG6afNgRnwijz' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
       ],
       "pageErrors": [],
-      "screenshot": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\ui-redesign\\pilot-shots\\sign_up-1280.png",
+      "screenshot": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\ui-redesign\\pilot-shots\\practice_recommendations-1280.png",
       "ok": true,
       "fatal": false,
       "redirected": false,
       "reasons": []
     },
     {
-      "route": "/password-reset",
+      "route": "/practice/problems",
       "viewport": 360,
       "status": 200,
-      "finalPath": "/password-reset",
+      "finalPath": "/practice/problems",
       "overlayText": "",
       "consoleErrors": [
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=agV6ydNNXJu8s1VWFaYcr' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE",
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=agV6ydNNXJu8s1VWFaYcr' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=D3w0LH40AF4oh9sT9w8GA' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE",
+        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=D3w0LH40AF4oh9sT9w8GA' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
       ],
       "pageErrors": [],
-      "screenshot": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\ui-redesign\\pilot-shots\\password_reset-360.png",
+      "screenshot": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\ui-redesign\\pilot-shots\\practice_problems-360.png",
       "ok": true,
       "fatal": false,
       "redirected": false,
       "reasons": []
     },
     {
-      "route": "/password-reset",
+      "route": "/practice/problems",
       "viewport": 768,
       "status": 200,
-      "finalPath": "/password-reset",
+      "finalPath": "/practice/problems",
       "overlayText": "",
       "consoleErrors": [
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=_IWCwcHCIEsxfmKLIA2L6' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE",
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=_IWCwcHCIEsxfmKLIA2L6' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=U4yhH_jUvQ12hWIimv-d7' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE",
+        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=U4yhH_jUvQ12hWIimv-d7' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
       ],
       "pageErrors": [],
-      "screenshot": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\ui-redesign\\pilot-shots\\password_reset-768.png",
+      "screenshot": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\ui-redesign\\pilot-shots\\practice_problems-768.png",
       "ok": true,
       "fatal": false,
       "redirected": false,
       "reasons": []
     },
     {
-      "route": "/password-reset",
+      "route": "/practice/problems",
       "viewport": 1280,
       "status": 200,
-      "finalPath": "/password-reset",
+      "finalPath": "/practice/problems",
       "overlayText": "",
       "consoleErrors": [
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=gaYWD4AxAa60_mLuLII2W' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE",
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=gaYWD4AxAa60_mLuLII2W' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=vXAo6j8ydnos25cCmj7-G' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE",
+        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=vXAo6j8ydnos25cCmj7-G' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
       ],
       "pageErrors": [],
-      "screenshot": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\ui-redesign\\pilot-shots\\password_reset-1280.png",
-      "ok": true,
-      "fatal": false,
-      "redirected": false,
-      "reasons": []
-    },
-    {
-      "route": "/password-reset/confirm",
-      "viewport": 360,
-      "status": 200,
-      "finalPath": "/password-reset/confirm",
-      "overlayText": "",
-      "consoleErrors": [
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=SxOIRgFaQNtZthx-yid02' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE",
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=SxOIRgFaQNtZthx-yid02' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
-      ],
-      "pageErrors": [],
-      "screenshot": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\ui-redesign\\pilot-shots\\password_reset_confirm-360.png",
-      "ok": true,
-      "fatal": false,
-      "redirected": false,
-      "reasons": []
-    },
-    {
-      "route": "/password-reset/confirm",
-      "viewport": 768,
-      "status": 200,
-      "finalPath": "/password-reset/confirm",
-      "overlayText": "",
-      "consoleErrors": [
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=FCatJX73dLWJZSz1QGvrk' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE",
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=FCatJX73dLWJZSz1QGvrk' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
-      ],
-      "pageErrors": [],
-      "screenshot": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\ui-redesign\\pilot-shots\\password_reset_confirm-768.png",
-      "ok": true,
-      "fatal": false,
-      "redirected": false,
-      "reasons": []
-    },
-    {
-      "route": "/password-reset/confirm",
-      "viewport": 1280,
-      "status": 200,
-      "finalPath": "/password-reset/confirm",
-      "overlayText": "",
-      "consoleErrors": [
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=gJ4n5YrWNup9Vtto1ncDj' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE",
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=gJ4n5YrWNup9Vtto1ncDj' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
-      ],
-      "pageErrors": [],
-      "screenshot": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\ui-redesign\\pilot-shots\\password_reset_confirm-1280.png",
-      "ok": true,
-      "fatal": false,
-      "redirected": false,
-      "reasons": []
-    },
-    {
-      "route": "/auth/error",
-      "viewport": 360,
-      "status": 200,
-      "finalPath": "/auth/error",
-      "overlayText": "",
-      "consoleErrors": [
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=uBE7WytlvPbDpFRXkQXpE' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE",
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=uBE7WytlvPbDpFRXkQXpE' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
-      ],
-      "pageErrors": [],
-      "screenshot": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\ui-redesign\\pilot-shots\\auth_error-360.png",
-      "ok": true,
-      "fatal": false,
-      "redirected": false,
-      "reasons": []
-    },
-    {
-      "route": "/auth/error",
-      "viewport": 768,
-      "status": 200,
-      "finalPath": "/auth/error",
-      "overlayText": "",
-      "consoleErrors": [
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=oWGqyO1opgQusJUrDA6to' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE",
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=oWGqyO1opgQusJUrDA6to' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
-      ],
-      "pageErrors": [],
-      "screenshot": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\ui-redesign\\pilot-shots\\auth_error-768.png",
-      "ok": true,
-      "fatal": false,
-      "redirected": false,
-      "reasons": []
-    },
-    {
-      "route": "/auth/error",
-      "viewport": 1280,
-      "status": 200,
-      "finalPath": "/auth/error",
-      "overlayText": "",
-      "consoleErrors": [
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=aaTtuG9oTsT5i2D8zAgLz' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE",
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=aaTtuG9oTsT5i2D8zAgLz' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
-      ],
-      "pageErrors": [],
-      "screenshot": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\ui-redesign\\pilot-shots\\auth_error-1280.png",
-      "ok": true,
-      "fatal": false,
-      "redirected": false,
-      "reasons": []
-    },
-    {
-      "route": "/auth/verify-email",
-      "viewport": 360,
-      "status": 200,
-      "finalPath": "/auth/verify-email",
-      "overlayText": "",
-      "consoleErrors": [
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=F01xAOLyEN-Jx1q5oWXQM' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE",
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=F01xAOLyEN-Jx1q5oWXQM' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
-      ],
-      "pageErrors": [],
-      "screenshot": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\ui-redesign\\pilot-shots\\auth_verify_email-360.png",
-      "ok": true,
-      "fatal": false,
-      "redirected": false,
-      "reasons": []
-    },
-    {
-      "route": "/auth/verify-email",
-      "viewport": 768,
-      "status": 200,
-      "finalPath": "/auth/verify-email",
-      "overlayText": "",
-      "consoleErrors": [
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=Qkwp_XIN3wTuk0yx0YgyD' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE",
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=Qkwp_XIN3wTuk0yx0YgyD' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
-      ],
-      "pageErrors": [],
-      "screenshot": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\ui-redesign\\pilot-shots\\auth_verify_email-768.png",
-      "ok": true,
-      "fatal": false,
-      "redirected": false,
-      "reasons": []
-    },
-    {
-      "route": "/auth/verify-email",
-      "viewport": 1280,
-      "status": 200,
-      "finalPath": "/auth/verify-email",
-      "overlayText": "",
-      "consoleErrors": [
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=JnVdNUPgb8I9HxRU_3or9' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE",
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=JnVdNUPgb8I9HxRU_3or9' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
-      ],
-      "pageErrors": [],
-      "screenshot": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\ui-redesign\\pilot-shots\\auth_verify_email-1280.png",
-      "ok": true,
-      "fatal": false,
-      "redirected": false,
-      "reasons": []
-    },
-    {
-      "route": "/onboarding/learning-goal",
-      "viewport": 360,
-      "status": 200,
-      "finalPath": "/onboarding/learning-goal",
-      "overlayText": "",
-      "consoleErrors": [
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=2dcl3r9Xz6hJratj-704R' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE",
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=2dcl3r9Xz6hJratj-704R' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
-      ],
-      "pageErrors": [],
-      "screenshot": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\ui-redesign\\pilot-shots\\onboarding_learning_goal-360.png",
-      "ok": true,
-      "fatal": false,
-      "redirected": false,
-      "reasons": []
-    },
-    {
-      "route": "/onboarding/learning-goal",
-      "viewport": 768,
-      "status": 200,
-      "finalPath": "/onboarding/learning-goal",
-      "overlayText": "",
-      "consoleErrors": [
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=46mlGTgCpvOKhaGqoOeL6' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE",
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=46mlGTgCpvOKhaGqoOeL6' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
-      ],
-      "pageErrors": [],
-      "screenshot": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\ui-redesign\\pilot-shots\\onboarding_learning_goal-768.png",
-      "ok": true,
-      "fatal": false,
-      "redirected": false,
-      "reasons": []
-    },
-    {
-      "route": "/onboarding/learning-goal",
-      "viewport": 1280,
-      "status": 200,
-      "finalPath": "/onboarding/learning-goal",
-      "overlayText": "",
-      "consoleErrors": [
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=FxvVqEN73pcj6tXqcWcq5' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE",
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=FxvVqEN73pcj6tXqcWcq5' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
-      ],
-      "pageErrors": [],
-      "screenshot": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\ui-redesign\\pilot-shots\\onboarding_learning_goal-1280.png",
+      "screenshot": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\ui-redesign\\pilot-shots\\practice_problems-1280.png",
       "ok": true,
       "fatal": false,
       "redirected": false,
