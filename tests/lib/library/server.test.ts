@@ -73,6 +73,7 @@ describe("listLibraryItems(submissions)", () => {
       {
         id: "sub-1",
         problem_id: "p-1",
+        question_no: 53,
         submitted_at: "2026-05-21T01:00:00Z",
         char_count: 412,
       },
@@ -96,6 +97,7 @@ describe("listLibraryItems(submissions)", () => {
       kind: "submission",
       id: "sub-1",
       problem_id: "p-1",
+      question_no: 53,
       submitted_at: "2026-05-21T01:00:00Z",
       char_count: 412,
       item_id: "li-1",
@@ -248,7 +250,9 @@ describe("listLibraryItems(problems)", () => {
        
       makeClient({
         library_items: { data: items },
-        problems: { data: [{ id: "p-1", title: "TOPIK 53 — 도표 분석" }] },
+        problems: {
+          data: [{ id: "p-1", title: "TOPIK 53 — 도표 분석", question_no: 53 }],
+        },
       }) as never;
     const out = await listLibraryItems("u", "problems", create);
     expect(out).toEqual([
@@ -256,6 +260,7 @@ describe("listLibraryItems(problems)", () => {
         kind: "problem",
         id: "p-1",
         title: "TOPIK 53 — 도표 분석",
+        question_no: 53,
         item_id: "li-p1",
         tags: ["bookmark"],
       },
