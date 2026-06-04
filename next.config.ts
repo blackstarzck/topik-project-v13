@@ -17,8 +17,17 @@ const nextConfig: NextConfig = {
   // intentionally do NOT include a catch-all here — dynamic pages get
   // App Router's default cache behaviour (no-store for RSC).
   async headers() {
-    return [
-      {
+    const rules = [];
+    // `immutable` static caching is correct ONLY in production, where the build
+    // emits content-hashed, genuinely-immutable filenames. In `next dev` the
+    // chunk URLs are stable but their CONTENT changes on every edit, so
+    // `immutable, max-age=1yr` makes the browser pin a STALE chunk for a year and
+    // refuse to refetch — that breaks HMR and surfaces phantom "stale chunk"
+    // runtime errors (e.g. a console error pointing at code the source no longer
+    // contains). Next.js warns about exactly this ("Custom Cache-Control headers
+    // detected for /_next/static/:path*"). So apply it in production only.
+    if (process.env.NODE_ENV === "production") {
+      rules.push({
         source: "/_next/static/:path*",
         headers: [
           {
@@ -26,7 +35,9 @@ const nextConfig: NextConfig = {
             value: `public, max-age=${ONE_YEAR_SECONDS}, immutable`,
           },
         ],
-      },
+      });
+    }
+    rules.push(
       {
         source: "/icon.svg",
         headers: [
@@ -45,7 +56,8 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-    ];
+    );
+    return rules;
   },
 };
 

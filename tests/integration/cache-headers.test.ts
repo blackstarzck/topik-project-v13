@@ -14,14 +14,36 @@ describe("cache-headers — next.config headers()", () => {
     expect(catchAll).toBeUndefined();
   });
 
-  it("/_next/static/:path* receives Cache-Control immutable for a year", async () => {
-    const rules = await nextConfig.headers!();
-    const rule = rules.find((r) => r.source === "/_next/static/:path*");
-    expect(rule).toBeTruthy();
-    const cc = rule!.headers.find((h) => h.key === "Cache-Control");
-    expect(cc).toBeTruthy();
-    expect(cc!.value).toContain("immutable");
-    expect(cc!.value).toContain("max-age=31536000");
+  // The immutable year-long static cache is correct ONLY in production (the
+  // build emits content-hashed filenames). In `next dev` the chunk URLs are
+  // stable while their content changes on edit, so forcing `immutable` pins a
+  // stale chunk and breaks HMR (Next.js warns about this). Hence: prod-only.
+  it("applies the immutable year-long static cache in PRODUCTION only", async () => {
+    const prev = process.env.NODE_ENV;
+    try {
+      (process.env as { NODE_ENV?: string }).NODE_ENV = "production";
+      const rules = await nextConfig.headers!();
+      const rule = rules.find((r) => r.source === "/_next/static/:path*");
+      expect(rule, "static immutable rule must exist in production").toBeTruthy();
+      const cc = rule!.headers.find((h) => h.key === "Cache-Control");
+      expect(cc).toBeTruthy();
+      expect(cc!.value).toContain("immutable");
+      expect(cc!.value).toContain("max-age=31536000");
+    } finally {
+      (process.env as { NODE_ENV?: string }).NODE_ENV = prev;
+    }
+  });
+
+  it("does NOT force-cache /_next/static in development (prevents stale dev chunks)", async () => {
+    const prev = process.env.NODE_ENV;
+    try {
+      (process.env as { NODE_ENV?: string }).NODE_ENV = "development";
+      const rules = await nextConfig.headers!();
+      const rule = rules.find((r) => r.source === "/_next/static/:path*");
+      expect(rule, "static immutable rule must be absent in dev").toBeUndefined();
+    } finally {
+      (process.env as { NODE_ENV?: string }).NODE_ENV = prev;
+    }
   });
 
   it("/icon.svg and /favicon.ico receive a one-day must-revalidate header", async () => {
