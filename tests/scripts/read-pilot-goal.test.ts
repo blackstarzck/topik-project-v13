@@ -1,8 +1,9 @@
 import { describe, test, expect } from "vitest";
-import {
-  parsePilotGoal,
-  readPilotGoalRoutes,
-} from "../../scripts/read-pilot-goal.mjs";
+// The parser is a plain .mjs script with no type declarations (tsconfig
+// allowJs:false), so TS cannot resolve a typed import. The runtime export is
+// exercised by every assertion below (mirrors ai-workflow-check.test.ts).
+// @ts-expect-error -- .mjs script has no .d.ts; runtime contract verified here
+import { parsePilotGoal, readPilotGoalRoutes } from "../../scripts/read-pilot-goal.mjs";
 
 // A fixture mirroring the PLAN.md §Goal block shape, incl. the inline comments
 // that broke the first parser cut (validate-the-validator).
