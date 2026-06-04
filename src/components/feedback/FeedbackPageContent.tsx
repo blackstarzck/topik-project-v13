@@ -80,7 +80,7 @@ export function FeedbackPageContent({
       <Alert
         type="info"
         showIcon
-        message={t("loadFailedTitle")}
+        title={t("loadFailedTitle")}
         description={t("loadFailedDescription")}
       />
     );
@@ -90,13 +90,13 @@ export function FeedbackPageContent({
   const onReanalyze = () => router.refresh();
 
   return (
-    <Space direction="vertical" size="large" style={{ width: "100%" }}>
+    <Space orientation="vertical" size="large" style={{ width: "100%" }}>
       {/* 부분 피드백 — 가능한 항목만 표시하고 누락 사유 안내(description 예외). */}
       {partial ? (
         <Alert
           type="warning"
           showIcon
-          message={t("partialTitle")}
+          title={t("partialTitle")}
           description={t("partialDescription")}
         />
       ) : null}

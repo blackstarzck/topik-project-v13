@@ -56,13 +56,13 @@ export function RecommendationsView() {
         <Alert
           type="info"
           showIcon
-          message={t("reasonSummaryTitle")}
+          title={t("reasonSummaryTitle")}
           description={bundle.data.run.reasonSummary}
         />
       ) : null}
 
       {bundle.isLoading ? (
-        <Spin tip={t("loadingTip")}>
+        <Spin description={t("loadingTip")}>
           <div style={{ minHeight: 80 }} />
         </Spin>
       ) : bundle.error ? (
@@ -71,7 +71,7 @@ export function RecommendationsView() {
           <Alert
             type="error"
             showIcon
-            message={t("loadErrorTitle")}
+            title={t("loadErrorTitle")}
             description={
               bundle.error instanceof Error ? bundle.error.message : ""
             }

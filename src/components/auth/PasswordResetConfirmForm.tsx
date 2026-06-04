@@ -112,7 +112,7 @@ export function PasswordResetConfirmForm() {
             showIcon
             style={{ marginBottom: 16 }}
             data-testid="password-reset-confirm-error"
-            message={t("saveFailedTitle")}
+            title={t("saveFailedTitle")}
             description={
               <span>
                 {t("saveFailedDescriptionPrefix")}

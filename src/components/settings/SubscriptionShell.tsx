@@ -244,7 +244,7 @@ export function SubscriptionShell() {
 
   return (
     <main style={{ padding: 24, maxWidth: 1040, margin: "0 auto" }}>
-      <Space direction="vertical" size="large" style={{ width: "100%" }}>
+      <Space orientation="vertical" size="large" style={{ width: "100%" }}>
         <div>
           <Space>
             <Tag>X-04</Tag>
@@ -259,7 +259,7 @@ export function SubscriptionShell() {
 
         <Row gutter={[16, 16]}>
           <Col xs={24} md={15}>
-            <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+            <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
               {/* Region 2: 현재 구독 요약 */}
               <Card title={t("current.title")}>
                 {sub.status === "loading" ? (
@@ -268,7 +268,7 @@ export function SubscriptionShell() {
                   <Alert
                     type="error"
                     showIcon
-                    message={t("current.errorTitle")}
+                    title={t("current.errorTitle")}
                     description={sub.message}
                     action={
                       <Button size="small" onClick={reloadSubscription}>
@@ -277,7 +277,7 @@ export function SubscriptionShell() {
                     }
                   />
                 ) : sub.subscription === null ? (
-                  <Space direction="vertical" size={8} style={{ width: "100%" }}>
+                  <Space orientation="vertical" size={8} style={{ width: "100%" }}>
                     <Space>
                       <Text type="secondary">{t("current.statusLabel")}</Text>
                       <Tag>{t("current.noSubBadge")}</Tag>
@@ -405,7 +405,7 @@ export function SubscriptionShell() {
           {/* Region 5: 우측 도움말 */}
           <Col xs={24} md={9}>
             <Card title={t("help.title")}>
-              <Space direction="vertical" size={10} style={{ width: "100%" }}>
+              <Space orientation="vertical" size={10} style={{ width: "100%" }}>
                 <div>
                   <Text strong>{t("help.changePolicyTitle")}</Text>
                   <Paragraph type="secondary" style={{ marginBottom: 0 }}>

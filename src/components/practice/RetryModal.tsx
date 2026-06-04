@@ -204,7 +204,7 @@ export function RetryModal({
         onCancel={onClose}
         title={t("expiredTitle")}
         footer={null}
-        maskClosable
+        mask={{ closable: true }}
         destroyOnHidden
       >
         {summary}
@@ -212,7 +212,7 @@ export function RetryModal({
           type="warning"
           showIcon
           style={{ marginBottom: 12 }}
-          message={t("expiredMessage")}
+          title={t("expiredMessage")}
           description={t("expiredDescription")}
         />
         <Button block onClick={onClose}>
@@ -228,7 +228,7 @@ export function RetryModal({
       onCancel={risky ? undefined : onClose}
       title={t("title")}
       footer={null}
-      maskClosable={!risky}
+      mask={{ closable: !risky }}
       keyboard={!risky}
       destroyOnHidden
     >
@@ -270,7 +270,7 @@ export function RetryModal({
           type="error"
           showIcon
           style={{ marginBottom: 12 }}
-          message={t("startFailedTitle")}
+          title={t("startFailedTitle")}
           description={t(startErrorKey)}
         />
       ) : null}

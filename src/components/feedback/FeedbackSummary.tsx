@@ -27,7 +27,7 @@ export function FeedbackSummary({ feedback }: Props) {
         <Alert
           type="warning"
           showIcon
-          message={t("scoreFailedTitle")}
+          title={t("scoreFailedTitle")}
           description={t("scoreFailedDescription")}
         />
       </AppCard>

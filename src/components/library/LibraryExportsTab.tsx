@@ -155,7 +155,7 @@ export function LibraryExportsTab({
     return (
       <Alert
         type="error"
-        message={t("loadError")}
+        title={t("loadError")}
         description={
           query.error instanceof Error ? query.error.message : undefined
         }
@@ -194,7 +194,7 @@ export function LibraryExportsTab({
               ),
             ]}
           >
-            <Space direction="vertical" size={4} style={{ width: "100%" }}>
+            <Space orientation="vertical" size={4} style={{ width: "100%" }}>
               <Text strong>
                 {t(exportSourceLabelKey(item.source_type) as Parameters<typeof t>[0])}
               </Text>

@@ -217,7 +217,7 @@ export function WritingEditor({
   }
 
   return (
-    <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+    <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
       {/* D-02 §2 — 작성 조건 카드 (52번만; 51번은 지문 자체가 조건). */}
       {questionNo === 52 ? (
         <ConditionsPanel questionNo={52} rubric={rubric} />

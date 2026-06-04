@@ -36,7 +36,7 @@ export default async function ProfilePage() {
       <h1>{t("heading")}</h1>
       <Row gutter={[16, 16]}>
         <Col xs={24} md={14}>
-          <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+          <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
             <ProfileForm
               userId={user.id}
               accountEmail={user.email ?? null}
@@ -50,7 +50,7 @@ export default async function ProfilePage() {
           </Space>
         </Col>
         <Col xs={24} md={10}>
-          <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+          <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
             <ExamInfoCard
               userId={user.id}
               goal={

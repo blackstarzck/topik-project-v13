@@ -1,0 +1,1187 @@
+{
+  "issues": [
+    {
+      "file": "src\\app\\(workspace)\\profile\\page.tsx",
+      "line": 39,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\app\\(workspace)\\profile\\page.tsx",
+      "line": 53,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\admin\\AdminAuditLogDrawer.tsx",
+      "line": 120,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Drawer `width` is deprecated. Width of the Drawer dialog, please use `size` instead"
+    },
+    {
+      "file": "src\\components\\admin\\AdminAuditLogDrawer.tsx",
+      "line": 137,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\admin\\AdminHub.tsx",
+      "line": 73,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\admin\\AdminHub.tsx",
+      "line": 103,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\admin\\AdminOrgAssignmentModal.tsx",
+      "line": 109,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\admin\\AdminOrgAssignmentModal.tsx",
+      "line": 111,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\admin\\AdminOrgAssignmentModal.tsx",
+      "line": 111,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `onClose` is deprecated. Callback when Alert is closed, please use `closable.onClose` instead"
+    },
+    {
+      "file": "src\\components\\admin\\AdminOrgAssignmentModal.tsx",
+      "line": 122,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\admin\\AdminOrgKpiCards.tsx",
+      "line": 42,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Statistic `valueStyle` is deprecated. Set value section style, please use `styles.content` instead"
+    },
+    {
+      "file": "src\\components\\admin\\AdminOrgKpiCards.tsx",
+      "line": 114,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\admin\\AdminOrgKpiCards.tsx",
+      "line": 124,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\admin\\AdminOrgPerUserTable.tsx",
+      "line": 65,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\admin\\AdminOrgPerUserTable.tsx",
+      "line": 125,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\admin\\AdminOrgUserDetailPanel.tsx",
+      "line": 47,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Drawer `width` is deprecated. Width of the Drawer dialog, please use `size` instead"
+    },
+    {
+      "file": "src\\components\\admin\\AdminOrgUserDetailPanel.tsx",
+      "line": 54,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\admin\\AdminProblemAssetsManager.tsx",
+      "line": 109,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\admin\\AdminProblemAssetsManager.tsx",
+      "line": 111,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\admin\\AdminProblemAssetsManager.tsx",
+      "line": 111,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `onClose` is deprecated. Callback when Alert is closed, please use `closable.onClose` instead"
+    },
+    {
+      "file": "src\\components\\admin\\AdminProblemDetailPanel.tsx",
+      "line": 215,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\admin\\AdminProblemDetailPanel.tsx",
+      "line": 249,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Drawer `width` is deprecated. Width of the Drawer dialog, please use `size` instead"
+    },
+    {
+      "file": "src\\components\\admin\\AdminProblemDetailPanel.tsx",
+      "line": 270,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\admin\\AdminProblemDetailPanel.tsx",
+      "line": 272,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\admin\\AdminProblemDetailPanel.tsx",
+      "line": 272,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `onClose` is deprecated. Callback when Alert is closed, please use `closable.onClose` instead"
+    },
+    {
+      "file": "src\\components\\admin\\AdminProblemDetailPanel.tsx",
+      "line": 279,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\admin\\AdminProblemDetailPanel.tsx",
+      "line": 288,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\admin\\AdminProblemKpiBand.tsx",
+      "line": 98,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Statistic `valueStyle` is deprecated. Set value section style, please use `styles.content` instead"
+    },
+    {
+      "file": "src\\components\\admin\\AdminProblemTable.tsx",
+      "line": 192,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\admin\\AdminProblemTable.tsx",
+      "line": 249,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\admin\\AdminUserDetailPanel.tsx",
+      "line": 76,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\admin\\AdminUserDetailPanel.tsx",
+      "line": 115,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Drawer `width` is deprecated. Width of the Drawer dialog, please use `size` instead"
+    },
+    {
+      "file": "src\\components\\admin\\AdminUserDetailPanel.tsx",
+      "line": 124,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\admin\\AdminUserDetailPanel.tsx",
+      "line": 126,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\admin\\AdminUserDetailPanel.tsx",
+      "line": 126,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `onClose` is deprecated. Callback when Alert is closed, please use `closable.onClose` instead"
+    },
+    {
+      "file": "src\\components\\admin\\AdminUserDetailPanel.tsx",
+      "line": 133,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\admin\\AdminUserKpiBand.tsx",
+      "line": 64,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Statistic `valueStyle` is deprecated. Set value section style, please use `styles.content` instead"
+    },
+    {
+      "file": "src\\components\\admin\\AdminUserKpiBand.tsx",
+      "line": 74,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Statistic `valueStyle` is deprecated. Set value section style, please use `styles.content` instead"
+    },
+    {
+      "file": "src\\components\\admin\\AdminUserRoleMenu.tsx",
+      "line": 67,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\admin\\AdminUserRoleMenu.tsx",
+      "line": 94,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\admin\\AdminUserRoleModal.tsx",
+      "line": 79,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\admin\\AdminUserRoleModal.tsx",
+      "line": 98,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\admin\\AdminUsersConsole.tsx",
+      "line": 290,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\admin\\AdminUsersConsole.tsx",
+      "line": 321,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\admin\\AdminUsersConsole.tsx",
+      "line": 328,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\admin\\AdminUsersConsole.tsx",
+      "line": 364,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\admin\\AdminUsersConsole.tsx",
+      "line": 366,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `onClose` is deprecated. Callback when Alert is closed, please use `closable.onClose` instead"
+    },
+    {
+      "file": "src\\components\\admin\\AdminUserTable.tsx",
+      "line": 149,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\admin\\AdminUserTable.tsx",
+      "line": 195,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\auth\\LoginForm.tsx",
+      "line": 176,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\auth\\LoginForm.tsx",
+      "line": 187,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\auth\\PasswordResetConfirmForm.tsx",
+      "line": 115,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\dashboard\\DashboardAlertsCard.tsx",
+      "line": 49,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\dashboard\\DashboardAlertsCard.tsx",
+      "line": 69,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\feedback\\AnalysisLoadingModal.tsx",
+      "line": 184,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\feedback\\AnalysisLoadingModal.tsx",
+      "line": 209,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\feedback\\AnalysisLoadingModal.tsx",
+      "line": 225,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Steps `direction` is deprecated. To specify the direction of the step bar, `horizontal` or `vertical`"
+    },
+    {
+      "file": "src\\components\\feedback\\AnalysisLoadingModal.tsx",
+      "line": 240,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\feedback\\DetailedFeedbackPanel.tsx",
+      "line": 64,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\feedback\\FeedbackPageContent.tsx",
+      "line": 83,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\feedback\\FeedbackPageContent.tsx",
+      "line": 93,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\feedback\\FeedbackPageContent.tsx",
+      "line": 99,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\feedback\\FeedbackRecommendationCards.tsx",
+      "line": 81,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\feedback\\FeedbackSummary.tsx",
+      "line": 30,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\growth\\GrowthDashboard.tsx",
+      "line": 159,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\growth\\GrowthDashboard.tsx",
+      "line": 208,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Statistic `valueStyle` is deprecated. Set value section style, please use `styles.content` instead"
+    },
+    {
+      "file": "src\\components\\growth\\GrowthDashboard.tsx",
+      "line": 250,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\growth\\GrowthDashboard.tsx",
+      "line": 281,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\growth\\GrowthDashboard.tsx",
+      "line": 287,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\growth\\GrowthDashboard.tsx",
+      "line": 358,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\growth\\GrowthDashboard.tsx",
+      "line": 371,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\growth\\GrowthLockedReport.tsx",
+      "line": 25,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\growth\\GrowthTrendChart.tsx",
+      "line": 111,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\growth\\GrowthTrendChart.tsx",
+      "line": 171,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\learning\\AlertsCard.tsx",
+      "line": 24,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\learning\\AlertsCard.tsx",
+      "line": 28,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\learning\\AlertsCard.tsx",
+      "line": 36,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\legal\\TermsContent.tsx",
+      "line": 22,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\library\\LibraryExportsTab.tsx",
+      "line": 158,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\library\\LibraryExportsTab.tsx",
+      "line": 197,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\library\\LibraryItemRow.tsx",
+      "line": 113,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\library\\LibraryReportsTab.tsx",
+      "line": 55,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\library\\LibraryReportsTab.tsx",
+      "line": 92,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\library\\LibrarySavedProblemsTab.tsx",
+      "line": 47,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\library\\LibrarySavedProblemsTab.tsx",
+      "line": 92,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\library\\LibraryStatsPanel.tsx",
+      "line": 88,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\library\\LibrarySubmissionsTab.tsx",
+      "line": 182,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\library\\LibrarySubmissionsTab.tsx",
+      "line": 196,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\library\\LibrarySubmissionsTab.tsx",
+      "line": 271,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\library\\LibraryTabs.tsx",
+      "line": 158,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\library\\PdfExportModal.tsx",
+      "line": 173,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\library\\PdfExportModal.tsx",
+      "line": 178,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\library\\PdfExportModal.tsx",
+      "line": 203,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Input `addonAfter` is deprecated. The label text displayed after (on the right side of) the input field, please use Space.Compact instead"
+    },
+    {
+      "file": "src\\components\\library\\PdfExportModal.tsx",
+      "line": 208,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\library\\PdfExportModal.tsx",
+      "line": 262,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\library\\PdfExportModal.tsx",
+      "line": 264,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\library\\PdfExportModal.tsx",
+      "line": 329,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\library\\PdfExportModal.tsx",
+      "line": 331,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\library\\PdfExportModal.tsx",
+      "line": 353,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\library\\PdfExportModal.tsx",
+      "line": 355,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\practice\\AlternativeCardsGrid.tsx",
+      "line": 96,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\practice\\DiagnosticCard.tsx",
+      "line": 54,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\practice\\NextProblemView.tsx",
+      "line": 138,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\practice\\NextProblemView.tsx",
+      "line": 176,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\practice\\NextProblemView.tsx",
+      "line": 233,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\practice\\ProblemListView.tsx",
+      "line": 187,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\practice\\RecommendationsView.tsx",
+      "line": 59,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\practice\\RecommendationsView.tsx",
+      "line": 65,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Spin `tip` is deprecated. Customize description content when Spin has children. Deprecated, use `description` instead"
+    },
+    {
+      "file": "src\\components\\practice\\RecommendationsView.tsx",
+      "line": 74,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\practice\\RetryModal.tsx",
+      "line": 215,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\practice\\RetryModal.tsx",
+      "line": 273,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\practice\\WeaknessView.tsx",
+      "line": 183,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\practice\\WeaknessView.tsx",
+      "line": 202,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\practice\\WeaknessView.tsx",
+      "line": 206,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\practice\\WeaknessView.tsx",
+      "line": 211,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\practice\\WeaknessView.tsx",
+      "line": 217,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\practice\\WeaknessView.tsx",
+      "line": 223,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\practice\\WeaknessView.tsx",
+      "line": 235,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\practice\\WeaknessView.tsx",
+      "line": 260,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\practice\\WeaknessView.tsx",
+      "line": 272,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\practice\\WeaknessView.tsx",
+      "line": 286,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\practice\\WeaknessView.tsx",
+      "line": 330,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\profile\\ExamInfoCard.tsx",
+      "line": 213,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Empty `imageStyle` is deprecated. The style of image, please use `styles.image` instead"
+    },
+    {
+      "file": "src\\components\\profile\\ProfileForm.tsx",
+      "line": 355,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\profile\\ProfileForm.tsx",
+      "line": 367,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\profile\\StatusHelpCard.tsx",
+      "line": 53,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\reports\\ComparisonKpiBlock.tsx",
+      "line": 66,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Statistic `valueStyle` is deprecated. Set value section style, please use `styles.content` instead"
+    },
+    {
+      "file": "src\\components\\reports\\ComparisonReportView.tsx",
+      "line": 95,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\reports\\ComparisonReportView.tsx",
+      "line": 119,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\settings\\LanguageForm.tsx",
+      "line": 237,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\settings\\LanguageForm.tsx",
+      "line": 245,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\settings\\LanguageForm.tsx",
+      "line": 265,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\settings\\LanguageForm.tsx",
+      "line": 282,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\settings\\LanguageForm.tsx",
+      "line": 301,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\settings\\LanguageForm.tsx",
+      "line": 305,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\settings\\LanguageForm.tsx",
+      "line": 365,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\settings\\LanguageForm.tsx",
+      "line": 394,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\settings\\NotificationPrefsForm.tsx",
+      "line": 320,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\settings\\NotificationPrefsForm.tsx",
+      "line": 340,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\settings\\NotificationPrefsForm.tsx",
+      "line": 355,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\settings\\NotificationPrefsForm.tsx",
+      "line": 375,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\settings\\NotificationPrefsForm.tsx",
+      "line": 380,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\settings\\NotificationPrefsForm.tsx",
+      "line": 390,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\settings\\NotificationPrefsForm.tsx",
+      "line": 410,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\settings\\NotificationPrefsForm.tsx",
+      "line": 533,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\settings\\PaywallShell.tsx",
+      "line": 108,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\settings\\PaywallShell.tsx",
+      "line": 149,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\settings\\PaywallShell.tsx",
+      "line": 174,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\settings\\PaywallShell.tsx",
+      "line": 235,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\settings\\PaywallShell.tsx",
+      "line": 260,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\settings\\SubscriptionShell.tsx",
+      "line": 247,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\settings\\SubscriptionShell.tsx",
+      "line": 262,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\settings\\SubscriptionShell.tsx",
+      "line": 271,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\settings\\SubscriptionShell.tsx",
+      "line": 280,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\settings\\SubscriptionShell.tsx",
+      "line": 408,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\shared\\AppLoading.tsx",
+      "line": 18,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Spin `tip` is deprecated. Customize description content when Spin has children. Deprecated, use `description` instead"
+    },
+    {
+      "file": "src\\components\\shared\\PlaceholderPage.tsx",
+      "line": 16,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\writing\\AutosaveWarningModal.tsx",
+      "line": 111,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\writing\\AutosaveWarningModal.tsx",
+      "line": 137,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\writing\\ChecklistRow.tsx",
+      "line": 25,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\writing\\ConditionsPanel.tsx",
+      "line": 119,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\writing\\ConditionsPanel.tsx",
+      "line": 128,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\writing\\HelpPanel.tsx",
+      "line": 74,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\writing\\LongFormEditor.tsx",
+      "line": 381,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\writing\\ReferenceMaterials.tsx",
+      "line": 37,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    },
+    {
+      "file": "src\\components\\writing\\SubmissionConfirmModal.tsx",
+      "line": 86,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\writing\\SubmissionConfirmModal.tsx",
+      "line": 96,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Alert `message` is deprecated. Content of Alert, please use `title` instead"
+    },
+    {
+      "file": "src\\components\\writing\\WritingEditor.tsx",
+      "line": 220,
+      "rule": "deprecated",
+      "severity": "warning",
+      "message": "Space `direction` is deprecated. The space direction"
+    }
+  ],
+  "summary": {
+    "total": 168,
+    "deprecated": 168,
+    "a11y": 0,
+    "usage": 0,
+    "performance": 0
+  }
+}

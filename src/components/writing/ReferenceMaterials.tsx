@@ -34,7 +34,7 @@ export function ReferenceMaterials({ assets, captions }: Props) {
 
   return (
     <AppCard size="small" title={t("cardTitle")}>
-      <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+      <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
         {assets.map((asset) => (
           <AssetView
             key={asset.id}

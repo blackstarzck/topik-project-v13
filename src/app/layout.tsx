@@ -55,7 +55,14 @@ export default async function RootLayout({
       lang={locale}
       style={{ ...cssVars, colorScheme: appearance } as React.CSSProperties}
     >
-      <body>
+      {/*
+       * suppressHydrationWarning (body 1-level 한정): Demoway 같은 브라우저 확장은
+       * SSR HTML을 받은 뒤 hydration 직전에 <body>에 data-* 속성
+       * (예: data-demoway-document-id)을 주입한다. 우리 코드 밖의 변형이므로
+       * React가 body "자체"의 속성 차이만 무시하게 한다. 자식 트리에는 전파되지
+       * 않아 실제 마크업 mismatch는 그대로 검출된다.
+       */}
+      <body suppressHydrationWarning>
         {/*
          * AntdRegistry prevents first-screen AntD component style flash.
          * It extracts and injects AntD styles during SSR streaming.

@@ -110,7 +110,7 @@ export function LibraryItemRow({
       trigger="click"
       title={t("editTags")}
       content={
-        <Space direction="vertical" style={{ width: 220 }} size="small">
+        <Space orientation="vertical" style={{ width: 220 }} size="small">
           <Input
             value={draftTags}
             onChange={(e) => setDraftTags(e.target.value)}

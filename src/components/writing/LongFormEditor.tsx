@@ -378,7 +378,7 @@ export function LongFormEditor({
   );
 
   return (
-    <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+    <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
       {/* D-03 평가 기준 / D-04 조건·루브릭 카드 (problems.rubric). */}
       <ConditionsPanel questionNo={questionNo} rubric={rubric} />
 

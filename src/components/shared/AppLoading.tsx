@@ -15,7 +15,7 @@ export function AppLoading({ tip }: { tip?: string }) {
         padding: "4rem 1rem",
       }}
     >
-      <Spin tip={tip ?? t("tip")} size="large" />
+      <Spin description={tip ?? t("tip")} size="large" />
     </div>
   );
 }

@@ -50,7 +50,7 @@ export function StatusHelpCard({
           type="warning"
           showIcon
           style={{ marginBottom: 12 }}
-          message={t("policyWarningTitle")}
+          title={t("policyWarningTitle")}
           description={t("policyWarningDescription")}
         />
       ) : null}

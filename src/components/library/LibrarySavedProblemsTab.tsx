@@ -44,7 +44,7 @@ export function LibrarySavedProblemsTab({
     return (
       <Alert
         type="error"
-        message={t("loadError")}
+        title={t("loadError")}
         description={
           query.error instanceof Error ? query.error.message : undefined
         }
@@ -89,7 +89,7 @@ export function LibrarySavedProblemsTab({
             </Link>,
           ]}
         >
-          <Space direction="vertical" size={2} style={{ width: "100%" }}>
+          <Space orientation="vertical" size={2} style={{ width: "100%" }}>
             <Text strong>{item.title}</Text>
           </Space>
         </LibraryItemRow>

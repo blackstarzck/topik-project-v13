@@ -21,11 +21,11 @@ type Props = {
 export function AlertsCard({ alerts }: Props) {
   return (
     <Card title="알림">
-      <Space direction="vertical" style={{ width: "100%" }}>
+      <Space orientation="vertical" style={{ width: "100%" }}>
         {alerts.length === 0 ? (
           <Alert
             type="info"
-            message="새 알림이 없어요."
+            title="새 알림이 없어요."
             showIcon
           />
         ) : (
@@ -33,7 +33,7 @@ export function AlertsCard({ alerts }: Props) {
             <Alert
               key={a.id}
               type={a.level}
-              message={a.title}
+              title={a.title}
               description={a.description}
               showIcon
             />

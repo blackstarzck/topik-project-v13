@@ -173,7 +173,7 @@ export function LoginForm() {
         <Alert
           type={activeNotice.tone}
           showIcon
-          message={
+          title={
             activeNotice.text ?? (activeNotice.key ? t(activeNotice.key) : "")
           }
           style={{ marginBottom: 16 }}
@@ -184,7 +184,7 @@ export function LoginForm() {
         <Alert
           type="info"
           showIcon
-          message={t("failedAttemptsHint")}
+          title={t("failedAttemptsHint")}
           style={{ marginBottom: 16 }}
           data-testid="login-failed-hint"
         />

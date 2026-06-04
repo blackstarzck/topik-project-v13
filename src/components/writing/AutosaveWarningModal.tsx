@@ -98,7 +98,7 @@ export function AutosaveWarningModal({
       }
       closable={false}
       footer={null}
-      maskClosable={false}
+      mask={{ closable: false }}
     >
       <Paragraph style={{ whiteSpace: "pre-line" }}>{body}</Paragraph>
 
@@ -108,7 +108,7 @@ export function AutosaveWarningModal({
           type="warning"
           showIcon
           style={{ marginBottom: 12 }}
-          message={warn}
+          title={warn}
         />
       ) : null}
 
@@ -134,7 +134,7 @@ export function AutosaveWarningModal({
         </Paragraph>
       ) : null}
 
-      <Space direction="vertical" style={{ width: "100%" }}>
+      <Space orientation="vertical" style={{ width: "100%" }}>
         <Button block onClick={onKeep}>
           {t("keepAutosave")}
         </Button>

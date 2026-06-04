@@ -155,7 +155,7 @@ export function LibraryTabs({ activeTab, initialItems }: Props) {
   ];
 
   return (
-    <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+    <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
       <Input.Search
         allowClear
         value={searchTerm}

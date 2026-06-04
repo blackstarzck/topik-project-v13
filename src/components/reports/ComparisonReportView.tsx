@@ -92,7 +92,7 @@ export function ComparisonReportView({
   }
 
   return (
-    <Space direction="vertical" size="large" style={{ width: "100%" }}>
+    <Space orientation="vertical" size="large" style={{ width: "100%" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <Title level={4} style={{ margin: 0 }}>
           {t("heading")}
@@ -116,7 +116,7 @@ export function ComparisonReportView({
           <Alert
             type="warning"
             showIcon
-            message={t("narrativeFailedTitle")}
+            title={t("narrativeFailedTitle")}
             description={t("narrativeFailedDescription")}
             action={
               <Button size="small" onClick={() => router.refresh()}>

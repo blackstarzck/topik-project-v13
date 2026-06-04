@@ -79,9 +79,9 @@ export function PdfExportModal({ open, onClose, selection }: Props) {
       onCancel={onClose}
       title={t("modalTitle")}
       width={680}
-      maskClosable={false}
+      mask={{ closable: false }}
       footer={null}
-      destroyOnClose
+      destroyOnHidden
     >
       {open ? (
         <PdfExportModalBody onClose={onClose} selection={selection} />
@@ -170,12 +170,12 @@ function PdfExportModalBody({
           }
         />
       ) : (
-        <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+        <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
           {tooMany ? (
             <Alert
               type="warning"
               showIcon
-              message={t("tooManyTitle", { max: MAX_ITEMS })}
+              title={t("tooManyTitle", { max: MAX_ITEMS })}
               description={t("tooManyDescription", { count: selection.length })}
             />
           ) : null}
@@ -195,17 +195,25 @@ function PdfExportModalBody({
               }
               style={{ marginBottom: 12 }}
             >
-              <Input
-                value={filename}
-                onChange={(e) => setFilename(e.target.value)}
-                maxLength={FILENAME_MAX}
-                aria-label={t("filenameAriaLabel")}
-                addonAfter=".pdf"
-              />
+              <Space.Compact style={{ width: "100%" }}>
+                <Input
+                  value={filename}
+                  onChange={(e) => setFilename(e.target.value)}
+                  maxLength={FILENAME_MAX}
+                  aria-label={t("filenameAriaLabel")}
+                />
+                <Input
+                  disabled
+                  aria-hidden
+                  tabIndex={-1}
+                  value=".pdf"
+                  style={{ width: 56, textAlign: "center" }}
+                />
+              </Space.Compact>
             </Form.Item>
 
             <Form.Item label={t("includeLabel")} style={{ marginBottom: 12 }}>
-              <Space direction="vertical">
+              <Space orientation="vertical">
                 <Checkbox
                   checked={includeAnswers}
                   onChange={(e) => setIncludeAnswers(e.target.checked)}
@@ -259,9 +267,9 @@ function PdfExportModalBody({
                 style={{ marginTop: 8 }}
                 type="warning"
                 showIcon
-                message={t("previewFailedTitle")}
+                title={t("previewFailedTitle")}
                 description={
-                  <Space direction="vertical">
+                  <Space orientation="vertical">
                     <Text type="secondary">
                       {t("previewSummary", {
                         count: previewItems.length,
@@ -326,9 +334,9 @@ function PdfExportModalBody({
             <Alert
               type="error"
               showIcon
-              message={t("errorTitle")}
+              title={t("errorTitle")}
               description={
-                <Space direction="vertical">
+                <Space orientation="vertical">
                   <Text type="secondary">{gen.message}</Text>
                   <Space>
                     <Button size="small" type="primary" onClick={handleExport}>
@@ -350,9 +358,9 @@ function PdfExportModalBody({
             <Alert
               type="success"
               showIcon
-              message={t("doneTitle")}
+              title={t("doneTitle")}
               description={
-                <Space direction="vertical">
+                <Space orientation="vertical">
                   <Text type="secondary">{t("doneDescription")}</Text>
                   <Space>
                     <Button size="small" type="primary" onClick={handleExport}>

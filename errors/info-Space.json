@@ -1,0 +1,103 @@
+{
+  "name": "Space",
+  "nameZh": "间距",
+  "description": "Set components spacing.",
+  "props": [
+    {
+      "name": "align",
+      "type": "`start` | `end` |`center` |`baseline`",
+      "default": "-",
+      "since": "4.2.0"
+    },
+    {
+      "name": "classNames",
+      "type": "Record<[SemanticDOM](#semantic-dom), string> | (info: { props: SpaceProps })=> Record<[SemanticDOM](#semantic-dom), string>",
+      "default": "-",
+      "since": ""
+    },
+    {
+      "name": "direction",
+      "type": "`vertical` | `horizontal`",
+      "default": "`horizontal`",
+      "since": "4.1.0"
+    },
+    {
+      "name": "orientation",
+      "type": "`vertical` | `horizontal`",
+      "default": "`horizontal`",
+      "since": ""
+    },
+    {
+      "name": "size",
+      "type": "[Size](#size) | [Size\\[\\]](#size)",
+      "default": "`small`",
+      "since": "4.1.0 | Array: 4.9.0"
+    },
+    {
+      "name": "split",
+      "type": "ReactNode",
+      "default": "-",
+      "since": "4.7.0"
+    },
+    {
+      "name": "separator",
+      "type": "ReactNode",
+      "default": "-",
+      "since": "-"
+    },
+    {
+      "name": "styles",
+      "type": "Record<[SemanticDOM](#semantic-dom), CSSProperties> | (info: { props: SpaceProps })=> Record<[SemanticDOM](#semantic-dom), CSSProperties>",
+      "default": "-",
+      "since": ""
+    },
+    {
+      "name": "vertical",
+      "type": "boolean",
+      "default": "false",
+      "since": "-"
+    },
+    {
+      "name": "wrap",
+      "type": "boolean",
+      "default": "false",
+      "since": "4.9.0"
+    }
+  ],
+  "subComponentProps": {
+    "Space.Compact": [
+      {
+        "name": "block",
+        "type": "boolean",
+        "default": "false"
+      },
+      {
+        "name": "direction",
+        "type": "`vertical` | `horizontal`",
+        "default": "`horizontal`"
+      },
+      {
+        "name": "orientation",
+        "type": "`vertical` | `horizontal`",
+        "default": "`horizontal`"
+      },
+      {
+        "name": "vertical",
+        "type": "boolean",
+        "default": "false"
+      },
+      {
+        "name": "size",
+        "type": "`large` | `middle` | `small`",
+        "default": "`middle`"
+      }
+    ],
+    "Space.Addon": [
+      {
+        "name": "children",
+        "type": "ReactNode",
+        "default": "-"
+      }
+    ]
+  }
+}

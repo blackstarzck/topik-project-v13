@@ -105,7 +105,7 @@ export function PaywallShell() {
 
   return (
     <main style={{ padding: 24, maxWidth: 1040, margin: "0 auto" }}>
-      <Space direction="vertical" size="large" style={{ width: "100%" }}>
+      <Space orientation="vertical" size="large" style={{ width: "100%" }}>
         {/* Region 1: 결제 선택 제목 */}
         <div>
           <Space>
@@ -146,7 +146,7 @@ export function PaywallShell() {
               <Alert
                 type="info"
                 showIcon
-                message={t("noPlans.title")}
+                title={t("noPlans.title")}
                 description={t("noPlans.body")}
               />
             ) : (
@@ -171,7 +171,7 @@ export function PaywallShell() {
                         }
                       >
                         <Space
-                          direction="vertical"
+                          orientation="vertical"
                           size={10}
                           style={{ width: "100%" }}
                         >
@@ -232,7 +232,7 @@ export function PaywallShell() {
               <Col xs={24} md={14}>
                 <Card title={t("benefits.title")}>
                   <Space
-                    direction="vertical"
+                    orientation="vertical"
                     size={4}
                     style={{ width: "100%" }}
                   >
@@ -257,7 +257,7 @@ export function PaywallShell() {
               <Col xs={24} md={10}>
                 <Card title={t("paymentInfo.title")}>
                   <Space
-                    direction="vertical"
+                    orientation="vertical"
                     size={4}
                     style={{ width: "100%" }}
                   >

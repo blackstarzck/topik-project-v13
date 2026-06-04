@@ -19,7 +19,7 @@ export function TermsContent() {
   const t = useTranslations("legal.terms");
   return (
     <Card style={{ maxWidth: 720, margin: "0 auto" }}>
-      <Space direction="vertical" size="large" style={{ width: "100%" }}>
+      <Space orientation="vertical" size="large" style={{ width: "100%" }}>
         {/* §1 법적 고지 페이지 (제목 + 임시 약관 안내) */}
         <div>
           <Title level={2} style={{ marginBottom: 8 }}>

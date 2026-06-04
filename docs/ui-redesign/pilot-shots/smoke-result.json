@@ -1,71 +1,47 @@
 {
   "baseSha": null,
-  "headSha": "4e0cc3d",
+  "headSha": "ba994b8",
   "booted": true,
   "reused": true,
   "changedFiles": [],
   "requiredRoutes": [
-    "/library"
+    "/profile",
+    "/dashboard"
   ],
   "excludedRoutes": [],
   "overApproximated": false,
   "testedRoutes": [
-    "/library"
+    "/dashboard",
+    "/profile"
   ],
   "viewports": [
-    360,
-    768,
     1280
   ],
-  "storageStatePath": "tests/e2e/auth-state/student.json",
+  "storageStatePath": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\tests\\e2e\\auth-state\\student.json",
   "perRouteResult": [
     {
-      "route": "/library",
-      "viewport": 360,
-      "status": 200,
-      "finalPath": "/library",
-      "overlayText": "",
-      "consoleErrors": [
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=65CbunEUjwrF7G1N4avwd' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE",
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=65CbunEUjwrF7G1N4avwd' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE",
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=65CbunEUjwrF7G1N4avwd' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
-      ],
-      "pageErrors": [],
-      "screenshot": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\ui-redesign\\pilot-shots\\library-360.png",
-      "ok": true,
-      "fatal": false,
-      "redirected": false,
-      "reasons": []
-    },
-    {
-      "route": "/library",
-      "viewport": 768,
-      "status": 200,
-      "finalPath": "/library",
-      "overlayText": "",
-      "consoleErrors": [
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=dJkW3jqBJ-i-XsDpv7SMn' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE",
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=dJkW3jqBJ-i-XsDpv7SMn' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
-      ],
-      "pageErrors": [],
-      "screenshot": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\ui-redesign\\pilot-shots\\library-768.png",
-      "ok": true,
-      "fatal": false,
-      "redirected": false,
-      "reasons": []
-    },
-    {
-      "route": "/library",
+      "route": "/profile",
       "viewport": 1280,
       "status": 200,
-      "finalPath": "/library",
+      "finalPath": "/profile",
       "overlayText": "",
-      "consoleErrors": [
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=I7jXXEcEp2NOYe1n1cvIc' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE",
-        "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=I7jXXEcEp2NOYe1n1cvIc' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
-      ],
+      "consoleErrors": [],
       "pageErrors": [],
-      "screenshot": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\ui-redesign\\pilot-shots\\library-1280.png",
+      "screenshot": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\ui-redesign\\pilot-shots\\profile-1280.png",
+      "ok": true,
+      "fatal": false,
+      "redirected": false,
+      "reasons": []
+    },
+    {
+      "route": "/dashboard",
+      "viewport": 1280,
+      "status": 200,
+      "finalPath": "/dashboard",
+      "overlayText": "",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\ui-redesign\\pilot-shots\\dashboard-1280.png",
       "ok": true,
       "fatal": false,
       "redirected": false,

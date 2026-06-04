@@ -78,7 +78,7 @@ export function FeedbackRecommendationCards({ dimensions }: Props) {
                 data-testid={`feedback-reco-${d.dimension}`}
                 style={{ height: "100%" }}
               >
-                <Space direction="vertical" size={4} style={{ width: "100%" }}>
+                <Space orientation="vertical" size={4} style={{ width: "100%" }}>
                   <Tag color="blue">{t(`label.${d.dimension}`)}</Tag>
                   <Text strong>{recoTitle}</Text>
                   <Text

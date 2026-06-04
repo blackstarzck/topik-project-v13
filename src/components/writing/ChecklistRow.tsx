@@ -22,7 +22,7 @@ export function ChecklistRow({ label, status, onChange }: Props) {
   ];
   return (
     <Space
-      direction="vertical"
+      orientation="vertical"
       size={2}
       style={{ width: "100%", marginBottom: 12 }}
     >

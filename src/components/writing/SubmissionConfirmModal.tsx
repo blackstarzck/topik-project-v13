@@ -56,7 +56,7 @@ export function SubmissionConfirmModal({
       cancelText={tCommon("cancel")}
       okButtonProps={{ disabled: !enough || !agreed || loading, loading }}
       // §4 — 제출 처리 중에는 배경 클릭/ESC 로 닫히지 않게(중복/오작동 방지).
-      maskClosable={!loading}
+      mask={{ closable: !loading }}
       keyboard={!loading}
       destroyOnHidden
     >
@@ -83,7 +83,7 @@ export function SubmissionConfirmModal({
           type="warning"
           showIcon
           style={{ marginBottom: 12 }}
-          message={t("notEnoughChars", { minChars })}
+          title={t("notEnoughChars", { minChars })}
         />
       ) : null}
 
@@ -93,7 +93,7 @@ export function SubmissionConfirmModal({
           type="error"
           showIcon
           style={{ marginBottom: 12 }}
-          message={t("submitFailedTitle")}
+          title={t("submitFailedTitle")}
           description={t("submitFailedDescription", { submitError })}
         />
       ) : null}

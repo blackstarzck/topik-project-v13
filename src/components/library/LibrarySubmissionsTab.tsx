@@ -179,7 +179,7 @@ export function LibrarySubmissionsTab({
     return (
       <Alert
         type="error"
-        message={t("loadError")}
+        title={t("loadError")}
         description={
           query.error instanceof Error ? query.error.message : undefined
         }
@@ -193,7 +193,7 @@ export function LibrarySubmissionsTab({
     Boolean(range && (range[0] || range[1]));
 
   return (
-    <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+    <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
       {/* Region 1: 필터 (유형·상태·기간 동시) + 결과 수 상단 표시 */}
       <Space wrap>
         <Select<StatusFilter>
@@ -268,7 +268,7 @@ export function LibrarySubmissionsTab({
                     />,
                   ]}
                 >
-                  <Space direction="vertical" size={2} style={{ width: "100%" }}>
+                  <Space orientation="vertical" size={2} style={{ width: "100%" }}>
                     <Space size="small" wrap>
                       <Link
                         href={

@@ -184,7 +184,7 @@ export function ProblemListView({ userId }: Props) {
         <Alert
           type="error"
           showIcon
-          message={t("loadErrorTitle")}
+          title={t("loadErrorTitle")}
           description={list.error instanceof Error ? list.error.message : ""}
           action={
             <Button size="small" onClick={() => list.refetch()}>

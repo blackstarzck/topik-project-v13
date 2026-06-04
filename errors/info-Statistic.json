@@ -1,0 +1,103 @@
+{
+  "name": "Statistic",
+  "nameZh": "统计数值",
+  "description": "Display statistic number.",
+  "props": [
+    {
+      "name": "classNames",
+      "type": "Record<[SemanticDOM](#semantic-dom), string> | (info: { props }) => Record<[SemanticDOM](#semantic-dom), string>",
+      "default": "-",
+      "since": ""
+    },
+    {
+      "name": "decimalSeparator",
+      "type": "string",
+      "default": "`.`",
+      "since": ""
+    },
+    {
+      "name": "formatter",
+      "type": "(value) => ReactNode",
+      "default": "-",
+      "since": ""
+    },
+    {
+      "name": "groupSeparator",
+      "type": "string",
+      "default": "`,`",
+      "since": ""
+    },
+    {
+      "name": "loading",
+      "type": "boolean",
+      "default": "false",
+      "since": "4.8.0"
+    },
+    {
+      "name": "precision",
+      "type": "number",
+      "default": "-",
+      "since": ""
+    },
+    {
+      "name": "prefix",
+      "type": "ReactNode",
+      "default": "-",
+      "since": ""
+    },
+    {
+      "name": "styles",
+      "type": "Record<[SemanticDOM](#semantic-dom), CSSProperties> | (info: { props }) => Record<[SemanticDOM](#semantic-dom), CSSProperties>",
+      "default": "-",
+      "since": ""
+    },
+    {
+      "name": "suffix",
+      "type": "ReactNode",
+      "default": "-",
+      "since": ""
+    },
+    {
+      "name": "title",
+      "type": "ReactNode",
+      "default": "-",
+      "since": ""
+    },
+    {
+      "name": "value",
+      "type": "string | number",
+      "default": "-",
+      "since": ""
+    },
+    {
+      "name": "valueStyle",
+      "type": "CSSProperties",
+      "default": "-",
+      "since": ""
+    },
+    {
+      "name": "format",
+      "type": "string",
+      "default": "`HH:mm:ss`",
+      "since": ""
+    },
+    {
+      "name": "onFinish",
+      "type": "() => void",
+      "default": "-",
+      "since": ""
+    },
+    {
+      "name": "onChange",
+      "type": "(value: number) => void",
+      "default": "-",
+      "since": "4.16.0"
+    },
+    {
+      "name": "type",
+      "type": "`countdown` `countup`",
+      "default": "-",
+      "since": ""
+    }
+  ]
+}

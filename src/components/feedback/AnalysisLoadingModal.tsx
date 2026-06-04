@@ -181,7 +181,7 @@ function AnalysisLoadingModalContent({
         <Alert
           type="error"
           showIcon
-          message={t("failedTitle")}
+          title={t("failedTitle")}
           description={t("failedDescription")}
         />
         <Space wrap style={{ marginTop: 16 }}>
@@ -206,7 +206,7 @@ function AnalysisLoadingModalContent({
         <Alert
           type="success"
           showIcon
-          message={t("completeTitle")}
+          title={t("completeTitle")}
           description={t("completeDescription")}
         />
       </AppCard>
@@ -222,7 +222,7 @@ function AnalysisLoadingModalContent({
       <Steps
         size="small"
         current={step}
-        direction="vertical"
+        orientation="vertical"
         items={STEP_KEYS.map((k) => ({
           title: t(`steps.${k}Title`),
           description: t(`steps.${k}Description`),
@@ -237,7 +237,7 @@ function AnalysisLoadingModalContent({
           type="warning"
           showIcon
           style={{ marginTop: 12 }}
-          message={t("slowTitle")}
+          title={t("slowTitle")}
           description={t("slowDescription", { retryAt })}
         />
       ) : null}

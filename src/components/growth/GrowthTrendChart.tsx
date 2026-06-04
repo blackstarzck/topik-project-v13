@@ -108,7 +108,7 @@ export function GrowthTrendChart({ points, onRetry }: Props) {
           ) : null}
         </Empty>
       ) : (
-        <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+        <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
           {/* 색상만으로 의미 전달 금지(접근성) — 범례 + 수치 축 라벨 병기. */}
           <div style={{ width: "100%", height: 280 }}>
             <ResponsiveContainer width="100%" height="100%">
@@ -168,7 +168,7 @@ export function GrowthTrendChart({ points, onRetry }: Props) {
           <Alert
             type="info"
             showIcon
-            message={
+            title={
               <Text type="secondary" style={{ fontSize: 12 }}>
                 {t("legendHelp")}
               </Text>

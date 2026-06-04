@@ -38,6 +38,8 @@ every document by default increases the chance of missing the important one.
 | [development/README.md](./development/README.md) | Detailed implementation specs. | Reading stack, backend/auth, AI boundary, deployment, or deferred-scope details after `spec.md` routes you there. |
 | [ai-workflow/README.md](./ai-workflow/README.md) | AI-agent workflow and evidence rules. | Managing Codex/Claude work, ledgers, reports, and verification. |
 | [ai-execution-plans/README.md](./ai-execution-plans/README.md) | Task-specific execution plans for AI agents. | Giving Codex/Claude a mapped plan for a long audit, remediation, or multi-phase task without forcing one huge file read. |
+| [user-admin-data-consistency.md](./user-admin-data-consistency.md) | v13 user DB usage and topik-ai admin page-sync inventory. | Planning user/admin data reconciliation before real CRUD validation. |
+| [user-admin-data-consistency.html](./user-admin-data-consistency.html) | HTML report for the v13/topik-ai data consistency inventory. | Reviewing the reconciliation baseline in a browser-friendly format. |
 | [ia-pages/README.md](./ia-pages/README.md) | Legacy observed HTML page notes. | Historical reference only. Active docs win on conflicts. |
 
 ## Example Requests

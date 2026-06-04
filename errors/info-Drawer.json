@@ -1,0 +1,248 @@
+{
+  "name": "Drawer",
+  "nameZh": "抽屉",
+  "description": "A panel that slides out from the edge of the screen.",
+  "props": [
+    {
+      "name": "afterOpenChange",
+      "type": "function(open)",
+      "default": "-",
+      "since": ""
+    },
+    {
+      "name": "bodyStyle",
+      "type": "CSSProperties",
+      "default": "-",
+      "since": "-"
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "default": "-",
+      "since": ""
+    },
+    {
+      "name": "classNames",
+      "type": "Record<[SemanticDOM](#semantic-dom), string> | (info: { props })=> Record<[SemanticDOM](#semantic-dom), string>",
+      "default": "-",
+      "since": ""
+    },
+    {
+      "name": "closable",
+      "type": "boolean | { closeIcon?: React.ReactNode; disabled?: boolean; placement?: 'start' | 'end' }",
+      "default": "true",
+      "since": "placement: 5.28.0"
+    },
+    {
+      "name": "contentWrapperStyle",
+      "type": "CSSProperties",
+      "default": "-",
+      "since": "-"
+    },
+    {
+      "name": "destroyOnClose",
+      "type": "boolean",
+      "default": "false",
+      "since": ""
+    },
+    {
+      "name": "destroyInactivePanel",
+      "type": "boolean",
+      "default": "false",
+      "since": "-"
+    },
+    {
+      "name": "destroyOnHidden",
+      "type": "boolean",
+      "default": "false",
+      "since": "5.25.0"
+    },
+    {
+      "name": "drawerStyle",
+      "type": "CSSProperties",
+      "default": "-",
+      "since": "-"
+    },
+    {
+      "name": "extra",
+      "type": "ReactNode",
+      "default": "-",
+      "since": "4.17.0"
+    },
+    {
+      "name": "footer",
+      "type": "ReactNode",
+      "default": "-",
+      "since": ""
+    },
+    {
+      "name": "footerStyle",
+      "type": "CSSProperties",
+      "default": "-",
+      "since": "-"
+    },
+    {
+      "name": "forceRender",
+      "type": "boolean",
+      "default": "false",
+      "since": ""
+    },
+    {
+      "name": "focusable",
+      "type": "`{ trap?: boolean, focusTriggerAfterClose?: boolean }`",
+      "default": "-",
+      "since": "6.2.0"
+    },
+    {
+      "name": "getContainer",
+      "type": "HTMLElement | () => HTMLElement | Selectors | false",
+      "default": "body",
+      "since": ""
+    },
+    {
+      "name": "headerStyle",
+      "type": "CSSProperties",
+      "default": "-",
+      "since": ""
+    },
+    {
+      "name": "height",
+      "type": "string | number",
+      "default": "378",
+      "since": ""
+    },
+    {
+      "name": "keyboard",
+      "type": "boolean",
+      "default": "true",
+      "since": ""
+    },
+    {
+      "name": "loading",
+      "type": "boolean",
+      "default": "false",
+      "since": "5.17.0"
+    },
+    {
+      "name": "mask",
+      "type": "boolean | `{ enabled?: boolean, blur?: boolean, closable?: boolean }`",
+      "default": "true",
+      "since": "mask.closable: 6.3.0"
+    },
+    {
+      "name": "maskClosable",
+      "type": "boolean",
+      "default": "true",
+      "since": ""
+    },
+    {
+      "name": "maskStyle",
+      "type": "CSSProperties",
+      "default": "-",
+      "since": "-"
+    },
+    {
+      "name": "maxSize",
+      "type": "number",
+      "default": "-",
+      "since": "6.0.0"
+    },
+    {
+      "name": "open",
+      "type": "boolean",
+      "default": "false",
+      "since": ""
+    },
+    {
+      "name": "placement",
+      "type": "`top` | `right` | `bottom` | `left`",
+      "default": "`right`",
+      "since": ""
+    },
+    {
+      "name": "push",
+      "type": "boolean | { distance: string | number }",
+      "default": "{ distance: 180 }",
+      "since": "4.5.0+"
+    },
+    {
+      "name": "resizable",
+      "type": "boolean | [ResizableConfig](#resizableconfig)",
+      "default": "-",
+      "since": "boolean: 6.1.0"
+    },
+    {
+      "name": "rootStyle",
+      "type": "CSSProperties",
+      "default": "-",
+      "since": ""
+    },
+    {
+      "name": "size",
+      "type": "'default' | 'large' | number | string",
+      "default": "'default'",
+      "since": "4.17.0, string: 6.2.0"
+    },
+    {
+      "name": "style",
+      "type": "CSSProperties",
+      "default": "-",
+      "since": ""
+    },
+    {
+      "name": "styles",
+      "type": "Record<[SemanticDOM](#semantic-dom), CSSProperties> | (info: { props })=> Record<[SemanticDOM](#semantic-dom), CSSProperties>",
+      "default": "-",
+      "since": ""
+    },
+    {
+      "name": "title",
+      "type": "ReactNode",
+      "default": "-",
+      "since": ""
+    },
+    {
+      "name": "width",
+      "type": "string | number",
+      "default": "378",
+      "since": ""
+    },
+    {
+      "name": "zIndex",
+      "type": "number",
+      "default": "1000",
+      "since": ""
+    },
+    {
+      "name": "onClose",
+      "type": "function(e)",
+      "default": "-",
+      "since": ""
+    },
+    {
+      "name": "drawerRender",
+      "type": "(node: ReactNode) => ReactNode",
+      "default": "-",
+      "since": "5.18.0"
+    }
+  ],
+  "subComponentProps": {
+    "Drawer.ResizableConfig": [
+      {
+        "name": "onResizeStart",
+        "type": "() => void",
+        "default": "-"
+      },
+      {
+        "name": "onResize",
+        "type": "(size: number) => void",
+        "default": "-"
+      },
+      {
+        "name": "onResizeEnd",
+        "type": "() => void",
+        "default": "-"
+      }
+    ]
+  }
+}

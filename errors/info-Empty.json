@@ -1,0 +1,37 @@
+{
+  "name": "Empty",
+  "nameZh": "空状态",
+  "description": "Empty state placeholder.",
+  "props": [
+    {
+      "name": "classNames",
+      "type": "Record<[SemanticDOM](#semantic-dom), string> | (info: { props })=> Record<[SemanticDOM](#semantic-dom), string>",
+      "default": "-",
+      "since": ""
+    },
+    {
+      "name": "description",
+      "type": "ReactNode",
+      "default": "-",
+      "since": ""
+    },
+    {
+      "name": "image",
+      "type": "ReactNode",
+      "default": "`Empty.PRESENTED_IMAGE_DEFAULT`",
+      "since": ""
+    },
+    {
+      "name": "imageStyle",
+      "type": "CSSProperties",
+      "default": "-",
+      "since": ""
+    },
+    {
+      "name": "styles",
+      "type": "Record<[SemanticDOM](#semantic-dom), CSSProperties> | (info: { props })=> Record<[SemanticDOM](#semantic-dom), CSSProperties>",
+      "default": "-",
+      "since": ""
+    }
+  ]
+}

@@ -52,7 +52,7 @@ export function LibraryReportsTab({
     return (
       <Alert
         type="error"
-        message={t("loadError")}
+        title={t("loadError")}
         description={
           query.error instanceof Error ? query.error.message : undefined
         }
@@ -89,7 +89,7 @@ export function LibraryReportsTab({
             />,
           ]}
         >
-          <Space direction="vertical" size={4} style={{ width: "100%" }}>
+          <Space orientation="vertical" size={4} style={{ width: "100%" }}>
             <Link href={`/writing/reports/${item.id}/compare` as never}>
               <Text strong>{t("title")}</Text>
             </Link>

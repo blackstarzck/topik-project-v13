@@ -352,7 +352,7 @@ export function ProfileForm({
             type="error"
             showIcon
             style={{ marginTop: 12 }}
-            message={avatarError}
+            title={avatarError}
             action={
               <Button size="small" onClick={() => fileInputRef.current?.click()}>
                 {tAvatar("reselect")}
@@ -364,7 +364,7 @@ export function ProfileForm({
           style={{ marginTop: 12 }}
           type="info"
           showIcon
-          message={tAvatar("securityNoticeTitle")}
+          title={tAvatar("securityNoticeTitle")}
           description={tAvatar("securityNoticeDescription")}
         />
       </section>

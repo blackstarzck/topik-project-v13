@@ -234,7 +234,7 @@ export function LanguageForm({ userId, initialLocale }: Props) {
 
   return (
     <Form layout="vertical" onFinish={handleFinish} disabled={saving}>
-      <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+      <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
         {/* Region 2: UI 언어 선택 */}
         <Form.Item label={t("uiLanguageLabel")} required style={{ marginBottom: 0 }}>
           <Radio.Group
@@ -242,7 +242,7 @@ export function LanguageForm({ userId, initialLocale }: Props) {
             onChange={(e) => setLocale(e.target.value as Locale)}
             aria-label={t("uiLanguageLabel")}
           >
-            <Space direction="vertical">
+            <Space orientation="vertical">
               <Radio value="ko">{t("optionKo")}</Radio>
               <Radio value="en">{t("optionEn")}</Radio>
               <Radio value="vi">{t("optionVi")}</Radio>
@@ -262,7 +262,7 @@ export function LanguageForm({ userId, initialLocale }: Props) {
             <Alert
               type="error"
               showIcon
-              message={t("learningLoadError")}
+              title={t("learningLoadError")}
               description={contentLoad.message}
             />
           ) : (
@@ -279,7 +279,7 @@ export function LanguageForm({ userId, initialLocale }: Props) {
                 }}
                 aria-label={t("learningCardTitle")}
               >
-                <Space direction="vertical">
+                <Space orientation="vertical">
                   <Radio value="follow">{t("learningFollow")}</Radio>
                   <Radio value="ko">{t("optionKo")}</Radio>
                   <Radio value="en">{t("optionEn")}</Radio>
@@ -298,11 +298,11 @@ export function LanguageForm({ userId, initialLocale }: Props) {
             <Alert
               type="error"
               showIcon
-              message={t("contentLoadError")}
+              title={t("contentLoadError")}
               description={contentLoad.message}
             />
           ) : (
-            <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+            <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
               <Form.Item label={t("feedbackDisplayLabel")} style={{ marginBottom: 0 }}>
                 <Segmented
                   value={
@@ -362,7 +362,7 @@ export function LanguageForm({ userId, initialLocale }: Props) {
                 <Alert
                   type="warning"
                   showIcon
-                  message={t("conflictTitle")}
+                  title={t("conflictTitle")}
                   description={t("conflictDescription")}
                   action={
                     <Button size="small" onClick={restoreRecommended}>
@@ -391,7 +391,7 @@ export function LanguageForm({ userId, initialLocale }: Props) {
         </Card>
 
         {/* Region 2 예외: 미지원 언어 안내 */}
-        <Alert type="info" showIcon message={t("unsupportedNotice")} />
+        <Alert type="info" showIcon title={t("unsupportedNotice")} />
 
         {/* Region 6: 저장 (변경값 없으면 비활성, 저장 중 중복 클릭 차단) */}
         <Form.Item style={{ marginBottom: 0 }}>

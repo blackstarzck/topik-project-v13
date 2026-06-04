@@ -22,7 +22,7 @@ export function GrowthLockedReport({ planLabel }: { planLabel: string | null }) 
       icon={<span style={{ fontSize: 40 }} aria-hidden>🔒</span>}
       title={t("title")}
       subTitle={
-        <Space direction="vertical" size={4} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={4} style={{ width: "100%" }}>
           <Paragraph type="secondary" style={{ margin: 0 }}>
             {t.rich("body", {
               plan: () => <Tag>{planText}</Tag>,

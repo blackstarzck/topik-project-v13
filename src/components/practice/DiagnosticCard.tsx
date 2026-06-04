@@ -51,7 +51,7 @@ export function DiagnosticCard({ weakDimensions, updatedAt, failed }: Props) {
         <Empty
           description={failed ? t("diagnosticFailed") : t("diagnosticNoData")}
         >
-          <Space direction="vertical" size="small">
+          <Space orientation="vertical" size="small">
             <Button
               type="primary"
               onClick={() => router.push("/practice/problems" as never)}

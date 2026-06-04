@@ -210,7 +210,7 @@ export function ExamInfoCard({ userId, goal }: Props) {
       {!view ? (
         <Empty
           description={t("emptyDescription")}
-          imageStyle={{ display: "none" }}
+          styles={{ image: { display: "none" } }}
         >
           {editable ? (
             <Button type="primary" onClick={startEdit}>

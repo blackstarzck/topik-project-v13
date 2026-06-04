@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>관리자 페이지 구성안 — 현재 구현 기반 도출 (TALKPIK v13)</title>
+<style>
+  :root{
+    --ink:#1f2328; --muted:#57606a; --line:#d0d7de; --bg:#ffffff; --soft:#f6f8fa;
+    --brand:#3538cd; --brand-soft:#eef2ff;
+    --warn-bg:#fff8e6; --warn-line:#f5c451; --warn-ink:#7a5b00;
+    --crud:#0a7d32; --crud-bg:#e6f4ea;
+    --state:#9a6700; --state-bg:#fff3cd;
+    --read:#0550ae; --read-bg:#ddf4ff;
+    --ana:#6639ba; --ana-bg:#f0e9ff;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; color:var(--ink); background:var(--bg);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+    line-height:1.65; font-size:15px;
+  }
+  .wrap{max-width:1040px; margin:0 auto; padding:32px 24px 96px;}
+  header.doc{border-bottom:2px solid var(--line); padding-bottom:18px; margin-bottom:8px;}
+  h1{font-size:26px; margin:0 0 6px; letter-spacing:-.3px;}
+  .sub{color:var(--muted); font-size:13.5px;}
+  .meta{margin-top:10px; font-size:13px; color:var(--muted);}
+  .meta code{background:var(--soft); padding:1px 6px; border-radius:5px; font-size:12.5px;}
+  h2{font-size:20px; margin:38px 0 12px; padding-top:10px; border-top:1px solid var(--line); letter-spacing:-.2px;}
+  h3{font-size:16.5px; margin:24px 0 8px; color:var(--brand);}
+  p{margin:8px 0;}
+  ol,ul{margin:8px 0 8px; padding-left:22px;}
+  li{margin:4px 0;}
+  code{font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace; background:var(--soft); padding:1px 5px; border-radius:5px; font-size:12.5px;}
+  a{color:var(--brand);}
+  .banner{
+    background:var(--warn-bg); border:1px solid var(--warn-line); border-left:5px solid var(--warn-line);
+    color:var(--warn-ink); border-radius:10px; padding:16px 18px; margin:18px 0 8px;
+  }
+  .banner h2{border:0; margin:0 0 8px; padding:0; font-size:17px; color:var(--warn-ink);}
+  .banner ol{padding-left:20px;}
+  .oneline{background:var(--brand-soft); border:1px solid #c7d2fe; border-radius:10px; padding:14px 16px; margin:14px 0;}
+  table{border-collapse:collapse; width:100%; margin:14px 0; font-size:13.5px;}
+  th,td{border:1px solid var(--line); padding:8px 10px; text-align:left; vertical-align:top;}
+  th{background:var(--soft); font-weight:600;}
+  tbody tr:nth-child(even){background:#fbfcfd;}
+  .badge{display:inline-block; font-size:11.5px; font-weight:700; padding:2px 8px; border-radius:999px; white-space:nowrap;}
+  .b-crud{color:var(--crud); background:var(--crud-bg);}
+  .b-state{color:var(--state); background:var(--state-bg);}
+  .b-read{color:var(--read); background:var(--read-bg);}
+  .b-ana{color:var(--ana); background:var(--ana-bg);}
+  .card{border:1px solid var(--line); border-radius:10px; padding:16px 18px; margin:14px 0; background:#fff;}
+  .card h3{margin-top:0;}
+  .card dl{margin:0; display:grid; grid-template-columns:120px 1fr; gap:4px 14px;}
+  .card dt{color:var(--muted); font-size:12.5px; font-weight:600; padding-top:2px;}
+  .card dd{margin:0;}
+  .note{font-size:12.5px; color:var(--muted); background:var(--soft); border-radius:8px; padding:6px 10px; margin-top:8px;}
+  .legend{display:flex; flex-wrap:wrap; gap:10px; margin:10px 0 4px; font-size:12.5px;}
+  .legend span{display:inline-flex; align-items:center; gap:6px;}
+  footer{margin-top:48px; padding-top:16px; border-top:1px solid var(--line); color:var(--muted); font-size:12.5px;}
+  @media (max-width:640px){ .card dl{grid-template-columns:1fr;} .card dt{padding-top:8px;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="doc">
+  <h1>관리자 페이지 구성안 — 현재 사용자 화면 구현 기반 도출</h1>
+  <div class="sub">TALKPIK v13 · derived planning reference (설계 입력용 참고 문서)</div>
+  <div class="meta">
+    작성: <strong>2026-06-04</strong> ·
+    근거: <code>docs/user-admin-data-consistency.md</code>,
+    <code>docs/admin-scope-boundary.md</code>,
+    <code>docs/user-admin-consistency-method.md</code>
+  </div>
+</header>
+
+<div class="banner">
+  <h2>⚠️ 먼저 읽어야 할 범위 경고 (중요)</h2>
+  <p>이 문서는 <strong>"관리자 페이지를 새로 만들라"는 지시서가 아닙니다.</strong></p>
+  <ol>
+    <li><strong>관리자(admin) 앱은 이 저장소가 아니라 별도 저장소 <code>topik-ai</code>가 소유</strong>합니다(Vite+React+AntD, 별도 git). 이 저장소(v13)는 <strong>사용자 화면 전용</strong>입니다.</li>
+    <li>그래서 이 문서는 <strong>"지금 v13에 실제로 구현된 사용자 기능을 운영하려면 관리자 콘솔에 어떤 화면·기능이 필요한가"를 거꾸로 도출한 설계 입력 자료</strong>입니다. 나중에 있을 <strong>admin↔v13 정합(sync) 단계</strong>의 참고용입니다.</li>
+    <li>이 문서를 근거로 <strong>v13 안에 admin 코드를 새로 만들거나 확장하면 안 됩니다.</strong> 데이터 스키마가 admin 우선으로 설계됐기 때문에, 사용자 화면을 스키마에 맞추는 방향입니다.</li>
+    <li>화면 명세의 최종 권위는 <code>topik-ai/docs/specs/admin-data-contract.md</code>와 <code>topik-ai/docs/page-sync/*.md</code>에 있습니다.</li>
+  </ol>
+</div>
+
+<div class="oneline">
+  <strong>한 문장:</strong> "지금 v13이 굴러가게 하려면 관리자가 무엇을 보고 무엇을 만질 수 있어야 하는가"의 지도 — 만드는 작업이 아니라 만들 때를 위한 밑그림.
+</div>
+
+<h2>1. 한 줄 요약</h2>
+<p>지금 v13에 구현된 사용자 기능(회원·문제·쓰기 제출·AI 피드백·추천·결제·알림·라이브러리)을 운영하려면, 관리자 콘솔은 크게 <strong>9개 영역</strong>이 필요합니다. 이 중 <strong>직접 만지는(CRUD) 영역은 "문제은행"과 "회원/결제 카탈로그"뿐</strong>이고, <strong>나머지 대부분은 사용자 소유 데이터라서 "읽기/지원/분석" 전용</strong>으로만 두는 것이 안전합니다.</p>
+
+<h2>2. 도출의 출발점 — 지금 "실제로 구현된 것"</h2>
+
+<h3>2-1. 사용자 화면 (현재 v13에 구현된 32개 라우트)</h3>
+<table>
+  <thead><tr><th>영역</th><th>라우트</th></tr></thead>
+  <tbody>
+    <tr><td>인증/온보딩</td><td><code>/login</code>, <code>/sign-up</code>, <code>/password-reset</code>(+confirm), <code>/auth/*</code>, <code>/onboarding/learning-goal</code></td></tr>
+    <tr><td>대시보드/성장</td><td><code>/dashboard</code>, <code>/growth</code></td></tr>
+    <tr><td>연습/추천</td><td><code>/practice/problems</code>, <code>/practice/recommendations</code>, <code>/practice/weakness</code>, <code>/practice/next</code></td></tr>
+    <tr><td>쓰기</td><td><code>/writing/short-answer-writing-51</code>, <code>/answer-writing-52</code>, <code>/long-form-writing-53</code>, <code>/essay-writing-54</code></td></tr>
+    <tr><td>피드백/리포트</td><td><code>/writing/feedback/short/[id]</code>, <code>/writing/feedback/long/[id]</code>, <code>/writing/reports/[id]/compare</code></td></tr>
+    <tr><td>라이브러리</td><td><code>/library</code></td></tr>
+    <tr><td>프로필/설정</td><td><code>/profile</code>, <code>/settings/language</code>, <code>/settings/notifications</code></td></tr>
+    <tr><td>결제</td><td><code>/paywall</code>, <code>/subscription</code></td></tr>
+    <tr><td>약관/정책</td><td><code>/terms</code>, <code>/privacy</code></td></tr>
+  </tbody>
+</table>
+
+<h3>2-2. 이미 이 저장소에 "동결된 채" 존재하는 admin 코드 (확장 금지 / 참고만)</h3>
+<p>v13 안에는 과거 만들어졌다가 <strong>동결(frozen)된 최소 관리자 골격</strong>이 있습니다. 권위 있는 admin 구현이 아니며 <strong>삭제도 확장도 하지 않습니다.</strong></p>
+<table>
+  <thead><tr><th>동결된 화면</th><th>위치</th><th>다루던 것 (코드상)</th></tr></thead>
+  <tbody>
+    <tr><td>관리 허브</td><td><code>admin/page.tsx</code> → <code>AdminHub</code></td><td>역할별 진입 메뉴</td></tr>
+    <tr><td>문제 관리</td><td><code>admin/problems</code></td><td>문제 목록·발행 토글·상세·에셋·KPI</td></tr>
+    <tr><td>회원 관리</td><td><code>admin/users</code></td><td>회원 목록·역할 변경·상세·감사로그 드로어·KPI</td></tr>
+    <tr><td>조직 관리</td><td><code>admin/org</code></td><td>조직 KPI·과제 배정·구성원별 현황</td></tr>
+  </tbody>
+</table>
+<div class="note"><strong>주의:</strong> <code>admin/org</code>가 쓰는 조직(organizations/assignments) 스키마는 철회된 "전체 빌드" 지시 아래 추가됐던 항목입니다(dev에만 적용, 사용자 기능 미사용). <strong>현재 사용자 화면 범위 밖</strong>이며 유지/롤백은 정합 단계 소유자 결정.</div>
+
+<h2>3. 관리자 콘솔 영역 — 한눈에 보기</h2>
+<div class="legend">
+  <span><span class="badge b-crud">CRUD</span> 직접 생성·수정·삭제</span>
+  <span><span class="badge b-state">상태변경</span> 특정 상태/역할만</span>
+  <span><span class="badge b-read">읽기·지원</span> 조회·CS 진단</span>
+  <span><span class="badge b-ana">분석</span> 집계 통계</span>
+</div>
+<table>
+  <thead><tr><th>#</th><th>관리 영역</th><th>핵심 관리 대상</th><th>관리 성격</th><th>topik-ai 매핑</th><th>우선순위</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td><strong>문제은행(쓰기 문제)</strong></td><td><code>problems</code>, <code>problem_assets</code></td><td><span class="badge b-crud">CRUD</span></td><td>Assessment &gt; 쓰기 문제은행</td><td><strong>1순위</strong></td></tr>
+    <tr><td>2</td><td><strong>회원·계정</strong></td><td><code>profiles</code>, <code>learning_goals</code>, <code>avatars</code></td><td><span class="badge b-state">상태변경</span> <span class="badge b-read">읽기·지원</span></td><td>Users &gt; 회원 목록/상세</td><td><strong>2순위</strong></td></tr>
+    <tr><td>3</td><td><strong>결제·구독</strong></td><td><code>subscription_plans</code>, <code>subscriptions</code>, <code>payment_history</code></td><td><span class="badge b-crud">카탈로그 CRUD</span> <span class="badge b-read">읽기·지원</span></td><td>Commerce &gt; 결제/환불/이커머스</td><td>3순위</td></tr>
+    <tr><td>4</td><td><strong>알림·메시지</strong></td><td><code>notification_settings</code>, <code>notification_log</code></td><td><span class="badge b-read">읽기·지원</span></td><td>Message &gt; 메일/푸시/그룹/이력</td><td>4순위</td></tr>
+    <tr><td>5</td><td><strong>쓰기 제출물·AI 피드백</strong></td><td><code>writing_submissions</code>, <code>writing_feedback</code>, …</td><td><span class="badge b-read">읽기·지원 전용</span></td><td>Users 상세 / Analytics</td><td>5순위</td></tr>
+    <tr><td>6</td><td><strong>학습 활동·추천</strong></td><td><code>problem_attempts</code>, <code>recommendation_*</code>, <code>study_events</code></td><td><span class="badge b-ana">분석</span></td><td>Analytics / Content</td><td>6순위</td></tr>
+    <tr><td>7</td><td><strong>라이브러리·리포트·내보내기</strong></td><td><code>library_items</code>, <code>comparison_reports</code>, <code>export_files</code></td><td><span class="badge b-read">읽기·지원 전용</span></td><td>(대응 화면 없음)</td><td>낮음</td></tr>
+    <tr><td>8</td><td><strong>대시보드·분석 지표</strong></td><td><code>get_dashboard_kpi</code>, 집계</td><td><span class="badge b-ana">분석</span></td><td>Dashboard / Analytics 개요</td><td>상시</td></tr>
+    <tr><td>9</td><td><strong>시스템·권한·감사</strong></td><td><code>profiles.app_role</code>, <code>admin_audit_logs</code></td><td>내부 운영</td><td>System &gt; 계정/권한/감사</td><td>내부</td></tr>
+  </tbody>
+</table>
+
+<h2>4. 화면별 상세 구성안</h2>
+
+<div class="card">
+  <h3>4-1. 문제은행(쓰기 문제) 관리 <span class="badge b-crud">CRUD</span> · 최우선</h3>
+  <dl>
+    <dt>목적</dt><dd>TOPIK 쓰기 문제(51·52·53·54형)를 등록·검토·발행하고 사용자 노출을 통제.</dd>
+    <dt>화면</dt><dd>문제 목록(유형/상태/공개 필터), 상세(지문·자료·채점기준 rubric·모범답안), 첨부 에셋, 발행/검토 KPI.</dd>
+    <dt>동작</dt><dd>문제 생성·수정, 발행 토글(<code>publish_status</code>), 검토 상태(<code>review_status</code>), 공개범위(<code>visibility</code>), 에셋 업로드/교체.</dd>
+    <dt>데이터</dt><dd><code>problems</code>, <code>problem_assets</code> + <code>problem-assets</code> 스토리지</dd>
+    <dt>권한</dt><dd>content_admin / platform_admin</dd>
+    <dt>topik-ai</dt><dd>Assessment &gt; TOPIK 쓰기 문제은행(<code>assessment_questions</code> + 97문항 JSON). <strong>필드/테이블 이름 다름 → 매핑 계약이 정합 1순위.</strong></dd>
+  </dl>
+  <div class="note">주의: topik-ai fixture는 문서(JSON) 중심이라 에셋 관리가 명시적이지 않음 → 에셋 관리 대상 여부 결정 필요.</div>
+</div>
+
+<div class="card">
+  <h3>4-2. 회원·계정 관리 <span class="badge b-state">상태변경</span> <span class="badge b-read">읽기·지원</span></h3>
+  <dl>
+    <dt>목적</dt><dd>회원 조회 + 운영상 꼭 필요한 상태(차단/역할)만 통제. 프로필 본문은 사용자 소유.</dd>
+    <dt>화면</dt><dd>회원 목록(상태/플랜/역할 필터), 상세(프로필·학습목표·결제상태·최근활동), 가입/접속 KPI.</dd>
+    <dt>동작</dt><dd>상태 변경(<code>profiles.status</code>), 역할 부여(<code>app_role</code>), 지원 조회. 프로필 본문·학습목표는 기본 읽기.</dd>
+    <dt>데이터</dt><dd><code>profiles</code>, <code>learning_goals</code>, <code>avatars</code> 스토리지</dd>
+    <dt>권한</dt><dd>상태/역할은 platform_admin, 조회는 지원 권한</dd>
+    <dt>topik-ai</dt><dd>Users &gt; 회원 목록/상세. <strong>매핑 이슈:</strong> v13 <code>profiles</code> ↔ topik-ai <code>users</code>, 이메일 출처(<code>auth.users</code> vs mock), 필드 매핑.</dd>
+  </dl>
+  <div class="note">주의: <code>learning_goals</code>는 admin 화면 없음 — 관리할지 조회만 할지 제품 결정 필요.</div>
+</div>
+
+<div class="card">
+  <h3>4-3. 결제·구독 관리 <span class="badge b-crud">카탈로그 CRUD</span> <span class="badge b-read">읽기·지원</span></h3>
+  <dl>
+    <dt>목적</dt><dd>요금제 카탈로그 관리 + 사용자 구독/결제 조회·지원.</dd>
+    <dt>화면</dt><dd>요금제 목록, 사용자별 구독 상태, 결제 내역/영수증, 환불 상태.</dd>
+    <dt>동작</dt><dd>요금제 CRUD(<code>subscription_plans</code>), 구독/결제 조회, 환불 처리(정책).</dd>
+    <dt>데이터</dt><dd><code>subscription_plans</code>, <code>subscriptions</code>(서비스가 씀), <code>payment_history</code>(서비스가 씀)</dd>
+    <dt>권한</dt><dd>platform_admin / 결제 운영 권한</dd>
+    <dt>topik-ai</dt><dd>Commerce &gt; 결제 내역(<code>commerce_payments</code>), 환불(<code>commerce_refunds</code>), 이커머스(<code>commerce_products/packages</code>). <strong>부분 겹침 — 1:1 아님.</strong> v13엔 별도 환불 테이블 없음.</dd>
+  </dl>
+  <div class="note">주의: "구독 상태"와 "결제 거래"를 admin 모델에서 분리할 것.</div>
+</div>
+
+<div class="card">
+  <h3>4-4. 알림·메시지 <span class="badge b-read">읽기·지원</span></h3>
+  <dl>
+    <dt>목적</dt><dd>발송 결과 추적 + (별도) 운영 캠페인 발송. 개인 알림 설정은 사용자 소유.</dd>
+    <dt>화면</dt><dd>발송 이력(채널/상태/수신자), 메일·푸시 템플릿, 대상 그룹.</dd>
+    <dt>동작</dt><dd>캠페인 템플릿/대상 관리(운영), 발송 이력 조회. 사용자별 설정은 조회만.</dd>
+    <dt>데이터</dt><dd><code>notification_settings</code>(사용자 소유), <code>notification_log</code></dd>
+    <dt>권한</dt><dd>메시지 운영 권한</dd>
+    <dt>topik-ai</dt><dd>Message &gt; 메일/푸시(<code>message_templates</code>), 대상 그룹(<code>message_groups</code>), 발송 이력(<code>message_histories</code>). <strong>사용자 설정 vs 캠페인 타겟팅은 다른 개념 — 합치지 말 것.</strong></dd>
+  </dl>
+</div>
+
+<div class="card">
+  <h3>4-5. 쓰기 제출물·AI 피드백 <span class="badge b-read">읽기·지원 전용</span></h3>
+  <dl>
+    <dt>목적</dt><dd>제출 글·AI 피드백을 품질 점검·고객지원 목적으로 조회. 편집 아님.</dd>
+    <dt>화면</dt><dd>제출물 본문(읽기), AI 피드백(전체/항목별/문장별), 피드백 생성 상태.</dd>
+    <dt>동작</dt><dd>조회·진단만. 필요 시 재생성 요청/오류 표시 정도.</dd>
+    <dt>데이터</dt><dd><code>writing_submissions</code>(<strong>불변</strong>), <code>writing_feedback</code>, <code>feedback_dimension_scores</code>, <code>sentence_feedback</code>, <code>writing_drafts</code></dd>
+    <dt>권한</dt><dd>지원/품질 권한(개인정보 최소 접근)</dd>
+    <dt>topik-ai</dt><dd>Users 상세 지원 탭 또는 Analytics에 read 형태. 직접 CRUD 화면 없음.</dd>
+  </dl>
+  <div class="note">주의: 제출물 불변 유지. 열람은 개인정보 경계 + 읽기 전용 경로를 먼저 정의.</div>
+</div>
+
+<div class="card">
+  <h3>4-6. 학습 활동·추천 <span class="badge b-ana">분석</span></h3>
+  <dl>
+    <dt>목적</dt><dd>학습 활동·추천 결과 집계·분석. 추천 규칙은 선택적 운영.</dd>
+    <dt>화면</dt><dd>추천 실행 이력·요약, 추천 문항·이유·약점 태그, 풀이 시도 통계, 활동 추이.</dd>
+    <dt>동작</dt><dd>조회·분석. (선택) 추천 규칙/설정. 진행상황 직접 수정 금지.</dd>
+    <dt>데이터</dt><dd><code>problem_attempts</code>, <code>recommendation_runs</code>, <code>recommendation_items</code>, <code>study_events</code></dd>
+    <dt>topik-ai</dt><dd>Analytics / Content 후보. 직접 CRUD 없음.</dd>
+  </dl>
+  <div class="note">주의: "추천 결과 CRUD"는 일반 admin 작업 아님 — 규칙 운영인지 생성물 관찰인지 명확히.</div>
+</div>
+
+<div class="card">
+  <h3>4-7. 라이브러리·리포트·내보내기 <span class="badge b-read">읽기·지원 전용</span></h3>
+  <dl>
+    <dt>목적</dt><dd>저장 항목·비교 리포트·내보내기 파일을 지원 목적 조회.</dd>
+    <dt>데이터</dt><dd><code>library_items</code>, <code>comparison_reports</code>, <code>export_files</code> + <code>generated-exports</code> 스토리지</dd>
+    <dt>topik-ai</dt><dd>대응 화면 없음. CS 요구 명확할 때만 읽기 경로 추가.</dd>
+  </dl>
+</div>
+
+<div class="card">
+  <h3>4-8. 대시보드·분석 지표 <span class="badge b-ana">분석</span></h3>
+  <dl>
+    <dt>목적</dt><dd>서비스 전반 운영 지표 조회(개별 CRUD 아님).</dd>
+    <dt>데이터</dt><dd><code>get_dashboard_kpi</code> RPC, <code>study_events</code>/결제/알림/피드백 집계</dd>
+    <dt>topik-ai</dt><dd>Dashboard, Analytics &gt; 통계 개요</dd>
+  </dl>
+  <div class="note">주의: admin은 집계 뷰가 필요하지 사용자용 KPI RPC 자체가 아님.</div>
+</div>
+
+<div class="card">
+  <h3>4-9. 시스템·권한·감사 로그 (내부 운영)</h3>
+  <dl>
+    <dt>목적</dt><dd>관리자 계정/권한·감사 로그 운영.</dd>
+    <dt>데이터</dt><dd><code>profiles.app_role</code>, <code>admin_audit_logs</code>, <code>private.is_*_admin</code> RLS 헬퍼 — <strong>앱 전체 인증/RLS 토대라 삭제 금지.</strong></dd>
+    <dt>topik-ai</dt><dd>System &gt; 관리자 계정(<code>admin_accounts</code>), 권한 관리, 감사 로그(<code>audit_logs</code>). <strong>감사 SoT는 topik-ai로 수렴.</strong></dd>
+  </dl>
+  <div class="note">주의: B2C 노출 없음. v13 <code>admin_audit_logs</code> ↔ topik-ai <code>audit_logs</code> 매핑 필요.</div>
+</div>
+
+<h2>5. 권한·역할 모델 (현재 v13 구현 기준)</h2>
+<table>
+  <thead><tr><th>역할</th><th>범위</th><th>접근 가능 영역(도출)</th></tr></thead>
+  <tbody>
+    <tr><td><code>platform_admin</code></td><td>전체</td><td>모든 영역</td></tr>
+    <tr><td><code>content_admin</code></td><td>콘텐츠</td><td>문제은행, (읽기) 피드백 품질</td></tr>
+    <tr><td><code>org_admin</code></td><td>조직</td><td>조직 대시보드(동결, 범위 밖)</td></tr>
+  </tbody>
+</table>
+<p class="note">topik-ai에는 별도 RBAC(System &gt; 권한 관리: <code>system_roles</code>/<code>system_permissions</code>/<code>admin_accounts</code>)가 있습니다. 최종 권한 모델은 정합 단계에서 매핑하며 B2C 사용자에 노출되지 않습니다.</p>
+
+<h2>6. "쓰기 가능" vs "읽기·지원 전용" 원칙 (가장 중요한 안전선)</h2>
+<p>가장 위험한 실수는 <strong>사용자 소유 데이터를 admin이 직접 편집(CRUD)하게 만드는 것</strong>입니다.</p>
+<table>
+  <thead><tr><th>분류</th><th>대상</th><th>이유</th></tr></thead>
+  <tbody>
+    <tr><td>✅ 직접 관리(CRUD) 적정</td><td><code>problems</code>/<code>problem_assets</code>, <code>subscription_plans</code></td><td>운영자가 만들고 관리하는 공급 측 데이터</td></tr>
+    <tr><td>🟡 상태/역할만 변경</td><td><code>profiles</code>(status/app_role)</td><td>운영상 필요하나 본문은 사용자 소유</td></tr>
+    <tr><td>🔒 읽기·지원 전용</td><td>제출물(불변)·피드백·초안·라이브러리·리포트·내보내기·구독·결제·알림설정</td><td>사용자 소유·서비스 생성·불변 데이터. 직접 편집은 신뢰·무결성 훼손</td></tr>
+    <tr><td>📊 분석/집계 전용</td><td><code>study_events</code>, <code>problem_attempts</code>, <code>recommendation_*</code>, KPI</td><td>원본 변경 금지, 집계 뷰로만</td></tr>
+  </tbody>
+</table>
+<ol>
+  <li>사용자 소유 데이터는 기본 읽기. CS 필요가 명확할 때만 읽기 경로 추가, 개인정보 경계 먼저 정의.</li>
+  <li>제출물(<code>writing_submissions</code>)은 불변 — admin도 수정 불가.</li>
+  <li>서비스가 쓰는 데이터(구독/결제/피드백/추천)는 admin이 직접 쓰지 않음.</li>
+  <li>admin용 스키마를 새로 추가해 사용자 화면을 끼워 맞추지 않음 — 스키마 정합 이슈는 소유자 에스컬레이션.</li>
+</ol>
+
+<h2>7. topik-ai 기존 admin과의 매핑·갭 요약</h2>
+<table>
+  <thead><tr><th>v13 데이터</th><th>topik-ai 화면</th><th>적합도</th><th>핵심 갭</th></tr></thead>
+  <tbody>
+    <tr><td><code>problems</code>/<code>problem_assets</code></td><td>Assessment &gt; 쓰기 문제은행</td><td>직접</td><td>필드/테이블 이름 매핑, 에셋 관리 여부</td></tr>
+    <tr><td><code>profiles</code></td><td>Users &gt; 회원 목록/상세</td><td>직접</td><td><code>profiles</code>↔<code>users</code>, 이메일 출처, 필드 매핑</td></tr>
+    <tr><td>결제 3종</td><td>Commerce &gt; 결제/환불/이커머스</td><td>부분</td><td>환불 테이블 부재, 요금제↔상품 모델 차이</td></tr>
+    <tr><td>알림 2종</td><td>Message &gt; 메일/푸시/그룹/이력</td><td>부분</td><td>설정 vs 캠페인 분리, 세그먼트 DB 부재</td></tr>
+    <tr><td>제출물/피드백</td><td>Users 상세/Analytics</td><td>부분/없음</td><td>직접 CRUD 화면 없음, 읽기·진단 경로 설계</td></tr>
+    <tr><td>활동/추천</td><td>Analytics</td><td>부분</td><td>집계 뷰/이벤트 탐색기 필요</td></tr>
+    <tr><td>라이브러리/리포트/내보내기</td><td>없음</td><td>없음</td><td>CS 필요 시 읽기 경로만</td></tr>
+    <tr><td><code>admin_audit_logs</code></td><td>System &gt; 감사 로그</td><td>부분/내부</td><td>최종 감사 SoT는 topik-ai</td></tr>
+  </tbody>
+</table>
+<p class="note">topik-ai에는 v13 대응 테이블이 아직 없는 계획 화면도 많습니다(Community, Operation 공지/FAQ/이벤트/정책/챗봇, Commerce 쿠폰/포인트, Content 콘텐츠/배지/단어장/미션, Assessment EPS/레벨테스트, 추천인). 해당 사용자 화면이 생기기 전까지 v13의 "관리 갭"으로 취급하지 않습니다.</p>
+
+<h2>8. 우선순위 로드맵 (어디부터?)</h2>
+<table>
+  <thead><tr><th>순서</th><th>슬라이스</th><th>이유</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td><strong>문제은행</strong>: <code>problems</code>/<code>problem_assets</code> ↔ Assessment 쓰기 문제은행</td><td>사용자에게 가장 직접 보이는 콘텐츠, 97문항 JSON fixture 존재</td></tr>
+    <tr><td>2</td><td><strong>회원/계정</strong>: <code>profiles</code> ↔ Users 회원 목록/상세</td><td>핵심 계정 관리, 소유권·RLS 매핑 신중히</td></tr>
+    <tr><td>3</td><td><strong>결제/구독</strong> ↔ Commerce</td><td>매출·지원 중요, 모델이 1:1 아님</td></tr>
+    <tr><td>4</td><td><strong>알림</strong> ↔ Message</td><td>개념은 가깝지만 캠페인↔개인설정 분리</td></tr>
+    <tr><td>5</td><td><strong>학습 산출물</strong>(제출물·피드백·라이브러리·내보내기·이벤트)</td><td>대부분 읽기·지원, 개인정보·불변 규칙 먼저 설계</td></tr>
+    <tr><td>6</td><td>topik-ai 계획 화면(대응 테이블 없음)</td><td>해당 사용자 화면/제품 범위 확정 후 연기</td></tr>
+  </tbody>
+</table>
+<p>각 슬라이스는 "필드 단위 매핑 → 상태/enum 용어집 → CRUD 검증 체크리스트" 순으로 구체화합니다.</p>
+
+<h2>9. 반드시 지킬 원칙 / 주의사항</h2>
+<ol>
+  <li>이 문서로 v13에 admin을 만들지 않는다. admin은 topik-ai 소유, 정합은 사용자 화면 완료 후 단계.</li>
+  <li>스키마는 admin-first. 사용자 화면을 스키마에 맞춘다. admin용 스키마 신규 추가 금지(소유자 승인 시 예외).</li>
+  <li>사용자 소유 데이터는 기본 읽기·지원. 제출물 불변, 서비스 작성 데이터 직접 편집 금지.</li>
+  <li>상태/enum 용어 일치가 최대 리스크 표면(<code>publish_status</code>, profile <code>status</code>, 피드백 상태 등).</li>
+  <li>개인정보 경계 우선. 제출물·초안·피드백 열람은 최소 권한·읽기 경로·접근 로그를 먼저 정의.</li>
+  <li>이 문서는 실증(live DB CRUD) 전 단계. 실제 정합은 슬라이스별 검증으로 확정.</li>
+</ol>
+
+<footer>
+  <strong>Docs consulted:</strong>
+  <code>docs/user-admin-data-consistency.md</code>,
+  <code>docs/admin-scope-boundary.md</code>,
+  <code>docs/user-admin-consistency-method.md</code>,
+  <code>docs/ai-workflow/runs/2026/06/04/20260604-2039-user-admin-data-inventory.md</code>,
+  <code>src/app/(workspace)/admin/*</code>, <code>src/lib/auth/admin-guard.ts</code>, <code>src/components/admin/*</code>,
+  <code>src/app/**/page.tsx</code>; (간접) <code>topik-ai/docs/specs/admin-data-contract.md</code>, <code>topik-ai/docs/page-sync/*.md</code>.
+  <br/><br/>
+  TALKPIK v13 · 관리자 페이지 구성안 (derived planning reference) · 2026-06-04 ·
+  Markdown 원본: <code>docs/admin-console-derived-spec.md</code>
+</footer>
+
+</div>
+</body>
+</html>

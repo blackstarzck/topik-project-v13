@@ -156,7 +156,7 @@ export function GrowthDashboard({
   const improvement = deltaSuffix(kpi.improvementPct);
 
   return (
-    <Space direction="vertical" size="large" style={{ width: "100%" }}>
+    <Space orientation="vertical" size="large" style={{ width: "100%" }}>
       <div>
         <Title level={3} style={{ marginBottom: 4 }}>
           {t("heading")}
@@ -205,7 +205,7 @@ export function GrowthDashboard({
                   <Statistic
                     title={t("kpi.improvement")}
                     value={improvement.text}
-                    valueStyle={improvement.color ? { color: improvement.color } : undefined}
+                    styles={{ content: improvement.color ? { color: improvement.color } : undefined }}
                   />
                   <Text type="secondary" style={{ fontSize: 12 }}>
                     {t("kpi.improvementHint")}
@@ -247,7 +247,7 @@ export function GrowthDashboard({
                 </Link>
               </Empty>
             ) : (
-              <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+              <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
                 {sortedWeak.slice(0, 6).map((w) => {
                   const percent = Math.round(w.avgScore * 100);
                   return (
@@ -278,13 +278,13 @@ export function GrowthDashboard({
           {/* area 5 — 인사이트. 실제 수치 근거(insights.ts), 3개 이하·60자 이하.
               insights.ts 가 키+ICU 변수만 만들고, 여기서 t()로 문구를 해석한다. */}
           <Card title={t("insights.title")}>
-            <Space direction="vertical" size="small" style={{ width: "100%" }}>
+            <Space orientation="vertical" size="small" style={{ width: "100%" }}>
               {insights.map((insight, idx) => (
                 <Alert
                   key={idx}
                   type="info"
                   showIcon
-                  message={tInsights(
+                  title={tInsights(
                     insight.key as Parameters<typeof tInsights>[0],
                     insight.values,
                   )}
@@ -355,7 +355,7 @@ export function GrowthDashboard({
                   </Empty>
                 ) : (
                   <Space
-                    direction="vertical"
+                    orientation="vertical"
                     size="middle"
                     style={{ width: "100%" }}
                   >
@@ -368,7 +368,7 @@ export function GrowthDashboard({
                           }}
                           wrap
                         >
-                          <Space direction="vertical" size={2}>
+                          <Space orientation="vertical" size={2}>
                             <Tag color="blue">
                               {rec.questionNo != null
                                 ? t("recommend.questionNo", {

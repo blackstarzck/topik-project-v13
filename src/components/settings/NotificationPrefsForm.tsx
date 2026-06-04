@@ -317,7 +317,7 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
       key: "email",
       label: t("channel.emailTab"),
       children: (
-        <Space direction="vertical" size={8} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={8} style={{ width: "100%" }}>
           <Checkbox
             checked={settings.channels.email}
             onChange={(e) => setChannel("email", e.target.checked)}
@@ -337,7 +337,7 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
         </Space>
       ),
       children: (
-        <Space direction="vertical" size={8} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={8} style={{ width: "100%" }}>
           <Checkbox
             checked={settings.channels.zalo}
             onChange={(e) => setChannel("zalo", e.target.checked)}
@@ -352,7 +352,7 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
       key: "both",
       label: t("channel.bothTab"),
       children: (
-        <Space direction="vertical" size={8} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={8} style={{ width: "100%" }}>
           <Checkbox
             checked={settings.channels.email}
             onChange={(e) => setChannel("email", e.target.checked)}
@@ -372,12 +372,12 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
 
   return (
     <Form layout="vertical" onFinish={handleFinish} disabled={saving}>
-      <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+      <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
         {settingsLoad.status === "error" ? (
           <Alert
             type="error"
             showIcon
-            message={t("loadErrorTitle")}
+            title={t("loadErrorTitle")}
             description={settingsLoad.message}
           />
         ) : null}
@@ -387,7 +387,7 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
           <Alert
             type="warning"
             showIcon
-            message={t("noChannel.title")}
+            title={t("noChannel.title")}
             description={t("noChannel.body")}
           />
         ) : null}
@@ -407,7 +407,7 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
 
         {/* Region 3: 알림 조건 입력 */}
         <Card size="small" title={t("condition.cardTitle")}>
-          <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+          <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
             {/* Boolean conditions persist to profiles.notification_prefs and do
                 not depend on the async notification_settings load. */}
             {NOTIFICATION_PREF_KEYS.map((key) => {
@@ -530,7 +530,7 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
           )}
         </Card>
 
-        <Alert type="info" showIcon message={t("deferredNotice")} />
+        <Alert type="info" showIcon title={t("deferredNotice")} />
 
         {/* Region 5: 저장 CTA (변경값 없으면 비활성, 저장 중 중복 클릭 차단) */}
         <Form.Item style={{ marginBottom: 0 }}>

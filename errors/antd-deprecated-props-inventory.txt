@@ -1,0 +1,44 @@
+alert            afterClose, closeIcon, closeText, message, onClose
+anchor           children
+auto-complete    Option, dataSource, dropdownClassName, dropdownMatchSelectWidth, dropdownRender, dropdownStyle, onDropdownVisibleChange, popupClassName
+avatar           Group, maxCount, maxPopoverPlacement, maxPopoverTrigger, maxStyle
+breadcrumb       Item, Separator, breadcrumbName, children, routes
+button           Group, iconPosition
+calendar         dateCellRender, dateFullCellRender, monthCellRender, monthFullCellRender
+card             bodyStyle, bordered, headStyle, tab
+carousel         dotPosition
+cascader         bordered, dropdownClassName, dropdownMenuColumnStyle, dropdownRender, dropdownStyle, onDropdownVisibleChange, onPopupVisibleChange, popupClassName, popupMenuColumnStyle, showArrow
+collapse         children, destroyInactivePanel, expandIconPosition
+config-provider  SizeContext, autoInsertSpaceInButton, dropdownMatchSelectWidth
+descriptions     children, contentStyle, labelStyle
+divider          orientationMargin, type
+drawer           bodyStyle, content, contentWrapperStyle, destroyOnClose, drawerStyle, footerStyle, headerStyle, maskClosable, maskStyle
+dropdown         destroyPopupOnHide, dropdownRender, overlayClassName, overlayStyle
+empty            imageStyle
+float-button     description
+generatePicker   bordered, dateFormat, dateTimeFormat, dropdownClassName, monthFormat, onSelect, popupClassName, popupStyle, weekFormat
+image            destroyOnClose, forceRender, maskClassName, onVisibleChange, rootClassName, toolbarRender, visible, wrapperStyle
+input            Group, bordered
+input-number     bordered
+interface        controlTmpOutline
+menu             _internalDisableMenuItemTitleTooltip
+modal            autoFocusButton, bodyStyle, destroyOnClose, focusTriggerAfterClose, maskClosable, maskStyle, warn
+notification     btn, message
+pagination       selectComponentClass
+progress         gapPosition, trailColor, width
+select           OptGroup, Option, bordered, dropdownClassName, dropdownMatchSelectWidth, dropdownRender, dropdownStyle, onDropdownVisibleChange, popupClassName, showArrow
+slider           handleStyle, onAfterChange, railStyle, trackStyle
+space            direction, split
+spin             mask, tip, wrapperClassName
+splitter         collapsibleIcon, layout
+statistic        Countdown, valueStyle
+steps            description, direction, labelPlacement, progressDot
+style            borderColorDisabled, color, colorActiveBarBorderSize, colorActiveBarHeight, colorActiveBarWidth, colorBgBody, colorBgHeader, colorBgTrigger, colorDangerItemBgActive, colorDangerItemBgSelected, colorDangerItemText, colorDangerItemTextHover, colorDangerItemTextSelected, colorGradientEnd, colorGroupTitle, colorItemBg, colorItemBgActive, colorItemBgHover, colorItemBgSelected, colorItemBgSelectedHorizontal, colorItemText, colorItemTextDisabled, colorItemTextHover, colorItemTextHoverHorizontal, colorItemTextSelected, colorItemTextSelectedHorizontal, colorSubItemBg, contentLineHeight, contentLineHeightLG, contentLineHeightSM, descriptionMaxWidth, dotWidthActive, minWidth, paddingBlock, paddingBlockLG, paddingBlockSM, radiusItem, radiusSubMenuItem, resizeSpinnerSize, titleLineHeight, width
+table            filterCheckall, filterDropdownOpen, onFilterDropdownOpenChange, onSelectAll, onSelectInvert, onSelectMultiple, onSelectNone, position, prefixCls, sortColumn, sortOrder
+tabs             destroyInactiveTabPane, indicatorSize, popupClassName, tabPosition
+tag              bordered
+time-picker      popupClassName, popupStyle
+timeline         children, dot, label, pending, pendingDot, position
+tooltip          destroyTooltipOnHide, overlayClassName, overlayInnerStyle, overlayStyle
+transfer         listStyle, operationStyle, operations
+tree-select      bordered, dropdownClassName, dropdownMatchSelectWidth, dropdownRender, dropdownStyle, onDropdownVisibleChange, popupClassName, showArrow

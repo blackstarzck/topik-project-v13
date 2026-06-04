@@ -1,0 +1,154 @@
+{
+  "name": "Steps",
+  "nameZh": "步骤条",
+  "description": "A navigation bar that guides users through the steps of a task.",
+  "props": [
+    {
+      "name": "classNames",
+      "type": "Record<[SemanticDOM](#semantic-dom), string> | (info: { props })=> Record<[SemanticDOM](#semantic-dom), string>",
+      "default": "-",
+      "since": ""
+    },
+    {
+      "name": "current",
+      "type": "number",
+      "default": "0",
+      "since": ""
+    },
+    {
+      "name": "direction",
+      "type": "string",
+      "default": "`horizontal`",
+      "since": ""
+    },
+    {
+      "name": "iconRender",
+      "type": "(oriNode, info: { index, active, item }) => ReactNode",
+      "default": "-",
+      "since": ""
+    },
+    {
+      "name": "initial",
+      "type": "number",
+      "default": "0",
+      "since": ""
+    },
+    {
+      "name": "labelPlacement",
+      "type": "string",
+      "default": "`horizontal`",
+      "since": ""
+    },
+    {
+      "name": "orientation",
+      "type": "string",
+      "default": "`horizontal`",
+      "since": ""
+    },
+    {
+      "name": "percent",
+      "type": "number",
+      "default": "-",
+      "since": "4.5.0"
+    },
+    {
+      "name": "progressDot",
+      "type": "boolean | (iconDot, { index, status, title, content }) => ReactNode",
+      "default": "false",
+      "since": ""
+    },
+    {
+      "name": "responsive",
+      "type": "boolean",
+      "default": "true",
+      "since": ""
+    },
+    {
+      "name": "size",
+      "type": "string",
+      "default": "`medium`",
+      "since": ""
+    },
+    {
+      "name": "status",
+      "type": "string",
+      "default": "`process`",
+      "since": ""
+    },
+    {
+      "name": "styles",
+      "type": "Record<[SemanticDOM](#semantic-dom), CSSProperties> | (info: { props })=> Record<[SemanticDOM](#semantic-dom), CSSProperties>",
+      "default": "-",
+      "since": ""
+    },
+    {
+      "name": "titlePlacement",
+      "type": "string",
+      "default": "`horizontal`",
+      "since": ""
+    },
+    {
+      "name": "type",
+      "type": "string",
+      "default": "`default`",
+      "since": ""
+    },
+    {
+      "name": "variant",
+      "type": "`filled` | `outlined`",
+      "default": "`filled`",
+      "since": ""
+    },
+    {
+      "name": "onChange",
+      "type": "(current) => void",
+      "default": "-",
+      "since": ""
+    },
+    {
+      "name": "items",
+      "type": "[StepItem](#stepitem)",
+      "default": "[]",
+      "since": "4.24.0"
+    }
+  ],
+  "subComponentProps": {
+    "Steps.StepItem": [
+      {
+        "name": "content",
+        "type": "ReactNode",
+        "default": "-"
+      },
+      {
+        "name": "description",
+        "type": "ReactNode",
+        "default": "-"
+      },
+      {
+        "name": "disabled",
+        "type": "boolean",
+        "default": "false"
+      },
+      {
+        "name": "icon",
+        "type": "ReactNode",
+        "default": "-"
+      },
+      {
+        "name": "status",
+        "type": "string",
+        "default": "`wait`"
+      },
+      {
+        "name": "subTitle",
+        "type": "ReactNode",
+        "default": "-"
+      },
+      {
+        "name": "title",
+        "type": "ReactNode",
+        "default": "-"
+      }
+    ]
+  }
+}

@@ -116,7 +116,7 @@ export function ConditionsPanel({ questionNo, rubric, loadFailed }: Props) {
         <Alert
           type="info"
           showIcon
-          message={t("manualCheck")}
+          title={t("manualCheck")}
           description={t(MANUAL_NOTE_KEYS[questionNo] as never)}
         />
       </AppCard>
@@ -125,7 +125,7 @@ export function ConditionsPanel({ questionNo, rubric, loadFailed }: Props) {
 
   return (
     <AppCard size="small" title={title}>
-      <Space direction="vertical" size="small" style={{ width: "100%" }}>
+      <Space orientation="vertical" size="small" style={{ width: "100%" }}>
         {parsed.conditions.length > 0 ? (
           <div>
             <Text strong style={{ fontSize: 13 }}>

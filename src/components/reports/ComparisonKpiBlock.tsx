@@ -63,7 +63,7 @@ export function ComparisonKpiBlock({
               title={t("improvement")}
               value={Math.abs(scoreDelta)}
               precision={1}
-              valueStyle={{ color: deltaColor }}
+              styles={{ content: { color: deltaColor } }}
               prefix={
                 <span aria-hidden>
                   {scoreDelta > 0 ? "▲" : scoreDelta < 0 ? "▼" : "—"}

@@ -180,7 +180,7 @@ export function WeaknessView({
   }
 
   return (
-    <Space direction="vertical" size="large" style={{ width: "100%" }}>
+    <Space orientation="vertical" size="large" style={{ width: "100%" }}>
       <div>
         <Title level={3} style={{ marginBottom: 4 }}>
           {t("heading")}
@@ -199,28 +199,28 @@ export function WeaknessView({
 
       {leadingWeakDimension && leadingInsight ? (
         <Card title={t("insightCardTitle")}>
-          <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+          <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
             <Alert
               showIcon
               type="info"
-              message={t("insightHeadline", { label: leadingWeakLabel })}
+              title={t("insightHeadline", { label: leadingWeakLabel })}
               description={t("insightDisclaimer")}
             />
             <Row gutter={[16, 16]}>
               <Col xs={24} md={8}>
-                <Space direction="vertical" size={4}>
+                <Space orientation="vertical" size={4}>
                   <Text strong>{t("insightWhyTitle")}</Text>
                   <Text type="secondary">{leadingInsight.why}</Text>
                 </Space>
               </Col>
               <Col xs={24} md={8}>
-                <Space direction="vertical" size={4}>
+                <Space orientation="vertical" size={4}>
                   <Text strong>{t("insightExampleTitle")}</Text>
                   <Text type="secondary">{leadingInsight.example}</Text>
                 </Space>
               </Col>
               <Col xs={24} md={8}>
-                <Space direction="vertical" size={4}>
+                <Space orientation="vertical" size={4}>
                   <Text strong>{t("insightStrategyTitle")}</Text>
                   <Text type="secondary">{leadingInsight.strategy}</Text>
                 </Space>
@@ -232,7 +232,7 @@ export function WeaknessView({
 
       <Row gutter={[24, 24]}>
         <Col xs={24} md={24}>
-          <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+          <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
             <Title level={4} style={{ marginBottom: 0 }}>
               {t("recommendationsTitle")}
             </Title>
@@ -257,7 +257,7 @@ export function WeaknessView({
                       }
                     >
                       <Space
-                        direction="vertical"
+                        orientation="vertical"
                         size="small"
                         style={{ width: "100%" }}
                       >
@@ -269,7 +269,7 @@ export function WeaknessView({
                           {truncateRecommendationTitle(rec.title)}
                         </Text>
                         {rec.locked ? (
-                          <Space direction="vertical" size={4}>
+                          <Space orientation="vertical" size={4}>
                             <Text type="secondary">{t("lockedNotice")}</Text>
                             <Button
                               onClick={(event) => {
@@ -283,7 +283,7 @@ export function WeaknessView({
                           </Space>
                         ) : (
                           <>
-                            <Space direction="vertical" size={2}>
+                            <Space orientation="vertical" size={2}>
                               <Tag color="blue">
                                 {recommendationSourceLabel(rec.source)}
                               </Tag>
@@ -327,7 +327,7 @@ export function WeaknessView({
               </Row>
             )}
             <Card>
-              <Space direction="vertical" size={8}>
+              <Space orientation="vertical" size={8}>
                 <Text strong>{t("deeperTitle")}</Text>
                 <Text type="secondary">{t("deeperBody")}</Text>
                 <Button onClick={() => router.push("/paywall" as never)}>

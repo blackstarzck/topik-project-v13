@@ -135,7 +135,7 @@ export function NextProblemView({ bundle }: Props) {
   // tier 4 / no primary AND no unlocked alternative → 빈 상태.
   if ((primaryTier === 4 || !primary) && !firstUnlockedAlt) {
     return (
-      <Space direction="vertical" size="large" style={{ width: "100%" }}>
+      <Space orientation="vertical" size="large" style={{ width: "100%" }}>
         <SummaryCardRow
           recentSubmissions={summary.recentSubmissions}
           averageScore={summary.averageScore}
@@ -173,7 +173,7 @@ export function NextProblemView({ bundle }: Props) {
 
   return (
     <Space
-      direction="vertical"
+      orientation="vertical"
       size="large"
       style={{ width: "100%", paddingBottom: 88 }}
     >
@@ -230,7 +230,7 @@ export function NextProblemView({ bundle }: Props) {
               </Button>
             }
           >
-            <Space direction="vertical" size="small" style={{ width: "100%" }}>
+            <Space orientation="vertical" size="small" style={{ width: "100%" }}>
               {/* R-02 §2 제약 — 난이도/시간 배지 필수. */}
               <Space wrap data-testid="next-problem-badges">
                 <Tag color="purple">

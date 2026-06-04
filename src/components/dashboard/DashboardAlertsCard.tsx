@@ -46,7 +46,7 @@ export function DashboardAlertsCard({ alerts, loadFailed = false }: Props) {
           <Alert
             type="warning"
             showIcon
-            message={t("loadFailedMessage")}
+            title={t("loadFailedMessage")}
             description={t("loadFailedDescription")}
           />
           <Space wrap>
@@ -66,7 +66,7 @@ export function DashboardAlertsCard({ alerts, loadFailed = false }: Props) {
             <Alert
               key={a.id}
               type={a.level}
-              message={a.title}
+              title={a.title}
               description={a.description}
               showIcon
             />
