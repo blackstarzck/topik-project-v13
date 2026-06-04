@@ -56,6 +56,7 @@
   - `docs/ui-redesign/PLAN.md` — M6 보완.
   - **(추가 2건, 사용자 재신고 후)** `src/components/learning/UpcomingExamCard.tsx`(`Statistic valueStyle`→`styles.content`)·`RecentFeedbackCard.tsx`(`List`→`Flex` 교체). `scripts/ai-workflow-check.mjs`에 `valueStyle` denylist 추가 + 테스트(+1=39 GREEN).
   - **(직접확인 기계강제)** `scripts/hooks/require-ui-smoke.mjs`(신규 Stop 훅 가드)·`.claude/settings.json`(신규, Stop 훅 배선).
+  - **(파일럿 범위 = machine-derivable Goal, 사용자 "자동화" 요청)** `docs/ui-redesign/PLAN.md`에 상단 `## Goal` YAML 블록 추가(objective/in.files/in.routes/out.absolute/done/pipeline) + §Scope가 이를 정본으로 가리킴. `scripts/read-pilot-goal.mjs`(신규 무의존성 파서)·`scripts/dev-route-smoke.mjs`(M1 인자없을 때 라우트를 §Goal에서 자동 소싱)·`tests/scripts/read-pilot-goal.test.ts`(신규, 5 GREEN).
 - Files explicitly not to touch: `src/components/admin/**`, `src/app/(workspace)/admin/**` (동결). 기존 user-facing 폐기 문법 다수(이번엔 백로그).
 
 ## Verification State
@@ -67,6 +68,7 @@
   - `pnpm typecheck` — GREEN (dashboard fix + test 파일).
   - **실제 앱 M1 스모크(사용자 지적 후, PLAN §A0/M1 절차):** `node scripts/dev-route-smoke.mjs --routes /dashboard` — 기존 dev 재사용, `student.json` 인증, authed /dashboard status 200 `ok:true` `reasons:[]`. consoleErrors=HMR WebSocket 노이즈뿐(non-fatal 분류), **antd deprecation 0건**(M1 보강이 warn까지 잡는데도 valueStyle·List·Space direction 전부 무검출=런타임 실제 소멸). 아티팩트 `docs/ui-redesign/pilot-shots/smoke-result.json`.
   - **Stop 훅 가드 직접 테스트:** allow(신선 스모크)·block(아티팩트 부재 exit 2)·loop-guard(stop_hook_active) 3경로 확인.
+  - **machine-derivable Goal 전 경로:** 파서 단위테스트 5 GREEN(인라인 주석 함정 포함) + `node scripts/read-pilot-goal.mjs`가 실제 PLAN.md에서 routes=[/login,/dashboard]·files 9·out.absolute 2 추출 + **M1 인자없이 실행 시 "routes auto-sourced from PLAN.md §Goal: /login, /dashboard" 로그 + 두 라우트 실제앱 ok·antd 0** 확인. 문서가 Goal을 set→M1이 소비하는 자동화 입증.
 - Latest results: 위 전부 통과. cache-headers 회귀 테스트(직전 커밋 49e6810)도 4 GREEN 유지.
 - **정직 기록(반복 실수):** /dashboard "한 줄이면 끝"이라던 1차 단정은 **틀렸다** — 실제 앱을 안 띄우고 부분 grep만 했다. valueStyle·List 2개를 사용자가 잡아냈다. 교훈을 기계강제(Stop 훅)로 박았다. cf. [[feedback-ui-completion-requires-dev-server]].
 - Known failures: none.

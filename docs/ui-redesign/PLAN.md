@@ -6,7 +6,50 @@
 > - **검토:** codex(gpt-5.5) 2라운드 — 1차 16건(설계 보강) → 2차 16건(실행가능성·정합성) 전부 수용. v4 본문 강화는 Claude 독립 리뷰어 4명 적대적 교차검수.
 > - **근거(정답지):** 승인된 마스터 플랜 `~/.claude/plans/refactored-knitting-dragonfly.md` §A — 본 v4 보완은 여기서 도출. **A단계 완료 자기검증 기준 문서.**
 > - **실행 주체(중요):** 본 문서는 **AI 에이전트 자동검수 실행 문서**다. 에이전트는 §실행 체크리스트를 Step 0 → Phase 2 **자동 완료 게이트**까지 수행한다. **단 "완료"는 에이전트의 보고가 아니라 통합 게이트 명령의 종료코드(+CI)가 잠근다(§강제성 A0).**
-> - **읽는 법:** **먼저 §강제성(A0)** — 판정·완료의 원천 — 을 읽고, 의도·근거는 §A–G, **에이전트 작업은 §"실행 체크리스트"를 위→아래로** 따른다.
+> - **읽는 법:** **먼저 §Goal** — 이 블록만으로 작업 범위·라우트·완료기준이 자동 확정된다 — 을 읽고, **§강제성(A0)**(판정·완료의 원천), 의도·근거 §A–G, **에이전트 작업은 §"실행 체크리스트"**를 위→아래로 따른다.
+
+---
+
+## Goal — machine-derivable (이 블록만으로 에이전트가 작업을 자동 확정; 사람 개입 불필요)
+
+> **핵심: 자동화.** 아래 YAML이 정답지다. 에이전트는 이 블록을 파싱해 *무엇을·어디까지·완료기준*을
+> 사람의 goal-setting 없이 set 한다. 프로즈(§Scope·§Locked decisions·§Critical files)와 충돌하면 **이
+> 블록이 우선**이며, 프로즈는 그 근거다. **확장 시**: 파일럿 통과 후 다음 클러스터로 넘어갈 땐
+> `goal.in.files`/`goal.in.routes`/`goal.objective`만 교체하면 다음 Goal이 자동으로 재설정된다(나머지
+> 강제 파이프라인 §A0·M1–M6·C1·Stop훅은 그대로 이 블록을 소비).
+
+```yaml
+goal:
+  objective: >
+    파일럿 2화면(로그인·대시보드)을 DESIGN.md + 테마로 정리하고,
+    실제 앱에서 콘솔 에러 0 · antd deprecation 0 으로 검증한다.
+  in:
+    files:                       # 편집/검증 대상(글롭). 변경분이 C1의 라우트 도출 입력.
+      - "src/app/login/**"
+      - "src/components/auth/LoginForm.tsx"
+      - "src/app/(workspace)/dashboard/**"
+      - "src/components/dashboard/**"
+      - "src/components/learning/**"                 # 대시보드가 렌더하는 카드
+      - "src/components/app/{WorkspaceShell,AppHeader}.tsx"
+      - "src/components/shared/{AppCard,AppDrawer,PageContainer,PageHeader,PublicShell}.tsx"
+      - "src/theme/components/shared.ts"
+      - "src/styles/global.css"
+    routes: ["/login", "/dashboard"]   # M1 실제-앱 검증 대상(하한/폴백)
+  out:
+    absolute:                    # 편집 절대 금지(동결 섬)
+      - "src/components/admin/**"
+      - "src/app/(workspace)/admin/**"
+    note: >
+      글로벌 테마 파일이 admin 렌더에 영향은 허용(편집 아님). 신규 DB 스키마 금지.
+  done:                          # 완료 = 기계 종료코드(A0-(2)), 에이전트 보고 아님
+    - "통합 게이트 exit 0: pnpm test·lint·typecheck·(clean)build + node scripts/ai-workflow-check.mjs --repo . --check-inline-styles --check-antd-deprecations"
+    - "M1 dev-smoke(routes) 전부 ok=true · 콘솔 에러 0 · antd deprecation 0 (@360/768/1280)"
+    - "admin diff 빈 출력: git diff --name-only -- src/components/admin \"src/app/(workspace)/admin\""
+  pipeline:                      # 이 Goal을 소비하는 자동화 경로(현 구현)
+    routes_from: "C1(scripts/derive-smoke-routes.mjs): 실제 git diff 변경분(= in.files 범위)에서 import 역참조로 검증 라우트 도출. in.routes는 폴백 하한."
+    verified_by: "M1(scripts/dev-route-smoke.mjs): routes를 실제 앱으로 검증(콘솔/런타임/스크린샷 @360/768/1280)."
+    enforced_by: "Stop 훅(scripts/hooks/require-ui-smoke.mjs): in.files류 UI 변경 후 신선·통과 M1 스모크가 없으면 턴 종료 차단."
+```
 
 ---
 
@@ -86,7 +129,9 @@
 
 ## Scope (admin 동결 — 정합성 보강 #6)
 
-- **In:** user-facing 클러스터.
+> 기계 정본 = 상단 **§Goal**의 `goal.in`/`goal.out`(파싱 대상). 아래는 그 prose 근거이며 충돌 시 §Goal 우선.
+
+- **In:** user-facing 클러스터(파일럿 = `goal.in.files`/`goal.in.routes`).
 - **Out(절대):** admin **소스 파일** 편집 금지(`src/components/admin/**`, `src/app/(workspace)/admin/**`).
   글로벌 테마 파일(`app/layout.tsx`, `styles/global.css`, `src/theme/**`)이 admin **렌더에 영향**을 줄 수는
   있음 — 이는 **허용**(admin remediation 아님). 신규 DB 스키마 금지.

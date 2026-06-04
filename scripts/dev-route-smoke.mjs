@@ -334,7 +334,25 @@ async function main() {
     changedFiles = d.changedFiles;
     overApproximated = d.overApproximated;
   } else {
-    requiredRoutes = ["/", "/login", "/dashboard"]; // PLAN Phase 2 pilot fallback
+    // No --routes/--base: the DOCUMENT sets the goal. Source pilot smoke routes
+    // from PLAN.md §Goal (goal.in.routes) so editing that block alone retargets
+    // verification — "이 문서만으로 Goal 자동 설정". Hardcoded list is the
+    // ultimate fallback if the block can't be read.
+    let fromGoal = [];
+    try {
+      const mod = await import("./read-pilot-goal.mjs");
+      fromGoal = mod.readPilotGoalRoutes(root);
+    } catch {
+      /* fall back to the hardcoded pilot list */
+    }
+    if (fromGoal.length) {
+      requiredRoutes = fromGoal;
+      console.log(
+        `[M1 dev-smoke] routes auto-sourced from PLAN.md §Goal: ${fromGoal.join(", ")}`,
+      );
+    } else {
+      requiredRoutes = ["/", "/login", "/dashboard"]; // PLAN Phase 2 pilot fallback
+    }
   }
 
   // Cross-audit P2: 0 routes must NOT silently exit 0. If the diff derived
