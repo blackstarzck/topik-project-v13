@@ -144,7 +144,7 @@ export default async function DashboardPage() {
   };
 
   return (
-    <Space direction="vertical" size="large" style={{ width: "100%" }}>
+    <Space orientation="vertical" size="large" style={{ width: "100%" }}>
       <DashboardHeader />
       <DashboardBody
         kpi={kpiData}
