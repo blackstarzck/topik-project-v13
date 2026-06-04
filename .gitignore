@@ -52,7 +52,12 @@
 .agents/superpowers/skills/*
 !.agents/superpowers/skills/*/
 !.agents/superpowers/skills/*/SKILL.md
-.claude/
+# Ignore local Claude config, but TRACK the shared project settings.json so the
+# committed Stop hook (real-app smoke gate, scripts/hooks/require-ui-smoke.mjs)
+# is enforced for everyone, not just one machine. settings.local.json (personal
+# permissions / machine paths) stays ignored.
+.claude/*
+!.claude/settings.json
 .codex/
 
 # Local/generated analysis artifacts

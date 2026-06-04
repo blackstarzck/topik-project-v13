@@ -61,6 +61,16 @@ jobs:
         run: |
           node scripts/ai-workflow-check.mjs --check-inline-styles --base "$BASE_SHA"
 
+      # M6 — antd deprecation guard (PLAN.md §강제성). Flags NEW prop-shaped antd
+      # deprecations under user-facing src/ on this PR's diff (admin excluded;
+      # `// ai-check: allow-antd-deprecated <reason>` escape hatch). Runtime/
+      # context deprecations are caught by the local M1 dev-smoke Stop hook.
+      - name: Validate antd deprecation delta (M6)
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          node scripts/ai-workflow-check.mjs --check-antd-deprecations --base "$BASE_SHA"
+
       # M1/M3 dev-mode smoke (`--check-smoke`) is intentionally NOT wired here
       # yet: it needs a booted `next dev` + Playwright (chromium) + seeded auth
       # storage-state — a heavier browser CI job (auth-state builder is currently

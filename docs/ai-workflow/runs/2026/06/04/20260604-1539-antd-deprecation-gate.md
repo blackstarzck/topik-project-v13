@@ -17,7 +17,7 @@
   - 신규 기계 게이트 M6 (antd deprecation 정적 가드) TDD 구현 + M1 콘솔 캡처 보강.
   - PLAN.md 보완(M6 게이트 표/통합 게이트/DoD/이력/백로그).
 - Out of scope: 기존 user-facing 폐기 문법 전체 sweep(코드) — PLAN.md 백로그 문서화만. admin 소스(동결).
-- Current next action: 완료 — 커밋 후 사용자 보고. 후속 권고: CI 배선(D단계), 게이트 코드 적대적 cross-review, 전체 sweep 클러스터 청산.
+- Current next action: 완료. 영구 재발방지(사용자 "결정해줘"): (1) Stop 훅 wiring을 `.gitignore` 예외로 커밋해 팀 강제, (2) M6를 CI(`ai-workflow-check.yml`)에 `--check-antd-deprecations --base`로 배선, (3) PLAN.md에 강제 경로 명시, (4) 브랜치 push. 전체 sweep은 훅+M1 클러스터 자동청산에 위임(일괄수정 비선택).
 
 ## Docs Consulted
 
@@ -100,4 +100,4 @@
 
 - Remaining risks: M6 denylist 수동·버전핀(antd 업글 시 갱신); 기존 폐기 문법 다수 잔존(델타 가드라 미차단 — 백로그); 런타임/컨텍스트형 deprecation은 M1 스모크 라우트/로드 시점에만 보임(상호작용형 정적 message는 양 게이트 모두 사각).
 - Assumptions: bodyStyle/headStyle/Tabs.TabPane/dropdownClassName이 antd 6.4.3에서도 폐기 상태(잘 알려진 v5→v6 폐기). Space direction은 node_modules 직접 확인.
-- Follow-up needed: (a) 게이트 코드 적대 cross-review, (b) CI 배선(D), (c) 전체 sweep 클러스터 청산, (d) 통합 게이트 full 실행.
+- Follow-up needed: (a) 게이트 코드 적대 cross-review, (b) M1/M3 CI 배선(브라우저+인증 — 여전히 미배선; M4·M6는 배선됨), (c) 전체 sweep은 클러스터 확장 시 훅+M1로 자동 청산, (d) Stop 훅 팀 도입 후 다른 기여자 마찰 모니터링(우회=`.smoke-skip`).
