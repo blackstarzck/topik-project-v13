@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, Empty, List, Tag, Typography } from "antd";
+import { Card, Empty, Flex, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 
@@ -29,42 +29,54 @@ export function RecentFeedbackCard({ items }: Props) {
       {items.length === 0 ? (
         <Empty description={t("empty")} />
       ) : (
-        <List
-          dataSource={items.slice(0, 3)}
-          renderItem={(item) => (
-            <List.Item
+        // antd 6.x deprecates the `List` component → compose with Flex (stable).
+        // role=list/listitem preserves the ul/li semantics List provided.
+        <Flex vertical role="list">
+          {items.slice(0, 3).map((item, idx, arr) => (
+            <Flex
               key={item.submissionId}
-              actions={[
-                <Link
-                  key="view"
-                  href={`/writing/feedback/long/${item.submissionId}` as never}
-                >
-                  {t("view")}
-                </Link>,
-              ]}
+              role="listitem"
+              justify="space-between"
+              align="center"
+              gap="middle"
+              wrap
+              style={{
+                padding: "12px 0",
+                borderBottom:
+                  idx < arr.length - 1
+                    ? "1px solid var(--app-color-border)"
+                    : undefined,
+              }}
             >
-              <Tag>
-                {item.questionNo != null
-                  ? t("questionNo", { no: item.questionNo })
-                  : "—"}
-              </Tag>
-              <span style={{ marginLeft: 8 }}>
-                {t("scoreLabel")}{" "}
-                <strong>
-                  {item.scoreTotal != null
-                    ? t("scoreValue", { score: Math.round(item.scoreTotal) })
-                    : t("scorePending")}
-                </strong>
-              </span>
-              <Text type="secondary" style={{ marginLeft: 12, fontSize: 12 }}>
-                {/* Pin tz so SSR/client render the same date string (no React #418). */}
-                {new Date(item.generatedAt).toLocaleDateString("ko-KR", {
-                  timeZone: "Asia/Seoul",
-                })}
-              </Text>
-            </List.Item>
-          )}
-        />
+              <Flex align="center" gap="small" wrap>
+                <Tag>
+                  {item.questionNo != null
+                    ? t("questionNo", { no: item.questionNo })
+                    : "—"}
+                </Tag>
+                <span>
+                  {t("scoreLabel")}{" "}
+                  <strong>
+                    {item.scoreTotal != null
+                      ? t("scoreValue", { score: Math.round(item.scoreTotal) })
+                      : t("scorePending")}
+                  </strong>
+                </span>
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                  {/* Pin tz so SSR/client render the same date string (no React #418). */}
+                  {new Date(item.generatedAt).toLocaleDateString("ko-KR", {
+                    timeZone: "Asia/Seoul",
+                  })}
+                </Text>
+              </Flex>
+              <Link
+                href={`/writing/feedback/long/${item.submissionId}` as never}
+              >
+                {t("view")}
+              </Link>
+            </Flex>
+          ))}
+        </Flex>
       )}
     </Card>
   );

@@ -475,6 +475,10 @@ const ANTD_DEPRECATIONS = [
     re: /\bdropdownClassName\s*=/,
     msg: "`dropdownClassName` is deprecated → use `popupClassName`/`classNames`",
   },
+  {
+    re: /\bvalueStyle\s*=/,
+    msg: "`valueStyle` is deprecated → use `styles.content` (Statistic)",
+  },
 ];
 const ANTD_DEPRECATED_ALLOW = /ai-check:\s*allow-antd-deprecated/;
 

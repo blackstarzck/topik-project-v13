@@ -20,7 +20,7 @@ export function UpcomingExamCard({ examDate }: Props) {
     <Card title={t("title")}>
       <Statistic
         value={exam.format("YYYY-MM-DD")}
-        valueStyle={{ fontSize: 20 }}
+        styles={{ content: { fontSize: 20 } }}
       />
       <Paragraph type="secondary" style={{ marginTop: 8, marginBottom: 0 }}>
         {daysLeft === 0

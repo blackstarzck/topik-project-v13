@@ -54,6 +54,8 @@
   - `scripts/dev-route-smoke.mjs` — console.warn antd-deprecation 캡처.
   - `tests/scripts/ai-workflow-check.test.ts` — M6 describe 블록(+6) + import.
   - `docs/ui-redesign/PLAN.md` — M6 보완.
+  - **(추가 2건, 사용자 재신고 후)** `src/components/learning/UpcomingExamCard.tsx`(`Statistic valueStyle`→`styles.content`)·`RecentFeedbackCard.tsx`(`List`→`Flex` 교체). `scripts/ai-workflow-check.mjs`에 `valueStyle` denylist 추가 + 테스트(+1=39 GREEN).
+  - **(직접확인 기계강제)** `scripts/hooks/require-ui-smoke.mjs`(신규 Stop 훅 가드)·`.claude/settings.json`(신규, Stop 훅 배선).
 - Files explicitly not to touch: `src/components/admin/**`, `src/app/(workspace)/admin/**` (동결). 기존 user-facing 폐기 문법 다수(이번엔 백로그).
 
 ## Verification State
@@ -63,10 +65,19 @@
   - `pnpm exec vitest run tests/scripts/ai-workflow-check.test.ts` — RED(6 fail, "not a function") → 구현 후 GREEN(38 pass).
   - `node scripts/ai-workflow-check.mjs --check-antd-deprecations` — probe(`<Space direction>` 신규파일) FAIL/exit 1 → 삭제 후 PASS/exit 0.
   - `pnpm typecheck` — GREEN (dashboard fix + test 파일).
+  - **실제 앱 M1 스모크(사용자 지적 후, PLAN §A0/M1 절차):** `node scripts/dev-route-smoke.mjs --routes /dashboard` — 기존 dev 재사용, `student.json` 인증, authed /dashboard status 200 `ok:true` `reasons:[]`. consoleErrors=HMR WebSocket 노이즈뿐(non-fatal 분류), **antd deprecation 0건**(M1 보강이 warn까지 잡는데도 valueStyle·List·Space direction 전부 무검출=런타임 실제 소멸). 아티팩트 `docs/ui-redesign/pilot-shots/smoke-result.json`.
+  - **Stop 훅 가드 직접 테스트:** allow(신선 스모크)·block(아티팩트 부재 exit 2)·loop-guard(stop_hook_active) 3경로 확인.
 - Latest results: 위 전부 통과. cache-headers 회귀 테스트(직전 커밋 49e6810)도 4 GREEN 유지.
+- **정직 기록(반복 실수):** /dashboard "한 줄이면 끝"이라던 1차 단정은 **틀렸다** — 실제 앱을 안 띄우고 부분 grep만 했다. valueStyle·List 2개를 사용자가 잡아냈다. 교훈을 기계강제(Stop 훅)로 박았다. cf. [[feedback-ui-completion-requires-dev-server]].
 - Known failures: none.
 - Skipped checks and reason: 전체 `pnpm test`/`lint`/clean build — 본 변경은 스크립트/테스트/문서 한정이고 dev 서버 실행 중이라 clean build는 M5 정신상 회피(focused 테스트 + typecheck로 대체). 통합 게이트 full 실행은 커밋 직후 권고.
 - Cross-model review: degraded — 단일 세션 구현. validate-the-validator(단위 RED→GREEN + 라이브 arm exit-code)로 대체 증거 확보. 한글 카피 mojibake로 codex 부적격(see codex-review-mojibake-windows); 후속 Claude 리뷰어 적대 검수 권고(M2-M5 v4.2 전례).
+- UX/UI Consistency Pass: passed
+  - Tokens: passed | `var(--app-color-border)`(승인 9 중) + Flex gap 토큰(small/middle); 신규 매직넘버 0 (M4 PASS).
+  - Components: passed | deprecated `List`→`Flex`(stable)·`Statistic valueStyle`→`styles.content`; AppCard 스코프 무관, 미터치 부채 없음.
+  - A11y: passed | `role=list/listitem`로 ul/li 시맨틱 보존; view 링크 tab 포커스·focus-visible 기본·대비(토큰 불변)·라벨(Tag+점수 텍스트) 유지.
+  - Responsive: passed | M1 실제앱 /dashboard @360/768/1280 전부 ok=true·가로스크롤/오버레이 없음·Flex wrap; 스크린샷 3장 docs/ui-redesign/pilot-shots/.
+- QA Gate: passed | 로컬 dev(재사용) 실제 인증 /dashboard 진입 + 콘솔 캡처, antd deprecation 0건(3뷰포트). M1 아티팩트 smoke-result.json.
 
 ## Fallback State
 

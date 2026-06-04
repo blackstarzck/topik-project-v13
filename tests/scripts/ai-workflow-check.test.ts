@@ -317,6 +317,14 @@ describe("checkAntdDeprecations — M6 antd 6.x deprecation guard", () => {
     ]);
   });
 
+  // Real /dashboard defects found only by running the app (M1), not by the
+  // first limited grep — added to the denylist after the fact.
+  test("flags Statistic `valueStyle` → styles.content", () => {
+    expect(
+      checkAntdDeprecations("<Statistic valueStyle={{ fontSize: 20 }} />"),
+    ).toEqual(["`valueStyle` is deprecated → use `styles.content` (Statistic)"]);
+  });
+
   test("escape hatch: allow-antd-deprecated comment suppresses it", () => {
     expect(
       checkAntdDeprecations(
