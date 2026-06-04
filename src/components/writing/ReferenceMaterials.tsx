@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Card, Empty, Image, Space, Typography } from "antd";
+import { Empty, Image, Space, Typography } from "antd";
 import { useTranslations } from "next-intl";
+import { AppCard } from "@/components/shared/AppCard";
 
 const { Text } = Typography;
 
@@ -32,7 +33,7 @@ export function ReferenceMaterials({ assets, captions }: Props) {
   if (assets.length === 0) return null;
 
   return (
-    <Card size="small" title={t("cardTitle")}>
+    <AppCard size="small" title={t("cardTitle")}>
       <Space direction="vertical" size="middle" style={{ width: "100%" }}>
         {assets.map((asset) => (
           <AssetView
@@ -42,7 +43,7 @@ export function ReferenceMaterials({ assets, captions }: Props) {
           />
         ))}
       </Space>
-    </Card>
+    </AppCard>
   );
 }
 

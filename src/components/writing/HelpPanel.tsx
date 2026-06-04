@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Button, Card, Empty, Space, Typography } from "antd";
+import { Button, Empty, Space, Typography } from "antd";
 import { useTranslations } from "next-intl";
+import { AppCard } from "@/components/shared/AppCard";
 import type { QuestionNo } from "@/lib/writing/types";
 
 const { Text, Paragraph } = Typography;
@@ -59,20 +60,20 @@ export function HelpPanel({ cards, questionNo }: Props) {
   if (!resolved || resolved.length === 0) {
     // §5 예외 — 도움말 없음: 접힌 빈 상태 + 추천 링크.
     return (
-      <Card size="small">
+      <AppCard size="small">
         <Empty description={t("empty")}>
           <Link href={"/practice/recommendations" as never}>
             <Button size="small">{t("viewRecommendations")}</Button>
           </Link>
         </Empty>
-      </Card>
+      </AppCard>
     );
   }
 
   return (
     <Space direction="vertical" size="small" style={{ width: "100%" }}>
       {resolved.slice(0, 3).map((c, i) => (
-        <Card key={i} size="small">
+        <AppCard key={i} size="small">
           <Text strong>{c.title.slice(0, 16)}</Text>
           <Paragraph
             style={{ margin: 0 }}
@@ -81,7 +82,7 @@ export function HelpPanel({ cards, questionNo }: Props) {
           >
             {c.body}
           </Paragraph>
-        </Card>
+        </AppCard>
       ))}
     </Space>
   );

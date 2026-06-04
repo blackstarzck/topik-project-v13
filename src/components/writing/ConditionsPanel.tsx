@@ -1,7 +1,8 @@
 "use client";
 
-import { Alert, Card, List, Space, Tag, Typography } from "antd";
+import { Alert, List, Space, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
+import { AppCard } from "@/components/shared/AppCard";
 
 const { Text } = Typography;
 
@@ -111,19 +112,19 @@ export function ConditionsPanel({ questionNo, rubric, loadFailed }: Props) {
   // §예외 — 기준 계산 실패 또는 데이터 없음 → 수동 체크 안내.
   if (!parsed) {
     return (
-      <Card size="small" title={title}>
+      <AppCard size="small" title={title}>
         <Alert
           type="info"
           showIcon
           message={t("manualCheck")}
           description={t(MANUAL_NOTE_KEYS[questionNo] as never)}
         />
-      </Card>
+      </AppCard>
     );
   }
 
   return (
-    <Card size="small" title={title}>
+    <AppCard size="small" title={title}>
       <Space direction="vertical" size="small" style={{ width: "100%" }}>
         {parsed.conditions.length > 0 ? (
           <div>
@@ -163,6 +164,6 @@ export function ConditionsPanel({ questionNo, rubric, loadFailed }: Props) {
           </div>
         ) : null}
       </Space>
-    </Card>
+    </AppCard>
   );
 }

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Alert, Checkbox, Descriptions, Modal, Typography } from "antd";
+import { Alert, Checkbox, Descriptions, Typography } from "antd";
 import { useTranslations } from "next-intl";
+import { AppModal } from "@/components/shared/AppModal";
 
 const { Paragraph, Text } = Typography;
 
@@ -46,7 +47,7 @@ export function SubmissionConfirmModal({
     : t("noSaveRecord");
 
   return (
-    <Modal
+    <AppModal
       title={t("title")}
       open={open}
       onOk={onConfirm}
@@ -101,6 +102,6 @@ export function SubmissionConfirmModal({
       <Checkbox checked={agreed} onChange={(e) => setAgreed(e.target.checked)}>
         {t("agreeNoEdit")}
       </Checkbox>
-    </Modal>
+    </AppModal>
   );
 }

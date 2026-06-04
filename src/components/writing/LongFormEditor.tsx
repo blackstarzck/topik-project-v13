@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Button, Card, Input, Space, Tabs, Typography } from "antd";
+import { Button, Input, Space, Tabs, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 
@@ -26,6 +26,7 @@ import {
   isCountSubmittable,
 } from "@/lib/writing/constants";
 import type { WritingProblemMaterials } from "@/lib/writing/server";
+import { AppCard } from "@/components/shared/AppCard";
 import { AutosaveBadge } from "./AutosaveBadge";
 import { ConditionsPanel, type ProblemRubric } from "./ConditionsPanel";
 import { SubmissionConfirmModal } from "./SubmissionConfirmModal";
@@ -95,20 +96,20 @@ function MaterialsPanel({
   if (!materials) return null;
   if ("text" in materials) {
     return (
-      <Card title={t("materialsTitle")}>
+      <AppCard title={t("materialsTitle")}>
         <Text>{materials.text}</Text>
-      </Card>
+      </AppCard>
     );
   }
   if ("chart" in materials) {
     return (
-      <Card title={t("materialsChartTitle", { type: materials.chart.type })}>
+      <AppCard title={t("materialsChartTitle", { type: materials.chart.type })}>
         <Text type="secondary">
           {t("materialsChartPlaceholder", {
             count: materials.chart.data.length,
           })}
         </Text>
-      </Card>
+      </AppCard>
     );
   }
   return null;
@@ -452,7 +453,7 @@ export function LongFormEditor({
             gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
           }}
         >
-          <Card>
+          <AppCard>
             <Title level={5}>{t("essayBodyTitle")}</Title>
             <Input.TextArea
               aria-label={t("essayBodyAria")}
@@ -463,7 +464,7 @@ export function LongFormEditor({
               placeholder={t("essayBodyPlaceholder")}
               disabled={submit.isPending}
             />
-          </Card>
+          </AppCard>
           <EssayChecklist
             status={state54.checklist}
             onChange={onChecklist54Change}

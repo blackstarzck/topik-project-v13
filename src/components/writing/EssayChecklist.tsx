@@ -1,7 +1,7 @@
 "use client";
 
-import { Card } from "antd";
 import { useTranslations } from "next-intl";
+import { AppCard } from "@/components/shared/AppCard";
 
 import {
   ESSAY_CHECKLIST_KEYS,
@@ -29,7 +29,7 @@ const LABEL_KEYS: Record<EssayChecklistKey, string> = {
 export function EssayChecklist({ status, onChange }: Props) {
   const t = useTranslations("writing.checklist");
   return (
-    <Card title={t("cardTitle")}>
+    <AppCard title={t("cardTitle")}>
       {ESSAY_CHECKLIST_KEYS.map((key) => (
         <ChecklistRow
           key={key}
@@ -38,6 +38,6 @@ export function EssayChecklist({ status, onChange }: Props) {
           onChange={(next) => onChange(key, next)}
         />
       ))}
-    </Card>
+    </AppCard>
   );
 }

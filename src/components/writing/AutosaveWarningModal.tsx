@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Alert, Button, Descriptions, Modal, Space, Tag, Typography } from "antd";
+import { Alert, Button, Descriptions, Space, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
+import { AppModal } from "@/components/shared/AppModal";
 
 const { Paragraph, Text } = Typography;
 
@@ -87,7 +88,7 @@ export function AutosaveWarningModal({
     : t("noSaveRecord");
 
   return (
-    <Modal
+    <AppModal
       open
       // §2 예외 — 경고 아이콘 로드 실패 대비: 아이콘 대신 텍스트 배지를 제목에 둔다.
       title={
@@ -156,6 +157,6 @@ export function AutosaveWarningModal({
           </Text>
         </Button>
       </Space>
-    </Modal>
+    </AppModal>
   );
 }
