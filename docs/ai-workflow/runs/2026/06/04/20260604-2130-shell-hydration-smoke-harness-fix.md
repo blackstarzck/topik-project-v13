@@ -103,14 +103,18 @@ M1 smoke screenshot showed the sidebar not collapsing at ≤360px. Investigating
 
 ## Risks And Follow-Up (HIGH IMPORTANCE)
 
-1. **The M1 smoke was SSR-only (no hydration) for the entire pilot + clusters 1-5** (127.0.0.1 cross-origin block).
-   It validated server render but was BLIND to client hydration/interactivity. `allowedDevOrigins` fixes this going
-   forward; **clusters 1-5 should get a bounded hydrated re-smoke** (their changes were SSR-safe wrapper swaps, so
-   risk is low, but the verification claim must be corrected to "SSR-verified; client behaviour re-checked post-fix").
-2. **`/library` "Maximum update depth exceeded" render loop** — real client bug surfaced by the hydration fix.
-   Currently confounded by Codex's uncommitted antd sweep. Re-smoke `/library` at committed HEAD after Codex lands;
-   if it persists, investigate the looping component (a setState-in-useEffect with bad deps).
-3. **Concurrent Codex antd-deprecation sweep (~50 files, uncommitted)** is colliding with the cluster rollout
-   (it has already re-touched cluster-5 library files and cluster-6 growth files). Coordinate before resuming.
+1. ✅ **RESOLVED — clusters 1-5 bounded hydrated re-smoke done.** The M1 smoke was SSR-only (no hydration) for the
+   pilot + clusters 1-5 (127.0.0.1 cross-origin block); `allowedDevOrigins` fixed it. Re-verification smoke (now
+   hydrating) over 14 representative routes (dashboard, library, writing, feedback, practice/recommendations,
+   practice/weakness, growth, settings/notifications, profile, paywall, subscription, /, terms, login) × {360,1280}
+   = **28 visits all ok=true, 0 console errors, 0 runtime errors, 0 antd deprecations, 0 overlays** at HEAD `273fd5b`.
+   Artifact: `docs/ui-redesign/pilot-shots/reverify2-smoke.json`. Clusters 1-5 client behaviour is now positively verified.
+2. ✅ **FIXED — `/library` "Maximum update depth exceeded" render loop.** Pre-existing in `LibrarySubmissionsTab`
+   (`allItems` recomputed every render → `filtered` useMemo → selection-lift useEffect looped). Fix: `useMemo(allItems,
+   [query.data, initialItems])` (commit `6ad6494`) + regression test `LibrarySubmissionsTab.test.tsx` (commit `273fd5b`,
+   validate-the-validator confirmed). `/library` @360/768/1280 now consoleErrors=[].
+3. ✅ **RESOLVED — concurrent Codex antd-deprecation sweep committed** at the user's request (commit `b67ad3b`,
+   ~50 files + Codex docs/ledgers). Shared tree is clean again; cluster rollout can resume.
 4. WorkspaceShell mobile-nav: **no fix needed** (was never broken). The earlier GPT-5.5 "fix the shell" directive
    is superseded by this evidence.
+5. **Next: resume cluster 6 (growth)** with the now-hydrating smoke as the verification baseline.
