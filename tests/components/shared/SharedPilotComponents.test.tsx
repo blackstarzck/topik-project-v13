@@ -4,6 +4,7 @@ import { cleanup, fireEvent, screen, within } from "@testing-library/react";
 
 import { AppCard } from "../../../src/components/shared/AppCard";
 import { AppDrawer } from "../../../src/components/shared/AppDrawer";
+import { AppModal } from "../../../src/components/shared/AppModal";
 import { PageContainer } from "../../../src/components/shared/PageContainer";
 import { PageHeader } from "../../../src/components/shared/PageHeader";
 import { PublicShell } from "../../../src/components/shared/PublicShell";
@@ -165,5 +166,53 @@ describe("AppDrawer (overlay sentinel)", () => {
       code: "Escape",
     });
     expect(onClose).toHaveBeenCalled();
+  });
+});
+
+describe("AppModal (overlay sentinel — first modal cluster)", () => {
+  it("renders an accessible dialog with the .app-modal hook and children when open", () => {
+    renderWithIntl(
+      <AppModal open title="modal-title" onCancel={() => undefined}>
+        <span data-testid="modal-child">body</span>
+      </AppModal>,
+    );
+    expect(screen.getByRole("dialog")).toBeTruthy();
+    expect(screen.getByTestId("modal-child")).toBeTruthy();
+    expect(document.querySelector(".app-modal")).toBeTruthy();
+  });
+
+  it("merges a caller rootClassName without dropping the hook", () => {
+    renderWithIntl(
+      <AppModal open rootClassName="caller-m" onCancel={() => undefined}>
+        <span>body</span>
+      </AppModal>,
+    );
+    const root = document.querySelector(".app-modal");
+    expect(root).toBeTruthy();
+    expect(root?.classList.contains("caller-m")).toBe(true);
+  });
+
+  it("calls onCancel on Escape (keyboard close — antd default preserved)", () => {
+    const onCancel = vi.fn();
+    renderWithIntl(
+      <AppModal open title="t" onCancel={onCancel}>
+        <span>body</span>
+      </AppModal>,
+    );
+    fireEvent.keyDown(screen.getByRole("dialog"), {
+      key: "Escape",
+      code: "Escape",
+    });
+    expect(onCancel).toHaveBeenCalled();
+  });
+
+  it("declares no --app-* variable in inline style", () => {
+    renderWithIntl(
+      <AppModal open onCancel={() => undefined}>
+        <span>body</span>
+      </AppModal>,
+    );
+    // Modal portals to document.body, so assert across the whole document.
+    expectNoAppVarDeclarationsIn(document.body);
   });
 });

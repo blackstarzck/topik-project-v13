@@ -4,7 +4,6 @@ import {
   Alert,
   Button,
   Descriptions,
-  Modal,
   Radio,
   Space,
   Tag,
@@ -14,6 +13,9 @@ import {
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { AppModal } from "@/components/shared/AppModal";
+import { writingProblemHref } from "@/lib/writing/routes";
+import { SPACING } from "@/theme/spacing";
 
 const { Paragraph, Text } = Typography;
 
@@ -122,9 +124,12 @@ export function RetryModal({
     }
     setStarting(true);
     try {
-      const freshParam = mode === "fresh" ? "&fresh=1" : "";
       router.push(
-        `/writing/${questionNo}?problem=${problemId}${freshParam}` as never,
+        writingProblemHref({
+          questionNo,
+          problemId,
+          fresh: mode === "fresh",
+        }) as never,
       );
     } catch {
       setStarting(false);
@@ -162,7 +167,12 @@ export function RetryModal({
       : t("statusNone");
 
   const summary = (
-    <Descriptions size="small" column={1} bordered style={{ marginBottom: 16 }}>
+    <Descriptions
+      size="small"
+      column={1}
+      bordered
+      style={{ marginBottom: SPACING.md }}
+    >
       <Descriptions.Item label={t("summaryProblem")}>
         {(problemTitle ?? t("summaryFallbackProblem")).slice(0, 28)}
       </Descriptions.Item>
@@ -189,7 +199,7 @@ export function RetryModal({
   // §2 예외 — 만료된 문제: 시작/모드 선택 숨기고 만료 안내 + 닫기만.
   if (expired) {
     return (
-      <Modal
+      <AppModal
         open={open}
         onCancel={onClose}
         title={t("expiredTitle")}
@@ -208,12 +218,12 @@ export function RetryModal({
         <Button block onClick={onClose}>
           {t("close")}
         </Button>
-      </Modal>
+      </AppModal>
     );
   }
 
   return (
-    <Modal
+    <AppModal
       open={open}
       onCancel={risky ? undefined : onClose}
       title={t("title")}
@@ -234,7 +244,7 @@ export function RetryModal({
         onChange={(e) => setMode(e.target.value as RetryMode)}
         style={{ width: "100%", marginBottom: 16 }}
       >
-        <Space direction="vertical" style={{ width: "100%" }}>
+        <Space orientation="vertical" style={{ width: "100%" }}>
           <Radio value="fresh">
             {t("modeFresh")}{" "}
             <Text type="secondary">{t("modeFreshHint")}</Text>
@@ -265,7 +275,7 @@ export function RetryModal({
         />
       ) : null}
 
-      <Space direction="vertical" size="small" style={{ width: "100%" }}>
+      <Space orientation="vertical" size="small" style={{ width: "100%" }}>
         <Button
           type="primary"
           block
@@ -282,6 +292,6 @@ export function RetryModal({
           {tActions("cancel")}
         </Button>
       </Space>
-    </Modal>
+    </AppModal>
   );
 }

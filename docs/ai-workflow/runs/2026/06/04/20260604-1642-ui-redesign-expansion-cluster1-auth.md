@@ -117,4 +117,20 @@
 
 - Risk: smoke routes that depend on query/fragment params (callback-fragment, reset/confirm, auth/error, verify-email) may redirect or render a fallback state — verify M1 records finalPath and treats legitimate redirects correctly; assert the rendered fallback is clean.
 - Risk: parallel implementation could introduce inconsistent patterns / new inline magic numbers / missing use-client → mitigated by precise specs + per-diff review + machine gates (M4/M6/M1) that judge reality regardless of author.
-- Follow-up: clusters 2–8 (later runs); M1/M3 CI wiring (browser+auth) still deferred (D); inherited dirty-tree decisions; existing-deprecation full sweep auto-cleared per cluster by hook+M1.
+- Follow-up: clusters 3–8 (later runs); M1/M3 CI wiring (browser+auth) still deferred (D); inherited dirty-tree decisions; existing-deprecation full sweep auto-cleared per cluster by hook+M1.
+
+---
+
+## Cluster 2 (practice) — done + verified, AND concurrent Codex session reconciled
+
+**Scope (cluster 2 = practice):** C-01 `/practice/recommendations`, C-02 `/practice/problems`, C-03 RetryModal (modal in problem-list). Introduced **`AppModal`** (the PLAN's first-modal-cluster shared component), TDD RED→GREEN (SharedPilotComponents.test +4 → 17 total). RetryModal migrated `Modal`→`AppModal`. Card→AppCard in RecommendationItemCards + TypeSelectCards. Bare `<Title level={3}>` page titles → `PageHeader` (h3→h1 a11y) in RecommendationsView + ProblemListView. `<Space direction>`→`orientation` (renders → M1/M6). Tokenized only re-indented bare numbers (rejected spec over-suggestions: borderWidth/size/fontSize/opacity not M4-guarded; never changed visual values 80/12).
+
+**Concurrent Codex session (CRITICAL):** while implementing cluster 2, a **parallel Codex session** ran `20260604-1658-route-navigation-wireframe-audit` (status: complete, uncommitted). It removed `/dev-preview/dashboard`, split `/writing/[questionId]`→ static `/writing/51..54`, added `src/lib/writing/routes.ts` (`writingProblemHref`), added `question_no` to library views, and centralized writing nav across dashboard/growth/library/practice. **Two files overlap both agents: `RetryModal.tsx` + `RecommendationItemCards.tsx`** (my AppModal/AppCard edits + Codex's `writingProblemHref`). The earlier "linter" revert of my `Descriptions variant="bordered"`→`bordered` was Codex (correct: antd 6.4.3 Descriptions uses boolean `bordered`, not `variant`; the understand-agent's M6 claim was wrong, and `Descriptions bordered` is NOT in M6's denylist).
+
+**User decision ("알아서해" = decide yourself):** commit BOTH works (complementary + both verified; perfect per-agent split impossible because RetryModal needs Codex's routes.ts AND my AppModal). Two commits, A→B, final HEAD consistent + green:
+- Commit A = Codex route-nav (its exclusive files; message credits the Codex ledger).
+- Commit B = my cluster-2 UI (exclusive files + the 2 shared files, which also carry Codex's writingProblemHref).
+
+**Combined-tree verification (both works together):** `pnpm typecheck` GREEN · M4 PASS · M6 PASS · `pnpm lint` 0 errors · `pnpm vitest run tests/components/shared tests/components/practice` 44/44 (incl. RetryModal.test + AppModal 17) · Codex's own run reported 130 tests GREEN. M1 dev-smoke on `/practice/recommendations` + `/practice/problems` to follow at the post-commit HEAD (RetryModal modal content is covered by its unit test since the passive route smoke does not open the modal).
+
+**Excluded from both commits (ambient/inherited, not either task):** `next-env.d.ts` (Next auto-gen), `src/app/layout.tsx` (prior-session suppressHydrationWarning), `pilot-shots/dashboard-*.png` (prior session), `errors/`, `fonts/`, `verify-*.mjs`.

@@ -4,6 +4,7 @@ import { Alert, Button, Empty, List, Space, Spin, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
+import { PageHeader } from "@/components/shared/PageHeader";
 import {
   isValidQuestionNo,
   type ProblemFilter,
@@ -22,7 +23,7 @@ import {
   type UserProblemRow,
 } from "./problem-list-data";
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 const PAGE_SIZE = 10;
 const VALID_SORTS: readonly ProblemSort[] = [
@@ -148,10 +149,8 @@ export function ProblemListView({ userId }: Props) {
     ) : null;
 
   return (
-    <Space direction="vertical" size="large" style={{ width: "100%" }}>
-      <Title level={3} style={{ marginBottom: 0 }}>
-        {t("heading")}
-      </Title>
+    <Space orientation="vertical" size="large" style={{ width: "100%" }}>
+      <PageHeader title={t("heading")} />
 
       <ProblemTypeTabs
         active={filter.questionNo ?? null}

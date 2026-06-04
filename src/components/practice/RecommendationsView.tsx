@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo } from "react";
+import { PageHeader } from "@/components/shared/PageHeader";
 import { isValidQuestionNo, type QuestionNo } from "@/lib/practice/types";
 import { ProblemTypeTabs } from "./ProblemTypeTabs";
 import { TypeSelectCards } from "./TypeSelectCards";
@@ -14,7 +15,7 @@ import {
 } from "./RecommendationItemCards";
 import { useRecommendationBundle } from "./recommendations-data";
 
-const { Title, Paragraph, Text } = Typography;
+const { Title, Text } = Typography;
 
 export function RecommendationsView() {
   const t = useTranslations("practice.recommendations");
@@ -44,15 +45,8 @@ export function RecommendationsView() {
   const rest = items.slice(1);
 
   return (
-    <Space direction="vertical" size="large" style={{ width: "100%" }}>
-      <div>
-        <Title level={3} style={{ marginBottom: 4 }}>
-          {t("heading")}
-        </Title>
-        <Paragraph type="secondary" style={{ margin: 0 }}>
-          {t("subtitle")}
-        </Paragraph>
-      </div>
+    <Space orientation="vertical" size="large" style={{ width: "100%" }}>
+      <PageHeader title={t("heading")} subtitle={t("subtitle")} />
 
       {/* C-01 §2 — 유형 탭. 권한 잠금 유형이 생기면 lockedTypes로 잠금 배지 표시. */}
       <ProblemTypeTabs active={active} onChange={updateType} />

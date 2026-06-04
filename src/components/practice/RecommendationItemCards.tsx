@@ -1,14 +1,19 @@
 "use client";
 
-import { Button, Card, Space, Tag, Typography } from "antd";
+import { Button, Space, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
+import { AppCard } from "@/components/shared/AppCard";
+import { writingProblemHref } from "@/lib/writing/routes";
 import type { RecommendationItemCard } from "./recommendations-data";
 
 const { Paragraph, Text, Title } = Typography;
 
 function ctaHref(card: RecommendationItemCard): string {
-  return card.questionNo ? `/writing/${card.questionNo}` : "/practice/problems";
+  return writingProblemHref({
+    questionNo: card.questionNo,
+    problemId: card.problemId,
+  });
 }
 
 /** C-01 §3 — 취약 태그 근거 (recommendation_items.weakness_tags). */
@@ -42,7 +47,7 @@ export function PrimaryRecommendationCard({
   const title =
     card.title.length > 32 ? `${card.title.slice(0, 32)}…` : card.title;
   return (
-    <Card
+    <AppCard
       style={{ borderColor: "#1677ff", borderWidth: 2 }}
       title={
         <Space>
@@ -80,7 +85,7 @@ export function PrimaryRecommendationCard({
           </Button>
         </Link>
       </div>
-    </Card>
+    </AppCard>
   );
 }
 
@@ -95,7 +100,7 @@ export function SecondaryRecommendationCard({
   const title =
     card.title.length > 32 ? `${card.title.slice(0, 32)}…` : card.title;
   return (
-    <Card
+    <AppCard
       size="small"
       title={
         card.questionNo
@@ -126,6 +131,6 @@ export function SecondaryRecommendationCard({
           <Button block>{t("continueProblem")}</Button>
         </Link>
       </div>
-    </Card>
+    </AppCard>
   );
 }

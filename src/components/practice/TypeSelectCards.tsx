@@ -1,8 +1,9 @@
 "use client";
 
-import { Card, Col, Row, Tag, Tooltip, Typography } from "antd";
+import { Col, Row, Tag, Tooltip, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
+import { AppCard } from "@/components/shared/AppCard";
 import { QUESTION_NOS, type QuestionNo } from "@/lib/practice/types";
 
 const { Text, Title } = Typography;
@@ -29,7 +30,7 @@ export function TypeSelectCards({ lockedTypes }: Props) {
           const typeLabel = tCommon(`questionType${qn}`);
           const desc = t(`typeDescription${qn}`);
           const card = (
-            <Card
+            <AppCard
               size="small"
               hoverable={!locked}
               style={locked ? { opacity: 0.55 } : undefined}
@@ -47,7 +48,7 @@ export function TypeSelectCards({ lockedTypes }: Props) {
               <Text type="secondary" style={{ fontSize: 13 }}>
                 {desc.length > 60 ? `${desc.slice(0, 60)}…` : desc}
               </Text>
-            </Card>
+            </AppCard>
           );
           return (
             <Col key={qn} xs={24} sm={12} lg={6}>
