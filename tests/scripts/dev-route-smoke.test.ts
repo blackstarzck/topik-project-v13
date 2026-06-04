@@ -12,7 +12,39 @@ import { describe, expect, test } from "vitest";
 // .mjs has no .d.ts (tsconfig allowJs:false); runtime contract verified here.
 // prettier-ignore
 // @ts-expect-error -- .mjs script has no .d.ts
-import { classifyRouteResult } from "../../scripts/dev-route-smoke.mjs";
+import { classifyRouteResult, detectOverlay } from "../../scripts/dev-route-smoke.mjs";
+
+// The Next dev `<nextjs-portal>` element is ALWAYS present in dev (it's the
+// overlay host) — so its mere presence must NOT count as an error. Only a
+// NON-EMPTY portal (childElementCount > 0), an error dialog, or error heading
+// text indicates an actual overlay. (Fix for a false-positive introduced while
+// fixing the cross-audit "overlay flushes as 200" P1.)
+describe("detectOverlay — distinguish an active error overlay from the empty host", () => {
+  test("an empty nextjs-portal on a clean page is NOT active", () => {
+    const r = detectOverlay({
+      portalChildCount: 0,
+      hasDialog: false,
+      bodyText: "홈 대시보드\n오늘의 학습 상태",
+    });
+    expect(r.active).toBe(false);
+  });
+
+  test("a non-empty portal (overlay rendered) IS active", () => {
+    expect(detectOverlay({ portalChildCount: 1 }).active).toBe(true);
+  });
+
+  test("an error dialog element IS active", () => {
+    expect(detectOverlay({ hasDialog: true }).active).toBe(true);
+  });
+
+  test("error heading text IS active and is surfaced", () => {
+    const r = detectOverlay({
+      bodyText: "Unhandled Runtime Error\nElement type is invalid",
+    });
+    expect(r.active).toBe(true);
+    expect(r.text).toMatch(/Unhandled Runtime Error/);
+  });
+});
 
 describe("classifyRouteResult — per-route smoke verdict", () => {
   test("a clean route (200, no errors, no redirect) passes", () => {

@@ -96,6 +96,23 @@ export function classifyRouteResult({
   return { ok: reasons.length === 0, fatal, redirected, reasons };
 }
 
+const OVERLAY_TEXT_RE =
+  /(Unhandled Runtime Error|Build Error|Application error[^\n]*|Failed to compile|Element type is invalid[^\n]*)/i;
+
+// Pure: is an active Next dev error overlay present? The `<nextjs-portal>` host
+// is ALWAYS in the dev DOM (empty when there's no error), so its mere presence
+// must not count — only a NON-EMPTY portal, an error dialog element, or error
+// heading text in the body indicates a real overlay.
+export function detectOverlay({
+  portalChildCount = 0,
+  hasDialog = false,
+  bodyText = "",
+} = {}) {
+  const m = String(bodyText).match(OVERLAY_TEXT_RE);
+  const active = portalChildCount > 0 || hasDialog || Boolean(m);
+  return { active, text: m ? m[0] : "Next.js error overlay present" };
+}
+
 // ---- impure ----------------------------------------------------------------
 
 function parseArg(argv, flag, fallback = null) {
@@ -186,19 +203,18 @@ async function visitRoute({ chromium, baseURL, route, viewport, storageStatePath
     // A Next dev error overlay (or error.tsx fallback) renders the page as HTTP
     // 200 with the error in the DOM, not in console/pageerror — probe for it.
     try {
-      const portalCount = await page.locator("nextjs-portal").count();
-      const bodyText = await page
-        .locator("body")
-        .innerText()
-        .catch(() => "");
-      const m = bodyText.match(
-        /(Unhandled Runtime Error|Build Error|Application error:[^\n]*|Element type is invalid[^\n]*)/i,
-      );
-      if (portalCount > 0 || m) {
-        overlayText = (
-          m ? m[0] : "Next.js error overlay (nextjs-portal) present"
-        ).slice(0, 300);
-      }
+      const probe = await page.evaluate(() => {
+        const portal = document.querySelector("nextjs-portal");
+        return {
+          portalChildCount: portal ? portal.childElementCount : 0,
+          hasDialog: !!document.querySelector(
+            "[data-nextjs-dialog], [data-nextjs-error-overlay], [data-nextjs-error]",
+          ),
+          bodyText: document.body ? document.body.innerText || "" : "",
+        };
+      });
+      const overlay = detectOverlay(probe);
+      if (overlay.active) overlayText = overlay.text.slice(0, 300);
     } catch {
       /* overlay probe is best-effort */
     }
