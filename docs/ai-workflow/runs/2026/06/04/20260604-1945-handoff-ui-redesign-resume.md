@@ -10,9 +10,15 @@
   cluster by cluster, per `docs/ui-redesign/PLAN.md`. Visual/structural ONLY — never change copy, i18n keys
   (`t("…")`), behavior, routes, data, or props contracts.
 - **Done + committed + real-app-verified:** pilot (`/login`, `/dashboard`) → **C1 auth/onboarding (7)** →
-  **C2 practice (+ AppModal)** → **C3 writing** → **C4 feedback/reports**.
-- **Next: Cluster 5 = library** (F-01 `/library`; F-M1 PdfExportModal → AppModal). Then growth → settings →
+  **C2 practice (+ AppModal)** → **C3 writing** → **C4 feedback/reports** → **C5 library** (GPT-5.5 visual review: 0 P1).
+- **Next: Cluster 6 = growth** (X-02 `/growth`, X-07 `/practice/weakness`). Then settings/profile →
   paywall → public/legal. (admin is **FROZEN** — never touch: IA H-01/X-08/X-10/X-15.)
+- **Per-cluster human/visual review is delegated to GPT-5.5 (codex) with screenshots attached** (user directive):
+  `codex exec -i <route>-{360,768,1280}.png -s read-only -c 'model_reasoning_effort="medium"'`, prompt = English DESIGN.md rules
+  + scope rules + the diff (Korean copy NOT evaluated → mojibake-immune since the visual judgment is image-based). Findings drive
+  fixes: any P1 is fixed; P2 that would expand beyond the conservative Card→AppCard swap is recorded, not forced.
+- **TOP cross-cutting follow-up (GPT-5.5 [P2] every cluster): WorkspaceShell does not collapse to a mobile drawer at ≤360px**
+  → all authed pages get a narrow column + hard Korean wrap. Shell-level, not per-cluster. Recommend a dedicated shell task after the clusters.
 - **How:** follow "The expansion recipe" below. Each cluster = surgical visual edits → static gates → **real-app
   M1 dev-smoke (PowerShell)** → commit code → commit evidence → update ledger/memory/this handoff.
 - **The machine gates judge reality, not your report** (PLAN §A0). "Done" = gate exit codes + M1 ok, not a claim.
@@ -41,9 +47,10 @@
 | `e7494e4` | **Codex writing route-rename** `/writing/51..54` → descriptive slugs (`short-answer-writing-51`, `answer-writing-52`, `long-form-writing-53`, `essay-writing-54`); committed with user approval to settle the concurrent work |
 | `1b94306` `36a4064` | **C3** writing UI (Card→AppCard ×9, Modal→AppModal ×2) + M1 evidence (4 routes) |
 | `3df0535` `555bb0c` | **C4** feedback/reports UI (Card→AppCard ×~30, /practice/next h1→PageHeader) + M1 evidence (3 routes) |
-| `1fd4ec2` | handoff update (this run) |
+| `1fd4ec2` `395f435` | handoff updates |
+| `4e0cc3d` `c69def2` | **C5** library UI (Card→AppCard ×3, PdfExportModal Modal→AppModal, page `<main>`→PageHeader) + M1 evidence + GPT-5.5 review |
 
-HEAD should be `1fd4ec2` (unless work continued). All committed work is gate-verified. `git status` should show ONLY the ambient/inherited files (below) — nothing else.
+HEAD should be `c69def2` (unless work continued). All committed work is gate-verified. `git status` should show ONLY the ambient/inherited files (below) — nothing else.
 
 ## Shared design-system primitives (already built — REUSE, do not recreate)
 
@@ -93,8 +100,8 @@ HEAD should be `1fd4ec2` (unless work continued). All committed work is gate-ver
 
 | # | cluster | screens (IA → route) | notes |
 |---|---|---|---|
-| **5** | **library** ←NEXT | F-01 `/library`; F-M1 PdfExportModal → **AppModal** | Re-derive components: glob `src/components/library/**` + find `/library` page + the PDF-export modal. Codex added `question_no` to library views (already in HEAD; the C3 commit `19f0d30` fixed its stale test). |
-| 6 | growth | X-02 `/growth`, X-07 `/practice/weakness` | weakness has a server paywall gate (plain HTML branch). `GrowthDashboard` uses `Statistic` (watch `valueStyle` deprecation if you touch its line — it IS in the M6 denylist). |
+| ~~5~~ | ~~library~~ **DONE** (`4e0cc3d`/`c69def2`) | F-01 `/library`; F-M1 PdfExportModal → AppModal | Card→AppCard ×3 + Modal→AppModal + page `<main>`→PageHeader. M1 /library @3 viewports 0-error; GPT-5.5 0 P1. |
+| **6** | **growth** ←NEXT | X-02 `/growth`, X-07 `/practice/weakness` | weakness has a server paywall gate (plain HTML branch). `GrowthDashboard` uses `Statistic` (watch `valueStyle` deprecation if you touch its line — it IS in the M6 denylist). `/practice/weakness` is dynamic-paywalled: smoke as the seeded student; if it renders the paywall branch that's still a valid render. |
 | 7 | settings/profile | G-01 `/settings/language`, X-09 `/settings/notifications`, X-05 `/profile` | forms → `.app-workspace-narrow` + AppCard. notifications uses Tabs/Switch/TimePicker. |
 | 8 | paywall/subscription | X-03 `/paywall`, X-04 `/subscription` | client shells (PaywallShell/SubscriptionShell). |
 | (P) | public/legal | X-01 `/` (landing), X-13 `/terms`, X-14 `/privacy` | public → PublicShell; landing is plain-CSS hero; legal is static semantic HTML. |
