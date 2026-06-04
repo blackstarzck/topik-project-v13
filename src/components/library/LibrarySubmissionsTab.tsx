@@ -79,8 +79,15 @@ export function LibrarySubmissionsTab({
 }: Props) {
   const t = useTranslations("library.submissions");
   const query = useLibraryItems("submissions");
-  const allItems: LibrarySubmissionView[] = (query.data ?? initialItems).filter(
-    isSubmission,
+  // Memoize so the reference is stable across renders. Recomputing `.filter`
+  // inline produced a NEW array every render → the `filtered` useMemo (which
+  // depends on `allItems`) and the selection-lift useEffect (which depends on
+  // `filtered`) re-ran every render → setState loop ("Maximum update depth
+  // exceeded"). It was masked while the dev-smoke could not hydrate (127.0.0.1
+  // cross-origin block); see runs/2026/06/04/20260604-2130-…ledger.
+  const allItems = useMemo<LibrarySubmissionView[]>(
+    () => (query.data ?? initialItems).filter(isSubmission),
+    [query.data, initialItems],
   );
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
