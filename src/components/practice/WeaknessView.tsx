@@ -3,7 +3,6 @@
 import {
   Alert,
   Button,
-  Card,
   Col,
   Empty,
   Row,
@@ -17,6 +16,7 @@ import { useRef, useState } from "react";
 import { logStudyEvent } from "@/lib/events/study-events";
 import { consumeRecommendationItem } from "@/lib/practice/consume";
 import { writingProblemHref } from "@/lib/writing/routes";
+import { AppCard } from "@/components/shared/AppCard";
 import { DimensionTabs, type DimensionTabSummaryProp } from "./DimensionTabs";
 import { DiagnosticCard } from "./DiagnosticCard";
 
@@ -198,7 +198,7 @@ export function WeaknessView({
       <DimensionTabs dimensions={weakDimensions} tabSummaries={tabSummaries} />
 
       {leadingWeakDimension && leadingInsight ? (
-        <Card title={t("insightCardTitle")}>
+        <AppCard title={t("insightCardTitle")}>
           <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
             <Alert
               showIcon
@@ -227,7 +227,7 @@ export function WeaknessView({
               </Col>
             </Row>
           </Space>
-        </Card>
+        </AppCard>
       ) : null}
 
       <Row gutter={[24, 24]}>
@@ -242,7 +242,7 @@ export function WeaknessView({
               <Row gutter={[16, 16]}>
                 {visibleRecommendations.map((rec) => (
                   <Col key={rec.problem_id} xs={24}>
-                    <Card
+                    <AppCard
                       hoverable={!rec.locked}
                       onClick={
                         rec.locked
@@ -321,12 +321,12 @@ export function WeaknessView({
                           </>
                         )}
                       </Space>
-                    </Card>
+                    </AppCard>
                   </Col>
                 ))}
               </Row>
             )}
-            <Card>
+            <AppCard>
               <Space orientation="vertical" size={8}>
                 <Text strong>{t("deeperTitle")}</Text>
                 <Text type="secondary">{t("deeperBody")}</Text>
@@ -334,7 +334,7 @@ export function WeaknessView({
                   {t("deeperCta")}
                 </Button>
               </Space>
-            </Card>
+            </AppCard>
           </Space>
         </Col>
       </Row>

@@ -9,6 +9,7 @@ import {
   getWeaknessRecommendations,
 } from "@/lib/practice/weakness";
 import { WeaknessView } from "@/components/practice/WeaknessView";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("practice.weakness");
@@ -53,8 +54,8 @@ export default async function PracticeWeaknessPage() {
   // 직접 쓰면 prod React #130을 유발한다. 잠금 안내는 plain HTML + Link로만 구성한다.
   if (isLocked(planLabel)) {
     return (
-      <main style={{ padding: 24, maxWidth: 560, margin: "0 auto" }}>
-        <h1>{t("pageTitle")}</h1>
+      <div className="app-workspace-narrow">
+        <PageHeader title={t("pageTitle")} />
         <div
           style={{
             border: "1px solid #f0f0f0",
@@ -102,7 +103,7 @@ export default async function PracticeWeaknessPage() {
             </Link>
           </div>
         </div>
-      </main>
+      </div>
     );
   }
 
@@ -122,8 +123,8 @@ export default async function PracticeWeaknessPage() {
   ]);
 
   return (
-    <main style={{ padding: 24 }}>
-      <h1>{t("pageTitle")}</h1>
+    <>
+      <PageHeader title={t("pageTitle")} />
       <WeaknessView
         weakDimensions={dimSummaries.map((d) => ({
           dimension: d.dimension,
@@ -155,6 +156,6 @@ export default async function PracticeWeaknessPage() {
         }))}
         updatedAt={lastFeedback.data?.generated_at ?? null}
       />
-    </main>
+    </>
   );
 }

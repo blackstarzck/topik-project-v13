@@ -1,7 +1,8 @@
 "use client";
 
-import { Card, Empty, Progress, Tabs, Tag, Typography } from "antd";
+import { Empty, Progress, Tabs, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
+import { AppCard } from "@/components/shared/AppCard";
 
 const { Text, Paragraph } = Typography;
 
@@ -72,7 +73,7 @@ export function DimensionTabs({ dimensions, tabSummaries }: Props) {
           label: t("tabNeedMore", { label, needed: s.neededAnswerCount }),
           disabled: true,
           children: (
-            <Card>
+            <AppCard>
               <Empty
                 description={t("tabNeedMoreDescription", {
                   label,
@@ -80,7 +81,7 @@ export function DimensionTabs({ dimensions, tabSummaries }: Props) {
                   current: s.sampleCount,
                 })}
               />
-            </Card>
+            </AppCard>
           ),
         };
       }
@@ -90,7 +91,7 @@ export function DimensionTabs({ dimensions, tabSummaries }: Props) {
         key: s.dimension,
         label,
         children: (
-          <Card>
+          <AppCard>
             <Progress
               percent={Math.round(score)}
               status={intStatus}
@@ -106,7 +107,7 @@ export function DimensionTabs({ dimensions, tabSummaries }: Props) {
                 · {t("sampleCount", { count: s.sampleCount })}
               </Text>
             </Paragraph>
-          </Card>
+          </AppCard>
         ),
       };
     });
@@ -118,9 +119,9 @@ export function DimensionTabs({ dimensions, tabSummaries }: Props) {
   // Legacy fallback — weak dimensions only.
   if (dimensions.length === 0) {
     return (
-      <Card>
+      <AppCard>
         <Empty description={t("tabsEmpty")} />
-      </Card>
+      </AppCard>
     );
   }
 
@@ -132,7 +133,7 @@ export function DimensionTabs({ dimensions, tabSummaries }: Props) {
       key: d.dimension,
       label,
       children: (
-        <Card>
+        <AppCard>
           <Progress
             percent={Math.round(d.averageScore)}
             status={intStatus}
@@ -150,7 +151,7 @@ export function DimensionTabs({ dimensions, tabSummaries }: Props) {
               </Text>
             ) : null}
           </Paragraph>
-        </Card>
+        </AppCard>
       ),
     };
   });

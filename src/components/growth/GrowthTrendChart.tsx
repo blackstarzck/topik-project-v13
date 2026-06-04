@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Alert, Button, Card, Empty, Radio, Space, Typography } from "antd";
+import { Alert, Button, Empty, Radio, Space, Typography } from "antd";
 import { useTranslations } from "next-intl";
+import { AppCard } from "@/components/shared/AppCard";
 import {
   CartesianGrid,
   Legend,
@@ -85,7 +86,7 @@ export function GrowthTrendChart({ points, onRetry }: Props) {
   const hasData = filtered.some((p) => p.volume > 0 || p.score != null);
 
   return (
-    <Card
+    <AppCard
       title={t("title")}
       extra={
         <Radio.Group
@@ -176,6 +177,6 @@ export function GrowthTrendChart({ points, onRetry }: Props) {
           />
         </Space>
       )}
-    </Card>
+    </AppCard>
   );
 }

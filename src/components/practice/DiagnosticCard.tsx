@@ -1,8 +1,9 @@
 "use client";
 
-import { Button, Card, Empty, Space, Tag, Typography } from "antd";
+import { Button, Empty, Space, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import { AppCard } from "@/components/shared/AppCard";
 
 const { Text, Title, Paragraph } = Typography;
 
@@ -47,7 +48,7 @@ export function DiagnosticCard({ weakDimensions, updatedAt, failed }: Props) {
 
   if (weakDimensions.length === 0) {
     return (
-      <Card data-testid="diagnostic-empty">
+      <AppCard data-testid="diagnostic-empty">
         <Empty
           description={failed ? t("diagnosticFailed") : t("diagnosticNoData")}
         >
@@ -64,7 +65,7 @@ export function DiagnosticCard({ weakDimensions, updatedAt, failed }: Props) {
             </Text>
           </Space>
         </Empty>
-      </Card>
+      </AppCard>
     );
   }
 
@@ -76,7 +77,7 @@ export function DiagnosticCard({ weakDimensions, updatedAt, failed }: Props) {
     : primary.dimension;
 
   return (
-    <Card>
+    <AppCard>
       <Title level={5}>{t("diagnosticTopTitle")}</Title>
       <Paragraph>
         <Tag color="red" style={{ fontSize: 14, padding: "4px 8px" }}>
@@ -104,6 +105,6 @@ export function DiagnosticCard({ weakDimensions, updatedAt, failed }: Props) {
           })}
         </Text>
       ) : null}
-    </Card>
+    </AppCard>
   );
 }

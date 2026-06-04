@@ -3,7 +3,6 @@
 import {
   Alert,
   Button,
-  Card,
   Col,
   Empty,
   List,
@@ -18,6 +17,7 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { writingProblemHref } from "@/lib/writing/routes";
+import { AppCard } from "@/components/shared/AppCard";
 import { GrowthTrendChart, type GrowthTrendPoint } from "./GrowthTrendChart";
 import { GrowthLockedReport } from "./GrowthLockedReport";
 import { buildGrowthInsights } from "./insights";
@@ -168,16 +168,16 @@ export function GrowthDashboard({
 
       {/* area 1 예외 — 권한 없는 리포트 잠금 + 업그레이드 CTA. */}
       {reportLocked ? (
-        <Card>
+        <AppCard>
           <GrowthLockedReport planLabel={planLabel} />
-        </Card>
+        </AppCard>
       ) : (
         <>
           {/* area 2 — KPI 카드 4개 고정. 목표/데이터 없음은 설정 유도. */}
           {hasGoal ? (
             <Row gutter={[16, 16]}>
               <Col xs={12} md={6}>
-                <Card size="small" style={{ height: "100%" }}>
+                <AppCard size="small" style={{ height: "100%" }}>
                   <Statistic
                     title={t("kpi.averageScore")}
                     value={kpi.averageScore != null ? Math.round(kpi.averageScore) : "—"}
@@ -186,10 +186,10 @@ export function GrowthDashboard({
                   <Text type="secondary" style={{ fontSize: 12 }}>
                     {t("kpi.averageScoreHint")}
                   </Text>
-                </Card>
+                </AppCard>
               </Col>
               <Col xs={12} md={6}>
-                <Card size="small" style={{ height: "100%" }}>
+                <AppCard size="small" style={{ height: "100%" }}>
                   <Statistic
                     title={t("kpi.attempts")}
                     value={kpi.totalAttempts}
@@ -198,10 +198,10 @@ export function GrowthDashboard({
                   <Text type="secondary" style={{ fontSize: 12 }}>
                     {t("kpi.attemptsHint")}
                   </Text>
-                </Card>
+                </AppCard>
               </Col>
               <Col xs={12} md={6}>
-                <Card size="small" style={{ height: "100%" }}>
+                <AppCard size="small" style={{ height: "100%" }}>
                   <Statistic
                     title={t("kpi.improvement")}
                     value={improvement.text}
@@ -210,10 +210,10 @@ export function GrowthDashboard({
                   <Text type="secondary" style={{ fontSize: 12 }}>
                     {t("kpi.improvementHint")}
                   </Text>
-                </Card>
+                </AppCard>
               </Col>
               <Col xs={12} md={6}>
-                <Card size="small" style={{ height: "100%" }}>
+                <AppCard size="small" style={{ height: "100%" }}>
                   <Statistic
                     title={t("kpi.goalAchievement")}
                     value={kpi.goalAchievementPct != null ? kpi.goalAchievementPct : "—"}
@@ -222,24 +222,24 @@ export function GrowthDashboard({
                   <Text type="secondary" style={{ fontSize: 12 }}>
                     {t("kpi.goalLabel", { goal: kpi.goalLabel })}
                   </Text>
-                </Card>
+                </AppCard>
               </Col>
             </Row>
           ) : (
-            <Card>
+            <AppCard>
               <Empty description={t("noGoal.description")}>
                 <Link href="/onboarding/learning-goal">
                   <Button type="primary">{t("noGoal.cta")}</Button>
                 </Link>
               </Empty>
-            </Card>
+            </AppCard>
           )}
 
           {/* area 3 — 성장 차트(recharts 시계열). */}
           <GrowthTrendChart points={trendPoints} onRetry={() => router.refresh()} />
 
           {/* area 4 — 약점 매트릭스. 색상만으로 의미 전달 금지 → 수치 라벨 병기. */}
-          <Card title={t("weakness.title")}>
+          <AppCard title={t("weakness.title")}>
             {weakDimensions.length === 0 ? (
               <Empty description={t("weakness.empty")}>
                 <Link href="/practice/problems">
@@ -273,11 +273,11 @@ export function GrowthDashboard({
                 })}
               </Space>
             )}
-          </Card>
+          </AppCard>
 
           {/* area 5 — 인사이트. 실제 수치 근거(insights.ts), 3개 이하·60자 이하.
               insights.ts 가 키+ICU 변수만 만들고, 여기서 t()로 문구를 해석한다. */}
-          <Card title={t("insights.title")}>
+          <AppCard title={t("insights.title")}>
             <Space orientation="vertical" size="small" style={{ width: "100%" }}>
               {insights.map((insight, idx) => (
                 <Alert
@@ -294,12 +294,12 @@ export function GrowthDashboard({
                 {t("insights.disclaimer")}
               </Text>
             </Space>
-          </Card>
+          </AppCard>
 
           {/* area 6 — 하단 요약/추천. 추천 없음이면 최근 완료 요약 + 문제 목록 CTA만. */}
           <Row gutter={[16, 16]}>
             <Col xs={24} md={12}>
-              <Card title={t("recent.title")}>
+              <AppCard title={t("recent.title")}>
                 {recentCompleted.length === 0 ? (
                   <Empty description={t("recent.empty")} />
                 ) : (
@@ -343,10 +343,10 @@ export function GrowthDashboard({
                     )}
                   />
                 )}
-              </Card>
+              </AppCard>
             </Col>
             <Col xs={24} md={12}>
-              <Card title={t("recommend.title")}>
+              <AppCard title={t("recommend.title")}>
                 {recommendations.length === 0 ? (
                   <Empty description={t("recommend.empty")}>
                     <Link href="/practice/problems">
@@ -360,7 +360,7 @@ export function GrowthDashboard({
                     style={{ width: "100%" }}
                   >
                     {recommendations.slice(0, 5).map((rec) => (
-                      <Card key={rec.problemId} size="small">
+                      <div key={rec.problemId} className="app-card-compact">
                         <Space
                           style={{
                             width: "100%",
@@ -391,11 +391,11 @@ export function GrowthDashboard({
                             </Button>
                           </Link>
                         </Space>
-                      </Card>
+                      </div>
                     ))}
                   </Space>
                 )}
-              </Card>
+              </AppCard>
             </Col>
           </Row>
         </>
