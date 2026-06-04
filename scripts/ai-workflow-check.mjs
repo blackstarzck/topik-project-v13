@@ -442,6 +442,64 @@ export function checkInlineStyleNumbers(text) {
   return findings;
 }
 
+// M6 — antd deprecation guard (PLAN.md §강제성 M6). Curated, VERSION-PINNED
+// (antd 6.4.3) denylist of deprecated antd props/identifiers, run against
+// DIFF-ADDED lines (+ untracked new files) scoped to user-facing src/ (admin is
+// frozen → excluded), so only NEWLY introduced deprecations are flagged. The
+// line-level `// ai-check: allow-antd-deprecated <reason>` comment is the escape
+// hatch. Each rule is antd-name-specific (near-zero false positives). Verified:
+// Space `direction` → `orientation` (node_modules/antd/es/space/index.js maps
+// [['direction','orientation'], ['split','separator']]); the Space rule is
+// scoped to `<Space …>` so Steps' legit `direction="vertical"` is not flagged.
+// Intentionally conservative, not exhaustive — extend per antd upgrade. Runtime/
+// context deprecations (static message/Modal.confirm "can not consume context")
+// are NOT prop-shaped → covered by the M1 dev-smoke console capture instead.
+const ANTD_DEPRECATIONS = [
+  {
+    re: /<Space\b[^>]*\bdirection\s*=/,
+    msg: "Space `direction` is deprecated → use `orientation`",
+  },
+  {
+    re: /\bbodyStyle\s*=/,
+    msg: "`bodyStyle` is deprecated → use `styles.body` (Card/Modal/Drawer)",
+  },
+  {
+    re: /\bheadStyle\s*=/,
+    msg: "`headStyle` is deprecated → use `styles.header` (Card)",
+  },
+  {
+    re: /\bTabPane\b/,
+    msg: "`Tabs.TabPane` is removed → use the Tabs `items` prop",
+  },
+  {
+    re: /\bdropdownClassName\s*=/,
+    msg: "`dropdownClassName` is deprecated → use `popupClassName`/`classNames`",
+  },
+];
+const ANTD_DEPRECATED_ALLOW = /ai-check:\s*allow-antd-deprecated/;
+
+// Strip comments only (NOT string contents): M6's Space rule needs the JSX tag
+// text intact, and stripping strings would not change matching for these
+// name-anchored rules. We only blank out comments so a deprecated token quoted
+// in a `//`/`/* */` comment is not flagged.
+function stripComments(line) {
+  return line.replace(/\/\/.*$/, "").replace(/\/\*.*?\*\//g, "");
+}
+
+// Pure: return the deprecation messages triggered by `text` (one per matching
+// rule per line). Exported for unit testing.
+export function checkAntdDeprecations(text) {
+  const findings = [];
+  for (const rawLine of String(text).split(/\r?\n/)) {
+    if (ANTD_DEPRECATED_ALLOW.test(rawLine)) continue; // documented escape hatch
+    const line = stripComments(rawLine);
+    for (const { re, msg } of ANTD_DEPRECATIONS) {
+      if (re.test(line)) findings.push(msg);
+    }
+  }
+  return findings;
+}
+
 function normalizePathForCheck(path) {
   return normalize(path).split(sep).join("/");
 }
@@ -1207,6 +1265,7 @@ function parseArgs(argv) {
     checkSmoke: false,
     smokeArtifactPath: null,
     checkInlineStyles: false,
+    checkAntdDeprecations: false,
     baseRef: null,
   };
 
@@ -1230,6 +1289,9 @@ function parseArgs(argv) {
     } else if (arg === "--check-inline-styles") {
       // M4 — inline-style delta guard over diff-added lines + new files.
       options.checkInlineStyles = true;
+    } else if (arg === "--check-antd-deprecations") {
+      // M6 — antd deprecation delta guard over diff-added lines + new files.
+      options.checkAntdDeprecations = true;
     } else if (arg === "--base") {
       options.baseRef = argv[++index];
     } else if (arg === "--pr-body") {
@@ -1249,6 +1311,7 @@ function parseArgs(argv) {
     !options.checkRepo &&
     !options.checkSmoke &&
     !options.checkInlineStyles &&
+    !options.checkAntdDeprecations &&
     !options.prBodyPath &&
     !options.commitMessagePath &&
     !options.help
@@ -1390,6 +1453,68 @@ async function main() {
     });
   }
 
+  if (options.checkAntdDeprecations) {
+    // M6 — antd deprecation delta over diff-added lines + untracked new files,
+    // scoped to user-facing src/ (the frozen admin island is excluded).
+    const isAdmin = (p) =>
+      /^src\/components\/admin\//.test(p) ||
+      /^src\/app\/\(workspace\)\/admin\//.test(p);
+    const inSrcUser = (p) =>
+      p && /^src\//.test(p) && /\.(tsx?|jsx?)$/.test(p) && !isAdmin(p);
+    const errors = [];
+    const diffArgs = [
+      "diff",
+      "--unified=0",
+      options.baseRef ?? "HEAD",
+      "--",
+      "src",
+    ];
+    const diff = spawnSync("git", diffArgs, {
+      cwd: options.root,
+      encoding: "utf8",
+    });
+    let currentFile = null;
+    for (const line of (diff.stdout ?? "").split(/\r?\n/)) {
+      if (line.startsWith("+++ ")) {
+        currentFile = line.slice(4).replace(/^b\//, "");
+        continue;
+      }
+      if (line.startsWith("+") && !line.startsWith("+++") && inSrcUser(currentFile)) {
+        for (const f of checkAntdDeprecations(line.slice(1))) {
+          errors.push(`${currentFile}: ${f}`);
+        }
+      }
+    }
+    const untracked = spawnSync(
+      "git",
+      ["ls-files", "--others", "--exclude-standard", "--", "src"],
+      { cwd: options.root, encoding: "utf8" },
+    );
+    for (const rel of (untracked.stdout ?? "")
+      .split(/\r?\n/)
+      .map((s) => s.trim())
+      .filter(inSrcUser)) {
+      try {
+        const content = await readFile(join(options.root, rel), "utf8");
+        for (const f of checkAntdDeprecations(content)) {
+          errors.push(`${rel}: ${f}`);
+        }
+      } catch {
+        // unreadable — skip
+      }
+    }
+    const hint =
+      "migrate to the antd 6.x replacement, or add `// ai-check: allow-antd-deprecated <reason>` on the line";
+    results.push({
+      label: "antd deprecation delta (M6)",
+      result: {
+        ok: errors.length === 0,
+        errors: errors.length ? [...errors, `(${hint})`] : [],
+        warnings: [],
+      },
+    });
+  }
+
   let exitCode = 0;
   for (const { label, result } of results) {
     if (result.ok) {
@@ -1426,6 +1551,7 @@ export const internals = {
   checkRscCompoundRender,
   checkSmokeCoverage,
   checkInlineStyleNumbers,
+  checkAntdDeprecations,
   REQUIRED_PR_SECTIONS,
   REQUIRED_GIT_DECISION_FIELDS,
   REQUIRED_LORE_TRAILERS,

@@ -5,7 +5,7 @@ import { describe, expect, test } from "vitest";
 // exercised by every assertion below.
 // prettier-ignore
 // @ts-expect-error -- .mjs script has no .d.ts; runtime contract verified here
-import { checkAppVarUsage, checkInlineAppVarDeclaration, checkRscCompoundRender, checkSmokeCoverage, checkInlineStyleNumbers } from "../../scripts/ai-workflow-check.mjs";
+import { checkAppVarUsage, checkInlineAppVarDeclaration, checkRscCompoundRender, checkSmokeCoverage, checkInlineStyleNumbers, checkAntdDeprecations } from "../../scripts/ai-workflow-check.mjs";
 
 // PLAN §Phase 1 (#7·#8) — CSS Variable Scoping Gate, allowlist arm.
 // Only the approved 9 `--app-*` names may appear in source. Non-approved names
@@ -282,5 +282,52 @@ describe("checkInlineStyleNumbers — guarded inline numeric literals", () => {
     expect(
       checkInlineStyleNumbers('const msg = "minWidth: 33 required";'),
     ).toEqual([]);
+  });
+});
+
+describe("checkAntdDeprecations — M6 antd 6.x deprecation guard", () => {
+  // validate-the-validator: the exact defect we just fixed on /dashboard.
+  test("flags Space `direction` (the /dashboard defect) → orientation", () => {
+    expect(
+      checkAntdDeprecations('<Space direction="vertical" size="large">'),
+    ).toEqual(["Space `direction` is deprecated → use `orientation`"]);
+  });
+
+  test("does NOT flag the migrated `orientation` form", () => {
+    expect(checkAntdDeprecations('<Space orientation="vertical">')).toEqual([]);
+  });
+
+  // Steps legitimately keeps direction="vertical" — must not false-positive.
+  test("does NOT flag direction on a non-Space component (Steps)", () => {
+    expect(checkAntdDeprecations('<Steps direction="vertical" />')).toEqual([]);
+  });
+
+  test("flags bodyStyle / headStyle / TabPane / dropdownClassName", () => {
+    expect(checkAntdDeprecations("<Card bodyStyle={{ padding: 0 }}>")).toEqual([
+      "`bodyStyle` is deprecated → use `styles.body` (Card/Modal/Drawer)",
+    ]);
+    expect(checkAntdDeprecations("<Card headStyle={{}}>")).toEqual([
+      "`headStyle` is deprecated → use `styles.header` (Card)",
+    ]);
+    expect(checkAntdDeprecations("<Tabs.TabPane tab='a' />")).toEqual([
+      "`Tabs.TabPane` is removed → use the Tabs `items` prop",
+    ]);
+    expect(checkAntdDeprecations('<Select dropdownClassName="x" />')).toEqual([
+      "`dropdownClassName` is deprecated → use `popupClassName`/`classNames`",
+    ]);
+  });
+
+  test("escape hatch: allow-antd-deprecated comment suppresses it", () => {
+    expect(
+      checkAntdDeprecations(
+        '<Space direction="vertical"> // ai-check: allow-antd-deprecated legacy shim',
+      ),
+    ).toEqual([]);
+  });
+
+  test("does NOT flag a deprecated token inside a line comment", () => {
+    expect(checkAntdDeprecations("// old: <Space direction='vertical'>")).toEqual(
+      [],
+    );
   });
 });

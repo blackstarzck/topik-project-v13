@@ -184,8 +184,23 @@ async function visitRoute({ chromium, baseURL, route, viewport, storageStatePath
   const page = await context.newPage();
   const consoleErrors = [];
   const pageErrors = [];
+  // antd routes deprecation warnings through console.error by default, but
+  // through console.warn when a non-strict WarningContext is present
+  // (antd/es/_util/warning.js). Capture matching warns too so M1/M6 are not
+  // blind to the console.warn path — filtered to antd deprecations to avoid
+  // React dev-warning noise.
+  const ANTD_DEPRECATION_RE = /\[antd[:\]][^]*deprecat/i;
   page.on("console", (msg) => {
-    if (msg.type() === "error") consoleErrors.push(msg.text());
+    const type = msg.type();
+    const text = msg.text();
+    if (type === "error") {
+      consoleErrors.push(text);
+    } else if (
+      (type === "warning" || type === "warn") &&
+      ANTD_DEPRECATION_RE.test(text)
+    ) {
+      consoleErrors.push(text);
+    }
   });
   page.on("pageerror", (err) => pageErrors.push(String(err?.message ?? err)));
 

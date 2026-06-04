@@ -44,7 +44,7 @@
 | 6 | 게이트가 **"코드가 도는가"** 만 봄 | 각 게이트는 **실제 결함을 잡는지 먼저 증명** | validate-the-validator |
 | 7 | TDD가 **jsdom 통과=완료**로 읽힘 | jsdom 단위테스트는 RSC 경계 버그를 못 잡으니 **실제 라우트 dev 렌더로 보완** 명시 | M1 |
 
-### 기계 게이트 (M1–M5, C1) — 싸고-바인딩 먼저
+### 기계 게이트 (M1–M6, C1) — 싸고-바인딩 먼저
 
 | 게이트 | 무엇을 관찰 | 구현 위치 | 상태 |
 |---|---|---|---|
@@ -54,18 +54,20 @@
 | **M3** 보고=증거 | M1 아티팩트 검증: `testedRoutes ⊊ requiredRoutes`·미부팅·**stale(headSha≠HEAD)** → FAIL | `scripts/ai-workflow-check.mjs` `checkSmokeCoverage()` + `--check-smoke` | **구현·증명됨** |
 | **C1** 라우트 도출 | `git diff`→필요 라우트(특수파일+임포트그래프 역참조); admin/동적은 사유와 함께 제외 | `scripts/derive-smoke-routes.mjs` (`--base`) | **구현·증명됨** |
 | **M4** 인라인-스타일 델타 가드 | 터치 파일 **신규** 인라인 숫자(`width/height/padding*/margin*/gap/borderRadius/inset`); `src/` 한정·델타(추가줄+신규파일)·토큰/상수·`opacity/zIndex/flex*` 면제·`// ai-check: allow-inline-number <사유>` 탈출구 | `scripts/ai-workflow-check.mjs` `checkInlineStyleNumbers()` + `--check-inline-styles` | **구현·증명됨** |
+| **M6** antd deprecation 가드 | 터치 파일 **신규** antd 폐기 문법(`<Space direction>`→`orientation`·`bodyStyle/headStyle`→`styles.*`·`Tabs.TabPane`→`items`·`dropdownClassName`); **user-facing `src/` 한정(admin 동결 제외)**·델타(추가줄+신규파일)·`// ai-check: allow-antd-deprecated <사유>` 탈출구. **prop형만**(런타임/컨텍스트형 정적 `message`/`Modal.confirm`은 M1 콘솔 캡처가 담당). 버전핀 antd 6.4.3, 보수적 denylist | `scripts/ai-workflow-check.mjs` `checkAntdDeprecations()` + `--check-antd-deprecations` | **구현·증명됨** (실제 `<Space direction>` 적발→orientation는 무적발) |
 
-> **통합 게이트(완료 잠금)** = `pnpm test`·`lint`·`typecheck`·(clean)`build` + `node scripts/ai-workflow-check.mjs --repo .`
+> **통합 게이트(완료 잠금)** = `pnpm test`·`lint`·`typecheck`·(clean)`build` + `node scripts/ai-workflow-check.mjs --repo . --check-inline-styles --check-antd-deprecations`
 > + **C1 도출 → 개발-모드 스모크(M1)** + admin diff 빈 출력. 이 명령의 **종료코드**가 완료를 잠근다(A0-(2)).
 >
-> ✅ **전 게이트(M2·M5·C1·M1·M3·M4) 구현·증명 완료** (B단계, 위상순 M5→M2→C1→M1→M3→M4). 통합 게이트의
-> "완료 잠금"이 실제로 작동한다. 단위테스트 68개 GREEN + 각 게이트 validate-the-validator 증명.
+> ✅ **전 게이트(M2·M5·C1·M1·M3·M4·M6) 구현·증명 완료** (B단계, 위상순 M5→M2→C1→M1→M3→M4; M6은 C단계 추가). 통합 게이트의
+> "완료 잠금"이 실제로 작동한다. 게이트 단위테스트 GREEN(M6 +6) + 각 게이트 validate-the-validator 증명.
 > - **남은 격차(정직):** (a) **CI 배선은 D단계** — 그 전까지 A0-(2)의 강제는 로컬 통합 게이트 종료코드로만 성립.
 >   (b) M3는 **신선도**를 강제하므로 코드 변경(커밋)으로 HEAD가 바뀌면 M1 스모크를 **재실행**해야 통과(설계대로).
 >   (c) M4가 적발한 **신규 인라인 5건**(login·loading·dev-preview)은 **B3 토큰화(C단계)** 백로그.
+>   (d) M6은 **신규 prop형 deprecation만** 델타로 막는다 — **기존** user-facing 폐기 문법(정적 `message`/`Modal.confirm`·`Descriptions bordered`·`Spin tip`·기존 `<Space direction>` 다수)은 **클러스터 확장 시 청산 백로그**(admin 제외). 런타임/컨텍스트형은 M1 콘솔 캡처(이제 antd deprecation warn도 수집)가 보조.
 > - **validate-the-validator(전 게이트 증명):** M2=현 `loading.tsx` `Skeleton.Button` 적발; M5=리스너 포트 BLOCK(exit 2);
 >   C1=공유컴포넌트→역참조 라우트; M1=#5 시그니처 FATAL + 실제 `/dashboard` 무에러 렌더; M3=라우트누락·stale FAIL;
->   M4=신규 인라인 적발·면제/JSX-attr/탈출구 비적발.
+>   M4=신규 인라인 적발·면제/JSX-attr/탈출구 비적발; **M6=신규 파일 `<Space direction>` 적발(exit 1)·`orientation`/Steps direction/주석/탈출구 비적발**.
 
 ---
 
@@ -211,9 +213,10 @@ antdPath/sourceFile/bridge는 **부록 B 동반 표**에. `bridge`는 승인 9�
 - [ ] **allowlist 외 파일 변경 금지**: 로그인(`app/login/page.tsx`, `components/auth/LoginForm.tsx`, PublicShell), 대시보드(`components/dashboard/*`), 셸(Phase 1). admin diff 빈 출력 재확인.
 - [ ] 인라인 매직넘버 → 토큰/공통부품. 직접 `Card`/`Drawer` → `AppCard`/`AppDrawer`(터치 파일만). 로딩/빈/에러/성공/비활성 상태. `"use client"` 규칙(§공통). 구조=Wireframe, 비주얼=DESIGN.md.
   - **DoD(M4):** 터치한 파일에 **신규 인라인 숫자 리터럴**(`width/height/padding*/margin*/gap/borderRadius/inset`) 0. 토큰/상수 사용·`opacity/zIndex/flex*` 면제·`// ai-check: allow-inline-number <사유>` 탈출구. **M4가 diff를 파싱해 기계 적발**(손으로 "정리함" 금지).
+  - **DoD(M6):** 터치한 user-facing 파일(admin 제외)에 **신규 antd 폐기 문법** 0(`<Space direction>`·`bodyStyle/headStyle`·`Tabs.TabPane`·`dropdownClassName`). 6.x 대체(`orientation`/`styles.*`/`items`/`popupClassName`) 사용·`// ai-check: allow-antd-deprecated <사유>` 탈출구. **M6가 diff를 파싱해 기계 적발**(손으로 "마이그레이션함" 금지).
 - [ ] **대시보드 스켈레톤**: `src/app/(workspace)/dashboard/loading.tsx`(레이아웃 맞춤 antd `Skeleton`, CLS 예약). **복합 antd(`Skeleton.Button` 등)를 렌더하므로 맨 위 `"use client"` 필수**(§공통 #14) — **M2 가드가 누락 시 FAIL**.
 - [ ] **QA 픽스처(#13 확정)**: dev 프리뷰 라우트 `src/app/dev-preview/dashboard/page.tsx` — 대시보드 표현 컴포넌트를 **픽스처 props·무인증**으로 렌더(실데이터/Supabase 불필요). 파일럿 스캐폴딩(네비 미연결, 확장 전 제거/플래그). **단, 이것은 보조 픽스처일 뿐 검증 대상이 아니다 — 검증은 아래 실제 라우트 스모크(M1)로 한다.**
-- [ ] **(자동 완료 게이트, #1·A0):** **M5 사전점검(dev 미실행 확인) →** focused `pnpm vitest run` → `pnpm lint` → `pnpm typecheck` → **(clean) `pnpm build`** → `node scripts/ai-workflow-check.mjs --repo .`(**현재 M2 arm만 작동**; M3·M4는 구현 후 합류 — §강제성 게이트 표) → parity 테스트, 전부 GREEN. 그 후 **C1으로 변경분에서 라우트 도출 → 개발 모드(`pnpm dev`) 스모크(M1)** — prod·dev-preview가 아니라 도출된 **실제 라우트**(C1 미구현 시 하드 폴백 `/`·`/login`·`/dashboard`):
+- [ ] **(자동 완료 게이트, #1·A0):** **M5 사전점검(dev 미실행 확인) →** focused `pnpm vitest run` → `pnpm lint` → `pnpm typecheck` → **(clean) `pnpm build`** → `node scripts/ai-workflow-check.mjs --repo . --check-inline-styles --check-antd-deprecations`(**M2(--repo)·M4·M6 arm 작동**; M3는 `--check-smoke`로 합류 — §강제성 게이트 표) → parity 테스트, 전부 GREEN. 그 후 **C1으로 변경분에서 라우트 도출 → 개발 모드(`pnpm dev`) 스모크(M1)** — prod·dev-preview가 아니라 도출된 **실제 라우트**(C1 미구현 시 하드 폴백 `/`·`/login`·`/dashboard`):
   - 대상 라우트: `/`, `/login`, **인증 `/dashboard`(그 `loading.tsx` 포함)** — 인증은 storage-state 세션 시드. (prod는 dev 경고를 숨기므로 금지; dev-preview는 실제 대시보드가 아님.)
   - 각 라우트 360/768/1280: **콘솔 에러 0, 런타임 오버레이 없음**, 가로 스크롤 없음, `loading.tsx` 정상 렌더(undefined-element 크래시 없음)
   - `theme-appearance` 쿠키로 light/dark, `<html style>`에 기대 bridge 값 assert; 느린 네비 시 스켈레톤 요소 존재, reduced-motion 매체 존중
@@ -286,6 +289,7 @@ Architecture Pass · 08 Review Checklist · **기계 게이트 M1–M5/C1**(§�
 - **v4.0(1차 실행 실패 교훈):** 1차 파일럿이 "74/74 검증완료"로 보고됐으나 실제 `pnpm dev`에서 결함 발견(`loading.tsx` RSC 런타임 #5, antd v6 deprecation, 인라인 미정리; 검증을 prod·jsdom·dev-preview로만 함). 근본 원인 = **선택적 읽기/이행 + 그걸 잡을 기계 게이트 부재**. 보완: **§강제성(A0)** 신설(판정=기계 현실관찰·완료=게이트 종료코드/CI·보고=게이트 출력 사본) + 명세 결함 7건을 현실-관찰 게이트(M1 개발-모드 스모크·M2 RSC 가드·M3 보고=증거·M4 인라인 델타·M5 빌드 위생·C1 라우트 도출)로 전환 + validate-the-validator. gpt-5.5(codex) 적대적 렌즈 3 + 합의 1로 검증된 마스터 플랜 반영. **게이트 전환은 설계 완료**이고 구현은 **M2만 완료·증명**(M1·M3·M4·M5·C1은 §강제성 게이트 표 순서대로 구현 예정). 의도적 정정·보강 2건 기록: 결함 #2 귀속을 마스터의 **M1→C1**(라우트 도출 책임=C1)로 정정, M1 스모크 뷰포트를 **360/1280→360/768/1280**(태블릿 보강). v4 본문 강화는 Claude 독립 리뷰어 4명(결함커버리지·내부정합성·충실성·완전성)의 적대적 교차검수로 P1 7건·P2 일부 반영.
 - **v4.1(B단계 — 게이트 구현 완료):** 설계만 있던 게이트를 실제 코드로 구현(전부 TDD RED→GREEN + validate-the-validator). 신규: `scripts/build-preflight.mjs`(M5, `prebuild` 배선), `scripts/derive-smoke-routes.mjs`(C1), `scripts/dev-route-smoke.mjs`(M1); 확장: `scripts/ai-workflow-check.mjs`에 `checkSmokeCoverage`(M3, `--check-smoke`)·`checkInlineStyleNumbers`(M4, `--check-inline-styles`). 단위테스트 68 GREEN. **M1이 실제 인증 `/dashboard`를 dev로 렌더해 #5 무재발 확정**(핸드오프가 미완이라던 검증). M4가 신규 인라인 5건 적발 = B3(C단계) 백로그. 잔여: CI 배선(D), B2/B3(C).
 - **v4.2(B단계 — 게이트 적대적 교차검수 + 보강):** Claude 독립 리뷰어 4명이 게이트 코드를 적대 검수 → **22건(P0 1·P1 11·P2 10)**. 자기 단위테스트는 통과했지만 실제 목적에 구멍 발견 → 리뷰어 repro를 테스트로 박아 TDD로 수정(단위테스트 **90 GREEN**). 수정: **M5** 단일포트 3000→다중포트(3000-3003·3100)+IPv4/IPv6+포트검증/크래시가드(P0/P1); **C1** 사이드이펙트 `import "x"`(global.css 등)·`.css` 해석→CSS-only 변경 진공통과 제거(P1)+중첩레이아웃 서브트리 스코프(P2); **M1** dev 에러 오버레이(200 위장) DOM 탐지→fatal(P1)+React #130 시그니처+Fast Refresh 정밀화+0-visit fail-closed; **M3** 빈/누락 requiredRoutes·headSha 누락·HEAD 미상·실패 perRoute 전부 fail-closed+슬래시 정규화(P1×4); **M4** 삼항/표현식 값 적발+주석/문자열 false-positive 제거+staged(HEAD 대비) 포함(P1×3). **의도적 미수정(정직):** CI 배선(D단계), M3의 독립 재유도 교차검증(좁은 `--routes` under-declare 방어는 부분만)·M1 재사용 서버 buildId 검증·M5 비-dev 리스너 구분은 후속 hardening으로 기록.
+- **v4.3(C단계 — antd deprecation 게이트 M6 신설 + M1 보강):** 사용자 보고로 /dashboard 콘솔 에러 = `<Space direction>` (antd 6.4.3 폐기, `node_modules/antd/es/space/index.js`의 `[['direction','orientation'],...]`에서 확인) 적발. 1차 실패 3대 결함(RSC #5·**antd deprecation**·인라인) 중 **deprecation만 전용 게이트가 없던** 격차를 메움. **즉시 수정**: `dashboard/page.tsx`의 `direction`→`orientation`(loading.tsx·DashboardBody는 이미 마이그레이션됨, page.tsx만 누락; 커밋 `2b8b6c3`). **게이트 M6 신설**(TDD RED→GREEN, 게이트 단위테스트 +6): `checkAntdDeprecations()`(버전핀 보수적 denylist, prop형만) + `--check-antd-deprecations` arm(user-facing src 델타, admin 제외, 탈출구). validate-the-validator: 신규 파일 `<Space direction>` FAIL(exit 1)·`orientation`/Steps direction/주석/탈출구 비적발(라이브 + 단위). **M1 보강**: `dev-route-smoke.mjs`가 antd deprecation `console.warn`도 수집(default는 console.error지만 non-strict WarningContext 경로 대비; `[antd…deprecat` 필터로 React 잡음 배제) — M1이 `error`만 보던 구멍 메움. **의도적 미수정(정직):** 기존 user-facing 폐기 문법 **전체 sweep**(정적 message/Modal.confirm·Descriptions bordered·Spin tip·기존 Space direction 다수)은 클러스터 확장 백로그(M6은 신규만 델타로 차단); M6 denylist는 수동·버전핀이라 antd 업글 시 갱신 필요; CI 배선(D)·게이트 코드 적대적 cross-review는 후속. cross-model review = degraded(단일 세션 구현, validate-the-validator로 대체 증거; 한글 카피 mojibake로 codex 부적격, 후속 Claude 리뷰어 권고).
 
 ## 부록 B — DESIGN.md Stitch 골격 (이 형태 그대로 작성)
 
