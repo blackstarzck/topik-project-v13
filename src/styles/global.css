@@ -154,6 +154,18 @@ body {
 }
 
 /*
+ * Constrained content width for AUTHED pages, whose <main> landmark is already
+ * provided by WorkspaceShell's antd Layout.Content (antd renders Content as
+ * <main>). Adding PageContainer (also <main>) would duplicate the landmark, so
+ * authed forms use this plain centering wrapper on a <div> instead. Layout-only,
+ * no --app-* declaration; vertical padding comes from the surrounding Content.
+ */
+.app-workspace-narrow {
+  max-width: 640px;
+  margin-inline: auto;
+}
+
+/*
  * Compact bounded row for repeated items inside a card (DESIGN.md → Components
  * "card-compact"). Replaces nested AntD Card usage so we never nest a card in a
  * card (07-review-checklist). Color/radius from approved bridge vars.

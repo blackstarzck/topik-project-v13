@@ -3,6 +3,8 @@ import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 
 import { VerifyEmailCard } from "@/components/auth/VerifyEmailCard";
+import { PageContainer } from "@/components/shared/PageContainer";
+import { PublicShell } from "@/components/shared/PublicShell";
 
 export const dynamic = "force-dynamic";
 
@@ -26,11 +28,13 @@ const srOnlyStyle: React.CSSProperties = {
 export default async function VerifyEmailPage() {
   const t = await getTranslations("auth.verifyEmail");
   return (
-    <main style={{ padding: "2.5rem 1rem", maxWidth: 640, margin: "0 auto" }}>
-      <h1 style={srOnlyStyle}>{t("srHeading")}</h1>
-      <Suspense fallback={null}>
-        <VerifyEmailCard />
-      </Suspense>
-    </main>
+    <PublicShell>
+      <PageContainer size="narrow">
+        <h1 style={srOnlyStyle}>{t("srHeading")}</h1>
+        <Suspense fallback={null}>
+          <VerifyEmailCard />
+        </Suspense>
+      </PageContainer>
+    </PublicShell>
   );
 }

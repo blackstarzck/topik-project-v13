@@ -20,8 +20,9 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { Card, Spin, Typography } from "antd";
+import { Spin, Typography } from "antd";
 
+import { AppCard } from "@/components/shared/AppCard";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import {
   mapSupabaseErrorCode,
@@ -82,8 +83,8 @@ export function CallbackFragmentFallback({ next }: { next: string }) {
   }, [next, router]);
 
   return (
-    <Card
-      style={{ maxWidth: 480, margin: "0 auto", textAlign: "center" }}
+    <AppCard
+      style={{ textAlign: "center" }}
       role="status"
       aria-live="polite"
       data-testid="callback-fragment-status"
@@ -92,6 +93,6 @@ export function CallbackFragmentFallback({ next }: { next: string }) {
       <Paragraph style={{ marginTop: 16, marginBottom: 0 }}>
         {status === "checking" ? t("checking") : t("redirecting")}
       </Paragraph>
-    </Card>
+    </AppCard>
   );
 }

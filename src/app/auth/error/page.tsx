@@ -3,6 +3,8 @@ import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 
 import { AuthErrorCard } from "@/components/auth/AuthErrorCard";
+import { PageContainer } from "@/components/shared/PageContainer";
+import { PublicShell } from "@/components/shared/PublicShell";
 
 export const dynamic = "force-dynamic";
 
@@ -26,11 +28,13 @@ const srOnlyStyle: React.CSSProperties = {
 export default async function AuthErrorPage() {
   const t = await getTranslations("auth.error");
   return (
-    <main style={{ padding: "2.5rem 1rem", maxWidth: 640, margin: "0 auto" }}>
-      <h1 style={srOnlyStyle}>{t("srHeading")}</h1>
-      <Suspense fallback={null}>
-        <AuthErrorCard />
-      </Suspense>
-    </main>
+    <PublicShell>
+      <PageContainer size="narrow">
+        <h1 style={srOnlyStyle}>{t("srHeading")}</h1>
+        <Suspense fallback={null}>
+          <AuthErrorCard />
+        </Suspense>
+      </PageContainer>
+    </PublicShell>
   );
 }

@@ -3,6 +3,10 @@ import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 
 import { PasswordResetRequestForm } from "@/components/auth/PasswordResetRequestForm";
+import { AppCard } from "@/components/shared/AppCard";
+import { PageContainer } from "@/components/shared/PageContainer";
+import { PublicShell } from "@/components/shared/PublicShell";
+import { SPACING } from "@/theme/spacing";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("auth.passwordReset");
@@ -12,12 +16,18 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function PasswordResetPage() {
   const t = await getTranslations("auth.passwordReset");
   return (
-    <main style={{ padding: "2rem 1rem", maxWidth: 480, margin: "0 auto" }}>
-      <h1 style={{ textAlign: "center", fontSize: 24 }}>{t("pageHeading")}</h1>
-      <PasswordResetRequestForm />
-      <p style={{ textAlign: "center", marginTop: 16 }}>
-        <Link href="/login">{t("backToLogin")}</Link>
-      </p>
-    </main>
+    <PublicShell>
+      <PageContainer size="narrow">
+        <h1 style={{ textAlign: "center", fontSize: 24, marginBottom: SPACING.lg }}>
+          {t("pageHeading")}
+        </h1>
+        <AppCard>
+          <PasswordResetRequestForm />
+        </AppCard>
+        <p style={{ textAlign: "center", marginTop: SPACING.md }}>
+          <Link href="/login">{t("backToLogin")}</Link>
+        </p>
+      </PageContainer>
+    </PublicShell>
   );
 }

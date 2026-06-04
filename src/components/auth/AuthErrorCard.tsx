@@ -12,8 +12,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { App, Button, Card, Form, Input, Space, Typography } from "antd";
+import { App, Button, Form, Input, Space, Typography } from "antd";
 
+import { AppCard } from "@/components/shared/AppCard";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { buildAuthRedirectUrl } from "@/lib/auth/redirect-url";
 import {
@@ -172,12 +173,11 @@ export function AuthErrorCard() {
   }
 
   return (
-    <Card
-      style={{ maxWidth: 520, margin: "0 auto" }}
+    <AppCard
       aria-live="polite"
       data-testid={`auth-error-card-${reason}`}
     >
-      <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+      <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
         <Title level={3} style={{ marginBottom: 0 }}>
           {reasonTitle}
         </Title>
@@ -204,7 +204,7 @@ export function AuthErrorCard() {
           </Text>
         )}
 
-        <Space direction="vertical" size="small" style={{ width: "100%" }}>
+        <Space orientation="vertical" size="small" style={{ width: "100%" }}>
           <Button
             type="primary"
             block
@@ -247,6 +247,6 @@ export function AuthErrorCard() {
           ))}
         </Paragraph>
       </Space>
-    </Card>
+    </AppCard>
   );
 }

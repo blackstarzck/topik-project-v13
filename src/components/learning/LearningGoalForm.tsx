@@ -171,7 +171,7 @@ export function LearningGoalForm({ userId, defaultValues }: Props) {
   });
 
   return (
-    <Space direction="vertical" size="large" style={{ width: "100%" }}>
+    <Space orientation="vertical" size="large" style={{ width: "100%" }}>
       <div>
         <Title level={3} style={{ marginBottom: 4 }}>
           {t("heading")}

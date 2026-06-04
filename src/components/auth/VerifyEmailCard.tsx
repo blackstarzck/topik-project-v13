@@ -15,9 +15,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { App, Button, Card, Divider, Form, Input, Space, Typography } from "antd";
+import { App, Button, Divider, Form, Input, Space, Typography } from "antd";
 
 import { AuthMascot } from "@/components/auth/AuthMascot";
+import { AppCard } from "@/components/shared/AppCard";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { buildAuthRedirectUrl } from "@/lib/auth/redirect-url";
 import { mapSupabaseErrorCode } from "@/lib/auth/error-mapping";
@@ -200,8 +201,8 @@ export function VerifyEmailCard() {
   }
 
   return (
-    <Card style={{ maxWidth: 520, margin: "0 auto" }} aria-live="polite">
-      <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+    <AppCard aria-live="polite">
+      <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
         {/* §1 마스코트/일러스트 — 안내 카피를 가리지 않게 상단, 대체 텍스트 필수 */}
         <AuthMascot alt={t("mascotAlt")} emoji="📬" size={48} />
         <Title level={3} style={{ marginBottom: 0 }}>
@@ -291,6 +292,6 @@ export function VerifyEmailCard() {
           <Link href="/">{t("escapeHome")}</Link>
         </Paragraph>
       </Space>
-    </Card>
+    </AppCard>
   );
 }

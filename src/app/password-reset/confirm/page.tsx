@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 
 import { PasswordResetConfirmForm } from "@/components/auth/PasswordResetConfirmForm";
+import { PageContainer } from "@/components/shared/PageContainer";
+import { PublicShell } from "@/components/shared/PublicShell";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("auth.passwordResetConfirm");
@@ -10,8 +12,10 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default function PasswordResetConfirmPage() {
   return (
-    <main style={{ padding: "2rem 1rem", maxWidth: 520, margin: "0 auto" }}>
-      <PasswordResetConfirmForm />
-    </main>
+    <PublicShell>
+      <PageContainer size="narrow">
+        <PasswordResetConfirmForm />
+      </PageContainer>
+    </PublicShell>
   );
 }

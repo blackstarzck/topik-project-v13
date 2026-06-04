@@ -13,6 +13,8 @@ import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 
 import { CallbackFragmentFallback } from "@/components/auth/CallbackFragmentFallback";
+import { PageContainer } from "@/components/shared/PageContainer";
+import { PublicShell } from "@/components/shared/PublicShell";
 import { sanitizeNext } from "@/lib/auth/error-mapping";
 
 export const dynamic = "force-dynamic";
@@ -51,11 +53,13 @@ export default async function CallbackFragmentPage({
   const t = await getTranslations("auth.callback");
 
   return (
-    <main style={{ padding: "2.5rem 1rem", maxWidth: 640, margin: "0 auto" }}>
-      <h1 style={srOnlyStyle}>{t("srHeading")}</h1>
-      <Suspense fallback={null}>
-        <CallbackFragmentFallback next={next} />
-      </Suspense>
-    </main>
+    <PublicShell>
+      <PageContainer size="narrow">
+        <h1 style={srOnlyStyle}>{t("srHeading")}</h1>
+        <Suspense fallback={null}>
+          <CallbackFragmentFallback next={next} />
+        </Suspense>
+      </PageContainer>
+    </PublicShell>
   );
 }

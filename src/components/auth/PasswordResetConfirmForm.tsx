@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Alert, App, Button, Card, Form, Input, Space, Typography } from "antd";
+import { Alert, App, Button, Form, Input, Space, Typography } from "antd";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { AuthMascot } from "@/components/auth/AuthMascot";
 import { PasswordStrengthMeter } from "@/components/auth/PasswordStrengthMeter";
+import { AppCard } from "@/components/shared/AppCard";
 import { mapSupabaseErrorCode } from "@/lib/auth/error-mapping";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
@@ -72,8 +73,8 @@ export function PasswordResetConfirmForm() {
   }
 
   return (
-    // §1 재설정 카드 — 절차 전체를 담는 중앙 컨테이너 (폭 360-520px).
-    <Card style={{ maxWidth: 520, margin: "0 auto" }}>
+    // §1 재설정 카드 — 절차 전체를 담는 surface (폭은 PageContainer narrow 가 제어).
+    <AppCard>
       <Form layout="vertical" onFinish={handleSubmit} requiredMark={false}>
         {/* §5 마스코트 — 보안 절차 긴장감 완화, 입력 영역을 가리지 않게 상단 배치 */}
         <AuthMascot
@@ -162,7 +163,7 @@ export function PasswordResetConfirmForm() {
         </Form.Item>
 
         <Form.Item style={{ marginBottom: 0 }}>
-          <Space direction="vertical" size="small" style={{ width: "100%" }}>
+          <Space orientation="vertical" size="small" style={{ width: "100%" }}>
             <Button
               type="primary"
               htmlType="submit"
@@ -180,6 +181,6 @@ export function PasswordResetConfirmForm() {
           </Space>
         </Form.Item>
       </Form>
-    </Card>
+    </AppCard>
   );
 }

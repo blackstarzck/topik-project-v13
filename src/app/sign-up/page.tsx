@@ -4,6 +4,10 @@ import Link from "next/link";
 
 import { AuthMascot } from "@/components/auth/AuthMascot";
 import { SignUpForm } from "@/components/auth/SignUpForm";
+import { AppCard } from "@/components/shared/AppCard";
+import { PageContainer } from "@/components/shared/PageContainer";
+import { PublicShell } from "@/components/shared/PublicShell";
+import { SPACING } from "@/theme/spacing";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("auth.signUp");
@@ -33,27 +37,31 @@ export default async function SignUpPage() {
   const tCommon = await getTranslations("common");
   const tMascot = await getTranslations("auth.mascot");
   return (
-    <main style={{ padding: "2rem 1rem", maxWidth: 480, margin: "0 auto" }}>
-      {/* description §1 브랜드 메시지 + §2 마스코트/혜택 영역. AuthMascot은
-          이미지 실패 시 기본 캐릭터(이모지)로 자동 대체 — §2 예외와 호환. */}
-      <section style={{ textAlign: "center", marginBottom: 24 }}>
-        <AuthMascot alt={tMascot("signUpAlt")} emoji="✏️" size={44} />
-        <h1 style={{ fontSize: 24, margin: "8px 0 4px" }}>{t("pageHeading")}</h1>
-        <p style={{ color: "#595959", margin: "0 0 12px", fontSize: 14 }}>
-          {t("pageSubtitle")}
+    <PublicShell>
+      <PageContainer size="narrow">
+        {/* description §1 브랜드 메시지 + §2 마스코트/혜택 영역. AuthMascot은
+            이미지 실패 시 기본 캐릭터(이모지)로 자동 대체 — §2 예외와 호환. */}
+        <section style={{ textAlign: "center", marginBottom: SPACING.lg }}>
+          <AuthMascot alt={tMascot("signUpAlt")} emoji="✏️" size={44} />
+          <h1 style={{ fontSize: 24, margin: "8px 0 4px" }}>{t("pageHeading")}</h1>
+          <p style={{ color: "#595959", margin: "0 0 12px", fontSize: 14 }}>
+            {t("pageSubtitle")}
+          </p>
+          <div>
+            {benefitChipKeys.map((key) => (
+              <span key={key} style={chipStyle}>
+                {t(key)}
+              </span>
+            ))}
+          </div>
+        </section>
+        <AppCard>
+          <SignUpForm />
+        </AppCard>
+        <p style={{ textAlign: "center", marginTop: SPACING.md }}>
+          {t("haveAccountPrompt")} <Link href="/login">{tCommon("login")}</Link>
         </p>
-        <div>
-          {benefitChipKeys.map((key) => (
-            <span key={key} style={chipStyle}>
-              {t(key)}
-            </span>
-          ))}
-        </div>
-      </section>
-      <SignUpForm />
-      <p style={{ textAlign: "center", marginTop: 16 }}>
-        {t("haveAccountPrompt")} <Link href="/login">{tCommon("login")}</Link>
-      </p>
-    </main>
+      </PageContainer>
+    </PublicShell>
   );
 }
