@@ -249,6 +249,22 @@ Final response follows [`templates/report-template.md`](templates/report-templat
 - **결과**: 로컬에서 PASS인데 CI에서 FAIL이거나 그 반대인 경우가 발생 가능. **신뢰는 CI 결과 기준**. 로컬은 작업 중 빠른 피드백 용도.
 - **로컬에서 CI와 같은 입력을 보고 싶으면**: `git diff --name-only origin/main..HEAD > /tmp/changed.txt && node scripts/ai-workflow-check.mjs --repo . --changed-files /tmp/changed.txt`.
 
+## UI Redesign Gates (M1–M5, C1) — machine-enforced
+
+UI 리디자인 작업(`docs/ui-redesign/PLAN.md` §강제성 A0)은 "판정=기계가 현실 관찰, 완료=게이트 종료코드"를 강제하는 기계 게이트를 둔다. 정본 정의·validate-the-validator는 PLAN.md §강제성, 구현·검증 기록은 [`runs/2026/06/04/20260604-1247-gate-impl-b.md`](runs/2026/06/04/20260604-1247-gate-impl-b.md).
+
+| 게이트 | 무엇 | 실행 | 강제 위치 |
+|---|---|---|---|
+| **M5** 빌드 위생 | dev 살아있을 때 `pnpm build` 차단(다중 포트 프로브) | `package.json` `prebuild`(자동) | 로컬 빌드 + CI 빌드 |
+| **M2** RSC 복합렌더 가드 | 서버 라우트 특수파일의 antd 복합 하위 렌더 적발 | `node scripts/ai-workflow-check.mjs --repo .` | 로컬 + CI |
+| **M4** 인라인-스타일 델타 | src/ 신규 인라인 레이아웃 매직넘버(삼항 포함) 적발 | `node scripts/ai-workflow-check.mjs --check-inline-styles --base <sha>` | 로컬 + **CI**(`.github/workflows/ai-workflow-check.yml`) |
+| **C1** 라우트 도출 | diff→스모크 필요 라우트(특수파일+임포트그래프 역참조; admin/동적 제외) | `node scripts/derive-smoke-routes.mjs --base <sha>` | M1 입력 |
+| **M1** 개발-모드 스모크 | 실제 dev로 라우트 렌더·콘솔/런타임/에러오버레이·#5 시그니처 탐지 → 아티팩트 | `node scripts/dev-route-smoke.mjs --base <sha>`(또는 `--routes`) | **로컬만**(브라우저+인증 필요; CI 미배선) |
+| **M3** 보고=증거 | M1 아티팩트 커버리지+신선도 fail-closed | `node scripts/ai-workflow-check.mjs --check-smoke [artifact]` | **로컬만**(M1 의존) |
+
+- **M4 탈출구:** 의도적 인라인 숫자는 같은 줄에 `// ai-check: allow-inline-number <사유>`. 토큰/상수·`opacity/zIndex/flex*`·문자열·주석·JSX 속성은 비대상.
+- **현재 강제 범위(정직):** M2·M4·M5는 CI에서 강제됨. M1·M3는 브라우저+인증 storage-state가 필요해 CI 미배선(로컬 실행) — 브라우저 CI 잡 + auth 시크릿이 후속 과제. M3 신선도: 코드 커밋으로 HEAD가 바뀌면 M1 스모크 재실행 필요(설계).
+
 ## Related
 
 - Plan and Light Spec that this gate reviews → [`planning-contracts.md`](planning-contracts.md)

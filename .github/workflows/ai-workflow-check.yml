@@ -51,3 +51,18 @@ jobs:
             --repo . \
             --changed-files "$RUNNER_TEMP/changed-files.txt" \
             --pr-body "$RUNNER_TEMP/pr-body.md"
+
+      # M4 — inline-style delta guard (PLAN.md §강제성). Flags NEW inline layout
+      # magic numbers under src/ on this PR's diff (tokens/constants exempt;
+      # `// ai-check: allow-inline-number <reason>` escape hatch).
+      - name: Validate inline-style delta (M4)
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          node scripts/ai-workflow-check.mjs --check-inline-styles --base "$BASE_SHA"
+
+      # M1/M3 dev-mode smoke (`--check-smoke`) is intentionally NOT wired here
+      # yet: it needs a booted `next dev` + Playwright (chromium) + seeded auth
+      # storage-state — a heavier browser CI job (auth-state builder is currently
+      # blocked by a rotated service key). Until that job exists, M1/M3 run
+      # locally. Follow-up: docs/ai-workflow/runs/2026/06/04/20260604-1247-gate-impl-b.md.
