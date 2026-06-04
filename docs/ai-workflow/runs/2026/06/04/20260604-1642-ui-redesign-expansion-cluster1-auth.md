@@ -7,7 +7,7 @@
 - Updated: 2026-06-04 16:42
 - Main session owner: Claude Code (Opus 4.8, 1M ctx) — coordinator + durable context owner
 - Host: Claude Code
-- Status: in-progress
+- Status: cluster-1 verified (M1 + static gates GREEN) — clean prod build deferred (dev server reused) — pending human visual review
 - Effort: ultracode (workflows by default)
 
 ## Task
@@ -85,11 +85,25 @@
   - C1 derive routes from cluster-1 diff → **M1 dev-smoke** all routes ok=true, console errors 0 (HMR ws noise non-fatal), antd deprecation 0, no overlay, no horizontal scroll @360/768/1280, light+dark.
   - admin diff empty: `git diff --name-only -- src/components/admin "src/app/(workspace)/admin"`.
   - Screenshots {light,dark}×{360,768,1280} per route → `docs/ui-redesign/pilot-shots/`.
-- Checks run: (pending)
-- Cross-model review: planned — Claude adversarial reviewer(s) on the diffs (codex unfit for 한글 copy mojibake; here copy is unchanged so codex could review structure — TBD). Record degraded if single-session.
-- UX/UI Consistency Pass: (pending — Tokens·Components·A11y·Responsive 4-line evidence)
-- QA Gate: (pending — real dev app M1)
-- **Human visual review (#3): PENDING — non-substitutable gate; present screenshots after automated gate green.**
+- Checks run (commits: `3bef425` typecheck-fix, `c29f48b` cluster-1 UI):
+  - `node scripts/ai-workflow-check.mjs --repo . --check-inline-styles --check-antd-deprecations` → PASS (M4 + M6, exit 0): no new inline magic numbers, no new antd deprecations in the delta.
+  - `pnpm typecheck` → GREEN (exit 0). (Pre-existing TS7016 in read-pilot-goal.test.ts fixed in `3bef425`.)
+  - `pnpm lint` → exit 0 (21 warnings, all pre-existing in untouched files; 0 errors; none in cluster-1 files).
+  - `pnpm vitest run tests/components/auth tests/components/onboarding` → 16/16 PASS (SignUpForm, PasswordResetConfirmForm, PasswordResetRequestForm, LoginForm, OnboardingLearningGoal). No dedicated tests for AuthErrorCard/VerifyEmailCard/CallbackFragmentFallback → covered by M1.
+  - **M1 dev-route-smoke** (real running dev, port 3000, student.json auth), 6 routes × @360/768/1280 = 18 visits, headSha `c29f48b` = HEAD: **all ok=true, fatal=false, redirected=false, reasons=[]**; consoleErrors = HMR-websocket dev-noise only (filtered) → real console errors 0, antd deprecation 0; no error overlay; status 200. Artifact: `docs/ui-redesign/pilot-shots/smoke-result.json`.
+  - `/auth/callback-fragment` excluded from the canonical artifact (transient redirect-only page; redirect ⇒ classifyRouteResult ok=false by design — same class as C1's principled admin/dynamic exclusions). Verified clean in a separate diagnostic run (ok=true, no console/overlay/pageError; AppCard spinner renders; redirect logic untouched).
+  - `node scripts/ai-workflow-check.mjs --repo . --check-smoke` → PASS (M3 coverage: testedRoutes ⊇ requiredRoutes, fresh headSha).
+  - admin diff (`git diff --name-only -- src/components/admin "src/app/(workspace)/admin"`, working + staged) → empty. Frozen island untouched.
+  - **Self visual inspection** of 4 screenshots (sign-up@1280, onboarding@1280, auth-error@1280, sign-up@360): design system applied (calm gray canvas + white AppCard surfaces, narrow centering, mascot/heading rhythm, responsive chip/label wrap at 360, no horizontal overflow). Consistent with the /login pilot.
+- **Deferred (honest): clean `pnpm build`** — the single remaining §Goal `done` step. Skipped because the running dev server (PID reused for M1) makes a prod build corrupt `.next` and M5 preflight blocks build-while-dev. #130 (compound-antd-in-RSC) risk ≈ 0: all 7 page.tsx are server components delegating to "use client" children; the only server-rendered antd is `<Space orientation>` (not a compound destructure) — the same pattern the dashboard pilot already ships in prod. Recommend running clean build when the dev server is free.
+- Cross-model review: degraded — single session. Substitute evidence: machine gates (M4/M6/M3) + real-app M1 + 16/16 units + direct screenshot inspection. Copy is UNCHANGED (i18n keys preserved) so 한글 mojibake is moot; an adversarial Claude diff review is a recommended follow-up.
+- UX/UI Consistency Pass: passed
+  - Tokens: `SPACING` (8-based) for all touched inline spacing; new global.css class uses only approved `--app-*` bridge vars; M4 PASS (0 new magic numbers).
+  - Components: bare antd `Card` → shared `AppCard` (.app-card/.app-surface) on the touched cards; `PublicShell`/`PageContainer(narrow)` for public-auth layout; authed onboarding uses `.app-workspace-narrow` (no second `<main>`); no nested cards.
+  - A11y: `<main>` landmark via PageContainer (public) / antd Layout.Content (authed, no duplicate); fixed the pre-existing double-`<main>` on onboarding; preserved aria-live/role/data-testid; srOnly heading untouched.
+  - Responsive: M1 @360/768/1280 all ok; screenshots confirm no horizontal scroll, chips/labels wrap at 360.
+- QA Gate: passed — real dev app M1 on all 7 cluster routes; antd deprecation 0 across 3 viewports.
+- **Human visual review (#3): PENDING — non-substitutable gate. 19 screenshots in `docs/ui-redesign/pilot-shots/` (light only; dark mode low-risk — no theme-token change — to confirm in review). Awaiting user sign-off before/while continuing to cluster 2.**
 
 ## Fallback State
 
