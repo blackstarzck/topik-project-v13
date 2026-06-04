@@ -6,8 +6,9 @@
 ## TL;DR (resume in 60s)
 
 - **Goal (`/goal`):** apply the validated pilot design system to every user-facing screen in `docs/Wireframe/`, cluster by cluster, per `docs/ui-redesign/PLAN.md`.
-- **Done + committed + real-app-verified:** pilot (`/login`, `/dashboard`) → **Cluster 1 (auth/onboarding, 7 screens)** → **Cluster 2 (practice + AppModal)**.
-- **Next:** **Cluster 3 = writing** (D-01..D-04 editor screens + 3 submission/loading/autosave modals → AppModal). Then feedback/reports → library → growth → settings → paywall → public/legal.
+- **Done + committed + real-app-verified:** pilot (`/login`, `/dashboard`) → **Cluster 1 (auth/onboarding, 7 screens)** → **Cluster 2 (practice + AppModal)** → **Cluster 3 (writing, commits `1b94306` UI + `36a4064` evidence; M1 4 routes × @360/768/1280 GREEN)**.
+- **Next:** **Cluster 4 = feedback/reports** (E-01/E-02 `/writing/feedback/{short,long}/[id]`, R-01 `/writing/reports/[id]/compare`, R-02 `/practice/next`) **+ D-M2 `AnalysisLoadingModal`** (deferred here from C3 — it lives in `src/components/feedback/`, is Card-based not a Modal, and renders on the dynamic-`[id]` feedback route). Then library → growth → settings → paywall → public/legal.
+- **Cluster 3 note:** resolved the concurrent-Codex writing route-rename (committed `e7494e4` with user approval) + a pre-existing stale library test (`19f0d30`). Cluster-3 ledger: `20260604-1845-ui-redesign-cluster3-writing.md`. `.smoke-skip` removed (Stop hook live again).
 - **How:** follow "The expansion recipe" below. Each cluster = surgical edits → static gates → **real-app M1 dev-smoke (PowerShell)** → commit code → commit evidence. Admin is **frozen** (never touch).
 - **The machine gates judge reality, not your report** (PLAN §A0). "Done" = gate exit codes + M1 ok, not a claim.
 
