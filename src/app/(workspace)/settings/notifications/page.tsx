@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth/session";
 import { getProfileSettings } from "@/lib/settings/server";
 import { NotificationPrefsForm } from "@/components/settings/NotificationPrefsForm";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("settings.notifications");
@@ -16,12 +17,12 @@ export default async function NotificationsSettingsPage() {
   const settings = await getProfileSettings(user.id);
   if (!settings) notFound();
   return (
-    <main style={{ padding: 24, maxWidth: 560 }}>
-      <h1>{t("pageHeading")}</h1>
+    <div className="app-workspace-narrow">
+      <PageHeader title={t("pageHeading")} />
       <NotificationPrefsForm
         userId={user.id}
         initialPrefs={settings.notification_prefs}
       />
-    </main>
+    </div>
   );
 }

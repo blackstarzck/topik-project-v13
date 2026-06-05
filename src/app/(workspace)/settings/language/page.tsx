@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth/session";
 import { getProfileSettings } from "@/lib/settings/server";
 import { LanguageForm } from "@/components/settings/LanguageForm";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("settings.language");
@@ -17,9 +18,9 @@ export default async function LanguageSettingsPage() {
   // i18n (G-01): server-side translation via getTranslations (RSC-safe).
   const t = await getTranslations("settings.language");
   return (
-    <main style={{ padding: 24, maxWidth: 560 }}>
-      <h1>{t("pageHeading")}</h1>
+    <div className="app-workspace-narrow">
+      <PageHeader title={t("pageHeading")} />
       <LanguageForm userId={user.id} initialLocale={settings.ui_locale} />
-    </main>
+    </div>
   );
 }

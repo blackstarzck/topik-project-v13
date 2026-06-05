@@ -4,6 +4,8 @@ import { Alert, App, Avatar, Button, Form, Input, Space, Typography } from "antd
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { AppCard } from "@/components/shared/AppCard";
+import { SPACING } from "@/theme/spacing";
 import { useUpdateProfile } from "@/lib/settings/mutations";
 import {
   AvatarError,
@@ -308,14 +310,11 @@ export function ProfileForm({
         />
       </Form.Item>
 
-      <section
+      <AppCard
+        size="small"
+        role="region"
         aria-label={tAvatar("regionAriaLabel")}
-        style={{
-          border: "1px solid var(--ant-color-border)",
-          borderRadius: 8,
-          marginBottom: 16,
-          padding: 16,
-        }}
+        style={{ marginBottom: SPACING.md }}
       >
         <Space align="start" size="middle">
           {avatarUrl ? (
@@ -367,7 +366,7 @@ export function ProfileForm({
           title={tAvatar("securityNoticeTitle")}
           description={tAvatar("securityNoticeDescription")}
         />
-      </section>
+      </AppCard>
 
       <Form.Item>
         <Button

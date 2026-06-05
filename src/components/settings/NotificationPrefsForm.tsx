@@ -4,7 +4,6 @@ import {
   Alert,
   App,
   Button,
-  Card,
   Checkbox,
   Empty,
   Form,
@@ -20,6 +19,8 @@ import {
 import dayjs, { type Dayjs } from "dayjs";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
+
+import { AppCard } from "@/components/shared/AppCard";
 
 import {
   NOTIFICATION_PREF_KEYS,
@@ -393,7 +394,7 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
         ) : null}
 
         {/* Region 2: 알림 채널 탭 (이메일 / Zalo / 둘 다) */}
-        <Card size="small" title={t("channel.cardTitle")}>
+        <AppCard size="small" title={t("channel.cardTitle")}>
           {settingsLoad.status === "loading" ? (
             <Skeleton active paragraph={{ rows: 2 }} />
           ) : (
@@ -403,10 +404,10 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
               items={channelTabs}
             />
           )}
-        </Card>
+        </AppCard>
 
         {/* Region 3: 알림 조건 입력 */}
-        <Card size="small" title={t("condition.cardTitle")}>
+        <AppCard size="small" title={t("condition.cardTitle")}>
           <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
             {/* Boolean conditions persist to profiles.notification_prefs and do
                 not depend on the async notification_settings load. */}
@@ -484,14 +485,14 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
               </>
             )}
           </Space>
-        </Card>
+        </AppCard>
 
         {/* Region 4: 미리보기 / 발송 이력 */}
-        <Card size="small" title={t("preview.cardTitle")}>
+        <AppCard size="small" title={t("preview.cardTitle")}>
           <Text type="secondary">{reminderPreview}</Text>
-        </Card>
+        </AppCard>
 
-        <Card size="small" title={t("history.cardTitle")}>
+        <AppCard size="small" title={t("history.cardTitle")}>
           {settingsLoad.status === "loading" ? (
             <Skeleton active paragraph={{ rows: 2 }} />
           ) : log.length === 0 ? (
@@ -528,7 +529,7 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
               )}
             />
           )}
-        </Card>
+        </AppCard>
 
         <Alert type="info" showIcon title={t("deferredNotice")} />
 

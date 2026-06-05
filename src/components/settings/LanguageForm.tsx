@@ -4,7 +4,6 @@ import {
   Alert,
   App,
   Button,
-  Card,
   Form,
   Radio,
   Segmented,
@@ -15,6 +14,8 @@ import {
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+
+import { AppCard } from "@/components/shared/AppCard";
 
 import {
   LOCALE_COOKIE,
@@ -255,7 +256,7 @@ export function LanguageForm({ userId, initialLocale }: Props) {
         </Paragraph>
 
         {/* Region 3: 학습 언어 선택 (설명·예시·번역 보조 기준 언어) */}
-        <Card size="small" title={t("learningCardTitle")}>
+        <AppCard size="small" title={t("learningCardTitle")}>
           {contentLoad.status === "loading" ? (
             <Skeleton active paragraph={{ rows: 2 }} />
           ) : contentLoad.status === "error" ? (
@@ -288,10 +289,10 @@ export function LanguageForm({ userId, initialLocale }: Props) {
               </Radio.Group>
             </Form.Item>
           )}
-        </Card>
+        </AppCard>
 
         {/* Region 4: 콘텐츠 설정 (피드백 표시 · 예문 난이도 · 해설 길이) */}
-        <Card size="small" title={t("contentCardTitle")}>
+        <AppCard size="small" title={t("contentCardTitle")}>
           {contentLoad.status === "loading" ? (
             <Skeleton active paragraph={{ rows: 3 }} />
           ) : contentLoad.status === "error" ? (
@@ -373,10 +374,10 @@ export function LanguageForm({ userId, initialLocale }: Props) {
               ) : null}
             </Space>
           )}
-        </Card>
+        </AppCard>
 
         {/* Region 5: 도움말 (언어 설정 영향 범위 안내) */}
-        <Card size="small" title={t("helpCardTitle")}>
+        <AppCard size="small" title={t("helpCardTitle")}>
           <ul style={{ margin: 0, paddingLeft: 18 }}>
             <li>
               <Text type="secondary">{t("helpUiScope")}</Text>
@@ -388,7 +389,7 @@ export function LanguageForm({ userId, initialLocale }: Props) {
               <Text type="secondary">{t("helpIncremental")}</Text>
             </li>
           </ul>
-        </Card>
+        </AppCard>
 
         {/* Region 2 예외: 미지원 언어 안내 */}
         <Alert type="info" showIcon title={t("unsupportedNotice")} />

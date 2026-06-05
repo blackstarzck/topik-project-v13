@@ -3,7 +3,6 @@
 import {
   App,
   Button,
-  Card,
   DatePicker,
   Empty,
   Form,
@@ -18,6 +17,7 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useState } from "react";
 
+import { AppCard } from "@/components/shared/AppCard";
 import { saveLearningGoal } from "@/lib/learning/mutations";
 
 const { Text, Paragraph } = Typography;
@@ -138,7 +138,7 @@ export function ExamInfoCard({ userId, goal }: Props) {
   // Edit mode: inline form (X-05 region 2).
   if (editable && editing) {
     return (
-      <Card title={t("cardTitle")}>
+      <AppCard title={t("cardTitle")}>
         <Form layout="vertical" disabled={saving}>
           <Form.Item label={t("levelLabel")} required style={{ marginBottom: 12 }}>
             <Select<TopikLevel>
@@ -191,13 +191,13 @@ export function ExamInfoCard({ userId, goal }: Props) {
             </Button>
           </Space>
         </Form>
-      </Card>
+      </AppCard>
     );
   }
 
   // View mode.
   return (
-    <Card
+    <AppCard
       title={t("cardTitle")}
       extra={
         editable && view ? (
@@ -243,6 +243,6 @@ export function ExamInfoCard({ userId, goal }: Props) {
           </Paragraph>
         </>
       )}
-    </Card>
+    </AppCard>
   );
 }

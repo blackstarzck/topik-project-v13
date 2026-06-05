@@ -1,8 +1,10 @@
 "use client";
 
-import { Alert, Card, Divider, Tag, Typography } from "antd";
+import { Alert, Divider, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
+
+import { AppCard } from "@/components/shared/AppCard";
 
 const { Text, Paragraph } = Typography;
 
@@ -43,7 +45,7 @@ export function StatusHelpCard({
     ? t(`role.${appRole}` as Parameters<typeof t>[0])
     : appRole;
   return (
-    <Card title={t("cardTitle")}>
+    <AppCard title={t("cardTitle")}>
       {/* X-05 region 4 예외: 정책 미동의 경고 */}
       {!policyAgreed ? (
         <Alert
@@ -86,6 +88,6 @@ export function StatusHelpCard({
           {t("withdrawalNote")}
         </Text>
       </Paragraph>
-    </Card>
+    </AppCard>
   );
 }

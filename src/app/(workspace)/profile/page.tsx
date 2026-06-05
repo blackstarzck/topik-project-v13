@@ -9,6 +9,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { ProfileForm } from "@/components/profile/ProfileForm";
 import { ExamInfoCard } from "@/components/profile/ExamInfoCard";
 import { StatusHelpCard } from "@/components/profile/StatusHelpCard";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("profile.page");
@@ -32,8 +33,8 @@ export default async function ProfilePage() {
     .maybeSingle();
 
   return (
-    <main style={{ padding: 24, maxWidth: 960, margin: "0 auto" }}>
-      <h1>{t("heading")}</h1>
+    <>
+      <PageHeader title={t("heading")} />
       <Row gutter={[16, 16]}>
         <Col xs={24} md={14}>
           <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
@@ -75,6 +76,6 @@ export default async function ProfilePage() {
           </Space>
         </Col>
       </Row>
-    </main>
+    </>
   );
 }
