@@ -1,6 +1,8 @@
 "use client";
 
-import { Card, Typography } from "antd";
+import { Typography } from "antd";
+
+import { AppCard } from "@/components/shared/AppCard";
 
 const { Title, Paragraph } = Typography;
 
@@ -12,10 +14,10 @@ type Props = {
 
 export function FeatureCard({ emoji, title, description }: Props) {
   return (
-    <Card>
+    <AppCard>
       <div style={{ fontSize: 36, marginBottom: 8 }}>{emoji}</div>
       <Title level={4}>{title}</Title>
       <Paragraph>{description}</Paragraph>
-    </Card>
+    </AppCard>
   );
 }

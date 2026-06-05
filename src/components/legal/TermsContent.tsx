@@ -6,19 +6,21 @@
 // 약관은 운영 진입 전 별도 작업으로 게시되며, 현 화면은 회원가입 동의 라벨/
 // 랜딩 헤더에서 연결되는 최소 disclosure placeholder다.
 //
-// "use client": antd 복합 컴포넌트(Typography.Title/Paragraph, Card)를
-// 서버 컴포넌트에서 쓰면 prod-only React #130 크래시가 나므로 필수.
+// "use client": antd 복합 컴포넌트(Typography.Title/Paragraph)를 서버
+// 컴포넌트에서 쓰면 prod-only React #130 크래시가 나므로 필수.
 
 import Link from "next/link";
-import { Card, Space, Typography } from "antd";
+import { Space, Typography } from "antd";
 import { useTranslations } from "next-intl";
+
+import { AppCard } from "@/components/shared/AppCard";
 
 const { Title, Paragraph, Text } = Typography;
 
 export function TermsContent() {
   const t = useTranslations("legal.terms");
   return (
-    <Card style={{ maxWidth: 720, margin: "0 auto" }}>
+    <AppCard>
       <Space orientation="vertical" size="large" style={{ width: "100%" }}>
         {/* §1 법적 고지 페이지 (제목 + 임시 약관 안내) */}
         <div>
@@ -68,6 +70,6 @@ export function TermsContent() {
           <Link href="/privacy">{t("linkPrivacy")}</Link>
         </Paragraph>
       </Space>
-    </Card>
+    </AppCard>
   );
 }

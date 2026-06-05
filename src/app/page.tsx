@@ -5,6 +5,8 @@ import { FeatureCard } from "@/components/landing/FeatureCard";
 import { Hero } from "@/components/landing/Hero";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { ProductPreview } from "@/components/landing/ProductPreview";
+import { PageContainer } from "@/components/shared/PageContainer";
+import { PublicShell } from "@/components/shared/PublicShell";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -33,38 +35,40 @@ export default async function HomePage() {
   const t = await getTranslations("landing.features");
 
   return (
-    <main style={{ maxWidth: 1080, margin: "0 auto", padding: "0 16px 64px" }}>
-      {/* §1 헤더/내비 — 로고 + 메뉴(4개 이하) + auth-aware CTA */}
-      <LandingHeader isAuthenticated={Boolean(user)} />
-      {/* §2 히어로 카피 + §3 시작 CTA + §5 마스코트 */}
-      <Hero isAuthenticated={Boolean(user)} />
-      {/* §6: 4개 이하 카드 — AI 첨삭 / 실전 문제 / 성장 리포트 / 라이브러리 */}
-      <section id="features">
-        <div style={featureGridStyle}>
-          <FeatureCard
-            emoji="✍️"
-            title={t("correctionTitle")}
-            description={t("correctionDescription")}
-          />
-          <FeatureCard
-            emoji="📝"
-            title={t("practiceTitle")}
-            description={t("practiceDescription")}
-          />
-          <FeatureCard
-            emoji="📈"
-            title={t("reportTitle")}
-            description={t("reportDescription")}
-          />
-          <FeatureCard
-            emoji="📚"
-            title={t("libraryTitle")}
-            description={t("libraryDescription")}
-          />
-        </div>
-      </section>
-      {/* §4 제품 프리뷰 — 3장 이하, 이미지 실패 시 요약 카드 fallback */}
-      <ProductPreview />
-    </main>
+    <PublicShell>
+      <PageContainer size="default">
+        {/* §1 헤더/내비 — 로고 + 메뉴(4개 이하) + auth-aware CTA */}
+        <LandingHeader isAuthenticated={Boolean(user)} />
+        {/* §2 히어로 카피 + §3 시작 CTA + §5 마스코트 */}
+        <Hero isAuthenticated={Boolean(user)} />
+        {/* §6: 4개 이하 카드 — AI 첨삭 / 실전 문제 / 성장 리포트 / 라이브러리 */}
+        <section id="features">
+          <div style={featureGridStyle}>
+            <FeatureCard
+              emoji="✍️"
+              title={t("correctionTitle")}
+              description={t("correctionDescription")}
+            />
+            <FeatureCard
+              emoji="📝"
+              title={t("practiceTitle")}
+              description={t("practiceDescription")}
+            />
+            <FeatureCard
+              emoji="📈"
+              title={t("reportTitle")}
+              description={t("reportDescription")}
+            />
+            <FeatureCard
+              emoji="📚"
+              title={t("libraryTitle")}
+              description={t("libraryDescription")}
+            />
+          </div>
+        </section>
+        {/* §4 제품 프리뷰 — 3장 이하, 이미지 실패 시 요약 카드 fallback */}
+        <ProductPreview />
+      </PageContainer>
+    </PublicShell>
   );
 }

@@ -11,8 +11,10 @@
 // to the same summary card — the §4 exception is satisfied either way.
 
 import { useState } from "react";
-import { Card, Typography } from "antd";
+import { Typography } from "antd";
 import { useTranslations } from "next-intl";
+
+import { AppCard } from "@/components/shared/AppCard";
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -134,7 +136,7 @@ export function ProductPreview() {
           const badge = t(preview.badgeKey);
           const title = t(preview.titleKey);
           return (
-            <Card key={preview.key} size="small">
+            <AppCard key={preview.key} size="small">
               <PreviewImage preview={preview} badge={badge} title={title} />
               <Title level={5} style={{ marginTop: 12, marginBottom: 4 }}>
                 {title}
@@ -145,7 +147,7 @@ export function ProductPreview() {
               >
                 {t(preview.summaryKey)}
               </Paragraph>
-            </Card>
+            </AppCard>
           );
         })}
       </div>
