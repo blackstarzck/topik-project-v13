@@ -4,10 +4,8 @@ import {
   Alert,
   App,
   Button,
-  Card,
   Col,
   Descriptions,
-  Modal,
   Result,
   Row,
   Skeleton,
@@ -22,6 +20,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
+import { AppCard } from "@/components/shared/AppCard";
+import { AppModal } from "@/components/shared/AppModal";
+import { PageHeader } from "@/components/shared/PageHeader";
+
 import {
   cadenceLabelKey,
   fetchActivePlans,
@@ -33,10 +35,19 @@ import {
   type SubscriptionPlan,
 } from "./billing-data";
 
-const { Title, Paragraph, Text } = Typography;
+const { Paragraph, Text } = Typography;
 
 const SUPPORT_EMAIL = "support@talkpik.example";
 const PAGE_SIZE = 10;
+
+// Content-width cap (matches the prior 1040 layout). The duplicate <main> +
+// padding are dropped — WorkspaceShell's Layout.Content already renders the
+// landmark + 24px padding; only the centered max-width is kept (library page
+// precedent). Hoisted to a module const so the M4 inline-number gate stays green.
+const SUBSCRIPTION_CONTENT_STYLE = {
+  maxWidth: 1040, // ai-check: allow-inline-number off-scale content-width cap (px)
+  marginInline: "auto",
+} as const;
 
 // i18n: 상태/결제 enum 값은 카탈로그 키 이름 + 배지 색만 보관하고(공유 엔티티
 // 의미를 바꾸지 않음), 한글 라벨은 렌더 시 t(`status.${key}`)로 해석한다.
@@ -243,25 +254,23 @@ export function SubscriptionShell() {
   };
 
   return (
-    <main style={{ padding: 24, maxWidth: 1040, margin: "0 auto" }}>
+    <div style={SUBSCRIPTION_CONTENT_STYLE}>
       <Space orientation="vertical" size="large" style={{ width: "100%" }}>
-        <div>
-          <Space>
-            <Tag>X-04</Tag>
-            <Title level={3} style={{ margin: 0 }}>
+        <PageHeader
+          title={
+            <Space>
+              <Tag>X-04</Tag>
               {t("heading")}
-            </Title>
-          </Space>
-          <Paragraph type="secondary" style={{ marginTop: 8, marginBottom: 0 }}>
-            {t("subheading")}
-          </Paragraph>
-        </div>
+            </Space>
+          }
+          subtitle={t("subheading")}
+        />
 
         <Row gutter={[16, 16]}>
           <Col xs={24} md={15}>
             <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
               {/* Region 2: 현재 구독 요약 */}
-              <Card title={t("current.title")}>
+              <AppCard title={t("current.title")}>
                 {sub.status === "loading" ? (
                   <Skeleton active paragraph={{ rows: 2 }} />
                 ) : sub.status === "error" ? (
@@ -332,11 +341,11 @@ export function SubscriptionShell() {
                     ]}
                   />
                 )}
-              </Card>
+              </AppCard>
 
               {/* Region 3: 변경/취소 액션 (external stubs + policy modal) */}
               {sub.status === "ready" && sub.subscription !== null ? (
-                <Card title={t("change.title")}>
+                <AppCard title={t("change.title")}>
                   <Space wrap>
                     <Button onClick={() => setPolicyModal("change")}>
                       {t("change.changePlan")}
@@ -354,11 +363,11 @@ export function SubscriptionShell() {
                   >
                     {t("change.note")}
                   </Paragraph>
-                </Card>
+                </AppCard>
               ) : null}
 
               {/* Region 4: 결제 이력 */}
-              <Card title={t("history.title")}>
+              <AppCard title={t("history.title")}>
                 {history.status === "error" ? (
                   <Result
                     status="warning"
@@ -398,13 +407,13 @@ export function SubscriptionShell() {
                     }}
                   />
                 )}
-              </Card>
+              </AppCard>
             </Space>
           </Col>
 
           {/* Region 5: 우측 도움말 */}
           <Col xs={24} md={9}>
-            <Card title={t("help.title")}>
+            <AppCard title={t("help.title")}>
               <Space orientation="vertical" size={10} style={{ width: "100%" }}>
                 <div>
                   <Text strong>{t("help.changePolicyTitle")}</Text>
@@ -433,7 +442,7 @@ export function SubscriptionShell() {
                   {t("help.contactCta")}
                 </Button>
               </Space>
-            </Card>
+            </AppCard>
           </Col>
         </Row>
 
@@ -447,7 +456,7 @@ export function SubscriptionShell() {
         </Space>
       </Space>
 
-      <Modal
+      <AppModal
         open={policyModal !== null}
         title={
           policyModal
@@ -473,7 +482,7 @@ export function SubscriptionShell() {
             ? t(policyCopy[policyModal].bodyKey as Parameters<typeof t>[0])
             : ""}
         </Paragraph>
-      </Modal>
-    </main>
+      </AppModal>
+    </div>
   );
 }

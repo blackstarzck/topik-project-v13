@@ -4,7 +4,6 @@ import {
   Alert,
   App,
   Button,
-  Card,
   Col,
   Result,
   Row,
@@ -18,6 +17,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
+import { AppCard } from "@/components/shared/AppCard";
+import { PageHeader } from "@/components/shared/PageHeader";
+
 import {
   cadenceLabelKey,
   fetchActivePlans,
@@ -27,9 +29,18 @@ import {
   type SubscriptionPlan,
 } from "./billing-data";
 
-const { Title, Paragraph, Text } = Typography;
+const { Title, Text } = Typography;
 
 const SUPPORT_EMAIL = "support@talkpik.example";
+
+// Content-width cap (matches the prior 1040 layout). The duplicate <main> +
+// padding are dropped — WorkspaceShell's Layout.Content already renders the
+// landmark + 24px padding; only the centered max-width is kept (library page
+// precedent). Hoisted to a module const so the M4 inline-number gate stays green.
+const PAYWALL_CONTENT_STYLE = {
+  maxWidth: 1040, // ai-check: allow-inline-number off-scale content-width cap (px)
+  marginInline: "auto",
+} as const;
 
 type LoadState =
   | { status: "loading" }
@@ -104,25 +115,23 @@ export function PaywallShell() {
   }
 
   return (
-    <main style={{ padding: 24, maxWidth: 1040, margin: "0 auto" }}>
+    <div style={PAYWALL_CONTENT_STYLE}>
       <Space orientation="vertical" size="large" style={{ width: "100%" }}>
         {/* Region 1: 결제 선택 제목 */}
-        <div>
-          <Space>
-            <Tag>X-03</Tag>
-            <Title level={3} style={{ margin: 0 }}>
+        <PageHeader
+          title={
+            <Space>
+              <Tag>X-03</Tag>
               {t("heading")}
-            </Title>
-          </Space>
-          <Paragraph type="secondary" style={{ marginTop: 8, marginBottom: 0 }}>
-            {t("subheading")}
-          </Paragraph>
-        </div>
+            </Space>
+          }
+          subtitle={t("subheading")}
+        />
 
         {state.status === "loading" || state.status === "has_subscription" ? (
-          <Card>
+          <AppCard>
             <Skeleton active paragraph={{ rows: 4 }} />
-          </Card>
+          </AppCard>
         ) : state.status === "error" ? (
           <Result
             status="warning"
@@ -155,7 +164,7 @@ export function PaywallShell() {
                   const benefits = planFeatureList(plan.features).slice(0, 4);
                   return (
                     <Col key={plan.plan_key} xs={24} md={8}>
-                      <Card
+                      <AppCard
                         style={
                           plan.recommended
                             ? { borderColor: "var(--ant-color-primary)" }
@@ -220,7 +229,7 @@ export function PaywallShell() {
                             {t("stubNote")}
                           </Text>
                         </Space>
-                      </Card>
+                      </AppCard>
                     </Col>
                   );
                 })}
@@ -230,7 +239,7 @@ export function PaywallShell() {
             <Row gutter={[16, 16]}>
               {/* Region 4: 혜택/지원 패널 */}
               <Col xs={24} md={14}>
-                <Card title={t("benefits.title")}>
+                <AppCard title={t("benefits.title")}>
                   <Space
                     orientation="vertical"
                     size={4}
@@ -250,12 +259,12 @@ export function PaywallShell() {
                       </Button>
                     </div>
                   </Space>
-                </Card>
+                </AppCard>
               </Col>
 
               {/* Region 5: 결제 보조 정보 */}
               <Col xs={24} md={10}>
-                <Card title={t("paymentInfo.title")}>
+                <AppCard title={t("paymentInfo.title")}>
                   <Space
                     orientation="vertical"
                     size={4}
@@ -266,7 +275,7 @@ export function PaywallShell() {
                     <Text type="secondary">{t("paymentInfo.item3")}</Text>
                     <Text type="secondary">{t("paymentInfo.item4")}</Text>
                   </Space>
-                </Card>
+                </AppCard>
               </Col>
             </Row>
 
@@ -281,6 +290,6 @@ export function PaywallShell() {
           </>
         )}
       </Space>
-    </main>
+    </div>
   );
 }
