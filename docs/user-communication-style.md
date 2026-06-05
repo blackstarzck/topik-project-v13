@@ -39,8 +39,6 @@ This rule applies not only to development terms, but also to internal agent term
 
 When the user asks for a report, status update, review, explanation, or comparison, choose the format that makes the result easiest to understand.
 
-Before writing a user-facing report, status update, review report, comparison report, handoff, or completion summary, read and follow [`docs/report-writing-template.md`](report-writing-template.md). This is mandatory.
-
 Prefer one or more of:
 
 - HTML report
@@ -56,7 +54,7 @@ Do not use a dense wall of text when a visual or structured format would be easi
 
 ## Required Report Shape
 
-For reports, follow [`docs/report-writing-template.md`](report-writing-template.md). The default order is:
+The default order for reports is:
 
 1. One-line conclusion
 2. Three-card scoreboard

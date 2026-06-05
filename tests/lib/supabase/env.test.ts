@@ -64,7 +64,6 @@ describe("supabase env validation", () => {
   });
 
   // Phase 7-A — NODE_ENV-gated localhost HTTP exception.
-  // See: docs/ai-workflow/plans/20260524-phase-7-coverage-gap-fill.md Task 0
   // Production / test must still reject http://; only NODE_ENV='development'
   // may use http://127.0.0.1 or http://localhost for local Supabase.
   it("getPublicEnv allows http://127.0.0.1 when NODE_ENV is development", async () => {

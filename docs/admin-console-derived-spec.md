@@ -259,7 +259,6 @@ v13 안에는 과거에 만들어졌다가 **동결(frozen)된 최소 관리자 
 - `docs/user-admin-data-consistency.md` — 사용자↔admin 데이터 인벤토리 (이 문서의 1차 근거)
 - `docs/admin-scope-boundary.md` — admin 범위 경계 (권위 지침)
 - `docs/user-admin-consistency-method.md` — 정합 방법론 / SoT 앵커링
-- `docs/ai-workflow/runs/2026/06/04/20260604-2039-user-admin-data-inventory.md` — 인벤토리 작업 일지
 - `src/app/(workspace)/admin/*` , `src/lib/auth/admin-guard.ts`, `src/components/admin/*`, `src/lib/admin/*` — 동결된 v13 admin 코드 (참고)
 - `src/app/**/page.tsx` — 현재 사용자 화면 라우트
 - (간접) `topik-ai/docs/specs/admin-data-contract.md`, `topik-ai/docs/page-sync/*.md` — 화면 이름·용어 앵커 (인벤토리를 통해 반영)

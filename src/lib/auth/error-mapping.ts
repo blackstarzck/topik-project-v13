@@ -1,7 +1,6 @@
 // Phase 8-C · Supabase auth error.code → canonical reason mapping
 //
-// Codex 3-round PASS consensus (rounds 1-3 in
-// tasks/codex-output-auth-error-ux-round{1,2,3}-20260526.md).
+// Codex 3-round PASS consensus (rounds 1-3, 20260526).
 // Source list: https://supabase.com/docs/guides/auth/debugging/error-codes
 //
 // Raw error.code values pass through unchanged when they appear here;

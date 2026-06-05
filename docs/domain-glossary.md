@@ -34,10 +34,9 @@
 | 공통 UI/테마 | `src/theme/`, `src/components/` | Phase 1에서 시작. |
 | 라우트/레이아웃 | `src/app/` | Phase 1·3에서 시작. |
 
-폴더 경계가 흐려졌다고 판단되면 Architecture Pass 단계에서 잡습니다 ([docs/ai-development-workflow.md](ai-development-workflow.md)의 Architecture Pass 절 참고).
+폴더 경계가 흐려졌다고 판단되면 Architecture Pass 단계에서 잡습니다.
 
 ## 관련 파일
 
 - 사용자 흐름 정본: [docs/flow/user-flow.md](flow/user-flow.md)
 - IA 분석: [docs/Wireframe/analysis-report.md](Wireframe/analysis-report.md)
-- AI 워크플로우: [docs/ai-development-workflow.md](ai-development-workflow.md)

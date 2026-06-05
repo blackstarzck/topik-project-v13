@@ -6,7 +6,7 @@
 
 이 문서는 TALKPIK AI의 Supabase Postgres 스키마 정본입니다. 데이터베이스, 마이그레이션, 또는 데이터 모델 관련 작업 전에 본 문서와 `docs/development/backend-auth.md`를 같이 읽으세요.
 
-근거 분석: [`docs/ai-workflow/runs/2026/05/20/20260520-1149-schema-parallel-analysis.md`](../ai-workflow/runs/2026/05/20/20260520-1149-schema-parallel-analysis.md) (Opus 4.7 × gpt-5.5 병렬 분석, round-2 종합).
+근거 분석: Opus 4.7 × gpt-5.5 병렬 분석, round-2 종합.
 
 ## Fixed Baseline
 
@@ -661,5 +661,5 @@ Tier 2 도입 시 새 마이그레이션 timestamp는 `2026XXXXHHMMSS_<domain>.s
 
 ## 8. 변경 이력
 
-- 2026-05-20: 초안 작성. Round-2 종합 스키마 정본화. 분석 ledger: `docs/ai-workflow/runs/2026/05/20/20260520-1149-schema-parallel-analysis.md`. 구현 ledger: `docs/ai-workflow/runs/2026/05/20/20260520-1530-schema-implementation.md`.
-- 2026-05-20 round-2: 마이그레이션 보강 (storage buckets/정책, profiles protected-column 트리거, feedback_status 전이 함수) 추가. 구현 ledger round-2 섹션 참고.
+- 2026-05-20: 초안 작성. Round-2 종합 스키마 정본화.
+- 2026-05-20 round-2: 마이그레이션 보강 (storage buckets/정책, profiles protected-column 트리거, feedback_status 전이 함수) 추가.

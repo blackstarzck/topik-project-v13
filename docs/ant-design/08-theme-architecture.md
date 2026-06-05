@@ -48,10 +48,9 @@ This is usually not required for:
 
 Fallback order:
 
-1. `docs/ant-design/06-ai-development-workflow.md`
-2. `docs/ant-design/02-global-styles.md`
-3. `https://ant.design/docs/react/customize-theme`
-4. `https://ant.design/theme-editor`
+1. `docs/ant-design/02-global-styles.md`
+2. `https://ant.design/docs/react/customize-theme`
+3. `https://ant.design/theme-editor`
 
 If local docs conflict, follow the newest project-specific theme structure and
 update the conflicting local docs before finalizing work.
@@ -328,7 +327,6 @@ Generate these values from `src/theme/` token resolution at request time, not by
 hand. Do not add new bridge variables unless the token has a documented use in
 Tailwind utilities or plain CSS rules outside AntD components.
 
-Automated checks for the rules above are enforced by `scripts/ai-workflow-check.mjs`.
 When adding or changing `--app-*` declarations, run the checker before marking
 work complete.
 

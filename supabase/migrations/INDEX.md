@@ -32,8 +32,6 @@
 | 11 | `12:10:00` | [`20260520121000_triggers.sql`](./20260520121000_triggers.sql) | `updated_at` autoupdate, draft 승격 |
 | 12 | `12:11:00` | [`20260520121100_rls_policies.sql`](./20260520121100_rls_policies.sql) | 17 테이블 RLS enable + force + 정책 |
 
-근거 ledger: [`../../docs/ai-workflow/runs/2026/05/20/20260520-1530-schema-implementation.md`](../../docs/ai-workflow/runs/2026/05/20/20260520-1530-schema-implementation.md)
-
 ##### Round 2 · 마이그레이션 보강 (4개)
 
 | # | timestamp | 파일 | 영역 |
@@ -53,11 +51,6 @@
 | 18 | `13:00:00` | [`20260521130000_phase_5_writing_rpc.sql`](./20260521130000_phase_5_writing_rpc.sql) | Phase 5 SECURITY DEFINER RPC: `submit_writing_with_feedback`, `create_comparison_report_with_metrics` |
 | 19 | `14:00:00` | [`20260521140000_phase_6_rpc_and_admin.sql`](./20260521140000_phase_6_rpc_and_admin.sql) | Phase 6: admin role helpers (`is_platform_admin/is_content_admin/is_org_admin`) + profile policy narrowing + writing_submissions explicit deny + `assert_submission_payload` validator + library/export/event ownership-strict RLS + `get_dashboard_kpi` + `admin_change_user_role` + `admin_toggle_problem_publish` + `submit_writing_with_feedback` validator hookup + `get_admin_org_dashboard` |
 | 20 | `14:10:00` | [`20260521141000_phase_6_notification_prefs.sql`](./20260521141000_phase_6_notification_prefs.sql) | Phase 6: `profiles.notification_prefs jsonb not null default '{}' + object check` |
-
-근거 ledger:
-- 17: [`../../docs/ai-workflow/runs/2026/05/20/20260520-1800-phase-2-data-and-auth-foundation.md`](../../docs/ai-workflow/runs/2026/05/20/20260520-1800-phase-2-data-and-auth-foundation.md)
-- 18: [`../../docs/ai-workflow/runs/2026/05/21/20260521-1700-phase-5-writing-feedback.md`](../../docs/ai-workflow/runs/2026/05/21/20260521-1700-phase-5-writing-feedback.md)
-- 19-20: [`../../docs/ai-workflow/runs/2026/05/21/20260521-1800-phase-6-admin-library-hardening.md`](../../docs/ai-workflow/runs/2026/05/21/20260521-1800-phase-6-admin-library-hardening.md)
 
 #### 26 (화) — Phase 7 profile bio + Phase 8 cleanup 함수
 
@@ -91,8 +84,6 @@
 | 29 | `12:03:00` | [`20260602120300_org.sql`](./20260602120300_org.sql) | **NET-NEW**: `organizations`, `org_members`, `assignments`, `assignment_submissions` + `private.is_org_member/is_org_manager` 헬퍼 + org-scoped RLS (X-08/X-10) |
 | 30 | `12:04:00` | [`20260602120400_admin_and_user_rpcs.sql`](./20260602120400_admin_and_user_rpcs.sql) | Admin RPC: `get_admin_users`, `get_admin_user_stats`, `admin_set_user_status`, `admin_update_problem`, `admin_delete_problem`, `admin_add_problem_asset`, `admin_remove_problem_asset`, `get_admin_audit_logs` + `get_admin_org_dashboard` 확장(drop→recreate, 4→6 컬럼 additive) + `list_user_problems`(C-02, SECURITY INVOKER) |
 
-근거 ledger: (coordinator 적용 시 `docs/ai-workflow/runs/2026/06/02/` 에 추가 예정)
-
 ---
 
 ## 새 마이그레이션을 추가할 때
@@ -102,7 +93,6 @@
 3. **본 INDEX.md 갱신**: 해당 날짜 섹션에 표 한 줄 추가. 새 연/월/일이면 트리 헤더 (`### 06`, `#### 05`) 부터 추가.
 4. **`supabase/README.md`** 의 요약 정보가 영향받으면 같이 갱신.
 5. **정본 spec(`docs/development/database-schema.md`)** 도 같이 갱신: §5 Migration Index 표, §1 테이블 컬럼 표, §7 invariants.
-6. **ai-workflow ledger**: 비-trivial 작업이면 `docs/ai-workflow/runs/YYYY/MM/DD/` 에 ledger 추가하고 본 INDEX의 해당 항목에 ledger 링크 명시.
 
 ## 빠른 검증 체크리스트
 

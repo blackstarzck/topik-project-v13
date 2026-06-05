@@ -26,7 +26,6 @@ flowchart TD
 | [03-patterns-and-components.md](./03-patterns-and-components.md) | 버튼, 폼, 테이블, 알림 같은 UI 부품 사용법입니다. | 실제 컴포넌트를 고를 때 |
 | [04-page-patterns-for-talkpik.md](./04-page-patterns-for-talkpik.md) | TALKPIK AI 페이지별 화면 패턴입니다. | 대시보드, 문제풀이, 피드백 화면을 만들 때 |
 | [05-visual-motion-illustration.md](./05-visual-motion-illustration.md) | 차트, 움직임, 시각 자료 규칙입니다. | 그래프, 로딩, 애니메이션이 필요할 때 |
-| [06-ai-development-workflow.md](./06-ai-development-workflow.md) | AI가 UI 작업을 진행하는 순서입니다. | UI 작업을 AI에게 맡길 때 |
 | [07-review-checklist.md](./07-review-checklist.md) | 화면 완성 전 체크리스트입니다. | 제출 전 마지막 확인 때 |
 | [08-theme-architecture.md](./08-theme-architecture.md) | 테마 구조와 관리 방식입니다. | 디자인 토큰을 코드에 적용할 때 |
 

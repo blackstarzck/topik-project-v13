@@ -14,7 +14,6 @@
 | DB 스키마, RLS 정책, 마이그레이션 인덱스 | [`database-schema.md`](./database-schema.md) |
 | Vercel 배포 게이트, env var 룰 | [`deployment.md`](./deployment.md) |
 | 결제·구독 deferred 정책 | [`deferred-scope.md`](./deferred-scope.md) |
-| IA 구현 검수 (audit가 어떤 키를 쓰는지) | [`../ai-workflow/ia-implementation-verification-execution-plan.md`](../ai-workflow/ia-implementation-verification-execution-plan.md) |
 
 ---
 
@@ -64,7 +63,6 @@ flowchart LR
 | 자격증명 위치 | `.env.local` (gitignored) | Vercel UI · Preview scope | Vercel UI · Production scope |
 | 데이터 종류 | 실험·fixture | dev 데이터 공유 | **실 사용자 데이터** |
 | 자유롭게 reset 가능? | ✅ | ✅ (협의) | ❌ (절대 X) |
-| Audit `pnpm test:ia:storage-state --apply` | ✅ 허용 | ✅ 허용 | ❌ **거부됨** (`build-storage-state.mjs` 가드) |
 | Custom SMTP | 선택 | 선택 | **필수** (built-in 2/hour 부족) |
 | 마이그레이션 적용 | 직접 push | 직접 push | **수동 승인 트리거** |
 
@@ -301,7 +299,7 @@ prod 아니라고 dev 키 노출 무시 X. dev에도 fixture / test 데이터가
 
 ## 7. Audit (IA 검수) vs prod 정책
 
-[`../ai-workflow/ia-implementation-verification-execution-plan.md`](../ai-workflow/ia-implementation-verification-execution-plan.md) 의 IA 구현 검수가 어떤 키를 어디서 쓰는지:
+IA 구현 검수가 어떤 키를 어디서 쓰는지:
 
 ### 7.1 안전한 prod-대상 audit (read-only)
 
@@ -319,40 +317,11 @@ prod 아니라고 dev 키 노출 무시 X. dev에도 fixture / test 데이터가
 
 ```text
 🚫 prod에 절대 X
-   • build-storage-state.mjs --apply  ← 가드로 자동 거부됨
    • 테스트 유저 생성
    • DB row 삽입/삭제
    • role 변경 RPC
    • 어떤 종류의 fixture seed든
 ```
-
-### 7.3 안전 가드 동작
-
-`scripts/audit-setup/build-storage-state.mjs` 가 다음 3 신호로 타깃 분류:
-
-```javascript
-function classifyTargetEnv() {
-  // 1. SUPABASE_ENV_LABEL 명시값 (가장 강한 신호)
-  // 2. NEXT_PUBLIC_SUPABASE_URL heuristic — 127.0.0.1/localhost → local
-  // 3. NEXT_PUBLIC_SITE_URL heuristic — *-dev / *-staging / *.vercel.app → dev
-  // 신호 없으면 → "unknown-treat-as-prod" (안전한 default)
-}
-```
-
-`--apply` 동작:
-
-| 분류 | 결과 | exit code |
-| --- | --- | --- |
-| `local` / `dev` / `staging` / `preview` | ✅ 진행 | (정상 흐름) |
-| `prod` 또는 `unknown-treat-as-prod` | 🚫 **REFUSED** | 2 |
-| 위 + `--i-know-this-is-prod-and-want-to-seed-anyway` 플래그 | ✅ 진행 (build-status.json에 기록) | (정상 흐름) |
-
-IA audit caveat: this break-glass flag is not valid for IA implementation
-verification seed-data, storage-state, or audit evidence. Any IA audit artifact
-produced with a production or unknown-target override is non-audit evidence and
-blocks final `PASS`.
-
-verbose flag 이름은 일부러 길게 — 우연한 prod 실행 방지. **prod에 대고 이 플래그를 절대 쓰지 마세요.** dev에서 라벨 분류가 헷갈릴 때 일회용 비상 탈출구 용도일 뿐.
 
 ---
 
@@ -454,5 +423,4 @@ verbose flag 이름은 일부러 길게 — 우연한 prod 실행 방지. **prod
 - [`stack.md`](./stack.md) — 프레임워크/패키지 선택
 - [`deferred-scope.md`](./deferred-scope.md) — 결제·구독 deferred 영역
 - [`../sitemap.md`](../sitemap.md) — 라우트 매핑 (audience map 포함)
-- [`../ai-workflow/ia-implementation-verification-execution-plan.md`](../ai-workflow/ia-implementation-verification-execution-plan.md) — IA 구현 검수 (audit `--apply` 가드 출처)
 - 사고 보고서 폴더: `docs/incidents/` (필요 시 신규 생성)

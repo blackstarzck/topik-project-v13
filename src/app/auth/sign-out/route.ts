@@ -19,13 +19,6 @@
 //   - No body required; Supabase signOut clears tokens by reading the current
 //     session cookie
 //   - dynamic: force-dynamic so middleware can't cache stale responses
-//
-// Verification:
-//   - tests/e2e/coverage/auth-route-handlers.spec.ts (Phase 4) covers:
-//     * POST clears the auth cookie
-//     * GET returns 405
-//     * Redirect target is /login
-//     * Repeated POST is idempotent
 
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";

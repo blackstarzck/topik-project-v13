@@ -1,5 +1,0 @@
-<html lang="ko" style="--app-color-primary:#1677FF;--app-color-bg-layout:#F5F5F5;--app-color-bg-container:#FFFFFF;--app-color-text:rgba(0, 0, 0, 0.88);--app-color-text-secondary:rgba(0, 0, 0, 0.65);--app-color-border:#D9D9D9;--app-radius:6px;--app-font-family:system-ui, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;--app-shadow-elevated:0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 9px 28px 8px rgba(0, 0, 0, 0.05);color-scheme:light">
-
-<style id="antd-cssinjs" data-rc-order="prepend" data-rc-priority="-1000">
-
-TOTAL_SIZE: 105277

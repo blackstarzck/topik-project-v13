@@ -115,7 +115,7 @@ flowchart TB
 
 이 프로젝트에서 문서는 지도, AI는 작업자, 검증은 안전모입니다.
 
-1. 먼저 지도를 봅니다: `docs/agent-index.md` 또는 아래 문서 맵에서 시작합니다.
+1. 먼저 지도를 봅니다: 아래 문서 맵에서 시작합니다.
 2. 작은 범위로 일을 나눕니다: 기능, 화면, 백엔드, UI, QA 중 무엇인지 분명히 합니다.
 3. AI에게 "관련 문서를 먼저 읽고 진행하라"고 요청합니다.
 4. 변경 후에는 무엇을 바꿨고, 어떤 문서를 근거로 삼았고, 무엇을 검증했는지 남깁니다.
@@ -138,11 +138,10 @@ AI에게 긴 명령을 한 번에 던지기보다, 문서와 검증 조건을 �
 
 | 하고 싶은 일 | 좋은 요청 예시 |
 | --- | --- |
-| 기능 만들기 | "`docs/spec.md`와 `docs/agent-index.md`를 먼저 읽고, 쓰기 제출 흐름을 구현 계획으로 정리한 뒤 진행해줘." |
+| 기능 만들기 | "`docs/spec.md`를 먼저 읽고, 쓰기 제출 흐름을 구현 계획으로 정리한 뒤 진행해줘." |
 | 화면 만들기 | "`docs/Wireframe/README.md`와 `docs/ant-design/README.md` 기준으로 대시보드 화면을 구현해줘. 모바일/데스크톱 검증도 포함해줘." |
 | 기술 결정 확인 | "`docs/spec.md` 기준으로 Supabase Auth와 AI 기능의 경계가 맞는지 검토해줘." |
 | 문서 정리 | "루트 README를 비개발자도 이해할 수 있게 고치고, 다른 문서와 충돌이 있으면 같이 보고해줘." |
-| 리뷰 요청 | "이번 변경이 `docs/ai-development-workflow.md`의 완료 조건을 만족하는지 리뷰해줘." |
 
 피해야 할 요청도 있습니다.
 
@@ -171,18 +170,15 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A["작업 시작"] --> B["docs/agent-index.md"]
-    B --> C{"작업 종류"}
+    A["작업 시작"] --> C{"작업 종류"}
     C -->|"제품/범위"| D["docs/prd.md"]
     C -->|"기술/구현"| E["docs/spec.md"]
     C -->|"화면/라우트"| F["docs/sitemap.md + docs/ia.md + docs/Wireframe/"]
     C -->|"UI"| G["docs/ant-design/README.md"]
-    C -->|"AI 작업 방식"| H["docs/ai-development-workflow.md"]
     E --> I["필요한 development 상세 문서"]
     D --> J["계획 / 구현 / 검증"]
     F --> J
     G --> J
-    H --> J
     I --> J
 ```
 
@@ -194,7 +190,6 @@ flowchart TD
 | active docs 우선 | legacy 문서는 참고만 합니다. |
 | 작은 변경 | unrelated refactor를 섞지 않습니다. |
 | 검증 후 완료 | 테스트, 체크, 수동 검증 중 가능한 근거를 남깁니다. |
-| AI 작업도 기록 | 필요한 경우 `docs/ai-workflow/runs/YYYY/MM/DD/`에 context ledger를 남깁니다. |
 
 ## AI 에이전트와 함께 일하는 방식
 
@@ -233,15 +228,12 @@ flowchart TD
     A["README.md<br/>Project entry"] --> B["docs/README.md<br/>Human docs map"]
     A --> X["AGENTS.md<br/>AI agent contract"]
     A --> Z[".agents/README.md<br/>Agent skills catalog"]
-    X --> Y["docs/agent-index.md<br/>AI routing index"]
     B --> C["docs/spec.md<br/>Implementation spec"]
     B --> D["docs/prd.md<br/>Product requirements"]
     B --> E["docs/sitemap.md + docs/ia.md<br/>Routes and IA"]
     B --> F["docs/Wireframe/README.md<br/>Screen specs"]
     B --> G["docs/ant-design/README.md<br/>UI rules"]
     B --> H["docs/flow/README.md<br/>User journey"]
-    B --> I["docs/ai-workflow/README.md<br/>AI workflow"]
-    Y --> C
 ```
 
 ## Main Entry Points
@@ -255,9 +247,7 @@ flowchart TD
 | Specific screen requirements | [docs/Wireframe/README.md](./docs/Wireframe/README.md) |
 | UI system, Ant Design patterns, theme rules | [docs/ant-design/README.md](./docs/ant-design/README.md) |
 | User journey and transitions | [docs/flow/README.md](./docs/flow/README.md) |
-| AI-agent workflow, ledgers, reports | [docs/ai-workflow/README.md](./docs/ai-workflow/README.md) |
 | AI agent skills catalog and sync model | [.agents/README.md](./.agents/README.md) |
-| AI document routing | [docs/agent-index.md](./docs/agent-index.md) |
 | Auth flow, login/signup/callback/error pages, operational policy (cleanup cron, rate limits, env vars) | [docs/development/auth-overview.md](./docs/development/auth-overview.md) |
 
 ## 현재 기준 문서
@@ -269,7 +259,7 @@ flowchart TD
 | 화면과 라우트 | [docs/sitemap.md](./docs/sitemap.md), [docs/ia.md](./docs/ia.md), [docs/Wireframe/README.md](./docs/Wireframe/README.md) |
 | 사용자 흐름 | [docs/flow/user-flow.md](./docs/flow/user-flow.md) |
 | UI 규칙 | [docs/ant-design/README.md](./docs/ant-design/README.md) |
-| AI 협업 규칙 | [AGENTS.md](./AGENTS.md), [docs/agent-index.md](./docs/agent-index.md), [docs/ai-development-workflow.md](./docs/ai-development-workflow.md), [.agents/README.md](./.agents/README.md) |
+| AI 협업 규칙 | [AGENTS.md](./AGENTS.md), [.agents/README.md](./.agents/README.md) |
 | 인증 흐름과 운영 정책 | [docs/development/auth-overview.md](./docs/development/auth-overview.md) |
 
 ## 운영 규칙

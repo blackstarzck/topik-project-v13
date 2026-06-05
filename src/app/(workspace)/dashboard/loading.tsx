@@ -3,7 +3,7 @@
 // "use client" is required: this segment skeleton renders the antd compound
 // subcomponent <Skeleton.Button>. In a React Server Component an antd compound
 // member resolves to `undefined` (RSC client-reference proxy) → runtime
-// "Element type is invalid". Enforced by the M2 guard in scripts/ai-workflow-check.mjs.
+// "Element type is invalid".
 import { Col, Row, Skeleton, Space } from "antd";
 
 import { AppCard } from "@/components/shared/AppCard";

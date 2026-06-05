@@ -5,11 +5,8 @@
 -- only SQL that does NOT depend on auth user UUIDs.
 --
 -- User-dependent seed (learning_goals, writing_submissions, library_items,
--- recommendation_runs/items, study_events, admin_audit_logs) is created by
--- scripts/audit-setup/seed-dev-users.mjs AFTER auth users are created via the
--- Supabase Auth Admin API.
---
--- See: docs/ai-workflow/plans/20260523-0100-implementation-coverage-audit.md §7.1.2
+-- recommendation_runs/items, study_events, admin_audit_logs) is created
+-- separately AFTER auth users are created via the Supabase Auth Admin API.
 --
 -- All rows carry an 'audit_seed' tag in their tags array or payload so Task 7
 -- cleanup can scope deletion.

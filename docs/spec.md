@@ -232,7 +232,6 @@ Before changing app code or adding a new implementation surface:
 
 - Re-read this file.
 - Read only the matching detailed files from the Required Reading Map.
-- Re-read `docs/ai-development-workflow.md`.
 - Re-read `docs/ant-design/README.md` for UI work.
 - Use `docs/sitemap.md` as the product route map and reconcile it with
   `src/app/`.
@@ -264,7 +263,6 @@ Before changing app code or adding a new implementation surface:
   screen requirements.
 - `docs/flow/user-flow.md` defines user journey order and transitions.
 - `docs/ant-design/` defines UI implementation rules.
-- `docs/ai-development-workflow.md` defines AI-agent workflow gates.
 
 If this file conflicts with another active doc on implementation technology,
 stop and report the conflict before implementing.

@@ -27,11 +27,9 @@ decision exists.
 
 ## Required Start
 
-1. Read `docs/agent-index.md`.
-2. Read `docs/spec.md`.
-3. Classify the user goal with the routing table in `docs/agent-index.md`.
-4. Read only the required active docs for that goal.
-5. Record `Docs consulted`, extracted requirements, doc conflicts, untouched relevant docs, and context ledger status in the plan or final report.
+1. Read `docs/spec.md`.
+2. Read only the required active docs for that goal.
+3. Record `Docs consulted`, extracted requirements, doc conflicts, untouched relevant docs, and context ledger status in the plan or final report.
 
 ## Route To Project Skills
 
@@ -61,10 +59,6 @@ Use these only after the applicable project skill above:
 | Local browser QA | `playwright-skill` only when constrained local browser automation is appropriate |
 | Vercel deployment or CLI work | `deploy-to-vercel` or `vercel-cli-with-tokens` only with explicit deployment scope |
 
-## Context Ledger
-
-Create or update a ledger under `docs/ai-workflow/runs/YYYY/MM/DD/` when required by `docs/agent-index.md` or `docs/ai-development-workflow.md`. Workflow-governing skill changes, implementation work, UI, route, auth, database, deployment, or AI-service boundary work require a ledger.
-
 ## Stop Conditions
 
 Stop before implementation when:
@@ -73,7 +67,3 @@ Stop before implementation when:
 - the user asks for net-new product scope not covered by active docs,
 - secret exposure or authorization uncertainty exists,
 - a destructive or irreversible action is required.
-
-## Final Report
-
-Use `docs/ai-workflow/report-template.md` for non-trivial work. Include changed files, docs consulted, workflow gates used, verification run, skipped checks, git publication decision, and remaining risk.

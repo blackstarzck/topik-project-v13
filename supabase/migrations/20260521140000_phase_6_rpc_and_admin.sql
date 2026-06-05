@@ -2,8 +2,6 @@
 -- TALKPIK AI · Phase 6 · RPC + admin + RLS hardening
 --
 -- Codex pre-impl review: 5 rounds, PASS at rev4 (2026-05-22).
--- Ledger: docs/ai-workflow/runs/2026/05/21/20260521-1800-phase-6-admin-library-hardening.md
--- Plan:   docs/ai-workflow/plans/20260521-phase-6-admin-library-hardening.md (rev4)
 --
 -- Sections:
 --   1.  Admin role helpers (is_platform/content/org_admin)

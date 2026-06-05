@@ -1,13 +1,6 @@
 # Claude Code Project Instructions
 
-Follow `AGENTS.md` and `docs/ai-development-workflow.md` for every task in this repository.
-
-This project has project-local installs only:
-
-- GStack skills: `.claude/skills`
-- Superpowers skills: `.claude/skills`
-
-At the start of every conversation or task, invoke `using-superpowers`. Before work begins, check the relevant GStack and Superpowers skills. For GStack in Claude Code, use the short skill names such as `office-hours`, `plan-eng-review`, `review`, `qa`, and `ship`.
+Follow `AGENTS.md` for every task in this repository.
 
 ## Scope Boundary — Admin (READ FIRST)
 
@@ -71,26 +64,18 @@ for implementation, QA, and review.
 
 Do not run a fresh grill-me/domain-discovery interview for this project. The validated source of truth is the active `docs/` set above. For every implementation request, infer the user's goal, select the relevant docs, read them before planning, and include a `Docs consulted` section in the plan and final report.
 
-For net-new scope, product pivots, unclear features outside the active docs, or explicit deviations from the docs, use `office-hours` plus `brainstorming`, then stop at one of these gates before implementation:
+For net-new scope, product pivots, unclear features outside the active docs, or explicit deviations from the docs, stop at one of these gates before implementation:
 
 - a docs update proposal listing the exact files that must change, or
 - an explicit user-approved implementation brief with acceptance criteria.
 
-Do not implement directly from office-hours output. If the request conflicts with active docs, report the conflict with exact document references and wait for direction.
+If the request conflicts with active docs, report the conflict with exact document references and wait for direction.
 
-For multi-agent work, the main Claude/Codex session is the coordinator and durable context owner. Child agents must receive bounded task packets with goal, docs consulted, extracted requirements, write scope, constraints, and required verification. Child agents must return result packets with files inspected or changed, decisions, checks run, blockers, assumptions, and follow-up. The main session integrates those packets before continuing or claiming completion.
-
-For non-trivial work, implementation work, UI/flow/integration changes, net-new scope, doc conflicts, multi-agent work, or work likely to resume across sessions, create and maintain a context ledger under `docs/ai-workflow/runs/` from `docs/ai-workflow/templates/context-ledger-template.md`. Use `docs/ai-workflow/contracts/agent-packets.md` for task and result packets. Before claiming completion, compare the ledger with current file state and verification output. Tiny docs/config edits may skip the ledger only when the final report states the allowed lightweight exception.
-
-When resuming after compaction, pause, or a new session, restore context by reading `CLAUDE.md`, `docs/ai-development-workflow.md`, the latest relevant run ledger, the ledger's docs consulted, and the current file state before continuing.
-
-Fallbacks do not weaken quality gates. If a required tool, skill, reviewer, test runner, browser, child agent, network operation, or context artifact is unavailable, follow the fallback protocol in `docs/ai-development-workflow.md`: recover equivalent evidence, record degraded mode, or fail closed. Fail closed for doc conflicts, missing approval, destructive actions, secret exposure risk, and security uncertainty.
-
-Do not bypass the workflow because the task looks small. Use the lightweight path documented in `docs/ai-development-workflow.md` when the change is small.
+Fail closed for doc conflicts, missing approval, destructive actions, secret exposure risk, and security uncertainty.
 
 ## Communication Style
 
-Use Korean by default for user-facing replies. Write for non-developers and vibe coders: short sentences, concrete wording, and plain Korean before expert terms. Follow `docs/user-communication-style.md` and `docs/report-writing-template.md`.
+Use Korean by default for user-facing replies. Write for non-developers and vibe coders: short sentences, concrete wording, and plain Korean before expert terms. Follow `docs/user-communication-style.md`.
 
 When explaining development status to the user, follow this format:
 

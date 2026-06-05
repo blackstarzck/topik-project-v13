@@ -219,7 +219,7 @@ content.
 Values live in `src/theme`; the `--app-*` bridge exposes the approved 9 to
 Tailwind/plain CSS. Parity (bridge ↔ resolved AntD token) is guarded by
 `tests/theme/theme-bridge-parity.test.ts`. The 9 approved bridge variables are
-the **only** allowed `--app-*` names (enforced by `scripts/ai-workflow-check.mjs`).
+the **only** allowed `--app-*` names.
 
 | DESIGN.md token | class | antdPath | sourceFile | bridge var |
 | --- | --- | --- | --- | --- |

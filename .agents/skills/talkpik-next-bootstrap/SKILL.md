@@ -13,8 +13,7 @@ Read these before editing:
 
 1. `docs/spec.md`
 2. `docs/development/stack.md`
-3. `docs/ai-development-workflow.md`
-4. `docs/ant-design/README.md` when the bootstrap touches UI providers or styles
+3. `docs/ant-design/README.md` when the bootstrap touches UI providers or styles
 
 ## Required Decisions
 

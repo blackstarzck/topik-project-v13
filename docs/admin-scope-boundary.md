@@ -96,5 +96,4 @@ Verified state so the next session does not have to re-derive it:
 - 2026-06-02: a session extended X-08/X-10 + added an admin-oriented migration
   (`20260602120500_admin_org_extensions.sql`) following the old "full build"
   handoff. On the owner clarifying this boundary, that work was **reverted**
-  (commit reverting `0ac3c9c`); the migration was never applied. See run ledger
-  `docs/ai-workflow/runs/2026/06/02/20260602-1300-ia-autonomous-cleanup-migration-i18n.md`.
+  (commit reverting `0ac3c9c`); the migration was never applied.

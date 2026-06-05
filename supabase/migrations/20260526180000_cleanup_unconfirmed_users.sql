@@ -14,9 +14,6 @@
 -- to avoid exposure through PostgREST. SECURITY DEFINER with locked
 -- search_path so it can delete auth.users / storage.objects regardless of
 -- caller role; revoked from public/anon/authenticated.
---
--- Spec: reports/email-confirmation-policy-research-20260526.html
--- Codex 3-round PASS consensus: tasks/codex-output-email-confirmation-review-round{1,2,3}-20260526.md
 -- =====================================================================
 
 create or replace function private.cleanup_unconfirmed_users(

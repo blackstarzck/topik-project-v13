@@ -77,7 +77,6 @@ pnpm dlx supabase gen types typescript --local > src/lib/supabase/types.ts
 4. 의존하는 테이블/함수가 이전 timestamp 파일에 있는지 확인. 없으면 같은 마이그레이션 안에서 먼저 정의하거나, 이전 파일에 합치는 게 안전.
 5. 정본 spec(`docs/development/database-schema.md`)도 같이 갱신. 인덱스 표, 컬럼 표, RLS/Invariants 섹션.
 6. [`migrations/INDEX.md`](./migrations/INDEX.md) 의 해당 연/월/일 섹션에 한 줄 추가 (새 날짜면 트리 헤더부터 추가).
-7. ai-workflow ledger에 작업 기록 (`docs/ai-workflow/runs/YYYY/MM/DD/...`).
 
 ## Idempotency 컨벤션
 
@@ -96,5 +95,3 @@ pnpm dlx supabase gen types typescript --local > src/lib/supabase/types.ts
 
 - **스키마 정본**: [`docs/development/database-schema.md`](../docs/development/database-schema.md) — Tier 1 MVP 테이블 컬럼/RLS/인덱스/ER
 - **Auth/RLS 정책**: [`docs/development/backend-auth.md`](../docs/development/backend-auth.md)
-- **분석 ledger**: [`docs/ai-workflow/runs/2026/05/20/20260520-1149-schema-parallel-analysis.md`](../docs/ai-workflow/runs/2026/05/20/20260520-1149-schema-parallel-analysis.md) — Opus 4.7 × gpt-5.5 병렬 분석 근거
-- **구현 ledger**: [`docs/ai-workflow/runs/2026/05/20/20260520-1530-schema-implementation.md`](../docs/ai-workflow/runs/2026/05/20/20260520-1530-schema-implementation.md) — 본 SQL 작성 작업 추적

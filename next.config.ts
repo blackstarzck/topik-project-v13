@@ -11,10 +11,9 @@ const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
 const nextConfig: NextConfig = {
   // Next 16 blocks cross-origin requests to dev resources (/_next/*) from hosts
   // not in this allowlist. The default allows `localhost` but NOT `127.0.0.1`;
-  // the M1 dev-route smoke harness (scripts/dev-route-smoke.mjs) navigates via
-  // 127.0.0.1, which got its HMR/dev resources blocked — so client components
-  // never hydrated under smoke and client-only behaviour (responsive shell, etc.)
-  // appeared "broken" in screenshots though it works for real users on localhost.
+  // a client visiting via 127.0.0.1 would get its HMR/dev resources blocked — so
+  // client components never hydrate and client-only behaviour (responsive shell,
+  // etc.) appears "broken" though it works for real users on localhost.
   // dev-only setting; has no effect on production.
   allowedDevOrigins: ["127.0.0.1"],
   // Static-asset cache headers. Phase 6 P1-6:

@@ -11,10 +11,8 @@ This skill turns "done" into evidence.
 
 Read these before final verification:
 
-1. `docs/ai-development-workflow.md`
-2. `docs/ai-workflow/report-template.md`
-3. The run ledger when one is required
-4. The active docs that governed the change
+1. The run ledger when one is required
+2. The active docs that governed the change
 
 ## Verification Order
 
@@ -25,7 +23,6 @@ Read these before final verification:
 5. For UI or user-facing flows, run browser or visual QA and check responsive layout.
 6. For Supabase or auth changes, verify RLS, secrets, and access boundaries.
 7. For AI or deployment changes, verify server boundary, env vars, and runtime behavior.
-8. Run `node scripts/ai-workflow-check.mjs --repo .` when Node and the script are available.
 
 ## Review Gate
 
@@ -39,7 +36,7 @@ Every code change needs review. If an independent reviewer or host-specific revi
 
 ## Final Report
 
-Use the report template for non-trivial work. Include:
+For non-trivial work, include:
 
 - files changed,
 - docs consulted and extracted requirements,

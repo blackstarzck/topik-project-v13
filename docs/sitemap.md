@@ -68,7 +68,7 @@ are the current baseline.
 
 ## Route Audience Map
 
-각 React route의 audience(UI/권한 분기) 분류. Light Spec의 `Audience` 필드, [`docs/agent-index.md`](agent-index.md) "Admin 화면" 라우팅 행, [`docs/ai-workflow/review-gates.md#architecture-pass`](ai-workflow/review-gates.md#architecture-pass)의 audience 경계 검증과 동일 분류.
+각 React route의 audience(UI/권한 분기) 분류. Light Spec의 `Audience` 필드와 동일 분류.
 
 | Audience | Routes | Page guard / RLS 기반 |
 | --- | --- | --- |
@@ -76,7 +76,7 @@ are the current baseline.
 | **user** (인증된 일반 사용자) | `/onboarding/learning-goal`, `/dashboard`, `/practice/*` (recommendations, problems, weakness, next), `/writing/*` (51-54, feedback, reports), `/library`, `/settings/{language,notifications}`, `/profile`, `/growth`, `/paywall`, `/subscription` | 세션 인증 + `auth.uid()` 기반 자기 row RLS |
 | **admin** (역할 분리된 관리자) | `/admin` (X-15, admin root), `/admin/problems` (H-01, content admin), `/admin/org` (X-08, org admin), `/admin/users` (X-10, platform admin) | `requireContentAdmin / requireOrgAdmin / requirePlatformAdmin` 페이지 가드 + `private.is_{content,org,platform}_admin(uid)` 기반 RLS + 모든 권한 변경/발행 토글은 `admin_audit_logs` 기록. `/admin` root는 직접 변경 action이 없어 audit 대상이 아니다. |
 
-`Audience: both`인 phase는 user 라우트와 admin 라우트를 동시에 다룬다. 그 경우 Light Spec과 plan task table의 각 task에 audience를 행별로 명시한다 ([`docs/ai-workflow/planning-contracts.md`](ai-workflow/planning-contracts.md)).
+`Audience: both`인 phase는 user 라우트와 admin 라우트를 동시에 다룬다. 그 경우 Light Spec과 plan task table의 각 task에 audience를 행별로 명시한다.
 
 비대화형 audience(`cron`, `system`, `external partner` 등)는 현재 라우트 매핑 범위 밖이며, 도입 시 별도 축으로 추가한다.
 

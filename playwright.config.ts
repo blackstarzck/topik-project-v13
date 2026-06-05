@@ -1,12 +1,10 @@
 import { defineConfig, devices } from "@playwright/test";
 
 // Implementation Coverage Audit (Plan rev4, SBU-B+C) + future regression tests.
-// Lifecycle: durable. See:
-//   docs/ai-workflow/plans/20260523-0100-implementation-coverage-audit.md §10 Task 4
+// Lifecycle: durable.
 //
 // Tests use storageState files at tests/e2e/auth-state/{role}.json. Those
-// files are gitignored and rebuilt by scripts/audit-setup/build-storage-state.mjs
-// for the audit, and removed by Task 7 cleanup.
+// files are gitignored.
 
 const BASE_URL = process.env.E2E_BASE_URL ?? "http://127.0.0.1:3000";
 
@@ -27,7 +25,7 @@ export default defineConfig({
   },
   reporter: [
     ["list"],
-    ["json", { outputFile: "tests/e2e/coverage/failure-log.json" }],
+    ["json", { outputFile: "test-results/failure-log.json" }],
   ],
   projects: [
     // All projects use Chromium — WebKit binaries not installed in this

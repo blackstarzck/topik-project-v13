@@ -23,12 +23,6 @@ node scripts/sync-agent-skills.mjs
 node scripts/sync-agent-skills.mjs --check
 ```
 
-The repository workflow checker also runs the sync check:
-
-```bash
-node scripts/ai-workflow-check.mjs --repo .
-```
-
 ## TALKPIK Project Skills
 
 | Skill | Use When |
@@ -94,5 +88,4 @@ flowchart TD
     J --> K
 ```
 
-For the full AI workflow, use `AGENTS.md`,
-`docs/agent-index.md`, and `docs/ai-development-workflow.md`.
+For the full AI workflow, use `AGENTS.md`.
