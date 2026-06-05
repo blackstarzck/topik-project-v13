@@ -9,6 +9,7 @@ import {
   getWeaknessRecommendations,
 } from "@/lib/practice/weakness";
 import { WeaknessView } from "@/components/practice/WeaknessView";
+import { AppCard } from "@/components/shared/AppCard";
 import { PageHeader } from "@/components/shared/PageHeader";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -50,20 +51,15 @@ export default async function PracticeWeaknessPage() {
   const planLabel = profile?.plan_label ?? null;
 
   // 유료 잠금 — 추천 본문 대신 업그레이드 안내(paywall gate).
-  // NOTE: 이 분기는 server component이므로 antd 복합 컴포넌트(Typography.Title 등)를
-  // 직접 쓰면 prod React #130을 유발한다. 잠금 안내는 plain HTML + Link로만 구성한다.
+  // NOTE: 이 분기는 server component이다. 공유 surface는 AppCard(plain antd Card
+  // 래퍼, "use client" 없음 → RSC 안전, 로그인/공개 페이지에서 검증됨)로 쓰고, 안내
+  // 본문은 복합 antd(Typography.Title 등) 없이 plain HTML + Link로 유지해 prod React
+  // #130을 피한다.
   if (isLocked(planLabel)) {
     return (
       <div className="app-workspace-narrow">
         <PageHeader title={t("pageTitle")} />
-        <div
-          style={{
-            border: "1px solid #f0f0f0",
-            borderRadius: 8,
-            padding: 24,
-            textAlign: "center",
-          }}
-        >
+        <AppCard style={{ textAlign: "center" }}>
           <div style={{ fontSize: 40 }} aria-hidden>
             🔒
           </div>
@@ -102,7 +98,7 @@ export default async function PracticeWeaknessPage() {
               {t("viewProblemList")}
             </Link>
           </div>
-        </div>
+        </AppCard>
       </div>
     );
   }

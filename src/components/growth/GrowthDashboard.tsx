@@ -18,6 +18,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { writingProblemHref } from "@/lib/writing/routes";
 import { AppCard } from "@/components/shared/AppCard";
+import { PageHeader } from "@/components/shared/PageHeader";
 import { GrowthTrendChart, type GrowthTrendPoint } from "./GrowthTrendChart";
 import { GrowthLockedReport } from "./GrowthLockedReport";
 import { buildGrowthInsights } from "./insights";
@@ -157,14 +158,7 @@ export function GrowthDashboard({
 
   return (
     <Space orientation="vertical" size="large" style={{ width: "100%" }}>
-      <div>
-        <Title level={3} style={{ marginBottom: 4 }}>
-          {t("heading")}
-        </Title>
-        <Paragraph type="secondary" style={{ margin: 0 }}>
-          {t("subheading")}
-        </Paragraph>
-      </div>
+      <PageHeader title={t("heading")} subtitle={t("subheading")} />
 
       {/* area 1 예외 — 권한 없는 리포트 잠금 + 업그레이드 CTA. */}
       {reportLocked ? (
