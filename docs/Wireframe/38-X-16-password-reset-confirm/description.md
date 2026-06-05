@@ -117,3 +117,9 @@
 
 - 만료된 링크, 끊긴 세션, provider 오류는 같은 recovery 안내로 묶는다.
 - 브라우저 새로고침 후 recovery session이 사라질 수 있으므로 입력값 보존을 보장하지 않는다.
+
+## Navigation
+
+- 진입 경로: X-06 재설정 메일 링크가 `/auth/callback?type=recovery`를 거친 뒤 `/password-reset/confirm`으로 이동한다.
+- 이탈 경로: 비밀번호 변경 완료 후 A-02 로그인으로 이동한다.
+- 화면 내부 동작: 새 비밀번호 입력, 강도/일치 확인, `updateUser` 요청, 오류 표시를 처리한다.

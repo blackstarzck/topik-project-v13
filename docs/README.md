@@ -34,7 +34,6 @@ every document by default increases the chance of missing the important one.
 | [development/README.md](./development/README.md) | Detailed implementation specs. | Reading stack, backend/auth, AI boundary, deployment, or deferred-scope details after `spec.md` routes you there. |
 | [user-admin-data-consistency.md](./user-admin-data-consistency.md) | v13 user DB usage and topik-ai admin page-sync inventory. | Planning user/admin data reconciliation before real CRUD validation. |
 | [user-admin-data-consistency.html](./user-admin-data-consistency.html) | HTML report for the v13/topik-ai data consistency inventory. | Reviewing the reconciliation baseline in a browser-friendly format. |
-| [ia-pages/README.md](./ia-pages/README.md) | Legacy observed HTML page notes. | Historical reference only. Active docs win on conflicts. |
 
 ## Example Requests
 
@@ -45,9 +44,9 @@ every document by default increases the chance of missing the important one.
 | Build a screen | "`docs/Wireframe`와 `docs/ant-design` 기준으로 대시보드 화면을 만들어줘." |
 | Check user flow | "`docs/flow/user-flow.md` 기준으로 학습 흐름이 자연스러운지 검토해줘." |
 
-## Active And Legacy Docs
+## Current Docs
 
-Active docs govern implementation, QA, and review:
+These docs govern implementation, QA, and review:
 
 - `prd.md`
 - `spec.md`
@@ -58,11 +57,5 @@ Active docs govern implementation, QA, and review:
 - `ant-design/README.md`
 - `development/*.md` when routed from `spec.md`
 
-Legacy docs are reference only:
-
-- `user-flow.md`
-- `ia-pages/`
-- legacy static route notes inside `sitemap.md`
-
-If active and legacy docs conflict, active docs win. If active docs conflict
-with a user request, stop and report the conflict before implementing.
+If these docs conflict with a user request, stop and report the conflict before
+implementing.

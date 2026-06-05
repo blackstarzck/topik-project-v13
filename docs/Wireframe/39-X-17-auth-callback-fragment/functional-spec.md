@@ -6,14 +6,20 @@
 
 Supabase implicit flow의 URL fragment를 browser에서 파싱해 세션을 설정하거나 안전한 인증 오류 화면으로 이동시킨다.
 
+## 사용자와 권한
+
+- Audience: public
+- public route로 열려야 한다.
+- 권한 기준: public route이며 인증 세션이 없어도 접근할 수 있어야 한다.
+
 ## 진입/이탈 흐름
 
 - Route: `/auth/callback-fragment`
 - Route type: page
-- Audience: public
-- 진입: `/auth/callback` route handler가 fragment 보존 redirect를 수행한 뒤 도착.
-- 성공 이탈: sanitized `next`.
-- 실패 이탈: `/auth/error?reason=<canonical>`.
+- 기준 흐름: `docs/flow/user-flow.md`의 IA 순서를 따른다.
+- 진입 경로: `/auth/callback`에 query 없이 implicit fragment만 있는 경우 fallback 화면으로 진입한다.
+- 이탈 경로: `setSession` 성공 시 B-01 또는 sanitized `next` 경로로 이동하고, fragment 실패/unknown 오류는 X-11로 이동한다.
+- 화면 내부 동작: fragment 파싱, session 설정, spinner, 오류 매핑과 안전한 next 경로 정리를 처리한다.
 
 ## 주요 기능
 
@@ -23,13 +29,22 @@ Supabase implicit flow의 URL fragment를 browser에서 파싱해 세션을 설�
 - `next` relative URL sanitization
 - 처리 중 spinner/status 표시
 
-## 상태/오류/권한
+## 상태/오류
 
-- public route로 열려야 한다.
 - 4개 상태: loading(spinner) / success-redirect / error-reason redirect / missing-fragment redirect.
 - token과 refresh token은 UI에 표시하지 않는다.
 - provider raw error는 URL/UI에 노출하지 않고 canonical reason으로만 연결한다.
 - `next`는 open redirect가 되지 않도록 page 진입 시 server에서 `sanitizeNext`를 통과한다.
+
+## 데이터 사용
+
+- 아래 표는 현재 문서화된 DB/스토리지/RPC 사용 근거다.
+
+### DB 데이터 사용 명세
+
+| 테이블/버킷/RPC | 컬럼/필드 | 사용 방식 | 화면 기능 | 권한/RLS | 근거 | 불확실성 |
+| --- | --- | --- | --- | --- | --- | --- |
+| `Supabase Auth:setSession` | `access_token`, `refresh_token` | auth action | fragment token으로 browser session 설정 | browser auth client | `src/components/auth/CallbackFragmentFallback.tsx` | token 값은 DB 객체로 직접 노출되지 않음 |
 
 ## 현재 구현 상태
 
@@ -37,6 +52,14 @@ Supabase implicit flow의 URL fragment를 browser에서 파싱해 세션을 설�
 - `CallbackFragmentFallback`(`"use client"`)이 mount 시 `parseAuthFragment`, `mapSupabaseErrorCode`, browser `supabase.auth.setSession`, `router.replace`를 사용해 자동 분기한다.
 - 상태 카드는 `role="status"` + `aria-live="polite"`로 처리/이동 상태를 알린다.
 - `export const dynamic = "force-dynamic"`으로 callback support page를 동적으로 처리한다.
+
+## 코드 구현 근거
+
+- `AuthCallbackFragmentPage` - `src/app/auth/callback-fragment/page.tsx`
+- `CallbackFragmentFallback` - `src/components/auth/CallbackFragmentFallback.tsx`
+- `parseAuthFragment`, `mapSupabaseErrorCode`, `sanitizeNext` - `src/lib/auth/error-mapping.ts`
+- `createSupabaseBrowserClient` - `src/lib/supabase/browser.ts`
+- `GET` route handler fallback branch - `src/app/auth/callback/route.ts`
 
 ## 미구현/불일치
 
@@ -48,12 +71,6 @@ Supabase implicit flow의 URL fragment를 browser에서 파싱해 세션을 설�
 - callback fragment 실패율을 운영에서 보려면 server-visible correlation id 또는 client telemetry가 별도 필요하다.
 - X-11 reason copy가 늘어나면 이 페이지의 error mapping도 함께 확인해야 한다.
 
-## DB 데이터 사용 명세
-
-| 테이블/버킷/RPC | 컬럼/필드 | 사용 방식 | 화면 기능 | 권한/RLS | 근거 | 불확실성 |
-| --- | --- | --- | --- | --- | --- | --- |
-| `Supabase Auth:setSession` | `access_token`, `refresh_token` | auth action | fragment token으로 browser session 설정 | browser auth client | `src/components/auth/CallbackFragmentFallback.tsx` | token 값은 DB 객체로 직접 노출되지 않음 |
-
 ## 수용 기준
 
 - 기존 34개 Wireframe 이후 추가된 코드 기준 화면임을 명시한다.
@@ -62,11 +79,3 @@ Supabase implicit flow의 URL fragment를 browser에서 파싱해 세션을 설�
 - `next`는 relative-only sanitization을 거친다.
 - loading / success-redirect / error-reason / missing-fragment 4개 상태가 각각 spinner 또는 X-11/target route로 연결된다.
 - 상태 카드가 SR에 announce되도록 `role="status"` aria-live 영역을 제공한다.
-
-## 검증 근거
-
-- Description: `docs/Wireframe/39-X-17-auth-callback-fragment/description.md`
-- Route map: `docs/sitemap.md`
-- Source: `src/app/auth/callback-fragment/page.tsx`
-- Component: `src/components/auth/CallbackFragmentFallback.tsx`
-- Error mapping: `src/lib/auth/error-mapping.ts`

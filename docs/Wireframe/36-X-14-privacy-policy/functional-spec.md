@@ -6,13 +6,20 @@
 
 회원가입 및 서비스 이용 전 개인정보 처리 범위를 확인할 수 있는 공개 route를 제공한다. 현재는 정식 개인정보보호 검토 전 placeholder다.
 
+## 사용자와 권한
+
+- Audience: public
+- 세션 없이 접근 가능해야 한다.
+- 권한 기준: public route이며 인증 세션이 없어도 접근할 수 있어야 한다.
+
 ## 진입/이탈 흐름
 
 - Route: `/privacy`
 - Route type: page
-- Audience: public
-- 진입: 회원가입 동의 라벨, X-13 이용약관, 직접 URL.
-- 이탈: `/terms`, `/`, `/sign-up`.
+- 기준 흐름: `docs/flow/user-flow.md`의 IA 순서를 따른다.
+- 진입 경로: X-01 제품 랜딩, X-13 이용약관, A-01 회원가입, 직접 `/privacy` 접근.
+- 이탈 경로: 이용약관 링크는 X-13, 돌아가기는 X-01 또는 호출한 화면으로 이동한다.
+- 화면 내부 동작: 개인정보처리방침 본문 읽기와 섹션 확인을 처리한다.
 
 ## 주요 기능
 
@@ -21,11 +28,20 @@
 - 외부 LLM 전송 가능성 고지
 - 관련 법적 문서와 가입/홈 링크 제공
 
-## 상태/오류/권한
+## 상태/오류
 
-- 세션 없이 접근 가능해야 한다.
-- 직접 DB 읽기/쓰기를 하지 않는다.
 - 개인정보 민감 copy는 구현된 범위만 말하고 미확정 정책을 단정하지 않는다.
+
+## 데이터 사용
+
+- 직접 DB 읽기/쓰기를 하지 않는다.
+- 현재 직접 DB 사용 근거 없음.
+
+### DB 데이터 사용 명세
+
+| 테이블/버킷/RPC | 컬럼/필드 | 사용 방식 | 화면 기능 | 권한/RLS | 근거 | 불확실성 |
+| --- | --- | --- | --- | --- | --- | --- |
+| - | - | - | 현재 직접 DB 사용 근거 없음 | public route | `src/app/privacy/page.tsx` | 정책 동의/삭제 요청 저장은 미정 |
 
 ## 현재 구현 상태
 
@@ -34,6 +50,10 @@
 - `src/lib/routes.ts`의 `PUBLIC_PATHS`에 `/privacy`가 포함되어 anonymous 접근이 허용된다.
 - `/sign-up` 동의 체크박스 라벨이 `target="_blank"`로 본 페이지를 연다(`src/components/auth/SignUpForm.tsx`).
 - 정식 처리방침과 알림/재동의 운영 절차는 아직 확정되지 않았다.
+
+## 코드 구현 근거
+
+- `PrivacyPage` - `src/app/privacy/page.tsx`
 
 ## 미구현/불일치
 
@@ -45,12 +65,6 @@
 - 개인정보 처리방침 versioning과 consent log가 필요하면 별도 DB 설계가 필요하다.
 - 외부 LLM 제공자별 보관 정책을 정식 문서에 연결해야 한다.
 
-## DB 데이터 사용 명세
-
-| 테이블/버킷/RPC | 컬럼/필드 | 사용 방식 | 화면 기능 | 권한/RLS | 근거 | 불확실성 |
-| --- | --- | --- | --- | --- | --- | --- |
-| - | - | - | 현재 직접 DB 사용 근거 없음 | public route | `src/app/privacy/page.tsx` | 정책 동의/삭제 요청 저장은 미정 |
-
 ## 수용 기준
 
 - 기존 34개 Wireframe 이후 추가된 코드 기준 화면임을 명시한다.
@@ -58,10 +72,3 @@
 - 수집 항목, 이용 목적, 보관 기간, 외부 LLM 전송 가능성이 placeholder 범위 안에서 드러난다.
 - 정식 게시 시 갱신 및 가입자 안내 예정임을 별도 안내로 표시한다.
 - `/terms`, `/`, `/sign-up` 이동 링크가 유지된다.
-
-## 검증 근거
-
-- Description: `docs/Wireframe/36-X-14-privacy-policy/description.md`
-- Route map: `docs/sitemap.md`
-- Source: `src/app/privacy/page.tsx`
-- Route allowlist: `src/lib/routes.ts`

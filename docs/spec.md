@@ -220,11 +220,9 @@ Before calling implementation work complete:
   reopened.
 - Do not expose secrets in browser-visible variables.
 - Do not share Preview links until Vercel environment variables are configured.
-- Do not treat legacy static `.html` route notes as current implementation
-  targets.
 - Do not silently invent product behavior. Use `docs/prd.md`, `docs/sitemap.md`,
-  `docs/ia.md`, `docs/flow/user-flow.md`, and matching IA page docs for product,
-  route, and flow requirements.
+  `docs/ia.md`, `docs/flow/user-flow.md`, and matching `docs/Wireframe/` page
+  docs for product, route, and flow requirements.
 
 ## Implementation Change Checklist
 

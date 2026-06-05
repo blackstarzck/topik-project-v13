@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { cookies } from "next/headers";
+import localFont from "next/font/local";
 import { getMessages } from "next-intl/server";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
 
@@ -11,6 +12,13 @@ import { AppProviders } from "./providers";
 import { getResolvedBridgeVarsByAppearance } from "@/theme/tailwind-bridge";
 import type { ThemeAppearance } from "@/theme/types";
 import "../styles/global.css";
+
+const pretendard = localFont({
+  src: "../../fonts/pretendard/PretendardVariable.woff2",
+  variable: "--font-pretendard",
+  weight: "45 920",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: {
@@ -53,6 +61,7 @@ export default async function RootLayout({
   return (
     <html
       lang={locale}
+      className={pretendard.variable}
       style={{ ...cssVars, colorScheme: appearance } as React.CSSProperties}
     >
       {/*

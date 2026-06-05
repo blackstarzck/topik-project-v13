@@ -164,7 +164,7 @@ flowchart TD
     D --> E["docs/Wireframe/README.md<br/>화면별 설명과 와이어프레임"]
 ```
 
-주의: 일부 오래된 관찰 문서는 인코딩이 깨진 문장이 남아 있습니다. 구현 기준은 항상 `docs/spec.md`, `docs/sitemap.md`의 Target React Route Map, `docs/Wireframe/`, `docs/flow/user-flow.md` 같은 active docs를 우선합니다. 인증·로그인·회원가입 흐름의 코드 + 운영 정책 한 페이지 정리본은 [`docs/development/auth-overview.md`](./docs/development/auth-overview.md) 에 있습니다.
+구현 기준은 항상 `docs/spec.md`, `docs/sitemap.md`의 Target React Route Map, `docs/Wireframe/`, `docs/flow/user-flow.md` 같은 현재 기준 문서를 우선합니다. 인증·로그인·회원가입 흐름의 코드 + 운영 정책 한 페이지 정리본은 [`docs/development/auth-overview.md`](./docs/development/auth-overview.md) 에 있습니다.
 
 ## 개발 협업자를 위한 읽는 순서
 
@@ -187,7 +187,7 @@ flowchart TD
 | 규칙 | 의미 |
 | --- | --- |
 | `docs/` 먼저 | 현재는 코드보다 문서가 기준입니다. |
-| active docs 우선 | legacy 문서는 참고만 합니다. |
+| 현재 기준 문서 우선 | `docs/spec.md`, `docs/sitemap.md`, `docs/Wireframe/`, `docs/flow/user-flow.md`를 기준으로 봅니다. |
 | 작은 변경 | unrelated refactor를 섞지 않습니다. |
 | 검증 후 완료 | 테스트, 체크, 수동 검증 중 가능한 근거를 남깁니다. |
 

@@ -160,7 +160,7 @@ Rules:
 - Then show step-by-step or sentence-level corrections.
 - Provide next actions: rewrite, save, export, practice similar.
 
-## Mock Exam (Future / Legacy)
+## Mock Exam (Future Scope)
 
 Mock exam screens are outside the current Paper route inventory. Use this
 pattern only if mock exam scope is reintroduced through `docs/Wireframe` and
@@ -185,8 +185,8 @@ Rules:
 ## Library And Vocabulary Notes
 
 The current Paper route inventory includes `F-01 My library` at `/library`.
-Standalone vocabulary is legacy/future scope unless a dedicated IA screen and
-route are added.
+Standalone vocabulary is future scope unless a dedicated IA screen and route are
+added.
 
 Recommended components:
 
@@ -204,7 +204,7 @@ Rules:
 - Filters should match learner mental models: level, type, tag, date, status.
 - Card view and list view may both exist, but state must remain consistent.
 
-## Board And Notices (Future / Legacy)
+## Board And Notices (Future Scope)
 
 Board and notice detail screens are outside the current Paper route inventory.
 Use this pattern only if those screens are reintroduced through `docs/Wireframe` and

@@ -20,6 +20,7 @@ describe("app theme contract", () => {
     expect(theme.appearance).toBe("light");
     // key = cache deduplication ID; prefix = CSS variable prefix (--ant-* by default)
     expect(theme.antd.cssVar).toEqual({ key: "talkpik", prefix: "ant" });
+    expect(theme.antd.token?.fontFamily).toContain("--font-pretendard");
     expect(theme.antd.token?.fontFamily).toContain("system-ui");
   });
 

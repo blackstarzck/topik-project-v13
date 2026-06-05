@@ -1,27 +1,22 @@
 # TALKPIK AI PRD
 
-> Status note (2026-04-24)
+> Status note (2026-06-05)
 >
-> This PRD was written from direct observation of a legacy deployed HTML site.
-> Product behavior remains useful, but the URL examples in this file are not the
-> current Next.js App Router paths that will be implemented under `src/app/`.
+> This PRD is maintained as active product intent. When route names or screen
+> coverage matter, use `docs/sitemap.md`, `docs/ia.md`, `docs/Wireframe/`, and
+> `docs/flow/user-flow.md` together.
 >
-> When route names matter, use `docs/sitemap.md` until source exists; after
-> implementation starts, use it together with the `src/app/` route tree.
->
-> Route/IA scope note (2026-05-20): the current Paper frame and
-> `docs/sitemap.md` route inventory do not include standalone routes or screens
-> for vocabulary, mock exam, board, or notice detail. Those PRD references
-> remain product context or future/deferred scope until matching `docs/Wireframe`
-> screens and sitemap routes are added.
-
-확인 기준: 2026-04-22에 배포 사이트 `https://topik-ai-nqgl.vercel.app/home.html`를 Playwright MCP로 직접 탐색한 화면과 클릭 결과입니다.
+> Route/IA scope note: the current `docs/Wireframe/` and `docs/sitemap.md`
+> inventory do not include standalone routes or screens for vocabulary, mock
+> exam, board, or notice detail. Those references remain product context or
+> future/deferred scope until matching `docs/Wireframe` screens and sitemap
+> routes are added.
 
 PRD는 Product Requirements Document의 줄임말입니다. 제품이 누구를 위해, 어떤 문제를 해결하고, 어떤 기능과 화면을 제공해야 하는지 정리한 요구사항 문서입니다.
 
 ## 1. 제품 개요
 
-TALKPIK AI는 TOPIK 한국어능력시험 학습자를 위한 AI 기반 학습 플랫폼입니다. 사용자는 자신의 학습 현황을 확인하고, 읽기/듣기 문제를 생성해 풀고, 쓰기 답안을 작성한 뒤 AI 피드백을 확인할 수 있습니다. 단어장, 모의고사 결과, 게시판은 제품 맥락에는 남아 있지만 현재 Paper route inventory에서는 별도 화면/route가 없는 future scope로 다룹니다.
+TALKPIK AI는 TOPIK 한국어능력시험 학습자를 위한 AI 기반 학습 플랫폼입니다. 사용자는 자신의 학습 현황을 확인하고, 문제 추천을 받아 쓰기 답안을 작성한 뒤 AI 피드백을 확인할 수 있습니다. 단어장, 모의고사 결과, 게시판은 제품 맥락에는 남아 있지만 현재 route inventory에서는 별도 화면/route가 없는 future scope로 다룹니다.
 
 ## 2. 제품 목표
 
@@ -63,80 +58,55 @@ TALKPIK AI는 TOPIK 한국어능력시험 학습자를 위한 AI 기반 학습 �
 
 ## 5. 전체 정보 구조
 
-아래 구조에는 legacy 관측 기반 제품 맥락이 포함되어 있습니다. 현재 구현 route 기준은 `docs/sitemap.md`의 Target React Route Map이며, Paper frame에 없는 단어장, 모의고사, 게시판은 별도 IA/route 추가 전까지 future scope입니다.
+현재 구현 route 기준은 `docs/sitemap.md`의 Target React Route Map입니다.
+화면별 구조는 `docs/Wireframe/README.md`와 각 화면의 `description.md`,
+`functional-spec.md`를 기준으로 봅니다.
 
-### Depth 0
+### 현재 화면 그룹
 
-- 홈 V1
+- 인증 / 온보딩: 회원가입, 로그인, 비밀번호 재설정, 학습 목표 설정, 인증 콜백/에러
+- 랜딩 / 법적 문서: 제품 랜딩, 이용약관, 개인정보처리방침
+- 학습 홈 / 추천: 홈 대시보드, 문제 유형 추천, 문제 목록, 성장 대시보드, 약점 기반 추천
+- 작성: TOPIK 쓰기 51번, 52번, 53번, 54번 답안 작성
+- 작성 보조: 다시 풀기 모달, 제출 확인 모달, AI 분석 로딩, 자동저장 경고
+- 피드백 / 리포트 / 추천: 단답 피드백, 장문 피드백, 비교 리포트, 다음 문제 추천
+- 내 서재 / 내보내기: 내 서재, PDF 내보내기 모달
+- 설정 / 결제 / 알림: 언어 설정, 페이월, 구독 관리, 프로필 편집, 알림 설정
 
-### Depth 1
-
-- 홈 V2
-- 내 서재
-- 단어장
-- 쓰기 보관함
-- 모의고사 결과
-- 게시판
-- 프로필 설정
-- AI 맞춤 문제 생성
-- 쓰기 집중 연습 설정
-
-### Depth 2
-
-- 문제 풀이
-- 쓰기 51번 연습
-- 쓰기 53번 연습
-- 쓰기 피드백 상세
-- 전체 응시 기록
-- 실전 모의고사 생성
-- 공지 상세
-
-### Depth 3
-
-- 실전 모의고사 풀이
-- OMR 답안지
+관리자 화면은 `docs/admin-scope-boundary.md`의 범위를 따릅니다. 이 저장소에서는
+사용자-facing 화면 구현을 우선하며, 관리자 기능은 별도 동기화 단계에서 다룹니다.
 
 ## 6. 핵심 유저 플로우
 
-### 읽기/듣기 학습 플로우
+### 가입과 첫 진입 플로우
 
-1. 사용자는 홈에서 학습 현황을 확인한다.
-2. `듣기/읽기 집중`을 선택한다.
-3. AI 맞춤 문제 생성 화면에서 영역, TOPIK 단계, 등급, 문제 유형을 선택한다.
-4. 문제 생성 버튼을 누른다.
-5. 문제 풀이 화면에서 지문 또는 음성을 확인하고 답을 선택한다.
-6. 정답 확인 또는 다음 문제 이동으로 학습을 이어간다.
+1. 사용자는 제품 랜딩에서 회원가입 또는 로그인을 선택한다.
+2. 회원가입 사용자는 이메일 인증과 학습 목표 설정을 거친다.
+3. 로그인 또는 인증이 완료되면 홈 대시보드로 이동한다.
+4. 인증 링크 오류, 만료, 재전송 제한은 인증 에러 화면에서 처리한다.
 
-### 쓰기 학습 플로우
+### 추천 학습과 쓰기 연습 플로우
 
-1. 사용자는 홈에서 `쓰기 집중 연습` 또는 약점 공략 카드를 선택한다.
-2. 쓰기 유형 51~54번 중 하나를 고른다.
-3. 필요하면 주제를 선택한다.
-4. 쓰기 연습 화면으로 이동한다.
-5. 문제를 읽고 답안을 입력한다.
-6. 추천 표현, 필수 어휘, AI Writing Guide를 참고한다.
-7. 제출한다.
-8. 쓰기 보관함에서 AI 피드백을 확인한다.
+1. 사용자는 홈 대시보드에서 추천 학습 또는 약점 기반 추천으로 진입한다.
+2. 문제 유형 추천과 문제 목록에서 풀 문제를 선택한다.
+3. 다시 풀기 모달에서 시작 조건을 확인한다.
+4. 쓰기 51~54번 중 해당 작성 화면으로 이동한다.
+5. 답안을 작성하고 제출 확인 모달을 거쳐 제출한다.
+6. AI 분석 로딩 후 단답 또는 장문 피드백 화면으로 이동한다.
 
 ### 피드백 확인 플로우
 
-1. 사용자는 `쓰기 보관함`으로 이동한다.
-2. 완료된 피드백 또는 임시 보관 내역을 선택한다.
-3. 검색, 필터, 정렬로 원하는 답안을 찾는다.
-4. 피드백 상세 화면에서 점수, AI 총평, 상세 분석을 확인한다.
-5. 필요하면 다시 풀기 또는 PDF 저장을 선택한다.
+1. 사용자는 피드백 화면에서 점수, 총평, 상세 분석을 확인한다.
+2. 필요하면 비교 리포트로 이전 답안과 현재 답안을 비교한다.
+3. 다음 문제 추천으로 이어서 학습하거나 다시 풀기를 선택한다.
+4. 보관이 필요하면 PDF 내보내기 모달을 사용한다.
 
-### 모의고사 플로우 (Future / 별도 IA 필요)
+### 복습과 성장 확인 플로우
 
-현재 Paper 32-screen route inventory에는 모의고사 화면이 없습니다. 이 플로우는 제품 맥락으로 보존하되, 구현하려면 `docs/Wireframe` 화면과 `docs/sitemap.md` route를 먼저 추가해야 합니다.
-
-1. 사용자는 `모의고사 결과`에서 최근 성적과 추이를 확인한다.
-2. `새 모의고사 응시`를 누른다.
-3. 실전 모의고사 생성 화면에서 시험 유형과 TOPIK 단계를 확인한다.
-4. `시험 시작하기`를 누른다.
-5. 타이머가 있는 시험 화면에서 문제를 푼다.
-6. OMR 답안지를 열어 답안 상태를 확인한다.
-7. 시험을 종료한다.
+1. 사용자는 내 서재에서 저장된 학습 기록과 피드백을 확인한다.
+2. 성장 대시보드에서 목표와 학습 추이를 확인한다.
+3. 약점 기반 추천을 통해 다음 학습 후보로 이동한다.
+4. 프로필, 언어, 알림, 구독 상태는 설정 계열 화면에서 관리한다.
 
 ## 7. 기능 요구사항
 
@@ -275,7 +245,7 @@ TALKPIK AI는 TOPIK 한국어능력시험 학습자를 위한 AI 기반 학습 �
 
 ### 7.10 단어장 (Future / 별도 IA 필요)
 
-현재 Paper 32-screen route inventory에는 standalone 단어장 route가 없습니다. 단어 복습이 필요하면 우선 `/library` 하위 기능으로 다루고, 독립 화면은 별도 IA가 추가될 때 구현합니다.
+현재 route inventory에는 standalone 단어장 route가 없습니다. 단어 복습이 필요하면 우선 `/library` 하위 기능으로 다루고, 독립 화면은 별도 IA가 추가될 때 구현합니다.
 
 #### 요구사항
 
@@ -291,7 +261,7 @@ TALKPIK AI는 TOPIK 한국어능력시험 학습자를 위한 AI 기반 학습 �
 
 ### 7.11 모의고사 결과 (Future / 별도 IA 필요)
 
-현재 Paper 32-screen route inventory에는 모의고사 결과 route가 없습니다. 구현 전 `docs/Wireframe`와 `docs/sitemap.md`에 화면과 route를 먼저 추가해야 합니다.
+현재 route inventory에는 모의고사 결과 route가 없습니다. 구현 전 `docs/Wireframe`와 `docs/sitemap.md`에 화면과 route를 먼저 추가해야 합니다.
 
 #### 요구사항
 
@@ -307,7 +277,7 @@ TALKPIK AI는 TOPIK 한국어능력시험 학습자를 위한 AI 기반 학습 �
 
 ### 7.12 실전 모의고사 (Future / 별도 IA 필요)
 
-현재 Paper 32-screen route inventory에는 실전 모의고사 route가 없습니다. 구현 전 `docs/Wireframe`와 `docs/sitemap.md`에 화면과 route를 먼저 추가해야 합니다.
+현재 route inventory에는 실전 모의고사 route가 없습니다. 구현 전 `docs/Wireframe`와 `docs/sitemap.md`에 화면과 route를 먼저 추가해야 합니다.
 
 #### 요구사항
 
@@ -325,7 +295,7 @@ TALKPIK AI는 TOPIK 한국어능력시험 학습자를 위한 AI 기반 학습 �
 
 ### 7.13 게시판 (Future / 별도 IA 필요)
 
-현재 Paper 32-screen route inventory에는 게시판이나 공지 상세 route가 없습니다. 구현 전 `docs/Wireframe`와 `docs/sitemap.md`에 화면과 route를 먼저 추가해야 합니다.
+현재 route inventory에는 게시판이나 공지 상세 route가 없습니다. 구현 전 `docs/Wireframe`와 `docs/sitemap.md`에 화면과 route를 먼저 추가해야 합니다.
 
 #### 요구사항
 
@@ -370,7 +340,7 @@ TALKPIK AI는 TOPIK 한국어능력시험 학습자를 위한 AI 기반 학습 �
 
 ### 반응성
 
-- PC 환경을 권장하는 안내가 있었으므로, 최소 PC 화면에서는 모든 주요 조작이 안정적으로 가능해야 한다.
+- 주요 화면은 데스크톱과 모바일에서 핵심 조작이 안정적으로 가능해야 한다.
 
 ### 다국어
 
@@ -435,14 +405,13 @@ TALKPIK AI는 TOPIK 한국어능력시험 학습자를 위한 AI 기반 학습 �
 
 ### 확인 필요
 
-- 홈의 `실전 모의고사` 카드는 현재 Paper route inventory 밖입니다. 구현하려면 모의고사 IA와 route를 다시 추가해야 합니다.
+- 모의고사는 현재 route inventory 밖입니다. 구현하려면 모의고사 IA와 route를 먼저 추가해야 합니다.
 - 내 서재의 문제 바구니 드래그 후 실제 복습 시작 흐름을 추가 검증해야 합니다.
 - 검색 입력 후 결과가 필터링되는지, 또는 검색 실행 방식이 다른지 확인이 필요합니다.
 - 언어 전환 범위를 메뉴까지만 할지, 학습 데이터와 피드백까지 포함할지 정책이 필요합니다.
 
 ### 리스크
 
-- 일부 버튼은 클릭 가능하지만 사용자가 기대하는 화면 변화가 명확하지 않았습니다.
 - 쓰기와 모의고사처럼 긴 흐름에서는 자동 저장, 제출, 종료 확인 같은 안전 장치가 중요합니다.
 
 ## 12. MVP 범위
@@ -472,4 +441,3 @@ MVP는 Minimum Viable Product의 줄임말로, 가장 먼저 검증해야 하는
 - [사이트맵 및 페이지 연결도](sitemap.md)
 - [페이지별 IA 문서 목차](ia.md)
 - [현행 유저 플로우 문서](flow/user-flow.md)
-- [레거시 유저 플로우 문서](user-flow.md)

@@ -16,12 +16,10 @@
 
 import type { ThemeConfig } from "antd";
 
+import { appFontFamily } from "./global/shared-seed";
 import type { ThemeAppearance } from "./types";
 
 export type ResolvedBridgeVars = Record<string, string>;
-
-const SHARED_FONT_FAMILY =
-  'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
 
 // antd `formatToken`(util/alias.js:24-26)은 colorShadow의 alpha를 base로
 // 0.08/0.12/0.05 multiplier를 곱해 boxShadowSecondary를 계산한다.
@@ -40,7 +38,7 @@ const LIGHT_BRIDGE_VARS: ResolvedBridgeVars = {
   "--app-color-text-secondary": "rgba(0, 0, 0, 0.65)",
   "--app-color-border": "#d9d9d9",
   "--app-radius": "6px",
-  "--app-font-family": SHARED_FONT_FAMILY,
+  "--app-font-family": appFontFamily,
   "--app-shadow-elevated": LIGHT_SHADOW_ELEVATED,
 };
 
@@ -52,7 +50,7 @@ const DARK_BRIDGE_VARS: ResolvedBridgeVars = {
   "--app-color-text-secondary": "rgba(255, 255, 255, 0.65)",
   "--app-color-border": "#424242",
   "--app-radius": "6px",
-  "--app-font-family": SHARED_FONT_FAMILY,
+  "--app-font-family": appFontFamily,
   "--app-shadow-elevated": DARK_SHADOW_ELEVATED,
 };
 

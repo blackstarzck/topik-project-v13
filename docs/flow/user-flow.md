@@ -4,7 +4,9 @@
 39개 중 X-13~X-17은 기존 34개 Wireframe 이후 코드베이스 기준으로 추가된 화면입니다.
 노드명은 `docs/Wireframe/{...}/description.md`의 `Source` 값과 일치합니다(참조 규칙: `docs/Wireframe/README.md`).
 
-레거시 관측 흐름은 `docs/user-flow.md`에 별도 보관되어 있습니다. 새 구현/QA는 본 문서를 정본으로 사용합니다.
+새 구현/QA는 본 문서를 정본으로 사용합니다.
+
+> 관리자 화면(H-01, X-08, X-10, X-15)은 `docs/admin-scope-boundary.md` 기준의 현재 구현 기록입니다. 이 저장소에서 신규 관리자 기능 확장이나 관리자 스키마/마이그레이션 추가 대상으로 보지 않습니다.
 
 ## Mermaid 사용자 플로우
 
@@ -180,7 +182,7 @@ flowchart TD
   X12 -. "60초 cooldown 후 인증 메일 재전송" .-> X12
   X12 -->|"이메일 링크 클릭"| CB
   A02 -. "매직 링크 / 비밀번호 재설정 링크 클릭" .-> CB
-  X06 -. "레거시/오류 callback" .-> CB
+  X06 -. "오류 callback" .-> CB
 
   CB -->|"토큰 교환 성공: 학습자"| B01
   CB -->|"토큰 교환 성공: 관리자"| X08

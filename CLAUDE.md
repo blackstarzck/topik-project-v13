@@ -44,23 +44,15 @@ invent product behavior.
 
 ## Source Of Truth
 
-Separate active source-of-truth docs from legacy observations. Use active docs
-for implementation, QA, and review.
-
-### Active Docs
+Use these docs for implementation, QA, and review.
 
 - `docs/prd.md`, `docs/spec.md`
 - `docs/ant-design/README.md` and the routed Ant Design detail docs
 - `docs/sitemap.md` Target React Route Map
 - `docs/ia.md` plus `docs/Wireframe/README.md` and matching page folders under `docs/Wireframe/{...}/description.md`
-- `docs/Wireframe/analysis-report.md`
+- `docs/Wireframe/functional-spec-index.md`
+- `docs/Wireframe/data-usage-index.md`
 - `docs/flow/user-flow.md`
-
-### Legacy Observations
-
-- `docs/user-flow.md`
-- `docs/ia-pages/*.md`
-- Legacy HTML Route Map sections in `docs/sitemap.md`
 
 Do not run a fresh grill-me/domain-discovery interview for this project. The validated source of truth is the active `docs/` set above. For every implementation request, infer the user's goal, select the relevant docs, read them before planning, and include a `Docs consulted` section in the plan and final report.
 

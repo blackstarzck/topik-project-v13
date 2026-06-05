@@ -66,3 +66,9 @@ Supabase implicit flow 또는 오래된 인증 링크의 URL fragment를 안전�
 - 이 페이지는 브라우저 전용 token 처리를 하므로 server-side 렌더에서 fragment를 읽으려 하지 않는다(`"use client"` component가 mount 후 `window.location.hash` 파싱).
 - `next` open redirect는 허용하지 않는다(`//`, 절대 URL, scheme 포함 값은 `/dashboard`로 fallback).
 - `setSession` 실패는 console error로만 기록하고 UI에는 canonical reason 화면으로만 연결한다.
+
+## Navigation
+
+- 진입 경로: `/auth/callback`에 query 없이 implicit fragment만 있는 경우 fallback 화면으로 진입한다.
+- 이탈 경로: `setSession` 성공 시 B-01 또는 sanitized `next` 경로로 이동하고, fragment 실패/unknown 오류는 X-11로 이동한다.
+- 화면 내부 동작: fragment 파싱, session 설정, spinner, 오류 매핑과 안전한 next 경로 정리를 처리한다.

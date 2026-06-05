@@ -108,3 +108,9 @@
 예외
 
 매핑되지 않은 reason은 `unknown`. raw `error_description`은 서버 로그에만, URL/UI 노출 금지.
+
+## Navigation
+
+- 진입 경로: `/auth/callback` 실패, X-17 fragment 처리 실패, 인증 토큰/PKCE 오류.
+- 이탈 경로: `user_not_found`는 A-01, `otp_expired`/`email_not_confirmed`는 X-12, `flow_state_*`/`bad_code_verifier`는 A-02로 이동한다.
+- 화면 내부 동작: 오류 reason 매핑, 재전송, Retry-After countdown, primary/secondary CTA 분기를 처리한다.

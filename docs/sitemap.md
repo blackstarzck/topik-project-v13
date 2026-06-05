@@ -14,11 +14,6 @@ Use these documents together when implementing or reviewing page coverage:
 1. [docs/sitemap.md](./sitemap.md) - route authority and page connection map.
 2. [docs/Wireframe/README.md](./Wireframe/README.md) - current 39-screen IA inventory: the existing 34 Wireframe entries plus 5 codebase-added screens, with one `description.md` and one `functional-spec.md` per screen.
 3. [docs/flow/user-flow.md](./flow/user-flow.md) - user flow and screen dependency order.
-4. [docs/ia-pages/README.md](./ia-pages/README.md) - legacy observed HTML crosswalk only.
-
-Do not use the legacy `docs/ia-pages` files as the current screen inventory. They
-remain useful for historical UI observations, but the Paper frame and `docs/Wireframe`
-are the current baseline.
 
 ## Target React Route Map
 
@@ -155,7 +150,7 @@ flowchart TD
   SIGNUP --> VERIFY["X-12 Auth verify-email\n/auth/verify-email"]
   VERIFY -. "이메일 링크 클릭" .-> CB["Auth callback\n/auth/callback"]
   LOGIN -. "매직 링크" .-> CB
-  RESET -. "legacy/error callback" .-> CB
+  RESET -. "error callback" .-> CB
   CB -. "implicit fragment fallback" .-> CBF["X-17 Auth callback fragment\n/auth/callback-fragment"]
   CBF -->|"성공"| DASH
   CBF -->|"실패"| ERR
@@ -166,37 +161,12 @@ flowchart TD
   ERR -. "다시 시도" .-> LOGIN
 ```
 
-## Legacy HTML Route Map
-
-The routes below are historical observations from `docs/ia-pages`. They are not
-new implementation targets unless they map to a current Paper/IA screen.
-
-| Legacy observed URL | Current route | Status |
-| --- | --- | --- |
-| `/home.html` | `/dashboard` | Replaced by B-01 Home dashboard. |
-| `/home_v2.html` | `/dashboard` | Legacy dashboard variant; no separate current route. |
-| `/practice_create.html` | `/practice/recommendations` | Replaced by C-01. |
-| `/practice_solve.html` | `/practice/problems` | Replaced by C-02 problem list plus D-01 to D-04 writing routes. |
-| `/writing_practice_create.html` | `/practice/recommendations` | Legacy setup folded into recommendation/list flow. |
-| `/writing_51.html` | `/writing/short-answer-writing-51` | Current D-01. |
-| `/writing_53.html` | `/writing/long-form-writing-53` | Current D-03. |
-| `/my_library.html` | `/library` | Current F-01. |
-| `/my_vocabulary.html` | `/library` | No standalone Paper route; treat as library content/filter if retained. |
-| `/writing_feedback_list.html` | `/library` | No standalone Paper route; feedback history belongs in library. |
-| `/writing_feedback_detail_*.html` | `/writing/feedback/short/:id` or `/writing/feedback/long/:id` | Split by current E-01/E-02 feedback screens. |
-| `/profile_settings.html` | `/profile`, `/settings/language`, `/settings/notifications` | Split by X-05, G-01, and X-09. |
-| `/mock_exam_results.html` | no current route | Outside the current Paper frame. |
-| `/mock_test_exam.html` | no current route | Outside the current Paper frame. |
-| `/mock_exam_history.html` | no current route | Outside the current Paper frame. |
-| `/mock_test_setup.html` | no current route | Outside the current Paper frame. |
-| `/board.html` | no current route | Outside the current Paper frame. |
-| `/notice_detail.html` | no current route | Outside the current Paper frame. |
-
 ## Coverage Rules
 
 - Every Paper frame screen listed in `docs/Wireframe/README.md` must appear in the
   Target React Route Map, either as a page route or as a hosted modal/state.
-- New production routes must not be added from legacy `docs/ia-pages` alone.
+- New production routes must be added through `docs/Wireframe/README.md`,
+  `docs/sitemap.md`, and `docs/flow/user-flow.md` together.
 - `/paywall` and `/subscription` do not reopen billing implementation scope.
   Billing SDKs, payment provider choice, and real payment flows remain governed
   by `docs/development/deferred-scope.md`.

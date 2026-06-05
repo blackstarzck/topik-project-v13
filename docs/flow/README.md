@@ -36,6 +36,3 @@ flowchart TD
 ## AI에게 지시할 때
 
 > `docs/flow/user-flow.md`를 기준으로 사용자가 어느 화면에서 어느 화면으로 이동해야 하는지 확인해줘.
-
-주의: [../user-flow.md](../user-flow.md)는 과거 HTML 관측 기록입니다.
-현재 기준 사용자 흐름은 이 폴더의 [user-flow.md](./user-flow.md)입니다.

@@ -56,7 +56,17 @@
 # settings.local.json (personal permissions / machine paths) stays ignored.
 .claude/*
 !.claude/settings.json
+.claude/skills/*
+!.claude/skills/
+!.claude/skills/dynamic-workflow-generator/
+!.claude/skills/dynamic-workflow-generator/SKILL.md
 .codex/
+!.codex/
+.codex/*
+!.codex/skills/
+.codex/skills/*
+!.codex/skills/dynamic-workflow-generator/
+!.codex/skills/dynamic-workflow-generator/SKILL.md
 
 # Local test/session artifacts (gitignored).
 tests/e2e/auth-state/

@@ -1,0 +1,8 @@
+# UI-smoke deferred.
+# Reason: concurrent Codex session has in-progress growth/practice edits
+# (weakness page, GrowthDashboard, GrowthTrendChart, DiagnosticCard,
+#  DimensionTabs, WeaknessView). This Claude session made NO source edits —
+# it is running a read-only harness-removal scope investigation (workflow
+# wf_10196e83-497) and a docs/HTML planning task. The UI changes are not this
+# session's to smoke-test or claim. Owning session should run M1 and remove
+# this marker before claiming UI done.
