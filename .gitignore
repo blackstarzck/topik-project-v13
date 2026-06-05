@@ -52,28 +52,16 @@
 .agents/superpowers/skills/*
 !.agents/superpowers/skills/*/
 !.agents/superpowers/skills/*/SKILL.md
-# Ignore local Claude config, but TRACK the shared project settings.json so the
-# committed Stop hook (real-app smoke gate, scripts/hooks/require-ui-smoke.mjs)
-# is enforced for everyone, not just one machine. settings.local.json (personal
-# permissions / machine paths) stays ignored.
+# Ignore local Claude config, but TRACK the shared project settings.json.
+# settings.local.json (personal permissions / machine paths) stays ignored.
 .claude/*
 !.claude/settings.json
 .codex/
 
-# Local/generated analysis artifacts
-harness-docs-analysis.html
-workflow-evaluation.html
-
-# Implementation Coverage Audit (Plan 20260523) — analysis-only artifacts.
-# These paths hold secret/session/temp files during the audit execution; durable
-# outputs are promoted to reports/ before commit. See:
-#   docs/ai-workflow/plans/20260523-0100-implementation-coverage-audit.md (§4, §10 Task 0)
-scripts/audit-setup/*
-!scripts/audit-setup/
-!scripts/audit-setup/*.mjs
+# Local test/session artifacts (gitignored).
 tests/e2e/auth-state/
 screenshots/
-tests/e2e/coverage/failure-log.json
+test-results/
 analysis/
 .env.local.bak
 
@@ -84,10 +72,6 @@ build/
 .next/
 out/
 coverage/
-# The `coverage/` rule above is for test coverage output (NYC/Vitest). Our
-# Playwright E2E specs happen to live under tests/e2e/coverage/ — unignore them.
-!tests/e2e/coverage/
-!tests/e2e/coverage/**
 
 # Logs and caches
 *.log
