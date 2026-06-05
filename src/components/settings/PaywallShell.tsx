@@ -117,16 +117,11 @@ export function PaywallShell() {
   return (
     <div style={PAYWALL_CONTENT_STYLE}>
       <Space orientation="vertical" size="large" style={{ width: "100%" }}>
-        {/* Region 1: 결제 선택 제목 */}
-        <PageHeader
-          title={
-            <Space>
-              <Tag>X-03</Tag>
-              {t("heading")}
-            </Space>
-          }
-          subtitle={t("subheading")}
-        />
+        {/* Region 1: 결제 선택 제목. IA 코드 배지는 h1 접근성 이름에서 제외하고 헤더 위 메타로 둔다. */}
+        <div>
+          <Tag>X-03</Tag>
+          <PageHeader title={t("heading")} subtitle={t("subheading")} />
+        </div>
 
         {state.status === "loading" || state.status === "has_subscription" ? (
           <AppCard>

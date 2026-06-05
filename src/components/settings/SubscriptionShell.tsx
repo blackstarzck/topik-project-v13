@@ -256,15 +256,11 @@ export function SubscriptionShell() {
   return (
     <div style={SUBSCRIPTION_CONTENT_STYLE}>
       <Space orientation="vertical" size="large" style={{ width: "100%" }}>
-        <PageHeader
-          title={
-            <Space>
-              <Tag>X-04</Tag>
-              {t("heading")}
-            </Space>
-          }
-          subtitle={t("subheading")}
-        />
+        {/* IA 코드 배지는 h1 접근성 이름에서 제외하고 헤더 위 메타로 둔다. */}
+        <div>
+          <Tag>X-04</Tag>
+          <PageHeader title={t("heading")} subtitle={t("subheading")} />
+        </div>
 
         <Row gutter={[16, 16]}>
           <Col xs={24} md={15}>
