@@ -123,8 +123,8 @@ HEAD should be `c69def2` (unless work continued). All committed work is gate-ver
 | ~~5~~ | ~~library~~ **DONE** (`4e0cc3d`/`c69def2`) | F-01 `/library`; F-M1 PdfExportModal → AppModal | Card→AppCard ×3 + Modal→AppModal + page `<main>`→PageHeader. M1 /library @3 viewports 0-error; GPT-5.5 0 P1. |
 | ~~6~~ | ~~growth~~ **DONE** (`a2b20ab`/`8d5a9f0`/`3605c3b`) | X-02 `/growth`, X-07 `/practice/weakness` | Card→AppCard ×18 + card-in-card→`.app-card-compact`; weakness 2×`<main>` dropped + PageHeader. GPT-5.5: 2 P1 FIXED (growth title→PageHeader, weakness locked→AppCard), 2 P2 recorded. M1 paywall branch 0-error (free-plan; unlocked branch = unit+pattern, honest gap). |
 | ~~7~~ | ~~settings/profile~~ **DONE** (`37ffc16`/`f3c4d4a`) | G-01/X-09/X-05 | Card→AppCard ×11; 3 pages drop `<main>` + h1→PageHeader; forms→`.app-workspace-narrow`; avatar div→AppCard. GPT-5.5 0 P1 / 2 P2 (recorded). |
-| **8** | **paywall/subscription** ←NEXT | X-03 `/paywall`, X-04 `/subscription` | client shells (PaywallShell/SubscriptionShell in `src/components/settings/`). (antd deprecations already Codex-swept.) **Multi-agent worktree: a `.smoke-skip` from another session is present — leave it, rely on explicit per-cluster M1.** |
-| (P) | public/legal | X-01 `/` (landing), X-13 `/terms`, X-14 `/privacy` | public → PublicShell; landing is plain-CSS hero; legal is static semantic HTML. |
+| ~~8~~ | ~~paywall/subscription~~ **DONE** (`6e09dfb`/`5368bb1`/`3adcda6`) | X-03 `/paywall`, X-04 `/subscription` | Card→AppCard ×8 + Modal→AppModal; PageHeader; GPT-5.5 1 P1 (non-bug timing) + 1 P2 fixed (IA tag out of h1). |
+| **(P)** | **public/legal** ←NEXT (LAST) | X-01 `/` (landing), X-13 `/terms`, X-14 `/privacy` | public → `PublicShell`+`PageContainer` (PageContainer IS the `<main>` on PUBLIC pages — opposite of authed). landing = plain-CSS hero (Hero/FeatureCard/ProductPreview/LandingHeader); legal = static semantic HTML (TermsContent). No auth → smoke without `--auth` (or auth ok, public renders either way). |
 
 ## Open follow-ups / honest gaps
 
