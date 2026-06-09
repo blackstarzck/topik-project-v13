@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Button, Input, Space, Typography } from "antd";
+import { Alert, Button, Input, Space, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useSubmitWriting, useUpsertDraft } from "@/lib/writing/mutations";
@@ -33,6 +33,7 @@ type Props = {
   questionNo: QuestionNo;
   initialDraft: WritingDraftRow | null;
   rubric?: ProblemRubric;
+  submitBlockedReason?: string | null;
 };
 
 const DEBOUNCE_MS = 2000;
@@ -43,6 +44,7 @@ export function WritingEditor({
   questionNo,
   initialDraft,
   rubric = null,
+  submitBlockedReason = null,
 }: Props) {
   const t = useTranslations("writing.editor");
   const [text, setText] = useState(initialDraft?.answer_text ?? "");
@@ -220,7 +222,18 @@ export function WritingEditor({
     <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
       {/* D-02 §2 — 작성 조건 카드 (52번만; 51번은 지문 자체가 조건). */}
       {questionNo === 52 ? (
-        <ConditionsPanel questionNo={52} rubric={rubric} />
+        <ConditionsPanel
+          questionNo={52}
+          rubric={rubric}
+          loadFailed={submitBlockedReason === "problem_data_incomplete"}
+        />
+      ) : null}
+      {submitBlockedReason ? (
+        <Alert
+          type="warning"
+          showIcon
+          title={t("submitBlockedProblemData")}
+        />
       ) : null}
 
       <Space wrap>
@@ -278,7 +291,7 @@ export function WritingEditor({
         <Button
           type="primary"
           onClick={() => setConfirmOpen(true)}
-          disabled={!submittable || submit.isPending}
+          disabled={!submittable || submit.isPending || Boolean(submitBlockedReason)}
         >
           {t("submit")}
         </Button>

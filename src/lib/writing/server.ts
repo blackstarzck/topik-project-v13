@@ -7,9 +7,16 @@ import {
 import type {
   ComparisonReportRow,
   FeedbackBundle,
+  QuestionNo,
   WritingDraftRow,
   WritingSubmissionRow,
 } from "./types";
+import { isQuestionNo } from "./types";
+import {
+  normalizeWritingProblem,
+  type NormalizedWritingProblem,
+  type ProblemLifecycleStatus,
+} from "./problem-normalizer";
 
 type ClientFactory = () => Promise<SupabaseServerClient>;
 
@@ -90,43 +97,93 @@ export async function getComparisonReport(
   return data;
 }
 
-// Phase 7 Task 3 (P0-3) — problem.materials shape for 53번 chart rendering.
-// Codex Round 1 P1-PLAN-3 required exposing materials in getWritingProblem.
-export type WritingProblemMaterials =
-  | { chart: { type: "bar" | "line" | "pie"; data: unknown[]; options?: Record<string, unknown> } }
-  | { text: string }
-  | null;
+export type WritingProblem = NormalizedWritingProblem;
+const DEFAULT_PROBLEM_CANDIDATE_LIMIT = 25;
 
-export type WritingProblem = {
+type WritingProblemQueryRow = {
   id: string;
   title: string;
   prompt: string;
-  materials: WritingProblemMaterials;
+  question_no: number | null;
+  materials: unknown;
+  answer_key: unknown;
+  rubric: unknown;
+  lifecycle_status?: ProblemLifecycleStatus | null;
+  lifecycle_reason?: string | null;
 };
+
+type WritingProblemQueryResult = {
+  data: WritingProblemQueryRow[] | null;
+  error: { message: string } | null;
+};
+
+function normalizeWritingProblemRow(
+  row: WritingProblemQueryRow,
+  questionNo: QuestionNo,
+): WritingProblem {
+  return normalizeWritingProblem({
+    id: row.id,
+    title: row.title,
+    prompt: row.prompt,
+    questionNo,
+    materials: row.materials,
+    answerKey: row.answer_key,
+    rubric: row.rubric,
+    lifecycleStatus:
+      "lifecycle_status" in row
+        ? (row.lifecycle_status as ProblemLifecycleStatus)
+        : "active",
+    lifecycleReason:
+      "lifecycle_reason" in row ? (row.lifecycle_reason as string | null) : null,
+  });
+}
 
 export async function getWritingProblem(
   questionNo: number,
   problemId: string | undefined,
   createClient: ClientFactory = createSupabaseServerClient,
 ): Promise<WritingProblem | null> {
+  if (!isQuestionNo(questionNo)) return null;
   const supabase = await createClient();
-  const base = supabase
-    .from("problems")
-    .select("id, title, prompt, materials")
-    .eq("domain", "writing")
-    .eq("question_no", questionNo)
-    .eq("publish_status", "published")
-    .limit(1);
-  const { data, error } = problemId
-    ? await base.eq("id", problemId)
-    : await base;
-  if (error) throw new Error(`getWritingProblem: ${error.message}`);
-  const row = data?.[0];
-  if (!row) return null;
-  return {
-    id: row.id,
-    title: row.title,
-    prompt: row.prompt,
-    materials: row.materials as WritingProblemMaterials,
+  const runQuery = async (withLifecycle: boolean) => {
+    let query = supabase
+      .from("problems")
+      .select(
+        withLifecycle
+          ? "id, title, prompt, question_no, materials, answer_key, rubric, lifecycle_status, lifecycle_reason"
+          : "id, title, prompt, question_no, materials, answer_key, rubric",
+      )
+      .eq("domain", "writing")
+      .eq("question_no", questionNo)
+      .eq("publish_status", "published");
+    if (withLifecycle) {
+      query = query.eq("lifecycle_status", "active");
+    }
+    // Default selection (no explicit problemId) must be DETERMINISTIC and stable.
+    // Without an ORDER BY, `.limit(1)` returns an arbitrary published row, so a
+    // direct/deep-link entry could surface a different (or incomplete) problem on
+    // each request. Order before limit so the default question always loads the
+    // same published problem.
+    query = query
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true })
+      .limit(problemId ? 1 : DEFAULT_PROBLEM_CANDIDATE_LIMIT);
+    const result = problemId ? await query.eq("id", problemId) : await query;
+    return result as unknown as WritingProblemQueryResult;
   };
+
+  let { data, error } = await runQuery(true);
+  if (error && error.message.includes("lifecycle_status")) {
+    ({ data, error } = await runQuery(false));
+  }
+  if (error) throw new Error(`getWritingProblem: ${error.message}`);
+  const problems = (data ?? []).map((row) =>
+    normalizeWritingProblemRow(row, questionNo),
+  );
+  if (problems.length === 0) return null;
+  if (problemId) return problems[0];
+  return (
+    problems.find((problem) => problem.submitBlockedReason === null) ??
+    problems[0]
+  );
 }

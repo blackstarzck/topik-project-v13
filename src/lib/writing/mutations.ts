@@ -20,14 +20,72 @@ export async function upsertDraft(
   createClient: ClientFactory = createSupabaseBrowserClient,
 ): Promise<WritingDraftRow> {
   const supabase = createClient();
+
+  // `writing_drafts_active_unique` is a partial unique index
+  // `(user_id, problem_id) where autosave_status <> 'superseded'`.
+  // PostgREST upsert cannot target that predicate, so autosave has to resolve
+  // the active draft explicitly instead of using `onConflict`.
+  const activeDraftId = await findActiveDraftId(supabase, input);
+  if (activeDraftId) {
+    const updated = await updateActiveDraft(supabase, activeDraftId, input);
+    if (updated) return updated;
+  }
+
+  const inserted = await insertDraft(supabase, input);
+  if (inserted.error && isUniqueViolation(inserted.error)) {
+    const racedDraftId = await findActiveDraftId(supabase, input);
+    if (racedDraftId) {
+      const updated = await updateActiveDraft(supabase, racedDraftId, input);
+      if (updated) return updated;
+    }
+  }
+  if (inserted.error) throw inserted.error;
+  if (!inserted.data) throw new Error("upsertDraft: empty row");
+  return inserted.data;
+}
+
+async function findActiveDraftId(
+  supabase: BrowserClient,
+  input: Pick<WritingDraftInsert, "user_id" | "problem_id">,
+): Promise<string | null> {
   const { data, error } = await supabase
     .from("writing_drafts")
-    .upsert(input, { onConflict: "user_id,problem_id" })
-    .select("*")
-    .single();
+    .select("id")
+    .eq("user_id", input.user_id)
+    .eq("problem_id", input.problem_id)
+    .neq("autosave_status", "superseded")
+    .maybeSingle();
   if (error) throw error;
-  if (!data) throw new Error("upsertDraft: empty row");
+  return data?.id ?? null;
+}
+
+async function updateActiveDraft(
+  supabase: BrowserClient,
+  draftId: string,
+  input: WritingDraftInsert,
+): Promise<WritingDraftRow | null> {
+  const { data, error } = await supabase
+    .from("writing_drafts")
+    .update(input)
+    .eq("id", draftId)
+    .neq("autosave_status", "superseded")
+    .select("*")
+    .maybeSingle();
+  if (error) throw error;
   return data;
+}
+
+function insertDraft(supabase: BrowserClient, input: WritingDraftInsert) {
+  return supabase.from("writing_drafts").insert(input).select("*").single();
+}
+
+function isUniqueViolation(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: unknown }).code === "23505"
+  );
 }
 
 export function useUpsertDraft() {

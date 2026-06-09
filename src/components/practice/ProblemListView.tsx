@@ -1,10 +1,11 @@
 "use client";
 
-import { Alert, Button, Empty, List, Space, Spin, Typography } from "antd";
+import { Alert, Button, Empty, Space, Spin, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { AppStackList } from "@/components/shared/AppStackList";
 import {
   isValidQuestionNo,
   type ProblemFilter,
@@ -194,11 +195,11 @@ export function ProblemListView({ userId }: Props) {
         />
       ) : rows.length > 0 ? (
         <>
-          <List
-            dataSource={rows}
-            renderItem={(row) => (
+          <AppStackList>
+            {rows.map((row, index) => (
               <ProblemRow
                 key={row.problemId}
+                isLast={index === rows.length - 1}
                 row={{
                   id: row.problemId,
                   domain: row.domain as never,
@@ -206,8 +207,10 @@ export function ProblemListView({ userId }: Props) {
                   topik_level: row.topikLevel ?? 0,
                   difficulty: row.difficulty,
                   title: row.title,
-                  publish_status: "published",
-                  review_status: "approved",
+                  publish_status: row.publishStatus,
+                  review_status: row.reviewStatus,
+                  lifecycle_status: row.lifecycleStatus,
+                  lifecycle_reason: row.lifecycleReason,
                   tags: row.tags,
                   updated_at: row.createdAt,
                 }}
@@ -216,8 +219,8 @@ export function ProblemListView({ userId }: Props) {
                 lastAttemptAt={row.lastAttemptAt}
                 onRetryClick={() => setRetryTarget(row)}
               />
-            )}
-          />
+            ))}
+          </AppStackList>
           {/* §5 하단 총 건수 + 페이지 이동 */}
           {totalLabel}
           <ProblemListPagination

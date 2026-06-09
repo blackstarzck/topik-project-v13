@@ -7,6 +7,7 @@ import type {
   ProblemSort,
   SolveState,
 } from "@/lib/practice/types";
+import type { Json } from "@/lib/supabase/types";
 
 /**
  * C-02 문제 목록 — list_user_problems RPC client wrapper.
@@ -21,9 +22,8 @@ import type {
  *   INVOKER, caller RLS) does status filtering + window total_count in SQL, so
  *   pagination is accurate for the filtered set.
  *
- * The RPC is not yet in the generated Supabase types, so we call it through an
- * `as never` cast (same pattern as submit_writing_with_feedback in
- * src/lib/writing/server-actions.ts) and validate the row shape at runtime.
+ * The local Supabase type mirror includes this RPC so the call stays typed;
+ * row mapping still guards nullable legacy fields for compatibility.
  */
 
 export type UserProblemRow = {
@@ -39,8 +39,12 @@ export type UserProblemRow = {
   lastAttemptAt: string | null;
   createdAt: string;
   solveState: SolveState;
-  /** Latest writing_submissions.id for solved rows → RetryModal deep-link. */
+  /** Latest writing_submissions.id for submitted rows → RetryModal deep-link. */
   latestSubmissionId: string | null;
+  lifecycleStatus: "active" | "inactive" | "expired";
+  lifecycleReason: string | null;
+  publishStatus: "draft" | "published" | "archived";
+  reviewStatus: "pending" | "approved" | "rejected";
 };
 
 export type UserProblemListResult = {
@@ -61,6 +65,17 @@ type RpcRow = {
   last_attempt_at: string | null;
   created_at: string;
   total_count: number | string | null;
+  solve_state?: string | null;
+  has_draft?: boolean | null;
+  draft_status?: string | null;
+  writing_submission_count?: number | null;
+  latest_submission_id?: string | null;
+  latest_submission_at?: string | null;
+  writing_feedback_status?: string | null;
+  lifecycle_status?: string | null;
+  lifecycle_reason?: string | null;
+  publish_status?: string | null;
+  review_status?: string | null;
 };
 
 function mapStatusFilter(
@@ -88,8 +103,8 @@ function mapSort(sort: ProblemSort): "recent" | "difficulty" {
   return "recent";
 }
 
-function buildFilterJson(filter: ProblemFilter): Record<string, unknown> {
-  const f: Record<string, unknown> = {};
+function buildFilterJson(filter: ProblemFilter): Record<string, Json> {
+  const f: Record<string, Json> = {};
   if (filter.questionNo != null) f.question_no = filter.questionNo;
   if (filter.difficulty != null) f.difficulty = filter.difficulty;
   if (filter.topikLevel != null) f.topik_level = filter.topikLevel;
@@ -102,9 +117,33 @@ function buildFilterJson(filter: ProblemFilter): Record<string, unknown> {
 }
 
 function toSolveState(row: RpcRow): SolveState {
+  if (row.solve_state === "submitted") return "submitted";
+  if (row.solve_state === "attempted") return "attempted";
+  if (row.solve_state === "none") return "none";
   if (row.is_solved) return "submitted";
   if ((row.attempt_count ?? 0) > 0) return "attempted";
   return "none";
+}
+
+function toLifecycleStatus(
+  value: string | null | undefined,
+): UserProblemRow["lifecycleStatus"] {
+  if (value === "inactive" || value === "expired") return value;
+  return "active";
+}
+
+function toPublishStatus(
+  value: string | null | undefined,
+): UserProblemRow["publishStatus"] {
+  if (value === "draft" || value === "archived") return value;
+  return "published";
+}
+
+function toReviewStatus(
+  value: string | null | undefined,
+): UserProblemRow["reviewStatus"] {
+  if (value === "pending" || value === "rejected") return value;
+  return "approved";
 }
 
 export async function fetchUserProblemsRpc(
@@ -121,50 +160,39 @@ export async function fetchUserProblemsRpc(
   > = createSupabaseBrowserClient,
 ): Promise<UserProblemListResult> {
   const supabase = createClient();
-  const { data, error } = await supabase.rpc("list_user_problems" as never, {
+  const { data, error } = await supabase.rpc("list_user_problems", {
     filter: buildFilterJson(params.filter),
     sort: mapSort(params.sort),
     page: params.page,
     page_size: params.pageSize,
-  } as never);
+  });
   if (error) throw error;
 
   const rpcRows = (data as unknown as RpcRow[]) ?? [];
   const total = rpcRows.length > 0 ? Number(rpcRows[0].total_count ?? 0) : 0;
 
-  // RetryModal "결과 보기" deep-link 를 위해 solved row 의 최신 제출 id 를 한 번에 조회.
-  const solvedIds = rpcRows
-    .filter((r) => r.is_solved)
-    .map((r) => r.problem_id);
-  const latestSubmissionByProblem = new Map<string, string>();
-  if (solvedIds.length > 0) {
-    const { data: subs } = await supabase
-      .from("writing_submissions")
-      .select("id, problem_id, submitted_at")
-      .in("problem_id", solvedIds)
-      .order("submitted_at", { ascending: false });
-    for (const s of subs ?? []) {
-      if (!latestSubmissionByProblem.has(s.problem_id)) {
-        latestSubmissionByProblem.set(s.problem_id, s.id);
-      }
-    }
-  }
-
-  const rows: UserProblemRow[] = rpcRows.map((r) => ({
-    problemId: r.problem_id,
-    title: r.title,
-    domain: r.domain,
-    topikLevel: r.topik_level,
-    questionNo: r.question_no,
-    difficulty: r.difficulty,
-    tags: Array.isArray(r.tags) ? r.tags : [],
-    attemptCount: r.attempt_count ?? 0,
-    isSolved: Boolean(r.is_solved),
-    lastAttemptAt: r.last_attempt_at,
-    createdAt: r.created_at,
-    solveState: toSolveState(r),
-    latestSubmissionId: latestSubmissionByProblem.get(r.problem_id) ?? null,
-  }));
+  const rows: UserProblemRow[] = rpcRows.map((r) => {
+    const solveState = toSolveState(r);
+    return {
+      problemId: r.problem_id,
+      title: r.title,
+      domain: r.domain,
+      topikLevel: r.topik_level,
+      questionNo: r.question_no,
+      difficulty: r.difficulty,
+      tags: Array.isArray(r.tags) ? r.tags : [],
+      attemptCount: r.attempt_count ?? 0,
+      isSolved: solveState === "submitted",
+      lastAttemptAt: r.last_attempt_at,
+      createdAt: r.created_at,
+      solveState,
+      latestSubmissionId: r.latest_submission_id ?? null,
+      lifecycleStatus: toLifecycleStatus(r.lifecycle_status),
+      lifecycleReason: r.lifecycle_reason ?? null,
+      publishStatus: toPublishStatus(r.publish_status),
+      reviewStatus: toReviewStatus(r.review_status),
+    };
+  });
   return { rows, total };
 }
 

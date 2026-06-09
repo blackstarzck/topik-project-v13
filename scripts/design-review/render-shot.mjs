@@ -87,17 +87,23 @@ async function main() {
       await page.waitForTimeout(WAIT)
       finalUrl = page.url()
 
-      // hydration / render-health heuristics
-      const errorOverlay = await page.locator('nextjs-portal, #nextjs__container_errors, [data-nextjs-dialog]').count().catch(() => 0)
+      // hydration / render-health heuristics.
+      // NOTE: <nextjs-portal> is ALWAYS present in Next dev (the dev indicator) — do NOT
+      // treat it as an error. Only the actual error DIALOG / error text counts.
+      const errorOverlay = await page.evaluate(() => {
+        if (document.querySelector('[data-nextjs-dialog], #nextjs__container_errors')) return true
+        const t = (document.body && document.body.innerText) || ''
+        return /Unhandled Runtime Error|Build Error|Failed to compile|Application error: a (client|server)-side exception/i.test(t)
+      }).catch(() => false)
       const bodyTextLen = await page.evaluate(() => (document.body && document.body.innerText ? document.body.innerText.length : 0)).catch(() => 0)
       const redirectedToLogin = /\/login(\?|$)/.test(finalUrl)
 
       const png = path.join(OUT, `${LABEL}-${width}.png`)
       await page.screenshot({ path: png, fullPage: true }).catch((e) => consoleErrors.push('screenshot: ' + e.message))
       captured += 1
-      results.push({ viewport: width, status, finalUrl, redirectedToLogin, errorOverlay: errorOverlay > 0, consoleErrorCount: consoleErrors.length, consoleErrors: consoleErrors.slice(0, 10), bodyTextLen, png })
+      results.push({ viewport: width, status, finalUrl, redirectedToLogin, errorOverlay, consoleErrorCount: consoleErrors.length, consoleErrors: consoleErrors.slice(0, 10), bodyTextLen, png })
       await context.close()
-      console.log(`shot ${LABEL}-${width}.png  status=${status} overlay=${errorOverlay > 0} bodyLen=${bodyTextLen} consoleErr=${consoleErrors.length}${redirectedToLogin ? ' [REDIRECTED-TO-LOGIN]' : ''}`)
+      console.log(`shot ${LABEL}-${width}.png  status=${status} errorOverlay=${errorOverlay} bodyLen=${bodyTextLen} consoleErr=${consoleErrors.length}${redirectedToLogin ? ' [REDIRECTED-TO-LOGIN]' : ''}`)
     }
   } finally {
     await browser.close()

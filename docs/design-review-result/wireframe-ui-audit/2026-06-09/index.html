@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Wireframe UI Audit - 전체 사용자 화면 - 2026-06-09</title>
+    <style>
+      body { font-family: -apple-system, "Segoe UI", Roboto, "Noto Sans KR", sans-serif; color:#202124; max-width:1180px; margin:0 auto; padding:24px; line-height:1.6; }
+      h1 { font-size:24px; border-bottom:3px solid #1a73e8; padding-bottom:8px; }
+      h2 { font-size:19px; margin-top:32px; border-left:4px solid #1a73e8; padding-left:10px; }
+      table { border-collapse:collapse; width:100%; font-size:13px; margin:12px 0; }
+      th,td { border:1px solid #dadce0; padding:6px 9px; text-align:left; vertical-align:top; }
+      th { background:#f1f3f4; }
+      code { background:#f1f3f4; padding:1px 5px; border-radius:4px; font-size:12px; }
+      .verdict { font-size:22px; font-weight:700; color:#fff; background:#137333; display:inline-block; padding:6px 18px; border-radius:8px; }
+      .kpi { display:inline-block; background:#e8f0fe; border-radius:8px; padding:8px 14px; margin:4px 6px 4px 0; font-size:14px; }
+      pre { background:#202124; color:#e8eaed; padding:12px; border-radius:8px; overflow:auto; font-size:12px; }
+      .muted { color:#5f6368; }
+    </style>
+  </head>
+  <body>
+    <h1>Wireframe UI Audit — 전체 사용자 화면 — 2026-06-09</h1>
+    <p><strong>Scope:</strong> docs/Wireframe/** 전체 39 폴더 (사용자/공개 35, admin-frozen 4 제외) · <code>src/lib/routes.ts</code> 매핑 기준</p>
+    <p><strong>Mode:</strong> audit → apply-safe(사용자 승인 fix) → verify (회귀)</p>
+    <p><strong>Coverage:</strong> 사용자/공개 35개 — pass 32, conditional 1, deferred 2 · admin-frozen 4개 범위 밖 · unmapped 0</p>
+
+    <h2>Verdict</h2>
+    <p><span class="verdict">PASS</span></p>
+    <p>직전 사이클의 차단 등급(P0/P1)이 모두 해소되었습니다. <strong>P0 0건</strong>, <strong>미해결 P1 0건</strong>.
+       쓰기 3대 P1(① 기본 선택 정렬 ② q52 완성 콘텐츠 부재 ③ X-16 하이드레이션)을 코드+데이터 수정으로 해결하고
+       e2e 게이트로 검증했습니다. 남은 항목은 비차단 P2/Nit과, DB 마이그레이션 적용(Docker)만 남은 C-02/C-03(Deferred)뿐입니다.
+       이들은 핵심 학습 흐름(문제선택→작성→제출→피드백→비교→보관함)을 막지 않습니다.</p>
+
+    <div>
+      <span class="kpi">P0: <strong>0</strong></span>
+      <span class="kpi">미해결 P1: <strong>0</strong></span>
+      <span class="kpi">이번 사이클 해결 P1: <strong>3</strong></span>
+      <span class="kpi">e2e: <strong>95 passed / 0 failed</strong></span>
+      <span class="kpi">Deferred: <strong>7</strong></span>
+    </div>
+
+    <h2>이번 회귀 사이클에서 적용한 수정 (apply-safe)</h2>
+    <table>
+      <thead><tr><th>id</th><th>severity</th><th>route</th><th>category</th><th>claim(이전 상태)</th><th>fix</th><th>evidence</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>W-P1-1</code></td>
+          <td><strong style="color:#137333">P1→RESOLVED</strong></td>
+          <td><code>/writing/* (기본 진입)</code></td>
+          <td>data-flow/code</td>
+          <td>getWritingProblem이 problemId 없을 때 ORDER BY 없이 .limit(1) → 직접/딥링크 진입이 임의(때로 빈) 문제를 로드.</td>
+          <td>server.ts: 기본 선택에 .order(created_at asc).order(id asc) 추가(결정적). + 빈 placeholder unpublish.</td>
+          <td>src/lib/writing/server.ts diff; DB published q51 91→90·q53 47→46·q54 82→81; 캡처 D-01/D-03/D-04.</td>
+        </tr>
+        <tr>
+          <td><code>W-P1-2</code></td>
+          <td><strong style="color:#137333">P1→RESOLVED(dev)</strong></td>
+          <td><code>/writing/answer-writing-52</code></td>
+          <td>data/content</td>
+          <td>q52 published가 빈 placeholder 1개뿐 → D-02 작성 불가(막다른 길).</td>
+          <td>완성 q52 wireframe fixture 5개 publish(dev). 빈 placeholder unpublish. prod publish는 admin 결정(escalate).</td>
+          <td>DB published q52 1→5; 캡처 D-02(완성 문제·submit 활성); seed.sql q52 publish UPDATE.</td>
+        </tr>
+        <tr>
+          <td><code>X16-P1-3</code></td>
+          <td><strong style="color:#137333">P1→RESOLVED</strong></td>
+          <td><code>/password-reset/confirm</code></td>
+          <td>render/hydration</td>
+          <td>만료시각을 useState lazy-init으로 계산 → 클라 하이드레이션 시 재실행되어 서버(null)와 불일치(React 하이드레이션 에러).</td>
+          <td>PasswordResetConfirmForm: useState(null) + useEffect로 마운트 후 설정.</td>
+          <td>컴포넌트 diff; e2e screens-public X-16 3뷰포트 GREEN(이전 3 FAIL).</td>
+        </tr>
+        <tr>
+          <td><code>TITLE-P2</code></td>
+          <td><strong style="color:#137333">P2→RESOLVED(부수)</strong></td>
+          <td><code>/writing/52·53·54</code></td>
+          <td>copy</td>
+          <td>제목 이중접두사 '52번 — TOPIK 52번 — …'(placeholder 제목이 'TOPIK NN번 —' 포함).</td>
+          <td>근본원인이던 placeholder unpublish → fixture(깨끗한 제목) 로드로 자연 해소.</td>
+          <td>fixture 제목 예: '기숙사 방 변경 문의'(접두사 없음); 캡처.</td>
+        </tr>
+        <tr>
+          <td><code>ALERT-P2</code></td>
+          <td><strong style="color:#137333">P2→RESOLVED</strong></td>
+          <td><code>/writing/* (차단 Alert)</code></td>
+          <td>antd/tech-debt</td>
+          <td>WritingEditor/LongFormEditor의 antd Alert가 폐기된 message= prop 사용 → console.error.</td>
+          <td>message= → title=(코드베이스 다른 Alert와 정렬).</td>
+          <td>WritingEditor.tsx:235·LongFormEditor.tsx:363 diff.</td>
+        </tr>
+        <tr>
+          <td><code>TC-FIX</code></td>
+          <td><strong style="color:#137333">회귀차단→RESOLVED</strong></td>
+          <td><code>src/lib/writing/server.ts</code></td>
+          <td>build/typecheck</td>
+          <td>동시 리팩터가 normalizeWritingProblemRow(questionNo: QuestionNo)를 추가했으나 QuestionNo 타입 미import → tsc TS2304(런타임 SWC는 무시해 e2e는 통과, 그러나 pnpm typecheck/build 실패). e2e만으로는 못 잡는 회귀.</td>
+          <td>server.ts의 type import에 QuestionNo 추가.</td>
+          <td>pnpm typecheck exit 0(수정 후). 적대적 verify에서 적발.</td>
+        </tr>
+        <tr>
+          <td><code>C02-DEF</code></td>
+          <td><strong style="color:#9334e6">DEFERRED</strong></td>
+          <td><code>/practice/problems · C-03</code></td>
+          <td>env/migration</td>
+          <td>라이브 list_user_problems가 구버전 → 쓰기 solve_state가 제출을 반영 못함 → C-03 도달 불가.</td>
+          <td>신규 RPC 마이그레이션 20260609120000(제출 기반 solve_state) + 클라 코드 작성 완료. 단 이 환경은 DDL 적용 불가(supabase CLI/Docker 없음) — lifecycle #31/#32와 동일 버킷.</td>
+          <td>live RPC probe hasNewCols=false; 마이그레이션 파일 + problem-list-data.ts 준비됨.</td>
+        </tr>
+        <tr>
+          <td><code>P2-MISC</code></td>
+          <td><strong style="color:#b06000">P2/Nit(비차단)</strong></td>
+          <td><code>X-11·X-03/04·F-M1·E-01/02·A-01/02</code></td>
+          <td>polish</td>
+          <td>legacyBehavior Link(X-11 otp), IA코드 노출(X-03/04), PDF 미리보기 UUID(F-M1), CTA 5개&gt;4(E-01/02), CTA 비활성 정책(A-01/02).</td>
+          <td>비차단 폴리시/카피/라벨 — 핵심 흐름 영향 없음. 후속 정리 대상으로 문서화.</td>
+          <td>직전 캡처(.design-review-shots/20260609) + 소스.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="muted">코드: <code>src/lib/writing/server.ts</code>(정렬), <code>src/components/auth/PasswordResetConfirmForm.tsx</code>(하이드레이션),
+       <code>src/components/writing/WritingEditor.tsx</code>·<code>LongFormEditor.tsx</code>(antd Alert title).
+       데이터(dev): 빈 예시 4건 unpublish + 완성 q52 5건 publish(라이브 + <code>supabase/seed.sql</code> reset 재현성).</p>
+
+    <h2>DB 상태 (published writing problems, before → after)</h2>
+    <table>
+      <thead><tr><th>question_no</th><th>before</th><th>after</th><th>비고</th></tr></thead>
+      <tbody>
+        <tr><td>q51</td><td>91</td><td>90</td><td>빈 예시 1111 unpublish</td></tr>
+        <tr><td>q52</td><td>1</td><td>5</td><td>빈 예시 2222 unpublish + 완성 fixture 5 publish</td></tr>
+        <tr><td>q53</td><td>47</td><td>46</td><td>빈 예시 3333 unpublish</td></tr>
+        <tr><td>q54</td><td>82</td><td>81</td><td>빈 예시 4444 unpublish</td></tr>
+      </tbody>
+    </table>
+
+    <h2>화면별 결과 (39)</h2>
+    <table>
+      <thead><tr><th>IA</th><th>분류</th><th>route</th><th>verdict</th><th>ref images</th><th>note</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>A-01</td>
+          <td><span style="background:#188038;color:#fff;padding:1px 7px;border-radius:10px;font-size:11px">public-active</span></td>
+          <td><code>/sign-up</code></td>
+          <td><strong style="color:#137333">pass</strong></td>
+          <td>complete</td>
+          <td>명세 강부합. CTA 비활성 정책(P2/정책).</td>
+        </tr>
+        <tr>
+          <td>A-02</td>
+          <td><span style="background:#188038;color:#fff;padding:1px 7px;border-radius:10px;font-size:11px">public-active</span></td>
+          <td><code>/login</code></td>
+          <td><strong style="color:#137333">pass</strong></td>
+          <td>complete</td>
+          <td>하이드레이션 정상. 소셜 미노출·CTA 정책(P2).</td>
+        </tr>
+        <tr>
+          <td>A-03</td>
+          <td><span style="background:#1a73e8;color:#fff;padding:1px 7px;border-radius:10px;font-size:11px">user-active</span></td>
+          <td><code>/onboarding/learning-goal</code></td>
+          <td><strong style="color:#137333">pass</strong></td>
+          <td>complete</td>
+          <td>명세 강부합.</td>
+        </tr>
+        <tr>
+          <td>B-01</td>
+          <td><span style="background:#1a73e8;color:#fff;padding:1px 7px;border-radius:10px;font-size:11px">user-active</span></td>
+          <td><code>/dashboard</code></td>
+          <td><strong style="color:#137333">pass</strong></td>
+          <td>complete</td>
+          <td>명세 강부합.</td>
+        </tr>
+        <tr>
+          <td>C-01</td>
+          <td><span style="background:#1a73e8;color:#fff;padding:1px 7px;border-radius:10px;font-size:11px">user-active</span></td>
+          <td><code>/practice/recommendations</code></td>
+          <td><strong style="color:#137333">pass</strong></td>
+          <td>complete</td>
+          <td>추천 렌더 정상(52 막다른길은 데이터 fix로 해소).</td>
+        </tr>
+        <tr>
+          <td>C-02</td>
+          <td><span style="background:#1a73e8;color:#fff;padding:1px 7px;border-radius:10px;font-size:11px">user-active</span></td>
+          <td><code>/practice/problems</code></td>
+          <td><strong style="color:#b06000">conditional</strong></td>
+          <td>complete</td>
+          <td>목록 렌더 정상. solve_state 라이브 미반영은 RPC DDL 대기(Deferred).</td>
+        </tr>
+        <tr>
+          <td>C-03</td>
+          <td><span style="background:#9334e6;color:#fff;padding:1px 7px;border-radius:10px;font-size:11px">modal-transient</span></td>
+          <td><code>(host C-02)</code></td>
+          <td><strong style="color:#9334e6">deferred</strong></td>
+          <td>complete</td>
+          <td>solve_state RPC DDL 미적용으로 트리거 도달 불가 — 소스+SOT로 평가.</td>
+        </tr>
+        <tr>
+          <td>D-01</td>
+          <td><span style="background:#1a73e8;color:#fff;padding:1px 7px;border-radius:10px;font-size:11px">user-active</span></td>
+          <td><code>/writing/short-answer-writing-51</code></td>
+          <td><strong style="color:#137333">pass</strong></td>
+          <td>complete</td>
+          <td>기본 진입이 완성 문제 로드(정렬 fix).</td>
+        </tr>
+        <tr>
+          <td>D-02</td>
+          <td><span style="background:#1a73e8;color:#fff;padding:1px 7px;border-radius:10px;font-size:11px">user-active</span></td>
+          <td><code>/writing/answer-writing-52</code></td>
+          <td><strong style="color:#137333">pass</strong></td>
+          <td>complete</td>
+          <td>완성 q52 publish + 정렬 fix → 작성 가능(이전 P1 해소).</td>
+        </tr>
+        <tr>
+          <td>D-03</td>
+          <td><span style="background:#1a73e8;color:#fff;padding:1px 7px;border-radius:10px;font-size:11px">user-active</span></td>
+          <td><code>/writing/long-form-writing-53</code></td>
+          <td><strong style="color:#137333">pass</strong></td>
+          <td>complete</td>
+          <td>기본 진입이 완성 문제 로드(정렬 fix + 빈 예시 unpublish).</td>
+        </tr>
+        <tr>
+          <td>D-04</td>
+          <td><span style="background:#1a73e8;color:#fff;padding:1px 7px;border-radius:10px;font-size:11px">user-active</span></td>
+          <td><code>/writing/essay-writing-54</code></td>
+          <td><strong style="color:#137333">pass</strong></td>
+          <td>complete</td>
+          <td>기본 진입이 완성 문제 로드(정렬 fix + 빈 예시 unpublish).</td>
+        </tr>
+        <tr>
+          <td>D-M1</td>
+          <td><span style="background:#9334e6;color:#fff;padding:1px 7px;border-radius:10px;font-size:11px">modal-transient</span></td>
+          <td><code>(host writing)</code></td>
+          <td><strong style="color:#137333">pass</strong></td>
+          <td>complete</td>
+          <td>제출 확인 모달 — flow e2e로 실측 통과.</td>
+        </tr>
+        <tr>
+          <td>D-M2</td>
+          <td><span style="background:#9334e6;color:#fff;padding:1px 7px;border-radius:10px;font-size:11px">modal-transient</span></td>
+          <td><code>(host submit)</code></td>
+          <td><strong style="color:#9334e6">deferred</strong></td>
+          <td>complete</td>
+          <td>transient(mock 즉시 resolve) — 소스+SOT 평가. 가짜 성공 없음.</td>
+        </tr>
+        <tr>
+          <td>E-01</td>
+          <td><span style="background:#00838f;color:#fff;padding:1px 7px;border-radius:10px;font-size:11px">dynamic-id</span></td>
+          <td><code>/writing/feedback/short/:id</code></td>
+          <td><strong style="color:#137333">pass</strong></td>
+          <td>complete</td>
+          <td>시드 제출로 렌더 정상. CTA 5개(&gt;4)는 P2.</td>
+        </tr>
+        <tr>
+          <td>E-02</td>
+          <td><span style="background:#00838f;color:#fff;padding:1px 7px;border-radius:10px;font-size:11px">dynamic-id</span></td>
+          <td><code>/writing/feedback/long/:id</code></td>
+          <td><strong style="color:#137333">pass</strong></td>
+          <td>complete</td>
+          <td>렌더 정상. 문장첨삭 라이브는 시드 한계(Deferred). CTA 5개 P2.</td>
+        </tr>
+        <tr>
+          <td>R-01</td>
+          <td><span style="background:#00838f;color:#fff;padding:1px 7px;border-radius:10px;font-size:11px">dynamic-id</span></td>
+          <td><code>/writing/reports/:id/compare</code></td>
+          <td><strong style="color:#137333">pass</strong></td>
+          <td>complete</td>
+          <td>flow e2e로 생성·렌더 통과. 전후비교 실측은 부분.</td>
+        </tr>
+        <tr>
+          <td>R-02</td>
+          <td><span style="background:#1a73e8;color:#fff;padding:1px 7px;border-radius:10px;font-size:11px">user-active</span></td>
+          <td><code>/practice/next</code></td>
+          <td><strong style="color:#137333">pass</strong></td>
+          <td>complete</td>
+          <td>추천 렌더 정상(52 막다른길 데이터 fix로 해소).</td>
+        </tr>
+        <tr>
+          <td>F-01</td>
+          <td><span style="background:#1a73e8;color:#fff;padding:1px 7px;border-radius:10px;font-size:11px">user-active</span></td>
+          <td><code>/library</code></td>
+          <td><strong style="color:#137333">pass</strong></td>
+          <td>complete</td>
+          <td>flow e2e로 저장·렌더 통과. 항목 라벨 UUID는 P2.</td>
+        </tr>
+        <tr>
+          <td>F-M1</td>
+          <td><span style="background:#9334e6;color:#fff;padding:1px 7px;border-radius:10px;font-size:11px">modal-transient</span></td>
+          <td><code>(host /library)</code></td>
+          <td><strong style="color:#137333">pass</strong></td>
+          <td>complete</td>
+          <td>flow e2e로 모달 오픈 통과. 미리보기 UUID 라벨 P2.</td>
+        </tr>
+        <tr>
+          <td>G-01</td>
+          <td><span style="background:#1a73e8;color:#fff;padding:1px 7px;border-radius:10px;font-size:11px">user-active</span></td>
+          <td><code>/settings/language</code></td>
+          <td><strong style="color:#137333">pass</strong></td>
+          <td>complete</td>
+          <td>명세 강부합.</td>
+        </tr>
+        <tr>
+          <td>H-01</td>
+          <td><span style="background:#9aa0a6;color:#fff;padding:1px 7px;border-radius:10px;font-size:11px">admin-frozen</span></td>
+          <td><code>/admin/problems</code></td>
+          <td><strong style="color:#9aa0a6">admin-frozen</strong></td>
+          <td>missing-hifi</td>
+          <td>관리자 동결 — 범위 밖(별도 admin 앱).</td>
+        </tr>
+        <tr>
+          <td>D-M3</td>
+          <td><span style="background:#9334e6;color:#fff;padding:1px 7px;border-radius:10px;font-size:11px">modal-transient</span></td>
+          <td><code>(host writing)</code></td>
+          <td><strong style="color:#137333">pass</strong></td>
+          <td>complete</td>
+          <td>자동저장 경고 — 명세 강부합.</td>
+        </tr>
+        <tr>
+          <td>X-01</td>
+          <td><span style="background:#188038;color:#fff;padding:1px 7px;border-radius:10px;font-size:11px">public-active</span></td>
+          <td><code>/</code></td>
+          <td><strong style="color:#137333">pass</strong></td>
+          <td>complete</td>
+          <td>명세 강부합.</td>
+        </tr>
+        <tr>
+          <td>X-02</td>
+          <td><span style="background:#1a73e8;color:#fff;padding:1px 7px;border-radius:10px;font-size:11px">user-active</span></td>
+          <td><code>/growth</code></td>
+          <td><strong style="color:#137333">pass</strong></td>
+          <td>complete</td>
+          <td>렌더 정상. 유료 본문은 free 계정 한계(Deferred). '기본 지표' 카피 P2.</td>
+        </tr>
+        <tr>
+          <td>X-03</td>
+          <td><span style="background:#1a73e8;color:#fff;padding:1px 7px;border-radius:10px;font-size:11px">user-active</span></td>
+          <td><code>/paywall</code></td>
+          <td><strong style="color:#137333">pass</strong></td>
+          <td>complete</td>
+          <td>렌더 정상. IA코드 'X-03' 노출·할인율 P2.</td>
+        </tr>
+        <tr>
+          <td>X-04</td>
+          <td><span style="background:#1a73e8;color:#fff;padding:1px 7px;border-radius:10px;font-size:11px">user-active</span></td>
+          <td><code>/subscription</code></td>
+          <td><strong style="color:#137333">pass</strong></td>
+          <td>complete</td>
+          <td>렌더 정상. IA코드 'X-04' 노출 P2.</td>
+        </tr>
+        <tr>
+          <td>X-05</td>
+          <td><span style="background:#1a73e8;color:#fff;padding:1px 7px;border-radius:10px;font-size:11px">user-active</span></td>
+          <td><code>/profile</code></td>
+          <td><strong style="color:#137333">pass</strong></td>
+          <td>complete</td>
+          <td>명세 강부합. 회원탈퇴 미지원 정직 고지.</td>
+        </tr>
+        <tr>
+          <td>X-06</td>
+          <td><span style="background:#188038;color:#fff;padding:1px 7px;border-radius:10px;font-size:11px">public-active</span></td>
+          <td><code>/password-reset</code></td>
+          <td><strong style="color:#137333">pass</strong></td>
+          <td>complete</td>
+          <td>렌더 정상.</td>
+        </tr>
+        <tr>
+          <td>X-07</td>
+          <td><span style="background:#1a73e8;color:#fff;padding:1px 7px;border-radius:10px;font-size:11px">user-active</span></td>
+          <td><code>/practice/weakness</code></td>
+          <td><strong style="color:#137333">pass</strong></td>
+          <td>complete</td>
+          <td>렌더 정상. 유료 본문 free 계정 한계(Deferred).</td>
+        </tr>
+        <tr>
+          <td>X-08</td>
+          <td><span style="background:#9aa0a6;color:#fff;padding:1px 7px;border-radius:10px;font-size:11px">admin-frozen</span></td>
+          <td><code>/admin/org</code></td>
+          <td><strong style="color:#9aa0a6">admin-frozen</strong></td>
+          <td>missing-hifi</td>
+          <td>관리자 동결 — 범위 밖.</td>
+        </tr>
+        <tr>
+          <td>X-09</td>
+          <td><span style="background:#1a73e8;color:#fff;padding:1px 7px;border-radius:10px;font-size:11px">user-active</span></td>
+          <td><code>/settings/notifications</code></td>
+          <td><strong style="color:#137333">pass</strong></td>
+          <td>complete</td>
+          <td>렌더 정상. 미구현 '준비 중' 정직 고지.</td>
+        </tr>
+        <tr>
+          <td>X-10</td>
+          <td><span style="background:#9aa0a6;color:#fff;padding:1px 7px;border-radius:10px;font-size:11px">admin-frozen</span></td>
+          <td><code>/admin/users</code></td>
+          <td><strong style="color:#9aa0a6">admin-frozen</strong></td>
+          <td>missing-hifi</td>
+          <td>관리자 동결 — 범위 밖.</td>
+        </tr>
+        <tr>
+          <td>X-11</td>
+          <td><span style="background:#188038;color:#fff;padding:1px 7px;border-radius:10px;font-size:11px">public-active</span></td>
+          <td><code>/auth/error</code></td>
+          <td><strong style="color:#137333">pass</strong></td>
+          <td>missing-both</td>
+          <td>reduced-reference. 렌더 정상. legacyBehavior Link(P2/tech-debt).</td>
+        </tr>
+        <tr>
+          <td>X-12</td>
+          <td><span style="background:#188038;color:#fff;padding:1px 7px;border-radius:10px;font-size:11px">public-active</span></td>
+          <td><code>/auth/verify-email</code></td>
+          <td><strong style="color:#137333">pass</strong></td>
+          <td>missing-both</td>
+          <td>reduced-reference. 렌더 정상.</td>
+        </tr>
+        <tr>
+          <td>X-13</td>
+          <td><span style="background:#188038;color:#fff;padding:1px 7px;border-radius:10px;font-size:11px">public-active</span></td>
+          <td><code>/terms</code></td>
+          <td><strong style="color:#137333">pass</strong></td>
+          <td>missing-both</td>
+          <td>reduced-reference. 정직성 모범(외부 LLM 전송 고지).</td>
+        </tr>
+        <tr>
+          <td>X-14</td>
+          <td><span style="background:#188038;color:#fff;padding:1px 7px;border-radius:10px;font-size:11px">public-active</span></td>
+          <td><code>/privacy</code></td>
+          <td><strong style="color:#137333">pass</strong></td>
+          <td>missing-both</td>
+          <td>reduced-reference. 정직성 모범.</td>
+        </tr>
+        <tr>
+          <td>X-15</td>
+          <td><span style="background:#9aa0a6;color:#fff;padding:1px 7px;border-radius:10px;font-size:11px">admin-frozen</span></td>
+          <td><code>/admin</code></td>
+          <td><strong style="color:#9aa0a6">admin-frozen</strong></td>
+          <td>missing-both</td>
+          <td>관리자 동결 — 범위 밖.</td>
+        </tr>
+        <tr>
+          <td>X-16</td>
+          <td><span style="background:#188038;color:#fff;padding:1px 7px;border-radius:10px;font-size:11px">public-active</span></td>
+          <td><code>/password-reset/confirm</code></td>
+          <td><strong style="color:#137333">pass</strong></td>
+          <td>missing-both</td>
+          <td>하이드레이션 P1 해소(useEffect). e2e 3뷰포트 GREEN.</td>
+        </tr>
+        <tr>
+          <td>X-17</td>
+          <td><span style="background:#188038;color:#fff;padding:1px 7px;border-radius:10px;font-size:11px">public-active</span></td>
+          <td><code>/auth/callback-fragment</code></td>
+          <td><strong style="color:#137333">pass</strong></td>
+          <td>missing-both</td>
+          <td>reduced-reference. transient fallback — 크래시 없음(e2e).</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Evidence Images</h2>
+    <figure style="margin:0 0 16px">
+      <img src="screenshots/09-D-02-answer-writing-52/current-1280.png" alt="D-02 (52번 답안 작성, 1280)" style="max-width:100%;border:1px solid #dadce0;border-radius:8px" />
+      <figcaption style="color:#5f6368;font-size:13px;margin-top:4px">D-02 (52번 답안 작성, 1280) — 완성 q52 문제(장마철 빨래)·빈칸 정보·작성 조건(필수 ㄱ/ㄴ)·평가 기준(내용/구성/언어)·작성 팁 패널·에디터 렌더. 차단 Alert 없음. 제목 이중접두사 없음(이전 P1·P2 동시 해소).</figcaption>
+    </figure>
+    <figure style="margin:0 0 16px">
+      <img src="screenshots/09-D-02-answer-writing-52/current-360.png" alt="D-02 모바일(360)" style="max-width:100%;border:1px solid #dadce0;border-radius:8px" />
+      <figcaption style="color:#5f6368;font-size:13px;margin-top:4px">D-02 모바일(360) — 반응형 정상 — 차단 없음.</figcaption>
+    </figure>
+    <figure style="margin:0 0 16px">
+      <img src="screenshots/08-D-01-short-answer-writing-51/current-1280.png" alt="D-01 (51번 단답, 1280)" style="max-width:100%;border:1px solid #dadce0;border-radius:8px" />
+      <figcaption style="color:#5f6368;font-size:13px;margin-top:4px">D-01 (51번 단답, 1280) — 기본 진입이 완성 ㄱ/ㄴ 문제 로드(정렬+완성선택 fix).</figcaption>
+    </figure>
+    <figure style="margin:0 0 16px">
+      <img src="screenshots/10-D-03-long-form-writing-53/current-1280.png" alt="D-03 (53번 장문, 1280)" style="max-width:100%;border:1px solid #dadce0;border-radius:8px" />
+      <figcaption style="color:#5f6368;font-size:13px;margin-top:4px">D-03 (53번 장문, 1280) — 기본 진입이 완성 문제 로드(빈 예시 unpublish).</figcaption>
+    </figure>
+    <figure style="margin:0 0 16px">
+      <img src="screenshots/11-D-04-essay-writing-54/current-1280.png" alt="D-04 (54번 에세이, 1280)" style="max-width:100%;border:1px solid #dadce0;border-radius:8px" />
+      <figcaption style="color:#5f6368;font-size:13px;margin-top:4px">D-04 (54번 에세이, 1280) — 기본 진입이 완성 문제 로드.</figcaption>
+    </figure>
+    <figure style="margin:0 0 16px">
+      <img src="screenshots/06-C-02-problem-list/current-1280.png" alt="C-02 (문제 목록, 1280)" style="max-width:100%;border:1px solid #dadce0;border-radius:8px" />
+      <figcaption style="color:#5f6368;font-size:13px;margin-top:4px">C-02 (문제 목록, 1280) — 목록 렌더 정상(solve_state 라이브 반영은 RPC DDL 대기).</figcaption>
+    </figure>
+    <figure style="margin:0 0 16px">
+      <img src="screenshots/38-X-16-password-reset-confirm/current-1280.png" alt="X-16 (새 비밀번호 설정, 1280)" style="max-width:100%;border:1px solid #dadce0;border-radius:8px" />
+      <figcaption style="color:#5f6368;font-size:13px;margin-top:4px">X-16 (새 비밀번호 설정, 1280) — 하이드레이션 에러/오버레이 없이 렌더(useEffect fix). e2e 3뷰포트 GREEN.</figcaption>
+    </figure>
+
+    <h2>Deferred (정직 고지)</h2>
+    <ul>
+      <li><strong>C-02 solve_state / C-03 다시풀기 모달</strong>: 신규 RPC(20260609120000)·클라 코드 준비 완료, DB DDL 적용은 Docker 환경 대기(이 환경 supabase CLI 없음). lifecycle #31/#32와 동일.</li>
+      <li><strong>E-02 문장첨삭 라이브</strong>: 시드 없음. <strong>R-01 전후비교</strong>: 이전 제출 시드 한계. <strong>X-02/X-07 유료 본문</strong>: free 계정. <strong>D-M2 로딩 단계·X-17 정상 fragment</strong>: transient.</li>
+      <li><strong>admin 4개(H-01·X-08·X-10·X-15)</strong>: 별도 admin 앱 소관 — 범위 밖(동결).</li>
+    </ul>
+
+    <h2>Evidence</h2>
+    <ul>
+      <li>e2e: <code>pnpm test:e2e</code> — 95 passed / 0 failed / 2 skipped (4.2m). X-16 하이드레이션 3뷰포트(360/768/1280) GREEN(이전 3 FAIL). core-writing-flow GREEN(19.5s). (로그 <code>.scratch/audit-2026-06-09/e2e-after.log</code>)</li>
+      <li>라이브 DB probe(읽기전용, 카운트만): <code>.scratch/audit-2026-06-09/probe.mjs</code> / 데이터 fix: <code>apply-data-fixes.mjs</code></li>
+      <li>캡처: <code>scripts/design-review/render-shot.mjs</code> 기반(public=localhost, authed=127.0.0.1+storageState)</li>
+      <li>Docs consulted: docs/Wireframe/&lt;각 화면&gt;/{description,functional-spec,screen-data-summary}.md (+ hifi/wireframe.png), docs/sitemap.md, docs/ia.md, docs/ant-design/07-review-checklist.md, AGENTS.md, docs/README.md, src/lib/routes.ts</li>
+      <li>직전 사이클 기준선: <code>docs/design-review-result/20260609-wireframe-page-review/</code></li>
+    </ul>
+
+    <h2>Verification</h2>
+    <ul>
+      <li><code>pnpm typecheck</code> — exit 0 (워킹트리, 동시 리팩터 포함 컴파일 정상)</li>
+      <li><code>pnpm test:e2e</code> — 95 passed / 0 failed / 2 skipped (4.2m). X-16 하이드레이션 3뷰포트(360/768/1280) GREEN(이전 3 FAIL). core-writing-flow GREEN(19.5s). · X-16 하이드레이션 3뷰포트 GREEN 전환(이전 FAIL) · core-writing-flow GREEN</li>
+      <li>라이브 캡처로 쓰기 51–54 기본 진입이 완성 문제를 로드하고 submit 활성임을 확인</li>
+      <li><strong>잔여 리스크</strong>: C-02/C-03는 DB 마이그레이션 적용 전까지 라이브에서 미반영(코드/마이그레이션은 준비됨). dev/mock 기준 — 실 운영 데이터·실 AI·실 결제와 다를 수 있음.</li>
+      <li><strong>동시 작업 주의</strong>: 워킹트리에 writing/practice 리팩터 미커밋 변경(타 세션) 존재. 본 수정은 그 위에 최소 추가했고, 커밋은 사용자 관리 영역(섞임 방지).</li>
+    </ul>
+    <p class="muted">생성: talkpik-wireframe-ui-audit (HTML report 버전) · 2026-06-09</p>
+  </body>
+</html>

@@ -544,6 +544,8 @@
       "startProblem": "Bắt đầu",
       "statusPublished": "Công khai",
       "statusUnpublished": "Riêng tư",
+      "statusInactive": "Không hoạt động",
+      "statusExpired": "Hết hạn",
       "lastAttempt": "Lần thử cuối: {date}",
       "attemptCount": "{count} lần thử"
     },
@@ -930,7 +932,12 @@
       "toProblemList": "Đến danh sách câu hỏi"
     },
     "prompt": {
-      "heading": "Câu {questionNo} — {title}"
+      "heading": "Câu {questionNo} — {title}",
+      "blanksLabel": "Thông tin chỗ trống",
+      "writingTasksLabel": "Yêu cầu viết",
+      "definitionLabel": "Chủ đề",
+      "backgroundLabel": "Bối cảnh",
+      "requiredQuestionsLabel": "Ý bắt buộc"
     },
     "editor": {
       "materialsTitle": "Tài liệu đề bài",
@@ -948,6 +955,7 @@
       "blurTooLong": "Bạn đã vượt quá tối đa {hardMax} ký tự. (hiện tại {charCount})",
       "saveDraft": "Lưu nháp",
       "submit": "Nộp bài",
+      "submitBlockedProblemData": "Không tải được điều kiện của câu hỏi nên chưa thể nộp bài. Hãy mở lại câu hỏi.",
       "tab53Intro": "Mở bài",
       "tab53Body": "Thân bài",
       "tab53Conclusion": "Kết bài",
@@ -1038,6 +1046,7 @@
       "altImage": "Hình ảnh tham khảo của đề",
       "altAudio": "Âm thanh tham khảo của đề",
       "imageLoadFailed": "Không thể tải hình ảnh. ({alt})",
+      "unitLabel": "Đơn vị: {unit}",
       "zoom": "Phóng to"
     },
     "help": {

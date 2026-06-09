@@ -6,7 +6,6 @@ import { HelpPanel } from "./HelpPanel";
 import { ReferenceMaterials, type ProblemAsset } from "./ReferenceMaterials";
 import { WritingEditor } from "./WritingEditor";
 import { LongFormEditor } from "./LongFormEditor";
-import type { ProblemRubric } from "./ConditionsPanel";
 import { writingQuestionHref } from "@/lib/writing/routes";
 import { isLongForm } from "@/lib/writing/types";
 import type { QuestionNo, WritingDraftRow } from "@/lib/writing/types";
@@ -18,7 +17,6 @@ type Props = {
   problem: WritingProblem | null;
   draft: WritingDraftRow | null;
   assets?: ProblemAsset[];
-  rubric?: ProblemRubric;
 };
 
 export async function WritingPageContent({
@@ -27,7 +25,6 @@ export async function WritingPageContent({
   problem,
   draft,
   assets = [],
-  rubric = null,
 }: Props) {
   const t = await getTranslations("writing.page");
   if (!problem) {
@@ -52,20 +49,21 @@ export async function WritingPageContent({
       <Col xs={24} lg={17}>
         <div style={{ display: "grid", gap: 16 }}>
           <QuestionPrompt
-            questionNo={questionNo}
-            title={problem.title}
-            prompt={problem.prompt}
+            problem={problem}
           />
           {/* D §3 — 참고 이미지/자료 영역 (자료 없으면 null). */}
-          <ReferenceMaterials assets={assets} />
+          <ReferenceMaterials
+            assets={assets}
+            materials={problem.referenceMaterials}
+          />
           {isLongForm(questionNo) ? (
             <LongFormEditor
               userId={userId}
               problemId={problem.id}
               questionNo={questionNo as 53 | 54}
               initialDraft={draft}
-              problemMaterials={problem.materials}
-              rubric={rubric}
+              rubric={problem.rubric}
+              submitBlockedReason={problem.submitBlockedReason}
             />
           ) : (
             <WritingEditor
@@ -73,7 +71,8 @@ export async function WritingPageContent({
               problemId={problem.id}
               questionNo={questionNo}
               initialDraft={draft}
-              rubric={rubric}
+              rubric={problem.rubric}
+              submitBlockedReason={problem.submitBlockedReason}
             />
           )}
         </div>

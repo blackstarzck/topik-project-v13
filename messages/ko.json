@@ -544,6 +544,8 @@
       "startProblem": "시작하기",
       "statusPublished": "공개",
       "statusUnpublished": "비공개",
+      "statusInactive": "비활성",
+      "statusExpired": "만료",
       "lastAttempt": "마지막 시도: {date}",
       "attemptCount": "시도 {count}회"
     },
@@ -930,7 +932,12 @@
       "toProblemList": "문제 목록으로"
     },
     "prompt": {
-      "heading": "{questionNo}번 — {title}"
+      "heading": "{questionNo}번 — {title}",
+      "blanksLabel": "빈칸 정보",
+      "writingTasksLabel": "작성 과제",
+      "definitionLabel": "주제",
+      "backgroundLabel": "배경",
+      "requiredQuestionsLabel": "필수 포함 조건"
     },
     "editor": {
       "materialsTitle": "문제 자료",
@@ -948,6 +955,7 @@
       "blurTooLong": "최대 {hardMax}자를 넘었어요. (현재 {charCount}자)",
       "saveDraft": "임시 저장",
       "submit": "제출하기",
+      "submitBlockedProblemData": "문제 조건을 불러오지 못해 제출할 수 없어요. 문제를 다시 열어 주세요.",
       "tab53Intro": "도입",
       "tab53Body": "전개",
       "tab53Conclusion": "마무리",
@@ -1038,6 +1046,7 @@
       "altImage": "문제 참고 이미지",
       "altAudio": "문제 참고 음성",
       "imageLoadFailed": "이미지를 불러오지 못했어요. ({alt})",
+      "unitLabel": "단위: {unit}",
       "zoom": "확대 보기"
     },
     "help": {

@@ -1,0 +1,136 @@
+{
+  "iaCode": "C-01",
+  "screen": "문제 유형 추천 (problem-type recommendations)",
+  "route": "/practice/recommendations",
+  "folder": "docs/Wireframe/05-C-01-problem-type-recommendations",
+  "questionNo": 5,
+  "sourcePriorityApplied": "description.md > functional-spec.md > screen-data-summary.md > hifi.png/wireframe.png > sample JSON (none for this screen)",
+  "frozenIslandNote": "Admin codes H-01/X-08/X-10/X-15 and frozen objects (organizations, org_members, assignments, assignment_submissions, admin_*/get_admin_*) untouched. No frozen object is referenced by this screen.",
+  "rows": [
+    {
+      "screenRequirement": "추천 묶음 표시 — 추천이 어떤 근거로 만들어졌는지 (source_type, reason_summary, 생성 시각) 보여준다",
+      "docSource": "description.md L3 영역3 '추천 문제 카드: 사용자의 목표와 취약점에 맞는 우선 문제를 크게 제안함' (PRIMARY); functional-spec.md L23 '추천 묶음 표시', L40 recommendation_runs source_type/reason_summary/created_at read; screen-data-summary.md L33,L40 확정 계약 'recommendation_runs가 source_type 관리'",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "recommendation_runs.source_type, recommendation_runs.reason_summary, recommendation_runs.created_at (and .id/.user_id/.expires_at present)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "Live recommendation_runs table has all named columns with CHECK source_type IN ('dashboard','feedback','weakness','next_problem') matching screen-data-summary 메모. user_id FK + owner RLS satisfies functional-spec authenticated-owner requirement. Stable query: screen reads the run row to render the reason/근거."
+    },
+    {
+      "screenRequirement": "대표 추천 문제 카드 — 추천 유형(problem_id), 우선순위(rank), 추천 사유(reason), 약점 태그(weakness_tags) 표시. 제목 32자 / 사유 2줄 이하",
+      "docSource": "description.md L3,L50 영역3 '대표 추천 1개, 제목 32자, 추천 사유 2줄 이하' (PRIMARY); functional-spec.md L24 '추천 이유', L41 recommendation_items problem_id/rank/reason/weakness_tags read/update; screen-data-summary.md L19-24 표시데이터 '추천 이유/약점 태그', L33,L41 확정 계약",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "recommendation_items.problem_id, recommendation_items.rank, recommendation_items.reason, recommendation_items.weakness_tags",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "Live recommendation_items has problem_id (FK problems.id), rank integer NOT NULL, reason text, weakness_tags text[]. Ordering by rank + per-item reason are concrete render needs description.md confirms → real validated columns required and present. UNIQUE(run_id,problem_id) supports deterministic item identity."
+    },
+    {
+      "screenRequirement": "난이도와 예상 소요 시간 표시 (hifi: '15분', '중' 난이도 배지)",
+      "docSource": "screen-data-summary.md L20 표시데이터 '난이도와 예상 소요 시간'; L33 확정 계약 'recommendation_items가 estimated_minutes 관리'; hifi.png 추천 카드 '15분/중' 배지 (disambiguation only)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "recommendation_items.estimated_minutes (예상 소요 시간); problems.difficulty (난이도)",
+      "gapStatus": "satisfied",
+      "classification": "strong-inference",
+      "stableQueryNeed": true,
+      "rationale": "estimated_minutes integer exists on recommendation_items (confirmed in 확정 계약 L33). 난이도 source: description.md does not name the field; screen-data-summary maps 난이도 to problems.difficulty (smallint 1..5, present). hifi badge confirms a difficulty chip on the card. Strong-inference because description.md (PRIMARY) does not itself name 'difficulty' — it comes from the lower-priority summary + image."
+    },
+    {
+      "screenRequirement": "유형 탭 필터 (51/52/53/54 TOPIK 쓰기 유형) — 후보 문제를 유형으로 조회, 권한 잠금 유형은 잠금 배지",
+      "docSource": "description.md L12,L36,L40 영역2 '51/52/53/54번 등 TOPIK 쓰기 유형을 필터링함', '권한 잠금 유형은 선택 불가와 잠금 배지' (PRIMARY); functional-spec.md L25 '유형 선택', L43 problems domain/question_no/topik_level read; screen-data-summary.md L34 확정 계약",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "problems.question_no, problems.domain, problems.topik_level (filter predicate)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "Live problems has question_no smallint CHECK IN (51,52,53,54) — exactly the four writing types in description.md, domain CHECK IN ('reading','listening','writing'), topik_level CHECK IN (1,2). Filtering candidates by question_no is a confirmed stable-query need. (잠금 배지 = entitlement/plan gating presentation; see paywall/entitlement row.)"
+    },
+    {
+      "screenRequirement": "유형별 직접 선택 카드 (단문쓰기/설명문/자료해석/논술문) — 카드 라벨·설명·공개 범위. 카드 최대 4개, 설명 60자 이하, 이용 불가 유형은 비활성 카드",
+      "docSource": "description.md L14,L60,L62,L64 영역4 '추천 외에도 사용자가 직접 문제 유형을 선택하는 카드 목록', '카드 최대 4개, 설명 60자 이하', '이용 불가 유형은 비활성 카드와 안내 툴팁' (PRIMARY); screen-data-summary.md L34 problems domain/question_no/topik_level/title/visibility/publish_status",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "problems.question_no, problems.title, problems.domain, problems.publish_status, problems.visibility",
+      "gapStatus": "satisfied",
+      "classification": "strong-inference",
+      "stableQueryNeed": true,
+      "rationale": "The four type cards correspond to question_no 51..54 (writing domain). title text NOT NULL serves card label; publish_status/visibility CHECKs support 'published/public 또는 본인 생성' visibility rule (screen-data-summary L34,L54). Card '설명' (60자) copy is a per-type static UI string, not a DB field — no schema need. Strong-inference: the card descriptions themselves are UI copy, only the type filter binds to problems."
+    },
+    {
+      "screenRequirement": "추천 근거가 되는 취약 영역 (dimension, score, weakness_level) — derived read for 추천 사유 산출",
+      "docSource": "functional-spec.md L24 '추천 이유', L42 feedback_dimension_scores dimension/score/weakness_level derived-read; screen-data-summary.md L42 'feedback_dimension_scores 약점 근거'; description.md L48 '사용자의 목표와 취약점에 맞는' (motivates derivation, does not require screen to render raw scores)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "feedback_dimension_scores.dimension, feedback_dimension_scores.score, feedback_dimension_scores.weakness_level",
+      "gapStatus": "satisfied",
+      "classification": "strong-inference",
+      "stableQueryNeed": false,
+      "rationale": "Live feedback_dimension_scores has dimension (CHECK 6 values), score numeric, weakness_level smallint 1..5, all present. functional-spec marks this 'derived-read' with 불확실성 'Derived usage inferred'. description.md (PRIMARY) does NOT require the screen to render these raw scores — they feed the upstream recommendation derivation, surfaced only as reason/weakness_tags on the item. So no NEW stable-query need on this screen; columns already exist. strong-inference because the linkage is derived/inferred, not stated in PRIMARY."
+    },
+    {
+      "screenRequirement": "추천 카드 선택 / 추천 항목 소비 상태 — 카드 클릭 시 status를 consumed로 변경",
+      "docSource": "screen-data-summary.md L27-28 입력/상태 '추천 카드 선택', '추천 항목 소비 상태', L46 '추천 카드 클릭 시 recommendation_items.status를 consumed로 바꾸고', L53 'status/update 본인 row'; functional-spec.md L41 recommendation_items read/update",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "recommendation_items.status",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "Live recommendation_items.status text NOT NULL default 'active' CHECK IN ('active','consumed','expired') — exactly supports the consume-on-click flow. Owner RLS update (functional-spec '본인 row만') matches. Confirmed write target; no augmentation needed."
+    },
+    {
+      "screenRequirement": "문제 유형 필터 상태 (선택된 51/52/53/54 탭) — 클라이언트 UI 상태",
+      "docSource": "screen-data-summary.md L29 입력/상태 '문제 유형 필터 상태'; description.md L38 영역2 '탭 4개 고정, 가로 스크롤 허용' (presentation only)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "(missing) — client-only UI state, not persisted",
+      "gapStatus": "jsonb-covered",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "Tab filter selection is transient client state; no doc states it is persisted to DB. The underlying filterable attribute (problems.question_no) already exists as a real column. No new column or jsonb blob is required — marking jsonb-covered/no-need rather than a schema-gap because nothing in the schema must change. (No invented column per STABLE-QUERY rule.)"
+    },
+    {
+      "screenRequirement": "이탈 — 유형 카드 선택/추천 시작 시 C-02 문제 목록(/practice/...)으로 이동 (problem 식별)",
+      "docSource": "description.md L87 '유형 카드 선택 또는 추천 유형 시작 시 C-02 문제 목록으로 이동'; functional-spec.md L18,L26 '문제 목록 이동'",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "recommendation_items.problem_id -> problems.id (navigation target id)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "Navigation handoff uses recommendation_items.problem_id (FK problems.id). Both exist; the href is built from the selected card's problem_id. No new object."
+    },
+    {
+      "screenRequirement": "권한 잠금 유형 배지 / 이용 불가 안내 (entitlement gating for locked writing types)",
+      "docSource": "description.md L40 영역2 예외 '권한 잠금 유형은 선택 불가와 잠금 배지', L64 영역4 '이용 불가 유형은 비활성 카드와 안내 툴팁'",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "(missing) — no recommendation/problems column expresses per-type entitlement lock",
+      "gapStatus": "unresolved",
+      "classification": "unresolved",
+      "stableQueryNeed": false,
+      "rationale": "description.md requires a lock state per writing type, but the live schema has no field on problems/recommendation_* encoding a per-type entitlement lock. This is plan/entitlement-driven (subscriptions/subscription_plans.features jsonb territory) and is paywall/entitlement scope, not a recommendation-data field. Routing to UNRESOLVED/escalate rather than inventing a column on problems; whether features jsonb already gates this is a cross-screen entitlement decision (paywall IA), not resolvable from C-01 docs alone."
+    },
+    {
+      "screenRequirement": "추천 규칙/가중치 catalog (약점 -> 문제 유형 운영 규칙)",
+      "docSource": "screen-data-summary.md L35 운영/관리 계약 '추천 규칙 설정 | 스키마 보강 필요 | ... 운영 규칙과 가중치 catalog는 현재 migration에 없다' 메모 '현재는 결과 row 중심 계약이다'; L57 정합성 메모; L60 검수 'reason 문구 생성 기준'",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "(missing) — no rule/weight catalog table in live schema",
+      "gapStatus": "unresolved",
+      "classification": "unresolved",
+      "stableQueryNeed": false,
+      "rationale": "CONTRACT-NOT-LABEL applied: although labeled '스키마 보강 필요', the 메모 explicitly says the confirmed contract is result-row-centric ('결과 row 중심 계약') and description.md (PRIMARY) never asks THIS user screen to query/render a rule catalog — the screen only consumes recommendation_runs/items result rows. So it is NOT a gap this user screen must close. It is a net-new OPERATIONAL/admin capability (rule authoring) → route to UNRESOLVED/escalate, do not apply. stableQueryNeed=false because no user-screen query needs it."
+    }
+  ],
+  "jsonMapping": [],
+  "jsonMappingNote": "No seed JSON exists for C-01 (confirmed: folder contains only description.md, functional-spec.md, screen-data-summary.md, hifi.png, wireframe.png). JSON MAPPING RULE therefore not exercised; no seed provenance (source file + item id) to preserve. If a seed file is later added, map by document meaning first (reason text, weakness_tags, rank, estimated_minutes -> recommendation_items columns) and derive deterministic upsert ids from (source file + JSON item.id), never array index.",
+  "classificationSummary": {
+    "satisfied": 7,
+    "jsonb-covered": 1,
+    "schema-gap": 0,
+    "unresolved": 2,
+    "totalRows": 11
+  },
+  "decisions": [
+    "No additive migration proposed for C-01: all data the user screen reads/writes (recommendation_runs, recommendation_items incl. estimated_minutes/weakness_tags/status, problems incl. question_no/difficulty/title/publish_status/visibility, feedback_dimension_scores) already exists in the live schema.",
+    "추천 규칙 catalog (스키마 보강 필요 label) -> UNRESOLVED via CONTRACT-NOT-LABEL: confirmed contract is result-row-centric; rule authoring is operational/admin net-new scope, escalated not applied.",
+    "Per-type entitlement lock badge -> UNRESOLVED: belongs to paywall/entitlement IA (subscriptions/subscription_plans.features), not a recommendation-data column; do not invent a problems column.",
+    "Type-filter tab state is client-only UI state; no DB change (no invented column per STABLE-QUERY rule)."
+  ]
+}

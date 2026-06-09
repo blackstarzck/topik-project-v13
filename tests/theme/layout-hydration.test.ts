@@ -13,6 +13,10 @@ vi.mock("next/headers", () => ({
   cookies: vi.fn(),
 }));
 
+vi.mock("next/font/local", () => ({
+  default: () => ({ className: "mock-font", variable: "mock-font-variable" }),
+}));
+
 // Mock @ant-design/nextjs-registry — not relevant to this test
 vi.mock("@ant-design/nextjs-registry", () => ({
   AntdRegistry: ({ children }: { children: React.ReactNode }) => children,

@@ -5,6 +5,10 @@ vi.mock("next/headers", () => ({
   cookies: vi.fn(),
 }));
 
+vi.mock("next/font/local", () => ({
+  default: () => ({ className: "mock-font", variable: "mock-font-variable" }),
+}));
+
 import { cookies } from "next/headers";
 import { resolveInitialAppearance } from "../../src/app/layout";
 

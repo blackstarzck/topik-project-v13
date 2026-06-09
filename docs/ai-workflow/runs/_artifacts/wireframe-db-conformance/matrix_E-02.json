@@ -1,0 +1,216 @@
+{
+  "iaCode": "E-02",
+  "questionNo": 53,
+  "route": "/writing/feedback/long/:id",
+  "screen": "E-02 장문 피드백 (long-form feedback)",
+  "liveSchemaBaselineNote": "Measured against LIVE schema discovered this run (writing_submissions, writing_feedback, feedback_dimension_scores, sentence_feedback, comparison_reports, library_items, export_files, study_events, plus create_comparison_report_with_metrics RPC). No assumed columns used. E-02 is a READ-mostly feedback display screen.",
+  "sourcePriority": "description.md > functional-spec.md > screen-data-summary.md > hifi.png/wireframe.png > (no sample JSON for this screen)",
+  "seedProvenance": {
+    "file": "(none)",
+    "note": "No sample JSON exists for E-02. The screen consumes feedback rows produced at submit time (RPC submit_writing_with_feedback for D-03/D-04) — it does not seed its own content. JSON-mapping rows are therefore N/A; jsonMapping captures the (none) provenance explicitly."
+  },
+  "rows": [
+    {
+      "screenRequirement": "장문 제출 원문 표시 — 원문 답안을 줄바꿈 보존하여 표시 (Area 2 원문 답안)",
+      "docSource": "description.md L32-38 '원문 답안과 문장 단위 첨삭... 원문은 줄바꿈 보존'; functional-spec.md L41 writing_submissions(answer_text); screen-data-summary.md L35 확정 계약 'writing_submissions와 writing_feedback이 장문 답안과 총평을 제공한다'",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "writing_submissions.answer_text",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "description.md confirms the screen renders the original answer text. writing_submissions.answer_text is a typed NOT NULL text column read by submission id (route :id). Newline preservation is a render concern, no extra column."
+    },
+    {
+      "screenRequirement": "제출 식별 + 문제 연결 + 제출 시각 + 글자 수 + 피드백 상태 (Area 1 제출 정보)",
+      "docSource": "functional-spec.md L41 writing_submissions(id, problem_id, char_count, submitted_at, feedback_status) read; description.md L24 '제출 정보'; screen-data-summary.md L43 migration column list",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "writing_submissions.id / problem_id / char_count / submitted_at / feedback_status",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "All typed columns present. feedback_status CHECK ('pending','analyzing','complete','failed') backs the '분석 대기/결과 없음/export 실패' states (spec L31) and the '제출 소유자 RLS와 feedback_status를 함께 확인' rule (L51). Route :id is the submission id."
+    },
+    {
+      "screenRequirement": "장문 유형 구분 53/54 — 화면 요약에 '유형' 표시",
+      "docSource": "screen-data-summary.md L4 '53~54번 장문 제출 결과', L35 메모 'question_no 53/54로 구분한다'; description.md L11/24 '유형'",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "writing_submissions.question_no",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "screen-data-summary 메모 fixes 53/54 distinction. writing_submissions.question_no is typed smallint with CHECK question_no IN (51,52,53,54); long-form is 53/54. Typed column already present."
+    },
+    {
+      "screenRequirement": "총점 + 최대점 + 핵심 총평 (Area 1 총점/총평, 총평 3줄)",
+      "docSource": "description.md L24 '총점... 핵심 총평을 요약', L26 '총평 3줄'; functional-spec.md L42 writing_feedback(score_total, score_max, overall_summary); screen-data-summary.md L44 column list",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "writing_feedback.score_total / score_max / overall_summary",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "writing_feedback has typed score_total/score_max numeric + overall_summary text, keyed by submission_id (PK). '3줄' is a render truncation, not a column. Confirmed read in functional-spec."
+    },
+    {
+      "screenRequirement": "분석 실패 안내 — 점수 산출 실패 시 총평 대신 실패 안내 표시 (Area 1 예외)",
+      "docSource": "description.md L28 '점수 산출 실패 시 총평 대신 분석 실패 안내 표시'; functional-spec.md L31 '상태/오류: 분석 대기, 결과 없음'",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "writing_feedback.status",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "writing_feedback.status CHECK ('partial','complete','failed') is the typed source for the score-failed branch; 'failed' drives the 분석 실패 안내. Already present; combined with submission feedback_status for the full state machine."
+    },
+    {
+      "screenRequirement": "AI 모델/생성 시각 표기 (피드백 출처)",
+      "docSource": "functional-spec.md L42 writing_feedback(ai_model, generated_at) read; screen-data-summary.md L44 column list (ai_model, ai_model_version, generated_at)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "writing_feedback.ai_model / generated_at",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "ai_model text + generated_at timestamptz are typed columns in the read set. Display-only provenance, no stable filter need on this screen."
+    },
+    {
+      "screenRequirement": "영역별 점수 패널 — 구조/논리/어휘/문법/주제 적합성 세부 평가, 각 항목 점수+요약 (Area 3, 항목 5개 이하)",
+      "docSource": "description.md L42-52 '구조, 논리, 어휘, 문법, 주제 적합성을 세부 평가... 평가 항목 5개 이하, 각 항목 본문 2줄'; functional-spec.md L43 feedback_dimension_scores(dimension, score, score_max, summary, weakness_level); screen-data-summary.md L36 확정 계약 'feedback_dimension_scores...가 normalized detail을 제공한다'",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "feedback_dimension_scores.dimension / score / score_max / summary / weakness_level",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "Normalized per-dimension table with CHECK dimension IN ('grammar','vocab','structure','content','expression','topic_fit') and UNIQUE(submission_id,dimension). The screen's five evaluation axes map onto these typed dimensions; this is the core stable-query detail data (screen-data-summary L36 calls it 핵심 상세 데이터)."
+    },
+    {
+      "screenRequirement": "약점 수준 / 개선 포인트 — 약점 강조, 보완 안내 (개선 포인트, 항목 누락 빈 상태)",
+      "docSource": "screen-data-summary.md L24 '개선 포인트'; description.md L52 '추천 없음/항목 누락은 빈 상태와 보완 안내'; functional-spec.md L43 feedback_dimension_scores(weakness_level)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "feedback_dimension_scores.weakness_level",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "weakness_level smallint CHECK 1..5 is the typed signal for 약점 강조 / 개선 포인트 ranking. Empty/missing dimension rows naturally yield the 빈 상태 branch — no extra column needed."
+    },
+    {
+      "screenRequirement": "문장별 첨삭 — 문장 단위 원문/수정/코멘트, sentence_index 정렬, 5개 후 더보기 (Area 2)",
+      "docSource": "description.md L32-40 '문장 단위 첨삭, 수정 제안... 문장별 첨삭 5개 후 더보기'; functional-spec.md L44 sentence_feedback(sentence_index, original_text, corrected_text, comment); screen-data-summary.md L72 검수 '문장별 피드백 정렬 기준을 sentence_index로 고정'",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "sentence_feedback.sentence_index / original_text / corrected_text / comment",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "Per-sentence normalized table with typed sentence_index (stable ORDER BY per the 검수 item) + original/corrected/comment text. '5개 후 더보기' is pagination over rows. Fully satisfied."
+    },
+    {
+      "screenRequirement": "첨삭 생성 실패 문장 처리 — 실패 문장은 원문만 표시 + 재분석 (Area 2 예외)",
+      "docSource": "description.md L40 '첨삭 생성 실패 문장은 원문만 표시하고 재분석 제공'",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "sentence_feedback.corrected_text / comment (NULL) + original_text",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "Failed sentence = a sentence_feedback row with NULL corrected_text/comment but populated original_text (all three are nullable in LIVE schema). The 원문만 표시 fallback and 재분석 CTA are client-derived from the null state; no new column. strong on render logic, but column nullability already supports it → satisfied."
+    },
+    {
+      "screenRequirement": "비교 리포트 생성/연결 — 이전 제출 대비 비교 리포트 액션 (Area 4 비교 리포트 → R-01)",
+      "docSource": "description.md L60-64 '비교 리포트... 액션', L87 '비교 리포트는 R-01'; screen-data-summary.md L37 확정 계약 'comparison_reports와 create_comparison_report_with_metrics RPC로 이전 제출 대비 리포트를 만들 수 있다 ... 현재 제출 id를 current_submission_id로 사용한다'",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "comparison_reports.current_submission_id / previous_submission_id / metrics / narrative + rpc create_comparison_report_with_metrics",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "screen-data-summary 확정 계약 names the RPC; LIVE schema has comparison_reports (metrics jsonb NOT NULL, FKs current/previous submission) AND the RPC create_comparison_report_with_metrics(current_id, previous_id, metrics, narrative, ai_model) was directly read this run (supabase/migrations/20260521130000_phase_5_writing_rpc.sql L125, security definer, validates both submissions owned by auth.uid()). Current submission id = route :id = current_submission_id. Confirmed (RPC body read)."
+    },
+    {
+      "screenRequirement": "비교 리포트 생성 버튼 조건 — 이전 제출이 있어야 활성 (검수 필요)",
+      "docSource": "screen-data-summary.md L73 검수 '비교 리포트 생성 버튼의 조건을 정한다'; LIVE comparison_reports.previous_submission_id NULL allowed",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "writing_submissions.parent_submission_id / question_no (prior submission lookup)",
+      "gapStatus": "satisfied",
+      "classification": "strong-inference",
+      "stableQueryNeed": true,
+      "rationale": "Enabling the compare CTA requires querying whether a prior same-problem/same-question submission exists. writing_submissions.parent_submission_id (self-FK) + user_id + question_no support that lookup with typed columns. The exact button condition is still a 검수 필요 open item (rule), but no schema gap — strong-inference because the precise predicate is undocumented, data is present."
+    },
+    {
+      "screenRequirement": "보관함 저장 — 피드백/제출을 보관함에 저장 (Area 4 저장)",
+      "docSource": "functional-spec.md L45 library_items(submission_id, item_type, note, tags) read/write; description.md L26/56 '보관함 저장'; screen-data-summary.md L48 'item_type ... 대상 id가 하나만'",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "library_items.submission_id / item_type / note / tags",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "library_items with item_type CHECK including 'submission' + exactly-one-target + type-matches CHECK constraints, UNIQUE per-target, RLS user_id=auth.uid(). Saving this feedback's submission maps to item_type='submission', submission_id=:id. Fully satisfied."
+    },
+    {
+      "screenRequirement": "PDF 내보내기 — 피드백을 PDF로 저장, 상태/실패/권한 잠금 처리 (Area 4 PDF 저장 → F-M1)",
+      "docSource": "functional-spec.md L46 export_files(source_type, source_id, status, storage_path) read/write; description.md L60-64 'PDF 저장 ... PDF 실패/권한 잠금은 토스트와 대체 저장'; screen-data-summary.md L49-50 export_files + storage:generated-exports",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "export_files.source_type / source_id / status / storage_path",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "export_files has source_type CHECK ('submission','report','library_selection') + status CHECK ('queued','ready','failed') + storage_path; PDF export uses source_type='submission', source_id=:id. 'failed' status drives the PDF 실패 토스트. Storage path exports/{user_id}/{export_id}.pdf is operational (screen-data-summary L50). Satisfied."
+    },
+    {
+      "screenRequirement": "피드백 조회 이벤트 기록 (분석 텔레메트리)",
+      "docSource": "functional-spec.md L47 study_events(event_type, submission_id, payload) write; screen-data-summary.md L51 study_events column list",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "study_events.event_type / submission_id / payload",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "study_events typed columns + frozen event_type catalog includes 'feedback_viewed' (and 'report_viewed','export_downloaded') covering this screen's telemetry. payload jsonb for extras. Write-only, no stable per-field query need here."
+    },
+    {
+      "screenRequirement": "다시 작성 액션 — 재작성으로 D-03/D-04 이동 (Area 4 다시 작성)",
+      "docSource": "description.md L60 '다시 작성', L87 '다시 작성은 D-03/D-04'; functional-spec.md L18",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "writing_submissions.problem_id / question_no (navigation target resolution)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "다시 작성 is navigation to D-03/D-04; the target problem is resolved from the submission's problem_id + question_no (53→D-03, 54→D-04). No new data; existing typed columns supply the route params. A re-submission would later link via parent_submission_id (present)."
+    },
+    {
+      "screenRequirement": "다음 문제 추천 액션 — 추천으로 R-02 이동 (Area 4 다음 문제 추천)",
+      "docSource": "description.md L60 '다음 문제 추천', L87 '다음 문제 추천은 R-02', L78 '추천 학습'; functional-spec.md L18",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "(missing — out of E-02 scope; R-02 owns recommendation_runs/items)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "On E-02 this is a navigation CTA to R-02; recommendation generation/persistence (recommendation_runs/recommendation_items, source_type 'feedback') belongs to the R-02 screen, not this read screen. E-02 needs no recommendation column itself, so (missing) is intentional and satisfied (no data dependency on this screen). NOT a schema gap."
+    },
+    {
+      "screenRequirement": "장문 첨삭 운영 템플릿 — 개선 포인트 라벨, 문장 수정 유형, 채점 기준 문구를 운영 데이터로 관리",
+      "docSource": "screen-data-summary.md L38 '스키마 보강 필요: 개선 포인트 라벨, 문장 수정 유형, 채점 기준 문구를 운영 데이터로 관리하는 구조는 없다' (메모: '현재는 feedback 결과 데이터 중심이다')",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "feedback_dimension_scores.summary / sentence_feedback.comment / writing_feedback.raw_ai_result (jsonb)",
+      "gapStatus": "jsonb-covered",
+      "classification": "strong-inference",
+      "stableQueryNeed": false,
+      "rationale": "CONTRACT-NOT-LABEL + STABLE-QUERY: although LABELED '스키마 보강 필요', the 메모 says '현재는 feedback 결과 데이터 중심' — the screen RENDERS labels/types/criteria phrasing that arrive inside the per-result feedback rows (dimension.summary, sentence.comment) and the raw_ai_result jsonb blob. description.md states NO concrete query/validation need for a separate template-catalog table; it only displays evaluation text. Per the rule this stays jsonb/result-covered with stableQueryNeed=false. The template-catalog desire is a documented future-stabilization wish (operational template management), NOT a confirmed E-02 render gap. It is also content-authoring/operational tooling — if ever built it would be an admin/content-management concern, so do not invent a user-facing column."
+    },
+    {
+      "screenRequirement": "RLS 소유자 경계 — 본인 제출/피드백/리포트/export만 조회 (권한 없음 상태)",
+      "docSource": "functional-spec.md L10 'auth.uid() 기반 RLS'; L51 '제출 소유자 RLS와 feedback_status를 함께 확인'; screen-data-summary.md L56-66 RLS 기준; functional-spec.md L31 '권한 없음'",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "writing_submissions.user_id / writing_feedback.user_id / feedback_dimension_scores.user_id / sentence_feedback.user_id / comparison_reports.user_id / library_items.user_id / export_files.user_id",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "Every consumed table carries user_id FK -> profiles.id with owner-only RLS (writing_submissions select-only/immutable; feedback tables select-only with server-side create). The '권한 없음' state is enforced by RLS denying non-owner rows. All ownership columns present in LIVE schema."
+    }
+  ],
+  "jsonMapping": [
+    {
+      "jsonKey": "(none)",
+      "targetColumn": "(N/A)",
+      "meaning": "E-02 has NO sample/seed JSON. It is a read-mostly feedback DISPLAY screen consuming rows generated at submit time (RPC submit_writing_with_feedback for D-03/D-04). There is no source JSON file and therefore no JSON item id to preserve as seed provenance for this screen. Seed provenance for the underlying problem/answer content lives on the producing screens (D-03 sample-53.json item.id, D-04 sample-54.json item.id), not here.",
+      "confidence": "confirmed"
+    }
+  ],
+  "frozenIslandNote": "No admin codes (H-01/X-08/X-10/X-15) and no frozen objects (organizations, org_members, assignments, assignment_submissions, admin_*/get_admin_*) touched. All rows resolve to user-facing writing_submissions/writing_feedback/feedback_dimension_scores/sentence_feedback/comparison_reports/library_items/export_files/study_events + the user-scoped RPC create_comparison_report_with_metrics.",
+  "unresolvedEscalations": [],
+  "idempotencyNote": "READ-ONLY conformance run — no migration or seed is applied. E-02 produces no seed of its own (no sample JSON). Any future feedback rows are written by the submit RPC keyed on the deterministic submission id, never by array index; this matrix proposes no new objects. No drop/reset/truncate.",
+  "overallVerdict": "All confirmed E-02 screen data requirements are SATISFIED by the LIVE schema (writing_submissions, writing_feedback, feedback_dimension_scores, sentence_feedback, comparison_reports + create_comparison_report_with_metrics RPC, library_items, export_files, study_events). The single documented '스키마 보강 필요' item (장문 첨삭 운영 템플릿 — 라벨/수정 유형/채점 기준 문구 운영 관리) stays jsonb/result-covered with stableQueryNeed=false per CONTRACT-NOT-LABEL: the 메모 accepts the current result-data-centric model and description.md states no concrete typed-column query/validation need; it is a future operational/content-authoring wish, not a user-facing render gap. No schema-gap, no unresolved escalation, no frozen-island contact."
+}

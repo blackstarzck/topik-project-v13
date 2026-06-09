@@ -1,0 +1,137 @@
+{
+  "iaCode": "A-03",
+  "screen": "학습 목표 설정 (learning-goal-setup)",
+  "route": "/onboarding/learning-goal",
+  "folder": "docs/Wireframe/03-A-03-learning-goal-setup",
+  "questionNo": 3,
+  "liveSchemaBaseline": {
+    "learning_goals": "PK(user_id); topik_level text CHECK IN ('TOPIK_I','TOPIK_II'); target_grade smallint CHECK 1..6; exam_date date NULL; weekly_goal_minutes integer NULL; weak_areas text[] default '{}'; is_active boolean default true; updated_at timestamptz",
+    "profiles": "PK(id); ui_locale text CHECK ('ko','en','vi'); status text CHECK ('active','blocked','deleted'); learning_locale text NULL; ... (SHARED admin-first entity)",
+    "recommendation_runs": "PK(id); user_id; source_type CHECK ('dashboard','feedback','weakness','next_problem'); source_id; reason_summary; created_at; expires_at -- stores results only, no rule catalog"
+  },
+  "rows": [
+    {
+      "screenRequirement": "온보딩 진행 단계 표시 (현재 단계/전체 단계 수, 단계명 12자 이하, 로드 실패 시 기본 1/3)",
+      "docSource": "description.md L20-28 (Wireframe No.1 온보딩 진행 단계; 제약: 단계명 12자 이하, 전체/현재 항상 병기; 예외: 로드 실패 시 1/3)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "(missing)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "UI-only step indicator. Onboarding step count/order is client/route state (OnboardingSteps.tsx), not persisted screen data. description.md gives a deterministic fallback (1/3) so no DB read is required. No table column needed — not a DB requirement."
+    },
+    {
+      "screenRequirement": "안내/마스코트 문구 (목표 설정이 맞춤 추천 기반임을 설명, 80자/2줄, 다국어 30% 확장)",
+      "docSource": "description.md L32-40 (Wireframe No.2 안내/마스코트); screen-data-summary.md L54 (onboarding 문구를 운영 데이터로 관리하려면 별도 구조 필요)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "(missing)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "Static localized copy rendered from i18n catalog, not operational DB data. description.md states no concrete query/validation/render need against a table. screen-data-summary explicitly defers '문구를 운영 데이터로 관리' as a separate future structure — not in this screen's scope. No column invented."
+    },
+    {
+      "screenRequirement": "TOPIK 수준 선택 (TOPIK I / II)",
+      "docSource": "description.md L48 (목표 급수 ... 입력); functional-spec.md L23 'TOPIK 수준 선택'; screen-data-summary.md L19 'TOPIK I/II 선택지', L28 'topik_level', 확정계약 L35",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "learning_goals.topik_level",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "Real validated column: text CHECK IN ('TOPIK_I','TOPIK_II'). description.md confirms screen captures 목표 급수 level; functional-spec lists 'TOPIK 수준 선택'; screen-data-summary 확정 계약 binds it to learning_goals.topik_level. Stable-query/validation need is met by the CHECK-constrained column. 필수값 (description L50)."
+    },
+    {
+      "screenRequirement": "목표 급수 입력 (target grade)",
+      "docSource": "description.md L48,L50 (목표 급수 ... 목표 필수); functional-spec.md L24 '목표 급수/시험일 입력'; screen-data-summary.md L28 'target_grade', 확정계약 L35",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "learning_goals.target_grade",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "Real validated column: smallint CHECK BETWEEN 1 AND 6 (TOPIK 1~6급). description.md marks 목표 필수; the CHECK constraint enforces 미지원 급수 안내 (description L52 예외). Stable-query/validation need satisfied by validated column."
+    },
+    {
+      "screenRequirement": "시험 일정 입력 (exam date, 과거 날짜 선택 불가)",
+      "docSource": "description.md L48,L50 (시험 일정 ... 과거 날짜 선택 불가); functional-spec.md L24 '목표 급수/시험일 입력'; screen-data-summary.md L28 'exam_date', 확정계약 L35",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "learning_goals.exam_date",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "Real column: date NULL. description.md confirms 시험일 필수 + 과거 날짜 불가 validation; a typed date column serves the render/validation need. 'no-past-date' is an app-side guard (no DB CHECK exists or is required) — column itself satisfies storage/query need."
+    },
+    {
+      "screenRequirement": "주간 학습 빈도/목표 시간 입력 (weekly goal minutes)",
+      "docSource": "description.md L48 (학습 빈도 ... 입력); functional-spec.md L25 '주간 목표 설정'; screen-data-summary.md L28 'weekly_goal_minutes', 확정계약 L35",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "learning_goals.weekly_goal_minutes",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "Real column: integer NULL. description.md confirms 학습 빈도 capture; functional-spec '주간 목표 설정'. screen-data-summary 확정 계약 binds to learning_goals.weekly_goal_minutes. Typed integer column serves stable query/render."
+    },
+    {
+      "screenRequirement": "취약 영역 선택 (weak areas, 체크 목록)",
+      "docSource": "description.md L48 (취약 영역 ... 입력); functional-spec.md L26 '취약 영역 선택'; screen-data-summary.md L23 '약점 영역 체크 목록', L28 'weak_areas', 확정계약 L35",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "learning_goals.weak_areas",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "Real column: text[] default '{}'. description.md confirms 취약 영역 multi-select. Array column serves multi-value storage/query. NOTE: screen-data-summary L57 검수 항목 asks whether the weak-area value LIST should be code enum vs operational data — the storage column exists; only the source-of-truth for the option catalog is an open product decision (not a schema gap for this screen)."
+    },
+    {
+      "screenRequirement": "목표 활성 상태 / 단일 활성 목표 upsert (저장 시 같은 user_id row upsert)",
+      "docSource": "screen-data-summary.md L35 (learning_goals가 사용자별 단일 활성 목표를 저장), L45 (같은 user_id row를 upsert); functional-spec.md L40 (learning_goals ... read/write, user_id, is_active)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "learning_goals.is_active + learning_goals.user_id (PK)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "PK(user_id) enforces single row per user; is_active boolean (default true) marks the active goal. Save path upserts on user_id per screen-data-summary 저장/조회 흐름. RLS owner (auth.uid()) gates. user_id is FK -> profiles.id. All required columns present."
+    },
+    {
+      "screenRequirement": "이전/다음 CTA 저장 동작 (필수값 누락 시 다음 비활성, 저장 실패 시 화면 유지+재시도 토스트)",
+      "docSource": "description.md L56-64 (Wireframe No.4 이전/다음 CTA; 제약/예외); functional-spec.md L30 '상태/오류: 목표 미입력, 잘못된 날짜, 저장 실패'",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "learning_goals (write/upsert) via saveLearningGoal",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "CTA-driven write of the learning_goals columns above; CTA enable/disable + retry-toast are client-side form/UX state, not persisted data. Save target columns all exist. No DB object beyond learning_goals write needed."
+    },
+    {
+      "screenRequirement": "사용자 locale / onboarding 상태 판단 (진입 시 ui_locale, 계정 상태)",
+      "docSource": "functional-spec.md L41 (profiles: id, ui_locale, status — read; onboarding 상태 판단); screen-data-summary.md L42,L49,L51 (profiles 본인 select; app_role/plan_label/status 보호 컬럼)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "profiles.id, profiles.ui_locale, profiles.status",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "Read-only of SHARED admin-first profiles entity; all three columns exist in LIVE schema (ui_locale CHECK ko/en/vi, status CHECK active/blocked/deleted). Used for locale render + access/onboarding gating. Do NOT reshape — reconcile only (FROZEN-adjacent shared entity, RLS app_role load-bearing)."
+    },
+    {
+      "screenRequirement": "기존 목표 조회 (화면 진입 시 prefill)",
+      "docSource": "screen-data-summary.md L45 (화면 진입 시 기존 learning_goals를 조회한다); functional-spec.md L54 (getLearningGoal - src/lib/learning/server.ts)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "learning_goals (SELECT by user_id)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "Read of learning_goals by user_id (PK) for prefill on re-entry. Owner RLS (auth.uid()). All read columns exist; query is stable on the PK."
+    },
+    {
+      "screenRequirement": "초기 추천 seed — 목표 저장 직후 추천 묶음 자동 생성 규칙/운영 설정",
+      "docSource": "screen-data-summary.md L36 (초기 추천 seed | 스키마 보강 필요 | 추천 규칙 catalog는 없다; recommendation_runs는 결과 저장만 가능), L54 (추천 규칙 ... 별도 구조 필요)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "recommendation_runs (results only — no rule catalog)",
+      "gapStatus": "schema-gap",
+      "classification": "unresolved",
+      "stableQueryNeed": false,
+      "rationale": "Per CONTRACT-NOT-LABEL: read the 확정 계약/메모, which here genuinely state the recommendation-RULE catalog + operational config structure does NOT exist in any migration (not just a label). recommendation_runs/recommendation_items store outputs but no rule/config catalog table exists. description.md (PRIMARY) does NOT make this screen render/query a rule catalog — A-03 only saves the goal; recommendation generation is downstream (B-01/추천). So this is a real net-new operational-config gap: route to UNRESOLVED, escalate, do NOT invent a column or seed. Not in the frozen admin island, but it is net-new scope requiring a product/schema decision."
+    }
+  ],
+  "jsonMapping": [],
+  "jsonMappingNote": "No seed JSON exists for screen A-03 (confirmed via Glob of docs/Wireframe/03-A-03-learning-goal-setup — only description.md, functional-spec.md, screen-data-summary.md, hifi.png, wireframe.png). Therefore no sample-JSON-key→column mapping rows and no JSON id provenance to preserve. The only seed-able data on this screen is per-user input (topik_level/target_grade/exam_date/weekly_goal_minutes/weak_areas), which is captured at runtime via auth.uid() owner-RLS upsert on learning_goals.user_id (PK = deterministic per-user id), not from a static seed file. weak_areas option catalog source (enum vs operational) is an open product decision (screen-data-summary L57), not a JSON seed mapping.",
+  "notes": "PRIMARY description.md confirms exactly four goal inputs (목표 급수, 시험 일정, 학습 빈도, 취약 영역) — all four plus topik_level map 1:1 to existing learning_goals columns; gapStatus=satisfied. profiles read (ui_locale/status) satisfied. The single 'schema-augmentation-needed' label in screen-data-summary that is NOT a false-label is '초기 추천 seed': its 확정 계약/메모 substantively state the recommendation-rule catalog/operational config does not exist — and PRIMARY does not require A-03 to query it — so it is a genuine net-new gap routed to UNRESOLVED (escalate, do not apply/seed). The OTHER 'label-only' deferral (onboarding 문구 운영 데이터화, L54) is satisfied as i18n static copy (no description.md query/render need). No migration proposed: every confirmed requirement is already served by the LIVE schema; idempotency/seed rules are moot because there is no seed file and no missing column to add for the in-scope (non-recommendation) requirements."
+}

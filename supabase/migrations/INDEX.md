@@ -84,6 +84,27 @@
 | 29 | `12:03:00` | [`20260602120300_org.sql`](./20260602120300_org.sql) | **NET-NEW**: `organizations`, `org_members`, `assignments`, `assignment_submissions` + `private.is_org_member/is_org_manager` 헬퍼 + org-scoped RLS (X-08/X-10) |
 | 30 | `12:04:00` | [`20260602120400_admin_and_user_rpcs.sql`](./20260602120400_admin_and_user_rpcs.sql) | Admin RPC: `get_admin_users`, `get_admin_user_stats`, `admin_set_user_status`, `admin_update_problem`, `admin_delete_problem`, `admin_add_problem_asset`, `admin_remove_problem_asset`, `get_admin_audit_logs` + `get_admin_org_dashboard` 확장(drop→recreate, 4→6 컬럼 additive) + `list_user_problems`(C-02, SECURITY INVOKER) |
 
+#### 08 (월) — Conformance decisions #2/#4 backing schema (작성만 완료, 적용 전)
+
+> ⚠ 26-30번과 동일하게 **작성만 완료** 상태(coordinator 검토·적용 전). wireframe-db-conformance 결정 #2·#4 확정에 따른 사용자 화면 backing 스키마. 둘 다 admin 소유 공유 영역이라 **적용은 소유자 승인 + `admin-data-contract` 이름 정합 후**. 근거: [`../../docs/ai-workflow/runs/2026/06/08/20260608-conformance-decisions-finalized.md`](../../docs/ai-workflow/runs/2026/06/08/20260608-conformance-decisions-finalized.md).
+
+| # | timestamp | 파일 | 영역 |
+| ---:| --- | --- | --- |
+| 31 | `12:00:00` | [`20260608120000_legal_documents_and_consents.sql`](./20260608120000_legal_documents_and_consents.sql) | `legal_documents`(버전별 약관/개인정보, published 공개 read + admin all), `user_consents`(per-user 동의 ledger, append-only owner read+insert) + RLS + updated_at 트리거. 약관 동의 영속화(#2=B). admin `operation_policies`/`requiresConsent` 의미 매핑 |
+| 32 | `12:01:00` | [`20260608120100_problems_lifecycle_expiry.sql`](./20260608120100_problems_lifecycle_expiry.sql) | `problems` additive 컬럼: `lifecycle_status`(active/inactive/expired, C-02 배지·행 비활성), `lifecycle_reason`(사유), `expires_at`(문제 전용 만료, `recommendation_runs.expires_at`와 분리) + 부분 인덱스. 만료 *기준* 미정 → 컬럼만, 자동만료 로직 없음(#4) |
+
+#### 08 (월) — Wireframe writing problem fixture seed (DB 적용 완료)
+
+| # | timestamp | 파일 | 영역 |
+| ---:| --- | --- | --- |
+| 33 | `12:02:00` | [`20260608120200_seed_writing_problem_fixtures.sql`](./20260608120200_seed_writing_problem_fixtures.sql) | Wireframe 08~11 JSON 기반 `problems` seed 466개. `materials.seed_source='wireframe_problem_fixtures'` + `source_file` + `source_item_id`로 중복 방지. 검수 통과분은 published/public/approved, 미통과분은 draft/private/pending. 스키마 변경 없음. |
+
+#### 09 (화) — User problem list writing state RPC
+
+| # | timestamp | 파일 | 영역 |
+| ---:| --- | --- | --- |
+| 34 | `12:00:00` | [`20260609120000_list_user_problems_writing_state.sql`](./20260609120000_list_user_problems_writing_state.sql) | `list_user_problems` 재정의. 사용자 문제 목록에서 쓰기 진행 상태를 `writing_drafts`/`writing_submissions` 기준으로 계산하고 `solve_state`, `latest_submission_id`, feedback/lifecycle/publish/review 상태를 additive 반환한다. `published` 문제만 노출하고 lifecycle 비활성/만료는 행 비활성 근거로 반환한다. |
+
 ---
 
 ## 새 마이그레이션을 추가할 때

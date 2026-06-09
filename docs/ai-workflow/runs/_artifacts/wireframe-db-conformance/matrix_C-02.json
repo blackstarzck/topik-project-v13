@@ -1,0 +1,204 @@
+{
+  "iaCode": "C-02",
+  "screen": "문제 목록 (problem-list)",
+  "route": "/practice/problems",
+  "folder": "docs/Wireframe/06-C-02-problem-list",
+  "questionNo": 6,
+  "measuredAgainst": "LIVE schema discovered this run + public.list_user_problems RPC (supabase/migrations/20260602120400_admin_and_user_rpcs.sql lines 639-733)",
+  "sourcePriorityApplied": "description.md > functional-spec.md > screen-data-summary.md > hifi.png/wireframe.png (no seed JSON for C-02)",
+  "rows": [
+    {
+      "screenRequirement": "필터/정렬/페이지네이션 + 정확한 총 건수(total_count) 조회 — 필터된 결과 기준 정확한 페이지 번호",
+      "docSource": "description.md §2 문제 유형 필터 / §3 검색·정렬 / §5 페이지 이동 (총 건수 상·하단 표시); functional-spec.md DB 데이터 사용 명세 'list_user_problems (RPC)'; screen-data-summary.md 확정 계약 '필터/정렬/페이지 조회'",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "rpc:public.list_user_problems(filter jsonb, sort text, page int, page_size int) -> table(problem_id,title,domain,topik_level,question_no,difficulty,tags,attempt_count,is_solved,last_attempt_at,created_at,total_count)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "RPC exists in LIVE schema, SECURITY INVOKER (caller RLS scope). Does status filtering + window total_count in SQL so filtered pagination page numbers are accurate. Client wrapper src/components/practice/problem-list-data.ts calls it. description.md §5 confirms 총 건수 must be shown — a concrete stable-query need."
+    },
+    {
+      "screenRequirement": "문제 제목 표시 (행 제목 32자 제약)",
+      "docSource": "description.md §4 문제 목록 행 ('문제 번호, 유형, 난이도, 상태, 시작 액션'); screen-data-summary.md 사용자 화면 표시 데이터 '문제 제목'",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "problems.title (text NOT NULL) — surfaced via list_user_problems.title",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "title is a real NOT NULL column on problems and is returned by the RPC. Also the search target (RPC ILIKE on title). 32자 truncation is a render concern, not schema."
+    },
+    {
+      "screenRequirement": "유형(domain) 표시 + domain 필터",
+      "docSource": "description.md §2 (유형 필터), §4 (유형 표시); screen-data-summary.md 사용자 입력/상태 데이터 'domain 필터'; functional-spec.md filter(domain)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "problems.domain (text NOT NULL, CHECK reading|listening|writing) — RPC returns .domain; filter jsonb key 'domain' -> problems.domain",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "domain is a real validated enum column and both a returned field and a filterable RPC key (filter->>'domain')."
+    },
+    {
+      "screenRequirement": "급수(topik_level) 표시 + topik_level 필터",
+      "docSource": "description.md §2 (난이도/번호 필터 묶음), §4 (유형/난이도 표시); screen-data-summary.md 'topik_level 필터'; functional-spec.md filter(topik_level)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "problems.topik_level (smallint NOT NULL, CHECK 1|2) — RPC returns .topik_level; filter jsonb key 'topik_level'",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "topik_level is a real validated column, returned by RPC and filterable (f->>'topik_level')."
+    },
+    {
+      "screenRequirement": "문제 번호(question_no) 표시 + question_no 필터",
+      "docSource": "description.md §2 ('번호 ... 로 목록을 좁힘'), §4 ('문제 번호 ... 표시'); screen-data-summary.md 'question_no 필터'; functional-spec.md filter(question_no)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "problems.question_no (smallint NULL, CHECK 51|52|53|54) — RPC returns .question_no; filter jsonb key 'question_no'",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "question_no is a real validated column, returned by RPC and filterable (f->>'question_no'). Nullable for non-writing items."
+    },
+    {
+      "screenRequirement": "난이도(difficulty) 표시 + difficulty 필터 + difficulty 정렬",
+      "docSource": "description.md §2 ('난이도 ... 로 목록을 좁힘'), §3 (정렬), §4 ('난이도 ... 표시'); screen-data-summary.md 'difficulty 필터'; functional-spec.md filter(difficulty), sort",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "problems.difficulty (smallint NULL, CHECK 1..5) — RPC returns .difficulty; filter jsonb key 'difficulty'; sort='difficulty' orders by difficulty",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "difficulty is a real validated column, returned by RPC, filterable, and a confirmed sort key in the RPC (case when sort='difficulty')."
+    },
+    {
+      "screenRequirement": "태그(tags) 표시 + 주제어 검색/필터 보조",
+      "docSource": "description.md §3 ('주제어로 검색'); screen-data-summary.md 사용자 화면 표시 데이터 '유형/급수/난이도/태그'; functional-spec.md problems.tags",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "problems.tags (text[] NOT NULL default '{}') — RPC returns .tags",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "tags is a real NOT NULL array column returned by RPC. Note: RPC 'search' applies ILIKE on title only (not tags) — description.md §3 '주제어로 검색' vs current RPC search-by-title is flagged in screen-data-summary 검수 필요 항목 ('검색 대상이 title만인지 prompt까지'); tag display is satisfied, tag-search is an open product decision, not a schema gap."
+    },
+    {
+      "screenRequirement": "풀이 여부(is_solved / 풀이완료·시도·미시도 상태 배지) + status 필터",
+      "docSource": "description.md §2 ('풀이 상태로 목록을 좁힘'), §4 ('상태 ... 배지 1개 우선'); screen-data-summary.md '풀이 여부와 시도 횟수' + 확정 계약 '풀이/북마크 상태' (is_solved); functional-spec.md filter(status: solved/attempted/unattempted)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "rpc list_user_problems.is_solved (derived: EXISTS problem_attempts.is_correct=true for caller) + filter status 'solved|attempted|unattempted' (derived from problem_attempts)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "is_solved is computed in SQL from problem_attempts (user_id=auth.uid()) and returned by the RPC; status filter is computed in SQL (filtered CTE). Accurate filtered total_count depends on this being SQL-side — a confirmed stable-query need. Base column problem_attempts.is_correct (boolean) is real."
+    },
+    {
+      "screenRequirement": "시도 횟수(attempt_count) 표시",
+      "docSource": "screen-data-summary.md 사용자 화면 표시 데이터 '풀이 여부와 시도 횟수' + 확정 계약 '풀이/북마크 상태' (attempt_count); functional-spec.md problem_attempts.status",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "rpc list_user_problems.attempt_count (derived: count(problem_attempts) for caller) — base table problem_attempts (user_id, problem_id)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "attempt_count is computed per-row in the RPC from problem_attempts scoped to caller_id. Returned field; backed by real problem_attempts rows. No standalone column needed (derived aggregate is correct)."
+    },
+    {
+      "screenRequirement": "최근 시도 시각(last_attempt_at) — 상태/정렬 보조",
+      "docSource": "screen-data-summary.md 확정 계약 '풀이/북마크 상태' (last_attempt_at); functional-spec.md problem_attempts (이력 표시)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "rpc list_user_problems.last_attempt_at (derived: max(problem_attempts.started_at) for caller)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "last_attempt_at is returned by the RPC (max started_at for caller). Display/sort-assist only; description.md does not require it as a primary render field, so stableQueryNeed=false beyond what the RPC already supplies."
+    },
+    {
+      "screenRequirement": "북마크 상태(bookmarked) 표시",
+      "docSource": "screen-data-summary.md 사용자 화면 표시 데이터 '북마크 상태' + 확정 계약 '풀이/북마크 상태' (bookmarked -> problem_attempts.bookmarked); functional-spec.md problem_attempts.bookmarked",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "problems_attempts.bookmarked (boolean NOT NULL default false) — column EXISTS but NOT returned by list_user_problems and NOT fetched by problem-list-data.ts",
+      "gapStatus": "jsonb-covered",
+      "classification": "strong-inference",
+      "stableQueryNeed": false,
+      "rationale": "WIRING gap not schema gap: problem_attempts.bookmarked is a real validated column (satisfiable), but the screen's primary read path (RPC) does not surface it and the client wrapper does not join it. description.md §1-5 does NOT mention bookmark display for C-02 (it appears only in screen-data-summary 표시 데이터, lower-priority source). Per CONTRACT-NOT-LABEL + STABLE-QUERY: no description-level stable-query/render need is stated, so this is left as-is (column ready, not wired). Marked jsonb-covered/strong-inference to flag the available-but-unwired column; route the RPC-extension decision as a follow-up, not a migration. stableQueryNeed=false."
+    },
+    {
+      "screenRequirement": "비공개 문제 행 비활성/제외 (visibility) — 예외 처리",
+      "docSource": "description.md §4 예외 ('비공개/만료 문제는 행 비활성 및 사유 표시'), 화면 예외 ('비공개 문제'); functional-spec.md 상태/오류 ('비공개 문제 제외'); screen-data-summary.md RLS 'published/public 문제 또는 본인 ai_generated만 노출'",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "problems.visibility (text NOT NULL, CHECK private|public|org) + problems.publish_status (CHECK draft|published|archived) — enforced via RLS in RPC visible CTE",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "visibility + publish_status are real validated enum columns. RLS on problems (RPC is SECURITY INVOKER) already restricts the set to caller-visible rows (published/public or own ai_generated). The 비공개 EXCLUSION is satisfied by RLS. The 비공개 사유 표시(row-disable with reason) for borderline rows would need the column surfaced, but the visibility filtering need is met."
+    },
+    {
+      "screenRequirement": "만료 문제 행 비활성 및 사유 표시 (만료 = expiry on a problem)",
+      "docSource": "description.md §4 예외 ('비공개/만료 문제는 행 비활성 및 사유 표시')",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "(missing) — problems has no expiry column (no expires_at). Expiry exists only on recommendation_runs.expires_at / recommendation_items.status, not on problems",
+      "gapStatus": "unresolved",
+      "classification": "unresolved",
+      "stableQueryNeed": true,
+      "rationale": "description.md §4 (PRIMARY) lists '만료 문제' as a row-disable+reason render need, but problems has NO expiry concept in the LIVE schema. The only expiry in schema is recommendation_runs.expires_at / recommendation_items.status — a problem reached via X-07/R-02 recommendation could be expired at the recommendation layer, not the problem layer. This is a genuine doc↔schema ambiguity (is '만료' about the recommendation or the problem?). ESCALATE as a product/schema question — do NOT add an expiry column to problems. Net-new gap routed to UNRESOLVED per scope rules."
+    },
+    {
+      "screenRequirement": "문제 자료(이미지/오디오) 첨부 — 행/상세 자료 연결",
+      "docSource": "functional-spec.md DB 데이터 사용 명세 'problem_assets'; screen-data-summary.md 확정 계약 '문제 메타데이터' (problem_assets) + Supabase 스키마 'storage:problem-assets'",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "problem_assets (problem_id FK, storage_path, asset_type CHECK image|audio, sort_order) + storage bucket 'problem-assets' (public-read)",
+      "gapStatus": "satisfied",
+      "classification": "strong-inference",
+      "stableQueryNeed": false,
+      "rationale": "problem_assets table + columns exist as real validated objects. Not in the RPC return shape. description.md §4 does not require asset thumbnails in the LIST row (assets are detail-level). functional-spec/screen-data-summary list it as 보조; satisfied via a separate read when needed. stableQueryNeed=false for the list screen."
+    },
+    {
+      "screenRequirement": "쓰기 문제 이어쓰기(작성 중) 표시 + 이어쓰기 CTA (autosave 상태)",
+      "docSource": "functional-spec.md DB 데이터 사용 명세 'writing_drafts' (problem_id, autosave_status, last_saved_at — 작성 중인 문제 표시와 이어쓰기 CTA); screen-data-summary.md 확정 계약 '풀이/북마크 상태' 메모 ('쓰기 문제의 이어쓰기 상태는 writing_drafts로 보조')",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "writing_drafts.autosave_status (CHECK clean|dirty|syncing|failed|superseded) + writing_drafts.last_saved_at + writing_drafts.problem_id — active draft UNIQUE(user_id,problem_id) WHERE autosave_status<>'superseded'",
+      "gapStatus": "satisfied",
+      "classification": "strong-inference",
+      "stableQueryNeed": false,
+      "rationale": "writing_drafts columns are real and validated. NOT returned by list_user_problems and NOT joined by problem-list-data.ts. description.md (PRIMARY) does not mention 이어쓰기 for C-02; it appears only in functional-spec + screen-data-summary 메모 as a 보조 read. Per STABLE-QUERY rule: no description-level need, columns already serve via a separate writing_drafts query → leave as-is, do not extend the RPC. stableQueryNeed=false."
+    },
+    {
+      "screenRequirement": "검색어 입력/검증 (2-40자, debounce 300ms, 금칙어 안내)",
+      "docSource": "description.md §3 검색/정렬 ('검색어 2-40자, debounce 300ms', '금칙어 입력은 검색창 하단에 안내'); functional-spec.md filter(search)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "rpc list_user_problems filter jsonb key 'search' (ILIKE on problems.title) — validation is client-side (validateSearch in problem-list-data.ts)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "Search is passed as filter->>'search' to the RPC (ILIKE on title). The 2-40자/금칙어/debounce constraints are pure UI/input-validation logic (validateSearch), not DB schema. No column needed. Backing query path (RPC) is confirmed."
+    },
+    {
+      "screenRequirement": "정렬값 (최신순 등) — 1개 선택",
+      "docSource": "description.md §3 ('최신순 등으로 정렬', '정렬 1개 선택'); functional-spec.md sort; screen-data-summary.md 사용자 입력/상태 '정렬값'",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "rpc list_user_problems sort param ('recent' default = created_at desc | 'difficulty') — problems.created_at / problems.difficulty",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "sort is an RPC param backed by real columns (created_at desc, difficulty asc). Note: client mapSort collapses 4 UI sorts to 2 RPC sorts and 'oldest' degrades to 'recent' (flagged in problem-list-data.ts as a minor follow-up) — a UI-mapping limitation, not a schema gap."
+    },
+    {
+      "screenRequirement": "페이지 상태 (page, page_size, 페이지 버튼 5개)",
+      "docSource": "description.md §5 페이지 이동 ('페이지 번호 또는 이전/다음', '페이지 버튼 5개', '10개/페이지' §4); functional-spec.md page/page_size; screen-data-summary.md 사용자 입력/상태 '페이지'",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "rpc list_user_problems page/page_size params (LIMIT v_size OFFSET v_offset; clamped 1..100) + total_count for page math",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "page/page_size are RPC params; total_count (window count) makes filtered page numbering accurate. description.md §5 confirms total count display + page navigation — a stable-query need fully met by the RPC."
+    },
+    {
+      "screenRequirement": "다시 풀기(C-03) 딥링크 — solved row의 최신 제출 결과 보기",
+      "docSource": "description.md Navigation ('문제 선택 시 C-03 다시 풀기 모달'); functional-spec.md 주요 기능 '다시 풀기 모달 호출'; code: RetryModal + latestSubmissionId in problem-list-data.ts",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "writing_submissions.id (latest by submitted_at for solved problem_ids) — secondary query in fetchUserProblemsRpc",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "RetryModal '결과 보기' deep-link uses writing_submissions.id (latest submitted_at per solved problem), fetched as a secondary .in('problem_id', solvedIds) query in problem-list-data.ts. Real columns; RLS-scoped. Not part of the RPC but confirmed in code. stableQueryNeed=false (modal-trigger detail, not list render)."
+    }
+  ],
+  "jsonMapping": [],
+  "jsonMappingNote": "No seed JSON exists for C-02 (problem-list is a read-only listing screen; folder has only description.md, functional-spec.md, screen-data-summary.md, hifi.png, wireframe.png — no sample JSON). JSON MAPPING RULE / provenance preservation is N/A this run.",
+  "notes": "PRIMARY source = description.md. CONTRACT-NOT-LABEL: screen-data-summary.md labels nothing '스키마 보강 필요' — all three 확정 계약 rows say '현재 스키마로 충족', consistent with the live schema. The screen's confirmed read path is rpc:public.list_user_problems (SECURITY INVOKER), which already covers title/domain/topik_level/question_no/difficulty/tags/is_solved/attempt_count/last_attempt_at/created_at/total_count + filter(domain,topik_level,question_no,difficulty,status,search) + sort + paging. Two columns exist but are NOT wired into the RPC: problem_attempts.bookmarked (북마크 표시) and writing_drafts.autosave_status/last_saved_at (이어쓰기) — both are lower-priority-source asks with no description.md stable-query need, so left as-is (column ready, no migration). ONE genuine doc↔schema ambiguity: description.md §4 '만료 문제 행 비활성' — problems has NO expiry concept (expiry lives only on recommendation_runs/recommendation_items) → UNRESOLVED, escalate (do NOT add expiry to problems). Search-by-주제어 vs current title-only ILIKE is an open product decision (screen-data-summary 검수 필요 항목), not a schema gap. No frozen-island objects (admin_*/organizations/assignments) touched. READ-ONLY run; only this matrix artifact written. No migration proposed."
+}

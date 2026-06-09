@@ -62,6 +62,12 @@ problem과 활성 draft를 조회하고, 입력 중 draft를 저장한다. 제�
 ## 스키마 정합성 메모
 54번 화면도 08~10번과 같은 통합 writing 계약을 사용한다. 문제별 UI 세부 계약은 스키마 보강 필요다.
 
+## 2026-06-09 구현 메모
+- 54번 더미 JSON은 `problems.materials`, `answer_key`, `rubric` JSONB에 저장한다.
+- 사용자 화면은 raw JSONB 대신 `NormalizedWritingProblem(kind="q54")`을 사용한다.
+- UI 입력 필드는 `topicTitle`, `topicDefinition`, `background`, `requiredQuestions`, `rubricSummary`, `checklistItems`이다.
+- 필수 질문 3개 또는 rubric이 정규화되지 않으면 제출을 막고 문제 데이터 오류 안내를 표시한다.
+
 ## 검수 필요 항목
 - 54번 rubric JSON의 필수 키를 정의한다.
 - 논술형 예시 답안 노출 범위를 정한다.

@@ -1,0 +1,1299 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>TALKPIK AI · 화면별 데이터베이스 구조 안내</title>
+<script>
+/* set theme before paint to avoid flash */
+(function(){try{var t=localStorage.getItem('tp-theme');if(!t){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+</script>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+<style>
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+
+:root{
+  --bg:#F8FAFC; --surface:#FFFFFF; --surface-2:#F1F5F9;
+  --ink:#1E293B; --ink-soft:#475569; --ink-faint:#64748B;
+  --primary:#1E40AF; --primary-2:#3B82F6; --accent:#D97706;
+  --muted:#E9EEF6; --border:#E2E8F0; --border-blue:#DBEAFE; --danger:#DC2626;
+  --shadow:0 1px 2px rgba(15,23,42,.04),0 4px 16px rgba(15,23,42,.06);
+  --shadow-lg:0 8px 30px rgba(15,23,42,.10);
+  --radius:14px; --radius-sm:9px;
+  --mono:'JetBrains Mono','Fira Code',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --sans:'Pretendard',-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif;
+}
+[data-theme="dark"]{
+  --bg:#0B1220; --surface:#131C2E; --surface-2:#1B2638;
+  --ink:#E2E8F0; --ink-soft:#A6B4C8; --ink-faint:#7C8AA0;
+  --primary:#60A5FA; --primary-2:#3B82F6; --accent:#FBBF24;
+  --muted:#1B2638; --border:#2A3852; --border-blue:#274169; --danger:#F87171;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.35);
+  --shadow-lg:0 10px 36px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font-family:var(--sans);font-size:16px;line-height:1.65;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+}
+a{color:var(--primary);text-decoration:none}
+a:hover{text-decoration:underline}
+:focus-visible{outline:2px solid var(--primary-2);outline-offset:2px;border-radius:4px}
+.ic{width:1em;height:1em;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.14em}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+.skip{position:absolute;left:-999px;top:8px;z-index:200;background:var(--primary);color:#fff;padding:8px 14px;border-radius:8px}
+.skip:focus{left:12px}
+
+/* ---------- top bar ---------- */
+.topbar{position:sticky;top:0;z-index:100;background:color-mix(in srgb,var(--surface) 86%,transparent);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+.topbar .row{max-width:1180px;margin:0 auto;padding:11px 20px;display:flex;align-items:center;gap:12px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:-.01em}
+.brand .logo{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;
+  background:linear-gradient(135deg,var(--primary),var(--primary-2));color:#fff;font-size:18px}
+.brand small{display:block;font-weight:500;color:var(--ink-faint);font-size:12px;line-height:1.1}
+.brand b{font-size:15px}
+.spacer{flex:1}
+.iconbtn{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:10px;cursor:pointer;
+  background:var(--surface-2);border:1px solid var(--border);color:var(--ink-soft);font-size:18px;transition:background .18s,color .18s}
+.iconbtn:hover{background:var(--muted);color:var(--ink)}
+[data-theme="light"] .moon{display:none}
+[data-theme="dark"] .sun{display:none}
+
+/* ---------- layout ---------- */
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+.layout{display:grid;grid-template-columns:1fr;gap:28px;padding:30px 0 80px}
+@media(min-width:1024px){.layout{grid-template-columns:236px minmax(0,1fr);align-items:start}}
+
+/* ---------- sidebar / toc ---------- */
+.toc-wrap{position:sticky;top:64px;z-index:40}
+.toc-wrap>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;font-weight:600;
+  padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow)}
+.toc-wrap>summary::-webkit-details-marker{display:none}
+.toc{margin-top:10px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:10px;box-shadow:var(--shadow)}
+.toc a{display:block;padding:7px 12px;border-radius:8px;color:var(--ink-soft);font-size:14px;font-weight:500;line-height:1.3}
+.toc a:hover{background:var(--surface-2);text-decoration:none;color:var(--ink)}
+.toc a.sub{padding-left:26px;font-size:13px;color:var(--ink-faint)}
+.toc a.active{background:color-mix(in srgb,var(--primary) 12%,transparent);color:var(--primary);font-weight:700}
+.toc .grp{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-faint);padding:10px 12px 4px;font-weight:700}
+@media(min-width:1024px){.toc-wrap>summary{display:none}.toc{margin-top:0;max-height:calc(100vh - 90px);overflow:auto}}
+
+/* ---------- typography ---------- */
+.main{min-width:0}
+h2.sec{font-size:24px;letter-spacing:-.02em;margin:46px 0 6px;display:flex;align-items:center;gap:11px;scroll-margin-top:74px}
+h2.sec:first-child{margin-top:0}
+h2.sec .n{display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:var(--muted);color:var(--primary);font-size:16px;flex:none}
+.sec-desc{color:var(--ink-soft);margin:0 0 18px;max-width:70ch}
+h3.grp{font-size:17px;margin:30px 0 12px;display:flex;align-items:center;gap:10px;scroll-margin-top:74px}
+h3.grp .badge{display:inline-grid;place-items:center;min-width:26px;height:26px;padding:0 7px;border-radius:8px;
+  background:var(--primary);color:#fff;font-size:13px;font-weight:700;font-family:var(--mono)}
+
+/* ---------- hero ---------- */
+.hero{background:
+   radial-gradient(120% 120% at 100% 0%,color-mix(in srgb,var(--primary-2) 16%,transparent),transparent 55%),
+   var(--surface);
+  border:1px solid var(--border);border-radius:20px;padding:30px;box-shadow:var(--shadow);margin-top:4px}
+.hero h1{font-size:30px;letter-spacing:-.025em;margin:.1em 0 .25em;line-height:1.2}
+.hero p.lead{color:var(--ink-soft);margin:0 0 18px;max-width:64ch}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.meta .m{display:inline-flex;align-items:center;gap:7px;font-size:13px;background:var(--surface-2);
+  border:1px solid var(--border);border-radius:999px;padding:6px 13px;color:var(--ink-soft)}
+.meta .m b{color:var(--ink);font-weight:600}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media(min-width:560px){.stats{grid-template-columns:repeat(4,1fr)}}
+.stat{background:var(--surface-2);border:1px solid var(--border);border-radius:13px;padding:15px 16px}
+.stat .v{font-size:26px;font-weight:800;letter-spacing:-.02em;color:var(--primary);font-family:var(--mono)}
+.stat .k{font-size:12.5px;color:var(--ink-faint);margin-top:2px}
+
+/* ---------- callouts ---------- */
+.note{display:flex;gap:11px;border-radius:13px;padding:14px 16px;font-size:14.5px;line-height:1.6;border:1px solid;margin:16px 0}
+.note .ic{font-size:19px;margin-top:1px}
+.note.info{background:color-mix(in srgb,var(--primary-2) 9%,var(--surface));border-color:var(--border-blue);color:var(--ink)}
+.note.info .ic{color:var(--primary-2)}
+.note.warn{background:color-mix(in srgb,var(--accent) 12%,var(--surface));border-color:color-mix(in srgb,var(--accent) 35%,var(--border));color:var(--ink)}
+.note.warn .ic{color:var(--accent)}
+.note b{font-weight:700}
+
+/* ---------- cards & grids ---------- */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin:14px 0}
+.grid{display:grid;gap:14px}
+@media(min-width:680px){.grid.c2{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:900px){.grid.c3{grid-template-columns:repeat(3,1fr)}}
+
+/* domain map */
+.dmap{display:grid;gap:13px;grid-template-columns:1fr}
+@media(min-width:600px){.dmap{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:980px){.dmap{grid-template-columns:repeat(3,1fr)}}
+.dcard{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:15px 15px 15px 17px;
+  box-shadow:var(--shadow);overflow:hidden}
+.dcard::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--c)}
+.dcard .dh{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.dcard .di{display:grid;place-items:center;width:34px;height:34px;border-radius:9px;color:var(--c);font-size:19px;
+  background:color-mix(in srgb,var(--c) 15%,var(--surface))}
+.dcard .dt{font-weight:700;font-size:15px}
+.dcard .dd{color:var(--ink-soft);font-size:13.5px;margin:0 0 10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+
+/* chips & badges */
+.chip{font-family:var(--mono);font-size:12px;background:var(--surface-2);border:1px solid var(--border);
+  color:var(--primary);padding:3px 8px;border-radius:7px;white-space:nowrap}
+[data-theme="dark"] .chip{color:#9DC1FF}
+.u{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.u .ic{font-size:13px}
+.u-r{background:#DBEAFE;color:#1E40AF}
+.u-w{background:#FEF3C7;color:#B45309}
+.u-d{background:#EDE9FE;color:#6D28D9}
+[data-theme="dark"] .u-r{background:rgba(59,130,246,.20);color:#93C5FD}
+[data-theme="dark"] .u-w{background:rgba(217,119,6,.24);color:#FCD34D}
+[data-theme="dark"] .u-d{background:rgba(139,92,246,.24);color:#C4B5FD}
+.tag{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.tag-self{background:#DCFCE7;color:#15803D}
+.tag-public{background:#DBEAFE;color:#1E40AF}
+.tag-immut{background:#FEE2E2;color:#B91C1C}
+.tag-admin{background:#FEE2E2;color:#B91C1C}
+.tag-one{background:#FEF3C7;color:#B45309}
+[data-theme="dark"] .tag-self{background:rgba(34,197,94,.20);color:#86EFAC}
+[data-theme="dark"] .tag-public{background:rgba(59,130,246,.20);color:#93C5FD}
+[data-theme="dark"] .tag-immut,[data-theme="dark"] .tag-admin{background:rgba(248,113,113,.20);color:#FCA5A5}
+[data-theme="dark"] .tag-one{background:rgba(217,119,6,.24);color:#FCD34D}
+
+/* tables */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:11px;margin-top:4px}
+table.tbl{width:100%;border-collapse:collapse;font-size:14px;min-width:440px}
+table.tbl th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);
+  font-weight:700;padding:9px 13px;background:var(--surface-2);border-bottom:1px solid var(--border);white-space:nowrap}
+table.tbl td{padding:9px 13px;border-bottom:1px solid var(--border);vertical-align:top}
+table.tbl tr:last-child td{border-bottom:0}
+table.tbl tbody tr:hover{background:var(--surface-2)}
+table.tbl td.col{white-space:nowrap}
+.ty{font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);background:var(--muted);border:1px solid var(--border);padding:1px 7px;border-radius:6px;white-space:nowrap}
+.ty.k{color:var(--primary)}
+.ty.j{color:#7C3AED}
+[data-theme="dark"] .ty.k{color:#9DC1FF}
+[data-theme="dark"] .ty.j{color:#C4B5FD}
+
+/* page cards */
+.pcard{background:var(--surface);border:1px solid var(--border);border-radius:13px;box-shadow:var(--shadow);
+  padding:16px 16px 6px;margin:13px 0;scroll-margin-top:74px}
+.pcard.adminbox{border-color:color-mix(in srgb,var(--danger) 40%,var(--border));
+  background:color-mix(in srgb,var(--danger) 5%,var(--surface))}
+.phead{display:flex;align-items:center;flex-wrap:wrap;gap:9px;margin-bottom:4px}
+.code{font-family:var(--mono);font-weight:700;font-size:13px;color:#fff;background:var(--primary);padding:3px 9px;border-radius:8px}
+.adminbox .code{background:var(--danger)}
+.ptitle{font-weight:700;font-size:15.5px}
+.lock{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;color:var(--danger);
+  background:color-mix(in srgb,var(--danger) 12%,transparent);padding:2px 9px;border-radius:999px}
+.pcard .tip{font-size:13.5px;color:var(--ink-soft);background:var(--surface-2);border-radius:9px;padding:10px 12px;margin:10px 0}
+.pcard .tip .ic{color:var(--primary-2);font-size:16px;vertical-align:-.18em;margin-right:5px}
+
+/* enum cards */
+.enums{display:grid;gap:12px;grid-template-columns:1fr}
+@media(min-width:640px){.enums{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:1040px){.enums{grid-template-columns:repeat(2,1fr)}}
+.ecard{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:13px 15px;box-shadow:var(--shadow)}
+.ecard .et{font-weight:600;font-size:13.5px;margin-bottom:9px;color:var(--ink)}
+.ecard .et code{font-family:var(--mono);font-size:12px;color:var(--ink-faint);font-weight:500}
+.pill{font-family:var(--mono);font-size:12px;background:color-mix(in srgb,var(--primary) 9%,var(--surface));
+  color:var(--primary);border:1px solid var(--border-blue);padding:2px 8px;border-radius:7px}
+.pill.tbd{font-family:var(--sans);font-style:italic;color:var(--ink-faint);background:var(--surface-2);border-color:var(--border)}
+
+/* storage + reminders */
+.rem{counter-reset:r;display:grid;gap:12px;grid-template-columns:1fr}
+@media(min-width:760px){.rem{grid-template-columns:repeat(2,1fr)}}
+.rcard{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px 16px 15px 56px;box-shadow:var(--shadow)}
+.rcard::before{counter-increment:r;content:counter(r);position:absolute;left:14px;top:14px;width:30px;height:30px;
+  display:grid;place-items:center;border-radius:9px;background:linear-gradient(135deg,var(--primary),var(--primary-2));
+  color:#fff;font-weight:800;font-family:var(--mono);font-size:15px}
+.rcard b{display:block;margin-bottom:3px}
+.rcard p{margin:0;color:var(--ink-soft);font-size:14px}
+
+/* index table chips */
+.idx td .chips{gap:5px}
+.idx .chip.pg{color:var(--ink-soft);background:var(--surface-2)}
+
+/* back to top */
+#toTop{position:fixed;right:20px;bottom:20px;z-index:90;width:46px;height:46px;border-radius:13px;display:grid;place-items:center;
+  background:var(--primary);color:#fff;border:0;cursor:pointer;font-size:20px;box-shadow:var(--shadow-lg);opacity:0;
+  transform:translateY(12px);pointer-events:none;transition:opacity .25s,transform .25s}
+#toTop.show{opacity:1;transform:none;pointer-events:auto}
+
+footer{border-top:1px solid var(--border);margin-top:40px;padding:24px 0;color:var(--ink-faint);font-size:13px;text-align:center}
+
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
+@media print{
+  :root{--bg:#fff;--surface:#fff;--surface-2:#f4f6fa;--ink:#111;--ink-soft:#333;--shadow:none;--shadow-lg:none}
+  .topbar,.toc-wrap,#toTop,.skip{display:none!important}
+  .layout{grid-template-columns:1fr;padding-top:0}
+  .pcard,.card,.dcard,.ecard,.rcard,.hero{break-inside:avoid;box-shadow:none}
+  body{font-size:12px}
+}
+
+/* ===== reference dock + accordion ===== */
+.refdock{scroll-margin-top:74px}
+@media(min-width:1024px){.layout>footer{grid-column:1 / -1}}
+.refhead{display:flex;align-items:center;gap:8px;font-weight:700;font-size:16px;padding:4px 6px 12px;border-bottom:1px solid var(--border);margin-bottom:8px}
+.refhead .ic{color:var(--primary)}
+.refall{margin-left:auto;font:inherit;font-size:11.5px;font-weight:700;cursor:pointer;color:var(--primary);background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:4px 11px}
+.refall:hover{background:var(--muted)}
+.refgrp{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);font-weight:700;padding:13px 6px 5px}
+details.acc{border:1px solid var(--border);border-radius:11px;margin:7px 0;background:var(--surface);box-shadow:var(--shadow);overflow:hidden}
+details.acc.adminbox{border-color:color-mix(in srgb,var(--danger) 40%,var(--border));background:color-mix(in srgb,var(--danger) 5%,var(--surface))}
+details.acc>summary{cursor:pointer;list-style:none;display:flex;align-items:center;flex-wrap:wrap;gap:7px;padding:11px 13px}
+details.acc>summary::-webkit-details-marker{display:none}
+details.acc>summary .ptitle{font-size:13.5px}
+details.acc>summary::after{content:"";margin-left:auto;width:7px;height:7px;border-right:2px solid var(--ink-faint);border-bottom:2px solid var(--ink-faint);transform:rotate(45deg);transition:transform .2s;flex:none}
+details.acc[open]>summary::after{transform:rotate(-135deg)}
+details.acc[open]>summary{border-bottom:1px solid var(--border);background:var(--surface-2)}
+details.acc>summary:hover{background:var(--surface-2)}
+details.acc>p{margin:11px 13px;font-size:13.5px;color:var(--ink-soft)}
+details.acc .tbl-wrap{margin:11px;border-radius:9px}
+details.acc .tip,details.acc .note{margin:11px 13px}
+@media(min-width:1180px){
+  .wrap{max-width:1340px}
+  .layout{grid-template-columns:212px minmax(0,1fr) 348px}
+  .layout>.toc-wrap{grid-column:1}
+  .layout>.main{grid-column:2}
+  .refdock{grid-column:3;position:sticky;top:64px;align-self:start;max-height:calc(100vh - 84px);overflow:auto;background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);padding:12px 14px}
+  .refdock details.acc .tbl-wrap table.tbl{min-width:0;font-size:12.5px}
+  .refdock details.acc .tbl-wrap table.tbl th,.refdock details.acc .tbl-wrap table.tbl td{padding:7px 9px}
+  .refdock details.acc>summary{padding:9px 11px}
+}
+@media(min-width:1024px) and (max-width:1179px){
+  .refdock{grid-column:1 / -1;margin-top:26px}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">본문으로 건너뛰기</a>
+
+<!-- icon sprite -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+ <symbol id="i-db" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></symbol>
+ <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></symbol>
+ <symbol id="i-pen" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></symbol>
+ <symbol id="i-sigma" viewBox="0 0 24 24"><path d="M18 7V4H6l6 8-6 8h12v-3"/></symbol>
+ <symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+ <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
+ <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></symbol>
+ <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></symbol>
+ <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+ <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></symbol>
+ <symbol id="i-print" viewBox="0 0 24 24"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></symbol>
+ <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+ <symbol id="i-q" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/></symbol>
+ <symbol id="i-check2" viewBox="0 0 24 24"><path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></symbol>
+ <symbol id="i-msg" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+ <symbol id="i-bars" viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></symbol>
+ <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></symbol>
+ <symbol id="i-book" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></symbol>
+ <symbol id="i-act" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></symbol>
+ <symbol id="i-dl" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></symbol>
+ <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></symbol>
+ <symbol id="i-card" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></symbol>
+ <symbol id="i-doc" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8"/></symbol>
+ <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+ <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/></symbol>
+</svg>
+
+<header class="topbar">
+  <div class="row">
+    <div class="brand">
+      <span class="logo"><svg class="ic"><use href="#i-db"/></svg></span>
+      <span><b>데이터베이스 구조 안내</b><small>TALKPIK AI · 화면별 정리</small></span>
+    </div>
+    <span class="spacer"></span>
+    <button class="iconbtn" id="themeBtn" onclick="toggleTheme()" aria-label="밝게/어둡게 전환">
+      <svg class="ic sun"><use href="#i-sun"/></svg><svg class="ic moon"><use href="#i-moon"/></svg>
+    </button>
+    <button class="iconbtn" onclick="window.print()" aria-label="인쇄 / PDF로 저장"><svg class="ic"><use href="#i-print"/></svg></button>
+  </div>
+</header>
+
+<div class="wrap layout">
+  <!-- sidebar TOC -->
+  <details class="toc-wrap">
+    <summary><svg class="ic"><use href="#i-bars" style="display:none"/></svg>목차 열기</summary>
+    <nav class="toc" aria-label="목차">
+      <a href="#top">개요</a>
+      <a href="#legend">사용 형태 (범례)</a>
+      <a href="#overview">전체 그림</a>
+      <a href="#common">공통 규칙</a>
+      <div class="grp">화면별 데이터 구조</div>
+      <a class="sub" href="#grp-a">A · 인증·온보딩</a>
+      <a class="sub" href="#grp-b">B · 홈</a>
+      <a class="sub" href="#grp-c">C · 문제 탐색·풀이</a>
+      <a class="sub" href="#grp-d">D · 쓰기</a>
+      <a class="sub" href="#grp-e">E · 피드백</a>
+      <a class="sub" href="#grp-r">R · 리포트·추천</a>
+      <a class="sub" href="#grp-f">F · 서재·내보내기</a>
+      <a class="sub" href="#grp-g">G · 설정</a>
+      <a class="sub" href="#grp-x">X · 계정·결제·법적·기타</a>
+      <a class="sub" href="#grp-h">H · 관리자 문제 관리</a>
+      <div class="grp">참고 자료</div>
+      <a href="#index">화면 → 테이블 색인</a>
+      <a href="#ref">테이블 레퍼런스</a>
+      <a href="#enums">상태값(열거형) 모음</a>
+      <a href="#storage">파일 저장소</a>
+      <a href="#notes">꼭 기억할 점</a>
+    </nav>
+  </details>
+
+  <main class="main" id="main">
+    <span id="top"></span>
+    <!-- HERO -->
+    <section class="hero">
+      <h1>화면별 데이터베이스 구조 안내</h1>
+      <p class="lead">이 제품을 처음 인계받는 개발자를 위한 안내서입니다. 각 화면이 어떤 데이터를 읽고 쓰는지,
+        그리고 그 데이터가 어떻게 생겼는지를 한 문서에서 파악할 수 있게 정리했습니다.</p>
+      <div class="meta">
+        <span class="m"><svg class="ic"><use href="#i-db"/></svg>데이터베이스 <b>PostgreSQL (Supabase)</b></span>
+        <span class="m"><svg class="ic"><use href="#i-users"/></svg>대상 <b>인계 개발자</b></span>
+        <span class="m"><svg class="ic"><use href="#i-info"/></svg>범위 <b>데이터 구조만</b></span>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="v">39</div><div class="k">화면</div></div>
+        <div class="stat"><div class="v">14</div><div class="k">데이터 묶음</div></div>
+        <div class="stat"><div class="v">24+</div><div class="k">테이블</div></div>
+        <div class="stat"><div class="v">28</div><div class="k">상태값 세트</div></div>
+      </div>
+      <div class="note info" style="margin-bottom:0">
+        <svg class="ic"><use href="#i-info"/></svg>
+        <div>이 문서는 <b>데이터 구조 자체</b>만 설명합니다. 코드 파일 위치·내부 함수·변수·화면 컴포넌트 이름은 다루지 않습니다.
+          같은 데이터 구조 위에서 어떤 방식으로 구현하든 참고할 수 있습니다.</div>
+      </div>
+    </section>
+
+    <!-- LEGEND -->
+    <h2 class="sec" id="legend"><span class="n"><svg class="ic"><use href="#i-info"/></svg></span>사용 형태 (범례)</h2>
+    <p class="sec-desc">아래에서 각 화면이 데이터를 어떻게 다루는지 세 가지 색으로 구분합니다. 색만이 아니라 글자로도 표시되니 흑백 인쇄에서도 구분됩니다.</p>
+    <div class="grid c3">
+      <div class="card" style="margin:0"><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span>
+        <p style="margin:10px 0 0;color:var(--ink-soft);font-size:14px">화면에 보여주려고 데이터를 <b>가져온다</b>.</p></div>
+      <div class="card" style="margin:0"><span class="u u-w"><svg class="ic"><use href="#i-pen"/></svg>쓰기</span>
+        <p style="margin:10px 0 0;color:var(--ink-soft);font-size:14px">사용자의 행동으로 데이터를 <b>새로 만들거나 바꾼다</b>.</p></div>
+      <div class="card" style="margin:0"><span class="u u-d"><svg class="ic"><use href="#i-sigma"/></svg>파생</span>
+        <p style="margin:10px 0 0;color:var(--ink-soft);font-size:14px">원본 데이터를 모아 <b>통계·점수·추세로 계산</b>해 쓴다.</p></div>
+    </div>
+
+    <!-- OVERVIEW -->
+    <h2 class="sec" id="overview"><span class="n"><svg class="ic"><use href="#i-db"/></svg></span>전체 그림</h2>
+    <p class="sec-desc">데이터는 크게 14개 묶음으로 나뉩니다. 각 묶음에 속한 테이블 이름과 한 줄 설명입니다.</p>
+    <div class="dmap">
+      <div class="dcard" style="--c:#2563EB"><div class="dh"><span class="di"><svg class="ic"><use href="#i-users"/></svg></span><span class="dt">사용자</span></div>
+        <p class="dd">계정 프로필과 학습 목표</p><div class="chips"><span class="chip">profiles</span><span class="chip">learning_goals</span></div></div>
+      <div class="dcard" style="--c:#4F46E5"><div class="dh"><span class="di"><svg class="ic"><use href="#i-q"/></svg></span><span class="dt">문제</span></div>
+        <p class="dd">문제 본문과 붙은 이미지·오디오</p><div class="chips"><span class="chip">problems</span><span class="chip">problem_assets</span></div></div>
+      <div class="dcard" style="--c:#0891B2"><div class="dh"><span class="di"><svg class="ic"><use href="#i-check2"/></svg></span><span class="dt">객관식 풀이</span></div>
+        <p class="dd">읽기·듣기 같은 선택형 풀이 기록</p><div class="chips"><span class="chip">problem_attempts</span></div></div>
+      <div class="dcard" style="--c:#0D9488"><div class="dh"><span class="di"><svg class="ic"><use href="#i-pen"/></svg></span><span class="dt">쓰기</span></div>
+        <p class="dd">자동저장 초안과 최종 제출본</p><div class="chips"><span class="chip">writing_drafts</span><span class="chip">writing_submissions</span></div></div>
+      <div class="dcard" style="--c:#7C3AED"><div class="dh"><span class="di"><svg class="ic"><use href="#i-msg"/></svg></span><span class="dt">피드백</span></div>
+        <p class="dd">총평·영역별 점수·문장별 교정</p><div class="chips"><span class="chip">writing_feedback</span><span class="chip">feedback_dimension_scores</span><span class="chip">sentence_feedback</span></div></div>
+      <div class="dcard" style="--c:#C026D3"><div class="dh"><span class="di"><svg class="ic"><use href="#i-bars"/></svg></span><span class="dt">리포트</span></div>
+        <p class="dd">이전·현재 답안 비교 결과</p><div class="chips"><span class="chip">comparison_reports</span></div></div>
+      <div class="dcard" style="--c:#D97706"><div class="dh"><span class="di"><svg class="ic"><use href="#i-star"/></svg></span><span class="dt">추천</span></div>
+        <p class="dd">추천 단위와 추천된 문제</p><div class="chips"><span class="chip">recommendation_runs</span><span class="chip">recommendation_items</span></div></div>
+      <div class="dcard" style="--c:#EA580C"><div class="dh"><span class="di"><svg class="ic"><use href="#i-book"/></svg></span><span class="dt">서재</span></div>
+        <p class="dd">사용자가 저장해 둔 항목 모음</p><div class="chips"><span class="chip">library_items</span></div></div>
+      <div class="dcard" style="--c:#16A34A"><div class="dh"><span class="di"><svg class="ic"><use href="#i-act"/></svg></span><span class="dt">활동 로그</span></div>
+        <p class="dd">학습 행동의 시간축 기록</p><div class="chips"><span class="chip">study_events</span></div></div>
+      <div class="dcard" style="--c:#64748B"><div class="dh"><span class="di"><svg class="ic"><use href="#i-dl"/></svg></span><span class="dt">파일</span></div>
+        <p class="dd">PDF 등 사용자가 만든 파일 정보</p><div class="chips"><span class="chip">export_files</span></div></div>
+      <div class="dcard" style="--c:#E11D48"><div class="dh"><span class="di"><svg class="ic"><use href="#i-bell"/></svg></span><span class="dt">알림</span></div>
+        <p class="dd">리마인더 설정과 발송 이력</p><div class="chips"><span class="chip">notification_settings</span><span class="chip">notification_log</span></div></div>
+      <div class="dcard" style="--c:#059669"><div class="dh"><span class="di"><svg class="ic"><use href="#i-card"/></svg></span><span class="dt">결제</span></div>
+        <p class="dd">플랜·구독·결제 이력</p><div class="chips"><span class="chip">subscription_plans</span><span class="chip">subscriptions</span><span class="chip">payment_history</span></div></div>
+      <div class="dcard" style="--c:#78716C"><div class="dh"><span class="di"><svg class="ic"><use href="#i-doc"/></svg></span><span class="dt">약관·동의</span></div>
+        <p class="dd">버전별 약관 문서와 동의 기록</p><div class="chips"><span class="chip">legal_documents</span><span class="chip">user_consents</span></div></div>
+      <div class="dcard" style="--c:#DC2626"><div class="dh"><span class="di"><svg class="ic"><use href="#i-shield"/></svg></span><span class="dt">관리자 <span class="lock"><svg class="ic"><use href="#i-lock"/></svg>별도 앱</span></span></div>
+        <p class="dd">관리자 작업 기록·조직 데이터</p><div class="chips"><span class="chip">admin_audit_logs</span><span class="chip">조직 테이블</span></div></div>
+    </div>
+    <div class="note warn">
+      <svg class="ic"><use href="#i-alert"/></svg>
+      <div><b>관리자 영역 주의.</b> <code class="ty">H-01</code> <code class="ty">X-08</code> <code class="ty">X-10</code> <code class="ty">X-15</code> 화면과 조직 관련 테이블은
+        <b>별도 관리자 앱이 담당</b>합니다. 이 문서에서는 구조만 설명하고, 사용자용 앱에서 새로 만들거나 확장하지 않습니다.
+        데이터 스키마는 관리자 쪽 설계를 먼저 따르고 사용자 화면이 거기에 맞춥니다.</div>
+    </div>
+
+    <!-- COMMON RULES -->
+    <h2 class="sec" id="common"><span class="n"><svg class="ic"><use href="#i-shield"/></svg></span>공통 규칙</h2>
+    <p class="sec-desc">모든 화면에 똑같이 적용되는 약속입니다. 개별 화면 설명을 읽기 전에 먼저 이해해 두면 좋습니다.</p>
+    <div class="rem">
+      <div class="rcard"><b>계정 연결</b><p>모든 사용자 데이터는 로그인 계정에 1:1로 연결된 프로필을 기준으로 묶입니다. 프로필이 중심점입니다.</p></div>
+      <div class="rcard"><b>본인 데이터만 접근</b><p>사용자가 만든 데이터는 <b>본인만 읽고 쓰도록</b> 데이터베이스 차원에서 막혀 있습니다. 화면이 막아 주는 게 아닙니다.</p></div>
+      <div class="rcard"><b>제출본은 못 고친다 (불변)</b><p>쓰기 최종 제출본은 한 번 만들면 수정·삭제가 막힙니다. 다시 풀면 새 제출본을 만들고 이전 것과 연결만 합니다.</p></div>
+      <div class="rcard"><b>상태값은 정해진 단어만</b><p>대부분의 상태 컬럼은 미리 정해진 단어 집합만 허용합니다(상태값 모음 참고).</p></div>
+      <div class="rcard"><b>권한은 DB가 진실</b><p>관리자 여부·플랜·계정 상태 같은 민감한 값은 토큰이 아니라 <b>DB에 저장된 값</b>으로 판단합니다. 사용자가 임의로 못 바꿉니다.</p></div>
+      <div class="rcard"><b>첨부 파일은 별도 저장소</b><p>이미지·오디오·PDF 같은 파일 자체는 테이블이 아니라 파일 저장소에 두고, 테이블에는 위치만 둡니다.</p></div>
+    </div>
+
+    <!-- ============ PAGES ============ -->
+    <h2 class="sec"><span class="n"><svg class="ic"><use href="#i-act"/></svg></span>화면별 데이터 구조</h2>
+    <p class="sec-desc">화면(IA 코드) 단위로 사용 테이블과 사용 형태를 정리했습니다. 처음 보는 테이블이 나오면 아래
+      <a href="#ref">테이블 레퍼런스</a>를 함께 보세요.</p>
+
+    <!-- GROUP A -->
+    <h3 class="grp" id="grp-a"><span class="badge">A</span>인증·온보딩</h3>
+
+    <article class="pcard">
+      <div class="phead"><span class="code">A-01</span><span class="ptitle">회원가입</span></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>테이블</th><th>사용 형태</th><th>무엇에 쓰나</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">profiles</span></td><td><span class="u u-w"><svg class="ic"><use href="#i-pen"/></svg>쓰기</span> <span class="ty">자동</span></td><td>가입이 끝나면 기본 프로필 한 줄이 자동으로 생긴다</td></tr>
+        <tr><td class="col"><span class="chip">legal_documents</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>가입 화면에 보여줄 약관·개인정보 문서(공개 버전)를 가져온다</td></tr>
+        <tr><td class="col"><span class="chip">user_consents</span></td><td><span class="u u-w"><svg class="ic"><use href="#i-pen"/></svg>쓰기</span></td><td>사용자가 동의한 약관 버전과 시각을 기록으로 남긴다</td></tr>
+      </tbody></table></div>
+      <div class="tip"><svg class="ic"><use href="#i-info"/></svg>로그인 이메일은 인증 시스템이 보관하고, 프로필에는 표시 이름·언어·권한·플랜·상태 같은 앱 전용 정보가 들어갑니다.</div>
+    </article>
+
+    <article class="pcard">
+      <div class="phead"><span class="code">A-02</span><span class="ptitle">로그인</span></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>테이블</th><th>사용 형태</th><th>무엇에 쓰나</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">profiles</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>로그인한 사용자의 계정 상태와 권한을 확인한다</td></tr>
+      </tbody></table></div>
+    </article>
+
+    <article class="pcard">
+      <div class="phead"><span class="code">A-03</span><span class="ptitle">학습 목표 설정 (온보딩)</span></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>테이블</th><th>사용 형태</th><th>무엇에 쓰나</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">learning_goals</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span> <span class="u u-w"><svg class="ic"><use href="#i-pen"/></svg>쓰기</span></td><td>목표 시험 등급, 시험일, 주간 목표, 약점 영역을 저장한다</td></tr>
+        <tr><td class="col"><span class="chip">profiles</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>기본 언어와 온보딩 진행 여부를 판단한다</td></tr>
+      </tbody></table></div>
+    </article>
+
+    <!-- GROUP B -->
+    <h3 class="grp" id="grp-b"><span class="badge">B</span>홈</h3>
+    <article class="pcard">
+      <div class="phead"><span class="code">B-01</span><span class="ptitle">홈 대시보드</span></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>테이블</th><th>사용 형태</th><th>무엇에 쓰나</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">profiles</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>사용자 표시와 플랜 상태</td></tr>
+        <tr><td class="col"><span class="chip">learning_goals</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>목표 달성률과 다음 행동 안내</td></tr>
+        <tr><td class="col"><span class="chip">recommendation_runs</span> <span class="chip">recommendation_items</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>추천 카드와 추천 사유</td></tr>
+        <tr><td class="col"><span class="chip">writing_drafts</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>이어 쓸 문제와 자동저장 상태</td></tr>
+        <tr><td class="col"><span class="chip">writing_feedback</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>최근 첨삭 점수 요약</td></tr>
+        <tr><td class="col"><span class="chip">study_events</span></td><td><span class="u u-d"><svg class="ic"><use href="#i-sigma"/></svg>파생</span></td><td>학습 연속일, 오늘 활동 같은 요약 지표</td></tr>
+      </tbody></table></div>
+      <div class="tip"><svg class="ic"><use href="#i-info"/></svg>대시보드 상단 요약 수치는 위 데이터를 서버에서 한 번에 집계해 내려줍니다.</div>
+    </article>
+
+    <!-- GROUP C -->
+    <h3 class="grp" id="grp-c"><span class="badge">C</span>문제 탐색·풀이</h3>
+    <article class="pcard">
+      <div class="phead"><span class="code">C-01</span><span class="ptitle">문제 유형 추천</span></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>테이블</th><th>사용 형태</th><th>무엇에 쓰나</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">recommendation_runs</span> <span class="chip">recommendation_items</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>추천 묶음과 추천 문제 목록</td></tr>
+        <tr><td class="col"><span class="chip">problems</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>추천 후보 문제의 기본 정보</td></tr>
+        <tr><td class="col"><span class="chip">feedback_dimension_scores</span></td><td><span class="u u-d"><svg class="ic"><use href="#i-sigma"/></svg>파생</span></td><td>약한 영역을 추천 근거로 사용</td></tr>
+      </tbody></table></div>
+    </article>
+
+    <article class="pcard">
+      <div class="phead"><span class="code">C-02</span><span class="ptitle">문제 목록</span></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>테이블</th><th>사용 형태</th><th>무엇에 쓰나</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">problems</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>목록, 필터, 정렬, 상세 진입</td></tr>
+        <tr><td class="col"><span class="chip">problem_assets</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>문제에 붙은 이미지·오디오</td></tr>
+        <tr><td class="col"><span class="chip">problem_attempts</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span> <span class="u u-w"><svg class="ic"><use href="#i-pen"/></svg>쓰기</span></td><td>풀이 이력, 북마크, 소요 시간</td></tr>
+        <tr><td class="col"><span class="chip">writing_drafts</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>작성 중인 문제 표시와 이어쓰기 안내</td></tr>
+      </tbody></table></div>
+      <div class="tip"><svg class="ic"><use href="#i-info"/></svg>목록은 필터·정렬·페이지 조건에 맞는 문제와 <b>정확한 총 건수</b>를 서버에서 계산해 내려줍니다. 문제의 활성/비활성·만료 상태도 함께 반영됩니다.</div>
+    </article>
+
+    <article class="pcard">
+      <div class="phead"><span class="code">C-03</span><span class="ptitle">재도전 모달</span></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>테이블</th><th>사용 형태</th><th>무엇에 쓰나</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">problem_attempts</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span> <span class="u u-w"><svg class="ic"><use href="#i-pen"/></svg>쓰기</span></td><td>재도전 가능 여부 판단과 새 시도 시작</td></tr>
+        <tr><td class="col"><span class="chip">writing_drafts</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span> <span class="u u-w"><svg class="ic"><use href="#i-pen"/></svg>쓰기</span></td><td>이어쓰기와 새로 시작 중 선택</td></tr>
+      </tbody></table></div>
+    </article>
+
+    <!-- GROUP D -->
+    <h3 class="grp" id="grp-d"><span class="badge">D</span>쓰기 (51~54번)</h3>
+    <article class="pcard">
+      <div class="phead"><span class="code">D-01~04</span><span class="ptitle">쓰기 작성 — 51·52·53·54번</span></div>
+      <p style="margin:2px 0 8px;color:var(--ink-soft);font-size:13.5px">네 화면의 데이터 사용은 동일합니다. 다른 점은 문제 번호와 답안 형태뿐입니다.</p>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>테이블</th><th>사용 형태</th><th>무엇에 쓰나</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">problems</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>문제 지문, 조건, 채점 기준</td></tr>
+        <tr><td class="col"><span class="chip">problem_assets</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>문제 자료 이미지·오디오</td></tr>
+        <tr><td class="col"><span class="chip">writing_drafts</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span> <span class="u u-w"><svg class="ic"><use href="#i-pen"/></svg>쓰기</span></td><td>작성 중 자동저장과 임시 보관</td></tr>
+        <tr><td class="col"><span class="chip">writing_submissions</span></td><td><span class="u u-w"><svg class="ic"><use href="#i-pen"/></svg>쓰기</span></td><td>최종 제출본 생성</td></tr>
+        <tr><td class="col"><span class="chip">study_events</span></td><td><span class="u u-w"><svg class="ic"><use href="#i-pen"/></svg>쓰기</span></td><td>작성 시작·제출 이벤트 기록</td></tr>
+      </tbody></table></div>
+      <div class="tip"><svg class="ic"><use href="#i-info"/></svg>51번은 빈칸 채우기처럼 구조화된 답(빈칸1·빈칸2), 53번은 도입·본문·결론 구조를 가집니다. 이런 구조화된 답은 답안 JSON으로 저장되며, 화면은 원본 자료를 곧장 그리지 않고 정돈된 형태로 변환한 뒤 보여 줍니다.</div>
+    </article>
+
+    <article class="pcard">
+      <div class="phead"><span class="code">D-M1</span><span class="ptitle">제출 확인 모달</span></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>테이블</th><th>사용 형태</th><th>무엇에 쓰나</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">writing_drafts</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>제출 직전 임시 답안 확인</td></tr>
+        <tr><td class="col"><span class="chip">writing_submissions</span></td><td><span class="u u-w"><svg class="ic"><use href="#i-pen"/></svg>쓰기</span></td><td>확정 제출본 생성</td></tr>
+      </tbody></table></div>
+      <div class="tip"><svg class="ic"><use href="#i-info"/></svg>최종 제출과 첫 피드백 대기 레코드 생성은 한 번에(원자적으로) 처리되어, "제출은 됐는데 분석이 안 걸린" 상태가 생기지 않습니다.</div>
+    </article>
+
+    <article class="pcard">
+      <div class="phead"><span class="code">D-M2</span><span class="ptitle">AI 분석 대기 화면</span></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>테이블</th><th>사용 형태</th><th>무엇에 쓰나</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">writing_submissions</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>분석 대기/완료 상태 표시</td></tr>
+        <tr><td class="col"><span class="chip">writing_feedback</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span> <span class="u u-w"><svg class="ic"><use href="#i-pen"/></svg>쓰기</span></td><td>분석이 끝나면 첨삭 결과를 연결</td></tr>
+      </tbody></table></div>
+      <div class="tip"><svg class="ic"><use href="#i-info"/></svg>제출본의 피드백 상태 전환(대기→분석중→완료/실패)은 <b>서버 측에서만</b> 일어나고, 정해진 흐름 외의 전환은 막혀 있습니다.</div>
+    </article>
+
+    <article class="pcard">
+      <div class="phead"><span class="code">D-M3</span><span class="ptitle">자동저장 경고</span></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>테이블</th><th>사용 형태</th><th>무엇에 쓰나</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">writing_drafts</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span> <span class="u u-w"><svg class="ic"><use href="#i-pen"/></svg>쓰기</span></td><td>자동저장 실패·지연·충돌 경고</td></tr>
+        <tr><td class="col"><span class="chip">study_events</span></td><td><span class="u u-w"><svg class="ic"><use href="#i-pen"/></svg>쓰기</span></td><td>자동저장 관련 이벤트 기록</td></tr>
+      </tbody></table></div>
+    </article>
+
+    <!-- GROUP E -->
+    <h3 class="grp" id="grp-e"><span class="badge">E</span>피드백</h3>
+    <article class="pcard">
+      <div class="phead"><span class="code">E-01 / E-02</span><span class="ptitle">단답형·장문형 피드백</span></div>
+      <p style="margin:2px 0 8px;color:var(--ink-soft);font-size:13.5px">두 화면의 데이터 사용은 거의 같습니다. <code class="ty">E-02</code>는 문장별 교정을 더 많이 활용합니다.</p>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>테이블</th><th>사용 형태</th><th>무엇에 쓰나</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">writing_submissions</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>제출 원문과 제출 상태</td></tr>
+        <tr><td class="col"><span class="chip">writing_feedback</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>총점과 총평</td></tr>
+        <tr><td class="col"><span class="chip">feedback_dimension_scores</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>영역별 점수와 약점 수준</td></tr>
+        <tr><td class="col"><span class="chip">sentence_feedback</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>문장별 수정 제안</td></tr>
+        <tr><td class="col"><span class="chip">library_items</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span> <span class="u u-w"><svg class="ic"><use href="#i-pen"/></svg>쓰기</span></td><td>피드백을 서재에 저장</td></tr>
+        <tr><td class="col"><span class="chip">export_files</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span> <span class="u u-w"><svg class="ic"><use href="#i-pen"/></svg>쓰기</span></td><td>피드백 PDF 내보내기 연결</td></tr>
+        <tr><td class="col"><span class="chip">study_events</span></td><td><span class="u u-w"><svg class="ic"><use href="#i-pen"/></svg>쓰기</span></td><td>피드백 조회 이벤트 기록</td></tr>
+      </tbody></table></div>
+    </article>
+
+    <!-- GROUP R -->
+    <h3 class="grp" id="grp-r"><span class="badge">R</span>리포트·추천</h3>
+    <article class="pcard">
+      <div class="phead"><span class="code">R-01</span><span class="ptitle">비교 리포트</span></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>테이블</th><th>사용 형태</th><th>무엇에 쓰나</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">comparison_reports</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span> <span class="u u-w"><svg class="ic"><use href="#i-pen"/></svg>쓰기</span></td><td>비교 리포트 본문과 지표</td></tr>
+        <tr><td class="col"><span class="chip">writing_submissions</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>비교 대상 제출본 불러오기</td></tr>
+        <tr><td class="col"><span class="chip">writing_feedback</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>점수 변화와 요약 비교</td></tr>
+        <tr><td class="col"><span class="chip">feedback_dimension_scores</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>영역별 성장 지표</td></tr>
+        <tr><td class="col"><span class="chip">study_events</span></td><td><span class="u u-w"><svg class="ic"><use href="#i-pen"/></svg>쓰기</span></td><td>리포트 조회 이벤트 기록</td></tr>
+      </tbody></table></div>
+      <div class="tip"><svg class="ic"><use href="#i-info"/></svg>AI 분석은 매번 결과가 달라질 수 있어, 리포트 생성 시점의 지표와 서술을 <b>스냅샷으로 저장</b>해 둡니다.</div>
+    </article>
+
+    <article class="pcard">
+      <div class="phead"><span class="code">R-02</span><span class="ptitle">다음 문제 추천</span></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>테이블</th><th>사용 형태</th><th>무엇에 쓰나</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">recommendation_runs</span> <span class="chip">recommendation_items</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span> <span class="u u-w"><svg class="ic"><use href="#i-pen"/></svg>갱신</span></td><td>추천 카드와 클릭 상태</td></tr>
+        <tr><td class="col"><span class="chip">problems</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>추천 대상 문제 정보</td></tr>
+        <tr><td class="col"><span class="chip">writing_feedback</span> <span class="chip">writing_submissions</span> <span class="chip">feedback_dimension_scores</span></td><td><span class="u u-d"><svg class="ic"><use href="#i-sigma"/></svg>파생</span></td><td>최근 결과를 추천 근거로 사용</td></tr>
+      </tbody></table></div>
+    </article>
+
+    <!-- GROUP F -->
+    <h3 class="grp" id="grp-f"><span class="badge">F</span>서재·내보내기</h3>
+    <article class="pcard">
+      <div class="phead"><span class="code">F-01</span><span class="ptitle">내 서재</span></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>테이블</th><th>사용 형태</th><th>무엇에 쓰나</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">library_items</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span> <span class="u u-w"><svg class="ic"><use href="#i-pen"/></svg>쓰기</span></td><td>저장 탭, 저장/해제, 태그</td></tr>
+        <tr><td class="col"><span class="chip">problems</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>저장한 문제 탭</td></tr>
+        <tr><td class="col"><span class="chip">writing_submissions</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>제출 이력 탭</td></tr>
+        <tr><td class="col"><span class="chip">comparison_reports</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>리포트 탭</td></tr>
+        <tr><td class="col"><span class="chip">export_files</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>내보낸 파일 탭</td></tr>
+        <tr><td class="col"><span class="chip">feedback_dimension_scores</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>저장 항목의 점수 표시</td></tr>
+        <tr><td class="col"><span class="chip">study_events</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>학습 활동 기록 표시</td></tr>
+      </tbody></table></div>
+      <div class="tip"><svg class="ic"><use href="#i-info"/></svg>서재는 문제·제출본·리포트·내보낸 파일을 <b>한 테이블에서 종류 구분과 함께</b> 다룹니다. 한 항목은 정확히 한 종류만 가리키도록 제약이 걸려 있습니다.</div>
+    </article>
+
+    <article class="pcard">
+      <div class="phead"><span class="code">F-M1</span><span class="ptitle">PDF 내보내기 모달</span></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>테이블</th><th>사용 형태</th><th>무엇에 쓰나</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">export_files</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span> <span class="u u-w"><svg class="ic"><use href="#i-pen"/></svg>쓰기</span></td><td>PDF 생성 요청과 결과 파일 상태</td></tr>
+        <tr><td class="col"><span class="chip">study_events</span></td><td><span class="u u-w"><svg class="ic"><use href="#i-pen"/></svg>쓰기</span></td><td>다운로드 이벤트 기록</td></tr>
+      </tbody></table></div>
+      <div class="tip"><svg class="ic"><use href="#i-info"/></svg>생성된 PDF 파일은 비공개 저장소에 보관되며 본인에게만 노출됩니다.</div>
+    </article>
+
+    <!-- GROUP G -->
+    <h3 class="grp" id="grp-g"><span class="badge">G</span>설정</h3>
+    <article class="pcard">
+      <div class="phead"><span class="code">G-01</span><span class="ptitle">언어 설정</span></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>테이블</th><th>사용 형태</th><th>무엇에 쓰나</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">profiles</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span> <span class="u u-w"><svg class="ic"><use href="#i-pen"/></svg>쓰기</span></td><td>앱 표시 언어 저장</td></tr>
+      </tbody></table></div>
+    </article>
+
+    <!-- GROUP X -->
+    <h3 class="grp" id="grp-x"><span class="badge">X</span>계정·결제·법적 문서·기타</h3>
+
+    <article class="pcard">
+      <div class="phead"><span class="code">X-01</span><span class="ptitle">제품 랜딩</span></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>테이블</th><th>사용 형태</th><th>무엇에 쓰나</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">profiles</span></td><td><span class="u u-d"><svg class="ic"><use href="#i-sigma"/></svg>파생</span></td><td>플랜에 맞춘 안내 문구(직접 DB 의존은 낮음)</td></tr>
+      </tbody></table></div>
+    </article>
+
+    <article class="pcard">
+      <div class="phead"><span class="code">X-02</span><span class="ptitle">성장 대시보드</span></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>테이블</th><th>사용 형태</th><th>무엇에 쓰나</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">study_events</span></td><td><span class="u u-d"><svg class="ic"><use href="#i-sigma"/></svg>파생</span></td><td>학습 추세와 활동 그래프</td></tr>
+        <tr><td class="col"><span class="chip">problem_attempts</span></td><td><span class="u u-d"><svg class="ic"><use href="#i-sigma"/></svg>파생</span></td><td>정확도와 학습 시간</td></tr>
+        <tr><td class="col"><span class="chip">writing_feedback</span></td><td><span class="u u-d"><svg class="ic"><use href="#i-sigma"/></svg>파생</span></td><td>점수 추세</td></tr>
+        <tr><td class="col"><span class="chip">feedback_dimension_scores</span></td><td><span class="u u-d"><svg class="ic"><use href="#i-sigma"/></svg>파생</span></td><td>영역별 성장·취약 분석</td></tr>
+      </tbody></table></div>
+    </article>
+
+    <article class="pcard">
+      <div class="phead"><span class="code">X-03</span><span class="ptitle">페이월</span></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>테이블</th><th>사용 형태</th><th>무엇에 쓰나</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">subscription_plans</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>보여줄 플랜 카탈로그</td></tr>
+        <tr><td class="col"><span class="chip">profiles</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>현재 플랜과 접근 제한 안내</td></tr>
+      </tbody></table></div>
+    </article>
+
+    <article class="pcard">
+      <div class="phead"><span class="code">X-04</span><span class="ptitle">구독 관리</span></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>테이블</th><th>사용 형태</th><th>무엇에 쓰나</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">subscriptions</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>현재 구독 상태와 기간</td></tr>
+        <tr><td class="col"><span class="chip">payment_history</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>결제 이력과 영수증 링크</td></tr>
+        <tr><td class="col"><span class="chip">profiles</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>플랜·상태 표시</td></tr>
+      </tbody></table></div>
+    </article>
+
+    <article class="pcard">
+      <div class="phead"><span class="code">X-05</span><span class="ptitle">프로필 편집</span></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>테이블</th><th>사용 형태</th><th>무엇에 쓰나</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">profiles</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span> <span class="u u-w"><svg class="ic"><use href="#i-pen"/></svg>쓰기</span></td><td>표시 이름, 별명, 자기소개, 아바타, 언어</td></tr>
+        <tr><td class="col"><span class="chip">learning_goals</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span> <span class="u u-w"><svg class="ic"><use href="#i-pen"/></svg>쓰기</span></td><td>시험 목표 정보</td></tr>
+      </tbody></table></div>
+      <div class="tip"><svg class="ic"><use href="#i-info"/></svg>아바타 이미지는 파일 저장소에 올리고 프로필에는 위치만 저장합니다. 권한·플랜·계정 상태 컬럼은 사용자가 직접 바꿀 수 없습니다.</div>
+    </article>
+
+    <article class="pcard">
+      <div class="phead"><span class="code">X-06</span><span class="ptitle">비밀번호 재설정 (요청)</span></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>테이블</th><th>사용 형태</th><th>무엇에 쓰나</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">profiles</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>재설정 이후 계정 상태 확인에 연결될 수 있음</td></tr>
+      </tbody></table></div>
+      <div class="tip"><svg class="ic"><use href="#i-info"/></svg>비밀번호 변경 자체는 인증 시스템이 처리하며 앱 테이블에는 저장하지 않습니다.</div>
+    </article>
+
+    <article class="pcard">
+      <div class="phead"><span class="code">X-07</span><span class="ptitle">약점 기반 추천</span></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>테이블</th><th>사용 형태</th><th>무엇에 쓰나</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">feedback_dimension_scores</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>약한 영역 계산</td></tr>
+        <tr><td class="col"><span class="chip">recommendation_runs</span> <span class="chip">recommendation_items</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span> <span class="u u-w"><svg class="ic"><use href="#i-pen"/></svg>갱신</span></td><td>추천 목록과 상태</td></tr>
+        <tr><td class="col"><span class="chip">problems</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>추천 문제 상세</td></tr>
+        <tr><td class="col"><span class="chip">writing_feedback</span></td><td><span class="u u-d"><svg class="ic"><use href="#i-sigma"/></svg>파생</span></td><td>최근 결과를 근거로 사용</td></tr>
+      </tbody></table></div>
+    </article>
+
+    <article class="pcard adminbox">
+      <div class="phead"><span class="code">X-08</span><span class="ptitle">기관 관리자 대시보드</span><span class="lock"><svg class="ic"><use href="#i-lock"/></svg>관리자 영역</span></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>테이블</th><th>사용 형태</th><th>무엇에 쓰나</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">admin_audit_logs</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>최근 관리자 활동</td></tr>
+        <tr><td class="col"><span class="chip">profiles</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>사용자 집계</td></tr>
+        <tr><td class="col"><span class="chip">study_events</span></td><td><span class="u u-d"><svg class="ic"><use href="#i-sigma"/></svg>파생</span></td><td>기관 단위 활동 집계</td></tr>
+        <tr><td class="col"><span class="chip">조직 테이블</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>조직·과제 데이터</td></tr>
+      </tbody></table></div>
+    </article>
+
+    <article class="pcard">
+      <div class="phead"><span class="code">X-09</span><span class="ptitle">알림 설정</span></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>테이블</th><th>사용 형태</th><th>무엇에 쓰나</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">notification_settings</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span> <span class="u u-w"><svg class="ic"><use href="#i-pen"/></svg>쓰기</span></td><td>리마인더 시간·요일·채널·시간대</td></tr>
+        <tr><td class="col"><span class="chip">notification_log</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>최근 발송 이력</td></tr>
+      </tbody></table></div>
+      <div class="tip"><svg class="ic"><use href="#i-info"/></svg>알림 발송 기록 작성은 서버 측에서 수행하고, 사용자는 본인 이력만 봅니다.</div>
+    </article>
+
+    <article class="pcard adminbox">
+      <div class="phead"><span class="code">X-10</span><span class="ptitle">관리자 사용자 관리</span><span class="lock"><svg class="ic"><use href="#i-lock"/></svg>관리자 영역</span></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>테이블</th><th>사용 형태</th><th>무엇에 쓰나</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">profiles</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span> <span class="u u-w"><svg class="ic"><use href="#i-pen"/></svg>쓰기</span></td><td>사용자 목록, 역할·상태 변경</td></tr>
+        <tr><td class="col"><span class="chip">admin_audit_logs</span></td><td><span class="u u-w"><svg class="ic"><use href="#i-pen"/></svg>쓰기</span></td><td>권한 변경 이력 기록</td></tr>
+      </tbody></table></div>
+    </article>
+
+    <article class="pcard">
+      <div class="phead"><span class="code">X-11</span><span class="ptitle">인증 오류</span></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>테이블</th><th>사용 형태</th><th>무엇에 쓰나</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">profiles</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>계정 상태 안내와 재시도 분기</td></tr>
+      </tbody></table></div>
+    </article>
+
+    <article class="pcard">
+      <div class="phead"><span class="code">X-12</span><span class="ptitle">이메일 인증 안내</span></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>테이블</th><th>사용 형태</th><th>무엇에 쓰나</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">profiles</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>가입 직후 인증 상태 확인</td></tr>
+      </tbody></table></div>
+      <div class="tip"><svg class="ic"><use href="#i-info"/></svg>가입 직후 프로필 한 줄이 반드시 생기도록 보장됩니다.</div>
+    </article>
+
+    <article class="pcard">
+      <div class="phead"><span class="code">X-13</span><span class="ptitle">이용약관</span></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>테이블</th><th>사용 형태</th><th>무엇에 쓰나</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">legal_documents</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>현재 공개된 약관 문서 본문</td></tr>
+        <tr><td class="col"><span class="chip">user_consents</span></td><td><span class="u u-w"><svg class="ic"><use href="#i-pen"/></svg>쓰기</span></td><td>정식 약관 공개 시 재동의 기록</td></tr>
+      </tbody></table></div>
+      <div class="tip"><svg class="ic"><use href="#i-info"/></svg>약관은 <b>버전별로 한 줄씩</b> 저장되며, 기존 버전은 고치지 않고 새 버전을 추가합니다(이력 보존). 약관·개인정보 화면은 로그인 전에도 열 수 있어, 공개된 문서는 누구나 읽을 수 있습니다.</div>
+    </article>
+
+    <article class="pcard">
+      <div class="phead"><span class="code">X-14</span><span class="ptitle">개인정보 처리방침</span></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>테이블</th><th>사용 형태</th><th>무엇에 쓰나</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">legal_documents</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>현재 공개된 개인정보 문서 본문</td></tr>
+      </tbody></table></div>
+    </article>
+
+    <article class="pcard adminbox">
+      <div class="phead"><span class="code">X-15</span><span class="ptitle">관리자 인덱스</span><span class="lock"><svg class="ic"><use href="#i-lock"/></svg>관리자 영역</span></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>테이블</th><th>사용 형태</th><th>무엇에 쓰나</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">profiles</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>관리자 루트 접근 권한 확인</td></tr>
+      </tbody></table></div>
+    </article>
+
+    <article class="pcard">
+      <div class="phead"><span class="code">X-16</span><span class="ptitle">비밀번호 재설정 (확정)</span></div>
+      <div class="tip" style="margin-top:6px"><svg class="ic"><use href="#i-info"/></svg>새 비밀번호 확정은 인증 시스템이 처리하며 앱 테이블에는 저장하지 않습니다.</div>
+    </article>
+
+    <article class="pcard">
+      <div class="phead"><span class="code">X-17</span><span class="ptitle">인증 콜백 처리</span></div>
+      <div class="tip" style="margin-top:6px"><svg class="ic"><use href="#i-info"/></svg>로그인·인증 후 세션을 확정하는 단계입니다. 앱 테이블에 직접 데이터를 쓰지 않고, 프로필 한 줄이 존재하도록 보장하는 역할만 합니다.</div>
+    </article>
+
+    <!-- GROUP H -->
+    <h3 class="grp" id="grp-h"><span class="badge">H</span>관리자 문제 관리</h3>
+    <article class="pcard adminbox">
+      <div class="phead"><span class="code">H-01</span><span class="ptitle">관리자 문제 관리</span><span class="lock"><svg class="ic"><use href="#i-lock"/></svg>관리자 영역</span></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>테이블</th><th>사용 형태</th><th>무엇에 쓰나</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">problems</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span> <span class="u u-w"><svg class="ic"><use href="#i-pen"/></svg>쓰기</span></td><td>문제 목록, 편집, 공개 상태, 검수 상태</td></tr>
+        <tr><td class="col"><span class="chip">problem_assets</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span> <span class="u u-w"><svg class="ic"><use href="#i-pen"/></svg>쓰기</span></td><td>문제 첨부 자료 관리</td></tr>
+        <tr><td class="col"><span class="chip">admin_audit_logs</span></td><td><span class="u u-w"><svg class="ic"><use href="#i-pen"/></svg>쓰기</span></td><td>변경 이력 기록</td></tr>
+      </tbody></table></div>
+      <div class="tip"><svg class="ic"><use href="#i-info"/></svg>문제 공개 전환이나 내용 수정 같은 관리자 작업은 <b>변경 전/후 차이와 함께 감사 로그로 남도록</b> 서버 측에서 처리됩니다.</div>
+    </article>
+
+    <!-- INDEX -->
+    <h2 class="sec" id="index"><span class="n"><svg class="ic"><use href="#i-bars"/></svg></span>화면 → 테이블 색인</h2>
+    <p class="sec-desc">반대로, 한 테이블이 어떤 화면들에서 쓰이는지 한눈에 봅니다.</p>
+    <div class="card idx" style="padding:0;overflow:hidden">
+      <div class="tbl-wrap" style="border:0">
+        <table class="tbl"><thead><tr><th>테이블</th><th>이 테이블을 쓰는 화면</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">profiles</span></td><td><div class="chips"><span class="chip pg">A-01</span><span class="chip pg">A-02</span><span class="chip pg">A-03</span><span class="chip pg">B-01</span><span class="chip pg">G-01</span><span class="chip pg">X-01</span><span class="chip pg">X-03</span><span class="chip pg">X-04</span><span class="chip pg">X-05</span><span class="chip pg">X-06</span><span class="chip pg">X-08</span><span class="chip pg">X-10</span><span class="chip pg">X-11</span><span class="chip pg">X-12</span><span class="chip pg">X-15</span></div></td></tr>
+        <tr><td class="col"><span class="chip">learning_goals</span></td><td><div class="chips"><span class="chip pg">A-03</span><span class="chip pg">B-01</span><span class="chip pg">X-05</span></div></td></tr>
+        <tr><td class="col"><span class="chip">problems</span></td><td><div class="chips"><span class="chip pg">C-01</span><span class="chip pg">C-02</span><span class="chip pg">D-01~04</span><span class="chip pg">R-02</span><span class="chip pg">F-01</span><span class="chip pg">X-07</span><span class="chip pg">H-01</span></div></td></tr>
+        <tr><td class="col"><span class="chip">problem_assets</span></td><td><div class="chips"><span class="chip pg">C-02</span><span class="chip pg">D-01~04</span><span class="chip pg">H-01</span></div></td></tr>
+        <tr><td class="col"><span class="chip">problem_attempts</span></td><td><div class="chips"><span class="chip pg">C-02</span><span class="chip pg">C-03</span><span class="chip pg">X-02</span></div></td></tr>
+        <tr><td class="col"><span class="chip">writing_drafts</span></td><td><div class="chips"><span class="chip pg">B-01</span><span class="chip pg">C-02</span><span class="chip pg">C-03</span><span class="chip pg">D-01~04</span><span class="chip pg">D-M1</span><span class="chip pg">D-M3</span></div></td></tr>
+        <tr><td class="col"><span class="chip">writing_submissions</span></td><td><div class="chips"><span class="chip pg">D-01~04</span><span class="chip pg">D-M1</span><span class="chip pg">D-M2</span><span class="chip pg">E-01</span><span class="chip pg">E-02</span><span class="chip pg">R-01</span><span class="chip pg">R-02</span><span class="chip pg">F-01</span></div></td></tr>
+        <tr><td class="col"><span class="chip">writing_feedback</span></td><td><div class="chips"><span class="chip pg">B-01</span><span class="chip pg">D-M2</span><span class="chip pg">E-01</span><span class="chip pg">E-02</span><span class="chip pg">R-01</span><span class="chip pg">R-02</span><span class="chip pg">X-02</span></div></td></tr>
+        <tr><td class="col"><span class="chip">feedback_dimension_scores</span></td><td><div class="chips"><span class="chip pg">C-01</span><span class="chip pg">E-01</span><span class="chip pg">E-02</span><span class="chip pg">R-01</span><span class="chip pg">R-02</span><span class="chip pg">X-02</span><span class="chip pg">X-07</span></div></td></tr>
+        <tr><td class="col"><span class="chip">sentence_feedback</span></td><td><div class="chips"><span class="chip pg">E-01</span><span class="chip pg">E-02</span></div></td></tr>
+        <tr><td class="col"><span class="chip">comparison_reports</span></td><td><div class="chips"><span class="chip pg">R-01</span><span class="chip pg">F-01</span></div></td></tr>
+        <tr><td class="col"><span class="chip">recommendation_runs</span></td><td><div class="chips"><span class="chip pg">B-01</span><span class="chip pg">C-01</span></div></td></tr>
+        <tr><td class="col"><span class="chip">recommendation_items</span></td><td><div class="chips"><span class="chip pg">B-01</span><span class="chip pg">C-01</span><span class="chip pg">R-02</span><span class="chip pg">X-07</span></div></td></tr>
+        <tr><td class="col"><span class="chip">library_items</span></td><td><div class="chips"><span class="chip pg">E-01</span><span class="chip pg">E-02</span><span class="chip pg">F-01</span></div></td></tr>
+        <tr><td class="col"><span class="chip">study_events</span></td><td><div class="chips"><span class="chip pg">B-01</span><span class="chip pg">D-01~04</span><span class="chip pg">D-M3</span><span class="chip pg">E-01</span><span class="chip pg">E-02</span><span class="chip pg">R-01</span><span class="chip pg">F-01</span><span class="chip pg">F-M1</span><span class="chip pg">X-02</span><span class="chip pg">X-08</span></div></td></tr>
+        <tr><td class="col"><span class="chip">export_files</span></td><td><div class="chips"><span class="chip pg">E-01</span><span class="chip pg">E-02</span><span class="chip pg">F-01</span><span class="chip pg">F-M1</span></div></td></tr>
+        <tr><td class="col"><span class="chip">notification_settings</span> <span class="chip">notification_log</span></td><td><div class="chips"><span class="chip pg">X-09</span></div></td></tr>
+        <tr><td class="col"><span class="chip">subscription_plans</span></td><td><div class="chips"><span class="chip pg">X-03</span></div></td></tr>
+        <tr><td class="col"><span class="chip">subscriptions</span> <span class="chip">payment_history</span></td><td><div class="chips"><span class="chip pg">X-04</span></div></td></tr>
+        <tr><td class="col"><span class="chip">legal_documents</span></td><td><div class="chips"><span class="chip pg">A-01</span><span class="chip pg">X-13</span><span class="chip pg">X-14</span></div></td></tr>
+        <tr><td class="col"><span class="chip">user_consents</span></td><td><div class="chips"><span class="chip pg">A-01</span><span class="chip pg">X-13</span></div></td></tr>
+        <tr><td class="col"><span class="chip">admin_audit_logs</span></td><td><div class="chips"><span class="chip pg">H-01</span><span class="chip pg">X-08</span><span class="chip pg">X-10</span></div></td></tr>
+        <tr><td class="col"><span class="chip">조직 테이블</span></td><td><div class="chips"><span class="chip pg">X-08</span></div></td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <!-- ENUMS -->
+    <h2 class="sec" id="enums"><span class="n"><svg class="ic"><use href="#i-check2"/></svg></span>상태값(열거형) 모음</h2>
+    <p class="sec-desc">표시된 값 외의 값은 허용되지 않습니다. 단, 일부 신규 컬럼은 코드 체계 확정 전이라 현재 비어 있을 수 있습니다.</p>
+    <div class="enums">
+      <div class="ecard"><div class="et">계정 상태 <code>profiles.status</code></div><div class="chips"><span class="pill">active</span><span class="pill">blocked</span><span class="pill">deleted</span></div></div>
+      <div class="ecard"><div class="et">권한 등급 <code>profiles.app_role</code></div><div class="chips"><span class="pill">learner</span><span class="pill">content_admin</span><span class="pill">org_admin</span><span class="pill">platform_admin</span></div></div>
+      <div class="ecard"><div class="et">앱 언어 <code>profiles.ui_locale</code></div><div class="chips"><span class="pill">ko</span><span class="pill">en</span><span class="pill">vi</span></div></div>
+      <div class="ecard"><div class="et">학습 목표 시험 <code>learning_goals.topik_level</code></div><div class="chips"><span class="pill">TOPIK_I</span><span class="pill">TOPIK_II</span></div></div>
+      <div class="ecard"><div class="et">문제 출처 <code>problems.source</code></div><div class="chips"><span class="pill">ai_generated</span><span class="pill">curated</span></div></div>
+      <div class="ecard"><div class="et">문제 영역 <code>problems.domain</code></div><div class="chips"><span class="pill">reading</span><span class="pill">listening</span><span class="pill">writing</span></div></div>
+      <div class="ecard"><div class="et">문제 공개 <code>problems.publish_status</code></div><div class="chips"><span class="pill">draft</span><span class="pill">published</span><span class="pill">archived</span></div></div>
+      <div class="ecard"><div class="et">문제 검수 결과 <code>problems.review_status</code></div><div class="chips"><span class="pill">pending</span><span class="pill">approved</span><span class="pill">rejected</span></div></div>
+      <div class="ecard"><div class="et">문제 검수 단계 <code>problems.review_workflow_status</code></div><div class="chips"><span class="pill tbd">코드 확정 전 · 현재 비어 있을 수 있음</span></div></div>
+      <div class="ecard"><div class="et">문제 주제 <code>problems.topic_category_code</code></div><div class="chips"><span class="pill tbd">코드 확정 전 · 현재 비어 있을 수 있음</span></div></div>
+      <div class="ecard"><div class="et">문제 수명 <code>problems.lifecycle_status</code></div><div class="chips"><span class="pill">active</span><span class="pill">inactive</span><span class="pill">expired</span></div></div>
+      <div class="ecard"><div class="et">문제 노출 <code>problems.visibility</code></div><div class="chips"><span class="pill">private</span><span class="pill">public</span><span class="pill">org</span></div></div>
+      <div class="ecard"><div class="et">자료 종류 <code>problem_assets.asset_type</code></div><div class="chips"><span class="pill">image</span><span class="pill">audio</span></div></div>
+      <div class="ecard"><div class="et">객관식 풀이 <code>problem_attempts.status</code></div><div class="chips"><span class="pill">started</span><span class="pill">submitted</span><span class="pill">reviewed</span></div></div>
+      <div class="ecard"><div class="et">쓰기 문제 번호 <code>question_no</code></div><div class="chips"><span class="pill">51</span><span class="pill">52</span><span class="pill">53</span><span class="pill">54</span></div></div>
+      <div class="ecard"><div class="et">자동저장 <code>writing_drafts.autosave_status</code></div><div class="chips"><span class="pill">clean</span><span class="pill">dirty</span><span class="pill">syncing</span><span class="pill">failed</span><span class="pill">superseded</span></div></div>
+      <div class="ecard"><div class="et">제출 피드백 <code>writing_submissions.feedback_status</code></div><div class="chips"><span class="pill">pending</span><span class="pill">analyzing</span><span class="pill">complete</span><span class="pill">failed</span></div></div>
+      <div class="ecard"><div class="et">피드백 총평 <code>writing_feedback.status</code></div><div class="chips"><span class="pill">partial</span><span class="pill">complete</span><span class="pill">failed</span></div></div>
+      <div class="ecard"><div class="et">피드백 영역 <code>feedback_dimension_scores.dimension</code></div><div class="chips"><span class="pill">grammar</span><span class="pill">vocab</span><span class="pill">structure</span><span class="pill">content</span><span class="pill">expression</span><span class="pill">topic_fit</span></div></div>
+      <div class="ecard"><div class="et">추천 출처 <code>recommendation_runs.source_type</code></div><div class="chips"><span class="pill">dashboard</span><span class="pill">feedback</span><span class="pill">weakness</span><span class="pill">next_problem</span></div></div>
+      <div class="ecard"><div class="et">추천 항목 <code>recommendation_items.status</code></div><div class="chips"><span class="pill">active</span><span class="pill">consumed</span><span class="pill">expired</span></div></div>
+      <div class="ecard"><div class="et">서재 종류 <code>library_items.item_type</code></div><div class="chips"><span class="pill">attempt</span><span class="pill">submission</span><span class="pill">report</span><span class="pill">export</span><span class="pill">problem</span></div></div>
+      <div class="ecard"><div class="et">활동 종류 <code>study_events.event_type</code></div><div class="chips"><span class="pill">practice_started</span><span class="pill">attempt_submitted</span><span class="pill">draft_autosaved</span><span class="pill">submission_submitted</span><span class="pill">feedback_viewed</span><span class="pill">report_viewed</span><span class="pill">recommendation_clicked</span><span class="pill">export_downloaded</span></div></div>
+      <div class="ecard"><div class="et">내보내기 출처 <code>export_files.source_type</code></div><div class="chips"><span class="pill">submission</span><span class="pill">report</span><span class="pill">library_selection</span></div></div>
+      <div class="ecard"><div class="et">내보내기 상태 <code>export_files.status</code></div><div class="chips"><span class="pill">queued</span><span class="pill">ready</span><span class="pill">failed</span></div></div>
+      <div class="ecard"><div class="et">약관 종류 <code>legal_documents.doc_type</code></div><div class="chips"><span class="pill">terms</span><span class="pill">privacy</span></div></div>
+      <div class="ecard"><div class="et">약관 상태 <code>legal_documents.status</code></div><div class="chips"><span class="pill">draft</span><span class="pill">published</span><span class="pill">archived</span></div></div>
+      <div class="ecard"><div class="et">동의 경로 <code>user_consents.source</code></div><div class="chips"><span class="pill">signup</span><span class="pill">re_consent</span><span class="pill">settings</span></div></div>
+    </div>
+
+    <!-- STORAGE -->
+    <h2 class="sec" id="storage"><span class="n"><svg class="ic"><use href="#i-dl"/></svg></span>파일 저장소</h2>
+    <p class="sec-desc">이미지·오디오·PDF 같은 실제 파일은 테이블이 아닌 파일 저장소에 보관하고, 테이블에는 위치만 둡니다.</p>
+    <div class="grid c3">
+      <div class="card" style="margin:0"><div class="phead"><span class="ptitle">아바타 저장소</span><span class="tag tag-public">공개 읽기</span></div><p style="margin:8px 0 0;color:var(--ink-soft);font-size:14px">프로필 이미지</p></div>
+      <div class="card" style="margin:0"><div class="phead"><span class="ptitle">문제 자료 저장소</span><span class="tag tag-public">공개 읽기</span></div><p style="margin:8px 0 0;color:var(--ink-soft);font-size:14px">문제 이미지·오디오</p></div>
+      <div class="card" style="margin:0"><div class="phead"><span class="ptitle">내보내기 저장소</span><span class="tag tag-immut">비공개</span></div><p style="margin:8px 0 0;color:var(--ink-soft);font-size:14px">사용자가 만든 PDF (본인만 접근)</p></div>
+    </div>
+    <div class="note info">
+      <svg class="ic"><use href="#i-info"/></svg>
+      <div>공개 저장소라도 <b>업로드·수정·삭제는 권한이 있는 주체만</b> 가능합니다. 내보내기 PDF는 본인 폴더에만 저장·접근할 수 있고, 한 번 만들면 덮어쓰지 않습니다(필요하면 새로 만듭니다).</div>
+    </div>
+
+    <!-- REMINDERS -->
+    <h2 class="sec" id="notes"><span class="n"><svg class="ic"><use href="#i-alert"/></svg></span>인계 시 꼭 기억할 점</h2>
+    <div class="rem">
+      <div class="rcard"><b>제출본·동의·관리자 기록은 못 고친다</b><p>이 세 가지는 "추가만" 되는 보존용 데이터입니다. 바꾸려 하지 말고 새 줄을 추가하세요.</p></div>
+      <div class="rcard"><b>본인 데이터 분리는 DB가 보장한다</b><p>화면에서 다른 사람 데이터를 걸러 줄 필요가 없습니다. 단, 우회 경로를 만들지 마세요.</p></div>
+      <div class="rcard"><b>공개 문제만 사용자에게 보인다</b><p>새 문제는 공개·검수 상태를 맞춰야 목록에 나옵니다.</p></div>
+      <div class="rcard"><b>관리자·조직 영역은 별도 앱 소유</b><p>사용자 앱에서 새로 만들거나 확장하지 않습니다. 스키마는 관리자 쪽을 먼저 따릅니다.</p></div>
+      <div class="rcard" style="grid-column:1/-1"><b>신규 코드 컬럼은 비어 있을 수 있다</b><p>문제의 주제 분류와 검수 진행 단계 컬럼은 코드 체계 확정 전이라 값이 비어 있을 수 있습니다. 값이 없다고 오류로 보지 마세요.</p></div>
+    </div>
+
+  </main>
+  <aside id="ref" class="refdock" aria-label="테이블 레퍼런스">
+    <div class="refhead"><svg class="ic"><use href="#i-db"/></svg><span>테이블 레퍼런스</span><button class="refall" type="button" onclick="toggleAllRef(this)">모두 펼치기</button></div>
+<div class="refgrp">사용자</div>
+
+    <details class="acc" open>
+      <summary><span class="chip" style="font-size:13px">profiles</span><span class="ptitle">계정 프로필</span><span class="tag tag-self">본인만</span></summary>
+      <p style="margin:6px 0 10px;color:var(--ink-soft);font-size:14px">인증 계정과 1:1로 연결되는 사용자 정보의 중심 테이블. 로그인 이메일은 인증 시스템이 보관하고, 여기에는 앱 전용 정보가 들어갑니다.</p>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>컬럼</th><th>타입</th><th>설명</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">id</span></td><td><span class="ty k">uuid</span></td><td>인증 계정과 동일한 식별자 (기본키)</td></tr>
+        <tr><td class="col"><span class="chip">display_name</span></td><td><span class="ty">text</span></td><td>표시 이름</td></tr>
+        <tr><td class="col"><span class="chip">nickname</span></td><td><span class="ty">text</span></td><td>별명(중복 불가)</td></tr>
+        <tr><td class="col"><span class="chip">avatar_path</span></td><td><span class="ty">text</span></td><td>아바타 이미지 저장 위치</td></tr>
+        <tr><td class="col"><span class="chip">bio</span></td><td><span class="ty">text</span></td><td>자기소개</td></tr>
+        <tr><td class="col"><span class="chip">ui_locale</span></td><td><span class="ty">text</span></td><td>앱 표시 언어 (ko/en/vi)</td></tr>
+        <tr><td class="col"><span class="chip">app_role</span></td><td><span class="ty">text</span></td><td>권한 등급</td></tr>
+        <tr><td class="col"><span class="chip">plan_label</span></td><td><span class="ty">text</span></td><td>표시용 플랜 라벨</td></tr>
+        <tr><td class="col"><span class="chip">status</span></td><td><span class="ty">text</span></td><td>계정 상태 (active/blocked/deleted)</td></tr>
+        <tr><td class="col"><span class="chip">notification_prefs</span></td><td><span class="ty j">json</span></td><td>간단 알림 설정(상세 설정은 별도 알림 테이블)</td></tr>
+        <tr><td class="col"><span class="chip">created_at</span> <span class="chip">updated_at</span></td><td><span class="ty">시각</span></td><td>생성·수정 시각</td></tr>
+      </tbody></table></div>
+      <div class="tip"><svg class="ic"><use href="#i-info"/></svg>권한·플랜·상태는 사용자가 직접 못 바꾸도록 보호됩니다.</div>
+    </details>
+
+    <details class="acc">
+      <summary><span class="chip" style="font-size:13px">learning_goals</span><span class="ptitle">학습 목표</span><span class="tag tag-self">본인만</span></summary>
+      <p style="margin:6px 0 10px;color:var(--ink-soft);font-size:14px">사용자당 하나. 온보딩에서 만들고 프로필·대시보드에서 다시 씁니다.</p>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>컬럼</th><th>타입</th><th>설명</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">user_id</span></td><td><span class="ty k">uuid</span></td><td>사용자 (기본키)</td></tr>
+        <tr><td class="col"><span class="chip">topik_level</span></td><td><span class="ty">text</span></td><td>목표 시험 구분 (TOPIK_I/TOPIK_II)</td></tr>
+        <tr><td class="col"><span class="chip">target_grade</span></td><td><span class="ty">정수</span></td><td>목표 등급(1~6)</td></tr>
+        <tr><td class="col"><span class="chip">exam_date</span></td><td><span class="ty">날짜</span></td><td>시험 예정일</td></tr>
+        <tr><td class="col"><span class="chip">weekly_goal_minutes</span></td><td><span class="ty">정수</span></td><td>주간 학습 목표 시간(분)</td></tr>
+        <tr><td class="col"><span class="chip">weak_areas</span></td><td><span class="ty">배열</span></td><td>약점 영역 태그</td></tr>
+        <tr><td class="col"><span class="chip">is_active</span></td><td><span class="ty">불리언</span></td><td>현재 활성 목표 여부</td></tr>
+      </tbody></table></div>
+    </details>
+
+    <div class="refgrp">문제</div>
+
+    <details class="acc">
+      <summary><span class="chip" style="font-size:13px">problems</span><span class="ptitle">문제 카탈로그</span><span class="tag tag-public">공개</span></summary>
+      <p style="margin:6px 0 10px;color:var(--ink-soft);font-size:14px">AI 생성 문제와 큐레이션 문제를 한 테이블에서 다룹니다. 공개·검수·수명 상태를 여러 축으로 관리합니다.</p>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>컬럼</th><th>타입</th><th>설명</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">id</span></td><td><span class="ty k">uuid</span></td><td>기본키</td></tr>
+        <tr><td class="col"><span class="chip">source</span></td><td><span class="ty">text</span></td><td>출처 (ai_generated/curated)</td></tr>
+        <tr><td class="col"><span class="chip">author_id</span></td><td><span class="ty k">uuid</span></td><td>작성자(있을 때)</td></tr>
+        <tr><td class="col"><span class="chip">domain</span></td><td><span class="ty">text</span></td><td><b>영역</b>: 읽기/듣기/쓰기 (reading/listening/writing)</td></tr>
+        <tr><td class="col"><span class="chip">question_no</span></td><td><span class="ty">정수</span></td><td>쓰기 51/52/53/54, 그 외는 비어 있음</td></tr>
+        <tr><td class="col"><span class="chip">topik_level</span></td><td><span class="ty">정수</span></td><td>TOPIK 구분(1/2)</td></tr>
+        <tr><td class="col"><span class="chip">difficulty</span></td><td><span class="ty">정수</span></td><td>난이도(1~5)</td></tr>
+        <tr><td class="col"><span class="chip">title</span></td><td><span class="ty">text</span></td><td>제목</td></tr>
+        <tr><td class="col"><span class="chip">prompt</span></td><td><span class="ty">text</span></td><td>문제 지문</td></tr>
+        <tr><td class="col"><span class="chip">materials</span></td><td><span class="ty j">json</span></td><td>자료(이미지·오디오 위치, 조건 등)</td></tr>
+        <tr><td class="col"><span class="chip">answer_key</span></td><td><span class="ty j">json</span></td><td>객관식 정답 또는 쓰기 모범 예시</td></tr>
+        <tr><td class="col"><span class="chip">rubric</span></td><td><span class="ty j">json</span></td><td>쓰기 채점 기준</td></tr>
+        <tr><td class="col"><span class="chip">explanation</span></td><td><span class="ty">text</span></td><td>해설</td></tr>
+        <tr><td class="col"><span class="chip">tags</span></td><td><span class="ty">배열</span></td><td>분류 태그</td></tr>
+        <tr><td class="col"><span class="chip">topic_category_code</span></td><td><span class="ty">text</span></td><td><b>주제 분류</b>(생활/학습/사회 등). 영역과는 다른 축. 현재 비어 있을 수 있음</td></tr>
+        <tr><td class="col"><span class="chip">publish_status</span></td><td><span class="ty">text</span></td><td>공개 상태 (draft/published/archived)</td></tr>
+        <tr><td class="col"><span class="chip">review_status</span></td><td><span class="ty">text</span></td><td>검수 <b>최종 결과</b> (pending/approved/rejected)</td></tr>
+        <tr><td class="col"><span class="chip">review_workflow_status</span></td><td><span class="ty">text</span></td><td>검수 <b>진행 단계</b>(별도 축). 현재 비어 있을 수 있음</td></tr>
+        <tr><td class="col"><span class="chip">lifecycle_status</span></td><td><span class="ty">text</span></td><td>수명 상태 (active/inactive/expired)</td></tr>
+        <tr><td class="col"><span class="chip">lifecycle_reason</span></td><td><span class="ty">text</span></td><td>비활성 사유(사용자 화면 표시용)</td></tr>
+        <tr><td class="col"><span class="chip">expires_at</span></td><td><span class="ty">시각</span></td><td>만료 시각(자동 만료 로직은 없음)</td></tr>
+        <tr><td class="col"><span class="chip">visibility</span></td><td><span class="ty">text</span></td><td>노출 범위 (private/public/org)</td></tr>
+      </tbody></table></div>
+      <div class="note info">
+        <svg class="ic"><use href="#i-info"/></svg>
+        <div>일반 사용자에게는 <b>공개 상태가 published이고 노출 범위가 public인</b> 문제만 보입니다.
+          <b>domain</b>(영역, 읽기/듣기/쓰기)과 <b>topic_category_code</b>(주제, 생활/학습/사회)는 의미가 다릅니다.
+          <b>review_status</b>(최종 결과)와 <b>review_workflow_status</b>(진행 단계)도 별개이며, 뒤 두 컬럼은 관리자 코드 체계 확정 전이라 비어 있을 수 있습니다.</div>
+      </div>
+    </details>
+
+    <details class="acc">
+      <summary><span class="chip" style="font-size:13px">problem_assets</span><span class="ptitle">문제 첨부 자료</span></summary>
+      <p style="margin:6px 0 10px;color:var(--ink-soft);font-size:14px">문제에 붙는 이미지·오디오의 위치 정보.</p>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>컬럼</th><th>타입</th><th>설명</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">id</span></td><td><span class="ty k">uuid</span></td><td>기본키</td></tr>
+        <tr><td class="col"><span class="chip">problem_id</span></td><td><span class="ty k">uuid</span></td><td>어느 문제의 자료인지</td></tr>
+        <tr><td class="col"><span class="chip">storage_path</span></td><td><span class="ty">text</span></td><td>파일 저장 위치</td></tr>
+        <tr><td class="col"><span class="chip">asset_type</span></td><td><span class="ty">text</span></td><td>종류 (image/audio)</td></tr>
+        <tr><td class="col"><span class="chip">sort_order</span></td><td><span class="ty">정수</span></td><td>표시 순서</td></tr>
+      </tbody></table></div>
+    </details>
+
+    <div class="refgrp">풀이·쓰기</div>
+
+    <details class="acc">
+      <summary><span class="chip" style="font-size:13px">problem_attempts</span><span class="ptitle">객관식 풀이 기록</span><span class="tag tag-self">본인만</span></summary>
+      <p style="margin:6px 0 10px;color:var(--ink-soft);font-size:14px">읽기·듣기 같은 선택형 풀이. 쓰기는 아래 별도 테이블이 담당.</p>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>컬럼</th><th>타입</th><th>설명</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">id</span></td><td><span class="ty k">uuid</span></td><td>기본키</td></tr>
+        <tr><td class="col"><span class="chip">user_id</span></td><td><span class="ty k">uuid</span></td><td>사용자</td></tr>
+        <tr><td class="col"><span class="chip">problem_id</span></td><td><span class="ty k">uuid</span></td><td>문제</td></tr>
+        <tr><td class="col"><span class="chip">selected_answer</span></td><td><span class="ty j">json</span></td><td>선택한 답</td></tr>
+        <tr><td class="col"><span class="chip">is_correct</span></td><td><span class="ty">불리언</span></td><td>정답 여부</td></tr>
+        <tr><td class="col"><span class="chip">score</span></td><td><span class="ty">숫자</span></td><td>점수</td></tr>
+        <tr><td class="col"><span class="chip">status</span></td><td><span class="ty">text</span></td><td>상태 (started/submitted/reviewed)</td></tr>
+        <tr><td class="col"><span class="chip">started_at</span> <span class="chip">submitted_at</span></td><td><span class="ty">시각</span></td><td>시작·제출 시각</td></tr>
+        <tr><td class="col"><span class="chip">bookmarked</span></td><td><span class="ty">불리언</span></td><td>북마크 여부</td></tr>
+        <tr><td class="col"><span class="chip">time_spent_seconds</span></td><td><span class="ty">정수</span></td><td>소요 시간(초)</td></tr>
+      </tbody></table></div>
+    </details>
+
+    <details class="acc">
+      <summary><span class="chip" style="font-size:13px">writing_drafts</span><span class="ptitle">쓰기 자동저장 초안</span><span class="tag tag-self">본인만</span></summary>
+      <p style="margin:6px 0 10px;color:var(--ink-soft);font-size:14px">작성 중 임시 저장본. 한 문제당 활성 초안은 1개만 유지됩니다.</p>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>컬럼</th><th>타입</th><th>설명</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">id</span></td><td><span class="ty k">uuid</span></td><td>기본키</td></tr>
+        <tr><td class="col"><span class="chip">user_id</span></td><td><span class="ty k">uuid</span></td><td>사용자</td></tr>
+        <tr><td class="col"><span class="chip">problem_id</span></td><td><span class="ty k">uuid</span></td><td>문제</td></tr>
+        <tr><td class="col"><span class="chip">question_no</span></td><td><span class="ty">정수</span></td><td>51/52/53/54</td></tr>
+        <tr><td class="col"><span class="chip">answer_text</span></td><td><span class="ty">text</span></td><td>답안 본문</td></tr>
+        <tr><td class="col"><span class="chip">answer_json</span></td><td><span class="ty j">json</span></td><td>구조화된 답(빈칸·문단 등)</td></tr>
+        <tr><td class="col"><span class="chip">char_count</span></td><td><span class="ty">정수</span></td><td>글자 수</td></tr>
+        <tr><td class="col"><span class="chip">autosave_status</span></td><td><span class="ty">text</span></td><td>자동저장 상태 (clean/dirty/syncing/failed/superseded)</td></tr>
+        <tr><td class="col"><span class="chip">last_saved_at</span></td><td><span class="ty">시각</span></td><td>마지막 저장 시각</td></tr>
+      </tbody></table></div>
+    </details>
+
+    <details class="acc">
+      <summary><span class="chip" style="font-size:13px">writing_submissions</span><span class="ptitle">쓰기 최종 제출본</span><span class="tag tag-immut">불변</span><span class="tag tag-self">본인만</span></summary>
+      <p style="margin:6px 0 10px;color:var(--ink-soft);font-size:14px">한 번 만들어지면 수정·삭제 불가. 재도전 시 이전 제출본과 연결됩니다. 본인만 읽기(관리자도 읽기 가능).</p>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>컬럼</th><th>타입</th><th>설명</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">id</span></td><td><span class="ty k">uuid</span></td><td>기본키</td></tr>
+        <tr><td class="col"><span class="chip">user_id</span></td><td><span class="ty k">uuid</span></td><td>사용자</td></tr>
+        <tr><td class="col"><span class="chip">problem_id</span></td><td><span class="ty k">uuid</span></td><td>문제</td></tr>
+        <tr><td class="col"><span class="chip">draft_id</span></td><td><span class="ty k">uuid</span></td><td>어느 초안에서 제출됐는지</td></tr>
+        <tr><td class="col"><span class="chip">question_no</span></td><td><span class="ty">정수</span></td><td>51/52/53/54</td></tr>
+        <tr><td class="col"><span class="chip">answer_text</span></td><td><span class="ty">text</span></td><td>제출 답안</td></tr>
+        <tr><td class="col"><span class="chip">answer_json</span></td><td><span class="ty j">json</span></td><td>구조화된 답</td></tr>
+        <tr><td class="col"><span class="chip">char_count</span></td><td><span class="ty">정수</span></td><td>글자 수</td></tr>
+        <tr><td class="col"><span class="chip">submitted_at</span></td><td><span class="ty">시각</span></td><td>제출 시각</td></tr>
+        <tr><td class="col"><span class="chip">feedback_status</span></td><td><span class="ty">text</span></td><td>피드백 진행 상태 (pending/analyzing/complete/failed)</td></tr>
+        <tr><td class="col"><span class="chip">parent_submission_id</span></td><td><span class="ty k">uuid</span></td><td>재도전 체인에서 이전 제출본</td></tr>
+      </tbody></table></div>
+    </details>
+
+    <div class="refgrp">피드백·리포트</div>
+
+    <details class="acc">
+      <summary><span class="chip" style="font-size:13px">writing_feedback</span><span class="ptitle">AI 첨삭 총평</span><span class="tag tag-self">본인만</span></summary>
+      <p style="margin:6px 0 10px;color:var(--ink-soft);font-size:14px">제출본 하나당 하나. 관리자도 읽기 가능.</p>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>컬럼</th><th>타입</th><th>설명</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">submission_id</span></td><td><span class="ty k">uuid</span></td><td>어느 제출본의 피드백인지 (기본키)</td></tr>
+        <tr><td class="col"><span class="chip">status</span></td><td><span class="ty">text</span></td><td>상태 (partial/complete/failed)</td></tr>
+        <tr><td class="col"><span class="chip">score_total</span> <span class="chip">score_max</span></td><td><span class="ty">숫자</span></td><td>총점 / 만점</td></tr>
+        <tr><td class="col"><span class="chip">overall_summary</span></td><td><span class="ty">text</span></td><td>AI 총평</td></tr>
+        <tr><td class="col"><span class="chip">ai_model</span> <span class="chip">ai_model_version</span></td><td><span class="ty">text</span></td><td>사용 모델 정보(재현용)</td></tr>
+        <tr><td class="col"><span class="chip">raw_ai_result</span></td><td><span class="ty j">json</span></td><td>원본 분석 결과 보관</td></tr>
+        <tr><td class="col"><span class="chip">generated_at</span></td><td><span class="ty">시각</span></td><td>생성 시각</td></tr>
+      </tbody></table></div>
+    </details>
+
+    <details class="acc">
+      <summary><span class="chip" style="font-size:13px">feedback_dimension_scores</span><span class="ptitle">영역별 점수</span><span class="tag tag-self">본인만</span></summary>
+      <p style="margin:6px 0 10px;color:var(--ink-soft);font-size:14px">문법·어휘·구조 등 차원별 점수. 약점 추천과 성장 차트의 근거.</p>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>컬럼</th><th>타입</th><th>설명</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">id</span></td><td><span class="ty k">uuid</span></td><td>기본키</td></tr>
+        <tr><td class="col"><span class="chip">submission_id</span></td><td><span class="ty k">uuid</span></td><td>제출본</td></tr>
+        <tr><td class="col"><span class="chip">dimension</span></td><td><span class="ty">text</span></td><td>영역 (grammar/vocab/structure/content/expression/topic_fit)</td></tr>
+        <tr><td class="col"><span class="chip">score</span> <span class="chip">score_max</span></td><td><span class="ty">숫자</span></td><td>점수 / 만점</td></tr>
+        <tr><td class="col"><span class="chip">summary</span></td><td><span class="ty">text</span></td><td>영역 코멘트</td></tr>
+        <tr><td class="col"><span class="chip">weakness_level</span></td><td><span class="ty">정수</span></td><td>약점 수준(1~5)</td></tr>
+      </tbody></table></div>
+    </details>
+
+    <details class="acc">
+      <summary><span class="chip" style="font-size:13px">sentence_feedback</span><span class="ptitle">문장별 교정</span><span class="tag tag-self">본인만</span></summary>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>컬럼</th><th>타입</th><th>설명</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">id</span></td><td><span class="ty k">uuid</span></td><td>기본키</td></tr>
+        <tr><td class="col"><span class="chip">submission_id</span></td><td><span class="ty k">uuid</span></td><td>제출본</td></tr>
+        <tr><td class="col"><span class="chip">sentence_index</span></td><td><span class="ty">정수</span></td><td>문장 순서</td></tr>
+        <tr><td class="col"><span class="chip">original_text</span></td><td><span class="ty">text</span></td><td>원문</td></tr>
+        <tr><td class="col"><span class="chip">corrected_text</span></td><td><span class="ty">text</span></td><td>수정문</td></tr>
+        <tr><td class="col"><span class="chip">comment</span></td><td><span class="ty">text</span></td><td>코멘트</td></tr>
+      </tbody></table></div>
+    </details>
+
+    <details class="acc">
+      <summary><span class="chip" style="font-size:13px">comparison_reports</span><span class="ptitle">비교 리포트</span><span class="tag tag-self">본인만</span></summary>
+      <p style="margin:6px 0 10px;color:var(--ink-soft);font-size:14px">이전 답안과 현재 답안의 비교 결과. 생성 시점 스냅샷으로 보존.</p>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>컬럼</th><th>타입</th><th>설명</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">id</span></td><td><span class="ty k">uuid</span></td><td>기본키</td></tr>
+        <tr><td class="col"><span class="chip">user_id</span></td><td><span class="ty k">uuid</span></td><td>사용자</td></tr>
+        <tr><td class="col"><span class="chip">current_submission_id</span></td><td><span class="ty k">uuid</span></td><td>현재 제출본</td></tr>
+        <tr><td class="col"><span class="chip">previous_submission_id</span></td><td><span class="ty k">uuid</span></td><td>비교 대상 이전 제출본</td></tr>
+        <tr><td class="col"><span class="chip">metrics</span></td><td><span class="ty j">json</span></td><td>차트 지표</td></tr>
+        <tr><td class="col"><span class="chip">narrative</span></td><td><span class="ty">text</span></td><td>AI 서술</td></tr>
+        <tr><td class="col"><span class="chip">generated_at</span></td><td><span class="ty">시각</span></td><td>생성 시각</td></tr>
+      </tbody></table></div>
+    </details>
+
+    <div class="refgrp">추천</div>
+
+    <details class="acc">
+      <summary><span class="chip" style="font-size:13px">recommendation_runs</span><span class="ptitle">추천 실행 단위</span><span class="tag tag-self">본인만</span></summary>
+      <p style="margin:6px 0 10px;color:var(--ink-soft);font-size:14px">추천이 한 번 만들어진 묶음. "왜 이 추천이 나왔는지"를 보존.</p>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>컬럼</th><th>타입</th><th>설명</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">id</span></td><td><span class="ty k">uuid</span></td><td>기본키</td></tr>
+        <tr><td class="col"><span class="chip">user_id</span></td><td><span class="ty k">uuid</span></td><td>사용자</td></tr>
+        <tr><td class="col"><span class="chip">source_type</span></td><td><span class="ty">text</span></td><td>추천 출처 (dashboard/feedback/weakness/next_problem)</td></tr>
+        <tr><td class="col"><span class="chip">source_id</span></td><td><span class="ty k">uuid</span></td><td>출처가 된 데이터</td></tr>
+        <tr><td class="col"><span class="chip">reason_summary</span></td><td><span class="ty">text</span></td><td>추천 사유 요약</td></tr>
+        <tr><td class="col"><span class="chip">created_at</span> <span class="chip">expires_at</span></td><td><span class="ty">시각</span></td><td>생성·만료 시각</td></tr>
+      </tbody></table></div>
+    </details>
+
+    <details class="acc">
+      <summary><span class="chip" style="font-size:13px">recommendation_items</span><span class="ptitle">추천된 문제</span><span class="tag tag-self">본인만</span></summary>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>컬럼</th><th>타입</th><th>설명</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">id</span></td><td><span class="ty k">uuid</span></td><td>기본키</td></tr>
+        <tr><td class="col"><span class="chip">run_id</span></td><td><span class="ty k">uuid</span></td><td>어느 추천 묶음인지</td></tr>
+        <tr><td class="col"><span class="chip">problem_id</span></td><td><span class="ty k">uuid</span></td><td>추천 문제</td></tr>
+        <tr><td class="col"><span class="chip">rank</span></td><td><span class="ty">정수</span></td><td>추천 순위</td></tr>
+        <tr><td class="col"><span class="chip">reason</span></td><td><span class="ty">text</span></td><td>개별 추천 이유</td></tr>
+        <tr><td class="col"><span class="chip">estimated_minutes</span></td><td><span class="ty">정수</span></td><td>예상 소요 시간</td></tr>
+        <tr><td class="col"><span class="chip">weakness_tags</span></td><td><span class="ty">배열</span></td><td>관련 약점 태그</td></tr>
+        <tr><td class="col"><span class="chip">status</span></td><td><span class="ty">text</span></td><td>상태 (active/consumed/expired)</td></tr>
+      </tbody></table></div>
+    </details>
+
+    <div class="refgrp">서재·활동·파일</div>
+
+    <details class="acc">
+      <summary><span class="chip" style="font-size:13px">library_items</span><span class="ptitle">내 서재</span><span class="tag tag-self">본인만</span><span class="tag tag-one">한 종류만</span></summary>
+      <p style="margin:6px 0 10px;color:var(--ink-soft);font-size:14px">문제·제출본·리포트·내보낸 파일을 한 테이블에서 종류 구분과 함께 저장. 한 항목은 정확히 한 종류만 가리킵니다.</p>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>컬럼</th><th>타입</th><th>설명</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">id</span></td><td><span class="ty k">uuid</span></td><td>기본키</td></tr>
+        <tr><td class="col"><span class="chip">user_id</span></td><td><span class="ty k">uuid</span></td><td>사용자</td></tr>
+        <tr><td class="col"><span class="chip">item_type</span></td><td><span class="ty">text</span></td><td>종류 (attempt/submission/report/export/problem)</td></tr>
+        <tr><td class="col"><span class="chip">attempt_id</span> <span class="chip">submission_id</span> <span class="chip">report_id</span> <span class="chip">export_id</span> <span class="chip">problem_id</span></td><td><span class="ty k">uuid</span></td><td>종류에 맞는 대상 하나만 채워짐</td></tr>
+        <tr><td class="col"><span class="chip">note</span></td><td><span class="ty">text</span></td><td>사용자 메모</td></tr>
+        <tr><td class="col"><span class="chip">tags</span></td><td><span class="ty">배열</span></td><td>태그</td></tr>
+        <tr><td class="col"><span class="chip">saved_at</span></td><td><span class="ty">시각</span></td><td>저장 시각</td></tr>
+      </tbody></table></div>
+    </details>
+
+    <details class="acc">
+      <summary><span class="chip" style="font-size:13px">study_events</span><span class="ptitle">학습 활동 로그</span><span class="tag tag-self">본인만</span></summary>
+      <p style="margin:6px 0 10px;color:var(--ink-soft);font-size:14px">대시보드·성장·추천이 함께 보는 시간축 기록. 관리자 읽기 가능.</p>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>컬럼</th><th>타입</th><th>설명</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">id</span></td><td><span class="ty k">uuid</span></td><td>기본키</td></tr>
+        <tr><td class="col"><span class="chip">user_id</span></td><td><span class="ty k">uuid</span></td><td>사용자</td></tr>
+        <tr><td class="col"><span class="chip">event_type</span></td><td><span class="ty">text</span></td><td>활동 종류(상태값 모음 참고)</td></tr>
+        <tr><td class="col"><span class="chip">occurred_at</span></td><td><span class="ty">시각</span></td><td>발생 시각</td></tr>
+        <tr><td class="col"><span class="chip">problem_id</span> <span class="chip">submission_id</span> <span class="chip">attempt_id</span></td><td><span class="ty k">uuid</span></td><td>관련 대상(있을 때)</td></tr>
+        <tr><td class="col"><span class="chip">session_id</span></td><td><span class="ty k">uuid</span></td><td>묶음용 세션 식별자</td></tr>
+        <tr><td class="col"><span class="chip">payload</span></td><td><span class="ty j">json</span></td><td>활동별 부가 정보</td></tr>
+      </tbody></table></div>
+    </details>
+
+    <details class="acc">
+      <summary><span class="chip" style="font-size:13px">export_files</span><span class="ptitle">내보낸 파일</span><span class="tag tag-self">본인만</span></summary>
+      <p style="margin:6px 0 10px;color:var(--ink-soft);font-size:14px">PDF 등 사용자가 만든 파일의 메타데이터. 파일 자체는 비공개 저장소에 보관.</p>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>컬럼</th><th>타입</th><th>설명</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">id</span></td><td><span class="ty k">uuid</span></td><td>기본키</td></tr>
+        <tr><td class="col"><span class="chip">user_id</span></td><td><span class="ty k">uuid</span></td><td>사용자</td></tr>
+        <tr><td class="col"><span class="chip">source_type</span></td><td><span class="ty">text</span></td><td>출처 (submission/report/library_selection)</td></tr>
+        <tr><td class="col"><span class="chip">source_id</span></td><td><span class="ty k">uuid</span></td><td>출처 데이터</td></tr>
+        <tr><td class="col"><span class="chip">storage_path</span></td><td><span class="ty">text</span></td><td>파일 저장 위치</td></tr>
+        <tr><td class="col"><span class="chip">options</span></td><td><span class="ty j">json</span></td><td>생성 옵션</td></tr>
+        <tr><td class="col"><span class="chip">status</span></td><td><span class="ty">text</span></td><td>상태 (queued/ready/failed)</td></tr>
+        <tr><td class="col"><span class="chip">created_at</span> <span class="chip">ready_at</span></td><td><span class="ty">시각</span></td><td>요청·완료 시각</td></tr>
+      </tbody></table></div>
+    </details>
+
+    <div class="refgrp">알림</div>
+
+    <details class="acc">
+      <summary><span class="chip" style="font-size:13px">notification_settings</span><span class="ptitle">알림 설정</span><span class="tag tag-self">본인만</span></summary>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>컬럼</th><th>타입</th><th>설명</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">user_id</span></td><td><span class="ty k">uuid</span></td><td>사용자</td></tr>
+        <tr><td class="col"><span class="chip">reminder_time</span></td><td><span class="ty">시각</span></td><td>리마인더 시간</td></tr>
+        <tr><td class="col"><span class="chip">reminder_days</span></td><td><span class="ty">배열</span></td><td>리마인더 요일</td></tr>
+        <tr><td class="col"><span class="chip">channels</span></td><td><span class="ty">배열</span></td><td>알림 채널</td></tr>
+        <tr><td class="col"><span class="chip">timezone</span></td><td><span class="ty">text</span></td><td>시간대</td></tr>
+        <tr><td class="col"><span class="chip">updated_at</span></td><td><span class="ty">시각</span></td><td>수정 시각</td></tr>
+      </tbody></table></div>
+    </details>
+
+    <details class="acc">
+      <summary><span class="chip" style="font-size:13px">notification_log</span><span class="ptitle">알림 발송 이력</span><span class="tag tag-self">본인만</span></summary>
+      <p style="margin:6px 0 10px;color:var(--ink-soft);font-size:14px">사용자는 본인 이력만 읽고, 발송 기록 작성은 서버 측에서 합니다.</p>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>컬럼</th><th>타입</th><th>설명</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">id</span></td><td><span class="ty k">uuid</span></td><td>기본키</td></tr>
+        <tr><td class="col"><span class="chip">user_id</span></td><td><span class="ty k">uuid</span></td><td>사용자</td></tr>
+        <tr><td class="col"><span class="chip">channel</span></td><td><span class="ty">text</span></td><td>발송 채널</td></tr>
+        <tr><td class="col"><span class="chip">template_key</span></td><td><span class="ty">text</span></td><td>사용한 템플릿</td></tr>
+        <tr><td class="col"><span class="chip">status</span></td><td><span class="ty">text</span></td><td>발송 상태</td></tr>
+        <tr><td class="col"><span class="chip">payload</span></td><td><span class="ty j">json</span></td><td>부가 정보</td></tr>
+        <tr><td class="col"><span class="chip">sent_at</span> <span class="chip">created_at</span></td><td><span class="ty">시각</span></td><td>발송·기록 시각</td></tr>
+      </tbody></table></div>
+    </details>
+
+    <div class="refgrp">결제</div>
+
+    <details class="acc">
+      <summary><span class="chip" style="font-size:13px">subscription_plans</span><span class="ptitle">플랜 카탈로그</span><span class="tag tag-public">공개</span></summary>
+      <p style="margin:6px 0 10px;color:var(--ink-soft);font-size:14px">페이월에서 보여줄 플랜 목록.</p>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>컬럼</th><th>타입</th><th>설명</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">plan_key</span></td><td><span class="ty">text</span></td><td>플랜 식별 키</td></tr>
+        <tr><td class="col"><span class="chip">name</span></td><td><span class="ty">text</span></td><td>플랜 이름</td></tr>
+        <tr><td class="col"><span class="chip">cadence</span></td><td><span class="ty">text</span></td><td>결제 주기</td></tr>
+        <tr><td class="col"><span class="chip">price_cents</span></td><td><span class="ty">정수</span></td><td>가격(센트 단위)</td></tr>
+        <tr><td class="col"><span class="chip">currency</span></td><td><span class="ty">text</span></td><td>통화</td></tr>
+        <tr><td class="col"><span class="chip">features</span></td><td><span class="ty j">json</span></td><td>포함 기능</td></tr>
+        <tr><td class="col"><span class="chip">recommended</span></td><td><span class="ty">불리언</span></td><td>추천 플랜 표시</td></tr>
+        <tr><td class="col"><span class="chip">active</span></td><td><span class="ty">불리언</span></td><td>노출 여부</td></tr>
+      </tbody></table></div>
+    </details>
+
+    <details class="acc">
+      <summary><span class="chip" style="font-size:13px">subscriptions</span><span class="ptitle">구독 상태</span><span class="tag tag-self">본인만</span></summary>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>컬럼</th><th>타입</th><th>설명</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">id</span></td><td><span class="ty k">uuid</span></td><td>기본키</td></tr>
+        <tr><td class="col"><span class="chip">user_id</span></td><td><span class="ty k">uuid</span></td><td>사용자</td></tr>
+        <tr><td class="col"><span class="chip">plan_key</span></td><td><span class="ty">text</span></td><td>구독 플랜</td></tr>
+        <tr><td class="col"><span class="chip">billing_cadence</span></td><td><span class="ty">text</span></td><td>결제 주기</td></tr>
+        <tr><td class="col"><span class="chip">status</span></td><td><span class="ty">text</span></td><td>구독 상태</td></tr>
+        <tr><td class="col"><span class="chip">current_period_start</span> <span class="chip">current_period_end</span></td><td><span class="ty">시각</span></td><td>현재 결제 기간</td></tr>
+        <tr><td class="col"><span class="chip">cancel_at</span></td><td><span class="ty">시각</span></td><td>해지 예정 시각</td></tr>
+        <tr><td class="col"><span class="chip">provider</span> <span class="chip">provider_subscription_id</span></td><td><span class="ty">text</span></td><td>결제 제공사 정보</td></tr>
+      </tbody></table></div>
+    </details>
+
+    <details class="acc">
+      <summary><span class="chip" style="font-size:13px">payment_history</span><span class="ptitle">결제 이력</span><span class="tag tag-self">본인만</span></summary>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>컬럼</th><th>타입</th><th>설명</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">id</span></td><td><span class="ty k">uuid</span></td><td>기본키</td></tr>
+        <tr><td class="col"><span class="chip">user_id</span></td><td><span class="ty k">uuid</span></td><td>사용자</td></tr>
+        <tr><td class="col"><span class="chip">subscription_id</span></td><td><span class="ty k">uuid</span></td><td>관련 구독</td></tr>
+        <tr><td class="col"><span class="chip">amount_cents</span></td><td><span class="ty">정수</span></td><td>결제 금액(센트)</td></tr>
+        <tr><td class="col"><span class="chip">currency</span></td><td><span class="ty">text</span></td><td>통화</td></tr>
+        <tr><td class="col"><span class="chip">status</span></td><td><span class="ty">text</span></td><td>결제 상태</td></tr>
+        <tr><td class="col"><span class="chip">receipt_url</span></td><td><span class="ty">text</span></td><td>영수증 링크</td></tr>
+        <tr><td class="col"><span class="chip">paid_at</span></td><td><span class="ty">시각</span></td><td>결제 시각</td></tr>
+      </tbody></table></div>
+    </details>
+
+    <div class="refgrp">약관·동의</div>
+
+    <details class="acc">
+      <summary><span class="chip" style="font-size:13px">legal_documents</span><span class="ptitle">버전별 약관 문서</span><span class="tag tag-public">공개</span></summary>
+      <p style="margin:6px 0 10px;color:var(--ink-soft);font-size:14px">약관·개인정보 문서를 버전마다 한 줄씩 저장. 기존 줄은 고치지 않고 새 버전을 추가(이력 보존). 공개된 문서는 로그인 전에도 누구나 읽기 가능.</p>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>컬럼</th><th>타입</th><th>설명</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">id</span></td><td><span class="ty k">uuid</span></td><td>기본키</td></tr>
+        <tr><td class="col"><span class="chip">doc_type</span></td><td><span class="ty">text</span></td><td>문서 종류 (terms/privacy)</td></tr>
+        <tr><td class="col"><span class="chip">version</span></td><td><span class="ty">text</span></td><td>버전 표기</td></tr>
+        <tr><td class="col"><span class="chip">locale</span></td><td><span class="ty">text</span></td><td>언어 (ko/en/vi)</td></tr>
+        <tr><td class="col"><span class="chip">title</span> <span class="chip">body</span> <span class="chip">summary</span></td><td><span class="ty">text</span></td><td>제목·본문·요약</td></tr>
+        <tr><td class="col"><span class="chip">is_placeholder</span></td><td><span class="ty">불리언</span></td><td>임시 자리표시 여부</td></tr>
+        <tr><td class="col"><span class="chip">requires_consent</span></td><td><span class="ty">불리언</span></td><td>동의가 필요한 문서인지</td></tr>
+        <tr><td class="col"><span class="chip">status</span></td><td><span class="ty">text</span></td><td>상태 (draft/published/archived)</td></tr>
+        <tr><td class="col"><span class="chip">effective_at</span></td><td><span class="ty">시각</span></td><td>시행 시각</td></tr>
+      </tbody></table></div>
+    </details>
+
+    <details class="acc">
+      <summary><span class="chip" style="font-size:13px">user_consents</span><span class="ptitle">동의 기록</span><span class="tag tag-immut">불변</span><span class="tag tag-self">본인만</span></summary>
+      <p style="margin:6px 0 10px;color:var(--ink-soft);font-size:14px">사용자가 어떤 약관 버전을 언제 동의했는지의 기록. 한 번 남기면 바뀌지 않습니다(추가만). 관리자 읽기 가능.</p>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>컬럼</th><th>타입</th><th>설명</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">id</span></td><td><span class="ty k">uuid</span></td><td>기본키</td></tr>
+        <tr><td class="col"><span class="chip">user_id</span></td><td><span class="ty k">uuid</span></td><td>사용자</td></tr>
+        <tr><td class="col"><span class="chip">document_id</span></td><td><span class="ty k">uuid</span></td><td>동의한 문서</td></tr>
+        <tr><td class="col"><span class="chip">doc_type</span></td><td><span class="ty">text</span></td><td>문서 종류 (terms/privacy)</td></tr>
+        <tr><td class="col"><span class="chip">version</span></td><td><span class="ty">text</span></td><td>동의한 버전</td></tr>
+        <tr><td class="col"><span class="chip">source</span></td><td><span class="ty">text</span></td><td>동의 경로 (signup/re_consent/settings)</td></tr>
+        <tr><td class="col"><span class="chip">accepted_at</span></td><td><span class="ty">시각</span></td><td>동의 시각</td></tr>
+      </tbody></table></div>
+    </details>
+
+    <div class="refgrp">관리자</div>
+
+    <details class="acc adminbox">
+      <summary><span class="chip" style="font-size:13px">admin_audit_logs</span><span class="ptitle">관리자 작업 기록</span><span class="tag tag-admin">관리자</span><span class="tag tag-immut">추가만</span></summary>
+      <p style="margin:6px 0 10px;color:var(--ink-soft);font-size:14px">관리자 작업을 변경 전/후 차이와 함께 남깁니다. 고치거나 지울 수 없습니다.</p>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>컬럼</th><th>타입</th><th>설명</th></tr></thead><tbody>
+        <tr><td class="col"><span class="chip">id</span></td><td><span class="ty k">uuid</span></td><td>기본키</td></tr>
+        <tr><td class="col"><span class="chip">admin_user_id</span></td><td><span class="ty k">uuid</span></td><td>작업한 관리자</td></tr>
+        <tr><td class="col"><span class="chip">action</span></td><td><span class="ty">text</span></td><td>작업 종류</td></tr>
+        <tr><td class="col"><span class="chip">target_table</span> <span class="chip">target_id</span></td><td><span class="ty">text</span></td><td>대상</td></tr>
+        <tr><td class="col"><span class="chip">diff</span></td><td><span class="ty j">json</span></td><td>변경 전/후 차이</td></tr>
+        <tr><td class="col"><span class="chip">payload</span></td><td><span class="ty j">json</span></td><td>부가 정보</td></tr>
+        <tr><td class="col"><span class="chip">created_at</span></td><td><span class="ty">시각</span></td><td>시각</td></tr>
+      </tbody></table></div>
+    </details>
+
+    <details class="acc adminbox">
+      <summary><span class="ptitle">조직 테이블</span><span class="tag tag-admin">관리자</span></summary>
+      <p style="margin:6px 0 0;color:var(--ink-soft);font-size:14px">조직 디렉터리, 조직 멤버십, 조직 과제, 과제 제출을 담는 테이블들이 있으나, 사용자용 앱에서는 직접 쓰지 않습니다. 관리자 앱 영역에 속합니다.</p>
+    </details>
+  </aside>
+  <footer>
+    <p>TALKPIK AI · 화면별 데이터베이스 구조 안내 — 데이터 구조 설명 전용 문서</p>
+  </footer>
+</div>
+
+<button id="toTop" aria-label="맨 위로" title="맨 위로"><svg class="ic"><use href="#i-up"/></svg></button>
+
+<script>
+function toggleAllRef(btn){var d=document.querySelectorAll(".refdock details.acc");var anyClosed=Array.prototype.some.call(d,function(x){return !x.open;});d.forEach(function(x){x.open=anyClosed;});btn.textContent=anyClosed?"모두 접기":"모두 펼치기";}
+function toggleTheme(){var h=document.documentElement;var next=h.getAttribute('data-theme')==='dark'?'light':'dark';h.setAttribute('data-theme',next);try{localStorage.setItem('tp-theme',next);}catch(e){}}
+(function(){
+  // active TOC highlight
+  var links=[].slice.call(document.querySelectorAll('.toc a[href^="#"]'));
+  var map={};links.forEach(function(a){var id=a.getAttribute('href').slice(1);if(id)map[id]=a;});
+  var targets=Object.keys(map).map(function(id){return document.getElementById(id);}).filter(Boolean);
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if(en.isIntersecting){
+          links.forEach(function(a){a.classList.remove('active');});
+          var a=map[en.target.id];if(a)a.classList.add('active');
+        }
+      });
+    },{rootMargin:'-70px 0px -70% 0px',threshold:0});
+    targets.forEach(function(t){io.observe(t);});
+  }
+  // close mobile TOC after click
+  var tw=document.querySelector('.toc-wrap');
+  document.querySelectorAll('.toc a').forEach(function(a){a.addEventListener('click',function(){
+    if(tw&&tw.hasAttribute('open')&&window.matchMedia('(max-width:1023px)').matches){tw.removeAttribute('open');}
+  });});
+  // back to top
+  var bt=document.getElementById('toTop');
+  function onScroll(){if(window.scrollY>600)bt.classList.add('show');else bt.classList.remove('show');}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+  bt.addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'});});
+})();
+</script>
+</body>
+</html>

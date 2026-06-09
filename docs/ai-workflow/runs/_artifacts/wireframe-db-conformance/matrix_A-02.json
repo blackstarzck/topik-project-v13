@@ -1,0 +1,92 @@
+{
+  "iaCode": "A-02",
+  "screen": "로그인 (login)",
+  "route": "/login",
+  "folder": "docs/Wireframe/02-A-02-login",
+  "questionNo": 0,
+  "sourcePriorityApplied": "description.md > functional-spec.md > screen-data-summary.md > hifi.png/wireframe.png > sample JSON (no seed JSON for this screen)",
+  "frozenIslandNote": "No admin/org/frozen objects touched. Admin login branch (success -> X-15) is navigation only; admin screens (H-01/X-08/X-10/X-15) and frozen objects (organizations, org_members, assignments, assignment_submissions, admin_*/get_admin_*) are out of scope and untouched.",
+  "rows": [
+    {
+      "screenRequirement": "로그인 안내/환영 브랜드 문구, 마스코트 안내 카피 (welcome/brand copy + mascot guidance text)",
+      "docSource": "description.md Wireframe Number Map No.1 '환영/brand 영역' (line 11) + No.2 '마스코트 안내' (line 12); Detailed Description lines 20-40 (제목 24자/보조문 70자/마스코트 카피 60자)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "(missing) — static UI copy / i18n string, not DB-sourced",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "Static marketing/brand copy with char-count constraints. No DB read. Rendered from i18n strings + static asset. screen-data-summary.md '사용자 화면 표시 데이터' lists '로그인 안내 문구' as display data with no DB contract. No column needed."
+    },
+    {
+      "screenRequirement": "이메일/비밀번호 입력 필드 라벨 + 클라이언트 형식 검증 (ID 4-80자, PW 8-64자, blur 검증)",
+      "docSource": "description.md No.3 '로그인 입력 폼' (line 13) + Detailed Description '제약 조건: ID 4-80자, PW 8-64자, blur 후 형식 검증' (line 50)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "(missing) — Supabase Auth input, not a public.schema column",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "Email/password are Auth credentials submitted to Supabase Auth signIn. screen-data-summary.md '운영/관리 대상 데이터 계약' row '로그인 세션 생성' 확정 계약 = 'DB 계약 없음' and RLS note line 47 '비밀번호는 Auth 내부 값이며 public schema RLS 대상이 아니다'. Client-side format validation only; no public schema column required."
+    },
+    {
+      "screenRequirement": "로그인 세션 생성 (이메일/비밀번호 로그인, 매직 링크, 소셜 provider 로그인)",
+      "docSource": "description.md Navigation '화면 내부 동작: 이메일/비밀번호 로그인, 매직 링크 발송, 소셜 로그인' (line 88); screen-data-summary.md 운영/관리 데이터 계약 row '로그인 세션 생성' (line 34)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "(missing) — Supabase Auth (auth.* / signIn flow), no public schema table",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "CONTRACT-NOT-LABEL applied: screen-data-summary.md row '로그인 세션 생성' 확정 계약 explicitly = 'DB 계약 없음 ... public schema 테이블로 직접 저장하지 않는다' and 메모 'Auth 오류 reason은 클라이언트 상태로 처리한다'. Session lives in Supabase Auth, not in any public schema object in the LIVE list. No gap — correctly absent by design."
+    },
+    {
+      "screenRequirement": "로그인 후 사용자 상태/권한 확인 → 학습자=B-01, 관리자=X-15 진입 분기 (status, app_role)",
+      "docSource": "functional-spec.md DB 데이터 사용 명세: profiles | id, status, app_role | read | '로그인 후 세션 사용자의 상태와 권한을 확인한다' (lines 39-40); description.md Navigation 이탈 경로 '학습자 로그인 성공 시 B-01, 관리자 로그인 성공 시 X-15' (line 87)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "profiles.id, profiles.status, profiles.app_role",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "After session creation the screen reads profiles to branch by role/status. LIVE profiles has id (PK), status (CHECK active/blocked/deleted), app_role (CHECK learner/content_admin/org_admin/platform_admin) — all real validated columns, load-bearing for RLS per LIVE NOTE. screen-data-summary.md row '로그인 후 사용자 상태' 확정 계약 = '현재 스키마로 충족'. Stable query needed (role/status drive a redirect decision)."
+    },
+    {
+      "screenRequirement": "로그인 후 기본 locale / 표시 상태 보조 (ui_locale, plan_label)",
+      "docSource": "screen-data-summary.md 운영/관리 데이터 계약 row '로그인 후 사용자 상태' 확정 계약 'profiles.status, profiles.plan_label, profiles.app_role, ui_locale로 진입 분기와 표시 상태를 보조할 수 있다' (line 35); 저장/조회/이벤트 흐름 '세션 생성 뒤 profiles를 읽어 상태와 기본 locale을 확인' (line 43)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "profiles.ui_locale, profiles.plan_label",
+      "gapStatus": "satisfied",
+      "classification": "strong-inference",
+      "stableQueryNeed": false,
+      "rationale": "Supplementary post-login display state. LIVE profiles has ui_locale (CHECK ko/en/vi, default 'ko') and plan_label (default 'free'). description.md does not name these as a hard requirement (only branching by status/role is primary), so display-supplementation is strong-inference, not confirmed; satisfied by existing columns with no stable-query-only need beyond the role/status query already covered."
+    },
+    {
+      "screenRequirement": "인증 오류 분기 — 잘못된 계정, 이메일 미인증, rate limit/잠금 (over_request_rate_limit), 휴면/탈퇴 계정, 세션 만료 안내",
+      "docSource": "description.md 제약/예외 lines 52 (rate-limit over_request_rate_limit, client counter = UX hint only, not security device), 64, 78-82; functional-spec.md '상태/오류: 잘못된 계정, 이메일 미인증, rate limit' (line 30); /login?reason=session_expired (lines 86-87)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "(missing) — Supabase Auth error code + client state; dormant/withdrawn maps to profiles.status (blocked/deleted)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "Error reasons are client state mapped from Supabase Auth error codes (mapSupabaseErrorCode per functional-spec line 51). description.md line 52: lockout enforced server-side by Supabase rate-limit; client failure counter is a UX hint, NOT a security device → no client-side persistence/column. screen-data-summary.md 메모 line 34 'Auth 오류 reason은 클라이언트 상태로 처리한다'. Dormant/withdrawn account messaging reuses profiles.status (active/blocked/deleted). No DB error-store column needed; no stable-query need (counter is non-authoritative UX)."
+    },
+    {
+      "screenRequirement": "로그인 시도 이력 / 인증 시도 로그 (auth-attempt ledger for security audit)",
+      "docSource": "screen-data-summary.md 스키마 정합성 메모 line 51 '로그인 화면은 public schema에 인증 시도 이력을 남기는 구조가 없다. 보안 감사나 로그인 ledger가 필요하면 스키마 보강 필요다' (labelled schema-augmentation-needed)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "(missing) — no auth-attempt/login-ledger table in LIVE schema",
+      "gapStatus": "unresolved",
+      "classification": "unresolved",
+      "stableQueryNeed": false,
+      "rationale": "CONTRACT-NOT-LABEL + STABLE-QUERY analysis: this is a hypothetical future feature ('필요하면', conditional). description.md (PRIMARY) explicitly states the client failure counter is a UX hint and lockout is enforced by Supabase server-side rate-limit, NOT a client/DB security device — so the current login screen has NO confirmed query/validation/render need for a login ledger. study_events exists but its event_type catalog is frozen separately and contains no login/auth-attempt event. A genuine security-audit ledger is net-new scope → route to UNRESOLVED (escalate, do not propose/apply a migration). NOT a schema-gap for THIS screen because no confirmed screen requirement depends on it."
+    }
+  ],
+  "jsonMapping": [],
+  "jsonMappingNote": "No seed/sample JSON exists for the A-02 login screen (Glob of docs/Wireframe/02-A-02-login confirms only description.md, functional-spec.md, screen-data-summary.md, hifi.png, wireframe.png). Login credentials are Supabase Auth inputs, never seeded into public schema. jsonMapping intentionally empty; no provenance (source file + item id) to preserve.",
+  "summary": {
+    "confirmed": 5,
+    "strongInference": 1,
+    "unresolved": 1,
+    "satisfied": 6,
+    "jsonbCovered": 0,
+    "schemaGap": 0,
+    "unresolvedGap": 1
+  }
+}

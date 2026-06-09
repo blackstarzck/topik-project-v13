@@ -1,5 +1,6 @@
 "use client";
 
+import { useSyncExternalStore } from "react";
 import { Tag } from "antd";
 import { useTranslations } from "next-intl";
 import type { AutosaveStatus } from "@/lib/writing/types";
@@ -24,16 +25,37 @@ const LABEL_KEYS: Record<AutosaveStatus, string> = {
   superseded: "statusSuperseded",
 };
 
+function formatSavedTime(value: string): string | null {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  const hour = String(date.getHours()).padStart(2, "0");
+  const minute = String(date.getMinutes()).padStart(2, "0");
+  return `${hour}:${minute}`;
+}
+
+function subscribeHydrationStore() {
+  return () => undefined;
+}
+
+function getClientSnapshot() {
+  return true;
+}
+
+function getServerSnapshot() {
+  return false;
+}
+
 export function AutosaveBadge({ status, lastSavedAt }: Props) {
   const t = useTranslations("writing.autosave");
+  const isClient = useSyncExternalStore(
+    subscribeHydrationStore,
+    getClientSnapshot,
+    getServerSnapshot,
+  );
   const tone = TONE[status];
   const label = t(LABEL_KEYS[status] as never);
-  const stamp = lastSavedAt
-    ? new Date(lastSavedAt).toLocaleTimeString("ko-KR", {
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-    : null;
+  const stamp = isClient && lastSavedAt ? formatSavedTime(lastSavedAt) : null;
+
   return (
     <Tag color={tone}>
       {label}

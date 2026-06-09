@@ -64,6 +64,12 @@ problem과 활성 draft를 불러온 뒤 입력 변화를 draft로 저장한다.
 ## 스키마 정합성 메모
 52번 화면 데이터는 통합 writing 스키마로 충족된다. 화면 고유 자료 구조를 운영에서 검증하려면 스키마 보강 필요다.
 
+## 2026-06-09 구현 메모
+- 52번 더미 JSON은 `problems.materials`, `answer_key`, `rubric` JSONB에 저장한다.
+- 사용자 화면은 raw JSONB 대신 `NormalizedWritingProblem(kind="q52")`을 사용한다.
+- UI 입력 필드는 `blankedPrompt`, `blanks`, `charLimit`, `validationMessages`, `rubric.conditions`이다.
+- 조건 또는 rubric이 정규화되지 않으면 제출을 막고 문제 데이터 오류 안내를 표시한다.
+
 ## 검수 필요 항목
 - 52번 글자 수 기준과 제출 가능 조건을 문서 계약으로 고정한다.
 - 작성 팁 문구를 운영 데이터로 분리할지 정한다.

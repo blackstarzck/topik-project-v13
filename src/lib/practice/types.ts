@@ -16,6 +16,8 @@ export type ProblemRow = Pick<
   | "title"
   | "publish_status"
   | "review_status"
+  | "lifecycle_status"
+  | "lifecycle_reason"
   | "tags"
   | "updated_at"
 >;

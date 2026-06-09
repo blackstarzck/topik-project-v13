@@ -18,6 +18,7 @@ const skillSets = [
       'talkpik-orchestrator',
       'talkpik-next-bootstrap',
       'talkpik-ui-system',
+      'talkpik-wireframe-ui-audit',
       'talkpik-state-data',
       'talkpik-supabase-boundary',
       'talkpik-quality-gate',

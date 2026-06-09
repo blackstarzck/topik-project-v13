@@ -544,6 +544,8 @@
       "startProblem": "Start",
       "statusPublished": "Published",
       "statusUnpublished": "Unpublished",
+      "statusInactive": "Inactive",
+      "statusExpired": "Expired",
       "lastAttempt": "Last attempt: {date}",
       "attemptCount": "{count} attempts"
     },
@@ -930,7 +932,12 @@
       "toProblemList": "To problem list"
     },
     "prompt": {
-      "heading": "Q{questionNo} — {title}"
+      "heading": "Q{questionNo} — {title}",
+      "blanksLabel": "Blank information",
+      "writingTasksLabel": "Writing tasks",
+      "definitionLabel": "Topic",
+      "backgroundLabel": "Background",
+      "requiredQuestionsLabel": "Required points"
     },
     "editor": {
       "materialsTitle": "Problem materials",
@@ -948,6 +955,7 @@
       "blurTooLong": "You exceeded the maximum of {hardMax} characters. (currently {charCount})",
       "saveDraft": "Save draft",
       "submit": "Submit",
+      "submitBlockedProblemData": "The problem conditions could not be loaded, so submission is disabled. Open the problem again.",
       "tab53Intro": "Intro",
       "tab53Body": "Body",
       "tab53Conclusion": "Conclusion",
@@ -1038,6 +1046,7 @@
       "altImage": "Problem reference image",
       "altAudio": "Problem reference audio",
       "imageLoadFailed": "Could not load the image. ({alt})",
+      "unitLabel": "Unit: {unit}",
       "zoom": "Zoom in"
     },
     "help": {

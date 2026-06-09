@@ -1,0 +1,104 @@
+{
+  "iaCode": "X-11",
+  "questionNo": 33,
+  "screen": {
+    "name": "인증 에러 (Auth Error)",
+    "route": "/auth/error",
+    "folder": "docs/Wireframe/33-X-11-auth-error",
+    "audience": "public (session may or may not exist; no user-owned row access assumed)"
+  },
+  "sourcePriorityApplied": "description.md > functional-spec.md > screen-data-summary.md(확정 계약+메모, NOT label) > hifi.png/wireframe.png (none present) > sample JSON (none)",
+  "seedJson": "none for this screen",
+  "rows": [
+    {
+      "screenRequirement": "사유별 메시지 — `reason` query를 받아 11개 매핑 표에서 따뜻하고 평이한 한국어 메시지(제목+설명)를 표시. 매핑에 없는 reason은 `unknown`으로 fallback. raw Supabase error_description은 UI/URL에 절대 노출 금지(서버 로그 전용).",
+      "docSource": "description.md L11-12/L34-44 (§2 사유별 메시지, 제약: 80자/2줄, raw error_description 미노출; 예외: 매핑 없는 reason은 unknown), L100-110 분기/예외; functional-spec.md L23 (오류 이유 분기), L30 (raw error 노출 금지), L44 (query reason 비신뢰, canonical reason만 표시); screen-data-summary.md L31 확정 계약 (오류 reason은 Auth callback 또는 query 상태로 전달되며 public schema에 저장하지 않는다)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "(missing)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "Reason is read from the URL `reason` query and mapped to a canonical AuthErrorReason via the hard-coded SUPPORTED_REASONS set (src/lib/auth/error-mapping.ts L23-47). Title/message copy is resolved from the i18n catalog auth.error.<reason>.title/message (AuthErrorCard L99-100), NOT from any DB row. description.md (PRIMARY) and screen-data-summary.md L31 확정 계약 explicitly state the reason is transported by Auth callback/query state and is NOT stored in public schema. No LIVE-schema column maps here and none should — inventing a reason-storage table contradicts the 확정 계약. Static app/i18n copy with no DB query/validation/render need."
+    },
+    {
+      "screenRequirement": "오류 문구 catalog — reason별 사용자 안내 문구를 (잠재적으로) 운영 데이터로 관리.",
+      "docSource": "screen-data-summary.md L33 (오류 문구 catalog / label='스키마 보강 필요' / 확정 계약: reason별 사용자 안내 문구를 운영 데이터로 관리하는 구조는 없다 / 메모: 현재는 앱 문구 중심이다); description.md L40 (한국어 메시지를 매핑 표에서 표시 — 매핑 표는 코드/i18n)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "(missing)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "CONTRACT-NOT-LABEL: the row is labeled '스키마 보강 필요' but its 확정 계약 (screen-data-summary.md L33) explicitly states '운영 데이터로 관리하는 구조는 없다' and 메모 '현재는 앱 문구 중심이다'. Read the 확정 계약 + 메모, not the label. description.md states no DB-driven query/validation/render need for the copy. Implementation resolves all reason copy via the static next-intl catalog (auth.error.*), confirmed in AuthErrorCard L84/L99-101. Intentionally static app copy — NOT a schema gap; a future move to DB-managed error copy would be net-new scope requiring a docs-update gate, not an unresolved migration now."
+    },
+    {
+      "screenRequirement": "주요/보조 CTA 분기 — 사유별 primary 1 + secondary ≤1 (resend / signup / retry / login / home / help). rate-limit 카운트다운 중 비활성. 중복 제출 차단.",
+      "docSource": "description.md L13/L46-56 (§3 주요 CTA, 제약: primary 1+secondary ≤1, 중복 제출 차단; 예외: rate-limit 카운트다운 중 비활성), L114-116 이탈 경로(user_not_found→A-01, otp_expired/email_not_confirmed→X-12, flow_state_*/bad_code_verifier→A-02); functional-spec.md L24 (재시도 CTA), L26 (로그인/가입 이동)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "(missing)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "CTA routing is driven entirely by the static REASON_CONTENT map (src/lib/auth/error-mapping.ts L76-141) keyed on the canonical reason; CTA labels come from the i18n catalog (AuthErrorCard L101/L224). Destinations are static navigation routes (/login, /sign-up, /, /auth/callback). No DB column required. The disable-during-countdown and double-submit guards are pure client state (AuthErrorCard L129-130, L167). No stable DB query need."
+    },
+    {
+      "screenRequirement": "재전송(resend) 동작 — otp_expired / email_not_confirmed / over_email_send_rate_limit 사유에서 사용자가 명시 제출한 이메일로 Supabase Auth 인증 메일 재전송. URL만으로 자동 resend 절대 금지.",
+      "docSource": "description.md L52 (otp_expired/email_not_confirmed → 인증 메일 재전송), L72-80 (§5 이메일 prefill 인풋, 제약: untrusted, 자동 resend X, 항상 사용자 명시 제출); functional-spec.md L24 (재시도 CTA), L10 (세션 없을 수 있으므로 사용자 row 접근 전제 안 함)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "supabase.auth.resend() (Supabase Auth API — NOT a public-schema table/RPC); cf. AuthErrorCard L139-146",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "Resend calls the Supabase Auth service API (supabase.auth.resend, AuthErrorCard L140) via the browser client — this is GoTrue/auth, not a public-schema table or RPC, so it does not map to any LIVE-schema object and needs none. No public DB read/write occurs on this screen. The email is user-submitted (untrusted), never auto-sent from the URL (Codex C-ε rule honored, AuthErrorCard L132-138). No schema involvement."
+    },
+    {
+      "screenRequirement": "Retry-After 카운트다운 — over_email_send_rate_limit / over_request_rate_limit + `retry_after_seconds` query가 있으면 분/초 카운트다운 후 CTA 자동 활성. 범위 1~86400, 없으면 60초 fallback, 음수/비숫자도 60초.",
+      "docSource": "description.md L14/L58-68 (§4 Retry-After 카운트다운, 제약: 범위 1~86400, 값 없으면 60초 fallback; 예외: 음수/비숫자 60초); functional-spec.md L25 (카운트다운), L30 (rate limit)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "(missing)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "retry_after_seconds is read from the URL query and sanitized to 1..86400 with a 60s fallback (sanitizeRetryAfterSeconds, error-mapping.ts L166-172; default applied AuthErrorCard L108-110). The countdown is pure client state (useEffect timer, AuthErrorCard L114-127). No DB column stores or supplies this value; the callback route forwards a literal 60s for rate-limit reasons (route.ts L43-48). No DB requirement."
+    },
+    {
+      "screenRequirement": "이메일 prefill 인풋 — `?email=` query를 가시·편집 가능한 input 초기값으로 사용. 클라이언트 + 서버 이메일 형식 검증. URL 변조 방지 차원에서 항상 사용자 명시 제출.",
+      "docSource": "description.md L15/L70-80 (§5 이메일 prefill 인풋, 제약: untrusted, 자동 resend X; 예외: 잘못된 형식은 클라이언트+서버 검증); functional-spec.md L10 (세션 없을 수 있어 사용자 row 접근 전제 안 함)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "(missing)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "The email field's initial value comes from the URL `email` query (AuthErrorCard L103/L111), held as untrusted client state and only used when the user explicitly submits a resend. It is NOT read from or written to profiles or any public-schema table on this screen. The 'server 검증' constraint refers to the Supabase Auth resend call validating the address, not a public DB read. No schema involvement."
+    },
+    {
+      "screenRequirement": "보조(escape) 링크 — 로그인 / 가입 / 홈 — 항상 최소 1개 escape route 노출, 키보드 접근성 확보.",
+      "docSource": "description.md L16/L82-92 (§6 보조 링크, 제약: 항상 노출, 키보드 접근성; 예외: 없음); functional-spec.md L26 (로그인/가입 이동)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "(missing)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "Static navigation links to /login, /sign-up, / from a hard-coded ESCAPE_LINKS array with i18n labels (AuthErrorCard L73-81/L232-248). The '도움말' label was intentionally dropped because no help/support surface exists yet (AuthErrorCard L58-67/L218-221) — note no help-content table is invented. No DB requirement."
+    },
+    {
+      "screenRequirement": "계정 상태 보조 조회 — 인증 오류 후 (세션이 있는 경우에 한해) 본인 계정 상태(active/blocked/deleted)를 보조로 확인해 재시도 분기에 연결될 수 있다.",
+      "docSource": "functional-spec.md L40 (profiles id,status read / '연결될 수 있다' 추정 표현 / public auth flow, no user-owned row access unless session exists); screen-data-summary.md L32 (계정 상태 보조 / 현재 스키마로 충족 / profiles.status가 active,blocked,deleted 제공 / 메모: 로그인 세션이 있는 경우에만 본인 row 조회), L41/L46 (본인 row select, app_role·plan_label·status는 보호 컬럼); description.md: 명시적 계정 상태 조회 섹션 없음 (PRIMARY는 reason 매핑·CTA·카운트다운·이메일·escape만 명시)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "profiles.id, profiles.status (CHECK status IN ('active','blocked','deleted'))",
+      "gapStatus": "satisfied",
+      "classification": "strong-inference",
+      "stableQueryNeed": false,
+      "rationale": "Optional, session-gated self-row read. screen-data-summary.md L32 marks it '현재 스키마로 충족' via existing profiles.id/profiles.status (both present in LIVE schema with the exact active/blocked/deleted enum). functional-spec.md L40 grades it speculative ('연결될 수 있다') and conditions it on session presence ('no user-owned row access unless session exists'). description.md (PRIMARY) does NOT call for this read on the error screen, and the current implementation (AuthErrorPage + AuthErrorCard) performs NO DB read at all — the screen is purely URL-query driven. So this is a strong inference of a possible future self-row read fully covered by existing columns; no NEW column needed, no stable-query need beyond an ordinary RLS-scoped (본인 row만, L41/L46) point read. profiles is a SHARED admin-first entity — reconcile, never reshape; status/app_role/plan_label are protected columns."
+    }
+  ],
+  "jsonMapping": [],
+  "jsonMappingNote": "No sample/seed JSON exists for X-11 (the auth error screen consumes only URL query params — reason, email, retry_after_seconds — and reads no per-row seed data). JSON MAPPING RULE is n/a. There is no source JSON file and no JSON item id to preserve as seed provenance. No upsert seed is generated for this screen.",
+  "frozenIslandCheck": "No frozen-island objects (organizations, org_members, assignments, assignment_submissions, admin_*/get_admin_*) and no admin IA codes (H-01/X-08/X-10/X-15) are referenced or required by X-11. profiles is a SHARED admin-first entity but is read-only-self-row here and is NOT part of the frozen island; no expansion or reshape is proposed. No admin/org gap surfaced.",
+  "migrationPlan": "NONE. Every screen requirement is either (a) driven by URL query params + a hard-coded reason map + the static i18n catalog (reason message, CTA, countdown, email prefill, escape links), (b) served by the Supabase Auth service API (resend) which is not a public-schema object, or (c) an optional session-gated self-row read fully satisfied by existing profiles.id/profiles.status. The '오류 문구 catalog / 스키마 보강 필요' row was read via CONTRACT-NOT-LABEL: its 확정 계약 + 메모 confirm intentional static app copy, so it is gapStatus=satisfied, NOT a schema gap. No additive migration is warranted. Zero DROP/RESET/TRUNCATE. No seed.",
+  "openQuestions": [
+    "screen-data-summary.md L53: 지원 문의 링크의 추적 이벤트 저장 여부 — if a future product decision wants to log support-link clicks (e.g. via study_events), that would be net-new scope requiring a docs-update gate; today no such event is contracted, so no gap is raised (and study_events event_type catalog is frozen separately).",
+    "screen-data-summary.md L52 / L33: reason 값 목록과 사용자 문구 표준화 + whether error copy should ever be DB-managed — currently standardized in code (error-mapping.ts SUPPORTED_REASONS) + i18n. Any move to operational/DB-managed copy is a product decision, NOT a schema gap.",
+    "functional-spec.md L40 lists profiles id/status as a 'may be connected' read while the live AuthErrorPage/AuthErrorCard perform NO DB read. This is a doc-vs-implementation divergence (speculative doc, leaner reality). It is satisfied-by-existing-columns either way (no migration), but the functional-spec data-usage row overstates current behavior — flag for doc reconciliation, not a schema change."
+  ],
+  "notes": "X-11 is a public, session-less auth-error screen. The live implementation (AuthErrorPage src/app/auth/error/page.tsx, AuthErrorCard src/components/auth/AuthErrorCard.tsx, error-mapping src/lib/auth/error-mapping.ts) performs ZERO public-schema DB reads/writes: all content derives from URL query params (reason/email/retry_after_seconds), a hard-coded REASON_CONTENT routing map, the static next-intl auth.error.* catalog, and the Supabase Auth service API for resend (not a public table). Per description.md (PRIMARY) + screen-data-summary.md 확정 계약 L31, the auth error reason is NOT stored in public schema. The single DB-touching row is an optional, session-gated profiles.id/status self-row read that the docs mark '현재 스키마로 충족' (functional-spec L40 speculative; screen-data-summary L32) — fully covered by existing columns, classification=strong-inference, stableQueryNeed=false, no migration. CONTRACT-NOT-LABEL correctly resolved the '오류 문구 catalog · 스키마 보강 필요' row to satisfied (static i18n copy). No frozen-island touch, no seed JSON, no migration."
+}

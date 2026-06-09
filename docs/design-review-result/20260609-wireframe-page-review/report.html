@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>와이어프레임 기준 사용자 화면 35개 디자인 리뷰 — TALKPIK (2026-06-09)</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --surface:#ffffff; --ink:#0f172a; --muted:#475569; --faint:#64748b;
+    --line:#e2e8f0; --brand:#2563eb; --brand-ink:#1d4ed8;
+    --p0:#b91c1c; --p0-bg:#fef2f2; --p1:#b45309; --p1-bg:#fffbeb; --p2:#1d4ed8; --p2-bg:#eff6ff;
+    --ok:#15803d; --ok-bg:#f0fdf4; --warn:#a16207; --warn-bg:#fefce8;
+    --radius:14px; --shadow:0 1px 2px rgba(15,23,42,.04),0 4px 16px rgba(15,23,42,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0b1220; --surface:#111a2e; --ink:#e9eef7; --muted:#a8b3c7; --faint:#8a97ad;
+      --line:#243044; --p0-bg:#2a1416; --p1-bg:#2a2110; --p2-bg:#0f1d33; --ok-bg:#0f2418; --warn-bg:#241f0d;
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.35);}
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic",sans-serif;}
+  .wrap{max-width:1000px;margin:0 auto;padding:24px 20px 80px}
+  header.top{padding:28px 0 8px}
+  .eyebrow{color:var(--brand-ink);font-weight:700;font-size:13px;letter-spacing:.04em;text-transform:uppercase}
+  h1{font-size:clamp(24px,4vw,34px);line-height:1.25;margin:.2em 0 .15em;font-weight:800;letter-spacing:-.01em}
+  .sub{color:var(--muted);font-size:16px;max-width:68ch}
+  .meta{color:var(--faint);font-size:13px;margin-top:10px}
+  section{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:22px 22px;margin:18px 0}
+  h2{font-size:20px;margin:0 0 4px;font-weight:750;letter-spacing:-.01em}
+  h2 .n{color:var(--faint);font-weight:600;font-size:15px;margin-right:8px}
+  .lead{color:var(--muted);margin:.2em 0 1em;max-width:72ch}
+  h3{font-size:16px;margin:18px 0 6px;font-weight:700}
+  p{margin:.5em 0;max-width:74ch}
+  ul{margin:.4em 0;padding-left:1.2em} li{margin:.3em 0;max-width:72ch}
+  a{color:var(--brand-ink)}
+  code{background:rgba(127,127,127,.14);padding:.08em .4em;border-radius:6px;font-size:.88em;
+    font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace}
+  .badge{display:inline-block;font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px;border:1px solid transparent;white-space:nowrap}
+  .b-p0{color:var(--p0);background:var(--p0-bg);border-color:#fecaca}
+  .b-p1{color:var(--p1);background:var(--p1-bg);border-color:#fde68a}
+  .b-p2{color:var(--p2);background:var(--p2-bg);border-color:#bfdbfe}
+  .b-ok{color:var(--ok);background:var(--ok-bg);border-color:#bbf7d0}
+  .b-warn{color:var(--warn);background:var(--warn-bg);border-color:#fde68a}
+  .b-defer{color:var(--faint);background:rgba(127,127,127,.1);border-color:var(--line)}
+  /* scorecards */
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:6px}
+  .card{border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:var(--bg)}
+  .card .k{font-size:13px;color:var(--faint);font-weight:600}
+  .card .v{font-size:30px;font-weight:800;line-height:1.1;margin-top:2px}
+  .card .d{font-size:12.5px;color:var(--muted);margin-top:3px}
+  /* correction callout */
+  .callout{border-left:4px solid var(--p1);background:var(--p1-bg);border-radius:10px;padding:14px 16px;margin:8px 0}
+  .callout.ok{border-left-color:var(--ok);background:var(--ok-bg)}
+  .callout strong{display:block;margin-bottom:4px}
+  /* table */
+  .tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+  table{border-collapse:collapse;width:100%;font-size:14px;min-width:680px}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  thead th{position:sticky;top:0;background:var(--surface);font-size:12.5px;color:var(--faint);
+    text-transform:uppercase;letter-spacing:.03em;border-bottom:2px solid var(--line)}
+  tbody tr:hover{background:rgba(37,99,235,.04)}
+  td.ia{font-weight:700;white-space:nowrap}
+  td.rt code{font-size:.82em}
+  .hl{background:rgba(180,83,9,.10);}
+  /* distribution bars */
+  .bar{display:flex;align-items:center;gap:10px;margin:6px 0}
+  .bar .lbl{width:130px;font-size:13px;color:var(--muted);flex:none}
+  .bar .track{flex:1;background:rgba(127,127,127,.12);border-radius:999px;height:14px;overflow:hidden}
+  .bar .fill{height:100%;border-radius:999px}
+  .bar .cnt{width:34px;text-align:right;font-variant-numeric:tabular-nums;font-weight:700;font-size:13px}
+  .foot{color:var(--faint);font-size:12.5px;margin-top:26px;text-align:center}
+  .legend{font-size:12.5px;color:var(--faint);margin-top:8px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media (max-width:640px){.grid2{grid-template-columns:1fr}.bar .lbl{width:96px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div class="eyebrow">Design Review · 와이어프레임 기준</div>
+  <h1>사용자 화면 35개 2레이어 디자인 리뷰</h1>
+  <p class="sub">TALKPIK(TOPIK 글쓰기 학습 앱)의 사용자 화면을 <code>docs/Wireframe/</code> 기준(SOT)으로
+  실제 브라우저로 띄워 캡처하고, ① SOT 정합 ② 다관점 분석 2레이어로 평가했습니다. 제품 코드는 변경하지 않았습니다.</p>
+  <div class="meta">대상 35화면(관리자 4개 제외) · 2026-06-09 · 본 보고서는 사용자 재검증 정정(쓰기 콘텐츠) 반영본입니다.</div>
+</header>
+
+<!-- CORRECTION FIRST -->
+<section>
+  <h2><span class="n">★</span>재검증 정정 (가장 중요)</h2>
+  <p class="lead">초기 리뷰에서 "쓰기 52·53·54 화면이 콘텐츠 결손으로 막혀 있다"고 보고했으나,
+  사용자 확인(“/writing/* 전부 정상”)을 받아 <strong>처음부터 다시 검증</strong>한 결과 이 규정은 틀렸습니다.</p>
+
+  <div class="callout ok">
+    <strong>실제 쓰기 콘텐츠는 정상입니다.</strong>
+    DB 실측: q53 published 47개 중 46개, q54 82개 중 81개가 <code>rubric·answer_key·materials</code> 완비.
+    실제 문제 id로 진입한 q53·q54 화면은 "불러오기 실패" 없이 정상 렌더됨을 브라우저로 확인.
+  </div>
+  <div class="callout">
+    <strong>제가 본 "차단" 화면의 진짜 원인 (정정된 발견).</strong>
+    <ul>
+      <li><strong>기본 문제 선택 버그</strong> — <code>getWritingProblem</code>이 <code>?problem=</code> 없을 때
+      <code>ORDER BY</code> 없이 <code>.limit(1)</code>로 골라, 직접 URL/딥링크 진입 시 임의의(하필 빈) 문제가 로드됨.
+      개발 DB에선 빈 시드 예시(<code>2222/3333/4444</code>)가 떠 "조건 불러오기 실패"가 보였던 것. (코드)</li>
+      <li><strong>빈 시드 예시가 published 상태</strong> — 예시 placeholder 3개가 공개로 남아 있음(시드 데이터 정리 필요).</li>
+      <li><strong>q52만 진짜 문제</strong> — q52는 published가 1개뿐인데 그게 빈 placeholder라, 정상 문제로 진입할 수 없음(콘텐츠 1건 부재).</li>
+    </ul>
+  </div>
+  <p>→ 정상 흐름(문제 목록·추천에서 실제 문제로 진입)에서는 쓰기 화면이 잘 동작합니다. 아래 표/발견은 이 정정을 반영했습니다.</p>
+</section>
+
+<!-- SCORECARD -->
+<section>
+  <h2><span class="n">1</span>스코어카드</h2>
+  <div class="cards">
+    <div class="card"><div class="k">P0 · 지금 당장</div><div class="v" style="color:var(--p0)">0</div><div class="d">완전히 못 쓰는 화면 없음</div></div>
+    <div class="card"><div class="k">P1 · 이번 주</div><div class="v" style="color:var(--p1)">3</div><div class="d">아래 핵심 발견 참조</div></div>
+    <div class="card"><div class="k">P2 · 여유 있을 때</div><div class="v" style="color:var(--p2)">8+</div><div class="d">일관성·폴리시</div></div>
+    <div class="card"><div class="k">캡처</div><div class="v">33<span style="font-size:16px;color:var(--faint)">/35</span></div><div class="d">2개 DEFERRED(소스+SOT)</div></div>
+    <div class="card"><div class="k">e2e</div><div class="v">92<span style="font-size:15px;color:var(--faint)"> / 3 / 2</span></div><div class="d">실패=전부 X-16(실버그)</div></div>
+  </div>
+  <h3>화면 판정 분포 (35)</h3>
+  <div class="bar"><span class="lbl">정상 렌더 양호</span><span class="track"><span class="fill" style="width:71%;background:var(--ok)"></span></span><span class="cnt">25</span></div>
+  <div class="bar"><span class="lbl">주의(조건부)</span><span class="track"><span class="fill" style="width:20%;background:var(--p1)"></span></span><span class="cnt">7</span></div>
+  <div class="bar"><span class="lbl">DEFER(소스 평가)</span><span class="track"><span class="fill" style="width:9%;background:var(--faint)"></span></span><span class="cnt">3</span></div>
+  <div class="legend">‘주의’는 데이터/딥링크 조건부 또는 P2 경미 항목입니다. P1 3건은 서로 다른 3개 근본 원인(q52 콘텐츠·기본 선택 버그·X-16 하이드레이션)이며 일부 화면에 파급됩니다. 색상만으로 구분하지 않도록 숫자를 함께 표기했습니다.</div>
+</section>
+
+<!-- KEY FINDINGS -->
+<section>
+  <h2><span class="n">2</span>핵심 발견 (정정 반영)</h2>
+
+  <h3><span class="badge b-p1">P1</span> &nbsp;쓰기 기본 진입 시 빈 예시 문제 로드 (코드 + 시드)</h3>
+  <p>문제 파라미터 없이 <code>/writing/answer-writing-52</code>처럼 직접 들어가면, 정렬 없는 <code>.limit(1)</code>이
+  빈 시드 예시를 골라 "조건 불러오기 실패 → 제출 차단"이 됩니다. <strong>실제 문제로 진입하면 정상</strong>입니다.
+  조치: 기본 선택에 <code>ORDER BY</code>(최신/추천) 추가 + 빈 예시 문제 <em>unpublish</em>.</p>
+
+  <h3><span class="badge b-p1">P1</span> &nbsp;q52 완성 문제 부재 (데이터)</h3>
+  <p>q52는 공개된 문제가 1개뿐이고 그게 빈 placeholder라, 대시보드·추천(C-01·R-02)이 권하는 "52번"을 눌러도
+  실제로 작성할 수 없습니다. 조치: 조건/루브릭이 채워진 q52 문제를 1개 이상 공개.</p>
+
+  <h3><span class="badge b-p1">P1</span> &nbsp;X-16 새 비밀번호 화면 하이드레이션 불일치 (코드)</h3>
+  <p>"약 60분 후(HH:mm쯤) 만료" 시각을 서버 렌더에서 계산해 서버/브라우저 결과가 달라집니다.
+  SOT가 이미 "SSR에서 만료 시각 계산 금지(마운트 후 표시)"로 규정 → 구현이 자기 규칙을 어김. e2e가 이 버그를 잡습니다(3뷰포트 실패).</p>
+
+  <h3><span class="badge b-p2">P2</span> &nbsp;일관성·폴리시 (대부분 공통 한 곳 수정)</h3>
+  <ul>
+    <li>페이월/구독(X-03·X-04) 화면 상단에 내부 코드 <code>X-03</code>/<code>X-04</code>가 사용자에게 노출.</li>
+    <li>내 서재·PDF 미리보기(F-01·F-M1)에서 항목이 <code>문제 11111111</code>(원시 UUID)로 표시.</li>
+    <li>antd <code>Alert</code>의 <code>message</code> 폐기 경고(빈 예시 렌더 시), X-11 <code>legacyBehavior</code> Link 경고.</li>
+    <li>피드백(E-01·E-02) 하단 CTA 5개(SOT는 주요1+보조3=4 이하), 로그인/가입 CTA 비활성 정책, 예시 문제 제목 이중 접두사.</li>
+    <li>C-02 목록의 풀이 상태가 제출 기록을 반영 못해(<code>problem_attempts</code> 비어 있음) "다시 풀기"·C-03 모달 진입 불가(시드 갭 가능).</li>
+  </ul>
+
+  <div class="callout ok">
+    <strong>정직성 모범 사례.</strong> 약관/개인정보(X-13·X-14)는 placeholder임을 숨기지 않고 외부 LLM 전송 가능성을 명확히 고지,
+    가입/알림/페이월은 미구현을 "준비 중"으로 정직 표기, 프로필은 회원 탈퇴 미지원을 고지 — 가짜 기능을 만들지 않았습니다.
+  </div>
+</section>
+
+<!-- TABLE -->
+<section>
+  <h2><span class="n">3</span>화면별 결과 (35)</h2>
+  <p class="lead">상태: <span class="badge b-ok">정상</span> 렌더 양호 · <span class="badge b-warn">주의</span> 데이터/딥링크 등 조건부 ·
+  <span class="badge b-defer">DEFER</span> 트리거 불가(소스+SOT 평가). admin 4개(H-01·X-08·X-10·X-15)는 범위 밖(별도 앱).</p>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>IA</th><th>화면</th><th>라우트</th><th>판정</th><th>주요 항목</th></tr></thead>
+    <tbody>
+      <tr><td class="ia">A-01</td><td>회원가입</td><td class="rt"><code>/sign-up</code></td><td><span class="badge b-ok">정상</span></td><td>CTA 비활성 정책(P2)</td></tr>
+      <tr><td class="ia">A-02</td><td>로그인</td><td class="rt"><code>/login</code></td><td><span class="badge b-ok">정상</span></td><td>소셜 미노출·CTA 정책(P2)</td></tr>
+      <tr><td class="ia">A-03</td><td>학습 목표 설정</td><td class="rt"><code>/onboarding/learning-goal</code></td><td><span class="badge b-ok">정상</span></td><td>마스코트 정렬(nit)</td></tr>
+      <tr><td class="ia">B-01</td><td>홈 대시보드</td><td class="rt"><code>/dashboard</code></td><td><span class="badge b-ok">정상</span></td><td>"이어 풀기"가 q52(콘텐츠 부재) 지목</td></tr>
+      <tr><td class="ia">C-01</td><td>문제 유형 추천</td><td class="rt"><code>/practice/recommendations</code></td><td><span class="badge b-warn">주의</span></td><td>추천이 q52 지목(P1, 데이터)·보완포인트 코드 라벨(P2)</td></tr>
+      <tr><td class="ia">C-02</td><td>문제 목록</td><td class="rt"><code>/practice/problems</code></td><td><span class="badge b-warn">주의</span></td><td>풀이 상태 미반영(P1, 시드 가능)</td></tr>
+      <tr><td class="ia">C-03</td><td>다시 풀기 모달</td><td class="rt">(host C-02)</td><td><span class="badge b-defer">DEFER</span></td><td>solve_state 미반영으로 도달 불가</td></tr>
+      <tr><td class="ia">D-01</td><td>51 단답 작성</td><td class="rt"><code>/writing/short-answer-writing-51</code></td><td><span class="badge b-ok">정상</span></td><td>—</td></tr>
+      <tr class="hl"><td class="ia">D-02</td><td>52 답안 작성</td><td class="rt"><code>/writing/answer-writing-52</code></td><td><span class="badge b-warn">주의</span></td><td>q52 완성 문제 부재(P1, 데이터)</td></tr>
+      <tr class="hl"><td class="ia">D-03</td><td>53 장문 작성</td><td class="rt"><code>/writing/long-form-writing-53</code></td><td><span class="badge b-ok">정상</span></td><td>실제 문제 정상 · 기본 진입만 빈 예시(P1 코드/시드)</td></tr>
+      <tr class="hl"><td class="ia">D-04</td><td>54 에세이 작성</td><td class="rt"><code>/writing/essay-writing-54</code></td><td><span class="badge b-ok">정상</span></td><td>실제 문제 정상 · 기본 진입만 빈 예시(P1 코드/시드)·antd 폐기(P2)</td></tr>
+      <tr><td class="ia">D-M1</td><td>제출 확인 모달</td><td class="rt">(host 쓰기)</td><td><span class="badge b-ok">정상</span></td><td>동의 게이트 등 우수</td></tr>
+      <tr><td class="ia">D-M2</td><td>AI 분석 로딩</td><td class="rt">(host 제출)</td><td><span class="badge b-defer">DEFER</span></td><td>transient·소스 평가, 정직 실패 처리</td></tr>
+      <tr><td class="ia">D-M3</td><td>자동저장 경고</td><td class="rt">(host 쓰기)</td><td><span class="badge b-ok">정상</span></td><td>경고·복구 안내 우수</td></tr>
+      <tr><td class="ia">E-01</td><td>단답 피드백</td><td class="rt"><code>/writing/feedback/short/&lt;id&gt;</code></td><td><span class="badge b-ok">정상</span></td><td>CTA 5개(>4)(P2)</td></tr>
+      <tr><td class="ia">E-02</td><td>장문 피드백</td><td class="rt"><code>/writing/feedback/long/&lt;id&gt;</code></td><td><span class="badge b-ok">정상</span></td><td>문장첨삭 데이터 없어 미검증·CTA 5개(P2)</td></tr>
+      <tr><td class="ia">R-01</td><td>비교 리포트</td><td class="rt"><code>/writing/reports/&lt;id&gt;/compare</code></td><td><span class="badge b-ok">정상</span></td><td>빈/단일결과 처리 우수</td></tr>
+      <tr><td class="ia">R-02</td><td>다음 문제 추천</td><td class="rt"><code>/practice/next</code></td><td><span class="badge b-warn">주의</span></td><td>추천이 q52 지목(P1, 데이터)</td></tr>
+      <tr><td class="ia">F-01</td><td>내 서재</td><td class="rt"><code>/library</code></td><td><span class="badge b-ok">정상</span></td><td>항목 UUID 라벨(P2)</td></tr>
+      <tr><td class="ia">F-M1</td><td>PDF 내보내기 모달</td><td class="rt">(host /library)</td><td><span class="badge b-ok">정상</span></td><td>미리보기 UUID(P2)</td></tr>
+      <tr><td class="ia">G-01</td><td>언어 설정</td><td class="rt"><code>/settings/language</code></td><td><span class="badge b-ok">정상</span></td><td>—</td></tr>
+      <tr><td class="ia">X-01</td><td>제품 랜딩</td><td class="rt"><code>/</code></td><td><span class="badge b-ok">정상</span></td><td>—</td></tr>
+      <tr><td class="ia">X-02</td><td>성장 대시보드</td><td class="rt"><code>/growth</code></td><td><span class="badge b-ok">정상</span></td><td>free 잠금·"기본 지표" 카피↔실제(P2)</td></tr>
+      <tr><td class="ia">X-03</td><td>페이월</td><td class="rt"><code>/paywall</code></td><td><span class="badge b-warn">주의</span></td><td>IA코드 "X-03" 노출(P2)</td></tr>
+      <tr><td class="ia">X-04</td><td>구독 관리</td><td class="rt"><code>/subscription</code></td><td><span class="badge b-warn">주의</span></td><td>IA코드 "X-04" 노출(P2)</td></tr>
+      <tr><td class="ia">X-05</td><td>프로필 편집</td><td class="rt"><code>/profile</code></td><td><span class="badge b-ok">정상</span></td><td>탈퇴 미지원 정직 고지</td></tr>
+      <tr><td class="ia">X-06</td><td>비밀번호 재설정</td><td class="rt"><code>/password-reset</code></td><td><span class="badge b-ok">정상</span></td><td>마스코트 정렬(nit)</td></tr>
+      <tr><td class="ia">X-07</td><td>약점 기반 추천</td><td class="rt"><code>/practice/weakness</code></td><td><span class="badge b-ok">정상</span></td><td>free 잠금(예외 경로)</td></tr>
+      <tr><td class="ia">X-09</td><td>알림 설정</td><td class="rt"><code>/settings/notifications</code></td><td><span class="badge b-ok">정상</span></td><td>발송 연동 준비 중 정직 고지</td></tr>
+      <tr class="hl"><td class="ia">X-16</td><td>새 비밀번호 설정</td><td class="rt"><code>/password-reset/confirm</code></td><td><span class="badge b-warn">주의</span></td><td>하이드레이션 불일치(P1, 코드)</td></tr>
+      <tr><td class="ia">X-11</td><td>인증 에러</td><td class="rt"><code>/auth/error</code></td><td><span class="badge b-ok">정상</span></td><td>legacyBehavior 경고(P2)</td></tr>
+      <tr><td class="ia">X-12</td><td>인증 메일 확인</td><td class="rt"><code>/auth/verify-email</code></td><td><span class="badge b-ok">정상</span></td><td>—</td></tr>
+      <tr><td class="ia">X-13</td><td>이용약관</td><td class="rt"><code>/terms</code></td><td><span class="badge b-ok">정상</span></td><td>정직 placeholder 모범</td></tr>
+      <tr><td class="ia">X-14</td><td>개인정보처리방침</td><td class="rt"><code>/privacy</code></td><td><span class="badge b-ok">정상</span></td><td>외부 LLM 전송 고지 모범</td></tr>
+      <tr><td class="ia">X-17</td><td>콜백 fragment</td><td class="rt"><code>/auth/callback-fragment</code></td><td><span class="badge b-defer">DEFER</span></td><td>fallback 안전·정상 경로 미검증</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- METHOD / LIMITS -->
+<section class="grid2">
+  <div>
+    <h2><span class="n">4</span>방법 & 캡처</h2>
+    <ul>
+      <li>실제 dev 브라우저로 35라우트를 360/768/1280 캡처(106장). public=localhost, authed=127.0.0.1 + 재생성 세션.</li>
+      <li>시드(비교리포트·라이브러리)는 앱 실제 흐름으로 생성 후 <strong>teardown 완료</strong> — 기존 제출 5건 보존 확인.</li>
+      <li>e2e(<code>pnpm test:e2e</code>) = <strong>92 통과 / 3 실패 / 2 스킵</strong>. 실패는 전부 X-16(실버그를 의도적으로 노출).</li>
+      <li>증거 스크린샷은 PII 보호를 위해 gitignore — 본 보고서엔 미첨부.</li>
+    </ul>
+  </div>
+  <div>
+    <h2><span class="n">5</span>한계 / 정직성</h2>
+    <ul>
+      <li><strong>작성 방식</strong>: 멀티 에이전트 워크플로우가 세션 한도로 실패 → 메인 루프 단일 리뷰어가 작성. 독립 다중 에이전트 교차검증은 부분 적용.</li>
+      <li><strong>초기 오판 정정</strong>: "쓰기 콘텐츠 전반 결손"은 재검증으로 철회. 실제 콘텐츠 정상, 원인은 기본 선택 버그+빈 시드+q52 1건.</li>
+      <li><strong>미검증(UNVERIFIED-LIVE)</strong>: E-02 문장 첨삭, 유료 본문(X-02/07), X-17 정상 경로, 각종 실패/대기 상태.</li>
+      <li>dev + mock 피드백 기준 — 실 운영/실 AI/실 결제와 다를 수 있음.</li>
+    </ul>
+  </div>
+</section>
+
+<p class="foot">상세: <code>docs/design-review-result/20260609-wireframe-page-review/pages/*.md</code> · 계획: <code>PLAN.md</code> · admin 경계: <code>admin-boundary-conflict-proposal.md</code><br>
+TALKPIK 와이어프레임 기준 디자인 리뷰 · 2026-06-09 · 사용자 재검증 정정 반영</p>
+
+</div>
+</body>
+</html>

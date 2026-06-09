@@ -1,8 +1,12 @@
 "use client";
 
-import { Alert, List, Space, Tag, Typography } from "antd";
+import { Alert, Space, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { AppCard } from "@/components/shared/AppCard";
+import {
+  AppStackList,
+  AppStackListItem,
+} from "@/components/shared/AppStackList";
 
 const { Text } = Typography;
 
@@ -128,39 +132,39 @@ export function ConditionsPanel({ questionNo, rubric, loadFailed }: Props) {
       <Space orientation="vertical" size="small" style={{ width: "100%" }}>
         {parsed.conditions.length > 0 ? (
           <div>
-            <Text strong style={{ fontSize: 13 }}>
-              {t("conditionsLabel")}
-            </Text>
-            <List
-              size="small"
-              dataSource={parsed.conditions.slice(0, 4)}
-              renderItem={(c, i) => (
-                <List.Item style={{ padding: "4px 0" }}>
+            <Text strong>{t("conditionsLabel")}</Text>
+            <AppStackList>
+              {parsed.conditions.slice(0, 4).map((c, i, arr) => (
+                <AppStackListItem
+                  key={`${i}-${c}`}
+                  compact
+                  isLast={i === arr.length - 1}
+                >
                   <Space align="start">
                     <Tag color={i === 0 ? "blue" : "default"}>
                       {i === 0 ? t("required") : i + 1}
                     </Tag>
                     <Text>{c}</Text>
                   </Space>
-                </List.Item>
-              )}
-            />
+                </AppStackListItem>
+              ))}
+            </AppStackList>
           </div>
         ) : null}
         {parsed.criteria.length > 0 ? (
           <div>
-            <Text strong style={{ fontSize: 13 }}>
-              {t("criteriaLabel")}
-            </Text>
-            <List
-              size="small"
-              dataSource={parsed.criteria.slice(0, 5)}
-              renderItem={(c) => (
-                <List.Item style={{ padding: "4px 0" }}>
+            <Text strong>{t("criteriaLabel")}</Text>
+            <AppStackList>
+              {parsed.criteria.slice(0, 5).map((c, i, arr) => (
+                <AppStackListItem
+                  key={`${i}-${c}`}
+                  compact
+                  isLast={i === arr.length - 1}
+                >
                   <Text type="secondary">• {c}</Text>
-                </List.Item>
-              )}
-            />
+                </AppStackListItem>
+              ))}
+            </AppStackList>
           </div>
         ) : null}
       </Space>

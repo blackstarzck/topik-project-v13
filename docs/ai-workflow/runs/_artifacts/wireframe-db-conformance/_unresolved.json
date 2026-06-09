@@ -1,0 +1,194 @@
+[
+  {
+    "ia": "A-01",
+    "liveDbObject": "(missing)",
+    "gapStatus": "unresolved",
+    "classification": "unresolved",
+    "screenRequirement": "약관/개인정보 동의 상태 및 동의 이력 — §4 약관 동의, 정책 버전 + 사용자 동의 기록.",
+    "rationale": "CONTRACT-NOT-LABEL 적용: label은 '스키마 보강 필요'지만 확정 계약 + 메모를 읽음. 그러나 여기선 라벨/확정계약이 일치 — public schema에 정책버전·동의기록 구조가 전혀 없고(어떤 jsonb 블롭도 동의이력을 담지 않음) description.md는 저장된 동의에 대한 구체적 query/validation/render 필요를 명시하지 않음(동의는 가입 게이트용 클라이언트 체크박스, SignUpForm L164-200). 메모가 '도입되면 별도 계약 필요'로 명시적 후행 단계 → 진짜 net-new 갭. 동의이력 저장은 정책버전 도입 결정 이후 사안이므로 컬럼/마이그레이션 신설하지 않고 UNRESOLVED로 에스컬레이션. profiles.content_prefs(jsonb)는 콘텐츠 선호용으로 동의이력 의미와 불일치 → 오용 금지."
+  },
+  {
+    "ia": "A-02",
+    "liveDbObject": "(missing) — no auth-attempt/login-ledger table in LIVE schema",
+    "gapStatus": "unresolved",
+    "classification": "unresolved",
+    "screenRequirement": "로그인 시도 이력 / 인증 시도 로그 (auth-attempt ledger for security audit)",
+    "rationale": "CONTRACT-NOT-LABEL + STABLE-QUERY analysis: this is a hypothetical future feature ('필요하면', conditional). description.md (PRIMARY) explicitly states the client failure counter is a UX hint and lockout is enforced by Supabase server-side rate-limit, NOT a client/DB security device — so the current login screen has NO confirmed query/validation/render need for a login ledger. study_events exists but its event_type catalog is frozen separately and contains no login/auth-attempt event. A genuine security-audit ledger is net-new scope → route to UNRESOLVED (escalate, do not propose/apply a migration). NOT a schema-gap for THIS screen because no confirmed screen requirement depends on it."
+  },
+  {
+    "ia": "A-03",
+    "liveDbObject": "recommendation_runs (results only — no rule catalog)",
+    "gapStatus": "schema-gap",
+    "classification": "unresolved",
+    "screenRequirement": "초기 추천 seed — 목표 저장 직후 추천 묶음 자동 생성 규칙/운영 설정",
+    "rationale": "Per CONTRACT-NOT-LABEL: read the 확정 계약/메모, which here genuinely state the recommendation-RULE catalog + operational config structure does NOT exist in any migration (not just a label). recommendation_runs/recommendation_items store outputs but no rule/config catalog table exists. description.md (PRIMARY) does NOT make this screen render/query a rule catalog — A-03 only saves the goal; recommendation generation is downstream (B-01/추천). So this is a real net-new operational-config gap: route to UNRESOLVED, escalate, do NOT invent a column or seed. Not in the frozen admin island, but it is net-new scope requiring a product/schema decision."
+  },
+  {
+    "ia": "C-01",
+    "liveDbObject": "(missing) — no recommendation/problems column expresses per-type entitlement lock",
+    "gapStatus": "unresolved",
+    "classification": "unresolved",
+    "screenRequirement": "권한 잠금 유형 배지 / 이용 불가 안내 (entitlement gating for locked writing types)",
+    "rationale": "description.md requires a lock state per writing type, but the live schema has no field on problems/recommendation_* encoding a per-type entitlement lock. This is plan/entitlement-driven (subscriptions/subscription_plans.features jsonb territory) and is paywall/entitlement scope, not a recommendation-data field. Routing to UNRESOLVED/escalate rather than inventing a column on problems; whether features jsonb already gates this is a cross-screen entitlement decision (paywall IA), not resolvable from C-01 docs alone."
+  },
+  {
+    "ia": "C-01",
+    "liveDbObject": "(missing) — no rule/weight catalog table in live schema",
+    "gapStatus": "unresolved",
+    "classification": "unresolved",
+    "screenRequirement": "추천 규칙/가중치 catalog (약점 -> 문제 유형 운영 규칙)",
+    "rationale": "CONTRACT-NOT-LABEL applied: although labeled '스키마 보강 필요', the 메모 explicitly says the confirmed contract is result-row-centric ('결과 row 중심 계약') and description.md (PRIMARY) never asks THIS user screen to query/render a rule catalog — the screen only consumes recommendation_runs/items result rows. So it is NOT a gap this user screen must close. It is a net-new OPERATIONAL/admin capability (rule authoring) → route to UNRESOLVED/escalate, do not apply. stableQueryNeed=false because no user-screen query needs it."
+  },
+  {
+    "ia": "C-02",
+    "liveDbObject": "(missing) — problems has no expiry column (no expires_at). Expiry exists only on recommendation_runs.expires_at / recommendation_items.status, not on problems",
+    "gapStatus": "unresolved",
+    "classification": "unresolved",
+    "screenRequirement": "만료 문제 행 비활성 및 사유 표시 (만료 = expiry on a problem)",
+    "rationale": "description.md §4 (PRIMARY) lists '만료 문제' as a row-disable+reason render need, but problems has NO expiry concept in the LIVE schema. The only expiry in schema is recommendation_runs.expires_at / recommendation_items.status — a problem reached via X-07/R-02 recommendation could be expired at the recommendation layer, not the problem layer. This is a genuine doc↔schema ambiguity (is '만료' about the recommendation or the problem?). ESCALATE as a product/schema question — do NOT add an expiry column to problems. Net-new gap routed to UNRESOLVED per scope rules."
+  },
+  {
+    "ia": "C-03",
+    "liveDbObject": "(missing)",
+    "gapStatus": "unresolved",
+    "classification": "unresolved",
+    "screenRequirement": "재시도 UX 문구 / 재시도 정책을 운영 데이터로 제어 (모달 안내 문구, 모드 정책)",
+    "rationale": "CONTRACT-NOT-LABEL: labeled '스키마 보강 필요' but the 확정 계약 + 메모 explicitly accept that copy/policy live in APP CODE / DOCS, not the DB — there is no description.md-confirmed query/validation/render need against a DB structure. So this is NOT a schema-gap to satisfy now: it is a deliberate non-DB concern. Per STABLE-QUERY rule (no stable-query need + doc accepts app-code storage) leave it; route as unresolved (no migration, escalate-only if operator-configurable policy is ever made a requirement). No column invented."
+  },
+  {
+    "ia": "F-01",
+    "liveDbObject": "recommendation_runs (source_type='next_problem'?) / recommendation_items — UNRESOLVED mapping",
+    "gapStatus": "unresolved",
+    "classification": "unresolved",
+    "screenRequirement": "복습 세트 생성 — 선택 자료로 복습 세트 생성 (Wireframe area 2 '복습 세트로 생성')",
+    "rationale": "description.md (PRIMARY) names a '복습 세트로 생성' action, but neither functional-spec.md data-usage nor screen-data-summary.md confirms a DB target for it (no library->review-set write contract). recommendation_runs/recommendation_items exist but their source_type CHECK (dashboard/feedback/weakness/next_problem) has no 'library_selection' source, and no doc maps F-01 selection -> a recommendation run. This is a net-new write path with no confirmed contract — route to UNRESOLVED/escalate, do NOT invent a mapping or column. stableQueryNeed=false: not a stable-query gap, an undocumented action. No production rollout."
+  },
+  {
+    "ia": "F-01",
+    "liveDbObject": "(missing)",
+    "gapStatus": "unresolved",
+    "classification": "unresolved",
+    "screenRequirement": "서재 분류/컬렉션 — 폴더/컬렉션/공유 상태 같은 고급 보관 구조 (advanced organization)",
+    "rationale": "CONTRACT-NOT-LABEL applied: this row is LABELED '스키마 보강 필요', but its 확정 계약 + 메모 do NOT accept a current jsonb store — they state advanced collection/folder/share structure '현재 migration에 없다' and the confirmed contract is '현재는 태그와 메모 중심이다' (i.e., only tags+note are in scope). description.md (PRIMARY) confirms ONLY search/filter/tags/memo — it does NOT confirm any folder/collection/share need or a concrete query/validation/render need for it. So there is no jsonb blob already serving it and no stable-query need to force a column. This is genuinely net-new scope → UNRESOLVED/escalate; never apply, never invent a collections table/column. stableQueryNeed=false. No production rollout."
+  },
+  {
+    "ia": "G-01",
+    "liveDbObject": "(missing) — no translation-content/operational-string catalog table in live schema",
+    "gapStatus": "unresolved",
+    "classification": "unresolved",
+    "screenRequirement": "번역 문구 catalog — 화면 문구 및 콘텐츠 번역본을 운영 데이터로 관리하는 구조 (학습 언어에 따른 콘텐츠 번역 제공)",
+    "rationale": "CONTRACT-NOT-LABEL applied: although labeled '스키마 보강 필요', the 메모 explicitly states the confirmed contract is '사용자 선호 저장' (user-preference storage), and description.md (PRIMARY) only requires THIS screen to (a) select a learning locale and (b) show a fallback badge when a translation is missing — it never asks the screen to query/manage an operational translation catalog. UI strings are served by the build-time i18n catalog, not a runtime DB table. A translation-content management structure is a net-new OPERATIONAL/content capability (content-admin territory) outside this user screen's read/write surface → route to UNRESOLVED/escalate, do not apply. stableQueryNeed=false because no G-01 user-screen query needs it. (No DB write/seed.)"
+  },
+  {
+    "ia": "R-02",
+    "liveDbObject": "(missing) — no recommendation-policy/exclusion-rule catalog table",
+    "gapStatus": "unresolved",
+    "classification": "unresolved",
+    "screenRequirement": "추천 정책 / 제외 조건 catalog — 최근 제출에서 다음 문제로 이어지는 운영 추천 규칙 (screen-data-summary.md 운영/관리 대상 데이터 계약 '추천 정책')",
+    "rationale": "The 확정 계약 itself states the operational recommendation-policy + exclusion-rule catalog does NOT exist (not just a label) and the current contract is only 'store the recommendation result'. The user screen consumes pre-computed recommendation_items and does NOT itself need a policy table to render (fallback tiers in getNextProblem derive picks live). This is a genuinely net-new operational/admin-side concern → escalate as UNRESOLVED, do not add schema. No user-screen blocker."
+  },
+  {
+    "ia": "X-03",
+    "liveDbObject": "(missing) — checkout session has no public DB contract; results land in subscriptions / payment_history",
+    "gapStatus": "unresolved",
+    "classification": "unresolved",
+    "screenRequirement": "결제 checkout 실행 (CTA 클릭 → 외부 결제 provider 흐름, 결과 DB 반영)",
+    "rationale": "screen-data-summary 확정 계약 explicitly states the checkout session has NO DB contract — it is an external payment provider flow whose results are written to subscriptions/payment_history by the billing service (service_role), not by the client. No client write path, no public RPC, no payment provider wired in code (PaywallShell handleSelect is an external stub showing '연동 예정'). This is genuinely net-new integration scope → UNRESOLVED / escalate; do not invent a checkout column or RPC. Frozen-island unaffected."
+  },
+  {
+    "ia": "X-03",
+    "liveDbObject": "(missing)",
+    "gapStatus": "unresolved",
+    "classification": "unresolved",
+    "screenRequirement": "paywall 기능별 제한 문구 / upsell 카피를 운영 데이터로 관리하는 구조",
+    "rationale": "CONTRACT-NOT-LABEL applied: the row is LABELED '스키마 보강 필요' but its 확정 계약 column states there IS NO operational structure and the 메모 confirms current behavior = plan catalog + app copy combined. description.md states NO concrete query/validation/render need for operationally-managed upsell copy (Regions 1/4/5 are static app strings). Therefore not a real stable-query need and not currently jsonb-covered by any live column. This is deferred operational/CMS scope → UNRESOLVED / escalate; do not invent a copy/upsell table. Frozen-island unaffected."
+  },
+  {
+    "ia": "X-05",
+    "liveDbObject": "(missing)",
+    "gapStatus": "unresolved",
+    "classification": "unresolved",
+    "screenRequirement": "공개 프로필 네트워크 확장(팔로우/공개 범위/외부 링크)",
+    "rationale": "screen-data-summary가 명시적으로 '현재 범위 밖'으로 둠 — description.md(PRIMARY)에 어떤 구체 요구도 없음. 화면이 실제로 요구하지 않으므로 컬럼 신설/제안 금지. 진짜 net-new 구조라 UNRESOLVED로 escalate(적용 안 함). CONTRACT-NOT-LABEL: '스키마 보강 필요' 라벨이지만 확정계약/메모가 '구조 없음/범위 밖'이라 jsonb-covered 아님 — 진짜 미존재 + 화면 비요구."
+  },
+  {
+    "ia": "X-06",
+    "liveDbObject": "(missing) — no resend-counter / auth-audit ledger table in LIVE schema",
+    "gapStatus": "unresolved",
+    "classification": "unresolved",
+    "screenRequirement": "재전송 제한 / 감사 이력 (사용자별 재전송 횟수·인증 시도 감사 ledger)",
+    "rationale": "CONTRACT-NOT-LABEL + STABLE-QUERY analysis: although labelled '스키마 보강 필요', the 확정 계약 states no such structure exists and the 메모 makes it explicitly conditional/hypothetical ('보안 정책이 필요하면', '필요하면'). description.md (PRIMARY) treats resend limiting as a client cooldown (useEmailCooldown) and rate-limit as Supabase server-side enforcement — so X-06 has NO confirmed query/validation/render need for a persisted resend-counter or audit ledger. study_events exists but its event_type catalog is frozen separately and contains no auth/password-reset/resend event. A genuine security-audit ledger is net-new scope → route to UNRESOLVED (escalate, do NOT propose/apply a migration). NOT a schema-gap for THIS screen because no confirmed screen requirement depends on it."
+  },
+  {
+    "ia": "X-07",
+    "liveDbObject": "(missing)",
+    "gapStatus": "schema-gap",
+    "classification": "unresolved",
+    "screenRequirement": "약점-문제 매핑 규칙 (dimension별 문제 유형 매핑·가중치·제외 조건 운영 구조) (screen-data-summary 운영/관리 대상 데이터 계약)",
+    "rationale": "screen-data-summary explicitly labels this '스키마 보강 필요' AND its 메모 confirms there is NO current structure ('현재는 결과 row 중심이다') — unlike the CONTRACT-NOT-LABEL pattern, the 확정 계약 here does NOT accept jsonb storage; it states the structure is absent. CRITICALLY, description.md (PRIMARY source) states NO concrete query/validation/render need for a mapping-rule table on this screen — the screen consumes pre-computed result rows (recommendation_items) + a tag-overlap fallback, both of which work today. So this is an OPERATIONAL/admin-curation gap, not a user-screen blocker. It is net-new operational structure (rule authoring), so it is routed to UNRESOLVED to escalate rather than apply — no migration proposed. stableQueryNeed=false because the user screen does not need it (the result-row contract already serves)."
+  },
+  {
+    "ia": "X-09",
+    "liveDbObject": "(missing) — preview rendered from i18n + reminder_time/timezone (no DB template body store)",
+    "gapStatus": "unresolved",
+    "classification": "unresolved",
+    "screenRequirement": "알림 문구/예시 미리보기 (실제 발송 문구, 80자/2줄)",
+    "rationale": "screen-data-summary L40 labels a notification-template catalog '스키마 보강 필요', and unlike the other rows the 확정 계약 here REJECTS current storage ('운영 데이터로 관리하는 구조는 없다') — so CONTRACT-NOT-LABEL does NOT downgrade it to jsonb-covered; the contract genuinely confirms no store. BUT description.md does not confirm a DB-render need: live code (reminderPreview) builds the preview entirely from i18n strings + reminder_time/timezone, and template_key is only displayed (raw) in the log list. A template-body catalog is genuinely NET-NEW operational/admin-shaped data with no current user-screen query/render need → route to UNRESOLVED (escalate as candidate, do NOT invent a column or migration this run). No production rollout."
+  },
+  {
+    "ia": "X-12",
+    "liveDbObject": "(missing)",
+    "gapStatus": "unresolved",
+    "classification": "unresolved",
+    "screenRequirement": "인증 재발송 이력 ledger — 재발송 횟수/안내 이력 저장 (라벨: 스키마 보강 필요).",
+    "rationale": "CONTRACT-NOT-LABEL: the label says '스키마 보강 필요' but the 확정 계약 + 메모 explicitly accept that no structure exists and one is needed only IF a future security/ops policy emerges — i.e. conditional/net-new, not a confirmed current need. description.md states no query/validation/render need for resend history (cooldown is localStorage; rate-limit is Supabase-built-in). Per STABLE-QUERY rule there is no stable-query need, so no column is invented. Genuinely net-new with no current screen requirement -> route to UNRESOLVED (escalate, never apply). Not jsonb-covered because no existing blob serves it; not a schema-gap to apply on this user-facing screen."
+  },
+  {
+    "ia": "X-13",
+    "liveDbObject": "(missing)",
+    "gapStatus": "schema-gap",
+    "classification": "unresolved",
+    "screenRequirement": "정책 본문 / 버전 / 공개 일자 / 적용 일자 (operationally-managed terms content + version + publish date)",
+    "rationale": "CONTRACT-NOT-LABEL applied: the '스키마 보강 필요' label is overridden by the 확정 계약, which states no operational terms-version/publish-date structure exists and ties it to future 동의 이력(consent-history) design. description.md (PRIMARY) confirms current screen is a static placeholder with NO concrete DB query/validation/render need — version/date are not even rendered by the implementation (TermsContent.tsx has no version/date field). No live-schema table maps by meaning (problems/library/legal-content all unrelated; nearest is none). Per STABLE-QUERY rule, do NOT invent a column: there is no current stable-query need. This is a deferred, net-new operational/consent-history schema item → route to schema-gap + classification unresolved, ESCALATE-not-apply. No migration emitted this run."
+  },
+  {
+    "ia": "X-13",
+    "liveDbObject": "(missing)",
+    "gapStatus": "unresolved",
+    "classification": "unresolved",
+    "screenRequirement": "약관 동의 이력 / 동의 시각 / 재동의 정책 저장 (consent log on sign-up)",
+    "rationale": "Explicitly out of current scope: docs state 약관 동의 이력 저장은 미정 (functional-spec.md DB 데이터 사용 명세 row L45, 불확실성 column). No live-schema object stores consent records (profiles/notification_settings/subscriptions do not model legal consent). This is net-new schema requiring its own migration + spec → UNRESOLVED, escalate. The X-13 terms screen itself does not write consent (that would be the A-01 sign-up flow); included here only as a documented downstream gap. No migration emitted."
+  },
+  {
+    "ia": "X-14",
+    "liveDbObject": "(missing)",
+    "gapStatus": "unresolved",
+    "classification": "unresolved",
+    "screenRequirement": "정책 본문 / 버전 / 공개 일자 / 적용 일자 as managed operational data (versioning + revision history)",
+    "rationale": "Read via CONTRACT-NOT-LABEL: the label says '스키마 보강 필요' but the 확정 계약 + 메모 confirm no such structure exists and the screen currently renders static content. description.md (top priority) provides NO concrete query/validation/render need for a stored version/date — it forbids fixing policy facts pre-legal-review. This is net-new, explicitly-undecided design (functional-spec 추가 발견 후보 + screen-data-summary 검수 필요 항목). Route to UNRESOLVED: escalate to legal/privacy review, do not invent a column or migration now."
+  },
+  {
+    "ia": "X-14",
+    "liveDbObject": "(missing)",
+    "gapStatus": "unresolved",
+    "classification": "unresolved",
+    "screenRequirement": "삭제/열람 요청 (personal-data deletion/access request) ticket or ledger persisted in app DB",
+    "rationale": "CONTRACT-NOT-LABEL applied: confirmed-contract says no such structure exists and current handling routes to a separate support channel (저장/조회/이벤트 흐름: '문의나 삭제 요청 링크는 별도 지원 채널로 이동'). The current page does not even render a deletion/inquiry link (page.tsx has only terms/home/sign-up). Whether to persist requests in-app is explicitly undecided (검수 필요 항목). Net-new + undecided => UNRESOLVED, escalate; never apply a migration/seed."
+  },
+  {
+    "ia": "X-16",
+    "liveDbObject": "(missing)",
+    "gapStatus": "unresolved",
+    "classification": "unresolved",
+    "screenRequirement": "비밀번호 조건/정책 문구 운영화 (password policy copy as operational data)",
+    "rationale": "CONTRACT-NOT-LABEL applied: the row is LABELED '스키마 보강 필요' but the 확정 계약 + 메모 say there is NO operational structure today and the copy should be reconciled between Auth settings and app validation strings (currently static i18n in the client). description.md states NO concrete query/validation/render need for a DB-backed policy table (strength rules are advisory client-side per §3/L73). Per STABLE-QUERY rule there is no stable-query need, so no column is invented. This is a genuinely net-new operational-config surface (policy-copy management) with no existing LIVE object — routed to UNRESOLVED to escalate, never applied. Not jsonb-covered because no existing jsonb blob serves it."
+  },
+  {
+    "ia": "X-17",
+    "liveDbObject": "(missing)",
+    "gapStatus": "unresolved",
+    "classification": "unresolved",
+    "screenRequirement": "callback fragment failure-rate observability (server-visible correlation id or client telemetry)",
+    "rationale": "Explicitly flagged in docs as a separate future need ('별도 필요'), NOT a confirmed requirement of the current X-17 screen. study_events exists but its event_type catalog is frozen separately and contains no auth-callback/telemetry event; adding an auth-failure telemetry sink would be net-new operational scope. Route to UNRESOLVED / escalate per scope rules; do not apply. setSession failure is currently console.error-only (description.md L44, L68), not persisted."
+  }
+]

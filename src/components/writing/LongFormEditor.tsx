@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Button, Input, Space, Tabs, Typography } from "antd";
+import { Alert, Button, Input, Space, Tabs, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 
@@ -25,7 +25,6 @@ import {
   isCountInRecommendedRange,
   isCountSubmittable,
 } from "@/lib/writing/constants";
-import type { WritingProblemMaterials } from "@/lib/writing/server";
 import { AppCard } from "@/components/shared/AppCard";
 import { AutosaveBadge } from "./AutosaveBadge";
 import { ConditionsPanel, type ProblemRubric } from "./ConditionsPanel";
@@ -45,8 +44,8 @@ type Props = {
   problemId: string;
   questionNo: 53 | 54;
   initialDraft: WritingDraftRow | null;
-  problemMaterials: WritingProblemMaterials;
   rubric?: ProblemRubric;
+  submitBlockedReason?: string | null;
 };
 
 const DEBOUNCE_MS = 2000;
@@ -87,41 +86,13 @@ function readInitial54(draft: WritingDraftRow | null): Question54State {
   return { text: draft?.answer_text ?? "", checklist: emptyChecklist() };
 }
 
-function MaterialsPanel({
-  materials,
-}: {
-  materials: WritingProblemMaterials;
-}) {
-  const t = useTranslations("writing.editor");
-  if (!materials) return null;
-  if ("text" in materials) {
-    return (
-      <AppCard title={t("materialsTitle")}>
-        <Text>{materials.text}</Text>
-      </AppCard>
-    );
-  }
-  if ("chart" in materials) {
-    return (
-      <AppCard title={t("materialsChartTitle", { type: materials.chart.type })}>
-        <Text type="secondary">
-          {t("materialsChartPlaceholder", {
-            count: materials.chart.data.length,
-          })}
-        </Text>
-      </AppCard>
-    );
-  }
-  return null;
-}
-
 export function LongFormEditor({
   userId,
   problemId,
   questionNo,
   initialDraft,
-  problemMaterials,
   rubric = null,
+  submitBlockedReason = null,
 }: Props) {
   const t = useTranslations("writing.editor");
   const [state53, setState53] = useState<Question53State>(() =>
@@ -380,7 +351,18 @@ export function LongFormEditor({
   return (
     <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
       {/* D-03 평가 기준 / D-04 조건·루브릭 카드 (problems.rubric). */}
-      <ConditionsPanel questionNo={questionNo} rubric={rubric} />
+      <ConditionsPanel
+        questionNo={questionNo}
+        rubric={rubric}
+        loadFailed={submitBlockedReason === "problem_data_incomplete"}
+      />
+      {submitBlockedReason ? (
+        <Alert
+          type="warning"
+          showIcon
+          title={t("submitBlockedProblemData")}
+        />
+      ) : null}
 
       <Space wrap>
         <AutosaveBadge status={status} lastSavedAt={lastSavedAt} />
@@ -395,8 +377,6 @@ export function LongFormEditor({
           {t("autosaveDisabledNotice")}
         </Text>
       ) : null}
-
-      <MaterialsPanel materials={problemMaterials} />
 
       {questionNo === 53 ? (
         <>
@@ -484,7 +464,7 @@ export function LongFormEditor({
         <Button
           type="primary"
           onClick={() => setConfirmOpen(true)}
-          disabled={!submittable || submit.isPending}
+          disabled={!submittable || submit.isPending || Boolean(submitBlockedReason)}
         >
           {t("submit")}
         </Button>

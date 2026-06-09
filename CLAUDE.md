@@ -30,6 +30,20 @@ schema to make a user screen work — reconcile the screen to the schema and esc
 real schema gaps. (The filled consistency artifact is built when reconciliation
 work starts, not pre-emptively.)
 
+## Supabase Schema Documentation Gate
+
+If an agent task changes the Supabase database schema structure, always update
+the matching schema documentation before reporting completion. This includes
+table, column, enum, constraint, index, RPC, RLS, storage, and migration changes.
+
+Required docs for Supabase schema changes:
+
+- [`docs/development/database-schema.md`](docs/development/database-schema.md)
+- [`docs/supabase-table-inventory.md`](docs/supabase-table-inventory.md)
+- [`supabase/migrations/INDEX.md`](supabase/migrations/INDEX.md)
+- [`docs/share/`](docs/share/) screen-by-screen DB structure docs, especially
+  [`database-structure-by-page.md`](docs/share/database-structure-by-page.md)
+
 ## Project State
 
 This repository now has a foundation implementation. `src/` and `package.json`
@@ -53,6 +67,7 @@ Use these docs for implementation, QA, and review.
 - `docs/Wireframe/functional-spec-index.md`
 - `docs/Wireframe/data-usage-index.md`
 - `docs/flow/user-flow.md`
+- [`docs/share/`](docs/share/) for screen-by-screen Supabase data structure changes
 
 Do not run a fresh grill-me/domain-discovery interview for this project. The validated source of truth is the active `docs/` set above. For every implementation request, infer the user's goal, select the relevant docs, read them before planning, and include a `Docs consulted` section in the plan and final report.
 
@@ -64,6 +79,20 @@ For net-new scope, product pivots, unclear features outside the active docs, or 
 If the request conflicts with active docs, report the conflict with exact document references and wait for direction.
 
 Fail closed for doc conflicts, missing approval, destructive actions, secret exposure risk, and security uncertainty.
+
+## E2E Verification Gate
+
+For every development-related user request, run `pnpm test:e2e` before reporting
+completion. Development-related work includes code, route/UI, Supabase/auth/security,
+deployment/env, test/build configuration, and data-flow changes.
+
+Use project memory for any test account or authentication details needed during
+e2e testing. Do not print, persist, or commit secrets, tokens, private keys, or
+service role keys.
+
+If `pnpm test:e2e` cannot run or fails, do not report the work as complete.
+Report the failure or skip reason, the reproduction command, and the remaining
+risk.
 
 ## Communication Style
 

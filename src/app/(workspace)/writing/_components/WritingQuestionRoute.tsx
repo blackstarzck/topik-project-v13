@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 
 import { WritingPageContent } from "@/components/writing/WritingPageContent";
-import type { ProblemRubric } from "@/components/writing/ConditionsPanel";
 import type { ProblemAsset } from "@/components/writing/ReferenceMaterials";
 import { requireUser } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -23,17 +22,13 @@ const PROBLEM_ASSETS_BUCKET = "problem-assets";
 
 async function loadProblemExtras(problemId: string): Promise<{
   assets: ProblemAsset[];
-  rubric: ProblemRubric;
 }> {
   const supabase = await createSupabaseServerClient();
-  const [assetsRes, problemRes] = await Promise.all([
-    supabase
-      .from("problem_assets")
-      .select("id, storage_path, asset_type, sort_order")
-      .eq("problem_id", problemId)
-      .order("sort_order", { ascending: true }),
-    supabase.from("problems").select("rubric").eq("id", problemId).maybeSingle(),
-  ]);
+  const assetsRes = await supabase
+    .from("problem_assets")
+    .select("id, storage_path, asset_type, sort_order")
+    .eq("problem_id", problemId)
+    .order("sort_order", { ascending: true });
 
   const assets: ProblemAsset[] = (assetsRes.data ?? []).map((a) => {
     const { data: pub } = supabase.storage
@@ -49,7 +44,6 @@ async function loadProblemExtras(problemId: string): Promise<{
 
   return {
     assets,
-    rubric: (problemRes.data?.rubric ?? null) as ProblemRubric,
   };
 }
 
@@ -65,7 +59,7 @@ export async function renderWritingQuestionPage(
     problem && !startFresh ? await getActiveDraft(user.id, problem.id) : null;
   const extras = problem
     ? await loadProblemExtras(problem.id)
-    : { assets: [], rubric: null };
+    : { assets: [] };
 
   return (
     <WritingPageContent
@@ -74,7 +68,6 @@ export async function renderWritingQuestionPage(
       problem={problem}
       draft={draft}
       assets={extras.assets}
-      rubric={extras.rubric}
     />
   );
 }

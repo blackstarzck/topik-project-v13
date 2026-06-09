@@ -73,6 +73,7 @@ tests/e2e/auth-state/
 screenshots/
 test-results/
 analysis/
+.design-review-shots/
 .env.local.bak
 
 # Dependencies and build outputs

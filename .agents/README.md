@@ -30,6 +30,7 @@ node scripts/sync-agent-skills.mjs --check
 | `talkpik-orchestrator` | Starting any TALKPIK implementation, refactor, bug fix, UI, backend, AI, deployment, or quality task. Routes the agent through project docs and project-local skills before editing. |
 | `talkpik-next-bootstrap` | Creating or changing the Next.js App Router foundation, source tree, package scripts, TypeScript setup, Tailwind setup, Ant Design providers, or initial app bootstrap. |
 | `talkpik-ui-system` | Building or changing UI, Ant Design components, Tailwind utility usage, theme tokens, light/dark appearance, layout, visual states, or design-system consistency. |
+| `talkpik-wireframe-ui-audit` | Auditing or periodically governing implemented UI screens against `docs/Wireframe/**` specs, reference images, browser screenshots, responsive states, and Ant Design quality criteria. |
 | `talkpik-state-data` | Implementing or reviewing React state, Zustand stores, TanStack Query usage, server data ownership, URL state, forms, React Hook Form, or Zod validation. |
 | `talkpik-supabase-boundary` | Working on Supabase Auth, Postgres schema, RLS policies, Storage, server/client Supabase clients, profile data, admin roles, migrations, or database security. |
 | `talkpik-quality-gate` | Verifying work, reviewing code, checking tests, validating UI flows, preparing final reports, or claiming TALKPIK work complete. |

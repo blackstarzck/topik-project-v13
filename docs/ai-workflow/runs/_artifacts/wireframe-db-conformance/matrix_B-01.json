@@ -1,0 +1,198 @@
+{
+  "iaCode": "B-01",
+  "screen": "home-dashboard",
+  "route": "/dashboard",
+  "questionNo": 0,
+  "sourcePriorityApplied": "description.md > functional-spec.md > screen-data-summary.md > hifi.png/wireframe.png > sample JSON",
+  "liveSchemaBaseline": "LIVE schema discovered this run (authoritative). get_dashboard_kpi() confirmed via supabase/migrations/20260521140000_phase_6_rpc_and_admin.sql:400-406 returns table(today_attempts int, total_attempts int, exam_days_left int, streak_days int).",
+  "rows": [
+    {
+      "screenRequirement": "사이드 내비 — 활성 메뉴 1개 표시, 권한 잠금 메뉴는 비활성+잠금 사유 (홈/문제풀기/쓰기연습/내서재/성장리포트/설정)",
+      "docSource": "description.md L11,L20-28 (Wireframe No.1 학습자 사이드 내비; 제약 메뉴명 10자 이하·활성 1개; 예외 권한 잠금 메뉴)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "(none — static route map)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "Navigation menu is a static route map (docs/sitemap.md), not DB-backed data. Lock state for permission-gated menus derives from profiles.plan_label/app_role which already exist; no per-menu data row is needed. No screen data requirement → no schema object."
+    },
+    {
+      "screenRequirement": "KPI: 오늘 제출(오늘 풀이 수)",
+      "docSource": "description.md L36 (KPI 요약 — 오늘 제출); screen-data-summary.md L34 확정계약 (public.get_dashboard_kpi가 오늘 풀이 수 반환)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "rpc:public.get_dashboard_kpi -> today_attempts (counts problem_attempts where started_at in KST today)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "RPC return column today_attempts confirmed in migration L402. Single RLS-bypass DEFINER round-trip, KST boundary. Consumed at src/app/(workspace)/dashboard/page.tsx:42 via getDashboardKpi. Stable validated value, not a jsonb blob."
+    },
+    {
+      "screenRequirement": "KPI: 전체 풀이 수",
+      "docSource": "screen-data-summary.md L34 확정계약 (오늘 풀이 수, 전체 풀이 수 ... 반환); functional-spec.md L41 (rpc:public.get_dashboard_kpi)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "rpc:public.get_dashboard_kpi -> total_attempts (count of all problem_attempts for caller)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "RPC return column total_attempts confirmed migration L403. Used as kpiData.totalAttempts (page.tsx:139)."
+    },
+    {
+      "screenRequirement": "KPI: 목표 달성률 (목표 달성)",
+      "docSource": "description.md L36 (KPI — 목표 달성); functional-spec.md L43 (learning_goals: topik_level,target_grade,exam_date,weekly_goal_minutes — 목표 달성률에 사용)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "writing_feedback.score_total (avg) + learning_goals (target/passing baseline) — derived in page.tsx:92-101 goalAchievementPct",
+      "gapStatus": "satisfied",
+      "classification": "strong-inference",
+      "stableQueryNeed": true,
+      "rationale": "get_dashboard_kpi does NOT return goal achievement %. The dashboard derives goalAchievementPct from avg writing_feedback.score_total vs a PASSING_SCORE baseline (page.tsx:92-101, baseline marked 추정치 in code). learning_goals (real columns target_grade/exam_date) is the documented intended source (functional-spec L43). The exact pct formula is an implementation choice, not a missing column — every input column (writing_feedback.score_total, learning_goals.target_grade) exists. Strong-inference because doc says 목표 달성 but does not fix the formula; classified satisfied (no schema gap)."
+    },
+    {
+      "screenRequirement": "KPI: 연속 학습 (연속 학습일/streak)",
+      "docSource": "description.md L36 (KPI — 연속 학습); screen-data-summary.md L34 확정계약 (... 연속 학습일을 반환한다)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "rpc:public.get_dashboard_kpi -> streak_days",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "RPC return column streak_days confirmed migration L405. Consumed page.tsx:142."
+    },
+    {
+      "screenRequirement": "KPI: 최근 첨삭 (KPI 타일 — 받은 피드백 수)",
+      "docSource": "description.md L36 (KPI — 최근 첨삭); functional-spec.md L44 (writing_feedback: submission_id,score_total,generated_at — 최근 첨삭과 점수 요약)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "writing_feedback (count, owner-RLS) — page.tsx:65-72 feedbackRows.length",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "Recent-feedback KPI tile uses count of writing_feedback rows for the user (kpiData.recentFeedbackCount, page.tsx:140). writing_feedback is a real table; owner select RLS per screen-data-summary L57."
+    },
+    {
+      "screenRequirement": "KPI 업데이트 시각 표시",
+      "docSource": "description.md L38 (제약: 업데이트 시각 표시)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "(none — request-time now, page.tsx:143 new Date(nowMs).toISOString())",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "'업데이트 시각' is the request render time, not stored data. No schema object needed; computed server-side."
+    },
+    {
+      "screenRequirement": "KPI 신규 사용자 빈 상태 (0값 대신 시작 유도)",
+      "docSource": "description.md L40 (예외: 신규 사용자는 0값 대신 시작 유도 문구)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "rpc:public.get_dashboard_kpi (zero-valued returns) — UI presentation branch",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "Empty-state is a UI branch on the same KPI zero values; no extra data object. RPC returns 0s for a brand-new user (counts), driving the empty CTA."
+    },
+    {
+      "screenRequirement": "추천/진행 카드 — 이어 풀 문제 (이어쓰기 draft 상태)",
+      "docSource": "description.md L48 (추천/진행 — 이어 풀 문제); screen-data-summary.md L35 확정계약 (writing_drafts로 진행 중 draft 표시); functional-spec.md L45 (writing_drafts: problem_id,autosave_status,updated_at)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "writing_drafts (problem_id, autosave_status, updated_at; owner-RLS)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "Continue-writing surface reads writing_drafts. Implementation counts dirty drafts (page.tsx:118-135, autosave_status='dirty') for the resume alert. All columns exist; autosave_status is a CHECK-constrained enum (clean/dirty/syncing/failed/superseded) — stable query value. UNIQUE(user_id,problem_id) WHERE not superseded keeps one active draft per problem (matches screen-data-summary L45)."
+    },
+    {
+      "screenRequirement": "추천/진행 카드 — 추천 유형 (추천 문제 카드, 기본 3개/최대 5개)",
+      "docSource": "description.md L48,L50 (추천 유형; 카드 기본 3개/최대 5개); screen-data-summary.md L36 확정계약 (recommendation_runs + recommendation_items가 대시보드 출처 추천 묶음/항목 저장)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "recommendation_items (problem_id,rank,reason,estimated_minutes,status) + recommendation_runs (source_type,reason_summary,expires_at) + problems (title,domain,question_no,difficulty)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "Recommendation cards resolve via getNextProblemBundle (next.ts:84-97,340-356): recommendation_items status='active' join recommendation_runs(expires_at not past) join problems. source_type catalog includes 'dashboard' (matches screen origin). status enum (active/consumed/expired) drives consume-on-start. All real columns; stable querying/ordering by rank required."
+    },
+    {
+      "screenRequirement": "추천/진행 카드 — 최근 피드백 (점수+요약 카드)",
+      "docSource": "description.md L48 (추천/진행 — 최근 피드백); screen-data-summary.md L35 확정계약 (writing_feedback, writing_submissions로 최근 피드백 표시); functional-spec.md L44 (writing_feedback)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "writing_feedback (submission_id,score_total,generated_at) join writing_submissions(question_no)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "RecentFeedbackCard reads writing_feedback ordered by generated_at desc, inner-joined to writing_submissions for question_no (page.tsx:65-90, slice top 3). All columns real; question_no is CHECK-constrained (51-54). Owner select RLS (screen-data-summary L57)."
+    },
+    {
+      "screenRequirement": "추천 카드 권한 잠금 (free 플랜 — 첫 대안만 열림, 나머지 잠금)",
+      "docSource": "functional-spec.md L48 (recommendation_items 사용); R-02 §3 예외 referenced in src/lib/practice/next.ts:254-260,386-391",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "profiles.plan_label (free/paid gate) — next.ts:403-408",
+      "gapStatus": "satisfied",
+      "classification": "strong-inference",
+      "stableQueryNeed": true,
+      "rationale": "description.md L28 mentions permission-locked menus generally; the recommendation-card lock derives from profiles.plan_label (real column, default 'free'). The paid-set is an app constant (next.ts:270-282). plan_label exists; no schema gap. Strong-inference because B-01 description does not itself enumerate the free/paid card gate (it is an R-02 carry-over surfaced on the dashboard)."
+    },
+    {
+      "screenRequirement": "추천 빈 상태 (추천 없음 / 최근 기록 없음 → 빈 상태 카드)",
+      "docSource": "description.md L52 (예외: 추천 없음/최근 기록 없음은 빈 상태 카드)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "recommendation_items / problems (null bundle.primary -> empty CTA, next.ts:188-189 Tier 4)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "Empty state is the null-result branch of the same recommendation query (Tier 4 returns null when no published problem). No additional data object."
+    },
+    {
+      "screenRequirement": "일정/알림 보조 영역 — 시험 일정 (시험 D-day)",
+      "docSource": "description.md L60 (일정/알림 — 시험 일정); screen-data-summary.md L42 (learning_goals: exam_date); screen-data-summary.md L34 확정계약 (KPI가 시험 D-day 반환)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "learning_goals.exam_date (D-day computed page.tsx:24-27,107-117) — also rpc get_dashboard_kpi.exam_days_left",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "Two confirmed paths to exam D-day: (a) learning_goals.exam_date read via getLearningGoal then computed (page.tsx:39,107), and (b) rpc exam_days_left (migration L404, computed from learning_goals.exam_date). exam_date is a real date column. Both exist; no gap."
+    },
+    {
+      "screenRequirement": "일정/알림 보조 영역 — 리마인더 / 학습 알림 (in-app 알림 항목, 최대 5개, 로케일 날짜)",
+      "docSource": "description.md L60,L62 (리마인더·학습 알림; 제약 알림 5개 이하, 날짜 로케일)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "(derived) writing_drafts dirty-count alert + learning_goals.exam_date alert (page.tsx:104-135). Persisted reminder config in notification_settings (reminder_time, reminder_days, channels).",
+      "gapStatus": "satisfied",
+      "classification": "strong-inference",
+      "stableQueryNeed": false,
+      "rationale": "Current dashboard alerts are synthesized in-app from exam D-day + dirty-draft count, not from a dedicated dashboard-alerts table. Persisted user reminder preferences live in notification_settings (real table, owner-all RLS) and notification_log exists for delivered notifications. B-01 description does not require querying notification_log on the dashboard; it links out to X-09 for alerts (description L87). Every backing column exists; no schema gap. stableQueryNeed=false because the dashboard composes alerts client-side from already-queried values rather than needing a new stable alert column."
+    },
+    {
+      "screenRequirement": "알림 로드 실패 시 재시도 + 설정 이동 CTA",
+      "docSource": "description.md L64 (예외: 알림 로드 실패 시 재시도와 설정 이동 CTA)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "(none — error branch; page.tsx:118-135 try/catch sets alertsLoadFailed)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "Load-failure is an error-handling UI branch (alertsLoadFailed flag), not stored data. CTA routes to G-01 settings (route map). No schema object."
+    },
+    {
+      "screenRequirement": "사용자 표시 / 멤버십 상태 (display_name, plan_label, status)",
+      "docSource": "functional-spec.md L42 (profiles: id,display_name,plan_label,status — 대시보드 사용자 표시와 권한 상태); description.md L88 (화면 내부 동작: 멤버십 상태 확인)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "profiles (id, display_name, plan_label, status; owner-RLS, SHARED admin-first entity)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "profiles is a real SHARED admin-first table; all four columns exist with CHECK-constrained status/app_role. plan_label read for membership/paywall gate (next.ts:403). Reconcile-to-schema rule observed: no reshape proposed. Membership/구독 관리 deep state lives in X-04 (subscriptions table) — dashboard only reads the plan_label badge."
+    },
+    {
+      "screenRequirement": "study_events — 학습 연속성/오늘 활동/이벤트 기반 KPI 및 카드 클릭 이벤트 기록",
+      "docSource": "functional-spec.md L46 (study_events: event_type,occurred_at,payload — derived-read, 학습 연속성/오늘 활동); screen-data-summary.md L51 (카드 클릭은 study_events에 클릭 이벤트를 남길 수 있다)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "study_events (event_type,occurred_at,payload,problem_id,submission_id,attempt_id; owner select/insert RLS)",
+      "gapStatus": "jsonb-covered",
+      "classification": "strong-inference",
+      "stableQueryNeed": false,
+      "rationale": "study_events is real and exists; its payload jsonb covers event detail and the event_type catalog is frozen separately (includes recommendation_clicked, feedback_viewed, etc.). functional-spec marks this derived-read with explicit uncertainty ('Derived usage inferred'). Per CONTRACT-NOT-LABEL + STABLE-QUERY: the screen's KPI numbers come from get_dashboard_kpi (problem_attempts), NOT from study_events aggregation today; study_events is the optional analytics/event-emit substrate. No stable-query column need stated in description.md. Leave the jsonb payload as-is; do not invent columns. jsonb-covered."
+    }
+  ],
+  "jsonMapping": [],
+  "frozenIslandChecks": [
+    "No admin codes (H-01/X-08/X-10/X-15) or frozen objects (organizations, org_members, assignments, assignment_submissions, admin_*/get_admin_*) are touched by B-01 rows.",
+    "Membership management deep flows route OUT to X-04 (subscriptions) — dashboard only reads profiles.plan_label badge; not expanded here.",
+    "Alerts route OUT to X-09; notification_log not queried on dashboard. No net-new alert table proposed."
+  ],
+  "schemaGaps": [],
+  "notes": "No schema-gap and no UNRESOLVED rows for B-01: every documented dashboard data requirement maps onto an existing LIVE-schema object. The single load-bearing RPC public.get_dashboard_kpi was verified against supabase/migrations/20260521140000_phase_6_rpc_and_admin.sql:400-406 (returns today_attempts, total_attempts, exam_days_left, streak_days). No seed JSON exists for this screen (per task step 2), so jsonMapping is empty and there is no provenance to preserve. Two derived-read items (goalAchievementPct, study_events) carry strong-inference because the docs name the source but leave the formula/aggregation to implementation; both inputs are real columns so neither is a gap. study_events is classified jsonb-covered (CONTRACT-NOT-LABEL + STABLE-QUERY): its payload jsonb already serves and description.md states no stable-query need, so no column is invented. No migration is proposed for B-01 (additive/idempotent rule moot — nothing to add)."
+}

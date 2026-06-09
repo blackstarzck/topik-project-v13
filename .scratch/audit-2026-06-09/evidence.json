@@ -1,0 +1,15 @@
+{
+  "e2e": "95 passed / 0 failed / 2 skipped (4.2m). X-16 하이드레이션 3뷰포트(360/768/1280) GREEN(이전 3 FAIL). core-writing-flow GREEN(19.5s).",
+  "e2eShort": "95 passed / 0 failed",
+  "dbBefore": { "q51": 91, "q52": 1, "q53": 47, "q54": 82 },
+  "dbAfter": { "q51": 90, "q52": 5, "q53": 46, "q54": 81 },
+  "captures": [
+    { "path": "screenshots/09-D-02-answer-writing-52/current-1280.png", "label": "D-02 (52번 답안 작성, 1280)", "detail": "완성 q52 문제(장마철 빨래)·빈칸 정보·작성 조건(필수 ㄱ/ㄴ)·평가 기준(내용/구성/언어)·작성 팁 패널·에디터 렌더. 차단 Alert 없음. 제목 이중접두사 없음(이전 P1·P2 동시 해소)." },
+    { "path": "screenshots/09-D-02-answer-writing-52/current-360.png", "label": "D-02 모바일(360)", "detail": "반응형 정상 — 차단 없음." },
+    { "path": "screenshots/08-D-01-short-answer-writing-51/current-1280.png", "label": "D-01 (51번 단답, 1280)", "detail": "기본 진입이 완성 ㄱ/ㄴ 문제 로드(정렬+완성선택 fix)." },
+    { "path": "screenshots/10-D-03-long-form-writing-53/current-1280.png", "label": "D-03 (53번 장문, 1280)", "detail": "기본 진입이 완성 문제 로드(빈 예시 unpublish)." },
+    { "path": "screenshots/11-D-04-essay-writing-54/current-1280.png", "label": "D-04 (54번 에세이, 1280)", "detail": "기본 진입이 완성 문제 로드." },
+    { "path": "screenshots/06-C-02-problem-list/current-1280.png", "label": "C-02 (문제 목록, 1280)", "detail": "목록 렌더 정상(solve_state 라이브 반영은 RPC DDL 대기)." },
+    { "path": "screenshots/38-X-16-password-reset-confirm/current-1280.png", "label": "X-16 (새 비밀번호 설정, 1280)", "detail": "하이드레이션 에러/오버레이 없이 렌더(useEffect fix). e2e 3뷰포트 GREEN." }
+  ]
+}

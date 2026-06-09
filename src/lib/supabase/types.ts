@@ -175,6 +175,11 @@ export interface Database {
           tags: string[];
           publish_status: "draft" | "published" | "archived";
           review_status: "pending" | "approved" | "rejected";
+          review_workflow_status: string | null;
+          topic_category_code: string | null;
+          lifecycle_status: "active" | "inactive" | "expired";
+          lifecycle_reason: string | null;
+          expires_at: string | null;
           visibility: "private" | "public" | "org";
           created_at: string;
           updated_at: string;
@@ -196,6 +201,11 @@ export interface Database {
           tags?: string[];
           publish_status?: "draft" | "published" | "archived";
           review_status?: "pending" | "approved" | "rejected";
+          review_workflow_status?: string | null;
+          topic_category_code?: string | null;
+          lifecycle_status?: "active" | "inactive" | "expired";
+          lifecycle_reason?: string | null;
+          expires_at?: string | null;
           visibility?: "private" | "public" | "org";
           created_at?: string;
           updated_at?: string;
@@ -217,6 +227,11 @@ export interface Database {
           tags?: string[];
           publish_status?: "draft" | "published" | "archived";
           review_status?: "pending" | "approved" | "rejected";
+          review_workflow_status?: string | null;
+          topic_category_code?: string | null;
+          lifecycle_status?: "active" | "inactive" | "expired";
+          lifecycle_reason?: string | null;
+          expires_at?: string | null;
           visibility?: "private" | "public" | "org";
           created_at?: string;
           updated_at?: string;
@@ -996,6 +1011,43 @@ export interface Database {
       admin_toggle_problem_publish: {
         Args: { problem_id: string; new_status: string };
         Returns: undefined;
+      };
+      admin_update_problem: {
+        Args: { problem_id: string; patch: Json };
+        Returns: undefined;
+      };
+      list_user_problems: {
+        Args: {
+          filter?: Json;
+          sort?: string;
+          page?: number;
+          page_size?: number;
+        };
+        Returns: {
+          problem_id: string;
+          title: string;
+          domain: string;
+          topik_level: number | null;
+          question_no: number | null;
+          difficulty: number | null;
+          tags: string[] | null;
+          attempt_count: number | null;
+          is_solved: boolean | null;
+          last_attempt_at: string | null;
+          created_at: string;
+          total_count: number;
+          solve_state: "none" | "attempted" | "submitted";
+          has_draft: boolean;
+          draft_status: string | null;
+          writing_submission_count: number;
+          latest_submission_id: string | null;
+          latest_submission_at: string | null;
+          writing_feedback_status: string | null;
+          lifecycle_status: "active" | "inactive" | "expired";
+          lifecycle_reason: string | null;
+          publish_status: "draft" | "published" | "archived";
+          review_status: "pending" | "approved" | "rejected";
+        }[];
       };
     };
     Enums: Record<never, never>;

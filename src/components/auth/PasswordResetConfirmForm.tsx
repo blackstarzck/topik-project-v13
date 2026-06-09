@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Alert, App, Button, Form, Input, Space, Typography } from "antd";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
@@ -41,13 +41,16 @@ export function PasswordResetConfirmForm() {
   const [saveFailed, setSaveFailed] = useState(false);
   // §3: 새 비밀번호 강도/규칙 실시간 검증을 위해 입력값 watch.
   const [passwordValue, setPasswordValue] = useState("");
-  // §4: 만료 시간 절대/상대 병기. 진입 시각 기준으로 클라이언트에서 1회 계산.
-  // SSR에서는 null (Date.now() 하이드레이션 mismatch 회피), 마운트 시점 lazy init.
-  const [expiresAt] = useState<Date | null>(() =>
-    typeof window === "undefined"
-      ? null
-      : new Date(Date.now() + LINK_TTL_MINUTES * 60 * 1000),
-  );
+  // §4: 서버와 첫 클라이언트 렌더는 둘 다 null 로 맞추고, hydration 이후에만
+  // 클라이언트 시간을 표시한다. setTimeout callback 에서 갱신해 synchronous
+  // setState-in-effect 와 render-time Date.now 둘 다 피한다.
+  const [expiresAt, setExpiresAt] = useState<Date | null>(null);
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setExpiresAt(new Date(Date.now() + LINK_TTL_MINUTES * 60 * 1000));
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   async function handleSubmit(values: Fields) {
     setSubmitting(true);

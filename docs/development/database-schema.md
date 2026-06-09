@@ -1,10 +1,18 @@
 # Database Schema
 
-> Status: canonical Tier 1 MVP schema spec
+> Status: historical initial Tier 1 MVP schema baseline
 >
 > Last updated: 2026-05-20
+>
+> Current schema inventory: [`docs/supabase-table-inventory.md`](../supabase-table-inventory.md)
 
-이 문서는 TALKPIK AI의 Supabase Postgres 스키마 정본입니다. 데이터베이스, 마이그레이션, 또는 데이터 모델 관련 작업 전에 본 문서와 `docs/development/backend-auth.md`를 같이 읽으세요.
+이 문서는 TALKPIK AI 첫 개발 단계에서 사용한 Supabase Postgres 초기 스키마
+기준 문서입니다. 현재 저장소 기준 최신 테이블/RPC/스토리지/사용처 재고는
+`docs/supabase-table-inventory.md`를 우선하세요.
+
+데이터베이스, 마이그레이션, 또는 데이터 모델 관련 작업 전에는
+`docs/supabase-table-inventory.md`, `docs/development/backend-auth.md`,
+현재 `supabase/migrations/`, `src/lib/supabase/types.ts`를 함께 확인하세요.
 
 근거 분석: Opus 4.7 × gpt-5.5 병렬 분석, round-2 종합.
 
@@ -93,9 +101,17 @@ AI 생성 문제와 admin 큐레이션 문제를 한 테이블 + `source` 컬럼
 | `tags` | `text[]` | no | `'{}'` | GIN |
 | `publish_status` | `text` | no | `'draft'` | check in (`'draft'`,`'published'`,`'archived'`) |
 | `review_status` | `text` | no | `'pending'` | check in (`'pending'`,`'approved'`,`'rejected'`) |
+| `lifecycle_status` | `text` | no | `'active'` | check in (`'active'`,`'inactive'`,`'expired'`) |
+| `lifecycle_reason` | `text` | yes | | 사용자 화면 비활성 사유 |
+| `expires_at` | `timestamptz` | yes | | 문제 전용 만료 시각. 자동 만료 로직 없음 |
 | `visibility` | `text` | no | `'private'` | check in (`'private'`,`'public'`,`'org'`) |
 | `created_at` | `timestamptz` | no | `now()` | |
 | `updated_at` | `timestamptz` | no | `now()` | trigger |
+
+**Writing 08~11 문제 데이터 계약**:
+- Wireframe 08~11 더미 JSON은 `problems.materials`, `answer_key`, `rubric` JSONB에 저장한다.
+- 사용자 화면은 raw JSONB를 직접 읽지 않고 `src/lib/writing/problem-normalizer.ts`의 `NormalizedWritingProblem` 계약으로 정규화한 뒤 렌더링한다.
+- `list_user_problems`는 사용자 문제 목록용 RPC다. 쓰기 상태는 `writing_drafts`와 `writing_submissions`에서 계산하고, lifecycle 비활성/만료 상태를 함께 반환한다.
 
 **인덱스**:
 - `(domain, question_no, topik_level)` composite
@@ -661,5 +677,5 @@ Tier 2 도입 시 새 마이그레이션 timestamp는 `2026XXXXHHMMSS_<domain>.s
 
 ## 8. 변경 이력
 
-- 2026-05-20: 초안 작성. Round-2 종합 스키마 정본화.
+- 2026-05-20: 초안 작성. Round-2 종합으로 초기 스키마 기준 확정.
 - 2026-05-20 round-2: 마이그레이션 보강 (storage buckets/정책, profiles protected-column 트리거, feedback_status 전이 함수) 추가.

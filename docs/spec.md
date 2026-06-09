@@ -45,7 +45,7 @@ Read this file first, then select the smallest matching set.
 | --- | --- |
 | framework, package, dependency, library, UI stack, state, forms, validation, chart, test | `docs/development/stack.md` |
 | Supabase, database, auth, login, RLS, storage, profile, admin role, server key | `docs/development/backend-auth.md` |
-| table, column, schema, migration, DDL, RLS policy SQL, index | `docs/development/database-schema.md` |
+| table, column, schema, migration, DDL, RLS policy SQL, index | `docs/supabase-table-inventory.md`, then `docs/development/database-schema.md` only for historical baseline/RLS design detail |
 | Vercel, deploy, deployment, preview, production, environment variable, rollback, CI | `docs/development/deployment.md` |
 | billing, subscription, paywall, payment, Stripe, plan pricing | `docs/development/deferred-scope.md` |
 | page, route, navigation, user flow | `docs/sitemap.md`, `docs/ia.md`, `docs/flow/user-flow.md`, and matching `docs/Wireframe/<page>/description.md` when page-specific |
@@ -247,8 +247,10 @@ Before changing app code or adding a new implementation surface:
   and package snapshot.
 - `docs/development/backend-auth.md` - Supabase, Auth, RLS, Storage, and Clerk
   decision.
-- `docs/development/database-schema.md` - Tier 1 MVP table spec, RLS policy
-  patterns, ER diagram, and migration index for `supabase/migrations/`.
+- `docs/supabase-table-inventory.md` - current Supabase table, RPC, storage,
+  and code usage inventory. Update it when schema or Supabase usage changes.
+- `docs/development/database-schema.md` - initial Tier 1 MVP table baseline,
+  RLS policy patterns, ER diagram, and original migration index.
 - `docs/development/deployment.md` - Vercel environments, build settings,
   deployment gates, and rollback.
 - `docs/development/deferred-scope.md` - billing and other deferred areas.

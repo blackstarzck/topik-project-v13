@@ -1,0 +1,94 @@
+{
+  "iaCode": "D-M3",
+  "questionNo": 22,
+  "screen": "자동저장 경고 (autosave warning)",
+  "folder": "docs/Wireframe/22-D-M3-autosave-warning",
+  "route": "/writing/short-answer-writing-51, /writing/answer-writing-52, /writing/long-form-writing-53, /writing/essay-writing-54 — Route type modal/toast (hosted by /writing/* editors)",
+  "liveSchemaBaseline": "discovered THIS run (prompt)",
+  "sourcePriority": "description.md > functional-spec.md > screen-data-summary.md > hifi.png/wireframe.png > sample JSON",
+  "seedJson": "(none for this screen — transient modal/state surface, nothing seedable)",
+  "rows": [
+    {
+      "screenRequirement": "자동저장 실패/상태 (autosave_status: clean→dirty→syncing→failed→superseded) — §2 경고 아이콘 + §목적 '저장되지 않은 변경 이탈 방지' + 상태/오류 '네트워크 실패·중복 저장·충돌'. Drives whether the warning modal shows (save_failure) and the badge state.",
+      "docSource": "description.md §2 '자동저장 해제 또는 저장 실패가 중요한 상태임을 알림' + §피드백 '경고 상태'; functional-spec.md §데이터 사용 row1 writing_drafts.autosave_status (read/write); screen-data-summary.md §운영/관리 대상 데이터 계약 row '자동저장 상태' 분류='현재 스키마로 충족' 확정 계약 'writing_drafts.autosave_status와 last_saved_at이 clean, dirty, syncing, failed, superseded 상태를 제공한다'.",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "writing_drafts.autosave_status",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "Live schema CHECK autosave_status IN ('clean','dirty','syncing','failed','superseded') matches the contract enum exactly. WritingEditor.tsx seeds status from initialDraft.autosave_status and writes autosave_status:'clean' on each upsert (mutations.ts upsertDraft, onConflict user_id,problem_id); 'failed' is set client-side on save error to raise warningTrigger='save_failure'. Real validated column, stable query (fetchDraft filters .neq('autosave_status','superseded')). Confirmed by implementation + functional-spec data-usage row."
+    },
+    {
+      "screenRequirement": "마지막 저장 시각 (last_saved_at) — §4 복구/저장 정보 '저장 시각 필수'. Rendered in the modal Descriptions and the AutosaveBadge.",
+      "docSource": "description.md §4 '마지막 저장 시각, 복구 가능 여부, 임시 저장 상태를 안내함' + 제약 '저장 시각 필수'; functional-spec.md §주요 기능 '최근 저장 시각' + §데이터 사용 row1 writing_drafts.last_saved_at; screen-data-summary.md row '자동저장 상태' 확정 계약 names last_saved_at.",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "writing_drafts.last_saved_at",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "Live column last_saved_at timestamptz NULL exists. WritingEditor sets lastSavedAt from initialDraft.last_saved_at and from the upserted row (row.last_saved_at), passing it into AutosaveWarningModal (lastSavedAt prop) and AutosaveBadge. §검수 필요 항목 'timezone' is a render-policy question (component uses toLocaleString('ko-KR')), not a schema gap. Stable query on the draft row. Confirmed."
+    },
+    {
+      "screenRequirement": "재시도 = 같은 draft 다시 저장 (answer_text 보존 + char_count) — §3 '손실 범위 명시' + §주요 기능 '재시도' + §1 제약 '현재 작성 내용 보존'. Retry CTA re-saves the in-progress answer so it is not lost.",
+      "docSource": "screen-data-summary.md §저장/조회/이벤트 흐름 '재시도는 같은 draft를 다시 저장한다'; functional-spec.md §데이터 사용 row1 writing_drafts.answer_text, char_count (read/write); description.md §1 제약 '현재 작성 내용 보존'.",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "writing_drafts.answer_text + writing_drafts.char_count",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "Live columns answer_text text NULL and char_count integer NULL exist. WritingEditor.persist() upserts {answer_text:next, char_count:next.length, autosave_status:'clean', last_saved_at:now} via useUpsertDraft; the retry CTA (onRetry) re-runs the same persist on the same (user_id,problem_id) partial-unique row. RLS: own row only (FK user_id -> profiles.id, auth.uid() owner). Confirmed by implementation + functional-spec data-usage row."
+    },
+    {
+      "screenRequirement": "활성 draft 식별 (한 사용자 × 한 문제 = 활성 draft 1개) — §입력/상태 '현재 draft 상태'. Identity keys to locate/upsert the draft the warning is about.",
+      "docSource": "screen-data-summary.md §Supabase 테이블 스키마 정보 'writing_drafts ... 활성 draft는 사용자와 문제 기준 1개만 허용된다' + functional-spec.md §사용자와 권한 'user-owned table은 auth.uid() 기반 RLS'.",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "writing_drafts.user_id + writing_drafts.problem_id (UNIQUE(user_id,problem_id) WHERE autosave_status<>'superseded')",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "Live schema has the exact partial-unique (user_id,problem_id) WHERE autosave_status<>'superseded' that enforces 'one active draft per user+problem'. fetchDraft queries .eq('user_id').eq('problem_id').neq('autosave_status','superseded').maybeSingle(); upsertDraft uses onConflict:'user_id,problem_id'. question_no (smallint CHECK 51/52/53/54) is also written and is part of the draft identity per question type. Confirmed."
+    },
+    {
+      "screenRequirement": "자동저장 이벤트 기록 (draft_autosaved) — analytics trail when an autosave occurs/fails; cross-referenced for study activity.",
+      "docSource": "functional-spec.md §데이터 사용 row2 study_events event_type/payload/occurred_at (write) '자동저장 이벤트를 기록한다'; screen-data-summary.md row '자동저장 이벤트' 분류='현재 스키마로 충족' 확정 계약 'study_events에 draft_autosaved 또는 실패 관련 payload를 남길 수 있다' 메모 'event_type catalog는 comment에 고정되어 있다'.",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "study_events.event_type + study_events.payload + study_events.occurred_at + study_events.problem_id",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "Live schema study_events NOTE freezes the event_type catalog including 'draft_autosaved'; columns event_type/payload/occurred_at(default now())/problem_id all present. WritingEditor logs logStudyEvent({eventType:'draft_autosaved', problemId, payload:{question_no, char_count}}) on successful autosave. study-events.ts enforces a PII contract — payload is primitives-only and forbids answer_text/content keys, so no raw draft body lands in study_events (it stays in writing_drafts). Insert-only own-row RLS. Confirmed; event_type is a stable filtered query need for activity views."
+    },
+    {
+      "screenRequirement": "복구 가능 여부 (가능/불가/확인중 tri-state) — §4 제약 '복구 상태는 가능/불가/확인중으로 표시' + 예외 '저장 정보 없음은 복구 불가와 도움말 링크'.",
+      "docSource": "description.md §4 제약 '복구 상태는 가능/불가/확인중으로 표시' + 예외; screen-data-summary.md §사용자 화면 표시 데이터 (no dedicated operational-data-contract row for recovery state — only autosave_status/last_saved_at are listed as the backing schema).",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "(derived) writing_drafts.last_saved_at / writing_drafts.autosave_status",
+      "gapStatus": "jsonb-covered",
+      "classification": "strong-inference",
+      "stableQueryNeed": false,
+      "rationale": "No DB column stores a 'recovery state'; it is a DERIVED render concept. AutosaveWarningModal RecoveryState ('possible'|'impossible'|'checking') defaults from lastSavedAt (record present => 'possible', absent => 'impossible'), and 'checking' maps to the transient syncing state. description.md gives a RENDER need (tri-state tag + help link), not a stable-query/validation need against a persisted recovery field. STABLE-QUERY rule: the existing draft columns (last_saved_at, autosave_status) already serve the derivation; do NOT invent a recovery_state column. Marked jsonb-covered (data-covered-by-existing-columns, no new column) with stableQueryNeed=false. Treated as strong-inference because the derivation rule is documented in code/comment, not in a confirmed-contract row."
+    },
+    {
+      "screenRequirement": "경고 문구 / 재시도 횟수 정책 운영화 (operational copy + retry-count policy as managed data) — §3 예외 '네트워크 끊김/복구 불가 별도 경고 문구', §5 예외 '끄기 실패 시 실패 사유 표시'.",
+      "docSource": "screen-data-summary.md §운영/관리 대상 데이터 계약 row '경고 문구/재시도 정책' 분류='스키마 보강 필요' 확정 계약 '네트워크 안내 문구와 재시도 횟수 정책을 운영 데이터로 관리하는 구조는 없다' 메모 '현재는 앱 정책이다'; §스키마 정합성 메모 '재시도 정책 운영화는 스키마 보강 필요'.",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "(missing)",
+      "gapStatus": "schema-gap",
+      "classification": "strong-inference",
+      "stableQueryNeed": false,
+      "rationale": "CONTRACT-NOT-LABEL applied: row is LABELED '스키마 보강 필요' but its 확정 계약 + 메모 state this is intentionally an APP policy with NO operational data structure, and §스키마 정합성 메모 confirms the core warning state is already satisfied by the schema. description.md does NOT demand a DB-query/validation need — warning copy is resolved via i18n (AutosaveWarningModal useTranslations('writing.autosave'): warnSaveFailureWarn, noBackup, etc.) and retry is a client gesture (no count policy persisted). No jsonb blob serves it and there is no stable-query need; do NOT invent a column. Genuine low-priority, non-blocking schema-gap with stableQueryNeed=false — any future operational warning/retry-policy catalog is net-new scope, not required for this screen. Leave as-is."
+    }
+  ],
+  "jsonMapping": [],
+  "jsonMappingNote": "No sample JSON exists for D-M3 (it is a transient autosave-warning modal/toast, not seedable content). JSON MAPPING RULE / seed-provenance preservation (source file + JSON item id) does not apply — there is nothing to seed. The screen is driven entirely by the live writing_drafts row (autosave_status/last_saved_at/answer_text/char_count) of the active draft for (user_id,problem_id), produced upstream by the D-01..D-04 writing editors, plus best-effort study_events 'draft_autosaved' inserts.",
+  "frozenIslandCheck": "No admin/org/frozen objects touched (H-01/X-08/X-10/X-15, organizations, org_members, assignments, assignment_submissions, admin_*/get_admin_*). Only non-frozen user-owned tables writing_drafts and study_events are involved. No expansion/proposal/seed of any frozen object.",
+  "idempotency": "No migration or seed proposed. All concrete data needs are satisfied by existing columns except one non-blocking schema-gap (operational warning copy / retry-count policy) with stableQueryNeed=false, which is routed to escalation as net-new scope rather than applied. Additive/idempotent + no-destructive rules trivially satisfied — zero DDL/DML emitted; an unchanged-source re-run is a byte-identical no-op.",
+  "summary": {
+    "totalRows": 7,
+    "satisfied": 5,
+    "jsonbCovered": 1,
+    "schemaGap": 1,
+    "unresolved": 0,
+    "stableQueryNeededColumnsPresent": true
+  }
+}

@@ -1,0 +1,154 @@
+{
+  "iaCode": "C-03",
+  "screen": "다시 풀기 모달 (Retry Modal)",
+  "route": "/practice/problems (modal, hosted)",
+  "questionNo": 7,
+  "sourcePriorityApplied": "description.md > functional-spec.md > screen-data-summary.md > hifi.png / wireframe.png > sample JSON (none for this screen)",
+  "liveSchemaBaseline": "authoritative live schema discovered this run",
+  "rows": [
+    {
+      "screenRequirement": "선택한 문제의 제목 (모달 §2 제목/문제 요약 — 28자 말줄임)",
+      "docSource": "description.md §2 '선택한 문제의 제목, 유형, 이전 풀이 상태를 재확인시킴' / 제약 '제목 28자'; wireframe.png 모달 상단; RetryModal.tsx problemTitle prop + summaryProblem item",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "problems.title",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "description.md confirms the screen renders the problem title; problems.title is a NOT NULL text column. Read by the problem list context that hosts the modal (fetchProblemList selects title). Stable rendered field → real column. satisfied."
+    },
+    {
+      "screenRequirement": "문제 유형 표시 / 라우트 분기 (모달 §2 유형, 51/52/53/54 문항 번호로 D-01~D-04 분기)",
+      "docSource": "description.md §2 '유형' + Navigation '문항 번호에 따른 작성 화면 이동'; functional-spec.md 이탈 경로 'D-01/D-02/D-03/D-04'; RetryModal.tsx questionNo prop drives feedbackPathFor + writingProblemHref",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "problems.question_no",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "Question number is the routing key (CHECK question_no IN 51,52,53,54). description.md makes the 문항-번호 branch a hard requirement; problems.question_no is the validated column already queried by the list. satisfied."
+    },
+    {
+      "screenRequirement": "시험 급수 표시 (wireframe '시험 급수 선택' 카드 — 선택 문제의 TOPIK 급수)",
+      "docSource": "wireframe.png box 3 '시험 급수 선택'; functional-spec.md 분기 '유형/급수/난이도 선택 후 시작'; problems list query selects topik_level",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "problems.topik_level",
+      "gapStatus": "satisfied",
+      "classification": "strong-inference",
+      "stableQueryNeed": true,
+      "rationale": "Wireframe shows a 급수 card and description.md §화면목적/분기 names 급수 as a confirm criterion; problems.topik_level (CHECK 1,2, NOT NULL) backs it and is already selected by fetchProblemList. description.md does not detail this box in text so classification is strong-inference, but the column exists → satisfied."
+    },
+    {
+      "screenRequirement": "난이도 표시 (wireframe '난이도 선택' 카드; 분기 조건)",
+      "docSource": "wireframe.png box '난이도 선택'; functional-spec.md 분기 '유형/급수/난이도 선택 후 시작'; queries.ts applySort difficulty + fetchProblemList selects difficulty",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "problems.difficulty",
+      "gapStatus": "satisfied",
+      "classification": "strong-inference",
+      "stableQueryNeed": true,
+      "rationale": "Difficulty is a confirm/branch criterion in functional-spec 분기 and shown in wireframe; problems.difficulty (nullable, CHECK 1..5) backs it, already queried and sortable. strong-inference (description.md text does not enumerate it) but column present → satisfied."
+    },
+    {
+      "screenRequirement": "이전 객관식 풀이 상태 요약: 시도 여부/점수/제출 시각/북마크 (모달 §2 '이전 풀이 상태', 이전 풀이 요약 카드)",
+      "docSource": "description.md §2 '이전 풀이 상태를 재확인'; screen-data-summary.md 운영계약 '이전 객관식 풀이 상태 — 현재 스키마로 충족: problem_attempts가 이전 시도, 점수, 제출 시각, 북마크 상태를 가진다'; functional-spec 데이터사용 problem_attempts (problem_id,status,is_correct,submitted_at)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "problem_attempts (status, is_correct, score, submitted_at, bookmarked, problem_id, user_id)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "확정 계약 (CONTRACT-NOT-LABEL: this is the 현재 스키마로 충족 row, no augmentation label) explicitly maps prior-attempt status to problem_attempts columns. description.md confirms the summary is rendered; owner-RLS read by user_id=auth.uid(). All columns exist. satisfied."
+    },
+    {
+      "screenRequirement": "이전 쓰기 draft 상태 / 이어쓰기 vs 새로 시작 판단 (모달 §3 모드 선택, hifi '이어쓰기' 카드)",
+      "docSource": "description.md §3 '이전 답안 기반' 모드 + functional-spec '이어풀기/새로 시작'; screen-data-summary.md 운영계약 '이전 쓰기 draft — 현재 스키마로 충족: writing_drafts의 autosave_status와 활성 draft unique 제약으로 이전 작성 상태를 구분'; queries.ts fetchUserSolveMap selects writing_drafts.problem_id",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "writing_drafts (autosave_status, last_saved_at, problem_id, user_id, question_no)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "확정 계약 maps the 이어쓰기/새로시작 decision to writing_drafts.autosave_status + the partial UNIQUE(user_id,problem_id) WHERE autosave_status<>'superseded' (active-draft constraint exists in live schema). RetryModal hasAttempt gating drives the 'resume' radio. satisfied; stable query (per-problem active draft lookup)."
+    },
+    {
+      "screenRequirement": "이전 제출본 존재 여부 → '결과 보기' deep-link 가능성 (RetryModal handleViewResult / hasSubmission)",
+      "docSource": "description.md Navigation '이전 제출 결과 보기'; functional-spec 모달동작 '이전 제출 결과 보기'; RetryModal.tsx hasSubmission + submissionId → feedbackPathFor; queries.ts fetchUserSolveMap selects writing_submissions(id,problem_id,submitted_at)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "writing_submissions (id, problem_id, user_id, submitted_at)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "description.md/functional-spec confirm '이전 제출 결과 보기'. Latest submission id per problem resolved from writing_submissions (immutable, select/insert RLS). Stable query by user_id+problem_id ordered by submitted_at. satisfied."
+    },
+    {
+      "screenRequirement": "재시도 시작 이벤트 기록 (재풀이 시작 행위 로깅)",
+      "docSource": "screen-data-summary.md Supabase 스키마 정보 'study_events — 재시도 이벤트' + RLS '본인 select/insert'; 검수필요 '재시도 클릭 event_type 이름을 표준화한다'",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "study_events (event_type, problem_id, attempt_id, payload, user_id)",
+      "gapStatus": "satisfied",
+      "classification": "strong-inference",
+      "stableQueryNeed": false,
+      "rationale": "study_events exists with problem_id/attempt_id/payload and a separately-frozen event_type catalog (practice_started etc.). The retry-click event_type name is still an open 검수 item (not yet standardized), but storage is fully covered by the existing table — no schema change. event recording is write-only/analytics, not a stable-query render need. satisfied via existing table; classification strong-inference because the exact event_type label is unresolved at doc level."
+    },
+    {
+      "screenRequirement": "새 시도 시작 시 새 attempt/draft 생성 + 이전 draft superseded 전환",
+      "docSource": "screen-data-summary.md 저장/조회/이벤트 흐름 '새로 시작을 선택하면 새 attempt/draft를 만들고 이전 draft는 superseded로 전환' + 메모 'superseded 처리하는 trigger가 있다'; description.md §3 '새 답안' 모드",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "problem_attempts (insert) + writing_drafts.autosave_status='superseded'",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "writing_drafts.autosave_status enum includes 'superseded' and the partial-unique constraint enforces single active draft — the live schema directly supports the supersede-then-new-draft flow named in the contract. problem_attempts allows a fresh insert per try. satisfied; no new objects needed."
+    },
+    {
+      "screenRequirement": "재시도 UX 문구 / 재시도 정책을 운영 데이터로 제어 (모달 안내 문구, 모드 정책)",
+      "docSource": "screen-data-summary.md 운영계약 '재시도 UX 문구 — 스키마 보강 필요' 그러나 확정계약 '모달 문구와 재시도 정책을 운영 데이터로 바꾸는 구조는 현재 migration에 없다' + 메모 '정책은 앱 코드 또는 문서 기준으로 유지된다'; 스키마정합성 메모 '모달 정책을 운영에서 조정하려면 별도 스키마가 필요'",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "(missing)",
+      "gapStatus": "unresolved",
+      "classification": "unresolved",
+      "stableQueryNeed": false,
+      "rationale": "CONTRACT-NOT-LABEL: labeled '스키마 보강 필요' but the 확정 계약 + 메모 explicitly accept that copy/policy live in APP CODE / DOCS, not the DB — there is no description.md-confirmed query/validation/render need against a DB structure. So this is NOT a schema-gap to satisfy now: it is a deliberate non-DB concern. Per STABLE-QUERY rule (no stable-query need + doc accepts app-code storage) leave it; route as unresolved (no migration, escalate-only if operator-configurable policy is ever made a requirement). No column invented."
+    },
+    {
+      "screenRequirement": "문제 만료 상태 (모달 §2 예외 '문제 만료 시 시작 대신 만료 안내 + 닫기만')",
+      "docSource": "description.md §2 예외 '문제 만료 시 시작 대신 만료 안내와 닫기만 제공'; RetryModal.tsx expired prop + comment '현재 problems 스키마에 만료 컬럼이 없어 기본 false; 추천 만료(run.expires_at) 등 상위에서 만료 판단'",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "recommendation_runs.expires_at (proxy) / problems (no expiry column)",
+      "gapStatus": "jsonb-covered",
+      "classification": "strong-inference",
+      "stableQueryNeed": false,
+      "rationale": "problems has no expiry column; RetryModal itself documents that expiry is injected from above (recommendation_runs.expires_at — a real timestamptz column that already drives rec-not-expired filtering in next.ts). The §2 만료 exception is satisfied by an existing upstream timestamp, not a missing column — classify as covered by existing schema (recommendation expiry), no new column needed unless a product-level problem-expiry concept is confirmed. No stable-query gap on problems. Not a schema-gap; flagged covered/strong-inference."
+    },
+    {
+      "screenRequirement": "재풀이 모드 선택값 (새 답안/이전 답안 기반/힌트 포함) — 사용자 입력 상태",
+      "docSource": "description.md §3 '새 답안, 이전 답안 기반, 힌트 포함 등 풀이 모드' + 제약 '모드 3개 이하, 하나는 기본 선택'; RetryModal.tsx RetryMode 'fresh'|'resume'|'hint' local useState",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "(missing) — transient client UI state",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "The mode selection is ephemeral client state (useState in RetryModal) consumed only to build the next-route href (fresh=1) — it is not persisted and needs no DB column. 'hint' mode is deferred/disabled in code. No stable-query/render-from-DB need → no column. satisfied as transient UI state (not a DB requirement)."
+    },
+    {
+      "screenRequirement": "시도 횟수 / 마지막 시도 시각 요약 (RetryModal §2 attemptCount + lastAttemptAt 라벨)",
+      "docSource": "RetryModal.tsx attemptCount + lastAttemptAt props feeding summaryPreviousStatus ('· N회 · 시각'); description.md §2 '이전 풀이 상태'; screen-data-summary 확정계약 problem_attempts '이전 시도 ... 제출 시각'",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "problem_attempts (count of rows, submitted_at/started_at)",
+      "gapStatus": "satisfied",
+      "classification": "strong-inference",
+      "stableQueryNeed": true,
+      "rationale": "attemptCount is derivable as a COUNT over problem_attempts for (user_id, problem_id); last attempt time = max(submitted_at|started_at). Both come from existing problem_attempts columns under owner RLS — no dedicated aggregate column required. strong-inference (derived, not stored) but fully backed by live schema → satisfied."
+    }
+  ],
+  "jsonMapping": [],
+  "jsonMappingNote": "No seed JSON exists for C-03 (Step 2 explicitly states '(no seed JSON for this screen)'). Therefore no jsonKey→column mappings, and no source-file/JSON-item-id provenance to preserve. All screen data is read live from problems / problem_attempts / writing_drafts / writing_submissions under owner RLS; this modal writes only via new-attempt/draft inserts + draft supersede + a study_events row, none of which are seeded from a JSON fixture.",
+  "frozenIslandCheck": "No frozen-island objects (organizations, org_members, assignments, assignment_submissions, admin_*/get_admin_*) and no admin IA codes (H-01/X-08/X-10/X-15) are referenced or required by C-03. No expansion proposed.",
+  "idempotencyNote": "No migration is emitted for C-03 — every confirmed/strong-inference row is already satisfied by the live schema (additive baseline). The only non-satisfied row (재시도 UX 문구/policy-as-data) is routed UNRESOLVED with NO migration (doc accepts app-code storage), preserving an unchanged-source byte-identical no-op.",
+  "summary": {
+    "satisfied": 9,
+    "jsonbCovered": 1,
+    "schemaGap": 0,
+    "unresolved": 1,
+    "totalRows": 13,
+    "confirmed": 7,
+    "strongInference": 5,
+    "unresolvedClassification": 1
+  }
+}

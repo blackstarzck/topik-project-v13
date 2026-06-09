@@ -1,0 +1,191 @@
+{
+  "iaCode": "X-03",
+  "screen": "페이월 (paywall)",
+  "route": "/paywall",
+  "questionNo": 0,
+  "sourcePriority": [
+    "description.md",
+    "functional-spec.md",
+    "screen-data-summary.md",
+    "hifi.png / wireframe.png",
+    "sample JSON (none for this screen)"
+  ],
+  "liveSchemaBaseline": {
+    "note": "subscription_plans/subscriptions/profiles fully present in the authoritative LIVE schema block. payment_history was below the truncation boundary; confirmed present in the same conformance migration 20260602120100_billing.sql that produced the billing objects in the live block (read-only verification, no schema change).",
+    "objectsUsed": [
+      "public.subscription_plans",
+      "public.subscriptions",
+      "public.profiles",
+      "public.payment_history (checkout-result sink; not directly rendered by X-03)"
+    ]
+  },
+  "rows": [
+    {
+      "screenRequirement": "결제 선택 제목 + 보조 설명 (Region 1): 단일 구독 결제 선택 단계 안내. 제목 24자, 보조 설명 80자/2줄, 가격 정보와 분리.",
+      "docSource": "description.md L11, L23-29 (Wireframe No.1 결제 선택 제목 + ▣ 제약 조건)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "(missing)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "Static app copy (i18n key paywall.heading/subheading). No DB read needed and none documented. Render-only; satisfied without schema."
+    },
+    {
+      "screenRequirement": "기존 구독자 분기: 기존 구독자는 결제 선택 대신 구독 관리(X-04)로 유도한다.",
+      "docSource": "description.md L31 (▣ 예외: 기존 구독자는 결제 선택 대신 구독 관리로 유도)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "subscriptions.status (+ subscriptions.user_id owner-RLS)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "description.md (PRIORITY 1) defines a concrete branch that must read the caller's subscription and decide active/trialing → redirect. PaywallShell.useEffect reads fetchMySubscription() and branches on status==='active'||'trialing'. This is a stable-query need on a real validated column (status is CHECK-constrained, owner-RLS filtered). Satisfied by live subscriptions.status; no jsonb blob involved."
+    },
+    {
+      "screenRequirement": "결제 주기 카드 3열 (Region 2): 월간/분기/연간 플랜을 카드로 비교. active 플랜만 표시.",
+      "docSource": "description.md L11, L35-39 (Wireframe No.2 결제 주기 카드 3열); screen-data-summary.md L35 (플랜/가격 카드 = 현재 스키마로 충족), L43; 메모 'active plan만 사용자에게 표시한다'",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "subscription_plans (active filter)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "Card set is built by querying subscription_plans WHERE active=true (fetchActivePlans .eq('active',true)). active is a real validated boolean column → stable-query need met by live schema. Cheapest-first order via price_cents."
+    },
+    {
+      "screenRequirement": "플랜 이름 (카드 제목)",
+      "docSource": "description.md L35-39 (카드 비교 배치) — disambiguated by hifi.png plan card heading; screen-data-summary.md L43 (name)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "subscription_plans.name",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "Display label per card; live column subscription_plans.name. Render-only."
+    },
+    {
+      "screenRequirement": "가격 표시 (카드 내 가격 정보)",
+      "docSource": "description.md L29 (가격 정보와 분리 = 가격은 카드에 존재), L43 (가격 조회 실패 시 기본 가격 문구로 대체); screen-data-summary.md L35, L43 (price_cents, currency)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "subscription_plans.price_cents, subscription_plans.currency",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "Price rendered via formatPlanPrice(price_cents/100, currency). Both are real validated columns. Stable-query/render need satisfied by live schema. Fetch-failure fallback handled in app (description.md exception)."
+    },
+    {
+      "screenRequirement": "결제 주기 라벨 (월간/분기/연간)",
+      "docSource": "description.md L39 (월간, 분기, 연간 결제 주기); screen-data-summary.md L35, L43 (cadence); functional-spec.md L19 (결제 주기)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "subscription_plans.cadence",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "cadence is a CHECK-constrained enum ('monthly','quarterly','yearly'); app maps to localized label via cadenceLabelKey. Real validated column; satisfied."
+    },
+    {
+      "screenRequirement": "혜택 목록 (카드별 혜택, 4개 이하)",
+      "docSource": "description.md L41 (혜택 4개 이하), L63 (첨삭 횟수/리포트/PDF 등 핵심 혜택 정리); screen-data-summary.md L35, L43 (features)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "subscription_plans.features (jsonb)",
+      "gapStatus": "jsonb-covered",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "Benefit strings stored as a features jsonb array; rendered as a list (planFeatureList slices to 4, strips __seed marker). description.md states no per-benefit query/validation need — display only. CONTRACT-NOT-LABEL: screen-data-summary 확정 계약 accepts current jsonb (features) for the card. jsonb-covered, no column to invent."
+    },
+    {
+      "screenRequirement": "추천 배지 (추천 플랜 1개만 표시)",
+      "docSource": "description.md L41 (추천 배지 1개만 표시); screen-data-summary.md L24 (추천 플랜 표시), L35, L43 (recommended)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "subscription_plans.recommended",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "Boolean flag rendered as a badge / highlighted border. recommended is a real validated boolean column. Display-driven (not queried/filtered), so stableQueryNeed=false; satisfied by live schema."
+    },
+    {
+      "screenRequirement": "결제 주기 선택 CTA (Region 3): 선택한 결제 주기로 구독 절차 시작. 카드별 CTA 1개, 중복 클릭 차단, 로딩 표시.",
+      "docSource": "description.md L11, L47-53 (Wireframe No.3 결제 주기 선택 CTA); functional-spec.md L24 (업그레이드 CTA)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "subscription_plans.plan_key (CTA payload / selection key)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "CTA carries the selected plan_key as the selection identifier (handleSelect(plan) keys on plan_key, the table PK). The button's loading/dedupe state is client UI. plan_key is a real validated PK; the selection reference is satisfied."
+    },
+    {
+      "screenRequirement": "결제 checkout 실행 (CTA 클릭 → 외부 결제 provider 흐름, 결과 DB 반영)",
+      "docSource": "description.md L51 (구독 절차 시작), L55 (결제 실패/미지원 수단/중복 구독 안내); screen-data-summary.md L37 (결제 checkout = DB 계약 없음, 외부 provider 흐름; 결과는 subscriptions/payment_history에 반영), L48",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "(missing) — checkout session has no public DB contract; results land in subscriptions / payment_history",
+      "gapStatus": "unresolved",
+      "classification": "unresolved",
+      "stableQueryNeed": false,
+      "rationale": "screen-data-summary 확정 계약 explicitly states the checkout session has NO DB contract — it is an external payment provider flow whose results are written to subscriptions/payment_history by the billing service (service_role), not by the client. No client write path, no public RPC, no payment provider wired in code (PaywallShell handleSelect is an external stub showing '연동 예정'). This is genuinely net-new integration scope → UNRESOLVED / escalate; do not invent a checkout column or RPC. Frozen-island unaffected."
+    },
+    {
+      "screenRequirement": "혜택/지원 패널 (Region 4): 핵심 혜택 정리 + 지원 문의 CTA 1개.",
+      "docSource": "description.md L11, L59-65 (Wireframe No.4 혜택/지원 패널), L67 (혜택 정보 조회 실패 시 기본 구독 설명만 표시)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "(missing)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "Static benefit/support copy + a mailto support CTA (SUPPORT_EMAIL). No operational/DB source documented; rendered from app i18n strings. Satisfied without schema. (Per-plan benefits live in subscription_plans.features, covered by its own row.)"
+    },
+    {
+      "screenRequirement": "결제 보조 정보 (Region 5): 환불/세금계산서/보안 결제/기관 문의 안내. 4항목 이하, 정책 링크 외부 이동.",
+      "docSource": "description.md L11, L71-79 (Wireframe No.5 결제 보조 정보), L79 (정책 변경/미확인 정보는 고객지원 문의로 연결)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "(missing)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "Static guidance copy + external policy links. No DB/operational source documented or implied. Render-only; satisfied without schema."
+    },
+    {
+      "screenRequirement": "접근 제한 안내 / 현재 플랜 표시 (유료 기능 잠금 진입 컨텍스트)",
+      "docSource": "functional-spec.md L23 (현재 플랜), L25 (제한 안내), L39 (profiles.plan_label, profiles.status read — 현재 플랜과 접근 제한 안내); screen-data-summary.md L45, L56 (profiles 접근 제한 보조; app_role/plan_label/status 보호 컬럼)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "profiles.plan_label, profiles.status",
+      "gapStatus": "satisfied",
+      "classification": "strong-inference",
+      "stableQueryNeed": true,
+      "rationale": "functional-spec lists profiles.plan_label/status as the read backing 현재 플랜/접근 제한 안내 (the legacy paywall evidence). Both are real validated columns (status CHECK-constrained; plan_label default 'free'). description.md (PRIORITY 1) does not narrate plan_label rendering — the priced surface drives off subscriptions.status — so this is a strong-inference supporting read, not a confirmed render in the current shell. Stable-query need is real where the lock context is computed. Satisfied by live profiles columns. SHARED admin-first entity: app_role/plan_label/status are protected — reconcile, never reshape."
+    },
+    {
+      "screenRequirement": "프로모션 없음 / 가격 조회 실패 / 플랜 정보 없음 시 폴백 문구",
+      "docSource": "description.md L43 (프로모션 없음/가격 조회 실패 시 기본 가격 문구로 대체); functional-spec.md L29 (플랜 정보 없음)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "(missing)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "Empty-result / fetch-error fallbacks are client-side UI states (noPlans alert, error Result). No DB source needed; the absence of rows in subscription_plans drives the fallback. Satisfied."
+    },
+    {
+      "screenRequirement": "paywall 기능별 제한 문구 / upsell 카피를 운영 데이터로 관리하는 구조",
+      "docSource": "screen-data-summary.md L38 (paywall 문구/권한 설명 = LABEL '스키마 보강 필요'; 확정 계약: 운영 데이터로 관리하는 구조는 없다; 메모: 현재는 plan catalog와 앱 문구를 조합한다)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "(missing)",
+      "gapStatus": "unresolved",
+      "classification": "unresolved",
+      "stableQueryNeed": false,
+      "rationale": "CONTRACT-NOT-LABEL applied: the row is LABELED '스키마 보강 필요' but its 확정 계약 column states there IS NO operational structure and the 메모 confirms current behavior = plan catalog + app copy combined. description.md states NO concrete query/validation/render need for operationally-managed upsell copy (Regions 1/4/5 are static app strings). Therefore not a real stable-query need and not currently jsonb-covered by any live column. This is deferred operational/CMS scope → UNRESOLVED / escalate; do not invent a copy/upsell table. Frozen-island unaffected."
+    }
+  ],
+  "jsonMapping": [],
+  "jsonMappingNote": "No seed JSON exists for screen X-03 (the prompt explicitly states '(no seed JSON for this screen)' and the wireframe folder contains only description.md, functional-spec.md, screen-data-summary.md, hifi.png, wireframe.png). The plan catalog is already seeded idempotently inside migration 20260602120100_billing.sql (INSERT ... ON CONFLICT (plan_key) DO NOTHING; deterministic plan_key provenance: topik_monthly/topik_quarterly/topik_yearly; rows tagged with features[] '__seed:conformance-20260602'). An unchanged-source re-run is a byte-identical no-op. No additional seed required from this run.",
+  "seedProvenance": {
+    "sourceFile": "supabase/migrations/20260602120100_billing.sql",
+    "deterministicId": "subscription_plans.plan_key (topik_monthly|topik_quarterly|topik_yearly)",
+    "upsertRule": "ON CONFLICT (plan_key) DO NOTHING",
+    "seedMarker": "features[] entry '__seed:conformance-20260602'",
+    "idempotent": true
+  },
+  "frozenIslandTouched": false,
+  "migrationsProposed": [],
+  "summary": {
+    "satisfied": 9,
+    "jsonbCovered": 1,
+    "schemaGap": 0,
+    "unresolved": 2
+  }
+}

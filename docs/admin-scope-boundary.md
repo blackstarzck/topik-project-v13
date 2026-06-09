@@ -4,6 +4,31 @@
 > This supersedes any earlier handoff / IA-audit instruction that treated admin
 > screens (H-01, X-08, X-10, X-15) as in-scope for active build in this repo.
 
+## ⚠️ OVERLAP INTEGRATION GATE — OPEN (2026-06-08, owner-approved)
+
+The owner opened the **overlap-only** integration gate. The rule below still holds
+for everything EXCEPT the three overlap domains, which are now in active work:
+
+- **Now allowed (overlap only)**: connecting the separate **topik-ai** admin app's
+  data/backend to v13's Supabase for **members/profiles**, **problems/question-bank**,
+  and **payments (read-only)** — per phased plan A(auth)→B(members)→C(problems)→D(payments).
+  topik-ai **UI is NOT ported**; only its data layer reconciles TO v13's schema.
+- **Still frozen (do NOT build)**: instructor, referral, coupon, points, community,
+  message, operation, system-metadata, analytics — v13 has no schema for these.
+  **STOP_AT_ESCALATION_GATE** until a later owner approval.
+- **Gate decisions (2026-06-08)**: (1) overlap gate OPEN, start Phase A; (2) D-A role
+  model = build a **permission-key layer enforced at RPC/RLS, scoped to shared-entity
+  keys only** (v13 keeps its 4 app_roles); (3) dev Supabase connection = **read-first**
+  (writes go through audit RPCs, staged). **`withdraw`(탈퇴)→deleted write stays BLOCKED**
+  until the owner settles withdraw semantics (D-F). All enum mappings remain **PROPOSED ONLY**.
+- **Still forbidden in THIS repo**: adding admin-oriented schema/migrations, building
+  admin UI/screens here. The integration code lives in **topik-ai** (separate repo);
+  v13 changes are limited to owner-approved **additive** schema/RPC for overlap (a
+  separate approval per change, e.g. Phase C columns).
+- **Source of truth**: design [`docs/admin-integration-plan.md`](admin-integration-plan.md) §11,
+  handoff + confirmation under `docs/ai-workflow/runs/2026/06/08/` (`20260608-handoff-admin-integration.md`,
+  `20260608-ch3-facts-confirmation.md`).
+
 ## The rule (one line)
 
 **This repo is the USER-FACING app. Do NOT build, extend, or "remediate" admin

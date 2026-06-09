@@ -67,6 +67,11 @@
 ## 스키마 정합성 메모
 기존 요약의 전용 문제 테이블 방식은 migration 근거가 없다. 이번 문서는 현재 migration의 통합 problems 계약으로 정리한다.
 
+## 2026-06-09 구현 메모
+- 51번 더미 JSON은 `problems.materials`, `answer_key`, `rubric` JSONB에 저장한다.
+- 사용자 화면은 raw JSONB 대신 `NormalizedWritingProblem(kind="q51")`을 사용한다.
+- UI 입력 필드는 `blankedPrompt`, `blanks`, `charLimit`, `validationMessages`, `rubric`이다.
+
 ## 검수 필요 항목
 - 51번 UI 전용 구조를 JSON 계약으로 둘지 별도 typed 구조로 보강할지 정한다.
 - 자동저장 실패 상태의 재시도 정책을 정한다.

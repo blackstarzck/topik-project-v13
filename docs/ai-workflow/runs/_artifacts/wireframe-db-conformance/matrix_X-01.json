@@ -1,0 +1,103 @@
+{
+  "iaCode": "X-01",
+  "questionNo": 23,
+  "screen": {
+    "name": "제품 랜딩 (Product Landing)",
+    "route": "/",
+    "folder": "docs/Wireframe/23-X-01-product-landing",
+    "audience": "public (anonymous + logged-in visitor)"
+  },
+  "sourcePriorityApplied": "description.md > functional-spec.md > screen-data-summary.md(확정 계약+메모, NOT label) > hifi.png/wireframe.png > sample JSON (none)",
+  "seedJson": "none for this screen",
+  "rows": [
+    {
+      "screenRequirement": "헤더/내비 — 로고, 주요 메뉴(4개 이하), 로그인/시작 버튼. 로그인 사용자는 시작 대신 대시보드 CTA 표시 (auth-aware nav).",
+      "docSource": "description.md L11/L22-30 (§1 헤더/내비, 제약: 메뉴 4개 이하; 예외: 로그인 사용자는 시작 대신 대시보드 CTA); functional-spec.md L25-27 (시작 CTA / 로그인 CTA)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "supabase.auth.getUser() (auth session boolean) — no profiles row read; cf. src/app/page.tsx L29-32, LandingHeader isAuthenticated prop",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "The auth-aware branch only needs the Supabase Auth session presence (logged-in vs anonymous), already read via auth.getUser() and passed as isAuthenticated boolean. functional-spec.md L11 explicitly states 'no user-owned row access unless session exists', so no profiles/DB column is required for the nav itself. Menu labels and logo are static UI copy. No stable DB query need."
+    },
+    {
+      "screenRequirement": "히어로 카피 — TOPIK 쓰기 AI 학습 제품 약속 (H1 36자, 서브카피 2줄). 가장 크게 전달하는 가치 제안 문구.",
+      "docSource": "description.md L12/L34-42 (§2 히어로 카피, 제약: H1 36자/서브카피 2줄); functional-spec.md L24 (가치 제안); screen-data-summary.md L37 메모 '현재는 정적/앱 문구 중심이다'",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "(missing)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "CONTRACT-NOT-LABEL: screen-data-summary.md labels 랜딩 문구 '스키마 보강 필요' but its 확정 계약 (L37) states '운영 데이터로 관리하는 구조는 없다' and 메모 says '현재는 정적/앱 문구 중심'. description.md states no DB-driven query/validation/render need for hero copy. Implementation (src/app/page.tsx L13, Hero) resolves copy via static next-intl catalog (landing.*), not a DB table. Intentionally static app copy — NOT a schema gap to fill; inventing a marketing-content table would add scope the docs explicitly decline. No stable-query need."
+    },
+    {
+      "screenRequirement": "시작 CTA — 회원가입/무료 시작으로 연결되는 핵심 전환 버튼 (대표 CTA 1 + 보조 링크 1). 비회원/세션 보유 사용자 분기.",
+      "docSource": "description.md L13/L46-54 (§3 시작 CTA, 예외: 비회원 이탈/세션 보유 사용자 분기); description.md L113 이탈 경로 (무료 시작→A-01, 로그인→A-02); functional-spec.md L25-26",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "supabase.auth.getUser() (auth session boolean) — cf. src/app/page.tsx L29-32, Hero isAuthenticated prop",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "The CTA target (가입/대시보드) branches on auth session presence only, already satisfied by auth.getUser(). Destination routes (A-01/A-02) are static navigation. No DB column required for the core CTA branch. functional-spec.md L29-31 lists only 'CTA 링크 실패' as the state/error, a routing concern not a data concern."
+    },
+    {
+      "screenRequirement": "로그인 사용자 CTA 분기 (plan-aware refinement) — 로그인+구독 상태에 따라 가입/대시보드/결제 화면으로 분기.",
+      "docSource": "screen-data-summary.md L36 (로그인 사용자 CTA 분기 / 현재 스키마로 충족 / profiles와 subscriptions로 분기 보조) + L47 (CTA는 Auth 상태와 subscription 상태에 따라 가입, 대시보드, 결제 화면으로 이동); functional-spec.md L41 (profiles.plan_label derived-read, '직접 DB 의존은 낮다')",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "profiles.plan_label, subscriptions.status",
+      "gapStatus": "satisfied",
+      "classification": "strong-inference",
+      "stableQueryNeed": false,
+      "rationale": "Optional plan-aware refinement of the CTA. screen-data-summary.md L36 marks this '현재 스키마로 충족' via existing profiles.plan_label and subscriptions.status columns (both present in LIVE schema). functional-spec.md L41 explicitly grades it derived-read with '현재 직접 DB 의존은 낮다' and L45 keeps the route public with low DB dependence. The base branch only needs auth state (covered above); plan/subscription refinement is a strong inference layered on existing self-row columns, not yet wired in src/app/page.tsx. No NEW column needed; per-user select honors existing RLS (본인 row만)."
+    },
+    {
+      "screenRequirement": "플랜/가격 요약 — active plan의 이름, 주기, 가격, 통화, 기능, 추천 여부 표시 (요금/기능 안내).",
+      "docSource": "screen-data-summary.md L35 (플랜/가격 표시 / 현재 스키마로 충족 / subscription_plans가 active plan의 이름·주기·가격·통화·기능·추천 여부 제공) + L42 (subscription_plans migration 컬럼) + L47/L50/L52 (active plan read, authenticated); functional-spec.md L27 (요금/기능 안내); description.md L24-27 화면 목적 (요금 안내는 description에 명시적 섹션 없음 — 가격 요약은 screen-data-summary 계약)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "subscription_plans (plan_key, name, cadence, price_cents, currency, features jsonb, recommended, active)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "subscription_plans in the LIVE schema fully provides every field named in the 확정 계약 (name, cadence, price_cents, currency, features, recommended, active). This is a real validated catalog read with a stable-query need: filter WHERE active=true, order by cadence, render price/recommended — a column-level requirement, not a jsonb blob. Marked 현재 스키마로 충족. RLS (L50/L52): active plan readable by authenticated users; this is the only open product decision (L60: public vs authenticated-gated price display) — a policy choice, not a schema gap. Not yet rendered in src/app/page.tsx (page currently static), but schema is fully satisfied; wiring is implementation, not a gap."
+    },
+    {
+      "screenRequirement": "제품 프리뷰 — 대시보드/피드백/리포트 화면 축약 (3장 이하, 실제 화면 기반 문구). 이미지 실패 시 기능 카드 요약 fallback.",
+      "docSource": "description.md L14/L58-66 (§4 제품 프리뷰, 제약: 3장 이하/실제 화면 기반 문구; 예외: 이미지 실패 시 기능 카드 요약 대체); screen-data-summary.md L37 (제품 미리보기 콘텐츠 운영 데이터 구조 없음)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "(missing)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "CONTRACT-NOT-LABEL: 제품 미리보기 is grouped under the '스키마 보강 필요' label row (screen-data-summary.md L37) but the 확정 계약 says no operational-data structure exists and 메모 confirms static/app content. description.md states no query/render-from-DB need; preview images are static assets with a static fallback. Implementation (src/app/page.tsx L70, ProductPreview) is a static component. Intentionally static — no schema gap."
+    },
+    {
+      "screenRequirement": "마스코트 — 학습 보조 캐릭터 (대체 텍스트 필수, 이미지 미노출 시 텍스트 톤 보완).",
+      "docSource": "description.md L15/L70-78 (§5 마스코트, 제약: 대체 텍스트 필수)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "(missing)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "Static brand asset + alt text. No DB requirement stated in any source; no operational-content structure exists nor is one requested. Rendered inside Hero (src/app/page.tsx L43). No schema gap."
+    },
+    {
+      "screenRequirement": "기능 카드 — AI 첨삭 / 실전 문제 / 성장 리포트 / 라이브러리 요약 (카드 4개 이하, 제목 14자, 설명 2줄).",
+      "docSource": "description.md L16/L82-90 (§6 기능 카드, 제약: 카드 4개 이하/제목 14자/설명 2줄); screen-data-summary.md L37 (기능 카드 콘텐츠 운영 데이터 구조 없음 / 메모: 정적·앱 문구 중심)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "(missing)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "CONTRACT-NOT-LABEL: under the '스키마 보강 필요' label but the 확정 계약 (L37) explicitly says no operational-data structure exists and 메모 says static/app copy. description.md states no DB query/render need. Implementation (src/app/page.tsx L33-67) hard-codes 4 FeatureCards with static next-intl strings (landing.features.*). Intentionally static app copy — NOT a schema gap; no marketing-CMS table to invent here."
+    }
+  ],
+  "jsonMapping": [],
+  "jsonMappingNote": "No sample/seed JSON exists for X-01 (public landing reads no per-row seed data). JSON MAPPING RULE n/a. No seed provenance to preserve (no source JSON file, no JSON item id). The only LIVE-schema reads relevant to this screen are: subscription_plans (catalog, satisfied, stable-query) and the optional profiles.plan_label/subscriptions.status CTA refinement (satisfied via existing self-row columns). No upsert seed is generated for this screen.",
+  "frozenIslandCheck": "No frozen-island objects (organizations, org_members, assignments, assignment_submissions, admin_*/get_admin_*) and no admin IA codes (H-01/X-08/X-10/X-15) are referenced or required by X-01. No expansion proposed.",
+  "migrationPlan": "NONE. Every screen requirement is either satisfied by an existing LIVE column (subscription_plans, profiles.plan_label, subscriptions.status) or is intentionally static app/i18n copy that the docs explicitly decline to manage as operational data (CONTRACT-NOT-LABEL). No additive migration is warranted. Zero DROP/RESET/TRUNCATE. No seed.",
+  "openQuestions": [
+    "screen-data-summary.md L60: 비로그인 사용자에게 가격을 public API로 노출할지 authenticated 전환 뒤 표시할지 — RLS/policy decision (currently active plan is authenticated-read per L50/L52). This is a product/policy decision, NOT a schema gap; routed to product decision, not UNRESOLVED migration.",
+    "screen-data-summary.md L61: 랜딩 문구 변경 주체와 저장소 결정 — if a future product decision wants DB-managed marketing copy, that would be net-new scope requiring a docs-update gate; today the docs confirm static copy so no gap is raised."
+  ],
+  "notes": "X-01 is a public landing screen whose visible content is overwhelmingly static i18n/app copy. Only one real column-level DB requirement exists (subscription_plans price catalog, fully satisfied with a stable-query need). The CTA logged-in branch needs only the Supabase Auth session boolean; an optional plan-aware refinement is covered by existing profiles.plan_label + subscriptions.status. The '스키마 보강 필요' label on hero/feature/preview copy was correctly read via CONTRACT-NOT-LABEL: the 확정 계약 + 메모 confirm intentional static content with no query/validation/render need, so those rows are gapStatus=satisfied with stableQueryNeed=false — NOT schema gaps. No migration, no seed, no frozen-island touch."
+}

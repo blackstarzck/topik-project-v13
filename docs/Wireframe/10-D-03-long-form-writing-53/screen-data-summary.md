@@ -64,6 +64,12 @@
 ## 스키마 정합성 메모
 53번 장문 작성의 기본 저장 계약은 현재 스키마로 충족된다. 도표 의미 구조를 운영 데이터로 안정화하려면 스키마 보강 필요다.
 
+## 2026-06-09 구현 메모
+- 53번 더미 JSON은 `problems.materials`, `answer_key`, `rubric` JSONB에 저장한다.
+- 사용자 화면은 raw JSONB 대신 `NormalizedWritingProblem(kind="q53")`을 사용한다.
+- UI 입력 필드는 `charts`, `materialCards`, `writingTasks`, `rubricCriteria`, `referenceMaterials`이다.
+- 차트는 정규화된 `NormalizedChart`를 기준으로 렌더링하고, 원본 JSON 구조 차이는 normalizer에서 흡수한다.
+
 ## 검수 필요 항목
 - 도표 자료가 이미지인지 구조화 JSON인지 기준을 정한다.
 - 장문 글자 수 제한과 autosave 주기를 문서 계약으로 고정한다.

@@ -31,6 +31,7 @@ every document by default increases the chance of missing the important one.
 | [flow/README.md](./flow/README.md) | User journey folder entry. | Checking the order of signup, study, writing, feedback, and review flows. |
 | [Wireframe/README.md](./Wireframe/README.md) | Page-level screen specs and wireframes. | Building or reviewing a specific screen. |
 | [ant-design/README.md](./ant-design/README.md) | UI implementation rules. | Designing or implementing UI with Ant Design. |
+| [supabase-table-inventory.md](./supabase-table-inventory.md) | Current Supabase table, RPC, storage, and code usage inventory. | Checking or changing tables, columns, migrations, RPCs, storage, RLS, or Supabase usage. |
 | [development/README.md](./development/README.md) | Detailed implementation specs. | Reading stack, backend/auth, AI boundary, deployment, or deferred-scope details after `spec.md` routes you there. |
 | [user-admin-data-consistency.md](./user-admin-data-consistency.md) | v13 user DB usage and topik-ai admin page-sync inventory. | Planning user/admin data reconciliation before real CRUD validation. |
 | [user-admin-data-consistency.html](./user-admin-data-consistency.html) | HTML report for the v13/topik-ai data consistency inventory. | Reviewing the reconciliation baseline in a browser-friendly format. |
@@ -55,6 +56,7 @@ These docs govern implementation, QA, and review:
 - `Wireframe/README.md` and matching `Wireframe/<page>/description.md`
 - `flow/user-flow.md`
 - `ant-design/README.md`
+- `supabase-table-inventory.md` for current Supabase schema and usage inventory
 - `development/*.md` when routed from `spec.md`
 
 If these docs conflict with a user request, stop and report the conflict before

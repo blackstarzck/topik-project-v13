@@ -1,0 +1,115 @@
+{
+  "iaCode": "F-M1",
+  "questionNo": 19,
+  "route": "/library, /writing/feedback/short/:id, /writing/feedback/long/:id, /writing/reports/:id/compare (modal)",
+  "screenFolder": "docs/Wireframe/19-F-M1-pdf-export-modal",
+  "liveSchemaBaseline": "LIVE SCHEMA DISCOVERED THIS RUN (export_files, study_events, library_items, writing_submissions, comparison_reports, profiles, ... + storage bucket generated-exports). export_files columns: id,user_id,source_type,source_id,storage_path,options(jsonb),status,created_at,ready_at; CHECK source_type IN ('submission','report','library_selection'); CHECK status IN ('queued','ready','failed'). study_events columns: id,user_id,event_type,occurred_at,problem_id,submission_id,attempt_id,session_id,payload(jsonb) — NO export_file_id column in live schema.",
+  "sources": {
+    "primary": "docs/Wireframe/19-F-M1-pdf-export-modal/description.md",
+    "secondary": "docs/Wireframe/19-F-M1-pdf-export-modal/functional-spec.md",
+    "tertiary": "docs/Wireframe/19-F-M1-pdf-export-modal/screen-data-summary.md (read 확정 계약 + 메모 columns, NOT '스키마 보강 필요' labels)",
+    "disambiguation": "hifi.png (PDF 출력 설정 modal: §1 선택한 항목 checkboxes, §2 포함 항목 답안/피드백 + 정렬, §3 파일 형식 PDF/이미지, right preview pane '답안 및 피드백 리포트', 취소 / PDF 생성 CTAs) + wireframe.png number map",
+    "seedJson": "(none) — no sample JSON for this screen; F-M1 consumes runtime user-owned data only, no seedable problem content",
+    "codeRef": "src/lib/export/pdf-export.ts (triggerPdfExport), src/components/library/PdfExportModal.tsx (handleExport)"
+  },
+  "rows": [
+    {
+      "screenRequirement": "PDF 대상 요약 / 선택 항목 표시 (내 서재 또는 피드백 화면에서 넘어온 내보내기 대상 항목 목록, 항목 6개 이하)",
+      "docSource": "description.md L11 '배경 내 서재 ... PDF 내보내기 액션', L38 '항목 6개 이하'; screen-data-summary.md L19 'PDF 대상 요약', L26-27 source_type/source_id; hifi.png §1 선택한 항목 checkbox list",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "export_files.source_type, export_files.source_id (+ caller passes library_items.id selection at runtime via PdfExportModal props)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "source_type (CHECK IN 'submission','report','library_selection') and source_id are real validated columns that pin the export target. Code pdf-export.ts inserts source_type/source_id; PdfExportModal passes the library selection (library_items.id list) as transient props, not persisted as separate rows. Selection list itself is runtime UI state derived from library_items, not seeded. The 6-item cap (MAX_ITEMS) is UI-side, no DB CHECK needed."
+    },
+    {
+      "screenRequirement": "내보내기 옵션 — 파일명(1-60자), 포함 항목(답안 포함/피드백 포함 토글), 정렬, 파일 형식(PDF), 개인정보 확인",
+      "docSource": "description.md L36 '포함 항목, 정렬, 답안/피드백 포함 여부, 파일 형식', L38 '파일명 1-60자 ... 개인정보 확인 필수'; screen-data-summary.md L21 '내보내기 옵션', L28 options, L61 '검수: options JSON의 허용 key를 정한다'; hifi.png §2 포함 항목/정렬, §3 파일 형식",
+      "jsonCandidateKey": "(none) (runtime UI form state → options jsonb)",
+      "liveDbObject": "export_files.options (jsonb)",
+      "gapStatus": "jsonb-covered",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "All option fields (filename, includeAnswers/includeFeedback, sortOrder, format) are caller-chosen UI form state. screen-data-summary.md treats them as the options jsonb contract and L61 explicitly leaves the allowed-key catalog as an open 검수 item — so options is the agreed store. description.md states no concrete per-option query/validation/render need against the DB (filename 1-60 and 6-item cap are validated UI-side per PdfExportModal). STABLE-QUERY rule: no stable-query need → keep in options jsonb, do not invent typed columns. Code currently writes options={source:'browser_print'} (Tier-1 print MVP); richer option persistence still fits the same jsonb blob."
+    },
+    {
+      "screenRequirement": "PDF 생성 요청/생성 상태 추적 (생성 중 / 완료 / 실패) + 결과 파일 경로",
+      "docSource": "description.md L60 '선택 옵션으로 PDF 생성을 시작', L62 '생성 중 CTA 비활성, 완료 후 다운로드 CTA'; functional-spec.md L40 export_files(source_type,source_id,storage_path,options,status) read/write; screen-data-summary.md L35 '확정 계약: export_files가 source_type, source_id, options, status, storage_path, ready_at을 저장한다', L47 'ready 상태가 되면 다운로드 링크 표시'",
+      "jsonCandidateKey": "(none) (runtime status)",
+      "liveDbObject": "export_files.status (CHECK 'queued'|'ready'|'failed'), export_files.storage_path, export_files.ready_at",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "Real validated columns. screen-data-summary.md 확정 계약 names status/storage_path/ready_at; status CHECK matches doc 'status는 queued, ready, failed'. Code pdf-export.ts inserts status='ready' + ready_at immediately (Tier-1 browser-print MVP, storage_path='browser-print://<uuid>'); the queue/ready/failed lifecycle and a real generated-exports file path are honestly 준비 중 but the column contract is fully present. No gap to apply."
+    },
+    {
+      "screenRequirement": "생성된 PDF 파일 저장/다운로드 (generated-exports private bucket, 경로 exports/{user_id}/{export_id}.pdf, 소유자만 읽기/생성)",
+      "docSource": "functional-spec.md L42 'storage:generated-exports read/write'; screen-data-summary.md L36 '확정 계약: generated-exports private bucket에 PDF 파일을 저장', L43 '경로는 exports/{user_id}/{export_id}.pdf', L50-54 RLS",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "storage:generated-exports bucket (referenced by export_files.storage_path) — bucket+policies migrations 20260520121200 / 20260520121300 / 20260527113000",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "Storage bucket + owner-scoped PDF-only policies are the agreed store per screen-data-summary 확정 계약. It is a storage object, not a relational column, so it is referenced via export_files.storage_path. The actual stored-file path (vs current browser-print:// marker) is part of the deferred Tier-2 path, but the bucket contract itself is satisfied — no schema gap."
+    },
+    {
+      "screenRequirement": "PDF 다운로드 이벤트 기록 (다운로드/내보내기 텔레메트리)",
+      "docSource": "functional-spec.md L41 study_events(event_type, export_file_id, payload) write 'PDF 다운로드 이벤트를 기록'; screen-data-summary.md L44 study_events 다운로드 이벤트, L55 'study_events는 본인 select/insert가 가능'",
+      "jsonCandidateKey": "(none) (runtime telemetry)",
+      "liveDbObject": "study_events.event_type ('export_downloaded'), study_events.payload (jsonb: {source_type, source_id}), study_events.user_id",
+      "gapStatus": "jsonb-covered",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "DOC-VS-LIVE MISMATCH handled by CONTRACT-NOT-LABEL/STABLE-QUERY: functional-spec.md L41 lists an export_file_id field on study_events, but the LIVE study_events table has NO export_file_id column (and no FK to export_files). Code pdf-export.ts records the export linkage inside payload jsonb ({source_type, source_id}) under event_type='export_downloaded' (a frozen catalog value). description.md states no concrete query/validation/render need on a typed export linkage, so per STABLE-QUERY rule the jsonb payload suffices — do NOT add a study_events.export_file_id column. event_type is a real column; the frozen event_type catalog already includes 'export_downloaded'."
+    },
+    {
+      "screenRequirement": "PDF 템플릿/레이아웃 (표지, 섹션 순서, 브랜딩 옵션) 운영 데이터 관리",
+      "docSource": "screen-data-summary.md L37 '스키마 보강 필요 — PDF 표지, 섹션 순서, 브랜딩 옵션을 운영 데이터로 관리하는 구조는 없다. 메모: 현재 options jsonb와 파일 상태 중심이다.', L58 '스키마 정합성 메모'",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "export_files.options (jsonb) — no dedicated template/layout table",
+      "gapStatus": "jsonb-covered",
+      "classification": "strong-inference",
+      "stableQueryNeed": false,
+      "rationale": "CONTRACT-NOT-LABEL: screen-data-summary.md LABELS this '스키마 보강 필요', but the same row's 확정 계약 + 메모 explicitly accept the CURRENT options jsonb + file-status model ('현재 options jsonb와 파일 상태 중심이다'), and the 스키마 정합성 메모 (L58) confirms only that the template OPERATION structure is deferred — not that the screen needs a typed column now. description.md describes the preview/표지 (hifi.png right pane) as a render-time concern, not a queried/validated entity. STABLE-QUERY rule: no stable-query need stated → treat as jsonb-covered (template hints live in options jsonb or static UI copy), do NOT propose a new template table. strong-inference because the operational template structure is an acknowledged future decision, not a confirmed current need."
+    },
+    {
+      "screenRequirement": "본인 소유 export/이벤트만 접근 (auth.uid() owner RLS)",
+      "docSource": "functional-spec.md L10 'user-owned table은 auth.uid() 기반 RLS', L40 권한; screen-data-summary.md L50-55 RLS/권한 기준 (export_files 본인 row, generated-exports 본인 경로, study_events 본인 select/insert)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "profiles.id (FK target of export_files.user_id and study_events.user_id, ON DELETE CASCADE)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "Ownership enforced by user_id FK -> profiles.id with auth.uid() RLS on export_files and study_events. Code pdf-export.ts resolves supabase.auth.getUser() and inserts user_id=user.id; the library_selection null-source_id invariant is enforced client-side before the round-trip to avoid a wasted RLS reject. profiles is a SHARED admin-first entity (do not reshape); this screen relies only on existing ownership wiring."
+    },
+    {
+      "screenRequirement": "예외 상태 — 선택 항목 사라짐 / 권한 없음 / 생성 실패·네트워크 오류 (재시도)",
+      "docSource": "description.md L28 '선택 항목이 사라지면 모달 대신 오류 안내', L40 '권한 없음/선택 없음은 옵션 영역 상단에 안내', L64 '생성 실패/네트워크 오류는 재시도와 문의 링크', L82 '예외: 생성 실패, 권한 없음, 선택 없음'; functional-spec.md L30 '생성 실패, 권한 없음, 파일 없음'",
+      "jsonCandidateKey": "(none) (runtime/derived UI state)",
+      "liveDbObject": "export_files.status='failed' (생성 실패) + client-derived states (selectionLost/권한 없음 are UI/RLS-driven, no dedicated column)",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "Generation failure is captured by export_files.status='failed' (real CHECK value). Selection-lost and permission-denied are runtime UI states (PdfExportModal selectionLost branch + RLS reject), not persisted entities, so they need no column. Retry currently re-invokes triggerPdfExport (new row); screen-data-summary.md L62 leaves 'whether to reuse the same export row on retry' as an open 검수 item — undecided, but not a schema gap (the existing columns support either choice). No new schema needed."
+    }
+  ],
+  "jsonMapping": [
+    {
+      "jsonKey": "(no seed JSON for F-M1)",
+      "targetColumn": "(none)",
+      "meaning": "F-M1 consumes only runtime user-owned data (export_files / study_events rows the learner creates) and a transient library selection. There is no sample JSON file and no seedable problem/content payload for this modal, so there is no JSON→column mapping. Provenance N/A.",
+      "confidence": "confirmed"
+    }
+  ],
+  "artifactPath": "C:/Users/admin/Desktop/workspace/topik-project/v13/docs/ai-workflow/runs/_artifacts/wireframe-db-conformance/matrix_F-M1.json",
+  "provenance": {
+    "seedFile": "(none)",
+    "seedItemIdField": "(none)",
+    "seedArrayLength": 0,
+    "deterministicSeedRule": "No seed for F-M1 — export_files and study_events rows are learner-authored at runtime, never seeded. Any future seeding of demo export rows would upsert on a deterministic id derived from provenance (never array index), additive/idempotent, no drop/reset (IDEMPOTENCY rule).",
+    "frozenIslandUntouched": ["organizations", "org_members", "assignments", "assignment_submissions", "admin_*", "get_admin_*", "H-01", "X-08", "X-10", "X-15"],
+    "adminScopeNote": "No admin/org objects touched. No net-new schema proposed. All F-M1 screen needs resolve against existing user-facing schema (export_files, study_events, generated-exports bucket, profiles)."
+  },
+  "notes": "All 8 F-M1 screen requirements resolve against the LIVE schema with NO schema-gap-to-apply and NO unresolved rows. Two CONTRACT-NOT-LABEL items: (a) 'PDF 템플릿/레이아웃' — screen-data-summary.md labels it '스키마 보강 필요' but its 확정 계약+메모 accept the current options jsonb + file-status model and the 스키마 정합성 메모 confirms only the template OPERATION structure is a deferred decision → jsonb-covered/stableQueryNeed=false, strong-inference; do NOT propose a template table. (b) 'PDF 다운로드 이벤트' — functional-spec.md L41 lists study_events.export_file_id, but the LIVE study_events table has NO export_file_id column; code (pdf-export.ts) records the linkage inside payload jsonb under event_type='export_downloaded' → jsonb-covered, no new column. export_files/storage_path currently use a Tier-1 browser-print MVP marker (browser-print://<uuid>, status='ready' immediately) with the real generated-exports stored-file path honestly 준비 중 — the column/bucket contracts are nonetheless fully present (satisfied). Two open 검수 items per screen-data-summary (options allowed-key catalog L61; retry-row-reuse L62) are undecided product questions, NOT schema gaps — existing columns support either resolution. No seed JSON. No production rollout; frozen admin/org island untouched."
+}

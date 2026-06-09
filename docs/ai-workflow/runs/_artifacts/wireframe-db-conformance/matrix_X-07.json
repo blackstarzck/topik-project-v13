@@ -1,0 +1,145 @@
+{
+  "iaCode": "X-07",
+  "screen": "약점 기반 추천 (weakness-based recommendations)",
+  "route": "/practice/weakness",
+  "folder": "docs/Wireframe/29-X-07-weakness-based-recommendations",
+  "questionNo": 29,
+  "scope": "user-facing; NOT admin/frozen-island (X-07 is in user scope). No frozen objects touched.",
+  "sourcePriorityApplied": "description.md > functional-spec.md > screen-data-summary.md (확정 계약 + 메모, not the '스키마 보강 필요' label) > hifi.png/wireframe.png > sample JSON (none for this screen).",
+  "liveSchemaBaseline": "Measured against LIVE schema discovered this run: problems, problem_attempts, writing_feedback, feedback_dimension_scores, recommendation_runs, recommendation_items, study_events, profiles. No (missing) objects required.",
+  "rows": [
+    {
+      "screenRequirement": "약점 탭 — 문법/어휘/구성/주제 적합성 4개 탭, 답안 부족 탭은 비활성 + 필요한 답안 수 표시 (description region 2; 제약: 탭 4개, 선택 1개만 활성; 예외: 답안 부족 탭 비활성+필요 답안 수)",
+      "docSource": "description.md L36-44 (■ 약점 탭, 제약: 탭 4개·라벨 10자 이하·선택 1개 활성, 예외: 답안 부족 탭 비활성 및 필요한 답안 수 표시)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "feedback_dimension_scores.dimension, feedback_dimension_scores.score, feedback_dimension_scores.score_max",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "getDimensionTabSummaries reads dimension/score/score_max per user, normalizes per dimension, gates by sampleCount>=threshold (default 5) → ready flag + neededAnswerCount drives the disabled tab + '필요 답안 수'. dimension is a real validated column with a CHECK enum (grammar/vocab/structure/content/expression/topic_fit); the four spec tabs (grammar/vocab/structure/topic_fit) are a code constant DIMENSION_TAB_ORDER. Stable-query need is real and met by a real column."
+    },
+    {
+      "screenRequirement": "핵심 진단 카드 — 우선 개선 약점 + 근거(평균 점수/약점 정도) (description region 3; 제약: 진단 제목 28자, 근거 2줄)",
+      "docSource": "description.md L46-56 (■ 핵심 진단 카드, 우선 개선해야 할 약점과 근거를 크게 보여줌); screen-data-summary.md L19-20 (약점 영역 목록, 약점 정도), L34 (약점 계산 근거 → feedback_dimension_scores가 dimension, score, weakness_level 제공)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "feedback_dimension_scores.dimension, feedback_dimension_scores.score, feedback_dimension_scores.score_max, feedback_dimension_scores.weakness_level",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "getWeakDimensions selects the weakest dimensions (asc avg score, threshold-gated) → DiagnosticCard renders primary weak dimension + '평균 점수 N점'. score_max present for fair normalization. weakness_level (smallint 1..5, CHECK) is the documented '약점 정도' source per screen-data-summary 확정 계약, available as a real column. All real validated columns; stable query genuinely needed and met."
+    },
+    {
+      "screenRequirement": "핵심 진단 카드 — 최근 답안(분석) 날짜 표시 (description region 3 제약: 최근 답안 날짜 표시)",
+      "docSource": "description.md L54 (▣ 제약 조건: 진단 제목 28자, 근거 2줄, 최근 답안 날짜 표시)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "writing_feedback.generated_at",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "page.tsx selects writing_feedback.generated_at (latest, owner-scoped, order desc limit 1) and passes updatedAt → DiagnosticCard renders '분석 갱신' date. generated_at is a real timestamptz column ordered/filtered (stable query). description explicitly requires '최근 답안 날짜', so this is a confirmed stable-query need against a real column."
+    },
+    {
+      "screenRequirement": "인사이트 보조 — 약점 발생 이유/예시 오류/개선 전략 (3개 이하, 각 60자 이하); 인사이트 부족 시 일반 학습 팁 대체 (description region 4)",
+      "docSource": "description.md L58-68 (■ 인사이트 보조, 약점 발생 이유·예시 오류·개선 전략을 짧게 보완; 예외: 인사이트 부족 시 일반 학습 팁으로 대체)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "(missing) — static i18n content keyed by feedback_dimension_scores.dimension",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "Insights are NOT a DB requirement: WeaknessView.insightFor() pulls why/example/strategy from static next-intl catalog (practice.weakness.insights.<dimension>) keyed by the leading weak dimension, with a 'fallback' namespace satisfying the '일반 학습 팁 대체' exception. description does not state any per-row DB-stored insight text. No column needed (do not invent one); the only DB input is the already-counted dimension. gapStatus=satisfied because the requirement is fully met without new schema."
+    },
+    {
+      "screenRequirement": "추천 학습 카드 — 약점에 맞는 추천 문제 목록 (4개 이하, 제목 28자, 추천 사유 1줄) (description region 5; screen-data-summary: 추천 문제 카드)",
+      "docSource": "description.md L70-80 (■ 추천 학습 카드, 약점에 맞는 문제·복습 자료·표현 연습 추천; 제약: 카드 4개 이하·제목 28자·추천 사유 1줄); screen-data-summary.md L21 (추천 문제 카드), L35 (recommendation_runs.source_type=weakness + recommendation_items가 추천 묶음과 항목 저장)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "recommendation_items.problem_id, recommendation_items.rank, recommendation_items.status; recommendation_runs.source_type='weakness', recommendation_runs.expires_at; problems.id, problems.title, problems.domain, problems.question_no, problems.publish_status",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "getWeaknessRecommendations queries recommendation_items (status='active') !inner-joined to recommendation_runs (filter expired via expires_at) and problems (publish_status='published'), ordered by rank, limit 3 → cards. All are real validated columns with CHECK enums (status, source_type, publish_status). Stable-query need is real (filter/order/join) and satisfied."
+    },
+    {
+      "screenRequirement": "추천 이유 (추천 사유 1줄) (description region 5 제약; screen-data-summary L22 추천 이유)",
+      "docSource": "description.md L78 (추천 사유 1줄); functional-spec.md L24-26 (추천 이유); screen-data-summary.md L22 (추천 이유)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "recommendation_items.reason, recommendation_items.weakness_tags",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "WeaknessView.recommendationReason() renders recommendation_items.reason when present, else a localized fallback string (tag-fallback / default). reason is a real text column; weakness_tags (text[]) carries '약점 연결' per screen-data-summary 메모. Displayed not queried-for-stability → stableQueryNeed=false, but the column exists so gapStatus=satisfied."
+    },
+    {
+      "screenRequirement": "예상 소요 시간 (screen-data-summary 사용자 화면 표시 데이터 L23)",
+      "docSource": "screen-data-summary.md L23 (예상 소요 시간); recommendation_items 스키마 L44 (estimated_minutes)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "recommendation_items.estimated_minutes",
+      "gapStatus": "satisfied",
+      "classification": "strong-inference",
+      "stableQueryNeed": false,
+      "rationale": "estimated_minutes is a real integer column; weakness.ts already selects it and exposes estimatedMinutes on WeaknessRecommendation. screen-data-summary lists '예상 소요 시간' as a display item. Current WeaknessView does not yet render it (display-layer gap, not a schema gap). Column exists → satisfied; SOURCE PRIORITY is screen-data-summary (description does not mention it), and render is optional, so strong-inference / stableQueryNeed=false."
+    },
+    {
+      "screenRequirement": "추천 대상 문제 상세/필터 — 유형·난이도·태그·공개 상태 (functional-spec DB 명세; screen-data-summary L36)",
+      "docSource": "functional-spec.md L42 (problems: id, domain, question_no, difficulty, tags — 추천 문제 상세 표시와 필터); screen-data-summary.md L36 (problems가 유형·난이도·태그·공개 상태 제공; 사용자에게 보이는 문제만 노출)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "problems.domain, problems.question_no, problems.difficulty, problems.tags, problems.publish_status, problems.visibility",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "Tag-fallback path queries problems.tags via .overlaps with weak dimension names and filters publish_status='published'; domain/question_no rendered on cards; visibility/publish_status enforce '사용자에게 보이는 문제만 노출' (RLS). All real columns with CHECK enums; tags filter + publish_status filter are stable queries that are met."
+    },
+    {
+      "screenRequirement": "약점 영역 선택 (사용자 입력/상태 — 탭 전환) (screen-data-summary 사용자 입력/상태 L27)",
+      "docSource": "screen-data-summary.md L27 (약점 영역 선택); description.md L40 (약점 유형을 전환함)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "(client state) — derived from feedback_dimension_scores.dimension",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": false,
+      "rationale": "Tab selection is ephemeral client state in DimensionTabs/WeaknessView; not persisted. The dimension enum it switches over is the real feedback_dimension_scores.dimension column. No persistence requirement in description → no column needed (do not invent)."
+    },
+    {
+      "screenRequirement": "추천 항목 status 변경 — 학습 시작 시 consumed 처리 (사용자 입력/상태; description region 6: 클릭 후 중복 실행 차단)",
+      "docSource": "screen-data-summary.md L28-29 (추천 문제 선택, 추천 항목 status 변경), L49 (문제 클릭 시 recommendation_items.status를 consumed로 바꾼다); functional-spec.md L41 (recommendation_items ... 사용 방식 read/update); description.md L90 (클릭 후 중복 실행 차단)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "recommendation_items.status",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "consumeRecommendationItem updates recommendation_items.status to 'consumed' (owner-scoped RLS update, where id+user_id+status='active'). status is a real text column with CHECK enum ('active','consumed','expired'). Stable querying/validation need is real (filter on status, enum-validated write) and met."
+    },
+    {
+      "screenRequirement": "추천 클릭/소비 로그 기록 (description region: 추천 소비 로그 기록; navigation 화면 내부 동작)",
+      "docSource": "description.md L116 (화면 내부 동작: ... 추천 소비 로그 기록을 처리한다); screen-data-summary.md L46 (study_events: 추천 클릭 이벤트)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "study_events.event_type='recommendation_clicked', study_events.problem_id, study_events.payload, study_events.user_id",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "WeaknessView.handleRecommendationClick fires logStudyEvent({eventType:'recommendation_clicked', problemId, payload:{source:'weakness'}}). event_type is from the frozen catalog (recommendation_clicked is a member); problem_id is a real FK column; payload jsonb carries only PII-safe primitives (source). event_type stable-querying is genuinely needed (analytics filter) and is a real column. payload is correctly jsonb (no stable-query need for free-form analytics keys)."
+    },
+    {
+      "screenRequirement": "유료 잠금 분기 — 잠금 시 업그레이드 안내 표시 (description region 1 예외: 유료 잠금이면 추천 본문 대신 업그레이드 안내)",
+      "docSource": "description.md L32 (▣ 예외: 유료 잠금이면 추천 본문 대신 업그레이드 안내 표시), L80 (region 5 예외: 유료 잠금/자료 없음은 비활성 카드와 안내 표시), L115 (이탈: 유료 잠금은 X-03 페이월로 이동)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "profiles.plan_label",
+      "gapStatus": "satisfied",
+      "classification": "confirmed",
+      "stableQueryNeed": true,
+      "rationale": "page.tsx isLocked() reads profiles.plan_label (owner-scoped) and gates the whole body to the upgrade notice when not a paid plan. plan_label is a real text column (default 'free') on the SHARED admin-first profiles table — read-only here, NOT reshaped (respects the reconcile-do-not-reshape note). Stable equality/membership query need is real and met."
+    },
+    {
+      "screenRequirement": "약점-문제 매핑 규칙 (dimension별 문제 유형 매핑·가중치·제외 조건 운영 구조) (screen-data-summary 운영/관리 대상 데이터 계약)",
+      "docSource": "screen-data-summary.md L37 (약점-문제 매핑 규칙 | 스키마 보강 필요 | dimension별 문제 유형 매핑, 가중치, 제외 조건을 관리하는 구조는 없다 | 현재는 결과 row 중심이다), L60 (매핑 규칙 운영 구조는 스키마 보강 필요다)",
+      "jsonCandidateKey": "(none)",
+      "liveDbObject": "(missing)",
+      "gapStatus": "schema-gap",
+      "classification": "unresolved",
+      "stableQueryNeed": false,
+      "rationale": "screen-data-summary explicitly labels this '스키마 보강 필요' AND its 메모 confirms there is NO current structure ('현재는 결과 row 중심이다') — unlike the CONTRACT-NOT-LABEL pattern, the 확정 계약 here does NOT accept jsonb storage; it states the structure is absent. CRITICALLY, description.md (PRIMARY source) states NO concrete query/validation/render need for a mapping-rule table on this screen — the screen consumes pre-computed result rows (recommendation_items) + a tag-overlap fallback, both of which work today. So this is an OPERATIONAL/admin-curation gap, not a user-screen blocker. It is net-new operational structure (rule authoring), so it is routed to UNRESOLVED to escalate rather than apply — no migration proposed. stableQueryNeed=false because the user screen does not need it (the result-row contract already serves)."
+    }
+  ],
+  "jsonMapping": [],
+  "jsonMappingNote": "No seed JSON exists for X-07 (Step 2 explicitly: 'no seed JSON for this screen'). JSON MAPPING RULE / provenance preservation is therefore not exercised. If weakness recommendation seeds are ever added, deterministic ids must derive from (source file + JSON item's own `id`), never array index, and upsert idempotently onto recommendation_items / recommendation_runs / problems.",
+  "notes": "All required objects exist in the LIVE schema — zero (missing) for any description-driven user requirement. The single schema-gap (약점-문제 매핑 규칙) is an operational/curation structure that screen-data-summary itself marks absent and that description (PRIMARY) does not require for the user screen; routed UNRESOLVED (escalate, do not apply). No frozen-island objects touched. profiles.plan_label is read-only here (reconcile, not reshape). IDEMPOTENCY/no-destructive rules: nothing to apply for this screen (read paths satisfied; status write is an owner-scoped enum update, not a migration)."
+}
