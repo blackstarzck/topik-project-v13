@@ -104,7 +104,11 @@ describe("Phase 6 types snapshot — 4 new tables + 1 column + 4 new RPCs", () =
     expect(update.notification_prefs).toBeTruthy();
   });
 
-  it("Functions snapshot covers 4 Phase 6 RPCs", () => {
+  it("Functions snapshot covers the dashboard KPI RPC", () => {
+    // Admin RPCs (get_admin_org_dashboard / admin_change_user_role /
+    // admin_toggle_problem_publish) were removed with the v13 admin island
+    // (2026-06-09); problems now come from an external API and v13 keeps only
+    // exposure control. Only the user-facing get_dashboard_kpi remains here.
     type Fns = Database["public"]["Functions"];
     expectTypeOf<Fns["get_dashboard_kpi"]["Returns"]>().toEqualTypeOf<
       {
@@ -114,20 +118,5 @@ describe("Phase 6 types snapshot — 4 new tables + 1 column + 4 new RPCs", () =
         streak_days: number;
       }[]
     >();
-    expectTypeOf<Fns["get_admin_org_dashboard"]["Returns"]>().toMatchTypeOf<
-      Array<{
-        learner_count: number;
-        active_7d_count: number;
-        submissions_7d_count: number;
-      }>
-    >();
-    expectTypeOf<Fns["admin_change_user_role"]["Args"]>().toEqualTypeOf<{
-      target_id: string;
-      new_role: string;
-    }>();
-    expectTypeOf<Fns["admin_toggle_problem_publish"]["Args"]>().toEqualTypeOf<{
-      problem_id: string;
-      new_status: string;
-    }>();
   });
 });

@@ -4,6 +4,44 @@
 > This supersedes any earlier handoff / IA-audit instruction that treated admin
 > screens (H-01, X-08, X-10, X-15) as in-scope for active build in this repo.
 
+## ✅ 2026-06-09 — v13 admin ISLAND REMOVED (owner decision)
+
+> The owner exercised the "keep vs roll back" call this doc reserved for them
+> (see "Current admin code" §). **The entire v13 admin island was removed.**
+>
+> **New data flow (owner clarification 2026-06-09):** the **admin (topik-ai)** fetches
+> problems/questions from an EXTERNAL / third-party API (ALREADY REVIEW-COMPLETE),
+> applies the management point (**exposure: public/private**), and **writes them to the
+> Supabase DB**. **v13 only READS** that data (read-only consumer). So v13 needs NO
+> problem CRUD, NO review workflow, and NO admin user/org management here — those
+> belong to the admin (topik-ai), not v13.
+>
+> **Removed (code + DB):**
+> - Code: `src/app/(workspace)/admin/*`, `src/components/admin/*`, `src/lib/admin/*`,
+>   `src/lib/auth/admin-guard.ts`, the admin nav in `src/lib/routes.ts`/`SidebarNav`,
+>   and the admin tests (`tests/components/admin/*`, `tests/lib/admin/*`,
+>   `tests/integration/admin-*`).
+> - DB (migration `20260609130000_remove_v13_admin_island.sql`): 11 admin RPCs
+>   (`admin_update_problem`/`delete`/`add_asset`/`remove_asset`/`toggle_problem_publish`/
+>   `change_user_role`/`set_user_status`/`get_admin_users`/`get_admin_user_stats`/
+>   `get_admin_audit_logs`/`get_admin_org_dashboard`), the 4 org tables
+>   (`organizations`/`org_members`/`assignments`/`assignment_submissions`), and the org
+>   helpers (`private.is_org_member`/`is_org_manager`).
+>
+> **PRESERVED (load-bearing — the whole app depends on these):** `profiles.app_role`
+> (+ 4-role enum), `admin_audit_logs` (table), `private.is_admin`/`is_content_admin`/
+> `is_org_admin`/`is_platform_admin` (RLS helpers; `is_platform_admin` alone gates 12
+> policies), and all user RPCs/tables.
+>
+> **Consequence for the topik-ai integration plan**: the plan in
+> [`admin-integration-plan.md`](admin-integration-plan.md) assumed topik-ai would
+> *reuse v13's admin RPCs* and that v13 problems are admin-authored. Both premises are
+> now void for problems (external API source). That plan needs revision before any
+> topik-ai↔v13 problem wiring. (Members/payments overlap is unaffected by this change.)
+>
+> The rest of this document is retained as historical context for the boundary that
+> held until 2026-06-09.
+
 ## ⚠️ OVERLAP INTEGRATION GATE — OPEN (2026-06-08, owner-approved)
 
 The owner opened the **overlap-only** integration gate. The rule below still holds

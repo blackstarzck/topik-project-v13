@@ -100,8 +100,10 @@ AI 생성 문제와 admin 큐레이션 문제를 한 테이블 + `source` 컬럼
 | `explanation` | `text` | yes | | |
 | `tags` | `text[]` | no | `'{}'` | GIN |
 | `publish_status` | `text` | no | `'draft'` | check in (`'draft'`,`'published'`,`'archived'`) |
-| `review_status` | `text` | no | `'pending'` | check in (`'pending'`,`'approved'`,`'rejected'`) |
-| `lifecycle_status` | `text` | no | `'active'` | check in (`'active'`,`'inactive'`,`'expired'`) |
+| `review_status` | `text` | no | `'pending'` | 최종 검수 결과. check in (`'pending'`,`'approved'`,`'rejected'`) |
+| `review_workflow_status` | `text` | yes | | 진행 중 검수 워크플로 단계 (D-C). topik-ai 5단계(검수 대기/검수 중/보류/검수 완료/수정 필요) 매핑. nullable·CHECK 없음(코드 확정 전 PROPOSED) |
+| `topic_category_code` | `text` | yes | | 주제 분류 코드 (D-B). `domain`(영역)과 의미 다름. topik-ai 주제(생활/학습/사회/문화/경제/교육/환경/기술) 매핑. nullable·CHECK 없음(코드 확정 전 PROPOSED) |
+| `lifecycle_status` | `text` | no | `'active'` | check in (`'active'`,`'inactive'`,`'expired'`). 관리자 `operationStatus` 정합 대상 |
 | `lifecycle_reason` | `text` | yes | | 사용자 화면 비활성 사유 |
 | `expires_at` | `timestamptz` | yes | | 문제 전용 만료 시각. 자동 만료 로직 없음 |
 | `visibility` | `text` | no | `'private'` | check in (`'private'`,`'public'`,`'org'`) |
@@ -477,6 +479,38 @@ X-10 관리 액션 추적. admin만 select.
 
 ---
 
+## 1.13 Phase 7 Tables — Billing / Notifications / Org / Legal (구현·적용 완료)
+
+> 아래 테이블은 처음엔 §6 Tier 2(미작성)로 남겨졌으나, conformance/admin-integration 단계에서
+> **마이그레이션이 작성·적용**되었다. 라이브 dev DB(`talkpik-dev`)에 모두 존재하며 RLS enable+force
+> 적용. 컬럼 단위 상세는 각 마이그레이션 파일을, 테이블 인벤토리는
+> [`docs/supabase-table-inventory.md`](../supabase-table-inventory.md)를 본다.
+
+**Billing** (`20260602120100_billing.sql`) — X-03 / `/subscription` / `/paywall`
+
+- `subscription_plans` (PK `plan_key text`): `name`, `cadence`(monthly/quarterly/yearly), `price_cents`, `currency`(KRW), `features` jsonb, `recommended`, `active`. authenticated가 active 플랜 read.
+- `subscriptions`: `user_id`→profiles, `plan_key`→subscription_plans, `billing_cadence`, `status`(active/canceled/past_due/trialing/paused), `current_period_*`, `cancel_at`, `provider*`. owner read-only(쓰기는 service_role).
+- `payment_history`: `user_id`→profiles, `subscription_id`→subscriptions, `amount_cents`, `currency`, `status`(paid/failed/refunded/pending), `receipt_url`, `paid_at`. owner read-only. **환불은 별도 테이블 없이 `status='refunded'`** (관리자 `commerce_refunds`와 정합 대상).
+
+**Notifications** (`20260602120200_notifications_and_settings.sql`) — X-09 / `/settings/notifications`
+
+- `notification_settings` (PK `user_id`→profiles): `reminder_time`, `reminder_days` jsonb[], `channels` jsonb, `timezone`. owner full control.
+- `notification_log`: `user_id`→profiles, `channel`, `template_key`, `status`(sent/failed/pending), `payload`, `sent_at`. owner read-only(쓰기는 service_role).
+- 같은 마이그레이션이 `profiles.learning_locale`(ko/en/vi, null=ui_locale 따름) + `profiles.content_prefs` jsonb 컬럼도 추가(G-01).
+
+**Organizations** — ❌ **제거됨 (2026-06-09, `20260609130000_remove_v13_admin_island.sql`)**
+
+- `organizations`/`org_members`/`assignments`/`assignment_submissions` + `private.is_org_member`/`is_org_manager` 헬퍼는 v13 admin 섬 철거 때 drop. (NET-NEW였고 사용자 화면 미사용.) 배경: [`admin-scope-boundary.md`](../admin-scope-boundary.md) 2026-06-09 결정.
+
+**Admin RPC 제거** (같은 마이그레이션) — 문제 쓰기/사용자관리/감사조회 RPC 11개(`admin_update_problem`·`admin_delete_problem`·`admin_add/remove_problem_asset`·`admin_toggle_problem_publish`·`admin_change_user_role`·`admin_set_user_status`·`get_admin_users`·`get_admin_user_stats`·`get_admin_audit_logs`·`get_admin_org_dashboard`) drop. **보존**: `profiles.app_role`, `admin_audit_logs`, `private.is_*_admin`(RLS load-bearing).
+
+**Legal** (`20260608120000_legal_documents_and_consents.sql`) — A-01 / X-13 / X-14
+
+- `legal_documents`: `doc_type`(terms/privacy), `version`, `locale`(ko/en/vi), `title`, `body`, `summary`, `is_placeholder`, `requires_consent`, `status`(draft/published/archived), `effective_at`. anon 포함 누구나 published read, platform_admin이 작성. **버전당 1행 append-only**. 관리자 `operation_policies`/`operation_policy_histories` 정합 대상.
+- `user_consents`: `user_id`→profiles, `document_id`→legal_documents, `doc_type`, `version`, `source`(signup/re_consent/settings), `accepted_at`. owner read + owner insert, **immutable(UPDATE/DELETE 정책 없음)**.
+
+---
+
 ## 2. RLS Patterns
 
 모든 user-owned 테이블:
@@ -602,7 +636,9 @@ erDiagram
 
 ## 5. Migration Index
 
-마이그레이션은 `supabase/migrations/` 에 도메인별 12개로 분할. timestamp 오름차순으로 적용.
+마이그레이션은 `supabase/migrations/` 에 timestamp 오름차순으로 적용. **현재 라이브 dev DB(`talkpik-dev`)에
+총 36개 적용 완료**(2026-06-09 기준). 아래 표는 초기 Tier-1 16개이며, 이후 Phase-7/conformance 마이그레이션은
+표 아래 목록 + 정본 인덱스 [`supabase/migrations/INDEX.md`](../../supabase/migrations/INDEX.md) 참조.
 
 | 순서 | 파일 | 책임 |
 | --- | --- | --- |
@@ -625,22 +661,36 @@ erDiagram
 
 각 파일은 idempotent하게 작성 (`if not exists`, `drop policy if exists`, `on conflict do nothing`).
 
-### 적용 방법 (구현 단계 진입 후)
+**Phase 7 / conformance / admin-integration 마이그레이션 (17~36, 적용 완료):**
+
+| timestamp | 파일 | 책임 |
+| --- | --- | --- |
+| `20260521120000`~`20260526180000` | (auth bootstrap / phase 5~6 RPC / cleanup cron 등) | `supabase/migrations/INDEX.md` 참조 |
+| `20260602120100` | `billing.sql` | `subscription_plans`, `subscriptions`, `payment_history` (§1.13) |
+| `20260602120200` | `notifications_and_settings.sql` | `notification_settings`, `notification_log`, `profiles.learning_locale`/`content_prefs` |
+| `20260602120300` | `org.sql` | `organizations`, `org_members`, `assignments`, `assignment_submissions` |
+| `20260602120400` | `admin_and_user_rpcs.sql` | `get_admin_users`, `admin_change_user_role`, `list_user_problems` 등 |
+| `20260608120000` | `legal_documents_and_consents.sql` | `legal_documents`, `user_consents` (§1.13) |
+| `20260608120100` | `problems_lifecycle_expiry.sql` | `problems.lifecycle_status`/`lifecycle_reason`/`expires_at` |
+| `20260608120200` | `seed_writing_problem_fixtures.sql` | Wireframe 08~11 쓰기 문제 seed |
+| `20260608120300` | `problems_topic_category_review_workflow.sql` | `problems.topic_category_code`(D-B) + `review_workflow_status`(D-C) + allowlist |
+| `20260608120400` | `admin_update_problem_audit_note.sql` | `admin_update_problem`에 `__note`→audit payload |
+| `20260609120000` | `list_user_problems_writing_state.sql` | `list_user_problems` 쓰기 상태/ lifecycle 반환 |
+
+### 적용 방법
 
 ```bash
-# Supabase CLI 초기화 (한 번)
-pnpm dlx supabase init
-pnpm dlx supabase start
+# 표준 경로 (CLI + DB 비밀번호 보유 시)
+pnpm dlx supabase db push       # 원격 적용 (idempotent, schema_migrations 추적)
+pnpm dlx supabase gen types typescript --project-id <ref> > src/lib/supabase/types.ts
 
-# 로컬 적용
-pnpm dlx supabase db reset      # 깨끗한 재적용
-pnpm dlx supabase db push       # 원격 적용
-
-# 타입 생성
-pnpm dlx supabase gen types typescript --local > src/types/database.ts
+# 이 환경처럼 CLI/DB 비밀번호가 없을 때 (access token만 있을 때)
+#   Supabase Management API POST /v1/projects/{ref}/database/query 로 마이그레이션 SQL 직접 적용.
+#   적용 후 schema_migrations(version,name) 백필 + 'notify pgrst, reload schema' 권장.
 ```
 
-본 저장소는 현재 pre-implementation 상태로 `package.json` / Supabase CLI 미설치. 위 명령은 implementation 단계에서 사용.
+> **금지**: `supabase db reset` (전체 재적용=데이터 파괴). 정합은 **additive + idempotent** 마이그레이션으로만.
+> prod 대상이면 report-only. 본 저장소는 구현 단계로 `package.json`/CLI 설치 완료.
 
 ---
 
@@ -648,14 +698,17 @@ pnpm dlx supabase gen types typescript --local > src/types/database.ts
 
 IA/sitemap 확정 또는 PRD MVP 범위 변경 전까지 DDL을 만들지 않습니다. 설계 메모만 남겨 둡니다.
 
+> **승격 완료(더 이상 deferred 아님)**: Billing(`subscription_plans`/`subscriptions`/`payment_history`),
+> Notifications(`notification_settings`/`notification_log`) 는 **DDL 작성·적용 완료** → §1.13 참조.
+> (이전 placeholder 표기는 stale였음. 2026-06-09 정정.)
+>
+> **Organizations는 2026-06-09에 도입→제거됨**: org 테이블/헬퍼는 v13 admin 섬과 함께 drop
+> (외부 API 문제 모델로 전환, 사용자 화면 미사용). 향후 조직 기능이 정식 IA로 들어오면 재설계.
+
 | 영역 | placeholder 테이블 | 트리거 조건 |
 | --- | --- | --- |
-| **Billing** | `subscriptions(user_id, plan, status, provider, external_ref, current_period_end)` | `docs/development/deferred-scope.md` billing 결정 후 |
-| **Organizations** | `organizations(id, name, status)`, `organization_memberships(org_id, user_id, role)` | X-08 기관 관리자 IA + sitemap route 확정 후 |
-| **Assignments** | `assignments(org_id, problem_id, title, due_at)`, `assignment_submissions(assignment_id, user_id, submission_id)` | organizations 도입 후 |
-| **Notifications** | `notification_preferences(user_id, channel, enabled, settings)` | X-09 알림 PRD 우선순위 격상 후 |
 | **모의고사** | `mock_exams`, `mock_exam_sessions`, `mock_exam_answers`, `mock_exam_results` | `docs/Wireframe/`에 모의고사 화면 + `docs/sitemap.md` route 추가 후 |
-| **게시판/공지** | `notices`, `events`, `notice_views` | IA/sitemap 추가 후 |
+| **게시판/공지** | `notices`, `events`, `notice_views` | IA/sitemap 추가 후 (관리자 `operation_notices`/`operation_events`와 정합) |
 | **단어장** | `vocab_entries`, `user_vocab` | `/library` 하위가 아닌 standalone 화면 IA 추가 후 |
 | **배지/XP** | `badges`, `user_badges`, `xp_events` | PRD 7.14 우선순위 격상 후 |
 
@@ -679,3 +732,5 @@ Tier 2 도입 시 새 마이그레이션 timestamp는 `2026XXXXHHMMSS_<domain>.s
 
 - 2026-05-20: 초안 작성. Round-2 종합으로 초기 스키마 기준 확정.
 - 2026-05-20 round-2: 마이그레이션 보강 (storage buckets/정책, profiles protected-column 트리거, feedback_status 전이 함수) 추가.
+- 2026-06-09: user↔admin 정합 작업. 라이브 dev DB에 누락돼 있던 4개 마이그레이션(legal/lifecycle/audit-note/list_user_problems) 적용 + `schema_migrations` 백필(36개 정렬). `problems`에 `topic_category_code`(D-B)·`review_workflow_status`(D-C) 문서화, §1.13 Phase-7 테이블 신설, §5 마이그레이션 인덱스/적용 방법 갱신, §6에서 billing/org/notifications 승격 정정.
+- 2026-06-09 (후속): **v13 admin 섬 제거**(소유자 결정 — 관리자(topik-ai)가 외부 API로 문제를 받아 노출(공개/비공개) 적용·Supabase 저장, **v13은 읽기만**). `20260609130000_remove_v13_admin_island.sql`로 admin RPC 11개 + org 테이블 4개 + org 헬퍼 2개 drop. **보존**: `app_role`·`admin_audit_logs`·`private.is_*_admin`(load-bearing). 코드/네비/테스트/타입 동반 제거. 배경·전체 목록: [`admin-scope-boundary.md`](../admin-scope-boundary.md) 2026-06-09 §.

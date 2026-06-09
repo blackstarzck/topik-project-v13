@@ -44,10 +44,6 @@ export const PROTECTED_ROUTE_CASES: readonly ProtectedRouteCase[] = [
   { path: "/writing/feedback/short/abc-id", iaCode: "E-01" },
   { path: "/writing/feedback/long/abc-id", iaCode: "E-02" },
   { path: "/writing/reports/abc-id/compare", iaCode: "R-01" },
-  { path: "/admin", iaCode: "X-15" },
-  { path: "/admin/problems", iaCode: "H-01" },
-  { path: "/admin/org", iaCode: "X-08" },
-  { path: "/admin/users", iaCode: "X-10" },
   { path: "/onboarding/learning-goal", iaCode: "A-03" },
   { path: "/subscription", iaCode: "X-04" },
   { path: "/paywall", iaCode: "X-03" },
@@ -135,17 +131,6 @@ export const SIDEBAR_ITEMS: readonly SidebarItem[] = [
     ],
   },
 ];
-
-export const SIDEBAR_ADMIN_SECTION: SidebarGroup = {
-  key: "admin",
-  label: "Admin",
-  labelKey: "admin",
-  children: [
-    { key: "/admin/problems", label: "Problem Admin", labelKey: "adminProblems" },
-    { key: "/admin/org", label: "Org Admin", labelKey: "adminOrg" },
-    { key: "/admin/users", label: "User Admin", labelKey: "adminUsers" },
-  ],
-};
 
 export const PAID_PLAN_LABELS: ReadonlySet<string> = new Set([
   "premium",

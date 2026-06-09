@@ -84,9 +84,9 @@
 | 29 | `12:03:00` | [`20260602120300_org.sql`](./20260602120300_org.sql) | **NET-NEW**: `organizations`, `org_members`, `assignments`, `assignment_submissions` + `private.is_org_member/is_org_manager` 헬퍼 + org-scoped RLS (X-08/X-10) |
 | 30 | `12:04:00` | [`20260602120400_admin_and_user_rpcs.sql`](./20260602120400_admin_and_user_rpcs.sql) | Admin RPC: `get_admin_users`, `get_admin_user_stats`, `admin_set_user_status`, `admin_update_problem`, `admin_delete_problem`, `admin_add_problem_asset`, `admin_remove_problem_asset`, `get_admin_audit_logs` + `get_admin_org_dashboard` 확장(drop→recreate, 4→6 컬럼 additive) + `list_user_problems`(C-02, SECURITY INVOKER) |
 
-#### 08 (월) — Conformance decisions #2/#4 backing schema (작성만 완료, 적용 전)
+#### 08 (월) — Conformance decisions #2/#4 backing schema (✅ 2026-06-09 적용 완료)
 
-> ⚠ 26-30번과 동일하게 **작성만 완료** 상태(coordinator 검토·적용 전). wireframe-db-conformance 결정 #2·#4 확정에 따른 사용자 화면 backing 스키마. 둘 다 admin 소유 공유 영역이라 **적용은 소유자 승인 + `admin-data-contract` 이름 정합 후**. 근거: [`../../docs/ai-workflow/runs/2026/06/08/20260608-conformance-decisions-finalized.md`](../../docs/ai-workflow/runs/2026/06/08/20260608-conformance-decisions-finalized.md).
+> ✅ **적용 완료(2026-06-09)**: 31·32는 라이브 dev DB에 적용됨. 적용 당시 31(legal)이 누락돼 있던 것을 발견해 함께 적용했고, `schema_migrations`도 백필. wireframe-db-conformance 결정 #2·#4 확정에 따른 사용자 화면 backing 스키마. 둘 다 admin 소유 공유 영역(`admin-data-contract` 이름 정합은 LATER admin-build 단계). 근거: [`../../docs/ai-workflow/runs/2026/06/08/20260608-conformance-decisions-finalized.md`](../../docs/ai-workflow/runs/2026/06/08/20260608-conformance-decisions-finalized.md).
 
 | # | timestamp | 파일 | 영역 |
 | ---:| --- | --- | --- |
@@ -99,11 +99,28 @@
 | ---:| --- | --- | --- |
 | 33 | `12:02:00` | [`20260608120200_seed_writing_problem_fixtures.sql`](./20260608120200_seed_writing_problem_fixtures.sql) | Wireframe 08~11 JSON 기반 `problems` seed 466개. `materials.seed_source='wireframe_problem_fixtures'` + `source_file` + `source_item_id`로 중복 방지. 검수 통과분은 published/public/approved, 미통과분은 draft/private/pending. 스키마 변경 없음. |
 
-#### 09 (화) — User problem list writing state RPC
+#### 08 (월) — Admin integration Phase C: 문제은행 정합 컬럼 + 감사 메모 (✅ 적용 완료)
+
+> Admin(topik-ai) 쓰기 문제은행 정합. GPT-5.5 교차검토 D-B/D-C 결정 반영. 둘 다 additive·idempotent, PROPOSED(코드 확정 전 CHECK 없음). 2026-06-09 적용 확인. 근거: [`../../docs/admin-integration-plan.md`](../../docs/admin-integration-plan.md).
+
+| # | timestamp | 파일 | 영역 |
+| ---:| --- | --- | --- |
+| 35 | `12:03:00` | [`20260608120300_problems_topic_category_review_workflow.sql`](./20260608120300_problems_topic_category_review_workflow.sql) | `problems` additive 컬럼 `topic_category_code`(D-B: 주제 분류, `domain` 영역과 구분) + `review_workflow_status`(D-C: 진행 검수단계, `review_status` 최종결과와 분리) + `admin_update_problem` allowlist 13키 확장. nullable·CHECK 없음(PROPOSED). |
+| 36 | `12:04:00` | [`20260608120400_admin_update_problem_audit_note.sql`](./20260608120400_admin_update_problem_audit_note.sql) | `admin_update_problem` create-or-replace: 예약 patch 키 `__note`(컬럼 아님)를 추출해 `admin_audit_logs.payload`에 `{"review_note":...}`로 기록. 시그니처 불변, 기존 동작 보존. 검수 사유/메모의 감사 보관. |
+
+#### 09 (화) — User problem list writing state RPC (✅ 적용 완료)
 
 | # | timestamp | 파일 | 영역 |
 | ---:| --- | --- | --- |
 | 34 | `12:00:00` | [`20260609120000_list_user_problems_writing_state.sql`](./20260609120000_list_user_problems_writing_state.sql) | `list_user_problems` 재정의. 사용자 문제 목록에서 쓰기 진행 상태를 `writing_drafts`/`writing_submissions` 기준으로 계산하고 `solve_state`, `latest_submission_id`, feedback/lifecycle/publish/review 상태를 additive 반환한다. `published` 문제만 노출하고 lifecycle 비활성/만료는 행 비활성 근거로 반환한다. |
+
+#### 09 (화) — v13 admin 섬 제거 (✅ 적용 완료, 소유자 결정)
+
+> 문제는 외부 API에서 **검수 완료** 상태로 수급 → v13은 노출제어(공개/비공개+만료)만. v13 admin CRUD/검수/사용자·조직 관리 불필요 → 코드 + DB 동반 제거. 보존: `app_role`·`admin_audit_logs`·`private.is_*_admin`. 배경: [`../../docs/admin-scope-boundary.md`](../../docs/admin-scope-boundary.md) 2026-06-09 §.
+
+| # | timestamp | 파일 | 영역 |
+| ---:| --- | --- | --- |
+| 37 | `13:00:00` | [`20260609130000_remove_v13_admin_island.sql`](./20260609130000_remove_v13_admin_island.sql) | admin RPC 11개(`admin_update_problem`·`delete`·`add/remove_problem_asset`·`toggle_problem_publish`·`change_user_role`·`set_user_status`·`get_admin_users`·`get_admin_user_stats`·`get_admin_audit_logs`·`get_admin_org_dashboard`) drop + org 테이블 4개(`organizations`·`org_members`·`assignments`·`assignment_submissions`) drop(cascade) + org 헬퍼 2개(`private.is_org_member`·`is_org_manager`) drop. **보존**: `app_role`·`admin_audit_logs`·`is_*_admin`. forward-only·idempotent. |
 
 ---
 

@@ -65,6 +65,10 @@ export interface Database {
           plan_label: string;
           status: "active" | "blocked" | "deleted";
           notification_prefs: Json;
+          // 20260602120200 — G-01 settings: preferred learning-content language
+          // (null = follow ui_locale) + content preferences object.
+          learning_locale: "ko" | "en" | "vi" | null;
+          content_prefs: Json;
           // Phase 7-E Task 10 — self-introduction (max 160 chars, CHECK constraint).
           bio: string | null;
           created_at: string;
@@ -84,6 +88,8 @@ export interface Database {
           plan_label?: string;
           status?: "active" | "blocked" | "deleted";
           notification_prefs?: Json;
+          learning_locale?: "ko" | "en" | "vi" | null;
+          content_prefs?: Json;
           bio?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -102,6 +108,8 @@ export interface Database {
           plan_label?: string;
           status?: "active" | "blocked" | "deleted";
           notification_prefs?: Json;
+          learning_locale?: "ko" | "en" | "vi" | null;
+          content_prefs?: Json;
           bio?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -983,6 +991,337 @@ export interface Database {
           },
         ];
       };
+      // -------------------------------------------------------------------
+      // Billing (20260602120100_billing.sql) — X-03 / account billing.
+      // -------------------------------------------------------------------
+      subscription_plans: {
+        Row: {
+          plan_key: string;
+          name: string;
+          cadence: "monthly" | "quarterly" | "yearly";
+          price_cents: number;
+          currency: string;
+          features: Json;
+          recommended: boolean;
+          active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          plan_key: string;
+          name: string;
+          cadence: "monthly" | "quarterly" | "yearly";
+          price_cents: number;
+          currency?: string;
+          features?: Json;
+          recommended?: boolean;
+          active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          plan_key?: string;
+          name?: string;
+          cadence?: "monthly" | "quarterly" | "yearly";
+          price_cents?: number;
+          currency?: string;
+          features?: Json;
+          recommended?: boolean;
+          active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      subscriptions: {
+        Row: {
+          id: string;
+          user_id: string;
+          plan_key: string | null;
+          billing_cadence: "monthly" | "quarterly" | "yearly";
+          status: "active" | "canceled" | "past_due" | "trialing" | "paused";
+          current_period_start: string | null;
+          current_period_end: string | null;
+          cancel_at: string | null;
+          provider: string | null;
+          provider_subscription_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          plan_key?: string | null;
+          billing_cadence: "monthly" | "quarterly" | "yearly";
+          status?: "active" | "canceled" | "past_due" | "trialing" | "paused";
+          current_period_start?: string | null;
+          current_period_end?: string | null;
+          cancel_at?: string | null;
+          provider?: string | null;
+          provider_subscription_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          plan_key?: string | null;
+          billing_cadence?: "monthly" | "quarterly" | "yearly";
+          status?: "active" | "canceled" | "past_due" | "trialing" | "paused";
+          current_period_start?: string | null;
+          current_period_end?: string | null;
+          cancel_at?: string | null;
+          provider?: string | null;
+          provider_subscription_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "subscriptions_plan_key_fkey";
+            columns: ["plan_key"];
+            isOneToOne: false;
+            referencedRelation: "subscription_plans";
+            referencedColumns: ["plan_key"];
+          },
+        ];
+      };
+      payment_history: {
+        Row: {
+          id: string;
+          user_id: string;
+          subscription_id: string | null;
+          amount_cents: number;
+          currency: string;
+          status: "paid" | "failed" | "refunded" | "pending";
+          receipt_url: string | null;
+          paid_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          subscription_id?: string | null;
+          amount_cents: number;
+          currency?: string;
+          status: "paid" | "failed" | "refunded" | "pending";
+          receipt_url?: string | null;
+          paid_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          subscription_id?: string | null;
+          amount_cents?: number;
+          currency?: string;
+          status?: "paid" | "failed" | "refunded" | "pending";
+          receipt_url?: string | null;
+          paid_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "payment_history_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payment_history_subscription_id_fkey";
+            columns: ["subscription_id"];
+            isOneToOne: false;
+            referencedRelation: "subscriptions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      // -------------------------------------------------------------------
+      // Notifications (20260602120200_notifications_and_settings.sql) — X-09.
+      // -------------------------------------------------------------------
+      notification_settings: {
+        Row: {
+          user_id: string;
+          reminder_time: string | null;
+          reminder_days: Json;
+          channels: Json;
+          timezone: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          reminder_time?: string | null;
+          reminder_days?: Json;
+          channels?: Json;
+          timezone?: string;
+          updated_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          reminder_time?: string | null;
+          reminder_days?: Json;
+          channels?: Json;
+          timezone?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "notification_settings_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: true;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      notification_log: {
+        Row: {
+          id: string;
+          user_id: string;
+          channel: string;
+          template_key: string;
+          status: "sent" | "failed" | "pending";
+          payload: Json | null;
+          sent_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          channel: string;
+          template_key: string;
+          status: "sent" | "failed" | "pending";
+          payload?: Json | null;
+          sent_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          channel?: string;
+          template_key?: string;
+          status?: "sent" | "failed" | "pending";
+          payload?: Json | null;
+          sent_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "notification_log_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      // -------------------------------------------------------------------
+      // Legal (20260608120000_legal_documents_and_consents.sql) — A-01/X-13/X-14.
+      // -------------------------------------------------------------------
+      legal_documents: {
+        Row: {
+          id: string;
+          doc_type: "terms" | "privacy";
+          version: string;
+          locale: "ko" | "en" | "vi";
+          title: string;
+          body: string;
+          summary: string | null;
+          is_placeholder: boolean;
+          requires_consent: boolean;
+          status: "draft" | "published" | "archived";
+          effective_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          doc_type: "terms" | "privacy";
+          version: string;
+          locale?: "ko" | "en" | "vi";
+          title: string;
+          body: string;
+          summary?: string | null;
+          is_placeholder?: boolean;
+          requires_consent?: boolean;
+          status?: "draft" | "published" | "archived";
+          effective_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          doc_type?: "terms" | "privacy";
+          version?: string;
+          locale?: "ko" | "en" | "vi";
+          title?: string;
+          body?: string;
+          summary?: string | null;
+          is_placeholder?: boolean;
+          requires_consent?: boolean;
+          status?: "draft" | "published" | "archived";
+          effective_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      user_consents: {
+        Row: {
+          id: string;
+          user_id: string;
+          document_id: string;
+          doc_type: "terms" | "privacy";
+          version: string;
+          source: "signup" | "re_consent" | "settings";
+          accepted_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          document_id: string;
+          doc_type: "terms" | "privacy";
+          version: string;
+          source?: "signup" | "re_consent" | "settings";
+          accepted_at?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          document_id?: string;
+          doc_type?: "terms" | "privacy";
+          version?: string;
+          source?: "signup" | "re_consent" | "settings";
+          accepted_at?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "user_consents_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "user_consents_document_id_fkey";
+            columns: ["document_id"];
+            isOneToOne: false;
+            referencedRelation: "legal_documents";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<never, never>;
     Functions: {
@@ -994,27 +1333,6 @@ export interface Database {
           exam_days_left: number | null;
           streak_days: number;
         }[];
-      };
-      get_admin_org_dashboard: {
-        Args: Record<string, never>;
-        Returns: {
-          learner_count: number;
-          active_7d_count: number;
-          submissions_7d_count: number;
-          recent_events: Json;
-        }[];
-      };
-      admin_change_user_role: {
-        Args: { target_id: string; new_role: string };
-        Returns: undefined;
-      };
-      admin_toggle_problem_publish: {
-        Args: { problem_id: string; new_status: string };
-        Returns: undefined;
-      };
-      admin_update_problem: {
-        Args: { problem_id: string; patch: Json };
-        Returns: undefined;
       };
       list_user_problems: {
         Args: {

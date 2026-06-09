@@ -5,10 +5,9 @@ import { useTranslations } from "next-intl";
 import { Lock } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useMemo } from "react";
-import { ADMIN_ROLES, type AppRole } from "@/lib/auth/roles";
+import { type AppRole } from "@/lib/auth/roles";
 import {
   computeSidebarLocks,
-  SIDEBAR_ADMIN_SECTION,
   SIDEBAR_ITEMS,
   type SidebarItem,
   type SidebarLeaf,
@@ -93,7 +92,6 @@ export function SidebarNav({ role, planLabel, onNavigate }: Props) {
   const pathname = usePathname();
   const router = useRouter();
   const t = useTranslations("nav");
-  const isAdmin = ADMIN_ROLES.includes(role);
 
   const locks = useMemo<SidebarLockMap>(
     () => computeSidebarLocks({ role, planLabel: planLabel ?? null }),
@@ -101,11 +99,8 @@ export function SidebarNav({ role, planLabel, onNavigate }: Props) {
   );
 
   const items = useMemo<MenuItems>(() => {
-    const source: readonly SidebarItem[] = isAdmin
-      ? [...SIDEBAR_ITEMS, SIDEBAR_ADMIN_SECTION]
-      : SIDEBAR_ITEMS;
-    return source.map((item) => buildItem(item, locks, t));
-  }, [isAdmin, locks, t]);
+    return SIDEBAR_ITEMS.map((item) => buildItem(item, locks, t));
+  }, [locks, t]);
 
   // 현재 위치 표시 — 정확 일치 우선, 없으면 가장 긴 접두 일치(중첩 라우트).
   const selectedKey = useMemo(() => {
@@ -116,13 +111,13 @@ export function SidebarNav({ role, planLabel, onNavigate }: Props) {
         else if (it.key.startsWith("/")) pathKeys.push(it.key);
       }
     };
-    collect(isAdmin ? [...SIDEBAR_ITEMS, SIDEBAR_ADMIN_SECTION] : SIDEBAR_ITEMS);
+    collect(SIDEBAR_ITEMS);
     if (pathKeys.includes(pathname)) return pathname;
     const prefixMatch = pathKeys
       .filter((k) => pathname.startsWith(`${k}/`))
       .sort((a, b) => b.length - a.length)[0];
     return prefixMatch ?? pathname;
-  }, [pathname, isAdmin]);
+  }, [pathname]);
 
   return (
     <Menu

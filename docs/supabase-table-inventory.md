@@ -67,11 +67,10 @@ admin 관련 스키마와 UI는 문서화/정리 대상일 수 있지만, 이 �
 | 결제 | `subscription_plans` | [20260602120100_billing.sql](../supabase/migrations/20260602120100_billing.sql) `create table if not exists public.subscription_plans` | 플랜 카탈로그 | 플랜키, 주기, 가격, 기능, 추천 여부 | Paywall |
 | 결제 | `subscriptions` | [20260602120100_billing.sql](../supabase/migrations/20260602120100_billing.sql) `create table if not exists public.subscriptions` | 사용자 구독 상태 | 사용자, 플랜, 상태, 기간, provider id | 구독 관리 |
 | 결제 | `payment_history` | [20260602120100_billing.sql](../supabase/migrations/20260602120100_billing.sql) `create table if not exists public.payment_history` | 결제 이력 | 금액, 통화, 상태, 영수증 URL | 구독 관리 |
-| 관리자 | `admin_audit_logs` | [20260520120800_audit.sql](../supabase/migrations/20260520120800_audit.sql) `create table if not exists public.admin_audit_logs` | 관리자 작업 감사 로그 | 관리자, action, target, diff/payload | 관리자 액션/RPC |
-| 조직 | `organizations` | [20260602120300_org.sql](../supabase/migrations/20260602120300_org.sql) `create table if not exists public.organizations` | 조직 디렉터리 | 이름, 생성자, 생성 시각 | 현재 repo에서는 frozen admin 섬 |
-| 조직 | `org_members` | [20260602120300_org.sql](../supabase/migrations/20260602120300_org.sql) `create table if not exists public.org_members` | 조직 멤버십 | 조직, 사용자, 조직 내 역할 | 현재 직접 사용 없음 |
-| 조직 | `assignments` | [20260602120300_org.sql](../supabase/migrations/20260602120300_org.sql) `create table if not exists public.assignments` | 조직 과제 | 조직, 제목, 문제, 마감, 생성자 | 관리자 org UI 일부 |
-| 조직 | `assignment_submissions` | [20260602120300_org.sql](../supabase/migrations/20260602120300_org.sql) `create table if not exists public.assignment_submissions` | 조직 과제 제출 | 과제, 사용자, 제출, 상태 | 현재 직접 사용 없음 |
+| 관리자 | `admin_audit_logs` | [20260520120800_audit.sql](../supabase/migrations/20260520120800_audit.sql) `create table if not exists public.admin_audit_logs` | 관리자 작업 감사 로그(보존 — 쓰기 admin RPC는 2026-06-09 제거) | 관리자, action, target, diff/payload | RLS load-bearing(보존) |
+| ~~조직~~ | ~~`organizations`/`org_members`/`assignments`/`assignment_submissions`~~ | ❌ 2026-06-09 제거 ([`20260609130000_remove_v13_admin_island.sql`](../supabase/migrations/20260609130000_remove_v13_admin_island.sql)) | v13 admin 섬 철거 시 drop(미사용) | — | 제거됨 |
+| 법무 | `legal_documents` | [20260608120000_legal_documents_and_consents.sql](../supabase/migrations/20260608120000_legal_documents_and_consents.sql) `create table if not exists public.legal_documents` | 버전별 약관/개인정보 문서(append-only) | 문서타입(terms/privacy), 버전, 로케일, 본문, 상태, 시행일 | 가입 약관(A-01), 약관(X-13), 개인정보(X-14) |
+| 법무 | `user_consents` | [20260608120000_legal_documents_and_consents.sql](../supabase/migrations/20260608120000_legal_documents_and_consents.sql) `create table if not exists public.user_consents` | 사용자 동의 원장(immutable) | 사용자, 문서, 타입/버전, 동의 출처, 동의 시각 | 가입 동의, 재동의(X-13) |
 
 ## 스토리지 버킷
 
@@ -89,17 +88,7 @@ admin 관련 스키마와 UI는 문서화/정리 대상일 수 있지만, 이 �
 | `create_comparison_report_with_metrics` | 비교 리포트 생성 | 비교 리포트 생성 server action |
 | `get_dashboard_kpi` | 대시보드 KPI 조회 | 학습 KPI |
 | `list_user_problems` | 사용자 문제 목록 조회. 쓰기 상태는 `writing_drafts`/`writing_submissions` 기준으로 계산하고 lifecycle 상태를 함께 반환 | 문제 목록 화면 |
-| `admin_change_user_role` | 관리자 사용자 역할 변경 | frozen admin |
-| `admin_toggle_problem_publish` | 관리자 문제 공개 상태 변경 | frozen admin |
-| `get_admin_users` | 관리자 사용자 목록 조회 | frozen admin |
-| `get_admin_user_stats` | 관리자 사용자 통계 조회 | frozen admin |
-| `admin_set_user_status` | 관리자 사용자 상태 변경 | frozen admin |
-| `admin_update_problem` | 관리자 문제 수정 | frozen admin |
-| `admin_delete_problem` | 관리자 문제 삭제 | frozen admin |
-| `admin_add_problem_asset` | 관리자 문제 에셋 추가 | frozen admin |
-| `admin_remove_problem_asset` | 관리자 문제 에셋 제거 | frozen admin |
-| `get_admin_audit_logs` | 관리자 감사 로그 조회 | frozen admin |
-| `get_admin_org_dashboard` | 조직 관리자 대시보드 | frozen admin |
+| ~~`admin_*` / `get_admin_*`~~ (11개) | ❌ **2026-06-09 제거** — 문제 쓰기·사용자관리·조직·감사조회 admin RPC 전부 drop ([`20260609130000_remove_v13_admin_island.sql`](../supabase/migrations/20260609130000_remove_v13_admin_island.sql)). 문제는 외부 API에서 검수완료로 수급, v13은 노출제어만. | 제거됨 |
 
 ## 테이블별 간단 구조
 
@@ -275,43 +264,14 @@ Paywall에서 보여줄 플랜 카탈로그다.
 
 ### `admin_audit_logs`
 
-관리자 작업 감사 로그다. admin frozen 영역에 속한다.
+관리자 작업 감사 로그. **보존(load-bearing 인접)** — append-only. 2026-06-09 v13 admin 섬 제거로 이 테이블에 쓰던 admin RPC들은 drop됐지만, 테이블 자체와 `private.is_*_admin` 기반 정책은 유지된다.
 
 핵심 컬럼: `id`, `admin_user_id`, `action`, `target_table`, `target_id`, `diff`, `payload`, `created_at`
 
-주요 사용처: `src/lib/admin/server-actions.ts`, `src/app/(workspace)/admin/actions.ts`
+주요 사용처: 현재 직접 쓰기 없음(admin RPC 제거). 보존 사유는 [`admin-scope-boundary.md`](admin-scope-boundary.md) 2026-06-09 § 참조.
 
-### `organizations`
-
-조직 디렉터리다. 현재 저장소에서는 frozen admin 영역으로 취급한다.
-
-핵심 컬럼: `id`, `name`, `created_by`, `created_at`
-
-주요 사용처: `src/components/admin/admin-rpc.ts`, `src/components/admin/AdminOrgAssignmentModal.tsx`
-
-### `org_members`
-
-조직 멤버십과 조직 내 역할을 저장한다. 현재 사용자 앱 기능에서는 직접 사용하지 않는다.
-
-핵심 컬럼: `org_id`, `user_id`, `role`, `created_at`
-
-주요 사용처: 현재 `src/` 직접 사용처 없음
-
-### `assignments`
-
-조직 과제를 저장한다. 현재 저장소에서는 frozen admin 영역으로 취급한다.
-
-핵심 컬럼: `id`, `org_id`, `title`, `problem_id`, `due_at`, `created_by`, `created_at`
-
-주요 사용처: `src/components/admin/admin-rpc.ts`, `src/components/admin/AdminOrgAssignmentModal.tsx`, `src/components/admin/AdminOrgKpiCards.tsx`, `src/components/admin/AdminOrgOperationsCards.tsx`
-
-### `assignment_submissions`
-
-조직 과제에 대한 학습자 제출 상태를 저장한다. 현재 사용자 앱 기능에서는 직접 사용하지 않는다.
-
-핵심 컬럼: `id`, `assignment_id`, `user_id`, `submission_id`, `status`, `submitted_at`, `created_at`
-
-주요 사용처: 현재 `src/` 직접 사용처 없음
+> **조직 테이블(`organizations`/`org_members`/`assignments`/`assignment_submissions`)은 2026-06-09 제거됨.**
+> v13 admin 섬과 함께 drop(미사용). 근거: [`20260609130000_remove_v13_admin_island.sql`](../supabase/migrations/20260609130000_remove_v13_admin_island.sql).
 
 ## 근거 파일
 
