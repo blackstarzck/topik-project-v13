@@ -1,0 +1,39 @@
+{
+  "page": "27-X-05-profile-editing",
+  "iaCode": "X-05",
+  "route": "/profile",
+  "status": "PASS",
+  "findings": [],
+  "checks": [
+    {
+      "id": "X05-profile-fields",
+      "status": "PASS",
+      "evidence": "Email is read-only and name/nickname/bio enforce 30/20/160 character limits."
+    },
+    {
+      "id": "X05-save-disabled-when-clean",
+      "status": "PASS",
+      "evidence": "The save CTA is disabled before any dirty edit."
+    },
+    {
+      "id": "X05-avatar-region",
+      "status": "PASS",
+      "evidence": "The avatar region shows JPG/PNG, 5MB constraints and an enabled upload affordance."
+    },
+    {
+      "id": "X05-side-cards",
+      "status": "PASS",
+      "evidence": "Goal exam and account-status cards render beside/below the form depending on viewport."
+    },
+    {
+      "id": "X05-responsive-capture",
+      "status": "PASS",
+      "evidence": "Mobile, tablet, and desktop captures load without dev overlay, page, console, or 500-response errors."
+    }
+  ],
+  "screenshots": {
+    "mobile-360": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/27-X-05-profile-editing/mobile-360.png",
+    "tablet-768": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/27-X-05-profile-editing/tablet-768.png",
+    "desktop-1280": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/27-X-05-profile-editing/desktop-1280.png"
+  }
+}

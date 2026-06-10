@@ -628,12 +628,38 @@
       "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/26-X-04-subscription-management/findings.json",
       "status": "PASS",
       "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
+    },
+    {
+      "folder": "27-X-05-profile-editing",
+      "iaCode": "X-05",
+      "screen": "Profile editing",
+      "route": "/profile",
+      "routeSource": "docs/Wireframe/27-X-05-profile-editing/functional-spec.md",
+      "routeFallback": "docs/sitemap.md",
+      "referenceImages": {
+        "wireframe": "docs/Wireframe/27-X-05-profile-editing/wireframe.png",
+        "hifi": "docs/Wireframe/27-X-05-profile-editing/hifi.png",
+        "status": "complete"
+      },
+      "docs": {
+        "description": "present",
+        "functionalSpec": "present",
+        "screenDataSummary": "present"
+      },
+      "classification": "user-active",
+      "audience": "user",
+      "authRequirement": "authenticated user",
+      "dynamicSeedRequirement": "profile audit uses the existing student profile without mutating saved profile or avatar data.",
+      "report": "docs/design-review-result/wireframe-ui-audit/2026-06-10/27-X-05-profile-editing.html",
+      "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/27-X-05-profile-editing/findings.json",
+      "status": "PASS",
+      "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
     }
   ],
   "summary": {
-    "completedPass": 24,
+    "completedPass": 25,
     "inProgress": 0,
-    "remainingKnownActiveScreens": 10,
+    "remainingKnownActiveScreens": 9,
     "adminFrozenOutOfScope": [
       "21-H-01-admin-problem-management",
       "30-X-08-organization-admin-dashboard",
