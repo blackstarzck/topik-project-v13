@@ -706,12 +706,38 @@
       "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/29-X-07-weakness-based-recommendations/findings.json",
       "status": "PASS",
       "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
+    },
+    {
+      "folder": "31-X-09-notification-settings",
+      "iaCode": "X-09",
+      "screen": "Notification settings",
+      "route": "/settings/notifications",
+      "routeSource": "docs/Wireframe/31-X-09-notification-settings/functional-spec.md",
+      "routeFallback": "docs/sitemap.md",
+      "referenceImages": {
+        "wireframe": "docs/Wireframe/31-X-09-notification-settings/wireframe.png",
+        "hifi": "docs/Wireframe/31-X-09-notification-settings/hifi.png",
+        "status": "complete"
+      },
+      "docs": {
+        "description": "present",
+        "functionalSpec": "present",
+        "screenDataSummary": "present"
+      },
+      "classification": "user-active",
+      "audience": "user",
+      "authRequirement": "authenticated user",
+      "dynamicSeedRequirement": "notification audit toggles a local preference to prove dirty-save gating but does not submit or persist shared account changes.",
+      "report": "docs/design-review-result/wireframe-ui-audit/2026-06-10/31-X-09-notification-settings.html",
+      "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/31-X-09-notification-settings/findings.json",
+      "status": "PASS",
+      "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
     }
   ],
   "summary": {
-    "completedPass": 27,
+    "completedPass": 28,
     "inProgress": 0,
-    "remainingKnownActiveScreens": 7,
+    "remainingKnownActiveScreens": 6,
     "adminFrozenOutOfScope": [
       "21-H-01-admin-problem-management",
       "30-X-08-organization-admin-dashboard",

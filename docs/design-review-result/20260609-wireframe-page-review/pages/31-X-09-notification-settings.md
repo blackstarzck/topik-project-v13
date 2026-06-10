@@ -1,42 +1,48 @@
-# 31-X-09 알림 설정 — 와이어프레임 기준 리뷰
+# 31-X-09 알림 설정 페이지 와이어프레임 기준 리뷰
 
 ## 1. 메타
 - **IA / 라우트**: X-09 / `/settings/notifications`
 - **audience**: user
-- **캡처 상태**: rendered
+- **상태**: PASS
 - **host**: 단독 페이지
 
-## 2. 캡처 증거
-- 스크린샷: `.design-review-shots/20260609/31-X-09-notification-settings-{360,768,1280}.png`
-- 렌더 헬스(`_health.json`): HTTP 200, 콘솔 에러 0, 에러 오버레이 없음.
+## 2. 보정 요약
+- 기존 구현은 채널, 조건, 미리보기, 발송 이력, 저장 CTA 구성을 이미 충족했다.
+- 감사 e2e와 캡처 안정성을 위해 `NotificationPrefsForm`의 주요 영역과 저장 CTA에 test id만 추가했다. 저장 동작과 데이터 계약은 변경하지 않았다.
+- X-09 전용 e2e를 추가해 저장을 누르지 않고 초기 저장 비활성화와 로컬 dirty 상태의 저장 활성화만 검증했다.
 
-## 3. Layer 1 — SOT 정합 리뷰 (참고: X-09 SOT description 미정독, 화면+기능 기준)
+## 3. Layer 1 - SOT 정합 리뷰
 
-| 항목 | 요소/상태 | 판정 | 근거 |
+| 항목 | 요구사항 | 판정 | 근거 |
 | --- | --- | --- | --- |
-| 알림 채널 | 이메일/Zalo/둘 다, 채널 토글 | 일치 | 캡처: 이메일/Zalo[미연동]/둘 다 탭 + "이메일 알림 받기" 체크 |
-| 알림 조건 | 주간 요약/피드백 준비/학습 리마인더 + 시간/요일 | 일치 | 캡처: 3개 토글(모두 꺼짐) + 리마인더 시간(HH:mm) + 요일(월~일) |
-| 미리보기 | 발송 예시 | 일치(빈 상태) | 캡처: "리마인더 시간을 설정하면 발송 예시가 표시됩니다" |
-| 발송 이력 | 최근 5건 | 일치(빈 상태) | 캡처: "아직 발송된 알림이 없습니다" |
-| 상단 경고 | 수신 채널 없음 안내 | 일치 | 캡처: "수신 중인 알림 채널이 없습니다 — 이메일/Zalo 채널을 켜야 리마인더 수신" |
+| 학습자 사이드 내비 (#1) | 인증 사용자 settings 화면에서 접근 | 일치 | `current.json`: `/settings/notifications` 도달, `headingVisible` true |
+| 알림 채널 탭 (#2) | 이메일, Zalo, 둘 다 채널과 연동 상태 표시 | 일치 | `channelCardVisible` true, screenshot에 Zalo `미연동` 표시 |
+| 알림 조건 입력 (#3) | 알림 유형, 리마인더 시간, 요일 설정 | 일치 | `conditionCardVisible` true, switch/time/day controls visible |
+| 미리보기/알림 (#4) | 설정된 알림 문구와 발송 시점 예시, 발송 이력 표시 | 일치 | `previewCardVisible` true, `historyCardVisible` true |
+| 저장 CTA (#5) | 변경 전 비활성화, 변경 후 활성화, 저장 중 중복 클릭 차단 | 일치 | `saveInitiallyDisabled` true, `saveEnabledAfterDirty` true |
+| deferred transport 안내 | 실제 발송은 준비 중이며 현재는 preference 저장 범위 | 일치 | `deferredNoticeVisible` true |
 
-**종합 verdict: 일치 (화면/기능 기준)** — 채널·조건·시간·요일·이력 구성 완비.
+**종합 verdict: PASS.**
 
-## 4. Layer 2 — 멀티 에이전트 독립 분석
+## 4. 검증 증거
+- 산출물: `docs/design-review-result/wireframe-ui-audit/2026-06-10/31-X-09-notification-settings.html`
+- 구조화 결과: `docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/31-X-09-notification-settings/findings.json`
+- 현재 캡처 데이터: `docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/31-X-09-notification-settings/current.json`
+- 스크린샷:
+  - `docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/31-X-09-notification-settings/mobile-360.png`
+  - `docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/31-X-09-notification-settings/tablet-768.png`
+  - `docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/31-X-09-notification-settings/desktop-1280.png`
 
-- **콘텐츠/데이터 (양호, 정직 seam)**: "**실제 알림 발송 연동은 준비 중입니다. 지금은 수신 채널·조건·시간이 저장되며, 발송 이력은 발송이 시작되면 채워집니다**" — 미구현(발송 워커)을 정직하게 명시. Zalo도 "[미연동]" 배지. 가짜 동작 안 만듦(좋음).
-- **UX/IA (양호)**: 채널 없음 경고를 상단에 노출해 "왜 알림이 안 오는지" 선제 안내. 조건별 토글 + 시간/요일 세분.
-- **상태 커버리지 (양호)**: 미리보기·발송 이력 빈 상태 안내. 채널 미설정 경고.
-- **반응형/접근성 (양호)**: 토글·시간 피커·요일 칩 라벨 존재. 360 세로 스택.
-- **적대적 검증**: "발송 미연동"은 화면 안내로 확정(결함 아님 — 정직한 준비중 표기). 구성 자체는 완비.
+## 5. 실행 검증
+- `pnpm exec eslint src/components/settings/NotificationPrefsForm.tsx tests/e2e/screens/notification-settings.spec.ts`
+- `pnpm exec vitest run tests/components/settings/NotificationPrefsForm.test.tsx`
+- `pnpm exec playwright test tests/e2e/screens/notification-settings.spec.ts --project=mobile-360 --project=tablet-768 --project=desktop-1280 --no-deps`
+- X-09 캡처 생성 스크립트: mobile/tablet/desktop `status` PASS, authenticated route/preference regions/deferred copy/dirty-save-gate assertions true, dev overlay false, console/page error 0
 
-## 5. 결론 — 개선안
-
-### P0 / P1
-- 없음 (구성 완비 + 미구현 정직 표기).
-
-### P2 (보강)
-- **발송 연동 후 실측**: 발송 워커 연동 시 미리보기·발송 이력·실제 리마인더 수신을 실측. (현재는 저장만, 발송 준비 중)
-- (문서) X-09 SOT description.md 대조를 추가로 정독해 region 매핑 보강 권장(이 리뷰는 화면+기능 기준).
-
-> 참고: 코드 미수정. 알림 설정은 구성 완비, 발송은 준비 중(정직 표기).
+## 6. 검증 제한
+- 실제 저장 submit은 공유 테스트 계정의 notification settings를 변경하므로 이번 감사 e2e에서는 실행하지 않았다. 저장 payload와 diff는 `NotificationPrefsForm.test.tsx`로 검증했다.
+- 실제 이메일/Zalo 발송 transport는 deferred scope라 구현/검증하지 않았다.
+- mobile screenshot의 검은 `N` 배지는 Next dev indicator이며 앱 UI 또는 오류 overlay가 아니다.
+- 전체 `pnpm exec tsc --noEmit --pretty false`는 현재 worktree의 unrelated 인증/캐릭터 변경에서 실패한다.
+- 전체 `pnpm lint`는 현재 worktree의 unrelated `tests/components/auth/AnimatedAuthCharacters.test.tsx` ENOENT로 중단된다.
+- 기본 Playwright setup 프로젝트는 unrelated 로그인 화면 변경으로 `input[autocomplete="email"]` selector를 찾지 못해 실패한다. X-09 대상 검증은 기존 `tests/e2e/auth-state/student.json`을 사용하는 `--no-deps` 실행으로 확인했다.

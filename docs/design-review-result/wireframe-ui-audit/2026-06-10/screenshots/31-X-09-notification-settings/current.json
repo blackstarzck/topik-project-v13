@@ -1,0 +1,68 @@
+{
+  "page": "31-X-09-notification-settings",
+  "route": "/settings/notifications",
+  "capturedAt": "2026-06-10T12:16:20.882Z",
+  "status": "PASS",
+  "captures": [
+    {
+      "viewport": "mobile-360",
+      "size": {
+        "width": 360,
+        "height": 720
+      },
+      "url": "http://127.0.0.1:3000/settings/notifications",
+      "headingVisible": true,
+      "formVisible": true,
+      "channelCardVisible": true,
+      "conditionCardVisible": true,
+      "previewCardVisible": true,
+      "historyCardVisible": true,
+      "deferredNoticeVisible": true,
+      "saveInitiallyDisabled": true,
+      "saveEnabledAfterDirty": true,
+      "devOverlayVisible": false,
+      "consoleErrors": [],
+      "screenshot": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/31-X-09-notification-settings/mobile-360.png"
+    },
+    {
+      "viewport": "tablet-768",
+      "size": {
+        "width": 768,
+        "height": 1024
+      },
+      "url": "http://127.0.0.1:3000/settings/notifications",
+      "headingVisible": true,
+      "formVisible": true,
+      "channelCardVisible": true,
+      "conditionCardVisible": true,
+      "previewCardVisible": true,
+      "historyCardVisible": true,
+      "deferredNoticeVisible": true,
+      "saveInitiallyDisabled": true,
+      "saveEnabledAfterDirty": true,
+      "devOverlayVisible": false,
+      "consoleErrors": [],
+      "screenshot": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/31-X-09-notification-settings/tablet-768.png"
+    },
+    {
+      "viewport": "desktop-1280",
+      "size": {
+        "width": 1280,
+        "height": 800
+      },
+      "url": "http://127.0.0.1:3000/settings/notifications",
+      "headingVisible": true,
+      "formVisible": true,
+      "channelCardVisible": true,
+      "conditionCardVisible": true,
+      "previewCardVisible": true,
+      "historyCardVisible": true,
+      "deferredNoticeVisible": true,
+      "saveInitiallyDisabled": true,
+      "saveEnabledAfterDirty": true,
+      "devOverlayVisible": false,
+      "consoleErrors": [],
+      "screenshot": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/31-X-09-notification-settings/desktop-1280.png"
+    }
+  ]
+}

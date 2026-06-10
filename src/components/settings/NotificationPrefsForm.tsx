@@ -372,7 +372,12 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
   ];
 
   return (
-    <Form layout="vertical" onFinish={handleFinish} disabled={saving}>
+    <Form
+      data-testid="notification-settings-form"
+      layout="vertical"
+      onFinish={handleFinish}
+      disabled={saving}
+    >
       <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
         {settingsLoad.status === "error" ? (
           <Alert
@@ -394,7 +399,11 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
         ) : null}
 
         {/* Region 2: 알림 채널 탭 (이메일 / Zalo / 둘 다) */}
-        <AppCard size="small" title={t("channel.cardTitle")}>
+        <AppCard
+          size="small"
+          title={t("channel.cardTitle")}
+          data-testid="notification-channel-card"
+        >
           {settingsLoad.status === "loading" ? (
             <Skeleton active paragraph={{ rows: 2 }} />
           ) : (
@@ -407,7 +416,11 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
         </AppCard>
 
         {/* Region 3: 알림 조건 입력 */}
-        <AppCard size="small" title={t("condition.cardTitle")}>
+        <AppCard
+          size="small"
+          title={t("condition.cardTitle")}
+          data-testid="notification-condition-card"
+        >
           <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
             {/* Boolean conditions persist to profiles.notification_prefs and do
                 not depend on the async notification_settings load. */}
@@ -488,11 +501,19 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
         </AppCard>
 
         {/* Region 4: 미리보기 / 발송 이력 */}
-        <AppCard size="small" title={t("preview.cardTitle")}>
+        <AppCard
+          size="small"
+          title={t("preview.cardTitle")}
+          data-testid="notification-preview-card"
+        >
           <Text type="secondary">{reminderPreview}</Text>
         </AppCard>
 
-        <AppCard size="small" title={t("history.cardTitle")}>
+        <AppCard
+          size="small"
+          title={t("history.cardTitle")}
+          data-testid="notification-history-card"
+        >
           {settingsLoad.status === "loading" ? (
             <Skeleton active paragraph={{ rows: 2 }} />
           ) : log.length === 0 ? (
@@ -536,6 +557,7 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
         {/* Region 5: 저장 CTA (변경값 없으면 비활성, 저장 중 중복 클릭 차단) */}
         <Form.Item style={{ marginBottom: 0 }}>
           <Button
+            data-testid="notification-save"
             type="primary"
             htmlType="submit"
             loading={saving}

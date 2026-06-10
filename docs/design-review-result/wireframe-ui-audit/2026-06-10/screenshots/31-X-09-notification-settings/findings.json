@@ -1,0 +1,39 @@
+{
+  "page": "31-X-09-notification-settings",
+  "iaCode": "X-09",
+  "route": "/settings/notifications",
+  "status": "PASS",
+  "findings": [],
+  "checks": [
+    {
+      "id": "X09-authenticated-route",
+      "status": "PASS",
+      "evidence": "Authenticated student storage reaches /settings/notifications and renders the notification settings heading."
+    },
+    {
+      "id": "X09-preference-regions",
+      "status": "PASS",
+      "evidence": "Channel, condition, preview, history, and form regions are visible."
+    },
+    {
+      "id": "X09-deferred-transport-copy",
+      "status": "PASS",
+      "evidence": "The screen explicitly states that actual notification delivery is still deferred."
+    },
+    {
+      "id": "X09-dirty-save-gate",
+      "status": "PASS",
+      "evidence": "Save is disabled before edits and becomes enabled after a local preference toggle without submitting."
+    },
+    {
+      "id": "X09-responsive-capture",
+      "status": "PASS",
+      "evidence": "Mobile, tablet, and desktop captures load without dev overlay, page, console, or 500-response errors."
+    }
+  ],
+  "screenshots": {
+    "mobile-360": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/31-X-09-notification-settings/mobile-360.png",
+    "tablet-768": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/31-X-09-notification-settings/tablet-768.png",
+    "desktop-1280": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/31-X-09-notification-settings/desktop-1280.png"
+  }
+}
