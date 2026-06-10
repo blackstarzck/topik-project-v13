@@ -1,0 +1,42 @@
+{
+  "route": "/practice/recommendations",
+  "origin": "http://127.0.0.1:3000",
+  "label": "current",
+  "storageState": "tests/e2e/auth-state/student.json",
+  "capturedAt": null,
+  "shots": [
+    {
+      "viewport": 360,
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:3000/practice/recommendations",
+      "redirectedToLogin": false,
+      "errorOverlay": false,
+      "consoleErrorCount": 0,
+      "consoleErrors": [],
+      "bodyTextLen": 630,
+      "png": "docs\\design-review-result\\wireframe-ui-audit\\2026-06-10\\screenshots\\05-C-01-problem-type-recommendations\\current-360.png"
+    },
+    {
+      "viewport": 768,
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:3000/practice/recommendations",
+      "redirectedToLogin": false,
+      "errorOverlay": false,
+      "consoleErrorCount": 0,
+      "consoleErrors": [],
+      "bodyTextLen": 630,
+      "png": "docs\\design-review-result\\wireframe-ui-audit\\2026-06-10\\screenshots\\05-C-01-problem-type-recommendations\\current-768.png"
+    },
+    {
+      "viewport": 1280,
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:3000/practice/recommendations",
+      "redirectedToLogin": false,
+      "errorOverlay": false,
+      "consoleErrorCount": 0,
+      "consoleErrors": [],
+      "bodyTextLen": 630,
+      "png": "docs\\design-review-result\\wireframe-ui-audit\\2026-06-10\\screenshots\\05-C-01-problem-type-recommendations\\current-1280.png"
+    }
+  ]
+}

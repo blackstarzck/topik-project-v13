@@ -104,6 +104,31 @@
       "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
     },
     {
+      "folder": "05-C-01-problem-type-recommendations",
+      "iaCode": "C-01",
+      "screen": "Problem type recommendations",
+      "route": "/practice/recommendations",
+      "routeSource": "docs/Wireframe/05-C-01-problem-type-recommendations/functional-spec.md",
+      "routeFallback": "docs/sitemap.md",
+      "referenceImages": {
+        "wireframe": "docs/Wireframe/05-C-01-problem-type-recommendations/wireframe.png",
+        "hifi": "docs/Wireframe/05-C-01-problem-type-recommendations/hifi.png",
+        "status": "complete"
+      },
+      "docs": {
+        "description": "present",
+        "functionalSpec": "present",
+        "screenDataSummary": "present"
+      },
+      "classification": "user-active",
+      "audience": "user",
+      "authRequirement": "authenticated user",
+      "report": "docs/design-review-result/wireframe-ui-audit/2026-06-10/05-C-01-problem-type-recommendations.html",
+      "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/05-C-01-problem-type-recommendations/findings.json",
+      "status": "PASS",
+      "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
+    },
+    {
       "folder": "08-D-01-short-answer-writing-51",
       "iaCode": "D-01",
       "screen": "Short-answer writing 51",
@@ -132,9 +157,9 @@
     }
   ],
   "summary": {
-    "completedPass": 5,
+    "completedPass": 6,
     "inProgress": 0,
-    "remainingKnownActiveScreens": 29,
+    "remainingKnownActiveScreens": 28,
     "adminFrozenOutOfScope": [
       "21-H-01-admin-problem-management",
       "30-X-08-organization-admin-dashboard",

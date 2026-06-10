@@ -48,6 +48,7 @@ export function PrimaryRecommendationCard({
     card.title.length > 32 ? `${card.title.slice(0, 32)}…` : card.title;
   return (
     <AppCard
+      className="recommendation-primary-card"
       style={{ borderColor: "#1677ff", borderWidth: 2 }}
       title={
         <Space>
@@ -101,6 +102,7 @@ export function SecondaryRecommendationCard({
     card.title.length > 32 ? `${card.title.slice(0, 32)}…` : card.title;
   return (
     <AppCard
+      className="recommendation-secondary-card"
       size="small"
       title={
         card.questionNo

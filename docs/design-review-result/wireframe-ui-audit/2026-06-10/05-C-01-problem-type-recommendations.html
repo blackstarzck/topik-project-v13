@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <title>Wireframe UI Audit - 05-C-01-problem-type-recommendations - 2026-06-10</title>
+    <style>
+      body {
+        margin: 32px;
+        background: #ffffff;
+        color: #172033;
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+      }
+
+      h1,
+      h2 {
+        letter-spacing: 0;
+      }
+
+      table {
+        width: 100%;
+        margin: 12px 0 28px;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+
+      th,
+      td {
+        padding: 10px 12px;
+        border: 1px solid #d9e1ef;
+        vertical-align: top;
+      }
+
+      th {
+        background: #f4f7fb;
+        text-align: left;
+      }
+
+      code {
+        border-radius: 4px;
+        background: #f3f4f6;
+        padding: 1px 4px;
+      }
+
+      figure {
+        margin: 22px 0;
+      }
+
+      img {
+        max-width: 100%;
+        border: 1px solid #d9e1ef;
+        border-radius: 8px;
+      }
+
+      figcaption {
+        margin-top: 8px;
+        color: #667085;
+        font-size: 13px;
+      }
+
+      .verdict {
+        border: 1px solid #8fd6ad;
+        border-radius: 8px;
+        background: #edfdf3;
+        padding: 14px 16px;
+      }
+
+      .note {
+        border: 1px solid #d9e1ef;
+        border-radius: 8px;
+        background: #f8fafc;
+        padding: 12px 14px;
+      }
+
+      .sev-pass {
+        display: inline-block;
+        border-radius: 999px;
+        background: #dff7ea;
+        color: #067647;
+        padding: 2px 10px;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Wireframe UI Audit - 05-C-01-problem-type-recommendations - 2026-06-10</h1>
+    <p><strong>Scope:</strong> C-01 Problem type recommendations route <code>/practice/recommendations</code></p>
+    <p><strong>Mode:</strong> audit-remediation</p>
+    <p><strong>Coverage:</strong> authenticated user route, reference wireframe and hifi complete.</p>
+
+    <h2>Verdict</h2>
+    <p class="verdict">
+      <strong>PASS.</strong> The current <code>/practice/recommendations</code> screen satisfies the active C-01
+      wireframe and hifi intent for this audit. It keeps the learning workspace navigation, presents fixed
+      51/52/53/54 type tabs, preserves a dominant recommendation card region, and exposes four direct type-selection
+      cards with metadata and start links. 360/768/1280 captures all returned status 200 with no Next error overlay and
+      console error count 0.
+    </p>
+
+    <p class="note">
+      Accepted variance: the current audit seed has a recommendation run reason but no active recommendation item rows.
+      The screen therefore shows a fallback recommended type panel while retaining the existing real recommendation item
+      path when item data is available.
+    </p>
+
+    <h2>Visual Delta Summary</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Area</th>
+          <th>Reference intent</th>
+          <th>Current implementation</th>
+          <th>Delta</th>
+          <th>User impact</th>
+          <th>Severity</th>
+          <th>Next action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>learning navigation</td>
+          <td>Keep the learner inside the practice navigation structure.</td>
+          <td>The route renders inside the authenticated workspace shell with learning nav context.</td>
+          <td>The required nav context is represented by the current app shell.</td>
+          <td>Users stay oriented inside the learning/practice area.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>No further action.</td>
+        </tr>
+        <tr>
+          <td>type tabs</td>
+          <td>Show the fixed 51/52/53/54 TOPIK writing type filters.</td>
+          <td>The tab strip exposes 51, 52, 53, and 54 only, with a visible selected state.</td>
+          <td>The previous generic all-tab surface is replaced by the documented four-type selector.</td>
+          <td>Learners can choose the target writing type directly.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>No further action.</td>
+        </tr>
+        <tr>
+          <td>recommendation card</td>
+          <td>Present one large recommended problem/type card with reason and primary action.</td>
+          <td>The screen shows a large fallback recommended type panel with reason, time, difficulty, status, and CTA.</td>
+          <td>The recommendation region remains dominant even when seed recommendation items are empty.</td>
+          <td>The page avoids a sparse empty state and still gives a clear next practice action.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>No further action.</td>
+        </tr>
+        <tr>
+          <td>direct type cards</td>
+          <td>Show up to four direct type cards with concise descriptions and available state.</td>
+          <td>Four cards show type label, icon, description, estimated minutes, difficulty, and start affordance.</td>
+          <td>The direct-pick area is scannable and aligned with hifi card hierarchy.</td>
+          <td>Learners can bypass recommendation data and start the type they want.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>No further action.</td>
+        </tr>
+        <tr>
+          <td>responsive render health</td>
+          <td>Desktop and tablet/mobile layouts should render without overflow or text/button collision.</td>
+          <td>1280 keeps tabs, recommendation panel, and four cards in a wide layout; 768 and 360 stack cleanly.</td>
+          <td>All audited breakpoints are stable.</td>
+          <td>Recommendation selection remains usable on desktop, tablet, and mobile.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>Local Next dev indicator is excluded from product UI severity.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Findings</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>id</th>
+          <th>category</th>
+          <th>claim</th>
+          <th>evidence</th>
+          <th>severity</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>C01-PASS-001</td>
+          <td>learning-navigation</td>
+          <td>The route renders inside the authenticated learning workspace.</td>
+          <td>360/768/1280 screenshots.</td>
+          <td><span class="sev-pass">PASS</span></td>
+        </tr>
+        <tr>
+          <td>C01-PASS-002</td>
+          <td>type-tabs</td>
+          <td>The type filter is fixed to 51/52/53/54 and has visible selected state.</td>
+          <td><code>ProblemTypeTabs.tsx</code> and DOM inspection.</td>
+          <td><span class="sev-pass">PASS</span></td>
+        </tr>
+        <tr>
+          <td>C01-PASS-003</td>
+          <td>recommendation-card-region</td>
+          <td>The recommendation card region stays dominant even when recommendation_items are empty.</td>
+          <td><code>RecommendationsView.tsx</code>, <code>RecommendationItemCards.tsx</code>, screenshots.</td>
+          <td><span class="sev-pass">PASS</span></td>
+        </tr>
+        <tr>
+          <td>C01-PASS-004</td>
+          <td>direct-type-cards</td>
+          <td>Four direct type cards expose type metadata and writing links.</td>
+          <td><code>TypeSelectCards.tsx</code> and DOM inspection.</td>
+          <td><span class="sev-pass">PASS</span></td>
+        </tr>
+        <tr>
+          <td>C01-PASS-005</td>
+          <td>responsive-render</td>
+          <td>The route renders cleanly across 360, 768, and 1280 audited breakpoints.</td>
+          <td>render-shot manifest and scoped Playwright C-01 e2e.</td>
+          <td><span class="sev-pass">PASS</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Verification</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Check</th>
+          <th>Result</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>node -e JSON.parse(...messages)</code></td>
+          <td>Passed for <code>messages/ko.json</code>, <code>messages/en.json</code>, and <code>messages/vi.json</code>.</td>
+        </tr>
+        <tr>
+          <td><code>pnpm typecheck</code></td>
+          <td>Passed.</td>
+        </tr>
+        <tr>
+          <td><code>pnpm lint</code></td>
+          <td>Passed with 0 errors and 9 pre-existing warnings.</td>
+        </tr>
+        <tr>
+          <td><code>node scripts/design-review/render-shot.mjs</code></td>
+          <td>Passed for 360/768/1280: status 200, errorOverlay=false, consoleErr=0.</td>
+        </tr>
+        <tr>
+          <td>DOM inspection</td>
+          <td>Heading, 51/52/53/54 tabs, fallback recommendation panel, fallback CTA, four type cards, and problem-list link confirmed.</td>
+        </tr>
+        <tr>
+          <td><code>pnpm exec playwright test tests/e2e/screens/screens-authed.spec.ts -g "C-01" --project=mobile-360 --project=tablet-768 --project=desktop-1280</code></td>
+          <td>Passed: 4 tests including auth setup and C-01 on all three viewport projects.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Evidence</h2>
+    <figure>
+      <img src="screenshots/05-C-01-problem-type-recommendations/current-1280.png" alt="C-01 current desktop 1280 capture" />
+      <figcaption>Current desktop 1280 capture.</figcaption>
+    </figure>
+    <figure>
+      <img src="screenshots/05-C-01-problem-type-recommendations/current-768.png" alt="C-01 current tablet 768 capture" />
+      <figcaption>Current tablet 768 capture.</figcaption>
+    </figure>
+    <figure>
+      <img src="screenshots/05-C-01-problem-type-recommendations/current-360.png" alt="C-01 current mobile 360 capture" />
+      <figcaption>Current mobile 360 capture.</figcaption>
+    </figure>
+    <figure>
+      <img src="screenshots/05-C-01-problem-type-recommendations/reference-hifi.png" alt="C-01 reference hifi" />
+      <figcaption>Reference hifi.</figcaption>
+    </figure>
+    <figure>
+      <img src="screenshots/05-C-01-problem-type-recommendations/reference-wireframe.png" alt="C-01 reference wireframe" />
+      <figcaption>Reference wireframe.</figcaption>
+    </figure>
+  </body>
+</html>

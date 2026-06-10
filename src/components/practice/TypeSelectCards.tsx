@@ -1,19 +1,58 @@
 "use client";
 
-import { Col, Row, Tag, Tooltip, Typography } from "antd";
+import type { ReactNode } from "react";
+import { Tooltip, Typography } from "antd";
+import {
+  BarChart3,
+  CheckCircle2,
+  Clock3,
+  FileText,
+  ListChecks,
+  PencilLine,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { AppCard } from "@/components/shared/AppCard";
 import { QUESTION_NOS, type QuestionNo } from "@/lib/practice/types";
 import { writingQuestionHref } from "@/lib/writing/routes";
 
 const { Text, Title } = Typography;
 
+const TYPE_META: Record<
+  QuestionNo,
+  {
+    minutes: number;
+    difficultyKey: "difficultyNormal" | "difficultyHardish" | "difficultyHard";
+    tone: "violet" | "blue" | "green" | "coral";
+    icon: ReactNode;
+  }
+> = {
+  51: {
+    minutes: 15,
+    difficultyKey: "difficultyNormal",
+    tone: "violet",
+    icon: <PencilLine size={28} />,
+  },
+  52: {
+    minutes: 25,
+    difficultyKey: "difficultyHardish",
+    tone: "blue",
+    icon: <FileText size={28} />,
+  },
+  53: {
+    minutes: 30,
+    difficultyKey: "difficultyHard",
+    tone: "green",
+    icon: <BarChart3 size={28} />,
+  },
+  54: {
+    minutes: 50,
+    difficultyKey: "difficultyHard",
+    tone: "coral",
+    icon: <ListChecks size={28} />,
+  },
+};
+
 type Props = {
-  /**
-   * 권한 등으로 잠긴 유형 집합. 잠긴 유형은 비활성 카드 + 안내 툴팁(§4 예외).
-   * 현재는 모든 유형이 열려 있어 기본값은 빈 집합.
-   */
   lockedTypes?: Set<QuestionNo>;
 };
 
@@ -21,57 +60,77 @@ export function TypeSelectCards({ lockedTypes }: Props) {
   const t = useTranslations("practice.recommendations");
   const tCommon = useTranslations("practice.common");
   return (
-    <div>
-      <Title level={5} style={{ marginBottom: 8 }}>
-        {t("typeSelectTitle")}
-      </Title>
-      <Row gutter={[12, 12]}>
+    <section className="recommendation-type-section">
+      <div className="recommendation-type-section__heading">
+        <Title level={4}>{t("typeSelectTitle")}</Title>
+        <Text type="secondary">{t("typeSelectSubtitle")}</Text>
+      </div>
+      <div className="recommendation-type-grid">
         {QUESTION_NOS.map((qn) => {
           const locked = lockedTypes?.has(qn) ?? false;
           const typeLabel = tCommon(`questionType${qn}`);
           const desc = t(`typeDescription${qn}`);
+          const meta = TYPE_META[qn];
           const card = (
-            <AppCard
-              size="small"
-              hoverable={!locked}
-              style={locked ? { opacity: 0.55 } : undefined}
-              title={
-                <span>
-                  {typeLabel}
-                  {locked ? (
-                    <Tag color="default" style={{ marginLeft: 8 }}>
-                      {t("locked")}
-                    </Tag>
-                  ) : null}
-                </span>
-              }
+            <span
+              className={[
+                "recommendation-type-card",
+                `is-${meta.tone}`,
+                locked ? "is-locked" : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
             >
-              <Text type="secondary" style={{ fontSize: 13 }}>
-                {desc.length > 60 ? `${desc.slice(0, 60)}…` : desc}
+              <span className="recommendation-type-card__topline">
+                <span className="recommendation-type-card__badge">
+                  {tCommon("questionNo", { no: qn })}
+                </span>
+                {locked ? (
+                  <span className="recommendation-type-card__locked">
+                    {t("locked")}
+                  </span>
+                ) : null}
+              </span>
+              <span className="recommendation-type-card__icon">
+                {meta.icon}
+              </span>
+              <strong>{typeLabel}</strong>
+              <Text type="secondary">
+                {desc.length > 60 ? `${desc.slice(0, 60)}...` : desc}
               </Text>
-            </AppCard>
+              <span className="recommendation-type-card__meta">
+                <span>
+                  <Clock3 size={14} />
+                  {tCommon("minutes", { minutes: meta.minutes })}
+                </span>
+                <span>
+                  <CheckCircle2 size={14} />
+                  {tCommon(meta.difficultyKey)}
+                </span>
+              </span>
+              <span className="recommendation-type-card__cta">
+                {t("typeCardCta")}
+              </span>
+            </span>
           );
-          return (
-            <Col key={qn} xs={24} sm={12} lg={6}>
-              {locked ? (
-                // §4 예외 — 이용 불가 유형은 비활성 카드 + 안내 툴팁.
-                <Tooltip title={t("typeLockedTooltip")}>
-                  <div aria-disabled style={{ cursor: "not-allowed" }}>
-                    {card}
-                  </div>
-                </Tooltip>
-              ) : (
-                <Link
-                  href={writingQuestionHref(qn) as never}
-                  aria-label={t("typeStartAria", { type: typeLabel })}
-                >
-                  {card}
-                </Link>
-              )}
-            </Col>
+          return locked ? (
+            <Tooltip key={qn} title={t("typeLockedTooltip")}>
+              <span aria-disabled="true" className="recommendation-type-link">
+                {card}
+              </span>
+            </Tooltip>
+          ) : (
+            <Link
+              key={qn}
+              href={writingQuestionHref(qn) as never}
+              className="recommendation-type-link"
+              aria-label={t("typeStartAria", { type: typeLabel })}
+            >
+              {card}
+            </Link>
           );
         })}
-      </Row>
-    </div>
+      </div>
+    </section>
   );
 }

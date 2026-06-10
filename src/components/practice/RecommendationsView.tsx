@@ -1,21 +1,85 @@
 "use client";
 
-import { Alert, Button, Col, Divider, Empty, Row, Space, Spin, Typography } from "antd";
+import { Alert, Button, Col, Row, Space, Spin, Typography } from "antd";
+import { ArrowRight, CheckCircle2, Clock3, Target } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { isValidQuestionNo, type QuestionNo } from "@/lib/practice/types";
+import { writingQuestionHref } from "@/lib/writing/routes";
 import { ProblemTypeTabs } from "./ProblemTypeTabs";
-import { TypeSelectCards } from "./TypeSelectCards";
 import {
   PrimaryRecommendationCard,
   SecondaryRecommendationCard,
 } from "./RecommendationItemCards";
+import { TypeSelectCards } from "./TypeSelectCards";
 import { useRecommendationBundle } from "./recommendations-data";
 
 const { Title, Text } = Typography;
+
+const FALLBACK_META: Record<QuestionNo, { minutes: number }> = {
+  51: { minutes: 15 },
+  52: { minutes: 25 },
+  53: { minutes: 30 },
+  54: { minutes: 50 },
+};
+
+function FallbackRecommendationPanel({
+  questionNo,
+  reasonSummary,
+}: {
+  questionNo: QuestionNo;
+  reasonSummary?: string | null;
+}) {
+  const t = useTranslations("practice.recommendations");
+  const tCommon = useTranslations("practice.common");
+  const typeLabel = tCommon(`questionType${questionNo}`);
+  const questionLabel = tCommon("questionNo", { no: questionNo });
+  const meta = FALLBACK_META[questionNo];
+
+  return (
+    <section className="recommendation-fallback-panel">
+      <div className="recommendation-fallback-panel__copy">
+        <span className="recommendation-fallback-panel__badge">
+          {t("primaryBadge")}
+        </span>
+        <Title level={2}>
+          {t("fallbackHeroTitle", { type: typeLabel })}
+        </Title>
+        <Text>
+          {reasonSummary ?? t("fallbackHeroBody", { type: typeLabel })}
+        </Text>
+      </div>
+      <div className="recommendation-fallback-panel__action">
+        <div className="recommendation-fallback-panel__status">
+          <span>
+            <Clock3 size={18} />
+            <small>{t("fallbackHeroTime")}</small>
+            <strong>{tCommon("minutes", { minutes: meta.minutes })}</strong>
+          </span>
+          <span>
+            <Target size={18} />
+            <small>{t("fallbackHeroDifficulty")}</small>
+            <strong>{tCommon("difficultyNormal")}</strong>
+          </span>
+          <span>
+            <CheckCircle2 size={18} />
+            <small>{t("fallbackHeroStatus")}</small>
+            <strong>{t("fallbackHeroStatusReady")}</strong>
+          </span>
+        </div>
+        <Link href={writingQuestionHref(questionNo) as never}>
+          <Button type="primary" size="large" block>
+            <span>{t("fallbackHeroCta", { type: questionLabel })}</span>
+            <ArrowRight size={18} aria-hidden="true" />
+          </Button>
+        </Link>
+      </div>
+    </section>
+  );
+}
 
 export function RecommendationsView() {
   const t = useTranslations("practice.recommendations");
@@ -43,17 +107,28 @@ export function RecommendationsView() {
   const items = bundle.data?.items ?? [];
   const primary = items[0] ?? null;
   const rest = items.slice(1);
+  const fallbackQuestionNo = active ?? primary?.questionNo ?? 51;
 
   return (
-    <Space orientation="vertical" size="large" style={{ width: "100%" }}>
-      <PageHeader title={t("heading")} subtitle={t("subtitle")} />
+    <Space
+      className="recommendations-page"
+      orientation="vertical"
+      size="large"
+      style={{ width: "100%" }}
+    >
+      <PageHeader
+        className="recommendations-page__header"
+        title={t("heading")}
+        subtitle={t("subtitle")}
+      />
 
-      {/* C-01 §2 — 유형 탭. 권한 잠금 유형이 생기면 lockedTypes로 잠금 배지 표시. */}
-      <ProblemTypeTabs active={active} onChange={updateType} />
+      <div className="recommendations-page__tabs">
+        <ProblemTypeTabs active={active} onChange={updateType} />
+      </div>
 
-      {/* C-01 §3 — 추천 사유: recommendation_runs.reason_summary (run-level 근거). */}
-      {bundle.data?.run?.reasonSummary ? (
+      {bundle.data?.run?.reasonSummary && primary ? (
         <Alert
+          className="recommendation-reason-alert"
           type="info"
           showIcon
           title={t("reasonSummaryTitle")}
@@ -63,12 +138,12 @@ export function RecommendationsView() {
 
       {bundle.isLoading ? (
         <Spin description={t("loadingTip")}>
-          <div style={{ minHeight: 80 }} />
+          <div style={{ minHeight: 120 }} />
         </Spin>
       ) : bundle.error ? (
-        // §3 예외 — 추천 계산 실패 시 직접 선택 카드와 재시도 제공.
         <>
           <Alert
+            className="recommendation-reason-alert"
             type="error"
             showIcon
             title={t("loadErrorTitle")}
@@ -85,14 +160,11 @@ export function RecommendationsView() {
         </>
       ) : items.length > 0 ? (
         <>
-          {/* §3 — 대표 추천 1개를 크게. */}
           {primary ? <PrimaryRecommendationCard card={primary} /> : null}
 
           {rest.length > 0 ? (
-            <div>
-              <Title level={5} style={{ marginBottom: 8 }}>
-                {t("otherRecommendations")}
-              </Title>
+            <section className="recommendation-secondary-section">
+              <Title level={4}>{t("otherRecommendations")}</Title>
               <Row gutter={[12, 12]}>
                 {rest.map((card) => (
                   <Col key={card.itemId} xs={24} md={12}>
@@ -100,26 +172,32 @@ export function RecommendationsView() {
                   </Col>
                 ))}
               </Row>
-            </div>
+            </section>
           ) : null}
 
-          <Divider style={{ margin: "8px 0" }} />
-          {/* §4 — 추천 외 직접 선택 카드. */}
           <TypeSelectCards />
         </>
       ) : (
-        // 피드백 — 빈 결과 안내 + 직접 유형 선택 동선(§4 카드).
         <>
-          <Empty description={t("emptyDescription")}>
-            <Link href={"/practice/problems" as never}>
-              <Button type="primary">{t("viewProblemList")}</Button>
-            </Link>
-          </Empty>
+          <FallbackRecommendationPanel
+            questionNo={fallbackQuestionNo}
+            reasonSummary={bundle.data?.run?.reasonSummary}
+          />
           <TypeSelectCards />
+          <div className="recommendations-page__problem-list-link">
+            <Text type="secondary">{t("emptyDescription")}</Text>
+            <Link href={"/practice/problems" as never}>
+              <Button>{t("viewProblemList")}</Button>
+            </Link>
+          </div>
         </>
       )}
 
-      <Text type="secondary" style={{ fontSize: 12 }}>
+      <Text
+        className="recommendations-page__footer-note"
+        type="secondary"
+        style={{ fontSize: 12 }}
+      >
         {t("footerNote")}
       </Text>
     </Space>
