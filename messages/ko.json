@@ -1441,7 +1441,20 @@
   },
   "onboarding": {
     "page": {
-      "metaTitle": "학습 목표 설정 — TALKPIK"
+      "metaTitle": "학습 목표 설정 — TALKPIK",
+      "brandSubtitle": "TOPIK Writing Tutor",
+      "mascotTitle": "목표와 언어를 알려주시면",
+      "mascotBody": "맞춤 문제와 피드백을 준비할게요.",
+      "benefitStripAria": "학습 목표 설정 후 제공되는 기능",
+      "benefitRecommendationTitle": "맞춤 문제 추천",
+      "benefitRecommendationBody": "내 목표에 맞는 문제",
+      "benefitFeedbackTitle": "AI 맞춤 피드백",
+      "benefitFeedbackBody": "나만을 위한 첨삭",
+      "benefitReportTitle": "성장 리포트",
+      "benefitReportBody": "실력 향상 추적",
+      "heroEyebrow": "ONBOARDING",
+      "heroTitle": "학습 목표 설정",
+      "heroBody": "목표와 언어를 선택하면, 나에게 맞는 문제와 피드백을 추천해드려요."
     },
     "steps": {
       "counter": "{current}/{total} 단계",
@@ -1455,12 +1468,18 @@
       "heading": "학습 목표 설정",
       "subheading": "목표 설정은 맞춤 추천의 기반이 됩니다.",
       "topikLevelLabel": "TOPIK 등급",
+      "topikLevelHelp": "이번 시험에서 준비할 TOPIK 범위를 선택해주세요.",
       "topikLevelOptionI": "TOPIK I (1-2급)",
       "topikLevelOptionII": "TOPIK II (3-6급)",
       "targetGradeLabel": "목표 등급",
+      "targetGradeHelp": "이번 시험에서 목표로 하는 등급을 선택해주세요.",
+      "gradeOption": "{grade}급",
       "examDateLabel": "시험 일정 (선택)",
+      "examDateHelp": "시험 예정일을 선택하면 학습 속도를 맞춰드려요.",
       "weeklyMinutesLabel": "주당 학습 시간 (분, 선택)",
+      "weeklyMinutesHelp": "일주일에 확보할 수 있는 학습 시간을 입력해주세요.",
       "weakAreasLabel": "취약 영역 (선택)",
+      "weakAreasHelp": "보강하고 싶은 영역을 여러 개 선택할 수 있어요.",
       "weakAreasPlaceholder": "여러 항목을 선택할 수 있어요",
       "weakAreas": {
         "vocabulary": "어휘",

@@ -64,12 +64,25 @@ export function OnboardingNavCta({
   };
 
   return (
-    <Space orientation="vertical" size="small" style={{ width: "100%" }}>
-      <Space style={{ width: "100%", justifyContent: "space-between" }} wrap>
-        <Button onClick={() => router.push(previousHref as never)}>
+    <Space
+      className="onboarding-goal-nav"
+      orientation="vertical"
+      size="small"
+      style={{ width: "100%" }}
+    >
+      <Space className="onboarding-goal-nav__actions" wrap>
+        <Button
+          className="onboarding-goal-nav__previous"
+          onClick={() => router.push(previousHref as never)}
+        >
           {t("previous")}
         </Button>
-        <Button type="link" onClick={handleSkip} loading={mutation.isPending}>
+        <Button
+          className="onboarding-goal-nav__skip"
+          type="link"
+          onClick={handleSkip}
+          loading={mutation.isPending}
+        >
           {t("skip")}
         </Button>
       </Space>

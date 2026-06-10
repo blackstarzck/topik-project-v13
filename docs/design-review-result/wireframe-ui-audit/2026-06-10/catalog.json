@@ -54,6 +54,31 @@
       "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
     },
     {
+      "folder": "03-A-03-learning-goal-setup",
+      "iaCode": "A-03",
+      "screen": "Learning goal setup",
+      "route": "/onboarding/learning-goal",
+      "routeSource": "docs/Wireframe/03-A-03-learning-goal-setup/functional-spec.md",
+      "routeFallback": "docs/sitemap.md",
+      "referenceImages": {
+        "wireframe": "docs/Wireframe/03-A-03-learning-goal-setup/wireframe.png",
+        "hifi": "docs/Wireframe/03-A-03-learning-goal-setup/hifi.png",
+        "status": "complete"
+      },
+      "docs": {
+        "description": "present",
+        "functionalSpec": "present",
+        "screenDataSummary": "present"
+      },
+      "classification": "user-active",
+      "audience": "user",
+      "authRequirement": "authenticated user",
+      "report": "docs/design-review-result/wireframe-ui-audit/2026-06-10/03-A-03-learning-goal-setup.html",
+      "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/03-A-03-learning-goal-setup/findings.json",
+      "status": "PASS",
+      "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
+    },
+    {
       "folder": "04-B-01-home-dashboard",
       "iaCode": "B-01",
       "screen": "Home dashboard",
@@ -107,9 +132,9 @@
     }
   ],
   "summary": {
-    "completedPass": 4,
+    "completedPass": 5,
     "inProgress": 0,
-    "remainingKnownActiveScreens": 30,
+    "remainingKnownActiveScreens": 29,
     "adminFrozenOutOfScope": [
       "21-H-01-admin-problem-management",
       "30-X-08-organization-admin-dashboard",

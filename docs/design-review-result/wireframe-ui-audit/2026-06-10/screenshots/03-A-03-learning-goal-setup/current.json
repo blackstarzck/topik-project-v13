@@ -1,0 +1,42 @@
+{
+  "route": "/onboarding/learning-goal",
+  "origin": "http://127.0.0.1:3000",
+  "label": "current",
+  "storageState": "tests/e2e/auth-state/student.json",
+  "capturedAt": null,
+  "shots": [
+    {
+      "viewport": 360,
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:3000/onboarding/learning-goal",
+      "redirectedToLogin": false,
+      "errorOverlay": false,
+      "consoleErrorCount": 0,
+      "consoleErrors": [],
+      "bodyTextLen": 610,
+      "png": "docs\\design-review-result\\wireframe-ui-audit\\2026-06-10\\screenshots\\03-A-03-learning-goal-setup\\current-360.png"
+    },
+    {
+      "viewport": 768,
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:3000/onboarding/learning-goal",
+      "redirectedToLogin": false,
+      "errorOverlay": false,
+      "consoleErrorCount": 0,
+      "consoleErrors": [],
+      "bodyTextLen": 610,
+      "png": "docs\\design-review-result\\wireframe-ui-audit\\2026-06-10\\screenshots\\03-A-03-learning-goal-setup\\current-768.png"
+    },
+    {
+      "viewport": 1280,
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:3000/onboarding/learning-goal",
+      "redirectedToLogin": false,
+      "errorOverlay": false,
+      "consoleErrorCount": 0,
+      "consoleErrors": [],
+      "bodyTextLen": 610,
+      "png": "docs\\design-review-result\\wireframe-ui-audit\\2026-06-10\\screenshots\\03-A-03-learning-goal-setup\\current-1280.png"
+    }
+  ]
+}

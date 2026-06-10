@@ -1441,7 +1441,20 @@
   },
   "onboarding": {
     "page": {
-      "metaTitle": "Set learning goal — TALKPIK"
+      "metaTitle": "Set learning goal — TALKPIK",
+      "brandSubtitle": "TOPIK Writing Tutor",
+      "mascotTitle": "Tell us your goal and language",
+      "mascotBody": "We'll prepare personalized questions and feedback for you.",
+      "benefitStripAria": "Features provided after setting a learning goal",
+      "benefitRecommendationTitle": "Personalized questions",
+      "benefitRecommendationBody": "Matched to your goal",
+      "benefitFeedbackTitle": "AI feedback",
+      "benefitFeedbackBody": "Correction for you",
+      "benefitReportTitle": "Growth report",
+      "benefitReportBody": "Track improvement",
+      "heroEyebrow": "ONBOARDING",
+      "heroTitle": "Set your learning goal",
+      "heroBody": "Choose your goal and language so we can recommend questions and feedback that fit you."
     },
     "steps": {
       "counter": "Step {current}/{total}",
@@ -1455,12 +1468,18 @@
       "heading": "Set your learning goal",
       "subheading": "Your goal is the basis for personalized recommendations.",
       "topikLevelLabel": "TOPIK level",
+      "topikLevelHelp": "Choose the TOPIK range you are preparing for.",
       "topikLevelOptionI": "TOPIK I (levels 1-2)",
       "topikLevelOptionII": "TOPIK II (levels 3-6)",
       "targetGradeLabel": "Target grade",
+      "targetGradeHelp": "Select the grade you want to reach in this exam.",
+      "gradeOption": "Grade {grade}",
       "examDateLabel": "Exam date (optional)",
+      "examDateHelp": "Add your exam date so we can pace your study plan.",
       "weeklyMinutesLabel": "Weekly study time (minutes, optional)",
+      "weeklyMinutesHelp": "Enter the study time you can reserve each week.",
       "weakAreasLabel": "Weak areas (optional)",
+      "weakAreasHelp": "Select one or more areas you want to strengthen.",
       "weakAreasPlaceholder": "You can select multiple items",
       "weakAreas": {
         "vocabulary": "Vocabulary",

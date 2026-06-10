@@ -1441,7 +1441,20 @@
   },
   "onboarding": {
     "page": {
-      "metaTitle": "Thiết lập mục tiêu học tập — TALKPIK"
+      "metaTitle": "Thiết lập mục tiêu học tập — TALKPIK",
+      "brandSubtitle": "Gia sư viết TOPIK",
+      "mascotTitle": "Hãy cho biết mục tiêu và ngôn ngữ của bạn",
+      "mascotBody": "Chúng tôi sẽ chuẩn bị câu hỏi và phản hồi phù hợp.",
+      "benefitStripAria": "Tính năng sau khi thiết lập mục tiêu học tập",
+      "benefitRecommendationTitle": "Đề xuất câu hỏi",
+      "benefitRecommendationBody": "Phù hợp mục tiêu",
+      "benefitFeedbackTitle": "Phản hồi AI",
+      "benefitFeedbackBody": "Chỉnh sửa cho bạn",
+      "benefitReportTitle": "Báo cáo tiến bộ",
+      "benefitReportBody": "Theo dõi cải thiện",
+      "heroEyebrow": "ONBOARDING",
+      "heroTitle": "Thiết lập mục tiêu học tập",
+      "heroBody": "Chọn mục tiêu và ngôn ngữ để nhận câu hỏi và phản hồi phù hợp với bạn."
     },
     "steps": {
       "counter": "Bước {current}/{total}",
@@ -1455,12 +1468,18 @@
       "heading": "Thiết lập mục tiêu học tập",
       "subheading": "Mục tiêu của bạn là cơ sở cho các đề xuất được cá nhân hóa.",
       "topikLevelLabel": "Cấp độ TOPIK",
+      "topikLevelHelp": "Chọn phạm vi TOPIK bạn đang chuẩn bị.",
       "topikLevelOptionI": "TOPIK I (cấp 1-2)",
       "topikLevelOptionII": "TOPIK II (cấp 3-6)",
       "targetGradeLabel": "Cấp độ mục tiêu",
+      "targetGradeHelp": "Chọn cấp độ bạn muốn đạt trong kỳ thi này.",
+      "gradeOption": "Cấp {grade}",
       "examDateLabel": "Ngày thi (tùy chọn)",
+      "examDateHelp": "Thêm ngày thi để hệ thống điều chỉnh nhịp học.",
       "weeklyMinutesLabel": "Thời gian học hàng tuần (phút, tùy chọn)",
+      "weeklyMinutesHelp": "Nhập thời gian học bạn có thể dành mỗi tuần.",
       "weakAreasLabel": "Lĩnh vực còn yếu (tùy chọn)",
+      "weakAreasHelp": "Chọn một hoặc nhiều phần bạn muốn củng cố.",
       "weakAreasPlaceholder": "Bạn có thể chọn nhiều mục",
       "weakAreas": {
         "vocabulary": "Từ vựng",

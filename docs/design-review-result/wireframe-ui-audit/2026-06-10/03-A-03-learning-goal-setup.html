@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <title>Wireframe UI Audit - 03-A-03-learning-goal-setup - 2026-06-10</title>
+    <style>
+      body {
+        margin: 32px;
+        background: #ffffff;
+        color: #172033;
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+      }
+
+      h1,
+      h2 {
+        letter-spacing: 0;
+      }
+
+      table {
+        width: 100%;
+        margin: 12px 0 28px;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+
+      th,
+      td {
+        padding: 10px 12px;
+        border: 1px solid #d9e1ef;
+        vertical-align: top;
+      }
+
+      th {
+        background: #f4f7fb;
+        text-align: left;
+      }
+
+      code {
+        border-radius: 4px;
+        background: #f3f4f6;
+        padding: 1px 4px;
+      }
+
+      figure {
+        margin: 22px 0;
+      }
+
+      img {
+        max-width: 100%;
+        border: 1px solid #d9e1ef;
+        border-radius: 8px;
+      }
+
+      figcaption {
+        margin-top: 8px;
+        color: #667085;
+        font-size: 13px;
+      }
+
+      .verdict {
+        border: 1px solid #8fd6ad;
+        border-radius: 8px;
+        background: #edfdf3;
+        padding: 14px 16px;
+      }
+
+      .note {
+        border: 1px solid #d9e1ef;
+        border-radius: 8px;
+        background: #f8fafc;
+        padding: 12px 14px;
+      }
+
+      .sev-pass {
+        display: inline-block;
+        border-radius: 999px;
+        background: #dff7ea;
+        color: #067647;
+        padding: 2px 10px;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Wireframe UI Audit - 03-A-03-learning-goal-setup - 2026-06-10</h1>
+    <p><strong>Scope:</strong> A-03 Learning goal setup route <code>/onboarding/learning-goal</code></p>
+    <p><strong>Mode:</strong> audit-remediation</p>
+    <p><strong>Coverage:</strong> authenticated user route, reference wireframe and hifi complete.</p>
+
+    <h2>Verdict</h2>
+    <p class="verdict">
+      <strong>PASS.</strong> The current <code>/onboarding/learning-goal</code> screen satisfies the active A-03
+      wireframe and hifi intent for this audit. It now shows onboarding step 3/3, a Talkpik AI guide/mascot surface,
+      personalized learning benefit copy, all documented learning-goal controls, and previous, skip, and save CTAs.
+      360/768/1280 captures all returned status 200 with no Next error overlay and console error count 0.
+    </p>
+
+    <p class="note">
+      Accepted variance: the guide uses CSS/lucide product art instead of a bitmap mascot asset, and previous/skip are
+      router-backed Ant Design buttons rather than anchor links. Both choices preserve the documented A-03 behavior and
+      avoid adding a new asset or routing dependency.
+    </p>
+
+    <h2>Visual Delta Summary</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Area</th>
+          <th>Reference intent</th>
+          <th>Current implementation</th>
+          <th>Delta</th>
+          <th>User impact</th>
+          <th>Severity</th>
+          <th>Next action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>progress indicator</td>
+          <td>Show which onboarding step the learner is currently completing.</td>
+          <td>Step 3/3 is shown with completed account/email steps and active learning-goal state.</td>
+          <td>The required onboarding progress region is represented.</td>
+          <td>The learner can understand why this setup screen appears before the dashboard.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>No further action.</td>
+        </tr>
+        <tr>
+          <td>guide and mascot</td>
+          <td>Explain that goal and language information powers personalized recommendations.</td>
+          <td>Talkpik AI branding, speech bubble, target/pencil visual, and benefit strip are visible.</td>
+          <td>The guide/mascot and learning-value regions match the wireframe intent.</td>
+          <td>Goal setup feels product-specific instead of a plain configuration form.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>No further action.</td>
+        </tr>
+        <tr>
+          <td>goal controls</td>
+          <td>Capture TOPIK level, target grade, exam date, study frequency, and weak areas.</td>
+          <td>The form includes TOPIK selection, grade buttons, date picker, weekly minutes input, and weak-area multiselect.</td>
+          <td>The documented form inputs are present and grouped in scannable rows.</td>
+          <td>The learner can set a goal that feeds future recommendation and feedback flows.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>No further action.</td>
+        </tr>
+        <tr>
+          <td>navigation CTAs</td>
+          <td>Provide a previous-step action, skip path, and next/save action.</td>
+          <td>The screen exposes previous-step, skip, and primary save-and-dashboard CTAs.</td>
+          <td>The CTA region is complete and preserves existing mutation/navigation behavior.</td>
+          <td>Users can either complete the form, revise the previous step, or continue with a default goal.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>No further action.</td>
+        </tr>
+        <tr>
+          <td>responsive render health</td>
+          <td>Desktop split and tablet/mobile stacked layouts should render without overflow or text/button collision.</td>
+          <td>1280 renders as split guide/form; 768 and 360 stack guide, progress, form, and CTAs in readable order.</td>
+          <td>All audited breakpoints are stable.</td>
+          <td>The onboarding form remains usable across desktop, tablet, and mobile.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>Local Next dev indicator is excluded from product UI severity.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>First Screen Delta</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Viewport</th>
+          <th>Expected first screen</th>
+          <th>Current first screen</th>
+          <th>Delta</th>
+          <th>Impact</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1280 desktop</td>
+          <td>Guide/mascot/value area and goal setup form should be visible in a balanced onboarding surface.</td>
+          <td>Split guide/form surface shows brand, guide, mascot, benefits, progress, form controls, and CTA region.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>Desktop users can understand and complete the task without scrolling.</td>
+        </tr>
+        <tr>
+          <td>768 tablet</td>
+          <td>Guide and form should stack without horizontal overflow or clipped controls.</td>
+          <td>Guide, benefits, progress, heading, controls, and CTAs stack in a readable single-column flow.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>Tablet users keep the full context and form path in the intended order.</td>
+        </tr>
+        <tr>
+          <td>360 mobile</td>
+          <td>Brand/value, progress, form fields, and CTAs should remain readable in one column.</td>
+          <td>Mobile capture shows stable guide content, non-broken progress labels, all fields, and save/previous/skip CTAs.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>The setup step remains touch-friendly on narrow screens.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Findings</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>id</th>
+          <th>category</th>
+          <th>claim</th>
+          <th>evidence</th>
+          <th>severity</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>A03-PASS-001</td>
+          <td>onboarding-progress</td>
+          <td>Step 3/3 progress and active learning-goal state are visible.</td>
+          <td>360/768/1280 screenshots and DOM inspection.</td>
+          <td><span class="sev-pass">PASS</span></td>
+        </tr>
+        <tr>
+          <td>A03-PASS-002</td>
+          <td>guide-and-learning-value</td>
+          <td>Talkpik AI guide, mascot-style visual, and three benefit items are present.</td>
+          <td>Current screenshots, hifi reference, and <code>page.tsx</code>.</td>
+          <td><span class="sev-pass">PASS</span></td>
+        </tr>
+        <tr>
+          <td>A03-PASS-003</td>
+          <td>goal-setting-controls</td>
+          <td>The documented learning-goal controls remain present and connected to save validation.</td>
+          <td>DOM inspection and <code>OnboardingLearningGoal.test.tsx</code>.</td>
+          <td><span class="sev-pass">PASS</span></td>
+        </tr>
+        <tr>
+          <td>A03-PASS-004</td>
+          <td>cta-and-navigation</td>
+          <td>Previous, skip, and save CTAs are visible and behaviorally connected.</td>
+          <td><code>OnboardingNavCta.tsx</code>, <code>LearningGoalForm.tsx</code>, and DOM inspection.</td>
+          <td><span class="sev-pass">PASS</span></td>
+        </tr>
+        <tr>
+          <td>A03-PASS-005</td>
+          <td>responsive-render</td>
+          <td>The route renders cleanly across 360, 768, and 1280 audited breakpoints.</td>
+          <td>render-shot manifest and scoped Playwright A-03 e2e.</td>
+          <td><span class="sev-pass">PASS</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Verification</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Check</th>
+          <th>Result</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>node -e JSON.parse(...messages)</code></td>
+          <td>Passed for <code>messages/ko.json</code>, <code>messages/en.json</code>, and <code>messages/vi.json</code>.</td>
+        </tr>
+        <tr>
+          <td><code>pnpm test tests/components/onboarding/OnboardingLearningGoal.test.tsx</code></td>
+          <td>Passed: 1 test file, 4 tests.</td>
+        </tr>
+        <tr>
+          <td><code>pnpm lint</code></td>
+          <td>Passed with 0 errors and 9 pre-existing warnings.</td>
+        </tr>
+        <tr>
+          <td><code>pnpm typecheck</code></td>
+          <td>Passed.</td>
+        </tr>
+        <tr>
+          <td><code>node scripts/design-review/render-shot.mjs</code></td>
+          <td>Passed for 360/768/1280: status 200, errorOverlay=false, consoleErr=0.</td>
+        </tr>
+        <tr>
+          <td>DOM inspection</td>
+          <td>Heading, progress, guide, mascot, benefits, goal controls, and previous/skip/save CTAs confirmed.</td>
+        </tr>
+        <tr>
+          <td><code>pnpm exec playwright test tests/e2e/screens/screens-authed.spec.ts -g "A-03" --project=mobile-360 --project=tablet-768 --project=desktop-1280</code></td>
+          <td>Passed: 4 tests including auth setup and A-03 on all three viewport projects.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Evidence</h2>
+    <figure>
+      <img src="screenshots/03-A-03-learning-goal-setup/current-1280.png" alt="A-03 current desktop 1280 capture" />
+      <figcaption>Current desktop 1280 capture.</figcaption>
+    </figure>
+    <figure>
+      <img src="screenshots/03-A-03-learning-goal-setup/current-768.png" alt="A-03 current tablet 768 capture" />
+      <figcaption>Current tablet 768 capture.</figcaption>
+    </figure>
+    <figure>
+      <img src="screenshots/03-A-03-learning-goal-setup/current-360.png" alt="A-03 current mobile 360 capture" />
+      <figcaption>Current mobile 360 capture.</figcaption>
+    </figure>
+    <figure>
+      <img src="screenshots/03-A-03-learning-goal-setup/reference-hifi.png" alt="A-03 reference hifi" />
+      <figcaption>Reference hifi.</figcaption>
+    </figure>
+    <figure>
+      <img src="screenshots/03-A-03-learning-goal-setup/reference-wireframe.png" alt="A-03 reference wireframe" />
+      <figcaption>Reference wireframe.</figcaption>
+    </figure>
+  </body>
+</html>
