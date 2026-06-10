@@ -180,11 +180,56 @@ export function formatAmountCents(cents: number, currency: string): string {
 }
 
 /** Drop the internal seed marker tag from a features jsonb array. */
-export function planFeatureList(features: unknown): string[] {
+const CADENCE_MONTHS: Record<PlanCadence, number> = {
+  monthly: 1,
+  quarterly: 3,
+  yearly: 12,
+};
+
+const CADENCE_KO_LABELS: Record<PlanCadence, string> = {
+  monthly: "월간",
+  quarterly: "분기",
+  yearly: "연간",
+};
+
+const DISCOUNT_FEATURE_RE = /^(월간|분기|연간)\s+\d+%\s*할인$/;
+
+function discountFeatureLabel(
+  plan: SubscriptionPlan,
+  plans: SubscriptionPlan[],
+): string | null {
+  const months = CADENCE_MONTHS[plan.cadence];
+  if (!months || months === 1) return null;
+
+  const monthly = plans.find((candidate) => candidate.cadence === "monthly");
+  if (!monthly || monthly.price_cents <= 0) return null;
+
+  const baseline = monthly.price_cents * months;
+  if (baseline <= plan.price_cents) return null;
+
+  const discountPercent = Math.round(
+    ((baseline - plan.price_cents) / baseline) * 100,
+  );
+  if (discountPercent <= 0) return null;
+
+  return `${CADENCE_KO_LABELS[plan.cadence]} ${discountPercent}% 할인`;
+}
+
+export function planFeatureList(
+  features: unknown,
+  plan?: SubscriptionPlan,
+  plans: SubscriptionPlan[] = [],
+): string[] {
   if (!Array.isArray(features)) return [];
-  return features
+  const list = features
     .filter((f): f is string => typeof f === "string")
     .filter((f) => !f.startsWith("__seed"));
+  const discountLabel =
+    plan && plans.length > 0 ? discountFeatureLabel(plan, plans) : null;
+  if (!discountLabel) return list;
+  return list.map((feature) =>
+    DISCOUNT_FEATURE_RE.test(feature) ? discountLabel : feature,
+  );
 }
 
 // i18n: 이 모듈은 컴포넌트가 아니라 useTranslations를 쓸 수 없다(wave-2/3

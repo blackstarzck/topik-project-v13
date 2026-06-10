@@ -576,12 +576,38 @@
       "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/24-X-02-growth-dashboard/findings.json",
       "status": "PASS",
       "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
+    },
+    {
+      "folder": "25-X-03-paywall",
+      "iaCode": "X-03",
+      "screen": "Paywall",
+      "route": "/paywall",
+      "routeSource": "docs/Wireframe/25-X-03-paywall/functional-spec.md",
+      "routeFallback": "docs/sitemap.md",
+      "referenceImages": {
+        "wireframe": "docs/Wireframe/25-X-03-paywall/wireframe.png",
+        "hifi": "docs/Wireframe/25-X-03-paywall/hifi.png",
+        "status": "complete"
+      },
+      "docs": {
+        "description": "present",
+        "functionalSpec": "present",
+        "screenDataSummary": "present"
+      },
+      "classification": "user-active",
+      "audience": "user",
+      "authRequirement": "authenticated user",
+      "dynamicSeedRequirement": "free/no-subscription student account renders the plan-selection shell; billing provider checkout remains deferred scope.",
+      "report": "docs/design-review-result/wireframe-ui-audit/2026-06-10/25-X-03-paywall.html",
+      "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/25-X-03-paywall/findings.json",
+      "status": "PASS",
+      "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
     }
   ],
   "summary": {
-    "completedPass": 22,
+    "completedPass": 23,
     "inProgress": 0,
-    "remainingKnownActiveScreens": 12,
+    "remainingKnownActiveScreens": 11,
     "adminFrozenOutOfScope": [
       "21-H-01-admin-problem-management",
       "30-X-08-organization-admin-dashboard",

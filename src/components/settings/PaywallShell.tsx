@@ -115,11 +115,10 @@ export function PaywallShell() {
   }
 
   return (
-    <div style={PAYWALL_CONTENT_STYLE}>
+    <div data-testid="paywall-shell" style={PAYWALL_CONTENT_STYLE}>
       <Space orientation="vertical" size="large" style={{ width: "100%" }}>
-        {/* Region 1: 결제 선택 제목. IA 코드 배지는 h1 접근성 이름에서 제외하고 헤더 위 메타로 둔다. */}
+        {/* Region 1: 결제 선택 제목. IA 코드는 사용자 화면에 노출하지 않는다. */}
         <div>
-          <Tag>X-03</Tag>
           <PageHeader title={t("heading")} subtitle={t("subheading")} />
         </div>
 
@@ -154,12 +153,21 @@ export function PaywallShell() {
                 description={t("noPlans.body")}
               />
             ) : (
-              <Row gutter={[16, 16]} align="stretch">
+              <Row
+                data-testid="paywall-plan-grid"
+                gutter={[16, 16]}
+                align="stretch"
+              >
                 {plans.map((plan) => {
-                  const benefits = planFeatureList(plan.features).slice(0, 4);
+                  const benefits = planFeatureList(
+                    plan.features,
+                    plan,
+                    plans,
+                  ).slice(0, 4);
                   return (
                     <Col key={plan.plan_key} xs={24} md={8}>
                       <AppCard
+                        data-testid={`paywall-plan-${plan.cadence}`}
                         style={
                           plan.recommended
                             ? { borderColor: "var(--ant-color-primary)" }
@@ -206,6 +214,7 @@ export function PaywallShell() {
                           )}
                           {/* Region 3: 결제 주기 선택 CTA (external stub) */}
                           <Button
+                            data-testid={`paywall-select-${plan.cadence}`}
                             type={plan.recommended ? "primary" : "default"}
                             block
                             loading={selecting === plan.plan_key}
@@ -218,6 +227,7 @@ export function PaywallShell() {
                             })}
                           </Button>
                           <Text
+                            data-testid="paywall-stub-note"
                             type="secondary"
                             style={{ fontSize: 12 }}
                           >
@@ -234,7 +244,10 @@ export function PaywallShell() {
             <Row gutter={[16, 16]}>
               {/* Region 4: 혜택/지원 패널 */}
               <Col xs={24} md={14}>
-                <AppCard title={t("benefits.title")}>
+                <AppCard
+                  data-testid="paywall-benefits-panel"
+                  title={t("benefits.title")}
+                >
                   <Space
                     orientation="vertical"
                     size={4}
@@ -259,7 +272,10 @@ export function PaywallShell() {
 
               {/* Region 5: 결제 보조 정보 */}
               <Col xs={24} md={10}>
-                <AppCard title={t("paymentInfo.title")}>
+                <AppCard
+                  data-testid="paywall-payment-info"
+                  title={t("paymentInfo.title")}
+                >
                   <Space
                     orientation="vertical"
                     size={4}

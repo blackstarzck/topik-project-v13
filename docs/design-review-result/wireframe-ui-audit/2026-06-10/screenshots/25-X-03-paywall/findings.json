@@ -1,0 +1,39 @@
+{
+  "page": "25-X-03-paywall",
+  "iaCode": "X-03",
+  "route": "/paywall",
+  "status": "PASS",
+  "findings": [],
+  "checks": [
+    {
+      "id": "X03-ia-code-hidden",
+      "status": "PASS",
+      "evidence": "The IA code X-03 is not rendered as user-facing text in any viewport."
+    },
+    {
+      "id": "X03-plan-cards",
+      "status": "PASS",
+      "evidence": "Monthly, quarterly, and yearly plan cards render in the paywall grid."
+    },
+    {
+      "id": "X03-discount-normalization",
+      "status": "PASS",
+      "evidence": "Quarterly discount is normalized to the actual 10% price delta; yearly remains 17%."
+    },
+    {
+      "id": "X03-deferred-checkout-copy",
+      "status": "PASS",
+      "evidence": "The paywall keeps payment integration copy as deferred and does not claim real checkout."
+    },
+    {
+      "id": "X03-responsive-capture",
+      "status": "PASS",
+      "evidence": "Mobile, tablet, and desktop captures load without page, console, or 500-response errors."
+    }
+  ],
+  "screenshots": {
+    "mobile-360": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/25-X-03-paywall/mobile-360.png",
+    "tablet-768": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/25-X-03-paywall/tablet-768.png",
+    "desktop-1280": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/25-X-03-paywall/desktop-1280.png"
+  }
+}

@@ -3,38 +3,46 @@
 ## 1. 메타
 - **IA / 라우트**: X-03 / `/paywall`
 - **audience**: user
-- **캡처 상태**: rendered
-- **host**: 단독 페이지 (유료 잠금 지점에서 진입)
+- **상태**: PASS
+- **host**: 단독 페이지
 
-## 2. 캡처 증거
-- 스크린샷: `.design-review-shots/20260609/25-X-03-paywall-{360,768,1280}.png`
-- 렌더 헬스(`_health.json`): HTTP 200, 콘솔 에러 0, 에러 오버레이 없음.
+## 2. 보정 요약
+- 기존 P2였던 사용자 화면 IA 코드 노출을 제거했다. `PaywallShell`은 더 이상 `<Tag>X-03</Tag>`를 렌더하지 않는다.
+- 분기 플랜의 stale seed 혜택 문구를 실제 가격 기준 할인율로 정규화했다. 월간 9,900원 기준 분기 26,700원은 약 10% 할인으로 표시하고, 연간 99,000원은 17% 할인으로 유지한다.
+- `PaywallShell`에 회귀 검증용 test id를 추가했다: `paywall-shell`, `paywall-plan-grid`, `paywall-plan-monthly`, `paywall-plan-quarterly`, `paywall-plan-yearly`, `paywall-select-*`, `paywall-stub-note`, `paywall-benefits-panel`, `paywall-payment-info`.
+- X-03 전용 e2e를 추가해 mobile/tablet/desktop에서 IA 코드 미노출, 3개 결제 주기 카드, 할인 문구, 결제 deferred 안내를 검증했다.
 
 ## 3. Layer 1 — SOT 정합 리뷰
 
-| 항목 | 요소/상태 | 판정 | 근거 |
+| 항목 | 요구사항 | 판정 | 근거 |
 | --- | --- | --- | --- |
-| 결제 선택 제목(#1) | 제목 24자 + 보조 설명 | 일치 | 캡처: "구독 시작하기" + "결제 주기를 비교하고…" |
-| 결제 주기 카드 3열(#2) | 3개 고정, 혜택 4개 이하, 추천 배지 1개 | 일치 | 캡처: 월간 ₩9,900 / 분기 ₩26,700 [추천] / 연간 ₩99,000 (각 혜택 3개) |
-| 결제 주기 선택 CTA(#3) | 카드별 CTA 1개 | 일치 | 캡처: 월간/분기/연간 구독 선택 각 1개 |
-| 혜택/지원 패널(#4) | 혜택 4개 이하 + 지원 문의 | 일치 | 캡처: 구독 혜택 4개(첨삭 무제한/추천/리포트/PDF) + 지원 문의 |
-| 결제 보조 정보(#5) | 환불/세금계산서/보안/기관 4항목 | 일치 | 캡처: 결제 안내 4항목 |
+| 결제 선택 제목 (#1) | 유료 기능 진입 시 단일 구독 결제 선택 단계 안내, 사용자 화면 IA 코드 미노출 | 일치 | capture: `headingVisible` true, `iaCodeCount` 0 |
+| 결제 주기 카드 3열 (#2) | 월간, 분기, 연간 카드 비교, 추천 배지 1개 | 일치 | capture/e2e: `paywall-plan-monthly`, `paywall-plan-quarterly`, `paywall-plan-yearly` 표시 |
+| 결제 주기 선택 CTA (#3) | 카드별 CTA 1개, 결제 준비/로딩 안내 | 일치 | e2e: 분기 CTA 클릭 후 결제 연동 준비 중 메시지 표시, `/paywall` 유지 |
+| 혜택/지원 패널 (#4) | 혜택 4개 이하, 지원 문의 CTA | 일치 | capture: `benefitsPanelVisible` true |
+| 결제 보조 정보 (#5) | 환불, 세금계산서, 보안 결제, 기관 문의 안내 | 일치 | capture: `paymentInfoVisible` true |
+| deferred billing 경계 | 실제 결제 provider/checkout은 아직 구현하지 않음 | 일치 | `docs/development/deferred-scope.md`에 따라 stub 안내만 유지 |
 
-**종합 verdict: 부분일치(경미)** — 페이월 구조 명세 충실, IA 코드 노출 1건.
+**종합 verdict: PASS.**
 
-## 4. Layer 2 — 멀티 에이전트 독립 분석
+## 4. 검증 증거
+- 산출물: `docs/design-review-result/wireframe-ui-audit/2026-06-10/25-X-03-paywall.html`
+- 구조화 결과: `docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/25-X-03-paywall/findings.json`
+- 현재 캡처 데이터: `docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/25-X-03-paywall/current.json`
+- 스크린샷:
+  - `docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/25-X-03-paywall/mobile-360.png`
+  - `docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/25-X-03-paywall/tablet-768.png`
+  - `docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/25-X-03-paywall/desktop-1280.png`
 
-- **콘텐츠 (P2)**: 제목 위에 **원시 IA 코드 "X-03"이 그대로 노출** — 사용자 화면에 내부 코드가 보임(디버그 라벨 누수). [[26-X-04]]도 동일("X-04"). 공통 PageHeader/breadcrumb 문제로 추정.
-- **콘텐츠 (nit)**: 분기 "17% 할인"과 연간 "17% 할인"이 동일 — 보통 연간이 분기보다 할인폭이 커야 자연스러움. 의도된 가격이면 무시 가능하나 확인 권장.
-- **콘텐츠/데이터 (정직 seam)**: 각 카드에 "결제 연동 준비 중 · 아직 실제 결제는 진행되지 않아요" + 결제 안내 "안전한 결제(연동 예정)" — 미구현(결제 게이트웨이)을 정직하게 표기.
-- **UX/IA (양호)**: 추천 플랜(분기) 강조, 혜택/결제 안내 분리로 비교 쉬움.
-- **반응형 (양호)**: 1280 3열, 360 세로 스택.
-- **적대적 검증**: "X-03 코드 노출"은 캡처로 확정(경미하나 사용자 가시). 결제 미연동은 정직 표기로 결함 아님.
+## 5. 실행 검증
+- `pnpm exec eslint src/components/settings/PaywallShell.tsx src/components/settings/billing-data.ts tests/components/settings/SubscriptionPaywallChrome.test.tsx tests/e2e/screens/paywall.spec.ts`
+- `pnpm exec vitest run tests/components/settings/SubscriptionPaywallChrome.test.tsx`
+- `pnpm exec playwright test tests/e2e/screens/paywall.spec.ts --project=mobile-360 --project=tablet-768 --project=desktop-1280 --no-deps`
+- X-03 캡처 생성 스크립트: mobile/tablet/desktop headingVisible true, iaCodeCount 0, plan cards 3개 visible, quarterlyDiscountVisible true, quarterlyStaleDiscountCount 0, yearlyDiscountVisible true, stubNoteCount 3, console/page error 0
 
-## 5. 결론 — 개선안
-
-### P2 (여유 있을 때)
-- **IA 코드 노출 제거**: 제목 위 "X-03" 라벨을 사용자 화면에서 제거([[26-X-04]]와 함께 공통 헤더 수정). — 근거: Layer 2 콘텐츠, 증거 25-X-03 캡처.
-- **분기/연간 할인율 확인**: 둘 다 17%가 의도인지 점검(연간 매력도).
-
-> 참고: 결제 연동은 준비 중(정직 표기). 코드 미수정.
+## 6. 검증 제한
+- 기존 구독자 redirect branch는 컴포넌트 테스트/실측 범위에 포함하지 않았다.
+- 실제 결제 checkout, payment provider, invoice/receipt 생성은 deferred scope라 구현하거나 검증하지 않았다.
+- 전체 `pnpm exec tsc --noEmit --pretty false`는 현재 worktree의 unrelated 인증/캐릭터 변경에서 실패한다.
+- 전체 `pnpm lint`는 현재 worktree의 unrelated `tests/components/auth/AnimatedAuthCharacters.test.tsx` ENOENT로 중단된다.
+- 기본 Playwright setup 프로젝트는 unrelated 로그인 화면 변경으로 `input[autocomplete="email"]` selector를 찾지 못해 실패한다. X-03 대상 검증은 기존 `tests/e2e/auth-state/student.json`을 사용하는 `--no-deps` 실행으로 확인했다.

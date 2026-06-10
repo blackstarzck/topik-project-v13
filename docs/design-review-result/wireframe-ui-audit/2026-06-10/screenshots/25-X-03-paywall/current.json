@@ -1,0 +1,80 @@
+{
+  "page": "25-X-03-paywall",
+  "route": "/paywall",
+  "capturedAt": "2026-06-10T11:37:03.189Z",
+  "status": "PASS",
+  "captures": [
+    {
+      "viewport": "mobile-360",
+      "size": {
+        "width": 360,
+        "height": 720
+      },
+      "url": "http://127.0.0.1:3000/paywall",
+      "headingVisible": true,
+      "iaCodeCount": 0,
+      "planGridVisible": true,
+      "planCardVisible": {
+        "monthly": true,
+        "quarterly": true,
+        "yearly": true
+      },
+      "quarterlyDiscountVisible": true,
+      "quarterlyStaleDiscountCount": 0,
+      "yearlyDiscountVisible": true,
+      "benefitsPanelVisible": true,
+      "paymentInfoVisible": true,
+      "stubNoteCount": 3,
+      "consoleErrors": [],
+      "screenshot": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/25-X-03-paywall/mobile-360.png"
+    },
+    {
+      "viewport": "tablet-768",
+      "size": {
+        "width": 768,
+        "height": 1024
+      },
+      "url": "http://127.0.0.1:3000/paywall",
+      "headingVisible": true,
+      "iaCodeCount": 0,
+      "planGridVisible": true,
+      "planCardVisible": {
+        "monthly": true,
+        "quarterly": true,
+        "yearly": true
+      },
+      "quarterlyDiscountVisible": true,
+      "quarterlyStaleDiscountCount": 0,
+      "yearlyDiscountVisible": true,
+      "benefitsPanelVisible": true,
+      "paymentInfoVisible": true,
+      "stubNoteCount": 3,
+      "consoleErrors": [],
+      "screenshot": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/25-X-03-paywall/tablet-768.png"
+    },
+    {
+      "viewport": "desktop-1280",
+      "size": {
+        "width": 1280,
+        "height": 800
+      },
+      "url": "http://127.0.0.1:3000/paywall",
+      "headingVisible": true,
+      "iaCodeCount": 0,
+      "planGridVisible": true,
+      "planCardVisible": {
+        "monthly": true,
+        "quarterly": true,
+        "yearly": true
+      },
+      "quarterlyDiscountVisible": true,
+      "quarterlyStaleDiscountCount": 0,
+      "yearlyDiscountVisible": true,
+      "benefitsPanelVisible": true,
+      "paymentInfoVisible": true,
+      "stubNoteCount": 3,
+      "consoleErrors": [],
+      "screenshot": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/25-X-03-paywall/desktop-1280.png"
+    }
+  ]
+}

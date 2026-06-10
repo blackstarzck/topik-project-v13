@@ -158,7 +158,7 @@ describe("SubscriptionShell (i18n chrome)", () => {
 });
 
 describe("PaywallShell (i18n chrome)", () => {
-  it("renders the heading and a plan card with cadence-aware CTA", async () => {
+  it("renders the paywall regions without exposing the IA code", async () => {
     fetchMySubscriptionMock.mockResolvedValue(null);
     fetchActivePlansMock.mockResolvedValue([
       {
@@ -168,7 +168,27 @@ describe("PaywallShell (i18n chrome)", () => {
         price_cents: 990000,
         currency: "KRW",
         features: ["AI 첨삭"],
+        recommended: false,
+        active: true,
+      },
+      {
+        plan_key: "pro_quarterly",
+        name: "프로 분기",
+        cadence: "quarterly",
+        price_cents: 2670000,
+        currency: "KRW",
+        features: ["월간 혜택 전부", "분기 17% 할인", "우선 첨삭 큐"],
         recommended: true,
+        active: true,
+      },
+      {
+        plan_key: "pro_yearly",
+        name: "프로 연간",
+        cadence: "yearly",
+        price_cents: 9900000,
+        currency: "KRW",
+        features: ["월간 혜택 전부", "연간 17% 할인", "PDF 내보내기"],
+        recommended: false,
         active: true,
       },
     ]);
@@ -176,16 +196,21 @@ describe("PaywallShell (i18n chrome)", () => {
     renderShell(<PaywallShell />);
 
     expect(screen.getByText("구독 시작하기")).toBeTruthy();
+    expect(screen.queryByText("X-03")).toBeNull();
 
     await waitFor(() => {
-      // recommended badge + ICU "{cadence} 구독 선택" with cadence "월간".
+      // recommended badge + ICU "{cadence} 구독 선택" with cadence "분기".
       expect(screen.getByText("추천")).toBeTruthy();
     });
     expect(
-      screen.getByRole("button", { name: "월간 구독 선택" }),
+      screen.getByRole("button", { name: "분기 구독 선택" }),
     ).toBeTruthy();
+    expect(screen.getByText("분기 10% 할인")).toBeTruthy();
+    expect(screen.queryByText("분기 17% 할인")).toBeNull();
+    expect(screen.getByText("연간 17% 할인")).toBeTruthy();
     // benefits panel verbatim leaf.
     expect(screen.getByText("· AI 작문 첨삭 무제한")).toBeTruthy();
+    expect(screen.getByText("결제 안내")).toBeTruthy();
   });
 
   it("shows the no-plans alert when the catalog is empty", async () => {
