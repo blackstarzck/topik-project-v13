@@ -1,0 +1,110 @@
+{
+  "capturedAt": "2026-06-10T08:48:45.975Z",
+  "results": [
+    {
+      "viewport": {
+        "name": "mobile-360",
+        "width": 360,
+        "height": 720
+      },
+      "url": "http://127.0.0.1:3000/writing/feedback/short/bb132619-1b59-431b-b83c-e1012a091f83",
+      "status": 200,
+      "modalVisible": true,
+      "backgroundVisible": true,
+      "maskVisible": true,
+      "activeStepCount": 1,
+      "progressbarCount": 1,
+      "cancelButtonVisible": true,
+      "expectedTimeText": "예상 소요 시간 8~15초",
+      "expectedTimeVisible": true,
+      "statusTitleVisible": true,
+      "currentStatusText": "문법 패턴과 어미 사용을 확인 중.",
+      "currentStatusTextLength": 19,
+      "modalBox": {
+        "x": 32,
+        "y": 28,
+        "width": 296,
+        "height": 669.09375
+      },
+      "backgroundBox": {
+        "x": 24,
+        "y": 88,
+        "width": 312,
+        "height": 411.984375
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "docs\\design-review-result\\wireframe-ui-audit\\2026-06-10\\screenshots\\13-D-M2-ai-analysis-loading\\mobile-360.png"
+    },
+    {
+      "viewport": {
+        "name": "tablet-768",
+        "width": 768,
+        "height": 1024
+      },
+      "url": "http://127.0.0.1:3000/writing/feedback/short/5df1b352-0134-42d4-a15b-5f7551c58701",
+      "status": 200,
+      "modalVisible": true,
+      "backgroundVisible": true,
+      "maskVisible": true,
+      "activeStepCount": 1,
+      "progressbarCount": 1,
+      "cancelButtonVisible": true,
+      "expectedTimeText": "예상 소요 시간 8~15초",
+      "expectedTimeVisible": true,
+      "statusTitleVisible": true,
+      "currentStatusText": "문법 패턴과 어미 사용을 확인 중.",
+      "currentStatusTextLength": 19,
+      "modalBox": {
+        "x": 98,
+        "y": 237.359375,
+        "width": 572,
+        "height": 549.296875
+      },
+      "backgroundBox": {
+        "x": 264,
+        "y": 88,
+        "width": 480,
+        "height": 437.984375
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "docs\\design-review-result\\wireframe-ui-audit\\2026-06-10\\screenshots\\13-D-M2-ai-analysis-loading\\tablet-768.png"
+    },
+    {
+      "viewport": {
+        "name": "desktop-1280",
+        "width": 1280,
+        "height": 800
+      },
+      "url": "http://127.0.0.1:3000/writing/feedback/short/55b59eb0-ade2-49cd-a943-ca9b540bd29f",
+      "status": 200,
+      "modalVisible": true,
+      "backgroundVisible": true,
+      "maskVisible": true,
+      "activeStepCount": 1,
+      "progressbarCount": 1,
+      "cancelButtonVisible": true,
+      "expectedTimeText": "예상 소요 시간 8~15초",
+      "expectedTimeVisible": true,
+      "statusTitleVisible": true,
+      "currentStatusText": "문법 패턴과 어미 사용을 확인 중.",
+      "currentStatusTextLength": 19,
+      "modalBox": {
+        "x": 354,
+        "y": 125.359375,
+        "width": 572,
+        "height": 549.296875
+      },
+      "backgroundBox": {
+        "x": 264,
+        "y": 88,
+        "width": 880,
+        "height": 437.984375
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "docs\\design-review-result\\wireframe-ui-audit\\2026-06-10\\screenshots\\13-D-M2-ai-analysis-loading\\desktop-1280.png"
+    }
+  ]
+}

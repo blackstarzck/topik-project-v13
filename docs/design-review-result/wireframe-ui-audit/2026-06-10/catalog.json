@@ -314,12 +314,39 @@
       "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/12-D-M1-submission-confirmation-modal/findings.json",
       "status": "PASS",
       "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
+    },
+    {
+      "folder": "13-D-M2-ai-analysis-loading",
+      "iaCode": "D-M2",
+      "screen": "AI analysis loading",
+      "route": "/writing/feedback/short/:id",
+      "routeSource": "docs/Wireframe/13-D-M2-ai-analysis-loading/functional-spec.md",
+      "routeFallback": "docs/sitemap.md",
+      "referenceImages": {
+        "wireframe": "docs/Wireframe/13-D-M2-ai-analysis-loading/wireframe.png",
+        "hifi": "docs/Wireframe/13-D-M2-ai-analysis-loading/hifi.png",
+        "status": "complete"
+      },
+      "docs": {
+        "description": "present",
+        "functionalSpec": "present",
+        "screenDataSummary": "present"
+      },
+      "classification": "user-active-modal",
+      "audience": "user",
+      "authRequirement": "authenticated user",
+      "hostRoute": "/writing/feedback/short/:id",
+      "modalTriggerRequirement": "D-M2 is shown while writing_submissions.feedback_status is pending or analyzing after final submission",
+      "report": "docs/design-review-result/wireframe-ui-audit/2026-06-10/13-D-M2-ai-analysis-loading.html",
+      "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/13-D-M2-ai-analysis-loading/findings.json",
+      "status": "PASS",
+      "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
     }
   ],
   "summary": {
-    "completedPass": 12,
+    "completedPass": 13,
     "inProgress": 0,
-    "remainingKnownActiveScreens": 22,
+    "remainingKnownActiveScreens": 21,
     "adminFrozenOutOfScope": [
       "21-H-01-admin-problem-management",
       "30-X-08-organization-admin-dashboard",

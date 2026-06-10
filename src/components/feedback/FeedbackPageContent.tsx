@@ -59,6 +59,7 @@ export function FeedbackPageContent({
         submissionId={submission.id}
         reloadHref={reloadHref}
         initialStatus={status}
+        submission={submission}
       />
     );
   }
@@ -70,6 +71,7 @@ export function FeedbackPageContent({
         submissionId={submission.id}
         reloadHref={reloadHref}
         initialStatus="failed"
+        submission={submission}
       />
     );
   }

@@ -5,53 +5,37 @@ import { useTranslations } from "next-intl";
 
 const { Text } = Typography;
 
-const FRAMES = ["📖", "✏️", "🔍", "📝", "✨"];
-/** reduce-motion일 때 깜빡임 없이 고정으로 보여줄 단일 프레임. */
-const STATIC_FRAME = "📝";
-
 type Props = {
-  /** current step index 0-based; cycles emoji */
   step: number;
-  /**
-   * 모션 비활성 (D-M2 description region 2 예외). true면 프레임 전환/펄스
-   * 애니메이션 없이 정적 이미지로 대체한다.
-   */
   reduceMotion?: boolean;
 };
 
-/**
- * D-M2 분석 캐릭터 (description region 2).
- * 제약: 애니메이션은 1개 핵심 루프, 텍스트를 가리지 않음.
- * 예외: 모션 비활성 설정 시 정적 이미지로 대체.
- */
 export function AnalysisCharacter({ step, reduceMotion }: Props) {
   const t = useTranslations("feedback.analysis");
-  const frame = reduceMotion ? STATIC_FRAME : FRAMES[step % FRAMES.length];
   return (
     <div
-      style={{
-        fontSize: 64,
-        textAlign: "center",
-        lineHeight: 1.4,
-      }}
+      className={[
+        "analysis-character",
+        reduceMotion ? "analysis-character--static" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
       aria-label={t("characterAria")}
       role="img"
+      data-step={step}
     >
-      <div
-        style={
-          reduceMotion
-            ? undefined
-            : { animation: "talkpik-analysis-pulse 1.6s ease-in-out infinite" }
-        }
-      >
-        {frame}
+      <div className="analysis-character__stage" aria-hidden>
+        <div className="analysis-character__bot">
+          <span className="analysis-character__eye" />
+          <span className="analysis-character__eye" />
+          <span className="analysis-character__mouth" />
+        </div>
+        <span className="analysis-character__spark analysis-character__spark--left" />
+        <span className="analysis-character__spark analysis-character__spark--right" />
       </div>
-      <Text type="secondary" style={{ fontSize: 14 }}>
+      <Text type="secondary" className="analysis-character__caption">
         {t("characterCaption")}
       </Text>
-      {reduceMotion ? null : (
-        <style>{`@keyframes talkpik-analysis-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}`}</style>
-      )}
     </div>
   );
 }
