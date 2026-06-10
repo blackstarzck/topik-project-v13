@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <title>Wireframe UI Audit - 09-D-02-answer-writing-52 - 2026-06-10</title>
+    <style>
+      body {
+        margin: 32px;
+        background: #ffffff;
+        color: #172033;
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+      }
+
+      h1,
+      h2 {
+        letter-spacing: 0;
+      }
+
+      table {
+        width: 100%;
+        margin: 12px 0 28px;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+
+      th,
+      td {
+        padding: 10px 12px;
+        border: 1px solid #d9e1ef;
+        vertical-align: top;
+      }
+
+      th {
+        background: #f4f7fb;
+        text-align: left;
+      }
+
+      code {
+        border-radius: 4px;
+        background: #f3f4f6;
+        padding: 1px 4px;
+      }
+
+      .verdict {
+        border: 1px solid #8fd6ad;
+        border-radius: 8px;
+        background: #edfdf3;
+        padding: 14px 16px;
+      }
+
+      .note {
+        border: 1px solid #d9e1ef;
+        border-radius: 8px;
+        background: #f8fafc;
+        padding: 12px 14px;
+      }
+
+      .sev-pass {
+        display: inline-block;
+        border-radius: 999px;
+        background: #dff7ea;
+        color: #067647;
+        padding: 2px 10px;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Wireframe UI Audit - 09-D-02-answer-writing-52 - 2026-06-10</h1>
+    <p><strong>Scope:</strong> D-02 Answer writing 52 at <code>/writing/answer-writing-52</code></p>
+    <p><strong>Mode:</strong> audit-remediation</p>
+    <p><strong>Coverage:</strong> authenticated user route, reference wireframe and hifi complete.</p>
+
+    <h2>Verdict</h2>
+    <p class="verdict">
+      <strong>PASS.</strong> D-02 now uses a 52-specific writing workspace instead of the generic editor layout. The
+      page exposes the required writing command area, step flow, prompt, writing conditions, single answer editor,
+      separated save/submit actions, and a right-side guide limited to three focused help cards.
+    </p>
+
+    <p class="note">
+      Accepted variance: the hifi image implies richer micro-content for condition tabs and writing shortcuts. The
+      current normalized data contract keeps 52 as <code>answerMode: single_text</code>, so the blank tabs are used as
+      contextual focus selectors while the saved/submitted payload remains one <code>answer_text</code>.
+    </p>
+
+    <h2>Visual Delta Summary</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Area</th>
+          <th>Reference intent</th>
+          <th>Current implementation</th>
+          <th>Delta</th>
+          <th>User impact</th>
+          <th>Severity</th>
+          <th>Next action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>page structure</td>
+          <td>Provide a dedicated 52번 writing workspace, not a generic form stack.</td>
+          <td>The route now renders <code>ShortAnswerWriting52Workspace</code> with command header, stepper, main writing area, and guide rail.</td>
+          <td>The prior generic 2-column editor gap is closed.</td>
+          <td>Learners can understand the 52번 task shape before writing.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>No blocking follow-up.</td>
+        </tr>
+        <tr>
+          <td>conditions</td>
+          <td>Show prompt and writing conditions together, with condition data blocking submit when incomplete.</td>
+          <td>The main column shows the prompt followed by <code>ConditionsPanel</code>, and submit remains disabled if normalized problem data is incomplete.</td>
+          <td>Aligned with D-02 description and screen-data-summary priority.</td>
+          <td>Users can inspect required blank conditions before writing.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>No blocking follow-up.</td>
+        </tr>
+        <tr>
+          <td>answer editor</td>
+          <td>Provide a sentence-form answer field with 10-160 character validation and save/submit separation.</td>
+          <td>The editor preserves autosave, manual save, submit confirmation, blur validation, progress indicator, and one <code>answer_text</code> payload.</td>
+          <td>Aligned with the active data contract and D-02 validation requirements.</td>
+          <td>Users can write safely without confusing save and submit.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>No blocking follow-up.</td>
+        </tr>
+        <tr>
+          <td>right guide</td>
+          <td>Show concise writing help, no more than three guide cards with two-line style body copy.</td>
+          <td>The right rail contains condition check, sentence completion tips, and blank-by-blank focus cards.</td>
+          <td>Aligned with the description limit while using available normalized blank hints.</td>
+          <td>Help remains close to the writing task without crowding the editor.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>No blocking follow-up.</td>
+        </tr>
+        <tr>
+          <td>responsive render</td>
+          <td>Keep desktop and mobile layouts readable with no overlapping controls.</td>
+          <td>Captures at 360, 768, and 1280 widths returned status 200, no Next error overlay, and consoleErr=0.</td>
+          <td>Responsive health is acceptable for this pass.</td>
+          <td>The writing page remains usable across audited breakpoints.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>Local Next dev indicator is excluded from product UI severity.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Evidence</h2>
+    <ul>
+      <li><code>screenshots/09-D-02-answer-writing-52/current.json</code> records authenticated captures at 360, 768, and 1280 widths.</li>
+      <li><code>src/components/writing/ShortAnswerWriting52Workspace.tsx</code> contains the 52-specific remediation.</li>
+      <li><code>src/components/writing/WritingPageContent.tsx</code> routes normalized <code>q52</code> problems into the dedicated workspace.</li>
+    </ul>
+
+    <h2>Verification</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Command</th>
+          <th>Result</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>pnpm exec tsc --noEmit --pretty false</code></td>
+          <td>Passed.</td>
+        </tr>
+        <tr>
+          <td><code>node scripts/design-review/render-shot.mjs</code> for <code>/writing/answer-writing-52</code></td>
+          <td>Captured 360/768/1280; status=200, errorOverlay=false, consoleErr=0.</td>
+        </tr>
+        <tr>
+          <td><code>pnpm exec playwright test tests/e2e/screens/screens-authed.spec.ts -g "D-02" --project=mobile-360 --project=tablet-768 --project=desktop-1280</code></td>
+          <td>Passed, 4 tests including auth setup and the D-02 route across audited breakpoints.</td>
+        </tr>
+        <tr>
+          <td><code>pnpm lint</code></td>
+          <td>Passed with 0 errors and 9 pre-existing warnings.</td>
+        </tr>
+      </tbody>
+    </table>
+  </body>
+</html>

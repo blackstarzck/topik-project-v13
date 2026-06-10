@@ -1,0 +1,117 @@
+{
+  "generatedAt": "2026-06-10T16:35:00+09:00",
+  "folder": "09-D-02-answer-writing-52",
+  "iaCode": "D-02",
+  "route": "/writing/answer-writing-52",
+  "classification": "user-active",
+  "verdict": "PASS",
+  "summary": "D-02 now uses a dedicated 52번 writing workspace. The page exposes a command header with autosave, timer, manual save, and submit actions; a three-step writing flow; prompt and writing conditions; a single 10-160 character answer editor; contextual blank focus tabs; and a right guide limited to three concise cards.",
+  "screenshots": {
+    "desktop1280": "current-1280.png",
+    "tablet768": "current-768.png",
+    "mobile360": "current-360.png",
+    "manifest": "current.json",
+    "referenceHifi": "reference-hifi.png",
+    "referenceWireframe": "reference-wireframe.png"
+  },
+  "acceptedVariance": [
+    "The active normalized q52 contract stores and submits one answer_text. Blank tabs therefore act as contextual focus selectors rather than separate per-blank inputs.",
+    "The hifi image implies richer guide micro-content, but the current implementation limits the guide rail to three cards as required by the active description.md.",
+    "Next dev indicator may appear in local screenshots. It is not product UI and is excluded from visual severity."
+  ],
+  "findings": [
+    {
+      "id": "D02-PASS-001",
+      "severity": "PASS",
+      "category": "page-structure",
+      "claim": "Resolved: the route now renders a dedicated 52번 workspace instead of the generic writing editor stack.",
+      "observed": "The authenticated route shows the 52번 command header, stepper, main writing column, and right guide at 360, 768, and 1280 widths.",
+      "expected": "D-02 should be a task-specific writing workspace with prompt, conditions, answer input, and writing help.",
+      "evidence": [
+        "src/components/writing/ShortAnswerWriting52Workspace.tsx",
+        "src/components/writing/WritingPageContent.tsx",
+        "screenshots/09-D-02-answer-writing-52/current-1280.png"
+      ],
+      "confidence": "high",
+      "recommendedNextAction": "No blocking follow-up."
+    },
+    {
+      "id": "D02-PASS-002",
+      "severity": "PASS",
+      "category": "conditions",
+      "claim": "Resolved: prompt and writing conditions are visible before the answer editor.",
+      "observed": "The main column renders QuestionPrompt, ConditionsPanel, reference materials, then the answer panel. Missing q52 conditions still block submit through submitBlockedReason.",
+      "expected": "The learner must see the 52번 prompt and required conditions before submission.",
+      "evidence": [
+        "src/components/writing/ShortAnswerWriting52Workspace.tsx",
+        "src/components/writing/ConditionsPanel.tsx",
+        "screenshots/09-D-02-answer-writing-52/current-360.png"
+      ],
+      "confidence": "high",
+      "recommendedNextAction": "No blocking follow-up."
+    },
+    {
+      "id": "D02-PASS-003",
+      "severity": "PASS",
+      "category": "answer-editor",
+      "claim": "Resolved: the answer editor preserves the 10-160 character contract and separates save from submit.",
+      "observed": "The editor shows char count, progress, blur validation, autosave status, manual save, and submit confirmation while persisting one q52 answer_text.",
+      "expected": "D-02 requires a sentence-form input, char count 10-160, blur/submit validation, autosave warning, and separated save/submit CTAs.",
+      "evidence": [
+        "src/components/writing/ShortAnswerWriting52Workspace.tsx",
+        "screenshots/09-D-02-answer-writing-52/current-1280.png"
+      ],
+      "confidence": "high",
+      "recommendedNextAction": "No blocking follow-up."
+    },
+    {
+      "id": "D02-PASS-004",
+      "severity": "PASS",
+      "category": "guide-rail",
+      "claim": "Resolved: the right writing help is concise and bounded to three cards.",
+      "observed": "The right rail shows condition check, sentence completion tips, and blank-by-blank focus cards, followed by a prompt review button.",
+      "expected": "D-02 help should stay close to the answer editor and use no more than three cards.",
+      "evidence": [
+        "screenshots/09-D-02-answer-writing-52/current-1280.png",
+        "src/components/writing/ShortAnswerWriting52Workspace.tsx"
+      ],
+      "confidence": "high",
+      "recommendedNextAction": "No blocking follow-up."
+    },
+    {
+      "id": "D02-PASS-005",
+      "severity": "PASS",
+      "category": "responsive-render",
+      "claim": "Resolved: the page renders stably across audited breakpoints.",
+      "observed": "The render-shot manifest records status=200, errorOverlay=false, and consoleErrorCount=0 for 360, 768, and 1280 widths. The targeted e2e screen test also passed across the same projects.",
+      "expected": "The route should render without runtime page errors or incoherent overlap on mobile, tablet, and desktop.",
+      "evidence": [
+        "screenshots/09-D-02-answer-writing-52/current.json",
+        "tests/e2e/screens/screens-authed.spec.ts"
+      ],
+      "confidence": "high",
+      "recommendedNextAction": "No blocking follow-up."
+    }
+  ],
+  "verification": [
+    {
+      "command": "pnpm exec tsc --noEmit --pretty false",
+      "result": "passed"
+    },
+    {
+      "command": "node scripts/design-review/render-shot.mjs for /writing/answer-writing-52 at 360, 768, and 1280 widths",
+      "result": "status=200, errorOverlay=false, consoleErr=0 for all audited viewports"
+    },
+    {
+      "command": "pnpm exec playwright test tests/e2e/screens/screens-authed.spec.ts -g \"D-02\" --project=mobile-360 --project=tablet-768 --project=desktop-1280",
+      "result": "4 passed including auth setup and the D-02 route across audited breakpoints"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "passed with 0 errors and 9 pre-existing warnings"
+    }
+  ],
+  "deferred": [
+    "Per-blank persisted answer_json remains deferred unless the active q52 source docs and database contract are changed to require it."
+  ]
+}
