@@ -1,19 +1,16 @@
 "use client";
 
-import { Button, Col, Empty, Row, Space, Tag, Typography } from "antd";
+import type { KeyboardEvent } from "react";
+import { Button, Col, Empty, Row, Space, Tag, Typography, theme } from "antd";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { AppCard } from "@/components/shared/AppCard";
 import { writingProblemHref } from "@/lib/writing/routes";
+import { SPACING } from "@/theme/spacing";
 
-const { Text, Title } = Typography;
+const { Paragraph, Text, Title } = Typography;
+const TITLE_LIMIT = 28;
 
-/**
- * Structurally matches src/lib/practice/next.ts AlternativeProblem. Defined
- * locally (not imported) so this "use client" file keeps NO import edge to the
- * server-only-by-convention next.ts module. `reason` is required (string|null)
- * to stay assignable from the lib type at the onSelect callback boundary.
- */
 type AlternativeProblem = {
   id: string;
   title: string;
@@ -27,13 +24,10 @@ type AlternativeProblem = {
 
 type Props = {
   alternatives: AlternativeProblem[];
-  /** 현재 선택된 문제 id (하이라이트용). */
   selectedId?: string | null;
-  /** 대안 카드를 선택할 때 호출. 미지정 시 클릭하면 바로 이동(레거시 동작). */
   onSelect?: (alt: AlternativeProblem) => void;
 };
 
-/** maps difficulty (1..5) to a practice.common translation key. */
 function difficultyKey(difficulty: number | null | undefined): string | null {
   if (difficulty == null) return null;
   if (difficulty <= 1) return "difficultyVeryEasy";
@@ -43,11 +37,19 @@ function difficultyKey(difficulty: number | null | undefined): string | null {
   return "difficultyHard";
 }
 
-/**
- * Phase 7-D Task 6 (P1-2) — R-02 대안 문제 카드 grid.
- * 제약: 대안 3개 이하, 카드 제목 28자, 카드 설명 2줄 제한.
- * 예외(§3): 권한 잠금 카드는 비활성 및 업그레이드 안내 표시.
- */
+function truncateTitle(title: string) {
+  return title.length > TITLE_LIMIT ? `${title.slice(0, TITLE_LIMIT)}...` : title;
+}
+
+function handleCardKeyDown(
+  event: KeyboardEvent<HTMLElement>,
+  callback: () => void,
+) {
+  if (event.key !== "Enter" && event.key !== " ") return;
+  event.preventDefault();
+  callback();
+}
+
 export function AlternativeCardsGrid({
   alternatives,
   selectedId,
@@ -55,41 +57,49 @@ export function AlternativeCardsGrid({
 }: Props) {
   const t = useTranslations("practice.next");
   const tCommon = useTranslations("practice.common");
+  const { token } = theme.useToken();
   const router = useRouter();
 
   if (alternatives.length === 0) {
     return (
-      <div>
+      <section data-testid="next-alternatives">
         <Title level={5}>{t("alternativesTitle")}</Title>
         <Empty description={t("alternativesEmpty")} />
-      </div>
+      </section>
     );
   }
 
+  const selectedStyle = {
+    borderColor: token.colorPrimary,
+    borderWidth: token.lineWidth * 2,
+  };
+
   return (
-    <div>
+    <section data-testid="next-alternatives">
       <Title level={5}>{t("alternativesTitle")}</Title>
-      <Row gutter={[12, 12]}>
-        {alternatives.slice(0, 3).map((a) => {
-          const diffKey = difficultyKey(a.difficulty);
+      <Row gutter={[SPACING.md, SPACING.md]}>
+        {alternatives.slice(0, 3).map((alternative) => {
+          const diffKey = difficultyKey(alternative.difficulty);
           const diffLabel = diffKey
             ? tCommon(diffKey as Parameters<typeof tCommon>[0])
             : null;
-          if (a.locked) {
+
+          if (alternative.locked) {
             return (
-              <Col key={a.id} xs={24} md={8}>
+              <Col key={alternative.id} xs={24} md={8}>
                 <AppCard
-                  data-testid={`alt-locked-${a.id}`}
-                  style={{ opacity: 0.7, background: "#fafafa" }}
+                  data-testid="next-alternative-locked"
+                  data-problem-id={alternative.id}
+                  style={{
+                    opacity: token.opacityLoading,
+                    background: token.colorBgContainerDisabled,
+                  }}
                   title={
-                    <Space>
-                      <span aria-hidden>🔒</span>
-                      <Tag color="default">
-                        {a.questionNo != null
-                          ? tCommon("questionNo", { no: a.questionNo })
-                          : a.domain}
-                      </Tag>
-                    </Space>
+                    <Tag color="default">
+                      {alternative.questionNo != null
+                        ? tCommon("questionNo", { no: alternative.questionNo })
+                        : alternative.domain}
+                    </Tag>
                   }
                 >
                   <Space
@@ -112,56 +122,56 @@ export function AlternativeCardsGrid({
 
           const handleClick = () => {
             if (onSelect) {
-              onSelect(a);
-            } else {
-              router.push(
-                writingProblemHref({
-                  questionNo: a.questionNo,
-                  problemId: a.id,
-                }) as never,
-              );
+              onSelect(alternative);
+              return;
             }
+            router.push(
+              writingProblemHref({
+                questionNo: alternative.questionNo,
+                problemId: alternative.id,
+              }) as never,
+            );
           };
 
           return (
-            <Col key={a.id} xs={24} md={8}>
+            <Col key={alternative.id} xs={24} md={8}>
               <AppCard
                 hoverable
+                role="button"
+                tabIndex={0}
                 onClick={handleClick}
-                data-testid={`alt-${a.id}`}
-                style={
-                  selectedId === a.id
-                    ? { borderColor: "#1677ff", borderWidth: 2 }
-                    : undefined
-                }
+                onKeyDown={(event) => handleCardKeyDown(event, handleClick)}
+                data-testid="next-alternative-card"
+                data-problem-id={alternative.id}
+                style={selectedId === alternative.id ? selectedStyle : undefined}
                 title={
                   <Space wrap>
                     <Tag color="default">
-                      {a.questionNo != null
-                        ? tCommon("questionNo", { no: a.questionNo })
-                        : a.domain}
+                      {alternative.questionNo != null
+                        ? tCommon("questionNo", { no: alternative.questionNo })
+                        : alternative.domain}
                     </Tag>
                     {diffLabel ? <Tag color="purple">{diffLabel}</Tag> : null}
-                    {a.estimatedMinutes != null ? (
+                    {alternative.estimatedMinutes != null ? (
                       <Tag color="cyan">
-                        {tCommon("minutes", { minutes: a.estimatedMinutes })}
+                        {tCommon("minutes", {
+                          minutes: alternative.estimatedMinutes,
+                        })}
                       </Tag>
                     ) : null}
                   </Space>
                 }
               >
-                <Text strong>
-                  {a.title.length > 28 ? `${a.title.slice(0, 28)}…` : a.title}
-                </Text>
-                {a.reason ? (
-                  <div style={{ marginTop: 4 }}>
-                    <Typography.Paragraph
+                <Text strong>{truncateTitle(alternative.title)}</Text>
+                {alternative.reason ? (
+                  <div style={{ marginTop: SPACING.xs }}>
+                    <Paragraph
                       type="secondary"
-                      style={{ fontSize: 12, margin: 0 }}
+                      style={{ fontSize: token.fontSizeSM, margin: 0 }}
                       ellipsis={{ rows: 2 }}
                     >
-                      {a.reason}
-                    </Typography.Paragraph>
+                      {alternative.reason}
+                    </Paragraph>
                   </div>
                 ) : null}
               </AppCard>
@@ -169,6 +179,6 @@ export function AlternativeCardsGrid({
           );
         })}
       </Row>
-    </div>
+    </section>
   );
 }

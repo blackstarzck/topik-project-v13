@@ -16,7 +16,7 @@ export default async function PracticeNextPage() {
   const bundle = await getNextProblemBundle(user.id);
   return (
     <>
-      <PageHeader title={t("pageTitle")} />
+      <PageHeader title={t("pageTitle")} subtitle={t("subtitle")} />
       <NextProblemView bundle={bundle} />
     </>
   );

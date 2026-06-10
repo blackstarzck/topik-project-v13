@@ -1,0 +1,24 @@
+{
+  "iaCode": "R-02",
+  "status": "PASS",
+  "findings": [],
+  "evidence": {
+    "route": "/practice/next",
+    "viewports": [
+      "mobile-360",
+      "tablet-768",
+      "desktop-1280"
+    ],
+    "statusOkAll": true,
+    "pageHeaderVisibleAll": true,
+    "summaryCardsWithinLimitAll": true,
+    "primaryVisibleAll": true,
+    "primaryReasonVisibleAll": true,
+    "primaryCardHasNoStartButtonAll": true,
+    "alternativesWithinLimitAll": true,
+    "selectionBarVisibleAll": true,
+    "startCtaSingleEnabledAll": true,
+    "cardSelectionDoesNotNavigateAll": true,
+    "noConsoleErrors": true
+  }
+}

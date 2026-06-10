@@ -419,12 +419,38 @@
       "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/16-R-01-comparison-report/findings.json",
       "status": "PASS",
       "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
+    },
+    {
+      "folder": "17-R-02-next-problem-recommendation",
+      "iaCode": "R-02",
+      "screen": "Next problem recommendation",
+      "route": "/practice/next",
+      "routeSource": "docs/Wireframe/17-R-02-next-problem-recommendation/functional-spec.md",
+      "routeFallback": "docs/sitemap.md",
+      "referenceImages": {
+        "wireframe": "docs/Wireframe/17-R-02-next-problem-recommendation/wireframe.png",
+        "hifi": "docs/Wireframe/17-R-02-next-problem-recommendation/hifi.png",
+        "status": "complete"
+      },
+      "docs": {
+        "description": "present",
+        "functionalSpec": "present",
+        "screenDataSummary": "present"
+      },
+      "classification": "user-active",
+      "audience": "user",
+      "authRequirement": "authenticated user",
+      "dynamicSeedRequirement": "active next_problem recommendation run preferred; falls back to same-type/random problem",
+      "report": "docs/design-review-result/wireframe-ui-audit/2026-06-10/17-R-02-next-problem-recommendation.html",
+      "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/17-R-02-next-problem-recommendation/findings.json",
+      "status": "PASS",
+      "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
     }
   ],
   "summary": {
-    "completedPass": 16,
+    "completedPass": 17,
     "inProgress": 0,
-    "remainingKnownActiveScreens": 18,
+    "remainingKnownActiveScreens": 17,
     "adminFrozenOutOfScope": [
       "21-H-01-admin-problem-management",
       "30-X-08-organization-admin-dashboard",
