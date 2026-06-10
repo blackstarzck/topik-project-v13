@@ -1,0 +1,44 @@
+{
+  "page": "36-X-14-privacy-policy",
+  "iaCode": "X-14",
+  "route": "/privacy",
+  "status": "PASS",
+  "findings": [],
+  "checks": [
+    {
+      "id": "X14-public-route",
+      "status": "PASS",
+      "evidence": "The public /privacy route loads with HTTP 200 in all captured viewports."
+    },
+    {
+      "id": "X14-placeholder-notice",
+      "status": "PASS",
+      "evidence": "The temporary privacy notice region is visible."
+    },
+    {
+      "id": "X14-data-policy-summary",
+      "status": "PASS",
+      "evidence": "Collection, purpose, retention, and external LLM/third-party summary region is visible."
+    },
+    {
+      "id": "X14-update-notice",
+      "status": "PASS",
+      "evidence": "Formal policy update notice is visible."
+    },
+    {
+      "id": "X14-related-links",
+      "status": "PASS",
+      "evidence": "Terms, home, and sign-up links are visible."
+    },
+    {
+      "id": "X14-responsive-capture",
+      "status": "PASS",
+      "evidence": "Mobile, tablet, and desktop captures load without dev overlay, page, console, or 500-response errors."
+    }
+  ],
+  "screenshots": {
+    "mobile-360": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/36-X-14-privacy-policy/mobile-360.png",
+    "tablet-768": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/36-X-14-privacy-policy/tablet-768.png",
+    "desktop-1280": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/36-X-14-privacy-policy/desktop-1280.png"
+  }
+}

@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>X-14 Privacy Audit</title></head>
+<body>
+  <h1>X-14 Privacy Audit</h1>
+  <p>Status: <strong>PASS</strong></p>
+  <p>Route: /privacy</p>
+  <table border="1" cellspacing="0" cellpadding="6">
+    <thead><tr><th>Check</th><th>Status</th><th>Evidence</th></tr></thead>
+    <tbody>
+      <tr><td>X14-public-route</td><td>PASS</td><td>The public /privacy route loads with HTTP 200 in all captured viewports.</td></tr>
+      <tr><td>X14-placeholder-notice</td><td>PASS</td><td>The temporary privacy notice region is visible.</td></tr>
+      <tr><td>X14-data-policy-summary</td><td>PASS</td><td>Collection, purpose, retention, and external LLM/third-party summary region is visible.</td></tr>
+      <tr><td>X14-update-notice</td><td>PASS</td><td>Formal policy update notice is visible.</td></tr>
+      <tr><td>X14-related-links</td><td>PASS</td><td>Terms, home, and sign-up links are visible.</td></tr>
+      <tr><td>X14-responsive-capture</td><td>PASS</td><td>Mobile, tablet, and desktop captures load without dev overlay, page, console, or 500-response errors.</td></tr>
+    </tbody>
+  </table>
+  <h2>Screenshots</h2>
+  <ul>
+    <li>mobile-360: docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/36-X-14-privacy-policy/mobile-360.png</li>
+    <li>tablet-768: docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/36-X-14-privacy-policy/tablet-768.png</li>
+    <li>desktop-1280: docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/36-X-14-privacy-policy/desktop-1280.png</li>
+  </ul>
+</body>
+</html>

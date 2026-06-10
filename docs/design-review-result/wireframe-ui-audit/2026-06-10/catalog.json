@@ -810,12 +810,38 @@
       "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/35-X-13-terms/findings.json",
       "status": "PASS",
       "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
+    },
+    {
+      "folder": "36-X-14-privacy-policy",
+      "iaCode": "X-14",
+      "screen": "Privacy policy",
+      "route": "/privacy",
+      "routeSource": "docs/Wireframe/36-X-14-privacy-policy/functional-spec.md",
+      "routeFallback": "docs/sitemap.md",
+      "referenceImages": {
+        "wireframe": "docs/Wireframe/36-X-14-privacy-policy/wireframe.png",
+        "hifi": "docs/Wireframe/36-X-14-privacy-policy/hifi.png",
+        "status": "missing-wireframe-and-hifi"
+      },
+      "docs": {
+        "description": "present",
+        "functionalSpec": "present",
+        "screenDataSummary": "present"
+      },
+      "classification": "public-active",
+      "audience": "public",
+      "authRequirement": "none",
+      "dynamicSeedRequirement": "placeholder privacy copy is audited against tracked legal.privacy translations; no DB/legal document store is used.",
+      "report": "docs/design-review-result/wireframe-ui-audit/2026-06-10/36-X-14-privacy-policy.html",
+      "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/36-X-14-privacy-policy/findings.json",
+      "status": "PASS",
+      "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
     }
   ],
   "summary": {
-    "completedPass": 31,
+    "completedPass": 32,
     "inProgress": 0,
-    "remainingKnownActiveScreens": 3,
+    "remainingKnownActiveScreens": 2,
     "adminFrozenOutOfScope": [
       "21-H-01-admin-problem-management",
       "30-X-08-organization-admin-dashboard",

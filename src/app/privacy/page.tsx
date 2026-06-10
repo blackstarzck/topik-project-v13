@@ -31,17 +31,17 @@ export default async function PrivacyPage() {
   return (
     <PublicShell>
       <PageContainer size="narrow">
-        <AppCard>
+        <AppCard data-testid="privacy-card">
           {/* §1 페이지 제목 */}
           <h1>{t("heading")}</h1>
 
           {/* §2 임시 안내 고지 — placeholder 상태를 숨기지 않는다 */}
-          <section style={sectionStyle}>
+          <section style={sectionStyle} data-testid="privacy-intro">
             <p>{t("intro")}</p>
           </section>
 
           {/* §3 처리 항목 요약 — 수집/이용/보관/제3자(외부 LLM 전송) */}
-          <section style={sectionStyle}>
+          <section style={sectionStyle} data-testid="privacy-summary">
             <h2>{t("summaryTitle")}</h2>
             <ul>
               <li>{t.rich("summaryCollect", { strong })}</li>
@@ -55,13 +55,13 @@ export default async function PrivacyPage() {
           </section>
 
           {/* §4 갱신 안내 — 정식 게시 시 갱신 및 가입자 안내 예정 */}
-          <section style={sectionStyle}>
+          <section style={sectionStyle} data-testid="privacy-update">
             <h2>{t("updateTitle")}</h2>
             <p>{t("updateBody")}</p>
           </section>
 
           {/* §5 관련 링크 — 이용약관 / 홈 / 가입 (escape route) */}
-          <section style={sectionStyle}>
+          <section style={sectionStyle} data-testid="privacy-related-links">
             <p>
               {t("relatedLabel")}
               <Link href="/terms">{t("linkTerms")}</Link>

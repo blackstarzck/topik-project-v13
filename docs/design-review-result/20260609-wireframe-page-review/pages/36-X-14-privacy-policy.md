@@ -1,35 +1,44 @@
-# 36-X-14 개인정보처리방침 — 와이어프레임 기준 리뷰
+# 36-X-14 개인정보처리방침 와이어프레임 리뷰
 
 ## 1. 메타
-- **IA / 라우트**: X-14 / `/privacy` (public)
-- **audience**: public
-- **캡처 상태**: rendered / SOT 이미지 없음(코드 기반, 텍스트 SOT)
-- **host**: 단독 페이지 (policy support)
+- **IA / route**: X-14 / `/privacy` (public)
+- **Audience**: public
+- **상태**: PASS
+- **Host**: policy support placeholder page
 
-## 2. 캡처 증거
-- 스크린샷: `.design-review-shots/20260609/36-X-14-privacy-{360,768,1280}.png`
-- 렌더 헬스(`_health.json`): HTTP 200, 콘솔 에러 0, 에러 오버레이 없음.
+## 2. 보정 요약
+- 페이지 동작은 유지하고 `PrivacyPage`에 감사용 stable test id만 추가했다.
+- X-14 전용 e2e를 추가해 placeholder 안내, 개인정보 처리 요약, 갱신 안내, 관련 링크를 검증했다.
+- `legal.terms`/`legal.privacy` 번역은 현재 dirty worktree와 HEAD가 동일함을 구조화 비교로 확인했다. 따라서 X-14 산출물은 unrelated dirty 번역 변경에 의존하지 않는다.
 
-## 3. Layer 1 — SOT 정합 리뷰
+## 3. Layer 1 - SOT 정합 리뷰
 
-| 항목 | 요소/상태 | 판정 | 근거 |
+| 항목 | 요구사항 | 판정 | 근거 |
 | --- | --- | --- | --- |
-| 제목(#1) | "개인정보처리방침" | 일치 | 캡처 |
-| 임시 안내(#2) | placeholder 고지 | 일치 | 캡처: "정식 개인정보처리방침은 한국 개인정보보호법 준수 사항을 반영해 운영 시작 전 별도 게시 예정" |
-| 처리 항목 요약(#3) | 수집/이용/보관/제3자+외부 LLM | **일치(모범)** | 캡처: 수집(이메일·이름·학습로그·제출물·평가)·이용(식별·진도·피드백 개선)·보관(탈퇴 시 즉시 파기, 익명 통계 보관)·제3자(없음, 단 AI 호출 시 제출 본문 외부 LLM 일시 전송 고지) |
-| 갱신 안내(#4) | 정식 게시 시 갱신+가입자 안내 | 일치 | 캡처: "정식 게시되면 본 페이지 갱신, 변경 내용 가입 사용자 안내" |
-| 관련 링크(#5) | 이용약관/홈/가입 | 일치 | 캡처: "이용약관 · 홈 · 가입" |
+| 페이지 제목 (#1) | 개인정보처리방침 제목 표시 | Pass | `current.json`: `cardVisible` true, heading rendered |
+| 임시 안내 (#2) | 정식 개인정보처리방침 전 placeholder 상태를 숨기지 않음 | Pass | `current.json`: `introVisible` true |
+| 처리 항목 요약 (#3) | 수집 항목, 이용 목적, 보관 기간, 외부 LLM/제3자 범위 안내 | Pass | `current.json`: `summaryVisible` true |
+| 갱신 안내 (#4) | 정식 게시 시 페이지 갱신과 사용자 안내 예정 표시 | Pass | `current.json`: `updateVisible` true |
+| 관련 링크 (#5) | 이용약관, 홈, 가입으로 이동 가능 | Pass | `current.json`: `termsLinkVisible`, `homeLinkVisible`, `signUpLinkVisible` true |
+| 반응형 단일 컬럼 | 모바일/데스크톱에서 읽기 좋은 단일 컬럼 | Pass | mobile/desktop screenshot 확인, 겹침 없음 |
 
-**종합 verdict: 일치 (강, 모범)** — placeholder 고지 + 외부 LLM 전송 민감 고지 모두 정직하게 충족.
+**종합 verdict: PASS.**
 
-## 4. Layer 2 — 멀티 에이전트 독립 분석
+## 4. 증거
+- Report: `docs/design-review-result/wireframe-ui-audit/2026-06-10/36-X-14-privacy-policy.html`
+- Structured findings: `docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/36-X-14-privacy-policy/findings.json`
+- Current capture data: `docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/36-X-14-privacy-policy/current.json`
+- Screenshots:
+  - `docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/36-X-14-privacy-policy/mobile-360.png`
+  - `docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/36-X-14-privacy-policy/tablet-768.png`
+  - `docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/36-X-14-privacy-policy/desktop-1280.png`
 
-- **콘텐츠/정직성 (우수)**: **외부 LLM 전송 가능성을 민감 고지로 명확히 표시**("AI 모델 호출 시 글쓰기 제출 본문이 외부 LLM 제공자에게 일시 전송될 수 있으며…") — SOT가 요구한 핵심 정직 고지를 정확히 구현. "확정적 보관 기간/제3자 약속을 새로 만들지 않는다"는 제약도 "정식 검토 전까지 확정적 보관/제3자 약속 만들지 않습니다"로 충족.
-- **UX/IA (양호)**: 처리 항목을 항목별 굵게 정리해 가독성 높음. [[35-X-13]] 이용약관과 상호 링크.
-- **반응형/접근성 (양호)**: 단일 컬럼 읽기 폭, 360 유지, 링크 접근.
-- **적대적 검증**: "정직 고지" 주장 → 캡처로 확정. 5영역 모두 일치.
+## 5. 실행 검증
+- `pnpm exec eslint src/app/privacy/page.tsx tests/e2e/screens/privacy.spec.ts`
+- `pnpm exec playwright test tests/e2e/screens/privacy.spec.ts --project=mobile-360 --project=tablet-768 --project=desktop-1280 --no-deps`
+- `pnpm exec playwright test tests/e2e/screens/screens-public.spec.ts -g "X-14" --project=mobile-360 --project=tablet-768 --project=desktop-1280 --no-deps`
+- X-14 capture script: `/privacy`를 360/768/1280에서 캡처했고 status PASS.
 
-## 5. 결론 — 개선안
-- **P0/P1/P2 없음.** placeholder 상태에서 개인정보 처리 범위(특히 외부 LLM 전송)를 정직하게 고지하는 모범 화면. (정식 처리방침 게시 시 A-01·X-13과 동기화는 운영 단계 작업, 리뷰 범위 밖.)
-
-> 참고: 코드 미수정. 현재(임시 방침) 상태 우수.
+## 6. 검증 한계
+- 정식 개인정보처리방침 문안, 동의 이력, 데이터 삭제 요청 흐름은 아직 scope 밖이다. 현재 화면은 placeholder 상태와 데이터 처리 범위 안내를 정직하게 표시하는지만 검증했다.
+- 전체 lint/typecheck와 기본 Playwright setup은 unrelated auth/landing/legal worktree 변경 때문에 계속 차단되어 있다.
