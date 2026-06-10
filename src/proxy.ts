@@ -61,13 +61,13 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   // Run on every request except api routes, the Next runtime, the favicon,
-  // and any static asset (images, fonts, sitemap, robots, etc). The asset
+  // and any static asset (images, videos, fonts, sitemap, robots, etc). The asset
   // exclusion prevents `/icon.svg`, `/robots.txt`, `/sitemap.xml`, and
   // similar metadata files from being redirected to /login.
   //
   // `/paywall` and `/subscription` shells stay behind the auth gate by
   // default and will be revisited when billing scope is reopened.
   matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt|xml|woff2?|ttf|otf)$).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|mp4|webm|ico|txt|xml|woff2?|ttf|otf)$).*)",
   ],
 };

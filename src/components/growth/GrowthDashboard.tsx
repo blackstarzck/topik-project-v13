@@ -16,14 +16,14 @@ import {
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { writingProblemHref } from "@/lib/writing/routes";
+import { writingFeedbackHref, writingProblemHref } from "@/lib/writing/routes";
 import { AppCard } from "@/components/shared/AppCard";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { GrowthTrendChart, type GrowthTrendPoint } from "./GrowthTrendChart";
 import { GrowthLockedReport } from "./GrowthLockedReport";
 import { buildGrowthInsights } from "./insights";
 
-const { Title, Paragraph, Text } = Typography;
+const { Text } = Typography;
 
 // dimension 코드 목록. 라벨 문구는 growth.dashboard.dimension.* 카탈로그에서
 // t()로 해석한다(색상만으로 의미 전달 금지 → 한글 라벨 병기).
@@ -87,7 +87,9 @@ export type GrowthDashboardProps = {
 // next-intl 키 타입을 growth.dashboard 네임스페이스로 좁힌다. 동적 dimension 키
 // (t(`dimension.${code}`))는 strict 타이핑이 bare string 을 거부하므로 호출부에서
 // 캐스트한다.
-type DashboardTranslate = ReturnType<typeof useTranslations<"growth.dashboard">>;
+type DashboardTranslate = ReturnType<
+  typeof useTranslations<"growth.dashboard">
+>;
 
 /**
  * X-02 성장 대시보드.
@@ -142,7 +144,9 @@ export function GrowthDashboard({
     return { text: t("kpi.improvementNone"), color: undefined };
   };
 
-  const sortedWeak = [...weakDimensions].sort((a, b) => a.avgScore - b.avgScore);
+  const sortedWeak = [...weakDimensions].sort(
+    (a, b) => a.avgScore - b.avgScore,
+  );
   const leading = sortedWeak[0];
   const leadingLabel = leading ? dimensionLabel(leading.dimension) : null;
 
@@ -174,8 +178,16 @@ export function GrowthDashboard({
                 <AppCard size="small" style={{ height: "100%" }}>
                   <Statistic
                     title={t("kpi.averageScore")}
-                    value={kpi.averageScore != null ? Math.round(kpi.averageScore) : "—"}
-                    suffix={kpi.averageScore != null ? t("kpi.pointSuffix") : undefined}
+                    value={
+                      kpi.averageScore != null
+                        ? Math.round(kpi.averageScore)
+                        : "—"
+                    }
+                    suffix={
+                      kpi.averageScore != null
+                        ? t("kpi.pointSuffix")
+                        : undefined
+                    }
                   />
                   <Text type="secondary" style={{ fontSize: 12 }}>
                     {t("kpi.averageScoreHint")}
@@ -199,7 +211,11 @@ export function GrowthDashboard({
                   <Statistic
                     title={t("kpi.improvement")}
                     value={improvement.text}
-                    styles={{ content: improvement.color ? { color: improvement.color } : undefined }}
+                    styles={{
+                      content: improvement.color
+                        ? { color: improvement.color }
+                        : undefined,
+                    }}
                   />
                   <Text type="secondary" style={{ fontSize: 12 }}>
                     {t("kpi.improvementHint")}
@@ -210,7 +226,11 @@ export function GrowthDashboard({
                 <AppCard size="small" style={{ height: "100%" }}>
                   <Statistic
                     title={t("kpi.goalAchievement")}
-                    value={kpi.goalAchievementPct != null ? kpi.goalAchievementPct : "—"}
+                    value={
+                      kpi.goalAchievementPct != null
+                        ? kpi.goalAchievementPct
+                        : "—"
+                    }
                     suffix={kpi.goalAchievementPct != null ? "%" : undefined}
                   />
                   <Text type="secondary" style={{ fontSize: 12 }}>
@@ -230,7 +250,10 @@ export function GrowthDashboard({
           )}
 
           {/* area 3 — 성장 차트(recharts 시계열). */}
-          <GrowthTrendChart points={trendPoints} onRetry={() => router.refresh()} />
+          <GrowthTrendChart
+            points={trendPoints}
+            onRetry={() => router.refresh()}
+          />
 
           {/* area 4 — 약점 매트릭스. 색상만으로 의미 전달 금지 → 수치 라벨 병기. */}
           <AppCard title={t("weakness.title")}>
@@ -241,13 +264,20 @@ export function GrowthDashboard({
                 </Link>
               </Empty>
             ) : (
-              <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+              <Space
+                orientation="vertical"
+                size="middle"
+                style={{ width: "100%" }}
+              >
                 {sortedWeak.slice(0, 6).map((w) => {
                   const percent = Math.round(w.avgScore * 100);
                   return (
                     <div key={w.dimension}>
                       <Space
-                        style={{ width: "100%", justifyContent: "space-between" }}
+                        style={{
+                          width: "100%",
+                          justifyContent: "space-between",
+                        }}
                       >
                         <Text strong>{dimensionLabel(w.dimension)}</Text>
                         <Text type="secondary">
@@ -272,7 +302,11 @@ export function GrowthDashboard({
           {/* area 5 — 인사이트. 실제 수치 근거(insights.ts), 3개 이하·60자 이하.
               insights.ts 가 키+ICU 변수만 만들고, 여기서 t()로 문구를 해석한다. */}
           <AppCard title={t("insights.title")}>
-            <Space orientation="vertical" size="small" style={{ width: "100%" }}>
+            <Space
+              orientation="vertical"
+              size="small"
+              style={{ width: "100%" }}
+            >
               {insights.map((insight, idx) => (
                 <Alert
                   key={idx}
@@ -306,7 +340,12 @@ export function GrowthDashboard({
                         actions={[
                           <Link
                             key="view"
-                            href={`/writing/feedback/long/${item.submissionId}` as never}
+                            href={
+                              writingFeedbackHref({
+                                questionNo: item.questionNo,
+                                submissionId: item.submissionId,
+                              }) as never
+                            }
                           >
                             {t("recent.view")}
                           </Link>,
@@ -331,7 +370,9 @@ export function GrowthDashboard({
                           type="secondary"
                           style={{ marginLeft: 12, fontSize: 12 }}
                         >
-                          {new Date(item.generatedAt).toLocaleDateString("ko-KR")}
+                          {new Date(item.generatedAt).toLocaleDateString(
+                            "ko-KR",
+                          )}
                         </Text>
                       </List.Item>
                     )}

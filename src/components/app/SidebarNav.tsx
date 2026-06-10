@@ -2,9 +2,24 @@
 
 import { Menu, Tag, Tooltip, type MenuProps } from "antd";
 import { useTranslations } from "next-intl";
-import { Lock } from "lucide-react";
+import {
+  BarChart3,
+  Bell,
+  BookOpen,
+  GraduationCap,
+  Home,
+  Languages,
+  Library,
+  Lightbulb,
+  ListChecks,
+  Lock,
+  PenLine,
+  Settings,
+  Target,
+  UserRound,
+} from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import { type AppRole } from "@/lib/auth/roles";
 import {
   computeSidebarLocks,
@@ -23,6 +38,7 @@ type Props = {
 };
 
 type MenuItems = MenuProps["items"];
+type MenuItem = NonNullable<MenuItems>[number];
 
 /**
  * Translator scoped to the `nav` message namespace. next-intl's type
@@ -49,7 +65,11 @@ function lockedLeafLabel(label: string, reason: string) {
         <Lock aria-hidden size={12} style={{ opacity: 0.7, flexShrink: 0 }} />
         <span>{label}</span>
         <Tag
-          style={{ marginInlineStart: "auto", fontSize: 11, lineHeight: "16px" }}
+          style={{
+            marginInlineStart: "auto",
+            fontSize: 11,
+            lineHeight: "16px",
+          }}
         >
           {reason}
         </Tag>
@@ -66,22 +86,44 @@ function buildLeaf(leaf: SidebarLeaf, locks: SidebarLockMap, t: NavTranslate) {
     return {
       key: leaf.key,
       label: lockedLeafLabel(label, reason),
+      icon: navIcon(leaf.key),
       disabled: true,
       title: `${label} (${reason})`,
     };
   }
-  return { key: leaf.key, label };
+  return { key: leaf.key, label, icon: navIcon(leaf.key) };
+}
+
+function navIcon(key: string) {
+  const props = { "aria-hidden": true, size: 17, strokeWidth: 1.8 };
+  if (key === "/dashboard") return <Home {...props} />;
+  if (key === "practice") return <BookOpen {...props} />;
+  if (key === "/practice/recommendations") return <Lightbulb {...props} />;
+  if (key === "/practice/problems") return <ListChecks {...props} />;
+  if (key === "/practice/next") return <Target {...props} />;
+  if (key === "/practice/weakness") return <BarChart3 {...props} />;
+  if (key === "writing" || key.startsWith("/writing/")) {
+    return <PenLine {...props} />;
+  }
+  if (key === "/library") return <Library {...props} />;
+  if (key === "/growth") return <BarChart3 {...props} />;
+  if (key === "/profile") return <UserRound {...props} />;
+  if (key === "settings") return <Settings {...props} />;
+  if (key === "/settings/language") return <Languages {...props} />;
+  if (key === "/settings/notifications") return <Bell {...props} />;
+  return null;
 }
 
 function buildItem(
   item: SidebarItem,
   locks: SidebarLockMap,
   t: NavTranslate,
-): NonNullable<MenuItems>[number] {
+): MenuItem {
   if ("children" in item) {
     return {
       key: item.key,
       label: t(item.labelKey as NavKey),
+      icon: navIcon(item.key),
       children: item.children.map((child) => buildLeaf(child, locks, t)),
     };
   }
@@ -91,6 +133,7 @@ function buildItem(
 export function SidebarNav({ role, planLabel, onNavigate }: Props) {
   const pathname = usePathname();
   const router = useRouter();
+  const tApp = useTranslations("app");
   const t = useTranslations("nav");
 
   const locks = useMemo<SidebarLockMap>(
@@ -120,17 +163,42 @@ export function SidebarNav({ role, planLabel, onNavigate }: Props) {
   }, [pathname]);
 
   return (
-    <Menu
-      mode="inline"
-      selectedKeys={[selectedKey]}
-      onClick={({ key }) => {
-        if (typeof key === "string" && key.startsWith("/")) {
-          router.push(key);
-          onNavigate?.();
-        }
-      }}
-      items={items}
-      style={{ height: "100%", borderInlineEnd: 0 }}
-    />
+    <div className="app-sidebar-shell">
+      <div className="app-sidebar-brand" aria-label={tApp("brand")}>
+        <span className="app-sidebar-brand__mark">
+          <GraduationCap aria-hidden size={20} />
+        </span>
+        <span>{tApp("brand")}</span>
+        <strong>AI</strong>
+      </div>
+      <Menu
+        mode="inline"
+        selectedKeys={[selectedKey]}
+        onClick={({ key }) => {
+          if (typeof key === "string" && key.startsWith("/")) {
+            router.push(key);
+            onNavigate?.();
+          }
+        }}
+        items={items}
+        className="app-sidebar-menu"
+        style={{ borderInlineEnd: 0 }}
+      />
+      <div className="app-sidebar-nudge">
+        <TextLike strong>{tApp("sidebarNudgeTitle")}</TextLike>
+        <span>{tApp("sidebarNudgeBody")}</span>
+        {planLabel ? <Tag>{planLabel}</Tag> : null}
+      </div>
+    </div>
   );
+}
+
+function TextLike({
+  children,
+  strong,
+}: {
+  children: ReactNode;
+  strong?: boolean;
+}) {
+  return strong ? <strong>{children}</strong> : <span>{children}</span>;
 }

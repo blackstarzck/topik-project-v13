@@ -13,7 +13,9 @@
   "app": {
     "brand": "TALKPIK",
     "openMenu": "Mở menu",
-    "menu": "Menu"
+    "menu": "Menu",
+    "sidebarNudgeTitle": "Tiến bộ từng chút mỗi ngày.",
+    "sidebarNudgeBody": "Theo dòng viết hôm nay và thu hẹp điểm yếu của bạn."
   },
   "nav": {
     "dashboard": "Bảng điều khiển",
@@ -423,8 +425,8 @@
       "dirtyDraftsDescription": "Bạn có {count} bài viết chưa hoàn thành."
     },
     "header": {
-      "title": "Bảng điều khiển chính",
-      "subtitle": "Xem nhanh tình trạng học tập hôm nay và việc cần làm tiếp theo.",
+      "title": "Học tập hôm nay",
+      "subtitle": "Luyện tập đều đặn sẽ tạo nên kỹ năng. Hãy tiến thêm một bước hôm nay.",
       "startCta": "Bắt đầu học"
     },
     "kpi": {
@@ -454,6 +456,38 @@
       "typesEmpty": "Chưa có dạng bài gợi ý. Hãy nộp bài viết để nhận gợi ý cá nhân hóa.",
       "recommendTag": "Gợi ý",
       "solveButton": "Giải"
+    },
+    "hub": {
+      "hubAria": "Trung tâm học tập trên bảng điều khiển",
+      "aiTutorTitle": "Gợi ý hôm nay từ AI tutor",
+      "aiTutorFallbackTitle": "Chọn bài luyện hôm nay",
+      "aiTutorBody": "Bắt đầu với một bài viết phù hợp với luồng học gần đây của bạn.",
+      "questionTag": "Câu {no}",
+      "questionTagFallback": "Đề xuất",
+      "estimatedTime": "Khoảng 40 phút",
+      "reasonTag": "Lý do gợi ý",
+      "solveNow": "Làm bài ngay",
+      "continueTitle": "Viết tiếp",
+      "continueTag": "Đang tiến hành",
+      "continueFallbackTitle": "Chọn bài viết",
+      "continueBody": "Chọn bài tiếp theo và tiếp tục luồng viết của bạn.",
+      "continueCta": "Tiếp tục viết",
+      "pendingTitle": "Phản hồi cần xem",
+      "pendingBadge": "{count} mục",
+      "pendingEmpty": "Chưa có phản hồi cần xem.",
+      "feedbackQuestion": "Phản hồi câu {no}",
+      "feedbackQuestionFallback": "Phản hồi",
+      "feedbackItemHint": "Xem các điểm cần sửa",
+      "reportCta": "Mở báo cáo phản hồi",
+      "quickStartTitle": "Bắt đầu nhanh",
+      "quickProblemTypes": "Chọn dạng bài",
+      "quickProblemTypesDesc": "Chọn câu 51-54",
+      "quickRetry": "Làm lại bài trước",
+      "quickRetryDesc": "Luyện lại bài đã làm",
+      "quickAiGuide": "Hướng dẫn phản hồi AI",
+      "quickAiGuideDesc": "Xem cách dùng phản hồi",
+      "quickGoal": "Đặt mục tiêu học",
+      "quickGoalDesc": "Điều chỉnh cấp độ và kế hoạch"
     },
     "alerts": {
       "cardTitle": "Thông báo",
@@ -930,6 +964,35 @@
       "problemLoadFailed": "Không thể tải đề bài cho câu hỏi số {questionNo}.",
       "retry": "Thử lại",
       "toProblemList": "Đến danh sách câu hỏi"
+    },
+    "q51": {
+      "pageTitle": "Câu 51 điền chỗ trống ngắn",
+      "pageSubtitle": "Đọc đề và viết một câu nối tự nhiên vào chỗ trống.",
+      "titleHelp": "Câu 51 yêu cầu hoàn thành câu trả lời ngắn dựa trên ngữ cảnh xung quanh.",
+      "stepperLabel": "Các bước viết",
+      "stepRead": "Đọc đề",
+      "stepWrite": "Viết câu trả lời",
+      "stepSubmit": "Nộp và phân tích",
+      "mainAria": "Khu vực viết câu trả lời ngắn câu 51",
+      "blankTabsLabel": "Chọn chỗ trống",
+      "answerTitle": "Câu trả lời chỗ trống {blank}",
+      "answerHintFallback": "Chọn cách diễn đạt nối tự nhiên với các câu xung quanh.",
+      "answerPlaceholder": "Viết một câu cho chỗ trống {blank}.",
+      "answerInputAria": "Ô nhập câu trả lời ngắn câu 51",
+      "expressionTitle": "Gợi ý cách diễn đạt",
+      "expressionHint0": "Vì vậy",
+      "expressionHint1": "Vì điều này",
+      "expressionHint2": "Cho nên",
+      "expressionHint3": "Do đó",
+      "expressionHint4": "Vì lý do này",
+      "guideAria": "Hướng dẫn gia sư AI",
+      "guideTitle": "Hướng dẫn gia sư AI",
+      "guideBody": "Chỗ trống {blank} cần nối kết quả của câu trước với câu sau một cách tự nhiên.",
+      "tipsTitle": "Mẹo viết",
+      "tip0": "Hãy dùng cách diễn đạt giải thích kết quả của vấn đề đã nêu trước đó.",
+      "tip1": "Các từ nối nhân quả như do đó, vì vậy thường được dùng ở đây.",
+      "hintTitle": "Gợi ý câu trả lời mẫu",
+      "reviewPrompt": "Xem lại đề"
     },
     "prompt": {
       "heading": "Câu {questionNo} — {title}",

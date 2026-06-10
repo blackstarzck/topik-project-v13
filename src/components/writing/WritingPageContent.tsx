@@ -6,6 +6,7 @@ import { HelpPanel } from "./HelpPanel";
 import { ReferenceMaterials, type ProblemAsset } from "./ReferenceMaterials";
 import { WritingEditor } from "./WritingEditor";
 import { LongFormEditor } from "./LongFormEditor";
+import { ShortAnswerWriting51Workspace } from "./ShortAnswerWriting51Workspace";
 import { writingQuestionHref } from "@/lib/writing/routes";
 import { isLongForm } from "@/lib/writing/types";
 import type { QuestionNo, WritingDraftRow } from "@/lib/writing/types";
@@ -42,15 +43,23 @@ export async function WritingPageContent({
       </Empty>
     );
   }
+  if (problem.kind === "q51") {
+    return (
+      <ShortAnswerWriting51Workspace
+        userId={userId}
+        problem={problem}
+        draft={draft}
+        assets={assets}
+      />
+    );
+  }
   return (
     // 반응형: 모바일(xs/sm)에서는 본문→도움말이 세로로 쌓이고, lg 이상에서만
     // 좌(본문)/우(도움말) 2단으로 배치한다.
     <Row gutter={[16, 16]}>
       <Col xs={24} lg={17}>
         <div style={{ display: "grid", gap: 16 }}>
-          <QuestionPrompt
-            problem={problem}
-          />
+          <QuestionPrompt problem={problem} />
           {/* D §3 — 참고 이미지/자료 영역 (자료 없으면 null). */}
           <ReferenceMaterials
             assets={assets}

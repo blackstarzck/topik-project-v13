@@ -1,353 +1,109 @@
-{
-  "date": "2026-06-09",
-  "verdict": "PASS",
-  "findings": [
-    {
-      "id": "W-P1-1",
-      "sev": "P1→RESOLVED",
-      "route": "/writing/* (기본 진입)",
-      "cat": "data-flow/code",
-      "claim": "getWritingProblem이 problemId 없을 때 ORDER BY 없이 .limit(1) → 직접/딥링크 진입이 임의(때로 빈) 문제를 로드.",
-      "fix": "server.ts: 기본 선택에 .order(created_at asc).order(id asc) 추가(결정적). + 빈 placeholder unpublish.",
-      "ev": "src/lib/writing/server.ts diff; DB published q51 91→90·q53 47→46·q54 82→81; 캡처 D-01/D-03/D-04."
+[
+  {
+    "folder": "10-D-03-long-form-writing-53",
+    "route": "/writing/long-form-writing-53",
+    "classification": "user-active",
+    "verdict": "Conditional",
+    "coverage": {
+      "targeted": 1,
+      "audited": 1,
+      "deferred": 0,
+      "unmapped": 0
     },
-    {
-      "id": "W-P1-2",
-      "sev": "P1→RESOLVED(dev)",
-      "route": "/writing/answer-writing-52",
-      "cat": "data/content",
-      "claim": "q52 published가 빈 placeholder 1개뿐 → D-02 작성 불가(막다른 길).",
-      "fix": "완성 q52 wireframe fixture 5개 publish(dev). 빈 placeholder unpublish. prod publish는 admin 결정(escalate).",
-      "ev": "DB published q52 1→5; 캡처 D-02(완성 문제·submit 활성); seed.sql q52 publish UPDATE."
+    "capture": {
+      "origin": "http://127.0.0.1:3000",
+      "storageState": "tests/e2e/auth-state/student.json",
+      "viewports": [360, 768, 1280],
+      "manifest": "screenshots/10-D-03-long-form-writing-53/render-manifest.json",
+      "renderHealth": {
+        "redirectedToLogin": false,
+        "errorOverlay": false,
+        "consoleErrorCount": 0
+      },
+      "viewportMetrics": [
+        {
+          "width": 360,
+          "scrollWidth": 360,
+          "clientWidth": 360,
+          "bodyHeight": 2091,
+          "introEditorY": 1446,
+          "manuscriptY": 1589
+        },
+        {
+          "width": 768,
+          "scrollWidth": 768,
+          "clientWidth": 768,
+          "bodyHeight": 1948,
+          "introEditorY": 1303,
+          "manuscriptY": 1446
+        },
+        {
+          "width": 1280,
+          "scrollWidth": 1280,
+          "clientWidth": 1280,
+          "bodyHeight": 1706,
+          "introEditorY": 1303,
+          "manuscriptY": 1446
+        }
+      ]
     },
-    {
-      "id": "X16-P1-3",
-      "sev": "P1→RESOLVED",
-      "route": "/password-reset/confirm",
-      "cat": "render/hydration",
-      "claim": "만료시각을 useState lazy-init으로 계산 → 클라 하이드레이션 시 재실행되어 서버(null)와 불일치(React 하이드레이션 에러).",
-      "fix": "PasswordResetConfirmForm: useState(null) + useEffect로 마운트 후 설정.",
-      "ev": "컴포넌트 diff; e2e screens-public X-16 3뷰포트 GREEN(이전 3 FAIL)."
-    },
-    {
-      "id": "TITLE-P2",
-      "sev": "P2→RESOLVED(부수)",
-      "route": "/writing/52·53·54",
-      "cat": "copy",
-      "claim": "제목 이중접두사 '52번 — TOPIK 52번 — …'(placeholder 제목이 'TOPIK NN번 —' 포함).",
-      "fix": "근본원인이던 placeholder unpublish → fixture(깨끗한 제목) 로드로 자연 해소.",
-      "ev": "fixture 제목 예: '기숙사 방 변경 문의'(접두사 없음); 캡처."
-    },
-    {
-      "id": "ALERT-P2",
-      "sev": "P2→RESOLVED",
-      "route": "/writing/* (차단 Alert)",
-      "cat": "antd/tech-debt",
-      "claim": "WritingEditor/LongFormEditor의 antd Alert가 폐기된 message= prop 사용 → console.error.",
-      "fix": "message= → title=(코드베이스 다른 Alert와 정렬).",
-      "ev": "WritingEditor.tsx:235·LongFormEditor.tsx:363 diff."
-    },
-    {
-      "id": "TC-FIX",
-      "sev": "회귀차단→RESOLVED",
-      "route": "src/lib/writing/server.ts",
-      "cat": "build/typecheck",
-      "claim": "동시 리팩터가 normalizeWritingProblemRow(questionNo: QuestionNo)를 추가했으나 QuestionNo 타입 미import → tsc TS2304(런타임 SWC는 무시해 e2e는 통과, 그러나 pnpm typecheck/build 실패). e2e만으로는 못 잡는 회귀.",
-      "fix": "server.ts의 type import에 QuestionNo 추가.",
-      "ev": "pnpm typecheck exit 0(수정 후). 적대적 verify에서 적발."
-    },
-    {
-      "id": "C02-DEF",
-      "sev": "DEFERRED",
-      "route": "/practice/problems · C-03",
-      "cat": "env/migration",
-      "claim": "라이브 list_user_problems가 구버전 → 쓰기 solve_state가 제출을 반영 못함 → C-03 도달 불가.",
-      "fix": "신규 RPC 마이그레이션 20260609120000(제출 기반 solve_state) + 클라 코드 작성 완료. 단 이 환경은 DDL 적용 불가(supabase CLI/Docker 없음) — lifecycle #31/#32와 동일 버킷.",
-      "ev": "live RPC probe hasNewCols=false; 마이그레이션 파일 + problem-list-data.ts 준비됨."
-    },
-    {
-      "id": "P2-MISC",
-      "sev": "P2/Nit(비차단)",
-      "route": "X-11·X-03/04·F-M1·E-01/02·A-01/02",
-      "cat": "polish",
-      "claim": "legacyBehavior Link(X-11 otp), IA코드 노출(X-03/04), PDF 미리보기 UUID(F-M1), CTA 5개>4(E-01/02), CTA 비활성 정책(A-01/02).",
-      "fix": "비차단 폴리시/카피/라벨 — 핵심 흐름 영향 없음. 후속 정리 대상으로 문서화.",
-      "ev": "직전 캡처(.design-review-shots/20260609) + 소스."
+    "findings": [
+      {
+        "id": "D03-WUA-P1-01",
+        "severity": "P1",
+        "category": "layout-hierarchy",
+        "claim": "The primary writing editor is not visible or visually dominant on the initial desktop viewport; the problem and materials stack pushes the editor below the fold.",
+        "observed": "At 1280x900, the first 53 writing field begins at y=1303 and the manuscript preview begins at y=1446. The current screen uses a single main column for prompt/materials/criteria/editor, with only tips in the right column.",
+        "expected": "description.md identifies the manuscript-style editor as the core input area and the wireframe/hifi show a left materials panel with a large right-side writing surface available in the primary workspace.",
+        "evidence": [
+          "screenshots/10-D-03-long-form-writing-53/current-1280.png",
+          "screenshots/10-D-03-long-form-writing-53/reference-hifi.png",
+          "screenshots/10-D-03-long-form-writing-53/reference-wireframe.png",
+          "src/components/writing/WritingPageContent.tsx:48",
+          "src/components/writing/LongFormEditor.tsx:381",
+          "docs/Wireframe/10-D-03-long-form-writing-53/description.md:12",
+          "docs/Wireframe/10-D-03-long-form-writing-53/description.md:13"
+        ],
+        "confidence": "high",
+        "recommendedNextAction": "For question 53 at desktop sizes, split the workspace into a left materials/criteria rail and a right sticky or independently scrollable writing pane. Keep the mobile stack, but prioritize editor visibility before helper cards."
+      },
+      {
+        "id": "D03-WUA-P2-01",
+        "severity": "P2",
+        "category": "state-copy",
+        "claim": "Autosave timestamps are formatted as clock time rather than the relative time required by the wireframe description.",
+        "observed": "AutosaveBadge formats lastSavedAt as HH:mm.",
+        "expected": "description.md requires autosave time to be shown as relative time.",
+        "evidence": [
+          "src/components/writing/AutosaveBadge.tsx:28",
+          "src/components/writing/AutosaveBadge.tsx:57",
+          "docs/Wireframe/10-D-03-long-form-writing-53/description.md:75"
+        ],
+        "confidence": "medium",
+        "recommendedNextAction": "Replace the HH:mm formatter with a relative-time label such as '방금 전', '2분 전', or the project-standard dayjs relative formatter."
+      }
+    ],
+    "passedChecks": [
+      "Authenticated route renders without redirecting to /login when using the student storageState.",
+      "No Next.js error overlay was detected in captured viewports.",
+      "No console errors were recorded in captured viewports.",
+      "Mobile/tablet/desktop captures have no horizontal overflow: scrollWidth equals clientWidth at 360, 768, and 1280.",
+      "Side navigation is available as desktop sidebar and mobile hamburger/drawer shell.",
+      "Question prompt, structured reference charts, evaluation criteria, character count, autosave status, manual save, submit confirmation trigger, and helper cards are present."
+    ],
+    "deferred": [
+      "Submission confirmation modal, autosave failure modal, and actual submit flow were not exercised to avoid writing additional draft/submission data during this read-only audit.",
+      "Problem/image failure state was not forced; current normalized chart data rendered successfully."
+    ],
+    "verification": {
+      "jsonValidation": "passed",
+      "renderShot": "passed for 360, 768, and 1280; no login redirect, no Next error overlay, and zero console errors",
+      "pnpmTestE2E": {
+        "status": "failed",
+        "targetScreenResult": "D-03 long-form-writing-53 passed in mobile-360, tablet-768, and desktop-1280 screen render checks",
+        "suiteSummary": "94 passed, 2 skipped, 1 failed",
+        "failure": "B-01 /dashboard tablet-768 screen render check raised pageerror: isAdmin is not defined"
+      }
     }
-  ],
-  "screens": [
-    {
-      "ia": "A-01",
-      "route": "/sign-up",
-      "cls": "public-active",
-      "verdict": "pass",
-      "note": "명세 강부합. CTA 비활성 정책(P2/정책)."
-    },
-    {
-      "ia": "A-02",
-      "route": "/login",
-      "cls": "public-active",
-      "verdict": "pass",
-      "note": "하이드레이션 정상. 소셜 미노출·CTA 정책(P2)."
-    },
-    {
-      "ia": "A-03",
-      "route": "/onboarding/learning-goal",
-      "cls": "user-active",
-      "verdict": "pass",
-      "note": "명세 강부합."
-    },
-    {
-      "ia": "B-01",
-      "route": "/dashboard",
-      "cls": "user-active",
-      "verdict": "pass",
-      "note": "명세 강부합."
-    },
-    {
-      "ia": "C-01",
-      "route": "/practice/recommendations",
-      "cls": "user-active",
-      "verdict": "pass",
-      "note": "추천 렌더 정상(52 막다른길은 데이터 fix로 해소)."
-    },
-    {
-      "ia": "C-02",
-      "route": "/practice/problems",
-      "cls": "user-active",
-      "verdict": "conditional",
-      "note": "목록 렌더 정상. solve_state 라이브 미반영은 RPC DDL 대기(Deferred)."
-    },
-    {
-      "ia": "C-03",
-      "route": "(host C-02)",
-      "cls": "modal-transient",
-      "verdict": "deferred",
-      "note": "solve_state RPC DDL 미적용으로 트리거 도달 불가 — 소스+SOT로 평가."
-    },
-    {
-      "ia": "D-01",
-      "route": "/writing/short-answer-writing-51",
-      "cls": "user-active",
-      "verdict": "pass",
-      "note": "기본 진입이 완성 문제 로드(정렬 fix)."
-    },
-    {
-      "ia": "D-02",
-      "route": "/writing/answer-writing-52",
-      "cls": "user-active",
-      "verdict": "pass",
-      "note": "완성 q52 publish + 정렬 fix → 작성 가능(이전 P1 해소)."
-    },
-    {
-      "ia": "D-03",
-      "route": "/writing/long-form-writing-53",
-      "cls": "user-active",
-      "verdict": "pass",
-      "note": "기본 진입이 완성 문제 로드(정렬 fix + 빈 예시 unpublish)."
-    },
-    {
-      "ia": "D-04",
-      "route": "/writing/essay-writing-54",
-      "cls": "user-active",
-      "verdict": "pass",
-      "note": "기본 진입이 완성 문제 로드(정렬 fix + 빈 예시 unpublish)."
-    },
-    {
-      "ia": "D-M1",
-      "route": "(host writing)",
-      "cls": "modal-transient",
-      "verdict": "pass",
-      "note": "제출 확인 모달 — flow e2e로 실측 통과."
-    },
-    {
-      "ia": "D-M2",
-      "route": "(host submit)",
-      "cls": "modal-transient",
-      "verdict": "deferred",
-      "note": "transient(mock 즉시 resolve) — 소스+SOT 평가. 가짜 성공 없음."
-    },
-    {
-      "ia": "E-01",
-      "route": "/writing/feedback/short/:id",
-      "cls": "dynamic-id",
-      "verdict": "pass",
-      "note": "시드 제출로 렌더 정상. CTA 5개(>4)는 P2."
-    },
-    {
-      "ia": "E-02",
-      "route": "/writing/feedback/long/:id",
-      "cls": "dynamic-id",
-      "verdict": "pass",
-      "note": "렌더 정상. 문장첨삭 라이브는 시드 한계(Deferred). CTA 5개 P2."
-    },
-    {
-      "ia": "R-01",
-      "route": "/writing/reports/:id/compare",
-      "cls": "dynamic-id",
-      "verdict": "pass",
-      "note": "flow e2e로 생성·렌더 통과. 전후비교 실측은 부분."
-    },
-    {
-      "ia": "R-02",
-      "route": "/practice/next",
-      "cls": "user-active",
-      "verdict": "pass",
-      "note": "추천 렌더 정상(52 막다른길 데이터 fix로 해소)."
-    },
-    {
-      "ia": "F-01",
-      "route": "/library",
-      "cls": "user-active",
-      "verdict": "pass",
-      "note": "flow e2e로 저장·렌더 통과. 항목 라벨 UUID는 P2."
-    },
-    {
-      "ia": "F-M1",
-      "route": "(host /library)",
-      "cls": "modal-transient",
-      "verdict": "pass",
-      "note": "flow e2e로 모달 오픈 통과. 미리보기 UUID 라벨 P2."
-    },
-    {
-      "ia": "G-01",
-      "route": "/settings/language",
-      "cls": "user-active",
-      "verdict": "pass",
-      "note": "명세 강부합."
-    },
-    {
-      "ia": "H-01",
-      "route": "/admin/problems",
-      "cls": "admin-frozen",
-      "verdict": "admin-frozen",
-      "note": "관리자 동결 — 범위 밖(별도 admin 앱)."
-    },
-    {
-      "ia": "D-M3",
-      "route": "(host writing)",
-      "cls": "modal-transient",
-      "verdict": "pass",
-      "note": "자동저장 경고 — 명세 강부합."
-    },
-    {
-      "ia": "X-01",
-      "route": "/",
-      "cls": "public-active",
-      "verdict": "pass",
-      "note": "명세 강부합."
-    },
-    {
-      "ia": "X-02",
-      "route": "/growth",
-      "cls": "user-active",
-      "verdict": "pass",
-      "note": "렌더 정상. 유료 본문은 free 계정 한계(Deferred). '기본 지표' 카피 P2."
-    },
-    {
-      "ia": "X-03",
-      "route": "/paywall",
-      "cls": "user-active",
-      "verdict": "pass",
-      "note": "렌더 정상. IA코드 'X-03' 노출·할인율 P2."
-    },
-    {
-      "ia": "X-04",
-      "route": "/subscription",
-      "cls": "user-active",
-      "verdict": "pass",
-      "note": "렌더 정상. IA코드 'X-04' 노출 P2."
-    },
-    {
-      "ia": "X-05",
-      "route": "/profile",
-      "cls": "user-active",
-      "verdict": "pass",
-      "note": "명세 강부합. 회원탈퇴 미지원 정직 고지."
-    },
-    {
-      "ia": "X-06",
-      "route": "/password-reset",
-      "cls": "public-active",
-      "verdict": "pass",
-      "note": "렌더 정상."
-    },
-    {
-      "ia": "X-07",
-      "route": "/practice/weakness",
-      "cls": "user-active",
-      "verdict": "pass",
-      "note": "렌더 정상. 유료 본문 free 계정 한계(Deferred)."
-    },
-    {
-      "ia": "X-08",
-      "route": "/admin/org",
-      "cls": "admin-frozen",
-      "verdict": "admin-frozen",
-      "note": "관리자 동결 — 범위 밖."
-    },
-    {
-      "ia": "X-09",
-      "route": "/settings/notifications",
-      "cls": "user-active",
-      "verdict": "pass",
-      "note": "렌더 정상. 미구현 '준비 중' 정직 고지."
-    },
-    {
-      "ia": "X-10",
-      "route": "/admin/users",
-      "cls": "admin-frozen",
-      "verdict": "admin-frozen",
-      "note": "관리자 동결 — 범위 밖."
-    },
-    {
-      "ia": "X-11",
-      "route": "/auth/error",
-      "cls": "public-active",
-      "verdict": "pass",
-      "note": "reduced-reference. 렌더 정상. legacyBehavior Link(P2/tech-debt)."
-    },
-    {
-      "ia": "X-12",
-      "route": "/auth/verify-email",
-      "cls": "public-active",
-      "verdict": "pass",
-      "note": "reduced-reference. 렌더 정상."
-    },
-    {
-      "ia": "X-13",
-      "route": "/terms",
-      "cls": "public-active",
-      "verdict": "pass",
-      "note": "reduced-reference. 정직성 모범(외부 LLM 전송 고지)."
-    },
-    {
-      "ia": "X-14",
-      "route": "/privacy",
-      "cls": "public-active",
-      "verdict": "pass",
-      "note": "reduced-reference. 정직성 모범."
-    },
-    {
-      "ia": "X-15",
-      "route": "/admin",
-      "cls": "admin-frozen",
-      "verdict": "admin-frozen",
-      "note": "관리자 동결 — 범위 밖."
-    },
-    {
-      "ia": "X-16",
-      "route": "/password-reset/confirm",
-      "cls": "public-active",
-      "verdict": "pass",
-      "note": "하이드레이션 P1 해소(useEffect). e2e 3뷰포트 GREEN."
-    },
-    {
-      "ia": "X-17",
-      "route": "/auth/callback-fragment",
-      "cls": "public-active",
-      "verdict": "pass",
-      "note": "reduced-reference. transient fallback — 크래시 없음(e2e)."
-    }
-  ]
-}
+  }
+]

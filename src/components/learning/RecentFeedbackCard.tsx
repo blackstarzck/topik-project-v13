@@ -4,6 +4,8 @@ import { Card, Empty, Flex, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 
+import { writingFeedbackHref } from "@/lib/writing/routes";
+
 const { Text } = Typography;
 
 export type RecentFeedbackItem = {
@@ -70,7 +72,12 @@ export function RecentFeedbackCard({ items }: Props) {
                 </Text>
               </Flex>
               <Link
-                href={`/writing/feedback/long/${item.submissionId}` as never}
+                href={
+                  writingFeedbackHref({
+                    questionNo: item.questionNo,
+                    submissionId: item.submissionId,
+                  }) as never
+                }
               >
                 {t("view")}
               </Link>

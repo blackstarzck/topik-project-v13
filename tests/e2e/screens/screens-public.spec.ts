@@ -23,14 +23,49 @@ const PUBLIC_SCREENS: Screen[] = [
   { ia: "X-14", name: "privacy", route: "/privacy", urlRegex: /\/privacy/ },
   { ia: "A-01", name: "sign-up", route: "/sign-up", urlRegex: /\/sign-up/ },
   { ia: "A-02", name: "login", route: "/login", urlRegex: /\/login/ },
-  { ia: "A-02", name: "login-session-expired", route: "/login?reason=session_expired", urlRegex: /\/login/ },
-  { ia: "X-06", name: "password-reset", route: "/password-reset", urlRegex: /\/password-reset/ },
-  { ia: "X-16", name: "password-reset-confirm", route: "/password-reset/confirm", urlRegex: /\/password-reset\/confirm/ },
-  { ia: "X-11", name: "auth-error-otp", route: "/auth/error?reason=otp_expired", urlRegex: /\/auth\/error/ },
-  { ia: "X-11", name: "auth-error-ratelimit", route: "/auth/error?reason=over_request_rate_limit", urlRegex: /\/auth\/error/ },
-  { ia: "X-12", name: "auth-verify-email", route: "/auth/verify-email", urlRegex: /\/auth\/verify-email/ },
+  {
+    ia: "A-02",
+    name: "login-session-expired",
+    route: "/login?reason=session_expired",
+    urlRegex: /\/login/,
+  },
+  {
+    ia: "X-06",
+    name: "password-reset",
+    route: "/password-reset",
+    urlRegex: /\/password-reset/,
+  },
+  {
+    ia: "X-16",
+    name: "password-reset-confirm",
+    route: "/password-reset/confirm",
+    urlRegex: /\/password-reset\/confirm/,
+  },
+  {
+    ia: "X-11",
+    name: "auth-error-otp",
+    route: "/auth/error?reason=otp_expired",
+    urlRegex: /\/auth\/error/,
+  },
+  {
+    ia: "X-11",
+    name: "auth-error-ratelimit",
+    route: "/auth/error?reason=over_request_rate_limit",
+    urlRegex: /\/auth\/error/,
+  },
+  {
+    ia: "X-12",
+    name: "auth-verify-email",
+    route: "/auth/verify-email",
+    urlRegex: /\/auth\/verify-email/,
+  },
   // X-17 is a transient fragment-handling fallback — it may redirect; assert no crash only.
-  { ia: "X-17", name: "auth-callback-fragment", route: "/auth/callback-fragment", lenientHeading: true },
+  {
+    ia: "X-17",
+    name: "auth-callback-fragment",
+    route: "/auth/callback-fragment",
+    lenientHeading: true,
+  },
 ];
 
 function collectErrors(page: Page): string[] {
@@ -51,6 +86,31 @@ for (const s of PUBLIC_SCREENS) {
       await expect(page.getByRole("heading").first()).toBeVisible();
     }
 
-    expect(errors, `uncaught page errors on ${s.route}:\n${errors.join("\n")}`).toEqual([]);
+    if (s.name === "product-landing") {
+      const heroVideo = page.locator("video.landing-hero-video");
+      await expect(heroVideo).toBeVisible();
+      await expect(heroVideo.locator("source")).toHaveAttribute(
+        "src",
+        "/assets/landing-hero-video.mp4",
+      );
+      await expect
+        .poll(() =>
+          heroVideo.evaluate((node) => (node as HTMLVideoElement).readyState),
+        )
+        .toBeGreaterThanOrEqual(2);
+      await expect
+        .poll(() =>
+          heroVideo.evaluate((node) => (node as HTMLVideoElement).videoWidth),
+        )
+        .toBeGreaterThan(0);
+      await expect(heroVideo).toHaveJSProperty("muted", true);
+      await expect(heroVideo).toHaveJSProperty("loop", true);
+      await expect(heroVideo).toHaveJSProperty("playsInline", true);
+    }
+
+    expect(
+      errors,
+      `uncaught page errors on ${s.route}:\n${errors.join("\n")}`,
+    ).toEqual([]);
   });
 }

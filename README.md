@@ -94,7 +94,7 @@ flowchart TB
     A --> D["Backend<br/>Supabase Auth + Postgres + Storage"]
     A --> E["Deploy<br/>Vercel + pnpm"]
     A --> F["Quality<br/>Vitest + Testing Library + Playwright"]
-    A --> G["AI Collaboration<br/>Codex + Claude + project skills"]
+    A --> G["AI Collaboration<br/>Codex + Claude + project docs"]
 ```
 
 | 분야 | 결정 |
@@ -193,7 +193,7 @@ flowchart TD
 
 ## AI 에이전트와 함께 일하는 방식
 
-이 프로젝트는 Codex와 Claude를 함께 쓰는 것을 전제로 합니다. 둘 다 같은 프로젝트 로컬 스킬과 문서를 보도록 맞춰져 있습니다.
+이 프로젝트는 Codex와 Claude를 함께 쓰는 것을 전제로 합니다. 둘 다 같은 프로젝트 문서와 남아 있는 실무 스킬을 보도록 맞춰져 있습니다.
 
 ```mermaid
 sequenceDiagram
@@ -213,7 +213,7 @@ sequenceDiagram
 
 | 층 | 역할 | 예 |
 | --- | --- | --- |
-| 프로젝트 가드레일 | TALKPIK 문서, 금지사항, 품질 기준, 보안 경계 강제 | `talkpik-orchestrator`, `talkpik-ui-system`, `talkpik-quality-gate` |
+| 프로젝트 가드레일 | TALKPIK 문서, 금지사항, 품질 기준, 보안 경계 강제 | `AGENTS.md`, `docs/README.md`, `docs/spec.md` |
 | 실무 기술 스킬 | 특정 프레임워크/라이브러리 구현 패턴 제공 | Next/React, Supabase/Postgres, Ant Design, Vitest/Playwright, RHF/Zod |
 | 작업 흐름 스킬 | 계획, TDD, 리뷰, 검증 같은 일하는 방식 제공 | Superpowers, GStack skills |
 

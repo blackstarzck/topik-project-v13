@@ -13,7 +13,9 @@
   "app": {
     "brand": "TALKPIK",
     "openMenu": "Open menu",
-    "menu": "Menu"
+    "menu": "Menu",
+    "sidebarNudgeTitle": "Grow a little every day.",
+    "sidebarNudgeBody": "Follow today's writing flow and narrow your weak spots."
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -423,8 +425,8 @@
       "dirtyDraftsDescription": "You have {count} unfinished answers."
     },
     "header": {
-      "title": "Home dashboard",
-      "subtitle": "See today's learning status and what to do next at a glance.",
+      "title": "Today's Learning",
+      "subtitle": "Steady practice builds skill. Take one more focused step today.",
       "startCta": "Start learning"
     },
     "kpi": {
@@ -454,6 +456,38 @@
       "typesEmpty": "No recommended types yet. Submit your writing to get personalized picks.",
       "recommendTag": "Recommended",
       "solveButton": "Solve"
+    },
+    "hub": {
+      "hubAria": "Dashboard learning hub",
+      "aiTutorTitle": "AI tutor recommendation",
+      "aiTutorFallbackTitle": "Choose a problem for today",
+      "aiTutorBody": "Start with a writing task matched to your recent study flow.",
+      "questionTag": "Question {no}",
+      "questionTagFallback": "Recommended",
+      "estimatedTime": "About 40 min",
+      "reasonTag": "Why this",
+      "solveNow": "Start problem",
+      "continueTitle": "Continue writing",
+      "continueTag": "In progress",
+      "continueFallbackTitle": "Pick a writing task",
+      "continueBody": "Choose the next problem and keep your writing flow moving.",
+      "continueCta": "Continue writing",
+      "pendingTitle": "Feedback to review",
+      "pendingBadge": "{count} items",
+      "pendingEmpty": "No feedback needs review yet.",
+      "feedbackQuestion": "Question {no} feedback",
+      "feedbackQuestionFallback": "Feedback",
+      "feedbackItemHint": "Review suggested fixes",
+      "reportCta": "Open feedback report",
+      "quickStartTitle": "Quick start",
+      "quickProblemTypes": "Choose a problem type",
+      "quickProblemTypesDesc": "Pick from questions 51-54",
+      "quickRetry": "Retry a previous problem",
+      "quickRetryDesc": "Practice a problem again",
+      "quickAiGuide": "AI feedback guide",
+      "quickAiGuideDesc": "Review how to use feedback",
+      "quickGoal": "Set learning goal",
+      "quickGoalDesc": "Adjust target grade and plan"
     },
     "alerts": {
       "cardTitle": "Alerts",
@@ -930,6 +964,35 @@
       "problemLoadFailed": "Could not load the prompt for question {questionNo}.",
       "retry": "Try again",
       "toProblemList": "To problem list"
+    },
+    "q51": {
+      "pageTitle": "Question 51 Short Blank",
+      "pageSubtitle": "Read the prompt and write one sentence that naturally fits the blank.",
+      "titleHelp": "Question 51 asks you to complete a short answer from the surrounding context.",
+      "stepperLabel": "Writing steps",
+      "stepRead": "Read prompt",
+      "stepWrite": "Write answer",
+      "stepSubmit": "Submit and analyze",
+      "mainAria": "Question 51 short-answer writing area",
+      "blankTabsLabel": "Blank selector",
+      "answerTitle": "Blank {blank} answer",
+      "answerHintFallback": "Choose an expression that naturally connects the surrounding sentences.",
+      "answerPlaceholder": "Write one sentence for blank {blank}.",
+      "answerInputAria": "Question 51 short answer input",
+      "expressionTitle": "Expression hints",
+      "expressionHint0": "For that reason",
+      "expressionHint1": "Because of this",
+      "expressionHint2": "So",
+      "expressionHint3": "Therefore",
+      "expressionHint4": "For this reason",
+      "guideAria": "AI tutor guide",
+      "guideTitle": "AI Tutor Guide",
+      "guideBody": "Blank {blank} should connect the result of the previous sentence to the next sentence naturally.",
+      "tipsTitle": "Writing tips",
+      "tip0": "Use an expression that explains the result of the issue stated earlier.",
+      "tip1": "Causal connectors such as therefore and for that reason are common here.",
+      "hintTitle": "Example-answer hint",
+      "reviewPrompt": "Review prompt"
     },
     "prompt": {
       "heading": "Q{questionNo} — {title}",

@@ -33,3 +33,19 @@ export function writingProblemHref({
   const freshParam = fresh ? "&fresh=1" : "";
   return `${writingQuestionHref(questionNo)}?problem=${encodeURIComponent(problemId)}${freshParam}`;
 }
+
+export function writingFeedbackHref({
+  questionNo,
+  submissionId,
+}: {
+  questionNo: number | null | undefined;
+  submissionId: string;
+}): string {
+  if (!submissionId) {
+    return "/library";
+  }
+
+  const feedbackKind =
+    isQuestionNo(questionNo) && questionNo <= 52 ? "short" : "long";
+  return `/writing/feedback/${feedbackKind}/${encodeURIComponent(submissionId)}`;
+}

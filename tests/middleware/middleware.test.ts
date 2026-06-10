@@ -30,6 +30,15 @@ async function callMiddleware(url: string) {
 }
 
 describe("middleware route protection", () => {
+  it("does not match static media assets", async () => {
+    const { config } = await import("../../src/proxy");
+    const matcher = new RegExp(`^${config.matcher[0]}$`);
+
+    expect(matcher.test("/dashboard")).toBe(true);
+    expect(matcher.test("/icon.svg")).toBe(false);
+    expect(matcher.test("/assets/landing-hero-video.mp4")).toBe(false);
+  });
+
   it("redirects anon user from /dashboard to /login", async () => {
     mockGetUser.mockResolvedValue({ data: { user: null }, error: null });
     const response = await callMiddleware("http://localhost/dashboard");

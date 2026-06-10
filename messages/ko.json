@@ -13,7 +13,9 @@
   "app": {
     "brand": "TALKPIK",
     "openMenu": "메뉴 열기",
-    "menu": "메뉴"
+    "menu": "메뉴",
+    "sidebarNudgeTitle": "매일 조금씩, 확실히 성장해요!",
+    "sidebarNudgeBody": "오늘의 글쓰기 흐름을 따라가며 약점을 줄여 보세요."
   },
   "nav": {
     "dashboard": "대시보드",
@@ -423,8 +425,8 @@
       "dirtyDraftsDescription": "완성하지 않은 답안 {count}건이 있습니다."
     },
     "header": {
-      "title": "홈 대시보드",
-      "subtitle": "오늘의 학습 상태와 다음 할 일을 한눈에 확인하세요.",
+      "title": "오늘의 학습",
+      "subtitle": "꾸준한 연습이 실력을 만듭니다. 오늘도 한 걸음 더 성장해보세요.",
       "startCta": "학습 시작"
     },
     "kpi": {
@@ -454,6 +456,38 @@
       "typesEmpty": "추천 유형이 아직 없어요. 글쓰기를 제출하면 맞춤 추천이 생겨요.",
       "recommendTag": "추천",
       "solveButton": "풀기"
+    },
+    "hub": {
+      "hubAria": "대시보드 학습 허브",
+      "aiTutorTitle": "AI 튜터의 오늘 추천",
+      "aiTutorFallbackTitle": "오늘 풀 문제를 골라 보세요",
+      "aiTutorBody": "최근 학습 흐름을 바탕으로 지금 시작할 문제를 추천해요.",
+      "questionTag": "{no}번",
+      "questionTagFallback": "추천",
+      "estimatedTime": "예상 40분",
+      "reasonTag": "추천 이유",
+      "solveNow": "바로 문제 풀기",
+      "continueTitle": "이어쓰기",
+      "continueTag": "진행 중",
+      "continueFallbackTitle": "작성할 문제 선택",
+      "continueBody": "도입부 작성 흐름을 이어갈 문제를 선택해 보세요.",
+      "continueCta": "이어서 작성하기",
+      "pendingTitle": "피드백 미반영",
+      "pendingBadge": "{count}건",
+      "pendingEmpty": "확인할 피드백이 아직 없어요.",
+      "feedbackQuestion": "{no}번 피드백",
+      "feedbackQuestionFallback": "피드백",
+      "feedbackItemHint": "반영할 항목 확인",
+      "reportCta": "피드백 리포트 확인하기",
+      "quickStartTitle": "빠른 시작",
+      "quickProblemTypes": "문제 유형 선택하고 풀기",
+      "quickProblemTypesDesc": "51~54번 유형별 문제 선택",
+      "quickRetry": "이전 문제 다시 풀기",
+      "quickRetryDesc": "이전에 푼 문제를 다시 연습",
+      "quickAiGuide": "AI 피드백 가이드",
+      "quickAiGuideDesc": "피드백 활용 방법 보기",
+      "quickGoal": "학습 목표 설정",
+      "quickGoalDesc": "목표 등급과 계획 설정"
     },
     "alerts": {
       "cardTitle": "알림",
@@ -930,6 +964,35 @@
       "problemLoadFailed": "{questionNo}번 문제 지문을 불러오지 못했어요.",
       "retry": "다시 시도",
       "toProblemList": "문제 목록으로"
+    },
+    "q51": {
+      "pageTitle": "51번 단문 빈칸",
+      "pageSubtitle": "문제 지문을 읽고 빈칸에 자연스럽게 이어질 한 문장을 작성하세요.",
+      "titleHelp": "51번은 앞뒤 문맥을 보고 짧은 답안을 완성하는 유형입니다.",
+      "stepperLabel": "작성 단계",
+      "stepRead": "문제 읽기",
+      "stepWrite": "답안 작성",
+      "stepSubmit": "제출 및 분석",
+      "mainAria": "51번 단답 작성 영역",
+      "blankTabsLabel": "빈칸 선택",
+      "answerTitle": "빈칸 {blank} 답안",
+      "answerHintFallback": "앞뒤 문장과 자연스럽게 이어지는 표현을 고르세요.",
+      "answerPlaceholder": "빈칸 {blank}에 들어갈 말을 한 문장으로 작성하세요.",
+      "answerInputAria": "51번 단답 답안 입력",
+      "expressionTitle": "표현 힌트",
+      "expressionHint0": "그렇기 때문에",
+      "expressionHint1": "이 때문에",
+      "expressionHint2": "그래서",
+      "expressionHint3": "따라서",
+      "expressionHint4": "이러한 이유로",
+      "guideAria": "AI 튜터 가이드",
+      "guideTitle": "AI 튜터 가이드",
+      "guideBody": "빈칸 {blank}은 앞 문장의 결과와 뒤 문장의 흐름을 자연스럽게 이어야 해요.",
+      "tipsTitle": "작성 팁",
+      "tip0": "앞 문장에서 제시된 문제의 결과를 설명하는 표현을 사용해 보세요.",
+      "tip1": "따라서, 그렇기 때문에처럼 인과 관계를 나타내는 표현이 자주 쓰여요.",
+      "hintTitle": "예시 답안 힌트",
+      "reviewPrompt": "지문 다시 보기"
     },
     "prompt": {
       "heading": "{questionNo}번 — {title}",

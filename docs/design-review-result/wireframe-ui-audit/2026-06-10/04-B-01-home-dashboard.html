@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <title>Wireframe UI Audit - 04-B-01-home-dashboard - 2026-06-10</title>
+    <style>
+      body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 32px; color: #172033; background: #ffffff; }
+      h1, h2 { letter-spacing: 0; }
+      table { border-collapse: collapse; width: 100%; margin: 12px 0 28px; font-size: 14px; }
+      th, td { border: 1px solid #d9e1ef; padding: 10px 12px; vertical-align: top; }
+      th { background: #f4f7fb; text-align: left; }
+      .verdict { padding: 14px 16px; border: 1px solid #f0c36d; background: #fff8e6; border-radius: 8px; }
+      figure { margin: 22px 0; }
+      img { max-width: 100%; border: 1px solid #d9e1ef; border-radius: 8px; }
+      figcaption { margin-top: 8px; color: #667085; font-size: 13px; }
+      code { background: #f3f4f6; padding: 1px 4px; border-radius: 4px; }
+    </style>
+  </head>
+  <body>
+    <h1>Wireframe UI Audit - 04-B-01-home-dashboard - 2026-06-10</h1>
+    <p><strong>Scope:</strong> B-01 홈 대시보드, route <code>/dashboard</code></p>
+    <p><strong>Mode:</strong> audit</p>
+    <p><strong>Coverage:</strong> 1/1 audited, 0 deferred for capture, reference images complete.</p>
+
+    <h2>Verdict</h2>
+    <p class="verdict"><strong>Conditional.</strong> 현재 `/dashboard`는 인증 상태에서 렌더링되고 핵심 학습 진입은 가능하다. 다만 최근 피드백 링크가 51/52번도 long feedback route로 연결되는 P1 동작 리스크가 있고, hifi가 의도한 고밀도 학습 허브 대비 시각 계층과 첫 화면 우선순위가 약하다.</p>
+
+    <h2>Visual Delta Summary</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Area</th>
+          <th>Reference intent</th>
+          <th>Current implementation</th>
+          <th>Delta</th>
+          <th>User impact</th>
+          <th>Severity</th>
+          <th>Next action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>app shell and side navigation</td>
+          <td>고정 학습자 사이드 내비, hifi의 Talkpik AI 브랜드/아이콘 메뉴/플랜·프로필 상태.</td>
+          <td>텍스트 중심 Sider, 상단 TALKPIK와 이메일, 플랜 잠금 tag.</td>
+          <td>IA는 충족하지만 hifi의 스캔성/상태 밀도는 낮다.</td>
+          <td>반복 사용 시 현재 위치와 플랜/도움말 상태 인지가 약하다.</td>
+          <td>P2</td>
+          <td>SidebarNav에 아이콘과 상태 패널을 기존 route 구조 안에서 보강.</td>
+        </tr>
+        <tr>
+          <td>top header and status area</td>
+          <td>오늘의 학습 중심 헤더, 상태/알림/도움말 맥락.</td>
+          <td>홈 대시보드 제목, 설명, 학습 시작 CTA, 이메일만 표시.</td>
+          <td>기능적이지만 hifi의 학습 상태/보조 액션 밀도가 없다.</td>
+          <td>다음 행동은 보이나 화면 목적의 학습 코칭감이 약하다.</td>
+          <td>P2</td>
+          <td>상단 상태/알림/도움말 우선순위를 명세 범위 안에서 재배치.</td>
+        </tr>
+        <tr>
+          <td>primary task area</td>
+          <td>AI 튜터 추천, 이어쓰기 진행률, 피드백 미반영을 첫 화면 중심에 노출.</td>
+          <td>이어 풀 문제 카드와 추천 유형 카드, 최근 피드백 리스트.</td>
+          <td>핵심 흐름은 있으나 hifi의 3분할 작업 구조와 시각 강조가 빠졌다.</td>
+          <td>무엇을 먼저 해야 하는지의 즉시성이 낮아진다.</td>
+          <td>P2</td>
+          <td>AI 추천/이어쓰기/피드백 미반영을 first viewport 우선순위로 묶는 fix-plan 작성.</td>
+        </tr>
+        <tr>
+          <td>reference/material or support panels</td>
+          <td>시험/알림, 빠른 시작, 도움말/가이드 같은 보조 패널.</td>
+          <td>예정된 시험과 알림 패널은 있음. 빠른 시작/AI 피드백 가이드는 없음.</td>
+          <td>지원 패널 일부만 구현.</td>
+          <td>학습 초보자가 대체 행동을 찾는 속도가 느려질 수 있다.</td>
+          <td>P2</td>
+          <td>빠른 시작을 기존 C-01/F-01/X-02/X-09 route로 연결하는 범위 내 개선.</td>
+        </tr>
+        <tr>
+          <td>writing/editor area</td>
+          <td>대시보드는 실제 editor가 아니라 writing handoff를 제공해야 한다.</td>
+          <td>이어 풀기 CTA가 writing route로 이동한다.</td>
+          <td>handoff는 존재하지만 최근 피드백 href가 question type을 반영하지 않는다.</td>
+          <td>51/52 피드백을 잘못된 화면에서 열 수 있다.</td>
+          <td>P1</td>
+          <td>RecentFeedbackCard href를 questionNo/submission type에 따라 분기.</td>
+        </tr>
+        <tr>
+          <td>progress, word count, and state indicators</td>
+          <td>KPI, 진행률, feedback pending, streak 등 학습 상태 표시.</td>
+          <td>KPI 4개와 update time, 시험 D-day, empty alert가 표시된다.</td>
+          <td>KPI는 description과 맞지만 hifi의 진행률/피드백 미반영 패널은 없다.</td>
+          <td>진행 상태의 행동 연결성이 약하다.</td>
+          <td>Deferred</td>
+          <td>KPI 기준은 docs/reference conflict로 제품 기준 결정 필요.</td>
+        </tr>
+        <tr>
+          <td>primary CTA</td>
+          <td>문제 풀기/이어쓰기/피드백 확인이 명확해야 한다.</td>
+          <td>학습 시작과 이어 풀기 CTA가 보이고 동작 href가 있다.</td>
+          <td>CTA 자체는 존재. hifi의 여러 다음 행동 체계는 단순화됨.</td>
+          <td>기본 진입은 가능하다.</td>
+          <td>Nit</td>
+          <td>시각 hierarchy 개선 시 CTA 그룹도 함께 정렬.</td>
+        </tr>
+        <tr>
+          <td>responsive priority and render health</td>
+          <td>desktop/mobile 모두 blocking overlay, overflow 없이 주요 task가 보여야 한다.</td>
+          <td>360/768/1280 캡처 모두 HTTP 200, login redirect 없음, error overlay 없음, console error 0, mobile overflowX 0.</td>
+          <td>렌더 health는 정상. 모바일에서 이어 풀기 CTA가 첫 화면 하단에 걸친다.</td>
+          <td>모바일 사용 가능. task dominance는 다소 약하다.</td>
+          <td>Nit</td>
+          <td>모바일 상단 간격과 KPI/primary task 순서를 fix-plan에서 점검.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>First Screen Delta</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Viewport</th>
+          <th>Expected first screen</th>
+          <th>Current first screen</th>
+          <th>Delta</th>
+          <th>Impact</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1280 desktop</td>
+          <td>사이드 내비, 오늘의 학습 헤더, KPI, AI 튜터 추천, 이어쓰기/피드백 미반영, 최근/빠른 시작 맥락.</td>
+          <td>텍스트 사이드 내비, TALKPIK 상단바, 홈 대시보드 헤더, KPI, 이어 풀 문제, 시험/알림, 최근 피드백 하단.</td>
+          <td>주요 영역은 있으나 hifi 작업 패널과 빠른 시작 밀도가 빠져 있다.</td>
+          <td>기본 사용은 가능하지만 오늘의 우선 행동이 약하게 보인다.</td>
+        </tr>
+        <tr>
+          <td>360 mobile</td>
+          <td>메뉴, 제목/상태, primary action, KPI, primary task entry가 overflow 없이 표시.</td>
+          <td>햄버거, 제목, 학습 시작, KPI, 업데이트 시각, 이어 풀 문제 카드가 첫 화면에 걸쳐 표시. 이어 풀기 CTA top은 약 679px.</td>
+          <td>overflow는 없고 primary continuation도 보이나 첫 화면 하단에 걸친다.</td>
+          <td>모바일 사용성은 유지되지만 핵심 task의 초기 지배력이 낮다.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Findings</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>id</th>
+          <th>severity</th>
+          <th>route</th>
+          <th>category</th>
+          <th>claim</th>
+          <th>evidence</th>
+          <th>next action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>B01-P1-001</td>
+          <td>P1</td>
+          <td>/dashboard</td>
+          <td>navigation</td>
+          <td>최근 피드백 51/52/53 보기 링크가 모두 <code>/writing/feedback/long/:id</code>로 연결된다.</td>
+          <td>DOM href 검사, <code>src/components/learning/RecentFeedbackCard.tsx:73</code></td>
+          <td>questionNo/submission type 기반 short/long href 분기와 e2e 검증.</td>
+        </tr>
+        <tr>
+          <td>B01-P2-002</td>
+          <td>P2</td>
+          <td>/dashboard</td>
+          <td>visual-hierarchy</td>
+          <td>hifi의 AI 추천/이어쓰기/피드백 미반영/빠른 시작 구조 대비 현재 화면은 단순 카드형 대시보드다.</td>
+          <td>current-1280.png, reference-hifi.png, <code>DashboardBody.tsx:52</code>, <code>DashboardBody.tsx:72</code></td>
+          <td>기능 범위 유지 전제로 first viewport 재배치 fix-plan.</td>
+        </tr>
+        <tr>
+          <td>B01-P2-003</td>
+          <td>P2</td>
+          <td>/dashboard</td>
+          <td>app-shell</td>
+          <td>사이드 내비와 상단 상태 영역이 hifi의 아이콘/상태 중심 shell보다 낮은 밀도로 보인다.</td>
+          <td>current-1280.png, reference-hifi.png, <code>WorkspaceShell.tsx:45</code>, <code>SidebarNav.tsx</code></td>
+          <td>아이콘, 플랜 상태, 프로필/도움말/알림 진입을 기존 shell에 보강.</td>
+        </tr>
+        <tr>
+          <td>B01-DOC-004</td>
+          <td>Deferred</td>
+          <td>/dashboard</td>
+          <td>docs-reference-conflict</td>
+          <td>KPI 항목 기준은 description과 hifi가 다르다.</td>
+          <td><code>description.md:12</code>, current-1280.png, reference-hifi.png</td>
+          <td>제품 기준 결정을 먼저 남긴다.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Evidence Images</h2>
+    <figure>
+      <img src="screenshots/04-B-01-home-dashboard/current-1280.png" alt="B-01 current desktop capture" />
+      <figcaption>Current desktop capture, 1280px.</figcaption>
+    </figure>
+    <figure>
+      <img src="screenshots/04-B-01-home-dashboard/current-360.png" alt="B-01 current mobile capture" />
+      <figcaption>Current mobile capture, 360px.</figcaption>
+    </figure>
+    <figure>
+      <img src="screenshots/04-B-01-home-dashboard/reference-hifi.png" alt="B-01 hifi reference" />
+      <figcaption>Reference hifi image.</figcaption>
+    </figure>
+    <figure>
+      <img src="screenshots/04-B-01-home-dashboard/reference-wireframe.png" alt="B-01 wireframe reference" />
+      <figcaption>Reference wireframe image.</figcaption>
+    </figure>
+
+    <h2>Deferred</h2>
+    <p>별도 seed/auth blocker는 없었다. KPI 항목 차이는 implementation defect가 아니라 <code>description.md</code>와 <code>hifi.png</code> 사이의 reference conflict로 분류했다. Designer sub-agent는 도구 정책상 명시 요청이 없으면 spawn할 수 없어 <code>designer-agent-skipped</code>로 기록했다.</p>
+
+    <h2>Evidence</h2>
+    <p>Consulted: <code>AGENTS.md</code>, <code>docs/README.md</code>, <code>docs/sitemap.md</code>, <code>docs/ia.md</code>, <code>docs/ant-design/07-review-checklist.md</code>, B-01 description/spec/data summary, render-shot helper, Playwright config, TESTING.md, dashboard source files. Captured 360/768/1280 screenshots with <code>scripts/design-review/render-shot.mjs</code>.</p>
+
+    <h2>Verification</h2>
+    <p>Capture manifest: <code>screenshots/04-B-01-home-dashboard/current.json</code>. All three captures ended at <code>http://127.0.0.1:3000/dashboard</code>, status 200, redirectedToLogin false, errorOverlay false, consoleErrorCount 0. DOM inspection found mobile overflowX 0 and confirmed the recent feedback href issue.</p>
+    <p>JSON parse check passed for <code>catalog.json</code>, <code>page-results.json</code>, <code>designer-agent-results.json</code>, <code>findings.json</code>, and <code>current.json</code>. Project gate: <code>pnpm test:e2e</code> completed with 95 passed and 2 skipped in 3.6m. The full command was run because the project verification policy requires <code>pnpm test:e2e</code> for route/UI work; the audit target remains <code>/dashboard</code>.</p>
+  </body>
+</html>

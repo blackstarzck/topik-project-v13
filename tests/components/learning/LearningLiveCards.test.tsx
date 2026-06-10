@@ -43,6 +43,31 @@ describe("RecentFeedbackCard i18n chrome", () => {
     expect(screen.getByText("보기")).toBeTruthy();
   });
 
+  it("links short-answer feedback for 51/52 and long-form feedback for 53/54", () => {
+    const items: RecentFeedbackItem[] = [
+      {
+        submissionId: "s-short",
+        questionNo: 52,
+        scoreTotal: 72,
+        generatedAt: "2026-06-02T09:00:00.000Z",
+      },
+      {
+        submissionId: "s-long",
+        questionNo: 53,
+        scoreTotal: 78,
+        generatedAt: "2026-06-02T09:00:00.000Z",
+      },
+    ];
+    const { container } = renderWithIntl(<RecentFeedbackCard items={items} />);
+    const links = Array.from(container.querySelectorAll("a"));
+    expect(links[0]?.getAttribute("href")).toBe(
+      "/writing/feedback/short/s-short",
+    );
+    expect(links[1]?.getAttribute("href")).toBe(
+      "/writing/feedback/long/s-long",
+    );
+  });
+
   it("renders the pending score copy when the score is null", () => {
     const items: RecentFeedbackItem[] = [
       {

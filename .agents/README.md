@@ -8,7 +8,6 @@ follow the same workflow contract.
 
 | Path | Role | Versioned? | Notes |
 | --- | --- | --- | --- |
-| `.agents/skills/talkpik-*/SKILL.md` | TALKPIK project-specific skills | yes | Product, stack, UI, state, Supabase, and quality gates. |
 | `.agents/skills/<practical-skill>/` | Practical development skills | yes | Project-local implementation guidance for the approved stack. Some skills include helper files, not only `SKILL.md`. |
 | `.agents/superpowers/skills/*/SKILL.md` | Superpowers workflow skills | yes | Startup, planning, TDD, debugging, review, and verification discipline. |
 | `skills-lock.json` | Practical skill install lock | yes | Records installer source, source path, and computed hash for installed practical skills. |
@@ -23,22 +22,10 @@ node scripts/sync-agent-skills.mjs
 node scripts/sync-agent-skills.mjs --check
 ```
 
-## TALKPIK Project Skills
-
-| Skill | Use When |
-| --- | --- |
-| `talkpik-orchestrator` | Starting any TALKPIK implementation, refactor, bug fix, UI, backend, AI, deployment, or quality task. Routes the agent through project docs and project-local skills before editing. |
-| `talkpik-next-bootstrap` | Creating or changing the Next.js App Router foundation, source tree, package scripts, TypeScript setup, Tailwind setup, Ant Design providers, or initial app bootstrap. |
-| `talkpik-ui-system` | Building or changing UI, Ant Design components, Tailwind utility usage, theme tokens, light/dark appearance, layout, visual states, or design-system consistency. |
-| `talkpik-wireframe-ui-audit` | Auditing or periodically governing implemented UI screens against `docs/Wireframe/**` specs, reference images, browser screenshots, responsive states, and Ant Design quality criteria. |
-| `talkpik-state-data` | Implementing or reviewing React state, Zustand stores, TanStack Query usage, server data ownership, URL state, forms, React Hook Form, or Zod validation. |
-| `talkpik-supabase-boundary` | Working on Supabase Auth, Postgres schema, RLS policies, Storage, server/client Supabase clients, profile data, admin roles, migrations, or database security. |
-| `talkpik-quality-gate` | Verifying work, reviewing code, checking tests, validating UI flows, preparing final reports, or claiming TALKPIK work complete. |
-
 ## Practical Development Skills
 
-These are advisory implementation skills for the approved stack. Use them under
-the relevant `talkpik-*` guardrail; they do not override project docs.
+These are advisory implementation skills for the approved stack. Use them with
+`AGENTS.md` and `docs/README.md`; they do not override project docs.
 
 | Surface | Skills |
 | --- | --- |
@@ -74,19 +61,16 @@ unless an explicit approved task says otherwise.
 
 ```mermaid
 flowchart TD
-    A["Task starts"] --> B["using-superpowers"]
-    B --> C["talkpik-orchestrator for TALKPIK work"]
-    C --> D{"Work surface"}
-    D -->|"Framework/bootstrap"| E["talkpik-next-bootstrap"]
-    D -->|"UI/theme"| F["talkpik-ui-system"]
-    D -->|"State/data/forms"| G["talkpik-state-data"]
-    D -->|"Supabase/security"| H["talkpik-supabase-boundary"]
-    D -->|"Completion"| J["talkpik-quality-gate"]
-    E --> K["Practical stack skill when implementation detail is needed"]
-    F --> K
-    G --> K
-    H --> K
-    J --> K
+    A["Task starts"] --> B["Read AGENTS.md and docs/README.md"]
+    B --> C{"Work surface"}
+    C -->|"Framework/bootstrap"| D["Next, React, Vercel skills when needed"]
+    C -->|"UI/theme"| E["Ant Design and web design skills when needed"]
+    C -->|"State/data/forms"| F["React Hook Form, Zod, or test skills when needed"]
+    C -->|"Supabase/security"| G["Supabase and Postgres skills when needed"]
+    D --> H["Verify against project docs"]
+    E --> H
+    F --> H
+    G --> H
 ```
 
 For the full AI workflow, use `AGENTS.md`.

@@ -12,21 +12,6 @@ const mirrorRoots = [
 
 const skillSets = [
   {
-    label: 'TALKPIK',
-    sourceRoot: path.join(repoRoot, '.agents', 'skills'),
-    names: [
-      'talkpik-orchestrator',
-      'talkpik-next-bootstrap',
-      'talkpik-ui-system',
-      'talkpik-wireframe-ui-audit',
-      'talkpik-state-data',
-      'talkpik-supabase-boundary',
-      'talkpik-quality-gate',
-    ],
-    unexpectedMirrorPrefix: 'talkpik-',
-    mode: 'skill-md',
-  },
-  {
     label: 'Practical',
     sourceRoot: path.join(repoRoot, '.agents', 'skills'),
     names: [
@@ -79,10 +64,9 @@ const listOnly = args.has('--list');
 if (args.has('--help') || args.has('-h')) {
   console.log(`Usage: node scripts/sync-agent-skills.mjs [--check|--list]
 
-Copies canonical TALKPIK and practical project skills from .agents/skills into
-host-specific mirrors, and canonical Superpowers skills from
-.agents/superpowers/skills into host-specific .codex/skills and .claude/skills
-mirrors.
+Copies canonical practical project skills from .agents/skills into host-specific
+mirrors, and canonical Superpowers skills from .agents/superpowers/skills into
+host-specific .codex/skills and .claude/skills mirrors.
 
 Options:
   --check  verify mirrors are in sync without writing files

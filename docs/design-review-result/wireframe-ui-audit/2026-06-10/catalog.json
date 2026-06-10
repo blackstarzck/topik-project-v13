@@ -1,0 +1,42 @@
+{
+  "runDate": "2026-06-10",
+  "mode": "audit",
+  "targets": [
+    {
+      "folder": "08-D-01-short-answer-writing-51",
+      "iaCode": "D-01",
+      "screen": "Short-answer writing 51",
+      "route": "/writing/short-answer-writing-51",
+      "routeSource": "docs/Wireframe/08-D-01-short-answer-writing-51/functional-spec.md",
+      "routeFallback": "docs/sitemap.md",
+      "referenceImages": {
+        "wireframe": "docs/Wireframe/08-D-01-short-answer-writing-51/wireframe.png",
+        "hifi": "docs/Wireframe/08-D-01-short-answer-writing-51/hifi.png",
+        "status": "complete"
+      },
+      "docs": {
+        "description": "present",
+        "functionalSpec": "present",
+        "screenDataSummary": "present"
+      },
+      "classification": "user-active",
+      "audience": "user",
+      "authRequirement": "authenticated user",
+      "dynamicSeedRequirement": "no dynamic route id; seeded question data required",
+      "modalTriggerRequirement": "D-M1 submit confirmation is triggered by the submit CTA",
+      "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request",
+      "likelySourceFiles": [
+        "src/app/(workspace)/writing/short-answer-writing-51/page.tsx",
+        "src/app/(workspace)/writing/_components/WritingQuestionRoute.tsx",
+        "src/components/writing/WritingPageContent.tsx",
+        "src/components/writing/WritingEditor.tsx",
+        "src/components/writing/QuestionPrompt.tsx",
+        "src/components/writing/ReferenceMaterials.tsx",
+        "src/components/writing/HelpPanel.tsx",
+        "src/components/app/WorkspaceShell.tsx",
+        "src/components/app/AppHeader.tsx",
+        "src/components/app/SidebarNav.tsx"
+      ]
+    }
+  ]
+}

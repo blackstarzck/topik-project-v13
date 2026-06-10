@@ -115,9 +115,11 @@ AI가 만든 결과물은 아래 중 하나 이상의 근거가 있어야 다음
 
 작업 완료를 말하기 전에 변경 범위에 맞는 검증을 수행한다.
 
-- 개발과 관련된 사용자 작업 요청은 완료 전 `pnpm test:e2e`를 반드시 실행한다. 여기에는 코드, route/UI, Supabase/auth/security, 배포/env, 테스트/빌드 설정, 데이터 흐름 변경이 포함된다.
+- 개발과 관련된 사용자 작업 요청은 완료 전 변경 영향 범위에 맞는 e2e 검증을 실행한다. 기본 범위는 작업 대상 route, 관련 사용자 흐름, 변경된 shared component가 영향을 주는 화면이다.
+- `pnpm test:e2e` 전체 실행은 auth, middleware, app shell, route guard, global style/theme, shared navigation, test config처럼 여러 route에 영향을 주는 변경이거나, 변경 영향 범위를 좁히기 어려운 경우에 사용한다.
+- 범위를 좁혀 e2e를 실행한 경우에는 실행한 Playwright 파일/필터/명령과 그 범위가 충분한 이유를 보고한다. 예: `pnpm exec playwright test -g "B-01 home-dashboard"`.
 - e2e 테스트 진행에 필요한 테스트 계정/인증정보는 현재 세션이나 도구가 제공하는 프로젝트 메모리에서 참고한다. secret, token, private key, service role key는 출력하거나 commit하지 않는다.
-- `pnpm test:e2e`를 실행할 수 없거나 실패하면 완료로 보고하지 않는다. 실패 또는 미실행 이유, 재현 명령, 남은 위험을 함께 보고한다.
+- 필요한 범위의 e2e를 실행할 수 없거나 실패하면 완료로 보고하지 않는다. 실패 또는 미실행 이유, 재현 명령, 남은 위험을 함께 보고한다.
 - 작은 문서 변경: 문서 링크와 파일 존재 여부, 충돌 여부 확인
 - 코드 변경: 관련 unit/integration test, `pnpm lint`, `pnpm typecheck` 중 필요한 항목
 - route/UI 변경: 관련 component test 또는 browser 확인, mobile/desktop layout 확인
