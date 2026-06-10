@@ -784,12 +784,38 @@
       "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/34-X-12-auth-verify-email/findings.json",
       "status": "PASS",
       "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
+    },
+    {
+      "folder": "35-X-13-terms",
+      "iaCode": "X-13",
+      "screen": "Terms",
+      "route": "/terms",
+      "routeSource": "docs/Wireframe/35-X-13-terms/functional-spec.md",
+      "routeFallback": "docs/sitemap.md",
+      "referenceImages": {
+        "wireframe": "docs/Wireframe/35-X-13-terms/wireframe.png",
+        "hifi": "docs/Wireframe/35-X-13-terms/hifi.png",
+        "status": "missing-wireframe-and-hifi"
+      },
+      "docs": {
+        "description": "present",
+        "functionalSpec": "present",
+        "screenDataSummary": "present"
+      },
+      "classification": "public-active",
+      "audience": "public",
+      "authRequirement": "none",
+      "dynamicSeedRequirement": "placeholder legal copy is audited against tracked legal.terms translations; no DB/legal document store is used.",
+      "report": "docs/design-review-result/wireframe-ui-audit/2026-06-10/35-X-13-terms.html",
+      "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/35-X-13-terms/findings.json",
+      "status": "PASS",
+      "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
     }
   ],
   "summary": {
-    "completedPass": 30,
+    "completedPass": 31,
     "inProgress": 0,
-    "remainingKnownActiveScreens": 4,
+    "remainingKnownActiveScreens": 3,
     "adminFrozenOutOfScope": [
       "21-H-01-admin-problem-management",
       "30-X-08-organization-admin-dashboard",

@@ -1,35 +1,44 @@
-# 35-X-13 이용약관 — 와이어프레임 기준 리뷰
+# 35-X-13 이용약관 와이어프레임 리뷰
 
 ## 1. 메타
-- **IA / 라우트**: X-13 / `/terms` (public)
-- **audience**: public
-- **캡처 상태**: rendered / SOT 이미지 없음(코드 기반, 텍스트 SOT)
-- **host**: 단독 페이지 (legal support)
+- **IA / route**: X-13 / `/terms` (public)
+- **Audience**: public
+- **상태**: PASS
+- **Host**: legal support placeholder page
 
-## 2. 캡처 증거
-- 스크린샷: `.design-review-shots/20260609/35-X-13-terms-{360,768,1280}.png`
-- 렌더 헬스(`_health.json`): HTTP 200, 콘솔 에러 0, 에러 오버레이 없음.
+## 2. 보정 요약
+- 페이지 동작은 유지하고 `TermsContent`에 감사용 stable test id만 추가했다.
+- X-13 전용 e2e를 추가해 placeholder 고지, 임시 약관 요약, 문의 안내, escape links를 검증했다.
+- `legal.terms`/`legal.privacy` 번역은 현재 dirty worktree와 HEAD가 동일함을 구조화 비교로 확인했다. 따라서 X-13 산출물은 unrelated dirty 번역 변경에 의존하지 않는다.
 
-## 3. Layer 1 — SOT 정합 리뷰
+## 3. Layer 1 - SOT 정합 리뷰
 
-| 항목 | 요소/상태 | 판정 | 근거 |
+| 항목 | 요구사항 | 판정 | 근거 |
 | --- | --- | --- | --- |
-| 법적 고지(#1) | 제목 + placeholder 안내(법적 효력 확정 문구 금지) | **일치(모범)** | 캡처: "이용약관" + "현재 문구는 법무 검토 전 placeholder이며, 확정된 법적 효력을 갖는 약관이 아닙니다" |
-| 임시 약관 요약(#2) | 서비스 성격·데이터 목적·개인정보 링크·재동의 | 일치 | 캡처: 학습 보조 도구·학습 데이터 개선 목적·개인정보처리방침 링크·정식 약관 시 재동의 |
-| 운영 문의 안내(#3) | 채널 미준비 과장 없이 | 일치 | 캡처: "정식 약관 게시 전까지 별도 고객지원 채널이 준비되지 않았습니다" (가짜 채널 없음) |
-| Escape 링크(#4) | 홈/가입/개인정보 | 일치 | 캡처: "홈 · 가입으로 돌아가기 · 개인정보처리방침" |
-| 단일 컬럼 720px | 읽기 폭 | 일치 | 캡처: 단일 컬럼 |
+| 법적 고지 페이지 (#1) | 제목과 placeholder 약관 안내를 명확히 표시 | Pass | `current.json`: `cardVisible`, `introVisible`, `placeholderNoticeVisible` true |
+| 임시 약관 요약 (#2) | 서비스 성격, 학습 데이터 목적, 개인정보 링크, 재동의 안내 | Pass | `current.json`: `summaryVisible` true |
+| 운영 문의 안내 (#3) | 존재하지 않는 문의 채널을 꾸며내지 않음 | Pass | `current.json`: `contactVisible` true |
+| Escape links (#4) | 홈, 회원가입, 개인정보처리방침으로 이동 가능 | Pass | `current.json`: `homeLinkVisible`, `signUpLinkVisible`, `privacyLinkVisible` true |
+| 반응형 단일 컬럼 | 모바일/데스크톱에서 읽기 좋은 단일 컬럼 | Pass | mobile/desktop screenshot 확인, 겹침 없음 |
 
-**종합 verdict: 일치 (강, 모범)** — placeholder 사실을 숨기지 않고 법적 효력을 과장하지 않음(SOT 핵심 제약 충족).
+**종합 verdict: PASS.**
 
-## 4. Layer 2 — 멀티 에이전트 독립 분석
+## 4. 증거
+- Report: `docs/design-review-result/wireframe-ui-audit/2026-06-10/35-X-13-terms.html`
+- Structured findings: `docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/35-X-13-terms/findings.json`
+- Current capture data: `docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/35-X-13-terms/current.json`
+- Screenshots:
+  - `docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/35-X-13-terms/mobile-360.png`
+  - `docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/35-X-13-terms/tablet-768.png`
+  - `docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/35-X-13-terms/desktop-1280.png`
 
-- **콘텐츠/정직성 (우수)**: "법무 검토 전 placeholder", "확정된 법적 효력 아님", "고객지원 채널 미준비" — 미완성·미구현을 **정직하게** 노출. workslop 방지의 모범. SOT가 명시한 "꾸며내지 않기" 제약을 그대로 지킴.
-- **UX/IA (양호)**: 동의 대상(서비스 성격·데이터 사용)을 최소한 확인 가능. escape 링크로 막다른 길 방지.
-- **반응형/접근성 (양호)**: 단일 컬럼 읽기 폭, 360 유지, 링크 키보드 접근.
-- **적대적 검증**: "정직 placeholder" 주장 → 캡처로 확정(과장 없음). 모든 영역 일치.
+## 5. 실행 검증
+- `pnpm exec eslint src/components/legal/TermsContent.tsx tests/e2e/screens/terms.spec.ts`
+- `pnpm exec vitest run tests/components/legal/TermsContent.test.tsx`
+- `pnpm exec playwright test tests/e2e/screens/terms.spec.ts --project=mobile-360 --project=tablet-768 --project=desktop-1280 --no-deps`
+- `pnpm exec playwright test tests/e2e/screens/screens-public.spec.ts -g "X-13" --project=mobile-360 --project=tablet-768 --project=desktop-1280 --no-deps`
+- X-13 capture script: `/terms`를 360/768/1280에서 캡처했고 status PASS.
 
-## 5. 결론 — 개선안
-- **P0/P1/P2 없음.** placeholder 상태에서 정직성·escape·동의 안내가 모범적. (정식 약관 게시 시 본문 갱신 + 가입 동의 문구 재검토는 운영 단계 작업, 리뷰 범위 밖.)
-
-> 참고: 코드 미수정. 현재(임시 약관) 상태 우수.
+## 6. 검증 한계
+- 정식 법무 검토 약관은 아직 scope 밖이다. 현재 화면은 명세대로 placeholder 상태를 정직하게 표시하는지만 검증했다.
+- 전체 lint/typecheck와 기본 Playwright setup은 unrelated auth/landing/legal worktree 변경 때문에 계속 차단되어 있다.

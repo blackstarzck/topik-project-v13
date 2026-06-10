@@ -1,0 +1,71 @@
+{
+  "page": "35-X-13-terms",
+  "route": "/terms",
+  "capturedAt": "2026-06-10T12:37:21.782Z",
+  "status": "PASS",
+  "captures": [
+    {
+      "viewport": "mobile-360",
+      "size": {
+        "width": 360,
+        "height": 720
+      },
+      "status": 200,
+      "url": "http://127.0.0.1:3000/terms",
+      "cardVisible": true,
+      "introVisible": true,
+      "placeholderNoticeVisible": true,
+      "summaryVisible": true,
+      "contactVisible": true,
+      "shortcutsVisible": true,
+      "privacyLinkVisible": true,
+      "signUpLinkVisible": true,
+      "homeLinkVisible": true,
+      "devOverlayVisible": false,
+      "consoleErrors": [],
+      "screenshot": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/35-X-13-terms/mobile-360.png"
+    },
+    {
+      "viewport": "tablet-768",
+      "size": {
+        "width": 768,
+        "height": 1024
+      },
+      "status": 200,
+      "url": "http://127.0.0.1:3000/terms",
+      "cardVisible": true,
+      "introVisible": true,
+      "placeholderNoticeVisible": true,
+      "summaryVisible": true,
+      "contactVisible": true,
+      "shortcutsVisible": true,
+      "privacyLinkVisible": true,
+      "signUpLinkVisible": true,
+      "homeLinkVisible": true,
+      "devOverlayVisible": false,
+      "consoleErrors": [],
+      "screenshot": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/35-X-13-terms/tablet-768.png"
+    },
+    {
+      "viewport": "desktop-1280",
+      "size": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "url": "http://127.0.0.1:3000/terms",
+      "cardVisible": true,
+      "introVisible": true,
+      "placeholderNoticeVisible": true,
+      "summaryVisible": true,
+      "contactVisible": true,
+      "shortcutsVisible": true,
+      "privacyLinkVisible": true,
+      "signUpLinkVisible": true,
+      "homeLinkVisible": true,
+      "devOverlayVisible": false,
+      "consoleErrors": [],
+      "screenshot": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/35-X-13-terms/desktop-1280.png"
+    }
+  ]
+}

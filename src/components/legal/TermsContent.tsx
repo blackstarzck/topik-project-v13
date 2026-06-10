@@ -20,21 +20,27 @@ const { Title, Paragraph, Text } = Typography;
 export function TermsContent() {
   const t = useTranslations("legal.terms");
   return (
-    <AppCard>
+    <AppCard data-testid="terms-card">
       <Space orientation="vertical" size="large" style={{ width: "100%" }}>
         {/* §1 법적 고지 페이지 (제목 + 임시 약관 안내) */}
         <div>
           <Title level={2} style={{ marginBottom: 8 }}>
             {t("heading")}
           </Title>
-          <Paragraph style={{ marginBottom: 0 }}>{t("intro")}</Paragraph>
-          <Paragraph type="secondary" style={{ marginBottom: 0, marginTop: 8 }}>
+          <Paragraph style={{ marginBottom: 0 }} data-testid="terms-intro">
+            {t("intro")}
+          </Paragraph>
+          <Paragraph
+            type="secondary"
+            style={{ marginBottom: 0, marginTop: 8 }}
+            data-testid="terms-placeholder-notice"
+          >
             {t("placeholderNotice")}
           </Paragraph>
         </div>
 
         {/* §2 임시 약관 요약 */}
-        <div>
+        <div data-testid="terms-summary">
           <Title level={4} style={{ marginBottom: 8 }}>
             {t("summaryTitle")}
           </Title>
@@ -51,7 +57,7 @@ export function TermsContent() {
         </div>
 
         {/* §3 운영 문의 안내 — 존재하지 않는 채널을 꾸며내지 않는다 */}
-        <div>
+        <div data-testid="terms-contact">
           <Title level={4} style={{ marginBottom: 8 }}>
             {t("contactTitle")}
           </Title>
@@ -61,7 +67,7 @@ export function TermsContent() {
         </div>
 
         {/* §4 Escape 링크 — 홈 / 회원가입 / 개인정보처리방침 */}
-        <Paragraph style={{ marginBottom: 0 }}>
+        <Paragraph style={{ marginBottom: 0 }} data-testid="terms-shortcuts">
           <Text type="secondary">{t("shortcutsLabel")}</Text>
           <Link href="/">{t("linkHome")}</Link>
           {" · "}
