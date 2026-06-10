@@ -2031,6 +2031,11 @@ body {
   grid-template-columns: minmax(320px, 0.82fr) minmax(520px, 1.18fr);
 }
 
+.writing-grid--essay {
+  grid-template-columns:
+    minmax(240px, 0.72fr) minmax(420px, 1.18fr) minmax(260px, 0.78fr);
+}
+
 .writing-grid__main {
   display: grid;
   gap: 16px;
@@ -2038,7 +2043,8 @@ body {
 }
 
 .writing-grid__support,
-.writing-grid__composer {
+.writing-grid__composer,
+.writing-grid__checklist {
   display: grid;
   gap: 16px;
   min-width: 0;
@@ -2169,6 +2175,13 @@ body {
 .writing-guide-hints .app-card-compact {
   display: grid;
   gap: 4px;
+}
+
+@media (max-width: 1199px) {
+  .writing-grid--longform,
+  .writing-grid--essay {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 1050px) {
