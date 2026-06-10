@@ -924,6 +924,7 @@
       "nextProblem": "다음 문제",
       "savePdf": "PDF 저장",
       "compareReport": "비교 리포트",
+      "saveGroup": "저장",
       "compareFailedTitle": "비교 리포트 생성 실패",
       "pdfSuccess": "PDF 출력 대화상자가 열렸습니다.",
       "pdfFailedTitle": "PDF 저장에 실패했어요",

@@ -20,6 +20,9 @@ type Props = {
   submission: WritingSubmissionRow;
   bundle: FeedbackBundle | null;
   withSentences: boolean;
+  dimensionCardLimit?: number;
+  showDetailPanel?: boolean;
+  retryLabelKey?: "retryDefault" | "retryWriting";
   /** 현재 화면 경로 — 분석 완료/재분석 시 RSC 갱신에 사용. */
   reloadHref: string;
   /** 현재 사용자 id — 보관함 저장 row owner. */
@@ -42,6 +45,9 @@ export function FeedbackPageContent({
   submission,
   bundle,
   withSentences,
+  dimensionCardLimit,
+  showDetailPanel = withSentences,
+  retryLabelKey,
   reloadHref,
   userId,
   saveLocked = false,
@@ -108,15 +114,16 @@ export function FeedbackPageContent({
       <DimensionCardGrid
         rows={bundle.dimensions}
         // E-01 단답 region 2 제약: 카드 4개 이하.
-        maxCards={withSentences ? undefined : 4}
+        maxCards={dimensionCardLimit}
         onReanalyze={onReanalyze}
       />
 
       {withSentences ? (
-        <>
-          <SentenceFeedbackList rows={bundle.sentences} onReanalyze={onReanalyze} />
-          <DetailedFeedbackPanel dimensions={bundle.dimensions} />
-        </>
+        <SentenceFeedbackList rows={bundle.sentences} onReanalyze={onReanalyze} />
+      ) : null}
+
+      {showDetailPanel ? (
+        <DetailedFeedbackPanel dimensions={bundle.dimensions} />
       ) : null}
 
       <FeedbackRecommendationCards dimensions={bundle.dimensions} />
@@ -131,7 +138,7 @@ export function FeedbackPageContent({
         nextHref="/practice/next"
         withPdf
         retryLabel={
-          withSentences ? tActions("retryWriting") : tActions("retryDefault")
+          tActions(retryLabelKey ?? (withSentences ? "retryWriting" : "retryDefault"))
         }
         saveLocked={saveLocked}
       />

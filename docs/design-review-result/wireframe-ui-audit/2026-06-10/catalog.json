@@ -341,12 +341,38 @@
       "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/13-D-M2-ai-analysis-loading/findings.json",
       "status": "PASS",
       "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
+    },
+    {
+      "folder": "14-E-01-short-answer-feedback",
+      "iaCode": "E-01",
+      "screen": "Short-answer feedback",
+      "route": "/writing/feedback/short/:id",
+      "routeSource": "docs/Wireframe/14-E-01-short-answer-feedback/functional-spec.md",
+      "routeFallback": "docs/sitemap.md",
+      "referenceImages": {
+        "wireframe": "docs/Wireframe/14-E-01-short-answer-feedback/wireframe.png",
+        "hifi": "docs/Wireframe/14-E-01-short-answer-feedback/hifi.png",
+        "status": "complete"
+      },
+      "docs": {
+        "description": "present",
+        "functionalSpec": "present",
+        "screenDataSummary": "present"
+      },
+      "classification": "user-active",
+      "audience": "user",
+      "authRequirement": "authenticated user",
+      "dynamicSeedRequirement": "existing completed short feedback submission required",
+      "report": "docs/design-review-result/wireframe-ui-audit/2026-06-10/14-E-01-short-answer-feedback.html",
+      "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/14-E-01-short-answer-feedback/findings.json",
+      "status": "PASS",
+      "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
     }
   ],
   "summary": {
-    "completedPass": 13,
+    "completedPass": 14,
     "inProgress": 0,
-    "remainingKnownActiveScreens": 21,
+    "remainingKnownActiveScreens": 20,
     "adminFrozenOutOfScope": [
       "21-H-01-admin-problem-management",
       "30-X-08-organization-admin-dashboard",

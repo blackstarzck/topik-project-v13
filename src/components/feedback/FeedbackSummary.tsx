@@ -23,7 +23,7 @@ export function FeedbackSummary({ feedback }: Props) {
 
   if (scoreFailed) {
     return (
-      <AppCard>
+      <AppCard data-testid="feedback-summary">
         <Alert
           type="warning"
           showIcon
@@ -35,7 +35,7 @@ export function FeedbackSummary({ feedback }: Props) {
   }
 
   return (
-    <AppCard>
+    <AppCard data-testid="feedback-summary">
       <Statistic title={t("scoreTitle")} value={score} suffix={`/ ${max}`} />
       <Paragraph
         type="secondary"

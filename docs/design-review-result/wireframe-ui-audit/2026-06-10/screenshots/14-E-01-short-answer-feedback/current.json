@@ -1,0 +1,65 @@
+[
+  {
+    "viewport": "mobile-360",
+    "route": "/writing/feedback/short/dabdff41-0355-4646-92b6-63ad729a1a79",
+    "status": 200,
+    "url": "http://127.0.0.1:3000/writing/feedback/short/dabdff41-0355-4646-92b6-63ad729a1a79",
+    "scoreVisible": true,
+    "summaryVisible": true,
+    "dimensionCardCount": 4,
+    "recommendationCardCount": 3,
+    "sentenceFeedbackVisible": true,
+    "actionVisibleCount": 4,
+    "actionTexts": [
+      "다시 풀기",
+      "다음 문제",
+      "저장",
+      "비교 리포트"
+    ],
+    "retryText": "다시 풀기",
+    "retryMatchesDefault": true,
+    "consoleErrors": []
+  },
+  {
+    "viewport": "tablet-768",
+    "route": "/writing/feedback/short/dabdff41-0355-4646-92b6-63ad729a1a79",
+    "status": 200,
+    "url": "http://127.0.0.1:3000/writing/feedback/short/dabdff41-0355-4646-92b6-63ad729a1a79",
+    "scoreVisible": true,
+    "summaryVisible": true,
+    "dimensionCardCount": 4,
+    "recommendationCardCount": 3,
+    "sentenceFeedbackVisible": true,
+    "actionVisibleCount": 4,
+    "actionTexts": [
+      "다시 풀기",
+      "다음 문제",
+      "저장",
+      "비교 리포트"
+    ],
+    "retryText": "다시 풀기",
+    "retryMatchesDefault": true,
+    "consoleErrors": []
+  },
+  {
+    "viewport": "desktop-1280",
+    "route": "/writing/feedback/short/dabdff41-0355-4646-92b6-63ad729a1a79",
+    "status": 200,
+    "url": "http://127.0.0.1:3000/writing/feedback/short/dabdff41-0355-4646-92b6-63ad729a1a79",
+    "scoreVisible": true,
+    "summaryVisible": true,
+    "dimensionCardCount": 4,
+    "recommendationCardCount": 3,
+    "sentenceFeedbackVisible": true,
+    "actionVisibleCount": 4,
+    "actionTexts": [
+      "다시 풀기",
+      "다음 문제",
+      "저장",
+      "비교 리포트"
+    ],
+    "retryText": "다시 풀기",
+    "retryMatchesDefault": true,
+    "consoleErrors": []
+  }
+]

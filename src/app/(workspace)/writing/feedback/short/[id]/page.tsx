@@ -39,7 +39,10 @@ export default async function ShortFeedbackPage({
     <FeedbackPageContent
       submission={submission}
       bundle={bundle}
-      withSentences={false}
+      withSentences
+      dimensionCardLimit={4}
+      showDetailPanel={false}
+      retryLabelKey="retryDefault"
       reloadHref={`/writing/feedback/short/${id}`}
       userId={user.id}
       saveLocked={saveLocked}

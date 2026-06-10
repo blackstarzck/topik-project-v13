@@ -924,6 +924,7 @@
       "nextProblem": "Next problem",
       "savePdf": "Save PDF",
       "compareReport": "Comparison report",
+      "saveGroup": "Save",
       "compareFailedTitle": "Failed to create comparison report",
       "pdfSuccess": "The PDF print dialog has opened.",
       "pdfFailedTitle": "Failed to save PDF",

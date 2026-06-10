@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Empty, List, Space, Tag, Typography } from "antd";
+import { Button, Empty, Space, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { AppCard } from "@/components/shared/AppCard";
 import { useState } from "react";
@@ -28,7 +28,11 @@ export function SentenceFeedbackList({ rows, onReanalyze }: Props) {
 
   if (rows.length === 0) {
     return (
-      <AppCard size="small" title={t("cardTitle")}>
+      <AppCard
+        size="small"
+        title={t("cardTitle")}
+        data-testid="feedback-sentence-card"
+      >
         <Empty description={t("emptyDescription")} />
       </AppCard>
     );
@@ -38,13 +42,24 @@ export function SentenceFeedbackList({ rows, onReanalyze }: Props) {
   const hiddenCount = rows.length - visible.length;
 
   return (
-    <AppCard title={t("cardTitle")} size="small">
-      <List
-        dataSource={visible}
-        renderItem={(r) => {
+    <AppCard
+      title={t("cardTitle")}
+      size="small"
+      data-testid="feedback-sentence-card"
+    >
+      <div role="list">
+        {visible.map((r, index) => {
           const failed = !r.corrected_text && !r.comment;
           return (
-            <List.Item key={r.id}>
+            <div
+              key={r.id}
+              role="listitem"
+              style={{
+                padding: index === 0 ? "0 0 12px" : "12px 0",
+                borderBottom:
+                  index < visible.length - 1 ? "1px solid #f0f0f0" : undefined,
+              }}
+            >
               <div style={{ width: "100%" }}>
                 {/* 원문은 줄바꿈 보존. */}
                 {r.original_text ? (
@@ -87,10 +102,10 @@ export function SentenceFeedbackList({ rows, onReanalyze }: Props) {
                   </>
                 )}
               </div>
-            </List.Item>
+            </div>
           );
-        }}
-      />
+        })}
+      </div>
       {hiddenCount > 0 ? (
         <div style={{ textAlign: "center", marginTop: 8 }}>
           <Button type="link" onClick={() => setExpanded(true)}>

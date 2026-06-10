@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <title>Wireframe UI Audit - 14-E-01-short-answer-feedback - 2026-06-10</title>
+    <style>
+      body {
+        margin: 32px;
+        background: #ffffff;
+        color: #172033;
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+      }
+
+      h1,
+      h2 {
+        letter-spacing: 0;
+      }
+
+      table {
+        width: 100%;
+        margin: 12px 0 28px;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+
+      th,
+      td {
+        padding: 10px 12px;
+        border: 1px solid #d9e1ef;
+        vertical-align: top;
+      }
+
+      th {
+        background: #f4f7fb;
+        text-align: left;
+      }
+
+      code {
+        border-radius: 4px;
+        background: #f3f4f6;
+        padding: 1px 4px;
+      }
+
+      .verdict {
+        border: 1px solid #8fd6ad;
+        border-radius: 8px;
+        background: #edfdf3;
+        padding: 14px 16px;
+      }
+
+      .note {
+        border: 1px solid #d9e1ef;
+        border-radius: 8px;
+        background: #f8fafc;
+        padding: 12px 14px;
+      }
+
+      .sev-pass {
+        display: inline-block;
+        border-radius: 999px;
+        background: #dff7ea;
+        color: #067647;
+        padding: 2px 10px;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Wireframe UI Audit - 14-E-01-short-answer-feedback - 2026-06-10</h1>
+    <p><strong>Scope:</strong> E-01 short-answer feedback after AI analysis is complete.</p>
+    <p><strong>Route used for capture:</strong> <code>/writing/feedback/short/:id</code> with an isolated completed submission.</p>
+    <p><strong>Mode:</strong> audit-remediation</p>
+
+    <h2>Verdict</h2>
+    <p class="verdict">
+      <strong>PASS.</strong> E-01 now exposes the score summary, at most four dimension cards, sentence-level correction
+      feedback, at most three recommendation cards, and one primary plus three secondary visible CTAs across mobile,
+      tablet, and desktop captures.
+    </p>
+
+    <p class="note">
+      Accepted variance: library save and PDF export are grouped under one Save menu. This preserves both functional-spec
+      actions while meeting the CTA budget from the description.
+    </p>
+
+    <h2>Visual Delta Summary</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Area</th>
+          <th>Reference intent</th>
+          <th>Current implementation</th>
+          <th>Delta</th>
+          <th>User impact</th>
+          <th>Severity</th>
+          <th>Next action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>score summary</td>
+          <td>Show score and overall summary in the first viewport, with summary capped to three lines.</td>
+          <td><code>FeedbackSummary</code> renders the score statistic and three-line summary before detailed sections.</td>
+          <td>Aligned with region 1.</td>
+          <td>Learners see the result immediately before reading corrections.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>No blocking follow-up.</td>
+        </tr>
+        <tr>
+          <td>dimension cards</td>
+          <td>Show at most four short dimension feedback cards.</td>
+          <td>The short feedback route passes <code>dimensionCardLimit={4}</code>, while long feedback can still show its fuller detail surface.</td>
+          <td>The previous route-level coupling is resolved.</td>
+          <td>The short-answer feedback page stays compact and scannable.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>No blocking follow-up.</td>
+        </tr>
+        <tr>
+          <td>sentence corrections</td>
+          <td>Show sentence-level correction suggestions for short-answer feedback.</td>
+          <td><code>SentenceFeedbackList</code> now renders on E-01, with empty-state support and no AntD List deprecation warning.</td>
+          <td>The previous missing sentence feedback is resolved.</td>
+          <td>Learners can act on concrete sentence-level corrections instead of only reading dimension summaries.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>No blocking follow-up.</td>
+        </tr>
+        <tr>
+          <td>recommendations</td>
+          <td>Show at most three learning recommendation cards.</td>
+          <td><code>FeedbackRecommendationCards</code> continues to rank and render the top three weakness recommendations.</td>
+          <td>Aligned with region 3.</td>
+          <td>The next learning step is focused rather than overpopulated.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>No blocking follow-up.</td>
+        </tr>
+        <tr>
+          <td>next actions</td>
+          <td>One primary CTA and at most three secondary CTAs, with duplicate-click guards.</td>
+          <td>The page renders retry, next problem, Save menu, and comparison report; library save and PDF export live inside the Save menu.</td>
+          <td>The previous five visible actions are reduced to four while preserving PDF export.</td>
+          <td>Actions are easier to scan and remain within the wireframe CTA budget.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>No blocking follow-up.</td>
+        </tr>
+        <tr>
+          <td>short-route wording</td>
+          <td>Use short-answer retry wording, not long-form rewrite wording.</td>
+          <td>The short route now passes <code>retryLabelKey="retryDefault"</code> independently from sentence feedback visibility.</td>
+          <td>The regression where E-01 displayed the long-form retry label is resolved.</td>
+          <td>The CTA remains contextually correct for question 51/52 feedback.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>No blocking follow-up.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Evidence</h2>
+    <ul>
+      <li><code>screenshots/14-E-01-short-answer-feedback/current.json</code> records authenticated captures at 360, 768, and 1280 widths.</li>
+      <li><code>screenshots/14-E-01-short-answer-feedback/findings.json</code> records PASS evidence for score visibility, card limits, sentence feedback, CTA count, retry wording, and console health.</li>
+      <li><code>src/app/(workspace)/writing/feedback/short/[id]/page.tsx</code> applies the short feedback variant settings.</li>
+      <li><code>src/components/feedback/FeedbackPageContent.tsx</code> separates sentence feedback visibility, detail panel visibility, dimension limits, and retry label variant.</li>
+      <li><code>src/components/feedback/NextActionBar.tsx</code> groups save/PDF actions under one visible Save menu.</li>
+      <li><code>tests/e2e/screens/short-feedback.spec.ts</code> verifies E-01 constraints against isolated completed feedback data.</li>
+    </ul>
+
+    <h2>Verification</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Command</th>
+          <th>Result</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>pnpm exec tsc --noEmit --pretty false</code></td>
+          <td>Passed.</td>
+        </tr>
+        <tr>
+          <td><code>Playwright capture script for E-01 at 360/768/1280</code></td>
+          <td>Passed; status=200, scoreVisible=true, dimensionCardCount&lt;=4, recommendationCardCount&lt;=3, sentenceFeedbackVisible=true, visible CTA count&lt;=4, consoleErr=0.</td>
+        </tr>
+        <tr>
+          <td><code>pnpm exec playwright test tests/e2e/screens/short-feedback.spec.ts --project=mobile-360 --project=tablet-768 --project=desktop-1280</code></td>
+          <td>Passed, 4 tests including auth setup and E-01 checks.</td>
+        </tr>
+        <tr>
+          <td><code>pnpm lint</code></td>
+          <td>Passed with 0 errors and 9 pre-existing warnings.</td>
+        </tr>
+      </tbody>
+    </table>
+  </body>
+</html>

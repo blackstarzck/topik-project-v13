@@ -42,7 +42,7 @@ export function DimensionCardGrid({ rows, maxCards, onReanalyze }: Props) {
   const visible = maxCards ? ordered.slice(0, maxCards) : ordered;
 
   return (
-    <Row gutter={[12, 12]}>
+    <Row gutter={[12, 12]} data-testid="feedback-dimension-grid">
       {visible.map((dim) => {
         const row = byDim.get(dim);
         const score = row?.score ?? null;
@@ -58,6 +58,7 @@ export function DimensionCardGrid({ rows, maxCards, onReanalyze }: Props) {
           <Col key={dim} xs={24} md={12} lg={8}>
             <AppCard
               size="small"
+              data-testid="feedback-dimension-card"
               style={failed ? { opacity: 0.6, background: "#fafafa" } : undefined}
             >
               <Text strong>{t(`label.${dim}`)}</Text>
