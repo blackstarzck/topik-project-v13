@@ -393,12 +393,38 @@
       "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/15-E-02-long-form-feedback/findings.json",
       "status": "PASS",
       "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
+    },
+    {
+      "folder": "16-R-01-comparison-report",
+      "iaCode": "R-01",
+      "screen": "Comparison report",
+      "route": "/writing/reports/:id/compare",
+      "routeSource": "docs/Wireframe/16-R-01-comparison-report/functional-spec.md",
+      "routeFallback": "docs/sitemap.md",
+      "referenceImages": {
+        "wireframe": "docs/Wireframe/16-R-01-comparison-report/wireframe.png",
+        "hifi": "docs/Wireframe/16-R-01-comparison-report/hifi.png",
+        "status": "complete"
+      },
+      "docs": {
+        "description": "present",
+        "functionalSpec": "present",
+        "screenDataSummary": "present"
+      },
+      "classification": "user-active",
+      "audience": "user",
+      "authRequirement": "authenticated user",
+      "dynamicSeedRequirement": "existing comparison report required",
+      "report": "docs/design-review-result/wireframe-ui-audit/2026-06-10/16-R-01-comparison-report.html",
+      "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/16-R-01-comparison-report/findings.json",
+      "status": "PASS",
+      "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
     }
   ],
   "summary": {
-    "completedPass": 15,
+    "completedPass": 16,
     "inProgress": 0,
-    "remainingKnownActiveScreens": 19,
+    "remainingKnownActiveScreens": 18,
     "adminFrozenOutOfScope": [
       "21-H-01-admin-problem-management",
       "30-X-08-organization-admin-dashboard",

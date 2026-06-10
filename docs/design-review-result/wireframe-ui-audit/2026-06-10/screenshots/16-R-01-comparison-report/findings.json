@@ -1,0 +1,23 @@
+{
+  "iaCode": "R-01",
+  "status": "PASS",
+  "findings": [],
+  "evidence": {
+    "route": "/writing/reports/2401aa92-15da-469c-9b81-fe9f368ffd97/compare",
+    "viewports": [
+      "mobile-360",
+      "tablet-768",
+      "desktop-1280"
+    ],
+    "statusOkAll": true,
+    "pageHeaderVisibleAll": true,
+    "kpiWithinLimitAll": true,
+    "chartVisibleAll": true,
+    "chartFallbackAvailableAll": true,
+    "dimensionCardsWithinLimitAll": true,
+    "narrativeVisibleAll": true,
+    "submissionDiffVisibleAll": true,
+    "visibleCtaWithinLimitAll": true,
+    "noConsoleErrors": true
+  }
+}

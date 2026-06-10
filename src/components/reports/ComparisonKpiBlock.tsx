@@ -1,27 +1,18 @@
 "use client";
 
-import { Col, Empty, Row, Statistic, Typography } from "antd";
+import { Col, Empty, Row, Statistic, Typography, theme } from "antd";
 import { useTranslations } from "next-intl";
 import { AppCard } from "@/components/shared/AppCard";
 
 const { Text } = Typography;
 
 type Props = {
-  /** 현재 총점. null이면 점수 산출 실패. */
   currentScore: number | null;
-  /** 개선 폭(현재-이전). null이면 이전 데이터 없음. */
   scoreDelta: number | null;
-  /** 변화한 항목 수(상승/하락 합). */
   changedDimensions: number;
-  /** 비교 데이터가 부족하면 단일 결과 요약으로 대체(description region 1 예외). */
   hasPrevious: boolean;
 };
 
-/**
- * R-01 비교 KPI (description region 1).
- * 제약: KPI 라벨 1줄, 비교 대상 2개 기본.
- * 예외: 비교 데이터 부족 시 단일 결과 요약으로 대체.
- */
 export function ComparisonKpiBlock({
   currentScore,
   scoreDelta,
@@ -29,10 +20,11 @@ export function ComparisonKpiBlock({
   hasPrevious,
 }: Props) {
   const t = useTranslations("reports.kpi");
+  const { token } = theme.useToken();
 
   if (currentScore === null) {
     return (
-      <AppCard>
+      <AppCard data-testid="comparison-kpi-block">
         <Empty description={t("emptyScore")} />
       </AppCard>
     );
@@ -40,24 +32,24 @@ export function ComparisonKpiBlock({
 
   const deltaColor =
     scoreDelta === null
-      ? undefined
+      ? token.colorText
       : scoreDelta > 0
-        ? "#3f8600"
+        ? token.colorSuccess
         : scoreDelta < 0
-          ? "#cf1322"
-          : undefined;
+          ? token.colorError
+          : token.colorText;
 
   return (
-    <AppCard>
+    <AppCard data-testid="comparison-kpi-block">
       <Row gutter={[16, 16]}>
-        <Col xs={24} md={8}>
+        <Col xs={24} md={8} data-testid="comparison-kpi-item">
           <Statistic
             title={t("currentTotal")}
             value={currentScore}
             suffix={t("suffixPoint")}
           />
         </Col>
-        <Col xs={24} md={8}>
+        <Col xs={24} md={8} data-testid="comparison-kpi-item">
           {hasPrevious && scoreDelta !== null ? (
             <Statistic
               title={t("improvement")}
@@ -66,7 +58,7 @@ export function ComparisonKpiBlock({
               styles={{ content: { color: deltaColor } }}
               prefix={
                 <span aria-hidden>
-                  {scoreDelta > 0 ? "▲" : scoreDelta < 0 ? "▼" : "—"}
+                  {scoreDelta > 0 ? "+" : scoreDelta < 0 ? "-" : "="}
                 </span>
               }
               suffix={t("suffixPoint")}
@@ -74,16 +66,16 @@ export function ComparisonKpiBlock({
           ) : (
             <Statistic
               title={t("improvement")}
-              value="—"
+              value={0}
               formatter={() => (
-                <Text type="secondary" style={{ fontSize: 16 }}>
+                <Text type="secondary" style={{ fontSize: token.fontSizeLG }}>
                   {t("noComparison")}
                 </Text>
               )}
             />
           )}
         </Col>
-        <Col xs={24} md={8}>
+        <Col xs={24} md={8} data-testid="comparison-kpi-item">
           <Statistic
             title={t("changedDimensions")}
             value={hasPrevious ? changedDimensions : 0}
@@ -92,7 +84,10 @@ export function ComparisonKpiBlock({
               hasPrevious
                 ? undefined
                 : () => (
-                    <Text type="secondary" style={{ fontSize: 16 }}>
+                    <Text
+                      type="secondary"
+                      style={{ fontSize: token.fontSizeLG }}
+                    >
                       {t("singleResult")}
                     </Text>
                   )
