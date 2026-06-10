@@ -836,12 +836,38 @@
       "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/36-X-14-privacy-policy/findings.json",
       "status": "PASS",
       "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
+    },
+    {
+      "folder": "38-X-16-password-reset-confirm",
+      "iaCode": "X-16",
+      "screen": "Password reset confirm",
+      "route": "/password-reset/confirm",
+      "routeSource": "docs/Wireframe/38-X-16-password-reset-confirm/functional-spec.md",
+      "routeFallback": "docs/sitemap.md",
+      "referenceImages": {
+        "wireframe": "docs/Wireframe/38-X-16-password-reset-confirm/wireframe.png",
+        "hifi": "docs/Wireframe/38-X-16-password-reset-confirm/hifi.png",
+        "status": "missing-wireframe-and-hifi"
+      },
+      "docs": {
+        "description": "present",
+        "functionalSpec": "present",
+        "screenDataSummary": "present"
+      },
+      "classification": "public-active",
+      "audience": "public",
+      "authRequirement": "public route; password update requires Supabase recovery session",
+      "dynamicSeedRequirement": "audit uses empty storage and intercepts password update failure; no live recovery email/session is required.",
+      "report": "docs/design-review-result/wireframe-ui-audit/2026-06-10/38-X-16-password-reset-confirm.html",
+      "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/38-X-16-password-reset-confirm/findings.json",
+      "status": "PASS",
+      "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
     }
   ],
   "summary": {
-    "completedPass": 32,
+    "completedPass": 33,
     "inProgress": 0,
-    "remainingKnownActiveScreens": 2,
+    "remainingKnownActiveScreens": 1,
     "adminFrozenOutOfScope": [
       "21-H-01-admin-problem-management",
       "30-X-08-organization-admin-dashboard",

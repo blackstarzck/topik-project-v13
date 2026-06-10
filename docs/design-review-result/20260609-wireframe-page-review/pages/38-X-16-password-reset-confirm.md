@@ -2,53 +2,47 @@
 
 ## 1. 메타
 - **IA / 라우트**: X-16 / `/password-reset/confirm`
-- **audience**: public (세션 없이 화면은 열리되, 저장은 recovery session 필요)
-- **캡처 상태**: rendered (실제 하이드레이션 화면 캡처 완료)
+- **audience**: public. 화면 접근은 세션 없이 가능하지만, 실제 비밀번호 저장은 Supabase recovery session이 필요하다.
+- **캡처 상태**: rendered / PASS
 - **host**: 단독 페이지
-- **SOT 이미지**: 없음(코드 기준 추가 화면, 텍스트 SOT만)
+- **SOT 이미지**: 없음. 기존 34개 Wireframe 이후 코드 기준으로 추가된 화면이라 텍스트 SOT와 현재 구현을 대조했다.
 
-## 2. 캡처 증거
-- 스크린샷: `.design-review-shots/20260609/38-X-16-password-reset-confirm-{360,768,1280}.png`
-- 렌더 헬스(`_health.json` 근거):
-  - HTTP 200, 로그인 리다이렉트 없음, 에러 오버레이 없음
-  - **콘솔 에러 1건 — `pageerror: Hydration failed because the server rendered HTML didn't match the client`** (3개 뷰포트 모두 동일)
-  - 화면 좌하단 Next.js dev 인디케이터에 "1 Issue" 표시(위 하이드레이션 에러)
-- e2e(Tier 2) 결과: **이 화면만 실패** — `screens-public.spec.ts`가 pageerror 0건을 요구하는데 하이드레이션 에러로 3뷰포트 모두 FAIL. (실제 버그를 테스트가 정직하게 잡음)
+## 2. 판정
+**PASS**
+
+이전 리뷰의 P1 이슈였던 만료 시각 하이드레이션 불일치는 현재 소스에서 재현되지 않는다. `PasswordResetConfirmForm`은 `expiresAt`을 `null`로 초기화하고 `useEffect` 내부 `setTimeout` 이후에만 클라이언트 시각을 계산한다. 따라서 SSR 출력에는 시각 문자열이 포함되지 않고, Playwright public smoke에서도 `pageerror`가 0건으로 확인됐다.
 
 ## 3. Layer 1 — SOT 정합 리뷰
 
-| 항목 | 요소/상태/문구/데이터 | 판정 | 근거 |
-| --- | --- | --- | --- |
-| 재설정 카드(#1) | 중앙 카드(폭 제한), 새 비밀번호 설정 폼 | 있음 | 캡처: 카드형 폼 정상 |
-| 흐름 안내(#2) | "마지막 단계 — 새 비밀번호만 정하면 끝" 헤더 | 있음 | 캡처: "이메일 링크로 들어오셨어요. 마지막 단계예요 — 새 비밀번호만 정하면 끝나요." |
-| 비밀번호 입력(#3) | 새 비밀번호 + 확인, 8-64자, show/hide | 있음 | 캡처: 두 입력 + 눈 토글 |
-| 안내 카피(#4) | 보안 조건 + 만료시간(절대/상대 병기 "약 60분 후(HH:mm쯤)") | **벗어남(중대)** | 캡처: "8-64자… 이 링크는 약 60분 후 (12:19쯤) 만료돼요." 표시되나, **SSR에서 시각을 계산해 하이드레이션 불일치 발생** |
-| 마스코트(#5) | 🔐 상단 배치 | 있음 | 캡처: 자물쇠 이모지 상단 |
-| 완료 CTA(#6) | "비밀번호 변경" + 로그인 복귀 링크 | 있음 | 캡처: 파란 CTA + "로그인 화면으로 돌아가기" |
+| 항목 | 판정 | 근거 |
+| --- | --- | --- |
+| 재설정 카드(#1) | 일치 | `AppCard` 기반 중앙 카드가 360/768/1280 캡처에서 유지된다. |
+| 흐름 안내(#2) | 일치 | “마지막 단계” 안내와 새 비밀번호 설정 헤딩이 노출된다. |
+| 비밀번호 입력(#3) | 일치 | 새 비밀번호/확인 필드, 8-64자 검증, 강도 미터와 규칙 체크리스트가 동작한다. |
+| 안내 카피(#4) | 일치 | 보안 조건과 “약 60분 후(HH:mm쯤)” 만료 안내가 hydration 이후 렌더되며 console/page error가 없다. |
+| 마스코트(#5) | 일치 | 보안 마스코트가 입력 영역을 가리지 않는 상단 위치에 표시된다. |
+| 완료 CTA + 실패 알림(#6) | 일치 | 저장 실패 시 warning alert와 `/password-reset` 재설정 링크가 노출되고 provider raw error는 UI에 노출되지 않는다. |
 
-**종합 verdict: 부분일치 (불일치 1건이 중대)**
-- 시각적 요소·문구·CTA는 SOT와 일치.
-- 그러나 **#4 안내 카피가 SOT가 명시한 설계 규칙을 위반**: description #4 예외는 "**SSR 단계에서는 만료 시각을 계산하지 않고(하이드레이션 mismatch 회피) 마운트 후 표시**"라고 못박았는데, 실제로는 만료 시각이 서버 렌더 결과에 포함되어 클라이언트와 달라져 하이드레이션 mismatch가 발생함. **코드가 자기 SOT 규칙을 어김.**
+## 4. Layer 2 — 멘탈 모델 / 상태 검증
+- **직접 진입**: `/password-reset/confirm`은 세션 없이도 HTTP 200으로 렌더된다. 이는 public route 요구와 일치한다.
+- **recovery session 없음/만료**: 저장 실패는 canonical warning alert로 안내되고, 사용자는 `/password-reset`에서 재요청할 수 있다.
+- **성공 흐름**: 기존 unit test가 `updateUser({ password })` 호출과 `/login` 이동을 검증한다.
+- **반응형**: 360/768/1280 캡처 모두 레이아웃 겹침, 잘림, dev error overlay가 없다.
 
-## 4. Layer 2 — 멀티 에이전트 독립 분석
+## 5. 증거
+- Report: `docs/design-review-result/wireframe-ui-audit/2026-06-10/38-X-16-password-reset-confirm.html`
+- Structured findings: `docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/38-X-16-password-reset-confirm/findings.json`
+- Current capture data: `docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/38-X-16-password-reset-confirm/current.json`
+- Screenshots:
+  - `docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/38-X-16-password-reset-confirm/mobile-360.png`
+  - `docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/38-X-16-password-reset-confirm/tablet-768.png`
+  - `docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/38-X-16-password-reset-confirm/desktop-1280.png`
 
-- **콘텐츠/데이터 (P1)**: 만료 시각 "(12:19쯤)"이 SSR 시점 기준으로 박혀 클라이언트 하이드레이션 시점과 불일치. React 콘솔 에러 원문이 원인을 명시: "Variable input such as time/random which changes each time… Date formatting in a user's locale which doesn't match the server." 사용자에겐 보통 정상으로 보이지만, React가 트리를 다시 그리며(regeneration) **깜빡임·드물게 잘못된 시각 노출** 가능.
-- **상태 커버리지 (양호)**: SOT가 요구한 실패 알림(세션 없음/만료/저장 실패를 한 warning으로 묶고 재발송 링크) 흐름은 명세상 정의됨. (이번 캡처는 토큰 없는 기본 진입 상태라 실패 알림 상태는 미노출 — UNVERIFIED-LIVE)
-- **접근성 (양호, 경미)**: 입력에 라벨 존재, show/hide 토글 존재. 강도 미터/체크리스트는 입력 시 노출되므로 빈 상태 캡처에선 미확인.
-- **반응형 (양호)**: 360/768/1280 모두 중앙 카드 레이아웃 유지, 깨짐 없음.
-- **적대적 검증**: "하이드레이션 에러" 주장 반증 시도 → 반증 실패(확정). 근거가 셋(① render-shot `_health.json` pageerror ② e2e 3뷰포트 FAIL ③ React 에러 원문이 time-based 입력을 지목)으로 일치. **확정(confirmed)**.
+## 6. 검증
+- `pnpm exec eslint src/components/auth/PasswordResetConfirmForm.tsx tests/e2e/screens/password-reset-confirm.spec.ts`
+- `pnpm exec vitest run tests/components/auth/PasswordResetConfirmForm.test.tsx`
+- `pnpm exec playwright test tests/e2e/screens/password-reset-confirm.spec.ts --project=mobile-360 --project=tablet-768 --project=desktop-1280 --no-deps`
+- `pnpm exec playwright test tests/e2e/screens/screens-public.spec.ts -g "X-16" --project=mobile-360 --project=tablet-768 --project=desktop-1280 --no-deps`
 
-## 5. 결론 — 개선안
-
-### P0 (지금 당장)
-- 없음 (화면이 완전히 깨지진 않음 — 사용자는 비밀번호 변경 가능).
-
-### P1 (이번 주 안에)
-- **만료 시각 안내를 클라이언트 마운트 후에만 렌더하도록 수정** (SOT가 이미 규정한 방식). 예: 만료 시각 문자열을 `useEffect`/마운트 이후 상태로만 계산해 SSR 출력에서 제외.
-  - 근거: Layer 1 불일치 + Layer 2 콘텐츠/데이터, 증거 = `_health.json` pageerror·e2e FAIL·React 에러 원문.
-  - 영향 범위: 비밀번호 재설정 마무리 화면. 로그인/가입엔 영향 없음. 수정 후 콘솔 에러 0·e2e GREEN으로 검증 가능.
-
-### P2 (여유 있을 때)
-- recovery session 없는 직접 진입을 사전 판별하는 진입 가드(현재는 저장 실패로 reactive 안내) — SOT "추가 발견 후보"와 일치.
-
-> 참고: 제품 코드는 수정하지 않았습니다(리뷰는 제안까지). 위 P1은 SOT가 이미 정한 방식으로 되돌리는 작업입니다.
+## 7. 남은 리스크
+- 실제 Supabase recovery email/session을 사용한 live password update는 실행하지 않았다. 현재 검증은 기존 unit test와 Playwright의 빈 세션/실패 복구 분기, public render smoke를 결합한 감사 범위다.

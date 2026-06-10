@@ -77,8 +77,13 @@ export function PasswordResetConfirmForm() {
 
   return (
     // §1 재설정 카드 — 절차 전체를 담는 surface (폭은 PageContainer narrow 가 제어).
-    <AppCard>
-      <Form layout="vertical" onFinish={handleSubmit} requiredMark={false}>
+    <AppCard data-testid="password-reset-confirm-card">
+      <Form
+        layout="vertical"
+        onFinish={handleSubmit}
+        requiredMark={false}
+        data-testid="password-reset-confirm-form"
+      >
         {/* §5 마스코트 — 보안 절차 긴장감 완화, 입력 영역을 가리지 않게 상단 배치 */}
         <AuthMascot
           alt={t("mascotAlt")}
@@ -94,7 +99,10 @@ export function PasswordResetConfirmForm() {
         </Paragraph>
 
         {/* §4 안내 카피 — 보안 조건 + 만료 시간(절대/상대 병기) */}
-        <Paragraph style={{ marginBottom: 16 }}>
+        <Paragraph
+          style={{ marginBottom: 16 }}
+          data-testid="password-reset-confirm-guide"
+        >
           <Text type="secondary">
             {t("guideBase")}
             {expiresAt ? (
@@ -119,7 +127,10 @@ export function PasswordResetConfirmForm() {
             description={
               <span>
                 {t("saveFailedDescriptionPrefix")}
-                <Link href="/password-reset">
+                <Link
+                  href="/password-reset"
+                  data-testid="password-reset-confirm-request-link"
+                >
                   {t("saveFailedDescriptionLink")}
                 </Link>
                 {t("saveFailedDescriptionSuffix")}
@@ -131,6 +142,7 @@ export function PasswordResetConfirmForm() {
         <Form.Item
           label={t("newPasswordLabel")}
           name="password"
+          htmlFor="password-reset-confirm-password"
           rules={[
             { required: true, message: t("passwordRequired") },
             { min: 8, message: t("passwordMin") },
@@ -138,6 +150,7 @@ export function PasswordResetConfirmForm() {
           ]}
         >
           <Input.Password
+            id="password-reset-confirm-password"
             autoComplete="new-password"
             onChange={(event) => setPasswordValue(event.target.value)}
           />
@@ -149,6 +162,7 @@ export function PasswordResetConfirmForm() {
         <Form.Item
           label={t("passwordConfirmLabel")}
           name="passwordConfirm"
+          htmlFor="password-reset-confirm-password-confirm"
           dependencies={["password"]}
           rules={[
             { required: true, message: t("passwordConfirmRequired") },
@@ -162,7 +176,10 @@ export function PasswordResetConfirmForm() {
             }),
           ]}
         >
-          <Input.Password autoComplete="new-password" />
+          <Input.Password
+            id="password-reset-confirm-password-confirm"
+            autoComplete="new-password"
+          />
         </Form.Item>
 
         <Form.Item style={{ marginBottom: 0 }}>
@@ -172,12 +189,17 @@ export function PasswordResetConfirmForm() {
               htmlType="submit"
               block
               loading={submitting}
+              data-testid="password-reset-confirm-submit"
             >
               {t("submit")}
             </Button>
             {/* §6: 로그인 화면 복귀 escape */}
             <Link href="/login">
-              <Button type="link" block>
+              <Button
+                type="link"
+                block
+                data-testid="password-reset-confirm-login"
+              >
                 {t("backToLoginButton")}
               </Button>
             </Link>

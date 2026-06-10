@@ -1,0 +1,39 @@
+{
+  "page": "38-X-16-password-reset-confirm",
+  "iaCode": "X-16",
+  "route": "/password-reset/confirm",
+  "status": "PASS",
+  "findings": [],
+  "checks": [
+    {
+      "id": "X16-public-route",
+      "status": "PASS",
+      "evidence": "The public /password-reset/confirm route loads with HTTP 200 and no login redirect in all captured viewports."
+    },
+    {
+      "id": "X16-client-expiry-copy",
+      "status": "PASS",
+      "evidence": "The guide copy renders after hydration without page or console errors; the previous time-based hydration mismatch is not reproduced."
+    },
+    {
+      "id": "X16-password-form",
+      "status": "PASS",
+      "evidence": "Password and confirmation inputs are visible, and the strength meter appears while typing a valid audit password."
+    },
+    {
+      "id": "X16-recovery-failure-path",
+      "status": "PASS",
+      "evidence": "A failed password update shows the canonical warning alert and /password-reset recovery link without exposing the synthetic provider error text."
+    },
+    {
+      "id": "X16-responsive-capture",
+      "status": "PASS",
+      "evidence": "Mobile, tablet, and desktop captures load without dev overlay, page, console, or 500-response errors."
+    }
+  ],
+  "screenshots": {
+    "mobile-360": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/38-X-16-password-reset-confirm/mobile-360.png",
+    "tablet-768": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/38-X-16-password-reset-confirm/tablet-768.png",
+    "desktop-1280": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/38-X-16-password-reset-confirm/desktop-1280.png"
+  }
+}
