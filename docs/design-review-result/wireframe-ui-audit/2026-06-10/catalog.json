@@ -758,12 +758,38 @@
       "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/33-X-11-auth-error/findings.json",
       "status": "PASS",
       "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
+    },
+    {
+      "folder": "34-X-12-auth-verify-email",
+      "iaCode": "X-12",
+      "screen": "Auth verify email",
+      "route": "/auth/verify-email",
+      "routeSource": "docs/Wireframe/34-X-12-auth-verify-email/functional-spec.md",
+      "routeFallback": "docs/sitemap.md",
+      "referenceImages": {
+        "wireframe": "docs/Wireframe/34-X-12-auth-verify-email/wireframe.png",
+        "hifi": "docs/Wireframe/34-X-12-auth-verify-email/hifi.png",
+        "status": "missing-wireframe-and-hifi"
+      },
+      "docs": {
+        "description": "present",
+        "functionalSpec": "present",
+        "screenDataSummary": "present"
+      },
+      "classification": "public-active",
+      "audience": "public",
+      "authRequirement": "none",
+      "dynamicSeedRequirement": "resend success is intercepted so no real verification email is delivered.",
+      "report": "docs/design-review-result/wireframe-ui-audit/2026-06-10/34-X-12-auth-verify-email.html",
+      "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/34-X-12-auth-verify-email/findings.json",
+      "status": "PASS",
+      "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
     }
   ],
   "summary": {
-    "completedPass": 29,
+    "completedPass": 30,
     "inProgress": 0,
-    "remainingKnownActiveScreens": 5,
+    "remainingKnownActiveScreens": 4,
     "adminFrozenOutOfScope": [
       "21-H-01-admin-problem-management",
       "30-X-08-organization-admin-dashboard",

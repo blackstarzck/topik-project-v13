@@ -1,36 +1,44 @@
-# 34-X-12 인증 메일 확인 안내 — 와이어프레임 기준 리뷰
+# 34-X-12 인증 메일 확인 안내 와이어프레임 리뷰
 
 ## 1. 메타
-- **IA / 라우트**: X-12 / `/auth/verify-email` (public)
-- **audience**: public
-- **캡처 상태**: rendered / SOT 이미지 없음(코드 기반, 텍스트 SOT)
-- **host**: 단독 페이지 (가입 직후)
+- **IA / route**: X-12 / `/auth/verify-email` (public)
+- **Audience**: public
+- **상태**: PASS
+- **Host**: 가입 직후 인증 메일 안내 페이지
 
-## 2. 캡처 증거
-- 스크린샷: `.design-review-shots/20260609/34-X-12-auth-verify-email-{360,768,1280}.png`
-- 렌더 헬스(`_health.json`): HTTP 200, 콘솔 에러 0, 에러 오버레이 없음.
+## 2. 보정 요약
+- 코드 동작 보정은 필요하지 않았다.
+- X-12 전용 e2e를 추가해 Supabase resend endpoint를 intercept하고, 실제 메일 발송 없이 성공 후 cooldown 상태를 검증했다.
+- 캡처는 Gmail 테스트 주소를 사용해 받은편지함 shortcut, resend 버튼, cooldown, disabled 상태를 mobile/tablet/desktop에서 확인했다.
 
-## 3. Layer 1 — SOT 정합 리뷰
+## 3. Layer 1 - SOT 정합 리뷰
 
-| 항목 | 요소/상태 | 판정 | 근거 |
+| 항목 | 요구사항 | 판정 | 근거 |
 | --- | --- | --- | --- |
-| 안내 카드(#1) | "받은편지함 확인" 중앙 카드 | 일치 | 캡처: 우편함 이모지 + "이메일을 확인해주세요" + 안내 |
-| 이메일 표시/입력(#2) | 이메일 표시 또는 입력 | 일치 | 캡처: "다른 이메일로 다시 보내려면" + 이메일 input |
-| 재전송 버튼(#3) | resend + 60초 cooldown | 일치 | 캡처: "인증 메일 다시 보내기" |
-| 이메일 안 왔을 때(#5) | 스팸함/다른 이메일/가입 복귀 | 일치 | 캡처: "이메일이 안 왔나요?" + 스팸함 확인 안내 + "다른 이메일로 가입하기" |
-| 도움말 링크(#6) | 로그인/가입/홈 escape | 일치 | 캡처: "로그인 페이지로 · 다른 이메일로 가입 · 홈으로" |
+| 안내 카드 (#1) | 가입 직후 이메일 확인을 안내하는 중앙 카드 | Pass | `current.json`: HTTP 200, heading/card content rendered |
+| 이메일 표시 (#2) | 가입한 이메일을 표시하고 resend input에 prefill | Pass | `current.json`: `emailDisplayed` true, `inputValue` `verify.audit@gmail.com` |
+| 인증 메일 재전송 (#3) | 사용자가 명시적으로 클릭해야 resend 실행 | Pass | e2e/capture: intercepted `/auth/v1/resend` request count 1 after click |
+| Cooldown timer (#4) | 성공 후 countdown 표시, 버튼/input 비활성화 | Pass | `current.json`: `countdownVisible`, `resendDisabled`, `inputDisabled` true |
+| 이메일이 안 보일 때 안내 (#5) | 스팸함 확인, inbox shortcut, 다른 이메일 가입 링크 | Pass | `current.json`: `helpVisible` true, `openInboxVisible` true |
+| Escape link (#6) | 로그인/가입/홈으로 빠져나갈 수 있음 | Pass | mobile/desktop screenshot에서 하단 escape links 표시 |
 
-**종합 verdict: 일치 (강)** — 안내·재전송·escape 구성 모두 명세 충족.
+**종합 verdict: PASS.**
 
-## 4. Layer 2 — 멀티 에이전트 독립 분석
+## 4. 증거
+- Report: `docs/design-review-result/wireframe-ui-audit/2026-06-10/34-X-12-auth-verify-email.html`
+- Structured findings: `docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/34-X-12-auth-verify-email/findings.json`
+- Current capture data: `docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/34-X-12-auth-verify-email/current.json`
+- Screenshots:
+  - `docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/34-X-12-auth-verify-email/mobile-360.png`
+  - `docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/34-X-12-auth-verify-email/tablet-768.png`
+  - `docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/34-X-12-auth-verify-email/desktop-1280.png`
 
-- **UX/IA (우수)**: 가입 직후 다음 행동(메일 확인)을 명확히 안내. 스팸함 확인·다른 이메일 재전송·escape 링크로 막다른 길 방지. 재전송은 이메일 명시 입력 요구(URL/세션 fire-and-forget 방지 — 보안 정합).
-- **상태 커버리지 (양호)**: cooldown 타이머·재전송 한도 안내는 코드/SOT상 정의(fresh 진입이라 카운트다운 미발생 — UNVERIFIED-LIVE).
-- **콘텐츠/i18n (양호)**: 카피 친절·평이.
-- **반응형/접근성 (양호)**: 중앙 카드 360 유지, input·버튼·링크 라벨.
-- **적대적 검증**: "일치(강)" 반증 시도 → 반증 실패. 6영역 캡처로 확인.
+## 5. 실행 검증
+- `pnpm exec eslint tests/e2e/screens/verify-email.spec.ts`
+- `pnpm exec playwright test tests/e2e/screens/verify-email.spec.ts --project=mobile-360 --project=tablet-768 --project=desktop-1280 --no-deps`
+- `pnpm exec playwright test tests/e2e/screens/screens-public.spec.ts -g "X-12" --project=mobile-360 --project=tablet-768 --project=desktop-1280 --no-deps`
+- X-12 capture script: resend success intercept 후 cooldown 상태를 360/768/1280에서 캡처했고 status PASS.
 
-## 5. 결론 — 개선안
-- **P0/P1/P2 없음.** 인증 메일 안내는 명세를 충실히 구현. (보강) 재전송 cooldown 카운트다운·한도 도달 안내를 1회 실측 권장.
-
-> 참고: 코드 미수정. 현재 상태 양호.
+## 6. 검증 한계
+- 실제 Supabase Auth 메일 발송은 실행하지 않았다. e2e와 capture 모두 `/auth/v1/resend`를 intercept해 UI 계약과 payload만 검증했다.
+- 전체 lint/typecheck와 기본 Playwright setup은 unrelated auth/landing/legal worktree 변경 때문에 계속 차단되어 있다.

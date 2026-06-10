@@ -1,0 +1,39 @@
+{
+  "page": "34-X-12-auth-verify-email",
+  "iaCode": "X-12",
+  "route": "/auth/verify-email",
+  "status": "PASS",
+  "findings": [],
+  "checks": [
+    {
+      "id": "X12-public-route",
+      "status": "PASS",
+      "evidence": "The public /auth/verify-email route loads with HTTP 200 in all captured viewports."
+    },
+    {
+      "id": "X12-email-prefill",
+      "status": "PASS",
+      "evidence": "The query email is visible and prefilled in the editable resend input."
+    },
+    {
+      "id": "X12-resend-cooldown",
+      "status": "PASS",
+      "evidence": "An intercepted signup resend starts the cooldown and disables resend/input controls."
+    },
+    {
+      "id": "X12-help-and-inbox",
+      "status": "PASS",
+      "evidence": "Help copy and the Gmail inbox shortcut are visible for the gmail.com test address."
+    },
+    {
+      "id": "X12-responsive-capture",
+      "status": "PASS",
+      "evidence": "Mobile, tablet, and desktop captures load without dev overlay, page, console, or 500-response errors."
+    }
+  ],
+  "screenshots": {
+    "mobile-360": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/34-X-12-auth-verify-email/mobile-360.png",
+    "tablet-768": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/34-X-12-auth-verify-email/tablet-768.png",
+    "desktop-1280": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/34-X-12-auth-verify-email/desktop-1280.png"
+  }
+}
