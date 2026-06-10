@@ -1,0 +1,134 @@
+{
+  "page": "33-X-11-auth-error",
+  "route": "/auth/error?reason=<code>",
+  "capturedAt": "2026-06-10T12:24:40.111Z",
+  "status": "PASS",
+  "captures": [
+    {
+      "variant": "otp",
+      "viewport": "mobile-360",
+      "size": {
+        "width": 360,
+        "height": 720
+      },
+      "status": 200,
+      "url": "http://127.0.0.1:3000/auth/error?reason=otp_expired&email=student%40example.com&error_description=Email%20link%20is%20invalid%20or%20has%20expired",
+      "cardVisible": true,
+      "countdownVisible": true,
+      "primaryDisabled": true,
+      "secondaryVisible": true,
+      "escapeVisible": true,
+      "emailFieldVisible": true,
+      "rawProviderTextExposed": false,
+      "devOverlayVisible": false,
+      "consoleErrors": [],
+      "screenshot": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/33-X-11-auth-error/otp-360.png",
+      "expectedEmailFieldState": true
+    },
+    {
+      "variant": "otp",
+      "viewport": "tablet-768",
+      "size": {
+        "width": 768,
+        "height": 1024
+      },
+      "status": 200,
+      "url": "http://127.0.0.1:3000/auth/error?reason=otp_expired&email=student%40example.com&error_description=Email%20link%20is%20invalid%20or%20has%20expired",
+      "cardVisible": true,
+      "countdownVisible": true,
+      "primaryDisabled": true,
+      "secondaryVisible": true,
+      "escapeVisible": true,
+      "emailFieldVisible": true,
+      "rawProviderTextExposed": false,
+      "devOverlayVisible": false,
+      "consoleErrors": [],
+      "screenshot": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/33-X-11-auth-error/otp-768.png",
+      "expectedEmailFieldState": true
+    },
+    {
+      "variant": "otp",
+      "viewport": "desktop-1280",
+      "size": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "url": "http://127.0.0.1:3000/auth/error?reason=otp_expired&email=student%40example.com&error_description=Email%20link%20is%20invalid%20or%20has%20expired",
+      "cardVisible": true,
+      "countdownVisible": true,
+      "primaryDisabled": true,
+      "secondaryVisible": true,
+      "escapeVisible": true,
+      "emailFieldVisible": true,
+      "rawProviderTextExposed": false,
+      "devOverlayVisible": false,
+      "consoleErrors": [],
+      "screenshot": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/33-X-11-auth-error/otp-1280.png",
+      "expectedEmailFieldState": true
+    },
+    {
+      "variant": "ratelimit",
+      "viewport": "mobile-360",
+      "size": {
+        "width": 360,
+        "height": 720
+      },
+      "status": 200,
+      "url": "http://127.0.0.1:3000/auth/error?reason=over_request_rate_limit&retry_after_seconds=60",
+      "cardVisible": true,
+      "countdownVisible": true,
+      "primaryDisabled": true,
+      "secondaryVisible": false,
+      "escapeVisible": true,
+      "emailFieldVisible": false,
+      "rawProviderTextExposed": false,
+      "devOverlayVisible": false,
+      "consoleErrors": [],
+      "screenshot": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/33-X-11-auth-error/ratelimit-360.png",
+      "expectedEmailFieldState": true
+    },
+    {
+      "variant": "ratelimit",
+      "viewport": "tablet-768",
+      "size": {
+        "width": 768,
+        "height": 1024
+      },
+      "status": 200,
+      "url": "http://127.0.0.1:3000/auth/error?reason=over_request_rate_limit&retry_after_seconds=60",
+      "cardVisible": true,
+      "countdownVisible": true,
+      "primaryDisabled": true,
+      "secondaryVisible": false,
+      "escapeVisible": true,
+      "emailFieldVisible": false,
+      "rawProviderTextExposed": false,
+      "devOverlayVisible": false,
+      "consoleErrors": [],
+      "screenshot": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/33-X-11-auth-error/ratelimit-768.png",
+      "expectedEmailFieldState": true
+    },
+    {
+      "variant": "ratelimit",
+      "viewport": "desktop-1280",
+      "size": {
+        "width": 1280,
+        "height": 800
+      },
+      "status": 200,
+      "url": "http://127.0.0.1:3000/auth/error?reason=over_request_rate_limit&retry_after_seconds=60",
+      "cardVisible": true,
+      "countdownVisible": true,
+      "primaryDisabled": true,
+      "secondaryVisible": false,
+      "escapeVisible": true,
+      "emailFieldVisible": false,
+      "rawProviderTextExposed": false,
+      "devOverlayVisible": false,
+      "consoleErrors": [],
+      "screenshot": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/33-X-11-auth-error/ratelimit-1280.png",
+      "expectedEmailFieldState": true
+    }
+  ]
+}

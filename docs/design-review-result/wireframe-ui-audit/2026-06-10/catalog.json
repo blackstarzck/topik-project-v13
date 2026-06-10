@@ -732,12 +732,38 @@
       "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/31-X-09-notification-settings/findings.json",
       "status": "PASS",
       "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
+    },
+    {
+      "folder": "33-X-11-auth-error",
+      "iaCode": "X-11",
+      "screen": "Auth error",
+      "route": "/auth/error?reason=<code>",
+      "routeSource": "docs/Wireframe/33-X-11-auth-error/functional-spec.md",
+      "routeFallback": "docs/sitemap.md",
+      "referenceImages": {
+        "wireframe": "docs/Wireframe/33-X-11-auth-error/wireframe.png",
+        "hifi": "docs/Wireframe/33-X-11-auth-error/hifi.png",
+        "status": "missing-wireframe-and-hifi"
+      },
+      "docs": {
+        "description": "present",
+        "functionalSpec": "present",
+        "screenDataSummary": "present"
+      },
+      "classification": "public-active",
+      "audience": "public",
+      "authRequirement": "none",
+      "dynamicSeedRequirement": "audit captures otp_expired and over_request_rate_limit branches with safe synthetic query parameters.",
+      "report": "docs/design-review-result/wireframe-ui-audit/2026-06-10/33-X-11-auth-error.html",
+      "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/33-X-11-auth-error/findings.json",
+      "status": "PASS",
+      "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
     }
   ],
   "summary": {
-    "completedPass": 28,
+    "completedPass": 29,
     "inProgress": 0,
-    "remainingKnownActiveScreens": 6,
+    "remainingKnownActiveScreens": 5,
     "adminFrozenOutOfScope": [
       "21-H-01-admin-problem-management",
       "30-X-08-organization-admin-dashboard",

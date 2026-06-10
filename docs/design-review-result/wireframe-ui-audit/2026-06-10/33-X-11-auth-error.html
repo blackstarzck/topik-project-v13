@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>X-11 Auth Error Audit</title></head>
+<body>
+  <h1>X-11 Auth Error Audit</h1>
+  <p>Status: <strong>PASS</strong></p>
+  <p>Route: /auth/error?reason=&lt;code&gt;</p>
+  <table border="1" cellspacing="0" cellpadding="6">
+    <thead><tr><th>Check</th><th>Status</th><th>Evidence</th></tr></thead>
+    <tbody>
+      <tr><td>X11-reason-mapping</td><td>PASS</td><td>otp_expired and over_request_rate_limit variants render their canonical card test IDs.</td></tr>
+      <tr><td>X11-countdown-disabled-cta</td><td>PASS</td><td>Both captured variants show a retry countdown and keep the primary CTA disabled during the cooldown.</td></tr>
+      <tr><td>X11-raw-provider-error-hidden</td><td>PASS</td><td>The injected raw Supabase error_description text is not present in rendered body text.</td></tr>
+      <tr><td>X11-escape-routes</td><td>PASS</td><td>Every variant exposes at least one escape route link.</td></tr>
+      <tr><td>X11-responsive-capture</td><td>PASS</td><td>Mobile, tablet, and desktop captures load without dev overlay, page, console, or 500-response errors.</td></tr>
+    </tbody>
+  </table>
+  <h2>Screenshots</h2>
+  <ul>
+    <li>otp-mobile-360: docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/33-X-11-auth-error/otp-360.png</li>
+    <li>otp-tablet-768: docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/33-X-11-auth-error/otp-768.png</li>
+    <li>otp-desktop-1280: docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/33-X-11-auth-error/otp-1280.png</li>
+    <li>ratelimit-mobile-360: docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/33-X-11-auth-error/ratelimit-360.png</li>
+    <li>ratelimit-tablet-768: docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/33-X-11-auth-error/ratelimit-768.png</li>
+    <li>ratelimit-desktop-1280: docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/33-X-11-auth-error/ratelimit-1280.png</li>
+  </ul>
+</body>
+</html>

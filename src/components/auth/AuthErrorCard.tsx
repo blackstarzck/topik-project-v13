@@ -219,11 +219,14 @@ export function AuthErrorCard() {
               도움말 화면이 없어 misleading 이므로 secondary 버튼으로 렌더하지
               않는다 (대신 아래 정직한 escape-route 행으로 안내). */}
           {content.secondary && content.secondary.kind !== "help" && (
-            <Link href={ctaHref(content.secondary.kind)} legacyBehavior>
-              <Button type="link" block data-testid="auth-error-secondary">
-                {t(`${reason}.secondaryLabel` as Parameters<typeof t>[0])}
-              </Button>
-            </Link>
+            <Button
+              type="link"
+              block
+              href={ctaHref(content.secondary.kind)}
+              data-testid="auth-error-secondary"
+            >
+              {t(`${reason}.secondaryLabel` as Parameters<typeof t>[0])}
+            </Button>
           )}
         </Space>
 
