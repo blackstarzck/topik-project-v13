@@ -100,6 +100,7 @@ describe("SubscriptionShell (i18n chrome)", () => {
     renderShell(<SubscriptionShell />);
 
     expect(screen.getByText("구독 관리")).toBeTruthy();
+    expect(screen.queryByText("X-04")).toBeNull();
     expect(
       screen.getByText("현재 구독 상태와 결제 이력을 확인하고 관리하세요."),
     ).toBeTruthy();
@@ -107,6 +108,12 @@ describe("SubscriptionShell (i18n chrome)", () => {
     await waitFor(() => {
       expect(screen.getByText("구독 없음")).toBeTruthy();
     });
+    expect(screen.getByTestId("subscription-shell")).toBeTruthy();
+    expect(screen.getByTestId("subscription-current-card")).toBeTruthy();
+    expect(screen.getByTestId("subscription-no-sub")).toBeTruthy();
+    expect(screen.getByTestId("subscription-start-cta")).toBeTruthy();
+    expect(screen.getByTestId("subscription-history-card")).toBeTruthy();
+    expect(screen.getByTestId("subscription-help-card")).toBeTruthy();
     expect(
       screen.getByText("현재 이용 중인 유료 구독이 없습니다."),
     ).toBeTruthy();
@@ -153,6 +160,10 @@ describe("SubscriptionShell (i18n chrome)", () => {
     // cadence "monthly" -> subscription.cadence.monthly.
     expect(screen.getByText("월간")).toBeTruthy();
     // change-action card present for a live subscription.
+    expect(screen.getByTestId("subscription-change-card")).toBeTruthy();
+    expect(screen.getByTestId("subscription-change-plan")).toBeTruthy();
+    expect(screen.getByTestId("subscription-change-payment")).toBeTruthy();
+    expect(screen.getByTestId("subscription-cancel")).toBeTruthy();
     expect(screen.getByRole("button", { name: "구독 취소" })).toBeTruthy();
   });
 });

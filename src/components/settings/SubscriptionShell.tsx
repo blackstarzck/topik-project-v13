@@ -254,11 +254,10 @@ export function SubscriptionShell() {
   };
 
   return (
-    <div style={SUBSCRIPTION_CONTENT_STYLE}>
+    <div data-testid="subscription-shell" style={SUBSCRIPTION_CONTENT_STYLE}>
       <Space orientation="vertical" size="large" style={{ width: "100%" }}>
-        {/* IA 코드 배지는 h1 접근성 이름에서 제외하고 헤더 위 메타로 둔다. */}
+        {/* IA 코드는 사용자 화면에 노출하지 않는다. */}
         <div>
-          <Tag>X-04</Tag>
           <PageHeader title={t("heading")} subtitle={t("subheading")} />
         </div>
 
@@ -266,7 +265,10 @@ export function SubscriptionShell() {
           <Col xs={24} md={15}>
             <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
               {/* Region 2: 현재 구독 요약 */}
-              <AppCard title={t("current.title")}>
+              <AppCard
+                data-testid="subscription-current-card"
+                title={t("current.title")}
+              >
                 {sub.status === "loading" ? (
                   <Skeleton active paragraph={{ rows: 2 }} />
                 ) : sub.status === "error" ? (
@@ -282,14 +284,24 @@ export function SubscriptionShell() {
                     }
                   />
                 ) : sub.subscription === null ? (
-                  <Space orientation="vertical" size={8} style={{ width: "100%" }}>
+                  <Space
+                    data-testid="subscription-no-sub"
+                    orientation="vertical"
+                    size={8}
+                    style={{ width: "100%" }}
+                  >
                     <Space>
                       <Text type="secondary">{t("current.statusLabel")}</Text>
                       <Tag>{t("current.noSubBadge")}</Tag>
                     </Space>
                     <Text type="secondary">{t("current.noSubBody")}</Text>
                     <Link href="/paywall">
-                      <Button type="primary">{t("current.startCta")}</Button>
+                      <Button
+                        data-testid="subscription-start-cta"
+                        type="primary"
+                      >
+                        {t("current.startCta")}
+                      </Button>
                     </Link>
                   </Space>
                 ) : (
@@ -341,15 +353,28 @@ export function SubscriptionShell() {
 
               {/* Region 3: 변경/취소 액션 (external stubs + policy modal) */}
               {sub.status === "ready" && sub.subscription !== null ? (
-                <AppCard title={t("change.title")}>
+                <AppCard
+                  data-testid="subscription-change-card"
+                  title={t("change.title")}
+                >
                   <Space wrap>
-                    <Button onClick={() => setPolicyModal("change")}>
+                    <Button
+                      data-testid="subscription-change-plan"
+                      onClick={() => setPolicyModal("change")}
+                    >
                       {t("change.changePlan")}
                     </Button>
-                    <Button onClick={() => setPolicyModal("payment_method")}>
+                    <Button
+                      data-testid="subscription-change-payment"
+                      onClick={() => setPolicyModal("payment_method")}
+                    >
                       {t("change.changePaymentMethod")}
                     </Button>
-                    <Button danger onClick={() => setPolicyModal("cancel")}>
+                    <Button
+                      data-testid="subscription-cancel"
+                      danger
+                      onClick={() => setPolicyModal("cancel")}
+                    >
                       {t("change.cancel")}
                     </Button>
                   </Space>
@@ -363,7 +388,10 @@ export function SubscriptionShell() {
               ) : null}
 
               {/* Region 4: 결제 이력 */}
-              <AppCard title={t("history.title")}>
+              <AppCard
+                data-testid="subscription-history-card"
+                title={t("history.title")}
+              >
                 {history.status === "error" ? (
                   <Result
                     status="warning"
@@ -409,7 +437,10 @@ export function SubscriptionShell() {
 
           {/* Region 5: 우측 도움말 */}
           <Col xs={24} md={9}>
-            <AppCard title={t("help.title")}>
+            <AppCard
+              data-testid="subscription-help-card"
+              title={t("help.title")}
+            >
               <Space orientation="vertical" size={10} style={{ width: "100%" }}>
                 <div>
                   <Text strong>{t("help.changePolicyTitle")}</Text>

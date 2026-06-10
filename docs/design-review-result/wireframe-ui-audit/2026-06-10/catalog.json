@@ -602,12 +602,38 @@
       "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/25-X-03-paywall/findings.json",
       "status": "PASS",
       "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
+    },
+    {
+      "folder": "26-X-04-subscription-management",
+      "iaCode": "X-04",
+      "screen": "Subscription management",
+      "route": "/subscription",
+      "routeSource": "docs/Wireframe/26-X-04-subscription-management/functional-spec.md",
+      "routeFallback": "docs/sitemap.md",
+      "referenceImages": {
+        "wireframe": "docs/Wireframe/26-X-04-subscription-management/wireframe.png",
+        "hifi": "docs/Wireframe/26-X-04-subscription-management/hifi.png",
+        "status": "complete"
+      },
+      "docs": {
+        "description": "present",
+        "functionalSpec": "present",
+        "screenDataSummary": "present"
+      },
+      "classification": "user-active",
+      "audience": "user",
+      "authRequirement": "authenticated user",
+      "dynamicSeedRequirement": "free/no-subscription student account renders the empty subscription shell; paid subscription branch remains separate coverage.",
+      "report": "docs/design-review-result/wireframe-ui-audit/2026-06-10/26-X-04-subscription-management.html",
+      "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/26-X-04-subscription-management/findings.json",
+      "status": "PASS",
+      "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
     }
   ],
   "summary": {
-    "completedPass": 23,
+    "completedPass": 24,
     "inProgress": 0,
-    "remainingKnownActiveScreens": 11,
+    "remainingKnownActiveScreens": 10,
     "adminFrozenOutOfScope": [
       "21-H-01-admin-problem-management",
       "30-X-08-organization-admin-dashboard",
