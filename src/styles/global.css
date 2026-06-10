@@ -2027,10 +2027,31 @@ body {
   align-items: start;
 }
 
+.writing-grid--longform {
+  grid-template-columns: minmax(320px, 0.82fr) minmax(520px, 1.18fr);
+}
+
 .writing-grid__main {
   display: grid;
   gap: 16px;
   min-width: 0;
+}
+
+.writing-grid__support,
+.writing-grid__composer {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.writing-editor-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  border-top: 1px solid var(--app-color-border);
+  padding-top: 12px;
 }
 
 .writing-answer-panel {
@@ -2536,6 +2557,11 @@ body {
   }
 
   .writing-answer-card__head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .writing-editor-toolbar {
     flex-direction: column;
     align-items: stretch;
   }

@@ -1070,6 +1070,27 @@
       "hintTitle": "Blank-by-blank focus",
       "reviewPrompt": "Review prompt and conditions"
     },
+    "q53": {
+      "pageTitle": "Question 53 Data Analysis Writing",
+      "pageSubtitle": "Use the graphs and conditions to compose a 200-300 character long-form answer.",
+      "titleHelp": "Question 53 asks you to analyze reference data and write a longer answer with intro, body, and conclusion.",
+      "stepperLabel": "Writing steps",
+      "stepAnalyze": "Analyze data",
+      "stepWrite": "Write body",
+      "stepSubmit": "Submit and analyze",
+      "sourceAria": "Question 53 materials and rubric",
+      "composerAria": "Question 53 long-form answer writing area",
+      "editorTitle": "Long-form writing editor",
+      "editorHint": "Explain the key data changes with an intro, body, and conclusion structure.",
+      "statusTitle": "Length/status",
+      "paragraphCount": "Sections {count}/3",
+      "targetRange": "Recommended 200-300 chars",
+      "guideTitle": "AI Tutor Pick",
+      "guideBody": "Compare the materials first, then organize causes and results into one clear flow.",
+      "guideTip0": "Mention chart or table changes directly in the body section.",
+      "guideTip1": "In the conclusion, avoid repeating everything and summarize only the main point.",
+      "reviewMaterials": "Review materials"
+    },
     "prompt": {
       "heading": "Q{questionNo} — {title}",
       "blanksLabel": "Blank information",

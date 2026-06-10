@@ -6,6 +6,7 @@ import { HelpPanel } from "./HelpPanel";
 import { ReferenceMaterials, type ProblemAsset } from "./ReferenceMaterials";
 import { WritingEditor } from "./WritingEditor";
 import { LongFormEditor } from "./LongFormEditor";
+import { LongFormWriting53Workspace } from "./LongFormWriting53Workspace";
 import { ShortAnswerWriting51Workspace } from "./ShortAnswerWriting51Workspace";
 import { ShortAnswerWriting52Workspace } from "./ShortAnswerWriting52Workspace";
 import { writingQuestionHref } from "@/lib/writing/routes";
@@ -57,6 +58,16 @@ export async function WritingPageContent({
   if (problem.kind === "q52") {
     return (
       <ShortAnswerWriting52Workspace
+        userId={userId}
+        problem={problem}
+        draft={draft}
+        assets={assets}
+      />
+    );
+  }
+  if (problem.kind === "q53") {
+    return (
+      <LongFormWriting53Workspace
         userId={userId}
         problem={problem}
         draft={draft}

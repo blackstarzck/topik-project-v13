@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <title>Wireframe UI Audit - 10-D-03-long-form-writing-53 - 2026-06-10</title>
+    <style>
+      body {
+        margin: 32px;
+        background: #ffffff;
+        color: #172033;
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+      }
+
+      h1,
+      h2 {
+        letter-spacing: 0;
+      }
+
+      table {
+        width: 100%;
+        margin: 12px 0 28px;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+
+      th,
+      td {
+        padding: 10px 12px;
+        border: 1px solid #d9e1ef;
+        vertical-align: top;
+      }
+
+      th {
+        background: #f4f7fb;
+        text-align: left;
+      }
+
+      code {
+        border-radius: 4px;
+        background: #f3f4f6;
+        padding: 1px 4px;
+      }
+
+      .verdict {
+        border: 1px solid #8fd6ad;
+        border-radius: 8px;
+        background: #edfdf3;
+        padding: 14px 16px;
+      }
+
+      .note {
+        border: 1px solid #d9e1ef;
+        border-radius: 8px;
+        background: #f8fafc;
+        padding: 12px 14px;
+      }
+
+      .sev-pass {
+        display: inline-block;
+        border-radius: 999px;
+        background: #dff7ea;
+        color: #067647;
+        padding: 2px 10px;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Wireframe UI Audit - 10-D-03-long-form-writing-53 - 2026-06-10</h1>
+    <p><strong>Scope:</strong> D-03 Long-form writing 53 at <code>/writing/long-form-writing-53</code></p>
+    <p><strong>Mode:</strong> audit-remediation</p>
+    <p><strong>Coverage:</strong> authenticated user route, reference wireframe and hifi complete.</p>
+
+    <h2>Verdict</h2>
+    <p class="verdict">
+      <strong>PASS.</strong> D-03 now uses a 53-specific data-analysis writing workspace. The route keeps the learner
+      app shell, provides a writing command header and step flow, places prompt/materials/rubric on the left, and moves
+      the long-form editor plus manuscript preview into the main writing column.
+    </p>
+
+    <p class="note">
+      Accepted variance: the hifi image shows a decorative AI tutor panel and an editable manuscript grid. The active
+      source contract stores question 53 as structured sections plus flattened <code>answer_text</code>, so editing
+      remains in section textareas while the manuscript grid is shown as a live preview.
+    </p>
+
+    <h2>Visual Delta Summary</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Area</th>
+          <th>Reference intent</th>
+          <th>Current implementation</th>
+          <th>Delta</th>
+          <th>User impact</th>
+          <th>Severity</th>
+          <th>Next action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>workspace structure</td>
+          <td>Use a dedicated 53번 writing workspace with materials and editor visible together.</td>
+          <td>The route now renders <code>LongFormWriting53Workspace</code> with command header, stepper, source column, and composer column.</td>
+          <td>The previous generic stacked layout is resolved.</td>
+          <td>Learners can analyze materials and write without losing context.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>No blocking follow-up.</td>
+        </tr>
+        <tr>
+          <td>problem/materials</td>
+          <td>Place 53번 prompt, charts, conditions, and reference material in the supporting column.</td>
+          <td>The left column shows prompt, chart/reference materials, rubric criteria, and a concise AI tutor hint.</td>
+          <td>Aligned with the description-level source priority.</td>
+          <td>Users can compare the data before drafting the body.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>No blocking follow-up.</td>
+        </tr>
+        <tr>
+          <td>long-form editor</td>
+          <td>Provide a core editor for 200-300 recommended characters, minimum 120 characters, and paragraph state.</td>
+          <td>The composer shows intro/body/conclusion tabs, char progress, paragraph count, autosave controls, and blur/submit length validation.</td>
+          <td>Aligned with D-03 editor and status requirements.</td>
+          <td>Users get clear structure and submission readiness feedback.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>No blocking follow-up.</td>
+        </tr>
+        <tr>
+          <td>manuscript preview</td>
+          <td>Show a manuscript-style writing surface.</td>
+          <td>The editor keeps section inputs and renders a live 20-character-per-line manuscript preview below the editor.</td>
+          <td>Meets the manuscript visibility requirement without changing the current answer_json contract.</td>
+          <td>Learners can inspect how the answer fills the 원고지 grid.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>No blocking follow-up.</td>
+        </tr>
+        <tr>
+          <td>responsive render</td>
+          <td>Keep mobile and desktop layouts readable with no overlapping controls.</td>
+          <td>Captures at 360, 768, and 1280 widths returned status 200, no Next error overlay, and consoleErr=0.</td>
+          <td>Responsive health is acceptable for this pass.</td>
+          <td>The writing page remains usable across audited breakpoints.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>Local Next dev indicator is excluded from product UI severity.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Evidence</h2>
+    <ul>
+      <li><code>screenshots/10-D-03-long-form-writing-53/current.json</code> records authenticated captures at 360, 768, and 1280 widths.</li>
+      <li><code>src/components/writing/LongFormWriting53Workspace.tsx</code> contains the 53-specific remediation.</li>
+      <li><code>src/components/writing/WritingPageContent.tsx</code> routes normalized <code>q53</code> problems into the dedicated workspace.</li>
+      <li><code>src/styles/global.css</code> contains the long-form writing grid and toolbar styles.</li>
+    </ul>
+
+    <h2>Verification</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Command</th>
+          <th>Result</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>pnpm exec tsc --noEmit --pretty false</code></td>
+          <td>Passed.</td>
+        </tr>
+        <tr>
+          <td><code>node scripts/design-review/render-shot.mjs</code> for <code>/writing/long-form-writing-53</code></td>
+          <td>Captured 360/768/1280; status=200, errorOverlay=false, consoleErr=0.</td>
+        </tr>
+        <tr>
+          <td><code>pnpm exec playwright test tests/e2e/screens/screens-authed.spec.ts -g "D-03" --project=mobile-360 --project=tablet-768 --project=desktop-1280</code></td>
+          <td>Passed, 4 tests including auth setup and the D-03 route across audited breakpoints.</td>
+        </tr>
+        <tr>
+          <td><code>pnpm lint</code></td>
+          <td>Passed with 0 errors and 9 pre-existing warnings.</td>
+        </tr>
+      </tbody>
+    </table>
+  </body>
+</html>

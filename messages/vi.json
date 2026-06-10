@@ -1070,6 +1070,27 @@
       "hintTitle": "Trọng tâm từng chỗ trống",
       "reviewPrompt": "Xem lại đề và điều kiện"
     },
+    "q53": {
+      "pageTitle": "Câu 53 viết phân tích dữ liệu",
+      "pageSubtitle": "Dựa vào biểu đồ và điều kiện để viết bài dài 200-300 ký tự.",
+      "titleHelp": "Câu 53 yêu cầu phân tích dữ liệu tham khảo và viết câu trả lời dài theo mở bài, thân bài, kết luận.",
+      "stepperLabel": "Các bước viết",
+      "stepAnalyze": "Phân tích dữ liệu",
+      "stepWrite": "Viết bài",
+      "stepSubmit": "Nộp và phân tích",
+      "sourceAria": "Tài liệu và tiêu chí câu 53",
+      "composerAria": "Khu vực viết câu trả lời dài câu 53",
+      "editorTitle": "Trình soạn bài viết dài",
+      "editorHint": "Giải thích thay đổi dữ liệu chính theo cấu trúc mở bài, thân bài và kết luận.",
+      "statusTitle": "Độ dài/trạng thái",
+      "paragraphCount": "Phần {count}/3",
+      "targetRange": "Khuyến nghị 200-300 ký tự",
+      "guideTitle": "Gợi ý gia sư AI",
+      "guideBody": "So sánh tài liệu trước, rồi sắp xếp nguyên nhân và kết quả thành một mạch rõ ràng.",
+      "guideTip0": "Hãy nhắc trực tiếp các thay đổi trong biểu đồ hoặc bảng ở phần thân bài.",
+      "guideTip1": "Ở phần kết luận, không lặp lại toàn bộ mà chỉ tóm tắt ý chính.",
+      "reviewMaterials": "Xem lại tài liệu"
+    },
     "prompt": {
       "heading": "Câu {questionNo} — {title}",
       "blanksLabel": "Thông tin chỗ trống",

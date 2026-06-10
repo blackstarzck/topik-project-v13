@@ -1,0 +1,119 @@
+{
+  "generatedAt": "2026-06-10T17:05:00+09:00",
+  "folder": "10-D-03-long-form-writing-53",
+  "iaCode": "D-03",
+  "route": "/writing/long-form-writing-53",
+  "classification": "user-active",
+  "verdict": "PASS",
+  "summary": "D-03 now uses a dedicated 53번 data-analysis writing workspace. The page shows a writing command header, step flow, left-side prompt/materials/rubric support column, right-side intro/body/conclusion editor, char and paragraph status, autosave controls, submit confirmation, and a live manuscript preview.",
+  "screenshots": {
+    "desktop1280": "current-1280.png",
+    "tablet768": "current-768.png",
+    "mobile360": "current-360.png",
+    "manifest": "current.json",
+    "referenceHifi": "reference-hifi.png",
+    "referenceWireframe": "reference-wireframe.png"
+  },
+  "acceptedVariance": [
+    "The active q53 draft contract stores structured sections in answer_json and a flattened answer_text. Editing therefore remains in section fields while the manuscript grid is a live preview.",
+    "The hifi includes decorative tutor imagery and secondary toolbar actions that are not required by description.md and are not added as net-new behavior in this audit.",
+    "Next dev indicator may appear in local screenshots. It is not product UI and is excluded from visual severity."
+  ],
+  "findings": [
+    {
+      "id": "D03-PASS-001",
+      "severity": "PASS",
+      "category": "workspace-structure",
+      "claim": "Resolved: D-03 now renders a 53번-specific workspace instead of the generic stacked long-form editor.",
+      "observed": "The route shows a command header, stepper, source column, and composer column at the audited desktop width; mobile stacks the same sections in a readable order.",
+      "expected": "53번 writing should keep problem/materials and long-form writing visible as a dedicated workspace.",
+      "evidence": [
+        "src/components/writing/LongFormWriting53Workspace.tsx",
+        "src/components/writing/WritingPageContent.tsx",
+        "screenshots/10-D-03-long-form-writing-53/current-1280.png"
+      ],
+      "confidence": "high",
+      "recommendedNextAction": "No blocking follow-up."
+    },
+    {
+      "id": "D03-PASS-002",
+      "severity": "PASS",
+      "category": "problem-materials",
+      "claim": "Resolved: prompt, chart/reference materials, and rubric criteria are grouped in the support column.",
+      "observed": "The left column renders QuestionPrompt, ReferenceMaterials, ConditionsPanel, and a concise AI tutor hint before the writing composer.",
+      "expected": "D-03 should place the 53번 passage, charts, conditions, and reference material in the problem/materials area.",
+      "evidence": [
+        "src/components/writing/LongFormWriting53Workspace.tsx",
+        "src/components/writing/ReferenceMaterials.tsx",
+        "screenshots/10-D-03-long-form-writing-53/current-360.png"
+      ],
+      "confidence": "high",
+      "recommendedNextAction": "No blocking follow-up."
+    },
+    {
+      "id": "D03-PASS-003",
+      "severity": "PASS",
+      "category": "long-form-editor",
+      "claim": "Resolved: the composer exposes paragraph structure, character status, autosave, and submit gating.",
+      "observed": "The composer includes intro/body/conclusion tabs, char progress, paragraph count, autosave toggle, manual save, submit confirmation, and length validation before submit.",
+      "expected": "The editor should support 200-300 recommended characters, a 120-character minimum, paragraph count, autosave, and submit readiness state.",
+      "evidence": [
+        "src/components/writing/LongFormWriting53Workspace.tsx",
+        "src/lib/writing/constants.ts",
+        "screenshots/10-D-03-long-form-writing-53/current-1280.png"
+      ],
+      "confidence": "high",
+      "recommendedNextAction": "No blocking follow-up."
+    },
+    {
+      "id": "D03-PASS-004",
+      "severity": "PASS",
+      "category": "manuscript-preview",
+      "claim": "Resolved: a manuscript-style view remains visible in the writing column.",
+      "observed": "The route renders the 20-character-per-line ManuscriptPreview below the section editor, using the same combined answer_text that is submitted.",
+      "expected": "The 53번 writing surface should provide a manuscript-style writing reference.",
+      "evidence": [
+        "src/components/writing/ManuscriptPreview.tsx",
+        "src/components/writing/LongFormWriting53Workspace.tsx",
+        "screenshots/10-D-03-long-form-writing-53/current-1280.png"
+      ],
+      "confidence": "high",
+      "recommendedNextAction": "No blocking follow-up."
+    },
+    {
+      "id": "D03-PASS-005",
+      "severity": "PASS",
+      "category": "responsive-render",
+      "claim": "Resolved: the page renders stably across audited breakpoints.",
+      "observed": "The render-shot manifest records status=200, errorOverlay=false, and consoleErrorCount=0 for 360, 768, and 1280 widths. The targeted e2e screen test also passed across the same projects.",
+      "expected": "The route should render without runtime page errors or incoherent overlap on mobile, tablet, and desktop.",
+      "evidence": [
+        "screenshots/10-D-03-long-form-writing-53/current.json",
+        "tests/e2e/screens/screens-authed.spec.ts"
+      ],
+      "confidence": "high",
+      "recommendedNextAction": "No blocking follow-up."
+    }
+  ],
+  "verification": [
+    {
+      "command": "pnpm exec tsc --noEmit --pretty false",
+      "result": "passed"
+    },
+    {
+      "command": "node scripts/design-review/render-shot.mjs for /writing/long-form-writing-53 at 360, 768, and 1280 widths",
+      "result": "status=200, errorOverlay=false, consoleErr=0 for all audited viewports"
+    },
+    {
+      "command": "pnpm exec playwright test tests/e2e/screens/screens-authed.spec.ts -g \"D-03\" --project=mobile-360 --project=tablet-768 --project=desktop-1280",
+      "result": "4 passed including auth setup and the D-03 route across audited breakpoints"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "passed with 0 errors and 9 pre-existing warnings"
+    }
+  ],
+  "deferred": [
+    "Editable manuscript-grid input remains deferred until the active source docs and answer_json contract require replacing the section editor."
+  ]
+}

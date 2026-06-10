@@ -1070,6 +1070,27 @@
       "hintTitle": "빈칸별 초점",
       "reviewPrompt": "지문·조건 다시 보기"
     },
+    "q53": {
+      "pageTitle": "53번 자료 분석 글쓰기",
+      "pageSubtitle": "그래프와 조건을 근거로 200~300자 장문 답안을 구성하세요.",
+      "titleHelp": "53번은 자료를 분석하고 도입-전개-마무리 흐름으로 긴 답안을 작성하는 유형입니다.",
+      "stepperLabel": "작성 단계",
+      "stepAnalyze": "자료 분석",
+      "stepWrite": "본문 작성",
+      "stepSubmit": "제출 및 분석",
+      "sourceAria": "53번 문제 자료와 평가 기준",
+      "composerAria": "53번 장문 답안 작성 영역",
+      "editorTitle": "본문 작성 에디터",
+      "editorHint": "도입, 전개, 마무리 3단 구성으로 자료의 핵심 변화를 설명하세요.",
+      "statusTitle": "글자수/상태",
+      "paragraphCount": "문단 {count}/3",
+      "targetRange": "권장 200~300자",
+      "guideTitle": "AI 튜터 픽",
+      "guideBody": "왼쪽 자료를 먼저 비교한 뒤, 변화의 원인과 결과를 한 흐름으로 정리해 보세요.",
+      "guideTip0": "그래프·표의 수치 변화는 전개 문단에서 직접 언급하세요.",
+      "guideTip1": "마무리는 앞의 내용을 반복하지 말고 핵심 결론만 짧게 정리하세요.",
+      "reviewMaterials": "자료 다시 보기"
+    },
     "prompt": {
       "heading": "{questionNo}번 — {title}",
       "blanksLabel": "빈칸 정보",

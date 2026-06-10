@@ -233,12 +233,39 @@
       "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/09-D-02-answer-writing-52/findings.json",
       "status": "PASS",
       "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
+    },
+    {
+      "folder": "10-D-03-long-form-writing-53",
+      "iaCode": "D-03",
+      "screen": "Long-form writing 53",
+      "route": "/writing/long-form-writing-53",
+      "routeSource": "docs/Wireframe/10-D-03-long-form-writing-53/functional-spec.md",
+      "routeFallback": "docs/sitemap.md",
+      "referenceImages": {
+        "wireframe": "docs/Wireframe/10-D-03-long-form-writing-53/wireframe.png",
+        "hifi": "docs/Wireframe/10-D-03-long-form-writing-53/hifi.png",
+        "status": "complete"
+      },
+      "docs": {
+        "description": "present",
+        "functionalSpec": "present",
+        "screenDataSummary": "present"
+      },
+      "classification": "user-active",
+      "audience": "user",
+      "authRequirement": "authenticated user",
+      "dynamicSeedRequirement": "no dynamic route id; seeded question data required",
+      "modalTriggerRequirement": "D-M1 submit confirmation is triggered by the submit CTA",
+      "report": "docs/design-review-result/wireframe-ui-audit/2026-06-10/10-D-03-long-form-writing-53.html",
+      "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/10-D-03-long-form-writing-53/findings.json",
+      "status": "PASS",
+      "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
     }
   ],
   "summary": {
-    "completedPass": 9,
+    "completedPass": 10,
     "inProgress": 0,
-    "remainingKnownActiveScreens": 25,
+    "remainingKnownActiveScreens": 24,
     "adminFrozenOutOfScope": [
       "21-H-01-admin-problem-management",
       "30-X-08-organization-admin-dashboard",
