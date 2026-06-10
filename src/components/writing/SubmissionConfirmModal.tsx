@@ -1,11 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { Alert, Checkbox, Descriptions, Typography } from "antd";
+import { Alert, Button, Checkbox, Typography } from "antd";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  ClipboardCheck,
+  Clock3,
+  FileText,
+  ShieldCheck,
+  Type,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { AppModal } from "@/components/shared/AppModal";
 
-const { Paragraph, Text } = Typography;
+const { Paragraph, Text, Title } = Typography;
 
 type Props = {
   open: boolean;
@@ -14,14 +23,8 @@ type Props = {
   loading?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
-  /** D-M1 제출 요약 — 문제 유형 표시 (예: 51). */
   questionNo?: number;
-  /** D-M1 제출 요약 — 마지막 자동 저장 시각(ISO). */
   lastSavedAt?: string | null;
-  /**
-   * D-M1 §4 예외 — 제출 실패 원인. 값이 있으면 모달을 유지(닫지 않음)하고
-   * 모달 안에서 오류 + 재시도(제출 버튼)를 노출한다.
-   */
   submitError?: string | null;
 };
 
@@ -39,69 +42,161 @@ export function SubmissionConfirmModal({
   const t = useTranslations("writing.submit");
   const tCommon = useTranslations("common");
   const enough = charCount >= minChars;
-  // §3 — 동의 체크. destroyOnClose 로 닫힐 때 언마운트되어 다시 열면 false 로 초기화.
   const [agreed, setAgreed] = useState(false);
 
   const savedLabel = lastSavedAt
     ? new Date(lastSavedAt).toLocaleString("ko-KR")
     : t("noSaveRecord");
+  const summaryItems = [
+    ...(questionNo
+      ? [
+          {
+            icon: <FileText aria-hidden size={18} />,
+            label: t("questionTypeLabel"),
+            value: t("questionNoValue", { questionNo }),
+          },
+        ]
+      : []),
+    {
+      icon: <Type aria-hidden size={18} />,
+      label: t("answerLengthLabel"),
+      value: (
+        <>
+          <Text strong type={enough ? "success" : "danger"}>
+            {t("charCountValue", { charCount })}
+          </Text>{" "}
+          <Text type="secondary">{t("minCharsHint", { minChars })}</Text>
+        </>
+      ),
+    },
+    {
+      icon: <Clock3 aria-hidden size={18} />,
+      label: t("lastSavedLabel"),
+      value: savedLabel,
+    },
+  ];
+  const checklistItems = [
+    t("checklistQuestion"),
+    t("checklistLength"),
+    t("checklistSaved"),
+    t("checklistNoEdit"),
+  ];
 
   return (
     <AppModal
-      title={t("title")}
+      rootClassName="d-m1-submit-modal"
+      title={null}
       open={open}
-      onOk={onConfirm}
       onCancel={onCancel}
-      okText={submitError ? t("okRetry") : t("ok")}
-      cancelText={tCommon("cancel")}
-      okButtonProps={{ disabled: !enough || !agreed || loading, loading }}
-      // §4 — 제출 처리 중에는 배경 클릭/ESC 로 닫히지 않게(중복/오작동 방지).
+      footer={null}
+      width={640}
+      centered
+      closable={!loading}
       mask={{ closable: !loading }}
       keyboard={!loading}
       destroyOnHidden
     >
-      {/* §2 제출 요약 — 문제 유형 / 답안 길이 / 저장 시각 (3항목). */}
-      <Descriptions size="small" column={1} bordered style={{ marginBottom: 12 }}>
-        {questionNo ? (
-          <Descriptions.Item label={t("questionTypeLabel")}>
-            {t("questionNoValue", { questionNo })}
-          </Descriptions.Item>
+      <div className="submit-confirm" data-testid="submission-confirm-modal">
+        <div className="submit-confirm__hero">
+          <div className="submit-confirm__icon">
+            <ClipboardCheck aria-hidden size={30} />
+          </div>
+          <Title level={2} className="submit-confirm__title">
+            {t("title")}
+          </Title>
+          <Paragraph className="submit-confirm__subtitle">
+            {t("subtitle")}
+          </Paragraph>
+        </div>
+
+        <section
+          className="submit-confirm__summary"
+          aria-label={t("summaryAria")}
+        >
+          {summaryItems.map((item) => (
+            <div className="submit-confirm__summary-row" key={item.label}>
+              <span className="submit-confirm__summary-icon">{item.icon}</span>
+              <Text type="secondary">{item.label}</Text>
+              <Text strong className="submit-confirm__summary-value">
+                {item.value}
+              </Text>
+            </div>
+          ))}
+        </section>
+
+        <section className="submit-confirm__warning">
+          <AlertTriangle aria-hidden size={24} />
+          <div>
+            <Text strong>{t("warningTitle")}</Text>
+            <Paragraph className="submit-confirm__warning-copy">
+              {t("submitNotice")}
+            </Paragraph>
+          </div>
+        </section>
+
+        {!enough ? (
+          <Alert
+            type="warning"
+            showIcon
+            title={t("notEnoughChars", { minChars })}
+          />
         ) : null}
-        <Descriptions.Item label={t("answerLengthLabel")}>
-          <Text strong type={enough ? "success" : "danger"}>
-            {t("charCountValue", { charCount })}
-          </Text>{" "}
-          {t("minCharsHint", { minChars })}
-        </Descriptions.Item>
-        <Descriptions.Item label={t("lastSavedLabel")}>{savedLabel}</Descriptions.Item>
-      </Descriptions>
 
-      <Paragraph>{t("submitNotice")}</Paragraph>
+        {submitError ? (
+          <Alert
+            type="error"
+            showIcon
+            title={t("submitFailedTitle")}
+            description={t("submitFailedDescription", { submitError })}
+          />
+        ) : null}
 
-      {!enough ? (
-        <Alert
-          type="warning"
-          showIcon
-          style={{ marginBottom: 12 }}
-          title={t("notEnoughChars", { minChars })}
-        />
-      ) : null}
+        <section className="submit-confirm__checklist">
+          <Text strong>{t("checklistTitle")}</Text>
+          <div className="submit-confirm__checklist-grid">
+            {checklistItems.map((item) => (
+              <span key={item}>
+                <CheckCircle2 aria-hidden size={16} />
+                {item}
+              </span>
+            ))}
+          </div>
+        </section>
 
-      {/* §4 예외 — 제출 실패 시 모달 유지 + 원인 + 재시도 안내. */}
-      {submitError ? (
-        <Alert
-          type="error"
-          showIcon
-          style={{ marginBottom: 12 }}
-          title={t("submitFailedTitle")}
-          description={t("submitFailedDescription", { submitError })}
-        />
-      ) : null}
+        <label className="submit-confirm__agreement">
+          <Checkbox
+            checked={agreed}
+            onChange={(e) => setAgreed(e.target.checked)}
+          />
+          <span>{t("agreeNoEdit")}</span>
+        </label>
 
-      {/* §3 — 동의 체크. 체크 전에는 제출 비활성. */}
-      <Checkbox checked={agreed} onChange={(e) => setAgreed(e.target.checked)}>
-        {t("agreeNoEdit")}
-      </Checkbox>
+        <div className="submit-confirm__actions">
+          <Button
+            size="large"
+            onClick={onCancel}
+            disabled={loading}
+            data-testid="submission-confirm-cancel"
+          >
+            {tCommon("cancel")}
+          </Button>
+          <Button
+            size="large"
+            type="primary"
+            onClick={onConfirm}
+            disabled={!enough || !agreed || loading}
+            loading={loading}
+            data-testid="submission-confirm-submit"
+          >
+            {submitError ? t("okRetry") : t("ok")}
+          </Button>
+        </div>
+
+        <div className="submit-confirm__footer-note">
+          <ShieldCheck aria-hidden size={16} />
+          <Text type="secondary">{t("footerNote")}</Text>
+        </div>
+      </div>
     </AppModal>
   );
 }

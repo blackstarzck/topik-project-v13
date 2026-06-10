@@ -1184,6 +1184,7 @@
     },
     "submit": {
       "title": "답안을 제출하시겠어요?",
+      "subtitle": "작성한 답안을 제출하면 수정할 수 없습니다.",
       "ok": "제출",
       "okRetry": "다시 제출",
       "noSaveRecord": "자동 저장 기록 없음",
@@ -1193,11 +1194,19 @@
       "charCountValue": "{charCount}자",
       "minCharsHint": "(최소 {minChars}자)",
       "lastSavedLabel": "마지막 저장",
+      "summaryAria": "제출 전 답안 요약",
+      "warningTitle": "제출 후에는 답안을 수정할 수 없습니다.",
       "submitNotice": "제출 후에는 답안을 수정할 수 없고, 자동으로 AI 분석이 시작됩니다. 분석에는 잠시 대기 시간이 걸릴 수 있어요.",
       "notEnoughChars": "아직 최소 글자 수({minChars}자)에 도달하지 않았어요.",
       "submitFailedTitle": "제출하지 못했어요",
       "submitFailedDescription": "{submitError} — '다시 제출'을 눌러 재시도하거나, 작성한 답안을 복사해 두세요.",
-      "agreeNoEdit": "제출 후 수정할 수 없음을 확인했어요."
+      "agreeNoEdit": "제출 후 수정할 수 없음을 확인했어요.",
+      "checklistTitle": "제출 전 체크리스트",
+      "checklistQuestion": "문제 지문 확인",
+      "checklistLength": "분량 조건 확인",
+      "checklistSaved": "자동 저장 상태 확인",
+      "checklistNoEdit": "수정 불가 확인",
+      "footerNote": "제출하면 안전하게 저장 후 AI 분석이 시작됩니다."
     },
     "conditions": {
       "title52": "작성 조건",

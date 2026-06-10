@@ -287,12 +287,39 @@
       "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/11-D-04-essay-writing-54/findings.json",
       "status": "PASS",
       "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
+    },
+    {
+      "folder": "12-D-M1-submission-confirmation-modal",
+      "iaCode": "D-M1",
+      "screen": "Submission confirmation modal",
+      "route": "/writing/short-answer-writing-51",
+      "routeSource": "docs/Wireframe/12-D-M1-submission-confirmation-modal/functional-spec.md",
+      "routeFallback": "docs/sitemap.md",
+      "referenceImages": {
+        "wireframe": "docs/Wireframe/12-D-M1-submission-confirmation-modal/wireframe.png",
+        "hifi": "docs/Wireframe/12-D-M1-submission-confirmation-modal/hifi.png",
+        "status": "complete"
+      },
+      "docs": {
+        "description": "present",
+        "functionalSpec": "present",
+        "screenDataSummary": "present"
+      },
+      "classification": "user-active-modal",
+      "audience": "user",
+      "authRequirement": "authenticated user",
+      "hostRoute": "/writing/short-answer-writing-51",
+      "modalTriggerRequirement": "D-M1 is triggered by the submit CTA on D-01/D-02/D-03/D-04 writing pages",
+      "report": "docs/design-review-result/wireframe-ui-audit/2026-06-10/12-D-M1-submission-confirmation-modal.html",
+      "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/12-D-M1-submission-confirmation-modal/findings.json",
+      "status": "PASS",
+      "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
     }
   ],
   "summary": {
-    "completedPass": 11,
+    "completedPass": 12,
     "inProgress": 0,
-    "remainingKnownActiveScreens": 23,
+    "remainingKnownActiveScreens": 22,
     "adminFrozenOutOfScope": [
       "21-H-01-admin-problem-management",
       "30-X-08-organization-admin-dashboard",

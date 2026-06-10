@@ -1184,6 +1184,7 @@
     },
     "submit": {
       "title": "Submit your answer?",
+      "subtitle": "You cannot edit your answer after submission.",
       "ok": "Submit",
       "okRetry": "Submit again",
       "noSaveRecord": "No autosave record",
@@ -1193,11 +1194,19 @@
       "charCountValue": "{charCount} chars",
       "minCharsHint": "(minimum {minChars} chars)",
       "lastSavedLabel": "Last saved",
+      "summaryAria": "Answer summary before submission",
+      "warningTitle": "You cannot edit after submitting.",
       "submitNotice": "After submitting, you cannot edit your answer, and AI analysis starts automatically. The analysis may take a short while.",
       "notEnoughChars": "You haven't reached the minimum character count ({minChars}) yet.",
       "submitFailedTitle": "Could not submit",
       "submitFailedDescription": "{submitError} — press 'Submit again' to retry, or copy your answer somewhere safe.",
-      "agreeNoEdit": "I understand I cannot edit after submitting."
+      "agreeNoEdit": "I understand I cannot edit after submitting.",
+      "checklistTitle": "Pre-submit checklist",
+      "checklistQuestion": "Prompt checked",
+      "checklistLength": "Length checked",
+      "checklistSaved": "Autosave checked",
+      "checklistNoEdit": "No-edit rule checked",
+      "footerNote": "Submitting safely saves the answer and starts AI analysis."
     },
     "conditions": {
       "title52": "Writing conditions",

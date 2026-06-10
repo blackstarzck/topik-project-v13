@@ -1184,6 +1184,7 @@
     },
     "submit": {
       "title": "Nộp câu trả lời?",
+      "subtitle": "Bạn không thể chỉnh sửa câu trả lời sau khi nộp.",
       "ok": "Nộp",
       "okRetry": "Nộp lại",
       "noSaveRecord": "Không có bản tự động lưu",
@@ -1193,11 +1194,19 @@
       "charCountValue": "{charCount} ký tự",
       "minCharsHint": "(tối thiểu {minChars} ký tự)",
       "lastSavedLabel": "Lưu lần cuối",
+      "summaryAria": "Tóm tắt câu trả lời trước khi nộp",
+      "warningTitle": "Bạn không thể chỉnh sửa sau khi nộp.",
       "submitNotice": "Sau khi nộp, bạn không thể chỉnh sửa câu trả lời và phân tích AI sẽ tự động bắt đầu. Quá trình phân tích có thể mất một lúc.",
       "notEnoughChars": "Bạn vẫn chưa đạt số ký tự tối thiểu ({minChars}).",
       "submitFailedTitle": "Không thể nộp bài",
       "submitFailedDescription": "{submitError} — nhấn 'Nộp lại' để thử lại, hoặc sao chép câu trả lời để dự phòng.",
-      "agreeNoEdit": "Tôi hiểu rằng không thể chỉnh sửa sau khi nộp."
+      "agreeNoEdit": "Tôi hiểu rằng không thể chỉnh sửa sau khi nộp.",
+      "checklistTitle": "Danh sách kiểm tra trước khi nộp",
+      "checklistQuestion": "Đã kiểm tra đề",
+      "checklistLength": "Đã kiểm tra độ dài",
+      "checklistSaved": "Đã kiểm tra tự động lưu",
+      "checklistNoEdit": "Đã hiểu không thể sửa",
+      "footerNote": "Khi nộp, câu trả lời được lưu an toàn và phân tích AI sẽ bắt đầu."
     },
     "conditions": {
       "title52": "Điều kiện viết",

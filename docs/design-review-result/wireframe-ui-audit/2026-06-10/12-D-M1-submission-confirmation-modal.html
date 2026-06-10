@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <title>Wireframe UI Audit - 12-D-M1-submission-confirmation-modal - 2026-06-10</title>
+    <style>
+      body {
+        margin: 32px;
+        background: #ffffff;
+        color: #172033;
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+      }
+
+      h1,
+      h2 {
+        letter-spacing: 0;
+      }
+
+      table {
+        width: 100%;
+        margin: 12px 0 28px;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+
+      th,
+      td {
+        padding: 10px 12px;
+        border: 1px solid #d9e1ef;
+        vertical-align: top;
+      }
+
+      th {
+        background: #f4f7fb;
+        text-align: left;
+      }
+
+      code {
+        border-radius: 4px;
+        background: #f3f4f6;
+        padding: 1px 4px;
+      }
+
+      .verdict {
+        border: 1px solid #8fd6ad;
+        border-radius: 8px;
+        background: #edfdf3;
+        padding: 14px 16px;
+      }
+
+      .note {
+        border: 1px solid #d9e1ef;
+        border-radius: 8px;
+        background: #f8fafc;
+        padding: 12px 14px;
+      }
+
+      .sev-pass {
+        display: inline-block;
+        border-radius: 999px;
+        background: #dff7ea;
+        color: #067647;
+        padding: 2px 10px;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Wireframe UI Audit - 12-D-M1-submission-confirmation-modal - 2026-06-10</h1>
+    <p><strong>Scope:</strong> D-M1 Submission confirmation modal triggered from writing routes.</p>
+    <p><strong>Host route used for capture:</strong> <code>/writing/short-answer-writing-51</code></p>
+    <p><strong>Mode:</strong> audit-remediation</p>
+
+    <h2>Verdict</h2>
+    <p class="verdict">
+      <strong>PASS.</strong> D-M1 now renders a dedicated submission confirmation surface with dimmed background,
+      answer summary, irreversible-submission warning, checklist reminder, agreement gate, and two clear CTAs.
+    </p>
+
+    <p class="note">
+      Accepted variance: the hifi includes decorative mascot imagery. This pass keeps the modal focused on the required
+      confirmation, checklist, warning, and submit/cancel controls without introducing new illustration assets.
+    </p>
+
+    <h2>Visual Delta Summary</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Area</th>
+          <th>Reference intent</th>
+          <th>Current implementation</th>
+          <th>Delta</th>
+          <th>User impact</th>
+          <th>Severity</th>
+          <th>Next action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>modal structure</td>
+          <td>Show a centered confirmation modal over a dimmed writing screen.</td>
+          <td>The shared <code>AppModal</code> now renders a D-M1-specific modal body with icon, centered title, summary, warning, checklist, agreement, and CTA rows.</td>
+          <td>The previous generic AntD descriptions table is resolved.</td>
+          <td>Learners see a clear final-confirmation checkpoint before submission.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>No blocking follow-up.</td>
+        </tr>
+        <tr>
+          <td>answer summary</td>
+          <td>Summarize question type, answer length, and last save state.</td>
+          <td>The summary card shows question number, character count with minimum hint, and last saved timestamp.</td>
+          <td>Aligned with the three-item summary requirement.</td>
+          <td>Users can verify the answer metadata before committing.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>No blocking follow-up.</td>
+        </tr>
+        <tr>
+          <td>warning and agreement</td>
+          <td>Warn that AI analysis starts and the answer cannot be edited after submission; require agreement.</td>
+          <td>The warning panel repeats the irreversible submission rule and analysis-start notice, while the submit button remains disabled until the agreement checkbox is checked.</td>
+          <td>Aligned with the consent gate.</td>
+          <td>Accidental final submission is less likely.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>No blocking follow-up.</td>
+        </tr>
+        <tr>
+          <td>CTA behavior</td>
+          <td>Provide cancel and confirm CTAs; block duplicate submission while loading.</td>
+          <td>The modal uses explicit cancel/submit buttons, disables submit until ready, and keeps close/mask/keyboard blocked while loading.</td>
+          <td>Aligned with D-M1 behavior requirements.</td>
+          <td>The user can safely cancel or proceed, with duplicate-submit protection preserved.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>No blocking follow-up.</td>
+        </tr>
+        <tr>
+          <td>responsive render</td>
+          <td>Keep modal content and CTA readable on mobile, tablet, and desktop.</td>
+          <td>Captures at 360, 768, and 1280 widths returned status 200, modalVisible=true, errorOverlay=false, and consoleErr=0.</td>
+          <td>Responsive health is acceptable for this pass.</td>
+          <td>The confirmation checkpoint remains usable across audited breakpoints.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>No blocking follow-up.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Evidence</h2>
+    <ul>
+      <li><code>screenshots/12-D-M1-submission-confirmation-modal/current.json</code> records authenticated modal captures at 360, 768, and 1280 widths.</li>
+      <li><code>src/components/writing/SubmissionConfirmModal.tsx</code> contains the D-M1 remediation.</li>
+      <li><code>tests/e2e/screens/submission-confirm-modal.spec.ts</code> verifies modal open, submit disabled state, agreement gate, and cancel close behavior.</li>
+      <li><code>src/styles/global.css</code> contains D-M1 modal styling and mobile compaction rules.</li>
+    </ul>
+
+    <h2>Verification</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Command</th>
+          <th>Result</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>pnpm exec tsc --noEmit --pretty false</code></td>
+          <td>Passed.</td>
+        </tr>
+        <tr>
+          <td><code>Playwright modal capture script for D-M1 at 360/768/1280</code></td>
+          <td>Captured modal; status=200, modalVisible=true, errorOverlay=false, consoleErr=0.</td>
+        </tr>
+        <tr>
+          <td><code>pnpm exec playwright test tests/e2e/screens/submission-confirm-modal.spec.ts --project=mobile-360 --project=tablet-768 --project=desktop-1280</code></td>
+          <td>Passed, 4 tests including auth setup and D-M1 modal gate checks.</td>
+        </tr>
+        <tr>
+          <td><code>pnpm lint</code></td>
+          <td>Passed with 0 errors and 9 pre-existing warnings.</td>
+        </tr>
+      </tbody>
+    </table>
+  </body>
+</html>
