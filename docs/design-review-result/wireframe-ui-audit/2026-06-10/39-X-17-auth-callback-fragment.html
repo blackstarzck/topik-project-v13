@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>X-17 Auth Callback Fragment Audit</title></head>
+<body>
+  <h1>X-17 Auth Callback Fragment Audit</h1>
+  <p>Status: <strong>PASS</strong></p>
+  <p>Route: /auth/callback-fragment</p>
+  <table border="1" cellspacing="0" cellpadding="6">
+    <thead><tr><th>Check</th><th>Status</th><th>Evidence</th></tr></thead>
+    <tbody>
+      <tr><td>X17-status-surface</td><td>PASS</td><td>The callback support page renders a centered role=status card/spinner while the synthetic setSession user lookup is held open.</td></tr>
+      <tr><td>X17-success-fragment</td><td>PASS</td><td>A synthetic access/refresh token fragment calls the intercepted Supabase user endpoint once, then redirects to sanitized relative next=/terms with no token/hash left in the final URL.</td></tr>
+      <tr><td>X17-error-fragment</td><td>PASS</td><td>An error_code fragment maps to /auth/error?reason=otp_expired and does not expose the raw provider error description.</td></tr>
+      <tr><td>X17-missing-fragment</td><td>PASS</td><td>A direct visit without token or error fragment redirects to /auth/error?reason=unknown.</td></tr>
+      <tr><td>X17-responsive-capture</td><td>PASS</td><td>Mobile, tablet, and desktop status captures plus redirect branches complete without dev overlay, page, console, or 500-response errors.</td></tr>
+    </tbody>
+  </table>
+  <h2>Screenshots</h2>
+  <ul>
+    <li>mobile-360: docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/39-X-17-auth-callback-fragment/mobile-360.png</li>
+    <li>tablet-768: docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/39-X-17-auth-callback-fragment/tablet-768.png</li>
+    <li>desktop-1280: docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/39-X-17-auth-callback-fragment/desktop-1280.png</li>
+  </ul>
+</body>
+</html>

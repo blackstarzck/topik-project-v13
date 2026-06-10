@@ -862,12 +862,38 @@
       "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/38-X-16-password-reset-confirm/findings.json",
       "status": "PASS",
       "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
+    },
+    {
+      "folder": "39-X-17-auth-callback-fragment",
+      "iaCode": "X-17",
+      "screen": "Auth callback fragment",
+      "route": "/auth/callback-fragment",
+      "routeSource": "docs/Wireframe/39-X-17-auth-callback-fragment/functional-spec.md",
+      "routeFallback": "docs/sitemap.md",
+      "referenceImages": {
+        "wireframe": "docs/Wireframe/39-X-17-auth-callback-fragment/wireframe.png",
+        "hifi": "docs/Wireframe/39-X-17-auth-callback-fragment/hifi.png",
+        "status": "missing-wireframe-and-hifi"
+      },
+      "docs": {
+        "description": "present",
+        "functionalSpec": "present",
+        "screenDataSummary": "present"
+      },
+      "classification": "public-active-transient",
+      "audience": "public",
+      "authRequirement": "none for route access; fragment token may establish a browser session",
+      "dynamicSeedRequirement": "audit uses a synthetic JWT-shaped access token and intercepts Supabase /auth/v1/user; no live email token is required.",
+      "report": "docs/design-review-result/wireframe-ui-audit/2026-06-10/39-X-17-auth-callback-fragment.html",
+      "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/39-X-17-auth-callback-fragment/findings.json",
+      "status": "PASS",
+      "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
     }
   ],
   "summary": {
-    "completedPass": 33,
+    "completedPass": 34,
     "inProgress": 0,
-    "remainingKnownActiveScreens": 1,
+    "remainingKnownActiveScreens": 0,
     "adminFrozenOutOfScope": [
       "21-H-01-admin-problem-management",
       "30-X-08-organization-admin-dashboard",
