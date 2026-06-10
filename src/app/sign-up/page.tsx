@@ -1,66 +1,130 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
+import {
+  BookOpenCheck,
+  ChartNoAxesCombined,
+  FileCheck2,
+  ShieldCheck,
+} from "lucide-react";
 
 import { AuthMascot } from "@/components/auth/AuthMascot";
 import { SignUpForm } from "@/components/auth/SignUpForm";
-import { AppCard } from "@/components/shared/AppCard";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PublicShell } from "@/components/shared/PublicShell";
-import { SPACING } from "@/theme/spacing";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("auth.signUp");
   return { title: t("metaTitle") };
 }
 
-// 혜택 칩 — description §2 제약: 3개 이하, 라벨 12자 이하. i18n: 라벨은
-// auth.signUp.benefit* 키로 해석한다.
+// description region 2: benefit chips stay at three items or fewer.
 const benefitChipKeys = [
   "benefitFreeTrial",
   "benefitRealExam",
   "benefitWeaknessReport",
 ] as const;
 
-const chipStyle: React.CSSProperties = {
-  display: "inline-block",
-  padding: "4px 12px",
-  borderRadius: 999,
-  background: "#f0f5ff",
-  color: "#1d39c4",
-  fontSize: 13,
-  margin: "0 6px 6px 0",
-};
+const heroHighlights = [
+  {
+    icon: ShieldCheck,
+    titleKey: "heroAiFeedbackTitle",
+    bodyKey: "heroAiFeedbackBody",
+  },
+  {
+    icon: ChartNoAxesCombined,
+    titleKey: "heroGrowthTitle",
+    bodyKey: "heroGrowthBody",
+  },
+  {
+    icon: FileCheck2,
+    titleKey: "heroPracticeTitle",
+    bodyKey: "heroPracticeBody",
+  },
+] as const;
 
 export default async function SignUpPage() {
   const t = await getTranslations("auth.signUp");
   const tCommon = await getTranslations("common");
   const tMascot = await getTranslations("auth.mascot");
+
   return (
-    <PublicShell>
-      <PageContainer size="narrow">
-        {/* description §1 브랜드 메시지 + §2 마스코트/혜택 영역. AuthMascot은
-            이미지 실패 시 기본 캐릭터(이모지)로 자동 대체 — §2 예외와 호환. */}
-        <section style={{ textAlign: "center", marginBottom: SPACING.lg }}>
-          <AuthMascot alt={tMascot("signUpAlt")} emoji="✏️" size={44} />
-          <h1 style={{ fontSize: 24, margin: "8px 0 4px" }}>{t("pageHeading")}</h1>
-          <p style={{ color: "#595959", margin: "0 0 12px", fontSize: 14 }}>
-            {t("pageSubtitle")}
-          </p>
-          <div>
-            {benefitChipKeys.map((key) => (
-              <span key={key} style={chipStyle}>
-                {t(key)}
+    <PublicShell className="signup-public-shell">
+      <PageContainer
+        size="wide"
+        className="signup-page"
+        aria-label={t("pageHeading")}
+      >
+        <section className="signup-shell-card" aria-labelledby="signup-title">
+          <div className="signup-hero-panel">
+            <Link href="/" className="signup-brand" aria-label="TALKPIK AI">
+              <span className="signup-brand__mark" aria-hidden="true">
+                T
               </span>
-            ))}
+              <span>
+                Talkpik <strong>AI</strong>
+              </span>
+            </Link>
+
+            <div className="signup-hero-copy">
+              <p className="signup-eyebrow">{t("heroEyebrow")}</p>
+              <h2>{t("heroTitle")}</h2>
+              <p>{t("heroBody")}</p>
+            </div>
+
+            <div className="signup-mascot-row">
+              <div className="signup-mascot-figure">
+                <AuthMascot alt={tMascot("signUpAlt")} emoji="✏️" size={96} />
+              </div>
+              <div className="signup-mascot-note">
+                <strong>{t("mascotTitle")}</strong>
+                <p>{t("mascotBody")}</p>
+              </div>
+            </div>
+
+            <div
+              className="signup-benefit-strip"
+              aria-label={t("benefitStripAria")}
+            >
+              {heroHighlights.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <div className="signup-benefit" key={item.titleKey}>
+                    <span className="signup-benefit__icon" aria-hidden="true">
+                      <Icon size={20} strokeWidth={2} />
+                    </span>
+                    <span>
+                      <strong>{t(item.titleKey)}</strong>
+                      <small>{t(item.bodyKey)}</small>
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="signup-form-panel">
+            <div className="signup-login-prompt">
+              <span>{t("haveAccountPrompt")}</span>
+              <Link href="/login">{tCommon("login")}</Link>
+            </div>
+
+            <div className="signup-form-heading">
+              <BookOpenCheck size={34} aria-hidden="true" />
+              <h1 id="signup-title">{t("pageHeading")}</h1>
+              <p>{t("formSubtitle")}</p>
+              <div className="signup-chip-row">
+                {benefitChipKeys.map((key) => (
+                  <span key={key}>{t(key)}</span>
+                ))}
+              </div>
+            </div>
+
+            <div className="signup-form-surface">
+              <SignUpForm />
+            </div>
           </div>
         </section>
-        <AppCard>
-          <SignUpForm />
-        </AppCard>
-        <p style={{ textAlign: "center", marginTop: SPACING.md }}>
-          {t("haveAccountPrompt")} <Link href="/login">{tCommon("login")}</Link>
-        </p>
       </PageContainer>
     </PublicShell>
   );

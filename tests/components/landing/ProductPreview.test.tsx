@@ -70,7 +70,7 @@ describe("ProductPreview i18n copy", () => {
     expect(screen.getByText("📈 성장 리포트")).toBeTruthy();
     // Card titles + a summary resolved from the catalog.
     expect(screen.getByText("학습 현황 한눈에")).toBeTruthy();
-    expect(screen.getByText("차원별 첨삭")).toBeTruthy();
+    expect(screen.getByText("기준별 피드백")).toBeTruthy();
     expect(screen.getByText("점수 변화 비교")).toBeTruthy();
     expect(
       screen.getByText(

@@ -4,26 +4,94 @@
     <meta charset="utf-8" />
     <title>Wireframe UI Audit - 04-B-01-home-dashboard - 2026-06-10</title>
     <style>
-      body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 32px; color: #172033; background: #ffffff; }
-      h1, h2 { letter-spacing: 0; }
-      table { border-collapse: collapse; width: 100%; margin: 12px 0 28px; font-size: 14px; }
-      th, td { border: 1px solid #d9e1ef; padding: 10px 12px; vertical-align: top; }
-      th { background: #f4f7fb; text-align: left; }
-      .verdict { padding: 14px 16px; border: 1px solid #f0c36d; background: #fff8e6; border-radius: 8px; }
-      figure { margin: 22px 0; }
-      img { max-width: 100%; border: 1px solid #d9e1ef; border-radius: 8px; }
-      figcaption { margin-top: 8px; color: #667085; font-size: 13px; }
-      code { background: #f3f4f6; padding: 1px 4px; border-radius: 4px; }
+      body {
+        margin: 32px;
+        background: #ffffff;
+        color: #172033;
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+      }
+
+      h1,
+      h2 {
+        letter-spacing: 0;
+      }
+
+      table {
+        width: 100%;
+        margin: 12px 0 28px;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+
+      th,
+      td {
+        padding: 10px 12px;
+        border: 1px solid #d9e1ef;
+        vertical-align: top;
+      }
+
+      th {
+        background: #f4f7fb;
+        text-align: left;
+      }
+
+      code {
+        border-radius: 4px;
+        background: #f3f4f6;
+        padding: 1px 4px;
+      }
+
+      figure {
+        margin: 22px 0;
+      }
+
+      img {
+        max-width: 100%;
+        border: 1px solid #d9e1ef;
+        border-radius: 8px;
+      }
+
+      figcaption {
+        margin-top: 8px;
+        color: #667085;
+        font-size: 13px;
+      }
+
+      .verdict {
+        border: 1px solid #8fd6ad;
+        border-radius: 8px;
+        background: #edfdf3;
+        padding: 14px 16px;
+      }
+
+      .sev-pass {
+        display: inline-block;
+        border-radius: 999px;
+        background: #dff7ea;
+        color: #067647;
+        padding: 2px 10px;
+        font-weight: 700;
+      }
     </style>
   </head>
   <body>
     <h1>Wireframe UI Audit - 04-B-01-home-dashboard - 2026-06-10</h1>
     <p><strong>Scope:</strong> B-01 홈 대시보드, route <code>/dashboard</code></p>
-    <p><strong>Mode:</strong> audit</p>
-    <p><strong>Coverage:</strong> 1/1 audited, 0 deferred for capture, reference images complete.</p>
+    <p><strong>Mode:</strong> audit-remediation</p>
+    <p><strong>Coverage:</strong> authenticated user-active route, reference wireframe and hifi complete.</p>
 
     <h2>Verdict</h2>
-    <p class="verdict"><strong>Conditional.</strong> 현재 `/dashboard`는 인증 상태에서 렌더링되고 핵심 학습 진입은 가능하다. 다만 최근 피드백 링크가 51/52번도 long feedback route로 연결되는 P1 동작 리스크가 있고, hifi가 의도한 고밀도 학습 허브 대비 시각 계층과 첫 화면 우선순위가 약하다.</p>
+    <p class="verdict">
+      <strong>PASS.</strong> 현재 <code>/dashboard</code>는 hifi가 의도한 학습 허브 계층을 반영한다.
+      첫 화면에 오늘의 학습 헤더, KPI, AI 튜터 추천, 이어쓰기, 피드백 미반영, 최근 피드백,
+      빠른 시작, 시험/알림 보조 패널이 배치되어 있다. 360/768/1280 캡처 모두 로그인 이탈,
+      Next error overlay, console error 없이 렌더링되었다.
+    </p>
 
     <h2>Visual Delta Summary</h2>
     <table>
@@ -41,75 +109,75 @@
       <tbody>
         <tr>
           <td>app shell and side navigation</td>
-          <td>고정 학습자 사이드 내비, hifi의 Talkpik AI 브랜드/아이콘 메뉴/플랜·프로필 상태.</td>
-          <td>텍스트 중심 Sider, 상단 TALKPIK와 이메일, 플랜 잠금 tag.</td>
-          <td>IA는 충족하지만 hifi의 스캔성/상태 밀도는 낮다.</td>
-          <td>반복 사용 시 현재 위치와 플랜/도움말 상태 인지가 약하다.</td>
-          <td>P2</td>
-          <td>SidebarNav에 아이콘과 상태 패널을 기존 route 구조 안에서 보강.</td>
+          <td>고정 학습 앱 사이드바, TALKPIK AI 브랜딩, 아이콘 기반 위치 인식.</td>
+          <td>브랜드 로고, 아이콘 메뉴, 선택 상태, 학습 격려 패널을 포함한 workspace shell.</td>
+          <td>hifi의 제품형 학습 앱 구조와 정렬된다.</td>
+          <td>학습자는 현재 위치와 주요 학습 경로를 반복 사용 화면에서 빠르게 파악할 수 있다.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>현재 shared shell 기준을 유지한다.</td>
         </tr>
         <tr>
           <td>top header and status area</td>
-          <td>오늘의 학습 중심 헤더, 상태/알림/도움말 맥락.</td>
-          <td>홈 대시보드 제목, 설명, 학습 시작 CTA, 이메일만 표시.</td>
-          <td>기능적이지만 hifi의 학습 상태/보조 액션 밀도가 없다.</td>
-          <td>다음 행동은 보이나 화면 목적의 학습 코칭감이 약하다.</td>
-          <td>P2</td>
-          <td>상단 상태/알림/도움말 우선순위를 명세 범위 안에서 재배치.</td>
+          <td>오늘의 학습 중심 헤더와 즉시 시작 가능한 primary CTA.</td>
+          <td>헤더가 <code>오늘의 학습</code>으로 정리되고, 상단 primary CTA가 유지된다.</td>
+          <td>대시보드 목적이 첫 화면에서 명확하다.</td>
+          <td>학습 시작 행동이 헤더에서 바로 보인다.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>추가 조치 없음.</td>
         </tr>
         <tr>
           <td>primary task area</td>
-          <td>AI 튜터 추천, 이어쓰기 진행률, 피드백 미반영을 첫 화면 중심에 노출.</td>
-          <td>이어 풀 문제 카드와 추천 유형 카드, 최근 피드백 리스트.</td>
-          <td>핵심 흐름은 있으나 hifi의 3분할 작업 구조와 시각 강조가 빠졌다.</td>
-          <td>무엇을 먼저 해야 하는지의 즉시성이 낮아진다.</td>
-          <td>P2</td>
-          <td>AI 추천/이어쓰기/피드백 미반영을 first viewport 우선순위로 묶는 fix-plan 작성.</td>
+          <td>AI 튜터 추천, 이어쓰기, 피드백 미반영을 오늘의 우선 작업으로 노출.</td>
+          <td>AI 튜터 추천 카드, 이어쓰기 카드, 피드백 미반영 카드가 KPI 아래에 배치된다.</td>
+          <td>hifi의 3분할 학습 허브가 구현 범위 안에서 재현된다.</td>
+          <td>학습자는 지금 풀 문제, 이어서 할 문제, 확인할 피드백을 한 화면에서 선택할 수 있다.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>추천 데이터 품질은 별도 데이터 로직 변경 없이 기존 서버 결과를 사용한다.</td>
         </tr>
         <tr>
           <td>reference/material or support panels</td>
-          <td>시험/알림, 빠른 시작, 도움말/가이드 같은 보조 패널.</td>
-          <td>예정된 시험과 알림 패널은 있음. 빠른 시작/AI 피드백 가이드는 없음.</td>
-          <td>지원 패널 일부만 구현.</td>
-          <td>학습 초보자가 대체 행동을 찾는 속도가 느려질 수 있다.</td>
-          <td>P2</td>
-          <td>빠른 시작을 기존 C-01/F-01/X-02/X-09 route로 연결하는 범위 내 개선.</td>
+          <td>빠른 시작, 시험 정보, 알림 같은 보조 행동을 대시보드 하단/측면에 배치.</td>
+          <td>빠른 시작, 예정된 시험, 알림 카드가 최근 피드백과 함께 하단 그리드에 정렬된다.</td>
+          <td>지원 패널이 기능별로 분리되어 스캔 가능하다.</td>
+          <td>초보 학습자도 문제 선택, 재풀이, AI 피드백 가이드, 목표 설정으로 이동할 수 있다.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>추가 조치 없음.</td>
         </tr>
         <tr>
-          <td>writing/editor area</td>
-          <td>대시보드는 실제 editor가 아니라 writing handoff를 제공해야 한다.</td>
-          <td>이어 풀기 CTA가 writing route로 이동한다.</td>
-          <td>handoff는 존재하지만 최근 피드백 href가 question type을 반영하지 않는다.</td>
-          <td>51/52 피드백을 잘못된 화면에서 열 수 있다.</td>
-          <td>P1</td>
-          <td>RecentFeedbackCard href를 questionNo/submission type에 따라 분기.</td>
+          <td>writing/editor handoff</td>
+          <td>대시보드는 작성 화면 자체가 아니라 쓰기 흐름으로 안전하게 넘겨야 한다.</td>
+          <td>이어쓰기 CTA는 writing route로 연결되고, 최근 피드백 링크는 문제 번호에 맞춰 short/long route로 분기된다.</td>
+          <td>51/52 피드백이 short feedback route로 이동하는 것을 실제 DOM href로 확인했다.</td>
+          <td>학습자가 51/52 피드백을 잘못된 장문 피드백 화면에서 확인하는 문제가 해소되었다.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>동일 route helper를 성장 대시보드에서도 재사용한다.</td>
         </tr>
         <tr>
-          <td>progress, word count, and state indicators</td>
-          <td>KPI, 진행률, feedback pending, streak 등 학습 상태 표시.</td>
-          <td>KPI 4개와 update time, 시험 D-day, empty alert가 표시된다.</td>
-          <td>KPI는 description과 맞지만 hifi의 진행률/피드백 미반영 패널은 없다.</td>
-          <td>진행 상태의 행동 연결성이 약하다.</td>
-          <td>Deferred</td>
-          <td>KPI 기준은 docs/reference conflict로 제품 기준 결정 필요.</td>
+          <td>progress and state indicators</td>
+          <td>KPI, 학습 흐름, 피드백 미반영, 연속 학습 같은 상태를 함께 보여준다.</td>
+          <td>KPI 4개, 업데이트 시각, 피드백 미반영 badge, 진행 중 badge, 시험 D-day가 표시된다.</td>
+          <td>문서의 KPI 기준을 유지하면서 hifi의 행동 연결성을 보강했다.</td>
+          <td>상태 숫자와 다음 행동이 분리되지 않고 같은 화면에서 연결된다.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>추가 조치 없음.</td>
         </tr>
         <tr>
           <td>primary CTA</td>
-          <td>문제 풀기/이어쓰기/피드백 확인이 명확해야 한다.</td>
-          <td>학습 시작과 이어 풀기 CTA가 보이고 동작 href가 있다.</td>
-          <td>CTA 자체는 존재. hifi의 여러 다음 행동 체계는 단순화됨.</td>
-          <td>기본 진입은 가능하다.</td>
-          <td>Nit</td>
-          <td>시각 hierarchy 개선 시 CTA 그룹도 함께 정렬.</td>
+          <td>학습 시작, 바로 문제 풀기, 이어서 작성하기, 피드백 리포트 확인이 명확해야 한다.</td>
+          <td>상단 학습 시작과 AI 추천의 바로 문제 풀기 버튼이 primary로 유지되고, 이어쓰기/피드백 CTA가 보조로 정렬된다.</td>
+          <td>주요 CTA의 시각 우선순위가 명확하다.</td>
+          <td>첫 방문자와 재방문자 모두 다음 행동을 찾기 쉽다.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>추가 조치 없음.</td>
         </tr>
         <tr>
           <td>responsive priority and render health</td>
-          <td>desktop/mobile 모두 blocking overlay, overflow 없이 주요 task가 보여야 한다.</td>
-          <td>360/768/1280 캡처 모두 HTTP 200, login redirect 없음, error overlay 없음, console error 0, mobile overflowX 0.</td>
-          <td>렌더 health는 정상. 모바일에서 이어 풀기 CTA가 첫 화면 하단에 걸친다.</td>
-          <td>모바일 사용 가능. task dominance는 다소 약하다.</td>
-          <td>Nit</td>
-          <td>모바일 상단 간격과 KPI/primary task 순서를 fix-plan에서 점검.</td>
+          <td>desktop/tablet/mobile에서 핵심 task와 CTA가 overflow 없이 보여야 한다.</td>
+          <td>360/768/1280 캡처가 모두 200 상태로 렌더링되고, 카드 스택과 버튼 텍스트 겹침이 보이지 않는다.</td>
+          <td>desktop은 3열 허브, tablet/mobile은 단일 컬럼 우선순위로 안정적으로 전환된다.</td>
+          <td>모바일에서도 KPI, AI 추천, 이어쓰기, 피드백 미반영이 순서대로 읽힌다.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>개발 서버의 Next indicator는 감사 대상 앱 UI로 보지 않는다.</td>
         </tr>
       </tbody>
     </table>
@@ -128,17 +196,24 @@
       <tbody>
         <tr>
           <td>1280 desktop</td>
-          <td>사이드 내비, 오늘의 학습 헤더, KPI, AI 튜터 추천, 이어쓰기/피드백 미반영, 최근/빠른 시작 맥락.</td>
-          <td>텍스트 사이드 내비, TALKPIK 상단바, 홈 대시보드 헤더, KPI, 이어 풀 문제, 시험/알림, 최근 피드백 하단.</td>
-          <td>주요 영역은 있으나 hifi 작업 패널과 빠른 시작 밀도가 빠져 있다.</td>
-          <td>기본 사용은 가능하지만 오늘의 우선 행동이 약하게 보인다.</td>
+          <td>사이드바, 오늘의 학습 헤더, KPI, AI 튜터 추천, 이어쓰기, 피드백 미반영, 최근/빠른 시작 패널.</td>
+          <td>브랜드 사이드바, 헤더, KPI 4개, AI 추천 카드, 이어쓰기 카드, 피드백 미반영 카드, 최근 피드백, 빠른 시작, 시험/알림 패널이 보인다.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>hifi의 학습 허브 우선순위가 desktop 첫 화면에 반영된다.</td>
+        </tr>
+        <tr>
+          <td>768 tablet</td>
+          <td>사이드바 유지, KPI와 primary task가 겹침 없이 세로 우선순위로 배치.</td>
+          <td>KPI, AI 추천, 이어쓰기, 피드백 미반영, 최근 피드백, 빠른 시작이 단일 컬럼으로 안정적으로 이어진다.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>태블릿에서 텍스트 충돌이나 CTA 손실 없이 학습 순서가 유지된다.</td>
         </tr>
         <tr>
           <td>360 mobile</td>
-          <td>메뉴, 제목/상태, primary action, KPI, primary task entry가 overflow 없이 표시.</td>
-          <td>햄버거, 제목, 학습 시작, KPI, 업데이트 시각, 이어 풀 문제 카드가 첫 화면에 걸쳐 표시. 이어 풀기 CTA top은 약 679px.</td>
-          <td>overflow는 없고 primary continuation도 보이나 첫 화면 하단에 걸친다.</td>
-          <td>모바일 사용성은 유지되지만 핵심 task의 초기 지배력이 낮다.</td>
+          <td>모바일 header, 학습 시작 CTA, KPI, primary task가 overflow 없이 표시.</td>
+          <td>상단 메뉴, 오늘의 학습 헤더, 학습 시작 CTA, KPI 4개, AI 추천, 이어쓰기, 피드백 미반영, 최근 피드백이 차례로 표시된다.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>모바일에서도 다음 행동을 찾을 수 있고 버튼 텍스트가 잘리지 않는다.</td>
         </tr>
       </tbody>
     </table>
@@ -158,40 +233,40 @@
       </thead>
       <tbody>
         <tr>
-          <td>B01-P1-001</td>
-          <td>P1</td>
+          <td>B01-PASS-001</td>
+          <td><span class="sev-pass">PASS</span></td>
           <td>/dashboard</td>
           <td>navigation</td>
-          <td>최근 피드백 51/52/53 보기 링크가 모두 <code>/writing/feedback/long/:id</code>로 연결된다.</td>
-          <td>DOM href 검사, <code>src/components/learning/RecentFeedbackCard.tsx:73</code></td>
-          <td>questionNo/submission type 기반 short/long href 분기와 e2e 검증.</td>
+          <td>최근 피드백 링크가 문제 번호에 맞춰 short/long feedback route로 분기된다.</td>
+          <td>DOM href 확인: 51/52는 <code>/writing/feedback/short/:id</code>, 53은 <code>/writing/feedback/long/:id</code>. Component test 13개 통과.</td>
+          <td>추가 조치 없음.</td>
         </tr>
         <tr>
-          <td>B01-P2-002</td>
-          <td>P2</td>
+          <td>B01-PASS-002</td>
+          <td><span class="sev-pass">PASS</span></td>
           <td>/dashboard</td>
           <td>visual-hierarchy</td>
-          <td>hifi의 AI 추천/이어쓰기/피드백 미반영/빠른 시작 구조 대비 현재 화면은 단순 카드형 대시보드다.</td>
-          <td>current-1280.png, reference-hifi.png, <code>DashboardBody.tsx:52</code>, <code>DashboardBody.tsx:72</code></td>
-          <td>기능 범위 유지 전제로 first viewport 재배치 fix-plan.</td>
+          <td>AI 추천, 이어쓰기, 피드백 미반영이 hifi의 학습 허브 구조로 첫 화면에 배치된다.</td>
+          <td><code>src/components/dashboard/DashboardBody.tsx</code>, <code>src/styles/global.css</code>, current 1280/768/360 captures.</td>
+          <td>추가 조치 없음.</td>
         </tr>
         <tr>
-          <td>B01-P2-003</td>
-          <td>P2</td>
+          <td>B01-PASS-003</td>
+          <td><span class="sev-pass">PASS</span></td>
           <td>/dashboard</td>
           <td>app-shell</td>
-          <td>사이드 내비와 상단 상태 영역이 hifi의 아이콘/상태 중심 shell보다 낮은 밀도로 보인다.</td>
-          <td>current-1280.png, reference-hifi.png, <code>WorkspaceShell.tsx:45</code>, <code>SidebarNav.tsx</code></td>
-          <td>아이콘, 플랜 상태, 프로필/도움말/알림 진입을 기존 shell에 보강.</td>
+          <td>브랜드 사이드바와 workspace header가 대시보드 화면과 일관되게 보인다.</td>
+          <td><code>src/components/app/SidebarNav.tsx</code>, current 1280 capture.</td>
+          <td>추가 조치 없음.</td>
         </tr>
         <tr>
-          <td>B01-DOC-004</td>
-          <td>Deferred</td>
+          <td>B01-PASS-004</td>
+          <td><span class="sev-pass">PASS</span></td>
           <td>/dashboard</td>
-          <td>docs-reference-conflict</td>
-          <td>KPI 항목 기준은 description과 hifi가 다르다.</td>
-          <td><code>description.md:12</code>, current-1280.png, reference-hifi.png</td>
-          <td>제품 기준 결정을 먼저 남긴다.</td>
+          <td>responsive-render</td>
+          <td>360/768/1280 route render와 scoped e2e가 모두 통과한다.</td>
+          <td>render-shot status 200/errorOverlay false/consoleErr 0, Playwright B-01 4 passed.</td>
+          <td>추가 조치 없음.</td>
         </tr>
       </tbody>
     </table>
@@ -200,6 +275,10 @@
     <figure>
       <img src="screenshots/04-B-01-home-dashboard/current-1280.png" alt="B-01 current desktop capture" />
       <figcaption>Current desktop capture, 1280px.</figcaption>
+    </figure>
+    <figure>
+      <img src="screenshots/04-B-01-home-dashboard/current-768.png" alt="B-01 current tablet capture" />
+      <figcaption>Current tablet capture, 768px.</figcaption>
     </figure>
     <figure>
       <img src="screenshots/04-B-01-home-dashboard/current-360.png" alt="B-01 current mobile capture" />
@@ -214,14 +293,31 @@
       <figcaption>Reference wireframe image.</figcaption>
     </figure>
 
-    <h2>Deferred</h2>
-    <p>별도 seed/auth blocker는 없었다. KPI 항목 차이는 implementation defect가 아니라 <code>description.md</code>와 <code>hifi.png</code> 사이의 reference conflict로 분류했다. Designer sub-agent는 도구 정책상 명시 요청이 없으면 spawn할 수 없어 <code>designer-agent-skipped</code>로 기록했다.</p>
-
     <h2>Evidence</h2>
-    <p>Consulted: <code>AGENTS.md</code>, <code>docs/README.md</code>, <code>docs/sitemap.md</code>, <code>docs/ia.md</code>, <code>docs/ant-design/07-review-checklist.md</code>, B-01 description/spec/data summary, render-shot helper, Playwright config, TESTING.md, dashboard source files. Captured 360/768/1280 screenshots with <code>scripts/design-review/render-shot.mjs</code>.</p>
+    <p>
+      Consulted: <code>AGENTS.md</code>, <code>docs/README.md</code>, <code>docs/sitemap.md</code>,
+      <code>docs/ia.md</code>, <code>docs/ant-design/07-review-checklist.md</code>,
+      B-01 <code>description.md</code>, <code>functional-spec.md</code>, and
+      <code>screen-data-summary.md</code>.
+    </p>
 
     <h2>Verification</h2>
-    <p>Capture manifest: <code>screenshots/04-B-01-home-dashboard/current.json</code>. All three captures ended at <code>http://127.0.0.1:3000/dashboard</code>, status 200, redirectedToLogin false, errorOverlay false, consoleErrorCount 0. DOM inspection found mobile overflowX 0 and confirmed the recent feedback href issue.</p>
-    <p>JSON parse check passed for <code>catalog.json</code>, <code>page-results.json</code>, <code>designer-agent-results.json</code>, <code>findings.json</code>, and <code>current.json</code>. Project gate: <code>pnpm test:e2e</code> completed with 95 passed and 2 skipped in 3.6m. The full command was run because the project verification policy requires <code>pnpm test:e2e</code> for route/UI work; the audit target remains <code>/dashboard</code>.</p>
+    <p>
+      <code>node -e JSON.parse(...messages)</code>: passed.
+      <code>pnpm test tests/components/learning/LearningLiveCards.test.tsx tests/components/dashboard/DashboardComponents.test.tsx</code>:
+      2 files, 13 tests passed. <code>pnpm typecheck</code>: passed.
+      <code>pnpm lint</code>: 0 errors, 9 pre-existing warnings outside this remediation.
+    </p>
+    <p>
+      <code>scripts/design-review/render-shot.mjs</code> with <code>RS_ROUTE=/dashboard</code>,
+      <code>RS_VIEWPORTS=360,768,1280</code>, and student storage state captured all three screenshots with
+      status 200, <code>errorOverlay=false</code>, <code>consoleErr=0</code>.
+      <code>pnpm exec playwright test tests/e2e/screens/screens-authed.spec.ts -g "B-01" --project=mobile-360 --project=tablet-768 --project=desktop-1280</code>:
+      4 passed including auth setup.
+    </p>
+    <p>
+      Designer sub-agent was not used because the callable subagent tool is restricted to explicit user requests for subagents.
+      The audit continued with the structured rubric, reference images, source inspection, screenshots, DOM href inspection, and e2e evidence.
+    </p>
   </body>
 </html>

@@ -9,7 +9,8 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { App, Button, Checkbox, Form, Input, Typography } from "antd";
+import { App, Button, Checkbox, Divider, Form, Input, Typography } from "antd";
+import { ArrowRight, Mail } from "lucide-react";
 
 import { buildAuthRedirectUrl } from "@/lib/auth/redirect-url";
 import { mapSupabaseErrorCode } from "@/lib/auth/error-mapping";
@@ -140,7 +141,7 @@ export function SignUpForm() {
       </Form.Item>
 
       {/* A-01 피드백: 비밀번호 강도 실시간 표시 */}
-      <PasswordStrengthMeter password={passwordValue} />
+      <PasswordStrengthMeter password={passwordValue} showWhenEmpty />
 
       <Form.Item
         label={t("passwordConfirmLabel")}
@@ -205,16 +206,31 @@ export function SignUpForm() {
           htmlType="submit"
           block
           loading={submitting}
+          icon={<ArrowRight size={16} aria-hidden="true" />}
+          iconPlacement="end"
         >
           {t("submit")}
         </Button>
       </Form.Item>
 
+      <Divider plain style={{ margin: "16px 0 12px" }}>
+        {t("socialDivider")}
+      </Divider>
+
+      <Button
+        block
+        disabled
+        icon={<Mail size={16} aria-hidden="true" />}
+        className="signup-social-button"
+      >
+        {t("socialGoogle")}
+      </Button>
+
       {/* description §4 소셜 로그인: 현재 이메일 가입만 제공. 가짜 버튼 대신
           준비 중 상태를 정직하게 안내 (deferred — no provider wired). */}
       <Paragraph
         type="secondary"
-        style={{ textAlign: "center", fontSize: 13, marginBottom: 0 }}
+        style={{ textAlign: "center", fontSize: 13, margin: "8px 0 0" }}
       >
         {t("socialNotice")}
       </Paragraph>

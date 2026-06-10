@@ -34,14 +34,14 @@ export default async function HomePage() {
         <section id="top" className="landing-hero-stage">
           <video
             className="landing-hero-video"
-            src="/assets/landing-hero-video.mp4"
             autoPlay
             muted
             loop
             playsInline
             aria-hidden="true"
-          />
-          <div className="landing-hero-video-overlay" aria-hidden="true" />
+          >
+            <source src="/assets/landing-hero-video.mp4" type="video/mp4" />
+          </video>
           <div className="landing-hero-shell">
             <LandingHeader isAuthenticated={Boolean(user)} />
             <Hero isAuthenticated={Boolean(user)} />

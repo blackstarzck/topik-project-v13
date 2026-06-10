@@ -1,7 +1,33 @@
 {
   "runDate": "2026-06-10",
-  "mode": "audit",
+  "mode": "audit-remediation",
+  "status": "in-progress",
   "targets": [
+    {
+      "folder": "04-B-01-home-dashboard",
+      "iaCode": "B-01",
+      "screen": "Home dashboard",
+      "route": "/dashboard",
+      "routeSource": "docs/Wireframe/04-B-01-home-dashboard/functional-spec.md",
+      "routeFallback": "docs/sitemap.md",
+      "referenceImages": {
+        "wireframe": "docs/Wireframe/04-B-01-home-dashboard/wireframe.png",
+        "hifi": "docs/Wireframe/04-B-01-home-dashboard/hifi.png",
+        "status": "complete"
+      },
+      "docs": {
+        "description": "present",
+        "functionalSpec": "present",
+        "screenDataSummary": "present"
+      },
+      "classification": "user-active",
+      "audience": "user",
+      "authRequirement": "authenticated user",
+      "report": "docs/design-review-result/wireframe-ui-audit/2026-06-10/04-B-01-home-dashboard.html",
+      "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/04-B-01-home-dashboard/findings.json",
+      "status": "PASS",
+      "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
+    },
     {
       "folder": "08-D-01-short-answer-writing-51",
       "iaCode": "D-01",
@@ -24,19 +50,21 @@
       "authRequirement": "authenticated user",
       "dynamicSeedRequirement": "no dynamic route id; seeded question data required",
       "modalTriggerRequirement": "D-M1 submit confirmation is triggered by the submit CTA",
-      "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request",
-      "likelySourceFiles": [
-        "src/app/(workspace)/writing/short-answer-writing-51/page.tsx",
-        "src/app/(workspace)/writing/_components/WritingQuestionRoute.tsx",
-        "src/components/writing/WritingPageContent.tsx",
-        "src/components/writing/WritingEditor.tsx",
-        "src/components/writing/QuestionPrompt.tsx",
-        "src/components/writing/ReferenceMaterials.tsx",
-        "src/components/writing/HelpPanel.tsx",
-        "src/components/app/WorkspaceShell.tsx",
-        "src/components/app/AppHeader.tsx",
-        "src/components/app/SidebarNav.tsx"
-      ]
+      "report": "docs/design-review-result/wireframe-ui-audit/2026-06-10/08-D-01-short-answer-writing-51.html",
+      "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/page-results.json",
+      "status": "PASS",
+      "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
     }
-  ]
+  ],
+  "summary": {
+    "completedPass": 2,
+    "inProgress": 0,
+    "remainingKnownActiveScreens": 32,
+    "adminFrozenOutOfScope": [
+      "21-H-01-admin-problem-management",
+      "30-X-08-organization-admin-dashboard",
+      "32-X-10-admin-user-management",
+      "37-X-15-admin-index"
+    ]
+  }
 }
