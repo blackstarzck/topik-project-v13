@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
+import { LockKeyhole } from "lucide-react";
 import { requireUser } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
@@ -57,12 +58,25 @@ export default async function PracticeWeaknessPage() {
   // #130을 피한다.
   if (isLocked(planLabel)) {
     return (
-      <div className="app-workspace-narrow">
+      <div className="app-workspace-narrow" data-testid="weakness-locked-shell">
         <PageHeader title={t("pageTitle")} />
-        <AppCard style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 40 }} aria-hidden>
-            🔒
-          </div>
+        <AppCard style={{ textAlign: "center" }} data-testid="weakness-locked-card">
+          <span
+            aria-hidden="true"
+            style={{
+              display: "inline-flex",
+              width: 48,
+              height: 48,
+              alignItems: "center",
+              justifyContent: "center",
+              border: "1px solid #dbe4f0",
+              borderRadius: 24,
+              background: "#f7fafc",
+              color: "#1668dc",
+            }}
+          >
+            <LockKeyhole size={24} strokeWidth={2} />
+          </span>
           <h2 style={{ marginTop: 8 }}>{t("lockTitle")}</h2>
           <p style={{ color: "rgba(0,0,0,0.45)" }}>
             {t("lockBody", { plan: planLabel ?? t("planFree") })}
@@ -77,6 +91,7 @@ export default async function PracticeWeaknessPage() {
             }}
           >
             <Link
+              data-testid="weakness-upgrade-plan"
               href="/paywall"
               style={{
                 background: "#1677ff",
@@ -88,6 +103,7 @@ export default async function PracticeWeaknessPage() {
               {t("upgradePlan")}
             </Link>
             <Link
+              data-testid="weakness-view-problems"
               href="/practice/problems"
               style={{
                 border: "1px solid #d9d9d9",

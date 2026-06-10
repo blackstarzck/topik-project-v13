@@ -680,12 +680,38 @@
       "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/28-X-06-password-reset/findings.json",
       "status": "PASS",
       "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
+    },
+    {
+      "folder": "29-X-07-weakness-based-recommendations",
+      "iaCode": "X-07",
+      "screen": "Weakness-based recommendations",
+      "route": "/practice/weakness",
+      "routeSource": "docs/Wireframe/29-X-07-weakness-based-recommendations/functional-spec.md",
+      "routeFallback": "docs/sitemap.md",
+      "referenceImages": {
+        "wireframe": "docs/Wireframe/29-X-07-weakness-based-recommendations/wireframe.png",
+        "hifi": "docs/Wireframe/29-X-07-weakness-based-recommendations/hifi.png",
+        "status": "complete"
+      },
+      "docs": {
+        "description": "present",
+        "functionalSpec": "present",
+        "screenDataSummary": "present"
+      },
+      "classification": "user-active",
+      "audience": "user",
+      "authRequirement": "authenticated user",
+      "dynamicSeedRequirement": "free-plan student account renders the paid-feature locked branch; paid recommendation body remains component/data-layer coverage.",
+      "report": "docs/design-review-result/wireframe-ui-audit/2026-06-10/29-X-07-weakness-based-recommendations.html",
+      "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/29-X-07-weakness-based-recommendations/findings.json",
+      "status": "PASS",
+      "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
     }
   ],
   "summary": {
-    "completedPass": 26,
+    "completedPass": 27,
     "inProgress": 0,
-    "remainingKnownActiveScreens": 8,
+    "remainingKnownActiveScreens": 7,
     "adminFrozenOutOfScope": [
       "21-H-01-admin-problem-management",
       "30-X-08-organization-admin-dashboard",

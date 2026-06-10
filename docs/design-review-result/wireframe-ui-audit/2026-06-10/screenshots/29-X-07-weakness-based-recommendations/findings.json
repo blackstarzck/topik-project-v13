@@ -1,0 +1,39 @@
+{
+  "page": "29-X-07-weakness-based-recommendations",
+  "iaCode": "X-07",
+  "route": "/practice/weakness",
+  "status": "PASS",
+  "findings": [],
+  "checks": [
+    {
+      "id": "X07-authenticated-route",
+      "status": "PASS",
+      "evidence": "Authenticated student storage reaches /practice/weakness and renders the weakness page heading."
+    },
+    {
+      "id": "X07-free-plan-lock",
+      "status": "PASS",
+      "evidence": "The free-plan exception path renders the locked recommendation card with plan context."
+    },
+    {
+      "id": "X07-lock-actions",
+      "status": "PASS",
+      "evidence": "The lock card exposes upgrade and problem-list escape actions."
+    },
+    {
+      "id": "X07-paid-body-hidden",
+      "status": "PASS",
+      "evidence": "The paid weakness analysis body is not exposed to the free-plan account."
+    },
+    {
+      "id": "X07-responsive-capture",
+      "status": "PASS",
+      "evidence": "Mobile, tablet, and desktop captures load without dev overlay, page, console, or 500-response errors."
+    }
+  ],
+  "screenshots": {
+    "mobile-360": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/29-X-07-weakness-based-recommendations/mobile-360.png",
+    "tablet-768": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/29-X-07-weakness-based-recommendations/tablet-768.png",
+    "desktop-1280": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/29-X-07-weakness-based-recommendations/desktop-1280.png"
+  }
+}
