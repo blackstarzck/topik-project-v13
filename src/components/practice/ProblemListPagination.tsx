@@ -18,12 +18,12 @@ export function ProblemListPagination({
   if (total <= pageSize) return null;
   return (
     <Pagination
+      className="problem-list-pagination"
       current={current}
       total={total}
       pageSize={pageSize}
       showSizeChanger={false}
       onChange={onChange}
-      style={{ marginTop: 24, textAlign: "center" }}
     />
   );
 }

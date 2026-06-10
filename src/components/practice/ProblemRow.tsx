@@ -1,6 +1,7 @@
 "use client";
 
 import { Badge, Button, Space, Tag, Tooltip, Typography } from "antd";
+import { FileText } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 
@@ -77,6 +78,11 @@ export function ProblemRow({
           ? tCommon("daysAgo", { days: rel.days })
           : rel.text
     : null;
+  const displayTitle =
+    row.title.length > 32 ? `${row.title.slice(0, 32)}...` : row.title;
+  const visibleTags = (Array.isArray(row.tags) ? row.tags : [])
+    .filter((tag) => !tag.startsWith("seed:") && tag !== `q${row.question_no}`)
+    .slice(0, 3);
 
   const action =
     hasPriorWork && onRetryClick ? (
@@ -103,53 +109,77 @@ export function ProblemRow({
     );
 
   return (
-    <AppStackListItem actions={action} isLast={isLast}>
-      <Space orientation="vertical" size={4} style={{ width: "100%" }}>
-        <Space wrap>
-          {row.question_no ? (
-            <Tag>{tCommon("questionNo", { no: row.question_no })}</Tag>
+    <AppStackListItem
+      actions={action}
+      className="problem-list-row"
+      isLast={isLast}
+    >
+      <div className="problem-list-row__content">
+        <span
+          className={[
+            "problem-list-row__icon",
+            row.question_no ? `is-type-${row.question_no}` : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+          aria-hidden="true"
+        >
+          <FileText size={20} />
+        </span>
+        <Space
+          className="problem-list-row__body"
+          orientation="vertical"
+          size={6}
+        >
+          <Space className="problem-list-row__titleline" wrap>
+            {row.question_no ? (
+              <Tag>{tCommon("questionNo", { no: row.question_no })}</Tag>
+            ) : null}
+            <strong className="problem-list-row__title">{displayTitle}</strong>
+            {solveState === "submitted" ? (
+              <Tag color="green">{t("solveSolved")}</Tag>
+            ) : solveState === "attempted" ? (
+              <Tag color="orange">{t("solveInProgress")}</Tag>
+            ) : null}
+          </Space>
+          {visibleTags.length > 0 ? (
+            <Space className="problem-list-row__tags" size={4} wrap>
+              {visibleTags.map((tag) => (
+                <Tag key={tag}>{tag}</Tag>
+              ))}
+            </Space>
           ) : null}
-          <span>
-            {row.title.length > 32
-              ? `${row.title.slice(0, 32)}…`
-              : row.title}
-          </span>
-          {solveState === "submitted" ? (
-            <Tag color="green">{t("solveSolved")}</Tag>
-          ) : solveState === "attempted" ? (
-            <Tag color="orange">{t("solveInProgress")}</Tag>
-          ) : null}
-        </Space>
-        <Space size="small" wrap>
-          {row.difficulty != null ? (
-            <Tag color="blue">
-              {tCommon("difficultyValue", { level: row.difficulty })}
-            </Tag>
-          ) : null}
-          <Badge
-            status={disabled ? "default" : "success"}
-            text={statusLabel}
-          />
-          {disabled && row.lifecycle_reason ? (
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              {row.lifecycle_reason}
-            </Text>
-          ) : null}
-          {/* C-02 저장 이력 (problem_attempts.attempt_count + 마지막 시도). */}
-          {attemptCount > 0 ? (
-            <Tooltip
-              title={
-                lastLabel ? t("lastAttempt", { date: lastLabel }) : undefined
-              }
-            >
+          <Space className="problem-list-row__meta" size="small" wrap>
+            {row.difficulty != null ? (
+              <Tag color="blue">
+                {tCommon("difficultyValue", { level: row.difficulty })}
+              </Tag>
+            ) : null}
+            <Badge
+              status={disabled ? "default" : "success"}
+              text={statusLabel}
+            />
+            {disabled && row.lifecycle_reason ? (
               <Text type="secondary" style={{ fontSize: 12 }}>
-                {t("attemptCount", { count: attemptCount })}
-                {lastLabel ? ` · ${lastLabel}` : ""}
+                {row.lifecycle_reason}
               </Text>
-            </Tooltip>
-          ) : null}
+            ) : null}
+            {/* C-02 저장 이력 (problem_attempts.attempt_count + 마지막 시도). */}
+            {attemptCount > 0 ? (
+              <Tooltip
+                title={
+                  lastLabel ? t("lastAttempt", { date: lastLabel }) : undefined
+                }
+              >
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                  {t("attemptCount", { count: attemptCount })}
+                  {lastLabel ? ` · ${lastLabel}` : ""}
+                </Text>
+              </Tooltip>
+            ) : null}
+          </Space>
         </Space>
-      </Space>
+      </div>
     </AppStackListItem>
   );
 }

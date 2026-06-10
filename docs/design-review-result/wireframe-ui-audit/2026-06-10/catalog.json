@@ -129,6 +129,31 @@
       "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
     },
     {
+      "folder": "06-C-02-problem-list",
+      "iaCode": "C-02",
+      "screen": "Problem list",
+      "route": "/practice/problems",
+      "routeSource": "docs/Wireframe/06-C-02-problem-list/functional-spec.md",
+      "routeFallback": "docs/sitemap.md",
+      "referenceImages": {
+        "wireframe": "docs/Wireframe/06-C-02-problem-list/wireframe.png",
+        "hifi": "docs/Wireframe/06-C-02-problem-list/hifi.png",
+        "status": "complete"
+      },
+      "docs": {
+        "description": "present",
+        "functionalSpec": "present",
+        "screenDataSummary": "present"
+      },
+      "classification": "user-active",
+      "audience": "user",
+      "authRequirement": "authenticated user",
+      "report": "docs/design-review-result/wireframe-ui-audit/2026-06-10/06-C-02-problem-list.html",
+      "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/06-C-02-problem-list/findings.json",
+      "status": "PASS",
+      "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
+    },
+    {
       "folder": "08-D-01-short-answer-writing-51",
       "iaCode": "D-01",
       "screen": "Short-answer writing 51",
@@ -157,9 +182,9 @@
     }
   ],
   "summary": {
-    "completedPass": 6,
+    "completedPass": 7,
     "inProgress": 0,
-    "remainingKnownActiveScreens": 28,
+    "remainingKnownActiveScreens": 27,
     "adminFrozenOutOfScope": [
       "21-H-01-admin-problem-management",
       "30-X-08-organization-admin-dashboard",

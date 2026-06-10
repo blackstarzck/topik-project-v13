@@ -17,7 +17,7 @@ import { FilterChips } from "./FilterChips";
 import { ProblemListControls } from "./ProblemListControls";
 import { ProblemListPagination } from "./ProblemListPagination";
 import { ProblemRow } from "./ProblemRow";
-import { ProblemTypeTabs } from "./ProblemTypeTabs";
+import { ProblemTypeFilterCards } from "./ProblemTypeFilterCards";
 import { RetryModal } from "./RetryModal";
 import {
   useUserProblemsRpc,
@@ -150,31 +150,42 @@ export function ProblemListView({ userId }: Props) {
     ) : null;
 
   return (
-    <Space orientation="vertical" size="large" style={{ width: "100%" }}>
-      <PageHeader title={t("heading")} />
+    <Space
+      className="problem-list-page"
+      orientation="vertical"
+      size="large"
+      style={{ width: "100%" }}
+    >
+      <PageHeader
+        className="problem-list-page__header"
+        title={t("heading")}
+        subtitle={t("subtitle")}
+      />
 
-      <ProblemTypeTabs
+      <ProblemTypeFilterCards
         active={filter.questionNo ?? null}
         onChange={(next) => commitFilter({ ...filter, questionNo: next })}
       />
 
-      <ProblemListControls
-        filter={filter}
-        sort={sort}
-        onFilterChange={commitFilter}
-        onSortChange={commitSort}
-      />
+      <section className="problem-list-filter-panel">
+        <ProblemListControls
+          filter={filter}
+          sort={sort}
+          onFilterChange={commitFilter}
+          onSortChange={commitSort}
+        />
 
-      <FilterChips
-        filter={filter}
-        sort={sort}
-        onFilterChange={commitFilter}
-        onSortChange={commitSort}
-        onReset={resetAll}
-      />
+        <FilterChips
+          filter={filter}
+          sort={sort}
+          onFilterChange={commitFilter}
+          onSortChange={commitSort}
+          onReset={resetAll}
+        />
+      </section>
 
       {/* §5 상단 총 건수 */}
-      {totalLabel}
+      <div className="problem-list-count">{totalLabel}</div>
 
       {list.isLoading ? (
         <Spin>
@@ -195,7 +206,7 @@ export function ProblemListView({ userId }: Props) {
         />
       ) : rows.length > 0 ? (
         <>
-          <AppStackList>
+          <AppStackList className="problem-list-rows">
             {rows.map((row, index) => (
               <ProblemRow
                 key={row.problemId}
@@ -222,13 +233,15 @@ export function ProblemListView({ userId }: Props) {
             ))}
           </AppStackList>
           {/* §5 하단 총 건수 + 페이지 이동 */}
-          {totalLabel}
-          <ProblemListPagination
-            current={page}
-            total={total}
-            pageSize={PAGE_SIZE}
-            onChange={commitPage}
-          />
+          <div className="problem-list-footer">
+            {totalLabel}
+            <ProblemListPagination
+              current={page}
+              total={total}
+              pageSize={PAGE_SIZE}
+              onChange={commitPage}
+            />
+          </div>
         </>
       ) : (
         // §2 예외 — 조합 결과 없음: 빈 결과 + 초기화 CTA.

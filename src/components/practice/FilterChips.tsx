@@ -98,7 +98,7 @@ export function FilterChips({
   const overflow = chips.length - visible.length;
 
   return (
-    <Space wrap size={4} align="center">
+    <Space className="problem-list-filter-chips" wrap size={4} align="center">
       <Text type="secondary" style={{ fontSize: 12 }}>
         {t("appliedFilters")}
       </Text>

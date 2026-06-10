@@ -52,13 +52,14 @@ export function ProblemListControls({
   }, [searchInput]);
 
   return (
-    <Space wrap size="middle" style={{ width: "100%" }} align="start">
-      <div>
+    <div className="problem-list-controls">
+      <div className="problem-list-control problem-list-control--search">
+        <Text className="problem-list-control__label">{t("searchLabel")}</Text>
         <Input.Search
           placeholder={t("searchPlaceholder")}
           allowClear
           status={searchErrorKey ? "error" : undefined}
-          style={{ width: 240 }}
+          style={{ width: "100%" }}
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
           aria-label={t("searchAria")}
@@ -72,62 +73,80 @@ export function ProblemListControls({
           </Text>
         ) : null}
       </div>
-      <Select
-        value={filter.difficulty ?? "any"}
-        style={{ width: 140 }}
-        onChange={(value) =>
-          onFilterChange({
-            ...filter,
-            difficulty: value === "any" ? null : Number(value),
-          })
-        }
-        options={[
-          { value: "any", label: t("difficultyAll") },
-          ...Array.from({ length: 5 }, (_, i) => ({
-            value: String(i + 1),
-            label: t("difficultyLevel", { level: i + 1 }),
-          })),
-        ]}
-      />
-      <Select
-        value={sort}
-        style={{ width: 160 }}
-        onChange={(value) => onSortChange(value as ProblemSort)}
-        options={[
-          { value: "newest", label: t("sortNewest") },
-          { value: "oldest", label: t("sortOldest") },
-          { value: "difficulty-asc", label: t("sortDifficultyAsc") },
-          { value: "difficulty-desc", label: t("sortDifficultyDesc") },
-        ]}
-      />
-      {/* Phase 7-D Task 12 (P1-8) — IA 4 filter 완전화 */}
-      <Select
-        value={filter.solveStatus ?? "all"}
-        style={{ width: 140 }}
-        aria-label={t("solveStatusAria")}
-        onChange={(value) =>
-          onFilterChange({
-            ...filter,
-            solveStatus: value as SolveStatusFilter,
-          })
-        }
-        options={[
-          { value: "all", label: t("solveAll") },
-          { value: "unsolved", label: t("solveUnsolved") },
-          { value: "inProgress", label: t("solveInProgress") },
-          { value: "solved", label: t("solveSolved") },
-        ]}
-      />
-      <Space size={6}>
-        <Switch
-          checked={filter.recommended === true}
-          onChange={(checked) =>
-            onFilterChange({ ...filter, recommended: checked })
+      <div className="problem-list-control">
+        <Text className="problem-list-control__label">
+          {t("difficultyLabel")}
+        </Text>
+        <Select
+          value={filter.difficulty ?? "any"}
+          style={{ width: "100%" }}
+          onChange={(value) =>
+            onFilterChange({
+              ...filter,
+              difficulty: value === "any" ? null : Number(value),
+            })
           }
-          aria-label={t("recommendedOnlyAria")}
+          options={[
+            { value: "any", label: t("difficultyAll") },
+            ...Array.from({ length: 5 }, (_, i) => ({
+              value: String(i + 1),
+              label: t("difficultyLevel", { level: i + 1 }),
+            })),
+          ]}
         />
-        <Text>{t("recommendedOnly")}</Text>
-      </Space>
-    </Space>
+      </div>
+      <div className="problem-list-control">
+        <Text className="problem-list-control__label">{t("sortLabel")}</Text>
+        <Select
+          value={sort}
+          style={{ width: "100%" }}
+          onChange={(value) => onSortChange(value as ProblemSort)}
+          options={[
+            { value: "newest", label: t("sortNewest") },
+            { value: "oldest", label: t("sortOldest") },
+            { value: "difficulty-asc", label: t("sortDifficultyAsc") },
+            { value: "difficulty-desc", label: t("sortDifficultyDesc") },
+          ]}
+        />
+      </div>
+      {/* Phase 7-D Task 12 (P1-8) — IA 4 filter 완전화 */}
+      <div className="problem-list-control">
+        <Text className="problem-list-control__label">
+          {t("solveStatusLabel")}
+        </Text>
+        <Select
+          value={filter.solveStatus ?? "all"}
+          style={{ width: "100%" }}
+          aria-label={t("solveStatusAria")}
+          onChange={(value) =>
+            onFilterChange({
+              ...filter,
+              solveStatus: value as SolveStatusFilter,
+            })
+          }
+          options={[
+            { value: "all", label: t("solveAll") },
+            { value: "unsolved", label: t("solveUnsolved") },
+            { value: "inProgress", label: t("solveInProgress") },
+            { value: "solved", label: t("solveSolved") },
+          ]}
+        />
+      </div>
+      <div className="problem-list-control problem-list-control--switch">
+        <Text className="problem-list-control__label">
+          {t("recommendationLabel")}
+        </Text>
+        <Space size={8}>
+          <Switch
+            checked={filter.recommended === true}
+            onChange={(checked) =>
+              onFilterChange({ ...filter, recommended: checked })
+            }
+            aria-label={t("recommendedOnlyAria")}
+          />
+          <Text>{t("recommendedOnly")}</Text>
+        </Space>
+      </div>
+    </div>
   );
 }
