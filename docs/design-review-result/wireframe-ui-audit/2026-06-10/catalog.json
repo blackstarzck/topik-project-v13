@@ -4,6 +4,56 @@
   "status": "in-progress",
   "targets": [
     {
+      "folder": "01-A-01-sign-up",
+      "iaCode": "A-01",
+      "screen": "Sign up",
+      "route": "/sign-up",
+      "routeSource": "docs/Wireframe/01-A-01-sign-up/functional-spec.md",
+      "routeFallback": "docs/sitemap.md",
+      "referenceImages": {
+        "wireframe": "docs/Wireframe/01-A-01-sign-up/wireframe.png",
+        "hifi": "docs/Wireframe/01-A-01-sign-up/hifi.png",
+        "status": "complete"
+      },
+      "docs": {
+        "description": "present",
+        "functionalSpec": "present",
+        "screenDataSummary": "present"
+      },
+      "classification": "public-active",
+      "audience": "public",
+      "authRequirement": "none",
+      "report": "docs/design-review-result/wireframe-ui-audit/2026-06-10/01-A-01-sign-up.html",
+      "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/01-A-01-sign-up/findings.json",
+      "status": "PASS",
+      "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
+    },
+    {
+      "folder": "02-A-02-login",
+      "iaCode": "A-02",
+      "screen": "Login",
+      "route": "/login",
+      "routeSource": "docs/Wireframe/02-A-02-login/functional-spec.md",
+      "routeFallback": "docs/sitemap.md",
+      "referenceImages": {
+        "wireframe": "docs/Wireframe/02-A-02-login/wireframe.png",
+        "hifi": "docs/Wireframe/02-A-02-login/hifi.png",
+        "status": "complete"
+      },
+      "docs": {
+        "description": "present",
+        "functionalSpec": "present",
+        "screenDataSummary": "present"
+      },
+      "classification": "public-active",
+      "audience": "public",
+      "authRequirement": "none",
+      "report": "docs/design-review-result/wireframe-ui-audit/2026-06-10/02-A-02-login.html",
+      "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/02-A-02-login/findings.json",
+      "status": "PASS",
+      "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
+    },
+    {
       "folder": "04-B-01-home-dashboard",
       "iaCode": "B-01",
       "screen": "Home dashboard",
@@ -57,9 +107,9 @@
     }
   ],
   "summary": {
-    "completedPass": 2,
+    "completedPass": 4,
     "inProgress": 0,
-    "remainingKnownActiveScreens": 32,
+    "remainingKnownActiveScreens": 30,
     "adminFrozenOutOfScope": [
       "21-H-01-admin-problem-management",
       "30-X-08-organization-admin-dashboard",

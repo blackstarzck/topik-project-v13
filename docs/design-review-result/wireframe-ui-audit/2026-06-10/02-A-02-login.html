@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <title>Wireframe UI Audit - 02-A-02-login - 2026-06-10</title>
+    <style>
+      body {
+        margin: 32px;
+        background: #ffffff;
+        color: #172033;
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+      }
+
+      h1,
+      h2 {
+        letter-spacing: 0;
+      }
+
+      table {
+        width: 100%;
+        margin: 12px 0 28px;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+
+      th,
+      td {
+        padding: 10px 12px;
+        border: 1px solid #d9e1ef;
+        vertical-align: top;
+      }
+
+      th {
+        background: #f4f7fb;
+        text-align: left;
+      }
+
+      code {
+        border-radius: 4px;
+        background: #f3f4f6;
+        padding: 1px 4px;
+      }
+
+      figure {
+        margin: 22px 0;
+      }
+
+      img {
+        max-width: 100%;
+        border: 1px solid #d9e1ef;
+        border-radius: 8px;
+      }
+
+      figcaption {
+        margin-top: 8px;
+        color: #667085;
+        font-size: 13px;
+      }
+
+      .verdict {
+        border: 1px solid #8fd6ad;
+        border-radius: 8px;
+        background: #edfdf3;
+        padding: 14px 16px;
+      }
+
+      .note {
+        border: 1px solid #d9e1ef;
+        border-radius: 8px;
+        background: #f8fafc;
+        padding: 12px 14px;
+      }
+
+      .sev-pass {
+        display: inline-block;
+        border-radius: 999px;
+        background: #dff7ea;
+        color: #067647;
+        padding: 2px 10px;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Wireframe UI Audit - 02-A-02-login - 2026-06-10</h1>
+    <p><strong>Scope:</strong> A-02 Login route <code>/login</code></p>
+    <p><strong>Mode:</strong> audit-remediation</p>
+    <p><strong>Coverage:</strong> public active route, reference wireframe and hifi complete.</p>
+
+    <h2>Verdict</h2>
+    <p class="verdict">
+      <strong>PASS.</strong> The current <code>/login</code> screen satisfies the active A-02 wireframe and hifi intent for this
+      audit. It now uses a branded split entry layout, welcome/value copy, mascot and benefit area, password and magic-link
+      login modes, password reset and sign-up routes, and an honest disabled Google/social surface. 360/768/1280 captures
+      all returned status 200 with no Next error overlay and console error count 0.
+    </p>
+
+    <p class="note">
+      Accepted variance: the hifi shows language and remember-me affordances, but the active A-02 functional spec does not
+      require them. Real OAuth wiring is also outside this remediation; the screen exposes the social branch as disabled
+      and explains the current email/magic-link limitation.
+    </p>
+
+    <h2>Visual Delta Summary</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Area</th>
+          <th>Reference intent</th>
+          <th>Current implementation</th>
+          <th>Delta</th>
+          <th>User impact</th>
+          <th>Severity</th>
+          <th>Next action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>brand message</td>
+          <td>Show a public welcome screen with Talkpik identity and TOPIK-writing value before the form.</td>
+          <td>Talkpik AI brand, AI TOPIK writing eyebrow, welcome headline, and value body copy are placed in the hero.</td>
+          <td>The hifi public-auth split structure is reflected.</td>
+          <td>Returning users understand they are re-entering the learning product, not a generic auth form.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>No further action.</td>
+        </tr>
+        <tr>
+          <td>mascot and benefit area</td>
+          <td>Use a mascot/support area and concise learning benefits to make the login screen feel product-specific.</td>
+          <td>Pencil mascot fallback, helper note, and three benefit items are visible on all audited breakpoints.</td>
+          <td>Reference regions for visual support and learning benefits are represented.</td>
+          <td>The page keeps motivation and context while preserving a short login path.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>No further action.</td>
+        </tr>
+        <tr>
+          <td>login form</td>
+          <td>Provide email/password login with clear submit behavior and an alternate auth path where supported.</td>
+          <td>Email/password login remains intact, and the existing magic-link mode is available through the segmented control.</td>
+          <td>The required auth behavior is retained while matching the hifi panel treatment.</td>
+          <td>Users can log in with password or choose the documented magic-link branch without losing form clarity.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>No further action.</td>
+        </tr>
+        <tr>
+          <td>recovery and sign-up routes</td>
+          <td>Expose password recovery and account creation routes from the login screen.</td>
+          <td>DOM inspection confirms <code>/password-reset</code> and <code>/sign-up</code> links are present.</td>
+          <td>Escape and recovery paths align with the public auth flow.</td>
+          <td>Users are not trapped if they forgot a password or need a new account.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>No further action.</td>
+        </tr>
+        <tr>
+          <td>social login surface</td>
+          <td>Represent the hifi social-login branch without implying unavailable provider wiring.</td>
+          <td>A disabled Google login button and preparation notice are shown after an "or" divider.</td>
+          <td>The social branch is visible and honest about current product capability.</td>
+          <td>Users understand that email or magic-link login is currently available.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>Wire real OAuth only when product/auth scope opens it.</td>
+        </tr>
+        <tr>
+          <td>responsive render health</td>
+          <td>Desktop split and tablet/mobile stacked layouts should render without overflow or text/button collision.</td>
+          <td>1280 renders as split hero/form; 768 and 360 stack hero, benefits, and form in a readable order.</td>
+          <td>All audited breakpoints are stable.</td>
+          <td>Login remains usable and visually aligned across desktop, tablet, and mobile.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>Local Next dev indicator is excluded from product UI severity.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>First Screen Delta</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Viewport</th>
+          <th>Expected first screen</th>
+          <th>Current first screen</th>
+          <th>Delta</th>
+          <th>Impact</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1280 desktop</td>
+          <td>Left welcome/mascot/benefits and right login form/social branch.</td>
+          <td>Hero, mascot, benefit strip, login form, password reset, disabled Google surface, and sign-up link are visible.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>Desktop matches the intended split auth entry.</td>
+        </tr>
+        <tr>
+          <td>768 tablet</td>
+          <td>Hero and form should stack or adapt without horizontal overflow.</td>
+          <td>Hero panel and form panel stack cleanly with preserved CTA order.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>Tablet users get the same content priority without cramped columns.</td>
+        </tr>
+        <tr>
+          <td>360 mobile</td>
+          <td>Brand/value, benefits, form, and CTA should remain readable in one column.</td>
+          <td>Mobile capture shows brand, hero, mascot, benefits, sign-up link, form, CTA, password reset, and disabled Google surface.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>The login path remains readable and touch-friendly on narrow screens.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Findings</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>id</th>
+          <th>severity</th>
+          <th>route</th>
+          <th>category</th>
+          <th>claim</th>
+          <th>evidence</th>
+          <th>next action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>A02-PASS-001</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>/login</td>
+          <td>brand-and-value-message</td>
+          <td>The login page now presents a branded public entry screen.</td>
+          <td><code>src/app/login/page.tsx</code>, <code>src/styles/global.css</code>, current 1280/768/360 captures.</td>
+          <td>No further action.</td>
+        </tr>
+        <tr>
+          <td>A02-PASS-002</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>/login</td>
+          <td>login-form-and-modes</td>
+          <td>Password login and magic-link login remain available with validation and submit states.</td>
+          <td><code>src/components/auth/LoginForm.tsx</code>, LoginForm component test 4 passed.</td>
+          <td>No further action.</td>
+        </tr>
+        <tr>
+          <td>A02-PASS-003</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>/login</td>
+          <td>recovery-and-escape-routes</td>
+          <td>Password reset and sign-up routes are present and correctly linked.</td>
+          <td>DOM inspection: <code>/password-reset</code> and <code>/sign-up</code>.</td>
+          <td>No further action.</td>
+        </tr>
+        <tr>
+          <td>A02-PASS-004</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>/login</td>
+          <td>social-login-surface</td>
+          <td>The social branch is visible as a disabled Google button with explanatory copy.</td>
+          <td>DOM inspection: Google button disabled true.</td>
+          <td>OAuth provider wiring remains separate scope.</td>
+        </tr>
+        <tr>
+          <td>A02-PASS-005</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>/login</td>
+          <td>responsive-render</td>
+          <td>360/768/1280 route render and scoped A-02 E2E are stable.</td>
+          <td>render-shot status 200/errorOverlay false/consoleErr 0; Playwright A-02 7 passed.</td>
+          <td>No further action.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Verification</h2>
+    <table>
+      <tbody>
+        <tr>
+          <th>messages JSON parse</th>
+          <td>Passed for <code>messages/ko.json</code>, <code>messages/en.json</code>, and <code>messages/vi.json</code>.</td>
+        </tr>
+        <tr>
+          <th>component test</th>
+          <td><code>pnpm test tests/components/auth/LoginForm.test.tsx</code> passed: 1 file, 4 tests.</td>
+        </tr>
+        <tr>
+          <th>lint</th>
+          <td><code>pnpm lint</code> passed with 0 errors and 11 warnings outside this A-02 scope.</td>
+        </tr>
+        <tr>
+          <th>render capture</th>
+          <td><code>render-shot</code> captured 360/768/1280 at <code>/login</code>; all status 200, errorOverlay false, consoleErr 0.</td>
+        </tr>
+        <tr>
+          <th>DOM inspection</th>
+          <td>Confirmed h1, <code>/sign-up</code>, <code>/password-reset</code>, disabled Google button, email autocomplete input, and password input.</td>
+        </tr>
+        <tr>
+          <th>scoped E2E</th>
+          <td><code>pnpm exec playwright test tests/e2e/screens/screens-public.spec.ts -g "A-02" --project=mobile-360 --project=tablet-768 --project=desktop-1280</code> passed: 7 tests.</td>
+        </tr>
+        <tr>
+          <th>repo typecheck</th>
+          <td><code>pnpm typecheck</code> is currently blocked by unrelated dirty landing errors in <code>src/components/landing/LandingContent.tsx</code>; the failure output references no A-02 changed file.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Evidence Images</h2>
+    <figure>
+      <img src="screenshots/02-A-02-login/current-1280.png" alt="A-02 current desktop capture" />
+      <figcaption>Current desktop capture, 1280px.</figcaption>
+    </figure>
+    <figure>
+      <img src="screenshots/02-A-02-login/current-768.png" alt="A-02 current tablet capture" />
+      <figcaption>Current tablet capture, 768px.</figcaption>
+    </figure>
+    <figure>
+      <img src="screenshots/02-A-02-login/current-360.png" alt="A-02 current mobile capture" />
+      <figcaption>Current mobile capture, 360px.</figcaption>
+    </figure>
+    <figure>
+      <img src="screenshots/02-A-02-login/reference-hifi.png" alt="A-02 reference hifi" />
+      <figcaption>Reference hifi.</figcaption>
+    </figure>
+    <figure>
+      <img src="screenshots/02-A-02-login/reference-wireframe.png" alt="A-02 reference wireframe" />
+      <figcaption>Reference wireframe.</figcaption>
+    </figure>
+  </body>
+</html>

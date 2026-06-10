@@ -1,11 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { App, Alert, Button, Form, Input, Segmented, Typography } from "antd";
+import {
+  App,
+  Alert,
+  Button,
+  Divider,
+  Form,
+  Input,
+  Segmented,
+  Typography,
+} from "antd";
 import type { FormInstance } from "antd";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { ArrowRight, Mail } from "lucide-react";
 
 import { buildAuthRedirectUrl } from "@/lib/auth/redirect-url";
 import { mapSupabaseErrorCode } from "@/lib/auth/error-mapping";
@@ -134,9 +144,7 @@ export function LoginForm() {
     const { error } = await supabase.auth.signInWithOtp({
       email: values.email,
       options: {
-        emailRedirectTo: buildAuthRedirectUrl(
-          "/auth/callback?next=/dashboard",
-        ),
+        emailRedirectTo: buildAuthRedirectUrl("/auth/callback?next=/dashboard"),
       },
     });
     setSubmitting(false);
@@ -235,6 +243,8 @@ export function LoginForm() {
               htmlType="submit"
               block
               loading={submitting}
+              icon={<ArrowRight size={16} aria-hidden="true" />}
+              iconPlacement="end"
             >
               {t("submit")}
             </Button>
@@ -266,12 +276,34 @@ export function LoginForm() {
               htmlType="submit"
               block
               loading={submitting}
+              icon={<ArrowRight size={16} aria-hidden="true" />}
+              iconPlacement="end"
             >
               {t("magicLinkSubmit")}
             </Button>
           </Form.Item>
         </Form>
       )}
+
+      <Divider plain style={{ margin: "16px 0 12px" }}>
+        {t("socialDivider")}
+      </Divider>
+
+      <Button
+        block
+        disabled
+        icon={<Mail size={16} aria-hidden="true" />}
+        className="signup-social-button"
+      >
+        {t("socialGoogle")}
+      </Button>
+
+      <Paragraph
+        type="secondary"
+        style={{ textAlign: "center", fontSize: 13, margin: "8px 0 0" }}
+      >
+        {t("socialNotice")}
+      </Paragraph>
     </div>
   );
 }
