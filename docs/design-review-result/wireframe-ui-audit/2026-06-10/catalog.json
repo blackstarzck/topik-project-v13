@@ -498,12 +498,37 @@
       "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/19-F-M1-pdf-export-modal/findings.json",
       "status": "PASS",
       "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
+    },
+    {
+      "folder": "20-G-01-language-settings",
+      "iaCode": "G-01",
+      "screen": "Language settings",
+      "route": "/settings/language",
+      "routeSource": "docs/Wireframe/20-G-01-language-settings/functional-spec.md",
+      "routeFallback": "docs/sitemap.md",
+      "referenceImages": {
+        "wireframe": "docs/Wireframe/20-G-01-language-settings/wireframe.png",
+        "hifi": "docs/Wireframe/20-G-01-language-settings/hifi.png",
+        "status": "complete"
+      },
+      "docs": {
+        "description": "present",
+        "functionalSpec": "present",
+        "screenDataSummary": "present"
+      },
+      "classification": "user-active",
+      "audience": "user",
+      "authRequirement": "authenticated user",
+      "report": "docs/design-review-result/wireframe-ui-audit/2026-06-10/20-G-01-language-settings.html",
+      "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/20-G-01-language-settings/findings.json",
+      "status": "PASS",
+      "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
     }
   ],
   "summary": {
-    "completedPass": 19,
+    "completedPass": 20,
     "inProgress": 0,
-    "remainingKnownActiveScreens": 15,
+    "remainingKnownActiveScreens": 14,
     "adminFrozenOutOfScope": [
       "21-H-01-admin-problem-management",
       "30-X-08-organization-admin-dashboard",

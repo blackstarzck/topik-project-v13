@@ -3,34 +3,42 @@
 ## 1. 메타
 - **IA / 라우트**: G-01 / `/settings/language`
 - **audience**: user
-- **캡처 상태**: rendered
+- **상태**: PASS
 - **host**: 단독 페이지
 
-## 2. 캡처 증거
-- 스크린샷: `.design-review-shots/20260609/20-G-01-language-settings-{360,768,1280}.png`
-- 렌더 헬스(`_health.json`): HTTP 200, 콘솔 에러 0, 에러 오버레이 없음.
+## 2. 보정 요약
+- 기존 리뷰의 결론대로 P0/P1/P2 이슈는 없었다.
+- 회귀 검증을 위해 주요 영역에 안정적인 test id를 추가했다: `language-settings-form`, `language-ui-radio`, `language-learning-card`, `language-learning-radio`, `language-content-card`, `language-feedback-display`, `language-example-difficulty`, `language-explanation-length`, `language-help-card`, `language-help-item`, `language-unsupported-notice`, `language-save`.
+- G-01 전용 e2e를 추가해 UI 언어 옵션 수, 학습 언어 옵션 수, 콘텐츠 설정 3그룹, 도움말 3항목, 변경 전 저장 disabled 상태를 검증했다.
 
 ## 3. Layer 1 — SOT 정합 리뷰
 
-| 항목 | 요소/상태 | 판정 | 근거 |
+| 항목 | 요구사항 | 판정 | 근거 |
 | --- | --- | --- | --- |
-| UI 언어 선택(#2) | 원어 병기, 6개 이하 | 일치 | 캡처: 한국어 (Korean)/English (English)/Tiếng Việt (Vietnamese) 라디오 + 설명 |
-| 학습 언어 선택(#3) | 콘텐츠 기준 언어, 번역 없음 안내 | 일치 | 캡처: UI 언어 따르기/한국어/English/Tiếng Việt + "번역 없으면 기본 언어로 표시" |
-| 콘텐츠 설정(#4) | 옵션 그룹 3개 이하, 임시 상태 | 일치 | 캡처: 피드백 표시(자세히/요약)·예문 난이도(쉬움/보통/어려움)·해설 길이(짧게/보통/자세히) = 3그룹 |
-| 도움말(#5) | 3항목 이하, 60자 이하 | 일치 | 캡처: UI/학습/콘텐츠 설명 3항목 |
-| 저장(#6) | 변경 없으면 비활성 | 일치 | 캡처: "저장" 비활성(변경 전) |
+| 학습자 사이드 내비 (#1) | 설정 위치 유지, 인증 필요 | 일치 | `/settings/language` 인증 storage state 접근, `/login` 리다이렉트 없음 |
+| UI 언어 선택 (#2) | 언어명/자어 병기, 옵션 6개 이하, 즉시 미리보기 | 일치 | UI 언어 radio 3개(ko/en/vi), 변경 전 저장 disabled |
+| 학습 언어 선택 (#3) | 학습 콘텐츠 기준 언어 설정, 번역 없음 안내 | 일치 | follow UI + ko/en/vi radio 4개 |
+| 콘텐츠 설정 (#4) | 옵션 그룹 3개 이하, 저장 전 임시 상태 | 일치 | 피드백 표시, 예문 난이도, 해설 길이 3그룹 |
+| 안내말 (#5) | 3항목 이하, 각 항목 60자 이하 | 일치 | 도움말 항목 3개 |
+| 저장 (#6) | 변경 없으면 disabled, 저장 중 중복 클릭 차단 | 일치 | `language-save` 초기 disabled, `saving` 상태에서 Form disabled |
 
-**종합 verdict: 일치 (강)** — 6개 영역 모두 명세 충족, 3개 지원 언어(ko/en/vi) 정렬.
+**종합 verdict: PASS.**
 
-## 4. Layer 2 — 멀티 에이전트 독립 분석
+## 4. 검증 증거
+- 산출물: `docs/design-review-result/wireframe-ui-audit/2026-06-10/20-G-01-language-settings.html`
+- 구조화 결과: `docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/20-G-01-language-settings/findings.json`
+- 현재 캡처 데이터: `docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/20-G-01-language-settings/current.json`
+- 스크린샷:
+  - `docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/20-G-01-language-settings/mobile-360.png`
+  - `docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/20-G-01-language-settings/tablet-768.png`
+  - `docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/20-G-01-language-settings/desktop-1280.png`
 
-- **콘텐츠/i18n (우수)**: "현재 한국어·English·Tiếng Việt 지원, 그 외 예정" 안내로 지원 범위 정직. UI 언어 vs 학습 언어 vs 콘텐츠를 명확히 분리.
-- **UX/IA (양호)**: 옵션 그룹화·도움말로 각 설정 영향 범위 설명. 저장 전 임시 상태.
-- **상태 커버리지 (양호)**: 변경 없으면 저장 비활성. "즉시 미리보기"(SOT #2)는 라디오 선택 시 동작 — UNVERIFIED-LIVE(저장 안 함).
-- **반응형/접근성 (양호)**: 1280 단일 컬럼, 라디오/버튼 그룹 라벨 존재.
-- **적대적 검증**: "일치(강)" 반증 시도 → 반증 실패. 6영역 모두 캡처로 확인.
+## 5. 실행 검증
+- `pnpm exec eslint src/components/settings/LanguageForm.tsx tests/e2e/screens/language-settings.spec.ts`
+- `pnpm exec playwright test tests/e2e/screens/language-settings.spec.ts --project=mobile-360 --project=tablet-768 --project=desktop-1280 --no-deps`
+- G-01 캡처 생성 스크립트: 모바일/태블릿/데스크톱 uiRadioCount 3, learningRadioCount 4, helpItemCount 3, console/page error 0
 
-## 5. 결론 — 개선안
-- **P0/P1/P2 없음.** 언어 설정은 명세를 충실히 구현하고 지원 범위를 정직하게 안내. (선택: "즉시 미리보기" 동작을 저장 흐름으로 한 번 실측)
-
-> 참고: 코드 미수정. 현재 상태 양호.
+## 6. 검증 제한
+- 전체 `pnpm exec tsc --noEmit --pretty false`는 현재 worktree의 unrelated 인증/캐릭터 변경에서 실패했다.
+- 전체 `pnpm lint`는 현재 worktree의 unrelated `tests/components/auth/AnimatedAuthCharacters.test.tsx` ENOENT로 중단됐다.
+- 기본 Playwright setup 프로젝트는 unrelated 로그인 화면 변경으로 `input[autocomplete="email"]` selector를 찾지 못해 실패한다. G-01 대상 검증은 기존 `tests/e2e/auth-state/student.json`을 사용하는 `--no-deps` 실행으로 확인했다.

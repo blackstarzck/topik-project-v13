@@ -1,0 +1,68 @@
+{
+  "page": "20-G-01-language-settings",
+  "route": "/settings/language",
+  "capturedAt": "2026-06-10T11:01:02.470Z",
+  "status": "PASS",
+  "captures": [
+    {
+      "viewport": "mobile-360",
+      "size": {
+        "width": 360,
+        "height": 720
+      },
+      "url": "http://127.0.0.1:3000/settings/language",
+      "uiRadioCount": 3,
+      "learningRadioCount": 4,
+      "helpItemCount": 3,
+      "saveDisabled": true,
+      "contentControlsVisible": [
+        true,
+        true,
+        true
+      ],
+      "unsupportedNoticeVisible": true,
+      "consoleErrors": [],
+      "screenshot": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/20-G-01-language-settings/mobile-360.png"
+    },
+    {
+      "viewport": "tablet-768",
+      "size": {
+        "width": 768,
+        "height": 1024
+      },
+      "url": "http://127.0.0.1:3000/settings/language",
+      "uiRadioCount": 3,
+      "learningRadioCount": 4,
+      "helpItemCount": 3,
+      "saveDisabled": true,
+      "contentControlsVisible": [
+        true,
+        true,
+        true
+      ],
+      "unsupportedNoticeVisible": true,
+      "consoleErrors": [],
+      "screenshot": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/20-G-01-language-settings/tablet-768.png"
+    },
+    {
+      "viewport": "desktop-1280",
+      "size": {
+        "width": 1280,
+        "height": 800
+      },
+      "url": "http://127.0.0.1:3000/settings/language",
+      "uiRadioCount": 3,
+      "learningRadioCount": 4,
+      "helpItemCount": 3,
+      "saveDisabled": true,
+      "contentControlsVisible": [
+        true,
+        true,
+        true
+      ],
+      "unsupportedNoticeVisible": true,
+      "consoleErrors": [],
+      "screenshot": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/20-G-01-language-settings/desktop-1280.png"
+    }
+  ]
+}

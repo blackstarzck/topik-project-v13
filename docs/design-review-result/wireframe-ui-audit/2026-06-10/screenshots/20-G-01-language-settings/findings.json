@@ -1,0 +1,39 @@
+{
+  "page": "20-G-01-language-settings",
+  "iaCode": "G-01",
+  "route": "/settings/language",
+  "status": "PASS",
+  "findings": [],
+  "checks": [
+    {
+      "id": "G01-ui-language",
+      "status": "PASS",
+      "evidence": "UI language selector exposes exactly 3 supported locale choices."
+    },
+    {
+      "id": "G01-learning-language",
+      "status": "PASS",
+      "evidence": "Learning language selector exposes follow UI plus ko/en/vi choices."
+    },
+    {
+      "id": "G01-content-options",
+      "status": "PASS",
+      "evidence": "Content settings are grouped into feedback display, example difficulty, and explanation length."
+    },
+    {
+      "id": "G01-help",
+      "status": "PASS",
+      "evidence": "Impact/help copy is limited to 3 guidance items."
+    },
+    {
+      "id": "G01-save",
+      "status": "PASS",
+      "evidence": "Save CTA is disabled when no setting has changed."
+    }
+  ],
+  "screenshots": {
+    "mobile-360": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/20-G-01-language-settings/mobile-360.png",
+    "tablet-768": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/20-G-01-language-settings/tablet-768.png",
+    "desktop-1280": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/20-G-01-language-settings/desktop-1280.png"
+  }
+}

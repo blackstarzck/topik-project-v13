@@ -234,11 +234,17 @@ export function LanguageForm({ userId, initialLocale }: Props) {
   }
 
   return (
-    <Form layout="vertical" onFinish={handleFinish} disabled={saving}>
+    <Form
+      data-testid="language-settings-form"
+      layout="vertical"
+      onFinish={handleFinish}
+      disabled={saving}
+    >
       <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
         {/* Region 2: UI 언어 선택 */}
         <Form.Item label={t("uiLanguageLabel")} required style={{ marginBottom: 0 }}>
           <Radio.Group
+            data-testid="language-ui-radio"
             value={locale}
             onChange={(e) => setLocale(e.target.value as Locale)}
             aria-label={t("uiLanguageLabel")}
@@ -256,7 +262,11 @@ export function LanguageForm({ userId, initialLocale }: Props) {
         </Paragraph>
 
         {/* Region 3: 학습 언어 선택 (설명·예시·번역 보조 기준 언어) */}
-        <AppCard size="small" title={t("learningCardTitle")}>
+        <AppCard
+          data-testid="language-learning-card"
+          size="small"
+          title={t("learningCardTitle")}
+        >
           {contentLoad.status === "loading" ? (
             <Skeleton active paragraph={{ rows: 2 }} />
           ) : contentLoad.status === "error" ? (
@@ -273,6 +283,7 @@ export function LanguageForm({ userId, initialLocale }: Props) {
               extra={t("learningFieldExtra")}
             >
               <Radio.Group
+                data-testid="language-learning-radio"
                 value={learningLocale ?? "follow"}
                 onChange={(e) => {
                   const v = e.target.value as LearningLocale | "follow";
@@ -292,7 +303,11 @@ export function LanguageForm({ userId, initialLocale }: Props) {
         </AppCard>
 
         {/* Region 4: 콘텐츠 설정 (피드백 표시 · 예문 난이도 · 해설 길이) */}
-        <AppCard size="small" title={t("contentCardTitle")}>
+        <AppCard
+          data-testid="language-content-card"
+          size="small"
+          title={t("contentCardTitle")}
+        >
           {contentLoad.status === "loading" ? (
             <Skeleton active paragraph={{ rows: 3 }} />
           ) : contentLoad.status === "error" ? (
@@ -306,6 +321,7 @@ export function LanguageForm({ userId, initialLocale }: Props) {
             <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
               <Form.Item label={t("feedbackDisplayLabel")} style={{ marginBottom: 0 }}>
                 <Segmented
+                  data-testid="language-feedback-display"
                   value={
                     contentPrefs.feedback_display ??
                     CONTENT_PREF_DEFAULTS.feedback_display
@@ -321,6 +337,7 @@ export function LanguageForm({ userId, initialLocale }: Props) {
               </Form.Item>
               <Form.Item label={t("exampleDifficultyLabel")} style={{ marginBottom: 0 }}>
                 <Segmented
+                  data-testid="language-example-difficulty"
                   value={
                     contentPrefs.example_difficulty ??
                     CONTENT_PREF_DEFAULTS.example_difficulty
@@ -340,6 +357,7 @@ export function LanguageForm({ userId, initialLocale }: Props) {
               </Form.Item>
               <Form.Item label={t("explanationLengthLabel")} style={{ marginBottom: 0 }}>
                 <Segmented
+                  data-testid="language-explanation-length"
                   value={
                     contentPrefs.explanation_length ??
                     CONTENT_PREF_DEFAULTS.explanation_length
@@ -377,26 +395,36 @@ export function LanguageForm({ userId, initialLocale }: Props) {
         </AppCard>
 
         {/* Region 5: 도움말 (언어 설정 영향 범위 안내) */}
-        <AppCard size="small" title={t("helpCardTitle")}>
+        <AppCard
+          data-testid="language-help-card"
+          size="small"
+          title={t("helpCardTitle")}
+        >
           <ul style={{ margin: 0, paddingLeft: 18 }}>
-            <li>
+            <li data-testid="language-help-item">
               <Text type="secondary">{t("helpUiScope")}</Text>
             </li>
-            <li>
+            <li data-testid="language-help-item">
               <Text type="secondary">{t("helpLearningScope")}</Text>
             </li>
-            <li>
+            <li data-testid="language-help-item">
               <Text type="secondary">{t("helpIncremental")}</Text>
             </li>
           </ul>
         </AppCard>
 
         {/* Region 2 예외: 미지원 언어 안내 */}
-        <Alert type="info" showIcon title={t("unsupportedNotice")} />
+        <Alert
+          data-testid="language-unsupported-notice"
+          type="info"
+          showIcon
+          title={t("unsupportedNotice")}
+        />
 
         {/* Region 6: 저장 (변경값 없으면 비활성, 저장 중 중복 클릭 차단) */}
         <Form.Item style={{ marginBottom: 0 }}>
           <Button
+            data-testid="language-save"
             type="primary"
             htmlType="submit"
             loading={saving}
