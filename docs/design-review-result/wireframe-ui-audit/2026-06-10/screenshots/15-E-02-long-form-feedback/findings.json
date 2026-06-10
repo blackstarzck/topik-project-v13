@@ -1,0 +1,21 @@
+{
+  "iaCode": "E-02",
+  "status": "PASS",
+  "findings": [],
+  "evidence": {
+    "route": "/writing/feedback/long/ee04234a-cfdc-4ea7-a904-c7f98e222814",
+    "viewports": [
+      "mobile-360",
+      "tablet-768",
+      "desktop-1280"
+    ],
+    "statusOkAll": true,
+    "scoreSummaryVisibleAll": true,
+    "dimensionGridHiddenAll": true,
+    "sentenceFeedbackVisibleAll": true,
+    "detailPanelWithinLimitAll": true,
+    "recommendationsWithinLimitAll": true,
+    "visibleCtaWithinLimitAll": true,
+    "noConsoleErrors": true
+  }
+}

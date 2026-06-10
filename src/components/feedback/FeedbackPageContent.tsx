@@ -20,6 +20,8 @@ type Props = {
   submission: WritingSubmissionRow;
   bundle: FeedbackBundle | null;
   withSentences: boolean;
+  showSubmissionMeta?: boolean;
+  showDimensionGrid?: boolean;
   dimensionCardLimit?: number;
   showDetailPanel?: boolean;
   retryLabelKey?: "retryDefault" | "retryWriting";
@@ -45,6 +47,8 @@ export function FeedbackPageContent({
   submission,
   bundle,
   withSentences,
+  showSubmissionMeta = false,
+  showDimensionGrid = true,
   dimensionCardLimit,
   showDetailPanel = withSentences,
   retryLabelKey,
@@ -109,14 +113,19 @@ export function FeedbackPageContent({
         />
       ) : null}
 
-      <FeedbackSummary feedback={bundle.feedback} />
-
-      <DimensionCardGrid
-        rows={bundle.dimensions}
-        // E-01 단답 region 2 제약: 카드 4개 이하.
-        maxCards={dimensionCardLimit}
-        onReanalyze={onReanalyze}
+      <FeedbackSummary
+        feedback={bundle.feedback}
+        submission={showSubmissionMeta ? submission : undefined}
       />
+
+      {showDimensionGrid ? (
+        <DimensionCardGrid
+          rows={bundle.dimensions}
+          // E-01 단답 region 2 제약: 카드 4개 이하.
+          maxCards={dimensionCardLimit}
+          onReanalyze={onReanalyze}
+        />
+      ) : null}
 
       {withSentences ? (
         <SentenceFeedbackList rows={bundle.sentences} onReanalyze={onReanalyze} />

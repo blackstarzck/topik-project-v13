@@ -367,12 +367,38 @@
       "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/14-E-01-short-answer-feedback/findings.json",
       "status": "PASS",
       "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
+    },
+    {
+      "folder": "15-E-02-long-form-feedback",
+      "iaCode": "E-02",
+      "screen": "Long-form feedback",
+      "route": "/writing/feedback/long/:id",
+      "routeSource": "docs/Wireframe/15-E-02-long-form-feedback/functional-spec.md",
+      "routeFallback": "docs/sitemap.md",
+      "referenceImages": {
+        "wireframe": "docs/Wireframe/15-E-02-long-form-feedback/wireframe.png",
+        "hifi": "docs/Wireframe/15-E-02-long-form-feedback/hifi.png",
+        "status": "complete"
+      },
+      "docs": {
+        "description": "present",
+        "functionalSpec": "present",
+        "screenDataSummary": "present"
+      },
+      "classification": "user-active",
+      "audience": "user",
+      "authRequirement": "authenticated user",
+      "dynamicSeedRequirement": "existing completed long feedback submission required",
+      "report": "docs/design-review-result/wireframe-ui-audit/2026-06-10/15-E-02-long-form-feedback.html",
+      "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/15-E-02-long-form-feedback/findings.json",
+      "status": "PASS",
+      "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
     }
   ],
   "summary": {
-    "completedPass": 14,
+    "completedPass": 15,
     "inProgress": 0,
-    "remainingKnownActiveScreens": 20,
+    "remainingKnownActiveScreens": 19,
     "adminFrozenOutOfScope": [
       "21-H-01-admin-problem-management",
       "30-X-08-organization-admin-dashboard",

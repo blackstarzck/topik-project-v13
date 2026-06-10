@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <title>Wireframe UI Audit - 15-E-02-long-form-feedback - 2026-06-10</title>
+    <style>
+      body {
+        margin: 32px;
+        background: #ffffff;
+        color: #172033;
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+      }
+
+      h1,
+      h2 {
+        letter-spacing: 0;
+      }
+
+      table {
+        width: 100%;
+        margin: 12px 0 28px;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+
+      th,
+      td {
+        padding: 10px 12px;
+        border: 1px solid #d9e1ef;
+        vertical-align: top;
+      }
+
+      th {
+        background: #f4f7fb;
+        text-align: left;
+      }
+
+      code {
+        border-radius: 4px;
+        background: #f3f4f6;
+        padding: 1px 4px;
+      }
+
+      .verdict {
+        border: 1px solid #8fd6ad;
+        border-radius: 8px;
+        background: #edfdf3;
+        padding: 14px 16px;
+      }
+
+      .note {
+        border: 1px solid #d9e1ef;
+        border-radius: 8px;
+        background: #f8fafc;
+        padding: 12px 14px;
+      }
+
+      .sev-pass {
+        display: inline-block;
+        border-radius: 999px;
+        background: #dff7ea;
+        color: #067647;
+        padding: 2px 10px;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Wireframe UI Audit - 15-E-02-long-form-feedback - 2026-06-10</h1>
+    <p><strong>Scope:</strong> E-02 long-form feedback for TOPIK writing question 53/54 submissions.</p>
+    <p><strong>Route used for capture:</strong> <code>/writing/feedback/long/:id</code> with an isolated completed long-form submission.</p>
+    <p><strong>Mode:</strong> audit-remediation</p>
+
+    <h2>Verdict</h2>
+    <p class="verdict">
+      <strong>PASS.</strong> E-02 now renders the score and submission summary, sentence-level corrections with an initial
+      five-item limit, a long-form detail panel capped at five evaluation items, learning recommendations capped at three,
+      and four visible bottom actions across mobile, tablet, and desktop captures.
+    </p>
+
+    <p class="note">
+      Accepted variance: library save and PDF export remain grouped under one Save menu, matching the E-01 remediation.
+      The visible CTA count stays within the E-02 budget while PDF export remains available from the action area.
+    </p>
+
+    <h2>Visual Delta Summary</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Area</th>
+          <th>Reference intent</th>
+          <th>Current implementation</th>
+          <th>Delta</th>
+          <th>User impact</th>
+          <th>Severity</th>
+          <th>Next action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>problem and score summary</td>
+          <td>Show score, type, submission information, and overall feedback in the top summary.</td>
+          <td>The long route enables submission meta tags for question number, writing type, character count, and submitted time.</td>
+          <td>The previous score-only summary is expanded for E-02 without changing E-01.</td>
+          <td>Learners can identify which long-form submission the feedback belongs to before reading details.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>No blocking follow-up.</td>
+        </tr>
+        <tr>
+          <td>sentence corrections</td>
+          <td>Show original sentences and correction suggestions, initially limited to five with show more.</td>
+          <td><code>SentenceFeedbackList</code> renders semantic list items and keeps the initial five-item limit.</td>
+          <td>Aligned with region 2 and avoids the AntD List deprecation warning.</td>
+          <td>Long answers stay readable while still allowing more detailed correction review.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>No blocking follow-up.</td>
+        </tr>
+        <tr>
+          <td>detail panel</td>
+          <td>Show at most five evaluation items for structure, logic/content, vocabulary, grammar, and topic fit.</td>
+          <td>The long route hides the duplicate dimension-card grid and relies on <code>DetailedFeedbackPanel</code> with five keyed items.</td>
+          <td>The long-form feedback structure now matches the wireframe regions more closely.</td>
+          <td>Users see one detailed evaluation surface instead of a duplicated score-card block plus detail panel.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>No blocking follow-up.</td>
+        </tr>
+        <tr>
+          <td>recommendations</td>
+          <td>Provide focused learning recommendations without overloading the feedback page.</td>
+          <td>Recommendation cards remain capped at three and appear before the final action bar.</td>
+          <td>Aligned with the learning-recommendation intent while keeping the page scannable.</td>
+          <td>The next study direction is visible but does not dominate correction review.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>No blocking follow-up.</td>
+        </tr>
+        <tr>
+          <td>bottom actions</td>
+          <td>Offer rewrite, PDF/save, comparison report, and next problem recommendation with at most four visible CTAs.</td>
+          <td>The shared action bar renders rewrite, next problem, Save menu, and comparison report; duplicate-click guards remain.</td>
+          <td>Aligned with region 4 and mobile stacking requirements.</td>
+          <td>The long-form learner has a clear next step without action clutter.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>No blocking follow-up.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Evidence</h2>
+    <ul>
+      <li><code>screenshots/15-E-02-long-form-feedback/current.json</code> records authenticated captures at 360, 768, and 1280 widths.</li>
+      <li><code>screenshots/15-E-02-long-form-feedback/findings.json</code> records PASS evidence for score summary, hidden duplicate grid, sentence limit, detail item limit, recommendations, CTA count, retry wording, and console health.</li>
+      <li><code>src/app/(workspace)/writing/feedback/long/[id]/page.tsx</code> enables the long feedback variant.</li>
+      <li><code>src/components/feedback/FeedbackSummary.tsx</code> renders the E-02 submission meta tags.</li>
+      <li><code>src/components/feedback/DetailedFeedbackPanel.tsx</code> exposes stable detail-panel test targets.</li>
+      <li><code>tests/e2e/screens/long-feedback.spec.ts</code> verifies E-02 constraints against isolated completed feedback data.</li>
+    </ul>
+
+    <h2>Verification</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Command</th>
+          <th>Result</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>pnpm exec tsc --noEmit --pretty false</code></td>
+          <td>Passed.</td>
+        </tr>
+        <tr>
+          <td><code>Playwright capture script for E-02 at 360/768/1280</code></td>
+          <td>Passed; status=200, scoreSummaryVisible=true, sentence initial items&lt;=5, detail items&lt;=5, CTA count&lt;=4, consoleErr=0.</td>
+        </tr>
+        <tr>
+          <td><code>pnpm exec playwright test tests/e2e/screens/long-feedback.spec.ts --project=mobile-360 --project=tablet-768 --project=desktop-1280</code></td>
+          <td>Passed, 4 tests including auth setup and E-02 checks.</td>
+        </tr>
+        <tr>
+          <td><code>pnpm lint</code></td>
+          <td>Passed with 0 errors and 9 pre-existing warnings.</td>
+        </tr>
+      </tbody>
+    </table>
+  </body>
+</html>

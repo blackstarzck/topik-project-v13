@@ -36,6 +36,8 @@ export default async function LongFeedbackPage({
       submission={submission}
       bundle={bundle}
       withSentences
+      showSubmissionMeta
+      showDimensionGrid={false}
       reloadHref={`/writing/feedback/long/${id}`}
       userId={user.id}
       saveLocked={saveLocked}

@@ -39,7 +39,7 @@ export function DetailedFeedbackPanel({ dimensions }: Props) {
 
   if (available.length === 0) {
     return (
-      <AppCard title={t("cardTitle")}>
+      <AppCard title={t("cardTitle")} data-testid="feedback-detail-panel">
         <Empty description={t("emptyDescription")} />
       </AppCard>
     );
@@ -54,7 +54,9 @@ export function DetailedFeedbackPanel({ dimensions }: Props) {
       key,
       label: (
         <Space>
-          <Text strong>{t(`label.${key}` as Parameters<typeof t>[0])}</Text>
+          <Text strong data-testid="feedback-detail-item">
+            {t(`label.${key}` as Parameters<typeof t>[0])}
+          </Text>
           <Tag color={score === null ? "default" : percent < 60 ? "red" : "blue"}>
             {score ?? "—"} / {max}
           </Tag>
@@ -83,7 +85,11 @@ export function DetailedFeedbackPanel({ dimensions }: Props) {
   });
 
   return (
-    <AppCard title={t("cardTitle")} styles={DETAIL_CARD_STYLES}>
+    <AppCard
+      title={t("cardTitle")}
+      styles={DETAIL_CARD_STYLES}
+      data-testid="feedback-detail-panel"
+    >
       <Collapse
         ghost
         items={items}
