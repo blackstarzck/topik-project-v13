@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <title>Wireframe UI Audit - 07-C-03-retry-modal - 2026-06-10</title>
+    <style>
+      body {
+        margin: 32px;
+        background: #ffffff;
+        color: #172033;
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+      }
+
+      h1,
+      h2 {
+        letter-spacing: 0;
+      }
+
+      table {
+        width: 100%;
+        margin: 12px 0 28px;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+
+      th,
+      td {
+        padding: 10px 12px;
+        border: 1px solid #d9e1ef;
+        vertical-align: top;
+      }
+
+      th {
+        background: #f4f7fb;
+        text-align: left;
+      }
+
+      code {
+        border-radius: 4px;
+        background: #f3f4f6;
+        padding: 1px 4px;
+      }
+
+      figure {
+        margin: 22px 0;
+      }
+
+      img {
+        max-width: 100%;
+        border: 1px solid #d9e1ef;
+        border-radius: 8px;
+      }
+
+      figcaption {
+        margin-top: 8px;
+        color: #667085;
+        font-size: 13px;
+      }
+
+      .verdict {
+        border: 1px solid #8fd6ad;
+        border-radius: 8px;
+        background: #edfdf3;
+        padding: 14px 16px;
+      }
+
+      .note {
+        border: 1px solid #d9e1ef;
+        border-radius: 8px;
+        background: #f8fafc;
+        padding: 12px 14px;
+      }
+
+      .sev-pass {
+        display: inline-block;
+        border-radius: 999px;
+        background: #dff7ea;
+        color: #067647;
+        padding: 2px 10px;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Wireframe UI Audit - 07-C-03-retry-modal - 2026-06-10</h1>
+    <p><strong>Scope:</strong> C-03 Retry modal hosted by <code>/practice/problems</code></p>
+    <p><strong>Mode:</strong> audit-remediation</p>
+    <p><strong>Coverage:</strong> authenticated user modal trigger, reference wireframe and hifi complete.</p>
+
+    <h2>Verdict</h2>
+    <p class="verdict">
+      <strong>PASS.</strong> The retry modal is now reachable from the problem list and matches the active C-03
+      wireframe contract for this audit. It opens above the dimmed problem-list context, shows a compact three-field
+      problem summary, provides three retry-mode choices with unavailable options disabled, and fixes the footer decision
+      area to <code>취소</code> and <code>시작</code>.
+    </p>
+
+    <p class="note">
+      Accepted variance: the hifi image includes richer illustrated selection cards, previous-score/time fields, and a
+      preview toggle. The active source order gives <code>description.md</code> priority, so this remediation does not
+      invent those fields without an approved data-contract update. The submitted-result path remains as a contextual
+      summary action and is covered by the component test because the live capture row was an in-progress draft.
+    </p>
+
+    <h2>Visual Delta Summary</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Area</th>
+          <th>Reference intent</th>
+          <th>Current implementation</th>
+          <th>Delta</th>
+          <th>User impact</th>
+          <th>Severity</th>
+          <th>Next action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>modal reachability</td>
+          <td>Open C-03 from a previously attempted problem in C-02.</td>
+          <td>The in-progress filter exposes a retry trigger and opens the modal at 360/768/1280 widths.</td>
+          <td>The prior capture gap is closed for the active audit account.</td>
+          <td>Learners can re-enter the retry decision flow from the problem list.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>No further action.</td>
+        </tr>
+        <tr>
+          <td>problem summary</td>
+          <td>Confirm selected title, type, and previous solve state in no more than three summary items.</td>
+          <td>The modal shows problem, type, and previous state with attempt count and recency.</td>
+          <td>Aligned with the description-level contract.</td>
+          <td>Users can verify the selected problem before starting.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>No further action.</td>
+        </tr>
+        <tr>
+          <td>retry modes</td>
+          <td>Show up to three retry modes with one selected by default and unavailable modes disabled.</td>
+          <td>The modal shows fresh, resume, and hint options; resume is selected for the captured draft row and hint is disabled.</td>
+          <td>Aligned with C-03 mode-selection requirements.</td>
+          <td>Users have a clear start decision without misleading enabled states.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>No further action.</td>
+        </tr>
+        <tr>
+          <td>footer CTA</td>
+          <td>Keep exactly two footer CTAs: cancel and start.</td>
+          <td>The footer now renders <code>취소</code> and <code>시작</code> only. Result viewing is no longer a third footer CTA.</td>
+          <td>The previous action-count mismatch is resolved.</td>
+          <td>The modal decision is simpler and matches the wireframe.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>No further action.</td>
+        </tr>
+        <tr>
+          <td>responsive render</td>
+          <td>Keep the modal readable over the dimmed list on mobile, tablet, and desktop.</td>
+          <td>All audited captures opened the modal with status 200, no Next error overlay, and consoleErr=0.</td>
+          <td>Responsive modal health is acceptable for this pass.</td>
+          <td>The retry flow remains usable across the audited breakpoints.</td>
+          <td><span class="sev-pass">PASS</span></td>
+          <td>Local Next dev indicator is excluded from product UI severity.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Evidence</h2>
+    <ul>
+      <li><code>screenshots/07-C-03-retry-modal/current.json</code> records modal-open captures at 360, 768, and 1280 widths.</li>
+      <li><code>tests/components/practice/RetryModal.test.tsx</code> verifies footer CTA count, start routing, recoverable errors, result routing, and cancel behavior.</li>
+      <li><code>src/components/practice/RetryModal.tsx</code> contains the footer and contextual result-action remediation.</li>
+    </ul>
+
+    <h2>Verification</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Command</th>
+          <th>Result</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>pnpm test tests/components/practice/RetryModal.test.tsx</code></td>
+          <td>Passed, 7 tests.</td>
+        </tr>
+        <tr>
+          <td><code>custom Playwright C-03 modal capture</code></td>
+          <td>Opened modal at 360/768/1280; footerButtons=[취소, 시작], modeRadioCount=3, consoleErr=0.</td>
+        </tr>
+        <tr>
+          <td><code>pnpm exec tsc --noEmit --pretty false</code></td>
+          <td>Passed.</td>
+        </tr>
+        <tr>
+          <td><code>pnpm lint</code></td>
+          <td>Passed with 0 errors and 9 pre-existing warnings.</td>
+        </tr>
+        <tr>
+          <td><code>pnpm exec playwright test tests/e2e/screens/screens-authed.spec.ts -g "C-02" --project=mobile-360 --project=tablet-768 --project=desktop-1280</code></td>
+          <td>Passed, 4 tests including auth setup and the host route across audited breakpoints.</td>
+        </tr>
+      </tbody>
+    </table>
+  </body>
+</html>

@@ -154,6 +154,33 @@
       "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
     },
     {
+      "folder": "07-C-03-retry-modal",
+      "iaCode": "C-03",
+      "screen": "Retry modal",
+      "route": "/practice/problems",
+      "routeSource": "docs/Wireframe/07-C-03-retry-modal/functional-spec.md",
+      "routeFallback": "docs/sitemap.md",
+      "referenceImages": {
+        "wireframe": "docs/Wireframe/07-C-03-retry-modal/wireframe.png",
+        "hifi": "docs/Wireframe/07-C-03-retry-modal/hifi.png",
+        "status": "complete"
+      },
+      "docs": {
+        "description": "present",
+        "functionalSpec": "present",
+        "screenDataSummary": "present"
+      },
+      "classification": "user-active-modal",
+      "audience": "user",
+      "authRequirement": "authenticated user",
+      "hostRoute": "/practice/problems",
+      "modalTriggerRequirement": "previously attempted or in-progress problem row in C-02",
+      "report": "docs/design-review-result/wireframe-ui-audit/2026-06-10/07-C-03-retry-modal.html",
+      "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/07-C-03-retry-modal/findings.json",
+      "status": "PASS",
+      "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
+    },
+    {
       "folder": "08-D-01-short-answer-writing-51",
       "iaCode": "D-01",
       "screen": "Short-answer writing 51",
@@ -182,9 +209,9 @@
     }
   ],
   "summary": {
-    "completedPass": 7,
+    "completedPass": 8,
     "inProgress": 0,
-    "remainingKnownActiveScreens": 27,
+    "remainingKnownActiveScreens": 26,
     "adminFrozenOutOfScope": [
       "21-H-01-admin-problem-management",
       "30-X-08-organization-admin-dashboard",

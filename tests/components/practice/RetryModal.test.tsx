@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, screen } from "@testing-library/react";
+import { cleanup, fireEvent, screen, within } from "@testing-library/react";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
 import { RetryModal } from "../../../src/components/practice/RetryModal";
 
@@ -41,7 +41,7 @@ afterEach(() => {
 });
 
 describe("RetryModal (Phase 7-D Task 5 route fix)", () => {
-  it("renders three buttons when both attempt and submission exist", () => {
+  it("keeps footer CTAs to start/cancel while exposing result view as contextual action", () => {
     renderWithIntl(
       <RetryModal
         open
@@ -55,9 +55,12 @@ describe("RetryModal (Phase 7-D Task 5 route fix)", () => {
     );
 
     expect(screen.getByText("이전 풀이가 있어요")).toBeTruthy();
-    // C-03 upgrade: primary CTA label is now '시작' (was '다시 풀기').
-    expect(screen.getByRole("button", { name: "시작" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "결과 보기" })).toBeTruthy();
+
+    const footerActions = within(screen.getByTestId("retry-modal-actions"));
+    // C-03 §4 keeps the bottom action pair fixed to start/cancel.
+    expect(footerActions.getAllByRole("button")).toHaveLength(2);
+    expect(screen.getByRole("button", { name: "시작" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "취소" })).toBeTruthy();
   });
 

@@ -1,0 +1,80 @@
+{
+  "runDate": "2026-06-10",
+  "iaCode": "C-03",
+  "route": "/practice/problems",
+  "hostRoutesTried": [
+    "/practice/problems?solve=solved",
+    "/practice/problems?solve=inProgress",
+    "/practice/problems"
+  ],
+  "origin": "http://127.0.0.1:3000",
+  "storageState": "tests/e2e/auth-state/student.json",
+  "shots": [
+    {
+      "viewport": 360,
+      "route": "/practice/problems?solve=inProgress",
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:3000/practice/problems?solve=inProgress",
+      "redirectedToLogin": false,
+      "retryTriggerCount": 1,
+      "modalVisible": true,
+      "modalTitle": "이전 풀이가 있어요",
+      "footerButtons": [
+        "취소",
+        "시작"
+      ],
+      "contextualResultCount": 0,
+      "modeRadioCount": 3,
+      "screenshotKind": "modal-open",
+      "errorOverlay": false,
+      "consoleErrorCount": 0,
+      "consoleErrors": [],
+      "bodyTextLen": 549,
+      "png": "docs\\design-review-result\\wireframe-ui-audit\\2026-06-10\\screenshots\\07-C-03-retry-modal\\current-360.png"
+    },
+    {
+      "viewport": 768,
+      "route": "/practice/problems?solve=inProgress",
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:3000/practice/problems?solve=inProgress",
+      "redirectedToLogin": false,
+      "retryTriggerCount": 1,
+      "modalVisible": true,
+      "modalTitle": "이전 풀이가 있어요",
+      "footerButtons": [
+        "취소",
+        "시작"
+      ],
+      "contextualResultCount": 0,
+      "modeRadioCount": 3,
+      "screenshotKind": "modal-open",
+      "errorOverlay": false,
+      "consoleErrorCount": 0,
+      "consoleErrors": [],
+      "bodyTextLen": 549,
+      "png": "docs\\design-review-result\\wireframe-ui-audit\\2026-06-10\\screenshots\\07-C-03-retry-modal\\current-768.png"
+    },
+    {
+      "viewport": 1280,
+      "route": "/practice/problems?solve=inProgress",
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:3000/practice/problems?solve=inProgress",
+      "redirectedToLogin": false,
+      "retryTriggerCount": 1,
+      "modalVisible": true,
+      "modalTitle": "이전 풀이가 있어요",
+      "footerButtons": [
+        "취소",
+        "시작"
+      ],
+      "contextualResultCount": 0,
+      "modeRadioCount": 3,
+      "screenshotKind": "modal-open",
+      "errorOverlay": false,
+      "consoleErrorCount": 0,
+      "consoleErrors": [],
+      "bodyTextLen": 549,
+      "png": "docs\\design-review-result\\wireframe-ui-audit\\2026-06-10\\screenshots\\07-C-03-retry-modal\\current-1280.png"
+    }
+  ]
+}

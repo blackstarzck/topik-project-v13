@@ -166,6 +166,9 @@ export function RetryModal({
       ? t("statusDrafting")
       : t("statusNone");
 
+  // §1 예외 — 위험 상태(시작 처리 중)에서는 배경 클릭/ESC 닫기 비활성.
+  const risky = starting;
+
   const summary = (
     <Descriptions
       size="small"
@@ -184,17 +187,28 @@ export function RetryModal({
         )}
       </Descriptions.Item>
       <Descriptions.Item label={t("summaryPreviousStatus")}>
-        {statusLabel}
-        {attemptCount > 0
-          ? ` · ${tCommon("attemptCount", { count: attemptCount })}`
-          : ""}
-        {lastLabel ? ` · ${lastLabel}` : ""}
+        <Space orientation="vertical" size={0}>
+          <Text>
+            {statusLabel}
+            {attemptCount > 0
+              ? ` · ${tCommon("attemptCount", { count: attemptCount })}`
+              : ""}
+            {lastLabel ? ` · ${lastLabel}` : ""}
+          </Text>
+          {canViewResult ? (
+            <Button
+              type="link"
+              size="small"
+              onClick={handleViewResult}
+              disabled={risky}
+            >
+              {t("viewResult")}
+            </Button>
+          ) : null}
+        </Space>
       </Descriptions.Item>
     </Descriptions>
   );
-
-  // §1 예외 — 위험 상태(시작 처리 중)에서는 배경 클릭/ESC 닫기 비활성.
-  const risky = starting;
 
   // §2 예외 — 만료된 문제: 시작/모드 선택 숨기고 만료 안내 + 닫기만.
   if (expired) {
@@ -211,7 +225,7 @@ export function RetryModal({
         <Alert
           type="warning"
           showIcon
-          style={{ marginBottom: 12 }}
+          style={{ marginBottom: SPACING.sm }}
           title={t("expiredMessage")}
           description={t("expiredDescription")}
         />
@@ -234,7 +248,7 @@ export function RetryModal({
     >
       {summary}
 
-      <Paragraph type="secondary" style={{ marginBottom: 12 }}>
+      <Paragraph type="secondary" style={{ marginBottom: SPACING.sm }}>
         {t("intro")}
       </Paragraph>
 
@@ -242,7 +256,7 @@ export function RetryModal({
       <Radio.Group
         value={mode}
         onChange={(e) => setMode(e.target.value as RetryMode)}
-        style={{ width: "100%", marginBottom: 16 }}
+        style={{ width: "100%", marginBottom: SPACING.md }}
       >
         <Space orientation="vertical" style={{ width: "100%" }}>
           <Radio value="fresh">
@@ -269,13 +283,23 @@ export function RetryModal({
         <Alert
           type="error"
           showIcon
-          style={{ marginBottom: 12 }}
+          style={{ marginBottom: SPACING.sm }}
           title={t("startFailedTitle")}
           description={t(startErrorKey)}
         />
       ) : null}
 
-      <Space orientation="vertical" size="small" style={{ width: "100%" }}>
+      <div
+        data-testid="retry-modal-actions"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+          gap: SPACING.sm,
+        }}
+      >
+        <Button block onClick={onClose} disabled={risky}>
+          {tActions("cancel")}
+        </Button>
         <Button
           type="primary"
           block
@@ -285,13 +309,7 @@ export function RetryModal({
         >
           {startErrorKey ? t("retry") : tActions("start")}
         </Button>
-        <Button block onClick={handleViewResult} disabled={!canViewResult || risky}>
-          {t("viewResult")}
-        </Button>
-        <Button type="text" block onClick={onClose} disabled={risky}>
-          {tActions("cancel")}
-        </Button>
-      </Space>
+      </div>
     </AppModal>
   );
 }

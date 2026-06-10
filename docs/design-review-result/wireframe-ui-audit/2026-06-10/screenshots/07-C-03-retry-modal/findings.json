@@ -1,0 +1,122 @@
+{
+  "generatedAt": "2026-06-10T16:10:00+09:00",
+  "folder": "07-C-03-retry-modal",
+  "iaCode": "C-03",
+  "route": "/practice/problems",
+  "classification": "user-active-modal",
+  "verdict": "PASS",
+  "summary": "The C-03 retry modal now satisfies the active wireframe contract for this audit. It is reachable from /practice/problems through an existing in-progress row, keeps the dimmed problem-list background, shows a three-item problem summary, presents three retry-mode options with one selected and unavailable modes disabled, and keeps the footer action pair fixed to cancel/start. The previous third footer CTA for result viewing was moved out of the decision footer; submitted-result access remains a contextual summary action and is covered by component tests.",
+  "screenshots": {
+    "desktop1280": "current-1280.png",
+    "tablet768": "current-768.png",
+    "mobile360": "current-360.png",
+    "manifest": "current.json",
+    "referenceHifi": "reference-hifi.png",
+    "referenceWireframe": "reference-wireframe.png"
+  },
+  "acceptedVariance": [
+    "The hifi image includes richer illustrated cards, previous-score/time fields, and an answer-preview toggle. The screen-data-summary gives description.md priority, and the active data contract does not require adding those net-new fields for this audit.",
+    "The live audit account exposed an in-progress row, so screenshots show the resume path. The submitted-result path is preserved as a contextual action and verified in tests/components/practice/RetryModal.test.tsx.",
+    "Next dev indicator may appear in local screenshots. It is not product UI and is excluded from visual severity."
+  ],
+  "findings": [
+    {
+      "id": "C03-PASS-001",
+      "severity": "PASS",
+      "category": "modal-reachability",
+      "claim": "Resolved: the modal is reachable from the authenticated C-02 problem list.",
+      "observed": "The audit capture found one retry trigger on /practice/problems?solve=inProgress and opened the modal at 360, 768, and 1280 widths.",
+      "expected": "C-03 is a hosted modal entered from C-02 when a learner selects a previously attempted problem.",
+      "evidence": [
+        "screenshots/07-C-03-retry-modal/current.json",
+        "src/components/practice/ProblemListView.tsx",
+        "src/components/practice/ProblemRow.tsx"
+      ],
+      "confidence": "high",
+      "recommendedNextAction": "No blocking follow-up."
+    },
+    {
+      "id": "C03-PASS-002",
+      "severity": "PASS",
+      "category": "problem-summary",
+      "claim": "Resolved: the modal summarizes the selected problem in three compact fields.",
+      "observed": "The modal shows problem title, question type, and previous state with attempt count and recency. Long titles remain clipped to 28 characters in source.",
+      "expected": "The description requires selected title, type, and previous solve state with no more than three summary items.",
+      "evidence": [
+        "src/components/practice/RetryModal.tsx",
+        "screenshots/07-C-03-retry-modal/current-1280.png"
+      ],
+      "confidence": "high",
+      "recommendedNextAction": "No blocking follow-up."
+    },
+    {
+      "id": "C03-PASS-003",
+      "severity": "PASS",
+      "category": "retry-mode-selection",
+      "claim": "Resolved: retry mode selection exposes three modes with one valid default selected.",
+      "observed": "The capture manifest records three radio options. In the in-progress row, resume is selected, fresh is available, and hint mode is visibly disabled as deferred.",
+      "expected": "The modal should show up to three retry modes, one default selection, and disabled unavailable choices.",
+      "evidence": [
+        "screenshots/07-C-03-retry-modal/current.json",
+        "src/components/practice/RetryModal.tsx"
+      ],
+      "confidence": "high",
+      "recommendedNextAction": "No blocking follow-up."
+    },
+    {
+      "id": "C03-PASS-004",
+      "severity": "PASS",
+      "category": "footer-cta",
+      "claim": "Resolved: the footer decision area is fixed to cancel/start.",
+      "observed": "The prior third footer action was removed. The audited footerButtons are [취소, 시작] at 360, 768, and 1280 widths.",
+      "expected": "The C-03 description requires exactly two CTA actions: cancel returns to the list and start opens the writing route for the selected mode.",
+      "evidence": [
+        "screenshots/07-C-03-retry-modal/current.json",
+        "tests/components/practice/RetryModal.test.tsx",
+        "src/components/practice/RetryModal.tsx"
+      ],
+      "confidence": "high",
+      "recommendedNextAction": "No blocking follow-up."
+    },
+    {
+      "id": "C03-PASS-005",
+      "severity": "PASS",
+      "category": "responsive-render",
+      "claim": "Resolved: the modal renders stably across audited breakpoints.",
+      "observed": "The custom Playwright capture opened the modal at 360, 768, and 1280 widths with status 200, errorOverlay=false, and consoleErr=0.",
+      "expected": "The modal should preserve focus/context over the dimmed C-02 page without runtime errors, text collision, or lost footer actions.",
+      "evidence": [
+        "screenshots/07-C-03-retry-modal/current-360.png",
+        "screenshots/07-C-03-retry-modal/current-768.png",
+        "screenshots/07-C-03-retry-modal/current-1280.png"
+      ],
+      "confidence": "high",
+      "recommendedNextAction": "No blocking follow-up."
+    }
+  ],
+  "verification": [
+    {
+      "command": "pnpm test tests/components/practice/RetryModal.test.tsx",
+      "result": "passed; 7 tests cover footer CTA count, start route, recoverable start failure, result-route paths, and cancel behavior"
+    },
+    {
+      "command": "custom Playwright C-03 modal capture at /practice/problems?solve=solved, /practice/problems?solve=inProgress, /practice/problems",
+      "result": "opened the in-progress retry modal at 360, 768, and 1280; footerButtons=[취소, 시작], modeRadioCount=3, consoleErr=0"
+    },
+    {
+      "command": "pnpm exec tsc --noEmit --pretty false",
+      "result": "passed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "passed with 0 errors and 9 pre-existing warnings"
+    },
+    {
+      "command": "pnpm exec playwright test tests/e2e/screens/screens-authed.spec.ts -g \"C-02\" --project=mobile-360 --project=tablet-768 --project=desktop-1280",
+      "result": "4 passed including auth setup and the C-02 host route across audited breakpoints"
+    }
+  ],
+  "deferred": [
+    "Previous-score/time metadata and preview-toggle behavior remain deferred until the active C-03 source docs and data contract require those fields."
+  ]
+}
