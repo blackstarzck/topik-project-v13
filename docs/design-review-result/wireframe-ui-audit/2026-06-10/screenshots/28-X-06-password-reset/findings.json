@@ -1,0 +1,39 @@
+{
+  "page": "28-X-06-password-reset",
+  "iaCode": "X-06",
+  "route": "/password-reset",
+  "status": "PASS",
+  "findings": [],
+  "checks": [
+    {
+      "id": "X06-request-shell",
+      "status": "PASS",
+      "evidence": "The public /password-reset page renders the centered reset card and email request form."
+    },
+    {
+      "id": "X06-security-visual-and-copy",
+      "status": "PASS",
+      "evidence": "Security visual treatment and link-expiry guidance are visible before the request is submitted."
+    },
+    {
+      "id": "X06-navigation",
+      "status": "PASS",
+      "evidence": "The escape link returns to /login."
+    },
+    {
+      "id": "X06-intercepted-send-success",
+      "status": "PASS",
+      "evidence": "An intercepted Supabase recover request renders the success state, target email, and cooldown countdown without sending a real email."
+    },
+    {
+      "id": "X06-responsive-capture",
+      "status": "PASS",
+      "evidence": "Mobile, tablet, and desktop captures load without dev overlay, page, console, or 500-response errors."
+    }
+  ],
+  "screenshots": {
+    "mobile-360": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/28-X-06-password-reset/mobile-360.png",
+    "tablet-768": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/28-X-06-password-reset/tablet-768.png",
+    "desktop-1280": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/28-X-06-password-reset/desktop-1280.png"
+  }
+}

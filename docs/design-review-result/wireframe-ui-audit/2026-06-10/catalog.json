@@ -654,12 +654,38 @@
       "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/27-X-05-profile-editing/findings.json",
       "status": "PASS",
       "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
+    },
+    {
+      "folder": "28-X-06-password-reset",
+      "iaCode": "X-06",
+      "screen": "Password reset",
+      "route": "/password-reset",
+      "routeSource": "docs/Wireframe/28-X-06-password-reset/functional-spec.md",
+      "routeFallback": "docs/sitemap.md",
+      "referenceImages": {
+        "wireframe": "docs/Wireframe/28-X-06-password-reset/wireframe.png",
+        "hifi": "docs/Wireframe/28-X-06-password-reset/hifi.png",
+        "status": "complete"
+      },
+      "docs": {
+        "description": "present",
+        "functionalSpec": "present",
+        "screenDataSummary": "present"
+      },
+      "classification": "public-active",
+      "audience": "public",
+      "authRequirement": "none",
+      "dynamicSeedRequirement": "Supabase Auth recover request is intercepted in e2e/capture so no real password-reset email is sent.",
+      "report": "docs/design-review-result/wireframe-ui-audit/2026-06-10/28-X-06-password-reset.html",
+      "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/28-X-06-password-reset/findings.json",
+      "status": "PASS",
+      "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
     }
   ],
   "summary": {
-    "completedPass": 25,
+    "completedPass": 26,
     "inProgress": 0,
-    "remainingKnownActiveScreens": 9,
+    "remainingKnownActiveScreens": 8,
     "adminFrozenOutOfScope": [
       "21-H-01-admin-problem-management",
       "30-X-08-organization-admin-dashboard",

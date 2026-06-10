@@ -87,7 +87,7 @@ export function PasswordResetRequestForm() {
 
   if (sentTo) {
     return (
-      <div>
+      <div data-testid="password-reset-sent-state">
         <Title level={3}>{t("sentTitle")}</Title>
         <Paragraph>
           {t.rich("sentBody", {
@@ -110,8 +110,16 @@ export function PasswordResetRequestForm() {
   }
 
   return (
-    <Form layout="vertical" onFinish={handleSubmit} requiredMark={false}>
+    <Form
+      data-testid="password-reset-request-form"
+      layout="vertical"
+      onFinish={handleSubmit}
+      requiredMark={false}
+    >
       <Paragraph>{t("intro")}</Paragraph>
+      <Paragraph style={{ marginTop: -4 }}>
+        <Text type="secondary">{t("sentExpiryNote")}</Text>
+      </Paragraph>
       <Form.Item
         label={t("emailLabel")}
         name="email"
