@@ -8,7 +8,6 @@ import { AppCard } from "@/components/shared/AppCard";
 
 const { Text } = Typography;
 
-// dimension 코드 → library.stats.dimensions 카탈로그 키. 문구는 t()로 해석한다.
 const DIMENSION_KEYS = [
   "grammar",
   "vocab",
@@ -19,15 +18,15 @@ const DIMENSION_KEYS = [
 ] as const;
 
 export type LibraryStats = {
-  /** Total saved library items (all tabs). */
+  /** Total saved library items across all tabs. */
   savedCount: number;
-  /** Average writing_feedback score over saved submissions (0-100), or null. */
+  /** Average writing_feedback score over saved submissions, or null. */
   avgScore: number | null;
-  /** Weakest dimension key (lowest avg), or null when not enough data. */
+  /** Lowest average dimension key, or null when not enough data exists. */
   weakestDimension: string | null;
-  /** Count of retry submissions (parent_submission_id not null) among saved. */
+  /** Count of saved retry submissions. */
   reviewCount: number;
-  /** ISO of the most recent saved_at, drives the last-updated line. */
+  /** Latest library_items.saved_at ISO string. */
   lastUpdated: string | null;
 };
 
@@ -35,17 +34,11 @@ type Props = {
   stats: LibraryStats;
 };
 
-/**
- * F-01 region 4 (우측 통계): 저장 수 / 평균 점수 / 취약 유형 / 복습 현황 +
- * last-updated. Constraint: 통계 카드 3개 이하 per group, 수치 라벨 1줄.
- * Exception (데이터 없음): show a 복습 시작 안내 instead of empty numbers.
- */
 export function LibraryStatsPanel({ stats }: Props) {
   const t = useTranslations("library.stats");
   const tDim = useTranslations("library.stats.dimensions");
   const empty = stats.savedCount === 0;
 
-  // last-updated 라인: ISO를 ko-KR 날짜로 포맷해 "최근 갱신 {date}"로 보여준다.
   function formatUpdated(iso: string | null): string {
     if (!iso) return t("noUpdate");
     try {
@@ -57,7 +50,6 @@ export function LibraryStatsPanel({ stats }: Props) {
     }
   }
 
-  // dimension 코드를 카탈로그 라벨로. 알 수 없는 코드는 코드 그대로 폴백.
   const dimLabel = (code: string) =>
     (DIMENSION_KEYS as readonly string[]).includes(code)
       ? tDim(code as (typeof DIMENSION_KEYS)[number])
@@ -65,54 +57,66 @@ export function LibraryStatsPanel({ stats }: Props) {
 
   if (empty) {
     return (
-      <AppCard title={t("title")}>
-        <Empty
-          image={Empty.PRESENTED_IMAGE_SIMPLE}
-          description={t("emptyDescription")}
-        >
-          <Link href="/practice/problems">{t("goToPractice")}</Link>
-        </Empty>
-      </AppCard>
+      <Space
+        data-testid="library-stats-panel"
+        orientation="vertical"
+        size="middle"
+        style={{ width: "100%" }}
+      >
+        <Text strong>{t("title")}</Text>
+        <AppCard data-testid="library-empty-stats" size="small">
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description={t("emptyDescription")}
+          >
+            <Link href="/practice/problems">{t("goToPractice")}</Link>
+          </Empty>
+        </AppCard>
+      </Space>
     );
   }
 
   return (
-    <AppCard
-      title={t("title")}
-      extra={
-        <Text type="secondary" style={{ fontSize: 12 }}>
-          {formatUpdated(stats.lastUpdated)}
-        </Text>
-      }
+    <Space
+      data-testid="library-stats-panel"
+      orientation="vertical"
+      size="middle"
+      style={{ width: "100%" }}
     >
-      <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
-        <Space size="large" wrap>
-          <Statistic
-            title={t("savedCount")}
-            value={stats.savedCount}
-            suffix={t("suffixCount")}
-          />
-          <Statistic
-            title={t("avgScore")}
-            value={stats.avgScore != null ? stats.avgScore : "—"}
-            suffix={stats.avgScore != null ? t("suffixPoint") : undefined}
-          />
-          <Statistic
-            title={t("reviewCount")}
-            value={stats.reviewCount}
-            suffix={t("suffixCount")}
-          />
-        </Space>
-        <div>
+      <Text strong>{t("title")}</Text>
+      <AppCard data-testid="library-stat-card" size="small">
+        <Statistic
+          title={t("savedCount")}
+          value={stats.savedCount}
+          suffix={t("suffixCount")}
+        />
+        <Text type="secondary">{formatUpdated(stats.lastUpdated)}</Text>
+      </AppCard>
+
+      <AppCard data-testid="library-stat-card" size="small">
+        <Statistic
+          title={t("avgScore")}
+          value={stats.avgScore != null ? stats.avgScore : "-"}
+          suffix={stats.avgScore != null ? t("suffixPoint") : undefined}
+        />
+        <Space size="small" wrap>
           <Text type="secondary">{t("weakestLabel")}</Text>
           {stats.weakestDimension ? (
             <Tag color="volcano">{dimLabel(stats.weakestDimension)}</Tag>
           ) : (
             <Text type="secondary">{t("weakestNeedData")}</Text>
           )}
-        </div>
+        </Space>
+      </AppCard>
+
+      <AppCard data-testid="library-stat-card" size="small">
+        <Statistic
+          title={t("reviewCount")}
+          value={stats.reviewCount}
+          suffix={t("suffixCount")}
+        />
         <Link href="/practice/problems">{t("continueReview")}</Link>
-      </Space>
-    </AppCard>
+      </AppCard>
+    </Space>
   );
 }

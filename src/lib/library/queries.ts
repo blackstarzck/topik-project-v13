@@ -67,7 +67,18 @@ async function joinSubmissions(
     .select("id, problem_id, question_no, submitted_at, char_count")
     .in("id", ids);
   if (error) throw error;
+
+  const problemIds = uniqueIds((data ?? []).map((row) => row.problem_id));
+  const { data: problems, error: problemError } = await supabase
+    .from("problems")
+    .select("id, title")
+    .in("id", problemIds);
+  if (problemError) throw problemError;
+
   const byId = new Map((data ?? []).map((row) => [row.id, row]));
+  const problemTitleById = new Map(
+    (problems ?? []).map((row) => [row.id, row.title]),
+  );
   const out: LibrarySubmissionView[] = [];
   for (const item of items) {
     if (!item.submission_id) continue;
@@ -77,6 +88,7 @@ async function joinSubmissions(
       kind: "submission",
       id: sub.id,
       problem_id: sub.problem_id,
+      problem_title: problemTitleById.get(sub.problem_id) ?? null,
       question_no: typeof sub.question_no === "number" ? sub.question_no : null,
       submitted_at: sub.submitted_at,
       char_count: sub.char_count,

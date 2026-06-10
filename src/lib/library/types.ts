@@ -43,6 +43,7 @@ export type LibrarySubmissionView = {
   /** Underlying `writing_submissions.id`. */
   id: string;
   problem_id: string;
+  problem_title: string | null;
   question_no: number | null;
   submitted_at: string;
   char_count: number;
@@ -96,5 +97,5 @@ export const REPORT_NARRATIVE_EXCERPT_LEN = 160;
 export function excerptNarrative(narrative: string | null): string | null {
   if (!narrative) return null;
   if (narrative.length <= REPORT_NARRATIVE_EXCERPT_LEN) return narrative;
-  return `${narrative.slice(0, REPORT_NARRATIVE_EXCERPT_LEN)}…`;
+  return `${narrative.slice(0, REPORT_NARRATIVE_EXCERPT_LEN)}...`;
 }

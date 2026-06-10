@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>F-01 My Library Audit</title></head>
+<body>
+  <h1>F-01 My Library Audit</h1>
+  <p>Status: <strong>PASS</strong></p>
+  <p>Route: /library</p>
+  <p>Fixture marker: f01-audit-85485f25</p>
+  <table border="1" cellspacing="0" cellpadding="6">
+    <thead><tr><th>Check</th><th>Status</th><th>Evidence</th></tr></thead>
+    <tbody><tr><td>F01-search-filter</td><td>PASS</td><td>Search input is capped at 40 characters and fixture search returns one visible row.</td></tr>
+<tr><td>F01-actions</td><td>PASS</td><td>Export/review actions are disabled until a saved item is selected, then PDF export becomes enabled.</td></tr>
+<tr><td>F01-list</td><td>PASS</td><td>Saved answer rows use the joined problem title and do not expose the problem UUID prefix.</td></tr>
+<tr><td>F01-stats</td><td>PASS</td><td>Right-side stats render no more than three cards.</td></tr>
+<tr><td>F01-pagination</td><td>PASS</td><td>All saved-item tabs use the shared 10-per-page pagination component.</td></tr></tbody>
+  </table>
+  <h2>Screenshots</h2>
+  <ul>
+    <li>mobile-360: docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/18-F-01-my-library/mobile-360.png</li>
+<li>tablet-768: docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/18-F-01-my-library/tablet-768.png</li>
+<li>desktop-1280: docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/18-F-01-my-library/desktop-1280.png</li>
+  </ul>
+  <h2>Verification</h2>
+  <p>Generated from authenticated browser captures against isolated F-01 library fixture data.</p>
+</body>
+</html>

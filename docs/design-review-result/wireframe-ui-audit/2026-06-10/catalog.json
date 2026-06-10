@@ -445,12 +445,38 @@
       "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/17-R-02-next-problem-recommendation/findings.json",
       "status": "PASS",
       "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
+    },
+    {
+      "folder": "18-F-01-my-library",
+      "iaCode": "F-01",
+      "screen": "My Library",
+      "route": "/library",
+      "routeSource": "docs/Wireframe/18-F-01-my-library/functional-spec.md",
+      "routeFallback": "docs/sitemap.md",
+      "referenceImages": {
+        "wireframe": "docs/Wireframe/18-F-01-my-library/wireframe.png",
+        "hifi": "docs/Wireframe/18-F-01-my-library/hifi.png",
+        "status": "complete"
+      },
+      "docs": {
+        "description": "present",
+        "functionalSpec": "present",
+        "screenDataSummary": "present"
+      },
+      "classification": "user-active",
+      "audience": "user",
+      "authRequirement": "authenticated user",
+      "dynamicSeedRequirement": "saved library rows required",
+      "report": "docs/design-review-result/wireframe-ui-audit/2026-06-10/18-F-01-my-library.html",
+      "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/18-F-01-my-library/findings.json",
+      "status": "PASS",
+      "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
     }
   ],
   "summary": {
-    "completedPass": 17,
+    "completedPass": 18,
     "inProgress": 0,
-    "remainingKnownActiveScreens": 17,
+    "remainingKnownActiveScreens": 16,
     "adminFrozenOutOfScope": [
       "21-H-01-admin-problem-management",
       "30-X-08-organization-admin-dashboard",

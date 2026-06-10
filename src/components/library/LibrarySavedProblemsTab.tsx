@@ -1,14 +1,19 @@
 "use client";
 
-import { Alert, Button, Empty, List, Space, Spin, Typography } from "antd";
+import { Alert, Button, Empty, Space, Spin, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
+import { useState } from "react";
 
 import { useLibraryItems } from "@/lib/library/queries";
 import type { LibraryItemView, LibraryProblemView } from "@/lib/library/types";
 import { writingProblemHref } from "@/lib/writing/routes";
 
 import { LibraryItemRow } from "./LibraryItemRow";
+import {
+  LIBRARY_PAGE_SIZE,
+  LibraryPagination,
+} from "./LibraryPagination";
 import { matchesLibrarySearch } from "./library-tab-url";
 
 const { Text } = Typography;
@@ -29,12 +34,20 @@ export function LibrarySavedProblemsTab({
   onResetSearch,
 }: Props) {
   const t = useTranslations("library.saved");
+  const tCount = useTranslations("library.submissions");
   const query = useLibraryItems("problems");
+  const [page, setPage] = useState(1);
   const allItems: LibraryProblemView[] = (query.data ?? initialItems).filter(
     isProblem,
   );
   const items = allItems.filter((i) =>
     matchesLibrarySearch(searchTerm, [i.title, ...i.tags]),
+  );
+  const totalPages = Math.max(1, Math.ceil(items.length / LIBRARY_PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const pageItems = items.slice(
+    (safePage - 1) * LIBRARY_PAGE_SIZE,
+    safePage * LIBRARY_PAGE_SIZE,
   );
 
   if (query.isLoading && (query.data ?? []).length === 0 && initialItems.length === 0) {
@@ -54,46 +67,65 @@ export function LibrarySavedProblemsTab({
   if (items.length === 0) {
     const searching = searchTerm.trim().length > 0;
     return (
-      <Empty
-        description={searching ? t("emptySearch") : t("emptyNoItems")}
-      >
-        {searching && onResetSearch ? (
-          <Button onClick={onResetSearch}>{t("resetFilter")}</Button>
-        ) : null}
-      </Empty>
+      <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+        <Text data-testid="library-result-count" type="secondary">
+          {tCount("resultCount", { count: 0 })}
+        </Text>
+        <Empty
+          description={searching ? t("emptySearch") : t("emptyNoItems")}
+        >
+          {searching && onResetSearch ? (
+            <Button onClick={onResetSearch}>{t("resetFilter")}</Button>
+          ) : null}
+        </Empty>
+      </Space>
     );
   }
 
   return (
-    <List
-      dataSource={items}
-      renderItem={(item) => (
-        <LibraryItemRow
-          key={item.item_id}
-          itemId={item.item_id}
-          tab="problems"
-          tags={item.tags}
-          trailingActions={[
-            <Link
-              key="retry"
-              href={
-                writingProblemHref({
-                  questionNo: item.question_no,
-                  problemId: item.id,
-                }) as never
-              }
-            >
-              <Button type="primary" size="small">
-                {t("retry")}
-              </Button>
-            </Link>,
-          ]}
-        >
-          <Space orientation="vertical" size={2} style={{ width: "100%" }}>
-            <Text strong>{item.title}</Text>
-          </Space>
-        </LibraryItemRow>
-      )}
-    />
+    <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+      <Text data-testid="library-result-count" type="secondary">
+        {tCount("resultCount", { count: items.length })}
+      </Text>
+      <Space
+        data-testid="library-item-list"
+        orientation="vertical"
+        size={0}
+        style={{ width: "100%" }}
+      >
+        {pageItems.map((item) => (
+          <LibraryItemRow
+            key={item.item_id}
+            itemId={item.item_id}
+            tab="problems"
+            tags={item.tags}
+            trailingActions={[
+              <Link
+                key="retry"
+                href={
+                  writingProblemHref({
+                    questionNo: item.question_no,
+                    problemId: item.id,
+                  }) as never
+                }
+              >
+                <Button type="primary" size="small">
+                  {t("retry")}
+                </Button>
+              </Link>,
+            ]}
+          >
+            <Space orientation="vertical" size={2} style={{ width: "100%" }}>
+              <Text strong>{item.title}</Text>
+            </Space>
+          </LibraryItemRow>
+        ))}
+      </Space>
+      <LibraryPagination
+        current={safePage}
+        total={items.length}
+        onChange={(p) => setPage(p)}
+      />
+    </Space>
   );
 }

@@ -57,8 +57,9 @@ export function matchesLibrarySearch(
   term: string,
   haystacks: Array<string | null | undefined>,
 ): boolean {
-  const needle = term.trim().toLowerCase();
+  const needle = term.trim().toLowerCase().slice(0, 40);
   if (needle.length === 0) return true;
+  if (needle.length < 2) return true;
   return haystacks.some(
     (h) => typeof h === "string" && h.toLowerCase().includes(needle),
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { Alert, App, Badge, Button, Empty, List, Space, Spin, Tag, Typography } from "antd";
+import { Alert, App, Badge, Button, Empty, Space, Spin, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
@@ -9,6 +9,10 @@ import { useLibraryItems } from "@/lib/library/queries";
 import type { LibraryExportView, LibraryItemView } from "@/lib/library/types";
 
 import { LibraryItemRow } from "./LibraryItemRow";
+import {
+  LIBRARY_PAGE_SIZE,
+  LibraryPagination,
+} from "./LibraryPagination";
 import { matchesLibrarySearch } from "./library-tab-url";
 
 const { Text } = Typography;
@@ -136,7 +140,9 @@ export function LibraryExportsTab({
   onResetSearch,
 }: Props) {
   const t = useTranslations("library.exports");
+  const tCount = useTranslations("library.submissions");
   const query = useLibraryItems("exports");
+  const [page, setPage] = useState(1);
   const allItems: LibraryExportView[] = (query.data ?? initialItems).filter(
     isExport,
   );
@@ -146,6 +152,12 @@ export function LibraryExportsTab({
       i.storage_path,
       ...i.tags,
     ]),
+  );
+  const totalPages = Math.max(1, Math.ceil(items.length / LIBRARY_PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const pageItems = items.slice(
+    (safePage - 1) * LIBRARY_PAGE_SIZE,
+    safePage * LIBRARY_PAGE_SIZE,
   );
 
   if (query.isLoading && (query.data ?? []).length === 0 && initialItems.length === 0) {
@@ -165,51 +177,78 @@ export function LibraryExportsTab({
   if (items.length === 0) {
     const searching = searchTerm.trim().length > 0;
     return (
-      <Empty
-        description={searching ? t("emptySearch") : t("emptyNoItems")}
-      >
-        {searching && onResetSearch ? (
-          <Button onClick={onResetSearch}>{t("resetFilter")}</Button>
-        ) : null}
-      </Empty>
+      <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+        <Text data-testid="library-result-count" type="secondary">
+          {tCount("resultCount", { count: 0 })}
+        </Text>
+        <Empty
+          description={searching ? t("emptySearch") : t("emptyNoItems")}
+        >
+          {searching && onResetSearch ? (
+            <Button onClick={onResetSearch}>{t("resetFilter")}</Button>
+          ) : null}
+        </Empty>
+      </Space>
     );
   }
 
   return (
-    <List
-      dataSource={items}
-      renderItem={(item) => {
-        const isPrint = isBrowserPrintExport(item);
-        return (
-          <LibraryItemRow
-            key={item.item_id}
-            itemId={item.item_id}
-            tab="exports"
-            tags={item.tags}
-            trailingActions={[
-              isPrint ? (
-                <RetryPrintButton key="reprint" item={item} />
-              ) : (
-                <DownloadButton key="download" />
-              ),
-            ]}
-          >
-            <Space orientation="vertical" size={4} style={{ width: "100%" }}>
-              <Text strong>
-                {t(exportSourceLabelKey(item.source_type) as Parameters<typeof t>[0])}
-              </Text>
-              <Space size="small" wrap>
-                <Badge
-                  status={statusBadgeStatus(item.status)}
-                  text={t(statusLabelKey(item.status) as Parameters<typeof t>[0])}
-                />
-                {isPrint ? <Tag color="geekblue">{t("browserPrintTag")}</Tag> : null}
-                <Text type="secondary">{item.storage_path}</Text>
+    <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+      <Text data-testid="library-result-count" type="secondary">
+        {tCount("resultCount", { count: items.length })}
+      </Text>
+      <Space
+        data-testid="library-item-list"
+        orientation="vertical"
+        size={0}
+        style={{ width: "100%" }}
+      >
+        {pageItems.map((item) => {
+          const isPrint = isBrowserPrintExport(item);
+          return (
+            <LibraryItemRow
+              key={item.item_id}
+              itemId={item.item_id}
+              tab="exports"
+              tags={item.tags}
+              trailingActions={[
+                isPrint ? (
+                  <RetryPrintButton key="reprint" item={item} />
+                ) : (
+                  <DownloadButton key="download" />
+                ),
+              ]}
+            >
+              <Space orientation="vertical" size={4} style={{ width: "100%" }}>
+                <Text strong>
+                  {t(
+                    exportSourceLabelKey(
+                      item.source_type,
+                    ) as Parameters<typeof t>[0],
+                  )}
+                </Text>
+                <Space size="small" wrap>
+                  <Badge
+                    status={statusBadgeStatus(item.status)}
+                    text={t(
+                      statusLabelKey(item.status) as Parameters<typeof t>[0],
+                    )}
+                  />
+                  {isPrint ? (
+                    <Tag color="geekblue">{t("browserPrintTag")}</Tag>
+                  ) : null}
+                  <Text type="secondary">{item.storage_path}</Text>
+                </Space>
               </Space>
-            </Space>
-          </LibraryItemRow>
-        );
-      }}
-    />
+            </LibraryItemRow>
+          );
+        })}
+      </Space>
+      <LibraryPagination
+        current={safePage}
+        total={items.length}
+        onChange={(p) => setPage(p)}
+      />
+    </Space>
   );
 }

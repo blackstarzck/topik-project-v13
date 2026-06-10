@@ -6,8 +6,6 @@ import {
   Checkbox,
   DatePicker,
   Empty,
-  List,
-  Pagination,
   Select,
   Space,
   Spin,
@@ -29,6 +27,10 @@ import { writingProblemHref } from "@/lib/writing/routes";
 import { ExportPdfButton } from "./ExportPdfButton";
 import { LibraryItemRow } from "./LibraryItemRow";
 import {
+  LIBRARY_PAGE_SIZE,
+  LibraryPagination,
+} from "./LibraryPagination";
+import {
   clampTitle,
   fetchSubmissionEnrichment,
   statusBadge,
@@ -39,8 +41,6 @@ import type { ExportSelectionItem } from "./PdfExportModal";
 
 const { Text, Paragraph } = Typography;
 const { RangePicker } = DatePicker;
-
-const PAGE_SIZE = 10;
 
 type StatusFilter = "all" | "complete" | "analyzing" | "pending" | "failed";
 
@@ -58,6 +58,14 @@ function isSubmission(item: LibraryItemView): item is LibrarySubmissionView {
 
 function formatDate(iso: string): string {
   return iso.slice(0, 16).replace("T", " ");
+}
+
+function submissionTitle(
+  item: LibrarySubmissionView,
+  fallbackTitle: string,
+): string {
+  const title = item.problem_title ?? fallbackTitle;
+  return item.question_no != null ? `No. ${item.question_no} - ${title}` : title;
 }
 
 /**
@@ -122,9 +130,10 @@ export function LibrarySubmissionsTab({
 
   const filtered = useMemo(() => {
     return allItems.filter((i) => {
+      const fallbackTitle = t("problemTitle", { id: i.problem_id.slice(0, 8) });
       if (
         !matchesLibrarySearch(searchTerm, [
-          t("problemTitle", { id: i.problem_id.slice(0, 8) }),
+          submissionTitle(i, fallbackTitle),
           i.problem_id,
           enrich.get(i.id)?.summary,
           ...i.tags,
@@ -137,20 +146,24 @@ export function LibrarySubmissionsTab({
         if (status !== statusFilter) return false;
       }
       if (range && (range[0] || range[1])) {
-        const t = new Date(i.submitted_at).getTime();
-        if (range[0] && t < range[0].startOf("day").valueOf()) return false;
-        if (range[1] && t > range[1].endOf("day").valueOf()) return false;
+        const submittedAt = new Date(i.submitted_at).getTime();
+        if (range[0] && submittedAt < range[0].startOf("day").valueOf()) {
+          return false;
+        }
+        if (range[1] && submittedAt > range[1].endOf("day").valueOf()) {
+          return false;
+        }
       }
       return true;
     });
   }, [allItems, searchTerm, statusFilter, range, enrich, t]);
 
   // Clamp the page when the filtered set shrinks.
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(filtered.length / LIBRARY_PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
   const pageItems = filtered.slice(
-    (safePage - 1) * PAGE_SIZE,
-    safePage * PAGE_SIZE,
+    (safePage - 1) * LIBRARY_PAGE_SIZE,
+    safePage * LIBRARY_PAGE_SIZE,
   );
 
   // Lift selection (intersected with currently-filtered ids) to the parent.
@@ -161,7 +174,10 @@ export function LibrarySubmissionsTab({
       .filter((i) => selected.has(i.item_id) && validIds.has(i.item_id))
       .map((i) => ({
         itemId: i.item_id,
-        title: t("problemTitle", { id: i.problem_id.slice(0, 8) }),
+        title: submissionTitle(
+          i,
+          t("problemTitle", { id: i.problem_id.slice(0, 8) }),
+        ),
       }));
     onSelectionChange(items);
   }, [selected, filtered, onSelectionChange, t]);
@@ -204,6 +220,7 @@ export function LibrarySubmissionsTab({
       {/* Region 1: 필터 (유형·상태·기간 동시) + 결과 수 상단 표시 */}
       <Space wrap>
         <Select<StatusFilter>
+          data-testid="library-status-filter"
           value={statusFilter}
           onChange={(v) => {
             setStatusFilter(v);
@@ -219,15 +236,19 @@ export function LibrarySubmissionsTab({
             { value: "failed", label: t("statusFailed") },
           ]}
         />
-        <RangePicker
-          value={range ?? undefined}
-          onChange={(v) => {
-            setRange(v as [Dayjs | null, Dayjs | null] | null);
-            setPage(1);
-          }}
-          aria-label={t("periodFilterAriaLabel")}
-        />
-        <Text type="secondary">{t("resultCount", { count: filtered.length })}</Text>
+        <span data-testid="library-period-filter">
+          <RangePicker
+            value={range ?? undefined}
+            onChange={(v) => {
+              setRange(v as [Dayjs | null, Dayjs | null] | null);
+              setPage(1);
+            }}
+            aria-label={t("periodFilterAriaLabel")}
+          />
+        </span>
+        <Text data-testid="library-result-count" type="secondary">
+          {t("resultCount", { count: filtered.length })}
+        </Text>
       </Space>
 
       {pageItems.length === 0 ? (
@@ -250,11 +271,19 @@ export function LibrarySubmissionsTab({
         </Empty>
       ) : (
         <>
-          <List
-            dataSource={pageItems}
-            renderItem={(item) => {
+          <Space
+            data-testid="library-item-list"
+            orientation="vertical"
+            size={0}
+            style={{ width: "100%" }}
+          >
+            {pageItems.map((item) => {
               const meta = enrich.get(item.id);
               const badge = statusBadge(meta?.feedbackStatus ?? "pending");
+              const fallbackTitle = t("problemTitle", {
+                id: item.problem_id.slice(0, 8),
+              });
+              const title = submissionTitle(item, fallbackTitle);
               return (
                 <LibraryItemRow
                   key={item.item_id}
@@ -262,12 +291,15 @@ export function LibrarySubmissionsTab({
                   tab="submissions"
                   tags={item.tags}
                   trailingActions={[
-                    <Checkbox
-                      key="select"
-                      checked={selected.has(item.item_id)}
-                      onChange={(e) => toggle(item.item_id, e.target.checked)}
-                      aria-label={t("selectForExportAriaLabel")}
-                    />,
+                    <span key="select" data-testid="library-select-item">
+                      <Checkbox
+                        checked={selected.has(item.item_id)}
+                        onChange={(e) =>
+                          toggle(item.item_id, e.target.checked)
+                        }
+                        aria-label={t("selectForExportAriaLabel")}
+                      />
+                    </span>,
                     <ExportPdfButton
                       key="export"
                       sourceType="submission"
@@ -285,13 +317,7 @@ export function LibrarySubmissionsTab({
                           }) as never
                         }
                       >
-                        <Text strong>
-                          {clampTitle(
-                            t("problemTitle", {
-                              id: item.problem_id.slice(0, 8),
-                            }),
-                          )}
-                        </Text>
+                        <Text strong>{clampTitle(title)}</Text>
                       </Link>
                       <Tag color={badge.color}>
                         {t(badge.labelKey as Parameters<typeof t>[0])}
@@ -323,21 +349,15 @@ export function LibrarySubmissionsTab({
                   </Space>
                 </LibraryItemRow>
               );
-            }}
-          />
+            })}
+          </Space>
 
           {/* Region 5: 페이지 이동 (10/page, <=5 버튼, 총 건수 하단) */}
-          <Space style={{ width: "100%", justifyContent: "center" }}>
-            <Pagination
-              current={safePage}
-              pageSize={PAGE_SIZE}
-              total={filtered.length}
-              showSizeChanger={false}
-              showTotal={(total) => t("totalCount", { count: total })}
-              onChange={(p) => setPage(p)}
-              responsive
-            />
-          </Space>
+          <LibraryPagination
+            current={safePage}
+            total={filtered.length}
+            onChange={(p) => setPage(p)}
+          />
         </>
       )}
     </Space>

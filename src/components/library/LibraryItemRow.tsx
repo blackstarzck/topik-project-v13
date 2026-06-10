@@ -4,7 +4,6 @@ import {
   App,
   Button,
   Input,
-  List,
   Popconfirm,
   Popover,
   Space,
@@ -18,6 +17,7 @@ import {
   useUpdateItemTags,
 } from "@/lib/library/mutations";
 import type { LibraryTab } from "@/lib/library/types";
+import { SPACING } from "@/theme/spacing";
 
 type Props = {
   children: ReactNode;
@@ -35,7 +35,7 @@ type Props = {
 /**
  * Shared row chrome for every `Library{Submissions,Reports,SavedProblems,Exports}Tab`.
  *
- * Layout — antd `List.Item`:
+ * Layout:
  *   [ left content children ]   [ tag chips, edit tags popover, delete popconfirm ]
  *
  * Tag editing uses a comma-separated text field inside a Popover; saving
@@ -93,7 +93,7 @@ export function LibraryItemRow({
 
   const tagChips =
     tags.length > 0 ? (
-      <Space size={[4, 4]} wrap>
+      <Space size={[SPACING.xs, SPACING.xs]} wrap>
         {tags.map((t) => (
           <Tag key={t}>{t}</Tag>
         ))}
@@ -159,5 +159,24 @@ export function LibraryItemRow({
     <span key="delete">{deleteConfirm}</span>,
   ];
 
-  return <List.Item actions={actions}>{children}</List.Item>;
+  return (
+    <div
+      data-testid="library-item-row"
+      data-library-tab={tab}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: SPACING.md,
+        flexWrap: "wrap",
+        paddingBlock: SPACING.md,
+        borderBottom: "1px solid var(--app-color-border)",
+      }}
+    >
+      <div style={{ minWidth: 0, flex: "1 1 280px" }}>{children}</div>
+      <Space size={[SPACING.sm, SPACING.sm]} wrap>
+        {actions}
+      </Space>
+    </div>
+  );
 }

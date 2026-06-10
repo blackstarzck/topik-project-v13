@@ -157,7 +157,9 @@ export function LibraryTabs({ activeTab, initialItems }: Props) {
   return (
     <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
       <Input.Search
+        data-testid="library-search"
         allowClear
+        maxLength={40}
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
         placeholder={t("searchPlaceholder")}
@@ -169,12 +171,16 @@ export function LibraryTabs({ activeTab, initialItems }: Props) {
           submissions tab lifts its current selection; these actions apply to
           저장 답안 선택. 액션 3개 이하: PDF 내보내기 / 복습 세트 생성 / 선택 해제.
           선택 없음은 버튼 비활성으로 안내한다. */}
-      <AppCard size="small">
+      <AppCard data-testid="library-actions" size="small">
         <Space wrap>
-          <Tag color={selection.length > 0 ? "blue" : "default"}>
+          <Tag
+            data-testid="library-selection-count"
+            color={selection.length > 0 ? "blue" : "default"}
+          >
             {t("selectionCount", { count: selection.length })}
           </Tag>
           <Button
+            data-testid="library-export-pdf"
             type="primary"
             disabled={selection.length === 0}
             onClick={() => setExportOpen(true)}
@@ -182,6 +188,7 @@ export function LibraryTabs({ activeTab, initialItems }: Props) {
             {t("exportPdf")}
           </Button>
           <Button
+            data-testid="library-create-review-set"
             disabled={selection.length === 0}
             loading={reviewPending}
             onClick={handleCreateReviewSet}
@@ -194,7 +201,13 @@ export function LibraryTabs({ activeTab, initialItems }: Props) {
         </Space>
       </AppCard>
 
-      <Tabs activeKey={activeTab} onChange={handleChange} items={items} />
+      <Tabs
+        data-testid="library-tabs"
+        activeKey={activeTab}
+        destroyOnHidden
+        onChange={handleChange}
+        items={items}
+      />
 
       <PdfExportModal
         open={exportOpen}

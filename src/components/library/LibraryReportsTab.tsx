@@ -1,14 +1,19 @@
 "use client";
 
-import { Alert, Button, Empty, List, Space, Spin, Typography } from "antd";
+import { Alert, Button, Empty, Space, Spin, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
+import { useState } from "react";
 
 import { useLibraryItems } from "@/lib/library/queries";
 import type { LibraryItemView, LibraryReportView } from "@/lib/library/types";
 
 import { ExportPdfButton } from "./ExportPdfButton";
 import { LibraryItemRow } from "./LibraryItemRow";
+import {
+  LIBRARY_PAGE_SIZE,
+  LibraryPagination,
+} from "./LibraryPagination";
 import { matchesLibrarySearch } from "./library-tab-url";
 
 const { Text, Paragraph } = Typography;
@@ -33,7 +38,9 @@ export function LibraryReportsTab({
   onResetSearch,
 }: Props) {
   const t = useTranslations("library.reports");
+  const tCount = useTranslations("library.submissions");
   const query = useLibraryItems("reports");
+  const [page, setPage] = useState(1);
   const allItems: LibraryReportView[] = (query.data ?? initialItems).filter(
     isReport,
   );
@@ -43,6 +50,12 @@ export function LibraryReportsTab({
       i.narrative_excerpt,
       ...i.tags,
     ]),
+  );
+  const totalPages = Math.max(1, Math.ceil(items.length / LIBRARY_PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const pageItems = items.slice(
+    (safePage - 1) * LIBRARY_PAGE_SIZE,
+    safePage * LIBRARY_PAGE_SIZE,
   );
 
   if (query.isLoading && (query.data ?? []).length === 0 && initialItems.length === 0) {
@@ -62,50 +75,69 @@ export function LibraryReportsTab({
   if (items.length === 0) {
     const searching = searchTerm.trim().length > 0;
     return (
-      <Empty
-        description={searching ? t("emptySearch") : t("emptyNoItems")}
-      >
-        {searching && onResetSearch ? (
-          <Button onClick={onResetSearch}>{t("resetFilter")}</Button>
-        ) : null}
-      </Empty>
+      <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+        <Text data-testid="library-result-count" type="secondary">
+          {tCount("resultCount", { count: 0 })}
+        </Text>
+        <Empty
+          description={searching ? t("emptySearch") : t("emptyNoItems")}
+        >
+          {searching && onResetSearch ? (
+            <Button onClick={onResetSearch}>{t("resetFilter")}</Button>
+          ) : null}
+        </Empty>
+      </Space>
     );
   }
 
   return (
-    <List
-      dataSource={items}
-      renderItem={(item) => (
-        <LibraryItemRow
-          key={item.item_id}
-          itemId={item.item_id}
-          tab="reports"
-          tags={item.tags}
-          trailingActions={[
-            <ExportPdfButton
-              key="export"
-              sourceType="report"
-              sourceId={item.id}
-            />,
-          ]}
-        >
-          <Space orientation="vertical" size={4} style={{ width: "100%" }}>
-            <Link href={`/writing/reports/${item.id}/compare` as never}>
-              <Text strong>{t("title")}</Text>
-            </Link>
-            <Text type="secondary">{formatDate(item.generated_at)}</Text>
-            {item.narrative_excerpt ? (
-              <Paragraph
-                style={{ marginBottom: 0 }}
-                ellipsis={{ rows: 2 }}
-                type="secondary"
-              >
-                {item.narrative_excerpt}
-              </Paragraph>
-            ) : null}
-          </Space>
-        </LibraryItemRow>
-      )}
-    />
+    <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+      <Text data-testid="library-result-count" type="secondary">
+        {tCount("resultCount", { count: items.length })}
+      </Text>
+      <Space
+        data-testid="library-item-list"
+        orientation="vertical"
+        size={0}
+        style={{ width: "100%" }}
+      >
+        {pageItems.map((item) => (
+          <LibraryItemRow
+            key={item.item_id}
+            itemId={item.item_id}
+            tab="reports"
+            tags={item.tags}
+            trailingActions={[
+              <ExportPdfButton
+                key="export"
+                sourceType="report"
+                sourceId={item.id}
+              />,
+            ]}
+          >
+            <Space orientation="vertical" size={4} style={{ width: "100%" }}>
+              <Link href={`/writing/reports/${item.id}/compare` as never}>
+                <Text strong>{t("title")}</Text>
+              </Link>
+              <Text type="secondary">{formatDate(item.generated_at)}</Text>
+              {item.narrative_excerpt ? (
+                <Paragraph
+                  style={{ marginBottom: 0 }}
+                  ellipsis={{ rows: 2 }}
+                  type="secondary"
+                >
+                  {item.narrative_excerpt}
+                </Paragraph>
+              ) : null}
+            </Space>
+          </LibraryItemRow>
+        ))}
+      </Space>
+      <LibraryPagination
+        current={safePage}
+        total={items.length}
+        onChange={(p) => setPage(p)}
+      />
+    </Space>
   );
 }
