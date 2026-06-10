@@ -1,9 +1,12 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, screen } from "@testing-library/react";
+import { cleanup, fireEvent, screen, within } from "@testing-library/react";
+import type { ComponentProps } from "react";
 
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
 import { AutosaveWarningModal } from "../../../src/components/writing/AutosaveWarningModal";
+
+type ModalProps = ComponentProps<typeof AutosaveWarningModal>;
 
 beforeEach(() => {
   if (!window.matchMedia) {
@@ -25,6 +28,29 @@ beforeEach(() => {
 
 afterEach(() => cleanup());
 
+function renderModal(props: Partial<ModalProps> = {}) {
+  const handlers = {
+    onKeep: vi.fn(),
+    onRetry: vi.fn(),
+    onProceed: vi.fn(),
+  };
+
+  renderWithIntl(
+    <AutosaveWarningModal
+      trigger="save_failure"
+      lastSavedAt={null}
+      {...handlers}
+      {...props}
+    />,
+  );
+
+  return handlers;
+}
+
+function modalButton(testId: string) {
+  return screen.getByTestId(testId) as HTMLButtonElement;
+}
+
 describe("AutosaveWarningModal", () => {
   it("renders nothing when trigger is null", () => {
     const { container } = renderWithIntl(
@@ -39,83 +65,72 @@ describe("AutosaveWarningModal", () => {
     expect(container.textContent).toBe("");
   });
 
-  it("save_failure trigger shows failure title + last-saved time", () => {
-    renderWithIntl(
-      <AutosaveWarningModal
-        trigger="save_failure"
-        lastSavedAt="2026-05-26T08:30:00Z"
-        onKeep={vi.fn()}
-        onRetry={vi.fn()}
-        onProceed={vi.fn()}
-      />,
-    );
-    expect(screen.getByText(/자동 저장 실패/)).toBeTruthy();
-    expect(screen.getByText(/마지막 저장:/)).toBeTruthy();
-  });
+  it("save_failure shows the warning copy, last-saved time, and recoverable state", () => {
+    renderModal({
+      trigger: "save_failure",
+      lastSavedAt: "2026-05-26T08:30:00Z",
+    });
 
-  it("disable_attempt trigger disables retry button", () => {
-    const onRetry = vi.fn();
-    renderWithIntl(
-      <AutosaveWarningModal
-        trigger="disable_attempt"
-        lastSavedAt={null}
-        onKeep={vi.fn()}
-        onRetry={onRetry}
-        onProceed={vi.fn()}
-      />,
+    const modal = screen.getByTestId("autosave-warning-modal");
+    expect(screen.getByText("자동 저장 실패")).toBeTruthy();
+    expect(screen.getByTestId("autosave-warning-alert").textContent).toContain(
+      "네트워크가 끊겼다면",
     );
-    const retryBtn = screen.getByText(/대신 자동 저장 유지/);
     expect(
-      (retryBtn.closest("button") as HTMLButtonElement).disabled,
-    ).toBe(true);
+      within(modal).getByTestId("autosave-warning-last-saved").textContent,
+    ).toContain("2026");
+    expect(
+      within(modal).getByTestId("autosave-warning-recovery-state").textContent,
+    ).toContain("복구 가능");
+    expect(modalButton("autosave-warning-retry").disabled).toBe(false);
   });
 
-  it("exit_with_dirty trigger shows exit warning + invokes onProceed", () => {
-    const onProceed = vi.fn();
-    renderWithIntl(
-      <AutosaveWarningModal
-        trigger="exit_with_dirty"
-        lastSavedAt={null}
-        onKeep={vi.fn()}
-        onRetry={vi.fn()}
-        onProceed={onProceed}
-      />,
+  it("disable_attempt disables retry and requires the danger proceed action", () => {
+    const handlers = renderModal({ trigger: "disable_attempt" });
+
+    expect(screen.queryByTestId("autosave-warning-alert")).toBeNull();
+    expect(screen.getByTestId("autosave-warning-no-backup").textContent).toContain(
+      "복구할 수 있는 임시 저장본이 없어요",
     );
-    // Title + body both contain "저장되지 않은 변경 사항" — use getAllBy.
-    expect(screen.getAllByText(/저장되지 않은 변경 사항/).length).toBeGreaterThan(
-      0,
-    );
-    fireEvent.click(screen.getByText(/위험을 알지만 진행/));
-    expect(onProceed).toHaveBeenCalledTimes(1);
+
+    const retryButton = modalButton("autosave-warning-retry");
+    expect(retryButton.disabled).toBe(true);
+    fireEvent.click(retryButton);
+    expect(handlers.onRetry).not.toHaveBeenCalled();
+
+    fireEvent.click(modalButton("autosave-warning-proceed"));
+    expect(handlers.onProceed).toHaveBeenCalledTimes(1);
   });
 
-  it("save_failure: clicking '지금 다시 시도' fires onRetry", () => {
-    const onRetry = vi.fn();
-    renderWithIntl(
-      <AutosaveWarningModal
-        trigger="save_failure"
-        lastSavedAt={null}
-        onKeep={vi.fn()}
-        onRetry={onRetry}
-        onProceed={vi.fn()}
-      />,
+  it("exit_with_dirty can show checking recovery state and invokes onProceed", () => {
+    const handlers = renderModal({
+      trigger: "exit_with_dirty",
+      recoveryState: "checking",
+    });
+
+    expect(screen.getByTestId("autosave-warning-body").textContent).toContain(
+      "페이지를 나가면",
     );
-    fireEvent.click(screen.getByText("지금 다시 시도"));
-    expect(onRetry).toHaveBeenCalledTimes(1);
+    expect(
+      screen.getByTestId("autosave-warning-recovery-state").textContent,
+    ).toContain("확인 중");
+    expect(screen.queryByTestId("autosave-warning-no-backup")).toBeNull();
+
+    fireEvent.click(modalButton("autosave-warning-proceed"));
+    expect(handlers.onProceed).toHaveBeenCalledTimes(1);
   });
 
-  it("any trigger: clicking '자동 저장 유지' fires onKeep", () => {
-    const onKeep = vi.fn();
-    renderWithIntl(
-      <AutosaveWarningModal
-        trigger="save_failure"
-        lastSavedAt={null}
-        onKeep={onKeep}
-        onRetry={vi.fn()}
-        onProceed={vi.fn()}
-      />,
-    );
-    fireEvent.click(screen.getByText("자동 저장 유지"));
-    expect(onKeep).toHaveBeenCalledTimes(1);
+  it("save_failure retry fires onRetry", () => {
+    const handlers = renderModal({ trigger: "save_failure" });
+
+    fireEvent.click(modalButton("autosave-warning-retry"));
+    expect(handlers.onRetry).toHaveBeenCalledTimes(1);
+  });
+
+  it("keep action fires onKeep", () => {
+    const handlers = renderModal({ trigger: "save_failure" });
+
+    fireEvent.click(modalButton("autosave-warning-keep"));
+    expect(handlers.onKeep).toHaveBeenCalledTimes(1);
   });
 });

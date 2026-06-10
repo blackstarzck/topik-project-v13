@@ -523,12 +523,39 @@
       "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/20-G-01-language-settings/findings.json",
       "status": "PASS",
       "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
+    },
+    {
+      "folder": "22-D-M3-autosave-warning",
+      "iaCode": "D-M3",
+      "screen": "Autosave warning modal",
+      "route": "/writing/short-answer-writing-51",
+      "routeSource": "docs/Wireframe/22-D-M3-autosave-warning/functional-spec.md",
+      "routeFallback": "docs/sitemap.md",
+      "referenceImages": {
+        "wireframe": "docs/Wireframe/22-D-M3-autosave-warning/wireframe.png",
+        "hifi": "docs/Wireframe/22-D-M3-autosave-warning/hifi.png",
+        "status": "complete"
+      },
+      "docs": {
+        "description": "present",
+        "functionalSpec": "present",
+        "screenDataSummary": "present"
+      },
+      "classification": "user-active-modal",
+      "audience": "user",
+      "authRequirement": "authenticated user",
+      "hostRoute": "/writing/short-answer-writing-51",
+      "modalTriggerRequirement": "D-M3 disable_attempt is triggered by the autosave-off CTA on writing pages; save_failure and exit_with_dirty are covered by component branch tests.",
+      "report": "docs/design-review-result/wireframe-ui-audit/2026-06-10/22-D-M3-autosave-warning.html",
+      "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/22-D-M3-autosave-warning/findings.json",
+      "status": "PASS",
+      "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
     }
   ],
   "summary": {
-    "completedPass": 20,
+    "completedPass": 21,
     "inProgress": 0,
-    "remainingKnownActiveScreens": 14,
+    "remainingKnownActiveScreens": 13,
     "adminFrozenOutOfScope": [
       "21-H-01-admin-problem-management",
       "30-X-08-organization-admin-dashboard",
