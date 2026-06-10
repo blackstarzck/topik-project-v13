@@ -120,9 +120,16 @@ describe("GrowthDashboard (i18n chrome)", () => {
 
   it("renders the locked report when reportLocked is true", () => {
     renderGrowth(<GrowthDashboard {...baseProps} reportLocked planLabel={null} />);
+    expect(screen.getByTestId("growth-kpi-grid")).toBeTruthy();
+    expect(screen.getByTestId("growth-kpi-average")).toBeTruthy();
+    expect(screen.getByTestId("growth-kpi-attempts")).toBeTruthy();
+    expect(screen.getByTestId("growth-kpi-improvement")).toBeTruthy();
+    expect(screen.getByTestId("growth-kpi-goal")).toBeTruthy();
     expect(
       screen.getByText("상세 성장 리포트는 유료 플랜 전용이에요"),
     ).toBeTruthy();
+    expect(screen.getByTestId("growth-locked-report")).toBeTruthy();
+    expect(screen.queryByText("성장 추세 차트")).toBeNull();
   });
 
   it("shows the no-goal setup prompt when hasGoal is false", () => {

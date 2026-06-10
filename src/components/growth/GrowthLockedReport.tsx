@@ -18,28 +18,36 @@ export function GrowthLockedReport({ planLabel }: { planLabel: string | null }) 
   // planLabel 이 없으면 "무료" 로 표시. Tag 는 rich 청크로 본문 안에 끼워 넣는다.
   const planText = planLabel ?? t("freePlan");
   return (
-    <Result
-      icon={<span style={{ fontSize: 40 }} aria-hidden>🔒</span>}
-      title={t("title")}
-      subTitle={
-        <Space orientation="vertical" size={4} style={{ width: "100%" }}>
-          <Paragraph type="secondary" style={{ margin: 0 }}>
-            {t.rich("body", {
-              plan: () => <Tag>{planText}</Tag>,
-            })}
-          </Paragraph>
-        </Space>
-      }
-      extra={
-        <Space wrap>
-          <Link href="/paywall">
-            <Button type="primary">{t("upgradeCta")}</Button>
-          </Link>
-          <Link href="/subscription">
-            <Button>{t("manageCta")}</Button>
-          </Link>
-        </Space>
-      }
-    />
+    <div data-testid="growth-locked-report">
+      <Result
+        icon={
+          <span style={{ fontSize: 40 }} aria-hidden>
+            🔒
+          </span>
+        }
+        title={t("title")}
+        subTitle={
+          <Space orientation="vertical" size={4} style={{ width: "100%" }}>
+            <Paragraph type="secondary" style={{ margin: 0 }}>
+              {t.rich("body", {
+                plan: () => <Tag>{planText}</Tag>,
+              })}
+            </Paragraph>
+          </Space>
+        }
+        extra={
+          <Space wrap>
+            <Link href="/paywall">
+              <Button data-testid="growth-upgrade-cta" type="primary">
+                {t("upgradeCta")}
+              </Button>
+            </Link>
+            <Link href="/subscription">
+              <Button data-testid="growth-manage-cta">{t("manageCta")}</Button>
+            </Link>
+          </Space>
+        }
+      />
+    </div>
   );
 }

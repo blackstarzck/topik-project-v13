@@ -160,95 +160,106 @@ export function GrowthDashboard({
 
   const improvement = deltaSuffix(kpi.improvementPct);
 
+  const kpiSection = hasGoal ? (
+    <Row data-testid="growth-kpi-grid" gutter={[16, 16]}>
+      <Col xs={12} md={6}>
+        <AppCard
+          data-testid="growth-kpi-average"
+          size="small"
+          style={{ height: "100%" }}
+        >
+          <Statistic
+            title={t("kpi.averageScore")}
+            value={kpi.averageScore != null ? Math.round(kpi.averageScore) : "—"}
+            suffix={
+              kpi.averageScore != null ? t("kpi.pointSuffix") : undefined
+            }
+          />
+          <Text type="secondary" style={{ fontSize: 12 }}>
+            {t("kpi.averageScoreHint")}
+          </Text>
+        </AppCard>
+      </Col>
+      <Col xs={12} md={6}>
+        <AppCard
+          data-testid="growth-kpi-attempts"
+          size="small"
+          style={{ height: "100%" }}
+        >
+          <Statistic
+            title={t("kpi.attempts")}
+            value={kpi.totalAttempts}
+            suffix={t("kpi.attemptsSuffix")}
+          />
+          <Text type="secondary" style={{ fontSize: 12 }}>
+            {t("kpi.attemptsHint")}
+          </Text>
+        </AppCard>
+      </Col>
+      <Col xs={12} md={6}>
+        <AppCard
+          data-testid="growth-kpi-improvement"
+          size="small"
+          style={{ height: "100%" }}
+        >
+          <Statistic
+            title={t("kpi.improvement")}
+            value={improvement.text}
+            styles={{
+              content: improvement.color
+                ? { color: improvement.color }
+                : undefined,
+            }}
+          />
+          <Text type="secondary" style={{ fontSize: 12 }}>
+            {t("kpi.improvementHint")}
+          </Text>
+        </AppCard>
+      </Col>
+      <Col xs={12} md={6}>
+        <AppCard
+          data-testid="growth-kpi-goal"
+          size="small"
+          style={{ height: "100%" }}
+        >
+          <Statistic
+            title={t("kpi.goalAchievement")}
+            value={
+              kpi.goalAchievementPct != null ? kpi.goalAchievementPct : "—"
+            }
+            suffix={kpi.goalAchievementPct != null ? "%" : undefined}
+          />
+          <Text type="secondary" style={{ fontSize: 12 }}>
+            {t("kpi.goalLabel", { goal: kpi.goalLabel })}
+          </Text>
+        </AppCard>
+      </Col>
+    </Row>
+  ) : (
+    <AppCard data-testid="growth-no-goal">
+      <Empty description={t("noGoal.description")}>
+        <Link href="/onboarding/learning-goal">
+          <Button type="primary">{t("noGoal.cta")}</Button>
+        </Link>
+      </Empty>
+    </AppCard>
+  );
+
   return (
     <Space orientation="vertical" size="large" style={{ width: "100%" }}>
       <PageHeader title={t("heading")} subtitle={t("subheading")} />
 
+      {/* area 2 — KPI 카드 4개 고정. 목표/데이터 없음은 설정 유도.
+          free 플랜도 잠금 카피가 약속한 기본 지표를 먼저 볼 수 있어야 한다. */}
+      {kpiSection}
+
       {/* area 1 예외 — 권한 없는 리포트 잠금 + 업그레이드 CTA. */}
       {reportLocked ? (
-        <AppCard>
+        <AppCard data-testid="growth-locked-report-card">
           <GrowthLockedReport planLabel={planLabel} />
         </AppCard>
       ) : (
         <>
-          {/* area 2 — KPI 카드 4개 고정. 목표/데이터 없음은 설정 유도. */}
-          {hasGoal ? (
-            <Row gutter={[16, 16]}>
-              <Col xs={12} md={6}>
-                <AppCard size="small" style={{ height: "100%" }}>
-                  <Statistic
-                    title={t("kpi.averageScore")}
-                    value={
-                      kpi.averageScore != null
-                        ? Math.round(kpi.averageScore)
-                        : "—"
-                    }
-                    suffix={
-                      kpi.averageScore != null
-                        ? t("kpi.pointSuffix")
-                        : undefined
-                    }
-                  />
-                  <Text type="secondary" style={{ fontSize: 12 }}>
-                    {t("kpi.averageScoreHint")}
-                  </Text>
-                </AppCard>
-              </Col>
-              <Col xs={12} md={6}>
-                <AppCard size="small" style={{ height: "100%" }}>
-                  <Statistic
-                    title={t("kpi.attempts")}
-                    value={kpi.totalAttempts}
-                    suffix={t("kpi.attemptsSuffix")}
-                  />
-                  <Text type="secondary" style={{ fontSize: 12 }}>
-                    {t("kpi.attemptsHint")}
-                  </Text>
-                </AppCard>
-              </Col>
-              <Col xs={12} md={6}>
-                <AppCard size="small" style={{ height: "100%" }}>
-                  <Statistic
-                    title={t("kpi.improvement")}
-                    value={improvement.text}
-                    styles={{
-                      content: improvement.color
-                        ? { color: improvement.color }
-                        : undefined,
-                    }}
-                  />
-                  <Text type="secondary" style={{ fontSize: 12 }}>
-                    {t("kpi.improvementHint")}
-                  </Text>
-                </AppCard>
-              </Col>
-              <Col xs={12} md={6}>
-                <AppCard size="small" style={{ height: "100%" }}>
-                  <Statistic
-                    title={t("kpi.goalAchievement")}
-                    value={
-                      kpi.goalAchievementPct != null
-                        ? kpi.goalAchievementPct
-                        : "—"
-                    }
-                    suffix={kpi.goalAchievementPct != null ? "%" : undefined}
-                  />
-                  <Text type="secondary" style={{ fontSize: 12 }}>
-                    {t("kpi.goalLabel", { goal: kpi.goalLabel })}
-                  </Text>
-                </AppCard>
-              </Col>
-            </Row>
-          ) : (
-            <AppCard>
-              <Empty description={t("noGoal.description")}>
-                <Link href="/onboarding/learning-goal">
-                  <Button type="primary">{t("noGoal.cta")}</Button>
-                </Link>
-              </Empty>
-            </AppCard>
-          )}
-
           {/* area 3 — 성장 차트(recharts 시계열). */}
           <GrowthTrendChart
             points={trendPoints}

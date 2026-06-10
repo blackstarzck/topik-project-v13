@@ -550,12 +550,38 @@
       "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/22-D-M3-autosave-warning/findings.json",
       "status": "PASS",
       "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
+    },
+    {
+      "folder": "24-X-02-growth-dashboard",
+      "iaCode": "X-02",
+      "screen": "Growth dashboard",
+      "route": "/growth",
+      "routeSource": "docs/Wireframe/24-X-02-growth-dashboard/functional-spec.md",
+      "routeFallback": "docs/sitemap.md",
+      "referenceImages": {
+        "wireframe": "docs/Wireframe/24-X-02-growth-dashboard/wireframe.png",
+        "hifi": "docs/Wireframe/24-X-02-growth-dashboard/hifi.png",
+        "status": "complete"
+      },
+      "docs": {
+        "description": "present",
+        "functionalSpec": "present",
+        "screenDataSummary": "present"
+      },
+      "classification": "user-active",
+      "audience": "user",
+      "authRequirement": "authenticated user",
+      "dynamicSeedRequirement": "free-plan student account is sufficient for the locked report state; paid unlock state remains separate coverage.",
+      "report": "docs/design-review-result/wireframe-ui-audit/2026-06-10/24-X-02-growth-dashboard.html",
+      "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/24-X-02-growth-dashboard/findings.json",
+      "status": "PASS",
+      "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
     }
   ],
   "summary": {
-    "completedPass": 21,
+    "completedPass": 22,
     "inProgress": 0,
-    "remainingKnownActiveScreens": 13,
+    "remainingKnownActiveScreens": 12,
     "adminFrozenOutOfScope": [
       "21-H-01-admin-problem-management",
       "30-X-08-organization-admin-dashboard",

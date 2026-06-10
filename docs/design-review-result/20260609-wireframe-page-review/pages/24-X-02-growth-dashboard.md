@@ -2,34 +2,46 @@
 
 ## 1. 메타
 - **IA / 라우트**: X-02 / `/growth`
-- **audience**: user (free 플랜은 잠금 게이트)
-- **캡처 상태**: rendered (free 플랜 잠금 상태)
+- **audience**: user
+- **상태**: PASS
 - **host**: 단독 페이지
 
-## 2. 캡처 증거
-- 스크린샷: `.design-review-shots/20260609/24-X-02-growth-dashboard-{360,768,1280}.png`
-- 렌더 헬스(`_health.json`): HTTP 200, 콘솔 에러 0, 에러 오버레이 없음.
+## 2. 보정 요약
+- 기존 P2였던 free 잠금 상태의 문구/화면 불일치를 수정했다.
+- `GrowthDashboard`에서 KPI/목표 없음 안내를 `reportLocked` 조건 밖으로 이동했다. free 플랜도 기본 KPI 4개를 먼저 보고, 상세 성장 리포트 영역만 잠긴다.
+- `GrowthDashboard`와 `GrowthLockedReport`에 회귀 검증용 test id를 추가했다: `growth-kpi-grid`, `growth-kpi-average`, `growth-kpi-attempts`, `growth-kpi-improvement`, `growth-kpi-goal`, `growth-no-goal`, `growth-locked-report`, `growth-upgrade-cta`, `growth-manage-cta`.
+- X-02 전용 e2e를 추가해 mobile/tablet/desktop에서 KPI 4개와 잠금 CTA, 상세 차트 미노출을 검증했다.
 
 ## 3. Layer 1 — SOT 정합 리뷰
 
-| 항목 | 요소/상태 | 판정 | 근거 |
+| 항목 | 요구사항 | 판정 | 근거 |
 | --- | --- | --- | --- |
-| #1 예외 (권한 잠금) | "권한 없는 리포트는 잠금 안내 + 업그레이드 CTA" | **일치(예외 경로)** | 캡처: 🔒 "상세 성장 리포트는 유료 플랜 전용" + 플랜 업그레이드/구독 관리 |
-| KPI 카드(#2) | 평균 점수/풀이 수/개선률/목표 달성률 (free는 기본 지표) | **부분(불일치)** | 잠금 카드 카피는 "free에서는 기본 지표만 볼 수 있어요"라는데 **화면엔 기본 지표 KPI가 안 보이고 잠금 카드만** 노출 |
-| 차트/약점/인사이트(#3~5) | 유료 전용 | 일치(잠금) | 유료 전용으로 잠금 — 업그레이드 시 노출(미검증) |
+| 학습자 사이드 내비 (#1) | 성장 리포트 메뉴 유지, 권한 없는 리포트는 잠금 안내 | 일치 | `/growth` 인증 접근, free 잠금 카드와 업그레이드/구독 관리 CTA 표시 |
+| KPI 카드 (#2) | 평균 점수, 풀이 수, 개선률, 목표 달성률 4개 고정 | 일치 | e2e/capture: `kpiCardCount` 4 |
+| 성장 차트 (#3) | 유료 상세 리포트 영역, free는 잠금 | 일치 | free 잠금 상태에서 `trendChartCount` 0 |
+| 약점 매트릭스 (#4) | 유료 상세 리포트 영역, 색상만으로 의미 전달 금지 | 일치(잠금) | free 상태에서는 잠금 카드의 텍스트 안내와 CTA로 대체 |
+| 인사이트 (#5) | 유료 상세 리포트 영역, 3개 이하 | 일치(잠금) | free 상태에서는 잠금 카드의 텍스트 안내와 CTA로 대체 |
+| 하단 요약/추천 (#6) | 추천 5개 이하, 없으면 CTA | 일치(잠금) | free 상태에서는 상세 리포트 잠금으로 대체 |
 
-**종합 verdict: 부분일치** — free 잠금 게이트는 명세대로지만, "기본 지표는 보여준다"는 안내와 실제(기본 지표 미노출)가 어긋남.
+**종합 verdict: PASS.**
 
-## 4. Layer 2 — 멀티 에이전트 독립 분석
+## 4. 검증 증거
+- 산출물: `docs/design-review-result/wireframe-ui-audit/2026-06-10/24-X-02-growth-dashboard.html`
+- 구조화 결과: `docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/24-X-02-growth-dashboard/findings.json`
+- 현재 캡처 데이터: `docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/24-X-02-growth-dashboard/current.json`
+- 스크린샷:
+  - `docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/24-X-02-growth-dashboard/mobile-360.png`
+  - `docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/24-X-02-growth-dashboard/tablet-768.png`
+  - `docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/24-X-02-growth-dashboard/desktop-1280.png`
 
-- **콘텐츠/상태 (P2)**: 잠금 카드 문구 "현재 플랜 free에서는 **기본 지표만 볼 수 있어요**"가 약속하는 기본 지표(평균 점수 등)가 화면에 없음 — 문구와 화면 불일치(또는 데이터 없음 상태와 혼재). 사용자는 "기본 지표"를 기대하지만 잠금만 봄.
-- **UX/IA (양호)**: 잠금 사유 + 업그레이드 혜택(추세 차트·약점 매트릭스·인사이트) 명시 + CTA 2개(업그레이드/구독 관리)로 전환 경로 명확.
-- **반응형/접근성 (양호)**: 중앙 잠금 카드, 360 유지.
-- **적대적 검증**: "기본 지표 미노출"은 캡처로 확정. 단 free에 데이터가 없어서일 수 있어 "문구-동작 정렬 필요"로 표기(과장 금지).
+## 5. 실행 검증
+- `pnpm exec eslint src/components/growth/GrowthDashboard.tsx src/components/growth/GrowthLockedReport.tsx tests/components/growth/GrowthChrome.test.tsx tests/e2e/screens/growth-dashboard.spec.ts`
+- `pnpm exec vitest run tests/components/growth/GrowthChrome.test.tsx`
+- `pnpm exec playwright test tests/e2e/screens/growth-dashboard.spec.ts --project=mobile-360 --project=tablet-768 --project=desktop-1280 --no-deps`
+- X-02 캡처 생성 스크립트: mobile/tablet/desktop kpiGridVisible true, kpiCardCount 4, lockedReportVisible true, upgrade/manage enabled, trendChartCount 0, console/page error 0
 
-## 5. 결론 — 개선안
-
-### P2 (여유 있을 때)
-- **잠금 카피 ↔ 실제 정렬**: free에 기본 지표(평균 점수 등)를 실제 보여주거나, 카피에서 "기본 지표만" 약속을 제거해 일관성 확보. — 근거: Layer 1 #2 / Layer 2 콘텐츠. 영향: 성장 대시보드 free 진입.
-
-> 참고: 유료 잠금 게이트 자체는 명세대로. 업그레이드 후 KPI/차트/약점/인사이트는 미검증(UNVERIFIED-LIVE, free 계정). 코드 미수정.
+## 6. 검증 제한
+- 유료 플랜 unlock 상태의 차트/약점/인사이트/추천 전체 화면은 현재 free 테스트 계정으로 실측하지 않았다.
+- 전체 `pnpm exec tsc --noEmit --pretty false`는 현재 worktree의 unrelated 인증/캐릭터 변경에서 실패한다.
+- 전체 `pnpm lint`는 현재 worktree의 unrelated `tests/components/auth/AnimatedAuthCharacters.test.tsx` ENOENT로 중단된다.
+- 기본 Playwright setup 프로젝트는 unrelated 로그인 화면 변경으로 `input[autocomplete="email"]` selector를 찾지 못해 실패한다. X-02 대상 검증은 기존 `tests/e2e/auth-state/student.json`을 사용하는 `--no-deps` 실행으로 확인했다.
