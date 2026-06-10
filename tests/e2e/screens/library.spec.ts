@@ -44,6 +44,11 @@ function collectErrors(page: Page): string[] {
   page.on("console", (msg) => {
     if (msg.type() === "error") errors.push(`console: ${msg.text()}`);
   });
+  page.on("response", (response) => {
+    if (response.status() >= 500) {
+      errors.push(`response: ${response.status()} ${response.url()}`);
+    }
+  });
   return errors;
 }
 
@@ -196,7 +201,7 @@ async function createLibraryFixture() {
   };
 }
 
-test.afterAll(async () => {
+async function cleanupLibraryFixtures() {
   if (
     createdLibraryItemIds.length === 0 &&
     createdExportIds.length === 0 &&
@@ -222,7 +227,14 @@ test.afterAll(async () => {
     await sb.from("writing_feedback").delete().eq("submission_id", id);
     await sb.from("writing_submissions").delete().eq("id", id);
   }
-});
+  createdLibraryItemIds.length = 0;
+  createdExportIds.length = 0;
+  createdReportIds.length = 0;
+  createdSubmissionIds.length = 0;
+}
+
+test.afterEach(cleanupLibraryFixtures);
+test.afterAll(cleanupLibraryFixtures);
 
 test.skip(
   !SUPABASE_URL || !SERVICE_KEY,
@@ -238,15 +250,15 @@ async function filterToFixture(page: Page, marker: string) {
 }
 
 async function openTab(page: Page, tab: string) {
-  await page.goto(`/library?tab=${tab}`, { waitUntil: "networkidle" });
+  await page.goto(`/library?tab=${tab}`, { waitUntil: "load" });
   await expect(page).toHaveURL(new RegExp(`/library\\?tab=${tab}`));
 }
 
-test("F-01 my library matches the wireframe constraints", async ({ page }) => {
+test("F-01 library and F-M1 pdf export modal match the wireframe constraints", async ({ page }) => {
   const errors = collectErrors(page);
   const fixture = await createLibraryFixture();
 
-  await page.goto("/library", { waitUntil: "networkidle" });
+  await page.goto("/library", { waitUntil: "load" });
   await expect(page).not.toHaveURL(/\/login/);
 
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
@@ -267,6 +279,23 @@ test("F-01 my library matches the wireframe constraints", async ({ page }) => {
   await page.getByTestId("library-select-item").click();
   await expect(page.getByTestId("library-selection-count")).toContainText("1");
   await expect(page.getByTestId("library-export-pdf")).toBeEnabled();
+  await page.getByTestId("library-export-pdf").click();
+
+  await expect(page.getByTestId("pdf-export-modal")).toBeVisible();
+  await expect(page.getByTestId("pdf-export-filename")).toHaveAttribute(
+    "maxlength",
+    "60",
+  );
+  await expect(page.getByTestId("pdf-export-preview-item")).toHaveCount(1);
+  const previewText = await page.getByTestId("pdf-export-preview").innerText();
+  expect(previewText).toContain(fixture.problemTitle.slice(0, 12));
+  expect(previewText).not.toContain(fixture.problemId.slice(0, 8));
+  await expect(page.getByTestId("pdf-export-submit")).toBeDisabled();
+
+  await page.getByTestId("pdf-export-privacy-confirm").click();
+  await expect(page.getByTestId("pdf-export-submit")).toBeEnabled();
+  await page.getByTestId("pdf-export-close").click();
+  await expect(page.getByTestId("pdf-export-modal")).toBeHidden();
 
   await openTab(page, "reports");
   await filterToFixture(page, fixture.marker);

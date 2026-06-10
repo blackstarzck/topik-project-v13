@@ -170,7 +170,12 @@ function PdfExportModalBody({
           }
         />
       ) : (
-        <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+        <Space
+          data-testid="pdf-export-modal"
+          orientation="vertical"
+          size="middle"
+          style={{ width: "100%" }}
+        >
           {tooMany ? (
             <Alert
               type="warning"
@@ -197,6 +202,7 @@ function PdfExportModalBody({
             >
               <Space.Compact style={{ width: "100%" }}>
                 <Input
+                  data-testid="pdf-export-filename"
                   value={filename}
                   onChange={(e) => setFilename(e.target.value)}
                   maxLength={FILENAME_MAX}
@@ -249,6 +255,7 @@ function PdfExportModalBody({
             {/* 개인정보 확인 필수 */}
             <Form.Item style={{ marginBottom: 0 }}>
               <Checkbox
+                data-testid="pdf-export-privacy-confirm"
                 checked={privacyConfirmed}
                 onChange={(e) => setPrivacyConfirmed(e.target.checked)}
               >
@@ -289,6 +296,7 @@ function PdfExportModalBody({
               />
             ) : (
               <div
+                data-testid="pdf-export-preview"
                 style={{
                   border: "1px solid var(--ant-color-border)",
                   borderRadius: 8,
@@ -307,7 +315,7 @@ function PdfExportModalBody({
                 </Paragraph>
                 <ol style={{ margin: 0, paddingLeft: 18 }}>
                   {previewItems.map((it) => (
-                    <li key={it.itemId}>
+                    <li key={it.itemId} data-testid="pdf-export-preview-item">
                       <Text>{it.title}</Text>
                       {includeAnswers ? (
                         <Text type="secondary">{t("previewAnswerTag")}</Text>
@@ -376,8 +384,11 @@ function PdfExportModalBody({
           ) : null}
 
           <Space style={{ justifyContent: "flex-end", width: "100%" }}>
-            <Button onClick={onClose}>{t("close")}</Button>
+            <Button data-testid="pdf-export-close" onClick={onClose}>
+              {t("close")}
+            </Button>
             <Button
+              data-testid="pdf-export-submit"
               type="primary"
               loading={gen.phase === "generating"}
               disabled={!canExport}

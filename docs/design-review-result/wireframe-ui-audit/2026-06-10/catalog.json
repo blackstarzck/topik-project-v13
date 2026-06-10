@@ -471,12 +471,39 @@
       "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/18-F-01-my-library/findings.json",
       "status": "PASS",
       "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
+    },
+    {
+      "folder": "19-F-M1-pdf-export-modal",
+      "iaCode": "F-M1",
+      "screen": "PDF export modal",
+      "route": "/library",
+      "routeSource": "docs/Wireframe/19-F-M1-pdf-export-modal/functional-spec.md",
+      "routeFallback": "docs/sitemap.md",
+      "referenceImages": {
+        "wireframe": "docs/Wireframe/19-F-M1-pdf-export-modal/wireframe.png",
+        "hifi": "docs/Wireframe/19-F-M1-pdf-export-modal/hifi.png",
+        "status": "complete"
+      },
+      "docs": {
+        "description": "present",
+        "functionalSpec": "present",
+        "screenDataSummary": "present"
+      },
+      "classification": "user-active-modal",
+      "audience": "user",
+      "authRequirement": "authenticated user",
+      "hostRoute": "/library",
+      "modalTriggerRequirement": "select at least one saved submission in F-01 and click the PDF export action",
+      "report": "docs/design-review-result/wireframe-ui-audit/2026-06-10/19-F-M1-pdf-export-modal.html",
+      "structuredFindings": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/19-F-M1-pdf-export-modal/findings.json",
+      "status": "PASS",
+      "designerAgent": "not-used-current-subagent-policy-requires-explicit-user-subagent-request"
     }
   ],
   "summary": {
-    "completedPass": 18,
+    "completedPass": 19,
     "inProgress": 0,
-    "remainingKnownActiveScreens": 16,
+    "remainingKnownActiveScreens": 15,
     "adminFrozenOutOfScope": [
       "21-H-01-admin-problem-management",
       "30-X-08-organization-admin-dashboard",

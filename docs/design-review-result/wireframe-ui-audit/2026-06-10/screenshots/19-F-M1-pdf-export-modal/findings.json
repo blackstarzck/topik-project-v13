@@ -1,0 +1,35 @@
+{
+  "page": "19-F-M1-pdf-export-modal",
+  "iaCode": "F-M1",
+  "route": "/library",
+  "hostRoute": "/library",
+  "status": "PASS",
+  "findings": [],
+  "checks": [
+    {
+      "id": "FM1-options",
+      "status": "PASS",
+      "evidence": "Filename input is capped at 60 characters and include/sort/format controls are visible in the modal."
+    },
+    {
+      "id": "FM1-preview",
+      "status": "PASS",
+      "evidence": "Preview renders one selected item with the joined problem title and no problem UUID prefix."
+    },
+    {
+      "id": "FM1-privacy-gate",
+      "status": "PASS",
+      "evidence": "PDF export CTA remains disabled until the personal-data confirmation checkbox is selected."
+    },
+    {
+      "id": "FM1-responsive",
+      "status": "PASS",
+      "evidence": "Mobile, tablet, and desktop modal captures render with zero console/page errors."
+    }
+  ],
+  "screenshots": {
+    "mobile-360": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/19-F-M1-pdf-export-modal/mobile-360.png",
+    "tablet-768": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/19-F-M1-pdf-export-modal/tablet-768.png",
+    "desktop-1280": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/19-F-M1-pdf-export-modal/desktop-1280.png"
+  }
+}
