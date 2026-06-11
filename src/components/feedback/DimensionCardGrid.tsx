@@ -47,34 +47,32 @@ export function DimensionCardGrid({ rows, maxCards, onReanalyze }: Props) {
         const row = byDim.get(dim);
         const score = row?.score ?? null;
         const failed = score === null;
-        const tone = failed
-          ? "default"
-          : score >= 80
-            ? "green"
-            : score >= 65
-              ? "gold"
-              : "red";
         return (
           <Col key={dim} xs={24} md={12} lg={8}>
             <AppCard
               size="small"
               data-testid="feedback-dimension-card"
-              style={failed ? { opacity: 0.6, background: "#fafafa" } : undefined}
+              className={failed ? "opacity-60" : undefined}
             >
               <Text strong>{t(`label.${dim}`)}</Text>
-              <div style={{ marginTop: 4 }}>
-                <Tag color={tone}>
+              <div className="mt-1">
+                <Tag>
                   {score ?? "—"} / {row?.score_max ?? 100}
                 </Tag>
               </div>
               {failed ? (
                 <div>
-                  <Text type="secondary" style={{ fontSize: 12 }}>
+                  <Text type="secondary" className="text-xs">
                     {t("failedText")}
                   </Text>
                   {onReanalyze ? (
-                    <div style={{ marginTop: 4 }}>
-                      <Button size="small" type="link" onClick={onReanalyze} style={{ padding: 0 }}>
+                    <div className="mt-1">
+                      <Button
+                        size="small"
+                        type="link"
+                        onClick={onReanalyze}
+                        className="p-0"
+                      >
                         {t("reanalyze")}
                       </Button>
                     </div>
@@ -84,12 +82,7 @@ export function DimensionCardGrid({ rows, maxCards, onReanalyze }: Props) {
                 <Text
                   type="secondary"
                   title={row?.summary ?? undefined}
-                  style={{
-                    display: "-webkit-box",
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: "vertical",
-                    overflow: "hidden",
-                  }}
+                  className="mt-2 block line-clamp-2"
                 >
                   {row?.summary ?? t("summaryFallback")}
                 </Text>

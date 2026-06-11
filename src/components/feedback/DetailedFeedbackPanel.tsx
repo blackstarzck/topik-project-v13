@@ -1,6 +1,6 @@
 "use client";
 
-import { Collapse, Empty, Progress, Space, Tag, Typography } from "antd";
+import { Collapse, Empty, Progress, Tag, Typography, theme } from "antd";
 import { useTranslations } from "next-intl";
 import { AppCard } from "@/components/shared/AppCard";
 import type { FeedbackDimensionScoreRow } from "@/lib/writing/types";
@@ -34,6 +34,7 @@ type Props = {
  */
 export function DetailedFeedbackPanel({ dimensions }: Props) {
   const t = useTranslations("feedback.detail");
+  const { token } = theme.useToken();
   const byDim = new Map(dimensions.map((d) => [d.dimension, d] as const));
   const available = DETAIL_DIMENSION_KEYS.filter((key) => byDim.has(key));
 
@@ -53,33 +54,33 @@ export function DetailedFeedbackPanel({ dimensions }: Props) {
     return {
       key,
       label: (
-        <Space>
+        <div className="flex flex-wrap items-center gap-2">
           <Text strong data-testid="feedback-detail-item">
             {t(`label.${key}` as Parameters<typeof t>[0])}
           </Text>
-          <Tag color={score === null ? "default" : percent < 60 ? "red" : "blue"}>
+          <Tag>
             {score ?? "—"} / {max}
           </Tag>
-        </Space>
+        </div>
       ),
       children: (
-        <Space orientation="vertical" size={8} style={{ width: "100%" }}>
+        <div className="flex w-full flex-col gap-2">
           {score !== null ? (
             <Progress
               percent={percent}
               showInfo={false}
-              status={percent < 60 ? "exception" : "normal"}
+              strokeColor={token.colorText}
             />
           ) : null}
           {/* 각 항목 본문 2줄 우선 (description region 3 제약). */}
           <Paragraph
             type="secondary"
-            style={{ marginBottom: 0 }}
+            className="mb-0"
             ellipsis={{ rows: 2, expandable: true, symbol: t("expandSymbol") }}
           >
             {row?.summary ?? t("itemSummaryFallback")}
           </Paragraph>
-        </Space>
+        </div>
       ),
     };
   });

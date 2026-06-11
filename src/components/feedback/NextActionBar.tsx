@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Dropdown, Space, Tooltip, notification } from "antd";
+import { Button, Dropdown, Tooltip, notification } from "antd";
 import type { MenuProps } from "antd";
 import { ChevronDown } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -39,7 +39,7 @@ const RLS_DENIED = new Set(["42501", "PGRST301", "PGRST116"]);
 /**
  * E-01/E-02 다음 행동 CTA (description region 4).
  * 제약: 주요 CTA 1개(다시 풀기/작성), 보조 CTA 3개 이하, 중복 클릭 차단.
- * 모바일은 탭/스택 전환 — Space가 wrap되며 각 버튼 block로 쌓인다.
+ * 모바일은 탭/스택 전환 — 액션들이 줄바꿈되며 각 버튼 block로 쌓인다.
  * 저장 관련 보조 액션은 하나의 메뉴에 묶어 CTA 수를 유지한다.
  * 예외: 저장 실패/권한 잠금, PDF 실패는 토스트와 메뉴 항목 상태로 안내한다.
  */
@@ -153,7 +153,7 @@ export function NextActionBar({
 
   return (
     <div data-testid="feedback-actions">
-      <Space wrap size={[8, 8]} style={{ width: "100%" }}>
+      <div className="flex w-full flex-wrap gap-2">
         <Button
           type="primary"
           onClick={() => router.push(retryHref)}
@@ -189,7 +189,7 @@ export function NextActionBar({
         >
           {t("compareReport")}
         </Button>
-      </Space>
+      </div>
     </div>
   );
 }

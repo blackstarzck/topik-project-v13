@@ -1,6 +1,6 @@
 "use client";
 
-import { Alert, Space } from "antd";
+import { Alert } from "antd";
 import { useTranslations } from "next-intl";
 import { DetailedFeedbackPanel } from "./DetailedFeedbackPanel";
 import { DimensionCardGrid } from "./DimensionCardGrid";
@@ -102,7 +102,7 @@ export function FeedbackPageContent({
   const onReanalyze = () => router.refresh();
 
   return (
-    <Space orientation="vertical" size="large" style={{ width: "100%" }}>
+    <div className="flex w-full flex-col gap-6">
       {/* 부분 피드백 — 가능한 항목만 표시하고 누락 사유 안내(description 예외). */}
       {partial ? (
         <Alert
@@ -151,6 +151,6 @@ export function FeedbackPageContent({
         }
         saveLocked={saveLocked}
       />
-    </Space>
+    </div>
   );
 }

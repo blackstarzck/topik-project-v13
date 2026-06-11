@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Empty, Space, Tag, Typography } from "antd";
+import { Button, Empty, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { AppCard } from "@/components/shared/AppCard";
 import { useState } from "react";
@@ -50,47 +50,49 @@ export function SentenceFeedbackList({ rows, onReanalyze }: Props) {
       <div role="list">
         {visible.map((r, index) => {
           const failed = !r.corrected_text && !r.comment;
+          const itemClassName = [
+            index === 0 ? "pb-3" : "py-3",
+            index < visible.length - 1 ? "border-b border-border" : "",
+          ]
+            .filter(Boolean)
+            .join(" ");
           return (
             <div
               key={r.id}
               role="listitem"
-              style={{
-                padding: index === 0 ? "0 0 12px" : "12px 0",
-                borderBottom:
-                  index < visible.length - 1 ? "1px solid #f0f0f0" : undefined,
-              }}
+              className={itemClassName}
             >
-              <div style={{ width: "100%" }}>
+              <div className="w-full">
                 {/* 원문은 줄바꿈 보존. */}
                 {r.original_text ? (
                   <Text
                     delete={!failed}
                     type="secondary"
-                    style={{ whiteSpace: "pre-line" }}
+                    className="whitespace-pre-line"
                   >
                     {r.original_text}
                   </Text>
                 ) : null}
                 {failed ? (
-                  <div style={{ marginTop: 4 }}>
-                    <Space size={8} wrap>
-                      <Tag color="default">{t("failTag")}</Tag>
+                  <div className="mt-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Tag>{t("failTag")}</Tag>
                       {onReanalyze ? (
                         <Button
                           size="small"
                           type="link"
-                          style={{ padding: 0 }}
+                          className="p-0"
                           onClick={onReanalyze}
                         >
                           {t("reanalyze")}
                         </Button>
                       ) : null}
-                    </Space>
+                    </div>
                   </div>
                 ) : (
                   <>
                     {r.corrected_text ? (
-                      <div style={{ whiteSpace: "pre-line" }}>
+                      <div className="whitespace-pre-line">
                         <Text>{r.corrected_text}</Text>
                       </div>
                     ) : null}
@@ -107,7 +109,7 @@ export function SentenceFeedbackList({ rows, onReanalyze }: Props) {
         })}
       </div>
       {hiddenCount > 0 ? (
-        <div style={{ textAlign: "center", marginTop: 8 }}>
+        <div className="mt-2 text-center">
           <Button type="link" onClick={() => setExpanded(true)}>
             {t("showMore", { count: hiddenCount })}
           </Button>

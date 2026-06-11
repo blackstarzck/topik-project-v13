@@ -1,6 +1,6 @@
 "use client";
 
-import { Alert, Space, Statistic, Tag, Typography } from "antd";
+import { Alert, Statistic, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { AppCard } from "@/components/shared/AppCard";
 import type {
@@ -74,13 +74,11 @@ export function FeedbackSummary({ feedback, submission }: Props) {
     <AppCard data-testid="feedback-summary">
       <Statistic title={t("scoreTitle")} value={score} suffix={`/ ${max}`} />
       {submission ? (
-        <Space
-          wrap
-          size={[8, 8]}
-          style={{ marginTop: 12 }}
+        <div
+          className="mt-3 flex flex-wrap gap-2"
           data-testid="feedback-summary-meta"
         >
-          <Tag color="blue">
+          <Tag>
             {tAnalysis("questionLabel", { questionNo: submission.question_no })}
           </Tag>
           <Tag>{tNav(navQuestionKey(submission.question_no))}</Tag>
@@ -88,11 +86,11 @@ export function FeedbackSummary({ feedback, submission }: Props) {
           {submittedAt ? (
             <Tag>{tAnalysis("submittedAtLabel", { submittedAt })}</Tag>
           ) : null}
-        </Space>
+        </div>
       ) : null}
       <Paragraph
         type="secondary"
-        style={{ marginTop: 12, marginBottom: 0 }}
+        className="mb-0 mt-3"
         ellipsis={{ rows: 3 }}
       >
         {feedback.overall_summary ?? t("overallFallback")}
