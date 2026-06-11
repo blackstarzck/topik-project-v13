@@ -114,7 +114,6 @@ export function RecommendationsView() {
       className="recommendations-page"
       orientation="vertical"
       size="large"
-      style={{ width: "100%" }}
     >
       <PageHeader
         className="recommendations-page__header"
@@ -138,7 +137,7 @@ export function RecommendationsView() {
 
       {bundle.isLoading ? (
         <Spin description={t("loadingTip")}>
-          <div style={{ minHeight: 120 }} />
+          <div className="recommendations-page__loading-space" />
         </Spin>
       ) : bundle.error ? (
         <>
@@ -196,7 +195,6 @@ export function RecommendationsView() {
       <Text
         className="recommendations-page__footer-note"
         type="secondary"
-        style={{ fontSize: 12 }}
       >
         {t("footerNote")}
       </Text>
