@@ -10,7 +10,7 @@
 // 컴포넌트에서 쓰면 prod-only React #130 크래시가 나므로 필수.
 
 import Link from "next/link";
-import { Space, Typography } from "antd";
+import { Typography } from "antd";
 import { useTranslations } from "next-intl";
 
 import { AppCard } from "@/components/shared/AppCard";
@@ -21,18 +21,18 @@ export function TermsContent() {
   const t = useTranslations("legal.terms");
   return (
     <AppCard data-testid="terms-card">
-      <Space orientation="vertical" size="large" style={{ width: "100%" }}>
+      <div className="flex w-full flex-col gap-6">
         {/* §1 법적 고지 페이지 (제목 + 임시 약관 안내) */}
         <div>
-          <Title level={2} style={{ marginBottom: 8 }}>
+          <Title level={2} className="!mb-2">
             {t("heading")}
           </Title>
-          <Paragraph style={{ marginBottom: 0 }} data-testid="terms-intro">
+          <Paragraph className="!mb-0" data-testid="terms-intro">
             {t("intro")}
           </Paragraph>
           <Paragraph
             type="secondary"
-            style={{ marginBottom: 0, marginTop: 8 }}
+            className="!mb-0 !mt-2"
             data-testid="terms-placeholder-notice"
           >
             {t("placeholderNotice")}
@@ -41,13 +41,13 @@ export function TermsContent() {
 
         {/* §2 임시 약관 요약 */}
         <div data-testid="terms-summary">
-          <Title level={4} style={{ marginBottom: 8 }}>
+          <Title level={4} className="!mb-2">
             {t("summaryTitle")}
           </Title>
-          <ul style={{ margin: 0, paddingLeft: 20 }}>
-            <li style={{ marginBottom: 8 }}>{t("summaryTool")}</li>
-            <li style={{ marginBottom: 8 }}>{t("summaryDataUse")}</li>
-            <li style={{ marginBottom: 8 }}>
+          <ul className="m-0 list-disc pl-5">
+            <li className="mb-2">{t("summaryTool")}</li>
+            <li className="mb-2">{t("summaryDataUse")}</li>
+            <li className="mb-2">
               {t.rich("summaryPrivacy", {
                 privacyLink: (chunks) => <Link href="/privacy">{chunks}</Link>,
               })}
@@ -58,16 +58,16 @@ export function TermsContent() {
 
         {/* §3 운영 문의 안내 — 존재하지 않는 채널을 꾸며내지 않는다 */}
         <div data-testid="terms-contact">
-          <Title level={4} style={{ marginBottom: 8 }}>
+          <Title level={4} className="!mb-2">
             {t("contactTitle")}
           </Title>
-          <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+          <Paragraph type="secondary" className="!mb-0">
             {t("contactBody")}
           </Paragraph>
         </div>
 
         {/* §4 Escape 링크 — 홈 / 회원가입 / 개인정보처리방침 */}
-        <Paragraph style={{ marginBottom: 0 }} data-testid="terms-shortcuts">
+        <Paragraph className="!mb-0" data-testid="terms-shortcuts">
           <Text type="secondary">{t("shortcutsLabel")}</Text>
           <Link href="/">{t("linkHome")}</Link>
           {" · "}
@@ -75,7 +75,7 @@ export function TermsContent() {
           {" · "}
           <Link href="/privacy">{t("linkPrivacy")}</Link>
         </Paragraph>
-      </Space>
+      </div>
     </AppCard>
   );
 }
