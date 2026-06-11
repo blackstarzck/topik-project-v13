@@ -8,7 +8,6 @@ import {
   Radio,
   Segmented,
   Skeleton,
-  Space,
   Typography,
 } from "antd";
 import { useTranslations } from "next-intl";
@@ -240,24 +239,24 @@ export function LanguageForm({ userId, initialLocale }: Props) {
       onFinish={handleFinish}
       disabled={saving}
     >
-      <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+      <div className="flex w-full flex-col gap-4">
         {/* Region 2: UI 언어 선택 */}
-        <Form.Item label={t("uiLanguageLabel")} required style={{ marginBottom: 0 }}>
+        <Form.Item className="mb-0" label={t("uiLanguageLabel")} required>
           <Radio.Group
             data-testid="language-ui-radio"
             value={locale}
             onChange={(e) => setLocale(e.target.value as Locale)}
             aria-label={t("uiLanguageLabel")}
           >
-            <Space orientation="vertical">
+            <div className="flex flex-col gap-2">
               <Radio value="ko">{t("optionKo")}</Radio>
               <Radio value="en">{t("optionEn")}</Radio>
               <Radio value="vi">{t("optionVi")}</Radio>
-            </Space>
+            </div>
           </Radio.Group>
         </Form.Item>
 
-        <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+        <Paragraph type="secondary" className="mb-0">
           <Text type="secondary">{t("coverageNote")}</Text>
         </Paragraph>
 
@@ -278,8 +277,8 @@ export function LanguageForm({ userId, initialLocale }: Props) {
             />
           ) : (
             <Form.Item
+              className="mb-0"
               label={t("learningFieldLabel")}
-              style={{ marginBottom: 0 }}
               extra={t("learningFieldExtra")}
             >
               <Radio.Group
@@ -291,12 +290,12 @@ export function LanguageForm({ userId, initialLocale }: Props) {
                 }}
                 aria-label={t("learningCardTitle")}
               >
-                <Space orientation="vertical">
+                <div className="flex flex-col gap-2">
                   <Radio value="follow">{t("learningFollow")}</Radio>
                   <Radio value="ko">{t("optionKo")}</Radio>
                   <Radio value="en">{t("optionEn")}</Radio>
                   <Radio value="vi">{t("optionVi")}</Radio>
-                </Space>
+                </div>
               </Radio.Group>
             </Form.Item>
           )}
@@ -318,8 +317,8 @@ export function LanguageForm({ userId, initialLocale }: Props) {
               description={contentLoad.message}
             />
           ) : (
-            <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
-              <Form.Item label={t("feedbackDisplayLabel")} style={{ marginBottom: 0 }}>
+            <div className="flex w-full flex-col gap-4">
+              <Form.Item className="mb-0" label={t("feedbackDisplayLabel")}>
                 <Segmented
                   data-testid="language-feedback-display"
                   value={
@@ -335,7 +334,7 @@ export function LanguageForm({ userId, initialLocale }: Props) {
                   ]}
                 />
               </Form.Item>
-              <Form.Item label={t("exampleDifficultyLabel")} style={{ marginBottom: 0 }}>
+              <Form.Item className="mb-0" label={t("exampleDifficultyLabel")}>
                 <Segmented
                   data-testid="language-example-difficulty"
                   value={
@@ -355,7 +354,7 @@ export function LanguageForm({ userId, initialLocale }: Props) {
                   ]}
                 />
               </Form.Item>
-              <Form.Item label={t("explanationLengthLabel")} style={{ marginBottom: 0 }}>
+              <Form.Item className="mb-0" label={t("explanationLengthLabel")}>
                 <Segmented
                   data-testid="language-explanation-length"
                   value={
@@ -390,7 +389,7 @@ export function LanguageForm({ userId, initialLocale }: Props) {
                   }
                 />
               ) : null}
-            </Space>
+            </div>
           )}
         </AppCard>
 
@@ -400,7 +399,7 @@ export function LanguageForm({ userId, initialLocale }: Props) {
           size="small"
           title={t("helpCardTitle")}
         >
-          <ul style={{ margin: 0, paddingLeft: 18 }}>
+          <ul className="m-0 list-disc pl-5">
             <li data-testid="language-help-item">
               <Text type="secondary">{t("helpUiScope")}</Text>
             </li>
@@ -422,7 +421,7 @@ export function LanguageForm({ userId, initialLocale }: Props) {
         />
 
         {/* Region 6: 저장 (변경값 없으면 비활성, 저장 중 중복 클릭 차단) */}
-        <Form.Item style={{ marginBottom: 0 }}>
+        <Form.Item className="mb-0">
           <Button
             data-testid="language-save"
             type="primary"
@@ -433,7 +432,7 @@ export function LanguageForm({ userId, initialLocale }: Props) {
             {tCommon("save")}
           </Button>
         </Form.Item>
-      </Space>
+      </div>
     </Form>
   );
 }
