@@ -1,6 +1,7 @@
 "use client";
 
-import { Button, Result, Space, Tag, Typography } from "antd";
+import { Button, Result, Tag, Typography } from "antd";
+import { LockKeyhole } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 
@@ -21,22 +22,24 @@ export function GrowthLockedReport({ planLabel }: { planLabel: string | null }) 
     <div data-testid="growth-locked-report">
       <Result
         icon={
-          <span style={{ fontSize: 40 }} aria-hidden>
-            🔒
-          </span>
+          <LockKeyhole
+            aria-hidden="true"
+            className="mx-auto h-10 w-10 text-text-secondary"
+            strokeWidth={1.8}
+          />
         }
         title={t("title")}
         subTitle={
-          <Space orientation="vertical" size={4} style={{ width: "100%" }}>
-            <Paragraph type="secondary" style={{ margin: 0 }}>
+          <div className="flex w-full flex-col gap-1">
+            <Paragraph type="secondary" className="!m-0">
               {t.rich("body", {
                 plan: () => <Tag>{planText}</Tag>,
               })}
             </Paragraph>
-          </Space>
+          </div>
         }
         extra={
-          <Space wrap>
+          <div className="flex flex-wrap justify-center gap-2">
             <Link href="/paywall">
               <Button data-testid="growth-upgrade-cta" type="primary">
                 {t("upgradeCta")}
@@ -45,7 +48,7 @@ export function GrowthLockedReport({ planLabel }: { planLabel: string | null }) 
             <Link href="/subscription">
               <Button data-testid="growth-manage-cta">{t("manageCta")}</Button>
             </Link>
-          </Space>
+          </div>
         }
       />
     </div>

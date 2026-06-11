@@ -8,10 +8,10 @@ import {
   List,
   Progress,
   Row,
-  Space,
   Statistic,
   Tag,
   Typography,
+  theme,
 } from "antd";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -117,6 +117,7 @@ export function GrowthDashboard({
 }: GrowthDashboardProps) {
   const t = useTranslations("growth.dashboard");
   const tInsights = useTranslations("growth.insights");
+  const { token } = theme.useToken();
   const router = useRouter();
 
   // dimension 코드를 카탈로그 라벨로. 동적 키라 캐스트가 필요하다.
@@ -134,12 +135,12 @@ export function GrowthDashboard({
     if (pct > 0)
       return {
         text: t("kpi.improvementUp", { pct: Math.round(pct) }),
-        color: "#3f8600",
+        color: token.colorSuccess,
       };
     if (pct < 0)
       return {
         text: t("kpi.improvementDown", { pct: Math.abs(Math.round(pct)) }),
-        color: "#cf1322",
+        color: token.colorError,
       };
     return { text: t("kpi.improvementNone"), color: undefined };
   };
@@ -166,7 +167,7 @@ export function GrowthDashboard({
         <AppCard
           data-testid="growth-kpi-average"
           size="small"
-          style={{ height: "100%" }}
+          className="h-full"
         >
           <Statistic
             title={t("kpi.averageScore")}
@@ -175,7 +176,7 @@ export function GrowthDashboard({
               kpi.averageScore != null ? t("kpi.pointSuffix") : undefined
             }
           />
-          <Text type="secondary" style={{ fontSize: 12 }}>
+          <Text type="secondary" className="!text-xs">
             {t("kpi.averageScoreHint")}
           </Text>
         </AppCard>
@@ -184,14 +185,14 @@ export function GrowthDashboard({
         <AppCard
           data-testid="growth-kpi-attempts"
           size="small"
-          style={{ height: "100%" }}
+          className="h-full"
         >
           <Statistic
             title={t("kpi.attempts")}
             value={kpi.totalAttempts}
             suffix={t("kpi.attemptsSuffix")}
           />
-          <Text type="secondary" style={{ fontSize: 12 }}>
+          <Text type="secondary" className="!text-xs">
             {t("kpi.attemptsHint")}
           </Text>
         </AppCard>
@@ -200,7 +201,7 @@ export function GrowthDashboard({
         <AppCard
           data-testid="growth-kpi-improvement"
           size="small"
-          style={{ height: "100%" }}
+          className="h-full"
         >
           <Statistic
             title={t("kpi.improvement")}
@@ -211,7 +212,7 @@ export function GrowthDashboard({
                 : undefined,
             }}
           />
-          <Text type="secondary" style={{ fontSize: 12 }}>
+          <Text type="secondary" className="!text-xs">
             {t("kpi.improvementHint")}
           </Text>
         </AppCard>
@@ -220,7 +221,7 @@ export function GrowthDashboard({
         <AppCard
           data-testid="growth-kpi-goal"
           size="small"
-          style={{ height: "100%" }}
+          className="h-full"
         >
           <Statistic
             title={t("kpi.goalAchievement")}
@@ -229,7 +230,7 @@ export function GrowthDashboard({
             }
             suffix={kpi.goalAchievementPct != null ? "%" : undefined}
           />
-          <Text type="secondary" style={{ fontSize: 12 }}>
+          <Text type="secondary" className="!text-xs">
             {t("kpi.goalLabel", { goal: kpi.goalLabel })}
           </Text>
         </AppCard>
@@ -246,7 +247,7 @@ export function GrowthDashboard({
   );
 
   return (
-    <Space orientation="vertical" size="large" style={{ width: "100%" }}>
+    <div className="flex w-full flex-col gap-6">
       <PageHeader title={t("heading")} subtitle={t("subheading")} />
 
       {/* area 2 — KPI 카드 4개 고정. 목표/데이터 없음은 설정 유도.
@@ -275,21 +276,12 @@ export function GrowthDashboard({
                 </Link>
               </Empty>
             ) : (
-              <Space
-                orientation="vertical"
-                size="middle"
-                style={{ width: "100%" }}
-              >
+              <div className="flex w-full flex-col gap-4">
                 {sortedWeak.slice(0, 6).map((w) => {
                   const percent = Math.round(w.avgScore * 100);
                   return (
                     <div key={w.dimension}>
-                      <Space
-                        style={{
-                          width: "100%",
-                          justifyContent: "space-between",
-                        }}
-                      >
+                      <div className="flex w-full items-center justify-between gap-3">
                         <Text strong>{dimensionLabel(w.dimension)}</Text>
                         <Text type="secondary">
                           {t("weakness.scoreSample", {
@@ -297,7 +289,7 @@ export function GrowthDashboard({
                             count: w.sampleCount,
                           })}
                         </Text>
-                      </Space>
+                      </div>
                       <Progress
                         percent={percent}
                         showInfo={false}
@@ -306,18 +298,14 @@ export function GrowthDashboard({
                     </div>
                   );
                 })}
-              </Space>
+              </div>
             )}
           </AppCard>
 
           {/* area 5 — 인사이트. 실제 수치 근거(insights.ts), 3개 이하·60자 이하.
               insights.ts 가 키+ICU 변수만 만들고, 여기서 t()로 문구를 해석한다. */}
           <AppCard title={t("insights.title")}>
-            <Space
-              orientation="vertical"
-              size="small"
-              style={{ width: "100%" }}
-            >
+            <div className="flex w-full flex-col gap-2">
               {insights.map((insight, idx) => (
                 <Alert
                   key={idx}
@@ -329,10 +317,10 @@ export function GrowthDashboard({
                   )}
                 />
               ))}
-              <Text type="secondary" style={{ fontSize: 12 }}>
+              <Text type="secondary" className="!text-xs">
                 {t("insights.disclaimer")}
               </Text>
-            </Space>
+            </div>
           </AppCard>
 
           {/* area 6 — 하단 요약/추천. 추천 없음이면 최근 완료 요약 + 문제 목록 CTA만. */}
@@ -367,7 +355,7 @@ export function GrowthDashboard({
                             ? t("recent.questionNo", { no: item.questionNo })
                             : "—"}
                         </Tag>
-                        <span style={{ marginLeft: 8 }}>
+                        <span className="ml-2">
                           {t("recent.scoreLabel")}{" "}
                           <strong>
                             {item.scoreTotal != null
@@ -379,7 +367,7 @@ export function GrowthDashboard({
                         </span>
                         <Text
                           type="secondary"
-                          style={{ marginLeft: 12, fontSize: 12 }}
+                          className="ml-3 !text-xs"
                         >
                           {new Date(item.generatedAt).toLocaleDateString(
                             "ko-KR",
@@ -400,22 +388,12 @@ export function GrowthDashboard({
                     </Link>
                   </Empty>
                 ) : (
-                  <Space
-                    orientation="vertical"
-                    size="middle"
-                    style={{ width: "100%" }}
-                  >
+                  <div className="flex w-full flex-col gap-4">
                     {recommendations.slice(0, 5).map((rec) => (
                       <div key={rec.problemId} className="app-card-compact">
-                        <Space
-                          style={{
-                            width: "100%",
-                            justifyContent: "space-between",
-                          }}
-                          wrap
-                        >
-                          <Space orientation="vertical" size={2}>
-                            <Tag color="blue">
+                        <div className="flex w-full flex-wrap items-center justify-between gap-3">
+                          <div className="flex flex-col gap-0.5">
+                            <Tag>
                               {rec.questionNo != null
                                 ? t("recommend.questionNo", {
                                     no: rec.questionNo,
@@ -423,7 +401,7 @@ export function GrowthDashboard({
                                 : t("recommend.questionFallback")}
                             </Tag>
                             <Text strong>{rec.title}</Text>
-                          </Space>
+                          </div>
                           <Link
                             href={
                               writingProblemHref({
@@ -436,16 +414,16 @@ export function GrowthDashboard({
                               {t("recommend.startCta")}
                             </Button>
                           </Link>
-                        </Space>
+                        </div>
                       </div>
                     ))}
-                  </Space>
+                  </div>
                 )}
               </AppCard>
             </Col>
           </Row>
         </>
       )}
-    </Space>
+    </div>
   );
 }

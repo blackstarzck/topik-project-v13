@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Alert, Button, Empty, Radio, Space, Typography } from "antd";
+import { Alert, Button, Empty, Radio, Typography, theme } from "antd";
 import { useTranslations } from "next-intl";
 import { AppCard } from "@/components/shared/AppCard";
 import {
@@ -71,6 +71,7 @@ function formatShortDate(date: string): string {
 
 export function GrowthTrendChart({ points, onRetry }: Props) {
   const t = useTranslations("growth.trend");
+  const { token } = theme.useToken();
   const [period, setPeriod] = useState<GrowthTrendPeriod>("30d");
   // 기준 시각은 마운트 시점에 한 번만 고정한다. 렌더 본문에서 Date.now()를
   // 직접 부르면 불순(impure)해 재렌더마다 결과가 흔들리므로 lazy initializer로 캡처.
@@ -109,15 +110,18 @@ export function GrowthTrendChart({ points, onRetry }: Props) {
           ) : null}
         </Empty>
       ) : (
-        <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+        <div className="flex w-full flex-col gap-4">
           {/* 색상만으로 의미 전달 금지(접근성) — 범례 + 수치 축 라벨 병기. */}
-          <div style={{ width: "100%", height: 280 }}>
+          <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={filtered}
                 margin={{ top: 8, right: 16, bottom: 0, left: -8 }}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke={token.colorBorderSecondary}
+                />
                 <XAxis
                   dataKey="date"
                   tickFormatter={formatShortDate}
@@ -149,7 +153,7 @@ export function GrowthTrendChart({ points, onRetry }: Props) {
                   type="monotone"
                   dataKey="score"
                   name={t("seriesScore")}
-                  stroke="#1677ff"
+                  stroke={token.colorPrimary}
                   strokeWidth={2}
                   dot={{ r: 2 }}
                   connectNulls
@@ -159,7 +163,7 @@ export function GrowthTrendChart({ points, onRetry }: Props) {
                   type="monotone"
                   dataKey="volume"
                   name={t("seriesVolume")}
-                  stroke="#52c41a"
+                  stroke={token.colorSuccess}
                   strokeWidth={2}
                   dot={{ r: 2 }}
                 />
@@ -170,12 +174,12 @@ export function GrowthTrendChart({ points, onRetry }: Props) {
             type="info"
             showIcon
             title={
-              <Text type="secondary" style={{ fontSize: 12 }}>
+              <Text type="secondary" className="!text-xs">
                 {t("legendHelp")}
               </Text>
             }
           />
-        </Space>
+        </div>
       )}
     </AppCard>
   );
