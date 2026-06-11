@@ -7,7 +7,6 @@ import {
   DatePicker,
   Empty,
   Select,
-  Space,
   Spin,
   Tag,
   Typography,
@@ -216,9 +215,9 @@ export function LibrarySubmissionsTab({
     Boolean(range && (range[0] || range[1]));
 
   return (
-    <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+    <div className="flex w-full flex-col gap-4">
       {/* Region 1: 필터 (유형·상태·기간 동시) + 결과 수 상단 표시 */}
-      <Space wrap>
+      <div className="flex flex-wrap items-center gap-2">
         <Select<StatusFilter>
           data-testid="library-status-filter"
           value={statusFilter}
@@ -226,7 +225,7 @@ export function LibrarySubmissionsTab({
             setStatusFilter(v);
             setPage(1);
           }}
-          style={{ minWidth: 140 }}
+          className="min-w-36"
           aria-label={t("statusFilterAriaLabel")}
           options={[
             { value: "all", label: t("statusAll") },
@@ -236,8 +235,9 @@ export function LibrarySubmissionsTab({
             { value: "failed", label: t("statusFailed") },
           ]}
         />
-        <span data-testid="library-period-filter">
+        <span data-testid="library-period-filter" className="w-full sm:w-auto">
           <RangePicker
+            className="w-full"
             value={range ?? undefined}
             onChange={(v) => {
               setRange(v as [Dayjs | null, Dayjs | null] | null);
@@ -249,7 +249,7 @@ export function LibrarySubmissionsTab({
         <Text data-testid="library-result-count" type="secondary">
           {t("resultCount", { count: filtered.length })}
         </Text>
-      </Space>
+      </div>
 
       {pageItems.length === 0 ? (
         <Empty
@@ -271,11 +271,9 @@ export function LibrarySubmissionsTab({
         </Empty>
       ) : (
         <>
-          <Space
+          <div
             data-testid="library-item-list"
-            orientation="vertical"
-            size={0}
-            style={{ width: "100%" }}
+            className="flex w-full flex-col"
           >
             {pageItems.map((item) => {
               const meta = enrich.get(item.id);
@@ -307,8 +305,8 @@ export function LibrarySubmissionsTab({
                     />,
                   ]}
                 >
-                  <Space orientation="vertical" size={2} style={{ width: "100%" }}>
-                    <Space size="small" wrap>
+                  <div className="flex w-full flex-col gap-1">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Link
                         href={
                           writingProblemHref({
@@ -319,11 +317,11 @@ export function LibrarySubmissionsTab({
                       >
                         <Text strong>{clampTitle(title)}</Text>
                       </Link>
-                      <Tag color={badge.color}>
+                      <Tag>
                         {t(badge.labelKey as Parameters<typeof t>[0])}
                       </Tag>
                       {meta?.scoreTotal != null ? (
-                        <Tag color="geekblue">
+                        <Tag>
                           {meta.scoreMax != null
                             ? t("scoreWithMax", {
                                 total: meta.scoreTotal,
@@ -332,25 +330,25 @@ export function LibrarySubmissionsTab({
                             : t("scoreNoMax", { total: meta.scoreTotal })}
                         </Tag>
                       ) : null}
-                    </Space>
+                    </div>
                     {meta?.summary ? (
                       <Paragraph
-                        style={{ marginBottom: 0 }}
+                        className="mb-0"
                         ellipsis={{ rows: 2 }}
                         type="secondary"
                       >
                         {meta.summary}
                       </Paragraph>
                     ) : null}
-                    <Space size="small" wrap>
+                    <div className="flex flex-wrap items-center gap-2">
                       <Tag>{t("charCount", { count: item.char_count })}</Tag>
                       <Text type="secondary">{formatDate(item.submitted_at)}</Text>
-                    </Space>
-                  </Space>
+                    </div>
+                  </div>
                 </LibraryItemRow>
               );
             })}
-          </Space>
+          </div>
 
           {/* Region 5: 페이지 이동 (10/page, <=5 버튼, 총 건수 하단) */}
           <LibraryPagination
@@ -360,6 +358,6 @@ export function LibrarySubmissionsTab({
           />
         </>
       )}
-    </Space>
+    </div>
   );
 }

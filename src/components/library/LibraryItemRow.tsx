@@ -6,7 +6,6 @@ import {
   Input,
   Popconfirm,
   Popover,
-  Space,
   Tag,
 } from "antd";
 import { useTranslations } from "next-intl";
@@ -17,7 +16,6 @@ import {
   useUpdateItemTags,
 } from "@/lib/library/mutations";
 import type { LibraryTab } from "@/lib/library/types";
-import { SPACING } from "@/theme/spacing";
 
 type Props = {
   children: ReactNode;
@@ -93,11 +91,11 @@ export function LibraryItemRow({
 
   const tagChips =
     tags.length > 0 ? (
-      <Space size={[SPACING.xs, SPACING.xs]} wrap>
+      <div className="flex flex-wrap gap-1">
         {tags.map((t) => (
           <Tag key={t}>{t}</Tag>
         ))}
-      </Space>
+      </div>
     ) : null;
 
   const editTagsPopover = (
@@ -110,14 +108,14 @@ export function LibraryItemRow({
       trigger="click"
       title={t("editTags")}
       content={
-        <Space orientation="vertical" style={{ width: 220 }} size="small">
+        <div className="flex w-56 flex-col gap-2">
           <Input
             value={draftTags}
             onChange={(e) => setDraftTags(e.target.value)}
             placeholder={t("tagsInputPlaceholder")}
             aria-label={t("tagsInputAriaLabel")}
           />
-          <Space>
+          <div className="flex flex-wrap gap-2">
             <Button
               size="small"
               type="primary"
@@ -129,8 +127,8 @@ export function LibraryItemRow({
             <Button size="small" onClick={() => setPopoverOpen(false)}>
               {t("cancel")}
             </Button>
-          </Space>
-        </Space>
+          </div>
+        </div>
       }
     >
       <Button size="small">{t("editTags")}</Button>
@@ -163,20 +161,12 @@ export function LibraryItemRow({
     <div
       data-testid="library-item-row"
       data-library-tab={tab}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: SPACING.md,
-        flexWrap: "wrap",
-        paddingBlock: SPACING.md,
-        borderBottom: "1px solid var(--app-color-border)",
-      }}
+      className="flex flex-wrap items-center justify-between gap-4 border-b border-border py-4"
     >
-      <div style={{ minWidth: 0, flex: "1 1 280px" }}>{children}</div>
-      <Space size={[SPACING.sm, SPACING.sm]} wrap>
+      <div className="min-w-0 flex-1 basis-72">{children}</div>
+      <div className="flex flex-wrap items-center gap-2">
         {actions}
-      </Space>
+      </div>
     </div>
   );
 }

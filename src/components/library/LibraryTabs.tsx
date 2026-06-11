@@ -1,6 +1,6 @@
 "use client";
 
-import { App, Button, Input, Space, Tabs, Tag, Typography } from "antd";
+import { App, Button, Input, Tabs, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
@@ -155,7 +155,7 @@ export function LibraryTabs({ activeTab, initialItems }: Props) {
   ];
 
   return (
-    <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+    <div className="flex w-full flex-col gap-4">
       <Input.Search
         data-testid="library-search"
         allowClear
@@ -164,7 +164,7 @@ export function LibraryTabs({ activeTab, initialItems }: Props) {
         onChange={(e) => setSearchTerm(e.target.value)}
         placeholder={t("searchPlaceholder")}
         aria-label={t("searchAriaLabel")}
-        style={{ maxWidth: 360 }}
+        className="max-w-sm"
       />
 
       {/* F-01 region 2 (내보내기/생성 액션): selection-driven actions. The
@@ -172,11 +172,8 @@ export function LibraryTabs({ activeTab, initialItems }: Props) {
           저장 답안 선택. 액션 3개 이하: PDF 내보내기 / 복습 세트 생성 / 선택 해제.
           선택 없음은 버튼 비활성으로 안내한다. */}
       <AppCard data-testid="library-actions" size="small">
-        <Space wrap>
-          <Tag
-            data-testid="library-selection-count"
-            color={selection.length > 0 ? "blue" : "default"}
-          >
+        <div className="flex flex-wrap items-center gap-2">
+          <Tag data-testid="library-selection-count">
             {t("selectionCount", { count: selection.length })}
           </Tag>
           <Button
@@ -198,7 +195,7 @@ export function LibraryTabs({ activeTab, initialItems }: Props) {
           {selection.length === 0 ? (
             <Text type="secondary">{t("selectionHint")}</Text>
           ) : null}
-        </Space>
+        </div>
       </AppCard>
 
       <Tabs
@@ -214,6 +211,6 @@ export function LibraryTabs({ activeTab, initialItems }: Props) {
         onClose={() => setExportOpen(false)}
         selection={selection}
       />
-    </Space>
+    </div>
   );
 }

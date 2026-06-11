@@ -1,6 +1,6 @@
 "use client";
 
-import { Empty, Space, Statistic, Tag, Typography } from "antd";
+import { Empty, Statistic, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 
@@ -57,11 +57,9 @@ export function LibraryStatsPanel({ stats }: Props) {
 
   if (empty) {
     return (
-      <Space
+      <div
         data-testid="library-stats-panel"
-        orientation="vertical"
-        size="middle"
-        style={{ width: "100%" }}
+        className="flex w-full flex-col gap-4"
       >
         <Text strong>{t("title")}</Text>
         <AppCard data-testid="library-empty-stats" size="small">
@@ -72,16 +70,14 @@ export function LibraryStatsPanel({ stats }: Props) {
             <Link href="/practice/problems">{t("goToPractice")}</Link>
           </Empty>
         </AppCard>
-      </Space>
+      </div>
     );
   }
 
   return (
-    <Space
+    <div
       data-testid="library-stats-panel"
-      orientation="vertical"
-      size="middle"
-      style={{ width: "100%" }}
+      className="flex w-full flex-col gap-4"
     >
       <Text strong>{t("title")}</Text>
       <AppCard data-testid="library-stat-card" size="small">
@@ -99,14 +95,14 @@ export function LibraryStatsPanel({ stats }: Props) {
           value={stats.avgScore != null ? stats.avgScore : "-"}
           suffix={stats.avgScore != null ? t("suffixPoint") : undefined}
         />
-        <Space size="small" wrap>
+        <div className="flex flex-wrap items-center gap-2">
           <Text type="secondary">{t("weakestLabel")}</Text>
           {stats.weakestDimension ? (
-            <Tag color="volcano">{dimLabel(stats.weakestDimension)}</Tag>
+            <Tag>{dimLabel(stats.weakestDimension)}</Tag>
           ) : (
             <Text type="secondary">{t("weakestNeedData")}</Text>
           )}
-        </Space>
+        </div>
       </AppCard>
 
       <AppCard data-testid="library-stat-card" size="small">
@@ -117,6 +113,6 @@ export function LibraryStatsPanel({ stats }: Props) {
         />
         <Link href="/practice/problems">{t("continueReview")}</Link>
       </AppCard>
-    </Space>
+    </div>
   );
 }

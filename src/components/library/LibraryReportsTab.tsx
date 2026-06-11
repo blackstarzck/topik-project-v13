@@ -1,6 +1,6 @@
 "use client";
 
-import { Alert, Button, Empty, Space, Spin, Typography } from "antd";
+import { Alert, Button, Empty, Spin, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useState } from "react";
@@ -75,7 +75,7 @@ export function LibraryReportsTab({
   if (items.length === 0) {
     const searching = searchTerm.trim().length > 0;
     return (
-      <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+      <div className="flex w-full flex-col gap-4">
         <Text data-testid="library-result-count" type="secondary">
           {tCount("resultCount", { count: 0 })}
         </Text>
@@ -86,20 +86,18 @@ export function LibraryReportsTab({
             <Button onClick={onResetSearch}>{t("resetFilter")}</Button>
           ) : null}
         </Empty>
-      </Space>
+      </div>
     );
   }
 
   return (
-    <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+    <div className="flex w-full flex-col gap-4">
       <Text data-testid="library-result-count" type="secondary">
         {tCount("resultCount", { count: items.length })}
       </Text>
-      <Space
+      <div
         data-testid="library-item-list"
-        orientation="vertical"
-        size={0}
-        style={{ width: "100%" }}
+        className="flex w-full flex-col"
       >
         {pageItems.map((item) => (
           <LibraryItemRow
@@ -115,29 +113,29 @@ export function LibraryReportsTab({
               />,
             ]}
           >
-            <Space orientation="vertical" size={4} style={{ width: "100%" }}>
+            <div className="flex w-full flex-col gap-1">
               <Link href={`/writing/reports/${item.id}/compare` as never}>
                 <Text strong>{t("title")}</Text>
               </Link>
               <Text type="secondary">{formatDate(item.generated_at)}</Text>
               {item.narrative_excerpt ? (
                 <Paragraph
-                  style={{ marginBottom: 0 }}
+                  className="mb-0"
                   ellipsis={{ rows: 2 }}
                   type="secondary"
                 >
                   {item.narrative_excerpt}
                 </Paragraph>
               ) : null}
-            </Space>
+            </div>
           </LibraryItemRow>
         ))}
-      </Space>
+      </div>
       <LibraryPagination
         current={safePage}
         total={items.length}
         onChange={(p) => setPage(p)}
       />
-    </Space>
+    </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Pagination, Space } from "antd";
+import { Pagination } from "antd";
 import { useTranslations } from "next-intl";
 
 export const LIBRARY_PAGE_SIZE = 10;
@@ -15,10 +15,7 @@ export function LibraryPagination({ current, total, onChange }: Props) {
   const t = useTranslations("library.submissions");
 
   return (
-    <Space
-      data-testid="library-pagination"
-      style={{ width: "100%", justifyContent: "center" }}
-    >
+    <div data-testid="library-pagination" className="flex w-full justify-center">
       <Pagination
         current={current}
         pageSize={LIBRARY_PAGE_SIZE}
@@ -29,6 +26,6 @@ export function LibraryPagination({ current, total, onChange }: Props) {
         onChange={onChange}
         responsive
       />
-    </Space>
+    </div>
   );
 }

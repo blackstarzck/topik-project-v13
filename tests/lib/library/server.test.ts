@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { listLibraryItems } from "../../../src/lib/library/server";
+import { REPORT_NARRATIVE_EXCERPT_LEN } from "../../../src/lib/library/types";
 
 type FromResult = {
   data?: unknown[] | null;
@@ -89,6 +90,12 @@ describe("listLibraryItems(submissions)", () => {
       makeClient({
         library_items: { data: items },
         writing_submissions: { data: subs },
+        problems: {
+          data: [
+            { id: "p-1", title: "Problem 1" },
+            { id: "p-2", title: "Problem 2" },
+          ],
+        },
       }) as never;
 
     const out = await listLibraryItems("u", "submissions", create);
@@ -97,6 +104,7 @@ describe("listLibraryItems(submissions)", () => {
       kind: "submission",
       id: "sub-1",
       problem_id: "p-1",
+      problem_title: "Problem 1",
       question_no: 53,
       submitted_at: "2026-05-21T01:00:00Z",
       char_count: 412,
@@ -108,7 +116,6 @@ describe("listLibraryItems(submissions)", () => {
 
   it("returns empty array when no library_items exist", async () => {
     const create = async () =>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       makeClient({ library_items: { data: [] } }) as never;
     const out = await listLibraryItems("u", "submissions", create);
     expect(out).toEqual([]);
@@ -118,7 +125,6 @@ describe("listLibraryItems(submissions)", () => {
     const create = async () =>
       makeClient({
         library_items: { data: null, error: { message: "permission denied" } },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       }) as never;
     await expect(
       listLibraryItems("u", "submissions", create),
@@ -189,8 +195,10 @@ describe("listLibraryItems(reports)", () => {
     expect(first.kind).toBe("report");
     if (first.kind === "report") {
       expect(first.id).toBe("rep-1");
-      expect(first.narrative_excerpt?.length).toBeLessThanOrEqual(161); // 160 + ellipsis
-      expect(first.narrative_excerpt?.endsWith("…")).toBe(true);
+      expect(first.narrative_excerpt?.length).toBeLessThanOrEqual(
+        REPORT_NARRATIVE_EXCERPT_LEN + 3,
+      );
+      expect(first.narrative_excerpt?.endsWith("...")).toBe(true);
       expect(first.tags).toEqual(["weak-grammar"]);
     }
   });

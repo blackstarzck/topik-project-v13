@@ -1,6 +1,15 @@
 "use client";
 
-import { Alert, App, Badge, Button, Empty, Space, Spin, Tag, Typography } from "antd";
+import {
+  Alert,
+  App,
+  Badge,
+  Button,
+  Empty,
+  Spin,
+  Tag,
+  Typography,
+} from "antd";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
@@ -117,7 +126,12 @@ function RetryPrintButton({ item }: RetryButtonProps) {
   }
 
   return (
-    <Button size="small" onClick={handleClick} loading={pending} disabled={!reprintable}>
+    <Button
+      size="small"
+      onClick={handleClick}
+      loading={pending}
+      disabled={!reprintable}
+    >
       {t("reprint")}
     </Button>
   );
@@ -177,7 +191,7 @@ export function LibraryExportsTab({
   if (items.length === 0) {
     const searching = searchTerm.trim().length > 0;
     return (
-      <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+      <div className="flex w-full flex-col gap-4">
         <Text data-testid="library-result-count" type="secondary">
           {tCount("resultCount", { count: 0 })}
         </Text>
@@ -188,20 +202,18 @@ export function LibraryExportsTab({
             <Button onClick={onResetSearch}>{t("resetFilter")}</Button>
           ) : null}
         </Empty>
-      </Space>
+      </div>
     );
   }
 
   return (
-    <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+    <div className="flex w-full flex-col gap-4">
       <Text data-testid="library-result-count" type="secondary">
         {tCount("resultCount", { count: items.length })}
       </Text>
-      <Space
+      <div
         data-testid="library-item-list"
-        orientation="vertical"
-        size={0}
-        style={{ width: "100%" }}
+        className="flex w-full flex-col"
       >
         {pageItems.map((item) => {
           const isPrint = isBrowserPrintExport(item);
@@ -219,7 +231,7 @@ export function LibraryExportsTab({
                 ),
               ]}
             >
-              <Space orientation="vertical" size={4} style={{ width: "100%" }}>
+              <div className="flex w-full flex-col gap-1">
                 <Text strong>
                   {t(
                     exportSourceLabelKey(
@@ -227,7 +239,7 @@ export function LibraryExportsTab({
                     ) as Parameters<typeof t>[0],
                   )}
                 </Text>
-                <Space size="small" wrap>
+                <div className="flex flex-wrap items-center gap-2">
                   <Badge
                     status={statusBadgeStatus(item.status)}
                     text={t(
@@ -235,20 +247,20 @@ export function LibraryExportsTab({
                     )}
                   />
                   {isPrint ? (
-                    <Tag color="geekblue">{t("browserPrintTag")}</Tag>
+                    <Tag>{t("browserPrintTag")}</Tag>
                   ) : null}
                   <Text type="secondary">{item.storage_path}</Text>
-                </Space>
-              </Space>
+                </div>
+              </div>
             </LibraryItemRow>
           );
         })}
-      </Space>
+      </div>
       <LibraryPagination
         current={safePage}
         total={items.length}
         onChange={(p) => setPage(p)}
       />
-    </Space>
+    </div>
   );
 }
