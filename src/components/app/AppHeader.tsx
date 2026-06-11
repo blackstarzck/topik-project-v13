@@ -17,16 +17,7 @@ type Props = {
 export function AppHeader({ email, showMenuToggle, onMenuToggle }: Props) {
   const t = useTranslations("app");
   return (
-    <Header
-      style={{
-        background: "var(--app-color-bg-container)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        padding: "0 24px",
-        borderBottom: "1px solid var(--app-color-border)",
-      }}
-    >
+    <Header className="app-header">
       <Space size={12} align="center">
         {showMenuToggle ? (
           <Button
@@ -36,7 +27,7 @@ export function AppHeader({ email, showMenuToggle, onMenuToggle }: Props) {
             icon={<MenuIcon aria-hidden size={20} />}
           />
         ) : null}
-        <Title level={4} style={{ margin: 0 }}>
+        <Title className="app-header__brand" level={4}>
           {t("brand")}
         </Title>
       </Space>
