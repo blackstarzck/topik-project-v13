@@ -171,10 +171,10 @@ function PdfExportModalBody({
         />
       ) : (
         <Space
+          className="pdf-export-modal"
           data-testid="pdf-export-modal"
           orientation="vertical"
           size="middle"
-          style={{ width: "100%" }}
         >
           {tooMany ? (
             <Alert
@@ -188,6 +188,7 @@ function PdfExportModalBody({
           {/* Region 2: PDF 옵션 */}
           <Form layout="vertical">
             <Form.Item
+              className="pdf-export-form-item"
               label={t("filenameLabel")}
               required
               validateStatus={filenameError ? "error" : undefined}
@@ -198,9 +199,8 @@ function PdfExportModalBody({
                   max: FILENAME_MAX,
                 })
               }
-              style={{ marginBottom: 12 }}
             >
-              <Space.Compact style={{ width: "100%" }}>
+              <Space.Compact className="pdf-export-filename">
                 <Input
                   data-testid="pdf-export-filename"
                   value={filename}
@@ -209,16 +209,19 @@ function PdfExportModalBody({
                   aria-label={t("filenameAriaLabel")}
                 />
                 <Input
+                  className="pdf-export-extension"
                   disabled
                   aria-hidden
                   tabIndex={-1}
                   value=".pdf"
-                  style={{ width: 56, textAlign: "center" }}
                 />
               </Space.Compact>
             </Form.Item>
 
-            <Form.Item label={t("includeLabel")} style={{ marginBottom: 12 }}>
+            <Form.Item
+              className="pdf-export-form-item"
+              label={t("includeLabel")}
+            >
               <Space orientation="vertical">
                 <Checkbox
                   checked={includeAnswers}
@@ -235,7 +238,7 @@ function PdfExportModalBody({
               </Space>
             </Form.Item>
 
-            <Form.Item label={t("sortLabel")} style={{ marginBottom: 12 }}>
+            <Form.Item className="pdf-export-form-item" label={t("sortLabel")}>
               <Radio.Group
                 value={sortOrder}
                 onChange={(e) => setSortOrder(e.target.value as SortOrder)}
@@ -246,14 +249,17 @@ function PdfExportModalBody({
               </Radio.Group>
             </Form.Item>
 
-            <Form.Item label={t("formatLabel")} style={{ marginBottom: 12 }}>
+            <Form.Item
+              className="pdf-export-form-item"
+              label={t("formatLabel")}
+            >
               <Radio.Group value={format}>
                 <Radio value="pdf">PDF</Radio>
               </Radio.Group>
             </Form.Item>
 
             {/* 개인정보 확인 필수 */}
-            <Form.Item style={{ marginBottom: 0 }}>
+            <Form.Item className="pdf-export-form-item pdf-export-form-item--flush">
               <Checkbox
                 data-testid="pdf-export-privacy-confirm"
                 checked={privacyConfirmed}
@@ -264,14 +270,14 @@ function PdfExportModalBody({
             </Form.Item>
           </Form>
 
-          <Divider style={{ margin: "4px 0" }} />
+          <Divider className="pdf-export-divider" />
 
           {/* Region 3: 미리보기 (1페이지 축약) */}
           <div>
             <Text strong>{t("previewLabel")}</Text>
             {preview === "failed" ? (
               <Alert
-                style={{ marginTop: 8 }}
+                className="pdf-export-preview-alert"
                 type="warning"
                 showIcon
                 title={t("previewFailedTitle")}
@@ -296,24 +302,20 @@ function PdfExportModalBody({
               />
             ) : (
               <div
+                className="pdf-export-preview"
                 data-testid="pdf-export-preview"
-                style={{
-                  border: "1px solid var(--ant-color-border)",
-                  borderRadius: 8,
-                  marginTop: 8,
-                  padding: 16,
-                  maxHeight: 220,
-                  overflow: "hidden",
-                }}
                 aria-label={t("previewAriaLabel")}
               >
-                <Title level={5} style={{ marginTop: 0 }}>
+                <Title className="pdf-export-preview__title" level={5}>
                   {filename.trim() || t("filenameDefault")}
                 </Title>
-                <Paragraph type="secondary" style={{ marginBottom: 8 }}>
+                <Paragraph
+                  className="pdf-export-preview__subtitle"
+                  type="secondary"
+                >
                   {t("previewSubtitle", { count: previewItems.length })}
                 </Paragraph>
-                <ol style={{ margin: 0, paddingLeft: 18 }}>
+                <ol className="pdf-export-preview__list">
                   {previewItems.map((it) => (
                     <li key={it.itemId} data-testid="pdf-export-preview-item">
                       <Text>{it.title}</Text>
@@ -383,7 +385,7 @@ function PdfExportModalBody({
             />
           ) : null}
 
-          <Space style={{ justifyContent: "flex-end", width: "100%" }}>
+          <Space className="pdf-export-actions">
             <Button data-testid="pdf-export-close" onClick={onClose}>
               {t("close")}
             </Button>

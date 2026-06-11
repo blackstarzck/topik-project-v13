@@ -67,7 +67,7 @@ export function LibrarySavedProblemsTab({
   if (items.length === 0) {
     const searching = searchTerm.trim().length > 0;
     return (
-      <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+      <Space className="library-tab-stack" orientation="vertical" size="middle">
         <Text data-testid="library-result-count" type="secondary">
           {tCount("resultCount", { count: 0 })}
         </Text>
@@ -83,15 +83,15 @@ export function LibrarySavedProblemsTab({
   }
 
   return (
-    <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+    <Space className="library-tab-stack" orientation="vertical" size="middle">
       <Text data-testid="library-result-count" type="secondary">
         {tCount("resultCount", { count: items.length })}
       </Text>
       <Space
+        className="library-item-list"
         data-testid="library-item-list"
         orientation="vertical"
         size={0}
-        style={{ width: "100%" }}
       >
         {pageItems.map((item) => (
           <LibraryItemRow
@@ -115,7 +115,11 @@ export function LibrarySavedProblemsTab({
               </Link>,
             ]}
           >
-            <Space orientation="vertical" size={2} style={{ width: "100%" }}>
+            <Space
+              className="library-item-detail"
+              orientation="vertical"
+              size={2}
+            >
               <Text strong>{item.title}</Text>
             </Space>
           </LibraryItemRow>

@@ -58,10 +58,10 @@ export function LibraryStatsPanel({ stats }: Props) {
   if (empty) {
     return (
       <Space
+        className="library-stats-panel"
         data-testid="library-stats-panel"
         orientation="vertical"
         size="middle"
-        style={{ width: "100%" }}
       >
         <Text strong>{t("title")}</Text>
         <AppCard data-testid="library-empty-stats" size="small">
@@ -78,10 +78,10 @@ export function LibraryStatsPanel({ stats }: Props) {
 
   return (
     <Space
+      className="library-stats-panel"
       data-testid="library-stats-panel"
       orientation="vertical"
       size="middle"
-      style={{ width: "100%" }}
     >
       <Text strong>{t("title")}</Text>
       <AppCard data-testid="library-stat-card" size="small">

@@ -216,7 +216,7 @@ export function LibrarySubmissionsTab({
     Boolean(range && (range[0] || range[1]));
 
   return (
-    <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+    <Space className="library-tab-stack" orientation="vertical" size="middle">
       {/* Region 1: 필터 (유형·상태·기간 동시) + 결과 수 상단 표시 */}
       <Space wrap>
         <Select<StatusFilter>
@@ -226,7 +226,7 @@ export function LibrarySubmissionsTab({
             setStatusFilter(v);
             setPage(1);
           }}
-          style={{ minWidth: 140 }}
+          className="library-filter-select"
           aria-label={t("statusFilterAriaLabel")}
           options={[
             { value: "all", label: t("statusAll") },
@@ -272,10 +272,10 @@ export function LibrarySubmissionsTab({
       ) : (
         <>
           <Space
+            className="library-item-list"
             data-testid="library-item-list"
             orientation="vertical"
             size={0}
-            style={{ width: "100%" }}
           >
             {pageItems.map((item) => {
               const meta = enrich.get(item.id);
@@ -307,7 +307,11 @@ export function LibrarySubmissionsTab({
                     />,
                   ]}
                 >
-                  <Space orientation="vertical" size={2} style={{ width: "100%" }}>
+                  <Space
+                    className="library-item-detail"
+                    orientation="vertical"
+                    size={2}
+                  >
                     <Space size="small" wrap>
                       <Link
                         href={
@@ -335,7 +339,7 @@ export function LibrarySubmissionsTab({
                     </Space>
                     {meta?.summary ? (
                       <Paragraph
-                        style={{ marginBottom: 0 }}
+                        className="library-row-copy"
                         ellipsis={{ rows: 2 }}
                         type="secondary"
                       >

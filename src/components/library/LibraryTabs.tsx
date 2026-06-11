@@ -155,7 +155,11 @@ export function LibraryTabs({ activeTab, initialItems }: Props) {
   ];
 
   return (
-    <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+    <Space
+      className="library-tabs-shell"
+      orientation="vertical"
+      size="middle"
+    >
       <Input.Search
         data-testid="library-search"
         allowClear
@@ -164,7 +168,7 @@ export function LibraryTabs({ activeTab, initialItems }: Props) {
         onChange={(e) => setSearchTerm(e.target.value)}
         placeholder={t("searchPlaceholder")}
         aria-label={t("searchAriaLabel")}
-        style={{ maxWidth: 360 }}
+        className="library-search"
       />
 
       {/* F-01 region 2 (내보내기/생성 액션): selection-driven actions. The
