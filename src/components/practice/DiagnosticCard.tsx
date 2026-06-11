@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Empty, Space, Tag, Typography } from "antd";
+import { Button, Empty, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { AppCard } from "@/components/shared/AppCard";
@@ -52,7 +52,7 @@ export function DiagnosticCard({ weakDimensions, updatedAt, failed }: Props) {
         <Empty
           description={failed ? t("diagnosticFailed") : t("diagnosticNoData")}
         >
-          <Space orientation="vertical" size="small">
+          <div className="flex flex-col gap-2">
             <Button
               type="primary"
               onClick={() => router.push("/practice/problems" as never)}
@@ -60,10 +60,10 @@ export function DiagnosticCard({ weakDimensions, updatedAt, failed }: Props) {
             >
               {t("reanalyze")}
             </Button>
-            <Text type="secondary" style={{ fontSize: 12 }}>
+            <Text type="secondary" className="!text-xs">
               {t("reanalyzeNote")}
             </Text>
-          </Space>
+          </div>
         </Empty>
       </AppCard>
     );
@@ -80,7 +80,7 @@ export function DiagnosticCard({ weakDimensions, updatedAt, failed }: Props) {
     <AppCard>
       <Title level={5}>{t("diagnosticTopTitle")}</Title>
       <Paragraph>
-        <Tag color="red" style={{ fontSize: 14, padding: "4px 8px" }}>
+        <Tag className="!text-sm">
           {label}
         </Tag>
         <Text>
@@ -94,7 +94,7 @@ export function DiagnosticCard({ weakDimensions, updatedAt, failed }: Props) {
         <Text type="secondary">{t("diagnosticBody")}</Text>
       </Paragraph>
       {updatedAt ? (
-        <Text type="secondary" style={{ fontSize: 12 }}>
+        <Text type="secondary" className="!text-xs">
           {t("diagnosticUpdated", {
             // Pin tz + 24h so SSR (Node) and client (browser) ICU agree — Node
             // renders the ko-KR day-period as "PM" vs browser "오후" → React #418.

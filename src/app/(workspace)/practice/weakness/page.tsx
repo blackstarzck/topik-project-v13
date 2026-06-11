@@ -60,56 +60,29 @@ export default async function PracticeWeaknessPage() {
     return (
       <div className="app-workspace-narrow" data-testid="weakness-locked-shell">
         <PageHeader title={t("pageTitle")} />
-        <AppCard style={{ textAlign: "center" }} data-testid="weakness-locked-card">
+        <AppCard className="text-center" data-testid="weakness-locked-card">
           <span
             aria-hidden="true"
-            style={{
-              display: "inline-flex",
-              width: 48,
-              height: 48,
-              alignItems: "center",
-              justifyContent: "center",
-              border: "1px solid #dbe4f0",
-              borderRadius: 24,
-              background: "#f7fafc",
-              color: "#1668dc",
-            }}
+            className="inline-flex size-12 items-center justify-center rounded-full border border-border bg-surface text-text"
           >
-            <LockKeyhole size={24} strokeWidth={2} />
+            <LockKeyhole size={24} />
           </span>
-          <h2 style={{ marginTop: 8 }}>{t("lockTitle")}</h2>
-          <p style={{ color: "rgba(0,0,0,0.45)" }}>
+          <h2 className="mt-2 text-xl font-semibold">{t("lockTitle")}</h2>
+          <p className="text-text-secondary">
             {t("lockBody", { plan: planLabel ?? t("planFree") })}
           </p>
-          <div
-            style={{
-              display: "flex",
-              gap: 8,
-              justifyContent: "center",
-              flexWrap: "wrap",
-              marginTop: 16,
-            }}
-          >
+          <div className="mt-4 flex flex-wrap justify-center gap-2">
             <Link
               data-testid="weakness-upgrade-plan"
               href="/paywall"
-              style={{
-                background: "#1677ff",
-                color: "#fff",
-                padding: "6px 16px",
-                borderRadius: 6,
-              }}
+              className="inline-flex min-h-8 items-center rounded-full border border-primary bg-primary px-4 text-sm font-medium text-background"
             >
               {t("upgradePlan")}
             </Link>
             <Link
               data-testid="weakness-view-problems"
               href="/practice/problems"
-              style={{
-                border: "1px solid #d9d9d9",
-                padding: "6px 16px",
-                borderRadius: 6,
-              }}
+              className="inline-flex min-h-8 items-center rounded-full border border-border bg-background px-4 text-sm font-medium text-text"
             >
               {t("viewProblemList")}
             </Link>

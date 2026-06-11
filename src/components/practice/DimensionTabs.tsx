@@ -97,9 +97,9 @@ export function DimensionTabs({ dimensions, tabSummaries }: Props) {
               status={intStatus}
               format={(p) => tCommon("score", { score: p ?? 0 })}
             />
-            <Paragraph style={{ marginTop: 12 }}>
+            <Paragraph className="!mt-3">
               <Text strong>{label}</Text> {t("averageScoreInline")}{" "}
-              <Tag color={intStatus === "exception" ? "red" : "blue"}>
+              <Tag>
                 {tCommon("score", { score: Math.round(score) })}
               </Tag>
               <Text type="secondary">
@@ -139,9 +139,9 @@ export function DimensionTabs({ dimensions, tabSummaries }: Props) {
             status={intStatus}
             format={(p) => tCommon("score", { score: p ?? 0 })}
           />
-          <Paragraph style={{ marginTop: 12 }}>
+          <Paragraph className="!mt-3">
             <Text strong>{label}</Text> {t("averageScoreInline")}{" "}
-            <Tag color={intStatus === "exception" ? "red" : "blue"}>
+            <Tag>
               {tCommon("score", { score: Math.round(d.averageScore) })}
             </Tag>
             {d.sampleCount != null ? (

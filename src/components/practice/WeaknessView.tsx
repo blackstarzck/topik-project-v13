@@ -6,7 +6,6 @@ import {
   Col,
   Empty,
   Row,
-  Space,
   Tag,
   Typography,
 } from "antd";
@@ -180,12 +179,12 @@ export function WeaknessView({
   }
 
   return (
-    <Space orientation="vertical" size="large" style={{ width: "100%" }}>
+    <div className="flex w-full flex-col gap-6">
       <div>
-        <Title level={3} style={{ marginBottom: 4 }}>
+        <Title level={3} className="!mb-1">
           {t("heading")}
         </Title>
-        <Paragraph type="secondary" style={{ margin: 0 }}>
+        <Paragraph type="secondary" className="!m-0">
           {t("subtitle")}
         </Paragraph>
       </div>
@@ -199,7 +198,7 @@ export function WeaknessView({
 
       {leadingWeakDimension && leadingInsight ? (
         <AppCard title={t("insightCardTitle")}>
-          <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+          <div className="flex w-full flex-col gap-4">
             <Alert
               showIcon
               type="info"
@@ -208,32 +207,32 @@ export function WeaknessView({
             />
             <Row gutter={[16, 16]}>
               <Col xs={24} md={8}>
-                <Space orientation="vertical" size={4}>
+                <div className="flex flex-col gap-1">
                   <Text strong>{t("insightWhyTitle")}</Text>
                   <Text type="secondary">{leadingInsight.why}</Text>
-                </Space>
+                </div>
               </Col>
               <Col xs={24} md={8}>
-                <Space orientation="vertical" size={4}>
+                <div className="flex flex-col gap-1">
                   <Text strong>{t("insightExampleTitle")}</Text>
                   <Text type="secondary">{leadingInsight.example}</Text>
-                </Space>
+                </div>
               </Col>
               <Col xs={24} md={8}>
-                <Space orientation="vertical" size={4}>
+                <div className="flex flex-col gap-1">
                   <Text strong>{t("insightStrategyTitle")}</Text>
                   <Text type="secondary">{leadingInsight.strategy}</Text>
-                </Space>
+                </div>
               </Col>
             </Row>
-          </Space>
+          </div>
         </AppCard>
       ) : null}
 
       <Row gutter={[24, 24]}>
         <Col xs={24} md={24}>
-          <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
-            <Title level={4} style={{ marginBottom: 0 }}>
+          <div className="flex w-full flex-col gap-4">
+            <Title level={4} className="!mb-0">
               {t("recommendationsTitle")}
             </Title>
             {recommendations.length === 0 ? (
@@ -250,17 +249,9 @@ export function WeaknessView({
                           : () => handleRecommendationClick(rec)
                       }
                       data-testid={`weakness-rec-${rec.problem_id}`}
-                      style={
-                        rec.locked
-                          ? { opacity: 0.7, background: "#fafafa" }
-                          : undefined
-                      }
+                      className={rec.locked ? "bg-surface opacity-70" : undefined}
                     >
-                      <Space
-                        orientation="vertical"
-                        size="small"
-                        style={{ width: "100%" }}
-                      >
+                      <div className="flex w-full flex-col gap-2">
                         <Text type="secondary">
                           {rec.locked ? "🔒 " : ""}
                           {tCommon("questionItem", { no: rec.question_no })}
@@ -269,7 +260,7 @@ export function WeaknessView({
                           {truncateRecommendationTitle(rec.title)}
                         </Text>
                         {rec.locked ? (
-                          <Space orientation="vertical" size={4}>
+                          <div className="flex flex-col gap-1">
                             <Text type="secondary">{t("lockedNotice")}</Text>
                             <Button
                               onClick={(event) => {
@@ -280,11 +271,11 @@ export function WeaknessView({
                             >
                               {t("upgradeInfo")}
                             </Button>
-                          </Space>
+                          </div>
                         ) : (
                           <>
-                            <Space orientation="vertical" size={2}>
-                              <Tag color="blue">
+                            <div className="flex flex-col gap-1">
+                              <Tag>
                                 {recommendationSourceLabel(rec.source)}
                               </Tag>
                               <Text
@@ -293,17 +284,11 @@ export function WeaknessView({
                                   rec,
                                   leadingWeakLabel,
                                 )}
-                                style={{
-                                  display: "block",
-                                  maxWidth: "100%",
-                                  overflow: "hidden",
-                                  textOverflow: "ellipsis",
-                                  whiteSpace: "nowrap",
-                                }}
+                                className="block max-w-full overflow-hidden text-ellipsis whitespace-nowrap"
                               >
                                 {recommendationReason(rec, leadingWeakLabel)}
                               </Text>
-                            </Space>
+                            </div>
                             <Button
                               type="primary"
                               disabled={
@@ -320,24 +305,24 @@ export function WeaknessView({
                             </Button>
                           </>
                         )}
-                      </Space>
+                      </div>
                     </AppCard>
                   </Col>
                 ))}
               </Row>
             )}
             <AppCard>
-              <Space orientation="vertical" size={8}>
+              <div className="flex flex-col gap-2">
                 <Text strong>{t("deeperTitle")}</Text>
                 <Text type="secondary">{t("deeperBody")}</Text>
                 <Button onClick={() => router.push("/paywall" as never)}>
                   {t("deeperCta")}
                 </Button>
-              </Space>
+              </div>
             </AppCard>
-          </Space>
+          </div>
         </Col>
       </Row>
-    </Space>
+    </div>
   );
 }
