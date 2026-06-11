@@ -5886,6 +5886,100 @@ body {
   margin-top: 12px;
 }
 
+.password-strength-bar {
+  display: flex;
+  gap: 4px;
+}
+
+.password-strength-segment {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: #f0f0f0;
+  transition: background 0.2s ease;
+}
+
+.password-strength-segment--filled.password-strength-segment--weak,
+.password-strength-label-text--weak.ant-typography {
+  color: #ff4d4f;
+}
+
+.password-strength-segment--filled.password-strength-segment--weak {
+  background: #ff4d4f;
+}
+
+.password-strength-segment--filled.password-strength-segment--fair,
+.password-strength-label-text--fair.ant-typography {
+  color: #faad14;
+}
+
+.password-strength-segment--filled.password-strength-segment--fair {
+  background: #faad14;
+}
+
+.password-strength-segment--filled.password-strength-segment--good,
+.password-strength-label-text--good.ant-typography,
+.password-strength-rule--met {
+  color: #52c41a;
+}
+
+.password-strength-segment--filled.password-strength-segment--good {
+  background: #52c41a;
+}
+
+.password-strength-segment--filled.password-strength-segment--strong,
+.password-strength-label-text--strong.ant-typography {
+  color: #237804;
+}
+
+.password-strength-segment--filled.password-strength-segment--strong {
+  background: #237804;
+}
+
+.password-strength-label {
+  margin-top: 4px;
+}
+
+.password-strength-label-text.ant-typography,
+.password-strength-rule {
+  font-size: 12px;
+}
+
+.password-strength-rules {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  padding: 0;
+  margin: 6px 0 0;
+  list-style: none;
+}
+
+.password-strength-rule {
+  color: #8c8c8c;
+}
+
+.password-reset-confirm-title.ant-typography {
+  margin-top: 12px;
+  text-align: center;
+}
+
+.password-reset-confirm-subtitle.ant-typography {
+  text-align: center;
+}
+
+.password-reset-confirm-guide.ant-typography,
+.password-reset-confirm-alert.ant-alert {
+  margin-bottom: 16px;
+}
+
+.password-reset-confirm-actions-item.ant-form-item {
+  margin-bottom: 0;
+}
+
+.password-reset-confirm-actions.ant-space {
+  width: 100%;
+}
+
 .analysis-loading-shell {
   position: relative;
   display: grid;

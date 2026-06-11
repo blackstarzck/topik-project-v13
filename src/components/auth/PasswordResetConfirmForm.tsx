@@ -91,16 +91,16 @@ export function PasswordResetConfirmForm() {
           size={48}
         />
         {/* §2 흐름 안내 — Stepper 미사용, 헤더 카피가 곧 위치 안내 */}
-        <Title level={3} style={{ textAlign: "center", marginTop: 12 }}>
+        <Title level={3} className="password-reset-confirm-title">
           {t("title")}
         </Title>
-        <Paragraph type="secondary" style={{ textAlign: "center" }}>
+        <Paragraph type="secondary" className="password-reset-confirm-subtitle">
           {t("subtitle")}
         </Paragraph>
 
         {/* §4 안내 카피 — 보안 조건 + 만료 시간(절대/상대 병기) */}
         <Paragraph
-          style={{ marginBottom: 16 }}
+          className="password-reset-confirm-guide"
           data-testid="password-reset-confirm-guide"
         >
           <Text type="secondary">
@@ -121,7 +121,7 @@ export function PasswordResetConfirmForm() {
           <Alert
             type="warning"
             showIcon
-            style={{ marginBottom: 16 }}
+            className="password-reset-confirm-alert"
             data-testid="password-reset-confirm-error"
             title={t("saveFailedTitle")}
             description={
@@ -182,8 +182,12 @@ export function PasswordResetConfirmForm() {
           />
         </Form.Item>
 
-        <Form.Item style={{ marginBottom: 0 }}>
-          <Space orientation="vertical" size="small" style={{ width: "100%" }}>
+        <Form.Item className="password-reset-confirm-actions-item">
+          <Space
+            orientation="vertical"
+            size="small"
+            className="password-reset-confirm-actions"
+          >
             <Button
               type="primary"
               htmlType="submit"

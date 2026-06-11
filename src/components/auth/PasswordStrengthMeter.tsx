@@ -68,46 +68,40 @@ export function PasswordStrengthMeter({
       data-testid="password-strength"
       aria-live="polite"
     >
-      <div style={{ display: "flex", gap: 4 }}>
+      <div className="password-strength-bar">
         {Array.from({ length: SEGMENT_COUNT }).map((_, index) => {
           const filled = index < strength.score;
           return (
             <div
               key={index}
-              style={{
-                flex: 1,
-                height: 4,
-                borderRadius: 2,
-                background: filled ? strength.color : "#f0f0f0",
-                transition: "background 0.2s ease",
-              }}
+              className={[
+                "password-strength-segment",
+                filled ? "password-strength-segment--filled" : "",
+                `password-strength-segment--${strength.level}`,
+              ]
+                .filter(Boolean)
+                .join(" ")}
             />
           );
         })}
       </div>
-      <div style={{ marginTop: 4 }}>
-        <Text style={{ fontSize: 12, color: strength.color }}>
+      <div className="password-strength-label">
+        <Text
+          className={`password-strength-label-text password-strength-label-text--${strength.level}`}
+        >
           {t("label", { level: t(LEVEL_LABEL_KEY[strength.level]) })}
         </Text>
       </div>
       {showRules ? (
-        <ul
-          style={{
-            listStyle: "none",
-            padding: 0,
-            margin: "6px 0 0",
-            display: "flex",
-            flexWrap: "wrap",
-            gap: "2px 12px",
-          }}
-        >
+        <ul className="password-strength-rules">
           {strength.rules.map((rule: PasswordRule) => (
             <li
               key={rule.key}
-              style={{
-                fontSize: 12,
-                color: rule.met ? "#52c41a" : "#8c8c8c",
-              }}
+              className={
+                rule.met
+                  ? "password-strength-rule password-strength-rule--met"
+                  : "password-strength-rule"
+              }
             >
               {rule.met ? "✓" : "○"} {t(RULE_LABEL_KEY[rule.key])}
             </li>
