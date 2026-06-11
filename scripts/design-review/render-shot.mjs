@@ -3,7 +3,7 @@
 // Reusable primitive for the design-fix-from-review (Stage 2) visual gate. It REUSES an
 // already-running dev server (Next 16 holds a single-dev lock) and writes one PNG per
 // viewport plus a sidecar JSON (console errors, error-overlay flag, body length) so a
-// multimodal reviewer can judge the rendered page against AWESOMIC-DESIGN.md / hifi.png.
+// multimodal reviewer can judge the rendered page against DESIGN.md / hifi.png.
 //
 // MUST be run from the repo root (pnpm non-flat node_modules; `playwright` won't resolve
 // from %TEMP%).  Inputs via env vars:
@@ -20,7 +20,7 @@
 // READ-ONLY w.r.t. the app: it only navigates and screenshots. It writes PNG/JSON to RS_OUT.
 
 import { chromium } from 'playwright'
-import { mkdir, writeFile, stat } from 'node:fs/promises'
+import { mkdir, writeFile, readFile, stat } from 'node:fs/promises'
 import path from 'node:path'
 
 const ROUTE = process.env.RS_ROUTE

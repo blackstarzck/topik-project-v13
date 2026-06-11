@@ -110,11 +110,7 @@ export function LibraryItemRow({
       trigger="click"
       title={t("editTags")}
       content={
-        <Space
-          className="library-tag-popover"
-          orientation="vertical"
-          size="small"
-        >
+        <Space orientation="vertical" style={{ width: 220 }} size="small">
           <Input
             value={draftTags}
             onChange={(e) => setDraftTags(e.target.value)}
@@ -165,11 +161,19 @@ export function LibraryItemRow({
 
   return (
     <div
-      className="library-item-row"
       data-testid="library-item-row"
       data-library-tab={tab}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: SPACING.md,
+        flexWrap: "wrap",
+        paddingBlock: SPACING.md,
+        borderBottom: "1px solid var(--app-color-border)",
+      }}
     >
-      <div className="library-item-row__content">{children}</div>
+      <div style={{ minWidth: 0, flex: "1 1 280px" }}>{children}</div>
       <Space size={[SPACING.sm, SPACING.sm]} wrap>
         {actions}
       </Space>

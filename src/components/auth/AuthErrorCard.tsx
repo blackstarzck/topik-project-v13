@@ -177,11 +177,11 @@ export function AuthErrorCard() {
       aria-live="polite"
       data-testid={`auth-error-card-${reason}`}
     >
-      <Space orientation="vertical" size="middle" className="auth-error-stack">
-        <Title level={3} className="auth-error-title">
+      <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+        <Title level={3} style={{ marginBottom: 0 }}>
           {reasonTitle}
         </Title>
-        <Paragraph className="auth-error-message">{reasonMessage}</Paragraph>
+        <Paragraph style={{ marginBottom: 0 }}>{reasonMessage}</Paragraph>
 
         {content.showsEmailField && (
           <Form layout="vertical">
@@ -204,7 +204,7 @@ export function AuthErrorCard() {
           </Text>
         )}
 
-        <Space orientation="vertical" size="small" className="auth-error-actions">
+        <Space orientation="vertical" size="small" style={{ width: "100%" }}>
           <Button
             type="primary"
             block
@@ -233,7 +233,7 @@ export function AuthErrorCard() {
         {/* §6 escape routes — primary/secondary와 같은 목적지(href)는 제외해
             한 화면에 같은 곳으로 가는 affordance가 중복되지 않게 한다. */}
         <Paragraph
-          className="auth-error-escape"
+          style={{ marginBottom: 0, textAlign: "center" }}
           data-testid="auth-error-escape"
         >
           {ESCAPE_LINKS.filter((link) => {

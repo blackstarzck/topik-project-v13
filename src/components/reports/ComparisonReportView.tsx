@@ -8,6 +8,7 @@ import { AppCard } from "@/components/shared/AppCard";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { logStudyEvent } from "@/lib/events/study-events";
 import type { ComparisonMetrics } from "@/lib/writing/comparison-service";
+import { SPACING } from "@/theme/spacing";
 import { ComparisonKpiBlock } from "./ComparisonKpiBlock";
 import { DimensionComparisonCards } from "./DimensionComparisonCards";
 import { ScoreComparisonChart, type ChartDatum } from "./ScoreComparisonChart";
@@ -96,7 +97,7 @@ export function ComparisonReportView({
   }
 
   return (
-    <Space orientation="vertical" size="large" className="comparison-page-stack">
+    <Space orientation="vertical" size="large" style={{ width: "100%" }}>
       <PageHeader
         title={t("heading")}
         actions={
@@ -132,10 +133,7 @@ export function ComparisonReportView({
           />
         ) : (
           <>
-            <Paragraph
-              className="comparison-narrative-copy"
-              ellipsis={{ rows: 3 }}
-            >
+            <Paragraph style={{ marginBottom: SPACING.sm }} ellipsis={{ rows: 3 }}>
               {narrative}
             </Paragraph>
             <Text type="secondary">{t("narrativeDisclaimer")}</Text>
@@ -154,7 +152,7 @@ export function ComparisonReportView({
       <SubmissionDiffPanel currentText={currentText} previousText={previousText} />
 
       <AppCard data-testid="comparison-next-actions">
-        <Title level={5} className="comparison-card-title">
+        <Title level={5} style={{ marginTop: 0 }}>
           {t("nextLearningTitle")}
         </Title>
         <Space wrap>

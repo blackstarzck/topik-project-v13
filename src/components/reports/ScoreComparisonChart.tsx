@@ -27,6 +27,8 @@ const DIMENSION_KEYS = [
   "topic_fit",
 ] as const;
 
+const CHART_MIN_WIDTH = 360;
+const CHART_HEIGHT = 280;
 const AXIS_FONT_SIZE = 12;
 const CHART_MARGIN = {
   top: SPACING.sm,
@@ -118,8 +120,8 @@ export function ScoreComparisonChart({ data, hasPrevious }: Props) {
 
   return (
     <AppCard data-testid="comparison-chart">
-      <Space className="comparison-chart__header">
-        <Title level={5} className="comparison-card-title">
+      <Space style={{ width: "100%", justifyContent: "space-between" }}>
+        <Title level={5} style={{ marginTop: 0 }}>
           {t("title")}
         </Title>
         <Button
@@ -131,8 +133,8 @@ export function ScoreComparisonChart({ data, hasPrevious }: Props) {
           {t("viewAsTable")}
         </Button>
       </Space>
-      <div className="comparison-chart__scroll">
-        <div className="comparison-chart__frame">
+      <div style={{ width: "100%", overflowX: "auto" }}>
+        <div style={{ minWidth: CHART_MIN_WIDTH, height: CHART_HEIGHT }}>
           <ChartBody
             chartData={chartData}
             hasPrevious={hasPrevious}

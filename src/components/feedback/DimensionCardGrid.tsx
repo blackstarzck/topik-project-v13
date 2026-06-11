@@ -58,36 +58,23 @@ export function DimensionCardGrid({ rows, maxCards, onReanalyze }: Props) {
           <Col key={dim} xs={24} md={12} lg={8}>
             <AppCard
               size="small"
-              className={[
-                "feedback-dimension-card",
-                failed ? "feedback-dimension-card--failed" : null,
-              ]
-                .filter(Boolean)
-                .join(" ")}
               data-testid="feedback-dimension-card"
+              style={failed ? { opacity: 0.6, background: "#fafafa" } : undefined}
             >
               <Text strong>{t(`label.${dim}`)}</Text>
-              <div className="feedback-dimension-card__score">
+              <div style={{ marginTop: 4 }}>
                 <Tag color={tone}>
                   {score ?? "—"} / {row?.score_max ?? 100}
                 </Tag>
               </div>
               {failed ? (
                 <div>
-                  <Text
-                    type="secondary"
-                    className="feedback-dimension-card__failed-text"
-                  >
+                  <Text type="secondary" style={{ fontSize: 12 }}>
                     {t("failedText")}
                   </Text>
                   {onReanalyze ? (
-                    <div className="feedback-dimension-card__actions">
-                      <Button
-                        size="small"
-                        type="link"
-                        onClick={onReanalyze}
-                        className="feedback-inline-link"
-                      >
+                    <div style={{ marginTop: 4 }}>
+                      <Button size="small" type="link" onClick={onReanalyze} style={{ padding: 0 }}>
                         {t("reanalyze")}
                       </Button>
                     </div>
@@ -97,7 +84,12 @@ export function DimensionCardGrid({ rows, maxCards, onReanalyze }: Props) {
                 <Text
                   type="secondary"
                   title={row?.summary ?? undefined}
-                  className="feedback-two-line"
+                  style={{
+                    display: "-webkit-box",
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                  }}
                 >
                   {row?.summary ?? t("summaryFallback")}
                 </Text>

@@ -30,7 +30,7 @@ export function OnboardingSteps({ current = STEP_KEYS.length - 1 }: Props) {
     : 0;
   return (
     <div>
-      <Text type="secondary" className="onboarding-step-counter">
+      <Text type="secondary" style={{ display: "block", marginBottom: 8 }}>
         {t("counter", {
           current: safeCurrent + 1,
           total: STEP_KEYS.length,

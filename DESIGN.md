@@ -74,11 +74,11 @@ components:
 
 # TALKPIK Design
 
-> Legacy visual reference retained for historical context.
-> The active source of truth for the user-facing visual layer is now
-> [`AWESOMIC-DESIGN.md`](AWESOMIC-DESIGN.md). The YAML above is no longer the
-> implementation contract. Structure & binding to `src/theme` lives in
-> [`docs/ant-design/08-theme-architecture.md`](docs/ant-design/08-theme-architecture.md).
+> Single source of truth for the **visual** layer of the TALKPIK user-facing app.
+> The YAML above is the machine-readable contract (exact values); the markdown
+> below explains intent (why / how). Structure & binding to `src/theme` lives in
+> [`docs/ant-design/08-theme-architecture.md`](docs/ant-design/08-theme-architecture.md);
+> this file owns the values.
 >
 > **Pilot decision (minimal risk / branch 1):** the 9 global bridge tokens are
 > kept at Ant Design v6.4.3 defaults. No brand-tokens manifest is introduced.
@@ -98,8 +98,9 @@ What we want a user to remember: *"quiet, trustworthy, and it always tells me
 the next step."* That is why surfaces are neutral, elevation is light, motion is
 short, and color is used for meaning — never for decoration.
 
-The values here mirror an earlier Ant Design stock-light pilot. They do not
-override the current Awesomic contract.
+The values here mirror Ant Design's stock light theme. We are not repainting the
+framework; we are giving its tokens names and a written intent so every screen
+applies them the same way.
 
 ## Colors
 

@@ -154,6 +154,7 @@ export function ProblemListView({ userId }: Props) {
       className="problem-list-page"
       orientation="vertical"
       size="large"
+      style={{ width: "100%" }}
     >
       <PageHeader
         className="problem-list-page__header"
@@ -188,7 +189,7 @@ export function ProblemListView({ userId }: Props) {
 
       {list.isLoading ? (
         <Spin>
-          <div className="problem-list-loading-space" />
+          <div style={{ minHeight: 80 }} />
         </Spin>
       ) : list.error ? (
         // §예외 — 로딩 실패.

@@ -20,6 +20,8 @@ const DETAIL_DIMENSION_KEYS: FeedbackDimensionScoreRow["dimension"][] = [
   "topic_fit",
 ];
 
+// 카드 본문 상단 패딩 0 — Collapse가 카드 상단에 붙도록(의도적 flush, antd 6.x styles API).
+const DETAIL_CARD_STYLES = { body: { paddingTop: 0 } } as const; // ai-check: allow-inline-number 0 = 의도적 flush
 
 type Props = {
   dimensions: FeedbackDimensionScoreRow[];
@@ -37,11 +39,7 @@ export function DetailedFeedbackPanel({ dimensions }: Props) {
 
   if (available.length === 0) {
     return (
-      <AppCard
-        title={t("cardTitle")}
-        className="feedback-detail-panel"
-        data-testid="feedback-detail-panel"
-      >
+      <AppCard title={t("cardTitle")} data-testid="feedback-detail-panel">
         <Empty description={t("emptyDescription")} />
       </AppCard>
     );
@@ -65,11 +63,7 @@ export function DetailedFeedbackPanel({ dimensions }: Props) {
         </Space>
       ),
       children: (
-        <Space
-          orientation="vertical"
-          size={8}
-          className="feedback-detail-panel__stack"
-        >
+        <Space orientation="vertical" size={8} style={{ width: "100%" }}>
           {score !== null ? (
             <Progress
               percent={percent}
@@ -80,7 +74,7 @@ export function DetailedFeedbackPanel({ dimensions }: Props) {
           {/* 각 항목 본문 2줄 우선 (description region 3 제약). */}
           <Paragraph
             type="secondary"
-            className="feedback-detail-panel__copy"
+            style={{ marginBottom: 0 }}
             ellipsis={{ rows: 2, expandable: true, symbol: t("expandSymbol") }}
           >
             {row?.summary ?? t("itemSummaryFallback")}
@@ -93,7 +87,7 @@ export function DetailedFeedbackPanel({ dimensions }: Props) {
   return (
     <AppCard
       title={t("cardTitle")}
-      className="feedback-detail-panel feedback-detail-panel--flush"
+      styles={DETAIL_CARD_STYLES}
       data-testid="feedback-detail-panel"
     >
       <Collapse

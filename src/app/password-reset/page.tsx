@@ -7,6 +7,7 @@ import { PasswordResetRequestForm } from "@/components/auth/PasswordResetRequest
 import { AppCard } from "@/components/shared/AppCard";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PublicShell } from "@/components/shared/PublicShell";
+import { SPACING } from "@/theme/spacing";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("auth.passwordReset");
@@ -21,24 +22,39 @@ export default async function PasswordResetPage() {
         <div
           aria-hidden="true"
           data-testid="password-reset-security-visual"
-          className="password-reset-security-visual"
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            gap: 12,
+            marginBottom: SPACING.md,
+          }}
         >
           {[MailCheck, ShieldCheck].map((Icon, index) => (
             <span
               key={index}
-              className="password-reset-security-icon"
+              style={{
+                display: "inline-flex",
+                width: 44,
+                height: 44,
+                alignItems: "center",
+                justifyContent: "center",
+                border: "1px solid #dbe4f0",
+                borderRadius: 22,
+                background: "#f7fafc",
+                color: "#1668dc",
+              }}
             >
               <Icon size={22} strokeWidth={2} />
             </span>
           ))}
         </div>
-        <h1 className="password-reset-heading">
+        <h1 style={{ textAlign: "center", fontSize: 24, marginBottom: SPACING.lg }}>
           {t("pageHeading")}
         </h1>
         <AppCard data-testid="password-reset-request-card">
           <PasswordResetRequestForm />
         </AppCard>
-        <p className="password-reset-back-link">
+        <p style={{ textAlign: "center", marginTop: SPACING.md }}>
           <Link href="/login">{t("backToLogin")}</Link>
         </p>
       </PageContainer>

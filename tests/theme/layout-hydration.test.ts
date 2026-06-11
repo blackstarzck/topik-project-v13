@@ -95,13 +95,13 @@ describe("RootLayout hydration consistency", () => {
     return { colorScheme, bgContainer, initialAppearance, lang, locale };
   }
 
-  test("dark cookie → light-fixed html AND AppProviders initialAppearance=light", async () => {
+  test("dark cookie → html colorScheme=dark AND AppProviders initialAppearance=dark", async () => {
     const { colorScheme, bgContainer, initialAppearance } =
       await getLayoutAndProviderProps("dark");
 
-    expect(colorScheme).toBe("light");
-    expect(bgContainer).toBe("#ffffff");
-    expect(initialAppearance).toBe("light");
+    expect(colorScheme).toBe("dark");
+    expect(bgContainer).not.toBe("#ffffff"); // dark mode has dark bg
+    expect(initialAppearance).toBe("dark");
   });
 
   test("light cookie → html colorScheme=light AND AppProviders initialAppearance=light", async () => {

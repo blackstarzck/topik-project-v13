@@ -15,7 +15,10 @@ export function LibraryPagination({ current, total, onChange }: Props) {
   const t = useTranslations("library.submissions");
 
   return (
-    <Space className="library-pagination" data-testid="library-pagination">
+    <Space
+      data-testid="library-pagination"
+      style={{ width: "100%", justifyContent: "center" }}
+    >
       <Pagination
         current={current}
         pageSize={LIBRARY_PAGE_SIZE}

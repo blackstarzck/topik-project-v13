@@ -1,7 +1,7 @@
 "use client";
 
 import type { KeyboardEvent } from "react";
-import { Button, Col, Empty, Row, Space, Tag, Typography } from "antd";
+import { Button, Col, Empty, Row, Space, Tag, Typography, theme } from "antd";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { AppCard } from "@/components/shared/AppCard";
@@ -57,6 +57,7 @@ export function AlternativeCardsGrid({
 }: Props) {
   const t = useTranslations("practice.next");
   const tCommon = useTranslations("practice.common");
+  const { token } = theme.useToken();
   const router = useRouter();
 
   if (alternatives.length === 0) {
@@ -67,6 +68,11 @@ export function AlternativeCardsGrid({
       </section>
     );
   }
+
+  const selectedStyle = {
+    borderColor: token.colorPrimary,
+    borderWidth: token.lineWidth * 2,
+  };
 
   return (
     <section data-testid="next-alternatives">
@@ -82,9 +88,12 @@ export function AlternativeCardsGrid({
             return (
               <Col key={alternative.id} xs={24} md={8}>
                 <AppCard
-                  className="next-alternative-card next-alternative-card--locked"
                   data-testid="next-alternative-locked"
                   data-problem-id={alternative.id}
+                  style={{
+                    opacity: token.opacityLoading,
+                    background: token.colorBgContainerDisabled,
+                  }}
                   title={
                     <Tag color="default">
                       {alternative.questionNo != null
@@ -96,7 +105,7 @@ export function AlternativeCardsGrid({
                   <Space
                     orientation="vertical"
                     size="small"
-                    className="next-alternative-card__stack"
+                    style={{ width: "100%" }}
                   >
                     <Text type="secondary">{t("lockedNotice")}</Text>
                     <Button
@@ -134,14 +143,7 @@ export function AlternativeCardsGrid({
                 onKeyDown={(event) => handleCardKeyDown(event, handleClick)}
                 data-testid="next-alternative-card"
                 data-problem-id={alternative.id}
-                className={[
-                  "next-alternative-card",
-                  selectedId === alternative.id
-                    ? "next-selectable-card--selected"
-                    : null,
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
+                style={selectedId === alternative.id ? selectedStyle : undefined}
                 title={
                   <Space wrap>
                     <Tag color="default">
@@ -162,10 +164,10 @@ export function AlternativeCardsGrid({
               >
                 <Text strong>{truncateTitle(alternative.title)}</Text>
                 {alternative.reason ? (
-                  <div className="next-alternative-card__reason-wrap">
+                  <div style={{ marginTop: SPACING.xs }}>
                     <Paragraph
                       type="secondary"
-                      className="next-alternative-card__reason"
+                      style={{ fontSize: token.fontSizeSM, margin: 0 }}
                       ellipsis={{ rows: 2 }}
                     >
                       {alternative.reason}

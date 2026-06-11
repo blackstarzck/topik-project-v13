@@ -41,31 +41,31 @@ export function WorkspaceShell({ role, email, planLabel, children }: Props) {
   const showDrawer = isMobile && drawerOpen;
 
   return (
-    <Layout className="app-workspace-layout">
+    <Layout style={{ minHeight: "100vh" }}>
       <Sider
-        className="app-workspace-sider"
         breakpoint="md"
         collapsedWidth={0}
         width={240}
         trigger={null}
+        style={{ background: "var(--app-color-bg-container)" }}
       >
         <SidebarNav role={role} planLabel={planLabel} />
       </Sider>
-      <Layout className="app-workspace-main">
+      <Layout>
         <AppHeader
           email={email}
           showMenuToggle={isMobile}
           onMenuToggle={() => setDrawerOpen(true)}
         />
-        <Content className="app-workspace-content">{children}</Content>
+        <Content style={{ padding: 24 }}>{children}</Content>
       </Layout>
 
       <AppDrawer
-        rootClassName="app-workspace-drawer"
         placement="left"
         size={240}
         open={showDrawer}
         onClose={() => setDrawerOpen(false)}
+        styles={{ body: { padding: 0 } }}
         title={t("menu")}
       >
         <SidebarNav

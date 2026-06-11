@@ -25,13 +25,13 @@ export function SectionEditor({
     <div>
       <Text strong>{label}</Text>
       <Input.TextArea
-        className="writing-section-editor__input"
         aria-label={label}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         disabled={disabled}
         autoSize={{ minRows }}
+        style={{ marginTop: 8 }}
       />
     </div>
   );

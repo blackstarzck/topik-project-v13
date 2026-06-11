@@ -37,29 +37,11 @@ type SignUpFields = {
   terms: boolean;
 };
 
-type SignUpFormFailure = {
-  errorFields: Array<{ name: Array<string | number> }>;
-};
-
-const SIGN_UP_TEXT_FIELDS = [
-  "displayName",
-  "email",
-  "password",
-  "passwordConfirm",
-] as const satisfies ReadonlyArray<keyof SignUpFields>;
-
 type SignUpFormProps = {
   onTypingChange?: (isTyping: boolean) => void;
   onPasswordChange?: (password: string) => void;
   onPasswordVisibilityChange?: (visible: boolean) => void;
 };
-
-function hasAnyTextInputValue(values: Partial<SignUpFields>) {
-  return SIGN_UP_TEXT_FIELDS.some((fieldName) => {
-    const value = values[fieldName];
-    return typeof value === "string" && value.trim().length > 0;
-  });
-}
 
 export function SignUpForm({
   onTypingChange,
@@ -69,11 +51,10 @@ export function SignUpForm({
   const t = useTranslations("auth.signUp");
   // Cross-namespace: server sign-up failure copy lives under `auth.error.<reason>.message`.
   const te = useTranslations("auth.error");
-  const { message, modal } = App.useApp();
+  const { message } = App.useApp();
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [googleSubmitting, setGoogleSubmitting] = useState(false);
-  const [hasAnyTextInput, setHasAnyTextInput] = useState(false);
   // password-strength meter는 실시간으로 입력값을 추적해야 하므로 watch.
   const [passwordValue, setPasswordValue] = useState("");
   const [form] = Form.useForm<SignUpFields>();
@@ -135,32 +116,12 @@ export function SignUpForm({
     }
   }
 
-  function handleSignUpFailed({ errorFields }: SignUpFormFailure) {
-    const hasTermsError = errorFields.some(
-      (field) => field.name[0] === "terms",
-    );
-    if (!hasTermsError) {
-      return;
-    }
-
-    modal.warning({
-      title: t("termsRequiredModalTitle"),
-      content: t("termsRequiredModalDescription"),
-      okText: t("termsRequiredModalOk"),
-      centered: true,
-    });
-  }
-
   return (
     <div className="auth-form-stack">
       <Form
         form={form}
         layout="vertical"
         onFinish={handleSignUp}
-        onFinishFailed={handleSignUpFailed}
-        onValuesChange={(_, values: SignUpFields) => {
-          setHasAnyTextInput(hasAnyTextInputValue(values));
-        }}
         requiredMark={false}
       >
         {/* description §3 입력 순서: 이름, 이메일, 비밀번호 */}
@@ -252,7 +213,6 @@ export function SignUpForm({
         </Form.Item>
 
         <Form.Item
-          help={null}
           name="terms"
           valuePropName="checked"
           rules={[
@@ -260,7 +220,7 @@ export function SignUpForm({
               validator: (_, value) =>
                 value
                   ? Promise.resolve()
-                  : Promise.reject(new Error("")),
+                  : Promise.reject(new Error(t("termsRequired"))),
             },
           ]}
         >
@@ -296,7 +256,6 @@ export function SignUpForm({
             htmlType="submit"
             block
             loading={submitting}
-            disabled={!hasAnyTextInput || submitting}
             icon={<ArrowRight size={16} aria-hidden="true" />}
             iconPlacement="end"
           >

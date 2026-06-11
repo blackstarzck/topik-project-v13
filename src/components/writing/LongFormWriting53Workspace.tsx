@@ -316,7 +316,6 @@ export function LongFormWriting53Workspace({
       <div>
         <Text strong>{label}</Text>
         <Input.TextArea
-          className="writing-section-editor__input"
           aria-label={label}
           value={state[key]}
           onChange={(e) => onSectionChange(key, e.target.value)}
@@ -324,6 +323,7 @@ export function LongFormWriting53Workspace({
           autoSize={{ minRows }}
           placeholder={placeholder}
           disabled={submit.isPending}
+          style={{ marginTop: 8 }}
         />
       </div>
     );

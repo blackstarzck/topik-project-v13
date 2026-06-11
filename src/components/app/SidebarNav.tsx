@@ -59,12 +59,18 @@ function lockedLeafLabel(label: string, reason: string) {
   return (
     <Tooltip title={`${label} · ${reason}`} placement="right">
       <span
-        className="app-sidebar-lock-label"
+        style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
         aria-label={`${label}, ${reason}`}
       >
-        <Lock aria-hidden className="app-sidebar-lock-icon" size={12} />
+        <Lock aria-hidden size={12} style={{ opacity: 0.7, flexShrink: 0 }} />
         <span>{label}</span>
-        <Tag className="app-sidebar-lock-tag">
+        <Tag
+          style={{
+            marginInlineStart: "auto",
+            fontSize: 11,
+            lineHeight: "16px",
+          }}
+        >
           {reason}
         </Tag>
       </span>
@@ -176,6 +182,7 @@ export function SidebarNav({ role, planLabel, onNavigate }: Props) {
         }}
         items={items}
         className="app-sidebar-menu"
+        style={{ borderInlineEnd: 0 }}
       />
       <div className="app-sidebar-nudge">
         <TextLike strong>{tApp("sidebarNudgeTitle")}</TextLike>

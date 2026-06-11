@@ -84,13 +84,13 @@ export function CallbackFragmentFallback({ next }: { next: string }) {
 
   return (
     <AppCard
-      className="callback-fragment-card"
+      style={{ textAlign: "center" }}
       role="status"
       aria-live="polite"
       data-testid="callback-fragment-status"
     >
       <Spin />
-      <Paragraph className="callback-fragment-message">
+      <Paragraph style={{ marginTop: 16, marginBottom: 0 }}>
         {status === "checking" ? t("checking") : t("redirecting")}
       </Paragraph>
     </AppCard>

@@ -202,13 +202,13 @@ export function VerifyEmailCard() {
 
   return (
     <AppCard aria-live="polite">
-      <Space orientation="vertical" size="middle" className="verify-email-stack">
+      <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
         {/* §1 마스코트/일러스트 — 안내 카피를 가리지 않게 상단, 대체 텍스트 필수 */}
         <AuthMascot alt={t("mascotAlt")} emoji="📬" size={48} />
-        <Title level={3} className="verify-email-title">
+        <Title level={3} style={{ marginBottom: 0 }}>
           {t("title")}
         </Title>
-        <Paragraph className="verify-email-body">{t("body")}</Paragraph>
+        <Paragraph style={{ marginBottom: 0 }}>{t("body")}</Paragraph>
 
         <Text type="secondary">{t("frequentNote")}</Text>
 
@@ -251,12 +251,15 @@ export function VerifyEmailCard() {
 
         {/* §5 이메일 안 왔을 때 안내 — primary 재전송과 시각적 위계 구분(secondary).
             스팸함 확인 / 받은편지함 열기 / 다른 이메일로 가입하기. */}
-        <Divider className="verify-email-divider" />
+        <Divider style={{ margin: "4px 0" }} />
         <div data-testid="verify-email-help">
-          <Text strong className="verify-email-help-heading">
+          <Text strong style={{ fontSize: 13 }}>
             {t("noEmailHeading")}
           </Text>
-          <Paragraph type="secondary" className="verify-email-help-body">
+          <Paragraph
+            type="secondary"
+            style={{ margin: "4px 0 8px", fontSize: 13 }}
+          >
             {t("noEmailBody")}
           </Paragraph>
           <Space size="small" wrap>
@@ -281,7 +284,7 @@ export function VerifyEmailCard() {
         </div>
 
         {/* §6 도움말/escape route — 항상 노출 */}
-        <Paragraph className="verify-email-escape">
+        <Paragraph style={{ marginBottom: 0, textAlign: "center" }}>
           <Link href="/login">{t("escapeToLogin")}</Link>
           {" · "}
           <Link href="/sign-up">{t("escapeSignUp")}</Link>

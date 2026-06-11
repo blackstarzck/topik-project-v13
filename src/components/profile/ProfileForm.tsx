@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { AppCard } from "@/components/shared/AppCard";
+import { SPACING } from "@/theme/spacing";
 import { useUpdateProfile } from "@/lib/settings/mutations";
 import {
   AvatarError,
@@ -313,7 +314,7 @@ export function ProfileForm({
         size="small"
         role="region"
         aria-label={tAvatar("regionAriaLabel")}
-        className="profile-avatar-card"
+        style={{ marginBottom: SPACING.md }}
       >
         <Space align="start" size="middle">
           {avatarUrl ? (
@@ -322,17 +323,17 @@ export function ProfileForm({
             <Avatar size={56}>{avatarInitial}</Avatar>
           )}
           <div>
-            <Paragraph strong className="profile-avatar-card__title">
+            <Paragraph strong style={{ marginTop: 0, marginBottom: 4 }}>
               {tAvatar("title")}
             </Paragraph>
-            <Paragraph type="secondary" className="profile-avatar-card__copy">
+            <Paragraph type="secondary" style={{ marginBottom: 8 }}>
               {tAvatar("constraints")}
             </Paragraph>
             <input
               ref={fileInputRef}
               type="file"
               accept="image/jpeg,image/png"
-              className="profile-avatar-file-input"
+              style={{ display: "none" }}
               aria-label={tAvatar("fileInputAriaLabel")}
               onChange={handleAvatarSelect}
             />
@@ -349,7 +350,7 @@ export function ProfileForm({
           <Alert
             type="error"
             showIcon
-            className="profile-avatar-alert"
+            style={{ marginTop: 12 }}
             title={avatarError}
             action={
               <Button size="small" onClick={() => fileInputRef.current?.click()}>
@@ -359,7 +360,7 @@ export function ProfileForm({
           />
         ) : null}
         <Alert
-          className="profile-avatar-alert"
+          style={{ marginTop: 12 }}
           type="info"
           showIcon
           title={tAvatar("securityNoticeTitle")}

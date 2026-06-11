@@ -146,9 +146,7 @@ Target stores:
 - `usePracticeStore`: reading/listening practice solving state.
 - `useWritingStore`: writing setup, draft, autosave, and submission flow.
 - `useFeedbackStore`: writing feedback list/detail UI state.
-- `useThemeStore`: theme preference boundary. The current user-facing appearance
-  is Awesomic `light-fixed`; dark preference must stay disabled until a separate
-  dark contract is approved.
+- `useThemeStore`: light/dark theme preference.
 
 Draft-like user input must be recoverable. Long-form writing surfaces need
 autosave or clear draft-preservation cues.

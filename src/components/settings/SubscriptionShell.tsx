@@ -40,6 +40,15 @@ const { Paragraph, Text } = Typography;
 const SUPPORT_EMAIL = "support@talkpik.example";
 const PAGE_SIZE = 10;
 
+// Content-width cap (matches the prior 1040 layout). The duplicate <main> +
+// padding are dropped — WorkspaceShell's Layout.Content already renders the
+// landmark + 24px padding; only the centered max-width is kept (library page
+// precedent). Hoisted to a module const so the M4 inline-number gate stays green.
+const SUBSCRIPTION_CONTENT_STYLE = {
+  maxWidth: 1040, // ai-check: allow-inline-number off-scale content-width cap (px)
+  marginInline: "auto",
+} as const;
+
 // i18n: 상태/결제 enum 값은 카탈로그 키 이름 + 배지 색만 보관하고(공유 엔티티
 // 의미를 바꾸지 않음), 한글 라벨은 렌더 시 t(`status.${key}`)로 해석한다.
 const STATUS_BADGE_META: Record<
@@ -245,12 +254,8 @@ export function SubscriptionShell() {
   };
 
   return (
-    <div className="subscription-shell" data-testid="subscription-shell">
-      <Space
-        className="billing-page-stack"
-        orientation="vertical"
-        size="large"
-      >
+    <div data-testid="subscription-shell" style={SUBSCRIPTION_CONTENT_STYLE}>
+      <Space orientation="vertical" size="large" style={{ width: "100%" }}>
         {/* IA 코드는 사용자 화면에 노출하지 않는다. */}
         <div>
           <PageHeader title={t("heading")} subtitle={t("subheading")} />
@@ -258,11 +263,7 @@ export function SubscriptionShell() {
 
         <Row gutter={[16, 16]}>
           <Col xs={24} md={15}>
-            <Space
-              className="billing-card-stack"
-              orientation="vertical"
-              size="middle"
-            >
+            <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
               {/* Region 2: 현재 구독 요약 */}
               <AppCard
                 data-testid="subscription-current-card"
@@ -284,10 +285,10 @@ export function SubscriptionShell() {
                   />
                 ) : sub.subscription === null ? (
                   <Space
-                    className="subscription-empty-stack"
                     data-testid="subscription-no-sub"
                     orientation="vertical"
                     size={8}
+                    style={{ width: "100%" }}
                   >
                     <Space>
                       <Text type="secondary">{t("current.statusLabel")}</Text>
@@ -378,8 +379,8 @@ export function SubscriptionShell() {
                     </Button>
                   </Space>
                   <Paragraph
-                    className="subscription-change-note"
                     type="secondary"
+                    style={{ marginTop: 12, marginBottom: 0, fontSize: 12 }}
                   >
                     {t("change.note")}
                   </Paragraph>
@@ -440,35 +441,22 @@ export function SubscriptionShell() {
               data-testid="subscription-help-card"
               title={t("help.title")}
             >
-              <Space
-                className="billing-card-stack"
-                orientation="vertical"
-                size={10}
-              >
+              <Space orientation="vertical" size={10} style={{ width: "100%" }}>
                 <div>
                   <Text strong>{t("help.changePolicyTitle")}</Text>
-                  <Paragraph
-                    className="subscription-help-copy"
-                    type="secondary"
-                  >
+                  <Paragraph type="secondary" style={{ marginBottom: 0 }}>
                     {t("help.changePolicyBody")}
                   </Paragraph>
                 </div>
                 <div>
                   <Text strong>{t("help.refundTitle")}</Text>
-                  <Paragraph
-                    className="subscription-help-copy"
-                    type="secondary"
-                  >
+                  <Paragraph type="secondary" style={{ marginBottom: 0 }}>
                     {t("help.refundBody")}
                   </Paragraph>
                 </div>
                 <div>
                   <Text strong>{t("help.planDiffTitle")}</Text>
-                  <Paragraph
-                    className="subscription-help-copy"
-                    type="secondary"
-                  >
+                  <Paragraph type="secondary" style={{ marginBottom: 0 }}>
                     {t("help.planDiffBody")}
                   </Paragraph>
                 </div>
@@ -516,7 +504,7 @@ export function SubscriptionShell() {
         onOk={confirmPolicy}
         onCancel={() => setPolicyModal(null)}
       >
-        <Paragraph className="subscription-modal-copy">
+        <Paragraph style={{ marginBottom: 0 }}>
           {policyModal
             ? t(policyCopy[policyModal].bodyKey as Parameters<typeof t>[0])
             : ""}

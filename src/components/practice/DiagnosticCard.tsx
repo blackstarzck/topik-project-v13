@@ -60,7 +60,7 @@ export function DiagnosticCard({ weakDimensions, updatedAt, failed }: Props) {
             >
               {t("reanalyze")}
             </Button>
-            <Text type="secondary" className="weakness-diagnostic-note">
+            <Text type="secondary" style={{ fontSize: 12 }}>
               {t("reanalyzeNote")}
             </Text>
           </Space>
@@ -80,7 +80,7 @@ export function DiagnosticCard({ weakDimensions, updatedAt, failed }: Props) {
     <AppCard>
       <Title level={5}>{t("diagnosticTopTitle")}</Title>
       <Paragraph>
-        <Tag color="red" className="weakness-diagnostic-tag">
+        <Tag color="red" style={{ fontSize: 14, padding: "4px 8px" }}>
           {label}
         </Tag>
         <Text>
@@ -94,7 +94,7 @@ export function DiagnosticCard({ weakDimensions, updatedAt, failed }: Props) {
         <Text type="secondary">{t("diagnosticBody")}</Text>
       </Paragraph>
       {updatedAt ? (
-        <Text type="secondary" className="weakness-diagnostic-updated">
+        <Text type="secondary" style={{ fontSize: 12 }}>
           {t("diagnosticUpdated", {
             // Pin tz + 24h so SSR (Node) and client (browser) ICU agree — Node
             // renders the ko-KR day-period as "PM" vs browser "오후" → React #418.

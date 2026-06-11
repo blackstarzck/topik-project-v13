@@ -75,7 +75,7 @@ export function LibraryReportsTab({
   if (items.length === 0) {
     const searching = searchTerm.trim().length > 0;
     return (
-      <Space className="library-tab-stack" orientation="vertical" size="middle">
+      <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
         <Text data-testid="library-result-count" type="secondary">
           {tCount("resultCount", { count: 0 })}
         </Text>
@@ -91,15 +91,15 @@ export function LibraryReportsTab({
   }
 
   return (
-    <Space className="library-tab-stack" orientation="vertical" size="middle">
+    <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
       <Text data-testid="library-result-count" type="secondary">
         {tCount("resultCount", { count: items.length })}
       </Text>
       <Space
-        className="library-item-list"
         data-testid="library-item-list"
         orientation="vertical"
         size={0}
+        style={{ width: "100%" }}
       >
         {pageItems.map((item) => (
           <LibraryItemRow
@@ -115,18 +115,14 @@ export function LibraryReportsTab({
               />,
             ]}
           >
-            <Space
-              className="library-item-detail"
-              orientation="vertical"
-              size={4}
-            >
+            <Space orientation="vertical" size={4} style={{ width: "100%" }}>
               <Link href={`/writing/reports/${item.id}/compare` as never}>
                 <Text strong>{t("title")}</Text>
               </Link>
               <Text type="secondary">{formatDate(item.generated_at)}</Text>
               {item.narrative_excerpt ? (
                 <Paragraph
-                  className="library-row-copy"
+                  style={{ marginBottom: 0 }}
                   ellipsis={{ rows: 2 }}
                   type="secondary"
                 >

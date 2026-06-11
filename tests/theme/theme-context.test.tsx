@@ -16,12 +16,12 @@ describe("ThemeContext", () => {
     setPropertySpy.mockRestore();
   });
 
-  test("ThemeProvider normalizes dark initial appearance to light", () => {
+  test("ThemeProvider initializes with provided appearance", () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <ThemeProvider initialAppearance="dark">{children}</ThemeProvider>
     );
     const { result } = renderHook(() => useTheme(), { wrapper });
-    expect(result.current.appearance).toBe("light");
+    expect(result.current.appearance).toBe("dark");
   });
 
   test("ThemeProvider defaults to light when no initialAppearance", () => {
@@ -32,7 +32,7 @@ describe("ThemeContext", () => {
     expect(result.current.appearance).toBe("light");
   });
 
-  test("setAppearance keeps appearance light while Awesomic is light-fixed", () => {
+  test("setAppearance updates appearance state", () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <ThemeProvider initialAppearance="light">{children}</ThemeProvider>
     );
@@ -42,10 +42,10 @@ describe("ThemeContext", () => {
       result.current.setAppearance("dark");
     });
 
-    expect(result.current.appearance).toBe("light");
+    expect(result.current.appearance).toBe("dark");
   });
 
-  test("theme object stays light when dark is requested", () => {
+  test("theme object reflects current appearance", () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <ThemeProvider initialAppearance="light">{children}</ThemeProvider>
     );
@@ -56,7 +56,7 @@ describe("ThemeContext", () => {
       result.current.setAppearance("dark");
     });
 
-    expect(result.current.theme.appearance).toBe("light");
+    expect(result.current.theme.appearance).toBe("dark");
   });
 
   test("setAppearance calls document.documentElement.style.setProperty with --app-* vars", () => {

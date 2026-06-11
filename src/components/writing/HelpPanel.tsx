@@ -71,12 +71,12 @@ export function HelpPanel({ cards, questionNo }: Props) {
   }
 
   return (
-    <Space className="writing-help-stack" orientation="vertical" size="small">
+    <Space orientation="vertical" size="small" style={{ width: "100%" }}>
       {resolved.slice(0, 3).map((c, i) => (
         <AppCard key={i} size="small">
           <Text strong>{c.title.slice(0, 16)}</Text>
           <Paragraph
-            className="writing-help-copy"
+            style={{ margin: 0 }}
             type="secondary"
             ellipsis={{ rows: 2 }}
           >

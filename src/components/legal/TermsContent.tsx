@@ -21,18 +21,18 @@ export function TermsContent() {
   const t = useTranslations("legal.terms");
   return (
     <AppCard data-testid="terms-card">
-      <Space orientation="vertical" size="large" className="legal-stack">
+      <Space orientation="vertical" size="large" style={{ width: "100%" }}>
         {/* §1 법적 고지 페이지 (제목 + 임시 약관 안내) */}
         <div>
-          <Title level={2} className="legal-title">
+          <Title level={2} style={{ marginBottom: 8 }}>
             {t("heading")}
           </Title>
-          <Paragraph className="legal-paragraph-flush" data-testid="terms-intro">
+          <Paragraph style={{ marginBottom: 0 }} data-testid="terms-intro">
             {t("intro")}
           </Paragraph>
           <Paragraph
             type="secondary"
-            className="legal-placeholder-notice"
+            style={{ marginBottom: 0, marginTop: 8 }}
             data-testid="terms-placeholder-notice"
           >
             {t("placeholderNotice")}
@@ -41,13 +41,13 @@ export function TermsContent() {
 
         {/* §2 임시 약관 요약 */}
         <div data-testid="terms-summary">
-          <Title level={4} className="legal-section-title">
+          <Title level={4} style={{ marginBottom: 8 }}>
             {t("summaryTitle")}
           </Title>
-          <ul className="legal-summary-list">
-            <li>{t("summaryTool")}</li>
-            <li>{t("summaryDataUse")}</li>
-            <li>
+          <ul style={{ margin: 0, paddingLeft: 20 }}>
+            <li style={{ marginBottom: 8 }}>{t("summaryTool")}</li>
+            <li style={{ marginBottom: 8 }}>{t("summaryDataUse")}</li>
+            <li style={{ marginBottom: 8 }}>
               {t.rich("summaryPrivacy", {
                 privacyLink: (chunks) => <Link href="/privacy">{chunks}</Link>,
               })}
@@ -58,16 +58,16 @@ export function TermsContent() {
 
         {/* §3 운영 문의 안내 — 존재하지 않는 채널을 꾸며내지 않는다 */}
         <div data-testid="terms-contact">
-          <Title level={4} className="legal-section-title">
+          <Title level={4} style={{ marginBottom: 8 }}>
             {t("contactTitle")}
           </Title>
-          <Paragraph type="secondary" className="legal-paragraph-flush">
+          <Paragraph type="secondary" style={{ marginBottom: 0 }}>
             {t("contactBody")}
           </Paragraph>
         </div>
 
         {/* §4 Escape 링크 — 홈 / 회원가입 / 개인정보처리방침 */}
-        <Paragraph className="legal-shortcuts" data-testid="terms-shortcuts">
+        <Paragraph style={{ marginBottom: 0 }} data-testid="terms-shortcuts">
           <Text type="secondary">{t("shortcutsLabel")}</Text>
           <Link href="/">{t("linkHome")}</Link>
           {" · "}

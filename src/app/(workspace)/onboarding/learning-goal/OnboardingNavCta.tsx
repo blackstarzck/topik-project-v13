@@ -68,6 +68,7 @@ export function OnboardingNavCta({
       className="onboarding-goal-nav"
       orientation="vertical"
       size="small"
+      style={{ width: "100%" }}
     >
       <Space className="onboarding-goal-nav__actions" wrap>
         <Button
@@ -86,7 +87,7 @@ export function OnboardingNavCta({
         </Button>
       </Space>
       {skipError ? (
-        <Text type="danger" className="onboarding-goal-nav__error">
+        <Text type="danger" style={{ fontSize: 12 }}>
           {t("skipFailedInline", { detail: skipError })}
         </Text>
       ) : null}

@@ -40,7 +40,7 @@ export function FeedbackRecommendationCards({ dimensions }: Props) {
     // description region 3 예외 — 추천 없음은 문제 목록 CTA로 대체.
     return (
       <AppCard>
-        <Title level={5} className="feedback-recommendation-title">
+        <Title level={5} style={{ marginTop: 0 }}>
           {t("cardTitle")}
         </Title>
         <Empty description={t("emptyDescription")}>
@@ -57,10 +57,10 @@ export function FeedbackRecommendationCards({ dimensions }: Props) {
 
   return (
     <AppCard>
-      <Title level={5} className="feedback-recommendation-title">
+      <Title level={5} style={{ marginTop: 0 }}>
         {t("cardTitle")}
       </Title>
-      <Paragraph type="secondary" className="feedback-recommendation-intro">
+      <Paragraph type="secondary" style={{ marginBottom: 12 }}>
         {t("intro")}
       </Paragraph>
       <Row gutter={[12, 12]}>
@@ -76,18 +76,19 @@ export function FeedbackRecommendationCards({ dimensions }: Props) {
                   router.push(`/practice/weakness?focus=${d.dimension}`)
                 }
                 data-testid={`feedback-reco-${d.dimension}`}
-                className="feedback-recommendation-card"
+                style={{ height: "100%" }}
               >
-                <Space
-                  orientation="vertical"
-                  size={4}
-                  className="feedback-recommendation-card__stack"
-                >
+                <Space orientation="vertical" size={4} style={{ width: "100%" }}>
                   <Tag color="blue">{t(`label.${d.dimension}`)}</Tag>
                   <Text strong>{recoTitle}</Text>
                   <Text
                     type="secondary"
-                    className="feedback-recommendation-card__reason"
+                    style={{
+                      display: "block",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
                     title={recoReason}
                   >
                     {recoReason}

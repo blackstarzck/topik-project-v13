@@ -27,11 +27,11 @@ export function QuestionPrompt({ problem }: Props) {
           title: problem.title,
         })}
       </Title>
-      <Paragraph className="writing-prompt-copy" type="secondary">
+      <Paragraph type="secondary" style={{ whiteSpace: "pre-line", margin: 0 }}>
         {prompt}
       </Paragraph>
       {problem.kind === "q51" || problem.kind === "q52" ? (
-        <Space className="writing-prompt-stack" orientation="vertical" size={4}>
+        <Space orientation="vertical" size={4} style={{ width: "100%" }}>
           <Typography.Text strong>{t("blanksLabel")}</Typography.Text>
           <Space wrap>
             {problem.blanks.map((blank) => (
@@ -44,9 +44,9 @@ export function QuestionPrompt({ problem }: Props) {
         </Space>
       ) : null}
       {problem.kind === "q53" && problem.writingTasks.length > 0 ? (
-        <Space className="writing-prompt-stack" orientation="vertical" size={4}>
+        <Space orientation="vertical" size={4} style={{ width: "100%" }}>
           <Typography.Text strong>{t("writingTasksLabel")}</Typography.Text>
-          <ol className="writing-prompt-list">
+          <ol style={{ margin: 0, paddingInlineStart: 20 }}>
             {problem.writingTasks.map((task) => (
               <li key={task}>{task}</li>
             ))}
@@ -54,15 +54,15 @@ export function QuestionPrompt({ problem }: Props) {
         </Space>
       ) : null}
       {problem.kind === "q54" ? (
-        <Space className="writing-prompt-stack" orientation="vertical" size={8}>
+        <Space orientation="vertical" size={8} style={{ width: "100%" }}>
           {problem.topicDefinition ? (
-            <Paragraph className="writing-prompt-paragraph">
+            <Paragraph style={{ margin: 0 }}>
               <Typography.Text strong>{t("definitionLabel")}</Typography.Text>{" "}
               {problem.topicDefinition}
             </Paragraph>
           ) : null}
           {problem.background ? (
-            <Paragraph className="writing-prompt-paragraph">
+            <Paragraph style={{ margin: 0 }}>
               <Typography.Text strong>{t("backgroundLabel")}</Typography.Text>{" "}
               {problem.background}
             </Paragraph>
@@ -72,7 +72,7 @@ export function QuestionPrompt({ problem }: Props) {
               <Typography.Text strong>
                 {t("requiredQuestionsLabel")}
               </Typography.Text>
-              <ol className="writing-prompt-list writing-prompt-list--offset">
+              <ol style={{ margin: "4px 0 0", paddingInlineStart: 20 }}>
                 {problem.requiredQuestions.map((question) => (
                   <li key={question}>{question}</li>
                 ))}

@@ -77,7 +77,7 @@ export function FeedbackSummary({ feedback, submission }: Props) {
         <Space
           wrap
           size={[8, 8]}
-          className="feedback-summary-meta"
+          style={{ marginTop: 12 }}
           data-testid="feedback-summary-meta"
         >
           <Tag color="blue">
@@ -92,7 +92,7 @@ export function FeedbackSummary({ feedback, submission }: Props) {
       ) : null}
       <Paragraph
         type="secondary"
-        className="feedback-summary-copy"
+        style={{ marginTop: 12, marginBottom: 0 }}
         ellipsis={{ rows: 3 }}
       >
         {feedback.overall_summary ?? t("overallFallback")}

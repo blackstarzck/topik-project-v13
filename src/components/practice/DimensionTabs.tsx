@@ -97,7 +97,7 @@ export function DimensionTabs({ dimensions, tabSummaries }: Props) {
               status={intStatus}
               format={(p) => tCommon("score", { score: p ?? 0 })}
             />
-            <Paragraph className="weakness-tab-summary">
+            <Paragraph style={{ marginTop: 12 }}>
               <Text strong>{label}</Text> {t("averageScoreInline")}{" "}
               <Tag color={intStatus === "exception" ? "red" : "blue"}>
                 {tCommon("score", { score: Math.round(score) })}
@@ -139,7 +139,7 @@ export function DimensionTabs({ dimensions, tabSummaries }: Props) {
             status={intStatus}
             format={(p) => tCommon("score", { score: p ?? 0 })}
           />
-          <Paragraph className="weakness-tab-summary">
+          <Paragraph style={{ marginTop: 12 }}>
             <Text strong>{label}</Text> {t("averageScoreInline")}{" "}
             <Tag color={intStatus === "exception" ? "red" : "blue"}>
               {tCommon("score", { score: Math.round(d.averageScore) })}

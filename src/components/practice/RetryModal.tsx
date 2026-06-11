@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { AppModal } from "@/components/shared/AppModal";
 import { writingProblemHref } from "@/lib/writing/routes";
+import { SPACING } from "@/theme/spacing";
 
 const { Paragraph, Text } = Typography;
 
@@ -170,10 +171,10 @@ export function RetryModal({
 
   const summary = (
     <Descriptions
-      className="retry-modal-summary"
       size="small"
       column={1}
       bordered
+      style={{ marginBottom: SPACING.md }}
     >
       <Descriptions.Item label={t("summaryProblem")}>
         {(problemTitle ?? t("summaryFallbackProblem")).slice(0, 28)}
@@ -222,9 +223,9 @@ export function RetryModal({
       >
         {summary}
         <Alert
-          className="retry-modal-alert"
           type="warning"
           showIcon
+          style={{ marginBottom: SPACING.sm }}
           title={t("expiredMessage")}
           description={t("expiredDescription")}
         />
@@ -247,17 +248,17 @@ export function RetryModal({
     >
       {summary}
 
-      <Paragraph className="retry-modal-intro" type="secondary">
+      <Paragraph type="secondary" style={{ marginBottom: SPACING.sm }}>
         {t("intro")}
       </Paragraph>
 
       {/* §3 — 재풀이 모드 선택 (기본 선택 1개 항상 존재). */}
       <Radio.Group
-        className="retry-modal-mode-group"
         value={mode}
         onChange={(e) => setMode(e.target.value as RetryMode)}
+        style={{ width: "100%", marginBottom: SPACING.md }}
       >
-        <Space className="retry-modal-mode-stack" orientation="vertical">
+        <Space orientation="vertical" style={{ width: "100%" }}>
           <Radio value="fresh">
             {t("modeFresh")}{" "}
             <Text type="secondary">{t("modeFreshHint")}</Text>
@@ -280,17 +281,21 @@ export function RetryModal({
       {startErrorKey ? (
         // §4 예외 — 시작 실패 시 모달 유지, 오류 + 재시도.
         <Alert
-          className="retry-modal-alert"
           type="error"
           showIcon
+          style={{ marginBottom: SPACING.sm }}
           title={t("startFailedTitle")}
           description={t(startErrorKey)}
         />
       ) : null}
 
       <div
-        className="retry-modal-actions"
         data-testid="retry-modal-actions"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+          gap: SPACING.sm,
+        }}
       >
         <Button block onClick={onClose} disabled={risky}>
           {tActions("cancel")}

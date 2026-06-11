@@ -318,11 +318,7 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
       key: "email",
       label: t("channel.emailTab"),
       children: (
-        <Space
-          orientation="vertical"
-          size={8}
-          className="notification-channel-stack"
-        >
+        <Space orientation="vertical" size={8} style={{ width: "100%" }}>
           <Checkbox
             checked={settings.channels.email}
             onChange={(e) => setChannel("email", e.target.checked)}
@@ -342,11 +338,7 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
         </Space>
       ),
       children: (
-        <Space
-          orientation="vertical"
-          size={8}
-          className="notification-channel-stack"
-        >
+        <Space orientation="vertical" size={8} style={{ width: "100%" }}>
           <Checkbox
             checked={settings.channels.zalo}
             onChange={(e) => setChannel("zalo", e.target.checked)}
@@ -361,11 +353,7 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
       key: "both",
       label: t("channel.bothTab"),
       children: (
-        <Space
-          orientation="vertical"
-          size={8}
-          className="notification-channel-stack"
-        >
+        <Space orientation="vertical" size={8} style={{ width: "100%" }}>
           <Checkbox
             checked={settings.channels.email}
             onChange={(e) => setChannel("email", e.target.checked)}
@@ -390,11 +378,7 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
       onFinish={handleFinish}
       disabled={saving}
     >
-      <Space
-        orientation="vertical"
-        size="middle"
-        className="notification-form-stack"
-      >
+      <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
         {settingsLoad.status === "error" ? (
           <Alert
             type="error"
@@ -437,11 +421,7 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
           title={t("condition.cardTitle")}
           data-testid="notification-condition-card"
         >
-          <Space
-            orientation="vertical"
-            size="middle"
-            className="notification-condition-stack"
-          >
+          <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
             {/* Boolean conditions persist to profiles.notification_prefs and do
                 not depend on the async notification_settings load. */}
             {NOTIFICATION_PREF_KEYS.map((key) => {
@@ -452,17 +432,14 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
                 <Form.Item
                   key={key}
                   label={prefLabel}
-                  className="notification-form-item--flush"
+                  style={{ marginBottom: 0 }}
                 >
                   <Switch
                     checked={values[key] ?? false}
                     onChange={(checked) => setKey(key, checked)}
                     aria-label={prefLabel}
                   />
-                  <Text
-                    type="secondary"
-                    className="notification-condition-status"
-                  >
+                  <Text type="secondary" style={{ marginLeft: 12 }}>
                     {values[key] ? t("condition.on") : t("condition.off")}
                   </Text>
                 </Form.Item>
@@ -476,7 +453,7 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
               <>
                 <Form.Item
                   label={t("condition.reminderTimeLabel")}
-                  className="notification-form-item--flush"
+                  style={{ marginBottom: 0 }}
                   extra={
                     anyChannelOn ? undefined : t("condition.reminderTimeExtra")
                   }
@@ -499,7 +476,7 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
 
                 <Form.Item
                   label={t("condition.reminderDaysLabel")}
-                  className="notification-form-item--flush"
+                  style={{ marginBottom: 0 }}
                 >
                   <Space wrap>
                     {WEEKDAYS.map((d) => (
@@ -507,10 +484,10 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
                         key={d.value}
                         checked={settings.reminder_days.includes(d.value)}
                         onChange={() => anyChannelOn && toggleDay(d.value)}
-                        className={
+                        style={
                           anyChannelOn
-                            ? "notification-day-tag"
-                            : "notification-day-tag notification-day-tag--disabled"
+                            ? undefined
+                            : { opacity: 0.5, cursor: "not-allowed" }
                         }
                       >
                         {t(`weekday.${d.labelKey}` as Parameters<typeof t>[0])}
@@ -578,7 +555,7 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
         <Alert type="info" showIcon title={t("deferredNotice")} />
 
         {/* Region 5: 저장 CTA (변경값 없으면 비활성, 저장 중 중복 클릭 차단) */}
-        <Form.Item className="notification-form-item--flush">
+        <Form.Item style={{ marginBottom: 0 }}>
           <Button
             data-testid="notification-save"
             type="primary"

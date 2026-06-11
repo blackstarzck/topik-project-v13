@@ -103,9 +103,9 @@ describe("NextProblemView (Phase 7-D bundle signature)", () => {
     expect(screen.getByTestId("next-problem-badge").textContent).toBe("탐색");
   });
 
-  it("clicking start CTA logs recommendation_clicked and pushes URL", () => {
+  it("clicking card logs recommendation_clicked and pushes URL", () => {
     renderWithIntl(<NextProblemView bundle={makeBundle(primary, 1)} />);
-    fireEvent.click(screen.getByTestId("next-start-cta"));
+    fireEvent.click(screen.getByTestId("next-problem-p-1"));
     expect(logStudyEventMock).toHaveBeenCalledWith({
       eventType: "recommendation_clicked",
       problemId: "p-1",

@@ -21,11 +21,8 @@ function WeaknessTags({ tags }: { tags: string[] }) {
   const t = useTranslations("practice.recommendations");
   if (tags.length === 0) return null;
   return (
-    <Space className="recommendation-weakness-tags" size={4} wrap>
-      <Text
-        className="recommendation-weakness-tags__label"
-        type="secondary"
-      >
+    <Space size={4} wrap style={{ marginTop: 8 }}>
+      <Text type="secondary" style={{ fontSize: 12 }}>
         {t("weaknessTagsLabel")}
       </Text>
       {tags.slice(0, 4).map((tag) => (
@@ -52,6 +49,7 @@ export function PrimaryRecommendationCard({
   return (
     <AppCard
       className="recommendation-primary-card"
+      style={{ borderColor: "#1677ff", borderWidth: 2 }}
       title={
         <Space>
           <Tag color="blue">{t("primaryBadge")}</Tag>
@@ -68,20 +66,20 @@ export function PrimaryRecommendationCard({
         ) : null
       }
     >
-      <Title className="recommendation-card-title" level={4}>
+      <Title level={4} style={{ marginTop: 0, marginBottom: 8 }}>
         {title}
       </Title>
       {card.reason ? (
         <Paragraph
-          className="recommendation-card-reason"
           type="secondary"
           ellipsis={{ rows: 2 }}
+          style={{ marginBottom: 8 }}
         >
           {card.reason}
         </Paragraph>
       ) : null}
       <WeaknessTags tags={card.weaknessTags} />
-      <div className="recommendation-card-cta">
+      <div style={{ marginTop: 16 }}>
         <Link href={ctaHref(card) as never}>
           <Button type="primary" size="large" block>
             {t("startFromThis")}
@@ -122,15 +120,15 @@ export function SecondaryRecommendationCard({
       <Text strong>{title}</Text>
       {card.reason ? (
         <Paragraph
-          className="recommendation-card-reason recommendation-card-reason--secondary"
           type="secondary"
           ellipsis={{ rows: 2 }}
+          style={{ margin: "8px 0" }}
         >
           {card.reason}
         </Paragraph>
       ) : null}
       <WeaknessTags tags={card.weaknessTags} />
-      <div className="recommendation-card-cta recommendation-card-cta--secondary">
+      <div style={{ marginTop: 12 }}>
         <Link href={ctaHref(card) as never}>
           <Button block>{t("continueProblem")}</Button>
         </Link>

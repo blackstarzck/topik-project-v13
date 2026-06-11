@@ -2,7 +2,7 @@
 
 import type { KeyboardEvent } from "react";
 import { useRef, useState } from "react";
-import { Button, Empty, Space, Tag, Typography } from "antd";
+import { Button, Empty, Space, Tag, Typography, theme } from "antd";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { AppCard } from "@/components/shared/AppCard";
@@ -10,11 +10,13 @@ import { logStudyEvent } from "@/lib/events/study-events";
 import { consumeRecommendationItem } from "@/lib/practice/consume";
 import type { AlternativeProblem, NextProblemBundle } from "@/lib/practice/next";
 import { writingProblemHref } from "@/lib/writing/routes";
+import { SPACING } from "@/theme/spacing";
 import { AlternativeCardsGrid } from "./AlternativeCardsGrid";
 import { SummaryCardRow } from "./SummaryCardRow";
 
 const { Paragraph, Text } = Typography;
 const PRIMARY_TITLE_LIMIT = 48;
+const SELECTION_BAR_OFFSET = 88;
 
 const TIER_META: Record<
   1 | 2 | 3,
@@ -63,6 +65,7 @@ type SelectedTarget = {
 export function NextProblemView({ bundle }: Props) {
   const t = useTranslations("practice.next");
   const tCommon = useTranslations("practice.common");
+  const { token } = theme.useToken();
   const router = useRouter();
   const { primary, primaryTier, summary, alternatives } = bundle;
 
@@ -154,7 +157,7 @@ export function NextProblemView({ bundle }: Props) {
 
   if ((primaryTier === 4 || !primary) && !firstUnlockedAlt) {
     return (
-      <Space orientation="vertical" size="large" className="next-problem-stack">
+      <Space orientation="vertical" size="large" style={{ width: "100%" }}>
         <SummaryCardRow
           recentSubmissions={summary.recentSubmissions}
           averageScore={summary.averageScore}
@@ -191,11 +194,16 @@ export function NextProblemView({ bundle }: Props) {
           : ""
       }`
     : null;
+  const selectedCardStyle = {
+    borderColor: token.colorPrimary,
+    borderWidth: token.lineWidth * 2,
+  };
+
   return (
     <Space
       orientation="vertical"
       size="large"
-      className="next-problem-stack next-problem-stack--with-selection"
+      style={{ width: "100%", paddingBottom: SELECTION_BAR_OFFSET }}
     >
       <SummaryCardRow
         recentSubmissions={summary.recentSubmissions}
@@ -214,12 +222,7 @@ export function NextProblemView({ bundle }: Props) {
           onKeyDown={(event) => handleCardKeyDown(event, selectPrimary)}
           data-testid="next-primary-card"
           data-problem-id={primary.problemId}
-          className={[
-            "next-selectable-card",
-            selected?.source === "next" ? "next-selectable-card--selected" : null,
-          ]
-            .filter(Boolean)
-            .join(" ")}
+          style={selected?.source === "next" ? selectedCardStyle : undefined}
           title={
             <Space wrap>
               <Tag color={meta.color} data-testid="next-problem-badge">
@@ -233,11 +236,7 @@ export function NextProblemView({ bundle }: Props) {
             </Space>
           }
         >
-          <Space
-            orientation="vertical"
-            size="small"
-            className="next-problem-card__stack"
-          >
+          <Space orientation="vertical" size="small" style={{ width: "100%" }}>
             <Space wrap data-testid="next-problem-badges">
               <Tag color="purple">
                 {t("difficultyBadge", {
@@ -257,7 +256,7 @@ export function NextProblemView({ bundle }: Props) {
             {reason ? (
               <Paragraph
                 type="secondary"
-                className="next-problem-reason"
+                style={{ margin: 0 }}
                 ellipsis={{ rows: 2 }}
                 data-testid="next-problem-reason"
               >
@@ -268,7 +267,7 @@ export function NextProblemView({ bundle }: Props) {
         </AppCard>
       ) : (
         <AppCard data-testid="next-primary-fallback">
-          <Paragraph type="secondary" className="next-problem-copy">
+          <Paragraph type="secondary" style={{ margin: 0 }}>
             {t("primaryExpired")}
           </Paragraph>
         </AppCard>
@@ -282,9 +281,29 @@ export function NextProblemView({ bundle }: Props) {
 
       <div
         data-testid="next-selection-bar"
-        className="next-selection-bar"
+        style={{
+          position: "fixed",
+          left: 0,
+          right: 0,
+          bottom: 0,
+          padding: `${SPACING.sm + SPACING.xs}px ${SPACING.lg}px`,
+          background: token.colorBgContainer,
+          borderTop: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: SPACING.md,
+          zIndex: 10,
+        }}
       >
-        <Text className="next-selection-bar__label">
+        <Text
+          style={{
+            minWidth: 0,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
           {selectionLabel
             ? t("selectionLabel", { selection: selectionLabel })
             : t("selectionPrompt")}

@@ -6,7 +6,7 @@
  *
  * "inline" is required (not bare @theme) so Tailwind generates:
  *   .text-primary { color: var(--app-color-primary) }  ← preserves runtime var
- * instead of resolving the value at build time.
+ * instead of resolving the value at build time (which would break dark mode toggle).
  */
 @theme inline {
   --color-primary: var(--app-color-primary);
@@ -20,7 +20,10 @@
   --shadow-elevated: var(--app-shadow-elevated);
 }
 
-/* color-scheme is injected on <html> from layout.tsx. */
+/*
+ * color-scheme is now injected dynamically on <html> from layout.tsx.
+ * Removed hardcoded ":root { color-scheme: light }" — it would override dark mode.
+ */
 
 * {
   box-sizing: border-box;
@@ -36,18 +39,6 @@ body {
   background: var(--app-color-bg-layout);
   color: var(--app-color-text);
   font-family: var(--app-font-family);
-}
-
-.app-sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
 }
 
 .app-page {
@@ -168,42 +159,6 @@ body {
 
 .app-public-shell__header {
   width: 100%;
-}
-
-.app-workspace-layout {
-  min-height: 100vh;
-  background: var(--app-color-bg-layout);
-}
-
-.app-workspace-sider {
-  border-inline-end: 1px solid var(--app-color-border);
-  background: var(--app-color-bg-container) !important;
-}
-
-.app-workspace-main {
-  min-width: 0;
-  background: var(--app-color-bg-layout);
-}
-
-.app-workspace-content {
-  padding: 24px;
-}
-
-.app-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--app-color-border);
-  background: var(--app-color-bg-container);
-  padding: 0 24px;
-}
-
-.app-header__brand.ant-typography {
-  margin: 0;
-}
-
-.app-workspace-drawer .ant-drawer-body {
-  padding: 0;
 }
 
 .signup-prompt-shell {
@@ -3614,11 +3569,6 @@ body {
   text-align: center;
 }
 
-.onboarding-step-counter.ant-typography {
-  display: block;
-  margin-bottom: 8px;
-}
-
 .onboarding-goal-steps .ant-steps {
   align-items: center;
 }
@@ -3670,14 +3620,6 @@ body {
 .learning-goal-form__fields {
   display: grid;
   gap: 12px;
-}
-
-.learning-goal-form__intro-title.ant-typography {
-  margin-bottom: 4px;
-}
-
-.learning-goal-form__intro-copy.ant-typography {
-  margin: 0;
 }
 
 .learning-goal-field-card {
@@ -3742,10 +3684,6 @@ body {
   border-radius: 10px;
 }
 
-.learning-goal-field-card__control .learning-goal-control {
-  width: 100%;
-}
-
 .learning-goal-grade-picker {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -3794,12 +3732,7 @@ body {
   font-weight: 700;
 }
 
-.onboarding-goal-nav__error.ant-typography {
-  font-size: 12px;
-}
-
 .recommendations-page {
-  width: 100%;
   max-width: 1180px;
   margin-inline: auto;
 }
@@ -3995,8 +3928,6 @@ body {
 
 .recommendation-primary-card.app-card {
   overflow: hidden;
-  border-color: var(--app-color-primary);
-  border-width: 2px;
   border-radius: 22px;
   background:
     linear-gradient(
@@ -4006,35 +3937,6 @@ body {
     ),
     #ffffff;
   box-shadow: 0 18px 46px rgba(42, 55, 89, 0.08);
-}
-
-.recommendation-card-title.ant-typography {
-  margin-top: 0;
-  margin-bottom: 8px;
-}
-
-.recommendation-card-reason.ant-typography {
-  margin-bottom: 8px;
-}
-
-.recommendation-card-reason--secondary.ant-typography {
-  margin: 8px 0;
-}
-
-.recommendation-weakness-tags.ant-space {
-  margin-top: 8px;
-}
-
-.recommendation-weakness-tags__label.ant-typography {
-  font-size: 12px;
-}
-
-.recommendation-card-cta {
-  margin-top: 16px;
-}
-
-.recommendation-card-cta--secondary {
-  margin-top: 12px;
 }
 
 .recommendation-secondary-section h4.ant-typography,
@@ -4200,17 +4102,11 @@ body {
   padding-top: 8px;
 }
 
-.recommendations-page__loading-space {
-  min-height: 120px;
-}
-
 .recommendations-page__footer-note {
   display: block;
-  font-size: 12px;
 }
 
 .problem-list-page {
-  width: 100%;
   max-width: 1180px;
   margin-inline: auto;
 }
@@ -4310,21 +4206,11 @@ body {
   gap: 7px;
 }
 
-.problem-list-control__field {
-  width: 100%;
-}
-
 .problem-list-control__label.ant-typography {
   color: #475467;
   font-size: 12px;
   font-weight: 750;
   line-height: 1.2;
-}
-
-.problem-list-control__error.ant-typography {
-  display: block;
-  margin-top: 4px;
-  font-size: 12px;
 }
 
 .problem-list-control--switch {
@@ -4333,10 +4219,6 @@ body {
 
 .problem-list-filter-chips {
   margin-top: 14px;
-}
-
-.problem-list-filter-chips__label.ant-typography {
-  font-size: 12px;
 }
 
 .problem-list-count {
@@ -4418,10 +4300,6 @@ body {
   margin-inline-end: 0;
 }
 
-.problem-list-row__meta-note.ant-typography {
-  font-size: 12px;
-}
-
 .problem-list-row > div:last-child {
   min-width: 104px;
 }
@@ -4444,36 +4322,8 @@ body {
   text-align: right;
 }
 
-.problem-list-loading-space {
-  min-height: 80px;
-}
-
-.retry-modal-summary.ant-descriptions {
-  margin-bottom: 16px;
-}
-
-.retry-modal-alert.ant-alert,
-.retry-modal-intro.ant-typography {
-  margin-bottom: 8px;
-}
-
-.retry-modal-mode-group.ant-radio-group,
-.retry-modal-mode-stack.ant-space {
-  width: 100%;
-}
-
-.retry-modal-mode-group.ant-radio-group {
-  margin-bottom: 16px;
-}
-
-.retry-modal-actions {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
-
 /*
- * Compact bounded row for repeated items inside a card (Awesomic → Components
+ * Compact bounded row for repeated items inside a card (DESIGN.md → Components
  * "card-compact"). Replaces nested AntD Card usage so we never nest a card in a
  * card (07-review-checklist). Color/radius from approved bridge vars.
  */
@@ -4484,58 +4334,9 @@ body {
   padding: 12px 16px;
 }
 
-.dashboard-page-stack {
-  display: grid;
-  gap: 24px;
-  width: 100%;
-}
-
 .dashboard-workspace {
-  width: 100%;
   max-width: 1240px;
   margin-inline: auto;
-}
-
-.dashboard-card-stack.ant-space {
-  width: 100%;
-}
-
-.dashboard-paragraph-flush.ant-typography {
-  margin: 0;
-}
-
-.dashboard-recommendation-row.ant-space {
-  width: 100%;
-  justify-content: space-between;
-}
-
-.dashboard-kpi-empty.ant-space {
-  width: 100%;
-  text-align: center;
-}
-
-.dashboard-kpi-empty__title.ant-typography {
-  font-size: 16px;
-}
-
-.dashboard-kpi-stack.ant-space {
-  width: 100%;
-}
-
-.dashboard-kpi-card.ant-card {
-  height: 100%;
-}
-
-.dashboard-kpi-updated.ant-typography {
-  font-size: 12px;
-}
-
-.dashboard-loading-title {
-  flex: 1;
-}
-
-.dashboard-loading-button.ant-skeleton-button {
-  width: 120px;
 }
 
 .dashboard-hub-grid {
@@ -4643,11 +4444,7 @@ body {
   width: 34px;
   height: 34px;
   border-radius: 12px;
-  background: color-mix(
-    in srgb,
-    var(--app-color-primary) 10%,
-    var(--app-color-bg-container)
-  );
+  background: var(--app-color-primary-bg);
   color: var(--app-color-primary);
   font-weight: 700;
   flex-shrink: 0;
@@ -4708,31 +4505,12 @@ body {
 
 .app-sidebar-menu.ant-menu {
   flex: 1 1 auto;
-  border-inline-end: 0;
   background: transparent;
 }
 
 .app-sidebar-menu .ant-menu-item,
 .app-sidebar-menu .ant-menu-submenu-title {
   border-radius: 8px;
-}
-
-.app-sidebar-lock-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  width: 100%;
-}
-
-.app-sidebar-lock-icon {
-  flex-shrink: 0;
-  opacity: 0.7;
-}
-
-.app-sidebar-lock-tag {
-  margin-inline-start: auto;
-  font-size: 11px;
-  line-height: 16px;
 }
 
 .app-sidebar-nudge {
@@ -5004,989 +4782,6 @@ body {
 .writing-guide-hints .app-card-compact {
   display: grid;
   gap: 4px;
-}
-
-.writing-editor-stack.ant-space,
-.writing-conditions-stack.ant-space,
-.writing-help-stack.ant-space,
-.writing-reference-stack.ant-space,
-.writing-prompt-stack.ant-space,
-.autosave-warning-actions.ant-space {
-  width: 100%;
-}
-
-.writing-checklist-row.ant-space {
-  width: 100%;
-  margin-bottom: 12px;
-}
-
-.autosave-warning-body.ant-typography,
-.writing-prompt-copy.ant-typography,
-.writing-reference-text.ant-typography {
-  white-space: pre-line;
-}
-
-.autosave-warning-alert.ant-alert,
-.autosave-warning-state.ant-descriptions {
-  margin-bottom: 12px;
-}
-
-.autosave-warning-no-backup.ant-typography,
-.writing-editor-status-note.ant-typography,
-.writing-reference-caption.ant-typography {
-  font-size: 12px;
-}
-
-.writing-help-copy.ant-typography,
-.writing-prompt-copy.ant-typography,
-.writing-prompt-paragraph.ant-typography {
-  margin: 0;
-}
-
-.writing-prompt-list {
-  margin: 0;
-  padding-inline-start: 20px;
-}
-
-.writing-prompt-list--offset {
-  margin-top: 4px;
-}
-
-.writing-section-editor__input.ant-input {
-  margin-top: 8px;
-}
-
-.writing-manuscript__grid {
-  display: grid;
-  gap: 2px;
-  margin-top: 8px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-    "Liberation Mono", "Courier New", monospace;
-}
-
-.writing-manuscript__row {
-  display: grid;
-  grid-template-columns: repeat(var(--writing-manuscript-columns, 20), 1fr);
-  gap: 2px;
-}
-
-.writing-manuscript__cell {
-  min-height: 24px;
-  border: 1px solid var(--app-color-border);
-  padding: 2px 0;
-  text-align: center;
-}
-
-.writing-reference-note-list {
-  display: grid;
-  gap: 4px;
-  margin: 8px 0 0;
-}
-
-.writing-reference-note-row {
-  display: grid;
-  grid-template-columns: 96px 1fr;
-  gap: 8px;
-}
-
-.writing-reference-note-value {
-  margin: 0;
-}
-
-.writing-reference-chart,
-.writing-reference-audio {
-  width: 100%;
-}
-
-.writing-reference-chart__frame {
-  width: 100%;
-  height: 240px;
-}
-
-.writing-reference-caption.ant-typography {
-  display: block;
-}
-
-.writing-reference-fallback {
-  border: 1px dashed var(--app-color-border);
-  border-radius: var(--app-radius);
-  padding: 16px;
-}
-
-.writing-reference-image {
-  max-width: 100%;
-  height: auto;
-}
-
-.writing-essay-editor-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 16px;
-}
-
-.writing-editor-actions.ant-space {
-  align-self: flex-start;
-}
-
-.feedback-page-stack.ant-space,
-.feedback-detail-panel__stack.ant-space,
-.feedback-actions__group.ant-space,
-.feedback-recommendation-card__stack.ant-space {
-  width: 100%;
-}
-
-.feedback-dimension-card--failed.app-card {
-  opacity: 0.6;
-  background: #fafafa;
-}
-
-.feedback-dimension-card__score,
-.feedback-dimension-card__actions,
-.feedback-sentence-row__actions {
-  margin-top: 4px;
-}
-
-.feedback-dimension-card__failed-text.ant-typography {
-  font-size: 12px;
-}
-
-.feedback-inline-link.ant-btn {
-  padding: 0;
-}
-
-.feedback-two-line.ant-typography {
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-}
-
-.feedback-detail-panel--flush .ant-card-body {
-  padding-top: 0;
-}
-
-.feedback-detail-panel__copy.ant-typography {
-  margin-bottom: 0;
-}
-
-.feedback-summary-meta.ant-space,
-.feedback-summary-copy.ant-typography {
-  margin-top: 12px;
-}
-
-.feedback-summary-copy.ant-typography {
-  margin-bottom: 0;
-}
-
-.feedback-sentence-row {
-  padding: 12px 0;
-}
-
-.feedback-sentence-row:first-child {
-  padding-top: 0;
-}
-
-.feedback-sentence-row--bordered {
-  border-bottom: 1px solid var(--app-color-border);
-}
-
-.feedback-sentence-row__body {
-  width: 100%;
-}
-
-.feedback-preline {
-  white-space: pre-line;
-}
-
-.feedback-sentence-list__footer {
-  margin-top: 8px;
-  text-align: center;
-}
-
-.feedback-recommendation-title.ant-typography {
-  margin-top: 0;
-}
-
-.feedback-recommendation-intro.ant-typography {
-  margin-bottom: 12px;
-}
-
-.feedback-recommendation-card.app-card {
-  height: 100%;
-}
-
-.feedback-recommendation-card__reason.ant-typography {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.comparison-page-stack.ant-space,
-.comparison-chart__header.ant-space,
-.next-problem-stack.ant-space,
-.next-problem-card__stack.ant-space,
-.next-alternative-card__stack.ant-space {
-  width: 100%;
-}
-
-.comparison-chart__header.ant-space {
-  justify-content: space-between;
-}
-
-.comparison-card-title.ant-typography {
-  margin-top: 0;
-}
-
-.comparison-narrative-copy.ant-typography {
-  margin-bottom: 8px;
-}
-
-.comparison-kpi-stat--up .ant-statistic-content {
-  color: #22a06b;
-}
-
-.comparison-kpi-stat--down .ant-statistic-content {
-  color: #e5484d;
-}
-
-.comparison-kpi-placeholder.ant-typography {
-  font-size: 16px;
-}
-
-.comparison-chart__scroll {
-  width: 100%;
-  overflow-x: auto;
-}
-
-.comparison-chart__frame {
-  min-width: 360px;
-  height: 280px;
-}
-
-.comparison-dimension-card__tag {
-  margin-top: 4px;
-}
-
-.comparison-preline.ant-typography {
-  white-space: pre-line;
-}
-
-.next-problem-stack--with-selection.ant-space {
-  padding-bottom: 88px;
-}
-
-.next-selectable-card--selected.app-card {
-  border-color: var(--app-color-primary);
-  border-width: 2px;
-}
-
-.next-problem-copy.ant-typography,
-.next-problem-reason.ant-typography,
-.next-alternative-card__reason.ant-typography {
-  margin: 0;
-}
-
-.next-selection-bar {
-  position: fixed;
-  z-index: 10;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  border-top: 1px solid var(--app-color-border);
-  background: var(--app-color-bg-container);
-  padding: 12px 24px;
-}
-
-.next-selection-bar__label.ant-typography {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.next-alternative-card--locked.app-card {
-  opacity: 0.65;
-  background: color-mix(
-    in srgb,
-    var(--app-color-bg-layout) 72%,
-    var(--app-color-bg-container)
-  );
-}
-
-.next-alternative-card__reason-wrap {
-  margin-top: 4px;
-}
-
-.next-alternative-card__reason.ant-typography,
-.next-summary-card__note.ant-typography {
-  font-size: 12px;
-}
-
-.next-summary-card__body {
-  margin-top: 8px;
-}
-
-.next-summary-card__type.ant-typography {
-  font-size: 20px;
-}
-
-.library-page {
-  max-width: 1200px;
-  margin-inline: auto;
-}
-
-.library-tabs-shell.ant-space,
-.library-stats-panel.ant-space,
-.library-tab-stack.ant-space,
-.library-item-list.ant-space,
-.library-item-detail.ant-space,
-.pdf-export-modal.ant-space,
-.pdf-export-filename.ant-space-compact {
-  width: 100%;
-}
-
-.library-search.ant-input-search {
-  max-width: 360px;
-}
-
-.library-filter-select.ant-select {
-  min-width: 140px;
-}
-
-.library-item-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-  padding-block: 16px;
-  border-bottom: 1px solid var(--app-color-border);
-}
-
-.library-item-row__content {
-  min-width: 0;
-  flex: 1 1 280px;
-}
-
-.library-tag-popover.ant-space {
-  width: 220px;
-}
-
-.library-row-copy.ant-typography {
-  margin-bottom: 0;
-}
-
-.library-pagination.ant-space {
-  width: 100%;
-  justify-content: center;
-}
-
-.pdf-export-form-item.ant-form-item {
-  margin-bottom: 12px;
-}
-
-.pdf-export-form-item--flush.ant-form-item {
-  margin-bottom: 0;
-}
-
-.pdf-export-extension.ant-input {
-  width: 56px;
-  text-align: center;
-}
-
-.pdf-export-divider.ant-divider {
-  margin: 4px 0;
-}
-
-.pdf-export-preview-alert.ant-alert,
-.pdf-export-preview {
-  margin-top: 8px;
-}
-
-.pdf-export-preview {
-  border: 1px solid var(--app-color-border);
-  border-radius: 8px;
-  padding: 16px;
-  max-height: 220px;
-  overflow: hidden;
-}
-
-.pdf-export-preview__title.ant-typography {
-  margin-top: 0;
-}
-
-.pdf-export-preview__subtitle.ant-typography {
-  margin-bottom: 8px;
-}
-
-.pdf-export-preview__list {
-  margin: 0;
-  padding-left: 18px;
-}
-
-.pdf-export-actions.ant-space {
-  width: 100%;
-  justify-content: flex-end;
-}
-
-.language-settings-form-stack.ant-space,
-.language-content-options.ant-space {
-  width: 100%;
-}
-
-.language-form-item--flush.ant-form-item,
-.language-coverage-note.ant-typography {
-  margin-bottom: 0;
-}
-
-.language-help-list {
-  margin: 0;
-  padding-left: 18px;
-}
-
-.growth-dashboard-stack.ant-space,
-.growth-list-stack.ant-space,
-.growth-trend-stack.ant-space,
-.growth-locked-copy.ant-space {
-  width: 100%;
-}
-
-.growth-kpi-card.app-card {
-  height: 100%;
-}
-
-.growth-kpi-hint.ant-typography,
-.growth-footnote.ant-typography,
-.growth-chart-help.ant-typography,
-.growth-recent-date.ant-typography {
-  font-size: 12px;
-}
-
-.growth-kpi-stat--up .ant-statistic-content {
-  color: #3f8600;
-}
-
-.growth-kpi-stat--down .ant-statistic-content {
-  color: #cf1322;
-}
-
-.growth-split-row.ant-space {
-  width: 100%;
-  justify-content: space-between;
-}
-
-.growth-trend-frame {
-  width: 100%;
-  height: 280px;
-}
-
-.growth-locked-icon {
-  font-size: 40px;
-}
-
-.growth-locked-paragraph.ant-typography {
-  margin: 0;
-}
-
-.growth-recent-score {
-  margin-left: 8px;
-}
-
-.growth-recent-date.ant-typography {
-  margin-left: 12px;
-}
-
-.paywall-shell,
-.subscription-shell {
-  max-width: 1040px;
-  margin-inline: auto;
-}
-
-.billing-page-stack.ant-space,
-.billing-card-stack.ant-space,
-.paywall-plan-card__body.ant-space,
-.subscription-empty-stack.ant-space {
-  width: 100%;
-}
-
-.paywall-plan-card--recommended.app-card {
-  border-color: var(--app-color-primary);
-}
-
-.paywall-plan-card__price.ant-typography {
-  margin: 0;
-}
-
-.paywall-list {
-  margin: 0;
-  padding-left: 18px;
-}
-
-.billing-footnote.ant-typography,
-.subscription-change-note.ant-typography {
-  font-size: 12px;
-}
-
-.paywall-benefits-action {
-  margin-top: 8px;
-}
-
-.subscription-change-note.ant-typography {
-  margin: 12px 0 0;
-}
-
-.subscription-help-copy.ant-typography,
-.subscription-modal-copy.ant-typography {
-  margin-bottom: 0;
-}
-
-.profile-page-stack.ant-space {
-  width: 100%;
-}
-
-.profile-avatar-card.app-card {
-  margin-bottom: 16px;
-}
-
-.profile-avatar-card__title.ant-typography {
-  margin: 0 0 4px;
-}
-
-.profile-avatar-card__copy.ant-typography {
-  margin-bottom: 8px;
-}
-
-.ant-form .profile-avatar-file-input[type="file"] {
-  display: none;
-}
-
-.profile-avatar-alert.ant-alert {
-  margin-top: 12px;
-}
-
-.profile-exam-form-item.ant-form-item {
-  margin-bottom: 12px;
-}
-
-.profile-exam-form-item--roomy.ant-form-item {
-  margin-bottom: 16px;
-}
-
-.profile-exam-control.ant-input-number,
-.profile-exam-control.ant-picker {
-  width: 100%;
-}
-
-.profile-goal-empty .ant-empty-image {
-  display: none;
-}
-
-.profile-status-alert.ant-alert {
-  margin-bottom: 12px;
-}
-
-.profile-status-plan-label.ant-typography {
-  margin-left: 12px;
-}
-
-.profile-flush-copy.ant-typography {
-  margin-bottom: 0;
-}
-
-.profile-footnote.ant-typography {
-  font-size: 12px;
-}
-
-.password-reset-security-visual {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.password-reset-security-icon {
-  display: inline-flex;
-  width: 44px;
-  height: 44px;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--app-color-border);
-  border-radius: 50%;
-  background: var(--app-color-bg-container);
-  color: var(--app-color-primary);
-}
-
-.password-reset-heading {
-  text-align: center;
-  font-size: 24px;
-  margin: 0 0 24px;
-}
-
-.password-reset-back-link {
-  text-align: center;
-  margin-top: 16px;
-}
-
-.password-reset-expiry-note.ant-typography {
-  margin-top: -4px;
-}
-
-.password-reset-countdown-row.ant-typography {
-  margin-bottom: 12px;
-}
-
-.weakness-locked-card.app-card {
-  text-align: center;
-}
-
-.weakness-locked-icon {
-  display: inline-flex;
-  width: 48px;
-  height: 48px;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--app-color-border);
-  border-radius: 50%;
-  background: var(--app-color-bg-container);
-  color: var(--app-color-primary);
-}
-
-.weakness-locked-title {
-  margin: 8px 0 0;
-}
-
-.weakness-locked-copy {
-  color: var(--app-color-text-secondary);
-}
-
-.weakness-locked-actions {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 16px;
-}
-
-.weakness-lock-action {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 6px 16px;
-  border-radius: 14px;
-  font-weight: 600;
-}
-
-.weakness-lock-action--primary,
-.weakness-lock-action--primary:hover {
-  background: var(--app-color-primary);
-  color: var(--app-color-bg-container);
-}
-
-.weakness-lock-action--secondary,
-.weakness-lock-action--secondary:hover {
-  border: 1px solid var(--app-color-border);
-  color: var(--app-color-text);
-}
-
-.weakness-view-stack.ant-space,
-.weakness-insight-stack.ant-space,
-.weakness-recommendation-stack.ant-space,
-.weakness-rec-card-stack.ant-space {
-  width: 100%;
-}
-
-.weakness-view-title.ant-typography {
-  margin-bottom: 4px;
-}
-
-.weakness-view-subtitle.ant-typography {
-  margin: 0;
-}
-
-.weakness-section-title.ant-typography {
-  margin-bottom: 0;
-}
-
-.weakness-tab-summary.ant-typography {
-  margin-top: 12px;
-}
-
-.weakness-diagnostic-note.ant-typography,
-.weakness-diagnostic-updated.ant-typography {
-  font-size: 12px;
-}
-
-.weakness-diagnostic-tag.ant-tag {
-  font-size: 14px;
-  padding: 4px 8px;
-}
-
-.weakness-rec-card--locked.app-card {
-  opacity: 0.7;
-  background: var(--app-color-bg-layout);
-}
-
-.weakness-rec-reason.ant-typography {
-  display: block;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.notification-form-stack.ant-space,
-.notification-channel-stack.ant-space,
-.notification-condition-stack.ant-space {
-  width: 100%;
-}
-
-.notification-form-item--flush.ant-form-item {
-  margin-bottom: 0;
-}
-
-.notification-condition-status.ant-typography {
-  margin-left: 12px;
-}
-
-.notification-day-tag--disabled.ant-tag {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.auth-error-stack.ant-space,
-.auth-error-actions.ant-space {
-  width: 100%;
-}
-
-.auth-error-title.ant-typography,
-.auth-error-message.ant-typography,
-.auth-error-escape.ant-typography {
-  margin-bottom: 0;
-}
-
-.auth-error-escape.ant-typography {
-  text-align: center;
-}
-
-.auth-mascot {
-  text-align: center;
-}
-
-.auth-mascot-image,
-.auth-mascot-glyph {
-  display: inline-block;
-}
-
-.auth-mascot-glyph {
-  font-size: 56px;
-  line-height: 1;
-}
-
-.auth-mascot-glyph--compact {
-  font-size: 48px;
-}
-
-.auth-mascot-caption {
-  margin-top: 8px;
-}
-
-.auth-mascot-caption-text.ant-typography,
-.verify-email-help-heading.ant-typography,
-.verify-email-help-body.ant-typography {
-  font-size: 13px;
-}
-
-.verify-email-stack.ant-space {
-  width: 100%;
-}
-
-.verify-email-title.ant-typography,
-.verify-email-body.ant-typography,
-.verify-email-escape.ant-typography {
-  margin-bottom: 0;
-}
-
-.verify-email-divider.ant-divider {
-  margin: 4px 0;
-}
-
-.verify-email-help-body.ant-typography {
-  margin: 4px 0 8px;
-}
-
-.verify-email-escape.ant-typography {
-  text-align: center;
-}
-
-.legal-stack.ant-space {
-  width: 100%;
-}
-
-.legal-title.ant-typography,
-.legal-section-title.ant-typography {
-  margin-bottom: 8px;
-}
-
-.legal-paragraph-flush.ant-typography,
-.legal-shortcuts.ant-typography {
-  margin-bottom: 0;
-}
-
-.legal-placeholder-notice.ant-typography {
-  margin-top: 8px;
-  margin-bottom: 0;
-}
-
-.legal-summary-list {
-  margin: 0;
-  padding-left: 20px;
-}
-
-.legal-summary-list > li:not(:last-child) {
-  margin-bottom: 8px;
-}
-
-.legal-section {
-  margin-bottom: 24px;
-}
-
-.legal-page-title {
-  margin: 0 0 16px;
-  font-size: 28px;
-  line-height: 1.25;
-  font-weight: 700;
-}
-
-.legal-native-section-title {
-  margin: 0 0 8px;
-  font-size: 20px;
-  line-height: 1.35;
-  font-weight: 700;
-}
-
-.legal-section p {
-  margin: 0;
-}
-
-.legal-section ul {
-  margin: 0;
-  padding-left: 20px;
-}
-
-.legal-section li:not(:last-child) {
-  margin-bottom: 8px;
-}
-
-.legal-scope-note {
-  margin-top: 12px;
-}
-
-.password-strength-bar {
-  display: flex;
-  gap: 4px;
-}
-
-.password-strength-segment {
-  flex: 1;
-  height: 4px;
-  border-radius: 2px;
-  background: #f0f0f0;
-  transition: background 0.2s ease;
-}
-
-.password-strength-segment--filled.password-strength-segment--weak,
-.password-strength-label-text--weak.ant-typography {
-  color: #ff4d4f;
-}
-
-.password-strength-segment--filled.password-strength-segment--weak {
-  background: #ff4d4f;
-}
-
-.password-strength-segment--filled.password-strength-segment--fair,
-.password-strength-label-text--fair.ant-typography {
-  color: #faad14;
-}
-
-.password-strength-segment--filled.password-strength-segment--fair {
-  background: #faad14;
-}
-
-.password-strength-segment--filled.password-strength-segment--good,
-.password-strength-label-text--good.ant-typography,
-.password-strength-rule--met {
-  color: #52c41a;
-}
-
-.password-strength-segment--filled.password-strength-segment--good {
-  background: #52c41a;
-}
-
-.password-strength-segment--filled.password-strength-segment--strong,
-.password-strength-label-text--strong.ant-typography {
-  color: #237804;
-}
-
-.password-strength-segment--filled.password-strength-segment--strong {
-  background: #237804;
-}
-
-.password-strength-label {
-  margin-top: 4px;
-}
-
-.password-strength-label-text.ant-typography,
-.password-strength-rule {
-  font-size: 12px;
-}
-
-.password-strength-rules {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px 12px;
-  padding: 0;
-  margin: 6px 0 0;
-  list-style: none;
-}
-
-.password-strength-rule {
-  color: #8c8c8c;
-}
-
-.password-reset-confirm-title.ant-typography {
-  margin-top: 12px;
-  text-align: center;
-}
-
-.password-reset-confirm-subtitle.ant-typography {
-  text-align: center;
-}
-
-.password-reset-confirm-guide.ant-typography,
-.password-reset-confirm-alert.ant-alert {
-  margin-bottom: 16px;
-}
-
-.password-reset-confirm-actions-item.ant-form-item {
-  margin-bottom: 0;
-}
-
-.password-reset-confirm-actions.ant-space {
-  width: 100%;
-}
-
-.callback-fragment-card {
-  text-align: center;
-}
-
-.callback-fragment-message.ant-typography {
-  margin-top: 16px;
-  margin-bottom: 0;
 }
 
 .analysis-loading-shell {
