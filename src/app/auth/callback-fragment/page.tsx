@@ -24,18 +24,6 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t("metaTitle") };
 }
 
-const srOnlyStyle: React.CSSProperties = {
-  position: "absolute",
-  width: 1,
-  height: 1,
-  padding: 0,
-  margin: -1,
-  overflow: "hidden",
-  clip: "rect(0, 0, 0, 0)",
-  whiteSpace: "nowrap",
-  border: 0,
-};
-
 type SearchParams = Record<string, string | string[] | undefined>;
 
 function pickFirst(value: string | string[] | undefined): string | undefined {
@@ -55,7 +43,7 @@ export default async function CallbackFragmentPage({
   return (
     <PublicShell>
       <PageContainer size="narrow">
-        <h1 style={srOnlyStyle}>{t("srHeading")}</h1>
+        <h1 className="sr-only">{t("srHeading")}</h1>
         <Suspense fallback={null}>
           <CallbackFragmentFallback next={next} />
         </Suspense>
