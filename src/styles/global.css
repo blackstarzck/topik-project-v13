@@ -5422,6 +5422,21 @@ body {
   justify-content: flex-end;
 }
 
+.language-settings-form-stack.ant-space,
+.language-content-options.ant-space {
+  width: 100%;
+}
+
+.language-form-item--flush.ant-form-item,
+.language-coverage-note.ant-typography {
+  margin-bottom: 0;
+}
+
+.language-help-list {
+  margin: 0;
+  padding-left: 18px;
+}
+
 .analysis-loading-shell {
   position: relative;
   display: grid;

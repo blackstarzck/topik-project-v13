@@ -240,9 +240,17 @@ export function LanguageForm({ userId, initialLocale }: Props) {
       onFinish={handleFinish}
       disabled={saving}
     >
-      <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+      <Space
+        className="language-settings-form-stack"
+        orientation="vertical"
+        size="middle"
+      >
         {/* Region 2: UI 언어 선택 */}
-        <Form.Item label={t("uiLanguageLabel")} required style={{ marginBottom: 0 }}>
+        <Form.Item
+          className="language-form-item--flush"
+          label={t("uiLanguageLabel")}
+          required
+        >
           <Radio.Group
             data-testid="language-ui-radio"
             value={locale}
@@ -257,7 +265,7 @@ export function LanguageForm({ userId, initialLocale }: Props) {
           </Radio.Group>
         </Form.Item>
 
-        <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+        <Paragraph className="language-coverage-note" type="secondary">
           <Text type="secondary">{t("coverageNote")}</Text>
         </Paragraph>
 
@@ -278,8 +286,8 @@ export function LanguageForm({ userId, initialLocale }: Props) {
             />
           ) : (
             <Form.Item
+              className="language-form-item--flush"
               label={t("learningFieldLabel")}
-              style={{ marginBottom: 0 }}
               extra={t("learningFieldExtra")}
             >
               <Radio.Group
@@ -318,8 +326,15 @@ export function LanguageForm({ userId, initialLocale }: Props) {
               description={contentLoad.message}
             />
           ) : (
-            <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
-              <Form.Item label={t("feedbackDisplayLabel")} style={{ marginBottom: 0 }}>
+            <Space
+              className="language-content-options"
+              orientation="vertical"
+              size="middle"
+            >
+              <Form.Item
+                className="language-form-item--flush"
+                label={t("feedbackDisplayLabel")}
+              >
                 <Segmented
                   data-testid="language-feedback-display"
                   value={
@@ -335,7 +350,10 @@ export function LanguageForm({ userId, initialLocale }: Props) {
                   ]}
                 />
               </Form.Item>
-              <Form.Item label={t("exampleDifficultyLabel")} style={{ marginBottom: 0 }}>
+              <Form.Item
+                className="language-form-item--flush"
+                label={t("exampleDifficultyLabel")}
+              >
                 <Segmented
                   data-testid="language-example-difficulty"
                   value={
@@ -355,7 +373,10 @@ export function LanguageForm({ userId, initialLocale }: Props) {
                   ]}
                 />
               </Form.Item>
-              <Form.Item label={t("explanationLengthLabel")} style={{ marginBottom: 0 }}>
+              <Form.Item
+                className="language-form-item--flush"
+                label={t("explanationLengthLabel")}
+              >
                 <Segmented
                   data-testid="language-explanation-length"
                   value={
@@ -400,7 +421,7 @@ export function LanguageForm({ userId, initialLocale }: Props) {
           size="small"
           title={t("helpCardTitle")}
         >
-          <ul style={{ margin: 0, paddingLeft: 18 }}>
+          <ul className="language-help-list">
             <li data-testid="language-help-item">
               <Text type="secondary">{t("helpUiScope")}</Text>
             </li>
@@ -422,7 +443,7 @@ export function LanguageForm({ userId, initialLocale }: Props) {
         />
 
         {/* Region 6: 저장 (변경값 없으면 비활성, 저장 중 중복 클릭 차단) */}
-        <Form.Item style={{ marginBottom: 0 }}>
+        <Form.Item className="language-form-item--flush">
           <Button
             data-testid="language-save"
             type="primary"
