@@ -24,7 +24,7 @@ export function LandingHeader({ isAuthenticated }: Props) {
   const t = useTranslations("landing");
 
   return (
-    <header className="landing-header">
+    <header className="landing-header !shadow-none !backdrop-blur-sm before:!hidden after:!hidden">
       <a href="#top" className="landing-header-logo" aria-label={t("logoAria")}>
         TALKPIK<span> AI</span>
       </a>

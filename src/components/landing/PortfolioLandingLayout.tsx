@@ -2,43 +2,17 @@
 
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
+import {
+  ArrowRight,
+  BookOpenText,
+  Check,
+  LayoutDashboard,
+  MessageSquareText,
+  PanelsTopLeft,
+} from "lucide-react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Autoplay, FreeMode } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
-
-function ArrowIcon({ strokeWidth = 2 }: { strokeWidth?: number }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={strokeWidth}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <line x1="5" y1="12" x2="19" y2="12" />
-      <polyline points="12 5 19 12 12 19" />
-    </svg>
-  );
-}
-
-function TalkpikMark() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8A2.5 2.5 0 0 1 17.5 16H11l-4.5 4v-4A2.5 2.5 0 0 1 4 13.5v-8Z"
-        fill="currentColor"
-      />
-      <path
-        d="M8 8h8M8 11h5"
-        stroke="#fff"
-        strokeLinecap="round"
-        strokeWidth="1.7"
-      />
-    </svg>
-  );
-}
 
 function VisualLabel({ label }: { label: string }) {
   return (
@@ -232,10 +206,21 @@ function useLandingMotion() {
 
 function LearningLoopSection() {
   const loops = [
-    ["학습 현황", "목표 등급, 시험일까지 남은 시간, 주간 학습 상태를 한눈에 확인합니다.", "dashboard preview"],
-    ["문제 추천", "부족한 영역과 목표 급수에 맞는 읽기, 듣기, 쓰기 학습으로 바로 이동합니다.", "recommendation preview"],
-    ["쓰기 연습", "TOPIK 쓰기 51번부터 54번까지 유형별 답안을 작성합니다.", "writing practice preview"],
-    ["AI 피드백", "점수, 총평, 단계별 첨삭, 비교 리포트로 다음 학습을 이어갑니다.", "feedback report preview"],
+    [
+      "대시보드",
+      "목표 등급, 시험일까지 남은 시간, 주간 학습 상태를 한눈에 확인합니다.",
+      "dashboard preview",
+    ],
+    [
+      "AI 피드백",
+      "TOPIK 쓰기 51~54번 답안을 점수, 총평, 단계별 첨삭으로 확인합니다.",
+      "feedback preview",
+    ],
+    [
+      "성장 리포트",
+      "이전 답안과 비교해 점수 변화와 약점 영역을 확인합니다.",
+      "report preview",
+    ],
   ];
 
   return (
@@ -261,7 +246,7 @@ function LearningLoopSection() {
         <div className="landing-layout-center">
           <a className="landing-layout-pill" href="/sign-up">
             무료로 시작하기
-            <ArrowIcon />
+            <ArrowRight aria-hidden="true" />
           </a>
         </div>
       </div>
@@ -374,7 +359,7 @@ function LearnerGoalsSection({
           modules={[Autoplay, FreeMode]}
           slidesPerView="auto"
           spaceBetween={24}
-          speed={5200}
+          speed={10400}
           loop={!prefersReducedMotion}
           allowTouchMove
           grabCursor
@@ -451,6 +436,30 @@ function LearningDataSection() {
 }
 
 function FeaturesSection() {
+  const features = [
+    {
+      title: "AI 첨삭",
+      description: "51~54번 답안을 기준별 점수와 문장 단위 코멘트로 확인합니다.",
+      icon: <MessageSquareText aria-hidden="true" />,
+    },
+    {
+      title: "실전 문제",
+      description: "목표 급수와 유형에 맞춘 문제로 시험 흐름에 맞게 연습합니다.",
+      icon: <PanelsTopLeft aria-hidden="true" />,
+      tall: true,
+    },
+    {
+      title: "성장 리포트",
+      description: "이전 답안과 점수 변화를 비교해 약점 영역을 좁힙니다.",
+      icon: <LayoutDashboard aria-hidden="true" />,
+    },
+    {
+      title: "라이브러리",
+      description: "저장한 문제, 제출 답안, 비교 리포트를 다시 찾아 복습합니다.",
+      icon: <BookOpenText aria-hidden="true" />,
+    },
+  ];
+
   return (
     <section id="features" className="landing-layout-section" data-landing-section>
       <div className="landing-layout-wrap">
@@ -461,84 +470,22 @@ function FeaturesSection() {
           </h2>
         </div>
         <div className="landing-layout-feature-grid">
-          <article className="landing-layout-feature" data-landing-stagger>
-            <span className="landing-layout-icon">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <rect x="3" y="4" width="18" height="15" rx="2" />
-                <path d="M7 8h5M7 12h10M7 16h7" />
-              </svg>
-            </span>
-            <div />
-            <h3>홈 대시보드</h3>
-            <p>현재 학습 상태와 다음 학습 진입점을 한 화면에서 보여줍니다.</p>
-          </article>
-          <article
-            className="landing-layout-feature landing-layout-feature--tall"
-            data-landing-stagger
-          >
-            <span className="landing-layout-icon">
-              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M4 4h7v7H4V4Zm9 0h7v7h-7V4ZM4 13h7v7H4v-7Zm9 0h7v7h-7v-7Z" />
-              </svg>
-            </span>
-            <div />
-            <h3>읽기·듣기 문제 생성</h3>
-            <p>TOPIK 단계, 목표 등급, 문제 유형을 고른 뒤 연습 문제로 이동합니다.</p>
-          </article>
-          <article className="landing-layout-feature" data-landing-stagger>
-            <span className="landing-layout-icon">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M4 20h16" />
-                <path d="M7 17 17.5 6.5a2.1 2.1 0 0 1 3 3L10 20H7v-3Z" />
-              </svg>
-            </span>
-            <div />
-            <h3>쓰기 51·53번 연습</h3>
-            <p>빈칸, 도입, 전개, 마무리처럼 유형별 작성 흐름을 제공합니다.</p>
-          </article>
-          <article className="landing-layout-feature" data-landing-stagger>
-            <span className="landing-layout-icon">
-              <TalkpikMark />
-            </span>
-            <div />
-            <h3>AI 피드백 상세</h3>
-            <p>점수, 총평, 구조 분석, 상세 첨삭으로 답안 개선 과정을 보여줍니다.</p>
-          </article>
-          <article className="landing-layout-feature" data-landing-stagger>
-            <span className="landing-layout-icon">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M4 5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2V5Z" />
-                <path d="M8 7h6M8 11h8M8 15h5" />
-              </svg>
-            </span>
-            <div />
-            <h3>보관함과 내 서재</h3>
-            <p>완료된 피드백, 임시 답안, 저장한 문제를 다시 찾아 복습합니다.</p>
-          </article>
+          {features.map((feature) => (
+            <article
+              className={
+                feature.tall
+                  ? "landing-layout-feature landing-layout-feature--tall"
+                  : "landing-layout-feature"
+              }
+              data-landing-stagger
+              key={feature.title}
+            >
+              <span className="landing-layout-icon">{feature.icon}</span>
+              <div />
+              <h3>{feature.title}</h3>
+              <p>{feature.description}</p>
+            </article>
+          ))}
         </div>
       </div>
     </section>
@@ -591,7 +538,7 @@ function FutureScopeSection() {
               {index === 0 ? (
                 <div className="landing-layout-visual">
                   <em>
-                    <TalkpikMark />
+                    <MessageSquareText aria-hidden="true" />
                   </em>
                 </div>
               ) : (
@@ -719,7 +666,12 @@ function PathSection() {
               <ul>
                 {(items as string[]).map((item) => (
                   <li key={item}>
-                    <span className="landing-layout-check" aria-hidden="true" />
+                    <span
+                      className="landing-layout-check text-background after:!hidden"
+                      aria-hidden="true"
+                    >
+                      <Check size={13} />
+                    </span>
                     {item}
                   </li>
                 ))}
@@ -741,7 +693,7 @@ function ProductFooter() {
       <div className="landing-layout-wrap landing-layout-footer__inner">
         <h2 data-landing-heading>
           TALKPIK AI로 시작하기
-          <ArrowIcon strokeWidth={1.8} />
+          <ArrowRight aria-hidden="true" />
         </h2>
         <p>
           TOPIK 목표 등급을 정하고, 추천 문제를 풀고, 쓰기 답안 피드백까지

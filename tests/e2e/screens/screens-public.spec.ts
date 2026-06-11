@@ -112,18 +112,52 @@ for (const s of PUBLIC_SCREENS) {
       const headerMetrics = await landingHeader.evaluate((node) => {
         const rect = node.getBoundingClientRect();
         const styles = window.getComputedStyle(node);
-        const blurStyles = window.getComputedStyle(node, "::before");
-        const surfaceStyles = window.getComputedStyle(node, "::after");
+        const beforeStyles = window.getComputedStyle(node, "::before");
+        const afterStyles = window.getComputedStyle(node, "::after");
+        const elementAtHeader = document.elementFromPoint(
+          Math.floor(window.innerWidth / 2),
+          Math.min(34, Math.floor(rect.height / 2)),
+        );
         return {
-          background: surfaceStyles.backgroundColor,
-          filter: blurStyles.filter,
+          background: styles.backgroundColor,
+          backdropFilter: styles.backdropFilter,
+          borderBottomWidth: styles.borderBottomWidth,
+          boxShadow: styles.boxShadow,
+          beforeDisplay: beforeStyles.display,
+          afterDisplay: afterStyles.display,
+          elementAtHeaderInsideHeader: Boolean(
+            elementAtHeader?.closest(".landing-header"),
+          ),
           height: rect.height,
           position: styles.position,
           top: rect.top,
+          zIndex: styles.zIndex,
         };
       });
-      expect(headerMetrics.filter).toContain("blur");
-      expect(headerMetrics.background).toBe("rgba(255, 255, 255, 0.94)");
+      const headerBlurMatch = headerMetrics.backdropFilter.match(
+        /blur\(([\d.]+)px\)/,
+      );
+      expect(
+        headerBlurMatch,
+        `expected landing header backdrop blur, got ${headerMetrics.backdropFilter}`,
+      ).not.toBeNull();
+      const headerBlurPx = Number(headerBlurMatch?.[1] ?? 0);
+      expect(headerBlurPx).toBeGreaterThan(0);
+      expect(headerBlurPx).toBeLessThanOrEqual(17);
+      expect(headerMetrics.background).toBe("rgba(255, 255, 255, 0.72)");
+      const hasVisibleHeaderShadow =
+        headerMetrics.boxShadow !== "none" &&
+        !headerMetrics.boxShadow
+          .split(/,\s(?=rgba?\()/)
+          .every((layer) =>
+            layer.startsWith("rgba(0, 0, 0, 0) 0px 0px 0px 0px"),
+          );
+      expect(hasVisibleHeaderShadow).toBe(false);
+      expect(headerMetrics.borderBottomWidth).toBe("0px");
+      expect(headerMetrics.beforeDisplay).toBe("none");
+      expect(headerMetrics.afterDisplay).toBe("none");
+      expect(Number(headerMetrics.zIndex)).toBeGreaterThanOrEqual(50);
+      expect(headerMetrics.elementAtHeaderInsideHeader).toBe(true);
       expect(headerMetrics.position).toBe("fixed");
       expect(Math.round(headerMetrics.top)).toBe(0);
       expect(headerMetrics.height).toBeGreaterThanOrEqual(64);
@@ -147,9 +181,35 @@ for (const s of PUBLIC_SCREENS) {
         )
         .toBe(0);
 
+      await page.locator("#preview").scrollIntoViewIfNeeded();
+      await expect(page.locator(".landing-layout-work")).toHaveCount(3);
+      await expect(
+        page.locator(".landing-layout-work").filter({ hasText: "대시보드" }),
+      ).toBeVisible();
+      await expect(
+        page.locator(".landing-layout-work").filter({ hasText: "AI 피드백" }),
+      ).toBeVisible();
+      await expect(
+        page.locator(".landing-layout-work").filter({ hasText: "성장 리포트" }),
+      ).toBeVisible();
+
       await page.locator("#services").scrollIntoViewIfNeeded();
       await expect(page.getByText("학습 현황부터")).toBeVisible();
       await expect(page.getByText("쓰기 답안 AI 첨삭")).toBeVisible();
+      await page.locator("#features").scrollIntoViewIfNeeded();
+      await expect(page.locator(".landing-layout-feature")).toHaveCount(4);
+      await expect(
+        page.locator(".landing-layout-feature").filter({ hasText: "AI 첨삭" }),
+      ).toBeVisible();
+      await expect(
+        page.locator(".landing-layout-feature").filter({ hasText: "실전 문제" }),
+      ).toBeVisible();
+      await expect(
+        page.locator(".landing-layout-feature").filter({ hasText: "성장 리포트" }),
+      ).toBeVisible();
+      await expect(
+        page.locator(".landing-layout-feature").filter({ hasText: "라이브러리" }),
+      ).toBeVisible();
       await page.locator("#blog").scrollIntoViewIfNeeded();
       await expect(page.getByText("Future scope").first()).toBeVisible();
       await page.locator("#contact").scrollIntoViewIfNeeded();
