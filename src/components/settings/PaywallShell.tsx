@@ -8,7 +8,6 @@ import {
   Result,
   Row,
   Skeleton,
-  Space,
   Tag,
   Typography,
 } from "antd";
@@ -32,15 +31,6 @@ import {
 const { Title, Text } = Typography;
 
 const SUPPORT_EMAIL = "support@talkpik.example";
-
-// Content-width cap (matches the prior 1040 layout). The duplicate <main> +
-// padding are dropped — WorkspaceShell's Layout.Content already renders the
-// landmark + 24px padding; only the centered max-width is kept (library page
-// precedent). Hoisted to a module const so the M4 inline-number gate stays green.
-const PAYWALL_CONTENT_STYLE = {
-  maxWidth: 1040, // ai-check: allow-inline-number off-scale content-width cap (px)
-  marginInline: "auto",
-} as const;
 
 type LoadState =
   | { status: "loading" }
@@ -115,8 +105,8 @@ export function PaywallShell() {
   }
 
   return (
-    <div data-testid="paywall-shell" style={PAYWALL_CONTENT_STYLE}>
-      <Space orientation="vertical" size="large" style={{ width: "100%" }}>
+    <div data-testid="paywall-shell" className="mx-auto w-full max-w-5xl">
+      <div className="flex w-full flex-col gap-6">
         {/* Region 1: 결제 선택 제목. IA 코드는 사용자 화면에 노출하지 않는다. */}
         <div>
           <PageHeader title={t("heading")} subtitle={t("subheading")} />
@@ -132,14 +122,14 @@ export function PaywallShell() {
             title={t("errorTitle")}
             subTitle={state.message}
             extra={
-              <Space>
+              <div className="flex flex-wrap justify-center gap-2">
                 <Button type="primary" onClick={() => router.refresh()}>
                   {t("retry")}
                 </Button>
                 <Link href="/subscription">
                   <Button>{t("goToManage")}</Button>
                 </Link>
-              </Space>
+              </div>
             }
           />
         ) : (
@@ -168,27 +158,23 @@ export function PaywallShell() {
                     <Col key={plan.plan_key} xs={24} md={8}>
                       <AppCard
                         data-testid={`paywall-plan-${plan.cadence}`}
-                        style={
+                        className={
                           plan.recommended
-                            ? { borderColor: "var(--ant-color-primary)" }
-                            : undefined
+                            ? "h-full border-primary"
+                            : "h-full"
                         }
                         title={
-                          <Space>
+                          <span className="flex flex-wrap items-center gap-2">
                             <Text strong>{plan.name}</Text>
                             {plan.recommended ? (
-                              <Tag color="blue">{t("recommendedBadge")}</Tag>
+                              <Tag>{t("recommendedBadge")}</Tag>
                             ) : null}
-                          </Space>
+                          </span>
                         }
                       >
-                        <Space
-                          orientation="vertical"
-                          size={10}
-                          style={{ width: "100%" }}
-                        >
+                        <div className="flex w-full flex-col gap-3">
                           <div>
-                            <Title level={4} style={{ margin: 0 }}>
+                            <Title level={4} className="!m-0">
                               {formatPlanPrice(plan)}
                             </Title>
                             <Text type="secondary">
@@ -200,7 +186,7 @@ export function PaywallShell() {
                             </Text>
                           </div>
                           {benefits.length > 0 ? (
-                            <ul style={{ margin: 0, paddingLeft: 18 }}>
+                            <ul className="m-0 pl-5">
                               {benefits.map((b) => (
                                 <li key={b}>
                                   <Text>{b}</Text>
@@ -229,11 +215,11 @@ export function PaywallShell() {
                           <Text
                             data-testid="paywall-stub-note"
                             type="secondary"
-                            style={{ fontSize: 12 }}
+                            className="!text-xs"
                           >
                             {t("stubNote")}
                           </Text>
-                        </Space>
+                        </div>
                       </AppCard>
                     </Col>
                   );
@@ -248,16 +234,12 @@ export function PaywallShell() {
                   data-testid="paywall-benefits-panel"
                   title={t("benefits.title")}
                 >
-                  <Space
-                    orientation="vertical"
-                    size={4}
-                    style={{ width: "100%" }}
-                  >
+                  <div className="flex w-full flex-col gap-1">
                     <Text>{t("benefits.item1")}</Text>
                     <Text>{t("benefits.item2")}</Text>
                     <Text>{t("benefits.item3")}</Text>
                     <Text>{t("benefits.item4")}</Text>
-                    <div style={{ marginTop: 8 }}>
+                    <div className="mt-2">
                       <Button
                         href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(
                           t("benefits.contactSubject"),
@@ -266,7 +248,7 @@ export function PaywallShell() {
                         {t("benefits.contactCta")}
                       </Button>
                     </div>
-                  </Space>
+                  </div>
                 </AppCard>
               </Col>
 
@@ -276,31 +258,27 @@ export function PaywallShell() {
                   data-testid="paywall-payment-info"
                   title={t("paymentInfo.title")}
                 >
-                  <Space
-                    orientation="vertical"
-                    size={4}
-                    style={{ width: "100%" }}
-                  >
+                  <div className="flex w-full flex-col gap-1">
                     <Text type="secondary">{t("paymentInfo.item1")}</Text>
                     <Text type="secondary">{t("paymentInfo.item2")}</Text>
                     <Text type="secondary">{t("paymentInfo.item3")}</Text>
                     <Text type="secondary">{t("paymentInfo.item4")}</Text>
-                  </Space>
+                  </div>
                 </AppCard>
               </Col>
             </Row>
 
-            <Space>
+            <div className="flex flex-wrap gap-2">
               <Link href="/subscription">
                 <Button>{t("viewManageCta")}</Button>
               </Link>
               <Button type="link" onClick={() => router.back()}>
                 {t("backCta")}
               </Button>
-            </Space>
+            </div>
           </>
         )}
-      </Space>
+      </div>
     </div>
   );
 }
