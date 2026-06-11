@@ -160,7 +160,7 @@ export function ProblemRow({
               text={statusLabel}
             />
             {disabled && row.lifecycle_reason ? (
-              <Text type="secondary" style={{ fontSize: 12 }}>
+              <Text className="problem-list-row__meta-note" type="secondary">
                 {row.lifecycle_reason}
               </Text>
             ) : null}
@@ -171,7 +171,7 @@ export function ProblemRow({
                   lastLabel ? t("lastAttempt", { date: lastLabel }) : undefined
                 }
               >
-                <Text type="secondary" style={{ fontSize: 12 }}>
+                <Text className="problem-list-row__meta-note" type="secondary">
                   {t("attemptCount", { count: attemptCount })}
                   {lastLabel ? ` · ${lastLabel}` : ""}
                 </Text>

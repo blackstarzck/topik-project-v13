@@ -99,7 +99,7 @@ export function FilterChips({
 
   return (
     <Space className="problem-list-filter-chips" wrap size={4} align="center">
-      <Text type="secondary" style={{ fontSize: 12 }}>
+      <Text className="problem-list-filter-chips__label" type="secondary">
         {t("appliedFilters")}
       </Text>
       {visible.map((c) => (
