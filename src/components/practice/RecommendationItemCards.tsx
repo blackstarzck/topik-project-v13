@@ -1,6 +1,7 @@
 "use client";
 
-import { Button, Space, Tag, Typography } from "antd";
+import type { ReactNode } from "react";
+import { Button, Typography } from "antd";
 import { ArrowRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -17,6 +18,27 @@ function ctaHref(card: RecommendationItemCard): string {
   });
 }
 
+function RecommendationBadge({
+  children,
+  tone = "neutral",
+}: {
+  children: ReactNode;
+  tone?: "neutral" | "primary";
+}) {
+  return (
+    <span
+      className={[
+        "inline-flex w-fit items-center rounded-full border px-3 py-1 text-xs font-semibold",
+        tone === "primary"
+          ? "border-primary bg-primary text-background"
+          : "border-border bg-surface text-text-secondary",
+      ].join(" ")}
+    >
+      {children}
+    </span>
+  );
+}
+
 /** C-01 §3 — 취약 태그 근거 (recommendation_items.weakness_tags). */
 function WeaknessTags({ tags }: { tags: string[] }) {
   const t = useTranslations("practice.recommendations");
@@ -27,9 +49,7 @@ function WeaknessTags({ tags }: { tags: string[] }) {
         {t("weaknessTagsLabel")}
       </Text>
       {tags.slice(0, 4).map((tag) => (
-        <Tag key={tag} className="m-0">
-          {tag}
-        </Tag>
+        <RecommendationBadge key={tag}>{tag}</RecommendationBadge>
       ))}
     </div>
   );
@@ -51,22 +71,22 @@ export function PrimaryRecommendationCard({
     <AppCard
       className="h-full"
       title={
-        <Space size={8} wrap>
-          <Tag className="m-0 border-primary bg-primary text-background">
+        <div className="flex flex-wrap gap-2">
+          <RecommendationBadge tone="primary">
             {t("primaryBadge")}
-          </Tag>
+          </RecommendationBadge>
           {card.questionNo ? (
-            <Tag className="m-0">
+            <RecommendationBadge>
               {tCommon("questionNo", { no: card.questionNo })}
-            </Tag>
+            </RecommendationBadge>
           ) : null}
-        </Space>
+        </div>
       }
       extra={
         card.estimatedMinutes ? (
-          <Tag className="m-0">
+          <RecommendationBadge>
             {tCommon("minutes", { minutes: card.estimatedMinutes })}
-          </Tag>
+          </RecommendationBadge>
         ) : null
       }
     >
@@ -112,9 +132,9 @@ export function SecondaryRecommendationCard({
       }
       extra={
         card.estimatedMinutes ? (
-          <Tag className="m-0">
+          <RecommendationBadge>
             {tCommon("minutes", { minutes: card.estimatedMinutes })}
-          </Tag>
+          </RecommendationBadge>
         ) : null
       }
     >

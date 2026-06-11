@@ -1,6 +1,7 @@
 "use client";
 
-import { Alert, Button, Spin, Tag, Typography } from "antd";
+import type { ReactNode } from "react";
+import { Alert, Button, Spin, Typography } from "antd";
 import { ArrowRight, CheckCircle2, Clock3, Target } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -27,6 +28,27 @@ const FALLBACK_META: Record<QuestionNo, { minutes: number }> = {
   54: { minutes: 50 },
 };
 
+function RecommendationBadge({
+  children,
+  tone = "neutral",
+}: {
+  children: ReactNode;
+  tone?: "neutral" | "primary";
+}) {
+  return (
+    <span
+      className={[
+        "inline-flex w-fit items-center rounded-full border px-3 py-1 text-xs font-semibold",
+        tone === "primary"
+          ? "border-primary bg-primary text-background"
+          : "border-border bg-surface text-text-secondary",
+      ].join(" ")}
+    >
+      {children}
+    </span>
+  );
+}
+
 function FallbackRecommendationPanel({
   questionNo,
   reasonSummary,
@@ -44,9 +66,9 @@ function FallbackRecommendationPanel({
     <AppCard>
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="flex min-w-0 flex-col justify-center gap-4">
-          <Tag className="m-0 w-fit border-primary bg-primary text-background">
+          <RecommendationBadge tone="primary">
             {t("primaryBadge")}
-          </Tag>
+          </RecommendationBadge>
           <h2 className="m-0 text-3xl font-semibold leading-tight text-text">
             {t("fallbackHeroTitle", { type: typeLabel })}
           </h2>
@@ -138,7 +160,7 @@ export function RecommendationsView() {
         subtitle={t("subtitle")}
       />
 
-      <div className="overflow-hidden rounded-default border border-border bg-background px-3 pt-2">
+      <div className="overflow-hidden rounded-3xl border border-border bg-background px-3 pt-2">
         <ProblemTypeTabs active={active} onChange={updateType} />
       </div>
 
