@@ -38,6 +38,18 @@ body {
   font-family: var(--app-font-family);
 }
 
+.app-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .app-page {
   display: grid;
   min-height: 100vh;
@@ -5744,6 +5756,21 @@ body {
 .notification-day-tag--disabled.ant-tag {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.auth-error-stack.ant-space,
+.auth-error-actions.ant-space {
+  width: 100%;
+}
+
+.auth-error-title.ant-typography,
+.auth-error-message.ant-typography,
+.auth-error-escape.ant-typography {
+  margin-bottom: 0;
+}
+
+.auth-error-escape.ant-typography {
+  text-align: center;
 }
 
 .analysis-loading-shell {
