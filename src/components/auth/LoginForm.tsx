@@ -235,7 +235,6 @@ export function LoginForm({
         />
       )}
       <Segmented
-        size="large"
         block
         value={mode}
         onChange={(v) => {
@@ -279,7 +278,6 @@ export function LoginForm({
                 ]}
               >
                 <Input
-                  size="large"
                   autoComplete="email"
                   placeholder={t("emailPlaceholder")}
                   prefix={
@@ -299,7 +297,6 @@ export function LoginForm({
                 rules={[{ required: true, message: t("passwordRequired") }]}
               >
                 <Input.Password
-                  size="large"
                   autoComplete="current-password"
                   placeholder={t("passwordPlaceholder")}
                   prefix={
@@ -337,7 +334,6 @@ export function LoginForm({
               ]}
             >
               <Input
-                size="large"
                 autoComplete="email"
                 placeholder={t("emailPlaceholder")}
                 prefix={
@@ -357,7 +353,6 @@ export function LoginForm({
         <div className="auth-login-action-panel">
           <Form.Item className="auth-form-submit">
             <Button
-              size="large"
               type="primary"
               htmlType="submit"
               block
@@ -374,7 +369,6 @@ export function LoginForm({
           </Divider>
 
           <Button
-            size="large"
             block
             htmlType="button"
             onClick={() => void handleGoogleLogin()}

@@ -135,7 +135,6 @@ export function SignUpForm({
           ]}
         >
           <Input
-            size="large"
             autoComplete="name"
             placeholder={t("namePlaceholder")}
             onFocus={() => onTypingChange?.(true)}
@@ -153,7 +152,6 @@ export function SignUpForm({
           ]}
         >
           <Input
-            size="large"
             autoComplete="email"
             placeholder="you@example.com"
             onFocus={() => onTypingChange?.(true)}
@@ -177,7 +175,6 @@ export function SignUpForm({
           ]}
         >
           <Input.Password
-            size="large"
             autoComplete="new-password"
             onFocus={() => onTypingChange?.(true)}
             onBlur={() => onTypingChange?.(false)}
@@ -209,7 +206,6 @@ export function SignUpForm({
           ]}
         >
           <Input.Password
-            size="large"
             autoComplete="new-password"
             onFocus={() => onTypingChange?.(true)}
             onBlur={() => onTypingChange?.(false)}
@@ -256,7 +252,6 @@ export function SignUpForm({
 
         <Form.Item className="auth-form-submit">
           <Button
-            size="large"
             type="primary"
             htmlType="submit"
             block
@@ -274,7 +269,6 @@ export function SignUpForm({
       </Divider>
 
       <Button
-        size="large"
         block
         onClick={() => void handleGoogleSignUp()}
         loading={googleSubmitting}
