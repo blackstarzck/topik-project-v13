@@ -1,6 +1,6 @@
 "use client";
 
-import { Alert, Button, Space, Tooltip, Typography, notification } from "antd";
+import { Alert, Button, Tooltip, Typography, notification } from "antd";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -8,7 +8,6 @@ import { AppCard } from "@/components/shared/AppCard";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { logStudyEvent } from "@/lib/events/study-events";
 import type { ComparisonMetrics } from "@/lib/writing/comparison-service";
-import { SPACING } from "@/theme/spacing";
 import { ComparisonKpiBlock } from "./ComparisonKpiBlock";
 import { DimensionComparisonCards } from "./DimensionComparisonCards";
 import { ScoreComparisonChart, type ChartDatum } from "./ScoreComparisonChart";
@@ -97,7 +96,7 @@ export function ComparisonReportView({
   }
 
   return (
-    <Space orientation="vertical" size="large" style={{ width: "100%" }}>
+    <div className="flex w-full flex-col gap-6">
       <PageHeader
         title={t("heading")}
         actions={
@@ -133,7 +132,7 @@ export function ComparisonReportView({
           />
         ) : (
           <>
-            <Paragraph style={{ marginBottom: SPACING.sm }} ellipsis={{ rows: 3 }}>
+            <Paragraph className="mb-2" ellipsis={{ rows: 3 }}>
               {narrative}
             </Paragraph>
             <Text type="secondary">{t("narrativeDisclaimer")}</Text>
@@ -152,10 +151,10 @@ export function ComparisonReportView({
       <SubmissionDiffPanel currentText={currentText} previousText={previousText} />
 
       <AppCard data-testid="comparison-next-actions">
-        <Title level={5} style={{ marginTop: 0 }}>
+        <Title level={5} className="mt-0">
           {t("nextLearningTitle")}
         </Title>
-        <Space wrap>
+        <div className="flex flex-wrap gap-2">
           <Button
             type="primary"
             onClick={() => navigateOnce("next", "/practice/next")}
@@ -191,8 +190,8 @@ export function ComparisonReportView({
               {t("retryProblem")}
             </Button>
           ) : null}
-        </Space>
+        </div>
       </AppCard>
-    </Space>
+    </div>
   );
 }

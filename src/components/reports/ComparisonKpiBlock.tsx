@@ -1,6 +1,6 @@
 "use client";
 
-import { Col, Empty, Row, Statistic, Typography, theme } from "antd";
+import { Col, Empty, Row, Statistic, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { AppCard } from "@/components/shared/AppCard";
 
@@ -20,7 +20,6 @@ export function ComparisonKpiBlock({
   hasPrevious,
 }: Props) {
   const t = useTranslations("reports.kpi");
-  const { token } = theme.useToken();
 
   if (currentScore === null) {
     return (
@@ -29,15 +28,6 @@ export function ComparisonKpiBlock({
       </AppCard>
     );
   }
-
-  const deltaColor =
-    scoreDelta === null
-      ? token.colorText
-      : scoreDelta > 0
-        ? token.colorSuccess
-        : scoreDelta < 0
-          ? token.colorError
-          : token.colorText;
 
   return (
     <AppCard data-testid="comparison-kpi-block">
@@ -55,7 +45,6 @@ export function ComparisonKpiBlock({
               title={t("improvement")}
               value={Math.abs(scoreDelta)}
               precision={1}
-              styles={{ content: { color: deltaColor } }}
               prefix={
                 <span aria-hidden>
                   {scoreDelta > 0 ? "+" : scoreDelta < 0 ? "-" : "="}
@@ -68,7 +57,7 @@ export function ComparisonKpiBlock({
               title={t("improvement")}
               value={0}
               formatter={() => (
-                <Text type="secondary" style={{ fontSize: token.fontSizeLG }}>
+                <Text type="secondary" className="text-lg">
                   {t("noComparison")}
                 </Text>
               )}
@@ -84,10 +73,7 @@ export function ComparisonKpiBlock({
               hasPrevious
                 ? undefined
                 : () => (
-                    <Text
-                      type="secondary"
-                      style={{ fontSize: token.fontSizeLG }}
-                    >
+                    <Text type="secondary" className="text-lg">
                       {t("singleResult")}
                     </Text>
                   )

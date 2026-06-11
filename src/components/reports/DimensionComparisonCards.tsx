@@ -35,12 +35,6 @@ function trendOf(delta: number | null): Trend {
   return "hold";
 }
 
-const TREND_COLOR: Record<Trend, string> = {
-  up: "green",
-  down: "red",
-  hold: "default",
-};
-
 export function DimensionComparisonCards({
   deltas,
   hasPrevious,
@@ -75,8 +69,8 @@ export function DimensionComparisonCards({
             <Col key={dimension} xs={12} md={6}>
               <AppCard size="small" data-testid="comparison-dimension-card">
                 <Text strong>{dimLabel(dimension)}</Text>
-                <div style={{ marginTop: SPACING.xs }}>
-                  <Tag color="blue">
+                <div className="mt-1">
+                  <Tag>
                     {score === null ? EMPTY_VALUE : t("scorePoint", { value: score })}
                   </Tag>
                 </div>
@@ -109,8 +103,8 @@ export function DimensionComparisonCards({
             <Col key={dimension} xs={12} md={6}>
               <AppCard size="small" data-testid="comparison-dimension-card">
                 <Text strong>{dimLabel(dimension)}</Text>
-                <div style={{ marginTop: SPACING.xs }}>
-                  <Tag color={TREND_COLOR[trend]}>
+                <div className="mt-1">
+                  <Tag>
                     {trendLabel[trend]}
                     {delta !== null && delta !== 0
                       ? ` ${delta > 0 ? "+" : ""}${delta}`

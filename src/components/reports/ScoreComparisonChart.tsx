@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Empty, Space, Table, Typography, theme } from "antd";
+import { Button, Empty, Table, Typography, theme } from "antd";
 import { useTranslations } from "next-intl";
 import {
   Bar,
@@ -27,8 +27,6 @@ const DIMENSION_KEYS = [
   "topic_fit",
 ] as const;
 
-const CHART_MIN_WIDTH = 360;
-const CHART_HEIGHT = 280;
 const AXIS_FONT_SIZE = 12;
 const CHART_MARGIN = {
   top: SPACING.sm,
@@ -120,8 +118,8 @@ export function ScoreComparisonChart({ data, hasPrevious }: Props) {
 
   return (
     <AppCard data-testid="comparison-chart">
-      <Space style={{ width: "100%", justifyContent: "space-between" }}>
-        <Title level={5} style={{ marginTop: 0 }}>
+      <div className="flex w-full flex-wrap items-center justify-between gap-2">
+        <Title level={5} className="mt-0">
           {t("title")}
         </Title>
         <Button
@@ -132,9 +130,9 @@ export function ScoreComparisonChart({ data, hasPrevious }: Props) {
         >
           {t("viewAsTable")}
         </Button>
-      </Space>
-      <div style={{ width: "100%", overflowX: "auto" }}>
-        <div style={{ minWidth: CHART_MIN_WIDTH, height: CHART_HEIGHT }}>
+      </div>
+      <div className="w-full overflow-x-auto">
+        <div className="h-72 min-w-96">
           <ChartBody
             chartData={chartData}
             hasPrevious={hasPrevious}
