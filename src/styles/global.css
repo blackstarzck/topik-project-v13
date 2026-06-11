@@ -5628,6 +5628,105 @@ body {
   margin-bottom: 12px;
 }
 
+.weakness-locked-card.app-card {
+  text-align: center;
+}
+
+.weakness-locked-icon {
+  display: inline-flex;
+  width: 48px;
+  height: 48px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--app-color-border);
+  border-radius: 50%;
+  background: var(--app-color-bg-container);
+  color: var(--app-color-primary);
+}
+
+.weakness-locked-title {
+  margin: 8px 0 0;
+}
+
+.weakness-locked-copy {
+  color: var(--app-color-text-secondary);
+}
+
+.weakness-locked-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.weakness-lock-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 16px;
+  border-radius: 14px;
+  font-weight: 600;
+}
+
+.weakness-lock-action--primary,
+.weakness-lock-action--primary:hover {
+  background: var(--app-color-primary);
+  color: var(--app-color-bg-container);
+}
+
+.weakness-lock-action--secondary,
+.weakness-lock-action--secondary:hover {
+  border: 1px solid var(--app-color-border);
+  color: var(--app-color-text);
+}
+
+.weakness-view-stack.ant-space,
+.weakness-insight-stack.ant-space,
+.weakness-recommendation-stack.ant-space,
+.weakness-rec-card-stack.ant-space {
+  width: 100%;
+}
+
+.weakness-view-title.ant-typography {
+  margin-bottom: 4px;
+}
+
+.weakness-view-subtitle.ant-typography {
+  margin: 0;
+}
+
+.weakness-section-title.ant-typography {
+  margin-bottom: 0;
+}
+
+.weakness-tab-summary.ant-typography {
+  margin-top: 12px;
+}
+
+.weakness-diagnostic-note.ant-typography,
+.weakness-diagnostic-updated.ant-typography {
+  font-size: 12px;
+}
+
+.weakness-diagnostic-tag.ant-tag {
+  font-size: 14px;
+  padding: 4px 8px;
+}
+
+.weakness-rec-card--locked.app-card {
+  opacity: 0.7;
+  background: var(--app-color-bg-layout);
+}
+
+.weakness-rec-reason.ant-typography {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .analysis-loading-shell {
   position: relative;
   display: grid;

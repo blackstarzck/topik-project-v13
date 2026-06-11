@@ -205,9 +205,7 @@ describe("WeaknessView", () => {
     const reason = screen.getByText(
       "긴 추천 이유도 카드 안에서는 한 줄로만 표시합니다.",
     ) as HTMLElement;
-    expect(reason.style.whiteSpace).toBe("nowrap");
-    expect(reason.style.textOverflow).toBe("ellipsis");
-    expect(reason.style.overflow).toBe("hidden");
+    expect(reason.className).toContain("weakness-rec-reason");
   });
 
   // Regression: the data layer (src/lib/practice/weakness.ts WEAKNESS_DIMENSIONS)

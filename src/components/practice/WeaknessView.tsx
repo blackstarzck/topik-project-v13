@@ -180,12 +180,12 @@ export function WeaknessView({
   }
 
   return (
-    <Space orientation="vertical" size="large" style={{ width: "100%" }}>
+    <Space orientation="vertical" size="large" className="weakness-view-stack">
       <div>
-        <Title level={3} style={{ marginBottom: 4 }}>
+        <Title level={3} className="weakness-view-title">
           {t("heading")}
         </Title>
-        <Paragraph type="secondary" style={{ margin: 0 }}>
+        <Paragraph type="secondary" className="weakness-view-subtitle">
           {t("subtitle")}
         </Paragraph>
       </div>
@@ -199,7 +199,11 @@ export function WeaknessView({
 
       {leadingWeakDimension && leadingInsight ? (
         <AppCard title={t("insightCardTitle")}>
-          <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+          <Space
+            orientation="vertical"
+            size="middle"
+            className="weakness-insight-stack"
+          >
             <Alert
               showIcon
               type="info"
@@ -232,8 +236,12 @@ export function WeaknessView({
 
       <Row gutter={[24, 24]}>
         <Col xs={24} md={24}>
-          <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
-            <Title level={4} style={{ marginBottom: 0 }}>
+          <Space
+            orientation="vertical"
+            size="middle"
+            className="weakness-recommendation-stack"
+          >
+            <Title level={4} className="weakness-section-title">
               {t("recommendationsTitle")}
             </Title>
             {recommendations.length === 0 ? (
@@ -243,6 +251,11 @@ export function WeaknessView({
                 {visibleRecommendations.map((rec) => (
                   <Col key={rec.problem_id} xs={24}>
                     <AppCard
+                      className={
+                        rec.locked
+                          ? "weakness-rec-card weakness-rec-card--locked"
+                          : "weakness-rec-card"
+                      }
                       hoverable={!rec.locked}
                       onClick={
                         rec.locked
@@ -250,16 +263,11 @@ export function WeaknessView({
                           : () => handleRecommendationClick(rec)
                       }
                       data-testid={`weakness-rec-${rec.problem_id}`}
-                      style={
-                        rec.locked
-                          ? { opacity: 0.7, background: "#fafafa" }
-                          : undefined
-                      }
                     >
                       <Space
                         orientation="vertical"
                         size="small"
-                        style={{ width: "100%" }}
+                        className="weakness-rec-card-stack"
                       >
                         <Text type="secondary">
                           {rec.locked ? "🔒 " : ""}
@@ -293,13 +301,7 @@ export function WeaknessView({
                                   rec,
                                   leadingWeakLabel,
                                 )}
-                                style={{
-                                  display: "block",
-                                  maxWidth: "100%",
-                                  overflow: "hidden",
-                                  textOverflow: "ellipsis",
-                                  whiteSpace: "nowrap",
-                                }}
+                                className="weakness-rec-reason"
                               >
                                 {recommendationReason(rec, leadingWeakLabel)}
                               </Text>

@@ -60,56 +60,32 @@ export default async function PracticeWeaknessPage() {
     return (
       <div className="app-workspace-narrow" data-testid="weakness-locked-shell">
         <PageHeader title={t("pageTitle")} />
-        <AppCard style={{ textAlign: "center" }} data-testid="weakness-locked-card">
+        <AppCard
+          className="weakness-locked-card"
+          data-testid="weakness-locked-card"
+        >
           <span
             aria-hidden="true"
-            style={{
-              display: "inline-flex",
-              width: 48,
-              height: 48,
-              alignItems: "center",
-              justifyContent: "center",
-              border: "1px solid #dbe4f0",
-              borderRadius: 24,
-              background: "#f7fafc",
-              color: "#1668dc",
-            }}
+            className="weakness-locked-icon"
           >
             <LockKeyhole size={24} strokeWidth={2} />
           </span>
-          <h2 style={{ marginTop: 8 }}>{t("lockTitle")}</h2>
-          <p style={{ color: "rgba(0,0,0,0.45)" }}>
+          <h2 className="weakness-locked-title">{t("lockTitle")}</h2>
+          <p className="weakness-locked-copy">
             {t("lockBody", { plan: planLabel ?? t("planFree") })}
           </p>
-          <div
-            style={{
-              display: "flex",
-              gap: 8,
-              justifyContent: "center",
-              flexWrap: "wrap",
-              marginTop: 16,
-            }}
-          >
+          <div className="weakness-locked-actions">
             <Link
               data-testid="weakness-upgrade-plan"
               href="/paywall"
-              style={{
-                background: "#1677ff",
-                color: "#fff",
-                padding: "6px 16px",
-                borderRadius: 6,
-              }}
+              className="weakness-lock-action weakness-lock-action--primary"
             >
               {t("upgradePlan")}
             </Link>
             <Link
               data-testid="weakness-view-problems"
               href="/practice/problems"
-              style={{
-                border: "1px solid #d9d9d9",
-                padding: "6px 16px",
-                borderRadius: 6,
-              }}
+              className="weakness-lock-action weakness-lock-action--secondary"
             >
               {t("viewProblemList")}
             </Link>
