@@ -5773,6 +5773,56 @@ body {
   text-align: center;
 }
 
+.auth-mascot {
+  text-align: center;
+}
+
+.auth-mascot-image,
+.auth-mascot-glyph {
+  display: inline-block;
+}
+
+.auth-mascot-glyph {
+  font-size: 56px;
+  line-height: 1;
+}
+
+.auth-mascot-glyph--compact {
+  font-size: 48px;
+}
+
+.auth-mascot-caption {
+  margin-top: 8px;
+}
+
+.auth-mascot-caption-text.ant-typography,
+.verify-email-help-heading.ant-typography,
+.verify-email-help-body.ant-typography {
+  font-size: 13px;
+}
+
+.verify-email-stack.ant-space {
+  width: 100%;
+}
+
+.verify-email-title.ant-typography,
+.verify-email-body.ant-typography,
+.verify-email-escape.ant-typography {
+  margin-bottom: 0;
+}
+
+.verify-email-divider.ant-divider {
+  margin: 4px 0;
+}
+
+.verify-email-help-body.ant-typography {
+  margin: 4px 0 8px;
+}
+
+.verify-email-escape.ant-typography {
+  text-align: center;
+}
+
 .analysis-loading-shell {
   position: relative;
   display: grid;

@@ -42,7 +42,7 @@ export function AuthMascot({
   const showImage = Boolean(src) && !imageFailed;
 
   return (
-    <div style={{ textAlign: "center" }} data-testid="auth-mascot">
+    <div className="auth-mascot" data-testid="auth-mascot">
       {showImage ? (
         // eslint-disable-next-line @next/next/no-img-element -- runtime asset w/ onError fallback
         <img
@@ -50,21 +50,25 @@ export function AuthMascot({
           alt={alt}
           width={size}
           height={size}
-          style={{ display: "inline-block" }}
+          className="auth-mascot-image"
           onError={() => setImageFailed(true)}
         />
       ) : (
         <span
           role="img"
           aria-label={alt}
-          style={{ fontSize: size, lineHeight: 1, display: "inline-block" }}
+          className={
+            size <= 48
+              ? "auth-mascot-glyph auth-mascot-glyph--compact"
+              : "auth-mascot-glyph"
+          }
         >
           {emoji}
         </span>
       )}
       {caption ? (
-        <div style={{ marginTop: 8 }}>
-          <Text type="secondary" style={{ fontSize: 13 }}>
+        <div className="auth-mascot-caption">
+          <Text type="secondary" className="auth-mascot-caption-text">
             {caption}
           </Text>
         </div>
