@@ -58,7 +58,11 @@ export function ReferenceMaterials({
 
   return (
     <AppCard size="small" title={t("cardTitle")}>
-      <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+      <Space
+        className="writing-reference-stack"
+        orientation="vertical"
+        size="middle"
+      >
         {materials.map((material) => (
           <MaterialView key={material.id} material={material} />
         ))}
@@ -87,16 +91,16 @@ function MaterialView({ material }: { material: NormalizedReferenceMaterial }) {
     return (
       <div>
         <Text strong>{material.title}</Text>
-        <dl style={{ display: "grid", gap: 4, margin: "8px 0 0" }}>
+        <dl className="writing-reference-note-list">
           {material.rows.map((row) => (
             <div
+              className="writing-reference-note-row"
               key={`${row.label}-${row.value}`}
-              style={{ display: "grid", gridTemplateColumns: "96px 1fr", gap: 8 }}
             >
               <dt>
                 <Text type="secondary">{row.label}</Text>
               </dt>
-              <dd style={{ margin: 0 }}>{row.value}</dd>
+              <dd className="writing-reference-note-value">{row.value}</dd>
             </div>
           ))}
         </dl>
@@ -106,7 +110,7 @@ function MaterialView({ material }: { material: NormalizedReferenceMaterial }) {
   return (
     <div>
       <Text strong>{material.title}</Text>
-      <Text style={{ display: "block", whiteSpace: "pre-line" }}>
+      <Text className="writing-reference-text">
         {material.text}
       </Text>
     </div>
@@ -149,8 +153,8 @@ function ChartView({ chart }: { chart: NormalizedChart }) {
 
   if (chart.chartType === "pie" || chart.chartType === "donut") {
     return (
-      <div style={{ width: "100%" }}>
-        <div style={{ width: "100%", height: 240 }}>
+      <div className="writing-reference-chart">
+        <div className="writing-reference-chart__frame">
           <ResponsiveContainer>
             <PieChart>
               <Pie
@@ -174,7 +178,7 @@ function ChartView({ chart }: { chart: NormalizedChart }) {
           </ResponsiveContainer>
         </div>
         {caption ? (
-          <Text type="secondary" style={{ fontSize: 12 }}>
+          <Text className="writing-reference-caption" type="secondary">
             {caption}
           </Text>
         ) : null}
@@ -184,8 +188,8 @@ function ChartView({ chart }: { chart: NormalizedChart }) {
 
   if (chart.chartType === "line") {
     return (
-      <div style={{ width: "100%" }}>
-        <div style={{ width: "100%", height: 240 }}>
+      <div className="writing-reference-chart">
+        <div className="writing-reference-chart__frame">
           <ResponsiveContainer>
             <LineChart data={rows}>
               <XAxis dataKey="name" />
@@ -205,7 +209,7 @@ function ChartView({ chart }: { chart: NormalizedChart }) {
           </ResponsiveContainer>
         </div>
         {caption ? (
-          <Text type="secondary" style={{ fontSize: 12 }}>
+          <Text className="writing-reference-caption" type="secondary">
             {caption}
           </Text>
         ) : null}
@@ -214,8 +218,8 @@ function ChartView({ chart }: { chart: NormalizedChart }) {
   }
 
   return (
-    <div style={{ width: "100%" }}>
-      <div style={{ width: "100%", height: 240 }}>
+    <div className="writing-reference-chart">
+      <div className="writing-reference-chart__frame">
         <ResponsiveContainer>
           <BarChart data={rows}>
             <XAxis dataKey="name" />
@@ -234,7 +238,7 @@ function ChartView({ chart }: { chart: NormalizedChart }) {
         </ResponsiveContainer>
       </div>
       {caption ? (
-        <Text type="secondary" style={{ fontSize: 12 }}>
+        <Text className="writing-reference-caption" type="secondary">
           {caption}
         </Text>
       ) : null}
@@ -262,11 +266,16 @@ function AssetView({
   if (asset.assetType === "audio") {
     return (
       <div>
-        <audio controls src={asset.url} aria-label={alt} style={{ width: "100%" }}>
+        <audio
+          className="writing-reference-audio"
+          controls
+          src={asset.url}
+          aria-label={alt}
+        >
           <track kind="captions" />
         </audio>
         {caption ? (
-          <Text type="secondary" style={{ fontSize: 12 }}>
+          <Text className="writing-reference-caption" type="secondary">
             {caption.slice(0, 40)}
           </Text>
         ) : null}
@@ -277,13 +286,7 @@ function AssetView({
   if (failed) {
     // §3 예외 — 이미지 로드 실패 시 대체 텍스트 + 빈 프레임.
     return (
-      <div
-        style={{
-          border: "1px dashed #d9d9d9",
-          borderRadius: 8,
-          padding: 16,
-        }}
-      >
+      <div className="writing-reference-fallback">
         <Empty
           image={Empty.PRESENTED_IMAGE_SIMPLE}
           description={t("imageLoadFailed", { alt })}
@@ -295,14 +298,14 @@ function AssetView({
   return (
     <div>
       <Image
+        className="writing-reference-image"
         src={asset.url}
         alt={alt}
-        style={{ maxWidth: "100%", height: "auto" }}
         onError={() => setFailed(true)}
         preview={{ mask: t("zoom") }}
       />
       {caption ? (
-        <Text type="secondary" style={{ display: "block", fontSize: 12 }}>
+        <Text className="writing-reference-caption" type="secondary">
           {caption.slice(0, 40)}
         </Text>
       ) : null}

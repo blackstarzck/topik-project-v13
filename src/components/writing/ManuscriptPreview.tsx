@@ -2,6 +2,7 @@
 
 import { Typography } from "antd";
 import { useTranslations } from "next-intl";
+import type { CSSProperties } from "react";
 
 const { Text, Title } = Typography;
 
@@ -27,38 +28,23 @@ export function ManuscriptPreview({ text, charsPerLine = 20 }: Props) {
   while (lines.length < 5) {
     lines.push([]);
   }
+  const gridStyle = {
+    "--writing-manuscript-columns": charsPerLine,
+  } as CSSProperties;
 
   return (
-    <div aria-label={t("manuscriptTitle")}>
+    <div
+      className="writing-manuscript"
+      style={gridStyle}
+      aria-label={t("manuscriptTitle")}
+    >
       <Title level={5}>{t("manuscriptTitle")}</Title>
       <Text type="secondary">{t("manuscriptPerLine", { charsPerLine })}</Text>
-      <div
-        style={{
-          marginTop: 8,
-          display: "grid",
-          gap: 2,
-          fontFamily: "monospace",
-        }}
-      >
+      <div className="writing-manuscript__grid">
         {lines.map((row, rowIdx) => (
-          <div
-            key={rowIdx}
-            style={{
-              display: "grid",
-              gridTemplateColumns: `repeat(${charsPerLine}, 1fr)`,
-              gap: 2,
-            }}
-          >
+          <div className="writing-manuscript__row" key={rowIdx}>
             {Array.from({ length: charsPerLine }).map((_, colIdx) => (
-              <div
-                key={colIdx}
-                style={{
-                  border: "1px solid #d9d9d9",
-                  textAlign: "center",
-                  padding: "2px 0",
-                  minHeight: 24,
-                }}
-              >
+              <div className="writing-manuscript__cell" key={colIdx}>
                 {row[colIdx] ?? ""}
               </div>
             ))}

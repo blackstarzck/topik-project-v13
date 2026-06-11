@@ -22,9 +22,9 @@ export function ChecklistRow({ label, status, onChange }: Props) {
   ];
   return (
     <Space
+      className="writing-checklist-row"
       orientation="vertical"
       size={2}
-      style={{ width: "100%", marginBottom: 12 }}
     >
       <Text>{label}</Text>
       <Segmented

@@ -102,8 +102,8 @@ export function AutosaveWarningModal({
     >
       <div data-testid="autosave-warning-modal">
         <Paragraph
+          className="autosave-warning-body"
           data-testid="autosave-warning-body"
-          style={{ whiteSpace: "pre-line" }}
         >
           {body}
         </Paragraph>
@@ -111,22 +111,22 @@ export function AutosaveWarningModal({
         {/* §3 예외 — 네트워크 끊김/복구 불가 별도 경고 문구. */}
         {warn ? (
           <Alert
+            className="autosave-warning-alert"
             data-testid="autosave-warning-alert"
             type="warning"
             showIcon
-            style={{ marginBottom: 12 }}
             message={warn}
           />
         ) : null}
 
         {/* §4 — 마지막 저장 시각(필수) + 복구 상태(가능/불가/확인중). */}
         <Descriptions
+          className="autosave-warning-state"
           data-testid="autosave-warning-state"
           size="small"
           column={1}
           bordered
           colon={false}
-          style={{ marginBottom: 12 }}
         >
           <Descriptions.Item label={t("lastSavedLabel")}>
             <span data-testid="autosave-warning-last-saved">{savedLabel}</span>
@@ -141,16 +141,16 @@ export function AutosaveWarningModal({
         {/* §4 예외 — 저장 정보 없음/복구 불가 시 도움말 링크. */}
         {recovery === "impossible" ? (
           <Paragraph
+            className="autosave-warning-no-backup"
             data-testid="autosave-warning-no-backup"
             type="secondary"
-            style={{ fontSize: 12 }}
           >
             {t("noBackup")}{" "}
             <Link href={"/library" as never}>{t("backupHelpLink")}</Link>
           </Paragraph>
         ) : null}
 
-        <Space orientation="vertical" style={{ width: "100%" }}>
+        <Space className="autosave-warning-actions" orientation="vertical">
           <Button block data-testid="autosave-warning-keep" onClick={onKeep}>
             {t("keepAutosave")}
           </Button>

@@ -4994,6 +4994,128 @@ body {
   gap: 4px;
 }
 
+.writing-editor-stack.ant-space,
+.writing-conditions-stack.ant-space,
+.writing-help-stack.ant-space,
+.writing-reference-stack.ant-space,
+.writing-prompt-stack.ant-space,
+.autosave-warning-actions.ant-space {
+  width: 100%;
+}
+
+.writing-checklist-row.ant-space {
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.autosave-warning-body.ant-typography,
+.writing-prompt-copy.ant-typography,
+.writing-reference-text.ant-typography {
+  white-space: pre-line;
+}
+
+.autosave-warning-alert.ant-alert,
+.autosave-warning-state.ant-descriptions {
+  margin-bottom: 12px;
+}
+
+.autosave-warning-no-backup.ant-typography,
+.writing-editor-status-note.ant-typography,
+.writing-reference-caption.ant-typography {
+  font-size: 12px;
+}
+
+.writing-help-copy.ant-typography,
+.writing-prompt-copy.ant-typography,
+.writing-prompt-paragraph.ant-typography {
+  margin: 0;
+}
+
+.writing-prompt-list {
+  margin: 0;
+  padding-inline-start: 20px;
+}
+
+.writing-prompt-list--offset {
+  margin-top: 4px;
+}
+
+.writing-section-editor__input.ant-input {
+  margin-top: 8px;
+}
+
+.writing-manuscript__grid {
+  display: grid;
+  gap: 2px;
+  margin-top: 8px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+}
+
+.writing-manuscript__row {
+  display: grid;
+  grid-template-columns: repeat(var(--writing-manuscript-columns, 20), 1fr);
+  gap: 2px;
+}
+
+.writing-manuscript__cell {
+  min-height: 24px;
+  border: 1px solid var(--app-color-border);
+  padding: 2px 0;
+  text-align: center;
+}
+
+.writing-reference-note-list {
+  display: grid;
+  gap: 4px;
+  margin: 8px 0 0;
+}
+
+.writing-reference-note-row {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 8px;
+}
+
+.writing-reference-note-value {
+  margin: 0;
+}
+
+.writing-reference-chart,
+.writing-reference-audio {
+  width: 100%;
+}
+
+.writing-reference-chart__frame {
+  width: 100%;
+  height: 240px;
+}
+
+.writing-reference-caption.ant-typography {
+  display: block;
+}
+
+.writing-reference-fallback {
+  border: 1px dashed var(--app-color-border);
+  border-radius: var(--app-radius);
+  padding: 16px;
+}
+
+.writing-reference-image {
+  max-width: 100%;
+  height: auto;
+}
+
+.writing-essay-editor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.writing-editor-actions.ant-space {
+  align-self: flex-start;
+}
+
 .analysis-loading-shell {
   position: relative;
   display: grid;
