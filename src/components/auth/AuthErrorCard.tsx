@@ -12,7 +12,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { App, Button, Form, Input, Space, Typography } from "antd";
+import { App, Button, Form, Input, Typography } from "antd";
 
 import { AppCard } from "@/components/shared/AppCard";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
@@ -177,11 +177,11 @@ export function AuthErrorCard() {
       aria-live="polite"
       data-testid={`auth-error-card-${reason}`}
     >
-      <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
-        <Title level={3} style={{ marginBottom: 0 }}>
+      <div className="flex w-full flex-col gap-4">
+        <Title level={3} className="!mb-0">
           {reasonTitle}
         </Title>
-        <Paragraph style={{ marginBottom: 0 }}>{reasonMessage}</Paragraph>
+        <Paragraph className="!mb-0">{reasonMessage}</Paragraph>
 
         {content.showsEmailField && (
           <Form layout="vertical">
@@ -204,7 +204,7 @@ export function AuthErrorCard() {
           </Text>
         )}
 
-        <Space orientation="vertical" size="small" style={{ width: "100%" }}>
+        <div className="flex w-full flex-col gap-2">
           <Button
             type="primary"
             block
@@ -228,12 +228,12 @@ export function AuthErrorCard() {
               {t(`${reason}.secondaryLabel` as Parameters<typeof t>[0])}
             </Button>
           )}
-        </Space>
+        </div>
 
         {/* §6 escape routes — primary/secondary와 같은 목적지(href)는 제외해
             한 화면에 같은 곳으로 가는 affordance가 중복되지 않게 한다. */}
         <Paragraph
-          style={{ marginBottom: 0, textAlign: "center" }}
+          className="!mb-0 text-center"
           data-testid="auth-error-escape"
         >
           {ESCAPE_LINKS.filter((link) => {
@@ -249,7 +249,7 @@ export function AuthErrorCard() {
             </span>
           ))}
         </Paragraph>
-      </Space>
+      </div>
     </AppCard>
   );
 }
