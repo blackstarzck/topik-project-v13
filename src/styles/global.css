@@ -5489,6 +5489,50 @@ body {
   margin-left: 12px;
 }
 
+.paywall-shell,
+.subscription-shell {
+  max-width: 1040px;
+  margin-inline: auto;
+}
+
+.billing-page-stack.ant-space,
+.billing-card-stack.ant-space,
+.paywall-plan-card__body.ant-space,
+.subscription-empty-stack.ant-space {
+  width: 100%;
+}
+
+.paywall-plan-card--recommended.app-card {
+  border-color: var(--app-color-primary);
+}
+
+.paywall-plan-card__price.ant-typography {
+  margin: 0;
+}
+
+.paywall-list {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.billing-footnote.ant-typography,
+.subscription-change-note.ant-typography {
+  font-size: 12px;
+}
+
+.paywall-benefits-action {
+  margin-top: 8px;
+}
+
+.subscription-change-note.ant-typography {
+  margin: 12px 0 0;
+}
+
+.subscription-help-copy.ant-typography,
+.subscription-modal-copy.ant-typography {
+  margin-bottom: 0;
+}
+
 .analysis-loading-shell {
   position: relative;
   display: grid;

@@ -33,15 +33,6 @@ const { Title, Text } = Typography;
 
 const SUPPORT_EMAIL = "support@talkpik.example";
 
-// Content-width cap (matches the prior 1040 layout). The duplicate <main> +
-// padding are dropped — WorkspaceShell's Layout.Content already renders the
-// landmark + 24px padding; only the centered max-width is kept (library page
-// precedent). Hoisted to a module const so the M4 inline-number gate stays green.
-const PAYWALL_CONTENT_STYLE = {
-  maxWidth: 1040, // ai-check: allow-inline-number off-scale content-width cap (px)
-  marginInline: "auto",
-} as const;
-
 type LoadState =
   | { status: "loading" }
   | { status: "has_subscription" }
@@ -115,8 +106,12 @@ export function PaywallShell() {
   }
 
   return (
-    <div data-testid="paywall-shell" style={PAYWALL_CONTENT_STYLE}>
-      <Space orientation="vertical" size="large" style={{ width: "100%" }}>
+    <div className="paywall-shell" data-testid="paywall-shell">
+      <Space
+        className="billing-page-stack"
+        orientation="vertical"
+        size="large"
+      >
         {/* Region 1: 결제 선택 제목. IA 코드는 사용자 화면에 노출하지 않는다. */}
         <div>
           <PageHeader title={t("heading")} subtitle={t("subheading")} />
@@ -167,12 +162,15 @@ export function PaywallShell() {
                   return (
                     <Col key={plan.plan_key} xs={24} md={8}>
                       <AppCard
-                        data-testid={`paywall-plan-${plan.cadence}`}
-                        style={
+                        className={[
+                          "paywall-plan-card",
                           plan.recommended
-                            ? { borderColor: "var(--ant-color-primary)" }
-                            : undefined
-                        }
+                            ? "paywall-plan-card--recommended"
+                            : null,
+                        ]
+                          .filter(Boolean)
+                          .join(" ")}
+                        data-testid={`paywall-plan-${plan.cadence}`}
                         title={
                           <Space>
                             <Text strong>{plan.name}</Text>
@@ -183,12 +181,15 @@ export function PaywallShell() {
                         }
                       >
                         <Space
+                          className="paywall-plan-card__body"
                           orientation="vertical"
                           size={10}
-                          style={{ width: "100%" }}
                         >
                           <div>
-                            <Title level={4} style={{ margin: 0 }}>
+                            <Title
+                              className="paywall-plan-card__price"
+                              level={4}
+                            >
                               {formatPlanPrice(plan)}
                             </Title>
                             <Text type="secondary">
@@ -200,7 +201,7 @@ export function PaywallShell() {
                             </Text>
                           </div>
                           {benefits.length > 0 ? (
-                            <ul style={{ margin: 0, paddingLeft: 18 }}>
+                            <ul className="paywall-list">
                               {benefits.map((b) => (
                                 <li key={b}>
                                   <Text>{b}</Text>
@@ -227,9 +228,9 @@ export function PaywallShell() {
                             })}
                           </Button>
                           <Text
+                            className="billing-footnote"
                             data-testid="paywall-stub-note"
                             type="secondary"
-                            style={{ fontSize: 12 }}
                           >
                             {t("stubNote")}
                           </Text>
@@ -249,15 +250,15 @@ export function PaywallShell() {
                   title={t("benefits.title")}
                 >
                   <Space
+                    className="billing-card-stack"
                     orientation="vertical"
                     size={4}
-                    style={{ width: "100%" }}
                   >
                     <Text>{t("benefits.item1")}</Text>
                     <Text>{t("benefits.item2")}</Text>
                     <Text>{t("benefits.item3")}</Text>
                     <Text>{t("benefits.item4")}</Text>
-                    <div style={{ marginTop: 8 }}>
+                    <div className="paywall-benefits-action">
                       <Button
                         href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(
                           t("benefits.contactSubject"),
@@ -277,9 +278,9 @@ export function PaywallShell() {
                   title={t("paymentInfo.title")}
                 >
                   <Space
+                    className="billing-card-stack"
                     orientation="vertical"
                     size={4}
-                    style={{ width: "100%" }}
                   >
                     <Text type="secondary">{t("paymentInfo.item1")}</Text>
                     <Text type="secondary">{t("paymentInfo.item2")}</Text>
