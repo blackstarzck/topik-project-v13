@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
-import { Space } from "antd";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { DashboardBody } from "@/components/dashboard/DashboardBody";
 import type { RecentFeedbackItem } from "@/components/learning/RecentFeedbackCard";
@@ -144,7 +143,7 @@ export default async function DashboardPage() {
   };
 
   return (
-    <Space orientation="vertical" size="large" style={{ width: "100%" }}>
+    <div className="dashboard-page-stack">
       <DashboardHeader />
       <DashboardBody
         kpi={kpiData}
@@ -155,6 +154,6 @@ export default async function DashboardPage() {
         alerts={alerts}
         alertsLoadFailed={alertsLoadFailed}
       />
-    </Space>
+    </div>
   );
 }

@@ -42,7 +42,11 @@ export function DashboardAlertsCard({ alerts, loadFailed = false }: Props) {
       }
     >
       {loadFailed ? (
-        <Space orientation="vertical" size="small" style={{ width: "100%" }}>
+        <Space
+          className="dashboard-card-stack"
+          orientation="vertical"
+          size="small"
+        >
           <Alert
             type="warning"
             showIcon
@@ -61,7 +65,7 @@ export function DashboardAlertsCard({ alerts, loadFailed = false }: Props) {
       ) : alerts.length === 0 ? (
         <Empty description={t("empty")} />
       ) : (
-        <Space orientation="vertical" style={{ width: "100%" }}>
+        <Space className="dashboard-card-stack" orientation="vertical">
           {alerts.slice(0, 5).map((a) => (
             <Alert
               key={a.id}

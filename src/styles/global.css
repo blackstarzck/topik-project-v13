@@ -4388,9 +4388,58 @@ body {
   padding: 12px 16px;
 }
 
+.dashboard-page-stack {
+  display: grid;
+  gap: 24px;
+  width: 100%;
+}
+
 .dashboard-workspace {
+  width: 100%;
   max-width: 1240px;
   margin-inline: auto;
+}
+
+.dashboard-card-stack.ant-space {
+  width: 100%;
+}
+
+.dashboard-paragraph-flush.ant-typography {
+  margin: 0;
+}
+
+.dashboard-recommendation-row.ant-space {
+  width: 100%;
+  justify-content: space-between;
+}
+
+.dashboard-kpi-empty.ant-space {
+  width: 100%;
+  text-align: center;
+}
+
+.dashboard-kpi-empty__title.ant-typography {
+  font-size: 16px;
+}
+
+.dashboard-kpi-stack.ant-space {
+  width: 100%;
+}
+
+.dashboard-kpi-card.ant-card {
+  height: 100%;
+}
+
+.dashboard-kpi-updated.ant-typography {
+  font-size: 12px;
+}
+
+.dashboard-loading-title {
+  flex: 1;
+}
+
+.dashboard-loading-button.ant-skeleton-button {
+  width: 120px;
 }
 
 .dashboard-hub-grid {

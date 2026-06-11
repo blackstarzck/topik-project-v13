@@ -58,10 +58,18 @@ export function DashboardRecommendations({ primary, alternatives }: Props) {
   const altList = alternatives.slice(0, 4);
 
   return (
-    <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+    <Space
+      className="dashboard-card-stack"
+      orientation="vertical"
+      size="middle"
+    >
       <AppCard title={t("continueCardTitle")}>
         {primary ? (
-          <Space orientation="vertical" size="small" style={{ width: "100%" }}>
+          <Space
+            className="dashboard-card-stack"
+            orientation="vertical"
+            size="small"
+          >
             <Space size={8} wrap>
               <Tag color="geekblue">
                 {t(SOURCE_LABEL_KEY[primary.source] as Parameters<typeof t>[0])}
@@ -73,14 +81,17 @@ export function DashboardRecommendations({ primary, alternatives }: Props) {
             <Text strong>{truncate(primary.title)}</Text>
             {primary.reason ? (
               <Paragraph
+                className="dashboard-paragraph-flush"
                 type="secondary"
                 ellipsis={{ rows: 2 }}
-                style={{ margin: 0 }}
               >
                 {primary.reason}
               </Paragraph>
             ) : (
-              <Paragraph type="secondary" style={{ margin: 0 }}>
+              <Paragraph
+                className="dashboard-paragraph-flush"
+                type="secondary"
+              >
                 {t("defaultReason")}
               </Paragraph>
             )}
@@ -110,11 +121,15 @@ export function DashboardRecommendations({ primary, alternatives }: Props) {
         {altList.length === 0 ? (
           <Empty description={t("typesEmpty")} />
         ) : (
-          <Space orientation="vertical" size="small" style={{ width: "100%" }}>
+          <Space
+            className="dashboard-card-stack"
+            orientation="vertical"
+            size="small"
+          >
             {altList.map((alt) => (
               <div key={alt.problemId} className="app-card-compact">
                 <Space
-                  style={{ width: "100%", justifyContent: "space-between" }}
+                  className="dashboard-recommendation-row"
                   wrap
                 >
                   <Space orientation="vertical" size={2}>

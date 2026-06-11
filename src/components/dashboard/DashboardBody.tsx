@@ -110,7 +110,6 @@ export function DashboardBody({
       className="dashboard-workspace"
       orientation="vertical"
       size="large"
-      style={{ width: "100%" }}
     >
       <DashboardKpiSummary kpi={kpi} />
 
@@ -158,7 +157,11 @@ export function DashboardBody({
         </AppCard>
 
         <AppCard className="dashboard-focus-card">
-          <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+          <Space
+            className="dashboard-card-stack"
+            orientation="vertical"
+            size="middle"
+          >
             <Flex justify="space-between" align="center" gap="small" wrap>
               <Text strong>{t("continueTitle")}</Text>
               <Tag color="processing">{t("continueTag")}</Tag>
@@ -185,7 +188,11 @@ export function DashboardBody({
         </AppCard>
 
         <AppCard className="dashboard-feedback-panel">
-          <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+          <Space
+            className="dashboard-card-stack"
+            orientation="vertical"
+            size="middle"
+          >
             <Flex justify="space-between" align="center" gap="small" wrap>
               <Text strong>{t("pendingTitle")}</Text>
               <Tag color={feedbackCount > 0 ? "volcano" : "default"}>
@@ -199,9 +206,9 @@ export function DashboardBody({
               />
             ) : (
               <Space
+                className="dashboard-card-stack"
                 orientation="vertical"
                 size="small"
-                style={{ width: "100%" }}
               >
                 {feedbackPreview.map((item) => (
                   <Link
@@ -239,12 +246,16 @@ export function DashboardBody({
 
       <section className="dashboard-lower-grid">
         <RecentFeedbackCard items={recentFeedbacks} />
-        <Space orientation="vertical" size="large" style={{ width: "100%" }}>
+        <Space
+          className="dashboard-card-stack"
+          orientation="vertical"
+          size="large"
+        >
           <AppCard title={t("quickStartTitle")}>
             <Space
+              className="dashboard-card-stack"
               orientation="vertical"
               size="small"
-              style={{ width: "100%" }}
             >
               {quickActions.map((action) => (
                 <Link

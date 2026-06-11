@@ -60,11 +60,11 @@ export function DashboardKpiSummary({ kpi }: Props) {
     return (
       <AppCard>
         <Space
+          className="dashboard-kpi-empty"
           orientation="vertical"
           size="small"
-          style={{ width: "100%", textAlign: "center" }}
         >
-          <Text strong style={{ fontSize: 16 }}>
+          <Text strong className="dashboard-kpi-empty__title">
             {t("newUserTitle")}
           </Text>
           <Text type="secondary">{t("newUserBody")}</Text>
@@ -77,10 +77,10 @@ export function DashboardKpiSummary({ kpi }: Props) {
   }
 
   return (
-    <Space orientation="vertical" size={8} style={{ width: "100%" }}>
+    <Space className="dashboard-kpi-stack" orientation="vertical" size={8}>
       <Row gutter={[16, 16]}>
         <Col xs={12} md={6}>
-          <AppCard size="small" style={{ height: "100%" }}>
+          <AppCard className="dashboard-kpi-card" size="small">
             <Statistic
               title={t("todaySubmissionsTitle")}
               value={kpi.todayAttempts}
@@ -89,7 +89,7 @@ export function DashboardKpiSummary({ kpi }: Props) {
           </AppCard>
         </Col>
         <Col xs={12} md={6}>
-          <AppCard size="small" style={{ height: "100%" }}>
+          <AppCard className="dashboard-kpi-card" size="small">
             <Statistic
               title={t("recentFeedbackTitle")}
               value={kpi.recentFeedbackCount}
@@ -98,7 +98,7 @@ export function DashboardKpiSummary({ kpi }: Props) {
           </AppCard>
         </Col>
         <Col xs={12} md={6}>
-          <AppCard size="small" style={{ height: "100%" }}>
+          <AppCard className="dashboard-kpi-card" size="small">
             <Statistic
               title={t("goalAchievementTitle")}
               value={kpi.goalAchievementPct != null ? kpi.goalAchievementPct : "—"}
@@ -107,7 +107,7 @@ export function DashboardKpiSummary({ kpi }: Props) {
           </AppCard>
         </Col>
         <Col xs={12} md={6}>
-          <AppCard size="small" style={{ height: "100%" }}>
+          <AppCard className="dashboard-kpi-card" size="small">
             <Statistic
               title={t("streakTitle")}
               value={kpi.streakDays}
@@ -116,7 +116,7 @@ export function DashboardKpiSummary({ kpi }: Props) {
           </AppCard>
         </Col>
       </Row>
-      <Text type="secondary" style={{ fontSize: 12 }}>
+      <Text type="secondary" className="dashboard-kpi-updated">
         {t("updatedAt", { time: updatedLabel })}
       </Text>
     </Space>
