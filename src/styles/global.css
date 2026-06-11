@@ -5533,6 +5533,63 @@ body {
   margin-bottom: 0;
 }
 
+.profile-page-stack.ant-space {
+  width: 100%;
+}
+
+.profile-avatar-card.app-card {
+  margin-bottom: 16px;
+}
+
+.profile-avatar-card__title.ant-typography {
+  margin: 0 0 4px;
+}
+
+.profile-avatar-card__copy.ant-typography {
+  margin-bottom: 8px;
+}
+
+.ant-form .profile-avatar-file-input[type="file"] {
+  display: none;
+}
+
+.profile-avatar-alert.ant-alert {
+  margin-top: 12px;
+}
+
+.profile-exam-form-item.ant-form-item {
+  margin-bottom: 12px;
+}
+
+.profile-exam-form-item--roomy.ant-form-item {
+  margin-bottom: 16px;
+}
+
+.profile-exam-control.ant-input-number,
+.profile-exam-control.ant-picker {
+  width: 100%;
+}
+
+.profile-goal-empty .ant-empty-image {
+  display: none;
+}
+
+.profile-status-alert.ant-alert {
+  margin-bottom: 12px;
+}
+
+.profile-status-plan-label.ant-typography {
+  margin-left: 12px;
+}
+
+.profile-flush-copy.ant-typography {
+  margin-bottom: 0;
+}
+
+.profile-footnote.ant-typography {
+  font-size: 12px;
+}
+
 .analysis-loading-shell {
   position: relative;
   display: grid;

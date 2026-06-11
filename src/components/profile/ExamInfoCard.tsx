@@ -140,7 +140,11 @@ export function ExamInfoCard({ userId, goal }: Props) {
     return (
       <AppCard title={t("cardTitle")}>
         <Form layout="vertical" disabled={saving}>
-          <Form.Item label={t("levelLabel")} required style={{ marginBottom: 12 }}>
+          <Form.Item
+            label={t("levelLabel")}
+            required
+            className="profile-exam-form-item"
+          >
             <Select<TopikLevel>
               value={level}
               onChange={(v) => {
@@ -159,13 +163,13 @@ export function ExamInfoCard({ userId, goal }: Props) {
             required
             validateStatus={gradeError ? "error" : undefined}
             help={gradeError ?? undefined}
-            style={{ marginBottom: 12 }}
+            className="profile-exam-form-item"
           >
             <InputNumber
               value={grade}
               min={1}
               max={6}
-              style={{ width: "100%" }}
+              className="profile-exam-control"
               onChange={(v) => {
                 setGrade(typeof v === "number" ? v : 1);
                 setGradeError(null);
@@ -173,12 +177,15 @@ export function ExamInfoCard({ userId, goal }: Props) {
               aria-label={t("targetGradeLabel")}
             />
           </Form.Item>
-          <Form.Item label={t("examDateLabel")} style={{ marginBottom: 16 }}>
+          <Form.Item
+            label={t("examDateLabel")}
+            className="profile-exam-form-item profile-exam-form-item--roomy"
+          >
             <DatePicker
               value={examDate ? dayjs(examDate) : null}
               onChange={(d) => setExamDate(d ? d.format("YYYY-MM-DD") : null)}
               disabledDate={(d) => d.isBefore(dayjs().startOf("day"))}
-              style={{ width: "100%" }}
+              className="profile-exam-control"
               aria-label={t("examDateAriaLabel")}
             />
           </Form.Item>
@@ -210,7 +217,7 @@ export function ExamInfoCard({ userId, goal }: Props) {
       {!view ? (
         <Empty
           description={t("emptyDescription")}
-          styles={{ image: { display: "none" } }}
+          className="profile-goal-empty"
         >
           {editable ? (
             <Button type="primary" onClick={startEdit}>
@@ -236,7 +243,7 @@ export function ExamInfoCard({ userId, goal }: Props) {
           ) : (
             <Paragraph type="secondary">{t("examDateUnset")}</Paragraph>
           )}
-          <Paragraph style={{ marginBottom: 0 }}>
+          <Paragraph className="profile-flush-copy">
             <Link href="/onboarding/learning-goal">
               {t("moreSettingsLink")}
             </Link>

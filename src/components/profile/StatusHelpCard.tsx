@@ -51,7 +51,7 @@ export function StatusHelpCard({
         <Alert
           type="warning"
           showIcon
-          style={{ marginBottom: 12 }}
+          className="profile-status-alert"
           title={t("policyWarningTitle")}
           description={t("policyWarningDescription")}
         />
@@ -65,15 +65,17 @@ export function StatusHelpCard({
       <Paragraph>
         <Text type="secondary">{t("roleLabelPrefix")}</Text>
         <Tag>{roleLabel}</Tag>
-        <Text type="secondary" style={{ marginLeft: 12 }}>{t("planLabelPrefix")}</Text>
+        <Text type="secondary" className="profile-status-plan-label">
+          {t("planLabelPrefix")}
+        </Text>
         <Tag color="gold">{planLabel}</Tag>
       </Paragraph>
       <Paragraph>
         <Text type="secondary">{t("joinedLabelPrefix")}</Text>
         <Text strong>{new Date(joinedAt).toLocaleDateString("ko-KR")}</Text>
       </Paragraph>
-      <Paragraph style={{ marginBottom: 0 }}>
-        <Text type="secondary" style={{ fontSize: 12 }}>
+      <Paragraph className="profile-flush-copy">
+        <Text type="secondary" className="profile-footnote">
           {t("goalNote")}
         </Text>
       </Paragraph>
@@ -83,8 +85,8 @@ export function StatusHelpCard({
         <Text type="secondary"> · </Text>
         <Link href="/settings/language">{t("languageLink")}</Link>
       </Paragraph>
-      <Paragraph style={{ marginBottom: 0 }}>
-        <Text type="secondary" style={{ fontSize: 12 }}>
+      <Paragraph className="profile-flush-copy">
+        <Text type="secondary" className="profile-footnote">
           {t("withdrawalNote")}
         </Text>
       </Paragraph>
