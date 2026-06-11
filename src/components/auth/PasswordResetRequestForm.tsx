@@ -117,7 +117,7 @@ export function PasswordResetRequestForm() {
       requiredMark={false}
     >
       <Paragraph>{t("intro")}</Paragraph>
-      <Paragraph style={{ marginTop: -4 }}>
+      <Paragraph className="!mt-0">
         <Text type="secondary">{t("sentExpiryNote")}</Text>
       </Paragraph>
       <Form.Item
@@ -131,7 +131,7 @@ export function PasswordResetRequestForm() {
         <Input autoComplete="email" disabled={cooldown.remaining > 0} />
       </Form.Item>
       {countdownLabel && (
-        <Paragraph style={{ marginBottom: 12 }}>
+        <Paragraph className="!mb-3">
           <Text type="secondary" data-testid="password-reset-countdown">
             {countdownLabel}
           </Text>

@@ -7,7 +7,6 @@ import { PasswordResetRequestForm } from "@/components/auth/PasswordResetRequest
 import { AppCard } from "@/components/shared/AppCard";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PublicShell } from "@/components/shared/PublicShell";
-import { SPACING } from "@/theme/spacing";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("auth.passwordReset");
@@ -22,39 +21,24 @@ export default async function PasswordResetPage() {
         <div
           aria-hidden="true"
           data-testid="password-reset-security-visual"
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            gap: 12,
-            marginBottom: SPACING.md,
-          }}
+          className="mb-4 flex justify-center gap-3"
         >
           {[MailCheck, ShieldCheck].map((Icon, index) => (
             <span
               key={index}
-              style={{
-                display: "inline-flex",
-                width: 44,
-                height: 44,
-                alignItems: "center",
-                justifyContent: "center",
-                border: "1px solid #dbe4f0",
-                borderRadius: 22,
-                background: "#f7fafc",
-                color: "#1668dc",
-              }}
+              className="inline-flex size-11 items-center justify-center rounded-full border border-border bg-surface text-text"
             >
-              <Icon size={22} strokeWidth={2} />
+              <Icon size={22} />
             </span>
           ))}
         </div>
-        <h1 style={{ textAlign: "center", fontSize: 24, marginBottom: SPACING.lg }}>
+        <h1 className="mb-6 text-center text-2xl font-semibold">
           {t("pageHeading")}
         </h1>
         <AppCard data-testid="password-reset-request-card">
           <PasswordResetRequestForm />
         </AppCard>
-        <p style={{ textAlign: "center", marginTop: SPACING.md }}>
+        <p className="mt-4 text-center">
           <Link href="/login">{t("backToLogin")}</Link>
         </p>
       </PageContainer>
