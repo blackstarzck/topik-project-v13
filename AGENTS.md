@@ -30,7 +30,7 @@ AI가 만든 결과물은 아래 중 하나 이상의 근거가 있어야 다음
 
 ## 비협상 규칙
 
-- **관리자 범위 경계**: 이 저장소는 user-facing app이다. 현재는 admin 기능을 새로 만들거나 확장하거나 remediate하지 않는다. IA `H-01`, `X-08`, `X-10`, `X-15` 및 admin-oriented schema/migration은 현재 작업 범위 밖이다. 기존 admin code는 삭제하지 않는다. 자세한 기준은 `docs/admin-scope-boundary.md`를 따른다.
+- **관리자 범위 경계**: 이 저장소는 user-facing app이다. admin 기능을 새로 만들거나 확장하거나 remediate하지 않는다. admin 콘솔은 별도 앱(topik-ai) 소유이며, 이 저장소에는 admin 코드/라우트/와이어프레임이 없다(2026-06-09 코드 제거, 2026-06-11 와이어프레임·문서 참조 제거). admin-oriented schema/migration 추가도 금지. 단 `profiles.app_role`, `admin_audit_logs`, `private.is_*_admin` RLS 헬퍼는 load-bearing이라 제거 금지. 자세한 기준은 `docs/admin-scope-boundary.md`를 따른다.
 - 이미 `docs/`에 정리된 제품 범위에 대해 fresh domain-discovery interview를 다시 시작하지 않는다.
 - 사용자 요청이 active docs와 충돌하면 구현하지 말고, 충돌한 문서와 위치를 먼저 보고한다.
 - net-new scope, 제품 pivot, active docs에 없는 요구사항은 바로 구현하지 않는다. 먼저 docs update proposal 또는 acceptance criteria가 있는 implementation brief를 만든다.

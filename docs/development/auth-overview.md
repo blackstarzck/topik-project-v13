@@ -56,7 +56,6 @@ flowchart TD
   PA -->|"동의+목표 있음"| D
   CB -->|"verifyOtp 성공: 이메일 가입"| LG
   CB -->|"verifyOtp/exchangeCodeForSession 성공: 학습자"| D
-  CB -->|"성공: 관리자 (app_role)"| ADM["/admin/org (X-08)"]
   CB -->|"실패"| E["/auth/error?reason= (X-11)"]
   E -. "otp_expired / email_not_confirmed" .-> V
   E -. "user_not_found" .-> S
@@ -91,7 +90,6 @@ flowchart TD
 | --- | --- |
 | [`src/lib/auth/session.ts`](../../src/lib/auth/session.ts) | `getCurrentUser()`, `requireUser()` — 세션 강제 |
 | [`src/lib/auth/profile.ts`](../../src/lib/auth/profile.ts) | `getCurrentProfile()`, `bootstrapProfile()`, `requireRole()`, `getSessionAndProfile()` |
-| [`src/lib/auth/admin-guard.ts`](../../src/lib/auth/admin-guard.ts) | `requirePlatformAdmin()`, `requireContentAdmin()`, `requireOrgAdmin()` |
 | [`src/lib/auth/roles.ts`](../../src/lib/auth/roles.ts) | `AppRole` 타입 + `ADMIN_ROLES` 상수 (client-safe) |
 | [`src/lib/auth/error-mapping.ts`](../../src/lib/auth/error-mapping.ts) | Supabase `error.code` → canonical `reason` 매핑, 메시지/CTA 테이블, `sanitizeNext`, `sanitizeRetryAfterSeconds`, `parseAuthFragment` |
 | [`src/lib/auth/redirect-url.ts`](../../src/lib/auth/redirect-url.ts) | `buildAuthRedirectUrl()`, `buildAuthCallbackUrl()` — 항상 절대 URL, dev는 `http://127.0.0.1:3000`, prod는 `NEXT_PUBLIC_SITE_URL` 필수 |
@@ -231,12 +229,9 @@ callback URL을 다시 밟으면 code 교환은 실패할 수 있다. 이때 서
 | 역할 | 값 | 접근 가능 영역 |
 | --- | --- | --- |
 | 학습자 | `learner` | `/dashboard` 이하 학습 영역 |
-| 콘텐츠 관리자 | `content_admin` | + `/admin/problems` (H-01) |
-| 기관 관리자 | `org_admin` | + `/admin/org` (X-08) |
-| 플랫폼 관리자 | `platform_admin` | 모든 `/admin/*` |
+| 관리자 3종 | `content_admin` / `org_admin` / `platform_admin` | 이 앱에는 관리자 화면이 없다. 관리자 콘솔은 별도 관리자 앱(topik-ai) 소관이며, 이 값들은 RLS 정책 판별(`private.is_*_admin`)용으로만 유지된다. |
 
-- 역할 변경은 **DB 트리거 + SECURITY DEFINER RPC (`admin_change_user_role`)** 로만 가능. 클라이언트가 `profiles.app_role` 을 직접 UPDATE 할 수 없다 ([마이그레이션 #15](../../supabase/migrations/20260520121400_profiles_protected_columns.sql)).
-- 서버 페이지/액션에서는 `requirePlatformAdmin()` / `requireContentAdmin()` / `requireOrgAdmin()` 호출. 비인가 시 `/dashboard?error=forbidden` 으로 redirect.
+- 역할 변경은 **DB 트리거가 차단** — 클라이언트가 `profiles.app_role` 을 직접 UPDATE 할 수 없다 ([마이그레이션 #15](../../supabase/migrations/20260520121400_profiles_protected_columns.sql)). 역할 부여/변경은 별도 관리자 앱(topik-ai) 쪽 서버 경로에서만 수행한다.
 
 ---
 
@@ -328,7 +323,7 @@ callback URL을 다시 밟으면 code 교환은 실패할 수 있다. 이때 서
 | 새 `?reason=` 추가 | [`src/lib/auth/error-mapping.ts`](../../src/lib/auth/error-mapping.ts) (`AuthErrorReason`, `SUPPORTED_REASONS`, `REASON_CONTENT`), [`docs/Wireframe/33-X-11-auth-error/description.md`](../Wireframe/33-X-11-auth-error/description.md), 본 문서 §5, [`tests/lib/auth/error-mapping.test.ts`](../../tests/lib/auth/error-mapping.test.ts) |
 | cleanup 주기/조건 변경 | [`20260526180000_cleanup_unconfirmed_users.sql`](../../supabase/migrations/20260526180000_cleanup_unconfirmed_users.sql), [cron 등록 마이그레이션](../../supabase/migrations/20260527110000_register_cleanup_cron.sql), [`docs/development/database-schema.md`](./database-schema.md), 본 문서 §6.1 |
 | 새 IA 화면 추가 | [`docs/Wireframe/README.md`](../Wireframe/README.md), [`docs/sitemap.md`](../sitemap.md), [`docs/flow/user-flow.md`](../flow/user-flow.md), 새 폴더 `description.md` + `wireframe.png` |
-| `app_role` 종류 변경 | [`src/lib/auth/roles.ts`](../../src/lib/auth/roles.ts), [`src/lib/auth/admin-guard.ts`](../../src/lib/auth/admin-guard.ts), 관련 RLS 마이그레이션, 본 문서 §6.5 |
+| `app_role` 종류 변경 | [`src/lib/auth/roles.ts`](../../src/lib/auth/roles.ts), 관련 RLS 마이그레이션, 본 문서 §6.5 |
 | `NEXT_PUBLIC_SITE_URL` 도메인 변경 | [`.env.example`](../../.env.example), Vercel env vars, Supabase Dashboard Redirect URLs, 이메일 템플릿 |
 
 **Resolved doc-↔-impl drift (2026-05-28)**: IA A-01 ([`description.md:58-60`](../Wireframe/01-A-01-sign-up/description.md))·X-06 ([`description.md:52-54`](../Wireframe/28-X-06-password-reset/description.md)) 의 PW 8-64자 명세와 실제 구현 (`SignUpForm.tsx` / `PasswordResetConfirmForm.tsx`) 의 `min:8` only 가 일치하지 않던 drift 가 정리됨. 사용자 결정 "코드를 docs에 맞춤" → 두 폼의 antd Form rules 에 `{ max: 64, message: "비밀번호는 64자 이하여야 합니다" }` 추가. description.md 는 그대로 유지.

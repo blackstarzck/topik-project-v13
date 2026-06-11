@@ -64,7 +64,7 @@ export default async function OnboardingLearningGoalPage() {
                 aria-hidden="true"
               >
                 <div className="flex aspect-square w-44 -rotate-6 items-center justify-center rounded-3xl border border-border bg-background">
-                  <Target size={76} strokeWidth={1.7} />
+                  <Target size={76} />
                 </div>
               </div>
 

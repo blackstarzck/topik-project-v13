@@ -45,16 +45,12 @@ Use these documents together when implementing or reviewing page coverage:
 | F-01 | My library | `/library` | page | Saved work, feedback history, exports, and study records. |
 | F-M1 | PDF export modal | hosted by `/library`, feedback, and report routes | modal | Exports a selected result/report. |
 | G-01 | Language settings | `/settings/language` | page | App language settings. |
-| X-15 | Admin index | `/admin` | page | Admin root placeholder and hub. Added after the existing 34 Wireframe screens from codebase route coverage. |
-| H-01 | Admin problem management | `/admin/problems` | page | Problem/content management. |
 | X-02 | Growth dashboard | `/growth` | page | Progress and growth analytics. |
 | X-03 | Paywall | `/paywall` | page | Paywall/plan-selection shell. Payment provider integration is deferred. |
 | X-04 | Subscription management | `/subscription` | page | Subscription status shell. Billing implementation is deferred. |
 | X-05 | Profile editing | `/profile` | page | User profile editing. |
 | X-07 | Weakness-based recommendations | `/practice/weakness` | page | Recommendations based on weak areas. |
-| X-08 | Organization admin dashboard | `/admin/org` | page | Institution-level admin overview. |
 | X-09 | Notification settings | `/settings/notifications` | page | Notification preferences. |
-| X-10 | Admin user management | `/admin/users` | page | Admin user/account management. |
 | —    | Auth callback | `/auth/callback` | route handler | Token-hash → `verifyOtp` 분기, code → `exchangeCodeForSession`. `next` query는 relative-only. 성공 시 `next` 또는 `/dashboard`로 redirect, 실패 시 `/auth/error?reason=<canonical>&retry_after_seconds=<n?>`로 redirect. raw `error_description`은 서버 로그에만. `export const dynamic = 'force-dynamic'`. **Phase 8 follow-up P0 fix(2026-05-27)**: page → Route Handler 전환 (Server Component cookies.set silent fail로 Set-Cookie 미발급되던 production 버그 해결). |
 | —    | Auth post-auth gate | `/auth/post-auth` | page | Google OAuth callback 이후 세션 보유 사용자를 약관 동의와 학습 목표 상태로 후속 라우팅한다. 세션 없음 → `/login`, 필수 동의 누락 → `/auth/consent`, 학습 목표 없음 → `/onboarding/learning-goal`, 모두 충족 → `/dashboard`. |
 | —    | Auth consent gate | `/auth/consent` | page + server action | Google OAuth 이후 필수 published 약관/개인정보 동의를 받는 보호 라우트. `legal_documents` 최신 required 문서 중 미동의분만 표시하고 동의 시 `user_consents.source='signup'`으로 기록한 뒤 `next`로 복귀. |
@@ -71,9 +67,8 @@ Use these documents together when implementing or reviewing page coverage:
 | --- | --- | --- |
 | **public** (인증 전) | `/`, `/terms`, `/privacy`, `/sign-up`, `/login`, `/password-reset`, `/password-reset/confirm`, `/auth/callback`, `/auth/callback-fragment`, `/auth/error`, `/auth/verify-email` | 없음 — 인증 미요구. middleware `PUBLIC_PATHS`에 명시 포함 필수 (없으면 익명 callback이 `/login`으로 튕겨 토큰 교환 자체가 실패) |
 | **user** (인증된 일반 사용자) | `/auth/post-auth`, `/auth/consent`, `/onboarding/learning-goal`, `/dashboard`, `/practice/*` (recommendations, problems, weakness, next), `/writing/*` (51-54, feedback, reports), `/library`, `/settings/{language,notifications}`, `/profile`, `/growth`, `/paywall`, `/subscription` | 세션 인증 + `auth.uid()` 기반 자기 row RLS |
-| **admin** (역할 분리된 관리자) | `/admin` (X-15, admin root), `/admin/problems` (H-01, content admin), `/admin/org` (X-08, org admin), `/admin/users` (X-10, platform admin) | `requireContentAdmin / requireOrgAdmin / requirePlatformAdmin` 페이지 가드 + `private.is_{content,org,platform}_admin(uid)` 기반 RLS + 모든 권한 변경/발행 토글은 `admin_audit_logs` 기록. `/admin` root는 직접 변경 action이 없어 audit 대상이 아니다. |
 
-`Audience: both`인 phase는 user 라우트와 admin 라우트를 동시에 다룬다. 그 경우 Light Spec과 plan task table의 각 task에 audience를 행별로 명시한다.
+관리자 라우트는 이 앱에 없다. 관리자 콘솔은 별도 관리자 앱(topik-ai) 소관이며, `profiles.app_role`의 관리자 역할 값과 `private.is_*_admin` RLS 헬퍼는 정책 판별용으로만 유지된다.
 
 비대화형 audience(`cron`, `system`, `external partner` 등)는 현재 라우트 매핑 범위 밖이며, 도입 시 별도 축으로 추가한다.
 
@@ -143,11 +138,6 @@ flowchart TD
   PROFILE --> NOTI["X-09 Notification settings\n/settings/notifications"]
   PROFILE --> SUBSCRIPTION["X-04 Subscription management\n/subscription"]
   SUBSCRIPTION --> PAYWALL["X-03 Paywall\n/paywall"]
-
-  DASH --> ADMIN_INDEX["X-15 Admin index\n/admin"]
-  ADMIN_INDEX --> ADMIN_PROBLEMS["H-01 Admin problem management\n/admin/problems"]
-  ADMIN_PROBLEMS --> ADMIN_ORG["X-08 Organization admin dashboard\n/admin/org"]
-  ADMIN_ORG --> ADMIN_USERS["X-10 Admin user management\n/admin/users"]
 
   SIGNUP --> VERIFY["X-12 Auth verify-email\n/auth/verify-email"]
   VERIFY -. "이메일 링크 클릭" .-> CB["Auth callback\n/auth/callback"]

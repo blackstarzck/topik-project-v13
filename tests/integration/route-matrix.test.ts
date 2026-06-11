@@ -64,9 +64,9 @@ describe("route matrix — anonymous context", () => {
 
 describe("route matrix — authenticated context (middleware-level)", () => {
   // Middleware does not perform role-based gating; it only checks
-  // authentication. Role checks live in `src/app/(workspace)/admin/layout.tsx`
-  // and per-admin-page `requireRole(...)` (tested in
-  // `tests/lib/auth/profile-getCurrentProfile.test.ts`).
+  // authentication. There are no admin routes in this app (the admin console
+  // lives in the separate topik-ai app); role values remain only as RLS
+  // policy inputs (see `tests/lib/auth/profile-getCurrentProfile.test.ts`).
   for (const path of PROTECTED_PATHS) {
     it(`lets authenticated user pass through ${path}`, async () => {
       mockGetUser.mockResolvedValue({

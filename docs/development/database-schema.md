@@ -79,7 +79,7 @@ A-03 학습 목표 1:1.
 
 ### 1.3 `problems` + `problem_assets`
 
-AI 생성 문제와 admin 큐레이션 문제를 한 테이블 + `source` 컬럼으로 통합. H-01 검수 흐름은 `publish_status` + `review_status` 두 축.
+AI 생성 문제와 admin 큐레이션 문제를 한 테이블 + `source` 컬럼으로 통합. 검수 흐름(`publish_status` + `review_status` 두 축)은 별도 관리자 앱(topik-ai)이 수행하고, 이 앱은 결과를 읽기만 한다.
 
 **`problems`**
 
@@ -455,7 +455,7 @@ F-M1 PDF 등 사용자 생성 파일 추적.
 
 ### 1.12 `admin_audit_logs`
 
-X-10 관리 액션 추적. admin만 select.
+관리자 액션 추적(쓰기는 별도 관리자 앱(topik-ai) 영역). admin만 select.
 
 | col | type | null | default | note |
 | --- | --- | --- | --- | --- |

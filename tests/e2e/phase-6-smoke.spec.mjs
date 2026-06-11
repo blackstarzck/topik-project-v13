@@ -26,9 +26,6 @@ const PRIVATE_ROUTES = [
   "/settings/language",
   "/settings/notifications",
   "/profile",
-  "/admin/users",
-  "/admin/problems",
-  "/admin/org",
 ];
 
 const results = [];

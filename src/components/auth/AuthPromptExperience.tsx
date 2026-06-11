@@ -49,7 +49,7 @@ export function AuthPromptExperience({
       <aside className="signup-prompt-hero" aria-label={heroEyebrow}>
         <NextLink href="/" className="signup-brand" aria-label="TALKPIK AI">
           <span className="signup-brand__mark" aria-hidden="true">
-            <Sparkles size={16} strokeWidth={2.2} />
+            <Sparkles size={16} />
           </span>
           <span>
             Talkpik <strong>AI</strong>
@@ -80,7 +80,7 @@ export function AuthPromptExperience({
             aria-label="TALKPIK AI"
           >
             <span className="signup-brand__mark" aria-hidden="true">
-              <Sparkles size={16} strokeWidth={2.2} />
+              <Sparkles size={16} />
             </span>
             <span>
               Talkpik <strong>AI</strong>

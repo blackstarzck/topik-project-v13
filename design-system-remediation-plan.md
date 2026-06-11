@@ -53,7 +53,7 @@ Theme tests are updated first: old AntD default expectations such as `#1677ff`, 
   Process user-facing Wireframe folders one page at a time. Hosted modal specs are grouped with their host route when the modal has no standalone route.
 
 - Frozen scope:
-  Admin-oriented Wireframes `H-01`, `X-08`, `X-10`, `X-15` are inventory-only and must not be remediated in this repository.
+  Admin screens are owned by the separate topik-ai app; their wireframes were removed from this repository (2026-06-11) and must not be remediated here.
 
 For each page phase:
 - 분석 에이전트 inventories Wireframe spec, current route, relevant components, inline styles, global selectors, hardcoded visual values, and existing tests.

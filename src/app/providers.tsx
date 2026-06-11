@@ -3,11 +3,13 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { App as AntdApp, ConfigProvider } from "antd";
+import { LucideProvider } from "lucide-react";
 import { NextIntlClientProvider, type AbstractIntlMessages } from "next-intl";
 import { useState } from "react";
 
 import { ThemeProvider, useTheme } from "@/contexts/theme-context";
 import { DEFAULT_TIME_ZONE, type Locale } from "@/i18n/locales";
+import { iconSettings } from "@/theme/config";
 import type { ThemeAppearance } from "@/theme";
 
 // ---------------------------------------------------------------------------
@@ -19,7 +21,9 @@ function AntdConfiguredProviders({ children }: { children: ReactNode }) {
   const { theme } = useTheme();
   return (
     <ConfigProvider theme={theme.antd}>
-      <AntdApp>{children}</AntdApp>
+      <LucideProvider strokeWidth={iconSettings.lucide.strokeWidth}>
+        <AntdApp>{children}</AntdApp>
+      </LucideProvider>
     </ConfigProvider>
   );
 }

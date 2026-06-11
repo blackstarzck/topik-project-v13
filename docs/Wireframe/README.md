@@ -4,7 +4,7 @@
 
 사용자 흐름은 [../flow/user-flow.md](../flow/user-flow.md)가 기준입니다. 화면 이동 정보가 화면 문서와 충돌하면 사용자 흐름 문서를 우선합니다.
 
-관리자 화면(H-01, X-08, X-10, X-15)은 [../admin-scope-boundary.md](../admin-scope-boundary.md)에 따라 현재 구현 기록용으로만 다룹니다. 이 저장소에서 신규 관리자 기능 확장이나 관리자 스키마/마이그레이션 추가 대상으로 보지 않습니다.
+관리자 화면은 별도 관리자 앱(topik-ai) 소관이라 이 폴더에 없습니다(2026-06-11 와이어프레임 제거). 자세한 경계는 [../admin-scope-boundary.md](../admin-scope-boundary.md)를 따릅니다.
 
 각 화면 폴더에는 보통 다음 파일이 있습니다.
 
@@ -45,7 +45,6 @@
 | 보관함 | 내 서재 | 18 F-01 내 서재 | [description.md](./18-F-01-my-library/description.md) |
 | 보관함 | PDF 내보내기 모달 | 19 F-M1 PDF 내보내기 모달 | [description.md](./19-F-M1-pdf-export-modal/description.md) |
 | 설정 | 설정 언어 | 20 G-01 설정 언어 | [description.md](./20-G-01-language-settings/description.md) |
-| 관리자 | 관리자 문제 관리 | 21 H-01 관리자 문제 관리 | [description.md](./21-H-01-admin-problem-management/description.md) |
 | 작성 보조 | 자동저장 경고 | 22 D-M3 자동저장 경고 | [description.md](./22-D-M3-autosave-warning/description.md) |
 | 확장 | 제품 랜딩 | 23 X-01 제품 랜딩 | [description.md](./23-X-01-product-landing/description.md) |
 | 확장 | 성장 대시보드 | 24 X-02 성장 대시보드 | [description.md](./24-X-02-growth-dashboard/description.md) |
@@ -54,18 +53,15 @@
 | 확장 | 프로필 편집 | 27 X-05 프로필 편집 | [description.md](./27-X-05-profile-editing/description.md) |
 | 확장 | 비밀번호 재설정 | 28 X-06 비밀번호 재설정 | [description.md](./28-X-06-password-reset/description.md) |
 | 확장 | 약점 기반 추천 | 29 X-07 약점 기반 추천 | [description.md](./29-X-07-weakness-based-recommendations/description.md) |
-| 확장 | 기관 관리자 대시보드 | 30 X-08 기관 관리자 대시보드 | [description.md](./30-X-08-organization-admin-dashboard/description.md) |
 | 확장 | 알림 설정 | 31 X-09 알림 설정 | [description.md](./31-X-09-notification-settings/description.md) |
-| 확장 | 관리자 사용자 관리 | 32 X-10 관리자 사용자 관리 | [description.md](./32-X-10-admin-user-management/description.md) |
 | 확장 | 인증 에러 | 33 X-11 인증 에러 | [description.md](./33-X-11-auth-error/description.md) |
 | 확장 | 인증 메일 확인 안내 | 34 X-12 인증 메일 확인 안내 | [description.md](./34-X-12-auth-verify-email/description.md) |
 | 추가 화면 | 이용약관 | 35 X-13 이용약관 | [description.md](./35-X-13-terms/description.md) |
 | 추가 화면 | 개인정보처리방침 | 36 X-14 개인정보처리방침 | [description.md](./36-X-14-privacy-policy/description.md) |
-| 추가 화면 | 관리자 인덱스 | 37 X-15 관리자 인덱스 | [description.md](./37-X-15-admin-index/description.md) |
 | 추가 화면 | 새 비밀번호 설정 | 38 X-16 새 비밀번호 설정 | [description.md](./38-X-16-password-reset-confirm/description.md) |
 | 추가 화면 | 인증 콜백 fragment 처리 | 39 X-17 인증 콜백 fragment 처리 | [description.md](./39-X-17-auth-callback-fragment/description.md) |
 
-> 33-39번은 기존 34개 Wireframe 이후 코드베이스 기준으로 추가된 화면입니다. 일부 코드 기반 추가 화면은 `wireframe.png`가 없을 수 있으며, 해당 경우 각 `description.md`에 이미지 없음 상태를 명시합니다.
+> 33-39번은 기존 34개 Wireframe 이후 코드베이스 기준으로 추가된 화면입니다. 일부 코드 기반 추가 화면은 `wireframe.png`가 없을 수 있으며, 해당 경우 각 `description.md`에 이미지 없음 상태를 명시합니다. 폴더 번호 21·30·32·37은 관리자 화면 제거(2026-06-11)로 결번입니다.
 
 ## AI에게 지시할 때
 

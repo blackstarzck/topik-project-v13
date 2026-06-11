@@ -1,6 +1,6 @@
 # Wireframe Functional Spec Index
 
-이 문서는 39개 Wireframe 페이지의 기능명세 문서와 DB 사용 명세를 한곳에서 찾기 위한 인덱스입니다.
+이 문서는 35개 Wireframe 페이지의 기능명세 문서와 DB 사용 명세를 한곳에서 찾기 위한 인덱스입니다. 관리자 화면은 별도 관리자 앱(topik-ai) 소관이라 이 인덱스에 없습니다.
 
 ## 기준
 
@@ -33,7 +33,6 @@
 | F-01 | My library | `/library` | user | 6 | [functional-spec.md](./18-F-01-my-library/functional-spec.md) |
 | F-M1 | PDF export modal | `/library, /writing/feedback/short/:id, /writing/feedback/long/:id, /writing/reports/:id/compare` | user | 3 | [functional-spec.md](./19-F-M1-pdf-export-modal/functional-spec.md) |
 | G-01 | Language settings | `/settings/language` | user | 1 | [functional-spec.md](./20-G-01-language-settings/functional-spec.md) |
-| H-01 | Admin problem management | `/admin/problems` | admin | 6 | [functional-spec.md](./21-H-01-admin-problem-management/functional-spec.md) |
 | D-M3 | Autosave warning | `/writing/short-answer-writing-51, /writing/answer-writing-52, /writing/long-form-writing-53, /writing/essay-writing-54` | user | 2 | [functional-spec.md](./22-D-M3-autosave-warning/functional-spec.md) |
 | X-01 | Product landing | `/` | public | 1 | [functional-spec.md](./23-X-01-product-landing/functional-spec.md) |
 | X-02 | Growth dashboard | `/growth` | user | 5 | [functional-spec.md](./24-X-02-growth-dashboard/functional-spec.md) |
@@ -42,14 +41,11 @@
 | X-05 | Profile editing | `/profile` | user | 4 | [functional-spec.md](./27-X-05-profile-editing/functional-spec.md) |
 | X-06 | Password reset | `/password-reset` | public | 1 | [functional-spec.md](./28-X-06-password-reset/functional-spec.md) |
 | X-07 | Weakness-based recommendations | `/practice/weakness` | user | 3 | [functional-spec.md](./29-X-07-weakness-based-recommendations/functional-spec.md) |
-| X-08 | Organization admin dashboard | `/admin/org` | admin | 5 | [functional-spec.md](./30-X-08-organization-admin-dashboard/functional-spec.md) |
 | X-09 | Notification settings | `/settings/notifications` | user | 1 | [functional-spec.md](./31-X-09-notification-settings/functional-spec.md) |
-| X-10 | Admin user management | `/admin/users` | admin | 4 | [functional-spec.md](./32-X-10-admin-user-management/functional-spec.md) |
 | X-11 | Auth error | `/auth/error` | public | 1 | [functional-spec.md](./33-X-11-auth-error/functional-spec.md) |
 | X-12 | Auth verify-email | `/auth/verify-email` | public | 2 | [functional-spec.md](./34-X-12-auth-verify-email/functional-spec.md) |
 | X-13 | Terms | `/terms` | public | 0 | [functional-spec.md](./35-X-13-terms/functional-spec.md) |
 | X-14 | Privacy policy | `/privacy` | public | 0 | [functional-spec.md](./36-X-14-privacy-policy/functional-spec.md) |
-| X-15 | Admin index | `/admin` | admin | 4 | [functional-spec.md](./37-X-15-admin-index/functional-spec.md) |
 | X-16 | Password reset confirm | `/password-reset/confirm` | public | 0 | [functional-spec.md](./38-X-16-password-reset-confirm/functional-spec.md) |
 | X-17 | Auth callback fragment | `/auth/callback-fragment` | public | 0 | [functional-spec.md](./39-X-17-auth-callback-fragment/functional-spec.md) |
 

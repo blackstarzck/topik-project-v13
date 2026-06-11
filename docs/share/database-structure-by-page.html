@@ -330,7 +330,6 @@ details.acc .tip,details.acc .note{margin:11px 13px}
       <a class="sub" href="#grp-f">F · 서재·내보내기</a>
       <a class="sub" href="#grp-g">G · 설정</a>
       <a class="sub" href="#grp-x">X · 계정·결제·법적·기타</a>
-      <a class="sub" href="#grp-h">H · 관리자 문제 관리</a>
       <div class="grp">참고 자료</div>
       <a href="#index">화면 → 테이블 색인</a>
       <a href="#ref">테이블 레퍼런스</a>
@@ -408,12 +407,12 @@ details.acc .tip,details.acc .note{margin:11px 13px}
       <div class="dcard" style="--c:#78716C"><div class="dh"><span class="di"><svg class="ic"><use href="#i-doc"/></svg></span><span class="dt">약관·동의</span></div>
         <p class="dd">버전별 약관 문서와 동의 기록</p><div class="chips"><span class="chip">legal_documents</span><span class="chip">user_consents</span></div></div>
       <div class="dcard" style="--c:#DC2626"><div class="dh"><span class="di"><svg class="ic"><use href="#i-shield"/></svg></span><span class="dt">관리자 <span class="lock"><svg class="ic"><use href="#i-lock"/></svg>별도 앱</span></span></div>
-        <p class="dd">관리자 작업 기록·조직 데이터</p><div class="chips"><span class="chip">admin_audit_logs</span><span class="chip">조직 테이블</span></div></div>
+        <p class="dd">관리자 작업 기록(별도 관리자 앱이 기록)</p><div class="chips"><span class="chip">admin_audit_logs</span></div></div>
     </div>
     <div class="note warn">
       <svg class="ic"><use href="#i-alert"/></svg>
-      <div><b>관리자 영역 주의.</b> <code class="ty">H-01</code> <code class="ty">X-08</code> <code class="ty">X-10</code> <code class="ty">X-15</code> 화면과 조직 관련 테이블은
-        <b>별도 관리자 앱이 담당</b>합니다. 이 문서에서는 구조만 설명하고, 사용자용 앱에서 새로 만들거나 확장하지 않습니다.
+      <div><b>관리자 영역 주의.</b> 관리자 화면과 그 데이터 흐름은
+        <b>별도 관리자 앱(topik-ai)이 담당</b>해서 이 문서에 없습니다.
         데이터 스키마는 관리자 쪽 설계를 먼저 따르고 사용자 화면이 거기에 맞춥니다.</div>
     </div>
 
@@ -685,16 +684,6 @@ details.acc .tip,details.acc .note{margin:11px 13px}
       </tbody></table></div>
     </article>
 
-    <article class="pcard adminbox">
-      <div class="phead"><span class="code">X-08</span><span class="ptitle">기관 관리자 대시보드</span><span class="lock"><svg class="ic"><use href="#i-lock"/></svg>관리자 영역</span></div>
-      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>테이블</th><th>사용 형태</th><th>무엇에 쓰나</th></tr></thead><tbody>
-        <tr><td class="col"><span class="chip">admin_audit_logs</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>최근 관리자 활동</td></tr>
-        <tr><td class="col"><span class="chip">profiles</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>사용자 집계</td></tr>
-        <tr><td class="col"><span class="chip">study_events</span></td><td><span class="u u-d"><svg class="ic"><use href="#i-sigma"/></svg>파생</span></td><td>기관 단위 활동 집계</td></tr>
-        <tr><td class="col"><span class="chip">조직 테이블</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>조직·과제 데이터</td></tr>
-      </tbody></table></div>
-    </article>
-
     <article class="pcard">
       <div class="phead"><span class="code">X-09</span><span class="ptitle">알림 설정</span></div>
       <div class="tbl-wrap"><table class="tbl"><thead><tr><th>테이블</th><th>사용 형태</th><th>무엇에 쓰나</th></tr></thead><tbody>
@@ -702,14 +691,6 @@ details.acc .tip,details.acc .note{margin:11px 13px}
         <tr><td class="col"><span class="chip">notification_log</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>최근 발송 이력</td></tr>
       </tbody></table></div>
       <div class="tip"><svg class="ic"><use href="#i-info"/></svg>알림 발송 기록 작성은 서버 측에서 수행하고, 사용자는 본인 이력만 봅니다.</div>
-    </article>
-
-    <article class="pcard adminbox">
-      <div class="phead"><span class="code">X-10</span><span class="ptitle">관리자 사용자 관리</span><span class="lock"><svg class="ic"><use href="#i-lock"/></svg>관리자 영역</span></div>
-      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>테이블</th><th>사용 형태</th><th>무엇에 쓰나</th></tr></thead><tbody>
-        <tr><td class="col"><span class="chip">profiles</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span> <span class="u u-w"><svg class="ic"><use href="#i-pen"/></svg>쓰기</span></td><td>사용자 목록, 역할·상태 변경</td></tr>
-        <tr><td class="col"><span class="chip">admin_audit_logs</span></td><td><span class="u u-w"><svg class="ic"><use href="#i-pen"/></svg>쓰기</span></td><td>권한 변경 이력 기록</td></tr>
-      </tbody></table></div>
     </article>
 
     <article class="pcard">
@@ -743,13 +724,6 @@ details.acc .tip,details.acc .note{margin:11px 13px}
       </tbody></table></div>
     </article>
 
-    <article class="pcard adminbox">
-      <div class="phead"><span class="code">X-15</span><span class="ptitle">관리자 인덱스</span><span class="lock"><svg class="ic"><use href="#i-lock"/></svg>관리자 영역</span></div>
-      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>테이블</th><th>사용 형태</th><th>무엇에 쓰나</th></tr></thead><tbody>
-        <tr><td class="col"><span class="chip">profiles</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span></td><td>관리자 루트 접근 권한 확인</td></tr>
-      </tbody></table></div>
-    </article>
-
     <article class="pcard">
       <div class="phead"><span class="code">X-16</span><span class="ptitle">비밀번호 재설정 (확정)</span></div>
       <div class="tip" style="margin-top:6px"><svg class="ic"><use href="#i-info"/></svg>새 비밀번호 확정은 인증 시스템이 처리하며 앱 테이블에는 저장하지 않습니다.</div>
@@ -760,28 +734,16 @@ details.acc .tip,details.acc .note{margin:11px 13px}
       <div class="tip" style="margin-top:6px"><svg class="ic"><use href="#i-info"/></svg>로그인·인증 후 세션을 확정하는 단계입니다. 앱 테이블에 직접 데이터를 쓰지 않고, 프로필 한 줄이 존재하도록 보장하는 역할만 합니다.</div>
     </article>
 
-    <!-- GROUP H -->
-    <h3 class="grp" id="grp-h"><span class="badge">H</span>관리자 문제 관리</h3>
-    <article class="pcard adminbox">
-      <div class="phead"><span class="code">H-01</span><span class="ptitle">관리자 문제 관리</span><span class="lock"><svg class="ic"><use href="#i-lock"/></svg>관리자 영역</span></div>
-      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>테이블</th><th>사용 형태</th><th>무엇에 쓰나</th></tr></thead><tbody>
-        <tr><td class="col"><span class="chip">problems</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span> <span class="u u-w"><svg class="ic"><use href="#i-pen"/></svg>쓰기</span></td><td>문제 목록, 편집, 공개 상태, 검수 상태</td></tr>
-        <tr><td class="col"><span class="chip">problem_assets</span></td><td><span class="u u-r"><svg class="ic"><use href="#i-eye"/></svg>읽기</span> <span class="u u-w"><svg class="ic"><use href="#i-pen"/></svg>쓰기</span></td><td>문제 첨부 자료 관리</td></tr>
-        <tr><td class="col"><span class="chip">admin_audit_logs</span></td><td><span class="u u-w"><svg class="ic"><use href="#i-pen"/></svg>쓰기</span></td><td>변경 이력 기록</td></tr>
-      </tbody></table></div>
-      <div class="tip"><svg class="ic"><use href="#i-info"/></svg>문제 공개 전환이나 내용 수정 같은 관리자 작업은 <b>변경 전/후 차이와 함께 감사 로그로 남도록</b> 서버 측에서 처리됩니다.</div>
-    </article>
-
     <!-- INDEX -->
     <h2 class="sec" id="index"><span class="n"><svg class="ic"><use href="#i-bars"/></svg></span>화면 → 테이블 색인</h2>
     <p class="sec-desc">반대로, 한 테이블이 어떤 화면들에서 쓰이는지 한눈에 봅니다.</p>
     <div class="card idx" style="padding:0;overflow:hidden">
       <div class="tbl-wrap" style="border:0">
         <table class="tbl"><thead><tr><th>테이블</th><th>이 테이블을 쓰는 화면</th></tr></thead><tbody>
-        <tr><td class="col"><span class="chip">profiles</span></td><td><div class="chips"><span class="chip pg">A-01</span><span class="chip pg">A-02</span><span class="chip pg">A-03</span><span class="chip pg">B-01</span><span class="chip pg">G-01</span><span class="chip pg">X-01</span><span class="chip pg">X-03</span><span class="chip pg">X-04</span><span class="chip pg">X-05</span><span class="chip pg">X-06</span><span class="chip pg">X-08</span><span class="chip pg">X-10</span><span class="chip pg">X-11</span><span class="chip pg">X-12</span><span class="chip pg">X-15</span></div></td></tr>
+        <tr><td class="col"><span class="chip">profiles</span></td><td><div class="chips"><span class="chip pg">A-01</span><span class="chip pg">A-02</span><span class="chip pg">A-03</span><span class="chip pg">B-01</span><span class="chip pg">G-01</span><span class="chip pg">X-01</span><span class="chip pg">X-03</span><span class="chip pg">X-04</span><span class="chip pg">X-05</span><span class="chip pg">X-06</span><span class="chip pg">X-11</span><span class="chip pg">X-12</span></div></td></tr>
         <tr><td class="col"><span class="chip">learning_goals</span></td><td><div class="chips"><span class="chip pg">A-03</span><span class="chip pg">B-01</span><span class="chip pg">X-05</span></div></td></tr>
-        <tr><td class="col"><span class="chip">problems</span></td><td><div class="chips"><span class="chip pg">C-01</span><span class="chip pg">C-02</span><span class="chip pg">D-01~04</span><span class="chip pg">R-02</span><span class="chip pg">F-01</span><span class="chip pg">X-07</span><span class="chip pg">H-01</span></div></td></tr>
-        <tr><td class="col"><span class="chip">problem_assets</span></td><td><div class="chips"><span class="chip pg">C-02</span><span class="chip pg">D-01~04</span><span class="chip pg">H-01</span></div></td></tr>
+        <tr><td class="col"><span class="chip">problems</span></td><td><div class="chips"><span class="chip pg">C-01</span><span class="chip pg">C-02</span><span class="chip pg">D-01~04</span><span class="chip pg">R-02</span><span class="chip pg">F-01</span><span class="chip pg">X-07</span></div></td></tr>
+        <tr><td class="col"><span class="chip">problem_assets</span></td><td><div class="chips"><span class="chip pg">C-02</span><span class="chip pg">D-01~04</span></div></td></tr>
         <tr><td class="col"><span class="chip">problem_attempts</span></td><td><div class="chips"><span class="chip pg">C-02</span><span class="chip pg">C-03</span><span class="chip pg">X-02</span></div></td></tr>
         <tr><td class="col"><span class="chip">writing_drafts</span></td><td><div class="chips"><span class="chip pg">B-01</span><span class="chip pg">C-02</span><span class="chip pg">C-03</span><span class="chip pg">D-01~04</span><span class="chip pg">D-M1</span><span class="chip pg">D-M3</span></div></td></tr>
         <tr><td class="col"><span class="chip">writing_submissions</span></td><td><div class="chips"><span class="chip pg">D-01~04</span><span class="chip pg">D-M1</span><span class="chip pg">D-M2</span><span class="chip pg">E-01</span><span class="chip pg">E-02</span><span class="chip pg">R-01</span><span class="chip pg">R-02</span><span class="chip pg">F-01</span></div></td></tr>
@@ -792,15 +754,14 @@ details.acc .tip,details.acc .note{margin:11px 13px}
         <tr><td class="col"><span class="chip">recommendation_runs</span></td><td><div class="chips"><span class="chip pg">B-01</span><span class="chip pg">C-01</span></div></td></tr>
         <tr><td class="col"><span class="chip">recommendation_items</span></td><td><div class="chips"><span class="chip pg">B-01</span><span class="chip pg">C-01</span><span class="chip pg">R-02</span><span class="chip pg">X-07</span></div></td></tr>
         <tr><td class="col"><span class="chip">library_items</span></td><td><div class="chips"><span class="chip pg">E-01</span><span class="chip pg">E-02</span><span class="chip pg">F-01</span></div></td></tr>
-        <tr><td class="col"><span class="chip">study_events</span></td><td><div class="chips"><span class="chip pg">B-01</span><span class="chip pg">D-01~04</span><span class="chip pg">D-M3</span><span class="chip pg">E-01</span><span class="chip pg">E-02</span><span class="chip pg">R-01</span><span class="chip pg">F-01</span><span class="chip pg">F-M1</span><span class="chip pg">X-02</span><span class="chip pg">X-08</span></div></td></tr>
+        <tr><td class="col"><span class="chip">study_events</span></td><td><div class="chips"><span class="chip pg">B-01</span><span class="chip pg">D-01~04</span><span class="chip pg">D-M3</span><span class="chip pg">E-01</span><span class="chip pg">E-02</span><span class="chip pg">R-01</span><span class="chip pg">F-01</span><span class="chip pg">F-M1</span><span class="chip pg">X-02</span></div></td></tr>
         <tr><td class="col"><span class="chip">export_files</span></td><td><div class="chips"><span class="chip pg">E-01</span><span class="chip pg">E-02</span><span class="chip pg">F-01</span><span class="chip pg">F-M1</span></div></td></tr>
         <tr><td class="col"><span class="chip">notification_settings</span> <span class="chip">notification_log</span></td><td><div class="chips"><span class="chip pg">X-09</span></div></td></tr>
         <tr><td class="col"><span class="chip">subscription_plans</span></td><td><div class="chips"><span class="chip pg">X-03</span></div></td></tr>
         <tr><td class="col"><span class="chip">subscriptions</span> <span class="chip">payment_history</span></td><td><div class="chips"><span class="chip pg">X-04</span></div></td></tr>
         <tr><td class="col"><span class="chip">legal_documents</span></td><td><div class="chips"><span class="chip pg">A-01</span><span class="chip pg">X-13</span><span class="chip pg">X-14</span></div></td></tr>
         <tr><td class="col"><span class="chip">user_consents</span></td><td><div class="chips"><span class="chip pg">A-01</span><span class="chip pg">X-13</span></div></td></tr>
-        <tr><td class="col"><span class="chip">admin_audit_logs</span></td><td><div class="chips"><span class="chip pg">H-01</span><span class="chip pg">X-08</span><span class="chip pg">X-10</span></div></td></tr>
-        <tr><td class="col"><span class="chip">조직 테이블</span></td><td><div class="chips"><span class="chip pg">X-08</span></div></td></tr>
+        <tr><td class="col"><span class="chip">admin_audit_logs</span></td><td><div class="chips">(사용자 화면 없음 — 별도 관리자 앱 영역)</div></td></tr>
         </tbody></table>
       </div>
     </div>
@@ -1240,7 +1201,7 @@ details.acc .tip,details.acc .note{margin:11px 13px}
 
     <details class="acc adminbox">
       <summary><span class="chip" style="font-size:13px">admin_audit_logs</span><span class="ptitle">관리자 작업 기록</span><span class="tag tag-admin">관리자</span><span class="tag tag-immut">추가만</span></summary>
-      <p style="margin:6px 0 10px;color:var(--ink-soft);font-size:14px">관리자 작업을 변경 전/후 차이와 함께 남깁니다. 고치거나 지울 수 없습니다.</p>
+      <p style="margin:6px 0 10px;color:var(--ink-soft);font-size:14px">관리자 작업을 변경 전/후 차이와 함께 남깁니다. 고치거나 지울 수 없습니다. 쓰는 쪽은 별도 관리자 앱(topik-ai)이며, 사용자용 앱 화면은 이 테이블을 쓰지 않습니다.</p>
       <div class="tbl-wrap"><table class="tbl"><thead><tr><th>컬럼</th><th>타입</th><th>설명</th></tr></thead><tbody>
         <tr><td class="col"><span class="chip">id</span></td><td><span class="ty k">uuid</span></td><td>기본키</td></tr>
         <tr><td class="col"><span class="chip">admin_user_id</span></td><td><span class="ty k">uuid</span></td><td>작업한 관리자</td></tr>
@@ -1252,10 +1213,6 @@ details.acc .tip,details.acc .note{margin:11px 13px}
       </tbody></table></div>
     </details>
 
-    <details class="acc adminbox">
-      <summary><span class="ptitle">조직 테이블</span><span class="tag tag-admin">관리자</span></summary>
-      <p style="margin:6px 0 0;color:var(--ink-soft);font-size:14px">조직 디렉터리, 조직 멤버십, 조직 과제, 과제 제출을 담는 테이블들이 있으나, 사용자용 앱에서는 직접 쓰지 않습니다. 관리자 앱 영역에 속합니다.</p>
-    </details>
   </aside>
   <footer>
     <p>TALKPIK AI · 화면별 데이터베이스 구조 안내 — 데이터 구조 설명 전용 문서</p>

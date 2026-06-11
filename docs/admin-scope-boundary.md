@@ -4,6 +4,22 @@
 > This supersedes any earlier handoff / IA-audit instruction that treated admin
 > screens (H-01, X-08, X-10, X-15) as in-scope for active build in this repo.
 
+## ✅ 2026-06-11 — admin WIREFRAMES + doc references REMOVED (owner request)
+
+> Following the 2026-06-09 code-island removal, the owner asked to also remove
+> the admin wireframes and their references from this repo's living docs.
+> **Removed:** `docs/Wireframe/{21-H-01,30-X-08,32-X-10,37-X-15}/` (4 folders),
+> and admin-screen references in `docs/ia.md`, `docs/sitemap.md`,
+> `docs/flow/user-flow.md`, `docs/Wireframe/{README,functional-spec-index,data-usage-index}.md`,
+> `docs/share/database-structure-by-page.{md,html}`, `docs/development/{auth-overview,database-schema}.md`,
+> login/notification wireframe cross-links, `CLAUDE.md`/`AGENTS.md`, and the
+> design plan/runbook frozen-scope notes. The active IA is now 35 user-facing
+> screens; IA codes H-01/X-08/X-10/X-15 exist only in this history doc and in
+> archived run artifacts (`docs/ai-workflow/runs/`, `docs/design-review-result/`),
+> which were intentionally left untouched.
+> **Still preserved (load-bearing):** `profiles.app_role`, `admin_audit_logs`,
+> `private.is_*_admin` RLS helpers.
+
 ## ✅ 2026-06-09 — v13 admin ISLAND REMOVED (owner decision)
 
 > The owner exercised the "keep vs roll back" call this doc reserved for them
@@ -18,7 +34,7 @@
 >
 > **Removed (code + DB):**
 > - Code: `src/app/(workspace)/admin/*`, `src/components/admin/*`, `src/lib/admin/*`,
->   `src/lib/auth/admin-guard.ts`, the admin nav in `src/lib/routes.ts`/`SidebarNav`,
+>   `src/lib/auth/admin-guard.ts`, the admin nav in `src/lib/routes.ts`/workspace navigation,
 >   and the admin tests (`tests/components/admin/*`, `tests/lib/admin/*`,
 >   `tests/integration/admin-*`).
 > - DB (migration `20260609130000_remove_v13_admin_island.sql`): 11 admin RPCs
@@ -115,7 +131,7 @@ Verified state so the next session does not have to re-derive it:
     `actions.ts`, guarded by `requirePlatformAdmin/ContentAdmin/OrgAdmin`.
   - Lib: `src/lib/admin/*` (queries, server, mutations, server-actions, types,
     org-dashboard) + `src/lib/auth/admin-guard.ts`.
-  - The app side-nav (`src/lib/routes.ts` / `SidebarNav`) links the admin routes
+  - The app side-nav (`src/lib/routes.ts` / workspace navigation) links the admin routes
     behind role gates — so if you ever DO remove admin UI, drop those nav entries
     in the same change (otherwise dead links).
 - **The admin SCHEMA is foundational/shared — do NOT remove it.** `profiles.app_role`,
@@ -148,7 +164,8 @@ Verified state so the next session does not have to re-derive it:
   - `docs/page-sync/*.md` — per-admin-page sync docs, explicitly written to align with
     user-screen development (each lists related admin/user pages + CRUD candidates).
   - `docs/specs/admin-page-gap-register.md`, `admin-action-log.md` (audit Target contract).
-- In THIS repo, the admin wireframes are `docs/Wireframe/{21-H-01,30-X-08,32-X-10,37-X-15}/`.
+- In THIS repo, the admin wireframes were `docs/Wireframe/{21-H-01,30-X-08,32-X-10,37-X-15}/`
+  (removed 2026-06-11 — see the section at the top of this doc).
 - Reconciliation axis: admin = documented *candidate contract* (no real DB); v13 = concrete
   `supabase/migrations`. The LATER sync aligns the two for OVERLAPPING entities only
   (users/profiles, assessment/problems+writing, etc.) — see the cross-app consistency doc

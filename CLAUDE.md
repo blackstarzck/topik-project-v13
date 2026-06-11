@@ -5,15 +5,17 @@ Follow `AGENTS.md` for every task in this repository.
 ## Scope Boundary — Admin (READ FIRST)
 
 **This repo is the USER-FACING app. Do NOT build, extend, or "remediate" admin
-features here right now.** Admin (IA codes **H-01, X-08, X-10, X-15**) has a
-separate source-of-truth implementation in a different local folder; the data
+features here.** The admin console is owned by the separate **topik-ai** app.
+This repo contains NO admin code, routes, or admin wireframes: the v13 admin
+code island was removed 2026-06-09 (owner decision), and the admin wireframe
+folders + doc references were removed 2026-06-11 (owner request). Data flow:
+the admin app writes problems/content to Supabase; **v13 only READS**. The data
 schema was designed admin-first, so **user-facing screens reconcile TO the
-existing schema** (do not add admin-oriented schema/migrations). Admin ↔ this-repo
-sync is a deliberate LATER phase, after user-facing screens are complete, using
-the existing admin docs. **This directive supersedes any handoff / IA-audit text
-that lists admin screens as in-scope.** Do not delete the existing admin code
-either (it is a self-contained, frozen island). Full detail + the current
-admin-code investigation: [`docs/admin-scope-boundary.md`](docs/admin-scope-boundary.md).
+existing schema** (do not add admin-oriented schema/migrations). Preserved and
+load-bearing (do NOT remove): `profiles.app_role`, `admin_audit_logs`, and the
+`private.is_*_admin` RLS helpers. **This directive supersedes any handoff /
+IA-audit / archived-run text that lists admin screens as in-scope.** Full
+history: [`docs/admin-scope-boundary.md`](docs/admin-scope-boundary.md).
 
 ## Data Consistency (User ↔ Admin) — high importance
 

@@ -1,23 +1,15 @@
 # Wireframe Data Usage Index
 
-이 문서는 DB 객체 기준으로 어떤 Wireframe 페이지가 어떤 데이터를 쓰는지 역색인합니다.
+이 문서는 DB 객체 기준으로 어떤 Wireframe 페이지가 어떤 데이터를 쓰는지 역색인합니다. 관리자 화면은 별도 관리자 앱(topik-ai) 소관이라 이 색인에 없습니다.
 
 ## Summary
 
-- Pages: 39
+- Pages: 35
 - Tables: 17
-- RPC/functions: 19
+- RPC/functions: 16
 - Storage buckets: 3
-- Page data links: 126
+- Page data links: 107
 - Unclassified DB objects: 0
-
-## admin_audit_logs
-
-| IA | Screen | Type | Columns/fields | Usage | Page feature |
-| --- | --- | --- | --- | --- | --- |
-| H-01 | Admin problem management | table | `admin_user_id`, `action`, `target_table`, `target_id`, `diff`, `payload` | write/read | 관리자 변경 이력을 남긴다. |
-| X-08 | Organization admin dashboard | table | `admin_user_id`, `action`, `target_table`, `created_at` | read | 최근 관리자 활동 표시에 사용한다. |
-| X-10 | Admin user management | table | `admin_user_id`, `action`, `target_table`, `target_id`, `diff` | write/read | 관리자 권한 변경 이력을 남긴다. |
 
 ## avatars
 
@@ -75,27 +67,6 @@
 | E-02 | Long-form feedback | table | `submission_id`, `item_type`, `note`, `tags` | read/write | 피드백 저장/보관함 추가에 사용한다. |
 | F-01 | My library | table | `item_type`, `attempt_id`, `submission_id`, `report_id`, `export_file_id`, `problem_id`, `note`, `tags`, `saved_at` | read/write | 내 보관함 탭, 저장/해제, 태그에 사용한다. |
 
-## private.is_content_admin
-
-| IA | Screen | Type | Columns/fields | Usage | Page feature |
-| --- | --- | --- | --- | --- | --- |
-| H-01 | Admin problem management | rpc | - | RLS helper | 콘텐츠 관리자 권한 확인에 사용한다. |
-| X-15 | Admin index | rpc | - | RLS helper | 하위 콘텐츠 관리자 route의 권한 확인에 사용한다. |
-
-## private.is_org_admin
-
-| IA | Screen | Type | Columns/fields | Usage | Page feature |
-| --- | --- | --- | --- | --- | --- |
-| X-08 | Organization admin dashboard | rpc | - | RLS helper | 기관 관리자 권한 확인에 사용한다. |
-| X-15 | Admin index | rpc | - | RLS helper | 하위 기관 관리자 route의 권한 확인에 사용한다. |
-
-## private.is_platform_admin
-
-| IA | Screen | Type | Columns/fields | Usage | Page feature |
-| --- | --- | --- | --- | --- | --- |
-| X-10 | Admin user management | rpc | - | RLS helper | 플랫폼 관리자 권한 확인에 사용한다. |
-| X-15 | Admin index | rpc | - | RLS helper | 하위 플랫폼 관리자 route의 권한 확인에 사용한다. |
-
 ## private.protect_profile_columns
 
 | IA | Screen | Type | Columns/fields | Usage | Page feature |
@@ -117,7 +88,6 @@
 | D-02 | Answer writing 52 | table | `problem_id`, `storage_path`, `asset_type` | read | 문제 자료 이미지/오디오를 연결한다. |
 | D-03 | Long-form writing 53 | table | `problem_id`, `storage_path`, `asset_type` | read | 문제 자료 이미지/오디오를 연결한다. |
 | D-04 | Essay writing 54 | table | `problem_id`, `storage_path`, `asset_type` | read | 문제 자료 이미지/오디오를 연결한다. |
-| H-01 | Admin problem management | table | `problem_id`, `storage_path`, `asset_type`, `sort_order` | read/write | 문제 첨부 자료 관리에 사용한다. |
 
 ## problem_attempts
 
@@ -126,12 +96,6 @@
 | C-02 | Problem list | table | `problem_id`, `status`, `is_correct`, `bookmarked`, `time_spent_seconds` | read/write | 풀이 이력, 재도전, 북마크 상태에 사용한다. |
 | C-03 | Retry modal | table | `problem_id`, `status`, `is_correct`, `submitted_at` | read/write | 재도전 가능 여부와 새 시도 시작에 사용한다. |
 | X-02 | Growth dashboard | table | `is_correct`, `submitted_at`, `time_spent_seconds` | derived-read | 풀이 정확도와 학습 시간 지표에 사용한다. |
-
-## problem-assets
-
-| IA | Screen | Type | Columns/fields | Usage | Page feature |
-| --- | --- | --- | --- | --- | --- |
-| H-01 | Admin problem management | storage | - | read/write | 문제 자료 파일 업로드와 공개 읽기에 사용한다. |
 
 ## problems
 
@@ -145,7 +109,6 @@
 | D-04 | Essay writing 54 | table | `id`, `question_no`, `prompt`, `materials`, `rubric`, `answer_key` | read | 54번 작성 문제 본문과 조건을 표시한다. |
 | R-02 | Next problem recommendation | table | `id`, `question_no`, `difficulty`, `title`, `tags` | read | 추천 대상 문제 정보를 표시한다. |
 | F-01 | My library | table | `id`, `title`, `question_no`, `difficulty` | read | 저장한 문제 탭에 사용한다. |
-| H-01 | Admin problem management | table | `domain`, `question_no`, `topik_level`, `difficulty`, `title`, `prompt`, `materials`, `answer_key`, `rubric`, `publish_status`, `review_status`, `visibility` | read/write | 관리자 문제 목록, 편집, 공개 상태에 사용한다. |
 | X-07 | Weakness-based recommendations | table | `id`, `domain`, `question_no`, `difficulty`, `tags` | read | 추천 문제 상세 표시와 필터에 사용한다. |
 
 ## profiles
@@ -162,36 +125,15 @@
 | X-04 | Subscription management | table | `plan_label`, `status` | read | 구독 상태 셸 화면에 사용한다. 실제 결제 테이블은 아직 없다. |
 | X-05 | Profile editing | table | `display_name`, `nickname`, `avatar_path`, `bio`, `ui_locale`, `plan_label`, `status` | read/write | 프로필 편집, 160자 자기소개, 아바타 경로에 사용한다. |
 | X-06 | Password reset | table | `id`, `email`, `status` | read | 비밀번호 재설정 성공 후 사용자 상태 확인에 연결될 수 있다. |
-| X-08 | Organization admin dashboard | table | `app_role`, `plan_label`, `status` | read | 조직/권한 대시보드의 사용자 집계에 사용한다. |
 | X-09 | Notification settings | table | `notification_prefs` | read/write | 알림 채널과 조건 설정을 JSON object로 저장한다. |
-| X-10 | Admin user management | table | `id`, `display_name`, `email`, `app_role`, `plan_label`, `status`, `created_at` | read/write | 관리자 사용자 목록, 역할/상태 변경에 사용한다. |
 | X-11 | Auth error | table | `id`, `status` | read | 인증 오류 후 계정 상태 안내와 재시도 분기에 연결될 수 있다. |
 | X-12 | Auth verify-email | table | `id`, `email`, `status` | read | 가입 직후 이메일 인증 안내와 인증 상태 확인에 연결된다. |
-| X-15 | Admin index | table | `id`, `app_role`, `status` | read | 관리자 root 접근 권한 확인에 사용한다. |
-
-## public.admin_change_user_role
-
-| IA | Screen | Type | Columns/fields | Usage | Page feature |
-| --- | --- | --- | --- | --- | --- |
-| X-10 | Admin user management | rpc | - | rpc | 사용자 역할 변경을 서버 측 검증과 감사 로그로 처리한다. |
-
-## public.admin_toggle_problem_publish
-
-| IA | Screen | Type | Columns/fields | Usage | Page feature |
-| --- | --- | --- | --- | --- | --- |
-| H-01 | Admin problem management | rpc | - | rpc | 문제 공개/비공개 전환을 감사 로그와 함께 처리한다. |
 
 ## public.create_comparison_report_with_metrics
 
 | IA | Screen | Type | Columns/fields | Usage | Page feature |
 | --- | --- | --- | --- | --- | --- |
 | R-01 | Comparison report | rpc | - | rpc | 현재 제출과 이전 제출 비교 리포트를 생성한다. |
-
-## public.get_admin_org_dashboard
-
-| IA | Screen | Type | Columns/fields | Usage | Page feature |
-| --- | --- | --- | --- | --- | --- |
-| X-08 | Organization admin dashboard | rpc | - | rpc | 기관 관리자 대시보드 KPI를 제공한다. |
 
 ## public.get_dashboard_kpi
 
@@ -258,7 +200,6 @@
 | F-M1 | PDF export modal | table | `event_type`, `export_file_id`, `payload` | write | PDF 다운로드 이벤트를 기록한다. |
 | D-M3 | Autosave warning | table | `event_type`, `payload`, `occurred_at` | write | 자동저장 이벤트를 기록한다. |
 | X-02 | Growth dashboard | table | `event_type`, `occurred_at`, `payload` | derived-read | 학습 추세와 활동 그래프에 사용한다. |
-| X-08 | Organization admin dashboard | table | `event_type`, `occurred_at`, `payload` | derived-read | 기관 단위 활동 집계에 사용한다. |
 
 ## writing_drafts
 
@@ -309,6 +250,11 @@
 | rpc | `private.assert_submission_payload` | infrastructure/security | Function is a trigger, RLS helper, cleanup job, validator, or security hardening helper rather than a direct page data surface. |
 | rpc | `private.cleanup_unconfirmed_users` | infrastructure/security | Function is a trigger, RLS helper, cleanup job, validator, or security hardening helper rather than a direct page data surface. |
 | rpc | `private.is_admin` | infrastructure/security | Function is a trigger, RLS helper, cleanup job, validator, or security hardening helper rather than a direct page data surface. |
+| rpc | `private.is_content_admin` | infrastructure/security | RLS helper preserved for policies; no user-facing page uses it (admin screens live in the separate topik-ai app). |
+| rpc | `private.is_org_admin` | infrastructure/security | RLS helper preserved for policies; no user-facing page uses it (admin screens live in the separate topik-ai app). |
+| rpc | `private.is_platform_admin` | infrastructure/security | RLS helper preserved for policies; no user-facing page uses it (admin screens live in the separate topik-ai app). |
+| table | `admin_audit_logs` | infrastructure/security | Admin audit trail written by the separate admin app (topik-ai); no user-facing page reads or writes it. |
+| storage | `problem-assets` | infrastructure | Bucket holding problem material files; user pages reach files indirectly via `problem_assets.storage_path`, uploads belong to the admin app. |
 | rpc | `private.is_email_confirmed` | infrastructure/security | Function is a trigger, RLS helper, cleanup job, validator, or security hardening helper rather than a direct page data surface. |
 | rpc | `public.supersede_active_draft` | infrastructure/security | Function is a trigger, RLS helper, cleanup job, validator, or security hardening helper rather than a direct page data surface. |
 | rpc | `public.touch_updated_at` | infrastructure/security | Function is a trigger, RLS helper, cleanup job, validator, or security hardening helper rather than a direct page data surface. |

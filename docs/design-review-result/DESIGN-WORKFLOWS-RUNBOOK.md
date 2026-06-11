@@ -2,7 +2,8 @@
 
 Three workflows + one helper, built 2026-06-05. All read the `docs/` source-of-truth
 (DESIGN.md, docs/ant-design/*, docs/Wireframe/*/description.md + hifi.png) and the audit
-report. Admin (H-01/X-08/X-10/X-15) is out of scope everywhere.
+report. Admin is out of scope everywhere (admin wireframes were removed from this
+repo 2026-06-11; the admin console is the separate topik-ai app).
 
 | name | file | mode | what it does |
 | --- | --- | --- | --- |
