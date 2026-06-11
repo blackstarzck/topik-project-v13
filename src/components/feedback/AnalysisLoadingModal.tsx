@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Alert, App, Button, Progress, Steps, Typography } from "antd";
+import { Alert, App, Button, Progress, Steps, Typography, theme } from "antd";
 import { ArrowLeft, Clock3, LifeBuoy, RefreshCcw, ShieldAlert } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -94,6 +94,7 @@ function AnalysisLoadingModalContent({
   const t = useTranslations("feedback.analysis");
   const router = useRouter();
   const { message, modal } = App.useApp();
+  const { token } = theme.useToken();
   const reduced = useReducedMotion(reduceMotion);
   const [autoStep, setAutoStep] = useState(0);
   const [slow, setSlow] = useState(false);
@@ -219,6 +220,7 @@ function AnalysisLoadingModalContent({
         <Progress
           percent={progressPercent}
           showInfo={false}
+          strokeColor={token.colorText}
           aria-label={t("progressLabel")}
           className="analysis-loading__progress"
         />
