@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Alert, Button, Descriptions, Space, Tag, Typography } from "antd";
+import { Alert, Button, Descriptions, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { AppModal } from "@/components/shared/AppModal";
 
@@ -58,11 +58,11 @@ function describeTrigger(
 function recoveryTag(state: RecoveryState, t: WarningTranslate) {
   switch (state) {
     case "possible":
-      return <Tag color="success">{t("recoveryPossible")}</Tag>;
+      return <Tag>{t("recoveryPossible")}</Tag>;
     case "checking":
-      return <Tag color="processing">{t("recoveryChecking")}</Tag>;
+      return <Tag>{t("recoveryChecking")}</Tag>;
     case "impossible":
-      return <Tag color="error">{t("recoveryImpossible")}</Tag>;
+      return <Tag>{t("recoveryImpossible")}</Tag>;
   }
 }
 
@@ -93,7 +93,7 @@ export function AutosaveWarningModal({
       // §2 예외 — 경고 아이콘 로드 실패 대비: 아이콘 대신 텍스트 배지를 제목에 둔다.
       title={
         <span>
-          <Tag color="warning">{t("warnBadge")}</Tag> {title}
+          <Tag>{t("warnBadge")}</Tag> {title}
         </span>
       }
       closable={false}
@@ -103,7 +103,7 @@ export function AutosaveWarningModal({
       <div data-testid="autosave-warning-modal">
         <Paragraph
           data-testid="autosave-warning-body"
-          style={{ whiteSpace: "pre-line" }}
+          className="whitespace-pre-line"
         >
           {body}
         </Paragraph>
@@ -114,7 +114,7 @@ export function AutosaveWarningModal({
             data-testid="autosave-warning-alert"
             type="warning"
             showIcon
-            style={{ marginBottom: 12 }}
+            className="mb-3"
             message={warn}
           />
         ) : null}
@@ -126,7 +126,7 @@ export function AutosaveWarningModal({
           column={1}
           bordered
           colon={false}
-          style={{ marginBottom: 12 }}
+          className="mb-3"
         >
           <Descriptions.Item label={t("lastSavedLabel")}>
             <span data-testid="autosave-warning-last-saved">{savedLabel}</span>
@@ -143,14 +143,14 @@ export function AutosaveWarningModal({
           <Paragraph
             data-testid="autosave-warning-no-backup"
             type="secondary"
-            style={{ fontSize: 12 }}
+            className="text-xs"
           >
             {t("noBackup")}{" "}
             <Link href={"/library" as never}>{t("backupHelpLink")}</Link>
           </Paragraph>
         ) : null}
 
-        <Space orientation="vertical" style={{ width: "100%" }}>
+        <div className="flex w-full flex-col gap-2">
           <Button block data-testid="autosave-warning-keep" onClick={onKeep}>
             {t("keepAutosave")}
           </Button>
@@ -178,7 +178,7 @@ export function AutosaveWarningModal({
                 : t("proceedAnyway")}
             </Text>
           </Button>
-        </Space>
+        </div>
       </div>
     </AppModal>
   );
