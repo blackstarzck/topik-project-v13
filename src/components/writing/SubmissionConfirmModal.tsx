@@ -14,7 +14,7 @@ import {
 import { useTranslations } from "next-intl";
 import { AppModal } from "@/components/shared/AppModal";
 
-const { Paragraph, Text, Title } = Typography;
+const { Text } = Typography;
 
 type Props = {
   open: boolean;
@@ -84,53 +84,67 @@ export function SubmissionConfirmModal({
 
   return (
     <AppModal
-      rootClassName="d-m1-submit-modal"
       title={null}
       open={open}
       onCancel={onCancel}
       footer={null}
       width={640}
+      classNames={{ body: "p-0" }}
       centered
       closable={!loading}
       mask={{ closable: !loading }}
       keyboard={!loading}
       destroyOnHidden
     >
-      <div className="submit-confirm" data-testid="submission-confirm-modal">
-        <div className="submit-confirm__hero">
-          <div className="submit-confirm__icon">
-            <ClipboardCheck aria-hidden size={30} />
+      <div
+        className="grid max-h-dvh gap-3 overflow-y-auto overscroll-contain p-3 sm:gap-4 sm:p-8"
+        data-testid="submission-confirm-modal"
+      >
+        <div className="grid justify-items-center gap-2 text-center">
+          <div className="inline-flex size-12 items-center justify-center rounded-2xl border border-border bg-surface text-text sm:size-16 sm:rounded-3xl">
+            <ClipboardCheck aria-hidden size={26} />
           </div>
-          <Title level={2} className="submit-confirm__title">
+          <h2 className="m-0 text-xl font-bold leading-tight text-text sm:text-2xl">
             {t("title")}
-          </Title>
-          <Paragraph className="submit-confirm__subtitle">
+          </h2>
+          <p className="m-0 max-w-md text-xs text-text-secondary sm:text-sm">
             {t("subtitle")}
-          </Paragraph>
+          </p>
         </div>
 
         <section
-          className="submit-confirm__summary"
+          className="overflow-hidden rounded-3xl border border-border bg-background"
           aria-label={t("summaryAria")}
         >
           {summaryItems.map((item) => (
-            <div className="submit-confirm__summary-row" key={item.label}>
-              <span className="submit-confirm__summary-icon">{item.icon}</span>
-              <Text type="secondary">{item.label}</Text>
-              <Text strong className="submit-confirm__summary-value">
+            <div
+              className="flex flex-wrap items-center gap-2 border-t border-border px-3 py-2 first:border-t-0 sm:gap-3 sm:px-4 sm:py-3"
+              key={item.label}
+            >
+              <span className="inline-flex size-7 flex-none items-center justify-center rounded-full border border-border bg-surface text-text sm:size-8">
+                {item.icon}
+              </span>
+              <span className="text-xs text-text-secondary sm:text-sm">
+                {item.label}
+              </span>
+              <span className="ml-auto min-w-0 text-right text-xs font-semibold text-text sm:text-sm">
                 {item.value}
-              </Text>
+              </span>
             </div>
           ))}
         </section>
 
-        <section className="submit-confirm__warning">
-          <AlertTriangle aria-hidden size={24} />
-          <div>
+        <section className="flex gap-3 rounded-3xl border border-border bg-surface p-3 sm:p-4">
+          <AlertTriangle
+            aria-hidden
+            size={20}
+            className="mt-1 flex-none text-text"
+          />
+          <div className="min-w-0">
             <Text strong>{t("warningTitle")}</Text>
-            <Paragraph className="submit-confirm__warning-copy">
+            <p className="m-0 mt-1 text-xs leading-relaxed text-text-secondary sm:text-sm">
               {t("submitNotice")}
-            </Paragraph>
+            </p>
           </div>
         </section>
 
@@ -151,28 +165,36 @@ export function SubmissionConfirmModal({
           />
         ) : null}
 
-        <section className="submit-confirm__checklist">
+        <section className="grid gap-3 rounded-3xl border border-border bg-background p-3 sm:p-4">
           <Text strong>{t("checklistTitle")}</Text>
-          <div className="submit-confirm__checklist-grid">
+          <div className="grid grid-cols-2 gap-2">
             {checklistItems.map((item) => (
-              <span key={item}>
-                <CheckCircle2 aria-hidden size={16} />
+              <span
+                className="inline-flex min-w-0 items-center gap-2 text-xs text-text-secondary sm:text-sm"
+                key={item}
+              >
+                <CheckCircle2
+                  aria-hidden
+                  size={14}
+                  className="flex-none text-text"
+                />
                 {item}
               </span>
             ))}
           </div>
         </section>
 
-        <label className="submit-confirm__agreement">
+        <label className="flex items-start gap-3 rounded-3xl border border-border bg-surface p-2 text-xs text-text sm:p-3 sm:text-sm">
           <Checkbox
             checked={agreed}
             onChange={(e) => setAgreed(e.target.checked)}
           />
-          <span>{t("agreeNoEdit")}</span>
+          <span className="pt-0.5">{t("agreeNoEdit")}</span>
         </label>
 
-        <div className="submit-confirm__actions">
+        <div className="grid grid-cols-2 gap-3">
           <Button
+            block
             size="large"
             onClick={onCancel}
             disabled={loading}
@@ -181,6 +203,7 @@ export function SubmissionConfirmModal({
             {tCommon("cancel")}
           </Button>
           <Button
+            block
             size="large"
             type="primary"
             onClick={onConfirm}
@@ -192,9 +215,9 @@ export function SubmissionConfirmModal({
           </Button>
         </div>
 
-        <div className="submit-confirm__footer-note">
-          <ShieldCheck aria-hidden size={16} />
-          <Text type="secondary">{t("footerNote")}</Text>
+        <div className="hidden items-center justify-center gap-2 text-center text-sm text-text-secondary sm:flex">
+          <ShieldCheck aria-hidden size={16} className="flex-none" />
+          <span>{t("footerNote")}</span>
         </div>
       </div>
     </AppModal>
