@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import {
   App,
   Alert,
   Button,
+  Checkbox,
   Divider,
   Form,
   Input,
@@ -15,8 +16,10 @@ import type { FormInstance } from "antd";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowRight, Mail } from "lucide-react";
+import { ArrowRight, LockKeyhole, Mail } from "lucide-react";
 
+import { GoogleMark } from "@/components/auth/GoogleMark";
+import { startGoogleOAuth } from "@/lib/auth/oauth";
 import { buildAuthRedirectUrl } from "@/lib/auth/redirect-url";
 import { mapSupabaseErrorCode } from "@/lib/auth/error-mapping";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
@@ -62,12 +65,22 @@ type LoginMode = "password" | "magic-link";
 type PasswordFields = { email: string; password: string };
 type MagicLinkFields = { email: string };
 
+type LoginFormProps = {
+  onTypingChange?: (isTyping: boolean) => void;
+  onPasswordChange?: (password: string) => void;
+  onPasswordVisibilityChange?: (visible: boolean) => void;
+};
+
 // Codex P4 D5 결정: 잠금은 서버 강제 (Supabase over_request_rate_limit → X-11 카드).
 // 클라이언트는 보안 장치가 아닌 사용자 안내용 실패 카운터만 둠. 우회 가능해도 보안에
 // 영향 없음. 사용자가 "다시 시도해도 안 될 수 있다" 는 신호를 미리 받게 함.
 const FAILED_ATTEMPTS_HINT_THRESHOLD = 3;
 
-export function LoginForm() {
+export function LoginForm({
+  onTypingChange,
+  onPasswordChange,
+  onPasswordVisibilityChange,
+}: LoginFormProps = {}) {
   const t = useTranslations("auth.login");
   // Cross-namespace: server auth-failure copy lives under `auth.error.<reason>.message`.
   const te = useTranslations("auth.error");
@@ -79,6 +92,7 @@ export function LoginForm() {
   const queryNotice = noticeReason ? REASON_NOTICE[noticeReason] : undefined;
   const [mode, setMode] = useState<LoginMode>("password");
   const [submitting, setSubmitting] = useState(false);
+  const [googleSubmitting, setGoogleSubmitting] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState<string | null>(null);
   const [failedAttempts, setFailedAttempts] = useState(0);
   // 로그인 시도 후 서버가 돌려준 상태성 오류(휴면/미인증/서버오류)를 위한 인라인 안내.
@@ -87,6 +101,10 @@ export function LoginForm() {
 
   // 화면 상단에 노출할 최종 안내: 시도 후 statusNotice가 query 안내보다 우선.
   const activeNotice = statusNotice ?? queryNotice ?? null;
+
+  function handlePasswordChange(event: ChangeEvent<HTMLInputElement>) {
+    onPasswordChange?.(event.target.value);
+  }
 
   async function handlePasswordLogin(values: PasswordFields) {
     setSubmitting(true);
@@ -160,6 +178,25 @@ export function LoginForm() {
     setMagicLinkSent(values.email);
   }
 
+  async function handleGoogleLogin() {
+    setGoogleSubmitting(true);
+    setStatusNotice(null);
+    try {
+      const { error } = await startGoogleOAuth("login");
+      if (error) {
+        const reason = mapSupabaseErrorCode(error.code);
+        setStatusNotice({
+          tone: "error",
+          text: te(`${reason}.message` as Parameters<typeof te>[0]),
+        });
+        setGoogleSubmitting(false);
+      }
+    } catch {
+      setStatusNotice({ tone: "error", key: "socialAuthFailed" });
+      setGoogleSubmitting(false);
+    }
+  }
+
   if (magicLinkSent) {
     return (
       <div>
@@ -176,7 +213,7 @@ export function LoginForm() {
   }
 
   return (
-    <div>
+    <div className="auth-form-stack">
       {activeNotice && (
         <Alert
           type={activeNotice.tone}
@@ -184,7 +221,7 @@ export function LoginForm() {
           title={
             activeNotice.text ?? (activeNotice.key ? t(activeNotice.key) : "")
           }
-          style={{ marginBottom: 16 }}
+          style={{ marginBottom: 0 }}
           data-testid="login-session-notice"
         />
       )}
@@ -193,7 +230,7 @@ export function LoginForm() {
           type="info"
           showIcon
           title={t("failedAttemptsHint")}
-          style={{ marginBottom: 16 }}
+          style={{ marginBottom: 0 }}
           data-testid="login-failed-hint"
         />
       )}
@@ -205,39 +242,116 @@ export function LoginForm() {
           form.resetFields();
           setFailedAttempts(0);
           setStatusNotice(null);
+          onTypingChange?.(false);
+          onPasswordChange?.("");
+          onPasswordVisibilityChange?.(false);
         }}
         options={[
           { label: t("modePassword"), value: "password" },
           { label: t("modeMagicLink"), value: "magic-link" },
         ]}
-        style={{ marginBottom: 16 }}
+        style={{ marginBottom: 0 }}
       />
 
-      {mode === "password" ? (
-        <Form
-          form={form as FormInstance<PasswordFields>}
-          layout="vertical"
-          onFinish={handlePasswordLogin}
-          requiredMark={false}
-        >
-          <Form.Item
-            label={t("emailLabel")}
-            name="email"
-            rules={[
-              { required: true, message: t("emailRequired") },
-              { type: "email", message: t("emailInvalid") },
-            ]}
-          >
-            <Input autoComplete="email" placeholder="you@example.com" />
-          </Form.Item>
-          <Form.Item
-            label={t("passwordLabel")}
-            name="password"
-            rules={[{ required: true, message: t("passwordRequired") }]}
-          >
-            <Input.Password autoComplete="current-password" />
-          </Form.Item>
-          <Form.Item>
+      <Form
+        form={form as FormInstance<PasswordFields | MagicLinkFields>}
+        layout="vertical"
+        onFinish={(values) => {
+          if (mode === "password") {
+            void handlePasswordLogin(values as PasswordFields);
+            return;
+          }
+          void handleMagicLink(values as MagicLinkFields);
+        }}
+        requiredMark={false}
+        className="auth-login-form"
+      >
+        <div className="auth-login-mode-panel">
+          {mode === "password" ? (
+            <>
+              <Form.Item
+                label={t("emailLabel")}
+                name="email"
+                rules={[
+                  { required: true, message: t("emailRequired") },
+                  { type: "email", message: t("emailInvalid") },
+                ]}
+              >
+                <Input
+                  autoComplete="email"
+                  placeholder={t("emailPlaceholder")}
+                  prefix={
+                    <Mail
+                      className="auth-input-icon"
+                      size={18}
+                      aria-hidden="true"
+                    />
+                  }
+                  onFocus={() => onTypingChange?.(true)}
+                  onBlur={() => onTypingChange?.(false)}
+                />
+              </Form.Item>
+              <Form.Item
+                label={t("passwordLabel")}
+                name="password"
+                rules={[{ required: true, message: t("passwordRequired") }]}
+              >
+                <Input.Password
+                  autoComplete="current-password"
+                  placeholder={t("passwordPlaceholder")}
+                  prefix={
+                    <LockKeyhole
+                      className="auth-input-icon"
+                      size={18}
+                      aria-hidden="true"
+                    />
+                  }
+                  onFocus={() => onTypingChange?.(true)}
+                  onBlur={() => onTypingChange?.(false)}
+                  onChange={handlePasswordChange}
+                  visibilityToggle={{
+                    onVisibleChange: (visible) =>
+                      onPasswordVisibilityChange?.(visible),
+                  }}
+                />
+              </Form.Item>
+              <div className="auth-form-options-row">
+                <Checkbox defaultChecked className="auth-form-remember">
+                  {t("rememberMe")}
+                </Checkbox>
+                <Paragraph className="auth-form-forgot">
+                  <Link href="/password-reset">{t("forgotPassword")}</Link>
+                </Paragraph>
+              </div>
+            </>
+          ) : (
+            <Form.Item
+              label={t("emailLabel")}
+              name="email"
+              rules={[
+                { required: true, message: t("emailRequired") },
+                { type: "email", message: t("emailInvalid") },
+              ]}
+            >
+              <Input
+                autoComplete="email"
+                placeholder={t("emailPlaceholder")}
+                prefix={
+                  <Mail
+                    className="auth-input-icon"
+                    size={18}
+                    aria-hidden="true"
+                  />
+                }
+                onFocus={() => onTypingChange?.(true)}
+                onBlur={() => onTypingChange?.(false)}
+              />
+            </Form.Item>
+          )}
+        </div>
+
+        <div className="auth-login-action-panel">
+          <Form.Item className="auth-form-submit">
             <Button
               type="primary"
               htmlType="submit"
@@ -246,64 +360,27 @@ export function LoginForm() {
               icon={<ArrowRight size={16} aria-hidden="true" />}
               iconPlacement="end"
             >
-              {t("submit")}
+              {mode === "password" ? t("submit") : t("magicLinkSubmit")}
             </Button>
           </Form.Item>
-          <Paragraph style={{ textAlign: "center" }}>
-            <Link href="/password-reset">{t("forgotPassword")}</Link>
-          </Paragraph>
-        </Form>
-      ) : (
-        <Form
-          form={form as FormInstance<MagicLinkFields>}
-          layout="vertical"
-          onFinish={handleMagicLink}
-          requiredMark={false}
-        >
-          <Form.Item
-            label={t("emailLabel")}
-            name="email"
-            rules={[
-              { required: true, message: t("emailRequired") },
-              { type: "email", message: t("emailInvalid") },
-            ]}
+
+          <Divider plain className="auth-form-divider">
+            {t("socialDivider")}
+          </Divider>
+
+          <Button
+            block
+            htmlType="button"
+            onClick={() => void handleGoogleLogin()}
+            loading={googleSubmitting}
+            disabled={submitting}
+            icon={<GoogleMark />}
+            className="signup-social-button"
           >
-            <Input autoComplete="email" placeholder="you@example.com" />
-          </Form.Item>
-          <Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              block
-              loading={submitting}
-              icon={<ArrowRight size={16} aria-hidden="true" />}
-              iconPlacement="end"
-            >
-              {t("magicLinkSubmit")}
-            </Button>
-          </Form.Item>
-        </Form>
-      )}
-
-      <Divider plain style={{ margin: "16px 0 12px" }}>
-        {t("socialDivider")}
-      </Divider>
-
-      <Button
-        block
-        disabled
-        icon={<Mail size={16} aria-hidden="true" />}
-        className="signup-social-button"
-      >
-        {t("socialGoogle")}
-      </Button>
-
-      <Paragraph
-        type="secondary"
-        style={{ textAlign: "center", fontSize: 13, margin: "8px 0 0" }}
-      >
-        {t("socialNotice")}
-      </Paragraph>
+            {t("socialGoogle")}
+          </Button>
+        </div>
+      </Form>
     </div>
   );
 }

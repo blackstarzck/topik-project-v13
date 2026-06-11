@@ -78,7 +78,7 @@ flowchart LR
 | --- | --- | --- | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | dev URL | dev URL | **prod URL** | 브라우저에서 사용 → `NEXT_PUBLIC_` prefix 필수 |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | dev publishable | dev publishable | **prod publishable** | 안전한 공개 키 |
-| `NEXT_PUBLIC_SITE_URL` | `http://127.0.0.1:3000` | preview 도메인 | prod 도메인 | redirect URL 생성에 사용 |
+| `NEXT_PUBLIC_SITE_URL` | `http://127.0.0.1:3000` | preview 도메인 | prod 도메인 | Supabase email/OAuth redirect URL 생성에 사용 |
 | `SUPABASE_SERVICE_ROLE_KEY` | dev Secret API key (`sb_secret_*`) | dev Secret API key | **prod Secret API key** | 서버 전용, 브라우저 노출 절대 X. 신규 발급은 Dashboard → Secret API Keys |
 | `SUPABASE_ENV_LABEL` | `local` (또는 `dev`) | `preview` | `prod` | audit 가드용 라벨 — 서버 전용 |
 | `SUPABASE_TEST_PASSWORD` | audit용 임시값 | (선택) | **NEVER SET** | audit 가짜 유저 4개 공유 비번. DB 비밀번호 아님 |
@@ -126,7 +126,8 @@ Dashboard에서 새 프로젝트 만들 때 체크리스트:
 | 5 | RLS 정책 활성화 확인 | `private.is_*_admin()` 함수 + `admin_audit_logs` 트리거 |
 | 6 | pg_cron extension 활성화 | `cleanup_unconfirmed_users_daily` 등록 |
 | 7 | Email Template (signup / recovery / magic-link) prod 도메인으로 갱신 | `{{ .ConfirmationURL }}` → `https://prod-domain/auth/callback` |
-| 8 | Authentication → URL Configuration → Redirect URLs | prod 도메인만 화이트리스트 |
+| 8 | Authentication → URL Configuration → Redirect URLs | prod 도메인의 `/auth/callback` 화이트리스트 |
+| 8-1 | Authentication → Providers → Google | Google provider 활성화. Google Cloud Authorized redirect URI는 `https://<project-ref>.supabase.co/auth/v1/callback`; Client Secret은 Supabase Dashboard/secret에만 저장 |
 | 9 | Custom SMTP 설정 | SendGrid / Resend / Postmark 등. built-in SMTP 2/hour는 운영 불가 |
 | 10 | Auth → Providers → Email → Confirm email **반드시 ON** | cleanup 정책의 전제 |
 | 11 | Storage 정책 적용 (`is_email_confirmed` 가드 포함) | 미인증 사용자 업로드 차단 |

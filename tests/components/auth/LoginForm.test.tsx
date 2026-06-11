@@ -12,6 +12,7 @@ import { renderWithIntl } from "../../test-utils/renderWithIntl";
 
 const signInWithPasswordMock = vi.fn();
 const signInWithOtpMock = vi.fn();
+const signInWithOAuthMock = vi.fn();
 const pushMock = vi.fn();
 
 vi.mock("@/lib/supabase/browser", () => ({
@@ -20,6 +21,7 @@ vi.mock("@/lib/supabase/browser", () => ({
       signInWithPassword: (...args: unknown[]) =>
         signInWithPasswordMock(...args),
       signInWithOtp: (...args: unknown[]) => signInWithOtpMock(...args),
+      signInWithOAuth: (...args: unknown[]) => signInWithOAuthMock(...args),
     },
   }),
 }));
@@ -37,10 +39,13 @@ import { LoginForm } from "../../../src/components/auth/LoginForm";
 const renderInApp = renderWithIntl;
 
 beforeEach(() => {
+  window.history.replaceState(null, "", "http://localhost:3000/login");
   signInWithPasswordMock.mockReset();
   signInWithPasswordMock.mockResolvedValue({ error: null });
   signInWithOtpMock.mockReset();
   signInWithOtpMock.mockResolvedValue({ error: null });
+  signInWithOAuthMock.mockReset();
+  signInWithOAuthMock.mockResolvedValue({ data: { url: "" }, error: null });
   pushMock.mockReset();
   vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://talkpik.example.com");
 });
@@ -122,5 +127,52 @@ describe("LoginForm", () => {
     const link = screen.getByText("비밀번호를 잊으셨나요?");
     expect(link).toBeTruthy();
     expect(link.closest("a")?.getAttribute("href")).toBe("/password-reset");
+  });
+
+  it("shows the remember-me affordance checked by default", () => {
+    renderInApp(<LoginForm />);
+    const checkbox = screen.getByLabelText(
+      "로그인 상태 유지",
+    ) as HTMLInputElement;
+    expect(checkbox.checked).toBe(true);
+  });
+
+  it("starts Google OAuth with post-auth redirect", async () => {
+    renderInApp(<LoginForm />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Google로 로그인" }));
+    });
+
+    await waitFor(() => {
+      expect(signInWithOAuthMock).toHaveBeenCalledTimes(1);
+    });
+    expect(signInWithOAuthMock.mock.calls[0][0]).toEqual({
+      provider: "google",
+      options: {
+        redirectTo:
+          "http://localhost:3000/auth/callback?next=%2Fauth%2Fpost-auth%3Fintent%3Dlogin",
+      },
+    });
+  });
+
+  it("shows an error alert when Google OAuth cannot start", async () => {
+    signInWithOAuthMock.mockResolvedValueOnce({
+      data: { url: "" },
+      error: { code: "unknown", message: "OAuth failed" },
+    });
+    renderInApp(<LoginForm />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Google로 로그인" }));
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "잠시 후 다시 시도해주세요. 문제가 계속되면 잠시 뒤 다시 시도해주세요.",
+        ),
+      ).toBeTruthy();
+    });
   });
 });

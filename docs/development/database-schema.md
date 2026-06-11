@@ -661,7 +661,7 @@ erDiagram
 
 각 파일은 idempotent하게 작성 (`if not exists`, `drop policy if exists`, `on conflict do nothing`).
 
-**Phase 7 / conformance / admin-integration 마이그레이션 (17~36, 적용 완료):**
+**Phase 7 / conformance / admin-integration / auth seed 마이그레이션 (17~38, 적용 상태는 `supabase/migrations/INDEX.md` 참조):**
 
 | timestamp | 파일 | 책임 |
 | --- | --- | --- |
@@ -676,6 +676,8 @@ erDiagram
 | `20260608120300` | `problems_topic_category_review_workflow.sql` | `problems.topic_category_code`(D-B) + `review_workflow_status`(D-C) + allowlist |
 | `20260608120400` | `admin_update_problem_audit_note.sql` | `admin_update_problem`에 `__note`→audit payload |
 | `20260609120000` | `list_user_problems_writing_state.sql` | `list_user_problems` 쓰기 상태/ lifecycle 반환 |
+| `20260609130000` | `remove_v13_admin_island.sql` | v13 admin RPC/org island 제거 |
+| `20260610104017` | `seed_initial_legal_documents.sql` | `/auth/consent`용 `legal_documents` published placeholder seed (`terms`/`privacy`, `ko/en/vi`) |
 
 ### 적용 방법
 

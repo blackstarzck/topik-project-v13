@@ -139,6 +139,20 @@ export async function GET(request: NextRequest) {
     const supabase = await createSupabaseServerClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (error) {
+      const {
+        data: { user: existingUser },
+      } = await supabase.auth.getUser();
+      if (existingUser) {
+        console.info(
+          "[auth/callback] stale OAuth callback revisited with active session",
+          {
+            code: error.code,
+            status: error.status,
+          },
+        );
+        return NextResponse.redirect(new URL(next, request.url));
+      }
+
       console.error("[auth/callback] exchangeCodeForSession error", {
         code: error.code,
         message: error.message,

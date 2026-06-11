@@ -56,6 +56,8 @@ Use these documents together when implementing or reviewing page coverage:
 | X-09 | Notification settings | `/settings/notifications` | page | Notification preferences. |
 | X-10 | Admin user management | `/admin/users` | page | Admin user/account management. |
 | —    | Auth callback | `/auth/callback` | route handler | Token-hash → `verifyOtp` 분기, code → `exchangeCodeForSession`. `next` query는 relative-only. 성공 시 `next` 또는 `/dashboard`로 redirect, 실패 시 `/auth/error?reason=<canonical>&retry_after_seconds=<n?>`로 redirect. raw `error_description`은 서버 로그에만. `export const dynamic = 'force-dynamic'`. **Phase 8 follow-up P0 fix(2026-05-27)**: page → Route Handler 전환 (Server Component cookies.set silent fail로 Set-Cookie 미발급되던 production 버그 해결). |
+| —    | Auth post-auth gate | `/auth/post-auth` | page | Google OAuth callback 이후 세션 보유 사용자를 약관 동의와 학습 목표 상태로 후속 라우팅한다. 세션 없음 → `/login`, 필수 동의 누락 → `/auth/consent`, 학습 목표 없음 → `/onboarding/learning-goal`, 모두 충족 → `/dashboard`. |
+| —    | Auth consent gate | `/auth/consent` | page + server action | Google OAuth 이후 필수 published 약관/개인정보 동의를 받는 보호 라우트. `legal_documents` 최신 required 문서 중 미동의분만 표시하고 동의 시 `user_consents.source='signup'`으로 기록한 뒤 `next`로 복귀. |
 | X-11 | Auth error | `/auth/error` | page | 11개 Supabase `error.code` 기반 reason 분기 (`otp_expired`, `flow_state_expired`, `flow_state_not_found`, `bad_code_verifier`, `user_not_found`, `over_email_send_rate_limit`, `over_request_rate_limit`, `email_not_confirmed`, `signup_disabled`, `access_denied`, `unknown`). rate-limit 계열은 `retry_after_seconds` countdown. Email prefill query는 untrusted (가시·편집 가능 input). |
 | X-12 | Auth verify-email | `/auth/verify-email` | page | 가입 직후 인증 메일 발송 안내 + 60초 cooldown 재전송 (Supabase same-user 60s + project 30/hour OTP + 빌트인 SMTP 2/hour 한도). |
 | X-17 | Auth callback fragment | `/auth/callback-fragment` | page | Implicit flow #fragment 처리. Route Handler가 query 없는 callback 요청을 이리 redirect → 브라우저가 RFC 7231로 fragment retain → client component `CallbackFragmentFallback`이 `window.location.hash` 파싱 → 정확한 `/auth/error?reason=…` 또는 `setSession` 후 `router.replace(next)`. Added after the existing 34 Wireframe screens from codebase route coverage. |
@@ -68,7 +70,7 @@ Use these documents together when implementing or reviewing page coverage:
 | Audience | Routes | Page guard / RLS 기반 |
 | --- | --- | --- |
 | **public** (인증 전) | `/`, `/terms`, `/privacy`, `/sign-up`, `/login`, `/password-reset`, `/password-reset/confirm`, `/auth/callback`, `/auth/callback-fragment`, `/auth/error`, `/auth/verify-email` | 없음 — 인증 미요구. middleware `PUBLIC_PATHS`에 명시 포함 필수 (없으면 익명 callback이 `/login`으로 튕겨 토큰 교환 자체가 실패) |
-| **user** (인증된 일반 사용자) | `/onboarding/learning-goal`, `/dashboard`, `/practice/*` (recommendations, problems, weakness, next), `/writing/*` (51-54, feedback, reports), `/library`, `/settings/{language,notifications}`, `/profile`, `/growth`, `/paywall`, `/subscription` | 세션 인증 + `auth.uid()` 기반 자기 row RLS |
+| **user** (인증된 일반 사용자) | `/auth/post-auth`, `/auth/consent`, `/onboarding/learning-goal`, `/dashboard`, `/practice/*` (recommendations, problems, weakness, next), `/writing/*` (51-54, feedback, reports), `/library`, `/settings/{language,notifications}`, `/profile`, `/growth`, `/paywall`, `/subscription` | 세션 인증 + `auth.uid()` 기반 자기 row RLS |
 | **admin** (역할 분리된 관리자) | `/admin` (X-15, admin root), `/admin/problems` (H-01, content admin), `/admin/org` (X-08, org admin), `/admin/users` (X-10, platform admin) | `requireContentAdmin / requireOrgAdmin / requirePlatformAdmin` 페이지 가드 + `private.is_{content,org,platform}_admin(uid)` 기반 RLS + 모든 권한 변경/발행 토글은 `admin_audit_logs` 기록. `/admin` root는 직접 변경 action이 없어 audit 대상이 아니다. |
 
 `Audience: both`인 phase는 user 라우트와 admin 라우트를 동시에 다룬다. 그 경우 Light Spec과 plan task table의 각 task에 audience를 행별로 명시한다.
@@ -150,11 +152,18 @@ flowchart TD
   SIGNUP --> VERIFY["X-12 Auth verify-email\n/auth/verify-email"]
   VERIFY -. "이메일 링크 클릭" .-> CB["Auth callback\n/auth/callback"]
   LOGIN -. "매직 링크" .-> CB
+  SIGNUP -. "Google OAuth" .-> CB
+  LOGIN -. "Google OAuth" .-> CB
   RESET -. "error callback" .-> CB
   CB -. "implicit fragment fallback" .-> CBF["X-17 Auth callback fragment\n/auth/callback-fragment"]
   CBF -->|"성공"| DASH
   CBF -->|"실패"| ERR
-  CB -->|"성공"| DASH
+  CB -->|"OAuth 성공"| POST["Auth post-auth\n/auth/post-auth"]
+  POST -->|"필수 동의 누락"| CONSENT["Auth consent\n/auth/consent"]
+  CONSENT -->|"동의 완료"| POST
+  POST -->|"학습 목표 없음"| GOAL
+  POST -->|"동의+목표 있음"| DASH
+  CB -->|"이메일 인증 성공"| GOAL
   CB -->|"실패"| ERR["X-11 Auth error\n/auth/error"]
   ERR -. "user_not_found" .-> SIGNUP
   ERR -. "재전송" .-> VERIFY

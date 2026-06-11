@@ -27,6 +27,8 @@ export type ProtectedRouteCase = {
 };
 
 export const PROTECTED_ROUTE_CASES: readonly ProtectedRouteCase[] = [
+  { path: "/auth/post-auth", iaCode: "AUTH-POST" },
+  { path: "/auth/consent", iaCode: "AUTH-CONSENT" },
   { path: "/dashboard", iaCode: "B-01" },
   { path: "/growth", iaCode: "X-02" },
   { path: "/library", iaCode: "F-01" },

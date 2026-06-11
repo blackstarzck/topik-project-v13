@@ -39,3 +39,12 @@ export function buildAuthRedirectUrl(path: string): string {
   const site = resolveSiteUrl();
   return `${site}${ensureLeadingSlash(path)}`;
 }
+
+export function buildAuthCallbackUrl(nextPath: string): string {
+  const next = ensureLeadingSlash(nextPath);
+  if (next.startsWith("//") || next.includes(":")) {
+    throw new Error(`Auth callback next path must be relative, got: ${nextPath}`);
+  }
+  const params = new URLSearchParams({ next });
+  return buildAuthRedirectUrl(`/auth/callback?${params.toString()}`);
+}

@@ -66,4 +66,22 @@ describe("auth redirect URL builder", () => {
 
     expect(() => buildAuthRedirectUrl("/dashboard")).toThrow();
   });
+
+  it("buildAuthCallbackUrl encodes nested post-auth next query", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://talkpik.example.com");
+    const { buildAuthCallbackUrl } = await loadModule();
+
+    expect(buildAuthCallbackUrl("/auth/post-auth?intent=login")).toBe(
+      "https://talkpik.example.com/auth/callback?next=%2Fauth%2Fpost-auth%3Fintent%3Dlogin",
+    );
+  });
+
+  it("buildAuthCallbackUrl rejects absolute next URLs", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://talkpik.example.com");
+    const { buildAuthCallbackUrl } = await loadModule();
+
+    expect(() => buildAuthCallbackUrl("https://evil.example")).toThrow(
+      /relative/,
+    );
+  });
 });

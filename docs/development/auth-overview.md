@@ -1,6 +1,6 @@
 # 인증 한눈에 보기 (로그인 · 회원가입 · 콜백)
 
-> Last updated: 2026-06-01
+> Last updated: 2026-06-10
 > 이 문서는 TALKPIK AI 의 **인증 흐름 + 운영 정책 + 코드 매핑 + 관리 포인트** 를
 > 한 페이지로 모은 정리본입니다. 새 도입 문서가 아니라 흩어져 있는 정본을 묶은
 > 인덱스 + 요약입니다. 더 자세한 내용은 각 섹션에 표시된 정본 링크를 따라가세요.
@@ -14,18 +14,18 @@
 | 화면 명세 (회원가입/로그인/콜백/에러/메일 안내/비밀번호 재설정) | [`docs/Wireframe/01-A-01-sign-up`](../Wireframe/01-A-01-sign-up/description.md), [`02-A-02-login`](../Wireframe/02-A-02-login/description.md), [`28-X-06-password-reset`](../Wireframe/28-X-06-password-reset/description.md), [`38-X-16-password-reset-confirm`](../Wireframe/38-X-16-password-reset-confirm/description.md), [`33-X-11-auth-error`](../Wireframe/33-X-11-auth-error/description.md), [`34-X-12-auth-verify-email`](../Wireframe/34-X-12-auth-verify-email/description.md), [`39-X-17-auth-callback-fragment`](../Wireframe/39-X-17-auth-callback-fragment/description.md) |
 | 사용자 플로우 (정본) | [`docs/flow/user-flow.md`](../flow/user-flow.md) |
 | 백엔드/Auth 정책 | [`docs/development/backend-auth.md`](./backend-auth.md) |
-| Auth 관련 마이그레이션 | [`supabase/migrations/INDEX.md`](../../supabase/migrations/INDEX.md) (#17, #22, #23, #24) |
+| Auth 관련 마이그레이션 | [`supabase/migrations/INDEX.md`](../../supabase/migrations/INDEX.md) (#17, #22, #23, #24, #31, #38) |
 | 환경 변수 | [`.env.example`](../../.env.example) |
 
 ---
 
 ## 1) 한 줄 결론
 
-이메일 + 비밀번호 / 매직 링크 / 비밀번호 재설정 흐름 전부 **Supabase Auth** 한
+이메일 + 비밀번호 / 매직 링크 / 비밀번호 재설정 / Google OAuth 흐름 전부 **Supabase Auth** 한
 곳에서 처리하고, **PKCE 콜백 (`/auth/callback`)** 으로 들어오는 토큰을 서버에서
-교환한 다음 학습자/관리자 라우트로 분기시킨다. **`profiles` 행 생성·역할 부여·
-미인증 계정 정리** 는 전부 Postgres 안에서 일어난다 (DB 트리거 + SECURITY DEFINER
-+ pg_cron).
+교환한다. Google OAuth는 바로 앱으로 보내지 않고 `/auth/post-auth`에서 필수 약관 동의와
+학습 목표 상태를 확인한 뒤 라우팅한다. **`profiles` 행 생성·역할 부여·미인증 계정
+정리** 는 전부 Postgres 안에서 일어난다 (DB 트리거 + SECURITY DEFINER + pg_cron).
 
 ---
 
@@ -41,12 +41,20 @@ flowchart TD
   LI -->|"비밀번호 로그인"| D["/dashboard"]
   LI -->|"매직 링크 발송"| MAIL["메일 안내"]
   MAIL -->|"링크 클릭"| CB
+  LI -->|"Google로 계속"| CB
+  S -->|"Google로 계속"| CB
   LI -->|"비밀번호 잊음"| PR["/password-reset (X-06)"]
   PR -->|"재설정 메일"| PRC["/password-reset/confirm (X-16)"]
   PRC -->|"변경 완료"| LI
   CB -. "query 없는 implicit fragment" .-> CBF["/auth/callback-fragment (X-17)"]
   CBF -->|"setSession 성공"| D
   CBF -->|"실패"| E
+  CB -->|"Google exchangeCodeForSession 성공"| PA["/auth/post-auth"]
+  PA -->|"필수 동의 누락"| CONSENT["/auth/consent"]
+  CONSENT -->|"동의 기록"| PA
+  PA -->|"학습 목표 없음"| LG["/onboarding/learning-goal"]
+  PA -->|"동의+목표 있음"| D
+  CB -->|"verifyOtp 성공: 이메일 가입"| LG
   CB -->|"verifyOtp/exchangeCodeForSession 성공: 학습자"| D
   CB -->|"성공: 관리자 (app_role)"| ADM["/admin/org (X-08)"]
   CB -->|"실패"| E["/auth/error?reason= (X-11)"]
@@ -71,6 +79,8 @@ flowchart TD
 | X-06 | 비밀번호 재설정 요청 | [`src/app/password-reset/page.tsx`](../../src/app/password-reset/page.tsx) | [`PasswordResetRequestForm.tsx`](../../src/components/auth/PasswordResetRequestForm.tsx) |
 | X-16 | 비밀번호 재설정 확정 | [`src/app/password-reset/confirm/page.tsx`](../../src/app/password-reset/confirm/page.tsx) | [`PasswordResetConfirmForm.tsx`](../../src/components/auth/PasswordResetConfirmForm.tsx) |
 | (라우트) | 인증 콜백 | [`src/app/auth/callback/route.ts`](../../src/app/auth/callback/route.ts) (Route Handler) | 서버 route handler |
+| (라우트) | OAuth 후처리 | [`src/app/auth/post-auth/page.tsx`](../../src/app/auth/post-auth/page.tsx) | 필수 약관 동의 + 학습 목표 라우팅 |
+| (라우트) | OAuth 약관 동의 | [`src/app/auth/consent/page.tsx`](../../src/app/auth/consent/page.tsx) | [`actions.ts`](../../src/app/auth/consent/actions.ts) |
 | X-17 | 인증 콜백 fragment 처리 | [`src/app/auth/callback-fragment/page.tsx`](../../src/app/auth/callback-fragment/page.tsx) | [`CallbackFragmentFallback.tsx`](../../src/components/auth/CallbackFragmentFallback.tsx) |
 | X-11 | 인증 에러 | [`src/app/auth/error/page.tsx`](../../src/app/auth/error/page.tsx) | [`AuthErrorCard.tsx`](../../src/components/auth/AuthErrorCard.tsx) |
 | X-12 | 인증 메일 확인 안내 | [`src/app/auth/verify-email/page.tsx`](../../src/app/auth/verify-email/page.tsx) | [`VerifyEmailCard.tsx`](../../src/components/auth/VerifyEmailCard.tsx) |
@@ -84,9 +94,11 @@ flowchart TD
 | [`src/lib/auth/admin-guard.ts`](../../src/lib/auth/admin-guard.ts) | `requirePlatformAdmin()`, `requireContentAdmin()`, `requireOrgAdmin()` |
 | [`src/lib/auth/roles.ts`](../../src/lib/auth/roles.ts) | `AppRole` 타입 + `ADMIN_ROLES` 상수 (client-safe) |
 | [`src/lib/auth/error-mapping.ts`](../../src/lib/auth/error-mapping.ts) | Supabase `error.code` → canonical `reason` 매핑, 메시지/CTA 테이블, `sanitizeNext`, `sanitizeRetryAfterSeconds`, `parseAuthFragment` |
-| [`src/lib/auth/redirect-url.ts`](../../src/lib/auth/redirect-url.ts) | `buildAuthRedirectUrl()` — 항상 절대 URL, dev는 `http://127.0.0.1:3000`, prod는 `NEXT_PUBLIC_SITE_URL` 필수 |
+| [`src/lib/auth/redirect-url.ts`](../../src/lib/auth/redirect-url.ts) | `buildAuthRedirectUrl()`, `buildAuthCallbackUrl()` — 항상 절대 URL, dev는 `http://127.0.0.1:3000`, prod는 `NEXT_PUBLIC_SITE_URL` 필수 |
+| [`src/lib/auth/oauth.ts`](../../src/lib/auth/oauth.ts) | 클라이언트 Google OAuth 시작. `signInWithOAuth({ provider: "google", options: { redirectTo } })`. PKCE code verifier가 origin별 저장소에 묶이므로 `redirectTo`는 현재 브라우저 `window.location.origin` 기준으로 만든다. |
+| [`src/lib/legal/consent.ts`](../../src/lib/legal/consent.ts) | 최신 required legal document 조회, 누락 동의 계산/기록, OAuth display_name 보강 |
 | [`src/proxy.ts`](../../src/proxy.ts) | Next.js middleware. 비공개 라우트 anon 접근 시 `/login` 으로 redirect. 만료 세션 쿠키 있으면 `?reason=session_expired` |
-| [`src/lib/routes.ts`](../../src/lib/routes.ts) | `PUBLIC_PATHS` (middleware 허용 목록) — `/sign-up`, `/login`, `/password-reset`, `/password-reset/confirm`, `/auth/callback`, `/auth/callback-fragment`, `/auth/error`, `/auth/verify-email`, `/terms`, `/privacy` |
+| [`src/lib/routes.ts`](../../src/lib/routes.ts) | `PUBLIC_PATHS` (middleware 허용 목록) — `/sign-up`, `/login`, `/password-reset`, `/password-reset/confirm`, `/auth/callback`, `/auth/callback-fragment`, `/auth/error`, `/auth/verify-email`, `/terms`, `/privacy`; `PROTECTED_ROUTE_CASES` — `/auth/post-auth`, `/auth/consent` 포함 |
 
 ---
 
@@ -106,8 +118,24 @@ flowchart TD
 
 - **비밀번호**: `supabase.auth.signInWithPassword({ email, password })` → 성공 시 `router.push('/dashboard')`
 - **매직 링크**: `supabase.auth.signInWithOtp({ email, options: { emailRedirectTo } })` → "이메일을 확인하세요" 상태 → 사용자 메일 링크 클릭 → `/auth/callback?next=/dashboard`
+- **Google**: `/login`과 `/sign-up` 모두 `supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo } })` 를 사용한다. `redirectTo` 는 현재 브라우저 origin의 `/auth/callback?next=/auth/post-auth?intent=login|sign-up` 로 조합한다. 로컬에서 `localhost`로 시작하면 `localhost`로, `127.0.0.1`로 시작하면 `127.0.0.1`로 돌아와야 한다.
 - **비밀번호 재설정 링크**: 로그인 폼 하단 `/password-reset` 링크
 - **세션 만료 안내**: middleware 가 만료된 `sb-*-auth-token` 쿠키를 감지하면 `/login?reason=session_expired` 로 보내고, `LoginForm` 이 안내 Alert 노출
+
+### 4.2.1 Google OAuth 후처리
+
+1. `/login` 또는 `/sign-up`의 `Google로 계속` 버튼 클릭.
+2. Supabase Auth Google authorize URL로 이동. Google은 유일한 소셜 provider다.
+3. Supabase가 앱의 `/auth/callback` 으로 `code`를 돌려준다.
+4. `/auth/callback` 에서 `exchangeCodeForSession(code)` 성공 시 `next`인 `/auth/post-auth?intent=login|sign-up` 으로 redirect.
+5. `/auth/post-auth` 는 세션이 없으면 `/login`, 세션이 있으면 다음을 순서대로 처리한다.
+   - `profiles.display_name` 이 비어 있으면 `user_metadata.display_name/full_name/name` 으로 보강한다. Google picture URL은 외부 URL이므로 `avatar_path`에 저장하지 않는다.
+   - `legal_documents.status='published' and requires_consent=true` 최신 문서 중 미동의분이 있으면 `/auth/consent?next=/auth/post-auth?...` 로 보낸다.
+   - 필수 약관이 하나도 없으면 사용자를 막지 않고 서버 로그를 남긴 뒤 다음 단계로 보낸다.
+   - `learning_goals`가 없으면 `/onboarding/learning-goal`, 있으면 `/dashboard` 로 보낸다.
+6. `/auth/consent` 에서 동의하면 누락된 `user_consents`만 `source='signup'` 으로 insert하고 `next`로 복귀한다.
+
+소셜 가입 여부는 별도 public 테이블에 저장하지 않는다. 인증 provider 연결 여부는 Supabase Auth의 `auth.users` / `auth.identities` 를 source of truth로 본다. Google provider access token도 앱 DB에 저장하지 않는다.
 
 ### 4.3 비밀번호 재설정 (X-06)
 
@@ -123,8 +151,12 @@ Route Handler 가 다음 순서로 처리한다 ([`src/app/auth/callback/route.t
 | --- | --- | --- |
 | 1 | `?error_code=` 가 query 에 박혀 옴 (일부 OAuth 공급자) | `mapSupabaseErrorCode(code)` → `/auth/error?reason=...` |
 | 2 | `?token_hash=` + `?type∈{signup,recovery,email_change,email}` | `verifyOtp({ token_hash, type })` → 성공 `redirect(next)`, 실패 `/auth/error` |
-| 3 | `?code=` (PKCE) | `exchangeCodeForSession(code)` → 성공 `redirect(next)`, 실패 `/auth/error` |
+| 3 | `?code=` (PKCE, Google OAuth 포함) | `exchangeCodeForSession(code)` → 성공 `redirect(next)`, 실패 `/auth/error` |
 | 4 | 위 3 가지 모두 없음 (legacy implicit flow, `#access_token=…`) | `CallbackFragmentFallback` 클라이언트 컴포넌트로 fragment 파싱 → `setSession()` 또는 에러 redirect |
+
+OAuth callback URL은 일회성 code를 포함한다. 사용자가 OAuth 성공 후 뒤로가기로 이미 소비된
+callback URL을 다시 밟으면 code 교환은 실패할 수 있다. 이때 서버에 이미 유효한 세션이 있으면
+에러 화면을 보여주지 않고 정화된 `next` 목적지로 다시 보낸다.
 
 ### 4.5 인증 에러 (X-11)
 
@@ -220,7 +252,8 @@ Route Handler 가 다음 순서로 처리한다 ([`src/app/auth/callback/route.t
 
 ### Supabase Dashboard 측 설정
 
-- **Authentication → URL Configuration → Redirect URLs**: `${NEXT_PUBLIC_SITE_URL}/auth/callback` 화이트리스트 등록
+- **Authentication → URL Configuration → Redirect URLs**: local, preview, production origin 각각의 `/auth/callback` 을 등록. Google OAuth도 이 callback만 사용한다.
+- **Authentication → Providers → Google**: Google provider 활성화. Google Cloud OAuth의 Authorized redirect URI는 `https://<project-ref>.supabase.co/auth/v1/callback`. Google Client Secret은 코드와 `.env.example`에 넣지 않고 Supabase Dashboard 또는 local Supabase secret으로만 관리한다. scope는 기본 `openid email profile`만 사용한다.
 - **Authentication → Email Templates**: confirm/magic link (signup·email_change·magiclink) 의 `{{ .ConfirmationURL }}` 이 `/auth/callback?token_hash=...&type=...` 형식인지 확인 (Supabase 기본값이 일치). **단 recovery (비밀번호 재설정) 는 §4.3 에 따라 `/password-reset/confirm` 직행 — `redirectTo` 가 callback 을 우회**
 - **Database → Extensions → pg_cron**: cleanup job 가동을 위해 활성화 필요
 - **Authentication → Providers → Email**: confirm email 켜져 있어야 cleanup 정책이 의미 있음

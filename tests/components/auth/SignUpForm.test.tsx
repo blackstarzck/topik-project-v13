@@ -12,6 +12,7 @@ import { renderWithIntl } from "../../test-utils/renderWithIntl";
 
 const signUpMock = vi.fn();
 const resendMock = vi.fn();
+const signInWithOAuthMock = vi.fn();
 const pushMock = vi.fn();
 
 vi.mock("@/lib/supabase/browser", () => ({
@@ -19,6 +20,7 @@ vi.mock("@/lib/supabase/browser", () => ({
     auth: {
       signUp: (...args: unknown[]) => signUpMock(...args),
       resend: (...args: unknown[]) => resendMock(...args),
+      signInWithOAuth: (...args: unknown[]) => signInWithOAuthMock(...args),
     },
   }),
 }));
@@ -34,10 +36,13 @@ import { SignUpForm } from "../../../src/components/auth/SignUpForm";
 const renderInApp = renderWithIntl;
 
 beforeEach(() => {
+  window.history.replaceState(null, "", "http://localhost:3000/sign-up");
   signUpMock.mockReset();
   signUpMock.mockResolvedValue({ error: null });
   resendMock.mockReset();
   resendMock.mockResolvedValue({ error: null });
+  signInWithOAuthMock.mockReset();
+  signInWithOAuthMock.mockResolvedValue({ data: { url: "" }, error: null });
   pushMock.mockReset();
 
   vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://talkpik.example.com");
@@ -161,5 +166,45 @@ describe("SignUpForm", () => {
     expect(pushMock.mock.calls[0][0]).toBe(
       "/auth/verify-email?email=valid%40example.com",
     );
+  });
+
+  it("starts Google OAuth without requiring the email sign-up form", async () => {
+    renderInApp(<SignUpForm />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Google로 계속" }));
+    });
+
+    await waitFor(() => {
+      expect(signInWithOAuthMock).toHaveBeenCalledTimes(1);
+    });
+    expect(signInWithOAuthMock.mock.calls[0][0]).toEqual({
+      provider: "google",
+      options: {
+        redirectTo:
+          "http://localhost:3000/auth/callback?next=%2Fauth%2Fpost-auth%3Fintent%3Dsign-up",
+      },
+    });
+    expect(signUpMock).not.toHaveBeenCalled();
+  });
+
+  it("shows an AntD message when Google OAuth cannot start", async () => {
+    signInWithOAuthMock.mockResolvedValueOnce({
+      data: { url: "" },
+      error: { code: "unknown", message: "OAuth failed" },
+    });
+    renderInApp(<SignUpForm />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Google로 계속" }));
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "Google 인증을 시작하지 못했어요. 잠시 후 다시 시도해주세요.",
+        ),
+      ).toBeTruthy();
+    });
   });
 });

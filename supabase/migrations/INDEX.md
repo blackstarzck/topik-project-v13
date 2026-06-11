@@ -122,6 +122,12 @@
 | ---:| --- | --- | --- |
 | 37 | `13:00:00` | [`20260609130000_remove_v13_admin_island.sql`](./20260609130000_remove_v13_admin_island.sql) | admin RPC 11개(`admin_update_problem`·`delete`·`add/remove_problem_asset`·`toggle_problem_publish`·`change_user_role`·`set_user_status`·`get_admin_users`·`get_admin_user_stats`·`get_admin_audit_logs`·`get_admin_org_dashboard`) drop + org 테이블 4개(`organizations`·`org_members`·`assignments`·`assignment_submissions`) drop(cascade) + org 헬퍼 2개(`private.is_org_member`·`is_org_manager`) drop. **보존**: `app_role`·`admin_audit_logs`·`is_*_admin`. forward-only·idempotent. |
 
+#### 10 (수) — Google OAuth 약관 게이트 seed (작성 완료)
+
+| # | timestamp | 파일 | 영역 |
+| ---:| --- | --- | --- |
+| 38 | `10:40:17` | [`20260610104017_seed_initial_legal_documents.sql`](./20260610104017_seed_initial_legal_documents.sql) | `/auth/consent`가 참조할 `terms`/`privacy` published placeholder 문서를 `ko/en/vi` 로케일별 seed. 스키마 변경 없음. `on conflict (doc_type, version, locale) do nothing`으로 idempotent. |
+
 ---
 
 ## 새 마이그레이션을 추가할 때

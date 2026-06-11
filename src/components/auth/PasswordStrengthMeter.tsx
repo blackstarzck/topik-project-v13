@@ -64,9 +64,9 @@ export function PasswordStrengthMeter({
 
   return (
     <div
+      className="password-strength-meter"
       data-testid="password-strength"
       aria-live="polite"
-      style={{ marginTop: -8, marginBottom: 8 }}
     >
       <div style={{ display: "flex", gap: 4 }}>
         {Array.from({ length: SEGMENT_COUNT }).map((_, index) => {

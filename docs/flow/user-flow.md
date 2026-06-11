@@ -19,6 +19,8 @@ flowchart TD
   A02["02 A-02 로그인"]
   X06["28 X-06 비밀번호 재설정"]
   X16["38 X-16 새 비밀번호 설정"]
+  PA["/auth/post-auth OAuth 후처리"]
+  CONSENT["/auth/consent 필수 약관 동의"]
   A03["03 A-03 학습 목표 설정"]
   B01["04 B-01 홈 대시보드"]
 
@@ -28,7 +30,8 @@ flowchart TD
   X13 -. "개인정보처리방침" .-> X14
   X01 -. "내비/미리보기/혜택 확인" .-> X01
 
-  A01 -->|"이메일 가입 / 소셜 로그인"| A03
+  A01 -->|"이메일 가입"| A03
+  A01 -. "Google로 계속" .-> PA
   A01 -. "약관/개인정보 확인" .-> X13
   A01 -. "약관/혜택 확인" .-> A01
 
@@ -36,7 +39,12 @@ flowchart TD
   A02 -->|"로그인 성공: 관리자"| X15
   A02 -->|"회원가입"| A01
   A02 -->|"계정 찾기"| X06
-  A02 -. "소셜 로그인" .-> B01
+  A02 -. "Google로 계속" .-> PA
+
+  PA -->|"필수 약관 미동의"| CONSENT
+  CONSENT -->|"동의 기록"| PA
+  PA -->|"학습 목표 없음"| A03
+  PA -->|"동의+학습 목표 있음"| B01
 
   X06 -->|"재설정 링크"| X16
   X16 -->|"비밀번호 변경 완료 / 로그인 복귀"| A02
@@ -182,8 +190,15 @@ flowchart TD
   X12 -. "60초 cooldown 후 인증 메일 재전송" .-> X12
   X12 -->|"이메일 링크 클릭"| CB
   A02 -. "매직 링크 / 비밀번호 재설정 링크 클릭" .-> CB
+  A01 -. "Google OAuth callback" .-> CB
+  A02 -. "Google OAuth callback" .-> CB
   X06 -. "오류 callback" .-> CB
 
+  CB -->|"Google OAuth 성공"| PA
+  PA -->|"필수 약관 미동의"| CONSENT
+  CONSENT -->|"동의 기록"| PA
+  PA -->|"학습 목표 없음"| A03
+  PA -->|"동의+학습 목표 있음"| B01
   CB -->|"토큰 교환 성공: 학습자"| B01
   CB -->|"토큰 교환 성공: 관리자"| X08
   CB -. "query 없는 implicit fragment" .-> X17
@@ -202,7 +217,7 @@ flowchart TD
 
 ## 인증 콜백 / 에러 흐름 — 상세 시나리오
 
-위 다이어그램의 `CB` (`/auth/callback`)와 X-11/X-12는 cleanup 정책(30일 미인증 자동 삭제)과 함께 가야 의미가 있다. cleanup이 켜진 상태에서 사용자가 옛 인증 링크를 클릭하면 Supabase가 보낼 응답이 늘어나기 때문이다. 시나리오는 다음 다섯 가지.
+위 다이어그램의 `CB` (`/auth/callback`)와 X-11/X-12는 cleanup 정책(30일 미인증 자동 삭제)과 함께 가야 의미가 있다. cleanup이 켜진 상태에서 사용자가 옛 인증 링크를 클릭하면 Supabase가 보낼 응답이 늘어나기 때문이다. 시나리오는 다음 여섯 가지.
 
 | # | 상황 | Supabase 응답 | UX 결과 |
 | --- | --- | --- | --- |
@@ -211,6 +226,7 @@ flowchart TD
 | 3 | 30일 미인증 cleanup 후 옛 링크 클릭 | `error.code = user_not_found` | X-11에서 "다시 가입하기" primary CTA → A-01 |
 | 4 | 같은 메일 60초 이내 재전송 시도 | `error.code = over_email_send_rate_limit` + `Retry-After` 헤더 | X-11에서 `retry_after_seconds` 카운트다운, 다 끝나면 CTA 자동 활성 |
 | 5 | 다른 브라우저/기기에서 PKCE 토큰 검증 시도 | `error.code = bad_code_verifier` 또는 `flow_state_not_found` | X-11에서 "처음부터 다시" 안내, A-02 로그인으로 secondary |
+| 6 | Google OAuth callback 성공 | `exchangeCodeForSession` success | `/auth/post-auth`에서 약관 동의 누락 시 `/auth/consent`, 학습 목표 누락 시 A-03, 모두 있으면 B-01 |
 
 세션 만료(in-app JWT expiry)는 미들웨어에서 잡혀 `/login?reason=session_expired`로 친절 redirect한다. X-11/X-12를 거치지 않는다.
 
