@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Alert, App, Button, Form, Input, Space, Typography } from "antd";
+import { Alert, App, Button, Form, Input, Typography } from "antd";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -85,24 +85,17 @@ export function PasswordResetConfirmForm() {
         data-testid="password-reset-confirm-form"
       >
         {/* §5 마스코트 — 보안 절차 긴장감 완화, 입력 영역을 가리지 않게 상단 배치 */}
-        <AuthMascot
-          alt={t("mascotAlt")}
-          emoji="🔐"
-          size={48}
-        />
+        <AuthMascot alt={t("mascotAlt")} emoji="🔐" size={48} />
         {/* §2 흐름 안내 — Stepper 미사용, 헤더 카피가 곧 위치 안내 */}
-        <Title level={3} style={{ textAlign: "center", marginTop: 12 }}>
+        <Title level={3} className="mt-3 text-center">
           {t("title")}
         </Title>
-        <Paragraph type="secondary" style={{ textAlign: "center" }}>
+        <Paragraph type="secondary" className="text-center">
           {t("subtitle")}
         </Paragraph>
 
         {/* §4 안내 카피 — 보안 조건 + 만료 시간(절대/상대 병기) */}
-        <Paragraph
-          style={{ marginBottom: 16 }}
-          data-testid="password-reset-confirm-guide"
-        >
+        <Paragraph className="mb-4" data-testid="password-reset-confirm-guide">
           <Text type="secondary">
             {t("guideBase")}
             {expiresAt ? (
@@ -121,7 +114,7 @@ export function PasswordResetConfirmForm() {
           <Alert
             type="warning"
             showIcon
-            style={{ marginBottom: 16 }}
+            className="mb-4"
             data-testid="password-reset-confirm-error"
             title={t("saveFailedTitle")}
             description={
@@ -182,8 +175,8 @@ export function PasswordResetConfirmForm() {
           />
         </Form.Item>
 
-        <Form.Item style={{ marginBottom: 0 }}>
-          <Space orientation="vertical" size="small" style={{ width: "100%" }}>
+        <Form.Item className="mb-0">
+          <div className="flex w-full flex-col gap-2">
             <Button
               type="primary"
               htmlType="submit"
@@ -203,7 +196,7 @@ export function PasswordResetConfirmForm() {
                 {t("backToLoginButton")}
               </Button>
             </Link>
-          </Space>
+          </div>
         </Form.Item>
       </Form>
     </AppCard>
