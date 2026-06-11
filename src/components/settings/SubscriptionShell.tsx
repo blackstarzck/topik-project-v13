@@ -9,7 +9,6 @@ import {
   Result,
   Row,
   Skeleton,
-  Space,
   Table,
   Tag,
   Typography,
@@ -40,36 +39,27 @@ const { Paragraph, Text } = Typography;
 const SUPPORT_EMAIL = "support@talkpik.example";
 const PAGE_SIZE = 10;
 
-// Content-width cap (matches the prior 1040 layout). The duplicate <main> +
-// padding are dropped — WorkspaceShell's Layout.Content already renders the
-// landmark + 24px padding; only the centered max-width is kept (library page
-// precedent). Hoisted to a module const so the M4 inline-number gate stays green.
-const SUBSCRIPTION_CONTENT_STYLE = {
-  maxWidth: 1040, // ai-check: allow-inline-number off-scale content-width cap (px)
-  marginInline: "auto",
-} as const;
-
-// i18n: 상태/결제 enum 값은 카탈로그 키 이름 + 배지 색만 보관하고(공유 엔티티
+// i18n: 상태/결제 enum 값은 카탈로그 키 이름만 보관하고(공유 엔티티
 // 의미를 바꾸지 않음), 한글 라벨은 렌더 시 t(`status.${key}`)로 해석한다.
 const STATUS_BADGE_META: Record<
   Subscription["status"],
-  { labelKey: string; color: string }
+  { labelKey: string }
 > = {
-  active: { labelKey: "active", color: "green" },
-  trialing: { labelKey: "trialing", color: "blue" },
-  past_due: { labelKey: "pastDue", color: "red" },
-  canceled: { labelKey: "canceled", color: "default" },
-  paused: { labelKey: "paused", color: "orange" },
+  active: { labelKey: "active" },
+  trialing: { labelKey: "trialing" },
+  past_due: { labelKey: "pastDue" },
+  canceled: { labelKey: "canceled" },
+  paused: { labelKey: "paused" },
 };
 
 const PAYMENT_STATUS_BADGE_META: Record<
   PaymentRecord["status"],
-  { labelKey: string; color: string }
+  { labelKey: string }
 > = {
-  paid: { labelKey: "paid", color: "green" },
-  failed: { labelKey: "failed", color: "red" },
-  refunded: { labelKey: "refunded", color: "default" },
-  pending: { labelKey: "pending", color: "blue" },
+  paid: { labelKey: "paid" },
+  failed: { labelKey: "failed" },
+  refunded: { labelKey: "refunded" },
+  pending: { labelKey: "pending" },
 };
 
 type SubState =
@@ -202,7 +192,7 @@ export function SubscriptionShell() {
       render: (status: PaymentRecord["status"]) => {
         const meta = PAYMENT_STATUS_BADGE_META[status];
         return (
-          <Tag color={meta.color}>
+          <Tag>
             {t(`paymentStatus.${meta.labelKey}` as Parameters<typeof t>[0])}
           </Tag>
         );
@@ -254,8 +244,11 @@ export function SubscriptionShell() {
   };
 
   return (
-    <div data-testid="subscription-shell" style={SUBSCRIPTION_CONTENT_STYLE}>
-      <Space orientation="vertical" size="large" style={{ width: "100%" }}>
+    <div
+      data-testid="subscription-shell"
+      className="mx-auto w-full max-w-5xl"
+    >
+      <div className="flex w-full flex-col gap-6">
         {/* IA 코드는 사용자 화면에 노출하지 않는다. */}
         <div>
           <PageHeader title={t("heading")} subtitle={t("subheading")} />
@@ -263,7 +256,7 @@ export function SubscriptionShell() {
 
         <Row gutter={[16, 16]}>
           <Col xs={24} md={15}>
-            <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+            <div className="flex w-full flex-col gap-4">
               {/* Region 2: 현재 구독 요약 */}
               <AppCard
                 data-testid="subscription-current-card"
@@ -284,16 +277,14 @@ export function SubscriptionShell() {
                     }
                   />
                 ) : sub.subscription === null ? (
-                  <Space
+                  <div
                     data-testid="subscription-no-sub"
-                    orientation="vertical"
-                    size={8}
-                    style={{ width: "100%" }}
+                    className="flex w-full flex-col gap-2"
                   >
-                    <Space>
+                    <div className="flex flex-wrap items-center gap-2">
                       <Text type="secondary">{t("current.statusLabel")}</Text>
                       <Tag>{t("current.noSubBadge")}</Tag>
-                    </Space>
+                    </div>
                     <Text type="secondary">{t("current.noSubBody")}</Text>
                     <Link href="/paywall">
                       <Button
@@ -303,7 +294,7 @@ export function SubscriptionShell() {
                         {t("current.startCta")}
                       </Button>
                     </Link>
-                  </Space>
+                  </div>
                 ) : (
                   <Descriptions
                     column={1}
@@ -313,9 +304,7 @@ export function SubscriptionShell() {
                         key: "status",
                         label: t("current.statusLabel"),
                         children: (
-                          <Tag
-                            color={STATUS_BADGE_META[sub.subscription.status].color}
-                          >
+                          <Tag>
                             {t(
                               `status.${STATUS_BADGE_META[sub.subscription.status].labelKey}` as Parameters<typeof t>[0],
                             )}
@@ -357,7 +346,7 @@ export function SubscriptionShell() {
                   data-testid="subscription-change-card"
                   title={t("change.title")}
                 >
-                  <Space wrap>
+                  <div className="flex flex-wrap gap-2">
                     <Button
                       data-testid="subscription-change-plan"
                       onClick={() => setPolicyModal("change")}
@@ -377,10 +366,10 @@ export function SubscriptionShell() {
                     >
                       {t("change.cancel")}
                     </Button>
-                  </Space>
+                  </div>
                   <Paragraph
                     type="secondary"
-                    style={{ marginTop: 12, marginBottom: 0, fontSize: 12 }}
+                    className="!mb-0 !mt-3 !text-xs"
                   >
                     {t("change.note")}
                   </Paragraph>
@@ -432,7 +421,7 @@ export function SubscriptionShell() {
                   />
                 )}
               </AppCard>
-            </Space>
+            </div>
           </Col>
 
           {/* Region 5: 우측 도움말 */}
@@ -441,22 +430,22 @@ export function SubscriptionShell() {
               data-testid="subscription-help-card"
               title={t("help.title")}
             >
-              <Space orientation="vertical" size={10} style={{ width: "100%" }}>
+              <div className="flex w-full flex-col gap-3">
                 <div>
                   <Text strong>{t("help.changePolicyTitle")}</Text>
-                  <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+                  <Paragraph type="secondary" className="!mb-0">
                     {t("help.changePolicyBody")}
                   </Paragraph>
                 </div>
                 <div>
                   <Text strong>{t("help.refundTitle")}</Text>
-                  <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+                  <Paragraph type="secondary" className="!mb-0">
                     {t("help.refundBody")}
                   </Paragraph>
                 </div>
                 <div>
                   <Text strong>{t("help.planDiffTitle")}</Text>
-                  <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+                  <Paragraph type="secondary" className="!mb-0">
                     {t("help.planDiffBody")}
                   </Paragraph>
                 </div>
@@ -468,20 +457,20 @@ export function SubscriptionShell() {
                 >
                   {t("help.contactCta")}
                 </Button>
-              </Space>
+              </div>
             </AppCard>
           </Col>
         </Row>
 
-        <Space>
+        <div className="flex flex-wrap gap-2">
           <Link href="/paywall">
             <Button>{t("startScreenCta")}</Button>
           </Link>
           <Button type="link" onClick={() => router.back()}>
             {t("backCta")}
           </Button>
-        </Space>
-      </Space>
+        </div>
+      </div>
 
       <AppModal
         open={policyModal !== null}
@@ -504,7 +493,7 @@ export function SubscriptionShell() {
         onOk={confirmPolicy}
         onCancel={() => setPolicyModal(null)}
       >
-        <Paragraph style={{ marginBottom: 0 }}>
+        <Paragraph className="!mb-0">
           {policyModal
             ? t(policyCopy[policyModal].bodyKey as Parameters<typeof t>[0])
             : ""}
