@@ -170,11 +170,9 @@ function PdfExportModalBody({
           }
         />
       ) : (
-        <Space
+        <div
           data-testid="pdf-export-modal"
-          orientation="vertical"
-          size="middle"
-          style={{ width: "100%" }}
+          className="flex max-h-96 w-full flex-col gap-4 overflow-y-auto pr-1 sm:max-h-none sm:overflow-visible sm:pr-0"
         >
           {tooMany ? (
             <Alert
@@ -188,6 +186,7 @@ function PdfExportModalBody({
           {/* Region 2: PDF 옵션 */}
           <Form layout="vertical">
             <Form.Item
+              className="mb-3"
               label={t("filenameLabel")}
               required
               validateStatus={filenameError ? "error" : undefined}
@@ -198,9 +197,8 @@ function PdfExportModalBody({
                   max: FILENAME_MAX,
                 })
               }
-              style={{ marginBottom: 12 }}
             >
-              <Space.Compact style={{ width: "100%" }}>
+              <Space.Compact className="w-full">
                 <Input
                   data-testid="pdf-export-filename"
                   value={filename}
@@ -213,13 +211,13 @@ function PdfExportModalBody({
                   aria-hidden
                   tabIndex={-1}
                   value=".pdf"
-                  style={{ width: 56, textAlign: "center" }}
+                  className="w-14 text-center"
                 />
               </Space.Compact>
             </Form.Item>
 
-            <Form.Item label={t("includeLabel")} style={{ marginBottom: 12 }}>
-              <Space orientation="vertical">
+            <Form.Item className="mb-3" label={t("includeLabel")}>
+              <div className="flex flex-col gap-2">
                 <Checkbox
                   checked={includeAnswers}
                   onChange={(e) => setIncludeAnswers(e.target.checked)}
@@ -232,11 +230,12 @@ function PdfExportModalBody({
                 >
                   {t("includeFeedback")}
                 </Checkbox>
-              </Space>
+              </div>
             </Form.Item>
 
-            <Form.Item label={t("sortLabel")} style={{ marginBottom: 12 }}>
+            <Form.Item className="mb-3" label={t("sortLabel")}>
               <Radio.Group
+                className="flex flex-col gap-2 sm:flex-row sm:flex-wrap"
                 value={sortOrder}
                 onChange={(e) => setSortOrder(e.target.value as SortOrder)}
               >
@@ -246,14 +245,17 @@ function PdfExportModalBody({
               </Radio.Group>
             </Form.Item>
 
-            <Form.Item label={t("formatLabel")} style={{ marginBottom: 12 }}>
-              <Radio.Group value={format}>
+            <Form.Item className="mb-3" label={t("formatLabel")}>
+              <Radio.Group
+                className="flex flex-col gap-2 sm:flex-row sm:flex-wrap"
+                value={format}
+              >
                 <Radio value="pdf">PDF</Radio>
               </Radio.Group>
             </Form.Item>
 
             {/* 개인정보 확인 필수 */}
-            <Form.Item style={{ marginBottom: 0 }}>
+            <Form.Item className="mb-0">
               <Checkbox
                 data-testid="pdf-export-privacy-confirm"
                 checked={privacyConfirmed}
@@ -264,19 +266,19 @@ function PdfExportModalBody({
             </Form.Item>
           </Form>
 
-          <Divider style={{ margin: "4px 0" }} />
+          <Divider className="my-1" />
 
           {/* Region 3: 미리보기 (1페이지 축약) */}
           <div>
             <Text strong>{t("previewLabel")}</Text>
             {preview === "failed" ? (
               <Alert
-                style={{ marginTop: 8 }}
+                className="mt-2"
                 type="warning"
                 showIcon
                 title={t("previewFailedTitle")}
                 description={
-                  <Space orientation="vertical">
+                  <div className="flex flex-col gap-2">
                     <Text type="secondary">
                       {t("previewSummary", {
                         count: previewItems.length,
@@ -291,29 +293,22 @@ function PdfExportModalBody({
                     <Button size="small" onClick={() => setPreview("ok")}>
                       {t("regeneratePreview")}
                     </Button>
-                  </Space>
+                  </div>
                 }
               />
             ) : (
               <div
                 data-testid="pdf-export-preview"
-                style={{
-                  border: "1px solid var(--ant-color-border)",
-                  borderRadius: 8,
-                  marginTop: 8,
-                  padding: 16,
-                  maxHeight: 220,
-                  overflow: "hidden",
-                }}
+                className="mt-2 max-h-56 overflow-hidden rounded-2xl border border-border p-4"
                 aria-label={t("previewAriaLabel")}
               >
-                <Title level={5} style={{ marginTop: 0 }}>
+                <Title level={5} className="mt-0">
                   {filename.trim() || t("filenameDefault")}
                 </Title>
-                <Paragraph type="secondary" style={{ marginBottom: 8 }}>
+                <Paragraph type="secondary" className="mb-2">
                   {t("previewSubtitle", { count: previewItems.length })}
                 </Paragraph>
-                <ol style={{ margin: 0, paddingLeft: 18 }}>
+                <ol className="m-0 list-decimal pl-5">
                   {previewItems.map((it) => (
                     <li key={it.itemId} data-testid="pdf-export-preview-item">
                       <Text>{it.title}</Text>
@@ -344,9 +339,9 @@ function PdfExportModalBody({
               showIcon
               title={t("errorTitle")}
               description={
-                <Space orientation="vertical">
+                <div className="flex flex-col gap-2">
                   <Text type="secondary">{gen.message}</Text>
-                  <Space>
+                  <div className="flex flex-wrap gap-2">
                     <Button size="small" type="primary" onClick={handleExport}>
                       {t("retry")}
                     </Button>
@@ -358,8 +353,8 @@ function PdfExportModalBody({
                     >
                       {t("contact")}
                     </Button>
-                  </Space>
-                </Space>
+                  </div>
+                </div>
               }
             />
           ) : gen.phase === "done" ? (
@@ -368,22 +363,22 @@ function PdfExportModalBody({
               showIcon
               title={t("doneTitle")}
               description={
-                <Space orientation="vertical">
+                <div className="flex flex-col gap-2">
                   <Text type="secondary">{t("doneDescription")}</Text>
-                  <Space>
+                  <div className="flex flex-wrap gap-2">
                     <Button size="small" type="primary" onClick={handleExport}>
                       {t("reprint")}
                     </Button>
                     <Button size="small" disabled>
                       {t("downloadStored")}
                     </Button>
-                  </Space>
-                </Space>
+                  </div>
+                </div>
               }
             />
           ) : null}
 
-          <Space style={{ justifyContent: "flex-end", width: "100%" }}>
+          <div className="flex w-full flex-wrap justify-end gap-2">
             <Button data-testid="pdf-export-close" onClick={onClose}>
               {t("close")}
             </Button>
@@ -396,8 +391,8 @@ function PdfExportModalBody({
             >
               {gen.phase === "generating" ? t("generating") : t("export")}
             </Button>
-          </Space>
-        </Space>
+          </div>
+        </div>
       )}
     </>
   );
