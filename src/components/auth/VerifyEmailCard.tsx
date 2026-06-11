@@ -15,7 +15,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { App, Button, Divider, Form, Input, Space, Typography } from "antd";
+import { App, Button, Divider, Form, Input, Typography } from "antd";
 
 import { AuthMascot } from "@/components/auth/AuthMascot";
 import { AppCard } from "@/components/shared/AppCard";
@@ -202,13 +202,13 @@ export function VerifyEmailCard() {
 
   return (
     <AppCard aria-live="polite">
-      <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+      <div className="flex w-full flex-col gap-4">
         {/* §1 마스코트/일러스트 — 안내 카피를 가리지 않게 상단, 대체 텍스트 필수 */}
         <AuthMascot alt={t("mascotAlt")} emoji="📬" size={48} />
-        <Title level={3} style={{ marginBottom: 0 }}>
+        <Title level={3} className="!mb-0">
           {t("title")}
         </Title>
-        <Paragraph style={{ marginBottom: 0 }}>{t("body")}</Paragraph>
+        <Paragraph className="!mb-0">{t("body")}</Paragraph>
 
         <Text type="secondary">{t("frequentNote")}</Text>
 
@@ -251,18 +251,18 @@ export function VerifyEmailCard() {
 
         {/* §5 이메일 안 왔을 때 안내 — primary 재전송과 시각적 위계 구분(secondary).
             스팸함 확인 / 받은편지함 열기 / 다른 이메일로 가입하기. */}
-        <Divider style={{ margin: "4px 0" }} />
+        <Divider className="!my-1" />
         <div data-testid="verify-email-help">
-          <Text strong style={{ fontSize: 13 }}>
+          <Text strong className="!text-xs">
             {t("noEmailHeading")}
           </Text>
           <Paragraph
             type="secondary"
-            style={{ margin: "4px 0 8px", fontSize: 13 }}
+            className="!mb-2 !mt-1 !text-xs"
           >
             {t("noEmailBody")}
           </Paragraph>
-          <Space size="small" wrap>
+          <div className="flex flex-wrap gap-2">
             {(() => {
               const inboxUrl = inboxUrlForEmail(emailValue || emailFromQuery);
               return inboxUrl ? (
@@ -280,18 +280,18 @@ export function VerifyEmailCard() {
             <Link href="/sign-up">
               <Button size="small">{t("signUpDifferentEmail")}</Button>
             </Link>
-          </Space>
+          </div>
         </div>
 
         {/* §6 도움말/escape route — 항상 노출 */}
-        <Paragraph style={{ marginBottom: 0, textAlign: "center" }}>
+        <Paragraph className="!mb-0 text-center">
           <Link href="/login">{t("escapeToLogin")}</Link>
           {" · "}
           <Link href="/sign-up">{t("escapeSignUp")}</Link>
           {" · "}
           <Link href="/">{t("escapeHome")}</Link>
         </Paragraph>
-      </Space>
+      </div>
     </AppCard>
   );
 }
