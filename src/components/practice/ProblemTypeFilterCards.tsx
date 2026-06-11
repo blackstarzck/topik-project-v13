@@ -1,7 +1,13 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { BarChart3, FileText, ListFilter, ListChecks, PencilLine } from "lucide-react";
+import {
+  BarChart3,
+  FileText,
+  ListChecks,
+  ListFilter,
+  PencilLine,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { QUESTION_NOS, type QuestionNo } from "@/lib/practice/types";
 
@@ -43,7 +49,10 @@ export function ProblemTypeFilterCards({ active, onChange }: Props) {
   ];
 
   return (
-    <section className="problem-list-type-filter" aria-label={t("typeTabAll")}>
+    <section
+      className="flex gap-3 overflow-x-auto pb-1"
+      aria-label={t("typeTabAll")}
+    >
       {options.map((option) => {
         const selected = active === option.value;
         return (
@@ -51,20 +60,29 @@ export function ProblemTypeFilterCards({ active, onChange }: Props) {
             key={option.key}
             type="button"
             className={[
-              "problem-list-type-filter__item",
-              selected ? "is-active" : "",
+              "flex min-w-44 flex-none items-center gap-3 rounded-3xl border bg-background p-4 text-left transition",
+              selected
+                ? "border-text shadow-sm"
+                : "border-border hover:border-text",
             ]
               .filter(Boolean)
               .join(" ")}
             aria-pressed={selected}
             onClick={() => onChange(option.value)}
           >
-            <span className="problem-list-type-filter__icon">
+            <span
+              className="flex h-11 w-11 flex-none items-center justify-center rounded-default border border-border bg-surface text-text"
+              aria-hidden="true"
+            >
               {option.icon}
             </span>
-            <span className="problem-list-type-filter__copy">
-              <strong>{option.title}</strong>
-              <small>{option.subtitle}</small>
+            <span className="grid min-w-0 gap-1">
+              <strong className="truncate text-sm text-text">
+                {option.title}
+              </strong>
+              <small className="truncate text-xs text-text-secondary">
+                {option.subtitle}
+              </small>
             </span>
           </button>
         );

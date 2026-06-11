@@ -1,6 +1,7 @@
 "use client";
 
-import { Button, Space, Tag, Typography } from "antd";
+import { Button, Typography } from "antd";
+import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ProblemFilter, ProblemSort } from "@/lib/practice/types";
 
@@ -98,19 +99,29 @@ export function FilterChips({
   const overflow = chips.length - visible.length;
 
   return (
-    <Space className="problem-list-filter-chips" wrap size={4} align="center">
-      <Text type="secondary" style={{ fontSize: 12 }}>
+    <div className="flex flex-wrap items-center gap-2">
+      <Text type="secondary" className="!text-xs">
         {t("appliedFilters")}
       </Text>
       {visible.map((c) => (
-        <Tag key={c.key} closable onClose={c.onClose} color="blue">
-          {c.label}
-        </Tag>
+        <button
+          key={c.key}
+          type="button"
+          className="inline-flex min-h-8 items-center gap-1 rounded-full border border-border bg-surface px-3 text-xs font-semibold text-text-secondary"
+          onClick={c.onClose}
+        >
+          <span>{c.label}</span>
+          <X size={12} aria-hidden="true" />
+        </button>
       ))}
-      {overflow > 0 ? <Tag>+{overflow}</Tag> : null}
+      {overflow > 0 ? (
+        <span className="inline-flex min-h-8 items-center rounded-full border border-border bg-surface px-3 text-xs font-semibold text-text-secondary">
+          +{overflow}
+        </span>
+      ) : null}
       <Button size="small" type="link" onClick={onReset}>
         {t("resetAll")}
       </Button>
-    </Space>
+    </div>
   );
 }

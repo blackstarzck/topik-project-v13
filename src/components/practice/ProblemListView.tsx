@@ -1,11 +1,11 @@
 "use client";
 
-import { Alert, Button, Empty, Space, Spin, Typography } from "antd";
+import { Alert, Button, Empty, Spin, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { AppStackList } from "@/components/shared/AppStackList";
+import { AppCard } from "@/components/shared/AppCard";
 import {
   isValidQuestionNo,
   type ProblemFilter,
@@ -150,14 +150,8 @@ export function ProblemListView({ userId }: Props) {
     ) : null;
 
   return (
-    <Space
-      className="problem-list-page"
-      orientation="vertical"
-      size="large"
-      style={{ width: "100%" }}
-    >
+    <div className="grid gap-6">
       <PageHeader
-        className="problem-list-page__header"
         title={t("heading")}
         subtitle={t("subtitle")}
       />
@@ -167,29 +161,31 @@ export function ProblemListView({ userId }: Props) {
         onChange={(next) => commitFilter({ ...filter, questionNo: next })}
       />
 
-      <section className="problem-list-filter-panel">
-        <ProblemListControls
-          filter={filter}
-          sort={sort}
-          onFilterChange={commitFilter}
-          onSortChange={commitSort}
-        />
+      <AppCard>
+        <div className="grid gap-4">
+          <ProblemListControls
+            filter={filter}
+            sort={sort}
+            onFilterChange={commitFilter}
+            onSortChange={commitSort}
+          />
 
-        <FilterChips
-          filter={filter}
-          sort={sort}
-          onFilterChange={commitFilter}
-          onSortChange={commitSort}
-          onReset={resetAll}
-        />
-      </section>
+          <FilterChips
+            filter={filter}
+            sort={sort}
+            onFilterChange={commitFilter}
+            onSortChange={commitSort}
+            onReset={resetAll}
+          />
+        </div>
+      </AppCard>
 
       {/* §5 상단 총 건수 */}
-      <div className="problem-list-count">{totalLabel}</div>
+      <div className="min-h-6">{totalLabel}</div>
 
       {list.isLoading ? (
         <Spin>
-          <div style={{ minHeight: 80 }} />
+          <div className="min-h-20" />
         </Spin>
       ) : list.error ? (
         // §예외 — 로딩 실패.
@@ -206,7 +202,10 @@ export function ProblemListView({ userId }: Props) {
         />
       ) : rows.length > 0 ? (
         <>
-          <AppStackList className="problem-list-rows">
+          <div
+            className="overflow-hidden rounded-3xl border border-border bg-background px-4"
+            role="list"
+          >
             {rows.map((row, index) => (
               <ProblemRow
                 key={row.problemId}
@@ -231,9 +230,9 @@ export function ProblemListView({ userId }: Props) {
                 onRetryClick={() => setRetryTarget(row)}
               />
             ))}
-          </AppStackList>
+          </div>
           {/* §5 하단 총 건수 + 페이지 이동 */}
-          <div className="problem-list-footer">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             {totalLabel}
             <ProblemListPagination
               current={page}
@@ -264,6 +263,6 @@ export function ProblemListView({ userId }: Props) {
           submissionId={retryTarget.latestSubmissionId ?? undefined}
         />
       ) : null}
-    </Space>
+    </div>
   );
 }

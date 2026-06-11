@@ -1,11 +1,11 @@
 "use client";
 
-import { Badge, Button, Space, Tag, Tooltip, Typography } from "antd";
+import type { ReactNode } from "react";
+import { Button, Tooltip, Typography } from "antd";
 import { FileText } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 
-import { AppStackListItem } from "@/components/shared/AppStackList";
 import type { ProblemRow as ProblemRowData } from "@/lib/practice/types";
 import { writingProblemHref } from "@/lib/writing/routes";
 
@@ -44,6 +44,14 @@ function relativeDay(iso: string | null | undefined): RelativeDay | null {
   if (days === 1) return { kind: "yesterday" };
   if (days < 7) return { kind: "daysAgo", days };
   return { kind: "absolute", text: new Date(iso).toLocaleDateString("ko-KR") };
+}
+
+function ProblemBadge({ children }: { children: ReactNode }) {
+  return (
+    <span className="inline-flex min-h-7 items-center rounded-full border border-border bg-surface px-3 text-xs font-semibold text-text-secondary">
+      {children}
+    </span>
+  );
 }
 
 export function ProblemRow({
@@ -86,15 +94,20 @@ export function ProblemRow({
 
   const action =
     hasPriorWork && onRetryClick ? (
-      <Button onClick={() => onRetryClick(row.id)} disabled={disabled}>
+      <Button
+        className="w-full md:w-auto"
+        onClick={() => onRetryClick(row.id)}
+        disabled={disabled}
+      >
         {t("retryAttempt")}
       </Button>
     ) : disabled ? (
-      <Button type="primary" disabled>
+      <Button className="w-full md:w-auto" type="primary" disabled>
         {t("startProblem")}
       </Button>
     ) : (
       <Link
+        className="w-full md:w-auto"
         href={
           writingProblemHref({
             questionNo: row.question_no,
@@ -102,65 +115,68 @@ export function ProblemRow({
           }) as never
         }
       >
-        <Button type="primary" disabled={disabled}>
+        <Button className="w-full md:w-auto" type="primary" disabled={disabled}>
           {t("startProblem")}
         </Button>
       </Link>
     );
 
   return (
-    <AppStackListItem
-      actions={action}
-      className="problem-list-row"
-      isLast={isLast}
+    <div
+      role="listitem"
+      className={[
+        "flex flex-col gap-4 bg-background py-4 md:flex-row md:items-center md:justify-between",
+        isLast ? "" : "border-b border-border",
+      ].join(" ")}
     >
-      <div className="problem-list-row__content">
+      <div className="flex min-w-0 gap-3">
         <span
-          className={[
-            "problem-list-row__icon",
-            row.question_no ? `is-type-${row.question_no}` : "",
-          ]
-            .filter(Boolean)
-            .join(" ")}
+          className="flex h-11 w-11 flex-none items-center justify-center rounded-default border border-border bg-surface text-text"
           aria-hidden="true"
         >
           <FileText size={20} />
         </span>
-        <Space
-          className="problem-list-row__body"
-          orientation="vertical"
-          size={6}
-        >
-          <Space className="problem-list-row__titleline" wrap>
+        <div className="grid min-w-0 gap-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
             {row.question_no ? (
-              <Tag>{tCommon("questionNo", { no: row.question_no })}</Tag>
+              <ProblemBadge>
+                {tCommon("questionNo", { no: row.question_no })}
+              </ProblemBadge>
             ) : null}
-            <strong className="problem-list-row__title">{displayTitle}</strong>
+            <strong className="min-w-0 text-base font-semibold text-text">
+              {displayTitle}
+            </strong>
             {solveState === "submitted" ? (
-              <Tag color="green">{t("solveSolved")}</Tag>
+              <ProblemBadge>{t("solveSolved")}</ProblemBadge>
             ) : solveState === "attempted" ? (
-              <Tag color="orange">{t("solveInProgress")}</Tag>
+              <ProblemBadge>{t("solveInProgress")}</ProblemBadge>
             ) : null}
-          </Space>
+          </div>
           {visibleTags.length > 0 ? (
-            <Space className="problem-list-row__tags" size={4} wrap>
+            <div className="flex flex-wrap gap-2">
               {visibleTags.map((tag) => (
-                <Tag key={tag}>{tag}</Tag>
+                <ProblemBadge key={tag}>{tag}</ProblemBadge>
               ))}
-            </Space>
+            </div>
           ) : null}
-          <Space className="problem-list-row__meta" size="small" wrap>
+          <div className="flex flex-wrap items-center gap-2">
             {row.difficulty != null ? (
-              <Tag color="blue">
+              <ProblemBadge>
                 {tCommon("difficultyValue", { level: row.difficulty })}
-              </Tag>
+              </ProblemBadge>
             ) : null}
-            <Badge
-              status={disabled ? "default" : "success"}
-              text={statusLabel}
-            />
+            <span className="inline-flex min-h-7 items-center gap-2 rounded-full border border-border bg-background px-3 text-xs font-semibold text-text-secondary">
+              <span
+                className={[
+                  "h-1.5 w-1.5 rounded-full",
+                  disabled ? "bg-text-secondary" : "bg-primary",
+                ].join(" ")}
+                aria-hidden="true"
+              />
+              {statusLabel}
+            </span>
             {disabled && row.lifecycle_reason ? (
-              <Text type="secondary" style={{ fontSize: 12 }}>
+              <Text type="secondary" className="!text-xs">
                 {row.lifecycle_reason}
               </Text>
             ) : null}
@@ -171,15 +187,16 @@ export function ProblemRow({
                   lastLabel ? t("lastAttempt", { date: lastLabel }) : undefined
                 }
               >
-                <Text type="secondary" style={{ fontSize: 12 }}>
+                <Text type="secondary" className="!text-xs">
                   {t("attemptCount", { count: attemptCount })}
                   {lastLabel ? ` · ${lastLabel}` : ""}
                 </Text>
               </Tooltip>
             ) : null}
-          </Space>
-        </Space>
+          </div>
+        </div>
       </div>
-    </AppStackListItem>
+      <div className="flex w-full justify-end md:w-auto">{action}</div>
+    </div>
   );
 }

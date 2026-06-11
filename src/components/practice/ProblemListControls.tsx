@@ -1,6 +1,6 @@
 "use client";
 
-import { Input, Select, Space, Switch, Typography } from "antd";
+import { Input, Select, Switch, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import type {
@@ -52,34 +52,35 @@ export function ProblemListControls({
   }, [searchInput]);
 
   return (
-    <div className="problem-list-controls">
-      <div className="problem-list-control problem-list-control--search">
-        <Text className="problem-list-control__label">{t("searchLabel")}</Text>
+    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+      <div className="grid gap-2 xl:col-span-2">
+        <Text className="!text-xs !font-semibold !text-text">
+          {t("searchLabel")}
+        </Text>
         <Input.Search
+          className="w-full"
+          size="large"
           placeholder={t("searchPlaceholder")}
           allowClear
           status={searchErrorKey ? "error" : undefined}
-          style={{ width: "100%" }}
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
           aria-label={t("searchAria")}
         />
         {searchErrorKey ? (
-          <Text
-            type="danger"
-            style={{ display: "block", fontSize: 12, marginTop: 4 }}
-          >
+          <Text type="danger" className="block !text-xs">
             {t(searchErrorKey)}
           </Text>
         ) : null}
       </div>
-      <div className="problem-list-control">
-        <Text className="problem-list-control__label">
+      <div className="grid gap-2">
+        <Text className="!text-xs !font-semibold !text-text">
           {t("difficultyLabel")}
         </Text>
         <Select
+          className="w-full"
+          size="large"
           value={filter.difficulty ?? "any"}
-          style={{ width: "100%" }}
           onChange={(value) =>
             onFilterChange({
               ...filter,
@@ -95,11 +96,14 @@ export function ProblemListControls({
           ]}
         />
       </div>
-      <div className="problem-list-control">
-        <Text className="problem-list-control__label">{t("sortLabel")}</Text>
+      <div className="grid gap-2">
+        <Text className="!text-xs !font-semibold !text-text">
+          {t("sortLabel")}
+        </Text>
         <Select
+          className="w-full"
+          size="large"
           value={sort}
-          style={{ width: "100%" }}
           onChange={(value) => onSortChange(value as ProblemSort)}
           options={[
             { value: "newest", label: t("sortNewest") },
@@ -110,13 +114,14 @@ export function ProblemListControls({
         />
       </div>
       {/* Phase 7-D Task 12 (P1-8) — IA 4 filter 완전화 */}
-      <div className="problem-list-control">
-        <Text className="problem-list-control__label">
+      <div className="grid gap-2">
+        <Text className="!text-xs !font-semibold !text-text">
           {t("solveStatusLabel")}
         </Text>
         <Select
+          className="w-full"
+          size="large"
           value={filter.solveStatus ?? "all"}
-          style={{ width: "100%" }}
           aria-label={t("solveStatusAria")}
           onChange={(value) =>
             onFilterChange({
@@ -132,11 +137,11 @@ export function ProblemListControls({
           ]}
         />
       </div>
-      <div className="problem-list-control problem-list-control--switch">
-        <Text className="problem-list-control__label">
+      <div className="grid gap-2 md:col-span-2 xl:col-span-1">
+        <Text className="!text-xs !font-semibold !text-text">
           {t("recommendationLabel")}
         </Text>
-        <Space size={8}>
+        <div className="flex min-h-10 items-center gap-2">
           <Switch
             checked={filter.recommended === true}
             onChange={(checked) =>
@@ -145,7 +150,7 @@ export function ProblemListControls({
             aria-label={t("recommendedOnlyAria")}
           />
           <Text>{t("recommendedOnly")}</Text>
-        </Space>
+        </div>
       </div>
     </div>
   );
