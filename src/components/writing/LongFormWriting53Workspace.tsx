@@ -6,9 +6,7 @@ import {
   Button,
   Input,
   Progress,
-  Space,
   Tabs,
-  Tag,
   Tooltip,
   Typography,
 } from "antd";
@@ -323,7 +321,7 @@ export function LongFormWriting53Workspace({
           autoSize={{ minRows }}
           placeholder={placeholder}
           disabled={submit.isPending}
-          style={{ marginTop: 8 }}
+          className="mt-2"
         />
       </div>
     );
@@ -344,19 +342,20 @@ export function LongFormWriting53Workspace({
     <div className="writing-workspace writing-workspace--q53">
       <header className="writing-command">
         <div className="writing-command__titles">
-          <Space size={8} align="center" wrap>
+          <div className="flex flex-wrap items-center gap-2">
             <h1 className="writing-command__title">{tPage("pageTitle")}</h1>
             <Tooltip title={tPage("titleHelp")}>
               <Info aria-hidden size={18} className="writing-command__info" />
             </Tooltip>
-          </Space>
+          </div>
           <p className="writing-command__subtitle">{tPage("pageSubtitle")}</p>
         </div>
         <div className="writing-command__actions">
           <AutosaveBadge status={status} lastSavedAt={lastSavedAt} />
-          <Tag icon={<Clock3 aria-hidden size={14} />}>
+          <span className="inline-flex min-h-8 items-center gap-1 rounded-full border border-border bg-surface px-3 text-xs font-semibold text-text">
+            <Clock3 aria-hidden size={14} />
             {formatElapsed(elapsedSeconds)}
-          </Tag>
+          </span>
           <Button
             icon={<PenLine aria-hidden size={16} />}
             onClick={onManualSave}
@@ -501,17 +500,21 @@ export function LongFormWriting53Workspace({
             ) : null}
 
             <div className="writing-editor-toolbar">
-              <Space size={8} wrap>
+              <div className="flex flex-wrap items-center gap-2">
                 <Lightbulb aria-hidden size={18} />
                 <Text strong>{tPage("statusTitle")}</Text>
-                <Tag>{tPage("paragraphCount", { count: filledParagraphs })}</Tag>
-                <Tag>{tPage("targetRange")}</Tag>
+                <span className="inline-flex min-h-7 items-center rounded-full border border-border bg-background px-3 text-xs font-semibold text-text-secondary">
+                  {tPage("paragraphCount", { count: filledParagraphs })}
+                </span>
+                <span className="inline-flex min-h-7 items-center rounded-full border border-border bg-background px-3 text-xs font-semibold text-text-secondary">
+                  {tPage("targetRange")}
+                </span>
                 <Button size="small" type="link" onClick={onToggleAutosave}>
                   {autosaveEnabled
                     ? tEditor("autosaveOff")
                     : tEditor("autosaveOn")}
                 </Button>
-              </Space>
+              </div>
             </div>
           </AppCard>
 
