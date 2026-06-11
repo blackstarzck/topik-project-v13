@@ -1,7 +1,7 @@
 "use client";
 
 import type { KeyboardEvent } from "react";
-import { Button, Col, Empty, Row, Space, Tag, Typography, theme } from "antd";
+import { Button, Col, Empty, Row, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { AppCard } from "@/components/shared/AppCard";
@@ -57,7 +57,6 @@ export function AlternativeCardsGrid({
 }: Props) {
   const t = useTranslations("practice.next");
   const tCommon = useTranslations("practice.common");
-  const { token } = theme.useToken();
   const router = useRouter();
 
   if (alternatives.length === 0) {
@@ -68,11 +67,6 @@ export function AlternativeCardsGrid({
       </section>
     );
   }
-
-  const selectedStyle = {
-    borderColor: token.colorPrimary,
-    borderWidth: token.lineWidth * 2,
-  };
 
   return (
     <section data-testid="next-alternatives">
@@ -90,23 +84,16 @@ export function AlternativeCardsGrid({
                 <AppCard
                   data-testid="next-alternative-locked"
                   data-problem-id={alternative.id}
-                  style={{
-                    opacity: token.opacityLoading,
-                    background: token.colorBgContainerDisabled,
-                  }}
+                  className="bg-surface opacity-60"
                   title={
-                    <Tag color="default">
+                    <Tag>
                       {alternative.questionNo != null
                         ? tCommon("questionNo", { no: alternative.questionNo })
                         : alternative.domain}
                     </Tag>
                   }
                 >
-                  <Space
-                    orientation="vertical"
-                    size="small"
-                    style={{ width: "100%" }}
-                  >
+                  <div className="flex w-full flex-col gap-2">
                     <Text type="secondary">{t("lockedNotice")}</Text>
                     <Button
                       size="small"
@@ -114,7 +101,7 @@ export function AlternativeCardsGrid({
                     >
                       {t("upgradeInfo")}
                     </Button>
-                  </Space>
+                  </div>
                 </AppCard>
               </Col>
             );
@@ -143,31 +130,33 @@ export function AlternativeCardsGrid({
                 onKeyDown={(event) => handleCardKeyDown(event, handleClick)}
                 data-testid="next-alternative-card"
                 data-problem-id={alternative.id}
-                style={selectedId === alternative.id ? selectedStyle : undefined}
+                className={
+                  selectedId === alternative.id ? "ring-2 ring-primary" : undefined
+                }
                 title={
-                  <Space wrap>
-                    <Tag color="default">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Tag>
                       {alternative.questionNo != null
                         ? tCommon("questionNo", { no: alternative.questionNo })
                         : alternative.domain}
                     </Tag>
-                    {diffLabel ? <Tag color="purple">{diffLabel}</Tag> : null}
+                    {diffLabel ? <Tag>{diffLabel}</Tag> : null}
                     {alternative.estimatedMinutes != null ? (
-                      <Tag color="cyan">
+                      <Tag>
                         {tCommon("minutes", {
                           minutes: alternative.estimatedMinutes,
                         })}
                       </Tag>
                     ) : null}
-                  </Space>
+                  </div>
                 }
               >
                 <Text strong>{truncateTitle(alternative.title)}</Text>
                 {alternative.reason ? (
-                  <div style={{ marginTop: SPACING.xs }}>
+                  <div className="mt-1">
                     <Paragraph
                       type="secondary"
-                      style={{ fontSize: token.fontSizeSM, margin: 0 }}
+                      className="mb-0 text-xs"
                       ellipsis={{ rows: 2 }}
                     >
                       {alternative.reason}
