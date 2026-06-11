@@ -1,6 +1,6 @@
 "use client";
 
-import { Col, Row, Statistic, Tag, Typography, theme } from "antd";
+import { Col, Row, Statistic, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { AppCard } from "@/components/shared/AppCard";
 import { SPACING } from "@/theme/spacing";
@@ -35,14 +35,13 @@ export function SummaryCardRow({
 }: Props) {
   const t = useTranslations("practice.next");
   const tCommon = useTranslations("practice.common");
-  const { token } = theme.useToken();
 
   return (
     <Row gutter={[SPACING.md, SPACING.md]} data-testid="next-summary-row">
       <Col xs={24} md={8}>
         <AppCard data-testid="next-summary-card">
           <Text type="secondary">{t("summaryWeaknessTitle")}</Text>
-          <div style={{ marginTop: SPACING.sm }}>
+          <div className="next-summary-card__body">
             {weakestDimensions.length === 0 ? (
               <Text>{t("summaryNotEnoughData")}</Text>
             ) : (
@@ -60,7 +59,7 @@ export function SummaryCardRow({
               ))
             )}
           </div>
-          <Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
+          <Text type="secondary" className="next-summary-card__note">
             {t("summaryRecentAverage", {
               count: recentSubmissions,
               average:
@@ -74,8 +73,8 @@ export function SummaryCardRow({
       <Col xs={24} md={8}>
         <AppCard data-testid="next-summary-card">
           <Text type="secondary">{t("summaryNextTypeTitle")}</Text>
-          <div style={{ marginTop: SPACING.sm }}>
-            <Text strong style={{ fontSize: token.fontSizeHeading4 }}>
+          <div className="next-summary-card__body">
+            <Text strong className="next-summary-card__type">
               {recommendedType ?? t("summaryTypePending")}
             </Text>
           </div>

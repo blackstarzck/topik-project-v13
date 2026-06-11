@@ -5210,6 +5210,119 @@ body {
   white-space: nowrap;
 }
 
+.comparison-page-stack.ant-space,
+.comparison-chart__header.ant-space,
+.next-problem-stack.ant-space,
+.next-problem-card__stack.ant-space,
+.next-alternative-card__stack.ant-space {
+  width: 100%;
+}
+
+.comparison-chart__header.ant-space {
+  justify-content: space-between;
+}
+
+.comparison-card-title.ant-typography {
+  margin-top: 0;
+}
+
+.comparison-narrative-copy.ant-typography {
+  margin-bottom: 8px;
+}
+
+.comparison-kpi-stat--up .ant-statistic-content {
+  color: #22a06b;
+}
+
+.comparison-kpi-stat--down .ant-statistic-content {
+  color: #e5484d;
+}
+
+.comparison-kpi-placeholder.ant-typography {
+  font-size: 16px;
+}
+
+.comparison-chart__scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.comparison-chart__frame {
+  min-width: 360px;
+  height: 280px;
+}
+
+.comparison-dimension-card__tag {
+  margin-top: 4px;
+}
+
+.comparison-preline.ant-typography {
+  white-space: pre-line;
+}
+
+.next-problem-stack--with-selection.ant-space {
+  padding-bottom: 88px;
+}
+
+.next-selectable-card--selected.app-card {
+  border-color: var(--app-color-primary);
+  border-width: 2px;
+}
+
+.next-problem-copy.ant-typography,
+.next-problem-reason.ant-typography,
+.next-alternative-card__reason.ant-typography {
+  margin: 0;
+}
+
+.next-selection-bar {
+  position: fixed;
+  z-index: 10;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-top: 1px solid var(--app-color-border);
+  background: var(--app-color-bg-container);
+  padding: 12px 24px;
+}
+
+.next-selection-bar__label.ant-typography {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.next-alternative-card--locked.app-card {
+  opacity: 0.65;
+  background: color-mix(
+    in srgb,
+    var(--app-color-bg-layout) 72%,
+    var(--app-color-bg-container)
+  );
+}
+
+.next-alternative-card__reason-wrap {
+  margin-top: 4px;
+}
+
+.next-alternative-card__reason.ant-typography,
+.next-summary-card__note.ant-typography {
+  font-size: 12px;
+}
+
+.next-summary-card__body {
+  margin-top: 8px;
+}
+
+.next-summary-card__type.ant-typography {
+  font-size: 20px;
+}
+
 .analysis-loading-shell {
   position: relative;
   display: grid;

@@ -1,6 +1,6 @@
 "use client";
 
-import { Col, Empty, Row, Statistic, Typography, theme } from "antd";
+import { Col, Empty, Row, Statistic, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { AppCard } from "@/components/shared/AppCard";
 
@@ -20,7 +20,6 @@ export function ComparisonKpiBlock({
   hasPrevious,
 }: Props) {
   const t = useTranslations("reports.kpi");
-  const { token } = theme.useToken();
 
   if (currentScore === null) {
     return (
@@ -30,14 +29,14 @@ export function ComparisonKpiBlock({
     );
   }
 
-  const deltaColor =
+  const deltaClass =
     scoreDelta === null
-      ? token.colorText
+      ? null
       : scoreDelta > 0
-        ? token.colorSuccess
+        ? "comparison-kpi-stat--up"
         : scoreDelta < 0
-          ? token.colorError
-          : token.colorText;
+          ? "comparison-kpi-stat--down"
+          : null;
 
   return (
     <AppCard data-testid="comparison-kpi-block">
@@ -52,10 +51,12 @@ export function ComparisonKpiBlock({
         <Col xs={24} md={8} data-testid="comparison-kpi-item">
           {hasPrevious && scoreDelta !== null ? (
             <Statistic
+              className={["comparison-kpi-stat", deltaClass]
+                .filter(Boolean)
+                .join(" ")}
               title={t("improvement")}
               value={Math.abs(scoreDelta)}
               precision={1}
-              styles={{ content: { color: deltaColor } }}
               prefix={
                 <span aria-hidden>
                   {scoreDelta > 0 ? "+" : scoreDelta < 0 ? "-" : "="}
@@ -68,7 +69,7 @@ export function ComparisonKpiBlock({
               title={t("improvement")}
               value={0}
               formatter={() => (
-                <Text type="secondary" style={{ fontSize: token.fontSizeLG }}>
+                <Text type="secondary" className="comparison-kpi-placeholder">
                   {t("noComparison")}
                 </Text>
               )}
@@ -84,10 +85,7 @@ export function ComparisonKpiBlock({
               hasPrevious
                 ? undefined
                 : () => (
-                    <Text
-                      type="secondary"
-                      style={{ fontSize: token.fontSizeLG }}
-                    >
+                    <Text type="secondary" className="comparison-kpi-placeholder">
                       {t("singleResult")}
                     </Text>
                   )

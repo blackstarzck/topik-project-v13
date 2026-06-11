@@ -75,7 +75,7 @@ export function DimensionComparisonCards({
             <Col key={dimension} xs={12} md={6}>
               <AppCard size="small" data-testid="comparison-dimension-card">
                 <Text strong>{dimLabel(dimension)}</Text>
-                <div style={{ marginTop: SPACING.xs }}>
+                <div className="comparison-dimension-card__tag">
                   <Tag color="blue">
                     {score === null ? EMPTY_VALUE : t("scorePoint", { value: score })}
                   </Tag>
@@ -109,7 +109,7 @@ export function DimensionComparisonCards({
             <Col key={dimension} xs={12} md={6}>
               <AppCard size="small" data-testid="comparison-dimension-card">
                 <Text strong>{dimLabel(dimension)}</Text>
-                <div style={{ marginTop: SPACING.xs }}>
+                <div className="comparison-dimension-card__tag">
                   <Tag color={TREND_COLOR[trend]}>
                     {trendLabel[trend]}
                     {delta !== null && delta !== 0

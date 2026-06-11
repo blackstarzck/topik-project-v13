@@ -19,21 +19,21 @@ export function SubmissionDiffPanel({ currentText, previousText }: Props) {
     <Row gutter={[SPACING.md, SPACING.md]} data-testid="comparison-submission-diff">
       <Col xs={24} md={12}>
         <AppCard size="small">
-          <Title level={5} style={{ marginTop: 0 }}>
+          <Title level={5} className="comparison-card-title">
             {t("currentAnswer")}
           </Title>
-          <Paragraph style={{ whiteSpace: "pre-line" }}>
+          <Paragraph className="comparison-preline">
             {currentText || EMPTY_ANSWER}
           </Paragraph>
         </AppCard>
       </Col>
       <Col xs={24} md={12}>
         <AppCard size="small">
-          <Title level={5} style={{ marginTop: 0 }}>
+          <Title level={5} className="comparison-card-title">
             {t("previousAnswer")}
           </Title>
           {previousText ? (
-            <Paragraph style={{ whiteSpace: "pre-line" }}>
+            <Paragraph className="comparison-preline">
               {previousText}
             </Paragraph>
           ) : (
