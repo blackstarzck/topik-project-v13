@@ -5823,6 +5823,69 @@ body {
   text-align: center;
 }
 
+.legal-stack.ant-space {
+  width: 100%;
+}
+
+.legal-title.ant-typography,
+.legal-section-title.ant-typography {
+  margin-bottom: 8px;
+}
+
+.legal-paragraph-flush.ant-typography,
+.legal-shortcuts.ant-typography {
+  margin-bottom: 0;
+}
+
+.legal-placeholder-notice.ant-typography {
+  margin-top: 8px;
+  margin-bottom: 0;
+}
+
+.legal-summary-list {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.legal-summary-list > li:not(:last-child) {
+  margin-bottom: 8px;
+}
+
+.legal-section {
+  margin-bottom: 24px;
+}
+
+.legal-page-title {
+  margin: 0 0 16px;
+  font-size: 28px;
+  line-height: 1.25;
+  font-weight: 700;
+}
+
+.legal-native-section-title {
+  margin: 0 0 8px;
+  font-size: 20px;
+  line-height: 1.35;
+  font-weight: 700;
+}
+
+.legal-section p {
+  margin: 0;
+}
+
+.legal-section ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.legal-section li:not(:last-child) {
+  margin-bottom: 8px;
+}
+
+.legal-scope-note {
+  margin-top: 12px;
+}
+
 .analysis-loading-shell {
   position: relative;
   display: grid;
