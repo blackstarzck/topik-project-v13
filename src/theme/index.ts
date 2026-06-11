@@ -1,3 +1,4 @@
+export * from "./awesomic";
 export * from "./create-theme";
 export * from "./registry";
 export * from "./tailwind-bridge";

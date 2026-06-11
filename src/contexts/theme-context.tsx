@@ -34,6 +34,11 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
+function resolveSupportedAppearance(_appearance: ThemeAppearance): ThemeAppearance {
+  void _appearance;
+  return defaultAppearance;
+}
+
 // ---------------------------------------------------------------------------
 // Provider
 // ---------------------------------------------------------------------------
@@ -41,12 +46,8 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 interface ThemeProviderProps {
   children: ReactNode;
   /**
-   * Appearance resolved server-side from cookie. Prevents first-paint flash.
-   * Defaults to "light".
-   *
-   * NOTE (T2): After mount, the CLIENT owns theme state. Server re-renders
-   * (router.refresh, etc.) do not override the user's selected appearance.
-   * This is intentional — the user's toggle persists until they change it.
+   * Appearance resolved server-side. Awesomic is light-fixed for now; dark
+   * inputs are normalized to light until a dark contract is approved.
    */
   initialAppearance?: ThemeAppearance;
   /** Theme name. Only "default" exists today. Extend when adding presets. */
@@ -58,8 +59,9 @@ export function ThemeProvider({
   initialAppearance = defaultAppearance,
   themeName = defaultThemeName,
 }: ThemeProviderProps) {
-  const [appearance, setAppearanceState] =
-    useState<ThemeAppearance>(initialAppearance);
+  const [appearance, setAppearanceState] = useState<ThemeAppearance>(() =>
+    resolveSupportedAppearance(initialAppearance),
+  );
 
   const theme = useMemo(
     () => getAppTheme(themeName, appearance),
@@ -74,22 +76,24 @@ export function ThemeProvider({
     (nextAppearance: ThemeAppearance) => {
       // antd v6.x 호환성: server-safe fallback. 동적 brand override가 생기면
       // client 측 theme.useToken() hook 결과로 추가 update 필요.
-      const vars = getResolvedBridgeVarsByAppearance(nextAppearance);
+      const supportedAppearance = resolveSupportedAppearance(nextAppearance);
+      const vars = getResolvedBridgeVarsByAppearance(supportedAppearance);
       const el = document.documentElement;
       Object.entries(vars).forEach(([key, value]) => {
         el.style.setProperty(key, value);
       });
-      el.style.setProperty("color-scheme", nextAppearance);
+      el.style.setProperty("color-scheme", supportedAppearance);
     },
     [],
   );
 
   const setAppearance = useCallback(
     (nextAppearance: ThemeAppearance) => {
-      setAppearanceState(nextAppearance);
-      applyVarsToDocument(nextAppearance);
+      const supportedAppearance = resolveSupportedAppearance(nextAppearance);
+      setAppearanceState(supportedAppearance);
+      applyVarsToDocument(supportedAppearance);
       // Persist for next SSR render (1 year)
-      document.cookie = `theme-appearance=${nextAppearance}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
+      document.cookie = `theme-appearance=${supportedAppearance}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
     },
     [applyVarsToDocument],
   );

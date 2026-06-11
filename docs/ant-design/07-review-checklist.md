@@ -21,6 +21,7 @@ Use this checklist before calling UI work complete.
 - [ ] Tailwind utilities read shared project theme variables, not a separate
       Tailwind palette or copied token values.
 - [ ] AntD components and Tailwind-authored surfaces remain visually aligned in
+      the current light-fixed appearance. If dark mode is reopened, check both
       light and dark appearances.
 - [ ] `--app-*` CSS variables are declared on `html` or `:root`, not via
       `style={}` on a wrapper component.

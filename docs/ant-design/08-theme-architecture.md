@@ -1,19 +1,18 @@
 # Theme Architecture
 
-> Status (2026-06-02)
+> Status (2026-06-11)
 >
 > `src/theme/`는 이미 구현되어 있습니다(아래 "Current Theme Folder" 참고). 본 문서는
 > 그 구현이 따라야 하는 **테마 구조 계약**을 정의합니다.
 >
 > 시각 기준(색·타이포·간격·컴포넌트 토큰의 의도와 실제 값)의 단일 출처는 저장소 루트
-> [`DESIGN.md`](../../DESIGN.md)(Stitch 포맷)입니다. 역할 분담: 본 문서는 그 값이
-> `src/theme/`와 `--app-*` 브릿지에 **어떻게 바인딩되는지**(구조)를 정의하고, `DESIGN.md`는
-> **무엇을 어떤 값으로** 정하는지(의도·값)를 정의합니다.
+> [`AWESOMIC-DESIGN.md`](../../AWESOMIC-DESIGN.md)입니다. 역할 분담: 본 문서는 그 값이
+> `src/theme/`와 `--app-*` 브릿지에 **어떻게 바인딩되는지**(구조)를 정의하고,
+> `AWESOMIC-DESIGN.md`는 **무엇을 어떤 값으로** 정하는지(의도·값)를 정의합니다.
 >
-> 파일럿(로그인+대시보드)은 **최소 위험 분기**를 따라 9개 글로벌 브릿지 토큰을 AntD
-> 기본값으로 유지합니다. 글로벌 토큰을 실제로 바꿀 때만 `src/theme/presets/default.ts`에
-> 토큰별 사유와 함께 override를 추가합니다. 그 전까지 default preset 이 비어 있는 상태가
-> 정상입니다(아래 "Theme presets" 규칙과 일관).
+> 현재 사용자 화면은 **Awesomic light-fixed**입니다. `DESIGN.md`는 삭제하지 않고
+> legacy reference로만 보관합니다. Cosmica는 디자인 기준이지만 로컬 font asset이
+> 없으므로 실제 앱은 Pretendard 단일 계열을 사용합니다.
 
 This file explains how theme configuration is organized in the TALKPIK AI codebase.
 
@@ -57,18 +56,21 @@ update the conflicting local docs before finalizing work.
 
 ## Core Principle
 
-This project now follows an AntD-first theme rule.
+This project now follows an AntD-first Awesomic theme rule.
 
 That means:
 
-- start from stock Ant Design light and dark behavior
-- keep the default preset close to empty
-- add token overrides only when the product has a concrete reason
-- do not restate Ant Design defaults inside our own theme files
+- bind Awesomic visual decisions through Ant Design `theme.token` and
+  `theme.components`
+- keep Tailwind as a consumer of the approved `--app-*` bridge only
+- keep user-facing rendering light-fixed until a real Awesomic dark contract is
+  approved
+- keep legacy dark infrastructure available for future work, but do not expose it
+  through initial render or user-facing controls
 
-Think of the theme system as a switchboard, not a repaint tool.
-Its first job is to select light or dark mode.
-Its second job is to hold only the overrides the product truly needs.
+Think of the theme system as a binding layer. Its job is to bind Awesomic values
+into Ant Design without creating a parallel Tailwind palette or scattered
+page-specific overrides.
 
 ## Why This Exists
 
@@ -90,7 +92,7 @@ We keep:
 - one registry of available theme presets
 - one preset file per theme
 - separate global and component shared rules
-- a default preset that stays close to stock Ant Design
+- a default preset that binds Awesomic values to Ant Design
 - optional preset-owned global styles for theme-specific structure that AntD
   tokens cannot express
 
@@ -103,7 +105,7 @@ src/theme/
   registry.ts
   create-theme.ts
   types.ts
-  antdTheme.ts
+  awesomic.ts
   tailwind-bridge.ts
   global/
     algorithms.ts
@@ -124,9 +126,9 @@ src/theme/
 - `src/theme/themes.ts`
   - compatibility re-export
   - kept so old imports do not break immediately
-- `src/theme/antdTheme.ts`
-  - helper that exposes the default AntD theme config
-  - acceptable for static use, but app runtime theme selection should use `getAppTheme`
+- `src/theme/awesomic.ts`
+  - stores the code-level Awesomic color, radius, shadow, and bridge constants
+  - must stay aligned with `AWESOMIC-DESIGN.md` and theme contract tests
 - `src/theme/tailwind-bridge.ts`
   - maps the approved subset of active AntD tokens to project CSS variables that
     Tailwind utilities may consume
@@ -144,7 +146,8 @@ src/theme/
   - carries optional preset-owned global styles into the active theme definition
   - enables or preserves AntD CSS-variable output when supported by the chosen
     AntD version
-  - applies the light or dark AntD algorithm automatically
+  - applies the selected AntD algorithm; user-facing entry points currently
+    normalize appearance to light
 
 ### Shared theme inputs
 
@@ -153,22 +156,19 @@ src/theme/
   - keep this minimal and neutral
   - right now this is mainly the app font family
 - `src/theme/global/algorithms.ts`
-  - maps `light` and `dark` appearance to Ant Design algorithms
+  - preserves `light` and `dark` algorithm mapping for future work
 - `src/theme/components/shared.ts`
   - shared component-level overrides used across all presets
-  - keep this empty unless the project has a documented reason to deviate from Ant Design defaults
+  - binds component-family Awesomic decisions such as primary button shadow,
+    pill radius, card radius, input radius, and tag radius
 
 ### Theme presets
 
 - `src/theme/presets/default.ts`
   - the current default theme preset
-  - should stay close to empty
-  - its job is to say "use light mode" or "use dark mode", not to restate Ant Design defaults
-- `src/theme/presets/liquid-glass.ts`
-  - owns both the Liquid Glass AntD token overrides and the Liquid Glass
-    structural global styles
-  - keep pseudo-elements, backdrop filters, overlay first-frame rules, and
-    Liquid Glass CSS variables here instead of in `src/styles/global.css`
+  - binds Awesomic global tokens to Ant Design
+  - includes a dark appearance entry only to preserve the type/infra boundary;
+    current user-facing code normalizes to light
 
 ### Types
 
@@ -179,16 +179,17 @@ src/theme/
 
 The runtime theme flow is:
 
-1. a preset such as `defaultThemePreset` defines optional appearance-specific overrides
+1. `defaultThemePreset` defines Awesomic token overrides
 2. `createThemeFamily` builds final `ThemeConfig` objects for `light` and `dark`
 3. `registry.ts` exposes the available themes
-4. the app root calls `getAppTheme(themeName, appearance)`
-5. `ConfigProvider` receives `activeTheme.antd`
-6. the theme bridge resolves AntD token values server-side and injects them as
+4. user-facing entry points normalize appearance to light
+5. the app root calls `getAppTheme(themeName, appearance)`
+6. `ConfigProvider` receives `activeTheme.antd`
+7. the theme bridge resolves Awesomic token values server-side and injects them as
    `--app-*` CSS variables on the `html` element in `app/layout.tsx`
-7. Tailwind utilities read only those `--app-*` variables via `@theme inline`
+8. Tailwind utilities read only those `--app-*` variables via `@theme inline`
    in `src/styles/global.css`
-8. new UI reads AntD tokens directly at render time when component logic needs
+9. new UI reads AntD tokens directly at render time when component logic needs
    token values
 
 This gives the app one source of truth at runtime even though the files are split
@@ -259,7 +260,7 @@ to an empty/invalid value on the first server render, causing visible flash.
 --app-color-primary: var(--ant-color-primary);
 
 /* REQUIRED — resolved actual value, safe at SSR */
---app-color-primary: #1677ff;
+--app-color-primary: #09090b;
 ```
 
 Resolved values must be injected server-side. The recommended pattern is a
@@ -312,13 +313,13 @@ The following `--app-*` variables are the approved bridge set. Each must hold a
 resolved actual value injected from `layout.tsx`:
 
 ```
---app-color-primary        resolved hex (e.g. #1677ff)
+--app-color-primary        resolved hex (Awesomic `#09090b`)
 --app-color-bg-layout      resolved hex
 --app-color-bg-container   resolved hex
 --app-color-text           resolved hex
 --app-color-text-secondary resolved hex
 --app-color-border         resolved hex
---app-radius               resolved px (e.g. 6px)
+--app-radius               resolved px (Awesomic `14px`)
 --app-font-family          resolved font stack
 --app-shadow-elevated      resolved box-shadow value
 ```
@@ -373,8 +374,8 @@ defaults first. If a confirmed product requirement needs a contextual override,
 scope that rule to the surface hook:
 
 ```css
-html[data-theme='liquidGlass'] .app-card .ant-tag {
-  /* Liquid Glass Card context only */
+html[data-theme='futureTheme'] .app-card .ant-tag {
+  /* Theme-specific Card context only */
 }
 ```
 
@@ -469,8 +470,8 @@ Use Theme Editor as a design tool, not as a dump target for every possible token
 
 Recommended workflow:
 
-1. Start with stock Ant Design defaults
-2. Use Theme Editor only when the product has a concrete branding or component requirement
+1. Start with the Awesomic token contract
+2. Use Theme Editor only to inspect AntD behavior, not to replace Awesomic values
 3. Export the values
 4. Move the relevant global values into `token`
 5. Move component-specific values into `components`
@@ -481,8 +482,8 @@ Do **not** blindly paste every exported value if many of them are just derived a
 Prefer this order:
 
 1. keep shared structural rules in `global/shared-seed.ts`
-2. keep the default preset nearly empty
-3. keep per-theme brand values in a preset file only when the product actually needs them
+2. keep Awesomic global values in `src/theme/presets/default.ts`
+3. keep shared Awesomic constants in `src/theme/awesomic.ts`
 4. keep per-component theme overrides in `components` or in the preset's `components` block only when Ant Design defaults are not enough
 
 ## Rules For Future Edits
@@ -527,14 +528,15 @@ until all of these pass.
 
 Before calling theme work complete, verify:
 
-- the app still works with stock Ant Design light and dark algorithms
+- the app renders with the Awesomic light-fixed contract
 - global changes still come from AntD tokens
 - component-specific overrides still live in `theme.components`
 - Tailwind utilities consume project bridge variables instead of copied theme
   values
-- AntD components and Tailwind-authored surfaces still match after switching
-  light/dark appearance
-- the default preset is still close to empty unless there is a documented reason otherwise
-- dark mode still uses AntD dark algorithm unless there is a documented reason otherwise
+- AntD components and Tailwind-authored surfaces match in the current light
+  appearance
+- the default preset contains only documented Awesomic global bindings
+- dark mode remains inaccessible to user-facing entry points unless a separate
+  Awesomic dark contract is approved
 - no new hardcoded color values were scattered into unrelated components
 - desktop and mobile layouts still render correctly

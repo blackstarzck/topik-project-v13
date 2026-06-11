@@ -104,7 +104,13 @@ Rules:
 
 ## Dark Mode
 
-If dark mode is added:
+Current policy:
+
+- User-facing UI is `light-fixed` while Awesomic is the active visual contract.
+- Existing dark-mode infrastructure may stay in code for future work, but it
+  must not be exposed through the initial render or user-facing controls.
+
+If dark mode is reopened later:
 
 - Use AntD `theme.darkAlgorithm`.
 - Do not handcraft a separate dark palette from scratch.

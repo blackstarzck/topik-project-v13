@@ -6,7 +6,7 @@
  *
  * "inline" is required (not bare @theme) so Tailwind generates:
  *   .text-primary { color: var(--app-color-primary) }  ← preserves runtime var
- * instead of resolving the value at build time (which would break dark mode toggle).
+ * instead of resolving the value at build time.
  */
 @theme inline {
   --color-primary: var(--app-color-primary);
@@ -20,10 +20,7 @@
   --shadow-elevated: var(--app-shadow-elevated);
 }
 
-/*
- * color-scheme is now injected dynamically on <html> from layout.tsx.
- * Removed hardcoded ":root { color-scheme: light }" — it would override dark mode.
- */
+/* color-scheme is injected on <html> from layout.tsx. */
 
 * {
   box-sizing: border-box;
@@ -4323,7 +4320,7 @@ body {
 }
 
 /*
- * Compact bounded row for repeated items inside a card (DESIGN.md → Components
+ * Compact bounded row for repeated items inside a card (Awesomic → Components
  * "card-compact"). Replaces nested AntD Card usage so we never nest a card in a
  * card (07-review-checklist). Color/radius from approved bridge vars.
  */
@@ -4444,7 +4441,11 @@ body {
   width: 34px;
   height: 34px;
   border-radius: 12px;
-  background: var(--app-color-primary-bg);
+  background: color-mix(
+    in srgb,
+    var(--app-color-primary) 10%,
+    var(--app-color-bg-container)
+  );
   color: var(--app-color-primary);
   font-weight: 700;
   flex-shrink: 0;

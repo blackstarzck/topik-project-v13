@@ -1,19 +1,19 @@
 import { describe, expect, test } from "vitest";
 import {
+  awesomicPrimaryActionShadow,
   defaultAppearance,
   defaultThemeName,
   getAppTheme,
   getResolvedBridgeVarsByAppearance,
 } from "../../src/theme";
 
-// Phase 8 follow-up (2026-05-27) — antd v6.x compatibility fix:
-// `theme` namespace에 "use client" marker + transitive createContext 평가 문제로
-// server component에서 dynamic token 계산 불가. SSR fallback은 appearance 기반
-// hardcoded values를 사용한다. 본 contract test는 새 API
-// `getResolvedBridgeVarsByAppearance(appearance)`를 검증한다.
+// antd v6.x compatibility fix:
+// `theme` namespace에 "use client" marker + transitive createContext 평가 문제가
+// 있어 server component에서 dynamic token 계산 불가. SSR fallback은 Awesomic
+// light-fixed hardcoded values를 사용한다.
 
 describe("app theme contract", () => {
-  test("exposes a default Ant Design theme with CSS variables enabled (key + prefix)", () => {
+  test("exposes the Awesomic default Ant Design theme with CSS variables enabled", () => {
     const theme = getAppTheme(defaultThemeName, defaultAppearance);
 
     expect(theme.name).toBe("default");
@@ -22,6 +22,12 @@ describe("app theme contract", () => {
     expect(theme.antd.cssVar).toEqual({ key: "talkpik", prefix: "ant" });
     expect(theme.antd.token?.fontFamily).toContain("--font-pretendard");
     expect(theme.antd.token?.fontFamily).toContain("system-ui");
+    expect(theme.antd.token?.colorPrimary).toBe("#09090b");
+    expect(theme.antd.token?.colorText).toBe("#18181b");
+    expect(theme.antd.token?.colorTextSecondary).toBe("#71717a");
+    expect(theme.antd.token?.colorBorder).toBe("#d4d4d8");
+    expect(theme.antd.token?.colorBgLayout).toBe("#f4f4f5");
+    expect(theme.antd.token?.borderRadius).toBe(14);
   });
 
   test("getResolvedBridgeVarsByAppearance returns actual hex/px values — no var() chains", () => {
@@ -32,40 +38,38 @@ describe("app theme contract", () => {
       expect(value).not.toMatch(/^var\(--ant-/);
     });
 
-    // Must be resolved actual values (antd v6.4.3 default seed token 기반)
-    expect(vars["--app-color-primary"]).toBe("#1677ff");
+    // Must be resolved actual values (Awesomic light-fixed baseline)
+    expect(vars["--app-color-primary"]).toBe("#09090b");
     expect(vars["--app-color-bg-container"]).toBe("#ffffff");
-    expect(vars["--app-color-border"]).toBe("#d9d9d9");
-    expect(vars["--app-radius"]).toBe("6px");
-    // colorText is rgba
-    expect(vars["--app-color-text"]).toMatch(/rgba?\(/);
+    expect(vars["--app-color-bg-layout"]).toBe("#f4f4f5");
+    expect(vars["--app-color-border"]).toBe("#d4d4d8");
+    expect(vars["--app-radius"]).toBe("14px");
+    expect(vars["--app-color-text"]).toBe("#18181b");
   });
 
-  test("getResolvedBridgeVarsByAppearance dark appearance returns dark values", () => {
+  test("getResolvedBridgeVarsByAppearance is light-fixed even for dark requests", () => {
     const darkVars = getResolvedBridgeVarsByAppearance("dark");
     const lightVars = getResolvedBridgeVarsByAppearance("light");
 
-    // Dark mode background must not be white
-    expect(darkVars["--app-color-bg-container"]).not.toBe("#ffffff");
-    // And must differ from light mode bg — catches "dark silently degraded to pale" regressions
-    expect(darkVars["--app-color-bg-container"]).not.toBe(
-      lightVars["--app-color-bg-container"],
-    );
+    expect(darkVars).toEqual(lightVars);
     // All values still resolved, not var() chains
     Object.values(darkVars).forEach((value) => {
       expect(value).not.toMatch(/^var\(--ant-/);
     });
   });
 
-  test("flattens button drop shadows via shared component tokens (calm, not game-like)", () => {
-    // DESIGN.md → Components: button-primary has no drop shadow. Branch 1 keeps
-    // all 9 global tokens at AntD defaults; this is a component-scoped refinement
-    // that must flow through createTheme into BOTH appearances.
+  test("binds Awesomic component tokens through shared component tokens", () => {
     for (const appearance of ["light", "dark"] as const) {
       const built = getAppTheme(defaultThemeName, appearance);
-      expect(built.antd.components?.Button?.primaryShadow).toBe("none");
+      expect(built.antd.components?.Button?.borderRadius).toBe(36);
+      expect(built.antd.components?.Button?.primaryShadow).toBe(
+        awesomicPrimaryActionShadow,
+      );
       expect(built.antd.components?.Button?.defaultShadow).toBe("none");
       expect(built.antd.components?.Button?.dangerShadow).toBe("none");
+      expect(built.antd.components?.Card?.borderRadiusLG).toBe(36);
+      expect(built.antd.components?.Input?.borderRadius).toBe(14);
+      expect(built.antd.components?.Tag?.borderRadiusSM).toBe(12);
     }
   });
 

@@ -3,6 +3,7 @@ import { describe, expect, test } from "vitest";
 import { theme } from "antd";
 
 import {
+  awesomicBridgeVars,
   defaultThemeName,
   getAppTheme,
   getResolvedBridgeVarsByAppearance,
@@ -10,12 +11,11 @@ import {
 import { appFontFamily } from "../../src/theme/global/shared-seed";
 import type { ThemeAppearance } from "../../src/theme/types";
 
-// PLAN §A — Theme bridge ↔ AntD token parity.
+// Theme bridge ↔ AntD token parity.
 //
-// Branch 1 (minimal risk) keeps the 9 approved `--app-*` global bridge tokens at
-// AntD v6.4.3 defaults. This test is the regression guard that the hardcoded
-// bridge (src/theme/tailwind-bridge.ts) never silently drifts away from AntD's
-// resolved design tokens.
+// Awesomic is the approved visual source of truth. This test guards that the
+// hardcoded SSR bridge (src/theme/tailwind-bridge.ts) never silently drifts away
+// from the AntD tokens generated from src/theme/presets/default.ts.
 //
 // Primary comparison: theme.getDesignToken(activeThemeConfig) per appearance.
 // If getDesignToken cannot run in the test env, fall back to the documented
@@ -45,35 +45,35 @@ const BRIDGE_TOKEN_MAP: Record<string, { token: string; format: Formatter }> = {
   "--app-shadow-elevated": { token: "boxShadowSecondary", format: asString },
 };
 
-// Documented AntD v6.4.3 defaults (defaultAlgorithm / darkAlgorithm).
+// Documented Awesomic light-fixed baseline.
 // fontFamily is the shared-seed override (single source for the app font stack).
 const STATIC_ANTD_DEFAULTS: Record<
   ThemeAppearance,
   Record<string, string>
 > = {
   light: {
-    colorPrimary: "#1677ff",
-    colorBgLayout: "#f5f5f5",
+    colorPrimary: "#09090b",
+    colorBgLayout: "#f4f4f5",
     colorBgContainer: "#ffffff",
-    colorText: "rgba(0,0,0,0.88)",
-    colorTextSecondary: "rgba(0,0,0,0.65)",
-    colorBorder: "#d9d9d9",
-    borderRadius: "6",
+    colorText: "#18181b",
+    colorTextSecondary: "#71717a",
+    colorBorder: "#d4d4d8",
+    borderRadius: "14",
     fontFamily: appFontFamily,
-    boxShadowSecondary:
-      "0 6px 16px 0 rgba(0,0,0,0.08), 0 3px 6px -4px rgba(0,0,0,0.12), 0 9px 28px 8px rgba(0,0,0,0.05)",
+    boxShadowSecondary: "0 4px 12px 0 rgba(0,0,0,0.04)",
   },
+  // Dark infra exists in src/theme, but user-facing bridge output is currently
+  // light-fixed until a separate Awesomic dark contract is approved.
   dark: {
-    colorPrimary: "#1668dc",
-    colorBgLayout: "#000000",
-    colorBgContainer: "#141414",
-    colorText: "rgba(255,255,255,0.85)",
-    colorTextSecondary: "rgba(255,255,255,0.65)",
-    colorBorder: "#424242",
-    borderRadius: "6",
+    colorPrimary: "#09090b",
+    colorBgLayout: "#f4f4f5",
+    colorBgContainer: "#ffffff",
+    colorText: "#18181b",
+    colorTextSecondary: "#71717a",
+    colorBorder: "#d4d4d8",
+    borderRadius: "14",
     fontFamily: appFontFamily,
-    boxShadowSecondary:
-      "0 6px 16px 0 rgba(255,255,255,0.016), 0 3px 6px -4px rgba(255,255,255,0.024), 0 9px 28px 8px rgba(255,255,255,0.01)",
+    boxShadowSecondary: "0 4px 12px 0 rgba(0,0,0,0.04)",
   },
 };
 
@@ -106,9 +106,9 @@ function resolveTokens(
   }
 }
 
-const APPEARANCES: ThemeAppearance[] = ["light", "dark"];
+const APPEARANCES: ThemeAppearance[] = ["light"];
 
-describe("theme bridge ↔ AntD token parity (branch 1: AntD defaults)", () => {
+describe("theme bridge ↔ AntD token parity (Awesomic light-fixed)", () => {
   for (const appearance of APPEARANCES) {
     describe(`${appearance} appearance`, () => {
       const bridge = getResolvedBridgeVarsByAppearance(appearance);
@@ -127,9 +127,18 @@ describe("theme bridge ↔ AntD token parity (branch 1: AntD defaults)", () => {
     });
   }
 
+  test("dark bridge requests return the light-fixed Awesomic bridge", () => {
+    expect(getResolvedBridgeVarsByAppearance("dark")).toEqual(
+      getResolvedBridgeVarsByAppearance("light"),
+    );
+    expect(getResolvedBridgeVarsByAppearance("light")).toEqual(
+      awesomicBridgeVars,
+    );
+  });
+
   // Teeth: when getDesignToken IS available, the documented static map must
   // itself match the resolved tokens, so the fallback can never silently drift.
-  test("static AntD default map matches getDesignToken when available", () => {
+  test("static Awesomic token map matches getDesignToken when available", () => {
     for (const appearance of APPEARANCES) {
       const resolved = resolveTokens(appearance);
       if (!resolved) continue; // getDesignToken blocked → nothing to cross-check

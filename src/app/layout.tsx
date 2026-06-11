@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { cookies } from "next/headers";
 import localFont from "next/font/local";
 import { getMessages } from "next-intl/server";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
@@ -29,17 +28,11 @@ export const metadata: Metadata = {
 };
 
 /**
- * Reads appearance from the theme-appearance cookie.
- * Returns "light" for any missing, invalid, or unexpected value.
- *
- * NOTE (T1): Using cookies() makes this layout dynamically rendered (no static
- * caching). For TALKPIK AI — which requires Supabase Auth on all routes — the
- * root layout is already dynamic, so this is an accepted tradeoff.
+ * Awesomic is light-only in the current remediation. Keep this as a function so
+ * dark infrastructure can be reopened behind one boundary later.
  */
 export async function resolveInitialAppearance(): Promise<ThemeAppearance> {
-  const cookieStore = await cookies();
-  const raw = cookieStore.get("theme-appearance")?.value;
-  return raw === "dark" ? "dark" : "light";
+  return "light";
 }
 
 export default async function RootLayout({
@@ -53,9 +46,9 @@ export default async function RootLayout({
   const locale = await resolveLocale();
   const messages = await getMessages();
   // antd v6.x 호환성: theme namespace는 client-only ("use client" + transitive
-  // createContext)이므로 server layout에서 import 자체 금지. SSR cssVars는 appearance
-  // 기반 hardcoded fallback만 사용. 동적 token은 client AppProviders → ThemeProvider →
-  // ConfigProvider hierarchy에서 처리 (현재 brand override 없음).
+  // createContext)이므로 server layout에서 import 자체 금지. SSR cssVars는
+  // Awesomic light-fixed fallback만 사용. 동적 token은 client AppProviders →
+  // ThemeProvider → ConfigProvider hierarchy에서 처리한다.
   const cssVars = getResolvedBridgeVarsByAppearance(appearance);
 
   return (

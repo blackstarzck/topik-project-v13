@@ -26,14 +26,14 @@ describe("resolveInitialAppearance", () => {
     expect(result).toBe("light");
   });
 
-  test('returns "dark" when cookie is "dark"', async () => {
+  test('returns "light" when cookie is "dark" because Awesomic is light-fixed', async () => {
     vi.mocked(cookies).mockResolvedValue({
       get: (name: string) =>
         name === "theme-appearance" ? { name, value: "dark" } : undefined,
     } as unknown as Awaited<ReturnType<typeof cookies>>);
 
     const result = await resolveInitialAppearance();
-    expect(result).toBe("dark");
+    expect(result).toBe("light");
   });
 
   test('returns "light" when cookie is "light"', async () => {
