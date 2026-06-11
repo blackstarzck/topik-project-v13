@@ -9,7 +9,6 @@ import {
   Form,
   List,
   Skeleton,
-  Space,
   Switch,
   Tabs,
   Tag,
@@ -60,14 +59,14 @@ const WEEKDAYS: { value: number; labelKey: string }[] = [
   { value: 0, labelKey: "sun" },
 ];
 
-// 발송 이력 status enum → 카탈로그 키 + 배지 색(enum 값은 그대로 유지).
+// 발송 이력 status enum → 카탈로그 키(enum 값은 그대로 유지).
 const LOG_STATUS_BADGE_META: Record<
   NotificationLogEntry["status"],
-  { labelKey: string; color: string }
+  { labelKey: string }
 > = {
-  sent: { labelKey: "sent", color: "green" },
-  failed: { labelKey: "failed", color: "red" },
-  pending: { labelKey: "pending", color: "blue" },
+  sent: { labelKey: "sent" },
+  failed: { labelKey: "failed" },
+  pending: { labelKey: "pending" },
 };
 
 type Props = {
@@ -318,7 +317,7 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
       key: "email",
       label: t("channel.emailTab"),
       children: (
-        <Space orientation="vertical" size={8} style={{ width: "100%" }}>
+        <div className="flex w-full flex-col gap-2">
           <Checkbox
             checked={settings.channels.email}
             onChange={(e) => setChannel("email", e.target.checked)}
@@ -326,19 +325,19 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
             {t("channel.emailReceive")}
           </Checkbox>
           <Text type="secondary">{t("channel.emailHint")}</Text>
-        </Space>
+        </div>
       ),
     },
     {
       key: "zalo",
       label: (
-        <Space size={4}>
+        <span className="inline-flex items-center gap-1">
           Zalo
           <Tag>{t("channel.notConnected")}</Tag>
-        </Space>
+        </span>
       ),
       children: (
-        <Space orientation="vertical" size={8} style={{ width: "100%" }}>
+        <div className="flex w-full flex-col gap-2">
           <Checkbox
             checked={settings.channels.zalo}
             onChange={(e) => setChannel("zalo", e.target.checked)}
@@ -346,14 +345,14 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
             {t("channel.zaloReceive")}
           </Checkbox>
           <Text type="secondary">{t("channel.zaloHint")}</Text>
-        </Space>
+        </div>
       ),
     },
     {
       key: "both",
       label: t("channel.bothTab"),
       children: (
-        <Space orientation="vertical" size={8} style={{ width: "100%" }}>
+        <div className="flex w-full flex-col gap-2">
           <Checkbox
             checked={settings.channels.email}
             onChange={(e) => setChannel("email", e.target.checked)}
@@ -366,7 +365,7 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
           >
             {t("channel.zaloReceivePending")}
           </Checkbox>
-        </Space>
+        </div>
       ),
     },
   ];
@@ -378,7 +377,7 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
       onFinish={handleFinish}
       disabled={saving}
     >
-      <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+      <div className="flex w-full flex-col gap-4">
         {settingsLoad.status === "error" ? (
           <Alert
             type="error"
@@ -421,7 +420,7 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
           title={t("condition.cardTitle")}
           data-testid="notification-condition-card"
         >
-          <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+          <div className="flex w-full flex-col gap-4">
             {/* Boolean conditions persist to profiles.notification_prefs and do
                 not depend on the async notification_settings load. */}
             {NOTIFICATION_PREF_KEYS.map((key) => {
@@ -432,14 +431,14 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
                 <Form.Item
                   key={key}
                   label={prefLabel}
-                  style={{ marginBottom: 0 }}
+                  className="!mb-0"
                 >
                   <Switch
                     checked={values[key] ?? false}
                     onChange={(checked) => setKey(key, checked)}
                     aria-label={prefLabel}
                   />
-                  <Text type="secondary" style={{ marginLeft: 12 }}>
+                  <Text type="secondary" className="ml-3">
                     {values[key] ? t("condition.on") : t("condition.off")}
                   </Text>
                 </Form.Item>
@@ -453,7 +452,7 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
               <>
                 <Form.Item
                   label={t("condition.reminderTimeLabel")}
-                  style={{ marginBottom: 0 }}
+                  className="!mb-0"
                   extra={
                     anyChannelOn ? undefined : t("condition.reminderTimeExtra")
                   }
@@ -476,28 +475,26 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
 
                 <Form.Item
                   label={t("condition.reminderDaysLabel")}
-                  style={{ marginBottom: 0 }}
+                  className="!mb-0"
                 >
-                  <Space wrap>
+                  <div className="flex flex-wrap gap-2">
                     {WEEKDAYS.map((d) => (
                       <Tag.CheckableTag
                         key={d.value}
                         checked={settings.reminder_days.includes(d.value)}
                         onChange={() => anyChannelOn && toggleDay(d.value)}
-                        style={
-                          anyChannelOn
-                            ? undefined
-                            : { opacity: 0.5, cursor: "not-allowed" }
+                        className={
+                          anyChannelOn ? undefined : "cursor-not-allowed opacity-50"
                         }
                       >
                         {t(`weekday.${d.labelKey}` as Parameters<typeof t>[0])}
                       </Tag.CheckableTag>
                     ))}
-                  </Space>
+                  </div>
                 </Form.Item>
               </>
             )}
-          </Space>
+          </div>
         </AppCard>
 
         {/* Region 4: 미리보기 / 발송 이력 */}
@@ -527,8 +524,8 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
               dataSource={log}
               renderItem={(entry) => (
                 <List.Item>
-                  <Space>
-                    <Tag color={LOG_STATUS_BADGE_META[entry.status].color}>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Tag>
                       {t(
                         `logStatus.${LOG_STATUS_BADGE_META[entry.status].labelKey}` as Parameters<typeof t>[0],
                       )}
@@ -545,7 +542,7 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
                         hour12: false,
                       })}
                     </Text>
-                  </Space>
+                  </div>
                 </List.Item>
               )}
             />
@@ -555,7 +552,7 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
         <Alert type="info" showIcon title={t("deferredNotice")} />
 
         {/* Region 5: 저장 CTA (변경값 없으면 비활성, 저장 중 중복 클릭 차단) */}
-        <Form.Item style={{ marginBottom: 0 }}>
+        <Form.Item className="!mb-0">
           <Button
             data-testid="notification-save"
             type="primary"
@@ -566,7 +563,7 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
             {tCommon("save")}
           </Button>
         </Form.Item>
-      </Space>
+      </div>
     </Form>
   );
 }
