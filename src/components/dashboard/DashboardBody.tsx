@@ -1,6 +1,7 @@
 "use client";
 
-import { Button, Empty, Flex, Space, Tag, Typography } from "antd";
+import type { ReactNode } from "react";
+import { Button, Empty, Typography } from "antd";
 import {
   ArrowRight,
   BarChart3,
@@ -47,6 +48,14 @@ type Props = {
 
 function truncateLabel(value: string, max = 34): string {
   return value.length > max ? `${value.slice(0, max)}...` : value;
+}
+
+function DashboardBadge({ children }: { children: ReactNode }) {
+  return (
+    <span className="inline-flex min-h-7 items-center rounded-full border border-border bg-surface px-3 text-xs font-semibold text-text-secondary">
+      {children}
+    </span>
+  );
 }
 
 export function DashboardBody({
@@ -106,44 +115,39 @@ export function DashboardBody({
   const alternativeTags = alternatives.slice(0, 2);
 
   return (
-    <Space
-      className="dashboard-workspace"
-      orientation="vertical"
-      size="large"
-      style={{ width: "100%" }}
-    >
+    <div className="grid gap-6">
       <DashboardKpiSummary kpi={kpi} />
 
-      <section className="dashboard-hub-grid" aria-label={t("hubAria")}>
-        <AppCard className="dashboard-ai-card">
-          <div className="dashboard-ai-card__body">
-            <div className="dashboard-ai-card__mark">
+      <section className="grid gap-5 lg:grid-cols-12" aria-label={t("hubAria")}>
+        <AppCard className="h-full lg:col-span-5">
+          <div className="grid h-full gap-6 md:grid-cols-3 md:items-center">
+            <div className="flex h-28 w-28 items-center justify-center rounded-3xl border border-border bg-surface text-text md:col-span-1">
               <Sparkles aria-hidden size={30} />
             </div>
-            <div className="dashboard-ai-card__content">
-              <Text strong className="dashboard-section-kicker">
+            <div className="grid gap-4 md:col-span-2">
+              <Text strong className="!text-sm !text-text-secondary">
                 {t("aiTutorTitle")}
               </Text>
-              <h2>
+              <h2 className="m-0 text-2xl font-semibold leading-tight text-text">
                 {primary
                   ? truncateLabel(primary.title)
                   : t("aiTutorFallbackTitle")}
               </h2>
-              <Paragraph type="secondary">
+              <Paragraph type="secondary" className="!m-0 !text-sm !leading-6">
                 {primary?.reason ?? t("aiTutorBody")}
               </Paragraph>
-              <Flex gap="small" wrap>
-                <Tag color="blue">{primaryQuestionTag}</Tag>
-                <Tag color="green">{t("estimatedTime")}</Tag>
-                <Tag>{t("reasonTag")}</Tag>
+              <div className="flex flex-wrap gap-2">
+                <DashboardBadge>{primaryQuestionTag}</DashboardBadge>
+                <DashboardBadge>{t("estimatedTime")}</DashboardBadge>
+                <DashboardBadge>{t("reasonTag")}</DashboardBadge>
                 {alternativeTags.map((alt) => (
-                  <Tag key={alt.problemId} color="cyan">
+                  <DashboardBadge key={alt.problemId}>
                     {alt.questionNo != null
                       ? t("questionTag", { no: alt.questionNo })
                       : t("questionTagFallback")}
-                  </Tag>
+                  </DashboardBadge>
                 ))}
-              </Flex>
+              </div>
               <Link href={primaryHref as never}>
                 <Button
                   type="primary"
@@ -157,56 +161,54 @@ export function DashboardBody({
           </div>
         </AppCard>
 
-        <AppCard className="dashboard-focus-card">
-          <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
-            <Flex justify="space-between" align="center" gap="small" wrap>
+        <AppCard className="h-full lg:col-span-3">
+          <div className="grid h-full gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <Text strong>{t("continueTitle")}</Text>
-              <Tag color="processing">{t("continueTag")}</Tag>
-            </Flex>
-            <div className="app-card-compact dashboard-focus-card__item">
-              <BookOpenCheck aria-hidden size={20} />
-              <div>
+              <DashboardBadge>{t("continueTag")}</DashboardBadge>
+            </div>
+            <div className="flex items-start gap-3 rounded-2xl border border-border bg-background p-4">
+              <span className="mt-0.5 inline-flex text-text">
+                <BookOpenCheck aria-hidden size={20} />
+              </span>
+              <div className="grid min-w-0 gap-1">
                 <Text strong>
                   {primary
                     ? truncateLabel(primary.title, 26)
                     : t("continueFallbackTitle")}
                 </Text>
-                <Paragraph type="secondary">
+                <Paragraph type="secondary" className="!m-0 !text-sm !leading-6">
                   {primary?.reason ?? t("continueBody")}
                 </Paragraph>
               </div>
             </div>
             <Link href={primaryHref as never}>
-              <Button block icon={<ArrowRight size={16} />}>
+              <Button block size="large" icon={<ArrowRight size={16} />}>
                 {t("continueCta")}
               </Button>
             </Link>
-          </Space>
+          </div>
         </AppCard>
 
-        <AppCard className="dashboard-feedback-panel">
-          <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
-            <Flex justify="space-between" align="center" gap="small" wrap>
+        <AppCard className="h-full lg:col-span-4">
+          <div className="grid h-full gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <Text strong>{t("pendingTitle")}</Text>
-              <Tag color={feedbackCount > 0 ? "volcano" : "default"}>
+              <DashboardBadge>
                 {t("pendingBadge", { count: feedbackCount })}
-              </Tag>
-            </Flex>
+              </DashboardBadge>
+            </div>
             {feedbackPreview.length === 0 ? (
               <Empty
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
                 description={t("pendingEmpty")}
               />
             ) : (
-              <Space
-                orientation="vertical"
-                size="small"
-                style={{ width: "100%" }}
-              >
+              <div className="grid gap-2">
                 {feedbackPreview.map((item) => (
                   <Link
                     key={item.submissionId}
-                    className="dashboard-feedback-link"
+                    className="flex items-center gap-3 rounded-2xl border border-border bg-background p-3 text-text transition hover:border-text"
                     href={
                       writingFeedbackHref({
                         questionNo: item.questionNo,
@@ -214,60 +216,64 @@ export function DashboardBody({
                       }) as never
                     }
                   >
-                    <span className="dashboard-feedback-link__badge">
+                    <span className="flex h-10 w-10 flex-none items-center justify-center rounded-default bg-surface text-sm font-semibold text-text">
                       {item.questionNo ?? "?"}
                     </span>
-                    <span>
-                      <strong>
+                    <span className="grid min-w-0 flex-1 gap-1">
+                      <strong className="truncate text-sm">
                         {item.questionNo != null
                           ? t("feedbackQuestion", { no: item.questionNo })
                           : t("feedbackQuestionFallback")}
                       </strong>
-                      <small>{t("feedbackItemHint")}</small>
+                      <small className="text-xs text-text-secondary">
+                        {t("feedbackItemHint")}
+                      </small>
                     </span>
-                    <ArrowRight aria-hidden size={16} />
+                    <ArrowRight aria-hidden size={16} className="flex-none" />
                   </Link>
                 ))}
-              </Space>
+              </div>
             )}
             <Link href={firstFeedbackHref as never}>
-              <Button block>{t("reportCta")}</Button>
+              <Button block size="large">
+                {t("reportCta")}
+              </Button>
             </Link>
-          </Space>
+          </div>
         </AppCard>
       </section>
 
-      <section className="dashboard-lower-grid">
-        <RecentFeedbackCard items={recentFeedbacks} />
-        <Space orientation="vertical" size="large" style={{ width: "100%" }}>
+      <section className="grid gap-5 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <RecentFeedbackCard items={recentFeedbacks} />
+        </div>
+        <div className="grid gap-5 lg:col-span-1">
           <AppCard title={t("quickStartTitle")}>
-            <Space
-              orientation="vertical"
-              size="small"
-              style={{ width: "100%" }}
-            >
+            <div className="grid gap-2">
               {quickActions.map((action) => (
                 <Link
                   key={action.href}
                   href={action.href as never}
-                  className="dashboard-quick-action"
+                  className="flex items-center gap-3 rounded-2xl border border-border bg-background p-3 text-text transition hover:border-text"
                 >
-                  <span className="dashboard-quick-action__icon">
+                  <span className="flex h-10 w-10 flex-none items-center justify-center rounded-default bg-surface text-text">
                     {action.icon}
                   </span>
-                  <span>
-                    <strong>{action.title}</strong>
-                    <small>{action.description}</small>
+                  <span className="grid min-w-0 flex-1 gap-1">
+                    <strong className="truncate text-sm">{action.title}</strong>
+                    <small className="text-xs leading-5 text-text-secondary">
+                      {action.description}
+                    </small>
                   </span>
-                  <ArrowRight aria-hidden size={16} />
+                  <ArrowRight aria-hidden size={16} className="flex-none" />
                 </Link>
               ))}
-            </Space>
+            </div>
           </AppCard>
           <UpcomingExamCard examDate={examDate} />
           <DashboardAlertsCard alerts={alerts} loadFailed={alertsLoadFailed} />
-        </Space>
+        </div>
       </section>
-    </Space>
+    </div>
   );
 }

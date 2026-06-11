@@ -1,10 +1,9 @@
 "use client";
 
-import { Card, Statistic, Typography } from "antd";
 import dayjs from "dayjs";
 import { useTranslations } from "next-intl";
 
-const { Paragraph } = Typography;
+import { AppCard } from "@/components/shared/AppCard";
 
 type Props = {
   examDate: string | null;
@@ -17,16 +16,17 @@ export function UpcomingExamCard({ examDate }: Props) {
   const daysLeft = exam.diff(dayjs().startOf("day"), "day");
   if (daysLeft < 0) return null;
   return (
-    <Card title={t("title")}>
-      <Statistic
-        value={exam.format("YYYY-MM-DD")}
-        styles={{ content: { fontSize: 20 } }}
-      />
-      <Paragraph type="secondary" style={{ marginTop: 8, marginBottom: 0 }}>
+    <AppCard title={t("title")}>
+      <div className="grid gap-2">
+        <strong className="text-xl font-semibold text-text">
+          {exam.format("YYYY-MM-DD")}
+        </strong>
+        <p className="m-0 text-sm text-text-secondary">
         {daysLeft === 0
           ? t("daysLeftToday")
           : t("daysLeft", { days: daysLeft })}
-      </Paragraph>
-    </Card>
+        </p>
+      </div>
+    </AppCard>
   );
 }

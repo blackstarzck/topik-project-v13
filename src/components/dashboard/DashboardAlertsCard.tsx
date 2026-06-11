@@ -1,6 +1,6 @@
 "use client";
 
-import { Alert, Button, Empty, Space } from "antd";
+import { Alert, Button, Empty } from "antd";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -42,26 +42,26 @@ export function DashboardAlertsCard({ alerts, loadFailed = false }: Props) {
       }
     >
       {loadFailed ? (
-        <Space orientation="vertical" size="small" style={{ width: "100%" }}>
+        <div className="grid gap-3">
           <Alert
             type="warning"
             showIcon
             title={t("loadFailedMessage")}
             description={t("loadFailedDescription")}
           />
-          <Space wrap>
+          <div className="flex flex-wrap gap-2">
             <Button type="primary" onClick={() => router.refresh()}>
               {t("retry")}
             </Button>
             <Link href="/settings/notifications">
               <Button>{t("goToSettings")}</Button>
             </Link>
-          </Space>
-        </Space>
+          </div>
+        </div>
       ) : alerts.length === 0 ? (
         <Empty description={t("empty")} />
       ) : (
-        <Space orientation="vertical" style={{ width: "100%" }}>
+        <div className="grid gap-3">
           {alerts.slice(0, 5).map((a) => (
             <Alert
               key={a.id}
@@ -71,7 +71,7 @@ export function DashboardAlertsCard({ alerts, loadFailed = false }: Props) {
               showIcon
             />
           ))}
-        </Space>
+        </div>
       )}
     </AppCard>
   );

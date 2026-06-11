@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Col, Row, Space, Statistic, Typography } from "antd";
+import { Button, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 
@@ -32,6 +32,30 @@ type Props = {
   kpi: DashboardKpiData;
 };
 
+function KpiTile({
+  title,
+  value,
+  suffix,
+}: {
+  title: string;
+  value: string | number;
+  suffix?: string;
+}) {
+  return (
+    <AppCard size="small" className="h-full">
+      <div className="grid gap-2">
+        <span className="text-xs font-medium text-text-secondary">{title}</span>
+        <span className="flex min-w-0 items-baseline gap-1 text-2xl font-semibold leading-none text-text">
+          <span className="truncate">{value}</span>
+          {suffix ? (
+            <span className="text-base font-medium text-text">{suffix}</span>
+          ) : null}
+        </span>
+      </div>
+    </AppCard>
+  );
+}
+
 export function DashboardKpiSummary({ kpi }: Props) {
   const t = useTranslations("dashboard.kpi");
   const isNewUser =
@@ -40,7 +64,7 @@ export function DashboardKpiSummary({ kpi }: Props) {
     kpi.streakDays === 0 &&
     kpi.recentFeedbackCount === 0;
 
-  // SSR/client hydration must produce the IDENTICAL string or React #418 fires.
+  // SSR/client hydration must produce the IDENTICAL string or React hydration mismatch fires.
   // Two ICU traps: (1) timezone — pin Asia/Seoul (KST is canonical for this
   // Korea-centric TOPIK app) so the value doesn't depend on the runtime tz;
   // (2) day-period — Node's ICU renders the ko-KR AM/PM marker as "PM"/"AM"
@@ -59,66 +83,48 @@ export function DashboardKpiSummary({ kpi }: Props) {
     // 예외: 신규 사용자는 0값 대신 시작 유도 문구.
     return (
       <AppCard>
-        <Space
-          orientation="vertical"
-          size="small"
-          style={{ width: "100%", textAlign: "center" }}
-        >
-          <Text strong style={{ fontSize: 16 }}>
+        <div className="mx-auto grid max-w-xl justify-items-center gap-3 text-center">
+          <Text strong className="!text-base">
             {t("newUserTitle")}
           </Text>
           <Text type="secondary">{t("newUserBody")}</Text>
           <Link href="/practice/recommendations">
-            <Button type="primary">{t("newUserCta")}</Button>
+            <Button type="primary" size="large">
+              {t("newUserCta")}
+            </Button>
           </Link>
-        </Space>
+        </div>
       </AppCard>
     );
   }
 
   return (
-    <Space orientation="vertical" size={8} style={{ width: "100%" }}>
-      <Row gutter={[16, 16]}>
-        <Col xs={12} md={6}>
-          <AppCard size="small" style={{ height: "100%" }}>
-            <Statistic
-              title={t("todaySubmissionsTitle")}
-              value={kpi.todayAttempts}
-              suffix={t("todaySubmissionsSuffix")}
-            />
-          </AppCard>
-        </Col>
-        <Col xs={12} md={6}>
-          <AppCard size="small" style={{ height: "100%" }}>
-            <Statistic
-              title={t("recentFeedbackTitle")}
-              value={kpi.recentFeedbackCount}
-              suffix={t("recentFeedbackSuffix")}
-            />
-          </AppCard>
-        </Col>
-        <Col xs={12} md={6}>
-          <AppCard size="small" style={{ height: "100%" }}>
-            <Statistic
-              title={t("goalAchievementTitle")}
-              value={kpi.goalAchievementPct != null ? kpi.goalAchievementPct : "—"}
-              suffix={kpi.goalAchievementPct != null ? "%" : undefined}
-            />
-          </AppCard>
-        </Col>
-        <Col xs={12} md={6}>
-          <AppCard size="small" style={{ height: "100%" }}>
-            <Statistic
-              title={t("streakTitle")}
-              value={kpi.streakDays}
-              suffix={t("streakSuffix")}
-            />
-          </AppCard>
-        </Col>
-      </Row>
-      <Text type="secondary" style={{ fontSize: 12 }}>
+    <div className="grid gap-3">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <KpiTile
+          title={t("todaySubmissionsTitle")}
+          value={kpi.todayAttempts}
+          suffix={t("todaySubmissionsSuffix")}
+        />
+        <KpiTile
+          title={t("recentFeedbackTitle")}
+          value={kpi.recentFeedbackCount}
+          suffix={t("recentFeedbackSuffix")}
+        />
+        <KpiTile
+          title={t("goalAchievementTitle")}
+          value={kpi.goalAchievementPct != null ? kpi.goalAchievementPct : "?"}
+          suffix={kpi.goalAchievementPct != null ? "%" : undefined}
+        />
+        <KpiTile
+          title={t("streakTitle")}
+          value={kpi.streakDays}
+          suffix={t("streakSuffix")}
+        />
+      </div>
+      <Text type="secondary" className="!text-xs">
         {t("updatedAt", { time: updatedLabel })}
       </Text>
-    </Space>
+    </div>
   );
 }

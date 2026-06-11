@@ -1,9 +1,10 @@
 "use client";
 
-import { Card, Empty, Flex, Tag, Typography } from "antd";
+import { Empty, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 
+import { AppCard } from "@/components/shared/AppCard";
 import { writingFeedbackHref } from "@/lib/writing/routes";
 
 const { Text } = Typography;
@@ -27,36 +28,28 @@ type Props = {
 export function RecentFeedbackCard({ items }: Props) {
   const t = useTranslations("dashboard.recentFeedback");
   return (
-    <Card title={t("title")}>
+    <AppCard title={t("title")}>
       {items.length === 0 ? (
         <Empty description={t("empty")} />
       ) : (
-        // antd 6.x deprecates the `List` component → compose with Flex (stable).
+        // antd 6.x deprecates the `List` component → compose with semantic divs.
         // role=list/listitem preserves the ul/li semantics List provided.
-        <Flex vertical role="list">
+        <div className="grid" role="list">
           {items.slice(0, 3).map((item, idx, arr) => (
-            <Flex
+            <div
               key={item.submissionId}
               role="listitem"
-              justify="space-between"
-              align="center"
-              gap="middle"
-              wrap
-              style={{
-                padding: "12px 0",
-                borderBottom:
-                  idx < arr.length - 1
-                    ? "1px solid var(--app-color-border)"
-                    : undefined,
-              }}
+              className={`flex flex-wrap items-center justify-between gap-3 py-3 ${
+                idx < arr.length - 1 ? "border-b border-border" : ""
+              }`}
             >
-              <Flex align="center" gap="small" wrap>
-                <Tag>
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <span className="inline-flex min-h-7 items-center rounded-full border border-border bg-surface px-3 text-xs font-semibold text-text-secondary">
                   {item.questionNo != null
                     ? t("questionNo", { no: item.questionNo })
                     : "—"}
-                </Tag>
-                <span>
+                </span>
+                <span className="text-sm text-text">
                   {t("scoreLabel")}{" "}
                   <strong>
                     {item.scoreTotal != null
@@ -64,13 +57,13 @@ export function RecentFeedbackCard({ items }: Props) {
                       : t("scorePending")}
                   </strong>
                 </span>
-                <Text type="secondary" style={{ fontSize: 12 }}>
-                  {/* Pin tz so SSR/client render the same date string (no React #418). */}
+                <Text type="secondary" className="!text-xs">
+                  {/* Pin tz so SSR/client render the same date string. */}
                   {new Date(item.generatedAt).toLocaleDateString("ko-KR", {
                     timeZone: "Asia/Seoul",
                   })}
                 </Text>
-              </Flex>
+              </div>
               <Link
                 href={
                   writingFeedbackHref({
@@ -81,10 +74,10 @@ export function RecentFeedbackCard({ items }: Props) {
               >
                 {t("view")}
               </Link>
-            </Flex>
+            </div>
           ))}
-        </Flex>
+        </div>
       )}
-    </Card>
+    </AppCard>
   );
 }
