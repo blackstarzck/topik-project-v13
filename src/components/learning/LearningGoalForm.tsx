@@ -7,9 +7,8 @@ import {
   DatePicker,
   Form,
   InputNumber,
-  Radio,
+  Segmented,
   Select,
-  Space,
   Typography,
 } from "antd";
 import dayjs from "dayjs";
@@ -21,6 +20,7 @@ import { z } from "zod";
 import { Brain, CalendarDays, Clock3, Flag, Target } from "lucide-react";
 import { useSaveLearningGoal } from "@/lib/learning/mutations";
 import type { Tables } from "@/lib/supabase/types";
+import { AppCard } from "@/components/shared/AppCard";
 
 const { Title, Paragraph } = Typography;
 
@@ -84,21 +84,28 @@ function GoalFieldCard({
   children,
 }: GoalFieldCardProps) {
   return (
-    <div className="learning-goal-field-card">
-      <div className="learning-goal-field-card__meta">
-        <span className="learning-goal-field-card__icon" aria-hidden="true">
-          {icon}
-        </span>
-        <span>
-          <strong>
-            {required ? <span aria-hidden="true">* </span> : null}
-            {title}
-          </strong>
-          <small>{description}</small>
-        </span>
+    <AppCard size="small">
+      <div className="grid gap-4 md:grid-cols-2 md:items-center">
+        <div className="flex min-w-0 items-start gap-3">
+          <span
+            className="inline-flex h-11 w-11 flex-none items-center justify-center rounded-default bg-surface text-text"
+            aria-hidden="true"
+          >
+            {icon}
+          </span>
+          <span className="min-w-0">
+            <strong className="block text-sm leading-5 text-text">
+              {required ? <span aria-hidden="true">* </span> : null}
+              {title}
+            </strong>
+            <small className="mt-1 block text-xs leading-5 text-text-secondary">
+              {description}
+            </small>
+          </span>
+        </div>
+        <div className="min-w-0">{children}</div>
       </div>
-      <div className="learning-goal-field-card__control">{children}</div>
-    </div>
+    </AppCard>
   );
 }
 
@@ -199,25 +206,20 @@ export function LearningGoalForm({
   });
 
   return (
-    <Space
-      className="learning-goal-form"
-      orientation="vertical"
-      size="large"
-      style={{ width: "100%" }}
-    >
+    <div className="mx-auto grid w-full max-w-3xl gap-6">
       {showIntro ? (
-        <div className="learning-goal-form__intro">
-          <Title level={3} style={{ marginBottom: 4 }}>
+        <div>
+          <Title level={3} className="!mb-1">
             {t("heading")}
           </Title>
-          <Paragraph type="secondary" style={{ margin: 0 }}>
+          <Paragraph type="secondary" className="!m-0">
             {t("subheading")}
           </Paragraph>
         </div>
       ) : null}
 
       <Form
-        className="learning-goal-form__fields"
+        className="grid gap-3"
         layout="vertical"
         onFinish={onSubmit}
         disabled={mutation.isPending}
@@ -233,11 +235,14 @@ export function LearningGoalForm({
             name="topik_level"
             render={({ field }) => (
               <Form.Item
+                className="!mb-0"
                 validateStatus={fieldErrors.topik_level ? "error" : undefined}
                 help={fieldErrors.topik_level}
               >
                 <Select
                   {...field}
+                  size="large"
+                  className="w-full"
                   aria-label={t("topikLevelLabel")}
                   onChange={(value) => {
                     const nextLevel = value as FormValues["topik_level"];
@@ -276,24 +281,24 @@ export function LearningGoalForm({
             name="target_grade"
             render={({ field }) => (
               <Form.Item
+                className="!mb-0"
                 validateStatus={fieldErrors.target_grade ? "error" : undefined}
                 help={fieldErrors.target_grade}
               >
-                <Radio.Group
+                <Segmented
+                  block
+                  size="large"
                   aria-label={t("targetGradeLabel")}
-                  className="learning-goal-grade-picker"
                   value={field.value}
-                  onChange={(event) => {
-                    field.onChange(event.target.value);
+                  onChange={(value) => {
+                    field.onChange(value);
                     clearFieldError("target_grade");
                   }}
-                >
-                  {targetGradeOptions.map((grade) => (
-                    <Radio.Button key={grade} value={grade}>
-                      {t("gradeOption", { grade })}
-                    </Radio.Button>
-                  ))}
-                </Radio.Group>
+                  options={targetGradeOptions.map((grade) => ({
+                    label: t("gradeOption", { grade }),
+                    value: grade,
+                  }))}
+                />
               </Form.Item>
             )}
           />
@@ -309,10 +314,13 @@ export function LearningGoalForm({
             name="exam_date"
             render={({ field }) => (
               <Form.Item
+                className="!mb-0"
                 validateStatus={fieldErrors.exam_date ? "error" : undefined}
                 help={fieldErrors.exam_date}
               >
                 <DatePicker
+                  size="large"
+                  className="w-full"
                   aria-label={t("examDateLabel")}
                   value={field.value ? dayjs(field.value) : null}
                   onChange={(d) => {
@@ -320,7 +328,6 @@ export function LearningGoalForm({
                     clearFieldError("exam_date");
                   }}
                   disabledDate={(d) => d.isBefore(dayjs().startOf("day"))}
-                  style={{ width: "100%" }}
                 />
               </Form.Item>
             )}
@@ -337,6 +344,7 @@ export function LearningGoalForm({
             name="weekly_goal_minutes"
             render={({ field }) => (
               <Form.Item
+                className="!mb-0"
                 validateStatus={
                   fieldErrors.weekly_goal_minutes ? "error" : undefined
                 }
@@ -344,11 +352,12 @@ export function LearningGoalForm({
               >
                 <InputNumber
                   {...field}
+                  size="large"
+                  className="w-full"
                   aria-label={t("weeklyMinutesLabel")}
                   min={15}
                   max={2000}
                   step={30}
-                  style={{ width: "100%" }}
                   onChange={(value) => {
                     field.onChange(value);
                     clearFieldError("weekly_goal_minutes");
@@ -369,11 +378,14 @@ export function LearningGoalForm({
             name="weak_areas"
             render={({ field }) => (
               <Form.Item
+                className="!mb-0"
                 validateStatus={fieldErrors.weak_areas ? "error" : undefined}
                 help={fieldErrors.weak_areas}
               >
                 <Select
                   {...field}
+                  size="large"
+                  className="w-full"
                   aria-label={t("weakAreasLabel")}
                   mode="multiple"
                   allowClear
@@ -390,12 +402,12 @@ export function LearningGoalForm({
         </GoalFieldCard>
 
         <Form.Item
-          className="learning-goal-submit-item"
+          className="!mb-0 pt-1"
           validateStatus={fieldErrors.__save ? "error" : undefined}
           help={fieldErrors.__save}
         >
           <Button
-            className="learning-goal-submit"
+            size="large"
             type="primary"
             htmlType="submit"
             block
@@ -405,6 +417,6 @@ export function LearningGoalForm({
           </Button>
         </Form.Item>
       </Form>
-    </Space>
+    </div>
   );
 }

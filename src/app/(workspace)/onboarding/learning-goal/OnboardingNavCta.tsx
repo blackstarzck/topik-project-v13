@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { App, Button, Space, Typography } from "antd";
+import { App, Button, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useSaveLearningGoal } from "@/lib/learning/mutations";
@@ -64,33 +64,28 @@ export function OnboardingNavCta({
   };
 
   return (
-    <Space
-      className="onboarding-goal-nav"
-      orientation="vertical"
-      size="small"
-      style={{ width: "100%" }}
-    >
-      <Space className="onboarding-goal-nav__actions" wrap>
+    <div className="mx-auto grid w-full max-w-3xl gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <Button
-          className="onboarding-goal-nav__previous"
+          size="large"
           onClick={() => router.push(previousHref as never)}
         >
           {t("previous")}
         </Button>
         <Button
-          className="onboarding-goal-nav__skip"
+          size="large"
           type="link"
           onClick={handleSkip}
           loading={mutation.isPending}
         >
           {t("skip")}
         </Button>
-      </Space>
+      </div>
       {skipError ? (
-        <Text type="danger" style={{ fontSize: 12 }}>
+        <Text type="danger" className="!text-xs">
           {t("skipFailedInline", { detail: skipError })}
         </Text>
       ) : null}
-    </Space>
+    </div>
   );
 }

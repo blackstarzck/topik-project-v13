@@ -29,14 +29,15 @@ export function OnboardingSteps({ current = STEP_KEYS.length - 1 }: Props) {
     ? Math.min(Math.max(current, 0), STEP_KEYS.length - 1)
     : 0;
   return (
-    <div>
-      <Text type="secondary" style={{ display: "block", marginBottom: 8 }}>
+    <div className="mx-auto w-full max-w-3xl">
+      <Text type="secondary" className="block text-center !text-sm">
         {t("counter", {
           current: safeCurrent + 1,
           total: STEP_KEYS.length,
         })}
       </Text>
       <Steps
+        className="mt-3"
         size="small"
         current={safeCurrent}
         responsive={false}
