@@ -3,19 +3,15 @@
 import {
   Alert,
   Button,
-  Descriptions,
   Radio,
-  Space,
-  Tag,
   Tooltip,
   Typography,
 } from "antd";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { AppModal } from "@/components/shared/AppModal";
 import { writingProblemHref } from "@/lib/writing/routes";
-import { SPACING } from "@/theme/spacing";
 
 const { Paragraph, Text } = Typography;
 
@@ -87,6 +83,14 @@ function relativeDay(iso: string | null | undefined): RelativeDay | null {
   if (days === 1) return { kind: "yesterday" };
   if (days < 7) return { kind: "daysAgo", days };
   return { kind: "absolute", text: new Date(iso).toLocaleDateString("ko-KR") };
+}
+
+function SummaryBadge({ children }: { children: ReactNode }) {
+  return (
+    <span className="inline-flex rounded-xl border border-border bg-primary px-3 py-1 text-xs font-medium text-background">
+      {children}
+    </span>
+  );
 }
 
 export function RetryModal({
@@ -170,25 +174,35 @@ export function RetryModal({
   const risky = starting;
 
   const summary = (
-    <Descriptions
-      size="small"
-      column={1}
-      bordered
-      style={{ marginBottom: SPACING.md }}
-    >
-      <Descriptions.Item label={t("summaryProblem")}>
-        {(problemTitle ?? t("summaryFallbackProblem")).slice(0, 28)}
-      </Descriptions.Item>
-      <Descriptions.Item label={t("summaryType")}>
-        {questionNo ? (
-          <Tag>{tCommon("questionNo", { no: questionNo })}</Tag>
-        ) : (
-          "—"
-        )}
-      </Descriptions.Item>
-      <Descriptions.Item label={t("summaryPreviousStatus")}>
-        <Space orientation="vertical" size={0}>
-          <Text>
+    <div className="mb-4 grid gap-2">
+      <div className="rounded-3xl border border-border bg-surface p-3">
+        <Text type="secondary" className="block !text-xs">
+          {t("summaryProblem")}
+        </Text>
+        <strong className="mt-1 block truncate text-sm text-text">
+          {(problemTitle ?? t("summaryFallbackProblem")).slice(0, 28)}
+        </strong>
+      </div>
+      <div className="grid gap-2 sm:grid-cols-2">
+        <div className="rounded-3xl border border-border bg-background p-3">
+          <Text type="secondary" className="block !text-xs">
+            {t("summaryType")}
+          </Text>
+          <div className="mt-2">
+            {questionNo ? (
+              <SummaryBadge>
+                {tCommon("questionNo", { no: questionNo })}
+              </SummaryBadge>
+            ) : (
+              <Text>-</Text>
+            )}
+          </div>
+        </div>
+        <div className="rounded-3xl border border-border bg-background p-3">
+          <Text type="secondary" className="block !text-xs">
+            {t("summaryPreviousStatus")}
+          </Text>
+          <Text className="mt-1 block !text-sm">
             {statusLabel}
             {attemptCount > 0
               ? ` · ${tCommon("attemptCount", { count: attemptCount })}`
@@ -197,6 +211,7 @@ export function RetryModal({
           </Text>
           {canViewResult ? (
             <Button
+              className="mt-2 !p-0"
               type="link"
               size="small"
               onClick={handleViewResult}
@@ -205,9 +220,9 @@ export function RetryModal({
               {t("viewResult")}
             </Button>
           ) : null}
-        </Space>
-      </Descriptions.Item>
-    </Descriptions>
+        </div>
+      </div>
+    </div>
   );
 
   // §2 예외 — 만료된 문제: 시작/모드 선택 숨기고 만료 안내 + 닫기만.
@@ -225,7 +240,7 @@ export function RetryModal({
         <Alert
           type="warning"
           showIcon
-          style={{ marginBottom: SPACING.sm }}
+          className="mb-3"
           title={t("expiredMessage")}
           description={t("expiredDescription")}
         />
@@ -248,34 +263,45 @@ export function RetryModal({
     >
       {summary}
 
-      <Paragraph type="secondary" style={{ marginBottom: SPACING.sm }}>
+      <Paragraph type="secondary" className="!mb-3">
         {t("intro")}
       </Paragraph>
 
       {/* §3 — 재풀이 모드 선택 (기본 선택 1개 항상 존재). */}
       <Radio.Group
+        className="mb-4 w-full"
         value={mode}
         onChange={(e) => setMode(e.target.value as RetryMode)}
-        style={{ width: "100%", marginBottom: SPACING.md }}
       >
-        <Space orientation="vertical" style={{ width: "100%" }}>
-          <Radio value="fresh">
-            {t("modeFresh")}{" "}
-            <Text type="secondary">{t("modeFreshHint")}</Text>
-          </Radio>
-          <Radio value="resume" disabled={!hasAttempt}>
-            {t("modeResume")}{" "}
-            <Text type="secondary">
-              {hasAttempt ? t("modeResumeHint") : t("modeResumeNone")}
-            </Text>
-          </Radio>
+        <div className="grid gap-2">
+          <div className="rounded-2xl border border-border bg-background p-3">
+            <Radio className="w-full" value="fresh">
+              <span className="font-medium text-text">{t("modeFresh")}</span>{" "}
+              <Text type="secondary" className="!text-sm">
+                {t("modeFreshHint")}
+              </Text>
+            </Radio>
+          </div>
+          <div className="rounded-2xl border border-border bg-background p-3">
+            <Radio className="w-full" value="resume" disabled={!hasAttempt}>
+              <span className="font-medium text-text">{t("modeResume")}</span>{" "}
+              <Text type="secondary" className="!text-sm">
+                {hasAttempt ? t("modeResumeHint") : t("modeResumeNone")}
+              </Text>
+            </Radio>
+          </div>
           {/* 힌트 포함 모드는 아직 준비 중(deferred) — 비활성 + 정직한 안내. */}
           <Tooltip title={t("modeHintTooltip")}>
-            <Radio value="hint" disabled>
-              {t("modeHint")} <Text type="secondary">{t("modeHintHint")}</Text>
-            </Radio>
+            <div className="rounded-2xl border border-border bg-background p-3">
+              <Radio className="w-full" value="hint" disabled>
+                <span className="font-medium text-text">{t("modeHint")}</span>{" "}
+                <Text type="secondary" className="!text-sm">
+                  {t("modeHintHint")}
+                </Text>
+              </Radio>
+            </div>
           </Tooltip>
-        </Space>
+        </div>
       </Radio.Group>
 
       {startErrorKey ? (
@@ -283,7 +309,7 @@ export function RetryModal({
         <Alert
           type="error"
           showIcon
-          style={{ marginBottom: SPACING.sm }}
+          className="mb-3"
           title={t("startFailedTitle")}
           description={t(startErrorKey)}
         />
@@ -291,11 +317,7 @@ export function RetryModal({
 
       <div
         data-testid="retry-modal-actions"
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-          gap: SPACING.sm,
-        }}
+        className="grid grid-cols-2 gap-3"
       >
         <Button block onClick={onClose} disabled={risky}>
           {tActions("cancel")}
