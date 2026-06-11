@@ -128,20 +128,20 @@ export function GrowthDashboard({
   // 개선률 KPI 표시 텍스트 + 색상. ICU 리프로 부호/퍼센트를 해석한다.
   const deltaSuffix = (
     pct: number | null,
-  ): { text: string; color: string | undefined } => {
+  ): { text: string; tone: "up" | "down" | undefined } => {
     if (pct == null)
-      return { text: t("kpi.improvementNoData"), color: undefined };
+      return { text: t("kpi.improvementNoData"), tone: undefined };
     if (pct > 0)
       return {
         text: t("kpi.improvementUp", { pct: Math.round(pct) }),
-        color: "#3f8600",
+        tone: "up",
       };
     if (pct < 0)
       return {
         text: t("kpi.improvementDown", { pct: Math.abs(Math.round(pct)) }),
-        color: "#cf1322",
+        tone: "down",
       };
-    return { text: t("kpi.improvementNone"), color: undefined };
+    return { text: t("kpi.improvementNone"), tone: undefined };
   };
 
   const sortedWeak = [...weakDimensions].sort(
@@ -164,9 +164,9 @@ export function GrowthDashboard({
     <Row data-testid="growth-kpi-grid" gutter={[16, 16]}>
       <Col xs={12} md={6}>
         <AppCard
+          className="growth-kpi-card"
           data-testid="growth-kpi-average"
           size="small"
-          style={{ height: "100%" }}
         >
           <Statistic
             title={t("kpi.averageScore")}
@@ -175,52 +175,52 @@ export function GrowthDashboard({
               kpi.averageScore != null ? t("kpi.pointSuffix") : undefined
             }
           />
-          <Text type="secondary" style={{ fontSize: 12 }}>
+          <Text className="growth-kpi-hint" type="secondary">
             {t("kpi.averageScoreHint")}
           </Text>
         </AppCard>
       </Col>
       <Col xs={12} md={6}>
         <AppCard
+          className="growth-kpi-card"
           data-testid="growth-kpi-attempts"
           size="small"
-          style={{ height: "100%" }}
         >
           <Statistic
             title={t("kpi.attempts")}
             value={kpi.totalAttempts}
             suffix={t("kpi.attemptsSuffix")}
           />
-          <Text type="secondary" style={{ fontSize: 12 }}>
+          <Text className="growth-kpi-hint" type="secondary">
             {t("kpi.attemptsHint")}
           </Text>
         </AppCard>
       </Col>
       <Col xs={12} md={6}>
         <AppCard
+          className="growth-kpi-card"
           data-testid="growth-kpi-improvement"
           size="small"
-          style={{ height: "100%" }}
         >
           <Statistic
+            className={
+              improvement.tone
+                ? `growth-kpi-stat--${improvement.tone}`
+                : undefined
+            }
             title={t("kpi.improvement")}
             value={improvement.text}
-            styles={{
-              content: improvement.color
-                ? { color: improvement.color }
-                : undefined,
-            }}
           />
-          <Text type="secondary" style={{ fontSize: 12 }}>
+          <Text className="growth-kpi-hint" type="secondary">
             {t("kpi.improvementHint")}
           </Text>
         </AppCard>
       </Col>
       <Col xs={12} md={6}>
         <AppCard
+          className="growth-kpi-card"
           data-testid="growth-kpi-goal"
           size="small"
-          style={{ height: "100%" }}
         >
           <Statistic
             title={t("kpi.goalAchievement")}
@@ -229,7 +229,7 @@ export function GrowthDashboard({
             }
             suffix={kpi.goalAchievementPct != null ? "%" : undefined}
           />
-          <Text type="secondary" style={{ fontSize: 12 }}>
+          <Text className="growth-kpi-hint" type="secondary">
             {t("kpi.goalLabel", { goal: kpi.goalLabel })}
           </Text>
         </AppCard>
@@ -246,7 +246,11 @@ export function GrowthDashboard({
   );
 
   return (
-    <Space orientation="vertical" size="large" style={{ width: "100%" }}>
+    <Space
+      className="growth-dashboard-stack"
+      orientation="vertical"
+      size="large"
+    >
       <PageHeader title={t("heading")} subtitle={t("subheading")} />
 
       {/* area 2 — KPI 카드 4개 고정. 목표/데이터 없음은 설정 유도.
@@ -276,19 +280,16 @@ export function GrowthDashboard({
               </Empty>
             ) : (
               <Space
+                className="growth-list-stack"
                 orientation="vertical"
                 size="middle"
-                style={{ width: "100%" }}
               >
                 {sortedWeak.slice(0, 6).map((w) => {
                   const percent = Math.round(w.avgScore * 100);
                   return (
                     <div key={w.dimension}>
                       <Space
-                        style={{
-                          width: "100%",
-                          justifyContent: "space-between",
-                        }}
+                        className="growth-split-row"
                       >
                         <Text strong>{dimensionLabel(w.dimension)}</Text>
                         <Text type="secondary">
@@ -314,9 +315,9 @@ export function GrowthDashboard({
               insights.ts 가 키+ICU 변수만 만들고, 여기서 t()로 문구를 해석한다. */}
           <AppCard title={t("insights.title")}>
             <Space
+              className="growth-list-stack"
               orientation="vertical"
               size="small"
-              style={{ width: "100%" }}
             >
               {insights.map((insight, idx) => (
                 <Alert
@@ -329,7 +330,7 @@ export function GrowthDashboard({
                   )}
                 />
               ))}
-              <Text type="secondary" style={{ fontSize: 12 }}>
+              <Text className="growth-footnote" type="secondary">
                 {t("insights.disclaimer")}
               </Text>
             </Space>
@@ -367,7 +368,7 @@ export function GrowthDashboard({
                             ? t("recent.questionNo", { no: item.questionNo })
                             : "—"}
                         </Tag>
-                        <span style={{ marginLeft: 8 }}>
+                        <span className="growth-recent-score">
                           {t("recent.scoreLabel")}{" "}
                           <strong>
                             {item.scoreTotal != null
@@ -378,8 +379,8 @@ export function GrowthDashboard({
                           </strong>
                         </span>
                         <Text
+                          className="growth-recent-date"
                           type="secondary"
-                          style={{ marginLeft: 12, fontSize: 12 }}
                         >
                           {new Date(item.generatedAt).toLocaleDateString(
                             "ko-KR",
@@ -401,17 +402,14 @@ export function GrowthDashboard({
                   </Empty>
                 ) : (
                   <Space
+                    className="growth-list-stack"
                     orientation="vertical"
                     size="middle"
-                    style={{ width: "100%" }}
                   >
                     {recommendations.slice(0, 5).map((rec) => (
                       <div key={rec.problemId} className="app-card-compact">
                         <Space
-                          style={{
-                            width: "100%",
-                            justifyContent: "space-between",
-                          }}
+                          className="growth-split-row"
                           wrap
                         >
                           <Space orientation="vertical" size={2}>

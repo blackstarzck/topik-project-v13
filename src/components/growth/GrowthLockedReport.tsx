@@ -21,14 +21,18 @@ export function GrowthLockedReport({ planLabel }: { planLabel: string | null }) 
     <div data-testid="growth-locked-report">
       <Result
         icon={
-          <span style={{ fontSize: 40 }} aria-hidden>
+          <span className="growth-locked-icon" aria-hidden>
             🔒
           </span>
         }
         title={t("title")}
         subTitle={
-          <Space orientation="vertical" size={4} style={{ width: "100%" }}>
-            <Paragraph type="secondary" style={{ margin: 0 }}>
+          <Space
+            className="growth-locked-copy"
+            orientation="vertical"
+            size={4}
+          >
+            <Paragraph className="growth-locked-paragraph" type="secondary">
               {t.rich("body", {
                 plan: () => <Tag>{planText}</Tag>,
               })}

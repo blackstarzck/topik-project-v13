@@ -109,9 +109,13 @@ export function GrowthTrendChart({ points, onRetry }: Props) {
           ) : null}
         </Empty>
       ) : (
-        <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+        <Space
+          className="growth-trend-stack"
+          orientation="vertical"
+          size="middle"
+        >
           {/* 색상만으로 의미 전달 금지(접근성) — 범례 + 수치 축 라벨 병기. */}
-          <div style={{ width: "100%", height: 280 }}>
+          <div className="growth-trend-frame">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={filtered}
@@ -170,7 +174,7 @@ export function GrowthTrendChart({ points, onRetry }: Props) {
             type="info"
             showIcon
             title={
-              <Text type="secondary" style={{ fontSize: 12 }}>
+              <Text className="growth-chart-help" type="secondary">
                 {t("legendHelp")}
               </Text>
             }

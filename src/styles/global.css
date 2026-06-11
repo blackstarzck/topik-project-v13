@@ -5437,6 +5437,58 @@ body {
   padding-left: 18px;
 }
 
+.growth-dashboard-stack.ant-space,
+.growth-list-stack.ant-space,
+.growth-trend-stack.ant-space,
+.growth-locked-copy.ant-space {
+  width: 100%;
+}
+
+.growth-kpi-card.app-card {
+  height: 100%;
+}
+
+.growth-kpi-hint.ant-typography,
+.growth-footnote.ant-typography,
+.growth-chart-help.ant-typography,
+.growth-recent-date.ant-typography {
+  font-size: 12px;
+}
+
+.growth-kpi-stat--up .ant-statistic-content {
+  color: #3f8600;
+}
+
+.growth-kpi-stat--down .ant-statistic-content {
+  color: #cf1322;
+}
+
+.growth-split-row.ant-space {
+  width: 100%;
+  justify-content: space-between;
+}
+
+.growth-trend-frame {
+  width: 100%;
+  height: 280px;
+}
+
+.growth-locked-icon {
+  font-size: 40px;
+}
+
+.growth-locked-paragraph.ant-typography {
+  margin: 0;
+}
+
+.growth-recent-score {
+  margin-left: 8px;
+}
+
+.growth-recent-date.ant-typography {
+  margin-left: 12px;
+}
+
 .analysis-loading-shell {
   position: relative;
   display: grid;
