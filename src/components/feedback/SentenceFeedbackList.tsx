@@ -54,32 +54,35 @@ export function SentenceFeedbackList({ rows, onReanalyze }: Props) {
             <div
               key={r.id}
               role="listitem"
-              style={{
-                padding: index === 0 ? "0 0 12px" : "12px 0",
-                borderBottom:
-                  index < visible.length - 1 ? "1px solid #f0f0f0" : undefined,
-              }}
+              className={[
+                "feedback-sentence-row",
+                index < visible.length - 1
+                  ? "feedback-sentence-row--bordered"
+                  : null,
+              ]
+                .filter(Boolean)
+                .join(" ")}
             >
-              <div style={{ width: "100%" }}>
+              <div className="feedback-sentence-row__body">
                 {/* 원문은 줄바꿈 보존. */}
                 {r.original_text ? (
                   <Text
                     delete={!failed}
                     type="secondary"
-                    style={{ whiteSpace: "pre-line" }}
+                    className="feedback-preline"
                   >
                     {r.original_text}
                   </Text>
                 ) : null}
                 {failed ? (
-                  <div style={{ marginTop: 4 }}>
+                  <div className="feedback-sentence-row__actions">
                     <Space size={8} wrap>
                       <Tag color="default">{t("failTag")}</Tag>
                       {onReanalyze ? (
                         <Button
                           size="small"
                           type="link"
-                          style={{ padding: 0 }}
+                          className="feedback-inline-link"
                           onClick={onReanalyze}
                         >
                           {t("reanalyze")}
@@ -90,7 +93,7 @@ export function SentenceFeedbackList({ rows, onReanalyze }: Props) {
                 ) : (
                   <>
                     {r.corrected_text ? (
-                      <div style={{ whiteSpace: "pre-line" }}>
+                      <div className="feedback-preline">
                         <Text>{r.corrected_text}</Text>
                       </div>
                     ) : null}
@@ -107,7 +110,7 @@ export function SentenceFeedbackList({ rows, onReanalyze }: Props) {
         })}
       </div>
       {hiddenCount > 0 ? (
-        <div style={{ textAlign: "center", marginTop: 8 }}>
+        <div className="feedback-sentence-list__footer">
           <Button type="link" onClick={() => setExpanded(true)}>
             {t("showMore", { count: hiddenCount })}
           </Button>

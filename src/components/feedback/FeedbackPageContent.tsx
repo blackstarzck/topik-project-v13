@@ -102,7 +102,7 @@ export function FeedbackPageContent({
   const onReanalyze = () => router.refresh();
 
   return (
-    <Space orientation="vertical" size="large" style={{ width: "100%" }}>
+    <Space orientation="vertical" size="large" className="feedback-page-stack">
       {/* 부분 피드백 — 가능한 항목만 표시하고 누락 사유 안내(description 예외). */}
       {partial ? (
         <Alert

@@ -153,7 +153,7 @@ export function NextActionBar({
 
   return (
     <div data-testid="feedback-actions">
-      <Space wrap size={[8, 8]} style={{ width: "100%" }}>
+      <Space wrap size={[8, 8]} className="feedback-actions__group">
         <Button
           type="primary"
           onClick={() => router.push(retryHref)}

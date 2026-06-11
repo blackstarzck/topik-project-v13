@@ -5116,6 +5116,100 @@ body {
   align-self: flex-start;
 }
 
+.feedback-page-stack.ant-space,
+.feedback-detail-panel__stack.ant-space,
+.feedback-actions__group.ant-space,
+.feedback-recommendation-card__stack.ant-space {
+  width: 100%;
+}
+
+.feedback-dimension-card--failed.app-card {
+  opacity: 0.6;
+  background: #fafafa;
+}
+
+.feedback-dimension-card__score,
+.feedback-dimension-card__actions,
+.feedback-sentence-row__actions {
+  margin-top: 4px;
+}
+
+.feedback-dimension-card__failed-text.ant-typography {
+  font-size: 12px;
+}
+
+.feedback-inline-link.ant-btn {
+  padding: 0;
+}
+
+.feedback-two-line.ant-typography {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.feedback-detail-panel--flush .ant-card-body {
+  padding-top: 0;
+}
+
+.feedback-detail-panel__copy.ant-typography {
+  margin-bottom: 0;
+}
+
+.feedback-summary-meta.ant-space,
+.feedback-summary-copy.ant-typography {
+  margin-top: 12px;
+}
+
+.feedback-summary-copy.ant-typography {
+  margin-bottom: 0;
+}
+
+.feedback-sentence-row {
+  padding: 12px 0;
+}
+
+.feedback-sentence-row:first-child {
+  padding-top: 0;
+}
+
+.feedback-sentence-row--bordered {
+  border-bottom: 1px solid var(--app-color-border);
+}
+
+.feedback-sentence-row__body {
+  width: 100%;
+}
+
+.feedback-preline {
+  white-space: pre-line;
+}
+
+.feedback-sentence-list__footer {
+  margin-top: 8px;
+  text-align: center;
+}
+
+.feedback-recommendation-title.ant-typography {
+  margin-top: 0;
+}
+
+.feedback-recommendation-intro.ant-typography {
+  margin-bottom: 12px;
+}
+
+.feedback-recommendation-card.app-card {
+  height: 100%;
+}
+
+.feedback-recommendation-card__reason.ant-typography {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .analysis-loading-shell {
   position: relative;
   display: grid;
