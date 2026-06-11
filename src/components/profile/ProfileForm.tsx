@@ -1,11 +1,10 @@
 "use client";
 
-import { Alert, App, Avatar, Button, Form, Input, Space, Typography } from "antd";
+import { Alert, App, Avatar, Button, Form, Input, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { AppCard } from "@/components/shared/AppCard";
-import { SPACING } from "@/theme/spacing";
 import { useUpdateProfile } from "@/lib/settings/mutations";
 import {
   AvatarError,
@@ -108,7 +107,6 @@ export function ProfileForm({
   const [avatarUrl, setAvatarUrl] = useState<string | null>(() =>
     safeAvatarUrl(initialAvatarPath),
   );
-  const [avatarPath, setAvatarPath] = useState<string | null>(initialAvatarPath);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarError, setAvatarError] = useState<string | null>(null);
 
@@ -133,7 +131,6 @@ export function ProfileForm({
     try {
       const { blob, ext } = await squareCropImage(file);
       const result = await uploadAvatar(userId, blob, ext);
-      setAvatarPath(result.path);
       setAvatarUrl(result.publicUrl);
       message.success(tAvatar("uploadSuccess"));
     } catch (err) {
@@ -314,26 +311,26 @@ export function ProfileForm({
         size="small"
         role="region"
         aria-label={tAvatar("regionAriaLabel")}
-        style={{ marginBottom: SPACING.md }}
+        className="mb-4"
       >
-        <Space align="start" size="middle">
+        <div className="flex items-start gap-4">
           {avatarUrl ? (
             <Avatar size={56} src={avatarUrl} alt={tAvatar("imageAlt")} />
           ) : (
             <Avatar size={56}>{avatarInitial}</Avatar>
           )}
           <div>
-            <Paragraph strong style={{ marginTop: 0, marginBottom: 4 }}>
+            <Paragraph strong className="!mb-1 !mt-0">
               {tAvatar("title")}
             </Paragraph>
-            <Paragraph type="secondary" style={{ marginBottom: 8 }}>
+            <Paragraph type="secondary" className="!mb-2">
               {tAvatar("constraints")}
             </Paragraph>
             <input
               ref={fileInputRef}
               type="file"
               accept="image/jpeg,image/png"
-              style={{ display: "none" }}
+              hidden
               aria-label={tAvatar("fileInputAriaLabel")}
               onChange={handleAvatarSelect}
             />
@@ -345,12 +342,12 @@ export function ProfileForm({
               {avatarUploading ? tAvatar("uploading") : tAvatar("changeImage")}
             </Button>
           </div>
-        </Space>
+        </div>
         {avatarError ? (
           <Alert
             type="error"
             showIcon
-            style={{ marginTop: 12 }}
+            className="mt-3"
             title={avatarError}
             action={
               <Button size="small" onClick={() => fileInputRef.current?.click()}>
@@ -360,7 +357,7 @@ export function ProfileForm({
           />
         ) : null}
         <Alert
-          style={{ marginTop: 12 }}
+          className="mt-3"
           type="info"
           showIcon
           title={tAvatar("securityNoticeTitle")}

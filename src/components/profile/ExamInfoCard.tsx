@@ -8,7 +8,6 @@ import {
   Form,
   InputNumber,
   Select,
-  Space,
   Tag,
   Typography,
 } from "antd";
@@ -140,7 +139,7 @@ export function ExamInfoCard({ userId, goal }: Props) {
     return (
       <AppCard title={t("cardTitle")}>
         <Form layout="vertical" disabled={saving}>
-          <Form.Item label={t("levelLabel")} required style={{ marginBottom: 12 }}>
+          <Form.Item label={t("levelLabel")} required className="!mb-3">
             <Select<TopikLevel>
               value={level}
               onChange={(v) => {
@@ -159,13 +158,13 @@ export function ExamInfoCard({ userId, goal }: Props) {
             required
             validateStatus={gradeError ? "error" : undefined}
             help={gradeError ?? undefined}
-            style={{ marginBottom: 12 }}
+            className="!mb-3"
           >
             <InputNumber
               value={grade}
               min={1}
               max={6}
-              style={{ width: "100%" }}
+              className="w-full"
               onChange={(v) => {
                 setGrade(typeof v === "number" ? v : 1);
                 setGradeError(null);
@@ -173,23 +172,23 @@ export function ExamInfoCard({ userId, goal }: Props) {
               aria-label={t("targetGradeLabel")}
             />
           </Form.Item>
-          <Form.Item label={t("examDateLabel")} style={{ marginBottom: 16 }}>
+          <Form.Item label={t("examDateLabel")} className="!mb-4">
             <DatePicker
               value={examDate ? dayjs(examDate) : null}
               onChange={(d) => setExamDate(d ? d.format("YYYY-MM-DD") : null)}
               disabledDate={(d) => d.isBefore(dayjs().startOf("day"))}
-              style={{ width: "100%" }}
+              className="w-full"
               aria-label={t("examDateAriaLabel")}
             />
           </Form.Item>
-          <Space>
+          <div className="flex flex-wrap gap-2">
             <Button type="primary" loading={saving} onClick={handleSave}>
               {tCommon("save")}
             </Button>
             <Button onClick={cancelEdit} disabled={saving}>
               {tCommon("cancel")}
             </Button>
-          </Space>
+          </div>
         </Form>
       </AppCard>
     );
@@ -223,7 +222,7 @@ export function ExamInfoCard({ userId, goal }: Props) {
       ) : (
         <>
           <Paragraph>
-            <Tag color="blue">{topikLabel(view.topik_level)}</Tag>
+            <Tag>{topikLabel(view.topik_level)}</Tag>
             <Text strong> {t("targetGradeValue", { grade: view.target_grade })}</Text>
           </Paragraph>
           {view.exam_date ? (
@@ -236,7 +235,7 @@ export function ExamInfoCard({ userId, goal }: Props) {
           ) : (
             <Paragraph type="secondary">{t("examDateUnset")}</Paragraph>
           )}
-          <Paragraph style={{ marginBottom: 0 }}>
+          <Paragraph className="!mb-0">
             <Link href="/onboarding/learning-goal">
               {t("moreSettingsLink")}
             </Link>

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { Col, Row, Space } from "antd";
+import { Col, Row } from "antd";
 import { requireUser } from "@/lib/auth/session";
 import { getProfileSettings } from "@/lib/settings/server";
 import { getLearningGoal } from "@/lib/learning/server";
@@ -37,7 +37,7 @@ export default async function ProfilePage() {
       <PageHeader title={t("heading")} />
       <Row gutter={[16, 16]}>
         <Col xs={24} md={14}>
-          <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+          <div className="flex w-full flex-col gap-4">
             <ProfileForm
               userId={user.id}
               accountEmail={user.email ?? null}
@@ -48,10 +48,10 @@ export default async function ProfilePage() {
                 bio: settings.bio,
               }}
             />
-          </Space>
+          </div>
         </Col>
         <Col xs={24} md={10}>
-          <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+          <div className="flex w-full flex-col gap-4">
             <ExamInfoCard
               userId={user.id}
               goal={
@@ -73,7 +73,7 @@ export default async function ProfilePage() {
                 planLabel={profileMeta.plan_label}
               />
             ) : null}
-          </Space>
+          </div>
         </Col>
       </Row>
     </>

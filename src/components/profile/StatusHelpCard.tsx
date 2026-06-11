@@ -51,29 +51,29 @@ export function StatusHelpCard({
         <Alert
           type="warning"
           showIcon
-          style={{ marginBottom: 12 }}
+          className="mb-3"
           title={t("policyWarningTitle")}
           description={t("policyWarningDescription")}
         />
       ) : null}
       <Paragraph>
         <Text type="secondary">{t("visibilityLabel")}</Text>
-        <Tag color={visibility === "public" ? "green" : "default"}>
+        <Tag>
           {visibility === "public" ? t("visibilityPublic") : t("visibilityPrivate")}
         </Tag>
       </Paragraph>
       <Paragraph>
         <Text type="secondary">{t("roleLabelPrefix")}</Text>
         <Tag>{roleLabel}</Tag>
-        <Text type="secondary" style={{ marginLeft: 12 }}>{t("planLabelPrefix")}</Text>
-        <Tag color="gold">{planLabel}</Tag>
+        <Text type="secondary" className="ml-3">{t("planLabelPrefix")}</Text>
+        <Tag>{planLabel}</Tag>
       </Paragraph>
       <Paragraph>
         <Text type="secondary">{t("joinedLabelPrefix")}</Text>
         <Text strong>{new Date(joinedAt).toLocaleDateString("ko-KR")}</Text>
       </Paragraph>
-      <Paragraph style={{ marginBottom: 0 }}>
-        <Text type="secondary" style={{ fontSize: 12 }}>
+      <Paragraph className="!mb-0">
+        <Text type="secondary" className="!text-xs">
           {t("goalNote")}
         </Text>
       </Paragraph>
@@ -83,8 +83,8 @@ export function StatusHelpCard({
         <Text type="secondary"> · </Text>
         <Link href="/settings/language">{t("languageLink")}</Link>
       </Paragraph>
-      <Paragraph style={{ marginBottom: 0 }}>
-        <Text type="secondary" style={{ fontSize: 12 }}>
+      <Paragraph className="!mb-0">
+        <Text type="secondary" className="!text-xs">
           {t("withdrawalNote")}
         </Text>
       </Paragraph>
