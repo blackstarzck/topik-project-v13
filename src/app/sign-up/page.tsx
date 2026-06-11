@@ -23,6 +23,13 @@ export default async function SignUpPage() {
         pageHeading={t("pageHeading")}
         formSubtitle={t("formSubtitle")}
         heroEyebrow={t("heroEyebrow")}
+        heroTitle={t("heroTitle")}
+        heroBody={t("heroBody")}
+        heroHighlights={[
+          { title: t("heroAiFeedbackTitle"), body: t("heroAiFeedbackBody") },
+          { title: t("heroGrowthTitle"), body: t("heroGrowthBody") },
+          { title: t("heroPracticeTitle"), body: t("heroPracticeBody") },
+        ]}
         mascotAlt={tMascot("signUpAlt")}
         switchPrompt={t("haveAccountPrompt")}
         switchHref="/login"

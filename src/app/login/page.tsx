@@ -25,6 +25,13 @@ export default async function LoginPage() {
         pageHeading={t("pageHeading")}
         formSubtitle={t("formSubtitle")}
         heroEyebrow={t("heroEyebrow")}
+        heroTitle={t("heroTitle")}
+        heroBody={t("heroBody")}
+        heroHighlights={[
+          { title: t("heroGoalTitle"), body: t("heroGoalBody") },
+          { title: t("heroFeedbackTitle"), body: t("heroFeedbackBody") },
+          { title: t("heroGrowthTitle"), body: t("heroGrowthBody") },
+        ]}
         mascotAlt={tMascot("loginAlt")}
         switchPrompt={t("noAccountPrompt")}
         switchHref="/sign-up"
