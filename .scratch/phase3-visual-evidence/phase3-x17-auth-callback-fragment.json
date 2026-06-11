@@ -1,0 +1,55 @@
+{
+  "route": "/auth/callback-fragment?next=/terms",
+  "origin": "http://127.0.0.1:3000",
+  "label": "phase3-x17-auth-callback-fragment",
+  "storageState": null,
+  "capturedAt": "2026-06-11T05:28:37.043Z",
+  "shots": [
+    {
+      "viewport": 360,
+      "status": 200,
+      "finalUrlWithoutHash": "http://127.0.0.1:3000/auth/callback-fragment?next=/terms",
+      "hashPresentDuringProcessing": true,
+      "redirectedToLogin": false,
+      "errorOverlay": false,
+      "consoleErrorCount": 0,
+      "consoleErrors": [],
+      "bodyTextLen": 20,
+      "userCalls": 1,
+      "h1": {
+        "position": "absolute",
+        "width": "1px",
+        "height": "1px",
+        "overflow": "hidden",
+        "clip": "rect(0px, 0px, 0px, 0px)"
+      },
+      "card": {
+        "textAlign": "center"
+      },
+      "png": ".scratch\\phase3-visual-evidence\\phase3-x17-auth-callback-fragment-360.png"
+    },
+    {
+      "viewport": 1280,
+      "status": 200,
+      "finalUrlWithoutHash": "http://127.0.0.1:3000/auth/callback-fragment?next=/terms",
+      "hashPresentDuringProcessing": true,
+      "redirectedToLogin": false,
+      "errorOverlay": false,
+      "consoleErrorCount": 0,
+      "consoleErrors": [],
+      "bodyTextLen": 20,
+      "userCalls": 1,
+      "h1": {
+        "position": "absolute",
+        "width": "1px",
+        "height": "1px",
+        "overflow": "hidden",
+        "clip": "rect(0px, 0px, 0px, 0px)"
+      },
+      "card": {
+        "textAlign": "center"
+      },
+      "png": ".scratch\\phase3-visual-evidence\\phase3-x17-auth-callback-fragment-1280.png"
+    }
+  ]
+}

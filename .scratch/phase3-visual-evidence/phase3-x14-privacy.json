@@ -1,0 +1,31 @@
+{
+  "route": "/privacy",
+  "origin": "http://127.0.0.1:3000",
+  "label": "phase3-x14-privacy",
+  "storageState": null,
+  "capturedAt": "2026-06-11T05:14:40.738Z",
+  "shots": [
+    {
+      "viewport": 360,
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:3000/privacy",
+      "redirectedToLogin": false,
+      "errorOverlay": false,
+      "consoleErrorCount": 0,
+      "consoleErrors": [],
+      "bodyTextLen": 497,
+      "png": ".scratch\\phase3-visual-evidence\\phase3-x14-privacy-360.png"
+    },
+    {
+      "viewport": 1280,
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:3000/privacy",
+      "redirectedToLogin": false,
+      "errorOverlay": false,
+      "consoleErrorCount": 0,
+      "consoleErrors": [],
+      "bodyTextLen": 497,
+      "png": ".scratch\\phase3-visual-evidence\\phase3-x14-privacy-1280.png"
+    }
+  ]
+}

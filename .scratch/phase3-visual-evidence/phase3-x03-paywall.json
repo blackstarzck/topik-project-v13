@@ -1,0 +1,31 @@
+{
+  "route": "/paywall",
+  "origin": "http://127.0.0.1:3000",
+  "label": "phase3-x03-paywall",
+  "storageState": "tests/e2e/auth-state/student.json",
+  "capturedAt": null,
+  "shots": [
+    {
+      "viewport": 360,
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:3000/paywall",
+      "redirectedToLogin": false,
+      "errorOverlay": false,
+      "consoleErrorCount": 0,
+      "consoleErrors": [],
+      "bodyTextLen": 647,
+      "png": ".scratch\\phase3-visual-evidence\\phase3-x03-paywall-360.png"
+    },
+    {
+      "viewport": 1280,
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:3000/paywall",
+      "redirectedToLogin": false,
+      "errorOverlay": false,
+      "consoleErrorCount": 0,
+      "consoleErrors": [],
+      "bodyTextLen": 647,
+      "png": ".scratch\\phase3-visual-evidence\\phase3-x03-paywall-1280.png"
+    }
+  ]
+}

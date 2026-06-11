@@ -1,0 +1,45 @@
+{
+  "route": "/auth/error?reason=over_request_rate_limit&retry_after_seconds=60",
+  "origin": "http://127.0.0.1:3000",
+  "label": "phase3-x11-auth-error-ratelimit",
+  "storageState": null,
+  "capturedAt": "2026-06-11T05:00:07.895Z",
+  "shots": [
+    {
+      "viewport": 360,
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:3000/auth/error?reason=over_request_rate_limit&retry_after_seconds=60",
+      "redirectedToLogin": false,
+      "errorOverlay": false,
+      "consoleErrorCount": 0,
+      "consoleErrors": [],
+      "bodyTextLen": 68,
+      "h1": {
+        "position": "absolute",
+        "width": "1px",
+        "height": "1px",
+        "overflow": "hidden",
+        "clip": "rect(0px, 0px, 0px, 0px)"
+      },
+      "png": ".scratch\\phase3-visual-evidence\\phase3-x11-auth-error-ratelimit-360.png"
+    },
+    {
+      "viewport": 1280,
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:3000/auth/error?reason=over_request_rate_limit&retry_after_seconds=60",
+      "redirectedToLogin": false,
+      "errorOverlay": false,
+      "consoleErrorCount": 0,
+      "consoleErrors": [],
+      "bodyTextLen": 68,
+      "h1": {
+        "position": "absolute",
+        "width": "1px",
+        "height": "1px",
+        "overflow": "hidden",
+        "clip": "rect(0px, 0px, 0px, 0px)"
+      },
+      "png": ".scratch\\phase3-visual-evidence\\phase3-x11-auth-error-ratelimit-1280.png"
+    }
+  ]
+}

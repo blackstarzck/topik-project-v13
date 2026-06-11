@@ -49,7 +49,7 @@
 
 | Phase | Agents | Scope |
 | --- | --- | --- |
-| Classify | 9 (one per category) | root-stray, tasks/, reports/, errors/, test-artifacts, ui-redesign-scratch, run-ledgers-plans, ignored-present, structure-gitignore |
+| Classify | 8 (one per category) | root-stray, tasks/, reports/, errors/, test-artifacts, run-ledgers-plans, ignored-present, structure-gitignore |
 | Verify | per-finding (adversarial) | Refute that each DELETE/UNTRACK/MOVE is safe; default unsafe if uncertain |
 | Synthesize | 1 | Ordered execution plan (buckets, steps+gates, decisions, structural recs, rollback) |
 | Critique | 1 | Completeness (missed categories) + overreach + ordering |

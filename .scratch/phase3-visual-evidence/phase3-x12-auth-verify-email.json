@@ -1,0 +1,45 @@
+{
+  "route": "/auth/verify-email?email=verify.audit%40gmail.com",
+  "origin": "http://127.0.0.1:3000",
+  "label": "phase3-x12-auth-verify-email",
+  "storageState": null,
+  "capturedAt": "2026-06-11T05:04:25.424Z",
+  "shots": [
+    {
+      "viewport": 360,
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:3000/auth/verify-email?email=verify.audit%40gmail.com",
+      "redirectedToLogin": false,
+      "errorOverlay": false,
+      "consoleErrorCount": 0,
+      "consoleErrors": [],
+      "bodyTextLen": 284,
+      "h1": {
+        "position": "absolute",
+        "width": "1px",
+        "height": "1px",
+        "overflow": "hidden",
+        "clip": "rect(0px, 0px, 0px, 0px)"
+      },
+      "png": ".scratch\\phase3-visual-evidence\\phase3-x12-auth-verify-email-360.png"
+    },
+    {
+      "viewport": 1280,
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:3000/auth/verify-email?email=verify.audit%40gmail.com",
+      "redirectedToLogin": false,
+      "errorOverlay": false,
+      "consoleErrorCount": 0,
+      "consoleErrors": [],
+      "bodyTextLen": 284,
+      "h1": {
+        "position": "absolute",
+        "width": "1px",
+        "height": "1px",
+        "overflow": "hidden",
+        "clip": "rect(0px, 0px, 0px, 0px)"
+      },
+      "png": ".scratch\\phase3-visual-evidence\\phase3-x12-auth-verify-email-1280.png"
+    }
+  ]
+}

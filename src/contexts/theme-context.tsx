@@ -13,8 +13,9 @@ import type { ReactNode } from "react";
 import {
   defaultAppearance,
   defaultThemeName,
+  getResolvedBridgeVars,
   getAppTheme,
-  getResolvedBridgeVarsByAppearance,
+  themeSettings,
 } from "@/theme";
 import type { AppThemeName, BuiltAppTheme, ThemeAppearance } from "@/theme";
 
@@ -51,15 +52,22 @@ interface ThemeProviderProps {
   initialAppearance?: ThemeAppearance;
   /** Theme name. Only "default" exists today. Extend when adding presets. */
   themeName?: AppThemeName;
+  /** Enables user-facing light/dark switching. DESIGN/Awesomic is light-only. */
+  allowAppearanceSwitching?: boolean;
 }
 
 export function ThemeProvider({
   children,
   initialAppearance = defaultAppearance,
   themeName = defaultThemeName,
+  allowAppearanceSwitching = themeSettings.allowAppearanceSwitching,
 }: ThemeProviderProps) {
-  const [appearance, setAppearanceState] =
-    useState<ThemeAppearance>(initialAppearance);
+  const resolvedInitialAppearance = allowAppearanceSwitching
+    ? initialAppearance
+    : defaultAppearance;
+  const [appearance, setAppearanceState] = useState<ThemeAppearance>(
+    resolvedInitialAppearance,
+  );
 
   const theme = useMemo(
     () => getAppTheme(themeName, appearance),
@@ -72,26 +80,29 @@ export function ThemeProvider({
    */
   const applyVarsToDocument = useCallback(
     (nextAppearance: ThemeAppearance) => {
-      // antd v6.x 호환성: server-safe fallback. 동적 brand override가 생기면
-      // client 측 theme.useToken() hook 결과로 추가 update 필요.
-      const vars = getResolvedBridgeVarsByAppearance(nextAppearance);
+      const vars = getResolvedBridgeVars(themeName, nextAppearance);
       const el = document.documentElement;
       Object.entries(vars).forEach(([key, value]) => {
         el.style.setProperty(key, value);
       });
       el.style.setProperty("color-scheme", nextAppearance);
     },
-    [],
+    [themeName],
   );
 
   const setAppearance = useCallback(
     (nextAppearance: ThemeAppearance) => {
+      if (!allowAppearanceSwitching) {
+        applyVarsToDocument(defaultAppearance);
+        return;
+      }
+
       setAppearanceState(nextAppearance);
       applyVarsToDocument(nextAppearance);
       // Persist for next SSR render (1 year)
       document.cookie = `theme-appearance=${nextAppearance}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
     },
-    [applyVarsToDocument],
+    [allowAppearanceSwitching, applyVarsToDocument],
   );
 
   // On mount: sync document vars with SSR-injected initialAppearance.

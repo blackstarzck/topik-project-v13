@@ -9,7 +9,8 @@ import { resolveLocale } from "@/i18n/request";
 import { AppProviders } from "./providers";
 // antd v6.x 호환성: @/theme barrel은 create-theme → "use client" algorithms.ts를
 // transitively pull한다. server layout은 server-safe 모듈만 직접 import.
-import { getResolvedBridgeVarsByAppearance } from "@/theme/tailwind-bridge";
+import { themeSettings } from "@/theme/config";
+import { getResolvedBridgeVars } from "@/theme/tailwind-bridge";
 import type { ThemeAppearance } from "@/theme/types";
 import "../styles/global.css";
 
@@ -37,6 +38,10 @@ export const metadata: Metadata = {
  * root layout is already dynamic, so this is an accepted tradeoff.
  */
 export async function resolveInitialAppearance(): Promise<ThemeAppearance> {
+  if (!themeSettings.allowAppearanceSwitching) {
+    return themeSettings.appearance;
+  }
+
   const cookieStore = await cookies();
   const raw = cookieStore.get("theme-appearance")?.value;
   return raw === "dark" ? "dark" : "light";
@@ -56,7 +61,7 @@ export default async function RootLayout({
   // createContext)이므로 server layout에서 import 자체 금지. SSR cssVars는 appearance
   // 기반 hardcoded fallback만 사용. 동적 token은 client AppProviders → ThemeProvider →
   // ConfigProvider hierarchy에서 처리 (현재 brand override 없음).
-  const cssVars = getResolvedBridgeVarsByAppearance(appearance);
+  const cssVars = getResolvedBridgeVars(themeSettings.main, appearance);
 
   return (
     <html

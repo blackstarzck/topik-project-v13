@@ -1,0 +1,31 @@
+{
+  "route": "/growth",
+  "origin": "http://127.0.0.1:3000",
+  "label": "phase3-x02-growth-dashboard",
+  "storageState": "tests/e2e/auth-state/student.json",
+  "capturedAt": null,
+  "shots": [
+    {
+      "viewport": 360,
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:3000/growth",
+      "redirectedToLogin": false,
+      "errorOverlay": false,
+      "consoleErrorCount": 0,
+      "consoleErrors": [],
+      "bodyTextLen": 359,
+      "png": ".scratch\\phase3-visual-evidence\\phase3-x02-growth-dashboard-360.png"
+    },
+    {
+      "viewport": 1280,
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:3000/growth",
+      "redirectedToLogin": false,
+      "errorOverlay": false,
+      "consoleErrorCount": 0,
+      "consoleErrors": [],
+      "bodyTextLen": 359,
+      "png": ".scratch\\phase3-visual-evidence\\phase3-x02-growth-dashboard-1280.png"
+    }
+  ]
+}

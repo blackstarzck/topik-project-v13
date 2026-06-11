@@ -372,6 +372,9 @@
       "socialDivider": "hoặc",
       "socialGoogle": "Tiếp tục với Google"
     },
+    "languageSelect": {
+      "ariaLabel": "Chọn ngôn ngữ hiển thị"
+    },
     "consent": {
       "metaTitle": "Cần đồng ý — TALKPIK",
       "heading": "Cần đồng ý với điều khoản",

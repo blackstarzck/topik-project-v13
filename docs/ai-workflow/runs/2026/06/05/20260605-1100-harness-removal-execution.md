@@ -45,7 +45,7 @@
 ## Scope Confirmed (git ls-files, 2026-06-05)
 
 - DELETE trees: docs/ai-workflow 230, reports 155, tasks 167, errors 31, docs/ai-execution-plans 31,
-  docs/ui-redesign/pilot-shots 138, scripts/audit-setup 20.
+  scripts/audit-setup 20.
 - DELETE single: docs/agent-index.md, docs/ai-development-workflow.md, docs/report-writing-template.md,
   docs/ant-design/06-ai-development-workflow.md, docs/superpowers/plans/2026-05-26-theme-system-refactor.md,
   .gitmessage, .github/workflows/ai-workflow-check.yml.

@@ -1,0 +1,31 @@
+{
+  "route": "/writing/feedback/short/a0d17000-0000-4000-8000-000000000051",
+  "origin": "http://127.0.0.1:3000",
+  "label": "phase3-e01-short-answer-feedback",
+  "storageState": "tests/e2e/auth-state/student.json",
+  "capturedAt": null,
+  "shots": [
+    {
+      "viewport": 360,
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:3000/writing/feedback/short/a0d17000-0000-4000-8000-000000000051",
+      "redirectedToLogin": false,
+      "errorOverlay": false,
+      "consoleErrorCount": 0,
+      "consoleErrors": [],
+      "bodyTextLen": 502,
+      "png": ".scratch\\phase3-visual-evidence\\phase3-e01-short-answer-feedback-360.png"
+    },
+    {
+      "viewport": 1280,
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:3000/writing/feedback/short/a0d17000-0000-4000-8000-000000000051",
+      "redirectedToLogin": false,
+      "errorOverlay": false,
+      "consoleErrorCount": 0,
+      "consoleErrors": [],
+      "bodyTextLen": 502,
+      "png": ".scratch\\phase3-visual-evidence\\phase3-e01-short-answer-feedback-1280.png"
+    }
+  ]
+}

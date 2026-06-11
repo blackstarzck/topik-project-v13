@@ -1,0 +1,31 @@
+{
+  "route": "/practice/problems",
+  "origin": "http://127.0.0.1:3000",
+  "label": "phase3-c02-problem-list",
+  "storageState": "tests/e2e/auth-state/student.json",
+  "capturedAt": null,
+  "shots": [
+    {
+      "viewport": 360,
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:3000/practice/problems",
+      "redirectedToLogin": false,
+      "errorOverlay": false,
+      "consoleErrorCount": 0,
+      "consoleErrors": [],
+      "bodyTextLen": 861,
+      "png": ".scratch\\phase3-visual-evidence\\phase3-c02-problem-list-360.png"
+    },
+    {
+      "viewport": 1280,
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:3000/practice/problems",
+      "redirectedToLogin": false,
+      "errorOverlay": false,
+      "consoleErrorCount": 0,
+      "consoleErrors": [],
+      "bodyTextLen": 863,
+      "png": ".scratch\\phase3-visual-evidence\\phase3-c02-problem-list-1280.png"
+    }
+  ]
+}

@@ -1,11 +1,12 @@
 "use client";
 
-import { Alert, Button, Col, Row, Space, Spin, Typography } from "antd";
+import { Alert, Button, Spin, Tag, Typography } from "antd";
 import { ArrowRight, CheckCircle2, Clock3, Target } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo } from "react";
+import { AppCard } from "@/components/shared/AppCard";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { isValidQuestionNo, type QuestionNo } from "@/lib/practice/types";
 import { writingQuestionHref } from "@/lib/writing/routes";
@@ -40,44 +41,64 @@ function FallbackRecommendationPanel({
   const meta = FALLBACK_META[questionNo];
 
   return (
-    <section className="recommendation-fallback-panel">
-      <div className="recommendation-fallback-panel__copy">
-        <span className="recommendation-fallback-panel__badge">
-          {t("primaryBadge")}
-        </span>
-        <Title level={2}>
-          {t("fallbackHeroTitle", { type: typeLabel })}
-        </Title>
-        <Text>
-          {reasonSummary ?? t("fallbackHeroBody", { type: typeLabel })}
-        </Text>
-      </div>
-      <div className="recommendation-fallback-panel__action">
-        <div className="recommendation-fallback-panel__status">
-          <span>
-            <Clock3 size={18} />
-            <small>{t("fallbackHeroTime")}</small>
-            <strong>{tCommon("minutes", { minutes: meta.minutes })}</strong>
-          </span>
-          <span>
-            <Target size={18} />
-            <small>{t("fallbackHeroDifficulty")}</small>
-            <strong>{tCommon("difficultyNormal")}</strong>
-          </span>
-          <span>
-            <CheckCircle2 size={18} />
-            <small>{t("fallbackHeroStatus")}</small>
-            <strong>{t("fallbackHeroStatusReady")}</strong>
-          </span>
+    <AppCard>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="flex min-w-0 flex-col justify-center gap-4">
+          <Tag className="m-0 w-fit border-primary bg-primary text-background">
+            {t("primaryBadge")}
+          </Tag>
+          <h2 className="m-0 text-3xl font-semibold leading-tight text-text">
+            {t("fallbackHeroTitle", { type: typeLabel })}
+          </h2>
+          <Text className="max-w-xl text-base leading-7" type="secondary">
+            {reasonSummary ?? t("fallbackHeroBody", { type: typeLabel })}
+          </Text>
         </div>
-        <Link href={writingQuestionHref(questionNo) as never}>
-          <Button type="primary" size="large" block>
-            <span>{t("fallbackHeroCta", { type: questionLabel })}</span>
-            <ArrowRight size={18} aria-hidden="true" />
-          </Button>
-        </Link>
+        <div className="self-center">
+          <div className="grid gap-2 sm:grid-cols-3">
+            <span className="flex min-w-0 items-center gap-3 rounded-default bg-surface p-3">
+              <Clock3 size={18} aria-hidden="true" />
+              <span className="grid min-w-0 gap-1">
+                <small className="text-xs text-text-secondary">
+                  {t("fallbackHeroTime")}
+                </small>
+                <strong className="truncate text-base text-text">
+                  {tCommon("minutes", { minutes: meta.minutes })}
+                </strong>
+              </span>
+            </span>
+            <span className="flex min-w-0 items-center gap-3 rounded-default bg-surface p-3">
+              <Target size={18} aria-hidden="true" />
+              <span className="grid min-w-0 gap-1">
+                <small className="text-xs text-text-secondary">
+                  {t("fallbackHeroDifficulty")}
+                </small>
+                <strong className="truncate text-base text-text">
+                  {tCommon("difficultyNormal")}
+                </strong>
+              </span>
+            </span>
+            <span className="flex min-w-0 items-center gap-3 rounded-default bg-surface p-3">
+              <CheckCircle2 size={18} aria-hidden="true" />
+              <span className="grid min-w-0 gap-1">
+                <small className="text-xs text-text-secondary">
+                  {t("fallbackHeroStatus")}
+                </small>
+                <strong className="truncate text-base text-text">
+                  {t("fallbackHeroStatusReady")}
+                </strong>
+              </span>
+            </span>
+          </div>
+          <Link href={writingQuestionHref(questionNo) as never}>
+            <Button className="mt-4" type="primary" size="large" block>
+              <span>{t("fallbackHeroCta", { type: questionLabel })}</span>
+              <ArrowRight size={18} aria-hidden="true" />
+            </Button>
+          </Link>
+        </div>
       </div>
-    </section>
+    </AppCard>
   );
 }
 
@@ -110,25 +131,20 @@ export function RecommendationsView() {
   const fallbackQuestionNo = active ?? primary?.questionNo ?? 51;
 
   return (
-    <Space
-      className="recommendations-page"
-      orientation="vertical"
-      size="large"
-      style={{ width: "100%" }}
-    >
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
       <PageHeader
-        className="recommendations-page__header"
+        className="mb-1"
         title={t("heading")}
         subtitle={t("subtitle")}
       />
 
-      <div className="recommendations-page__tabs">
+      <div className="overflow-hidden rounded-default border border-border bg-background px-3 pt-2">
         <ProblemTypeTabs active={active} onChange={updateType} />
       </div>
 
       {bundle.data?.run?.reasonSummary && primary ? (
         <Alert
-          className="recommendation-reason-alert"
+          className="rounded-default"
           type="info"
           showIcon
           title={t("reasonSummaryTitle")}
@@ -138,12 +154,12 @@ export function RecommendationsView() {
 
       {bundle.isLoading ? (
         <Spin description={t("loadingTip")}>
-          <div style={{ minHeight: 120 }} />
+          <div className="min-h-32" />
         </Spin>
       ) : bundle.error ? (
         <>
           <Alert
-            className="recommendation-reason-alert"
+            className="rounded-default"
             type="error"
             showIcon
             title={t("loadErrorTitle")}
@@ -163,15 +179,17 @@ export function RecommendationsView() {
           {primary ? <PrimaryRecommendationCard card={primary} /> : null}
 
           {rest.length > 0 ? (
-            <section className="recommendation-secondary-section">
-              <Title level={4}>{t("otherRecommendations")}</Title>
-              <Row gutter={[12, 12]}>
+            <section className="grid gap-3">
+              <Title className="m-0" level={4}>
+                {t("otherRecommendations")}
+              </Title>
+              <div className="grid gap-3 md:grid-cols-2">
                 {rest.map((card) => (
-                  <Col key={card.itemId} xs={24} md={12}>
+                  <div key={card.itemId} className="min-w-0">
                     <SecondaryRecommendationCard card={card} />
-                  </Col>
+                  </div>
                 ))}
-              </Row>
+              </div>
             </section>
           ) : null}
 
@@ -184,7 +202,7 @@ export function RecommendationsView() {
             reasonSummary={bundle.data?.run?.reasonSummary}
           />
           <TypeSelectCards />
-          <div className="recommendations-page__problem-list-link">
+          <div className="flex flex-wrap items-center justify-center gap-3 border-t border-border pt-2">
             <Text type="secondary">{t("emptyDescription")}</Text>
             <Link href={"/practice/problems" as never}>
               <Button>{t("viewProblemList")}</Button>
@@ -193,13 +211,9 @@ export function RecommendationsView() {
         </>
       )}
 
-      <Text
-        className="recommendations-page__footer-note"
-        type="secondary"
-        style={{ fontSize: 12 }}
-      >
+      <Text className="block text-xs" type="secondary">
         {t("footerNote")}
       </Text>
-    </Space>
+    </div>
   );
 }

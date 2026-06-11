@@ -37,12 +37,16 @@ Implementation rule:
 | Forms | `react-hook-form` | `7.x` | Complex forms with low render overhead. |
 | Validation | `zod` | `4.x` | Shared schema validation for forms and API payloads. |
 | Charts | `recharts` | `3.x` | Growth dashboard and learning progress visualization. Mock exam charts are future context unless matching IA/routes are reintroduced. |
+| Page motion | `gsap` | `3.x` | Landing-page scroll-triggered reveal, stagger, and lightweight motion where CSS-only motion is not enough. |
+| Carousel | `swiper` | `12.x` | Landing-page touch carousel/autoplay interactions with accessible React components. |
 | Dates | `dayjs` | `1.x` | Date formatting, exam date, subscription date, and learning history display. |
 
 Frontend rules:
 
 - Use Ant Design components before custom UI.
 - Use Ant Design tokens before hardcoded colors, radius, spacing, or shadows.
+- Keep GSAP and Swiper usage page-scoped. They are approved for landing-page
+  motion and carousel interactions, not as replacements for app UI components.
 - Use Tailwind CSS only as a constrained utility layer. Do not let utility
   classes replace Ant Design components, theme tokens, or centralized theme
   decisions.
@@ -109,6 +113,8 @@ actual versions into `package.json` and `pnpm-lock.yaml`.
 | `playwright` | `1.60.0` |
 | `recharts` | `3.8.1` |
 | `lucide-react` | `1.16.0` |
+| `gsap` | `3.15.0` |
+| `swiper` | `12.2.0` |
 | `dayjs` | `1.11.20` |
 | `eslint` | `10.4.0` |
 | `eslint-config-next` | `16.2.6` |

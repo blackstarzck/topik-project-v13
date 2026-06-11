@@ -14,9 +14,10 @@ export function ProblemTypeTabs({ active, onChange, lockedTypes }: Props) {
   const t = useTranslations("practice.common");
   return (
     <Tabs
-      className="recommendation-type-tabs"
+      className="w-full"
       activeKey={String(active ?? 51)}
       onChange={(key) => onChange(Number(key) as QuestionNo)}
+      tabBarGutter={8}
       items={QUESTION_NOS.map((n) => {
         const locked = lockedTypes?.has(n) ?? false;
         return {
@@ -24,15 +25,13 @@ export function ProblemTypeTabs({ active, onChange, lockedTypes }: Props) {
           disabled: locked,
           label: locked ? (
             <span
-              className="recommendation-type-tabs__label"
+              className="font-medium"
               aria-label={t("typeTabLockedAria", { no: n })}
             >
               {t("typeTabLocked", { no: n })}
             </span>
           ) : (
-            <span className="recommendation-type-tabs__label">
-              {t("questionNo", { no: n })}
-            </span>
+            <span className="font-medium">{t("questionNo", { no: n })}</span>
           ),
         };
       })}

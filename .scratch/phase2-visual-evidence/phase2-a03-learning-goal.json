@@ -1,0 +1,31 @@
+{
+  "route": "/onboarding/learning-goal",
+  "origin": "http://127.0.0.1:3000",
+  "label": "phase2-a03-learning-goal",
+  "storageState": "tests/e2e/auth-state/student.json",
+  "capturedAt": null,
+  "shots": [
+    {
+      "viewport": 360,
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:3000/onboarding/learning-goal",
+      "redirectedToLogin": false,
+      "errorOverlay": false,
+      "consoleErrorCount": 0,
+      "consoleErrors": [],
+      "bodyTextLen": 610,
+      "png": ".scratch\\phase2-visual-evidence\\phase2-a03-learning-goal-360.png"
+    },
+    {
+      "viewport": 1280,
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:3000/onboarding/learning-goal",
+      "redirectedToLogin": false,
+      "errorOverlay": false,
+      "consoleErrorCount": 0,
+      "consoleErrors": [],
+      "bodyTextLen": 610,
+      "png": ".scratch\\phase2-visual-evidence\\phase2-a03-learning-goal-1280.png"
+    }
+  ]
+}

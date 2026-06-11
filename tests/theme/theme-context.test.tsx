@@ -16,9 +16,19 @@ describe("ThemeContext", () => {
     setPropertySpy.mockRestore();
   });
 
-  test("ThemeProvider initializes with provided appearance", () => {
+  test("ThemeProvider uses configured light appearance by default", () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <ThemeProvider initialAppearance="dark">{children}</ThemeProvider>
+    );
+    const { result } = renderHook(() => useTheme(), { wrapper });
+    expect(result.current.appearance).toBe("light");
+  });
+
+  test("ThemeProvider preserves dark infra when appearance switching is explicitly enabled", () => {
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <ThemeProvider initialAppearance="dark" allowAppearanceSwitching>
+        {children}
+      </ThemeProvider>
     );
     const { result } = renderHook(() => useTheme(), { wrapper });
     expect(result.current.appearance).toBe("dark");
@@ -34,7 +44,9 @@ describe("ThemeContext", () => {
 
   test("setAppearance updates appearance state", () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <ThemeProvider initialAppearance="light">{children}</ThemeProvider>
+      <ThemeProvider initialAppearance="light" allowAppearanceSwitching>
+        {children}
+      </ThemeProvider>
     );
     const { result } = renderHook(() => useTheme(), { wrapper });
 
@@ -47,7 +59,9 @@ describe("ThemeContext", () => {
 
   test("theme object reflects current appearance", () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <ThemeProvider initialAppearance="light">{children}</ThemeProvider>
+      <ThemeProvider initialAppearance="light" allowAppearanceSwitching>
+        {children}
+      </ThemeProvider>
     );
     const { result } = renderHook(() => useTheme(), { wrapper });
     expect(result.current.theme.appearance).toBe("light");
@@ -61,7 +75,9 @@ describe("ThemeContext", () => {
 
   test("setAppearance calls document.documentElement.style.setProperty with --app-* vars", () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <ThemeProvider initialAppearance="light">{children}</ThemeProvider>
+      <ThemeProvider initialAppearance="light" allowAppearanceSwitching>
+        {children}
+      </ThemeProvider>
     );
     const { result } = renderHook(() => useTheme(), { wrapper });
 

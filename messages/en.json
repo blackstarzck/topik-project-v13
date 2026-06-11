@@ -372,6 +372,9 @@
       "socialDivider": "or",
       "socialGoogle": "Continue with Google"
     },
+    "languageSelect": {
+      "ariaLabel": "Choose display language"
+    },
     "consent": {
       "metaTitle": "Consent required — TALKPIK",
       "heading": "Consent is required",

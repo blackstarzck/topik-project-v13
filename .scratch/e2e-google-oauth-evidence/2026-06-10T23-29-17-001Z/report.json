@@ -1,0 +1,44 @@
+{
+  "baseUrl": "http://127.0.0.1:3000",
+  "outDir": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\.scratch\\e2e-google-oauth-evidence\\2026-06-10T23-29-17-001Z",
+  "results": [
+    {
+      "route": "/login",
+      "screenshot": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\.scratch\\e2e-google-oauth-evidence\\2026-06-10T23-29-17-001Z\\login-google-screen.png",
+      "finalUrlHost": "accounts.google.com",
+      "finalUrlPath": "/v3/signin/identifier",
+      "reachedGoogle": true,
+      "authorizeStatuses": [
+        302
+      ],
+      "googleStatuses": [
+        302,
+        200,
+        200,
+        200,
+        204
+      ],
+      "errors": [],
+      "bodyText": "로드 중\nGoogle 계정으로 로그인\n로그인\nfglggyfvzjdsbyckinqa.supabase.co(으)로 이동\n이메일 또는 휴대전화\n이메일을 잊으셨나요?\n다음\n계정 만들기\n한국어\n도움말\n개인정보처리방침\n약관"
+    },
+    {
+      "route": "/sign-up",
+      "screenshot": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\.scratch\\e2e-google-oauth-evidence\\2026-06-10T23-29-17-001Z\\sign-up-google-screen.png",
+      "finalUrlHost": "accounts.google.com",
+      "finalUrlPath": "/v3/signin/identifier",
+      "reachedGoogle": true,
+      "authorizeStatuses": [
+        302
+      ],
+      "googleStatuses": [
+        302,
+        200,
+        200,
+        200,
+        204
+      ],
+      "errors": [],
+      "bodyText": "로드 중\nGoogle 계정으로 로그인\n로그인\nfglggyfvzjdsbyckinqa.supabase.co(으)로 이동\n이메일 또는 휴대전화\n이메일을 잊으셨나요?\n다음\n계정 만들기\n한국어\n도움말\n개인정보처리방침\n약관"
+    }
+  ]
+}

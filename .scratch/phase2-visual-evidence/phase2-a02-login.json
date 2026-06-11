@@ -1,0 +1,31 @@
+{
+  "route": "/login",
+  "origin": "http://localhost:3000",
+  "label": "phase2-a02-login",
+  "storageState": null,
+  "capturedAt": null,
+  "shots": [
+    {
+      "viewport": 360,
+      "status": 200,
+      "finalUrl": "http://localhost:3000/login",
+      "redirectedToLogin": true,
+      "errorOverlay": false,
+      "consoleErrorCount": 0,
+      "consoleErrors": [],
+      "bodyTextLen": 130,
+      "png": ".scratch\\phase2-visual-evidence\\phase2-a02-login-360.png"
+    },
+    {
+      "viewport": 1280,
+      "status": 200,
+      "finalUrl": "http://localhost:3000/login",
+      "redirectedToLogin": true,
+      "errorOverlay": false,
+      "consoleErrorCount": 0,
+      "consoleErrors": [],
+      "bodyTextLen": 149,
+      "png": ".scratch\\phase2-visual-evidence\\phase2-a02-login-1280.png"
+    }
+  ]
+}

@@ -58,7 +58,7 @@ function PreviewMock({ badge }: { badge: string }) {
     <div
       style={{
         borderRadius: 8,
-        background: "linear-gradient(135deg,#f5f8ff 0%,#eef4ff 100%)",
+        background: "#f5f8ff",
         border: "1px solid #e6efff",
         padding: 16,
         minHeight: 120,

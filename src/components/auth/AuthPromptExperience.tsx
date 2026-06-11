@@ -6,6 +6,7 @@ import { Flex, Typography } from "antd";
 import { Sparkles } from "lucide-react";
 
 import { AnimatedAuthCharacters } from "@/components/auth/AnimatedAuthCharacters";
+import { AuthLanguageSelect } from "@/components/auth/AuthLanguageSelect";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { SignUpForm } from "@/components/auth/SignUpForm";
 
@@ -72,7 +73,7 @@ export function AuthPromptExperience({
       </aside>
 
       <main className="signup-prompt-form-panel" aria-labelledby={titleId}>
-        <Flex vertical className="signup-prompt-form-inner">
+        <div className="signup-prompt-topbar">
           <NextLink
             href="/"
             className="signup-prompt-mobile-brand"
@@ -85,7 +86,10 @@ export function AuthPromptExperience({
               Talkpik <strong>AI</strong>
             </span>
           </NextLink>
+          <AuthLanguageSelect />
+        </div>
 
+        <Flex vertical className="signup-prompt-form-inner">
           <Flex vertical align="center" className="signup-prompt-form-heading">
             <Title id={titleId} level={1} className="signup-prompt-form-title">
               {pageHeading}

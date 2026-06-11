@@ -1,0 +1,31 @@
+{
+  "route": "/",
+  "origin": "http://localhost:3000",
+  "label": "phase2-x01-product-landing",
+  "storageState": null,
+  "capturedAt": null,
+  "shots": [
+    {
+      "viewport": 360,
+      "status": 200,
+      "finalUrl": "http://localhost:3000/",
+      "redirectedToLogin": false,
+      "errorOverlay": false,
+      "consoleErrorCount": 0,
+      "consoleErrors": [],
+      "bodyTextLen": 1795,
+      "png": ".scratch\\phase2-visual-evidence\\phase2-x01-product-landing-360.png"
+    },
+    {
+      "viewport": 1280,
+      "status": 200,
+      "finalUrl": "http://localhost:3000/",
+      "redirectedToLogin": false,
+      "errorOverlay": false,
+      "consoleErrorCount": 0,
+      "consoleErrors": [],
+      "bodyTextLen": 1795,
+      "png": ".scratch\\phase2-visual-evidence\\phase2-x01-product-landing-1280.png"
+    }
+  ]
+}

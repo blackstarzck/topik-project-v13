@@ -104,7 +104,6 @@ Use `docs/ai-workflow/contracts/agent-packets.md` for packet details.
 - Checks run: `rg --files`, targeted `rg`, `git status --porcelain --untracked-files=all`.
 - Findings:
   - P1: Preserved TALKPIK skills, especially `talkpik-quality-gate`, reference deleted docs/checker paths.
-  - P1: Preserved `docs/ui-redesign/PLAN.md` contains deleted gate architecture and should be STRIP/archive/delete.
   - P1: Mixed-file STRIP list misses retained docs with deleted ledger/checker/workflow references.
   - P2: `.agents/superpowers/` should be an explicit hard exclusion unless D-superpowers selects deletion.
   - P2: This review ledger lives under the planned delete tree; export or preserve review evidence before cleanup.
@@ -135,7 +134,7 @@ Use `docs/ai-workflow/contracts/agent-packets.md` for packet details.
   - `Get-Content -Raw -Encoding UTF8 -LiteralPath harness-removal-plan.html` - read successfully.
   - `git status --short --branch` - read successfully.
   - Three Codex native subagent reviews completed and result packets were integrated.
-  - Targeted retained-reference checks were run for TALKPIK skills, `docs/ui-redesign/PLAN.md`, selected retained docs, `.env.example`, `next.config.ts`, `supabase/seed.sql`, and `supabase/migrations/INDEX.md`.
+  - Targeted retained-reference checks were run for TALKPIK skills, selected retained docs, `.env.example`, `next.config.ts`, `supabase/seed.sql`, and `supabase/migrations/INDEX.md`.
   - `node scripts/ai-workflow-check.mjs --repo .` - PASS repository state.
   - `git diff --check -- docs/ai-workflow/runs/2026/06/05/20260605-0940-harness-removal-plan-review.md` - exit 0; note that the ledger is untracked, so this command had no tracked diff content to inspect.
 - Latest results:

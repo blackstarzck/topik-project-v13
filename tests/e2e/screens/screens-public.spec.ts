@@ -106,6 +106,196 @@ for (const s of PUBLIC_SCREENS) {
       await expect(heroVideo).toHaveJSProperty("muted", true);
       await expect(heroVideo).toHaveJSProperty("loop", true);
       await expect(heroVideo).toHaveJSProperty("playsInline", true);
+
+      const landingHeader = page.locator(".landing-header");
+      await expect(landingHeader).toBeVisible();
+      const headerMetrics = await landingHeader.evaluate((node) => {
+        const rect = node.getBoundingClientRect();
+        const styles = window.getComputedStyle(node);
+        const blurStyles = window.getComputedStyle(node, "::before");
+        const surfaceStyles = window.getComputedStyle(node, "::after");
+        return {
+          background: surfaceStyles.backgroundColor,
+          filter: blurStyles.filter,
+          height: rect.height,
+          position: styles.position,
+          top: rect.top,
+        };
+      });
+      expect(headerMetrics.filter).toContain("blur");
+      expect(headerMetrics.background).toBe("rgba(255, 255, 255, 0.94)");
+      expect(headerMetrics.position).toBe("fixed");
+      expect(Math.round(headerMetrics.top)).toBe(0);
+      expect(headerMetrics.height).toBeGreaterThanOrEqual(64);
+
+      const navDisplay = await page
+        .locator(".landing-header-nav")
+        .evaluate((node) => window.getComputedStyle(node).display);
+      const viewport = page.viewportSize();
+      if ((viewport?.width ?? 0) <= 900) {
+        expect(navDisplay).toBe("none");
+      } else {
+        expect(navDisplay).not.toBe("none");
+      }
+
+      await page.evaluate(() => window.scrollTo(0, 900));
+      await expect
+        .poll(() =>
+          landingHeader.evaluate((node) =>
+            Math.round(node.getBoundingClientRect().top),
+          ),
+        )
+        .toBe(0);
+
+      await page.locator("#services").scrollIntoViewIfNeeded();
+      await expect(page.getByText("학습 현황부터")).toBeVisible();
+      await expect(page.getByText("쓰기 답안 AI 첨삭")).toBeVisible();
+      await page.locator("#blog").scrollIntoViewIfNeeded();
+      await expect(page.getByText("Future scope").first()).toBeVisible();
+      await page.locator("#contact").scrollIntoViewIfNeeded();
+      await expect(page.getByText("TALKPIK AI로 시작하기")).toBeVisible();
+
+      const signupPill = page.locator(".landing-layout-pill[href='/sign-up']").first();
+      await expect(signupPill).toBeVisible();
+      const signupPillMetrics = await signupPill.evaluate((node) => {
+        const rect = node.getBoundingClientRect();
+        const svgRect = node.querySelector("svg")?.getBoundingClientRect();
+        return {
+          height: rect.height,
+          svgWidth: svgRect?.width ?? 0,
+        };
+      });
+      expect(signupPillMetrics.height).toBeLessThanOrEqual(56);
+      expect(signupPillMetrics.svgWidth).toBeLessThanOrEqual(24);
+
+      const landingNumber = page
+        .locator(".landing-layout-service__frame .landing-layout-number")
+        .first();
+      await expect(landingNumber).toHaveText("01");
+      const landingNumberFont = await landingNumber.evaluate(async (node) => {
+        await document.fonts.ready;
+        return {
+          fontFamily: window.getComputedStyle(node).fontFamily,
+          isRegistered: Array.from(document.fonts).some(
+            (fontFace) => fontFace.family === "Montserrat",
+          ),
+        };
+      });
+      expect(landingNumberFont.fontFamily).toContain("Montserrat");
+      expect(landingNumberFont.isRegistered).toBe(true);
+
+      const sentenceNumberCount = await page
+        .locator(
+          [
+            ".landing-layout-work__caption p .landing-layout-number",
+            ".landing-layout-service p .landing-layout-number",
+            ".landing-layout-step-list p .landing-layout-number",
+            ".landing-layout-feature h3 .landing-layout-number",
+          ].join(", "),
+        )
+        .count();
+      expect(sentenceNumberCount).toBe(0);
+
+      const inlineNumberParagraph = page
+        .locator(".landing-layout-work__caption p")
+        .filter({ hasText: "51" })
+        .first();
+      await expect(inlineNumberParagraph).toBeVisible();
+      const inlineParagraphFont = await inlineNumberParagraph.evaluate(
+        (node) => window.getComputedStyle(node).fontFamily,
+      );
+      expect(inlineParagraphFont).not.toContain("Montserrat");
+
+      const numberOnlyPathMarkers = await page
+        .locator(".landing-layout-path > strong .landing-layout-number")
+        .count();
+      expect(numberOnlyPathMarkers).toBe(1);
+
+      const animatedSections = await page.locator("[data-landing-section]").count();
+      expect(animatedSections).toBeGreaterThanOrEqual(8);
+      const staggerTargets = await page.locator("[data-landing-stagger]").count();
+      expect(staggerTargets).toBeGreaterThanOrEqual(20);
+
+      const swiperRoot = page.locator(".landing-layout-testimonials.swiper");
+      await expect(swiperRoot).toBeVisible();
+      expect(
+        await swiperRoot.evaluate((node) =>
+          node.hasAttribute("data-landing-stagger"),
+        ),
+      ).toBe(true);
+      await expect(
+        page.locator(".landing-layout-testimonials__slide[data-landing-stagger]"),
+      ).toHaveCount(0);
+      const swiperSlides = await page
+        .locator(".landing-layout-testimonials__slide")
+        .count();
+      expect(swiperSlides).toBeGreaterThanOrEqual(4);
+      const carouselMotion = await swiperRoot
+        .locator(".swiper-wrapper")
+        .evaluate(async (node) => {
+          const before = window.getComputedStyle(node).transform;
+          await new Promise((resolve) => window.setTimeout(resolve, 800));
+          return {
+            before,
+            after: window.getComputedStyle(node).transform,
+          };
+        });
+      expect(carouselMotion.after).not.toBe(carouselMotion.before);
+
+      const revealedFeature = page
+        .locator(".landing-layout-feature[data-landing-stagger]")
+        .first();
+      await revealedFeature.scrollIntoViewIfNeeded();
+      await expect
+        .poll(() =>
+          revealedFeature.evaluate((node) =>
+            Number(window.getComputedStyle(node).opacity),
+          ),
+        )
+        .toBeGreaterThan(0.9);
+
+      const flowLines = page.locator(
+        ".landing-layout-step-list article[data-landing-line]",
+      );
+      await expect(flowLines).toHaveCount(4);
+      await page.locator(".landing-layout-step-list").scrollIntoViewIfNeeded();
+      await expect
+        .poll(() =>
+          flowLines.nth(1).evaluate((node) =>
+            Number(
+              window
+                .getComputedStyle(node)
+                .getPropertyValue("--landing-line-scale")
+                .trim() || "1",
+            ),
+          ),
+        )
+        .toBeGreaterThan(0.9);
+      await expect
+        .poll(() =>
+          flowLines.nth(1).evaluate((node) => {
+            const styles = window.getComputedStyle(node, "::before");
+
+            return styles.transform;
+          }),
+        )
+        .not.toBe("matrix(0, 0, 0, 1, 0, 0)");
+      const flowLineColor = await flowLines
+        .nth(1)
+        .evaluate(
+          (node) => window.getComputedStyle(node, "::before").backgroundColor,
+        );
+      expect(flowLineColor).toBe("rgb(185, 185, 179)");
+
+      const pageText = await page.locator("body").innerText();
+      expect(pageText).not.toContain("Paul Richards");
+      expect(pageText).not.toContain("Framer");
+      expect(pageText).not.toContain("$299");
+
+      const horizontalOverflow = await page.evaluate(
+        () => document.body.scrollWidth - document.documentElement.clientWidth,
+      );
+      expect(horizontalOverflow).toBeLessThanOrEqual(1);
     }
 
     expect(

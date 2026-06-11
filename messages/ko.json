@@ -372,6 +372,9 @@
       "socialDivider": "또는",
       "socialGoogle": "Google로 계속"
     },
+    "languageSelect": {
+      "ariaLabel": "표시 언어 선택"
+    },
     "consent": {
       "metaTitle": "약관 동의 — TALKPIK",
       "heading": "약관 동의가 필요해요",

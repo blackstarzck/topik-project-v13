@@ -1,16 +1,23 @@
 import { createThemeFamily } from "./create-theme";
+import { themeSettings } from "./config";
+import { awesomicThemePreset } from "./presets/awesomic";
 import { defaultThemePreset } from "./presets/default";
-import type { AppThemeName, BuiltAppTheme, ThemeAppearance } from "./types";
-
-export const defaultThemeName = "default" satisfies AppThemeName;
-export const defaultAppearance = "light" satisfies ThemeAppearance;
+import type { AppThemePreset, BuiltAppTheme, ThemeAppearance } from "./types";
 
 export const themePresets = {
   default: defaultThemePreset,
-} satisfies Record<AppThemeName, typeof defaultThemePreset>;
+  awesomic: awesomicThemePreset,
+} satisfies Record<string, AppThemePreset>;
+
+export type AppThemeName = keyof typeof themePresets;
+
+export const defaultThemeName = themeSettings.main satisfies AppThemeName;
+export const defaultAppearance =
+  themeSettings.appearance satisfies ThemeAppearance;
 
 export const themes = {
   default: createThemeFamily(defaultThemePreset),
+  awesomic: createThemeFamily(awesomicThemePreset),
 } satisfies Record<AppThemeName, Record<ThemeAppearance, BuiltAppTheme>>;
 
 export function getAppTheme(
