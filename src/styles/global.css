@@ -5980,6 +5980,15 @@ body {
   width: 100%;
 }
 
+.callback-fragment-card {
+  text-align: center;
+}
+
+.callback-fragment-message.ant-typography {
+  margin-top: 16px;
+  margin-bottom: 0;
+}
+
 .analysis-loading-shell {
   position: relative;
   display: grid;
