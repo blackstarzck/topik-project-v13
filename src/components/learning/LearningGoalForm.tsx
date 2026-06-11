@@ -203,14 +203,16 @@ export function LearningGoalForm({
       className="learning-goal-form"
       orientation="vertical"
       size="large"
-      style={{ width: "100%" }}
     >
       {showIntro ? (
         <div className="learning-goal-form__intro">
-          <Title level={3} style={{ marginBottom: 4 }}>
+          <Title level={3} className="learning-goal-form__intro-title">
             {t("heading")}
           </Title>
-          <Paragraph type="secondary" style={{ margin: 0 }}>
+          <Paragraph
+            type="secondary"
+            className="learning-goal-form__intro-copy"
+          >
             {t("subheading")}
           </Paragraph>
         </div>
@@ -313,6 +315,7 @@ export function LearningGoalForm({
                 help={fieldErrors.exam_date}
               >
                 <DatePicker
+                  className="learning-goal-control"
                   aria-label={t("examDateLabel")}
                   value={field.value ? dayjs(field.value) : null}
                   onChange={(d) => {
@@ -320,7 +323,6 @@ export function LearningGoalForm({
                     clearFieldError("exam_date");
                   }}
                   disabledDate={(d) => d.isBefore(dayjs().startOf("day"))}
-                  style={{ width: "100%" }}
                 />
               </Form.Item>
             )}
@@ -344,11 +346,11 @@ export function LearningGoalForm({
               >
                 <InputNumber
                   {...field}
+                  className="learning-goal-control"
                   aria-label={t("weeklyMinutesLabel")}
                   min={15}
                   max={2000}
                   step={30}
-                  style={{ width: "100%" }}
                   onChange={(value) => {
                     field.onChange(value);
                     clearFieldError("weekly_goal_minutes");

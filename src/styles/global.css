@@ -3602,6 +3602,11 @@ body {
   text-align: center;
 }
 
+.onboarding-step-counter.ant-typography {
+  display: block;
+  margin-bottom: 8px;
+}
+
 .onboarding-goal-steps .ant-steps {
   align-items: center;
 }
@@ -3653,6 +3658,14 @@ body {
 .learning-goal-form__fields {
   display: grid;
   gap: 12px;
+}
+
+.learning-goal-form__intro-title.ant-typography {
+  margin-bottom: 4px;
+}
+
+.learning-goal-form__intro-copy.ant-typography {
+  margin: 0;
 }
 
 .learning-goal-field-card {
@@ -3717,6 +3730,10 @@ body {
   border-radius: 10px;
 }
 
+.learning-goal-field-card__control .learning-goal-control {
+  width: 100%;
+}
+
 .learning-goal-grade-picker {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -3763,6 +3780,10 @@ body {
 
 .onboarding-goal-nav__skip.ant-btn {
   font-weight: 700;
+}
+
+.onboarding-goal-nav__error.ant-typography {
+  font-size: 12px;
 }
 
 .recommendations-page {
