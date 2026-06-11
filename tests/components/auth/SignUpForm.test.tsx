@@ -54,9 +54,32 @@ afterEach(() => {
 });
 
 describe("SignUpForm", () => {
+  it("disables submit while all text inputs are empty", () => {
+    renderInApp(<SignUpForm />);
+
+    const submitButton = screen.getByRole("button", { name: "회원가입" });
+    expect((submitButton as HTMLButtonElement).disabled).toBe(true);
+
+    fireEvent.click(screen.getByRole("checkbox"));
+    expect((submitButton as HTMLButtonElement).disabled).toBe(true);
+
+    fireEvent.change(screen.getByLabelText("이름"), {
+      target: { value: "홍길동" },
+    });
+    expect((submitButton as HTMLButtonElement).disabled).toBe(false);
+
+    fireEvent.change(screen.getByLabelText("이름"), {
+      target: { value: "" },
+    });
+    expect((submitButton as HTMLButtonElement).disabled).toBe(true);
+  });
+
   it("requires terms acceptance before submit", async () => {
     renderInApp(<SignUpForm />);
 
+    fireEvent.change(screen.getByLabelText("이름"), {
+      target: { value: "홍길동" },
+    });
     fireEvent.change(screen.getByLabelText("이메일"), {
       target: { value: "u@example.com" },
     });
@@ -73,8 +96,17 @@ describe("SignUpForm", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText("이용약관에 동의해주세요")).toBeTruthy();
+      expect(screen.getByRole("dialog")).toBeTruthy();
     });
+    expect(screen.queryByText("이용약관에 동의해주세요")).toBeNull();
+    expect(screen.getAllByText("약관 동의가 필요해요").length).toBeGreaterThan(
+      0,
+    );
+    expect(
+      screen.getByText(
+        "회원가입을 계속하려면 이용약관과 개인정보처리방침에 동의해주세요.",
+      ),
+    ).toBeTruthy();
     expect(signUpMock).not.toHaveBeenCalled();
   });
 

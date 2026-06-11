@@ -188,6 +188,33 @@ test.describe("A-01 sign-up functional flow", () => {
     expect(errors).toEqual([]);
   });
 
+  test("submit is disabled while all text inputs are empty", async ({
+    page,
+  }) => {
+    const errors = collectErrors(page);
+    let blockedNetworkAttempts = 0;
+    await page.route(SIGN_UP_ROUTE, async (route) => {
+      blockedNetworkAttempts += 1;
+      await route.abort();
+    });
+
+    await openSignUp(page);
+
+    const submitButton = page.locator('button[type="submit"]');
+    await expect(submitButton).toBeDisabled();
+
+    await page.locator("#terms").check({ force: true });
+    await expect(submitButton).toBeDisabled();
+
+    await page.locator("#displayName").fill("a");
+    await expect(submitButton).toBeEnabled();
+
+    await page.locator("#displayName").fill("");
+    await expect(submitButton).toBeDisabled();
+    expect(blockedNetworkAttempts).toBe(0);
+    expect(errors).toEqual([]);
+  });
+
   test("client validation blocks sign-up without terms or matching passwords", async ({
     page,
   }) => {
@@ -202,10 +229,20 @@ test.describe("A-01 sign-up functional flow", () => {
     await fillSignUpForm(page, { agreeToTerms: false });
     await clickSubmit(page);
 
+    const termsModal = page
+      .locator(".ant-modal-confirm")
+      .filter({ hasText: "약관 동의가 필요해요" });
+    await expect(termsModal).toBeVisible();
     await expect(
-      page.locator(".ant-form-item-explain-error").filter({ hasText: /동의/ }),
+      termsModal.filter({
+        hasText:
+          "회원가입을 계속하려면 이용약관과 개인정보처리방침에 동의해주세요.",
+      }),
     ).toBeVisible();
     expect(blockedNetworkAttempts).toBe(0);
+
+    await termsModal.getByRole("button", { name: "확인" }).click();
+    await expect(termsModal).toBeHidden();
 
     await page.locator("#terms").check({ force: true });
     await page.locator("#passwordConfirm").fill("Different123!");
