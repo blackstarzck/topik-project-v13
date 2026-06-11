@@ -5590,6 +5590,44 @@ body {
   font-size: 12px;
 }
 
+.password-reset-security-visual {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.password-reset-security-icon {
+  display: inline-flex;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--app-color-border);
+  border-radius: 50%;
+  background: var(--app-color-bg-container);
+  color: var(--app-color-primary);
+}
+
+.password-reset-heading {
+  text-align: center;
+  font-size: 24px;
+  margin: 0 0 24px;
+}
+
+.password-reset-back-link {
+  text-align: center;
+  margin-top: 16px;
+}
+
+.password-reset-expiry-note.ant-typography {
+  margin-top: -4px;
+}
+
+.password-reset-countdown-row.ant-typography {
+  margin-bottom: 12px;
+}
+
 .analysis-loading-shell {
   position: relative;
   display: grid;
