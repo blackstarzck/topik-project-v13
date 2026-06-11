@@ -5727,6 +5727,25 @@ body {
   white-space: nowrap;
 }
 
+.notification-form-stack.ant-space,
+.notification-channel-stack.ant-space,
+.notification-condition-stack.ant-space {
+  width: 100%;
+}
+
+.notification-form-item--flush.ant-form-item {
+  margin-bottom: 0;
+}
+
+.notification-condition-status.ant-typography {
+  margin-left: 12px;
+}
+
+.notification-day-tag--disabled.ant-tag {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .analysis-loading-shell {
   position: relative;
   display: grid;
