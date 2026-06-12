@@ -3687,8 +3687,7 @@ body {
   scrollbar-width: thin;
 }
 
-.app-sidebar-shell:hover .app-sidebar-menu-scroll,
-.app-sidebar-shell:focus-within .app-sidebar-menu-scroll {
+.app-sidebar-shell:hover .app-sidebar-menu-scroll {
   scrollbar-color: color-mix(
       in srgb,
       var(--app-color-text-secondary) 58%,
@@ -3712,9 +3711,7 @@ body {
   background-clip: content-box;
 }
 
-.app-sidebar-shell:hover .app-sidebar-menu-scroll::-webkit-scrollbar-thumb,
-.app-sidebar-shell:focus-within
-  .app-sidebar-menu-scroll::-webkit-scrollbar-thumb {
+.app-sidebar-shell:hover .app-sidebar-menu-scroll::-webkit-scrollbar-thumb {
   background-color: color-mix(
     in srgb,
     var(--app-color-text-secondary) 58%,
