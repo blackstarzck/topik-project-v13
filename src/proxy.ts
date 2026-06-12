@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
-import { PUBLIC_PATHS } from "./lib/routes";
+import { AUTH_ENTRY_PATHS, PUBLIC_PATHS } from "./lib/routes";
 import { getPublicEnv } from "./lib/supabase/env";
 import type { Database } from "./lib/supabase/types";
 
@@ -8,6 +8,18 @@ function isPublicPath(pathname: string): boolean {
   return PUBLIC_PATHS.some(
     (p) => pathname === p || pathname.startsWith(`${p}/`),
   );
+}
+
+function isAuthEntryPath(pathname: string): boolean {
+  return AUTH_ENTRY_PATHS.some((p) => pathname === p);
+}
+
+function redirectWithRefreshedCookies(url: URL, response: NextResponse) {
+  const redirectResponse = NextResponse.redirect(url);
+  response.cookies.getAll().forEach((cookie) => {
+    redirectResponse.cookies.set(cookie.name, cookie.value, cookie);
+  });
+  return redirectResponse;
 }
 
 export async function proxy(request: NextRequest) {
@@ -37,6 +49,13 @@ export async function proxy(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
+  if (user && isAuthEntryPath(pathname)) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/dashboard";
+    url.search = "";
+    return redirectWithRefreshedCookies(url, response);
+  }
+
   if (!isPublicPath(pathname) && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
@@ -46,14 +65,10 @@ export async function proxy(request: NextRequest) {
       .getAll()
       .some((c) => c.name.startsWith("sb-") && c.name.endsWith("-auth-token"));
     url.search = hadStaleSession ? "?reason=session_expired" : "";
-    const redirectResponse = NextResponse.redirect(url);
     // Carry over cookies that supabase.auth.getUser() may have refreshed
     // or cleared. Without this, an expired refresh cookie would survive
     // the redirect and the next request would hit refresh failure again.
-    response.cookies.getAll().forEach((cookie) => {
-      redirectResponse.cookies.set(cookie.name, cookie.value, cookie);
-    });
-    return redirectResponse;
+    return redirectWithRefreshedCookies(url, response);
   }
 
   return response;

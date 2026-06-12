@@ -67,6 +67,30 @@ describe("middleware route protection", () => {
     expect(response.status).toBe(200);
   });
 
+  it("redirects authenticated users away from /login", async () => {
+    mockGetUser.mockResolvedValue({
+      data: { user: { id: "user-123" } },
+      error: null,
+    });
+    const response = await callMiddleware("http://localhost/login");
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe(
+      "http://localhost/dashboard",
+    );
+  });
+
+  it("redirects authenticated users away from /sign-up", async () => {
+    mockGetUser.mockResolvedValue({
+      data: { user: { id: "user-123" } },
+      error: null,
+    });
+    const response = await callMiddleware("http://localhost/sign-up");
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe(
+      "http://localhost/dashboard",
+    );
+  });
+
   it("allows anon user to access the landing page /", async () => {
     mockGetUser.mockResolvedValue({ data: { user: null }, error: null });
     const response = await callMiddleware("http://localhost/");

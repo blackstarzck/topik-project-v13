@@ -6,6 +6,7 @@ import { Flex, Typography } from "antd";
 import { Sparkles } from "lucide-react";
 
 import { AnimatedAuthCharacters } from "@/components/auth/AnimatedAuthCharacters";
+import { AuthEntrySessionGuard } from "@/components/auth/AuthEntrySessionGuard";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { SignUpForm } from "@/components/auth/SignUpForm";
 
@@ -41,6 +42,7 @@ export function AuthPromptExperience({
 
   return (
     <div className={`signup-prompt-layout signup-prompt-layout--${mode}`}>
+      <AuthEntrySessionGuard />
       <aside className="signup-prompt-hero" aria-label={heroEyebrow}>
         <NextLink href="/" className="signup-brand" aria-label="TALKPIK AI">
           <span className="signup-brand__mark" aria-hidden="true">

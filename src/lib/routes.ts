@@ -21,6 +21,8 @@ export const PUBLIC_PATHS = [
   "/privacy",
 ] as const;
 
+export const AUTH_ENTRY_PATHS = ["/login", "/sign-up"] as const;
+
 export type ProtectedRouteCase = {
   path: string;
   iaCode: string;
