@@ -299,7 +299,7 @@
       "rememberMe": "로그인 상태 유지",
       "invalidCredentials": "이메일 또는 비밀번호가 올바르지 않아요.",
       "magicLinkSentTitle": "이메일을 확인하세요",
-      "magicLinkSentBody": "<strong>{email}</strong> 로 로그인 링크를 보냈습니다. 메일 안의 링크를 누르면 대시보드로 이동합니다.",
+      "magicLinkSentBody": "<strong>{email}</strong> 로 로그인 링크를 보냈습니다.<br>메일 안의 링크를 누르면 대시보드로 이동합니다.",
       "tryAgain": "다시 로그인 시도",
       "magicLinkSendFailed": "매직링크 전송 실패: {message}",
       "networkError": "지금 로그인 서버에 연결할 수 없어요. 잠시 후 다시 시도해주세요.",

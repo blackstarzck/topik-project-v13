@@ -199,12 +199,13 @@ export function LoginForm({
 
   if (magicLinkSent) {
     return (
-      <div>
+      <div className="text-center">
         <Title level={3}>{t("magicLinkSentTitle")}</Title>
         <Paragraph>
           {t.rich("magicLinkSentBody", {
             email: magicLinkSent,
             strong: (chunks) => <strong>{chunks}</strong>,
+            br: () => <br />,
           })}
         </Paragraph>
         <Button onClick={() => setMagicLinkSent(null)}>{t("tryAgain")}</Button>
