@@ -5,10 +5,10 @@
 ## Summary
 
 - Pages: 35
-- Tables: 17
+- Tables: 20
 - RPC/functions: 16
 - Storage buckets: 3
-- Page data links: 107
+- Page data links: 110
 - Unclassified DB objects: 0
 
 ## avatars
@@ -66,6 +66,18 @@
 | E-01 | Short-answer feedback | table | `submission_id`, `item_type`, `note`, `tags` | read/write | 피드백 저장/보관함 추가에 사용한다. |
 | E-02 | Long-form feedback | table | `submission_id`, `item_type`, `note`, `tags` | read/write | 피드백 저장/보관함 추가에 사용한다. |
 | F-01 | My library | table | `item_type`, `attempt_id`, `submission_id`, `report_id`, `export_file_id`, `problem_id`, `note`, `tags`, `saved_at` | read/write | 내 보관함 탭, 저장/해제, 태그에 사용한다. |
+
+## notification_delivery_attempts
+
+| IA | Screen | Type | Columns/fields | Usage | Page feature |
+| --- | --- | --- | --- | --- | --- |
+| X-09 | Notification settings | table | `template_key`, `channel`, `status`, `sent_at`, `created_at` | read | 발송 이력 패널 최근 5건(상태 6종 라벨)에 사용한다. topik-ai 소유 공유 객체(owner select)다. |
+
+## notification_log
+
+| IA | Screen | Type | Columns/fields | Usage | Page feature |
+| --- | --- | --- | --- | --- | --- |
+| X-09 | Notification settings | table | `channel`, `template_key`, `status`, `sent_at` | deprecated (미사용) | 구 발송 이력 소스. 2026-06-12 `notification_delivery_attempts`로 교체되어 화면 데이터 경로에서 제거됐다(O-9). |
 
 ## private.protect_profile_columns
 
@@ -200,6 +212,12 @@
 | F-M1 | PDF export modal | table | `event_type`, `export_file_id`, `payload` | write | PDF 다운로드 이벤트를 기록한다. |
 | D-M3 | Autosave warning | table | `event_type`, `payload`, `occurred_at` | write | 자동저장 이벤트를 기록한다. |
 | X-02 | Growth dashboard | table | `event_type`, `occurred_at`, `payload` | derived-read | 학습 추세와 활동 그래프에 사용한다. |
+
+## user_notifications
+
+| IA | Screen | Type | Columns/fields | Usage | Page feature |
+| --- | --- | --- | --- | --- | --- |
+| B-01 | Home dashboard | table | `id`, `category`, `title`, `link_url`, `read_at`, `created_at` | read/update | 일정/알림 보조 영역의 최신 5건 알림 피드. 클릭 시 `read_at` 기록 후 이동한다(2026-06-12 구현). |
 
 ## writing_drafts
 
