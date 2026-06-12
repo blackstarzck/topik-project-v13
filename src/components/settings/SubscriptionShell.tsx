@@ -244,10 +244,7 @@ export function SubscriptionShell() {
   };
 
   return (
-    <div
-      data-testid="subscription-shell"
-      className="mx-auto w-full max-w-5xl"
-    >
+    <div data-testid="subscription-shell" className="w-full">
       <div className="flex w-full flex-col gap-6">
         {/* IA 코드는 사용자 화면에 노출하지 않는다. */}
         <div>

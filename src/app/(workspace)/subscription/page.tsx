@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
+import { WorkspaceBody } from "@/components/app/WorkspaceBody";
 import { SubscriptionShell } from "@/components/settings/SubscriptionShell";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -8,5 +9,9 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default function SubscriptionPage() {
-  return <SubscriptionShell />;
+  return (
+    <WorkspaceBody>
+      <SubscriptionShell />
+    </WorkspaceBody>
+  );
 }

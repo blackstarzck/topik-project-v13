@@ -9,6 +9,7 @@ import {
   getWeakDimensions,
   getWeaknessRecommendations,
 } from "@/lib/practice/weakness";
+import { WorkspaceBody } from "@/components/app/WorkspaceBody";
 import { WeaknessView } from "@/components/practice/WeaknessView";
 import { AppCard } from "@/components/shared/AppCard";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -58,37 +59,39 @@ export default async function PracticeWeaknessPage() {
   // #130을 피한다.
   if (isLocked(planLabel)) {
     return (
-      <div className="app-workspace-narrow" data-testid="weakness-locked-shell">
-        <PageHeader title={t("pageTitle")} />
-        <AppCard className="text-center" data-testid="weakness-locked-card">
-          <span
-            aria-hidden="true"
-            className="inline-flex size-12 items-center justify-center rounded-full border border-border bg-surface text-text"
-          >
-            <LockKeyhole size={24} />
-          </span>
-          <h2 className="mt-2 text-xl font-semibold">{t("lockTitle")}</h2>
-          <p className="text-text-secondary">
-            {t("lockBody", { plan: planLabel ?? t("planFree") })}
-          </p>
-          <div className="mt-4 flex flex-wrap justify-center gap-2">
-            <Link
-              data-testid="weakness-upgrade-plan"
-              href="/paywall"
-              className="inline-flex min-h-8 items-center rounded-full border border-primary bg-primary px-4 text-sm font-medium text-background"
+      <WorkspaceBody size="task">
+        <div data-testid="weakness-locked-shell">
+          <PageHeader title={t("pageTitle")} />
+          <AppCard className="text-center" data-testid="weakness-locked-card">
+            <span
+              aria-hidden="true"
+              className="inline-flex size-12 items-center justify-center rounded-full border border-border bg-surface text-text"
             >
-              {t("upgradePlan")}
-            </Link>
-            <Link
-              data-testid="weakness-view-problems"
-              href="/practice/problems"
-              className="inline-flex min-h-8 items-center rounded-full border border-border bg-background px-4 text-sm font-medium text-text"
-            >
-              {t("viewProblemList")}
-            </Link>
-          </div>
-        </AppCard>
-      </div>
+              <LockKeyhole size={24} />
+            </span>
+            <h2 className="mt-2 text-xl font-semibold">{t("lockTitle")}</h2>
+            <p className="text-text-secondary">
+              {t("lockBody", { plan: planLabel ?? t("planFree") })}
+            </p>
+            <div className="mt-4 flex flex-wrap justify-center gap-2">
+              <Link
+                data-testid="weakness-upgrade-plan"
+                href="/paywall"
+                className="inline-flex min-h-8 items-center rounded-full border border-primary bg-primary px-4 text-sm font-medium text-background"
+              >
+                {t("upgradePlan")}
+              </Link>
+              <Link
+                data-testid="weakness-view-problems"
+                href="/practice/problems"
+                className="inline-flex min-h-8 items-center rounded-full border border-border bg-background px-4 text-sm font-medium text-text"
+              >
+                {t("viewProblemList")}
+              </Link>
+            </div>
+          </AppCard>
+        </div>
+      </WorkspaceBody>
     );
   }
 
@@ -108,7 +111,7 @@ export default async function PracticeWeaknessPage() {
   ]);
 
   return (
-    <>
+    <WorkspaceBody>
       <PageHeader title={t("pageTitle")} />
       <WeaknessView
         weakDimensions={dimSummaries.map((d) => ({
@@ -141,6 +144,6 @@ export default async function PracticeWeaknessPage() {
         }))}
         updatedAt={lastFeedback.data?.generated_at ?? null}
       />
-    </>
+    </WorkspaceBody>
   );
 }

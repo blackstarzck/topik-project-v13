@@ -11,6 +11,7 @@ import {
   type LibraryStats,
 } from "@/components/library/LibraryStatsPanel";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { WorkspaceBody } from "@/components/app/WorkspaceBody";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("library.page");
@@ -103,7 +104,7 @@ export default async function LibraryPage({ searchParams }: Props) {
   ]);
 
   return (
-    <div className="mx-auto max-w-6xl">
+    <WorkspaceBody>
       <PageHeader title={t("heading")} />
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={16}>
@@ -113,6 +114,6 @@ export default async function LibraryPage({ searchParams }: Props) {
           <LibraryStatsPanel stats={stats} />
         </Col>
       </Row>
-    </div>
+    </WorkspaceBody>
   );
 }

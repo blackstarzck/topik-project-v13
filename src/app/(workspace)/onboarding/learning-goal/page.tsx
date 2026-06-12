@@ -9,6 +9,7 @@ import {
   Sparkles,
   Target,
 } from "lucide-react";
+import { WorkspaceBody } from "@/components/app/WorkspaceBody";
 import { LearningGoalForm } from "@/components/learning/LearningGoalForm";
 import { AppCard } from "@/components/shared/AppCard";
 import { getLearningGoal } from "@/lib/learning/server";
@@ -27,7 +28,7 @@ export default async function OnboardingLearningGoalPage() {
   const goal = await getLearningGoal(user.id);
 
   return (
-    <div className="mx-auto w-full max-w-6xl text-text">
+    <WorkspaceBody className="text-text">
       <section
         className="grid gap-6 lg:grid-cols-2"
         aria-label={t("heroTitle")}
@@ -89,7 +90,7 @@ export default async function OnboardingLearningGoalPage() {
           </AppCard>
         </aside>
 
-        <main>
+        <div>
           <AppCard>
             <div className="grid gap-8">
               <OnboardingSteps />
@@ -116,9 +117,9 @@ export default async function OnboardingLearningGoalPage() {
               <OnboardingNavCta userId={user.id} />
             </div>
           </AppCard>
-        </main>
+        </div>
       </section>
-    </div>
+    </WorkspaceBody>
   );
 }
 
@@ -133,10 +134,7 @@ function OnboardingBenefit({
 }) {
   return (
     <div className="flex items-start gap-3 rounded-2xl bg-surface p-4">
-      <span
-        className="mt-0.5 inline-flex text-text"
-        aria-hidden="true"
-      >
+      <span className="mt-0.5 inline-flex text-text" aria-hidden="true">
         {icon}
       </span>
       <span className="grid gap-1">

@@ -5,6 +5,7 @@ import { useRef, useState } from "react";
 import { Button, Empty, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import { WorkspaceFixedActionBar } from "@/components/app/WorkspaceBody";
 import { AppCard } from "@/components/shared/AppCard";
 import { logStudyEvent } from "@/lib/events/study-events";
 import { consumeRecommendationItem } from "@/lib/practice/consume";
@@ -268,11 +269,11 @@ export function NextProblemView({ bundle }: Props) {
         onSelect={selectAlternative}
       />
 
-      <div
+      <WorkspaceFixedActionBar
         data-testid="next-selection-bar"
-        className="fixed bottom-0 left-0 right-0 z-10 flex items-center justify-between gap-4 border-t border-border bg-background px-6 py-3 md:left-60"
+        size="workspace"
       >
-        <Text className="min-w-0 truncate">
+        <Text className="min-w-0 flex-1 truncate">
           {selectionLabel
             ? t("selectionLabel", { selection: selectionLabel })
             : t("selectionPrompt")}
@@ -284,10 +285,11 @@ export function NextProblemView({ bundle }: Props) {
           loading={starting}
           onClick={() => handleStart()}
           data-testid="next-start-cta"
+          className="shrink-0"
         >
           {t("startLearning")}
         </Button>
-      </div>
+      </WorkspaceFixedActionBar>
     </div>
   );
 }

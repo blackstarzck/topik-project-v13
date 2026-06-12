@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth/session";
 import { getProfileSettings } from "@/lib/settings/server";
+import { WorkspaceBody } from "@/components/app/WorkspaceBody";
 import { NotificationPrefsForm } from "@/components/settings/NotificationPrefsForm";
 import { PageHeader } from "@/components/shared/PageHeader";
 
@@ -17,12 +18,12 @@ export default async function NotificationsSettingsPage() {
   const settings = await getProfileSettings(user.id);
   if (!settings) notFound();
   return (
-    <div className="app-workspace-narrow">
+    <WorkspaceBody size="form">
       <PageHeader title={t("pageHeading")} />
       <NotificationPrefsForm
         userId={user.id}
         initialPrefs={settings.notification_prefs}
       />
-    </div>
+    </WorkspaceBody>
   );
 }

@@ -6,6 +6,7 @@ import { DashboardBody } from "@/components/dashboard/DashboardBody";
 import type { RecentFeedbackItem } from "@/components/learning/RecentFeedbackCard";
 import type { DashboardAlertItem } from "@/components/dashboard/DashboardAlertsCard";
 import type { DashboardPrimary, DashboardAlternative } from "@/components/dashboard/DashboardRecommendations";
+import { WorkspaceBody } from "@/components/app/WorkspaceBody";
 import { requireUser } from "@/lib/auth/session";
 import { getDashboardKpi } from "@/lib/learning/kpi";
 import { getLearningGoal } from "@/lib/learning/server";
@@ -143,7 +144,7 @@ export default async function DashboardPage() {
   };
 
   return (
-    <div className="grid gap-6">
+    <WorkspaceBody className="grid gap-6">
       <DashboardHeader />
       <DashboardBody
         kpi={kpiData}
@@ -154,6 +155,6 @@ export default async function DashboardPage() {
         alerts={alerts}
         alertsLoadFailed={alertsLoadFailed}
       />
-    </div>
+    </WorkspaceBody>
   );
 }

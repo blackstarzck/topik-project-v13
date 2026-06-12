@@ -1,0 +1,107 @@
+.app-workspace-layout.ant-layout {
+  --workspace-sider-width: 240px;
+  --workspace-content-padding-block: 24px;
+  --workspace-mobile-bar-height: 64px;
+  min-height: 100vh;
+  min-height: max(100vh, 100dvh);
+  background: var(--app-color-bg-layout);
+}
+
+.app-workspace-sider .ant-layout-sider-children {
+  height: 100%;
+}
+
+.app-workspace-main.ant-layout {
+  min-width: 0;
+  min-height: 100vh;
+  min-height: max(100vh, 100dvh);
+  background: var(--app-color-bg-layout);
+}
+
+.app-workspace-content.ant-layout-content {
+  min-height: 100vh;
+  min-height: max(100vh, 100dvh);
+  padding: var(--workspace-content-padding-block) 24px;
+}
+
+.app-workspace-body {
+  width: 100%;
+  min-width: 0;
+  margin-inline: auto;
+}
+
+.app-workspace-body--form {
+  max-width: 640px;
+}
+
+.app-workspace-body--task {
+  max-width: 960px;
+}
+
+.app-workspace-body--workspace {
+  max-width: 1152px;
+}
+
+.app-workspace-body--wide {
+  max-width: 1280px;
+}
+
+.app-workspace-body--full {
+  max-width: none;
+}
+
+.app-workspace-fixed-action-bar {
+  position: fixed;
+  z-index: 10;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  border-top: 1px solid var(--app-color-border);
+  background: var(--app-color-bg-container);
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+}
+
+.app-workspace-fixed-action-bar__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.app-sidebar-shell {
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+@media (max-width: 767.98px) {
+  .app-workspace-layout {
+    --workspace-content-padding-block: 16px;
+  }
+
+  .app-workspace-content.ant-layout-content {
+    min-height: calc(100vh - var(--workspace-mobile-bar-height));
+    min-height: max(
+      calc(100vh - var(--workspace-mobile-bar-height)),
+      calc(100dvh - var(--workspace-mobile-bar-height))
+    );
+    padding: 16px;
+  }
+}
+
+@media (min-width: 768px) {
+  .app-workspace-sider.ant-layout-sider {
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    height: 100vh;
+    height: max(100vh, 100dvh);
+    max-height: 100vh;
+    max-height: max(100vh, 100dvh);
+  }
+
+  .app-workspace-fixed-action-bar {
+    left: var(--workspace-sider-width);
+    padding-inline: 24px;
+  }
+}

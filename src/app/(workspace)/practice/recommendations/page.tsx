@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
+import { WorkspaceBody } from "@/components/app/WorkspaceBody";
 import { RecommendationsView } from "@/components/practice/RecommendationsView";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -8,5 +9,9 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default function PracticeRecommendationsPage() {
-  return <RecommendationsView />;
+  return (
+    <WorkspaceBody>
+      <RecommendationsView />
+    </WorkspaceBody>
+  );
 }

@@ -13,6 +13,7 @@ import { themeSettings } from "@/theme/config";
 import { getResolvedBridgeVars } from "@/theme/tailwind-bridge";
 import type { ThemeAppearance } from "@/theme/types";
 import "../styles/global.css";
+import "../styles/workspace-layout.css";
 
 const pretendard = localFont({
   src: "../../fonts/pretendard/PretendardVariable.woff2",

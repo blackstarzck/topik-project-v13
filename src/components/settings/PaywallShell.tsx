@@ -105,7 +105,7 @@ export function PaywallShell() {
   }
 
   return (
-    <div data-testid="paywall-shell" className="mx-auto w-full max-w-5xl">
+    <div data-testid="paywall-shell" className="w-full">
       <div className="flex w-full flex-col gap-6">
         {/* Region 1: 결제 선택 제목. IA 코드는 사용자 화면에 노출하지 않는다. */}
         <div>

@@ -16,6 +16,7 @@ import {
   type GrowthDashboardProps,
 } from "@/components/growth/GrowthDashboard";
 import { GrowthLoadError } from "@/components/growth/GrowthLoadError";
+import { WorkspaceBody } from "@/components/app/WorkspaceBody";
 import type { GrowthTrendPoint } from "@/components/growth/GrowthTrendChart";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -241,7 +242,17 @@ export default async function GrowthPage() {
       : t("goalUnset");
   const data = await loadGrowthData(user.id, supabase, formatGoalLabel);
 
-  if (!data) return <GrowthLoadError />;
+  if (!data) {
+    return (
+      <WorkspaceBody>
+        <GrowthLoadError />
+      </WorkspaceBody>
+    );
+  }
 
-  return <GrowthDashboard {...data} />;
+  return (
+    <WorkspaceBody>
+      <GrowthDashboard {...data} />
+    </WorkspaceBody>
+  );
 }

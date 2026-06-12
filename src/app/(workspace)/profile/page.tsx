@@ -10,6 +10,7 @@ import { ProfileForm } from "@/components/profile/ProfileForm";
 import { ExamInfoCard } from "@/components/profile/ExamInfoCard";
 import { StatusHelpCard } from "@/components/profile/StatusHelpCard";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { WorkspaceBody } from "@/components/app/WorkspaceBody";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("profile.page");
@@ -33,7 +34,7 @@ export default async function ProfilePage() {
     .maybeSingle();
 
   return (
-    <>
+    <WorkspaceBody>
       <PageHeader title={t("heading")} />
       <Row gutter={[16, 16]}>
         <Col xs={24} md={14}>
@@ -76,6 +77,6 @@ export default async function ProfilePage() {
           </div>
         </Col>
       </Row>
-    </>
+    </WorkspaceBody>
   );
 }

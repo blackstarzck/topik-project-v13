@@ -33,6 +33,34 @@ Rules:
 - Navigation must remain predictable across all main pages.
 - Language/profile controls should be stable and easy to find.
 
+## Authenticated Workspace Body Width
+
+Authenticated workspace routes use `WorkspaceShell`, whose AntD
+`Layout.Content` is the page's `<main>` landmark. Do not put `PageContainer`
+inside workspace routes because `PageContainer` also renders `<main>` and would
+duplicate the landmark.
+
+Use `src/components/app/WorkspaceBody.tsx` for workspace page body width. It
+renders only a `<div>` and owns no padding, heading, data fetching, or page
+semantics. `WorkspaceShell` / `.app-workspace-content` owns viewport padding;
+`WorkspaceBody` owns only horizontal max-width alignment.
+
+Workspace body variants:
+
+- `form` (`640px`): focused settings forms such as language and notifications.
+- `task` (`960px`): focused task gates such as the free-plan weakness lock.
+- `workspace` (`1152px`): default authenticated workspace pages including
+  dashboard, growth, library, practice lists, profile, paywall, subscription,
+  and onboarding learning goal.
+- `wide` (`1280px`): dense workspace pages that need extra horizontal room.
+- `full`: editor/canvas-like workspace surfaces that intentionally span the
+  available content area.
+
+Public and auth pages may continue to use `PageContainer`. Authenticated
+workspace pages should use `WorkspaceBody`, and fixed workspace actions should
+use `WorkspaceFixedActionBar` so their inner content aligns to the same variant
+as the page body.
+
 ## Dashboard / Workbench
 
 Use Ant Design workbench thinking.
