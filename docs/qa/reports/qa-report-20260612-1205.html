@@ -97,12 +97,28 @@
   <div class="kpi"><div class="n" style="color:#3a3aa0">3</div><div class="l">스펙 갭 관찰</div></div>
 </div>
 
+<div class="card" style="border-left:4px solid var(--pass)">
+<strong>📌 1차 수정 완료 (2026-06-12 · 브랜치 <code>first-qa-remediation</code>)</strong>
+<p>본 리포트의 수정 가능 발견사항이 owner 승인 계획
+(<code>docs/qa/plan/first-remediation-execution-plan-20260612.md</code>)에 따라 같은 날 수정·검증 완료됐습니다.</p>
+<ul>
+<li><b>D-2 해소</b> — 인증 핸들러 5곳 try/catch/finally 방어 + 단위 테스트 (커밋 <code>f5afb7d</code>)</li>
+<li><b>D-3 해소</b> — 비-uuid <code>?problem=</code> id는 DB 조회 없이 정상 빈 상태로 (커밋 <code>bdeff1b</code>)</li>
+<li><b>G6/U-1 해소</b> — 사이드바 하단 로그아웃 진입점 구현(owner 승인) + i18n 3로케일 + 문서 + e2e (커밋 <code>46409f8</code>)</li>
+<li><b>D-5 해소</b> — 루트 커스텀 404 (커밋 <code>60ed769</code>)</li>
+<li><b>T-1 해소</b> — core-writing-flow stale 셀렉터 4곳 교체(:81 외 가려져 있던 3곳 추가 발견) (커밋 <code>8a435f3</code>)</li>
+<li><b>검증</b> — typecheck PASS · vitest 641 pass/3 skip · clean prod 빌드 · <b>e2e 풀 207 pass / 0 fail / 4 skip</b>(skip 4 = 기존 2 + 신규 로그아웃 spec의 모바일/태블릿 의도적 skip 2) · 수동 확인 4/4(아래 X-09 포함)</li>
+<li><b>X-09 저장 영속성 UNVERIFIED 해소</b> — 토글→저장→재진입 값 유지 직접 확인(원상 복구 완료)</li>
+</ul>
+<p>잔여: <b>D-1</b>(배포 환경 변수 — 인프라 액션), <b>D-4</b>(포맷 드리프트 — 보류), <b>G1</b>(이탈 경고 — 보류), G2~G5·G7~G10(문서 게이트 유지).</p>
+</div>
+
 <div class="card">
 <strong>비개발자용 한 줄 설명</strong>
 <ul>
 <li><b>좋은 점:</b> 화면은 모두 잘 뜨고, 로그인 안 한 사람은 보호 화면에 못 들어가며, 비밀번호 같은 비밀값은 화면 코드에 새어 나오지 않았습니다.</li>
 <li><b>꼭 고칠 것(배포 전):</b> 사이트 주소를 알려주는 설정값 한 개(<code>NEXT_PUBLIC_SITE_URL</code>)가 빠져 있어서, 실제 배포 모드에서 회원가입·비밀번호 재설정·인증메일 재전송 버튼이 "빙글빙글 도는 상태"로 멈춥니다. QA 중에 이 값을 채워 넣자 곧바로 정상 동작했습니다. 배포 환경에도 이 값을 꼭 넣어야 합니다.</li>
-<li><b>여유 있을 때:</b> 잘못된 문제 주소를 직접 입력하면 친절한 빈 화면 대신 일반 오류 화면이 뜨는 경우, 그리고 로그아웃 버튼이 화면 어디에도 안 보이는 점입니다.</li>
+<li><b>여유 있을 때:</b> 잘못된 문제 주소를 직접 입력하면 친절한 빈 화면 대신 일반 오류 화면이 뜨는 경우, 그리고 로그아웃 버튼이 화면 어디에도 안 보이는 점입니다. <b>→ 둘 다 1차 수정(2026-06-12)에서 해결됐습니다.</b></li>
 </ul>
 </div>
 
@@ -145,6 +161,7 @@
 <tr><td><code>pnpm test:supabase:local</code></td><td><span class="pill unv">SKIP</span></td><td>Docker/Supabase CLI 부재(환경 제약, 결함 아님). 대체 검증: 브라우저로 anon 차단(ACC-S1) + RLS not-found 경로(ACC-S5) 확인. 교차-유저 RLS는 테스트 계정 1개라 Deferred.</td></tr>
 <tr><td><code>pnpm test:e2e</code> (1차)</td><td><span class="pill warn">193 pass / 13 fail / 2 skip</span></td><td>실패 13건 전부 근본 원인 규명(아래). 계획의 베이스라인 "95/0/2"는 커밋 d25275f가 인증 e2e를 추가하기 전 수치 — 현행 스위트는 3뷰포트 매트릭스로 208개.</td></tr>
 <tr><td><code>pnpm test:e2e</code> (env 수정 후 풀 재실행)</td><td><span class="pill pass" id="e2e-final">205 pass / 1 fail / 2 skip</span></td><td>풀 재실행(7.1분): 1차 대비 12건 RED→GREEN(env 수정 효과). <b>잔여 1건은 core-writing-flow의 stale <code>.ant-modal-title</code> 셀렉터(T-1, 제품 정상·테스트 유지보수)</b>. 총합 208로 1차와 일치. 즉 <b>제품 결함 0건</b>.</td></tr>
+<tr><td><code>pnpm test:e2e</code> (1차 수정 후 최종, 2026-06-12)</td><td><span class="pill pass">207 pass / 0 fail / 4 skip</span></td><td>D-2/D-3/G6/D-5/T-1 수정 반영 풀 재실행(7.1분): <b>0 fail</b>. T-1 해소 +1, 신규 workspace-logout spec +1(desktop-1280). skip 4 = 기존 2 + 로그아웃 spec의 모바일/태블릿 의도적 skip 2(전역 토큰 revoke 차단 설계). 총합 211.</td></tr>
 </table>
 
 <div class="danger">
@@ -173,7 +190,7 @@
 <tr><td><code>/privacy</code> (X-14)</td><td>200</td><td>/privacy</td><td>✓</td><td>0</td></tr>
 <tr><td><code>/auth/callback-fragment</code> (X-17)</td><td>200</td><td>→ <code>/auth/error?reason=unknown</code></td><td>✓</td><td>0</td><td></td></tr>
 <tr><td><code>/auth/callback</code></td><td colspan="4">라우트 핸들러(코드/세션 없는 직접 진입 시 안전 처리) — UI 없음, 동작만 확인. NAV-S1(오래된 콜백 재방문)은 e2e <code>auth-callback-history.spec</code> PASS로 커버.</td></tr>
-<tr><td><code>/auth/sign-out</code></td><td colspan="4"><code>GET → 405</code> 확인(POST 전용). UI 진입점은 발견 불가 → 스펙 갭 G6.</td></tr>
+<tr><td><code>/auth/sign-out</code></td><td colspan="4"><code>GET → 405</code> 확인(POST 전용). UI 진입점은 발견 불가 → 스펙 갭 G6. <b>→ 1차 수정에서 사이드바 로그아웃 버튼 구현(커밋 <code>46409f8</code>)</b>.</td></tr>
 </table>
 <p><small>X-17(fragment 없음)이 <code>/auth/error?reason=unknown</code>으로 분기하는 것은 user-flow.md "fragment 실패/unknown → X-11"과 일치.</small></p>
 
@@ -275,7 +292,7 @@
 <tr><td>AUTH-S2</td><td>재방문 로그인 post-auth 분기</td><td>[CODE+SPEC]</td><td><span class="pill pass">PASS</span></td><td>로그인 계정 post-auth→/dashboard(동의+목표 충족 분기 정상). 동의 미충족 분기는 미재현(이 계정 이미 동의)</td></tr>
 <tr><td>AUTH-S3</td><td>비밀번호 분실→X-16</td><td>[CODE]</td><td><span class="pill pass">PASS</span></td><td>password-reset.spec GREEN(요청→sent+cooldown); X-16 렌더 확인. 만료 링크 실제 메일 흐름은 미수행</td></tr>
 <tr><td>AUTH-S5</td><td>Google OAuth</td><td>[CODE+SPEC]</td><td><span class="pill pass">PASS</span></td><td>google-oauth.spec GREEN</td></tr>
-<tr><td>AUTH-S6</td><td>로그아웃</td><td>[CODE+갭]</td><td><span class="pill gap">스펙 갭 G6</span></td><td>대시보드/프로필/설정/헤더 드로어 어디에도 로그아웃 UI 없음. <code>GET /auth/sign-out → 405</code> 확인. 라우트만 존재</td></tr>
+<tr><td>AUTH-S6</td><td>로그아웃</td><td>[CODE+갭]</td><td><span class="pill pass">해소(1차 수정)</span></td><td>대시보드/프로필/설정/헤더 드로어 어디에도 로그아웃 UI 없음. <code>GET /auth/sign-out → 405</code> 확인. 라우트만 존재 → <b>사이드바 하단 로그아웃 구현(커밋 <code>46409f8</code>), e2e+수동 검증</b></td></tr>
 <tr><td>ACC-S1</td><td>비로그인 × 보호 22</td><td>[CODE]</td><td><span class="pill pass">PASS</span></td><td>22개 전부 /login redirect</td></tr>
 <tr><td>ACC-S3</td><td>로그인 × /login·/sign-up</td><td>[갭]</td><td><span class="pill gap">스펙 갭 G5</span></td><td>인증 상태로 두 페이지 모두 폼 렌더(가드 없음) 확인</td></tr>
 <tr><td>ACC-S4</td><td>무료 × /growth·/weakness</td><td>[CODE]</td><td><span class="pill pass">PASS</span></td><td>리다이렉트 아닌 잠금 UI+업그레이드 CTA 3개 렌더. 기본 지표만 노출</td></tr>
@@ -285,7 +302,7 @@
 <tr><td>WRIT-S3</td><td>제출 취소 입력 보존</td><td>[CODE]</td><td><span class="pill pass">PASS</span></td><td>D-M1 오픈→취소→입력(40자) 그대로 보존</td></tr>
 <tr><td>SET-S2</td><td>언어 변경</td><td>[CODE]</td><td><span class="pill pass">PASS</span></td><td>영어 전환 즉시 UI 반영, missing key 0, coverageNote 노출, 콘솔 에러 0(한국어 복원)</td></tr>
 <tr><td>PAY-S1</td><td>잠긴 기능→페이월</td><td>[CODE]</td><td><span class="pill pass">PASS</span></td><td>페이월 정직한 스텁("결제 연동 준비 중·실제 결제 안 됨") — 구독 행 생성 없음</td></tr>
-<tr><td>STATE-S3</td><td>잘못된 문제 id</td><td>[CODE]</td><td><span class="pill warn">부분(P2)</span></td><td>valid uuid(없음)=정상 빈상태+재시도+문제목록 / malformed(비-uuid)=서버 에러 바운더리(D-3)</td></tr>
+<tr><td>STATE-S3</td><td>잘못된 문제 id</td><td>[CODE]</td><td><span class="pill pass">해소(1차 수정)</span></td><td>valid uuid(없음)=정상 빈상태+재시도+문제목록 / malformed(비-uuid)=서버 에러 바운더리(D-3) → <b>uuid 형식 가드로 빈 상태 통일(커밋 <code>bdeff1b</code>), 수동 재확인</b></td></tr>
 <tr><td>STATE-S4</td><td>없는 라우트</td><td>[CODE]</td><td><span class="pill warn">부분(P3)</span></td><td>최상위 미매치=Next 기본 404(전용 AppNotFound 아님). (workspace) 내부는 커스텀 404 정상</td></tr>
 <tr><td>NAV-S1</td><td>오래된 콜백 재방문</td><td>[CODE]</td><td><span class="pill pass">PASS</span></td><td>auth-callback-history.spec GREEN</td></tr>
 <tr><td>SET-S3</td><td>알림 설정 저장</td><td>[CODE]</td><td><span class="pill warn">부분</span></td><td>화면·저장 게이팅 ✓. <b>저장 영속성 미검증(UNVERIFIED), 발송은 스텁</b> — §11-S 참조</td></tr>
@@ -303,7 +320,7 @@
 <tr><td>G3</td><td>서버 측 이중 제출 방지 없음(UI 버튼 비활성뿐)</td><td>코드 확인. D-M1 제출 버튼은 isPending 중 비활성(UI 가드 동작)</td><td>서버 멱등성 필요 여부 결정</td></tr>
 <tr><td>G4</td><td>분석 폴링 60초 소진 후 타임아웃 안내 없음</td><td>코드 확인(5초×12 폴링). 실패/지연 패널은 있으나 소진 후 타임아웃 카피 없음</td><td>소진 후 안내 카피 추가</td></tr>
 <tr><td>G5</td><td>로그인 상태 /login·/sign-up 가드 없음</td><td><b>확인됨.</b> 인증 상태로 두 페이지 모두 폼 렌더</td><td>의도면 문서화, 아니면 대시보드 redirect 가드</td></tr>
-<tr><td>G6</td><td>로그아웃 UI 진입점 미발견(라우트만 존재)</td><td><b>확인됨.</b> 대시보드/프로필/설정/드로어에 로그아웃 없음. <code>GET /auth/sign-out=405</code></td><td><b>우선순위 높음</b> — 로그인 사용자가 UI로 로그아웃 불가. 진입점 추가 강력 권장</td></tr>
+<tr><td>G6</td><td>로그아웃 UI 진입점 미발견(라우트만 존재)</td><td><b>확인됨.</b> 대시보드/프로필/설정/드로어에 로그아웃 없음. <code>GET /auth/sign-out=405</code></td><td><span class="pill pass">구현됨(owner 승인, 1차 수정)</span> 사이드바 하단 로그아웃 버튼(form POST) + <code>nav.logout</code> 3로케일 + user-flow/B-01 문서 + 전용 e2e. 커밋 <code>46409f8</code></td></tr>
 <tr><td>G7</td><td>학습 목표 건너뛰기: 문서(허용) vs 코드(강제 회귀) 충돌</td><td>코드 확인(대시보드가 목표 없으면 A-03 강제). 본 계정은 목표 있어 미재현</td><td>문서/코드 정합</td></tr>
 <tr><td>G8</td><td>dashboard 외 보호 페이지 온보딩 게이트 부재</td><td>코드 확인. ACC-S2 분기 미직접재현(계정 온보딩 완료)</td><td>온보딩 우회 허용 여부 결정</td></tr>
 <tr><td>G9</td><td>신규 사용자 대시보드 시작 안내 부재</td><td>대시보드 KPI는 0 표기. description.md는 "0값 대신 시작 유도 문구" 요구 — 신규(제출0) 계정 미보유로 부분 관찰</td><td>신규 빈 상태 시작 안내 추가 여부</td></tr>
@@ -336,10 +353,10 @@
 <h2 id="ux">9. UX/사용성 발견 (Nielsen + WCAG)</h2>
 <table>
 <tr><th>#</th><th>휴리스틱</th><th>화면</th><th>발견</th><th>등급</th><th>개선 제안</th></tr>
-<tr><td>U-1</td><td>#3 사용자 통제와 자유</td><td>전역(사이드바/헤더)</td><td>로그아웃 UI 진입점이 없음(G6). 로그인 사용자가 정상적으로 빠져나갈 방법이 화면에 없음</td><td><span class="pill warn">P2(UX)</span></td><td>사이드바 하단 또는 프로필 메뉴에 로그아웃 추가</td></tr>
-<tr><td>U-2</td><td>#1 시스템 상태 가시성</td><td>인증 폼(가입/재설정/재전송)</td><td>redirect URL 생성 실패(env 누락) 시 버튼이 영구 로딩+에러 안내 없음(unhandled rejection)</td><td><span class="pill warn">P2</span></td><td>handleResend류를 try/catch로 감싸 실패 토스트+로딩 해제(D-2)</td></tr>
+<tr><td>U-1</td><td>#3 사용자 통제와 자유</td><td>전역(사이드바/헤더)</td><td>로그아웃 UI 진입점이 없음(G6). 로그인 사용자가 정상적으로 빠져나갈 방법이 화면에 없음</td><td><span class="pill pass">해소(1차 수정)</span></td><td>사이드바 하단 로그아웃 구현(커밋 <code>46409f8</code>)</td></tr>
+<tr><td>U-2</td><td>#1 시스템 상태 가시성</td><td>인증 폼(가입/재설정/재전송)</td><td>redirect URL 생성 실패(env 누락) 시 버튼이 영구 로딩+에러 안내 없음(unhandled rejection)</td><td><span class="pill pass">해소(1차 수정)</span></td><td>핸들러 5곳 try/catch/finally — 실패 토스트+로딩 해제(커밋 <code>f5afb7d</code>)</td></tr>
 <tr><td>U-3</td><td>#5 일관성 / #9 오류 복구</td><td>글쓰기(작성 중 이동)</td><td>앱 내 이동 시 미저장 경고 없음(G1). user-flow의 D-M3 흐름과 불일치</td><td><span class="pill gap">갭</span></td><td>G1 문서 게이트</td></tr>
-<tr><td>U-4</td><td>#9 오류 메시지 품질</td><td>글쓰기(잘못된 problem id)</td><td>malformed id 시 "문제가 발생했어요"(일반 서버 오류). valid uuid는 친절한 빈상태로 잘 처리됨</td><td><span class="pill warn">P2</span></td><td>id 형식 검증 후 빈상태로 통일(D-3)</td></tr>
+<tr><td>U-4</td><td>#9 오류 메시지 품질</td><td>글쓰기(잘못된 problem id)</td><td>malformed id 시 "문제가 발생했어요"(일반 서버 오류). valid uuid는 친절한 빈상태로 잘 처리됨</td><td><span class="pill pass">해소(1차 수정)</span></td><td>id 형식 검증 후 빈상태로 통일(커밋 <code>bdeff1b</code>)</td></tr>
 </table>
 <div class="ok"><strong>긍정적 UX 관찰:</strong> 자동저장 배지+저장 시각, 제출 게이팅("왜 안 되는지" 표시), 잠금 카드+업그레이드 CTA, 페이월 정직한 스텁 안내, 글자수 실시간 표시, 3개 언어 즉시 전환(missing key 0), 모바일 드로어/reflow 정상 — 핵심 과업 흐름에 막힘 없음.</div>
 
@@ -374,13 +391,13 @@
 </div>
 
 <div class="card">
-<h3>D-2 · <span class="pill warn">P2</span> — 인증 redirect 실패 시 무피드백 영구 로딩(코드 견고성)</h3>
-<p>D-1의 근본 원인이 환경이라도, <b>실패 모드 자체가 결함</b>입니다. <code>handleResend</code>(및 유사 가입/재설정 핸들러)가 <code>buildAuthRedirectUrl</code> throw를 잡지 않아 <code>setResending(false)</code>에 도달하지 못하고 사용자에게 아무 안내 없이 버튼이 멈춥니다(상태 5원칙 #1·#4 위반). <b>개선:</b> 핸들러를 try/catch로 감싸 실패 토스트 + 로딩 해제. <small>증거: 콘솔 pageerror + 버튼 loading 잔존.</small> owner=프론트엔드 · status=open(P2).</p>
+<h3>D-2 · <span class="pill pass">RESOLVED</span> — 인증 redirect 실패 시 무피드백 영구 로딩(코드 견고성)</h3>
+<p>D-1의 근본 원인이 환경이라도, <b>실패 모드 자체가 결함</b>입니다. <code>handleResend</code>(및 유사 가입/재설정 핸들러)가 <code>buildAuthRedirectUrl</code> throw를 잡지 않아 <code>setResending(false)</code>에 도달하지 못하고 사용자에게 아무 안내 없이 버튼이 멈춥니다(상태 5원칙 #1·#4 위반). <b>개선:</b> 핸들러를 try/catch로 감싸 실패 토스트 + 로딩 해제. <small>증거: 콘솔 pageerror + 버튼 loading 잔존.</small> owner=프론트엔드 · <b>status=resolved(2026-06-12 1차 수정, 커밋 <code>f5afb7d</code>)</b> — 핸들러 5곳(LoginForm 매직링크/SignUpForm/PasswordResetRequestForm/VerifyEmailCard/AuthErrorCard) try/catch/finally + builder-throw 단위 테스트 5건.</p>
 </div>
 
 <div class="card">
-<h3>D-3 · <span class="pill warn">P2</span> — 잘못된(비-uuid) <code>?problem=</code> id가 서버 에러 바운더리 유발</h3>
-<p>STATE-S3: valid-format uuid(존재하지 않음)는 "지문을 불러오지 못했어요 · 다시 시도 · 문제 목록으로"로 <b>정상 처리</b>. 그러나 malformed(비-uuid) id는 Postgres uuid 캐스팅 throw → "문제가 발생했어요"(일반 서버 오류, 다시 시도는 있으나 문제목록 링크 없음). <b>개선:</b> problem id를 uuid 형식 검증 후 빈상태로 통일. 갇힘은 아님(재시도·사이드바 존재)이라 P2. <small>증거: state-s3-malformed.png / state-s3-valid-uuid.png.</small> owner=프론트엔드 · status=open(P2).</p>
+<h3>D-3 · <span class="pill pass">RESOLVED</span> — 잘못된(비-uuid) <code>?problem=</code> id가 서버 에러 바운더리 유발</h3>
+<p>STATE-S3: valid-format uuid(존재하지 않음)는 "지문을 불러오지 못했어요 · 다시 시도 · 문제 목록으로"로 <b>정상 처리</b>. 그러나 malformed(비-uuid) id는 Postgres uuid 캐스팅 throw → "문제가 발생했어요"(일반 서버 오류, 다시 시도는 있으나 문제목록 링크 없음). <b>개선:</b> problem id를 uuid 형식 검증 후 빈상태로 통일. 갇힘은 아님(재시도·사이드바 존재)이라 P2. <small>증거: state-s3-malformed.png / state-s3-valid-uuid.png.</small> owner=프론트엔드 · <b>status=resolved(2026-06-12 1차 수정, 커밋 <code>bdeff1b</code>)</b> — <code>getWritingProblem</code> 입구 uuid 가드(DB 조회 0회) + 단위 테스트, 브라우저 재확인(빈 상태 노출).</p>
 </div>
 
 <div class="card">
@@ -389,13 +406,13 @@
 </div>
 
 <div class="card">
-<h3>D-5 · <span class="pill warn">P3</span> — 최상위 미매치 라우트가 Next 기본 404</h3>
-<p>STATE-S4: <code>/존재안함</code> → "404 This page could not be found"(Next 기본). 루트 <code>not-found.tsx</code> 부재. <code>(workspace)</code> 내부는 커스텀 AppNotFound 정상 동작. 404 상태코드는 정상이라 cosmetic. <b>개선:</b> 루트 <code>app/not-found.tsx</code> 추가. owner=프론트엔드 · status=open(P3).</p>
+<h3>D-5 · <span class="pill pass">RESOLVED</span> — 최상위 미매치 라우트가 Next 기본 404</h3>
+<p>STATE-S4: <code>/존재안함</code> → "404 This page could not be found"(Next 기본). 루트 <code>not-found.tsx</code> 부재. <code>(workspace)</code> 내부는 커스텀 AppNotFound 정상 동작. 404 상태코드는 정상이라 cosmetic. <b>개선:</b> 루트 <code>app/not-found.tsx</code> 추가. owner=프론트엔드 · <b>status=resolved(2026-06-12 1차 수정, 커밋 <code>60ed769</code>)</b> — AppNotFound 재사용, 브라우저 재확인(404 + 커스텀 화면).</p>
 </div>
 
 <div class="card">
-<h3>T-1 · <span class="pill unv">테스트 유지보수(제품 무관)</span> — core-writing-flow의 stale <code>.ant-modal-title</code></h3>
-<p><code>core-writing-flow.spec.ts:81</code>이 antd 6에서 사라진 <code>.ant-modal-title</code> 클래스로 D-M1 제목을 찾아 실패. 실제 모달은 정상(제목 h2·체크박스·제출 버튼 렌더, 전용 spec PASS). <b>제품 결함 아님.</b> 권장: 셀렉터를 <code>getByTestId("submission-confirm-modal")</code>로 교체.</p>
+<h3>T-1 · <span class="pill pass">RESOLVED</span> — core-writing-flow의 stale <code>.ant-modal-title</code>(테스트 유지보수, 제품 무관)</h3>
+<p><code>core-writing-flow.spec.ts:81</code>이 antd 6에서 사라진 <code>.ant-modal-title</code> 클래스로 D-M1 제목을 찾아 실패. 실제 모달은 정상(제목 h2·체크박스·제출 버튼 렌더, 전용 spec PASS). <b>제품 결함 아님.</b> 권장: 셀렉터를 <code>getByTestId("submission-confirm-modal")</code>로 교체. <b>status=resolved(2026-06-12 1차 수정, 커밋 <code>8a435f3</code>)</b> — :81 교체 후 그동안 가려져 있던 후속 stale 셀렉터 3곳(저장 CTA가 Dropdown 그룹으로 변경됨·비교 CTA·F-M1 모달)도 발견·교체. 흐름 전 구간 GREEN.</p>
 </div>
 
 <h3 id="stubs">11-S · 스텁 / Mock / Deferred 백엔드 (결함 아님 · PASS 범위 명시)</h3>
@@ -416,7 +433,7 @@
 <h2 id="unverified">12. UNVERIFIED 목록 (사유 + 재검증 방법)</h2>
 <table>
 <tr><th>항목</th><th>사유</th><th>재검증 방법</th></tr>
-<tr><td><b>X-09 알림 설정 저장 영속성</b></td><td>통과 e2e가 렌더 전용("without saving")이고, "작업하지 말라"는 지시로 저장 클릭+재진입을 직접 수행하지 않음. (발송 transport는 §11-S 스텁이라 별개)</td><td>알림 토글 변경→저장 클릭→성공 토스트 확인→재진입 시 값 유지 확인(profiles.notification_prefs 반영). 서버 1회 기동 필요</td></tr>
+<tr><td><b>X-09 알림 설정 저장 영속성</b> <span class="pill pass">해소(1차 수정 검증)</span></td><td>통과 e2e가 렌더 전용("without saving")이고, "작업하지 말라"는 지시로 저장 클릭+재진입을 직접 수행하지 않음. (발송 transport는 §11-S 스텁이라 별개) → <b>2026-06-12 1차 수정 검증 단계에서 직접 확인: 토글 변경→저장→성공 토스트→재진입 시 값 유지(이후 원상 복구·재확인). 영속성 정상.</b></td><td>알림 토글 변경→저장 클릭→성공 토스트 확인→재진입 시 값 유지 확인(profiles.notification_prefs 반영). 서버 1회 기동 필요</td></tr>
 <tr><td><b>제출→실제 피드백 "내용 품질"</b></td><td>제출→피드백 흐름은 검증됐으나 콘텐츠가 <code>mock-v1</code>이라 실 AI 품질은 검증 대상 아님(§11-S)</td><td>실 LLM transport 연동 후 별도 검증</td></tr>
 <tr><td>교차-유저 RLS 격리(user-A↔user-B)</td><td>테스트 계정 1개(student@audit.local)만 존재</td><td>2번째 계정 추가 후 타인 소유 row 접근 시도, 또는 Docker 스택에서 rls-smoke.test 실행</td></tr>
 <tr><td>실제 메일 링크 흐름(만료/cleanup 후 user_not_found)</td><td>실제 메일 수신/링크 만료가 외부(Supabase) 의존</td><td>스테이징 메일박스에서 만료 링크 클릭 → X-11 reason 매핑 확인(user-flow 6시나리오)</td></tr>
@@ -447,7 +464,7 @@
 <li><b>[환경 변경]</b> <code>.env.local</code>에 <code>NEXT_PUBLIC_SITE_URL</code> 1줄 추가됨(문서화된 필수 값). 커밋 대상은 아니며 의도된 설정 보완입니다.</li>
 <li><b>[제약]</b> Docker/Supabase CLI 부재 → <code>test:supabase:local</code> skip(환경 제약, 결함 아님). 교차-유저 RLS는 Deferred(계정 1개).</li>
 <li><b>[Deferred]</b> 실제 메일 링크/멀티탭/오프라인/IME/200% 줌 등 외부·OS 의존 케이스(§12).</li>
-<li><b>[문서 게이트]</b> 스펙 갭 G1/G5/G6(+G2·G4·G7·G9 부분)은 owner 결정 필요. 특히 <b>G6 로그아웃 진입점</b>은 사용성 영향이 커 우선 처리 권장.</li>
+<li><b>[문서 게이트]</b> 스펙 갭 G1/G5(+G2·G4·G7·G9 부분)은 owner 결정 필요. <b>G6 로그아웃 진입점은 owner 승인으로 1차 수정에서 구현 완료(커밋 <code>46409f8</code>)</b>.</li>
 <li><b>[증거 보안]</b> trace·<code>tests/e2e/auth-state/</code>·<code>test-results/</code>는 인증 토큰 포함 → 복사·커밋하지 않고 로컬 경로만 보존. 스크린샷에는 민감정보 없음(테스트 계정 이메일은 audit용).</li>
 </ul>
 
