@@ -6,7 +6,8 @@ import { ChevronDown } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { triggerPdfExport } from "@/lib/export/pdf-export";
+import { exportPdfWithPrintFallback } from "@/lib/export/pdf-export-client";
+import { PDF_EXPORT_DEFAULT_OPTIONS } from "@/lib/export/pdf-options";
 import { useSaveLibraryItem } from "@/lib/library/mutations";
 import { useCreateComparisonReport } from "@/lib/writing/mutations";
 
@@ -86,8 +87,20 @@ export function NextActionBar({
     if (pdfBusy) return; // 중복 클릭 차단
     setPdfBusy(true);
     try {
-      await triggerPdfExport({ sourceType: "submission", sourceId: submissionId });
-      notification.success({ message: t("pdfSuccess") });
+      // 서버 실파일 생성 → 실패 시 브라우저 인쇄 폴백 (F-M1 브리프 §3-B).
+      const outcome = await exportPdfWithPrintFallback({
+        sourceType: "submission",
+        sourceId: submissionId,
+        options: {
+          filename: t("pdfDefaultFilename"),
+          ...PDF_EXPORT_DEFAULT_OPTIONS,
+        },
+      });
+      if (outcome.mode === "file") {
+        notification.success({ message: t("pdfDownloaded") });
+      } else {
+        notification.info({ message: t("pdfSuccess") });
+      }
     } catch {
       notification.error({
         message: t("pdfFailedTitle"),

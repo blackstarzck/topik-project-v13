@@ -109,12 +109,15 @@ describe("PdfExportModal i18n chrome", () => {
         selection={[{ itemId: "item-1", title: "문제 abcd1234" }]}
       />,
     );
-    // Region 2 option form labels.
+    // hifi 2단 레이아웃 (2026-06-12): 좌측 섹션 1~3 + 파일명, 우측 미리보기.
+    expect(screen.getByText("1. 선택한 문제")).toBeTruthy();
+    expect(screen.getByText("2. 포함할 항목")).toBeTruthy();
+    expect(screen.getByText("내 답안")).toBeTruthy();
+    expect(screen.getByText("AI 피드백 리포트")).toBeTruthy();
+    expect(screen.getByText("3. 레이아웃 옵션")).toBeTruthy();
     expect(screen.getByText("파일명")).toBeTruthy();
-    expect(screen.getByText("포함 항목")).toBeTruthy();
-    expect(screen.getByText("내 답안 포함")).toBeTruthy();
-    expect(screen.getByText("AI 피드백 포함")).toBeTruthy();
-    // Region 4 primary CTA (idle phase).
-    expect(screen.getByRole("button", { name: "PDF 내보내기" })).toBeTruthy();
+    expect(screen.getByText("미리보기")).toBeTruthy();
+    // Region 4 primary CTA (idle phase) — hifi "PDF 생성".
+    expect(screen.getByRole("button", { name: "PDF 생성" })).toBeTruthy();
   });
 });

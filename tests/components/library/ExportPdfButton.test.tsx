@@ -4,44 +4,50 @@ import { createExportPdfHandler } from "../../../src/components/library/ExportPd
 import koMessages from "../../../messages/ko.json";
 
 /**
- * `ExportPdfButton` is a thin shell around `triggerPdfExport` + antd's
- * App.message bus. The component's load-bearing logic is extracted into
- * `createExportPdfHandler` so vitest can verify the click sequence without
- * a DOM (no jsdom is configured).
+ * `ExportPdfButton` is a thin shell around the server-PDF export pipeline
+ * (`exportPdfWithPrintFallback`) + antd's App.message bus. The load-bearing
+ * logic is extracted into `createExportPdfHandler` so vitest can verify the
+ * click sequence without a DOM (no jsdom is configured).
  *
- * i18n: the handler is hook-free and now takes the localized success/fallback
- * toast text via deps (the component resolves t() and supplies them). We pull
- * the VERBATIM Korean from the merged ko catalog so the assertions track the
- * single source of truth (no dependency on the ephemeral messages/_staging/ dir).
+ * i18n: the handler is hook-free and takes the localized toast text via deps
+ * (the component resolves t() and supplies them). We pull the VERBATIM Korean
+ * from the merged ko catalog so the assertions track the source of truth.
  *
- * Contract under test:
- *   1. clicking the button calls `triggerPdfExport` with the same
- *      sourceType/sourceId the button was mounted with — exactly once;
- *   2. on success → `message.success(deps.successMessage)`;
- *   3. on error → `message.error(err.message)`;
- *   4. on non-Error rejection → `message.error(deps.errorMessage)`;
+ * Contract under test (F-M1 server-render, 2026-06-12 brief):
+ *   1. clicking calls `deps.trigger` with the bound sourceType/sourceId once;
+ *   2. mode='file' → notifySuccess(downloadedMessage);
+ *   3. mode='print' (인쇄 폴백) → notifyWarning(printFallbackMessage);
+ *   4. on error → notifyError(err.message); non-Error → errorMessage;
  *   5. the button does NOT log a study_events row itself
- *      (triggerPdfExport already does — double-log would skew KPI counts).
+ *      (the export pipeline already does — double-log would skew KPI counts).
  */
-const SUCCESS_KO = koMessages.library.exportButton.printDialogOpened;
-const FALLBACK_KO = koMessages.library.exportButton.exportFailed;
+const DOWNLOADED_KO = koMessages.library.exportButton.downloaded;
+const FALLBACK_PRINT_KO = koMessages.library.exportButton.fallbackPrint;
+const ERROR_KO = koMessages.library.exportButton.exportFailed;
+
+function makeDeps(trigger: ReturnType<typeof vi.fn>) {
+  return {
+    trigger: trigger as unknown as Parameters<
+      typeof createExportPdfHandler
+    >[1]["trigger"],
+    notifySuccess: vi.fn<(msg: string) => void>(),
+    notifyWarning: vi.fn<(msg: string) => void>(),
+    notifyError: vi.fn<(msg: string) => void>(),
+    downloadedMessage: DOWNLOADED_KO,
+    printFallbackMessage: FALLBACK_PRINT_KO,
+    errorMessage: ERROR_KO,
+  };
+}
+
 describe("ExportPdfButton — createExportPdfHandler", () => {
-  it("calls triggerPdfExport with the bound sourceType/sourceId exactly once", async () => {
-    const trigger = vi.fn(async () => ({ exportId: "exp-1" }));
-    const notifySuccess = vi.fn();
-    const notifyError = vi.fn();
+  it("calls the trigger with the bound sourceType/sourceId exactly once", async () => {
+    const trigger = vi.fn(async () => ({ mode: "file" as const, exportId: "exp-1" }));
+    const deps = makeDeps(trigger);
 
     const onClick = createExportPdfHandler(
       { sourceType: "submission", sourceId: "sub-42" },
-      {
-        trigger,
-        notifySuccess,
-        notifyError,
-        successMessage: SUCCESS_KO,
-        errorMessage: FALLBACK_KO,
-      },
+      deps,
     );
-
     await onClick();
 
     expect(trigger).toHaveBeenCalledTimes(1);
@@ -51,53 +57,54 @@ describe("ExportPdfButton — createExportPdfHandler", () => {
     });
   });
 
-  it("emits the Korean success toast after triggerPdfExport resolves", async () => {
-    const trigger = vi.fn(async () => ({ exportId: "exp-1" }));
-    const notifySuccess = vi.fn();
-    const notifyError = vi.fn();
+  it("emits the downloaded toast when the server render succeeds (mode=file)", async () => {
+    const trigger = vi.fn(async () => ({ mode: "file" as const, exportId: "exp-1" }));
+    const deps = makeDeps(trigger);
 
     const onClick = createExportPdfHandler(
       { sourceType: "report", sourceId: "rep-9" },
-      {
-        trigger,
-        notifySuccess,
-        notifyError,
-        successMessage: SUCCESS_KO,
-        errorMessage: FALLBACK_KO,
-      },
+      deps,
     );
-
     await onClick();
 
-    expect(notifySuccess).toHaveBeenCalledTimes(1);
-    expect(notifySuccess).toHaveBeenCalledWith(SUCCESS_KO);
-    expect(notifyError).not.toHaveBeenCalled();
+    expect(deps.notifySuccess).toHaveBeenCalledTimes(1);
+    expect(deps.notifySuccess).toHaveBeenCalledWith(DOWNLOADED_KO);
+    expect(deps.notifyWarning).not.toHaveBeenCalled();
+    expect(deps.notifyError).not.toHaveBeenCalled();
+  });
+
+  it("emits the print-fallback notice when the server render fell back (mode=print)", async () => {
+    const trigger = vi.fn(async () => ({ mode: "print" as const, exportId: "exp-2" }));
+    const deps = makeDeps(trigger);
+
+    const onClick = createExportPdfHandler(
+      { sourceType: "submission", sourceId: "sub-1" },
+      deps,
+    );
+    await onClick();
+
+    expect(deps.notifyWarning).toHaveBeenCalledTimes(1);
+    expect(deps.notifyWarning).toHaveBeenCalledWith(FALLBACK_PRINT_KO);
+    expect(deps.notifySuccess).not.toHaveBeenCalled();
   });
 
   it("surfaces the trigger error message through notifyError (no rethrow)", async () => {
     const trigger = vi.fn(async () => {
       throw new Error("network down");
     });
-    const notifySuccess = vi.fn();
-    const notifyError = vi.fn();
+    const deps = makeDeps(trigger);
 
     const onClick = createExportPdfHandler(
       { sourceType: "submission", sourceId: "sub-1" },
-      {
-        trigger,
-        notifySuccess,
-        notifyError,
-        successMessage: SUCCESS_KO,
-        errorMessage: FALLBACK_KO,
-      },
+      deps,
     );
 
     // Handler must not reject — clicking the button should never crash the
     // tree. Errors are surfaced through the toast bus instead.
     await expect(onClick()).resolves.toBeUndefined();
-    expect(notifyError).toHaveBeenCalledTimes(1);
-    expect(notifyError).toHaveBeenCalledWith("network down");
-    expect(notifySuccess).not.toHaveBeenCalled();
+    expect(deps.notifyError).toHaveBeenCalledTimes(1);
+    expect(deps.notifyError).toHaveBeenCalledWith("network down");
+    expect(deps.notifySuccess).not.toHaveBeenCalled();
   });
 
   it("falls back to a Korean default message when the thrown value is not an Error", async () => {
@@ -105,43 +112,32 @@ describe("ExportPdfButton — createExportPdfHandler", () => {
       // Simulate a non-Error rejection (e.g. supabase-js sometimes throws strings).
       throw "boom";
     });
-    const notifyError = vi.fn();
+    const deps = makeDeps(trigger);
 
     const onClick = createExportPdfHandler(
       { sourceType: "report", sourceId: "rep-2" },
-      {
-        trigger,
-        notifySuccess: vi.fn(),
-        notifyError,
-        successMessage: SUCCESS_KO,
-        errorMessage: FALLBACK_KO,
-      },
+      deps,
     );
-
     await onClick();
-    expect(notifyError).toHaveBeenCalledWith(FALLBACK_KO);
+    expect(deps.notifyError).toHaveBeenCalledWith(ERROR_KO);
   });
 
   it("does not invoke any study-event logger of its own (single-log contract)", async () => {
-    // Sanity assertion: the deps surface only the trigger + two notify
-    // channels + the two localized toast strings. There's no `logEvent`
+    // Sanity assertion: the deps surface only the trigger + three notify
+    // channels + the three localized toast strings. There's no `logEvent`
     // channel — the button has no way to write a second study_events row
     // even if a future refactor tries.
-    const trigger = vi.fn(async () => ({ exportId: "exp-1" }));
-    const deps = {
-      trigger,
-      notifySuccess: vi.fn(),
-      notifyError: vi.fn(),
-      successMessage: SUCCESS_KO,
-      errorMessage: FALLBACK_KO,
-    } as const;
-    // Type-level check: no event-logging channel is exposed to the handler.
+    const trigger = vi.fn(async () => ({ mode: "file" as const, exportId: "exp-1" }));
+    const deps = makeDeps(trigger);
+
     const keys = Object.keys(deps).sort();
     expect(keys).toEqual([
+      "downloadedMessage",
       "errorMessage",
       "notifyError",
       "notifySuccess",
-      "successMessage",
+      "notifyWarning",
+      "printFallbackMessage",
       "trigger",
     ]);
     expect(keys).not.toContain("logEvent");
