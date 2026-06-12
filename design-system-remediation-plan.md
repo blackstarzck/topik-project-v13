@@ -1,5 +1,11 @@
 # Wireframe 기준 사용자 화면 스타일 일관성 복구 계획
 
+> Current status note (2026-06-12): The canonical visual source is root
+> `DESIGN.md`. The `DESIGN/` folder remains for machine-readable tokens and
+> generated/reference assets. Historical references below may describe the
+> earlier migration state and should not be treated as current authority unless
+> revalidated.
+
 ## Summary
 
 `docs/Wireframe/`를 phase 단위의 작업 범위로 삼아 사용자 화면의 스타일 규칙을 Awesomic 기준으로 재정렬한다. Ant Design은 theme token의 주입 지점, Tailwind는 AntD/Awesomic token을 소비하는 bridge로만 사용한다. `global.css`의 page/component-specific override와 inline style은 phase별로 줄이고, 각 phase는 분석 에이전트 → 작업 에이전트 → 독립 리뷰 에이전트 → 회귀 수정 → 재리뷰 → page-scoped 검증 → commit → 에이전트 종료 순서로 닫는다.
@@ -8,7 +14,7 @@
 
 ## Key Changes
 
-- 디자인 source of truth를 `DESIGN.md`에서 `AWESOMIC-DESIGN.md`로 전환한다. `DESIGN.md`는 삭제하지 않고 비권위 문서로 격하하며, `docs/ant-design/08-theme-architecture.md`의 원칙을 “stock AntD default 유지”가 아니라 “Awesomic token을 AntD 구조에 바인딩”으로 고친다.
+- 디자인 source of truth는 루트 `DESIGN.md`이다. `DESIGN/` 폴더는 `tokens.json`, `theme.css`, `variables.css` 같은 machine-readable/generated/reference asset을 보관하고, runtime binding은 `docs/ant-design/08-theme-architecture.md`와 `src/theme`가 소유한다.
 - Dark mode는 이번 범위에서 `light-fixed`로 동결한다. Awesomic이 light-only이고 현재 dark algorithm/bridge는 black primary와 충돌할 수 있으므로, dark infra 코드는 보존하되 사용자-facing 진입점과 초기 렌더는 light만 사용한다.
 - 실제 font stack은 당장 Pretendard 단일 계열로 유지한다. Awesomic의 Cosmica 원칙은 기록하되, 로컬 font asset이 없는 상태에서 `Cosmica`, `DM Sans`, `Plus Jakarta Sans`를 CSS에 허위 선언하지 않는다.
 - `src/theme` 계층을 기준으로 AntD token을 설정하고, Tailwind bridge는 필요한 CSS variable만 노출한다. bridge key를 추가하면 `tailwind-bridge.ts`, root variable injection, `global.css @theme inline`, theme parity tests를 함께 갱신한다.
@@ -67,7 +73,7 @@ For each page phase:
 
 A phase cannot close if any of these remain unhandled:
 
-- Active implementation references `DESIGN.md` as the design source of truth.
+- Active implementation references the retired nested design document path as the design source of truth instead of root `DESIGN.md`.
 - Tailwind defines an independent palette or duplicates Awesomic tokens instead of consuming bridge variables.
 - New page-specific CSS is added to `global.css`.
 - `.ant-*` selectors are used for component styling where AntD tokens/component tokens or local primitives can solve it.

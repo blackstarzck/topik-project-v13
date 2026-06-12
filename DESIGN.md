@@ -1,250 +1,505 @@
----
-version: alpha
-name: TALKPIK
-description: Calm, focused Korean(TOPIK) study tool — quiet surfaces, one clear action
-colors:
-  primary: "#1677ff"
-  text: "rgba(0,0,0,0.88)"
-  text-secondary: "rgba(0,0,0,0.65)"
-  border: "#d9d9d9"
-  bg-layout: "#f5f5f5"
-  bg-container: "#ffffff"
-  primary-hover: "#4096ff"
-  primary-active: "#0958d9"
-typography:
-  body-md:
-    fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
-    fontSize: 14px
-    lineHeight: 1.5715
-  body-sm:
-    fontFamily: "{typography.body-md.fontFamily}"
-    fontSize: 12px
-    lineHeight: 1.6667
-  title-md:
-    fontFamily: "{typography.body-md.fontFamily}"
-    fontSize: 16px
-    fontWeight: 600
-    lineHeight: 1.5
-  title-lg:
-    fontFamily: "{typography.body-md.fontFamily}"
-    fontSize: 20px
-    fontWeight: 600
-    lineHeight: 1.4
-  title-page:
-    fontFamily: "{typography.body-md.fontFamily}"
-    fontSize: 24px
-    fontWeight: 600
-    lineHeight: 1.35
-rounded:
-  sm: 4px
-  md: 6px
-  lg: 8px
-spacing:
-  xs: 4px
-  sm: 8px
-  md: 16px
-  lg: 24px
-  xl: 32px
-components:
-  surface:
-    backgroundColor: "{colors.bg-container}"
-    rounded: "{rounded.lg}"
-    padding: "{spacing.lg}"
-  card:
-    backgroundColor: "{colors.bg-container}"
-    rounded: "{rounded.lg}"
-    padding: "{spacing.lg}"
-  card-compact:
-    backgroundColor: "{colors.bg-container}"
-    rounded: "{rounded.md}"
-    padding: "{spacing.md}"
-  button-primary:
-    backgroundColor: "{colors.primary}"
-    textColor: "{colors.bg-container}"
-    rounded: "{rounded.md}"
-  button-primary-hover:
-    backgroundColor: "{colors.primary-hover}"
-    textColor: "{colors.bg-container}"
-    rounded: "{rounded.md}"
-  button-primary-active:
-    backgroundColor: "{colors.primary-active}"
-    textColor: "{colors.bg-container}"
-    rounded: "{rounded.md}"
----
+# TALKPIK Awesomic Design
+> Rounded midnight marketplace — a portfolio gallery cut from matte black tiles on a white tablecloth, where large rounded corners and a single custom typeface do all the expressive work.
 
-# TALKPIK Design
+> Official visual reference for TALKPIK AI's user-facing app: product-level
+> visual intent, semantic token meaning, and imported Awesomic token roles.
 
-> Source of truth for the **visual intent and semantic token meaning** of the
-> TALKPIK user-facing app. Machine-readable imported token values live in
-> `DESIGN/tokens.json` when a theme preset is bound from `DESIGN/`; runtime
-> structure and binding to `src/theme` live in
-> [`docs/ant-design/08-theme-architecture.md`](docs/ant-design/08-theme-architecture.md).
->
-> **Active theme policy:** one project theme source is projected into two
-> library-specific adapters. AntD receives values through `ConfigProvider`,
-> `theme.token`, and `theme.components`. Tailwind receives the same resolved
-> values through `--app-*` bridge variables and Tailwind v4 `@theme inline`.
-> Tailwind must not become a second palette, radius scale, shadow scale, or font
-> source.
->
-> The current implementation exposes a base bridge set for global roles. Expanding
-> the Tailwind bridge is allowed only when the new token has a documented
-> Tailwind/plain-CSS use, maps back to the same source as the AntD adapter, and
-> updates the theme contract tests.
+> Source map:
+> - `DESIGN.md`: canonical visual intent and semantic token meaning.
+> - `DESIGN/tokens.json`: machine-readable imported token source.
+> - `docs/ant-design/08-theme-architecture.md`: runtime binding contract.
+> - `src/theme`: implementation that projects values into AntD and Tailwind
+>   adapters.
 
-## Overview
+> Runtime policy: one project theme source is projected into two adapters. AntD
+> receives values through `ConfigProvider`, `theme.token`, and
+> `theme.components`; Tailwind receives the same resolved values through
+> `--app-*` bridge variables and Tailwind v4 `@theme inline`. Tailwind must not
+> become a second palette, radius scale, shadow scale, or font source.
 
-TALKPIK is a TOPIK (Korean proficiency) study tool. The product should feel
-**calm and focused**: long Korean passages must stay readable, and each screen
-should present **one clear primary action**. We deliberately avoid a loud,
-game-like or AI-gradient look (see `docs/ant-design/02-global-styles.md`).
+> Runtime exception: the raw Awesomic reference favors very soft 28-36px
+> surfaces, but TALKPIK runtime intentionally reduces app workspace radii to
+> 4-8px so study dashboards read as panels instead of bubbles. Keep this
+> exception documented in `docs/ant-design/08-theme-architecture.md`.
 
-What we want a user to remember: *"quiet, trustworthy, and it always tells me
-the next step."* That is why surfaces are neutral, elevation is light, motion is
-short, and color is used for meaning — never for decoration.
+> Do not paste raw CSS custom properties or raw Tailwind `@theme` values from
+> this file into app CSS. Normalize selected values through `src/theme`, then
+> project them into both the AntD adapter and the Tailwind v4 adapter. New
+> `--app-*` bridge variables require a documented source token, a real
+> Tailwind/plain-CSS use case, and matching theme contract tests.
 
-The values here define semantic product roles. Runtime implementation may bind
-those roles to stock AntD values or imported theme tokens, but the binding must
-happen through `src/theme` so AntD and Tailwind stay synchronized.
+**Theme:** light
 
-## Colors
+**Product intent:** TALKPIK is a calm, focused TOPIK study tool. Long Korean
+passages must stay readable, each task area should present one clear primary
+action, and the UI should avoid loud game-like or generic AI-gradient identity.
+Color carries meaning, never decoration; pair every color signal with text or
+icon.
 
-Color carries **meaning**, never decoration. Pair every color signal with text
-or an icon (never color alone).
+Awesomic operates on a white-and-near-black canvas with maximum roundness — 36px cards and pill-shaped containers dominate every surface, creating a soft, approachable tension against the very dark #09090b fills used for primary actions. The neutral scale is dense and graduated (gray-50 through gray-950), but only 3-4 steps appear in any single view, keeping contrast high without complexity. The single custom typeface, Cosmica, spans the entire system from 10px badge labels to 64px display headlines — its weight range (300–700) does all tonal work that color doesn't. Accent color is almost entirely absent from the UI layer: vivid orange (#ff5a00) surfaces only on YC badge labels, and the vivid pink (#fe45e2) is a single decorative card wash — the system's restraint makes these moments land harder.
 
-- Primary `{colors.primary}` — the single main action per task area (submit,
-  start, continue) and the selected navigation item.
-- Text `{colors.text}` — body copy and headings on neutral surfaces.
-- Text secondary `{colors.text-secondary}` — helper text, captions, timestamps.
-- Border `{colors.border}` — quiet separation between surfaces.
-- Layout background `{colors.bg-layout}` — the page/workspace canvas.
-- Container background `{colors.bg-container}` — cards, forms, and raised
-  surfaces sitting on the canvas.
+## Tokens — Colors
 
-Semantic states (success / warning / error / info) use Ant Design's stock
-semantic colors directly; they are not redefined here.
+| Name | Value | Token | Role |
+|------|-------|-------|------|
+| Obsidian | `#09090b` | `--color-obsidian` | Primary filled button backgrounds, display heading text on white surfaces — the system's anchor dark, nearly true black |
+| Ink | `#18181b` | `--color-ink` | Body text, nav text, badge text on light surfaces — one shade lighter than Obsidian, used for reading-weight text |
+| Graphite | `#3f3f46` | `--color-graphite` | Button borders, badge backgrounds (dark variant), border strokes across components — the dominant UI border tone |
+| Slate | `#52525b` | `--color-slate` | Mid-dark card backgrounds in dark sections, subtle icon fills |
+| Steel | `#71717a` | `--color-steel` | Muted body copy, helper text labels such as stat captions |
+| Ash | `#a1a1aa` | `--color-ash` | Subdued heading variants, placeholder text, decorative rule strokes |
+| Pebble | `#d4d4d8` | `--color-pebble` | Hairline dividers, inactive link backgrounds, lightest visible border on white cards |
+| Fog | `#ececee` | `--color-fog` | Card backgrounds (mid variant), badge borders, section dividers — the second surface step above the canvas |
+| Mist | `#f4f4f5` | `--color-mist` | Page canvas, light card backgrounds, tag/link hover surface — the dominant background tone |
+| Snow | `#ffffff` | `--color-snow` | White card surfaces, input backgrounds, button fill for outlined variant — the brightest surface in the stack |
+| Ember | `#ff5a00` | `--color-ember` | YC batch badge backgrounds — vivid orange signals startup-ecosystem provenance, appears only on badge-sized labels |
+| Orchid Flash | `#fe45e2` | `--color-orchid-flash` | Decorative card wash accent — single-use vivid pink on a large card background to punctuate the portfolio grid |
 
-**Dark appearance** is **derived from Ant Design's `darkAlgorithm`** — we do not
-hand-author a separate dark palette. For reference, the algorithm resolves these
-bridge values (verified by `tests/theme/theme-bridge-parity.test.ts`):
+## Tokens — Typography
 
-| role | light | dark (darkAlgorithm) |
-| --- | --- | --- |
-| primary | `#1677ff` | `#1668dc` |
-| text | `rgba(0,0,0,0.88)` | `rgba(255,255,255,0.85)` |
-| text-secondary | `rgba(0,0,0,0.65)` | `rgba(255,255,255,0.65)` |
-| border | `#d9d9d9` | `#424242` |
-| bg-layout | `#f5f5f5` | `#000000` |
-| bg-container | `#ffffff` | `#141414` |
+### Cosmica — The sole typeface across the entire system — every badge, button, nav link, heading, and body copy uses Cosmica. Its wide weight range means all typographic hierarchy is weight-driven rather than family-switching. At 56–64px the light-to-medium weights feel assertive without shouting; at 10–14px the medium-to-semibold weights keep small labels legible at compact density. · `--font-cosmica`
+- **Substitute:** DM Sans, Plus Jakarta Sans
+- **Weights:** 300, 400, 500, 600, 700
+- **Sizes:** 10px, 12px, 13px, 14px, 15px, 16px, 18px, 20px, 32px, 40px, 56px, 64px
+- **Line height:** 1.0–1.8 (tighter at display sizes ~1.0–1.12, looser at body sizes ~1.45–1.68)
+- **Letter spacing:** normal across all sizes — no tracked-out headlines or tight-tracked display text
+- **Role:** The sole typeface across the entire system — every badge, button, nav link, heading, and body copy uses Cosmica. Its wide weight range means all typographic hierarchy is weight-driven rather than family-switching. At 56–64px the light-to-medium weights feel assertive without shouting; at 10–14px the medium-to-semibold weights keep small labels legible at compact density.
 
-## Typography
+### Type Scale
 
-The UI font is the system stack (`{typography.body-md.fontFamily}`), applied to
-`body`, the Ant Design `fontFamily` token, and the app shell — one consistent
-font everywhere.
+| Role | Size | Line Height | Letter Spacing | Token |
+|------|------|-------------|----------------|-------|
+| caption | 10px | 1.8 | — | `--text-caption` |
+| body | 14px | 1.56 | — | `--text-body` |
+| body-lg | 16px | 1.5 | — | `--text-body-lg` |
+| subheading | 18px | 1.45 | — | `--text-subheading` |
+| heading-sm | 20px | 1.35 | — | `--text-heading-sm` |
+| heading | 32px | 1.28 | — | `--text-heading` |
+| heading-lg | 40px | 1.25 | — | `--text-heading-lg` |
+| display-sm | 56px | 1.12 | — | `--text-display-sm` |
+| display | 64px | 1 | — | `--text-display` |
 
-Base body size stays **14px** (Ant Design default). We do **not** raise the
-global font size to 16 and we do not use viewport-width font scaling — Korean
-text must keep a stable, predictable rhythm.
+## Tokens — Spacing & Shapes
 
-Hierarchy:
+**Base unit:** 4px
 
-- `title-page` (24px/600) — page heading (e.g. dashboard, login).
-- `title-lg` (20px/600) — major section titles.
-- `title-md` (16px/600) — card titles.
-- `body-md` (14px) — default body copy; line-height `1.5715` keeps long Korean
-  lines comfortable.
-- `body-sm` (12px) — captions, timestamps, helper text.
+**Density:** compact
 
-## Layout
+### Spacing Scale
 
-Spacing follows an **8-based rhythm** (`spacing.xs`=4 → `spacing.xl`=32). Use the
-scale, not arbitrary pixel values; magic numbers in inline styles are the debt
-this design system replaces.
+| Name | Value | Token |
+|------|-------|-------|
+| 4 | 4px | `--spacing-4` |
+| 8 | 8px | `--spacing-8` |
+| 12 | 12px | `--spacing-12` |
+| 16 | 16px | `--spacing-16` |
+| 20 | 20px | `--spacing-20` |
+| 24 | 24px | `--spacing-24` |
+| 28 | 28px | `--spacing-28` |
+| 32 | 32px | `--spacing-32` |
+| 36 | 36px | `--spacing-36` |
+| 40 | 40px | `--spacing-40` |
+| 48 | 48px | `--spacing-48` |
+| 64 | 64px | `--spacing-64` |
+| 68 | 68px | `--spacing-68` |
+| 80 | 80px | `--spacing-80` |
+| 120 | 120px | `--spacing-120` |
 
-- Page padding uses `{spacing.lg}` (24px) on the workspace content area.
-- Card internal padding uses `{spacing.lg}`; compact/list cards use
-  `{spacing.md}`.
-- Gaps between stacked sections use `{spacing.lg}`; gaps inside a group use
-  `{spacing.sm}`–`{spacing.md}`.
+### Border Radius
 
-Structure stays an app/workspace shell (stable sidebar + header + content), not
-a marketing hero. The primary task is visible without unnecessary scrolling.
+| Element | Value |
+|---------|-------|
+| hero | 48px |
+| pill | 10000px |
+| cards | 36px (primary) or 28px (compact) |
+| icons | 40px |
+| badges | 12px |
+| inputs | 14px |
+| buttons | 36px (pill) or 14-16px (rounded rect) |
 
-## Elevation & Depth
+### Shadows
 
-Elevation separates floating surfaces from the page — it is **not** decoration.
+| Name | Value | Token |
+|------|-------|-------|
+| subtle | `rgba(255, 255, 255, 0.5) 0px 0.5px 0px 0px inset, rgba(11...` | `--shadow-subtle` |
+| subtle-2 | `rgb(228, 228, 231) 0px 1px 0px 0px inset` | `--shadow-subtle-2` |
+| subtle-3 | `rgb(255, 255, 255) 0px 0.5px 0px 0px inset` | `--shadow-subtle-3` |
+| subtle-4 | `rgb(255, 255, 255) 0px -0.5px 0px 0px` | `--shadow-subtle-4` |
+| subtle-5 | `rgb(228, 228, 231) 0px -1px 0px 0px` | `--shadow-subtle-5` |
+| md | `rgba(0, 0, 0, 0.04) 0px 4px 12px 0px` | `--shadow-md` |
 
-- Page sections and study content sit flat on the canvas (no card-like shadow).
-- Only genuinely floating surfaces (dropdowns, popovers, drawers, modals) use the
-  elevated shadow (Ant Design `boxShadowSecondary`, exposed as
-  `--app-shadow-elevated`).
-- Buttons are **flat**: the default Ant Design primary/default/danger drop
-  shadows are removed via component tokens (calm, not game-like). See Components.
-- Avoid heavy shadows on long reading or writing content — they hurt readability.
+### Layout
 
-## Shapes
-
-Corner radius uses the `rounded` scale (Ant Design's stock radius family):
-
-- `{rounded.sm}` (4px) — tags, small controls.
-- `{rounded.md}` (6px) — buttons, inputs (Ant Design default `borderRadius`).
-- `{rounded.lg}` (8px) — cards and raised surfaces (`borderRadiusLG`).
+- **Page max-width:** 1200px
+- **Section gap:** 80px
+- **Card padding:** 24-28px
+- **Element gap:** 8px
 
 ## Components
 
-Components inherit the tokens above. Variants are listed as separate items.
+### Primary Pill Button
+**Role:** Main page CTA — Book demo, Get started, View all projects
 
-- `surface` / `card` — the shared raised surface (`.app-surface` / `.app-card`
-  hook). Container background, `{rounded.lg}` corners, `{spacing.lg}` padding.
-- `card-compact` — list/repeated items inside a section: `{rounded.md}`,
-  `{spacing.md}` padding. (Do not nest a full card inside a card; use a compact
-  row instead.)
-- `button-primary` — the one primary action per task area. Primary background,
-  container-color text, `{rounded.md}`, **no drop shadow**.
-- `button-primary-hover` — `{colors.primary-hover}`.
-- `button-primary-active` — `{colors.primary-active}`.
+Background #09090b, white text, Cosmica 14–16px weight 500, border-radius 36px, padding 12px 16px, 1.5px ring at rgb(44,46,52) with layered inset highlight and soft drop shadow. The multi-layer shadow gives the black pill a pressed-glass tactile quality unique to this system.
 
-Motion on interactive components is limited to `transform`/`opacity`, 150–300ms,
-and is suppressed under `prefers-reduced-motion`. No motion on exam/writing
-content.
+### Outlined White Button
+**Role:** Secondary actions, nav-adjacent controls
+
+Background #ffffff, text #3f3f46, border 1px solid #3f3f46, border-radius 36px, padding 20px. Same pill silhouette as primary but inverted — white fill against the dark border reads as a ghost on light backgrounds.
+
+### Rounded Dark Button
+**Role:** In-context actions within dark card panels
+
+Background #09090b, white text, border 1px solid rgba(255,255,255,0.2), border-radius 14–16px, padding 12–14px 16–18px. The softer radius (not pill) distinguishes panel-embedded actions from page-level CTAs.
+
+### Light Surface Card
+**Role:** Stat blocks, feature sections, testimonials on white canvas
+
+Background #ffffff, border-radius 36px, padding 28px horizontal and vertical, no box-shadow (flat). The extreme 36px radius makes white rectangles read as bubbles rather than panels.
+
+### Card Footer Actions
+**Role:** Card-level CTAs and navigation actions in TALKPIK app surfaces
+
+Use Ant Design `Card.actions` for card-level buttons instead of placing those buttons inside the card body. The body should hold content only; the footer/actions area owns the card's primary or secondary CTA. In TALKPIK runtime, keep this footer visually borderless by default: no top divider, no extra outline, and no nested mini-card treatment. Use one action group per card and keep the button aligned with the card content.
+
+### Card Header Title + Extra
+**Role:** Card titles, right-aligned status chips, and count metadata in TALKPIK app surfaces
+
+Use Ant Design `Card` `title` for the card title and `extra` for card-level status or count metadata. Do not hand-build a title/status row inside the card body when sibling cards should share alignment. The card body should start with the card's actual content, not a repeated header row.
+
+### Muted Surface Card
+**Role:** Secondary content blocks and social proof rows
+
+Background #ececee, border-radius 28px, padding 24px all sides, no shadow. Slightly smaller radius and darker fill than white cards creates a quiet depth step without elevation.
+
+### Dark Problem Panel
+**Role:** Contrast section listing bottleneck points (e.g. 'We solve the bottlenecks' section)
+
+Background #09090b or #222222, border-radius 28–36px, white and #a1a1aa text. Keyword phrases use Cosmica weight 600–700 while lead-in words use weight 300–400, creating inline weight contrast within single lines.
+
+### Portfolio Tile Card
+**Role:** Work showcase grid — full-bleed image with category badges overlaid
+
+Background is the full-bleed project image or a vivid accent fill (#fe45e2 for decorative tiles). Border-radius 36px clipping the image. Badge labels float over the image at bottom-left, using the transparent dark badge variant.
+
+### Dark Overlay Badge
+**Role:** Category/skill tags on dark or image backgrounds
+
+Background transparent, text #ffffff, border 1px solid rgba(255,255,255,0.3–0.5), border-radius 12px, padding 4px 8px, Cosmica 12px weight 500.
+
+### Dark Filled Badge
+**Role:** Skill/service tags on light backgrounds
+
+Background #3f3f46, text #fafafa, border-radius 12px, padding 4px 8px, Cosmica 12px weight 500.
+
+### Ember Badge (YC Marker)
+**Role:** Y Combinator batch identifier on project cards and testimonials
+
+Background #ff5a00, text #ffffff, border-radius 12px, padding 4px 8px, Cosmica 12px weight 600. Its use is exclusive to YC affiliation labels — never repurpose for generic status.
+
+### Email Input + CTA Row
+**Role:** Hero email capture form
+
+Input: background #ffffff, text #333333, border transparent, border-radius 14px, padding 12px 12px 12px 16px, Cosmica 14px weight 400, placeholder text in #a1a1aa. Paired inline with a Primary Pill Button (Book demo) in a flex row.
+
+### Announcement Banner
+**Role:** Full-width notification strip above the nav
+
+Background #222222 or near-black, rounded-rect pill shape at border-radius 48px, text white Cosmica 14px, with a ghost inline CTA link on the right. Uses backdrop-filter blur for a frosted dark treatment.
+
+### Stat Number Block
+**Role:** Key metric highlights (20 000+, 4 000+, 70%, 40%, 60%)
+
+Large numeral at 40–56px Cosmica weight 700 in #09090b or #18181b. Descriptor label below at 12–14px weight 400 in #71717a. No card border — sits directly on section background for raw typographic emphasis.
 
 ## Do's and Don'ts
 
-- **Do:** prefer Ant Design tokens and components; keep one primary action per
-  task area; use a layout-matched skeleton for loads over ~300ms; keep motion to
-  `transform`/`opacity` at 150–300ms; respect `prefers-reduced-motion`; pair
-  color with text/icon.
-- **Don't:** scatter inline magic numbers; signal meaning with color alone; nest
-  a card inside a card; animate writing/exam content; use large page-transition
-  motion; hand-author a separate dark palette (use `darkAlgorithm`).
+### Do
+- Put card titles and right-side status/count metadata in Ant Design `Card` `title` and `extra` when the information describes the whole card.
+- Put card-level CTA buttons in the Ant Design `Card.actions` footer area, not in the card body. Keep the footer action area borderless by default.
+- Treat 28-36px radii as raw Awesomic reference values for marketing/reference surfaces; use the documented TALKPIK runtime radius exception (4-8px workspace cards/panels) for study dashboards and operational UI.
+- Use Ant Design components and tokens first; treat Tailwind as a layout utility and `--app-*` bridge consumer.
+- Keep one clear primary action per task area, and pair every color signal with text or icon.
+- Apply the multi-layer button shadow (rgba(255,255,255,0.5) inset + rgba(117,123,133,0.4) inset + rgb(44,46,52) 1.5px ring + rgba(0,0,0,0.14) drop) only on the primary #09090b pill button — it defines the CTA's physicality.
+- Reserve Ember (#ff5a00) exclusively for YC batch badges and Orchid Flash (#fe45e2) exclusively for single decorative card washes — these vivid colors derive their impact from appearing nowhere else.
+- Use Cosmica weight 300–400 for lead-in words and weight 600–700 for the key noun/verb in the same line to create inline tonal contrast without changing size.
+- Maintain a 4-step neutral surface stack (Mist → Snow → Fog → Obsidian) per page — don't introduce more than four background tones in a single section view.
+- Apply border-radius 12px to all badge and tag components regardless of content length — pill tags use 10000px only for navigation-level controls.
+- Use backdrop-filter blur (5–17px range) on overlaid panels and the announcement banner to create depth without hard shadows on light surfaces.
 
-## Appendix — Token ↔ Runtime binding
+### Don't
+- Don't create custom card header rows inside the card body for whole-card title/status alignment.
+- Don't place card-level CTA buttons inside card body content unless the action is inline with a form field or a sentence-level control.
+- Don't use any color other than #09090b/#222222 for filled button backgrounds — the system has no chromatic CTA color; dark filled + white text is the only primary action pattern.
+- Don't apply the raw 28-36px Awesomic radius scale to TALKPIK workspace cards when the runtime contract specifies the smaller app radius.
+- Don't paste raw Tailwind export values into app CSS; normalize through `src/theme` and expose only approved `@theme inline` aliases.
+- Don't create a separate Tailwind palette, radius scale, shadow scale, or font source.
+- Don't introduce new typefaces — Cosmica's weight range handles all hierarchy; adding a second family destroys the single-voice typographic system.
+- Don't apply drop shadows to cards — card depth is expressed through background color steps (#ffffff vs #ececee vs #09090b), not elevation shadows.
+- Don't use #ff5a00 or #fe45e2 for UI states, hover effects, or repeated interface elements — their power is scarcity; repeated use collapses their impact.
+- Don't use letter-spacing overrides on headlines — Cosmica's normal tracking at large sizes is a deliberate choice; tracked-out display text would clash with the type system.
+- Don't place text directly on the vivid Orchid Flash (#fe45e2) card background at body size — it is a decorative wash only; any overlaid text must use display weight white.
 
-Values are normalized in `src/theme` and projected into both runtime adapters:
-AntD `ThemeConfig` and the Tailwind `--app-*` bridge. Parity between bridge
-values and resolved theme values is guarded by `tests/theme/*`.
+## Surfaces
 
-The rows below are the current base bridge set, not a permanent maximum. Add a
-new `--app-*` variable only with a documented source token, a Tailwind/plain-CSS
-use case, and matching test updates.
+| Level | Name | Value | Purpose |
+|-------|------|-------|---------|
+| 1 | Canvas | `#f4f4f5` | Page background and default section fill |
+| 2 | Card White | `#ffffff` | Primary card surface on the canvas |
+| 3 | Card Muted | `#ececee` | Secondary card or tag surface, slightly elevated feel against white |
+| 4 | Dark Surface | `#09090b` | Dark card sections, filled button backgrounds, problem-statement panels |
 
-| DESIGN.md token | class | antdPath | sourceFile | current bridge var |
-| --- | --- | --- | --- | --- |
-| `colors.primary` | antd.global | `theme.token.colorPrimary` | AntD v6.4.3 default (unchanged) | `--app-color-primary` |
-| `colors.bg-layout` | antd.global | `theme.token.colorBgLayout` | AntD default / algorithm | `--app-color-bg-layout` |
-| `colors.bg-container` | antd.global | `theme.token.colorBgContainer` | AntD default / algorithm | `--app-color-bg-container` |
-| `colors.text` | antd.global | `theme.token.colorText` | AntD default / algorithm | `--app-color-text` |
-| `colors.text-secondary` | antd.global | `theme.token.colorTextSecondary` | AntD default / algorithm | `--app-color-text-secondary` |
-| `colors.border` | antd.global | `theme.token.colorBorder` | AntD default / algorithm | `--app-color-border` |
-| `rounded.md` | antd.global | `theme.token.borderRadius` | AntD default (unchanged) | `--app-radius` |
-| `typography.body-md.fontFamily` | antd.global | `theme.token.fontFamily` | `src/theme/global/shared-seed.ts` (font only) | `--app-font-family` |
-| (elevation) | antd.global | `theme.token.boxShadowSecondary` | AntD default / algorithm | `--app-shadow-elevated` |
-| `components.card` | antd.component | `theme.components.Card` | `src/theme/components/shared.ts` | — |
-| `components.button-primary` | antd.component | `theme.components.Button` | `src/theme/components/shared.ts` | — |
-| `spacing.*` | layout-primitive | Tailwind adapter / layout CSS | `src/theme` or documented layout primitive | optional bridge expansion |
+## Elevation
 
-> Rule: every bridge value must match `src/theme`. Do not paste raw values from
-> `DESIGN/DESIGN.md` or Tailwind examples into app CSS. AntD components remain
-> the design component layer; Tailwind consumes theme values only through the
-> adapter.
+- **Primary Action Button:** `rgba(255,255,255,0.5) 0px 0.5px 0px 0px inset, rgba(117,123,133,0.4) 0px 9px 14px -5px inset, rgb(44,46,52) 0px 0px 0px 1.5px, rgba(0,0,0,0.14) 0px 4px 6px 0px`
+- **Card (inset bottom border):** `rgb(228,228,231) 0px 1px 0px 0px inset`
+- **Card (subtle drop shadow):** `rgba(0,0,0,0.04) 0px 4px 12px 0px`
+
+## Imagery
+
+Awesomic uses full-bleed product and motion screenshots as portfolio tile fills — the work IS the image, with no lifestyle photography or human-context staging. Tiles are clipped to 36px rounded rectangles, giving raw screen captures a contained, curated feel. Video production tiles use dark cinematic stills (moody red neon on black) cropped tight to the 36px rounded container. Illustration and graphic-design work tiles show vibrant multi-color client deliverables framed inside the same tile shape, creating a gallery-wall effect. Icons throughout the UI are minimal, monochrome, single-stroke or flat fills at ~20px, never decorative. The system is imagery-dependent for the portfolio section but typography-dominant for all informational and conversion sections — roughly 60% text, 40% imagery across the full page.
+
+## Layout
+
+Max-width approximately 1200px, centered on the canvas (#f4f4f5). The hero is a 2-column split: large display headline left (weight 700, 56–64px) with an accented cycling word in a lighter tonal color, and a compact right column with subtext, email input, and CTA. Below the hero, a horizontal logo-strip scrolls client logos at full bleed. Subsequent sections alternate: white-canvas text+card layouts, then a full-width dark panel (#09090b) for problem-statement copy, back to a light canvas for social proof and stat blocks. The portfolio grid is a horizontal scroll row of tall rounded tiles rather than a static grid. Feature/benefit cards use a 2-3 column grid at 36px-radius white cards on the Mist canvas. Section vertical gaps are 80px; internal card padding 24–28px. Navigation is a sticky top bar at ~40px height with inline text links and a black pill 'Book demo' button at the right edge.
+
+## Agent Prompt Guide
+
+**Quick Color Reference**
+- text (primary): #09090b / #18181b
+- text (muted): #71717a
+- background (canvas): #f4f4f5
+- card surface: #ffffff
+- border / divider: #ececee / #3f3f46
+- accent (badge only): #ff5a00 (YC), #fe45e2 (decorative card)
+- primary action: #09090b (filled action)
+
+**Example Component Prompts**
+
+1. **Hero Headline Section**: White or Mist (#f4f4f5) background. Left column: display headline at 56px Cosmica weight 700, color #09090b, normal letter-spacing, line-height 1.12. One word in the headline renders in #a1a1aa at the same size/weight to create cycling accent. Right column: body text at 16px Cosmica weight 400, color #18181b; email input (background #ffffff, border transparent, radius 14px, padding 12px 16px, placeholder #a1a1aa) paired with a pill button (background #09090b, text #ffffff, radius 36px, padding 12px 16px, Cosmica 14px weight 500).
+
+2. **Portfolio Tile**: 36px border-radius container clipping a full-bleed project screenshot. Overlay at bottom-left: project title in Cosmica 20px weight 600 white; category badges below (transparent background, white text, border rgba(255,255,255,0.3), radius 12px, padding 4px 8px, Cosmica 12px weight 500). One tile per grid row may use #fe45e2 as a solid card background instead of an image.
+
+3. **Dark Problem Panel**: Background #09090b, border-radius 36px, padding 28px. Bullet rows in Cosmica 18px, line-height 1.45: lead-in word (e.g. 'Forget about') in #a1a1aa weight 400, followed by key phrase in #ffffff weight 600. Each row preceded by a circle icon in #3f3f46.
+
+4. **Stat Block Row**: On Mist (#f4f4f5) background, no card border. Stat numeral at 40px Cosmica weight 700 color #09090b. Descriptor label at 13px Cosmica weight 400 color #71717a, line-height 1.56, placed directly beneath the numeral with 4px gap.
+
+5. **Skill/Service Badge (dark variant)**: Background #3f3f46, text #fafafa, border-radius 12px, padding 4px 8px, Cosmica 12px weight 500. For YC labels substitute background #ff5a00, text #ffffff.
+
+## Motion Philosophy
+
+Awesomic uses animation expressively but purposefully. Three named scrolling loops (reverseloop, scroll-text, scroll-text-cta) drive the horizontal logo ticker and portfolio scroll strips at a slow 8–50s linear duration — continuous motion implies an always-on, high-volume output. UI micro-interactions (hover states, accordion expand) use 0.2–0.35s ease transitions on transform and opacity only. The one expressive easing (cubic-bezier 0.175, 0.885, 0.32, 1.275 — a mild overshoot spring) is reserved for entrance animations. Never animate color or background-color — only positional and opacity transforms.
+
+## Similar Brands
+
+- **Designjoy** — Same subscription-design-service model with dark filled pill buttons and portfolio-tile-as-hero grid layout
+- **Superside** — Full-bleed portfolio tiles, single-typeface system, and dark/light alternating section bands for a design marketplace
+- **Arc.dev** — Near-black primary action buttons on white canvas with a graduated gray neutral scale and rounded card containers
+- **Contra** — Talent marketplace with portfolio card grids using extreme rounded corners and minimal accent color against achromatic surfaces
+- **Framer** — Custom typeface used at all sizes for full system consistency, large rounded cards, and dark filled CTA buttons on a light page
+
+## Quick Start
+
+### CSS Custom Properties
+
+```css
+:root {
+  /* Colors */
+  --color-obsidian: #09090b;
+  --color-ink: #18181b;
+  --color-graphite: #3f3f46;
+  --color-slate: #52525b;
+  --color-steel: #71717a;
+  --color-ash: #a1a1aa;
+  --color-pebble: #d4d4d8;
+  --color-fog: #ececee;
+  --color-mist: #f4f4f5;
+  --color-snow: #ffffff;
+  --color-ember: #ff5a00;
+  --color-orchid-flash: #fe45e2;
+
+  /* Typography — Font Families */
+  --font-cosmica: 'Cosmica', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  /* Typography — Scale */
+  --text-caption: 10px;
+  --leading-caption: 1.8;
+  --text-body: 14px;
+  --leading-body: 1.56;
+  --text-body-lg: 16px;
+  --leading-body-lg: 1.5;
+  --text-subheading: 18px;
+  --leading-subheading: 1.45;
+  --text-heading-sm: 20px;
+  --leading-heading-sm: 1.35;
+  --text-heading: 32px;
+  --leading-heading: 1.28;
+  --text-heading-lg: 40px;
+  --leading-heading-lg: 1.25;
+  --text-display-sm: 56px;
+  --leading-display-sm: 1.12;
+  --text-display: 64px;
+  --leading-display: 1;
+
+  /* Typography — Weights */
+  --font-weight-light: 300;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Spacing */
+  --spacing-unit: 4px;
+  --spacing-4: 4px;
+  --spacing-8: 8px;
+  --spacing-12: 12px;
+  --spacing-16: 16px;
+  --spacing-20: 20px;
+  --spacing-24: 24px;
+  --spacing-28: 28px;
+  --spacing-32: 32px;
+  --spacing-36: 36px;
+  --spacing-40: 40px;
+  --spacing-48: 48px;
+  --spacing-64: 64px;
+  --spacing-68: 68px;
+  --spacing-80: 80px;
+  --spacing-120: 120px;
+
+  /* Layout */
+  --page-max-width: 1200px;
+  --section-gap: 80px;
+  --card-padding: 24-28px;
+  --element-gap: 8px;
+
+  /* Border Radius */
+  --radius-md: 6px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-2xl-2: 20px;
+  --radius-3xl: 24px;
+  --radius-3xl-2: 28px;
+  --radius-3xl-3: 36px;
+  --radius-3xl-4: 40px;
+  --radius-full: 48px;
+  --radius-full-2: 56px;
+  --radius-full-3: 64px;
+  --radius-full-4: 80px;
+  --radius-full-5: 1000px;
+  --radius-full-6: 10000px;
+
+  /* Named Radii */
+  --radius-hero: 48px;
+  --radius-pill: 10000px;
+  --radius-cards: 36px (primary) or 28px (compact);
+  --radius-icons: 40px;
+  --radius-badges: 12px;
+  --radius-inputs: 14px;
+  --radius-buttons: 36px (pill) or 14-16px (rounded rect);
+
+  /* Shadows */
+  --shadow-subtle: rgba(255, 255, 255, 0.5) 0px 0.5px 0px 0px inset, rgba(117, 123, 133, 0.4) 0px 9px 14px -5px inset, rgb(44, 46, 52) 0px 0px 0px 1.5px, rgba(0, 0, 0, 0.14) 0px 4px 6px 0px;
+  --shadow-subtle-2: rgb(228, 228, 231) 0px 1px 0px 0px inset;
+  --shadow-subtle-3: rgb(255, 255, 255) 0px 0.5px 0px 0px inset;
+  --shadow-subtle-4: rgb(255, 255, 255) 0px -0.5px 0px 0px;
+  --shadow-subtle-5: rgb(228, 228, 231) 0px -1px 0px 0px;
+  --shadow-md: rgba(0, 0, 0, 0.04) 0px 4px 12px 0px;
+
+  /* Surfaces */
+  --surface-canvas: #f4f4f5;
+  --surface-card-white: #ffffff;
+  --surface-card-muted: #ececee;
+  --surface-dark-surface: #09090b;
+}
+```
+
+### Tailwind v4 — Raw Export Reference Only
+
+The block below shows the raw exported Tailwind token shape. In the TALKPIK app,
+equivalent Tailwind utilities must be produced from `src/theme` through
+`@theme inline` aliases that read resolved `--app-*` variables. If a token below
+is promoted into the app bridge, update `src/theme/tokens/*`,
+`src/theme/tailwind-bridge.ts`, `src/styles/global.css`, and `tests/theme/*`
+together.
+
+```css
+@theme {
+  /* Colors */
+  --color-obsidian: #09090b;
+  --color-ink: #18181b;
+  --color-graphite: #3f3f46;
+  --color-slate: #52525b;
+  --color-steel: #71717a;
+  --color-ash: #a1a1aa;
+  --color-pebble: #d4d4d8;
+  --color-fog: #ececee;
+  --color-mist: #f4f4f5;
+  --color-snow: #ffffff;
+  --color-ember: #ff5a00;
+  --color-orchid-flash: #fe45e2;
+
+  /* Typography */
+  --font-cosmica: 'Cosmica', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  /* Typography — Scale */
+  --text-caption: 10px;
+  --leading-caption: 1.8;
+  --text-body: 14px;
+  --leading-body: 1.56;
+  --text-body-lg: 16px;
+  --leading-body-lg: 1.5;
+  --text-subheading: 18px;
+  --leading-subheading: 1.45;
+  --text-heading-sm: 20px;
+  --leading-heading-sm: 1.35;
+  --text-heading: 32px;
+  --leading-heading: 1.28;
+  --text-heading-lg: 40px;
+  --leading-heading-lg: 1.25;
+  --text-display-sm: 56px;
+  --leading-display-sm: 1.12;
+  --text-display: 64px;
+  --leading-display: 1;
+
+  /* Spacing */
+  --spacing-4: 4px;
+  --spacing-8: 8px;
+  --spacing-12: 12px;
+  --spacing-16: 16px;
+  --spacing-20: 20px;
+  --spacing-24: 24px;
+  --spacing-28: 28px;
+  --spacing-32: 32px;
+  --spacing-36: 36px;
+  --spacing-40: 40px;
+  --spacing-48: 48px;
+  --spacing-64: 64px;
+  --spacing-68: 68px;
+  --spacing-80: 80px;
+  --spacing-120: 120px;
+
+  /* Border Radius */
+  --radius-md: 6px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-2xl-2: 20px;
+  --radius-3xl: 24px;
+  --radius-3xl-2: 28px;
+  --radius-3xl-3: 36px;
+  --radius-3xl-4: 40px;
+  --radius-full: 48px;
+  --radius-full-2: 56px;
+  --radius-full-3: 64px;
+  --radius-full-4: 80px;
+  --radius-full-5: 1000px;
+  --radius-full-6: 10000px;
+
+  /* Shadows */
+  --shadow-subtle: rgba(255, 255, 255, 0.5) 0px 0.5px 0px 0px inset, rgba(117, 123, 133, 0.4) 0px 9px 14px -5px inset, rgb(44, 46, 52) 0px 0px 0px 1.5px, rgba(0, 0, 0, 0.14) 0px 4px 6px 0px;
+  --shadow-subtle-2: rgb(228, 228, 231) 0px 1px 0px 0px inset;
+  --shadow-subtle-3: rgb(255, 255, 255) 0px 0.5px 0px 0px inset;
+  --shadow-subtle-4: rgb(255, 255, 255) 0px -0.5px 0px 0px;
+  --shadow-subtle-5: rgb(228, 228, 231) 0px -1px 0px 0px;
+  --shadow-md: rgba(0, 0, 0, 0.04) 0px 4px 12px 0px;
+}
+```

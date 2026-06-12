@@ -1,7 +1,8 @@
 /**
  * Layout spacing scale (px) for inline styles on user-facing surfaces.
  *
- * Mirrors DESIGN.md `spacing` (sm/md/lg) and AntD's margin token ladder
+ * Mirrors the runtime spacing rhythm documented in DESIGN.md and
+ * docs/ant-design/08-theme-architecture.md, plus AntD's margin token ladder
  * (marginXS≈8, margin=16, marginLG=24, marginXL=32). Use these NAMED tokens in
  * inline styles instead of magic numbers — keeps the M4 inline-style gate green
  * (identifier values are exempt) and centralizes the spacing rhythm. Plain

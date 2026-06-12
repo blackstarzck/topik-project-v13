@@ -1,5 +1,10 @@
 # 사용자 화면 디자인 개선 — 파일럿 실행 계획
 
+> **Historical note (2026-06-12):** This is a 2026-06-04 pilot execution plan.
+> Current canonical visual source is root `DESIGN.md`; the `DESIGN/` folder
+> remains for token and generated/reference assets. Keep body references as
+> historical unless this plan is reactivated.
+
 > **현재성 주의:** 이 문서는 2026-06-04 파일럿 실행 계획 기록이다.
 > 현재 theme source of truth, AntD adapter, Tailwind adapter, `--app-*`
 > bridge 확장 규칙은 `docs/ant-design/08-theme-architecture.md`와

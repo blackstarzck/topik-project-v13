@@ -22,15 +22,15 @@ For TALKPIK theme work, read the project sources in this order:
 
 1. `docs/ant-design/08-theme-architecture.md` defines how theme values are
    bound into runtime adapters.
-2. `DESIGN.md` defines TALKPIK visual intent, semantic roles, and product-level
-   token meaning.
+2. `DESIGN.md` defines TALKPIK visual intent, semantic roles, product-level
+   token meaning, and selected Awesomic reference guidance.
 3. `DESIGN/tokens.json` is the machine-readable source for imported/normalized
    design tokens when a preset is bound from `DESIGN/`.
-4. `DESIGN/DESIGN.md` is an external style reference/export artifact unless a
-   section is explicitly promoted by `DESIGN.md` or `08-theme-architecture.md`.
-   Do not paste its raw Tailwind `@theme` values into app code.
-5. `src/theme/` is the implementation of the selected theme source. It must
+4. `src/theme/` is the implementation of the selected theme source. It must
    project the same values into the AntD adapter and the Tailwind adapter.
+5. `DESIGN/theme.css` and `DESIGN/variables.css` are generated/reference assets.
+   Do not paste raw Tailwind `@theme` values from `DESIGN/` into app code;
+   normalize selected values through `src/theme` first.
 
 ## Official Design Menu Map
 
