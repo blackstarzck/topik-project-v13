@@ -138,12 +138,19 @@ function normalizeWritingProblemRow(
   });
 }
 
+// problems.id는 uuid 컬럼 — 형식이 아닌 값을 .eq("id", …)에 넘기면 PostgREST가
+// uuid 캐스트 오류(22P02)로 500을 돌려줘 서버 에러 바운더리에 도달한다 (D-3,
+// QA 2026-06-12). 형식 검증으로 "존재하지 않는 문제"와 같은 null 경로로 보낸다.
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function getWritingProblem(
   questionNo: number,
   problemId: string | undefined,
   createClient: ClientFactory = createSupabaseServerClient,
 ): Promise<WritingProblem | null> {
   if (!isQuestionNo(questionNo)) return null;
+  if (problemId && !UUID_PATTERN.test(problemId)) return null;
   const supabase = await createClient();
   const runQuery = async (withLifecycle: boolean) => {
     let query = supabase

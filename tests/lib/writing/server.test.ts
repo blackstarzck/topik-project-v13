@@ -19,8 +19,14 @@ type Call =
   | { type: "limit"; count: number }
   | { type: "order"; column: string };
 
+// 실제 problems.id는 uuid — getWritingProblem의 D-3 uuid 형식 가드를 통과해야
+// 하므로 fixture id도 uuid 형식을 쓴다 (이전 "incomplete-51" 류 문자열은 가드에
+// 걸려 explicit-id 케이스가 무의미해진다).
+const INCOMPLETE_51_ID = "11111111-1111-4111-8111-111111111151";
+const COMPLETE_51_ID = "22222222-2222-4222-8222-222222222251";
+
 const incomplete51: QueryRow = {
-  id: "incomplete-51",
+  id: INCOMPLETE_51_ID,
   title: "Incomplete 51",
   prompt: "Prompt without blank markers or blank metadata.",
   question_no: 51,
@@ -32,7 +38,7 @@ const incomplete51: QueryRow = {
 };
 
 const complete51: QueryRow = {
-  id: "complete-51",
+  id: COMPLETE_51_ID,
   title: "Complete 51",
   prompt: "Prompt whose blanks are represented in materials.",
   question_no: 51,
@@ -95,7 +101,7 @@ describe("getWritingProblem", () => {
       async () => client as never,
     );
 
-    expect(problem?.id).toBe("complete-51");
+    expect(problem?.id).toBe(COMPLETE_51_ID);
     expect(problem?.submitBlockedReason).toBeNull();
     expect(calls).toContainEqual({ type: "limit", count: 25 });
   });
@@ -105,17 +111,40 @@ describe("getWritingProblem", () => {
 
     const problem = await getWritingProblem(
       51,
-      "incomplete-51",
+      INCOMPLETE_51_ID,
       async () => client as never,
     );
 
-    expect(problem?.id).toBe("incomplete-51");
+    expect(problem?.id).toBe(INCOMPLETE_51_ID);
     expect(problem?.submitBlockedReason).toBe("problem_data_incomplete");
     expect(calls).toContainEqual({
       type: "eq",
       column: "id",
-      value: "incomplete-51",
+      value: INCOMPLETE_51_ID,
     });
     expect(calls).toContainEqual({ type: "limit", count: 1 });
+  });
+
+  it("returns null for a malformed (non-uuid) problem id without querying (D-3)", async () => {
+    const { client, calls } = makeClient([incomplete51, complete51]);
+
+    const problem = await getWritingProblem(
+      51,
+      "잘못된id",
+      async () => client as never,
+    );
+
+    expect(problem).toBeNull();
+    // uuid 형식 가드가 DB 조회 전에 끊어야 한다 — 쿼리 호출 0건.
+    expect(calls).toEqual([]);
+  });
+
+  it("treats an empty problem id as the default selection, not malformed", async () => {
+    const { client, calls } = makeClient([incomplete51, complete51]);
+
+    const problem = await getWritingProblem(51, "", async () => client as never);
+
+    expect(problem?.id).toBe(COMPLETE_51_ID);
+    expect(calls).toContainEqual({ type: "limit", count: 25 });
   });
 });
