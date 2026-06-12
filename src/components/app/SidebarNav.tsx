@@ -253,24 +253,26 @@ export function SidebarNav({ role, planLabel, onNavigate }: Props) {
         <span>{tApp("brand")}</span>
         <strong>AI</strong>
       </div>
-      <ConfigProvider theme={sidebarMenuTheme}>
-        <Menu
-          mode="inline"
-          openKeys={openKeys}
-          selectedKeys={[selectedKey]}
-          onOpenChange={(nextOpenKeys) => {
-            setOpenKeys(nextOpenKeys);
-          }}
-          onClick={({ key }) => {
-            if (typeof key === "string" && key.startsWith("/")) {
-              router.push(key);
-              onNavigate?.();
-            }
-          }}
-          items={items}
-          className="app-sidebar-menu"
-        />
-      </ConfigProvider>
+      <div className="app-sidebar-menu-scroll">
+        <ConfigProvider theme={sidebarMenuTheme}>
+          <Menu
+            mode="inline"
+            openKeys={openKeys}
+            selectedKeys={[selectedKey]}
+            onOpenChange={(nextOpenKeys) => {
+              setOpenKeys(nextOpenKeys);
+            }}
+            onClick={({ key }) => {
+              if (typeof key === "string" && key.startsWith("/")) {
+                router.push(key);
+                onNavigate?.();
+              }
+            }}
+            items={items}
+            className="app-sidebar-menu"
+          />
+        </ConfigProvider>
+      </div>
       <div className="app-sidebar-nudge">
         <TextLike strong>{tApp("sidebarNudgeTitle")}</TextLike>
         <span>{tApp("sidebarNudgeBody")}</span>

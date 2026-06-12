@@ -45,7 +45,17 @@ describe("WorkspaceShell", () => {
     expect(container.querySelector(".app-workspace-layout")).toBeTruthy();
     expect(container.querySelector(".app-workspace-sider")).toBeTruthy();
     expect(container.querySelector(".app-sidebar-shell")).toBeTruthy();
+    expect(container.querySelector(".app-sidebar-menu-scroll")).toBeTruthy();
     expect(container.querySelector(".app-sidebar-menu")).toBeTruthy();
+    expect(
+      container.querySelector(".app-sidebar-menu-scroll .app-sidebar-menu"),
+    ).toBeTruthy();
+    expect(
+      container.querySelector(".app-sidebar-menu-scroll .app-sidebar-nudge"),
+    ).toBeNull();
+    expect(
+      container.querySelector(".app-sidebar-menu-scroll .app-sidebar-logout"),
+    ).toBeNull();
     expect(container.querySelector(".app-workspace-content")).toBeTruthy();
     expect(container.querySelector(".app-header")).toBeNull();
     expect(screen.getByTestId("workspace-child")).toBeTruthy();
