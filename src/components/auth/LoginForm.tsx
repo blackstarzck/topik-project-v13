@@ -158,24 +158,35 @@ export function LoginForm({
 
   async function handleMagicLink(values: MagicLinkFields) {
     setSubmitting(true);
-    const supabase = createSupabaseBrowserClient();
-    const { error } = await supabase.auth.signInWithOtp({
-      email: values.email,
-      options: {
-        emailRedirectTo: buildAuthRedirectUrl("/auth/callback?next=/dashboard"),
-      },
-    });
-    setSubmitting(false);
-    if (error) {
-      const reason = mapSupabaseErrorCode(error.code);
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const { error } = await supabase.auth.signInWithOtp({
+        email: values.email,
+        options: {
+          emailRedirectTo: buildAuthRedirectUrl(
+            "/auth/callback?next=/dashboard",
+          ),
+        },
+      });
+      if (error) {
+        const reason = mapSupabaseErrorCode(error.code);
+        message.error(
+          t("magicLinkSendFailed", {
+            message: te(`${reason}.message` as Parameters<typeof te>[0]),
+          }),
+        );
+        return;
+      }
+      setMagicLinkSent(values.email);
+    } catch {
+      // D-2 (QA 2026-06-12): buildAuthRedirectUrl은 NEXT_PUBLIC_SITE_URL 부재
+      // 시 동기 throw — catch 없이는 unhandled rejection으로 버튼이 영구 로딩.
       message.error(
-        t("magicLinkSendFailed", {
-          message: te(`${reason}.message` as Parameters<typeof te>[0]),
-        }),
+        t("magicLinkSendFailed", { message: te("unknown.message") }),
       );
-      return;
+    } finally {
+      setSubmitting(false);
     }
-    setMagicLinkSent(values.email);
   }
 
   async function handleGoogleLogin() {

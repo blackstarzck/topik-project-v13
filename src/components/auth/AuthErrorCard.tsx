@@ -136,31 +136,39 @@ export function AuthErrorCard() {
       return;
     }
     setResending(true);
-    const supabase = createSupabaseBrowserClient();
-    const { error } = await supabase.auth.resend({
-      type: "signup",
-      email: trimmed,
-      options: {
-        emailRedirectTo: buildAuthRedirectUrl("/auth/callback?next=/onboarding/learning-goal"),
-      },
-    });
-    setResending(false);
-    if (error) {
-      const code = mapSupabaseErrorCode(error.code);
-      if (code === "over_email_send_rate_limit" || code === "over_request_rate_limit") {
-        setRemaining(60);
-        message.error(t("resendRateLimited"));
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: trimmed,
+        options: {
+          emailRedirectTo: buildAuthRedirectUrl(
+            "/auth/callback?next=/onboarding/learning-goal",
+          ),
+        },
+      });
+      if (error) {
+        const code = mapSupabaseErrorCode(error.code);
+        if (code === "over_email_send_rate_limit" || code === "over_request_rate_limit") {
+          setRemaining(60);
+          message.error(t("resendRateLimited"));
+          return;
+        }
+        message.error(
+          t("resendFailed", {
+            message: t(`${code}.message` as Parameters<typeof t>[0]),
+          }),
+        );
         return;
       }
-      const failedReason = mapSupabaseErrorCode(error.code);
-      message.error(
-        t("resendFailed", {
-          message: t(`${failedReason}.message` as Parameters<typeof t>[0]),
-        }),
-      );
-      return;
+      message.success(t("resendSuccess"));
+    } catch {
+      // D-2 (QA 2026-06-12): buildAuthRedirectUrl은 NEXT_PUBLIC_SITE_URL 부재
+      // 시 동기 throw — catch 없이는 unhandled rejection으로 버튼이 영구 로딩.
+      message.error(t("resendFailed", { message: t("unknown.message") }));
+    } finally {
+      setResending(false);
     }
-    message.success(t("resendSuccess"));
   }
 
   function handlePrimaryClick(cta: AuthErrorCta) {

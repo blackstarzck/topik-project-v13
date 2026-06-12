@@ -59,30 +59,40 @@ export function PasswordResetRequestForm() {
   async function handleSubmit(values: Fields) {
     if (cooldown.remaining > 0) return;
     setSubmitting(true);
-    const supabase = createSupabaseBrowserClient();
-    const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
-      redirectTo: buildAuthRedirectUrl("/password-reset/confirm"),
-    });
-    setSubmitting(false);
-    if (error) {
-      const code = mapSupabaseErrorCode(error.code);
-      if (
-        code === "over_email_send_rate_limit" ||
-        code === "over_request_rate_limit"
-      ) {
-        cooldown.start();
-        message.error(t("rateLimited"));
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        values.email,
+        {
+          redirectTo: buildAuthRedirectUrl("/password-reset/confirm"),
+        },
+      );
+      if (error) {
+        const code = mapSupabaseErrorCode(error.code);
+        if (
+          code === "over_email_send_rate_limit" ||
+          code === "over_request_rate_limit"
+        ) {
+          cooldown.start();
+          message.error(t("rateLimited"));
+          return;
+        }
+        message.error(
+          t("sendFailed", {
+            message: te(`${code}.message` as Parameters<typeof te>[0]),
+          }),
+        );
         return;
       }
-      message.error(
-        t("sendFailed", {
-          message: te(`${code}.message` as Parameters<typeof te>[0]),
-        }),
-      );
-      return;
+      cooldown.start();
+      setSentTo(values.email);
+    } catch {
+      // D-2 (QA 2026-06-12): buildAuthRedirectUrl은 NEXT_PUBLIC_SITE_URL 부재
+      // 시 동기 throw — catch 없이는 unhandled rejection으로 버튼이 영구 로딩.
+      message.error(t("sendFailed", { message: te("unknown.message") }));
+    } finally {
+      setSubmitting(false);
     }
-    cooldown.start();
-    setSentTo(values.email);
   }
 
   if (sentTo) {

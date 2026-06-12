@@ -67,39 +67,48 @@ export function SignUpForm({
 
   async function handleSignUp(values: SignUpFields) {
     setSubmitting(true);
-    const supabase = createSupabaseBrowserClient();
-    const { error } = await supabase.auth.signUp({
-      email: values.email,
-      password: values.password,
-      options: {
-        data: { display_name: values.displayName },
-        emailRedirectTo: buildAuthRedirectUrl(
-          "/auth/callback?next=/onboarding/learning-goal",
-        ),
-      },
-    });
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const { error } = await supabase.auth.signUp({
+        email: values.email,
+        password: values.password,
+        options: {
+          data: { display_name: values.displayName },
+          emailRedirectTo: buildAuthRedirectUrl(
+            "/auth/callback?next=/onboarding/learning-goal",
+          ),
+        },
+      });
 
-    if (error) {
-      setSubmitting(false);
-      // §3 예외: 중복 이메일은 토스트가 아니라 이메일 필드 하단 인라인 오류로.
-      if (error.code && DUPLICATE_EMAIL_CODES.has(error.code)) {
-        form.setFields([
-          {
-            name: "email",
-            errors: [t("emailDuplicate")],
-          },
-        ]);
+      if (error) {
+        // §3 예외: 중복 이메일은 토스트가 아니라 이메일 필드 하단 인라인 오류로.
+        if (error.code && DUPLICATE_EMAIL_CODES.has(error.code)) {
+          form.setFields([
+            {
+              name: "email",
+              errors: [t("emailDuplicate")],
+            },
+          ]);
+          return;
+        }
+        const reason = mapSupabaseErrorCode(error.code);
+        message.error(
+          t("signUpFailed", {
+            message: te(`${reason}.message` as Parameters<typeof te>[0]),
+          }),
+        );
         return;
       }
-      const reason = mapSupabaseErrorCode(error.code);
-      message.error(
-        t("signUpFailed", {
-          message: te(`${reason}.message` as Parameters<typeof te>[0]),
-        }),
+      router.push(
+        `/auth/verify-email?email=${encodeURIComponent(values.email)}`,
       );
-      return;
+    } catch {
+      // D-2 (QA 2026-06-12): buildAuthRedirectUrl은 NEXT_PUBLIC_SITE_URL 부재
+      // 시 동기 throw — catch 없이는 unhandled rejection으로 버튼이 영구 로딩.
+      message.error(t("signUpFailed", { message: te("unknown.message") }));
+    } finally {
+      setSubmitting(false);
     }
-    router.push(`/auth/verify-email?email=${encodeURIComponent(values.email)}`);
   }
 
   async function handleGoogleSignUp() {

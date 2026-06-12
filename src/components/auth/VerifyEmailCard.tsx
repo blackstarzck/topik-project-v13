@@ -164,40 +164,47 @@ export function VerifyEmailCard() {
     if (cooldownRemaining > 0) return;
 
     setResending(true);
-    const supabase = createSupabaseBrowserClient();
-    const { error } = await supabase.auth.resend({
-      type: "signup",
-      email: trimmed,
-      options: {
-        emailRedirectTo: buildAuthRedirectUrl(
-          "/auth/callback?next=/onboarding/learning-goal",
-        ),
-      },
-    });
-    setResending(false);
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: trimmed,
+        options: {
+          emailRedirectTo: buildAuthRedirectUrl(
+            "/auth/callback?next=/onboarding/learning-goal",
+          ),
+        },
+      });
 
-    if (error) {
-      const code = mapSupabaseErrorCode(error.code);
-      if (code === "over_email_send_rate_limit" || code === "over_request_rate_limit") {
-        // Phase 8 follow-up v2.3 (2026-05-27): HTTP status(429 등)는 cooldown 초가
-        // 아니다. 이전 구현이 status 값을 초로 잘못 해석. supabase-js AuthError는
-        // Retry-After 헤더를 직접 노출 안 하므로 default 60초 fallback. 진짜
-        // Retry-After 값이 필요하면 callback layer에서 query로 받아 처리.
-        writeCooldownStart(COOLDOWN_DEFAULT_SECONDS);
-        setCooldownRemaining(COOLDOWN_DEFAULT_SECONDS);
-        message.error(t("resendRateLimited"));
+      if (error) {
+        const code = mapSupabaseErrorCode(error.code);
+        if (code === "over_email_send_rate_limit" || code === "over_request_rate_limit") {
+          // Phase 8 follow-up v2.3 (2026-05-27): HTTP status(429 등)는 cooldown 초가
+          // 아니다. 이전 구현이 status 값을 초로 잘못 해석. supabase-js AuthError는
+          // Retry-After 헤더를 직접 노출 안 하므로 default 60초 fallback. 진짜
+          // Retry-After 값이 필요하면 callback layer에서 query로 받아 처리.
+          writeCooldownStart(COOLDOWN_DEFAULT_SECONDS);
+          setCooldownRemaining(COOLDOWN_DEFAULT_SECONDS);
+          message.error(t("resendRateLimited"));
+          return;
+        }
+        message.error(
+          t("resendFailed", {
+            message: te(`${code}.message` as Parameters<typeof te>[0]),
+          }),
+        );
         return;
       }
-      message.error(
-        t("resendFailed", {
-          message: te(`${code}.message` as Parameters<typeof te>[0]),
-        }),
-      );
-      return;
+      writeCooldownStart(COOLDOWN_DEFAULT_SECONDS);
+      setCooldownRemaining(COOLDOWN_DEFAULT_SECONDS);
+      message.success(t("resendSuccess"));
+    } catch {
+      // D-2 (QA 2026-06-12): buildAuthRedirectUrl은 NEXT_PUBLIC_SITE_URL 부재
+      // 시 동기 throw — catch 없이는 unhandled rejection으로 버튼이 영구 로딩.
+      message.error(t("resendFailed", { message: te("unknown.message") }));
+    } finally {
+      setResending(false);
     }
-    writeCooldownStart(COOLDOWN_DEFAULT_SECONDS);
-    setCooldownRemaining(COOLDOWN_DEFAULT_SECONDS);
-    message.success(t("resendSuccess"));
   }
 
   return (
