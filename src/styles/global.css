@@ -4836,6 +4836,146 @@ body {
   font-size: 14px;
 }
 
+/*
+ * In-app notification center (bell + popover inbox + dashboard feed).
+ * Desktop has no workspace header, so the bell floats fixed at the top-right
+ * corner of the content area; on mobile it sits inside .app-workspace-mobile-bar.
+ */
+.app-notification-corner {
+  position: fixed;
+  top: 14px;
+  right: 20px;
+  z-index: 80;
+}
+
+.app-notification-corner .app-notification-bell {
+  border: 1px solid var(--app-color-border);
+  border-radius: 999px;
+  background: var(--app-color-bg-container);
+  box-shadow: 0 6px 18px rgba(42, 55, 89, 0.1);
+}
+
+.app-notification-panel {
+  width: 320px;
+  max-width: 78vw;
+}
+
+.app-notification-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.app-notification-panel__error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.app-notification-list {
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.app-notification-item.ant-list-item {
+  padding: 2px 0;
+  border-block-end: 0;
+}
+
+.app-notification-item__button {
+  display: flex;
+  width: 100%;
+  align-items: flex-start;
+  gap: 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  padding: 8px;
+  text-align: start;
+  font: inherit;
+  cursor: pointer;
+}
+
+.app-notification-item__button:hover {
+  background: var(--app-color-bg-layout);
+}
+
+/* 안 읽음 = 점 + 굵은 제목 + 옅은 배경 (색상 단독 구분 금지) */
+.app-notification-item--unread .app-notification-item__button {
+  background: color-mix(in srgb, var(--app-color-primary) 6%, transparent);
+}
+
+.app-notification-item--unread .app-notification-item__button:hover {
+  background: color-mix(in srgb, var(--app-color-primary) 11%, transparent);
+}
+
+.app-notification-item__dot {
+  flex-shrink: 0;
+  width: 10px;
+  padding-top: 4px;
+}
+
+.app-notification-item__content {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* B-01 일정/알림 보조 영역 — 대시보드 카드 안의 알림 피드 행 */
+.app-notification-feed-item.ant-list-item {
+  padding: 2px 0;
+  border-block-end: 0;
+}
+
+.app-notification-feed-item__button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  padding: 8px;
+  text-align: start;
+  font: inherit;
+  cursor: pointer;
+}
+
+.app-notification-feed-item__button:hover {
+  background: var(--app-color-bg-layout);
+}
+
+.app-notification-feed-item--unread .app-notification-feed-item__button {
+  background: color-mix(in srgb, var(--app-color-primary) 6%, transparent);
+}
+
+.app-notification-feed-item--unread .app-notification-feed-item__button:hover {
+  background: color-mix(in srgb, var(--app-color-primary) 11%, transparent);
+}
+
+.app-notification-feed-item__tag {
+  flex-shrink: 0;
+  margin-inline-end: 0;
+}
+
+.app-notification-feed-item__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 767.98px) {
+  .app-notification-panel {
+    max-width: calc(100vw - 48px);
+  }
+}
+
 .writing-workspace {
   display: grid;
   gap: 18px;

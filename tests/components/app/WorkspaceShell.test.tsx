@@ -35,6 +35,7 @@ describe("WorkspaceShell", () => {
     const { container } = renderWithIntl(
       <WorkspaceShell
         role="learner"
+        userId="user-1"
         email="learner@example.com"
         planLabel="premium"
       >
@@ -53,7 +54,7 @@ describe("WorkspaceShell", () => {
 
   it("renders locked sidebar entries with class-based affordances", () => {
     const { container } = renderWithIntl(
-      <WorkspaceShell role="learner" email={null} planLabel={null}>
+      <WorkspaceShell role="learner" userId="user-1" email={null} planLabel={null}>
         <div>body</div>
       </WorkspaceShell>,
     );
@@ -67,7 +68,7 @@ describe("WorkspaceShell", () => {
     navMock.pathname = "/practice/problems";
 
     const { container } = renderWithIntl(
-      <WorkspaceShell role="learner" email={null} planLabel="premium">
+      <WorkspaceShell role="learner" userId="user-1" email={null} planLabel="premium">
         <div>body</div>
       </WorkspaceShell>,
     );
@@ -80,7 +81,7 @@ describe("WorkspaceShell", () => {
     navMock.pathname = "/practice/problems";
 
     const { container } = renderWithIntl(
-      <WorkspaceShell role="learner" email={null} planLabel="premium">
+      <WorkspaceShell role="learner" userId="user-1" email={null} planLabel="premium">
         <div>body</div>
       </WorkspaceShell>,
     );
@@ -99,7 +100,7 @@ describe("WorkspaceShell", () => {
     navMock.pathname = "/writing/feedback/short/submission-1";
 
     const { container } = renderWithIntl(
-      <WorkspaceShell role="learner" email={null} planLabel="premium">
+      <WorkspaceShell role="learner" userId="user-1" email={null} planLabel="premium">
         <div>body</div>
       </WorkspaceShell>,
     );

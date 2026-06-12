@@ -28,12 +28,14 @@ import {
 } from "@/lib/settings/types";
 import { useUpdateNotificationPrefs } from "@/lib/settings/mutations";
 import {
-  fetchNotificationLog,
+  fetchDeliveryHistory,
+  type DeliveryHistoryEntry,
+} from "@/components/notifications/notifications-data";
+import {
   fetchNotificationSettings,
   upsertNotificationSettings,
   NOTIFICATION_SETTINGS_DEFAULTS,
   type NotificationChannels,
-  type NotificationLogEntry,
   type NotificationSettings,
 } from "./learning-settings-data";
 
@@ -61,12 +63,15 @@ const WEEKDAYS: { value: number; labelKey: string }[] = [
 
 // 발송 이력 status enum → 카탈로그 키(enum 값은 그대로 유지).
 const LOG_STATUS_BADGE_META: Record<
-  NotificationLogEntry["status"],
+  DeliveryHistoryEntry["status"],
   { labelKey: string }
 > = {
   sent: { labelKey: "sent" },
   failed: { labelKey: "failed" },
   pending: { labelKey: "pending" },
+  skipped: { labelKey: "skipped" },
+  opted_out: { labelKey: "optedOut" },
+  deduped: { labelKey: "deduped" },
 };
 
 type Props = {
@@ -137,7 +142,8 @@ function timeStringToDayjs(value: string | null): Dayjs | null {
  *   makes clear delivery is 연동 예정.
  * - Region 3 (조건 입력): reminder_time (HH:mm) + reminder_days persisted;
  *   off-channel inputs are disabled when no channel is on.
- * - Region 4 (미리보기/도움말): preview copy + 발송 이력 5개 from notification_log.
+ * - Region 4 (미리보기/도움말): preview copy + 발송 이력 5개 from
+ *   notification_delivery_attempts (fetchDeliveryHistory).
  * - Region 5 (저장): dirty-gated, double-click guarded.
  * - 수신 권한 없음 notice when both channels off.
  * - The 3 boolean conditions still persist to profiles.notification_prefs.
@@ -166,7 +172,7 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
   const [settings, setSettings] = useState<NotificationSettings>(
     NOTIFICATION_SETTINGS_DEFAULTS,
   );
-  const [log, setLog] = useState<NotificationLogEntry[]>([]);
+  const [log, setLog] = useState<DeliveryHistoryEntry[]>([]);
   const [activeChannel, setActiveChannel] = useState<"email" | "zalo" | "both">(
     "email",
   );
@@ -178,7 +184,9 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
       try {
         const [s, l] = await Promise.all([
           fetchNotificationSettings(userId),
-          fetchNotificationLog(userId, 5).catch(() => []),
+          fetchDeliveryHistory(userId, 5).catch(
+            () => [] as DeliveryHistoryEntry[],
+          ),
         ]);
         if (cancelled) return;
         setSavedSettings(s);

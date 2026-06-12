@@ -274,7 +274,10 @@
       "logStatus": {
         "sent": "Sent",
         "failed": "Failed",
-        "pending": "Pending"
+        "pending": "Pending",
+        "skipped": "Skipped",
+        "optedOut": "Opted out",
+        "deduped": "Deduplicated"
       }
     }
   },
@@ -635,7 +638,14 @@
       "loadFailedDescription": "Please try again in a moment or check your alert settings.",
       "retry": "Retry",
       "goToSettings": "Go to alert settings",
-      "empty": "No new alerts."
+      "empty": "No new alerts.",
+      "category": {
+        "study": "Study",
+        "examSchedule": "Exam schedule",
+        "notice": "Notice",
+        "event": "Event",
+        "marketing": "News"
+      }
     },
     "recentFeedback": {
       "title": "Recent feedback",
@@ -650,6 +660,18 @@
       "title": "Upcoming exam",
       "daysLeft": "Days left: D-{days}",
       "daysLeftToday": "Days left: today"
+    }
+  },
+  "notifications": {
+    "bell": {
+      "bellAria": "Open notifications",
+      "title": "Notifications",
+      "markAllRead": "Mark all as read",
+      "empty": "No new notifications.",
+      "loadError": "Couldn't load notifications.",
+      "retry": "Retry",
+      "markReadError": "Couldn't mark the notification as read.",
+      "markAllError": "Couldn't mark all notifications as read."
     }
   },
   "practice": {

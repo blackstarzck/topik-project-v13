@@ -221,6 +221,12 @@ export type NotificationLogEntry = {
   created_at: string;
 };
 
+/**
+ * @deprecated The X-09 발송 이력 panel now reads
+ * `notification_delivery_attempts` via `fetchDeliveryHistory` in
+ * src/components/notifications/notifications-data.ts. Kept until the
+ * notification_log table is retired.
+ */
 export async function fetchNotificationLog(
   userId: string,
   limit = 5,

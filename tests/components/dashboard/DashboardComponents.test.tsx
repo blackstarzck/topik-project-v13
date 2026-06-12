@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { cleanup, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { cleanup, screen, waitFor } from "@testing-library/react";
 
 import koMessages from "../../../messages/ko.json";
 import { DashboardAlertsCard } from "../../../src/components/dashboard/DashboardAlertsCard";
@@ -14,6 +14,15 @@ import { renderWithIntl } from "../../test-utils/renderWithIntl";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
+}));
+
+// DashboardAlertsCard fetches user_notifications client-side; vitest has no
+// Supabase env, so the data module is mocked at the boundary.
+const fetchNotificationsMock = vi.hoisted(() => vi.fn());
+
+vi.mock("@/components/notifications/notifications-data", () => ({
+  fetchNotifications: (...args: unknown[]) => fetchNotificationsMock(...args),
+  markNotificationRead: vi.fn(),
 }));
 
 const dashboard = koMessages.dashboard;
@@ -110,17 +119,49 @@ describe("DashboardRecommendations", () => {
 });
 
 describe("DashboardAlertsCard", () => {
-  it("renders the empty state when there are no alerts", () => {
-    renderWithIntl(<DashboardAlertsCard alerts={[]} />);
-    expect(screen.getByText(dashboard.alerts.cardTitle)).toBeTruthy();
-    expect(screen.getByText(dashboard.alerts.settingsLink)).toBeTruthy();
-    expect(screen.getByText(dashboard.alerts.empty)).toBeTruthy();
+  beforeEach(() => {
+    fetchNotificationsMock.mockReset();
+    fetchNotificationsMock.mockResolvedValue([]);
   });
 
-  it("renders the retry CTA when alerts failed to load", () => {
-    renderWithIntl(<DashboardAlertsCard alerts={[]} loadFailed />);
-    expect(screen.getByText(dashboard.alerts.loadFailedMessage)).toBeTruthy();
+  it("renders the empty state when there are no alerts or notifications", async () => {
+    renderWithIntl(<DashboardAlertsCard userId="user-1" alerts={[]} />);
+    expect(screen.getByText(dashboard.alerts.cardTitle)).toBeTruthy();
+    expect(screen.getByText(dashboard.alerts.settingsLink)).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByText(dashboard.alerts.empty)).toBeTruthy();
+    });
+  });
+
+  it("renders the retry CTA when alerts failed to load", async () => {
+    renderWithIntl(<DashboardAlertsCard userId="user-1" alerts={[]} loadFailed />);
+    await waitFor(() => {
+      expect(screen.getByText(dashboard.alerts.loadFailedMessage)).toBeTruthy();
+    });
     expect(screen.getByText(dashboard.alerts.retry)).toBeTruthy();
     expect(screen.getByText(dashboard.alerts.goToSettings)).toBeTruthy();
+  });
+
+  it("renders latest notifications with category tag and marks the unread title", async () => {
+    fetchNotificationsMock.mockResolvedValue([
+      {
+        id: "n1",
+        template_key: "exam_d7",
+        category: "exam_schedule",
+        title: "시험 D-7 안내",
+        body: "시험이 일주일 남았어요.",
+        link_url: "/dashboard",
+        read_at: null,
+        created_at: "2026-06-10T09:00:00.000Z",
+      },
+    ]);
+    renderWithIntl(<DashboardAlertsCard userId="user-1" alerts={[]} />);
+    await waitFor(() => {
+      expect(screen.getByText("시험 D-7 안내")).toBeTruthy();
+    });
+    expect(
+      screen.getByText(dashboard.alerts.category.examSchedule),
+    ).toBeTruthy();
+    expect(fetchNotificationsMock).toHaveBeenCalledWith("user-1", 5);
   });
 });

@@ -37,6 +37,7 @@ import type {
 const { Paragraph, Text } = Typography;
 
 type Props = {
+  userId: string;
   kpi: DashboardKpiData;
   examDate: string | null;
   primary: DashboardPrimary | null;
@@ -59,6 +60,7 @@ function DashboardBadge({ children }: { children: ReactNode }) {
 }
 
 export function DashboardBody({
+  userId,
   kpi,
   examDate,
   primary,
@@ -271,7 +273,11 @@ export function DashboardBody({
             </div>
           </AppCard>
           <UpcomingExamCard examDate={examDate} />
-          <DashboardAlertsCard alerts={alerts} loadFailed={alertsLoadFailed} />
+          <DashboardAlertsCard
+            userId={userId}
+            alerts={alerts}
+            loadFailed={alertsLoadFailed}
+          />
         </div>
       </section>
     </div>
