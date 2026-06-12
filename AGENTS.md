@@ -30,7 +30,7 @@ AI가 만든 결과물은 아래 중 하나 이상의 근거가 있어야 다음
 
 ## 비협상 규칙
 
-- **관리자 범위 경계**: 이 저장소는 user-facing app이다. admin 기능을 새로 만들거나 확장하거나 remediate하지 않는다. admin 콘솔은 별도 앱(topik-ai) 소유이며, 이 저장소에는 admin 코드/라우트/와이어프레임이 없다(2026-06-09 코드 제거, 2026-06-11 와이어프레임·문서 참조 제거). admin-oriented schema/migration 추가도 금지. 단 `profiles.app_role`, `admin_audit_logs`, `private.is_*_admin` RLS 헬퍼는 load-bearing이라 제거 금지. 자세한 기준은 `docs/admin-scope-boundary.md`를 따른다.
+- **관리자 범위 경계**: 이 저장소는 user-facing app이다. admin 기능을 새로 만들거나 확장하거나 remediate하지 않는다. admin 콘솔은 별도 앱(topik-ai) 소유이며, 이 저장소에는 admin 코드/라우트/와이어프레임이 없다(2026-06-09 코드 제거, 2026-06-11 와이어프레임·문서 참조 제거). 공유 Supabase 스키마 소유권은 앱 기준이 아니라 **도메인 기준**으로 정한다(2026-06-12 알림 기능 개발로 개정): 이 저장소는 core user-facing schema(예: `profiles`, `notification_settings`, `user_notifications`)만 소유하고, admin 운영 schema(알림 템플릿/그룹/발송 운영 등)는 topik-ai가 자체 migration tracker(`admin_schema_migrations`)로 소유·관리하므로 이 저장소에 추가하지 않는다. 양쪽에서 읽거나 쓰는 공유 객체는 topik-ai `docs/architecture/shared-supabase-schema-ownership.md`의 owner/writer/reader/RLS/migration home 기록을 따르며, 기존 v13 소유 테이블의 DDL 변경은 owner(v13) 승인 + migration decision record가 필요하다. 단 `profiles.app_role`, `admin_audit_logs`, `private.is_*_admin` RLS 헬퍼는 load-bearing이라 제거 금지. 자세한 기준은 `docs/admin-scope-boundary.md`를 따른다.
 - 이미 `docs/`에 정리된 제품 범위에 대해 fresh domain-discovery interview를 다시 시작하지 않는다.
 - 사용자 요청이 active docs와 충돌하면 구현하지 말고, 충돌한 문서와 위치를 먼저 보고한다.
 - net-new scope, 제품 pivot, active docs에 없는 요구사항은 바로 구현하지 않는다. 먼저 docs update proposal 또는 acceptance criteria가 있는 implementation brief를 만든다.
