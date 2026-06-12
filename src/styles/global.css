@@ -4836,6 +4836,10 @@ body {
   font-size: 14px;
 }
 
+.app-sidebar-logout {
+  margin-top: 10px;
+}
+
 .writing-workspace {
   display: grid;
   gap: 18px;

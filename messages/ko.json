@@ -39,7 +39,8 @@
     "adminProblems": "문제 관리",
     "adminOrg": "기관 관리",
     "adminUsers": "사용자 관리",
-    "lockPaidOnly": "유료 플랜 전용"
+    "lockPaidOnly": "유료 플랜 전용",
+    "logout": "로그아웃"
   },
   "landing": {
     "logoAria": "TALKPIK 홈 상단으로 이동",

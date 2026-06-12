@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Button,
   ConfigProvider,
   Menu,
   Tag,
@@ -20,6 +21,7 @@ import {
   Lightbulb,
   ListChecks,
   Lock,
+  LogOut,
   PenLine,
   Settings,
   Target,
@@ -274,6 +276,22 @@ export function SidebarNav({ role, planLabel, onNavigate }: Props) {
         <span>{tApp("sidebarNudgeBody")}</span>
         {planLabel ? <Tag>{planLabel}</Tag> : null}
       </div>
+      {/* G6 (QA 2026-06-12): 로그아웃 진입점. /auth/sign-out은 POST 전용(CSRF
+          보호) + 303→/login이므로 JS 없이 동작하는 HTML form post를 쓴다. */}
+      <form
+        method="post"
+        action="/auth/sign-out"
+        className="app-sidebar-logout"
+      >
+        <Button
+          block
+          htmlType="submit"
+          icon={<LogOut aria-hidden size={16} strokeWidth={1.8} />}
+          data-testid="sidebar-logout"
+        >
+          {t("logout")}
+        </Button>
+      </form>
     </div>
   );
 }

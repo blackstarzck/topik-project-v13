@@ -39,7 +39,8 @@
     "adminProblems": "Quản lý câu hỏi",
     "adminOrg": "Tổ chức",
     "adminUsers": "Người dùng",
-    "lockPaidOnly": "Chỉ gói trả phí"
+    "lockPaidOnly": "Chỉ gói trả phí",
+    "logout": "Đăng xuất"
   },
   "landing": {
     "logoAria": "Lên đầu trang chủ TALKPIK",

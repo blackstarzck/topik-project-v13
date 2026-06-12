@@ -39,7 +39,8 @@
     "adminProblems": "Problem management",
     "adminOrg": "Organization",
     "adminUsers": "Users",
-    "lockPaidOnly": "Paid plan only"
+    "lockPaidOnly": "Paid plan only",
+    "logout": "Log out"
   },
   "landing": {
     "logoAria": "Go to top of TALKPIK home",
