@@ -4845,6 +4845,10 @@ body {
   background: transparent;
 }
 
+.app-sidebar-shell .app-sidebar-menu.ant-menu-root.ant-menu-inline {
+  border-inline-end: 0;
+}
+
 .app-sidebar-menu .ant-menu-item,
 .app-sidebar-menu .ant-menu-submenu-title {
   border-radius: 8px;
