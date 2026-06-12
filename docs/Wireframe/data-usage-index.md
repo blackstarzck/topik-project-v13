@@ -5,10 +5,10 @@
 ## Summary
 
 - Pages: 35
-- Tables: 19
+- Tables: 21
 - RPC/functions: 16
 - Storage buckets: 3
-- Page data links: 109
+- Page data links: 111
 - Unclassified DB objects: 0
 
 ## avatars
@@ -67,17 +67,23 @@
 | E-02 | Long-form feedback | table | `submission_id`, `item_type`, `note`, `tags` | read/write | 피드백 저장/보관함 추가에 사용한다. |
 | F-01 | My library | table | `item_type`, `attempt_id`, `submission_id`, `report_id`, `export_file_id`, `problem_id`, `note`, `tags`, `saved_at` | read/write | 내 보관함 탭, 저장/해제, 태그에 사용한다. |
 
+## notification_delivery_attempts
+
+| IA | Screen | Type | Columns/fields | Usage | Page feature |
+| --- | --- | --- | --- | --- | --- |
+| X-09 | Notification settings | table | `template_key`, `channel`, `status`, `sent_at`, `created_at` | read | 발송 이력 패널 최근 5건(상태 6종 라벨)에 사용한다. topik-ai 소유 공유 객체(owner select)다. |
+
 ## notification_log
 
 | IA | Screen | Type | Columns/fields | Usage | Page feature |
 | --- | --- | --- | --- | --- | --- |
-| X-09 | Notification settings | table | `channel`, `template_key`, `status`, `payload`, `sent_at`, `created_at` | read | 최근 발송 이력 5개를 표시한다. 실제 발송 service가 연결되기 전에는 비어 있을 수 있다. |
+| X-09 | Notification settings | table | `channel`, `template_key`, `status`, `sent_at` | deprecated (미사용) | 구 발송 이력 소스. 2026-06-12 `notification_delivery_attempts`로 교체되어 화면 데이터 경로에서 제거됐다(O-9). |
 
 ## notification_settings
 
 | IA | Screen | Type | Columns/fields | Usage | Page feature |
 | --- | --- | --- | --- | --- | --- |
-| X-09 | Notification settings | table | `reminder_time`, `reminder_days`, `channels`, `timezone`, `updated_at` | read/write | 알림 시간, 요일, 채널, timezone을 사용자별 1:1 설정으로 저장한다. |
+| X-09 | Notification settings | table | `reminder_time`, `reminder_days`, `channels`, `timezone`, `updated_at` | read/write | 알림 시간, 요일, 채널, timezone을 사용자별 1:1 설정으로 저장한다. `channels`는 `in_app`/`email`/`push`/`zalo` 계약이며 현재 화면은 `in_app`/`email`/`zalo`를 다룬다. |
 
 ## private.protect_profile_columns
 
@@ -137,7 +143,7 @@
 | X-04 | Subscription management | table | `plan_label`, `status` | read | 구독 상태 셸 화면에 사용한다. 실제 결제 테이블은 아직 없다. |
 | X-05 | Profile editing | table | `display_name`, `nickname`, `avatar_path`, `bio`, `ui_locale`, `plan_label`, `status` | read/write | 프로필 편집, 160자 자기소개, 아바타 경로에 사용한다. |
 | X-06 | Password reset | table | `id`, `email`, `status` | read | 비밀번호 재설정 성공 후 사용자 상태 확인에 연결될 수 있다. |
-| X-09 | Notification settings | table | `notification_prefs` | read/write | `weekly_summary`, `feedback_ready`, `study_reminder` 3개 조건 선호를 JSON object로 저장한다. |
+| X-09 | Notification settings | table | `notification_prefs` | read/write | 알림 채널과 조건 설정을 JSON object로 저장한다. |
 | X-11 | Auth error | table | `id`, `status` | read | 인증 오류 후 계정 상태 안내와 재시도 분기에 연결될 수 있다. |
 | X-12 | Auth verify-email | table | `id`, `email`, `status` | read | 가입 직후 이메일 인증 안내와 인증 상태 확인에 연결된다. |
 
@@ -212,6 +218,12 @@
 | F-M1 | PDF export modal | table | `event_type`, `export_file_id`, `payload` | write | PDF 다운로드 이벤트를 기록한다. |
 | D-M3 | Autosave warning | table | `event_type`, `payload`, `occurred_at` | write | 자동저장 이벤트를 기록한다. |
 | X-02 | Growth dashboard | table | `event_type`, `occurred_at`, `payload` | derived-read | 학습 추세와 활동 그래프에 사용한다. |
+
+## user_notifications
+
+| IA | Screen | Type | Columns/fields | Usage | Page feature |
+| --- | --- | --- | --- | --- | --- |
+| B-01 | Home dashboard | table | `id`, `category`, `title`, `link_url`, `read_at`, `created_at` | read/update | 일정/알림 보조 영역의 최신 5건 알림 피드. 클릭 시 `read_at` 기록 후 이동한다(2026-06-12 구현). |
 
 ## writing_drafts
 

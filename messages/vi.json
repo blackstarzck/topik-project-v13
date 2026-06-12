@@ -275,7 +275,10 @@
       "logStatus": {
         "sent": "Đã gửi",
         "failed": "Thất bại",
-        "pending": "Đang chờ"
+        "pending": "Đang chờ",
+        "skipped": "Bỏ qua",
+        "optedOut": "Từ chối nhận",
+        "deduped": "Chặn trùng lặp"
       }
     }
   },
@@ -637,7 +640,14 @@
       "loadFailedDescription": "Vui lòng thử lại sau giây lát hoặc kiểm tra cài đặt thông báo.",
       "retry": "Thử lại",
       "goToSettings": "Đến cài đặt thông báo",
-      "empty": "Không có thông báo mới."
+      "empty": "Không có thông báo mới.",
+      "category": {
+        "study": "Học tập",
+        "examSchedule": "Lịch thi",
+        "notice": "Thông báo",
+        "event": "Sự kiện",
+        "marketing": "Tin tức"
+      }
     },
     "recentFeedback": {
       "title": "Phản hồi gần đây",
@@ -652,6 +662,18 @@
       "title": "Kỳ thi sắp tới",
       "daysLeft": "Số ngày còn lại: D-{days}",
       "daysLeftToday": "Số ngày còn lại: hôm nay"
+    }
+  },
+  "notifications": {
+    "bell": {
+      "bellAria": "Mở thông báo",
+      "title": "Thông báo",
+      "markAllRead": "Đánh dấu tất cả đã đọc",
+      "empty": "Không có thông báo mới.",
+      "loadError": "Không tải được thông báo.",
+      "retry": "Thử lại",
+      "markReadError": "Không thể đánh dấu thông báo là đã đọc.",
+      "markAllError": "Không thể đánh dấu tất cả thông báo là đã đọc."
     }
   },
   "practice": {

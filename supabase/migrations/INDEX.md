@@ -128,6 +128,12 @@
 | ---:| --- | --- | --- |
 | 38 | `10:40:17` | [`20260610104017_seed_initial_legal_documents.sql`](./20260610104017_seed_initial_legal_documents.sql) | `/auth/consent`가 참조할 `terms`/`privacy` published placeholder 문서를 `ko/en/vi` 로케일별 seed. 스키마 변경 없음. `on conflict (doc_type, version, locale) do nothing`으로 idempotent. |
 
+#### 12 (금) — 알림 기능: 인앱 수신함 (notification WP0-4)
+
+| # | timestamp | 파일 | 영역 |
+| ---:| --- | --- | --- |
+| 39 | `16:00:00` | [`20260612160000_user_notifications.sql`](./20260612160000_user_notifications.sql) | `user_notifications` 인앱 수신함 (벨 뱃지/알림센터/B-01 카드). owner select + `read_at` 단일 컬럼 grant update, insert/delete는 service_role 파이프라인 전용. `delivery_attempt_id`는 topik-ai 소유 `notification_delivery_attempts` soft 참조(FK 없음 — 소유권 계약). 계약 SoT: topik-ai `docs/specs/notification-contract.md` |
+
 ---
 
 ## 새 마이그레이션을 추가할 때

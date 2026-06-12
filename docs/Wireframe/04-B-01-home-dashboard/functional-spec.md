@@ -46,10 +46,12 @@
 | `study_events` | `event_type`, `occurred_at`, `payload` | derived-read | 학습 연속성, 오늘 활동, 이벤트 기반 KPI에 사용한다. | authenticated user; auth.uid() owner RLS where user-owned | `src/lib/events/study-events.ts`<br>`src/lib/export/pdf-export.ts`<br>`supabase/migrations/20260520120700_library_events_exports.sql` | Derived usage inferred from current source/domain docs. |
 | `recommendation_runs` | `source_type`, `reason_summary` | read | 추천 묶음의 출처와 설명에 사용한다. | authenticated user; auth.uid() owner RLS where user-owned | `supabase/migrations/20260520120600_recommendations.sql` | none |
 | `recommendation_items` | `problem_id`, `rank`, `reason`, `status` | read/update | 추천 카드와 클릭/완료 상태에 사용한다. | authenticated user; auth.uid() owner RLS where user-owned | `src/lib/practice/next.ts`<br>`src/lib/practice/queries.ts`<br>`src/lib/practice/weakness.ts`<br>`supabase/migrations/20260520120600_recommendations.sql` | none |
+| `user_notifications` | `id`, `category`, `title`, `link_url`, `read_at`, `created_at` | read/update | 일정/알림 보조 영역(№4)의 최신 5건 알림 피드. 클릭 시 `read_at` 기록 후 `link_url` 이동. | authenticated user; auth.uid() owner select + `read_at`만 owner update | `src/components/dashboard/DashboardAlertsCard.tsx`<br>`src/components/notifications/notifications-data.ts`<br>`supabase/migrations/20260612160000_user_notifications.sql` | none |
 
 ## 현재 구현 상태
 
 - dashboard page에서 실제 Supabase 읽기가 있으며 일부 추천 영역은 source module 기반으로 보강되어야 한다.
+- 일정/알림 보조 영역(№4) — **2026-06-12 구현**: `user_notifications` 최신 5건 피드(category 구분 태그, 클릭=읽음+이동, 로드 실패 시 재시도+알림 설정 CTA) — `DashboardAlertsCard`.
 
 ## 코드 구현 근거
 

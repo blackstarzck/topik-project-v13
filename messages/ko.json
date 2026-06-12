@@ -273,9 +273,12 @@
         "empty": "아직 발송된 알림이 없습니다."
       },
       "logStatus": {
-        "sent": "발송됨",
+        "sent": "발송 완료",
         "failed": "실패",
-        "pending": "대기"
+        "pending": "대기",
+        "skipped": "건너뜀",
+        "optedOut": "수신 거부",
+        "deduped": "중복 차단"
       }
     }
   },
@@ -637,7 +640,14 @@
       "loadFailedDescription": "잠시 후 다시 시도하거나 알림 설정을 확인해 주세요.",
       "retry": "다시 시도",
       "goToSettings": "알림 설정으로 이동",
-      "empty": "새 알림이 없어요."
+      "empty": "새 알림이 없어요.",
+      "category": {
+        "study": "학습",
+        "examSchedule": "시험 일정",
+        "notice": "공지",
+        "event": "이벤트",
+        "marketing": "소식"
+      }
     },
     "recentFeedback": {
       "title": "최근 피드백",
@@ -652,6 +662,18 @@
       "title": "예정된 시험",
       "daysLeft": "남은 일수: D-{days}",
       "daysLeftToday": "남은 일수: 오늘"
+    }
+  },
+  "notifications": {
+    "bell": {
+      "bellAria": "알림 열기",
+      "title": "알림",
+      "markAllRead": "모두 읽음",
+      "empty": "새 알림이 없어요.",
+      "loadError": "알림을 불러오지 못했어요.",
+      "retry": "다시 시도",
+      "markReadError": "알림 읽음 처리에 실패했어요.",
+      "markAllError": "알림 모두 읽음 처리에 실패했어요."
     }
   },
   "practice": {

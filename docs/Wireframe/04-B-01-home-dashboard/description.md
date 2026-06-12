@@ -66,6 +66,8 @@
 
 ▣ 예외: 알림 로드 실패 시 재시도와 설정 이동 CTA 제공.
 
+▣ 구현 메모: 2026-06-12 구현 — `user_notifications` 최신 5건 피드(category 구분 태그, 클릭=읽음 처리+link_url 이동, 로드 실패 시 재시도+알림 설정 CTA). `DashboardAlertsCard` 확장.
+
 화면 목적 / 분기 / 피드백 / 예외 상황
 
 목적

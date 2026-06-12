@@ -147,6 +147,7 @@ export default async function DashboardPage() {
     <WorkspaceBody className="grid gap-6">
       <DashboardHeader />
       <DashboardBody
+        userId={user.id}
         kpi={kpiData}
         examDate={goal.exam_date}
         primary={primary}

@@ -4,6 +4,7 @@ import { Button, Grid, Layout, Space, Typography } from "antd";
 import { Menu as MenuIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, type ReactNode } from "react";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { AppDrawer } from "@/components/shared/AppDrawer";
 import type { AppRole } from "@/lib/auth/roles";
 import { SidebarNav } from "./SidebarNav";
@@ -14,12 +15,13 @@ const { useBreakpoint } = Grid;
 
 type Props = {
   role: AppRole;
+  userId: string;
   email?: string | null;
   planLabel?: string | null;
   children: ReactNode;
 };
 
-export function WorkspaceShell({ role, email, planLabel, children }: Props) {
+export function WorkspaceShell({ role, userId, email, planLabel, children }: Props) {
   const t = useTranslations("app");
   const screens = useBreakpoint();
   const isMobile = screens.md === false;
@@ -51,11 +53,18 @@ export function WorkspaceShell({ role, email, planLabel, children }: Props) {
                 {t("brand")}
               </Title>
             </Space>
-            <Space>
+            <Space size={8} align="center">
               {email ? <Text type="secondary">{email}</Text> : null}
+              <NotificationBell userId={userId} />
             </Space>
           </Header>
-        ) : null}
+        ) : (
+          /* No desktop header exists, so the bell floats fixed at the
+             top-right corner of the content area on every workspace page. */
+          <div className="app-notification-corner">
+            <NotificationBell userId={userId} />
+          </div>
+        )}
         <Content className="app-workspace-content">{children}</Content>
       </Layout>
 

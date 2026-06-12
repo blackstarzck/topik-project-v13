@@ -20,6 +20,7 @@ export default async function WorkspaceLayout({
   return (
     <WorkspaceShell
       role={profile.app_role}
+      userId={user.id}
       email={user.email}
       planLabel={profile.plan_label}
     >
