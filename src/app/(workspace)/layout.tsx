@@ -15,6 +15,15 @@ export default async function WorkspaceLayout({
 }) {
   const session = await getSessionAndProfile();
   if (!session) redirect("/login");
+  const { user, profile } = session;
 
-  return <WorkspaceShell>{children}</WorkspaceShell>;
+  return (
+    <WorkspaceShell
+      role={profile.app_role}
+      email={user.email}
+      planLabel={profile.plan_label}
+    >
+      {children}
+    </WorkspaceShell>
+  );
 }
