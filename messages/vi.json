@@ -573,6 +573,7 @@
       "newUserTitle": "Bắt đầu buổi học đầu tiên nhé?",
       "newUserBody": "Khi bạn giải bài và nộp bài viết, các chỉ số bài nộp hôm nay, nhận xét gần đây và tiến độ mục tiêu sẽ hiển thị ở đây.",
       "newUserCta": "Bắt đầu với bài gợi ý",
+      "zeroValuePrompt": "Hiển thị sau buổi đầu",
       "todaySubmissionsTitle": "Bài nộp hôm nay",
       "todaySubmissionsSuffix": "lần",
       "recentFeedbackTitle": "Nhận xét gần đây",

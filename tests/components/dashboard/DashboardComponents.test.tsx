@@ -23,11 +23,11 @@ afterEach(() => {
 });
 
 describe("DashboardHeader", () => {
-  it("renders the heading, subtitle, and primary CTA", () => {
+  it("renders the heading and subtitle without a header CTA", () => {
     renderWithIntl(<DashboardHeader />);
     expect(screen.getByText(dashboard.header.title)).toBeTruthy();
     expect(screen.getByText(dashboard.header.subtitle)).toBeTruthy();
-    expect(screen.getByText(dashboard.header.startCta)).toBeTruthy();
+    expect(screen.queryByText(dashboard.header.startCta)).toBeNull();
   });
 });
 
@@ -41,7 +41,7 @@ describe("DashboardKpiSummary", () => {
     updatedAt: "2026-06-02T09:00:00.000Z",
   };
 
-  it("shows the new-user empty state when there is no activity", () => {
+  it("keeps the four KPI tiles and replaces zero values with start guidance", () => {
     const empty: DashboardKpiData = {
       todayAttempts: 0,
       totalAttempts: 0,
@@ -51,8 +51,11 @@ describe("DashboardKpiSummary", () => {
       updatedAt: "2026-06-02T09:00:00.000Z",
     };
     renderWithIntl(<DashboardKpiSummary kpi={empty} />);
-    expect(screen.getByText(dashboard.kpi.newUserTitle)).toBeTruthy();
-    expect(screen.getByText(dashboard.kpi.newUserCta)).toBeTruthy();
+    expect(screen.getByText(dashboard.kpi.todaySubmissionsTitle)).toBeTruthy();
+    expect(screen.getByText(dashboard.kpi.recentFeedbackTitle)).toBeTruthy();
+    expect(screen.getByText(dashboard.kpi.goalAchievementTitle)).toBeTruthy();
+    expect(screen.getByText(dashboard.kpi.streakTitle)).toBeTruthy();
+    expect(screen.getAllByText(dashboard.kpi.zeroValuePrompt)).toHaveLength(4);
   });
 
   it("renders the four KPI tile labels when populated", () => {
@@ -61,6 +64,7 @@ describe("DashboardKpiSummary", () => {
     expect(screen.getByText(dashboard.kpi.recentFeedbackTitle)).toBeTruthy();
     expect(screen.getByText(dashboard.kpi.goalAchievementTitle)).toBeTruthy();
     expect(screen.getByText(dashboard.kpi.streakTitle)).toBeTruthy();
+    expect(screen.queryByText(/업데이트:/)).toBeNull();
   });
 });
 

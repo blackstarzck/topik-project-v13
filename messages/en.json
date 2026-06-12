@@ -573,6 +573,7 @@
       "newUserTitle": "Ready to start your first session?",
       "newUserBody": "Once you solve problems and submit your writing, your today's submissions, recent feedback, and goal progress will appear here.",
       "newUserCta": "Start with recommended problems",
+      "zeroValuePrompt": "Shown after first session",
       "todaySubmissionsTitle": "Today's submissions",
       "todaySubmissionsSuffix": "times",
       "recentFeedbackTitle": "Recent feedback",

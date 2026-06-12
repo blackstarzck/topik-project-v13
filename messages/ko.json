@@ -573,6 +573,7 @@
       "newUserTitle": "첫 학습을 시작해 볼까요?",
       "newUserBody": "문제를 풀고 글쓰기를 제출하면 오늘 제출·최근 첨삭·목표 달성 지표가 여기에 채워져요.",
       "newUserCta": "추천 문제로 시작하기",
+      "zeroValuePrompt": "첫 학습 후 표시",
       "todaySubmissionsTitle": "오늘 제출",
       "todaySubmissionsSuffix": "회",
       "recentFeedbackTitle": "최근 첨삭",
