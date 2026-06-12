@@ -107,6 +107,7 @@ function settingsEqual(a: NotificationSettings, b: NotificationSettings): boolea
   return (
     (a.reminder_time ?? "") === (b.reminder_time ?? "") &&
     a.timezone === b.timezone &&
+    a.channels.in_app === b.channels.in_app &&
     a.channels.email === b.channels.email &&
     a.channels.zalo === b.channels.zalo &&
     a.reminder_days.length === b.reminder_days.length &&

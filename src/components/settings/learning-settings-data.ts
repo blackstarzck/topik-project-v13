@@ -120,7 +120,14 @@ export function detectContentPrefConflict(prefs: ContentPrefs): boolean {
 // X-09 notification_settings + notification_log
 // ---------------------------------------------------------------------------
 
-export type NotificationChannels = { email: boolean; zalo: boolean };
+/**
+ * Channel contract (topik-ai docs/specs/notification-contract.md):
+ * allowed keys are in_app / email / push / zalo. This screen persists
+ * in_app / email / zalo today (push is provider-less "준비 중" and has no
+ * toggle yet). Rows written before 2026-06-12 lack the in_app key —
+ * missing in_app is read as TRUE (in-app은 기본 수신 채널).
+ */
+export type NotificationChannels = { in_app: boolean; email: boolean; zalo: boolean };
 
 export type NotificationSettings = {
   reminder_time: string | null; // "HH:mm[:ss]"
@@ -132,16 +139,18 @@ export type NotificationSettings = {
 export const NOTIFICATION_SETTINGS_DEFAULTS: NotificationSettings = {
   reminder_time: null,
   reminder_days: [],
-  channels: { email: false, zalo: false },
+  channels: { in_app: true, email: false, zalo: false },
   timezone: "Asia/Seoul",
 };
 
 function coerceChannels(raw: unknown): NotificationChannels {
   if (raw == null || typeof raw !== "object" || Array.isArray(raw)) {
-    return { email: false, zalo: false };
+    return { in_app: true, email: false, zalo: false };
   }
   const obj = raw as Record<string, unknown>;
   return {
+    // missing key = true (legacy rows predate the in_app contract)
+    in_app: obj.in_app !== false,
     email: obj.email === true,
     zalo: obj.zalo === true,
   };

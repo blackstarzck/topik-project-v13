@@ -494,9 +494,15 @@ F-M1 PDF 등 사용자 생성 파일 추적.
 
 **Notifications** (`20260602120200_notifications_and_settings.sql`) — X-09 / `/settings/notifications`
 
-- `notification_settings` (PK `user_id`→profiles): `reminder_time`, `reminder_days` jsonb[], `channels` jsonb, `timezone`. owner full control.
-- `notification_log`: `user_id`→profiles, `channel`, `template_key`, `status`(sent/failed/pending), `payload`, `sent_at`. owner read-only(쓰기는 service_role).
+- `notification_settings` (PK `user_id`→profiles): `reminder_time`, `reminder_days` jsonb[], `channels` jsonb, `timezone`. owner full control. `channels` 허용 key는 `in_app`/`email`/`push`/`zalo` 4종 계약(2026-06-12, topik-ai `docs/specs/notification-contract.md`) — 기존 row의 missing `in_app`은 true로 해석.
+- `notification_log`: `user_id`→profiles, `channel`, `template_key`, `status`(sent/failed/pending), `payload`, `sent_at`. owner read-only(쓰기는 service_role). **2026-06-12부터 deprecated** — 발송 이력 SoT는 topik-ai 소유 `notification_dispatches`/`notification_delivery_attempts` 2계층(X-09 이력 패널은 attempts owner-select로 교체 예정, O-9). DDL 변경 없음.
 - 같은 마이그레이션이 `profiles.learning_locale`(ko/en/vi, null=ui_locale 따름) + `profiles.content_prefs` jsonb 컬럼도 추가(G-01).
+
+**Notifications — 인앱 수신함** (`20260612160000_user_notifications.sql`) — 알림센터 / B-01 알림 카드 (2026-06-12, 알림 기능 WP0-4)
+
+- `user_notifications`: `user_id`→profiles(cascade), `template_key`, `category`(study/exam_schedule/notice/event/marketing CHECK), `title`, `body`, `link_url`, `payload` jsonb, `read_at`, `delivery_attempt_id`(topik-ai 소유 attempts **soft 참조 — FK 없음**, 소유권 계약), `created_at`. 인덱스: `(user_id, created_at desc)` + unread partial `(user_id) where read_at is null`.
+- RLS+force: owner select / owner update. **update는 `read_at` 단일 컬럼 grant**(테이블 update revoke 후 컬럼 grant) — insert/delete는 client 역할에서 revoke, 쓰기는 발송 파이프라인(service_role) 전용.
+- 스키마 소유권: 이 테이블은 v13 소유. admin 운영 테이블(templates/groups/dispatches/attempts)은 topik-ai가 `admin_schema_migrations` tracker로 별도 관리 — topik-ai `docs/architecture/shared-supabase-schema-ownership.md` 참조.
 
 **Organizations** — ❌ **제거됨 (2026-06-09, `20260609130000_remove_v13_admin_island.sql`)**
 
@@ -678,6 +684,7 @@ erDiagram
 | `20260609120000` | `list_user_problems_writing_state.sql` | `list_user_problems` 쓰기 상태/ lifecycle 반환 |
 | `20260609130000` | `remove_v13_admin_island.sql` | v13 admin RPC/org island 제거 |
 | `20260610104017` | `seed_initial_legal_documents.sql` | `/auth/consent`용 `legal_documents` published placeholder seed (`terms`/`privacy`, `ko/en/vi`) |
+| `20260612160000` | `user_notifications.sql` | 알림 기능 인앱 수신함 `user_notifications` (owner select + `read_at` 컬럼 grant update, 파이프라인 insert 전용, attempts soft 참조) |
 
 ### 적용 방법
 
@@ -729,6 +736,7 @@ Tier 2 도입 시 새 마이그레이션 timestamp는 `2026XXXXHHMMSS_<domain>.s
 - admin 판정은 `private.is_admin()` SECURITY DEFINER 함수만 (JWT claim 금지 — DB가 truth).
 - `profiles.app_role` / `plan_label` / `status`는 BEFORE UPDATE 트리거 `private.protect_profile_columns()` 가 보호. 비-admin은 어떤 경로로도 변경 불가 (RLS + 트리거 이중).
 - Storage 경로 컨벤션 (필수): `avatars/{user_id}/...`, `problem-assets/{problem_id}/...`, `generated-exports/exports/{user_id}/{export_id}.pdf`. 위반 시 storage RLS 정책으로 차단됨.
+- `user_notifications`는 owner가 `read_at`만 변경 가능(테이블 update revoke + 단일 컬럼 grant). insert/delete는 service_role 파이프라인 전용. `delivery_attempt_id`는 cross-namespace FK 금지 계약에 따라 soft 참조.
 
 ## 8. 변경 이력
 

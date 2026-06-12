@@ -58,8 +58,8 @@
 - notification_log는 본인 select만 가능하고 쓰기는 알림 서비스 권한 흐름이다.
 
 ## 스키마 정합성 메모
-사용자 알림 설정과 발송 이력은 현재 스키마로 충족된다. 템플릿 본문 관리 구조는 없다.
+사용자 알림 설정과 발송 이력은 현재 스키마로 충족된다. 템플릿 본문 관리 구조는 없다(관리자 앱 topik-ai 소유 — `notification_templates`).
 
 ## 검수 필요 항목
-- channels JSON의 허용 key를 고정한다.
+- ~~channels JSON의 허용 key를 고정한다.~~ **확정(2026-06-12)**: 허용 key는 `in_app`/`email`/`push`/`zalo` 4종 (topik-ai `docs/specs/notification-contract.md` 계약). 기존 row의 missing `in_app`은 true(기본 수신)로 해석한다. `push`는 provider 연동 전 "준비 중"이며 이 화면에 토글이 없다.
 - timezone 기본값과 daylight saving 처리를 정한다.
