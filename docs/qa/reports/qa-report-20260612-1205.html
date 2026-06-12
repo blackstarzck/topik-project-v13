@@ -75,6 +75,19 @@
 <strong>단, prod 배포 전 반드시 처리할 환경 설정 1건이 있습니다</strong> — <code>NEXT_PUBLIC_SITE_URL</code> 미설정 시 회원가입·비밀번호 재설정·인증 메일 재전송이 전부 멈춥니다(아래 D-1).
 </div>
 
+<div class="danger">
+<strong>⚠️ PASS의 정확한 의미 — 의도적 스텁/Mock 백엔드 공개 (2026-06-12 추가, 정정)</strong><br>
+이 리포트의 "PASS"는 <b>화면 렌더·흐름·정합·해당 e2e 통과</b>를 뜻합니다. <b>"기능이 실제로 끝까지 동작/연동된다"는 뜻이 아닙니다.</b> 다음은 코드상 <b>의도적으로 스텁/Mock/deferred</b>인 백엔드입니다(전부 코드 주석으로 정직하게 표기돼 있어 결함은 아니지만, PASS가 "완성"으로 오해되지 않도록 명시). 자세한 영향은 §11-S 참조.
+<ul>
+<li><b>AI 피드백/분석(E-01·E-02·R-01·D-M2)</b> — 제출 시 <code>generateMockFeedback()</code>(<code>ai_model:"mock-v1"</code>)로 생성. <b>실제 LLM/AI 아님.</b> 제출→피드백 표시 <em>흐름</em>은 동작하나 점수·코멘트는 mock.</li>
+<li><b>알림 발송(X-09)</b> — preference 저장만, <b>실제 이메일/푸시 transport 없음(스텁)</b>. 화면도 "준비 중" 표기.</li>
+<li><b>결제/구독(X-03·X-04)</b> — 결제 provider 미연동. CTA는 정직한 "연동 예정" 안내(스텁).</li>
+<li><b>PDF 내보내기(F-M1)</b> — 브라우저 인쇄(window.print)는 동작, <b>서버 파일 다운로드는 준비 중</b>.</li>
+<li><b>다시 풀기 힌트 포함 모드(C-03)</b> — deferred(비활성+안내). 기본 다시풀기는 동작.</li>
+</ul>
+실제 동작이 검증된 것: 라우트 렌더·하이드레이션, 접근 제어, 폼 검증/저장 게이팅, 언어 전환, 아바타 업로드(실 Storage 연동), 시크릿 비노출.
+</div>
+
 <div class="kpis">
   <div class="kpi"><div class="n" style="color:var(--pass)">0</div><div class="l">P0 (지금 당장)</div></div>
   <div class="kpi"><div class="n" style="color:var(--pass)">0</div><div class="l">P1 (이번 주)</div></div>
@@ -222,29 +235,29 @@
 <tr><td>B-01</td><td>홈 대시보드</td><td><span class="pill pass">PASS</span></td><td>영역 1-4 모두 존재(사이드내비/KPI 4+갱신시각/추천·진행 카드/최근 피드백). 성장=🔒유료 배지(잠금 사유). 캡처 확인</td></tr>
 <tr><td>C-01</td><td>문제 유형 추천</td><td><span class="pill pass">PASS</span></td><td>렌더+하이드레이션</td></tr>
 <tr><td>C-02</td><td>문제 목록</td><td><span class="pill pass">PASS</span></td><td>영역 1-5 모두: 필터(유형 탭/난이도/풀이상태/추천만)·검색(2-40자)·정렬·행(번호·유형·난이도·●공개·시작)·페이지(총 223 중 1-10). 캡처 확인</td></tr>
-<tr><td>C-03</td><td>다시 풀기 모달</td><td><span class="pill pass">PASS</span></td><td>모달(라우트 없음) — user-flow상 C-02에서 트리거. C-02 행→시작 동작 확인</td></tr>
+<tr><td>C-03</td><td>다시 풀기 모달</td><td><span class="pill pass">PASS(기본)</span></td><td>모달(라우트 없음) — C-02에서 트리거. 기본 다시풀기 동작. <b>단 "힌트 포함" 모드는 deferred(비활성+안내)</b></td></tr>
 <tr><td>D-01</td><td>51번 단답</td><td><span class="pill pass">PASS</span></td><td>영역 1-5(저장/제출·지문·이미지·입력 10-120자·도움말). 제출 비활성(글자수 부족 "왜 안되는지" 표시)</td></tr>
 <tr><td>D-02</td><td>52번 답안</td><td><span class="pill pass">PASS</span></td><td>렌더+하이드레이션</td></tr>
 <tr><td>D-03</td><td>53번 장문</td><td><span class="pill pass">PASS</span></td><td>지문·조건·참고차트(recharts)·도입/전개/마무리 에디터·글자수(0/300 권장)·원고지·작성단계 stepper. 캡처 확인</td></tr>
 <tr><td>D-04</td><td>54번 에세이</td><td><span class="pill pass">PASS</span></td><td>렌더+하이드레이션</td></tr>
 <tr><td>D-M1</td><td>제출 확인 모달</td><td><span class="pill pass">PASS</span></td><td>submission-confirm-modal.spec GREEN(동의 전 제출 비활성→체크 후 활성→취소시 입력 보존). 모달은 <code>&lt;h2&gt;</code>로 제목 렌더(antd6)</td></tr>
-<tr><td>D-M2</td><td>AI 분석 로딩</td><td><span class="pill pass">PASS</span></td><td>analysis-loading-modal.spec GREEN</td></tr>
+<tr><td>D-M2</td><td>AI 분석 로딩</td><td><span class="pill warn">화면 PASS · 분석=mock</span></td><td>analysis-loading-modal.spec GREEN(모달 컴포넌트). <b>실제 분석은 <code>generateMockFeedback</code>(mock-v1)</b>이라 거의 즉시 완료 — 폴링/지연/실패 패널은 컴포넌트 단위로만 확인(런타임 장기 폴링 미재현=UNVERIFIED, G4 연계)</td></tr>
 <tr><td>D-M3</td><td>자동저장 경고</td><td><span class="pill warn">부분</span></td><td>autosave-warning-modal.spec GREEN(컴포넌트). <b>단 앱 내 이동 트리거는 미배선=스펙 갭 G1</b></td></tr>
-<tr><td>E-01</td><td>단답 피드백</td><td><span class="pill pass">PASS</span></td><td>시드 데이터로 검증: 총평·4차원 카드·문장 첨삭·추천·4액션. short-feedback.spec GREEN</td></tr>
-<tr><td>E-02</td><td>장문 피드백</td><td><span class="pill pass">PASS</span></td><td>시드 데이터로 검증. long-feedback.spec GREEN</td></tr>
-<tr><td>R-01</td><td>비교 리포트</td><td><span class="pill pass">PASS</span></td><td>시드 데이터로 검증: KPI·비교 bar 차트(이전 vs 현재)·표로보기·narrative. comparison-report.spec GREEN</td></tr>
+<tr><td>E-01</td><td>단답 피드백</td><td><span class="pill pass">PASS(표시/흐름)</span></td><td>시드 데이터로 표시 검증: 총평·4차원 카드·문장 첨삭·추천·4액션. short-feedback.spec GREEN. <b>주의: 점수/코멘트는 <code>mock-v1</code> 생성(실 AI 아님)</b> — 표시·제출 흐름 PASS, 콘텐츠 품질은 mock</td></tr>
+<tr><td>E-02</td><td>장문 피드백</td><td><span class="pill pass">PASS(표시/흐름)</span></td><td>시드 데이터로 표시 검증. long-feedback.spec GREEN. <b>주의: 콘텐츠는 <code>mock-v1</code> 생성(실 AI 아님)</b></td></tr>
+<tr><td>R-01</td><td>비교 리포트</td><td><span class="pill pass">PASS(표시/흐름)</span></td><td>시드 데이터로 표시 검증: KPI·비교 bar 차트(이전 vs 현재)·표로보기·narrative. comparison-report.spec GREEN. <b>주의: narrative/점수는 <code>mock-v1</code> 기반</b></td></tr>
 <tr><td>R-02</td><td>다음 문제 추천</td><td><span class="pill pass">PASS</span></td><td>next-problem.spec GREEN; 폴백 추천 렌더</td></tr>
 <tr><td>F-01</td><td>내 서재</td><td><span class="pill pass">PASS</span></td><td>library.spec GREEN(탭·검색·페이지·빈상태)</td></tr>
-<tr><td>F-M1</td><td>PDF 내보내기 모달</td><td><span class="pill pass">PASS</span></td><td>모달; window.print 호출(LIB-S1 코드 확인). core-writing-flow 후반 단계가 모달 오픈 확인(env 수정 후 도달 가능)</td></tr>
+<tr><td>F-M1</td><td>PDF 내보내기 모달</td><td><span class="pill pass">PASS(인쇄)</span></td><td>모달 + <b>브라우저 인쇄(window.print)는 동작</b>(LIB-S1). <b>단 서버 파일 다운로드(generated-exports 버킷)는 "준비 중"(deferred)</b>. core-writing-flow 후반이 모달 오픈 확인</td></tr>
 <tr><td>G-01</td><td>설정 언어</td><td><span class="pill pass">PASS</span></td><td>language-settings.spec GREEN; SET-S2 직접 관찰: 영어 전환 즉시 반영, missing key 0, coverageNote 노출</td></tr>
 <tr><td>X-01</td><td>제품 랜딩</td><td><span class="pill pass">PASS</span></td><td>screens-public.spec GREEN + 캡처</td></tr>
 <tr><td>X-02</td><td>성장 대시보드</td><td><span class="pill pass">PASS</span></td><td>growth-dashboard.spec GREEN; 무료=잠금 UI(ACC-S4)</td></tr>
 <tr><td>X-03</td><td>페이월</td><td><span class="pill pass">PASS</span></td><td>paywall.spec GREEN; 3주기·추천배지 1개·정직한 스텁. 캡처 확인</td></tr>
-<tr><td>X-04</td><td>구독 관리</td><td><span class="pill pass">PASS</span></td><td>subscription-management.spec GREEN</td></tr>
+<tr><td>X-04</td><td>구독 관리</td><td><span class="pill pass">PASS(화면)</span></td><td>subscription-management.spec GREEN. <b>변경/해지/결제수단은 EXTERNAL STUB</b>(정책 모달 "연동 예정", 실제 billing 호출 없음). 결제 이력 표시는 동작</td></tr>
 <tr><td>X-05</td><td>프로필 편집</td><td><span class="pill pass">PASS</span></td><td>profile-editing.spec GREEN</td></tr>
 <tr><td>X-06</td><td>비밀번호 재설정</td><td><span class="pill pass">PASS</span></td><td>password-reset.spec env 수정 후 GREEN(요청 인터셉트→sent 상태)</td></tr>
 <tr><td>X-07</td><td>약점 기반 추천</td><td><span class="pill pass">PASS</span></td><td>weakness-recommendations.spec GREEN; 무료=잠금</td></tr>
-<tr><td>X-09</td><td>알림 설정</td><td><span class="pill pass">PASS</span></td><td>notification-settings.spec GREEN</td></tr>
+<tr><td>X-09</td><td>알림 설정</td><td><span class="pill warn">부분(화면 PASS)</span></td><td><b>화면 렌더 + 저장 dirty-게이팅(변경 시 저장 활성)만 검증</b>(notification-settings.spec는 이름부터 "renders ... <em>without saving</em>" — 렌더 전용). <b>저장 영속성(profiles.notification_prefs 반영·재진입 유지)은 본 QA 미검증=UNVERIFIED.</b> <b>실제 발송 transport는 미구현 스텁/deferred</b>(화면도 "준비 중" 표기). "알림 기능 동작"으로 읽으면 과장.</td></tr>
 <tr><td>X-11</td><td>인증 에러</td><td><span class="pill pass">PASS</span></td><td>auth-error.spec GREEN; reason 매핑 캡처</td></tr>
 <tr><td>X-12</td><td>인증 메일 확인</td><td><span class="pill pass">PASS</span></td><td>verify-email.spec env 수정 후 GREEN; 재전송→resend 요청+cooldown 직접 확인</td></tr>
 <tr><td>X-13</td><td>이용약관</td><td><span class="pill pass">PASS</span></td><td>terms.spec GREEN</td></tr>
@@ -275,7 +288,9 @@
 <tr><td>STATE-S3</td><td>잘못된 문제 id</td><td>[CODE]</td><td><span class="pill warn">부분(P2)</span></td><td>valid uuid(없음)=정상 빈상태+재시도+문제목록 / malformed(비-uuid)=서버 에러 바운더리(D-3)</td></tr>
 <tr><td>STATE-S4</td><td>없는 라우트</td><td>[CODE]</td><td><span class="pill warn">부분(P3)</span></td><td>최상위 미매치=Next 기본 404(전용 AppNotFound 아님). (workspace) 내부는 커스텀 404 정상</td></tr>
 <tr><td>NAV-S1</td><td>오래된 콜백 재방문</td><td>[CODE]</td><td><span class="pill pass">PASS</span></td><td>auth-callback-history.spec GREEN</td></tr>
-<tr><td colspan="5"><small>그 외 ONB/PRAC-S2~4/WRIT-S1·S4·S5/FB-S1~3/LIB-S1/SET-S1·S3/PERS/VAL/NAV-S2~5/STD 시나리오는 해당 화면 e2e 스펙(30개, 3뷰포트) 통과 + 코드 조사로 커버. 실제 메일 링크/멀티탭/오프라인/IME 등 외부·OS 의존 케이스는 §11 UNVERIFIED, §13 위험으로 분리.</small></td></tr>
+<tr><td>SET-S3</td><td>알림 설정 저장</td><td>[CODE]</td><td><span class="pill warn">부분</span></td><td>화면·저장 게이팅 ✓. <b>저장 영속성 미검증(UNVERIFIED), 발송은 스텁</b> — §11-S 참조</td></tr>
+<tr><td>FB-S1~3</td><td>피드백 열람·성장·재열람</td><td>[CODE]</td><td><span class="pill pass">표시/흐름 PASS</span></td><td>표시·흐름은 e2e+시드로 검증. <b>단 피드백 콘텐츠는 mock-v1 생성</b> — §11-S 참조</td></tr>
+<tr><td colspan="5"><small>그 외 ONB/PRAC-S2~4/WRIT-S1·S4·S5/LIB-S1/SET-S1/PERS/VAL/NAV-S2~5/STD 시나리오는 해당 화면 e2e 스펙(30개, 3뷰포트) 통과 + 코드 조사로 커버. 실제 메일 링크/멀티탭/오프라인/IME 등 외부·OS 의존 케이스는 §12 UNVERIFIED, §14 위험으로 분리. <b>스텁/Mock 백엔드는 §11-S에 전수 명시.</b></small></td></tr>
 </table>
 
 <!-- ======================= GAPS ======================= -->
@@ -337,7 +352,7 @@
 <tr><td>UX/사용성</td><td><span class="pill warn">조건부</span></td><td>핵심 과업 완료 막힘 없음. 단 로그아웃 진입점(U-1)·인증 실패 피드백(U-2)은 개선 백로그</td></tr>
 <tr><td>개발</td><td><span class="pill warn">조건부</span></td><td>lint/typecheck/build/test PASS. format FAIL(P3). e2e는 env 수정 후 GREEN(잔여 1=테스트 셀렉터). secret 미노출, route guard 정상</td></tr>
 <tr><td>QA</td><td><span class="pill pass">PASS</span></td><td>P0/P1 0건. 재현 절차·증거 기록. 환경 게이트 1건 명시</td></tr>
-<tr><td>콘텐츠/학습</td><td><span class="pill pass">PASS</span></td><td>51-54 문항 맥락·CTA·피드백 문구 학습자 친화. 단 일부 시드 콘텐츠("알고리즘 추천 서비스" 등) 정합은 콘텐츠팀 확인 권장</td></tr>
+<tr><td>콘텐츠/학습</td><td><span class="pill warn">조건부</span></td><td>51-54 문항 맥락·CTA·UI 문구 학습자 친화. <b>단 피드백 콘텐츠는 mock-v1 생성</b>(실 AI 품질 미검증, §11-S). 일부 시드 콘텐츠("알고리즘 추천 서비스" 등) 정합은 콘텐츠팀 확인 권장</td></tr>
 </table>
 
 <!-- ======================= DEFECTS ======================= -->
@@ -383,10 +398,26 @@
 <p><code>core-writing-flow.spec.ts:81</code>이 antd 6에서 사라진 <code>.ant-modal-title</code> 클래스로 D-M1 제목을 찾아 실패. 실제 모달은 정상(제목 h2·체크박스·제출 버튼 렌더, 전용 spec PASS). <b>제품 결함 아님.</b> 권장: 셀렉터를 <code>getByTestId("submission-confirm-modal")</code>로 교체.</p>
 </div>
 
+<h3 id="stubs">11-S · 스텁 / Mock / Deferred 백엔드 (결함 아님 · PASS 범위 명시)</h3>
+<div class="note">아래는 <b>코드상 의도적으로 미연동/Mock</b>인 백엔드입니다(주석에 정직하게 표기 → 결함으로 집계하지 않음). 화면·흐름은 동작하므로 PASS이지만, "기능이 끝까지 동작/연동된다"로 읽으면 과장입니다. 자기-감사(2026-06-12 사용자 지적 후)로 전수 확인.</div>
+<table>
+<tr><th>기능</th><th>화면/흐름</th><th>실제 백엔드 상태</th><th>근거(코드)</th></tr>
+<tr><td>AI 피드백/분석 (E-01·E-02·R-01·D-M2)</td><td>제출→피드백 표시 흐름 ✓</td><td><b>Mock</b> — <code>generateMockFeedback()</code>, <code>ai_model:"mock-v1"</code>. 실 LLM/AI 아님</td><td><code>src/lib/writing/feedback-service.ts</code>, <code>server-actions.ts</code></td></tr>
+<tr><td>알림 발송 (X-09)</td><td>설정 화면·저장 게이팅 ✓</td><td><b>스텁</b> — preference 저장만, 이메일/푸시 transport 없음</td><td><code>src/components/settings/NotificationPrefsForm.tsx</code> ("REAL SEND is an external stub")</td></tr>
+<tr><td>결제 (X-03)</td><td>페이월·요금제 표시 ✓</td><td><b>스텁</b> — provider 미연동, CTA="연동 예정"</td><td><code>src/components/settings/PaywallShell.tsx</code></td></tr>
+<tr><td>구독 변경/해지/결제수단 (X-04)</td><td>구독·이력 표시 ✓</td><td><b>스텁</b> — 정책 모달 "연동 예정", billing 호출 없음</td><td><code>src/components/settings/SubscriptionShell.tsx</code></td></tr>
+<tr><td>PDF 내보내기 (F-M1)</td><td>브라우저 인쇄(window.print) ✓</td><td>서버 파일 다운로드(generated-exports 버킷) <b>준비 중</b></td><td><code>src/components/library/PdfExportModal.tsx</code></td></tr>
+<tr><td>다시 풀기 힌트 모드 (C-03)</td><td>기본 다시풀기 ✓</td><td>힌트 포함 모드 <b>deferred</b>(비활성+안내)</td><td><code>src/components/practice/RetryModal.tsx</code></td></tr>
+<tr><td>아바타 업로드 (X-05) — <em>대조군</em></td><td>업로드·검증 ✓</td><td><b>실연동</b>(Supabase Storage avatars 버킷). 스텁 아님 — 오해 방지용 기재</td><td><code>src/components/profile/avatar-upload.ts</code></td></tr>
+</table>
+<div class="note"><b>검증 방법 caveat:</b> 일부 화면은 <code>screens-authed.spec.ts</code>의 <b>렌더 전용 스모크</b>("renders authed without page errors")로만 e2e 커버됩니다(heading 노출·/login 미바운스). 이 화면들은 "렌더 검증"이지 "동작 검증"이 아닙니다. 동작까지 단언하는 전용 스펙(피드백 카드 수·제출 게이팅·언어 전환 등)이 있는 화면은 본문에 해당 spec명을 적었습니다.</div>
+
 <!-- ======================= UNVERIFIED ======================= -->
 <h2 id="unverified">12. UNVERIFIED 목록 (사유 + 재검증 방법)</h2>
 <table>
 <tr><th>항목</th><th>사유</th><th>재검증 방법</th></tr>
+<tr><td><b>X-09 알림 설정 저장 영속성</b></td><td>통과 e2e가 렌더 전용("without saving")이고, "작업하지 말라"는 지시로 저장 클릭+재진입을 직접 수행하지 않음. (발송 transport는 §11-S 스텁이라 별개)</td><td>알림 토글 변경→저장 클릭→성공 토스트 확인→재진입 시 값 유지 확인(profiles.notification_prefs 반영). 서버 1회 기동 필요</td></tr>
+<tr><td><b>제출→실제 피드백 "내용 품질"</b></td><td>제출→피드백 흐름은 검증됐으나 콘텐츠가 <code>mock-v1</code>이라 실 AI 품질은 검증 대상 아님(§11-S)</td><td>실 LLM transport 연동 후 별도 검증</td></tr>
 <tr><td>교차-유저 RLS 격리(user-A↔user-B)</td><td>테스트 계정 1개(student@audit.local)만 존재</td><td>2번째 계정 추가 후 타인 소유 row 접근 시도, 또는 Docker 스택에서 rls-smoke.test 실행</td></tr>
 <tr><td>실제 메일 링크 흐름(만료/cleanup 후 user_not_found)</td><td>실제 메일 수신/링크 만료가 외부(Supabase) 의존</td><td>스테이징 메일박스에서 만료 링크 클릭 → X-11 reason 매핑 확인(user-flow 6시나리오)</td></tr>
 <tr><td>AUTH-S2 동의 미충족 분기 / G7·G8 온보딩 게이트</td><td>테스트 계정이 이미 동의+학습목표 완료</td><td>동의·목표 미완료 신규 계정으로 post-auth→consent/A-03 분기 확인</td></tr>
