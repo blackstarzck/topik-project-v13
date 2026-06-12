@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>TALKPIK AI 브라우저 중심 QA 실행 계획안 (rev6)</title>
+<style>
+  :root {
+    --ink: #1f2937;
+    --muted: #6b7280;
+    --line: #e5e7eb;
+    --accent: #1677ff;
+    --warn-bg: #fffbe6;
+    --warn-line: #faad14;
+    --danger-bg: #fff1f0;
+    --danger-line: #ff4d4f;
+    --ok-bg: #f6ffed;
+    --ok-line: #52c41a;
+    --code-bg: #f5f5f5;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Pretendard", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
+    color: var(--ink);
+    line-height: 1.7;
+    background: #fafafa;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 32px 20px 80px; }
+  header.doc {
+    background: #fff; border: 1px solid var(--line); border-radius: 12px;
+    padding: 24px 28px; margin-bottom: 24px;
+  }
+  h1 { font-size: 24px; margin: 0 0 6px; }
+  .sub { color: var(--muted); font-size: 14px; margin: 0; }
+  .badge {
+    display: inline-block; font-size: 12px; font-weight: 700; color: #fff;
+    background: var(--accent); border-radius: 999px; padding: 2px 10px;
+    vertical-align: middle; margin-left: 8px;
+  }
+  section {
+    background: #fff; border: 1px solid var(--line); border-radius: 12px;
+    padding: 20px 28px; margin-bottom: 20px;
+  }
+  h2 {
+    font-size: 18px; margin: 4px 0 14px; padding-bottom: 8px;
+    border-bottom: 2px solid var(--accent);
+  }
+  h3 { font-size: 15px; margin: 18px 0 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 10px 0; }
+  th, td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: #f0f5ff; }
+  code {
+    background: var(--code-bg); border-radius: 4px; padding: 1px 6px;
+    font-family: Consolas, "D2Coding", monospace; font-size: 13px;
+  }
+  ul, ol { padding-left: 22px; margin: 8px 0; }
+  li { margin: 4px 0; }
+  .callout { border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-size: 14px; }
+  .callout.warn { background: var(--warn-bg); border: 1px solid var(--warn-line); }
+  .callout.danger { background: var(--danger-bg); border: 1px solid var(--danger-line); }
+  .callout.ok { background: var(--ok-bg); border: 1px solid var(--ok-line); }
+  .callout strong:first-child { display: block; margin-bottom: 4px; }
+  .num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 50%; background: var(--accent);
+    color: #fff; font-size: 12px; font-weight: 700; margin-right: 8px; flex: none;
+  }
+  .keylist { list-style: none; padding-left: 0; }
+  .keylist li { display: flex; gap: 4px; margin: 8px 0; }
+  footer { color: var(--muted); font-size: 12px; text-align: center; margin-top: 24px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="doc">
+  <h1>TALKPIK AI 브라우저 중심 QA 실행 계획안 <span class="badge">rev6</span></h1>
+  <p class="sub">2026-06-12 · 상태: 확정 — QA 실행 시 이 문서를 따른다 · 원본: <code>docs/qa/qa-execution-plan.md</code></p>
+  <table>
+    <tr><th style="width:200px">보고서 저장 위치</th><td><code>docs/qa/reports/qa-report-YYYYMMDD-HHMM.html</code></td></tr>
+    <tr><th>증거(스크린샷) 위치</th><td><code>docs/qa/reports/qa-report-YYYYMMDD-HHMM-evidence/</code></td></tr>
+    <tr><th>라우트 단일 출처</th><td><code>src/lib/routes.ts</code></td></tr>
+  </table>
+</header>
+
+<section>
+  <h2>요약</h2>
+  <ul>
+    <li>QA 기본 실행 방식은 <strong>AI가 Playwright와 in-app browser로 실제 화면을 열고 클릭/입력/전환/스크린샷을 검증하는 방식</strong>으로 한다.</li>
+    <li>자동 테스트는 필수 게이트다. 최종 판정은 "테스트 통과 + 브라우저 직접 조작 증거 + HTML 보고서"를 함께 본다.</li>
+    <li><strong>증거 판정 규칙: 하이드레이션(클라이언트 코드 실행)이 증명되지 않은 캡처는 PASS/FAIL 판정 금지, UNVERIFIED로 기록한다.</strong> UNVERIFIED는 통과로 집계하지 않는다.</li>
+    <li>방법론: ISTQB risk-based testing, Test Pyramid, Agile Testing Quadrants, Exploratory Testing, Playwright Trace Viewer, OWASP WSTG, WCAG 2.2, Nielsen 10 usability heuristics(휴리스틱 평가).</li>
+    <li>프로젝트 기준: <code>docs/spec.md</code>, <code>docs/sitemap.md</code>, <code>docs/flow/user-flow.md</code>, <code>docs/Wireframe/README.md</code>, <code>TESTING.md</code>. <strong>화면별 검증 기준은 각 와이어프레임 폴더의 <code>description.md</code>다</strong> (실행 단계 3의 매핑 표 참조).</li>
+  </ul>
+</section>
+
+<section>
+  <h2>rev2–rev6에서 보완된 핵심</h2>
+  <p>실제 저장소 대조와 과거 사고 이력에서 나온 보완. 실행 시 생략 금지.</p>
+  <ul class="keylist">
+    <li><span class="num">1</span><div><strong>순서 고정</strong> — 자동화 게이트(빌드 포함) 전부 → 서버 기동 → 브라우저 QA. dev 서버가 살아있을 때 <code>pnpm build</code> 실행 금지(<code>.next</code> 오염 → 가짜 500 사고 이력).</div></li>
+    <li><span class="num">2</span><div><strong>prod 빌드 기본</strong> — 긴 Playwright 실행은 dev 서버를 열화시켜 가짜 타임아웃을 만든 이력이 있다. e2e와 대량 캡처는 <code>pnpm build &amp;&amp; pnpm start</code> 기준.</div></li>
+    <li><span class="num">3</span><div><strong>UNVERIFIED 규칙</strong> — 헤드리스 캡처가 실화면과 달라 거짓 결함을 보고한 사고(2026-06-05)의 재발 방지. 하이드레이션 증명 전에는 판정하지 않는다.</div></li>
+    <li><span class="num">4</span><div><strong>라우트 목록은 <code>src/lib/routes.ts</code> 기준</strong> — 문서 간 라우트 표기가 어긋나면 routes.ts가 이긴다.</div></li>
+    <li><span class="num">5</span><div><strong>trace 미커밋</strong> — <code>test-results/</code>와 <code>tests/e2e/auth-state/</code>는 gitignore 대상(인증 토큰 포함). 보고서에는 스크린샷만 복사하고 trace는 로컬 경로만 기록.</div></li>
+    <li><span class="num">6</span><div><strong>Docker 의존 테스트는 skip 전제</strong> — 이 환경에는 Docker/Supabase CLI가 없어 <code>pnpm test:supabase:local</code>은 실행 불가가 기본. 환경 제약이지 결함이 아니다.</div></li>
+    <li><span class="num">7</span><div><strong>화면별 와이어프레임 대조 (rev3 추가)</strong> — 각 화면은 <code>docs/Wireframe/&lt;화면 폴더&gt;/description.md</code>의 영역(Number Map)·제약 조건·예외 상태를 기준으로 검증한다. 스모크(뜨는지)만 보고 통과 판정하지 않는다.</div></li>
+    <li><span class="num">8</span><div><strong>UX/사용성 휴리스틱 평가 (rev4 추가)</strong> — 정합·결함 검증과 별개로 "쓰기 편한가"를 Nielsen 휴리스틱 체크리스트로 본다. 발견 항목은 휴리스틱 번호+증거 스크린샷+개선 제안 세트로만 기록하고, 근거 없는 "느낌상 불편" 판정은 금지(거짓 보고 사고 재발 방지).</div></li>
+    <li><span class="num">9</span><div><strong>분야별 사용자 시나리오 (rev4 추가)</strong> — 시나리오는 한 줄 요약이 아니라 <strong>상황(누가·어떤 상태) + 진입 경로(어디서 어떻게) + 기대 결과</strong> 세트로 정의한다. 직접 URL 진입은 스모크 용도일 뿐이고, 시나리오는 반드시 실제 사용자 경로로 수행한다.</div></li>
+    <li><span class="num">10</span><div><strong>시나리오 3층 출처 모델 (rev5 추가)</strong> — 기대 결과의 출처를 <strong>[SPEC] 문서 정의 / [CODE] 코드 구현 확인 / [STD] 표준 사용성(프로젝트 미고려 흐름)</strong>으로 라벨링한다. 어느 층에도 정의가 없으면 결함이 아니라 <strong>스펙 갭(UNDEFINED)</strong>으로 기록하고 문서 게이트로 에스컬레이션 — QA가 제품 동작을 임의로 발명하지 않는다. 코드 심층 조사 3건(2026-06-12)으로 갭 G1~G10 선식별(4-C).</div></li>
+    <li><span class="num">11</span><div><strong>기능 단위 실행 상태 검증 (rev6 추가)</strong> — 각 화면 <code>functional-spec.md</code>의 "주요 기능" 목록을 인벤토리로 삼아, 기능마다 <strong>시작 전→시작→실행 중→성공/실패 5단계의 인터랙션 관리</strong>(클릭 방지, 진행 표시, 입력 보존, 잠금 해제)를 검증한다(4-D). 서비스 전역으로는 상태 관리 5원칙 위반을 sweep한다.</div></li>
+  </ul>
+</section>
+
+<section>
+  <h2>사전 점검 (Preflight)</h2>
+  <ul>
+    <li><code>git status --short</code>, <code>node --version</code>, <code>pnpm --version</code> 기록 (Node 24 필요 — <code>package.json</code> engines 기준).</li>
+    <li><strong>포트 3000 점유 프로세스 확인</strong> — 죽지 않은 테스트 서버가 IPv6 localhost(<code>::1</code>)를 점유해 "무한 로딩"을 일으킨 이력이 있다. 유령 프로세스가 있으면 종료 후 시작.</li>
+    <li><code>.env.local</code>에 <code>SUPABASE_TEST_PASSWORD</code> 등 필요 키가 <strong>활성 라인</strong>으로 존재하는지 확인. 값은 출력 금지. 주석 라인만 보고 "키 없음" 단정 금지.</li>
+    <li>동시 작업 중인 다른 에이전트의 미커밋 변경이 있는지 <code>git status</code> 전체 확인.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>실행 방식과 순서 (순서 고정)</h2>
+  <ol>
+    <li><strong>자동화 게이트 먼저</strong> — 서버를 띄우지 않은 상태에서, 순차 실행: lint → typecheck → format → build → test</li>
+    <li><strong>그다음 서버 기동</strong> — e2e와 대량 캡처는 <code>pnpm build &amp;&amp; pnpm start</code>(prod) 기본. 탐색적 QA는 <code>pnpm dev</code> 허용.</li>
+    <li><strong>브라우저 QA</strong> — Playwright e2e(scripted regression, trace, viewport) + in-app browser(탐색적 QA).</li>
+  </ol>
+  <div class="callout danger">
+    <strong>금지</strong>
+    dev 서버가 살아있는 상태에서 <code>pnpm build</code> 실행 금지 — <code>.next</code>가 섞여 가짜 500 에러가 난다.
+  </div>
+  <ul>
+    <li><code>pnpm test:e2e</code>는 서버를 자동 기동하지 않는다(<code>playwright.config.ts</code>에 webServer 설정 없음). 서버 기동 확인 후 실행. base URL: <code>E2E_BASE_URL</code> 또는 기본값 <code>http://127.0.0.1:3000</code>.</li>
+    <li>viewport는 playwright.config의 3개 프로젝트와 동일: mobile <code>360x720</code>, tablet <code>768x1024</code>, desktop <code>1280x800</code>.</li>
+    <li>실패 시 Playwright trace, screenshot, <code>test-results/failure-log.json</code>을 증거로 수집.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>역할별 QA 매트릭스</h2>
+  <table>
+    <tr><th>담당 영역</th><th>AI가 확인할 것</th><th>통과 기준</th></tr>
+    <tr><td>기획</td><td>PRD, sitemap, user-flow, 화면별 wireframe <code>description.md</code> 대비 실제 route/flow</td><td>문서와 실제 화면 흐름이 충돌하지 않음</td></tr>
+    <tr><td>디자인</td><td>Ant Design 사용, responsive, 상태, 접근성</td><td>overflow/겹침 없음, loading/empty/error/disabled 존재. <strong>판정은 하이드레이션 증명된 캡처에서만</strong></td></tr>
+    <tr><td>UX/사용성</td><td>핵심 과업 흐름의 마찰, 상태 가시성, 오류 메시지, 폼 사용성, 터치 타깃, 학습자 언어</td><td>핵심 과업 완료에 막힘 없음. 발견 항목은 휴리스틱 근거+증거와 함께 기록</td></tr>
+    <tr><td>개발</td><td>lint, typecheck, build, unit/integration/e2e, auth/RLS/env</td><td>명령 통과, secret 미노출, protected route guard 정상</td></tr>
+    <tr><td>QA</td><td>end-to-end 사용자 시나리오, 회귀, 결함 등급</td><td>P0/P1 0개, 재현 절차와 증거 기록</td></tr>
+    <tr><td>콘텐츠/학습</td><td>TOPIK 51~54 문항 맥락, CTA, 피드백 문구</td><td>학습자가 다음 행동을 이해할 수 있음</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>실행 단계</h2>
+
+  <h3>1. 자동화 게이트 (순차 실행)</h3>
+  <ul>
+    <li><code>pnpm lint</code> / <code>pnpm typecheck</code> / <code>pnpm format</code> / <code>pnpm build</code> / <code>pnpm test</code></li>
+    <li><code>pnpm test:supabase:local</code> — Docker + Supabase CLI 필요. <strong>이 환경에서는 실행 불가가 기본 전제.</strong> 실행 불가 시 보고서에 skip 사유와 대체 검증(브라우저 기반 anon 차단 확인 등)을 기록.</li>
+    <li>서버 기동 후 <code>pnpm test:e2e</code>. <strong>베이스라인: 95 통과 / 0 실패 / 2 skip</strong> — 이보다 나빠지면 회귀로 간주.</li>
+  </ul>
+
+  <h3>2. 브라우저 Smoke (<code>src/lib/routes.ts</code> 기준 전체 열거)</h3>
+  <p><strong>public (12)</strong></p>
+  <ul>
+    <li><code>/</code>, <code>/sign-up</code>, <code>/login</code>, <code>/password-reset</code>, <code>/password-reset/confirm</code>, <code>/auth/callback</code>, <code>/auth/callback-fragment</code>, <code>/auth/error</code>, <code>/auth/verify-email</code>, <code>/terms</code>, <code>/privacy</code></li>
+    <li><code>/auth/sign-out</code>은 <strong>세션을 끊으므로 맨 마지막 또는 별도 브라우저 컨텍스트에서</strong> 확인.</li>
+  </ul>
+  <p><strong>protected (22)</strong></p>
+  <ul>
+    <li><code>/auth/post-auth</code>, <code>/auth/consent</code>, <code>/onboarding/learning-goal</code></li>
+    <li><code>/dashboard</code>, <code>/growth</code>, <code>/library</code>, <code>/profile</code></li>
+    <li><code>/settings/language</code>, <code>/settings/notifications</code></li>
+    <li><code>/practice/recommendations</code>, <code>/practice/problems</code>, <code>/practice/next</code>, <code>/practice/weakness</code></li>
+    <li><code>/writing/short-answer-writing-51</code>, <code>/writing/answer-writing-52</code>, <code>/writing/long-form-writing-53</code>, <code>/writing/essay-writing-54</code></li>
+    <li><code>/writing/feedback/short/:id</code>, <code>/writing/feedback/long/:id</code>, <code>/writing/reports/:id/compare</code></li>
+    <li><code>/subscription</code>, <code>/paywall</code></li>
+  </ul>
+  <div class="callout warn">
+    <strong>규칙</strong>
+    <ul>
+      <li>feedback/report 라우트는 <strong>실제 제출 id 필요</strong> — 시드가 없으면 UNVERIFIED + Deferred 사유 기록 (R-01 compare 전례).</li>
+      <li><code>/growth</code>는 무료 플랜이면 잠금이 <strong>정상 동작</strong> — 테스트 계정 플랜 상태를 먼저 확인하고 기대 결과를 분기. 잠김 자체를 결함으로 판정하지 않는다.</li>
+      <li>비로그인 protected 접근 → <code>/login</code> redirect 확인.</li>
+      <li><strong>직접 URL 진입 결과가 막혀 보이면 정상 사용 흐름으로 재진입해 교차 확인</strong>한 뒤에만 결함 판정 (기본 선택 로직 때문에 직접 진입과 실사용 흐름이 다를 수 있음).</li>
+    </ul>
+  </div>
+
+  <h3>3. 화면별 와이어프레임 대조 (description.md 기준)</h3>
+  <p>각 화면을 검증하기 전에 해당 와이어프레임 폴더의 <code>description.md</code>를 먼저 읽고, 문서에 적힌 내용이 실제 화면에 있는지 대조한다. 필요 시 <code>functional-spec.md</code>, <code>screen-data-summary.md</code>(있는 폴더만)도 함께 본다.</p>
+  <p><strong>대조 항목 (description.md 구조 기준)</strong></p>
+  <ol>
+    <li><strong>영역 존재</strong>: Wireframe Number Map의 각 영역이 실제 화면에 있는가</li>
+    <li><strong>제약 조건(▣ 제약 조건)</strong>: 자동저장 상태 표시, 글자 수 제한, 비율 유지 등 영역별 제약이 지켜지는가</li>
+    <li><strong>예외 상태(▣ 예외)</strong>: 로드 실패/빈 데이터/네트워크 오류 시 재시도·대체 표시가 있는가 (강제 재현이 어려우면 UNVERIFIED + 사유 기록)</li>
+  </ol>
+  <div class="callout warn">
+    <strong>규칙</strong>
+    <ul>
+      <li>화면 이동 정보가 <code>description.md</code>와 충돌하면 <code>docs/flow/user-flow.md</code>가 우선한다 (Wireframe README 규칙).</li>
+      <li>모달 화면(C-03, D-M1, D-M2, D-M3, F-M1)은 라우트가 없으므로 단계 4의 사용자 시나리오에서 트리거해 확인한다.</li>
+      <li>폴더 번호 21·30·32·37은 admin 화면 제거(2026-06-11)로 결번 — 대조 대상이 아니며, 존재하면 오히려 admin scope 침범(P0) 신호다.</li>
+      <li>와이어프레임이 없는 라우트(<code>/auth/callback</code>, <code>/auth/sign-out</code>, <code>/auth/post-auth</code>, <code>/auth/consent</code>)는 redirect/동작만 확인한다.</li>
+    </ul>
+  </div>
+  <p><strong>매핑 표 (35화면, <code>docs/Wireframe/README.md</code> 기준)</strong></p>
+  <table>
+    <tr><th style="width:80px">IA 코드</th><th>라우트 / 트리거</th><th>와이어프레임 폴더 (<code>docs/Wireframe/</code>)</th></tr>
+    <tr><td>A-01</td><td><code>/sign-up</code></td><td><code>01-A-01-sign-up</code></td></tr>
+    <tr><td>A-02</td><td><code>/login</code></td><td><code>02-A-02-login</code></td></tr>
+    <tr><td>A-03</td><td><code>/onboarding/learning-goal</code></td><td><code>03-A-03-learning-goal-setup</code></td></tr>
+    <tr><td>B-01</td><td><code>/dashboard</code></td><td><code>04-B-01-home-dashboard</code></td></tr>
+    <tr><td>C-01</td><td><code>/practice/recommendations</code></td><td><code>05-C-01-problem-type-recommendations</code></td></tr>
+    <tr><td>C-02</td><td><code>/practice/problems</code></td><td><code>06-C-02-problem-list</code></td></tr>
+    <tr><td>C-03</td><td>모달 — 문제 목록에서 "다시 풀기"</td><td><code>07-C-03-retry-modal</code></td></tr>
+    <tr><td>D-01</td><td><code>/writing/short-answer-writing-51</code></td><td><code>08-D-01-short-answer-writing-51</code></td></tr>
+    <tr><td>D-02</td><td><code>/writing/answer-writing-52</code></td><td><code>09-D-02-answer-writing-52</code></td></tr>
+    <tr><td>D-03</td><td><code>/writing/long-form-writing-53</code></td><td><code>10-D-03-long-form-writing-53</code></td></tr>
+    <tr><td>D-04</td><td><code>/writing/essay-writing-54</code></td><td><code>11-D-04-essay-writing-54</code></td></tr>
+    <tr><td>D-M1</td><td>모달 — 작성 화면에서 제출</td><td><code>12-D-M1-submission-confirmation-modal</code></td></tr>
+    <tr><td>D-M2</td><td>모달 — 제출 후 AI 분석 로딩</td><td><code>13-D-M2-ai-analysis-loading</code></td></tr>
+    <tr><td>D-M3</td><td>모달 — 작성 중 이탈/자동저장 경고</td><td><code>22-D-M3-autosave-warning</code></td></tr>
+    <tr><td>E-01</td><td><code>/writing/feedback/short/:id</code></td><td><code>14-E-01-short-answer-feedback</code></td></tr>
+    <tr><td>E-02</td><td><code>/writing/feedback/long/:id</code></td><td><code>15-E-02-long-form-feedback</code></td></tr>
+    <tr><td>R-01</td><td><code>/writing/reports/:id/compare</code></td><td><code>16-R-01-comparison-report</code></td></tr>
+    <tr><td>R-02</td><td><code>/practice/next</code></td><td><code>17-R-02-next-problem-recommendation</code></td></tr>
+    <tr><td>F-01</td><td><code>/library</code></td><td><code>18-F-01-my-library</code></td></tr>
+    <tr><td>F-M1</td><td>모달 — 내 서재에서 PDF 내보내기</td><td><code>19-F-M1-pdf-export-modal</code></td></tr>
+    <tr><td>G-01</td><td><code>/settings/language</code></td><td><code>20-G-01-language-settings</code></td></tr>
+    <tr><td>X-01</td><td><code>/</code></td><td><code>23-X-01-product-landing</code></td></tr>
+    <tr><td>X-02</td><td><code>/growth</code></td><td><code>24-X-02-growth-dashboard</code></td></tr>
+    <tr><td>X-03</td><td><code>/paywall</code></td><td><code>25-X-03-paywall</code></td></tr>
+    <tr><td>X-04</td><td><code>/subscription</code></td><td><code>26-X-04-subscription-management</code></td></tr>
+    <tr><td>X-05</td><td><code>/profile</code></td><td><code>27-X-05-profile-editing</code></td></tr>
+    <tr><td>X-06</td><td><code>/password-reset</code></td><td><code>28-X-06-password-reset</code></td></tr>
+    <tr><td>X-07</td><td><code>/practice/weakness</code></td><td><code>29-X-07-weakness-based-recommendations</code></td></tr>
+    <tr><td>X-09</td><td><code>/settings/notifications</code></td><td><code>31-X-09-notification-settings</code></td></tr>
+    <tr><td>X-11</td><td><code>/auth/error</code></td><td><code>33-X-11-auth-error</code></td></tr>
+    <tr><td>X-12</td><td><code>/auth/verify-email</code></td><td><code>34-X-12-auth-verify-email</code></td></tr>
+    <tr><td>X-13</td><td><code>/terms</code></td><td><code>35-X-13-terms</code></td></tr>
+    <tr><td>X-14</td><td><code>/privacy</code></td><td><code>36-X-14-privacy-policy</code></td></tr>
+    <tr><td>X-16</td><td><code>/password-reset/confirm</code></td><td><code>38-X-16-password-reset-confirm</code></td></tr>
+    <tr><td>X-17</td><td><code>/auth/callback-fragment</code></td><td><code>39-X-17-auth-callback-fragment</code></td></tr>
+  </table>
+
+  <h3>4. 테스트 시나리오 카탈로그 (3층 출처 모델)</h3>
+  <p>시나리오는 "어떤 사용자가, 어떤 상황에서, 어떤 경로로 들어왔는지"를 명시하고 <strong>그 경로 그대로 수행</strong>한다. 직접 URL 진입은 단계 2 스모크에서 이미 확인하므로 이 단계에서는 금지(ACC 카테고리 예외) — 직접 진입과 실사용 경로가 다르게 동작한 전례가 있다. 각 시나리오는 ID로 defect log와 연결한다.</p>
+  <div class="callout ok">
+    <strong>기대 결과의 출처 라벨</strong>
+    <ul>
+      <li><strong>[SPEC]</strong> — <code>user-flow.md</code>/<code>description.md</code>가 정의한 동작</li>
+      <li><strong>[CODE]</strong> — 코드 조사로 확인한 구현 동작 (2026-06-12 조사 3건)</li>
+      <li><strong>[STD]</strong> — 표준 사용성 기준 (프로젝트 문서/코드가 미처 고려하지 않은 흐름)</li>
+      <li><strong>[갭검증]</strong> — 기대 동작이 어디에도 정의 안 됨 → 동작을 관찰·기록하고 스펙 갭으로 보고 (결함 판정 금지, 4-C 참조)</li>
+    </ul>
+  </div>
+
+  <p><strong>4-A. 분야별 핵심 경로</strong></p>
+  <table>
+    <tr><th style="width:70px">분야</th><th style="width:130px">시나리오</th><th>상황 · 진입 경로 · 기대 결과</th></tr>
+    <tr><td rowspan="6">인증/공개</td><td><strong>AUTH-S1</strong><br>첫 방문 가입</td><td>경로: <code>/</code>(X-01) → 가입 CTA → <code>/sign-up</code>(A-01) → 가입 → 메일 인증 안내(X-12).<br>기대: 입력 검증 인라인. X-12에 가입 이메일 표시 + 재전송(60초 cooldown, 새로고침 유지) + 웹메일 바로가기. [CODE]</td></tr>
+    <tr><td><strong>AUTH-S2</strong><br>재방문 로그인</td><td>경로: <code>/login</code>(A-02) → post-auth 분기.<br>기대(결정 트리): 필수 약관 미동의 → <code>/auth/consent</code>(미체크 제출 시 경고 루프), 학습 목표 없음 → A-03, 둘 다 충족 → <code>/dashboard</code>. [CODE+SPEC]</td></tr>
+    <tr><td><strong>AUTH-S3</strong><br>비밀번호 분실</td><td>경로: <code>/login</code> → X-06 → 메일 링크 → X-16 → 성공 시 <code>/login</code> 복귀.<br>기대: 만료 ~1시간 안내, 만료 후 저장 실패 알림+재발송 안내. 비밀번호 8–64자+강도 미터+확인 일치. [CODE]</td></tr>
+    <tr><td><strong>AUTH-S4</strong><br>세션 만료 복귀</td><td>기대: <code>/login?reason=session_expired</code> 경고 alert. 원래 위치 미보존(현 구현 — UX 개선 후보 P2로 기록). [CODE]</td></tr>
+    <tr><td><strong>AUTH-S5</strong><br>Google OAuth</td><td>경로: 로그인/가입의 Google 버튼 → <code>/auth/callback?code</code> → post-auth.<br>기대: 실패 시 <code>/auth/error?reason=코드</code>(11종 매핑, rate limit 카운트다운 — user-flow 6시나리오 표 기준). [CODE+SPEC]</td></tr>
+    <tr><td><strong>AUTH-S6</strong><br>로그아웃</td><td>기대: POST <code>/auth/sign-out</code> → <code>/login</code>(GET 405). <strong>UI 진입점은 조사에서 미발견 — 로그아웃 버튼 위치 확인이 1차 목적. 없으면 갭 G6.</strong> [CODE+갭검증]</td></tr>
+    <tr><td rowspan="2">온보딩</td><td><strong>ONB-S1</strong><br>학습 목표 설정</td><td>경로: consent → A-03 → 저장 → 대시보드.<br>기대: 급수/목표 등급/시험일(미래만)/주간 목표/약점 영역 저장, KPI·추천 반영, 재진입 시 기존 값. [CODE]</td></tr>
+    <tr><td><strong>ONB-S2</strong><br>건너뛰기</td><td><strong>문서(건너뛰기→대시보드) vs 코드(목표 없으면 대시보드가 A-03로 강제 회귀) 충돌. 실제 동작(루프 여부) 관찰 → 갭 G7.</strong> [갭검증]</td></tr>
+    <tr><td rowspan="4">문제 선택</td><td><strong>PRAC-S1</strong><br>추천 따라 도달</td><td>경로: B-01 → C-01(<code>?type=</code> 탭) → C-02 → 문제 선택 → 작성.<br>기대: C-02 필터(유형/난이도/풀이상태/검색/정렬/페이지), 풀이 상태 배지, 0건이면 Empty+초기화 CTA. [CODE]</td></tr>
+    <tr><td><strong>PRAC-S2</strong><br>다시 풀기</td><td>경로: C-02에서 푼 문제 → C-03 모달.<br>기대: 새로 시작 / 이어서(draft 있을 때) / 결과 보기(제출 있을 때). 만료된 추천은 만료 알림만. [CODE]</td></tr>
+    <tr><td><strong>PRAC-S3</strong><br>약점 보완(유료)</td><td>기대: 무료는 잠금 카드+업그레이드 링크(콘텐츠 미노출). 유료는 차원별 탭(표본 부족은 "준비 중"). [CODE]</td></tr>
+    <tr><td><strong>PRAC-S4</strong><br>다음 문제 폴백</td><td>기대: R-02 4단계 폴백(활성 추천→같은 유형 미시도→아무 미시도→"자유롭게 고르세요"). 무료는 대안 1개만 해제. 신규 사용자도 빈 화면 금지. [CODE]</td></tr>
+    <tr><td rowspan="5">쓰기</td><td><strong>WRIT-S1</strong><br>정상 작성·제출<br>(51/52/53/54)</td><td>경로: 목록 경유 → 작성 → D-M1 → 확인 → 피드백.<br>기대: autosave 2초 디바운스+배지 5상태+저장 시각. D-M1은 hardMin 미만/동의 전 비활성. 글자수: 51=10–120, 52=10–160, 53=120–300, 54=300–700. [CODE]</td></tr>
+    <tr><td><strong>WRIT-S2</strong><br>작성 중 이탈</td><td>①새로고침/탭 닫기 → 브라우저 경고(beforeunload). <strong>②사이드바 이동 → 경고 미배선(코드 확인), user-flow와 충돌 → 갭 G1.</strong> [CODE+갭검증]</td></tr>
+    <tr><td><strong>WRIT-S3</strong><br>제출 취소/실패</td><td>기대: 취소 → 입력 유지 복귀. 실패 → 모달 유지+오류+입력 보존+재시도. [CODE]</td></tr>
+    <tr><td><strong>WRIT-S4</strong><br>새로고침 복원</td><td>기대: F5 후 draft 복원(user×problem 키). <code>?fresh=1</code>이면 빈 화면. [CODE]</td></tr>
+    <tr><td><strong>WRIT-S5</strong><br>제출한 문제 재진입</td><td><strong>기대 미정의 — 현재 안내 없이 편집 모드(재제출 가능). 관찰 → 갭 G2.</strong> [갭검증]</td></tr>
+    <tr><td rowspan="3">피드백/리포트</td><td><strong>FB-S1</strong><br>피드백 열람</td><td>기대: 분석 중 대기 패널(5초×12회 폴링), 10초 초과 지연 안내, 실패 시 실패 패널+재시도. <strong>60초 소진 후 타임아웃 안내 없음 → 갭 G4 관찰.</strong> 완료 시 점수·코멘트·CTA. [CODE]</td></tr>
+    <tr><td><strong>FB-S2</strong><br>성장 확인</td><td>경로: 피드백 → R-01 → R-02.<br>기대: R-01은 같은 문제 2회+ 제출 시 생성. 1회 제출 사용자에게 진입점이 어떻게 보이는지 관찰(404 노출 금지). [CODE+갭검증]</td></tr>
+    <tr><td><strong>FB-S3</strong><br>과거 기록 재열람</td><td>경로: F-01 → 과거 제출물 → 피드백 재진입. [SPEC]</td></tr>
+    <tr><td>보관함</td><td><strong>LIB-S1</strong><br>서재·PDF</td><td>경로: F-01(4탭) → 항목 선택(≤6) → F-M1.<br>기대: 파일명 검증(빈값/60자). <strong>내보내기=브라우저 인쇄(window.print), 파일 다운로드 아님.</strong> 신규 사용자 통계 패널은 빈 상태 안내+문제 목록 링크. [CODE]</td></tr>
+    <tr><td rowspan="3">설정/프로필</td><td><strong>SET-S1</strong><br>프로필 수정</td><td>기대: display_name 2–30자, nickname 2–20자, bio ≤160자, 아바타 5MB jpg/png. 이메일 읽기 전용. 변경 없으면 저장 비활성, 저장 중 중복 클릭 차단. [CODE+SPEC]</td></tr>
+    <tr><td><strong>SET-S2</strong><br>언어 변경</td><td>기대: 저장 즉시 쿠키+refresh로 전환. 미이전 페이지 안내(coverageNote) 노출. <code>missing key</code> 없음. [CODE]</td></tr>
+    <tr><td><strong>SET-S3</strong><br>알림 설정</td><td>기대: 불린 3종+채널(이메일, Zalo "미연동" 태그)+리마인더 시간(5분 단위)/요일. 변경 전 저장 비활성, 성공/실패 토스트. 실제 발송은 스텁. [CODE]</td></tr>
+    <tr><td rowspan="2">결제/구독</td><td><strong>PAY-S1</strong><br>잠김 → 페이월</td><td>경로: 사이드바 잠금 아이콘 → <code>/growth</code> 잠금 UI → 페이월(X-03).<br>기대: 실제 플랜 데이터 표시, 선택 CTA는 스텁 안내("연동 예정") — 구독 행 생성 금지. <strong>실제 결제 수행 금지.</strong> [CODE]</td></tr>
+    <tr><td><strong>PAY-S2</strong><br>구독 관리</td><td>기대: 구독 없으면 "구독 없음"+페이월 링크. 변경/결제수단/해지는 정책 모달+스텁. 결제 이력 10건/페이지. [CODE]</td></tr>
+  </table>
+
+  <p><strong>4-B. 횡단 시나리오 (상태·경로 변형)</strong></p>
+  <table>
+    <tr><th style="width:90px">카테고리</th><th style="width:130px">시나리오</th><th>내용 · 기대 결과</th></tr>
+    <tr><td rowspan="5">NAV<br>뒤로가기/<br>히스토리</td><td><strong>NAV-S1</strong><br>콜백 재방문</td><td>로그인 직후 뒤로가기/오래된 <code>/auth/callback?code</code> 재방문 → 에러 없이 <code>/dashboard</code>(e2e 존재). [CODE]</td></tr>
+    <tr><td><strong>NAV-S2</strong><br>로그아웃 후 뒤로</td><td>protected 화면이 캐시(bfcache)로 보이면 안 됨 → <code>/login</code>. [STD — 관찰·기록]</td></tr>
+    <tr><td><strong>NAV-S3</strong><br>분석 중 이탈</td><td>D-M2 "뒤로" → 확인 모달 후 복귀(router.back). [CODE]</td></tr>
+    <tr><td><strong>NAV-S4</strong><br>제출 후 뒤로</td><td>피드백 도착 후 뒤로가기 → 작성 화면 → 재제출 시도. <strong>서버 멱등성 없음 — 중복 제출 발생 여부 관찰 → 갭 G3.</strong> [갭검증]</td></tr>
+    <tr><td><strong>NAV-S5</strong><br>모달 위 뒤로</td><td>D-M1/C-03/F-M1 열린 상태 브라우저 뒤로가기 — 기대 미정의, 관찰·기록. [STD+갭검증]</td></tr>
+    <tr><td rowspan="6">ACC<br>접근 제어 ×<br>세션 상태<br>(직접 URL 허용)</td><td colspan="2">상태 5종: ①비로그인 ②로그인+온보딩 미완료 ③로그인 무료 ④로그인 유료 ⑤세션 만료</td></tr>
+    <tr><td><strong>ACC-S1</strong></td><td>① × protected 22개 → 전부 <code>/login</code> redirect. [CODE]</td></tr>
+    <tr><td><strong>ACC-S2</strong></td><td>② × <code>/dashboard</code> → A-03 redirect [CODE]. <strong>② × 다른 protected(문제 목록 등) → 게이트 없음 — 온보딩 우회 여부 관찰 → 갭 G8.</strong> [갭검증]</td></tr>
+    <tr><td><strong>ACC-S3</strong></td><td>③④ × <code>/login</code>·<code>/sign-up</code> → <strong>가드 없음, 렌더(코드 확인). 의도 미정의 → 갭 G5.</strong> [갭검증]</td></tr>
+    <tr><td><strong>ACC-S4</strong></td><td>③ × <code>/growth</code>·<code>/practice/weakness</code> → redirect 아닌 잠금 UI+페이월 CTA. ④는 전체 콘텐츠. [CODE]</td></tr>
+    <tr><td><strong>ACC-S5 / S6</strong></td><td>S5: ③ × 타인 feedback/report id → 404(AppNotFound), 데이터 누출 금지. [CODE]<br>S6: ⑤ × 작성 중 저장/제출 → <code>session_expired</code> 안내. <strong>작성 내용 손실 여부 반드시 관찰 — 손실 시 P0 후보.</strong> [CODE+갭검증]</td></tr>
+    <tr><td rowspan="5">PERS<br>설정 지속성</td><td><strong>PERS-S1</strong></td><td>언어 변경 → 로그아웃 → 재로그인 → 유지(<code>profiles.ui_locale</code> DB 우선). [CODE]</td></tr>
+    <tr><td><strong>PERS-S2</strong></td><td>언어 변경 → <strong>쿠키 없는 새 브라우저/기기 로그인</strong> → 저장된 언어가 따라옴(DB &gt; 쿠키). [CODE]</td></tr>
+    <tr><td><strong>PERS-S3</strong></td><td>학습 목표/알림 설정 재방문 시 유지, KPI·추천 반영. [CODE]</td></tr>
+    <tr><td><strong>PERS-S4</strong></td><td>인증 메일 재전송 cooldown이 새로고침 후 유지(localStorage). [CODE]</td></tr>
+    <tr><td><strong>PERS-S5</strong></td><td>작성 draft가 로그아웃/재로그인 후 유지(DB 저장). [CODE — 관찰로 확정]</td></tr>
+    <tr><td rowspan="5">VAL<br>검증/중복</td><td><strong>VAL-S1</strong></td><td>가입 중복 이메일 → 필드 하단 인라인 오류, 수정 시 해제. 조용한 무반응 금지. [CODE]</td></tr>
+    <tr><td><strong>VAL-S2</strong></td><td>닉네임 중복 저장(대소문자 변형 포함) → DB 유니크가 거부. <strong>거부가 필드 오류로 표시되는지 검증(X-05 요구) — 클라 사전 체크 없음, 원시 DB 오류 노출이면 P2.</strong> [SPEC+CODE]</td></tr>
+    <tr><td><strong>VAL-S3</strong></td><td>글자수 경계값: hardMin−1/hardMin/hardMax/hardMax+1 제출 가능 여부 + blur 메시지. [CODE]</td></tr>
+    <tr><td><strong>VAL-S4</strong></td><td>아바타 5MB 초과/비허용 형식 → 즉시 오류+재선택. [SPEC]</td></tr>
+    <tr><td><strong>VAL-S5</strong></td><td>비밀번호 8자 미만/65자/불일치. 가입과 재설정 규칙 일치 확인. [CODE]</td></tr>
+    <tr><td rowspan="5">STATE<br>데이터 상태</td><td><strong>STATE-S1</strong><br>신규(제출 0)</td><td>대시보드(KPI 0/—, 추천 폴백 존재), 서재(빈 상태 안내), C-01/R-02 폴백. <strong>"시작 안내" 부재 → 갭 G9 기록.</strong> [CODE+갭검증]</td></tr>
+    <tr><td><strong>STATE-S2</strong></td><td>추천 만료만 있는 사용자 → C-01 폴백 패널, C-03 만료 알림. [CODE]</td></tr>
+    <tr><td><strong>STATE-S3</strong></td><td><code>?problem=잘못된id</code> → 빈 상태+재시도/목록 링크(크래시 금지). [CODE]</td></tr>
+    <tr><td><strong>STATE-S4</strong></td><td><code>/nonexistent</code> → 전용 404(AppNotFound). [CODE]</td></tr>
+    <tr><td><strong>STATE-S5</strong></td><td>분석 중 이탈 후 피드백 URL 재진입 → 대기 패널 재폴링. 탭 비활성→복귀 시 stale 상태 갱신 여부(백그라운드 폴링 꺼짐 확인됨). [CODE+갭검증]</td></tr>
+    <tr><td rowspan="4">FAIL<br>실패/복구</td><td><strong>FAIL-S1</strong></td><td>자동저장 실패(네트워크 차단 재현) → failed 배지+경고 모달(재시도/계속) → 재시도 복구. [CODE]</td></tr>
+    <tr><td><strong>FAIL-S2</strong></td><td>제출 실패 → 입력 보존+모달 내 오류+재시도. [CODE]</td></tr>
+    <tr><td><strong>FAIL-S3</strong></td><td>분석 실패 → 실패 패널+재시도. <strong>60초 초과 분석 중 → 타임아웃 안내 없음(갭 G4), 탈출 가능 여부 관찰.</strong> [CODE+갭검증]</td></tr>
+    <tr><td><strong>FAIL-S4</strong></td><td>오프라인에서 작성 계속/제출 → 미정의. 데이터 손실 여부 중심 관찰. [STD+갭검증]</td></tr>
+    <tr><td rowspan="7">STD<br>표준 사용성<br>(미고려 흐름)</td><td><strong>STD-S1</strong><br>멀티탭</td><td>같은 문제 두 탭 동시 작성 — 단일 draft(user×problem)라 마지막 저장이 덮어씀 예상. 손실 인지 가능성 관찰. [STD+갭검증]</td></tr>
+    <tr><td><strong>STD-S2</strong><br>링크 선소비</td><td>메일 보안 스캐너가 인증/재설정 링크 선소비(만료 코드) → X-11 흐름 안내 여부(user-flow 6시나리오 표 대조). [SPEC]</td></tr>
+    <tr><td><strong>STD-S3</strong><br>한글 IME</td><td>조합 중 글자수 카운트/디바운스 정확성(53/54 경계값 근처). [STD]</td></tr>
+    <tr><td><strong>STD-S4</strong><br>긴 붙여넣기</td><td>hardMax 초과 텍스트 붙여넣기 → 카운트/제출 차단. [STD]</td></tr>
+    <tr><td><strong>STD-S5</strong><br>자동완성</td><td>가입/로그인/재설정 폼에서 브라우저 자동완성·비밀번호 관리자 정상 동작. [STD]</td></tr>
+    <tr><td><strong>STD-S6</strong><br>연타</td><td>제출·저장 버튼 더블클릭/연타(서버 멱등성 없음 — G3 연계). [STD+갭검증]</td></tr>
+    <tr><td><strong>STD-S7</strong><br>200% 줌</td><td>200% 확대, 20자 닉네임, 긴 제목에서 오버플로/겹침. [STD/WCAG]</td></tr>
+  </table>
+
+  <p><strong>4-C. 스펙 갭 레지스터 (조사로 선식별, 2026-06-12)</strong></p>
+  <div class="callout warn">
+    <strong>처리 규칙</strong>
+    아래 항목은 결함으로 판정하지 않는다. 실제 동작을 관찰·기록해 보고서의 Spec gaps 섹션에 모으고, 문서 게이트(docs 업데이트 제안 또는 owner 승인 브리프)로 에스컬레이션한다. 단, 갭 검증 중 데이터 손실/노출이 실제 발생하면 그건 결함(P0/P1)이다.
+  </div>
+  <table>
+    <tr><th style="width:50px">ID</th><th>내용</th><th style="width:150px">관련 시나리오</th></tr>
+    <tr><td>G1</td><td>앱 내 이동 시 자동저장 경고 미배선 (user-flow.md와 충돌)</td><td>WRIT-S2</td></tr>
+    <tr><td>G2</td><td>제출한 문제 재진입 시 "이미 제출함" 안내 없음</td><td>WRIT-S5</td></tr>
+    <tr><td>G3</td><td>서버 측 이중 제출 방지 없음 (UI 버튼 비활성뿐)</td><td>NAV-S4, STD-S6</td></tr>
+    <tr><td>G4</td><td>분석 폴링 60초 소진 후 타임아웃 안내 없음</td><td>FB-S1, FAIL-S3</td></tr>
+    <tr><td>G5</td><td>로그인 상태에서 <code>/login</code>·<code>/sign-up</code> 접근 가드 없음</td><td>ACC-S3</td></tr>
+    <tr><td>G6</td><td>로그아웃 UI 진입점 미발견 (라우트만 존재)</td><td>AUTH-S6</td></tr>
+    <tr><td>G7</td><td>학습 목표 건너뛰기: 문서(허용) vs 코드(강제 회귀) 충돌</td><td>ONB-S2</td></tr>
+    <tr><td>G8</td><td>dashboard 외 protected 페이지의 온보딩 게이트 부재</td><td>ACC-S2</td></tr>
+    <tr><td>G9</td><td>신규 사용자 대시보드에 시작 안내 부재</td><td>STATE-S1</td></tr>
+    <tr><td>G10</td><td>멀티탭/오프라인/모달 뒤로가기 등 동작 미정의</td><td>STD-S1, FAIL-S4, NAV-S5</td></tr>
+  </table>
+
+  <p><strong>4-D. 기능 단위 실행 상태 검증 (FUNC)</strong></p>
+  <p>여정(4-A/4-B)이 "흐름이 이어지는가"를 본다면, 이 층은 <strong>페이지 안의 개별 기능이 무엇을 하고, 화면에 어떤 영향을 주고, 실행 상태마다 사용자 인터랙션을 어떻게 관리하는가</strong>를 본다.</p>
+  <ul>
+    <li>기능 인벤토리 출처: 각 화면 폴더 <code>functional-spec.md</code>의 <strong>"주요 기능" + "상태/오류" 목록</strong> (인덱스: <code>functional-spec-index.md</code>). 화면 검증 시 해당 명세를 먼저 읽는다.</li>
+    <li>ID 체계: <code>FUNC-&lt;IA코드&gt;-&lt;기능명&gt;</code> (예: <code>FUNC-D01-자동저장</code>).</li>
+    <li><strong>중복 규칙</strong>: 4-A/4-B 시나리오가 이미 그 기능의 수명주기를 커버하면 해당 시나리오 ID만 참조하고 재실행하지 않는다.</li>
+  </ul>
+  <p><strong>실행 상태 수명주기 템플릿 (모든 비동기 기능에 적용)</strong></p>
+  <table>
+    <tr><th style="width:120px">상태</th><th>확인 항목</th></tr>
+    <tr><td>① 시작 전 (Idle)</td><td>실행 조건 미충족 시 비활성/숨김인가, <strong>왜 안 되는지</strong> 보이는가 (예: 글자수 부족 시 제출 비활성 + 부족 표시)</td></tr>
+    <tr><td>② 시작 (Trigger)</td><td>클릭 즉시 반응이 보이는가, 시작과 동시에 <strong>중복 실행이 잠기는가</strong>(연타/더블클릭)</td></tr>
+    <tr><td>③ 실행 중 (In-flight)</td><td>진행 표시(스피너/로딩바/배지/스켈레톤)가 있는가, <strong>잠금 범위가 적절한가</strong>(필요한 것만 — 화면 전체 동결 금지), 취소가 가능하면 취소 동작이 안전한가</td></tr>
+    <tr><td>④ 성공</td><td>결과가 화면에 반영되는가(전환/데이터 갱신/토스트/배지), 잠금이 풀리는가, 재실행 가능한 상태로 복귀하는가</td></tr>
+    <tr><td>⑤ 실패</td><td><strong>무엇이 왜 실패했고 어떻게 해야 하는지</strong> 보이는가, 입력이 보존되는가, 재시도 경로가 있는가, 잠금이 풀리는가</td></tr>
+  </table>
+  <p><strong>기능 인벤토리 시드 (코드 조사로 상태 관리가 이미 확인된 기능)</strong></p>
+  <table>
+    <tr><th style="width:80px">화면</th><th style="width:130px">기능</th><th>실행 중 관리 (코드 확인)</th><th style="width:130px">연계 시나리오</th></tr>
+    <tr><td>D-01~04</td><td>자동저장</td><td>배지 5상태 + 저장 시각, 실패 시 경고 모달(재시도/계속)</td><td>FAIL-S1</td></tr>
+    <tr><td>D-M1</td><td>제출</td><td>isPending 중 버튼 비활성, 실패 시 모달 유지 + 입력 보존</td><td>WRIT-S1/S3</td></tr>
+    <tr><td>D-M2</td><td>분석 대기</td><td>5초×12 폴링, 10초 지연 안내, "뒤로"는 확인 모달</td><td>FB-S1, G4</td></tr>
+    <tr><td>X-12</td><td>인증 메일 재전송</td><td>60초 cooldown(새로고침 유지), 전송 중 비활성</td><td>AUTH-S1</td></tr>
+    <tr><td>G-01</td><td>언어 저장</td><td>저장 즉시 쿠키 + 화면 갱신(refresh)</td><td>SET-S2, PERS-S1</td></tr>
+    <tr><td>X-09</td><td>알림 저장</td><td>변경 전 저장 비활성(dirty 게이팅), 저장 중 비활성, 성공/실패 토스트</td><td>SET-S3</td></tr>
+    <tr><td>X-05</td><td>프로필 저장</td><td>변경 없으면 비활성, 저장 중 중복 클릭 차단</td><td>SET-S1, VAL-S2</td></tr>
+    <tr><td>X-05</td><td>아바타 업로드</td><td>실패 시 즉시 오류 + 재선택</td><td>VAL-S4</td></tr>
+    <tr><td>F-M1</td><td>PDF 내보내기</td><td>파일명 검증 → 브라우저 인쇄 호출</td><td>LIB-S1</td></tr>
+    <tr><td>R-02</td><td>추천 시작</td><td>이벤트 기록 + 추천 소비 후 작성 화면 라우팅</td><td>PRAC-S4</td></tr>
+    <tr><td>X-03/X-04</td><td>결제/변경 CTA</td><td>짧은 로딩 → 스텁 안내("연동 예정"), 데이터 변경 없음</td><td>PAY-S1/S2</td></tr>
+    <tr><td>C-02</td><td>필터/검색/페이지</td><td>로딩 Spin, 오류 Alert+재시도, 0건 Empty+초기화</td><td>PRAC-S1</td></tr>
+    <tr><td>A-01/A-02</td><td>가입/로그인 제출</td><td>제출 중 상태, 오류 인라인 표시</td><td>AUTH-S1/S2, VAL-S1</td></tr>
+  </table>
+  <p>이 표는 시드일 뿐이다 — <strong>전체 인벤토리는 35개 화면의 <code>functional-spec.md</code> "주요 기능" 목록에서 가져오고</strong>, 시드에 없는 기능(랜딩 CTA, 피드백 화면의 저장/다음 행동 버튼, 성장 차트 필터, 약점 탭 전환 등)도 같은 템플릿으로 검증한다. 명세에 있는데 화면에 없는 기능(또는 그 반대)은 단계 3의 와이어프레임 대조 결과로 기록한다.</p>
+  <div class="callout warn">
+    <strong>서비스 전역 상태 관리 5원칙 (광역 sweep 규칙)</strong>
+    <p style="margin:6px 0 4px;">모든 화면에서 <code>functional-spec.md</code>의 "상태/오류" 목록과 대조하며 아래 원칙 위반을 찾는다. 위반은 기본 P2(단계 5 UX 휴리스틱 연계), <strong>갇힘·입력 손실은 P1/P0</strong>.</p>
+    <ol>
+      <li><strong>피드백 없는 상태 금지</strong> — 동작 진행 중 무슨 일이 일어나는지 항상 화면에 보인다.</li>
+      <li><strong>중복 실행 잠금</strong> — 실행 중에는 같은 동작이 다시 실행되지 않는다.</li>
+      <li><strong>실패해도 입력 보존</strong> — 실패가 사용자의 입력/진행 상황을 지우지 않는다.</li>
+      <li><strong>갇힘 금지</strong> — 어떤 상태에서도 탈출 경로가 있다 (G4 무한 로딩이 위반 사례).</li>
+      <li><strong>패턴 일관성</strong> — 같은 종류의 동작(저장/제출/내보내기)은 화면이 달라도 같은 상태 관리 패턴을 쓴다.</li>
+    </ol>
+  </div>
+
+  <h3>5. UX/사용성 평가 (휴리스틱 기반)</h3>
+  <p>정합(문서와 같은가)·결함(깨지는가)과 별개로 <strong>"쓰기 편한가"</strong>를 본다. 단계 4의 시나리오 카탈로그를 수행하면서 함께 기록한다 (별도 재방문 불필요).</p>
+  <p><strong>체크리스트 (Nielsen 10 휴리스틱 + WCAG 2.2 적용)</strong></p>
+  <ol>
+    <li><strong>시스템 상태 가시성</strong>: 저장/제출/분석 진행 상태가 항상 보이는가 (autosave 배지, 로딩 표시, 분석 진행 단계)</li>
+    <li><strong>사용자 통제와 복구</strong>: 제출 취소 가능, 작성 중 이탈 시 경고, 복귀 후 입력 보존</li>
+    <li><strong>오류 예방과 복구</strong>: 폼 검증이 제출 전에 인라인으로 보이는가, 오류 메시지가 "무엇이 왜 잘못됐고 어떻게 고치는지"를 알려주는가</li>
+    <li><strong>현재 위치 인지</strong>: 사이드바 활성 상태, 페이지 제목, 단계 표시가 실제 위치와 일치하는가</li>
+    <li><strong>일관성</strong>: 같은 동작(저장/제출/내보내기/취소)이 화면마다 같은 위치·라벨·패턴인가 (Ant Design 패턴 기준)</li>
+    <li><strong>과업 효율</strong>: 핵심 과업(문제 선택→작성→제출→피드백)의 클릭/단계 수가 <code>user-flow.md</code> 대비 불필요하게 늘지 않았는가</li>
+    <li><strong>모바일 인체공학</strong>: 터치 타깃 최소 24×24px(WCAG 2.2), 모바일 키보드가 입력 필드·CTA를 가리지 않는가</li>
+    <li><strong>학습자 언어 배려</strong>: TOPIK 학습자(한국어 비원어민)가 이해할 수 있는 문구인가, UI 언어 설정이 안내·오류 문구까지 반영되는가</li>
+  </ol>
+  <div class="callout warn">
+    <strong>판정 규칙 (주관 판단 통제 — 거짓 보고 재발 방지)</strong>
+    <ul>
+      <li>발견 항목은 반드시 <strong>휴리스틱 번호 + 화면 + 증거 스크린샷 + 개선 제안</strong> 세트로 기록한다. 근거 없는 "느낌상 불편" 판정은 금지.</li>
+      <li>등급은 기본 P2/P3. <strong>핵심 과업을 완료할 수 없게 막을 때만 P1.</strong></li>
+      <li>UX 발견 항목은 ship-blocker가 아니라 개선 백로그로 defer할 수 있다 (defer 시 사유/owner 명시 — 완료 기준의 P2 규칙과 동일).</li>
+    </ul>
+  </div>
+
+  <h3>6. 탐색적 QA 세션</h3>
+  <ul>
+    <li>Session A: auth 실패/복구, expired/reset link, session expired</li>
+    <li>Session B: writing 입력 손실, autosave, 제출 취소/확인</li>
+    <li>Session C: feedback/report/library/export 연결</li>
+    <li>Session D: mobile overflow, keyboard focus, modal/drawer close, 긴 텍스트</li>
+  </ul>
+
+  <h3>7. 보안/데이터 QA</h3>
+  <ul>
+    <li>anon protected access 차단 (브라우저로 확인)</li>
+    <li>user-A/user-B row isolation: 원래 <code>tests/integration/rls-smoke.test.ts</code> 담당(Docker 게이트). <strong>테스트 계정 2개가 있으면 브라우저로 확인, 1개뿐이면 Deferred + 사유 기록.</strong></li>
+    <li>browser-visible env에 secret/service role key 미노출</li>
+    <li>admin route/UI/schema 신규 추가 여부 확인 — <strong>침범은 P0.</strong> 단 <code>profiles.app_role</code>, <code>admin_audit_logs</code>, <code>private.is_*_admin</code>은 보존 대상이며 존재 자체는 결함이 아니다 (<code>docs/admin-scope-boundary.md</code> 참고).</li>
+  </ul>
+</section>
+
+<section>
+  <h2>HTML 보고서</h2>
+  <ul>
+    <li>최종 산출물은 HTML로 만든다.</li>
+    <li>저장 위치: <code>docs/qa/reports/qa-report-YYYYMMDD-HHMM.html</code></li>
+    <li>스크린샷 증거: <code>docs/qa/reports/qa-report-YYYYMMDD-HHMM-evidence/</code>에 복사해 상대 경로로 링크.</li>
+  </ul>
+  <p><strong>보고서 구성</strong></p>
+  <ul>
+    <li>Executive summary: 전체 판정, P0/P1/P2/P3 수, ship-readiness</li>
+    <li>Environment: branch/worktree, Node/pnpm, base URL, 실행 시각</li>
+    <li>Command results: lint/typecheck/format/build/test/e2e 결과</li>
+    <li>Browser evidence: route별 screenshot, viewport, trace 로컬 경로</li>
+    <li><strong>Screen checklist: 35화면 × description.md 대조 결과 (PASS/FAIL/UNVERIFIED, 영역·제약·예외 단위)</strong></li>
+    <li><strong>Scenario results: 시나리오 ID(AUTH-S1 등) × 결과 × 출처 라벨([SPEC]/[CODE]/[STD]) × 수행한 진입 경로 기록</strong></li>
+    <li><strong>Spec gaps: 4-C 레지스터(G1~G10) + 신규 발견 갭의 관찰 결과 — 결함 집계와 분리, 문서 게이트 에스컬레이션 대상으로 표기</strong></li>
+    <li><strong>Function lifecycle results: FUNC-&lt;IA&gt;-&lt;기능&gt; × 5단계(시작 전/시작/실행 중/성공/실패) 결과 — 중복 커버는 시나리오 ID 참조, 상태 관리 5원칙 위반 목록 포함</strong></li>
+    <li><strong>UX findings: 휴리스틱 번호·화면·증거·개선 제안·등급 단위의 사용성 발견 목록</strong></li>
+    <li>Role matrix: 기획/디자인/개발/QA/UX/콘텐츠별 pass/fail</li>
+    <li>Defect log: severity, route, 재현 절차, 기대/실제 결과, 증거, owner, status</li>
+    <li><strong>UNVERIFIED 목록: 항목별 사유와 재검증 방법</strong></li>
+    <li><strong>Docs consulted: 이번 QA에서 참조한 문서 목록</strong> (CLAUDE.md 요구사항)</li>
+    <li>Remaining risks: 미실행 항목, 환경 제약, deferred scope</li>
+  </ul>
+  <div class="callout danger">
+    <strong>증거 보안 규칙</strong>
+    trace와 <code>tests/e2e/auth-state/</code>, <code>test-results/</code>는 gitignore 대상(인증 토큰 포함)이므로 로컬 경로만 기록하고 절대 복사/커밋하지 않는다. 스크린샷에 토큰·이메일 등 민감정보가 노출되면 마스킹 후 첨부한다.
+  </div>
+  <p>보고서는 한국어 요약을 포함한다(필요 시 <code>-ko</code> 쉬운 버전 별도 생성 — 기존 산출물 관례).</p>
+</section>
+
+<section>
+  <h2>결함 등급과 완료 기준</h2>
+  <table>
+    <tr><th style="width:60px">등급</th><th>기준</th></tr>
+    <tr><td><strong>P0</strong></td><td>데이터 노출, auth bypass, route guard 실패, app crash, writing 제출 손실, admin scope 침범</td></tr>
+    <tr><td><strong>P1</strong></td><td>핵심 학습 흐름 중단, feedback/report/library 주요 기능 실패, 모바일 사용 불가</td></tr>
+    <tr><td><strong>P2</strong></td><td>상태 메시지 오류, 부분 기능 실패, 접근성/반응형 문제</td></tr>
+    <tr><td><strong>P3</strong></td><td>copy, spacing, cosmetic issue</td></tr>
+  </table>
+  <div class="callout warn">
+    <strong>판정 보강</strong>
+    UNVERIFIED는 PASS도 FAIL도 아니다. 하이드레이션 증명 없는 시각적 문제 제보는 결함이 아니라 UNVERIFIED로 남기고 재검증 경로를 기록한다. <strong>스펙 갭(4-C)은 P0~P3 결함 집계에 넣지 않고</strong> Spec gaps 섹션에 따로 모아 문서 게이트로 보낸다 — 단, 갭 검증 중 데이터 손실/노출이 실제 발생하면 그건 결함(P0/P1)이다.
+  </div>
+  <p><strong>완료 기준</strong></p>
+  <ul>
+    <li>P0/P1 0개</li>
+    <li>P2는 수정 완료 또는 defer 사유/owner 명시</li>
+    <li>자동화 명령 결과와 브라우저 증거가 HTML 보고서에 포함</li>
+    <li>실패가 있었던 테스트는 재현 명령과 재검증 결과 포함</li>
+    <li><strong>UNVERIFIED 항목은 전부 사유·재검증 방법 명시</strong></li>
+  </ul>
+</section>
+
+<section>
+  <h2>가정</h2>
+  <ul>
+    <li>QA는 현재 로컬 repository와 active docs 기준으로 수행한다.</li>
+    <li>테스트 계정과 필요한 env는 준비되어 있다고 가정하되, secret 값은 출력하지 않는다.</li>
+    <li>이 계획은 QA 실행 계획이며 public API, route, DB schema, 타입 변경을 포함하지 않는다.</li>
+    <li><strong>이 환경에는 Docker/Supabase CLI가 없으므로 로컬 스택 의존 테스트는 기본 skip이며, 이는 환경 제약이지 결함이 아니다.</strong></li>
+  </ul>
+</section>
+
+<section>
+  <h2>Docs consulted (rev2 작성 시 대조한 파일)</h2>
+  <ul>
+    <li><code>package.json</code> — 스크립트/엔진 확인</li>
+    <li><code>playwright.config.ts</code> — webServer 부재, viewport 3종, base URL, trace 설정</li>
+    <li><code>src/lib/routes.ts</code> — public 12 / protected 22 라우트, <code>/growth</code> 플랜 잠금</li>
+    <li><code>TESTING.md</code> — Supabase 로컬 스택 게이트 구조</li>
+    <li><code>.gitignore</code> — <code>test-results/</code>, <code>tests/e2e/auth-state/</code> 제외 확인</li>
+    <li><code>docs/Wireframe/README.md</code> — 35화면 목록·결번 21·30·32·37·user-flow 우선 규칙 확인 (rev3)</li>
+    <li><code>docs/Wireframe/&lt;화면 폴더&gt;/description.md</code> — 화면별 영역(Number Map)·제약 조건·예외 상태 구조 확인 (rev3)</li>
+    <li><code>docs/flow/user-flow.md</code> — 인증 콜백/에러 6시나리오 표, post-auth 분기, 유료 잠금 진입점, D-M3 이탈 흐름 (rev5)</li>
+    <li><code>docs/Wireframe/functional-spec-index.md</code> 및 화면별 <code>functional-spec.md</code> — 기능 인벤토리("주요 기능"/"상태/오류"), 4-D 기능 단위 검증의 출처 (rev6)</li>
+    <li>코드베이스 심층 조사 3건 (2026-06-12, rev5) — ①쓰기/제출 라이프사이클 ②학습/피드백/데이터 상태 ③인증/온보딩/전역. 스펙 갭 G1~G10의 출처</li>
+  </ul>
+</section>
+
+<footer>TALKPIK AI · QA 실행 계획안 rev6 · 2026-06-12 · 원본: docs/qa/qa-execution-plan.md</footer>
+
+</div>
+</body>
+</html>
