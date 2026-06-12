@@ -31,7 +31,7 @@ export function RecommendationCard({
         <Paragraph
           type="secondary"
           ellipsis={{ rows: 2 }}
-          style={{ marginBottom: 12 }}
+          className="!mb-3"
         >
           {reason}
         </Paragraph>

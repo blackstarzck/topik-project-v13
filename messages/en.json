@@ -1491,7 +1491,7 @@
     "insights": {
       "scoreUp": "Your recent average score rose {pct}% from before.",
       "scoreDown": "Your recent average score dropped {pct}% from before.",
-      "weakestDimension": "Your '{dimension}' score is the lowest.",
+      "weakestDimension": "Your {dimension} score is the lowest.",
       "recentVolume": "You've built up {count} recent attempts.",
       "averageScore": "You've averaged {score} points so far.",
       "streak": "You've studied {days} days in a row.",

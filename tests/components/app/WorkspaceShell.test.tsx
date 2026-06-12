@@ -61,16 +61,19 @@ describe("WorkspaceShell", () => {
     expect(screen.getByTestId("workspace-child")).toBeTruthy();
   });
 
-  it("renders locked sidebar entries with class-based affordances", () => {
+  it("keeps growth dashboard available for free-plan learners", () => {
     const { container } = renderWithIntl(
       <WorkspaceShell role="learner" email={null} planLabel={null}>
         <div>body</div>
       </WorkspaceShell>,
     );
 
-    expect(container.querySelector(".app-sidebar-lock-label")).toBeTruthy();
-    expect(container.querySelector(".app-sidebar-lock-icon")).toBeTruthy();
-    expect(container.querySelector(".app-sidebar-lock-tag")).toBeTruthy();
+    expect(container.querySelector(".app-sidebar-lock-label")).toBeNull();
+    expect(container.querySelector(".app-sidebar-lock-icon")).toBeNull();
+    expect(container.querySelector(".app-sidebar-lock-tag")).toBeNull();
+
+    fireEvent.click(screen.getAllByText("성장 대시보드")[0]);
+    expect(navMock.routerPush).toHaveBeenCalledWith("/growth");
   });
 
   it("keeps the current nested route group open on direct entry", () => {

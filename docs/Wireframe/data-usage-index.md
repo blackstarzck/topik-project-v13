@@ -5,10 +5,10 @@
 ## Summary
 
 - Pages: 35
-- Tables: 17
+- Tables: 19
 - RPC/functions: 16
 - Storage buckets: 3
-- Page data links: 107
+- Page data links: 109
 - Unclassified DB objects: 0
 
 ## avatars
@@ -66,6 +66,18 @@
 | E-01 | Short-answer feedback | table | `submission_id`, `item_type`, `note`, `tags` | read/write | 피드백 저장/보관함 추가에 사용한다. |
 | E-02 | Long-form feedback | table | `submission_id`, `item_type`, `note`, `tags` | read/write | 피드백 저장/보관함 추가에 사용한다. |
 | F-01 | My library | table | `item_type`, `attempt_id`, `submission_id`, `report_id`, `export_file_id`, `problem_id`, `note`, `tags`, `saved_at` | read/write | 내 보관함 탭, 저장/해제, 태그에 사용한다. |
+
+## notification_log
+
+| IA | Screen | Type | Columns/fields | Usage | Page feature |
+| --- | --- | --- | --- | --- | --- |
+| X-09 | Notification settings | table | `channel`, `template_key`, `status`, `payload`, `sent_at`, `created_at` | read | 최근 발송 이력 5개를 표시한다. 실제 발송 service가 연결되기 전에는 비어 있을 수 있다. |
+
+## notification_settings
+
+| IA | Screen | Type | Columns/fields | Usage | Page feature |
+| --- | --- | --- | --- | --- | --- |
+| X-09 | Notification settings | table | `reminder_time`, `reminder_days`, `channels`, `timezone`, `updated_at` | read/write | 알림 시간, 요일, 채널, timezone을 사용자별 1:1 설정으로 저장한다. |
 
 ## private.protect_profile_columns
 
@@ -125,7 +137,7 @@
 | X-04 | Subscription management | table | `plan_label`, `status` | read | 구독 상태 셸 화면에 사용한다. 실제 결제 테이블은 아직 없다. |
 | X-05 | Profile editing | table | `display_name`, `nickname`, `avatar_path`, `bio`, `ui_locale`, `plan_label`, `status` | read/write | 프로필 편집, 160자 자기소개, 아바타 경로에 사용한다. |
 | X-06 | Password reset | table | `id`, `email`, `status` | read | 비밀번호 재설정 성공 후 사용자 상태 확인에 연결될 수 있다. |
-| X-09 | Notification settings | table | `notification_prefs` | read/write | 알림 채널과 조건 설정을 JSON object로 저장한다. |
+| X-09 | Notification settings | table | `notification_prefs` | read/write | `weekly_summary`, `feedback_ready`, `study_reminder` 3개 조건 선호를 JSON object로 저장한다. |
 | X-11 | Auth error | table | `id`, `status` | read | 인증 오류 후 계정 상태 안내와 재시도 분기에 연결될 수 있다. |
 | X-12 | Auth verify-email | table | `id`, `email`, `status` | read | 가입 직후 이메일 인증 안내와 인증 상태 확인에 연결된다. |
 

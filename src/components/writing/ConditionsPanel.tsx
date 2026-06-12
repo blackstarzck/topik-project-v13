@@ -129,7 +129,7 @@ export function ConditionsPanel({ questionNo, rubric, loadFailed }: Props) {
 
   return (
     <AppCard size="small" title={title}>
-      <Space orientation="vertical" size="small" style={{ width: "100%" }}>
+      <Space orientation="vertical" size="small" className="w-full">
         {parsed.conditions.length > 0 ? (
           <div>
             <Text strong>{t("conditionsLabel")}</Text>

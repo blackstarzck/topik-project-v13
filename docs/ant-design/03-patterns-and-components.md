@@ -98,6 +98,21 @@ Rules:
 - Use `Table` for records users compare or sort.
 - Use `Card` plus `Flex` or `Space` for simpler scans, feed summaries, or
   bounded repeated items.
+- Inside an existing `Card`, repeated rows should not default to mini-card
+  styling. Prefer flat rows separated by spacing and hierarchy, with a light
+  hover surface for interactive states. Avoid persistent internal dividers by
+  default; reserve permanent `border + radius` row containers for standalone
+  selectable tiles or grouped inputs that need a visible boundary.
+- Card-internal status chips, counts, and helper labels should use subtle filled
+  surfaces without outline borders. Reserve outlined `Tag`/chip treatment for
+  filters, form choices, or selectable states where the boundary communicates
+  interaction.
+- Card-level CTA buttons belong in Ant Design `Card.actions`. The card body is
+  for content; the footer/actions area owns primary or secondary card actions
+  and should stay borderless by default in TALKPIK app surfaces.
+- Whole-card titles belong in Ant Design `Card` `title`, and right-aligned
+  status/count metadata belongs in `extra`. Avoid hand-built card header rows in
+  the body when sibling cards should share structure and alignment.
 - Do not create theme-specific Card wrappers such as `LiquidGlassCard`.
   Theme-specific surface and child-component styling belongs in the theme
   preset, scoped to `.app-card`.

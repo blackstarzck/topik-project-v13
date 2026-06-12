@@ -41,7 +41,7 @@
 | X-05 | Profile editing | `/profile` | user | 4 | [functional-spec.md](./27-X-05-profile-editing/functional-spec.md) |
 | X-06 | Password reset | `/password-reset` | public | 1 | [functional-spec.md](./28-X-06-password-reset/functional-spec.md) |
 | X-07 | Weakness-based recommendations | `/practice/weakness` | user | 3 | [functional-spec.md](./29-X-07-weakness-based-recommendations/functional-spec.md) |
-| X-09 | Notification settings | `/settings/notifications` | user | 1 | [functional-spec.md](./31-X-09-notification-settings/functional-spec.md) |
+| X-09 | Notification settings | `/settings/notifications` | user | 3 | [functional-spec.md](./31-X-09-notification-settings/functional-spec.md) |
 | X-11 | Auth error | `/auth/error` | public | 1 | [functional-spec.md](./33-X-11-auth-error/functional-spec.md) |
 | X-12 | Auth verify-email | `/auth/verify-email` | public | 2 | [functional-spec.md](./34-X-12-auth-verify-email/functional-spec.md) |
 | X-13 | Terms | `/terms` | public | 0 | [functional-spec.md](./35-X-13-terms/functional-spec.md) |

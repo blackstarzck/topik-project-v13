@@ -2,67 +2,142 @@
 
 ## 화면 목적
 
-사용자가 알림 채널과 조건을 저장하게 한다.
+사용자가 알림 채널, 수신 조건, 리마인더 시간/요일을 저장하게 한다. 실제 발송 transport는 아직 구현 범위 밖이므로 이 화면은 “설정 저장”과 “발송 준비 중” 상태를 명확히 구분한다.
 
 ## 사용자와 권한
 
 - Audience: user
-- 권한 기준: 로그인한 사용자만 접근하며 user-owned table은 auth.uid() 기반 RLS가 기준이다.
+- 권한 기준: 로그인한 사용자만 접근하며 user-owned table은 `auth.uid()` 기반 RLS가 기준이다.
+- 관리자 기능이나 관리자 전용 발송 운영 화면은 이 저장소 범위가 아니다.
+
+## Paper 원천 정보 요약
+
+Paper의 31 X-09 알림 설정 화면은 다음 표시 항목을 갖는다.
+
+- 사이드 내비
+- 알림 설정 제목
+- 이메일 채널
+- Zalo 채널
+- 둘 다 채널
+- 알림 주기 선택
+- 알림 시간 선택
+- 알림 내용 설정
+- 시간대/권한 상태
+- 알림 미리보기
+- 도움말/마스코트
+- 발송 이력 패널
+- 저장 CTA
 
 ## 진입/이탈 흐름
 
 - Route: `/settings/notifications`
 - Route type: page
 - 기준 흐름: `docs/flow/user-flow.md`의 IA 순서를 따른다.
-- 진입 경로: B-01 홈 대시보드의 알림 진입.
+- 진입 경로: B-01 홈 대시보드의 알림 진입 또는 프로필/설정 영역의 알림 설정 링크.
 - 이탈 경로: 저장 후 같은 화면에 머물며 별도 다음 화면으로 이동하지 않는다.
-- 화면 내부 동작: 이메일/푸시 채널, 알림 유형, 요일/시간, 토글 변경과 저장을 처리한다.
+- 변경값 존재 시 내부 링크 이동, 새로고침, 탭 닫기 전에 이탈 확인을 표시한다.
 
 ## 주요 기능
 
-- 채널 토글
-- 조건 입력
-- 미리보기
-- 저장
+### 채널 탭
+
+- 이메일, Zalo, 둘 다 탭을 제공한다.
+- 이메일 채널은 가입 이메일 기준 수신 선호를 저장한다.
+- Zalo 채널은 Paper에 포함되어 있고 UI 선호 저장은 가능하지만, 실제 Zalo 외부 연동과 발송은 준비 중으로 표시한다.
+- 이메일과 Zalo가 모두 꺼져 있으면 수신 채널 없음 안내를 표시한다.
+
+### 조건 입력
+
+- `profiles.notification_prefs`에 3개 boolean 조건을 저장한다.
+  - `weekly_summary`
+  - `feedback_ready`
+  - `study_reminder`
+- `notification_settings`에 스케줄 세부 값을 저장한다.
+  - `reminder_time`: `HH:mm[:ss]`
+  - `reminder_days`: 0-6 정수 배열, 0=일요일
+  - `channels`: `{ "email": boolean, "zalo": boolean }`
+  - `timezone`: 기본 `Asia/Seoul`
+- 채널이 모두 off이면 리마인더 시간/요일 입력은 비활성화한다.
+
+### 미리보기와 발송 이력
+
+- 리마인더 시간이 있으면 예정 발송 예시 문구를 표시한다.
+- 최근 발송 이력은 `notification_log`에서 최신 5개를 조회한다.
+- 실제 transport가 연결되기 전에는 발송 이력이 비어 있을 수 있으며, 빈 상태를 정상 상태로 처리한다.
+
+### 저장
+
+- 변경값이 없으면 저장 CTA를 비활성화한다.
+- 저장 중 중복 클릭을 차단한다.
+- 저장 성공 시 성공 토스트를 표시한다.
+- 저장 실패 시 오류 토스트를 표시한다.
 
 ## 상태/오류
 
-- 전송 채널 미연동, 권한 없음, 저장 실패
+| 상태 | 표시/동작 |
+| --- | --- |
+| 로딩 | 설정과 발송 이력 영역에 skeleton을 표시한다. |
+| 저장 전 변경 없음 | 저장 CTA 비활성. |
+| 저장 전 변경 있음 | 저장 CTA 활성, 이탈 확인 활성. |
+| 수신 채널 없음 | 경고 안내 표시, 스케줄 입력 비활성. |
+| Zalo 미연동 | 미연동/연동 예정 표시. 실제 발송 성공으로 표현하지 않는다. |
+| 발송 이력 없음 | 빈 상태 표시. |
+| 설정 로드 실패 | 오류 Alert 표시. |
+| 저장 실패 | 오류 토스트 표시. |
 
 ## 데이터 사용
 
-- 아래 표는 현재 문서화된 DB/스토리지/RPC 사용 근거다.
+아래 표는 현재 문서화된 DB/스토리지/RPC 사용 근거다.
 
 ### DB 데이터 사용 명세
 
 | 테이블/버킷/RPC | 컬럼/필드 | 사용 방식 | 화면 기능 | 권한/RLS | 근거 | 불확실성 |
 | --- | --- | --- | --- | --- | --- | --- |
-| `profiles` | `notification_prefs` | read/write | 알림 채널과 조건 설정을 JSON object로 저장한다. | authenticated user; auth.uid() owner RLS where user-owned | `src/app/(workspace)/profile/page.tsx`<br>`src/lib/admin/queries.ts`<br>`src/lib/admin/server.ts`<br>`src/lib/auth/profile.ts`<br>`src/lib/settings/mutations.ts` | Notification transport is deferred; only preference persistence is current evidence. |
+| `profiles` | `notification_prefs` | read/write | `weekly_summary`, `feedback_ready`, `study_reminder` 3개 boolean 조건을 JSON object로 저장한다. | authenticated user; 본인 profile row update. 보호 컬럼(`app_role`, `plan_label`, `status`)은 변경하지 않는다. | `src/lib/settings/types.ts`<br>`src/lib/settings/mutations.ts`<br>`src/components/settings/NotificationPrefsForm.tsx` | 실제 발송 여부가 아니라 조건 선호만 저장한다. |
+| `notification_settings` | `user_id`, `reminder_time`, `reminder_days`, `channels`, `timezone`, `updated_at` | read/write upsert | 알림 시간, 요일, 채널, timezone을 사용자별 1:1 설정으로 저장한다. | authenticated user; `user_id = auth.uid()` owner full control. | `supabase/migrations/20260602120200_notifications_and_settings.sql`<br>`src/components/settings/learning-settings-data.ts`<br>`src/components/settings/NotificationPrefsForm.tsx` | `channels` 허용 key는 코드상 `email`, `zalo`만 확정. timezone 편집 UI는 현재 없음. |
+| `notification_log` | `id`, `user_id`, `channel`, `template_key`, `status`, `payload`, `sent_at`, `created_at` | read | 최근 발송 이력 5개를 표시한다. | authenticated user; 본인 select만 가능. 쓰기는 알림 서비스/service role 흐름. | `supabase/migrations/20260602120200_notifications_and_settings.sql`<br>`src/components/settings/learning-settings-data.ts`<br>`src/components/settings/NotificationPrefsForm.tsx` | 발송 service/transport가 없어 실제 row 생성 경로는 아직 없음. |
 
 ## 현재 구현 상태
 
-- profiles.notification_prefs JSON 컬럼이 현재 저장소다. 실제 발송은 deferred다.
+- 구현됨:
+  - `/settings/notifications` route 렌더링
+  - `profiles.notification_prefs` 조건 저장
+  - `notification_settings` 조회/upsert
+  - `notification_log` 최신 5개 조회
+  - 채널 탭, 조건 카드, 미리보기 카드, 발송 이력 카드, 저장 dirty-gating
+  - 실제 발송 준비 중 안내
+- 미구현/deferred:
+  - 실제 이메일 발송 transport
+  - 실제 Zalo 외부 연동/발송 transport
+  - 발송 스케줄러/worker
+  - 발송 결과를 `notification_log`에 쓰는 service-role 경로
+  - template catalog 또는 운영자가 문구를 관리하는 구조
+  - 사용자 편집 가능한 timezone selector
 
 ## 코드 구현 근거
 
 - `NotificationSettingsPage` - `src/app/(workspace)/settings/notifications/page.tsx`
 - `NotificationPrefsForm`, `handleFinish`, `computeNotificationDiff` - `src/components/settings/NotificationPrefsForm.tsx`
-- `fetchNotificationSettings`, `fetchNotificationLog` - `src/components/settings/learning-settings-data.ts`
+- `fetchNotificationSettings`, `upsertNotificationSettings`, `fetchNotificationLog` - `src/components/settings/learning-settings-data.ts`
 - `useUpdateNotificationPrefs`, `updateNotificationPrefs` - `src/lib/settings/mutations.ts`
+- `NOTIFICATION_PREF_KEYS`, `coerceNotificationPrefs` - `src/lib/settings/types.ts`
+- Supabase DDL/RLS - `supabase/migrations/20260602120200_notifications_and_settings.sql`
 
-## 미구현/불일치
+## 후속 알림 발송 개발 브리프
 
-- 실제 이메일/푸시 발송 transport는 구현 범위 밖이고 preference 저장만 확인된다.
+실제 발송을 구현할 때는 이 화면 문서의 범위만으로 transport를 확정하지 않는다. 최소 implementation brief 또는 별도 설계 문서에서 아래를 먼저 확정한다.
 
-## 추가 발견 후보
-
-- 코드 구현 근거와 DB/source inventory가 바뀌면 구현 상태 문구를 갱신한다.
-- 새 migration이나 Supabase 호출이 추가되면 DB 데이터 사용 명세를 다시 생성한다.
-- 불확실성이 표시된 데이터는 제품 결정 또는 후속 구현 전까지 후보로만 취급한다.
+- 발송 대상 산정: `notification_settings.channels`, `reminder_time`, `reminder_days`, `timezone`, `profiles.notification_prefs`를 함께 평가한다.
+- 발송 채널: 이메일 provider, Zalo provider/API, 실패/재시도 정책.
+- 실행 주기: cron/queue/worker 위치와 중복 발송 방지 idempotency key.
+- 로그 쓰기: service role 서버 경로에서 `notification_log.status`를 `pending`, `sent`, `failed`로 기록한다.
+- 템플릿: `template_key`별 본문 관리 방식. 현재 template catalog 테이블은 없다.
+- 보안: service role key는 browser-visible 변수로 노출하지 않는다.
+- 사용자 표현: transport 연결 전까지는 “저장됨”과 “발송됨”을 구분한다.
 
 ## 수용 기준
 
-- 이 화면의 주요 CTA와 상태가 Wireframe description과 route map에 맞게 설명되어 있다.
-- 위 DB 데이터 사용 명세의 모든 객체가 `docs/Wireframe/data-usage-index.md`에도 역색인되어 있다.
-- 확정할 수 없는 기능 또는 데이터는 구현된 것처럼 쓰지 않고 gap/candidate로 남긴다.
+- 이 화면의 주요 CTA와 상태가 Paper의 X-09 영역과 route map에 맞게 설명되어 있다.
+- DB 데이터 사용 명세의 객체가 `docs/Wireframe/data-usage-index.md`에도 역색인되어 있다.
+- 구현된 저장/조회와 미구현 발송 transport가 명확히 분리되어 있다.
 - user/admin/public 권한 경계가 `docs/sitemap.md` audience와 맞는다.

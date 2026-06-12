@@ -12,13 +12,15 @@ const awesomicToken = {
   colorLinkHover: awesomicThemeTokens.color.obsidian,
   colorLinkActive: awesomicThemeTokens.color.obsidian,
   borderRadius: awesomicThemeTokens.radius.base,
+  borderRadiusSM: awesomicThemeTokens.radius.badge,
+  borderRadiusLG: awesomicThemeTokens.radius.base,
   boxShadow: awesomicThemeTokens.shadow.none,
   boxShadowSecondary: awesomicThemeTokens.shadow.elevated,
 };
 
 const awesomicComponents = {
   Button: {
-    borderRadius: awesomicThemeTokens.radius.buttonPill,
+    borderRadius: awesomicThemeTokens.radius.button,
     defaultShadow: awesomicThemeTokens.shadow.none,
     primaryShadow: awesomicThemeTokens.shadow.none,
     dangerShadow: awesomicThemeTokens.shadow.none,

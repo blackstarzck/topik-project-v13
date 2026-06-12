@@ -13,10 +13,10 @@ type Props = {
 export function PlaceholderPage({ iaCode, title, phaseHint }: Props) {
   return (
     <Card>
-      <Space orientation="vertical" size="small" style={{ width: "100%" }}>
+      <Space orientation="vertical" size="small" className="w-full">
         <Space>
           <Tag>{iaCode}</Tag>
-          <Title level={3} style={{ margin: 0 }}>
+          <Title level={3} className="!m-0">
             {title}
           </Title>
         </Space>

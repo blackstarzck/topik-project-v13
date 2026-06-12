@@ -58,7 +58,7 @@ export function ReferenceMaterials({
 
   return (
     <AppCard size="small" title={t("cardTitle")}>
-      <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+      <Space orientation="vertical" size="middle" className="w-full">
         {materials.map((material) => (
           <MaterialView key={material.id} material={material} />
         ))}
@@ -87,16 +87,16 @@ function MaterialView({ material }: { material: NormalizedReferenceMaterial }) {
     return (
       <div>
         <Text strong>{material.title}</Text>
-        <dl style={{ display: "grid", gap: 4, margin: "8px 0 0" }}>
+        <dl className="mt-2 grid gap-1">
           {material.rows.map((row) => (
             <div
               key={`${row.label}-${row.value}`}
-              style={{ display: "grid", gridTemplateColumns: "96px 1fr", gap: 8 }}
+              className="grid grid-cols-[96px_1fr] gap-2"
             >
               <dt>
                 <Text type="secondary">{row.label}</Text>
               </dt>
-              <dd style={{ margin: 0 }}>{row.value}</dd>
+              <dd className="m-0">{row.value}</dd>
             </div>
           ))}
         </dl>
@@ -106,7 +106,7 @@ function MaterialView({ material }: { material: NormalizedReferenceMaterial }) {
   return (
     <div>
       <Text strong>{material.title}</Text>
-      <Text style={{ display: "block", whiteSpace: "pre-line" }}>
+      <Text className="block whitespace-pre-line">
         {material.text}
       </Text>
     </div>
@@ -149,8 +149,8 @@ function ChartView({ chart }: { chart: NormalizedChart }) {
 
   if (chart.chartType === "pie" || chart.chartType === "donut") {
     return (
-      <div style={{ width: "100%" }}>
-        <div style={{ width: "100%", height: 240 }}>
+      <div className="w-full">
+        <div className="h-60 w-full">
           <ResponsiveContainer>
             <PieChart>
               <Pie
@@ -174,7 +174,7 @@ function ChartView({ chart }: { chart: NormalizedChart }) {
           </ResponsiveContainer>
         </div>
         {caption ? (
-          <Text type="secondary" style={{ fontSize: 12 }}>
+          <Text type="secondary" className="text-xs">
             {caption}
           </Text>
         ) : null}
@@ -184,8 +184,8 @@ function ChartView({ chart }: { chart: NormalizedChart }) {
 
   if (chart.chartType === "line") {
     return (
-      <div style={{ width: "100%" }}>
-        <div style={{ width: "100%", height: 240 }}>
+      <div className="w-full">
+        <div className="h-60 w-full">
           <ResponsiveContainer>
             <LineChart data={rows}>
               <XAxis dataKey="name" />
@@ -205,7 +205,7 @@ function ChartView({ chart }: { chart: NormalizedChart }) {
           </ResponsiveContainer>
         </div>
         {caption ? (
-          <Text type="secondary" style={{ fontSize: 12 }}>
+          <Text type="secondary" className="text-xs">
             {caption}
           </Text>
         ) : null}
@@ -214,8 +214,8 @@ function ChartView({ chart }: { chart: NormalizedChart }) {
   }
 
   return (
-    <div style={{ width: "100%" }}>
-      <div style={{ width: "100%", height: 240 }}>
+    <div className="w-full">
+      <div className="h-60 w-full">
         <ResponsiveContainer>
           <BarChart data={rows}>
             <XAxis dataKey="name" />
@@ -234,7 +234,7 @@ function ChartView({ chart }: { chart: NormalizedChart }) {
         </ResponsiveContainer>
       </div>
       {caption ? (
-        <Text type="secondary" style={{ fontSize: 12 }}>
+        <Text type="secondary" className="text-xs">
           {caption}
         </Text>
       ) : null}
@@ -262,11 +262,11 @@ function AssetView({
   if (asset.assetType === "audio") {
     return (
       <div>
-        <audio controls src={asset.url} aria-label={alt} style={{ width: "100%" }}>
+        <audio controls src={asset.url} aria-label={alt} className="w-full">
           <track kind="captions" />
         </audio>
         {caption ? (
-          <Text type="secondary" style={{ fontSize: 12 }}>
+          <Text type="secondary" className="text-xs">
             {caption.slice(0, 40)}
           </Text>
         ) : null}
@@ -277,13 +277,7 @@ function AssetView({
   if (failed) {
     // §3 예외 — 이미지 로드 실패 시 대체 텍스트 + 빈 프레임.
     return (
-      <div
-        style={{
-          border: "1px dashed #d9d9d9",
-          borderRadius: 8,
-          padding: 16,
-        }}
-      >
+      <div className="rounded-lg border border-dashed border-border p-4">
         <Empty
           image={Empty.PRESENTED_IMAGE_SIMPLE}
           description={t("imageLoadFailed", { alt })}
@@ -297,12 +291,12 @@ function AssetView({
       <Image
         src={asset.url}
         alt={alt}
-        style={{ maxWidth: "100%", height: "auto" }}
+        className="h-auto max-w-full"
         onError={() => setFailed(true)}
         preview={{ mask: t("zoom") }}
       />
       {caption ? (
-        <Text type="secondary" style={{ display: "block", fontSize: 12 }}>
+        <Text type="secondary" className="block text-xs">
           {caption.slice(0, 40)}
         </Text>
       ) : null}

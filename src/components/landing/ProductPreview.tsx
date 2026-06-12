@@ -56,35 +56,15 @@ const PREVIEWS: Preview[] = [
 function PreviewMock({ badge }: { badge: string }) {
   return (
     <div
-      style={{
-        borderRadius: 8,
-        background: "#f5f8ff",
-        border: "1px solid #e6efff",
-        padding: 16,
-        minHeight: 120,
-        display: "flex",
-        flexDirection: "column",
-        gap: 8,
-      }}
+      className="flex min-h-[120px] flex-col gap-2 rounded-lg border border-[#e6efff] bg-[#f5f8ff] p-4"
       aria-hidden="true"
     >
-      <Text strong style={{ fontSize: 13 }}>
+      <Text strong className="!text-[13px]">
         {badge}
       </Text>
-      <div
-        style={{
-          height: 8,
-          width: "70%",
-          background: "#c7dbff",
-          borderRadius: 4,
-        }}
-      />
-      <div
-        style={{ height: 8, width: "90%", background: "#dbe8ff", borderRadius: 4 }}
-      />
-      <div
-        style={{ height: 8, width: "55%", background: "#dbe8ff", borderRadius: 4 }}
-      />
+      <div className="h-2 w-[70%] rounded bg-[#c7dbff]" />
+      <div className="h-2 w-[90%] rounded bg-[#dbe8ff]" />
+      <div className="h-2 w-[55%] rounded bg-[#dbe8ff]" />
     </div>
   );
 }
@@ -108,42 +88,35 @@ function PreviewImage({
     <img
       src={preview.imageSrc}
       alt={t("imageAlt", { title })}
-      style={{ width: "100%", borderRadius: 8, display: "block" }}
+      className="block w-full rounded-lg"
       onError={() => setFailed(true)}
     />
   );
 }
 
-const gridStyle: React.CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-  gap: 16,
-  marginTop: 24,
-};
-
 export function ProductPreview() {
   const t = useTranslations("landing.preview");
   return (
-    <section id="preview" style={{ marginTop: 64 }}>
-      <Title level={2} style={{ textAlign: "center" }}>
+    <section id="preview" className="mt-16">
+      <Title level={2} className="!text-center">
         {t("sectionTitle")}
       </Title>
-      <Paragraph type="secondary" style={{ textAlign: "center" }}>
+      <Paragraph type="secondary" className="!text-center">
         {t("sectionBody")}
       </Paragraph>
-      <div style={gridStyle}>
+      <div className="mt-6 grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(240px,1fr))]">
         {PREVIEWS.map((preview) => {
           const badge = t(preview.badgeKey);
           const title = t(preview.titleKey);
           return (
             <AppCard key={preview.key} size="small">
               <PreviewImage preview={preview} badge={badge} title={title} />
-              <Title level={5} style={{ marginTop: 12, marginBottom: 4 }}>
+              <Title level={5} className="!mb-1 !mt-3">
                 {title}
               </Title>
               <Paragraph
                 type="secondary"
-                style={{ marginBottom: 0, fontSize: 13 }}
+                className="!mb-0 !text-[13px]"
               >
                 {t(preview.summaryKey)}
               </Paragraph>

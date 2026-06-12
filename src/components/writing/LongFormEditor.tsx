@@ -349,7 +349,7 @@ export function LongFormEditor({
   );
 
   return (
-    <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+    <Space orientation="vertical" size="middle" className="w-full">
       {/* D-03 평가 기준 / D-04 조건·루브릭 카드 (problems.rubric). */}
       <ConditionsPanel
         questionNo={questionNo}
@@ -373,7 +373,7 @@ export function LongFormEditor({
         </Button>
       </Space>
       {!autosaveEnabled ? (
-        <Text type="warning" style={{ fontSize: 12 }}>
+        <Text type="warning" className="text-xs">
           {t("autosaveDisabledNotice")}
         </Text>
       ) : null}
@@ -424,15 +424,8 @@ export function LongFormEditor({
           <ManuscriptPreview text={combinedText} />
         </>
       ) : (
-        <div
-          style={{
-            display: "grid",
-            gap: 16,
-            // 반응형: 좁은 화면에서는 본문/체크리스트가 1열로 쌓이고, 넓을 때만
-            // 2열(본문 + 320px 체크리스트). 고정 폭의 360px 가로 넘침 해소.
-            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-          }}
-        >
+        // 좁은 화면은 1열, 넓을 때만 본문 + 체크리스트로 배치한다.
+        <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(280px,1fr))]">
           <AppCard>
             <Title level={5}>{t("essayBodyTitle")}</Title>
             <Input.TextArea
@@ -453,7 +446,7 @@ export function LongFormEditor({
       )}
 
       {/* D §5 — 자동저장(상단 배지) / 수동 임시저장 / 최종 제출 3-way 분리. */}
-      <Space style={{ alignSelf: "flex-start" }}>
+      <Space className="self-start">
         <Button
           onClick={onManualSave}
           loading={status === "syncing" && upsert.isPending}

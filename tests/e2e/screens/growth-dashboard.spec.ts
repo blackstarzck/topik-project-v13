@@ -14,7 +14,7 @@ function collectErrors(page: Page): string[] {
   return errors;
 }
 
-test("X-02 growth dashboard shows basic KPI before the paid-report lock", async ({
+test("X-02 growth dashboard is available without a paid-plan lock", async ({
   page,
 }) => {
   const errors = collectErrors(page);
@@ -23,16 +23,21 @@ test("X-02 growth dashboard shows basic KPI before the paid-report lock", async 
   await expect(page).not.toHaveURL(/\/login/);
   await expect(page).toHaveURL(/\/growth/);
 
-  await expect(page.getByRole("heading", { name: "성장 대시보드" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "성장 대시보드" }),
+  ).toBeVisible();
   await expect(page.getByTestId("growth-kpi-grid")).toBeVisible();
   await expect(page.getByTestId("growth-kpi-average")).toBeVisible();
   await expect(page.getByTestId("growth-kpi-attempts")).toBeVisible();
   await expect(page.getByTestId("growth-kpi-improvement")).toBeVisible();
   await expect(page.getByTestId("growth-kpi-goal")).toBeVisible();
-  await expect(page.getByTestId("growth-locked-report")).toBeVisible();
-  await expect(page.getByTestId("growth-upgrade-cta")).toBeEnabled();
-  await expect(page.getByTestId("growth-manage-cta")).toBeEnabled();
-  await expect(page.getByText("성장 추세 차트")).toHaveCount(0);
+  await expect(page.getByText("성장 추세 차트")).toBeVisible();
+  await expect(page.getByText("약점 매트릭스")).toBeVisible();
+  await expect(page.getByText("인사이트")).toBeVisible();
+  await expect(page.getByText("최근 완료 문제")).toBeVisible();
+  await expect(page.getByText("다음 추천 문제")).toBeVisible();
+  await expect(page.getByTestId("growth-locked-report")).toHaveCount(0);
+  await expect(page.getByText("유료 플랜 전용")).toHaveCount(0);
 
   expect(errors).toEqual([]);
 });

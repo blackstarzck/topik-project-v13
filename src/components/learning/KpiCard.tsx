@@ -11,10 +11,10 @@ type Props = {
 
 export function KpiCard({ title, value, suffix, hint }: Props) {
   return (
-    <Card size="small" style={{ height: "100%" }}>
+    <Card size="small" className="h-full">
       <Statistic title={title} value={value} suffix={suffix} />
       {hint ? (
-        <div style={{ marginTop: 8, fontSize: 12, color: "#888" }}>{hint}</div>
+        <div className="mt-2 text-xs text-text-secondary">{hint}</div>
       ) : null}
     </Card>
   );

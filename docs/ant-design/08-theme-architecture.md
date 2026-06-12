@@ -4,6 +4,10 @@
 >
 > `src/theme/config.ts` selects the active theme preset. The current product
 > preset is `awesomic`, and its normalized token source is `DESIGN/tokens.json`.
+> Radius is the current exception: the raw Awesomic reference keeps very soft
+> 28-36px surfaces, but TALKPIK runtime tokens intentionally reduce app
+> workspace radii to 4-8px surfaces so study dashboards read as panels instead
+> of bubbles.
 >
 > `DESIGN/` is light-only today. The first Awesomic binding therefore fixes the
 > user-facing appearance to light through `themeSettings.allowAppearanceSwitching
@@ -473,6 +477,41 @@ In short:
 Do not create theme-named component forks such as `LiquidGlassCard` or
 `CustomThemeACard`. Create one role-based shared wrapper such as `AppCard`, then
 let each theme preset style that stable hook.
+
+### Card-Internal Rows
+
+`AppCard` owns the outer surface. Repeated items inside that surface should not
+create a second card language by default.
+
+Default pattern:
+
+- transparent row content
+- spacing and typography for separation
+- light hover/focus surface for interactive rows
+- no persistent card-body divider lines by default
+- no permanent boxed `border + radius` treatment
+- no outline borders on card-internal status chips or counts by default
+
+Use a bordered, rounded child container only when the child must stand alone as a
+selectable tile outside an existing card, or when a form/input group needs a
+visible boundary. `card-compact` means a compact row pattern, not permission to
+nest a visual card inside another card.
+
+### Card Footer Actions
+
+Use Ant Design `Card.actions` for card-level CTA buttons. Keep the `Card` body
+focused on content and move primary or secondary card actions to the semantic
+footer/actions slot. TALKPIK app surfaces should make that footer visually
+continuous with the card by default: no top divider, no extra outline, and no
+nested mini-card treatment.
+
+### Card Header Title + Extra
+
+Use Ant Design `Card` `title` for whole-card titles and `extra` for right-side
+status chips, counts, or metadata that describes the whole card. Do not create a
+custom header row inside `body` for this information; otherwise sibling cards
+drift in vertical alignment and spacing because some use AntD's header slot and
+others use body content.
 
 When child AntD components need to adapt to a themed surface, preserve AntD
 defaults first. If a confirmed product requirement needs a contextual override,

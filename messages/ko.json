@@ -1491,7 +1491,7 @@
     "insights": {
       "scoreUp": "최근 평균 점수가 이전보다 {pct}% 올랐어요.",
       "scoreDown": "최근 평균 점수가 이전보다 {pct}% 내렸어요.",
-      "weakestDimension": "'{dimension}' 영역 점수가 가장 낮아요.",
+      "weakestDimension": "{dimension} 영역 점수가 가장 낮아요.",
       "recentVolume": "최근 {count}회 풀이 기록이 쌓였어요.",
       "averageScore": "지금까지 평균 {score}점을 받았어요.",
       "streak": "{days}일 연속으로 학습하고 있어요.",

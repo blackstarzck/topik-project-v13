@@ -61,6 +61,15 @@ Use this checklist before calling UI work complete.
 - [ ] Navigation is stable and predictable.
 - [ ] The primary task is visible and visually dominant.
 - [ ] Cards are not nested inside cards.
+- [ ] Card-internal rows do not look like mini cards; permanent bordered,
+      rounded row containers are justified only for standalone selectable tiles
+      or grouped inputs.
+- [ ] Card-internal status chips and counts use filled surfaces without outline
+      borders unless they are selectable filters or form choices.
+- [ ] Card-level CTA buttons are placed in Ant Design `Card.actions`, not inside
+      card body content, and the footer/actions area is borderless by default.
+- [ ] Whole-card titles and right-side status/count metadata use Ant Design
+      `Card` `title`/`extra`, not custom header rows inside the body.
 - [ ] Mobile layout has no horizontal overflow.
 - [ ] Text does not overlap controls or other text.
 

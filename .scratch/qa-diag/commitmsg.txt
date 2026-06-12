@@ -1,0 +1,19 @@
+docs(qa): correct overstated PASS verdicts and disclose stub/mock backends
+
+Self-audit after a reviewer challenge on X-09: several PASS verdicts implied
+working features where the backend is an intentional stub or mock. This is a
+report-only correction with no app code changes.
+
+- X-09 notification: screen render and save dirty-gating PASS; save persistence
+  UNVERIFIED because the passing e2e is render-only; real email/push delivery
+  transport is a stub.
+- E-01/E-02/R-01/D-M2 feedback and analysis: display and submit flow PASS, but
+  the content comes from generateMockFeedback with ai_model=mock-v1, not a real
+  AI/LLM.
+- X-03/X-04 payment and billing, F-M1 server-file PDF download, C-03 hint mode:
+  intentional stubs or deferred features, annotated and not counted as defects.
+- Added a stub/mock disclosure table, UNVERIFIED entries, and a render-only
+  coverage caveat for the screens-authed smoke spec.
+- Confirmed avatar upload (X-05) is a REAL Supabase Storage upload, not a stub.
+
+Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>

@@ -26,12 +26,14 @@ export const awesomicThemeTokens = {
     snow: "#ffffff",
   },
   radius: {
-    base: 14,
-    badge: 12,
-    buttonPill: 36,
-    card: 36,
-    compactCard: 28,
-    input: 14,
+    // The raw Awesomic reference uses very soft 28-36px surfaces. TALKPIK's
+    // workspace is denser, so runtime radii are intentionally toned down.
+    base: 6,
+    badge: 4,
+    button: 6,
+    card: 8,
+    compactCard: 6,
+    input: 6,
   },
   shadow: {
     elevated: "rgba(0, 0, 0, 0.04) 0px 4px 12px 0px",

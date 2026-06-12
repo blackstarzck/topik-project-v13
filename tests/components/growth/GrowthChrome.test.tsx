@@ -8,7 +8,6 @@ import type { ReactElement } from "react";
 import { GrowthDashboard } from "../../../src/components/growth/GrowthDashboard";
 import type { GrowthDashboardProps } from "../../../src/components/growth/GrowthDashboard";
 import { GrowthTrendChart } from "../../../src/components/growth/GrowthTrendChart";
-import { GrowthLockedReport } from "../../../src/components/growth/GrowthLockedReport";
 import { GrowthLoadError } from "../../../src/components/growth/GrowthLoadError";
 import koMessages from "../../../messages/ko.json";
 
@@ -80,9 +79,7 @@ const baseProps: GrowthDashboardProps = {
     { dimension: "grammar", avgScore: 0.55, sampleCount: 4 },
     { dimension: "vocab", avgScore: 0.7, sampleCount: 3 },
   ],
-  recommendations: [
-    { problemId: "p-1", title: "추천 문제 A", questionNo: 51 },
-  ],
+  recommendations: [{ problemId: "p-1", title: "추천 문제 A", questionNo: 51 }],
   trendPoints: [],
   recentCompleted: [
     {
@@ -95,8 +92,6 @@ const baseProps: GrowthDashboardProps = {
   streakDays: 3,
   recentVolume: 6,
   hasGoal: true,
-  reportLocked: false,
-  planLabel: "premium",
 };
 
 describe("GrowthDashboard (i18n chrome)", () => {
@@ -115,21 +110,28 @@ describe("GrowthDashboard (i18n chrome)", () => {
   it("resolves a numeric ICU insight from the key-expose pattern", () => {
     renderGrowth(<GrowthDashboard {...baseProps} />);
     // improvementPct 5 (>=3) → growth.insights.scoreUp with pct=5.
-    expect(screen.getByText("최근 평균 점수가 이전보다 5% 올랐어요.")).toBeTruthy();
+    expect(
+      screen.getByText("최근 평균 점수가 이전보다 5% 올랐어요."),
+    ).toBeTruthy();
+    expect(screen.getByText("문법 영역 점수가 가장 낮아요.")).toBeTruthy();
+    expect(screen.queryByText("{dimension}", { exact: false })).toBeNull();
   });
 
-  it("renders the locked report when reportLocked is true", () => {
-    renderGrowth(<GrowthDashboard {...baseProps} reportLocked planLabel={null} />);
+  it("renders the full dashboard sections without a paid lock", () => {
+    renderGrowth(<GrowthDashboard {...baseProps} />);
     expect(screen.getByTestId("growth-kpi-grid")).toBeTruthy();
     expect(screen.getByTestId("growth-kpi-average")).toBeTruthy();
     expect(screen.getByTestId("growth-kpi-attempts")).toBeTruthy();
     expect(screen.getByTestId("growth-kpi-improvement")).toBeTruthy();
     expect(screen.getByTestId("growth-kpi-goal")).toBeTruthy();
+    expect(screen.getByText("성장 추세 차트")).toBeTruthy();
+    expect(screen.getByText("약점 매트릭스")).toBeTruthy();
+    expect(screen.getByText("인사이트")).toBeTruthy();
+    expect(screen.getByText("최근 완료 문제")).toBeTruthy();
+    expect(screen.getByText("다음 추천 문제")).toBeTruthy();
     expect(
-      screen.getByText("상세 성장 리포트는 유료 플랜 전용이에요"),
-    ).toBeTruthy();
-    expect(screen.getByTestId("growth-locked-report")).toBeTruthy();
-    expect(screen.queryByText("성장 추세 차트")).toBeNull();
+      screen.queryByText("상세 성장 리포트는 유료 플랜 전용이에요"),
+    ).toBeNull();
   });
 
   it("shows the no-goal setup prompt when hasGoal is false", () => {
@@ -159,17 +161,6 @@ describe("GrowthTrendChart (i18n chrome)", () => {
       ),
     ).toBeTruthy();
     expect(screen.getByRole("button", { name: "다시 시도" })).toBeTruthy();
-  });
-});
-
-describe("GrowthLockedReport (i18n chrome)", () => {
-  it("renders the plan tag inside the rich body and the upgrade CTA", () => {
-    renderGrowth(<GrowthLockedReport planLabel="무료" />);
-    expect(
-      screen.getByText("상세 성장 리포트는 유료 플랜 전용이에요"),
-    ).toBeTruthy();
-    expect(screen.getByRole("button", { name: "플랜 업그레이드" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "구독 관리" })).toBeTruthy();
   });
 });
 

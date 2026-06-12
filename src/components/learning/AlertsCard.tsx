@@ -21,7 +21,7 @@ type Props = {
 export function AlertsCard({ alerts }: Props) {
   return (
     <Card title="알림">
-      <Space orientation="vertical" style={{ width: "100%" }}>
+      <Space orientation="vertical" className="w-full">
         {alerts.length === 0 ? (
           <Alert
             type="info"

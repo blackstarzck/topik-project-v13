@@ -31,7 +31,7 @@ export function SectionEditor({
         placeholder={placeholder}
         disabled={disabled}
         autoSize={{ minRows }}
-        style={{ marginTop: 8 }}
+        className="mt-2"
       />
     </div>
   );

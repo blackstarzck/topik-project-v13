@@ -31,18 +31,9 @@ export type PasswordStrength = {
   score: number;
   /** Locale-free level key; the meter resolves the label via auth.strength.level*. */
   level: PasswordStrengthLevel;
-  /** antd-compatible status color hint. */
-  color: string;
   rules: PasswordRule[];
   /** True when the password satisfies the 8-64 length policy. */
   meetsPolicy: boolean;
-};
-
-const LEVEL_COLOR: Record<PasswordStrengthLevel, string> = {
-  weak: "#ff4d4f",
-  fair: "#faad14",
-  good: "#52c41a",
-  strong: "#237804",
 };
 
 export function evaluatePasswordStrength(
@@ -83,7 +74,6 @@ export function evaluatePasswordStrength(
   return {
     score,
     level,
-    color: LEVEL_COLOR[level],
     rules,
     meetsPolicy,
   };

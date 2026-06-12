@@ -114,6 +114,17 @@ Rules:
   `Space` where appropriate.
 - Keep major learning workflows visible without forcing unnecessary scrolling.
 - Do not put cards inside cards.
+- Inside an existing card, repeated actions or summaries should default to flat
+  rows separated by spacing, typography, and a light hover background when
+  interactive. Do not add persistent internal dividers by default, and do not
+  wrap every row in a permanent `border + radius` box unless the row must stand
+  alone as a selectable tile or a form/input group needs a visible boundary.
+- Place card-level CTA buttons in Ant Design `Card.actions`, not inside the card
+  body. Keep that footer/actions area visually borderless unless a specific
+  product requirement needs a divider.
+- Put whole-card titles in Ant Design `Card` `title` and right-side status or
+  count metadata in `extra`. Do not build a separate title/status row inside the
+  card body when sibling cards need the same header alignment.
 - Use cards for repeated items, summaries, or bounded content groups.
 - Do not use a marketing hero as the first screen for the actual app.
 

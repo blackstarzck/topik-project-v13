@@ -233,7 +233,7 @@ export function LoginForm({
           title={
             activeNotice.text ?? (activeNotice.key ? t(activeNotice.key) : "")
           }
-          style={{ marginBottom: 0 }}
+          className="!mb-0"
           data-testid="login-session-notice"
         />
       )}
@@ -242,7 +242,7 @@ export function LoginForm({
           type="info"
           showIcon
           title={t("failedAttemptsHint")}
-          style={{ marginBottom: 0 }}
+          className="!mb-0"
           data-testid="login-failed-hint"
         />
       )}
@@ -262,7 +262,7 @@ export function LoginForm({
           { label: t("modePassword"), value: "password" },
           { label: t("modeMagicLink"), value: "magic-link" },
         ]}
-        style={{ marginBottom: 0 }}
+        className="!mb-0"
       />
 
       <Form

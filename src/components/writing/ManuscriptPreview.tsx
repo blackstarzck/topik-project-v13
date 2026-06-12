@@ -8,7 +8,7 @@ const { Text, Title } = Typography;
 type Props = {
   text: string;
   /** TOPIK 원고지 standard: 20 chars per line. */
-  charsPerLine?: number;
+  charsPerLine?: 20;
 };
 
 /**
@@ -32,32 +32,16 @@ export function ManuscriptPreview({ text, charsPerLine = 20 }: Props) {
     <div aria-label={t("manuscriptTitle")}>
       <Title level={5}>{t("manuscriptTitle")}</Title>
       <Text type="secondary">{t("manuscriptPerLine", { charsPerLine })}</Text>
-      <div
-        style={{
-          marginTop: 8,
-          display: "grid",
-          gap: 2,
-          fontFamily: "monospace",
-        }}
-      >
+      <div className="mt-2 grid gap-0.5 font-mono">
         {lines.map((row, rowIdx) => (
           <div
             key={rowIdx}
-            style={{
-              display: "grid",
-              gridTemplateColumns: `repeat(${charsPerLine}, 1fr)`,
-              gap: 2,
-            }}
+            className="grid grid-cols-[repeat(20,1fr)] gap-0.5"
           >
             {Array.from({ length: charsPerLine }).map((_, colIdx) => (
               <div
                 key={colIdx}
-                style={{
-                  border: "1px solid #d9d9d9",
-                  textAlign: "center",
-                  padding: "2px 0",
-                  minHeight: 24,
-                }}
+                className="min-h-6 border border-[#d9d9d9] py-0.5 text-center"
               >
                 {row[colIdx] ?? ""}
               </div>

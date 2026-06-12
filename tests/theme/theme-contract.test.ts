@@ -48,7 +48,9 @@ describe("app theme contract", () => {
       awesomicThemeTokens.color.snow,
     );
     expect(vars["--app-color-border"]).toBe(awesomicThemeTokens.color.pebble);
-    expect(vars["--app-radius"]).toBe("14px");
+    expect(vars["--app-radius"]).toBe(
+      `${awesomicThemeTokens.radius.base}px`,
+    );
     expect(vars["--app-color-text"]).toBe(awesomicThemeTokens.color.ink);
     expect(vars["--app-color-text-secondary"]).toBe(
       awesomicThemeTokens.color.steel,
@@ -76,10 +78,27 @@ describe("app theme contract", () => {
       expect(built.antd.token?.colorBgContainer).toBe(
         awesomicThemeTokens.color.snow,
       );
-      expect(built.antd.token?.borderRadius).toBe(14);
-      expect(built.antd.components?.Card?.borderRadiusLG).toBe(36);
-      expect(built.antd.components?.Input?.borderRadius).toBe(14);
-      expect(built.antd.components?.Tag?.borderRadiusSM).toBe(12);
+      expect(built.antd.token?.borderRadius).toBe(
+        awesomicThemeTokens.radius.base,
+      );
+      expect(built.antd.token?.borderRadiusSM).toBe(
+        awesomicThemeTokens.radius.badge,
+      );
+      expect(built.antd.token?.borderRadiusLG).toBe(
+        awesomicThemeTokens.radius.base,
+      );
+      expect(built.antd.components?.Card?.borderRadiusLG).toBe(
+        awesomicThemeTokens.radius.card,
+      );
+      expect(built.antd.components?.Input?.borderRadius).toBe(
+        awesomicThemeTokens.radius.input,
+      );
+      expect(built.antd.components?.Tag?.borderRadiusSM).toBe(
+        awesomicThemeTokens.radius.badge,
+      );
+      expect(built.antd.components?.Button?.borderRadius).toBe(
+        awesomicThemeTokens.radius.button,
+      );
       expect(built.antd.components?.Button?.primaryShadow).toBe("none");
       expect(built.antd.components?.Button?.defaultShadow).toBe("none");
       expect(built.antd.components?.Button?.dangerShadow).toBe("none");

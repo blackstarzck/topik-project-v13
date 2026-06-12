@@ -42,6 +42,20 @@ const RULE_LABEL_KEY: Record<
   symbol: "ruleSymbol",
 };
 
+const LEVEL_BAR_CLASS: Record<PasswordStrengthLevel, string> = {
+  weak: "bg-[var(--ant-color-error)]",
+  fair: "bg-[var(--ant-color-warning)]",
+  good: "bg-[var(--ant-color-success)]",
+  strong: "bg-[var(--ant-color-success-active)]",
+};
+
+const LEVEL_TEXT_CLASS: Record<PasswordStrengthLevel, string> = {
+  weak: "!text-[var(--ant-color-error)]",
+  fair: "!text-[var(--ant-color-warning)]",
+  good: "!text-[var(--ant-color-success)]",
+  strong: "!text-[var(--ant-color-success-active)]",
+};
+
 type Props = {
   password: string;
   /** Hide until the user has typed at least one char (avoids empty noise). */
@@ -68,46 +82,40 @@ export function PasswordStrengthMeter({
       data-testid="password-strength"
       aria-live="polite"
     >
-      <div style={{ display: "flex", gap: 4 }}>
+      <div className="flex gap-1">
         {Array.from({ length: SEGMENT_COUNT }).map((_, index) => {
           const filled = index < strength.score;
           return (
             <div
               key={index}
-              style={{
-                flex: 1,
-                height: 4,
-                borderRadius: 2,
-                background: filled ? strength.color : "#f0f0f0",
-                transition: "background 0.2s ease",
-              }}
+              className={[
+                "h-1 flex-1 rounded-[2px] transition-colors duration-200",
+                filled
+                  ? LEVEL_BAR_CLASS[strength.level]
+                  : "bg-[var(--ant-color-fill-secondary)]",
+              ].join(" ")}
             />
           );
         })}
       </div>
-      <div style={{ marginTop: 4 }}>
-        <Text style={{ fontSize: 12, color: strength.color }}>
+      <div className="mt-1">
+        <Text
+          className={["text-xs", LEVEL_TEXT_CLASS[strength.level]].join(" ")}
+        >
           {t("label", { level: t(LEVEL_LABEL_KEY[strength.level]) })}
         </Text>
       </div>
       {showRules ? (
-        <ul
-          style={{
-            listStyle: "none",
-            padding: 0,
-            margin: "6px 0 0",
-            display: "flex",
-            flexWrap: "wrap",
-            gap: "2px 12px",
-          }}
-        >
+        <ul className="mt-1.5 flex list-none flex-wrap gap-x-3 gap-y-0.5 p-0">
           {strength.rules.map((rule: PasswordRule) => (
             <li
               key={rule.key}
-              style={{
-                fontSize: 12,
-                color: rule.met ? "#52c41a" : "#8c8c8c",
-              }}
+              className={[
+                "text-xs",
+                rule.met
+                  ? "text-[var(--ant-color-success)]"
+                  : "text-text-secondary",
+              ].join(" ")}
             >
               {rule.met ? "✓" : "○"} {t(RULE_LABEL_KEY[rule.key])}
             </li>

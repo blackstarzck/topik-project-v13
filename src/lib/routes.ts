@@ -134,30 +134,12 @@ export const SIDEBAR_ITEMS: readonly SidebarItem[] = [
   },
 ];
 
-export const PAID_PLAN_LABELS: ReadonlySet<string> = new Set([
-  "premium",
-  "pro",
-  "team",
-  "yearly",
-  "quarterly",
-  "monthly",
-]);
-
-export function isPaidPlan(planLabel: string | null | undefined): boolean {
-  if (!planLabel) return false;
-  return PAID_PLAN_LABELS.has(planLabel.toLowerCase());
-}
-
 export type SidebarLockMap = Readonly<Record<string, string>>;
 
 export function computeSidebarLocks(args: {
   role: AppRole;
   planLabel: string | null | undefined;
 }): SidebarLockMap {
-  void args.role;
-  const locks: Record<string, string> = {};
-  if (!isPaidPlan(args.planLabel)) {
-    locks["/growth"] = "lockPaidOnly";
-  }
-  return locks;
+  void args;
+  return {};
 }

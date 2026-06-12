@@ -58,10 +58,10 @@ export function DashboardRecommendations({ primary, alternatives }: Props) {
   const altList = alternatives.slice(0, 4);
 
   return (
-    <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+    <Space orientation="vertical" size="middle" className="w-full">
       <AppCard title={t("continueCardTitle")}>
         {primary ? (
-          <Space orientation="vertical" size="small" style={{ width: "100%" }}>
+          <Space orientation="vertical" size="small" className="w-full">
             <Space size={8} wrap>
               <Tag color="geekblue">
                 {t(SOURCE_LABEL_KEY[primary.source] as Parameters<typeof t>[0])}
@@ -75,12 +75,12 @@ export function DashboardRecommendations({ primary, alternatives }: Props) {
               <Paragraph
                 type="secondary"
                 ellipsis={{ rows: 2 }}
-                style={{ margin: 0 }}
+                className="!m-0"
               >
                 {primary.reason}
               </Paragraph>
             ) : (
-              <Paragraph type="secondary" style={{ margin: 0 }}>
+              <Paragraph type="secondary" className="!m-0">
                 {t("defaultReason")}
               </Paragraph>
             )}
@@ -110,13 +110,10 @@ export function DashboardRecommendations({ primary, alternatives }: Props) {
         {altList.length === 0 ? (
           <Empty description={t("typesEmpty")} />
         ) : (
-          <Space orientation="vertical" size="small" style={{ width: "100%" }}>
+          <Space orientation="vertical" size="small" className="w-full">
             {altList.map((alt) => (
               <div key={alt.problemId} className="app-card-compact">
-                <Space
-                  style={{ width: "100%", justifyContent: "space-between" }}
-                  wrap
-                >
+                <Space className="w-full justify-between" wrap>
                   <Space orientation="vertical" size={2}>
                     <Tag color="blue">
                       {alt.questionNo != null

@@ -1,4 +1,3 @@
-import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
@@ -21,19 +20,6 @@ type SearchParams = Record<string, string | string[] | undefined>;
 function pickFirst(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
 }
-
-const documentListStyle: CSSProperties = {
-  border: "1px solid var(--ant-color-border-secondary)",
-  borderRadius: 8,
-  padding: 16,
-  background: "var(--ant-color-fill-quaternary)",
-};
-
-const documentBodyStyle: CSSProperties = {
-  maxHeight: 160,
-  overflow: "auto",
-  whiteSpace: "pre-wrap",
-};
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("auth.consent");
@@ -67,7 +53,7 @@ export default async function AuthConsentPage({
   return (
     <PublicShell>
       <PageContainer size="narrow">
-        <Flex vertical gap={24} style={{ width: "100%" }}>
+        <Flex vertical gap={24} className="w-full">
           <div>
             <Title level={2}>{t("heading")}</Title>
             <Paragraph type="secondary">{t("description")}</Paragraph>
@@ -77,26 +63,31 @@ export default async function AuthConsentPage({
             <Alert type="warning" showIcon title={t("requiredError")} />
           )}
 
-          <Flex vertical gap={16} style={{ width: "100%" }}>
+          <Flex vertical gap={16} className="w-full">
             {missingDocuments.map((doc) => (
-              <section key={doc.id} style={documentListStyle}>
-                <Flex vertical gap={8} style={{ width: "100%" }}>
+              <section
+                key={doc.id}
+                className="rounded-lg border border-border bg-surface p-4"
+              >
+                <Flex vertical gap={8} className="w-full">
                   <Text strong>{doc.title}</Text>
                   <Text type="secondary">
                     {t("versionLabel", { version: doc.version })}
                   </Text>
                   {doc.summary ? <Paragraph>{doc.summary}</Paragraph> : null}
-                  <Paragraph style={documentBodyStyle}>{doc.body}</Paragraph>
+                  <Paragraph className="max-h-40 overflow-auto whitespace-pre-wrap">
+                    {doc.body}
+                  </Paragraph>
                 </Flex>
               </section>
             ))}
           </Flex>
 
-          <Divider style={{ margin: 0 }} />
+          <Divider className="!m-0" />
 
           <form action={acceptRequiredConsentsAction}>
             <input type="hidden" name="next" value={next} />
-            <Flex vertical gap={16} style={{ width: "100%" }}>
+            <Flex vertical gap={16} className="w-full">
               <Checkbox name="accept">
                 {t("agreement")}
               </Checkbox>

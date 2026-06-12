@@ -26,14 +26,6 @@ export async function generateMetadata(): Promise<Metadata> {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-/** plan_label 이 유료에 해당하면 리포트 잠금 해제. */
-const PAID_PLAN_LABELS = new Set(["premium", "pro", "team", "yearly", "quarterly", "monthly"]);
-
-function isReportLocked(planLabel: string | null): boolean {
-  if (!planLabel) return true;
-  return !PAID_PLAN_LABELS.has(planLabel.toLowerCase());
-}
-
 function dayKey(iso: string): string {
   // KST(+9h) 기준 day bucket. 서버 TZ 의존 없이 오프셋 가산.
   const d = new Date(new Date(iso).getTime() + 9 * 60 * 60 * 1000);
@@ -68,7 +60,10 @@ function buildTrendPoints(
     volumeBuckets.set(key, (volumeBuckets.get(key) ?? 0) + 1);
   }
 
-  const allKeys = new Set<string>([...scoreBuckets.keys(), ...volumeBuckets.keys()]);
+  const allKeys = new Set<string>([
+    ...scoreBuckets.keys(),
+    ...volumeBuckets.keys(),
+  ]);
   const points: GrowthTrendPoint[] = Array.from(allKeys)
     .sort()
     .map((key) => {
@@ -90,7 +85,10 @@ function buildTrendPoints(
 function computeImprovementPct(feedbacks: FeedbackPoint[]): number | null {
   const scores = feedbacks
     .filter((f) => f.score_total != null)
-    .map((f) => ({ at: new Date(f.generated_at).getTime(), s: f.score_total as number }))
+    .map((f) => ({
+      at: new Date(f.generated_at).getTime(),
+      s: f.score_total as number,
+    }))
     .sort((a, b) => a.at - b.at);
   if (scores.length < 4) return null;
   const mid = Math.floor(scores.length / 2);
@@ -116,7 +114,7 @@ async function loadGrowthData(
     const recentVolumeSince = new Date(Date.now() - 30 * DAY_MS).toISOString();
 
     const goal = await getLearningGoal(userId);
-    const [kpi, weak, recs, feedbackRes, eventsRes, recentRes, profileRes, recentVolRes] =
+    const [kpi, weak, recs, feedbackRes, eventsRes, recentRes, recentVolRes] =
       await Promise.all([
         getDashboardKpi(userId, supabase),
         getWeakDimensions(userId),
@@ -140,11 +138,6 @@ async function loadGrowthData(
           .eq("user_id", userId)
           .order("generated_at", { ascending: false })
           .limit(5),
-        supabase
-          .from("profiles")
-          .select("plan_label")
-          .eq("id", userId)
-          .maybeSingle(),
         supabase
           .from("study_events")
           .select("id", { count: "exact", head: true })
@@ -197,12 +190,8 @@ async function loadGrowthData(
       };
     });
 
-    const planLabel = profileRes.data?.plan_label ?? null;
-
     return {
       hasGoal: Boolean(goal),
-      reportLocked: isReportLocked(planLabel),
-      planLabel,
       streakDays: kpi.streakDays,
       recentVolume: recentVolRes.count ?? 0,
       kpi: {

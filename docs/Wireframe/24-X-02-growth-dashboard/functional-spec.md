@@ -16,7 +16,8 @@
 - 기준 흐름: `docs/flow/user-flow.md`의 IA 순서를 따른다.
 - 진입 경로: B-01 홈 대시보드의 목표/성장 카드.
 - 이탈 경로: 추천 액션 선택은 X-07 약점 기반 추천으로 이동한다.
-- 화면 내부 동작: KPI, 성장 추세 차트, 잠금 리포트, 인사이트 카드, 추천 액션을 확인한다.
+- 화면 내부 동작: KPI, 성장 추세 차트, 약점 매트릭스, 인사이트 카드, 추천 액션을 확인한다.
+- 결제/구독 기준: 성장 대시보드는 유료 플랜 전용 화면이 아니며, 로그인한 사용자는 플랜 상태와 관계없이 `/growth`에 접근한다.
 
 ## 주요 기능
 
@@ -46,6 +47,7 @@
 ## 현재 구현 상태
 
 - study_events와 feedback 기반 파생 지표를 명확히 표시한다.
+- 무료 플랜 사용자도 사이드 내비에서 성장 대시보드 메뉴를 선택할 수 있고, KPI/차트/약점/인사이트/추천 영역을 확인할 수 있다.
 
 ## 코드 구현 근거
 
@@ -53,7 +55,6 @@
 - `GrowthDashboard` - `src/components/growth/GrowthDashboard.tsx`
 - `GrowthTrendChart` - `src/components/growth/GrowthTrendChart.tsx`
 - `GrowthLoadError` - `src/components/growth/GrowthLoadError.tsx`
-- `GrowthLockedReport` - `src/components/growth/GrowthLockedReport.tsx`
 - `buildGrowthInsights` - `src/components/growth/insights.ts`
 - `getDashboardKpi` - `src/lib/learning/kpi.ts`
 - `getWeakDimensions`, `getWeaknessRecommendations` - `src/lib/practice/weakness.ts`

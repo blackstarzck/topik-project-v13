@@ -28,7 +28,15 @@ type AuthMascotProps = {
   /** Emoji fallback shown when no src or the image fails to load. */
   emoji?: string;
   /** Pixel size of the mascot glyph/image. */
-  size?: number;
+  size?: 48 | 56;
+};
+
+const MASCOT_TEXT_SIZE_CLASS: Record<
+  NonNullable<AuthMascotProps["size"]>,
+  string
+> = {
+  48: "text-5xl",
+  56: "text-[56px]",
 };
 
 export function AuthMascot({
@@ -42,7 +50,7 @@ export function AuthMascot({
   const showImage = Boolean(src) && !imageFailed;
 
   return (
-    <div style={{ textAlign: "center" }} data-testid="auth-mascot">
+    <div className="text-center" data-testid="auth-mascot">
       {showImage ? (
         // eslint-disable-next-line @next/next/no-img-element -- runtime asset w/ onError fallback
         <img
@@ -50,21 +58,24 @@ export function AuthMascot({
           alt={alt}
           width={size}
           height={size}
-          style={{ display: "inline-block" }}
+          className="inline-block"
           onError={() => setImageFailed(true)}
         />
       ) : (
         <span
           role="img"
           aria-label={alt}
-          style={{ fontSize: size, lineHeight: 1, display: "inline-block" }}
+          className={[
+            "inline-block leading-none",
+            MASCOT_TEXT_SIZE_CLASS[size],
+          ].join(" ")}
         >
           {emoji}
         </span>
       )}
       {caption ? (
-        <div style={{ marginTop: 8 }}>
-          <Text type="secondary" style={{ fontSize: 13 }}>
+        <div className="mt-2">
+          <Text type="secondary" className="text-[13px]">
             {caption}
           </Text>
         </div>

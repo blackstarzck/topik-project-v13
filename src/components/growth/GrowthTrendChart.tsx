@@ -105,15 +105,19 @@ export function GrowthTrendChart({ points, onRetry }: Props) {
     >
       {!hasData ? (
         <Empty description={t("empty")}>
-          {onRetry ? (
-            <Button onClick={onRetry}>{t("retry")}</Button>
-          ) : null}
+          {onRetry ? <Button onClick={onRetry}>{t("retry")}</Button> : null}
         </Empty>
       ) : (
         <div className="flex w-full flex-col gap-4">
           {/* 색상만으로 의미 전달 금지(접근성) — 범례 + 수치 축 라벨 병기. */}
           <div className="h-72 w-full">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer
+              width="100%"
+              height="100%"
+              minWidth={0}
+              minHeight={288}
+              initialDimension={{ width: 800, height: 288 }}
+            >
               <LineChart
                 data={filtered}
                 margin={{ top: 8, right: 16, bottom: 0, left: -8 }}

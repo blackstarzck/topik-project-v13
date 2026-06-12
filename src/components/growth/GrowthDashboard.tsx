@@ -5,7 +5,7 @@ import {
   Button,
   Col,
   Empty,
-  List,
+  Flex,
   Progress,
   Row,
   Statistic,
@@ -20,7 +20,6 @@ import { writingFeedbackHref, writingProblemHref } from "@/lib/writing/routes";
 import { AppCard } from "@/components/shared/AppCard";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { GrowthTrendChart, type GrowthTrendPoint } from "./GrowthTrendChart";
-import { GrowthLockedReport } from "./GrowthLockedReport";
 import { buildGrowthInsights } from "./insights";
 
 const { Text } = Typography;
@@ -79,9 +78,6 @@ export type GrowthDashboardProps = {
   recentVolume: number;
   /** True when no goal row exists — KPI/matrix swap to a setup-prompt card. */
   hasGoal: boolean;
-  /** 무료 플랜이면 상세 리포트 잠금. */
-  reportLocked: boolean;
-  planLabel: string | null;
 };
 
 // next-intl 키 타입을 growth.dashboard 네임스페이스로 좁힌다. 동적 dimension 키
@@ -101,7 +97,6 @@ type DashboardTranslate = ReturnType<
  * - area 4 약점 매트릭스: 색상만으로 의미 전달 금지 → 수치 라벨 병기.
  * - area 5 인사이트: 실제 수치 근거, 3개 이하·60자 이하(insights.ts).
  * - area 6 하단 요약/추천: 최근 완료 문제 + 다음 추천(5개 이하).
- * - area 1 예외: 무료 플랜은 상세 리포트 잠금 + 업그레이드 CTA.
  */
 export function GrowthDashboard({
   kpi,
@@ -112,8 +107,6 @@ export function GrowthDashboard({
   streakDays,
   recentVolume,
   hasGoal,
-  reportLocked,
-  planLabel,
 }: GrowthDashboardProps) {
   const t = useTranslations("growth.dashboard");
   const tInsights = useTranslations("growth.insights");
@@ -171,10 +164,10 @@ export function GrowthDashboard({
         >
           <Statistic
             title={t("kpi.averageScore")}
-            value={kpi.averageScore != null ? Math.round(kpi.averageScore) : "—"}
-            suffix={
-              kpi.averageScore != null ? t("kpi.pointSuffix") : undefined
+            value={
+              kpi.averageScore != null ? Math.round(kpi.averageScore) : "—"
             }
+            suffix={kpi.averageScore != null ? t("kpi.pointSuffix") : undefined}
           />
           <Text type="secondary" className="!text-xs">
             {t("kpi.averageScoreHint")}
@@ -218,11 +211,7 @@ export function GrowthDashboard({
         </AppCard>
       </Col>
       <Col xs={12} md={6}>
-        <AppCard
-          data-testid="growth-kpi-goal"
-          size="small"
-          className="h-full"
-        >
+        <AppCard data-testid="growth-kpi-goal" size="small" className="h-full">
           <Statistic
             title={t("kpi.goalAchievement")}
             value={
@@ -250,180 +239,165 @@ export function GrowthDashboard({
     <div className="flex w-full flex-col gap-6">
       <PageHeader title={t("heading")} subtitle={t("subheading")} />
 
-      {/* area 2 — KPI 카드 4개 고정. 목표/데이터 없음은 설정 유도.
-          free 플랜도 잠금 카피가 약속한 기본 지표를 먼저 볼 수 있어야 한다. */}
+      {/* area 2 — KPI 카드 4개 고정. 목표/데이터 없음은 설정 유도. */}
       {kpiSection}
 
-      {/* area 1 예외 — 권한 없는 리포트 잠금 + 업그레이드 CTA. */}
-      {reportLocked ? (
-        <AppCard data-testid="growth-locked-report-card">
-          <GrowthLockedReport planLabel={planLabel} />
-        </AppCard>
-      ) : (
-        <>
-          {/* area 3 — 성장 차트(recharts 시계열). */}
-          <GrowthTrendChart
-            points={trendPoints}
-            onRetry={() => router.refresh()}
-          />
+      {/* area 3 — 성장 차트(recharts 시계열). */}
+      <GrowthTrendChart points={trendPoints} onRetry={() => router.refresh()} />
 
-          {/* area 4 — 약점 매트릭스. 색상만으로 의미 전달 금지 → 수치 라벨 병기. */}
-          <AppCard title={t("weakness.title")}>
-            {weakDimensions.length === 0 ? (
-              <Empty description={t("weakness.empty")}>
+      {/* area 4 — 약점 매트릭스. 색상만으로 의미 전달 금지 → 수치 라벨 병기. */}
+      <AppCard title={t("weakness.title")}>
+        {weakDimensions.length === 0 ? (
+          <Empty description={t("weakness.empty")}>
+            <Link href="/practice/problems">
+              <Button type="primary">{t("weakness.startCta")}</Button>
+            </Link>
+          </Empty>
+        ) : (
+          <div className="flex w-full flex-col gap-4">
+            {sortedWeak.slice(0, 6).map((w) => {
+              const percent = Math.round(w.avgScore * 100);
+              return (
+                <div key={w.dimension}>
+                  <div className="flex w-full items-center justify-between gap-3">
+                    <Text strong>{dimensionLabel(w.dimension)}</Text>
+                    <Text type="secondary">
+                      {t("weakness.scoreSample", {
+                        score: percent,
+                        count: w.sampleCount,
+                      })}
+                    </Text>
+                  </div>
+                  <Progress
+                    percent={percent}
+                    showInfo={false}
+                    status={percent < 60 ? "exception" : "normal"}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </AppCard>
+
+      {/* area 5 — 인사이트. 실제 수치 근거(insights.ts), 3개 이하·60자 이하.
+          insights.ts 가 키+ICU 변수만 만들고, 여기서 t()로 문구를 해석한다. */}
+      <AppCard title={t("insights.title")}>
+        <div className="flex w-full flex-col gap-2">
+          {insights.map((insight, idx) => (
+            <Alert
+              key={idx}
+              type="info"
+              showIcon
+              title={tInsights(
+                insight.key as Parameters<typeof tInsights>[0],
+                insight.values,
+              )}
+            />
+          ))}
+          <Text type="secondary" className="!text-xs">
+            {t("insights.disclaimer")}
+          </Text>
+        </div>
+      </AppCard>
+
+      {/* area 6 — 하단 요약/추천. 추천 없음이면 최근 완료 요약 + 문제 목록 CTA만. */}
+      <Row gutter={[16, 16]}>
+        <Col xs={24} md={12}>
+          <AppCard title={t("recent.title")}>
+            {recentCompleted.length === 0 ? (
+              <Empty description={t("recent.empty")} />
+            ) : (
+              <Flex vertical gap={12}>
+                {recentCompleted.slice(0, 5).map((item) => (
+                  <Flex
+                    key={item.submissionId}
+                    align="center"
+                    justify="space-between"
+                    wrap
+                    gap={8}
+                  >
+                    <Flex align="center" wrap gap={8}>
+                      <Tag>
+                        {item.questionNo != null
+                          ? t("recent.questionNo", { no: item.questionNo })
+                          : "—"}
+                      </Tag>
+                      <span>
+                        {t("recent.scoreLabel")}{" "}
+                        <strong>
+                          {item.scoreTotal != null
+                            ? t("recent.scoreValue", {
+                                score: Math.round(item.scoreTotal),
+                              })
+                            : t("recent.scorePending")}
+                        </strong>
+                      </span>
+                      <Text type="secondary" className="!text-xs">
+                        {new Date(item.generatedAt).toLocaleDateString("ko-KR")}
+                      </Text>
+                    </Flex>
+                    <span>
+                      <Link
+                        href={
+                          writingFeedbackHref({
+                            questionNo: item.questionNo,
+                            submissionId: item.submissionId,
+                          }) as never
+                        }
+                      >
+                        {t("recent.view")}
+                      </Link>
+                    </span>
+                  </Flex>
+                ))}
+              </Flex>
+            )}
+          </AppCard>
+        </Col>
+        <Col xs={24} md={12}>
+          <AppCard title={t("recommend.title")}>
+            {recommendations.length === 0 ? (
+              <Empty description={t("recommend.empty")}>
                 <Link href="/practice/problems">
-                  <Button type="primary">{t("weakness.startCta")}</Button>
+                  <Button type="primary">{t("recommend.listCta")}</Button>
                 </Link>
               </Empty>
             ) : (
               <div className="flex w-full flex-col gap-4">
-                {sortedWeak.slice(0, 6).map((w) => {
-                  const percent = Math.round(w.avgScore * 100);
-                  return (
-                    <div key={w.dimension}>
-                      <div className="flex w-full items-center justify-between gap-3">
-                        <Text strong>{dimensionLabel(w.dimension)}</Text>
-                        <Text type="secondary">
-                          {t("weakness.scoreSample", {
-                            score: percent,
-                            count: w.sampleCount,
-                          })}
-                        </Text>
+                {recommendations.slice(0, 5).map((rec) => (
+                  <div key={rec.problemId} className="app-card-compact">
+                    <div className="flex w-full flex-wrap items-center justify-between gap-3">
+                      <div className="flex flex-col gap-0.5">
+                        <Tag>
+                          {rec.questionNo != null
+                            ? t("recommend.questionNo", {
+                                no: rec.questionNo,
+                              })
+                            : t("recommend.questionFallback")}
+                        </Tag>
+                        <Text strong>{rec.title}</Text>
                       </div>
-                      <Progress
-                        percent={percent}
-                        showInfo={false}
-                        status={percent < 60 ? "exception" : "normal"}
-                      />
+                      <Link
+                        href={
+                          writingProblemHref({
+                            questionNo: rec.questionNo,
+                            problemId: rec.problemId,
+                          }) as never
+                        }
+                      >
+                        <Button type="primary">
+                          {t("recommend.startCta")}
+                        </Button>
+                      </Link>
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
               </div>
             )}
           </AppCard>
-
-          {/* area 5 — 인사이트. 실제 수치 근거(insights.ts), 3개 이하·60자 이하.
-              insights.ts 가 키+ICU 변수만 만들고, 여기서 t()로 문구를 해석한다. */}
-          <AppCard title={t("insights.title")}>
-            <div className="flex w-full flex-col gap-2">
-              {insights.map((insight, idx) => (
-                <Alert
-                  key={idx}
-                  type="info"
-                  showIcon
-                  title={tInsights(
-                    insight.key as Parameters<typeof tInsights>[0],
-                    insight.values,
-                  )}
-                />
-              ))}
-              <Text type="secondary" className="!text-xs">
-                {t("insights.disclaimer")}
-              </Text>
-            </div>
-          </AppCard>
-
-          {/* area 6 — 하단 요약/추천. 추천 없음이면 최근 완료 요약 + 문제 목록 CTA만. */}
-          <Row gutter={[16, 16]}>
-            <Col xs={24} md={12}>
-              <AppCard title={t("recent.title")}>
-                {recentCompleted.length === 0 ? (
-                  <Empty description={t("recent.empty")} />
-                ) : (
-                  <List
-                    size="small"
-                    dataSource={recentCompleted.slice(0, 5)}
-                    renderItem={(item) => (
-                      <List.Item
-                        key={item.submissionId}
-                        actions={[
-                          <Link
-                            key="view"
-                            href={
-                              writingFeedbackHref({
-                                questionNo: item.questionNo,
-                                submissionId: item.submissionId,
-                              }) as never
-                            }
-                          >
-                            {t("recent.view")}
-                          </Link>,
-                        ]}
-                      >
-                        <Tag>
-                          {item.questionNo != null
-                            ? t("recent.questionNo", { no: item.questionNo })
-                            : "—"}
-                        </Tag>
-                        <span className="ml-2">
-                          {t("recent.scoreLabel")}{" "}
-                          <strong>
-                            {item.scoreTotal != null
-                              ? t("recent.scoreValue", {
-                                  score: Math.round(item.scoreTotal),
-                                })
-                              : t("recent.scorePending")}
-                          </strong>
-                        </span>
-                        <Text
-                          type="secondary"
-                          className="ml-3 !text-xs"
-                        >
-                          {new Date(item.generatedAt).toLocaleDateString(
-                            "ko-KR",
-                          )}
-                        </Text>
-                      </List.Item>
-                    )}
-                  />
-                )}
-              </AppCard>
-            </Col>
-            <Col xs={24} md={12}>
-              <AppCard title={t("recommend.title")}>
-                {recommendations.length === 0 ? (
-                  <Empty description={t("recommend.empty")}>
-                    <Link href="/practice/problems">
-                      <Button type="primary">{t("recommend.listCta")}</Button>
-                    </Link>
-                  </Empty>
-                ) : (
-                  <div className="flex w-full flex-col gap-4">
-                    {recommendations.slice(0, 5).map((rec) => (
-                      <div key={rec.problemId} className="app-card-compact">
-                        <div className="flex w-full flex-wrap items-center justify-between gap-3">
-                          <div className="flex flex-col gap-0.5">
-                            <Tag>
-                              {rec.questionNo != null
-                                ? t("recommend.questionNo", {
-                                    no: rec.questionNo,
-                                  })
-                                : t("recommend.questionFallback")}
-                            </Tag>
-                            <Text strong>{rec.title}</Text>
-                          </div>
-                          <Link
-                            href={
-                              writingProblemHref({
-                                questionNo: rec.questionNo,
-                                problemId: rec.problemId,
-                              }) as never
-                            }
-                          >
-                            <Button type="primary">
-                              {t("recommend.startCta")}
-                            </Button>
-                          </Link>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </AppCard>
-            </Col>
-          </Row>
-        </>
-      )}
+        </Col>
+      </Row>
     </div>
   );
 }

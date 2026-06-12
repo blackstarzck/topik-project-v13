@@ -219,7 +219,7 @@ export function WritingEditor({
   }
 
   return (
-    <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+    <Space orientation="vertical" size="middle" className="w-full">
       {/* D-02 §2 — 작성 조건 카드 (52번만; 51번은 지문 자체가 조건). */}
       {questionNo === 52 ? (
         <ConditionsPanel
@@ -255,7 +255,7 @@ export function WritingEditor({
         </Button>
       </Space>
       {!autosaveEnabled ? (
-        <Text type="warning" style={{ fontSize: 12 }}>
+        <Text type="warning" className="text-xs">
           {t("autosaveDisabledNotice")}
         </Text>
       ) : null}
@@ -274,7 +274,7 @@ export function WritingEditor({
       />
       {/* §4 예외 — 글자수 미달/초과 blur 즉시 안내. */}
       {blurNotice ? (
-        <Text type="danger" style={{ fontSize: 12 }}>
+        <Text type="danger" className="text-xs">
           {blurNotice}
         </Text>
       ) : null}

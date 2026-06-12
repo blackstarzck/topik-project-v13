@@ -15,7 +15,7 @@ type Props = {
 export function FeatureCard({ emoji, title, description }: Props) {
   return (
     <AppCard>
-      <div style={{ fontSize: 36, marginBottom: 8 }}>{emoji}</div>
+      <div className="mb-2 text-4xl">{emoji}</div>
       <Title level={4}>{title}</Title>
       <Paragraph>{description}</Paragraph>
     </AppCard>

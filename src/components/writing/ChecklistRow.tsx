@@ -24,7 +24,7 @@ export function ChecklistRow({ label, status, onChange }: Props) {
     <Space
       orientation="vertical"
       size={2}
-      style={{ width: "100%", marginBottom: 12 }}
+      className="mb-3 w-full"
     >
       <Text>{label}</Text>
       <Segmented

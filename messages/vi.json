@@ -1491,7 +1491,7 @@
     "insights": {
       "scoreUp": "Điểm trung bình gần đây tăng {pct}% so với trước.",
       "scoreDown": "Điểm trung bình gần đây giảm {pct}% so với trước.",
-      "weakestDimension": "Điểm '{dimension}' của bạn thấp nhất.",
+      "weakestDimension": "Điểm {dimension} của bạn thấp nhất.",
       "recentVolume": "Bạn đã tích lũy {count} lần làm gần đây.",
       "averageScore": "Đến nay bạn đạt trung bình {score} điểm.",
       "streak": "Bạn đã học {days} ngày liên tiếp.",

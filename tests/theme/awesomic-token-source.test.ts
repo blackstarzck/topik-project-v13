@@ -28,6 +28,14 @@ function tokenValue(path: string): string | number | Record<string, unknown> {
   return (value as DesignTokenLeaf).$value;
 }
 
+function tokenPx(path: string): number {
+  const value = tokenValue(path);
+  if (typeof value !== "string" || !value.endsWith("px")) {
+    throw new Error(`Expected ${path} to be a px token`);
+  }
+  return Number.parseFloat(value);
+}
+
 describe("Awesomic token source contract", () => {
   test("selected theme is registered", () => {
     expect(themeSettings.main).toBe("awesomic");
@@ -43,9 +51,25 @@ describe("Awesomic token source contract", () => {
     expect(awesomicThemeTokens.color.pebble).toBe(tokenValue("color.pebble"));
     expect(awesomicThemeTokens.color.mist).toBe(tokenValue("color.mist"));
     expect(awesomicThemeTokens.color.snow).toBe(tokenValue("color.snow"));
-    expect(awesomicThemeTokens.radius.input).toBe(14);
-    expect(awesomicThemeTokens.radius.card).toBe(36);
-    expect(awesomicThemeTokens.radius.badge).toBe(12);
+  });
+
+  test("runtime radius tokens are reduced from the raw rounded reference", () => {
+    expect(awesomicThemeTokens.radius.base).toBe(6);
+    expect(awesomicThemeTokens.radius.input).toBe(6);
+    expect(awesomicThemeTokens.radius.button).toBe(6);
+    expect(awesomicThemeTokens.radius.card).toBe(8);
+    expect(awesomicThemeTokens.radius.compactCard).toBe(6);
+    expect(awesomicThemeTokens.radius.badge).toBe(4);
+
+    expect(awesomicThemeTokens.radius.card).toBeLessThan(
+      tokenPx("radius.3xl-3"),
+    );
+    expect(awesomicThemeTokens.radius.button).toBeLessThan(
+      tokenPx("radius.3xl-3"),
+    );
+    expect(awesomicThemeTokens.radius.badge).toBeLessThan(
+      tokenPx("radius.xl"),
+    );
   });
 
   test("global.css uses only approved --app-* bridge variables", () => {
