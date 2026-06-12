@@ -80,6 +80,15 @@ describe("RecentFeedbackCard i18n chrome", () => {
     renderWithIntl(<RecentFeedbackCard items={items} />);
     expect(screen.getByText("대기")).toBeTruthy();
   });
+
+  it("passes dashboard height classes to the card root", () => {
+    const { container } = renderWithIntl(
+      <RecentFeedbackCard items={[]} className="w-full lg:h-full" />,
+    );
+    const card = container.querySelector(".app-card");
+    expect(card?.className).toContain("flex flex-col");
+    expect(card?.className).toContain("w-full lg:h-full");
+  });
 });
 
 describe("UpcomingExamCard i18n chrome", () => {

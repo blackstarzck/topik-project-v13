@@ -18,6 +18,7 @@ export type RecentFeedbackItem = {
 
 type Props = {
   items: RecentFeedbackItem[];
+  className?: string;
 };
 
 /**
@@ -25,26 +26,28 @@ type Props = {
  * IA spec: docs/Wireframe/04-B-01-home-dashboard/description.md 추가 항목.
  * 최근 3건 표시 + 상세 페이지 링크.
  */
-export function RecentFeedbackCard({ items }: Props) {
+export function RecentFeedbackCard({ items, className }: Props) {
   const t = useTranslations("dashboard.recentFeedback");
   return (
-    <AppCard title={t("title")}>
+    <AppCard
+      title={t("title")}
+      className={["flex flex-col", className].filter(Boolean).join(" ")}
+      classNames={{ body: "flex-1" }}
+    >
       {items.length === 0 ? (
         <Empty description={t("empty")} />
       ) : (
         // antd 6.x deprecates the `List` component → compose with semantic divs.
         // role=list/listitem preserves the ul/li semantics List provided.
         <div className="grid" role="list">
-          {items.slice(0, 3).map((item, idx, arr) => (
+          {items.slice(0, 3).map((item) => (
             <div
               key={item.submissionId}
               role="listitem"
-              className={`flex flex-wrap items-center justify-between gap-3 py-3 ${
-                idx < arr.length - 1 ? "border-b border-border" : ""
-              }`}
+              className="flex flex-wrap items-center justify-between gap-3 py-3"
             >
               <div className="flex min-w-0 flex-wrap items-center gap-2">
-                <span className="inline-flex min-h-7 items-center rounded-full border border-border bg-surface px-3 text-xs font-semibold text-text-secondary">
+                <span className="inline-flex min-h-7 items-center rounded-sm bg-surface px-3 text-xs font-semibold text-text-secondary">
                   {item.questionNo != null
                     ? t("questionNo", { no: item.questionNo })
                     : "—"}

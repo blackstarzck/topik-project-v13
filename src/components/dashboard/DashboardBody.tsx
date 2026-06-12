@@ -8,7 +8,6 @@ import {
   BookOpenCheck,
   ClipboardList,
   RotateCcw,
-  Sparkles,
   Target,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -36,6 +35,11 @@ import type {
 
 const { Paragraph, Text } = Typography;
 
+const cardFooterClassNames = {
+  body: "flex-1",
+  actions: "app-card-footer-actions",
+};
+
 type Props = {
   kpi: DashboardKpiData;
   examDate: string | null;
@@ -52,7 +56,7 @@ function truncateLabel(value: string, max = 34): string {
 
 function DashboardBadge({ children }: { children: ReactNode }) {
   return (
-    <span className="inline-flex min-h-7 items-center rounded-full border border-border bg-surface px-3 text-xs font-semibold text-text-secondary">
+    <span className="inline-flex min-h-7 items-center rounded-sm bg-surface px-3 text-xs font-semibold text-text-secondary">
       {children}
     </span>
   );
@@ -119,12 +123,27 @@ export function DashboardBody({
       <DashboardKpiSummary kpi={kpi} />
 
       <section className="grid gap-5 lg:grid-cols-12" aria-label={t("hubAria")}>
-        <AppCard className="h-full lg:col-span-5">
-          <div className="grid h-full gap-6 md:grid-cols-3 md:items-center">
-            <div className="flex h-28 w-28 items-center justify-center rounded-3xl border border-border bg-surface text-text md:col-span-1">
-              <Sparkles aria-hidden size={30} />
-            </div>
-            <div className="grid gap-4 md:col-span-2">
+        <AppCard
+          className="flex h-full flex-col lg:col-span-5"
+          classNames={cardFooterClassNames}
+          actions={[
+            <Link
+              key="solve-now"
+              href={primaryHref as never}
+              className="inline-flex"
+            >
+              <Button
+                type="primary"
+                size="large"
+                icon={<ArrowRight size={16} />}
+              >
+                {t("solveNow")}
+              </Button>
+            </Link>,
+          ]}
+        >
+          <div className="grid h-full gap-4">
+            <div className="grid gap-4">
               <Text strong className="!text-sm !text-text-secondary">
                 {t("aiTutorTitle")}
               </Text>
@@ -148,26 +167,29 @@ export function DashboardBody({
                   </DashboardBadge>
                 ))}
               </div>
-              <Link href={primaryHref as never}>
-                <Button
-                  type="primary"
-                  size="large"
-                  icon={<ArrowRight size={16} />}
-                >
-                  {t("solveNow")}
-                </Button>
-              </Link>
             </div>
           </div>
         </AppCard>
 
-        <AppCard className="h-full lg:col-span-3">
+        <AppCard
+          title={t("continueTitle")}
+          extra={<DashboardBadge>{t("continueTag")}</DashboardBadge>}
+          className="flex h-full flex-col lg:col-span-3"
+          classNames={cardFooterClassNames}
+          actions={[
+            <Link
+              key="continue-writing"
+              href={primaryHref as never}
+              className="block"
+            >
+              <Button block size="large" icon={<ArrowRight size={16} />}>
+                {t("continueCta")}
+              </Button>
+            </Link>,
+          ]}
+        >
           <div className="grid h-full gap-4">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <Text strong>{t("continueTitle")}</Text>
-              <DashboardBadge>{t("continueTag")}</DashboardBadge>
-            </div>
-            <div className="flex items-start gap-3 rounded-2xl border border-border bg-background p-4">
+            <div className="flex items-start gap-3 py-3">
               <span className="mt-0.5 inline-flex text-text">
                 <BookOpenCheck aria-hidden size={20} />
               </span>
@@ -177,27 +199,39 @@ export function DashboardBody({
                     ? truncateLabel(primary.title, 26)
                     : t("continueFallbackTitle")}
                 </Text>
-                <Paragraph type="secondary" className="!m-0 !text-sm !leading-6">
+                <Paragraph
+                  type="secondary"
+                  className="!m-0 !text-sm !leading-6"
+                >
                   {primary?.reason ?? t("continueBody")}
                 </Paragraph>
               </div>
             </div>
-            <Link href={primaryHref as never}>
-              <Button block size="large" icon={<ArrowRight size={16} />}>
-                {t("continueCta")}
-              </Button>
-            </Link>
           </div>
         </AppCard>
 
-        <AppCard className="h-full lg:col-span-4">
+        <AppCard
+          title={t("pendingTitle")}
+          extra={
+            <DashboardBadge>
+              {t("pendingBadge", { count: feedbackCount })}
+            </DashboardBadge>
+          }
+          className="flex h-full flex-col lg:col-span-4"
+          classNames={cardFooterClassNames}
+          actions={[
+            <Link
+              key="feedback-report"
+              href={firstFeedbackHref as never}
+              className="block"
+            >
+              <Button block size="large">
+                {t("reportCta")}
+              </Button>
+            </Link>,
+          ]}
+        >
           <div className="grid h-full gap-4">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <Text strong>{t("pendingTitle")}</Text>
-              <DashboardBadge>
-                {t("pendingBadge", { count: feedbackCount })}
-              </DashboardBadge>
-            </div>
             {feedbackPreview.length === 0 ? (
               <Empty
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
@@ -208,7 +242,7 @@ export function DashboardBody({
                 {feedbackPreview.map((item) => (
                   <Link
                     key={item.submissionId}
-                    className="flex items-center gap-3 rounded-2xl border border-border bg-background p-3 text-text transition hover:border-text"
+                    className="-mx-2 flex items-center gap-3 px-2 py-3 text-text transition hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text"
                     href={
                       writingFeedbackHref({
                         questionNo: item.questionNo,
@@ -216,7 +250,7 @@ export function DashboardBody({
                       }) as never
                     }
                   >
-                    <span className="flex h-10 w-10 flex-none items-center justify-center rounded-default bg-surface text-sm font-semibold text-text">
+                    <span className="flex h-10 w-10 flex-none items-center justify-center rounded-sm bg-surface text-sm font-semibold text-text">
                       {item.questionNo ?? "?"}
                     </span>
                     <span className="grid min-w-0 flex-1 gap-1">
@@ -234,18 +268,16 @@ export function DashboardBody({
                 ))}
               </div>
             )}
-            <Link href={firstFeedbackHref as never}>
-              <Button block size="large">
-                {t("reportCta")}
-              </Button>
-            </Link>
           </div>
         </AppCard>
       </section>
 
       <section className="grid gap-5 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <RecentFeedbackCard items={recentFeedbacks} />
+        <div className="flex lg:col-span-2">
+          <RecentFeedbackCard
+            items={recentFeedbacks}
+            className="w-full lg:h-full"
+          />
         </div>
         <div className="grid gap-5 lg:col-span-1">
           <AppCard title={t("quickStartTitle")}>
@@ -254,9 +286,9 @@ export function DashboardBody({
                 <Link
                   key={action.href}
                   href={action.href as never}
-                  className="flex items-center gap-3 rounded-2xl border border-border bg-background p-3 text-text transition hover:border-text"
+                  className="-mx-2 flex items-center gap-3 px-2 py-3 text-text transition hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text"
                 >
-                  <span className="flex h-10 w-10 flex-none items-center justify-center rounded-default bg-surface text-text">
+                  <span className="flex h-10 w-10 flex-none items-center justify-center rounded-sm bg-surface text-text">
                     {action.icon}
                   </span>
                   <span className="grid min-w-0 flex-1 gap-1">
