@@ -43,18 +43,33 @@
 
 ## 현재 구현 상태
 
-- generated-exports bucket과 export_files 상태가 기준이다.
+- **서버 실파일 생성 적용(2026-06-12, 브리프 `docs/pdf-export-real-file-brief-20260612.md`)**:
+  `POST /api/export/pdf`가 react-pdf로 PDF를 생성해 `generated-exports`의
+  `exports/{user_id}/{export_id}.pdf`에 업로드하고 `export_files`를
+  queued→ready(실패 시 failed)로 기록한다. 클라이언트는 본인 경로 파일을
+  내려받아 저장하며, 서버 생성 실패 시 브라우저 인쇄(`window.print`)로
+  폴백한다. 본문은 한국어 고정(NanumGothic 임베딩, `public/fonts/pdf/`).
+- 모달 UI는 hifi.png 2단 레이아웃(선택한 문제/포함할 항목/레이아웃 옵션 +
+  미리보기)으로 정렬됨. 파일명·개인정보 확인은 본 문서 제약에 따라 유지.
 
 ## 코드 구현 근거
 
 - `PdfExportModal`, `handleExport` - `src/components/library/PdfExportModal.tsx`
 - `ExportPdfButton` - `src/components/library/ExportPdfButton.tsx`
-- `triggerPdfExport` - `src/lib/export/pdf-export.ts`
+- `POST /api/export/pdf` - `src/app/api/export/pdf/route.ts`
+- `buildPdfDocument`, `registerPdfFonts` - `src/lib/export/pdf-document.tsx`
+- `resolvePdfExportItems` - `src/lib/export/pdf-export-server.ts`
+- `requestServerPdfExport`, `exportPdfWithPrintFallback` - `src/lib/export/pdf-export-client.ts`
+- `pdfExportRequestSchema`(options 계약) - `src/lib/export/pdf-options.ts`
+- `triggerPdfExport`(인쇄 폴백) - `src/lib/export/pdf-export.ts`
 - `LibraryTabs` modal host - `src/components/library/LibraryTabs.tsx`
 
 ## 미구현/불일치
 
-- 현재 확인된 gap은 DB/source inventory 기준으로 문서에 기록된 항목뿐이다.
+- PDF 템플릿/레이아웃의 운영 데이터화(표지·브랜딩 옵션)는 여전히 없음 — v1은
+  코드 내 "간단 1안" 템플릿(owner 확정).
+- library_selection은 저장 답안(submission) 항목만 PDF 본문으로 변환한다.
+  리포트/문제 항목의 묶음 병합은 후속 협의.
 
 ## 추가 발견 후보
 

@@ -111,6 +111,7 @@
 <li><b>X-09 저장 영속성 UNVERIFIED 해소</b> — 토글→저장→재진입 값 유지 직접 확인(원상 복구 완료)</li>
 </ul>
 <p>잔여: <b>D-1</b>(배포 환경 변수 — 인프라 액션), <b>D-4</b>(포맷 드리프트 — 보류), <b>G1</b>(이탈 경고 — 보류), G2~G5·G7~G10(문서 게이트 유지).</p>
+<p><b>후속(같은 날, owner 지시): F-M1 PDF 실파일 전환 + 모달 hifi 정렬</b> — §11-S의 "PDF 서버 파일 다운로드 준비 중" 스텁을 실연동으로 전환(서버 react-pdf 생성·한글 폰트 임베딩·<code>generated-exports</code> 업로드·실패 시 인쇄 폴백, 스키마 변경 0). 모달 UI는 hifi.png 2단 레이아웃으로 재구성(디자인 시스템 준수). 실파일 다운로드 브라우저 검증 완료. 상세=§11-S PDF 행, 브리프 <code>docs/pdf-export-real-file-brief-20260612.md</code>.</p>
 </div>
 
 <div class="card">
@@ -423,7 +424,7 @@
 <tr><td>알림 발송 (X-09)</td><td>설정 화면·저장 게이팅 ✓</td><td><b>스텁</b> — preference 저장만, 이메일/푸시 transport 없음</td><td><code>src/components/settings/NotificationPrefsForm.tsx</code> ("REAL SEND is an external stub")</td></tr>
 <tr><td>결제 (X-03)</td><td>페이월·요금제 표시 ✓</td><td><b>스텁</b> — provider 미연동, CTA="연동 예정"</td><td><code>src/components/settings/PaywallShell.tsx</code></td></tr>
 <tr><td>구독 변경/해지/결제수단 (X-04)</td><td>구독·이력 표시 ✓</td><td><b>스텁</b> — 정책 모달 "연동 예정", billing 호출 없음</td><td><code>src/components/settings/SubscriptionShell.tsx</code></td></tr>
-<tr><td>PDF 내보내기 (F-M1)</td><td>브라우저 인쇄(window.print) ✓</td><td>서버 파일 다운로드(generated-exports 버킷) <b>준비 중</b></td><td><code>src/components/library/PdfExportModal.tsx</code></td></tr>
+<tr><td>PDF 내보내기 (F-M1)</td><td>브라우저 인쇄(window.print) ✓</td><td><span class="pill pass">실연동 전환(2026-06-12)</span> 서버가 react-pdf로 실파일 생성 → <code>generated-exports</code> 업로드 → 다운로드. 한글 폰트 임베딩, 실패 시 인쇄 폴백. 모달 UI도 hifi 2단 레이아웃으로 정렬(owner 지시). 실파일 다운로드(32KB, %PDF) 브라우저 검증 완료. 브리프=<code>docs/pdf-export-real-file-brief-20260612.md</code></td><td><code>src/app/api/export/pdf/route.ts</code>, <code>src/lib/export/pdf-document.tsx</code>, <code>src/components/library/PdfExportModal.tsx</code></td></tr>
 <tr><td>다시 풀기 힌트 모드 (C-03)</td><td>기본 다시풀기 ✓</td><td>힌트 포함 모드 <b>deferred</b>(비활성+안내)</td><td><code>src/components/practice/RetryModal.tsx</code></td></tr>
 <tr><td>아바타 업로드 (X-05) — <em>대조군</em></td><td>업로드·검증 ✓</td><td><b>실연동</b>(Supabase Storage avatars 버킷). 스텁 아님 — 오해 방지용 기재</td><td><code>src/components/profile/avatar-upload.ts</code></td></tr>
 </table>
