@@ -58,5 +58,9 @@
 PDF 요청과 파일 저장은 현재 스키마로 충족된다. PDF 템플릿 운영 구조는 스키마 보강 필요다.
 
 ## 검수 필요 항목
-- options JSON의 허용 key를 정한다.
-- PDF 생성 실패 후 재시도 시 같은 export row를 재사용할지 정한다.
+- ~~options JSON의 허용 key를 정한다.~~ → 확정(2026-06-12, 브리프 §2-5):
+  `source`('server_render'|'browser_print') + `filename`/`includeAnswers`/
+  `includeFeedback`/`layout`('paged'|'continuous')/`orientation`
+  ('portrait'|'landscape'). 스키마: `src/lib/export/pdf-options.ts`.
+- ~~PDF 생성 실패 후 재시도 시 같은 export row를 재사용할지 정한다.~~ →
+  확정(2026-06-12, 브리프 §3-H): 재시도는 항상 **새 row** — 실패 이력 보존.
