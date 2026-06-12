@@ -2,7 +2,7 @@
 
 import { App, Badge, Button, Empty, List, Popover, Skeleton, Typography } from "antd";
 import { Bell } from "lucide-react";
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useNow, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
@@ -40,6 +40,9 @@ type Props = {
 export function NotificationBell({ userId }: Props) {
   const t = useTranslations("notifications.bell");
   const format = useFormatter();
+  // relativeTime은 now가 없으면 호출마다 IntlError(ENVIRONMENT_FALLBACK)를 던진다
+  // (dev 콘솔 폭주 — QA 2차 라운드에서 발견). 1분 주기로 갱신되는 now를 공급한다.
+  const now = useNow({ updateInterval: 60_000 });
   const router = useRouter();
   const { message } = App.useApp();
 
@@ -179,7 +182,7 @@ export function NotificationBell({ userId }: Props) {
                       {item.body}
                     </Paragraph>
                     <Text type="secondary" className="!text-xs">
-                      {format.relativeTime(new Date(item.created_at))}
+                      {format.relativeTime(new Date(item.created_at), now)}
                     </Text>
                   </span>
                 </button>
