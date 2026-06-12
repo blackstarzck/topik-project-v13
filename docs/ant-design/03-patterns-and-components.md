@@ -17,6 +17,15 @@ Preferred components:
 Rules:
 
 - Sidebar items must map to stable product areas.
+- `Menu` selected, hover, active, disabled, border, active bar, and text-color
+  states must come from AntD `Menu` component tokens. If only one product area
+  needs a different navigation style, wrap that area in a scoped
+  `ConfigProvider` instead of changing the global `Menu` theme.
+- Do not restyle `Menu` internals with Tailwind utilities, broad `.ant-menu*`
+  selectors, or project-authored visual inline styles.
+- AntD may generate inline style attributes for runtime behavior such as inline
+  menu indentation. Treat those as library output; only override them when there
+  is a confirmed product bug and no token or prop can express the fix.
 - Tabs are for switching views inside the same context, not for global routing.
 - Steps are for workflows with a required order.
 - Breadcrumbs are for deep pages such as notice detail or feedback detail.
@@ -72,7 +81,8 @@ Preferred components:
 - `Table`: sortable, comparable structured data.
 - `Card`: bounded summary or repeated item. In app code, use
   `src/components/shared/AppCard.tsx` for user-facing Card surfaces so themes
-  have a stable `.app-card` hook.
+  have a stable `.app-card` hook. Project wrappers must wrap AntD components
+  rather than replace them with custom/Tailwind-only controls.
 - `Descriptions`: read-only detail metadata.
 - `Statistic`: important metrics.
 - `Progress`: target completion or exam progress.
@@ -91,6 +101,9 @@ Rules:
 - Do not create theme-specific Card wrappers such as `LiquidGlassCard`.
   Theme-specific surface and child-component styling belongs in the theme
   preset, scoped to `.app-card`.
+- Do not use Tailwind utilities to recreate AntD component variants or states.
+  Tailwind may position and constrain the component; AntD props, tokens, and
+  component tokens own the component behavior and appearance.
 - Use `Descriptions` for stable metadata in detail pages.
 - Use `Statistic` only for numbers that matter.
 - Avoid overusing cards for every section.

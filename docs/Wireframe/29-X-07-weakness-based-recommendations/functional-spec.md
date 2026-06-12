@@ -15,7 +15,7 @@
 - Route type: page
 - 기준 흐름: `docs/flow/user-flow.md`의 IA 순서를 따른다.
 - 진입 경로: X-02 성장 대시보드 또는 R-01 비교 리포트의 약점 인사이트 CTA.
-- 이탈 경로: 추천 문제 시작은 C-02 문제 목록/선택 흐름으로 이동하고, 유료 잠금은 X-03 페이월로 이동한다.
+- 이탈 경로: 추천 문제 시작은 C-02 문제 목록/선택 흐름으로 이동한다.
 - 화면 내부 동작: 약점 탭, 진단 카드, 추천 카드, 인사이트 확인, 추천 소비 로그 기록을 처리한다.
 
 ## 주요 기능
@@ -47,7 +47,7 @@
 
 ## 코드 구현 근거
 
-- `PracticeWeaknessPage`, `isLocked` - `src/app/(workspace)/practice/weakness/page.tsx`
+- `PracticeWeaknessPage` - `src/app/(workspace)/practice/weakness/page.tsx`
 - `WeaknessView`, `handleRecommendationClick` - `src/components/practice/WeaknessView.tsx`
 - `DimensionTabs` - `src/components/practice/DimensionTabs.tsx`
 - `DiagnosticCard` - `src/components/practice/DiagnosticCard.tsx`

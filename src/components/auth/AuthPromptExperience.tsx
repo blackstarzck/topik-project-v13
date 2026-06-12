@@ -6,7 +6,6 @@ import { Flex, Typography } from "antd";
 import { Sparkles } from "lucide-react";
 
 import { AnimatedAuthCharacters } from "@/components/auth/AnimatedAuthCharacters";
-import { AuthLanguageSelect } from "@/components/auth/AuthLanguageSelect";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { SignUpForm } from "@/components/auth/SignUpForm";
 
@@ -23,8 +22,6 @@ type AuthPromptExperienceProps = {
   switchPrompt: string;
   switchHref: "/login" | "/sign-up";
   switchLabel: string;
-  termsLabel: string;
-  privacyLabel: string;
 };
 
 export function AuthPromptExperience({
@@ -36,8 +33,6 @@ export function AuthPromptExperience({
   switchPrompt,
   switchHref,
   switchLabel,
-  termsLabel,
-  privacyLabel,
 }: AuthPromptExperienceProps) {
   const [isTyping, setIsTyping] = useState(false);
   const [password, setPassword] = useState("");
@@ -65,11 +60,6 @@ export function AuthPromptExperience({
           />
         </div>
 
-        <nav className="signup-prompt-links">
-          <NextLink href="/privacy">{privacyLabel}</NextLink>
-          <NextLink href="/terms">{termsLabel}</NextLink>
-          <NextLink href={switchHref}>{switchLabel}</NextLink>
-        </nav>
       </aside>
 
       <main className="signup-prompt-form-panel" aria-labelledby={titleId}>
@@ -86,7 +76,6 @@ export function AuthPromptExperience({
               Talkpik <strong>AI</strong>
             </span>
           </NextLink>
-          <AuthLanguageSelect />
         </div>
 
         <Flex vertical className="signup-prompt-form-inner">

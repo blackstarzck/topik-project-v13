@@ -140,13 +140,15 @@ async function mockSignUpDuplicateEmail(page: Page): Promise<SignUpRequest[]> {
 }
 
 test.describe("A-01 sign-up functional flow", () => {
-  test("public sign-up screen exposes required links and active Google login state", async ({
+  test("public sign-up screen keeps form links and hides hero secondary links", async ({
     page,
   }) => {
     const errors = collectErrors(page);
 
     await openSignUp(page);
 
+    await expect(page.getByTestId("auth-language-select")).toHaveCount(0);
+    await expect(page.locator(".signup-prompt-links")).toHaveCount(0);
     await expect(
       page.locator('a[href="/terms"]:visible').first(),
     ).toBeVisible();

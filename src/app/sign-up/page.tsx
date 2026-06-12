@@ -13,8 +13,6 @@ export default async function SignUpPage() {
   const t = await getTranslations("auth.signUp");
   const tCommon = await getTranslations("common");
   const tMascot = await getTranslations("auth.mascot");
-  const tTerms = await getTranslations("legal.terms");
-  const tPrivacy = await getTranslations("legal.privacy");
 
   return (
     <PublicShell className="signup-prompt-shell">
@@ -27,8 +25,6 @@ export default async function SignUpPage() {
         switchPrompt={t("haveAccountPrompt")}
         switchHref="/login"
         switchLabel={tCommon("login")}
-        termsLabel={tTerms("heading")}
-        privacyLabel={tPrivacy("heading")}
       />
     </PublicShell>
   );

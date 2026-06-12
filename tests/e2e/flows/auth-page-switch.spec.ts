@@ -80,33 +80,21 @@ test.describe("A-01/A-02 auth page switch", () => {
     expect(errors).toEqual([]);
   });
 
-  test("language selector changes anonymous auth pages", async ({ page }) => {
+  test("anonymous auth pages hide secondary settings and hero links", async ({
+    page,
+  }) => {
     const errors = collectErrors(page);
 
     await page.goto("/login", { waitUntil: "networkidle" });
-    await expect(page.getByTestId("auth-language-select")).toBeVisible();
-
-    await page.getByTestId("auth-language-select-control").click();
-    await page
-      .locator(
-        ".ant-select-dropdown:not(.ant-select-dropdown-hidden) .ant-select-item-option",
-      )
-      .filter({ hasText: "English" })
-      .click();
-
-    await expect(
-      page.getByRole("heading", { name: "Welcome back" }),
-    ).toBeVisible();
-    await expect
-      .poll(async () => {
-        const cookies = await page.context().cookies();
-        return cookies.find((cookie) => cookie.name === "NEXT_LOCALE")?.value;
-      })
-      .toBe("en");
+    await expect(page.getByTestId("auth-language-select")).toHaveCount(0);
+    await expect(page.locator(".signup-prompt-links")).toHaveCount(0);
+    await expect(page.locator('a[href="/privacy"]:visible')).toHaveCount(0);
+    await expect(page.locator('a[href="/terms"]:visible')).toHaveCount(0);
 
     await page.goto("/sign-up", { waitUntil: "networkidle" });
-    await expect(page.getByRole("heading", { name: "Sign up" })).toBeVisible();
-    await expect(page.getByTestId("auth-language-select")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "회원가입" })).toBeVisible();
+    await expect(page.getByTestId("auth-language-select")).toHaveCount(0);
+    await expect(page.locator(".signup-prompt-links")).toHaveCount(0);
 
     expect(errors).toEqual([]);
   });

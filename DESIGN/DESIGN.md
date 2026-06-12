@@ -1,6 +1,12 @@
 # Awesomic — Style Reference
 > Rounded midnight marketplace — a portfolio gallery cut from matte black tiles on a white tablecloth, where large rounded corners and a single custom typeface do all the expressive work.
 
+> Implementation note for TALKPIK AI: this file is a raw visual reference/export
+> artifact. It is not the app runtime theme contract by itself. App code must
+> normalize selected values through `src/theme`, then project them into both the
+> AntD adapter and the Tailwind v4 adapter. Do not paste raw `@theme` values
+> from this file into `src/styles/global.css` or a Tailwind config.
+
 **Theme:** light
 
 Awesomic operates on a white-and-near-black canvas with maximum roundness — 36px cards and pill-shaped containers dominate every surface, creating a soft, approachable tension against the very dark #09090b fills used for primary actions. The neutral scale is dense and graduated (gray-50 through gray-950), but only 3-4 steps appear in any single view, keeping contrast high without complexity. The single custom typeface, Cosmica, spans the entire system from 10px badge labels to 64px display headlines — its weight range (300–700) does all tonal work that color doesn't. Accent color is almost entirely absent from the UI layer: vivid orange (#ff5a00) surfaces only on YC badge labels, and the vivid pink (#fe45e2) is a single decorative card wash — the system's restraint makes these moments land harder.
@@ -362,7 +368,14 @@ Awesomic uses animation expressively but purposefully. Three named scrolling loo
 }
 ```
 
-### Tailwind v4
+### Tailwind v4 — Raw Export Reference Only
+
+The block below shows the raw exported Tailwind token shape. In the TALKPIK app,
+equivalent Tailwind utilities must be produced from `src/theme` through
+`@theme inline` aliases that read resolved `--app-*` variables. If a token below
+is promoted into the app bridge, update `src/theme/tokens/*`,
+`src/theme/tailwind-bridge.ts`, `src/styles/global.css`, and `tests/theme/*`
+together.
 
 ```css
 @theme {

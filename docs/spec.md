@@ -86,9 +86,9 @@ Folder responsibilities:
 - `src/lib/`: Supabase clients, validation schemas, and server-only utilities.
 - `src/stores/`: focused Zustand stores for recoverable client interaction state.
 - `src/styles/`: Tailwind entrypoint and minimal global CSS used only where
-  layout glue is necessary.
+  layout glue and the Tailwind theme adapter are necessary.
 - `src/theme/`: Ant Design theme setup, token composition, theme presets, and
-  the Tailwind token bridge.
+  the Tailwind token bridge/adapter.
 - `src/types/`: shared TypeScript types.
 
 Do not use `src/App.tsx` as the route authority. `docs/sitemap.md` remains the
@@ -99,14 +99,27 @@ implementation reference. Reconcile both before route changes.
 
 - Use Ant Design components before building custom UI.
 - Use Ant Design theme tokens before hardcoded colors, shadows, radii, or spacing.
+- AntD component visual states such as selected, hover, active, disabled,
+  border, radius, and active bar belong in `theme.components` or a scoped
+  `ConfigProvider` when the behavior is surface-specific.
 - Use Tailwind CSS for constrained utility styling, responsive layout glue, and
   small one-off adjustments when Ant Design components or tokens are not enough.
 - Do not use Tailwind as the design system, component library, or source of
-  brand tokens. Ant Design tokens remain the styling authority.
+  brand tokens. Project theme tokens are interpreted through `src/theme`; AntD
+  remains the primary component/runtime theme adapter.
+- Do not recreate AntD component states with Tailwind utility classes, broad
+  `.ant-*` selectors, or generated AntD class selectors.
 - Keep theme decisions centralized under `src/theme/`.
-- Keep Tailwind and Ant Design visually synchronized through shared theme CSS
-  variables generated from the active Ant Design theme. Do not copy separate
-  Tailwind color, radius, shadow, font, or spacing values by hand.
+- When a theme is changed or added, update both library-specific adapters from
+  the same source of truth: AntD through `ConfigProvider`, `theme.token`, and
+  `theme.components`; Tailwind through `src/styles/global.css` `@theme inline`
+  aliases that consume resolved `--app-*` bridge variables.
+- Do not copy separate Tailwind color, radius, shadow, font, or spacing values
+  by hand. Tailwind theme values must be generated from or mapped back to the
+  same project theme source used by the AntD adapter.
+- Do not use project-authored visual inline styles for colors, backgrounds,
+  borders, radii, padding, or component states. AntD-generated inline styles
+  and the server-side `<html>` theme bridge are separate exceptions.
 - Use `ConfigProvider` at the app root.
 - Use Ant Design `App` provider for message, notification, and modal context.
 - Prefer Ant Design layout and feedback primitives such as `Layout`, `Row`,

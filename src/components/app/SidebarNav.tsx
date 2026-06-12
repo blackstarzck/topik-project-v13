@@ -1,6 +1,14 @@
 "use client";
 
-import { Menu, Tag, Tooltip, type MenuProps } from "antd";
+import {
+  ConfigProvider,
+  Menu,
+  Tag,
+  Tooltip,
+  theme as antdTheme,
+  type MenuProps,
+  type ThemeConfig,
+} from "antd";
 import {
   BarChart3,
   Bell,
@@ -19,7 +27,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
-import { useMemo, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import type { AppRole } from "@/lib/auth/roles";
 import {
   computeSidebarLocks,
@@ -90,6 +98,41 @@ function buildItem(
   return buildLeaf(item, locks, t);
 }
 
+function matchesRoute(pathname: string, key: string) {
+  return pathname === key || pathname.startsWith(`${key}/`);
+}
+
+function firstPathSegment(key: string) {
+  const segment = key.split("/").filter(Boolean)[0];
+  return segment ? `/${segment}` : null;
+}
+
+function groupMatchesRoute(group: SidebarItem, pathname: string) {
+  if (!("children" in group)) return false;
+
+  if (group.children.some((child) => matchesRoute(pathname, child.key))) {
+    return true;
+  }
+
+  const sharedSegments = new Set(
+    group.children
+      .map((child) => firstPathSegment(child.key))
+      .filter((segment): segment is string => Boolean(segment)),
+  );
+
+  return [...sharedSegments].some((segment) => matchesRoute(pathname, segment));
+}
+
+function getRouteOpenKeys(pathname: string) {
+  return SIDEBAR_ITEMS.filter((item) => groupMatchesRoute(item, pathname)).map(
+    (item) => item.key,
+  );
+}
+
+function mergeOpenKeys(openKeys: readonly string[], requiredKeys: string[]) {
+  return Array.from(new Set([...openKeys, ...requiredKeys]));
+}
+
 function navIcon(key: string) {
   const props = { "aria-hidden": true, size: 17, strokeWidth: 1.8 };
 
@@ -125,6 +168,7 @@ function TextLike({
 export function SidebarNav({ role, planLabel, onNavigate }: Props) {
   const pathname = usePathname();
   const router = useRouter();
+  const { token } = antdTheme.useToken();
   const tApp = useTranslations("app");
   const t = useTranslations("nav");
 
@@ -160,6 +204,44 @@ export function SidebarNav({ role, planLabel, onNavigate }: Props) {
     return prefixMatch ?? pathname;
   }, [pathname]);
 
+  const [openKeys, setOpenKeys] = useState<string[]>(() =>
+    getRouteOpenKeys(pathname),
+  );
+  const [trackedPathname, setTrackedPathname] = useState(pathname);
+
+  // Auto-expand the active route's group only when navigation changes the path.
+  // After that the user's open/close choice wins, so a selected child no longer
+  // forces its accordion to stay open.
+  if (trackedPathname !== pathname) {
+    setTrackedPathname(pathname);
+    setOpenKeys((prev) => mergeOpenKeys(prev, getRouteOpenKeys(pathname)));
+  }
+
+  const sidebarMenuTheme = useMemo<ThemeConfig>(
+    () => ({
+      components: {
+        Menu: {
+          activeBarBorderWidth: 0,
+          activeBarWidth: 0,
+          itemActiveBg: token.colorFillSecondary,
+          itemBorderRadius: 8,
+          itemHoverBg: token.colorFillTertiary,
+          itemHoverColor: token.colorText,
+          itemSelectedBg: token.colorPrimary,
+          itemSelectedColor: token.colorWhite,
+          subMenuItemBorderRadius: 8,
+        },
+      },
+    }),
+    [
+      token.colorFillSecondary,
+      token.colorFillTertiary,
+      token.colorPrimary,
+      token.colorText,
+      token.colorWhite,
+    ],
+  );
+
   return (
     <div className="app-sidebar-shell">
       <div className="app-sidebar-brand" aria-label={tApp("brand")}>
@@ -169,18 +251,24 @@ export function SidebarNav({ role, planLabel, onNavigate }: Props) {
         <span>{tApp("brand")}</span>
         <strong>AI</strong>
       </div>
-      <Menu
-        mode="inline"
-        selectedKeys={[selectedKey]}
-        onClick={({ key }) => {
-          if (typeof key === "string" && key.startsWith("/")) {
-            router.push(key);
-            onNavigate?.();
-          }
-        }}
-        items={items}
-        className="app-sidebar-menu"
-      />
+      <ConfigProvider theme={sidebarMenuTheme}>
+        <Menu
+          mode="inline"
+          openKeys={openKeys}
+          selectedKeys={[selectedKey]}
+          onOpenChange={(nextOpenKeys) => {
+            setOpenKeys(nextOpenKeys);
+          }}
+          onClick={({ key }) => {
+            if (typeof key === "string" && key.startsWith("/")) {
+              router.push(key);
+              onNavigate?.();
+            }
+          }}
+          items={items}
+          className="app-sidebar-menu"
+        />
+      </ConfigProvider>
       <div className="app-sidebar-nudge">
         <TextLike strong>{tApp("sidebarNudgeTitle")}</TextLike>
         <span>{tApp("sidebarNudgeBody")}</span>

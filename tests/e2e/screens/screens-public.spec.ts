@@ -125,12 +125,18 @@ for (const s of PUBLIC_SCREENS) {
           boxShadow: styles.boxShadow,
           beforeDisplay: beforeStyles.display,
           afterDisplay: afterStyles.display,
+          documentClientWidth: document.documentElement.clientWidth,
           elementAtHeaderInsideHeader: Boolean(
             elementAtHeader?.closest(".landing-header"),
           ),
           height: rect.height,
+          left: rect.left,
+          maxWidth: styles.maxWidth,
           position: styles.position,
+          right: rect.right,
           top: rect.top,
+          transform: styles.transform,
+          width: rect.width,
           zIndex: styles.zIndex,
         };
       });
@@ -161,6 +167,11 @@ for (const s of PUBLIC_SCREENS) {
       expect(headerMetrics.position).toBe("fixed");
       expect(Math.round(headerMetrics.top)).toBe(0);
       expect(headerMetrics.height).toBeGreaterThanOrEqual(64);
+      expect(Math.round(headerMetrics.left)).toBe(0);
+      expect(Math.round(headerMetrics.right)).toBe(headerMetrics.documentClientWidth);
+      expect(Math.round(headerMetrics.width)).toBe(headerMetrics.documentClientWidth);
+      expect(headerMetrics.maxWidth).toBe("none");
+      expect(headerMetrics.transform).toBe("none");
 
       const navDisplay = await page
         .locator(".landing-header-nav")

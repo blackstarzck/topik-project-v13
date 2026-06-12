@@ -10,9 +10,12 @@
 > = false`, while preserving the existing dark infrastructure for future token
 > work.
 >
-> Tailwind remains a bridge only: `src/styles/global.css` uses `@theme inline`
-> to consume the approved `--app-*` variables resolved by
-> `getResolvedBridgeVars(themeName, appearance)`.
+> Tailwind has a theme adapter, not an independent design system:
+> `src/styles/global.css` uses Tailwind v4 `@theme inline` to consume resolved
+> `--app-*` variables from the same theme source used by the AntD adapter.
+> The current code exposes a base bridge set; new bridge variables require a
+> documented source-token mapping, a real Tailwind/plain-CSS use, and matching
+> contract tests.
 
 This file explains how theme configuration is organized in the TALKPIK AI codebase.
 
@@ -56,13 +59,22 @@ update the conflicting local docs before finalizing work.
 
 ## Core Principle
 
-This project now follows a config-selected AntD preset rule.
+This project follows a config-selected project theme preset rule with two
+runtime adapters: AntD for design components, and Tailwind for constrained
+utility classes.
 
 That means:
 
 - `src/theme/config.ts` selects the active named preset through
   `themeSettings.main`
 - the current product preset is `awesomic`, bound from `DESIGN/` tokens
+- `src/theme` normalizes product theme tokens once, then projects them into
+  both the AntD adapter and the Tailwind adapter
+- AntD remains the primary component/runtime adapter through `ConfigProvider`,
+  `theme.token`, and `theme.components`
+- Tailwind consumes the same resolved theme through CSS variables and
+  `@theme inline`; it must not own a separate palette, radius scale, shadow
+  scale, or font stack
 - `appearance` stays a separate light/dark axis
 - `DESIGN/` is currently light-only, so `allowAppearanceSwitching` is false for
   the first Awesomic binding
@@ -136,10 +148,13 @@ src/theme/
   - helper that exposes the default AntD theme config
   - acceptable for static use, but app runtime theme selection should use `getAppTheme`
 - `src/theme/tailwind-bridge.ts`
-  - maps the approved subset of the selected theme preset to project CSS
-    variables that Tailwind utilities may consume
+  - maps the selected theme preset to the approved project CSS variables that
+    Tailwind utilities and plain CSS may consume
+  - owns the Tailwind adapter contract together with `src/styles/global.css`
+    `@theme inline`
   - must not define a second brand palette, radius scale, shadow scale, or font
-    stack
+    stack; every exposed value must map back to normalized project theme tokens,
+    resolved AntD tokens, or a documented layout primitive
 - `src/theme/config.ts`
   - selects the active named preset and default appearance
   - keeps theme selection separate from token definitions
@@ -189,8 +204,9 @@ src/theme/
     code
   - documents source tokens that need an asset or additional design decision
     before runtime use
-  - exports the allowed `--app-*` bridge variable set so tests can reject
-    accidental Tailwind-side token expansion
+  - exports the current allowed `--app-*` bridge variable set so tests can
+    reject accidental Tailwind-side token expansion; expand this list only with
+    updated docs and theme contract tests
 
 ### Types
 
@@ -206,22 +222,26 @@ The runtime theme flow is:
 3. `createThemeFamily` builds final `ThemeConfig` objects for `light` and `dark`
 4. `registry.ts` exposes the registered preset keys as `AppThemeName`
 5. the app root calls `getAppTheme(themeSettings.main, appearance)`
-6. `ConfigProvider` receives `activeTheme.antd`
-7. the theme bridge resolves selected preset values server-side and injects them
+6. the AntD adapter produces `activeTheme.antd`
+7. `ConfigProvider` receives `activeTheme.antd`
+8. the Tailwind adapter resolves selected preset values server-side and injects them
    as `--app-*` CSS variables on the `html` element in `app/layout.tsx`
-8. Tailwind utilities read only those `--app-*` variables via `@theme inline`
+9. Tailwind utilities read those `--app-*` variables via `@theme inline`
    in `src/styles/global.css`
-9. new UI reads AntD tokens directly at render time when component logic needs
+10. new UI reads AntD tokens directly at render time when component logic needs
    token values
 
-This gives the app one source of truth at runtime even though the files are split
-for maintainability. The `--app-*` variables on `html` ensure portal-rendered
-AntD components (Modal, Drawer, Notification) inherit the correct values.
+This gives the app one theme source of truth even though the adapters are split
+for each library's native mechanism. The `--app-*` variables on `html` ensure
+portal-rendered AntD components (Modal, Drawer, Notification) and Tailwind-authored
+surfaces inherit the same resolved values.
 
 ## AntD And Tailwind Synchronization
 
-Tailwind is a utility layer, not a parallel design system. The source of truth
-for visual decisions remains the active Ant Design theme.
+Tailwind is a utility layer with a theme adapter, not a parallel design system.
+The source of truth for theme values is the normalized project theme in
+`src/theme`; AntD is the primary component/runtime adapter, and Tailwind is the
+utility adapter.
 
 Synchronization rule:
 
@@ -229,15 +249,66 @@ Synchronization rule:
   semantic colors, shadows, and motion-level decisions.
 - AntD `theme.components` owns component-family customization such as Button,
   Menu, Layout, Table, Tabs, Form, Drawer, and Modal adjustments.
-- `tailwind-bridge.ts` may expose only a small approved subset of resolved AntD
-  tokens as project CSS variables.
-- Tailwind configuration or CSS may alias utilities to those variables, but must
-  not contain copied hex colors, copied radius values, copied shadows, or a
-  separate font stack.
+- `tailwind-bridge.ts` plus `src/styles/global.css` form the Tailwind adapter.
+  They may expose the documented project theme variables needed by Tailwind
+  utilities or plain CSS surfaces.
+- The current implementation exposes a base bridge set. A new theme or token
+  can expand that set only when the token has a documented use, maps back to
+  the same source used by the AntD adapter, and updates the theme contract
+  tests.
+- Tailwind configuration or CSS may alias utilities to those variables, but
+  must not contain copied hex colors, copied radius values, copied shadows, or
+  a separate font stack.
 - Tailwind classes are allowed for layout composition, responsive behavior,
   width/height constraints, grid/flex helpers, and small spacing adjustments.
 - Tailwind classes should not be used to restyle AntD component internals when
   an AntD prop, variant, token, or component token can express the change.
+- When a theme is changed or added, update the AntD adapter and Tailwind adapter
+  together. A theme change that updates only one side is incomplete.
+
+### Styling Ownership Rule
+
+Use this order before writing any visual override:
+
+1. AntD component prop, variant, or semantic slot.
+2. Root `ConfigProvider` `theme.token` for app-wide language changes.
+3. Root or preset `theme.components.<Component>` for one AntD component family.
+4. Scoped `ConfigProvider` around a feature or wrapper when one product area
+   needs different component tokens.
+5. Stable project class plus Tailwind/layout CSS for sizing, positioning, or
+   responsive glue.
+6. Narrow CSS escape hatch under a stable project hook when AntD has no prop,
+   semantic slot, or token for the behavior.
+
+The last option is an exception path. It must not target generated AntD classes
+such as `css-dev-only-do-not-override-*`, and it must not be a broad `.ant-*`
+override in page or global CSS. Scope it to a project-owned hook such as
+`.app-sidebar-shell` or `.app-drawer`, document why a token was insufficient,
+and verify the affected desktop and mobile screens.
+
+Project-authored inline style is also custom CSS. Do not use `style={{ ... }}`
+for visual decisions such as color, background, border, radius, padding, or
+selected/hover/active/disabled states. Acceptable exceptions are:
+
+- server-side `--app-*` bridge injection on `<html>`
+- runtime geometry or measurement that cannot be known statically
+- third-party or AntD-generated inline style attributes that are not authored
+  by project code
+
+AntD's `classNames` semantic slot API is preferred for stable slot targeting.
+AntD's `styles` semantic slot API may be used only when the value comes from the
+theme/token system or when no class/token path can express the required runtime
+style. Do not use it to hide scattered visual decisions inside JSX.
+
+### Component State Examples
+
+| Concern | Owner | Do not use |
+| --- | --- | --- |
+| App-wide brand color, radius, font, base surfaces | `theme.token` in the active preset | Tailwind palette copies, feature-level hardcoded values |
+| Button primary, hover, border, shadow | `theme.components.Button` or global tokens | `className="bg-..."` on AntD `Button` for the state |
+| Sidebar `Menu` selected background/text/active bar | scoped `ConfigProvider` with `theme.components.Menu` when sidebar-only, otherwise preset `Menu` tokens | `.ant-menu-item-selected` global overrides, Tailwind selected-state utilities |
+| Drawer/Modal surface, body padding, mask, motion-sensitive surface behavior | `AppDrawer`/`AppModal` wrappers plus `theme.components.Drawer`/`Modal` and scoped project hooks when tokens cannot express structure | raw page CSS against generated AntD classes |
+| Layout-only width, height, grid/flex behavior | Tailwind utilities or project layout CSS consuming `--app-*` where relevant | new theme tokens without product reuse |
 
 ### CSS Variable Architecture Contract
 
@@ -319,20 +390,21 @@ is `cssVar.prefix`, which defaults to `ant`.
 To change variable names from `--ant-*` to a custom prefix, set
 `cssVar: { prefix: 'myapp', key: 'myapp' }` explicitly.
 
-#### Correct data flow (one direction only)
+#### Correct data flow (one source, two adapters)
 
 ```
-AntD design tokens
-  → resolved actual values  (server-side, from active ThemeConfig)
-  → --app-* on html element (app/layout.tsx via <html style={...}>)
-  → @theme inline           (src/styles/global.css)
+Project theme source (DESIGN/tokens.json or active preset source)
+  → normalized tokens in src/theme
+  → AntD adapter: ThemeConfig for ConfigProvider
+  → Tailwind adapter: resolved --app-* variables on html
+  → @theme inline in src/styles/global.css
   → Tailwind utilities
 ```
 
 #### Bridge targets
 
-The following `--app-*` variables are the approved bridge set. Each must hold a
-resolved actual value injected from `layout.tsx`:
+The following `--app-*` variables are the current base bridge set. Each must
+hold a resolved actual value injected from `layout.tsx`:
 
 ```
 --app-color-primary        resolved hex (e.g. #1677ff)
@@ -347,8 +419,19 @@ resolved actual value injected from `layout.tsx`:
 ```
 
 Generate these values from `getResolvedBridgeVars(themeName, appearance)` at
-request time, not by hand. Do not add new bridge variables unless the token has a
-documented use in Tailwind utilities or plain CSS rules outside AntD components.
+request time, not by hand.
+
+The base set is not a permanent maximum. Add a new bridge variable only when all
+of these are true:
+
+1. the token has a documented Tailwind utility or plain CSS use outside AntD
+   component internals
+2. the value maps back to normalized project theme tokens, resolved AntD tokens,
+   or a documented layout primitive
+3. `src/theme/tokens/*`, `src/theme/tailwind-bridge.ts`,
+   `src/styles/global.css`, and `tests/theme/*` are updated together
+4. no raw palette, radius, shadow, or font value is copied into Tailwind as an
+   independent source
 
 When adding or changing `--app-*` declarations, run the checker before marking
 work complete.
@@ -426,8 +509,15 @@ Examples:
 
 - `Button.primaryShadow`
 - `Menu.itemSelectedBg`
+- `Menu.itemSelectedColor`
+- `Menu.activeBarBorderWidth`
 - `Layout.headerBg`
 - `Table.rowHoverBg`
+
+When the component-family change should apply only inside one product surface,
+use a scoped `ConfigProvider` near that surface instead of global tokens. The
+workspace sidebar `Menu` is the canonical example: sidebar navigation state can
+have sidebar-specific `Menu` tokens without changing every menu in the app.
 
 ### Put a value in plain layout CSS only when AntD is not expressing that concern
 
@@ -515,8 +605,13 @@ Prefer this order:
 - Do not put all preset values back into one giant `themes.ts`
 - Do not duplicate the same color in three places without reason
 - Do not add visual values to Tailwind unless they reference the project
-  `--app-*` bridge variables or are layout-only values with no design-token
-  meaning
+  `--app-*` bridge variables, are generated from the same theme source as the
+  AntD adapter, or are layout-only values with no design-token meaning
+- Do not use project-authored visual inline style for theme, component, or state
+  styling
+- Do not target AntD generated classes such as `css-dev-only-do-not-override-*`
+- Prefer scoped `ConfigProvider` component-token overrides over broad `.ant-*`
+  CSS overrides
 - If a shared component token starts growing large, split it into per-component files under `src/theme/components/`
 - If a preset becomes large, keep its values inside the preset file instead of spreading them across random UI components
 - Do not add a preset override just to make Ant Design look the same as it already does by default
@@ -531,6 +626,8 @@ until all of these pass.
 - [ ] All `--app-*` CSS variables are declared on `html` or `:root` (via
       `app/layout.tsx`). No `--app-*` variable is set through `style={}` on a
       React component.
+- [ ] The theme source of truth for the change is explicit, and both the AntD
+      adapter and Tailwind adapter read from that same source.
 - [ ] No `--app-*` variable holds a `var(--ant-*)` chain. Every `--app-*`
       variable holds a resolved actual value (hex, px, font stack, or
       box-shadow).
@@ -538,6 +635,8 @@ until all of these pass.
       first render before any client JS runs.
 - [ ] `src/styles/global.css` uses `@theme inline { ... }` (not bare `@theme`)
       for Tailwind v4 variable bridging.
+- [ ] Any newly added bridge variable has an updated source-token mapping,
+      documented use case, and `tests/theme/*` coverage.
 - [ ] Active theme appearance is stored in React state or context, not computed
       at module level outside a React component.
 - [ ] `tests/theme/theme-contract.test.ts` is consistent with the current
@@ -553,8 +652,13 @@ Before calling theme work complete, verify:
 - the app still works with stock Ant Design light and dark algorithms
 - global changes still come from AntD tokens
 - component-specific overrides still live in `theme.components`
-- Tailwind utilities consume project bridge variables instead of copied theme
-  values
+- component selected, hover, active, disabled, border, radius, and active-bar
+  states are not recreated with Tailwind utilities or project-authored inline
+  styles
+- Tailwind utilities consume project bridge variables from the same theme source
+  instead of copied theme values
+- any scoped CSS escape hatch is under a project-owned hook and has a documented
+  reason a token, prop, or scoped `ConfigProvider` was insufficient
 - AntD components and Tailwind-authored surfaces still match after switching
   light/dark appearance
 - the default preset is still close to empty unless there is a documented reason otherwise

@@ -16,6 +16,22 @@ should prioritize sources.
 Avoid using random blog posts as primary guidance. Third-party articles can be
 used only as supporting examples.
 
+## Project Visual Source Hierarchy
+
+For TALKPIK theme work, read the project sources in this order:
+
+1. `docs/ant-design/08-theme-architecture.md` defines how theme values are
+   bound into runtime adapters.
+2. `DESIGN.md` defines TALKPIK visual intent, semantic roles, and product-level
+   token meaning.
+3. `DESIGN/tokens.json` is the machine-readable source for imported/normalized
+   design tokens when a preset is bound from `DESIGN/`.
+4. `DESIGN/DESIGN.md` is an external style reference/export artifact unless a
+   section is explicitly promoted by `DESIGN.md` or `08-theme-architecture.md`.
+   Do not paste its raw Tailwind `@theme` values into app code.
+5. `src/theme/` is the implementation of the selected theme source. It must
+   project the same values into the AntD adapter and the Tailwind adapter.
+
 ## Official Design Menu Map
 
 The Ant Design `Design` section is organized as follows:
@@ -115,4 +131,3 @@ The installed `antd` npm package is mainly runtime distribution content:
 It does not include the full website design docs such as `docs/spec`. Therefore,
 AI design-system guidance must be stored locally or read from the official
 website/GitHub.
-

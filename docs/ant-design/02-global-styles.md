@@ -14,7 +14,18 @@ Preferred path:
 1. Keep one public theme entry point, with internal theme files split by responsibility when needed.
 2. Use AntD component props and variants.
 3. Use component tokens when a specific AntD component needs adjustment.
-4. Use custom CSS only for layout glue, app shell, and domain-specific surfaces.
+4. Use the Tailwind theme adapter only for constrained utility classes that
+   consume shared project CSS variables.
+5. Use custom CSS only for layout glue, app shell, and domain-specific surfaces.
+
+Tailwind is allowed to have a Tailwind-native theme adapter (`@theme inline`),
+but that adapter must read values derived from the same project theme source as
+AntD. Do not paste raw colors, radii, shadows, font stacks, or component states
+into Tailwind as a second design system.
+
+Detailed ownership rules live in `08-theme-architecture.md`. This page is the
+short global-style policy; do not treat it as permission to move component
+state styling into CSS.
 
 Avoid:
 
@@ -23,6 +34,31 @@ Avoid:
 - Scattered shadow values.
 - Recreating AntD component states in CSS.
 - Recreating AntD component states or surfaces in visual inline styles.
+- Recreating AntD component states with Tailwind utility classes.
+
+## Global CSS Ownership
+
+`src/styles/global.css` is allowed to contain:
+
+- Tailwind imports and the Tailwind v4 `@theme inline` bridge.
+- Stable app shell and layout glue that AntD tokens cannot express directly.
+- Plain CSS surfaces that consume approved `--app-*` variables.
+- Narrow, documented escape hatches scoped under a stable project class.
+
+`src/styles/global.css` must not contain:
+
+- New design-token sources or raw palettes separate from `src/theme`.
+- Broad `.ant-*` overrides for selected, hover, active, disabled, border, or
+  radius states.
+- Selectors that target AntD's generated `css-dev-only-do-not-override-*`
+  classes.
+- Workarounds that duplicate an available AntD component token.
+
+Project-authored inline style is custom CSS. Do not use `style={{ ... }}` for
+visual design choices such as color, background, border, radius, padding, or
+component state. Exceptions are runtime geometry/measurement that cannot be
+known statically, server-side `--app-*` bridge injection on `<html>`, and
+library-generated inline styles that are not authored by project code.
 
 ## Color
 

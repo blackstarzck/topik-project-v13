@@ -1,22 +1,34 @@
 // @vitest-environment jsdom
-import { screen } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { WorkspaceShell } from "../../../src/components/app/WorkspaceShell";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
 
-const { routerPush } = vi.hoisted(() => ({
+const navMock = vi.hoisted(() => ({
   routerPush: vi.fn(),
+  pathname: "/dashboard",
 }));
 
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/dashboard",
-  useRouter: () => ({ push: routerPush }),
+  usePathname: () => navMock.pathname,
+  useRouter: () => ({ push: navMock.routerPush }),
 }));
+
+function hasExpandedMenuItem(container: HTMLElement, label: string) {
+  return Array.from(
+    container.querySelectorAll('[role="menuitem"][aria-expanded]'),
+  ).some(
+    (menuItem) =>
+      menuItem.textContent?.includes(label) &&
+      menuItem.getAttribute("aria-expanded") === "true",
+  );
+}
 
 describe("WorkspaceShell", () => {
   beforeEach(() => {
-    routerPush.mockClear();
+    navMock.routerPush.mockClear();
+    navMock.pathname = "/dashboard";
   });
 
   it("renders the workspace sidebar while keeping AppHeader unused", () => {
@@ -49,5 +61,49 @@ describe("WorkspaceShell", () => {
     expect(container.querySelector(".app-sidebar-lock-label")).toBeTruthy();
     expect(container.querySelector(".app-sidebar-lock-icon")).toBeTruthy();
     expect(container.querySelector(".app-sidebar-lock-tag")).toBeTruthy();
+  });
+
+  it("keeps the current nested route group open on direct entry", () => {
+    navMock.pathname = "/practice/problems";
+
+    const { container } = renderWithIntl(
+      <WorkspaceShell role="learner" email={null} planLabel="premium">
+        <div>body</div>
+      </WorkspaceShell>,
+    );
+
+    expect(hasExpandedMenuItem(container, "학습")).toBe(true);
+    expect(container.textContent).toContain("문제 풀이");
+  });
+
+  it("lets the user collapse the active group even while a child is selected", () => {
+    navMock.pathname = "/practice/problems";
+
+    const { container } = renderWithIntl(
+      <WorkspaceShell role="learner" email={null} planLabel="premium">
+        <div>body</div>
+      </WorkspaceShell>,
+    );
+
+    expect(hasExpandedMenuItem(container, "학습")).toBe(true);
+
+    const groupTitle = Array.from(
+      container.querySelectorAll('[role="menuitem"][aria-expanded]'),
+    ).find((item) => item.textContent?.includes("학습")) as HTMLElement;
+    fireEvent.click(within(groupTitle).getByText("학습"));
+
+    expect(hasExpandedMenuItem(container, "학습")).toBe(false);
+  });
+
+  it("opens the writing group for nested writing feedback routes", () => {
+    navMock.pathname = "/writing/feedback/short/submission-1";
+
+    const { container } = renderWithIntl(
+      <WorkspaceShell role="learner" email={null} planLabel="premium">
+        <div>body</div>
+      </WorkspaceShell>,
+    );
+
+    expect(hasExpandedMenuItem(container, "글쓰기")).toBe(true);
   });
 });

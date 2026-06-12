@@ -14,8 +14,6 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function LoginPage() {
   const t = await getTranslations("auth.login");
   const tSignUp = await getTranslations("auth.signUp");
-  const tTerms = await getTranslations("legal.terms");
-  const tPrivacy = await getTranslations("legal.privacy");
   const tMascot = await getTranslations("auth.mascot");
 
   return (
@@ -29,8 +27,6 @@ export default async function LoginPage() {
         switchPrompt={t("noAccountPrompt")}
         switchHref="/sign-up"
         switchLabel={tSignUp("pageHeading")}
-        termsLabel={tTerms("heading")}
-        privacyLabel={tPrivacy("heading")}
       />
     </PublicShell>
   );

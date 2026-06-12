@@ -29,6 +29,21 @@ flowchart TD
 | [07-review-checklist.md](./07-review-checklist.md) | 화면 완성 전 체크리스트입니다. | 제출 전 마지막 확인 때 |
 | [08-theme-architecture.md](./08-theme-architecture.md) | 테마 구조와 관리 방식입니다. | 디자인 토큰을 코드에 적용할 때 |
 
+## 테마와 스타일 SOT
+
+테마, AntD, Tailwind, inline style 관리 기준은
+`08-theme-architecture.md`를 최종 SOT로 삼습니다.
+
+- AntD 컴포넌트의 색, 선택, hover, active, disabled, border, radius 상태는
+  `ConfigProvider`의 `theme.token`과 `theme.components`로 관리합니다.
+- Tailwind는 레이아웃과 반응형 utility를 위한 보조 계층입니다. AntD
+  컴포넌트 상태나 brand token을 Tailwind로 다시 만들지 않습니다.
+- 프로젝트 코드가 직접 작성하는 visual inline style은 금지합니다. 단,
+  AntD가 런타임에 생성하는 inline style과 `<html>`에 주입하는 theme bridge
+  변수는 별도 예외로 구분합니다.
+- AntD 기본 class를 전역으로 덮어쓰는 방식은 마지막 수단입니다. 필요한
+  경우 stable project hook 아래에 좁게 scope를 걸고 이유를 문서화합니다.
+
 ## 비개발자를 위한 핵심
 
 화면을 만들 때 AI에게 "예쁘게 해줘"라고만 말하면 결과가 흔들릴 수 있습니다.

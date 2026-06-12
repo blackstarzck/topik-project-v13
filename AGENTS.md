@@ -104,6 +104,8 @@ AI가 만든 결과물은 아래 중 하나 이상의 근거가 있어야 다음
 - `docs/sitemap.md`는 제품 route map이고, `src/app/`은 현재 구현 reference다. route 변경 전 둘을 reconcile한다.
 - Ant Design component와 theme token을 우선 사용한다.
 - Tailwind CSS는 제한된 utility layer로만 사용한다. 디자인 시스템이나 brand token source로 사용하지 않는다.
+- theme을 수정하거나 추가할 때는 하나의 theme source of truth를 기준으로 Ant Design adapter와 Tailwind adapter를 함께 갱신한다. AntD는 `ConfigProvider`/`theme.token`/`theme.components` 방식으로, Tailwind는 `src/styles/global.css`의 Tailwind v4 `@theme inline`과 `--app-*` bridge 방식으로 같은 값을 소비해야 한다.
+- 디자인 컴포넌트는 AntD 컴포넌트 또는 AntD 컴포넌트를 감싼 프로젝트 wrapper를 사용한다. Tailwind로 Button/Input/Card/Modal 같은 AntD 컴포넌트의 상태나 variant를 재구현하지 않는다.
 - Supabase server-only key와 secret은 browser-visible 변수로 노출하지 않는다.
 - RLS, auth, storage, profile, admin role을 건드릴 때는 관련 문서를 먼저 읽는다.
 - framework-level dependency를 추가하거나 교체하려면 stack-change decision 또는 사용자 승인과 문서 갱신이 필요하다.

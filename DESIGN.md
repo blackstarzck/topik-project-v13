@@ -74,18 +74,23 @@ components:
 
 # TALKPIK Design
 
-> Single source of truth for the **visual** layer of the TALKPIK user-facing app.
-> The YAML above is the machine-readable contract (exact values); the markdown
-> below explains intent (why / how). Structure & binding to `src/theme` lives in
-> [`docs/ant-design/08-theme-architecture.md`](docs/ant-design/08-theme-architecture.md);
-> this file owns the values.
+> Source of truth for the **visual intent and semantic token meaning** of the
+> TALKPIK user-facing app. Machine-readable imported token values live in
+> `DESIGN/tokens.json` when a theme preset is bound from `DESIGN/`; runtime
+> structure and binding to `src/theme` live in
+> [`docs/ant-design/08-theme-architecture.md`](docs/ant-design/08-theme-architecture.md).
 >
-> **Pilot decision (minimal risk / branch 1):** the 9 global bridge tokens are
-> kept at Ant Design v6.4.3 defaults. No brand-tokens manifest is introduced.
-> Visual identity in the pilot comes from consistent surfaces, restrained
-> component tokens (flat buttons), spacing rhythm, and the dark-mode shell fix —
-> not from changing the global palette. A bolder palette is a separate
-> branch-2 follow-up if the pilot screenshots show too little change.
+> **Active theme policy:** one project theme source is projected into two
+> library-specific adapters. AntD receives values through `ConfigProvider`,
+> `theme.token`, and `theme.components`. Tailwind receives the same resolved
+> values through `--app-*` bridge variables and Tailwind v4 `@theme inline`.
+> Tailwind must not become a second palette, radius scale, shadow scale, or font
+> source.
+>
+> The current implementation exposes a base bridge set for global roles. Expanding
+> the Tailwind bridge is allowed only when the new token has a documented
+> Tailwind/plain-CSS use, maps back to the same source as the AntD adapter, and
+> updates the theme contract tests.
 
 ## Overview
 
@@ -98,9 +103,9 @@ What we want a user to remember: *"quiet, trustworthy, and it always tells me
 the next step."* That is why surfaces are neutral, elevation is light, motion is
 short, and color is used for meaning — never for decoration.
 
-The values here mirror Ant Design's stock light theme. We are not repainting the
-framework; we are giving its tokens names and a written intent so every screen
-applies them the same way.
+The values here define semantic product roles. Runtime implementation may bind
+those roles to stock AntD values or imported theme tokens, but the binding must
+happen through `src/theme` so AntD and Tailwind stay synchronized.
 
 ## Colors
 
@@ -214,14 +219,17 @@ content.
   a card inside a card; animate writing/exam content; use large page-transition
   motion; hand-author a separate dark palette (use `darkAlgorithm`).
 
-## Appendix — Token ↔ AntD binding
+## Appendix — Token ↔ Runtime binding
 
-Values live in `src/theme`; the `--app-*` bridge exposes the approved 9 to
-Tailwind/plain CSS. Parity (bridge ↔ resolved AntD token) is guarded by
-`tests/theme/theme-bridge-parity.test.ts`. The 9 approved bridge variables are
-the **only** allowed `--app-*` names.
+Values are normalized in `src/theme` and projected into both runtime adapters:
+AntD `ThemeConfig` and the Tailwind `--app-*` bridge. Parity between bridge
+values and resolved theme values is guarded by `tests/theme/*`.
 
-| DESIGN.md token | class | antdPath | sourceFile | bridge var |
+The rows below are the current base bridge set, not a permanent maximum. Add a
+new `--app-*` variable only with a documented source token, a Tailwind/plain-CSS
+use case, and matching test updates.
+
+| DESIGN.md token | class | antdPath | sourceFile | current bridge var |
 | --- | --- | --- | --- | --- |
 | `colors.primary` | antd.global | `theme.token.colorPrimary` | AntD v6.4.3 default (unchanged) | `--app-color-primary` |
 | `colors.bg-layout` | antd.global | `theme.token.colorBgLayout` | AntD default / algorithm | `--app-color-bg-layout` |
@@ -234,8 +242,9 @@ the **only** allowed `--app-*` names.
 | (elevation) | antd.global | `theme.token.boxShadowSecondary` | AntD default / algorithm | `--app-shadow-elevated` |
 | `components.card` | antd.component | `theme.components.Card` | `src/theme/components/shared.ts` | — |
 | `components.button-primary` | antd.component | `theme.components.Button` | `src/theme/components/shared.ts` | — |
-| `spacing.*` | layout-primitive | (Tailwind / layout) | — | — |
+| `spacing.*` | layout-primitive | Tailwind adapter / layout CSS | `src/theme` or documented layout primitive | optional bridge expansion |
 
-> Rule: `bridge` = the approved 9 names only. Unchanged defaults' source is
-> "AntD default / darkAlgorithm"; only real overrides name a repo file. All
-> values must match `src/theme`, guarded by the parity test.
+> Rule: every bridge value must match `src/theme`. Do not paste raw values from
+> `DESIGN/DESIGN.md` or Tailwind examples into app CSS. AntD components remain
+> the design component layer; Tailwind consumes theme values only through the
+> adapter.
