@@ -21,7 +21,10 @@ afterEach(() => {
 
 // Rule 1 guard: no element below html declares an --app-* variable via style=.
 function expectNoAppVarDeclarationsIn(container: HTMLElement) {
-  const all = [container, ...Array.from(container.querySelectorAll<HTMLElement>("*"))];
+  const all = [
+    container,
+    ...Array.from(container.querySelectorAll<HTMLElement>("*")),
+  ];
   for (const el of all) {
     const style = el.getAttribute("style") ?? "";
     // Using var(--app-*) is allowed (consumption); DECLARING --app-*: is not.
@@ -44,7 +47,9 @@ describe("AppCard", () => {
   });
 
   it("merges a caller className without dropping the hooks", () => {
-    const { container } = renderWithIntl(<AppCard className="caller-x">x</AppCard>);
+    const { container } = renderWithIntl(
+      <AppCard className="caller-x">x</AppCard>,
+    );
     const card = container.querySelector(".app-card");
     expect(card?.classList.contains("app-surface")).toBe(true);
     expect(card?.classList.contains("caller-x")).toBe(true);
@@ -59,7 +64,11 @@ describe("AppCard", () => {
 describe("PageContainer", () => {
   it("renders a single main landmark with the size + caller class", () => {
     renderWithIntl(
-      <PageContainer size="narrow" className="caller-y" aria-label="login region">
+      <PageContainer
+        size="narrow"
+        className="caller-y"
+        aria-label="login region"
+      >
         <span data-testid="pc-child">c</span>
       </PageContainer>,
     );
@@ -74,7 +83,9 @@ describe("PageContainer", () => {
   it("defaults to the default size variant", () => {
     renderWithIntl(<PageContainer>c</PageContainer>);
     expect(
-      screen.getByRole("main").classList.contains("app-page-container--default"),
+      screen
+        .getByRole("main")
+        .classList.contains("app-page-container--default"),
     ).toBe(true);
   });
 
@@ -101,7 +112,9 @@ describe("PageHeader", () => {
 
   it("carries no copy of its own — renders only what is passed", () => {
     renderWithIntl(<PageHeader title="only-title" />);
-    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("only-title");
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(
+      "only-title",
+    );
     // no subtitle/actions rendered when not provided
     expect(screen.queryByRole("button")).toBeNull();
   });
@@ -139,6 +152,24 @@ describe("AppDrawer (overlay sentinel)", () => {
     expect(screen.getByRole("dialog")).toBeTruthy();
     expect(screen.getByTestId("drawer-child")).toBeTruthy();
     expect(document.querySelector(".app-drawer")).toBeTruthy();
+  });
+
+  it("expands the body height baseline while preserving caller body styles", () => {
+    renderWithIntl(
+      <AppDrawer
+        open
+        title="t"
+        onClose={() => undefined}
+        styles={{ body: { padding: 0 } }}
+      >
+        <span>menu</span>
+      </AppDrawer>,
+    );
+    const body = document.querySelector(".ant-drawer-body");
+    const style = body?.getAttribute("style") ?? "";
+    expect(style).toContain("display: flex");
+    expect(style).toContain("min-height: calc(100dvh - 56px)");
+    expect(style).toContain("padding: 0px");
   });
 
   it("calls onClose when the mask (overlay) is clicked", () => {

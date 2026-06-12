@@ -34,7 +34,7 @@
 >
 > **Removed (code + DB):**
 > - Code: `src/app/(workspace)/admin/*`, `src/components/admin/*`, `src/lib/admin/*`,
->   `src/lib/auth/admin-guard.ts`, the admin nav in `src/lib/routes.ts`/workspace navigation,
+>   `src/lib/auth/admin-guard.ts`, former admin navigation entries,
 >   and the admin tests (`tests/components/admin/*`, `tests/lib/admin/*`,
 >   `tests/integration/admin-*`).
 > - DB (migration `20260609130000_remove_v13_admin_island.sql`): 11 admin RPCs
@@ -131,9 +131,8 @@ Verified state so the next session does not have to re-derive it:
     `actions.ts`, guarded by `requirePlatformAdmin/ContentAdmin/OrgAdmin`.
   - Lib: `src/lib/admin/*` (queries, server, mutations, server-actions, types,
     org-dashboard) + `src/lib/auth/admin-guard.ts`.
-  - The app side-nav (`src/lib/routes.ts` / workspace navigation) links the admin routes
-    behind role gates — so if you ever DO remove admin UI, drop those nav entries
-    in the same change (otherwise dead links).
+  - Former route chrome linked the admin routes behind role gates, so admin
+    route entries had to be dropped in the same removal to avoid dead links.
 - **The admin SCHEMA is foundational/shared — do NOT remove it.** `profiles.app_role`,
   `admin_audit_logs`, and the `private.is_*_admin` RLS helpers underpin core auth
   + RLS (e.g. the profile protect-columns admin bypass). These are load-bearing
