@@ -78,7 +78,13 @@ test("core writing flow: dashboard → write → submit → feedback → compare
   const submitBtn = page.getByRole("button", { name: "제출하기", exact: true });
   await expect(submitBtn).toBeEnabled();
   await submitBtn.click();
-  await expect(page.locator(".ant-modal-title", { hasText: "답안을 제출하시겠어요?" })).toBeVisible();
+  // T-1 (QA 2026-06-12): antd 6은 모달 제목을 클래스 없는 h2로 렌더 —
+  // .ant-modal-title 셀렉터는 stale. testid + heading으로 단언한다.
+  const confirmModal = page.getByTestId("submission-confirm-modal");
+  await expect(confirmModal).toBeVisible();
+  await expect(
+    confirmModal.getByRole("heading", { name: "답안을 제출하시겠어요?" }),
+  ).toBeVisible();
 
   // 4) agree + submit → feedback (single modal open → page-level locators are unambiguous)
   await page.getByRole("checkbox").check();
@@ -94,13 +100,15 @@ test("core writing flow: dashboard → write → submit → feedback → compare
   await expect(page).not.toHaveURL(/\/login/);
   await expect(page.getByRole("heading").first()).toBeVisible();
 
-  // 6) save to library
-  const saveBtn = page.getByRole("button", { name: "보관함 저장", exact: true });
-  await saveBtn.click();
-  await expect(page.getByRole("button", { name: "보관함에 저장됨", exact: true })).toBeVisible({ timeout: 10000 });
+  // 6) save to library — T-1 (QA 2026-06-12): 저장 CTA가 단독 버튼에서
+  // Dropdown 그룹(feedback-action-save, 메뉴: 보관함 저장/PDF 저장)으로 바뀜.
+  // 이전 단독 "보관함 저장" 버튼 셀렉터는 stale (전용 short-feedback spec 패턴).
+  await page.getByTestId("feedback-action-save").click();
+  await page.getByRole("menuitem", { name: "보관함 저장" }).click();
+  await expect(page.getByText("보관함에 저장했어요.")).toBeVisible({ timeout: 10000 });
 
   // 7) comparison report (R-01)
-  await page.getByRole("button", { name: "비교 리포트", exact: true }).click();
+  await page.getByTestId("feedback-action-compare").click();
   await page.waitForURL(/\/writing\/reports\/[0-9a-f-]+\/compare/, { timeout: 20000 });
   await expect(page.getByRole("heading", { name: "비교 리포트" })).toBeVisible();
 
@@ -109,9 +117,11 @@ test("core writing flow: dashboard → write → submit → feedback → compare
   await expect(page).toHaveURL(/\/library/);
   await expect(page.getByRole("heading").first()).toBeVisible();
 
-  // 9) PDF export modal (F-M1): select an item then open the modal
-  const cb = page.locator(".ant-checkbox-input").first();
-  await cb.check({ force: true });
-  await page.getByRole("button", { name: "PDF로 내보내기" }).first().click();
-  await expect(page.locator(".ant-modal-title", { hasText: "PDF로 내보내기" })).toBeVisible({ timeout: 10000 });
+  // 9) PDF export modal (F-M1): select an item then open the modal.
+  // T-1 (QA 2026-06-12): .ant-modal-title은 antd 6에서 stale — 전용 library
+  // spec과 동일한 testid 셀렉터를 쓴다.
+  await page.getByTestId("library-select-item").first().click();
+  await expect(page.getByTestId("library-export-pdf")).toBeEnabled();
+  await page.getByTestId("library-export-pdf").click();
+  await expect(page.getByTestId("pdf-export-modal")).toBeVisible({ timeout: 10000 });
 });
