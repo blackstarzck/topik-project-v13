@@ -513,6 +513,7 @@ F-M1 PDF 등 사용자 생성 파일 추적.
 **Legal** (`20260608120000_legal_documents_and_consents.sql`) — A-01 / X-13 / X-14
 
 - `legal_documents`: `doc_type`(terms/privacy), `version`, `locale`(ko/en/vi), `title`, `body`, `summary`, `is_placeholder`, `requires_consent`, `status`(draft/published/archived), `effective_at`. anon 포함 누구나 published read, platform_admin이 작성. **버전당 1행 append-only**. 관리자 `operation_policies`/`operation_policy_histories` 정합 대상.
+- `legal_documents` RLS: published read 정책은 `status='published'`만 평가한다 (`20260612221000_fix_legal_documents_public_read_policy.sql`). Admin draft/archived 접근은 별도 `legal_documents_admin_all` 정책의 `private.is_platform_admin()` helper로 유지한다.
 - `user_consents`: `user_id`→profiles, `document_id`→legal_documents, `doc_type`, `version`, `source`(signup/re_consent/settings), `accepted_at`. owner read + owner insert, **immutable(UPDATE/DELETE 정책 없음)**.
 
 ---
@@ -685,6 +686,7 @@ erDiagram
 | `20260609130000` | `remove_v13_admin_island.sql` | v13 admin RPC/org island 제거 |
 | `20260610104017` | `seed_initial_legal_documents.sql` | `/auth/consent`용 `legal_documents` published placeholder seed (`terms`/`privacy`, `ko/en/vi`) |
 | `20260612160000` | `user_notifications.sql` | 알림 기능 인앱 수신함 `user_notifications` (owner select + `read_at` 컬럼 grant update, 파이프라인 insert 전용, attempts soft 참조) |
+| `20260612221000` | `fix_legal_documents_public_read_policy.sql` | `legal_documents` published 공개 read 정책에서 admin helper 호출 제거 |
 
 ### 적용 방법
 
