@@ -17,6 +17,7 @@
 //   4. 둘 다 없음 (implicit flow with #fragment) → redirect('/auth/callback-fragment')
 //      → 브라우저가 fragment를 새 location에 자동 보존(RFC 7231) → client component 처리
 
+import { createServerClient } from "@supabase/ssr";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
@@ -26,7 +27,8 @@ import {
   sanitizeNext,
   type AuthErrorReason,
 } from "@/lib/auth/error-mapping";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getPublicEnv } from "@/lib/supabase/env";
+import type { Database } from "@/lib/supabase/types";
 
 // Codex P4 D8 (2026-05-29): Forward Supabase Retry-After to retry_after_seconds query.
 //
@@ -41,7 +43,10 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 // 를 명시 forward. 이전엔 항상 null 이라 X-11 AuthErrorCard 의 implicit default 가
 // 받아주는 구조였음 — 의도가 호출자에서 explicit 해짐.
 function rateLimitFallback(reason: AuthErrorReason): number | null {
-  if (reason === "over_email_send_rate_limit" || reason === "over_request_rate_limit") {
+  if (
+    reason === "over_email_send_rate_limit" ||
+    reason === "over_request_rate_limit"
+  ) {
     return RATE_LIMIT_FALLBACK_SECONDS;
   }
   return null;
@@ -61,17 +66,64 @@ function isVerifyType(value: string | null): value is VerifyType {
   return value !== null && ALLOWED_VERIFY_TYPES.has(value as VerifyType);
 }
 
+function buildBrowserVisibleAppUrl(path: string, request: NextRequest): URL {
+  const url = new URL(path, request.url);
+  if (url.hostname === "0.0.0.0") {
+    url.hostname = "localhost";
+  }
+  return url;
+}
+
 function buildErrorUrl(
   request: NextRequest,
   reason: string,
   retryAfterSeconds: number | null,
 ): URL {
-  const url = new URL("/auth/error", request.url);
+  const url = buildBrowserVisibleAppUrl("/auth/error", request);
   url.searchParams.set("reason", reason);
   if (retryAfterSeconds !== null) {
     url.searchParams.set("retry_after_seconds", String(retryAfterSeconds));
   }
   return url;
+}
+
+type ResponseCookieOptions = Parameters<NextResponse["cookies"]["set"]>[2];
+
+type CookieToSet = {
+  name: string;
+  value: string;
+  options: ResponseCookieOptions;
+};
+
+function createAuthCallbackClient(request: NextRequest) {
+  const env = getPublicEnv();
+  const pendingCookies: CookieToSet[] = [];
+  const supabase = createServerClient<Database>(env.url, env.publishableKey, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll();
+      },
+      setAll(cookiesToSet) {
+        pendingCookies.push(
+          ...cookiesToSet.map(({ name, value, options }) => ({
+            name,
+            value,
+            options: options as ResponseCookieOptions,
+          })),
+        );
+      },
+    },
+  });
+
+  return {
+    supabase,
+    withAuthCookies(response: NextResponse) {
+      pendingCookies.forEach(({ name, value, options }) => {
+        response.cookies.set(name, value, options);
+      });
+      return response;
+    },
+  };
 }
 
 export async function GET(request: NextRequest) {
@@ -102,15 +154,18 @@ export async function GET(request: NextRequest) {
   // 2a. token_hash 있지만 type이 invalid — malformed callback. Codex 후속:
   // fragment fallback으로 흘리지 말고 명시적으로 /auth/error?reason=unknown.
   if (tokenHash && !isVerifyType(typeParam)) {
-    console.error("[auth/callback] malformed callback: token_hash present but invalid type", {
-      typeParam,
-    });
+    console.error(
+      "[auth/callback] malformed callback: token_hash present but invalid type",
+      {
+        typeParam,
+      },
+    );
     return NextResponse.redirect(buildErrorUrl(request, "unknown", null));
   }
 
   // 2. Server-side PKCE main flow.
   if (tokenHash && isVerifyType(typeParam)) {
-    const supabase = await createSupabaseServerClient();
+    const { supabase, withAuthCookies } = createAuthCallbackClient(request);
     const { error } = await supabase.auth.verifyOtp({
       token_hash: tokenHash,
       type: typeParam,
@@ -121,22 +176,26 @@ export async function GET(request: NextRequest) {
         message: error.message,
         status: error.status,
       });
-      return NextResponse.redirect(
-        buildErrorUrl(
-        request,
-        mapSupabaseErrorCode(error.code),
-        rateLimitFallback(mapSupabaseErrorCode(error.code)),
-      ),
+      return withAuthCookies(
+        NextResponse.redirect(
+          buildErrorUrl(
+            request,
+            mapSupabaseErrorCode(error.code),
+            rateLimitFallback(mapSupabaseErrorCode(error.code)),
+          ),
+        ),
       );
     }
     // 세션 쿠키는 createSupabaseServerClient의 setAll callback이 cookies().set으로
     // 등록 → Route Handler 응답에 Set-Cookie 헤더 emit됨.
-    return NextResponse.redirect(new URL(next, request.url));
+    return withAuthCookies(
+      NextResponse.redirect(buildBrowserVisibleAppUrl(next, request)),
+    );
   }
 
   // 3. OAuth code flow.
   if (code) {
-    const supabase = await createSupabaseServerClient();
+    const { supabase, withAuthCookies } = createAuthCallbackClient(request);
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (error) {
       const {
@@ -150,7 +209,9 @@ export async function GET(request: NextRequest) {
             status: error.status,
           },
         );
-        return NextResponse.redirect(new URL(next, request.url));
+        return withAuthCookies(
+          NextResponse.redirect(buildBrowserVisibleAppUrl(next, request)),
+        );
       }
 
       console.error("[auth/callback] exchangeCodeForSession error", {
@@ -158,15 +219,19 @@ export async function GET(request: NextRequest) {
         message: error.message,
         status: error.status,
       });
-      return NextResponse.redirect(
-        buildErrorUrl(
-        request,
-        mapSupabaseErrorCode(error.code),
-        rateLimitFallback(mapSupabaseErrorCode(error.code)),
-      ),
+      return withAuthCookies(
+        NextResponse.redirect(
+          buildErrorUrl(
+            request,
+            mapSupabaseErrorCode(error.code),
+            rateLimitFallback(mapSupabaseErrorCode(error.code)),
+          ),
+        ),
       );
     }
-    return NextResponse.redirect(new URL(next, request.url));
+    return withAuthCookies(
+      NextResponse.redirect(buildBrowserVisibleAppUrl(next, request)),
+    );
   }
 
   // 4. No server-readable token — implicit flow with fragment.
@@ -174,7 +239,10 @@ export async function GET(request: NextRequest) {
   // 새 location에 retain. 따라서 우리가 query 없이 redirect하면 브라우저가 자동으로
   // #error_code=... 또는 #access_token=... 을 새 path에 붙여서 따라간다.
   // /auth/callback-fragment page가 client component로 window.location.hash 파싱.
-  const fragmentTarget = new URL("/auth/callback-fragment", request.url);
+  const fragmentTarget = buildBrowserVisibleAppUrl(
+    "/auth/callback-fragment",
+    request,
+  );
   fragmentTarget.searchParams.set("next", next);
   return NextResponse.redirect(fragmentTarget);
 }

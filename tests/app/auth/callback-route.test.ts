@@ -4,14 +4,66 @@ import { NextRequest } from "next/server";
 const getUserMock = vi.fn();
 const exchangeCodeForSessionMock = vi.fn();
 const verifyOtpMock = vi.fn();
+const cookieStoreSetMock = vi.fn();
 
-vi.mock("@/lib/supabase/server", () => ({
-  createSupabaseServerClient: async () => ({
+vi.mock("@/lib/supabase/env", () => ({
+  getPublicEnv: () => ({
+    url: "https://project-ref.supabase.co",
+    publishableKey: "sb_publishable_test",
+  }),
+}));
+
+vi.mock("next/headers", () => ({
+  cookies: async () => ({
+    getAll: () => [],
+    set: (...args: unknown[]) => cookieStoreSetMock(...args),
+  }),
+}));
+
+vi.mock("@supabase/ssr", () => ({
+  createServerClient: (
+    _url: string,
+    _key: string,
+    options: {
+      cookies: {
+        setAll: (
+          cookiesToSet: Array<{
+            name: string;
+            value: string;
+            options: Record<string, unknown>;
+          }>,
+        ) => void | Promise<void>;
+      };
+    },
+  ) => ({
     auth: {
-      exchangeCodeForSession: (...args: unknown[]) =>
-        exchangeCodeForSessionMock(...args),
+      exchangeCodeForSession: async (...args: unknown[]) => {
+        const result = await exchangeCodeForSessionMock(...args);
+        if (!result.error) {
+          await options.cookies.setAll([
+            {
+              name: "sb-test-auth-token",
+              value: "session-cookie",
+              options: { httpOnly: true, path: "/", sameSite: "lax" },
+            },
+          ]);
+        }
+        return result;
+      },
       getUser: (...args: unknown[]) => getUserMock(...args),
-      verifyOtp: (...args: unknown[]) => verifyOtpMock(...args),
+      verifyOtp: async (...args: unknown[]) => {
+        const result = await verifyOtpMock(...args);
+        if (!result.error) {
+          await options.cookies.setAll([
+            {
+              name: "sb-test-auth-token",
+              value: "session-cookie",
+              options: { httpOnly: true, path: "/", sameSite: "lax" },
+            },
+          ]);
+        }
+        return result;
+      },
     },
   }),
 }));
@@ -30,6 +82,7 @@ describe("/auth/callback route", () => {
     exchangeCodeForSessionMock.mockResolvedValue({ error: null });
     verifyOtpMock.mockReset();
     verifyOtpMock.mockResolvedValue({ error: null });
+    cookieStoreSetMock.mockReset();
     vi.spyOn(console, "error").mockImplementation(() => undefined);
     vi.spyOn(console, "info").mockImplementation(() => undefined);
   });
@@ -49,6 +102,34 @@ describe("/auth/callback route", () => {
     expect(getUserMock).not.toHaveBeenCalled();
     expect(response.headers.get("location")).toBe(
       "http://localhost:3000/auth/post-auth?intent=login",
+    );
+  });
+
+  it("does not redirect browser-visible app URLs to local 0.0.0.0", async () => {
+    const response = await GET(
+      request(
+        "http://0.0.0.0:3000/auth/callback?code=fresh-code&next=%2Fauth%2Fpost-auth%3Fintent%3Dlogin",
+      ),
+    );
+
+    expect(exchangeCodeForSessionMock).toHaveBeenCalledWith("fresh-code");
+    expect(response.headers.get("location")).toBe(
+      "http://localhost:3000/auth/post-auth?intent=login",
+    );
+  });
+
+  it("attaches OAuth session cookies to the callback redirect response", async () => {
+    const response = await GET(
+      request(
+        "http://localhost:3000/auth/callback?code=fresh-code&next=%2Fauth%2Fpost-auth%3Fintent%3Dlogin",
+      ),
+    );
+
+    expect(exchangeCodeForSessionMock).toHaveBeenCalledWith("fresh-code");
+    expect(response.headers.getSetCookie()).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("sb-test-auth-token=session-cookie"),
+      ]),
     );
   });
 

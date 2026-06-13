@@ -8,9 +8,7 @@ import {
 describe("Google OAuth URL helpers", () => {
   it("buildPostAuthPath keeps login and sign-up intents distinct", () => {
     expect(buildPostAuthPath("login")).toBe("/auth/post-auth?intent=login");
-    expect(buildPostAuthPath("sign-up")).toBe(
-      "/auth/post-auth?intent=sign-up",
-    );
+    expect(buildPostAuthPath("sign-up")).toBe("/auth/post-auth?intent=sign-up");
   });
 
   it("buildClientAuthCallbackUrl uses the active browser origin", () => {
@@ -18,6 +16,17 @@ describe("Google OAuth URL helpers", () => {
       buildClientAuthCallbackUrl(
         "/auth/post-auth?intent=login",
         "http://localhost:3000",
+      ),
+    ).toBe(
+      "http://localhost:3000/auth/callback?next=%2Fauth%2Fpost-auth%3Fintent%3Dlogin",
+    );
+  });
+
+  it("buildClientAuthCallbackUrl normalizes local 0.0.0.0 origins to localhost", () => {
+    expect(
+      buildClientAuthCallbackUrl(
+        "/auth/post-auth?intent=login",
+        "http://0.0.0.0:3000",
       ),
     ).toBe(
       "http://localhost:3000/auth/callback?next=%2Fauth%2Fpost-auth%3Fintent%3Dlogin",

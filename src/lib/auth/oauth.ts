@@ -16,11 +16,19 @@ function ensureRelativePath(path: string): string {
   return next;
 }
 
+function normalizeLocalBrowserOrigin(origin: string): string {
+  const url = new URL(origin);
+  if (url.hostname === "0.0.0.0") {
+    url.hostname = "localhost";
+  }
+  return url.origin;
+}
+
 export function buildClientAuthCallbackUrl(
   nextPath: string,
   origin = window.location.origin,
 ): string {
-  const url = new URL("/auth/callback", origin);
+  const url = new URL("/auth/callback", normalizeLocalBrowserOrigin(origin));
   url.searchParams.set("next", ensureRelativePath(nextPath));
   return url.toString();
 }

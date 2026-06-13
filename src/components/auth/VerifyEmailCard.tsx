@@ -52,10 +52,7 @@ const COOLDOWN_STORAGE_KEY = "talkpik:verify-email:cooldown-until";
 // catalog so minutes/seconds render correctly per locale.
 type CountdownTranslate = ReturnType<typeof useTranslations<"auth.countdown">>;
 
-function formatCountdown(
-  totalSeconds: number,
-  tc: CountdownTranslate,
-): string {
+function formatCountdown(totalSeconds: number, tc: CountdownTranslate): string {
   if (totalSeconds <= 0) return tc("zero");
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
@@ -178,7 +175,10 @@ export function VerifyEmailCard() {
 
       if (error) {
         const code = mapSupabaseErrorCode(error.code);
-        if (code === "over_email_send_rate_limit" || code === "over_request_rate_limit") {
+        if (
+          code === "over_email_send_rate_limit" ||
+          code === "over_request_rate_limit"
+        ) {
           // Phase 8 follow-up v2.3 (2026-05-27): HTTP status(429 등)는 cooldown 초가
           // 아니다. 이전 구현이 status 값을 초로 잘못 해석. supabase-js AuthError는
           // Retry-After 헤더를 직접 노출 안 하므로 default 60초 fallback. 진짜
@@ -225,6 +225,26 @@ export function VerifyEmailCard() {
           </Text>
         )}
 
+        <div
+          className="flex flex-col gap-2"
+          data-testid="verify-email-existing-account-actions"
+        >
+          <Paragraph type="secondary" className="!mb-0">
+            {t("existingAccountNote")}
+          </Paragraph>
+          <div className="flex flex-wrap gap-2">
+            <Button href="/login" data-testid="verify-email-login">
+              {t("loginCta")}
+            </Button>
+            <Button
+              href="/password-reset"
+              data-testid="verify-email-password-reset"
+            >
+              {t("passwordResetCta")}
+            </Button>
+          </div>
+        </div>
+
         <Form layout="vertical">
           <Form.Item label={t("resendOtherLabel")} htmlFor="verify-email-input">
             <Input
@@ -263,10 +283,7 @@ export function VerifyEmailCard() {
           <Text strong className="!text-xs">
             {t("noEmailHeading")}
           </Text>
-          <Paragraph
-            type="secondary"
-            className="!mb-2 !mt-1 !text-xs"
-          >
+          <Paragraph type="secondary" className="!mb-2 !mt-1 !text-xs">
             {t("noEmailBody")}
           </Paragraph>
           <div className="flex flex-wrap gap-2">

@@ -1,19 +1,17 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
-import { Alert, Button, Checkbox, Divider, Flex, Typography } from "antd";
 
 import { acceptRequiredConsentsAction } from "@/app/auth/consent/actions";
+import { AuthConsentPanel } from "@/components/auth/AuthConsentPanel";
+import { PageContainer } from "@/components/shared/PageContainer";
+import { PublicShell } from "@/components/shared/PublicShell";
 import { sanitizeNext } from "@/lib/auth/error-mapping";
 import { bootstrapProfile } from "@/lib/auth/profile";
 import { requireUser } from "@/lib/auth/session";
 import { getMissingRequiredConsentDocuments } from "@/lib/legal/consent";
-import { PageContainer } from "@/components/shared/PageContainer";
-import { PublicShell } from "@/components/shared/PublicShell";
 
 export const dynamic = "force-dynamic";
-
-const { Paragraph, Text, Title } = Typography;
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -48,55 +46,15 @@ export default async function AuthConsentPage({
     redirect(next);
   }
 
-  const t = await getTranslations("auth.consent");
-
   return (
     <PublicShell>
       <PageContainer size="narrow">
-        <Flex vertical gap={24} className="w-full">
-          <div>
-            <Title level={2}>{t("heading")}</Title>
-            <Paragraph type="secondary">{t("description")}</Paragraph>
-          </div>
-
-          {showRequiredError && (
-            <Alert type="warning" showIcon title={t("requiredError")} />
-          )}
-
-          <Flex vertical gap={16} className="w-full">
-            {missingDocuments.map((doc) => (
-              <section
-                key={doc.id}
-                className="rounded-lg border border-border bg-surface p-4"
-              >
-                <Flex vertical gap={8} className="w-full">
-                  <Text strong>{doc.title}</Text>
-                  <Text type="secondary">
-                    {t("versionLabel", { version: doc.version })}
-                  </Text>
-                  {doc.summary ? <Paragraph>{doc.summary}</Paragraph> : null}
-                  <Paragraph className="max-h-40 overflow-auto whitespace-pre-wrap">
-                    {doc.body}
-                  </Paragraph>
-                </Flex>
-              </section>
-            ))}
-          </Flex>
-
-          <Divider className="!m-0" />
-
-          <form action={acceptRequiredConsentsAction}>
-            <input type="hidden" name="next" value={next} />
-            <Flex vertical gap={16} className="w-full">
-              <Checkbox name="accept">
-                {t("agreement")}
-              </Checkbox>
-              <Button type="primary" htmlType="submit" block>
-                {t("submit")}
-              </Button>
-            </Flex>
-          </form>
-        </Flex>
+        <AuthConsentPanel
+          action={acceptRequiredConsentsAction}
+          documents={missingDocuments}
+          next={next}
+          showRequiredError={showRequiredError}
+        />
       </PageContainer>
     </PublicShell>
   );

@@ -1,7 +1,7 @@
 # TALKPIK AI 사용자 플로우 (현행)
 
-이 문서는 `docs/Wireframe/`의 35개 페이지 IA와 연동된 **현행 사용자 플로우**입니다.
-이 중 X-13~X-17은 기존 34개 Wireframe 이후 코드베이스 기준으로 추가된 화면입니다.
+이 문서는 `docs/Wireframe/`의 36개 페이지 IA와 연동된 **현행 사용자 플로우**입니다.
+이 중 X-13~X-18은 기존 34개 Wireframe 이후 코드베이스 기준으로 추가된 화면입니다.
 노드명은 `docs/Wireframe/{...}/description.md`의 `Source` 값과 일치합니다(참조 규칙: `docs/Wireframe/README.md`).
 
 새 구현/QA는 본 문서를 정본으로 사용합니다.
@@ -20,7 +20,7 @@ flowchart TD
   X06["28 X-06 비밀번호 재설정"]
   X16["38 X-16 새 비밀번호 설정"]
   PA["/auth/post-auth OAuth 후처리"]
-  CONSENT["/auth/consent 필수 약관 동의"]
+  CONSENT["40 X-18 소셜 로그인 약관 동의"]
   A03["03 A-03 학습 목표 설정"]
   B01["04 B-01 홈 대시보드"]
 

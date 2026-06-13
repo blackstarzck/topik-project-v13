@@ -60,8 +60,9 @@
 | 추가 화면 | 개인정보처리방침 | 36 X-14 개인정보처리방침 | [description.md](./36-X-14-privacy-policy/description.md) |
 | 추가 화면 | 새 비밀번호 설정 | 38 X-16 새 비밀번호 설정 | [description.md](./38-X-16-password-reset-confirm/description.md) |
 | 추가 화면 | 인증 콜백 fragment 처리 | 39 X-17 인증 콜백 fragment 처리 | [description.md](./39-X-17-auth-callback-fragment/description.md) |
+| 추가 화면 | 소셜 로그인 약관 동의 | 40 X-18 소셜 로그인 약관 동의 | [description.md](./40-X-18-auth-consent/description.md) |
 
-> 33-39번은 기존 34개 Wireframe 이후 코드베이스 기준으로 추가된 화면입니다. 일부 코드 기반 추가 화면은 `wireframe.png`가 없을 수 있으며, 해당 경우 각 `description.md`에 이미지 없음 상태를 명시합니다. 폴더 번호 21·30·32·37은 관리자 화면 제거(2026-06-11)로 결번입니다.
+> 33-40번은 기존 34개 Wireframe 이후 코드베이스 기준으로 추가된 화면입니다. 일부 코드 기반 추가 화면은 `wireframe.png`가 없을 수 있으며, 해당 경우 각 `description.md`에 이미지 없음 상태를 명시합니다. 폴더 번호 21·30·32·37은 관리자 화면 제거(2026-06-11)로 결번입니다.
 
 ## AI에게 지시할 때
 
