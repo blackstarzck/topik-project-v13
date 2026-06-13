@@ -11,7 +11,7 @@
 
 | 영역 | 정본 위치 |
 | --- | --- |
-| 화면 명세 (회원가입/로그인/콜백/에러/메일 안내/비밀번호 재설정) | [`docs/Wireframe/01-A-01-sign-up`](../Wireframe/01-A-01-sign-up/description.md), [`02-A-02-login`](../Wireframe/02-A-02-login/description.md), [`28-X-06-password-reset`](../Wireframe/28-X-06-password-reset/description.md), [`38-X-16-password-reset-confirm`](../Wireframe/38-X-16-password-reset-confirm/description.md), [`33-X-11-auth-error`](../Wireframe/33-X-11-auth-error/description.md), [`34-X-12-auth-verify-email`](../Wireframe/34-X-12-auth-verify-email/description.md), [`39-X-17-auth-callback-fragment`](../Wireframe/39-X-17-auth-callback-fragment/description.md) |
+| 화면 명세 (회원가입/로그인/콜백/에러/메일 안내/비밀번호 재설정/소셜 약관 동의) | [`docs/Wireframe/01-A-01-sign-up`](../Wireframe/01-A-01-sign-up/description.md), [`02-A-02-login`](../Wireframe/02-A-02-login/description.md), [`28-X-06-password-reset`](../Wireframe/28-X-06-password-reset/description.md), [`38-X-16-password-reset-confirm`](../Wireframe/38-X-16-password-reset-confirm/description.md), [`33-X-11-auth-error`](../Wireframe/33-X-11-auth-error/description.md), [`34-X-12-auth-verify-email`](../Wireframe/34-X-12-auth-verify-email/description.md), [`39-X-17-auth-callback-fragment`](../Wireframe/39-X-17-auth-callback-fragment/description.md), [`40-X-18-auth-consent`](../Wireframe/40-X-18-auth-consent/description.md) |
 | 사용자 플로우 (정본) | [`docs/flow/user-flow.md`](../flow/user-flow.md) |
 | 백엔드/Auth 정책 | [`docs/development/backend-auth.md`](./backend-auth.md) |
 | Auth 관련 마이그레이션 | [`supabase/migrations/INDEX.md`](../../supabase/migrations/INDEX.md) (#17, #22, #23, #24, #31, #38) |
@@ -79,7 +79,7 @@ flowchart TD
 | X-16 | 비밀번호 재설정 확정 | [`src/app/password-reset/confirm/page.tsx`](../../src/app/password-reset/confirm/page.tsx) | [`PasswordResetConfirmForm.tsx`](../../src/components/auth/PasswordResetConfirmForm.tsx) |
 | (라우트) | 인증 콜백 | [`src/app/auth/callback/route.ts`](../../src/app/auth/callback/route.ts) (Route Handler) | 서버 route handler |
 | (라우트) | OAuth 후처리 | [`src/app/auth/post-auth/page.tsx`](../../src/app/auth/post-auth/page.tsx) | 필수 약관 동의 + 학습 목표 라우팅 |
-| (라우트) | OAuth 약관 동의 | [`src/app/auth/consent/page.tsx`](../../src/app/auth/consent/page.tsx) | [`actions.ts`](../../src/app/auth/consent/actions.ts) |
+| X-18 | OAuth 약관 동의 | [`src/app/auth/consent/page.tsx`](../../src/app/auth/consent/page.tsx) | [`actions.ts`](../../src/app/auth/consent/actions.ts) |
 | X-17 | 인증 콜백 fragment 처리 | [`src/app/auth/callback-fragment/page.tsx`](../../src/app/auth/callback-fragment/page.tsx) | [`CallbackFragmentFallback.tsx`](../../src/components/auth/CallbackFragmentFallback.tsx) |
 | X-11 | 인증 에러 | [`src/app/auth/error/page.tsx`](../../src/app/auth/error/page.tsx) | [`AuthErrorCard.tsx`](../../src/components/auth/AuthErrorCard.tsx) |
 | X-12 | 인증 메일 확인 안내 | [`src/app/auth/verify-email/page.tsx`](../../src/app/auth/verify-email/page.tsx) | [`VerifyEmailCard.tsx`](../../src/components/auth/VerifyEmailCard.tsx) |
@@ -111,6 +111,15 @@ flowchart TD
 5. 콜백 서버에서 `verifyOtp({ token_hash, type })` → 성공 시 `redirect(next)`, 실패 시 `/auth/error?reason=<...>`
 6. `next` 는 `sanitizeNext()` 로 정화 — 외부 URL, `//`, `:` 포함 값은 `/dashboard` fallback
 7. **`profiles` 행은 DB 트리거 `on_auth_user_created` 가 자동 생성** (마이그레이션 #17). 클라이언트 코드는 profiles INSERT 권한이 없다 (RLS).
+
+#### 4.1.1 중복 이메일과 연속 발송 정책
+
+- 공개 회원가입 화면에서는 이메일이 이미 가입되어 있는지 확정적으로 알려주지 않는다.
+- 공개 화면에서 `service_role`을 사용해 이메일 중복 조회 API를 만들지 않는다.
+- `supabase.auth.signUp()` 결과가 `error === null`이면 `user` 값이 없어도 `/auth/verify-email?email=...`로 이동한다. Supabase가 계정 존재 여부를 숨기기 위해 흐린 응답을 줄 수 있기 때문이다.
+- Supabase가 명시적인 중복 이메일 계열 에러를 주면 `/sign-up`에 머물고, “로그인하기”와 “비밀번호 재설정” CTA가 있는 보안-safe 안내를 보여준다.
+- `over_email_send_rate_limit`, `over_request_rate_limit`, HTTP `429`는 회원가입 전용 60초 쿨다운으로 처리한다. 저장 키는 `talkpik:sign-up:cooldown-until`이며, 쿨다운 중에는 submit만 막고 이메일 입력은 열어둔다.
+- X-12(`/auth/verify-email`)는 새 계정이면 인증 메일을 확인하고, 이미 계정이 있다면 로그인 또는 비밀번호 재설정을 이용하라고 안내한다.
 
 ### 4.2 로그인 (A-02 → 대시보드 / 관리자)
 

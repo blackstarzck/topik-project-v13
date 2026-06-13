@@ -139,6 +139,63 @@ async function mockSignUpDuplicateEmail(page: Page): Promise<SignUpRequest[]> {
   return requests;
 }
 
+async function mockSignUpNoUserSuccess(page: Page): Promise<SignUpRequest[]> {
+  const requests: SignUpRequest[] = [];
+
+  await page.route(SIGN_UP_ROUTE, async (route, request) => {
+    if (request.method() === "OPTIONS") {
+      await route.fulfill({ headers: corsHeaders(request), status: 204 });
+      return;
+    }
+
+    requests.push({
+      payload: readJsonPayload(request),
+      url: new URL(request.url()),
+    });
+
+    await route.fulfill({
+      body: JSON.stringify({
+        session: null,
+        user: null,
+      }),
+      contentType: "application/json",
+      headers: corsHeaders(request),
+      status: 200,
+    });
+  });
+
+  return requests;
+}
+
+async function mockSignUpRateLimited(page: Page): Promise<SignUpRequest[]> {
+  const requests: SignUpRequest[] = [];
+
+  await page.route(SIGN_UP_ROUTE, async (route, request) => {
+    if (request.method() === "OPTIONS") {
+      await route.fulfill({ headers: corsHeaders(request), status: 204 });
+      return;
+    }
+
+    requests.push({
+      payload: readJsonPayload(request),
+      url: new URL(request.url()),
+    });
+
+    await route.fulfill({
+      body: JSON.stringify({
+        code: "over_email_send_rate_limit",
+        error_code: "over_email_send_rate_limit",
+        message: "email rate limit exceeded",
+      }),
+      contentType: "application/json",
+      headers: corsHeaders(request),
+      status: 429,
+    });
+  });
+
+  return requests;
+}
+
 test.describe("A-01 sign-up functional flow", () => {
   test("public sign-up screen keeps form links and hides hero secondary links", async ({
     page,
@@ -222,7 +279,27 @@ test.describe("A-01 sign-up functional flow", () => {
     expect(errors).toEqual([]);
   });
 
-  test("duplicate email auth error is shown inline and keeps user on sign-up", async ({
+  test("no-user success-like auth response still reaches verify-email guidance", async ({
+    page,
+  }) => {
+    const errors = collectErrors(page);
+    const signUpRequests = await mockSignUpNoUserSuccess(page);
+
+    await openSignUp(page);
+    await fillSignUpForm(page, { email: "obfuscated@example.com" });
+    await clickSubmit(page);
+
+    await page.waitForURL(
+      /\/auth\/verify-email\?email=obfuscated%40example\.com$/,
+    );
+    await expect(
+      page.getByTestId("verify-email-existing-account-actions"),
+    ).toBeVisible();
+    expect(signUpRequests).toHaveLength(1);
+    expect(errors).toEqual([]);
+  });
+
+  test("duplicate email auth error shows safe guidance and keeps user on sign-up", async ({
     page,
   }) => {
     const errors = collectErrors(page);
@@ -232,13 +309,39 @@ test.describe("A-01 sign-up functional flow", () => {
     await fillSignUpForm(page);
     await clickSubmit(page);
 
+    await expect(page.getByTestId("sign-up-safe-guidance")).toBeVisible();
     await expect(
-      page
-        .locator(".ant-form-item-explain-error")
-        .filter({ hasText: /이미 가입된 이메일/ }),
-    ).toBeVisible();
+      page.getByTestId("sign-up-safe-guidance-login"),
+    ).toHaveAttribute("href", "/login");
+    await expect(
+      page.getByTestId("sign-up-safe-guidance-reset"),
+    ).toHaveAttribute("href", "/password-reset");
     await expect(page).toHaveURL(/\/sign-up/);
     expect(signUpRequests).toHaveLength(1);
+    expect(errors).toEqual([]);
+  });
+
+  test("rate-limited signup starts a cooldown and blocks repeat submits", async ({
+    page,
+  }) => {
+    const errors = collectErrors(page);
+    const signUpRequests = await mockSignUpRateLimited(page);
+
+    await page.addInitScript(() => {
+      window.localStorage.removeItem("talkpik:sign-up:cooldown-until");
+    });
+
+    await openSignUp(page);
+    await fillSignUpForm(page, { email: "limited@example.com" });
+    await clickSubmit(page);
+
+    await expect(page.getByTestId("sign-up-countdown")).toBeVisible();
+    await expect(page.locator('button[type="submit"]')).toBeDisabled();
+    await page.locator("#email").fill("fixed@example.com");
+    await expect(page.locator("#email")).toHaveValue("fixed@example.com");
+    await expect
+      .poll(() => signUpRequests.length, { message: "signup request count" })
+      .toBe(1);
     expect(errors).toEqual([]);
   });
 });

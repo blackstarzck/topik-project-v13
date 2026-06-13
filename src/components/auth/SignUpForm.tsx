@@ -6,17 +6,30 @@
 //   resend with 60s cooldown and survives reloads/deep-links.
 
 import type { ChangeEvent } from "react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { App, Button, Checkbox, Divider, Form, Input } from "antd";
+import {
+  Alert,
+  App,
+  Button,
+  Checkbox,
+  Divider,
+  Form,
+  Input,
+  Typography,
+} from "antd";
 import { ArrowRight } from "lucide-react";
 
 import { GoogleMark } from "@/components/auth/GoogleMark";
 import { buildAuthRedirectUrl } from "@/lib/auth/redirect-url";
 import { mapSupabaseErrorCode } from "@/lib/auth/error-mapping";
 import { startGoogleOAuth } from "@/lib/auth/oauth";
+import {
+  DEFAULT_COOLDOWN_SECONDS,
+  useEmailCooldown,
+} from "@/lib/auth/use-email-cooldown";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { PasswordStrengthMeter } from "@/components/auth/PasswordStrengthMeter";
 
@@ -28,6 +41,26 @@ const DUPLICATE_EMAIL_CODES = new Set([
   "email_exists",
   "email_address_already_in_use",
 ]);
+
+const RATE_LIMIT_CODES = new Set([
+  "over_email_send_rate_limit",
+  "over_request_rate_limit",
+]);
+
+const SIGN_UP_COOLDOWN_STORAGE_KEY = "talkpik:sign-up:cooldown-until";
+
+const { Text } = Typography;
+
+type CountdownTranslate = ReturnType<typeof useTranslations<"auth.countdown">>;
+
+function formatCountdown(totalSeconds: number, tc: CountdownTranslate): string {
+  if (totalSeconds <= 0) return tc("zero");
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  if (minutes === 0) return tc("seconds", { seconds });
+  if (seconds === 0) return tc("minutes", { minutes });
+  return tc("minutesSeconds", { minutes, seconds });
+}
 
 type SignUpFields = {
   email: string;
@@ -49,15 +82,29 @@ export function SignUpForm({
   onPasswordVisibilityChange,
 }: SignUpFormProps = {}) {
   const t = useTranslations("auth.signUp");
+  const tc = useTranslations("auth.countdown");
+  const tcooldown = useTranslations("auth.cooldown");
   // Cross-namespace: server sign-up failure copy lives under `auth.error.<reason>.message`.
   const te = useTranslations("auth.error");
   const { message } = App.useApp();
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [googleSubmitting, setGoogleSubmitting] = useState(false);
+  const [safeGuidanceVisible, setSafeGuidanceVisible] = useState(false);
+  const signUpCooldown = useEmailCooldown(
+    SIGN_UP_COOLDOWN_STORAGE_KEY,
+    DEFAULT_COOLDOWN_SECONDS,
+  );
   // password-strength meter는 실시간으로 입력값을 추적해야 하므로 watch.
   const [passwordValue, setPasswordValue] = useState("");
   const [form] = Form.useForm<SignUpFields>();
+
+  const countdownLabel = useMemo(() => {
+    if (signUpCooldown.remaining <= 0) return null;
+    return tcooldown("label", {
+      label: formatCountdown(signUpCooldown.remaining, tc),
+    });
+  }, [signUpCooldown.remaining, tc, tcooldown]);
 
   function handlePasswordChange(event: ChangeEvent<HTMLInputElement>) {
     const nextPassword = event.target.value;
@@ -66,6 +113,9 @@ export function SignUpForm({
   }
 
   async function handleSignUp(values: SignUpFields) {
+    if (signUpCooldown.remaining > 0) return;
+
+    setSafeGuidanceVisible(false);
     setSubmitting(true);
     try {
       const supabase = createSupabaseBrowserClient();
@@ -81,14 +131,18 @@ export function SignUpForm({
       });
 
       if (error) {
-        // §3 예외: 중복 이메일은 토스트가 아니라 이메일 필드 하단 인라인 오류로.
+        if (
+          error.status === 429 ||
+          (error.code && RATE_LIMIT_CODES.has(error.code))
+        ) {
+          signUpCooldown.start();
+          message.error(t("rateLimitedMessage"));
+          return;
+        }
+        // §3 예외: 중복 이메일 여부는 단정하지 않고 보안-safe 안내로 처리한다.
         if (error.code && DUPLICATE_EMAIL_CODES.has(error.code)) {
-          form.setFields([
-            {
-              name: "email",
-              errors: [t("emailDuplicate")],
-            },
-          ]);
+          form.setFields([{ name: "email", errors: [] }]);
+          setSafeGuidanceVisible(true);
           return;
         }
         const reason = mapSupabaseErrorCode(error.code);
@@ -170,6 +224,7 @@ export function SignUpForm({
               if (form.getFieldError("email").length > 0) {
                 form.setFields([{ name: "email", errors: [] }]);
               }
+              setSafeGuidanceVisible(false);
             }}
           />
         </Form.Item>
@@ -259,11 +314,53 @@ export function SignUpForm({
           </Checkbox>
         </Form.Item>
 
+        {safeGuidanceVisible && (
+          <Alert
+            type="info"
+            showIcon
+            className="!mb-4"
+            data-testid="sign-up-safe-guidance"
+            title={t("accountCheckTitle")}
+            description={
+              <div className="flex flex-col gap-3">
+                <span>{t("accountCheckDescription")}</span>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="small"
+                    href="/login"
+                    data-testid="sign-up-safe-guidance-login"
+                  >
+                    {t("accountCheckLogin")}
+                  </Button>
+                  <Button
+                    size="small"
+                    href="/password-reset"
+                    data-testid="sign-up-safe-guidance-reset"
+                  >
+                    {t("accountCheckReset")}
+                  </Button>
+                </div>
+              </div>
+            }
+          />
+        )}
+
+        {countdownLabel && (
+          <Text
+            type="secondary"
+            className="!mb-4 block text-center"
+            data-testid="sign-up-countdown"
+          >
+            {countdownLabel}
+          </Text>
+        )}
+
         <Form.Item className="auth-form-submit">
           <Button
             type="primary"
             htmlType="submit"
             block
+            disabled={signUpCooldown.remaining > 0}
             loading={submitting}
             icon={<ArrowRight size={16} aria-hidden="true" />}
             iconPlacement="end"

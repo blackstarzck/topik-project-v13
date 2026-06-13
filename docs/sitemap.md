@@ -12,7 +12,7 @@
 Use these documents together when implementing or reviewing page coverage:
 
 1. [docs/sitemap.md](./sitemap.md) - route authority and page connection map.
-2. [docs/Wireframe/README.md](./Wireframe/README.md) - current 39-screen IA inventory: the existing 34 Wireframe entries plus 5 codebase-added screens, with one `description.md` and one `functional-spec.md` per screen.
+2. [docs/Wireframe/README.md](./Wireframe/README.md) - current Wireframe IA inventory, including codebase-added screens, with one `description.md` and one `functional-spec.md` per screen.
 3. [docs/flow/user-flow.md](./flow/user-flow.md) - user flow and screen dependency order.
 
 ## Target React Route Map
@@ -53,7 +53,7 @@ Use these documents together when implementing or reviewing page coverage:
 | X-09 | Notification settings | `/settings/notifications` | page | Notification preferences. |
 | —    | Auth callback | `/auth/callback` | route handler | Token-hash → `verifyOtp` 분기, code → `exchangeCodeForSession`. `next` query는 relative-only. 성공 시 `next` 또는 `/dashboard`로 redirect, 실패 시 `/auth/error?reason=<canonical>&retry_after_seconds=<n?>`로 redirect. raw `error_description`은 서버 로그에만. `export const dynamic = 'force-dynamic'`. **Phase 8 follow-up P0 fix(2026-05-27)**: page → Route Handler 전환 (Server Component cookies.set silent fail로 Set-Cookie 미발급되던 production 버그 해결). |
 | —    | Auth post-auth gate | `/auth/post-auth` | page | Google OAuth callback 이후 세션 보유 사용자를 약관 동의와 학습 목표 상태로 후속 라우팅한다. 세션 없음 → `/login`, 필수 동의 누락 → `/auth/consent`, 학습 목표 없음 → `/onboarding/learning-goal`, 모두 충족 → `/dashboard`. |
-| —    | Auth consent gate | `/auth/consent` | page + server action | Google OAuth 이후 필수 published 약관/개인정보 동의를 받는 보호 라우트. `legal_documents` 최신 required 문서 중 미동의분만 표시하고 동의 시 `user_consents.source='signup'`으로 기록한 뒤 `next`로 복귀. |
+| X-18 | Auth consent gate | `/auth/consent` | page + server action | Google OAuth 이후 필수 published 약관/개인정보 동의를 받는 보호 라우트. `legal_documents` 최신 required 문서 중 미동의분만 표시하고 동의 시 `user_consents.source='signup'`으로 기록한 뒤 `next`로 복귀. Wireframe inventory: `40-X-18-auth-consent`. |
 | X-11 | Auth error | `/auth/error` | page | 11개 Supabase `error.code` 기반 reason 분기 (`otp_expired`, `flow_state_expired`, `flow_state_not_found`, `bad_code_verifier`, `user_not_found`, `over_email_send_rate_limit`, `over_request_rate_limit`, `email_not_confirmed`, `signup_disabled`, `access_denied`, `unknown`). rate-limit 계열은 `retry_after_seconds` countdown. Email prefill query는 untrusted (가시·편집 가능 input). |
 | X-12 | Auth verify-email | `/auth/verify-email` | page | 가입 직후 인증 메일 발송 안내 + 60초 cooldown 재전송 (Supabase same-user 60s + project 30/hour OTP + 빌트인 SMTP 2/hour 한도). |
 | X-17 | Auth callback fragment | `/auth/callback-fragment` | page | Implicit flow #fragment 처리. Route Handler가 query 없는 callback 요청을 이리 redirect → 브라우저가 RFC 7231로 fragment retain → client component `CallbackFragmentFallback`이 `window.location.hash` 파싱 → 정확한 `/auth/error?reason=…` 또는 `setSession` 후 `router.replace(next)`. Added after the existing 34 Wireframe screens from codebase route coverage. |
@@ -149,7 +149,7 @@ flowchart TD
   CBF -->|"성공"| DASH
   CBF -->|"실패"| ERR
   CB -->|"OAuth 성공"| POST["Auth post-auth\n/auth/post-auth"]
-  POST -->|"필수 동의 누락"| CONSENT["Auth consent\n/auth/consent"]
+  POST -->|"필수 동의 누락"| CONSENT["X-18 Auth consent\n/auth/consent"]
   CONSENT -->|"동의 완료"| POST
   POST -->|"학습 목표 없음"| GOAL
   POST -->|"동의+목표 있음"| DASH

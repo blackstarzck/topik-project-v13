@@ -43,8 +43,29 @@ import { SignUpForm } from "../../../src/components/auth/SignUpForm";
 // intl + antd App wrapper (baseline ko catalog, matching the assertions).
 const renderInApp = renderWithIntl;
 
+function fillValidSignUpForm(email = "valid@example.com") {
+  fireEvent.change(document.querySelector("#displayName")!, {
+    target: { value: "Tester" },
+  });
+  fireEvent.change(document.querySelector("#email")!, {
+    target: { value: email },
+  });
+  fireEvent.change(document.querySelector("#password")!, {
+    target: { value: "password123" },
+  });
+  fireEvent.change(document.querySelector("#passwordConfirm")!, {
+    target: { value: "password123" },
+  });
+  fireEvent.click(screen.getByRole("checkbox"));
+}
+
+function submitButton() {
+  return document.querySelector('button[type="submit"]') as HTMLButtonElement;
+}
+
 beforeEach(() => {
   window.history.replaceState(null, "", "http://localhost:3000/sign-up");
+  window.localStorage.clear();
   signUpMock.mockReset();
   signUpMock.mockResolvedValue({ error: null });
   resendMock.mockReset();
@@ -178,6 +199,85 @@ describe("SignUpForm", () => {
     expect(pushMock.mock.calls[0][0]).toBe(
       "/auth/verify-email?email=valid%40example.com",
     );
+  });
+
+  it("redirects to /auth/verify-email for a no-user success-like signup response", async () => {
+    signUpMock.mockResolvedValueOnce({
+      data: { session: null, user: null },
+      error: null,
+    });
+    renderInApp(<SignUpForm />);
+
+    fillValidSignUpForm("obfuscated@example.com");
+
+    await act(async () => {
+      fireEvent.click(submitButton());
+    });
+
+    await waitFor(() => {
+      expect(pushMock).toHaveBeenCalledTimes(1);
+    });
+    expect(pushMock.mock.calls[0][0]).toBe(
+      "/auth/verify-email?email=obfuscated%40example.com",
+    );
+  });
+
+  it("shows safe account guidance for explicit duplicate signup errors", async () => {
+    signUpMock.mockResolvedValueOnce({
+      data: { session: null, user: null },
+      error: {
+        code: "user_already_exists",
+        message: "User already registered",
+        status: 422,
+      },
+    });
+    renderInApp(<SignUpForm />);
+
+    fillValidSignUpForm("registered@example.com");
+
+    await act(async () => {
+      fireEvent.click(submitButton());
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("sign-up-safe-guidance")).toBeTruthy();
+    });
+    expect(
+      screen.getByTestId("sign-up-safe-guidance-login").getAttribute("href"),
+    ).toBe("/login");
+    expect(
+      screen.getByTestId("sign-up-safe-guidance-reset").getAttribute("href"),
+    ).toBe("/password-reset");
+    expect(pushMock).not.toHaveBeenCalled();
+  });
+
+  it("starts a signup cooldown for rate-limited signup responses", async () => {
+    signUpMock.mockResolvedValueOnce({
+      data: { session: null, user: null },
+      error: {
+        code: "over_email_send_rate_limit",
+        message: "email rate limit exceeded",
+        status: 429,
+      },
+    });
+    renderInApp(<SignUpForm />);
+
+    fillValidSignUpForm("limited@example.com");
+
+    await act(async () => {
+      fireEvent.click(submitButton());
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("sign-up-countdown")).toBeTruthy();
+    });
+    expect(submitButton().disabled).toBe(true);
+
+    await act(async () => {
+      fireEvent.click(submitButton());
+    });
+    expect(signUpMock).toHaveBeenCalledTimes(1);
+    expect(pushMock).not.toHaveBeenCalled();
   });
 
   it("clears loading and shows an error when the redirect URL builder throws (D-2)", async () => {
