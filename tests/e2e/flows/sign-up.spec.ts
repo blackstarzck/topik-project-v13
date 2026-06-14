@@ -351,16 +351,41 @@ test.describe("A-01 sign-up functional flow", () => {
     const errors = collectErrors(page);
     const signUpRequests = await mockSignUpRateLimited(page);
 
-    await page.addInitScript(() => {
+    await openSignUp(page);
+    await page.evaluate(() => {
       window.localStorage.removeItem("talkpik:sign-up:cooldown-until");
     });
-
-    await openSignUp(page);
     await fillSignUpForm(page, { email: "limited@example.com" });
     await clickSubmit(page);
 
     await expect(page.getByTestId("sign-up-countdown")).toBeVisible();
-    await expect(page.locator('button[type="submit"]')).toBeDisabled();
+    const submit = page.locator('button[type="submit"]');
+    await expect(submit).toBeDisabled();
+    await expect(submit).toContainText("회원가입");
+    await expect(page.getByTestId("auth-switch-link-disabled")).toBeVisible();
+    await expect(page.getByTestId("auth-switch-link-disabled")).toHaveText(
+      "로그인",
+    );
+    await expect(page.getByTestId("auth-switch-link")).toHaveCount(0);
+    await expect
+      .poll(() =>
+        submit.evaluate(
+          (element) => window.getComputedStyle(element).backgroundColor,
+        ),
+      )
+      .not.toBe("rgb(25, 25, 25)");
+    await expect
+      .poll(() =>
+        submit.evaluate((element) => window.getComputedStyle(element).color),
+      )
+      .not.toBe("rgba(0, 0, 0, 0.25)");
+
+    await page.reload({ waitUntil: "networkidle" });
+    await expect(page.getByTestId("sign-up-countdown")).toBeVisible();
+    await expect(submit).toBeDisabled();
+    await expect(submit).toContainText("회원가입");
+    await expect(page.getByTestId("auth-switch-link-disabled")).toBeVisible();
+
     await page.locator("#email").fill("fixed@example.com");
     await expect(page.locator("#email")).toHaveValue("fixed@example.com");
     await expect

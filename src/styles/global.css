@@ -606,16 +606,27 @@ body {
 
 .signup-prompt-form-panel .signup-form-surface .ant-btn-primary {
   min-height: var(--auth-control-height);
-  border-color: #191919;
   border-radius: 8px;
-  background: #191919;
   font-weight: 600;
 }
 
-.signup-prompt-form-panel .signup-form-surface .ant-btn-primary:hover,
-.signup-prompt-form-panel .signup-form-surface .ant-btn-primary:focus-visible {
+.signup-prompt-form-panel .signup-form-surface .ant-btn-primary:not(:disabled):not(.ant-btn-disabled) {
+  border-color: #191919;
+  background: #191919;
+}
+
+.signup-prompt-form-panel .signup-form-surface .ant-btn-primary:not(:disabled):not(.ant-btn-disabled):hover,
+.signup-prompt-form-panel .signup-form-surface .ant-btn-primary:not(:disabled):not(.ant-btn-disabled):focus-visible {
   border-color: #000000;
   background: #000000;
+}
+
+.signup-prompt-form-panel .signup-form-surface .ant-btn-primary:disabled,
+.signup-prompt-form-panel .signup-form-surface .ant-btn-primary.ant-btn-disabled {
+  border-color: rgba(0, 0, 0, 0.15);
+  background: rgba(0, 0, 0, 0.04);
+  color: rgba(0, 0, 0, 0.45);
+  box-shadow: none;
 }
 
 .signup-prompt-form-panel .signup-form-surface .ant-input-affix-wrapper>.ant-input {
@@ -702,6 +713,12 @@ body {
 
 .signup-prompt-account-link .signup-prompt-account-link__link:hover {
   text-decoration: underline;
+}
+
+.signup-prompt-account-link .signup-prompt-account-link__link--disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+  text-decoration: none;
 }
 
 .signup-public-shell {

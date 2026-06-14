@@ -260,6 +260,7 @@ describe("SignUpForm", () => {
   });
 
   it("starts a signup cooldown for rate-limited signup responses", async () => {
+    const onCooldownChange = vi.fn();
     signUpMock.mockResolvedValueOnce({
       data: { session: null, user: null },
       error: {
@@ -268,7 +269,7 @@ describe("SignUpForm", () => {
         status: 429,
       },
     });
-    renderInApp(<SignUpForm />);
+    renderInApp(<SignUpForm onCooldownChange={onCooldownChange} />);
 
     fillValidSignUpForm("limited@example.com");
 
@@ -280,12 +281,32 @@ describe("SignUpForm", () => {
       expect(screen.getByTestId("sign-up-countdown")).toBeTruthy();
     });
     expect(submitButton().disabled).toBe(true);
+    expect(submitButton().textContent).toContain("회원가입");
+    expect(onCooldownChange).toHaveBeenLastCalledWith(true);
 
     await act(async () => {
       fireEvent.click(submitButton());
     });
     expect(signUpMock).toHaveBeenCalledTimes(1);
     expect(pushMock).not.toHaveBeenCalled();
+  });
+
+  it("restores the signup cooldown from localStorage after a reload", async () => {
+    const onCooldownChange = vi.fn();
+    window.localStorage.setItem(
+      "talkpik:sign-up:cooldown-until",
+      String(Date.now() + 43_000),
+    );
+
+    renderInApp(<SignUpForm onCooldownChange={onCooldownChange} />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("sign-up-countdown")).toBeTruthy();
+    });
+    expect(submitButton().disabled).toBe(true);
+    expect(submitButton().textContent).toContain("회원가입");
+    expect(onCooldownChange).toHaveBeenLastCalledWith(true);
+    expect(signUpMock).not.toHaveBeenCalled();
   });
 
   it("clears loading and shows an error when the redirect URL builder throws (D-2)", async () => {

@@ -38,7 +38,9 @@ export function AuthPromptExperience({
   const [isTyping, setIsTyping] = useState(false);
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const [isSignUpCoolingDown, setIsSignUpCoolingDown] = useState(false);
   const titleId = `${mode}-title`;
+  const isSwitchDisabled = mode === "sign-up" && isSignUpCoolingDown;
 
   return (
     <div className={`signup-prompt-layout signup-prompt-layout--${mode}`}>
@@ -61,7 +63,6 @@ export function AuthPromptExperience({
             passwordVisible={passwordVisible}
           />
         </div>
-
       </aside>
 
       <main className="signup-prompt-form-panel" aria-labelledby={titleId}>
@@ -104,6 +105,7 @@ export function AuthPromptExperience({
                 onTypingChange={setIsTyping}
                 onPasswordChange={setPassword}
                 onPasswordVisibilityChange={setPasswordVisible}
+                onCooldownChange={setIsSignUpCoolingDown}
               />
             )}
           </div>
@@ -115,12 +117,23 @@ export function AuthPromptExperience({
             className="signup-prompt-account-link"
           >
             <Text type="secondary">{switchPrompt}</Text>
-            <AntLink
-              href={switchHref}
-              className="signup-prompt-account-link__link"
-            >
-              {switchLabel}
-            </AntLink>
+            {isSwitchDisabled ? (
+              <Text
+                aria-disabled="true"
+                className="signup-prompt-account-link__link signup-prompt-account-link__link--disabled"
+                data-testid="auth-switch-link-disabled"
+              >
+                {switchLabel}
+              </Text>
+            ) : (
+              <AntLink
+                href={switchHref}
+                className="signup-prompt-account-link__link"
+                data-testid="auth-switch-link"
+              >
+                {switchLabel}
+              </AntLink>
+            )}
           </Flex>
         </Flex>
       </main>
