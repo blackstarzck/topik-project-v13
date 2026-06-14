@@ -1,6 +1,13 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page, type Request } from "@playwright/test";
 
 test.use({ storageState: { cookies: [], origins: [] } });
+
+const RESEND_ROUTE = /\/auth\/v1\/resend(?:\?|$)/;
+
+type ResendRequest = {
+  payload: Record<string, unknown>;
+  url: URL;
+};
 
 function collectErrors(page: Page): string[] {
   const errors: string[] = [];
@@ -14,6 +21,47 @@ function collectErrors(page: Page): string[] {
     }
   });
   return errors;
+}
+
+function corsHeaders(request: Request) {
+  return {
+    "access-control-allow-headers":
+      request.headers()["access-control-request-headers"] ??
+      "authorization, x-client-info, apikey, content-type",
+    "access-control-allow-methods": "POST, OPTIONS",
+    "access-control-allow-origin": "*",
+  };
+}
+
+function readJsonPayload(request: Request): Record<string, unknown> {
+  const raw = request.postData();
+  if (!raw) return {};
+  return JSON.parse(raw) as Record<string, unknown>;
+}
+
+async function mockAuthErrorResend(page: Page): Promise<ResendRequest[]> {
+  const requests: ResendRequest[] = [];
+
+  await page.route(RESEND_ROUTE, async (route, request) => {
+    if (request.method() === "OPTIONS") {
+      await route.fulfill({ headers: corsHeaders(request), status: 204 });
+      return;
+    }
+
+    requests.push({
+      payload: readJsonPayload(request),
+      url: new URL(request.url()),
+    });
+
+    await route.fulfill({
+      body: "{}",
+      contentType: "application/json",
+      headers: corsHeaders(request),
+      status: 200,
+    });
+  });
+
+  return requests;
 }
 
 test("X-11 auth error maps expired OTP without exposing raw provider text", async ({
@@ -43,6 +91,48 @@ test("X-11 auth error maps expired OTP without exposing raw provider text", asyn
   expect(errors).toEqual([]);
 });
 
+test("X-11 expired OTP enables resend after countdown and secondary login works", async ({
+  page,
+}) => {
+  const errors = collectErrors(page);
+  const resendRequests = await mockAuthErrorResend(page);
+
+  await page.goto(
+    "/auth/error?reason=otp_expired&email=student%40example.com&retry_after_seconds=1",
+    { waitUntil: "networkidle" },
+  );
+
+  const primary = page.getByTestId("auth-error-primary");
+  await expect(primary).toBeDisabled();
+  await expect(primary).toBeEnabled({ timeout: 3000 });
+  await primary.click();
+
+  await expect
+    .poll(() => resendRequests.length, { message: "auth error resend count" })
+    .toBe(1);
+  expect(resendRequests[0].payload).toMatchObject({
+    email: "student@example.com",
+    type: "signup",
+  });
+  const redirectTo = new URL(
+    resendRequests[0].url.searchParams.get("redirect_to") ?? "",
+  );
+  expect(redirectTo.origin).toBe(new URL(page.url()).origin);
+  expect(redirectTo.pathname).toBe("/auth/callback");
+  expect(redirectTo.searchParams.get("next")).toBe("/onboarding/learning-goal");
+
+  await page.goto(
+    "/auth/error?reason=otp_expired&email=student%40example.com",
+    {
+      waitUntil: "networkidle",
+    },
+  );
+  await page.getByTestId("auth-error-secondary").click();
+  await expect(page).toHaveURL(/\/login$/);
+
+  expect(errors).toEqual([]);
+});
+
 test("X-11 auth error keeps rate-limited retry disabled during countdown", async ({
   page,
 }) => {
@@ -61,6 +151,117 @@ test("X-11 auth error keeps rate-limited retry disabled during countdown", async
   await expect(page.getByTestId("auth-error-primary")).toBeDisabled();
   await expect(page.getByTestId("auth-error-escape")).toBeVisible();
   await expect(page.locator("#auth-error-email")).toHaveCount(0);
+
+  expect(errors).toEqual([]);
+});
+
+test("X-11 rate-limited retry navigates to login after countdown", async ({
+  page,
+}) => {
+  const errors = collectErrors(page);
+
+  await page.goto(
+    "/auth/error?reason=over_request_rate_limit&retry_after_seconds=1",
+    { waitUntil: "networkidle" },
+  );
+
+  const primary = page.getByTestId("auth-error-primary");
+  await expect(primary).toBeDisabled();
+  await expect(primary).toBeEnabled({ timeout: 3000 });
+  await primary.click();
+  await expect(page).toHaveURL(/\/login$/);
+
+  expect(errors).toEqual([]);
+});
+
+test("X-11 user_not_found stays neutral and its click actions navigate correctly", async ({
+  page,
+}) => {
+  const errors = collectErrors(page);
+
+  await page.goto(
+    "/auth/error?reason=user_not_found&email=deleted%40example.com",
+    {
+      waitUntil: "networkidle",
+    },
+  );
+
+  await expect(
+    page.getByTestId("auth-error-card-user_not_found"),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "이 링크로는 계속할 수 없어요" }),
+  ).toBeVisible();
+  await expect(page.getByText("deleted@example.com")).toHaveCount(0);
+  await expect(page.locator("#auth-error-email")).toHaveCount(0);
+  await expect(page.getByText(/계정은 더 이상 존재/)).toHaveCount(0);
+  await expect(page.getByText(/계정이 존재/)).toHaveCount(0);
+
+  await page.getByTestId("auth-error-primary").click();
+  await expect(page).toHaveURL(/\/sign-up$/);
+
+  await page.goto(
+    "/auth/error?reason=user_not_found&email=deleted%40example.com",
+    {
+      waitUntil: "networkidle",
+    },
+  );
+  await page.getByTestId("auth-error-secondary").click();
+  await expect(page).toHaveURL(/\/login$/);
+
+  await page.goto(
+    "/auth/error?reason=user_not_found&email=deleted%40example.com",
+    {
+      waitUntil: "networkidle",
+    },
+  );
+  const escapeLinks = page.getByTestId("auth-error-escape").getByRole("link");
+  await expect(escapeLinks).toHaveCount(1);
+  const homeEscapeLink = escapeLinks.first();
+  await expect(homeEscapeLink).toBeVisible();
+  await expect(homeEscapeLink).toHaveAttribute("href", "/");
+  await Promise.all([page.waitForURL(/\/$/), homeEscapeLink.click()]);
+
+  expect(errors).toEqual([]);
+});
+
+test("X-11 escape links do not duplicate primary or secondary destinations", async ({
+  page,
+}) => {
+  const errors = collectErrors(page);
+
+  await page.goto("/auth/error?reason=unknown", { waitUntil: "networkidle" });
+
+  const primaryHref = await page
+    .getByTestId("auth-error-primary")
+    .getAttribute("href");
+  const secondaryHref = await page
+    .getByTestId("auth-error-secondary")
+    .getAttribute("href")
+    .catch(() => null);
+  const escapeHrefs = await page
+    .getByTestId("auth-error-escape")
+    .getByRole("link")
+    .evaluateAll((links) =>
+      links.map((link) => link.getAttribute("href")).filter(Boolean),
+    );
+
+  expect(new Set(escapeHrefs).size).toBe(escapeHrefs.length);
+  expect(escapeHrefs).not.toContain(primaryHref);
+  if (secondaryHref) expect(escapeHrefs).not.toContain(secondaryHref);
+
+  await page
+    .getByTestId("auth-error-escape")
+    .getByRole("link", { name: "로그인" })
+    .click();
+  await expect(page).toHaveURL(/\/login$/);
+
+  await page.goto("/auth/error?reason=unknown", { waitUntil: "networkidle" });
+  await page
+    .getByTestId("auth-error-escape")
+    .getByRole("link", { name: "가입" })
+    .click();
+  await expect(page).toHaveURL(/\/sign-up$/);
 
   expect(errors).toEqual([]);
 });

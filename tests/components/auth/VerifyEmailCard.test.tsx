@@ -57,6 +57,27 @@ afterEach(() => {
 });
 
 describe("VerifyEmailCard", () => {
+  it("presents email verification as the primary task and keeps account actions secondary", () => {
+    renderInApp(<VerifyEmailCard />);
+
+    expect(
+      screen.getByRole("heading", { name: "인증 메일을 보냈어요" }),
+    ).toBeTruthy();
+    expect(
+      screen.getByText(
+        "가입 요청을 확인했어요. 새 계정이면 아래 이메일로 인증 메일이 도착해요. 메일의 링크를 눌러 가입을 마무리해주세요.",
+      ),
+    ).toBeTruthy();
+    expect(screen.getByText("가입 이메일:")).toBeTruthy();
+    expect(screen.getByText("u@example.com")).toBeTruthy();
+    expect(screen.getByLabelText("인증 메일을 받을 이메일")).toBeTruthy();
+    expect(
+      screen.getByTestId("verify-email-existing-account-actions"),
+    ).toBeTruthy();
+    expect(screen.queryByText(/이미 가입된 이메일/)).toBeNull();
+    expect(screen.queryByText(/계정이 존재/)).toBeNull();
+  });
+
   it("resends the verification email with the callback redirect URL", async () => {
     renderInApp(<VerifyEmailCard />);
 
@@ -75,7 +96,9 @@ describe("VerifyEmailCard", () => {
     );
     await waitFor(() => {
       expect(
-        screen.getByText("인증 메일을 다시 보냈어요. 받은편지함을 확인해주세요."),
+        screen.getByText(
+          "인증 메일을 다시 보냈어요. 받은편지함을 확인해주세요.",
+        ),
       ).toBeTruthy();
     });
   });

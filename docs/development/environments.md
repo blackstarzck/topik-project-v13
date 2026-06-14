@@ -78,7 +78,7 @@ flowchart LR
 | --- | --- | --- | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | dev URL | dev URL | **prod URL** | 브라우저에서 사용 → `NEXT_PUBLIC_` prefix 필수 |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | dev publishable | dev publishable | **prod publishable** | 안전한 공개 키 |
-| `NEXT_PUBLIC_SITE_URL` | `http://127.0.0.1:3000` | preview 도메인 | prod 도메인 | Supabase email/OAuth redirect URL 생성에 사용 |
+| `NEXT_PUBLIC_SITE_URL` | `http://127.0.0.1:3000` | preview 도메인 | prod 도메인 | Supabase email redirect URL 생성에 사용. dev 브라우저에서는 현재 local origin이 우선된다 |
 | `SUPABASE_SERVICE_ROLE_KEY` | dev Secret API key (`sb_secret_*`) | dev Secret API key | **prod Secret API key** | 서버 전용, 브라우저 노출 절대 X. 신규 발급은 Dashboard → Secret API Keys |
 | `SUPABASE_ENV_LABEL` | `local` (또는 `dev`) | `preview` | `prod` | audit 가드용 라벨 — 서버 전용 |
 | `SUPABASE_TEST_PASSWORD` | audit용 임시값 | (선택) | **NEVER SET** | audit 가짜 유저 4개 공유 비번. DB 비밀번호 아님 |
@@ -125,7 +125,7 @@ Dashboard에서 새 프로젝트 만들 때 체크리스트:
 | 4 | `supabase/migrations/` 전체 적용 | dev에서 검증된 순서로 |
 | 5 | RLS 정책 활성화 확인 | `private.is_*_admin()` 함수 + `admin_audit_logs` 트리거 |
 | 6 | pg_cron extension 활성화 | `cleanup_unconfirmed_users_daily` 등록 |
-| 7 | Email Template (signup / recovery / magic-link) prod 도메인으로 갱신 | `{{ .ConfirmationURL }}` → `https://prod-domain/auth/callback` |
+| 7 | Email Template (signup / magic-link / email-change) prod 도메인으로 갱신 | `{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=...` 링크 사용. recovery는 `/password-reset/confirm` 직행 |
 | 8 | Authentication → URL Configuration → Redirect URLs | prod 도메인의 `/auth/callback` 화이트리스트 |
 | 8-1 | Authentication → Providers → Google | Google provider 활성화. Google Cloud Authorized redirect URI는 `https://<project-ref>.supabase.co/auth/v1/callback`; Client Secret은 Supabase Dashboard/secret에만 저장 |
 | 9 | Custom SMTP 설정 | SendGrid / Resend / Postmark 등. built-in SMTP 2/hour는 운영 불가 |
@@ -354,7 +354,7 @@ IA 구현 검수가 어떤 키를 어디서 쓰는지:
 | Built-in SMTP 한도 도달 | Custom SMTP 즉시 전환 | 사용자에게 cooldown 안내, X-11 카운트다운 동작 확인 |
 | DB 용량 폭주 | Supabase Dashboard에서 plan upgrade 또는 데이터 archive | cleanup 정책 강화 |
 | Vercel 빌드 실패 (prod) | 이전 deployment로 promote | 실패 빌드 분석, 재배포 |
-| `NEXT_PUBLIC_SITE_URL` 도메인 변경 후 콜백 실패 | Supabase Dashboard Redirect URLs 화이트리스트 갱신 | 이메일 템플릿 `{{ .ConfirmationURL }}` 확인 |
+| `NEXT_PUBLIC_SITE_URL` 도메인 변경 후 콜백 실패 | Supabase Dashboard Redirect URLs 화이트리스트 갱신 | 이메일 템플릿이 `{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=...` 링크인지 확인 |
 
 ---
 
@@ -383,7 +383,7 @@ IA 구현 검수가 어떤 키를 어디서 쓰는지:
 [ ] 6. SUPABASE_ENV_LABEL=prod 명시
 [ ] 7. NEXT_PUBLIC_SITE_URL을 prod 도메인으로
 [ ] 8. Supabase Redirect URLs 화이트리스트 갱신
-[ ] 9. Email Template 도메인 확인
+[ ] 9. Email Template이 token_hash 기반 callback 링크인지 확인
 [ ] 10. 첫 prod 배포 (Vercel Promote)
 [ ] 11. Smoke test (§7.1 read-only audit)
 [ ] 12. 모니터링 알람 셋업

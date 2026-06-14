@@ -75,13 +75,16 @@ test("X-12 verify email resends through intercepted signup email and starts cool
     window.localStorage.removeItem("talkpik:verify-email:cooldown-until");
   });
 
-  await page.goto(
+  const response = await page.goto(
     `/auth/verify-email?email=${encodeURIComponent(VERIFY_EMAIL)}`,
     { waitUntil: "networkidle" },
   );
+  expect(response?.headers()["referrer-policy"]).toBe("no-referrer");
 
   await expect(page).toHaveURL(/\/auth\/verify-email/);
-  await expect(page.getByRole("heading").first()).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "인증 메일을 보냈어요" }),
+  ).toBeVisible();
   await expect(page.getByText(VERIFY_EMAIL)).toBeVisible();
   await expect(page.locator("#verify-email-input")).toHaveValue(VERIFY_EMAIL);
   await expect(page.getByTestId("verify-email-help")).toBeVisible();
@@ -98,13 +101,112 @@ test("X-12 verify email resends through intercepted signup email and starts cool
     email: VERIFY_EMAIL,
     type: "signup",
   });
-  expect(resendRequests[0].url.searchParams.get("redirect_to") ?? "").toContain(
-    "/auth/callback?next=/onboarding/learning-goal",
+  const redirectTo = new URL(
+    resendRequests[0].url.searchParams.get("redirect_to") ?? "",
   );
+  expect(redirectTo.origin).toBe(new URL(page.url()).origin);
+  expect(redirectTo.pathname).toBe("/auth/callback");
+  expect(redirectTo.searchParams.get("next")).toBe("/onboarding/learning-goal");
 
   await expect(page.getByTestId("verify-email-countdown")).toBeVisible();
   await expect(page.locator("#verify-email-input")).toBeDisabled();
   await expect(resend).toBeDisabled();
 
+  expect(errors).toEqual([]);
+});
+
+test("X-12 verify email blocks empty resend without a network request", async ({
+  page,
+}) => {
+  const errors = collectErrors(page);
+  const resendRequests = await mockVerifyEmailResend(page);
+
+  await page.addInitScript(() => {
+    window.localStorage.removeItem("talkpik:verify-email:cooldown-until");
+  });
+  await page.goto(
+    `/auth/verify-email?email=${encodeURIComponent(VERIFY_EMAIL)}`,
+    { waitUntil: "networkidle" },
+  );
+
+  await page.locator("#verify-email-input").fill("");
+  await page.getByTestId("verify-email-resend").click();
+
+  await expect(page.getByText("이메일을 입력해주세요.")).toBeVisible();
+  expect(resendRequests).toHaveLength(0);
+  expect(errors).toEqual([]);
+});
+
+test("X-12 verify email clickable actions navigate to the expected destinations", async ({
+  page,
+}) => {
+  const errors = collectErrors(page);
+
+  await page.goto(
+    `/auth/verify-email?email=${encodeURIComponent(VERIFY_EMAIL)}`,
+    { waitUntil: "networkidle" },
+  );
+
+  const popupPromise = page.waitForEvent("popup");
+  await page.getByTestId("verify-email-open-inbox").click();
+  const popup = await popupPromise;
+  await expect(popup).toHaveURL(/mail\.google\.com/);
+  await popup.close();
+
+  await page.getByTestId("verify-email-login").click();
+  await expect(page).toHaveURL(/\/login$/);
+
+  await page.goto(
+    `/auth/verify-email?email=${encodeURIComponent(VERIFY_EMAIL)}`,
+    { waitUntil: "networkidle" },
+  );
+  await page.getByTestId("verify-email-password-reset").click();
+  await expect(page).toHaveURL(/\/password-reset$/);
+
+  await page.goto(
+    `/auth/verify-email?email=${encodeURIComponent(VERIFY_EMAIL)}`,
+    { waitUntil: "networkidle" },
+  );
+  await page
+    .getByRole("link", { name: "다른 이메일로 가입하기", exact: true })
+    .click();
+  await expect(page).toHaveURL(/\/sign-up$/);
+
+  await page.goto(
+    `/auth/verify-email?email=${encodeURIComponent(VERIFY_EMAIL)}`,
+    { waitUntil: "networkidle" },
+  );
+  await page.getByRole("link", { name: "로그인 페이지로" }).click();
+  await expect(page).toHaveURL(/\/login$/);
+
+  await page.goto(
+    `/auth/verify-email?email=${encodeURIComponent(VERIFY_EMAIL)}`,
+    { waitUntil: "networkidle" },
+  );
+  await page
+    .getByRole("link", { name: "다른 이메일로 가입", exact: true })
+    .click();
+  await expect(page).toHaveURL(/\/sign-up$/);
+
+  await page.goto(
+    `/auth/verify-email?email=${encodeURIComponent(VERIFY_EMAIL)}`,
+    { waitUntil: "networkidle" },
+  );
+  await page.getByRole("link", { name: "홈으로" }).click();
+  await expect(page).toHaveURL(/\/$/);
+
+  expect(errors).toEqual([]);
+});
+
+test("X-12 verify email hides direct inbox link for unknown mail domains", async ({
+  page,
+}) => {
+  const errors = collectErrors(page);
+
+  await page.goto("/auth/verify-email?email=learner%40example.org", {
+    waitUntil: "networkidle",
+  });
+
+  await expect(page.getByTestId("verify-email-open-inbox")).toHaveCount(0);
   expect(errors).toEqual([]);
 });

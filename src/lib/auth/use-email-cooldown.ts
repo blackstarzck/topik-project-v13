@@ -7,10 +7,10 @@
 //
 // 보안 의도:
 // - localStorage timestamp 기반: 새로고침 / 탭 재방문에도 cooldown 유지 → 우회 차단.
-// - SSR-safe: window 가드 + 마운트 후 useEffect 에서 복원.
+// - SSR-safe: 서버/클라이언트 첫 렌더는 0으로 맞추고 마운트 후 useEffect 에서 복원.
 // - 백그라운드 탭 drift 보정: setInterval tick 마다 localStorage 의 until 으로 다시 계산.
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 
 export const DEFAULT_COOLDOWN_SECONDS = 60;
 
@@ -51,6 +51,49 @@ function clearStorage(storageKey: string): void {
   }
 }
 
+const cooldownSubscribers = new Map<string, Set<() => void>>();
+
+function notifyCooldownSubscribers(storageKey: string): void {
+  const subscribers = cooldownSubscribers.get(storageKey);
+  if (!subscribers) return;
+  subscribers.forEach((callback) => callback());
+}
+
+function subscribeCooldown(
+  storageKey: string,
+  onStoreChange: () => void,
+): () => void {
+  if (typeof window === "undefined") return () => undefined;
+
+  const subscribers = cooldownSubscribers.get(storageKey) ?? new Set();
+  subscribers.add(onStoreChange);
+  cooldownSubscribers.set(storageKey, subscribers);
+
+  const timer = window.setInterval(() => {
+    const fresh = readRemaining(storageKey);
+    if (fresh <= 0) {
+      clearStorage(storageKey);
+    }
+    onStoreChange();
+  }, 1000);
+
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key === storageKey) {
+      onStoreChange();
+    }
+  };
+  window.addEventListener("storage", handleStorage);
+
+  return () => {
+    window.clearInterval(timer);
+    window.removeEventListener("storage", handleStorage);
+    subscribers.delete(onStoreChange);
+    if (subscribers.size === 0) {
+      cooldownSubscribers.delete(storageKey);
+    }
+  };
+}
+
 // i18n: the hook intentionally exposes only the raw `remaining` seconds. The
 // display label ("5분 30초 후 다시 보낼 수 있어요") is locale-specific copy, so
 // the consuming component formats it via t() (auth.countdown.* + auth.cooldown.label).
@@ -65,37 +108,24 @@ export function useEmailCooldown(
   storageKey: string,
   defaultSeconds: number = DEFAULT_COOLDOWN_SECONDS,
 ): EmailCooldown {
-  const [remaining, setRemaining] = useState(() => readRemaining(storageKey));
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const subscribe = useCallback(
+    (onStoreChange: () => void) => subscribeCooldown(storageKey, onStoreChange),
+    [storageKey],
+  );
+  const getSnapshot = useCallback(
+    () => readRemaining(storageKey),
+    [storageKey],
+  );
+  const remaining = useSyncExternalStore(subscribe, getSnapshot, () => 0);
 
-  useEffect(() => {
-    if (remaining <= 0) {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-      clearStorage(storageKey);
-      return;
-    }
-    if (!timerRef.current) {
-      timerRef.current = setInterval(() => {
-        const fresh = readRemaining(storageKey);
-        setRemaining(fresh);
-      }, 1000);
-    }
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-    };
-  }, [remaining, storageKey]);
-
-  function start(seconds?: number): void {
-    const value = seconds ?? defaultSeconds;
-    writeStart(storageKey, value);
-    setRemaining(value);
-  }
+  const start = useCallback(
+    (seconds?: number): void => {
+      const value = seconds ?? defaultSeconds;
+      writeStart(storageKey, value);
+      notifyCooldownSubscribers(storageKey);
+    },
+    [defaultSeconds, storageKey],
+  );
 
   return { remaining, start };
 }

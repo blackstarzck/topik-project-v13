@@ -6,7 +6,7 @@
 //   resend with 60s cooldown and survives reloads/deep-links.
 
 import type { ChangeEvent } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -74,12 +74,14 @@ type SignUpFormProps = {
   onTypingChange?: (isTyping: boolean) => void;
   onPasswordChange?: (password: string) => void;
   onPasswordVisibilityChange?: (visible: boolean) => void;
+  onCooldownChange?: (isCoolingDown: boolean) => void;
 };
 
 export function SignUpForm({
   onTypingChange,
   onPasswordChange,
   onPasswordVisibilityChange,
+  onCooldownChange,
 }: SignUpFormProps = {}) {
   const t = useTranslations("auth.signUp");
   const tc = useTranslations("auth.countdown");
@@ -98,13 +100,18 @@ export function SignUpForm({
   // password-strength meter는 실시간으로 입력값을 추적해야 하므로 watch.
   const [passwordValue, setPasswordValue] = useState("");
   const [form] = Form.useForm<SignUpFields>();
+  const isCoolingDown = signUpCooldown.remaining > 0;
+
+  useEffect(() => {
+    onCooldownChange?.(isCoolingDown);
+  }, [isCoolingDown, onCooldownChange]);
 
   const countdownLabel = useMemo(() => {
-    if (signUpCooldown.remaining <= 0) return null;
+    if (!isCoolingDown) return null;
     return tcooldown("label", {
       label: formatCountdown(signUpCooldown.remaining, tc),
     });
-  }, [signUpCooldown.remaining, tc, tcooldown]);
+  }, [isCoolingDown, signUpCooldown.remaining, tc, tcooldown]);
 
   function handlePasswordChange(event: ChangeEvent<HTMLInputElement>) {
     const nextPassword = event.target.value;
@@ -113,7 +120,7 @@ export function SignUpForm({
   }
 
   async function handleSignUp(values: SignUpFields) {
-    if (signUpCooldown.remaining > 0) return;
+    if (isCoolingDown) return;
 
     setSafeGuidanceVisible(false);
     setSubmitting(true);
@@ -360,7 +367,7 @@ export function SignUpForm({
             type="primary"
             htmlType="submit"
             block
-            disabled={signUpCooldown.remaining > 0}
+            disabled={isCoolingDown}
             loading={submitting}
             icon={<ArrowRight size={16} aria-hidden="true" />}
             iconPlacement="end"

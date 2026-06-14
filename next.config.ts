@@ -46,6 +46,15 @@ const nextConfig: NextConfig = {
     }
     rules.push(
       {
+        source: "/auth/:path*",
+        headers: [
+          {
+            key: "Referrer-Policy",
+            value: "no-referrer",
+          },
+        ],
+      },
+      {
         source: "/icon.svg",
         headers: [
           {

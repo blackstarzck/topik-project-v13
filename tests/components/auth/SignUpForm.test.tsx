@@ -243,6 +243,14 @@ describe("SignUpForm", () => {
       expect(screen.getByTestId("sign-up-safe-guidance")).toBeTruthy();
     });
     expect(
+      screen.getByText(
+        "이 이메일로 바로 새 가입을 계속할 수 없어요. 이미 계정을 만든 적이 있다면 로그인하거나 비밀번호를 재설정해 주세요.",
+      ),
+    ).toBeTruthy();
+    expect(screen.queryByText("User already registered")).toBeNull();
+    expect(screen.queryByText(/이미 가입된 이메일/)).toBeNull();
+    expect(screen.queryByText(/계정이 존재/)).toBeNull();
+    expect(
       screen.getByTestId("sign-up-safe-guidance-login").getAttribute("href"),
     ).toBe("/login");
     expect(
@@ -252,6 +260,7 @@ describe("SignUpForm", () => {
   });
 
   it("starts a signup cooldown for rate-limited signup responses", async () => {
+    const onCooldownChange = vi.fn();
     signUpMock.mockResolvedValueOnce({
       data: { session: null, user: null },
       error: {
@@ -260,7 +269,7 @@ describe("SignUpForm", () => {
         status: 429,
       },
     });
-    renderInApp(<SignUpForm />);
+    renderInApp(<SignUpForm onCooldownChange={onCooldownChange} />);
 
     fillValidSignUpForm("limited@example.com");
 
@@ -272,12 +281,32 @@ describe("SignUpForm", () => {
       expect(screen.getByTestId("sign-up-countdown")).toBeTruthy();
     });
     expect(submitButton().disabled).toBe(true);
+    expect(submitButton().textContent).toContain("회원가입");
+    expect(onCooldownChange).toHaveBeenLastCalledWith(true);
 
     await act(async () => {
       fireEvent.click(submitButton());
     });
     expect(signUpMock).toHaveBeenCalledTimes(1);
     expect(pushMock).not.toHaveBeenCalled();
+  });
+
+  it("restores the signup cooldown from localStorage after a reload", async () => {
+    const onCooldownChange = vi.fn();
+    window.localStorage.setItem(
+      "talkpik:sign-up:cooldown-until",
+      String(Date.now() + 43_000),
+    );
+
+    renderInApp(<SignUpForm onCooldownChange={onCooldownChange} />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("sign-up-countdown")).toBeTruthy();
+    });
+    expect(submitButton().disabled).toBe(true);
+    expect(submitButton().textContent).toContain("회원가입");
+    expect(onCooldownChange).toHaveBeenLastCalledWith(true);
+    expect(signUpMock).not.toHaveBeenCalled();
   });
 
   it("clears loading and shows an error when the redirect URL builder throws (D-2)", async () => {

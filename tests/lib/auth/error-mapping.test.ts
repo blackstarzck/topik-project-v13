@@ -36,6 +36,12 @@ describe("mapSupabaseErrorCode", () => {
     expect(mapSupabaseErrorCode(null)).toBe("unknown");
     expect(mapSupabaseErrorCode(undefined)).toBe("unknown");
   });
+
+  it("maps Supabase PKCE code-verifier storage failures to bad_code_verifier", () => {
+    expect(mapSupabaseErrorCode("pkce_code_verifier_not_found")).toBe(
+      "bad_code_verifier",
+    );
+  });
 });
 
 describe("isValidReason", () => {
