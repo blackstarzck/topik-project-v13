@@ -347,9 +347,9 @@
       "emailRequired": "Vui lòng nhập email",
       "emailInvalid": "Định dạng email không hợp lệ",
       "emailMax": "Email không được vượt quá 80 ký tự",
-      "emailDuplicate": "Chúng tôi đã nhận yêu cầu đăng ký. Bạn cũng có thể thử đăng nhập hoặc đặt lại mật khẩu.",
+      "emailDuplicate": "Hiện chưa thể tiếp tục tạo tài khoản mới bằng email này. Bạn cũng có thể thử đăng nhập hoặc đặt lại mật khẩu.",
       "accountCheckTitle": "Chúng tôi đã nhận yêu cầu đăng ký",
-      "accountCheckDescription": "Nếu đây là tài khoản mới, email xác minh sẽ được gửi đến. Nếu bạn đã có tài khoản, vui lòng đăng nhập hoặc đặt lại mật khẩu.",
+      "accountCheckDescription": "Hiện chưa thể tiếp tục tạo tài khoản mới bằng email này. Nếu bạn từng tạo tài khoản trước đây, hãy đăng nhập hoặc đặt lại mật khẩu.",
       "accountCheckLogin": "Đăng nhập",
       "accountCheckReset": "Đặt lại mật khẩu",
       "rateLimitedTitle": "Đã gửi quá nhiều email",
@@ -437,18 +437,18 @@
       "metaTitle": "Xác minh email — TALKPIK",
       "srHeading": "Xác minh email",
       "mascotAlt": "Nhân vật trợ lý học tập TALKPIK",
-      "title": "Kiểm tra email hoặc đăng nhập",
-      "body": "Chúng tôi đã nhận yêu cầu đăng ký. Nếu đây là tài khoản mới, email xác minh sẽ được gửi đến. Nếu bạn đã có tài khoản, email xác minh mới có thể không được gửi.",
-      "existingAccountNote": "Nếu bạn đã có tài khoản, vui lòng đăng nhập hoặc đặt lại mật khẩu.",
+      "title": "Chúng tôi đã gửi email xác minh",
+      "body": "Chúng tôi đã nhận yêu cầu đăng ký. Nếu đây là tài khoản mới, email xác minh sẽ được gửi đến email bên dưới. Hãy mở liên kết trong email để hoàn tất đăng ký.",
+      "existingAccountNote": "Nếu bạn từng tạo tài khoản trước đây, hãy đăng nhập hoặc đặt lại mật khẩu.",
       "loginCta": "Đăng nhập",
       "passwordResetCta": "Đặt lại mật khẩu",
       "frequentNote": "Nếu email được gửi quá thường xuyên, vui lòng thử lại sau vài phút.",
       "signupEmailPrefix": "Email đăng ký:",
-      "resendOtherLabel": "Để gửi lại đến email khác",
+      "resendOtherLabel": "Email để nhận email xác minh",
       "emailPlaceholder": "Nhập email bạn đã đăng ký",
       "resend": "Gửi lại email xác minh",
       "noEmailHeading": "Bạn chưa nhận được email?",
-      "noEmailBody": "Email có thể mất 1–2 phút để đến. Trước tiên hãy kiểm tra thư mục spam (thư rác).",
+      "noEmailBody": "Email có thể mất 1–2 phút để đến. Hãy kiểm tra thư mục spam hoặc quảng cáo.",
       "openInbox": "Mở hộp thư đến",
       "signUpDifferentEmail": "Đăng ký bằng email khác",
       "escapeToLogin": "Tới trang đăng nhập",
@@ -495,16 +495,16 @@
       "bad_code_verifier": {
         "title": "Xác minh bảo mật thất bại",
         "message": "Vui lòng hoàn tất quá trình trong cùng trình duyệt mà bạn đã bắt đầu xác minh.",
-        "primaryLabel": "Bắt đầu lại"
+        "primaryLabel": "Thử lại từ đăng nhập"
       },
       "user_not_found": {
-        "title": "Tài khoản này không còn tồn tại",
-        "message": "Các tài khoản không hoạt động lâu sẽ được tự động dọn dẹp. Chỉ cần đăng ký lại là bạn có thể sử dụng ngay.",
+        "title": "Không thể tiếp tục bằng liên kết này",
+        "message": "Hãy bắt đầu lại từ trang đăng ký hoặc quay lại trang đăng nhập.",
         "primaryLabel": "Đăng ký lại",
         "secondaryLabel": "Đăng nhập"
       },
       "over_email_send_rate_limit": {
-        "title": "Đã gửi quá nhiều email",
+        "title": "Bạn có thể thử lại sau ít phút",
         "message": "Vui lòng thử lại sau ít phút. Bạn có thể gửi lại khi thời gian còn lại kết thúc.",
         "primaryLabel": "Thử lại sau ít phút"
       },
@@ -514,7 +514,7 @@
         "primaryLabel": "Thử lại sau ít phút"
       },
       "email_not_confirmed": {
-        "title": "Email của bạn vẫn chưa được xác minh",
+        "title": "Cần xác minh email",
         "message": "Vui lòng kiểm tra hộp thư đến để tìm email xác minh. Nếu không thấy, bạn có thể gửi lại.",
         "primaryLabel": "Gửi lại email xác minh",
         "secondaryLabel": "Đăng nhập"

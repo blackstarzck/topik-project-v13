@@ -188,7 +188,7 @@ flowchart TD
   X17 -->|"fragment 실패/unknown"| X11
   CB -->|"토큰 교환 실패"| X11
 
-  X11 -. "user_not_found → 다시 가입" .-> A01
+  X11 -. "user_not_found → 중립 안내 후 다시 가입" .-> A01
   X11 -. "otp_expired / email_not_confirmed → 재전송" .-> X12
   X11 -. "flow_state_* / bad_code_verifier → 다시 시도" .-> A02
   X11 -. "Retry-After 카운트다운 후 자동 활성" .-> X11
@@ -205,9 +205,9 @@ flowchart TD
 | --- | --- | --- | --- |
 | 1 | 정상 가입 직후 30분 안에 메일 클릭 | `verifyOtp` success | `next` 또는 `/dashboard`로 redirect |
 | 2 | 24h 토큰 만료 후 클릭 | `error.code = otp_expired` | X-11에서 "다시 인증 메일 받기" 안내 (이메일 prefill, 60초 cooldown) |
-| 3 | 30일 미인증 cleanup 후 옛 링크 클릭 | `error.code = user_not_found` | X-11에서 "다시 가입하기" primary CTA → A-01 |
+| 3 | 30일 미인증 cleanup 후 옛 링크 클릭 | `error.code = user_not_found` | X-11에서 "이 링크로는 계속할 수 없어요" 중립 안내 + "다시 가입하기" primary CTA → A-01 |
 | 4 | 같은 메일 60초 이내 재전송 시도 | `error.code = over_email_send_rate_limit` + `Retry-After` 헤더 | X-11에서 `retry_after_seconds` 카운트다운, 다 끝나면 CTA 자동 활성 |
-| 5 | 다른 브라우저/기기에서 PKCE 토큰 검증 시도 | `error.code = bad_code_verifier` 또는 `flow_state_not_found` | X-11에서 "처음부터 다시" 안내, A-02 로그인으로 secondary |
+| 5 | 다른 브라우저/기기에서 PKCE 토큰 검증 시도 | `error.code = bad_code_verifier` 또는 `flow_state_not_found` | X-11에서 "처음부터 다시" 안내, A-02 로그인으로 secondary. signup/magic-link/email-change 메일 템플릿은 `token_hash` callback 형식으로 구성해 이 케이스를 줄인다 |
 | 6 | Google OAuth callback 성공 | `exchangeCodeForSession` success | `/auth/post-auth`에서 약관 동의 누락 시 `/auth/consent`, 학습 목표 누락 시 A-03, 모두 있으면 B-01 |
 
 세션 만료(in-app JWT expiry)는 미들웨어에서 잡혀 `/login?reason=session_expired`로 친절 redirect한다. X-11/X-12를 거치지 않는다.

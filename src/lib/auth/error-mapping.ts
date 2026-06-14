@@ -36,6 +36,7 @@ const SUPPORTED_REASONS = new Set<AuthErrorReason>([
 
 export function mapSupabaseErrorCode(code: string | null | undefined): AuthErrorReason {
   if (!code) return "unknown";
+  if (code === "pkce_code_verifier_not_found") return "bad_code_verifier";
   return SUPPORTED_REASONS.has(code as AuthErrorReason)
     ? (code as AuthErrorReason)
     : "unknown";

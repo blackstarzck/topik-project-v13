@@ -347,9 +347,9 @@
       "emailRequired": "이메일을 입력하세요",
       "emailInvalid": "올바른 이메일 형식이 아닙니다",
       "emailMax": "이메일은 80자 이하여야 합니다",
-      "emailDuplicate": "가입 요청을 확인했어요. 로그인하거나 비밀번호 재설정을 이용해볼 수도 있어요.",
+      "emailDuplicate": "이 이메일로 바로 새 가입을 계속할 수 없어요. 로그인하거나 비밀번호 재설정을 이용해볼 수도 있어요.",
       "accountCheckTitle": "가입 요청을 확인했어요",
-      "accountCheckDescription": "새 계정이면 인증 메일이 도착해요. 이미 계정이 있다면 로그인하거나 비밀번호 재설정을 이용해주세요.",
+      "accountCheckDescription": "이 이메일로 바로 새 가입을 계속할 수 없어요. 이미 계정을 만든 적이 있다면 로그인하거나 비밀번호를 재설정해 주세요.",
       "accountCheckLogin": "로그인하기",
       "accountCheckReset": "비밀번호 재설정",
       "rateLimitedTitle": "메일을 너무 많이 보냈어요",
@@ -437,18 +437,18 @@
       "metaTitle": "이메일 인증 — TALKPIK",
       "srHeading": "이메일 인증",
       "mascotAlt": "TALKPIK 학습 도우미 캐릭터",
-      "title": "이메일을 확인하거나 로그인해주세요",
-      "body": "가입 요청을 확인했어요. 새 계정이면 인증 메일이 도착해요. 이미 계정이 있다면 새 인증 메일이 오지 않을 수 있어요.",
-      "existingAccountNote": "이미 계정이 있다면 로그인하거나 비밀번호 재설정을 이용해주세요.",
+      "title": "인증 메일을 보냈어요",
+      "body": "가입 요청을 확인했어요. 새 계정이면 아래 이메일로 인증 메일이 도착해요. 메일의 링크를 눌러 가입을 마무리해주세요.",
+      "existingAccountNote": "이미 계정을 만든 적이 있다면 로그인하거나 비밀번호를 재설정해 주세요.",
       "loginCta": "로그인하기",
       "passwordResetCta": "비밀번호 재설정",
       "frequentNote": "메일이 자주 발송되면 몇 분 후 다시 시도해주세요.",
       "signupEmailPrefix": "가입 이메일:",
-      "resendOtherLabel": "다른 이메일로 다시 보내려면",
+      "resendOtherLabel": "인증 메일을 받을 이메일",
       "emailPlaceholder": "가입한 이메일을 입력해주세요",
       "resend": "인증 메일 다시 보내기",
-      "noEmailHeading": "이메일이 안 왔나요?",
-      "noEmailBody": "메일이 도착하기까지 1~2분 걸릴 수 있어요. 먼저 스팸함(정크 메일함)을 확인해주세요.",
+      "noEmailHeading": "메일이 안 왔나요?",
+      "noEmailBody": "도착까지 1~2분 걸릴 수 있어요. 스팸함이나 프로모션함을 확인해주세요.",
       "openInbox": "받은편지함 열기",
       "signUpDifferentEmail": "다른 이메일로 가입하기",
       "escapeToLogin": "로그인 페이지로",
@@ -495,16 +495,16 @@
       "bad_code_verifier": {
         "title": "보안 검증에 실패했어요",
         "message": "처음 인증을 시작한 브라우저에서 끝까지 진행해주세요.",
-        "primaryLabel": "처음부터 다시"
+        "primaryLabel": "로그인부터 다시 시도하기"
       },
       "user_not_found": {
-        "title": "이 계정은 더 이상 존재하지 않아요",
-        "message": "오래 비활성화된 계정은 자동으로 정리됐어요. 다시 가입하시면 바로 사용할 수 있어요.",
+        "title": "이 링크로는 계속할 수 없어요",
+        "message": "가입부터 다시 시도하거나 로그인 페이지로 돌아가 주세요.",
         "primaryLabel": "다시 가입하기",
         "secondaryLabel": "로그인하기"
       },
       "over_email_send_rate_limit": {
-        "title": "메일을 너무 많이 보냈어요",
+        "title": "잠시 후 다시 시도할 수 있어요",
         "message": "잠시 후 다시 시도해주세요. 남은 시간이 끝나면 자동으로 다시 보낼 수 있어요.",
         "primaryLabel": "잠시 후 다시 시도"
       },
@@ -514,7 +514,7 @@
         "primaryLabel": "잠시 후 다시 시도"
       },
       "email_not_confirmed": {
-        "title": "이메일 인증이 아직 완료되지 않았어요",
+        "title": "이메일 확인이 필요해요",
         "message": "받은편지함에서 인증 메일을 확인해주세요. 메일이 보이지 않으면 다시 받을 수 있어요.",
         "primaryLabel": "인증 메일 다시 받기",
         "secondaryLabel": "로그인하기"

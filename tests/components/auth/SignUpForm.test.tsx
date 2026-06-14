@@ -243,6 +243,14 @@ describe("SignUpForm", () => {
       expect(screen.getByTestId("sign-up-safe-guidance")).toBeTruthy();
     });
     expect(
+      screen.getByText(
+        "이 이메일로 바로 새 가입을 계속할 수 없어요. 이미 계정을 만든 적이 있다면 로그인하거나 비밀번호를 재설정해 주세요.",
+      ),
+    ).toBeTruthy();
+    expect(screen.queryByText("User already registered")).toBeNull();
+    expect(screen.queryByText(/이미 가입된 이메일/)).toBeNull();
+    expect(screen.queryByText(/계정이 존재/)).toBeNull();
+    expect(
       screen.getByTestId("sign-up-safe-guidance-login").getAttribute("href"),
     ).toBe("/login");
     expect(

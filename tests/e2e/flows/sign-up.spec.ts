@@ -241,9 +241,14 @@ test.describe("A-01 sign-up functional flow", () => {
       email: VALID_EMAIL,
       password: VALID_PASSWORD,
     });
-    expect(
+    const redirectTo = new URL(
       signUpRequests[0].url.searchParams.get("redirect_to") ?? "",
-    ).toContain("/auth/callback?next=/onboarding/learning-goal");
+    );
+    expect(redirectTo.origin).toBe(new URL(page.url()).origin);
+    expect(redirectTo.pathname).toBe("/auth/callback");
+    expect(redirectTo.searchParams.get("next")).toBe(
+      "/onboarding/learning-goal",
+    );
     expect(errors).toEqual([]);
   });
 
@@ -310,6 +315,13 @@ test.describe("A-01 sign-up functional flow", () => {
     await clickSubmit(page);
 
     await expect(page.getByTestId("sign-up-safe-guidance")).toBeVisible();
+    await expect(page.getByText("User already registered")).toHaveCount(0);
+    await expect(page.getByText(/이미 가입된 이메일/)).toHaveCount(0);
+    await expect(page.getByText(/계정이 존재/)).toHaveCount(0);
+    expect(page.url()).not.toContain("duplicate");
+    expect(page.url()).not.toContain("exists");
+    expect(page.url()).not.toContain("reason");
+    expect(page.url()).not.toContain("user_not_found");
     await expect(
       page.getByTestId("sign-up-safe-guidance-login"),
     ).toHaveAttribute("href", "/login");
@@ -318,6 +330,18 @@ test.describe("A-01 sign-up functional flow", () => {
     ).toHaveAttribute("href", "/password-reset");
     await expect(page).toHaveURL(/\/sign-up/);
     expect(signUpRequests).toHaveLength(1);
+
+    await page.getByTestId("sign-up-safe-guidance-login").click();
+    await expect(page).toHaveURL(/\/login$/);
+
+    await openSignUp(page);
+    await fillSignUpForm(page);
+    await clickSubmit(page);
+    await expect(page.getByTestId("sign-up-safe-guidance")).toBeVisible();
+    await page.getByTestId("sign-up-safe-guidance-reset").click();
+    await expect(page).toHaveURL(/\/password-reset$/);
+
+    expect(signUpRequests).toHaveLength(2);
     expect(errors).toEqual([]);
   });
 

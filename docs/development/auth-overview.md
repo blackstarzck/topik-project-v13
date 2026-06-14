@@ -92,7 +92,7 @@ flowchart TD
 | [`src/lib/auth/profile.ts`](../../src/lib/auth/profile.ts) | `getCurrentProfile()`, `bootstrapProfile()`, `requireRole()`, `getSessionAndProfile()` |
 | [`src/lib/auth/roles.ts`](../../src/lib/auth/roles.ts) | `AppRole` 타입 + `ADMIN_ROLES` 상수 (client-safe) |
 | [`src/lib/auth/error-mapping.ts`](../../src/lib/auth/error-mapping.ts) | Supabase `error.code` → canonical `reason` 매핑, 메시지/CTA 테이블, `sanitizeNext`, `sanitizeRetryAfterSeconds`, `parseAuthFragment` |
-| [`src/lib/auth/redirect-url.ts`](../../src/lib/auth/redirect-url.ts) | `buildAuthRedirectUrl()`, `buildAuthCallbackUrl()` — 항상 절대 URL, dev는 `http://127.0.0.1:3000`, prod는 `NEXT_PUBLIC_SITE_URL` 필수 |
+| [`src/lib/auth/redirect-url.ts`](../../src/lib/auth/redirect-url.ts) | `buildAuthRedirectUrl()`, `buildAuthCallbackUrl()` — 항상 절대 URL. dev 브라우저에서는 현재 local origin(`localhost`/`127.0.0.1`)을 우선 사용하고, 서버/비브라우저 dev는 `http://127.0.0.1:3000` fallback. prod는 `NEXT_PUBLIC_SITE_URL` 필수 |
 | [`src/lib/auth/oauth.ts`](../../src/lib/auth/oauth.ts) | 클라이언트 Google OAuth 시작. `signInWithOAuth({ provider: "google", options: { redirectTo } })`. PKCE code verifier가 origin별 저장소에 묶이므로 `redirectTo`는 현재 브라우저 `window.location.origin` 기준으로 만든다. |
 | [`src/lib/legal/consent.ts`](../../src/lib/legal/consent.ts) | 최신 required legal document 조회, 누락 동의 계산/기록, OAuth display_name 보강 |
 | [`src/proxy.ts`](../../src/proxy.ts) | Next.js middleware. 비공개 라우트 anon 접근 시 `/login` 으로 redirect. 만료 세션 쿠키 있으면 `?reason=session_expired` |
@@ -119,7 +119,7 @@ flowchart TD
 - `supabase.auth.signUp()` 결과가 `error === null`이면 `user` 값이 없어도 `/auth/verify-email?email=...`로 이동한다. Supabase가 계정 존재 여부를 숨기기 위해 흐린 응답을 줄 수 있기 때문이다.
 - Supabase가 명시적인 중복 이메일 계열 에러를 주면 `/sign-up`에 머물고, “로그인하기”와 “비밀번호 재설정” CTA가 있는 보안-safe 안내를 보여준다.
 - `over_email_send_rate_limit`, `over_request_rate_limit`, HTTP `429`는 회원가입 전용 60초 쿨다운으로 처리한다. 저장 키는 `talkpik:sign-up:cooldown-until`이며, 쿨다운 중에는 submit만 막고 이메일 입력은 열어둔다.
-- X-12(`/auth/verify-email`)는 새 계정이면 인증 메일을 확인하고, 이미 계정이 있다면 로그인 또는 비밀번호 재설정을 이용하라고 안내한다.
+- X-12(`/auth/verify-email`)는 "인증 메일을 보냈어요"를 주 안내로 두고, 재전송/받은편지함 확인을 먼저 제공한다. 이미 계정을 만든 적이 있는 사용자를 위한 로그인/비밀번호 재설정 CTA는 하단 보조 영역으로 제공하되, 계정 존재 여부를 확정하는 문구는 사용하지 않는다.
 
 ### 4.2 로그인 (A-02 → 대시보드 / 관리자)
 
@@ -172,6 +172,7 @@ callback URL을 다시 밟으면 code 교환은 실패할 수 있다. 이때 서
 - 화면 메시지·CTA·이메일 prefill 여부·카운트다운 여부 전부 [`error-mapping.ts:REASON_CONTENT`](../../src/lib/auth/error-mapping.ts) 한 곳에서 관리
 - raw Supabase `error_description` 은 **절대 UI/URL 노출 금지** — 서버 로그(`console.error`)에만 남긴다
 - `retry_after_seconds` 는 1\~86400 정수만 통과 (`sanitizeRetryAfterSeconds`)
+- `/auth/:path*` 응답은 `Referrer-Policy: no-referrer` 헤더를 사용한다. `/auth/verify-email?email=...`처럼 이메일이 query에 들어가는 화면에서 외부 링크 이동 시 referrer로 이메일이 새지 않게 하기 위함이다.
 
 ---
 
@@ -183,10 +184,10 @@ callback URL을 다시 밟으면 code 교환은 실패할 수 있다. 이때 서
 | `flow_state_expired` | 인증 절차가 만료됐어요 | 다시 시도하기 (login) | 로그인하기 | X | X |
 | `flow_state_not_found` | 인증 요청을 찾을 수 없어요 | 다시 시도하기 (login) | 도움말 | X | X |
 | `bad_code_verifier` | 보안 검증에 실패했어요 | 처음부터 다시 (login) | — | X | X |
-| `user_not_found` | 이 계정은 더 이상 존재하지 않아요 | 다시 가입하기 (signup) | 로그인하기 | X | X |
-| `over_email_send_rate_limit` | 메일을 너무 많이 보냈어요 | 잠시 후 다시 시도 (resend) | — | O | **O** |
+| `user_not_found` | 이 링크로는 계속할 수 없어요 | 다시 가입하기 (signup) | 로그인하기 | X | X |
+| `over_email_send_rate_limit` | 잠시 후 다시 시도할 수 있어요 | 잠시 후 다시 시도 (resend) | — | O | **O** |
 | `over_request_rate_limit` | 요청이 너무 많아요 | 잠시 후 다시 시도 (retry) | — | X | **O** |
-| `email_not_confirmed` | 이메일 인증이 아직 완료되지 않았어요 | 인증 메일 다시 받기 (resend) | 로그인하기 | O | X |
+| `email_not_confirmed` | 이메일 확인이 필요해요 | 인증 메일 다시 받기 (resend) | 로그인하기 | O | X |
 | `signup_disabled` | 현재 신규 가입이 일시 중단됐어요 | 홈으로 | — | X | X |
 | `access_denied` | 인증이 거부됐어요 | 다시 가입하기 (signup) | 로그인하기 | X | X |
 | `unknown` | 처리 중 문제가 생겼어요 | 홈으로 | 도움말 | X | X |
@@ -250,7 +251,7 @@ callback URL을 다시 밟으면 code 교환은 실패할 수 있다. 이때 서
 | --- | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | 브라우저 노출 | Supabase 프로젝트 URL |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | 브라우저 노출 | publishable(=anon) key. **절대 service-role 넣지 말 것** |
-| `NEXT_PUBLIC_SITE_URL` | 브라우저 노출 | `buildAuthRedirectUrl()` 이 사용. dev 외 환경에서는 **필수** — [`redirect-url.ts:29-35`](../../src/lib/auth/redirect-url.ts) 가 미설정 시 throw. `https://...` 만 허용 (`javascript:`, `data:` 등 차단). `.env.example` 의 `# --- Browser-visible (publishable) ---` 섹션에 등재. |
+| `NEXT_PUBLIC_SITE_URL` | 브라우저 노출 | `buildAuthRedirectUrl()` 이 사용. dev 외 환경에서는 **필수** — 미설정 시 throw. dev 브라우저에서는 PKCE origin mismatch를 줄이기 위해 현재 local origin을 우선 사용한다. `https://...` 만 허용 (`javascript:`, `data:` 등 차단). `.env.example` 의 `# --- Browser-visible (publishable) ---` 섹션에 등재. |
 | `SUPABASE_SERVICE_ROLE_KEY` | 서버 전용 | Phase 6 admin 작업에서만 필요. Vercel/CI 시크릿으로만 |
 | `ACCESS_TOKEN` | 서버 전용 | Supabase CLI 용 PAT |
 
@@ -258,7 +259,11 @@ callback URL을 다시 밟으면 code 교환은 실패할 수 있다. 이때 서
 
 - **Authentication → URL Configuration → Redirect URLs**: local, preview, production origin 각각의 `/auth/callback` 을 등록. Google OAuth도 이 callback만 사용한다.
 - **Authentication → Providers → Google**: Google provider 활성화. Google Cloud OAuth의 Authorized redirect URI는 `https://<project-ref>.supabase.co/auth/v1/callback`. Google Client Secret은 코드와 `.env.example`에 넣지 않고 Supabase Dashboard 또는 local Supabase secret으로만 관리한다. scope는 기본 `openid email profile`만 사용한다.
-- **Authentication → Email Templates**: confirm/magic link (signup·email_change·magiclink) 의 `{{ .ConfirmationURL }}` 이 `/auth/callback?token_hash=...&type=...` 형식인지 확인 (Supabase 기본값이 일치). **단 recovery (비밀번호 재설정) 는 §4.3 에 따라 `/password-reset/confirm` 직행 — `redirectTo` 가 callback 을 우회**
+- **Authentication → Email Templates**: confirm signup / magic link / email change 는 서버 콜백이 읽을 수 있는 `token_hash` 링크로 구성한다. `{{ .ConfirmationURL }}` 그대로 사용하면 Supabase verify endpoint 또는 PKCE/fragment 흐름으로 빠질 수 있어, 다른 브라우저/메일앱에서 열 때 `bad_code_verifier`가 날 수 있다. 이 앱의 `emailRedirectTo`는 이미 `/auth/callback?next=...` query를 포함하므로 `{{ .RedirectTo }}` 뒤에 `&token_hash=...&type=...` 를 붙인다. 권장 형식:
+  - Confirm signup: `<a href="{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=signup">Confirm email</a>`
+  - Magic link: `<a href="{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=email">Sign in</a>`
+  - Email change: `<a href="{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=email_change">Confirm email</a>`
+  - **Recovery (비밀번호 재설정)** 는 §4.3 에 따라 `/password-reset/confirm` 직행 — `redirectTo` 가 callback 을 우회
 - **Database → Extensions → pg_cron**: cleanup job 가동을 위해 활성화 필요
 - **Authentication → Providers → Email**: confirm email 켜져 있어야 cleanup 정책이 의미 있음
 
@@ -299,7 +304,7 @@ callback URL을 다시 밟으면 code 교환은 실패할 수 있다. 이때 서
 ### Q2. 가입 후 30일이 지난 옛 인증 메일을 사용자가 클릭하면?
 
 - 응답: `error.code = user_not_found` → `/auth/error?reason=user_not_found`
-- 화면: "이 계정은 더 이상 존재하지 않아요. 오래 비활성화된 계정은 자동으로 정리됐어요. 다시 가입하시면 바로 사용할 수 있어요."
+- 화면: "이 링크로는 계속할 수 없어요. 가입부터 다시 시도하거나 로그인 페이지로 돌아가 주세요."
 - 주요 CTA: **다시 가입하기** → `/sign-up`
 
 ### Q3. 한 사용자에게 platform_admin 권한 부여하려면?
@@ -310,9 +315,11 @@ callback URL을 다시 밟으면 code 교환은 실패할 수 있다. 이때 서
 
 ### Q4. 인증 콜백이 `/auth/error?reason=bad_code_verifier` 로 자꾸 가는데?
 
-- PKCE 토큰 검증 실패 — **인증을 시작한 브라우저와 메일 링크를 클릭한 브라우저가 다른 경우** 가 대표 원인
-- 사용자에게 "처음 시작한 브라우저에서 끝까지 진행해주세요" 안내 (이미 X-11 메시지에 포함)
-- 백엔드 조치 불필요 — 사용자 행동 이슈
+- 의미: 회원가입 row 생성은 성공했지만, 메일 링크를 세션으로 교환하는 콜백 단계에서 PKCE 확인값을 찾지 못했다.
+- 대표 원인 1: 인증을 시작한 브라우저와 메일 링크를 클릭한 브라우저가 다르다. 예: Codex 내부 브라우저에서 가입 시작 후 Chrome/Naver 메일에서 링크 클릭.
+- 대표 원인 2: local dev에서 `localhost:3000`으로 시작했는데 redirect URL은 `127.0.0.1:3000`으로 생성된다. 두 origin은 브라우저 저장소가 다르다.
+- 코드 조치: dev 브라우저의 `buildAuthRedirectUrl()` 은 현재 local origin을 우선 사용해 `localhost`/`127.0.0.1` mismatch를 줄인다.
+- 운영/설정 조치: Supabase Email Template의 signup/magic-link/email-change 링크는 `{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=...` 형식이어야 한다. 이 방식은 서버가 `verifyOtp()`로 세션을 만들 수 있어, 사용자가 메일앱이나 다른 브라우저에서 링크를 열어도 PKCE localStorage에 덜 의존한다.
 
 ### Q5. 세션 자동 로그아웃 주기는?
 

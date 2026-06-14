@@ -49,7 +49,7 @@
 
 ▣ 설명
 
-• 사유별 우선 행동. `otp_expired`/`email_not_confirmed` → 인증 메일 재전송. `user_not_found` → 다시 가입하기. `flow_state_*` → 다시 시도. `over_*_rate_limit` → 카운트다운 후 자동 활성.
+• 사유별 우선 행동. `otp_expired`/`email_not_confirmed` → 인증 메일 재전송. `user_not_found` → 중립 문구와 함께 다시 가입하기. `flow_state_*` → 다시 시도. `over_*_rate_limit` → 카운트다운 후 자동 활성.
 
 ▣ 제약 조건: 한 화면당 primary CTA 1개 + secondary 1개 이하. 중복 제출 차단.
 
@@ -103,7 +103,7 @@
 
 피드백
 
-사유별 메시지 + 주요 CTA + Retry-After 카운트다운 + (필요 시) 이메일 입력.
+사유별 메시지 + 주요 CTA + Retry-After 카운트다운 + (필요 시) 이메일 입력. `user_not_found`는 이메일 query가 있어도 이메일을 표시하지 않고, 계정 존재/부재를 직접 단정하지 않는다.
 
 예외
 

@@ -13,6 +13,11 @@ import { renderWithIntl } from "../../test-utils/renderWithIntl";
 const resendMock = vi.fn();
 const buildAuthRedirectUrlMock = vi.fn();
 const pushMock = vi.fn();
+const searchParamsState = vi.hoisted(() => ({
+  email: "u@example.com",
+  reason: "email_not_confirmed",
+  retryAfterSeconds: null as string | null,
+}));
 
 vi.mock("@/lib/supabase/browser", () => ({
   createSupabaseBrowserClient: () => ({
@@ -35,8 +40,10 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: pushMock, replace: vi.fn(), refresh: vi.fn() }),
   useSearchParams: () => ({
     get: (key: string) => {
-      if (key === "reason") return "email_not_confirmed";
-      if (key === "email") return "u@example.com";
+      if (key === "reason") return searchParamsState.reason;
+      if (key === "email") return searchParamsState.email;
+      if (key === "retry_after_seconds")
+        return searchParamsState.retryAfterSeconds;
       return null;
     },
   }),
@@ -47,6 +54,9 @@ import { AuthErrorCard } from "../../../src/components/auth/AuthErrorCard";
 const renderInApp = renderWithIntl;
 
 beforeEach(() => {
+  searchParamsState.email = "u@example.com";
+  searchParamsState.reason = "email_not_confirmed";
+  searchParamsState.retryAfterSeconds = null;
   resendMock.mockReset();
   resendMock.mockResolvedValue({ error: null });
   pushMock.mockReset();
@@ -63,6 +73,21 @@ afterEach(() => {
 });
 
 describe("AuthErrorCard", () => {
+  it("keeps user_not_found neutral and does not render untrusted email from the URL", () => {
+    searchParamsState.reason = "user_not_found";
+    searchParamsState.email = "deleted@example.com";
+
+    renderInApp(<AuthErrorCard />);
+
+    expect(
+      screen.getByRole("heading", { name: "이 링크로는 계속할 수 없어요" }),
+    ).toBeTruthy();
+    expect(screen.queryByText("deleted@example.com")).toBeNull();
+    expect(screen.queryByLabelText("이메일")).toBeNull();
+    expect(screen.queryByText(/계정은 더 이상 존재/)).toBeNull();
+    expect(screen.queryByText(/계정이 존재/)).toBeNull();
+  });
+
   it("resends the verification email with the callback redirect URL", async () => {
     renderInApp(<AuthErrorCard />);
 
@@ -81,7 +106,9 @@ describe("AuthErrorCard", () => {
     );
     await waitFor(() => {
       expect(
-        screen.getByText("인증 메일을 다시 보냈어요. 받은편지함을 확인해주세요."),
+        screen.getByText(
+          "인증 메일을 다시 보냈어요. 받은편지함을 확인해주세요.",
+        ),
       ).toBeTruthy();
     });
   });

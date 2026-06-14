@@ -5,6 +5,7 @@
 // Always returns an absolute http(s) URL; never a bare relative path.
 
 const DEV_FALLBACK = "http://127.0.0.1:3000";
+const LOCAL_BROWSER_HOSTS = new Set(["localhost", "127.0.0.1", "0.0.0.0"]);
 
 function ensureLeadingSlash(path: string): string {
   return path.startsWith("/") ? path : `/${path}`;
@@ -14,7 +15,32 @@ function stripTrailingSlash(url: string): string {
   return url.endsWith("/") ? url.slice(0, -1) : url;
 }
 
+function normalizeLocalBrowserOrigin(origin: string): string | null {
+  try {
+    const url = new URL(origin);
+    if (!/^https?:$/i.test(url.protocol)) return null;
+    if (!LOCAL_BROWSER_HOSTS.has(url.hostname)) return null;
+    if (url.hostname === "0.0.0.0") {
+      url.hostname = "localhost";
+    }
+    return url.origin;
+  } catch {
+    return null;
+  }
+}
+
+function resolveDevelopmentBrowserOrigin(): string | null {
+  if (process.env.NODE_ENV !== "development") return null;
+  if (typeof window === "undefined") return null;
+  return normalizeLocalBrowserOrigin(window.location.origin);
+}
+
 function resolveSiteUrl(): string {
+  const browserOrigin = resolveDevelopmentBrowserOrigin();
+  if (browserOrigin) {
+    return browserOrigin;
+  }
+
   const env = process.env.NEXT_PUBLIC_SITE_URL?.trim();
   if (env && env.length > 0) {
     // Validate scheme — reject javascript:, data:, etc.
@@ -43,7 +69,9 @@ export function buildAuthRedirectUrl(path: string): string {
 export function buildAuthCallbackUrl(nextPath: string): string {
   const next = ensureLeadingSlash(nextPath);
   if (next.startsWith("//") || next.includes(":")) {
-    throw new Error(`Auth callback next path must be relative, got: ${nextPath}`);
+    throw new Error(
+      `Auth callback next path must be relative, got: ${nextPath}`,
+    );
   }
   const params = new URLSearchParams({ next });
   return buildAuthRedirectUrl(`/auth/callback?${params.toString()}`);

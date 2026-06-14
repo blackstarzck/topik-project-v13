@@ -51,6 +51,34 @@ describe("auth redirect URL builder", () => {
     );
   });
 
+  it("buildAuthRedirectUrl uses the current local browser origin in development", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "http://127.0.0.1:3000");
+    vi.stubGlobal("window", {
+      location: { origin: "http://localhost:3000" },
+    });
+    const { buildAuthRedirectUrl } = await loadModule();
+
+    expect(
+      buildAuthRedirectUrl("/auth/callback?next=/onboarding/learning-goal"),
+    ).toBe(
+      "http://localhost:3000/auth/callback?next=/onboarding/learning-goal",
+    );
+  });
+
+  it("buildAuthRedirectUrl normalizes 0.0.0.0 browser origins in development", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "http://127.0.0.1:3000");
+    vi.stubGlobal("window", {
+      location: { origin: "http://0.0.0.0:3000" },
+    });
+    const { buildAuthRedirectUrl } = await loadModule();
+
+    expect(buildAuthRedirectUrl("/auth/callback")).toBe(
+      "http://localhost:3000/auth/callback",
+    );
+  });
+
   it("buildAuthRedirectUrl throws in production when SITE_URL missing", async () => {
     vi.stubEnv("NODE_ENV", "production");
     const { buildAuthRedirectUrl } = await loadModule();

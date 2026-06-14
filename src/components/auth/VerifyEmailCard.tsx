@@ -217,33 +217,11 @@ export function VerifyEmailCard() {
         </Title>
         <Paragraph className="!mb-0">{t("body")}</Paragraph>
 
-        <Text type="secondary">{t("frequentNote")}</Text>
-
         {emailFromQuery && (
           <Text type="secondary">
             {t("signupEmailPrefix")} <strong>{emailFromQuery}</strong>
           </Text>
         )}
-
-        <div
-          className="flex flex-col gap-2"
-          data-testid="verify-email-existing-account-actions"
-        >
-          <Paragraph type="secondary" className="!mb-0">
-            {t("existingAccountNote")}
-          </Paragraph>
-          <div className="flex flex-wrap gap-2">
-            <Button href="/login" data-testid="verify-email-login">
-              {t("loginCta")}
-            </Button>
-            <Button
-              href="/password-reset"
-              data-testid="verify-email-password-reset"
-            >
-              {t("passwordResetCta")}
-            </Button>
-          </div>
-        </div>
 
         <Form layout="vertical">
           <Form.Item label={t("resendOtherLabel")} htmlFor="verify-email-input">
@@ -276,6 +254,8 @@ export function VerifyEmailCard() {
           {t("resend")}
         </Button>
 
+        <Text type="secondary">{t("frequentNote")}</Text>
+
         {/* §5 이메일 안 왔을 때 안내 — primary 재전송과 시각적 위계 구분(secondary).
             스팸함 확인 / 받은편지함 열기 / 다른 이메일로 가입하기. */}
         <Divider className="!my-1" />
@@ -304,6 +284,27 @@ export function VerifyEmailCard() {
             <Link href="/sign-up">
               <Button size="small">{t("signUpDifferentEmail")}</Button>
             </Link>
+          </div>
+        </div>
+
+        <Divider className="!my-1" />
+        <div
+          className="flex flex-col gap-2"
+          data-testid="verify-email-existing-account-actions"
+        >
+          <Paragraph type="secondary" className="!mb-0">
+            {t("existingAccountNote")}
+          </Paragraph>
+          <div className="flex flex-wrap gap-2">
+            <Button href="/login" data-testid="verify-email-login">
+              {t("loginCta")}
+            </Button>
+            <Button
+              href="/password-reset"
+              data-testid="verify-email-password-reset"
+            >
+              {t("passwordResetCta")}
+            </Button>
           </div>
         </div>
 
