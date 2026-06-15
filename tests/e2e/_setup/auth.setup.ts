@@ -29,7 +29,18 @@ setup("authenticate student", async ({ page }) => {
   await page.locator('input[autocomplete="current-password"]').fill(PASSWORD);
   await page.locator('button[type="submit"]').click();
 
-  // LoginForm calls router.push("/dashboard") on success.
+  // LoginForm calls router.push("/dashboard") on success, then the workspace
+  // guard may send accounts with missing required consent to /auth/consent.
+  await page.waitForURL(/\/(dashboard|auth\/consent)/, { timeout: 15_000 });
+  await page.waitForLoadState("networkidle");
+  await page
+    .waitForURL(/\/auth\/consent/, { timeout: 5_000 })
+    .catch(() => undefined);
+  if (new URL(page.url()).pathname === "/auth/consent") {
+    await page.locator('input[name="accept"]').check({ force: true });
+    await page.locator('form button[type="submit"]').click();
+  }
+
   await page.waitForURL("**/dashboard", { timeout: 15_000 });
   await expect(page).toHaveURL(/\/dashboard/);
 

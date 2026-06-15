@@ -11,8 +11,21 @@ import {
   PanelsTopLeft,
 } from "lucide-react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useTranslations } from "next-intl";
 import { Autoplay, FreeMode } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
+
+import type { LandingAuthStatus } from "@/lib/auth/completion-routes";
+import { getLandingCta, type LandingCta } from "./auth-cta";
+
+type PortfolioLandingLayoutProps = {
+  authStatus: LandingAuthStatus;
+};
+
+type LandingLayoutCta = {
+  primary: LandingCta | null;
+  primaryLabel: string;
+};
 
 function VisualLabel({ label }: { label: string }) {
   return (
@@ -204,7 +217,7 @@ function useLandingMotion() {
   return rootRef;
 }
 
-function LearningLoopSection() {
+function LearningLoopSection({ primary, primaryLabel }: LandingLayoutCta) {
   const loops = [
     [
       "대시보드",
@@ -244,8 +257,8 @@ function LearningLoopSection() {
           ))}
         </div>
         <div className="landing-layout-center">
-          <a className="landing-layout-pill" href="/sign-up">
-            무료로 시작하기
+          <a className="landing-layout-pill" href={primary?.href ?? "/sign-up"}>
+            {primary ? primaryLabel : "무료로 시작하기"}
             <ArrowRight aria-hidden="true" />
           </a>
         </div>
@@ -610,7 +623,7 @@ function ProcessSection() {
   );
 }
 
-function PathSection() {
+function PathSection({ primary, primaryLabel }: LandingLayoutCta) {
   const paths = [
     [
       "처음 시작",
@@ -676,8 +689,11 @@ function PathSection() {
                   </li>
                 ))}
               </ul>
-              <a className="landing-layout-dark-button" href={href as string}>
-                시작하기
+              <a
+                className="landing-layout-dark-button"
+                href={primary?.href ?? (href as string)}
+              >
+                {primary ? primaryLabel : "시작하기"}
               </a>
             </article>
           ))}
@@ -687,7 +703,9 @@ function PathSection() {
   );
 }
 
-function ProductFooter() {
+function ProductFooter({ primary, primaryLabel }: LandingLayoutCta) {
+  const t = useTranslations("landing");
+
   return (
     <footer id="contact" className="landing-layout-footer" data-landing-section>
       <div className="landing-layout-wrap landing-layout-footer__inner">
@@ -702,8 +720,14 @@ function ProductFooter() {
         <div className="landing-layout-footer__bottom">
           <span>© TALKPIK AI</span>
           <nav>
-            <a href="/sign-up">시작하기</a>
-            <a href="/login">로그인</a>
+            {primary ? (
+              <a href={primary.href}>{primaryLabel}</a>
+            ) : (
+              <>
+                <a href="/sign-up">시작하기</a>
+                <a href="/login">{t("ctaLogin")}</a>
+              </>
+            )}
             <a href="/terms">이용약관</a>
             <a href="/privacy">개인정보처리방침</a>
           </nav>
@@ -713,14 +737,19 @@ function ProductFooter() {
   );
 }
 
-export function PortfolioLandingLayout() {
+export function PortfolioLandingLayout({
+  authStatus,
+}: PortfolioLandingLayoutProps) {
   const rootRef = useLandingMotion();
   const prefersReducedMotion = usePrefersReducedMotion();
+  const t = useTranslations("landing");
+  const primary = authStatus === "anonymous" ? null : getLandingCta(authStatus);
+  const primaryLabel = primary ? t(primary.headerLabelKey) : "";
 
   return (
     <div ref={rootRef} className="landing-layout-motion-root">
       {/* ===================== LEARNING LOOP ===================== */}
-      <LearningLoopSection />
+      <LearningLoopSection primary={primary} primaryLabel={primaryLabel} />
       {/* ===================== CORE VALUE ===================== */}
       <CoreValueSection />
       {/* ===================== LEARNER GOALS ===================== */}
@@ -734,9 +763,9 @@ export function PortfolioLandingLayout() {
       {/* ===================== USER FLOW ===================== */}
       <ProcessSection />
       {/* ===================== ENTRY PATHS ===================== */}
-      <PathSection />
+      <PathSection primary={primary} primaryLabel={primaryLabel} />
       {/* ===================== FOOTER ===================== */}
-      <ProductFooter />
+      <ProductFooter primary={primary} primaryLabel={primaryLabel} />
     </div>
   );
 }

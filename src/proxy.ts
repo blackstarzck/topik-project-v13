@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
+import { getAuthEntryRedirectPath } from "./lib/auth/completion-routes";
 import { AUTH_ENTRY_PATHS, PUBLIC_PATHS } from "./lib/routes";
 import { getPublicEnv } from "./lib/supabase/env";
 import type { Database } from "./lib/supabase/types";
@@ -51,8 +52,11 @@ export async function proxy(request: NextRequest) {
 
   if (user && isAuthEntryPath(pathname)) {
     const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
-    url.search = "";
+    const redirectPath = getAuthEntryRedirectPath(pathname);
+    url.pathname = redirectPath.split("?")[0];
+    url.search = redirectPath.includes("?")
+      ? `?${redirectPath.split("?")[1]}`
+      : "";
     return redirectWithRefreshedCookies(url, response);
   }
 

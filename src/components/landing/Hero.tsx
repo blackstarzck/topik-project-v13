@@ -2,20 +2,25 @@
 
 import { useState } from "react";
 import { Button, Typography } from "antd";
-import { ArrowUpRight, LogIn } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+
+import type { LandingAuthStatus } from "@/lib/auth/completion-routes";
+import { getLandingCta } from "./auth-cta";
 
 const { Title, Paragraph } = Typography;
 
 type HeroProps = {
-  isAuthenticated?: boolean;
+  authStatus?: LandingAuthStatus;
 };
 
-export function Hero({ isAuthenticated = false }: HeroProps) {
+export function Hero({ authStatus = "anonymous" }: HeroProps) {
   const t = useTranslations("landing");
   const router = useRouter();
   const [navigating, setNavigating] = useState(false);
+  const authenticatedCta =
+    authStatus === "anonymous" ? null : getLandingCta(authStatus);
 
   function go(href: string) {
     if (navigating) return;
@@ -31,7 +36,7 @@ export function Hero({ isAuthenticated = false }: HeroProps) {
           {t("heroTitle")}
         </Title>
         <Paragraph className="landing-hero-body">{t("heroBody")}</Paragraph>
-        {isAuthenticated ? (
+        {authenticatedCta ? (
           <div className="landing-hero-actions">
             <Button
               type="primary"
@@ -40,9 +45,9 @@ export function Hero({ isAuthenticated = false }: HeroProps) {
               icon={<ArrowUpRight size={16} aria-hidden="true" />}
               iconPlacement="end"
               loading={navigating}
-              onClick={() => go("/dashboard")}
+              onClick={() => go(authenticatedCta.href)}
             >
-              {t("heroCtaDashboard")}
+              {t(authenticatedCta.heroLabelKey)}
             </Button>
           </div>
         ) : (
@@ -57,15 +62,6 @@ export function Hero({ isAuthenticated = false }: HeroProps) {
               onClick={() => go("/sign-up")}
             >
               {t("heroCtaSignUp")}
-            </Button>
-            <Button
-              size="large"
-              className="landing-hero-button landing-hero-button--secondary"
-              icon={<LogIn size={16} aria-hidden="true" />}
-              disabled={navigating}
-              onClick={() => go("/login")}
-            >
-              {t("heroCtaLogin")}
             </Button>
           </div>
         )}

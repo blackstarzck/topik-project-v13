@@ -34,13 +34,28 @@ function renderLoginPrompt() {
   return renderWithIntl(
     <AuthPromptExperience
       mode="login"
-      pageHeading="다시 오신 걸 환영해요"
-      formSubtitle="계속하려면 로그인하세요"
-      heroEyebrow="로그인"
-      mascotAlt="로그인 캐릭터"
-      switchPrompt="계정이 없나요?"
+      pageHeading="Login"
+      formSubtitle="Continue with your account"
+      heroEyebrow="Login hero"
+      mascotAlt="Login mascot"
+      switchPrompt="No account?"
       switchHref="/sign-up"
-      switchLabel="회원가입"
+      switchLabel="Sign up"
+    />,
+  );
+}
+
+function renderSignUpPrompt() {
+  return renderWithIntl(
+    <AuthPromptExperience
+      mode="sign-up"
+      pageHeading="Sign up"
+      formSubtitle="Create your account"
+      heroEyebrow="Sign-up hero"
+      mascotAlt="Sign-up mascot"
+      switchPrompt="Already have an account?"
+      switchHref="/login"
+      switchLabel="Log in"
     />,
   );
 }
@@ -65,7 +80,7 @@ describe("AuthPromptExperience", () => {
     vi.restoreAllMocks();
   });
 
-  it("replaces authenticated auth entry pages with the dashboard on mount", async () => {
+  it("replaces authenticated login entry pages with post-auth on mount", async () => {
     getUserMock.mockResolvedValueOnce({
       data: { user: { id: "user-123" } },
       error: null,
@@ -74,7 +89,24 @@ describe("AuthPromptExperience", () => {
     renderLoginPrompt();
 
     await waitFor(() => {
-      expect(routerReplaceMock).toHaveBeenCalledWith("/dashboard");
+      expect(routerReplaceMock).toHaveBeenCalledWith(
+        "/auth/post-auth?intent=login",
+      );
+    });
+  });
+
+  it("keeps the sign-up intent when replacing an authenticated sign-up page", async () => {
+    getUserMock.mockResolvedValueOnce({
+      data: { user: { id: "user-123" } },
+      error: null,
+    });
+
+    renderSignUpPrompt();
+
+    await waitFor(() => {
+      expect(routerReplaceMock).toHaveBeenCalledWith(
+        "/auth/post-auth?intent=sign-up",
+      );
     });
   });
 
@@ -97,7 +129,9 @@ describe("AuthPromptExperience", () => {
     });
 
     await waitFor(() => {
-      expect(routerReplaceMock).toHaveBeenCalledWith("/dashboard");
+      expect(routerReplaceMock).toHaveBeenCalledWith(
+        "/auth/post-auth?intent=login",
+      );
     });
   });
 });

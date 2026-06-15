@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { WorkspaceShell } from "@/components/app/WorkspaceShell";
+import { hasCompletedRequiredConsent } from "@/lib/auth/completion";
+import { POST_AUTH_LOGIN_PATH } from "@/lib/auth/completion-routes";
 import { getSessionAndProfile } from "@/lib/auth/profile";
 
 // All workspace routes require an authenticated session, so they cannot be
@@ -15,6 +17,8 @@ export default async function WorkspaceLayout({
 }) {
   const session = await getSessionAndProfile();
   if (!session) redirect("/login");
+  const hasConsent = await hasCompletedRequiredConsent(session);
+  if (!hasConsent) redirect(POST_AUTH_LOGIN_PATH);
   const { user, profile } = session;
 
   return (
