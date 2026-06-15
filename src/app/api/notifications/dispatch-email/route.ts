@@ -107,6 +107,13 @@ const BATCH_LIMIT = 50;
 const MAX_RETRY = 3;
 // error_message 저장 길이 제한 (provider 응답 본문이 길 수 있다).
 const ERROR_MESSAGE_MAX = 500;
+// 발신 주소(기본값). 오너 결정(2026-06-12): 우선 Resend 테스트 발신 주소를 쓴다.
+// ⚠ 운영 발신 도메인 필요: onboarding@resend.dev는 Resend 테스트 전용으로
+//   "본인 Resend 계정 이메일"로만 실제 발송된다(임의 수신자 발송 불가). 운영에서
+//   실제 가입 사용자들에게 보내려면 소유 도메인을 Resend에 인증하고(권장:
+//   서브도메인 notify.keduall.com — 기존 keduall.com 메일플러그 SPF와 분리) env의
+//   RESEND_FROM 을 'Talkpik AI <guest@notify.keduall.com>' 형태로 교체해야 한다.
+//   도메인 인증 전까지는 본 기본값 유지.
 const DEFAULT_FROM = "onboarding@resend.dev";
 const DISPLAY_NAME_FALLBACK = "학습자";
 const SITE_URL_FALLBACK = "https://app.talkpik.ai";
@@ -353,6 +360,10 @@ export async function GET() {
   );
 }
 
+// 수신자 모델(오너 결정 2026-06-12): **가입 사용자만** 발송 대상이다. 수신 이메일은
+// 항상 가입 계정 이메일(auth.users.email)로만 해석하며, 관리자가 임의 이메일을
+// 입력해 보내는 경로는 두지 않는다(발송 대상은 notification_groups의 가입 사용자
+// id로만 산정). 따라서 여기서 user_id로 계정 이메일을 조회하는 것이 유일한 경로다.
 // auth admin으로 user_id → email 해석. (profiles에 email 컬럼 없음.)
 async function resolveRecipientEmail(
   supabase: WorkerSupabaseClient,
