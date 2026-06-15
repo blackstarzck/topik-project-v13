@@ -1,0 +1,41 @@
+﻿{
+    "schemaVersion":  "1.0",
+    "runId":  "2026-06-15-wireframe-ai-concepts",
+    "reviewId":  "39-X-17-auth-callback-fragment__default__desktop__c02",
+    "conceptId":  "39-X-17-auth-callback-fragment__default__desktop__c02",
+    "localConceptId":  "concept-02",
+    "stateId":  "39-X-17-auth-callback-fragment__default__desktop",
+    "page":  "39-X-17-auth-callback-fragment",
+    "state":  "default",
+    "screenType":  "auth",
+    "imagePath":  "39-X-17-auth-callback-fragment/default/concept-02/image.png",
+    "promptPath":  "39-X-17-auth-callback-fragment/default/concept-02/prompt.json",
+    "metaPath":  "39-X-17-auth-callback-fragment/default/concept-02/meta.json",
+    "reviewPath":  "39-X-17-auth-callback-fragment/default/concept-02/review.json",
+    "status":  "accepted",
+    "validation":  "pass",
+    "mustPreserveStateSignals":  [
+                                     "auth callback error",
+                                     "retry later instruction",
+                                     "home button",
+                                     "login/signup link",
+                                     "no sidebar"
+                                 ],
+    "checks":  {
+                   "fileExists":  true,
+                   "nonZeroBytes":  true,
+                   "noChrome":  true,
+                   "stateSignalPreserved":  true,
+                   "primaryCtaDarkOnly":  true,
+                   "neutralPaletteOnly":  true,
+                   "workspaceRadiusOk":  true,
+                   "noLoudGradient":  true,
+                   "keyRegionsPreserved":  true,
+                   "textUsableAsVisualReference":  true
+               },
+    "issueCodes":  [
+
+                   ],
+    "notes":  "System-message auth callback concept preserves processing error, retry-later instruction, home CTA, login/signup links, and no sidebar. Background vignette is subtle neutral.",
+    "reviewedAt":  "2026-06-15T16:59:59.6465258+09:00"
+}

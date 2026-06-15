@@ -1,0 +1,31 @@
+{
+  "runId": "20260615-091636",
+  "capturedAt": "2026-06-15T00:16:56.625Z",
+  "ia": "A-01",
+  "folder": "01-A-01-sign-up",
+  "state": "default",
+  "route": "/sign-up",
+  "auth": false,
+  "viewport": {
+    "name": "desktop",
+    "width": 1280,
+    "height": 900
+  },
+  "status": "ok",
+  "note": null,
+  "expectedPath": "/sign-up",
+  "finalUrl": "http://127.0.0.1:3000/sign-up",
+  "finalPath": "/sign-up",
+  "title": "회원가입 — TALKPIK | TALKPIK AI",
+  "headings": [
+    "회원가입"
+  ],
+  "screenshotPath": "docs/Wireframe/01-A-01-sign-up/browser-screenshot--default--desktop.png",
+  "durationMs": 2748,
+  "errors": {
+    "pageErrors": [],
+    "consoleErrors": [],
+    "responseErrors": [],
+    "errorMessage": null
+  }
+}

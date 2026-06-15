@@ -3,7 +3,7 @@
 import { Alert, Button, Empty, Spin, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { AppCard } from "@/components/shared/AppCard";
 import {
@@ -16,13 +16,10 @@ import {
 import { FilterChips } from "./FilterChips";
 import { ProblemListControls } from "./ProblemListControls";
 import { ProblemListPagination } from "./ProblemListPagination";
-import { ProblemRow } from "./ProblemRow";
-import { ProblemTypeFilterCards } from "./ProblemTypeFilterCards";
+import { ProblemTable } from "./ProblemTable";
+import { ProblemTypeTabs } from "./ProblemTypeTabs";
 import { RetryModal } from "./RetryModal";
-import {
-  useUserProblemsRpc,
-  type UserProblemRow,
-} from "./problem-list-data";
+import { useUserProblemsRpc, type UserProblemRow } from "./problem-list-data";
 
 const { Text } = Typography;
 
@@ -33,6 +30,9 @@ const VALID_SORTS: readonly ProblemSort[] = [
   "difficulty-asc",
   "difficulty-desc",
 ];
+const problemListCardClassNames = {
+  body: "problem-list-card__body",
+};
 
 function parseQuestion(raw: string | null): QuestionNo | null {
   if (!raw) return null;
@@ -56,8 +56,31 @@ function parseSort(raw: string | null): ProblemSort {
 
 function parseSolveStatus(raw: string | null): SolveStatusFilter | undefined {
   if (!raw) return undefined;
-  if (raw === "unsolved" || raw === "inProgress" || raw === "solved") return raw;
+  if (raw === "unsolved" || raw === "inProgress" || raw === "solved")
+    return raw;
   return undefined;
+}
+
+type ProblemListUrlState = {
+  filter: ProblemFilter;
+  sort: ProblemSort;
+  page: number;
+};
+
+function parseUrlState(params: URLSearchParams): ProblemListUrlState {
+  const p = Number(params.get("page") ?? "1");
+  return {
+    filter: {
+      questionNo: parseQuestion(params.get("type")),
+      difficulty: parseDifficulty(params.get("difficulty")),
+      search: params.get("q") ?? "",
+      topikLevel: null,
+      recommended: params.get("recommended") === "1",
+      solveStatus: parseSolveStatus(params.get("solve")),
+    },
+    sort: parseSort(params.get("sort")),
+    page: Number.isInteger(p) && p > 0 ? p : 1,
+  };
 }
 
 type Props = {
@@ -70,23 +93,20 @@ export function ProblemListView({ userId }: Props) {
   const router = useRouter();
   const params = useSearchParams();
   const [retryTarget, setRetryTarget] = useState<UserProblemRow | null>(null);
-
-  const filter = useMemo<ProblemFilter>(
-    () => ({
-      questionNo: parseQuestion(params.get("type")),
-      difficulty: parseDifficulty(params.get("difficulty")),
-      search: params.get("q") ?? "",
-      topikLevel: null,
-      recommended: params.get("recommended") === "1",
-      solveStatus: parseSolveStatus(params.get("solve")),
-    }),
-    [params],
+  const paramsKey = params.toString();
+  const urlState = useMemo(
+    () => parseUrlState(new URLSearchParams(paramsKey)),
+    [paramsKey],
   );
-  const sort = useMemo(() => parseSort(params.get("sort")), [params]);
-  const page = useMemo(() => {
-    const p = Number(params.get("page") ?? "1");
-    return Number.isInteger(p) && p > 0 ? p : 1;
-  }, [params]);
+  const [viewState, setViewState] = useState(urlState);
+  const [, startTransition] = useTransition();
+  const { filter, sort, page } = viewState;
+
+  useEffect(() => {
+    startTransition(() => {
+      setViewState(urlState);
+    });
+  }, [startTransition, urlState]);
 
   function pushParams(next: URLSearchParams) {
     router.replace(
@@ -94,35 +114,59 @@ export function ProblemListView({ userId }: Props) {
     );
   }
 
-  function commitFilter(next: ProblemFilter) {
+  function buildParams(
+    nextFilter: ProblemFilter,
+    nextSort: ProblemSort,
+    nextPage: number,
+  ) {
     const sp = new URLSearchParams();
-    if (next.questionNo != null) sp.set("type", String(next.questionNo));
-    if (next.difficulty != null) sp.set("difficulty", String(next.difficulty));
-    if (next.search && next.search.length > 0) sp.set("q", next.search);
-    if (next.recommended === true) sp.set("recommended", "1");
-    if (next.solveStatus && next.solveStatus !== "all")
-      sp.set("solve", next.solveStatus);
-    if (sort !== "newest") sp.set("sort", sort);
-    sp.set("page", "1");
-    pushParams(sp);
+    if (nextFilter.questionNo != null)
+      sp.set("type", String(nextFilter.questionNo));
+    if (nextFilter.difficulty != null)
+      sp.set("difficulty", String(nextFilter.difficulty));
+    if (nextFilter.search && nextFilter.search.length > 0)
+      sp.set("q", nextFilter.search);
+    if (nextFilter.recommended === true) sp.set("recommended", "1");
+    if (nextFilter.solveStatus && nextFilter.solveStatus !== "all")
+      sp.set("solve", nextFilter.solveStatus);
+    if (nextSort !== "newest") sp.set("sort", nextSort);
+    sp.set("page", String(nextPage));
+    return sp;
+  }
+
+  function commitFilter(next: ProblemFilter) {
+    const nextState = { filter: next, sort, page: 1 };
+    const sp = buildParams(next, sort, 1);
+    setViewState(nextState);
+    startTransition(() => {
+      pushParams(sp);
+    });
   }
 
   function commitSort(nextSort: ProblemSort) {
-    const sp = new URLSearchParams(params.toString());
-    if (nextSort === "newest") sp.delete("sort");
-    else sp.set("sort", nextSort);
-    sp.set("page", "1");
-    pushParams(sp);
+    const nextState = { filter, sort: nextSort, page: 1 };
+    const sp = buildParams(filter, nextSort, 1);
+    setViewState(nextState);
+    startTransition(() => {
+      pushParams(sp);
+    });
   }
 
   function commitPage(nextPage: number) {
-    const sp = new URLSearchParams(params.toString());
-    sp.set("page", String(nextPage));
-    pushParams(sp);
+    const nextState = { filter, sort, page: nextPage };
+    const sp = buildParams(filter, sort, nextPage);
+    setViewState(nextState);
+    startTransition(() => {
+      pushParams(sp);
+    });
   }
 
   function resetAll() {
-    pushParams(new URLSearchParams());
+    const nextState = parseUrlState(new URLSearchParams());
+    setViewState(nextState);
+    startTransition(() => {
+      pushParams(new URLSearchParams());
+    });
   }
 
   // C-02 §5 — list_user_problems RPC: 필터 적용 후 정확한 total_count + 페이지.
@@ -151,12 +195,10 @@ export function ProblemListView({ userId }: Props) {
 
   return (
     <div className="grid gap-6">
-      <PageHeader
-        title={t("heading")}
-        subtitle={t("subtitle")}
-      />
+      <PageHeader title={t("heading")} subtitle={t("subtitle")} />
 
-      <ProblemTypeFilterCards
+      <ProblemTypeTabs
+        includeAll
         active={filter.questionNo ?? null}
         onChange={(next) => commitFilter({ ...filter, questionNo: next })}
       />
@@ -180,9 +222,6 @@ export function ProblemListView({ userId }: Props) {
         </div>
       </AppCard>
 
-      {/* §5 상단 총 건수 */}
-      <div className="min-h-6">{totalLabel}</div>
-
       {list.isLoading ? (
         <Spin>
           <div className="min-h-20" />
@@ -202,35 +241,12 @@ export function ProblemListView({ userId }: Props) {
         />
       ) : rows.length > 0 ? (
         <>
-          <div
-            className="overflow-hidden rounded-3xl border border-border bg-background px-4"
-            role="list"
+          <AppCard
+            className="problem-list-card overflow-hidden"
+            classNames={problemListCardClassNames}
           >
-            {rows.map((row, index) => (
-              <ProblemRow
-                key={row.problemId}
-                isLast={index === rows.length - 1}
-                row={{
-                  id: row.problemId,
-                  domain: row.domain as never,
-                  question_no: row.questionNo,
-                  topik_level: row.topikLevel ?? 0,
-                  difficulty: row.difficulty,
-                  title: row.title,
-                  publish_status: row.publishStatus,
-                  review_status: row.reviewStatus,
-                  lifecycle_status: row.lifecycleStatus,
-                  lifecycle_reason: row.lifecycleReason,
-                  tags: row.tags,
-                  updated_at: row.createdAt,
-                }}
-                solveState={row.solveState}
-                attemptCount={row.attemptCount}
-                lastAttemptAt={row.lastAttemptAt}
-                onRetryClick={() => setRetryTarget(row)}
-              />
-            ))}
-          </div>
+            <ProblemTable rows={rows} onRetryClick={setRetryTarget} />
+          </AppCard>
           {/* §5 하단 총 건수 + 페이지 이동 */}
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             {totalLabel}

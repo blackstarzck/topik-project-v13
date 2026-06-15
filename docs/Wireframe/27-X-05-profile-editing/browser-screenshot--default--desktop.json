@@ -1,0 +1,31 @@
+{
+  "runId": "20260615-091636",
+  "capturedAt": "2026-06-15T00:23:18.681Z",
+  "ia": "X-05",
+  "folder": "27-X-05-profile-editing",
+  "state": "default",
+  "route": "/profile",
+  "auth": true,
+  "viewport": {
+    "name": "desktop",
+    "width": 1280,
+    "height": 900
+  },
+  "status": "ok",
+  "note": null,
+  "expectedPath": "/profile",
+  "finalUrl": "http://127.0.0.1:3000/profile",
+  "finalPath": "/profile",
+  "title": "프로필 — TALKPIK | TALKPIK AI",
+  "headings": [
+    "프로필"
+  ],
+  "screenshotPath": "docs/Wireframe/27-X-05-profile-editing/browser-screenshot--default--desktop.png",
+  "durationMs": 3156,
+  "errors": {
+    "pageErrors": [],
+    "consoleErrors": [],
+    "responseErrors": [],
+    "errorMessage": null
+  }
+}

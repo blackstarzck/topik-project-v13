@@ -1,0 +1,11 @@
+﻿{
+    "schemaVersion":  "1.0",
+    "runId":  "2026-06-15-wireframe-ai-concepts",
+    "conceptId":  "concept-03",
+    "globalConceptId":  "25-X-03-paywall__default__desktop__c03",
+    "stateId":  "25-X-03-paywall__default__desktop",
+    "page":  "25-X-03-paywall",
+    "state":  "default",
+    "screenType":  "workspace",
+    "prompt":  "Use case: ui-mockup\nAsset type: desktop AI redesign concept bitmap for TALKPIK AI user app\nPrimary request: Create concept-03 for page 25-X-03-paywall, state default. Reference state: in-app subscription start screen with plan cards and payment guide. Create an account-workflow variant: the user is in the app and chooses a plan, not on a public marketing page.\nComposition/framing: desktop 1280x900 edge-to-edge app UI screenshot only; no browser address bar, tabs, bookmarks bar, OS title bar, device frame, or watermark. Keep the app sidebar. Main: compact title and helper copy, then plan comparison cards in a single row with monthly, quarterly recommended, yearly; quarterly card has dark selected button and subtle recommended badge. Below: subscription benefit checklist and payment guide in aligned panels. Footer area includes subscription management and back actions.\nStyle/medium: polished Ant Design-friendly account/subscription UI, compact and trustworthy, no hero graphics, no hype copy, stable grid.\nColor palette: Mist/Snow/Fog neutral surfaces, Obsidian #09090b only for recommended primary CTA, gray secondary buttons, restrained border emphasis. No purple/blue gradient.\nTypography: Cosmica-like modern sans, Korean UI text as visual direction only, no negative letter spacing, price and cadence hierarchy clear.\nMust preserve state signals: paywall subscription selection, monthly/quarterly/annual cards, recommended quarterly, benefits, payment guide, select buttons, manage/back actions, payment not completed.\nAvoid: browser chrome, OS frame, device frame, colorful CTAs, loud marketing gradient, decorative subscription art, huge radii, card shadow abuse."
+}

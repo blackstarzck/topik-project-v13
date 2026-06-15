@@ -1,31 +1,68 @@
 # TALKPIK AI Sitemap And Page Connections
 
-> Status note (2026-05-19)
+> Status note (2026-06-15)
 >
-> This document is the route authority until production source exists. The route
-> map below is aligned to the Paper wireframe frame
-> `01KQ6XQSNNNXSXWR2H4Q6SMMN3/1-0/4R1-0` and the current IA set in
-> [docs/Wireframe/README.md](./Wireframe/README.md).
+> This document is the route authority for the v13 user-facing app. The route map
+> below is reconciled against the Paper flow frame
+> `01KQE0HPBV13Y0BGDEJJGQBY3H/1-0/30X-0`, the current active Wireframe IA in
+> [docs/Wireframe/README.md](./Wireframe/README.md), and implemented route
+> coverage in `src/app/`.
+>
+> The linked Paper flow contains 32 original wireframe screens. Three of those
+> screens are admin surfaces (`H-01`, `X-08`, `X-10`) and are intentionally not
+> mapped to v13 routes because admin UI belongs to the separate topik-ai app. See
+> [docs/admin-scope-boundary.md](./admin-scope-boundary.md).
 
 ## Source Order
 
 Use these documents together when implementing or reviewing page coverage:
 
 1. [docs/sitemap.md](./sitemap.md) - route authority and page connection map.
-2. [docs/Wireframe/README.md](./Wireframe/README.md) - current Wireframe IA inventory, including codebase-added screens, with one `description.md` and one `functional-spec.md` per screen.
-3. [docs/flow/user-flow.md](./flow/user-flow.md) - user flow and screen dependency order.
+2. Paper flow frame `01KQE0HPBV13Y0BGDEJJGQBY3H/1-0/30X-0` - visual flow source for the original 32-screen IA.
+3. [docs/Wireframe/README.md](./Wireframe/README.md) - current active user-facing Wireframe IA inventory, including codebase-added screens, with one `description.md` and one `functional-spec.md` per screen.
+4. [docs/flow/user-flow.md](./flow/user-flow.md) - user flow and screen dependency order.
+5. [docs/admin-scope-boundary.md](./admin-scope-boundary.md) - admin exclusion rule when Paper-era IA contains admin screens.
+
+## Paper Flow Reconciliation
+
+The linked Paper frame was captured and inspected on 2026-06-15. It opens the
+`flow` artboard and contains two visual sections:
+
+| Section in Paper | Meaning for this document |
+| --- | --- |
+| `실제 와이어프레임 기반 Flow 예시` | Sample click-flow subset. Useful for validating arrow semantics, not a complete route inventory. |
+| `전체 실제 와이어프레임 화면 Flow` | Complete original Paper flow source. The header states that it uses 32 original Paper wireframes and connects CTA/link/card points with Mermaid-style branching arrows. This is the source used for sitemap reconciliation. |
+
+The 32-screen Paper flow resolves into the following sitemap treatment:
+
+| Treatment | IA screens |
+| --- | --- |
+| Active v13 user-facing routes or hosted surfaces | `A-01`, `A-02`, `A-03`, `B-01`, `C-01`, `C-02`, `C-03`, `D-01`, `D-02`, `D-03`, `D-04`, `D-M1`, `D-M2`, `D-M3`, `E-01`, `E-02`, `R-01`, `R-02`, `F-01`, `F-M1`, `G-01`, `X-01`, `X-02`, `X-03`, `X-04`, `X-05`, `X-06`, `X-07`, `X-09` |
+| Paper-era admin screens, excluded from v13 route map | `H-01`, `X-08`, `X-10` |
+| Active v13 additions not shown in the 32-screen Paper flow | `X-11`, `X-12`, `X-13`, `X-14`, `X-16`, `X-17`, `X-18`, plus auth route handlers such as `/auth/callback`, `/auth/post-auth`, and `/auth/sign-out` |
+
+### Paper-Era Admin Screens Excluded From v13
+
+These screens appear in the linked Paper flow, but must not become routes in this
+repository.
+
+| IA | Paper screen | v13 route | Owner / reason |
+| --- | --- | --- | --- |
+| H-01 | Admin problem management | none | Admin/content management is out of scope for this user app. |
+| X-08 | Organization admin dashboard | none | Organization admin UI belongs to the separate topik-ai admin app. |
+| X-10 | Admin user management | none | User administration belongs to the separate topik-ai admin app. |
 
 ## Target React Route Map
 
 | IA | Screen | React route | Route type | Notes |
 | --- | --- | --- | --- | --- |
 | X-01 | Product landing | `/` | page | Public entry point. Links to sign-up and login. |
-| X-13 | Terms | `/terms` | page | Public legal placeholder. Added after the existing 34 Wireframe screens from codebase route coverage. |
-| X-14 | Privacy policy | `/privacy` | page | Public privacy placeholder. Added after the existing 34 Wireframe screens from codebase route coverage. |
+| X-13 | Terms | `/terms` | page | Public legal placeholder. Active Wireframe/codebase addition not shown in the 32-screen Paper flow. |
+| X-14 | Privacy policy | `/privacy` | page | Public privacy placeholder. Active Wireframe/codebase addition not shown in the 32-screen Paper flow. |
 | A-01 | Sign-up | `/sign-up` | page | Account creation. |
 | A-02 | Login | `/login` | page | Existing user entry. |
 | X-06 | Password reset | `/password-reset` | page | Password recovery flow. |
-| X-16 | Password reset confirm | `/password-reset/confirm` | page | New-password form reached from password recovery email. Added after the existing 34 Wireframe screens from codebase route coverage. |
+| X-16 | Password reset confirm | `/password-reset/confirm` | page | New-password form reached from password recovery email. Active Wireframe/codebase addition not shown in the 32-screen Paper flow. |
 | A-03 | Learning goal setup | `/onboarding/learning-goal` | page | First-run onboarding before the dashboard. |
 | B-01 | Home dashboard | `/dashboard` | page | Authenticated learning dashboard. |
 | C-01 | Problem type recommendations | `/practice/recommendations` | page | Recommends writing/problem types. |
@@ -56,7 +93,7 @@ Use these documents together when implementing or reviewing page coverage:
 | X-18 | Auth consent gate | `/auth/consent` | page + server action | Google OAuth 이후 필수 published 약관/개인정보 동의를 받는 보호 라우트. `legal_documents` 최신 required 문서 중 미동의분만 표시하고 동의 시 `user_consents.source='signup'`으로 기록한 뒤 `next`로 복귀. Wireframe inventory: `40-X-18-auth-consent`. |
 | X-11 | Auth error | `/auth/error` | page | 11개 Supabase `error.code` 기반 reason 분기 (`otp_expired`, `flow_state_expired`, `flow_state_not_found`, `bad_code_verifier`, `user_not_found`, `over_email_send_rate_limit`, `over_request_rate_limit`, `email_not_confirmed`, `signup_disabled`, `access_denied`, `unknown`). rate-limit 계열은 `retry_after_seconds` countdown. Email prefill query는 untrusted (가시·편집 가능 input). `user_not_found`는 이메일을 표시하지 않고 중립 문구로 안내. |
 | X-12 | Auth verify-email | `/auth/verify-email` | page | 가입 직후 인증 메일 발송 안내 + 60초 cooldown 재전송 (Supabase same-user 60s + project 30/hour OTP + 빌트인 SMTP 2/hour 한도). 로그인/비밀번호 재설정은 하단 보조 CTA. |
-| X-17 | Auth callback fragment | `/auth/callback-fragment` | page | Implicit flow #fragment 처리. Route Handler가 query 없는 callback 요청을 이리 redirect → 브라우저가 RFC 7231로 fragment retain → client component `CallbackFragmentFallback`이 `window.location.hash` 파싱 → 정확한 `/auth/error?reason=…` 또는 `setSession` 후 `router.replace(next)`. Added after the existing 34 Wireframe screens from codebase route coverage. |
+| X-17 | Auth callback fragment | `/auth/callback-fragment` | page | Implicit flow #fragment 처리. Route Handler가 query 없는 callback 요청을 이리 redirect → 브라우저가 RFC 7231로 fragment retain → client component `CallbackFragmentFallback`이 `window.location.hash` 파싱 → 정확한 `/auth/error?reason=…` 또는 `setSession` 후 `router.replace(next)`. Active Wireframe/codebase addition not shown in the 32-screen Paper flow. |
 | —    | Auth sign-out | `/auth/sign-out` | route handler (POST) | 서버 사이드 세션 쿠키 정리. 본 phase 카탈로그만, 코드 도입은 후속 작업. |
 
 ## Route Audience Map
@@ -162,8 +199,11 @@ flowchart TD
 
 ## Coverage Rules
 
-- Every Paper frame screen listed in `docs/Wireframe/README.md` must appear in the
-  Target React Route Map, either as a page route or as a hosted modal/state.
+- Every active user-facing screen listed in `docs/Wireframe/README.md` must appear
+  in the Target React Route Map, either as a page route or as a hosted modal/state.
+- Paper-era admin screens visible in the linked flow (`H-01`, `X-08`, `X-10`) are
+  not coverage gaps in this repository. Keep them out of the v13 route map and
+  refer to `docs/admin-scope-boundary.md`.
 - New production routes must be added through `docs/Wireframe/README.md`,
   `docs/sitemap.md`, and `docs/flow/user-flow.md` together.
 - `/paywall` and `/subscription` do not reopen billing implementation scope.

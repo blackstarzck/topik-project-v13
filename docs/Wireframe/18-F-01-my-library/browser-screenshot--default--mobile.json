@@ -1,0 +1,31 @@
+{
+  "runId": "20260615-091636",
+  "capturedAt": "2026-06-15T00:22:01.035Z",
+  "ia": "F-01",
+  "folder": "18-F-01-my-library",
+  "state": "default",
+  "route": "/library",
+  "auth": true,
+  "viewport": {
+    "name": "mobile",
+    "width": 360,
+    "height": 900
+  },
+  "status": "ok",
+  "note": null,
+  "expectedPath": "/library",
+  "finalUrl": "http://127.0.0.1:3000/library",
+  "finalPath": "/library",
+  "title": "내 서재 — TALKPIK | TALKPIK AI",
+  "headings": [
+    "내 서재"
+  ],
+  "screenshotPath": "docs/Wireframe/18-F-01-my-library/browser-screenshot--default--mobile.png",
+  "durationMs": 3974,
+  "errors": {
+    "pageErrors": [],
+    "consoleErrors": [],
+    "responseErrors": [],
+    "errorMessage": null
+  }
+}

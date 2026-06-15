@@ -1,0 +1,31 @@
+{
+  "runId": "20260615-091636",
+  "capturedAt": "2026-06-15T00:17:26.506Z",
+  "ia": "X-16",
+  "folder": "38-X-16-password-reset-confirm",
+  "state": "default",
+  "route": "/password-reset/confirm",
+  "auth": false,
+  "viewport": {
+    "name": "desktop",
+    "width": 1280,
+    "height": 900
+  },
+  "status": "ok",
+  "note": null,
+  "expectedPath": "/password-reset/confirm",
+  "finalUrl": "http://127.0.0.1:3000/password-reset/confirm",
+  "finalPath": "/password-reset/confirm",
+  "title": "새 비밀번호 설정 — TALKPIK | TALKPIK AI",
+  "headings": [
+    "새 비밀번호 설정"
+  ],
+  "screenshotPath": "docs/Wireframe/38-X-16-password-reset-confirm/browser-screenshot--default--desktop.png",
+  "durationMs": 2455,
+  "errors": {
+    "pageErrors": [],
+    "consoleErrors": [],
+    "responseErrors": [],
+    "errorMessage": null
+  }
+}

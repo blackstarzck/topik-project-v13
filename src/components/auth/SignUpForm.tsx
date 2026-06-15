@@ -25,7 +25,11 @@ import { ArrowRight } from "lucide-react";
 import { GoogleMark } from "@/components/auth/GoogleMark";
 import { buildAuthRedirectUrl } from "@/lib/auth/redirect-url";
 import { mapSupabaseErrorCode } from "@/lib/auth/error-mapping";
-import { startGoogleOAuth } from "@/lib/auth/oauth";
+import {
+  isGoogleOAuthUnsupportedBrowserError,
+  startGoogleOAuth,
+  type GoogleOAuthEmbeddedBrowser,
+} from "@/lib/auth/oauth";
 import {
   DEFAULT_COOLDOWN_SECONDS,
   useEmailCooldown,
@@ -84,6 +88,7 @@ export function SignUpForm({
   onCooldownChange,
 }: SignUpFormProps = {}) {
   const t = useTranslations("auth.signUp");
+  const toauth = useTranslations("auth.oauth");
   const tc = useTranslations("auth.countdown");
   const tcooldown = useTranslations("auth.cooldown");
   // Cross-namespace: server sign-up failure copy lives under `auth.error.<reason>.message`.
@@ -92,6 +97,8 @@ export function SignUpForm({
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [googleSubmitting, setGoogleSubmitting] = useState(false);
+  const [blockedOAuthBrowser, setBlockedOAuthBrowser] =
+    useState<GoogleOAuthEmbeddedBrowser | null>(null);
   const [safeGuidanceVisible, setSafeGuidanceVisible] = useState(false);
   const signUpCooldown = useEmailCooldown(
     SIGN_UP_COOLDOWN_STORAGE_KEY,
@@ -123,6 +130,7 @@ export function SignUpForm({
     if (isCoolingDown) return;
 
     setSafeGuidanceVisible(false);
+    setBlockedOAuthBrowser(null);
     setSubmitting(true);
     try {
       const supabase = createSupabaseBrowserClient();
@@ -174,20 +182,39 @@ export function SignUpForm({
 
   async function handleGoogleSignUp() {
     setGoogleSubmitting(true);
+    setBlockedOAuthBrowser(null);
     try {
       const { error } = await startGoogleOAuth("sign-up");
       if (error) {
         message.error(t("socialAuthFailed"));
         setGoogleSubmitting(false);
       }
-    } catch {
-      message.error(t("socialAuthFailed"));
+    } catch (error) {
+      if (isGoogleOAuthUnsupportedBrowserError(error)) {
+        setBlockedOAuthBrowser(error.browser);
+      } else {
+        message.error(t("socialAuthFailed"));
+      }
       setGoogleSubmitting(false);
     }
   }
 
   return (
     <div className="auth-form-stack">
+      {blockedOAuthBrowser && (
+        <Alert
+          type="warning"
+          showIcon
+          title={toauth("embeddedBrowserTitle", {
+            browser: toauth(
+              `browser.${blockedOAuthBrowser}` as Parameters<typeof toauth>[0],
+            ),
+          })}
+          description={toauth("embeddedBrowserDescription")}
+          className="!mb-0"
+          data-testid="oauth-browser-warning"
+        />
+      )}
       <Form
         form={form}
         layout="vertical"

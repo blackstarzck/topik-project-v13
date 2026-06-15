@@ -18,15 +18,13 @@ type RecItem = {
   reason: string | null;
   weakness_tags: string[] | null;
   recommendation_runs: { expires_at: string | null } | null;
-  problems:
-    | {
-        id: string;
-        title: string;
-        domain: string;
-        question_no: number | null;
-        publish_status: string;
-      }
-    | null;
+  problems: {
+    id: string;
+    title: string;
+    domain: string;
+    question_no: number | null;
+    publish_status: string;
+  } | null;
 };
 
 type ProblemRow = {
@@ -181,19 +179,20 @@ describe("getWeakDimensions", () => {
 });
 
 describe("getWeaknessRecommendations", () => {
-  it("returns up to 3 recommendation_items when active items exist (tier 1)", async () => {
+  it("returns up to 4 recommendation_items when active items exist (tier 1)", async () => {
     const recItems: RecItem[] = [
       makeItem("i-1", "p-1", 1),
       makeItem("i-2", "p-2", 2),
       makeItem("i-3", "p-3", 3),
+      makeItem("i-4", "p-4", 4),
     ];
     const create = async () =>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       makeClient({ recItems }) as any;
     const out = await getWeaknessRecommendations("user-1", create);
-    expect(out).toHaveLength(3);
+    expect(out).toHaveLength(4);
     expect(out[0].source).toBe("recommendation");
-    expect(out.map((r) => r.problemId)).toEqual(["p-1", "p-2", "p-3"]);
+    expect(out.map((r) => r.problemId)).toEqual(["p-1", "p-2", "p-3", "p-4"]);
   });
 
   it("falls back to tag-overlap query when recommendation_items is empty (tier 2)", async () => {
@@ -218,7 +217,10 @@ describe("getWeaknessRecommendations", () => {
     expect(out.every((r) => r.source === "tag_fallback")).toBe(true);
     // The overlaps() call must have used the weak dimensions as tags.
     expect(client.__calls.overlaps?.column).toBe("tags");
-    expect(client.__calls.overlaps?.values.sort()).toEqual(["content", "vocab"]);
+    expect(client.__calls.overlaps?.values.sort()).toEqual([
+      "content",
+      "vocab",
+    ]);
   });
 
   it("returns [] when neither recommendation_items nor weak dimensions exist", async () => {

@@ -1,0 +1,31 @@
+{
+  "runId": "20260615-091636",
+  "capturedAt": "2026-06-15T00:19:22.512Z",
+  "ia": "C-02",
+  "folder": "06-C-02-problem-list",
+  "state": "default",
+  "route": "/practice/problems",
+  "auth": true,
+  "viewport": {
+    "name": "tablet",
+    "width": 768,
+    "height": 1024
+  },
+  "status": "ok",
+  "note": null,
+  "expectedPath": "/practice/problems",
+  "finalUrl": "http://127.0.0.1:3000/practice/problems",
+  "finalPath": "/practice/problems",
+  "title": "문제 목록 — TALKPIK | TALKPIK AI",
+  "headings": [
+    "문제 목록"
+  ],
+  "screenshotPath": "docs/Wireframe/06-C-02-problem-list/browser-screenshot--default--tablet.png",
+  "durationMs": 4006,
+  "errors": {
+    "pageErrors": [],
+    "consoleErrors": [],
+    "responseErrors": [],
+    "errorMessage": null
+  }
+}

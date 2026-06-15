@@ -1,0 +1,11 @@
+﻿{
+    "schemaVersion":  "1.0",
+    "runId":  "2026-06-15-wireframe-ai-concepts",
+    "conceptId":  "concept-03",
+    "globalConceptId":  "08-D-01-short-answer-writing-51__default__desktop__c03",
+    "stateId":  "08-D-01-short-answer-writing-51__default__desktop",
+    "page":  "08-D-01-short-answer-writing-51",
+    "state":  "default",
+    "screenType":  "workspace",
+    "prompt":  "Use case: ui-mockup\nAsset type: TALKPIK AI step-focused 51 writing workspace concept\nInput image role: source screenshot is a reference for 51 writing default state and current step only.\nPrimary request: Redesign 08-D-01-short-answer-writing-51/default.\nDirection: step-focused writing lane.\nComposition/framing: desktop 1280x900 edge-to-edge app UI screenshot only; no browser address bar, tabs, bookmarks bar, OS window title bar, device frame, or watermark. Preserve current active step as 2: answer writing. Show step 1 problem reading completed/secondary, step 2 answer writing active, step 3 submit/analyze disabled/upcoming. Keep left sidebar, prompt passage, reference material, blank tabs, focused answer textarea with character count, autosave/timer controls, submit disabled/ready area, right tutor guide and hints.\nStyle/medium: high-fidelity Ant Design Steps/Tabs/TextArea/Card/Button UI, compact TOPIK writing workspace.\nColor palette: Mist/Snow/Fog/Obsidian neutral stack; Obsidian only for active step and primary action; saved status as tiny text/icon.\nTypography: Cosmica-like single sans, readable Korean passage, compact no letter spacing.\nConstraints: current writing state and editor must dominate; Korean UI text is visual direction only and not final copy source.\nAvoid: browser chrome, OS frame, device frame, AI gradients, colorful CTA, feedback/result state, large decorative mascot, heavy shadows, watermark."
+}

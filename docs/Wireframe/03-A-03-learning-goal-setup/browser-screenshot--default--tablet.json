@@ -1,0 +1,31 @@
+{
+  "runId": "20260615-091636",
+  "capturedAt": "2026-06-15T00:18:44.162Z",
+  "ia": "A-03",
+  "folder": "03-A-03-learning-goal-setup",
+  "state": "default",
+  "route": "/onboarding/learning-goal",
+  "auth": true,
+  "viewport": {
+    "name": "tablet",
+    "width": 768,
+    "height": 1024
+  },
+  "status": "ok",
+  "note": null,
+  "expectedPath": "/onboarding/learning-goal",
+  "finalUrl": "http://127.0.0.1:3000/onboarding/learning-goal",
+  "finalPath": "/onboarding/learning-goal",
+  "title": "학습 목표 설정 — TALKPIK | TALKPIK AI",
+  "headings": [
+    "학습 목표 설정"
+  ],
+  "screenshotPath": "docs/Wireframe/03-A-03-learning-goal-setup/browser-screenshot--default--tablet.png",
+  "durationMs": 3653,
+  "errors": {
+    "pageErrors": [],
+    "consoleErrors": [],
+    "responseErrors": [],
+    "errorMessage": null
+  }
+}

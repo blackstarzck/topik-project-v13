@@ -3,6 +3,54 @@
 import { createSupabaseBrowserClient } from "../supabase/browser";
 
 export type GoogleOAuthIntent = "login" | "sign-up";
+export type GoogleOAuthEmbeddedBrowser =
+  | "kakaoTalk"
+  | "instagram"
+  | "facebook"
+  | "line"
+  | "naver";
+
+export type GoogleOAuthBrowserSupport =
+  | { supported: true }
+  | {
+      supported: false;
+      browser: GoogleOAuthEmbeddedBrowser;
+      reason: "embedded_user_agent";
+    };
+
+const GOOGLE_OAUTH_DISALLOWED_USER_AGENTS: ReadonlyArray<{
+  browser: GoogleOAuthEmbeddedBrowser;
+  pattern: RegExp;
+}> = [
+  { browser: "kakaoTalk", pattern: /\bKAKAOTALK\b/i },
+  { browser: "instagram", pattern: /\bInstagram\b/i },
+  { browser: "facebook", pattern: /\b(FBAN|FBAV|FB_IAB)\b/i },
+  { browser: "line", pattern: /\bLine\/\d/i },
+  { browser: "naver", pattern: /\bNAVER\(inapp/i },
+];
+
+export class GoogleOAuthUnsupportedBrowserError extends Error {
+  readonly browser: GoogleOAuthEmbeddedBrowser;
+
+  constructor(browser: GoogleOAuthEmbeddedBrowser) {
+    super("Google OAuth is blocked in this embedded browser.");
+    this.name = "GoogleOAuthUnsupportedBrowserError";
+    this.browser = browser;
+  }
+}
+
+export function isGoogleOAuthUnsupportedBrowserError(
+  error: unknown,
+): error is GoogleOAuthUnsupportedBrowserError {
+  return (
+    error instanceof GoogleOAuthUnsupportedBrowserError ||
+    (typeof error === "object" &&
+      error !== null &&
+      "name" in error &&
+      error.name === "GoogleOAuthUnsupportedBrowserError" &&
+      "browser" in error)
+  );
+}
 
 export function buildPostAuthPath(intent: GoogleOAuthIntent): string {
   return `/auth/post-auth?intent=${intent}`;
@@ -33,7 +81,28 @@ export function buildClientAuthCallbackUrl(
   return url.toString();
 }
 
+export function getGoogleOAuthBrowserSupport(
+  userAgent =
+    typeof navigator === "undefined" ? "" : navigator.userAgent,
+): GoogleOAuthBrowserSupport {
+  for (const disallowed of GOOGLE_OAUTH_DISALLOWED_USER_AGENTS) {
+    if (disallowed.pattern.test(userAgent)) {
+      return {
+        supported: false,
+        browser: disallowed.browser,
+        reason: "embedded_user_agent",
+      };
+    }
+  }
+  return { supported: true };
+}
+
 export async function startGoogleOAuth(intent: GoogleOAuthIntent) {
+  const browserSupport = getGoogleOAuthBrowserSupport();
+  if (!browserSupport.supported) {
+    throw new GoogleOAuthUnsupportedBrowserError(browserSupport.browser);
+  }
+
   const supabase = createSupabaseBrowserClient();
   return supabase.auth.signInWithOAuth({
     provider: "google",

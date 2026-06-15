@@ -16,14 +16,14 @@
 - Route type: page
 - 기준 흐름: `docs/flow/user-flow.md`의 IA 순서를 따른다.
 - 진입 경로: 루트 `/` 직접 접근 또는 공개 링크.
-- 이탈 경로: 무료 시작은 A-01, 로그인은 A-02, 이용약관/개인정보 링크는 X-13/X-14로 이동한다.
+- 이탈 경로: 히어로의 무료 시작은 A-01, 헤더/내비의 로그인은 A-02, 이용약관/개인정보 링크는 X-13/X-14로 이동한다.
 - 화면 내부 동작: 섹션 이동, 미리보기 확인, 혜택 카드 확인을 처리한다.
 
 ## 주요 기능
 
 - 가치 제안
-- 시작 CTA
-- 로그인 CTA
+- 시작 CTA: 히어로에서 제공
+- 로그인 CTA: 헤더/내비에서 제공
 - 요금/기능 안내
 
 ## 상태/오류
@@ -38,7 +38,7 @@
 
 | 테이블/버킷/RPC | 컬럼/필드 | 사용 방식 | 화면 기능 | 권한/RLS | 근거 | 불확실성 |
 | --- | --- | --- | --- | --- | --- | --- |
-| `profiles` | `plan_label` | derived-read | 랜딩의 플랜/권한 CTA 문구와 연결될 수 있으나 현재 직접 DB 의존은 낮다. | public/auth flow; no user-owned row access unless session exists | `src/app/(workspace)/profile/page.tsx`<br>`src/lib/admin/queries.ts`<br>`src/lib/admin/server.ts`<br>`src/lib/auth/profile.ts`<br>`src/lib/settings/mutations.ts` | Derived usage inferred from current source/domain docs. |
+| `profiles` | `plan_label` | derived-read | 랜딩의 플랜/권한 CTA 문구와 연결될 수 있으나 현재 직접 DB 의존은 낮다. | public/auth flow; no user-owned row access unless session exists | `src/app/(workspace)/profile/page.tsx`<br>`src/lib/auth/profile.ts`<br>`src/lib/settings/mutations.ts` | Derived usage inferred from current source/domain docs. |
 
 ## 현재 구현 상태
 

@@ -6,7 +6,7 @@ import { LandingHeader } from "@/components/landing/LandingHeader";
 import { PortfolioLandingLayout } from "@/components/landing/PortfolioLandingLayout";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PublicShell } from "@/components/shared/PublicShell";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getCurrentLandingAuthStatus } from "@/lib/auth/completion";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("landing");
@@ -14,10 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HomePage() {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const authStatus = await getCurrentLandingAuthStatus();
 
   return (
     <PublicShell className="landing-public-shell">
@@ -34,12 +31,12 @@ export default async function HomePage() {
             <source src="/assets/landing-hero-video.mp4" type="video/mp4" />
           </video>
           <div className="landing-hero-shell">
-            <LandingHeader isAuthenticated={Boolean(user)} />
-            <Hero isAuthenticated={Boolean(user)} />
+            <LandingHeader authStatus={authStatus} />
+            <Hero authStatus={authStatus} />
           </div>
         </section>
 
-        <PortfolioLandingLayout />
+        <PortfolioLandingLayout authStatus={authStatus} />
       </PageContainer>
     </PublicShell>
   );

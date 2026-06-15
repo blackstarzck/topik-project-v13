@@ -1,0 +1,32 @@
+{
+  "runId": "20260615-091636",
+  "capturedAt": "2026-06-15T00:20:49.911Z",
+  "ia": "D-M2",
+  "folder": "13-D-M2-ai-analysis-loading",
+  "state": "analyzing",
+  "route": "/writing/feedback/short/44ce0316-ca25-4d4f-8fd6-252a1be02085",
+  "auth": true,
+  "viewport": {
+    "name": "tablet",
+    "width": 768,
+    "height": 1024
+  },
+  "status": "ok",
+  "note": null,
+  "expectedPath": "/writing/feedback/short/44ce0316-ca25-4d4f-8fd6-252a1be02085",
+  "finalUrl": "http://127.0.0.1:3000/writing/feedback/short/44ce0316-ca25-4d4f-8fd6-252a1be02085",
+  "finalPath": "/writing/feedback/short/44ce0316-ca25-4d4f-8fd6-252a1be02085",
+  "title": "단답 피드백 — TALKPIK | TALKPIK AI",
+  "headings": [
+    "제출한 답안",
+    "AI가 답안을 분석하고 있어요"
+  ],
+  "screenshotPath": "docs/Wireframe/13-D-M2-ai-analysis-loading/browser-screenshot--analyzing--tablet.png",
+  "durationMs": 3514,
+  "errors": {
+    "pageErrors": [],
+    "consoleErrors": [],
+    "responseErrors": [],
+    "errorMessage": null
+  }
+}

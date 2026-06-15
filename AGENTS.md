@@ -88,7 +88,7 @@ AI가 만든 결과물은 아래 중 하나 이상의 근거가 있어야 다음
 4. 필요한 최소 변경만 수행한다.
 5. 테스트 또는 검증을 실행한다.
 6. 변경 내용, 이유, 확인 결과, 남은 위험을 요약한다.
-7. 중요한 결정, 실패, 실험 결과는 기존 기록 체계에 맞춰 남긴다. 예: `docs/ai-workflow/runs/YYYY/MM/DD/`, `docs/design-review-result/`, `docs/superpowers/plans/`, `supabase/migrations/INDEX.md`.
+7. 중요한 결정, 실패, 실험 결과는 기존 기록 체계에 맞춰 남긴다. 예: `docs/ai-workflow/runs/YYYY/MM/DD/`, `docs/superpowers/plans/`, `supabase/migrations/INDEX.md`.
 
 ## 구현/개발 작업 계획
 
@@ -106,6 +106,7 @@ AI가 만든 결과물은 아래 중 하나 이상의 근거가 있어야 다음
 - Tailwind CSS는 제한된 utility layer로만 사용한다. 디자인 시스템이나 brand token source로 사용하지 않는다.
 - theme을 수정하거나 추가할 때는 하나의 theme source of truth를 기준으로 Ant Design adapter와 Tailwind adapter를 함께 갱신한다. AntD는 `ConfigProvider`/`theme.token`/`theme.components` 방식으로, Tailwind는 `src/styles/global.css`의 Tailwind v4 `@theme inline`과 `--app-*` bridge 방식으로 같은 값을 소비해야 한다.
 - 디자인 컴포넌트는 AntD 컴포넌트 또는 AntD 컴포넌트를 감싼 프로젝트 wrapper를 사용한다. Tailwind로 Button/Input/Card/Modal 같은 AntD 컴포넌트의 상태나 variant를 재구현하지 않는다.
+- 난이도(1~5) 색 표시는 `DESIGN.md`의 "Tokens — Difficulty Scale"을 따른다. 아이콘만 틴트하고 글자 라벨은 무채색으로 두며, 색/라벨 매핑은 `src/components/practice/DifficultyMeter.tsx`의 `difficultyFillColor`·`difficultyLabelKey` 단일 소스를 쓴다. 이 5색은 난이도 표시 외 UI에 재사용하지 않는다.
 - Supabase server-only key와 secret은 browser-visible 변수로 노출하지 않는다.
 - RLS, auth, storage, profile, admin role을 건드릴 때는 관련 문서를 먼저 읽는다.
 - framework-level dependency를 추가하거나 교체하려면 stack-change decision 또는 사용자 승인과 문서 갱신이 필요하다.

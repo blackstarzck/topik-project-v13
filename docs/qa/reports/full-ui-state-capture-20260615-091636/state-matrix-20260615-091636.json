@@ -1,0 +1,317 @@
+[
+  {
+    "ia": "X-01",
+    "folder": "23-X-01-product-landing",
+    "route": "/",
+    "state": "default",
+    "auth": false,
+    "preAction": null
+  },
+  {
+    "ia": "A-01",
+    "folder": "01-A-01-sign-up",
+    "route": "/sign-up",
+    "state": "default",
+    "auth": false,
+    "preAction": null
+  },
+  {
+    "ia": "A-02",
+    "folder": "02-A-02-login",
+    "route": "/login",
+    "state": "default",
+    "auth": false,
+    "preAction": null
+  },
+  {
+    "ia": "A-02",
+    "folder": "02-A-02-login",
+    "route": "/login?reason=session_expired",
+    "state": "session-expired",
+    "auth": false,
+    "preAction": null
+  },
+  {
+    "ia": "X-06",
+    "folder": "28-X-06-password-reset",
+    "route": "/password-reset",
+    "state": "default",
+    "auth": false,
+    "preAction": null
+  },
+  {
+    "ia": "X-16",
+    "folder": "38-X-16-password-reset-confirm",
+    "route": "/password-reset/confirm",
+    "state": "default",
+    "auth": false,
+    "preAction": null
+  },
+  {
+    "ia": "X-11",
+    "folder": "33-X-11-auth-error",
+    "route": "/auth/error?reason=unknown",
+    "state": "unknown",
+    "auth": false,
+    "preAction": null
+  },
+  {
+    "ia": "X-11",
+    "folder": "33-X-11-auth-error",
+    "route": "/auth/error?reason=otp_expired&email=student%40example.com&retry_after_seconds=1",
+    "state": "otp-expired",
+    "auth": false,
+    "preAction": null
+  },
+  {
+    "ia": "X-11",
+    "folder": "33-X-11-auth-error",
+    "route": "/auth/error?reason=over_request_rate_limit&retry_after_seconds=60",
+    "state": "rate-limited",
+    "auth": false,
+    "preAction": null
+  },
+  {
+    "ia": "X-12",
+    "folder": "34-X-12-auth-verify-email",
+    "route": "/auth/verify-email",
+    "state": "default",
+    "auth": false,
+    "preAction": null
+  },
+  {
+    "ia": "X-17",
+    "folder": "39-X-17-auth-callback-fragment",
+    "route": "/auth/callback-fragment",
+    "state": "default",
+    "auth": false,
+    "preAction": null
+  },
+  {
+    "ia": "X-13",
+    "folder": "35-X-13-terms",
+    "route": "/terms",
+    "state": "default",
+    "auth": false,
+    "preAction": null
+  },
+  {
+    "ia": "X-14",
+    "folder": "36-X-14-privacy-policy",
+    "route": "/privacy",
+    "state": "default",
+    "auth": false,
+    "preAction": null
+  },
+  {
+    "ia": "X-18",
+    "folder": "40-X-18-auth-consent",
+    "route": "/auth/consent?next=/dashboard",
+    "state": "current-account-redirect",
+    "auth": true,
+    "note": "The .env.local student account has already accepted required consent; this captures the actual redirect state.",
+    "preAction": null
+  },
+  {
+    "ia": "A-03",
+    "folder": "03-A-03-learning-goal-setup",
+    "route": "/onboarding/learning-goal",
+    "state": "default",
+    "auth": true,
+    "preAction": null
+  },
+  {
+    "ia": "B-01",
+    "folder": "04-B-01-home-dashboard",
+    "route": "/dashboard",
+    "state": "default",
+    "auth": true,
+    "preAction": null
+  },
+  {
+    "ia": "C-01",
+    "folder": "05-C-01-problem-type-recommendations",
+    "route": "/practice/recommendations",
+    "state": "default",
+    "auth": true,
+    "preAction": null
+  },
+  {
+    "ia": "C-02",
+    "folder": "06-C-02-problem-list",
+    "route": "/practice/problems",
+    "state": "default",
+    "auth": true,
+    "preAction": null
+  },
+  {
+    "ia": "C-03",
+    "folder": "07-C-03-retry-modal",
+    "route": "/practice/problems?solve=solved",
+    "state": "modal-open",
+    "auth": true,
+    "preAction": "retry-modal"
+  },
+  {
+    "ia": "D-01",
+    "folder": "08-D-01-short-answer-writing-51",
+    "route": "/writing/short-answer-writing-51",
+    "state": "default",
+    "auth": true,
+    "preAction": null
+  },
+  {
+    "ia": "D-02",
+    "folder": "09-D-02-answer-writing-52",
+    "route": "/writing/answer-writing-52",
+    "state": "default",
+    "auth": true,
+    "preAction": null
+  },
+  {
+    "ia": "D-03",
+    "folder": "10-D-03-long-form-writing-53",
+    "route": "/writing/long-form-writing-53",
+    "state": "default",
+    "auth": true,
+    "preAction": null
+  },
+  {
+    "ia": "D-04",
+    "folder": "11-D-04-essay-writing-54",
+    "route": "/writing/essay-writing-54",
+    "state": "default",
+    "auth": true,
+    "preAction": null
+  },
+  {
+    "ia": "D-M1",
+    "folder": "12-D-M1-submission-confirmation-modal",
+    "route": "/writing/short-answer-writing-51?problem=007785ff-0105-41a1-b884-2227ba6a7540&fresh=1",
+    "state": "modal-open",
+    "auth": true,
+    "draftProblemId": "007785ff-0105-41a1-b884-2227ba6a7540",
+    "preAction": "submission-confirm"
+  },
+  {
+    "ia": "D-M2",
+    "folder": "13-D-M2-ai-analysis-loading",
+    "route": "/writing/feedback/short/44ce0316-ca25-4d4f-8fd6-252a1be02085",
+    "state": "analyzing",
+    "auth": true,
+    "preAction": null
+  },
+  {
+    "ia": "D-M3",
+    "folder": "22-D-M3-autosave-warning",
+    "route": "/writing/short-answer-writing-51?problem=007785ff-0105-41a1-b884-2227ba6a7540&fresh=1",
+    "state": "modal-open",
+    "auth": true,
+    "draftProblemId": "007785ff-0105-41a1-b884-2227ba6a7540",
+    "preAction": "autosave-warning"
+  },
+  {
+    "ia": "E-01",
+    "folder": "14-E-01-short-answer-feedback",
+    "route": "/writing/feedback/short/0216dcf7-d835-4ee7-979e-ab5683bf2b6e",
+    "state": "complete",
+    "auth": true,
+    "preAction": null
+  },
+  {
+    "ia": "E-02",
+    "folder": "15-E-02-long-form-feedback",
+    "route": "/writing/feedback/long/77ed47ca-0047-4cf6-9d18-8dbac352a161",
+    "state": "complete",
+    "auth": true,
+    "preAction": null
+  },
+  {
+    "ia": "R-01",
+    "folder": "16-R-01-comparison-report",
+    "route": "/writing/reports/a2fd55f5-f824-4016-bde3-c8c5d7406bfe/compare",
+    "state": "default",
+    "auth": true,
+    "preAction": null
+  },
+  {
+    "ia": "R-02",
+    "folder": "17-R-02-next-problem-recommendation",
+    "route": "/practice/next",
+    "state": "default",
+    "auth": true,
+    "preAction": null
+  },
+  {
+    "ia": "F-01",
+    "folder": "18-F-01-my-library",
+    "route": "/library",
+    "state": "default",
+    "auth": true,
+    "preAction": null
+  },
+  {
+    "ia": "F-M1",
+    "folder": "19-F-M1-pdf-export-modal",
+    "route": "/library",
+    "state": "modal-open",
+    "auth": true,
+    "preAction": "pdf-export-modal"
+  },
+  {
+    "ia": "G-01",
+    "folder": "20-G-01-language-settings",
+    "route": "/settings/language",
+    "state": "default",
+    "auth": true,
+    "preAction": null
+  },
+  {
+    "ia": "X-02",
+    "folder": "24-X-02-growth-dashboard",
+    "route": "/growth",
+    "state": "default",
+    "auth": true,
+    "preAction": null
+  },
+  {
+    "ia": "X-03",
+    "folder": "25-X-03-paywall",
+    "route": "/paywall",
+    "state": "default",
+    "auth": true,
+    "preAction": null
+  },
+  {
+    "ia": "X-04",
+    "folder": "26-X-04-subscription-management",
+    "route": "/subscription",
+    "state": "default",
+    "auth": true,
+    "preAction": null
+  },
+  {
+    "ia": "X-05",
+    "folder": "27-X-05-profile-editing",
+    "route": "/profile",
+    "state": "default",
+    "auth": true,
+    "preAction": null
+  },
+  {
+    "ia": "X-07",
+    "folder": "29-X-07-weakness-based-recommendations",
+    "route": "/practice/weakness",
+    "state": "default",
+    "auth": true,
+    "preAction": null
+  },
+  {
+    "ia": "X-09",
+    "folder": "31-X-09-notification-settings",
+    "route": "/settings/notifications",
+    "state": "default",
+    "auth": true,
+    "preAction": null
+  }
+]

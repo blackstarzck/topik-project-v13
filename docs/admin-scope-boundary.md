@@ -15,8 +15,8 @@
 > login/notification wireframe cross-links, `CLAUDE.md`/`AGENTS.md`, and the
 > design plan/runbook frozen-scope notes. The active IA is now 35 user-facing
 > screens; IA codes H-01/X-08/X-10/X-15 exist only in this history doc and in
-> archived run artifacts (`docs/ai-workflow/runs/`, `docs/design-review-result/`),
-> which were intentionally left untouched.
+> archived run artifacts (`docs/ai-workflow/runs/`), which were intentionally
+> left untouched. (The former design-review-result archive has since been removed.)
 > **Still preserved (load-bearing):** `profiles.app_role`, `admin_audit_logs`,
 > `private.is_*_admin` RLS helpers.
 

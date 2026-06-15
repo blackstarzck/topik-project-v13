@@ -1,0 +1,32 @@
+{
+  "runId": "20260615-091636",
+  "capturedAt": "2026-06-15T00:19:13.057Z",
+  "ia": "C-01",
+  "folder": "05-C-01-problem-type-recommendations",
+  "state": "default",
+  "route": "/practice/recommendations",
+  "auth": true,
+  "viewport": {
+    "name": "desktop",
+    "width": 1280,
+    "height": 900
+  },
+  "status": "ok",
+  "note": null,
+  "expectedPath": "/practice/recommendations",
+  "finalUrl": "http://127.0.0.1:3000/practice/recommendations",
+  "finalPath": "/practice/recommendations",
+  "title": "추천 문제 — TALKPIK | TALKPIK AI",
+  "headings": [
+    "추천 문제",
+    "취업 서류 작성 특강 안내"
+  ],
+  "screenshotPath": "docs/Wireframe/05-C-01-problem-type-recommendations/browser-screenshot--default--desktop.png",
+  "durationMs": 4392,
+  "errors": {
+    "pageErrors": [],
+    "consoleErrors": [],
+    "responseErrors": [],
+    "errorMessage": null
+  }
+}

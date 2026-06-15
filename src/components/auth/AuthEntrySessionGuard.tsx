@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
+import { POST_AUTH_LOGIN_PATH } from "@/lib/auth/completion-routes";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 type Props = {
@@ -13,7 +14,9 @@ type Props = {
  * Keeps authenticated users out of the login/sign-up forms even when the page is
  * restored from the browser back-forward cache after an OAuth round-trip.
  */
-export function AuthEntrySessionGuard({ redirectTo = "/dashboard" }: Props) {
+export function AuthEntrySessionGuard({
+  redirectTo = POST_AUTH_LOGIN_PATH,
+}: Props) {
   const router = useRouter();
 
   useEffect(() => {

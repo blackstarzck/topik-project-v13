@@ -1,0 +1,39 @@
+﻿{
+    "schemaVersion":  "1.0",
+    "runId":  "2026-06-15-wireframe-ai-concepts",
+    "reviewId":  "14-E-01-short-answer-feedback__complete__desktop__c02",
+    "conceptId":  "14-E-01-short-answer-feedback__complete__desktop__c02",
+    "localConceptId":  "concept-02",
+    "stateId":  "14-E-01-short-answer-feedback__complete__desktop",
+    "page":  "14-E-01-short-answer-feedback",
+    "state":  "complete",
+    "screenType":  "workspace",
+    "imagePath":  "14-E-01-short-answer-feedback/complete/concept-02/image.png",
+    "promptPath":  "14-E-01-short-answer-feedback/complete/concept-02/prompt.json",
+    "metaPath":  "14-E-01-short-answer-feedback/complete/concept-02/meta.json",
+    "reviewPath":  "14-E-01-short-answer-feedback/complete/concept-02/review.json",
+    "status":  "accepted",
+    "validation":  "pass",
+    "mustPreserveStateSignals":  [
+                                     "completed feedback/result state",
+                                     "score or summary",
+                                     "next action"
+                                 ],
+    "checks":  {
+                   "fileExists":  true,
+                   "nonZeroBytes":  true,
+                   "noChrome":  true,
+                   "stateSignalPreserved":  true,
+                   "primaryCtaDarkOnly":  true,
+                   "neutralPaletteOnly":  true,
+                   "workspaceRadiusOk":  true,
+                   "noLoudGradient":  true,
+                   "keyRegionsPreserved":  true,
+                   "textUsableAsVisualReference":  true
+               },
+    "issueCodes":  [
+
+                   ],
+    "notes":  "문장별 첨삭 중심, 완료 배지, 점수, 추천 학습, bottom actions가 유지됨.",
+    "reviewedAt":  "2026-06-15T12:57:54.8953239+09:00"
+}

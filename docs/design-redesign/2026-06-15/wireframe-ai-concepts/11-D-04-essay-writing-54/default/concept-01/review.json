@@ -1,0 +1,39 @@
+﻿{
+    "schemaVersion":  "1.0",
+    "runId":  "2026-06-15-wireframe-ai-concepts",
+    "reviewId":  "11-D-04-essay-writing-54__default__desktop__c01",
+    "conceptId":  "11-D-04-essay-writing-54__default__desktop__c01",
+    "localConceptId":  "concept-01",
+    "stateId":  "11-D-04-essay-writing-54__default__desktop",
+    "page":  "11-D-04-essay-writing-54",
+    "state":  "default",
+    "screenType":  "workspace",
+    "imagePath":  "11-D-04-essay-writing-54/default/concept-01/image.png",
+    "promptPath":  "11-D-04-essay-writing-54/default/concept-01/prompt.json",
+    "metaPath":  "11-D-04-essay-writing-54/default/concept-01/meta.json",
+    "reviewPath":  "11-D-04-essay-writing-54/default/concept-01/review.json",
+    "status":  "accepted",
+    "validation":  "pass",
+    "mustPreserveStateSignals":  [
+                                     "default page purpose",
+                                     "key regions preserved",
+                                     "primary action preserved"
+                                 ],
+    "checks":  {
+                   "fileExists":  true,
+                   "nonZeroBytes":  true,
+                   "noChrome":  true,
+                   "stateSignalPreserved":  true,
+                   "primaryCtaDarkOnly":  true,
+                   "neutralPaletteOnly":  true,
+                   "workspaceRadiusOk":  true,
+                   "noLoudGradient":  true,
+                   "keyRegionsPreserved":  true,
+                   "textUsableAsVisualReference":  true
+               },
+    "issueCodes":  [
+
+                   ],
+    "notes":  "54번 essay writing state, active step, 조건/루브릭, central editor, checklist, manuscript preview가 보존됨.",
+    "reviewedAt":  "2026-06-15T14:11:50.6901920+09:00"
+}

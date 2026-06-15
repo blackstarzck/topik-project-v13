@@ -1,0 +1,31 @@
+{
+  "runId": "20260615-091636",
+  "capturedAt": "2026-06-15T00:22:54.786Z",
+  "ia": "X-03",
+  "folder": "25-X-03-paywall",
+  "state": "default",
+  "route": "/paywall",
+  "auth": true,
+  "viewport": {
+    "name": "tablet",
+    "width": 768,
+    "height": 1024
+  },
+  "status": "ok",
+  "note": null,
+  "expectedPath": "/paywall",
+  "finalUrl": "http://127.0.0.1:3000/paywall",
+  "finalPath": "/paywall",
+  "title": "구독 가입 — TALKPIK | TALKPIK AI",
+  "headings": [
+    "구독 시작하기"
+  ],
+  "screenshotPath": "docs/Wireframe/25-X-03-paywall/browser-screenshot--default--tablet.png",
+  "durationMs": 3319,
+  "errors": {
+    "pageErrors": [],
+    "consoleErrors": [],
+    "responseErrors": [],
+    "errorMessage": null
+  }
+}

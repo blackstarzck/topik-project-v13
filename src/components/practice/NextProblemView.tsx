@@ -12,6 +12,7 @@ import { consumeRecommendationItem } from "@/lib/practice/consume";
 import type { AlternativeProblem, NextProblemBundle } from "@/lib/practice/next";
 import { writingProblemHref } from "@/lib/writing/routes";
 import { AlternativeCardsGrid } from "./AlternativeCardsGrid";
+import { difficultyKey } from "./difficulty";
 import { SummaryCardRow } from "./SummaryCardRow";
 
 const { Paragraph, Text } = Typography;
@@ -25,15 +26,6 @@ const TIER_META: Record<
   2: { badgeKey: "tier2Badge", descriptionKey: "tier2Desc" },
   3: { badgeKey: "tier3Badge", descriptionKey: "tier3Desc" },
 };
-
-function difficultyKey(difficulty: number | null | undefined): string | null {
-  if (difficulty == null) return null;
-  if (difficulty <= 1) return "difficultyVeryEasy";
-  if (difficulty === 2) return "difficultyEasy";
-  if (difficulty === 3) return "difficultyNormal";
-  if (difficulty === 4) return "difficultyHardish";
-  return "difficultyHard";
-}
 
 function truncateTitle(title: string) {
   return title.length > PRIMARY_TITLE_LIMIT

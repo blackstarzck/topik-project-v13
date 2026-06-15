@@ -98,7 +98,7 @@ admin 관련 스키마와 UI는 문서화/정리 대상일 수 있지만, 이 �
 
 핵심 컬럼: `id`, `display_name`, `nickname`, `avatar_path`, `ui_locale`, `app_role`, `plan_label`, `status`, `notification_prefs`, `bio`, `learning_locale`, `content_prefs`, `created_at`, `updated_at`
 
-주요 사용처: `src/lib/auth/profile.ts`, `src/lib/settings/*`, `src/app/(workspace)/profile/page.tsx`, `src/lib/auth/admin-guard.ts`
+주요 사용처: `src/lib/auth/profile.ts`, `src/lib/settings/*`, `src/app/(workspace)/profile/page.tsx`
 
 ### `learning_goals`
 
@@ -114,7 +114,7 @@ AI 생성 문제와 관리자 curated 문제를 함께 담는 문제 카탈로�
 
 핵심 컬럼: `id`, `source`, `author_id`, `domain`, `question_no`, `topik_level`, `difficulty`, `title`, `prompt`, `materials`, `answer_key`, `rubric`, `explanation`, `tags`, `publish_status`, `review_status`, `lifecycle_status`, `lifecycle_reason`, `expires_at`, `visibility`
 
-주요 사용처: `src/lib/practice/*`, `src/app/(workspace)/practice/*`, `src/app/(workspace)/writing/_components/WritingQuestionRoute.tsx`, `src/lib/admin/*`
+주요 사용처: `src/lib/practice/*`, `src/app/(workspace)/practice/*`, `src/app/(workspace)/writing/_components/WritingQuestionRoute.tsx`
 
 쓰기 51~54번 화면은 `materials`/`answer_key`/`rubric` JSONB를 직접 렌더링하지 않고 `src/lib/writing/problem-normalizer.ts`의 `NormalizedWritingProblem`으로 정규화해서 사용한다.
 
@@ -124,7 +124,7 @@ AI 생성 문제와 관리자 curated 문제를 함께 담는 문제 카탈로�
 
 핵심 컬럼: `id`, `problem_id`, `storage_path`, `asset_type`, `sort_order`
 
-주요 사용처: `src/app/(workspace)/writing/_components/WritingQuestionRoute.tsx`, `src/components/admin/AdminProblemAssetsManager.tsx`
+주요 사용처: `src/app/(workspace)/writing/_components/WritingQuestionRoute.tsx`
 
 ### `problem_attempts`
 

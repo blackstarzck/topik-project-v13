@@ -9,6 +9,7 @@ import { AnimatedAuthCharacters } from "@/components/auth/AnimatedAuthCharacters
 import { AuthEntrySessionGuard } from "@/components/auth/AuthEntrySessionGuard";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { SignUpForm } from "@/components/auth/SignUpForm";
+import { getAuthEntryRedirectPath } from "@/lib/auth/completion-routes";
 
 const { Link: AntLink, Paragraph, Text, Title } = Typography;
 
@@ -44,7 +45,9 @@ export function AuthPromptExperience({
 
   return (
     <div className={`signup-prompt-layout signup-prompt-layout--${mode}`}>
-      <AuthEntrySessionGuard />
+      <AuthEntrySessionGuard
+        redirectTo={getAuthEntryRedirectPath(`/${mode}`)}
+      />
       <aside className="signup-prompt-hero" aria-label={heroEyebrow}>
         <NextLink href="/" className="signup-brand" aria-label="TALKPIK AI">
           <span className="signup-brand__mark" aria-hidden="true">

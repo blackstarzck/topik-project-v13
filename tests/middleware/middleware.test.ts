@@ -75,7 +75,7 @@ describe("middleware route protection", () => {
     const response = await callMiddleware("http://localhost/login");
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe(
-      "http://localhost/dashboard",
+      "http://localhost/auth/post-auth?intent=login",
     );
   });
 
@@ -87,7 +87,7 @@ describe("middleware route protection", () => {
     const response = await callMiddleware("http://localhost/sign-up");
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe(
-      "http://localhost/dashboard",
+      "http://localhost/auth/post-auth?intent=sign-up",
     );
   });
 

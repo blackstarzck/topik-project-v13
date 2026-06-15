@@ -37,7 +37,7 @@
 
 | 테이블/버킷/RPC | 컬럼/필드 | 사용 방식 | 화면 기능 | 권한/RLS | 근거 | 불확실성 |
 | --- | --- | --- | --- | --- | --- | --- |
-| `profiles` | `id`, `email`, `display_name`, `app_role`, `plan_label`, `status` | triggered-write | 회원가입 후 auth.users 트리거가 프로필 기본 row를 만든다. | public/auth flow; no user-owned row access unless session exists | `src/app/(workspace)/profile/page.tsx`<br>`src/lib/admin/queries.ts`<br>`src/lib/admin/server.ts`<br>`src/lib/auth/profile.ts`<br>`src/lib/settings/mutations.ts` | none |
+| `profiles` | `id`, `email`, `display_name`, `app_role`, `plan_label`, `status` | triggered-write | 회원가입 후 auth.users 트리거가 프로필 기본 row를 만든다. | public/auth flow; no user-owned row access unless session exists | `src/app/(workspace)/profile/page.tsx`<br>`src/lib/auth/profile.ts`<br>`src/lib/settings/mutations.ts` | none |
 | `rpc:public.handle_new_user` | - | trigger | auth.users 생성 후 public.profiles를 보강한다. | public/auth flow; no user-owned row access unless session exists | `supabase/migrations/20260521120000_auth_user_profile_bootstrap.sql` | none |
 
 ## 현재 구현 상태

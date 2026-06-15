@@ -1,0 +1,29 @@
+{
+  "runId": "20260615-091636",
+  "capturedAt": "2026-06-15T00:21:10.553Z",
+  "ia": "E-01",
+  "folder": "14-E-01-short-answer-feedback",
+  "state": "complete",
+  "route": "/writing/feedback/short/0216dcf7-d835-4ee7-979e-ab5683bf2b6e",
+  "auth": true,
+  "viewport": {
+    "name": "mobile",
+    "width": 360,
+    "height": 900
+  },
+  "status": "ok",
+  "note": null,
+  "expectedPath": "/writing/feedback/short/0216dcf7-d835-4ee7-979e-ab5683bf2b6e",
+  "finalUrl": "http://127.0.0.1:3000/writing/feedback/short/0216dcf7-d835-4ee7-979e-ab5683bf2b6e",
+  "finalPath": "/writing/feedback/short/0216dcf7-d835-4ee7-979e-ab5683bf2b6e",
+  "title": "단답 피드백 — TALKPIK | TALKPIK AI",
+  "headings": [],
+  "screenshotPath": "docs/Wireframe/14-E-01-short-answer-feedback/browser-screenshot--complete--mobile.png",
+  "durationMs": 3623,
+  "errors": {
+    "pageErrors": [],
+    "consoleErrors": [],
+    "responseErrors": [],
+    "errorMessage": null
+  }
+}

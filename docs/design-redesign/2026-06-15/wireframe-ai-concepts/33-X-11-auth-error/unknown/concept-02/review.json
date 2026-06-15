@@ -1,0 +1,41 @@
+﻿{
+    "schemaVersion":  "1.0",
+    "runId":  "2026-06-15-wireframe-ai-concepts",
+    "reviewId":  "33-X-11-auth-error__unknown__desktop__c02",
+    "conceptId":  "33-X-11-auth-error__unknown__desktop__c02",
+    "localConceptId":  "concept-02",
+    "stateId":  "33-X-11-auth-error__unknown__desktop",
+    "page":  "33-X-11-auth-error",
+    "state":  "unknown",
+    "screenType":  "auth",
+    "imagePath":  "33-X-11-auth-error/unknown/concept-02/image.png",
+    "promptPath":  "33-X-11-auth-error/unknown/concept-02/prompt.json",
+    "metaPath":  "33-X-11-auth-error/unknown/concept-02/meta.json",
+    "reviewPath":  "33-X-11-auth-error/unknown/concept-02/review.json",
+    "status":  "accepted",
+    "validation":  "pass",
+    "mustPreserveStateSignals":  [
+                                     "generic processing problem",
+                                     "retry later instruction",
+                                     "home button",
+                                     "login/signup link",
+                                     "auth-only no sidebar"
+                                 ],
+    "checks":  {
+                   "fileExists":  true,
+                   "nonZeroBytes":  true,
+                   "noChrome":  true,
+                   "stateSignalPreserved":  true,
+                   "primaryCtaDarkOnly":  true,
+                   "neutralPaletteOnly":  true,
+                   "workspaceRadiusOk":  true,
+                   "noLoudGradient":  true,
+                   "keyRegionsPreserved":  true,
+                   "textUsableAsVisualReference":  true
+               },
+    "issueCodes":  [
+
+                   ],
+    "notes":  "System-notice auth error concept preserves generic processing issue, retry-later message, home action, login/signup links, and no sidebar.",
+    "reviewedAt":  "2026-06-15T16:13:00.8976700+09:00"
+}

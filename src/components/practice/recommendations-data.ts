@@ -44,6 +44,15 @@ export type RecommendationBundle = {
   availableTypes: Set<QuestionNo>;
 };
 
+export const RECOMMENDATION_REQUEST_TIMEOUT_MS = 8_000;
+
+export class RecommendationRequestTimeoutError extends Error {
+  constructor() {
+    super("recommendation_request_timeout");
+    this.name = "RecommendationRequestTimeoutError";
+  }
+}
+
 function normalizeJoinedProblem(
   raw: unknown,
 ): { title: string; question_no: number | null } | null {
@@ -62,7 +71,21 @@ function toQuestionNo(value: number | null): QuestionNo | null {
     : null;
 }
 
-export async function fetchRecommendationBundle(
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+  return new Promise<T>((resolve, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(new RecommendationRequestTimeoutError());
+    }, timeoutMs);
+
+    promise.then(resolve, reject).finally(() => {
+      if (timeoutId) clearTimeout(timeoutId);
+    });
+  });
+}
+
+async function queryRecommendationBundle(
   questionNo: QuestionNo | null,
   createClient: () => ReturnType<
     typeof createSupabaseBrowserClient
@@ -141,6 +164,19 @@ export async function fetchRecommendationBundle(
   };
 }
 
+export function fetchRecommendationBundle(
+  questionNo: QuestionNo | null,
+  createClient: () => ReturnType<
+    typeof createSupabaseBrowserClient
+  > = createSupabaseBrowserClient,
+  timeoutMs = RECOMMENDATION_REQUEST_TIMEOUT_MS,
+): Promise<RecommendationBundle> {
+  return withTimeout(
+    queryRecommendationBundle(questionNo, createClient),
+    timeoutMs,
+  );
+}
+
 export function recommendationBundleKey(questionNo: QuestionNo | null) {
   return ["recommendation-bundle", questionNo ?? "all"] as const;
 }
@@ -149,6 +185,7 @@ export function useRecommendationBundle(questionNo: QuestionNo | null) {
   return useQuery({
     queryKey: recommendationBundleKey(questionNo),
     queryFn: () => fetchRecommendationBundle(questionNo),
+    retry: false,
   });
 }
 

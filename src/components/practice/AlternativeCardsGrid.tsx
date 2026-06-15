@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { AppCard } from "@/components/shared/AppCard";
 import { writingProblemHref } from "@/lib/writing/routes";
 import { SPACING } from "@/theme/spacing";
+import { difficultyKey } from "./difficulty";
 
 const { Paragraph, Text, Title } = Typography;
 const TITLE_LIMIT = 28;
@@ -27,15 +28,6 @@ type Props = {
   selectedId?: string | null;
   onSelect?: (alt: AlternativeProblem) => void;
 };
-
-function difficultyKey(difficulty: number | null | undefined): string | null {
-  if (difficulty == null) return null;
-  if (difficulty <= 1) return "difficultyVeryEasy";
-  if (difficulty === 2) return "difficultyEasy";
-  if (difficulty === 3) return "difficultyNormal";
-  if (difficulty === 4) return "difficultyHardish";
-  return "difficultyHard";
-}
 
 function truncateTitle(title: string) {
   return title.length > TITLE_LIMIT ? `${title.slice(0, TITLE_LIMIT)}...` : title;

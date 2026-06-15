@@ -1,0 +1,31 @@
+{
+  "runId": "20260615-091636",
+  "capturedAt": "2026-06-15T00:22:31.402Z",
+  "ia": "G-01",
+  "folder": "20-G-01-language-settings",
+  "state": "default",
+  "route": "/settings/language",
+  "auth": true,
+  "viewport": {
+    "name": "tablet",
+    "width": 768,
+    "height": 1024
+  },
+  "status": "ok",
+  "note": null,
+  "expectedPath": "/settings/language",
+  "finalUrl": "http://127.0.0.1:3000/settings/language",
+  "finalPath": "/settings/language",
+  "title": "언어 설정 — TALKPIK | TALKPIK AI",
+  "headings": [
+    "언어 설정"
+  ],
+  "screenshotPath": "docs/Wireframe/20-G-01-language-settings/browser-screenshot--default--tablet.png",
+  "durationMs": 4006,
+  "errors": {
+    "pageErrors": [],
+    "consoleErrors": [],
+    "responseErrors": [],
+    "errorMessage": null
+  }
+}

@@ -1,0 +1,11 @@
+﻿{
+    "schemaVersion":  "1.0",
+    "runId":  "2026-06-15-wireframe-ai-concepts",
+    "conceptId":  "concept-03",
+    "globalConceptId":  "20-G-01-language-settings__default__desktop__c03",
+    "stateId":  "20-G-01-language-settings__default__desktop",
+    "page":  "20-G-01-language-settings",
+    "state":  "default",
+    "screenType":  "workspace",
+    "prompt":  "Use case: ui-mockup\nAsset type: desktop AI redesign concept bitmap for TALKPIK AI user app\nPrimary request: Create concept-03 for page 20-G-01-language-settings, state default. Reference state: language settings page. Create a scan-optimized single-column settings panel that feels consistent with Ant Design and the project neutral design system.\nComposition/framing: desktop 1280x900 edge-to-edge app UI screenshot only; no browser address bar, tabs, bookmarks bar, OS title bar, device frame, or watermark. Preserve sidebar and settings language active item. Center a 720-800px wide settings column with clear section dividers: UI language radio group; learning language radio group in a Snow section; content settings segmented controls; help notes; supported language info banner; disabled save button at bottom. Keep enough whitespace but not a landing-page hero.\nStyle/medium: polished high-fidelity settings UI, compact form density, Ant Design-friendly controls, quiet neutral sections, no decorative icons beyond small functional markers.\nColor palette: Mist/Snow/Fog/Obsidian; Obsidian #09090b for selected control and active nav only; disabled gray save button; muted blue-gray information banner.\nTypography: Cosmica-like modern sans, Korean UI text as visual direction only, no negative letter spacing, compact heading scale.\nMust preserve state signals: UI language radios, learning language radios, content segmented preferences, help block, supported language banner, disabled save button.\nAvoid: browser chrome, OS frame, device frame, loud gradients, colorful CTAs, marketing composition, huge icons, rounded 28-36px cards, heavy drop shadows."
+}

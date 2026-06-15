@@ -37,7 +37,7 @@
 
 | 테이블/버킷/RPC | 컬럼/필드 | 사용 방식 | 화면 기능 | 권한/RLS | 근거 | 불확실성 |
 | --- | --- | --- | --- | --- | --- | --- |
-| `profiles` | `id`, `status`, `app_role` | read | 로그인 후 세션 사용자의 상태와 권한을 확인한다. | public/auth flow; no user-owned row access unless session exists | `src/app/(workspace)/profile/page.tsx`<br>`src/lib/admin/queries.ts`<br>`src/lib/admin/server.ts`<br>`src/lib/auth/profile.ts`<br>`src/lib/settings/mutations.ts` | none |
+| `profiles` | `id`, `status`, `app_role` | read | 로그인 후 세션 사용자의 상태와 권한을 확인한다. | public/auth flow; no user-owned row access unless session exists | `src/app/(workspace)/profile/page.tsx`<br>`src/lib/auth/profile.ts`<br>`src/lib/settings/mutations.ts` | none |
 
 ## 현재 구현 상태
 

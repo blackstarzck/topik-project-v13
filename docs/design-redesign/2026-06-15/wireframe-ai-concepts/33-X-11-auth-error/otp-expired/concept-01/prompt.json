@@ -1,0 +1,11 @@
+﻿{
+    "schemaVersion":  "1.0",
+    "runId":  "2026-06-15-wireframe-ai-concepts",
+    "conceptId":  "concept-01",
+    "globalConceptId":  "33-X-11-auth-error__otp-expired__desktop__c01",
+    "stateId":  "33-X-11-auth-error__otp-expired__desktop",
+    "page":  "33-X-11-auth-error",
+    "state":  "otp-expired",
+    "screenType":  "auth",
+    "prompt":  "Use case: ui-mockup\nAsset type: desktop AI redesign concept bitmap for TALKPIK AI user app\nPrimary request: Create concept-01 for page 33-X-11-auth-error, state otp-expired. Reference state: auth error page where verification link has expired. It shows email input, note that a new verification email can be sent and email can be received only once within 60 seconds, primary resend verification email button, login link, and home link.\nComposition/framing: desktop 1280x900 edge-to-edge app UI screenshot only; no browser address bar, tabs, bookmarks bar, OS title bar, device frame, or watermark. Auth-only page, no sidebar. Center a compact Snow card on Mist background. Include concise expired-link title, explanatory copy, email input with generic email, small cooldown/help line, Obsidian full-width resend email CTA, and secondary login/home links.\nStyle/medium: high-fidelity Ant Design-friendly auth error form, compact and trustworthy, no marketing background.\nColor palette: Mist/Snow/Fog/Obsidian; Obsidian #09090b for primary resend CTA only; muted gray helper text; no red error wall, no gradients.\nTypography: Cosmica-like modern sans, Korean UI text as visual direction only, no negative letter spacing, concise title.\nMust preserve state signals: OTP/verification link expired, email input, resend verification email action, 60-second limit/cooldown note, login link, home link, no app sidebar.\nAvoid: browser chrome, OS frame, device frame, loud gradient, colorful CTA, decorative warning illustration, huge card, heavy shadow."
+}

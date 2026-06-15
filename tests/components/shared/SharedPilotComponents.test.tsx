@@ -8,6 +8,7 @@ import { AppModal } from "../../../src/components/shared/AppModal";
 import { PageContainer } from "../../../src/components/shared/PageContainer";
 import { PageHeader } from "../../../src/components/shared/PageHeader";
 import { PublicShell } from "../../../src/components/shared/PublicShell";
+import { SelectableAppCard } from "../../../src/components/shared/SelectableAppCard";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
 
 // PLAN §Phase 1 — shared pilot components, TDD contract (#12 · #15 a11y).
@@ -58,6 +59,73 @@ describe("AppCard", () => {
   it("declares no --app-* variable in inline style", () => {
     const { container } = renderWithIntl(<AppCard>x</AppCard>);
     expectNoAppVarDeclarationsIn(container);
+  });
+});
+
+describe("SelectableAppCard", () => {
+  it("exposes selected state through aria and shared class hooks", () => {
+    const { container } = renderWithIntl(
+      <SelectableAppCard selected onSelect={() => undefined} title="choice">
+        body
+      </SelectableAppCard>,
+    );
+
+    const card = screen.getByRole("button", { name: /choice/i });
+    expect(card.getAttribute("aria-pressed")).toBe("true");
+    expect(card.classList.contains("selectable-app-card--selected")).toBe(
+      true,
+    );
+    expect(container.querySelector(".app-card")).toBeTruthy();
+    expect(container.querySelector(".app-surface")).toBeTruthy();
+  });
+
+  it("supports Enter and Space selection", () => {
+    const onSelect = vi.fn();
+    renderWithIntl(
+      <SelectableAppCard onSelect={onSelect} title="choice">
+        body
+      </SelectableAppCard>,
+    );
+
+    const card = screen.getByRole("button", { name: /choice/i });
+    fireEvent.keyDown(card, { key: "Enter" });
+    fireEvent.keyDown(card, { key: " " });
+
+    expect(onSelect).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not select when disabled", () => {
+    const onSelect = vi.fn();
+    renderWithIntl(
+      <SelectableAppCard disabled onSelect={onSelect} title="choice">
+        body
+      </SelectableAppCard>,
+    );
+
+    const card = screen.getByRole("button", { name: /choice/i });
+    fireEvent.click(card);
+    fireEvent.keyDown(card, { key: "Enter" });
+
+    expect(card.getAttribute("aria-disabled")).toBe("true");
+    expect(onSelect).not.toHaveBeenCalled();
+  });
+
+  it("applies the shared footer action class when actions are provided", () => {
+    renderWithIntl(
+      <SelectableAppCard
+        onSelect={() => undefined}
+        title="choice"
+        actions={[<button key="action">action</button>]}
+      >
+        body
+      </SelectableAppCard>,
+    );
+
+    expect(
+      document
+        .querySelector(".ant-card-actions")
+        ?.classList.contains("app-card-footer-actions"),
+    ).toBe(true);
   });
 });
 

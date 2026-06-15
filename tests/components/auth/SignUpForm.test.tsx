@@ -63,8 +63,18 @@ function submitButton() {
   return document.querySelector('button[type="submit"]') as HTMLButtonElement;
 }
 
+function setUserAgent(userAgent: string) {
+  Object.defineProperty(window.navigator, "userAgent", {
+    value: userAgent,
+    configurable: true,
+  });
+}
+
 beforeEach(() => {
   window.history.replaceState(null, "", "http://localhost:3000/sign-up");
+  setUserAgent(
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Version/17.0 Mobile/15E148 Safari/604.1",
+  );
   window.localStorage.clear();
   signUpMock.mockReset();
   signUpMock.mockResolvedValue({ error: null });
@@ -363,6 +373,26 @@ describe("SignUpForm", () => {
           "http://localhost:3000/auth/callback?next=%2Fauth%2Fpost-auth%3Fintent%3Dsign-up",
       },
     });
+    expect(signUpMock).not.toHaveBeenCalled();
+  });
+
+  it("shows external-browser guidance instead of starting Google OAuth in KakaoTalk", async () => {
+    setUserAgent(
+      "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 KAKAOTALK 10.7.0",
+    );
+    renderInApp(<SignUpForm />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Google로 계속" }));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("oauth-browser-warning")).toBeTruthy();
+    });
+    expect(
+      screen.getByText("카카오톡 안에서는 Google 로그인이 막힐 수 있어요"),
+    ).toBeTruthy();
+    expect(signInWithOAuthMock).not.toHaveBeenCalled();
     expect(signUpMock).not.toHaveBeenCalled();
   });
 

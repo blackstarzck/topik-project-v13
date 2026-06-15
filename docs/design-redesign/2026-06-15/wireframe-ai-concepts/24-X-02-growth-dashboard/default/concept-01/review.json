@@ -1,0 +1,43 @@
+﻿{
+    "schemaVersion":  "1.0",
+    "runId":  "2026-06-15-wireframe-ai-concepts",
+    "reviewId":  "24-X-02-growth-dashboard__default__desktop__c01",
+    "conceptId":  "24-X-02-growth-dashboard__default__desktop__c01",
+    "localConceptId":  "concept-01",
+    "stateId":  "24-X-02-growth-dashboard__default__desktop",
+    "page":  "24-X-02-growth-dashboard",
+    "state":  "default",
+    "screenType":  "workspace",
+    "imagePath":  "24-X-02-growth-dashboard/default/concept-01/image.png",
+    "promptPath":  "24-X-02-growth-dashboard/default/concept-01/prompt.json",
+    "metaPath":  "24-X-02-growth-dashboard/default/concept-01/meta.json",
+    "reviewPath":  "24-X-02-growth-dashboard/default/concept-01/review.json",
+    "status":  "accepted",
+    "validation":  "pass",
+    "mustPreserveStateSignals":  [
+                                     "growth dashboard",
+                                     "KPI cards",
+                                     "trend chart with time filters",
+                                     "weakness matrix",
+                                     "insights",
+                                     "recent completed list",
+                                     "next recommendation list"
+                                 ],
+    "checks":  {
+                   "fileExists":  true,
+                   "nonZeroBytes":  true,
+                   "noChrome":  true,
+                   "stateSignalPreserved":  true,
+                   "primaryCtaDarkOnly":  true,
+                   "neutralPaletteOnly":  true,
+                   "workspaceRadiusOk":  true,
+                   "noLoudGradient":  true,
+                   "keyRegionsPreserved":  true,
+                   "textUsableAsVisualReference":  true
+               },
+    "issueCodes":  [
+
+                   ],
+    "notes":  "Growth dashboard concept preserves KPI strip, trend chart filters, weakness matrix, insights, recent completed list, and recommendation CTAs.",
+    "reviewedAt":  "2026-06-15T15:09:26.8596704+09:00"
+}

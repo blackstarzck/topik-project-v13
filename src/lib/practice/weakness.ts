@@ -23,7 +23,7 @@ type ClientFactory = () => Promise<SupabaseServerClient>;
  *   - `problems` exposes rows where `publish_status = 'published'`.
  *
  * Fallback chain for `getWeaknessRecommendations`:
- *   1) Pre-computed active items (status='active', run not expired) → up to 3.
+ *   1) Pre-computed active items (status='active', run not expired) → up to 4.
  *   2) Tag-overlap fallback against published problems using weak dimensions.
  *
  * `getWeakDimensions` is independently gated by a count threshold (default 5)
@@ -214,20 +214,32 @@ type RecommendationItemJoined = {
   reason: string | null;
   estimated_minutes: number | null;
   weakness_tags: string[] | null;
-  recommendation_runs: {
-    expires_at: string | null;
-  } | { expires_at: string | null }[] | null;
-  problems: {
-    id: string;
-    title: string;
-    domain: string;
-    question_no: number | null;
-    publish_status: string;
-  } | { id: string; title: string; domain: string; question_no: number | null; publish_status: string }[] | null;
+  recommendation_runs:
+    | {
+        expires_at: string | null;
+      }
+    | { expires_at: string | null }[]
+    | null;
+  problems:
+    | {
+        id: string;
+        title: string;
+        domain: string;
+        question_no: number | null;
+        publish_status: string;
+      }
+    | {
+        id: string;
+        title: string;
+        domain: string;
+        question_no: number | null;
+        publish_status: string;
+      }[]
+    | null;
 };
 
 /**
- * Up to 3 problem recommendations for the user's weakness page.
+ * Up to 4 problem recommendations for the user's weakness page.
  *
  * Step 1: pre-computed `recommendation_items` (status='active') joined to
  *         `recommendation_runs` so we can filter out expired runs. The DB
@@ -256,7 +268,7 @@ export async function getWeaknessRecommendations(
       referencedTable: "recommendation_runs",
     })
     .order("rank", { ascending: true })
-    .limit(3);
+    .limit(4);
   if (itemsError) {
     throw new Error(`getWeaknessRecommendations(items): ${itemsError.message}`);
   }
@@ -279,7 +291,7 @@ export async function getWeaknessRecommendations(
       estimatedMinutes: row.estimated_minutes ?? undefined,
     });
   }
-  if (fromItems.length > 0) return fromItems.slice(0, 3);
+  if (fromItems.length > 0) return fromItems.slice(0, 4);
 
   // Fallback: query published problems whose tags overlap with the user's
   // weak dimensions. If we couldn't compute weak dimensions either (e.g. not
@@ -294,7 +306,7 @@ export async function getWeaknessRecommendations(
     .eq("publish_status", "published")
     .overlaps("tags", tags)
     .order("updated_at", { ascending: false })
-    .limit(3);
+    .limit(4);
   if (probError) {
     throw new Error(
       `getWeaknessRecommendations(tag-fallback): ${probError.message}`,

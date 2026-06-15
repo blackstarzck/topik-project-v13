@@ -19,7 +19,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight, LockKeyhole, Mail } from "lucide-react";
 
 import { GoogleMark } from "@/components/auth/GoogleMark";
-import { startGoogleOAuth } from "@/lib/auth/oauth";
+import {
+  isGoogleOAuthUnsupportedBrowserError,
+  startGoogleOAuth,
+  type GoogleOAuthEmbeddedBrowser,
+} from "@/lib/auth/oauth";
 import { buildAuthRedirectUrl } from "@/lib/auth/redirect-url";
 import { mapSupabaseErrorCode } from "@/lib/auth/error-mapping";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
@@ -82,6 +86,7 @@ export function LoginForm({
   onPasswordVisibilityChange,
 }: LoginFormProps = {}) {
   const t = useTranslations("auth.login");
+  const toauth = useTranslations("auth.oauth");
   // Cross-namespace: server auth-failure copy lives under `auth.error.<reason>.message`.
   const te = useTranslations("auth.error");
   const { message } = App.useApp();
@@ -97,6 +102,8 @@ export function LoginForm({
   const [failedAttempts, setFailedAttempts] = useState(0);
   // 로그인 시도 후 서버가 돌려준 상태성 오류(휴면/미인증/서버오류)를 위한 인라인 안내.
   const [statusNotice, setStatusNotice] = useState<StatusNotice | null>(null);
+  const [blockedOAuthBrowser, setBlockedOAuthBrowser] =
+    useState<GoogleOAuthEmbeddedBrowser | null>(null);
   const [form] = Form.useForm<PasswordFields | MagicLinkFields>();
 
   // 화면 상단에 노출할 최종 안내: 시도 후 statusNotice가 query 안내보다 우선.
@@ -109,6 +116,7 @@ export function LoginForm({
   async function handlePasswordLogin(values: PasswordFields) {
     setSubmitting(true);
     setStatusNotice(null);
+    setBlockedOAuthBrowser(null);
     const supabase = createSupabaseBrowserClient();
     let result: Awaited<ReturnType<typeof supabase.auth.signInWithPassword>>;
     try {
@@ -158,6 +166,7 @@ export function LoginForm({
 
   async function handleMagicLink(values: MagicLinkFields) {
     setSubmitting(true);
+    setBlockedOAuthBrowser(null);
     try {
       const supabase = createSupabaseBrowserClient();
       const { error } = await supabase.auth.signInWithOtp({
@@ -192,6 +201,7 @@ export function LoginForm({
   async function handleGoogleLogin() {
     setGoogleSubmitting(true);
     setStatusNotice(null);
+    setBlockedOAuthBrowser(null);
     try {
       const { error } = await startGoogleOAuth("login");
       if (error) {
@@ -202,8 +212,12 @@ export function LoginForm({
         });
         setGoogleSubmitting(false);
       }
-    } catch {
-      setStatusNotice({ tone: "error", key: "socialAuthFailed" });
+    } catch (error) {
+      if (isGoogleOAuthUnsupportedBrowserError(error)) {
+        setBlockedOAuthBrowser(error.browser);
+      } else {
+        setStatusNotice({ tone: "error", key: "socialAuthFailed" });
+      }
       setGoogleSubmitting(false);
     }
   }
@@ -237,6 +251,20 @@ export function LoginForm({
           data-testid="login-session-notice"
         />
       )}
+      {blockedOAuthBrowser && (
+        <Alert
+          type="warning"
+          showIcon
+          title={toauth("embeddedBrowserTitle", {
+            browser: toauth(
+              `browser.${blockedOAuthBrowser}` as Parameters<typeof toauth>[0],
+            ),
+          })}
+          description={toauth("embeddedBrowserDescription")}
+          className="!mb-0"
+          data-testid="oauth-browser-warning"
+        />
+      )}
       {failedAttempts >= FAILED_ATTEMPTS_HINT_THRESHOLD && (
         <Alert
           type="info"
@@ -254,6 +282,7 @@ export function LoginForm({
           form.resetFields();
           setFailedAttempts(0);
           setStatusNotice(null);
+          setBlockedOAuthBrowser(null);
           onTypingChange?.(false);
           onPasswordChange?.("");
           onPasswordVisibilityChange?.(false);

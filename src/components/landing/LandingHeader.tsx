@@ -5,6 +5,9 @@ import { ArrowUpRight, LogIn } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 
+import type { LandingAuthStatus } from "@/lib/auth/completion-routes";
+import { getLandingCta } from "./auth-cta";
+
 type NavItem = {
   labelKey: "navFeatures" | "navPreview" | "navTerms";
   href: string;
@@ -17,11 +20,13 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 type Props = {
-  isAuthenticated: boolean;
+  authStatus: LandingAuthStatus;
 };
 
-export function LandingHeader({ isAuthenticated }: Props) {
+export function LandingHeader({ authStatus }: Props) {
   const t = useTranslations("landing");
+  const authenticatedCta =
+    authStatus === "anonymous" ? null : getLandingCta(authStatus);
 
   return (
     <header className="landing-header !shadow-none !backdrop-blur-sm before:!hidden after:!hidden">
@@ -47,14 +52,14 @@ export function LandingHeader({ isAuthenticated }: Props) {
         )}
       </nav>
 
-      {isAuthenticated ? (
-        <Link href="/dashboard">
+      {authenticatedCta ? (
+        <Link href={authenticatedCta.href}>
           <Button
             className="landing-header-button landing-header-button--primary"
             icon={<ArrowUpRight size={14} aria-hidden="true" />}
             iconPlacement="end"
           >
-            {t("ctaDashboard")}
+            {t(authenticatedCta.headerLabelKey)}
           </Button>
         </Link>
       ) : (
@@ -65,15 +70,6 @@ export function LandingHeader({ isAuthenticated }: Props) {
               icon={<LogIn size={14} aria-hidden="true" />}
             >
               {t("ctaLogin")}
-            </Button>
-          </Link>
-          <Link href="/sign-up">
-            <Button
-              className="landing-header-button landing-header-button--primary"
-              icon={<ArrowUpRight size={14} aria-hidden="true" />}
-              iconPlacement="end"
-            >
-              {t("ctaSignUp")}
             </Button>
           </Link>
         </div>

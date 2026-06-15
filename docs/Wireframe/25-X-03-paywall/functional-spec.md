@@ -36,7 +36,7 @@
 
 | 테이블/버킷/RPC | 컬럼/필드 | 사용 방식 | 화면 기능 | 권한/RLS | 근거 | 불확실성 |
 | --- | --- | --- | --- | --- | --- | --- |
-| `profiles` | `plan_label`, `status` | read | 현재 플랜과 접근 제한 안내에 사용한다. | authenticated user; auth.uid() owner RLS where user-owned | `src/app/(workspace)/profile/page.tsx`<br>`src/lib/admin/queries.ts`<br>`src/lib/admin/server.ts`<br>`src/lib/auth/profile.ts`<br>`src/lib/settings/mutations.ts` | Billing table is deferred; only profiles.plan_label/status is current evidence. |
+| `profiles` | `plan_label`, `status` | read | 현재 플랜과 접근 제한 안내에 사용한다. | authenticated user; auth.uid() owner RLS where user-owned | `src/app/(workspace)/profile/page.tsx`<br>`src/lib/auth/profile.ts`<br>`src/lib/settings/mutations.ts` | Billing table is deferred; only profiles.plan_label/status is current evidence. |
 
 ## 현재 구현 상태
 

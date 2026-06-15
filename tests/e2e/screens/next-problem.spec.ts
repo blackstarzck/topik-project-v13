@@ -72,7 +72,9 @@ async function createNextProblemFixture() {
     .limit(4);
   if (problems.error) throw problems.error;
   if ((problems.data ?? []).length < 4) {
-    throw new Error("R-02 e2e requires at least four published writing problems");
+    throw new Error(
+      "R-02 e2e requires at least four published writing problems",
+    );
   }
 
   const submissionId = randomUUID();
@@ -195,10 +197,20 @@ test("R-02 next problem recommendation matches the wireframe constraints", async
 
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await expect(page.getByTestId("next-summary-card")).toHaveCount(3);
+  const summaryCardHeights = await page
+    .getByTestId("next-summary-card")
+    .evaluateAll((cards) =>
+      cards.map((card) => card.getBoundingClientRect().height),
+    );
+  expect(
+    Math.max(...summaryCardHeights) - Math.min(...summaryCardHeights),
+  ).toBeLessThanOrEqual(1);
   await expect(page.getByTestId("next-primary-card")).toBeVisible();
   await expect(page.getByTestId("next-problem-badge")).toBeVisible();
   await expect(page.getByTestId("next-problem-reason")).toBeVisible();
-  expect(await page.getByTestId("next-alternative-card").count()).toBeLessThanOrEqual(3);
+  expect(
+    await page.getByTestId("next-alternative-card").count(),
+  ).toBeLessThanOrEqual(3);
   expect(
     await page
       .locator(
@@ -208,9 +220,13 @@ test("R-02 next problem recommendation matches the wireframe constraints", async
   ).toBeLessThanOrEqual(3);
   await expect(page.getByTestId("next-selection-bar")).toBeVisible();
   await expect(page.getByTestId("next-start-cta")).toBeEnabled();
-  await expect(page.getByTestId("next-primary-card").locator("button")).toHaveCount(0);
+  await expect(
+    page.getByTestId("next-primary-card").locator("button"),
+  ).toHaveCount(0);
 
-  const selectionBefore = await page.getByTestId("next-selection-bar").innerText();
+  const selectionBefore = await page
+    .getByTestId("next-selection-bar")
+    .innerText();
   const firstAlternative = page.getByTestId("next-alternative-card").first();
   if ((await firstAlternative.count()) > 0) {
     await firstAlternative.click();

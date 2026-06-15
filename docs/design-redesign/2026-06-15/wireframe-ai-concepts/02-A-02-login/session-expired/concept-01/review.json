@@ -1,0 +1,39 @@
+﻿{
+    "schemaVersion":  "1.0",
+    "runId":  "2026-06-15-wireframe-ai-concepts",
+    "reviewId":  "02-A-02-login__session-expired__desktop__c01",
+    "conceptId":  "02-A-02-login__session-expired__desktop__c01",
+    "localConceptId":  "concept-01",
+    "stateId":  "02-A-02-login__session-expired__desktop",
+    "page":  "02-A-02-login",
+    "state":  "session-expired",
+    "screenType":  "auth",
+    "imagePath":  "02-A-02-login/session-expired/concept-01/image.png",
+    "promptPath":  "02-A-02-login/session-expired/concept-01/prompt.json",
+    "metaPath":  "02-A-02-login/session-expired/concept-01/meta.json",
+    "reviewPath":  "02-A-02-login/session-expired/concept-01/review.json",
+    "status":  "accepted",
+    "validation":  "pass",
+    "mustPreserveStateSignals":  [
+                                     "session expired notice",
+                                     "login form remains primary",
+                                     "safe recovery links"
+                                 ],
+    "checks":  {
+                   "fileExists":  true,
+                   "nonZeroBytes":  true,
+                   "noChrome":  true,
+                   "stateSignalPreserved":  true,
+                   "primaryCtaDarkOnly":  true,
+                   "neutralPaletteOnly":  true,
+                   "workspaceRadiusOk":  true,
+                   "noLoudGradient":  true,
+                   "keyRegionsPreserved":  true,
+                   "textUsableAsVisualReference":  true
+               },
+    "issueCodes":  [
+
+                   ],
+    "notes":  "세션 만료 알림과 로그인 주 동선이 명확하고 desktop frame이 안정적임.",
+    "reviewedAt":  "2026-06-15T12:42:38.0893874+09:00"
+}

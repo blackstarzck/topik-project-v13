@@ -1,6 +1,0 @@
-{
-  "used": false,
-  "reason": "Separate designer-agent delegation was not required for this target because both reference images exist. The available subagent tool is restricted to explicit user-requested delegation, so the audit used direct visual comparison plus Playwright captures.",
-  "missingReferenceImages": [],
-  "confidenceImpact": "none for reference coverage; subjective visual confidence remains bounded by non-pixel-perfect audit rules."
-}
