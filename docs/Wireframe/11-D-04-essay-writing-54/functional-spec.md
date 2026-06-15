@@ -38,7 +38,7 @@
 
 | 테이블/버킷/RPC | 컬럼/필드 | 사용 방식 | 화면 기능 | 권한/RLS | 근거 | 불확실성 |
 | --- | --- | --- | --- | --- | --- | --- |
-| `problems` | `id`, `question_no`, `prompt`, `materials`, `rubric`, `answer_key` | read | 54번 작성 문제 본문과 조건을 표시한다. | authenticated user; auth.uid() owner RLS where user-owned | `src/lib/admin/queries.ts`<br>`src/lib/admin/server.ts`<br>`src/lib/library/queries.ts`<br>`src/lib/library/server.ts`<br>`src/lib/practice/next.ts` | none |
+| `problems` | `id`, `question_no`, `prompt`, `materials`, `rubric`, `answer_key` | read | 54번 작성 문제 본문과 조건을 표시한다. | authenticated user; auth.uid() owner RLS where user-owned | `src/lib/library/queries.ts`<br>`src/lib/library/server.ts`<br>`src/lib/practice/next.ts` | none |
 | `problem_assets` | `problem_id`, `storage_path`, `asset_type` | read | 문제 자료 이미지/오디오를 연결한다. | authenticated user; auth.uid() owner RLS where user-owned | `supabase/migrations/20260520120200_problems.sql` | none |
 | `writing_drafts` | `problem_id`, `answer_text`, `answer_json`, `char_count`, `autosave_status`, `last_saved_at` | read/write | 작성 중 임시 저장과 자동저장 상태에 사용한다. | authenticated user; auth.uid() owner RLS where user-owned | `src/app/(workspace)/dashboard/page.tsx`<br>`src/lib/practice/queries.ts`<br>`src/lib/writing/mutations.ts`<br>`src/lib/writing/queries.ts`<br>`src/lib/writing/server.ts` | none |
 | `writing_submissions` | `problem_id`, `answer_text`, `answer_json`, `char_count`, `feedback_status` | write/read | 최종 제출과 제출 상태 확인에 사용한다. | authenticated user; auth.uid() owner RLS where user-owned | `src/lib/library/queries.ts`<br>`src/lib/library/server.ts`<br>`src/lib/practice/next.ts`<br>`src/lib/practice/queries.ts`<br>`src/lib/writing/queries.ts` | none |

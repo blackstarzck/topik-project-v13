@@ -26,11 +26,10 @@ building or changing any user screen that reads/writes a SHARED entity**
 (profiles/users, problems/question-bank, writing submissions/feedback, billing,
 etc.), consult the method in
 [`docs/user-admin-consistency-method.md`](docs/user-admin-consistency-method.md)
-(and the artifact `docs/user-admin-data-consistency.md` once it exists). Anchor
+(and the artifact [`docs/user-admin-data-consistency.md`](docs/user-admin-data-consistency.md)). Anchor
 naming on `topik-ai/docs/specs/admin-data-contract.md`. Do NOT add admin-oriented
 schema to make a user screen work — reconcile the screen to the schema and escalate
-real schema gaps. (The filled consistency artifact is built when reconciliation
-work starts, not pre-emptively.)
+real schema gaps.
 
 ## Supabase Schema Documentation Gate
 

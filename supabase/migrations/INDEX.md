@@ -68,7 +68,7 @@
 | 25 | `14:00:00` | [`20260527140000_cleanup_retention_floor.sql`](./20260527140000_cleanup_retention_floor.sql) | Phase 8 follow-up v2.3 P0: `private.cleanup_unconfirmed_users` 재정의 — retention_days < 30 + dry_run=false 시 raise exception. dry_run preview는 허용. v1 "30일 미만 절대 안 건드림" 주장의 코드 정공법 보호 (Codex 검수 적발 후 fix). 권한 revoke 재선언 포함 |
 
 근거 ledger:
-- 22-25: [`../../reports/phase-8-implementation-report-20260527.html`](../../reports/phase-8-implementation-report-20260527.html) (Phase 8 v2.x 자체 검수 정정 + follow-up)
+- 22-25: Phase 8 v2.x 자체 검수 정정 + follow-up. (구현 보고서는 2026-06-05 워크플로우 하네스 정리 때 함께 삭제됨 — 마이그레이션 22~25 파일 본문 참조.)
 
 ### 06 — June
 

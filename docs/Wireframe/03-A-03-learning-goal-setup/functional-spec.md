@@ -38,7 +38,7 @@
 | 테이블/버킷/RPC | 컬럼/필드 | 사용 방식 | 화면 기능 | 권한/RLS | 근거 | 불확실성 |
 | --- | --- | --- | --- | --- | --- | --- |
 | `learning_goals` | `user_id`, `topik_level`, `target_grade`, `exam_date`, `weekly_goal_minutes`, `weak_areas`, `is_active` | read/write | 온보딩 학습 목표를 저장하고 이후 대시보드 추천에 연결한다. | authenticated user; auth.uid() owner RLS where user-owned | `src/lib/learning/mutations.ts`<br>`src/lib/learning/queries.ts`<br>`src/lib/learning/server.ts`<br>`supabase/migrations/20260520120100_profiles_goals.sql` | none |
-| `profiles` | `id`, `ui_locale`, `status` | read | 사용자 기본 설정과 onboarding 상태 판단에 사용한다. | authenticated user; auth.uid() owner RLS where user-owned | `src/app/(workspace)/profile/page.tsx`<br>`src/lib/admin/queries.ts`<br>`src/lib/admin/server.ts`<br>`src/lib/auth/profile.ts`<br>`src/lib/settings/mutations.ts` | none |
+| `profiles` | `id`, `ui_locale`, `status` | read | 사용자 기본 설정과 onboarding 상태 판단에 사용한다. | authenticated user; auth.uid() owner RLS where user-owned | `src/app/(workspace)/profile/page.tsx`<br>`src/lib/auth/profile.ts`<br>`src/lib/settings/mutations.ts` | none |
 
 ## 현재 구현 상태
 

@@ -39,7 +39,7 @@
 | --- | --- | --- | --- | --- | --- | --- |
 | `feedback_dimension_scores` | `dimension`, `score`, `weakness_level`, `summary` | read | 취약 영역 계산에 사용한다. | authenticated user; auth.uid() owner RLS where user-owned | `src/lib/practice/next.ts`<br>`src/lib/practice/weakness.ts`<br>`src/lib/writing/queries.ts`<br>`src/lib/writing/server-actions.ts`<br>`src/lib/writing/server.ts` | none |
 | `recommendation_items` | `problem_id`, `rank`, `reason`, `weakness_tags`, `status` | read/update | 약점 기반 추천 목록과 상태에 사용한다. | authenticated user; auth.uid() owner RLS where user-owned | `src/lib/practice/next.ts`<br>`src/lib/practice/queries.ts`<br>`src/lib/practice/weakness.ts`<br>`supabase/migrations/20260520120600_recommendations.sql` | none |
-| `problems` | `id`, `domain`, `question_no`, `difficulty`, `tags` | read | 추천 문제 상세 표시와 필터에 사용한다. | authenticated user; auth.uid() owner RLS where user-owned | `src/lib/admin/queries.ts`<br>`src/lib/admin/server.ts`<br>`src/lib/library/queries.ts`<br>`src/lib/library/server.ts`<br>`src/lib/practice/next.ts` | none |
+| `problems` | `id`, `domain`, `question_no`, `difficulty`, `tags` | read | 추천 문제 상세 표시와 필터에 사용한다. | authenticated user; auth.uid() owner RLS where user-owned | `src/lib/library/queries.ts`<br>`src/lib/library/server.ts`<br>`src/lib/practice/next.ts` | none |
 
 ## 현재 구현 상태
 

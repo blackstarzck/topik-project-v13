@@ -88,7 +88,7 @@ AI가 만든 결과물은 아래 중 하나 이상의 근거가 있어야 다음
 4. 필요한 최소 변경만 수행한다.
 5. 테스트 또는 검증을 실행한다.
 6. 변경 내용, 이유, 확인 결과, 남은 위험을 요약한다.
-7. 중요한 결정, 실패, 실험 결과는 기존 기록 체계에 맞춰 남긴다. 예: `docs/ai-workflow/runs/YYYY/MM/DD/`, `docs/design-review-result/`, `docs/superpowers/plans/`, `supabase/migrations/INDEX.md`.
+7. 중요한 결정, 실패, 실험 결과는 기존 기록 체계에 맞춰 남긴다. 예: `docs/ai-workflow/runs/YYYY/MM/DD/`, `docs/superpowers/plans/`, `supabase/migrations/INDEX.md`.
 
 ## 구현/개발 작업 계획
 

@@ -40,7 +40,7 @@
 | `recommendation_runs` | `source_type`, `reason_summary`, `created_at` | read | 추천이 어떤 근거로 만들어졌는지 보여준다. | authenticated user; auth.uid() owner RLS where user-owned | `supabase/migrations/20260520120600_recommendations.sql` | none |
 | `recommendation_items` | `problem_id`, `rank`, `reason`, `weakness_tags` | read/update | 추천 유형과 선택 상태를 제공한다. | authenticated user; auth.uid() owner RLS where user-owned | `src/lib/practice/next.ts`<br>`src/lib/practice/queries.ts`<br>`src/lib/practice/weakness.ts`<br>`supabase/migrations/20260520120600_recommendations.sql` | none |
 | `feedback_dimension_scores` | `dimension`, `score`, `weakness_level` | derived-read | 취약 영역 기반 추천 근거가 된다. | authenticated user; auth.uid() owner RLS where user-owned | `src/lib/practice/next.ts`<br>`src/lib/practice/weakness.ts`<br>`src/lib/writing/queries.ts`<br>`src/lib/writing/server-actions.ts`<br>`src/lib/writing/server.ts` | Derived usage inferred from current source/domain docs. |
-| `problems` | `id`, `domain`, `question_no`, `topik_level`, `difficulty`, `tags` | read | 추천 문제 후보를 조회한다. | authenticated user; auth.uid() owner RLS where user-owned | `src/lib/admin/queries.ts`<br>`src/lib/admin/server.ts`<br>`src/lib/library/queries.ts`<br>`src/lib/library/server.ts`<br>`src/lib/practice/next.ts` | none |
+| `problems` | `id`, `domain`, `question_no`, `topik_level`, `difficulty`, `tags` | read | 추천 문제 후보를 조회한다. | authenticated user; auth.uid() owner RLS where user-owned | `src/lib/library/queries.ts`<br>`src/lib/library/server.ts`<br>`src/lib/practice/next.ts` | none |
 
 ## 현재 구현 상태
 
