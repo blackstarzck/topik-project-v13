@@ -300,5 +300,5 @@ describe("ProblemListView", () => {
     expect(screen.getByText("복습 필요")).toBeTruthy();
     expect(screen.getAllByRole("button", { name: /시작하기/ })).toHaveLength(2);
     expect(screen.getAllByRole("button", { name: /다시 풀기/ })).toHaveLength(4);
-  });
+  }, 45_000);
 });

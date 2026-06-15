@@ -3832,7 +3832,7 @@ body {
   gap: 0.25rem;
   border-radius: 999px;
   background: var(--app-color-primary);
-  color: var(--app-color-background);
+  color: var(--app-color-bg-container);
   padding: 0.125rem 0.5rem;
   font-size: 0.75rem;
   font-weight: 700;
