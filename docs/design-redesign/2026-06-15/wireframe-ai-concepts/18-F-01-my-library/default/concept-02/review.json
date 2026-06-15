@@ -1,0 +1,43 @@
+﻿{
+    "schemaVersion":  "1.0",
+    "runId":  "2026-06-15-wireframe-ai-concepts",
+    "reviewId":  "18-F-01-my-library__default__desktop__c02",
+    "conceptId":  "18-F-01-my-library__default__desktop__c02",
+    "localConceptId":  "concept-02",
+    "stateId":  "18-F-01-my-library__default__desktop",
+    "page":  "18-F-01-my-library",
+    "state":  "default",
+    "screenType":  "workspace",
+    "imagePath":  "18-F-01-my-library/default/concept-02/image.png",
+    "promptPath":  "18-F-01-my-library/default/concept-02/prompt.json",
+    "metaPath":  "18-F-01-my-library/default/concept-02/meta.json",
+    "reviewPath":  "18-F-01-my-library/default/concept-02/review.json",
+    "status":  "accepted",
+    "validation":  "pass",
+    "mustPreserveStateSignals":  [
+                                     "saved answer library",
+                                     "search and filters",
+                                     "tabs",
+                                     "selectable row/card",
+                                     "bulk export/study set actions",
+                                     "right statistics",
+                                     "PDF/tag/delete actions"
+                                 ],
+    "checks":  {
+                   "fileExists":  true,
+                   "nonZeroBytes":  true,
+                   "noChrome":  true,
+                   "stateSignalPreserved":  true,
+                   "primaryCtaDarkOnly":  true,
+                   "neutralPaletteOnly":  true,
+                   "workspaceRadiusOk":  true,
+                   "noLoudGradient":  true,
+                   "keyRegionsPreserved":  true,
+                   "textUsableAsVisualReference":  true
+               },
+    "issueCodes":  [
+
+                   ],
+    "notes":  "Review-queue library concept preserves search, tabs, filters, selectable saved answer card, bulk actions, right statistics, and row actions.",
+    "reviewedAt":  "2026-06-15T14:44:48.2816154+09:00"
+}

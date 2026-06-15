@@ -1,0 +1,42 @@
+﻿{
+    "schemaVersion":  "1.0",
+    "runId":  "2026-06-15-wireframe-ai-concepts",
+    "reviewId":  "26-X-04-subscription-management__default__desktop__c02",
+    "conceptId":  "26-X-04-subscription-management__default__desktop__c02",
+    "localConceptId":  "concept-02",
+    "stateId":  "26-X-04-subscription-management__default__desktop",
+    "page":  "26-X-04-subscription-management",
+    "state":  "default",
+    "screenType":  "workspace",
+    "imagePath":  "26-X-04-subscription-management/default/concept-02/image.png",
+    "promptPath":  "26-X-04-subscription-management/default/concept-02/prompt.json",
+    "metaPath":  "26-X-04-subscription-management/default/concept-02/meta.json",
+    "reviewPath":  "26-X-04-subscription-management/default/concept-02/review.json",
+    "status":  "accepted",
+    "validation":  "pass",
+    "mustPreserveStateSignals":  [
+                                     "no current subscription",
+                                     "start subscription",
+                                     "empty payment history",
+                                     "policy/refund/plan help",
+                                     "support inquiry",
+                                     "subscription start/back navigation"
+                                 ],
+    "checks":  {
+                   "fileExists":  true,
+                   "nonZeroBytes":  true,
+                   "noChrome":  true,
+                   "stateSignalPreserved":  true,
+                   "primaryCtaDarkOnly":  true,
+                   "neutralPaletteOnly":  true,
+                   "workspaceRadiusOk":  true,
+                   "noLoudGradient":  true,
+                   "keyRegionsPreserved":  true,
+                   "textUsableAsVisualReference":  true
+               },
+    "issueCodes":  [
+
+                   ],
+    "notes":  "Status-first subscription management concept preserves no-subscription state, start CTA, empty payment history, help/support rail, and navigation actions. Payment copy is visual reference only.",
+    "reviewedAt":  "2026-06-15T15:26:32.0758166+09:00"
+}

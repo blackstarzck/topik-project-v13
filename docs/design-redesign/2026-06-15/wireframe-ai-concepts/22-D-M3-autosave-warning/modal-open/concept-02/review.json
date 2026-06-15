@@ -1,0 +1,42 @@
+﻿{
+    "schemaVersion":  "1.0",
+    "runId":  "2026-06-15-wireframe-ai-concepts",
+    "reviewId":  "22-D-M3-autosave-warning__modal-open__desktop__c02",
+    "conceptId":  "22-D-M3-autosave-warning__modal-open__desktop__c02",
+    "localConceptId":  "concept-02",
+    "stateId":  "22-D-M3-autosave-warning__modal-open__desktop",
+    "page":  "22-D-M3-autosave-warning",
+    "state":  "modal-open",
+    "screenType":  "modal",
+    "imagePath":  "22-D-M3-autosave-warning/modal-open/concept-02/image.png",
+    "promptPath":  "22-D-M3-autosave-warning/modal-open/concept-02/prompt.json",
+    "metaPath":  "22-D-M3-autosave-warning/modal-open/concept-02/meta.json",
+    "reviewPath":  "22-D-M3-autosave-warning/modal-open/concept-02/review.json",
+    "status":  "accepted",
+    "validation":  "pass",
+    "mustPreserveStateSignals":  [
+                                     "modal-open dim overlay",
+                                     "autosave-off warning",
+                                     "no last save",
+                                     "recovery unavailable",
+                                     "keep autosave",
+                                     "destructive turn off option"
+                                 ],
+    "checks":  {
+                   "fileExists":  true,
+                   "nonZeroBytes":  true,
+                   "noChrome":  true,
+                   "stateSignalPreserved":  true,
+                   "primaryCtaDarkOnly":  true,
+                   "neutralPaletteOnly":  true,
+                   "workspaceRadiusOk":  true,
+                   "noLoudGradient":  true,
+                   "keyRegionsPreserved":  true,
+                   "textUsableAsVisualReference":  true
+               },
+    "issueCodes":  [
+
+                   ],
+    "notes":  "Recovery-status-first autosave warning modal preserves dim overlay, save/recovery status, safe keep-autosave action, and destructive disable action.",
+    "reviewedAt":  "2026-06-15T15:04:31.5990316+09:00"
+}

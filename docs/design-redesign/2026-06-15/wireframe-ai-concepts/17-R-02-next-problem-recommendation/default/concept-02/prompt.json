@@ -1,0 +1,11 @@
+﻿{
+    "schemaVersion":  "1.0",
+    "runId":  "2026-06-15-wireframe-ai-concepts",
+    "conceptId":  "concept-02",
+    "globalConceptId":  "17-R-02-next-problem-recommendation__default__desktop__c02",
+    "stateId":  "17-R-02-next-problem-recommendation__default__desktop",
+    "page":  "17-R-02-next-problem-recommendation",
+    "state":  "default",
+    "screenType":  "workspace",
+    "prompt":  "Use case: ui-mockup\nAsset type: desktop AI redesign concept bitmap for TALKPIK AI user app\nPrimary request: Create concept-02 for page 17-R-02-next-problem-recommendation, state default. Reference state: next TOPIK writing problem recommendation from weak scores. Make this concept rationale-first: why this problem is recommended should be visible before the start button.\nComposition/framing: desktop 1280x900 edge-to-edge app UI screenshot only; no browser address bar, tabs, bookmarks bar, OS frame, device frame, or watermark. Keep left navigation. Top row: weak score chips and estimated learning time. Main split: left panel with selected 51번 단답 recommendation and problem title, right panel with recommendation rationale: weak grammar/structure signals, expected skill gain, time estimate. Below: other recommendation cards including locked paid cards with upgrade secondary buttons. Bottom sticky bar shows selected problem and Obsidian start learning CTA.\nStyle/medium: high-fidelity Ant Design-friendly product UI, compact, clear selection border, subdued tags, operational learning workflow.\nColor palette: Mist/Snow/Fog neutrals; Obsidian #09090b for primary CTA and selection accent; gray locked states; restrained semantic green only for confidence/fit.\nTypography: Cosmica-like sans, Korean text as visual direction only, no negative letter spacing, compact labels and captions.\nMust preserve state signals: next problem recommendation, weak scores, recommended 51 type, estimated 12 minute time, selected card, paid/locked alternatives, bottom 학습 시작 CTA.\nAvoid: browser chrome, OS frame, device frame, bright gradients, colorful buttons, oversized decorative empty space, heavy shadows, rounded-pill overload."
+}

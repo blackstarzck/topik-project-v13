@@ -1,0 +1,22 @@
+﻿{
+    "schemaVersion":  "1.0",
+    "runId":  "2026-06-15-wireframe-ai-concepts",
+    "promptId":  "02-A-02-login__session-expired__desktop__c01",
+    "stateId":  "02-A-02-login__session-expired__desktop",
+    "conceptIndex":  1,
+    "conceptId":  "02-A-02-login__session-expired__desktop__c01",
+    "direction":  "gentle session recovery",
+    "sourceScreenshotPath":  "docs/Wireframe/02-A-02-login/browser-screenshot--session-expired--desktop.png",
+    "designSource":  "DESIGN.md",
+    "promptText":  "Use case: ui-mockup\nAsset type: TALKPIK AI auth screen redesign concept\nInput image role: the visible source screenshot is a reference image for layout, state, and information architecture, not an edit target that must be pixel-preserved.\nPrimary request: Redesign 02-A-02-login/session-expired as a calm login recovery screen.\nDirection: gentle session recovery.\nComposition/framing: desktop 1280x900 web app screenshot, no browser chrome and no OS window frame. Preserve the normal login form, but add a clear inline session-expired notice near the top of the form. Include email/password fields, login CTA, recovery link, sign-up link, and social login. Keep the left support/brand visual quiet and secondary.\nStyle/medium: high-fidelity web UI mockup, Ant Design-friendly Alert/Form/Input/Button structure.\nColor palette: Mist/Snow/Fog/Obsidian neutral system. Use Fog or pale neutral alert surface with text/icon; Obsidian #09090b primary CTA only.\nTypography: Cosmica-like single sans font, compact density, weight-driven hierarchy, no letter spacing.\nConstraints: alert should feel calm and non-alarming; no raw provider/session/token details; Korean UI text is visual direction only and not final copy source.\nAvoid: browser chrome, OS window frame, provider raw errors, token details, scary security language, loud colors, gradients, repeated chromatic actions, oversized bubble cards, watermark.",
+    "negativeConstraints":  [
+                                "no distorted Korean text as final copy",
+                                "follow DESIGN.md visual tokens",
+                                "no browser chrome",
+                                "no OS window frame",
+                                "no loud AI gradients",
+                                "no chromatic repeated CTA",
+                                "no watermark"
+                            ],
+    "createdAt":  "2026-06-15T03:22:34.1919590Z"
+}

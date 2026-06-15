@@ -1,0 +1,39 @@
+﻿{
+    "schemaVersion":  "1.0",
+    "runId":  "2026-06-15-wireframe-ai-concepts",
+    "reviewId":  "05-C-01-problem-type-recommendations__default__desktop__c02",
+    "conceptId":  "05-C-01-problem-type-recommendations__default__desktop__c02",
+    "localConceptId":  "concept-02",
+    "stateId":  "05-C-01-problem-type-recommendations__default__desktop",
+    "page":  "05-C-01-problem-type-recommendations",
+    "state":  "default",
+    "screenType":  "workspace",
+    "imagePath":  "05-C-01-problem-type-recommendations/default/concept-02/image.png",
+    "promptPath":  "05-C-01-problem-type-recommendations/default/concept-02/prompt.json",
+    "metaPath":  "05-C-01-problem-type-recommendations/default/concept-02/meta.json",
+    "reviewPath":  "05-C-01-problem-type-recommendations/default/concept-02/review.json",
+    "status":  "accepted",
+    "validation":  "pass",
+    "mustPreserveStateSignals":  [
+                                     "default page purpose",
+                                     "key regions preserved",
+                                     "primary action preserved"
+                                 ],
+    "checks":  {
+                   "fileExists":  true,
+                   "nonZeroBytes":  true,
+                   "noChrome":  true,
+                   "stateSignalPreserved":  true,
+                   "primaryCtaDarkOnly":  true,
+                   "neutralPaletteOnly":  true,
+                   "workspaceRadiusOk":  true,
+                   "noLoudGradient":  true,
+                   "keyRegionsPreserved":  true,
+                   "textUsableAsVisualReference":  true
+               },
+    "issueCodes":  [
+
+                   ],
+    "notes":  "추천 근거, 분석 근거, 대표 문제, 대안 추천, 유형 선택이 보존됨.",
+    "reviewedAt":  "2026-06-15T13:35:39.1211045+09:00"
+}

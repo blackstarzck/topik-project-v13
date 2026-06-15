@@ -1,0 +1,11 @@
+﻿{
+    "schemaVersion":  "1.0",
+    "runId":  "2026-06-15-wireframe-ai-concepts",
+    "conceptId":  "concept-01",
+    "globalConceptId":  "27-X-05-profile-editing__default__desktop__c01",
+    "stateId":  "27-X-05-profile-editing__default__desktop",
+    "page":  "27-X-05-profile-editing",
+    "state":  "default",
+    "screenType":  "workspace",
+    "prompt":  "Use case: ui-mockup\nAsset type: desktop AI redesign concept bitmap for TALKPIK AI user app\nPrimary request: Create concept-01 for page 27-X-05-profile-editing, state default. Reference state: profile editing page with email field, name, nickname, bio, profile image upload/change, security notice, disabled save button, right cards for target exam and account status.\nComposition/framing: desktop 1280x900 edge-to-edge app UI screenshot only; no browser address bar, tabs, bookmarks bar, OS title bar, device frame, or watermark. Preserve left sidebar with profile active. Main left form: email input with generic masked email, name field, nickname field, bio textarea with character count, profile image upload card, security info banner, disabled save button. Right rail: target exam card with edit link and account status card with visibility, role, plan, join date, links to notification/language settings.\nStyle/medium: high-fidelity Ant Design-friendly profile settings UI, compact, form-first, clear validation/help text, no decorative account page.\nColor palette: Mist/Snow/Fog/Obsidian; Obsidian #09090b for active nav and selected states only; disabled save gray; muted blue-gray security banner.\nTypography: Cosmica-like modern sans, Korean UI text as visual direction only, no negative letter spacing, all form labels fit.\nMust preserve state signals: profile edit form, email/name/nickname/bio fields, profile image change, security notice, disabled save, target exam card, account status card.\nAvoid: browser chrome, OS frame, device frame, loud gradient, colorful CTA, avatar illustration focus, over-rounded cards, heavy shadows, exposing real email text."
+}

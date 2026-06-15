@@ -1,0 +1,43 @@
+﻿{
+    "schemaVersion":  "1.0",
+    "runId":  "2026-06-15-wireframe-ai-concepts",
+    "reviewId":  "17-R-02-next-problem-recommendation__default__desktop__c01",
+    "conceptId":  "17-R-02-next-problem-recommendation__default__desktop__c01",
+    "localConceptId":  "concept-01",
+    "stateId":  "17-R-02-next-problem-recommendation__default__desktop",
+    "page":  "17-R-02-next-problem-recommendation",
+    "state":  "default",
+    "screenType":  "workspace",
+    "imagePath":  "17-R-02-next-problem-recommendation/default/concept-01/image.png",
+    "promptPath":  "17-R-02-next-problem-recommendation/default/concept-01/prompt.json",
+    "metaPath":  "17-R-02-next-problem-recommendation/default/concept-01/meta.json",
+    "reviewPath":  "17-R-02-next-problem-recommendation/default/concept-01/review.json",
+    "status":  "accepted",
+    "validation":  "pass",
+    "mustPreserveStateSignals":  [
+                                     "next problem recommendation",
+                                     "weak area scores",
+                                     "recommended problem type",
+                                     "estimated time",
+                                     "selected recommendation card",
+                                     "locked alternative cards",
+                                     "bottom start CTA"
+                                 ],
+    "checks":  {
+                   "fileExists":  true,
+                   "nonZeroBytes":  true,
+                   "noChrome":  true,
+                   "stateSignalPreserved":  true,
+                   "primaryCtaDarkOnly":  true,
+                   "neutralPaletteOnly":  true,
+                   "workspaceRadiusOk":  true,
+                   "noLoudGradient":  true,
+                   "keyRegionsPreserved":  true,
+                   "textUsableAsVisualReference":  true
+               },
+    "issueCodes":  [
+
+                   ],
+    "notes":  "Recommendation workspace concept preserves weak-area cards, selected recommendation, locked alternatives, and bottom start CTA.",
+    "reviewedAt":  "2026-06-15T14:37:11.4953698+09:00"
+}

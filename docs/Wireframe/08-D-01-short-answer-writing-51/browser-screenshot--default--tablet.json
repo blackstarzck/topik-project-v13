@@ -1,0 +1,31 @@
+{
+  "runId": "20260615-091636",
+  "capturedAt": "2026-06-15T00:19:47.793Z",
+  "ia": "D-01",
+  "folder": "08-D-01-short-answer-writing-51",
+  "state": "default",
+  "route": "/writing/short-answer-writing-51",
+  "auth": true,
+  "viewport": {
+    "name": "tablet",
+    "width": 768,
+    "height": 1024
+  },
+  "status": "ok",
+  "note": null,
+  "expectedPath": "/writing/short-answer-writing-51",
+  "finalUrl": "http://127.0.0.1:3000/writing/short-answer-writing-51",
+  "finalPath": "/writing/short-answer-writing-51",
+  "title": "쓰기 — TALKPIK | TALKPIK AI",
+  "headings": [
+    "51번 단문 빈칸"
+  ],
+  "screenshotPath": "docs/Wireframe/08-D-01-short-answer-writing-51/browser-screenshot--default--tablet.png",
+  "durationMs": 4621,
+  "errors": {
+    "pageErrors": [],
+    "consoleErrors": [],
+    "responseErrors": [],
+    "errorMessage": null
+  }
+}

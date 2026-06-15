@@ -1,0 +1,42 @@
+﻿{
+    "schemaVersion":  "1.0",
+    "runId":  "2026-06-15-wireframe-ai-concepts",
+    "reviewId":  "28-X-06-password-reset__default__desktop__c01",
+    "conceptId":  "28-X-06-password-reset__default__desktop__c01",
+    "localConceptId":  "concept-01",
+    "stateId":  "28-X-06-password-reset__default__desktop",
+    "page":  "28-X-06-password-reset",
+    "state":  "default",
+    "screenType":  "auth",
+    "imagePath":  "28-X-06-password-reset/default/concept-01/image.png",
+    "promptPath":  "28-X-06-password-reset/default/concept-01/prompt.json",
+    "metaPath":  "28-X-06-password-reset/default/concept-01/meta.json",
+    "reviewPath":  "28-X-06-password-reset/default/concept-01/review.json",
+    "status":  "accepted",
+    "validation":  "pass",
+    "mustPreserveStateSignals":  [
+                                     "password reset request",
+                                     "email input empty",
+                                     "reset link send CTA",
+                                     "1-hour expiry/security note",
+                                     "back to login link",
+                                     "no app sidebar"
+                                 ],
+    "checks":  {
+                   "fileExists":  true,
+                   "nonZeroBytes":  true,
+                   "noChrome":  true,
+                   "stateSignalPreserved":  true,
+                   "primaryCtaDarkOnly":  true,
+                   "neutralPaletteOnly":  true,
+                   "workspaceRadiusOk":  true,
+                   "noLoudGradient":  true,
+                   "keyRegionsPreserved":  true,
+                   "textUsableAsVisualReference":  true
+               },
+    "issueCodes":  [
+
+                   ],
+    "notes":  "Auth password-reset concept preserves centered form, email input, reset-link CTA, expiry/security note, login return link, and no sidebar/browser chrome.",
+    "reviewedAt":  "2026-06-15T15:39:15.2428155+09:00"
+}

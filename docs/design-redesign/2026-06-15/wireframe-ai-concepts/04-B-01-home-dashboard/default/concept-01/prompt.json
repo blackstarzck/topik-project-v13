@@ -1,0 +1,20 @@
+﻿{
+    "schemaVersion":  "1.0",
+    "runId":  "2026-06-15-wireframe-ai-concepts",
+    "promptId":  "04-B-01-home-dashboard__default__desktop__c01",
+    "stateId":  "04-B-01-home-dashboard__default__desktop",
+    "conceptIndex":  1,
+    "conceptId":  "04-B-01-home-dashboard__default__desktop__c01",
+    "direction":  "quiet command center",
+    "sourceScreenshotPath":  "docs/Wireframe/04-B-01-home-dashboard/browser-screenshot--default--desktop.png",
+    "designSource":  "DESIGN.md",
+    "promptText":  "Use case: ui-mockup\nAsset type: TALKPIK AI desktop app redesign concept\nInput image role: the visible source screenshot is a reference image for layout, state, and information architecture, not an edit target that must be pixel-preserved.\nPrimary request: Redesign 04-B-01-home-dashboard/default as a calm TOPIK study dashboard.\nDirection: quiet command center.\nComposition/framing: desktop 1280x900 screenshot, fixed left sidebar, compact KPI row, recommendation cards, recent feedback, quick start, exam and notification panels. Preserve the dashboard state and core page purpose.\nStyle/medium: high-fidelity web UI mockup, Ant Design-friendly layout, compact operational study workspace.\nColor palette: Mist #f4f4f5 canvas, Snow #ffffff cards, Fog #ececee secondary surfaces, Ink/Obsidian text, Obsidian #09090b primary CTA only.\nTypography: Cosmica-like single sans font, compact density, weight-driven hierarchy, no letter spacing.\nConstraints: workspace panels should use restrained 4-8px radii; one clear primary action per task area; color signals must be paired with text or icons; Korean UI text is visual direction only and not final copy source.\nAvoid: loud AI gradients, purple/blue SaaS glow, chromatic repeated CTAs, oversized soft bubbles, heavy card shadows, decorative orbs, watermark, raw implementation/debug text.",
+    "negativeConstraints":  [
+                                "no distorted Korean text as final copy",
+                                "follow DESIGN.md visual tokens",
+                                "no loud AI gradients",
+                                "no chromatic repeated CTA",
+                                "no watermark"
+                            ],
+    "createdAt":  "2026-06-15T03:14:33.7083929Z"
+}

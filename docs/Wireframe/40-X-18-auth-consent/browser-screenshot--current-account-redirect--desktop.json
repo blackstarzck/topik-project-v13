@@ -1,0 +1,32 @@
+{
+  "runId": "20260615-091636",
+  "capturedAt": "2026-06-15T00:18:36.338Z",
+  "ia": "X-18",
+  "folder": "40-X-18-auth-consent",
+  "state": "current-account-redirect",
+  "route": "/auth/consent?next=/dashboard",
+  "auth": true,
+  "viewport": {
+    "name": "desktop",
+    "width": 1280,
+    "height": 900
+  },
+  "status": "redirected",
+  "note": "The .env.local student account has already accepted required consent; this captures the actual redirect state.",
+  "expectedPath": "/auth/consent",
+  "finalUrl": "http://127.0.0.1:3000/dashboard",
+  "finalPath": "/dashboard",
+  "title": "대시보드 — TALKPIK | TALKPIK AI",
+  "headings": [
+    "오늘의 학습",
+    "취업 서류 작성 특강 안내"
+  ],
+  "screenshotPath": "docs/Wireframe/40-X-18-auth-consent/browser-screenshot--current-account-redirect--desktop.png",
+  "durationMs": 4929,
+  "errors": {
+    "pageErrors": [],
+    "consoleErrors": [],
+    "responseErrors": [],
+    "errorMessage": null
+  }
+}

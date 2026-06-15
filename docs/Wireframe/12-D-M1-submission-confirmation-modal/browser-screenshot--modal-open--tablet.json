@@ -1,0 +1,32 @@
+{
+  "runId": "20260615-091636",
+  "capturedAt": "2026-06-15T00:20:39.072Z",
+  "ia": "D-M1",
+  "folder": "12-D-M1-submission-confirmation-modal",
+  "state": "modal-open",
+  "route": "/writing/short-answer-writing-51?problem=007785ff-0105-41a1-b884-2227ba6a7540&fresh=1",
+  "auth": true,
+  "viewport": {
+    "name": "tablet",
+    "width": 768,
+    "height": 1024
+  },
+  "status": "ok",
+  "note": null,
+  "expectedPath": "/writing/short-answer-writing-51",
+  "finalUrl": "http://127.0.0.1:3000/writing/short-answer-writing-51?problem=007785ff-0105-41a1-b884-2227ba6a7540&fresh=1",
+  "finalPath": "/writing/short-answer-writing-51",
+  "title": "쓰기 — TALKPIK | TALKPIK AI",
+  "headings": [
+    "51번 단문 빈칸",
+    "답안을 제출하시겠어요?"
+  ],
+  "screenshotPath": "docs/Wireframe/12-D-M1-submission-confirmation-modal/browser-screenshot--modal-open--tablet.png",
+  "durationMs": 4155,
+  "errors": {
+    "pageErrors": [],
+    "consoleErrors": [],
+    "responseErrors": [],
+    "errorMessage": null
+  }
+}

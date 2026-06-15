@@ -1,0 +1,2370 @@
+﻿{
+    "schemaVersion":  "1.0",
+    "runId":  "2026-06-15-wireframe-ai-concepts",
+    "createdAt":  "2026-06-15T17:03:10.5739503+09:00",
+    "designSource":  "DESIGN.md",
+    "promptStandards":  "_tools/prompt-standards.md",
+    "sourceRoot":  "docs/Wireframe",
+    "outputRoot":  "docs/design-redesign/2026-06-15/wireframe-ai-concepts",
+    "viewport":  "desktop",
+    "targetSelector":  "docs/Wireframe/**/browser-screenshot--*--desktop.png",
+    "sourceStateCount":  39,
+    "conceptsPerState":  3,
+    "expectedImageCount":  117,
+    "actualImageCount":  117,
+    "status":  "complete",
+    "notes":  [
+                  "Generated images are visual direction bitmap assets, not final UI copy sources.",
+                  "Source screenshots, docs, source code, and theme files are not modified.",
+                  "All prompts must enforce edge-to-edge app UI only: no browser chrome, OS window title bar, device frame, or watermark."
+              ],
+    "states":  [
+                   {
+                       "stateId":  "01-A-01-sign-up__default__desktop",
+                       "pageSlug":  "01-A-01-sign-up",
+                       "stateName":  "default",
+                       "viewport":  "desktop",
+                       "screenType":  "auth",
+                       "sourceScreenshotPath":  "docs/Wireframe/01-A-01-sign-up/browser-screenshot--default--desktop.png",
+                       "descriptionPath":  "docs/Wireframe/01-A-01-sign-up/description.md",
+                       "functionalSpecPath":  "docs/Wireframe/01-A-01-sign-up/functional-spec.md",
+                       "outputPath":  "01-A-01-sign-up/default",
+                       "mustPreserveStateSignals":  [
+                                                        "default page purpose",
+                                                        "key regions preserved",
+                                                        "primary action preserved"
+                                                    ],
+                       "concepts":  [
+                                        {
+                                            "conceptIndex":  1,
+                                            "conceptId":  "01-A-01-sign-up__default__desktop__c01",
+                                            "localConceptId":  "concept-01",
+                                            "imagePath":  "01-A-01-sign-up/default/concept-01/image.png",
+                                            "promptPath":  "01-A-01-sign-up/default/concept-01/prompt.json",
+                                            "metaPath":  "01-A-01-sign-up/default/concept-01/meta.json",
+                                            "reviewPath":  "01-A-01-sign-up/default/concept-01/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  2,
+                                            "conceptId":  "01-A-01-sign-up__default__desktop__c02",
+                                            "localConceptId":  "concept-02",
+                                            "imagePath":  "01-A-01-sign-up/default/concept-02/image.png",
+                                            "promptPath":  "01-A-01-sign-up/default/concept-02/prompt.json",
+                                            "metaPath":  "01-A-01-sign-up/default/concept-02/meta.json",
+                                            "reviewPath":  "01-A-01-sign-up/default/concept-02/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  3,
+                                            "conceptId":  "01-A-01-sign-up__default__desktop__c03",
+                                            "localConceptId":  "concept-03",
+                                            "imagePath":  "01-A-01-sign-up/default/concept-03/image.png",
+                                            "promptPath":  "01-A-01-sign-up/default/concept-03/prompt.json",
+                                            "metaPath":  "01-A-01-sign-up/default/concept-03/meta.json",
+                                            "reviewPath":  "01-A-01-sign-up/default/concept-03/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        }
+                                    ]
+                   },
+                   {
+                       "stateId":  "02-A-02-login__default__desktop",
+                       "pageSlug":  "02-A-02-login",
+                       "stateName":  "default",
+                       "viewport":  "desktop",
+                       "screenType":  "auth",
+                       "sourceScreenshotPath":  "docs/Wireframe/02-A-02-login/browser-screenshot--default--desktop.png",
+                       "descriptionPath":  "docs/Wireframe/02-A-02-login/description.md",
+                       "functionalSpecPath":  "docs/Wireframe/02-A-02-login/functional-spec.md",
+                       "outputPath":  "02-A-02-login/default",
+                       "mustPreserveStateSignals":  [
+                                                        "default page purpose",
+                                                        "key regions preserved",
+                                                        "primary action preserved"
+                                                    ],
+                       "concepts":  [
+                                        {
+                                            "conceptIndex":  1,
+                                            "conceptId":  "02-A-02-login__default__desktop__c01",
+                                            "localConceptId":  "concept-01",
+                                            "imagePath":  "02-A-02-login/default/concept-01/image.png",
+                                            "promptPath":  "02-A-02-login/default/concept-01/prompt.json",
+                                            "metaPath":  "02-A-02-login/default/concept-01/meta.json",
+                                            "reviewPath":  "02-A-02-login/default/concept-01/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  2,
+                                            "conceptId":  "02-A-02-login__default__desktop__c02",
+                                            "localConceptId":  "concept-02",
+                                            "imagePath":  "02-A-02-login/default/concept-02/image.png",
+                                            "promptPath":  "02-A-02-login/default/concept-02/prompt.json",
+                                            "metaPath":  "02-A-02-login/default/concept-02/meta.json",
+                                            "reviewPath":  "02-A-02-login/default/concept-02/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  3,
+                                            "conceptId":  "02-A-02-login__default__desktop__c03",
+                                            "localConceptId":  "concept-03",
+                                            "imagePath":  "02-A-02-login/default/concept-03/image.png",
+                                            "promptPath":  "02-A-02-login/default/concept-03/prompt.json",
+                                            "metaPath":  "02-A-02-login/default/concept-03/meta.json",
+                                            "reviewPath":  "02-A-02-login/default/concept-03/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        }
+                                    ]
+                   },
+                   {
+                       "stateId":  "02-A-02-login__session-expired__desktop",
+                       "pageSlug":  "02-A-02-login",
+                       "stateName":  "session-expired",
+                       "viewport":  "desktop",
+                       "screenType":  "auth",
+                       "sourceScreenshotPath":  "docs/Wireframe/02-A-02-login/browser-screenshot--session-expired--desktop.png",
+                       "descriptionPath":  "docs/Wireframe/02-A-02-login/description.md",
+                       "functionalSpecPath":  "docs/Wireframe/02-A-02-login/functional-spec.md",
+                       "outputPath":  "02-A-02-login/session-expired",
+                       "mustPreserveStateSignals":  [
+                                                        "session expired notice",
+                                                        "login form remains primary",
+                                                        "safe recovery links"
+                                                    ],
+                       "concepts":  [
+                                        {
+                                            "conceptIndex":  1,
+                                            "conceptId":  "02-A-02-login__session-expired__desktop__c01",
+                                            "localConceptId":  "concept-01",
+                                            "imagePath":  "02-A-02-login/session-expired/concept-01/image.png",
+                                            "promptPath":  "02-A-02-login/session-expired/concept-01/prompt.json",
+                                            "metaPath":  "02-A-02-login/session-expired/concept-01/meta.json",
+                                            "reviewPath":  "02-A-02-login/session-expired/concept-01/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  2,
+                                            "conceptId":  "02-A-02-login__session-expired__desktop__c02",
+                                            "localConceptId":  "concept-02",
+                                            "imagePath":  "02-A-02-login/session-expired/concept-02/image.png",
+                                            "promptPath":  "02-A-02-login/session-expired/concept-02/prompt.json",
+                                            "metaPath":  "02-A-02-login/session-expired/concept-02/meta.json",
+                                            "reviewPath":  "02-A-02-login/session-expired/concept-02/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  3,
+                                            "conceptId":  "02-A-02-login__session-expired__desktop__c03",
+                                            "localConceptId":  "concept-03",
+                                            "imagePath":  "02-A-02-login/session-expired/concept-03/image.png",
+                                            "promptPath":  "02-A-02-login/session-expired/concept-03/prompt.json",
+                                            "metaPath":  "02-A-02-login/session-expired/concept-03/meta.json",
+                                            "reviewPath":  "02-A-02-login/session-expired/concept-03/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        }
+                                    ]
+                   },
+                   {
+                       "stateId":  "03-A-03-learning-goal-setup__default__desktop",
+                       "pageSlug":  "03-A-03-learning-goal-setup",
+                       "stateName":  "default",
+                       "viewport":  "desktop",
+                       "screenType":  "workspace",
+                       "sourceScreenshotPath":  "docs/Wireframe/03-A-03-learning-goal-setup/browser-screenshot--default--desktop.png",
+                       "descriptionPath":  "docs/Wireframe/03-A-03-learning-goal-setup/description.md",
+                       "functionalSpecPath":  "docs/Wireframe/03-A-03-learning-goal-setup/functional-spec.md",
+                       "outputPath":  "03-A-03-learning-goal-setup/default",
+                       "mustPreserveStateSignals":  [
+                                                        "default page purpose",
+                                                        "key regions preserved",
+                                                        "primary action preserved"
+                                                    ],
+                       "concepts":  [
+                                        {
+                                            "conceptIndex":  1,
+                                            "conceptId":  "03-A-03-learning-goal-setup__default__desktop__c01",
+                                            "localConceptId":  "concept-01",
+                                            "imagePath":  "03-A-03-learning-goal-setup/default/concept-01/image.png",
+                                            "promptPath":  "03-A-03-learning-goal-setup/default/concept-01/prompt.json",
+                                            "metaPath":  "03-A-03-learning-goal-setup/default/concept-01/meta.json",
+                                            "reviewPath":  "03-A-03-learning-goal-setup/default/concept-01/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  2,
+                                            "conceptId":  "03-A-03-learning-goal-setup__default__desktop__c02",
+                                            "localConceptId":  "concept-02",
+                                            "imagePath":  "03-A-03-learning-goal-setup/default/concept-02/image.png",
+                                            "promptPath":  "03-A-03-learning-goal-setup/default/concept-02/prompt.json",
+                                            "metaPath":  "03-A-03-learning-goal-setup/default/concept-02/meta.json",
+                                            "reviewPath":  "03-A-03-learning-goal-setup/default/concept-02/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  3,
+                                            "conceptId":  "03-A-03-learning-goal-setup__default__desktop__c03",
+                                            "localConceptId":  "concept-03",
+                                            "imagePath":  "03-A-03-learning-goal-setup/default/concept-03/image.png",
+                                            "promptPath":  "03-A-03-learning-goal-setup/default/concept-03/prompt.json",
+                                            "metaPath":  "03-A-03-learning-goal-setup/default/concept-03/meta.json",
+                                            "reviewPath":  "03-A-03-learning-goal-setup/default/concept-03/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        }
+                                    ]
+                   },
+                   {
+                       "stateId":  "04-B-01-home-dashboard__default__desktop",
+                       "pageSlug":  "04-B-01-home-dashboard",
+                       "stateName":  "default",
+                       "viewport":  "desktop",
+                       "screenType":  "workspace",
+                       "sourceScreenshotPath":  "docs/Wireframe/04-B-01-home-dashboard/browser-screenshot--default--desktop.png",
+                       "descriptionPath":  "docs/Wireframe/04-B-01-home-dashboard/description.md",
+                       "functionalSpecPath":  "docs/Wireframe/04-B-01-home-dashboard/functional-spec.md",
+                       "outputPath":  "04-B-01-home-dashboard/default",
+                       "mustPreserveStateSignals":  [
+                                                        "default page purpose",
+                                                        "key regions preserved",
+                                                        "primary action preserved"
+                                                    ],
+                       "concepts":  [
+                                        {
+                                            "conceptIndex":  1,
+                                            "conceptId":  "04-B-01-home-dashboard__default__desktop__c01",
+                                            "localConceptId":  "concept-01",
+                                            "imagePath":  "04-B-01-home-dashboard/default/concept-01/image.png",
+                                            "promptPath":  "04-B-01-home-dashboard/default/concept-01/prompt.json",
+                                            "metaPath":  "04-B-01-home-dashboard/default/concept-01/meta.json",
+                                            "reviewPath":  "04-B-01-home-dashboard/default/concept-01/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  2,
+                                            "conceptId":  "04-B-01-home-dashboard__default__desktop__c02",
+                                            "localConceptId":  "concept-02",
+                                            "imagePath":  "04-B-01-home-dashboard/default/concept-02/image.png",
+                                            "promptPath":  "04-B-01-home-dashboard/default/concept-02/prompt.json",
+                                            "metaPath":  "04-B-01-home-dashboard/default/concept-02/meta.json",
+                                            "reviewPath":  "04-B-01-home-dashboard/default/concept-02/review.json",
+                                            "status":  "generated_with_issues",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+                                                               "WRONG_FRAME_CHROME"
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  3,
+                                            "conceptId":  "04-B-01-home-dashboard__default__desktop__c03",
+                                            "localConceptId":  "concept-03",
+                                            "imagePath":  "04-B-01-home-dashboard/default/concept-03/image.png",
+                                            "promptPath":  "04-B-01-home-dashboard/default/concept-03/prompt.json",
+                                            "metaPath":  "04-B-01-home-dashboard/default/concept-03/meta.json",
+                                            "reviewPath":  "04-B-01-home-dashboard/default/concept-03/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        }
+                                    ]
+                   },
+                   {
+                       "stateId":  "05-C-01-problem-type-recommendations__default__desktop",
+                       "pageSlug":  "05-C-01-problem-type-recommendations",
+                       "stateName":  "default",
+                       "viewport":  "desktop",
+                       "screenType":  "workspace",
+                       "sourceScreenshotPath":  "docs/Wireframe/05-C-01-problem-type-recommendations/browser-screenshot--default--desktop.png",
+                       "descriptionPath":  "docs/Wireframe/05-C-01-problem-type-recommendations/description.md",
+                       "functionalSpecPath":  "docs/Wireframe/05-C-01-problem-type-recommendations/functional-spec.md",
+                       "outputPath":  "05-C-01-problem-type-recommendations/default",
+                       "mustPreserveStateSignals":  [
+                                                        "default page purpose",
+                                                        "key regions preserved",
+                                                        "primary action preserved"
+                                                    ],
+                       "concepts":  [
+                                        {
+                                            "conceptIndex":  1,
+                                            "conceptId":  "05-C-01-problem-type-recommendations__default__desktop__c01",
+                                            "localConceptId":  "concept-01",
+                                            "imagePath":  "05-C-01-problem-type-recommendations/default/concept-01/image.png",
+                                            "promptPath":  "05-C-01-problem-type-recommendations/default/concept-01/prompt.json",
+                                            "metaPath":  "05-C-01-problem-type-recommendations/default/concept-01/meta.json",
+                                            "reviewPath":  "05-C-01-problem-type-recommendations/default/concept-01/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  2,
+                                            "conceptId":  "05-C-01-problem-type-recommendations__default__desktop__c02",
+                                            "localConceptId":  "concept-02",
+                                            "imagePath":  "05-C-01-problem-type-recommendations/default/concept-02/image.png",
+                                            "promptPath":  "05-C-01-problem-type-recommendations/default/concept-02/prompt.json",
+                                            "metaPath":  "05-C-01-problem-type-recommendations/default/concept-02/meta.json",
+                                            "reviewPath":  "05-C-01-problem-type-recommendations/default/concept-02/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  3,
+                                            "conceptId":  "05-C-01-problem-type-recommendations__default__desktop__c03",
+                                            "localConceptId":  "concept-03",
+                                            "imagePath":  "05-C-01-problem-type-recommendations/default/concept-03/image.png",
+                                            "promptPath":  "05-C-01-problem-type-recommendations/default/concept-03/prompt.json",
+                                            "metaPath":  "05-C-01-problem-type-recommendations/default/concept-03/meta.json",
+                                            "reviewPath":  "05-C-01-problem-type-recommendations/default/concept-03/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        }
+                                    ]
+                   },
+                   {
+                       "stateId":  "06-C-02-problem-list__default__desktop",
+                       "pageSlug":  "06-C-02-problem-list",
+                       "stateName":  "default",
+                       "viewport":  "desktop",
+                       "screenType":  "workspace",
+                       "sourceScreenshotPath":  "docs/Wireframe/06-C-02-problem-list/browser-screenshot--default--desktop.png",
+                       "descriptionPath":  "docs/Wireframe/06-C-02-problem-list/description.md",
+                       "functionalSpecPath":  "docs/Wireframe/06-C-02-problem-list/functional-spec.md",
+                       "outputPath":  "06-C-02-problem-list/default",
+                       "mustPreserveStateSignals":  [
+                                                        "default page purpose",
+                                                        "key regions preserved",
+                                                        "primary action preserved"
+                                                    ],
+                       "concepts":  [
+                                        {
+                                            "conceptIndex":  1,
+                                            "conceptId":  "06-C-02-problem-list__default__desktop__c01",
+                                            "localConceptId":  "concept-01",
+                                            "imagePath":  "06-C-02-problem-list/default/concept-01/image.png",
+                                            "promptPath":  "06-C-02-problem-list/default/concept-01/prompt.json",
+                                            "metaPath":  "06-C-02-problem-list/default/concept-01/meta.json",
+                                            "reviewPath":  "06-C-02-problem-list/default/concept-01/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  2,
+                                            "conceptId":  "06-C-02-problem-list__default__desktop__c02",
+                                            "localConceptId":  "concept-02",
+                                            "imagePath":  "06-C-02-problem-list/default/concept-02/image.png",
+                                            "promptPath":  "06-C-02-problem-list/default/concept-02/prompt.json",
+                                            "metaPath":  "06-C-02-problem-list/default/concept-02/meta.json",
+                                            "reviewPath":  "06-C-02-problem-list/default/concept-02/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  3,
+                                            "conceptId":  "06-C-02-problem-list__default__desktop__c03",
+                                            "localConceptId":  "concept-03",
+                                            "imagePath":  "06-C-02-problem-list/default/concept-03/image.png",
+                                            "promptPath":  "06-C-02-problem-list/default/concept-03/prompt.json",
+                                            "metaPath":  "06-C-02-problem-list/default/concept-03/meta.json",
+                                            "reviewPath":  "06-C-02-problem-list/default/concept-03/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        }
+                                    ]
+                   },
+                   {
+                       "stateId":  "07-C-03-retry-modal__modal-open__desktop",
+                       "pageSlug":  "07-C-03-retry-modal",
+                       "stateName":  "modal-open",
+                       "viewport":  "desktop",
+                       "screenType":  "modal",
+                       "sourceScreenshotPath":  "docs/Wireframe/07-C-03-retry-modal/browser-screenshot--modal-open--desktop.png",
+                       "descriptionPath":  "docs/Wireframe/07-C-03-retry-modal/description.md",
+                       "functionalSpecPath":  "docs/Wireframe/07-C-03-retry-modal/functional-spec.md",
+                       "outputPath":  "07-C-03-retry-modal/modal-open",
+                       "mustPreserveStateSignals":  [
+                                                        "dimmed background context",
+                                                        "centered modal",
+                                                        "clear primary decision"
+                                                    ],
+                       "concepts":  [
+                                        {
+                                            "conceptIndex":  1,
+                                            "conceptId":  "07-C-03-retry-modal__modal-open__desktop__c01",
+                                            "localConceptId":  "concept-01",
+                                            "imagePath":  "07-C-03-retry-modal/modal-open/concept-01/image.png",
+                                            "promptPath":  "07-C-03-retry-modal/modal-open/concept-01/prompt.json",
+                                            "metaPath":  "07-C-03-retry-modal/modal-open/concept-01/meta.json",
+                                            "reviewPath":  "07-C-03-retry-modal/modal-open/concept-01/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  2,
+                                            "conceptId":  "07-C-03-retry-modal__modal-open__desktop__c02",
+                                            "localConceptId":  "concept-02",
+                                            "imagePath":  "07-C-03-retry-modal/modal-open/concept-02/image.png",
+                                            "promptPath":  "07-C-03-retry-modal/modal-open/concept-02/prompt.json",
+                                            "metaPath":  "07-C-03-retry-modal/modal-open/concept-02/meta.json",
+                                            "reviewPath":  "07-C-03-retry-modal/modal-open/concept-02/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  3,
+                                            "conceptId":  "07-C-03-retry-modal__modal-open__desktop__c03",
+                                            "localConceptId":  "concept-03",
+                                            "imagePath":  "07-C-03-retry-modal/modal-open/concept-03/image.png",
+                                            "promptPath":  "07-C-03-retry-modal/modal-open/concept-03/prompt.json",
+                                            "metaPath":  "07-C-03-retry-modal/modal-open/concept-03/meta.json",
+                                            "reviewPath":  "07-C-03-retry-modal/modal-open/concept-03/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        }
+                                    ]
+                   },
+                   {
+                       "stateId":  "08-D-01-short-answer-writing-51__default__desktop",
+                       "pageSlug":  "08-D-01-short-answer-writing-51",
+                       "stateName":  "default",
+                       "viewport":  "desktop",
+                       "screenType":  "workspace",
+                       "sourceScreenshotPath":  "docs/Wireframe/08-D-01-short-answer-writing-51/browser-screenshot--default--desktop.png",
+                       "descriptionPath":  "docs/Wireframe/08-D-01-short-answer-writing-51/description.md",
+                       "functionalSpecPath":  "docs/Wireframe/08-D-01-short-answer-writing-51/functional-spec.md",
+                       "outputPath":  "08-D-01-short-answer-writing-51/default",
+                       "mustPreserveStateSignals":  [
+                                                        "default page purpose",
+                                                        "key regions preserved",
+                                                        "primary action preserved"
+                                                    ],
+                       "concepts":  [
+                                        {
+                                            "conceptIndex":  1,
+                                            "conceptId":  "08-D-01-short-answer-writing-51__default__desktop__c01",
+                                            "localConceptId":  "concept-01",
+                                            "imagePath":  "08-D-01-short-answer-writing-51/default/concept-01/image.png",
+                                            "promptPath":  "08-D-01-short-answer-writing-51/default/concept-01/prompt.json",
+                                            "metaPath":  "08-D-01-short-answer-writing-51/default/concept-01/meta.json",
+                                            "reviewPath":  "08-D-01-short-answer-writing-51/default/concept-01/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  2,
+                                            "conceptId":  "08-D-01-short-answer-writing-51__default__desktop__c02",
+                                            "localConceptId":  "concept-02",
+                                            "imagePath":  "08-D-01-short-answer-writing-51/default/concept-02/image.png",
+                                            "promptPath":  "08-D-01-short-answer-writing-51/default/concept-02/prompt.json",
+                                            "metaPath":  "08-D-01-short-answer-writing-51/default/concept-02/meta.json",
+                                            "reviewPath":  "08-D-01-short-answer-writing-51/default/concept-02/review.json",
+                                            "status":  "generated_with_issues",
+                                            "validation":  "needs_review",
+                                            "issueCodes":  [
+                                                               "STATE_SIGNAL_MISSING"
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  3,
+                                            "conceptId":  "08-D-01-short-answer-writing-51__default__desktop__c03",
+                                            "localConceptId":  "concept-03",
+                                            "imagePath":  "08-D-01-short-answer-writing-51/default/concept-03/image.png",
+                                            "promptPath":  "08-D-01-short-answer-writing-51/default/concept-03/prompt.json",
+                                            "metaPath":  "08-D-01-short-answer-writing-51/default/concept-03/meta.json",
+                                            "reviewPath":  "08-D-01-short-answer-writing-51/default/concept-03/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        }
+                                    ]
+                   },
+                   {
+                       "stateId":  "09-D-02-answer-writing-52__default__desktop",
+                       "pageSlug":  "09-D-02-answer-writing-52",
+                       "stateName":  "default",
+                       "viewport":  "desktop",
+                       "screenType":  "workspace",
+                       "sourceScreenshotPath":  "docs/Wireframe/09-D-02-answer-writing-52/browser-screenshot--default--desktop.png",
+                       "descriptionPath":  "docs/Wireframe/09-D-02-answer-writing-52/description.md",
+                       "functionalSpecPath":  "docs/Wireframe/09-D-02-answer-writing-52/functional-spec.md",
+                       "outputPath":  "09-D-02-answer-writing-52/default",
+                       "mustPreserveStateSignals":  [
+                                                        "default page purpose",
+                                                        "key regions preserved",
+                                                        "primary action preserved"
+                                                    ],
+                       "concepts":  [
+                                        {
+                                            "conceptIndex":  1,
+                                            "conceptId":  "09-D-02-answer-writing-52__default__desktop__c01",
+                                            "localConceptId":  "concept-01",
+                                            "imagePath":  "09-D-02-answer-writing-52/default/concept-01/image.png",
+                                            "promptPath":  "09-D-02-answer-writing-52/default/concept-01/prompt.json",
+                                            "metaPath":  "09-D-02-answer-writing-52/default/concept-01/meta.json",
+                                            "reviewPath":  "09-D-02-answer-writing-52/default/concept-01/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  2,
+                                            "conceptId":  "09-D-02-answer-writing-52__default__desktop__c02",
+                                            "localConceptId":  "concept-02",
+                                            "imagePath":  "09-D-02-answer-writing-52/default/concept-02/image.png",
+                                            "promptPath":  "09-D-02-answer-writing-52/default/concept-02/prompt.json",
+                                            "metaPath":  "09-D-02-answer-writing-52/default/concept-02/meta.json",
+                                            "reviewPath":  "09-D-02-answer-writing-52/default/concept-02/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  3,
+                                            "conceptId":  "09-D-02-answer-writing-52__default__desktop__c03",
+                                            "localConceptId":  "concept-03",
+                                            "imagePath":  "09-D-02-answer-writing-52/default/concept-03/image.png",
+                                            "promptPath":  "09-D-02-answer-writing-52/default/concept-03/prompt.json",
+                                            "metaPath":  "09-D-02-answer-writing-52/default/concept-03/meta.json",
+                                            "reviewPath":  "09-D-02-answer-writing-52/default/concept-03/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        }
+                                    ]
+                   },
+                   {
+                       "stateId":  "10-D-03-long-form-writing-53__default__desktop",
+                       "pageSlug":  "10-D-03-long-form-writing-53",
+                       "stateName":  "default",
+                       "viewport":  "desktop",
+                       "screenType":  "workspace",
+                       "sourceScreenshotPath":  "docs/Wireframe/10-D-03-long-form-writing-53/browser-screenshot--default--desktop.png",
+                       "descriptionPath":  "docs/Wireframe/10-D-03-long-form-writing-53/description.md",
+                       "functionalSpecPath":  "docs/Wireframe/10-D-03-long-form-writing-53/functional-spec.md",
+                       "outputPath":  "10-D-03-long-form-writing-53/default",
+                       "mustPreserveStateSignals":  [
+                                                        "default page purpose",
+                                                        "key regions preserved",
+                                                        "primary action preserved"
+                                                    ],
+                       "concepts":  [
+                                        {
+                                            "conceptIndex":  1,
+                                            "conceptId":  "10-D-03-long-form-writing-53__default__desktop__c01",
+                                            "localConceptId":  "concept-01",
+                                            "imagePath":  "10-D-03-long-form-writing-53/default/concept-01/image.png",
+                                            "promptPath":  "10-D-03-long-form-writing-53/default/concept-01/prompt.json",
+                                            "metaPath":  "10-D-03-long-form-writing-53/default/concept-01/meta.json",
+                                            "reviewPath":  "10-D-03-long-form-writing-53/default/concept-01/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  2,
+                                            "conceptId":  "10-D-03-long-form-writing-53__default__desktop__c02",
+                                            "localConceptId":  "concept-02",
+                                            "imagePath":  "10-D-03-long-form-writing-53/default/concept-02/image.png",
+                                            "promptPath":  "10-D-03-long-form-writing-53/default/concept-02/prompt.json",
+                                            "metaPath":  "10-D-03-long-form-writing-53/default/concept-02/meta.json",
+                                            "reviewPath":  "10-D-03-long-form-writing-53/default/concept-02/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  3,
+                                            "conceptId":  "10-D-03-long-form-writing-53__default__desktop__c03",
+                                            "localConceptId":  "concept-03",
+                                            "imagePath":  "10-D-03-long-form-writing-53/default/concept-03/image.png",
+                                            "promptPath":  "10-D-03-long-form-writing-53/default/concept-03/prompt.json",
+                                            "metaPath":  "10-D-03-long-form-writing-53/default/concept-03/meta.json",
+                                            "reviewPath":  "10-D-03-long-form-writing-53/default/concept-03/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        }
+                                    ]
+                   },
+                   {
+                       "stateId":  "11-D-04-essay-writing-54__default__desktop",
+                       "pageSlug":  "11-D-04-essay-writing-54",
+                       "stateName":  "default",
+                       "viewport":  "desktop",
+                       "screenType":  "workspace",
+                       "sourceScreenshotPath":  "docs/Wireframe/11-D-04-essay-writing-54/browser-screenshot--default--desktop.png",
+                       "descriptionPath":  "docs/Wireframe/11-D-04-essay-writing-54/description.md",
+                       "functionalSpecPath":  "docs/Wireframe/11-D-04-essay-writing-54/functional-spec.md",
+                       "outputPath":  "11-D-04-essay-writing-54/default",
+                       "mustPreserveStateSignals":  [
+                                                        "default page purpose",
+                                                        "key regions preserved",
+                                                        "primary action preserved"
+                                                    ],
+                       "concepts":  [
+                                        {
+                                            "conceptIndex":  1,
+                                            "conceptId":  "11-D-04-essay-writing-54__default__desktop__c01",
+                                            "localConceptId":  "concept-01",
+                                            "imagePath":  "11-D-04-essay-writing-54/default/concept-01/image.png",
+                                            "promptPath":  "11-D-04-essay-writing-54/default/concept-01/prompt.json",
+                                            "metaPath":  "11-D-04-essay-writing-54/default/concept-01/meta.json",
+                                            "reviewPath":  "11-D-04-essay-writing-54/default/concept-01/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  2,
+                                            "conceptId":  "11-D-04-essay-writing-54__default__desktop__c02",
+                                            "localConceptId":  "concept-02",
+                                            "imagePath":  "11-D-04-essay-writing-54/default/concept-02/image.png",
+                                            "promptPath":  "11-D-04-essay-writing-54/default/concept-02/prompt.json",
+                                            "metaPath":  "11-D-04-essay-writing-54/default/concept-02/meta.json",
+                                            "reviewPath":  "11-D-04-essay-writing-54/default/concept-02/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  3,
+                                            "conceptId":  "11-D-04-essay-writing-54__default__desktop__c03",
+                                            "localConceptId":  "concept-03",
+                                            "imagePath":  "11-D-04-essay-writing-54/default/concept-03/image.png",
+                                            "promptPath":  "11-D-04-essay-writing-54/default/concept-03/prompt.json",
+                                            "metaPath":  "11-D-04-essay-writing-54/default/concept-03/meta.json",
+                                            "reviewPath":  "11-D-04-essay-writing-54/default/concept-03/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        }
+                                    ]
+                   },
+                   {
+                       "stateId":  "12-D-M1-submission-confirmation-modal__modal-open__desktop",
+                       "pageSlug":  "12-D-M1-submission-confirmation-modal",
+                       "stateName":  "modal-open",
+                       "viewport":  "desktop",
+                       "screenType":  "modal",
+                       "sourceScreenshotPath":  "docs/Wireframe/12-D-M1-submission-confirmation-modal/browser-screenshot--modal-open--desktop.png",
+                       "descriptionPath":  "docs/Wireframe/12-D-M1-submission-confirmation-modal/description.md",
+                       "functionalSpecPath":  "docs/Wireframe/12-D-M1-submission-confirmation-modal/functional-spec.md",
+                       "outputPath":  "12-D-M1-submission-confirmation-modal/modal-open",
+                       "mustPreserveStateSignals":  [
+                                                        "dimmed background context",
+                                                        "centered modal",
+                                                        "clear primary decision"
+                                                    ],
+                       "concepts":  [
+                                        {
+                                            "conceptIndex":  1,
+                                            "conceptId":  "12-D-M1-submission-confirmation-modal__modal-open__desktop__c01",
+                                            "localConceptId":  "concept-01",
+                                            "imagePath":  "12-D-M1-submission-confirmation-modal/modal-open/concept-01/image.png",
+                                            "promptPath":  "12-D-M1-submission-confirmation-modal/modal-open/concept-01/prompt.json",
+                                            "metaPath":  "12-D-M1-submission-confirmation-modal/modal-open/concept-01/meta.json",
+                                            "reviewPath":  "12-D-M1-submission-confirmation-modal/modal-open/concept-01/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  2,
+                                            "conceptId":  "12-D-M1-submission-confirmation-modal__modal-open__desktop__c02",
+                                            "localConceptId":  "concept-02",
+                                            "imagePath":  "12-D-M1-submission-confirmation-modal/modal-open/concept-02/image.png",
+                                            "promptPath":  "12-D-M1-submission-confirmation-modal/modal-open/concept-02/prompt.json",
+                                            "metaPath":  "12-D-M1-submission-confirmation-modal/modal-open/concept-02/meta.json",
+                                            "reviewPath":  "12-D-M1-submission-confirmation-modal/modal-open/concept-02/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  3,
+                                            "conceptId":  "12-D-M1-submission-confirmation-modal__modal-open__desktop__c03",
+                                            "localConceptId":  "concept-03",
+                                            "imagePath":  "12-D-M1-submission-confirmation-modal/modal-open/concept-03/image.png",
+                                            "promptPath":  "12-D-M1-submission-confirmation-modal/modal-open/concept-03/prompt.json",
+                                            "metaPath":  "12-D-M1-submission-confirmation-modal/modal-open/concept-03/meta.json",
+                                            "reviewPath":  "12-D-M1-submission-confirmation-modal/modal-open/concept-03/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        }
+                                    ]
+                   },
+                   {
+                       "stateId":  "13-D-M2-ai-analysis-loading__analyzing__desktop",
+                       "pageSlug":  "13-D-M2-ai-analysis-loading",
+                       "stateName":  "analyzing",
+                       "viewport":  "desktop",
+                       "screenType":  "workspace",
+                       "sourceScreenshotPath":  "docs/Wireframe/13-D-M2-ai-analysis-loading/browser-screenshot--analyzing--desktop.png",
+                       "descriptionPath":  "docs/Wireframe/13-D-M2-ai-analysis-loading/description.md",
+                       "functionalSpecPath":  "docs/Wireframe/13-D-M2-ai-analysis-loading/functional-spec.md",
+                       "outputPath":  "13-D-M2-ai-analysis-loading/analyzing",
+                       "mustPreserveStateSignals":  [
+                                                        "analysis loading status",
+                                                        "progress indication",
+                                                        "submitted context dimmed"
+                                                    ],
+                       "concepts":  [
+                                        {
+                                            "conceptIndex":  1,
+                                            "conceptId":  "13-D-M2-ai-analysis-loading__analyzing__desktop__c01",
+                                            "localConceptId":  "concept-01",
+                                            "imagePath":  "13-D-M2-ai-analysis-loading/analyzing/concept-01/image.png",
+                                            "promptPath":  "13-D-M2-ai-analysis-loading/analyzing/concept-01/prompt.json",
+                                            "metaPath":  "13-D-M2-ai-analysis-loading/analyzing/concept-01/meta.json",
+                                            "reviewPath":  "13-D-M2-ai-analysis-loading/analyzing/concept-01/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  2,
+                                            "conceptId":  "13-D-M2-ai-analysis-loading__analyzing__desktop__c02",
+                                            "localConceptId":  "concept-02",
+                                            "imagePath":  "13-D-M2-ai-analysis-loading/analyzing/concept-02/image.png",
+                                            "promptPath":  "13-D-M2-ai-analysis-loading/analyzing/concept-02/prompt.json",
+                                            "metaPath":  "13-D-M2-ai-analysis-loading/analyzing/concept-02/meta.json",
+                                            "reviewPath":  "13-D-M2-ai-analysis-loading/analyzing/concept-02/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  3,
+                                            "conceptId":  "13-D-M2-ai-analysis-loading__analyzing__desktop__c03",
+                                            "localConceptId":  "concept-03",
+                                            "imagePath":  "13-D-M2-ai-analysis-loading/analyzing/concept-03/image.png",
+                                            "promptPath":  "13-D-M2-ai-analysis-loading/analyzing/concept-03/prompt.json",
+                                            "metaPath":  "13-D-M2-ai-analysis-loading/analyzing/concept-03/meta.json",
+                                            "reviewPath":  "13-D-M2-ai-analysis-loading/analyzing/concept-03/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        }
+                                    ]
+                   },
+                   {
+                       "stateId":  "14-E-01-short-answer-feedback__complete__desktop",
+                       "pageSlug":  "14-E-01-short-answer-feedback",
+                       "stateName":  "complete",
+                       "viewport":  "desktop",
+                       "screenType":  "workspace",
+                       "sourceScreenshotPath":  "docs/Wireframe/14-E-01-short-answer-feedback/browser-screenshot--complete--desktop.png",
+                       "descriptionPath":  "docs/Wireframe/14-E-01-short-answer-feedback/description.md",
+                       "functionalSpecPath":  "docs/Wireframe/14-E-01-short-answer-feedback/functional-spec.md",
+                       "outputPath":  "14-E-01-short-answer-feedback/complete",
+                       "mustPreserveStateSignals":  [
+                                                        "completed feedback/result state",
+                                                        "score or summary",
+                                                        "next action"
+                                                    ],
+                       "concepts":  [
+                                        {
+                                            "conceptIndex":  1,
+                                            "conceptId":  "14-E-01-short-answer-feedback__complete__desktop__c01",
+                                            "localConceptId":  "concept-01",
+                                            "imagePath":  "14-E-01-short-answer-feedback/complete/concept-01/image.png",
+                                            "promptPath":  "14-E-01-short-answer-feedback/complete/concept-01/prompt.json",
+                                            "metaPath":  "14-E-01-short-answer-feedback/complete/concept-01/meta.json",
+                                            "reviewPath":  "14-E-01-short-answer-feedback/complete/concept-01/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  2,
+                                            "conceptId":  "14-E-01-short-answer-feedback__complete__desktop__c02",
+                                            "localConceptId":  "concept-02",
+                                            "imagePath":  "14-E-01-short-answer-feedback/complete/concept-02/image.png",
+                                            "promptPath":  "14-E-01-short-answer-feedback/complete/concept-02/prompt.json",
+                                            "metaPath":  "14-E-01-short-answer-feedback/complete/concept-02/meta.json",
+                                            "reviewPath":  "14-E-01-short-answer-feedback/complete/concept-02/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  3,
+                                            "conceptId":  "14-E-01-short-answer-feedback__complete__desktop__c03",
+                                            "localConceptId":  "concept-03",
+                                            "imagePath":  "14-E-01-short-answer-feedback/complete/concept-03/image.png",
+                                            "promptPath":  "14-E-01-short-answer-feedback/complete/concept-03/prompt.json",
+                                            "metaPath":  "14-E-01-short-answer-feedback/complete/concept-03/meta.json",
+                                            "reviewPath":  "14-E-01-short-answer-feedback/complete/concept-03/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        }
+                                    ]
+                   },
+                   {
+                       "stateId":  "15-E-02-long-form-feedback__complete__desktop",
+                       "pageSlug":  "15-E-02-long-form-feedback",
+                       "stateName":  "complete",
+                       "viewport":  "desktop",
+                       "screenType":  "workspace",
+                       "sourceScreenshotPath":  "docs/Wireframe/15-E-02-long-form-feedback/browser-screenshot--complete--desktop.png",
+                       "descriptionPath":  "docs/Wireframe/15-E-02-long-form-feedback/description.md",
+                       "functionalSpecPath":  "docs/Wireframe/15-E-02-long-form-feedback/functional-spec.md",
+                       "outputPath":  "15-E-02-long-form-feedback/complete",
+                       "mustPreserveStateSignals":  [
+                                                        "completed feedback/result state",
+                                                        "score or summary",
+                                                        "next action"
+                                                    ],
+                       "concepts":  [
+                                        {
+                                            "conceptIndex":  1,
+                                            "conceptId":  "15-E-02-long-form-feedback__complete__desktop__c01",
+                                            "localConceptId":  "concept-01",
+                                            "imagePath":  "15-E-02-long-form-feedback/complete/concept-01/image.png",
+                                            "promptPath":  "15-E-02-long-form-feedback/complete/concept-01/prompt.json",
+                                            "metaPath":  "15-E-02-long-form-feedback/complete/concept-01/meta.json",
+                                            "reviewPath":  "15-E-02-long-form-feedback/complete/concept-01/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  2,
+                                            "conceptId":  "15-E-02-long-form-feedback__complete__desktop__c02",
+                                            "localConceptId":  "concept-02",
+                                            "imagePath":  "15-E-02-long-form-feedback/complete/concept-02/image.png",
+                                            "promptPath":  "15-E-02-long-form-feedback/complete/concept-02/prompt.json",
+                                            "metaPath":  "15-E-02-long-form-feedback/complete/concept-02/meta.json",
+                                            "reviewPath":  "15-E-02-long-form-feedback/complete/concept-02/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  3,
+                                            "conceptId":  "15-E-02-long-form-feedback__complete__desktop__c03",
+                                            "localConceptId":  "concept-03",
+                                            "imagePath":  "15-E-02-long-form-feedback/complete/concept-03/image.png",
+                                            "promptPath":  "15-E-02-long-form-feedback/complete/concept-03/prompt.json",
+                                            "metaPath":  "15-E-02-long-form-feedback/complete/concept-03/meta.json",
+                                            "reviewPath":  "15-E-02-long-form-feedback/complete/concept-03/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        }
+                                    ]
+                   },
+                   {
+                       "stateId":  "16-R-01-comparison-report__default__desktop",
+                       "pageSlug":  "16-R-01-comparison-report",
+                       "stateName":  "default",
+                       "viewport":  "desktop",
+                       "screenType":  "workspace",
+                       "sourceScreenshotPath":  "docs/Wireframe/16-R-01-comparison-report/browser-screenshot--default--desktop.png",
+                       "descriptionPath":  "docs/Wireframe/16-R-01-comparison-report/description.md",
+                       "functionalSpecPath":  "docs/Wireframe/16-R-01-comparison-report/functional-spec.md",
+                       "outputPath":  "16-R-01-comparison-report/default",
+                       "mustPreserveStateSignals":  [
+                                                        "default page purpose",
+                                                        "key regions preserved",
+                                                        "primary action preserved"
+                                                    ],
+                       "concepts":  [
+                                        {
+                                            "conceptIndex":  1,
+                                            "conceptId":  "16-R-01-comparison-report__default__desktop__c01",
+                                            "localConceptId":  "concept-01",
+                                            "imagePath":  "16-R-01-comparison-report/default/concept-01/image.png",
+                                            "promptPath":  "16-R-01-comparison-report/default/concept-01/prompt.json",
+                                            "metaPath":  "16-R-01-comparison-report/default/concept-01/meta.json",
+                                            "reviewPath":  "16-R-01-comparison-report/default/concept-01/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  2,
+                                            "conceptId":  "16-R-01-comparison-report__default__desktop__c02",
+                                            "localConceptId":  "concept-02",
+                                            "imagePath":  "16-R-01-comparison-report/default/concept-02/image.png",
+                                            "promptPath":  "16-R-01-comparison-report/default/concept-02/prompt.json",
+                                            "metaPath":  "16-R-01-comparison-report/default/concept-02/meta.json",
+                                            "reviewPath":  "16-R-01-comparison-report/default/concept-02/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  3,
+                                            "conceptId":  "16-R-01-comparison-report__default__desktop__c03",
+                                            "localConceptId":  "concept-03",
+                                            "imagePath":  "16-R-01-comparison-report/default/concept-03/image.png",
+                                            "promptPath":  "16-R-01-comparison-report/default/concept-03/prompt.json",
+                                            "metaPath":  "16-R-01-comparison-report/default/concept-03/meta.json",
+                                            "reviewPath":  "16-R-01-comparison-report/default/concept-03/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        }
+                                    ]
+                   },
+                   {
+                       "stateId":  "17-R-02-next-problem-recommendation__default__desktop",
+                       "pageSlug":  "17-R-02-next-problem-recommendation",
+                       "stateName":  "default",
+                       "viewport":  "desktop",
+                       "screenType":  "workspace",
+                       "sourceScreenshotPath":  "docs/Wireframe/17-R-02-next-problem-recommendation/browser-screenshot--default--desktop.png",
+                       "descriptionPath":  "docs/Wireframe/17-R-02-next-problem-recommendation/description.md",
+                       "functionalSpecPath":  "docs/Wireframe/17-R-02-next-problem-recommendation/functional-spec.md",
+                       "outputPath":  "17-R-02-next-problem-recommendation/default",
+                       "mustPreserveStateSignals":  [
+                                                        "default page purpose",
+                                                        "key regions preserved",
+                                                        "primary action preserved"
+                                                    ],
+                       "concepts":  [
+                                        {
+                                            "conceptIndex":  1,
+                                            "conceptId":  "17-R-02-next-problem-recommendation__default__desktop__c01",
+                                            "localConceptId":  "concept-01",
+                                            "imagePath":  "17-R-02-next-problem-recommendation/default/concept-01/image.png",
+                                            "promptPath":  "17-R-02-next-problem-recommendation/default/concept-01/prompt.json",
+                                            "metaPath":  "17-R-02-next-problem-recommendation/default/concept-01/meta.json",
+                                            "reviewPath":  "17-R-02-next-problem-recommendation/default/concept-01/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  2,
+                                            "conceptId":  "17-R-02-next-problem-recommendation__default__desktop__c02",
+                                            "localConceptId":  "concept-02",
+                                            "imagePath":  "17-R-02-next-problem-recommendation/default/concept-02/image.png",
+                                            "promptPath":  "17-R-02-next-problem-recommendation/default/concept-02/prompt.json",
+                                            "metaPath":  "17-R-02-next-problem-recommendation/default/concept-02/meta.json",
+                                            "reviewPath":  "17-R-02-next-problem-recommendation/default/concept-02/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  3,
+                                            "conceptId":  "17-R-02-next-problem-recommendation__default__desktop__c03",
+                                            "localConceptId":  "concept-03",
+                                            "imagePath":  "17-R-02-next-problem-recommendation/default/concept-03/image.png",
+                                            "promptPath":  "17-R-02-next-problem-recommendation/default/concept-03/prompt.json",
+                                            "metaPath":  "17-R-02-next-problem-recommendation/default/concept-03/meta.json",
+                                            "reviewPath":  "17-R-02-next-problem-recommendation/default/concept-03/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        }
+                                    ]
+                   },
+                   {
+                       "stateId":  "18-F-01-my-library__default__desktop",
+                       "pageSlug":  "18-F-01-my-library",
+                       "stateName":  "default",
+                       "viewport":  "desktop",
+                       "screenType":  "workspace",
+                       "sourceScreenshotPath":  "docs/Wireframe/18-F-01-my-library/browser-screenshot--default--desktop.png",
+                       "descriptionPath":  "docs/Wireframe/18-F-01-my-library/description.md",
+                       "functionalSpecPath":  "docs/Wireframe/18-F-01-my-library/functional-spec.md",
+                       "outputPath":  "18-F-01-my-library/default",
+                       "mustPreserveStateSignals":  [
+                                                        "default page purpose",
+                                                        "key regions preserved",
+                                                        "primary action preserved"
+                                                    ],
+                       "concepts":  [
+                                        {
+                                            "conceptIndex":  1,
+                                            "conceptId":  "18-F-01-my-library__default__desktop__c01",
+                                            "localConceptId":  "concept-01",
+                                            "imagePath":  "18-F-01-my-library/default/concept-01/image.png",
+                                            "promptPath":  "18-F-01-my-library/default/concept-01/prompt.json",
+                                            "metaPath":  "18-F-01-my-library/default/concept-01/meta.json",
+                                            "reviewPath":  "18-F-01-my-library/default/concept-01/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  2,
+                                            "conceptId":  "18-F-01-my-library__default__desktop__c02",
+                                            "localConceptId":  "concept-02",
+                                            "imagePath":  "18-F-01-my-library/default/concept-02/image.png",
+                                            "promptPath":  "18-F-01-my-library/default/concept-02/prompt.json",
+                                            "metaPath":  "18-F-01-my-library/default/concept-02/meta.json",
+                                            "reviewPath":  "18-F-01-my-library/default/concept-02/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  3,
+                                            "conceptId":  "18-F-01-my-library__default__desktop__c03",
+                                            "localConceptId":  "concept-03",
+                                            "imagePath":  "18-F-01-my-library/default/concept-03/image.png",
+                                            "promptPath":  "18-F-01-my-library/default/concept-03/prompt.json",
+                                            "metaPath":  "18-F-01-my-library/default/concept-03/meta.json",
+                                            "reviewPath":  "18-F-01-my-library/default/concept-03/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        }
+                                    ]
+                   },
+                   {
+                       "stateId":  "19-F-M1-pdf-export-modal__modal-open__desktop",
+                       "pageSlug":  "19-F-M1-pdf-export-modal",
+                       "stateName":  "modal-open",
+                       "viewport":  "desktop",
+                       "screenType":  "modal",
+                       "sourceScreenshotPath":  "docs/Wireframe/19-F-M1-pdf-export-modal/browser-screenshot--modal-open--desktop.png",
+                       "descriptionPath":  "docs/Wireframe/19-F-M1-pdf-export-modal/description.md",
+                       "functionalSpecPath":  "docs/Wireframe/19-F-M1-pdf-export-modal/functional-spec.md",
+                       "outputPath":  "19-F-M1-pdf-export-modal/modal-open",
+                       "mustPreserveStateSignals":  [
+                                                        "dimmed background context",
+                                                        "centered modal",
+                                                        "clear primary decision"
+                                                    ],
+                       "concepts":  [
+                                        {
+                                            "conceptIndex":  1,
+                                            "conceptId":  "19-F-M1-pdf-export-modal__modal-open__desktop__c01",
+                                            "localConceptId":  "concept-01",
+                                            "imagePath":  "19-F-M1-pdf-export-modal/modal-open/concept-01/image.png",
+                                            "promptPath":  "19-F-M1-pdf-export-modal/modal-open/concept-01/prompt.json",
+                                            "metaPath":  "19-F-M1-pdf-export-modal/modal-open/concept-01/meta.json",
+                                            "reviewPath":  "19-F-M1-pdf-export-modal/modal-open/concept-01/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  2,
+                                            "conceptId":  "19-F-M1-pdf-export-modal__modal-open__desktop__c02",
+                                            "localConceptId":  "concept-02",
+                                            "imagePath":  "19-F-M1-pdf-export-modal/modal-open/concept-02/image.png",
+                                            "promptPath":  "19-F-M1-pdf-export-modal/modal-open/concept-02/prompt.json",
+                                            "metaPath":  "19-F-M1-pdf-export-modal/modal-open/concept-02/meta.json",
+                                            "reviewPath":  "19-F-M1-pdf-export-modal/modal-open/concept-02/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  3,
+                                            "conceptId":  "19-F-M1-pdf-export-modal__modal-open__desktop__c03",
+                                            "localConceptId":  "concept-03",
+                                            "imagePath":  "19-F-M1-pdf-export-modal/modal-open/concept-03/image.png",
+                                            "promptPath":  "19-F-M1-pdf-export-modal/modal-open/concept-03/prompt.json",
+                                            "metaPath":  "19-F-M1-pdf-export-modal/modal-open/concept-03/meta.json",
+                                            "reviewPath":  "19-F-M1-pdf-export-modal/modal-open/concept-03/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        }
+                                    ]
+                   },
+                   {
+                       "stateId":  "20-G-01-language-settings__default__desktop",
+                       "pageSlug":  "20-G-01-language-settings",
+                       "stateName":  "default",
+                       "viewport":  "desktop",
+                       "screenType":  "workspace",
+                       "sourceScreenshotPath":  "docs/Wireframe/20-G-01-language-settings/browser-screenshot--default--desktop.png",
+                       "descriptionPath":  "docs/Wireframe/20-G-01-language-settings/description.md",
+                       "functionalSpecPath":  "docs/Wireframe/20-G-01-language-settings/functional-spec.md",
+                       "outputPath":  "20-G-01-language-settings/default",
+                       "mustPreserveStateSignals":  [
+                                                        "default page purpose",
+                                                        "key regions preserved",
+                                                        "primary action preserved"
+                                                    ],
+                       "concepts":  [
+                                        {
+                                            "conceptIndex":  1,
+                                            "conceptId":  "20-G-01-language-settings__default__desktop__c01",
+                                            "localConceptId":  "concept-01",
+                                            "imagePath":  "20-G-01-language-settings/default/concept-01/image.png",
+                                            "promptPath":  "20-G-01-language-settings/default/concept-01/prompt.json",
+                                            "metaPath":  "20-G-01-language-settings/default/concept-01/meta.json",
+                                            "reviewPath":  "20-G-01-language-settings/default/concept-01/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  2,
+                                            "conceptId":  "20-G-01-language-settings__default__desktop__c02",
+                                            "localConceptId":  "concept-02",
+                                            "imagePath":  "20-G-01-language-settings/default/concept-02/image.png",
+                                            "promptPath":  "20-G-01-language-settings/default/concept-02/prompt.json",
+                                            "metaPath":  "20-G-01-language-settings/default/concept-02/meta.json",
+                                            "reviewPath":  "20-G-01-language-settings/default/concept-02/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  3,
+                                            "conceptId":  "20-G-01-language-settings__default__desktop__c03",
+                                            "localConceptId":  "concept-03",
+                                            "imagePath":  "20-G-01-language-settings/default/concept-03/image.png",
+                                            "promptPath":  "20-G-01-language-settings/default/concept-03/prompt.json",
+                                            "metaPath":  "20-G-01-language-settings/default/concept-03/meta.json",
+                                            "reviewPath":  "20-G-01-language-settings/default/concept-03/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        }
+                                    ]
+                   },
+                   {
+                       "stateId":  "22-D-M3-autosave-warning__modal-open__desktop",
+                       "pageSlug":  "22-D-M3-autosave-warning",
+                       "stateName":  "modal-open",
+                       "viewport":  "desktop",
+                       "screenType":  "modal",
+                       "sourceScreenshotPath":  "docs/Wireframe/22-D-M3-autosave-warning/browser-screenshot--modal-open--desktop.png",
+                       "descriptionPath":  "docs/Wireframe/22-D-M3-autosave-warning/description.md",
+                       "functionalSpecPath":  "docs/Wireframe/22-D-M3-autosave-warning/functional-spec.md",
+                       "outputPath":  "22-D-M3-autosave-warning/modal-open",
+                       "mustPreserveStateSignals":  [
+                                                        "dimmed background context",
+                                                        "centered modal",
+                                                        "clear primary decision"
+                                                    ],
+                       "concepts":  [
+                                        {
+                                            "conceptIndex":  1,
+                                            "conceptId":  "22-D-M3-autosave-warning__modal-open__desktop__c01",
+                                            "localConceptId":  "concept-01",
+                                            "imagePath":  "22-D-M3-autosave-warning/modal-open/concept-01/image.png",
+                                            "promptPath":  "22-D-M3-autosave-warning/modal-open/concept-01/prompt.json",
+                                            "metaPath":  "22-D-M3-autosave-warning/modal-open/concept-01/meta.json",
+                                            "reviewPath":  "22-D-M3-autosave-warning/modal-open/concept-01/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  2,
+                                            "conceptId":  "22-D-M3-autosave-warning__modal-open__desktop__c02",
+                                            "localConceptId":  "concept-02",
+                                            "imagePath":  "22-D-M3-autosave-warning/modal-open/concept-02/image.png",
+                                            "promptPath":  "22-D-M3-autosave-warning/modal-open/concept-02/prompt.json",
+                                            "metaPath":  "22-D-M3-autosave-warning/modal-open/concept-02/meta.json",
+                                            "reviewPath":  "22-D-M3-autosave-warning/modal-open/concept-02/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  3,
+                                            "conceptId":  "22-D-M3-autosave-warning__modal-open__desktop__c03",
+                                            "localConceptId":  "concept-03",
+                                            "imagePath":  "22-D-M3-autosave-warning/modal-open/concept-03/image.png",
+                                            "promptPath":  "22-D-M3-autosave-warning/modal-open/concept-03/prompt.json",
+                                            "metaPath":  "22-D-M3-autosave-warning/modal-open/concept-03/meta.json",
+                                            "reviewPath":  "22-D-M3-autosave-warning/modal-open/concept-03/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        }
+                                    ]
+                   },
+                   {
+                       "stateId":  "23-X-01-product-landing__default__desktop",
+                       "pageSlug":  "23-X-01-product-landing",
+                       "stateName":  "default",
+                       "viewport":  "desktop",
+                       "screenType":  "public_landing",
+                       "sourceScreenshotPath":  "docs/Wireframe/23-X-01-product-landing/browser-screenshot--default--desktop.png",
+                       "descriptionPath":  "docs/Wireframe/23-X-01-product-landing/description.md",
+                       "functionalSpecPath":  "docs/Wireframe/23-X-01-product-landing/functional-spec.md",
+                       "outputPath":  "23-X-01-product-landing/default",
+                       "mustPreserveStateSignals":  [
+                                                        "default page purpose",
+                                                        "key regions preserved",
+                                                        "primary action preserved"
+                                                    ],
+                       "concepts":  [
+                                        {
+                                            "conceptIndex":  1,
+                                            "conceptId":  "23-X-01-product-landing__default__desktop__c01",
+                                            "localConceptId":  "concept-01",
+                                            "imagePath":  "23-X-01-product-landing/default/concept-01/image.png",
+                                            "promptPath":  "23-X-01-product-landing/default/concept-01/prompt.json",
+                                            "metaPath":  "23-X-01-product-landing/default/concept-01/meta.json",
+                                            "reviewPath":  "23-X-01-product-landing/default/concept-01/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  2,
+                                            "conceptId":  "23-X-01-product-landing__default__desktop__c02",
+                                            "localConceptId":  "concept-02",
+                                            "imagePath":  "23-X-01-product-landing/default/concept-02/image.png",
+                                            "promptPath":  "23-X-01-product-landing/default/concept-02/prompt.json",
+                                            "metaPath":  "23-X-01-product-landing/default/concept-02/meta.json",
+                                            "reviewPath":  "23-X-01-product-landing/default/concept-02/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  3,
+                                            "conceptId":  "23-X-01-product-landing__default__desktop__c03",
+                                            "localConceptId":  "concept-03",
+                                            "imagePath":  "23-X-01-product-landing/default/concept-03/image.png",
+                                            "promptPath":  "23-X-01-product-landing/default/concept-03/prompt.json",
+                                            "metaPath":  "23-X-01-product-landing/default/concept-03/meta.json",
+                                            "reviewPath":  "23-X-01-product-landing/default/concept-03/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        }
+                                    ]
+                   },
+                   {
+                       "stateId":  "24-X-02-growth-dashboard__default__desktop",
+                       "pageSlug":  "24-X-02-growth-dashboard",
+                       "stateName":  "default",
+                       "viewport":  "desktop",
+                       "screenType":  "workspace",
+                       "sourceScreenshotPath":  "docs/Wireframe/24-X-02-growth-dashboard/browser-screenshot--default--desktop.png",
+                       "descriptionPath":  "docs/Wireframe/24-X-02-growth-dashboard/description.md",
+                       "functionalSpecPath":  "docs/Wireframe/24-X-02-growth-dashboard/functional-spec.md",
+                       "outputPath":  "24-X-02-growth-dashboard/default",
+                       "mustPreserveStateSignals":  [
+                                                        "default page purpose",
+                                                        "key regions preserved",
+                                                        "primary action preserved"
+                                                    ],
+                       "concepts":  [
+                                        {
+                                            "conceptIndex":  1,
+                                            "conceptId":  "24-X-02-growth-dashboard__default__desktop__c01",
+                                            "localConceptId":  "concept-01",
+                                            "imagePath":  "24-X-02-growth-dashboard/default/concept-01/image.png",
+                                            "promptPath":  "24-X-02-growth-dashboard/default/concept-01/prompt.json",
+                                            "metaPath":  "24-X-02-growth-dashboard/default/concept-01/meta.json",
+                                            "reviewPath":  "24-X-02-growth-dashboard/default/concept-01/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  2,
+                                            "conceptId":  "24-X-02-growth-dashboard__default__desktop__c02",
+                                            "localConceptId":  "concept-02",
+                                            "imagePath":  "24-X-02-growth-dashboard/default/concept-02/image.png",
+                                            "promptPath":  "24-X-02-growth-dashboard/default/concept-02/prompt.json",
+                                            "metaPath":  "24-X-02-growth-dashboard/default/concept-02/meta.json",
+                                            "reviewPath":  "24-X-02-growth-dashboard/default/concept-02/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  3,
+                                            "conceptId":  "24-X-02-growth-dashboard__default__desktop__c03",
+                                            "localConceptId":  "concept-03",
+                                            "imagePath":  "24-X-02-growth-dashboard/default/concept-03/image.png",
+                                            "promptPath":  "24-X-02-growth-dashboard/default/concept-03/prompt.json",
+                                            "metaPath":  "24-X-02-growth-dashboard/default/concept-03/meta.json",
+                                            "reviewPath":  "24-X-02-growth-dashboard/default/concept-03/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        }
+                                    ]
+                   },
+                   {
+                       "stateId":  "25-X-03-paywall__default__desktop",
+                       "pageSlug":  "25-X-03-paywall",
+                       "stateName":  "default",
+                       "viewport":  "desktop",
+                       "screenType":  "workspace",
+                       "sourceScreenshotPath":  "docs/Wireframe/25-X-03-paywall/browser-screenshot--default--desktop.png",
+                       "descriptionPath":  "docs/Wireframe/25-X-03-paywall/description.md",
+                       "functionalSpecPath":  "docs/Wireframe/25-X-03-paywall/functional-spec.md",
+                       "outputPath":  "25-X-03-paywall/default",
+                       "mustPreserveStateSignals":  [
+                                                        "default page purpose",
+                                                        "key regions preserved",
+                                                        "primary action preserved"
+                                                    ],
+                       "concepts":  [
+                                        {
+                                            "conceptIndex":  1,
+                                            "conceptId":  "25-X-03-paywall__default__desktop__c01",
+                                            "localConceptId":  "concept-01",
+                                            "imagePath":  "25-X-03-paywall/default/concept-01/image.png",
+                                            "promptPath":  "25-X-03-paywall/default/concept-01/prompt.json",
+                                            "metaPath":  "25-X-03-paywall/default/concept-01/meta.json",
+                                            "reviewPath":  "25-X-03-paywall/default/concept-01/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  2,
+                                            "conceptId":  "25-X-03-paywall__default__desktop__c02",
+                                            "localConceptId":  "concept-02",
+                                            "imagePath":  "25-X-03-paywall/default/concept-02/image.png",
+                                            "promptPath":  "25-X-03-paywall/default/concept-02/prompt.json",
+                                            "metaPath":  "25-X-03-paywall/default/concept-02/meta.json",
+                                            "reviewPath":  "25-X-03-paywall/default/concept-02/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  3,
+                                            "conceptId":  "25-X-03-paywall__default__desktop__c03",
+                                            "localConceptId":  "concept-03",
+                                            "imagePath":  "25-X-03-paywall/default/concept-03/image.png",
+                                            "promptPath":  "25-X-03-paywall/default/concept-03/prompt.json",
+                                            "metaPath":  "25-X-03-paywall/default/concept-03/meta.json",
+                                            "reviewPath":  "25-X-03-paywall/default/concept-03/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        }
+                                    ]
+                   },
+                   {
+                       "stateId":  "26-X-04-subscription-management__default__desktop",
+                       "pageSlug":  "26-X-04-subscription-management",
+                       "stateName":  "default",
+                       "viewport":  "desktop",
+                       "screenType":  "workspace",
+                       "sourceScreenshotPath":  "docs/Wireframe/26-X-04-subscription-management/browser-screenshot--default--desktop.png",
+                       "descriptionPath":  "docs/Wireframe/26-X-04-subscription-management/description.md",
+                       "functionalSpecPath":  "docs/Wireframe/26-X-04-subscription-management/functional-spec.md",
+                       "outputPath":  "26-X-04-subscription-management/default",
+                       "mustPreserveStateSignals":  [
+                                                        "default page purpose",
+                                                        "key regions preserved",
+                                                        "primary action preserved"
+                                                    ],
+                       "concepts":  [
+                                        {
+                                            "conceptIndex":  1,
+                                            "conceptId":  "26-X-04-subscription-management__default__desktop__c01",
+                                            "localConceptId":  "concept-01",
+                                            "imagePath":  "26-X-04-subscription-management/default/concept-01/image.png",
+                                            "promptPath":  "26-X-04-subscription-management/default/concept-01/prompt.json",
+                                            "metaPath":  "26-X-04-subscription-management/default/concept-01/meta.json",
+                                            "reviewPath":  "26-X-04-subscription-management/default/concept-01/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  2,
+                                            "conceptId":  "26-X-04-subscription-management__default__desktop__c02",
+                                            "localConceptId":  "concept-02",
+                                            "imagePath":  "26-X-04-subscription-management/default/concept-02/image.png",
+                                            "promptPath":  "26-X-04-subscription-management/default/concept-02/prompt.json",
+                                            "metaPath":  "26-X-04-subscription-management/default/concept-02/meta.json",
+                                            "reviewPath":  "26-X-04-subscription-management/default/concept-02/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  3,
+                                            "conceptId":  "26-X-04-subscription-management__default__desktop__c03",
+                                            "localConceptId":  "concept-03",
+                                            "imagePath":  "26-X-04-subscription-management/default/concept-03/image.png",
+                                            "promptPath":  "26-X-04-subscription-management/default/concept-03/prompt.json",
+                                            "metaPath":  "26-X-04-subscription-management/default/concept-03/meta.json",
+                                            "reviewPath":  "26-X-04-subscription-management/default/concept-03/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        }
+                                    ]
+                   },
+                   {
+                       "stateId":  "27-X-05-profile-editing__default__desktop",
+                       "pageSlug":  "27-X-05-profile-editing",
+                       "stateName":  "default",
+                       "viewport":  "desktop",
+                       "screenType":  "workspace",
+                       "sourceScreenshotPath":  "docs/Wireframe/27-X-05-profile-editing/browser-screenshot--default--desktop.png",
+                       "descriptionPath":  "docs/Wireframe/27-X-05-profile-editing/description.md",
+                       "functionalSpecPath":  "docs/Wireframe/27-X-05-profile-editing/functional-spec.md",
+                       "outputPath":  "27-X-05-profile-editing/default",
+                       "mustPreserveStateSignals":  [
+                                                        "default page purpose",
+                                                        "key regions preserved",
+                                                        "primary action preserved"
+                                                    ],
+                       "concepts":  [
+                                        {
+                                            "conceptIndex":  1,
+                                            "conceptId":  "27-X-05-profile-editing__default__desktop__c01",
+                                            "localConceptId":  "concept-01",
+                                            "imagePath":  "27-X-05-profile-editing/default/concept-01/image.png",
+                                            "promptPath":  "27-X-05-profile-editing/default/concept-01/prompt.json",
+                                            "metaPath":  "27-X-05-profile-editing/default/concept-01/meta.json",
+                                            "reviewPath":  "27-X-05-profile-editing/default/concept-01/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  2,
+                                            "conceptId":  "27-X-05-profile-editing__default__desktop__c02",
+                                            "localConceptId":  "concept-02",
+                                            "imagePath":  "27-X-05-profile-editing/default/concept-02/image.png",
+                                            "promptPath":  "27-X-05-profile-editing/default/concept-02/prompt.json",
+                                            "metaPath":  "27-X-05-profile-editing/default/concept-02/meta.json",
+                                            "reviewPath":  "27-X-05-profile-editing/default/concept-02/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  3,
+                                            "conceptId":  "27-X-05-profile-editing__default__desktop__c03",
+                                            "localConceptId":  "concept-03",
+                                            "imagePath":  "27-X-05-profile-editing/default/concept-03/image.png",
+                                            "promptPath":  "27-X-05-profile-editing/default/concept-03/prompt.json",
+                                            "metaPath":  "27-X-05-profile-editing/default/concept-03/meta.json",
+                                            "reviewPath":  "27-X-05-profile-editing/default/concept-03/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        }
+                                    ]
+                   },
+                   {
+                       "stateId":  "28-X-06-password-reset__default__desktop",
+                       "pageSlug":  "28-X-06-password-reset",
+                       "stateName":  "default",
+                       "viewport":  "desktop",
+                       "screenType":  "auth",
+                       "sourceScreenshotPath":  "docs/Wireframe/28-X-06-password-reset/browser-screenshot--default--desktop.png",
+                       "descriptionPath":  "docs/Wireframe/28-X-06-password-reset/description.md",
+                       "functionalSpecPath":  "docs/Wireframe/28-X-06-password-reset/functional-spec.md",
+                       "outputPath":  "28-X-06-password-reset/default",
+                       "mustPreserveStateSignals":  [
+                                                        "default page purpose",
+                                                        "key regions preserved",
+                                                        "primary action preserved"
+                                                    ],
+                       "concepts":  [
+                                        {
+                                            "conceptIndex":  1,
+                                            "conceptId":  "28-X-06-password-reset__default__desktop__c01",
+                                            "localConceptId":  "concept-01",
+                                            "imagePath":  "28-X-06-password-reset/default/concept-01/image.png",
+                                            "promptPath":  "28-X-06-password-reset/default/concept-01/prompt.json",
+                                            "metaPath":  "28-X-06-password-reset/default/concept-01/meta.json",
+                                            "reviewPath":  "28-X-06-password-reset/default/concept-01/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  2,
+                                            "conceptId":  "28-X-06-password-reset__default__desktop__c02",
+                                            "localConceptId":  "concept-02",
+                                            "imagePath":  "28-X-06-password-reset/default/concept-02/image.png",
+                                            "promptPath":  "28-X-06-password-reset/default/concept-02/prompt.json",
+                                            "metaPath":  "28-X-06-password-reset/default/concept-02/meta.json",
+                                            "reviewPath":  "28-X-06-password-reset/default/concept-02/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  3,
+                                            "conceptId":  "28-X-06-password-reset__default__desktop__c03",
+                                            "localConceptId":  "concept-03",
+                                            "imagePath":  "28-X-06-password-reset/default/concept-03/image.png",
+                                            "promptPath":  "28-X-06-password-reset/default/concept-03/prompt.json",
+                                            "metaPath":  "28-X-06-password-reset/default/concept-03/meta.json",
+                                            "reviewPath":  "28-X-06-password-reset/default/concept-03/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        }
+                                    ]
+                   },
+                   {
+                       "stateId":  "29-X-07-weakness-based-recommendations__default__desktop",
+                       "pageSlug":  "29-X-07-weakness-based-recommendations",
+                       "stateName":  "default",
+                       "viewport":  "desktop",
+                       "screenType":  "workspace",
+                       "sourceScreenshotPath":  "docs/Wireframe/29-X-07-weakness-based-recommendations/browser-screenshot--default--desktop.png",
+                       "descriptionPath":  "docs/Wireframe/29-X-07-weakness-based-recommendations/description.md",
+                       "functionalSpecPath":  "docs/Wireframe/29-X-07-weakness-based-recommendations/functional-spec.md",
+                       "outputPath":  "29-X-07-weakness-based-recommendations/default",
+                       "mustPreserveStateSignals":  [
+                                                        "default page purpose",
+                                                        "key regions preserved",
+                                                        "primary action preserved"
+                                                    ],
+                       "concepts":  [
+                                        {
+                                            "conceptIndex":  1,
+                                            "conceptId":  "29-X-07-weakness-based-recommendations__default__desktop__c01",
+                                            "localConceptId":  "concept-01",
+                                            "imagePath":  "29-X-07-weakness-based-recommendations/default/concept-01/image.png",
+                                            "promptPath":  "29-X-07-weakness-based-recommendations/default/concept-01/prompt.json",
+                                            "metaPath":  "29-X-07-weakness-based-recommendations/default/concept-01/meta.json",
+                                            "reviewPath":  "29-X-07-weakness-based-recommendations/default/concept-01/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  2,
+                                            "conceptId":  "29-X-07-weakness-based-recommendations__default__desktop__c02",
+                                            "localConceptId":  "concept-02",
+                                            "imagePath":  "29-X-07-weakness-based-recommendations/default/concept-02/image.png",
+                                            "promptPath":  "29-X-07-weakness-based-recommendations/default/concept-02/prompt.json",
+                                            "metaPath":  "29-X-07-weakness-based-recommendations/default/concept-02/meta.json",
+                                            "reviewPath":  "29-X-07-weakness-based-recommendations/default/concept-02/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  3,
+                                            "conceptId":  "29-X-07-weakness-based-recommendations__default__desktop__c03",
+                                            "localConceptId":  "concept-03",
+                                            "imagePath":  "29-X-07-weakness-based-recommendations/default/concept-03/image.png",
+                                            "promptPath":  "29-X-07-weakness-based-recommendations/default/concept-03/prompt.json",
+                                            "metaPath":  "29-X-07-weakness-based-recommendations/default/concept-03/meta.json",
+                                            "reviewPath":  "29-X-07-weakness-based-recommendations/default/concept-03/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        }
+                                    ]
+                   },
+                   {
+                       "stateId":  "31-X-09-notification-settings__default__desktop",
+                       "pageSlug":  "31-X-09-notification-settings",
+                       "stateName":  "default",
+                       "viewport":  "desktop",
+                       "screenType":  "workspace",
+                       "sourceScreenshotPath":  "docs/Wireframe/31-X-09-notification-settings/browser-screenshot--default--desktop.png",
+                       "descriptionPath":  "docs/Wireframe/31-X-09-notification-settings/description.md",
+                       "functionalSpecPath":  "docs/Wireframe/31-X-09-notification-settings/functional-spec.md",
+                       "outputPath":  "31-X-09-notification-settings/default",
+                       "mustPreserveStateSignals":  [
+                                                        "default page purpose",
+                                                        "key regions preserved",
+                                                        "primary action preserved"
+                                                    ],
+                       "concepts":  [
+                                        {
+                                            "conceptIndex":  1,
+                                            "conceptId":  "31-X-09-notification-settings__default__desktop__c01",
+                                            "localConceptId":  "concept-01",
+                                            "imagePath":  "31-X-09-notification-settings/default/concept-01/image.png",
+                                            "promptPath":  "31-X-09-notification-settings/default/concept-01/prompt.json",
+                                            "metaPath":  "31-X-09-notification-settings/default/concept-01/meta.json",
+                                            "reviewPath":  "31-X-09-notification-settings/default/concept-01/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  2,
+                                            "conceptId":  "31-X-09-notification-settings__default__desktop__c02",
+                                            "localConceptId":  "concept-02",
+                                            "imagePath":  "31-X-09-notification-settings/default/concept-02/image.png",
+                                            "promptPath":  "31-X-09-notification-settings/default/concept-02/prompt.json",
+                                            "metaPath":  "31-X-09-notification-settings/default/concept-02/meta.json",
+                                            "reviewPath":  "31-X-09-notification-settings/default/concept-02/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  3,
+                                            "conceptId":  "31-X-09-notification-settings__default__desktop__c03",
+                                            "localConceptId":  "concept-03",
+                                            "imagePath":  "31-X-09-notification-settings/default/concept-03/image.png",
+                                            "promptPath":  "31-X-09-notification-settings/default/concept-03/prompt.json",
+                                            "metaPath":  "31-X-09-notification-settings/default/concept-03/meta.json",
+                                            "reviewPath":  "31-X-09-notification-settings/default/concept-03/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        }
+                                    ]
+                   },
+                   {
+                       "stateId":  "33-X-11-auth-error__otp-expired__desktop",
+                       "pageSlug":  "33-X-11-auth-error",
+                       "stateName":  "otp-expired",
+                       "viewport":  "desktop",
+                       "screenType":  "auth",
+                       "sourceScreenshotPath":  "docs/Wireframe/33-X-11-auth-error/browser-screenshot--otp-expired--desktop.png",
+                       "descriptionPath":  "docs/Wireframe/33-X-11-auth-error/description.md",
+                       "functionalSpecPath":  "docs/Wireframe/33-X-11-auth-error/functional-spec.md",
+                       "outputPath":  "33-X-11-auth-error/otp-expired",
+                       "mustPreserveStateSignals":  [
+                                                        "expired verification link message",
+                                                        "manual resend action",
+                                                        "login escape route"
+                                                    ],
+                       "concepts":  [
+                                        {
+                                            "conceptIndex":  1,
+                                            "conceptId":  "33-X-11-auth-error__otp-expired__desktop__c01",
+                                            "localConceptId":  "concept-01",
+                                            "imagePath":  "33-X-11-auth-error/otp-expired/concept-01/image.png",
+                                            "promptPath":  "33-X-11-auth-error/otp-expired/concept-01/prompt.json",
+                                            "metaPath":  "33-X-11-auth-error/otp-expired/concept-01/meta.json",
+                                            "reviewPath":  "33-X-11-auth-error/otp-expired/concept-01/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  2,
+                                            "conceptId":  "33-X-11-auth-error__otp-expired__desktop__c02",
+                                            "localConceptId":  "concept-02",
+                                            "imagePath":  "33-X-11-auth-error/otp-expired/concept-02/image.png",
+                                            "promptPath":  "33-X-11-auth-error/otp-expired/concept-02/prompt.json",
+                                            "metaPath":  "33-X-11-auth-error/otp-expired/concept-02/meta.json",
+                                            "reviewPath":  "33-X-11-auth-error/otp-expired/concept-02/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  3,
+                                            "conceptId":  "33-X-11-auth-error__otp-expired__desktop__c03",
+                                            "localConceptId":  "concept-03",
+                                            "imagePath":  "33-X-11-auth-error/otp-expired/concept-03/image.png",
+                                            "promptPath":  "33-X-11-auth-error/otp-expired/concept-03/prompt.json",
+                                            "metaPath":  "33-X-11-auth-error/otp-expired/concept-03/meta.json",
+                                            "reviewPath":  "33-X-11-auth-error/otp-expired/concept-03/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        }
+                                    ]
+                   },
+                   {
+                       "stateId":  "33-X-11-auth-error__rate-limited__desktop",
+                       "pageSlug":  "33-X-11-auth-error",
+                       "stateName":  "rate-limited",
+                       "viewport":  "desktop",
+                       "screenType":  "auth",
+                       "sourceScreenshotPath":  "docs/Wireframe/33-X-11-auth-error/browser-screenshot--rate-limited--desktop.png",
+                       "descriptionPath":  "docs/Wireframe/33-X-11-auth-error/description.md",
+                       "functionalSpecPath":  "docs/Wireframe/33-X-11-auth-error/functional-spec.md",
+                       "outputPath":  "33-X-11-auth-error/rate-limited",
+                       "mustPreserveStateSignals":  [
+                                                        "rate limit guidance",
+                                                        "disabled retry or countdown",
+                                                        "safe wording"
+                                                    ],
+                       "concepts":  [
+                                        {
+                                            "conceptIndex":  1,
+                                            "conceptId":  "33-X-11-auth-error__rate-limited__desktop__c01",
+                                            "localConceptId":  "concept-01",
+                                            "imagePath":  "33-X-11-auth-error/rate-limited/concept-01/image.png",
+                                            "promptPath":  "33-X-11-auth-error/rate-limited/concept-01/prompt.json",
+                                            "metaPath":  "33-X-11-auth-error/rate-limited/concept-01/meta.json",
+                                            "reviewPath":  "33-X-11-auth-error/rate-limited/concept-01/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  2,
+                                            "conceptId":  "33-X-11-auth-error__rate-limited__desktop__c02",
+                                            "localConceptId":  "concept-02",
+                                            "imagePath":  "33-X-11-auth-error/rate-limited/concept-02/image.png",
+                                            "promptPath":  "33-X-11-auth-error/rate-limited/concept-02/prompt.json",
+                                            "metaPath":  "33-X-11-auth-error/rate-limited/concept-02/meta.json",
+                                            "reviewPath":  "33-X-11-auth-error/rate-limited/concept-02/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  3,
+                                            "conceptId":  "33-X-11-auth-error__rate-limited__desktop__c03",
+                                            "localConceptId":  "concept-03",
+                                            "imagePath":  "33-X-11-auth-error/rate-limited/concept-03/image.png",
+                                            "promptPath":  "33-X-11-auth-error/rate-limited/concept-03/prompt.json",
+                                            "metaPath":  "33-X-11-auth-error/rate-limited/concept-03/meta.json",
+                                            "reviewPath":  "33-X-11-auth-error/rate-limited/concept-03/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        }
+                                    ]
+                   },
+                   {
+                       "stateId":  "33-X-11-auth-error__unknown__desktop",
+                       "pageSlug":  "33-X-11-auth-error",
+                       "stateName":  "unknown",
+                       "viewport":  "desktop",
+                       "screenType":  "auth",
+                       "sourceScreenshotPath":  "docs/Wireframe/33-X-11-auth-error/browser-screenshot--unknown--desktop.png",
+                       "descriptionPath":  "docs/Wireframe/33-X-11-auth-error/description.md",
+                       "functionalSpecPath":  "docs/Wireframe/33-X-11-auth-error/functional-spec.md",
+                       "outputPath":  "33-X-11-auth-error/unknown",
+                       "mustPreserveStateSignals":  [
+                                                        "unknown auth error explanation",
+                                                        "no raw error details",
+                                                        "recovery route"
+                                                    ],
+                       "concepts":  [
+                                        {
+                                            "conceptIndex":  1,
+                                            "conceptId":  "33-X-11-auth-error__unknown__desktop__c01",
+                                            "localConceptId":  "concept-01",
+                                            "imagePath":  "33-X-11-auth-error/unknown/concept-01/image.png",
+                                            "promptPath":  "33-X-11-auth-error/unknown/concept-01/prompt.json",
+                                            "metaPath":  "33-X-11-auth-error/unknown/concept-01/meta.json",
+                                            "reviewPath":  "33-X-11-auth-error/unknown/concept-01/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  2,
+                                            "conceptId":  "33-X-11-auth-error__unknown__desktop__c02",
+                                            "localConceptId":  "concept-02",
+                                            "imagePath":  "33-X-11-auth-error/unknown/concept-02/image.png",
+                                            "promptPath":  "33-X-11-auth-error/unknown/concept-02/prompt.json",
+                                            "metaPath":  "33-X-11-auth-error/unknown/concept-02/meta.json",
+                                            "reviewPath":  "33-X-11-auth-error/unknown/concept-02/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  3,
+                                            "conceptId":  "33-X-11-auth-error__unknown__desktop__c03",
+                                            "localConceptId":  "concept-03",
+                                            "imagePath":  "33-X-11-auth-error/unknown/concept-03/image.png",
+                                            "promptPath":  "33-X-11-auth-error/unknown/concept-03/prompt.json",
+                                            "metaPath":  "33-X-11-auth-error/unknown/concept-03/meta.json",
+                                            "reviewPath":  "33-X-11-auth-error/unknown/concept-03/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        }
+                                    ]
+                   },
+                   {
+                       "stateId":  "34-X-12-auth-verify-email__default__desktop",
+                       "pageSlug":  "34-X-12-auth-verify-email",
+                       "stateName":  "default",
+                       "viewport":  "desktop",
+                       "screenType":  "auth",
+                       "sourceScreenshotPath":  "docs/Wireframe/34-X-12-auth-verify-email/browser-screenshot--default--desktop.png",
+                       "descriptionPath":  "docs/Wireframe/34-X-12-auth-verify-email/description.md",
+                       "functionalSpecPath":  "docs/Wireframe/34-X-12-auth-verify-email/functional-spec.md",
+                       "outputPath":  "34-X-12-auth-verify-email/default",
+                       "mustPreserveStateSignals":  [
+                                                        "default page purpose",
+                                                        "key regions preserved",
+                                                        "primary action preserved"
+                                                    ],
+                       "concepts":  [
+                                        {
+                                            "conceptIndex":  1,
+                                            "conceptId":  "34-X-12-auth-verify-email__default__desktop__c01",
+                                            "localConceptId":  "concept-01",
+                                            "imagePath":  "34-X-12-auth-verify-email/default/concept-01/image.png",
+                                            "promptPath":  "34-X-12-auth-verify-email/default/concept-01/prompt.json",
+                                            "metaPath":  "34-X-12-auth-verify-email/default/concept-01/meta.json",
+                                            "reviewPath":  "34-X-12-auth-verify-email/default/concept-01/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  2,
+                                            "conceptId":  "34-X-12-auth-verify-email__default__desktop__c02",
+                                            "localConceptId":  "concept-02",
+                                            "imagePath":  "34-X-12-auth-verify-email/default/concept-02/image.png",
+                                            "promptPath":  "34-X-12-auth-verify-email/default/concept-02/prompt.json",
+                                            "metaPath":  "34-X-12-auth-verify-email/default/concept-02/meta.json",
+                                            "reviewPath":  "34-X-12-auth-verify-email/default/concept-02/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  3,
+                                            "conceptId":  "34-X-12-auth-verify-email__default__desktop__c03",
+                                            "localConceptId":  "concept-03",
+                                            "imagePath":  "34-X-12-auth-verify-email/default/concept-03/image.png",
+                                            "promptPath":  "34-X-12-auth-verify-email/default/concept-03/prompt.json",
+                                            "metaPath":  "34-X-12-auth-verify-email/default/concept-03/meta.json",
+                                            "reviewPath":  "34-X-12-auth-verify-email/default/concept-03/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        }
+                                    ]
+                   },
+                   {
+                       "stateId":  "35-X-13-terms__default__desktop",
+                       "pageSlug":  "35-X-13-terms",
+                       "stateName":  "default",
+                       "viewport":  "desktop",
+                       "screenType":  "legal",
+                       "sourceScreenshotPath":  "docs/Wireframe/35-X-13-terms/browser-screenshot--default--desktop.png",
+                       "descriptionPath":  "docs/Wireframe/35-X-13-terms/description.md",
+                       "functionalSpecPath":  "docs/Wireframe/35-X-13-terms/functional-spec.md",
+                       "outputPath":  "35-X-13-terms/default",
+                       "mustPreserveStateSignals":  [
+                                                        "default page purpose",
+                                                        "key regions preserved",
+                                                        "primary action preserved"
+                                                    ],
+                       "concepts":  [
+                                        {
+                                            "conceptIndex":  1,
+                                            "conceptId":  "35-X-13-terms__default__desktop__c01",
+                                            "localConceptId":  "concept-01",
+                                            "imagePath":  "35-X-13-terms/default/concept-01/image.png",
+                                            "promptPath":  "35-X-13-terms/default/concept-01/prompt.json",
+                                            "metaPath":  "35-X-13-terms/default/concept-01/meta.json",
+                                            "reviewPath":  "35-X-13-terms/default/concept-01/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  2,
+                                            "conceptId":  "35-X-13-terms__default__desktop__c02",
+                                            "localConceptId":  "concept-02",
+                                            "imagePath":  "35-X-13-terms/default/concept-02/image.png",
+                                            "promptPath":  "35-X-13-terms/default/concept-02/prompt.json",
+                                            "metaPath":  "35-X-13-terms/default/concept-02/meta.json",
+                                            "reviewPath":  "35-X-13-terms/default/concept-02/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  3,
+                                            "conceptId":  "35-X-13-terms__default__desktop__c03",
+                                            "localConceptId":  "concept-03",
+                                            "imagePath":  "35-X-13-terms/default/concept-03/image.png",
+                                            "promptPath":  "35-X-13-terms/default/concept-03/prompt.json",
+                                            "metaPath":  "35-X-13-terms/default/concept-03/meta.json",
+                                            "reviewPath":  "35-X-13-terms/default/concept-03/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        }
+                                    ]
+                   },
+                   {
+                       "stateId":  "36-X-14-privacy-policy__default__desktop",
+                       "pageSlug":  "36-X-14-privacy-policy",
+                       "stateName":  "default",
+                       "viewport":  "desktop",
+                       "screenType":  "legal",
+                       "sourceScreenshotPath":  "docs/Wireframe/36-X-14-privacy-policy/browser-screenshot--default--desktop.png",
+                       "descriptionPath":  "docs/Wireframe/36-X-14-privacy-policy/description.md",
+                       "functionalSpecPath":  "docs/Wireframe/36-X-14-privacy-policy/functional-spec.md",
+                       "outputPath":  "36-X-14-privacy-policy/default",
+                       "mustPreserveStateSignals":  [
+                                                        "default page purpose",
+                                                        "key regions preserved",
+                                                        "primary action preserved"
+                                                    ],
+                       "concepts":  [
+                                        {
+                                            "conceptIndex":  1,
+                                            "conceptId":  "36-X-14-privacy-policy__default__desktop__c01",
+                                            "localConceptId":  "concept-01",
+                                            "imagePath":  "36-X-14-privacy-policy/default/concept-01/image.png",
+                                            "promptPath":  "36-X-14-privacy-policy/default/concept-01/prompt.json",
+                                            "metaPath":  "36-X-14-privacy-policy/default/concept-01/meta.json",
+                                            "reviewPath":  "36-X-14-privacy-policy/default/concept-01/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  2,
+                                            "conceptId":  "36-X-14-privacy-policy__default__desktop__c02",
+                                            "localConceptId":  "concept-02",
+                                            "imagePath":  "36-X-14-privacy-policy/default/concept-02/image.png",
+                                            "promptPath":  "36-X-14-privacy-policy/default/concept-02/prompt.json",
+                                            "metaPath":  "36-X-14-privacy-policy/default/concept-02/meta.json",
+                                            "reviewPath":  "36-X-14-privacy-policy/default/concept-02/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  3,
+                                            "conceptId":  "36-X-14-privacy-policy__default__desktop__c03",
+                                            "localConceptId":  "concept-03",
+                                            "imagePath":  "36-X-14-privacy-policy/default/concept-03/image.png",
+                                            "promptPath":  "36-X-14-privacy-policy/default/concept-03/prompt.json",
+                                            "metaPath":  "36-X-14-privacy-policy/default/concept-03/meta.json",
+                                            "reviewPath":  "36-X-14-privacy-policy/default/concept-03/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        }
+                                    ]
+                   },
+                   {
+                       "stateId":  "38-X-16-password-reset-confirm__default__desktop",
+                       "pageSlug":  "38-X-16-password-reset-confirm",
+                       "stateName":  "default",
+                       "viewport":  "desktop",
+                       "screenType":  "auth",
+                       "sourceScreenshotPath":  "docs/Wireframe/38-X-16-password-reset-confirm/browser-screenshot--default--desktop.png",
+                       "descriptionPath":  "docs/Wireframe/38-X-16-password-reset-confirm/description.md",
+                       "functionalSpecPath":  "docs/Wireframe/38-X-16-password-reset-confirm/functional-spec.md",
+                       "outputPath":  "38-X-16-password-reset-confirm/default",
+                       "mustPreserveStateSignals":  [
+                                                        "default page purpose",
+                                                        "key regions preserved",
+                                                        "primary action preserved"
+                                                    ],
+                       "concepts":  [
+                                        {
+                                            "conceptIndex":  1,
+                                            "conceptId":  "38-X-16-password-reset-confirm__default__desktop__c01",
+                                            "localConceptId":  "concept-01",
+                                            "imagePath":  "38-X-16-password-reset-confirm/default/concept-01/image.png",
+                                            "promptPath":  "38-X-16-password-reset-confirm/default/concept-01/prompt.json",
+                                            "metaPath":  "38-X-16-password-reset-confirm/default/concept-01/meta.json",
+                                            "reviewPath":  "38-X-16-password-reset-confirm/default/concept-01/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  2,
+                                            "conceptId":  "38-X-16-password-reset-confirm__default__desktop__c02",
+                                            "localConceptId":  "concept-02",
+                                            "imagePath":  "38-X-16-password-reset-confirm/default/concept-02/image.png",
+                                            "promptPath":  "38-X-16-password-reset-confirm/default/concept-02/prompt.json",
+                                            "metaPath":  "38-X-16-password-reset-confirm/default/concept-02/meta.json",
+                                            "reviewPath":  "38-X-16-password-reset-confirm/default/concept-02/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  3,
+                                            "conceptId":  "38-X-16-password-reset-confirm__default__desktop__c03",
+                                            "localConceptId":  "concept-03",
+                                            "imagePath":  "38-X-16-password-reset-confirm/default/concept-03/image.png",
+                                            "promptPath":  "38-X-16-password-reset-confirm/default/concept-03/prompt.json",
+                                            "metaPath":  "38-X-16-password-reset-confirm/default/concept-03/meta.json",
+                                            "reviewPath":  "38-X-16-password-reset-confirm/default/concept-03/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        }
+                                    ]
+                   },
+                   {
+                       "stateId":  "39-X-17-auth-callback-fragment__default__desktop",
+                       "pageSlug":  "39-X-17-auth-callback-fragment",
+                       "stateName":  "default",
+                       "viewport":  "desktop",
+                       "screenType":  "auth",
+                       "sourceScreenshotPath":  "docs/Wireframe/39-X-17-auth-callback-fragment/browser-screenshot--default--desktop.png",
+                       "descriptionPath":  "docs/Wireframe/39-X-17-auth-callback-fragment/description.md",
+                       "functionalSpecPath":  "docs/Wireframe/39-X-17-auth-callback-fragment/functional-spec.md",
+                       "outputPath":  "39-X-17-auth-callback-fragment/default",
+                       "mustPreserveStateSignals":  [
+                                                        "default page purpose",
+                                                        "key regions preserved",
+                                                        "primary action preserved"
+                                                    ],
+                       "concepts":  [
+                                        {
+                                            "conceptIndex":  1,
+                                            "conceptId":  "39-X-17-auth-callback-fragment__default__desktop__c01",
+                                            "localConceptId":  "concept-01",
+                                            "imagePath":  "39-X-17-auth-callback-fragment/default/concept-01/image.png",
+                                            "promptPath":  "39-X-17-auth-callback-fragment/default/concept-01/prompt.json",
+                                            "metaPath":  "39-X-17-auth-callback-fragment/default/concept-01/meta.json",
+                                            "reviewPath":  "39-X-17-auth-callback-fragment/default/concept-01/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  2,
+                                            "conceptId":  "39-X-17-auth-callback-fragment__default__desktop__c02",
+                                            "localConceptId":  "concept-02",
+                                            "imagePath":  "39-X-17-auth-callback-fragment/default/concept-02/image.png",
+                                            "promptPath":  "39-X-17-auth-callback-fragment/default/concept-02/prompt.json",
+                                            "metaPath":  "39-X-17-auth-callback-fragment/default/concept-02/meta.json",
+                                            "reviewPath":  "39-X-17-auth-callback-fragment/default/concept-02/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  3,
+                                            "conceptId":  "39-X-17-auth-callback-fragment__default__desktop__c03",
+                                            "localConceptId":  "concept-03",
+                                            "imagePath":  "39-X-17-auth-callback-fragment/default/concept-03/image.png",
+                                            "promptPath":  "39-X-17-auth-callback-fragment/default/concept-03/prompt.json",
+                                            "metaPath":  "39-X-17-auth-callback-fragment/default/concept-03/meta.json",
+                                            "reviewPath":  "39-X-17-auth-callback-fragment/default/concept-03/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        }
+                                    ]
+                   },
+                   {
+                       "stateId":  "40-X-18-auth-consent__current-account-redirect__desktop",
+                       "pageSlug":  "40-X-18-auth-consent",
+                       "stateName":  "current-account-redirect",
+                       "viewport":  "desktop",
+                       "screenType":  "auth",
+                       "sourceScreenshotPath":  "docs/Wireframe/40-X-18-auth-consent/browser-screenshot--current-account-redirect--desktop.png",
+                       "descriptionPath":  "docs/Wireframe/40-X-18-auth-consent/description.md",
+                       "functionalSpecPath":  "docs/Wireframe/40-X-18-auth-consent/functional-spec.md",
+                       "outputPath":  "40-X-18-auth-consent/current-account-redirect",
+                       "mustPreserveStateSignals":  [
+                                                        "dashboard redirect state",
+                                                        "no consent form",
+                                                        "study continuation"
+                                                    ],
+                       "concepts":  [
+                                        {
+                                            "conceptIndex":  1,
+                                            "conceptId":  "40-X-18-auth-consent__current-account-redirect__desktop__c01",
+                                            "localConceptId":  "concept-01",
+                                            "imagePath":  "40-X-18-auth-consent/current-account-redirect/concept-01/image.png",
+                                            "promptPath":  "40-X-18-auth-consent/current-account-redirect/concept-01/prompt.json",
+                                            "metaPath":  "40-X-18-auth-consent/current-account-redirect/concept-01/meta.json",
+                                            "reviewPath":  "40-X-18-auth-consent/current-account-redirect/concept-01/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  2,
+                                            "conceptId":  "40-X-18-auth-consent__current-account-redirect__desktop__c02",
+                                            "localConceptId":  "concept-02",
+                                            "imagePath":  "40-X-18-auth-consent/current-account-redirect/concept-02/image.png",
+                                            "promptPath":  "40-X-18-auth-consent/current-account-redirect/concept-02/prompt.json",
+                                            "metaPath":  "40-X-18-auth-consent/current-account-redirect/concept-02/meta.json",
+                                            "reviewPath":  "40-X-18-auth-consent/current-account-redirect/concept-02/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        },
+                                        {
+                                            "conceptIndex":  3,
+                                            "conceptId":  "40-X-18-auth-consent__current-account-redirect__desktop__c03",
+                                            "localConceptId":  "concept-03",
+                                            "imagePath":  "40-X-18-auth-consent/current-account-redirect/concept-03/image.png",
+                                            "promptPath":  "40-X-18-auth-consent/current-account-redirect/concept-03/prompt.json",
+                                            "metaPath":  "40-X-18-auth-consent/current-account-redirect/concept-03/meta.json",
+                                            "reviewPath":  "40-X-18-auth-consent/current-account-redirect/concept-03/review.json",
+                                            "status":  "accepted",
+                                            "validation":  "pass",
+                                            "issueCodes":  [
+
+                                                           ]
+                                        }
+                                    ]
+                   }
+               ],
+    "summary":  {
+                    "accepted":  115,
+                    "generated_with_issues":  2,
+                    "rejected":  0,
+                    "failed":  0,
+                    "missing":  0
+                }
+}

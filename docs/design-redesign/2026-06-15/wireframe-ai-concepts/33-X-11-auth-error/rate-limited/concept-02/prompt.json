@@ -1,0 +1,11 @@
+﻿{
+    "schemaVersion":  "1.0",
+    "runId":  "2026-06-15-wireframe-ai-concepts",
+    "conceptId":  "concept-02",
+    "globalConceptId":  "33-X-11-auth-error__rate-limited__desktop__c02",
+    "stateId":  "33-X-11-auth-error__rate-limited__desktop",
+    "page":  "33-X-11-auth-error",
+    "state":  "rate-limited",
+    "screenType":  "auth",
+    "prompt":  "Use case: ui-mockup\nAsset type: TALKPIK AI temporary auth pause page concept\nInput image role: source screenshot is a reference for rate-limited auth error state only.\nPrimary request: Redesign 33-X-11-auth-error/rate-limited.\nDirection: temporary pause with clear next time.\nComposition/framing: desktop 1280x900 edge-to-edge app UI screenshot only; no browser address bar, tabs, bookmarks bar, OS window title bar, device frame, or watermark. Show a centered Snow card on Mist canvas with TALKPIK AI mark, title explaining too many requests, muted helper copy, prominent countdown in minutes/seconds, disabled retry button, secondary login and home links. Keep no raw provider details.\nStyle/medium: high-fidelity Ant Design Result/Statistic Countdown/Button/Card UI.\nColor palette: neutral Mist/Snow/Fog/Obsidian; disabled action is Fog/Steel; enabled primary would be Obsidian #09090b.\nTypography: Cosmica-like single sans, compact density, no letter spacing.\nConstraints: rate-limit state signal must be unmistakable; safe non-blaming wording; Korean UI text is visual direction only and not final copy source.\nAvoid: browser chrome, OS frame, device frame, danger-red dominant styling, gradients, chromatic CTA, provider/raw error codes, technical stack references, watermark."
+}

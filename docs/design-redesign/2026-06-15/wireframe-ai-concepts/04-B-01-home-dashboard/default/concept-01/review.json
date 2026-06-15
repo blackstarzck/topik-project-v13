@@ -1,0 +1,39 @@
+﻿{
+    "schemaVersion":  "1.0",
+    "runId":  "2026-06-15-wireframe-ai-concepts",
+    "reviewId":  "04-B-01-home-dashboard__default__desktop__c01",
+    "conceptId":  "04-B-01-home-dashboard__default__desktop__c01",
+    "localConceptId":  "concept-01",
+    "stateId":  "04-B-01-home-dashboard__default__desktop",
+    "page":  "04-B-01-home-dashboard",
+    "state":  "default",
+    "screenType":  "workspace",
+    "imagePath":  "04-B-01-home-dashboard/default/concept-01/image.png",
+    "promptPath":  "04-B-01-home-dashboard/default/concept-01/prompt.json",
+    "metaPath":  "04-B-01-home-dashboard/default/concept-01/meta.json",
+    "reviewPath":  "04-B-01-home-dashboard/default/concept-01/review.json",
+    "status":  "accepted",
+    "validation":  "pass",
+    "mustPreserveStateSignals":  [
+                                     "default page purpose",
+                                     "key regions preserved",
+                                     "primary action preserved"
+                                 ],
+    "checks":  {
+                   "fileExists":  true,
+                   "nonZeroBytes":  true,
+                   "noChrome":  true,
+                   "stateSignalPreserved":  true,
+                   "primaryCtaDarkOnly":  true,
+                   "neutralPaletteOnly":  true,
+                   "workspaceRadiusOk":  true,
+                   "noLoudGradient":  true,
+                   "keyRegionsPreserved":  true,
+                   "textUsableAsVisualReference":  true
+               },
+    "issueCodes":  [
+
+                   ],
+    "notes":  "Accepted as visual direction asset. Dashboard structure, neutral palette, dark primary CTA, compact workspace density, and state purpose are preserved. Korean text remains visual reference only.",
+    "reviewedAt":  "2026-06-15T12:42:38.1128484+09:00"
+}

@@ -1,0 +1,11 @@
+﻿{
+    "schemaVersion":  "1.0",
+    "runId":  "2026-06-15-wireframe-ai-concepts",
+    "conceptId":  "concept-03",
+    "globalConceptId":  "28-X-06-password-reset__default__desktop__c03",
+    "stateId":  "28-X-06-password-reset__default__desktop",
+    "page":  "28-X-06-password-reset",
+    "state":  "default",
+    "screenType":  "auth",
+    "prompt":  "Use case: ui-mockup\nAsset type: desktop AI redesign concept bitmap for TALKPIK AI user app\nPrimary request: Create concept-03 for page 28-X-06-password-reset, state default. Reference state: simple password reset request screen. Create a minimal task-focused auth concept with no extra decoration.\nComposition/framing: desktop 1280x900 edge-to-edge app UI screenshot only; no browser address bar, tabs, bookmarks bar, OS title bar, device frame, or watermark. No app sidebar. Center a small auth card beneath two functional icons and title. Card: short instruction, muted link-expiry line, email input, full-width Obsidian \u0027재설정 링크 보내기\u0027 button. Below card: 로그인으로 돌아가기 link. Keep generous background but not a hero section.\nStyle/medium: high-fidelity Ant Design-friendly auth form, compact, clean, neutral, one task per screen.\nColor palette: Mist/Snow/Fog/Obsidian; Obsidian #09090b for the only CTA; gray helper text; no gradients.\nTypography: Cosmica-like modern sans, Korean UI text as visual direction only, no negative letter spacing, all button/input text fits.\nMust preserve state signals: password reset request, empty email input, reset link CTA, expiry note, back to login link, no sidebar/browser chrome.\nAvoid: browser chrome, OS frame, device frame, decorative image, colorful CTA, loud background, large card radius, heavy drop shadow."
+}

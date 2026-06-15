@@ -1,0 +1,31 @@
+{
+  "runId": "20260615-091636",
+  "capturedAt": "2026-06-15T00:21:56.966Z",
+  "ia": "R-02",
+  "folder": "17-R-02-next-problem-recommendation",
+  "state": "default",
+  "route": "/practice/next",
+  "auth": true,
+  "viewport": {
+    "name": "desktop",
+    "width": 1280,
+    "height": 900
+  },
+  "status": "ok",
+  "note": null,
+  "expectedPath": "/practice/next",
+  "finalUrl": "http://127.0.0.1:3000/practice/next",
+  "finalPath": "/practice/next",
+  "title": "다음 문제 — TALKPIK | TALKPIK AI",
+  "headings": [
+    "다음 문제"
+  ],
+  "screenshotPath": "docs/Wireframe/17-R-02-next-problem-recommendation/browser-screenshot--default--desktop.png",
+  "durationMs": 3792,
+  "errors": {
+    "pageErrors": [],
+    "consoleErrors": [],
+    "responseErrors": [],
+    "errorMessage": null
+  }
+}

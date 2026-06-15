@@ -1,0 +1,39 @@
+﻿{
+    "schemaVersion":  "1.0",
+    "runId":  "2026-06-15-wireframe-ai-concepts",
+    "reviewId":  "04-B-01-home-dashboard__default__desktop__c02",
+    "conceptId":  "04-B-01-home-dashboard__default__desktop__c02",
+    "localConceptId":  "concept-02",
+    "stateId":  "04-B-01-home-dashboard__default__desktop",
+    "page":  "04-B-01-home-dashboard",
+    "state":  "default",
+    "screenType":  "workspace",
+    "imagePath":  "04-B-01-home-dashboard/default/concept-02/image.png",
+    "promptPath":  "04-B-01-home-dashboard/default/concept-02/prompt.json",
+    "metaPath":  "04-B-01-home-dashboard/default/concept-02/meta.json",
+    "reviewPath":  "04-B-01-home-dashboard/default/concept-02/review.json",
+    "status":  "generated_with_issues",
+    "validation":  "pass",
+    "mustPreserveStateSignals":  [
+                                     "default page purpose",
+                                     "key regions preserved",
+                                     "primary action preserved"
+                                 ],
+    "checks":  {
+                   "fileExists":  true,
+                   "nonZeroBytes":  true,
+                   "noChrome":  false,
+                   "stateSignalPreserved":  true,
+                   "primaryCtaDarkOnly":  true,
+                   "neutralPaletteOnly":  true,
+                   "workspaceRadiusOk":  true,
+                   "noLoudGradient":  true,
+                   "keyRegionsPreserved":  true,
+                   "textUsableAsVisualReference":  true
+               },
+    "issueCodes":  [
+                       "WRONG_FRAME_CHROME"
+                   ],
+    "notes":  "Useful visual direction, but generated image includes desktop/browser window chrome at the top. Keep as reference with issue; future prompts should require no browser or OS chrome.",
+    "reviewedAt":  "2026-06-15T12:42:38.1378179+09:00"
+}

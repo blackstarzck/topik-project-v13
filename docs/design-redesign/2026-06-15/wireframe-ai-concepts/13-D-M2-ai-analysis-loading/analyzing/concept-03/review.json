@@ -1,0 +1,39 @@
+﻿{
+    "schemaVersion":  "1.0",
+    "runId":  "2026-06-15-wireframe-ai-concepts",
+    "reviewId":  "13-D-M2-ai-analysis-loading__analyzing__desktop__c03",
+    "conceptId":  "13-D-M2-ai-analysis-loading__analyzing__desktop__c03",
+    "localConceptId":  "concept-03",
+    "stateId":  "13-D-M2-ai-analysis-loading__analyzing__desktop",
+    "page":  "13-D-M2-ai-analysis-loading",
+    "state":  "analyzing",
+    "screenType":  "modal",
+    "imagePath":  "13-D-M2-ai-analysis-loading/analyzing/concept-03/image.png",
+    "promptPath":  "13-D-M2-ai-analysis-loading/analyzing/concept-03/prompt.json",
+    "metaPath":  "13-D-M2-ai-analysis-loading/analyzing/concept-03/meta.json",
+    "reviewPath":  "13-D-M2-ai-analysis-loading/analyzing/concept-03/review.json",
+    "status":  "accepted",
+    "validation":  "pass",
+    "mustPreserveStateSignals":  [
+                                     "analysis loading status",
+                                     "progress indication",
+                                     "submitted context dimmed"
+                                 ],
+    "checks":  {
+                   "fileExists":  true,
+                   "nonZeroBytes":  true,
+                   "noChrome":  true,
+                   "stateSignalPreserved":  true,
+                   "primaryCtaDarkOnly":  true,
+                   "neutralPaletteOnly":  true,
+                   "workspaceRadiusOk":  true,
+                   "noLoudGradient":  true,
+                   "keyRegionsPreserved":  true,
+                   "textUsableAsVisualReference":  true
+               },
+    "issueCodes":  [
+
+                   ],
+    "notes":  "analysis timeline, current status, dimmed submitted context가 보존됨.",
+    "reviewedAt":  "2026-06-15T12:53:45.9340547+09:00"
+}

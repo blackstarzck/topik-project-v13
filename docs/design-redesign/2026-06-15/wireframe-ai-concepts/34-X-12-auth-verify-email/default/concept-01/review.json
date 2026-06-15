@@ -1,0 +1,44 @@
+﻿{
+    "schemaVersion":  "1.0",
+    "runId":  "2026-06-15-wireframe-ai-concepts",
+    "reviewId":  "34-X-12-auth-verify-email__default__desktop__c01",
+    "conceptId":  "34-X-12-auth-verify-email__default__desktop__c01",
+    "localConceptId":  "concept-01",
+    "stateId":  "34-X-12-auth-verify-email__default__desktop",
+    "page":  "34-X-12-auth-verify-email",
+    "state":  "default",
+    "screenType":  "auth",
+    "imagePath":  "34-X-12-auth-verify-email/default/concept-01/image.png",
+    "promptPath":  "34-X-12-auth-verify-email/default/concept-01/prompt.json",
+    "metaPath":  "34-X-12-auth-verify-email/default/concept-01/meta.json",
+    "reviewPath":  "34-X-12-auth-verify-email/default/concept-01/review.json",
+    "status":  "accepted",
+    "validation":  "pass",
+    "mustPreserveStateSignals":  [
+                                     "verification email sent",
+                                     "email field",
+                                     "resend verification CTA",
+                                     "rate/frequency note",
+                                     "did-not-receive help",
+                                     "other email signup",
+                                     "login/password reset/home links",
+                                     "no sidebar"
+                                 ],
+    "checks":  {
+                   "fileExists":  true,
+                   "nonZeroBytes":  true,
+                   "noChrome":  true,
+                   "stateSignalPreserved":  true,
+                   "primaryCtaDarkOnly":  true,
+                   "neutralPaletteOnly":  true,
+                   "workspaceRadiusOk":  true,
+                   "noLoudGradient":  true,
+                   "keyRegionsPreserved":  true,
+                   "textUsableAsVisualReference":  true
+               },
+    "issueCodes":  [
+
+                   ],
+    "notes":  "Verification-email sent concept preserves email input, resend CTA, frequency note, help section, alternate signup, login/password reset/home links, and auth-only layout.",
+    "reviewedAt":  "2026-06-15T16:19:07.5364823+09:00"
+}

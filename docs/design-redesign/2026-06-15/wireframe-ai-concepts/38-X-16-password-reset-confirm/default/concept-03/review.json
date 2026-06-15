@@ -1,0 +1,44 @@
+﻿{
+    "schemaVersion":  "1.0",
+    "runId":  "2026-06-15-wireframe-ai-concepts",
+    "reviewId":  "38-X-16-password-reset-confirm__default__desktop__c03",
+    "conceptId":  "38-X-16-password-reset-confirm__default__desktop__c03",
+    "localConceptId":  "concept-03",
+    "stateId":  "38-X-16-password-reset-confirm__default__desktop",
+    "page":  "38-X-16-password-reset-confirm",
+    "state":  "default",
+    "screenType":  "auth",
+    "imagePath":  "38-X-16-password-reset-confirm/default/concept-03/image.png",
+    "promptPath":  "38-X-16-password-reset-confirm/default/concept-03/prompt.json",
+    "metaPath":  "38-X-16-password-reset-confirm/default/concept-03/meta.json",
+    "reviewPath":  "38-X-16-password-reset-confirm/default/concept-03/review.json",
+    "status":  "accepted",
+    "validation":  "pass",
+    "mustPreserveStateSignals":  [
+                                     "valid password reset link",
+                                     "new password and confirm password fields",
+                                     "eye icons",
+                                     "password guidance",
+                                     "future expiry note",
+                                     "change password CTA",
+                                     "login return link",
+                                     "no sidebar"
+                                 ],
+    "checks":  {
+                   "fileExists":  true,
+                   "nonZeroBytes":  true,
+                   "noChrome":  true,
+                   "stateSignalPreserved":  true,
+                   "primaryCtaDarkOnly":  true,
+                   "neutralPaletteOnly":  true,
+                   "workspaceRadiusOk":  true,
+                   "noLoudGradient":  true,
+                   "keyRegionsPreserved":  true,
+                   "textUsableAsVisualReference":  true
+               },
+    "issueCodes":  [
+
+                   ],
+    "notes":  "Minimal two-field password reset form preserves valid reset link, two password inputs, visibility icons, requirements, future expiry note, change CTA, and login return link.",
+    "reviewedAt":  "2026-06-15T16:52:17.5039303+09:00"
+}

@@ -1,0 +1,44 @@
+﻿{
+    "schemaVersion":  "1.0",
+    "runId":  "2026-06-15-wireframe-ai-concepts",
+    "reviewId":  "31-X-09-notification-settings__default__desktop__c03",
+    "conceptId":  "31-X-09-notification-settings__default__desktop__c03",
+    "localConceptId":  "concept-03",
+    "stateId":  "31-X-09-notification-settings__default__desktop",
+    "page":  "31-X-09-notification-settings",
+    "state":  "default",
+    "screenType":  "workspace",
+    "imagePath":  "31-X-09-notification-settings/default/concept-03/image.png",
+    "promptPath":  "31-X-09-notification-settings/default/concept-03/prompt.json",
+    "metaPath":  "31-X-09-notification-settings/default/concept-03/meta.json",
+    "reviewPath":  "31-X-09-notification-settings/default/concept-03/review.json",
+    "status":  "accepted",
+    "validation":  "pass",
+    "mustPreserveStateSignals":  [
+                                     "notification settings",
+                                     "no receiving channel warning",
+                                     "channel tabs",
+                                     "disabled/off notification options",
+                                     "reminder controls disabled",
+                                     "preview/history empty",
+                                     "integration readiness notice",
+                                     "disabled save"
+                                 ],
+    "checks":  {
+                   "fileExists":  true,
+                   "nonZeroBytes":  true,
+                   "noChrome":  true,
+                   "stateSignalPreserved":  true,
+                   "primaryCtaDarkOnly":  true,
+                   "neutralPaletteOnly":  true,
+                   "workspaceRadiusOk":  true,
+                   "noLoudGradient":  true,
+                   "keyRegionsPreserved":  true,
+                   "textUsableAsVisualReference":  true
+               },
+    "issueCodes":  [
+
+                   ],
+    "notes":  "Linear notification settings concept preserves warning, channel tabs, off toggles, disabled reminder controls, preview/history empty states, integration notice, and disabled save.",
+    "reviewedAt":  "2026-06-15T15:58:27.7360159+09:00"
+}

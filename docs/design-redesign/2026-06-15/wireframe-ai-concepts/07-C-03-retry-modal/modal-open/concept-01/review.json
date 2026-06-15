@@ -1,0 +1,39 @@
+﻿{
+    "schemaVersion":  "1.0",
+    "runId":  "2026-06-15-wireframe-ai-concepts",
+    "reviewId":  "07-C-03-retry-modal__modal-open__desktop__c01",
+    "conceptId":  "07-C-03-retry-modal__modal-open__desktop__c01",
+    "localConceptId":  "concept-01",
+    "stateId":  "07-C-03-retry-modal__modal-open__desktop",
+    "page":  "07-C-03-retry-modal",
+    "state":  "modal-open",
+    "screenType":  "modal",
+    "imagePath":  "07-C-03-retry-modal/modal-open/concept-01/image.png",
+    "promptPath":  "07-C-03-retry-modal/modal-open/concept-01/prompt.json",
+    "metaPath":  "07-C-03-retry-modal/modal-open/concept-01/meta.json",
+    "reviewPath":  "07-C-03-retry-modal/modal-open/concept-01/review.json",
+    "status":  "accepted",
+    "validation":  "pass",
+    "mustPreserveStateSignals":  [
+                                     "dimmed background context",
+                                     "centered modal",
+                                     "clear primary decision"
+                                 ],
+    "checks":  {
+                   "fileExists":  true,
+                   "nonZeroBytes":  true,
+                   "noChrome":  true,
+                   "stateSignalPreserved":  true,
+                   "primaryCtaDarkOnly":  true,
+                   "neutralPaletteOnly":  true,
+                   "workspaceRadiusOk":  true,
+                   "noLoudGradient":  true,
+                   "keyRegionsPreserved":  true,
+                   "textUsableAsVisualReference":  true
+               },
+    "issueCodes":  [
+
+                   ],
+    "notes":  "modal-open 상태, dimmed background, retry options, 단일 dark CTA가 보존됨.",
+    "reviewedAt":  "2026-06-15T12:44:52.9477947+09:00"
+}

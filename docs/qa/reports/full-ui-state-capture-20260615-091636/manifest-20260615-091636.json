@@ -1,0 +1,3685 @@
+{
+  "runId": "20260615-091636",
+  "marker": "full-ui-capture-20260615-091636-a7b52b49",
+  "baseUrl": "http://127.0.0.1:3000",
+  "startedAt": "2026-06-15T00:16:36.134Z",
+  "finishedAt": "2026-06-15T00:23:44.555Z",
+  "authStatePath": "tests/e2e/auth-state/student.json",
+  "results": [
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:16:41.963Z",
+      "ia": "X-01",
+      "folder": "23-X-01-product-landing",
+      "state": "default",
+      "route": "/",
+      "auth": false,
+      "viewport": {
+        "name": "mobile",
+        "width": 360,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/",
+      "finalUrl": "http://127.0.0.1:3000/",
+      "finalPath": "/",
+      "title": "TALKPIK AI · TOPIK 글쓰기 AI 학습",
+      "headings": [
+        "쓰고. 첨삭받고. 정복하세요.",
+        "학습 현황부터피드백까지 하나의 흐름",
+        "대시보드로 현황 파악",
+        "부족한 영역 바로 연습",
+        "쓰기 답안 AI 첨삭"
+      ],
+      "screenshotPath": "docs/Wireframe/23-X-01-product-landing/browser-screenshot--default--mobile.png",
+      "durationMs": 3047,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:16:45.284Z",
+      "ia": "X-01",
+      "folder": "23-X-01-product-landing",
+      "state": "default",
+      "route": "/",
+      "auth": false,
+      "viewport": {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/",
+      "finalUrl": "http://127.0.0.1:3000/",
+      "finalPath": "/",
+      "title": "TALKPIK AI · TOPIK 글쓰기 AI 학습",
+      "headings": [
+        "쓰고. 첨삭받고. 정복하세요.",
+        "학습 현황부터피드백까지 하나의 흐름",
+        "대시보드로 현황 파악",
+        "부족한 영역 바로 연습",
+        "쓰기 답안 AI 첨삭"
+      ],
+      "screenshotPath": "docs/Wireframe/23-X-01-product-landing/browser-screenshot--default--tablet.png",
+      "durationMs": 3259,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:16:48.599Z",
+      "ia": "X-01",
+      "folder": "23-X-01-product-landing",
+      "state": "default",
+      "route": "/",
+      "auth": false,
+      "viewport": {
+        "name": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/",
+      "finalUrl": "http://127.0.0.1:3000/",
+      "finalPath": "/",
+      "title": "TALKPIK AI · TOPIK 글쓰기 AI 학습",
+      "headings": [
+        "쓰고. 첨삭받고. 정복하세요.",
+        "학습 현황부터피드백까지 하나의 흐름",
+        "대시보드로 현황 파악",
+        "부족한 영역 바로 연습",
+        "쓰기 답안 AI 첨삭"
+      ],
+      "screenshotPath": "docs/Wireframe/23-X-01-product-landing/browser-screenshot--default--desktop.png",
+      "durationMs": 3246,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:16:51.174Z",
+      "ia": "A-01",
+      "folder": "01-A-01-sign-up",
+      "state": "default",
+      "route": "/sign-up",
+      "auth": false,
+      "viewport": {
+        "name": "mobile",
+        "width": 360,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/sign-up",
+      "finalUrl": "http://127.0.0.1:3000/sign-up",
+      "finalPath": "/sign-up",
+      "title": "회원가입 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "회원가입"
+      ],
+      "screenshotPath": "docs/Wireframe/01-A-01-sign-up/browser-screenshot--default--mobile.png",
+      "durationMs": 2503,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:16:53.793Z",
+      "ia": "A-01",
+      "folder": "01-A-01-sign-up",
+      "state": "default",
+      "route": "/sign-up",
+      "auth": false,
+      "viewport": {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/sign-up",
+      "finalUrl": "http://127.0.0.1:3000/sign-up",
+      "finalPath": "/sign-up",
+      "title": "회원가입 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "회원가입"
+      ],
+      "screenshotPath": "docs/Wireframe/01-A-01-sign-up/browser-screenshot--default--tablet.png",
+      "durationMs": 2526,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:16:56.625Z",
+      "ia": "A-01",
+      "folder": "01-A-01-sign-up",
+      "state": "default",
+      "route": "/sign-up",
+      "auth": false,
+      "viewport": {
+        "name": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/sign-up",
+      "finalUrl": "http://127.0.0.1:3000/sign-up",
+      "finalPath": "/sign-up",
+      "title": "회원가입 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "회원가입"
+      ],
+      "screenshotPath": "docs/Wireframe/01-A-01-sign-up/browser-screenshot--default--desktop.png",
+      "durationMs": 2748,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:16:59.226Z",
+      "ia": "A-02",
+      "folder": "02-A-02-login",
+      "state": "default",
+      "route": "/login",
+      "auth": false,
+      "viewport": {
+        "name": "mobile",
+        "width": 360,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/login",
+      "finalUrl": "http://127.0.0.1:3000/login",
+      "finalPath": "/login",
+      "title": "로그인 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "다시 오신 걸 환영해요"
+      ],
+      "screenshotPath": "docs/Wireframe/02-A-02-login/browser-screenshot--default--mobile.png",
+      "durationMs": 2515,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:17:01.641Z",
+      "ia": "A-02",
+      "folder": "02-A-02-login",
+      "state": "default",
+      "route": "/login",
+      "auth": false,
+      "viewport": {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/login",
+      "finalUrl": "http://127.0.0.1:3000/login",
+      "finalPath": "/login",
+      "title": "로그인 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "다시 오신 걸 환영해요"
+      ],
+      "screenshotPath": "docs/Wireframe/02-A-02-login/browser-screenshot--default--tablet.png",
+      "durationMs": 2357,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:17:04.109Z",
+      "ia": "A-02",
+      "folder": "02-A-02-login",
+      "state": "default",
+      "route": "/login",
+      "auth": false,
+      "viewport": {
+        "name": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/login",
+      "finalUrl": "http://127.0.0.1:3000/login",
+      "finalPath": "/login",
+      "title": "로그인 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "다시 오신 걸 환영해요"
+      ],
+      "screenshotPath": "docs/Wireframe/02-A-02-login/browser-screenshot--default--desktop.png",
+      "durationMs": 2409,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:17:06.619Z",
+      "ia": "A-02",
+      "folder": "02-A-02-login",
+      "state": "session-expired",
+      "route": "/login?reason=session_expired",
+      "auth": false,
+      "viewport": {
+        "name": "mobile",
+        "width": 360,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/login",
+      "finalUrl": "http://127.0.0.1:3000/login?reason=session_expired",
+      "finalPath": "/login",
+      "title": "로그인 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "다시 오신 걸 환영해요"
+      ],
+      "screenshotPath": "docs/Wireframe/02-A-02-login/browser-screenshot--session-expired--mobile.png",
+      "durationMs": 2436,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:17:09.004Z",
+      "ia": "A-02",
+      "folder": "02-A-02-login",
+      "state": "session-expired",
+      "route": "/login?reason=session_expired",
+      "auth": false,
+      "viewport": {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/login",
+      "finalUrl": "http://127.0.0.1:3000/login?reason=session_expired",
+      "finalPath": "/login",
+      "title": "로그인 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "다시 오신 걸 환영해요"
+      ],
+      "screenshotPath": "docs/Wireframe/02-A-02-login/browser-screenshot--session-expired--tablet.png",
+      "durationMs": 2308,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:17:11.745Z",
+      "ia": "A-02",
+      "folder": "02-A-02-login",
+      "state": "session-expired",
+      "route": "/login?reason=session_expired",
+      "auth": false,
+      "viewport": {
+        "name": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/login",
+      "finalUrl": "http://127.0.0.1:3000/login?reason=session_expired",
+      "finalPath": "/login",
+      "title": "로그인 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "다시 오신 걸 환영해요"
+      ],
+      "screenshotPath": "docs/Wireframe/02-A-02-login/browser-screenshot--session-expired--desktop.png",
+      "durationMs": 2669,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:17:14.164Z",
+      "ia": "X-06",
+      "folder": "28-X-06-password-reset",
+      "state": "default",
+      "route": "/password-reset",
+      "auth": false,
+      "viewport": {
+        "name": "mobile",
+        "width": 360,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/password-reset",
+      "finalUrl": "http://127.0.0.1:3000/password-reset",
+      "finalPath": "/password-reset",
+      "title": "비밀번호 재설정 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "비밀번호 재설정"
+      ],
+      "screenshotPath": "docs/Wireframe/28-X-06-password-reset/browser-screenshot--default--mobile.png",
+      "durationMs": 2358,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:17:16.578Z",
+      "ia": "X-06",
+      "folder": "28-X-06-password-reset",
+      "state": "default",
+      "route": "/password-reset",
+      "auth": false,
+      "viewport": {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/password-reset",
+      "finalUrl": "http://127.0.0.1:3000/password-reset",
+      "finalPath": "/password-reset",
+      "title": "비밀번호 재설정 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "비밀번호 재설정"
+      ],
+      "screenshotPath": "docs/Wireframe/28-X-06-password-reset/browser-screenshot--default--tablet.png",
+      "durationMs": 2343,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:17:18.989Z",
+      "ia": "X-06",
+      "folder": "28-X-06-password-reset",
+      "state": "default",
+      "route": "/password-reset",
+      "auth": false,
+      "viewport": {
+        "name": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/password-reset",
+      "finalUrl": "http://127.0.0.1:3000/password-reset",
+      "finalPath": "/password-reset",
+      "title": "비밀번호 재설정 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "비밀번호 재설정"
+      ],
+      "screenshotPath": "docs/Wireframe/28-X-06-password-reset/browser-screenshot--default--desktop.png",
+      "durationMs": 2358,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:17:21.451Z",
+      "ia": "X-16",
+      "folder": "38-X-16-password-reset-confirm",
+      "state": "default",
+      "route": "/password-reset/confirm",
+      "auth": false,
+      "viewport": {
+        "name": "mobile",
+        "width": 360,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/password-reset/confirm",
+      "finalUrl": "http://127.0.0.1:3000/password-reset/confirm",
+      "finalPath": "/password-reset/confirm",
+      "title": "새 비밀번호 설정 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "새 비밀번호 설정"
+      ],
+      "screenshotPath": "docs/Wireframe/38-X-16-password-reset-confirm/browser-screenshot--default--mobile.png",
+      "durationMs": 2386,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:17:23.974Z",
+      "ia": "X-16",
+      "folder": "38-X-16-password-reset-confirm",
+      "state": "default",
+      "route": "/password-reset/confirm",
+      "auth": false,
+      "viewport": {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/password-reset/confirm",
+      "finalUrl": "http://127.0.0.1:3000/password-reset/confirm",
+      "finalPath": "/password-reset/confirm",
+      "title": "새 비밀번호 설정 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "새 비밀번호 설정"
+      ],
+      "screenshotPath": "docs/Wireframe/38-X-16-password-reset-confirm/browser-screenshot--default--tablet.png",
+      "durationMs": 2441,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:17:26.506Z",
+      "ia": "X-16",
+      "folder": "38-X-16-password-reset-confirm",
+      "state": "default",
+      "route": "/password-reset/confirm",
+      "auth": false,
+      "viewport": {
+        "name": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/password-reset/confirm",
+      "finalUrl": "http://127.0.0.1:3000/password-reset/confirm",
+      "finalPath": "/password-reset/confirm",
+      "title": "새 비밀번호 설정 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "새 비밀번호 설정"
+      ],
+      "screenshotPath": "docs/Wireframe/38-X-16-password-reset-confirm/browser-screenshot--default--desktop.png",
+      "durationMs": 2455,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:17:29.018Z",
+      "ia": "X-11",
+      "folder": "33-X-11-auth-error",
+      "state": "unknown",
+      "route": "/auth/error?reason=unknown",
+      "auth": false,
+      "viewport": {
+        "name": "mobile",
+        "width": 360,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/auth/error",
+      "finalUrl": "http://127.0.0.1:3000/auth/error?reason=unknown",
+      "finalPath": "/auth/error",
+      "title": "인증 오류 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "인증 오류",
+        "처리 중 문제가 생겼어요"
+      ],
+      "screenshotPath": "docs/Wireframe/33-X-11-auth-error/browser-screenshot--unknown--mobile.png",
+      "durationMs": 2441,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:17:31.466Z",
+      "ia": "X-11",
+      "folder": "33-X-11-auth-error",
+      "state": "unknown",
+      "route": "/auth/error?reason=unknown",
+      "auth": false,
+      "viewport": {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/auth/error",
+      "finalUrl": "http://127.0.0.1:3000/auth/error?reason=unknown",
+      "finalPath": "/auth/error",
+      "title": "인증 오류 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "인증 오류",
+        "처리 중 문제가 생겼어요"
+      ],
+      "screenshotPath": "docs/Wireframe/33-X-11-auth-error/browser-screenshot--unknown--tablet.png",
+      "durationMs": 2358,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:17:33.964Z",
+      "ia": "X-11",
+      "folder": "33-X-11-auth-error",
+      "state": "unknown",
+      "route": "/auth/error?reason=unknown",
+      "auth": false,
+      "viewport": {
+        "name": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/auth/error",
+      "finalUrl": "http://127.0.0.1:3000/auth/error?reason=unknown",
+      "finalPath": "/auth/error",
+      "title": "인증 오류 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "인증 오류",
+        "처리 중 문제가 생겼어요"
+      ],
+      "screenshotPath": "docs/Wireframe/33-X-11-auth-error/browser-screenshot--unknown--desktop.png",
+      "durationMs": 2423,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:17:36.414Z",
+      "ia": "X-11",
+      "folder": "33-X-11-auth-error",
+      "state": "otp-expired",
+      "route": "/auth/error?reason=otp_expired&email=student%40example.com&retry_after_seconds=1",
+      "auth": false,
+      "viewport": {
+        "name": "mobile",
+        "width": 360,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/auth/error",
+      "finalUrl": "http://127.0.0.1:3000/auth/error?reason=otp_expired&email=student%40example.com&retry_after_seconds=1",
+      "finalPath": "/auth/error",
+      "title": "인증 오류 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "인증 오류",
+        "인증 링크가 만료됐어요"
+      ],
+      "screenshotPath": "docs/Wireframe/33-X-11-auth-error/browser-screenshot--otp-expired--mobile.png",
+      "durationMs": 2388,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:17:38.796Z",
+      "ia": "X-11",
+      "folder": "33-X-11-auth-error",
+      "state": "otp-expired",
+      "route": "/auth/error?reason=otp_expired&email=student%40example.com&retry_after_seconds=1",
+      "auth": false,
+      "viewport": {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/auth/error",
+      "finalUrl": "http://127.0.0.1:3000/auth/error?reason=otp_expired&email=student%40example.com&retry_after_seconds=1",
+      "finalPath": "/auth/error",
+      "title": "인증 오류 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "인증 오류",
+        "인증 링크가 만료됐어요"
+      ],
+      "screenshotPath": "docs/Wireframe/33-X-11-auth-error/browser-screenshot--otp-expired--tablet.png",
+      "durationMs": 2313,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:17:41.324Z",
+      "ia": "X-11",
+      "folder": "33-X-11-auth-error",
+      "state": "otp-expired",
+      "route": "/auth/error?reason=otp_expired&email=student%40example.com&retry_after_seconds=1",
+      "auth": false,
+      "viewport": {
+        "name": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/auth/error",
+      "finalUrl": "http://127.0.0.1:3000/auth/error?reason=otp_expired&email=student%40example.com&retry_after_seconds=1",
+      "finalPath": "/auth/error",
+      "title": "인증 오류 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "인증 오류",
+        "인증 링크가 만료됐어요"
+      ],
+      "screenshotPath": "docs/Wireframe/33-X-11-auth-error/browser-screenshot--otp-expired--desktop.png",
+      "durationMs": 2458,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:17:43.698Z",
+      "ia": "X-11",
+      "folder": "33-X-11-auth-error",
+      "state": "rate-limited",
+      "route": "/auth/error?reason=over_request_rate_limit&retry_after_seconds=60",
+      "auth": false,
+      "viewport": {
+        "name": "mobile",
+        "width": 360,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/auth/error",
+      "finalUrl": "http://127.0.0.1:3000/auth/error?reason=over_request_rate_limit&retry_after_seconds=60",
+      "finalPath": "/auth/error",
+      "title": "인증 오류 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "인증 오류",
+        "요청이 너무 많아요"
+      ],
+      "screenshotPath": "docs/Wireframe/33-X-11-auth-error/browser-screenshot--rate-limited--mobile.png",
+      "durationMs": 2296,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:17:46.115Z",
+      "ia": "X-11",
+      "folder": "33-X-11-auth-error",
+      "state": "rate-limited",
+      "route": "/auth/error?reason=over_request_rate_limit&retry_after_seconds=60",
+      "auth": false,
+      "viewport": {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/auth/error",
+      "finalUrl": "http://127.0.0.1:3000/auth/error?reason=over_request_rate_limit&retry_after_seconds=60",
+      "finalPath": "/auth/error",
+      "title": "인증 오류 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "인증 오류",
+        "요청이 너무 많아요"
+      ],
+      "screenshotPath": "docs/Wireframe/33-X-11-auth-error/browser-screenshot--rate-limited--tablet.png",
+      "durationMs": 2326,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:17:48.391Z",
+      "ia": "X-11",
+      "folder": "33-X-11-auth-error",
+      "state": "rate-limited",
+      "route": "/auth/error?reason=over_request_rate_limit&retry_after_seconds=60",
+      "auth": false,
+      "viewport": {
+        "name": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/auth/error",
+      "finalUrl": "http://127.0.0.1:3000/auth/error?reason=over_request_rate_limit&retry_after_seconds=60",
+      "finalPath": "/auth/error",
+      "title": "인증 오류 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "인증 오류",
+        "요청이 너무 많아요"
+      ],
+      "screenshotPath": "docs/Wireframe/33-X-11-auth-error/browser-screenshot--rate-limited--desktop.png",
+      "durationMs": 2212,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:17:50.866Z",
+      "ia": "X-12",
+      "folder": "34-X-12-auth-verify-email",
+      "state": "default",
+      "route": "/auth/verify-email",
+      "auth": false,
+      "viewport": {
+        "name": "mobile",
+        "width": 360,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/auth/verify-email",
+      "finalUrl": "http://127.0.0.1:3000/auth/verify-email",
+      "finalPath": "/auth/verify-email",
+      "title": "이메일 인증 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "이메일 인증",
+        "인증 메일을 보냈어요"
+      ],
+      "screenshotPath": "docs/Wireframe/34-X-12-auth-verify-email/browser-screenshot--default--mobile.png",
+      "durationMs": 2403,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:17:53.361Z",
+      "ia": "X-12",
+      "folder": "34-X-12-auth-verify-email",
+      "state": "default",
+      "route": "/auth/verify-email",
+      "auth": false,
+      "viewport": {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/auth/verify-email",
+      "finalUrl": "http://127.0.0.1:3000/auth/verify-email",
+      "finalPath": "/auth/verify-email",
+      "title": "이메일 인증 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "이메일 인증",
+        "인증 메일을 보냈어요"
+      ],
+      "screenshotPath": "docs/Wireframe/34-X-12-auth-verify-email/browser-screenshot--default--tablet.png",
+      "durationMs": 2434,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:17:55.873Z",
+      "ia": "X-12",
+      "folder": "34-X-12-auth-verify-email",
+      "state": "default",
+      "route": "/auth/verify-email",
+      "auth": false,
+      "viewport": {
+        "name": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/auth/verify-email",
+      "finalUrl": "http://127.0.0.1:3000/auth/verify-email",
+      "finalPath": "/auth/verify-email",
+      "title": "이메일 인증 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "이메일 인증",
+        "인증 메일을 보냈어요"
+      ],
+      "screenshotPath": "docs/Wireframe/34-X-12-auth-verify-email/browser-screenshot--default--desktop.png",
+      "durationMs": 2444,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:17:58.608Z",
+      "ia": "X-17",
+      "folder": "39-X-17-auth-callback-fragment",
+      "state": "default",
+      "route": "/auth/callback-fragment",
+      "auth": false,
+      "viewport": {
+        "name": "mobile",
+        "width": 360,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/auth/callback-fragment",
+      "finalUrl": "http://127.0.0.1:3000/auth/error?reason=unknown",
+      "finalPath": "/auth/error",
+      "title": "인증 오류 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "인증 오류",
+        "처리 중 문제가 생겼어요"
+      ],
+      "screenshotPath": "docs/Wireframe/39-X-17-auth-callback-fragment/browser-screenshot--default--mobile.png",
+      "durationMs": 2457,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:18:01.572Z",
+      "ia": "X-17",
+      "folder": "39-X-17-auth-callback-fragment",
+      "state": "default",
+      "route": "/auth/callback-fragment",
+      "auth": false,
+      "viewport": {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/auth/callback-fragment",
+      "finalUrl": "http://127.0.0.1:3000/auth/error?reason=unknown",
+      "finalPath": "/auth/error",
+      "title": "인증 오류 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "인증 오류",
+        "처리 중 문제가 생겼어요"
+      ],
+      "screenshotPath": "docs/Wireframe/39-X-17-auth-callback-fragment/browser-screenshot--default--tablet.png",
+      "durationMs": 2888,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:18:04.354Z",
+      "ia": "X-17",
+      "folder": "39-X-17-auth-callback-fragment",
+      "state": "default",
+      "route": "/auth/callback-fragment",
+      "auth": false,
+      "viewport": {
+        "name": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/auth/callback-fragment",
+      "finalUrl": "http://127.0.0.1:3000/auth/error?reason=unknown",
+      "finalPath": "/auth/error",
+      "title": "인증 오류 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "인증 오류",
+        "처리 중 문제가 생겼어요"
+      ],
+      "screenshotPath": "docs/Wireframe/39-X-17-auth-callback-fragment/browser-screenshot--default--desktop.png",
+      "durationMs": 2718,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:18:08.099Z",
+      "ia": "X-13",
+      "folder": "35-X-13-terms",
+      "state": "default",
+      "route": "/terms",
+      "auth": false,
+      "viewport": {
+        "name": "mobile",
+        "width": 360,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/terms",
+      "finalUrl": "http://127.0.0.1:3000/terms",
+      "finalPath": "/terms",
+      "title": "이용약관 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "이용약관"
+      ],
+      "screenshotPath": "docs/Wireframe/35-X-13-terms/browser-screenshot--default--mobile.png",
+      "durationMs": 3635,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:18:10.612Z",
+      "ia": "X-13",
+      "folder": "35-X-13-terms",
+      "state": "default",
+      "route": "/terms",
+      "auth": false,
+      "viewport": {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/terms",
+      "finalUrl": "http://127.0.0.1:3000/terms",
+      "finalPath": "/terms",
+      "title": "이용약관 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "이용약관"
+      ],
+      "screenshotPath": "docs/Wireframe/35-X-13-terms/browser-screenshot--default--tablet.png",
+      "durationMs": 2436,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:18:13.091Z",
+      "ia": "X-13",
+      "folder": "35-X-13-terms",
+      "state": "default",
+      "route": "/terms",
+      "auth": false,
+      "viewport": {
+        "name": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/terms",
+      "finalUrl": "http://127.0.0.1:3000/terms",
+      "finalPath": "/terms",
+      "title": "이용약관 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "이용약관"
+      ],
+      "screenshotPath": "docs/Wireframe/35-X-13-terms/browser-screenshot--default--desktop.png",
+      "durationMs": 2369,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:18:15.553Z",
+      "ia": "X-14",
+      "folder": "36-X-14-privacy-policy",
+      "state": "default",
+      "route": "/privacy",
+      "auth": false,
+      "viewport": {
+        "name": "mobile",
+        "width": 360,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/privacy",
+      "finalUrl": "http://127.0.0.1:3000/privacy",
+      "finalPath": "/privacy",
+      "title": "개인정보처리방침 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "개인정보처리방침",
+        "처리 항목 요약 (임시)",
+        "갱신 안내"
+      ],
+      "screenshotPath": "docs/Wireframe/36-X-14-privacy-policy/browser-screenshot--default--mobile.png",
+      "durationMs": 2400,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:18:17.985Z",
+      "ia": "X-14",
+      "folder": "36-X-14-privacy-policy",
+      "state": "default",
+      "route": "/privacy",
+      "auth": false,
+      "viewport": {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/privacy",
+      "finalUrl": "http://127.0.0.1:3000/privacy",
+      "finalPath": "/privacy",
+      "title": "개인정보처리방침 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "개인정보처리방침",
+        "처리 항목 요약 (임시)",
+        "갱신 안내"
+      ],
+      "screenshotPath": "docs/Wireframe/36-X-14-privacy-policy/browser-screenshot--default--tablet.png",
+      "durationMs": 2330,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:18:20.860Z",
+      "ia": "X-14",
+      "folder": "36-X-14-privacy-policy",
+      "state": "default",
+      "route": "/privacy",
+      "auth": false,
+      "viewport": {
+        "name": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/privacy",
+      "finalUrl": "http://127.0.0.1:3000/privacy",
+      "finalPath": "/privacy",
+      "title": "개인정보처리방침 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "개인정보처리방침",
+        "처리 항목 요약 (임시)",
+        "갱신 안내"
+      ],
+      "screenshotPath": "docs/Wireframe/36-X-14-privacy-policy/browser-screenshot--default--desktop.png",
+      "durationMs": 2818,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:18:26.050Z",
+      "ia": "X-18",
+      "folder": "40-X-18-auth-consent",
+      "state": "current-account-redirect",
+      "route": "/auth/consent?next=/dashboard",
+      "auth": true,
+      "viewport": {
+        "name": "mobile",
+        "width": 360,
+        "height": 900
+      },
+      "status": "redirected",
+      "note": "The .env.local student account has already accepted required consent; this captures the actual redirect state.",
+      "expectedPath": "/auth/consent",
+      "finalUrl": "http://127.0.0.1:3000/dashboard",
+      "finalPath": "/dashboard",
+      "title": "대시보드 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "오늘의 학습",
+        "취업 서류 작성 특강 안내"
+      ],
+      "screenshotPath": "docs/Wireframe/40-X-18-auth-consent/browser-screenshot--current-account-redirect--mobile.png",
+      "durationMs": 5110,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:18:31.339Z",
+      "ia": "X-18",
+      "folder": "40-X-18-auth-consent",
+      "state": "current-account-redirect",
+      "route": "/auth/consent?next=/dashboard",
+      "auth": true,
+      "viewport": {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024
+      },
+      "status": "redirected",
+      "note": "The .env.local student account has already accepted required consent; this captures the actual redirect state.",
+      "expectedPath": "/auth/consent",
+      "finalUrl": "http://127.0.0.1:3000/dashboard",
+      "finalPath": "/dashboard",
+      "title": "대시보드 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "오늘의 학습",
+        "취업 서류 작성 특강 안내"
+      ],
+      "screenshotPath": "docs/Wireframe/40-X-18-auth-consent/browser-screenshot--current-account-redirect--tablet.png",
+      "durationMs": 5169,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:18:36.338Z",
+      "ia": "X-18",
+      "folder": "40-X-18-auth-consent",
+      "state": "current-account-redirect",
+      "route": "/auth/consent?next=/dashboard",
+      "auth": true,
+      "viewport": {
+        "name": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "status": "redirected",
+      "note": "The .env.local student account has already accepted required consent; this captures the actual redirect state.",
+      "expectedPath": "/auth/consent",
+      "finalUrl": "http://127.0.0.1:3000/dashboard",
+      "finalPath": "/dashboard",
+      "title": "대시보드 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "오늘의 학습",
+        "취업 서류 작성 특강 안내"
+      ],
+      "screenshotPath": "docs/Wireframe/40-X-18-auth-consent/browser-screenshot--current-account-redirect--desktop.png",
+      "durationMs": 4929,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:18:40.430Z",
+      "ia": "A-03",
+      "folder": "03-A-03-learning-goal-setup",
+      "state": "default",
+      "route": "/onboarding/learning-goal",
+      "auth": true,
+      "viewport": {
+        "name": "mobile",
+        "width": 360,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/onboarding/learning-goal",
+      "finalUrl": "http://127.0.0.1:3000/onboarding/learning-goal",
+      "finalPath": "/onboarding/learning-goal",
+      "title": "학습 목표 설정 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "학습 목표 설정"
+      ],
+      "screenshotPath": "docs/Wireframe/03-A-03-learning-goal-setup/browser-screenshot--default--mobile.png",
+      "durationMs": 3986,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:18:44.162Z",
+      "ia": "A-03",
+      "folder": "03-A-03-learning-goal-setup",
+      "state": "default",
+      "route": "/onboarding/learning-goal",
+      "auth": true,
+      "viewport": {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/onboarding/learning-goal",
+      "finalUrl": "http://127.0.0.1:3000/onboarding/learning-goal",
+      "finalPath": "/onboarding/learning-goal",
+      "title": "학습 목표 설정 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "학습 목표 설정"
+      ],
+      "screenshotPath": "docs/Wireframe/03-A-03-learning-goal-setup/browser-screenshot--default--tablet.png",
+      "durationMs": 3653,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:18:48.363Z",
+      "ia": "A-03",
+      "folder": "03-A-03-learning-goal-setup",
+      "state": "default",
+      "route": "/onboarding/learning-goal",
+      "auth": true,
+      "viewport": {
+        "name": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/onboarding/learning-goal",
+      "finalUrl": "http://127.0.0.1:3000/onboarding/learning-goal",
+      "finalPath": "/onboarding/learning-goal",
+      "title": "학습 목표 설정 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "학습 목표 설정"
+      ],
+      "screenshotPath": "docs/Wireframe/03-A-03-learning-goal-setup/browser-screenshot--default--desktop.png",
+      "durationMs": 4126,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:18:52.071Z",
+      "ia": "B-01",
+      "folder": "04-B-01-home-dashboard",
+      "state": "default",
+      "route": "/dashboard",
+      "auth": true,
+      "viewport": {
+        "name": "mobile",
+        "width": 360,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/dashboard",
+      "finalUrl": "http://127.0.0.1:3000/dashboard",
+      "finalPath": "/dashboard",
+      "title": "대시보드 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "오늘의 학습",
+        "취업 서류 작성 특강 안내"
+      ],
+      "screenshotPath": "docs/Wireframe/04-B-01-home-dashboard/browser-screenshot--default--mobile.png",
+      "durationMs": 3629,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:18:57.002Z",
+      "ia": "B-01",
+      "folder": "04-B-01-home-dashboard",
+      "state": "default",
+      "route": "/dashboard",
+      "auth": true,
+      "viewport": {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/dashboard",
+      "finalUrl": "http://127.0.0.1:3000/dashboard",
+      "finalPath": "/dashboard",
+      "title": "대시보드 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "오늘의 학습",
+        "취업 서류 작성 특강 안내"
+      ],
+      "screenshotPath": "docs/Wireframe/04-B-01-home-dashboard/browser-screenshot--default--tablet.png",
+      "durationMs": 4811,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:19:01.074Z",
+      "ia": "B-01",
+      "folder": "04-B-01-home-dashboard",
+      "state": "default",
+      "route": "/dashboard",
+      "auth": true,
+      "viewport": {
+        "name": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/dashboard",
+      "finalUrl": "http://127.0.0.1:3000/dashboard",
+      "finalPath": "/dashboard",
+      "title": "대시보드 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "오늘의 학습",
+        "취업 서류 작성 특강 안내"
+      ],
+      "screenshotPath": "docs/Wireframe/04-B-01-home-dashboard/browser-screenshot--default--desktop.png",
+      "durationMs": 3983,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:19:04.413Z",
+      "ia": "C-01",
+      "folder": "05-C-01-problem-type-recommendations",
+      "state": "default",
+      "route": "/practice/recommendations",
+      "auth": true,
+      "viewport": {
+        "name": "mobile",
+        "width": 360,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/practice/recommendations",
+      "finalUrl": "http://127.0.0.1:3000/practice/recommendations",
+      "finalPath": "/practice/recommendations",
+      "title": "추천 문제 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "추천 문제",
+        "취업 서류 작성 특강 안내"
+      ],
+      "screenshotPath": "docs/Wireframe/05-C-01-problem-type-recommendations/browser-screenshot--default--mobile.png",
+      "durationMs": 3263,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:19:08.588Z",
+      "ia": "C-01",
+      "folder": "05-C-01-problem-type-recommendations",
+      "state": "default",
+      "route": "/practice/recommendations",
+      "auth": true,
+      "viewport": {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/practice/recommendations",
+      "finalUrl": "http://127.0.0.1:3000/practice/recommendations",
+      "finalPath": "/practice/recommendations",
+      "title": "추천 문제 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "추천 문제",
+        "취업 서류 작성 특강 안내"
+      ],
+      "screenshotPath": "docs/Wireframe/05-C-01-problem-type-recommendations/browser-screenshot--default--tablet.png",
+      "durationMs": 4104,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:19:13.057Z",
+      "ia": "C-01",
+      "folder": "05-C-01-problem-type-recommendations",
+      "state": "default",
+      "route": "/practice/recommendations",
+      "auth": true,
+      "viewport": {
+        "name": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/practice/recommendations",
+      "finalUrl": "http://127.0.0.1:3000/practice/recommendations",
+      "finalPath": "/practice/recommendations",
+      "title": "추천 문제 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "추천 문제",
+        "취업 서류 작성 특강 안내"
+      ],
+      "screenshotPath": "docs/Wireframe/05-C-01-problem-type-recommendations/browser-screenshot--default--desktop.png",
+      "durationMs": 4392,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:19:18.391Z",
+      "ia": "C-02",
+      "folder": "06-C-02-problem-list",
+      "state": "default",
+      "route": "/practice/problems",
+      "auth": true,
+      "viewport": {
+        "name": "mobile",
+        "width": 360,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/practice/problems",
+      "finalUrl": "http://127.0.0.1:3000/practice/problems",
+      "finalPath": "/practice/problems",
+      "title": "문제 목록 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "문제 목록"
+      ],
+      "screenshotPath": "docs/Wireframe/06-C-02-problem-list/browser-screenshot--default--mobile.png",
+      "durationMs": 5261,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:19:22.512Z",
+      "ia": "C-02",
+      "folder": "06-C-02-problem-list",
+      "state": "default",
+      "route": "/practice/problems",
+      "auth": true,
+      "viewport": {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/practice/problems",
+      "finalUrl": "http://127.0.0.1:3000/practice/problems",
+      "finalPath": "/practice/problems",
+      "title": "문제 목록 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "문제 목록"
+      ],
+      "screenshotPath": "docs/Wireframe/06-C-02-problem-list/browser-screenshot--default--tablet.png",
+      "durationMs": 4006,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:19:27.346Z",
+      "ia": "C-02",
+      "folder": "06-C-02-problem-list",
+      "state": "default",
+      "route": "/practice/problems",
+      "auth": true,
+      "viewport": {
+        "name": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/practice/problems",
+      "finalUrl": "http://127.0.0.1:3000/practice/problems",
+      "finalPath": "/practice/problems",
+      "title": "문제 목록 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "문제 목록"
+      ],
+      "screenshotPath": "docs/Wireframe/06-C-02-problem-list/browser-screenshot--default--desktop.png",
+      "durationMs": 4638,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:19:30.974Z",
+      "ia": "C-03",
+      "folder": "07-C-03-retry-modal",
+      "state": "modal-open",
+      "route": "/practice/problems?solve=solved",
+      "auth": true,
+      "viewport": {
+        "name": "mobile",
+        "width": 360,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/practice/problems",
+      "finalUrl": "http://127.0.0.1:3000/practice/problems?solve=solved",
+      "finalPath": "/practice/problems",
+      "title": "문제 목록 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "문제 목록"
+      ],
+      "screenshotPath": "docs/Wireframe/07-C-03-retry-modal/browser-screenshot--modal-open--mobile.png",
+      "durationMs": 3557,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:19:34.958Z",
+      "ia": "C-03",
+      "folder": "07-C-03-retry-modal",
+      "state": "modal-open",
+      "route": "/practice/problems?solve=solved",
+      "auth": true,
+      "viewport": {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/practice/problems",
+      "finalUrl": "http://127.0.0.1:3000/practice/problems?solve=solved",
+      "finalPath": "/practice/problems",
+      "title": "문제 목록 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "문제 목록"
+      ],
+      "screenshotPath": "docs/Wireframe/07-C-03-retry-modal/browser-screenshot--modal-open--tablet.png",
+      "durationMs": 3916,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:19:39.560Z",
+      "ia": "C-03",
+      "folder": "07-C-03-retry-modal",
+      "state": "modal-open",
+      "route": "/practice/problems?solve=solved",
+      "auth": true,
+      "viewport": {
+        "name": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/practice/problems",
+      "finalUrl": "http://127.0.0.1:3000/practice/problems?solve=solved",
+      "finalPath": "/practice/problems",
+      "title": "문제 목록 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "문제 목록"
+      ],
+      "screenshotPath": "docs/Wireframe/07-C-03-retry-modal/browser-screenshot--modal-open--desktop.png",
+      "durationMs": 4502,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:19:43.106Z",
+      "ia": "D-01",
+      "folder": "08-D-01-short-answer-writing-51",
+      "state": "default",
+      "route": "/writing/short-answer-writing-51",
+      "auth": true,
+      "viewport": {
+        "name": "mobile",
+        "width": 360,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/writing/short-answer-writing-51",
+      "finalUrl": "http://127.0.0.1:3000/writing/short-answer-writing-51",
+      "finalPath": "/writing/short-answer-writing-51",
+      "title": "쓰기 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "51번 단문 빈칸"
+      ],
+      "screenshotPath": "docs/Wireframe/08-D-01-short-answer-writing-51/browser-screenshot--default--mobile.png",
+      "durationMs": 3487,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:19:47.793Z",
+      "ia": "D-01",
+      "folder": "08-D-01-short-answer-writing-51",
+      "state": "default",
+      "route": "/writing/short-answer-writing-51",
+      "auth": true,
+      "viewport": {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/writing/short-answer-writing-51",
+      "finalUrl": "http://127.0.0.1:3000/writing/short-answer-writing-51",
+      "finalPath": "/writing/short-answer-writing-51",
+      "title": "쓰기 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "51번 단문 빈칸"
+      ],
+      "screenshotPath": "docs/Wireframe/08-D-01-short-answer-writing-51/browser-screenshot--default--tablet.png",
+      "durationMs": 4621,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:19:52.210Z",
+      "ia": "D-01",
+      "folder": "08-D-01-short-answer-writing-51",
+      "state": "default",
+      "route": "/writing/short-answer-writing-51",
+      "auth": true,
+      "viewport": {
+        "name": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/writing/short-answer-writing-51",
+      "finalUrl": "http://127.0.0.1:3000/writing/short-answer-writing-51",
+      "finalPath": "/writing/short-answer-writing-51",
+      "title": "쓰기 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "51번 단문 빈칸"
+      ],
+      "screenshotPath": "docs/Wireframe/08-D-01-short-answer-writing-51/browser-screenshot--default--desktop.png",
+      "durationMs": 4347,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:19:56.770Z",
+      "ia": "D-02",
+      "folder": "09-D-02-answer-writing-52",
+      "state": "default",
+      "route": "/writing/answer-writing-52",
+      "auth": true,
+      "viewport": {
+        "name": "mobile",
+        "width": 360,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/writing/answer-writing-52",
+      "finalUrl": "http://127.0.0.1:3000/writing/answer-writing-52",
+      "finalPath": "/writing/answer-writing-52",
+      "title": "쓰기 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "52번 설명문 빈칸"
+      ],
+      "screenshotPath": "docs/Wireframe/09-D-02-answer-writing-52/browser-screenshot--default--mobile.png",
+      "durationMs": 4463,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:20:00.862Z",
+      "ia": "D-02",
+      "folder": "09-D-02-answer-writing-52",
+      "state": "default",
+      "route": "/writing/answer-writing-52",
+      "auth": true,
+      "viewport": {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/writing/answer-writing-52",
+      "finalUrl": "http://127.0.0.1:3000/writing/answer-writing-52",
+      "finalPath": "/writing/answer-writing-52",
+      "title": "쓰기 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "52번 설명문 빈칸"
+      ],
+      "screenshotPath": "docs/Wireframe/09-D-02-answer-writing-52/browser-screenshot--default--tablet.png",
+      "durationMs": 4005,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:20:04.197Z",
+      "ia": "D-02",
+      "folder": "09-D-02-answer-writing-52",
+      "state": "default",
+      "route": "/writing/answer-writing-52",
+      "auth": true,
+      "viewport": {
+        "name": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/writing/answer-writing-52",
+      "finalUrl": "http://127.0.0.1:3000/writing/answer-writing-52",
+      "finalPath": "/writing/answer-writing-52",
+      "title": "쓰기 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "52번 설명문 빈칸"
+      ],
+      "screenshotPath": "docs/Wireframe/09-D-02-answer-writing-52/browser-screenshot--default--desktop.png",
+      "durationMs": 3233,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:20:08.951Z",
+      "ia": "D-03",
+      "folder": "10-D-03-long-form-writing-53",
+      "state": "default",
+      "route": "/writing/long-form-writing-53",
+      "auth": true,
+      "viewport": {
+        "name": "mobile",
+        "width": 360,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/writing/long-form-writing-53",
+      "finalUrl": "http://127.0.0.1:3000/writing/long-form-writing-53",
+      "finalPath": "/writing/long-form-writing-53",
+      "title": "쓰기 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "53번 자료 분석 글쓰기"
+      ],
+      "screenshotPath": "docs/Wireframe/10-D-03-long-form-writing-53/browser-screenshot--default--mobile.png",
+      "durationMs": 4680,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:20:13.628Z",
+      "ia": "D-03",
+      "folder": "10-D-03-long-form-writing-53",
+      "state": "default",
+      "route": "/writing/long-form-writing-53",
+      "auth": true,
+      "viewport": {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/writing/long-form-writing-53",
+      "finalUrl": "http://127.0.0.1:3000/writing/long-form-writing-53",
+      "finalPath": "/writing/long-form-writing-53",
+      "title": "쓰기 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "53번 자료 분석 글쓰기"
+      ],
+      "screenshotPath": "docs/Wireframe/10-D-03-long-form-writing-53/browser-screenshot--default--tablet.png",
+      "durationMs": 4585,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:20:17.946Z",
+      "ia": "D-03",
+      "folder": "10-D-03-long-form-writing-53",
+      "state": "default",
+      "route": "/writing/long-form-writing-53",
+      "auth": true,
+      "viewport": {
+        "name": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/writing/long-form-writing-53",
+      "finalUrl": "http://127.0.0.1:3000/writing/long-form-writing-53",
+      "finalPath": "/writing/long-form-writing-53",
+      "title": "쓰기 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "53번 자료 분석 글쓰기"
+      ],
+      "screenshotPath": "docs/Wireframe/10-D-03-long-form-writing-53/browser-screenshot--default--desktop.png",
+      "durationMs": 4205,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:20:21.887Z",
+      "ia": "D-04",
+      "folder": "11-D-04-essay-writing-54",
+      "state": "default",
+      "route": "/writing/essay-writing-54",
+      "auth": true,
+      "viewport": {
+        "name": "mobile",
+        "width": 360,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/writing/essay-writing-54",
+      "finalUrl": "http://127.0.0.1:3000/writing/essay-writing-54",
+      "finalPath": "/writing/essay-writing-54",
+      "title": "쓰기 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "54번 주제 논술"
+      ],
+      "screenshotPath": "docs/Wireframe/11-D-04-essay-writing-54/browser-screenshot--default--mobile.png",
+      "durationMs": 3868,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:20:26.140Z",
+      "ia": "D-04",
+      "folder": "11-D-04-essay-writing-54",
+      "state": "default",
+      "route": "/writing/essay-writing-54",
+      "auth": true,
+      "viewport": {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/writing/essay-writing-54",
+      "finalUrl": "http://127.0.0.1:3000/writing/essay-writing-54",
+      "finalPath": "/writing/essay-writing-54",
+      "title": "쓰기 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "54번 주제 논술"
+      ],
+      "screenshotPath": "docs/Wireframe/11-D-04-essay-writing-54/browser-screenshot--default--tablet.png",
+      "durationMs": 4192,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:20:31.027Z",
+      "ia": "D-04",
+      "folder": "11-D-04-essay-writing-54",
+      "state": "default",
+      "route": "/writing/essay-writing-54",
+      "auth": true,
+      "viewport": {
+        "name": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/writing/essay-writing-54",
+      "finalUrl": "http://127.0.0.1:3000/writing/essay-writing-54",
+      "finalPath": "/writing/essay-writing-54",
+      "title": "쓰기 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "54번 주제 논술"
+      ],
+      "screenshotPath": "docs/Wireframe/11-D-04-essay-writing-54/browser-screenshot--default--desktop.png",
+      "durationMs": 4808,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:20:34.848Z",
+      "ia": "D-M1",
+      "folder": "12-D-M1-submission-confirmation-modal",
+      "state": "modal-open",
+      "route": "/writing/short-answer-writing-51?problem=007785ff-0105-41a1-b884-2227ba6a7540&fresh=1",
+      "auth": true,
+      "viewport": {
+        "name": "mobile",
+        "width": 360,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/writing/short-answer-writing-51",
+      "finalUrl": "http://127.0.0.1:3000/writing/short-answer-writing-51?problem=007785ff-0105-41a1-b884-2227ba6a7540&fresh=1",
+      "finalPath": "/writing/short-answer-writing-51",
+      "title": "쓰기 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "51번 단문 빈칸",
+        "답안을 제출하시겠어요?"
+      ],
+      "screenshotPath": "docs/Wireframe/12-D-M1-submission-confirmation-modal/browser-screenshot--modal-open--mobile.png",
+      "durationMs": 3757,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:20:39.072Z",
+      "ia": "D-M1",
+      "folder": "12-D-M1-submission-confirmation-modal",
+      "state": "modal-open",
+      "route": "/writing/short-answer-writing-51?problem=007785ff-0105-41a1-b884-2227ba6a7540&fresh=1",
+      "auth": true,
+      "viewport": {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/writing/short-answer-writing-51",
+      "finalUrl": "http://127.0.0.1:3000/writing/short-answer-writing-51?problem=007785ff-0105-41a1-b884-2227ba6a7540&fresh=1",
+      "finalPath": "/writing/short-answer-writing-51",
+      "title": "쓰기 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "51번 단문 빈칸",
+        "답안을 제출하시겠어요?"
+      ],
+      "screenshotPath": "docs/Wireframe/12-D-M1-submission-confirmation-modal/browser-screenshot--modal-open--tablet.png",
+      "durationMs": 4155,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:20:43.369Z",
+      "ia": "D-M1",
+      "folder": "12-D-M1-submission-confirmation-modal",
+      "state": "modal-open",
+      "route": "/writing/short-answer-writing-51?problem=007785ff-0105-41a1-b884-2227ba6a7540&fresh=1",
+      "auth": true,
+      "viewport": {
+        "name": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/writing/short-answer-writing-51",
+      "finalUrl": "http://127.0.0.1:3000/writing/short-answer-writing-51?problem=007785ff-0105-41a1-b884-2227ba6a7540&fresh=1",
+      "finalPath": "/writing/short-answer-writing-51",
+      "title": "쓰기 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "51번 단문 빈칸",
+        "답안을 제출하시겠어요?"
+      ],
+      "screenshotPath": "docs/Wireframe/12-D-M1-submission-confirmation-modal/browser-screenshot--modal-open--desktop.png",
+      "durationMs": 4206,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:20:46.239Z",
+      "ia": "D-M2",
+      "folder": "13-D-M2-ai-analysis-loading",
+      "state": "analyzing",
+      "route": "/writing/feedback/short/44ce0316-ca25-4d4f-8fd6-252a1be02085",
+      "auth": true,
+      "viewport": {
+        "name": "mobile",
+        "width": 360,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/writing/feedback/short/44ce0316-ca25-4d4f-8fd6-252a1be02085",
+      "finalUrl": "http://127.0.0.1:3000/writing/feedback/short/44ce0316-ca25-4d4f-8fd6-252a1be02085",
+      "finalPath": "/writing/feedback/short/44ce0316-ca25-4d4f-8fd6-252a1be02085",
+      "title": "단답 피드백 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "제출한 답안",
+        "AI가 답안을 분석하고 있어요"
+      ],
+      "screenshotPath": "docs/Wireframe/13-D-M2-ai-analysis-loading/browser-screenshot--analyzing--mobile.png",
+      "durationMs": 2810,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:20:49.911Z",
+      "ia": "D-M2",
+      "folder": "13-D-M2-ai-analysis-loading",
+      "state": "analyzing",
+      "route": "/writing/feedback/short/44ce0316-ca25-4d4f-8fd6-252a1be02085",
+      "auth": true,
+      "viewport": {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/writing/feedback/short/44ce0316-ca25-4d4f-8fd6-252a1be02085",
+      "finalUrl": "http://127.0.0.1:3000/writing/feedback/short/44ce0316-ca25-4d4f-8fd6-252a1be02085",
+      "finalPath": "/writing/feedback/short/44ce0316-ca25-4d4f-8fd6-252a1be02085",
+      "title": "단답 피드백 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "제출한 답안",
+        "AI가 답안을 분석하고 있어요"
+      ],
+      "screenshotPath": "docs/Wireframe/13-D-M2-ai-analysis-loading/browser-screenshot--analyzing--tablet.png",
+      "durationMs": 3514,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:20:53.873Z",
+      "ia": "D-M2",
+      "folder": "13-D-M2-ai-analysis-loading",
+      "state": "analyzing",
+      "route": "/writing/feedback/short/44ce0316-ca25-4d4f-8fd6-252a1be02085",
+      "auth": true,
+      "viewport": {
+        "name": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/writing/feedback/short/44ce0316-ca25-4d4f-8fd6-252a1be02085",
+      "finalUrl": "http://127.0.0.1:3000/writing/feedback/short/44ce0316-ca25-4d4f-8fd6-252a1be02085",
+      "finalPath": "/writing/feedback/short/44ce0316-ca25-4d4f-8fd6-252a1be02085",
+      "title": "단답 피드백 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "제출한 답안",
+        "AI가 답안을 분석하고 있어요"
+      ],
+      "screenshotPath": "docs/Wireframe/13-D-M2-ai-analysis-loading/browser-screenshot--analyzing--desktop.png",
+      "durationMs": 3863,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:20:58.108Z",
+      "ia": "D-M3",
+      "folder": "22-D-M3-autosave-warning",
+      "state": "modal-open",
+      "route": "/writing/short-answer-writing-51?problem=007785ff-0105-41a1-b884-2227ba6a7540&fresh=1",
+      "auth": true,
+      "viewport": {
+        "name": "mobile",
+        "width": 360,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/writing/short-answer-writing-51",
+      "finalUrl": "http://127.0.0.1:3000/writing/short-answer-writing-51?problem=007785ff-0105-41a1-b884-2227ba6a7540&fresh=1",
+      "finalPath": "/writing/short-answer-writing-51",
+      "title": "쓰기 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "51번 단문 빈칸"
+      ],
+      "screenshotPath": "docs/Wireframe/22-D-M3-autosave-warning/browser-screenshot--modal-open--mobile.png",
+      "durationMs": 4149,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:21:02.067Z",
+      "ia": "D-M3",
+      "folder": "22-D-M3-autosave-warning",
+      "state": "modal-open",
+      "route": "/writing/short-answer-writing-51?problem=007785ff-0105-41a1-b884-2227ba6a7540&fresh=1",
+      "auth": true,
+      "viewport": {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/writing/short-answer-writing-51",
+      "finalUrl": "http://127.0.0.1:3000/writing/short-answer-writing-51?problem=007785ff-0105-41a1-b884-2227ba6a7540&fresh=1",
+      "finalPath": "/writing/short-answer-writing-51",
+      "title": "쓰기 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "51번 단문 빈칸"
+      ],
+      "screenshotPath": "docs/Wireframe/22-D-M3-autosave-warning/browser-screenshot--modal-open--tablet.png",
+      "durationMs": 3876,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:21:06.838Z",
+      "ia": "D-M3",
+      "folder": "22-D-M3-autosave-warning",
+      "state": "modal-open",
+      "route": "/writing/short-answer-writing-51?problem=007785ff-0105-41a1-b884-2227ba6a7540&fresh=1",
+      "auth": true,
+      "viewport": {
+        "name": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/writing/short-answer-writing-51",
+      "finalUrl": "http://127.0.0.1:3000/writing/short-answer-writing-51?problem=007785ff-0105-41a1-b884-2227ba6a7540&fresh=1",
+      "finalPath": "/writing/short-answer-writing-51",
+      "title": "쓰기 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "51번 단문 빈칸"
+      ],
+      "screenshotPath": "docs/Wireframe/22-D-M3-autosave-warning/browser-screenshot--modal-open--desktop.png",
+      "durationMs": 4462,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:21:10.553Z",
+      "ia": "E-01",
+      "folder": "14-E-01-short-answer-feedback",
+      "state": "complete",
+      "route": "/writing/feedback/short/0216dcf7-d835-4ee7-979e-ab5683bf2b6e",
+      "auth": true,
+      "viewport": {
+        "name": "mobile",
+        "width": 360,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/writing/feedback/short/0216dcf7-d835-4ee7-979e-ab5683bf2b6e",
+      "finalUrl": "http://127.0.0.1:3000/writing/feedback/short/0216dcf7-d835-4ee7-979e-ab5683bf2b6e",
+      "finalPath": "/writing/feedback/short/0216dcf7-d835-4ee7-979e-ab5683bf2b6e",
+      "title": "단답 피드백 — TALKPIK | TALKPIK AI",
+      "headings": [],
+      "screenshotPath": "docs/Wireframe/14-E-01-short-answer-feedback/browser-screenshot--complete--mobile.png",
+      "durationMs": 3623,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:21:14.540Z",
+      "ia": "E-01",
+      "folder": "14-E-01-short-answer-feedback",
+      "state": "complete",
+      "route": "/writing/feedback/short/0216dcf7-d835-4ee7-979e-ab5683bf2b6e",
+      "auth": true,
+      "viewport": {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/writing/feedback/short/0216dcf7-d835-4ee7-979e-ab5683bf2b6e",
+      "finalUrl": "http://127.0.0.1:3000/writing/feedback/short/0216dcf7-d835-4ee7-979e-ab5683bf2b6e",
+      "finalPath": "/writing/feedback/short/0216dcf7-d835-4ee7-979e-ab5683bf2b6e",
+      "title": "단답 피드백 — TALKPIK | TALKPIK AI",
+      "headings": [],
+      "screenshotPath": "docs/Wireframe/14-E-01-short-answer-feedback/browser-screenshot--complete--tablet.png",
+      "durationMs": 3900,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:21:18.733Z",
+      "ia": "E-01",
+      "folder": "14-E-01-short-answer-feedback",
+      "state": "complete",
+      "route": "/writing/feedback/short/0216dcf7-d835-4ee7-979e-ab5683bf2b6e",
+      "auth": true,
+      "viewport": {
+        "name": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/writing/feedback/short/0216dcf7-d835-4ee7-979e-ab5683bf2b6e",
+      "finalUrl": "http://127.0.0.1:3000/writing/feedback/short/0216dcf7-d835-4ee7-979e-ab5683bf2b6e",
+      "finalPath": "/writing/feedback/short/0216dcf7-d835-4ee7-979e-ab5683bf2b6e",
+      "title": "단답 피드백 — TALKPIK | TALKPIK AI",
+      "headings": [],
+      "screenshotPath": "docs/Wireframe/14-E-01-short-answer-feedback/browser-screenshot--complete--desktop.png",
+      "durationMs": 4117,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:21:22.482Z",
+      "ia": "E-02",
+      "folder": "15-E-02-long-form-feedback",
+      "state": "complete",
+      "route": "/writing/feedback/long/77ed47ca-0047-4cf6-9d18-8dbac352a161",
+      "auth": true,
+      "viewport": {
+        "name": "mobile",
+        "width": 360,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/writing/feedback/long/77ed47ca-0047-4cf6-9d18-8dbac352a161",
+      "finalUrl": "http://127.0.0.1:3000/writing/feedback/long/77ed47ca-0047-4cf6-9d18-8dbac352a161",
+      "finalPath": "/writing/feedback/long/77ed47ca-0047-4cf6-9d18-8dbac352a161",
+      "title": "장문 피드백 — TALKPIK | TALKPIK AI",
+      "headings": [],
+      "screenshotPath": "docs/Wireframe/15-E-02-long-form-feedback/browser-screenshot--complete--mobile.png",
+      "durationMs": 3680,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:21:26.485Z",
+      "ia": "E-02",
+      "folder": "15-E-02-long-form-feedback",
+      "state": "complete",
+      "route": "/writing/feedback/long/77ed47ca-0047-4cf6-9d18-8dbac352a161",
+      "auth": true,
+      "viewport": {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/writing/feedback/long/77ed47ca-0047-4cf6-9d18-8dbac352a161",
+      "finalUrl": "http://127.0.0.1:3000/writing/feedback/long/77ed47ca-0047-4cf6-9d18-8dbac352a161",
+      "finalPath": "/writing/feedback/long/77ed47ca-0047-4cf6-9d18-8dbac352a161",
+      "title": "장문 피드백 — TALKPIK | TALKPIK AI",
+      "headings": [],
+      "screenshotPath": "docs/Wireframe/15-E-02-long-form-feedback/browser-screenshot--complete--tablet.png",
+      "durationMs": 3931,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:21:31.055Z",
+      "ia": "E-02",
+      "folder": "15-E-02-long-form-feedback",
+      "state": "complete",
+      "route": "/writing/feedback/long/77ed47ca-0047-4cf6-9d18-8dbac352a161",
+      "auth": true,
+      "viewport": {
+        "name": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/writing/feedback/long/77ed47ca-0047-4cf6-9d18-8dbac352a161",
+      "finalUrl": "http://127.0.0.1:3000/writing/feedback/long/77ed47ca-0047-4cf6-9d18-8dbac352a161",
+      "finalPath": "/writing/feedback/long/77ed47ca-0047-4cf6-9d18-8dbac352a161",
+      "title": "장문 피드백 — TALKPIK | TALKPIK AI",
+      "headings": [],
+      "screenshotPath": "docs/Wireframe/15-E-02-long-form-feedback/browser-screenshot--complete--desktop.png",
+      "durationMs": 4483,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:21:35.154Z",
+      "ia": "R-01",
+      "folder": "16-R-01-comparison-report",
+      "state": "default",
+      "route": "/writing/reports/a2fd55f5-f824-4016-bde3-c8c5d7406bfe/compare",
+      "auth": true,
+      "viewport": {
+        "name": "mobile",
+        "width": 360,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/writing/reports/a2fd55f5-f824-4016-bde3-c8c5d7406bfe/compare",
+      "finalUrl": "http://127.0.0.1:3000/writing/reports/a2fd55f5-f824-4016-bde3-c8c5d7406bfe/compare",
+      "finalPath": "/writing/reports/a2fd55f5-f824-4016-bde3-c8c5d7406bfe/compare",
+      "title": "비교 리포트 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "비교 리포트"
+      ],
+      "screenshotPath": "docs/Wireframe/16-R-01-comparison-report/browser-screenshot--default--mobile.png",
+      "durationMs": 4043,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:21:40.194Z",
+      "ia": "R-01",
+      "folder": "16-R-01-comparison-report",
+      "state": "default",
+      "route": "/writing/reports/a2fd55f5-f824-4016-bde3-c8c5d7406bfe/compare",
+      "auth": true,
+      "viewport": {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/writing/reports/a2fd55f5-f824-4016-bde3-c8c5d7406bfe/compare",
+      "finalUrl": "http://127.0.0.1:3000/writing/reports/a2fd55f5-f824-4016-bde3-c8c5d7406bfe/compare",
+      "finalPath": "/writing/reports/a2fd55f5-f824-4016-bde3-c8c5d7406bfe/compare",
+      "title": "비교 리포트 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "비교 리포트"
+      ],
+      "screenshotPath": "docs/Wireframe/16-R-01-comparison-report/browser-screenshot--default--tablet.png",
+      "durationMs": 4954,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:21:45.409Z",
+      "ia": "R-01",
+      "folder": "16-R-01-comparison-report",
+      "state": "default",
+      "route": "/writing/reports/a2fd55f5-f824-4016-bde3-c8c5d7406bfe/compare",
+      "auth": true,
+      "viewport": {
+        "name": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/writing/reports/a2fd55f5-f824-4016-bde3-c8c5d7406bfe/compare",
+      "finalUrl": "http://127.0.0.1:3000/writing/reports/a2fd55f5-f824-4016-bde3-c8c5d7406bfe/compare",
+      "finalPath": "/writing/reports/a2fd55f5-f824-4016-bde3-c8c5d7406bfe/compare",
+      "title": "비교 리포트 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "비교 리포트"
+      ],
+      "screenshotPath": "docs/Wireframe/16-R-01-comparison-report/browser-screenshot--default--desktop.png",
+      "durationMs": 5060,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:21:48.928Z",
+      "ia": "R-02",
+      "folder": "17-R-02-next-problem-recommendation",
+      "state": "default",
+      "route": "/practice/next",
+      "auth": true,
+      "viewport": {
+        "name": "mobile",
+        "width": 360,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/practice/next",
+      "finalUrl": "http://127.0.0.1:3000/practice/next",
+      "finalPath": "/practice/next",
+      "title": "다음 문제 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "다음 문제"
+      ],
+      "screenshotPath": "docs/Wireframe/17-R-02-next-problem-recommendation/browser-screenshot--default--mobile.png",
+      "durationMs": 3439,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:21:53.076Z",
+      "ia": "R-02",
+      "folder": "17-R-02-next-problem-recommendation",
+      "state": "default",
+      "route": "/practice/next",
+      "auth": true,
+      "viewport": {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/practice/next",
+      "finalUrl": "http://127.0.0.1:3000/practice/next",
+      "finalPath": "/practice/next",
+      "title": "다음 문제 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "다음 문제"
+      ],
+      "screenshotPath": "docs/Wireframe/17-R-02-next-problem-recommendation/browser-screenshot--default--tablet.png",
+      "durationMs": 4087,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:21:56.966Z",
+      "ia": "R-02",
+      "folder": "17-R-02-next-problem-recommendation",
+      "state": "default",
+      "route": "/practice/next",
+      "auth": true,
+      "viewport": {
+        "name": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/practice/next",
+      "finalUrl": "http://127.0.0.1:3000/practice/next",
+      "finalPath": "/practice/next",
+      "title": "다음 문제 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "다음 문제"
+      ],
+      "screenshotPath": "docs/Wireframe/17-R-02-next-problem-recommendation/browser-screenshot--default--desktop.png",
+      "durationMs": 3792,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:22:01.035Z",
+      "ia": "F-01",
+      "folder": "18-F-01-my-library",
+      "state": "default",
+      "route": "/library",
+      "auth": true,
+      "viewport": {
+        "name": "mobile",
+        "width": 360,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/library",
+      "finalUrl": "http://127.0.0.1:3000/library",
+      "finalPath": "/library",
+      "title": "내 서재 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "내 서재"
+      ],
+      "screenshotPath": "docs/Wireframe/18-F-01-my-library/browser-screenshot--default--mobile.png",
+      "durationMs": 3974,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:22:05.354Z",
+      "ia": "F-01",
+      "folder": "18-F-01-my-library",
+      "state": "default",
+      "route": "/library",
+      "auth": true,
+      "viewport": {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/library",
+      "finalUrl": "http://127.0.0.1:3000/library",
+      "finalPath": "/library",
+      "title": "내 서재 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "내 서재"
+      ],
+      "screenshotPath": "docs/Wireframe/18-F-01-my-library/browser-screenshot--default--tablet.png",
+      "durationMs": 4228,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:22:09.990Z",
+      "ia": "F-01",
+      "folder": "18-F-01-my-library",
+      "state": "default",
+      "route": "/library",
+      "auth": true,
+      "viewport": {
+        "name": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/library",
+      "finalUrl": "http://127.0.0.1:3000/library",
+      "finalPath": "/library",
+      "title": "내 서재 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "내 서재"
+      ],
+      "screenshotPath": "docs/Wireframe/18-F-01-my-library/browser-screenshot--default--desktop.png",
+      "durationMs": 4558,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:22:14.566Z",
+      "ia": "F-M1",
+      "folder": "19-F-M1-pdf-export-modal",
+      "state": "modal-open",
+      "route": "/library",
+      "auth": true,
+      "viewport": {
+        "name": "mobile",
+        "width": 360,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/library",
+      "finalUrl": "http://127.0.0.1:3000/library",
+      "finalPath": "/library",
+      "title": "내 서재 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "내 서재"
+      ],
+      "screenshotPath": "docs/Wireframe/19-F-M1-pdf-export-modal/browser-screenshot--modal-open--mobile.png",
+      "durationMs": 4513,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:22:19.253Z",
+      "ia": "F-M1",
+      "folder": "19-F-M1-pdf-export-modal",
+      "state": "modal-open",
+      "route": "/library",
+      "auth": true,
+      "viewport": {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/library",
+      "finalUrl": "http://127.0.0.1:3000/library",
+      "finalPath": "/library",
+      "title": "내 서재 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "내 서재"
+      ],
+      "screenshotPath": "docs/Wireframe/19-F-M1-pdf-export-modal/browser-screenshot--modal-open--tablet.png",
+      "durationMs": 4617,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:22:23.658Z",
+      "ia": "F-M1",
+      "folder": "19-F-M1-pdf-export-modal",
+      "state": "modal-open",
+      "route": "/library",
+      "auth": true,
+      "viewport": {
+        "name": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/library",
+      "finalUrl": "http://127.0.0.1:3000/library",
+      "finalPath": "/library",
+      "title": "내 서재 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "내 서재"
+      ],
+      "screenshotPath": "docs/Wireframe/19-F-M1-pdf-export-modal/browser-screenshot--modal-open--desktop.png",
+      "durationMs": 4271,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:22:27.282Z",
+      "ia": "G-01",
+      "folder": "20-G-01-language-settings",
+      "state": "default",
+      "route": "/settings/language",
+      "auth": true,
+      "viewport": {
+        "name": "mobile",
+        "width": 360,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/settings/language",
+      "finalUrl": "http://127.0.0.1:3000/settings/language",
+      "finalPath": "/settings/language",
+      "title": "언어 설정 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "언어 설정"
+      ],
+      "screenshotPath": "docs/Wireframe/20-G-01-language-settings/browser-screenshot--default--mobile.png",
+      "durationMs": 3536,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:22:31.402Z",
+      "ia": "G-01",
+      "folder": "20-G-01-language-settings",
+      "state": "default",
+      "route": "/settings/language",
+      "auth": true,
+      "viewport": {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/settings/language",
+      "finalUrl": "http://127.0.0.1:3000/settings/language",
+      "finalPath": "/settings/language",
+      "title": "언어 설정 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "언어 설정"
+      ],
+      "screenshotPath": "docs/Wireframe/20-G-01-language-settings/browser-screenshot--default--tablet.png",
+      "durationMs": 4006,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:22:34.946Z",
+      "ia": "G-01",
+      "folder": "20-G-01-language-settings",
+      "state": "default",
+      "route": "/settings/language",
+      "auth": true,
+      "viewport": {
+        "name": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/settings/language",
+      "finalUrl": "http://127.0.0.1:3000/settings/language",
+      "finalPath": "/settings/language",
+      "title": "언어 설정 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "언어 설정"
+      ],
+      "screenshotPath": "docs/Wireframe/20-G-01-language-settings/browser-screenshot--default--desktop.png",
+      "durationMs": 3451,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:22:38.644Z",
+      "ia": "X-02",
+      "folder": "24-X-02-growth-dashboard",
+      "state": "default",
+      "route": "/growth",
+      "auth": true,
+      "viewport": {
+        "name": "mobile",
+        "width": 360,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/growth",
+      "finalUrl": "http://127.0.0.1:3000/growth",
+      "finalPath": "/growth",
+      "title": "성장 대시보드 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "성장 대시보드"
+      ],
+      "screenshotPath": "docs/Wireframe/24-X-02-growth-dashboard/browser-screenshot--default--mobile.png",
+      "durationMs": 3350,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:22:42.951Z",
+      "ia": "X-02",
+      "folder": "24-X-02-growth-dashboard",
+      "state": "default",
+      "route": "/growth",
+      "auth": true,
+      "viewport": {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/growth",
+      "finalUrl": "http://127.0.0.1:3000/growth",
+      "finalPath": "/growth",
+      "title": "성장 대시보드 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "성장 대시보드"
+      ],
+      "screenshotPath": "docs/Wireframe/24-X-02-growth-dashboard/browser-screenshot--default--tablet.png",
+      "durationMs": 4216,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:22:47.721Z",
+      "ia": "X-02",
+      "folder": "24-X-02-growth-dashboard",
+      "state": "default",
+      "route": "/growth",
+      "auth": true,
+      "viewport": {
+        "name": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/growth",
+      "finalUrl": "http://127.0.0.1:3000/growth",
+      "finalPath": "/growth",
+      "title": "성장 대시보드 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "성장 대시보드"
+      ],
+      "screenshotPath": "docs/Wireframe/24-X-02-growth-dashboard/browser-screenshot--default--desktop.png",
+      "durationMs": 4613,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:22:51.382Z",
+      "ia": "X-03",
+      "folder": "25-X-03-paywall",
+      "state": "default",
+      "route": "/paywall",
+      "auth": true,
+      "viewport": {
+        "name": "mobile",
+        "width": 360,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/paywall",
+      "finalUrl": "http://127.0.0.1:3000/paywall",
+      "finalPath": "/paywall",
+      "title": "구독 가입 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "구독 시작하기"
+      ],
+      "screenshotPath": "docs/Wireframe/25-X-03-paywall/browser-screenshot--default--mobile.png",
+      "durationMs": 3567,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:22:54.786Z",
+      "ia": "X-03",
+      "folder": "25-X-03-paywall",
+      "state": "default",
+      "route": "/paywall",
+      "auth": true,
+      "viewport": {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/paywall",
+      "finalUrl": "http://127.0.0.1:3000/paywall",
+      "finalPath": "/paywall",
+      "title": "구독 가입 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "구독 시작하기"
+      ],
+      "screenshotPath": "docs/Wireframe/25-X-03-paywall/browser-screenshot--default--tablet.png",
+      "durationMs": 3319,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:22:58.245Z",
+      "ia": "X-03",
+      "folder": "25-X-03-paywall",
+      "state": "default",
+      "route": "/paywall",
+      "auth": true,
+      "viewport": {
+        "name": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/paywall",
+      "finalUrl": "http://127.0.0.1:3000/paywall",
+      "finalPath": "/paywall",
+      "title": "구독 가입 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "구독 시작하기"
+      ],
+      "screenshotPath": "docs/Wireframe/25-X-03-paywall/browser-screenshot--default--desktop.png",
+      "durationMs": 3360,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:23:01.594Z",
+      "ia": "X-04",
+      "folder": "26-X-04-subscription-management",
+      "state": "default",
+      "route": "/subscription",
+      "auth": true,
+      "viewport": {
+        "name": "mobile",
+        "width": 360,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/subscription",
+      "finalUrl": "http://127.0.0.1:3000/subscription",
+      "finalPath": "/subscription",
+      "title": "구독 관리 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "구독 관리"
+      ],
+      "screenshotPath": "docs/Wireframe/26-X-04-subscription-management/browser-screenshot--default--mobile.png",
+      "durationMs": 3278,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:23:04.900Z",
+      "ia": "X-04",
+      "folder": "26-X-04-subscription-management",
+      "state": "default",
+      "route": "/subscription",
+      "auth": true,
+      "viewport": {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/subscription",
+      "finalUrl": "http://127.0.0.1:3000/subscription",
+      "finalPath": "/subscription",
+      "title": "구독 관리 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "구독 관리"
+      ],
+      "screenshotPath": "docs/Wireframe/26-X-04-subscription-management/browser-screenshot--default--tablet.png",
+      "durationMs": 3200,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:23:08.291Z",
+      "ia": "X-04",
+      "folder": "26-X-04-subscription-management",
+      "state": "default",
+      "route": "/subscription",
+      "auth": true,
+      "viewport": {
+        "name": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/subscription",
+      "finalUrl": "http://127.0.0.1:3000/subscription",
+      "finalPath": "/subscription",
+      "title": "구독 관리 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "구독 관리"
+      ],
+      "screenshotPath": "docs/Wireframe/26-X-04-subscription-management/browser-screenshot--default--desktop.png",
+      "durationMs": 3340,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:23:11.621Z",
+      "ia": "X-05",
+      "folder": "27-X-05-profile-editing",
+      "state": "default",
+      "route": "/profile",
+      "auth": true,
+      "viewport": {
+        "name": "mobile",
+        "width": 360,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/profile",
+      "finalUrl": "http://127.0.0.1:3000/profile",
+      "finalPath": "/profile",
+      "title": "프로필 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "프로필"
+      ],
+      "screenshotPath": "docs/Wireframe/27-X-05-profile-editing/browser-screenshot--default--mobile.png",
+      "durationMs": 3275,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:23:15.426Z",
+      "ia": "X-05",
+      "folder": "27-X-05-profile-editing",
+      "state": "default",
+      "route": "/profile",
+      "auth": true,
+      "viewport": {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/profile",
+      "finalUrl": "http://127.0.0.1:3000/profile",
+      "finalPath": "/profile",
+      "title": "프로필 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "프로필"
+      ],
+      "screenshotPath": "docs/Wireframe/27-X-05-profile-editing/browser-screenshot--default--tablet.png",
+      "durationMs": 3739,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:23:18.681Z",
+      "ia": "X-05",
+      "folder": "27-X-05-profile-editing",
+      "state": "default",
+      "route": "/profile",
+      "auth": true,
+      "viewport": {
+        "name": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/profile",
+      "finalUrl": "http://127.0.0.1:3000/profile",
+      "finalPath": "/profile",
+      "title": "프로필 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "프로필"
+      ],
+      "screenshotPath": "docs/Wireframe/27-X-05-profile-editing/browser-screenshot--default--desktop.png",
+      "durationMs": 3156,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:23:22.024Z",
+      "ia": "X-07",
+      "folder": "29-X-07-weakness-based-recommendations",
+      "state": "default",
+      "route": "/practice/weakness",
+      "auth": true,
+      "viewport": {
+        "name": "mobile",
+        "width": 360,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/practice/weakness",
+      "finalUrl": "http://127.0.0.1:3000/practice/weakness",
+      "finalPath": "/practice/weakness",
+      "title": "약점 보강 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "약점 보강",
+        "약점 기반 맞춤 추천은 유료 플랜 전용이에요"
+      ],
+      "screenshotPath": "docs/Wireframe/29-X-07-weakness-based-recommendations/browser-screenshot--default--mobile.png",
+      "durationMs": 3277,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:23:25.831Z",
+      "ia": "X-07",
+      "folder": "29-X-07-weakness-based-recommendations",
+      "state": "default",
+      "route": "/practice/weakness",
+      "auth": true,
+      "viewport": {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/practice/weakness",
+      "finalUrl": "http://127.0.0.1:3000/practice/weakness",
+      "finalPath": "/practice/weakness",
+      "title": "약점 보강 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "약점 보강",
+        "약점 기반 맞춤 추천은 유료 플랜 전용이에요"
+      ],
+      "screenshotPath": "docs/Wireframe/29-X-07-weakness-based-recommendations/browser-screenshot--default--tablet.png",
+      "durationMs": 3750,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:23:29.386Z",
+      "ia": "X-07",
+      "folder": "29-X-07-weakness-based-recommendations",
+      "state": "default",
+      "route": "/practice/weakness",
+      "auth": true,
+      "viewport": {
+        "name": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/practice/weakness",
+      "finalUrl": "http://127.0.0.1:3000/practice/weakness",
+      "finalPath": "/practice/weakness",
+      "title": "약점 보강 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "약점 보강",
+        "약점 기반 맞춤 추천은 유료 플랜 전용이에요"
+      ],
+      "screenshotPath": "docs/Wireframe/29-X-07-weakness-based-recommendations/browser-screenshot--default--desktop.png",
+      "durationMs": 3450,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:23:32.865Z",
+      "ia": "X-09",
+      "folder": "31-X-09-notification-settings",
+      "state": "default",
+      "route": "/settings/notifications",
+      "auth": true,
+      "viewport": {
+        "name": "mobile",
+        "width": 360,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/settings/notifications",
+      "finalUrl": "http://127.0.0.1:3000/settings/notifications",
+      "finalPath": "/settings/notifications",
+      "title": "알림 설정 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "알림 설정"
+      ],
+      "screenshotPath": "docs/Wireframe/31-X-09-notification-settings/browser-screenshot--default--mobile.png",
+      "durationMs": 3394,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:23:36.896Z",
+      "ia": "X-09",
+      "folder": "31-X-09-notification-settings",
+      "state": "default",
+      "route": "/settings/notifications",
+      "auth": true,
+      "viewport": {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/settings/notifications",
+      "finalUrl": "http://127.0.0.1:3000/settings/notifications",
+      "finalPath": "/settings/notifications",
+      "title": "알림 설정 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "알림 설정"
+      ],
+      "screenshotPath": "docs/Wireframe/31-X-09-notification-settings/browser-screenshot--default--tablet.png",
+      "durationMs": 3929,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    },
+    {
+      "runId": "20260615-091636",
+      "capturedAt": "2026-06-15T00:23:41.115Z",
+      "ia": "X-09",
+      "folder": "31-X-09-notification-settings",
+      "state": "default",
+      "route": "/settings/notifications",
+      "auth": true,
+      "viewport": {
+        "name": "desktop",
+        "width": 1280,
+        "height": 900
+      },
+      "status": "ok",
+      "note": null,
+      "expectedPath": "/settings/notifications",
+      "finalUrl": "http://127.0.0.1:3000/settings/notifications",
+      "finalPath": "/settings/notifications",
+      "title": "알림 설정 — TALKPIK | TALKPIK AI",
+      "headings": [
+        "알림 설정"
+      ],
+      "screenshotPath": "docs/Wireframe/31-X-09-notification-settings/browser-screenshot--default--desktop.png",
+      "durationMs": 4138,
+      "errors": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "responseErrors": [],
+        "errorMessage": null
+      }
+    }
+  ],
+  "cleanup": {
+    "submissionCount": 7,
+    "reportCount": 2,
+    "runCount": 1,
+    "exportCount": 1,
+    "libraryItemCount": 4,
+    "draftSnapshotCount": 2,
+    "errors": []
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "runId": "20260615-091636",
+  "capturedAt": "2026-06-15T00:21:40.194Z",
+  "ia": "R-01",
+  "folder": "16-R-01-comparison-report",
+  "state": "default",
+  "route": "/writing/reports/a2fd55f5-f824-4016-bde3-c8c5d7406bfe/compare",
+  "auth": true,
+  "viewport": {
+    "name": "tablet",
+    "width": 768,
+    "height": 1024
+  },
+  "status": "ok",
+  "note": null,
+  "expectedPath": "/writing/reports/a2fd55f5-f824-4016-bde3-c8c5d7406bfe/compare",
+  "finalUrl": "http://127.0.0.1:3000/writing/reports/a2fd55f5-f824-4016-bde3-c8c5d7406bfe/compare",
+  "finalPath": "/writing/reports/a2fd55f5-f824-4016-bde3-c8c5d7406bfe/compare",
+  "title": "비교 리포트 — TALKPIK | TALKPIK AI",
+  "headings": [
+    "비교 리포트"
+  ],
+  "screenshotPath": "docs/Wireframe/16-R-01-comparison-report/browser-screenshot--default--tablet.png",
+  "durationMs": 4954,
+  "errors": {
+    "pageErrors": [],
+    "consoleErrors": [],
+    "responseErrors": [],
+    "errorMessage": null
+  }
+}
