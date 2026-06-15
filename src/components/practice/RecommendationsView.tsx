@@ -224,18 +224,17 @@ export function RecommendationsView() {
             reasonSummary={bundle.data?.run?.reasonSummary}
           />
           <TypeSelectCards />
-          <div className="flex flex-wrap items-center justify-center gap-3 border-t border-border pt-2">
+          <div className="flex flex-col items-start gap-2 pt-2 sm:flex-row sm:items-center sm:gap-3">
             <Text type="secondary">{t("emptyDescription")}</Text>
-            <Link href={"/practice/problems" as never}>
-              <Button>{t("viewProblemList")}</Button>
+            <Link
+              className="inline-flex items-center text-sm font-semibold text-text underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              href={"/practice/problems" as never}
+            >
+              {t("viewProblemList")}
             </Link>
           </div>
         </>
       )}
-
-      <Text className="block text-xs" type="secondary">
-        {t("footerNote")}
-      </Text>
     </div>
   );
 }
