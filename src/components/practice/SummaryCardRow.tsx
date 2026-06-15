@@ -1,11 +1,11 @@
 "use client";
 
-import { Col, Row, Statistic, Tag, Typography } from "antd";
+import type { ReactNode } from "react";
+import { Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { AppCard } from "@/components/shared/AppCard";
-import { SPACING } from "@/theme/spacing";
 
-const { Text } = Typography;
+const { Paragraph, Text } = Typography;
 
 type WeakDimension = { dimension: string; score: number };
 
@@ -26,6 +26,42 @@ const DIMENSION_LABEL_KEYS: Record<string, string> = {
   topic_fit: "dimTopicFit",
 };
 
+function SummaryMetricCard({
+  title,
+  value,
+  detail,
+}: {
+  title: ReactNode;
+  value: ReactNode;
+  detail?: ReactNode;
+}) {
+  return (
+    <AppCard data-testid="next-summary-card" className="h-full w-full">
+      <div className="flex h-full flex-col gap-3">
+        <Text type="secondary" className="block text-sm">
+          {title}
+        </Text>
+        <Paragraph
+          strong
+          className="mb-0 text-xl leading-7"
+          data-testid="next-summary-value"
+        >
+          {value}
+        </Paragraph>
+        {detail ? (
+          <Text
+            type="secondary"
+            className="block text-xs"
+            data-testid="next-summary-detail"
+          >
+            {detail}
+          </Text>
+        ) : null}
+      </div>
+    </AppCard>
+  );
+}
+
 export function SummaryCardRow({
   recentSubmissions,
   averageScore,
@@ -35,62 +71,51 @@ export function SummaryCardRow({
 }: Props) {
   const t = useTranslations("practice.next");
   const tCommon = useTranslations("practice.common");
+  const weaknessValue =
+    weakestDimensions.length === 0
+      ? t("summaryNotEnoughData")
+      : weakestDimensions
+          .slice(0, 3)
+          .map((dimension) => {
+            const labelKey = DIMENSION_LABEL_KEYS[dimension.dimension];
+            const label = labelKey
+              ? tCommon(labelKey as Parameters<typeof tCommon>[0])
+              : dimension.dimension;
+            return `${label} ${tCommon("score", {
+              score: Math.round(dimension.score),
+            })}`;
+          })
+          .join(" · ");
+  const recentAverageValue = t("summaryRecentAverage", {
+    count: recentSubmissions,
+    average:
+      averageScore != null
+        ? tCommon("score", { score: averageScore.toFixed(1) })
+        : t("summaryDataShort"),
+  });
+  const estimatedTimeValue =
+    estimatedMinutes != null
+      ? tCommon("minutes", { minutes: estimatedMinutes })
+      : t("noInfo");
 
   return (
-    <Row gutter={[SPACING.md, SPACING.md]} data-testid="next-summary-row">
-      <Col xs={24} md={8}>
-        <AppCard data-testid="next-summary-card">
-          <Text type="secondary">{t("summaryWeaknessTitle")}</Text>
-          <div className="mt-3">
-            {weakestDimensions.length === 0 ? (
-              <Text>{t("summaryNotEnoughData")}</Text>
-            ) : (
-              weakestDimensions.slice(0, 3).map((dimension) => (
-                <Tag key={dimension.dimension}>
-                  {DIMENSION_LABEL_KEYS[dimension.dimension]
-                    ? tCommon(
-                        DIMENSION_LABEL_KEYS[
-                          dimension.dimension
-                        ] as Parameters<typeof tCommon>[0],
-                      )
-                    : dimension.dimension}{" "}
-                  {tCommon("score", { score: Math.round(dimension.score) })}
-                </Tag>
-              ))
-            )}
-          </div>
-          <Text type="secondary" className="text-xs">
-            {t("summaryRecentAverage", {
-              count: recentSubmissions,
-              average:
-                averageScore != null
-                  ? tCommon("score", { score: averageScore.toFixed(1) })
-                  : t("summaryDataShort"),
-            })}
-          </Text>
-        </AppCard>
-      </Col>
-      <Col xs={24} md={8}>
-        <AppCard data-testid="next-summary-card">
-          <Text type="secondary">{t("summaryNextTypeTitle")}</Text>
-          <div className="mt-3">
-            <Text strong className="text-xl">
-              {recommendedType ?? t("summaryTypePending")}
-            </Text>
-          </div>
-        </AppCard>
-      </Col>
-      <Col xs={24} md={8}>
-        <AppCard data-testid="next-summary-card">
-          <Statistic
-            title={t("summaryEstimatedTime")}
-            value={estimatedMinutes ?? 0}
-            suffix={
-              estimatedMinutes != null ? tCommon("minuteSuffix") : t("noInfo")
-            }
-          />
-        </AppCard>
-      </Col>
-    </Row>
+    <div
+      className="grid auto-rows-fr grid-cols-1 gap-4 md:grid-cols-3"
+      data-testid="next-summary-row"
+    >
+      <SummaryMetricCard
+        title={t("summaryWeaknessTitle")}
+        value={weaknessValue}
+        detail={recentAverageValue}
+      />
+      <SummaryMetricCard
+        title={t("summaryNextTypeTitle")}
+        value={recommendedType ?? t("summaryTypePending")}
+      />
+      <SummaryMetricCard
+        title={t("summaryEstimatedTime")}
+        value={estimatedTimeValue}
+      />
+    </div>
   );
 }

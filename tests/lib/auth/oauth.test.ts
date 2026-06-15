@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import {
   buildClientAuthCallbackUrl,
   buildPostAuthPath,
+  getGoogleOAuthBrowserSupport,
+  GoogleOAuthUnsupportedBrowserError,
 } from "../../../src/lib/auth/oauth";
 
 describe("Google OAuth URL helpers", () => {
@@ -40,5 +42,28 @@ describe("Google OAuth URL helpers", () => {
         "http://localhost:3000",
       ),
     ).toThrow(/relative/);
+  });
+
+  it("allows normal mobile browsers to start Google OAuth", () => {
+    expect(
+      getGoogleOAuthBrowserSupport(
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Version/17.0 Mobile/15E148 Safari/604.1",
+      ),
+    ).toEqual({ supported: true });
+  });
+
+  it("blocks KakaoTalk embedded browsers before Google OAuth starts", () => {
+    expect(
+      getGoogleOAuthBrowserSupport(
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 KAKAOTALK 10.7.0",
+      ),
+    ).toEqual({
+      supported: false,
+      browser: "kakaoTalk",
+      reason: "embedded_user_agent",
+    });
+    const error = new GoogleOAuthUnsupportedBrowserError("kakaoTalk");
+    expect(error.name).toBe("GoogleOAuthUnsupportedBrowserError");
+    expect(error.browser).toBe("kakaoTalk");
   });
 });

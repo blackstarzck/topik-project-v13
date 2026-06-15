@@ -126,13 +126,14 @@ flowchart TD
 - **비밀번호**: `supabase.auth.signInWithPassword({ email, password })` → 성공 시 `router.push('/dashboard')`
 - **매직 링크**: `supabase.auth.signInWithOtp({ email, options: { emailRedirectTo } })` → "이메일을 확인하세요" 상태 → 사용자 메일 링크 클릭 → `/auth/callback?next=/dashboard`
 - **Google**: `/login`과 `/sign-up` 모두 `supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo } })` 를 사용한다. `redirectTo` 는 현재 브라우저 origin의 `/auth/callback?next=/auth/post-auth?intent=login|sign-up` 로 조합한다. 로컬에서 `localhost`로 시작하면 `localhost`로, `127.0.0.1`로 시작하면 `127.0.0.1`로 돌아와야 한다.
+- Google OAuth는 Google 정책상 임베디드 웹뷰에서 `disallowed_useragent` 로 차단될 수 있다. 카카오톡 등 인앱 브라우저로 감지되면 `/login`·`/sign-up`은 OAuth 요청을 시작하지 않고 외부 브라우저에서 다시 열라는 인라인 안내를 보여준다.
 - **비밀번호 재설정 링크**: 로그인 폼 하단 `/password-reset` 링크
 - **세션 만료 안내**: middleware 가 만료된 `sb-*-auth-token` 쿠키를 감지하면 `/login?reason=session_expired` 로 보내고, `LoginForm` 이 안내 Alert 노출
 
 ### 4.2.1 Google OAuth 후처리
 
 1. `/login` 또는 `/sign-up`의 `Google로 계속` 버튼 클릭.
-2. Supabase Auth Google authorize URL로 이동. Google은 유일한 소셜 provider다.
+2. 카카오톡 등 Google OAuth가 차단되는 임베디드 브라우저면 현재 화면에서 외부 브라우저 안내를 노출하고 중단한다. 일반 브라우저면 Supabase Auth Google authorize URL로 이동한다. Google은 유일한 소셜 provider다.
 3. Supabase가 앱의 `/auth/callback` 으로 `code`를 돌려준다.
 4. `/auth/callback` 에서 `exchangeCodeForSession(code)` 성공 시 `next`인 `/auth/post-auth?intent=login|sign-up` 으로 redirect.
 5. `/auth/post-auth` 는 세션이 없으면 `/login`, 세션이 있으면 다음을 순서대로 처리한다.

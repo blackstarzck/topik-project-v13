@@ -1,8 +1,14 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Alert, Button, Spin, Typography } from "antd";
-import { ArrowRight, CheckCircle2, Clock3, Target } from "lucide-react";
+import { Alert, Button, Skeleton, Tag, Typography } from "antd";
+import {
+  ArrowRight,
+  ChartNoAxesColumnIncreasing,
+  CheckCircle2,
+  Clock3,
+  Lightbulb,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -11,12 +17,14 @@ import { AppCard } from "@/components/shared/AppCard";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { isValidQuestionNo, type QuestionNo } from "@/lib/practice/types";
 import { writingQuestionHref } from "@/lib/writing/routes";
+import { difficultyFillColor } from "./DifficultyMeter";
 import { ProblemTypeTabs } from "./ProblemTypeTabs";
 import {
   PrimaryRecommendationCard,
   SecondaryRecommendationCard,
 } from "./RecommendationItemCards";
 import { TypeSelectCards } from "./TypeSelectCards";
+import { getReasonTagColor } from "./reason-tag-colors";
 import { useRecommendationBundle } from "./recommendations-data";
 
 const { Title, Text } = Typography;
@@ -90,7 +98,11 @@ function FallbackRecommendationPanel({
               </span>
             </span>
             <span className="flex min-w-0 items-center gap-3 rounded-default bg-surface p-3">
-              <Target size={18} aria-hidden="true" />
+              <ChartNoAxesColumnIncreasing
+                size={18}
+                aria-hidden="true"
+                color={difficultyFillColor(3)}
+              />
               <span className="grid min-w-0 gap-1">
                 <small className="text-xs text-text-secondary">
                   {t("fallbackHeroDifficulty")}
@@ -124,6 +136,160 @@ function FallbackRecommendationPanel({
   );
 }
 
+function RecommendationReasonSkeleton() {
+  return (
+    <div
+      className="recommendation-reason-card__skeleton"
+      data-testid="recommendation-reason-skeleton"
+    >
+      <Skeleton.Button
+        className="recommendation-reason-card__skeleton-line"
+        size="small"
+        block
+      />
+      <div className="recommendation-reason-card__skeleton-tags">
+        <Skeleton.Button
+          className="recommendation-reason-card__skeleton-tag"
+          size="small"
+          shape="round"
+        />
+        <Skeleton.Button
+          className="recommendation-reason-card__skeleton-tag"
+          size="small"
+          shape="round"
+        />
+        <Skeleton.Button
+          className="recommendation-reason-card__skeleton-tag"
+          size="small"
+          shape="round"
+        />
+      </div>
+    </div>
+  );
+}
+
+function RecommendationReasonPanel({
+  questionNo,
+  reasonSummary,
+  weaknessTags,
+  isLoading,
+  animationKey,
+}: {
+  questionNo: QuestionNo;
+  reasonSummary?: string | null;
+  weaknessTags: string[];
+  isLoading: boolean;
+  animationKey: string;
+}) {
+  const t = useTranslations("practice.recommendations");
+  const tCommon = useTranslations("practice.common");
+  const typeLabel = tCommon(`questionType${questionNo}`);
+  const tags =
+    weaknessTags.length > 0
+      ? weaknessTags
+      : [
+          t("reasonTagGrammar"),
+          t("reasonTagStructure"),
+          t("reasonTagExpression"),
+        ];
+
+  return (
+    <section
+      className={[
+        "recommendation-reason-card",
+        // Stagger only the real content. The skeleton stays static — animating a
+        // placeholder reads as jank. The panel's `key` remounts on the
+        // loading→ready flip, so the loaded content still animates in once.
+        isLoading ? null : "recommendation-reason-card--stagger",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      data-animation-key={animationKey}
+    >
+      <div className="recommendation-reason-card__icon" aria-hidden="true">
+        <Lightbulb size={24} strokeWidth={1.7} />
+      </div>
+      <div className="recommendation-reason-card__body">
+        <Text className="recommendation-reason-card__title" strong>
+          {t("reasonSummaryTitle")}
+        </Text>
+        {isLoading ? (
+          <RecommendationReasonSkeleton />
+        ) : (
+          <>
+            <Text className="recommendation-reason-card__copy" type="secondary">
+              {reasonSummary ?? t("reasonSummaryFallback", { type: typeLabel })}
+            </Text>
+            <div className="recommendation-reason-card__footer">
+              <div className="recommendation-reason-card__tags">
+                {tags.map((tag, index) => (
+                  <Tag
+                    className="recommendation-reason-card__tag"
+                    color={getReasonTagColor(index, tags.length)}
+                    key={`${tag}-${index}`}
+                    variant="filled"
+                  >
+                    {tag}
+                  </Tag>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function RecommendationResultsSkeleton() {
+  return (
+    <div
+      className="recommendation-results-skeleton"
+      data-testid="recommendation-results-skeleton"
+      aria-busy="true"
+    >
+      <AppCard className="h-full">
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid min-w-0 content-center gap-4">
+            <Skeleton.Button
+              className="recommendation-results-skeleton__badge"
+              size="small"
+              shape="round"
+            />
+            <Skeleton
+              title={{ width: "58%" }}
+              paragraph={{ rows: 1, width: ["72%"] }}
+            />
+          </div>
+          <div className="grid gap-4 self-center">
+            <div className="grid gap-2 sm:grid-cols-3">
+              <Skeleton.Button size="large" block />
+              <Skeleton.Button size="large" block />
+              <Skeleton.Button size="large" block />
+            </div>
+            <Skeleton.Button size="large" block />
+          </div>
+        </div>
+      </AppCard>
+
+      <section className="grid gap-3">
+        <Skeleton.Button
+          className="recommendation-results-skeleton__section-title"
+          size="small"
+        />
+        <div className="grid gap-3 md:grid-cols-2">
+          <AppCard size="small">
+            <Skeleton title={{ width: "42%" }} paragraph={{ rows: 2 }} />
+          </AppCard>
+          <AppCard size="small">
+            <Skeleton title={{ width: "46%" }} paragraph={{ rows: 2 }} />
+          </AppCard>
+        </div>
+      </section>
+    </div>
+  );
+}
+
 export function RecommendationsView() {
   const t = useTranslations("practice.recommendations");
   const router = useRouter();
@@ -151,6 +317,18 @@ export function RecommendationsView() {
   const primary = items[0] ?? null;
   const rest = items.slice(1);
   const fallbackQuestionNo = active ?? primary?.questionNo ?? 51;
+  const recommendedQuestionNo = primary?.questionNo ?? fallbackQuestionNo;
+  const reasonSummary = bundle.data?.run?.reasonSummary ?? primary?.reason;
+
+  // The stagger replays whenever this key changes the panel's React `key`,
+  // remounting it. Derive it from the content actually shown — the selected
+  // type and its load state — NOT from the tab click. A click-driven counter
+  // bumped the key before the URL→active→bundle update landed, so the panel
+  // remounted against the previous tab's still-current data: the old tags
+  // staggered in, then the new tab's tags staggered in a second time.
+  const reasonAnimationKey = `${active ?? "auto"}-${
+    bundle.isLoading ? "loading" : "ready"
+  }`;
 
   return (
     <div className="flex w-full flex-col gap-6">
@@ -160,24 +338,23 @@ export function RecommendationsView() {
         subtitle={t("subtitle")}
       />
 
-      <div className="overflow-hidden rounded-3xl border border-border bg-background px-3 pt-2">
+      <div className="grid gap-4">
         <ProblemTypeTabs active={active} onChange={updateType} />
+        <RecommendationReasonPanel
+          key={`reason-${reasonAnimationKey}`}
+          questionNo={recommendedQuestionNo}
+          reasonSummary={reasonSummary}
+          weaknessTags={primary?.weaknessTags ?? []}
+          isLoading={bundle.isLoading}
+          animationKey={reasonAnimationKey}
+        />
       </div>
 
-      {bundle.data?.run?.reasonSummary && primary ? (
-        <Alert
-          className="rounded-default"
-          type="info"
-          showIcon
-          title={t("reasonSummaryTitle")}
-          description={bundle.data.run.reasonSummary}
-        />
-      ) : null}
-
       {bundle.isLoading ? (
-        <Spin description={t("loadingTip")}>
-          <div className="min-h-32" />
-        </Spin>
+        <>
+          <RecommendationResultsSkeleton />
+          <TypeSelectCards />
+        </>
       ) : bundle.error ? (
         <>
           <Alert
@@ -185,9 +362,7 @@ export function RecommendationsView() {
             type="error"
             showIcon
             title={t("loadErrorTitle")}
-            description={
-              bundle.error instanceof Error ? bundle.error.message : ""
-            }
+            description={t("loadErrorDescription")}
             action={
               <Button size="small" onClick={() => bundle.refetch()}>
                 {t("retry")}
@@ -205,7 +380,7 @@ export function RecommendationsView() {
               <Title className="m-0" level={4}>
                 {t("otherRecommendations")}
               </Title>
-              <div className="grid gap-3 md:grid-cols-2">
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                 {rest.map((card) => (
                   <div key={card.itemId} className="min-w-0">
                     <SecondaryRecommendationCard card={card} />

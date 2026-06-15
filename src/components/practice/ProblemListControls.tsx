@@ -137,10 +137,7 @@ export function ProblemListControls({
           ]}
         />
       </div>
-      <div className="grid gap-2 md:col-span-2 xl:col-span-1">
-        <Text className="!text-xs !font-semibold !text-text">
-          {t("recommendationLabel")}
-        </Text>
+      <div className="grid content-end md:col-span-2 xl:col-span-1">
         <div className="flex min-h-10 items-center gap-2">
           <Switch
             checked={filter.recommended === true}

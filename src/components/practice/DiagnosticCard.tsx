@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Empty, Tag, Typography } from "antd";
+import { ListChecks } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { AppCard } from "@/components/shared/AppCard";
@@ -48,23 +49,26 @@ export function DiagnosticCard({ weakDimensions, updatedAt, failed }: Props) {
 
   if (weakDimensions.length === 0) {
     return (
-      <AppCard data-testid="diagnostic-empty">
+      <AppCard
+        data-testid="diagnostic-empty"
+        actions={[
+          <Button
+            key="problem-list"
+            type="primary"
+            icon={<ListChecks size={16} />}
+            onClick={() => router.push("/practice/problems" as never)}
+            data-testid="diagnostic-reanalyze"
+          >
+            {t("recommendationsEmptyCta")}
+          </Button>,
+        ]}
+      >
         <Empty
           description={failed ? t("diagnosticFailed") : t("diagnosticNoData")}
-        >
-          <div className="flex flex-col gap-2">
-            <Button
-              type="primary"
-              onClick={() => router.push("/practice/problems" as never)}
-              data-testid="diagnostic-reanalyze"
-            >
-              {t("reanalyze")}
-            </Button>
-            <Text type="secondary" className="!text-xs">
-              {t("reanalyzeNote")}
-            </Text>
-          </div>
-        </Empty>
+        />
+        <Text type="secondary" className="block text-center !text-xs">
+          {t("reanalyzeNote")}
+        </Text>
       </AppCard>
     );
   }
@@ -72,7 +76,9 @@ export function DiagnosticCard({ weakDimensions, updatedAt, failed }: Props) {
   const primary = weakDimensions[0];
   const label = DIMENSION_LABEL_KEYS[primary.dimension]
     ? tCommon(
-        DIMENSION_LABEL_KEYS[primary.dimension] as Parameters<typeof tCommon>[0],
+        DIMENSION_LABEL_KEYS[primary.dimension] as Parameters<
+          typeof tCommon
+        >[0],
       )
     : primary.dimension;
 
@@ -80,9 +86,7 @@ export function DiagnosticCard({ weakDimensions, updatedAt, failed }: Props) {
     <AppCard>
       <Title level={5}>{t("diagnosticTopTitle")}</Title>
       <Paragraph>
-        <Tag className="!text-sm">
-          {label}
-        </Tag>
+        <Tag className="!text-sm">{label}</Tag>
         <Text>
           {" "}
           {t("diagnosticAverage", {

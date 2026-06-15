@@ -1,14 +1,7 @@
 "use client";
 
-import {
-  Alert,
-  Button,
-  Col,
-  Empty,
-  Row,
-  Tag,
-  Typography,
-} from "antd";
+import { Alert, Button, Col, Empty, Row, Tag, Typography } from "antd";
+import { ArrowRight, ListChecks } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
@@ -16,12 +9,16 @@ import { logStudyEvent } from "@/lib/events/study-events";
 import { consumeRecommendationItem } from "@/lib/practice/consume";
 import { writingProblemHref } from "@/lib/writing/routes";
 import { AppCard } from "@/components/shared/AppCard";
+import { SelectableAppCard } from "@/components/shared/SelectableAppCard";
 import { DimensionTabs, type DimensionTabSummaryProp } from "./DimensionTabs";
 import { DiagnosticCard } from "./DiagnosticCard";
 
-const { Title, Paragraph, Text } = Typography;
+const { Title, Text } = Typography;
 const RECOMMENDATION_TITLE_MAX_LENGTH = 28;
 const RECOMMENDATION_CARD_LIMIT = 4;
+const CARD_ACTION_CLASS_NAMES = {
+  actions: "app-card-footer-actions",
+};
 
 type WeakDimensionProp = {
   dimension: string;
@@ -37,8 +34,7 @@ type RecommendationProp = {
   source?: "recommendation" | "tag_fallback";
   /** recommendation_items.id — for consume-on-start (RLS owner-update). */
   item_id?: string | null;
-  /** X-07 §5 예외 — 유료 잠금 카드(비활성 + 업그레이드 안내). */
-  locked?: boolean;
+  estimated_minutes?: number | null;
 };
 
 type Props = {
@@ -88,13 +84,22 @@ export function WeaknessView({
   const t = useTranslations("practice.weakness");
   const tCommon = useTranslations("practice.common");
   const router = useRouter();
+  const visibleRecommendations = recommendations.slice(
+    0,
+    RECOMMENDATION_CARD_LIMIT,
+  );
   // dup-click guard: once a start has been kicked off, ignore further clicks.
   const startedRef = useRef(false);
+  const [selectedId, setSelectedId] = useState(
+    visibleRecommendations[0]?.problem_id ?? null,
+  );
   const [startingId, setStartingId] = useState<string | null>(null);
 
   function dimensionLabel(dimension: string) {
     return DIMENSION_LABEL_KEYS[dimension]
-      ? tCommon(DIMENSION_LABEL_KEYS[dimension] as Parameters<typeof tCommon>[0])
+      ? tCommon(
+          DIMENSION_LABEL_KEYS[dimension] as Parameters<typeof tCommon>[0],
+        )
       : dimension;
   }
 
@@ -137,29 +142,17 @@ export function WeaknessView({
   const leadingInsight = leadingWeakDimension
     ? insightFor(leadingWeakDimension.dimension)
     : null;
-  const visibleRecommendations = recommendations.slice(
-    0,
-    RECOMMENDATION_CARD_LIMIT,
-  );
-
-  if (weakDimensions.length === 0) {
-    return (
-      <Empty description={t("emptyAnalysis")}>
-        <Button
-          type="primary"
-          onClick={() => router.push("/practice/problems" as never)}
-        >
-          {t("solveProblems")}
-        </Button>
-      </Empty>
-    );
-  }
+  const selectedRecommendation =
+    visibleRecommendations.find((rec) => rec.problem_id === selectedId) ??
+    visibleRecommendations[0] ??
+    null;
+  const selectedRank = selectedRecommendation
+    ? visibleRecommendations.findIndex(
+        (rec) => rec.problem_id === selectedRecommendation.problem_id,
+      ) + 1
+    : 0;
 
   function handleRecommendationClick(rec: RecommendationProp) {
-    if (rec.locked) {
-      router.push("/paywall" as never);
-      return;
-    }
     if (startedRef.current) return; // 중복 실행 차단
     startedRef.current = true;
     setStartingId(rec.problem_id);
@@ -178,18 +171,25 @@ export function WeaknessView({
     );
   }
 
+  function handlePrimaryCta() {
+    if (!selectedRecommendation) {
+      router.push("/practice/problems" as never);
+      return;
+    }
+    handleRecommendationClick(selectedRecommendation);
+  }
+
   return (
     <div className="flex w-full flex-col gap-6">
-      <div>
-        <Title level={3} className="!mb-1">
-          {t("heading")}
-        </Title>
-        <Paragraph type="secondary" className="!m-0">
-          {t("subtitle")}
-        </Paragraph>
-      </div>
+      {weakDimensions.length === 0 ? (
+        <Alert
+          showIcon
+          type="info"
+          title={t("emptyAnalysis")}
+          description={t("emptyAnalysisHint")}
+        />
+      ) : null}
 
-      {/* Phase 7-D Task 7 - DiagnosticCard + DimensionTabs */}
       <DiagnosticCard
         weakDimensions={weakDimensions}
         updatedAt={updatedAt ?? null}
@@ -236,88 +236,121 @@ export function WeaknessView({
               {t("recommendationsTitle")}
             </Title>
             {recommendations.length === 0 ? (
-              <Empty description={t("recommendationsEmpty")} />
+              <AppCard>
+                <Empty description={t("recommendationsEmpty")}>
+                  <Button
+                    type="primary"
+                    icon={<ListChecks size={16} />}
+                    onClick={() => router.push("/practice/problems" as never)}
+                  >
+                    {t("recommendationsEmptyCta")}
+                  </Button>
+                </Empty>
+              </AppCard>
             ) : (
               <Row gutter={[16, 16]}>
-                {visibleRecommendations.map((rec) => (
-                  <Col key={rec.problem_id} xs={24}>
-                    <AppCard
-                      hoverable={!rec.locked}
-                      onClick={
-                        rec.locked
-                          ? undefined
-                          : () => handleRecommendationClick(rec)
-                      }
-                      data-testid={`weakness-rec-${rec.problem_id}`}
-                      className={rec.locked ? "bg-surface opacity-70" : undefined}
-                    >
-                      <div className="flex w-full flex-col gap-2">
-                        <Text type="secondary">
-                          {rec.locked ? "🔒 " : ""}
-                          {tCommon("questionItem", { no: rec.question_no })}
-                        </Text>
-                        <Text strong title={rec.title}>
-                          {truncateRecommendationTitle(rec.title)}
-                        </Text>
-                        {rec.locked ? (
-                          <div className="flex flex-col gap-1">
-                            <Text type="secondary">{t("lockedNotice")}</Text>
-                            <Button
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                router.push("/paywall" as never);
-                              }}
-                              data-testid={`weakness-rec-upgrade-${rec.problem_id}`}
-                            >
-                              {t("upgradeInfo")}
-                            </Button>
-                          </div>
-                        ) : (
-                          <>
-                            <div className="flex flex-col gap-1">
+                {visibleRecommendations.map((rec) => {
+                  const isSelected =
+                    selectedRecommendation?.problem_id === rec.problem_id;
+                  return (
+                    <Col key={rec.problem_id} xs={24} md={12} xl={6}>
+                      <SelectableAppCard
+                        hoverable
+                        selected={isSelected}
+                        onSelect={() => setSelectedId(rec.problem_id)}
+                        title={truncateRecommendationTitle(rec.title)}
+                        extra={
+                          <Tag>
+                            {tCommon("questionItem", { no: rec.question_no })}
+                          </Tag>
+                        }
+                        actions={[
+                          <Button
+                            key="select"
+                            disabled={isSelected}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              setSelectedId(rec.problem_id);
+                            }}
+                          >
+                            {isSelected
+                              ? t("selectedRecommendation")
+                              : t("selectRecommendation")}
+                          </Button>,
+                        ]}
+                        data-testid={`weakness-rec-${rec.problem_id}`}
+                      >
+                        <div className="flex w-full flex-col gap-3">
+                          <div className="flex flex-wrap gap-2">
+                            <Tag>{recommendationSourceLabel(rec.source)}</Tag>
+                            {rec.estimated_minutes != null ? (
                               <Tag>
-                                {recommendationSourceLabel(rec.source)}
+                                {t("estimatedMinutes", {
+                                  minutes: rec.estimated_minutes,
+                                })}
                               </Tag>
-                              <Text
-                                type="secondary"
-                                title={recommendationReason(
-                                  rec,
-                                  leadingWeakLabel,
-                                )}
-                                className="block max-w-full overflow-hidden text-ellipsis whitespace-nowrap"
-                              >
-                                {recommendationReason(rec, leadingWeakLabel)}
-                              </Text>
-                            </div>
-                            <Button
-                              type="primary"
-                              disabled={
-                                startingId != null &&
-                                startingId !== rec.problem_id
-                              }
-                              loading={startingId === rec.problem_id}
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                handleRecommendationClick(rec);
-                              }}
-                            >
-                              {t("startRecommendation")}
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </AppCard>
-                  </Col>
-                ))}
+                            ) : null}
+                          </div>
+                          <Text
+                            type="secondary"
+                            title={recommendationReason(rec, leadingWeakLabel)}
+                            className="block max-w-full overflow-hidden text-ellipsis whitespace-nowrap"
+                          >
+                            {recommendationReason(rec, leadingWeakLabel)}
+                          </Text>
+                        </div>
+                      </SelectableAppCard>
+                    </Col>
+                  );
+                })}
               </Row>
             )}
-            <AppCard>
+            <AppCard
+              title={t("nextStepTitle")}
+              classNames={CARD_ACTION_CLASS_NAMES}
+              actions={[
+                <Button
+                  key="start"
+                  type="primary"
+                  icon={
+                    selectedRecommendation ? (
+                      <ArrowRight size={16} />
+                    ) : (
+                      <ListChecks size={16} />
+                    )
+                  }
+                  loading={
+                    selectedRecommendation
+                      ? startingId === selectedRecommendation.problem_id
+                      : false
+                  }
+                  disabled={
+                    selectedRecommendation
+                      ? startingId != null &&
+                        startingId !== selectedRecommendation.problem_id
+                      : false
+                  }
+                  onClick={handlePrimaryCta}
+                  data-testid="weakness-primary-start"
+                >
+                  {selectedRecommendation
+                    ? t("startSelectedRecommendation", {
+                        rank: selectedRank,
+                      })
+                    : t("recommendationsEmptyCta")}
+                </Button>,
+              ]}
+            >
               <div className="flex flex-col gap-2">
-                <Text strong>{t("deeperTitle")}</Text>
-                <Text type="secondary">{t("deeperBody")}</Text>
-                <Button onClick={() => router.push("/paywall" as never)}>
-                  {t("deeperCta")}
-                </Button>
+                <Text type="secondary">
+                  {selectedRecommendation
+                    ? t("nextStepBody", {
+                        title: truncateRecommendationTitle(
+                          selectedRecommendation.title,
+                        ),
+                      })
+                    : t("nextStepFallbackBody")}
+                </Text>
               </div>
             </AppCard>
           </div>

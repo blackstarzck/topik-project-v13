@@ -60,7 +60,7 @@ export function ProblemTypeFilterCards({ active, onChange }: Props) {
             key={option.key}
             type="button"
             className={[
-              "flex min-w-44 flex-none items-center gap-3 rounded-3xl border bg-background p-4 text-left transition",
+              "flex min-w-44 flex-none items-center gap-3 rounded-default border bg-background p-4 text-left transition",
               selected
                 ? "border-text shadow-sm"
                 : "border-border hover:border-text",

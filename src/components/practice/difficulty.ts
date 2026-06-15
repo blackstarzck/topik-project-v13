@@ -1,0 +1,18 @@
+/**
+ * 숫자 난이도(1~5) → `practice.common` 난이도 라벨 키 매핑.
+ *
+ * 추천 화면의 유형 카드(`TypeSelectCards`)와 동일한 난이도 어휘(보통 / 조금
+ * 어려움 / 어려움 …)를 문제 목록(`ProblemRow`), 다음 문제(`NextProblemView`),
+ * 대체 문제 카드(`AlternativeCardsGrid`)가 모두 공유하도록 한 곳에서 정의한다.
+ * 난이도가 없으면(null/undefined) `null`을 돌려주고, 호출부는 표시를 생략한다.
+ */
+export function difficultyKey(
+  difficulty: number | null | undefined,
+): string | null {
+  if (difficulty == null) return null;
+  if (difficulty <= 1) return "difficultyVeryEasy";
+  if (difficulty === 2) return "difficultyEasy";
+  if (difficulty === 3) return "difficultyNormal";
+  if (difficulty === 4) return "difficultyHardish";
+  return "difficultyHard";
+}

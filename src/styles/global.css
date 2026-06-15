@@ -97,7 +97,6 @@ body {
  * is effectively still. transform/opacity micro-motion elsewhere stays subtle.
  */
 @media (prefers-reduced-motion: reduce) {
-
   *,
   *::before,
   *::after {
@@ -108,11 +107,13 @@ body {
   }
 
   .landing-layout-testimonials .swiper-wrapper,
+  .landing-hero-copy > *,
   [data-landing-heading],
   [data-landing-stagger],
   [data-landing-line],
   [data-landing-parallax] {
     --landing-line-scale: 1 !important;
+    animation: none !important;
     opacity: 1 !important;
     transform: none !important;
     transition-duration: 0.01ms !important;
@@ -219,12 +220,16 @@ body {
   overflow: hidden;
   padding: 48px;
   background:
-    radial-gradient(circle at 48% 55%,
+    radial-gradient(
+      circle at 48% 55%,
       rgba(255, 255, 255, 0.08),
-      transparent 36%),
-    radial-gradient(circle at 28% 78%,
+      transparent 36%
+    ),
+    radial-gradient(
+      circle at 28% 78%,
       rgba(255, 255, 255, 0.05),
-      transparent 30%),
+      transparent 30%
+    ),
     linear-gradient(145deg, #202020 0%, #191919 62%, #242424 100%);
   color: #ffffff;
 }
@@ -331,13 +336,17 @@ body {
   background: #e8d754;
 }
 
-.signup-prompt-character-wrap .signup-character--purple .signup-character__eyes {
+.signup-prompt-character-wrap
+  .signup-character--purple
+  .signup-character__eyes {
   top: 10%;
   left: 25%;
   gap: 32px;
 }
 
-.signup-prompt-character-wrap .signup-character--charcoal .signup-character__eyes {
+.signup-prompt-character-wrap
+  .signup-character--charcoal
+  .signup-character__eyes {
   top: 10.32%;
   left: 21.66%;
   gap: 24px;
@@ -349,7 +358,9 @@ body {
   gap: 32px;
 }
 
-.signup-prompt-character-wrap .signup-character--yellow .signup-character__eyes {
+.signup-prompt-character-wrap
+  .signup-character--yellow
+  .signup-character__eyes {
   top: 17.39%;
   left: 37.14%;
   gap: 24px;
@@ -426,7 +437,7 @@ body {
   pointer-events: none;
 }
 
-.signup-prompt-topbar>* {
+.signup-prompt-topbar > * {
   pointer-events: auto;
 }
 
@@ -522,7 +533,7 @@ body {
   max-width: none;
 }
 
-.signup-prompt-form-panel .signup-form-surface>* {
+.signup-prompt-form-panel .signup-form-surface > * {
   width: 100%;
 }
 
@@ -576,13 +587,16 @@ body {
   padding-bottom: var(--auth-label-gap);
 }
 
-.signup-prompt-form-panel .signup-form-surface .ant-form-item-label>label {
+.signup-prompt-form-panel .signup-form-surface .ant-form-item-label > label {
   color: #030712;
   font-size: 14px;
   font-weight: 500;
 }
 
-.signup-prompt-form-panel .signup-form-surface .ant-form-item-control-input-content>.ant-input,
+.signup-prompt-form-panel
+  .signup-form-surface
+  .ant-form-item-control-input-content
+  > .ant-input,
 .signup-prompt-form-panel .signup-form-surface .ant-input-affix-wrapper,
 .signup-prompt-form-panel .signup-social-button.ant-btn {
   height: var(--auth-control-height);
@@ -599,7 +613,9 @@ body {
 }
 
 .signup-prompt-form-panel .signup-form-surface .ant-input:focus,
-.signup-prompt-form-panel .signup-form-surface .ant-input-affix-wrapper-focused {
+.signup-prompt-form-panel
+  .signup-form-surface
+  .ant-input-affix-wrapper-focused {
   border-color: #181818;
   box-shadow: 0 0 0 2px rgba(24, 24, 24, 0.08);
 }
@@ -610,26 +626,37 @@ body {
   font-weight: 600;
 }
 
-.signup-prompt-form-panel .signup-form-surface .ant-btn-primary:not(:disabled):not(.ant-btn-disabled) {
+.signup-prompt-form-panel
+  .signup-form-surface
+  .ant-btn-primary:not(:disabled):not(.ant-btn-disabled) {
   border-color: #191919;
   background: #191919;
 }
 
-.signup-prompt-form-panel .signup-form-surface .ant-btn-primary:not(:disabled):not(.ant-btn-disabled):hover,
-.signup-prompt-form-panel .signup-form-surface .ant-btn-primary:not(:disabled):not(.ant-btn-disabled):focus-visible {
+.signup-prompt-form-panel
+  .signup-form-surface
+  .ant-btn-primary:not(:disabled):not(.ant-btn-disabled):hover,
+.signup-prompt-form-panel
+  .signup-form-surface
+  .ant-btn-primary:not(:disabled):not(.ant-btn-disabled):focus-visible {
   border-color: #000000;
   background: #000000;
 }
 
 .signup-prompt-form-panel .signup-form-surface .ant-btn-primary:disabled,
-.signup-prompt-form-panel .signup-form-surface .ant-btn-primary.ant-btn-disabled {
+.signup-prompt-form-panel
+  .signup-form-surface
+  .ant-btn-primary.ant-btn-disabled {
   border-color: rgba(0, 0, 0, 0.15);
   background: rgba(0, 0, 0, 0.04);
   color: rgba(0, 0, 0, 0.45);
   box-shadow: none;
 }
 
-.signup-prompt-form-panel .signup-form-surface .ant-input-affix-wrapper>.ant-input {
+.signup-prompt-form-panel
+  .signup-form-surface
+  .ant-input-affix-wrapper
+  > .ant-input {
   height: auto;
   min-height: 0;
   padding-block: 0;
@@ -670,12 +697,22 @@ body {
   font-weight: 500;
 }
 
-.signup-prompt-layout--login .signup-prompt-form-panel .signup-form-surface .ant-form-item-label>label {
+.signup-prompt-layout--login
+  .signup-prompt-form-panel
+  .signup-form-surface
+  .ant-form-item-label
+  > label {
   color: #4f5f7a;
 }
 
-.signup-prompt-layout--login .signup-prompt-form-panel .signup-form-surface .ant-input:focus,
-.signup-prompt-layout--login .signup-prompt-form-panel .signup-form-surface .ant-input-affix-wrapper-focused {
+.signup-prompt-layout--login
+  .signup-prompt-form-panel
+  .signup-form-surface
+  .ant-input:focus,
+.signup-prompt-layout--login
+  .signup-prompt-form-panel
+  .signup-form-surface
+  .ant-input-affix-wrapper-focused {
   border-color: #aab5ff;
   box-shadow: 0 0 0 2px rgba(82, 102, 255, 0.1);
 }
@@ -841,9 +878,11 @@ body {
   overflow: hidden;
   border-color: rgba(47, 84, 235, 0.16);
   background:
-    linear-gradient(180deg,
+    linear-gradient(
+      180deg,
       rgba(255, 247, 235, 0.98),
-      rgba(239, 248, 255, 0.96)),
+      rgba(239, 248, 255, 0.96)
+    ),
     #f7fbff;
 }
 
@@ -1134,7 +1173,7 @@ body {
   text-align: center;
 }
 
-.signup-form-heading>svg {
+.signup-form-heading > svg {
   color: #2f54eb;
   margin-bottom: 10px;
 }
@@ -1174,7 +1213,7 @@ body {
   margin-inline: auto;
 }
 
-.signup-form-surface .ant-form-item-label>label {
+.signup-form-surface .ant-form-item-label > label {
   font-weight: 700;
 }
 
@@ -1207,6 +1246,7 @@ body {
 }
 
 .landing-hero-stage {
+  background-color: #ccc2b7;
   position: relative;
   min-height: 100svh;
   overflow: hidden;
@@ -1217,6 +1257,7 @@ body {
   inset: 0;
   width: 100%;
   height: 100%;
+  background-color: #ccc2b7;
   object-fit: cover;
 }
 
@@ -1388,6 +1429,40 @@ body {
 
 .landing-hero-copy {
   max-width: 620px;
+}
+
+.landing-hero-copy > * {
+  opacity: 0;
+  transform: translate3d(0, 44px, 0);
+  animation: landing-hero-copy-enter 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.landing-hero-copy > :nth-child(1) {
+  animation-delay: 0.12s;
+}
+
+.landing-hero-copy > :nth-child(2) {
+  animation-delay: 0.24s;
+}
+
+.landing-hero-copy > :nth-child(3) {
+  animation-delay: 0.36s;
+}
+
+.landing-hero-copy > :nth-child(4) {
+  animation-delay: 0.48s;
+}
+
+@keyframes landing-hero-copy-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 44px, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
 }
 
 .landing-hero-kicker {
@@ -1674,19 +1749,27 @@ body {
   align-items: end;
 }
 
-.landing-image-placeholder--chart .landing-image-placeholder__mock i:nth-of-type(1) {
+.landing-image-placeholder--chart
+  .landing-image-placeholder__mock
+  i:nth-of-type(1) {
   min-height: 22px;
 }
 
-.landing-image-placeholder--chart .landing-image-placeholder__mock i:nth-of-type(2) {
+.landing-image-placeholder--chart
+  .landing-image-placeholder__mock
+  i:nth-of-type(2) {
   min-height: 36px;
 }
 
-.landing-image-placeholder--chart .landing-image-placeholder__mock i:nth-of-type(3) {
+.landing-image-placeholder--chart
+  .landing-image-placeholder__mock
+  i:nth-of-type(3) {
   min-height: 48px;
 }
 
-.landing-image-placeholder--chart .landing-image-placeholder__mock i:nth-of-type(4) {
+.landing-image-placeholder--chart
+  .landing-image-placeholder__mock
+  i:nth-of-type(4) {
   min-height: 30px;
 }
 
@@ -1709,7 +1792,9 @@ body {
   min-height: 34px;
 }
 
-.landing-image-placeholder--platform .landing-image-placeholder__mock i:nth-of-type(2) {
+.landing-image-placeholder--platform
+  .landing-image-placeholder__mock
+  i:nth-of-type(2) {
   grid-row: span 3;
 }
 
@@ -1724,7 +1809,9 @@ body {
   border-radius: 50%;
 }
 
-.landing-image-placeholder--analysis .landing-image-placeholder__mock i:nth-of-type(1) {
+.landing-image-placeholder--analysis
+  .landing-image-placeholder__mock
+  i:nth-of-type(1) {
   grid-column: 3;
   min-height: 58px;
 }
@@ -1913,7 +2000,7 @@ body {
   line-height: 1.55;
 }
 
-.landing-platform-inner>.landing-image-placeholder {
+.landing-platform-inner > .landing-image-placeholder {
   width: min(100%, 820px);
   min-height: 374px;
   margin-top: 0;
@@ -2081,7 +2168,7 @@ body {
   align-items: flex-start;
 }
 
-.landing-step-list li>span {
+.landing-step-list li > span {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2214,7 +2301,6 @@ body {
 }
 
 @media (max-width: 560px) {
-
   .landing-hero-stage,
   .landing-hero-shell {
     min-height: auto;
@@ -2402,7 +2488,7 @@ body {
   }
 
   .landing-image-placeholder,
-  .landing-platform-inner>.landing-image-placeholder,
+  .landing-platform-inner > .landing-image-placeholder,
   .landing-section--split .landing-image-placeholder,
   .landing-steps-layout .landing-image-placeholder {
     min-height: 198px;
@@ -2487,7 +2573,7 @@ body {
     min-width: 132px;
   }
 
-  .landing-platform-inner>.landing-image-placeholder {
+  .landing-platform-inner > .landing-image-placeholder {
     min-height: 178px;
   }
 
@@ -2501,7 +2587,7 @@ body {
     gap: 14px;
   }
 
-  .landing-step-list li>span {
+  .landing-step-list li > span {
     width: 36px;
     height: 36px;
   }
@@ -2636,13 +2722,13 @@ body {
   word-break: keep-all;
 }
 
-.landing-layout-heading .landing-layout-eyebrow+h2,
+.landing-layout-heading .landing-layout-eyebrow + h2,
 .landing-layout-stats-row h2,
 .landing-layout-process-head h2 {
   margin-top: 18px;
 }
 
-.landing-layout-heading--center .landing-layout-eyebrow+h2 {
+.landing-layout-heading--center .landing-layout-eyebrow + h2 {
   margin-top: 0;
 }
 
@@ -2694,8 +2780,11 @@ body {
 .landing-layout-visual::before {
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(0, 0, 0, 0.04));
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.02),
+    rgba(0, 0, 0, 0.04)
+  );
   content: "";
 }
 
@@ -2704,7 +2793,7 @@ body {
   background: #0c0c0d;
 }
 
-.landing-layout-visual>em {
+.landing-layout-visual > em {
   position: relative;
   z-index: 1;
   display: inline-flex;
@@ -2716,7 +2805,7 @@ body {
   font-style: normal;
 }
 
-.landing-layout-visual>span {
+.landing-layout-visual > span {
   position: relative;
   z-index: 1;
   border-radius: 999px;
@@ -2730,8 +2819,8 @@ body {
   text-transform: lowercase;
 }
 
-.landing-layout-visual--dark>span,
-.landing-layout-post--dark .landing-layout-visual>span {
+.landing-layout-visual--dark > span,
+.landing-layout-post--dark .landing-layout-visual > span {
   display: none;
 }
 
@@ -2930,7 +3019,7 @@ body {
   padding: 22px;
 }
 
-.landing-layout-service__frame>span {
+.landing-layout-service__frame > span {
   color: #1c1c1f;
   font-family: "Montserrat", var(--app-font-family), sans-serif;
   font-variant-numeric: tabular-nums;
@@ -2948,8 +3037,7 @@ body {
   aspect-ratio: 1 / 1;
   border-radius: 3px;
   background:
-    repeating-linear-gradient(135deg, #e2e2e0 0 8px, #ededec 8px 16px),
-    #e6e6e4;
+    repeating-linear-gradient(135deg, #e2e2e0 0 8px, #ededec 8px 16px), #e6e6e4;
 }
 
 .landing-layout-service h3,
@@ -3087,7 +3175,7 @@ body {
   align-items: start;
 }
 
-.landing-layout-stats-row>div:first-child {
+.landing-layout-stats-row > div:first-child {
   max-width: 560px;
 }
 
@@ -3142,7 +3230,7 @@ body {
   grid-row: span 2;
 }
 
-.landing-layout-feature>div {
+.landing-layout-feature > div {
   flex: 1;
 }
 
@@ -3156,7 +3244,7 @@ body {
   aspect-ratio: 16 / 10;
 }
 
-.landing-layout-post>span {
+.landing-layout-post > span {
   display: block;
   margin: 18px 0 8px;
   color: #8b8b8e;
@@ -3246,7 +3334,7 @@ body {
   gap: 20px;
 }
 
-.landing-layout-step-content>span {
+.landing-layout-step-content > span {
   color: #0c0c0d;
   font-family: "Montserrat", var(--app-font-family), sans-serif;
   font-variant-numeric: tabular-nums;
@@ -3271,7 +3359,7 @@ body {
   text-align: left;
 }
 
-.landing-layout-path>span {
+.landing-layout-path > span {
   color: #0c0c0d;
   font-size: 46px;
   font-weight: 850;
@@ -3292,7 +3380,7 @@ body {
   background: #dededc;
 }
 
-.landing-layout-path>strong {
+.landing-layout-path > strong {
   color: #0c0c0d;
   font-size: 46px;
   font-weight: 700;
@@ -3654,6 +3742,403 @@ body {
 
 .app-card.app-surface .app-card-footer-actions a {
   text-decoration: none;
+}
+
+.selectable-app-card {
+  height: 100%;
+  transition:
+    border-color 160ms ease-out,
+    box-shadow 160ms ease-out,
+    transform 160ms ease-out;
+}
+
+.selectable-app-card[role="button"] {
+  cursor: pointer;
+}
+
+.selectable-app-card[role="button"]:hover {
+  transform: translateY(-1px);
+}
+
+.selectable-app-card[role="button"]:focus-visible {
+  outline: 2px solid var(--app-color-primary);
+  outline-offset: 2px;
+}
+
+.selectable-app-card--selected {
+  border-color: var(--app-color-primary);
+  box-shadow:
+    var(--app-shadow-elevated),
+    0 0 0 1.5px var(--app-color-primary) inset;
+}
+
+.selectable-app-card--disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.selectable-app-card__content {
+  display: flex;
+  min-width: 0;
+  width: 100%;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.selectable-app-card__cue {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 999px;
+  background: var(--app-color-primary);
+  color: var(--app-color-background);
+  padding: 0.125rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.problem-list-card.app-card.app-surface .problem-list-card__body {
+  padding: 0 16px;
+}
+
+/*
+ * C-01 recommendation type selector. Segmented gives us the single-choice
+ * control semantics; this scoped hook only changes the control from a joined
+ * segmented bar into the product-requested separated button tiles.
+ */
+.problem-type-tabs.ant-segmented {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0;
+  background: transparent;
+}
+
+.problem-type-tabs .ant-segmented-group {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  overflow-x: auto;
+  padding: 1px;
+}
+
+.problem-type-tabs--with-all .ant-segmented-group {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.problem-type-tabs .ant-segmented-thumb {
+  display: none;
+}
+
+.problem-type-tabs .ant-segmented-item {
+  min-width: 180px;
+  border: 1px solid var(--app-color-border);
+  border-radius: var(--app-radius);
+  background: var(--app-color-bg-container);
+  box-shadow: var(--app-shadow-elevated);
+  transition:
+    border-color 160ms ease-out,
+    box-shadow 160ms ease-out,
+    background-color 160ms ease-out;
+}
+
+.problem-type-tabs--with-all .ant-segmented-item {
+  min-width: 160px;
+}
+
+.problem-type-tabs .ant-segmented-item::after {
+  display: none;
+}
+
+.problem-type-tabs .ant-segmented-item:hover,
+.problem-type-tabs .ant-segmented-item:focus-within {
+  border-color: var(--app-color-text-secondary);
+}
+
+.problem-type-tabs .ant-segmented-item.is-selected {
+  border-color: var(--app-color-text);
+  box-shadow: 0 0 0 1px var(--app-color-text);
+}
+
+.problem-type-tabs .ant-segmented-item.is-locked {
+  opacity: 0.56;
+}
+
+.problem-type-tabs .ant-segmented-item-label {
+  min-height: 44px;
+  padding: 0;
+}
+
+.problem-type-tabs__option {
+  display: flex;
+  min-width: 0;
+  min-height: 44px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 14px;
+  color: var(--app-color-text);
+}
+
+.problem-type-tabs__left {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+}
+
+.problem-type-tabs__icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--app-radius);
+  background: var(--app-color-bg-layout);
+  color: var(--app-color-text);
+}
+
+.problem-type-tabs__text {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.problem-type-tabs__badge {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  min-height: 24px;
+  border-radius: 999px;
+  background: var(--app-color-bg-layout);
+  padding: 0 10px;
+  color: var(--app-color-text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.recommendation-reason-card {
+  display: flex;
+  gap: 16px;
+  border: 1px solid var(--app-color-border);
+  border-radius: var(--app-radius);
+  background: var(--app-color-bg-container);
+  padding: 18px 20px;
+}
+
+.recommendation-reason-card__icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  color: var(--app-color-text);
+}
+
+.recommendation-reason-card__body {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+}
+
+.recommendation-reason-card__title.ant-typography {
+  display: block;
+  color: var(--app-color-text);
+  font-size: 18px;
+  line-height: 1.45;
+  font-weight: 600;
+}
+
+.recommendation-reason-card__copy.ant-typography {
+  display: block;
+  font-size: 14px;
+  line-height: 1.56;
+}
+
+.recommendation-reason-card__footer {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.recommendation-reason-card__tags {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.recommendation-reason-card__tag.ant-tag {
+  margin-inline-end: 0;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.56;
+}
+
+/* 문제 목록 행 태그 — 추천 사유 태그와 동일한 외형을 공유한다. */
+.problem-row__tag.ant-tag {
+  margin-inline-end: 0;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.56;
+}
+
+/* Stagger applies to the loaded content only. The skeleton placeholder is kept
+   static (the `--stagger` class is dropped while loading), so its elements are
+   intentionally absent from these selectors. */
+.recommendation-reason-card--stagger
+  :where(
+    .recommendation-reason-card__icon,
+    .recommendation-reason-card__title,
+    .recommendation-reason-card__copy,
+    .recommendation-reason-card__tag
+  ) {
+  animation: recommendation-reason-stagger-in 360ms
+    cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: opacity, transform;
+}
+
+.recommendation-reason-card--stagger .recommendation-reason-card__icon {
+  animation-delay: 0ms;
+}
+
+.recommendation-reason-card--stagger .recommendation-reason-card__title {
+  animation-delay: 45ms;
+}
+
+.recommendation-reason-card--stagger .recommendation-reason-card__copy {
+  animation-delay: 90ms;
+}
+
+.recommendation-reason-card--stagger
+  .recommendation-reason-card__tag:nth-child(1) {
+  animation-delay: 135ms;
+}
+
+.recommendation-reason-card--stagger
+  .recommendation-reason-card__tag:nth-child(2) {
+  animation-delay: 180ms;
+}
+
+.recommendation-reason-card--stagger
+  .recommendation-reason-card__tag:nth-child(3) {
+  animation-delay: 225ms;
+}
+
+.recommendation-reason-card--stagger
+  .recommendation-reason-card__tag:nth-child(n + 4) {
+  animation-delay: 270ms;
+}
+
+@keyframes recommendation-reason-stagger-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.recommendation-reason-card__skeleton {
+  display: grid;
+  max-width: 720px;
+  gap: 10px;
+}
+
+.recommendation-reason-card__skeleton-line {
+  width: min(100%, 520px);
+}
+
+.recommendation-reason-card__skeleton-tags {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.recommendation-reason-card__skeleton-tag {
+  width: 116px;
+}
+
+.recommendation-reason-card__skeleton-tag:nth-child(2) {
+  width: 104px;
+}
+
+.recommendation-reason-card__skeleton-tag:nth-child(3) {
+  width: 112px;
+}
+
+.recommendation-results-skeleton {
+  display: grid;
+  gap: 24px;
+}
+
+.recommendation-results-skeleton__badge {
+  width: 76px;
+}
+
+.recommendation-results-skeleton__section-title {
+  width: 184px;
+}
+
+/* Recommendation skeletons use a paler grey than antd's default fill so the
+   loading state reads as quiet. This theme is light-only, so the recessed
+   surface token (mist) is enough — and it matches the meta tiles on the card.
+   !important + descendant scope reliably wins over antd's runtime styles. */
+.recommendation-reason-card .ant-skeleton-button,
+.recommendation-results-skeleton .ant-skeleton-button,
+.recommendation-results-skeleton .ant-skeleton-title,
+.recommendation-results-skeleton .ant-skeleton-paragraph > li {
+  background: var(--app-color-bg-layout) !important;
+}
+
+@media (max-width: 767px) {
+  .problem-type-tabs .ant-segmented-group {
+    display: flex;
+    width: max-content;
+    min-width: 0;
+  }
+
+  .problem-type-tabs .ant-segmented-item {
+    flex: 0 0 210px;
+    width: 210px;
+  }
+
+  .recommendation-reason-card {
+    gap: 12px;
+    padding: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .recommendation-reason-card--stagger
+    :where(
+      .recommendation-reason-card__icon,
+      .recommendation-reason-card__title,
+      .recommendation-reason-card__copy,
+      .recommendation-reason-card__tag
+    ) {
+    animation-delay: 0ms !important;
+    opacity: 1 !important;
+    transform: none !important;
+    will-change: auto !important;
+  }
 }
 
 .app-sidebar-shell {
@@ -4033,8 +4518,10 @@ body {
 }
 
 .writing-grid--essay {
-  grid-template-columns: minmax(240px, 0.72fr) minmax(420px, 1.18fr) minmax(260px,
-      0.78fr);
+  grid-template-columns: minmax(240px, 0.72fr) minmax(420px, 1.18fr) minmax(
+      260px,
+      0.78fr
+    );
 }
 
 .writing-grid__main {
@@ -4363,14 +4850,20 @@ body {
   position: relative;
   width: 82px;
   height: 72px;
-  border: 1px solid color-mix(in srgb, var(--app-color-primary) 24%, transparent);
+  border: 1px solid
+    color-mix(in srgb, var(--app-color-primary) 24%, transparent);
   border-radius: 24px 24px 18px 18px;
-  background: linear-gradient(180deg,
-      color-mix(in srgb,
-        var(--app-color-primary) 16%,
-        var(--app-color-bg-container)),
-      var(--app-color-bg-container));
-  box-shadow: 0 16px 34px color-mix(in srgb, var(--app-color-primary) 18%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(
+      in srgb,
+      var(--app-color-primary) 16%,
+      var(--app-color-bg-container)
+    ),
+    var(--app-color-bg-container)
+  );
+  box-shadow: 0 16px 34px
+    color-mix(in srgb, var(--app-color-primary) 18%, transparent);
   transform-origin: center bottom;
 }
 
@@ -4428,7 +4921,8 @@ body {
   bottom: 18px;
 }
 
-.analysis-character:not(.analysis-character--static) .analysis-character__spark {
+.analysis-character:not(.analysis-character--static)
+  .analysis-character__spark {
   animation: talkpik-analysis-spark 1.6s ease-in-out infinite;
 }
 
@@ -4437,7 +4931,6 @@ body {
 }
 
 @keyframes talkpik-analysis-bob {
-
   0%,
   100% {
     transform: translateY(0);
@@ -4449,7 +4942,6 @@ body {
 }
 
 @keyframes talkpik-analysis-spark {
-
   0%,
   100% {
     opacity: 0.36;
@@ -4530,7 +5022,6 @@ body {
   .analysis-loading__actions .ant-btn {
     width: 100%;
   }
-
 }
 
 @media (max-width: 1023px) {
@@ -4576,7 +5067,6 @@ body {
 }
 
 @media (max-width: 1199px) {
-
   .writing-grid--longform,
   .writing-grid--essay {
     grid-template-columns: 1fr;
@@ -4610,7 +5100,6 @@ body {
   .signup-form-panel {
     padding-top: 72px;
   }
-
 
   .writing-command,
   .writing-command__actions {
@@ -4707,7 +5196,6 @@ body {
   .signup-chip-row {
     justify-content: flex-start;
   }
-
 
   .writing-command {
     padding: 16px;

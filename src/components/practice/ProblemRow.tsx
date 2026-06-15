@@ -1,13 +1,15 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Button, Tooltip, Typography } from "antd";
-import { FileText } from "lucide-react";
+import { Button, Tag, Tooltip, Typography } from "antd";
+import { ChartNoAxesColumnIncreasing, FileText } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 import type { ProblemRow as ProblemRowData } from "@/lib/practice/types";
 import { writingProblemHref } from "@/lib/writing/routes";
+import { difficultyKey } from "./difficulty";
+import { getReasonTagColor } from "./reason-tag-colors";
 
 const { Text } = Typography;
 
@@ -67,14 +69,6 @@ export function ProblemRow({
   const lifecycleStatus = row.lifecycle_status ?? "active";
   const disabled =
     row.publish_status !== "published" || lifecycleStatus !== "active";
-  const statusLabel =
-    row.publish_status !== "published"
-      ? t("statusUnpublished")
-      : lifecycleStatus === "expired"
-        ? t("statusExpired")
-        : lifecycleStatus === "inactive"
-          ? t("statusInactive")
-          : t("statusPublished");
   const hasPriorWork = solveState !== "none";
   const rel = relativeDay(lastAttemptAt);
   const lastLabel = rel
@@ -88,6 +82,8 @@ export function ProblemRow({
     : null;
   const displayTitle =
     row.title.length > 32 ? `${row.title.slice(0, 32)}...` : row.title;
+  // 추천 화면 유형 카드와 동일한 난이도 어휘를 쓰도록 공유 매핑 사용.
+  const diffKey = difficultyKey(row.difficulty);
   const visibleTags = (Array.isArray(row.tags) ? row.tags : [])
     .filter((tag) => !tag.startsWith("seed:") && tag !== `q${row.question_no}`)
     .slice(0, 3);
@@ -130,19 +126,24 @@ export function ProblemRow({
       ].join(" ")}
     >
       <div className="flex min-w-0 gap-3">
-        <span
-          className="flex h-11 w-11 flex-none items-center justify-center rounded-default border border-border bg-surface text-text"
-          aria-hidden="true"
-        >
-          <FileText size={20} />
-        </span>
+        {row.question_no ? (
+          <span
+            className="flex h-11 w-11 flex-none items-center justify-center rounded-default border border-border bg-surface text-lg font-bold tabular-nums text-primary"
+            role="img"
+            aria-label={tCommon("questionNo", { no: row.question_no })}
+          >
+            <span aria-hidden="true">{row.question_no}</span>
+          </span>
+        ) : (
+          <span
+            className="flex h-11 w-11 flex-none items-center justify-center rounded-default border border-border bg-surface text-text"
+            aria-hidden="true"
+          >
+            <FileText size={20} />
+          </span>
+        )}
         <div className="grid min-w-0 gap-2">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
-            {row.question_no ? (
-              <ProblemBadge>
-                {tCommon("questionNo", { no: row.question_no })}
-              </ProblemBadge>
-            ) : null}
             <strong className="min-w-0 text-base font-semibold text-text">
               {displayTitle}
             </strong>
@@ -153,28 +154,26 @@ export function ProblemRow({
             ) : null}
           </div>
           {visibleTags.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {visibleTags.map((tag) => (
-                <ProblemBadge key={tag}>{tag}</ProblemBadge>
+            <div className="flex flex-wrap items-center gap-2">
+              {visibleTags.map((tag, index) => (
+                <Tag
+                  key={tag}
+                  className="problem-row__tag"
+                  color={getReasonTagColor(index, visibleTags.length)}
+                  variant="filled"
+                >
+                  {tag}
+                </Tag>
               ))}
             </div>
           ) : null}
-          <div className="flex flex-wrap items-center gap-2">
-            {row.difficulty != null ? (
-              <ProblemBadge>
-                {tCommon("difficultyValue", { level: row.difficulty })}
-              </ProblemBadge>
+          <div className="flex flex-wrap items-center gap-3">
+            {diffKey ? (
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-text-secondary">
+                <ChartNoAxesColumnIncreasing size={14} aria-hidden="true" />
+                {tCommon(diffKey as Parameters<typeof tCommon>[0])}
+              </span>
             ) : null}
-            <span className="inline-flex min-h-7 items-center gap-2 rounded-full border border-border bg-background px-3 text-xs font-semibold text-text-secondary">
-              <span
-                className={[
-                  "h-1.5 w-1.5 rounded-full",
-                  disabled ? "bg-text-secondary" : "bg-primary",
-                ].join(" ")}
-                aria-hidden="true"
-              />
-              {statusLabel}
-            </span>
             {disabled && row.lifecycle_reason ? (
               <Text type="secondary" className="!text-xs">
                 {row.lifecycle_reason}

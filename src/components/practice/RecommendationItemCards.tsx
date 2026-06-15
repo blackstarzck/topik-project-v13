@@ -2,14 +2,27 @@
 
 import type { ReactNode } from "react";
 import { Button, Typography } from "antd";
-import { ArrowRight } from "lucide-react";
+import {
+  ArrowRight,
+  ChartNoAxesColumnIncreasing,
+  CheckCircle2,
+  Clock3,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { AppCard } from "@/components/shared/AppCard";
 import { writingProblemHref } from "@/lib/writing/routes";
+import { difficultyFillColor } from "./DifficultyMeter";
 import type { RecommendationItemCard } from "./recommendations-data";
 
 const { Paragraph, Text, Title } = Typography;
+
+const DEFAULT_MINUTES_BY_QUESTION: Record<number, number> = {
+  51: 15,
+  52: 25,
+  53: 30,
+  54: 50,
+};
 
 function ctaHref(card: RecommendationItemCard): string {
   return writingProblemHref({
@@ -35,6 +48,26 @@ function RecommendationBadge({
       ].join(" ")}
     >
       {children}
+    </span>
+  );
+}
+
+function RecommendationMetaTile({
+  icon,
+  label,
+  value,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: ReactNode;
+}) {
+  return (
+    <span className="flex min-w-0 items-center gap-3 rounded-default bg-surface p-3">
+      {icon}
+      <span className="grid min-w-0 gap-1">
+        <small className="text-xs text-text-secondary">{label}</small>
+        <strong className="truncate text-base text-text">{value}</strong>
+      </span>
     </span>
   );
 }
@@ -67,45 +100,64 @@ export function PrimaryRecommendationCard({
   const tCommon = useTranslations("practice.common");
   const title =
     card.title.length > 32 ? `${card.title.slice(0, 32)}…` : card.title;
+  const minutes =
+    card.estimatedMinutes ??
+    (card.questionNo != null
+      ? DEFAULT_MINUTES_BY_QUESTION[card.questionNo]
+      : null);
   return (
-    <AppCard
-      className="h-full"
-      title={
-        <div className="flex flex-wrap gap-2">
+    <AppCard className="h-full">
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="flex min-w-0 flex-col justify-center gap-4">
           <RecommendationBadge tone="primary">
             {t("primaryBadge")}
           </RecommendationBadge>
-          {card.questionNo ? (
-            <RecommendationBadge>
-              {tCommon("questionNo", { no: card.questionNo })}
-            </RecommendationBadge>
+          <Title className="m-0 text-3xl font-semibold leading-tight" level={2}>
+            {title}
+          </Title>
+          {card.reason ? (
+            <Paragraph
+              className="m-0 max-w-xl text-base leading-7"
+              type="secondary"
+              ellipsis={{ rows: 2 }}
+            >
+              {card.reason}
+            </Paragraph>
           ) : null}
         </div>
-      }
-      extra={
-        card.estimatedMinutes ? (
-          <RecommendationBadge>
-            {tCommon("minutes", { minutes: card.estimatedMinutes })}
-          </RecommendationBadge>
-        ) : null
-      }
-    >
-      <Title className="mt-0" level={3}>
-        {title}
-      </Title>
-      {card.reason ? (
-        <Paragraph type="secondary" ellipsis={{ rows: 2 }}>
-          {card.reason}
-        </Paragraph>
-      ) : null}
-      <WeaknessTags tags={card.weaknessTags} />
-      <div className="mt-4">
-        <Link href={ctaHref(card) as never}>
-          <Button type="primary" size="large" block>
-            {t("startFromThis")}
-            <ArrowRight size={18} aria-hidden="true" />
-          </Button>
-        </Link>
+        <div className="self-center">
+          <div className="grid gap-2 sm:grid-cols-3">
+            <RecommendationMetaTile
+              icon={<Clock3 size={18} aria-hidden="true" />}
+              label={t("fallbackHeroTime")}
+              value={
+                minutes != null ? tCommon("minutes", { minutes }) : "—"
+              }
+            />
+            <RecommendationMetaTile
+              icon={
+                <ChartNoAxesColumnIncreasing
+                  size={18}
+                  aria-hidden="true"
+                  color={difficultyFillColor(3)}
+                />
+              }
+              label={t("fallbackHeroDifficulty")}
+              value={tCommon("difficultyNormal")}
+            />
+            <RecommendationMetaTile
+              icon={<CheckCircle2 size={18} aria-hidden="true" />}
+              label={t("fallbackHeroStatus")}
+              value={t("fallbackHeroStatusReady")}
+            />
+          </div>
+          <Link href={ctaHref(card) as never}>
+            <Button className="mt-4" type="primary" size="large" block>
+              {t("startFromThis")}
+              <ArrowRight size={18} aria-hidden="true" />
+            </Button>
+          </Link>
+        </div>
       </div>
     </AppCard>
   );

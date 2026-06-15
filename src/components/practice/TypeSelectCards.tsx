@@ -5,7 +5,7 @@ import { Tooltip, Typography } from "antd";
 import {
   ArrowRight,
   BarChart3,
-  CheckCircle2,
+  ChartNoAxesColumnIncreasing,
   Clock3,
   FileText,
   ListChecks,
@@ -16,35 +16,45 @@ import Link from "next/link";
 import { AppCard } from "@/components/shared/AppCard";
 import { QUESTION_NOS, type QuestionNo } from "@/lib/practice/types";
 import { writingQuestionHref } from "@/lib/writing/routes";
+import {
+  difficultyFillColor,
+  difficultyLabelKey,
+  type DifficultyLevel,
+} from "./DifficultyMeter";
 
 const { Text, Title } = Typography;
+
+const typeCardClassNames = {
+  body: "flex flex-1 flex-col",
+  actions: "app-card-footer-actions",
+};
 
 const TYPE_META: Record<
   QuestionNo,
   {
     minutes: number;
-    difficultyKey: "difficultyNormal" | "difficultyHardish" | "difficultyHard";
+    difficultyLevel: DifficultyLevel;
     icon: ReactNode;
   }
 > = {
   51: {
     minutes: 15,
-    difficultyKey: "difficultyNormal",
+    difficultyLevel: 3,
     icon: <PencilLine size={28} />,
   },
   52: {
     minutes: 25,
-    difficultyKey: "difficultyHardish",
+    difficultyLevel: 4,
     icon: <FileText size={28} />,
   },
   53: {
     minutes: 30,
-    difficultyKey: "difficultyHard",
+    difficultyLevel: 5,
     icon: <BarChart3 size={28} />,
   },
   54: {
     minutes: 50,
-    difficultyKey: "difficultyHard",
+    difficultyLevel: 5,
     icon: <ListChecks size={28} />,
   },
 };
@@ -62,7 +72,6 @@ export function TypeSelectCards({ lockedTypes }: Props) {
         <Title className="m-0" level={4}>
           {t("typeSelectTitle")}
         </Title>
-        <Text type="secondary">{t("typeSelectSubtitle")}</Text>
       </div>
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         {QUESTION_NOS.map((qn) => {
@@ -73,22 +82,22 @@ export function TypeSelectCards({ lockedTypes }: Props) {
           const card = (
             <AppCard
               className={[
-                "h-full transition-transform",
+                "flex h-full flex-col transition-transform",
                 locked ? "opacity-60" : "hover:-translate-y-1",
               ].join(" ")}
+              classNames={typeCardClassNames}
+              actions={[
+                <span
+                  key="start"
+                  className="inline-flex w-full items-center gap-2 text-sm font-semibold text-text"
+                >
+                  {t("typeCardCta")}
+                  <ArrowRight size={16} aria-hidden="true" />
+                </span>,
+              ]}
             >
-              <span className="flex items-center justify-between gap-3">
-                <span className="rounded-default bg-surface px-3 py-1 text-xs font-semibold text-text">
-                  {tCommon("questionNo", { no: qn })}
-                </span>
-                {locked ? (
-                  <span className="rounded-default bg-surface px-3 py-1 text-xs text-text-secondary">
-                    {t("locked")}
-                  </span>
-                ) : null}
-              </span>
               <span
-                className="mt-5 inline-flex size-12 items-center justify-center rounded-default border border-border bg-surface text-text"
+                className="inline-flex size-12 items-center justify-center rounded-default bg-surface text-text"
                 aria-hidden="true"
               >
                 {meta.icon}
@@ -99,19 +108,19 @@ export function TypeSelectCards({ lockedTypes }: Props) {
               <Text className="mt-2 block min-h-12" type="secondary">
                 {desc.length > 60 ? `${desc.slice(0, 60)}...` : desc}
               </Text>
-              <span className="mt-5 flex flex-wrap gap-3 border-t border-border pt-3 text-xs text-text-secondary">
+              <span className="mt-5 flex flex-wrap gap-3 text-xs text-text-secondary">
                 <span className="inline-flex items-center gap-1">
-                  <Clock3 size={14} />
+                  <Clock3 size={14} aria-hidden="true" />
                   {tCommon("minutes", { minutes: meta.minutes })}
                 </span>
                 <span className="inline-flex items-center gap-1">
-                  <CheckCircle2 size={14} />
-                  {tCommon(meta.difficultyKey)}
+                  <ChartNoAxesColumnIncreasing
+                    size={14}
+                    aria-hidden="true"
+                    color={difficultyFillColor(meta.difficultyLevel)}
+                  />
+                  {tCommon(difficultyLabelKey(meta.difficultyLevel))}
                 </span>
-              </span>
-              <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-text">
-                {t("typeCardCta")}
-                <ArrowRight size={16} aria-hidden="true" />
               </span>
             </AppCard>
           );

@@ -94,17 +94,6 @@ function useLandingMotion() {
     const rootElement = rootRef.current;
 
     const context = gsap.context(() => {
-      const heroItems = document.querySelectorAll(".landing-hero-copy > *");
-
-      gsap.from(heroItems, {
-        autoAlpha: 0,
-        y: 44,
-        duration: 0.9,
-        ease: "power3.out",
-        stagger: 0.12,
-        delay: 0.12,
-      });
-
       gsap.utils.toArray<HTMLElement>("[data-landing-section]").forEach((section) => {
         const heading = section.querySelectorAll("[data-landing-heading]");
         const items = section.querySelectorAll("[data-landing-stagger]");

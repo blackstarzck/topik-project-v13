@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import Link from "next/link";
-import { LockKeyhole } from "lucide-react";
 import { requireUser } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
@@ -11,7 +9,6 @@ import {
 } from "@/lib/practice/weakness";
 import { WorkspaceBody } from "@/components/app/WorkspaceBody";
 import { WeaknessView } from "@/components/practice/WeaknessView";
-import { AppCard } from "@/components/shared/AppCard";
 import { PageHeader } from "@/components/shared/PageHeader";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -19,81 +16,17 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t("metaTitle") };
 }
 
-/** 유료에 해당하는 plan_label (growth 페이지와 동일 기준). */
-const PAID_PLAN_LABELS = new Set([
-  "premium",
-  "pro",
-  "team",
-  "yearly",
-  "quarterly",
-  "monthly",
-]);
-
-function isLocked(planLabel: string | null): boolean {
-  if (!planLabel) return true;
-  return !PAID_PLAN_LABELS.has(planLabel.toLowerCase());
-}
-
 /**
  * X-07 약점 기반 추천 (`/practice/weakness`).
  *
- * description region 1 예외: 유료 잠금이면 추천 본문 대신 업그레이드 안내 표시.
- * 잠금 판정은 growth 페이지와 동일하게 profiles.plan_label 기준.
+ * Billing is deferred, so this route must not gate by plan_label or link users
+ * into checkout/paywall behavior. Data 부족 상태는 X-07 예외 상태로 화면 안에서
+ * 처리하고, 사용자는 문제 목록으로 이어갈 수 있다.
  */
 export default async function PracticeWeaknessPage() {
   const t = await getTranslations("practice.weakness");
   const user = await requireUser();
   const supabase = await createSupabaseServerClient();
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("plan_label")
-    .eq("id", user.id)
-    .maybeSingle();
-  const planLabel = profile?.plan_label ?? null;
-
-  // 유료 잠금 — 추천 본문 대신 업그레이드 안내(paywall gate).
-  // NOTE: 이 분기는 server component이다. 공유 surface는 AppCard(plain antd Card
-  // 래퍼, "use client" 없음 → RSC 안전, 로그인/공개 페이지에서 검증됨)로 쓰고, 안내
-  // 본문은 복합 antd(Typography.Title 등) 없이 plain HTML + Link로 유지해 prod React
-  // #130을 피한다.
-  if (isLocked(planLabel)) {
-    return (
-      <WorkspaceBody size="task">
-        <div data-testid="weakness-locked-shell">
-          <PageHeader title={t("pageTitle")} />
-          <AppCard className="text-center" data-testid="weakness-locked-card">
-            <span
-              aria-hidden="true"
-              className="inline-flex size-12 items-center justify-center rounded-full border border-border bg-surface text-text"
-            >
-              <LockKeyhole size={24} />
-            </span>
-            <h2 className="mt-2 text-xl font-semibold">{t("lockTitle")}</h2>
-            <p className="text-text-secondary">
-              {t("lockBody", { plan: planLabel ?? t("planFree") })}
-            </p>
-            <div className="mt-4 flex flex-wrap justify-center gap-2">
-              <Link
-                data-testid="weakness-upgrade-plan"
-                href="/paywall"
-                className="inline-flex min-h-8 items-center rounded-full border border-primary bg-primary px-4 text-sm font-medium text-background"
-              >
-                {t("upgradePlan")}
-              </Link>
-              <Link
-                data-testid="weakness-view-problems"
-                href="/practice/problems"
-                className="inline-flex min-h-8 items-center rounded-full border border-border bg-background px-4 text-sm font-medium text-text"
-              >
-                {t("viewProblemList")}
-              </Link>
-            </div>
-          </AppCard>
-        </div>
-      </WorkspaceBody>
-    );
-  }
 
   const [dimSummaries, tabSummaries, recs, lastFeedback] = await Promise.all([
     getWeakDimensions(user.id),
@@ -112,7 +45,7 @@ export default async function PracticeWeaknessPage() {
 
   return (
     <WorkspaceBody>
-      <PageHeader title={t("pageTitle")} />
+      <PageHeader title={t("pageTitle")} subtitle={t("subtitle")} />
       <WeaknessView
         weakDimensions={dimSummaries.map((d) => ({
           dimension: d.dimension,
@@ -131,9 +64,7 @@ export default async function PracticeWeaknessPage() {
           reason: r.reason,
           source: r.source,
           item_id: r.itemId ?? null,
-          // 이 페이지는 region-1 예외로 무료 사용자를 통째로 차단하므로
-          // 여기 도달한 사용자는 모두 유료다 → 개별 카드 잠금 없음.
-          locked: false,
+          estimated_minutes: r.estimatedMinutes ?? null,
         }))}
         tabSummaries={tabSummaries.map((t) => ({
           dimension: t.dimension,

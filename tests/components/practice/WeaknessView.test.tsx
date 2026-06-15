@@ -6,6 +6,7 @@ import { WeaknessView } from "../../../src/components/practice/WeaknessView";
 
 const pushMock = vi.fn();
 const logStudyEventMock = vi.fn();
+const consumeRecommendationItemMock = vi.fn();
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
@@ -25,9 +26,17 @@ vi.mock("@/lib/events/study-events", () => ({
   },
 }));
 
+vi.mock("@/lib/practice/consume", () => ({
+  consumeRecommendationItem: (...args: unknown[]) => {
+    consumeRecommendationItemMock(...args);
+    return Promise.resolve();
+  },
+}));
+
 beforeEach(() => {
   pushMock.mockReset();
   logStudyEventMock.mockReset();
+  consumeRecommendationItemMock.mockReset();
   // Ant Design Tabs uses ResizeObserver and matchMedia, which jsdom does not provide.
   if (!(globalThis as Record<string, unknown>).ResizeObserver) {
     (globalThis as Record<string, unknown>).ResizeObserver = class {
@@ -64,7 +73,8 @@ describe("WeaknessView", () => {
     expect(
       screen.getByText("글쓰기를 5건 이상 제출하면 약점 분석이 활성화됩니다."),
     ).toBeTruthy();
-    const cta = screen.getByRole("button", { name: "문제 풀기" });
+    expect(screen.getByText("추천 문제가 아직 없습니다.")).toBeTruthy();
+    const cta = screen.getAllByRole("button", { name: "문제 목록 보기" })[0];
     fireEvent.click(cta);
     expect(pushMock).toHaveBeenCalledWith("/practice/problems");
   });
@@ -73,8 +83,8 @@ describe("WeaknessView", () => {
     renderWithIntl(
       <WeaknessView
         weakDimensions={[
-          { dimension: "grammar", averageScore: 0.4 },
-          { dimension: "vocab", averageScore: 0.55 },
+          { dimension: "grammar", averageScore: 40 },
+          { dimension: "vocab", averageScore: 55 },
         ]}
         recommendations={[
           { problem_id: "p-1", title: "어휘 연습 문제", question_no: 51 },
@@ -87,10 +97,10 @@ describe("WeaknessView", () => {
     expect(screen.getByText("어휘 연습 문제")).toBeTruthy();
   });
 
-  it("logs recommendation_clicked and pushes the problem URL on rec card click", () => {
+  it("logs recommendation_clicked and pushes the problem URL from the representative CTA", () => {
     renderWithIntl(
       <WeaknessView
-        weakDimensions={[{ dimension: "grammar", averageScore: 0.3 }]}
+        weakDimensions={[{ dimension: "grammar", averageScore: 30 }]}
         recommendations={[
           { problem_id: "prob-42", title: "추천 문제", question_no: 52 },
         ]}
@@ -99,24 +109,78 @@ describe("WeaknessView", () => {
 
     const card = screen.getByTestId("weakness-rec-prob-42");
     fireEvent.click(card);
+    expect(logStudyEventMock).not.toHaveBeenCalled();
 
+    const start = screen.getByTestId("weakness-primary-start");
+    fireEvent.click(start);
     expect(logStudyEventMock).toHaveBeenCalledTimes(1);
     expect(logStudyEventMock).toHaveBeenCalledWith({
       eventType: "recommendation_clicked",
       problemId: "prob-42",
       payload: { source: "weakness" },
     });
+    expect(consumeRecommendationItemMock).toHaveBeenCalledWith(null);
     expect(pushMock).toHaveBeenCalledWith(
       "/writing/answer-writing-52?problem=prob-42",
     );
   });
 
-  it("surfaces cautious weakness insights, recommendation reasons, primary start action, and deferred paywall entry", () => {
+  it("selects a recommendation card with keyboard without starting navigation", () => {
+    renderWithIntl(
+      <WeaknessView
+        weakDimensions={[{ dimension: "grammar", averageScore: 30 }]}
+        recommendations={[
+          { problem_id: "prob-1", title: "First", question_no: 51 },
+          { problem_id: "prob-2", title: "Second", question_no: 52 },
+        ]}
+      />,
+    );
+
+    const firstCard = screen.getByTestId("weakness-rec-prob-1");
+    const secondCard = screen.getByTestId("weakness-rec-prob-2");
+    expect(firstCard.getAttribute("aria-pressed")).toBe("true");
+    expect(secondCard.getAttribute("aria-pressed")).toBe("false");
+
+    fireEvent.keyDown(secondCard, { key: "Enter" });
+
+    expect(firstCard.getAttribute("aria-pressed")).toBe("false");
+    expect(secondCard.getAttribute("aria-pressed")).toBe("true");
+    expect(logStudyEventMock).not.toHaveBeenCalled();
+    expect(consumeRecommendationItemMock).not.toHaveBeenCalled();
+    expect(pushMock).not.toHaveBeenCalled();
+  });
+
+  it("guards the selected recommendation start action against duplicate clicks", () => {
+    renderWithIntl(
+      <WeaknessView
+        weakDimensions={[{ dimension: "grammar", averageScore: 30 }]}
+        recommendations={[
+          {
+            problem_id: "prob-guard",
+            title: "Guarded",
+            question_no: 51,
+            item_id: "item-guard",
+          },
+        ]}
+      />,
+    );
+
+    const start = screen.getByTestId("weakness-primary-start");
+    fireEvent.click(start);
+    fireEvent.click(start);
+
+    expect(logStudyEventMock).toHaveBeenCalledTimes(1);
+    expect(consumeRecommendationItemMock).toHaveBeenCalledTimes(1);
+    expect(consumeRecommendationItemMock).toHaveBeenCalledWith("item-guard");
+    expect(pushMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("surfaces cautious weakness insights, recommendation reasons, and one primary start action", () => {
     renderWithIntl(
       <WeaknessView
         weakDimensions={[
-          { dimension: "grammar", averageScore: 0.36 },
-          { dimension: "vocab", averageScore: 0.62 },
+          { dimension: "grammar", averageScore: 36 },
+          { dimension: "vocab", averageScore: 62 },
         ]}
         recommendations={[
           {
@@ -142,8 +206,12 @@ describe("WeaknessView", () => {
       screen.getByText("최근 답안에서 시제 연결이 자주 흔들렸어요."),
     ).toBeTruthy();
     expect(screen.getByText("추천 근거")).toBeTruthy();
+    expect(screen.getByText("다음 학습")).toBeTruthy();
+    expect(screen.getAllByText("선택됨").length).toBeGreaterThan(0);
+    expect(screen.queryByText(/결제/)).toBeNull();
+    expect(screen.queryByText(/유료/)).toBeNull();
 
-    const startButton = screen.getByRole("button", { name: /추천 학습 시작/ });
+    const startButton = screen.getByTestId("weakness-primary-start");
     expect(startButton.className).toContain("ant-btn-primary");
     fireEvent.click(startButton);
     expect(logStudyEventMock).toHaveBeenCalledWith({
@@ -152,19 +220,12 @@ describe("WeaknessView", () => {
       payload: { source: "weakness" },
     });
     expect(pushMock).toHaveBeenCalledWith("/practice/problems");
-
-    expect(screen.getByText("더 깊은 추천 보기")).toBeTruthy();
-    expect(
-      screen.getByText(
-        /결제 기능은 아직 준비 중이라 실제 결제나 구독은 진행되지 않아요/,
-      ),
-    ).toBeTruthy();
   });
 
   it("shows a fallback reason when a tag-based recommendation has no stored reason", () => {
     renderWithIntl(
       <WeaknessView
-        weakDimensions={[{ dimension: "grammar", averageScore: 0.36 }]}
+        weakDimensions={[{ dimension: "grammar", averageScore: 36 }]}
         recommendations={[
           {
             problem_id: "prob-99",
@@ -186,7 +247,7 @@ describe("WeaknessView", () => {
   it("keeps recommendation card title and reason within IA display limits", () => {
     renderWithIntl(
       <WeaknessView
-        weakDimensions={[{ dimension: "grammar", averageScore: 0.36 }]}
+        weakDimensions={[{ dimension: "grammar", averageScore: 36 }]}
         recommendations={[
           {
             problem_id: "prob-100",
@@ -224,7 +285,7 @@ describe("WeaknessView", () => {
     (dimension, label) => {
       renderWithIntl(
         <WeaknessView
-          weakDimensions={[{ dimension, averageScore: 0.3 }]}
+          weakDimensions={[{ dimension, averageScore: 30 }]}
           recommendations={[
             {
               problem_id: "prob-dim",
@@ -255,7 +316,7 @@ describe("WeaknessView", () => {
   it("caps recommendation cards at the IA limit of 4", () => {
     renderWithIntl(
       <WeaknessView
-        weakDimensions={[{ dimension: "grammar", averageScore: 0.3 }]}
+        weakDimensions={[{ dimension: "grammar", averageScore: 30 }]}
         recommendations={Array.from({ length: 5 }, (_, i) => ({
           problem_id: `prob-${i + 1}`,
           title: `추천 문제 ${i + 1}`,
@@ -266,10 +327,19 @@ describe("WeaknessView", () => {
       />,
     );
 
-    expect(screen.getByTestId("weakness-rec-prob-4")).toBeTruthy();
+    expect(screen.getByTestId("weakness-rec-prob-1").getAttribute("aria-pressed")).toBe(
+      "true",
+    );
+    expect(screen.getByTestId("weakness-rec-prob-4").getAttribute("aria-pressed")).toBe(
+      "false",
+    );
     expect(screen.queryByTestId("weakness-rec-prob-5")).toBeNull();
+    expect(screen.getByRole("button", { name: "선택됨" })).toBeTruthy();
     expect(
-      screen.getAllByRole("button", { name: /추천 학습 시작/ }),
-    ).toHaveLength(4);
+      screen.getAllByRole("button", { name: "이 문제 선택" }),
+    ).toHaveLength(3);
+    expect(
+      screen.getByRole("button", { name: /추천 1번 문제 풀기/ }),
+    ).toBeTruthy();
   });
 });
