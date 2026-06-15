@@ -134,6 +134,8 @@
 | ---:| --- | --- | --- |
 | 39 | `16:00:00` | [`20260612160000_user_notifications.sql`](./20260612160000_user_notifications.sql) | `user_notifications` 인앱 수신함 (벨 뱃지/알림센터/B-01 카드). owner select + `read_at` 단일 컬럼 grant update, insert/delete는 service_role 파이프라인 전용. `delivery_attempt_id`는 topik-ai 소유 `notification_delivery_attempts` soft 참조(FK 없음 — 소유권 계약). 계약 SoT: topik-ai `docs/specs/notification-contract.md` |
 | 40 | `22:10:00` | [`20260612221000_fix_legal_documents_public_read_policy.sql`](./20260612221000_fix_legal_documents_public_read_policy.sql) | `legal_documents_published_read` 정책에서 공개 published read와 `private.is_platform_admin()` admin helper를 분리. anon 공개 약관 조회가 helper 실행 권한 오류(42501)로 실패하지 않도록 `status='published'`만 평가. |
+| 41 | `20:00:00` | [`20260612200000_user_marketing_consent.sql`](./20260612200000_user_marketing_consent.sql) | H-2 마케팅 동의 저장소. `user_marketing_consent`(가산형, profiles 미변경): `consented_at`/`unsubscribed_at`/`unsubscribe_token uuid unique`/`source`. 유효 동의 = `consented_at not null AND unsubscribed_at null`. owner select/insert/update RLS + force, service_role read. 토큰 수신거부는 서버 service_role(토큰=인증). N-OPT-04/N-EML-07. |
+| 42 | `20:01:00` | [`20260612200100_marketing_consent_in_dispatch.sql`](./20260612200100_marketing_consent_in_dispatch.sql) | H-2 dispatch consent 게이트. hard-coded marketing→`opted_out`를 `private.is_marketing_consented()` 조회로 교체(admin/event 함수). 동의 O+채널 on→eligible, 동의 O+채널 off→skipped, 동의 X→opted_out. 비-마케팅 동작 불변. |
 
 ---
 
