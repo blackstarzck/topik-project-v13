@@ -1,12 +1,28 @@
 # TALKPIK AI 사용자 플로우 (현행)
 
-이 문서는 `docs/Wireframe/`의 36개 페이지 IA와 연동된 **현행 사용자 플로우**입니다.
-이 중 X-13~X-18은 기존 34개 Wireframe 이후 코드베이스 기준으로 추가된 화면입니다.
+이 문서는 `docs/Wireframe/`의 36개 사용자 앱 페이지 IA와 연동된 **현행 사용자 플로우**입니다.
+이 중 X-13~X-18은 기존 Paper `Frame` 캡처 이후 코드베이스와 active docs 기준으로 추가된 화면입니다.
 노드명은 `docs/Wireframe/{...}/description.md`의 `Source` 값과 일치합니다(참조 규칙: `docs/Wireframe/README.md`).
 
 새 구현/QA는 본 문서를 정본으로 사용합니다.
 
 > 관리자 화면은 별도 관리자 앱(topik-ai) 소관이라 이 흐름도 범위에 없습니다. 경계 기준은 `docs/admin-scope-boundary.md`를 따릅니다.
+
+## Paper 캡처 대조 기록
+
+- 대조일: 2026-06-15
+- Paper 원본: `https://app.paper.design/file/01KQE0HPBV13Y0BGDEJJGQBY3H/1-0/5YL-0`
+- 대조 대상: Paper `TOPIK AI documents` 페이지의 `Frame` 아트보드
+- 캡처 증거: [2026-06-15-paper-frame-user-flow.png](./evidence/2026-06-15-paper-frame-user-flow.png)
+
+![Paper Frame user flow capture](./evidence/2026-06-15-paper-frame-user-flow.png)
+
+대조 결론:
+
+- 핵심 학습 흐름은 Paper `Frame`과 일치한다: X-01 → A-01/A-02 → A-03 → B-01 → C-01/C-02/C-03 → D-01~D-04 → D-M1/D-M2 → E-01/E-02 → R-01/R-02/F-01.
+- Paper `Frame`에는 관리자 노드 `30 X-08 기관 관리자 대시보드`, `21 H-01 관리자 문제 관리`, `32 X-10 관리자 사용자 관리`가 남아 있다. 이 노드는 2026-06-09/2026-06-11 관리자 범위 제거 결정에 따라 현행 사용자 앱 흐름에서 제외한다.
+- 현행 문서는 Paper `Frame`에 없는 최신 인증/약관 흐름을 포함한다: X-11 인증 에러, X-12 인증 메일 확인 안내, X-13 이용약관, X-14 개인정보처리방침, X-16 새 비밀번호 설정, X-17 인증 콜백 fragment 처리, X-18 소셜 로그인 약관 동의, `/auth/callback`, `/auth/post-auth`.
+- 따라서 Paper `Frame`은 과거 시각 자료로만 참조하고, 구현/QA 판단은 아래 Mermaid와 상세 시나리오를 기준으로 한다.
 
 ## Mermaid 사용자 플로우
 
