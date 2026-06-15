@@ -1,8 +1,0 @@
-{
-  "runDate": "2026-06-10",
-  "target": "08-D-01-short-answer-writing-51",
-  "status": "designer-agent-unavailable",
-  "reason": "The current subagent tool policy allows spawning only when the user explicitly requests sub-agents or delegation. The audit continued with the structured visual rubric, reference images, code inspection, Playwright screenshots, and scoped e2e evidence.",
-  "missingReferenceImages": [],
-  "confidenceImpact": "normal-reference-complete; no reduction from missing images"
-}

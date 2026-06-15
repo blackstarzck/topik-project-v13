@@ -55,6 +55,43 @@ Awesomic operates on a white-and-near-black canvas with maximum roundness — 36
 | Ember | `#ff5a00` | `--color-ember` | YC batch badge backgrounds — vivid orange signals startup-ecosystem provenance, appears only on badge-sized labels |
 | Orchid Flash | `#fe45e2` | `--color-orchid-flash` | Decorative card wash accent — single-use vivid pink on a large card background to punctuate the portfolio grid |
 
+## Tokens — Difficulty Scale
+
+Semantic color scale for TOPIK writing difficulty (`problems.difficulty`, 1–5).
+A low-saturation warm gradient (easy = green → hard = brick), kept deliberately
+muted so it never reads as "vivid" and does not break the system's calm,
+largely-achromatic identity. This is the only chromatic scale allowed in the UI
+layer beyond the reserved Ember/Orchid accents, and it exists solely to encode
+difficulty.
+
+| Level | Label key (`practice.common`) | Value | Role |
+|-------|-------------------------------|-------|------|
+| 1 · 쉬움 (very easy) | `difficultyVeryEasy` | `#5e9e6f` | Calm green — easiest |
+| 2 · 조금 쉬움 (easy) | `difficultyEasy` | `#8aa04e` | Olive |
+| 3 · 보통 (normal) | `difficultyNormal` | `#cca63a` | Gold / mustard |
+| 4 · 조금 어려움 (hardish) | `difficultyHardish` | `#cf833f` | Soft orange |
+| 5 · 어려움 (hard) | `difficultyHard` | `#c75d4f` | Brick red — hardest |
+
+**Rules**
+
+- Tint the difficulty **icon only** (e.g. the lucide
+  `ChartNoAxesColumnIncreasing` stroke). Keep the text label achromatic
+  (`text-secondary`) so contrast/legibility holds — color is a supplementary
+  signal and the text label always carries the meaning, per "color carries
+  meaning, never decoration; pair every color signal with text or icon."
+- Default to a single tinted icon, not a multi-bar meter, for the difficulty
+  indicator.
+- Single source: the level→color and level→label-key mapping is defined only in
+  `src/components/practice/DifficultyMeter.tsx` (`difficultyFillColor(level)`,
+  `difficultyLabelKey(level)`) — same single-source rule as
+  `reason-tag-colors.ts`.
+- These five colors are difficulty-only. Do not reuse them for CTAs, buttons,
+  states, hover, or any other UI (the achromatic-CTA rule stands).
+- They currently live as fixed hex in the component helper. If they ever need to
+  be consumed via Tailwind utilities or AntD tokens, promote them through
+  `src/theme` into `--app-*` and update the theme contract tests (per the
+  runtime policy above).
+
 ## Tokens — Typography
 
 ### Cosmica — The sole typeface across the entire system — every badge, button, nav link, heading, and body copy uses Cosmica. Its wide weight range means all typographic hierarchy is weight-driven rather than family-switching. At 56–64px the light-to-medium weights feel assertive without shouting; at 10–14px the medium-to-semibold weights keep small labels legible at compact density. · `--font-cosmica`
@@ -220,6 +257,7 @@ Large numeral at 40–56px Cosmica weight 700 in #09090b or #18181b. Descriptor 
 - Treat 28-36px radii as raw Awesomic reference values for marketing/reference surfaces; use the documented TALKPIK runtime radius exception (4-8px workspace cards/panels) for study dashboards and operational UI.
 - Use Ant Design components and tokens first; treat Tailwind as a layout utility and `--app-*` bridge consumer.
 - Keep one clear primary action per task area, and pair every color signal with text or icon.
+- Encode difficulty (1–5) with the muted Difficulty Scale by tinting the difficulty icon only; keep the label text achromatic and source colors from `difficultyFillColor`/`difficultyLabelKey` (see Tokens — Difficulty Scale).
 - Apply the multi-layer button shadow (rgba(255,255,255,0.5) inset + rgba(117,123,133,0.4) inset + rgb(44,46,52) 1.5px ring + rgba(0,0,0,0.14) drop) only on the primary #09090b pill button — it defines the CTA's physicality.
 - Reserve Ember (#ff5a00) exclusively for YC batch badges and Orchid Flash (#fe45e2) exclusively for single decorative card washes — these vivid colors derive their impact from appearing nowhere else.
 - Use Cosmica weight 300–400 for lead-in words and weight 600–700 for the key noun/verb in the same line to create inline tonal contrast without changing size.
@@ -237,6 +275,7 @@ Large numeral at 40–56px Cosmica weight 700 in #09090b or #18181b. Descriptor 
 - Don't introduce new typefaces — Cosmica's weight range handles all hierarchy; adding a second family destroys the single-voice typographic system.
 - Don't apply drop shadows to cards — card depth is expressed through background color steps (#ffffff vs #ececee vs #09090b), not elevation shadows.
 - Don't use #ff5a00 or #fe45e2 for UI states, hover effects, or repeated interface elements — their power is scarcity; repeated use collapses their impact.
+- Don't reuse the Difficulty Scale colors (#5e9e6f / #8aa04e / #cca63a / #cf833f / #c75d4f) for any non-difficulty UI (buttons, states, hover) — like Ember/Orchid, they are scoped to one purpose.
 - Don't use letter-spacing overrides on headlines — Cosmica's normal tracking at large sizes is a deliberate choice; tracked-out display text would clash with the type system.
 - Don't place text directly on the vivid Orchid Flash (#fe45e2) card background at body size — it is a decorative wash only; any overlaid text must use display weight white.
 
@@ -273,6 +312,7 @@ Max-width approximately 1200px, centered on the canvas (#f4f4f5). The hero is a 
 - border / divider: #ececee / #3f3f46
 - accent (badge only): #ff5a00 (YC), #fe45e2 (decorative card)
 - primary action: #09090b (filled action)
+- difficulty (1–5, icon tint only): #5e9e6f → #8aa04e → #cca63a → #cf833f → #c75d4f (see Tokens — Difficulty Scale)
 
 **Example Component Prompts**
 

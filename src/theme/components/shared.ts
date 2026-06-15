@@ -16,4 +16,11 @@ export const sharedComponentTokens = {
     defaultShadow: "none",
     dangerShadow: "none",
   },
+  Select: {
+    optionActiveBg:
+      "color-mix(in srgb, var(--app-color-bg-layout) 70%, var(--app-color-bg-container))",
+    optionSelectedBg: "var(--app-color-bg-layout)",
+    optionSelectedColor: "var(--app-color-text)",
+    optionSelectedFontWeight: 500,
+  },
 } satisfies ThemeConfig["components"];
