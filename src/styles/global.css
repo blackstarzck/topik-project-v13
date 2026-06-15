@@ -50,6 +50,46 @@
   font-weight: 900;
 }
 
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("../../fonts/space/SpaceGrotesk-Light.ttf") format("truetype");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 300;
+}
+
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("../../fonts/space/SpaceGrotesk-Regular.ttf") format("truetype");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("../../fonts/space/SpaceGrotesk-Medium.ttf") format("truetype");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 500;
+}
+
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("../../fonts/space/SpaceGrotesk-SemiBold.ttf") format("truetype");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 600;
+}
+
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("../../fonts/space/SpaceGrotesk-Bold.ttf") format("truetype");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 700;
+}
+
 /*
  * @theme inline bridges --app-* CSS variables (injected on <html> by layout.tsx)
  * into Tailwind v4 utility classes.
@@ -3800,7 +3840,222 @@ body {
 }
 
 .problem-list-card.app-card.app-surface .problem-list-card__body {
-  padding: 0 16px;
+  padding: 0;
+}
+
+.problem-table__column-title {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 6px;
+  color: var(--app-color-text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+.problem-table__column-title--center {
+  justify-content: center;
+}
+
+.problem-table__column-title--problem {
+  justify-content: flex-start;
+  padding-left: 66px;
+}
+
+.problem-table__column-title-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  color: var(--app-color-text-secondary);
+}
+
+.problem-table__column-title-icon svg {
+  stroke-width: 1.8;
+}
+
+.problem-table__row--disabled {
+  opacity: 0.68;
+}
+
+.problem-table__problem-cell {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 14px;
+}
+
+.problem-table__type-index {
+  display: inline-flex;
+  flex: 0 0 auto;
+  width: 52px;
+  height: 52px;
+  align-items: center;
+  justify-content: center;
+  color: var(--app-color-text);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.problem-table__type-index--number {
+  font-family: "Space Grotesk", var(--app-font-family), sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+.problem-table__copy {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+}
+
+.problem-table__title-line {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.problem-table__title {
+  min-width: 0;
+  color: var(--app-color-text);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.problem-table__new-badge {
+  display: inline-flex;
+  min-height: 22px;
+  align-items: center;
+  border-radius: 12px;
+  background: color-mix(
+    in srgb,
+    var(--app-color-text-secondary) 12%,
+    transparent
+  );
+  padding: 0 9px;
+  color: var(--app-color-text);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.problem-table__tags {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.problem-table__disabled-reason {
+  color: var(--app-color-text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.problem-table__value {
+  display: inline-flex;
+  min-height: 26px;
+  align-items: center;
+  justify-content: center;
+  color: var(--app-color-text);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.45;
+  letter-spacing: 0;
+}
+
+.problem-table__status-pill {
+  display: inline-flex;
+  min-height: 26px;
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  padding: 0 11px;
+  color: var(--app-color-text);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.problem-table__status-pill--unsolved {
+  border-color: color-mix(in srgb, var(--app-color-border) 70%, transparent);
+  background: var(--app-color-bg-layout);
+}
+
+.problem-table__status-pill--completed {
+  border-color: var(--app-color-primary);
+  background: var(--app-color-bg-layout);
+}
+
+.problem-table__status-pill--wrongNote {
+  border-color: var(--app-color-primary);
+  background: var(--app-color-bg-container);
+}
+
+.problem-table__status-pill--reviewNeeded {
+  border-color: var(--app-color-border);
+  background: color-mix(
+    in srgb,
+    var(--app-color-bg-layout) 70%,
+    var(--app-color-bg-container)
+  );
+}
+
+.problem-table__action {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.problem-table__action-link {
+  display: inline-flex;
+}
+
+.problem-table__action-button.ant-btn {
+  min-width: 82px;
+  height: 32px;
+  border-radius: 6px;
+  padding-inline: 16px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.problem-table__action-button--primary.ant-btn {
+  border-color: var(--app-color-primary);
+  background: var(--app-color-primary);
+  color: var(--app-color-bg-container);
+  font-weight: 400;
+}
+
+.problem-table__action-button--secondary.ant-btn {
+  border-color: var(--app-color-border);
+  background: var(--app-color-bg-container);
+  color: var(--app-color-text);
+  font-weight: 400;
+}
+
+.problem-table__action-button--primary.ant-btn:not(:disabled):hover,
+.problem-table__action-button--primary.ant-btn:not(:disabled):focus-visible {
+  border-color: var(--app-color-primary);
+  background: var(--app-color-primary);
+  color: var(--app-color-bg-container);
+}
+
+.problem-table__action-button--secondary.ant-btn:not(:disabled):hover,
+.problem-table__action-button--secondary.ant-btn:not(:disabled):focus-visible {
+  border-color: var(--app-color-primary);
+  background: var(--app-color-bg-layout);
+  color: var(--app-color-text);
 }
 
 /*
@@ -3980,15 +4235,8 @@ body {
   flex-wrap: wrap;
 }
 
-.recommendation-reason-card__tag.ant-tag {
-  margin-inline-end: 0;
-  font-size: 14px;
-  font-weight: 400;
-  line-height: 1.56;
-}
-
-/* 문제 목록 행 태그 — 추천 사유 태그와 동일한 외형을 공유한다. */
-.problem-row__tag.ant-tag {
+.recommendation-reason-card__tag.ant-tag,
+.problem-table__tag.ant-tag {
   margin-inline-end: 0;
   font-size: 14px;
   font-weight: 400;

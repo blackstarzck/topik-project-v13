@@ -16,7 +16,7 @@ import {
 import { FilterChips } from "./FilterChips";
 import { ProblemListControls } from "./ProblemListControls";
 import { ProblemListPagination } from "./ProblemListPagination";
-import { ProblemRow } from "./ProblemRow";
+import { ProblemTable } from "./ProblemTable";
 import { ProblemTypeTabs } from "./ProblemTypeTabs";
 import { RetryModal } from "./RetryModal";
 import { useUserProblemsRpc, type UserProblemRow } from "./problem-list-data";
@@ -222,9 +222,6 @@ export function ProblemListView({ userId }: Props) {
         </div>
       </AppCard>
 
-      {/* §5 상단 총 건수 */}
-      <div className="min-h-6">{totalLabel}</div>
-
       {list.isLoading ? (
         <Spin>
           <div className="min-h-20" />
@@ -247,32 +244,8 @@ export function ProblemListView({ userId }: Props) {
           <AppCard
             className="problem-list-card overflow-hidden"
             classNames={problemListCardClassNames}
-            role="list"
           >
-            {rows.map((row, index) => (
-              <ProblemRow
-                key={row.problemId}
-                isLast={index === rows.length - 1}
-                row={{
-                  id: row.problemId,
-                  domain: row.domain as never,
-                  question_no: row.questionNo,
-                  topik_level: row.topikLevel ?? 0,
-                  difficulty: row.difficulty,
-                  title: row.title,
-                  publish_status: row.publishStatus,
-                  review_status: row.reviewStatus,
-                  lifecycle_status: row.lifecycleStatus,
-                  lifecycle_reason: row.lifecycleReason,
-                  tags: row.tags,
-                  updated_at: row.createdAt,
-                }}
-                solveState={row.solveState}
-                attemptCount={row.attemptCount}
-                lastAttemptAt={row.lastAttemptAt}
-                onRetryClick={() => setRetryTarget(row)}
-              />
-            ))}
+            <ProblemTable rows={rows} onRetryClick={setRetryTarget} />
           </AppCard>
           {/* §5 하단 총 건수 + 페이지 이동 */}
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">

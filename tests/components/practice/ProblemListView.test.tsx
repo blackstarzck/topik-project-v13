@@ -13,6 +13,7 @@ import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import enMessages from "../../../messages/en.json";
+import koMessages from "../../../messages/ko.json";
 
 const navState = vi.hoisted(() => ({
   replace: vi.fn(),
@@ -36,20 +37,64 @@ vi.mock("@/lib/supabase/browser", () => ({
 
 import { ProblemListView } from "../../../src/components/practice/ProblemListView";
 
-function renderInApp(node: ReactNode) {
+type RpcProblemRow = {
+  problem_id: string;
+  title: string;
+  difficulty: number;
+  tags: string[];
+  attempt_count: number;
+  is_solved: boolean;
+  solve_state: "none" | "attempted" | "submitted";
+};
+
+function renderInApp(node: ReactNode, locale: "en" | "ko" = "en") {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
     },
   });
+  const messages = locale === "ko" ? koMessages : enMessages;
 
   return render(
-    <NextIntlClientProvider locale="en" messages={enMessages}>
+    <NextIntlClientProvider locale={locale} messages={messages}>
       <AntdApp>
         <QueryClientProvider client={queryClient}>{node}</QueryClientProvider>
       </AntdApp>
     </NextIntlClientProvider>,
   );
+}
+
+function rpcRow(row: RpcProblemRow, index: number) {
+  return {
+    problem_id: row.problem_id,
+    title: row.title,
+    domain: "writing",
+    topik_level: 2,
+    question_no: 51,
+    difficulty: row.difficulty,
+    tags: row.tags,
+    attempt_count: row.attempt_count,
+    is_solved: row.is_solved,
+    last_attempt_at: row.attempt_count > 0 ? "2026-06-10T00:00:00.000Z" : null,
+    created_at: `2026-06-${String(10 - index).padStart(2, "0")}T00:00:00.000Z`,
+    total_count: 6,
+    solve_state: row.solve_state,
+    has_draft: false,
+    draft_status: null,
+    writing_submission_count: row.solve_state === "submitted" ? 1 : 0,
+    latest_submission_id:
+      row.solve_state === "submitted" ? `submission-${index}` : null,
+    latest_submission_at:
+      row.solve_state === "submitted"
+        ? "2026-06-10T00:00:00.000Z"
+        : null,
+    writing_feedback_status:
+      row.solve_state === "submitted" ? "complete" : null,
+    lifecycle_status: "active",
+    lifecycle_reason: null,
+    publish_status: "published",
+    review_status: "approved",
+  };
 }
 
 beforeEach(() => {
@@ -120,5 +165,140 @@ describe("ProblemListView", () => {
     await waitFor(() => {
       expect(rpcMock.mock.calls.length).toBeGreaterThan(initialRpcCallCount);
     });
+  });
+
+  it("renders the C-02 row metrics using compact difficulty buckets and display data", async () => {
+    rpcMock.mockResolvedValueOnce({
+      data: [
+        rpcRow(
+          {
+            problem_id: "problem-128",
+            title: "51-128_동의어 어휘 빈칸",
+            difficulty: 3,
+            tags: ["어휘", "동의어", "빈칸"],
+            attempt_count: 0,
+            is_solved: false,
+            solve_state: "none",
+          },
+          0,
+        ),
+        rpcRow(
+          {
+            problem_id: "problem-127",
+            title: "51-127_반의어 어휘 빈칸",
+            difficulty: 2,
+            tags: ["어휘", "반의어", "빈칸"],
+            attempt_count: 1,
+            is_solved: true,
+            solve_state: "submitted",
+          },
+          1,
+        ),
+        rpcRow(
+          {
+            problem_id: "problem-126",
+            title: "51-126_관용 표현 빈칸",
+            difficulty: 3,
+            tags: ["어휘", "관용 표현", "빈칸"],
+            attempt_count: 1,
+            is_solved: false,
+            solve_state: "attempted",
+          },
+          2,
+        ),
+        rpcRow(
+          {
+            problem_id: "problem-125",
+            title: "51-125_접속 부사 빈칸",
+            difficulty: 4,
+            tags: ["문법", "접속 부사", "빈칸"],
+            attempt_count: 0,
+            is_solved: false,
+            solve_state: "none",
+          },
+          3,
+        ),
+        rpcRow(
+          {
+            problem_id: "problem-124",
+            title: "51-124_문맥상 어휘 빈칸",
+            difficulty: 3,
+            tags: ["어휘", "문맥", "빈칸"],
+            attempt_count: 1,
+            is_solved: true,
+            solve_state: "submitted",
+          },
+          4,
+        ),
+        rpcRow(
+          {
+            problem_id: "problem-123",
+            title: "51-123_유의어 어휘 빈칸",
+            difficulty: 2,
+            tags: ["어휘", "유의어", "빈칸"],
+            attempt_count: 1,
+            is_solved: false,
+            solve_state: "attempted",
+          },
+          5,
+        ),
+      ],
+      error: null,
+    });
+
+    renderInApp(<ProblemListView userId="user-1" />, "ko");
+
+    await screen.findByText("51-128_동의어 어휘 빈칸");
+
+    expect(
+      screen.getByRole("columnheader", {
+        name: koMessages.practice.problems.problemColumnLabel,
+      }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("columnheader", {
+        name: koMessages.practice.problems.difficultyLabel,
+      }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("columnheader", {
+        name: koMessages.practice.problems.estimatedTimeLabel,
+      }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("columnheader", {
+        name: koMessages.practice.problems.previousScoreLabel,
+      }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("columnheader", {
+        name: koMessages.practice.problems.solveStatusLabel,
+      }),
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole("columnheader", {
+        name: koMessages.practice.problems.solveAction,
+      }),
+    ).toBeNull();
+
+    expect(screen.getByText("신규")).toBeTruthy();
+    expect(screen.getAllByText("중")).toHaveLength(3);
+    expect(screen.getAllByText("하")).toHaveLength(2);
+    expect(screen.getByText("상")).toBeTruthy();
+    expect(screen.getAllByText("12분")).toHaveLength(2);
+    expect(screen.getByText("10분")).toBeTruthy();
+    expect(screen.getByText("13분")).toBeTruthy();
+    expect(screen.getByText("15분")).toBeTruthy();
+    expect(screen.getByText("9분")).toBeTruthy();
+    expect(screen.getByText("85점")).toBeTruthy();
+    expect(screen.getByText("62점")).toBeTruthy();
+    expect(screen.getByText("90점")).toBeTruthy();
+    expect(screen.getByText("70점")).toBeTruthy();
+    expect(screen.getAllByText("미풀이")).toHaveLength(2);
+    expect(screen.getAllByText("완료")).toHaveLength(2);
+    expect(screen.getByText("오답 노트")).toBeTruthy();
+    expect(screen.getByText("복습 필요")).toBeTruthy();
+    expect(screen.getAllByRole("button", { name: /시작하기/ })).toHaveLength(2);
+    expect(screen.getAllByRole("button", { name: /다시 풀기/ })).toHaveLength(4);
   });
 });
