@@ -70,6 +70,7 @@ type WorkerSchema = {
           template_key: string;
           channel: string;
           status: string;
+          class: string | null;
           subject: string | null;
           body_html: string | null;
           link_url: string | null;
@@ -80,6 +81,12 @@ type WorkerSchema = {
       };
       profiles: {
         Row: { id: string; display_name: string | null };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      user_marketing_consent: {
+        Row: { user_id: string; unsubscribe_token: string };
         Insert: never;
         Update: never;
         Relationships: [];
@@ -117,6 +124,37 @@ function appendCtaLink(html: string, linkUrl: string | null): string {
     ? path
     : `${base}/${path.replace(/^\/+/, "")}`;
   return `${html}\n<p><a href="${href}">알림 확인하기</a></p>`;
+}
+
+// 마케팅 class 이메일에는 동작하는 수신거부 링크를 본문에 덧붙인다(법적 요건,
+// N-EML-07). 토큰은 user_marketing_consent.unsubscribe_token에서 해석한다. 토큰을
+// 못 찾으면 (자격상 마케팅이 발송될 수 없는 상태이므로 정상 경로에선 발생하지
+// 않는다) 링크를 붙이지 않고 원문을 반환한다 — 깨진 링크를 넣지 않는다.
+export function appendUnsubscribeLink(
+  html: string,
+  token: string | null,
+): string {
+  const tok = (token ?? "").trim();
+  if (!tok) return html;
+  const base = (process.env.NEXT_PUBLIC_SITE_URL ?? SITE_URL_FALLBACK).replace(
+    /\/+$/,
+    "",
+  );
+  const href = `${base}/api/notifications/unsubscribe?token=${encodeURIComponent(tok)}`;
+  return `${html}\n<p style="font-size:12px;color:#888"><a href="${href}">수신거부</a></p>`;
+}
+
+// 수신자의 unsubscribe_token 해석. user_marketing_consent에 행이 없으면 null.
+async function resolveUnsubscribeToken(
+  supabase: WorkerSupabaseClient,
+  userId: string,
+): Promise<string | null> {
+  const { data } = await supabase
+    .from("user_marketing_consent")
+    .select("unsubscribe_token")
+    .eq("user_id", userId)
+    .maybeSingle();
+  return (data?.unsubscribe_token as string | null) ?? null;
 }
 
 type PendingAttempt = {
@@ -228,10 +266,16 @@ export async function POST(request: NextRequest) {
     }
 
     const subject = renderDisplayName(content.subject, content.displayName);
-    const html = appendCtaLink(
+    let html = appendCtaLink(
       renderDisplayName(content.bodyHtml, content.displayName),
       content.linkUrl,
     );
+
+    // 마케팅 class 이메일만 수신거부 링크를 본문에 덧붙인다(N-EML-07).
+    if (content.templateClass === "marketing") {
+      const token = await resolveUnsubscribeToken(supabase, attempt.user_id);
+      html = appendUnsubscribeLink(html, token);
+    }
 
     // 4c. Resend 호출. 키는 절대 로깅/반환하지 않는다.
     let res: Response;
@@ -323,6 +367,7 @@ type ResolvedContent = {
   subject: string | null;
   bodyHtml: string | null;
   linkUrl: string | null;
+  templateClass: string | null;
   displayName: string | null;
 };
 
@@ -336,6 +381,7 @@ async function resolveContent(
   let subject: string | null = null;
   let bodyHtml: string | null = null;
   let linkUrl: string | null = null;
+  let templateClass: string | null = null;
   let resolved = false;
 
   const { data: dispatch } = await supabase
@@ -347,13 +393,14 @@ async function resolveContent(
   if (dispatch?.template_id) {
     const { data: template } = await supabase
       .from("notification_templates")
-      .select("subject, body_html, link_url")
+      .select("subject, body_html, link_url, class")
       .eq("id", dispatch.template_id as string)
       .maybeSingle();
     if (template) {
       subject = (template.subject as string | null) ?? null;
       bodyHtml = (template.body_html as string | null) ?? null;
       linkUrl = (template.link_url as string | null) ?? null;
+      templateClass = (template.class as string | null) ?? null;
       resolved = true;
     }
   }
@@ -362,7 +409,7 @@ async function resolveContent(
   if (!resolved) {
     const { data: byKey } = await supabase
       .from("notification_templates")
-      .select("subject, body_html, link_url")
+      .select("subject, body_html, link_url, class")
       .eq("template_key", attempt.template_key)
       .eq("channel", "email")
       .eq("status", "active")
@@ -371,6 +418,7 @@ async function resolveContent(
     subject = (byKey.subject as string | null) ?? null;
     bodyHtml = (byKey.body_html as string | null) ?? null;
     linkUrl = (byKey.link_url as string | null) ?? null;
+    templateClass = (byKey.class as string | null) ?? null;
   }
 
   const { data: profile } = await supabase
@@ -383,6 +431,7 @@ async function resolveContent(
     subject,
     bodyHtml,
     linkUrl,
+    templateClass,
     displayName: (profile?.display_name as string | null) ?? null,
   };
 }
