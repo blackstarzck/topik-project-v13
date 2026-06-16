@@ -11,7 +11,7 @@
 | 1 | description.md | 사용 |
 | 2 | functional-spec.md | 보조 |
 
-소스 우선순위는 description.md, functional-spec.md, hifi.png, wireframe.png 순서다. 문서와 이미지가 다르면 description.md 기준으로 확정한다.
+소스 우선순위는 description.md, functional-spec.md, browser-screenshot.png(있는 경우) 순서다. 문서와 이미지가 다르면 description.md 기준으로 확정한다.
 
 ## 사용자 화면 표시 데이터
 - 인증 메일 발송 안내

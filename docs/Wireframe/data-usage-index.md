@@ -4,11 +4,11 @@
 
 ## Summary
 
-- Pages: 35
-- Tables: 21
+- Pages: 36
+- Tables: 23
 - RPC/functions: 16
 - Storage buckets: 3
-- Page data links: 111
+- Page data links: 114
 - Unclassified DB objects: 0
 
 ## avatars
@@ -138,14 +138,49 @@
 | A-03 | Learning goal setup | table | `id`, `ui_locale`, `status` | read | 사용자 기본 설정과 onboarding 상태 판단에 사용한다. |
 | B-01 | Home dashboard | table | `id`, `display_name`, `plan_label`, `status` | read | 대시보드 사용자 표시와 권한 상태에 사용한다. |
 | G-01 | Language settings | table | `ui_locale`, `updated_at` | read/write | 앱 표시 언어를 저장한다. |
-| X-01 | Product landing | table | `plan_label` | derived-read | 랜딩의 플랜/권한 CTA 문구와 연결될 수 있으나 현재 직접 DB 의존은 낮다. |
-| X-03 | Paywall | table | `plan_label`, `status` | read | 현재 플랜과 접근 제한 안내에 사용한다. |
-| X-04 | Subscription management | table | `plan_label`, `status` | read | 구독 상태 셸 화면에 사용한다. 실제 결제 테이블은 아직 없다. |
+| X-01 | Product landing | table | `plan_label` | derived-read | 랜딩의 플랜/권한 CTA fallback과 사용자 상태 분기에 연결될 수 있다. |
+| X-03 | Paywall | table | `plan_label`, `status` | fallback read | 현재 플랜과 접근 제한 안내의 fallback 분기에 연결될 수 있다. 기본 결제 근거는 `subscription_plans`와 `subscriptions`다. |
+| X-04 | Subscription management | table | `plan_label`, `status` | fallback read | 구독 상태 셸의 fallback 분기에 연결될 수 있다. 기본 결제 근거는 `subscription_plans`, `subscriptions`, `payment_history`다. |
 | X-05 | Profile editing | table | `display_name`, `nickname`, `avatar_path`, `bio`, `ui_locale`, `plan_label`, `status` | read/write | 프로필 편집, 160자 자기소개, 아바타 경로에 사용한다. |
 | X-06 | Password reset | table | `id`, `email`, `status` | read | 비밀번호 재설정 성공 후 사용자 상태 확인에 연결될 수 있다. |
 | X-09 | Notification settings | table | `notification_prefs` | read/write | 알림 채널과 조건 설정을 JSON object로 저장한다. |
 | X-11 | Auth error | table | `id`, `status` | read | 인증 오류 후 계정 상태 안내와 재시도 분기에 연결될 수 있다. |
 | X-12 | Auth verify-email | table | `id`, `email`, `status` | read | 가입 직후 이메일 인증 안내와 인증 상태 확인에 연결된다. |
+| X-18 | Auth consent | table | `id`, `ui_locale` | read/bootstrap | 소셜 로그인 후 사용자 locale 기준으로 필수 법적 문서 동의 게이트를 구성한다. |
+
+## subscription_plans
+
+| IA | Screen | Type | Columns/fields | Usage | Page feature |
+| --- | --- | --- | --- | --- | --- |
+| X-01 | Product landing | table | `plan_key`, `name`, `cadence`, `price_cents`, `currency`, `features`, `recommended`, `active` | schema-supported read | 플랜/가격/혜택 표시의 backing table이다. 현재 landing source는 직접 DB 의존이 낮고 X-03/X-04에서 같은 backing data를 실제 조회한다. |
+| X-03 | Paywall | table | `plan_key`, `name`, `cadence`, `price_cents`, `currency`, `features`, `recommended`, `active` | read | 페이월 플랜/가격 카드에 사용한다. |
+| X-04 | Subscription management | table | `plan_key`, `name`, `cadence`, `price_cents`, `currency`, `features`, `recommended`, `active` | read | 현재 구독의 플랜명/혜택 표시와 plan_key 매칭에 사용한다. |
+
+## subscriptions
+
+| IA | Screen | Type | Columns/fields | Usage | Page feature |
+| --- | --- | --- | --- | --- | --- |
+| X-01 | Product landing | table | `user_id`, `plan_key`, `billing_cadence`, `status`, `current_period_start`, `current_period_end`, `cancel_at` | schema-supported derived-read | 로그인 사용자의 CTA 분기와 현재 구독자 분기에 연결될 수 있다. |
+| X-03 | Paywall | table | `user_id`, `plan_key`, `billing_cadence`, `status`, `current_period_start`, `current_period_end`, `cancel_at` | read | 기존 구독자 분기와 현재 구독 상태 안내에 사용한다. |
+| X-04 | Subscription management | table | `user_id`, `plan_key`, `billing_cadence`, `status`, `current_period_start`, `current_period_end`, `cancel_at` | read | 현재 구독 상태, 기간, 해지 예약 상태 표시에 사용한다. |
+
+## payment_history
+
+| IA | Screen | Type | Columns/fields | Usage | Page feature |
+| --- | --- | --- | --- | --- | --- |
+| X-04 | Subscription management | table | `amount_cents`, `currency`, `status`, `receipt_url`, `paid_at` | read | 본인 결제 이력 목록에 사용한다. |
+
+## legal_documents
+
+| IA | Screen | Type | Columns/fields | Usage | Page feature |
+| --- | --- | --- | --- | --- | --- |
+| X-18 | Auth consent | table | `id`, `doc_type`, `version`, `locale`, `title`, `summary`, `body`, `effective_at`, `status`, `requires_consent` | read | 최신 published required 약관/개인정보 문서를 조회해 누락 동의 목록을 만든다. |
+
+## user_consents
+
+| IA | Screen | Type | Columns/fields | Usage | Page feature |
+| --- | --- | --- | --- | --- | --- |
+| X-18 | Auth consent | table | `user_id`, `document_id`, `doc_type`, `version`, `source`, `accepted_at` | read/write | 사용자별 기존 동의 이력을 확인하고 누락된 필수 동의를 기록한다. |
 
 ## public.create_comparison_report_with_metrics
 
@@ -285,5 +320,4 @@
 
 ## Document Conflicts
 
-- database-schema-drift: `docs/development/database-schema.md` does not fully reflect the later migration set now present under `supabase/migrations/`.
-- stale-ia-paths-in-audit-output: Latest IA audit artifacts still contain legacy `docs/IA/...` strings; current docs use `docs/Wireframe/...`.
+- No known broken document links in this index as of the 2026-06-16 cleanup.

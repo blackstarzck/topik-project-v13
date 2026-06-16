@@ -3,10 +3,10 @@
 > Status note (2026-06-05)
 >
 > This PRD is maintained as active product intent. When route names or screen
-> coverage matter, use `docs/sitemap.md`, `docs/ia.md`, `docs/Wireframe/`, and
+> coverage matter, use `docs/ia.md`, `docs/ia.md`, `docs/Wireframe/`, and
 > `docs/flow/user-flow.md` together.
 >
-> Route/IA scope note: the current `docs/Wireframe/` and `docs/sitemap.md`
+> Route/IA scope note: the current `docs/Wireframe/` and `docs/ia.md`
 > inventory do not include standalone routes or screens for vocabulary, mock
 > exam, board, or notice detail. Those references remain product context or
 > future/deferred scope until matching `docs/Wireframe` screens and sitemap
@@ -58,7 +58,7 @@ TALKPIK AI는 TOPIK 한국어능력시험 학습자를 위한 AI 기반 학습 �
 
 ## 5. 전체 정보 구조
 
-현재 구현 route 기준은 `docs/sitemap.md`의 Target React Route Map입니다.
+현재 구현 route 기준은 `docs/ia.md`의 Target React Route Map입니다.
 화면별 구조는 `docs/Wireframe/README.md`와 각 화면의 `description.md`,
 `functional-spec.md`를 기준으로 봅니다.
 
@@ -73,7 +73,7 @@ TALKPIK AI는 TOPIK 한국어능력시험 학습자를 위한 AI 기반 학습 �
 - 내 서재 / 내보내기: 내 서재, PDF 내보내기 모달
 - 설정 / 결제 / 알림: 언어 설정, 페이월, 구독 관리, 프로필 편집, 알림 설정
 
-관리자 화면은 `docs/admin-scope-boundary.md`의 범위를 따릅니다. 이 저장소에서는
+관리자 화면은 `AGENTS.md의 관리자 범위 경계`의 범위를 따릅니다. 이 저장소에서는
 사용자-facing 화면 구현을 우선하며, 관리자 기능은 별도 동기화 단계에서 다룹니다.
 
 ## 6. 핵심 유저 플로우
@@ -261,7 +261,7 @@ TALKPIK AI는 TOPIK 한국어능력시험 학습자를 위한 AI 기반 학습 �
 
 ### 7.11 모의고사 결과 (Future / 별도 IA 필요)
 
-현재 route inventory에는 모의고사 결과 route가 없습니다. 구현 전 `docs/Wireframe`와 `docs/sitemap.md`에 화면과 route를 먼저 추가해야 합니다.
+현재 route inventory에는 모의고사 결과 route가 없습니다. 구현 전 `docs/Wireframe`와 `docs/ia.md`에 화면과 route를 먼저 추가해야 합니다.
 
 #### 요구사항
 
@@ -277,7 +277,7 @@ TALKPIK AI는 TOPIK 한국어능력시험 학습자를 위한 AI 기반 학습 �
 
 ### 7.12 실전 모의고사 (Future / 별도 IA 필요)
 
-현재 route inventory에는 실전 모의고사 route가 없습니다. 구현 전 `docs/Wireframe`와 `docs/sitemap.md`에 화면과 route를 먼저 추가해야 합니다.
+현재 route inventory에는 실전 모의고사 route가 없습니다. 구현 전 `docs/Wireframe`와 `docs/ia.md`에 화면과 route를 먼저 추가해야 합니다.
 
 #### 요구사항
 
@@ -295,7 +295,7 @@ TALKPIK AI는 TOPIK 한국어능력시험 학습자를 위한 AI 기반 학습 �
 
 ### 7.13 게시판 (Future / 별도 IA 필요)
 
-현재 route inventory에는 게시판이나 공지 상세 route가 없습니다. 구현 전 `docs/Wireframe`와 `docs/sitemap.md`에 화면과 route를 먼저 추가해야 합니다.
+현재 route inventory에는 게시판이나 공지 상세 route가 없습니다. 구현 전 `docs/Wireframe`와 `docs/ia.md`에 화면과 route를 먼저 추가해야 합니다.
 
 #### 요구사항
 
@@ -438,6 +438,5 @@ MVP는 Minimum Viable Product의 줄임말로, 가장 먼저 검증해야 하는
 
 ## 13. 관련 문서
 
-- [사이트맵 및 페이지 연결도](sitemap.md)
 - [페이지별 IA 문서 목차](ia.md)
 - [현행 유저 플로우 문서](flow/user-flow.md)

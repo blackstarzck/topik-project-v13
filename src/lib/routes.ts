@@ -1,7 +1,7 @@
 ﻿/**
  * Single source of truth for sitemap-aligned route data.
  *
- * Keep this file in sync with docs/sitemap.md when a route moves.
+ * Keep this file in sync with docs/flow/sitemap.md when a route moves.
  */
 
 import type { AppRole } from "./auth/roles";

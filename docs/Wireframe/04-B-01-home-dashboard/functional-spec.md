@@ -14,7 +14,7 @@
 - Route: `/dashboard`
 - Route type: page
 - 기준 흐름: `docs/flow/user-flow.md`의 IA 순서를 따른다.
-- 진입 경로: A-02 로그인 성공, A-03 온보딩 완료, `/auth/callback` 성공, X-03 결제 완료 후 학습 복귀.
+- 진입 경로: A-02 로그인 성공, A-03 온보딩 완료, `/auth/callback` 성공, X-03 학습 복귀.
 - 이탈 경로: 추천 학습은 C-01, 최근 첨삭은 F-01, 목표/성장 카드는 X-02, 알림은 X-09, 설정은 G-01, 프로필은 X-05, 멤버십/구독 관리는 X-04로 이동한다.
 - 화면 내부 동작: KPI, 추천 문제, 최근 피드백, 알림 카드, 멤버십 상태를 확인한다.
 
@@ -79,4 +79,4 @@
 - 이 화면의 주요 CTA와 상태가 Wireframe description과 route map에 맞게 설명되어 있다.
 - 위 DB 데이터 사용 명세의 모든 객체가 `docs/Wireframe/data-usage-index.md`에도 역색인되어 있다.
 - 확정할 수 없는 기능 또는 데이터는 구현된 것처럼 쓰지 않고 gap/candidate로 남긴다.
-- user/admin/public 권한 경계가 `docs/sitemap.md` audience와 맞는다.
+- user/admin/public 권한 경계가 `docs/ia.md`와 화면 기능명세의 audience와 맞는다.

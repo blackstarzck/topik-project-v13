@@ -40,7 +40,7 @@ Use this checklist before calling UI work complete.
 - [ ] No `--app-*` variable holds a `var(--ant-*)` chain; each holds a resolved
       actual value safe for SSR.
 - [ ] Resolved `--app-*` values are present on first render (injected from
-      `app/layout.tsx` server-side, not deferred to client JS).
+      `src/app/layout.tsx` server-side, not deferred to client JS).
 - [ ] Portal-rendered AntD surfaces (Modal, Drawer, Notification, Tooltip) have
       been verified to display correct `--app-*` colors in a running build.
 - [ ] `src/styles/global.css` uses `@theme inline` (not bare `@theme`) for any

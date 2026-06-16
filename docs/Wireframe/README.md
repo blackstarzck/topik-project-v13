@@ -4,7 +4,7 @@
 
 사용자 흐름은 [../flow/user-flow.md](../flow/user-flow.md)가 기준입니다. 화면 이동 정보가 화면 문서와 충돌하면 사용자 흐름 문서를 우선합니다.
 
-관리자 화면은 별도 관리자 앱(topik-ai) 소관이라 이 폴더에 없습니다(2026-06-11 와이어프레임 제거). 자세한 경계는 [../admin-scope-boundary.md](../admin-scope-boundary.md)를 따릅니다.
+관리자 화면은 별도 관리자 앱(topik-ai) 소관이라 이 폴더에 없습니다(2026-06-11 와이어프레임 제거). 이 저장소의 active Wireframe은 사용자 앱 화면만 다룹니다.
 
 각 화면 폴더에는 보통 다음 파일이 있습니다.
 
@@ -68,4 +68,4 @@
 
 `docs/Wireframe/README.md`에서 관련 화면을 찾고, 해당 `description.md`, `functional-spec.md`, 필요 시 `screen-data-summary.md`를 함께 확인합니다.
 
-화면 이름을 바꾸거나 새 화면을 추가할 때는 [../flow/user-flow.md](../flow/user-flow.md), [../sitemap.md](../sitemap.md), 이 README의 Source 목록을 함께 맞춰야 합니다.
+화면 이름을 바꾸거나 새 화면을 추가할 때는 [../flow/user-flow.md](../flow/user-flow.md), [../ia.md](../ia.md), 이 README의 Source 목록을 함께 맞춰야 합니다.

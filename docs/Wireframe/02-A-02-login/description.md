@@ -49,7 +49,7 @@
 
 ▣ 제약 조건: ID 4-80자, PW 8-64자, blur 후 형식 검증.
 
-▣ 예외: 오류 문구는 각 필드 하단. 잠금은 Supabase 서버 측 rate-limit (`over_request_rate_limit`) 으로 강제되며, 클라이언트는 X-11 카드로 안내. 클라이언트 측 실패 카운터는 보안 장치가 아닌 UX 힌트로만 동작 (3회 실패 후 "잠시 후 다시 시도" 안내). Codex P4 D5 결정 (2026-05-29) 근거: `docs/ai-workflow/runs/2026/05/29/p4-codex-delegation/D5-lockout-spec-clarify.md`.
+▣ 예외: 오류 문구는 각 필드 하단. 잠금은 Supabase 서버 측 rate-limit (`over_request_rate_limit`) 으로 강제되며, 클라이언트는 X-11 카드로 안내. 클라이언트 측 실패 카운터는 보안 장치가 아닌 UX 힌트로만 동작 (3회 실패 후 "잠시 후 다시 시도" 안내). Codex P4 D5 결정 요약(2026-05-29): 잠금 보안 판단은 서버 rate-limit를 기준으로 하고, 클라이언트 카운터는 안내용으로만 둔다.
 
 4
 

@@ -30,8 +30,8 @@ flowchart TD
 | 연결 문서 | 관계 |
 | --- | --- |
 | [../Wireframe/README.md](../Wireframe/README.md) | Flow의 각 화면이 IA 문서의 화면 설명과 연결됩니다. |
-| [../sitemap.md](../sitemap.md) | 사용자가 이동하는 화면이 실제 라우트와 연결됩니다. |
-| [../spec.md](../spec.md) | 흐름 안에서 각 기능이 어떻게 동작해야 하는지 설명합니다. |
+| [../ia.md](../ia.md) | 사용자가 이동하는 화면이 실제 라우트와 연결됩니다. |
+| [../../README.md](../../README.md) / [../../AGENTS.md](../../AGENTS.md) | 흐름 안에서 각 기능이 어떻게 동작해야 하는지 설명합니다. |
 
 ## AI에게 지시할 때
 

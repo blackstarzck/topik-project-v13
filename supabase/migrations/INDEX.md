@@ -5,7 +5,7 @@
 실제 SQL 파일은 **Supabase CLI 호환을 위해 `supabase/migrations/` 디렉토리 바로 아래에 flat 으로 위치**합니다 (CLI는 하위 폴더 SQL을 스캔하지 않음). 본 문서는 가독성을 위한 메타 정리입니다.
 
 명명 규칙·idempotency·CLI 적용 명령은 [`../README.md`](../README.md) 참조.
-테이블 컬럼·RLS·ER 등 스키마 상세는 [`../../docs/development/database-schema.md`](../../docs/development/database-schema.md) 참조.
+테이블 컬럼·RLS·ER 등 스키마 상세는 각 migration SQL 본문, 본 인덱스, 관련 Wireframe 기능명세와 `docs/Wireframe/data-usage-index.md`를 함께 참조.
 
 ---
 
@@ -86,7 +86,7 @@
 
 #### 08 (월) — Conformance decisions #2/#4 backing schema (✅ 2026-06-09 적용 완료)
 
-> ✅ **적용 완료(2026-06-09)**: 31·32는 라이브 dev DB에 적용됨. 적용 당시 31(legal)이 누락돼 있던 것을 발견해 함께 적용했고, `schema_migrations`도 백필. wireframe-db-conformance 결정 #2·#4 확정에 따른 사용자 화면 backing 스키마. 둘 다 admin 소유 공유 영역(`admin-data-contract` 이름 정합은 LATER admin-build 단계). 근거: [`../../docs/ai-workflow/runs/2026/06/08/20260608-conformance-decisions-finalized.md`](../../docs/ai-workflow/runs/2026/06/08/20260608-conformance-decisions-finalized.md).
+> ✅ **적용 완료(2026-06-09)**: 31·32는 라이브 dev DB에 적용됨. 적용 당시 31(legal)이 누락돼 있던 것을 발견해 함께 적용했고, `schema_migrations`도 백필. wireframe-db-conformance 결정 #2·#4 확정에 따른 사용자 화면 backing 스키마. 둘 다 admin 소유 공유 영역(`admin-data-contract` 이름 정합은 LATER admin-build 단계). 원문 run artifact는 2026-06-16 문서 정리로 제거했고, durable conclusion은 이 문단과 migration 설명에 보존한다.
 
 | # | timestamp | 파일 | 영역 |
 | ---:| --- | --- | --- |
@@ -101,7 +101,7 @@
 
 #### 08 (월) — Admin integration Phase C: 문제은행 정합 컬럼 + 감사 메모 (✅ 적용 완료)
 
-> Admin(topik-ai) 쓰기 문제은행 정합. GPT-5.5 교차검토 D-B/D-C 결정 반영. 둘 다 additive·idempotent, PROPOSED(코드 확정 전 CHECK 없음). 2026-06-09 적용 확인. 근거: [`../../docs/admin-integration-plan.md`](../../docs/admin-integration-plan.md).
+> Admin(topik-ai) 쓰기 문제은행 정합. GPT-5.5 교차검토 D-B/D-C 결정 반영. 둘 다 additive·idempotent, PROPOSED(코드 확정 전 CHECK 없음). 2026-06-09 적용 확인. 삭제된 planning artifact의 durable conclusion은 이 문단과 migration 설명에 보존한다.
 
 | # | timestamp | 파일 | 영역 |
 | ---:| --- | --- | --- |
@@ -116,7 +116,7 @@
 
 #### 09 (화) — v13 admin 섬 제거 (✅ 적용 완료, 소유자 결정)
 
-> 문제는 외부 API에서 **검수 완료** 상태로 수급 → v13은 노출제어(공개/비공개+만료)만. v13 admin CRUD/검수/사용자·조직 관리 불필요 → 코드 + DB 동반 제거. 보존: `app_role`·`admin_audit_logs`·`private.is_*_admin`. 배경: [`../../docs/admin-scope-boundary.md`](../../docs/admin-scope-boundary.md) 2026-06-09 §.
+> 문제는 외부 API에서 **검수 완료** 상태로 수급 → v13은 노출제어(공개/비공개+만료)만. v13 admin CRUD/검수/사용자·조직 관리 불필요 → 코드 + DB 동반 제거. 보존: `app_role`·`admin_audit_logs`·`private.is_*_admin`. durable conclusion은 AGENTS의 관리자 범위 경계와 이 migration 설명에 보존한다.
 
 | # | timestamp | 파일 | 영역 |
 | ---:| --- | --- | --- |
@@ -132,10 +132,15 @@
 
 | # | timestamp | 파일 | 영역 |
 | ---:| --- | --- | --- |
-| 39 | `16:00:00` | [`20260612160000_user_notifications.sql`](./20260612160000_user_notifications.sql) | `user_notifications` 인앱 수신함 (벨 뱃지/알림센터/B-01 카드). owner select + `read_at` 단일 컬럼 grant update, insert/delete는 service_role 파이프라인 전용. `delivery_attempt_id`는 topik-ai 소유 `notification_delivery_attempts` soft 참조(FK 없음 — 소유권 계약). 계약 SoT: topik-ai `docs/specs/notification-contract.md` |
-| 40 | `22:10:00` | [`20260612221000_fix_legal_documents_public_read_policy.sql`](./20260612221000_fix_legal_documents_public_read_policy.sql) | `legal_documents_published_read` 정책에서 공개 published read와 `private.is_platform_admin()` admin helper를 분리. anon 공개 약관 조회가 helper 실행 권한 오류(42501)로 실패하지 않도록 `status='published'`만 평가. |
-| 41 | `20:00:00` | [`20260612200000_user_marketing_consent.sql`](./20260612200000_user_marketing_consent.sql) | H-2 마케팅 동의 저장소. `user_marketing_consent`(가산형, profiles 미변경): `consented_at`/`unsubscribed_at`/`unsubscribe_token uuid unique`/`source`. 유효 동의 = `consented_at not null AND unsubscribed_at null`. owner select/insert/update RLS + force, service_role read. 토큰 수신거부는 서버 service_role(토큰=인증). N-OPT-04/N-EML-07. |
-| 42 | `20:01:00` | [`20260612200100_marketing_consent_in_dispatch.sql`](./20260612200100_marketing_consent_in_dispatch.sql) | H-2 dispatch consent 게이트. hard-coded marketing→`opted_out`를 `private.is_marketing_consented()` 조회로 교체(admin/event 함수). 동의 O+채널 on→eligible, 동의 O+채널 off→skipped, 동의 X→opted_out. 비-마케팅 동작 불변. |
+| 39 | `16:00:00` | [`20260612160000_user_notifications.sql`](./20260612160000_user_notifications.sql) | `user_notifications` 인앱 수신함(벨 뱃지/알림센터/B-01 카드). owner select + `read_at` 단일 컬럼 grant update, insert/delete는 service_role 파이프라인 전용. `delivery_attempt_id`는 topik-ai 소유 `notification_delivery_attempts` soft 참조(FK 없음 — 소유권 계약). |
+| 40 | `18:00:00` | [`20260612180000_notification_dispatcher.sql`](./20260612180000_notification_dispatcher.sql) | v13 사용자 알림 dispatcher 함수. topik-ai 운영 스키마를 v13 migration에 만들지 않고, 공유 객체는 soft reference/contract 방식으로 연결한다. |
+| 41 | `18:01:00` | [`20260612180100_register_notification_cron.sql`](./20260612180100_register_notification_cron.sql) | 알림 dispatch cron 등록/정리용 migration. 실행 환경에서 `pg_cron` 사용 가능 여부에 따라 동작한다. |
+| 42 | `19:00:00` | [`20260612190000_notification_email_pipeline.sql`](./20260612190000_notification_email_pipeline.sql) | 이메일 알림 파이프라인 보강. `notification_email_config`와 이메일 처리 함수를 추가하되, 실제 provider/secret은 환경 설정에 둔다. |
+| 43 | `19:01:00` | [`20260612190100_email_transport_fail_user.sql`](./20260612190100_email_transport_fail_user.sql) | 이메일 전송 실패 시 사용자 알림 상태를 안전하게 실패 처리하도록 보강한다. |
+| 44 | `19:02:00` | [`20260612190200_email_live_defer.sql`](./20260612190200_email_live_defer.sql) | live 이메일 전송을 deferred 상태로 유지하는 안전장치. 실제 provider 활성화 전까지 운영 발송을 막는다. |
+| 45 | `20:00:00` | [`20260612200000_user_marketing_consent.sql`](./20260612200000_user_marketing_consent.sql) | H-2 마케팅 동의 저장소. `user_marketing_consent`(가산형, profiles 미변경): `consented_at`/`unsubscribed_at`/`unsubscribe_token uuid unique`/`source`. 유효 동의 = `consented_at not null AND unsubscribed_at null`. owner select/insert/update RLS + force, service_role read. |
+| 46 | `20:01:00` | [`20260612200100_marketing_consent_in_dispatch.sql`](./20260612200100_marketing_consent_in_dispatch.sql) | H-2 dispatch consent 게이트. hard-coded marketing→`opted_out`를 `private.is_marketing_consented()` 조회로 교체(admin/event 함수). 동의 O+채널 on→eligible, 동의 O+채널 off→skipped, 동의 X→opted_out. 비-마케팅 동작 불변. |
+| 47 | `22:10:00` | [`20260612221000_fix_legal_documents_public_read_policy.sql`](./20260612221000_fix_legal_documents_public_read_policy.sql) | `legal_documents_published_read` 정책에서 공개 published read와 `private.is_platform_admin()` admin helper를 분리. anon 공개 약관 조회가 helper 실행 권한 오류(42501)로 실패하지 않도록 `status='published'`만 평가. |
 
 ---
 
@@ -145,7 +150,7 @@
 2. **파일 작성**: `supabase/migrations/<timestamp>_<짧은_설명>.sql` 로 flat 위치에 둠. 하위 폴더 만들지 말 것 — Supabase CLI가 못 본다.
 3. **본 INDEX.md 갱신**: 해당 날짜 섹션에 표 한 줄 추가. 새 연/월/일이면 트리 헤더 (`### 06`, `#### 05`) 부터 추가.
 4. **`supabase/README.md`** 의 요약 정보가 영향받으면 같이 갱신.
-5. **정본 spec(`docs/development/database-schema.md`)** 도 같이 갱신: §5 Migration Index 표, §1 테이블 컬럼 표, §7 invariants.
+5. 관련 Wireframe 기능명세, `docs/Wireframe/data-usage-index.md`, 그리고 필요한 경우 `README.md`/`AGENTS.md`의 경계 규칙도 같이 갱신.
 
 ## 빠른 검증 체크리스트
 
@@ -154,4 +159,4 @@
 - [ ] SQL이 idempotent (`if not exists`, `or replace`, `drop ... if exists`)?
 - [ ] FK 참조 테이블이 이전 timestamp 파일에 존재하는가?
 - [ ] RLS-적용 대상이라면 RLS enable + force + 정책이 같은 또는 후속 마이그레이션에 있는가?
-- [ ] INDEX.md / README.md / database-schema.md 세 곳을 모두 갱신했는가?
+- [ ] INDEX.md / 관련 Wireframe 기능명세 / data-usage-index / README.md 또는 AGENTS.md 중 영향받는 곳을 모두 갱신했는가?

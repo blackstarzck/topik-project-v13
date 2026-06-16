@@ -7,9 +7,9 @@
 > **작성일**: 2026-06-09 · **범위 결정(owner)**: 전체 3-Track 상세(C안) + 이 계획안 자체도 GPT-5.5 메타리뷰 후 확정.
 >
 > **근거 문서**
-> - 정합 분석 + 결정: [`docs/writing-questionbank-reconciliation.md`](../../writing-questionbank-reconciliation.md) (Codex 교차검증 §8 포함)
-> - 통합 설계서: [`docs/admin-integration-plan.md`](../../admin-integration-plan.md)
-> - 경계: [`docs/admin-scope-boundary.md`](../../admin-scope-boundary.md)
+> - 정합 분석 + 결정: 삭제된 historical reconciliation artifact의 durable conclusion은 이 계획의 체크리스트와 관련 active docs에 흡수한다.
+> - 통합 설계서: 삭제된 admin integration planning artifact의 durable conclusion은 migration 설명과 AGENTS의 관리자 범위 경계에 보존한다.
+> - 경계: AGENTS의 관리자 범위 경계
 > - anchor: `topik-ai/docs/specs/admin-data-contract.md`
 >
 > **메타리뷰 상태**: ✅ GPT-5.5 메타리뷰 완료 — **SOUND-WITH-FIXES**, TOP5 지적 전부 반영(§8). owner 확정 대기.
@@ -38,7 +38,7 @@
 **Track 정의**
 - **Track A (v13 저장소, 지금 실행 가능)**: user 화면을 스키마에 맞추는 정리. owner 승인 불필요(단 GPT-5.5 게이트는 거침).
 - **Track B (owner 결정)**: 사람이 정해야 하는 enum/정책. v13은 결정 패킷 작성 + 승인 후 (해당 시) 마이그레이션.
-- **Track C (topik-ai 저장소, owner 승인 게이트)**: admin 콘텐츠/노출/메모 표면. **구현은 topik-ai에서**, 각 페이즈마다 owner 승인. `docs/admin-scope-boundary.md` 준수.
+- **Track C (topik-ai 저장소, owner 승인 게이트)**: admin 콘텐츠/노출/메모 표면. **구현은 topik-ai에서**, 각 페이즈마다 owner 승인. `AGENTS.md의 관리자 범위 경계` 준수.
 
 ---
 
@@ -70,13 +70,13 @@
 - **교차/적대 리뷰 게이트**: 모든 페이즈(P0 포함). 기본 = GPT-5.5(cross-family). **2026-06-09 codex 토큰 만료 → 임시로 "새 맥락 Claude 적대검수 에이전트"로 대체**(같은 계열이라 독립성 낮음 — codex 복구 시 GPT-5.5로 재검수 권장). owner 승인으로 전환.
 - **owner 승인 게이트**: Track B(결정), Track C(구현 페이즈마다).
 - **스키마 문서 게이트**(신규 CLAUDE.md): DB 구조(table/column/enum/constraint/index/RPC/RLS/storage/migration) 변경 시 보고 전 갱신:
-  `docs/development/database-schema.md` · `docs/supabase-table-inventory.md` · `supabase/migrations/INDEX.md` ·
-  `docs/share/`(특히 `database-structure-by-page.md`). → **적용 대상(메타리뷰 반영)**: B0(백필 마이그레이션)·B1(topic_category_code CHECK)·B2(lifecycle enum/CHECK·만료 트리거 추가 시)·B4(review_workflow_status CHECK)·C2(메모 컬럼 신설 시)·C3(서버 검증 RPC/제약 추가 시) 및 모든 seed/backfill 마이그레이션.
+  `supabase/migrations/INDEX.md` · `docs/Wireframe/data-usage-index.md` · `supabase/migrations/INDEX.md` ·
+  `docs/Wireframe/data-usage-index.md`(특히 `database-structure-by-page.md`). → **적용 대상(메타리뷰 반영)**: B0(백필 마이그레이션)·B1(topic_category_code CHECK)·B2(lifecycle enum/CHECK·만료 트리거 추가 시)·B4(review_workflow_status CHECK)·C2(메모 컬럼 신설 시)·C3(서버 검증 RPC/제약 추가 시) 및 모든 seed/backfill 마이그레이션.
 - **E2E 게이트**: v13 개발성 변경 전부 `pnpm test:e2e`.
 
 **산출물 위치 규약**
 - 마스터 계획(이 문서): `docs/superpowers/plans/2026-06-09-writing-questionbank-remediation.md`
-- 페이즈별 plan/review/report: `docs/ai-workflow/runs/YYYY/MM/DD/<phase>-{plan,gpt55-review,report}.md` (실행일 기준)
+- 페이즈별 plan/review/report: 이 계획 문서의 체크리스트와 관련 active docs의 Decision/History 섹션에 흡수한다. 원문 run artifact는 2026-06-16 문서 정리로 제거한다.
 - Track C(topik-ai) 산출물은 topik-ai 저장소의 동등 위치 + v13에 handoff 패킷 사본.
 
 ---
@@ -136,7 +136,7 @@ P0
 **A2 · 정식 데이터 형태 확정 + normalizer 견고화 (G2·G9·G11, F3 읽기측)**
 - 선행: **A1**(생성 타입 최신화 후 진행 — v13 컴파일/typecheck 기준 안정).
 - 목표: (a) "문제 콘텐츠 형태 계약"을 문서로 공표 — rubric=OBJECT `{conditions,criteria}`, #54 materials 정식형(풍부형) + 평면형 레거시 폴백, `materials.review.validation` 형태. (b) normalizer가 malformed blob에 대해 안전 폴백/명시적 사유로 떨어지게 견고화(F3 읽기측 방어).
-- 변경: `docs/`(형태 계약 문서) + `src/lib/writing/problem-normalizer.ts`(방어 강화, 동작 보존). `docs/share/` 갱신 고려.
+- 변경: `docs/`(형태 계약 문서) + `src/lib/writing/problem-normalizer.ts`(방어 강화, 동작 보존). `docs/Wireframe/data-usage-index.md` 갱신 고려.
 - 수용기준: 형태 계약 문서화 + 잘못된 blob에도 화면이 크래시 대신 명시적 `problem_data_incomplete`로 처리 + 단위 테스트 추가.
 - 검증: 단위 테스트 + `pnpm test:e2e`.
 - GPT-5.5 포커스: 정식형 선택이 양쪽(화면·admin 저작기)과 모순 없는지, 폴백이 의미를 바꾸지 않는지.
@@ -159,7 +159,7 @@ P0
 **B1 · 주제분류 코드셋 + NULL 백필 + CHECK (G6)**
 - 선행: **B0**(노출/백필 방침 확정).
 - 산출: 결정 패킷 — 후보 ASCII 코드셋(life/study/society/culture/economy/education/environment/technology + 미분류), **화면 샘플 라벨 건강/행정의 매핑 처분**(신규코드 vs 기존편입), **기존 NULL row 백필 방침**(NULL 유지 허용 vs 'uncategorized'로 채움), 마이그레이션 초안.
-- owner 승인 후: 기존 NULL 백필 → `topic_category_code` CHECK 제약 마이그레이션 + admin 쓰기 enable + **스키마 문서 게이트**(4개 문서) + `docs/share/`.
+- owner 승인 후: 기존 NULL 백필 → `topic_category_code` CHECK 제약 마이그레이션 + admin 쓰기 enable + **스키마 문서 게이트**(4개 문서) + `docs/Wireframe/data-usage-index.md`.
 - 검증: 마이그레이션 적대검수 + `pnpm test:e2e`.
 - GPT-5.5 포커스: 코드셋 완전성(모든 화면 라벨 커버), CHECK가 기존 데이터(NULL 포함)와 충돌 없는지, NULL 정책.
 
@@ -250,7 +250,7 @@ P0
 
 ## 5. 보고문서 규약 + 템플릿
 
-**위치**: `docs/ai-workflow/runs/YYYY/MM/DD/<phase>-{plan,gpt55-review,report}.md` (실행일).
+**위치**: 이 계획 문서의 진행 체크리스트와 관련 active docs의 Decision/History 섹션.
 Track C는 topik-ai 동등 위치 + v13에 handoff 사본.
 
 **완료 보고 템플릿(`<phase>-report.md`)**
@@ -279,16 +279,16 @@ Track C는 topik-ai 동등 위치 + v13에 handoff 사본.
 ## 7. 진행 체크리스트
 
 - [x] P0 — 계획 GPT-5.5 메타리뷰(§8) 반영·owner 확정(3-Track C안)
-- [x] **B0 — 노출·분류 백필 판정 완료(2026-06-09)**: D1 현상유지·D3 명시적 공개·D2/D4/D5/D6 채택. 백필 마이그레이션 불필요. → [`runs/2026/06/09/B0-report.md`](../../ai-workflow/runs/2026/06/09/B0-report.md). 후속: C1(D3·D6), B1(D4 NULL백필→CHECK), live DB 재확인(deferred).
-- [x] **A1 — 타입 동기화 완료(2026-06-09, 검증된 수기 보정)**: types.ts에 review_workflow_status·topic_category_code(Row/Insert/Update)·admin_update_problem(Functions) 추가, lifecycle 보존. typecheck✓·단위✓(3/3)·E2E 스모크✓(3 passed). gen types는 환경상 불가+live regen이 lifecycle 유실시켜 수기 보정 채택(owner 승인). 픽스처 AdminProblemPublishToggle.test.tsx 2줄 보정. → [`runs/2026/06/09/A1-report.md`](../../ai-workflow/runs/2026/06/09/A1-report.md).
+- [x] **B0 — 노출·분류 백필 판정 완료(2026-06-09)**: D1 현상유지·D3 명시적 공개·D2/D4/D5/D6 채택. 백필 마이그레이션 불필요. 후속: C1(D3·D6), B1(D4 NULL백필→CHECK), live DB 재확인(deferred).
+- [x] **A1 — 타입 동기화 완료(2026-06-09, 검증된 수기 보정)**: types.ts에 review_workflow_status·topic_category_code(Row/Insert/Update)·admin_update_problem(Functions) 추가, lifecycle 보존. typecheck✓·단위✓(3/3)·E2E 스모크✓(3 passed). gen types는 환경상 불가+live regen이 lifecycle 유실시켜 수기 보정 채택(owner 승인). 픽스처 AdminProblemPublishToggle.test.tsx 2줄 보정.
 - [ ] **A1-pre(신규·미완) — live 스키마 ↔ 마이그레이션 정합**: service role 읽기로 발견 — **live는 lifecycle 마이그(20260608120100) 미적용**(lifecycle_* 컬럼 없음)인데 topic/review_workflow(20260608120300)는 적용됨(양방향 드리프트). pending 마이그 적용(최소 lifecycle) → live==migrations → 추후 정식 gen types로 수기 보정 대체. DB/Docker 접근 게이트(cf. [[project-conformance-9-decisions-finalized]]). 적용 시 스키마 문서 게이트.
-- [x] **A3 — 글자수 정책 QA 완료(2026-06-09, GPT-5.5 PASS)**: 상수↔프롬프트 일치(불일치 0), 타입별 상수 유지. 코드 변경 0. → [`runs/2026/06/09/A3-report.md`](../../ai-workflow/runs/2026/06/09/A3-report.md). 정합문서 §10.
-- [x] **A2 완료(2026-06-09, 임시 Claude 적대검수 PASS-WITH-FIXES)** — 형태 계약 문서(`docs/writing-problem-content-shape-contract.md`) + normalizer 견고화(배열 rubric 양쪽 흡수·**q51 빈칸0·q53 차트0&과제0 제출차단** 신규) + 적대 테스트 40 + 글자수 드리프트 가드. 퍼징상 P0 크래시 0. typecheck✓·단위 97✓·E2E 쓰기플로우✓. → [`runs/2026/06/09/A2-report.md`](../../ai-workflow/runs/2026/06/09/A2-report.md). 51·53 차단=사용자 영향(owner veto 가능). codex 복구 시 GPT-5.5 재검수 권장.
-- [x] **B1 — 주제 코드셋 완료(2026-06-09)**: 아키텍처 결정(GPT-5.5 위임 → 관리형 참조 테이블 `problem_topic_categories`, 자식 leaf 저장, FK/RPC 검증, CHECK 없음) + **매핑 명세 완료**(45 distinct 라벨+무라벨 → parent/child leaf, GPT-5.5 PASS-WITH-FIXES: 소비→economy·자세→life·서비스→큐, unknown→큐·Q51→NULL·active-leaf-only). 부모 9 + 자식 leaf ~30. 백필 예측 371 auto/5 큐/90 NULL. → [`B1-arch-decision.md`](../../ai-workflow/runs/2026/06/09/B1-arch-decision.md)·[`B1-mapping-spec.md`](../../ai-workflow/runs/2026/06/09/B1-mapping-spec.md). **코드/스키마 변경 0.** 실행(테이블·시드·FK·백필)=C-TAX(DB 게이트).
+- [x] **A3 — 글자수 정책 QA 완료(2026-06-09, GPT-5.5 PASS)**: 상수↔프롬프트 일치(불일치 0), 타입별 상수 유지. 코드 변경 0. 정합문서 §10.
+- [x] **A2 완료(2026-06-09, 임시 Claude 적대검수 PASS-WITH-FIXES)** — 형태 계약 문서(`docs/writing-problem-content-shape-contract.md`) + normalizer 견고화(배열 rubric 양쪽 흡수·**q51 빈칸0·q53 차트0&과제0 제출차단** 신규) + 적대 테스트 40 + 글자수 드리프트 가드. 퍼징상 P0 크래시 0. typecheck✓·단위 97✓·E2E 쓰기플로우✓. 51·53 차단=사용자 영향(owner veto 가능). codex 복구 시 GPT-5.5 재검수 권장.
+- [x] **B1 — 주제 코드셋 완료(2026-06-09)**: 아키텍처 결정(GPT-5.5 위임 → 관리형 참조 테이블 `problem_topic_categories`, 자식 leaf 저장, FK/RPC 검증, CHECK 없음) + **매핑 명세 완료**(45 distinct 라벨+무라벨 → parent/child leaf, GPT-5.5 PASS-WITH-FIXES: 소비→economy·자세→life·서비스→큐, unknown→큐·Q51→NULL·active-leaf-only). 부모 9 + 자식 leaf ~30. 백필 예측 371 auto/5 큐/90 NULL. **코드/스키마 변경 0.** 실행(테이블·시드·FK·백필)=C-TAX(DB 게이트).
 - [ ] **C-TAX(신규) — Managed Subject Taxonomy** (Track C, owner 게이트·DB 게이트): ① `problem_topic_categories` 마이그 ② parent/child seed ③ `problems.topic_category_code` FK/검증(CHECK 아님) ④ topik-ai `TOPIC_CATEGORY_LABEL` hardcode 제거→lookup ⑤ `/system/metadata`를 이 테이블 read/write facade로(+`item.parent_code` 확장) ⑥ 매핑 확정 후 backfill. /system/metadata는 현재 in-memory mock → DB 테이블 먼저 SoR. 선행: B1 매핑 명세.
-- [x] **B2 완료(2026-06-09, Opus 4.8 에이전트 위임)** — operationStatus=권고레이어→미지정 write안함·노출후보→active·숨김후보→inactive·**운영제외→inactive**(expired는 만료전용). expires_at=수동/저장만(자동만료 없음). 선행=A1-pre+admin_update_problem allowlist에 lifecycle키 추가(현재 없어 silent no-op). → [`B2-decision.md`](../../ai-workflow/runs/2026/06/09/B2-decision.md). G5 RESOLVED. 적용=DB+topik-ai 게이트.
-- [x] **B3 완료(2026-06-09, Opus 4.8 에이전트 위임)** — #52=**피드백/루브릭 채점 전용**(채점기 answer_key 미사용). answer_key=complete_paragraph(model_answer+힌트) 유지, 정답배열 비저작. 완성도=프롬프트마커+rubric. 적발: admin buildContent('52') 객관식 오모델→C3b 수정. → [`B3-decision.md`](../../ai-workflow/runs/2026/06/09/B3-decision.md). G10 RESOLVED. 코드 변경 0.
-- [x] **B4 완료(2026-06-09, Opus 4.8 에이전트 위임)** — review_workflow_status = **고정 CHECK**(관리형 아님): 값 not_started/in_progress/on_hold/done/revision_requested, **NULL 허용**(470행 NULL, 백필 안 함). review_status와 분리 유지(보류=on_hold는 review_status 보존), 교차필드 규칙은 admin 쓰기 로직(DB CHECK/트리거 아님). admin 단일 writer가 닫힌 5라벨 union이라 거부 위험 0. → [`B4-decision.md`](../../ai-workflow/runs/2026/06/09/B4-decision.md). CHECK 적용=DB 게이트. **Track B 전체 종료.**
+- [x] **B2 완료(2026-06-09, Opus 4.8 에이전트 위임)** — operationStatus=권고레이어→미지정 write안함·노출후보→active·숨김후보→inactive·**운영제외→inactive**(expired는 만료전용). expires_at=수동/저장만(자동만료 없음). 선행=A1-pre+admin_update_problem allowlist에 lifecycle키 추가(현재 없어 silent no-op). G5 RESOLVED. 적용=DB+topik-ai 게이트.
+- [x] **B3 완료(2026-06-09, Opus 4.8 에이전트 위임)** — #52=**피드백/루브릭 채점 전용**(채점기 answer_key 미사용). answer_key=complete_paragraph(model_answer+힌트) 유지, 정답배열 비저작. 완성도=프롬프트마커+rubric. 적발: admin buildContent('52') 객관식 오모델→C3b 수정. G10 RESOLVED. 코드 변경 0.
+- [x] **B4 완료(2026-06-09, Opus 4.8 에이전트 위임)** — review_workflow_status = **고정 CHECK**(관리형 아님): 값 not_started/in_progress/on_hold/done/revision_requested, **NULL 허용**(470행 NULL, 백필 안 함). review_status와 분리 유지(보류=on_hold는 review_status 보존), 교차필드 규칙은 admin 쓰기 로직(DB CHECK/트리거 아님). admin 단일 writer가 닫힌 5라벨 union이라 거부 위험 0. CHECK 적용=DB 게이트. **Track B 전체 종료.**
 - [ ] C0 (검증 데이터) → C1 / C2 → C3a → C3b → C3c (각: 구현계획 → GPT5.5 → owner 승인 → topik-ai 실행 → report) — C1은 B0의 D3·D6 적용. **C3는 C-TAX의 taxonomy 매핑을 write에 재사용**(GPT-5.5 R5).
 
 ---

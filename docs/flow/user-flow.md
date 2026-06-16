@@ -2,20 +2,20 @@
 
 이 문서는 `docs/Wireframe/`의 36개 사용자 앱 페이지 IA와 연동된 **현행 사용자 플로우**입니다.
 이 중 X-13~X-18은 기존 Paper `Frame` 캡처 이후 코드베이스와 active docs 기준으로 추가된 화면입니다.
-노드명은 `docs/Wireframe/{...}/description.md`의 `Source` 값과 일치합니다(참조 규칙: `docs/Wireframe/README.md`).
+화면 노드명은 `docs/Wireframe/{...}/description.md`의 `Source` 값과 일치합니다(참조 규칙: `docs/Wireframe/README.md`). `/auth/callback`, `/auth/post-auth` 같은 시스템 노드는 실제 route 근거로만 표시하며 Wireframe 화면 수에 포함하지 않습니다.
 
 새 구현/QA는 본 문서를 정본으로 사용합니다.
 
-> 관리자 화면은 별도 관리자 앱(topik-ai) 소관이라 이 흐름도 범위에 없습니다. 경계 기준은 `docs/admin-scope-boundary.md`를 따릅니다.
+> 관리자 화면은 별도 관리자 앱(topik-ai) 소관이라 이 흐름도 범위에 없습니다. 경계 기준은 `AGENTS.md`의 관리자 범위 경계 규칙을 따릅니다.
 
 ## Paper 캡처 대조 기록
 
 - 대조일: 2026-06-15
 - Paper 원본: `https://app.paper.design/file/01KQE0HPBV13Y0BGDEJJGQBY3H/1-0/5YL-0`
 - 대조 대상: Paper `TOPIK AI documents` 페이지의 `Frame` 아트보드
-- 캡처 증거: [2026-06-15-paper-frame-user-flow.png](./evidence/2026-06-15-paper-frame-user-flow.png)
+- 캡처 증거: [2026-06-15-paper-frame-user-flow.png](./2026-06-15-paper-frame-user-flow.png)
 
-![Paper Frame user flow capture](./evidence/2026-06-15-paper-frame-user-flow.png)
+![Paper Frame user flow capture](./2026-06-15-paper-frame-user-flow.png)
 
 대조 결론:
 
@@ -46,7 +46,7 @@ flowchart TD
   X13 -. "개인정보처리방침" .-> X14
   X01 -. "내비/미리보기/혜택 확인" .-> X01
 
-  A01 -->|"이메일 가입"| A03
+  A01 -->|"이메일 가입 / 인증 메일 안내"| X12
   A01 -. "Google로 계속" .-> PA
   A01 -. "약관/개인정보 확인" .-> X13
   A01 -. "약관/혜택 확인" .-> A01
@@ -171,10 +171,10 @@ flowchart TD
   R02 -. "유료 잠금 진입" .-> X03
   FM1 -. "유료 잠금 진입" .-> X03
   R01 -. "유료 잠금 진입" .-> X03
-  X03 -->|"구독 CTA / 결제 완료"| X04
-  X03 -->|"결제 완료 후 학습 복귀"| B01
+  X03 -->|"구독 CTA"| X04
+  X03 -->|"학습 복귀"| B01
   X04 -->|"플랜 변경"| X03
-  X04 -. "결제수단 / 이력 확인" .-> X04
+  X04 -. "결제 deferred 안내 / 이력 placeholder" .-> X04
   G01 -. "멤버십 / 결제 진입" .-> X04
   X05 -. "멤버십 / 결제 진입" .-> X04
   X05 -. "입력 수정 / 이미지 변경 / 저장" .-> X05
@@ -198,7 +198,8 @@ flowchart TD
   CONSENT -->|"동의 기록"| PA
   PA -->|"학습 목표 없음"| A03
   PA -->|"동의+학습 목표 있음"| B01
-  CB -->|"토큰 교환 성공: 학습자"| B01
+  CB -->|"토큰 교환 성공: next=/onboarding/learning-goal"| A03
+  CB -->|"토큰 교환 성공: next=/dashboard 등"| B01
   CB -. "query 없는 implicit fragment" .-> X17
   X17 -->|"setSession 성공"| B01
   X17 -->|"fragment 실패/unknown"| X11

@@ -1,72 +1,48 @@
 # Local AI harness installs and runtime state
 .omx/
+.agents/
 
-# AI folders are mostly local installs. TALKPIK and Superpowers skills are
-# authored once under .agents/ and host-specific mirrors are generated locally
-# by scripts/sync-agent-skills.mjs.
-.agents/*
-!.agents/README.md
-!.agents/skills/
-.agents/skills/*
-!.agents/skills/talkpik-*/
-!.agents/skills/talkpik-*/SKILL.md
+# Codex keeps only Superpowers workflow skills and an optional gstack skill.
+.codex/*
+!.codex/skills/
+.codex/skills/*
+!.codex/skills/brainstorming/
+!.codex/skills/brainstorming/**
+!.codex/skills/dispatching-parallel-agents/
+!.codex/skills/dispatching-parallel-agents/**
+!.codex/skills/executing-plans/
+!.codex/skills/executing-plans/**
+!.codex/skills/finishing-a-development-branch/
+!.codex/skills/finishing-a-development-branch/**
+!.codex/skills/receiving-code-review/
+!.codex/skills/receiving-code-review/**
+!.codex/skills/requesting-code-review/
+!.codex/skills/requesting-code-review/**
+!.codex/skills/subagent-driven-development/
+!.codex/skills/subagent-driven-development/**
+!.codex/skills/systematic-debugging/
+!.codex/skills/systematic-debugging/**
+!.codex/skills/test-driven-development/
+!.codex/skills/test-driven-development/**
+!.codex/skills/using-git-worktrees/
+!.codex/skills/using-git-worktrees/**
+!.codex/skills/using-superpowers/
+!.codex/skills/using-superpowers/**
+!.codex/skills/verification-before-completion/
+!.codex/skills/verification-before-completion/**
+!.codex/skills/writing-plans/
+!.codex/skills/writing-plans/**
+!.codex/skills/writing-skills/
+!.codex/skills/writing-skills/**
+!.codex/skills/gstack/
+!.codex/skills/gstack/**
 
-# Versioned practical skills shared by Codex and Claude. Keep full directories
-# because some external skills include scripts, helpers, or reference files.
-!.agents/skills/ant-design/
-!.agents/skills/ant-design/**
-!.agents/skills/deploy-to-vercel/
-!.agents/skills/deploy-to-vercel/**
-!.agents/skills/next-best-practices/
-!.agents/skills/next-best-practices/**
-!.agents/skills/next-cache-components/
-!.agents/skills/next-cache-components/**
-!.agents/skills/next-upgrade/
-!.agents/skills/next-upgrade/**
-!.agents/skills/playwright-skill/
-!.agents/skills/playwright-skill/**
-!.agents/skills/react-hook-form-zod/
-!.agents/skills/react-hook-form-zod/**
-!.agents/skills/supabase/
-!.agents/skills/supabase/**
-!.agents/skills/supabase-postgres-best-practices/
-!.agents/skills/supabase-postgres-best-practices/**
-!.agents/skills/vercel-cli-with-tokens/
-!.agents/skills/vercel-cli-with-tokens/**
-!.agents/skills/vercel-composition-patterns/
-!.agents/skills/vercel-composition-patterns/**
-!.agents/skills/vercel-react-best-practices/
-!.agents/skills/vercel-react-best-practices/**
-!.agents/skills/vercel-react-native-skills/
-!.agents/skills/vercel-react-native-skills/**
-!.agents/skills/vercel-react-view-transitions/
-!.agents/skills/vercel-react-view-transitions/**
-!.agents/skills/vitest-testing/
-!.agents/skills/vitest-testing/**
-!.agents/skills/web-design-guidelines/
-!.agents/skills/web-design-guidelines/**
-
-!.agents/superpowers/
-.agents/superpowers/*
-!.agents/superpowers/skills/
-.agents/superpowers/skills/*
-!.agents/superpowers/skills/*/
-!.agents/superpowers/skills/*/SKILL.md
 # Ignore local Claude config, but TRACK the shared project settings.json.
 # settings.local.json (personal permissions / machine paths) stays ignored.
 .claude/*
 !.claude/settings.json
-.claude/skills/*
 !.claude/skills/
-!.claude/skills/dynamic-workflow-generator/
-!.claude/skills/dynamic-workflow-generator/SKILL.md
-.codex/
-!.codex/
-.codex/*
-!.codex/skills/
-.codex/skills/*
-!.codex/skills/dynamic-workflow-generator/
-!.codex/skills/dynamic-workflow-generator/SKILL.md
+.claude/skills/*
 
 # Local test/session artifacts (gitignored).
 tests/e2e/auth-state/
@@ -106,4 +82,5 @@ coverage/
 .DS_Store
 Thumbs.db
 .idea/
-.vscode/
+.vscode/*
+!.vscode/settings.json

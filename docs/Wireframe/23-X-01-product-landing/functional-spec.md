@@ -38,11 +38,13 @@
 
 | 테이블/버킷/RPC | 컬럼/필드 | 사용 방식 | 화면 기능 | 권한/RLS | 근거 | 불확실성 |
 | --- | --- | --- | --- | --- | --- | --- |
-| `profiles` | `plan_label` | derived-read | 랜딩의 플랜/권한 CTA 문구와 연결될 수 있으나 현재 직접 DB 의존은 낮다. | public/auth flow; no user-owned row access unless session exists | `src/app/(workspace)/profile/page.tsx`<br>`src/lib/auth/profile.ts`<br>`src/lib/settings/mutations.ts` | Derived usage inferred from current source/domain docs. |
+| `subscription_plans` | `plan_key`, `name`, `cadence`, `price_cents`, `currency`, `features`, `recommended`, `active` | schema-supported read | 플랜/가격/혜택 표시의 backing table이다. | authenticated read for active plans; writes via operations/billing owner flow | `supabase/migrations/20260602120100_billing.sql`<br>`docs/Wireframe/23-X-01-product-landing/screen-data-summary.md` | 현재 landing source는 직접 DB 호출이 낮고, X-03/X-04에서 같은 backing data를 실제 조회한다. |
+| `subscriptions` | `user_id`, `plan_key`, `billing_cadence`, `status`, `current_period_start`, `current_period_end`, `cancel_at` | schema-supported derived-read | 로그인 사용자의 CTA 분기와 현재 구독자 분기에 연결될 수 있다. | owner select; writes via billing service flow | `supabase/migrations/20260602120100_billing.sql`<br>`docs/Wireframe/23-X-01-product-landing/screen-data-summary.md` | public 랜딩의 비로그인 상태에서는 직접 조회하지 않는다. |
+| `profiles` | `plan_label` | derived-read | 랜딩의 플랜/권한 CTA 문구 fallback과 사용자 상태 분기에 연결될 수 있다. | public/auth flow; no user-owned row access unless session exists | `src/app/(workspace)/profile/page.tsx`<br>`src/lib/auth/profile.ts`<br>`src/lib/settings/mutations.ts` | Derived usage inferred from current source/domain docs. |
 
 ## 현재 구현 상태
 
-- 현재 직접 DB 의존은 낮고 public route로 유지한다.
+- 현재 public landing source의 직접 DB 의존은 낮다. 다만 billing backing tables는 migration에 존재하며, 가격/구독 상태의 실제 조회 근거는 X-03/X-04와 `src/components/settings/billing-data.ts`에 있다.
 
 ## 코드 구현 근거
 
@@ -67,4 +69,4 @@
 - 이 화면의 주요 CTA와 상태가 Wireframe description과 route map에 맞게 설명되어 있다.
 - 위 DB 데이터 사용 명세의 모든 객체가 `docs/Wireframe/data-usage-index.md`에도 역색인되어 있다.
 - 확정할 수 없는 기능 또는 데이터는 구현된 것처럼 쓰지 않고 gap/candidate로 남긴다.
-- user/admin/public 권한 경계가 `docs/sitemap.md` audience와 맞는다.
+- user/admin/public 권한 경계가 `docs/ia.md`와 화면 기능명세의 audience와 맞는다.

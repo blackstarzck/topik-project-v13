@@ -17,7 +17,7 @@ This plan treats "all states" as every state that is documented, implemented, or
 Covered:
 - All public routes in `src/lib/routes.ts`.
 - All protected user-facing routes in `src/lib/routes.ts`.
-- Hosted modal/state surfaces listed in `docs/sitemap.md`.
+- Hosted modal/state surfaces listed in `docs/ia.md`.
 - For each page/function: idle, validation/disabled, loading or in-flight, success, failure/error, empty data, populated data, locked/free-plan state where applicable.
 - Navigation triptychs: before action, moving/loading, after arrival or failure.
 - Desktop, tablet, and mobile viewport captures.
@@ -42,19 +42,19 @@ Before execution, confirm or provide:
   - Screenshot sidecar JSON: next to each PNG in the same Wireframe folder
   - Existing representative images: preserve `browser-screenshot.png`, `wireframe.png`, and `hifi.png`
   - HTML report: `docs/qa/reports/qa-report-YYYYMMDD-HHMM.html`
-  - Run ledger: `docs/ai-workflow/runs/YYYY/MM/DD/full-ui-state-capture-qa.md`
+  - Run ledger: `docs/qa/reports/full-ui-state-capture-qa-YYYYMMDD-HHMM.md`
 
 ## Docs Consulted
 
-- `docs/README.md`
-- `docs/spec.md`
-- `docs/sitemap.md`
+- `README.md`
+- `AGENTS.md` / `README.md`
+- `docs/ia.md`
 - `docs/Wireframe/README.md`
 - `docs/Wireframe/functional-spec-index.md`
 - `docs/Wireframe/data-usage-index.md`
 - `docs/ant-design/07-review-checklist.md`
-- `docs/development/backend-auth.md`
-- `docs/development/environments.md`
+- `관련 Supabase migration SQL과 `src/lib/supabase/``
+- `.env.example`
 - `docs/qa/qa-execution-plan.md`
 - `docs/design-review-result/DESIGN-WORKFLOWS-RUNBOOK.md`
 - `scripts/design-review/render-shot.mjs`
@@ -62,18 +62,17 @@ Before execution, confirm or provide:
 - `playwright.config.ts`
 - `tests/e2e/_setup/auth.setup.ts`
 
-Known missing docs:
-- `docs/agent-index.md` is referenced by the local orchestrator skill but does not exist.
-- `docs/ai-development-workflow.md` and `docs/ai-workflow/report-template.md` are referenced by quality-gate skill but do not exist.
+Resolved workflow-doc note:
+- 2026-06-16 cleanup removed the old run artifact tree from the active documentation model. QA evidence now belongs under `docs/qa/reports/`, while durable decisions move into the relevant active docs.
 
 ## Phase 0: Safety, Environment, And Baseline
 
 **Files:**
 - Read: `AGENTS.md`
-- Read: `docs/development/environments.md`
+- Read: `.env.example`
 - Read: `.env.local` only for key presence, never values
 - Read: `.gitignore`
-- Artifact: `docs/ai-workflow/runs/YYYY/MM/DD/full-ui-state-capture-qa.md`
+- Artifact: `docs/qa/reports/full-ui-state-capture-qa-YYYYMMDD-HHMM.md`
 
 - [ ] **Step 0.1: Record current tree and environment**
 
@@ -169,7 +168,7 @@ Expected:
 
 **Files:**
 - Read: `src/lib/routes.ts`
-- Read: `docs/sitemap.md`
+- Read: `docs/ia.md`
 - Read: `docs/Wireframe/README.md`
 - Read: `docs/Wireframe/functional-spec-index.md`
 - Read per-screen: `docs/Wireframe/<screen>/description.md`
@@ -783,7 +782,7 @@ Expected:
 - Create: `docs/qa/reports/qa-report-YYYYMMDD-HHMM-state-matrix.json`
 - Create: `docs/Wireframe/<screen-folder>/browser-screenshot--<state>--<viewport>.png`
 - Create: `docs/Wireframe/<screen-folder>/browser-screenshot--<state>--<viewport>.json`
-- Update ledger: `docs/ai-workflow/runs/YYYY/MM/DD/full-ui-state-capture-qa.md`
+- Update ledger: `docs/qa/reports/full-ui-state-capture-qa-YYYYMMDD-HHMM.md`
 
 - [ ] **Step 9.1: Produce a screenshot manifest**
 

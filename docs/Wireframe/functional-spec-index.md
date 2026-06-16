@@ -1,6 +1,6 @@
 # Wireframe Functional Spec Index
 
-이 문서는 35개 Wireframe 페이지의 기능명세 문서와 DB 사용 명세를 한곳에서 찾기 위한 인덱스입니다. 관리자 화면은 별도 관리자 앱(topik-ai) 소관이라 이 인덱스에 없습니다.
+이 문서는 36개 Wireframe 페이지의 기능명세 문서와 DB 사용 명세를 한곳에서 찾기 위한 인덱스입니다. 관리자 화면은 별도 관리자 앱(topik-ai) 소관이라 이 인덱스에 없습니다.
 
 ## 기준
 
@@ -48,8 +48,8 @@
 | X-14 | Privacy policy | `/privacy` | public | 0 | [functional-spec.md](./36-X-14-privacy-policy/functional-spec.md) |
 | X-16 | Password reset confirm | `/password-reset/confirm` | public | 0 | [functional-spec.md](./38-X-16-password-reset-confirm/functional-spec.md) |
 | X-17 | Auth callback fragment | `/auth/callback-fragment` | public | 0 | [functional-spec.md](./39-X-17-auth-callback-fragment/functional-spec.md) |
+| X-18 | Auth consent | `/auth/consent` | user | 3 | [functional-spec.md](./40-X-18-auth-consent/functional-spec.md) |
 
 ## Known Document Conflicts
 
-- database-schema-drift: `docs/development/database-schema.md` does not fully reflect the later migration set now present under `supabase/migrations/`.
-- stale-ia-paths-in-audit-output: Latest IA audit artifacts still contain legacy `docs/IA/...` strings; current docs use `docs/Wireframe/...`.
+- No known broken document links in this index as of the 2026-06-16 cleanup.

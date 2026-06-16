@@ -91,7 +91,7 @@
     <li>자동 테스트는 필수 게이트다. 최종 판정은 "테스트 통과 + 브라우저 직접 조작 증거 + HTML 보고서"를 함께 본다.</li>
     <li><strong>증거 판정 규칙: 하이드레이션(클라이언트 코드 실행)이 증명되지 않은 캡처는 PASS/FAIL 판정 금지, UNVERIFIED로 기록한다.</strong> UNVERIFIED는 통과로 집계하지 않는다.</li>
     <li>방법론: ISTQB risk-based testing, Test Pyramid, Agile Testing Quadrants, Exploratory Testing, Playwright Trace Viewer, OWASP WSTG, WCAG 2.2, Nielsen 10 usability heuristics(휴리스틱 평가).</li>
-    <li>프로젝트 기준: <code>docs/spec.md</code>, <code>docs/sitemap.md</code>, <code>docs/flow/user-flow.md</code>, <code>docs/Wireframe/README.md</code>, <code>TESTING.md</code>. <strong>화면별 검증 기준은 각 와이어프레임 폴더의 <code>description.md</code>다</strong> (실행 단계 3의 매핑 표 참조).</li>
+    <li>프로젝트 기준: <code>AGENTS.md / README.md</code>, <code>docs/ia.md</code>, <code>docs/flow/user-flow.md</code>, <code>docs/Wireframe/README.md</code>, <code>TESTING.md</code>. <strong>화면별 검증 기준은 각 와이어프레임 폴더의 <code>description.md</code>다</strong> (실행 단계 3의 매핑 표 참조).</li>
   </ul>
 </section>
 
@@ -207,7 +207,7 @@
       <li>와이어프레임이 없는 라우트(<code>/auth/callback</code>, <code>/auth/sign-out</code>, <code>/auth/post-auth</code>, <code>/auth/consent</code>)는 redirect/동작만 확인한다.</li>
     </ul>
   </div>
-  <p><strong>매핑 표 (35화면, <code>docs/Wireframe/README.md</code> 기준)</strong></p>
+  <p><strong>매핑 표 (36화면, <code>docs/Wireframe/README.md</code> 기준)</strong></p>
   <table>
     <tr><th style="width:80px">IA 코드</th><th>라우트 / 트리거</th><th>와이어프레임 폴더 (<code>docs/Wireframe/</code>)</th></tr>
     <tr><td>A-01</td><td><code>/sign-up</code></td><td><code>01-A-01-sign-up</code></td></tr>
@@ -384,7 +384,7 @@
     <tr><td>C-02</td><td>필터/검색/페이지</td><td>로딩 Spin, 오류 Alert+재시도, 0건 Empty+초기화</td><td>PRAC-S1</td></tr>
     <tr><td>A-01/A-02</td><td>가입/로그인 제출</td><td>제출 중 상태, 오류 인라인 표시</td><td>AUTH-S1/S2, VAL-S1</td></tr>
   </table>
-  <p>이 표는 시드일 뿐이다 — <strong>전체 인벤토리는 35개 화면의 <code>functional-spec.md</code> "주요 기능" 목록에서 가져오고</strong>, 시드에 없는 기능(랜딩 CTA, 피드백 화면의 저장/다음 행동 버튼, 성장 차트 필터, 약점 탭 전환 등)도 같은 템플릿으로 검증한다. 명세에 있는데 화면에 없는 기능(또는 그 반대)은 단계 3의 와이어프레임 대조 결과로 기록한다.</p>
+  <p>이 표는 시드일 뿐이다 — <strong>전체 인벤토리는 36개 화면의 <code>functional-spec.md</code> "주요 기능" 목록에서 가져오고</strong>, 시드에 없는 기능(랜딩 CTA, 피드백 화면의 저장/다음 행동 버튼, 성장 차트 필터, 약점 탭 전환 등)도 같은 템플릿으로 검증한다. 명세에 있는데 화면에 없는 기능(또는 그 반대)은 단계 3의 와이어프레임 대조 결과로 기록한다.</p>
   <div class="callout warn">
     <strong>서비스 전역 상태 관리 5원칙 (광역 sweep 규칙)</strong>
     <p style="margin:6px 0 4px;">모든 화면에서 <code>functional-spec.md</code>의 "상태/오류" 목록과 대조하며 아래 원칙 위반을 찾는다. 위반은 기본 P2(단계 5 UX 휴리스틱 연계), <strong>갇힘·입력 손실은 P1/P0</strong>.</p>
@@ -432,7 +432,7 @@
     <li>anon protected access 차단 (브라우저로 확인)</li>
     <li>user-A/user-B row isolation: 원래 <code>tests/integration/rls-smoke.test.ts</code> 담당(Docker 게이트). <strong>테스트 계정 2개가 있으면 브라우저로 확인, 1개뿐이면 Deferred + 사유 기록.</strong></li>
     <li>browser-visible env에 secret/service role key 미노출</li>
-    <li>admin route/UI/schema 신규 추가 여부 확인 — <strong>침범은 P0.</strong> 단 <code>profiles.app_role</code>, <code>admin_audit_logs</code>, <code>private.is_*_admin</code>은 보존 대상이며 존재 자체는 결함이 아니다 (<code>docs/admin-scope-boundary.md</code> 참고).</li>
+    <li>admin route/UI/schema 신규 추가 여부 확인 — <strong>침범은 P0.</strong> 단 <code>profiles.app_role</code>, <code>admin_audit_logs</code>, <code>private.is_*_admin</code>은 보존 대상이며 존재 자체는 결함이 아니다 (<code>AGENTS.md의 관리자 범위 경계</code> 참고).</li>
   </ul>
 </section>
 
@@ -449,7 +449,7 @@
     <li>Environment: branch/worktree, Node/pnpm, base URL, 실행 시각</li>
     <li>Command results: lint/typecheck/format/build/test/e2e 결과</li>
     <li>Browser evidence: route별 screenshot, viewport, trace 로컬 경로</li>
-    <li><strong>Screen checklist: 35화면 × description.md 대조 결과 (PASS/FAIL/UNVERIFIED, 영역·제약·예외 단위)</strong></li>
+    <li><strong>Screen checklist: 36화면 × description.md 대조 결과 (PASS/FAIL/UNVERIFIED, 영역·제약·예외 단위)</strong></li>
     <li><strong>Scenario results: 시나리오 ID(AUTH-S1 등) × 결과 × 출처 라벨([SPEC]/[CODE]/[STD]) × 수행한 진입 경로 기록</strong></li>
     <li><strong>Spec gaps: 4-C 레지스터(G1~G10) + 신규 발견 갭의 관찰 결과 — 결함 집계와 분리, 문서 게이트 에스컬레이션 대상으로 표기</strong></li>
     <li><strong>Function lifecycle results: FUNC-&lt;IA&gt;-&lt;기능&gt; × 5단계(시작 전/시작/실행 중/성공/실패) 결과 — 중복 커버는 시나리오 ID 참조, 상태 관리 5원칙 위반 목록 포함</strong></li>
@@ -508,7 +508,7 @@
     <li><code>src/lib/routes.ts</code> — public 12 / protected 22 라우트, <code>/growth</code> 플랜 잠금</li>
     <li><code>TESTING.md</code> — Supabase 로컬 스택 게이트 구조</li>
     <li><code>.gitignore</code> — <code>test-results/</code>, <code>tests/e2e/auth-state/</code> 제외 확인</li>
-    <li><code>docs/Wireframe/README.md</code> — 35화면 목록·결번 21·30·32·37·user-flow 우선 규칙 확인 (rev3)</li>
+    <li><code>docs/Wireframe/README.md</code> — 36화면 목록·결번 21·30·32·37·user-flow 우선 규칙 확인 (rev3)</li>
     <li><code>docs/Wireframe/&lt;화면 폴더&gt;/description.md</code> — 화면별 영역(Number Map)·제약 조건·예외 상태 구조 확인 (rev3)</li>
     <li><code>docs/flow/user-flow.md</code> — 인증 콜백/에러 6시나리오 표, post-auth 분기, 유료 잠금 진입점, D-M3 이탈 흐름 (rev5)</li>
     <li><code>docs/Wireframe/functional-spec-index.md</code> 및 화면별 <code>functional-spec.md</code> — 기능 인벤토리("주요 기능"/"상태/오류"), 4-D 기능 단위 검증의 출처 (rev6)</li>

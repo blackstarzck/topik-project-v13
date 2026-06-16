@@ -43,7 +43,7 @@
 
 ## 현재 구현 상태
 
-- **서버 실파일 생성 적용(2026-06-12, 브리프 `docs/pdf-export-real-file-brief-20260612.md`)**:
+- **서버 실파일 생성 적용(2026-06-12, owner 지시와 QA report 기록 기준)**:
   `POST /api/export/pdf`가 react-pdf로 PDF를 생성해 `generated-exports`의
   `exports/{user_id}/{export_id}.pdf`에 업로드하고 `export_files`를
   queued→ready(실패 시 failed)로 기록한다. 클라이언트는 본인 경로 파일을
@@ -81,4 +81,4 @@
 - 이 화면의 주요 CTA와 상태가 Wireframe description과 route map에 맞게 설명되어 있다.
 - 위 DB 데이터 사용 명세의 모든 객체가 `docs/Wireframe/data-usage-index.md`에도 역색인되어 있다.
 - 확정할 수 없는 기능 또는 데이터는 구현된 것처럼 쓰지 않고 gap/candidate로 남긴다.
-- user/admin/public 권한 경계가 `docs/sitemap.md` audience와 맞는다.
+- user/admin/public 권한 경계가 `docs/ia.md`와 화면 기능명세의 audience와 맞는다.

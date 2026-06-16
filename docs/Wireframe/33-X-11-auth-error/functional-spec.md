@@ -64,4 +64,4 @@ Supabase 인증 실패 이유를 안전한 문구와 재시도 행동으로 안�
 - 이 화면의 주요 CTA와 상태가 Wireframe description과 route map에 맞게 설명되어 있다.
 - 위 DB 데이터 사용 명세의 모든 객체가 `docs/Wireframe/data-usage-index.md`에도 역색인되어 있다.
 - 확정할 수 없는 기능 또는 데이터는 구현된 것처럼 쓰지 않고 gap/candidate로 남긴다.
-- user/admin/public 권한 경계가 `docs/sitemap.md` audience와 맞는다.
+- user/admin/public 권한 경계가 `docs/ia.md`와 화면 기능명세의 audience와 맞는다.

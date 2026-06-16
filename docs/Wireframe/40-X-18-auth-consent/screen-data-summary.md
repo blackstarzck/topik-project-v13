@@ -11,8 +11,8 @@ Google OAuth 같은 소셜 로그인 이후, 사용자가 서비스 필수 약�
 | 우선순위 | 소스 | 적용 |
 | --- | --- | --- |
 | 1 | `docs/flow/user-flow.md` | Google OAuth 후처리 흐름 |
-| 2 | `docs/sitemap.md` | `/auth/consent` route와 audience |
-| 3 | `docs/development/auth-overview.md` | 인증 흐름과 코드 매핑 |
+| 2 | `docs/ia.md` | `/auth/consent` route와 audience |
+| 3 | 관련 auth Wireframe 기능명세와 `src/app/auth/` | 인증 흐름과 코드 매핑 |
 | 4 | `src/lib/legal/consent.ts` | legal document 조회와 consent 저장 |
 | 5 | `supabase/migrations/20260608120000_legal_documents_and_consents.sql` | DB 테이블/RLS 계약 |
 

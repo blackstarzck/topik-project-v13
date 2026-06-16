@@ -124,7 +124,7 @@ src/theme/
   registry.ts
   create-theme.ts
   types.ts
-  antdTheme.ts
+  create-theme.ts
   tailwind-bridge.ts
   tokens/
     awesomic.ts
@@ -148,9 +148,9 @@ src/theme/
 - `src/theme/themes.ts`
   - compatibility re-export
   - kept so old imports do not break immediately
-- `src/theme/antdTheme.ts`
-  - helper that exposes the default AntD theme config
-  - acceptable for static use, but app runtime theme selection should use `getAppTheme`
+- `src/theme/create-theme.ts`
+  - helper that builds the AntD theme config for each registered theme preset
+  - app runtime theme selection should use `getAppTheme`
 - `src/theme/tailwind-bridge.ts`
   - maps the selected theme preset to the approved project CSS variables that
     Tailwind utilities and plain CSS may consume
@@ -229,7 +229,7 @@ The runtime theme flow is:
 6. the AntD adapter produces `activeTheme.antd`
 7. `ConfigProvider` receives `activeTheme.antd`
 8. the Tailwind adapter resolves selected preset values server-side and injects them
-   as `--app-*` CSS variables on the `html` element in `app/layout.tsx`
+   as `--app-*` CSS variables on the `html` element in `src/app/layout.tsx`
 9. Tailwind utilities read those `--app-*` variables via `@theme inline`
    in `src/styles/global.css`
 10. new UI reads AntD tokens directly at render time when component logic needs
@@ -338,7 +338,7 @@ exception unless it is explicitly documented per-component.
 
 ```tsx
 /* REQUIRED — portals always inherit from html/root */
-// app/layout.tsx (server component)
+// src/app/layout.tsx (server component)
 <html style={{ '--app-color-primary': resolvedToken.colorPrimary } as React.CSSProperties}>
 ```
 
@@ -361,7 +361,7 @@ to an empty/invalid value on the first server render, causing visible flash.
 ```
 
 Resolved values must be injected server-side. The recommended pattern is a
-server component in `app/layout.tsx` that reads a theme cookie via `cookies()`
+server component in `src/app/layout.tsx` that reads a theme cookie via `cookies()`
 from `next/headers` and writes resolved token values to `<html style={...}>`.
 Note: calling `cookies()` makes the route dynamically rendered.
 
@@ -663,7 +663,7 @@ These items catch structural defects. Do not proceed to the remaining checklist
 until all of these pass.
 
 - [ ] All `--app-*` CSS variables are declared on `html` or `:root` (via
-      `app/layout.tsx`). No `--app-*` variable is set through `style={}` on a
+      `src/app/layout.tsx`). No `--app-*` variable is set through `style={}` on a
       React component.
 - [ ] The theme source of truth for the change is explicit, and both the AntD
       adapter and Tailwind adapter read from that same source.

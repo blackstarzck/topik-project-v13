@@ -20,7 +20,7 @@
 - 방법론: ISTQB risk-based testing, Test Pyramid, Agile Testing Quadrants,
   Exploratory Testing, Playwright Trace Viewer, OWASP WSTG, WCAG 2.2,
   Nielsen 10 usability heuristics(휴리스틱 평가).
-- 프로젝트 기준: [`docs/spec.md`](../spec.md), [`docs/sitemap.md`](../sitemap.md),
+- 프로젝트 기준: `AGENTS.md` / `README.md`, [`docs/ia.md`](../ia.md),
   [`docs/flow/user-flow.md`](../flow/user-flow.md),
   [`docs/Wireframe/README.md`](../Wireframe/README.md),
   [`TESTING.md`](../../TESTING.md).
@@ -191,7 +191,7 @@ protected (22):
 - 와이어프레임이 없는 라우트(`/auth/callback`, `/auth/sign-out`,
   `/auth/post-auth`, `/auth/consent`)는 redirect/동작만 확인한다.
 
-매핑 표 (35화면, [`docs/Wireframe/README.md`](../Wireframe/README.md) 기준):
+매핑 표 (36화면, [`docs/Wireframe/README.md`](../Wireframe/README.md) 기준):
 
 | IA 코드 | 라우트 / 트리거 | 와이어프레임 폴더 (`docs/Wireframe/`) |
 | --- | --- | --- |
@@ -554,7 +554,7 @@ protected (22):
 | C-02 | 필터/검색/페이지 | 로딩 Spin, 오류 Alert+재시도, 0건 Empty+초기화 | PRAC-S1 |
 | A-01/A-02 | 가입/로그인 제출 | 제출 중 상태, 오류 인라인 표시 | AUTH-S1/S2, VAL-S1 |
 
-이 표는 시드일 뿐이다 — **전체 인벤토리는 35개 화면의 `functional-spec.md`
+이 표는 시드일 뿐이다 — **전체 인벤토리는 36개 화면의 `functional-spec.md`
 "주요 기능" 목록에서 가져오고**, 시드에 없는 기능(랜딩 CTA, 피드백 화면의
 저장/다음 행동 버튼, 성장 차트 필터, 약점 탭 전환 등)도 같은 템플릿으로
 검증한다. 명세에 있는데 화면에 없는 기능(또는 그 반대)은 단계 3의 와이어프레임
@@ -624,7 +624,7 @@ P1/P0**.
 - admin route/UI/schema 신규 추가 여부 확인 — **침범은 P0.** 단
   `profiles.app_role`, `admin_audit_logs`, `private.is_*_admin`은 보존
   대상이며 존재 자체는 결함이 아니다
-  ([`docs/admin-scope-boundary.md`](../admin-scope-boundary.md) 참고).
+  (AGENTS의 관리자 범위 경계 참고).
 
 ## HTML 보고서
 
@@ -637,7 +637,7 @@ P1/P0**.
   - Environment: branch/worktree, Node/pnpm, base URL, 실행 시각
   - Command results: lint/typecheck/format/build/test/e2e 결과
   - Browser evidence: route별 screenshot, viewport, trace 로컬 경로
-  - **Screen checklist: 35화면 × description.md 대조 결과
+  - **Screen checklist: 36화면 × description.md 대조 결과
     (PASS/FAIL/UNVERIFIED, 영역·제약·예외 단위)**
   - **Scenario results: 시나리오 ID(AUTH-S1 등) × 결과 × 출처
     라벨([SPEC]/[CODE]/[STD]) × 수행한 진입 경로 기록**
@@ -699,7 +699,7 @@ P1/P0**.
   라우트, `/growth` 플랜 잠금
 - [`TESTING.md`](../../TESTING.md) — Supabase 로컬 스택 게이트 구조
 - `.gitignore` — `test-results/`, `tests/e2e/auth-state/` 제외 확인
-- [`docs/Wireframe/README.md`](../Wireframe/README.md) — 35화면 목록·결번
+- [`docs/Wireframe/README.md`](../Wireframe/README.md) — 36화면 목록·결번
   21·30·32·37·user-flow 우선 규칙 확인 (rev3)
 - `docs/Wireframe/<화면 폴더>/description.md` — 화면별 영역(Number Map)·제약
   조건·예외 상태 구조 확인 (rev3)

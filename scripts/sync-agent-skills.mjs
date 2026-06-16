@@ -1,42 +1,16 @@
 #!/usr/bin/env node
 
-import { cp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdir, readFile, readdir, rm, stat } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 
 const repoRoot = process.cwd();
-const mirrorRoots = [
-  path.join(repoRoot, '.codex', 'skills'),
-  path.join(repoRoot, '.claude', 'skills'),
-];
+const sourceRoot = path.join(repoRoot, '.codex', 'skills');
+const mirrorRoots = [path.join(repoRoot, '.claude', 'skills')];
 
-const skillSets = [
-  {
-    label: 'Practical',
-    sourceRoot: path.join(repoRoot, '.agents', 'skills'),
-    names: [
-      'next-best-practices',
-      'next-cache-components',
-      'next-upgrade',
-      'vercel-composition-patterns',
-      'deploy-to-vercel',
-      'vercel-react-best-practices',
-      'vercel-react-native-skills',
-      'vercel-react-view-transitions',
-      'vercel-cli-with-tokens',
-      'web-design-guidelines',
-      'supabase',
-      'supabase-postgres-best-practices',
-      'ant-design',
-      'playwright-skill',
-      'vitest-testing',
-      'react-hook-form-zod',
-    ],
-    mode: 'directory',
-  },
+const skillGroups = [
   {
     label: 'Superpowers',
-    sourceRoot: path.join(repoRoot, '.agents', 'superpowers', 'skills'),
     names: [
       'brainstorming',
       'dispatching-parallel-agents',
@@ -53,20 +27,28 @@ const skillSets = [
       'writing-plans',
       'writing-skills',
     ],
-    mode: 'skill-md',
   },
 ];
+
+if (await exists(path.join(sourceRoot, 'gstack'))) {
+  skillGroups.push({
+    label: 'GStack',
+    names: ['gstack'],
+  });
+}
 
 const args = new Set(process.argv.slice(2));
 const checkOnly = args.has('--check');
 const listOnly = args.has('--list');
+const failures = [];
+const synced = [];
 
 if (args.has('--help') || args.has('-h')) {
   console.log(`Usage: node scripts/sync-agent-skills.mjs [--check|--list]
 
-Copies canonical practical project skills from .agents/skills into host-specific
-mirrors, and canonical Superpowers skills from .agents/superpowers/skills into
-host-specific .codex/skills and .claude/skills mirrors.
+Copies canonical Superpowers and optional gstack skills from .codex/skills into
+host-specific mirrors. Product, stack, and implementation guidance lives in
+AGENTS.md and docs/ instead of extra Codex runtime skills.
 
 Options:
   --check  verify mirrors are in sync without writing files
@@ -76,47 +58,19 @@ Options:
 }
 
 if (listOnly) {
-  for (const skillSet of skillSets) {
-    console.log(`# ${skillSet.label}`);
-    console.log(skillSet.names.join('\n'));
+  for (const group of skillGroups) {
+    console.log(`# ${group.label}`);
+    console.log(group.names.join('\n'));
   }
   process.exit(0);
 }
 
-const failures = [];
-const synced = [];
-
-async function assertNoUnexpectedMirrors(root, skillSet) {
-  if (!skillSet.unexpectedMirrorPrefix) {
-    return;
-  }
-
-  let entries;
+async function exists(targetPath) {
   try {
-    entries = await readdir(root, { withFileTypes: true });
+    await stat(targetPath);
+    return true;
   } catch {
-    return;
-  }
-
-  const allowed = new Set(skillSet.names);
-  for (const entry of entries) {
-    if (!entry.isDirectory() || !entry.name.startsWith(skillSet.unexpectedMirrorPrefix)) {
-      continue;
-    }
-
-    if (!allowed.has(entry.name)) {
-      failures.push(`Unexpected ${skillSet.label} skill mirror: ${path.relative(repoRoot, path.join(root, entry.name))}`);
-    }
-  }
-}
-
-async function readSkill(skillSet, skillName) {
-  const sourcePath = path.join(skillSet.sourceRoot, skillName, 'SKILL.md');
-  try {
-    return await readFile(sourcePath, 'utf8');
-  } catch (error) {
-    failures.push(`Missing canonical ${skillSet.label} skill: ${path.relative(repoRoot, sourcePath)} (${error.code ?? error.message})`);
-    return null;
+    return false;
   }
 }
 
@@ -153,33 +107,21 @@ async function listFiles(root, current = root, options = {}) {
   return files;
 }
 
-async function syncSkill(skillName, content, mirrorRoot) {
-  const mirrorPath = path.join(mirrorRoot, skillName, 'SKILL.md');
+async function assertLegacySkillRootsRemoved() {
+  const legacyRoots = [
+    path.join(repoRoot, '.agents', 'skills'),
+    path.join(repoRoot, '.agents', 'superpowers'),
+  ];
 
-  let current = null;
-  try {
-    current = await readFile(mirrorPath, 'utf8');
-  } catch {
-    current = null;
+  for (const legacyRoot of legacyRoots) {
+    if (await exists(legacyRoot)) {
+      failures.push(`Legacy skill root still exists: ${path.relative(repoRoot, legacyRoot)}`);
+    }
   }
-
-  if (current === content) {
-    synced.push(`ok ${path.relative(repoRoot, mirrorPath)}`);
-    return;
-  }
-
-  if (checkOnly) {
-    failures.push(`Out of sync: ${path.relative(repoRoot, mirrorPath)}`);
-    return;
-  }
-
-  await mkdir(path.dirname(mirrorPath), { recursive: true });
-  await writeFile(mirrorPath, content, 'utf8');
-  synced.push(`wrote ${path.relative(repoRoot, mirrorPath)}`);
 }
 
-async function syncDirectory(skillSet, skillName, mirrorRoot) {
-  const sourceDir = path.join(skillSet.sourceRoot, skillName);
+async function syncDirectory(skillName, mirrorRoot) {
+  const sourceDir = path.join(sourceRoot, skillName);
   const mirrorDir = path.join(mirrorRoot, skillName);
   const sourceFiles = await listFiles(sourceDir);
 
@@ -222,26 +164,12 @@ async function syncDirectory(skillSet, skillName, mirrorRoot) {
   synced.push(`wrote ${path.relative(repoRoot, mirrorDir)}`);
 }
 
-for (const skillSet of skillSets) {
-  for (const mirrorRoot of mirrorRoots) {
-    await assertNoUnexpectedMirrors(mirrorRoot, skillSet);
-  }
+await assertLegacySkillRootsRemoved();
 
-  for (const skillName of skillSet.names) {
-    if (skillSet.mode === 'directory') {
-      for (const mirrorRoot of mirrorRoots) {
-        await syncDirectory(skillSet, skillName, mirrorRoot);
-      }
-      continue;
-    }
-
-    const content = await readSkill(skillSet, skillName);
-    if (content === null) {
-      continue;
-    }
-
+for (const group of skillGroups) {
+  for (const skillName of group.names) {
     for (const mirrorRoot of mirrorRoots) {
-      await syncSkill(skillName, content, mirrorRoot);
+      await syncDirectory(skillName, mirrorRoot);
     }
   }
 }

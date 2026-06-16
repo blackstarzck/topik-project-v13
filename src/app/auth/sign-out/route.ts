@@ -1,6 +1,6 @@
 // Auth sign-out route handler (POST).
 //
-// docs/sitemap.md row "Auth sign-out | /auth/sign-out | route handler (POST)":
+// docs/flow/sitemap.md row "Auth sign-out | /auth/sign-out | route handler (POST)":
 //   서버 사이드 세션 쿠키 정리.
 //
 // Flow:

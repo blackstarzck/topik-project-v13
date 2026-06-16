@@ -15,7 +15,7 @@
 - Route type: page
 - 기준 흐름: `docs/flow/user-flow.md`의 IA 순서를 따른다.
 - 진입 경로: X-01 제품 랜딩의 무료 시작 CTA, A-02 로그인의 회원가입 링크, 직접 `/sign-up` 접근.
-- 이탈 경로: 이메일/소셜 가입 성공 시 A-03 학습 목표 설정으로 이동하고, 가입 직후 X-12 인증 메일 확인 안내로 이어질 수 있다. 약관/개인정보 링크는 X-13/X-14로 이동한다.
+- 이탈 경로: 이메일 가입 성공 시 X-12 인증 메일 확인 안내로 이동하고, 인증 링크의 `/auth/callback?next=/onboarding/learning-goal` 처리 후 A-03 학습 목표 설정으로 이어진다. 소셜 가입/로그인은 `/auth/post-auth`에서 약관 동의와 학습 목표 상태를 확인한 뒤 X-18, A-03, B-01 중 하나로 이동한다. 약관/개인정보 링크는 X-13/X-14로 이동한다.
 - 화면 내부 동작: 입력값 검증, 약관 동의, 소셜 로그인 선택, 인증 메일 발송 실패/중복 이메일 오류 표시.
 
 ## 주요 기능
@@ -65,4 +65,4 @@
 - 이 화면의 주요 CTA와 상태가 Wireframe description과 route map에 맞게 설명되어 있다.
 - 위 DB 데이터 사용 명세의 모든 객체가 `docs/Wireframe/data-usage-index.md`에도 역색인되어 있다.
 - 확정할 수 없는 기능 또는 데이터는 구현된 것처럼 쓰지 않고 gap/candidate로 남긴다.
-- user/admin/public 권한 경계가 `docs/sitemap.md` audience와 맞는다.
+- user/admin/public 권한 경계가 `docs/ia.md`와 화면 기능명세의 audience와 맞는다.

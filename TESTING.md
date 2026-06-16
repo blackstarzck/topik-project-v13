@@ -62,8 +62,11 @@ tests/
     auth/profile-getCurrentProfile.test.ts  # getCurrentProfile / requireRole
   middleware/middleware.test.ts      # proxy.ts (renamed from middleware.ts in cleanup PR)
   integration/
-    route-matrix.test.ts             # all 27 active routes × anon/auth
-    admin-role-matrix.test.ts        # admin/layout + per-page requireRole
+    route-matrix.test.ts             # PUBLIC_PATHS/PROTECTED_ROUTE_CASES × anon/auth
     profile-trigger.test.ts          # SUPABASE_LOCAL_STACK gated
     rls-smoke.test.ts                # SUPABASE_LOCAL_STACK gated
 ```
+
+Admin UI routes are intentionally absent from this repository. Admin-role
+preservation infrastructure is covered through route/RLS smoke tests and
+Supabase migration review, not an active admin page matrix.

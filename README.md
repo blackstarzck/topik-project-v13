@@ -43,7 +43,7 @@ flowchart LR
 | 항목 | 상태 |
 | --- | --- |
 | 구현 상태 | 기반 구현 진행 중 — `src/` + `package.json` 존재. App Router 라우트 scaffold + 인증 흐름 + 테마 시스템 + Supabase 스키마/RLS 마이그레이션 완료. 쓰기 제출·피드백 화면과 mock 피드백 경로도 일부 구현됨. 실제 LLM 기반 AI 첨삭·문제 생성은 단계적으로 추가 중. |
-| 현재 기준 | `docs/`가 제품, 화면, AI 작업 방식의 source of truth. 인증 영역은 추가로 [`docs/development/auth-overview.md`](./docs/development/auth-overview.md) 가 코드 + 운영 정책 정본. |
+| 현재 기준 | `docs/`와 `AGENTS.md`가 제품, 화면, AI 작업 방식의 source of truth. 인증 영역은 관련 auth Wireframe 기능명세와 `src/app/auth/`, `src/lib/supabase/` 구현을 함께 확인합니다. |
 | 구현 방식 | Next.js App Router 기반. 인증·테마·DB 스키마는 구현됨, 학습 기능은 단계적 추가. |
 | 협업 방식 | 사람과 AI가 같은 문서 세트를 읽고, 변경 근거와 검증 결과를 남깁니다. |
 
@@ -138,9 +138,9 @@ AI에게 긴 명령을 한 번에 던지기보다, 문서와 검증 조건을 �
 
 | 하고 싶은 일 | 좋은 요청 예시 |
 | --- | --- |
-| 기능 만들기 | "`docs/spec.md`를 먼저 읽고, 쓰기 제출 흐름을 구현 계획으로 정리한 뒤 진행해줘." |
+| 기능 만들기 | "`README.md`, 관련 Wireframe 기능명세, 현재 source를 먼저 읽고, 쓰기 제출 흐름을 구현 계획으로 정리한 뒤 진행해줘." |
 | 화면 만들기 | "`docs/Wireframe/README.md`와 `docs/ant-design/README.md` 기준으로 대시보드 화면을 구현해줘. 모바일/데스크톱 검증도 포함해줘." |
-| 기술 결정 확인 | "`docs/spec.md` 기준으로 Supabase Auth와 AI 기능의 경계가 맞는지 검토해줘." |
+| 기술 결정 확인 | "`AGENTS.md`, `README.md`, 관련 migration/Wireframe 기준으로 Supabase Auth와 AI 기능의 경계가 맞는지 검토해줘." |
 | 문서 정리 | "루트 README를 비개발자도 이해할 수 있게 고치고, 다른 문서와 충돌이 있으면 같이 보고해줘." |
 
 피해야 할 요청도 있습니다.
@@ -148,7 +148,7 @@ AI에게 긴 명령을 한 번에 던지기보다, 문서와 검증 조건을 �
 | 피해야 할 요청 | 이유 |
 | --- | --- |
 | "그냥 알아서 예쁘게 만들어줘" | 현재 문서와 다른 제품이 될 수 있습니다. |
-| "필요한 라이브러리 마음대로 추가해" | 기술 스택은 `docs/spec.md`에 고정되어 있습니다. |
+| "필요한 라이브러리 마음대로 추가해" | 기술 스택은 기존 `package.json`, lockfile, AGENTS의 승인 규칙을 기준으로 합니다. |
 | "테스트는 나중에" | 이 프로젝트는 검증 근거를 남기는 방식으로 협업합니다. |
 | "문서 안 보고 바로 구현해" | 문서가 현재 source of truth입니다. |
 
@@ -159,12 +159,12 @@ AI에게 긴 명령을 한 번에 던지기보다, 문서와 검증 조건을 �
 ```mermaid
 flowchart TD
     A["이 README"] --> B["docs/prd.md<br/>무엇을 왜 만드는가"]
-    B --> C["docs/sitemap.md<br/>어떤 화면이 있는가"]
+    B --> C["docs/ia.md<br/>어떤 화면이 있는가"]
     C --> D["docs/flow/user-flow.md<br/>사용자가 어떤 순서로 움직이는가"]
     D --> E["docs/Wireframe/README.md<br/>화면별 설명과 와이어프레임"]
 ```
 
-구현 기준은 항상 `docs/spec.md`, `docs/sitemap.md`의 Target React Route Map, `docs/Wireframe/`, `docs/flow/user-flow.md` 같은 현재 기준 문서를 우선합니다. 인증·로그인·회원가입 흐름의 코드 + 운영 정책 한 페이지 정리본은 [`docs/development/auth-overview.md`](./docs/development/auth-overview.md) 에 있습니다.
+구현 기준은 항상 `AGENTS.md`, `README.md`, `docs/ia.md`, `docs/Wireframe/`, `docs/flow/user-flow.md`, 현재 `src/` 구현을 함께 봅니다. 인증·로그인·회원가입 흐름은 관련 auth Wireframe 기능명세와 `src/app/auth/`, `src/lib/supabase/`를 함께 확인합니다.
 
 ## 개발 협업자를 위한 읽는 순서
 
@@ -172,10 +172,10 @@ flowchart TD
 flowchart TD
     A["작업 시작"] --> C{"작업 종류"}
     C -->|"제품/범위"| D["docs/prd.md"]
-    C -->|"기술/구현"| E["docs/spec.md"]
-    C -->|"화면/라우트"| F["docs/sitemap.md + docs/ia.md + docs/Wireframe/"]
+    C -->|"기술/구현"| E["README.md + package.json + src/"]
+    C -->|"화면/라우트"| F["docs/ia.md + docs/Wireframe/"]
     C -->|"UI"| G["docs/ant-design/README.md"]
-    E --> I["필요한 development 상세 문서"]
+    E --> I["필요한 source / migration / Wireframe"]
     D --> J["계획 / 구현 / 검증"]
     F --> J
     G --> J
@@ -187,7 +187,7 @@ flowchart TD
 | 규칙 | 의미 |
 | --- | --- |
 | `docs/` 먼저 | 현재는 코드보다 문서가 기준입니다. |
-| 현재 기준 문서 우선 | `docs/spec.md`, `docs/sitemap.md`, `docs/Wireframe/`, `docs/flow/user-flow.md`를 기준으로 봅니다. |
+| 현재 기준 문서 우선 | `AGENTS.md`, `README.md`, `docs/ia.md`, `docs/Wireframe/`, `docs/flow/user-flow.md`를 기준으로 봅니다. |
 | 작은 변경 | unrelated refactor를 섞지 않습니다. |
 | 검증 후 완료 | 테스트, 체크, 수동 검증 중 가능한 근거를 남깁니다. |
 
@@ -213,11 +213,11 @@ sequenceDiagram
 
 | 층 | 역할 | 예 |
 | --- | --- | --- |
-| 프로젝트 가드레일 | TALKPIK 문서, 금지사항, 품질 기준, 보안 경계 강제 | `AGENTS.md`, `docs/README.md`, `docs/spec.md` |
+| 프로젝트 가드레일 | TALKPIK 문서, 금지사항, 품질 기준, 보안 경계 강제 | `AGENTS.md`, `README.md`, `docs/prd.md`, `docs/ia.md`, `docs/Wireframe/` |
 | 실무 기술 스킬 | 특정 프레임워크/라이브러리 구현 패턴 제공 | Next/React, Supabase/Postgres, Ant Design, Vitest/Playwright, RHF/Zod |
 | 작업 흐름 스킬 | 계획, TDD, 리뷰, 검증 같은 일하는 방식 제공 | Superpowers, GStack skills |
 
-프로젝트 가드레일이 항상 실무 기술 스킬보다 우선합니다. 예를 들어 어떤 외부 스킬이 shadcn/ui나 Redux를 추천해도, `docs/spec.md`가 승인하지 않았으면 사용하지 않습니다.
+프로젝트 가드레일이 항상 실무 기술 스킬보다 우선합니다. 예를 들어 어떤 외부 스킬이 shadcn/ui나 Redux를 추천해도, 이 저장소의 기존 스택과 AGENTS 승인 규칙에 맞지 않으면 사용하지 않습니다.
 
 ## Document Map
 
@@ -225,42 +225,40 @@ sequenceDiagram
 
 ```mermaid
 flowchart TD
-    A["README.md<br/>Project entry"] --> B["docs/README.md<br/>Human docs map"]
-    A --> X["AGENTS.md<br/>AI agent contract"]
-    A --> Z[".agents/README.md<br/>Agent skills catalog"]
-    B --> C["docs/spec.md<br/>Implementation spec"]
+    A["README.md<br/>Project entry"] --> B["AGENTS.md<br/>AI agent contract"]
+    B --> C["package.json + src/<br/>Implementation reference"]
     B --> D["docs/prd.md<br/>Product requirements"]
-    B --> E["docs/sitemap.md + docs/ia.md<br/>Routes and IA"]
+    B --> E["docs/ia.md<br/>Routes and IA"]
     B --> F["docs/Wireframe/README.md<br/>Screen specs"]
     B --> G["docs/ant-design/README.md<br/>UI rules"]
     B --> H["docs/flow/README.md<br/>User journey"]
+    H --> I["docs/flow/sitemap.md<br/>Sitemap diagram"]
 ```
 
 ## Main Entry Points
 
 | Need | Start here |
 | --- | --- |
-| 프로젝트 전체를 사람 관점에서 이해하기 | [docs/README.md](./docs/README.md) |
-| Implementation stack, dependencies, backend, auth, AI boundary, deployment, environment variables, testing | [docs/spec.md](./docs/spec.md) |
+| 프로젝트 전체를 사람 관점에서 이해하기 | [README.md](./README.md) |
+| Implementation stack, dependencies, backend, auth, AI boundary, deployment, environment variables, testing | [AGENTS.md](./AGENTS.md), [package.json](./package.json), [TESTING.md](./TESTING.md), [supabase/migrations/INDEX.md](./supabase/migrations/INDEX.md) |
 | Product scope, user value, business rules | [docs/prd.md](./docs/prd.md) |
-| Routes and navigation | [docs/sitemap.md](./docs/sitemap.md), [docs/ia.md](./docs/ia.md) |
+| Routes and navigation | [docs/ia.md](./docs/ia.md), [docs/flow/user-flow.md](./docs/flow/user-flow.md), [docs/flow/sitemap.md](./docs/flow/sitemap.md), [docs/Wireframe/README.md](./docs/Wireframe/README.md) |
 | Specific screen requirements | [docs/Wireframe/README.md](./docs/Wireframe/README.md) |
 | UI system, Ant Design patterns, theme rules | [docs/ant-design/README.md](./docs/ant-design/README.md) |
 | User journey and transitions | [docs/flow/README.md](./docs/flow/README.md) |
-| AI agent skills catalog and sync model | [.agents/README.md](./.agents/README.md) |
-| Auth flow, login/signup/callback/error pages, operational policy (cleanup cron, rate limits, env vars) | [docs/development/auth-overview.md](./docs/development/auth-overview.md) |
+| Auth flow, login/signup/callback/error pages, operational policy (cleanup cron, rate limits, env vars) | 관련 auth Wireframe 기능명세, `src/app/auth/`, `src/lib/supabase/`, [supabase/migrations/INDEX.md](./supabase/migrations/INDEX.md) |
 
 ## 현재 기준 문서
 
 | 기준 | 문서 |
 | --- | --- |
-| 단일 구현 기준 | [docs/spec.md](./docs/spec.md) |
+| 구현 기준 | [AGENTS.md](./AGENTS.md), [README.md](./README.md), [package.json](./package.json), 현재 `src/` |
 | 제품 목적과 범위 | [docs/prd.md](./docs/prd.md) |
-| 화면과 라우트 | [docs/sitemap.md](./docs/sitemap.md), [docs/ia.md](./docs/ia.md), [docs/Wireframe/README.md](./docs/Wireframe/README.md) |
+| 화면과 라우트 | [docs/ia.md](./docs/ia.md), [docs/flow/user-flow.md](./docs/flow/user-flow.md), [docs/flow/sitemap.md](./docs/flow/sitemap.md), [docs/Wireframe/README.md](./docs/Wireframe/README.md) |
 | 사용자 흐름 | [docs/flow/user-flow.md](./docs/flow/user-flow.md) |
 | UI 규칙 | [docs/ant-design/README.md](./docs/ant-design/README.md) |
-| AI 협업 규칙 | [AGENTS.md](./AGENTS.md), [.agents/README.md](./.agents/README.md) |
-| 인증 흐름과 운영 정책 | [docs/development/auth-overview.md](./docs/development/auth-overview.md) |
+| AI 협업 규칙 | [AGENTS.md](./AGENTS.md) |
+| 인증 흐름과 운영 정책 | 관련 auth Wireframe 기능명세, `src/app/auth/`, `src/lib/supabase/`, [supabase/migrations/INDEX.md](./supabase/migrations/INDEX.md) |
 
 ## 운영 규칙
 

@@ -124,7 +124,7 @@ Paper의 31 X-09 알림 설정 화면은 다음 표시 항목을 갖는다.
 - `fetchDeliveryHistory`, `fetchNotifications`, `markNotificationRead` - `src/components/notifications/notifications-data.ts`
 - `useUpdateNotificationPrefs`, `updateNotificationPrefs` - `src/lib/settings/mutations.ts`
 - `NOTIFICATION_PREF_KEYS`, `coerceNotificationPrefs` - `src/lib/settings/types.ts`
-- Supabase DDL/RLS - `supabase/migrations/20260602120200_notifications_and_settings.sql`, `supabase/migrations/20260612160000_user_notifications.sql`, `supabase/migrations/20260612180000_notification_dispatcher.sql`, `supabase/migrations/20260612180100_register_notification_cron.sql`
+- Supabase DDL/RLS - `supabase/migrations/20260602120200_notifications_and_settings.sql`, `supabase/migrations/20260612160000_user_notifications.sql`, `supabase/migrations/20260612180000_notification_dispatcher.sql`, `supabase/migrations/20260612180100_register_notification_cron.sql`, `supabase/migrations/20260612190000_notification_email_pipeline.sql`, `supabase/migrations/20260612190100_notification_email_templates_seed.sql`, `supabase/migrations/20260612190200_email_live_defer.sql`
 
 ## 후속 알림 발송 개발 브리프
 
@@ -143,4 +143,4 @@ email/Zalo/push 외부 발송을 구현할 때는 이 화면 문서의 범위만
 - 이 화면의 주요 CTA와 상태가 Paper의 X-09 영역과 route map에 맞게 설명되어 있다.
 - DB 데이터 사용 명세의 객체가 `docs/Wireframe/data-usage-index.md`에도 역색인되어 있다.
 - 구현된 저장/조회와 미구현 발송 transport가 명확히 분리되어 있다.
-- user/admin/public 권한 경계가 `docs/sitemap.md` audience와 맞는다.
+- user/admin/public 권한 경계가 `docs/ia.md`와 화면 기능명세의 audience와 맞는다.
