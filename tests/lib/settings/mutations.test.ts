@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  checkNicknameAvailability,
   NicknameTakenError,
   updateLocale,
   updateNotificationPrefs,
@@ -12,13 +13,28 @@ type UpdateCall = {
   id?: string;
 };
 
+type RpcCall = {
+  fn: string;
+  args: Record<string, unknown>;
+};
+
 function makeClient(opts: {
   currentPrefs?: unknown;
   selectError?: { message: string } | null;
   updateError?: { code?: string; details?: string; message: string } | null;
+  rpcData?: boolean | null;
+  rpcError?: { message: string } | null;
+  onRpc?: (call: RpcCall) => void;
   onUpdate?: (call: UpdateCall) => void;
 }) {
   return {
+    rpc: (fn: string, args: Record<string, unknown>) => {
+      opts.onRpc?.({ fn, args });
+      return Promise.resolve({
+        data: opts.rpcData ?? null,
+        error: opts.rpcError ?? null,
+      });
+    },
     from: (table: string) => ({
       select: () => ({
         eq: () => ({
@@ -73,6 +89,55 @@ describe("updateLocale", () => {
           }) as any,
       ),
     ).rejects.toMatchObject({ message: "rls denied" });
+  });
+});
+
+describe("checkNicknameAvailability", () => {
+  it("calls the nickname availability RPC with the trimmed candidate", async () => {
+    const calls: RpcCall[] = [];
+    const result = await checkNicknameAvailability(
+      "  talkpik-abc123  ",
+      () =>
+        makeClient({
+          rpcData: true,
+          onRpc: (call) => calls.push(call),
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        }) as any,
+    );
+
+    expect(result).toBe(true);
+    expect(calls).toEqual([
+      {
+        fn: "is_nickname_available",
+        args: { candidate: "talkpik-abc123" },
+      },
+    ]);
+  });
+
+  it("returns false when the RPC reports a taken nickname", async () => {
+    await expect(
+      checkNicknameAvailability(
+        "talkpik-taken",
+        () =>
+          makeClient({
+            rpcData: false,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          }) as any,
+      ),
+    ).resolves.toBe(false);
+  });
+
+  it("throws when the RPC fails so the UI can show a retry/fallback state", async () => {
+    await expect(
+      checkNicknameAvailability(
+        "talkpik-error",
+        () =>
+          makeClient({
+            rpcError: { message: "rpc unavailable" },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          }) as any,
+      ),
+    ).rejects.toMatchObject({ message: "rpc unavailable" });
   });
 });
 

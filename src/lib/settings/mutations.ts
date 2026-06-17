@@ -41,6 +41,18 @@ export function profileSettingsQueryKey(userId: string) {
   return ["profile-settings", userId] as const;
 }
 
+export async function checkNicknameAvailability(
+  nickname: string,
+  createClient: ClientFactory = createSupabaseBrowserClient,
+): Promise<boolean> {
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc("is_nickname_available", {
+    candidate: nickname.trim(),
+  });
+  if (error) throw error;
+  return data === true;
+}
+
 /**
  * Update `profiles.ui_locale` for the calling user. RLS limits the update to
  * the auth.uid() row.

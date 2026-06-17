@@ -53,4 +53,21 @@ describe("profiles nationality migration", () => {
     expect(normalized).not.toContain("split_part(new.email");
     expect(normalized).not.toContain("new.raw_user_meta_data->>'nickname'");
   });
+
+  it("adds a security-definer RPC for nickname availability checks", () => {
+    const sql = readMigrations();
+    const normalized = sql.replace(/\s+/g, " ").toLowerCase();
+
+    expect(normalized).toContain(
+      "create or replace function public.is_nickname_available(candidate text)",
+    );
+    expect(normalized).toContain("returns boolean");
+    expect(normalized).toContain("security definer");
+    expect(normalized).toContain("auth.uid()");
+    expect(normalized).toContain("lower(nickname::text)");
+    expect(normalized).toContain("id <> caller_id");
+    expect(normalized).toContain(
+      "grant execute on function public.is_nickname_available(text) to authenticated",
+    );
+  });
 });

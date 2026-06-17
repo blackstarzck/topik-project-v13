@@ -14,10 +14,33 @@ import type { ReactNode } from "react";
 
 import koMessages from "../../../messages/ko.json";
 
-const mutateAsyncMock = vi.fn();
-const useUpdateProfileMock = vi.fn();
+const {
+  mutateAsyncMock,
+  useUpdateProfileMock,
+  checkNicknameAvailabilityMock,
+  MockNicknameTakenError,
+} = vi.hoisted(() => {
+  const mutateAsyncMock = vi.fn();
+  const useUpdateProfileMock = vi.fn();
+  const checkNicknameAvailabilityMock = vi.fn();
+  class MockNicknameTakenError extends Error {
+    constructor() {
+      super("이미 사용 중인 닉네임이에요.");
+      this.name = "NicknameTakenError";
+    }
+  }
+  return {
+    mutateAsyncMock,
+    useUpdateProfileMock,
+    checkNicknameAvailabilityMock,
+    MockNicknameTakenError,
+  };
+});
 
 vi.mock("@/lib/settings/mutations", () => ({
+  checkNicknameAvailability: (...args: unknown[]) =>
+    checkNicknameAvailabilityMock(...args),
+  NicknameTakenError: MockNicknameTakenError,
   useUpdateProfile: (...args: unknown[]) => useUpdateProfileMock(...args),
 }));
 
@@ -71,6 +94,8 @@ function renderProfileFormWithNavigation(
 beforeEach(() => {
   mutateAsyncMock.mockReset();
   mutateAsyncMock.mockResolvedValue(undefined);
+  checkNicknameAvailabilityMock.mockReset();
+  checkNicknameAvailabilityMock.mockResolvedValue(true);
   useUpdateProfileMock.mockReset();
   useUpdateProfileMock.mockReturnValue({
     mutate: vi.fn(),
@@ -169,6 +194,10 @@ describe("ProfileForm", () => {
     fireEvent.change(nameInput, { target: { value: "  Chan  " } });
     fireEvent.change(nickInput, { target: { value: "tester" } });
 
+    await waitFor(() => {
+      expect(screen.getByText(koMessages.profile.form.nicknameAvailable)).toBeTruthy();
+    });
+
     await act(async () => {
       submitForm(container);
     });
@@ -241,6 +270,146 @@ describe("ProfileForm", () => {
       (screen.getByRole("button", { name: "프로필 저장" }) as HTMLButtonElement)
         .disabled,
     ).toBe(true);
+  });
+
+  it("does not check duplicate nickname for one-character values", () => {
+    renderProfileForm();
+
+    const nickInput = screen.getByLabelText(
+      koMessages.profile.form.nicknameLabel,
+    ) as HTMLInputElement;
+    fireEvent.change(nickInput, { target: { value: "B" } });
+
+    expect(screen.getByText(koMessages.profile.form.nicknameTooShort)).toBeTruthy();
+    expect(checkNicknameAvailabilityMock).not.toHaveBeenCalled();
+  });
+
+  it("shows available nickname feedback and enables Save after debounce", async () => {
+    renderProfileForm();
+
+    const nickInput = screen.getByLabelText(
+      koMessages.profile.form.nicknameLabel,
+    ) as HTMLInputElement;
+    fireEvent.change(nickInput, { target: { value: "talkpik-new" } });
+
+    await waitFor(
+      () => {
+        expect(checkNicknameAvailabilityMock).toHaveBeenCalledWith("talkpik-new");
+      },
+      { timeout: 1000 },
+    );
+    await waitFor(() => {
+      expect(screen.getByText(koMessages.profile.form.nicknameAvailable)).toBeTruthy();
+    });
+    expect(
+      (screen.getByRole("button", {
+        name: koMessages.profile.form.saveAriaLabel,
+      }) as HTMLButtonElement).disabled,
+    ).toBe(false);
+  });
+
+  it("shows duplicate nickname feedback and disables Save", async () => {
+    checkNicknameAvailabilityMock.mockResolvedValue(false);
+    renderProfileForm();
+
+    const nickInput = screen.getByLabelText(
+      koMessages.profile.form.nicknameLabel,
+    ) as HTMLInputElement;
+    fireEvent.change(nickInput, { target: { value: "talkpik-taken" } });
+
+    await waitFor(() => {
+      expect(screen.getByText(koMessages.profile.form.nicknameTaken)).toBeTruthy();
+    });
+    expect(
+      (screen.getByRole("button", {
+        name: koMessages.profile.form.saveAriaLabel,
+      }) as HTMLButtonElement).disabled,
+    ).toBe(true);
+  });
+
+  it("shows check-failed feedback but keeps Save available for DB-backed final validation", async () => {
+    checkNicknameAvailabilityMock.mockRejectedValue(new Error("network"));
+    renderProfileForm();
+
+    const nickInput = screen.getByLabelText(
+      koMessages.profile.form.nicknameLabel,
+    ) as HTMLInputElement;
+    fireEvent.change(nickInput, { target: { value: "talkpik-offline" } });
+
+    await waitFor(() => {
+      expect(screen.getByText(koMessages.profile.form.nicknameCheckFailed)).toBeTruthy();
+    });
+    expect(
+      (screen.getByRole("button", {
+        name: koMessages.profile.form.saveAriaLabel,
+      }) as HTMLButtonElement).disabled,
+    ).toBe(false);
+  });
+
+  it("does not check duplicate nickname when the saved nickname is unchanged", () => {
+    renderProfileForm({
+      initialProfile: {
+        display_name: null,
+        nickname: "talkpik-saved",
+        bio: null,
+      },
+    });
+
+    expect(checkNicknameAvailabilityMock).not.toHaveBeenCalled();
+  });
+
+  it("ignores stale nickname availability responses", async () => {
+    let resolveFirst: (value: boolean) => void = () => undefined;
+    checkNicknameAvailabilityMock
+      .mockReturnValueOnce(
+        new Promise<boolean>((resolve) => {
+          resolveFirst = resolve;
+        }),
+      )
+      .mockResolvedValueOnce(true);
+    renderProfileForm();
+
+    const nickInput = screen.getByLabelText(
+      koMessages.profile.form.nicknameLabel,
+    ) as HTMLInputElement;
+    fireEvent.change(nickInput, { target: { value: "talkpik-old" } });
+    await waitFor(() => {
+      expect(checkNicknameAvailabilityMock).toHaveBeenCalledWith("talkpik-old");
+    });
+
+    fireEvent.change(nickInput, { target: { value: "talkpik-new" } });
+    await waitFor(() => {
+      expect(checkNicknameAvailabilityMock).toHaveBeenCalledWith("talkpik-new");
+    });
+
+    resolveFirst(false);
+    await waitFor(() => {
+      expect(screen.getByText(koMessages.profile.form.nicknameAvailable)).toBeTruthy();
+    });
+    expect(screen.queryByText(koMessages.profile.form.nicknameTaken)).toBeNull();
+  });
+
+  it("maps save-time nickname unique conflicts to field-level feedback", async () => {
+    mutateAsyncMock.mockRejectedValue(new MockNicknameTakenError());
+    const { container } = renderProfileForm();
+
+    const nickInput = screen.getByLabelText(
+      koMessages.profile.form.nicknameLabel,
+    ) as HTMLInputElement;
+    fireEvent.change(nickInput, { target: { value: "talkpik-race" } });
+    await waitFor(() => {
+      expect(screen.getByText(koMessages.profile.form.nicknameAvailable)).toBeTruthy();
+    });
+
+    await act(async () => {
+      submitForm(container);
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.getAllByText(koMessages.profile.form.nicknameTaken).length,
+      ).toBeGreaterThan(0);
+    });
   });
 
   it("renders existing bio value from initialProfile", () => {

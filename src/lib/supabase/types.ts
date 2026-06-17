@@ -1337,6 +1337,12 @@ export interface Database {
           streak_days: number;
         }[];
       };
+      is_nickname_available: {
+        Args: {
+          candidate: string;
+        };
+        Returns: boolean;
+      };
       list_user_problems: {
         Args: {
           filter?: Json;

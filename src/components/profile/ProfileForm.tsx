@@ -5,7 +5,11 @@ import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { AppCard } from "@/components/shared/AppCard";
-import { useUpdateProfile } from "@/lib/settings/mutations";
+import {
+  checkNicknameAvailability,
+  NicknameTakenError,
+  useUpdateProfile,
+} from "@/lib/settings/mutations";
 import {
   AvatarError,
   avatarPublicUrl,
@@ -18,6 +22,10 @@ import {
 const { Paragraph } = Typography;
 
 const PROFILE_NAME_MIN_LENGTH = 2;
+const NICKNAME_CHECK_DEBOUNCE_MS = 500;
+
+type NicknameAvailability = "idle" | "checking" | "available" | "taken" | "failed";
+type FormValidateStatus = "success" | "warning" | "error" | "validating";
 
 type ProfileDraft = {
   display_name: string | null;
@@ -174,6 +182,9 @@ export function ProfileForm({
   const [nickname, setNickname] = useState<string>(
     initialProfile.nickname ?? "",
   );
+  const [nicknameAvailability, setNicknameAvailability] =
+    useState<NicknameAvailability>("idle");
+  const nicknameCheckSeqRef = useRef(0);
   const [bio, setBio] = useState<string>(initialProfile.bio ?? "");
 
   const draftProfile = useMemo(
@@ -193,7 +204,31 @@ export function ProfileForm({
     : nicknameTooShort
       ? t("nicknameTooShort")
       : null;
-  const canSubmit = isDirty && !validationError;
+  const nicknameAvailabilityBlocksSubmit =
+    nicknameAvailability === "checking" || nicknameAvailability === "taken";
+  const canSubmit =
+    isDirty && !validationError && !nicknameAvailabilityBlocksSubmit;
+  const nicknameValidateStatus: FormValidateStatus | undefined =
+    nicknameTooShort || nicknameAvailability === "taken"
+      ? "error"
+      : nicknameAvailability === "checking"
+        ? "validating"
+        : nicknameAvailability === "available"
+          ? "success"
+          : nicknameAvailability === "failed"
+            ? "warning"
+            : undefined;
+  const nicknameHelp = nicknameTooShort
+    ? t("nicknameTooShort")
+    : nicknameAvailability === "taken"
+      ? t("nicknameTaken")
+      : nicknameAvailability === "checking"
+        ? t("nicknameChecking")
+        : nicknameAvailability === "available"
+          ? t("nicknameAvailable")
+          : nicknameAvailability === "failed"
+            ? t("nicknameCheckFailed")
+            : t("nicknameHelp");
   const avatarInitial =
     (draftProfile.display_name ?? draftProfile.nickname ?? accountEmail ?? "?")
       .trim()
@@ -254,18 +289,65 @@ export function ProfileForm({
     };
   }, [isDirty, t]);
 
+  useEffect(() => {
+    const normalizedNickname = draftProfile.nickname;
+    const savedNickname = savedProfile.nickname;
+    const nextSeq = nicknameCheckSeqRef.current + 1;
+    nicknameCheckSeqRef.current = nextSeq;
+
+    if (
+      normalizedNickname === null ||
+      normalizedNickname.length < PROFILE_NAME_MIN_LENGTH ||
+      normalizedNickname === savedNickname
+    ) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      if (nicknameCheckSeqRef.current !== nextSeq) return;
+      setNicknameAvailability("checking");
+      void checkNicknameAvailability(normalizedNickname)
+        .then((available) => {
+          if (nicknameCheckSeqRef.current !== nextSeq) return;
+          setNicknameAvailability(available ? "available" : "taken");
+        })
+        .catch(() => {
+          if (nicknameCheckSeqRef.current !== nextSeq) return;
+          setNicknameAvailability("failed");
+        });
+    }, NICKNAME_CHECK_DEBOUNCE_MS);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [draftProfile.nickname, savedProfile.nickname]);
+
   async function handleFinish() {
     if (!isDirty) return;
     if (validationError) {
       message.error(validationError);
       return;
     }
+    if (nicknameAvailability === "checking") {
+      message.error(t("nicknameChecking"));
+      return;
+    }
+    if (nicknameAvailability === "taken") {
+      message.error(t("nicknameTaken"));
+      return;
+    }
 
     try {
       await mutation.mutateAsync(draftProfile);
       setSavedProfile(draftProfile);
+      setNicknameAvailability("idle");
       message.success(t("saveSuccess"));
     } catch (err) {
+      if (err instanceof NicknameTakenError) {
+        setNicknameAvailability("taken");
+        message.error(t("nicknameTaken"));
+        return;
+      }
       // err.message 는 데이터 계층(useUpdateProfile, src/lib/settings)에서 온
       // 서비스 메시지이므로 그대로 노출하고, 없으면 기본 저장 실패 문구로 대체.
       message.error(err instanceof Error ? err.message : t("saveError"));
@@ -306,12 +388,15 @@ export function ProfileForm({
 
       <Form.Item
         label={t("nicknameLabel")}
-        validateStatus={nicknameTooShort ? "error" : undefined}
-        help={nicknameTooShort ? t("nicknameTooShort") : t("nicknameHelp")}
+        validateStatus={nicknameValidateStatus}
+        help={nicknameHelp}
       >
         <Input
           value={nickname}
-          onChange={(event) => setNickname(event.target.value)}
+          onChange={(event) => {
+            setNickname(event.target.value);
+            setNicknameAvailability("idle");
+          }}
           placeholder={t("nicknamePlaceholder")}
           maxLength={20}
           aria-label={t("nicknameLabel")}
