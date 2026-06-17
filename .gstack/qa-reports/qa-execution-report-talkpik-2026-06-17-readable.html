@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TALKPIK AI QA 쉬운 리포트 - 2026-06-17</title>
+    <style>
+      :root {
+        --bg: #f7f8fb;
+        --panel: #ffffff;
+        --ink: #172033;
+        --muted: #637083;
+        --line: #dfe5ee;
+        --red: #c93535;
+        --red-bg: #fff1f1;
+        --yellow: #9a6700;
+        --yellow-bg: #fff7df;
+        --green: #217346;
+        --green-bg: #ecf8f0;
+        --blue: #255ea8;
+        --blue-bg: #eef5ff;
+        --shadow: 0 12px 30px rgba(23, 32, 51, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family:
+          "Pretendard",
+          "Apple SD Gothic Neo",
+          "Malgun Gothic",
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        line-height: 1.65;
+      }
+
+      main {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 32px 20px 56px;
+      }
+
+      header {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        box-shadow: var(--shadow);
+        padding: 28px;
+      }
+
+      h1,
+      h2,
+      h3 {
+        line-height: 1.25;
+        margin: 0;
+      }
+
+      h1 {
+        font-size: 32px;
+        letter-spacing: 0;
+      }
+
+      h2 {
+        margin-top: 36px;
+        font-size: 24px;
+      }
+
+      h3 {
+        margin-top: 24px;
+        font-size: 18px;
+      }
+
+      p {
+        margin: 10px 0 0;
+      }
+
+      .lead {
+        font-size: 18px;
+        color: var(--muted);
+        margin-top: 12px;
+      }
+
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 18px;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        min-height: 30px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 4px 12px;
+        background: #fbfcff;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .grid {
+        display: grid;
+        gap: 16px;
+      }
+
+      .grid.cols-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .grid.cols-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: var(--shadow);
+      }
+
+      .status {
+        border-left: 5px solid var(--yellow);
+      }
+
+      .status.red {
+        border-left-color: var(--red);
+      }
+
+      .status.green {
+        border-left-color: var(--green);
+      }
+
+      .badge {
+        display: inline-block;
+        border-radius: 6px;
+        padding: 2px 8px;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .badge.red {
+        background: var(--red-bg);
+        color: var(--red);
+      }
+
+      .badge.yellow {
+        background: var(--yellow-bg);
+        color: var(--yellow);
+      }
+
+      .badge.green {
+        background: var(--green-bg);
+        color: var(--green);
+      }
+
+      .badge.blue {
+        background: var(--blue-bg);
+        color: var(--blue);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      th,
+      td {
+        border-bottom: 1px solid var(--line);
+        padding: 12px 14px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        background: #f0f4fa;
+        font-size: 14px;
+      }
+
+      tr:last-child td {
+        border-bottom: 0;
+      }
+
+      ul,
+      ol {
+        padding-left: 22px;
+        margin: 10px 0 0;
+      }
+
+      li + li {
+        margin-top: 6px;
+      }
+
+      code {
+        background: #eef1f6;
+        border-radius: 4px;
+        padding: 1px 5px;
+        font-family: Consolas, "SFMono-Regular", monospace;
+        font-size: 0.93em;
+      }
+
+      .note {
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .section {
+        margin-top: 18px;
+      }
+
+      .simple-flow {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 8px;
+        margin-top: 14px;
+      }
+
+      .flow-step {
+        background: var(--blue-bg);
+        color: var(--blue);
+        border: 1px solid #cfe0f7;
+        border-radius: 8px;
+        padding: 12px;
+        text-align: center;
+        font-weight: 700;
+      }
+
+      a {
+        color: var(--blue);
+      }
+
+      @media (max-width: 820px) {
+        main {
+          padding: 20px 12px 40px;
+        }
+
+        header {
+          padding: 20px;
+        }
+
+        h1 {
+          font-size: 26px;
+        }
+
+        .grid.cols-3,
+        .grid.cols-2,
+        .simple-flow {
+          grid-template-columns: 1fr;
+        }
+
+        table {
+          display: block;
+          overflow-x: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>TALKPIK AI QA 쉬운 리포트</h1>
+        <p class="lead">
+          쉽게 말하면, 기본 검사는 통과했지만 출시 전에 꼭 확인해야 할 사용자 흐름 문제가 남아 있습니다.
+        </p>
+        <div class="meta">
+          <span class="pill">작성일: 2026-06-17</span>
+          <span class="pill">대상: 사용자 앱</span>
+          <span class="pill">서버: http://127.0.0.1:3000</span>
+          <span class="pill">코드 수정 없음</span>
+          <span class="pill">커밋 없음</span>
+        </div>
+      </header>
+
+      <section class="section grid cols-3" aria-label="전체 상태">
+        <article class="card status red">
+          <span class="badge red">빨강</span>
+          <h3>바로 고칠 것</h3>
+          <p>피드백 직접 열기와 모바일 구독 화면에서 실패가 확인됐습니다. 회원가입 전환은 테스트 기준 갱신 문제이고, 알림은 부분 구현과 보류 범위를 나눠 봐야 합니다.</p>
+        </article>
+        <article class="card status">
+          <span class="badge yellow">노랑</span>
+          <h3>주의할 것</h3>
+          <p>전체 화면 테스트는 한 번에 끝나지 않아 화면 크기와 기능별로 나누어 확인했습니다.</p>
+        </article>
+        <article class="card status green">
+          <span class="badge green">초록</span>
+          <h3>통과한 것</h3>
+          <p>코드 문법, 연결 상태, 일반 기능 테스트는 통과했습니다. 핵심 글쓰기 흐름도 확인했습니다.</p>
+        </article>
+      </section>
+
+      <section>
+        <h2>한 줄 결론</h2>
+        <div class="card">
+          <p>
+            지금 상태는 <strong>조건부 통과</strong>입니다. 앱 전체가 완전히 멈추지는 않지만,
+            사용자가 결과를 직접 다시 열거나 모바일에서 구독 화면을 볼 때 막힐 수 있습니다.
+            알림은 완성 기능이 아니라 부분 구현 상태로 따로 봐야 합니다.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>사용자가 실제로 겪을 수 있는 문제</h2>
+        <div class="grid cols-2 section">
+          <article class="card">
+            <span class="badge yellow">정정</span>
+            <h3>회원가입 화면 전환은 새 디자인 기준 확인 필요</h3>
+            <p>
+              최근 회원가입 화면은 처음에 이름만 보여주고, 입력이 끝날 때마다 다음 칸을 하나씩 보여주는 방식으로 바뀌었습니다.
+              기존 테스트는 예전처럼 비밀번호 확인 칸이 바로 보여야 한다고 기대하고 있었습니다.
+            </p>
+            <p class="note">정리: 현재 증거만으로는 제품 결함이 아니라, 테스트가 새 화면 방식을 따라가지 못한 문제로 보는 것이 맞습니다.</p>
+          </article>
+
+          <article class="card">
+            <span class="badge red">P1</span>
+            <h3>피드백 링크 직접 열기 문제</h3>
+            <p>
+              사용자가 이전 첨삭 결과 링크를 직접 열 때, 데스크톱에서 피드백 화면 대신
+              찾을 수 없는 화면으로 떨어지는 경우가 확인됐습니다.
+            </p>
+            <p class="note">영향: 저장된 학습 결과를 다시 확인하지 못할 수 있습니다.</p>
+          </article>
+
+          <article class="card">
+            <span class="badge yellow">부분 구현</span>
+            <h3>알림은 아직 완성 기능이 아닙니다</h3>
+            <p>
+              알림 설정 화면과 일부 저장, 인앱 알림 쪽은 구현되어 있습니다.
+              하지만 실제 이메일, Zalo, push 발송은 프로젝트 문서상 아직 보류입니다.
+            </p>
+            <p class="note">정리: 알림 전체를 출시 완료 기능처럼 보면 안 됩니다. 현재는 설정/인앱 일부만 확인 대상이고, 외부 발송은 후속 개발 범위입니다.</p>
+          </article>
+
+          <article class="card">
+            <span class="badge red">P1/P2</span>
+            <h3>모바일 구독 화면 문제</h3>
+            <p>
+              모바일에서 구독 화면을 열 때 서버 오류나 화면 초기화 오류가 기록됐습니다.
+              데스크톱은 통과했고 태블릿은 다시 실행했을 때 통과했습니다.
+            </p>
+            <p class="note">영향: 모바일 사용자가 구독 상태를 보려고 할 때 화면이 불안정할 수 있습니다.</p>
+          </article>
+        </div>
+      </section>
+
+      <section>
+        <h2>확인한 흐름</h2>
+        <p class="note">이번 QA는 단순히 화면이 뜨는지만 본 것이 아니라, 사용자가 움직이는 순서까지 확인했습니다.</p>
+        <div class="simple-flow" aria-label="테스트한 사용자 흐름">
+          <div class="flow-step">가입/로그인</div>
+          <div class="flow-step">학습 시작</div>
+          <div class="flow-step">문제 선택</div>
+          <div class="flow-step">답안 작성</div>
+          <div class="flow-step">피드백 확인</div>
+        </div>
+      </section>
+
+      <section>
+        <h2>검사 결과 요약</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>검사</th>
+              <th>결과</th>
+              <th>쉬운 설명</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>기본 코드 검사</td>
+              <td><span class="badge green">통과</span></td>
+              <td>코드 문법과 연결 상태를 확인했고 새 오류는 없었습니다. 경고는 6개 남았습니다.</td>
+            </tr>
+            <tr>
+              <td>자동 기능 테스트</td>
+              <td><span class="badge green">통과</span></td>
+              <td>작은 기능 단위 테스트는 761개 통과했고 3개는 의도적으로 건너뛰었습니다.</td>
+            </tr>
+            <tr>
+              <td>보안/패키지 점검</td>
+              <td><span class="badge red">실패</span></td>
+              <td>사용 중인 개발 도구와 관련 패키지에서 5개 보안 알림이 나왔습니다.</td>
+            </tr>
+            <tr>
+              <td>화면 자동 테스트</td>
+              <td><span class="badge yellow">나누어 확인</span></td>
+              <td>전체를 한 번에 돌리면 제한 시간 안에 끝나지 않아 화면 크기별로 나누어 확인했습니다.</td>
+            </tr>
+            <tr>
+              <td>알림 실패 상태</td>
+              <td><span class="badge yellow">부분 확인</span></td>
+              <td>알림 설정/인앱 일부는 구현되어 있지만, 외부 발송은 보류입니다. 실패 상태 테스트는 현재 구현 범위에 맞게 다시 정리해야 합니다.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>시나리오별 상태</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>범위</th>
+              <th>상태</th>
+              <th>쉽게 풀어쓴 설명</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>공개 화면과 약관</td>
+              <td><span class="badge green">통과</span></td>
+              <td>첫 화면, 약관, 개인정보 화면은 데스크톱과 모바일에서 기본 확인을 마쳤습니다.</td>
+            </tr>
+            <tr>
+              <td>회원가입/로그인</td>
+              <td><span class="badge yellow">테스트 갱신 필요</span></td>
+              <td>회원가입 화면이 단계형으로 바뀌었는데, 일부 테스트가 예전 화면 구조를 기대하고 있었습니다.</td>
+            </tr>
+            <tr>
+              <td>비밀번호 재설정</td>
+              <td><span class="badge yellow">주의</span></td>
+              <td>잘못된 링크로 들어와도 먼저 새 비밀번호 입력 화면이 보입니다. 실패 안내가 늦게 나옵니다.</td>
+            </tr>
+            <tr>
+              <td>이메일 인증</td>
+              <td><span class="badge yellow">주의</span></td>
+              <td>잘못된 이메일 주소가 들어와도 인증 메일을 보낸 것처럼 보입니다.</td>
+            </tr>
+            <tr>
+              <td>학습 홈과 문제 목록</td>
+              <td><span class="badge green">통과</span></td>
+              <td>대시보드, 추천, 문제 목록, 쓰기 화면 기본 렌더링은 확인했습니다.</td>
+            </tr>
+            <tr>
+              <td>쓰기와 제출</td>
+              <td><span class="badge green">통과</span></td>
+              <td>답안 작성, 제출 확인, 분석 중 화면, 핵심 글쓰기 흐름을 확인했습니다.</td>
+            </tr>
+            <tr>
+              <td>피드백/비교 리포트</td>
+              <td><span class="badge red">실패 일부</span></td>
+              <td>피드백 화면 자체는 통과했지만, 특정 피드백 주소를 직접 열 때 데스크톱에서 실패했습니다.</td>
+            </tr>
+            <tr>
+              <td>내 서재/PDF</td>
+              <td><span class="badge green">통과</span></td>
+              <td>최근 재검사에서는 내 서재와 PDF 내보내기 모달이 통과했습니다.</td>
+            </tr>
+            <tr>
+              <td>알림 설정</td>
+              <td><span class="badge yellow">부분 구현/보류</span></td>
+              <td>설정 화면과 인앱 알림 일부는 구현되어 있습니다. 실제 이메일, Zalo, push 발송은 아직 보류 범위입니다.</td>
+            </tr>
+            <tr>
+              <td>구독/결제 안내</td>
+              <td><span class="badge red">실패 일부</span></td>
+              <td>결제 기능 자체는 보류 상태로 보이지만, 모바일 구독 화면에서 오류가 기록됐습니다.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>우선 처리 순서</h2>
+        <ol class="card">
+          <li>피드백 링크 직접 열기 문제를 확인합니다. 학습 결과를 다시 보는 핵심 흐름입니다.</li>
+          <li>알림은 구현된 범위와 보류 범위를 나눠 다시 테스트합니다. 외부 발송은 완료 기능으로 보지 않습니다.</li>
+          <li>모바일 구독 화면 오류를 확인합니다. 모바일에서만 흔들리는지, 서버 오류인지 분리해야 합니다.</li>
+          <li>회원가입 전환 테스트를 새 단계형 화면에 맞게 고칩니다. 제품 결함으로 단정하지 않습니다.</li>
+          <li>보안 알림이 난 패키지를 별도 작업으로 정리합니다. 의존성 변경은 범위가 커질 수 있습니다.</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>이번에 하지 않은 일</h2>
+        <div class="card">
+          <ul>
+            <li>소스 코드는 수정하지 않았습니다.</li>
+            <li>테스트 파일도 수정하지 않았습니다.</li>
+            <li>커밋이나 배포는 하지 않았습니다.</li>
+            <li>실제 결제 기능이나 실제 AI 채점 품질은 이번 QA 범위가 아니었습니다.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section>
+        <h2>개발자용 근거</h2>
+        <div class="card">
+          <p>
+            원본 Markdown 리포트:
+            <code>.gstack/qa-reports/qa-execution-report-talkpik-2026-06-17.md</code>
+          </p>
+          <p>
+            기준 시나리오:
+            <code>.gstack/qa-reports/qa-branching-test-design-talkpik-2026-06-17.md</code>
+          </p>
+          <p>
+            주요 증거는 <code>test-results/</code> 아래 실패 화면, 오류 설명, trace 파일에 남아 있습니다.
+          </p>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

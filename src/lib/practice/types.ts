@@ -56,6 +56,7 @@ export type ProblemFilter = {
   search?: string;
   /** True → 추천 리스트(recommendation_items.status='active')만. */
   recommended?: boolean;
+  reviewSetId?: string | null;
   /** Phase 7-D Task 12 — 사용자별 풀이 상태 필터. */
   solveStatus?: SolveStatusFilter;
 };

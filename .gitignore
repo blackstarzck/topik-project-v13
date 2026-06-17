@@ -40,6 +40,7 @@
 # Ignore local Claude config, but TRACK the shared project settings.json.
 # settings.local.json (personal permissions / machine paths) stays ignored.
 .claude/*
+!.claude/CLAUDE.md
 !.claude/settings.json
 !.claude/skills/
 .claude/skills/*

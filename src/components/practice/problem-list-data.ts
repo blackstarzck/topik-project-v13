@@ -93,21 +93,15 @@ function mapStatusFilter(
   }
 }
 
-function mapSort(sort: ProblemSort): "recent" | "difficulty" {
-  // The RPC supports 'recent' | 'difficulty'. We map the four UI sorts onto the
-  // two RPC sorts (asc/desc nuance for created_at is fixed desc in the RPC; the
-  // UI 'oldest' degrades to 'recent' here — flagged as a minor follow-up).
-  if (sort === "difficulty-asc" || sort === "difficulty-desc") {
-    return "difficulty";
-  }
-  return "recent";
-}
-
 function buildFilterJson(filter: ProblemFilter): Record<string, Json> {
   const f: Record<string, Json> = {};
   if (filter.questionNo != null) f.question_no = filter.questionNo;
   if (filter.difficulty != null) f.difficulty = filter.difficulty;
   if (filter.topikLevel != null) f.topik_level = filter.topikLevel;
+  if (filter.recommended === true) f.recommended = true;
+  if (filter.reviewSetId && filter.reviewSetId.trim().length > 0) {
+    f.review_set_id = filter.reviewSetId.trim();
+  }
   const status = mapStatusFilter(filter.solveStatus);
   if (status) f.status = status;
   if (filter.search && filter.search.trim().length > 0) {
@@ -162,7 +156,7 @@ export async function fetchUserProblemsRpc(
   const supabase = createClient();
   const { data, error } = await supabase.rpc("list_user_problems", {
     filter: buildFilterJson(params.filter),
-    sort: mapSort(params.sort),
+    sort: params.sort,
     page: params.page,
     page_size: params.pageSize,
   });

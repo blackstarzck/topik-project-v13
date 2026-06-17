@@ -23,6 +23,7 @@ import {
   registerPdfFonts,
 } from "@/lib/export/pdf-document";
 import {
+  assertMonthlyPdfExportLimit,
   PdfExportRequestError,
   resolvePdfExportItems,
 } from "@/lib/export/pdf-export-server";
@@ -60,6 +61,18 @@ export async function POST(request: NextRequest) {
   } = await supabase.auth.getUser();
   if (userError || !user) {
     return NextResponse.json({ error: "로그인이 필요해요." }, { status: 401 });
+  }
+
+  try {
+    await assertMonthlyPdfExportLimit(supabase, user.id);
+  } catch (err) {
+    if (err instanceof PdfExportRequestError) {
+      return NextResponse.json({ error: err.message }, { status: err.status });
+    }
+    return NextResponse.json(
+      { error: "PDF 내보내기 한도를 확인하지 못했어요." },
+      { status: 500 },
+    );
   }
 
   // §3-H: 재시도 포함 모든 시도가 새 row — 실패 이력이 ledger에 남는다.

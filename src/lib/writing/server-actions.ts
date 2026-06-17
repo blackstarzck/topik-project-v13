@@ -2,6 +2,11 @@
 
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "../supabase/server";
+import type { Json } from "../supabase/types";
+import {
+  submitExternalWriting,
+  toExternalTaskType,
+} from "../writing-api/evaluation";
 import {
   computeComparisonMetrics,
   generateNarrative,
@@ -23,6 +28,16 @@ export type SubmitWritingResult = {
   questionNo: QuestionNo;
 };
 
+const WRITING_PROBLEM_NOT_SUBMITTABLE_MESSAGE =
+  "현재 제출할 수 없는 문제입니다. 다른 문제를 선택해 주세요.";
+
+function toSubmitWritingErrorMessage(message: string) {
+  if (message.includes("problem_not_submittable")) {
+    return WRITING_PROBLEM_NOT_SUBMITTABLE_MESSAGE;
+  }
+  return `submitWriting failed: ${message}`;
+}
+
 export async function submitWritingAction(
   input: SubmitWritingInput,
 ): Promise<SubmitWritingResult> {
@@ -31,6 +46,47 @@ export async function submitWritingAction(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+
+  const externalBaseUrl = process.env.TALKPIK_WRITING_API_BASE_URL?.trim();
+  if (externalBaseUrl) {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const accessToken = session?.access_token;
+    if (!accessToken) throw new Error("submitWriting: missing session token");
+
+    const external = await submitExternalWriting({
+      baseUrl: externalBaseUrl,
+      accessToken,
+      payload: {
+        task_type: toExternalTaskType(input.question_no),
+        task_id: input.problem_id,
+        text: input.answer_text,
+        user_id: user.id,
+        lang: "ko",
+        passage_context: "",
+      },
+    });
+
+    const { error: insertError } = await supabase
+      .from("writing_submissions")
+      .insert({
+        id: external.submission_id,
+        user_id: user.id,
+        problem_id: input.problem_id,
+        draft_id: input.draft_id ?? null,
+        question_no: input.question_no,
+        answer_text: input.answer_text,
+        answer_json: (input.answer_json ?? null) as Json | null,
+        char_count: input.char_count,
+        feedback_status: external.status === "failed" ? "failed" : "analyzing",
+      });
+    if (insertError) {
+      throw new Error(`submitWriting external local insert: ${insertError.message}`);
+    }
+
+    return { submissionId: external.submission_id, questionNo: input.question_no };
+  }
 
   const mock = generateMockFeedback({
     question_no: input.question_no,
@@ -56,7 +112,7 @@ export async function submitWritingAction(
       sentences: mock.sentences,
     } as never,
   );
-  if (error) throw new Error(`submitWriting failed: ${error.message}`);
+  if (error) throw new Error(toSubmitWritingErrorMessage(error.message));
   const submissionId = (data as unknown as string) ?? "";
   if (!submissionId) {
     throw new Error("submitWriting: RPC returned empty submission id");

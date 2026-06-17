@@ -142,6 +142,14 @@
 | 46 | `20:01:00` | [`20260612200100_marketing_consent_in_dispatch.sql`](./20260612200100_marketing_consent_in_dispatch.sql) | H-2 dispatch consent 게이트. hard-coded marketing→`opted_out`를 `private.is_marketing_consented()` 조회로 교체(admin/event 함수). 동의 O+채널 on→eligible, 동의 O+채널 off→skipped, 동의 X→opted_out. 비-마케팅 동작 불변. |
 | 47 | `22:10:00` | [`20260612221000_fix_legal_documents_public_read_policy.sql`](./20260612221000_fix_legal_documents_public_read_policy.sql) | `legal_documents_published_read` 정책에서 공개 published read와 `private.is_platform_admin()` admin helper를 분리. anon 공개 약관 조회가 helper 실행 권한 오류(42501)로 실패하지 않도록 `status='published'`만 평가. |
 
+#### 17 (Writing submission visibility guard)
+
+| # | timestamp | 파일 | 영역 |
+| ---:| --- | --- | --- |
+| 48 | `05:50:40` | [`20260617055040_guard_writing_submission_problem_visibility.sql`](./20260617055040_guard_writing_submission_problem_visibility.sql) | Adds `private.assert_writing_problem_submittable` and redefines `submit_writing_with_feedback` so writing submissions are inserted only for `writing` problems that are `published`, `public`, `active`, and match the submitted question number. |
+| 49 | `18:30:00` | [`20260617183000_list_user_problems_recommended_sort.sql`](./20260617183000_list_user_problems_recommended_sort.sql) | Redefines `list_user_problems` with C-02 `recommended` filtering through active recommendation rows and exact UI sort semantics for newest, oldest, difficulty ascending, and difficulty descending. |
+| 50 | `21:30:00` | [`20260617213000_required_random_nickname.sql`](./20260617213000_required_random_nickname.sql) | Requires new profiles to receive a non-identifying default nickname (`talkpik-...`) during auth bootstrap, backfills blank existing nicknames, and retries random nickname generation on unique collisions. Does not derive nickname from email or provider metadata. |
+
 ---
 
 ## 새 마이그레이션을 추가할 때

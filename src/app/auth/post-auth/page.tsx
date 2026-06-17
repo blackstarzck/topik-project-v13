@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { requireUser } from "@/lib/auth/session";
+import { addGoogleLinkedNotice } from "@/lib/auth/identity-linking";
 import {
   backfillOAuthDisplayName,
   getMissingRequiredConsentDocuments,
@@ -50,5 +51,10 @@ export default async function PostAuthPage({
   }
 
   const hasGoal = await hasLearningGoal(user.id);
-  redirect(hasGoal ? "/dashboard" : "/onboarding/learning-goal");
+  redirect(
+    addGoogleLinkedNotice(
+      hasGoal ? "/dashboard" : "/onboarding/learning-goal",
+      user,
+    ),
+  );
 }

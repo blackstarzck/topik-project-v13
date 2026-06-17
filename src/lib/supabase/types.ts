@@ -54,6 +54,7 @@ export interface Database {
         Row: {
           id: string;
           display_name: string | null;
+          nationality_country_code: string | null;
           nickname: string | null;
           avatar_path: string | null;
           ui_locale: "ko" | "en" | "vi";
@@ -77,6 +78,7 @@ export interface Database {
         Insert: {
           id: string;
           display_name?: string | null;
+          nationality_country_code?: string | null;
           nickname?: string | null;
           avatar_path?: string | null;
           ui_locale?: "ko" | "en" | "vi";
@@ -97,6 +99,7 @@ export interface Database {
         Update: {
           id?: string;
           display_name?: string | null;
+          nationality_country_code?: string | null;
           nickname?: string | null;
           avatar_path?: string | null;
           ui_locale?: "ko" | "en" | "vi";

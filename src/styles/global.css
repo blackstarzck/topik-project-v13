@@ -583,6 +583,22 @@ body {
   gap: var(--auth-section-gap);
 }
 
+.signup-prompt-form-panel .auth-progressive-step {
+  animation: auth-progressive-step-in 180ms ease-out both;
+}
+
+@keyframes auth-progressive-step-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .signup-prompt-form-panel .auth-login-form {
   display: grid;
   gap: var(--auth-section-gap);
@@ -648,16 +664,107 @@ body {
 }
 
 .signup-prompt-form-panel .signup-form-surface .ant-input:hover,
-.signup-prompt-form-panel .signup-form-surface .ant-input-affix-wrapper:hover {
+.signup-prompt-form-panel .signup-form-surface .ant-input-affix-wrapper:hover,
+.signup-prompt-form-panel
+  .signup-form-surface
+  .ant-select:not(.ant-select-disabled):hover,
+.signup-prompt-form-panel
+  .signup-form-surface
+  .ant-select:not(.ant-select-disabled):hover
+  .ant-select-selector {
   border-color: #cfd4dc;
 }
 
 .signup-prompt-form-panel .signup-form-surface .ant-input:focus,
 .signup-prompt-form-panel
   .signup-form-surface
-  .ant-input-affix-wrapper-focused {
+  .ant-input-affix-wrapper-focused,
+.signup-prompt-form-panel .signup-form-surface .ant-select-focused,
+.signup-prompt-form-panel
+  .signup-form-surface
+  .ant-select-focused
+  .ant-select-selector {
   border-color: #181818;
   box-shadow: 0 0 0 2px rgba(24, 24, 24, 0.08);
+}
+
+.signup-prompt-form-panel .signup-form-surface .ant-select-single {
+  height: var(--auth-control-height) !important;
+  min-height: var(--auth-control-height) !important;
+  align-items: center;
+  border-color: #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.signup-prompt-form-panel
+  .signup-form-surface
+  .ant-select-single
+  .ant-select-content {
+  height: 100%;
+  min-height: 100%;
+  align-items: center;
+}
+
+.signup-prompt-form-panel
+  .signup-form-surface
+  .ant-select-single
+  .ant-select-content
+  > span {
+  display: flex;
+  height: 100%;
+  min-height: 100%;
+  align-items: center;
+}
+
+.signup-prompt-form-panel
+  .signup-form-surface
+  .ant-select-single
+  .ant-select-placeholder,
+.signup-prompt-form-panel
+  .signup-form-surface
+  .ant-select-single
+  .ant-select-item {
+  display: flex;
+  align-items: center;
+}
+
+.signup-prompt-form-panel
+  .signup-form-surface
+  .ant-select-single
+  .ant-select-selector {
+  min-height: var(--auth-control-height);
+  border-color: #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.signup-prompt-form-panel
+  .signup-form-surface
+  .ant-select-single:not(.ant-select-customize-input)
+  .ant-select-selector {
+  height: var(--auth-control-height);
+}
+
+.signup-prompt-form-panel
+  .signup-form-surface
+  .ant-select-single
+  .ant-select-selection-search-input {
+  height: 100%;
+}
+
+.signup-prompt-form-panel
+  .signup-form-surface
+  .ant-select-single
+  .ant-select-selection-item,
+.signup-prompt-form-panel
+  .signup-form-surface
+  .ant-select-single
+  .ant-select-selection-placeholder {
+  display: flex;
+  align-items: center;
 }
 
 .signup-prompt-form-panel .signup-form-surface .ant-btn-primary {
@@ -4402,12 +4509,28 @@ body {
   align-items: center;
   flex: 0 0 auto;
   gap: 8px;
-  min-height: 40px;
+  min-height: 44px;
   margin-bottom: 18px;
+  border: 0;
+  border-radius: var(--app-radius);
+  background: transparent;
+  padding: 0;
   color: var(--app-color-text);
+  cursor: pointer;
+  font: inherit;
   font-size: 20px;
   font-weight: 800;
   line-height: 1;
+  text-align: left;
+}
+
+.app-sidebar-brand:hover {
+  color: var(--app-color-text);
+}
+
+.app-sidebar-brand:focus-visible {
+  outline: 2px solid var(--app-color-primary);
+  outline-offset: 3px;
 }
 
 .app-sidebar-brand strong {

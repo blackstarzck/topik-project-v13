@@ -232,6 +232,7 @@ flowchart TD
     B --> F["docs/Wireframe/README.md<br/>Screen specs"]
     B --> G["docs/ant-design/README.md<br/>UI rules"]
     B --> H["docs/flow/README.md<br/>User journey"]
+    B --> J["docs/swagger-api/README.md<br/>Backend OpenAPI reference"]
     H --> I["docs/flow/sitemap.md<br/>Sitemap diagram"]
 ```
 
@@ -246,6 +247,7 @@ flowchart TD
 | Specific screen requirements | [docs/Wireframe/README.md](./docs/Wireframe/README.md) |
 | UI system, Ant Design patterns, theme rules | [docs/ant-design/README.md](./docs/ant-design/README.md) |
 | User journey and transitions | [docs/flow/README.md](./docs/flow/README.md) |
+| Backend OpenAPI endpoint and schema reference | [docs/swagger-api/README.md](./docs/swagger-api/README.md) |
 | Auth flow, login/signup/callback/error pages, operational policy (cleanup cron, rate limits, env vars) | 관련 auth Wireframe 기능명세, `src/app/auth/`, `src/lib/supabase/`, [supabase/migrations/INDEX.md](./supabase/migrations/INDEX.md) |
 
 ## 현재 기준 문서
@@ -258,6 +260,7 @@ flowchart TD
 | 사용자 흐름 | [docs/flow/user-flow.md](./docs/flow/user-flow.md) |
 | UI 규칙 | [docs/ant-design/README.md](./docs/ant-design/README.md) |
 | AI 협업 규칙 | [AGENTS.md](./AGENTS.md) |
+| 외부 백엔드 API 참고 | [docs/swagger-api/README.md](./docs/swagger-api/README.md) |
 | 인증 흐름과 운영 정책 | 관련 auth Wireframe 기능명세, `src/app/auth/`, `src/lib/supabase/`, [supabase/migrations/INDEX.md](./supabase/migrations/INDEX.md) |
 
 ## 운영 규칙

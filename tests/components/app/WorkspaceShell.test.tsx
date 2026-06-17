@@ -62,9 +62,31 @@ describe("WorkspaceShell", () => {
     expect(screen.getByTestId("workspace-child")).toBeTruthy();
   });
 
+  it("sends the brand mark to the learner home route", () => {
+    renderWithIntl(
+      <WorkspaceShell
+        role="learner"
+        userId="user-1"
+        email={null}
+        planLabel={null}
+      >
+        <div>body</div>
+      </WorkspaceShell>,
+    );
+
+    fireEvent.click(screen.getAllByLabelText("TALKPIK")[0]);
+
+    expect(navMock.routerPush).toHaveBeenCalledWith("/dashboard");
+  });
+
   it("keeps growth dashboard available for free-plan learners", () => {
     const { container } = renderWithIntl(
-      <WorkspaceShell role="learner" userId="user-1" email={null} planLabel={null}>
+      <WorkspaceShell
+        role="learner"
+        userId="user-1"
+        email={null}
+        planLabel={null}
+      >
         <div>body</div>
       </WorkspaceShell>,
     );
@@ -73,6 +95,7 @@ describe("WorkspaceShell", () => {
     expect(container.querySelector(".app-sidebar-lock-icon")).toBeNull();
     expect(container.querySelector(".app-sidebar-lock-tag")).toBeNull();
 
+    fireEvent.click(screen.getAllByText("성장 리포트")[0]);
     fireEvent.click(screen.getAllByText("성장 대시보드")[0]);
     expect(navMock.routerPush).toHaveBeenCalledWith("/growth");
   });
@@ -81,43 +104,76 @@ describe("WorkspaceShell", () => {
     navMock.pathname = "/practice/problems";
 
     const { container } = renderWithIntl(
-      <WorkspaceShell role="learner" userId="user-1" email={null} planLabel="premium">
+      <WorkspaceShell
+        role="learner"
+        userId="user-1"
+        email={null}
+        planLabel="premium"
+      >
         <div>body</div>
       </WorkspaceShell>,
     );
 
-    expect(hasExpandedMenuItem(container, "학습")).toBe(true);
-    expect(container.textContent).toContain("문제 풀이");
+    expect(hasExpandedMenuItem(container, "문제 풀기")).toBe(true);
+    expect(container.textContent).toContain("문제 목록");
   });
 
   it("lets the user collapse the active group even while a child is selected", () => {
     navMock.pathname = "/practice/problems";
 
     const { container } = renderWithIntl(
-      <WorkspaceShell role="learner" userId="user-1" email={null} planLabel="premium">
+      <WorkspaceShell
+        role="learner"
+        userId="user-1"
+        email={null}
+        planLabel="premium"
+      >
         <div>body</div>
       </WorkspaceShell>,
     );
 
-    expect(hasExpandedMenuItem(container, "학습")).toBe(true);
+    expect(hasExpandedMenuItem(container, "문제 풀기")).toBe(true);
 
     const groupTitle = Array.from(
       container.querySelectorAll('[role="menuitem"][aria-expanded]'),
-    ).find((item) => item.textContent?.includes("학습")) as HTMLElement;
-    fireEvent.click(within(groupTitle).getByText("학습"));
+    ).find((item) => item.textContent?.includes("문제 풀기")) as HTMLElement;
+    fireEvent.click(within(groupTitle).getByText("문제 풀기"));
 
-    expect(hasExpandedMenuItem(container, "학습")).toBe(false);
+    expect(hasExpandedMenuItem(container, "문제 풀기")).toBe(false);
   });
 
   it("opens the writing group for nested writing feedback routes", () => {
     navMock.pathname = "/writing/feedback/short/submission-1";
 
     const { container } = renderWithIntl(
-      <WorkspaceShell role="learner" userId="user-1" email={null} planLabel="premium">
+      <WorkspaceShell
+        role="learner"
+        userId="user-1"
+        email={null}
+        planLabel="premium"
+      >
         <div>body</div>
       </WorkspaceShell>,
     );
 
-    expect(hasExpandedMenuItem(container, "글쓰기")).toBe(true);
+    expect(hasExpandedMenuItem(container, "쓰기 연습")).toBe(true);
+  });
+
+  it("opens settings for profile direct entry because profile is an account setting", () => {
+    navMock.pathname = "/profile";
+
+    const { container } = renderWithIntl(
+      <WorkspaceShell
+        role="learner"
+        userId="user-1"
+        email={null}
+        planLabel="premium"
+      >
+        <div>body</div>
+      </WorkspaceShell>,
+    );
+
+    expect(hasExpandedMenuItem(container, "설정")).toBe(true);
+    expect(container.textContent).toContain("프로필");
   });
 });

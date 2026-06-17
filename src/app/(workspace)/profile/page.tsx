@@ -7,6 +7,7 @@ import { getProfileSettings } from "@/lib/settings/server";
 import { getLearningGoal } from "@/lib/learning/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { ProfileForm } from "@/components/profile/ProfileForm";
+import { AccountLoginMethodsCard } from "@/components/profile/AccountLoginMethodsCard";
 import { ExamInfoCard } from "@/components/profile/ExamInfoCard";
 import { StatusHelpCard } from "@/components/profile/StatusHelpCard";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -19,6 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function ProfilePage() {
   const t = await getTranslations("profile.page");
+  const tLoginMethods = await getTranslations("profile.loginMethods");
   const user = await requireUser();
   const settings = await getProfileSettings(user.id);
   if (!settings) notFound();
@@ -39,6 +41,23 @@ export default async function ProfilePage() {
       <Row gutter={[16, 16]}>
         <Col xs={24} md={14}>
           <div className="flex w-full flex-col gap-4">
+            <AccountLoginMethodsCard
+              accountEmail={user.email ?? null}
+              labels={{
+                regionAriaLabel: tLoginMethods("regionAriaLabel"),
+                title: tLoginMethods("title"),
+                description: tLoginMethods("description"),
+                emailMethod: tLoginMethods("emailMethod"),
+                emailUnavailable: tLoginMethods("emailUnavailable"),
+                googleMethod: tLoginMethods("googleMethod"),
+                googleDescription: tLoginMethods("googleDescription"),
+                connected: tLoginMethods("connected"),
+                disconnected: tLoginMethods("disconnected"),
+                connectGoogle: tLoginMethods("connectGoogle"),
+                connectFailed: tLoginMethods("connectFailed"),
+                linkStarted: tLoginMethods("linkStarted"),
+              }}
+            />
             <ProfileForm
               userId={user.id}
               accountEmail={user.email ?? null}

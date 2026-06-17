@@ -10,6 +10,7 @@ import {
   Target,
 } from "lucide-react";
 import { WorkspaceBody } from "@/components/app/WorkspaceBody";
+import { AuthIdentityNotice } from "@/components/auth/AuthIdentityNotice";
 import { LearningGoalForm } from "@/components/learning/LearningGoalForm";
 import { AppCard } from "@/components/shared/AppCard";
 import { getLearningGoal } from "@/lib/learning/server";
@@ -29,6 +30,9 @@ export default async function OnboardingLearningGoalPage() {
 
   return (
     <WorkspaceBody className="text-text">
+      <div className="mb-4">
+        <AuthIdentityNotice />
+      </div>
       <section
         className="grid gap-6 lg:grid-cols-2"
         aria-label={t("heroTitle")}

@@ -14,6 +14,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { triggerPdfExport } from "@/lib/export/pdf-export";
+import { downloadStoredPdfExport } from "@/lib/export/pdf-export-client";
 import { useLibraryItems } from "@/lib/library/queries";
 import type { LibraryExportView, LibraryItemView } from "@/lib/library/types";
 
@@ -137,12 +138,54 @@ function RetryPrintButton({ item }: RetryButtonProps) {
   );
 }
 
-function DownloadButton() {
+function exportFilename(item: LibraryExportView): string | null {
+  const opts = item.options;
+  if (
+    opts !== null &&
+    typeof opts === "object" &&
+    !Array.isArray(opts) &&
+    "filename" in opts &&
+    typeof (opts as { filename?: unknown }).filename === "string"
+  ) {
+    return (opts as { filename: string }).filename;
+  }
+  return null;
+}
+
+function DownloadButton({ item }: { item: LibraryExportView }) {
   // Phase 6 has no real download URL — see OOS-6. Render the affordance as
   // a disabled button so the UX hints at the future state without misleading.
   const t = useTranslations("library.exports");
+  const { message } = App.useApp();
+  const [pending, setPending] = useState(false);
+  const downloadable =
+    item.status === "ready" &&
+    item.storage_path.length > 0 &&
+    !item.storage_path.startsWith("browser-print://");
+
+  async function handleClick() {
+    if (!downloadable) return;
+    setPending(true);
+    try {
+      await downloadStoredPdfExport({
+        storagePath: item.storage_path,
+        filename: exportFilename(item),
+      });
+      message.success(t("downloadStarted"));
+    } catch (err) {
+      message.error(err instanceof Error ? err.message : t("downloadFailed"));
+    } finally {
+      setPending(false);
+    }
+  }
+
   return (
-    <Button size="small" disabled>
+    <Button
+      size="small"
+      disabled={!downloadable}
+      loading={pending}
+      onClick={handleClick}
+    >
       {t("download")}
     </Button>
   );
@@ -227,7 +270,7 @@ export function LibraryExportsTab({
                 isPrint ? (
                   <RetryPrintButton key="reprint" item={item} />
                 ) : (
-                  <DownloadButton key="download" />
+                  <DownloadButton key="download" item={item} />
                 ),
               ]}
             >

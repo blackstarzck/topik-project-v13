@@ -133,6 +133,7 @@ export function RetryModal({
           questionNo,
           problemId,
           fresh: mode === "fresh",
+          hint: mode === "hint",
         }) as never,
       );
     } catch {
@@ -290,10 +291,9 @@ export function RetryModal({
               </Text>
             </Radio>
           </div>
-          {/* 힌트 포함 모드는 아직 준비 중(deferred) — 비활성 + 정직한 안내. */}
           <Tooltip title={t("modeHintTooltip")}>
             <div className="rounded-2xl border border-border bg-background p-3">
-              <Radio className="w-full" value="hint" disabled>
+              <Radio className="w-full" value="hint">
                 <span className="font-medium text-text">{t("modeHint")}</span>{" "}
                 <Text type="secondary" className="!text-sm">
                   {t("modeHintHint")}

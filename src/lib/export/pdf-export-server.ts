@@ -7,6 +7,14 @@ import { getFeedbackBundle, getSubmission } from "../writing/server";
 import type { PdfExportItem, PdfSubmissionItem } from "./pdf-document";
 import { PDF_EXPORT_MAX_ITEMS, type PdfExportRequest } from "./pdf-options";
 
+export const PDF_EXPORT_MONTHLY_LIMIT = 3;
+
+type LibrarySelectionExportEntry = {
+  kind: "submission" | "report";
+  id: string;
+  savedAt: string;
+};
+
 /** 사용자에게 그대로 보여줄 수 있는 안전한 메시지를 가진 요청 오류. */
 export class PdfExportRequestError extends Error {
   readonly status: number;
@@ -14,6 +22,31 @@ export class PdfExportRequestError extends Error {
     super(message);
     this.name = "PdfExportRequestError";
     this.status = status;
+  }
+}
+
+export async function assertMonthlyPdfExportLimit(
+  supabase: SupabaseServerClient,
+  userId: string,
+  now = new Date(),
+): Promise<void> {
+  const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+  const nextMonthStart = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1),
+  );
+  const { count, error } = await supabase
+    .from("export_files")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .neq("status", "failed")
+    .gte("created_at", monthStart.toISOString())
+    .lt("created_at", nextMonthStart.toISOString());
+  if (error) throw new Error(`pdf export limit: ${error.message}`);
+  if ((count ?? 0) >= PDF_EXPORT_MONTHLY_LIMIT) {
+    throw new PdfExportRequestError(
+      429,
+      `PDF 내보내기는 월 ${PDF_EXPORT_MONTHLY_LIMIT}회까지 사용할 수 있어요.`,
+    );
   }
 }
 
@@ -74,6 +107,26 @@ async function loadSubmissionItem(
   };
 }
 
+async function loadReportItem(
+  supabase: SupabaseServerClient,
+  reportId: string,
+): Promise<PdfExportItem> {
+  const { data: report, error } = await supabase
+    .from("comparison_reports")
+    .select("id, narrative, generated_at")
+    .eq("id", reportId)
+    .maybeSingle();
+  if (error) throw new Error(`resolvePdfExportItems: ${error.message}`);
+  if (!report) {
+    throw new PdfExportRequestError(404, "리포트를 찾을 수 없어요.");
+  }
+  return {
+    kind: "report",
+    generatedAt: formatDate(report.generated_at),
+    narrative: report.narrative,
+  };
+}
+
 export async function resolvePdfExportItems(
   supabase: SupabaseServerClient,
   request: PdfExportRequest,
@@ -89,6 +142,8 @@ export async function resolvePdfExportItems(
   }
 
   if (request.sourceType === "report") {
+    return [await loadReportItem(supabase, request.sourceId)];
+    /*
     const { data: report, error } = await supabase
       .from("comparison_reports")
       .select("id, narrative, generated_at")
@@ -105,27 +160,43 @@ export async function resolvePdfExportItems(
         narrative: report.narrative,
       },
     ];
+    */
   }
 
   // library_selection: 본인 library_items(submission 항목) → 제출별 PDF 블록.
   const { data: rows, error } = await supabase
     .from("library_items")
-    .select("id, item_type, submission_id, saved_at")
+    .select("id, item_type, submission_id, report_id, saved_at")
     .in("id", request.itemIds);
   if (error) throw new Error(`resolvePdfExportItems: ${error.message}`);
 
-  const submissionIds = (rows ?? [])
-    .filter((row) => row.item_type === "submission" && row.submission_id)
-    .map((row) => ({ id: row.submission_id as string, savedAt: row.saved_at }));
+  const selectedEntries: LibrarySelectionExportEntry[] = [];
+  for (const row of rows ?? []) {
+    if (row.item_type === "submission" && row.submission_id) {
+      selectedEntries.push({
+        kind: "submission",
+        id: row.submission_id,
+        savedAt: row.saved_at,
+      });
+      continue;
+    }
+    if (row.item_type === "report" && row.report_id) {
+      selectedEntries.push({
+        kind: "report",
+        id: row.report_id,
+        savedAt: row.saved_at,
+      });
+    }
+  }
 
-  if (submissionIds.length === 0) {
+  if (selectedEntries.length === 0) {
     // RLS가 타인 항목을 걸렀거나(빈 결과) 답안 항목이 아닌 경우.
     throw new PdfExportRequestError(
       404,
       "내보낼 수 있는 저장 답안을 찾지 못했어요.",
     );
   }
-  if (submissionIds.length > PDF_EXPORT_MAX_ITEMS) {
+  if (selectedEntries.length > PDF_EXPORT_MAX_ITEMS) {
     throw new PdfExportRequestError(
       400,
       `한 번에 ${PDF_EXPORT_MAX_ITEMS}개까지 내보낼 수 있어요.`,
@@ -133,17 +204,21 @@ export async function resolvePdfExportItems(
   }
 
   // 저장 시각 최신순 — 라이브러리 목록과 같은 순서로 PDF에 담는다.
-  submissionIds.sort((a, b) => (a.savedAt < b.savedAt ? 1 : -1));
+  selectedEntries.sort((a, b) => (a.savedAt < b.savedAt ? 1 : -1));
 
   const items: PdfExportItem[] = [];
-  for (const entry of submissionIds) {
-    items.push(
-      await loadSubmissionItem(
-        supabase,
-        entry.id,
-        request.options.includeFeedback,
-      ),
-    );
+  for (const entry of selectedEntries) {
+    if (entry.kind === "submission") {
+      items.push(
+        await loadSubmissionItem(
+          supabase,
+          entry.id,
+          request.options.includeFeedback,
+        ),
+      );
+    } else {
+      items.push(await loadReportItem(supabase, entry.id));
+    }
   }
   return items;
 }

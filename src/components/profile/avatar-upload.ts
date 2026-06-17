@@ -68,6 +68,10 @@ export type AvatarUploadResult = {
   publicUrl: string;
 };
 
+export function isOwnAvatarPath(userId: string, path: string | null): boolean {
+  return typeof path === "string" && path.startsWith(`${userId}/`);
+}
+
 /**
  * Upload a (square-cropped) avatar blob to avatars/{userId}/avatar-<ts>.<ext>,
  * persist the path to profiles.avatar_path, and return the public URL.
@@ -103,6 +107,28 @@ export function avatarPublicUrl(path: string | null): string | null {
   const supabase = createSupabaseBrowserClient();
   const { data } = supabase.storage.from("avatars").getPublicUrl(path);
   return data.publicUrl;
+}
+
+export async function removeAvatar(
+  userId: string,
+  currentPath: string | null,
+): Promise<void> {
+  const supabase = createSupabaseBrowserClient();
+  const removablePath = isOwnAvatarPath(userId, currentPath)
+    ? currentPath
+    : null;
+  if (removablePath) {
+    const { error: removeError } = await supabase.storage
+      .from("avatars")
+      .remove([removablePath]);
+    if (removeError) throw new Error(removeError.message);
+  }
+
+  const { error: profileError } = await supabase
+    .from("profiles")
+    .update({ avatar_path: null })
+    .eq("id", userId);
+  if (profileError) throw new Error(profileError.message);
 }
 
 export { extensionFor };

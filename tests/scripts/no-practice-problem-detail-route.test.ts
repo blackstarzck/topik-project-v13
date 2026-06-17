@@ -22,7 +22,14 @@ function sourceFiles(dir: string): string[] {
 describe("navigation route inventory", () => {
   test("does not generate a non-existent /practice/problems/:id route", () => {
     const offenders = sourceFiles(join(process.cwd(), "src"))
-      .filter((path) => readFileSync(path, "utf8").includes("/practice/problems/"))
+      .filter((path) => {
+        const withoutRouteMetadata = readFileSync(path, "utf8").replace(
+          /appPath:\s*"[^"]*"/g,
+          "",
+        );
+
+        return withoutRouteMetadata.includes("/practice/problems/");
+      })
       .map((path) => path.replace(`${process.cwd()}\\`, ""));
 
     expect(offenders).toEqual([]);

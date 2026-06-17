@@ -1,7 +1,11 @@
-import { describe, expect, it } from "vitest";
-import { getNextProblem } from "../../../src/lib/practice/next";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+  getNextProblem,
+  getNextProblemBundle,
+} from "../../../src/lib/practice/next";
 
 type RecItem = {
+  id?: string;
   problem_id: string;
   rank: number;
   reason: string | null;
@@ -26,6 +30,7 @@ type ProblemRow = {
   title: string;
   domain: string;
   question_no: number | null;
+  difficulty?: number | null;
 };
 
 /**
@@ -41,6 +46,10 @@ function makeClient(opts: {
   problemsByQuestionNo?: Record<number, ProblemRow[]>;
   problemsAny?: ProblemRow[];
   problemsError?: { message: string } | null;
+  submissionCount?: number;
+  feedbacks?: { score_total: number | null }[];
+  dimensionScores?: { dimension: string; score: number | null }[];
+  profile?: { plan_label: string | null } | null;
 }) {
   return {
     from(table: string) {
@@ -91,10 +100,61 @@ function makeClient(opts: {
         };
         return { select: () => chain };
       }
+      if (table === "writing_submissions") {
+        const chain = {
+          eq: () => chain,
+          gte: () =>
+            Promise.resolve({
+              data: [],
+              count: opts.submissionCount ?? 0,
+              error: null,
+            }),
+        };
+        return { select: () => chain };
+      }
+      if (table === "writing_feedback") {
+        const chain = {
+          eq: () => chain,
+          not: () => chain,
+          order: () => chain,
+          limit: () =>
+            Promise.resolve({
+              data: opts.feedbacks ?? [],
+              error: null,
+            }),
+        };
+        return { select: () => chain };
+      }
+      if (table === "feedback_dimension_scores") {
+        const chain = {
+          eq: () => chain,
+          not: () =>
+            Promise.resolve({
+              data: opts.dimensionScores ?? [],
+              error: null,
+            }),
+        };
+        return { select: () => chain };
+      }
+      if (table === "profiles") {
+        const chain = {
+          eq: () => chain,
+          maybeSingle: () =>
+            Promise.resolve({
+              data: opts.profile ?? { plan_label: "premium" },
+              error: null,
+            }),
+        };
+        return { select: () => chain };
+      }
       throw new Error(`unexpected table ${table}`);
     },
   };
 }
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe("getNextProblem", () => {
   it("tier 1: returns the active recommendation_items hit when available", async () => {
@@ -125,6 +185,47 @@ describe("getNextProblem", () => {
       source: "recommendation",
       reason: "weak grammar",
     });
+  });
+
+  it("tier 1: skips an unpublished recommendation and uses the next published one", async () => {
+    const recItems: RecItem[] = [
+      {
+        id: "rec-draft",
+        problem_id: "p-draft",
+        rank: 1,
+        reason: "draft should not show",
+        recommendation_runs: { expires_at: null },
+        problems: {
+          id: "p-draft",
+          title: "Draft problem",
+          domain: "writing",
+          question_no: 53,
+          publish_status: "draft",
+        },
+      },
+      {
+        id: "rec-published",
+        problem_id: "p-published",
+        rank: 2,
+        reason: "published backup",
+        recommendation_runs: { expires_at: null },
+        problems: {
+          id: "p-published",
+          title: "Published backup",
+          domain: "writing",
+          question_no: 52,
+          publish_status: "published",
+        },
+      },
+    ];
+    const create = async () =>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      makeClient({ recItems, attempts: [], problemsAny: [] }) as any;
+
+    const out = await getNextProblem("user-1", create);
+    expect(out?.problemId).toBe("p-published");
+    expect(out?.source).toBe("recommendation");
+    expect(out?.reason).toBe("published backup");
   });
 
   it("tier 2: falls back to same-question_no when recommendations are empty", async () => {
@@ -190,6 +291,34 @@ describe("getNextProblem", () => {
     expect(out?.source).toBe("random");
   });
 
+  it("tier 3: picks the first primary slot from the 51-54 writing set", async () => {
+    vi.spyOn(Math, "random").mockReturnValue(0);
+    const create = async () =>
+      makeClient({
+        recItems: [],
+        attempts: [],
+        problemsAny: [
+          {
+            id: "p-53",
+            title: "Long form first in DB",
+            domain: "writing",
+            question_no: 53,
+          },
+          {
+            id: "p-51",
+            title: "Short answer first recommendation",
+            domain: "writing",
+            question_no: 51,
+          },
+        ],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      }) as any;
+
+    const out = await getNextProblem("user-1", create);
+    expect(out?.problemId).toBe("p-51");
+    expect(out?.source).toBe("random");
+  });
+
   it("tier 3 also runs when tier 2 finds no fresh question_no match", async () => {
     // Latest attempt is question 51 but every q51 problem was already tried.
     const attempts: AttemptRow[] = [
@@ -205,7 +334,12 @@ describe("getNextProblem", () => {
         attempts,
         problemsByQuestionNo: {
           51: [
-            { id: "p-51-old", title: "Old", domain: "writing", question_no: 51 },
+            {
+              id: "p-51-old",
+              title: "Old",
+              domain: "writing",
+              question_no: 51,
+            },
           ],
         },
         problemsAny: [
@@ -224,6 +358,51 @@ describe("getNextProblem", () => {
     expect(out?.source).toBe("random");
   });
 
+  it("tier 3: continues the 51-52-53-54 rotation when same-question_no has no fresh problem", async () => {
+    vi.spyOn(Math, "random").mockReturnValue(0);
+    const attempts: AttemptRow[] = [
+      {
+        problem_id: "p-51-old",
+        started_at: "2026-05-20T00:00:00Z",
+        problems: { id: "p-51-old", question_no: 51 },
+      },
+    ];
+    const create = async () =>
+      makeClient({
+        recItems: [],
+        attempts,
+        problemsByQuestionNo: {
+          51: [
+            {
+              id: "p-51-old",
+              title: "Old",
+              domain: "writing",
+              question_no: 51,
+            },
+          ],
+        },
+        problemsAny: [
+          {
+            id: "p-54",
+            title: "Essay first in DB",
+            domain: "writing",
+            question_no: 54,
+          },
+          {
+            id: "p-52",
+            title: "Next rotation problem",
+            domain: "writing",
+            question_no: 52,
+          },
+        ],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      }) as any;
+
+    const out = await getNextProblem("user-1", create);
+    expect(out?.problemId).toBe("p-52");
+    expect(out?.source).toBe("random");
+  });
+
   it("tier 4: returns null when there is no problem to surface at all", async () => {
     const create = async () =>
       makeClient({
@@ -234,5 +413,60 @@ describe("getNextProblem", () => {
       }) as any;
     const out = await getNextProblem("user-1", create);
     expect(out).toBeNull();
+  });
+});
+
+describe("getNextProblemBundle", () => {
+  it("recommends all four writing question types for a new user when recommendation_items is empty", async () => {
+    const create = async () =>
+      makeClient({
+        recItems: [],
+        attempts: [],
+        problemsAny: [
+          {
+            id: "p-51",
+            title: "Primary 51",
+            domain: "writing",
+            question_no: 51,
+            difficulty: 3,
+          },
+          {
+            id: "p-52",
+            title: "Alternative 52",
+            domain: "writing",
+            question_no: 52,
+            difficulty: 3,
+          },
+          {
+            id: "p-53",
+            title: "Alternative 53",
+            domain: "writing",
+            question_no: 53,
+            difficulty: 3,
+          },
+          {
+            id: "p-54",
+            title: "Alternative 54",
+            domain: "writing",
+            question_no: 54,
+            difficulty: 3,
+          },
+        ],
+        profile: { plan_label: "premium" },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      }) as any;
+
+    const bundle = await getNextProblemBundle("user-1", create);
+
+    expect(bundle.primary?.problemId).toBe("p-51");
+    expect(bundle.alternatives.map((alt) => alt.id)).toEqual([
+      "p-52",
+      "p-53",
+      "p-54",
+    ]);
+    expect([
+      bundle.primary?.questionNo,
+      ...bundle.alternatives.map((alt) => alt.questionNo),
+    ]).toEqual([51, 52, 53, 54]);
   });
 });

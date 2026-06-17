@@ -14,6 +14,29 @@ import {
 type BrowserClient = ReturnType<typeof createSupabaseBrowserClient>;
 type ClientFactory = () => BrowserClient;
 
+export class NicknameTakenError extends Error {
+  constructor() {
+    super("이미 사용 중인 닉네임이에요.");
+    this.name = "NicknameTakenError";
+  }
+}
+
+function isNicknameUniqueError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const candidate = error as {
+    code?: unknown;
+    message?: unknown;
+    details?: unknown;
+  };
+  const text = `${String(candidate.message ?? "")} ${String(
+    candidate.details ?? "",
+  )}`;
+  return (
+    candidate.code === "23505" &&
+    text.includes("profiles_nickname_lower_uniq")
+  );
+}
+
 export function profileSettingsQueryKey(userId: string) {
   return ["profile-settings", userId] as const;
 }
@@ -76,7 +99,10 @@ export async function updateProfile(
     .from("profiles")
     .update(patch)
     .eq("id", userId);
-  if (error) throw error;
+  if (error) {
+    if (isNicknameUniqueError(error)) throw new NicknameTakenError();
+    throw error;
+  }
 }
 
 export function useUpdateProfile(userId: string) {

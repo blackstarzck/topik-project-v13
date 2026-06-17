@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   backfillOAuthDisplayName,
+  generateRandomNickname,
   getMissingRequiredConsentDocuments,
   recordRequiredConsents,
   type RequiredConsentDocument,
@@ -109,6 +110,13 @@ const privacyDoc: RequiredConsentDocument = {
 };
 
 describe("legal consent helpers", () => {
+  it("generates a non-identifying talkpik nickname", () => {
+    expect(generateRandomNickname(() => 0)).toBe("talkpik-000000");
+    expect(generateRandomNickname(() => 1 - Number.EPSILON)).toMatch(
+      /^talkpik-[0-9a-z]{6}$/,
+    );
+  });
+
   it("returns only required documents the user has not accepted", async () => {
     const client = makeClient({
       legalDocuments: [
@@ -157,7 +165,7 @@ describe("legal consent helpers", () => {
     ]);
   });
 
-  it("backfills blank display_name from OAuth metadata only", async () => {
+  it("backfills blank display_name from OAuth metadata and a random nickname", async () => {
     const updates: Row[] = [];
     const client = makeClient({
       profile: {
@@ -185,10 +193,43 @@ describe("legal consent helpers", () => {
     );
 
     expect(result.display_name).toBe("Google User");
-    expect(updates).toEqual([{ display_name: "Google User" }]);
+    expect(result.nickname).toMatch(/^talkpik-[0-9a-z]{6}$/);
+    expect(updates).toEqual([
+      {
+        display_name: "Google User",
+        nickname: expect.stringMatching(/^talkpik-[0-9a-z]{6}$/),
+      },
+    ]);
   });
 
-  it("does not overwrite an existing display_name", async () => {
+  it("backfills a blank nickname with a random non-identifying value", async () => {
+    const updates: Row[] = [];
+    const client = makeClient({
+      profile: {
+        id: "user-1",
+        display_name: null,
+        nickname: null,
+        ui_locale: "ko",
+        app_role: "learner",
+        plan_label: "free",
+        status: "active",
+      },
+      updates,
+    });
+
+    const result = await backfillOAuthDisplayName(
+      { id: "user-1", user_metadata: {} } as never,
+      async () =>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        client as any,
+      () => 0,
+    );
+
+    expect(result.nickname).toBe("talkpik-000000");
+    expect(updates).toEqual([{ nickname: "talkpik-000000" }]);
+  });
+
+  it("does not overwrite an existing display_name while filling a missing nickname", async () => {
     const updates: Row[] = [];
     const client = makeClient({
       profile: {
@@ -210,6 +251,9 @@ describe("legal consent helpers", () => {
     );
 
     expect(result.display_name).toBe("Existing");
-    expect(updates).toEqual([]);
+    expect(result.nickname).toMatch(/^talkpik-[0-9a-z]{6}$/);
+    expect(updates).toEqual([
+      { nickname: expect.stringMatching(/^talkpik-[0-9a-z]{6}$/) },
+    ]);
   });
 });

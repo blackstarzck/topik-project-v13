@@ -5,11 +5,13 @@
 ## Summary
 
 - Pages: 36
-- Tables: 23
-- RPC/functions: 16
+- Tables: 32 (31 v13 + 1 topik-ai shared)
+- RPC/functions: 38
 - Storage buckets: 3
-- Page data links: 114
+- Page data links: 122
 - Unclassified DB objects: 0
+
+> 집계 기준: Tables는 현재 v13 forward migration 테이블 31개와 topik-ai 소유 공유 테이블 `notification_delivery_attempts` 1개를 합산한다. Page data links는 fallback/schema-supported/deprecated 행까지 포함한 화면 데이터 계약 행 수다.
 
 ## avatars
 
@@ -120,11 +122,11 @@
 | IA | Screen | Type | Columns/fields | Usage | Page feature |
 | --- | --- | --- | --- | --- | --- |
 | C-01 | Problem type recommendations | table | `id`, `domain`, `question_no`, `topik_level`, `difficulty`, `tags` | read | 추천 문제 후보를 조회한다. |
-| C-02 | Problem list | table | `id`, `domain`, `question_no`, `topik_level`, `difficulty`, `title`, `prompt`, `tags`, `publish_status`, `visibility` | read | 문제 목록, 필터, 정렬, 상세 진입에 사용한다. |
-| D-01 | Short-answer writing 51 | table | `id`, `question_no`, `prompt`, `materials`, `rubric`, `answer_key` | read | 51번 작성 문제 본문과 조건을 표시한다. |
-| D-02 | Answer writing 52 | table | `id`, `question_no`, `prompt`, `materials`, `rubric`, `answer_key` | read | 52번 작성 문제 본문과 조건을 표시한다. |
-| D-03 | Long-form writing 53 | table | `id`, `question_no`, `prompt`, `materials`, `rubric`, `answer_key` | read | 53번 작성 문제 본문과 조건을 표시한다. |
-| D-04 | Essay writing 54 | table | `id`, `question_no`, `prompt`, `materials`, `rubric`, `answer_key` | read | 54번 작성 문제 본문과 조건을 표시한다. |
+| C-02 | Problem list | table | `id`, `domain`, `question_no`, `topik_level`, `difficulty`, `title`, `prompt`, `tags`, `publish_status`, `visibility`, `lifecycle_status`, `lifecycle_reason`, `review_status` | read | 문제 목록, 필터, 정렬, 상세 진입에 사용한다. |
+| D-01 | Short-answer writing 51 | table | `id`, `question_no`, `prompt`, `materials`, `rubric`, `answer_key`, `publish_status`, `lifecycle_status`, `lifecycle_reason` | read | 51번 작성 문제 본문과 조건을 표시한다. |
+| D-02 | Answer writing 52 | table | `id`, `question_no`, `prompt`, `materials`, `rubric`, `answer_key`, `publish_status`, `lifecycle_status`, `lifecycle_reason` | read | 52번 작성 문제 본문과 조건을 표시한다. |
+| D-03 | Long-form writing 53 | table | `id`, `question_no`, `prompt`, `materials`, `rubric`, `answer_key`, `publish_status`, `lifecycle_status`, `lifecycle_reason` | read | 53번 작성 문제 본문과 조건을 표시한다. |
+| D-04 | Essay writing 54 | table | `id`, `question_no`, `prompt`, `materials`, `rubric`, `answer_key`, `publish_status`, `lifecycle_status`, `lifecycle_reason` | read | 54번 작성 문제 본문과 조건을 표시한다. |
 | R-02 | Next problem recommendation | table | `id`, `question_no`, `difficulty`, `title`, `tags` | read | 추천 대상 문제 정보를 표시한다. |
 | F-01 | My library | table | `id`, `title`, `question_no`, `difficulty` | read | 저장한 문제 탭에 사용한다. |
 | X-07 | Weakness-based recommendations | table | `id`, `domain`, `question_no`, `difficulty`, `tags` | read | 추천 문제 상세 표시와 필터에 사용한다. |
@@ -206,7 +208,7 @@
 
 | IA | Screen | Type | Columns/fields | Usage | Page feature |
 | --- | --- | --- | --- | --- | --- |
-| C-02 | Problem list | rpc | `filter` jsonb(domain/topik_level/question_no/difficulty/status/search), `sort`, `page`, `page_size` → rows + `total_count` | rpc | 필터·정렬·페이지에 맞는 문제 목록과 정확한 총 건수를 SQL에서 계산한다. SECURITY INVOKER라 호출자 RLS(auth.uid()) 범위에서 실행된다. |
+| C-02 | Problem list | rpc | `filter` jsonb(domain/topik_level/question_no/difficulty/status/search), `sort`, `page`, `page_size` → rows(`publish_status`, `review_status`, `lifecycle_status`, `lifecycle_reason`) + `total_count` | rpc | 필터·정렬·페이지에 맞는 문제 목록과 정확한 총 건수를 SQL에서 계산한다. SECURITY INVOKER라 호출자 RLS(auth.uid()) 범위에서 실행된다. |
 
 ## public.submit_writing_with_feedback
 
@@ -258,7 +260,8 @@
 
 | IA | Screen | Type | Columns/fields | Usage | Page feature |
 | --- | --- | --- | --- | --- | --- |
-| B-01 | Home dashboard | table | `id`, `category`, `title`, `link_url`, `read_at`, `created_at` | read/update | 일정/알림 보조 영역의 최신 5건 알림 피드. 클릭 시 `read_at` 기록 후 이동한다(2026-06-12 구현). |
+| B-01 | Home dashboard | table | `id`, `template_key`, `category`, `title`, `body`, `link_url`, `read_at`, `created_at` | read/update | 일정/알림 보조 영역의 최신 5건 알림 피드. 클릭 시 `read_at` 기록 후 이동한다(2026-06-12 구현). |
+| X-09 | Notification settings | table | `id`, `template_key`, `category`, `title`, `body`, `link_url`, `read_at`, `created_at` | read/update | 인앱 알림센터와 읽음 상태에 사용한다. 읽음 처리 시 `read_at`만 갱신한다. |
 
 ## writing_drafts
 
@@ -308,11 +311,39 @@
 | --- | --- | --- | --- |
 | rpc | `private.assert_submission_payload` | infrastructure/security | Function is a trigger, RLS helper, cleanup job, validator, or security hardening helper rather than a direct page data surface. |
 | rpc | `private.cleanup_unconfirmed_users` | infrastructure/security | Function is a trigger, RLS helper, cleanup job, validator, or security hardening helper rather than a direct page data surface. |
+| rpc | `private.dispatch_admin_notifications` | infrastructure/notification | Notification dispatch helper owned by server-side jobs/admin pipeline; no user-facing page calls it directly. |
+| rpc | `private.dispatch_notification_event` | infrastructure/notification | Notification dispatcher entrypoint used by backend event processing; no user-facing page calls it directly. |
+| rpc | `private.dispatch_notifications` | infrastructure/notification | Notification batch dispatcher used by scheduled/server-side delivery; no user-facing page calls it directly. |
+| rpc | `private.dispatch_scheduled_notifications` | infrastructure/notification | Scheduled notification dispatcher used by pg_cron/server jobs; no user-facing page calls it directly. |
+| rpc | `private.finalize_email_attempt` | infrastructure/notification | Email delivery bookkeeping helper for `notification_delivery_attempts`; no direct page data surface. |
 | rpc | `private.is_admin` | infrastructure/security | Function is a trigger, RLS helper, cleanup job, validator, or security hardening helper rather than a direct page data surface. |
 | rpc | `private.is_content_admin` | infrastructure/security | RLS helper preserved for policies; no user-facing page uses it (admin screens live in the separate topik-ai app). |
+| rpc | `private.is_marketing_consented` | infrastructure/compliance | Consent helper for notification/email delivery decisions; no user-facing page calls it directly. |
 | rpc | `private.is_org_admin` | infrastructure/security | RLS helper preserved for policies; no user-facing page uses it (admin screens live in the separate topik-ai app). |
+| rpc | `private.is_org_manager` | infrastructure/security | Organization role helper for admin/assignment policies; no user-facing page calls it directly. |
+| rpc | `private.is_org_member` | infrastructure/security | Organization membership helper for admin/assignment policies; no user-facing page calls it directly. |
 | rpc | `private.is_platform_admin` | infrastructure/security | RLS helper preserved for policies; no user-facing page uses it (admin screens live in the separate topik-ai app). |
+| rpc | `private.notification_email_transport` | infrastructure/notification | Email transport wrapper for server-side notification delivery; no user-facing page calls it directly. |
+| rpc | `private.render_notification_text` | infrastructure/notification | Notification template rendering helper; page surfaces read rendered notifications, not this function. |
+| rpc | `private.retry_failed_email_attempts` | infrastructure/notification | Server-side retry helper for failed email attempts; no user-facing page calls it directly. |
+| rpc | `public.admin_add_problem_asset` | admin app | Problem asset mutation RPC for the separate admin app; no user-facing page calls it directly. |
+| rpc | `public.admin_change_user_role` | admin app | User role mutation RPC for the separate admin app; no user-facing page calls it directly. |
+| rpc | `public.admin_delete_problem` | admin app | Problem deletion RPC for the separate admin app; no user-facing page calls it directly. |
+| rpc | `public.admin_remove_problem_asset` | admin app | Problem asset removal RPC for the separate admin app; no user-facing page calls it directly. |
+| rpc | `public.admin_set_user_status` | admin app | User status mutation RPC for the separate admin app; no user-facing page calls it directly. |
+| rpc | `public.admin_toggle_problem_publish` | admin app | Problem publish mutation RPC for the separate admin app; no user-facing page calls it directly. |
+| rpc | `public.admin_update_problem` | admin app | Problem mutation RPC for the separate admin app; no user-facing page calls it directly. |
+| rpc | `public.get_admin_audit_logs` | admin app | Admin audit log read RPC for the separate admin app; no user-facing page calls it directly. |
+| rpc | `public.get_admin_org_dashboard` | admin app | Organization dashboard RPC for the separate admin app; no user-facing page calls it directly. |
+| rpc | `public.get_admin_user_stats` | admin app | Admin user statistics RPC for the separate admin app; no user-facing page calls it directly. |
+| rpc | `public.get_admin_users` | admin app | Admin user list RPC for the separate admin app; no user-facing page calls it directly. |
 | table | `admin_audit_logs` | infrastructure/security | Admin audit trail written by the separate admin app (topik-ai); no user-facing page reads or writes it. |
+| table | `assignment_submissions` | admin app | Assignment submission data belongs to organization/admin workflows; no user-facing Wireframe page reads or writes it. |
+| table | `assignments` | admin app | Assignment data belongs to organization/admin workflows; no user-facing Wireframe page reads or writes it. |
+| table | `notification_email_config` | infrastructure/notification | Email transport mode/fail-test config for the notification pipeline; no browser-visible page reads or writes it. |
+| table | `org_members` | admin app | Organization membership table for admin/organization policies; no user-facing Wireframe page reads or writes it. |
+| table | `organizations` | admin app | Organization table for admin/organization workflows; no user-facing Wireframe page reads or writes it. |
+| table | `user_marketing_consent` | infrastructure/compliance | Marketing consent/unsubscribe ledger used by notification APIs and dispatchers; no Wireframe page displays it directly. |
 | storage | `problem-assets` | infrastructure | Bucket holding problem material files; user pages reach files indirectly via `problem_assets.storage_path`, uploads belong to the admin app. |
 | rpc | `private.is_email_confirmed` | infrastructure/security | Function is a trigger, RLS helper, cleanup job, validator, or security hardening helper rather than a direct page data surface. |
 | rpc | `public.supersede_active_draft` | infrastructure/security | Function is a trigger, RLS helper, cleanup job, validator, or security hardening helper rather than a direct page data surface. |

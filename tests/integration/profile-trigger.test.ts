@@ -28,6 +28,12 @@ describe.skipIf(!ENABLED)("profile trigger integration", () => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password: "p@ssw0rd-strong-1234",
+      options: {
+        data: {
+          display_name: "Trigger User",
+          nationality_country_code: "VN",
+        },
+      },
     });
     if (error) throw error;
     const userId = data.user?.id;
@@ -35,7 +41,7 @@ describe.skipIf(!ENABLED)("profile trigger integration", () => {
 
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("id, app_role, status")
+      .select("id, app_role, status, nationality_country_code")
       .eq("id", userId)
       .single();
 
@@ -46,6 +52,11 @@ describe.skipIf(!ENABLED)("profile trigger integration", () => {
     }
     if (profile.status !== "active") {
       throw new Error(`unexpected status: ${profile.status}`);
+    }
+    if (profile.nationality_country_code !== "VN") {
+      throw new Error(
+        `unexpected country code: ${profile.nationality_country_code}`,
+      );
     }
   });
 });

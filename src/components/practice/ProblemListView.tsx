@@ -76,6 +76,7 @@ function parseUrlState(params: URLSearchParams): ProblemListUrlState {
       search: params.get("q") ?? "",
       topikLevel: null,
       recommended: params.get("recommended") === "1",
+      reviewSetId: params.get("reviewSet"),
       solveStatus: parseSolveStatus(params.get("solve")),
     },
     sort: parseSort(params.get("sort")),
@@ -127,6 +128,7 @@ export function ProblemListView({ userId }: Props) {
     if (nextFilter.search && nextFilter.search.length > 0)
       sp.set("q", nextFilter.search);
     if (nextFilter.recommended === true) sp.set("recommended", "1");
+    if (nextFilter.reviewSetId) sp.set("reviewSet", nextFilter.reviewSetId);
     if (nextFilter.solveStatus && nextFilter.solveStatus !== "all")
       sp.set("solve", nextFilter.solveStatus);
     if (nextSort !== "newest") sp.set("sort", nextSort);

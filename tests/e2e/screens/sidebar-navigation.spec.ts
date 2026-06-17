@@ -10,6 +10,18 @@ const SIDEBAR_CASES = [
     groupKey: "practice",
   },
   {
+    name: "weakness recommendations",
+    route: "/practice/weakness",
+    pathRegex: /\/practice\/weakness/,
+    groupKey: "growth",
+  },
+  {
+    name: "profile editing",
+    route: "/profile",
+    pathRegex: /\/profile/,
+    groupKey: "settings",
+  },
+  {
     name: "writing feedback",
     route: `/writing/feedback/short/${SUB_SHORT}`,
     pathRegex: /\/writing\/feedback\/short\//,

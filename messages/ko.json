@@ -18,23 +18,25 @@
     "sidebarNudgeBody": "오늘의 글쓰기 흐름을 따라가며 약점을 줄여 보세요."
   },
   "nav": {
-    "dashboard": "대시보드",
-    "practice": "학습",
-    "practiceRecommendations": "추천",
-    "practiceProblems": "문제 풀이",
+    "dashboard": "홈",
+    "practice": "문제 풀기",
+    "practiceRecommendations": "문제 유형 추천",
+    "practiceProblems": "문제 목록",
     "practiceNext": "다음 문제",
     "practiceWeakness": "약점 보강",
-    "writing": "글쓰기",
+    "writing": "쓰기 연습",
     "writing51": "51 단답",
     "writing52": "52 답변",
     "writing53": "53 장문",
     "writing54": "54 에세이",
-    "library": "내 라이브러리",
-    "growth": "성장 대시보드",
+    "library": "내 서재",
+    "growth": "성장 리포트",
+    "growthDashboard": "성장 대시보드",
     "profile": "프로필",
     "settings": "설정",
     "settingsLanguage": "언어",
     "settingsNotifications": "알림",
+    "subscription": "구독 관리",
     "admin": "관리",
     "adminProblems": "문제 관리",
     "adminOrg": "기관 관리",
@@ -255,6 +257,8 @@
         "reminderTimeLabel": "리마인더 시간 (HH:mm)",
         "reminderTimeExtra": "수신 채널을 켜면 리마인더 시간을 설정할 수 있어요.",
         "reminderTimeAria": "리마인더 시간",
+        "timezoneLabel": "시간대",
+        "timezoneAria": "리마인더 시간대",
         "reminderDaysLabel": "리마인더 요일"
       },
       "pref": {
@@ -289,6 +293,10 @@
     }
   },
   "auth": {
+    "identityNotice": {
+      "googleLinkedTitle": "Google 로그인이 계정에 연결됐어요.",
+      "googleLinkedDescription": "다음부터 이메일 또는 Google로 로그인할 수 있어요."
+    },
     "login": {
       "metaTitle": "로그인 — TALKPIK",
       "pageHeading": "다시 오신 걸 환영해요",
@@ -349,6 +357,9 @@
       "nameRequired": "이름을 입력하세요",
       "nameMin": "이름은 2자 이상이어야 합니다",
       "nameMax": "이름은 30자 이하여야 합니다",
+      "countryRegionLabel": "국가/지역",
+      "countryRegionPlaceholder": "국가 또는 지역을 선택하세요",
+      "countryRegionRequired": "국가/지역을 선택하세요",
       "emailLabel": "이메일",
       "emailRequired": "이메일을 입력하세요",
       "emailInvalid": "올바른 이메일 형식이 아닙니다",
@@ -1652,7 +1663,9 @@
       "reprint": "다시 인쇄",
       "download": "다운로드",
       "printDialogOpened": "PDF 출력 대화상자가 열렸습니다.",
-      "reprintFailed": "다시 인쇄에 실패했어요."
+      "reprintFailed": "다시 인쇄에 실패했어요.",
+      "downloadStarted": "PDF 다운로드를 시작했어요.",
+      "downloadFailed": "PDF 다운로드에 실패했어요."
     },
     "stats": {
       "title": "내 서재 통계",
@@ -1872,6 +1885,20 @@
       "saveError": "저장에 실패했어요.",
       "unsavedLeavePrompt": "저장하지 않은 변경사항이 있습니다. 페이지를 떠나시겠어요?"
     },
+    "loginMethods": {
+      "regionAriaLabel": "로그인 방법",
+      "title": "로그인 방법",
+      "description": "계정에 연결된 로그인 방법을 확인하고 Google 로그인을 추가할 수 있어요.",
+      "emailMethod": "이메일 로그인",
+      "emailUnavailable": "등록된 이메일 없음",
+      "googleMethod": "Google 로그인",
+      "googleDescription": "Google 계정으로 같은 학습 계정에 로그인합니다.",
+      "connected": "연결됨",
+      "disconnected": "연결되지 않음",
+      "connectGoogle": "Google 연결하기",
+      "linkStarted": "Google 연결을 시작했어요.",
+      "connectFailed": "Google 연결을 시작하지 못했어요."
+    },
     "avatar": {
       "regionAriaLabel": "프로필 이미지 영역",
       "imageAlt": "프로필 이미지",
@@ -1881,9 +1908,12 @@
       "uploadAriaLabel": "이미지 업로드",
       "uploading": "업로드 중...",
       "changeImage": "이미지 변경",
+      "removeImage": "기본 이미지로 변경",
       "reselect": "다시 선택",
       "uploadSuccess": "프로필 이미지를 업데이트했어요.",
       "uploadFailed": "이미지 업로드에 실패했어요.",
+      "removeSuccess": "프로필 이미지를 기본값으로 변경했어요.",
+      "removeFailed": "프로필 이미지 삭제에 실패했어요.",
       "invalidType": "JPG 또는 PNG 이미지만 올릴 수 있어요.",
       "tooLarge": "이미지 크기는 5MB 이하여야 해요.",
       "convertFailed": "이미지 변환에 실패했어요.",

@@ -9,6 +9,7 @@ import { useUpdateProfile } from "@/lib/settings/mutations";
 import {
   AvatarError,
   avatarPublicUrl,
+  removeAvatar,
   squareCropImage,
   uploadAvatar,
   validateAvatarFile,
@@ -107,6 +108,7 @@ export function ProfileForm({
   const [avatarUrl, setAvatarUrl] = useState<string | null>(() =>
     safeAvatarUrl(initialAvatarPath),
   );
+  const [avatarPath, setAvatarPath] = useState<string | null>(initialAvatarPath);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarError, setAvatarError] = useState<string | null>(null);
 
@@ -131,6 +133,7 @@ export function ProfileForm({
     try {
       const { blob, ext } = await squareCropImage(file);
       const result = await uploadAvatar(userId, blob, ext);
+      setAvatarPath(result.path);
       setAvatarUrl(result.publicUrl);
       message.success(tAvatar("uploadSuccess"));
     } catch (err) {
@@ -140,6 +143,25 @@ export function ProfileForm({
         err instanceof AvatarError
           ? tAvatar(err.messageKey as Parameters<typeof tAvatar>[0])
           : tAvatar("uploadFailed"),
+      );
+    } finally {
+      setAvatarUploading(false);
+    }
+  }
+
+  async function handleAvatarRemove() {
+    setAvatarError(null);
+    setAvatarUploading(true);
+    try {
+      await removeAvatar(userId, avatarPath);
+      setAvatarPath(null);
+      setAvatarUrl(null);
+      message.success(tAvatar("removeSuccess"));
+    } catch (err) {
+      setAvatarError(
+        err instanceof AvatarError
+          ? tAvatar(err.messageKey as Parameters<typeof tAvatar>[0])
+          : tAvatar("removeFailed"),
       );
     } finally {
       setAvatarUploading(false);
@@ -340,6 +362,13 @@ export function ProfileForm({
               aria-label={tAvatar("uploadAriaLabel")}
             >
               {avatarUploading ? tAvatar("uploading") : tAvatar("changeImage")}
+            </Button>
+            <Button
+              className="ml-2"
+              disabled={!avatarPath || avatarUploading}
+              onClick={handleAvatarRemove}
+            >
+              {tAvatar("removeImage")}
             </Button>
           </div>
         </div>

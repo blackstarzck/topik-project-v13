@@ -42,7 +42,7 @@
 ## Supabase 테이블 스키마 정보
 | 객체 | 화면 역할 | migration 기준 |
 | --- | --- | --- |
-| rpc:public.list_user_problems | 필터/정렬/페이지 조회 | 20260602120400_admin_and_user_rpcs.sql: filter, sort, page, page_size를 받아 사용자 RLS 범위의 문제 목록과 total_count를 반환한다. |
+| rpc:public.list_user_problems | 필터/정렬/페이지 조회 | 20260609120000_list_user_problems_writing_state.sql: filter, sort, page, page_size를 받아 사용자 RLS 범위의 문제 목록, `publish_status`, `review_status`, `lifecycle_status`, `lifecycle_reason`, total_count를 반환한다. |
 | problems | 문제 목록 원천 | 20260520120200_problems.sql: id, source, author_id, domain, question_no, topik_level, difficulty, title, prompt, materials, answer_key, rubric, explanation, tags, publish_status, review_status, visibility, created_at, updated_at. |
 | problem_assets | 문제 첨부 자료 | 20260520120200_problems.sql: id, problem_id, storage_path, asset_type, sort_order. asset_type은 image 또는 audio. |
 | problem_attempts | 풀이/북마크 상태 | 20260520120300_attempts.sql: id, user_id, problem_id, selected_answer, is_correct, score, status, started_at, submitted_at, bookmarked, time_spent_seconds. |

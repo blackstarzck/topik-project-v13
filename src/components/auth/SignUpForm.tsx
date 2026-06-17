@@ -5,9 +5,15 @@
 //   instead of in-place "이메일 확인하세요" state. Verify page handles
 //   resend with 60s cooldown and survives reloads/deep-links.
 
-import type { ChangeEvent } from "react";
+import type {
+  ChangeEvent,
+  ComponentType,
+  KeyboardEvent,
+  ReactNode,
+  SVGProps,
+} from "react";
 import { useEffect, useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -18,9 +24,12 @@ import {
   Divider,
   Form,
   Input,
+  Select,
   Typography,
 } from "antd";
 import { ArrowRight } from "lucide-react";
+import { countries, hasFlag } from "country-flag-icons";
+import * as FlagIcons from "country-flag-icons/react/3x2";
 
 import { GoogleMark } from "@/components/auth/GoogleMark";
 import { buildAuthRedirectUrl } from "@/lib/auth/redirect-url";
@@ -55,6 +64,137 @@ const SIGN_UP_COOLDOWN_STORAGE_KEY = "talkpik:sign-up:cooldown-until";
 
 const { Text } = Typography;
 
+const STEP_NAME = 0;
+const STEP_COUNTRY_REGION = 1;
+const STEP_EMAIL = 2;
+const STEP_PASSWORD = 3;
+const STEP_TERMS = 4;
+
+const NON_ISO_REGION_CODES = new Set([
+  "AC",
+  "EU",
+  "IC",
+  "TA",
+  "XA",
+  "XC",
+  "XK",
+  "XO",
+]);
+
+const ISO_COUNTRY_CODES = countries
+  .filter(
+    (code) =>
+      /^[A-Z]{2}$/.test(code) &&
+      !NON_ISO_REGION_CODES.has(code) &&
+      hasFlag(code),
+  )
+  .sort();
+
+const ISO_COUNTRY_CODE_SET = new Set(ISO_COUNTRY_CODES);
+
+type CountryFlagComponent = ComponentType<
+  SVGProps<SVGSVGElement> & { title?: string }
+>;
+
+const COUNTRY_FLAG_ICONS = FlagIcons as Record<
+  string,
+  CountryFlagComponent | undefined
+>;
+
+type CountryRegionOption = {
+  value: string;
+  label: ReactNode;
+  countryName: string;
+  searchText: string;
+};
+
+function normalizeFieldValue(value: unknown) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function normalizeCountryCode(value: unknown) {
+  return normalizeFieldValue(value).toUpperCase();
+}
+
+function isDisplayNameReady(value: unknown) {
+  const displayName = normalizeFieldValue(value);
+  return displayName.length >= 2 && displayName.length <= 30;
+}
+
+function isCountryCodeReady(value: unknown) {
+  return ISO_COUNTRY_CODE_SET.has(normalizeCountryCode(value));
+}
+
+function isEmailReady(value: unknown) {
+  const email = normalizeFieldValue(value);
+  return (
+    email.length > 0 &&
+    email.length <= 80 &&
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  );
+}
+
+function isPasswordPairReady(password: unknown, passwordConfirm: unknown) {
+  const nextPassword = typeof password === "string" ? password : "";
+  const nextPasswordConfirm =
+    typeof passwordConfirm === "string" ? passwordConfirm : "";
+  return (
+    nextPassword.length >= 8 &&
+    nextPassword.length <= 64 &&
+    nextPassword === nextPasswordConfirm
+  );
+}
+
+function CountryFlag({
+  code,
+  countryName,
+}: {
+  code: string;
+  countryName: string;
+}) {
+  const FlagIcon = COUNTRY_FLAG_ICONS[code];
+  if (!FlagIcon) {
+    return (
+      <span className="w-6 shrink-0 text-xs font-medium text-neutral-500">
+        {code}
+      </span>
+    );
+  }
+
+  return <FlagIcon title={countryName} className="h-4 w-6 shrink-0" />;
+}
+
+function CountryRegionOptionLabel({
+  code,
+  countryName,
+}: {
+  code: string;
+  countryName: string;
+}) {
+  return (
+    <span className="flex items-center gap-2">
+      <CountryFlag code={code} countryName={countryName} />
+      <span className="min-w-0 flex-1 truncate">{countryName}</span>
+      <span className="shrink-0 text-xs text-neutral-500">{code}</span>
+    </span>
+  );
+}
+
+function createCountryRegionOptions(locale: string): CountryRegionOption[] {
+  const names = new Intl.DisplayNames([locale], { type: "region" });
+  const collator = new Intl.Collator(locale);
+
+  return ISO_COUNTRY_CODES.map((code) => {
+    const countryName = names.of(code) ?? code;
+    return {
+      value: code,
+      countryName,
+      searchText: `${countryName} ${code}`,
+      label: <CountryRegionOptionLabel code={code} countryName={countryName} />,
+    };
+  }).sort((a, b) => collator.compare(a.countryName, b.countryName));
+}
+
 type CountdownTranslate = ReturnType<typeof useTranslations<"auth.countdown">>;
 
 function formatCountdown(totalSeconds: number, tc: CountdownTranslate): string {
@@ -71,6 +211,7 @@ type SignUpFields = {
   password: string;
   passwordConfirm: string;
   displayName: string;
+  nationalityCountryCode: string;
   terms: boolean;
 };
 
@@ -88,6 +229,7 @@ export function SignUpForm({
   onCooldownChange,
 }: SignUpFormProps = {}) {
   const t = useTranslations("auth.signUp");
+  const locale = useLocale();
   const toauth = useTranslations("auth.oauth");
   const tc = useTranslations("auth.countdown");
   const tcooldown = useTranslations("auth.cooldown");
@@ -100,6 +242,7 @@ export function SignUpForm({
   const [blockedOAuthBrowser, setBlockedOAuthBrowser] =
     useState<GoogleOAuthEmbeddedBrowser | null>(null);
   const [safeGuidanceVisible, setSafeGuidanceVisible] = useState(false);
+  const [visibleStep, setVisibleStep] = useState(STEP_NAME);
   const signUpCooldown = useEmailCooldown(
     SIGN_UP_COOLDOWN_STORAGE_KEY,
     DEFAULT_COOLDOWN_SECONDS,
@@ -107,7 +250,39 @@ export function SignUpForm({
   // password-strength meter는 실시간으로 입력값을 추적해야 하므로 watch.
   const [passwordValue, setPasswordValue] = useState("");
   const [form] = Form.useForm<SignUpFields>();
+  const displayNameValue = Form.useWatch("displayName", form);
+  const nationalityCountryCodeValue = Form.useWatch(
+    "nationalityCountryCode",
+    form,
+  );
+  const emailValue = Form.useWatch("email", form);
+  const passwordConfirmValue = Form.useWatch("passwordConfirm", form);
+  const termsValue = Form.useWatch("terms", form);
   const isCoolingDown = signUpCooldown.remaining > 0;
+  const hasValidName = isDisplayNameReady(displayNameValue);
+  const hasValidCountryRegion = isCountryCodeReady(
+    nationalityCountryCodeValue,
+  );
+  const hasValidEmail = isEmailReady(emailValue);
+  const hasValidPassword = isPasswordPairReady(
+    passwordValue,
+    passwordConfirmValue,
+  );
+  const isSubmitReady =
+    hasValidName &&
+    hasValidCountryRegion &&
+    hasValidEmail &&
+    hasValidPassword &&
+    termsValue === true;
+  const showCountryRegionStep = visibleStep >= STEP_COUNTRY_REGION;
+  const showEmailStep = visibleStep >= STEP_EMAIL;
+  const showPasswordStep = visibleStep >= STEP_PASSWORD;
+  const showTermsStep = visibleStep >= STEP_TERMS;
+  const showSubmitButton = showTermsStep;
+  const countryRegionOptions = useMemo(
+    () => createCountryRegionOptions(locale),
+    [locale],
+  );
 
   useEffect(() => {
     onCooldownChange?.(isCoolingDown);
@@ -126,6 +301,53 @@ export function SignUpForm({
     onPasswordChange?.(nextPassword);
   }
 
+  function focusNextField(fieldId: string) {
+    window.setTimeout(() => {
+      document.getElementById(fieldId)?.focus();
+    }, 0);
+  }
+
+  function revealStep(nextStep: number, focusFieldId?: string) {
+    setVisibleStep((currentStep) => Math.max(currentStep, nextStep));
+    if (focusFieldId) {
+      focusNextField(focusFieldId);
+    }
+  }
+
+  function handleStepCompletion(step: number) {
+    const values = form.getFieldsValue();
+    if (step === STEP_NAME && isDisplayNameReady(values.displayName)) {
+      revealStep(STEP_COUNTRY_REGION, "nationalityCountryCode");
+      return;
+    }
+    if (
+      step === STEP_COUNTRY_REGION &&
+      isCountryCodeReady(values.nationalityCountryCode)
+    ) {
+      revealStep(STEP_EMAIL, "email");
+      return;
+    }
+    if (step === STEP_EMAIL && isEmailReady(values.email)) {
+      revealStep(STEP_PASSWORD, "password");
+      return;
+    }
+    if (
+      step === STEP_PASSWORD &&
+      isPasswordPairReady(values.password, values.passwordConfirm)
+    ) {
+      revealStep(STEP_TERMS, "terms");
+    }
+  }
+
+  function handleStepKeyDown(
+    event: KeyboardEvent<HTMLInputElement>,
+    step: number,
+  ) {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    handleStepCompletion(step);
+  }
+
   async function handleSignUp(values: SignUpFields) {
     if (isCoolingDown) return;
 
@@ -138,7 +360,12 @@ export function SignUpForm({
         email: values.email,
         password: values.password,
         options: {
-          data: { display_name: values.displayName },
+          data: {
+            display_name: values.displayName,
+            nationality_country_code: normalizeCountryCode(
+              values.nationalityCountryCode,
+            ),
+          },
           emailRedirectTo: buildAuthRedirectUrl(
             "/auth/callback?next=/onboarding/learning-goal",
           ),
@@ -221,7 +448,7 @@ export function SignUpForm({
         onFinish={handleSignUp}
         requiredMark={false}
       >
-        {/* description §3 입력 순서: 이름, 이메일, 비밀번호 */}
+        {/* description §3 입력 순서: 이름, 국가/지역, 이메일, 비밀번호 */}
         <Form.Item
           label={t("nameLabel")}
           name="displayName"
@@ -235,118 +462,183 @@ export function SignUpForm({
             autoComplete="name"
             placeholder={t("namePlaceholder")}
             onFocus={() => onTypingChange?.(true)}
-            onBlur={() => onTypingChange?.(false)}
-          />
-        </Form.Item>
-
-        <Form.Item
-          label={t("emailLabel")}
-          name="email"
-          rules={[
-            { required: true, message: t("emailRequired") },
-            { type: "email", message: t("emailInvalid") },
-            { max: 80, message: t("emailMax") },
-          ]}
-        >
-          <Input
-            autoComplete="email"
-            placeholder="you@example.com"
-            onFocus={() => onTypingChange?.(true)}
-            onBlur={() => onTypingChange?.(false)}
-            // 사용자가 이메일을 고치면 직전 "중복 이메일" 서버 오류는 지운다.
-            onChange={() => {
-              if (form.getFieldError("email").length > 0) {
-                form.setFields([{ name: "email", errors: [] }]);
-              }
-              setSafeGuidanceVisible(false);
+            onBlur={() => {
+              onTypingChange?.(false);
+              handleStepCompletion(STEP_NAME);
             }}
+            onKeyDown={(event) => handleStepKeyDown(event, STEP_NAME)}
           />
         </Form.Item>
 
-        <Form.Item
-          label={t("passwordLabel")}
-          name="password"
-          rules={[
-            { required: true, message: t("passwordRequired") },
-            { min: 8, message: t("passwordMin") },
-            { max: 64, message: t("passwordMax") },
-          ]}
-        >
-          <Input.Password
-            autoComplete="new-password"
-            onFocus={() => onTypingChange?.(true)}
-            onBlur={() => onTypingChange?.(false)}
-            onChange={handlePasswordChange}
-            visibilityToggle={{
-              onVisibleChange: (visible) =>
-                onPasswordVisibilityChange?.(visible),
-            }}
-          />
-        </Form.Item>
+        {showCountryRegionStep && (
+          <div className="auth-progressive-step">
+            <Form.Item
+              label={t("countryRegionLabel")}
+              name="nationalityCountryCode"
+              rules={[
+                { required: true, message: t("countryRegionRequired") },
+              ]}
+            >
+              <Select
+                id="nationalityCountryCode"
+                aria-label={t("countryRegionLabel")}
+                data-testid="country-region-select"
+                showSearch
+                virtual={false}
+                options={countryRegionOptions}
+                placeholder={t("countryRegionPlaceholder")}
+                filterOption={(input, option) => {
+                  const searchText =
+                    (option as CountryRegionOption | undefined)?.searchText ??
+                    "";
+                  return searchText
+                    .toLowerCase()
+                    .includes(input.trim().toLowerCase());
+                }}
+                onFocus={() => onTypingChange?.(true)}
+                onBlur={() => onTypingChange?.(false)}
+                onChange={(value) => {
+                  if (isCountryCodeReady(value)) {
+                    revealStep(STEP_EMAIL, "email");
+                  }
+                }}
+              />
+            </Form.Item>
+          </div>
+        )}
 
-        {/* A-01 피드백: 비밀번호 강도 실시간 표시 */}
-        <PasswordStrengthMeter password={passwordValue} showWhenEmpty />
+        {showEmailStep && (
+          <div className="auth-progressive-step">
+            <Form.Item
+              label={t("emailLabel")}
+              name="email"
+              rules={[
+                { required: true, message: t("emailRequired") },
+                { type: "email", message: t("emailInvalid") },
+                { max: 80, message: t("emailMax") },
+              ]}
+            >
+              <Input
+                autoComplete="email"
+                placeholder="you@example.com"
+                onFocus={() => onTypingChange?.(true)}
+                onBlur={() => {
+                  onTypingChange?.(false);
+                  handleStepCompletion(STEP_EMAIL);
+                }}
+                onKeyDown={(event) => handleStepKeyDown(event, STEP_EMAIL)}
+                // 사용자가 이메일을 고치면 직전 "중복 이메일" 서버 오류는 지운다.
+                onChange={() => {
+                  if (form.getFieldError("email").length > 0) {
+                    form.setFields([{ name: "email", errors: [] }]);
+                  }
+                  setSafeGuidanceVisible(false);
+                }}
+              />
+            </Form.Item>
+          </div>
+        )}
 
-        <Form.Item
-          label={t("passwordConfirmLabel")}
-          name="passwordConfirm"
-          dependencies={["password"]}
-          rules={[
-            { required: true, message: t("passwordConfirmRequired") },
-            ({ getFieldValue }) => ({
-              validator(_, value) {
-                if (!value || getFieldValue("password") === value) {
-                  return Promise.resolve();
-                }
-                return Promise.reject(new Error(t("passwordMismatch")));
-              },
-            }),
-          ]}
-        >
-          <Input.Password
-            autoComplete="new-password"
-            onFocus={() => onTypingChange?.(true)}
-            onBlur={() => onTypingChange?.(false)}
-          />
-        </Form.Item>
+        {showPasswordStep && (
+          <div className="auth-progressive-step">
+            <Form.Item
+              label={t("passwordLabel")}
+              name="password"
+              rules={[
+                { required: true, message: t("passwordRequired") },
+                { min: 8, message: t("passwordMin") },
+                { max: 64, message: t("passwordMax") },
+              ]}
+            >
+              <Input.Password
+                autoComplete="new-password"
+                onFocus={() => onTypingChange?.(true)}
+                onBlur={() => {
+                  onTypingChange?.(false);
+                  handleStepCompletion(STEP_PASSWORD);
+                }}
+                onKeyDown={(event) => handleStepKeyDown(event, STEP_PASSWORD)}
+                onChange={handlePasswordChange}
+                visibilityToggle={{
+                  onVisibleChange: (visible) =>
+                    onPasswordVisibilityChange?.(visible),
+                }}
+              />
+            </Form.Item>
 
-        <Form.Item
-          name="terms"
-          valuePropName="checked"
-          rules={[
-            {
-              validator: (_, value) =>
-                value
-                  ? Promise.resolve()
-                  : Promise.reject(new Error(t("termsRequired"))),
-            },
-          ]}
-        >
-          <Checkbox>
-            {t.rich("termsAgreement", {
-              terms: (chunks) => (
-                <Link
-                  href="/terms"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(event) => event.stopPropagation()}
-                >
-                  {chunks}
-                </Link>
-              ),
-              privacy: (chunks) => (
-                <Link
-                  href="/privacy"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(event) => event.stopPropagation()}
-                >
-                  {chunks}
-                </Link>
-              ),
-            })}
-          </Checkbox>
-        </Form.Item>
+            {/* A-01 피드백: 비밀번호 강도 실시간 표시 */}
+            <PasswordStrengthMeter password={passwordValue} showWhenEmpty />
+
+            <Form.Item
+              label={t("passwordConfirmLabel")}
+              name="passwordConfirm"
+              dependencies={["password"]}
+              rules={[
+                { required: true, message: t("passwordConfirmRequired") },
+                ({ getFieldValue }) => ({
+                  validator(_, value) {
+                    if (!value || getFieldValue("password") === value) {
+                      return Promise.resolve();
+                    }
+                    return Promise.reject(new Error(t("passwordMismatch")));
+                  },
+                }),
+              ]}
+            >
+              <Input.Password
+                autoComplete="new-password"
+                onFocus={() => onTypingChange?.(true)}
+                onBlur={() => {
+                  onTypingChange?.(false);
+                  handleStepCompletion(STEP_PASSWORD);
+                }}
+                onKeyDown={(event) => handleStepKeyDown(event, STEP_PASSWORD)}
+              />
+            </Form.Item>
+          </div>
+        )}
+
+        {showTermsStep && (
+          <div className="auth-progressive-step">
+            <Form.Item
+              name="terms"
+              valuePropName="checked"
+              rules={[
+                {
+                  validator: (_, value) =>
+                    value
+                      ? Promise.resolve()
+                      : Promise.reject(new Error(t("termsRequired"))),
+                },
+              ]}
+            >
+              <Checkbox>
+                {t.rich("termsAgreement", {
+                  terms: (chunks) => (
+                    <Link
+                      href="/terms"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      {chunks}
+                    </Link>
+                  ),
+                  privacy: (chunks) => (
+                    <Link
+                      href="/privacy"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      {chunks}
+                    </Link>
+                  ),
+                })}
+              </Checkbox>
+            </Form.Item>
+          </div>
+        )}
 
         {safeGuidanceVisible && (
           <Alert
@@ -389,19 +681,23 @@ export function SignUpForm({
           </Text>
         )}
 
-        <Form.Item className="auth-form-submit">
-          <Button
-            type="primary"
-            htmlType="submit"
-            block
-            disabled={isCoolingDown}
-            loading={submitting}
-            icon={<ArrowRight size={16} aria-hidden="true" />}
-            iconPlacement="end"
-          >
-            {t("submit")}
-          </Button>
-        </Form.Item>
+        {showSubmitButton && (
+          <div className="auth-progressive-step">
+            <Form.Item className="auth-form-submit">
+              <Button
+                type="primary"
+                htmlType="submit"
+                block
+                disabled={!isSubmitReady || isCoolingDown}
+                loading={submitting}
+                icon={<ArrowRight size={16} aria-hidden="true" />}
+                iconPlacement="end"
+              >
+                {t("submit")}
+              </Button>
+            </Form.Item>
+          </div>
+        )}
       </Form>
 
       <Divider plain className="auth-form-divider">

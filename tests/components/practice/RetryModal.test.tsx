@@ -86,6 +86,26 @@ describe("RetryModal (Phase 7-D Task 5 route fix)", () => {
     );
   });
 
+  it("'시작' in hint mode pushes the writing route with hint support enabled", () => {
+    renderWithIntl(
+      <RetryModal
+        open
+        onClose={vi.fn()}
+        problemId="p-1"
+        questionNo={54}
+        hasAttempt
+        hasSubmission={false}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("radio", { name: /힌트 포함/ }));
+    fireEvent.click(screen.getByRole("button", { name: "시작" }));
+
+    expect(pushMock).toHaveBeenCalledWith(
+      "/writing/essay-writing-54?problem=p-1&hint=1",
+    );
+  });
+
   it("'시작' with null questionNo shows a recoverable start-failure alert (keeps modal open, no push)", () => {
     renderWithIntl(
       <RetryModal

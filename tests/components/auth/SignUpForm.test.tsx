@@ -43,20 +43,58 @@ import { SignUpForm } from "../../../src/components/auth/SignUpForm";
 // intl + antd App wrapper (baseline ko catalog, matching the assertions).
 const renderInApp = renderWithIntl;
 
-function fillValidSignUpForm(email = "valid@example.com") {
-  fireEvent.change(document.querySelector("#displayName")!, {
-    target: { value: "Tester" },
-  });
-  fireEvent.change(document.querySelector("#email")!, {
-    target: { value: email },
-  });
-  fireEvent.change(document.querySelector("#password")!, {
-    target: { value: "password123" },
-  });
-  fireEvent.change(document.querySelector("#passwordConfirm")!, {
-    target: { value: "password123" },
-  });
+async function fillAndBlur(label: string, value: string) {
+  const input = screen.getByLabelText(label);
+  fireEvent.change(input, { target: { value } });
+  fireEvent.blur(input);
+}
+
+async function fillValidName(value = "홍길동") {
+  await fillAndBlur("이름", value);
+  await screen.findByLabelText("국가/지역");
+}
+
+async function selectCountryRegion(countryName = "베트남") {
+  fireEvent.mouseDown(screen.getByRole("combobox", { name: "국가/지역" }));
+  const matches = await screen.findAllByText(countryName);
+  const option = matches.find((node) =>
+    node.closest(".ant-select-item-option"),
+  );
+  if (!option) {
+    throw new Error(`Country option not found: ${countryName}`);
+  }
+  fireEvent.click(option);
+  await screen.findByLabelText("이메일");
+}
+
+async function fillValidEmail(email = "valid@example.com") {
+  await fillAndBlur("이메일", email);
+  await screen.findByLabelText("비밀번호");
+  await screen.findByLabelText("비밀번호 확인");
+}
+
+async function fillValidPassword(
+  password = "password123",
+  passwordConfirm = password,
+) {
+  await fillAndBlur("비밀번호", password);
+  await fillAndBlur("비밀번호 확인", passwordConfirm);
+}
+
+async function fillValidCredentials(email = "valid@example.com") {
+  await fillValidName();
+  await selectCountryRegion();
+  await fillValidEmail(email);
+  await fillValidPassword();
+  await screen.findByRole("checkbox");
+}
+
+async function fillValidSignUpForm(email = "valid@example.com") {
+  await fillValidCredentials(email);
   fireEvent.click(screen.getByRole("checkbox"));
+  await waitFor(() => {
+    expect(submitButton().disabled).toBe(false);
+  });
 }
 
 function submitButton() {
@@ -97,50 +135,74 @@ afterEach(() => {
 });
 
 describe("SignUpForm", () => {
-  it("requires terms acceptance before submit", async () => {
+  it("starts with only the name field while keeping Google sign-up available", () => {
     renderInApp(<SignUpForm />);
 
-    fireEvent.change(screen.getByLabelText("이메일"), {
-      target: { value: "u@example.com" },
-    });
-    fireEvent.change(screen.getByLabelText("비밀번호"), {
-      target: { value: "password123" },
-    });
-    fireEvent.change(screen.getByLabelText("비밀번호 확인"), {
-      target: { value: "password123" },
-    });
-    // terms NOT checked
+    expect(screen.getByLabelText("이름")).toBeTruthy();
+    expect(screen.queryByLabelText("국가/지역")).toBeNull();
+    expect(screen.queryByLabelText("이메일")).toBeNull();
+    expect(screen.queryByLabelText("비밀번호")).toBeNull();
+    expect(screen.queryByLabelText("비밀번호 확인")).toBeNull();
+    expect(screen.queryByRole("checkbox")).toBeNull();
+    expect(screen.queryByRole("button", { name: "회원가입" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Google로 계속" })).toBeTruthy();
+  });
 
-    await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "회원가입" }));
-    });
+  it("reveals each next sign-up step after the current step is valid", async () => {
+    renderInApp(<SignUpForm />);
 
-    await waitFor(() => {
-      expect(screen.getByText("이용약관에 동의해주세요")).toBeTruthy();
-    });
+    await fillAndBlur("이름", "홍길동");
+    expect(await screen.findByLabelText("국가/지역")).toBeTruthy();
+    expect(screen.queryByLabelText("이메일")).toBeNull();
+    expect(screen.queryByLabelText("비밀번호")).toBeNull();
+
+    await selectCountryRegion();
+    expect(await screen.findByLabelText("이메일")).toBeTruthy();
+    expect(screen.queryByLabelText("비밀번호")).toBeNull();
+
+    await fillAndBlur("이메일", "valid@example.com");
+    expect(await screen.findByLabelText("비밀번호")).toBeTruthy();
+    expect(await screen.findByLabelText("비밀번호 확인")).toBeTruthy();
+    expect(screen.getByTestId("password-strength")).toBeTruthy();
+    expect(screen.queryByRole("checkbox")).toBeNull();
+
+    await fillAndBlur("비밀번호", "password123");
+    await fillAndBlur("비밀번호 확인", "password123");
+    expect(await screen.findByRole("checkbox")).toBeTruthy();
+    expect(submitButton().disabled).toBe(true);
+  });
+
+  it("does not reveal later steps while the current step is invalid", async () => {
+    renderInApp(<SignUpForm />);
+
+    await fillAndBlur("이름", "김");
+    expect(screen.queryByLabelText("국가/지역")).toBeNull();
+
+    await fillValidName();
+    expect(screen.queryByLabelText("이메일")).toBeNull();
+
+    await selectCountryRegion();
+    await fillAndBlur("이메일", "not-an-email");
+    expect(screen.queryByLabelText("비밀번호")).toBeNull();
+
+    await fillValidEmail();
+    await fillAndBlur("비밀번호", "password123");
+    await fillAndBlur("비밀번호 확인", "DIFFERENT");
+    expect(screen.queryByRole("checkbox")).toBeNull();
+    expect(screen.queryByRole("button", { name: "회원가입" })).toBeNull();
     expect(signUpMock).not.toHaveBeenCalled();
   });
 
-  it("rejects mismatched password confirmation", async () => {
+  it("keeps submit disabled until terms are accepted", async () => {
     renderInApp(<SignUpForm />);
 
-    fireEvent.change(screen.getByLabelText("이메일"), {
-      target: { value: "u@example.com" },
-    });
-    fireEvent.change(screen.getByLabelText("비밀번호"), {
-      target: { value: "password123" },
-    });
-    fireEvent.change(screen.getByLabelText("비밀번호 확인"), {
-      target: { value: "DIFFERENT" },
-    });
+    await fillValidCredentials();
+
+    const button = submitButton();
+    expect(button.disabled).toBe(true);
     fireEvent.click(screen.getByRole("checkbox"));
-
-    await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "회원가입" }));
-    });
-
     await waitFor(() => {
-      expect(screen.getByText("비밀번호가 일치하지 않습니다")).toBeTruthy();
+      expect(button.disabled).toBe(false);
     });
     expect(signUpMock).not.toHaveBeenCalled();
   });
@@ -148,22 +210,7 @@ describe("SignUpForm", () => {
   it("calls supabase.auth.signUp with emailRedirectTo on valid submit", async () => {
     renderInApp(<SignUpForm />);
 
-    // A-01 reordered fields to 이름→이메일→비밀번호→비밀번호 확인 and made
-    // 이름(displayName) a required field, so it must be filled for the form to
-    // pass validation and call signUp.
-    fireEvent.change(screen.getByLabelText("이름"), {
-      target: { value: "홍길동" },
-    });
-    fireEvent.change(screen.getByLabelText("이메일"), {
-      target: { value: "valid@example.com" },
-    });
-    fireEvent.change(screen.getByLabelText("비밀번호"), {
-      target: { value: "password123" },
-    });
-    fireEvent.change(screen.getByLabelText("비밀번호 확인"), {
-      target: { value: "password123" },
-    });
-    fireEvent.click(screen.getByRole("checkbox"));
+    await fillValidSignUpForm();
 
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "회원가입" }));
@@ -175,6 +222,10 @@ describe("SignUpForm", () => {
     const call = signUpMock.mock.calls[0][0];
     expect(call.email).toBe("valid@example.com");
     expect(call.password).toBe("password123");
+    expect(call.options.data).toEqual({
+      display_name: "홍길동",
+      nationality_country_code: "VN",
+    });
     // Phase 8-D: emailRedirectTo now points to /auth/callback?next=...
     expect(call.options.emailRedirectTo).toBe(
       "https://talkpik.example.com/auth/callback?next=/onboarding/learning-goal",
@@ -184,20 +235,7 @@ describe("SignUpForm", () => {
   it("redirects to /auth/verify-email after successful sign-up (Phase 8-D)", async () => {
     renderInApp(<SignUpForm />);
 
-    // A-01: 이름(displayName) is required — fill it so submit succeeds.
-    fireEvent.change(screen.getByLabelText("이름"), {
-      target: { value: "홍길동" },
-    });
-    fireEvent.change(screen.getByLabelText("이메일"), {
-      target: { value: "valid@example.com" },
-    });
-    fireEvent.change(screen.getByLabelText("비밀번호"), {
-      target: { value: "password123" },
-    });
-    fireEvent.change(screen.getByLabelText("비밀번호 확인"), {
-      target: { value: "password123" },
-    });
-    fireEvent.click(screen.getByRole("checkbox"));
+    await fillValidSignUpForm();
 
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "회원가입" }));
@@ -218,7 +256,7 @@ describe("SignUpForm", () => {
     });
     renderInApp(<SignUpForm />);
 
-    fillValidSignUpForm("obfuscated@example.com");
+    await fillValidSignUpForm("obfuscated@example.com");
 
     await act(async () => {
       fireEvent.click(submitButton());
@@ -243,7 +281,7 @@ describe("SignUpForm", () => {
     });
     renderInApp(<SignUpForm />);
 
-    fillValidSignUpForm("registered@example.com");
+    await fillValidSignUpForm("registered@example.com");
 
     await act(async () => {
       fireEvent.click(submitButton());
@@ -281,7 +319,7 @@ describe("SignUpForm", () => {
     });
     renderInApp(<SignUpForm onCooldownChange={onCooldownChange} />);
 
-    fillValidSignUpForm("limited@example.com");
+    await fillValidSignUpForm("limited@example.com");
 
     await act(async () => {
       fireEvent.click(submitButton());
@@ -313,8 +351,7 @@ describe("SignUpForm", () => {
     await waitFor(() => {
       expect(screen.getByTestId("sign-up-countdown")).toBeTruthy();
     });
-    expect(submitButton().disabled).toBe(true);
-    expect(submitButton().textContent).toContain("회원가입");
+    expect(submitButton()).toBeNull();
     expect(onCooldownChange).toHaveBeenLastCalledWith(true);
     expect(signUpMock).not.toHaveBeenCalled();
   });
@@ -327,19 +364,7 @@ describe("SignUpForm", () => {
     });
     renderInApp(<SignUpForm />);
 
-    fireEvent.change(screen.getByLabelText("이름"), {
-      target: { value: "홍길동" },
-    });
-    fireEvent.change(screen.getByLabelText("이메일"), {
-      target: { value: "valid@example.com" },
-    });
-    fireEvent.change(screen.getByLabelText("비밀번호"), {
-      target: { value: "password123" },
-    });
-    fireEvent.change(screen.getByLabelText("비밀번호 확인"), {
-      target: { value: "password123" },
-    });
-    fireEvent.click(screen.getByRole("checkbox"));
+    await fillValidSignUpForm();
 
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "회원가입" }));
@@ -354,6 +379,21 @@ describe("SignUpForm", () => {
     // 버튼 영구 로딩(D-2) 회귀 방지: finally가 submitting을 해제해야 한다.
     const button = screen.getByRole("button", { name: "회원가입" });
     expect(button.className).not.toContain("ant-btn-loading");
+  });
+
+  it("keeps opened fields editable and blocks submit when an earlier value becomes invalid", async () => {
+    renderInApp(<SignUpForm />);
+
+    await fillValidSignUpForm();
+    await fillAndBlur("이메일", "broken-email");
+
+    expect(screen.getByLabelText("비밀번호")).toBeTruthy();
+    expect(screen.getByLabelText("비밀번호 확인")).toBeTruthy();
+    expect(screen.getByRole("checkbox")).toBeTruthy();
+    await waitFor(() => {
+      expect(submitButton().disabled).toBe(true);
+    });
+    expect(signUpMock).not.toHaveBeenCalled();
   });
 
   it("starts Google OAuth without requiring the email sign-up form", async () => {

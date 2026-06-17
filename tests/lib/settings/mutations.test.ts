@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  NicknameTakenError,
   updateLocale,
   updateNotificationPrefs,
   updateProfile,
@@ -14,7 +15,7 @@ type UpdateCall = {
 function makeClient(opts: {
   currentPrefs?: unknown;
   selectError?: { message: string } | null;
-  updateError?: { message: string } | null;
+  updateError?: { code?: string; details?: string; message: string } | null;
   onUpdate?: (call: UpdateCall) => void;
 }) {
   return {
@@ -132,6 +133,24 @@ describe("updateProfile", () => {
       () => makeClient({ onUpdate: (c) => calls.push(c) }) as any,
     );
     expect(calls).toHaveLength(0);
+  });
+
+  it("maps nickname unique constraint failures to a dedicated error", async () => {
+    await expect(
+      updateProfile(
+        "user-1",
+        { nickname: "talkpik-000000" },
+        () =>
+          makeClient({
+            updateError: {
+              code: "23505",
+              message:
+                'duplicate key value violates unique constraint "profiles_nickname_lower_uniq"',
+            },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          }) as any,
+      ),
+    ).rejects.toBeInstanceOf(NicknameTakenError);
   });
 });
 

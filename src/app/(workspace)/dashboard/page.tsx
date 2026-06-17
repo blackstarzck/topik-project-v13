@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { DashboardBody } from "@/components/dashboard/DashboardBody";
+import { AuthIdentityNotice } from "@/components/auth/AuthIdentityNotice";
 import type { RecentFeedbackItem } from "@/components/learning/RecentFeedbackCard";
 import type { DashboardAlertItem } from "@/components/dashboard/DashboardAlertsCard";
 import type { DashboardPrimary, DashboardAlternative } from "@/components/dashboard/DashboardRecommendations";
@@ -145,6 +146,7 @@ export default async function DashboardPage() {
 
   return (
     <WorkspaceBody className="grid gap-6">
+      <AuthIdentityNotice />
       <DashboardHeader />
       <DashboardBody
         userId={user.id}

@@ -27,6 +27,9 @@ export type RequiredConsentDocument = Pick<
 
 const FALLBACK_LOCALE: LegalLocale = "ko";
 const LEGAL_LOCALES = new Set<LegalLocale>(["ko", "en", "vi"]);
+const RANDOM_NICKNAME_PREFIX = "talkpik";
+const RANDOM_NICKNAME_LENGTH = 6;
+const RANDOM_NICKNAME_SPACE = 36 ** RANDOM_NICKNAME_LENGTH;
 
 function coerceLegalLocale(value: string | null | undefined): LegalLocale {
   return LEGAL_LOCALES.has(value as LegalLocale)
@@ -154,27 +157,50 @@ function readUserDisplayName(user: User): string | null {
   return null;
 }
 
+export function generateRandomNickname(
+  random: () => number = Math.random,
+): string {
+  const value = Math.floor(random() * RANDOM_NICKNAME_SPACE)
+    .toString(36)
+    .padStart(RANDOM_NICKNAME_LENGTH, "0")
+    .slice(0, RANDOM_NICKNAME_LENGTH);
+  return `${RANDOM_NICKNAME_PREFIX}-${value}`;
+}
+
 export async function backfillOAuthDisplayName(
   user: User,
   createClient: ClientFactory = createSupabaseServerClient,
+  random: () => number = Math.random,
 ): Promise<Tables<"profiles">> {
   const profile = await bootstrapProfile(user.id, createClient);
-  if (profile.display_name?.trim()) return profile;
+  const patch: Partial<Pick<Tables<"profiles">, "display_name" | "nickname">> =
+    {};
 
-  const displayName = readUserDisplayName(user);
-  if (!displayName) return profile;
+  if (!profile.display_name?.trim()) {
+    const displayName = readUserDisplayName(user);
+    if (displayName) patch.display_name = displayName;
+  }
+
+  if (
+    profile.nickname == null ||
+    (typeof profile.nickname === "string" && profile.nickname.trim().length === 0)
+  ) {
+    patch.nickname = generateRandomNickname(random);
+  }
+
+  if (Object.keys(patch).length === 0) return profile;
 
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("profiles")
-    .update({ display_name: displayName })
+    .update(patch)
     .eq("id", user.id)
     .select("*")
     .maybeSingle();
 
   if (error) {
-    throw new Error(`Failed to backfill OAuth display name: ${error.message}`);
+    throw new Error(`Failed to backfill OAuth profile: ${error.message}`);
   }
 
-  return data ?? { ...profile, display_name: displayName };
+  return data ?? { ...profile, ...patch };
 }

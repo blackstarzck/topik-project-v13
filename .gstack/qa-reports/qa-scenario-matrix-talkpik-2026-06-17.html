@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TALKPIK AI QA 시나리오 매트릭스</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f6f8;
+      --paper: #ffffff;
+      --ink: #18181b;
+      --muted: #60646c;
+      --line: #d9dde5;
+      --soft: #eef1f6;
+      --brand: #111827;
+      --accent: #2563eb;
+      --good-bg: #e8f7ef;
+      --good: #13734b;
+      --warn-bg: #fff6df;
+      --warn: #9a6400;
+      --bad-bg: #fdecec;
+      --bad: #bb2424;
+      --code-bg: #101318;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.68;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .page { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; width: min(1180px, calc(100% - 32px)); margin: 0 auto; padding: 36px 0 72px; }
+    .hero {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 32px;
+      box-shadow: 0 20px 48px rgba(15, 23, 42, 0.07);
+    }
+    .eyebrow { margin: 0 0 8px; color: var(--accent); font-size: 13px; font-weight: 800; letter-spacing: 0; text-transform: uppercase; }
+    h1 { margin: 0; font-size: clamp(28px, 4vw, 44px); line-height: 1.18; letter-spacing: 0; }
+    .description { margin: 14px 0 0; color: var(--muted); font-size: 16px; max-width: 820px; }
+    .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+    .meta span { border: 1px solid var(--line); background: var(--soft); border-radius: 999px; padding: 6px 10px; font-size: 13px; color: var(--muted); }
+    .layout { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 24px; align-items: start; }
+    .toc { position: sticky; top: 18px; max-height: calc(100vh - 36px); overflow: auto; background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
+    .toc p { margin: 0 0 10px; font-weight: 800; color: var(--brand); }
+    .toc a { display: block; color: var(--muted); font-size: 13px; padding: 6px 0; border-top: 1px solid transparent; }
+    .toc a:hover { color: var(--accent); text-decoration: none; }
+    .toc-l3 { padding-left: 12px !important; }
+    .content { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 30px; overflow: hidden; }
+    .content h1 { display: none; }
+    h2 { margin: 36px 0 12px; padding-top: 6px; font-size: 25px; line-height: 1.3; border-top: 1px solid var(--line); }
+    h2:first-child { margin-top: 0; border-top: 0; }
+    h3 { margin: 28px 0 10px; font-size: 19px; line-height: 1.35; }
+    h4 { margin: 22px 0 8px; font-size: 16px; }
+    p { margin: 10px 0; }
+    ul { margin: 10px 0 18px; padding-left: 22px; }
+    li { margin: 5px 0; }
+    .numbered-step { display: flex; gap: 8px; padding: 10px 12px; background: #fafafa; border: 1px solid var(--line); border-radius: 8px; }
+    code { background: #f0f2f5; border: 1px solid #e2e5ea; border-radius: 5px; padding: 1px 5px; font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace; font-size: 0.92em; }
+    pre { overflow: auto; background: var(--code-bg); color: #eef2ff; border-radius: 10px; padding: 16px; line-height: 1.55; }
+    pre code { background: transparent; border: 0; color: inherit; padding: 0; }
+    .table-wrap { overflow-x: auto; margin: 16px 0 24px; border: 1px solid var(--line); border-radius: 10px; }
+    table { width: 100%; min-width: 760px; border-collapse: collapse; font-size: 14px; }
+    th, td { padding: 10px 12px; vertical-align: top; border-bottom: 1px solid var(--line); }
+    th { position: sticky; top: 0; background: #f8fafc; text-align: left; font-weight: 800; color: #30343b; }
+    tr:nth-child(even) td { background: #fbfcfe; }
+    tr:hover td { background: #f5f8ff; }
+    .pill { display: inline-flex; align-items: center; min-height: 24px; border-radius: 999px; padding: 2px 9px; font-size: 12px; font-weight: 800; white-space: nowrap; }
+    .status-good { background: var(--good-bg); color: var(--good); }
+    .status-warn { background: var(--warn-bg); color: var(--warn); }
+    .status-bad { background: var(--bad-bg); color: var(--bad); }
+    @media (max-width: 900px) {
+      .page { width: min(100% - 20px, 1180px); padding-top: 18px; }
+      .hero, .content { padding: 22px; }
+      .layout { grid-template-columns: 1fr; }
+      .toc { position: static; max-height: none; }
+      table { min-width: 680px; }
+    }
+    @media print {
+      body { background: #fff; }
+      .page { width: 100%; padding: 0; }
+      .hero, .content, .toc { box-shadow: none; border-color: #ccc; }
+      .layout { grid-template-columns: 1fr; }
+      .toc { display: none; }
+      a { color: #000; text-decoration: underline; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <p class="eyebrow">QA Scenario Matrix</p>
+      <h1>TALKPIK AI QA 시나리오 매트릭스</h1>
+      <p class="description">Detailed QA scenarios covering actions, state changes, back navigation, and direct URL handling.</p>
+      <div class="meta"><span>Generated: 2026-06-17</span><span>Source: Markdown QA artifact</span><span>Mode: Report-only QA</span></div>
+    </section>
+    <section class="layout">
+      <nav class="toc"><p>Table of contents</p><a class="toc-l1" href="#talkpik-ai-qa-시나리오-매트릭스">TALKPIK AI QA 시나리오 매트릭스</a><a class="toc-l2" href="#실행-원칙">실행 원칙</a><a class="toc-l2" href="#공통-상태값-사전-목록">공통 상태값 사전 목록</a><a class="toc-l2" href="#리뷰-기록-템플릿">리뷰 기록 템플릿</a><a class="toc-l2" href="#시나리오-매트릭스">시나리오 매트릭스</a><a class="toc-l2" href="#자동-테스트와-매핑">자동 테스트와 매핑</a><a class="toc-l2" href="#실행-명령-초안">실행 명령 초안</a><a class="toc-l2" href="#최종-리포트-구성">최종 리포트 구성</a><a class="toc-l2" href="#에이전트-리뷰-종합">에이전트 리뷰 종합</a><a class="toc-l3" href="#ux-ui-에이전트-관점">UX/UI 에이전트 관점</a><a class="toc-l3" href="#기획-에이전트-관점">기획 에이전트 관점</a><a class="toc-l3" href="#테스트-엔지니어-관점">테스트 엔지니어 관점</a><a class="toc-l3" href="#보안-권한-에이전트-관점">보안/권한 에이전트 관점</a><a class="toc-l2" href="#실행-우선순위">실행 우선순위</a><a class="toc-l2" href="#실행-중-이슈-등급-기준">실행 중 이슈 등급 기준</a></nav>
+      <article class="content">
+        <h1 id="talkpik-ai-qa-시나리오-매트릭스">TALKPIK AI QA 시나리오 매트릭스</h1>
+<ul>
+<li>작성일: 2026-06-17</li>
+<li>모드: 리포트 전용 QA. 개발 작업, 소스 수정, 테스트 추가, 커밋 없음.</li>
+<li>대상: 사용자 앱 36개 Wireframe 화면과 route handler/API 직접 검증.</li>
+<li>기준 문서: <code>AGENTS.md</code>, <code>README.md</code>, <code>TESTING.md</code>, <code>docs/ia.md</code>, <code>docs/flow/user-flow.md</code>, <code>docs/Wireframe/README.md</code>, <code>docs/Wireframe/functional-spec-index.md</code>, <code>docs/Wireframe/data-usage-index.md</code>, <code>docs/ant-design/07-review-checklist.md</code></li>
+</ul>
+<h2 id="실행-원칙">실행 원칙</h2>
+<p class="numbered-step"><span>각 시나리오는 <code>page landing -&gt; user action -&gt; state change -&gt; UI response -&gt; back navigation -&gt; direct URL</code> 순서로 확인한다.</span></p>
+<p class="numbered-step"><span>모든 클릭, 입력, 토글, 모달, 필터, 탭, 저장, 제출, redirect 후 console error를 확인한다.</span></p>
+<p class="numbered-step"><span>direct URL은 anonymous / authenticated 상태를 나누어 확인한다.</span></p>
+<p class="numbered-step"><span>뒤로가기는 브라우저 Back, 앱 내부 Back/취소 CTA, 모달 닫기를 분리해 확인한다.</span></p>
+<p class="numbered-step"><span>결과 평가는 UX, UI 디자인, 기획, 개발 관점으로 따로 기록한 뒤 지휘자 관점에서 종합한다.</span></p>
+<p class="numbered-step"><span>secret 값은 기록하지 않는다. 필요한 경우 변수명만 쓴다.</span></p>
+<h2 id="공통-상태값-사전-목록">공통 상태값 사전 목록</h2>
+<div class="table-wrap"><table><thead><tr><th>상태 그룹</th><th>확인할 값</th><th>관련 화면</th></tr></thead><tbody><tr><td>Auth/session</td><td>anonymous, authenticated, session_expired, recovery session, OAuth callback success/error, consent missing, onboarding missing</td><td><code>/</code>, <code>/login</code>, <code>/sign-up</code>, <code>/auth/*</code>, <code>/onboarding/learning-goal</code>, workspace routes</td></tr><tr><td>Route guard</td><td>public allowed, protected redirect, transient system redirect, not-found, unsafe <code>next</code> fallback</td><td>public/auth/workspace/system routes</td></tr><tr><td>Form</td><td><span class="pill status-warn">pristine, dirty, valid, invalid, submitting, submitted, duplicate submit blocked, server error</span></td><td>auth, onboarding, writing, settings, profile</td></tr><tr><td>Writing draft</td><td><span class="pill status-bad">no draft, dirty answer, saving, saved, save failed, autosave disabled, conflict/stale draft</span></td><td>D-01~D-04, D-M3</td></tr><tr><td>Submission/feedback</td><td><span class="pill status-bad">ready to submit, confirm blocked, submitted, analyzing, feedback completed, feedback failed, invalid id</span></td><td>D-M1, D-M2, E-01, E-02, R-01</td></tr><tr><td>Problem list</td><td><span class="pill status-warn">filter selected, search term, sort order, page index, result count, empty result, private/lifecycle blocked</span></td><td>C-01, C-02, C-03, X-07, R-02</td></tr><tr><td>Notification</td><td>channel enabled/disabled, dirty settings, save success/error, inbox unread/read, optimistic rollback, delivery history empty/error</td><td>B-01, X-09</td></tr><tr><td>Library/export</td><td>saved/unsaved, selected item, export option selected, export pending, export unavailable/paywall</td><td>F-01, F-M1, X-03</td></tr><tr><td>Subscription</td><td>no subscription, active plan, deferred checkout, payment history empty, plan change intent</td><td>X-03, X-04</td></tr><tr><td>UI/system</td><td>loading, empty, success, warning, error, disabled, selected/active, focus trapped, horizontal overflow, mobile collapse</td><td>all pages</td></tr></tbody></table></div>
+<h2 id="리뷰-기록-템플릿">리뷰 기록 템플릿</h2>
+<p>각 시나리오 실행 후 아래 형식으로 기록한다.</p>
+<pre><code class="language-md">### QA-XX 결과
+
+- 실행 상태: PASS / FAIL / BLOCKED / NOT RUN
+- 증거: screenshot path, Playwright trace, console summary
+- 사용자 액션: ...
+- 변한 상태값: ...
+- 기대 반응: ...
+- 실제 반응: ...
+- 뒤로가기 결과: ...
+- direct URL 결과: ...
+- UX 관점: ...
+- UI 디자인 관점: ...
+- 기획 관점: ...
+- 개발 관점: ...
+- 지휘자 종합: ...</code></pre>
+<h2 id="시나리오-매트릭스">시나리오 매트릭스</h2>
+<div class="table-wrap"><table><thead><tr><th>ID</th><th>화면/흐름</th><th>사전 조건</th><th>사용자 액션</th><th>변해야 하는 상태값</th><th>기대 반응</th><th>뒤로가기 확인</th><th>direct URL 확인</th><th>리뷰 초점</th></tr></thead><tbody><tr><td>QA-00</td><td>환경/기준선</td><td><code>.env.local</code>은 secret 출력 없이 존재 여부만 확인. dev server 또는 Playwright webServer 사용</td><td><code>pnpm lint</code>, <code>pnpm typecheck</code>, <code>pnpm test</code>, <code>pnpm test:e2e</code> 실행</td><td>build/type/test status, e2e auth storage state</td><td>기본 검증 실패가 있으면 브라우저 QA 전에 기록</td><td>해당 없음</td><td>해당 없음</td><td><span class="pill status-warn">개발: 실패 로그, flaky 가능성, secret 미노출</span></td></tr><tr><td>QA-01</td><td>제품 랜딩 <code>/</code></td><td>anonymous</td><td>헤더 로그인, 무료 시작, 섹션 anchor, 약관/개인정보 링크 클릭</td><td>route path, hover/pressed state, video ready state, scroll position</td><td>CTA가 <code>/login</code>, <code>/sign-up</code>, <code>/terms</code>, <code>/privacy</code>로 이동. 랜딩 비디오/섹션이 깨지지 않음</td><td>각 하위 페이지에서 Back 시 랜딩의 이전 위치 또는 상단으로 일관 복귀</td><td><code>/</code> direct는 anonymous에게 랜딩, authenticated CTA는 대시보드 지향</td><td>UX: 첫 행동 명확성. UI: hero/header 고정, 모바일 overflow</td></tr><tr><td>QA-02</td><td>회원가입 <code>/sign-up</code></td><td>anonymous</td><td>빈 제출, 잘못된 이메일, 비밀번호 불일치, 약관 미체크, 정상 입력 후 제출, Google 버튼</td><td>form validity, terms checked, submitting, cooldown/error</td><td>필드 오류는 하단 표시. 정상 제출은 <code>/auth/verify-email</code> 안내. provider raw 오류 미노출</td><td>로그인/약관 이동 후 Back 시 입력 보존 여부 확인</td><td><code>/sign-up</code> direct 허용. 로그인 세션 상태에서 접근 시 정책 확인</td><td>기획: 중복 이메일을 확정 표현하지 않는지. 개발: auth payload/redirect</td></tr><tr><td>QA-03</td><td>로그인 <code>/login</code></td><td>anonymous + 테스트 계정</td><td>빈 제출, 잘못된 계정, 정상 로그인, 매직링크 탭, Google 버튼, <code>?reason=session_expired</code></td><td>auth method, validation, submitting, session state</td><td>정상 로그인은 <code>/dashboard</code>. 세션 만료 reason은 친절 안내. 인앱 브라우저 Google 제한 안내</td><td>회원가입/비밀번호 재설정 이동 후 Back 시 auth 패널 안정</td><td><code>/login</code>, <code>/login?reason=session_expired</code> direct 허용</td><td>UX: 실패 후 다음 행동. UI: 탭/폼 높이 흔들림</td></tr><tr><td>QA-04</td><td>비밀번호 재설정 <code>/password-reset</code></td><td>anonymous</td><td>이메일 입력, 빈 제출, 전송 성공, rate limit/cooldown, 로그인 복귀</td><td>email value, submitting, cooldown, sent state</td><td>전송 후 확인 안내와 재시도 제한. raw provider 오류 미노출</td><td>로그인 복귀 후 Back 시 재설정 화면 상태 확인</td><td><code>/password-reset</code> direct 허용</td><td>기획: 존재 여부 노출 없이 안내하는지</td></tr><tr><td>QA-05</td><td>새 비밀번호 설정 <code>/password-reset/confirm</code></td><td>anonymous 또는 recovery session 없음</td><td>direct URL 진입, 비밀번호 약함/불일치, 제출</td><td><span class="pill status-good">password strength, match, submitting, recovery session error</span></td><td>recovery session 없으면 저장 실패 안내와 재발송 링크. token 노출 없음</td><td>재발송 링크 이동 후 Back 시 오류 상태 과도 노출 없는지</td><td><code>/password-reset/confirm</code> direct는 페이지 표시 가능, 저장은 실패 안내</td><td>보안: token/provider raw error 미노출</td></tr><tr><td>QA-06</td><td>인증 오류 <code>/auth/error</code></td><td>anonymous</td><td><code>reason=otp_expired</code>, <code>user_not_found</code>, <code>over_request_rate_limit</code>, unknown reason 접근, CTA 클릭</td><td>reason mapping, retry countdown, resend state</td><td>canonical 문구 표시. Retry-After 동안 CTA disabled. raw error 미노출</td><td>CTA 이동 후 Back 시 같은 오류 카드가 안전하게 보임</td><td>reason 없음/unknown/지원 reason 모두 안전한 fallback</td><td>기획: 오류별 다음 행동이 다른지</td></tr><tr><td>QA-07</td><td>인증 메일 확인 <code>/auth/verify-email</code></td><td>anonymous</td><td><code>email=</code> 있음/없음, 재전송, 빈 이메일, Gmail 링크, 로그인/재가입 링크</td><td>email prefill, resend cooldown, inbox link visibility</td><td>이메일 있으면 재전송 가능. 없으면 입력 안내. 알 수 없는 도메인은 inbox link 숨김</td><td>외부 메일 링크 제외, 내부 링크 Back 동작 확인</td><td><code>/auth/verify-email</code>, <code>?email=...</code>, malformed email 대응</td><td>UX: 직접 진입자가 길을 잃지 않는지</td></tr><tr><td>QA-08</td><td>인증 callback fragment <code>/auth/callback-fragment</code></td><td>anonymous</td><td>hash 없음, error hash, token hash, unsafe <code>next</code></td><td>fragment parsed, session set, redirect target, error reason</td><td>hash 없음은 <code>/auth/error?reason=unknown</code>. error hash는 canonical reason. unsafe next는 <code>/dashboard</code> fallback</td><td>redirect 후 Back 시 callback 화면이 루프/토큰 노출하지 않는지</td><td>direct URL은 자동 처리 후 안전 redirect 또는 error</td><td>보안: fragment/token/raw description 노출 금지</td></tr><tr><td>QA-09</td><td>소셜 약관 동의 <code>/auth/consent</code></td><td>authenticated, consent missing 가정</td><td>checkbox 없이 제출, 체크 후 계속, unsafe <code>next</code>, DB 오류 상태</td><td>consent checked, required-error, user_consents write intent, redirect target</td><td>체크 누락은 같은 화면 안내. 체크 후 safe next로 이동. 외부 next 차단</td><td>다음 화면에서 Back 시 동의 화면 재노출 정책 확인</td><td>anonymous direct는 login redirect. auth direct는 누락 동의 없을 때 정책 확인</td><td>기획: 약관 전 core 진입 차단</td></tr><tr><td>QA-10</td><td>학습 목표 설정 <code>/onboarding/learning-goal</code></td><td>authenticated</td><td>필수값 누락, 목표 급수/시험일/빈도/취약영역 선택, 저장, 건너뛰기</td><td>learning_goals fields, valid/invalid, submitting</td><td>필수값 누락 시 다음 CTA disabled 또는 오류. 저장/건너뛰기는 <code>/dashboard</code></td><td>dashboard에서 Back 시 중복 저장/폼 재제출 없음</td><td>anonymous direct는 login. authenticated direct는 페이지 접근</td><td>UX: 첫 사용자에게 부담이 크지 않은지</td></tr><tr><td>QA-11</td><td>Workspace shell/sidebar</td><td>authenticated</td><td>각 sidebar 메뉴 클릭, 하위 메뉴 열기, 로그아웃, 모바일 메뉴 조작</td><td>active menu, expanded group, auth session, layout width</td><td>active는 문맥 유지. 로그아웃은 <code>/login</code>, 이후 protected route 차단</td><td>각 메뉴 이동 후 Back이 이전 route로 복귀</td><td>deep link 피드백/약점/프로필에서 sidebar active 문맥 확인</td><td>UI: 6개 상위 메뉴 원칙, 모바일 overflow</td></tr><tr><td>QA-12</td><td>홈 대시보드 <code>/dashboard</code></td><td>authenticated, 데이터 있음/없음 모두 관찰</td><td>추천 카드, 최근 첨삭, 알림 열기, 알림 읽음, 설정 이동</td><td>KPI loading/empty, notification read_at, card CTA route</td><td>새 사용자 빈 상태와 기존 데이터 상태 모두 이해 가능. 알림 실패 시 재시도</td><td>알림/추천/최근첨삭 이동 후 Back 시 대시보드 상태 유지</td><td>anonymous direct는 login. auth direct는 dashboard</td><td>기획: 다음 학습 행동이 분명한지</td></tr><tr><td>QA-13</td><td>문제 유형 추천 <code>/practice/recommendations</code></td><td>authenticated</td><td>추천 카드 선택, 직접 유형 카드 선택, 실패/빈 추천 상태 관찰</td><td>selected type, recommendation source, loading/error</td><td>추천 실패 시 직접 선택 카드와 재시도. 선택 후 문제 목록 이동</td><td>문제 목록에서 Back 시 선택 상태/추천 맥락 유지 여부</td><td>direct 접근은 추천 계산/직접 선택 가능</td><td>UX: 추천 사유가 신뢰 가능한지</td></tr><tr><td>QA-14</td><td>문제 목록 <code>/practice/problems</code></td><td>authenticated</td><td>필터, 검색, 정렬, 페이지 이동, 결과 없음 만들기, 문제 행 클릭</td><td>filter, search, sort, page, total_count, empty result, selected problem</td><td>결과 수와 page가 정확히 갱신. 빈 결과는 초기화 CTA. 행 클릭은 C-03 모달</td><td>모달 닫기/작성 화면 Back 시 목록 필터 유지 여부</td><td>query 유무 직접 접근, anonymous redirect</td><td>개발: RPC filter/sort/page와 UI 불일치</td></tr><tr><td>QA-15</td><td>다시 풀기 모달 C-03</td><td>문제 목록에서 문제 선택</td><td>모달 열기, mode 선택, 이전 결과 보기, 취소, 시작, 배경 클릭, Esc</td><td>modal open, selected retry mode, focus trap, loading/error</td><td>취소는 목록 복귀. 시작은 51~54 writing route. 위험 상태는 배경 닫기 제한</td><td>모달 열린 상태에서 Back 또는 Esc 동작</td><td>독립 URL 없음. host <code>/practice/problems</code>에서만 검증</td><td>UI: focus trap, scroll lock, dim 처리</td></tr><tr><td>QA-16</td><td>쓰기 51~54 <code>/writing/*</code></td><td>authenticated, 문제 데이터 있음</td><td>답안 입력, 글자수 변화, 임시저장, 도움말 접기, 이미지/자료 로드 실패, 제출 클릭</td><td>answer_text, char_count, autosave_status, dirty, submit enabled</td><td>입력에 따라 글자수와 제출 가능 상태 변경. 저장 실패 시 답안 보존</td><td>dirty 상태에서 sidebar/Back 시 D-M3 경고</td><td>direct 접근 시 문제 context 없거나 anonymous일 때 안내/redirect 확인</td><td>UX: 시험 답안 보존 신뢰감</td></tr><tr><td>QA-17</td><td>제출 확인 모달 D-M1</td><td>writing 답안 작성 완료</td><td>제출 클릭, 체크 없이 제출, 체크 후 제출, 취소</td><td><span class="pill status-warn">confirm checked, submitting, duplicate blocked, writing_submissions intent</span></td><td><span class="pill status-warn">체크 전 제출 blocked. 제출 후 D-M2 분석 로딩. 취소는 작성 화면</span></td><td>모달 취소/Back 시 작성 내용 유지</td><td>독립 URL 없음. writing host에서 검증</td><td>기획: 오제출 방지와 진행감</td></tr><tr><td>QA-18</td><td>AI 분석 로딩 D-M2</td><td>제출 직후 또는 fixture</td><td><span class="pill status-bad">분석 중, 완료, 실패/timeout, 새로고침</span></td><td><span class="pill status-bad">feedback_status pending/analyzing/completed/failed</span></td><td>진행 상태 표시, 완료 후 E-01/E-02 이동, 실패 시 재시도/안내</td><td>완료 후 Back 시 제출 재실행 안 됨</td><td>독립 route 없음. 제출 flow에서 검증</td><td>개발: 중복 제출, 상태 polling 안정성</td></tr><tr><td>QA-19</td><td>단답/장문 피드백 E-01/E-02</td><td>authenticated, valid submission id</td><td>저장, 다시 풀기, 비교 리포트, 다음 문제, PDF/공유 메뉴</td><td>library saved, feedback score, dimension scores, navigation target</td><td>저장 toast, 다음 행동 CTA, 점수/첨삭/원문 표시</td><td>compare/next/library 이동 후 Back 시 피드백 유지</td><td>valid id, invalid id, unauthorized id direct 대응</td><td>UX: 피드백이 다음 학습으로 연결되는지</td></tr><tr><td>QA-20</td><td>비교 리포트 R-01</td><td>authenticated, report id 있음</td><td>metric 확인, 약점 인사이트, 다음 문제, 공유/차트</td><td>report metrics, selected chart, next route</td><td>비교 대상과 성장 지표가 혼동되지 않음</td><td>다음 문제/약점 이동 후 Back 시 report 유지</td><td>valid/invalid/unauthorized id direct 대응</td><td>기획: 비교 기준과 해석 가능성</td></tr><tr><td>QA-21</td><td>다음 문제 추천 <code>/practice/next</code></td><td>authenticated</td><td>추천 카드 선택, 목록 탐색, 유료 잠금 분기</td><td>recommendation status, selected problem, paywall trigger</td><td>추천 이유와 시작 CTA 표시. 잠금이면 X-03으로 자연 진입</td><td>문제 목록/페이월 이동 후 Back 시 추천 맥락 유지</td><td>direct 접근 시 추천 없음/empty 상태 대응</td><td>UX: “다음 할 일”이 즉시 보이는지</td></tr><tr><td>QA-22</td><td>내 서재/PDF F-01/F-M1</td><td>authenticated</td><td>탭 변경, 검색, 행 선택, 저장 해제, PDF 모달 열기, 옵션 선택, 다운로드/닫기</td><td>selected tab, item selected, saved status, export option, export status</td><td>빈 탭과 결과 탭 구분. PDF 생성 준비/잠금/오류 상태 명확</td><td>모달 닫기/Back 시 탭과 검색 유지</td><td><code>/library</code> direct, modal은 host에서 검증</td><td>UI: 모달 내부 상태와 host 배경</td></tr><tr><td>QA-23</td><td>성장/약점 <code>/growth</code>, <code>/practice/weakness</code></td><td>authenticated</td><td>기간/탭/추천 카드, 약점 탭 변경, 문제 시작</td><td>KPI period, weakness dimension, selected tab, recommendation</td><td>성장 지표와 추천 문제가 연결됨. 유료 잠금 오인 없음</td><td>문제 목록 진입 후 Back 시 선택 탭 유지</td><td>anonymous redirect, auth direct 허용</td><td>기획: 성장 리포트와 약점 추천의 역할 분리</td></tr><tr><td>QA-24</td><td>언어 설정 <code>/settings/language</code></td><td>authenticated</td><td>언어/지역/학습 언어 변경, 저장, 저장 전 이탈</td><td>ui_locale, dirty, saving, saved, validation</td><td>저장 전 버튼 disabled/active가 명확. 저장 후 UI 언어 변화 확인</td><td>dirty 상태 Back/sidebar 클릭 시 이탈 확인 필요</td><td>anonymous redirect, auth direct 허용</td><td>개발: locale 변경 후 hydration/문구 깨짐</td></tr><tr><td>QA-25</td><td>알림 설정 <code>/settings/notifications</code></td><td>authenticated</td><td>채널 탭, 토글, 요일/시간 변경, 저장, 로드 실패, 저장 실패, 수신함 읽음 실패</td><td>channels, reminder days/time, dirty, save error, read_at rollback</td><td>미연동 채널은 실제 발송 가능처럼 보이지 않음. 실패 시 입력 보존/재시도</td><td>dirty 상태 Back/sidebar 클릭 시 이탈 확인</td><td>anonymous redirect, auth direct 허용</td><td>보안/기획: transport deferred 표현 정확성</td></tr><tr><td>QA-26</td><td>프로필 <code>/profile</code></td><td>authenticated</td><td>이름/닉네임/자기소개 입력, 이미지 업로드 시도, 저장 disabled/enabled</td><td>display_name, nickname, bio, avatar_path, dirty, saving</td><td>길이 제한, 이메일 read-only, 저장 전/후 상태 명확</td><td>dirty 상태 Back/sidebar 클릭 시 이탈 확인</td><td>anonymous redirect, auth direct 허용</td><td>UI: 필드 label, disabled 이유</td></tr><tr><td>QA-27</td><td>페이월/구독 <code>/paywall</code>, <code>/subscription</code></td><td>authenticated</td><td>플랜 카드, 구독 CTA, 학습 복귀, 플랜 변경, 결제 이력 확인</td><td>plan selected, checkout deferred, subscription status, payment history empty</td><td>실제 결제가 연결된 것처럼 보이지 않음. deferred 안내 명확</td><td>subscription/paywall 왕복 Back 자연스러움</td><td>anonymous redirect, auth direct 허용</td><td>기획: 결제 deferred 범위 준수</td></tr><tr><td>QA-28</td><td>법적 문서 <code>/terms</code>, <code>/privacy</code></td><td>anonymous/authenticated</td><td>상호 링크, 회원가입 복귀, placeholder 안내 확인</td><td>public page state, legal placeholder visibility</td><td>세션 없이 접근. placeholder/정식 미확정 상태 숨김 없음</td><td>회원가입/랜딩에서 왕복 Back 확인</td><td>direct 접근 허용</td><td>기획: 운영 전 위험 문구 명확성</td></tr><tr><td>QA-29</td><td>미존재/불가 route</td><td>anonymous/authenticated</td><td><code>/admin</code>, <code>/practice/problems/bad</code>, <code>/writing/feedback/short/bad</code>, 임의 route 접근</td><td>not-found, protected redirect, auth guard</td><td>admin 기능 노출 없음. 사용자에게 안전한 404 또는 login redirect</td><td>404에서 Back 시 이전 페이지 복귀</td><td>direct URL 전체 확인</td><td>보안: 관리자 범위 침범 없음</td></tr></tbody></table></div>
+<h2 id="자동-테스트와-매핑">자동 테스트와 매핑</h2>
+<div class="table-wrap"><table><thead><tr><th>자동 테스트</th><th>커버하는 시나리오</th><th>보강할 수동 QA</th></tr></thead><tbody><tr><td><code>tests/e2e/screens/screens-public.spec.ts</code></td><td>QA-01~QA-08, QA-28 일부 direct URL 렌더링</td><td>각 페이지의 클릭/뒤로가기/파라미터 변형</td></tr><tr><td><code>tests/e2e/screens/screens-authed.spec.ts</code></td><td>QA-10~QA-27 일부 auth direct URL 렌더링</td><td>상태값 변화, dirty guard, modal/back</td></tr><tr><td><code>tests/e2e/flows/sign-up.spec.ts</code></td><td>QA-02</td><td>실제 UX 문구, Back, 모바일</td></tr><tr><td><code>tests/e2e/flows/auth-page-switch.spec.ts</code></td><td>QA-03</td><td>Back history, form state 보존</td></tr><tr><td><code>tests/e2e/screens/auth-error.spec.ts</code></td><td>QA-06</td><td>전체 reason matrix, CTA 후 Back</td></tr><tr><td><code>tests/e2e/screens/verify-email.spec.ts</code></td><td>QA-07</td><td>직접 URL 변형과 외부 링크 처리</td></tr><tr><td><code>tests/e2e/screens/auth-callback-fragment.spec.ts</code></td><td>QA-08</td><td>브라우저 Back loop 여부</td></tr><tr><td><code>tests/e2e/flows/core-writing-flow.spec.ts</code></td><td>QA-14~QA-22</td><td>52/53/54 개별, autosave, invalid id</td></tr><tr><td><code>tests/e2e/notification-error-states.spec.ts</code></td><td>QA-12, QA-25</td><td>실제 화면에서 사용자 복구감 확인</td></tr><tr><td><code>tests/e2e/screens/sidebar-navigation.spec.ts</code></td><td>QA-11</td><td>모바일 sidebar, Back, dirty guard</td></tr></tbody></table></div>
+<h2 id="실행-명령-초안">실행 명령 초안</h2>
+<pre><code class="language-powershell">pnpm lint
+pnpm typecheck
+pnpm test
+pnpm test:e2e</code></pre>
+<p>브라우저 수동 QA는 dev server가 필요하다.</p>
+<pre><code class="language-powershell">pnpm dev</code></pre>
+<p>기본 대상 URL은 <code>http://127.0.0.1:3000</code>로 둔다. 이미 다른 포트가 사용 중이면 사용 가능한 포트와 <code>E2E_BASE_URL</code>을 보고서에 기록한다.</p>
+<h2 id="최종-리포트-구성">최종 리포트 구성</h2>
+<p class="numbered-step"><span>Executive summary: 전체 health score, 가장 위험한 사용자 흐름 3개</span></p>
+<p class="numbered-step"><span>Scenario result table: QA-00~QA-29 PASS/FAIL/BLOCKED</span></p>
+<p class="numbered-step"><span>Issues: repro steps, screenshot, console, severity, affected route</span></p>
+<p class="numbered-step"><span>Direct URL matrix: anonymous/authenticated/invalid parameter 결과</span></p>
+<p class="numbered-step"><span>Back navigation matrix: 정상 복귀/루프/상태 손실 여부</span></p>
+<p class="numbered-step"><span>State transition matrix: 액션별 데이터 상태 변화와 UI 반응</span></p>
+<p class="numbered-step"><span>4-perspective review: UX/UI/기획/개발 관점 요약</span></p>
+<p class="numbered-step"><span>SOT check: 읽은 문서, 충돌 여부, 갱신 필요 문서</span></p>
+<h2 id="에이전트-리뷰-종합">에이전트 리뷰 종합</h2>
+<h3 id="ux-ui-에이전트-관점">UX/UI 에이전트 관점</h3>
+<ul>
+<li>모든 시나리오는 desktop/mobile을 분리한다. 특히 sidebar, modal, writing editor, PDF modal, problem list filter는 viewport에 따라 실패 양상이 다르다.</li>
+<li>UI 판정은 loading, empty, success, warning, error, disabled, selected, focus trapped, overflow 상태를 빠짐없이 본다.</li>
+<li>모달은 열림/닫힘뿐 아니라 Esc, 배경 클릭, focus trap, scroll lock, 뒤로가기 동작까지 한 세트로 판정한다.</li>
+<li>writing 51~54는 글자수, 저장 상태, 제출 가능 상태, 이탈 경고가 사용자의 현재 작업을 잃지 않게 연결되는지가 핵심이다.</li>
+</ul>
+<h3 id="기획-에이전트-관점">기획 에이전트 관점</h3>
+<ul>
+<li>핵심 사용자 여정은 <code>landing -&gt; signup/login -&gt; email/auth handling -&gt; consent/onboarding -&gt; dashboard -&gt; recommendation -&gt; problem list -&gt; writing -&gt; submit -&gt; feedback -&gt; next/library/growth</code> 순서로 본다.</li>
+<li>범위 밖으로 본 항목은 admin 기능, 실제 결제 SDK/결제 처리, 실제 LLM 채점 품질, 독립 단어장/모의고사 기능이다.</li>
+<li>직접 URL 진입 시 사용자가 막히지 않는 안내가 있어야 하는 페이지는 <code>/auth/verify-email</code>, <code>/auth/error</code>, <code>/password-reset/confirm</code>, <code>/auth/callback-fragment</code>다.</li>
+<li>protected route는 로그인 전에는 <code>/login</code>으로, 로그인 후 필수 동의/온보딩이 없으면 해당 보완 흐름으로 이동해야 한다.</li>
+</ul>
+<h3 id="테스트-엔지니어-관점">테스트 엔지니어 관점</h3>
+<ul>
+<li>기존 e2e는 public/auth 화면 렌더링, signup, auth 특수 화면, 51번 writing happy path, sidebar direct-entry, notification error 일부를 커버한다.</li>
+<li>수동 QA가 특히 보완해야 할 갭은 onboarding 저장, login 실패/세션 만료 안내, 52/53/54 전체 제출, draft/autosave 실패와 충돌, problem list filter/search/sort/page/bookmark, notification 성공 저장/시간대/상태 라벨, library 저장/해제/export, profile/language dirty guard다.</li>
+<li>e2e 실패 증거는 <code>test-results/failure-log.json</code>, <code>test-results/**/trace.zip</code>, screenshot, spec/project명, 재현 명령, console error, response URL을 함께 기록한다.</li>
+<li>secret 값은 절대 캡처하지 않고 <code>E2E_STUDENT_EMAIL</code>, <code>SUPABASE_TEST_PASSWORD</code>, <code>SUPABASE_SERVICE_ROLE_KEY</code>, <code>SUPABASE_ACCESS_TOKEN</code> 같은 변수명만 쓴다.</li>
+</ul>
+<h3 id="보안-권한-에이전트-관점">보안/권한 에이전트 관점</h3>
+<ul>
+<li><code>/auth/sign-out</code>는 GET 접근 시 405여야 하고, POST 성공 시 session 삭제 후 <code>/login</code>으로 이동해야 한다.</li>
+<li><code>/auth/consent?next=...</code>는 상대 경로만 허용해야 하며 외부 URL 또는 protocol-relative URL은 fallback되어야 한다.</li>
+<li><code>/auth/callback-fragment</code>와 password reset confirm 흐름은 URL, 화면, console, trace에 token/hash/provider raw error가 노출되면 실패다.</li>
+<li>dynamic id가 있는 feedback/report/library/export 계열은 invalid id, missing id, 다른 사용자 id를 각각 확인한다. 다른 사용자의 데이터가 보이면 즉시 P0/P1이다.</li>
+<li><code>/api/export/pdf</code>는 anonymous 401, 본인 데이터만 export가 기준이다. <code>/api/notifications/dispatch-email</code>은 worker secret 없이는 거부되어야 한다.</li>
+<li>현재 QA 중 확인할 잠재 충돌: SOT는 세션 만료 안내를 <code>/login?reason=session_expired</code>로 기대하지만, 현 구현의 보호 route redirect가 단순 <code>/login</code>일 가능성이 있어 실제 실행으로 확인한다.</li>
+<li><code>pnpm audit --audit-level moderate</code> 사전 점검에서 dependency advisory가 발견되었다. 이번 작업에서는 수정하지 않고 보안 리스크로만 기록한다.</li>
+</ul>
+<h2 id="실행-우선순위">실행 우선순위</h2>
+<div class="table-wrap"><table><thead><tr><th>우선순위</th><th>시나리오</th><th>이유</th></tr></thead><tbody><tr><td>P0</td><td>QA-03, QA-08, QA-09, QA-16~QA-20, QA-29</td><td>auth/session, token 노출, writing 제출, 권한/직접 URL 실패는 제품 신뢰와 데이터 보호에 직접 영향</td></tr><tr><td>P1</td><td>QA-02, QA-05~QA-07, QA-10~QA-15, QA-22, QA-25~QA-27</td><td>가입/복구/온보딩/목록/설정은 사용자 여정 중단 가능성이 높음</td></tr><tr><td>P2</td><td>QA-01, QA-21, QA-23, QA-24, QA-28</td><td>core flow 보조 화면이지만 UX 완성도와 route 품질에 영향</td></tr></tbody></table></div>
+<h2 id="실행-중-이슈-등급-기준">실행 중 이슈 등급 기준</h2>
+<div class="table-wrap"><table><thead><tr><th>등급</th><th>기준</th></tr></thead><tbody><tr><td>P0</td><td>secret/token 노출, 타 사용자 데이터 접근, auth 우회, 제출 데이터 유실, 앱 전체 진입 불가</td></tr><tr><td>P1</td><td>핵심 writing/auth/onboarding flow 중단, 뒤로가기 루프, direct URL에서 복구 불가, 모바일 주요 UI 조작 불가</td></tr><tr><td>P2</td><td>특정 상태의 안내 부족, 일부 CTA/필터/탭 오류, 화면 overflow, console error가 있지만 우회 가능</td></tr><tr><td>P3</td><td>문구, 간격, 보조 상태 표시, 낮은 빈도의 polish 이슈</td></tr></tbody></table></div>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

@@ -69,8 +69,9 @@ export function LibraryTabs({ activeTab, initialItems }: Props) {
   async function handleCreateReviewSet() {
     setReviewPending(true);
     try {
-      await createReviewSet(selection.map((s) => s.itemId));
+      const reviewSetId = await createReviewSet(selection.map((s) => s.itemId));
       message.success(t("reviewSetCreated", { count: selection.length }));
+      router.push(`/practice/problems?reviewSet=${reviewSetId}` as never);
     } catch (err) {
       message.error(
         err instanceof Error ? err.message : t("reviewSetFailed"),

@@ -89,6 +89,29 @@ describe("/auth/post-auth", () => {
     await expect(renderPostAuth()).rejects.toThrow("NEXT_REDIRECT:/dashboard");
   });
 
+  it("adds a Google linked notice only to final authenticated destinations", async () => {
+    requireUserMock.mockResolvedValueOnce({
+      id: "user-1",
+      identities: [{ provider: "email" }, { provider: "google" }],
+    });
+
+    await expect(renderPostAuth("sign-up")).rejects.toThrow(
+      "NEXT_REDIRECT:/dashboard?notice=google-linked",
+    );
+  });
+
+  it("keeps the consent redirect free of the Google linked notice", async () => {
+    requireUserMock.mockResolvedValueOnce({
+      id: "user-1",
+      identities: [{ provider: "google" }],
+    });
+    getMissingRequiredConsentDocumentsMock.mockResolvedValueOnce([termsDoc]);
+
+    await expect(renderPostAuth("sign-up")).rejects.toThrow(
+      "NEXT_REDIRECT:/auth/consent?next=%2Fauth%2Fpost-auth%3Fintent%3Dsign-up",
+    );
+  });
+
   it("backfills the OAuth display name before routing", async () => {
     await expect(renderPostAuth()).rejects.toThrow("NEXT_REDIRECT:/dashboard");
 

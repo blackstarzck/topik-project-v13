@@ -18,23 +18,25 @@
     "sidebarNudgeBody": "Follow today's writing flow and narrow your weak spots."
   },
   "nav": {
-    "dashboard": "Dashboard",
-    "practice": "Practice",
-    "practiceRecommendations": "Recommended",
-    "practiceProblems": "Problems",
+    "dashboard": "Home",
+    "practice": "Problem solving",
+    "practiceRecommendations": "Recommended types",
+    "practiceProblems": "Problem list",
     "practiceNext": "Next problem",
     "practiceWeakness": "Weak areas",
-    "writing": "Writing",
+    "writing": "Writing practice",
     "writing51": "51 Short answer",
     "writing52": "52 Response",
     "writing53": "53 Long form",
     "writing54": "54 Essay",
     "library": "My library",
-    "growth": "Growth dashboard",
+    "growth": "Growth report",
+    "growthDashboard": "Growth dashboard",
     "profile": "Profile",
     "settings": "Settings",
     "settingsLanguage": "Language",
     "settingsNotifications": "Notifications",
+    "subscription": "Subscription",
     "admin": "Admin",
     "adminProblems": "Problem management",
     "adminOrg": "Organization",
@@ -255,6 +257,8 @@
         "reminderTimeLabel": "Reminder time (HH:mm)",
         "reminderTimeExtra": "Turn on a receive channel to set a reminder time.",
         "reminderTimeAria": "Reminder time",
+        "timezoneLabel": "Time zone",
+        "timezoneAria": "Reminder time zone",
         "reminderDaysLabel": "Reminder days"
       },
       "pref": {
@@ -289,6 +293,10 @@
     }
   },
   "auth": {
+    "identityNotice": {
+      "googleLinkedTitle": "Google sign-in is connected to your account.",
+      "googleLinkedDescription": "You can use either email or Google to sign in next time."
+    },
     "login": {
       "metaTitle": "Log in — TALKPIK",
       "pageHeading": "Welcome back",
@@ -349,6 +357,9 @@
       "nameRequired": "Enter your name",
       "nameMin": "Your name must be at least 2 characters",
       "nameMax": "Your name must be 30 characters or fewer",
+      "countryRegionLabel": "Country/region",
+      "countryRegionPlaceholder": "Select a country or region",
+      "countryRegionRequired": "Select a country or region",
       "emailLabel": "Email",
       "emailRequired": "Enter your email",
       "emailInvalid": "That email format isn't valid",
@@ -1652,7 +1663,9 @@
       "reprint": "Print again",
       "download": "Download",
       "printDialogOpened": "The PDF print dialog has opened.",
-      "reprintFailed": "Failed to print again."
+      "reprintFailed": "Failed to print again.",
+      "downloadStarted": "Your PDF download has started.",
+      "downloadFailed": "Failed to download the PDF."
     },
     "stats": {
       "title": "Library Stats",
@@ -1872,6 +1885,20 @@
       "saveError": "Saving failed.",
       "unsavedLeavePrompt": "You have unsaved changes. Do you want to leave this page?"
     },
+    "loginMethods": {
+      "regionAriaLabel": "Login methods",
+      "title": "Login methods",
+      "description": "Review the login methods connected to your account and add Google sign-in.",
+      "emailMethod": "Email login",
+      "emailUnavailable": "No email registered",
+      "googleMethod": "Google sign-in",
+      "googleDescription": "Use Google to sign in to the same learning account.",
+      "connected": "Connected",
+      "disconnected": "Not connected",
+      "connectGoogle": "Connect Google",
+      "linkStarted": "Google linking started.",
+      "connectFailed": "Couldn't start Google linking."
+    },
     "avatar": {
       "regionAriaLabel": "Profile image area",
       "imageAlt": "Profile image",
@@ -1881,9 +1908,12 @@
       "uploadAriaLabel": "Upload image",
       "uploading": "Uploading...",
       "changeImage": "Change image",
+      "removeImage": "Use default image",
       "reselect": "Reselect",
       "uploadSuccess": "Your profile image has been updated.",
       "uploadFailed": "Image upload failed.",
+      "removeSuccess": "Your profile image has been reset to the default.",
+      "removeFailed": "Failed to remove the profile image.",
       "invalidType": "Only JPG or PNG images can be uploaded.",
       "tooLarge": "The image must be 5MB or smaller.",
       "convertFailed": "Image conversion failed.",

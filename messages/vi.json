@@ -18,23 +18,25 @@
     "sidebarNudgeBody": "Theo dòng viết hôm nay và thu hẹp điểm yếu của bạn."
   },
   "nav": {
-    "dashboard": "Bảng điều khiển",
-    "practice": "Luyện tập",
-    "practiceRecommendations": "Đề xuất",
-    "practiceProblems": "Bài tập",
+    "dashboard": "Trang chủ",
+    "practice": "Làm bài",
+    "practiceRecommendations": "Gợi ý dạng bài",
+    "practiceProblems": "Danh sách bài",
     "practiceNext": "Bài tiếp theo",
     "practiceWeakness": "Điểm yếu",
-    "writing": "Viết",
+    "writing": "Luyện viết",
     "writing51": "51 Trả lời ngắn",
     "writing52": "52 Trả lời",
     "writing53": "53 Đoạn văn dài",
     "writing54": "54 Bài luận",
     "library": "Thư viện của tôi",
-    "growth": "Bảng tiến bộ",
+    "growth": "Báo cáo tiến bộ",
+    "growthDashboard": "Bảng tiến bộ",
     "profile": "Hồ sơ",
     "settings": "Cài đặt",
     "settingsLanguage": "Ngôn ngữ",
     "settingsNotifications": "Thông báo",
+    "subscription": "Quản lý gói",
     "admin": "Quản trị",
     "adminProblems": "Quản lý câu hỏi",
     "adminOrg": "Tổ chức",
@@ -255,6 +257,8 @@
         "reminderTimeLabel": "Giờ nhắc (HH:mm)",
         "reminderTimeExtra": "Bật một kênh nhận để đặt giờ nhắc.",
         "reminderTimeAria": "Giờ nhắc",
+        "timezoneLabel": "Múi giờ",
+        "timezoneAria": "Múi giờ nhắc",
         "reminderDaysLabel": "Các ngày nhắc"
       },
       "pref": {
@@ -289,6 +293,10 @@
     }
   },
   "auth": {
+    "identityNotice": {
+      "googleLinkedTitle": "Đăng nhập Google đã được kết nối với tài khoản.",
+      "googleLinkedDescription": "Lần sau bạn có thể đăng nhập bằng email hoặc Google."
+    },
     "login": {
       "metaTitle": "Đăng nhập — TALKPIK",
       "pageHeading": "Chào mừng bạn trở lại",
@@ -349,6 +357,9 @@
       "nameRequired": "Vui lòng nhập tên",
       "nameMin": "Tên phải có ít nhất 2 ký tự",
       "nameMax": "Tên không được vượt quá 30 ký tự",
+      "countryRegionLabel": "Quốc gia/khu vực",
+      "countryRegionPlaceholder": "Chọn quốc gia hoặc khu vực",
+      "countryRegionRequired": "Vui lòng chọn quốc gia hoặc khu vực",
       "emailLabel": "Email",
       "emailRequired": "Vui lòng nhập email",
       "emailInvalid": "Định dạng email không hợp lệ",
@@ -1652,7 +1663,9 @@
       "reprint": "In lại",
       "download": "Tải xuống",
       "printDialogOpened": "Hộp thoại in PDF đã mở.",
-      "reprintFailed": "Không thể in lại."
+      "reprintFailed": "Không thể in lại.",
+      "downloadStarted": "Đã bắt đầu tải PDF.",
+      "downloadFailed": "Không thể tải PDF."
     },
     "stats": {
       "title": "Thống kê thư viện",
@@ -1872,6 +1885,20 @@
       "saveError": "Lưu thất bại.",
       "unsavedLeavePrompt": "Bạn có thay đổi chưa lưu. Bạn có muốn rời khỏi trang này không?"
     },
+    "loginMethods": {
+      "regionAriaLabel": "Phương thức đăng nhập",
+      "title": "Phương thức đăng nhập",
+      "description": "Xem các phương thức đăng nhập đã kết nối và thêm đăng nhập Google.",
+      "emailMethod": "Đăng nhập bằng email",
+      "emailUnavailable": "Chưa đăng ký email",
+      "googleMethod": "Đăng nhập Google",
+      "googleDescription": "Dùng Google để đăng nhập vào cùng một tài khoản học tập.",
+      "connected": "Đã kết nối",
+      "disconnected": "Chưa kết nối",
+      "connectGoogle": "Kết nối Google",
+      "linkStarted": "Đã bắt đầu kết nối Google.",
+      "connectFailed": "Không thể bắt đầu kết nối Google."
+    },
     "avatar": {
       "regionAriaLabel": "Khu vực ảnh hồ sơ",
       "imageAlt": "Ảnh hồ sơ",
@@ -1881,9 +1908,12 @@
       "uploadAriaLabel": "Tải ảnh lên",
       "uploading": "Đang tải lên...",
       "changeImage": "Đổi ảnh",
+      "removeImage": "Dùng ảnh mặc định",
       "reselect": "Chọn lại",
       "uploadSuccess": "Ảnh hồ sơ của bạn đã được cập nhật.",
       "uploadFailed": "Tải ảnh lên thất bại.",
+      "removeSuccess": "Ảnh hồ sơ đã được đặt lại về mặc định.",
+      "removeFailed": "Không thể xóa ảnh hồ sơ.",
       "invalidType": "Chỉ có thể tải lên ảnh JPG hoặc PNG.",
       "tooLarge": "Kích thước ảnh phải từ 5MB trở xuống.",
       "convertFailed": "Chuyển đổi ảnh thất bại.",

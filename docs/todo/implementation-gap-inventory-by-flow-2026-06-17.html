@@ -1,0 +1,619 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>흐름별 미구현 기능 완료 전환 보고서 - 2026-06-17</title>
+    <style>
+      :root {
+        --bg: #f5f7fb;
+        --paper: #ffffff;
+        --ink: #17202a;
+        --muted: #607086;
+        --line: #d8e0ea;
+        --brand: #1f6f78;
+        --brand-dark: #134f57;
+        --ok: #0f766e;
+        --ok-soft: #e6f5f1;
+        --warn: #a16207;
+        --warn-soft: #fff4d6;
+        --info: #2563eb;
+        --info-soft: #eaf1ff;
+        --danger: #b42318;
+        --danger-soft: #fdecea;
+        --shadow: 0 18px 48px rgba(18, 38, 63, 0.1);
+        --radius: 14px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font:
+          16px/1.65 "Pretendard", "Noto Sans KR", "Apple SD Gothic Neo",
+          "Malgun Gothic", "Segoe UI", Arial, sans-serif;
+      }
+
+      a {
+        color: var(--brand-dark);
+        text-decoration-thickness: 0.08em;
+        text-underline-offset: 0.18em;
+      }
+
+      code {
+        border: 1px solid #dbe4ef;
+        border-radius: 6px;
+        background: #f8fafc;
+        padding: 0.08rem 0.35rem;
+        color: #26384d;
+        font-size: 0.92em;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 280px minmax(0, 1fr);
+        min-height: 100vh;
+      }
+
+      .toc {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow: auto;
+        border-right: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.92);
+        padding: 28px 22px;
+        backdrop-filter: blur(12px);
+      }
+
+      .toc h2 {
+        margin: 0 0 14px;
+        color: var(--brand-dark);
+        font-size: 14px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .toc a {
+        display: block;
+        border-radius: 8px;
+        padding: 8px 10px;
+        color: var(--ink);
+        text-decoration: none;
+      }
+
+      .toc a:hover {
+        background: var(--info-soft);
+        color: var(--info);
+      }
+
+      main {
+        max-width: 1180px;
+        padding: 40px 34px 72px;
+      }
+
+      .hero {
+        border-radius: 22px;
+        background:
+          linear-gradient(135deg, rgba(31, 111, 120, 0.95), rgba(19, 79, 87, 0.96)),
+          #1f6f78;
+        box-shadow: var(--shadow);
+        color: #fff;
+        padding: 42px;
+      }
+
+      .eyebrow {
+        margin: 0 0 10px;
+        color: rgba(255, 255, 255, 0.78);
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(30px, 4vw, 48px);
+        line-height: 1.18;
+      }
+
+      .hero p {
+        max-width: 880px;
+        margin: 18px 0 0;
+        color: rgba(255, 255, 255, 0.86);
+      }
+
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 24px;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        min-height: 30px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.14);
+        padding: 4px 12px;
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      section {
+        margin-top: 22px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--paper);
+        box-shadow: 0 10px 30px rgba(18, 38, 63, 0.05);
+        padding: 28px;
+      }
+
+      h2 {
+        margin: 0 0 14px;
+        color: var(--brand-dark);
+        font-size: 24px;
+      }
+
+      h3 {
+        margin: 24px 0 10px;
+        color: #26384d;
+        font-size: 18px;
+      }
+
+      p {
+        margin: 0 0 12px;
+      }
+
+      ul {
+        margin: 10px 0 0;
+        padding-left: 20px;
+      }
+
+      li + li {
+        margin-top: 6px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .stat {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #fbfdff;
+        padding: 18px;
+      }
+
+      .stat strong {
+        display: block;
+        margin-bottom: 4px;
+        color: var(--brand-dark);
+        font-size: 28px;
+        line-height: 1;
+      }
+
+      .stat span {
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 14px;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #fff;
+      }
+
+      th,
+      td {
+        border-bottom: 1px solid var(--line);
+        padding: 12px 14px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        background: #f1f6fa;
+        color: #314357;
+        font-size: 13px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      tr:last-child td {
+        border-bottom: 0;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 3px 10px;
+        font-size: 12px;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      .done {
+        background: var(--ok-soft);
+        color: var(--ok);
+      }
+
+      .deferred {
+        background: var(--warn-soft);
+        color: var(--warn);
+      }
+
+      .verified {
+        background: var(--info-soft);
+        color: var(--info);
+      }
+
+      .risk {
+        background: var(--danger-soft);
+        color: var(--danger);
+      }
+
+      .note {
+        border-left: 4px solid var(--brand);
+        border-radius: 10px;
+        background: #f0f8fa;
+        padding: 14px 16px;
+      }
+
+      .callout {
+        border: 1px solid #cfe0e6;
+        border-radius: 12px;
+        background: #f8fcfd;
+        padding: 16px;
+      }
+
+      .small {
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .footer {
+        margin-top: 28px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      @media (max-width: 920px) {
+        .layout {
+          display: block;
+        }
+
+        .toc {
+          position: static;
+          height: auto;
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+        }
+
+        main {
+          padding: 24px 16px 48px;
+        }
+
+        .hero,
+        section {
+          padding: 22px;
+        }
+
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        table {
+          display: block;
+          overflow-x: auto;
+          white-space: nowrap;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <nav class="toc" aria-label="문서 목차">
+        <h2>목차</h2>
+        <a href="#summary">요약</a>
+        <a href="#source">확인한 근거</a>
+        <a href="#completion">완료 전환 항목</a>
+        <a href="#flow">흐름별 상태</a>
+        <a href="#verification">검증 결과</a>
+        <a href="#deferred">보류 범위</a>
+        <a href="#insight">팩트 체크 인사이트</a>
+      </nav>
+
+      <main>
+        <header class="hero">
+          <p class="eyebrow">TALKPIK AI · Implementation Gap Report</p>
+          <h1>흐름별 미구현 기능 완료 전환 보고서</h1>
+          <p>
+            <code>implementation-gap-inventory-by-flow-2026-06-17.md</code>에
+            정리된 active TODO를 기준으로, <code>openapi-reference.md</code> 기반
+            문제 제출·AI 분석·피드백 연동과 외부 준비물 없이 가능한 기능 보강 후
+            완료 전환 가능 여부를 정리했다.
+          </p>
+          <div class="meta">
+            <span class="pill">작성일: 2026-06-17</span>
+            <span class="pill">대상: user-facing app</span>
+            <span class="pill">상태: 구현 및 검증 완료</span>
+          </div>
+        </header>
+
+        <section id="summary">
+          <h2>요약</h2>
+          <div class="grid">
+            <div class="stat">
+              <strong>11</strong>
+              <span>이번 작업에서 완료 전환한 active gap</span>
+            </div>
+            <div class="stat">
+              <strong>0</strong>
+              <span>구현 범위 내 SOT 충돌</span>
+            </div>
+            <div class="stat">
+              <strong>통과</strong>
+              <span>typecheck, lint, Vitest, Playwright</span>
+            </div>
+          </div>
+          <p class="note">
+            결론: 원본 인벤토리의 active TODO 중 OpenAPI 연동으로 막혀 있던
+            작성·분석·피드백 흐름과, 추천 필터/정렬, PDF/내 서재/복습 세트,
+            알림 timezone, 아바타 기본 이미지 정책은 개발 완료 상태로 전환할 수
+            있다. 결제 provider, 외부 알림 transport, 실제 LLM 품질/사용량 제한
+            등 scope decision에서 보류한 항목은 완료 전환 대상에서 제외한다.
+          </p>
+        </section>
+
+        <section id="source">
+          <h2>확인한 근거</h2>
+          <ul>
+            <li><code>AGENTS.md</code>와 <code>README.md</code></li>
+            <li><code>docs/todo/implementation-gap-inventory-by-flow-2026-06-17.md</code></li>
+            <li><code>docs/swagger-api/openapi-reference.md</code></li>
+            <li><code>docs/scope-decisions/2026-06-17-ai-deferred-and-mvp-scope.md</code></li>
+            <li><code>docs/ia.md</code>, <code>docs/flow/user-flow.md</code>, 관련 Wireframe 문서</li>
+            <li>현재 <code>src/</code>, <code>tests/</code>, <code>supabase/migrations/</code> 구현</li>
+          </ul>
+        </section>
+
+        <section id="completion">
+          <h2>완료 전환 항목</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>영역</th>
+                <th>원본 gap</th>
+                <th>이번 처리</th>
+                <th>상태</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>C-02</td>
+                <td>추천만 필터가 실제 RPC 결과에 적용되지 않음</td>
+                <td><code>filter.recommended</code>를 RPC와 SQL 함수에 연결</td>
+                <td><span class="tag done">완료</span></td>
+              </tr>
+              <tr>
+                <td>C-02</td>
+                <td>정렬 의미가 <code>recent</code>/<code>difficulty</code>로 축소됨</td>
+                <td><code>newest</code>, <code>oldest</code>, <code>difficulty-asc</code>, <code>difficulty-desc</code>를 보존</td>
+                <td><span class="tag done">완료</span></td>
+              </tr>
+              <tr>
+                <td>C-03</td>
+                <td>힌트 포함 재풀이 모드 disabled</td>
+                <td><code>hint=1</code> route parameter로 재풀이 진입 지원</td>
+                <td><span class="tag done">완료</span></td>
+              </tr>
+              <tr>
+                <td>D/E</td>
+                <td>문제 제출, AI 분석, 피드백이 내부 완료 흐름과 미연동</td>
+                <td>OpenAPI 제출·상태 조회·피드백 동기화 route/action 추가</td>
+                <td><span class="tag done">완료</span></td>
+              </tr>
+              <tr>
+                <td>F-M1</td>
+                <td>PDF 월 3회 제한 미구현</td>
+                <td><code>export_files</code> 월별 count 기반 3회 제한 추가</td>
+                <td><span class="tag done">완료</span></td>
+              </tr>
+              <tr>
+                <td>F-M1</td>
+                <td><code>library_selection</code> PDF 범위가 저장 답안으로 제한</td>
+                <td>저장 답안과 비교 리포트를 함께 PDF item으로 변환</td>
+                <td><span class="tag done">완료</span></td>
+              </tr>
+              <tr>
+                <td>F-01</td>
+                <td>export history 재다운로드 버튼이 placeholder</td>
+                <td>Supabase Storage <code>download</code> 기반 실제 재다운로드 연결</td>
+                <td><span class="tag done">완료</span></td>
+              </tr>
+              <tr>
+                <td>F-01</td>
+                <td>복습 세트 생성 후 durable play/use flow 없음</td>
+                <td><code>study_events</code> ID를 받아 <code>/practice/problems?reviewSet=...</code>로 연결</td>
+                <td><span class="tag done">완료</span></td>
+              </tr>
+              <tr>
+                <td>X-09</td>
+                <td>timezone 편집 UI 없음</td>
+                <td>알림 설정 폼에 timezone Select 추가</td>
+                <td><span class="tag done">완료</span></td>
+              </tr>
+              <tr>
+                <td>X-05</td>
+                <td>아바타 삭제/기본 이미지 정책 불명확</td>
+                <td>본인 storage path만 삭제하고 <code>profiles.avatar_path</code>를 null 처리</td>
+                <td><span class="tag done">완료</span></td>
+              </tr>
+              <tr>
+                <td>G-01</td>
+                <td>언어 설정 적용 범위가 incremental 상태</td>
+                <td>UI locale 저장, cookie fallback, refresh 동작과 화면 검증 확인</td>
+                <td><span class="tag verified">확인 완료</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="flow">
+          <h2>흐름별 상태</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>큰 흐름</th>
+                <th>원본 판단</th>
+                <th>작업 후 판단</th>
+                <th>메모</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1. 시작 / 인증</td>
+                <td>대부분 구현, 일부 P3 gap</td>
+                <td><span class="tag deferred">이번 완료 전환 대상 아님</span></td>
+                <td>법무 문구와 도움말 route는 scope decision상 별도 판단 필요.</td>
+              </tr>
+              <tr>
+                <td>2. 홈 / 대시보드</td>
+                <td>active gap 없음</td>
+                <td><span class="tag done">유지</span></td>
+                <td>AI 정확도 보장처럼 표현하지 않는 조건 유지.</td>
+              </tr>
+              <tr>
+                <td>3. 문제 선택</td>
+                <td>C-02/C-03 active gap 존재</td>
+                <td><span class="tag done">완료 전환</span></td>
+                <td>추천 필터, 정렬, 힌트 재풀이를 구현했다.</td>
+              </tr>
+              <tr>
+                <td>4. 답안 작성</td>
+                <td>화면/제출 흐름 대부분 구현</td>
+                <td><span class="tag done">OpenAPI 연동 완료</span></td>
+                <td>외부 API가 설정된 경우 실제 제출·분석 상태로 들어간다.</td>
+              </tr>
+              <tr>
+                <td>5. 피드백 / 복습</td>
+                <td>PDF, 내 서재, 복습 세트 부족</td>
+                <td><span class="tag done">완료 전환</span></td>
+                <td>월 제한, 재다운로드, 리포트 포함 PDF, 복습 세트 실행 경로를 보강했다.</td>
+              </tr>
+              <tr>
+                <td>6. 설정 / 결제</td>
+                <td>설정 부분 구현, 결제 보류</td>
+                <td><span class="tag done">설정 gap 완료</span></td>
+                <td>timezone과 아바타 삭제 정책을 구현했다. 결제 provider는 보류.</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="verification">
+          <h2>검증 결과</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>검증</th>
+                <th>명령 / 범위</th>
+                <th>결과</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>TypeScript</td>
+                <td><code>pnpm typecheck</code></td>
+                <td><span class="tag done">통과</span></td>
+              </tr>
+              <tr>
+                <td>Lint</td>
+                <td><code>pnpm lint</code></td>
+                <td><span class="tag done">오류 0</span> <span class="small">기존 warning 6개</span></td>
+              </tr>
+              <tr>
+                <td>Unit / component</td>
+                <td>practice, writing API, export, profile avatar 관련 Vitest</td>
+                <td><span class="tag done">40 tests 통과</span></td>
+              </tr>
+              <tr>
+                <td>Language form</td>
+                <td><code>tests/components/settings/LanguageForm.test.tsx</code></td>
+                <td><span class="tag done">3 tests 통과</span></td>
+              </tr>
+              <tr>
+                <td>Playwright UI</td>
+                <td>library, profile, notification, language screens · desktop/mobile</td>
+                <td><span class="tag done">통과</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="deferred">
+          <h2>완료 전환에서 제외한 보류 범위</h2>
+          <div class="callout">
+            <p>
+              아래 항목은 <code>docs/scope-decisions/2026-06-17-ai-deferred-and-mvp-scope.md</code>
+              기준으로 active 개발 완료 기능처럼 취급하지 않는다.
+            </p>
+            <ul>
+              <li>결제 provider checkout, 결제수단 변경, 취소 write-back, webhook</li>
+              <li>email/Zalo/push 외부 발송 transport</li>
+              <li>정식 법무 문구, 정책 versioning, 재동의/삭제 요청 운영 flow</li>
+              <li>실제 LLM 품질 보장, AI 사용량 한도, 작성 중 AI 대화 피드백</li>
+              <li>유료 고급 비교 분석과 운영 정책이 필요한 기능</li>
+            </ul>
+          </div>
+        </section>
+
+        <section id="insight">
+          <h2>팩트 체크 인사이트</h2>
+          <ul>
+            <li>
+              Supabase Storage 다운로드는 bucket object에 대한 권한 정책을 통과해야 하므로,
+              export history 재다운로드는 저장된 <code>storage_path</code>를 Storage API
+              <code>download</code>로 처리하는 방식이 맞다.
+              <a href="https://supabase.com/docs/reference/javascript/storage-from-download">Supabase download 문서</a>
+            </li>
+            <li>
+              Storage object 삭제 역시 Storage API로 처리해야 파일 객체가 실제로 제거된다.
+              이번 아바타 삭제는 사용자 폴더 경로만 삭제 대상으로 제한했다.
+              <a href="https://supabase.com/docs/guides/storage/management/delete-objects">Supabase delete objects 문서</a>
+            </li>
+            <li>
+              Next.js App Router에서는 <code>app</code> 디렉터리의 route handler가
+              서버 API endpoint 역할을 한다. evaluation status 동기화 route도 이 구조를 따른다.
+              <a href="https://nextjs.org/docs/app/getting-started/route-handlers">Next.js Route Handlers 문서</a>
+            </li>
+          </ul>
+        </section>
+
+        <p class="footer">
+          이 문서는 기존 active SOT를 직접 수정하지 않고, <code>docs/todo/</code> 아래의
+          구현 보고 산출물로 작성했다. 실제 SOT 상태 변경이 필요하면 별도
+          <code>docs/sot-change-proposals/</code> 제안으로 분리한다.
+        </p>
+      </main>
+    </div>
+  </body>
+</html>

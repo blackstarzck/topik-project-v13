@@ -4,6 +4,8 @@ test.use({ storageState: { cookies: [], origins: [] } });
 
 const SIGN_UP_ROUTE = /\/auth\/v1\/signup(?:\?|$)/;
 const VALID_NAME = "홍길동";
+const VALID_NATIONALITY_COUNTRY_CODE = "VN";
+const VALID_COUNTRY_REGION_LABEL = "베트남";
 const VALID_EMAIL = "e2e-signup@example.com";
 const VALID_PASSWORD = "Password123!";
 
@@ -35,7 +37,7 @@ function readJsonPayload(request: Request): Record<string, unknown> {
 }
 
 async function openSignUp(page: Page) {
-  await page.goto("/sign-up", { waitUntil: "networkidle" });
+  await page.goto("/sign-up", { waitUntil: "load" });
   await expect(page).toHaveURL(/\/sign-up/);
   await expect(page.getByRole("heading", { name: "회원가입" })).toBeVisible();
 }
@@ -44,25 +46,50 @@ async function fillSignUpForm(
   page: Page,
   {
     displayName = VALID_NAME,
+    countryRegionLabel = VALID_COUNTRY_REGION_LABEL,
     email = VALID_EMAIL,
     password = VALID_PASSWORD,
     passwordConfirm = VALID_PASSWORD,
     agreeToTerms = true,
   }: {
     displayName?: string;
+    countryRegionLabel?: string;
     email?: string;
     password?: string;
     passwordConfirm?: string;
     agreeToTerms?: boolean;
   } = {},
 ) {
-  await page.locator("#displayName").fill(displayName);
-  await page.locator("#email").fill(email);
-  await page.locator("#password").fill(password);
-  await page.locator("#passwordConfirm").fill(passwordConfirm);
+  const displayNameInput = page.locator("#displayName");
+  await expect(displayNameInput).toBeVisible();
+  await displayNameInput.fill(displayName);
+  await displayNameInput.blur();
+
+  const countryRegionSelect = page.getByTestId("country-region-select");
+  await expect(countryRegionSelect).toBeVisible();
+  await countryRegionSelect.click();
+  await page
+    .locator(".ant-select-item-option")
+    .filter({ hasText: countryRegionLabel })
+    .click();
+
+  const emailInput = page.locator("#email");
+  await expect(emailInput).toBeVisible();
+  await emailInput.fill(email);
+  await emailInput.blur();
+
+  const passwordInput = page.locator("#password");
+  const passwordConfirmInput = page.locator("#passwordConfirm");
+  await expect(passwordInput).toBeVisible();
+  await expect(passwordConfirmInput).toBeVisible();
+  await passwordInput.fill(password);
+  await passwordInput.blur();
+  await passwordConfirmInput.fill(passwordConfirm);
+  await passwordConfirmInput.blur();
 
   if (agreeToTerms) {
-    await page.locator("#terms").check({ force: true });
+    await expect(page.locator("#terms")).toBeVisible();
+    await page.locator("#terms").check();
   }
 }
 
@@ -97,7 +124,10 @@ async function mockSignUpSuccess(page: Page): Promise<SignUpRequest[]> {
           identities: [],
           role: "authenticated",
           updated_at: new Date().toISOString(),
-          user_metadata: { display_name: VALID_NAME },
+          user_metadata: {
+            display_name: VALID_NAME,
+            nationality_country_code: VALID_NATIONALITY_COUNTRY_CODE,
+          },
         },
       }),
       contentType: "application/json",
@@ -197,7 +227,7 @@ async function mockSignUpRateLimited(page: Page): Promise<SignUpRequest[]> {
 }
 
 test.describe("A-01 sign-up functional flow", () => {
-  test("public sign-up screen keeps form links and hides hero secondary links", async ({
+  test("public sign-up screen starts progressively and keeps alternate paths", async ({
     page,
   }) => {
     const errors = collectErrors(page);
@@ -206,16 +236,66 @@ test.describe("A-01 sign-up functional flow", () => {
 
     await expect(page.getByTestId("auth-language-select")).toHaveCount(0);
     await expect(page.locator(".signup-prompt-links")).toHaveCount(0);
+    await expect(page.locator("#displayName")).toBeVisible();
+    await expect(page.getByTestId("country-region-select")).toHaveCount(0);
+    await expect(page.locator("#email")).toHaveCount(0);
+    await expect(page.locator("#password")).toHaveCount(0);
+    await expect(page.locator("#terms")).toHaveCount(0);
+    await expect(page.locator('button[type="submit"]')).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /Google/ })).toBeEnabled();
+    await expect(
+      page.locator('a[href="/login"]:visible').first(),
+    ).toBeVisible();
+
+    await page.locator("#displayName").fill(VALID_NAME);
+    await page.locator("#displayName").blur();
+    await expect(page.getByTestId("country-region-select")).toBeVisible();
+    const displayNameBox = await page.locator("#displayName").boundingBox();
+    const countryRegionBox = await page
+      .getByTestId("country-region-select")
+      .boundingBox();
+    if (!displayNameBox || !countryRegionBox) {
+      throw new Error("Could not measure sign-up input heights");
+    }
+    expect(
+      Math.abs(countryRegionBox.height - displayNameBox.height),
+    ).toBeLessThanOrEqual(1);
+    await expect(page.locator("#email")).toHaveCount(0);
+
+    await page.getByTestId("country-region-select").click();
+    await page
+      .locator(".ant-select-item-option")
+      .filter({ hasText: VALID_COUNTRY_REGION_LABEL })
+      .click();
+    const selectedCountryCenterDelta = await page
+      .getByTestId("country-region-select")
+      .evaluate((select) => {
+        const selectedValue = select.querySelector(
+          ".ant-select-content > span",
+        );
+        if (!selectedValue) {
+          throw new Error("Could not find selected country value");
+        }
+        const selectBox = select.getBoundingClientRect();
+        const valueBox = selectedValue.getBoundingClientRect();
+        return Math.abs(
+          valueBox.top +
+            valueBox.height / 2 -
+            (selectBox.top + selectBox.height / 2),
+        );
+      });
+    expect(selectedCountryCenterDelta).toBeLessThanOrEqual(1);
+    await expect(page.locator("#email")).toBeVisible();
+
+    await page.reload({ waitUntil: "networkidle" });
+    await fillSignUpForm(page, { agreeToTerms: false });
     await expect(
       page.locator('a[href="/terms"]:visible').first(),
     ).toBeVisible();
     await expect(
       page.locator('a[href="/privacy"]:visible').first(),
     ).toBeVisible();
-    await expect(
-      page.locator('a[href="/login"]:visible').first(),
-    ).toBeVisible();
-    await expect(page.getByRole("button", { name: /Google/ })).toBeEnabled();
+    await expect(page.locator('button[type="submit"]')).toBeDisabled();
 
     expect(errors).toEqual([]);
   });
@@ -237,7 +317,10 @@ test.describe("A-01 sign-up functional flow", () => {
 
     expect(signUpRequests).toHaveLength(1);
     expect(signUpRequests[0].payload).toMatchObject({
-      data: { display_name: VALID_NAME },
+      data: {
+        display_name: VALID_NAME,
+        nationality_country_code: VALID_NATIONALITY_COUNTRY_CODE,
+      },
       email: VALID_EMAIL,
       password: VALID_PASSWORD,
     });
@@ -264,22 +347,13 @@ test.describe("A-01 sign-up functional flow", () => {
 
     await openSignUp(page);
     await fillSignUpForm(page, { agreeToTerms: false });
-    await clickSubmit(page);
-
-    await expect(
-      page.locator(".ant-form-item-explain-error").filter({ hasText: /동의/ }),
-    ).toBeVisible();
+    await expect(page.locator('button[type="submit"]')).toBeDisabled();
     expect(blockedNetworkAttempts).toBe(0);
 
-    await page.locator("#terms").check({ force: true });
+    await page.locator("#terms").check();
     await page.locator("#passwordConfirm").fill("Different123!");
-    await clickSubmit(page);
-
-    await expect(
-      page
-        .locator(".ant-form-item-explain-error")
-        .filter({ hasText: /비밀번호.*일치/ }),
-    ).toBeVisible();
+    await page.locator("#passwordConfirm").blur();
+    await expect(page.locator('button[type="submit"]')).toBeDisabled();
     expect(blockedNetworkAttempts).toBe(0);
     expect(errors).toEqual([]);
   });
@@ -382,11 +456,12 @@ test.describe("A-01 sign-up functional flow", () => {
 
     await page.reload({ waitUntil: "networkidle" });
     await expect(page.getByTestId("sign-up-countdown")).toBeVisible();
-    await expect(submit).toBeDisabled();
-    await expect(submit).toContainText("회원가입");
+    await expect(submit).toHaveCount(0);
     await expect(page.getByTestId("auth-switch-link-disabled")).toBeVisible();
 
-    await page.locator("#email").fill("fixed@example.com");
+    await fillSignUpForm(page, { email: "fixed@example.com" });
+    await expect(submit).toBeDisabled();
+    await expect(submit).toContainText("회원가입");
     await expect(page.locator("#email")).toHaveValue("fixed@example.com");
     await expect
       .poll(() => signUpRequests.length, { message: "signup request count" })

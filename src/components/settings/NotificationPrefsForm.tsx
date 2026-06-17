@@ -8,6 +8,7 @@ import {
   Empty,
   Form,
   List,
+  Select,
   Skeleton,
   Switch,
   Tabs,
@@ -59,6 +60,12 @@ const WEEKDAYS: { value: number; labelKey: string }[] = [
   { value: 5, labelKey: "fri" },
   { value: 6, labelKey: "sat" },
   { value: 0, labelKey: "sun" },
+];
+
+const TIMEZONE_OPTIONS = [
+  { value: "Asia/Seoul", label: "Asia/Seoul" },
+  { value: "Asia/Ho_Chi_Minh", label: "Asia/Ho_Chi_Minh" },
+  { value: "UTC", label: "UTC" },
 ];
 
 // 발송 이력 status enum → 카탈로그 키(enum 값은 그대로 유지).
@@ -479,6 +486,21 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
                     minuteStep={5}
                     placeholder="HH:mm"
                     aria-label={t("condition.reminderTimeAria")}
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  label={t("condition.timezoneLabel")}
+                  className="!mb-0"
+                >
+                  <Select
+                    className="max-w-xs"
+                    value={settings.timezone}
+                    aria-label={t("condition.timezoneAria")}
+                    options={TIMEZONE_OPTIONS}
+                    onChange={(timezone) =>
+                      setSettings((prev) => ({ ...prev, timezone }))
+                    }
                   />
                 </Form.Item>
 

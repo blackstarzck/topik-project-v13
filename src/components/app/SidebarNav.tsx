@@ -14,6 +14,7 @@ import {
   BarChart3,
   Bell,
   BookOpen,
+  CreditCard,
   GraduationCap,
   Home,
   Languages,
@@ -32,6 +33,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useMemo, useState, type ReactNode } from "react";
 import type { AppRole } from "@/lib/auth/roles";
 import {
+  APP_ROUTES,
   computeSidebarLocks,
   SIDEBAR_ITEMS,
   type SidebarItem,
@@ -104,11 +106,6 @@ function matchesRoute(pathname: string, key: string) {
   return pathname === key || pathname.startsWith(`${key}/`);
 }
 
-function firstPathSegment(key: string) {
-  const segment = key.split("/").filter(Boolean)[0];
-  return segment ? `/${segment}` : null;
-}
-
 function groupMatchesRoute(group: SidebarItem, pathname: string) {
   if (!("children" in group)) return false;
 
@@ -116,13 +113,15 @@ function groupMatchesRoute(group: SidebarItem, pathname: string) {
     return true;
   }
 
-  const sharedSegments = new Set(
-    group.children
-      .map((child) => firstPathSegment(child.key))
-      .filter((segment): segment is string => Boolean(segment)),
-  );
+  if (group.key === "writing") {
+    return matchesRoute(pathname, "/writing");
+  }
 
-  return [...sharedSegments].some((segment) => matchesRoute(pathname, segment));
+  if (group.key === "settings") {
+    return matchesRoute(pathname, "/settings");
+  }
+
+  return false;
 }
 
 function getRouteOpenKeys(pathname: string) {
@@ -148,11 +147,12 @@ function navIcon(key: string) {
     return <PenLine {...props} />;
   }
   if (key === "/library") return <Library {...props} />;
-  if (key === "/growth") return <BarChart3 {...props} />;
+  if (key === "growth" || key === "/growth") return <BarChart3 {...props} />;
   if (key === "/profile") return <UserRound {...props} />;
   if (key === "settings") return <Settings {...props} />;
   if (key === "/settings/language") return <Languages {...props} />;
   if (key === "/settings/notifications") return <Bell {...props} />;
+  if (key === "/subscription") return <CreditCard {...props} />;
 
   return null;
 }
@@ -246,13 +246,21 @@ export function SidebarNav({ role, planLabel, onNavigate }: Props) {
 
   return (
     <div className="app-sidebar-shell">
-      <div className="app-sidebar-brand" aria-label={tApp("brand")}>
+      <button
+        type="button"
+        className="app-sidebar-brand"
+        aria-label={tApp("brand")}
+        onClick={() => {
+          router.push(APP_ROUTES.dashboard);
+          onNavigate?.();
+        }}
+      >
         <span className="app-sidebar-brand__mark">
           <GraduationCap aria-hidden size={20} />
         </span>
         <span>{tApp("brand")}</span>
         <strong>AI</strong>
-      </div>
+      </button>
       <div className="app-sidebar-menu-scroll">
         <ConfigProvider theme={sidebarMenuTheme}>
           <Menu

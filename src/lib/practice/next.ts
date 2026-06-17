@@ -14,8 +14,10 @@ type ClientFactory = () => Promise<SupabaseServerClient>;
 /**
  * Phase 6 — "next problem" helper (Task 6 §next).
  *
- * Goal: pick the single next problem the user should solve. Four fallback
- * tiers — each one represents a weaker signal than the previous one. The
+ * Goal: pick the next-problem bundle the user can choose from. The primary
+ * slot still needs a single problem, but the R-02 screen fills alternatives
+ * from the same 51/52/53/54 writing set instead of limiting new users to one
+ * question type. Four fallback tiers — each one represents a weaker signal than the previous one. The
  * function returns `null` only when no published problem exists at all
  * (or none the user hasn't already attempted) — the caller's UI shows the
  * "오늘은 자유롭게 골라보세요" CTA in that case.
@@ -24,7 +26,7 @@ type ClientFactory = () => Promise<SupabaseServerClient>;
  *         expired) ordered by rank — the strongest signal.
  * Tier 2: same `question_no` as the user's most recent attempt — keeps the
  *         learner inside the dimension they were practicing.
- * Tier 3: any published problem the user hasn't tried — random pick.
+ * Tier 3: any published problem the user hasn't tried — 51/52/53/54 writing set.
  * Tier 4: `null` — let the UI handle the empty state.
  *
  * All queries are RLS-bound (server client, no service role). The caller
@@ -60,13 +62,18 @@ type ProblemSlice = Pick<
   "id" | "title" | "domain" | "question_no" | "difficulty"
 >;
 
+const WRITING_QUESTION_NOS = [51, 52, 53, 54] as const;
+
 type RecommendationJoinedRow = {
   id: string;
   problem_id: string;
   rank: number;
   reason: string | null;
   estimated_minutes: number | null;
-  recommendation_runs: { expires_at: string | null } | { expires_at: string | null }[] | null;
+  recommendation_runs:
+    | { expires_at: string | null }
+    | { expires_at: string | null }[]
+    | null;
   problems:
     | (ProblemSlice & { publish_status: string; difficulty: number | null })
     | (ProblemSlice & { publish_status: string; difficulty: number | null })[]
@@ -94,14 +101,16 @@ export async function getNextProblem(
       referencedTable: "recommendation_runs",
     })
     .order("rank", { ascending: true })
-    .limit(1);
+    .limit(8);
   if (recErr) throw new Error(`getNextProblem(rec): ${recErr.message}`);
-  const recRow = (recRows ?? [])[0] as unknown as
-    | RecommendationJoinedRow
-    | undefined;
-  if (recRow) {
+  const validRecRows = (recRows ?? []) as unknown as RecommendationJoinedRow[];
+  for (const recRow of validRecRows) {
     const problem = pickOne(recRow.problems);
-    if (problem && problem.publish_status === "published") {
+    if (
+      problem &&
+      problem.publish_status === "published" &&
+      isWritingQuestionNo(problem.question_no)
+    ) {
       return {
         problemId: problem.id,
         title: problem.title,
@@ -169,8 +178,15 @@ export async function getNextProblem(
     }
   }
 
-  // Tier 3 — any published problem the user hasn't attempted.
-  const tier3 = await pickProblemExcluding(supabase, attemptedIds, null);
+  // Tier 3 — any published problem the user hasn't attempted. The source name
+  // stays "random" for compatibility with existing UI labels, but selection is
+  // deterministic so the bundle can expose the full 51/52/53/54 writing set.
+  const tier3 = await pickProblemExcluding(
+    supabase,
+    attemptedIds,
+    null,
+    latestQuestionNo,
+  );
   if (tier3) {
     return {
       problemId: tier3.id,
@@ -193,11 +209,11 @@ async function pickProblemExcluding(
   supabase: SupabaseServerClient,
   attemptedIds: Set<string>,
   questionNo: number | null,
+  rotationAnchorQuestionNo: number | null = questionNo,
 ): Promise<ProblemSlice | null> {
-  // Pull a small candidate window then randomly pick one client-side. We
-  // avoid `order('random()')` because PostgREST doesn't expose it and a
-  // full-table random scan is wasteful. 20 is enough for variety on the
-  // weakness page without blowing up the payload.
+  // Pull a small candidate window then choose by the 51→52→53→54 practice
+  // rotation. We avoid `order('random()')` because PostgREST doesn't expose it
+  // and random selection makes first-user recommendations unstable.
   //
   // Note: PostgREST filter methods (`.eq`) must precede `.order`/`.limit` —
   // chaining filters after `.limit` returns a non-builder thenable. We apply
@@ -211,18 +227,63 @@ async function pickProblemExcluding(
   }
   const { data, error } = await base
     .order("updated_at", { ascending: false })
-    .limit(20);
+    .limit(40);
   if (error) throw new Error(`pickProblemExcluding: ${error.message}`);
-  const candidates = (data ?? []).filter((row) => !attemptedIds.has(row.id));
-  if (candidates.length === 0) return null;
-  const idx = Math.floor(Math.random() * candidates.length);
-  return candidates[idx] as ProblemSlice;
+  const candidates = (data ?? []).filter(
+    (row) => !attemptedIds.has(row.id) && isWritingQuestionNo(row.question_no),
+  );
+  return pickByQuestionRotation(
+    candidates as ProblemSlice[],
+    rotationAnchorQuestionNo,
+  );
 }
 
 function pickOne<T>(raw: T | T[] | null | undefined): T | null {
   if (raw == null) return null;
   if (Array.isArray(raw)) return raw[0] ?? null;
   return raw;
+}
+
+function isWritingQuestionNo(
+  questionNo: number | null | undefined,
+): questionNo is (typeof WRITING_QUESTION_NOS)[number] {
+  return WRITING_QUESTION_NOS.includes(
+    questionNo as (typeof WRITING_QUESTION_NOS)[number],
+  );
+}
+
+function questionRotationOrder(
+  latestQuestionNo: number | null | undefined,
+): readonly number[] {
+  if (!isWritingQuestionNo(latestQuestionNo)) return WRITING_QUESTION_NOS;
+  const index = WRITING_QUESTION_NOS.indexOf(latestQuestionNo);
+  return [
+    ...WRITING_QUESTION_NOS.slice(index + 1),
+    ...WRITING_QUESTION_NOS.slice(0, index + 1),
+  ];
+}
+
+function pickByQuestionRotation(
+  candidates: ProblemSlice[],
+  latestQuestionNo: number | null | undefined,
+): ProblemSlice | null {
+  if (candidates.length === 0) return null;
+  return sortByQuestionRotation(candidates, latestQuestionNo)[0];
+}
+
+function sortByQuestionRotation(
+  candidates: ProblemSlice[],
+  latestQuestionNo: number | null | undefined,
+): ProblemSlice[] {
+  const order = questionRotationOrder(latestQuestionNo);
+  return [...candidates].sort((a, b) => {
+    const orderDelta =
+      order.indexOf(a.question_no ?? -1) - order.indexOf(b.question_no ?? -1);
+    if (orderDelta !== 0) return orderDelta;
+    const difficultyDelta = (a.difficulty ?? 999) - (b.difficulty ?? 999);
+    if (difficultyDelta !== 0) return difficultyDelta;
+    return a.title.localeCompare(b.title, "ko");
+  });
 }
 
 // Phase 7-D Task 6 (P1-2) — getNextProblemBundle.
@@ -348,7 +409,7 @@ async function fetchAlternatives(
     .from("recommendation_items")
     .select(
       "id, problem_id, reason, estimated_minutes," +
-        " problems!inner(id, title, domain, question_no, difficulty)",
+        " problems!inner(id, title, domain, question_no, difficulty, publish_status)",
     )
     .eq("user_id", userId)
     .eq("status", "active")
@@ -362,12 +423,19 @@ async function fetchAlternatives(
     problems: unknown;
   };
   const altRows = (data ?? []) as unknown as AltRow[];
-  const alternatives = altRows
+  const alternatives: AlternativeProblem[] = altRows
     .flatMap((row) => {
       const p = pickOne(row.problems);
       if (!p || typeof p !== "object") return [];
-      const problem = p as ProblemSlice;
+      const problem = p as ProblemSlice & { publish_status?: string | null };
       if (problem.id === excludeId) return [];
+      if (
+        problem.publish_status != null &&
+        problem.publish_status !== "published"
+      ) {
+        return [];
+      }
+      if (!isWritingQuestionNo(problem.question_no)) return [];
       return [
         {
           id: problem.id,
@@ -383,12 +451,82 @@ async function fetchAlternatives(
     })
     .slice(0, 3);
 
+  if (alternatives.length < 3) {
+    const excludedIds = new Set(alternatives.map((alt) => alt.id));
+    if (excludeId) excludedIds.add(excludeId);
+    const fallbackAlternatives = await fetchPublishedProblemAlternatives(
+      supabase,
+      userId,
+      excludedIds,
+      3 - alternatives.length,
+    );
+    alternatives.push(...fallbackAlternatives);
+  }
+
   // R-02 §3 예외 — free-plan users keep the first alternative unlocked and see
   // the rest as locked upgrade cards. Paid users see everything unlocked.
   if (paid) return alternatives;
   return alternatives.map((alt, idx) =>
     idx === 0 ? alt : { ...alt, locked: true },
   );
+}
+
+async function fetchPublishedProblemAlternatives(
+  supabase: SupabaseServerClient,
+  userId: string,
+  excludedIds: Set<string>,
+  limit: number,
+): Promise<AlternativeProblem[]> {
+  const { data: attemptRows } = await supabase
+    .from("problem_attempts")
+    .select("problem_id, started_at, problems!inner(id, question_no)")
+    .eq("user_id", userId)
+    .order("started_at", { ascending: false });
+
+  const attemptedIds = new Set<string>();
+  let latestQuestionNo: number | null = null;
+  for (const row of attemptRows ?? []) {
+    attemptedIds.add(row.problem_id);
+    if (latestQuestionNo == null) {
+      const joined = pickOne(
+        (row as { problems: unknown }).problems as
+          | { question_no: number | null }
+          | { question_no: number | null }[]
+          | null,
+      );
+      if (joined && typeof joined.question_no === "number") {
+        latestQuestionNo = joined.question_no;
+      }
+    }
+  }
+
+  const { data, error } = await supabase
+    .from("problems")
+    .select("id, title, domain, question_no, difficulty")
+    .eq("publish_status", "published")
+    .order("updated_at", { ascending: false })
+    .limit(40);
+  if (error)
+    throw new Error(`fetchPublishedProblemAlternatives: ${error.message}`);
+
+  const candidates = ((data ?? []) as ProblemSlice[]).filter(
+    (row) =>
+      !excludedIds.has(row.id) &&
+      !attemptedIds.has(row.id) &&
+      isWritingQuestionNo(row.question_no),
+  );
+
+  return sortByQuestionRotation(candidates, latestQuestionNo)
+    .slice(0, limit)
+    .map((problem) => ({
+      id: problem.id,
+      title: problem.title,
+      questionNo: problem.question_no,
+      domain: problem.domain,
+      reason: "아직 풀지 않은 공개 문제입니다.",
+      estimatedMinutes: null,
+      difficulty: problem.difficulty ?? null,
+    }));
 }
 
 export async function getNextProblemBundle(

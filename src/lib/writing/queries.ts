@@ -100,6 +100,17 @@ export async function fetchFeedbackStatus(
   submissionId: string,
   createClient: ClientFactory = createSupabaseBrowserClient,
 ): Promise<FeedbackStatus | null> {
+  const syncResponse = await fetch(
+    `/api/writing/evaluation-status?submissionId=${encodeURIComponent(submissionId)}`,
+    { cache: "no-store" },
+  );
+  if (syncResponse.ok) {
+    const body = (await syncResponse.json()) as {
+      feedback_status?: FeedbackStatus | null;
+    };
+    if (body.feedback_status) return body.feedback_status;
+  }
+
   const supabase = createClient();
   const { data, error } = await supabase
     .from("writing_submissions")

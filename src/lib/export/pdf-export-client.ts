@@ -38,6 +38,33 @@ function triggerBrowserDownload(blob: Blob, filename: string): void {
   setTimeout(() => URL.revokeObjectURL(url), 10_000);
 }
 
+function filenameFromStoragePath(storagePath: string): string {
+  const lastSegment = storagePath.split("/").filter(Boolean).at(-1);
+  return lastSegment && lastSegment.endsWith(".pdf")
+    ? lastSegment
+    : "talkpik-export.pdf";
+}
+
+export async function downloadStoredPdfExport(
+  input: {
+    storagePath: string;
+    filename?: string | null;
+  },
+  createClient: BrowserClientFactory = createSupabaseBrowserClient,
+): Promise<void> {
+  const supabase = createClient();
+  const { data, error } = await supabase.storage
+    .from(BUCKET)
+    .download(input.storagePath);
+  if (error || !data) {
+    throw new Error(error?.message ?? "download failed");
+  }
+  triggerBrowserDownload(
+    data,
+    input.filename ?? filenameFromStoragePath(input.storagePath),
+  );
+}
+
 export async function requestServerPdfExport(
   input: PdfExportRequest,
   createClient: BrowserClientFactory = createSupabaseBrowserClient,
@@ -59,17 +86,12 @@ export async function requestServerPdfExport(
 
   const result = (await response.json()) as ServerPdfExportResult;
 
-  const supabase = createClient();
-  const { data, error } = await supabase.storage
-    .from(BUCKET)
-    .download(result.storagePath);
-  if (error || !data) {
-    throw new Error(error?.message ?? "download failed");
-  }
-
-  triggerBrowserDownload(
-    data,
-    result.filename ?? `${sanitizePdfFilename(input.options.filename)}.pdf`,
+  await downloadStoredPdfExport(
+    {
+      storagePath: result.storagePath,
+      filename: result.filename ?? `${sanitizePdfFilename(input.options.filename)}.pdf`,
+    },
+    createClient,
   );
   return result;
 }

@@ -13,7 +13,7 @@
 
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
-export async function createReviewSet(itemIds: string[]): Promise<void> {
+export async function createReviewSet(itemIds: string[]): Promise<string> {
   if (itemIds.length === 0) throw new Error("선택한 항목이 없습니다.");
   const supabase = createSupabaseBrowserClient();
   const {
@@ -23,10 +23,16 @@ export async function createReviewSet(itemIds: string[]): Promise<void> {
   if (userError) throw new Error(userError.message);
   if (!user) throw new Error("로그인이 필요합니다.");
 
-  const { error } = await supabase.from("study_events").insert({
-    user_id: user.id,
-    event_type: "review_set_created",
-    payload: { item_ids: itemIds, count: itemIds.length },
-  });
+  const { data, error } = await supabase
+    .from("study_events")
+    .insert({
+      user_id: user.id,
+      event_type: "review_set_created",
+      payload: { item_ids: itemIds, count: itemIds.length },
+    })
+    .select("id")
+    .single();
   if (error) throw new Error(error.message);
+  if (!data?.id) throw new Error("복습 세트 ID를 만들지 못했습니다.");
+  return data.id;
 }

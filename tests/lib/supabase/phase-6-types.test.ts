@@ -104,6 +104,24 @@ describe("Phase 6 types snapshot — 4 new tables + 1 column + 4 new RPCs", () =
     expect(update.notification_prefs).toBeTruthy();
   });
 
+  it("profiles.nationality_country_code column exists as optional profile metadata", () => {
+    type Row = Tables<"profiles">;
+    expectTypeOf<Row["nationality_country_code"]>().toEqualTypeOf<
+      string | null
+    >();
+
+    const insert: TablesInsert<"profiles"> = {
+      id: "u",
+      nationality_country_code: "VN",
+    };
+    expect(insert.nationality_country_code).toBe("VN");
+
+    const update: TablesUpdate<"profiles"> = {
+      nationality_country_code: null,
+    };
+    expect(update.nationality_country_code).toBeNull();
+  });
+
   it("Functions snapshot covers the dashboard KPI RPC", () => {
     // Admin RPCs (get_admin_org_dashboard / admin_change_user_role /
     // admin_toggle_problem_publish) were removed with the v13 admin island

@@ -59,7 +59,7 @@ describe("fetchUserProblemsRpc", () => {
         search: "essay",
         status: "attempted",
       },
-      sort: "difficulty",
+      sort: "difficulty-desc",
       page: 2,
       page_size: 20,
     });
@@ -74,6 +74,62 @@ describe("fetchUserProblemsRpc", () => {
       lifecycleReason: "품질 점검 중",
       publishStatus: "published",
       reviewStatus: "approved",
+    });
+  });
+
+  it("passes recommended-only and exact sort intent to the RPC", async () => {
+    const rpc = vi.fn(async () => ({
+      data: [],
+      error: null,
+    }));
+
+    await fetchUserProblemsRpc(
+      {
+        filter: {
+          recommended: true,
+        },
+        sort: "oldest",
+        page: 1,
+        pageSize: 10,
+      },
+      () => ({ rpc }) as never,
+    );
+
+    expect(rpc).toHaveBeenCalledWith("list_user_problems", {
+      filter: {
+        recommended: true,
+      },
+      sort: "oldest",
+      page: 1,
+      page_size: 10,
+    });
+  });
+
+  it("passes saved review-set id to the RPC filter", async () => {
+    const rpc = vi.fn(async () => ({
+      data: [],
+      error: null,
+    }));
+
+    await fetchUserProblemsRpc(
+      {
+        filter: {
+          reviewSetId: "review-set-1",
+        },
+        sort: "newest",
+        page: 1,
+        pageSize: 10,
+      },
+      () => ({ rpc }) as never,
+    );
+
+    expect(rpc).toHaveBeenCalledWith("list_user_problems", {
+      filter: {
+        review_set_id: "review-set-1",
+      },
+      sort: "newest",
+      page: 1,
+      page_size: 10,
     });
   });
 

@@ -18,9 +18,11 @@ Codex와 모든 AI 에이전트는 이 문서를 프로젝트 작업 계약으�
 - 작업 시 전체 문서를 무조건 읽지 말고, 요청 범위와 직접 관련된 SOT를 체크리스트처럼 선택해 확인한다.
 - 현재 source code는 이미 구현된 동작의 기준이다. 동작을 바꾸기 전에는 관련 SOT와 current source를 함께 확인한다.
 - SOT나 agent rule 문서 수정이 필요하면 수정 전 사용자에게 `대상 문서 / 수정 이유 / 수정 방향`을 알린다. 요청 범위 밖의 SOT 변경은 승인 없이 수행하지 않는다.
-- SOT를 실제로 수정한 경우 완료 보고에 `수정한 문서 / 수정 내용 / 충돌 여부 / 후속 갱신 필요 여부`를 포함한다.
+- SOT는 절대 수정하지 않는다. SOT 문서의 변경이 필요한 경우 사용자에게 반드시 보고하고 확인받는다. 기존 SOT 문서를 직접 변경하지 않고 SOT 변경 제안은 `docs/sot-change-proposals/`에 저장한다.
+- SOT 수정이 사용자 결정으로 확정된 경우, 해당 결정이 왜 그렇게 내려졌는지 결정 이유, 근거 문서, 검토한 대안을 함께 기록한다.
+- 중요 스코프 결정 문서: `docs/scope-decisions/2026-06-17-ai-deferred-and-mvp-scope.md`는 AI 기능 보류, 외부 연동/운영 확정 보류, 6/22 MVP 기준과 전체 Wireframe 기준의 적용 방식을 정한다. 이 범위에서 `docs/development-core-planning/`, `docs/Wireframe/`, `docs/flow/`의 해석이 갈리면 해당 결정 문서를 우선한다.
 - 사용자 요청이 active SOT와 충돌하면 구현하지 말고, 충돌한 문서와 위치를 먼저 보고한다.
-- active SOT에 없는 net-new scope, 제품 pivot, 제품 behavior, data rule, UX flow, security rule은 바로 구현하지 않는다. 먼저 docs update proposal 또는 acceptance criteria가 있는 implementation brief를 만든다.
+- active SOT에 없는 net-new scope, 제품 pivot, 제품 behavior, data rule, UX flow, security rule은 바로 구현하지 않는다. 먼저 `docs/sot-change-proposals/`에 docs update proposal 또는 acceptance criteria가 있는 implementation brief를 만든다.
 
 ## 읽기 순서
 
@@ -29,6 +31,8 @@ Codex와 모든 AI 에이전트는 이 문서를 프로젝트 작업 계약으�
 | 작업 유형 | 추가 확인 문서 |
 | --- | --- |
 | 제품/기능 | `docs/prd.md`, `docs/ia.md`, `docs/flow/user-flow.md`, 관련 `docs/Wireframe/<page>/` |
+| 스코프/보류/AI/외부 연동 | `docs/scope-decisions/2026-06-17-ai-deferred-and-mvp-scope.md`, `docs/development-core-planning/`, 관련 `docs/Wireframe/<page>/`, 현재 `src/` |
+| 화면/라우트/내비게이션 | `docs/ia.md`, `docs/flow/user-flow.md`, `docs/flow/sitemap.md`, `docs/Wireframe/README.md`, 관련 `docs/Wireframe/<page>/`, 현재 `src/app/`, 현재 `src/lib/routes.ts` |
 | 코드/구현 | `package.json`, 관련 `src/`, 관련 Wireframe 기능명세 |
 | UI/스타일 | `DESIGN.md`, `docs/ant-design/README.md` 흐름, `docs/ant-design/07-review-checklist.md` |
 | Supabase/DB/RLS | `supabase/migrations/INDEX.md`, 관련 migration, `docs/Wireframe/data-usage-index.md`, 관련 화면 기능명세 |
@@ -39,16 +43,21 @@ Codex와 모든 AI 에이전트는 이 문서를 프로젝트 작업 계약으�
 
 `docs/INDEX.md`나 `memory/MEMORY.md`가 생기면 공통 진입 문서로 함께 확인한다.
 
+사이드바, workspace layout, active menu, route 노출 여부를 바꾸는 작업은 `docs/Wireframe/share/03-learner-side-nav-state/description.md`, `docs/Wireframe/share/03-learner-side-nav-state/contextual-route-placement.md`, `docs/Wireframe/share/03-learner-side-nav-state/sidebar-navigation-decision-summary.md`를 함께 확인한다.
+
 ## 작업 절차
 
+- 작업 전 사용자가 요청한 작업이 제품, 코드, 데이터, UI, 테스트, 문서에 어느 정도 영향을 미치는지 영향도를 먼저 파악한다.
+- 파악한 영향도에 따라 읽을 SOT, 수정 범위, 검증 범위, phase/TODO 수준을 정하고 불필요한 확장을 피한다.
 - 개발 또는 변경 작업은 먼저 목적, 범위, phase/TODO, 검증 방법이 포함된 실행 계획을 만든다.
-- 계획은 `1차 초안 -> 비판적 검토 -> 보완안 -> 구현` 순서로 다듬는다.
+- 계획은 `1차 초안 -> 멀티 에이전트 호출 + 비판적 검토 -> 보완안 -> 구현` 순서로 다듬는다.
 - 사용자의 개발/변경 작업 요청은 원칙적으로 에이전트 팀 관점으로 처리한다. 도구가 허용되면 실제 멀티 에이전트를 사용하고, 단순 작업이거나 도구 사용이 적절하지 않으면 메인 세션 안에서 `계획자 / 구현자 / 비판자` 역할을 분리해 검토한다.
 - 검토에는 반드시 비판적 시선의 critic 관점을 포함한다.
 - 작업은 phase와 TODO 단위로 쪼개 진행하고, 각 단계가 끝날 때 확인 결과를 남긴다.
 - 기존 구조와 문서를 먼저 확인하고, 프로젝트 방식에 맞춰 필요한 최소 변경만 수행한다.
 - 긴 작업, background 작업, timeout, hang, 의도치 않은 세션 종료 가능성이 있으면 재개 가능한 handoff 또는 진행 기록을 남긴다.
 - 중요한 결정, 실패, 실험 결과는 기존 기록 체계에 맞춰 남긴다. 예: `docs/superpowers/plans/`, `docs/qa/reports/`, `supabase/migrations/INDEX.md`, 관련 active docs의 Decision/History 섹션.
+- 작업후 반드시 인사이트를 제공한다. 인사이트는 반드시 웹, 커뮤니티등 조사를 통해 팩트 체크가된 객관적인 사실이어야 한다. 추측은 금지한다. 근거를 웹 링크로 명시한다.
 
 ## 구현 규칙
 
@@ -82,6 +91,7 @@ Codex와 모든 AI 에이전트는 이 문서를 프로젝트 작업 계약으�
 - `pnpm test:e2e` 전체 실행은 auth, middleware, app shell, route guard, global style/theme, shared navigation, test config처럼 여러 route에 영향을 주거나 영향 범위를 좁히기 어려운 경우에 사용한다.
 - 코드 변경은 관련 unit/integration test, `pnpm lint`, `pnpm typecheck` 중 영향 범위에 맞는 항목을 실행한다.
 - Supabase/migration 변경은 SQL idempotency, RLS 영향, `supabase/migrations/INDEX.md`, 관련 migration, `docs/Wireframe/data-usage-index.md`, 관련 화면 기능명세 갱신 여부를 확인한다.
+- 검증 또는 테스트 과정에서 Supabase 데이터베이스 조작이 필요하면 `.env.example`에 정의된 변수명을 기준으로 하며, 관리 API/DB 조작은 `SUPABASE_ACCESS_TOKEN`, `SUPABASE_SERVICE_ROLE_KEY`, 사용자 테스트 계정은 `E2E_STUDENT_EMAIL`, `SUPABASE_TEST_PASSWORD`를 사용한다. 해당 값은 secret으로 취급해 터미널 출력, 로그, 문서, 커밋 메시지, 테스트 리포트에 기록하지 않고, 보고에는 변수명만 언급한다.
 - auth/security 변경은 실패 케이스, redirect, cookie/session, secret 노출 여부를 확인한다.
 - 검증을 실행하지 못했거나 실패하면 완료로 보고하지 않는다. 미실행/실패 이유, 재현 명령, 남은 위험을 함께 보고한다.
 
@@ -98,12 +108,4 @@ Codex와 모든 AI 에이전트는 이 문서를 프로젝트 작업 계약으�
 ## 비협상 경계
 
 - 이 저장소는 user-facing app이다. admin 기능을 새로 만들거나 확장하거나 remediate하지 않는다.
-- admin 콘솔은 별도 앱(topik-ai) 소유이며, 이 저장소에는 admin 코드/라우트/와이어프레임이 없다(2026-06-09 코드 제거, 2026-06-11 와이어프레임·문서 참조 제거).
-- 공유 Supabase 스키마 소유권은 앱 기준이 아니라 도메인 기준으로 정한다. 이 저장소는 core user-facing schema(예: `profiles`, `notification_settings`, `user_notifications`)만 소유한다.
-- admin 운영 schema(알림 템플릿/그룹/발송 운영 등)는 topik-ai가 자체 migration tracker(`admin_schema_migrations`)로 소유·관리하므로 이 저장소에 추가하지 않는다.
-- 양쪽에서 읽거나 쓰는 공유 객체는 topik-ai `docs/architecture/shared-supabase-schema-ownership.md`의 owner/writer/reader/RLS/migration home 기록을 따른다.
-- 기존 v13 소유 테이블의 DDL 변경은 owner(v13) 승인과 migration decision record가 필요하다.
-- `profiles.app_role`, `admin_audit_logs`, `private.is_*_admin` RLS 헬퍼는 load-bearing이므로 제거하지 않는다.
 - 이미 `docs/`에 정리된 제품 범위에 대해 fresh domain-discovery interview를 다시 시작하지 않는다.
-- 목적 없는 대형 문서나 장황한 보고서를 생성하지 않는다.
-- 이미 실패한 실험은 기록 확인 없이 반복하지 않는다.
