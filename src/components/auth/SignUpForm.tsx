@@ -274,10 +274,31 @@ export function SignUpForm({
     hasValidEmail &&
     hasValidPassword &&
     termsValue === true;
-  const showCountryRegionStep = visibleStep >= STEP_COUNTRY_REGION;
-  const showEmailStep = visibleStep >= STEP_EMAIL;
-  const showPasswordStep = visibleStep >= STEP_PASSWORD;
-  const showTermsStep = visibleStep >= STEP_TERMS;
+  const autoVisibleStep = useMemo(() => {
+    if (
+      hasValidName &&
+      hasValidCountryRegion &&
+      hasValidEmail &&
+      hasValidPassword
+    ) {
+      return STEP_TERMS;
+    }
+    if (hasValidName && hasValidCountryRegion && hasValidEmail) {
+      return STEP_PASSWORD;
+    }
+    if (hasValidName && hasValidCountryRegion) {
+      return STEP_EMAIL;
+    }
+    if (hasValidName) {
+      return STEP_COUNTRY_REGION;
+    }
+    return STEP_NAME;
+  }, [hasValidCountryRegion, hasValidEmail, hasValidName, hasValidPassword]);
+  const currentVisibleStep = Math.max(visibleStep, autoVisibleStep);
+  const showCountryRegionStep = currentVisibleStep >= STEP_COUNTRY_REGION;
+  const showEmailStep = currentVisibleStep >= STEP_EMAIL;
+  const showPasswordStep = currentVisibleStep >= STEP_PASSWORD;
+  const showTermsStep = currentVisibleStep >= STEP_TERMS;
   const showSubmitButton = showTermsStep;
   const countryRegionOptions = useMemo(
     () => createCountryRegionOptions(locale),

@@ -248,7 +248,7 @@ test.describe("A-01 sign-up functional flow", () => {
     ).toBeVisible();
 
     await page.locator("#displayName").fill(VALID_NAME);
-    await page.locator("#displayName").blur();
+    await expect(page.locator("#displayName")).toBeFocused();
     await expect(page.getByTestId("country-region-select")).toBeVisible();
     const displayNameBox = await page.locator("#displayName").boundingBox();
     const countryRegionBox = await page
@@ -285,7 +285,23 @@ test.describe("A-01 sign-up functional flow", () => {
         );
       });
     expect(selectedCountryCenterDelta).toBeLessThanOrEqual(1);
-    await expect(page.locator("#email")).toBeVisible();
+    const emailInput = page.locator("#email");
+    const passwordInput = page.locator("#password");
+    const passwordConfirmInput = page.locator("#passwordConfirm");
+    await expect(emailInput).toBeVisible();
+    await expect(emailInput).toBeFocused();
+
+    await emailInput.fill(VALID_EMAIL);
+    await expect(passwordInput).toBeVisible();
+    await expect(passwordConfirmInput).toBeVisible();
+    await expect(emailInput).toBeFocused();
+
+    await expect(page.locator("#terms")).toHaveCount(0);
+    await passwordInput.fill(VALID_PASSWORD);
+    await expect(page.locator("#terms")).toHaveCount(0);
+    await passwordConfirmInput.fill(VALID_PASSWORD);
+    await expect(page.locator("#terms")).toBeVisible();
+    await expect(passwordConfirmInput).toBeFocused();
 
     await page.reload({ waitUntil: "networkidle" });
     await fillSignUpForm(page, { agreeToTerms: false });
