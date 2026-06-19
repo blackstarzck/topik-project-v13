@@ -303,21 +303,9 @@ for (const s of PUBLIC_SCREENS) {
       expect(signupPillMetrics.height).toBeLessThanOrEqual(56);
       expect(signupPillMetrics.svgWidth).toBeLessThanOrEqual(24);
 
-      const landingNumber = page
-        .locator(".landing-layout-service__frame .landing-layout-number")
-        .first();
-      await expect(landingNumber).toHaveText("01");
-      const landingNumberFont = await landingNumber.evaluate(async (node) => {
-        await document.fonts.ready;
-        return {
-          fontFamily: window.getComputedStyle(node).fontFamily,
-          isRegistered: Array.from(document.fonts).some(
-            (fontFace) => fontFace.family === "Montserrat",
-          ),
-        };
-      });
-      expect(landingNumberFont.fontFamily).toContain("Montserrat");
-      expect(landingNumberFont.isRegistered).toBe(true);
+      await expect(
+        page.locator(".landing-layout-service__frame .landing-layout-number"),
+      ).toHaveCount(0);
 
       const sentenceNumberCount = await page
         .locator(

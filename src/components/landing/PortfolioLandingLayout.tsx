@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { gsap } from "gsap";
 import {
   ArrowRight,
@@ -27,10 +28,45 @@ type LandingLayoutCta = {
   primaryLabel: string;
 };
 
-function VisualLabel({ label }: { label: string }) {
+const CORE_VALUE_IMAGE_SRCS = [
+  "/assets/core-value-01.png",
+  "/assets/core-value-02.png",
+  "/assets/core-value-03.png",
+];
+
+const LEARNER_GOAL_AVATAR_SRCS = [
+  "/assets/avatar/cat.png",
+  "/assets/avatar/rabbit.png",
+  "/assets/avatar/penguin.png",
+  "/assets/avatar/panda.png",
+];
+
+const FUTURE_SCOPE_IMAGE_SRCS = [
+  "/assets/landing-future-vocabulary.png",
+  "/assets/landing-future-exam.png",
+  "/assets/landing-future-board.png",
+];
+
+function VisualLabel({
+  label,
+  imageSrc,
+}: {
+  label: string;
+  imageSrc?: string;
+}) {
   return (
     <div className="landing-layout-visual" data-landing-parallax>
-      <span>{label}</span>
+      {imageSrc ? (
+        <Image
+          src={imageSrc}
+          alt=""
+          fill
+          sizes="(max-width: 768px) 100vw, 50vw"
+          draggable={false}
+        />
+      ) : (
+        <span>{label}</span>
+      )}
     </div>
   );
 }
@@ -84,9 +120,12 @@ function useLandingMotion() {
     gsap.registerPlugin(ScrollTrigger);
 
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      gsap.set("[data-landing-section], [data-landing-stagger], [data-landing-line]", {
-        clearProps: "all",
-      });
+      gsap.set(
+        "[data-landing-section], [data-landing-stagger], [data-landing-line]",
+        {
+          clearProps: "all",
+        },
+      );
       return undefined;
     }
 
@@ -94,97 +133,98 @@ function useLandingMotion() {
     const rootElement = rootRef.current;
 
     const context = gsap.context(() => {
-      gsap.utils.toArray<HTMLElement>("[data-landing-section]").forEach((section) => {
-        const heading = section.querySelectorAll("[data-landing-heading]");
-        const items = section.querySelectorAll("[data-landing-stagger]");
-        const timeline = gsap.timeline({
-          scrollTrigger: {
-            trigger: section,
-            start: "top 68%",
-            once: true,
-          },
+      gsap.utils
+        .toArray<HTMLElement>("[data-landing-section]")
+        .forEach((section) => {
+          const heading = section.querySelectorAll("[data-landing-heading]");
+          const items = section.querySelectorAll("[data-landing-stagger]");
+          const timeline = gsap.timeline({
+            scrollTrigger: {
+              trigger: section,
+              start: "top 68%",
+              once: true,
+            },
+          });
+
+          if (heading.length > 0) {
+            timeline.from(heading, {
+              autoAlpha: 0,
+              y: 96,
+              duration: 0.9,
+              ease: "power3.out",
+            });
+          }
+
+          if (items.length > 0) {
+            timeline.from(
+              items,
+              {
+                autoAlpha: 0,
+                y: 72,
+                duration: 0.78,
+                ease: "power3.out",
+                stagger: 0.08,
+              },
+              heading.length > 0 ? 0.14 : 0,
+            );
+          }
         });
 
-        if (heading.length > 0) {
-          timeline.from(heading, {
-            autoAlpha: 0,
-            y: 96,
-            duration: 0.9,
-            ease: "power3.out",
-          });
-        }
-
-        if (items.length > 0) {
-          timeline.from(
-            items,
-            {
-              autoAlpha: 0,
-              y: 72,
-              duration: 0.78,
-              ease: "power3.out",
-              stagger: 0.08,
-            },
-            heading.length > 0 ? 0.14 : 0,
+      gsap.utils
+        .toArray<HTMLElement>(".landing-layout-step-list")
+        .forEach((list) => {
+          const lines = list.querySelectorAll<HTMLElement>(
+            "[data-landing-line]",
           );
-        }
-      });
 
-      gsap.utils.toArray<HTMLElement>(".landing-layout-step-list").forEach((list) => {
-        const lines = list.querySelectorAll<HTMLElement>("[data-landing-line]");
-
-        if (lines.length === 0) {
-          return;
-        }
-
-        let hasAnimated = false;
-
-        const animateLines = () => {
-          if (hasAnimated) {
+          if (lines.length === 0) {
             return;
           }
 
-          hasAnimated = true;
-          list.classList.add("landing-layout-step-list--line-active");
-        };
+          let hasAnimated = false;
 
-        list.classList.add("landing-layout-step-list--line-ready");
-
-        ScrollTrigger.create({
-          trigger: list,
-          start: "top 70%",
-          once: true,
-          onEnter: animateLines,
-        });
-
-        const observer = new IntersectionObserver(
-          (entries) => {
-            if (entries.some((entry) => entry.isIntersecting)) {
-              animateLines();
-              observer.disconnect();
+          const animateLines = () => {
+            if (hasAnimated) {
+              return;
             }
-          },
-          {
-            rootMargin: "0px 0px -30% 0px",
-            threshold: 0.16,
-          },
-        );
 
-        observer.observe(list);
-        observers.push(observer);
-      });
+            hasAnimated = true;
+            list.classList.add("landing-layout-step-list--line-active");
+          };
 
-      gsap.utils.toArray<HTMLElement>("[data-landing-parallax]").forEach((item) => {
-        gsap.to(item, {
-          yPercent: -7,
-          ease: "none",
-          scrollTrigger: {
-            trigger: item,
-            start: "top bottom",
-            end: "bottom top",
-            scrub: 0.7,
-          },
+          list.classList.add("landing-layout-step-list--line-ready");
+
+          const observer = new IntersectionObserver(
+            (entries) => {
+              if (entries.some((entry) => entry.isIntersecting)) {
+                animateLines();
+                observer.disconnect();
+              }
+            },
+            {
+              rootMargin: "0px 0px -30% 0px",
+              threshold: 0.16,
+            },
+          );
+
+          observer.observe(list);
+          observers.push(observer);
         });
-      });
+
+      gsap.utils
+        .toArray<HTMLElement>("[data-landing-parallax]")
+        .forEach((item) => {
+          gsap.to(item, {
+            yPercent: -7,
+            ease: "none",
+            scrollTrigger: {
+              trigger: item,
+              start: "top bottom",
+              end: "bottom top",
+              scrub: 0.7,
+            },
+          });
+        });
 
       ScrollTrigger.refresh();
     }, rootRef);
@@ -193,12 +233,14 @@ function useLandingMotion() {
       observers.forEach((observer) => {
         observer.disconnect();
       });
-      rootElement?.querySelectorAll(".landing-layout-step-list").forEach((list) => {
-        list.classList.remove(
-          "landing-layout-step-list--line-ready",
-          "landing-layout-step-list--line-active",
-        );
-      });
+      rootElement
+        ?.querySelectorAll(".landing-layout-step-list")
+        .forEach((list) => {
+          list.classList.remove(
+            "landing-layout-step-list--line-ready",
+            "landing-layout-step-list--line-active",
+          );
+        });
       context.revert();
     };
   }, []);
@@ -212,30 +254,41 @@ function LearningLoopSection({ primary, primaryLabel }: LandingLayoutCta) {
       "대시보드",
       "목표 등급, 시험일까지 남은 시간, 주간 학습 상태를 한눈에 확인합니다.",
       "dashboard preview",
+      "/assets/landing/landing-loop-dashboard.png",
     ],
     [
       "AI 피드백",
       "TOPIK 쓰기 51~54번 답안을 점수, 총평, 단계별 첨삭으로 확인합니다.",
       "feedback preview",
+      "/assets/landing/landing-loop-feedback.png",
     ],
     [
       "성장 리포트",
       "이전 답안과 비교해 점수 변화와 약점 영역을 확인합니다.",
       "report preview",
+      "/assets/landing/landing-loop-report.png",
     ],
   ];
 
   return (
-    <section id="preview" className="landing-layout-section" data-landing-section>
+    <section
+      id="preview"
+      className="landing-layout-section"
+      data-landing-section
+    >
       <div className="landing-layout-wrap">
         <div data-landing-heading>
           <Eyebrow>Learning Loop</Eyebrow>
         </div>
         <div className="landing-layout-work-grid">
-          {loops.map(([name, description, label]) => (
-            <article className="landing-layout-work" data-landing-stagger key={name}>
+          {loops.map(([name, description, label, imageSrc]) => (
+            <article
+              className="landing-layout-work"
+              data-landing-stagger
+              key={name}
+            >
               <figure>
-                <VisualLabel label={label} />
+                <VisualLabel label={label} imageSrc={imageSrc} />
               </figure>
               <div className="landing-layout-work__caption">
                 <strong>{name}</strong>
@@ -276,7 +329,11 @@ function CoreValueSection() {
   ];
 
   return (
-    <section id="services" className="landing-layout-section" data-landing-section>
+    <section
+      id="services"
+      className="landing-layout-section"
+      data-landing-section
+    >
       <div className="landing-layout-wrap">
         <div className="landing-layout-heading" data-landing-heading>
           <Eyebrow>Core Value</Eyebrow>
@@ -287,11 +344,24 @@ function CoreValueSection() {
           </h2>
         </div>
         <div className="landing-layout-service-grid">
-          {values.map(([number, title, description]) => (
-            <article className="landing-layout-service" data-landing-stagger key={number}>
-              <div className="landing-layout-service__frame">
-                <span className="landing-layout-number">{number}</span>
-                <div className="landing-layout-service__strip" aria-hidden="true">
+          {values.map(([number, title, description], index) => (
+            <article
+              className="landing-layout-service"
+              data-landing-stagger
+              key={number}
+            >
+              <div className="landing-layout-service__frame landing-layout-service__frame--image">
+                <Image
+                  src={CORE_VALUE_IMAGE_SRCS[index]}
+                  alt=""
+                  fill
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                  draggable={false}
+                />
+                <div
+                  className="landing-layout-service__strip"
+                  aria-hidden="true"
+                >
                   <i />
                   <i />
                   <i />
@@ -316,25 +386,25 @@ function LearnerGoalsSection({
   const goals = [
     [
       "G1",
-      "목표 등급까지 얼마나 남았는지 한눈에 보고 싶어요.",
-      "TOPIK I·II 준비 학습자",
+      "D-30, 오늘 할 일은?\n목표 급수까지 남은 거리를 한눈에 보고 싶어요.",
+      "TOPIK II 4급 목표 학습자",
       "학습 현황 확인",
     ],
     [
       "G2",
-      "혼자 쓴 답안도 구체적으로 고칠 부분을 알고 싶어요.",
+      "점수만 보고 끝내기엔 아쉬워요.\n어떤 문장을 어떻게 고칠지 바로 알고 싶습니다.",
       "쓰기 첨삭이 필요한 학습자",
       "AI 피드백",
     ],
     [
       "G3",
-      "저장한 문제와 이전 피드백을 다시 보며 복습하고 싶어요.",
-      "반복 학습이 필요한 학습자",
-      "내 서재와 보관함",
+      "전에 틀린 표현, 또 틀리고 싶지 않아요.\n피드백을 모아두고 반복해서 확인할래요.",
+      "반복 복습이 필요한 학습자",
+      "오답과 피드백 복습",
     ],
     [
       "G4",
-      "약점에 맞는 다음 문제를 바로 추천받고 싶어요.",
+      "시험 전엔 시간이 제일 부족하니까,\n내 약점에 맞는 문제부터 바로 풀고 싶습니다!",
       "시험 전 집중 학습자",
       "약점 기반 추천",
     ],
@@ -376,7 +446,7 @@ function LearnerGoalsSection({
                 }
           }
         >
-          {goals.map(([initials, quote, name, role]) => (
+          {goals.map(([, quote, name, role], index) => (
             <SwiperSlide
               className="landing-layout-testimonials__slide"
               key={quote}
@@ -384,7 +454,15 @@ function LearnerGoalsSection({
               <article>
                 <p>{quote}</p>
                 <div>
-                  <span>{initials}</span>
+                  <span className="landing-layout-testimonials__avatar">
+                    <Image
+                      src={LEARNER_GOAL_AVATAR_SRCS[index]}
+                      alt=""
+                      width={42}
+                      height={42}
+                      draggable={false}
+                    />
+                  </span>
                   <section className="landing-layout-testimonials__who">
                     <strong>{name}</strong>
                     <small>{role}</small>
@@ -425,7 +503,11 @@ function LearningDataSection() {
           </div>
           <div className="landing-layout-stats-grid">
             {dataPoints.map(([value, label]) => (
-              <div className="landing-layout-stat" data-landing-stagger key={value}>
+              <div
+                className="landing-layout-stat"
+                data-landing-stagger
+                key={value}
+              >
                 <strong>{value}</strong>
                 <span>{label}</span>
               </div>
@@ -441,12 +523,14 @@ function FeaturesSection() {
   const features = [
     {
       title: "AI 첨삭",
-      description: "51~54번 답안을 기준별 점수와 문장 단위 코멘트로 확인합니다.",
+      description:
+        "51~54번 답안을 기준별 점수와 문장 단위 코멘트로 확인합니다.",
       icon: <MessageSquareText aria-hidden="true" />,
     },
     {
       title: "실전 문제",
-      description: "목표 급수와 유형에 맞춘 문제로 시험 흐름에 맞게 연습합니다.",
+      description:
+        "목표 급수와 유형에 맞춘 문제로 시험 흐름에 맞게 연습합니다.",
       icon: <PanelsTopLeft aria-hidden="true" />,
       tall: true,
     },
@@ -457,13 +541,18 @@ function FeaturesSection() {
     },
     {
       title: "라이브러리",
-      description: "저장한 문제, 제출 답안, 비교 리포트를 다시 찾아 복습합니다.",
+      description:
+        "저장한 문제, 제출 답안, 비교 리포트를 다시 찾아 복습합니다.",
       icon: <BookOpenText aria-hidden="true" />,
     },
   ];
 
   return (
-    <section id="features" className="landing-layout-section" data-landing-section>
+    <section
+      id="features"
+      className="landing-layout-section"
+      data-landing-section
+    >
       <div className="landing-layout-wrap">
         <div className="landing-layout-heading" data-landing-heading>
           <Eyebrow>MVP Features</Eyebrow>
@@ -537,15 +626,10 @@ function FutureScopeSection() {
               data-landing-stagger
               key={title}
             >
-              {index === 0 ? (
-                <div className="landing-layout-visual">
-                  <em>
-                    <MessageSquareText aria-hidden="true" />
-                  </em>
-                </div>
-              ) : (
-                <VisualLabel label={`${title} preview`} />
-              )}
+              <VisualLabel
+                label={`${title} preview`}
+                imageSrc={FUTURE_SCOPE_IMAGE_SRCS[index]}
+              />
               <span>{status}</span>
               <h3>{title}</h3>
               <p>{description}</p>
@@ -596,7 +680,10 @@ function ProcessSection() {
           <div className="landing-layout-step-list">
             {steps.map(([number, title, description]) => (
               <article data-landing-line key={number}>
-                <div className="landing-layout-step-content" data-landing-stagger>
+                <div
+                  className="landing-layout-step-content"
+                  data-landing-stagger
+                >
                   <span className="landing-layout-number">{number}</span>
                   <div>
                     <h3>{title}</h3>
@@ -654,7 +741,11 @@ function PathSection({ primary, primaryLabel }: LandingLayoutCta) {
         </div>
         <div className="landing-layout-path-grid">
           {paths.map(([name, description, marker, items, href]) => (
-            <article className="landing-layout-path" data-landing-stagger key={name as string}>
+            <article
+              className="landing-layout-path"
+              data-landing-stagger
+              key={name as string}
+            >
               <h3>{name}</h3>
               <p>{description}</p>
               <hr />
