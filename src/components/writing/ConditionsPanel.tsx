@@ -1,12 +1,8 @@
 "use client";
 
-import { Alert, Space, Tag, Typography } from "antd";
+import { Alert, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { AppCard } from "@/components/shared/AppCard";
-import {
-  AppStackList,
-  AppStackListItem,
-} from "@/components/shared/AppStackList";
 
 const { Text } = Typography;
 
@@ -14,7 +10,7 @@ const { Text } = Typography;
  * problems.rubric 는 자유 JSON. 명세가 요구하는 표시는:
  *  - D-02 §2 조건 카드 (조건 4개 이하, 핵심 조건 항상 노출)
  *  - D-03 §4 평가 기준 카드 (기준 5개 이하)
- *  - D-04 §1 루브릭 요약 (3항목)
+ *  - D-04 §1 조건/루브릭 카드 (조건 5개 이하, 루브릭 요약은 D-03과 같은 평가 기준 카드 처리)
  *  - 예외: 기준 계산 실패 → 수동 체크 안내로 대체
  *
  * 우리는 rubric 에서 다음 키들을 관용적으로 읽는다(없으면 폴백):
@@ -69,10 +65,15 @@ function asStringList(
 export function parseRubric(
   rubric: ProblemRubric,
   formatWeight: WeightFormatter = defaultWeightFormatter,
+  conditionMax = 4,
 ): ParsedRubric | null {
   if (!rubric || typeof rubric !== "object") return null;
   const obj = rubric as Record<string, unknown>;
-  const conditions = asStringList(obj.conditions ?? obj.조건, 4, formatWeight);
+  const conditions = asStringList(
+    obj.conditions ?? obj.조건,
+    conditionMax,
+    formatWeight,
+  );
   const criteria = asStringList(
     obj.criteria ?? obj.평가기준 ?? obj.items ?? obj.dimensions,
     5,
@@ -97,7 +98,7 @@ type Props = {
 const TITLE_KEYS: Record<52 | 53 | 54, string> = {
   52: "title52",
   53: "title53",
-  54: "title54",
+  54: "title53",
 };
 
 const MANUAL_NOTE_KEYS: Record<52 | 53 | 54, string> = {
@@ -108,9 +109,14 @@ const MANUAL_NOTE_KEYS: Record<52 | 53 | 54, string> = {
 
 export function ConditionsPanel({ questionNo, rubric, loadFailed }: Props) {
   const t = useTranslations("writing.conditions");
+  const conditionMax = questionNo === 54 ? 5 : 4;
   const parsed = loadFailed
     ? null
-    : parseRubric(rubric, (weight) => t("weightSuffix", { weight }));
+    : parseRubric(
+        rubric,
+        (weight) => t("weightSuffix", { weight }),
+        conditionMax,
+      );
   const title = t(TITLE_KEYS[questionNo] as never);
 
   // §예외 — 기준 계산 실패 또는 데이터 없음 → 수동 체크 안내.
@@ -127,47 +133,45 @@ export function ConditionsPanel({ questionNo, rubric, loadFailed }: Props) {
     );
   }
 
+  if (questionNo === 53 || questionNo === 54) {
+    const criteria =
+      parsed.criteria.length > 0 ? parsed.criteria : parsed.conditions;
+
+    return (
+      <AppCard size="small" title={title}>
+        <ul className="writing-guide-list writing-guide-list--examples">
+          {criteria.slice(0, 5).map((c) => (
+            <li key={c}>{c}</li>
+          ))}
+        </ul>
+      </AppCard>
+    );
+  }
+
   return (
     <AppCard size="small" title={title}>
-      <Space orientation="vertical" size="small" className="w-full">
+      <div className="writing-guide-copy">
         {parsed.conditions.length > 0 ? (
           <div>
             <Text strong>{t("conditionsLabel")}</Text>
-            <AppStackList>
-              {parsed.conditions.slice(0, 4).map((c, i, arr) => (
-                <AppStackListItem
-                  key={`${i}-${c}`}
-                  compact
-                  isLast={i === arr.length - 1}
-                >
-                  <Space align="start">
-                    <Tag color={i === 0 ? "blue" : "default"}>
-                      {i === 0 ? t("required") : i + 1}
-                    </Tag>
-                    <Text>{c}</Text>
-                  </Space>
-                </AppStackListItem>
+            <ul className="writing-guide-list mt-2">
+              {parsed.conditions.slice(0, conditionMax).map((c, i) => (
+                <li key={`${i}-${c}`}>{c}</li>
               ))}
-            </AppStackList>
+            </ul>
           </div>
         ) : null}
         {parsed.criteria.length > 0 ? (
           <div>
             <Text strong>{t("criteriaLabel")}</Text>
-            <AppStackList>
-              {parsed.criteria.slice(0, 5).map((c, i, arr) => (
-                <AppStackListItem
-                  key={`${i}-${c}`}
-                  compact
-                  isLast={i === arr.length - 1}
-                >
-                  <Text type="secondary">• {c}</Text>
-                </AppStackListItem>
+            <ul className="writing-guide-list mt-2">
+              {parsed.criteria.slice(0, 5).map((c, i) => (
+                <li key={`${i}-${c}`}>{c}</li>
               ))}
-            </AppStackList>
+            </ul>
           </div>
         ) : null}
-      </Space>
+      </div>
     </AppCard>
   );
 }

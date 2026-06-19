@@ -32,36 +32,57 @@ export type NormalizedChart = {
   }>;
 };
 
-export type NormalizedReferenceMaterial =
+export type NormalizedMaterialCardRow = {
+  label: string;
+  value: string;
+};
+
+export type NormalizedMaterialCard =
   | {
+      id: string;
       kind: "chart";
-      id: string;
       title: string;
+      subtitle: string | null;
       chart: NormalizedChart;
-      description: string | null;
+      rows?: undefined;
+      warning?: string;
     }
   | {
-      kind: "note";
       id: string;
+      kind: "reference";
       title: string;
-      rows: Array<{ label: string; value: string }>;
-    }
-  | {
-      kind: "text";
-      id: string;
-      title: string;
-      text: string;
+      subtitle: string | null;
+      chart?: undefined;
+      rows: NormalizedMaterialCardRow[];
+      warning?: string;
     };
+
+export type NormalizedEssayGuidanceSection = {
+  id: string;
+  title: string;
+  description: string | null;
+  items: string[];
+  required: boolean;
+};
+
+export type NormalizedEssayGuidance = {
+  structure: NormalizedEssayGuidanceSection[];
+  reasonCount: number | null;
+  reasoningPattern: string | null;
+  scoringFocus: string[];
+  prohibitedElements: string[];
+  modelOutline: NormalizedEssayGuidanceSection[];
+};
 
 type NormalizedProblemCommon = {
   id: string;
   title: string;
+  textType: string | null;
   prompt: string;
   questionNo: QuestionNo;
   lifecycleStatus: ProblemLifecycleStatus;
   lifecycleReason: string | null;
   rubric: NormalizedRubric;
-  referenceMaterials: NormalizedReferenceMaterial[];
   fallbackWarnings: string[];
   submitBlockedReason: "lifecycle" | "problem_data_incomplete" | null;
 };
@@ -89,7 +110,8 @@ export type NormalizedWritingProblem =
       kind: "q53";
       questionNo: 53;
       charts: NormalizedChart[];
-      materialCards: NormalizedReferenceMaterial[];
+      materialCards: NormalizedMaterialCard[];
+      guideCards: string[];
       writingTasks: string[];
       rubricCriteria: string[];
     })
@@ -106,11 +128,13 @@ export type NormalizedWritingProblem =
         language: string | null;
       };
       checklistItems: string[];
+      essayGuidance: NormalizedEssayGuidance;
     });
 
 export type WritingProblemNormalizerInput = {
   id: string;
   title: string;
+  textType?: string | null;
   prompt: string;
   questionNo: QuestionNo;
   materials: unknown;
@@ -130,6 +154,14 @@ function asString(value: unknown): string | null {
     return value.trim();
   }
   if (typeof value === "number") return String(value);
+  return null;
+}
+
+function asInteger(value: unknown): number | null {
+  if (typeof value === "number" && Number.isInteger(value)) return value;
+  if (typeof value === "string" && /^\d+$/.test(value.trim())) {
+    return Number(value.trim());
+  }
   return null;
 }
 
@@ -160,12 +192,35 @@ function pickRecord(...values: unknown[]): AnyRecord | null {
   return null;
 }
 
-function getNestedRecord(record: AnyRecord | null, key: string): AnyRecord | null {
+function getNestedRecord(
+  record: AnyRecord | null,
+  key: string,
+): AnyRecord | null {
   return record ? asRecord(record[key]) : null;
 }
 
 function getNestedString(record: AnyRecord | null, key: string): string | null {
   return record ? asString(record[key]) : null;
+}
+
+function firstDefinedField(sources: Array<AnyRecord | null>, key: string) {
+  for (const source of sources) {
+    if (!source) continue;
+    if (source[key] !== undefined && source[key] !== null) return source[key];
+  }
+  return undefined;
+}
+
+function extractTextType(materials: AnyRecord | null): string | null {
+  return (
+    getNestedString(materials, "text_type") ??
+    getNestedString(getNestedRecord(materials, "meta"), "text_type") ??
+    getNestedString(getNestedRecord(materials, "taxonomy"), "text_type") ??
+    getNestedString(
+      getNestedRecord(materials, "approved_topic_seed"),
+      "text_type",
+    )
+  );
 }
 
 function normalizeLifecycle(
@@ -182,9 +237,8 @@ function extractPromptNumberedItems(prompt: string): string[] {
   ).filter((item): item is string => Boolean(item));
   if (lineItems.length > 0) return lineItems;
 
-  return Array.from(
-    prompt.matchAll(/\d\)\s*([^?。.!]+[?？])/g),
-    (match) => match[1]?.trim(),
+  return Array.from(prompt.matchAll(/\d\)\s*([^?。.!]+[?？])/g), (match) =>
+    match[1]?.trim(),
   ).filter((item): item is string => Boolean(item));
 }
 
@@ -221,7 +275,7 @@ function normalizeRubric(
       // produce). A bare array can't distinguish conditions vs criteria, so
       // populate both — criteria-only would falsely submit-block q52, which
       // gates on rubric.conditions.
-      return { conditions: list.slice(0, 4), criteria: list.slice(0, 5) };
+      return { conditions: list.slice(0, 5), criteria: list.slice(0, 5) };
     }
   }
   const candidate = getRubricCandidate(rubric, materials);
@@ -229,7 +283,7 @@ function normalizeRubric(
 
   const conditions = asStringList(
     candidate.conditions ?? candidate["조건"] ?? candidate.tasks,
-  ).slice(0, 4);
+  ).slice(0, 5);
 
   const listCriteria = asStringList(
     candidate.criteria ??
@@ -284,8 +338,9 @@ function extractBlanks(
   const answerRecord = answerKeyRecord(answerKey);
   const labels = Array.from(
     new Set(
-      Array.from(prompt.matchAll(/[（(]\s*([ㄱ-ㅎ])\s*[）)]/g), (match) =>
-        match[1],
+      Array.from(
+        prompt.matchAll(/[（(]\s*([ㄱ-ㅎ])\s*[）)]/g),
+        (match) => match[1],
       ).filter((label): label is string => Boolean(label)),
     ),
   );
@@ -307,8 +362,7 @@ function extractBlanks(
     const blank = blankFrom(record, label);
     return {
       ...blank,
-      acceptedAnswers:
-        answers.length > 0 ? answers : blank.acceptedAnswers,
+      acceptedAnswers: answers.length > 0 ? answers : blank.acceptedAnswers,
       targetHint:
         label === "ㄱ"
           ? asString(source?.blank_target_giyeok)
@@ -366,18 +420,28 @@ function extractCharts(materials: AnyRecord | null): NormalizedChart[] {
   ].filter((chart): chart is NormalizedChart => Boolean(chart));
 }
 
-function contextNoteRows(record: AnyRecord | null) {
+function chartSubtitle(chart: NormalizedChart): string | null {
+  const parts = [
+    chart.unit,
+    chart.surveyOrg,
+    chart.yearRange.length > 0 ? chart.yearRange.join("-") : null,
+  ].filter((part): part is string => Boolean(part));
+  return parts.length > 0 ? parts.join(" · ") : null;
+}
+
+function materialCardRows(
+  record: AnyRecord | null,
+): NormalizedMaterialCardRow[] {
   if (!record) return [];
-  const pairs = [
+  const candidates: Array<[unknown, unknown]> = [
     [record.row1_label, record.row1_value],
     [record.row2_label, record.row2_value],
-    ["원인", record.cause],
-    ["현황", record.status],
-  ] as const;
+    [record.row3_label, record.row3_value],
+  ];
   const seen = new Set<string>();
-  return pairs.flatMap(([labelRaw, valueRaw]) => {
-    const label = asString(labelRaw);
-    const value = asString(valueRaw);
+  return candidates.flatMap(([rawLabel, rawValue]) => {
+    const label = asString(rawLabel);
+    const value = asString(rawValue);
     const key = `${label}:${value}`;
     if (!label || !value || seen.has(key)) return [];
     seen.add(key);
@@ -385,53 +449,57 @@ function contextNoteRows(record: AnyRecord | null) {
   });
 }
 
-function normalizeReferenceMaterials(
-  materials: AnyRecord | null,
-): NormalizedReferenceMaterial[] {
-  const charts = extractCharts(materials).map((chart) => ({
-    kind: "chart" as const,
-    id: chart.id,
-    title: chart.title,
-    chart,
-    description: null,
-  }));
-  const contextNotes =
+function contextNotesRecord(materials: AnyRecord | null): AnyRecord | null {
+  const scenario = getNestedRecord(materials, "scenario");
+  return (
     getNestedRecord(materials, "context_notes") ??
-    getNestedRecord(materials, "notes");
-  const rows = contextNoteRows(contextNotes);
-  const noteTitle = asString(contextNotes?.display_label) ?? "자료 해설";
-  const notes =
+    getNestedRecord(scenario, "context_notes")
+  );
+}
+
+function normalizeMaterialCards(
+  materials: AnyRecord | null,
+  charts: NormalizedChart[],
+): NormalizedMaterialCard[] {
+  const chartCards: NormalizedMaterialCard[] = charts.map((chart) => ({
+    id: chart.id,
+    kind: "chart" as const,
+    title: chart.title,
+    subtitle: chartSubtitle(chart),
+    chart,
+    warning:
+      chart.series.length === 0 || chart.chartType === "unknown"
+        ? "chart_unrenderable"
+        : undefined,
+  }));
+  const contextNotes = contextNotesRecord(materials);
+  const rows = materialCardRows(contextNotes);
+  const referenceCards: NormalizedMaterialCard[] =
     rows.length > 0
       ? [
           {
-            kind: "note" as const,
             id: "context_notes",
-            title: noteTitle,
+            kind: "reference" as const,
+            title: asString(contextNotes?.display_label) ?? "Reference",
+            subtitle: null,
             rows,
           },
         ]
       : [];
-  const sourceContext = getNestedRecord(materials, "source_context");
-  const situation = asString(sourceContext?.situation_summary);
-  const sourceText =
-    situation && charts.length === 0
-      ? [
-          {
-            kind: "text" as const,
-            id: "source_context",
-            title: "상황",
-            text: situation,
-          },
-        ]
-      : [];
-  return [...charts, ...notes, ...sourceText];
+  return [...chartCards, ...referenceCards].slice(0, 3);
+}
+
+function extractGuideCards(materials: AnyRecord | null): string[] {
+  return [
+    ...asStringList(materials?.guide_cards),
+    ...asStringList(materials?.ai_guide_cards),
+  ].slice(0, 3);
 }
 
 function scenarioRecord(materials: AnyRecord | null): AnyRecord | null {
   return (
     getNestedRecord(materials, "scenario") ??
-    getNestedRecord(materials, "scenario_logic") ??
-    getNestedRecord(materials, "approved_topic_seed")
+    getNestedRecord(materials, "scenario_logic")
   );
 }
 
@@ -452,6 +520,207 @@ function q54PromptParts(prompt: string, title: string) {
   return { topicDefinition, background, requiredQuestions };
 }
 
+function normalizeGuidanceSection(
+  raw: unknown,
+  index: number,
+  fallbackRequired: boolean,
+): NormalizedEssayGuidanceSection | null {
+  const id = `section-${index + 1}`;
+  if (typeof raw === "string") {
+    const title = raw.trim();
+    return title
+      ? { id, title, description: null, items: [], required: fallbackRequired }
+      : null;
+  }
+  const obj = asRecord(raw);
+  if (!obj) return null;
+
+  const title =
+    asString(obj.title) ??
+    asString(obj.label) ??
+    asString(obj.name) ??
+    asString(obj.section) ??
+    asString(obj.heading);
+  const description =
+    asString(obj.description) ??
+    asString(obj.instruction) ??
+    asString(obj.requirement) ??
+    asString(obj.body) ??
+    asString(obj.content);
+  const items = [
+    ...asStringList(obj.items),
+    ...asStringList(obj.children),
+    ...asStringList(obj.details),
+    ...asStringList(obj.subitems),
+    ...asStringList(obj.bullets),
+  ];
+  const textFallback = asString(obj.text);
+  const required =
+    typeof obj.required === "boolean"
+      ? obj.required
+      : typeof obj.is_required === "boolean"
+        ? obj.is_required
+        : fallbackRequired;
+
+  if (!title && !description && !textFallback && items.length === 0) {
+    return null;
+  }
+
+  return {
+    id: asString(obj.id) ?? id,
+    title: title ?? description ?? textFallback ?? id,
+    description: title ? (description ?? textFallback) : null,
+    items,
+    required,
+  };
+}
+
+function splitGuidanceStructure(raw: string): string[] {
+  const byArrow = raw
+    .split(/\s*(?:→|->|⇒|>|,)\s*/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  return byArrow.length > 1 ? byArrow : [raw.trim()].filter(Boolean);
+}
+
+function normalizeGuidanceSections(
+  value: unknown,
+  fallbackRequired: boolean,
+): NormalizedEssayGuidanceSection[] {
+  const rawItems =
+    typeof value === "string"
+      ? splitGuidanceStructure(value)
+      : Array.isArray(value)
+        ? value
+        : [];
+  return rawItems
+    .map((item, index) =>
+      normalizeGuidanceSection(item, index, fallbackRequired),
+    )
+    .filter((item): item is NormalizedEssayGuidanceSection => Boolean(item))
+    .slice(0, 6);
+}
+
+function fallbackEssayStructure(
+  requiredQuestions: string[],
+): NormalizedEssayGuidanceSection[] {
+  return [
+    {
+      id: "intro",
+      title: "서론",
+      description: "주제에 대한 자신의 입장을 분명히 제시하세요.",
+      items: requiredQuestions[0] ? [requiredQuestions[0]] : [],
+      required: true,
+    },
+    {
+      id: "body",
+      title: "본론",
+      description: "입장을 뒷받침하는 근거와 사례를 연결해 설명하세요.",
+      items: requiredQuestions.slice(1),
+      required: true,
+    },
+    {
+      id: "conclusion",
+      title: "결론",
+      description: "앞서 쓴 내용을 요약하고 자신의 입장을 다시 강조하세요.",
+      items: [],
+      required: true,
+    },
+  ];
+}
+
+function normalizeModelOutline(
+  value: unknown,
+): NormalizedEssayGuidanceSection[] {
+  const arraySections = normalizeGuidanceSections(value, false);
+  if (arraySections.length > 0) return arraySections;
+
+  const obj = asRecord(value);
+  if (!obj) return [];
+  const preferredKeys = ["intro", "body", "conclusion"];
+  const labels: Record<string, string> = {
+    intro: "서론",
+    body: "본론",
+    conclusion: "결론",
+  };
+  const keys = [
+    ...preferredKeys.filter((key) => obj[key] !== undefined),
+    ...Object.keys(obj).filter((key) => !preferredKeys.includes(key)),
+  ];
+
+  return keys.flatMap((key, index) => {
+    const raw = obj[key];
+    const nested = normalizeGuidanceSection(raw, index, false);
+    if (nested && (asRecord(raw) || Array.isArray(raw))) {
+      return [
+        {
+          ...nested,
+          id: asString(nested.id) ?? `outline-${key}`,
+          title: labels[key] ?? nested.title,
+          required: false,
+        },
+      ];
+    }
+    const items = asStringList(raw);
+    return items.length > 0
+      ? [
+          {
+            id: `outline-${key}`,
+            title: labels[key] ?? key,
+            description: null,
+            items,
+            required: false,
+          },
+        ]
+      : [];
+  });
+}
+
+function q54GuidanceSources(
+  materials: AnyRecord | null,
+  rubricCandidate: AnyRecord | null,
+): Array<AnyRecord | null> {
+  return [
+    materials,
+    getNestedRecord(materials, "metadata"),
+    getNestedRecord(materials, "meta"),
+    getNestedRecord(materials, "q54"),
+    getNestedRecord(materials, "writing_54"),
+    getNestedRecord(materials, "topik_writing_54"),
+    getNestedRecord(materials, "topik_writing_54_question"),
+    scenarioRecord(materials),
+    getNestedRecord(rubricCandidate, "guidance"),
+  ];
+}
+
+function normalizeEssayGuidance(
+  materials: AnyRecord | null,
+  rubricCandidate: AnyRecord | null,
+  requiredQuestions: string[],
+): NormalizedEssayGuidance {
+  const sources = q54GuidanceSources(materials, rubricCandidate);
+  const requiredStructure = firstDefinedField(sources, "required_structure");
+  const structure =
+    normalizeGuidanceSections(requiredStructure, true).length > 0
+      ? normalizeGuidanceSections(requiredStructure, true)
+      : fallbackEssayStructure(requiredQuestions);
+
+  return {
+    structure,
+    reasonCount: asInteger(firstDefinedField(sources, "required_reason_count")),
+    reasoningPattern: asString(firstDefinedField(sources, "reasoning_pattern")),
+    scoringFocus: asStringList(
+      firstDefinedField(sources, "scoring_focus"),
+    ).slice(0, 6),
+    prohibitedElements: asStringList(
+      firstDefinedField(sources, "prohibited_elements"),
+    ).slice(0, 4),
+    modelOutline: normalizeModelOutline(
+      firstDefinedField(sources, "model_outline"),
+    ),
+  };
+}
+
 export function normalizeWritingProblem(
   input: WritingProblemNormalizerInput,
 ): NormalizedWritingProblem {
@@ -463,7 +732,6 @@ export function normalizeWritingProblem(
     getNestedString(materials, "prompt_text") ||
     getNestedString(materials, "prompt") ||
     "";
-  const referenceMaterials = normalizeReferenceMaterials(materials);
   const baseRubric = normalizeRubric(input.rubric, materials);
   const submitBlockedReason =
     lifecycleStatus === "active" ? null : ("lifecycle" as const);
@@ -471,12 +739,12 @@ export function normalizeWritingProblem(
   const common = {
     id: input.id,
     title: input.title,
+    textType: input.textType ?? extractTextType(materials),
     prompt,
     questionNo: input.questionNo,
     lifecycleStatus,
     lifecycleReason: input.lifecycleReason ?? null,
     rubric: baseRubric,
-    referenceMaterials,
     fallbackWarnings,
     submitBlockedReason,
   };
@@ -529,6 +797,7 @@ export function normalizeWritingProblem(
 
   if (input.questionNo === 53) {
     const charts = extractCharts(materials);
+    const materialCards = normalizeMaterialCards(materials, charts);
     const tasks = extractPromptNumberedItems(prompt).slice(0, 3);
     if (charts.length === 0) fallbackWarnings.push("missing_charts");
     if (tasks.length === 0) fallbackWarnings.push("missing_writing_tasks");
@@ -537,7 +806,8 @@ export function normalizeWritingProblem(
       kind: "q53",
       questionNo: 53,
       charts,
-      materialCards: referenceMaterials,
+      materialCards,
+      guideCards: extractGuideCards(materials),
       writingTasks: tasks,
       rubricCriteria: baseRubric.criteria,
       submitBlockedReason:
@@ -549,12 +819,10 @@ export function normalizeWritingProblem(
   }
 
   const scenario = scenarioRecord(materials);
-  const topicTitle =
-    getNestedString(scenario, "topic_seed_title") ??
-    getNestedString(materials, "topic_seed_title") ??
-    input.title;
+  const topicTitle = input.title;
   const promptParts = q54PromptParts(prompt, topicTitle);
-  const summary = rubricSummaryFrom(getRubricCandidate(input.rubric, materials));
+  const rubricCandidate = getRubricCandidate(input.rubric, materials);
+  const summary = rubricSummaryFrom(rubricCandidate);
   const requiredQuestions =
     promptParts.requiredQuestions.length > 0
       ? promptParts.requiredQuestions
@@ -562,7 +830,9 @@ export function normalizeWritingProblem(
           getNestedString(scenario, "chart_a_focus"),
           getNestedString(scenario, "chart_b_focus"),
           getNestedString(scenario, "cross_chart_bridge"),
-        ].filter((item): item is string => Boolean(item)).slice(0, 3);
+        ]
+          .filter((item): item is string => Boolean(item))
+          .slice(0, 3);
   if (requiredQuestions.length < 3) {
     fallbackWarnings.push("missing_required_questions");
   }
@@ -580,6 +850,11 @@ export function normalizeWritingProblem(
     requiredQuestions,
     rubricSummary: summary,
     checklistItems: requiredQuestions,
+    essayGuidance: normalizeEssayGuidance(
+      materials,
+      rubricCandidate,
+      requiredQuestions,
+    ),
     submitBlockedReason:
       common.submitBlockedReason ??
       (requiredQuestions.length < 3 || baseRubric.criteria.length === 0

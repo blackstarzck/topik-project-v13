@@ -19,15 +19,17 @@ export function QuestionPrompt({ problem }: Props) {
   const t = useTranslations("writing.prompt");
   const prompt =
     problem.kind === "q54" ? firstPromptBlock(problem.prompt) : problem.prompt;
+  const titlePrefix = problem.textType?.trim();
+  const heading = titlePrefix
+    ? `${titlePrefix} - ${problem.title}`
+    : problem.title;
   return (
     <AppCard size="small">
-      <Title level={5}>
-        {t("heading", {
-          questionNo: problem.questionNo,
-          title: problem.title,
-        })}
-      </Title>
-      <Paragraph type="secondary" className="!m-0 whitespace-pre-line">
+      <Title level={5}>{heading}</Title>
+      <Paragraph
+        type="secondary"
+        className="writing-question-prompt !m-0 whitespace-pre-line"
+      >
         {prompt}
       </Paragraph>
       {problem.kind === "q51" || problem.kind === "q52" ? (
@@ -46,23 +48,23 @@ export function QuestionPrompt({ problem }: Props) {
       {problem.kind === "q53" && problem.writingTasks.length > 0 ? (
         <Space orientation="vertical" size={4} className="w-full">
           <Typography.Text strong>{t("writingTasksLabel")}</Typography.Text>
-          <ol className="m-0 ps-5">
+          <ul className="writing-guide-list writing-question-prompt">
             {problem.writingTasks.map((task) => (
               <li key={task}>{task}</li>
             ))}
-          </ol>
+          </ul>
         </Space>
       ) : null}
       {problem.kind === "q54" ? (
         <Space orientation="vertical" size={8} className="w-full">
           {problem.topicDefinition ? (
-            <Paragraph className="!m-0">
+            <Paragraph className="writing-question-prompt !m-0">
               <Typography.Text strong>{t("definitionLabel")}</Typography.Text>{" "}
               {problem.topicDefinition}
             </Paragraph>
           ) : null}
           {problem.background ? (
-            <Paragraph className="!m-0">
+            <Paragraph className="writing-question-prompt !m-0">
               <Typography.Text strong>{t("backgroundLabel")}</Typography.Text>{" "}
               {problem.background}
             </Paragraph>
@@ -72,11 +74,11 @@ export function QuestionPrompt({ problem }: Props) {
               <Typography.Text strong>
                 {t("requiredQuestionsLabel")}
               </Typography.Text>
-              <ol className="mb-0 mt-1 ps-5">
+              <ul className="writing-guide-list writing-question-prompt mt-1">
                 {problem.requiredQuestions.map((question) => (
                   <li key={question}>{question}</li>
                 ))}
-              </ol>
+              </ul>
             </div>
           ) : null}
         </Space>

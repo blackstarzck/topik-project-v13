@@ -1,5 +1,4 @@
-import type { QuestionNo } from "@/lib/writing/types";
-import type { FeedbackPayload } from "@/lib/writing/feedback-service";
+import type { FeedbackDimensionKey, QuestionNo } from "@/lib/writing/types";
 
 type ExternalTraitScore = {
   trait?: string;
@@ -13,9 +12,39 @@ type ExternalTraitScore = {
 type ExternalAnnotation = {
   start?: number | null;
   end?: number | null;
+  start_offset?: number | null;
+  end_offset?: number | null;
+  text?: string | null;
+  suggestion?: string | null;
+  annotation_type?: string | null;
+  category?: string | null;
   original_text?: string | null;
   corrected_text?: string | null;
   comment?: string | null;
+};
+
+export type EvaluationFeedbackPayload = {
+  feedback: {
+    status: "complete";
+    score_total: number;
+    score_max: number;
+    overall_summary: string;
+    ai_model: string;
+    ai_model_version: string;
+  };
+  dimensions: Array<{
+    dimension: FeedbackDimensionKey;
+    score: number;
+    score_max: number;
+    summary: string;
+    weakness_level: number;
+  }>;
+  sentences: Array<{
+    sentence_index: number;
+    original_text: string;
+    corrected_text: string;
+    comment: string;
+  }>;
 };
 
 export type ExternalEvaluationFeedback = {
@@ -69,9 +98,30 @@ export class ExternalEvaluationApiError extends Error {
   }
 }
 
+export function getTalkpikApiBaseUrl(): string | null {
+  const raw =
+    process.env.TALKPIK_API_BASE_URL?.trim() ||
+    process.env.TALKPIK_WRITING_API_BASE_URL?.trim();
+  if (!raw) return null;
+
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    throw new Error("TALKPIK_API_BASE_URL must be a valid URL");
+  }
+
+  const isProduction = process.env.NODE_ENV === "production";
+  if (isProduction && url.protocol !== "https:") {
+    throw new Error("TALKPIK_API_BASE_URL must use https in production");
+  }
+
+  return url.toString().replace(/\/$/, "");
+}
+
 const TRAIT_TO_DIMENSION: Record<
   string,
-  FeedbackPayload["dimensions"][number]["dimension"]
+  EvaluationFeedbackPayload["dimensions"][number]["dimension"]
 > = {
   grammar: "grammar",
   vocab: "vocab",
@@ -90,7 +140,7 @@ export function toExternalTaskType(questionNo: QuestionNo): string {
 
 export function mapExternalEvaluationFeedback(
   input: ExternalEvaluationFeedback,
-): FeedbackPayload {
+): EvaluationFeedbackPayload {
   const dimensions = input.trait_scores
     .map((trait) => {
       const key = (trait.trait ?? trait.name ?? "").toLowerCase();
@@ -105,14 +155,21 @@ export function mapExternalEvaluationFeedback(
         weakness_level: score == null ? 3 : score < 70 ? 4 : score < 85 ? 3 : 1,
       };
     })
-    .filter((row): row is FeedbackPayload["dimensions"][number] => row !== null);
+    .filter(
+      (row): row is EvaluationFeedbackPayload["dimensions"][number] =>
+        row !== null,
+    );
 
-  const sentences = (input.annotations ?? []).map((annotation, index) => ({
-    sentence_index: index,
-    original_text: annotation.original_text ?? "",
-    corrected_text: annotation.corrected_text ?? annotation.original_text ?? "",
-    comment: annotation.comment ?? "",
-  }));
+  const sentences = (input.annotations ?? []).map((annotation, index) => {
+    const originalText = annotation.original_text ?? annotation.text ?? "";
+    return {
+      sentence_index: index,
+      original_text: originalText,
+      corrected_text:
+        annotation.corrected_text ?? annotation.suggestion ?? originalText,
+      comment: annotation.comment ?? "",
+    };
+  });
 
   return {
     feedback: {

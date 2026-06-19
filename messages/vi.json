@@ -1044,6 +1044,38 @@
         }
       }
     },
+    "report": {
+      "title": "Báo cáo phản hồi câu {questionNo}",
+      "subtitle": "Chúng tôi đã phân tích hai câu trả lời điền vào chỗ trống.",
+      "submittedAt": "Đã nộp {submittedAt}",
+      "analysisTime": "AI phân tích {seconds} giây",
+      "scoreTitle": "Điểm lần này",
+      "scoreSuffix": "/ {max} điểm",
+      "scoreValue": "{score} điểm",
+      "scorePending": "Cần kiểm tra điểm",
+      "scoreStrong": "Bài làm ổn định",
+      "scoreReview": "Sẽ tốt hơn nếu chỉnh thêm",
+      "scoreNeedsPractice": "Cần luyện tập thêm",
+      "criteriaTitle": "Điểm theo chỗ trống",
+      "criteriaHint": "Dựa trên score và weight",
+      "criteriaEmpty": "Chưa có điểm theo từng chỗ trống.",
+      "scoreSummaryFallback": "Nhận xét cho mục này đang trống.",
+      "weightScore": "Điểm phân bổ {score}",
+      "focusTitle": "Điểm cần cải thiện tiếp theo",
+      "focusEmpty": "Chưa có điểm cải thiện được đề xuất.",
+      "recommendationFallback": "Hãy hiểu ngữ cảnh của đề trước, rồi viết lại câu trả lời.",
+      "blank1Label": "Chỗ trống ㉠",
+      "blank2Label": "Chỗ trống ㉡",
+      "genericCriteria": "Mục {index}",
+      "dimension": {
+        "grammar": "Ngữ pháp",
+        "vocab": "Từ vựng",
+        "structure": "Bố cục",
+        "content": "Nội dung",
+        "expression": "Diễn đạt",
+        "topic_fit": "Mức độ phù hợp chủ đề"
+      }
+    },
     "analysis": {
       "title": "AI đang phân tích bài làm của bạn",
       "autoMoveNote": "Bạn sẽ tự động chuyển sang màn hình kết quả khi phân tích xong. Thường mất từ vài giây đến một phút.",
@@ -1112,6 +1144,17 @@
       "failedText": "Mục này phân tích thất bại.",
       "reanalyze": "Phân tích lại",
       "summaryFallback": "Không có tóm tắt"
+    },
+    "external": {
+      "learningTitle": "Luyện tập đề xuất",
+      "learningIntro": "Các điểm học tập này được lấy từ phản hồi phân tích của bài làm này.",
+      "focusAreas": "Phần cần tập trung",
+      "studyTips": "Mẹo học tập",
+      "grammarPoints": "Điểm ngữ pháp",
+      "vocabulary": "Từ vựng",
+      "exercises": "Bài luyện tập",
+      "exerciseAnswer": "Đáp án: {answer}",
+      "exerciseExplanation": "Giải thích: {explanation}"
     },
     "summary": {
       "scoreTitle": "Điểm tổng quan",
@@ -1255,10 +1298,13 @@
       "guideAria": "Hướng dẫn gia sư AI",
       "guideTitle": "Hướng dẫn gia sư AI",
       "guideBody": "Chỗ trống {blank} cần nối kết quả của câu trước với câu sau một cách tự nhiên.",
+      "guidePlaceholder": "Nội dung hướng dẫn riêng cho đề sẽ xuất hiện ở đây.",
       "tipsTitle": "Mẹo viết",
       "tip0": "Hãy dùng cách diễn đạt giải thích kết quả của vấn đề đã nêu trước đó.",
       "tip1": "Các từ nối nhân quả như do đó, vì vậy thường được dùng ở đây.",
       "hintTitle": "Gợi ý câu trả lời mẫu",
+      "tipsPlaceholder": "Mẹo viết riêng cho đề sẽ xuất hiện ở đây.",
+      "hintPlaceholder": "Gợi ý chỗ trống riêng cho đề sẽ xuất hiện ở đây.",
       "reviewPrompt": "Xem lại đề"
     },
     "q52": {
@@ -1282,12 +1328,14 @@
       "expressionHint3": "Ví dụ",
       "expressionHint4": "Kết quả là",
       "guideAria": "Hướng dẫn viết câu 52",
-      "guideTitle": "Kiểm tra điều kiện",
-      "guideBody": "Kiểm tra điều kiện của chỗ trống {blank}, rồi viết để hai chỗ trống nối trong cùng một mạch chủ đề.",
-      "tipsTitle": "Mẹo hoàn thành câu",
+      "guideTitle": "Điều kiện đề bài",
+      "guideBody": "Kiểm tra đoạn văn và điều kiện cùng nhau, rồi viết để hai chỗ trống nối trong cùng một mạch chủ đề.",
+      "conditionFallback": "Dựa vào mạch đoạn văn và ký hiệu chỗ trống để kiểm tra điều kiện của cả hai chỗ trống.",
+      "tipsTitle": "Hướng dẫn viết",
+      "guideFallback": "Hãy xác định quan hệ giữa các câu xung quanh trước, rồi nối hai chỗ trống thành một câu trả lời tự nhiên.",
       "tip0": "Hãy kiểm tra xem chỗ trống đầu có cần tiếp nhận vấn đề hoặc định nghĩa từ câu trước không.",
       "tip1": "Chỗ trống thứ hai cần ăn khớp tự nhiên với kết luận hoặc ví dụ phía sau.",
-      "hintTitle": "Trọng tâm từng chỗ trống",
+      "hintTitle": "Cụm diễn đạt mẫu",
       "reviewPrompt": "Xem lại đề và điều kiện"
     },
     "q53": {
@@ -1309,9 +1357,16 @@
       "guideBody": "So sánh tài liệu trước, rồi sắp xếp nguyên nhân và kết quả thành một mạch rõ ràng.",
       "guideTip0": "Hãy nhắc trực tiếp các thay đổi trong biểu đồ hoặc bảng ở phần thân bài.",
       "guideTip1": "Ở phần kết luận, không lặp lại toàn bộ mà chỉ tóm tắt ý chính.",
+      "materialsTitle": "Tài liệu tham khảo",
+      "materialsEmpty": "Không có tài liệu để hiển thị.",
+      "materialChartFallback": "Loại biểu đồ này được hiển thị bằng bảng thay thế.",
+      "composerModeWrite": "Viết",
+      "composerModeManuscript": "Giấy viết",
       "reviewMaterials": "Xem lại tài liệu"
     },
     "q54": {
+      "composerModeWrite": "Viết",
+      "composerModeManuscript": "Giấy viết",
       "pageTitle": "Câu 54 bài luận theo chủ đề",
       "pageSubtitle": "Dựa vào điều kiện và rubric để viết bài luận 600-700 ký tự.",
       "titleHelp": "Câu 54 yêu cầu thuyết phục bằng lập trường, dẫn chứng và cấu trúc trong bài luận dài.",
@@ -1332,6 +1387,16 @@
       "guideBody": "Đừng chỉ chép lại đề. Hãy xác định lập trường trước rồi nối các dẫn chứng.",
       "guideTip0": "Nêu rõ lập trường của bạn trong phần mở bài.",
       "guideTip1": "Dùng từ nối để liên kết các lý do và ví dụ khác nhau ở phần thân bài.",
+      "guidanceStructureTitle": "Gợi ý cấu trúc bài viết",
+      "guidanceFocusTitle": "Điểm kiểm tra khi viết",
+      "guidanceOutlineTitle": "Dàn ý mẫu",
+      "guidanceRequiredTag": "Bắt buộc",
+      "guidanceReasonCount": "Ít nhất {count} lý do",
+      "guidanceReasoningPattern": "Cách lập luận: {pattern}",
+      "guidanceScoringFocusLabel": "Trọng tâm chấm điểm",
+      "guidanceAvoidLabel": "Cần tránh",
+      "guidanceOutlineSectionSuffix": "dàn ý",
+      "guidanceFocusFallback": "Dựa vào điều kiện đề bài và rubric để kiểm tra cấu trúc bài viết.",
       "reviewPrompt": "Xem lại điều kiện"
     },
     "prompt": {
@@ -1428,6 +1493,9 @@
       "checklistNoEdit": "Đã hiểu không thể sửa",
       "footerNote": "Khi nộp, câu trả lời được lưu an toàn và phân tích AI sẽ bắt đầu."
     },
+    "guide": {
+      "loadFailedTag": "Không tải được"
+    },
     "conditions": {
       "title52": "Điều kiện viết",
       "title53": "Tiêu chí đánh giá",
@@ -1452,14 +1520,6 @@
       "labelEvidence": "Luận cứ — thống kê / ví dụ / kinh nghiệm",
       "labelConnectors": "Từ nối — tuy nhiên / do đó / ngoài ra, v.v.",
       "labelTopicFit": "Bám chủ đề — phù hợp ý đồ đề bài"
-    },
-    "reference": {
-      "cardTitle": "Tài liệu tham khảo",
-      "altImage": "Hình ảnh tham khảo của đề",
-      "altAudio": "Âm thanh tham khảo của đề",
-      "imageLoadFailed": "Không thể tải hình ảnh. ({alt})",
-      "unitLabel": "Đơn vị: {unit}",
-      "zoom": "Phóng to"
     },
     "help": {
       "empty": "Chưa có mẹo viết cho dạng này.",

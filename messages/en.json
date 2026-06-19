@@ -1044,6 +1044,38 @@
         }
       }
     },
+    "report": {
+      "title": "Question {questionNo} feedback report",
+      "subtitle": "We analyzed the two blank-answer responses together.",
+      "submittedAt": "Submitted {submittedAt}",
+      "analysisTime": "AI analysis {seconds}s",
+      "scoreTitle": "This score",
+      "scoreSuffix": "/ {max} pts",
+      "scoreValue": "{score} pts",
+      "scorePending": "Score needs review",
+      "scoreStrong": "Stable answer",
+      "scoreReview": "Good with some refinement",
+      "scoreNeedsPractice": "Needs more practice",
+      "criteriaTitle": "Scores by blank",
+      "criteriaHint": "Based on score and weight",
+      "criteriaEmpty": "No blank-level scores are available yet.",
+      "scoreSummaryFallback": "Feedback for this item is empty.",
+      "weightScore": "Weight {score} pts",
+      "focusTitle": "Next improvement points",
+      "focusEmpty": "No improvement points are available yet.",
+      "recommendationFallback": "Review the prompt context first, then rewrite your answer.",
+      "blank1Label": "Blank ㉠",
+      "blank2Label": "Blank ㉡",
+      "genericCriteria": "Item {index}",
+      "dimension": {
+        "grammar": "Grammar",
+        "vocab": "Vocabulary",
+        "structure": "Structure",
+        "content": "Content",
+        "expression": "Expression",
+        "topic_fit": "Topic relevance"
+      }
+    },
     "analysis": {
       "title": "AI is analyzing your answer",
       "autoMoveNote": "You'll move to the results screen automatically when analysis finishes. It usually takes a few seconds to a minute.",
@@ -1112,6 +1144,17 @@
       "failedText": "This item failed to analyze.",
       "reanalyze": "Analyze again",
       "summaryFallback": "No summary"
+    },
+    "external": {
+      "learningTitle": "Recommended practice",
+      "learningIntro": "These learning points come from the analysis response for this answer.",
+      "focusAreas": "Focus areas",
+      "studyTips": "Study tips",
+      "grammarPoints": "Grammar points",
+      "vocabulary": "Vocabulary",
+      "exercises": "Exercises",
+      "exerciseAnswer": "Answer: {answer}",
+      "exerciseExplanation": "Explanation: {explanation}"
     },
     "summary": {
       "scoreTitle": "Overall score",
@@ -1255,10 +1298,13 @@
       "guideAria": "AI tutor guide",
       "guideTitle": "AI Tutor Guide",
       "guideBody": "Blank {blank} should connect the result of the previous sentence to the next sentence naturally.",
+      "guidePlaceholder": "Problem-specific guide content will appear here.",
       "tipsTitle": "Writing tips",
       "tip0": "Use an expression that explains the result of the issue stated earlier.",
       "tip1": "Causal connectors such as therefore and for that reason are common here.",
       "hintTitle": "Example-answer hint",
+      "tipsPlaceholder": "Problem-specific writing tips will appear here.",
+      "hintPlaceholder": "Problem-specific blank hints will appear here.",
       "reviewPrompt": "Review prompt"
     },
     "q52": {
@@ -1282,12 +1328,14 @@
       "expressionHint3": "For example",
       "expressionHint4": "Consequently",
       "guideAria": "Question 52 writing guide",
-      "guideTitle": "Condition check",
-      "guideBody": "Check the condition for blank {blank}, then make both blanks continue within the same topic flow.",
-      "tipsTitle": "Sentence completion tips",
+      "guideTitle": "Problem conditions",
+      "guideBody": "Check the passage and conditions together, then make both blanks continue within the same topic flow.",
+      "conditionFallback": "Use the passage flow and blank markers to review the conditions for both blanks.",
+      "tipsTitle": "Writing guide",
+      "guideFallback": "Clarify the relationship between the surrounding sentences first, then connect both blanks as one natural answer.",
       "tip0": "Check whether the first blank should receive a problem statement or definition from the previous sentence.",
       "tip1": "The second blank should match the conclusion or example that follows.",
-      "hintTitle": "Blank-by-blank focus",
+      "hintTitle": "Example expressions",
       "reviewPrompt": "Review prompt and conditions"
     },
     "q53": {
@@ -1309,9 +1357,16 @@
       "guideBody": "Compare the materials first, then organize causes and results into one clear flow.",
       "guideTip0": "Mention chart or table changes directly in the body section.",
       "guideTip1": "In the conclusion, avoid repeating everything and summarize only the main point.",
+      "materialsTitle": "Reference materials",
+      "materialsEmpty": "No materials are available.",
+      "materialChartFallback": "This chart type is shown as a table fallback.",
+      "composerModeWrite": "Write",
+      "composerModeManuscript": "Manuscript",
       "reviewMaterials": "Review materials"
     },
     "q54": {
+      "composerModeWrite": "Write",
+      "composerModeManuscript": "Manuscript",
       "pageTitle": "Question 54 Topic Essay",
       "pageSubtitle": "Use the conditions and rubric to write a 600-700 character essay.",
       "titleHelp": "Question 54 asks you to persuade with your position, evidence, and structure in a long essay.",
@@ -1332,6 +1387,16 @@
       "guideBody": "Do not simply copy the prompt. Decide your position first, then connect your evidence.",
       "guideTip0": "State your position clearly in the introduction.",
       "guideTip1": "Use connectors to link different reasons and examples in the body.",
+      "guidanceStructureTitle": "Suggested essay structure",
+      "guidanceFocusTitle": "Writing check points",
+      "guidanceOutlineTitle": "Model outline",
+      "guidanceRequiredTag": "Required",
+      "guidanceReasonCount": "At least {count} reasons",
+      "guidanceReasoningPattern": "Reasoning pattern: {pattern}",
+      "guidanceScoringFocusLabel": "Scoring focus",
+      "guidanceAvoidLabel": "Avoid",
+      "guidanceOutlineSectionSuffix": "outline",
+      "guidanceFocusFallback": "Use the problem conditions and rubric to check your essay structure.",
       "reviewPrompt": "Review conditions"
     },
     "prompt": {
@@ -1428,6 +1493,9 @@
       "checklistNoEdit": "No-edit rule checked",
       "footerNote": "Submitting safely saves the answer and starts AI analysis."
     },
+    "guide": {
+      "loadFailedTag": "Load failed"
+    },
     "conditions": {
       "title52": "Writing conditions",
       "title53": "Evaluation criteria",
@@ -1452,14 +1520,6 @@
       "labelEvidence": "Evidence — statistics / examples / experience",
       "labelConnectors": "Connectors — however / therefore / also, etc.",
       "labelTopicFit": "Topic fit — matches the prompt's intent"
-    },
-    "reference": {
-      "cardTitle": "Reference materials",
-      "altImage": "Problem reference image",
-      "altAudio": "Problem reference audio",
-      "imageLoadFailed": "Could not load the image. ({alt})",
-      "unitLabel": "Unit: {unit}",
-      "zoom": "Zoom in"
     },
     "help": {
       "empty": "There are no writing tips for this type yet.",

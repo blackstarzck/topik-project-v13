@@ -151,6 +151,7 @@ export async function getWritingProblem(
 ): Promise<WritingProblem | null> {
   if (!isQuestionNo(questionNo)) return null;
   if (problemId && !UUID_PATTERN.test(problemId)) return null;
+  const explicitProblemId = problemId || null;
   const supabase = await createClient();
   const runQuery = async (withLifecycle: boolean) => {
     let query = supabase
@@ -166,16 +167,16 @@ export async function getWritingProblem(
     if (withLifecycle) {
       query = query.eq("lifecycle_status", "active");
     }
-    // Default selection (no explicit problemId) must be DETERMINISTIC and stable.
-    // Without an ORDER BY, `.limit(1)` returns an arbitrary published row, so a
-    // direct/deep-link entry could surface a different (or incomplete) problem on
-    // each request. Order before limit so the default question always loads the
-    // same published problem.
+    // Default selection (no explicit problemId) must be deterministic and stable.
+    // Order before limit so direct/deep-link entry surfaces the same published
+    // candidate set and can skip incomplete rows below.
     query = query
       .order("created_at", { ascending: true })
       .order("id", { ascending: true })
-      .limit(problemId ? 1 : DEFAULT_PROBLEM_CANDIDATE_LIMIT);
-    const result = problemId ? await query.eq("id", problemId) : await query;
+      .limit(explicitProblemId ? 1 : DEFAULT_PROBLEM_CANDIDATE_LIMIT);
+    const result = explicitProblemId
+      ? await query.eq("id", explicitProblemId)
+      : await query;
     return result as unknown as WritingProblemQueryResult;
   };
 
@@ -188,9 +189,11 @@ export async function getWritingProblem(
     normalizeWritingProblemRow(row, questionNo),
   );
   if (problems.length === 0) return null;
-  if (problemId) return problems[0];
-  return (
-    problems.find((problem) => problem.submitBlockedReason === null) ??
-    problems[0]
-  );
+  if (!explicitProblemId) {
+    return (
+      problems.find((problem) => problem.submitBlockedReason === null) ??
+      problems[0]
+    );
+  }
+  return problems[0];
 }

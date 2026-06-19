@@ -96,6 +96,36 @@ describe("normalizeWritingProblem", () => {
     expect(normalized.charLimit.hardMax).toBe(120);
   });
 
+  it("promotes the writing fixture text_type into textType", () => {
+    const normalized = normalizeWritingProblem({
+      id: "q51-text-type",
+      title: "Gym survey",
+      prompt: "Prompt ( ㄱ ) ( ㄴ )",
+      questionNo: 51,
+      materials: { meta: { text_type: "Survey notice" } },
+      answerKey: {},
+      rubric: {},
+      lifecycleStatus: "active",
+    });
+
+    expect(normalized.textType).toBe("Survey notice");
+  });
+
+  it("promotes the normalized taxonomy text_type into textType", () => {
+    const normalized = normalizeWritingProblem({
+      id: "q51-taxonomy-text-type",
+      title: "Gym survey",
+      prompt: "Prompt ( ㄱ ) ( ㄴ )",
+      questionNo: 51,
+      materials: { taxonomy: { text_type: "Inquiry email" } },
+      answerKey: {},
+      rubric: {},
+      lifecycleStatus: "active",
+    });
+
+    expect(normalized.textType).toBe("Inquiry email");
+  });
+
   it("normalizes seeded 53 chart/material shape", () => {
     const item = record(sample53[0]);
     const normalized = normalizeWritingProblem({
@@ -122,11 +152,125 @@ describe("normalizeWritingProblem", () => {
     if (normalized.kind !== "q53") throw new Error("expected q53");
     expect(normalized.charts).toHaveLength(2);
     expect(normalized.charts[0].chartType).toBe("bar");
-    expect(normalized.referenceMaterials.some((m) => m.kind === "chart")).toBe(
-      true,
-    );
+    expect(normalized.materialCards).toHaveLength(3);
+    expect(normalized.materialCards[0]).toMatchObject({
+      id: "chart_a",
+      kind: "chart",
+      title: normalized.charts[0].title,
+    });
+    expect(normalized.materialCards[1]).toMatchObject({
+      id: "chart_b",
+      kind: "chart",
+      title: normalized.charts[1].title,
+    });
+    const referenceCard = normalized.materialCards[2];
+    expect(referenceCard).toBeDefined();
+    if (!referenceCard) throw new Error("expected reference card");
+    expect(referenceCard.kind).toBe("reference");
+    if (referenceCard.kind !== "reference") {
+      throw new Error("expected reference card");
+    }
+    expect(referenceCard.rows.length).toBeGreaterThan(0);
     expect(normalized.writingTasks).toHaveLength(3);
     expect(normalized.rubricCriteria.length).toBeGreaterThan(0);
+  });
+
+  it("normalizes 53 material cards without exposing answer-only fields", () => {
+    const normalized = normalizeWritingProblem({
+      id: "q53-leak-guard",
+      title: "q53",
+      prompt: "1) a\n2) b\n3) c",
+      questionNo: 53,
+      materials: {
+        charts: {
+          chart_a: {
+            title: "bar chart",
+            chart_type: "bar",
+            series: [{ label: "A", values: [1, 2] }],
+          },
+          chart_b: {
+            title: "donut chart",
+            chart_type: "donut",
+            series: [{ label: "B", values: [3] }],
+          },
+        },
+        context_notes: {
+          display_label: "참고",
+          row1_label: "원인",
+          row1_value: "safe cause",
+          row2_label: "현황",
+          row2_value: "safe status",
+        },
+        model_answer: "must not leak",
+        narrative: {
+          cause_sentence: "must not leak either",
+          solution_sentence: "must not leak solution",
+        },
+        scenario_logic: {
+          shared_context: "must not leak context",
+        },
+      },
+      answerKey: { model_answer: "must not leak answer key" },
+      rubric: {},
+      lifecycleStatus: "active",
+    });
+
+    expect(normalized.kind).toBe("q53");
+    if (normalized.kind !== "q53") throw new Error("expected q53");
+    expect(normalized.materialCards).toHaveLength(3);
+    expect(normalized.materialCards.map((card) => card.kind)).toEqual([
+      "chart",
+      "chart",
+      "reference",
+    ]);
+    expect(normalized.materialCards[1].chart?.chartType).toBe("donut");
+    const serialized = JSON.stringify(normalized.materialCards);
+    expect(serialized).toContain("safe cause");
+    expect(serialized).not.toContain("must not leak");
+  });
+
+  it("caps 53 material cards at three cards", () => {
+    const normalized = normalizeWritingProblem({
+      id: "q53-cap",
+      title: "q53",
+      prompt: "1) a\n2) b\n3) c",
+      questionNo: 53,
+      materials: {
+        charts: {
+          chart_a: {
+            title: "chart a",
+            chart_type: "line",
+            series: [{ label: "A", values: [1, 2] }],
+          },
+          chart_b: {
+            title: "chart b",
+            chart_type: "pie",
+            series: [{ label: "B", values: [3] }],
+          },
+          chart_c: {
+            title: "chart c",
+            chart_type: "bar",
+            series: [{ label: "C", values: [4] }],
+          },
+        },
+        context_notes: {
+          display_label: "참고",
+          row1_label: "메모",
+          row1_value: "third card",
+        },
+      },
+      rubric: {},
+      lifecycleStatus: "active",
+    });
+
+    expect(normalized.kind).toBe("q53");
+    if (normalized.kind !== "q53") throw new Error("expected q53");
+    expect(normalized.materialCards).toHaveLength(3);
+    expect(normalized.materialCards.map((card) => card.id)).toEqual([
+      "chart_a",
+      "chart_b",
+      "context_notes",
+    ]);
   });
 
   it("splits 54 essay prompt into topic, required questions, and rubric", () => {
@@ -140,6 +284,117 @@ describe("normalizeWritingProblem", () => {
     expect(normalized.requiredQuestions).toHaveLength(3);
     expect(normalized.rubricSummary.content).toContain("세 가지 과제");
     expect(normalized.submitBlockedReason).toBeNull();
+  });
+
+  it("normalizes 54 essay guidance metadata for the writing structure panel", () => {
+    const normalized = normalizeWritingProblem({
+      id: "q54-guidance",
+      title: "알고리즘 추천 서비스",
+      prompt:
+        "다음을 주제로 하여 자신의 생각을 600~700자로 쓰시오.\n\n1) 알고리즘 추천 서비스는 어떤 편리함을 제공하는가?\n2) 지나치게 의존할 경우 어떤 문제가 발생할 수 있는가?\n3) 어떻게 하면 적절하게 활용할 수 있는가?",
+      questionNo: 54,
+      materials: {
+        required_structure: [
+          {
+            title: "서론",
+            description:
+              "주제에 대한 자신의 의견을 명확히 밝히고 글의 방향을 제시하세요.",
+            required: true,
+          },
+          {
+            title: "본론",
+            description:
+              "의견을 뒷받침하는 구체적 이유나 사례를 2가지 이상 제시하세요.",
+            required: true,
+            items: ["본론 1: 첫 번째 근거/사례", "본론 2: 두 번째 근거/사례"],
+          },
+          {
+            title: "결론",
+            description:
+              "앞서 제시한 내용을 요약하고 자신의 의견을 다시 강조하세요.",
+            required: true,
+          },
+        ],
+        required_reason_count: 2,
+        reasoning_pattern: "주장→근거",
+        scoring_focus: ["의견 제시", "구체적 근거", "문장 연결", "분량"],
+        prohibited_elements: ["주제 이탈"],
+        model_outline: {
+          intro: "입장 제시",
+          body: ["첫 번째 근거", "두 번째 근거"],
+          conclusion: "입장 재강조",
+        },
+      },
+      rubric: { criteria: ["내용", "구성", "언어"] },
+      lifecycleStatus: "active",
+    });
+
+    expect(normalized.kind).toBe("q54");
+    if (normalized.kind !== "q54") throw new Error("expected q54");
+    const guidance = (
+      normalized as typeof normalized & {
+        essayGuidance?: {
+          structure: Array<{
+            title: string;
+            description: string | null;
+            items: string[];
+            required: boolean;
+          }>;
+          reasonCount: number | null;
+          reasoningPattern: string | null;
+          scoringFocus: string[];
+          prohibitedElements: string[];
+          modelOutline: Array<{ title: string; items: string[] }>;
+        };
+      }
+    ).essayGuidance;
+
+    expect(guidance).toBeDefined();
+    expect(guidance?.structure.map((section) => section.title)).toEqual([
+      "서론",
+      "본론",
+      "결론",
+    ]);
+    expect(guidance?.structure[1].items).toEqual([
+      "본론 1: 첫 번째 근거/사례",
+      "본론 2: 두 번째 근거/사례",
+    ]);
+    expect(guidance?.reasonCount).toBe(2);
+    expect(guidance?.reasoningPattern).toBe("주장→근거");
+    expect(guidance?.scoringFocus).toEqual([
+      "의견 제시",
+      "구체적 근거",
+      "문장 연결",
+      "분량",
+    ]);
+    expect(guidance?.prohibitedElements).toEqual(["주제 이탈"]);
+    expect(guidance?.modelOutline[0].items).toContain("입장 제시");
+  });
+
+  it("preserves up to five 54 rubric conditions for the D-04 condition panel", () => {
+    const normalized = normalizeWritingProblem({
+      ...inputFromFixture(record(sample54[0]), 54),
+      rubric: {
+        conditions: [
+          "조건 1",
+          "조건 2",
+          "조건 3",
+          "조건 4",
+          "조건 5",
+          "조건 6",
+        ],
+        criteria: ["내용", "구성", "언어"],
+      },
+    });
+
+    expect(normalized.kind).toBe("q54");
+    expect(normalized.rubric.conditions).toEqual([
+      "조건 1",
+      "조건 2",
+      "조건 3",
+      "조건 4",
+      "조건 5",
+    ]);
   });
 
   it("returns explicit fallback and submit block for incomplete 54 data", () => {
@@ -164,11 +419,23 @@ describe("normalizeWritingProblem — adversarial / malformed inputs (A2 hardeni
   const malformed: Array<[string, Partial<WritingProblemNormalizerInput>]> = [
     ["bare-array rubric", { rubric: ["조건 A", "조건 B", "기준 1"] }],
     ["string materials", { materials: '{"unparsed":true}' }],
-    ["null materials/rubric/answerKey", { materials: null, rubric: null, answerKey: null }],
-    ["chart_a as array", { materials: { charts: { chart_a: [1, 2, 3], chart_b: null } } }],
+    [
+      "null materials/rubric/answerKey",
+      { materials: null, rubric: null, answerKey: null },
+    ],
+    [
+      "chart_a as array",
+      { materials: { charts: { chart_a: [1, 2, 3], chart_b: null } } },
+    ],
     ["answer_key as array", { answerKey: ["x", "y"] }],
-    ["answer_key[label] non-string", { answerKey: { ["ㄱ"]: 42, ["ㄴ"]: { nested: true } } }],
-    ["review.validation non-array", { materials: { review: { validation: 7 } } }],
+    [
+      "answer_key[label] non-string",
+      { answerKey: { ["ㄱ"]: 42, ["ㄴ"]: { nested: true } } },
+    ],
+    [
+      "review.validation non-array",
+      { materials: { review: { validation: 7 } } },
+    ],
     [
       "blanks weird position",
       { materials: { blanks: { blank_1: { position: 99 }, blank_2: "nope" } } },
@@ -178,7 +445,10 @@ describe("normalizeWritingProblem — adversarial / malformed inputs (A2 hardeni
       {
         materials: {
           charts: {
-            chart_a: { title: "t", series: [{ label: "a", values: ["x", null, 3] }] },
+            chart_a: {
+              title: "t",
+              series: [{ label: "a", values: ["x", null, 3] }],
+            },
           },
         },
       },

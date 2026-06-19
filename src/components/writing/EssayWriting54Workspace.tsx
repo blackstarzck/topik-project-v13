@@ -1,28 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  Alert,
-  Button,
-  Input,
-  Progress,
-  Tooltip,
-  Typography,
-} from "antd";
-import {
-  Clock3,
-  Info,
-  Lightbulb,
-  PenLine,
-  RotateCcw,
-  SendHorizontal,
-  Sparkles,
-} from "lucide-react";
+import { Alert, Input, Progress, Segmented, Typography } from "antd";
+import { Sparkles } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
 
 import { AppCard } from "@/components/shared/AppCard";
 import { logStudyEvent } from "@/lib/events/study-events";
+import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
 import {
   getCharLimit,
   isCountInRecommendedRange,
@@ -39,19 +24,25 @@ import {
   type LongFormDraftJson,
   type WritingDraftRow,
 } from "@/lib/writing/types";
-import { AutosaveBadge } from "./AutosaveBadge";
 import {
   AutosaveWarningModal,
   type WarningTrigger,
 } from "./AutosaveWarningModal";
 import { ConditionsPanel } from "./ConditionsPanel";
-import { EssayChecklist } from "./EssayChecklist";
+import { EssayStructureGuide } from "./EssayStructureGuide";
 import { ManuscriptPreview } from "./ManuscriptPreview";
 import { QuestionPrompt } from "./QuestionPrompt";
-import { ReferenceMaterials, type ProblemAsset } from "./ReferenceMaterials";
 import { SubmissionConfirmModal } from "./SubmissionConfirmModal";
+import { SubmissionFailedModal } from "./SubmissionFailedModal";
+import {
+  SubmittedAnalysisPanel,
+  type SubmittedAnalysisState,
+} from "./SubmittedAnalysisPanel";
+import { WritingGuideAccordion } from "./WritingGuideAccordion";
+import { WritingExamShell } from "./WritingExamShell";
+import { serializeWritingAnswerSnapshot } from "./writingAnswerSnapshot";
 
-const { Text, Paragraph } = Typography;
+const { Text } = Typography;
 
 type Q54Problem = Extract<NormalizedWritingProblem, { kind: "q54" }>;
 
@@ -59,7 +50,6 @@ type Props = {
   userId: string;
   problem: Q54Problem;
   draft: WritingDraftRow | null;
-  assets?: ProblemAsset[];
 };
 
 type Question54State = {
@@ -67,14 +57,9 @@ type Question54State = {
   checklist: Record<EssayChecklistKey, ChecklistItemStatus>;
 };
 
-const DEBOUNCE_MS = 2000;
+type ComposerMode = "write" | "manuscript";
 
-function formatElapsed(seconds: number): string {
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = seconds % 60;
-  return [h, m, s].map((n) => String(n).padStart(2, "0")).join(":");
-}
+const DEBOUNCE_MS = 2000;
 
 function readInitial54(draft: WritingDraftRow | null): Question54State {
   if (
@@ -98,21 +83,10 @@ function build54Json(state: Question54State): LongFormDraftJson {
   };
 }
 
-function paragraphCount(text: string): number {
-  return text
-    .split(/\n\s*\n/)
-    .map((part) => part.trim())
-    .filter(Boolean).length;
-}
-
-export function EssayWriting54Workspace({
-  userId,
-  problem,
-  draft,
-  assets = [],
-}: Props) {
+export function EssayWriting54Workspace({ userId, problem, draft }: Props) {
   const tPage = useTranslations("writing.q54");
   const tEditor = useTranslations("writing.editor");
+  const tGuide = useTranslations("writing.guide");
   const [state, setState] = useState<Question54State>(() =>
     readInitial54(draft),
   );
@@ -129,13 +103,14 @@ export function EssayWriting54Workspace({
   );
   const [blurNotice, setBlurNotice] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [autosaveEnabled, setAutosaveEnabled] = useState(true);
+  const [submittedAnalysis, setSubmittedAnalysis] =
+    useState<SubmittedAnalysisState | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [composerMode, setComposerMode] = useState<ComposerMode>("write");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveSeqRef = useRef(0);
   const upsert = useUpsertDraft();
   const submit = useSubmitWriting();
-  const router = useRouter();
 
   const limit = getCharLimit(54);
   const charCount = state.text.length;
@@ -145,8 +120,24 @@ export function EssayWriting54Workspace({
     100,
     Math.round((charCount / limit.hardMax) * 100),
   );
-  const paragraphs = useMemo(() => paragraphCount(state.text), [state.text]);
   const locked = Boolean(problem.submitBlockedReason);
+  const currentAnswerSnapshot = useMemo(
+    () => serializeWritingAnswerSnapshot(build54Json(state)),
+    [state],
+  );
+  const [lastSavedSnapshot, setLastSavedSnapshot] = useState(
+    () => currentAnswerSnapshot,
+  );
+  const hasUnsavedAnswerChange = currentAnswerSnapshot !== lastSavedSnapshot;
+  const exitGuard = useUnsavedChangesGuard({
+    when: hasUnsavedAnswerChange,
+    fallbackHref: "/practice/problems",
+  });
+  const modalTrigger: WarningTrigger | null = exitGuard.pendingNavigation
+    ? "exit_with_dirty"
+    : warningTrigger;
+  const guideLoadFailed =
+    problem.submitBlockedReason === "problem_data_incomplete";
 
   useEffect(() => {
     void logStudyEvent({
@@ -169,17 +160,6 @@ export function EssayWriting54Workspace({
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
   }, []);
-
-  useEffect(() => {
-    const hasUnsaved = status === "dirty" || status === "failed";
-    if (!hasUnsaved) return;
-    function onBeforeUnload(e: BeforeUnloadEvent) {
-      e.preventDefault();
-      e.returnValue = "";
-    }
-    window.addEventListener("beforeunload", onBeforeUnload);
-    return () => window.removeEventListener("beforeunload", onBeforeUnload);
-  }, [status]);
 
   function validateLength() {
     if (charCount === 0) {
@@ -210,6 +190,7 @@ export function EssayWriting54Workspace({
     nextText: string,
     isManual: boolean,
   ) {
+    const nextSnapshot = serializeWritingAnswerSnapshot(build54Json(nextState));
     setStatus("syncing");
     const seq = ++saveSeqRef.current;
     upsert.mutate(
@@ -226,6 +207,7 @@ export function EssayWriting54Workspace({
       {
         onSuccess: (row) => {
           if (seq !== saveSeqRef.current) return;
+          setLastSavedSnapshot(nextSnapshot);
           setStatus("clean");
           setDraftId(row.id);
           setLastSavedAt(row.last_saved_at ?? null);
@@ -247,10 +229,6 @@ export function EssayWriting54Workspace({
   }
 
   function scheduleSave(nextState: Question54State) {
-    if (!autosaveEnabled) {
-      setStatus("dirty");
-      return;
-    }
     if (status !== "syncing") setStatus("dirty");
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(
@@ -266,40 +244,22 @@ export function EssayWriting54Workspace({
     scheduleSave(nextState);
   }
 
-  function onChecklistChange(
-    key: EssayChecklistKey,
-    next: ChecklistItemStatus,
-  ) {
-    if (locked) return;
-    const nextState = {
-      ...state,
-      checklist: { ...state.checklist, [key]: next },
-    };
-    setState(nextState);
-    scheduleSave(nextState);
-  }
-
   function onManualSave() {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     persist(state, state.text, true);
   }
 
-  function onToggleAutosave() {
-    if (autosaveEnabled) {
-      setWarningTrigger("disable_attempt");
-    } else {
-      setAutosaveEnabled(true);
-    }
-  }
-
   function onOpenSubmitConfirm() {
     validateLength();
     if (!submittable || locked) return;
+    setSubmitError(null);
     setConfirmOpen(true);
   }
 
-  function onConfirmSubmit() {
-    setSubmitError(null);
+  function submitAnswer({
+    clearFailure = true,
+  }: { clearFailure?: boolean } = {}) {
+    if (clearFailure) setSubmitError(null);
     submit.mutate(
       {
         draft_id: draftId,
@@ -312,17 +272,40 @@ export function EssayWriting54Workspace({
       {
         onSuccess: (result) => {
           setConfirmOpen(false);
+          setSubmitError(null);
           void logStudyEvent({
             eventType: "submission_submitted",
             problemId: problem.id,
             submissionId: result.submissionId,
             payload: { question_no: 54, char_count: charCount },
           });
-          router.push(`/writing/feedback/long/${result.submissionId}`);
+          setSubmittedAnalysis({
+            submissionId: result.submissionId,
+            questionNo: result.questionNo,
+            answerText: state.text,
+            charCount,
+            submittedAt: new Date().toISOString(),
+            feedbackHref: `/writing/feedback/long/${result.submissionId}`,
+          });
         },
-        onError: (e) => setSubmitError(e.message),
+        onError: (e) => {
+          setConfirmOpen(false);
+          setSubmitError(e.message);
+        },
       },
     );
+  }
+
+  function onConfirmSubmit() {
+    submitAnswer();
+  }
+
+  function onRetrySubmitFailure() {
+    submitAnswer({ clearFailure: false });
+  }
+
+  if (submittedAnalysis) {
+    return <SubmittedAnalysisPanel state={submittedAnalysis} />;
   }
 
   const charCountUI = (
@@ -336,206 +319,213 @@ export function EssayWriting54Workspace({
   );
 
   return (
-    <div className="writing-workspace writing-workspace--q54">
-      <header className="writing-command">
-        <div className="writing-command__titles">
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="writing-command__title">{tPage("pageTitle")}</h1>
-            <Tooltip title={tPage("titleHelp")}>
-              <Info aria-hidden size={18} className="writing-command__info" />
-            </Tooltip>
-          </div>
-          <p className="writing-command__subtitle">{tPage("pageSubtitle")}</p>
-        </div>
-        <div className="writing-command__actions">
-          <AutosaveBadge status={status} lastSavedAt={lastSavedAt} />
-          <span className="inline-flex min-h-8 items-center gap-1 rounded-full border border-border bg-surface px-3 text-xs font-semibold text-text">
-            <Clock3 aria-hidden size={14} />
-            {formatElapsed(elapsedSeconds)}
-          </span>
-          <Button
-            icon={<PenLine aria-hidden size={16} />}
-            onClick={onManualSave}
-            loading={status === "syncing" && upsert.isPending}
-            disabled={submit.isPending || state.text.length === 0 || locked}
-          >
-            {tEditor("saveDraft")}
-          </Button>
-          <Button
-            type="primary"
-            icon={<SendHorizontal aria-hidden size={16} />}
-            onClick={onOpenSubmitConfirm}
-            disabled={!submittable || submit.isPending || locked}
-          >
-            {tEditor("submit")}
-          </Button>
-        </div>
-      </header>
-
-      <section className="writing-stepper" aria-label={tPage("stepperLabel")}>
-        <div className="writing-step writing-step--done">
-          <span>1</span>
-          <Text>{tPage("stepConditions")}</Text>
-        </div>
-        <div className="writing-step writing-step--active">
-          <span>2</span>
-          <Text strong>{tPage("stepWrite")}</Text>
-        </div>
-        <div className="writing-step">
-          <span>3</span>
-          <Text type="secondary">{tPage("stepCheck")}</Text>
-        </div>
-      </section>
-
-      {problem.submitBlockedReason ? (
-        <Alert
-          type="warning"
-          showIcon
-          title={tEditor("submitBlockedProblemData")}
-        />
-      ) : null}
-
-      <div className="writing-grid writing-grid--essay">
-        <section
-          className="writing-grid__support"
-          aria-label={tPage("sourceAria")}
-        >
-          <QuestionPrompt problem={problem} />
-          <ConditionsPanel
-            questionNo={54}
-            rubric={problem.rubric}
-            loadFailed={problem.submitBlockedReason === "problem_data_incomplete"}
+    <WritingExamShell
+      title={tPage("pageTitle")}
+      subtitle={tPage("pageSubtitle")}
+      progressPercent={progressPercent}
+      elapsedSeconds={elapsedSeconds}
+      autosaveStatus={status}
+      lastSavedAt={lastSavedAt}
+      canSave={!submit.isPending && state.text.length > 0 && !locked}
+      canSubmit={submittable && !submit.isPending && !locked}
+      isSaving={status === "syncing" && upsert.isPending}
+      isSubmitting={submit.isPending}
+      onSave={onManualSave}
+      onSubmit={onOpenSubmitConfirm}
+      onRequestBack={exitGuard.requestNavigation}
+    >
+      <div className="writing-workspace writing-workspace--q54">
+        {problem.submitBlockedReason ? (
+          <Alert
+            type="warning"
+            showIcon
+            title={tEditor("submitBlockedProblemData")}
           />
-          <ReferenceMaterials
-            assets={assets}
-            materials={problem.referenceMaterials}
-          />
-          <section className="writing-guide-card writing-guide-card--tutor">
-            <div className="writing-guide-card__title">
-              <Sparkles aria-hidden size={18} />
-              <Text strong>{tPage("guideTitle")}</Text>
-            </div>
-            <p>{tPage("guideBody")}</p>
-            <ul className="writing-guide-list">
-              <li>{tPage("guideTip0")}</li>
-              <li>{tPage("guideTip1")}</li>
-            </ul>
+        ) : null}
+
+        <div className="writing-grid writing-grid--essay">
+          <section
+            className="writing-grid__support"
+            aria-label={tPage("sourceAria")}
+          >
+            <QuestionPrompt problem={problem} />
+            <ConditionsPanel
+              questionNo={54}
+              rubric={problem.rubric}
+              loadFailed={
+                problem.submitBlockedReason === "problem_data_incomplete"
+              }
+            />
+            <WritingGuideAccordion
+              className="writing-guide-accordion writing-guide-accordion--support"
+              loadFailed={guideLoadFailed}
+              loadFailedLabel={tGuide("loadFailedTag")}
+              defaultActiveKeys={["guide"]}
+              items={[
+                {
+                  key: "guide",
+                  disabledOnLoadFailed: true,
+                  className: "writing-guide-accordion__item--tutor",
+                  icon: <Sparkles aria-hidden size={18} />,
+                  title: tPage("guideTitle"),
+                  children: (
+                    <>
+                      <p>{tPage("guideBody")}</p>
+                      <ul className="writing-guide-list">
+                        <li>{tPage("guideTip0")}</li>
+                        <li>{tPage("guideTip1")}</li>
+                      </ul>
+                    </>
+                  ),
+                },
+              ]}
+            />
           </section>
-        </section>
 
-        <section
-          className="writing-grid__composer"
-          aria-label={tPage("composerAria")}
-        >
-          <AppCard>
-            <div className="writing-answer-card__head">
-              <div>
-                <Text strong>{tPage("editorTitle")}</Text>
-                <Paragraph
-                  type="secondary"
-                  className="writing-answer-card__hint"
-                >
-                  {tPage("editorHint")}
-                </Paragraph>
-              </div>
-              {charCountUI}
-            </div>
-            <Progress
-              percent={progressPercent}
-              showInfo={false}
-              size="small"
-              status={inRecommended ? "success" : "active"}
-            />
-            <Input.TextArea
-              aria-label={tPage("answerInputAria")}
-              value={state.text}
-              onChange={(e) => onTextChange(e.target.value)}
-              onBlur={validateLength}
-              autoSize={{ minRows: 18 }}
-              maxLength={limit.hardMax}
-              placeholder={tEditor("essayBodyPlaceholder")}
-              disabled={submit.isPending || locked}
-            />
-            {blurNotice ? (
-              <Text type="danger" className="writing-answer-card__notice">
-                {blurNotice}
-              </Text>
-            ) : null}
-            {!autosaveEnabled ? (
-              <Text type="warning" className="writing-answer-card__notice">
-                {tEditor("autosaveDisabledNotice")}
-              </Text>
-            ) : null}
-            <div className="writing-editor-toolbar">
-              <div className="flex flex-wrap items-center gap-2">
-                <Lightbulb aria-hidden size={18} />
-                <Text strong>{tPage("statusTitle")}</Text>
-                <span className="inline-flex min-h-7 items-center rounded-full border border-border bg-background px-3 text-xs font-semibold text-text-secondary">
-                  {tPage("paragraphCount", { count: paragraphs })}
-                </span>
-                <span className="inline-flex min-h-7 items-center rounded-full border border-border bg-background px-3 text-xs font-semibold text-text-secondary">
-                  {tPage("targetRange")}
-                </span>
-                <Button size="small" type="link" onClick={onToggleAutosave}>
-                  {autosaveEnabled
-                    ? tEditor("autosaveOff")
-                    : tEditor("autosaveOn")}
-                </Button>
-              </div>
-            </div>
-          </AppCard>
-
-          <AppCard>
-            <ManuscriptPreview text={state.text} />
-          </AppCard>
-        </section>
-
-        <aside
-          className="writing-grid__checklist"
-          aria-label={tPage("checklistAria")}
-        >
-          <EssayChecklist status={state.checklist} onChange={onChecklistChange} />
-          <Button
-            block
-            icon={<RotateCcw aria-hidden size={16} />}
-            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          <section
+            className="writing-grid__composer"
+            aria-label={tPage("composerAria")}
           >
-            {tPage("reviewPrompt")}
-          </Button>
-        </aside>
-      </div>
+            <AppCard className="writing-composer-card">
+              <div className="writing-answer-card__head">
+                <div>
+                  <Text strong>{tPage("editorTitle")}</Text>
+                </div>
+                <div className="writing-composer-mode">
+                  {charCountUI}
+                  <Segmented
+                    size="small"
+                    value={composerMode}
+                    onChange={(value) => setComposerMode(value as ComposerMode)}
+                    options={[
+                      {
+                        label: (
+                          <span data-testid="q54-composer-mode-write">
+                            {tPage("composerModeWrite")}
+                          </span>
+                        ),
+                        value: "write",
+                      },
+                      {
+                        label: (
+                          <span data-testid="q54-composer-mode-manuscript">
+                            {tPage("composerModeManuscript")}
+                          </span>
+                        ),
+                        value: "manuscript",
+                      },
+                    ]}
+                  />
+                </div>
+              </div>
 
-      <SubmissionConfirmModal
-        open={confirmOpen}
-        charCount={charCount}
-        minChars={limit.hardMin}
-        questionNo={54}
-        lastSavedAt={lastSavedAt}
-        loading={submit.isPending}
-        submitError={submitError}
-        onConfirm={onConfirmSubmit}
-        onCancel={() => {
-          setSubmitError(null);
-          setConfirmOpen(false);
-        }}
-      />
-      <AutosaveWarningModal
-        trigger={warningTrigger}
-        lastSavedAt={lastSavedAt}
-        retrying={upsert.isPending}
-        onKeep={() => setWarningTrigger(null)}
-        onRetry={() => {
-          setWarningTrigger(null);
-          if (debounceRef.current) clearTimeout(debounceRef.current);
-          persist(state, state.text, false);
-        }}
-        onProceed={() => {
-          if (warningTrigger === "disable_attempt") {
-            setAutosaveEnabled(false);
-          }
-          setWarningTrigger(null);
-        }}
-      />
-    </div>
+              {composerMode === "write" ? (
+                <div
+                  className="writing-composer-panel writing-composer-panel--write"
+                  data-testid="q54-composer-write-panel"
+                >
+                  <Progress
+                    percent={progressPercent}
+                    showInfo={false}
+                    size="small"
+                    status={inRecommended ? "success" : "active"}
+                  />
+                  <Input.TextArea
+                    aria-label={tPage("answerInputAria")}
+                    value={state.text}
+                    onChange={(e) => onTextChange(e.target.value)}
+                    onBlur={validateLength}
+                    autoSize={{ minRows: 18 }}
+                    maxLength={limit.hardMax}
+                    placeholder={tEditor("essayBodyPlaceholder")}
+                    disabled={submit.isPending || locked}
+                  />
+                  {blurNotice ? (
+                    <Text type="danger" className="writing-answer-card__notice">
+                      {blurNotice}
+                    </Text>
+                  ) : null}
+                </div>
+              ) : (
+                <div
+                  className="writing-composer-panel writing-composer-panel--manuscript"
+                  data-testid="q54-composer-manuscript-panel"
+                >
+                  <Progress
+                    percent={progressPercent}
+                    showInfo={false}
+                    size="small"
+                    status={inRecommended ? "success" : "active"}
+                  />
+                  <ManuscriptPreview text={state.text} showHeader={false} />
+                </div>
+              )}
+            </AppCard>
+          </section>
+
+          <aside
+            className="writing-grid__checklist"
+            aria-label={tPage("checklistAria")}
+          >
+            <EssayStructureGuide
+              guidance={problem.essayGuidance}
+              loadFailed={guideLoadFailed}
+              loadFailedLabel={tGuide("loadFailedTag")}
+            />
+          </aside>
+        </div>
+
+        <SubmissionConfirmModal
+          open={confirmOpen}
+          charCount={charCount}
+          minChars={limit.hardMin}
+          questionNo={54}
+          lastSavedAt={lastSavedAt}
+          loading={submit.isPending}
+          onConfirm={onConfirmSubmit}
+          onCancel={() => {
+            setSubmitError(null);
+            setConfirmOpen(false);
+          }}
+        />
+        <SubmissionFailedModal
+          open={Boolean(submitError)}
+          submitError={submitError}
+          loading={submit.isPending}
+          onRetry={onRetrySubmitFailure}
+          onClose={() => setSubmitError(null)}
+        />
+        <AutosaveWarningModal
+          trigger={modalTrigger}
+          lastSavedAt={lastSavedAt}
+          retrying={upsert.isPending}
+          onKeep={() => {
+            if (exitGuard.pendingNavigation) {
+              exitGuard.cancelPendingNavigation();
+              return;
+            }
+            setWarningTrigger(null);
+          }}
+          onRetry={() => {
+            if (exitGuard.pendingNavigation) {
+              exitGuard.cancelPendingNavigation();
+              if (debounceRef.current) clearTimeout(debounceRef.current);
+              persist(state, state.text, true);
+              return;
+            }
+            setWarningTrigger(null);
+            if (debounceRef.current) clearTimeout(debounceRef.current);
+            persist(state, state.text, false);
+          }}
+          onProceed={() => {
+            if (exitGuard.pendingNavigation) {
+              exitGuard.proceedPendingNavigation();
+              return;
+            }
+            setWarningTrigger(null);
+          }}
+        />
+      </div>
+    </WritingExamShell>
   );
 }

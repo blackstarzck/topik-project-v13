@@ -1,9 +1,15 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { redirect } from "next/navigation";
-import { createSupabaseServerClient } from "../supabase/server";
+import {
+  createSupabaseServerClient,
+  createSupabaseServiceRoleClient,
+} from "../supabase/server";
 import type { Json } from "../supabase/types";
 import {
+  ExternalEvaluationApiError,
+  getTalkpikApiBaseUrl,
   submitExternalWriting,
   toExternalTaskType,
 } from "../writing-api/evaluation";
@@ -11,7 +17,6 @@ import {
   computeComparisonMetrics,
   generateNarrative,
 } from "./comparison-service";
-import { generateMockFeedback } from "./feedback-service";
 import type { QuestionNo } from "./types";
 
 export type SubmitWritingInput = {
@@ -38,6 +43,52 @@ function toSubmitWritingErrorMessage(message: string) {
   return `submitWriting failed: ${message}`;
 }
 
+function isExternalSubmitNetworkError(error: unknown): error is TypeError {
+  return error instanceof TypeError;
+}
+
+function isRecoverableExternalSubmitError(error: unknown): boolean {
+  return (
+    isExternalSubmitNetworkError(error) ||
+    (error instanceof ExternalEvaluationApiError &&
+      error.status >= 500 &&
+      error.status < 600)
+  );
+}
+
+async function createFailedLocalSubmission({
+  serviceSupabase,
+  userId,
+  input,
+}: {
+  serviceSupabase: ReturnType<typeof createSupabaseServiceRoleClient>;
+  userId: string;
+  input: SubmitWritingInput;
+}): Promise<SubmitWritingResult> {
+  const submissionId = randomUUID();
+  const { data, error } = await serviceSupabase.rpc(
+    "create_external_writing_submission",
+    {
+      submission: {
+        external_submission_id: submissionId,
+        user_id: userId,
+        problem_id: input.problem_id,
+        draft_id: input.draft_id ?? null,
+        question_no: input.question_no,
+        answer_text: input.answer_text,
+        answer_json: (input.answer_json ?? null) as Json | null,
+        char_count: input.char_count,
+        feedback_status: "failed",
+      },
+    } as never,
+  );
+  if (error) throw new Error(toSubmitWritingErrorMessage(error.message));
+  if (data !== submissionId) {
+    throw new Error("submitWriting: insert returned empty submission id");
+  }
+  return { submissionId, questionNo: input.question_no };
+}
+
 export async function submitWritingAction(
   input: SubmitWritingInput,
 ): Promise<SubmitWritingResult> {
@@ -47,77 +98,86 @@ export async function submitWritingAction(
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const externalBaseUrl = process.env.TALKPIK_WRITING_API_BASE_URL?.trim();
+  const externalBaseUrl = getTalkpikApiBaseUrl();
   if (externalBaseUrl) {
     const {
       data: { session },
     } = await supabase.auth.getSession();
     const accessToken = session?.access_token;
     if (!accessToken) throw new Error("submitWriting: missing session token");
+    const serviceSupabase = createSupabaseServiceRoleClient();
+    const externalTaskType = toExternalTaskType(input.question_no);
 
-    const external = await submitExternalWriting({
-      baseUrl: externalBaseUrl,
-      accessToken,
-      payload: {
-        task_type: toExternalTaskType(input.question_no),
-        task_id: input.problem_id,
-        text: input.answer_text,
-        user_id: user.id,
-        lang: "ko",
-        passage_context: "",
-      },
-    });
-
-    const { error: insertError } = await supabase
-      .from("writing_submissions")
-      .insert({
-        id: external.submission_id,
-        user_id: user.id,
-        problem_id: input.problem_id,
-        draft_id: input.draft_id ?? null,
-        question_no: input.question_no,
-        answer_text: input.answer_text,
-        answer_json: (input.answer_json ?? null) as Json | null,
-        char_count: input.char_count,
-        feedback_status: external.status === "failed" ? "failed" : "analyzing",
+    let external;
+    try {
+      external = await submitExternalWriting({
+        baseUrl: externalBaseUrl,
+        accessToken,
+        payload: {
+          task_type: externalTaskType,
+          task_id: input.problem_id,
+          text: input.answer_text,
+          user_id: user.id,
+          lang: "ko",
+          passage_context: "",
+        },
       });
-    if (insertError) {
-      throw new Error(`submitWriting external local insert: ${insertError.message}`);
+    } catch (error) {
+      if (!isRecoverableExternalSubmitError(error)) throw error;
+      console.warn(
+        "[writing-submit] external_writing_submit_recoverable_failed",
+        {
+          questionNo: input.question_no,
+          errorName: error instanceof Error ? error.name : "UnknownError",
+          errorStatus:
+            error instanceof ExternalEvaluationApiError ? error.status : null,
+        },
+      );
+      return createFailedLocalSubmission({
+        serviceSupabase,
+        userId: user.id,
+        input,
+      });
     }
 
-    return { submissionId: external.submission_id, questionNo: input.question_no };
+    const nextStatus = external.status === "failed" ? "failed" : "analyzing";
+    const { data: localSubmissionId, error: createError } =
+      await serviceSupabase.rpc("create_external_writing_submission", {
+        submission: {
+          external_submission_id: external.submission_id,
+          user_id: user.id,
+          problem_id: input.problem_id,
+          draft_id: input.draft_id ?? null,
+          question_no: input.question_no,
+          answer_text: input.answer_text,
+          answer_json: (input.answer_json ?? null) as Json | null,
+          char_count: input.char_count,
+          feedback_status: nextStatus,
+        },
+      } as never);
+    if (createError) {
+      throw new Error(
+        `submitWriting external local create: ${createError.message}`,
+      );
+    }
+    if (localSubmissionId !== external.submission_id) {
+      throw new Error(
+        "submitWriting external local create returned mismatched submission id",
+      );
+    }
+
+    return {
+      submissionId: external.submission_id,
+      questionNo: input.question_no,
+    };
   }
 
-  const mock = generateMockFeedback({
-    question_no: input.question_no,
-    char_count: input.char_count,
-    answer_text: input.answer_text,
+  const serviceSupabase = createSupabaseServiceRoleClient();
+  return createFailedLocalSubmission({
+    serviceSupabase,
+    userId: user.id,
+    input,
   });
-
-  const submissionPayload: Record<string, unknown> = {
-    problem_id: input.problem_id,
-    question_no: input.question_no,
-    answer_text: input.answer_text,
-    answer_json: input.answer_json ?? null,
-    char_count: input.char_count,
-  };
-  if (input.draft_id) submissionPayload.draft_id = input.draft_id;
-
-  const { data, error } = await supabase.rpc(
-    "submit_writing_with_feedback" as never,
-    {
-      submission: submissionPayload,
-      feedback: mock.feedback,
-      dimensions: mock.dimensions,
-      sentences: mock.sentences,
-    } as never,
-  );
-  if (error) throw new Error(toSubmitWritingErrorMessage(error.message));
-  const submissionId = (data as unknown as string) ?? "";
-  if (!submissionId) {
-    throw new Error("submitWriting: RPC returned empty submission id");
-  }
-  return { submissionId, questionNo: input.question_no };
 }
 
 export type CreateComparisonReportInput = {
@@ -194,7 +254,7 @@ export async function createComparisonReportAction(
       previous_id: input.previous_id ?? null,
       metrics: metrics as unknown as Record<string, unknown>,
       narrative,
-      ai_model: "mock-v1",
+      ai_model: "comparison-local-v1",
     } as never,
   );
   if (rpcErr) throw new Error(`comparison rpc: ${rpcErr.message}`);

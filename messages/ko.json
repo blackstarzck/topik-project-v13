@@ -1044,6 +1044,38 @@
         }
       }
     },
+    "report": {
+      "title": "{questionNo}번 피드백 리포트",
+      "subtitle": "두 빈칸 답안을 기준으로 분석했어요.",
+      "submittedAt": "제출일 {submittedAt}",
+      "analysisTime": "AI 분석 {seconds}초",
+      "scoreTitle": "이번 점수",
+      "scoreSuffix": "/ {max}점",
+      "scoreValue": "{score}점",
+      "scorePending": "점수 확인 필요",
+      "scoreStrong": "안정적인 답안",
+      "scoreReview": "보완하면 더 좋아요",
+      "scoreNeedsPractice": "추가 연습 필요",
+      "criteriaTitle": "빈칸별 점수",
+      "criteriaHint": "score와 weight 기준",
+      "criteriaEmpty": "표시할 빈칸별 점수가 아직 없어요.",
+      "scoreSummaryFallback": "이 항목의 피드백이 아직 비어 있어요.",
+      "weightScore": "배점 {score}점",
+      "focusTitle": "다음 보완 포인트",
+      "focusEmpty": "추천할 보완 포인트가 아직 없어요.",
+      "recommendationFallback": "문제의 맥락을 먼저 파악한 뒤 답안을 다시 작성해 보세요.",
+      "blank1Label": "㉠ 빈칸",
+      "blank2Label": "㉡ 빈칸",
+      "genericCriteria": "항목 {index}",
+      "dimension": {
+        "grammar": "문법",
+        "vocab": "어휘",
+        "structure": "구성",
+        "content": "내용",
+        "expression": "표현",
+        "topic_fit": "주제 적합성"
+      }
+    },
     "analysis": {
       "title": "AI가 답안을 분석하고 있어요",
       "autoMoveNote": "분석이 끝나면 자동으로 결과 화면으로 이동합니다. 보통 몇 초에서 1분 정도 걸려요.",
@@ -1112,6 +1144,17 @@
       "failedText": "이 항목은 분석에 실패했어요.",
       "reanalyze": "다시 분석하기",
       "summaryFallback": "요약 없음"
+    },
+    "external": {
+      "learningTitle": "추천 학습",
+      "learningIntro": "분석 응답에 포함된 학습 포인트를 바탕으로 보완하면 좋은 부분을 정리했어요.",
+      "focusAreas": "집중 영역",
+      "studyTips": "학습 팁",
+      "grammarPoints": "문법 포인트",
+      "vocabulary": "어휘",
+      "exercises": "연습",
+      "exerciseAnswer": "정답: {answer}",
+      "exerciseExplanation": "해설: {explanation}"
     },
     "summary": {
       "scoreTitle": "총평 점수",
@@ -1255,10 +1298,13 @@
       "guideAria": "AI 튜터 가이드",
       "guideTitle": "AI 튜터 가이드",
       "guideBody": "빈칸 {blank}은 앞 문장의 결과와 뒤 문장의 흐름을 자연스럽게 이어야 해요.",
+      "guidePlaceholder": "문제별 가이드 내용이 이곳에 표시될 예정입니다.",
       "tipsTitle": "작성 팁",
       "tip0": "앞 문장에서 제시된 문제의 결과를 설명하는 표현을 사용해 보세요.",
       "tip1": "따라서, 그렇기 때문에처럼 인과 관계를 나타내는 표현이 자주 쓰여요.",
       "hintTitle": "예시 답안 힌트",
+      "tipsPlaceholder": "문제별 작성 팁이 이곳에 표시될 예정입니다.",
+      "hintPlaceholder": "문제별 빈칸 힌트가 이곳에 표시될 예정입니다.",
       "reviewPrompt": "지문 다시 보기"
     },
     "q52": {
@@ -1282,12 +1328,14 @@
       "expressionHint3": "예를 들어",
       "expressionHint4": "결과적으로",
       "guideAria": "52번 작성 도움말",
-      "guideTitle": "조건 점검",
-      "guideBody": "현재 선택한 빈칸 {blank}의 조건을 확인한 뒤, 두 빈칸이 같은 주제 흐름 안에서 이어지게 작성하세요.",
-      "tipsTitle": "문장 완성 팁",
+      "guideTitle": "문제 조건",
+      "guideBody": "지문과 조건을 함께 확인한 뒤 두 빈칸이 같은 주제 흐름 안에서 이어지게 작성하세요.",
+      "conditionFallback": "지문 흐름과 빈칸 표시를 기준으로 두 빈칸의 조건을 함께 확인하세요.",
+      "tipsTitle": "작성 가이드",
+      "guideFallback": "앞뒤 문장의 관계를 먼저 정리한 뒤, 두 빈칸을 하나의 자연스러운 답안으로 연결하세요.",
       "tip0": "첫 빈칸은 앞 문장의 문제 제기나 정의를 받아 주는 역할인지 확인하세요.",
       "tip1": "두 번째 빈칸은 뒤 문장의 결론·예시와 자연스럽게 호응해야 해요.",
-      "hintTitle": "빈칸별 초점",
+      "hintTitle": "예시 표현",
       "reviewPrompt": "지문·조건 다시 보기"
     },
     "q53": {
@@ -1309,9 +1357,16 @@
       "guideBody": "왼쪽 자료를 먼저 비교한 뒤, 변화의 원인과 결과를 한 흐름으로 정리해 보세요.",
       "guideTip0": "그래프·표의 수치 변화는 전개 문단에서 직접 언급하세요.",
       "guideTip1": "마무리는 앞의 내용을 반복하지 말고 핵심 결론만 짧게 정리하세요.",
+      "materialsTitle": "원고지 참고 자료",
+      "materialsEmpty": "표시할 자료가 없습니다.",
+      "materialChartFallback": "차트 형식을 표시하기 어려워 표로 함께 제공합니다.",
+      "composerModeWrite": "쓰기",
+      "composerModeManuscript": "원고지",
       "reviewMaterials": "자료 다시 보기"
     },
     "q54": {
+      "composerModeWrite": "쓰기",
+      "composerModeManuscript": "원고지",
       "pageTitle": "54번 주제 논술",
       "pageSubtitle": "조건과 루브릭을 참고해 600~700자 논술 답안을 작성하세요.",
       "titleHelp": "54번은 주제에 대한 자신의 입장을 근거와 구조로 설득하는 장문 논술 유형입니다.",
@@ -1332,6 +1387,16 @@
       "guideBody": "문제를 다시 옮겨 쓰기보다 자신의 입장을 먼저 정하고 근거를 이어 보세요.",
       "guideTip0": "서론에는 본인 입장을 분명하게 쓰세요.",
       "guideTip1": "본론은 서로 다른 근거와 사례를 연결 표현으로 묶으세요.",
+      "guidanceStructureTitle": "글의 구조 제안",
+      "guidanceFocusTitle": "작성 체크 포인트",
+      "guidanceOutlineTitle": "모범 개요",
+      "guidanceRequiredTag": "필수",
+      "guidanceReasonCount": "근거 {count}개 이상",
+      "guidanceReasoningPattern": "전개 방식: {pattern}",
+      "guidanceScoringFocusLabel": "평가 초점",
+      "guidanceAvoidLabel": "피해야 할 요소",
+      "guidanceOutlineSectionSuffix": "개요",
+      "guidanceFocusFallback": "문제 조건과 루브릭을 기준으로 글의 구조를 점검하세요.",
       "reviewPrompt": "조건 다시 보기"
     },
     "prompt": {
@@ -1428,6 +1493,9 @@
       "checklistNoEdit": "수정 불가 확인",
       "footerNote": "제출하면 안전하게 저장 후 AI 분석이 시작됩니다."
     },
+    "guide": {
+      "loadFailedTag": "불러오기 실패"
+    },
     "conditions": {
       "title52": "작성 조건",
       "title53": "평가 기준",
@@ -1452,14 +1520,6 @@
       "labelEvidence": "근거 — 통계 / 사례 / 경험",
       "labelConnectors": "연결어 — 그러나 / 따라서 / 또한 등",
       "labelTopicFit": "주제 일치 — 출제 의도와 부합"
-    },
-    "reference": {
-      "cardTitle": "참고 자료",
-      "altImage": "문제 참고 이미지",
-      "altAudio": "문제 참고 음성",
-      "imageLoadFailed": "이미지를 불러오지 못했어요. ({alt})",
-      "unitLabel": "단위: {unit}",
-      "zoom": "확대 보기"
     },
     "help": {
       "empty": "이 유형의 작성 팁이 아직 없어요.",

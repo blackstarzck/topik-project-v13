@@ -82,6 +82,11 @@ export type LongFormQuestion54Json = {
   checklist: Record<EssayChecklistKey, ChecklistItemStatus>;
 };
 
+export type ShortAnswerQuestion51Json = {
+  _v: "51.v1";
+  blanks: Record<string, string>;
+};
+
 export type LongFormDraftJson =
   | LongFormQuestion53Json
   | LongFormQuestion54Json;
@@ -123,6 +128,35 @@ const ALLOWED_STATUS: readonly ChecklistItemStatus[] = [
 
 function isStringRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
+}
+
+export function isShortAnswer51DraftJson(
+  value: unknown,
+): value is ShortAnswerQuestion51Json {
+  if (!isStringRecord(value)) return false;
+  if (value._v !== "51.v1") return false;
+  if (!isStringRecord(value.blanks)) return false;
+  return Object.values(value.blanks).every((item) => typeof item === "string");
+}
+
+export function build51AnswerText(
+  blanks: Record<string, string>,
+  orderedBlanks: Array<{ label: string }>,
+): string {
+  return orderedBlanks
+    .map((blank) => {
+      const answer = blanks[blank.label]?.trim() ?? "";
+      return answer.length > 0 ? `${blank.label}: ${answer}` : "";
+    })
+    .filter(Boolean)
+    .join("\n");
+}
+
+export function count51AnswerChars(blanks: Record<string, string>): number {
+  return Object.values(blanks).reduce(
+    (total, answer) => total + answer.trim().length,
+    0,
+  );
 }
 
 export function isLongFormDraftJson(value: unknown): value is LongFormDraftJson {
