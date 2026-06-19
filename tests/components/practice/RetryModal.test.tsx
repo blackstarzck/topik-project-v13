@@ -60,8 +60,62 @@ describe("RetryModal (Phase 7-D Task 5 route fix)", () => {
     const footerActions = within(screen.getByTestId("retry-modal-actions"));
     // C-03 §4 keeps the bottom action pair fixed to start/cancel.
     expect(footerActions.getAllByRole("button")).toHaveLength(2);
+    expect(
+      screen
+        .getByTestId("retry-modal-actions")
+        .classList.contains("app-modal-footer-actions"),
+    ).toBe(true);
     expect(screen.getByRole("button", { name: "시작" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "취소" })).toBeTruthy();
+  });
+
+  it("does not wrap mode choices in bordered card containers", () => {
+    renderWithIntl(
+      <RetryModal
+        open
+        onClose={vi.fn()}
+        problemId="p-1"
+        problemTitle="알고리즘 추천 서비스"
+        questionNo={54}
+        attemptCount={1}
+        hasAttempt
+        hasSubmission={false}
+      />,
+    );
+
+    expect(screen.getByText("알고리즘 추천 서비스")).toBeTruthy();
+    expect(
+      screen.getByRole("radio", { name: /새 답안으로 시작/ }),
+    ).toBeTruthy();
+    expect(document.querySelector(".app-modal .border-border")).toBeNull();
+  });
+
+  it("uses AntD bordered Descriptions for the top summary", () => {
+    renderWithIntl(
+      <RetryModal
+        open
+        onClose={vi.fn()}
+        problemId="p-1"
+        problemTitle="알고리즘 추천 서비스"
+        questionNo={54}
+        attemptCount={1}
+        lastAttemptAt={new Date().toISOString()}
+        hasAttempt
+        hasSubmission={false}
+      />,
+    );
+
+    const summary = screen.getByTestId("retry-modal-compact-summary");
+    expect(summary.classList.contains("ant-descriptions")).toBe(true);
+    expect(summary.classList.contains("ant-descriptions-bordered")).toBe(true);
+    expect(summary.textContent).toContain("알고리즘 추천 서비스");
+    expect(summary.textContent).toContain("54번");
+    expect(summary.textContent).toContain("작성 중(임시 저장)");
+    expect(summary.textContent).toContain("시도 1회");
+    expect(summary.textContent).toContain("오늘");
+    expect(within(summary).getByText("문제")).toBeTruthy();
+    expect(within(summary).getByText("유형")).toBeTruthy();
+    expect(within(summary).getByText("이전 상태")).toBeTruthy();
   });
 
   it("'시작' in fresh mode pushes the Wireframe-slug writing route with problem and fresh params", () => {
@@ -86,7 +140,7 @@ describe("RetryModal (Phase 7-D Task 5 route fix)", () => {
     );
   });
 
-  it("'시작' in hint mode pushes the writing route with hint support enabled", () => {
+  it("keeps hint mode disabled while hint retry is deferred", () => {
     renderWithIntl(
       <RetryModal
         open
@@ -98,11 +152,13 @@ describe("RetryModal (Phase 7-D Task 5 route fix)", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("radio", { name: /힌트 포함/ }));
+    const hintMode = screen.getByRole("radio", { name: /힌트 포함/ });
+    expect(hintMode.hasAttribute("disabled")).toBe(true);
+    fireEvent.click(hintMode);
     fireEvent.click(screen.getByRole("button", { name: "시작" }));
 
     expect(pushMock).toHaveBeenCalledWith(
-      "/writing/essay-writing-54?problem=p-1&hint=1",
+      "/writing/essay-writing-54?problem=p-1",
     );
   });
 

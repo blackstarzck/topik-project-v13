@@ -1,42 +1,34 @@
-# Admin Evaluation API
+# Admin Eval API
 
-[Back to Swagger API README](../README.md) | [Auth and errors](../auth-and-errors.md) | [Related schemas](../schemas/admin-eval.md)
+Source: [Swagger UI](https://api.dotoretopik.com/docs) / [OpenAPI JSON](https://api.dotoretopik.com/openapi.json)
+Last synced: 2026-06-19
 
-Internal evaluation dashboard endpoints for graded submissions, datasets, reviews, and runs.
-
-Swagger tag description:
-
-**Admin Evaluation / 관리자 평가**
-
-Browse graded submissions, review AI scoring quality, manage golden datasets, and trigger evaluation pipeline runs.
-
-채점된 제출물 조회, AI 채점 품질 검토, 골든 데이터셋 관리, 평가 파이프라인 실행.
+Scope: Evaluation operations, reviews, and datasets
 
 ## Endpoint Index
 
-|Method|Path|Summary|
-|---|---|---|
-|`GET`|`/api/admin/eval/datasets`|List golden datasets (eval runs)|
-|`GET`|`/api/admin/eval/datasets/{dataset_id}/results`|Get dataset case results|
-|`GET`|`/api/admin/eval/datasets/{dataset_id}/stats`|Get dataset statistics|
-|`GET`|`/api/admin/eval/reviews/{target_type}/{target_id}`|List all expert reviews|
-|`POST`|`/api/admin/eval/reviews/{target_type}/{target_id}`|Submit or update expert review|
-|`GET`|`/api/admin/eval/reviews/{target_type}/{target_id}/my`|Get my expert review|
-|`POST`|`/api/admin/eval/run`|Trigger evaluation pipeline run|
-|`GET`|`/api/admin/eval/run/{run_id}/status`|Poll eval run status|
-|`GET`|`/api/admin/eval/stats/overview`|Dashboard overview statistics|
-|`GET`|`/api/admin/eval/submissions/{submission_id}`|Get submission detail|
-|`GET`|`/api/admin/eval/users`|List users with graded submissions|
-|`GET`|`/api/admin/eval/users/{user_id}/submissions`|List a user's graded submissions|
+| Method | Path | Summary | Auth |
+| --- | --- | --- | --- |
+| GET | [`/api/admin/eval/datasets`](#get-api-admin-eval-datasets) | List golden datasets (eval runs) | BearerAuth |
+| GET | [`/api/admin/eval/datasets/{dataset_id}/results`](#get-api-admin-eval-datasets-dataset-id-results) | Get dataset case results | BearerAuth |
+| GET | [`/api/admin/eval/datasets/{dataset_id}/stats`](#get-api-admin-eval-datasets-dataset-id-stats) | Get dataset statistics | BearerAuth |
+| GET | [`/api/admin/eval/reviews/{target_type}/{target_id}`](#get-api-admin-eval-reviews-target-type-target-id) | List all expert reviews | BearerAuth |
+| POST | [`/api/admin/eval/reviews/{target_type}/{target_id}`](#post-api-admin-eval-reviews-target-type-target-id) | Submit or update expert review | BearerAuth |
+| GET | [`/api/admin/eval/reviews/{target_type}/{target_id}/my`](#get-api-admin-eval-reviews-target-type-target-id-my) | Get my expert review | BearerAuth |
+| POST | [`/api/admin/eval/run`](#post-api-admin-eval-run) | Trigger evaluation pipeline run | BearerAuth |
+| GET | [`/api/admin/eval/run/{run_id}/status`](#get-api-admin-eval-run-run-id-status) | Poll eval run status | BearerAuth |
+| GET | [`/api/admin/eval/stats/overview`](#get-api-admin-eval-stats-overview) | Dashboard overview statistics | BearerAuth |
+| GET | [`/api/admin/eval/submissions/{submission_id}`](#get-api-admin-eval-submissions-submission-id) | Get submission detail | BearerAuth |
+| GET | [`/api/admin/eval/users`](#get-api-admin-eval-users) | List users with graded submissions | BearerAuth |
+| GET | [`/api/admin/eval/users/{user_id}/submissions`](#get-api-admin-eval-users-user-id-submissions) | List a user's graded submissions | BearerAuth |
 
-## Endpoint Details
-
-### GET /api/admin/eval/datasets
+## GET /api/admin/eval/datasets
 
 Summary: List golden datasets (eval runs)
-Operation ID: `list_datasets_api_admin_eval_datasets_get`
 
-Description:
+Auth: BearerAuth
+
+### Description
 
 List golden datasets / 골든 데이터셋 목록 조회
 
@@ -57,37 +49,50 @@ Filter by pipeline name. Each record corresponds to one completed eval run.
 }
 ```
 
-Required request headers / auth:
-|Scheme|Header|Description|
-|---|---|---|
-|BearerAuth|`Authorization: Bearer <jwt>`|JWT Bearer token. Dashboard tokens come from POST /api/eval/auth/login.|
+### Parameters
 
-Parameters:
-|name|in|required|type|description|example|
-|---|---|---|---|---|---|
-|pipeline|query|no|anyOf<string \| null>|-|-|
-|limit|query|no|integer|-|{"default":50}|
-|offset|query|no|integer|-|{"default":0}|
+| Name | In | Required | Type | Description |
+| --- | --- | --- | --- | --- |
+| `pipeline` | query | no | string \| null |  |
+| `limit` | query | no | integer |  |
+| `offset` | query | no | integer |  |
 
-Request body:
-- None declared.
+### Responses
 
-Responses:
-- `200` Eval run records from the SQLite eval database, optionally filtered by pipeline.
-  - Response content:
-|mediaType|schema|example|
-|---|---|---|
-|application/json|[DatasetsResponse](../schemas/admin-eval.md#datasetsresponse)|{"items":[{"id":"run-2024-11-15","pipeline":"writing_scorer","mode":"full","passed":18,"total":20,"created_at":"2024-11-15T10:00:00"}],"total":1,"limit":50,"offset":0}|
-- `401` Missing or invalid JWT.
-- `403` Caller lacks the `admin` role.
-- `422` Invalid pagination parameters.
+| Status | Description | Media | Schema |
+| --- | --- | --- | --- |
+| 200 | Eval run records from the SQLite eval database, optionally filtered by pipeline. | `application/json` | [DatasetsResponse](../schemas/admin-eval.md#datasetsresponse) |
+| 401 | Missing or invalid JWT. | - | - |
+| 403 | Caller lacks the `admin` role. | - | - |
+| 422 | Invalid pagination parameters. | - | - |
 
-### GET /api/admin/eval/datasets/{dataset_id}/results
+Response 200 example:
+
+```json
+{
+  "items": [
+    {
+      "id": "run-2024-11-15",
+      "pipeline": "writing_scorer",
+      "mode": "full",
+      "passed": 18,
+      "total": 20,
+      "created_at": "2024-11-15T10:00:00"
+    }
+  ],
+  "total": 1,
+  "limit": 50,
+  "offset": 0
+}
+```
+
+## GET /api/admin/eval/datasets/{dataset_id}/results
 
 Summary: Get dataset case results
-Operation ID: `get_dataset_results_api_admin_eval_datasets__dataset_id__results_get`
 
-Description:
+Auth: BearerAuth
+
+### Description
 
 Get dataset case results / 데이터셋 케이스 결과 조회
 
@@ -110,38 +115,50 @@ actual AI output, and pass/fail verdict.
 }
 ```
 
-Required request headers / auth:
-|Scheme|Header|Description|
-|---|---|---|
-|BearerAuth|`Authorization: Bearer <jwt>`|JWT Bearer token. Dashboard tokens come from POST /api/eval/auth/login.|
+### Parameters
 
-Parameters:
-|name|in|required|type|description|example|
-|---|---|---|---|---|---|
-|dataset_id|path|yes|string|-|-|
-|status|query|no|enum<"all" \| "passed" \| "failed">|-|{"default":"all"}|
-|limit|query|no|integer|-|{"default":100}|
-|offset|query|no|integer|-|{"default":0}|
+| Name | In | Required | Type | Description |
+| --- | --- | --- | --- | --- |
+| `dataset_id` | path | yes | string |  |
+| `status` | query | no | enum(`all`, `passed`, `failed`) |  |
+| `limit` | query | no | integer |  |
+| `offset` | query | no | integer |  |
 
-Request body:
-- None declared.
+### Responses
 
-Responses:
-- `200` Individual test case results for the eval run, filtered by status.
-  - Response content:
-|mediaType|schema|example|
-|---|---|---|
-|application/json|[DatasetResultsResponse](../schemas/admin-eval.md#datasetresultsresponse)|{"items":[{"case_id":"tc001","status":"passed","score":42.5,"expected_min":40,"actual":42.5}],"total":1,"limit":100,"offset":0}|
-- `401` Missing or invalid JWT.
-- `403` Caller lacks the `admin` role.
-- `422` Invalid status filter or pagination parameters.
+| Status | Description | Media | Schema |
+| --- | --- | --- | --- |
+| 200 | Individual test case results for the eval run, filtered by status. | `application/json` | [DatasetResultsResponse](../schemas/admin-eval.md#datasetresultsresponse) |
+| 401 | Missing or invalid JWT. | - | - |
+| 403 | Caller lacks the `admin` role. | - | - |
+| 422 | Invalid status filter or pagination parameters. | - | - |
 
-### GET /api/admin/eval/datasets/{dataset_id}/stats
+Response 200 example:
+
+```json
+{
+  "items": [
+    {
+      "case_id": "tc001",
+      "status": "passed",
+      "score": 42.5,
+      "expected_min": 40,
+      "actual": 42.5
+    }
+  ],
+  "total": 1,
+  "limit": 100,
+  "offset": 0
+}
+```
+
+## GET /api/admin/eval/datasets/{dataset_id}/stats
 
 Summary: Get dataset statistics
-Operation ID: `get_dataset_stats_api_admin_eval_datasets__dataset_id__stats_get`
 
-Description:
+Auth: BearerAuth
+
+### Description
 
 Get dataset statistics / 데이터셋 통계 조회
 
@@ -164,40 +181,47 @@ score distribution, and per-pipeline breakdown.
 }
 ```
 
-Required request headers / auth:
-|Scheme|Header|Description|
-|---|---|---|
-|BearerAuth|`Authorization: Bearer <jwt>`|JWT Bearer token. Dashboard tokens come from POST /api/eval/auth/login.|
+### Parameters
 
-Parameters:
-|name|in|required|type|description|example|
-|---|---|---|---|---|---|
-|dataset_id|path|yes|string|-|-|
+| Name | In | Required | Type | Description |
+| --- | --- | --- | --- | --- |
+| `dataset_id` | path | yes | string |  |
 
-Request body:
-- None declared.
+### Responses
 
-Responses:
-- `200` Aggregate statistics for the eval run: pass rate, average score, distribution.
-  - Response content:
-|mediaType|schema|example|
-|---|---|---|
-|application/json|[DatasetStatsResponse](../schemas/admin-eval.md#datasetstatsresponse)|{"dataset_id":"run-2024-11-15","pipeline":"writing_scorer","total_cases":20,"passed":18,"pass_rate":0.9,"avg_score":42.3,"score_distribution":{"30-40":2,"40-50":16,"50-60":2}}|
-- `401` Missing or invalid JWT.
-- `403` Caller lacks the `admin` role.
-- `404` Dataset not found or empty.
-- `422` Validation Error
-  - Response content:
-|mediaType|schema|example|
-|---|---|---|
-|application/json|[HTTPValidationError](../schemas/common.md#httpvalidationerror)|-|
+| Status | Description | Media | Schema |
+| --- | --- | --- | --- |
+| 200 | Aggregate statistics for the eval run: pass rate, average score, distribution. | `application/json` | [DatasetStatsResponse](../schemas/admin-eval.md#datasetstatsresponse) |
+| 401 | Missing or invalid JWT. | - | - |
+| 403 | Caller lacks the `admin` role. | - | - |
+| 404 | Dataset not found or empty. | - | - |
+| 422 | Validation Error | `application/json` | [HTTPValidationError](../schemas/common.md#httpvalidationerror) |
 
-### GET /api/admin/eval/reviews/{target_type}/{target_id}
+Response 200 example:
+
+```json
+{
+  "dataset_id": "run-2024-11-15",
+  "pipeline": "writing_scorer",
+  "total_cases": 20,
+  "passed": 18,
+  "pass_rate": 0.9,
+  "avg_score": 42.3,
+  "score_distribution": {
+    "30-40": 2,
+    "40-50": 16,
+    "50-60": 2
+  }
+}
+```
+
+## GET /api/admin/eval/reviews/{target_type}/{target_id}
 
 Summary: List all expert reviews
-Operation ID: `list_reviews_api_admin_eval_reviews__target_type___target_id__get`
 
-Description:
+Auth: BearerAuth
+
+### Description
 
 List all expert reviews / 전문가 리뷰 전체 목록 조회
 
@@ -218,36 +242,46 @@ Useful for comparing multiple reviewers' opinions on the same AI output.
 }
 ```
 
-Required request headers / auth:
-|Scheme|Header|Description|
-|---|---|---|
-|BearerAuth|`Authorization: Bearer <jwt>`|JWT Bearer token. Dashboard tokens come from POST /api/eval/auth/login.|
+### Parameters
 
-Parameters:
-|name|in|required|type|description|example|
-|---|---|---|---|---|---|
-|target_type|path|yes|enum<"submission" \| "eval_result">|-|-|
-|target_id|path|yes|string|-|-|
+| Name | In | Required | Type | Description |
+| --- | --- | --- | --- | --- |
+| `target_type` | path | yes | enum(`submission`, `eval_result`) |  |
+| `target_id` | path | yes | string |  |
 
-Request body:
-- None declared.
+### Responses
 
-Responses:
-- `200` All admin reviews submitted for the target.
-  - Response content:
-|mediaType|schema|example|
-|---|---|---|
-|application/json|[ReviewListResponse](../schemas/admin-eval.md#reviewlistresponse)|{"items":[{"reviewer_name":"Admin A","agreement":"agree","grade":"A","general_feedback":"정확한 채점입니다.","reviewed_at":"2024-11-15T11:00:00"}],"total":1}|
-- `401` Missing or invalid JWT.
-- `403` Caller lacks the `admin` role.
-- `422` Invalid target_type.
+| Status | Description | Media | Schema |
+| --- | --- | --- | --- |
+| 200 | All admin reviews submitted for the target. | `application/json` | [ReviewListResponse](../schemas/admin-eval.md#reviewlistresponse) |
+| 401 | Missing or invalid JWT. | - | - |
+| 403 | Caller lacks the `admin` role. | - | - |
+| 422 | Invalid target_type. | - | - |
 
-### POST /api/admin/eval/reviews/{target_type}/{target_id}
+Response 200 example:
+
+```json
+{
+  "items": [
+    {
+      "reviewer_name": "Admin A",
+      "agreement": "agree",
+      "grade": "A",
+      "general_feedback": "정확한 채점입니다.",
+      "reviewed_at": "2024-11-15T11:00:00"
+    }
+  ],
+  "total": 1
+}
+```
+
+## POST /api/admin/eval/reviews/{target_type}/{target_id}
 
 Summary: Submit or update expert review
-Operation ID: `upsert_review_api_admin_eval_reviews__target_type___target_id__post`
 
-Description:
+Auth: BearerAuth
+
+### Description
 
 Submit or update expert review / 전문가 리뷰 제출 또는 수정
 
@@ -273,39 +307,52 @@ are optional — submit partial reviews freely.
 
 **`grade` values:** `A` | `B` | `C` | `D` | `F`
 
-Required request headers / auth:
-|Scheme|Header|Description|
-|---|---|---|
-|BearerAuth|`Authorization: Bearer <jwt>`|JWT Bearer token. Dashboard tokens come from POST /api/eval/auth/login.|
+### Parameters
 
-Parameters:
-|name|in|required|type|description|example|
-|---|---|---|---|---|---|
-|target_type|path|yes|enum<"submission" \| "eval_result">|-|-|
-|target_id|path|yes|string|-|-|
+| Name | In | Required | Type | Description |
+| --- | --- | --- | --- | --- |
+| `target_type` | path | yes | enum(`submission`, `eval_result`) |  |
+| `target_id` | path | yes | string |  |
 
-Request body:
-- Required: yes
-|mediaType|schema|example|
-|---|---|---|
-|application/json|[ReviewRequest](../schemas/admin-eval.md#reviewrequest)|-|
+### Request Body
 
-Responses:
-- `200` The created or updated review (upsert).
-  - Response content:
-|mediaType|schema|example|
-|---|---|---|
-|application/json|[ExpertReview](../schemas/admin-eval.md#expertreview)|{"agreement":"mostly_agree","grade":"B","disagreed_sections":["expression"],"section_feedbacks":{"expression":"어휘 점수가 낮게 책정됨"},"general_feedback":"전반적으로 적절한 채점이나 표현 부분은 재검토 필요.","reviewed_at":"2024-11-15T11:00:00"}|
-- `401` Missing or invalid JWT.
-- `403` Caller lacks the `admin` role.
-- `422` Invalid target_type or malformed review body.
+Media type: `application/json`
 
-### GET /api/admin/eval/reviews/{target_type}/{target_id}/my
+Schema: [ReviewRequest](../schemas/admin-eval.md#reviewrequest)
+
+### Responses
+
+| Status | Description | Media | Schema |
+| --- | --- | --- | --- |
+| 200 | The created or updated review (upsert). | `application/json` | [ExpertReview](../schemas/admin-eval.md#expertreview) |
+| 401 | Missing or invalid JWT. | - | - |
+| 403 | Caller lacks the `admin` role. | - | - |
+| 422 | Invalid target_type or malformed review body. | - | - |
+
+Response 200 example:
+
+```json
+{
+  "agreement": "mostly_agree",
+  "grade": "B",
+  "disagreed_sections": [
+    "expression"
+  ],
+  "section_feedbacks": {
+    "expression": "어휘 점수가 낮게 책정됨"
+  },
+  "general_feedback": "전반적으로 적절한 채점이나 표현 부분은 재검토 필요.",
+  "reviewed_at": "2024-11-15T11:00:00"
+}
+```
+
+## GET /api/admin/eval/reviews/{target_type}/{target_id}/my
 
 Summary: Get my expert review
-Operation ID: `get_my_review_api_admin_eval_reviews__target_type___target_id__my_get`
 
-Description:
+Auth: BearerAuth
+
+### Description
 
 Get my expert review / 내 전문가 리뷰 조회
 
@@ -329,36 +376,43 @@ Returns an empty object `{}` if no review has been submitted yet.
 }
 ```
 
-Required request headers / auth:
-|Scheme|Header|Description|
-|---|---|---|
-|BearerAuth|`Authorization: Bearer <jwt>`|JWT Bearer token. Dashboard tokens come from POST /api/eval/auth/login.|
+### Parameters
 
-Parameters:
-|name|in|required|type|description|example|
-|---|---|---|---|---|---|
-|target_type|path|yes|enum<"submission" \| "eval_result">|-|-|
-|target_id|path|yes|string|-|-|
+| Name | In | Required | Type | Description |
+| --- | --- | --- | --- | --- |
+| `target_type` | path | yes | enum(`submission`, `eval_result`) |  |
+| `target_id` | path | yes | string |  |
 
-Request body:
-- None declared.
+### Responses
 
-Responses:
-- `200` The current admin's review for the target, or `{}` if none submitted yet.
-  - Response content:
-|mediaType|schema|example|
-|---|---|---|
-|application/json|[ExpertReview](../schemas/admin-eval.md#expertreview)|{"agreement":"mostly_agree","grade":"B","disagreed_sections":["expression"],"general_feedback":"채점 기준이 다소 엄격하게 적용된 것 같습니다.","reviewed_at":"2024-11-15T11:00:00"}|
-- `401` Missing or invalid JWT.
-- `403` Caller lacks the `admin` role.
-- `422` Invalid target_type.
+| Status | Description | Media | Schema |
+| --- | --- | --- | --- |
+| 200 | The current admin's review for the target, or `{}` if none submitted yet. | `application/json` | [ExpertReview](../schemas/admin-eval.md#expertreview) |
+| 401 | Missing or invalid JWT. | - | - |
+| 403 | Caller lacks the `admin` role. | - | - |
+| 422 | Invalid target_type. | - | - |
 
-### POST /api/admin/eval/run
+Response 200 example:
+
+```json
+{
+  "agreement": "mostly_agree",
+  "grade": "B",
+  "disagreed_sections": [
+    "expression"
+  ],
+  "general_feedback": "채점 기준이 다소 엄격하게 적용된 것 같습니다.",
+  "reviewed_at": "2024-11-15T11:00:00"
+}
+```
+
+## POST /api/admin/eval/run
 
 Summary: Trigger evaluation pipeline run
-Operation ID: `trigger_eval_run_api_admin_eval_run_post`
 
-Description:
+Auth: BearerAuth
+
+### Description
 
 Trigger evaluation pipeline run / 평가 파이프라인 실행 시작
 
@@ -394,36 +448,40 @@ Modes: `full` (all cases), `quick` (fast subset), `stability` (repeat runs).
 }
 ```
 
-Required request headers / auth:
-|Scheme|Header|Description|
-|---|---|---|
-|BearerAuth|`Authorization: Bearer <jwt>`|JWT Bearer token. Dashboard tokens come from POST /api/eval/auth/login.|
+### Request Body
 
-Parameters:
-- None declared.
+Media type: `application/json`
 
-Request body:
-- Required: yes
-|mediaType|schema|example|
-|---|---|---|
-|application/json|[EvalRunRequest](../schemas/admin-eval.md#evalrunrequest)|-|
+Schema: [EvalRunRequest](../schemas/admin-eval.md#evalrunrequest)
 
-Responses:
-- `200` Run started. Returns the run_id to poll for status.
-  - Response content:
-|mediaType|schema|example|
-|---|---|---|
-|application/json|[EvalRunResponse](../schemas/admin-eval.md#evalrunresponse)|{"run_id":"a1b2c3d4-...","status":"running","pipeline":"writing_scorer","dataset":"all","mode":"quick"}|
-- `401` Missing or invalid JWT.
-- `403` Caller lacks the `admin` role.
-- `422` Invalid `pipeline` or `mode` (not in allowlist), or malformed `dataset`/`case_filter`.
+### Responses
 
-### GET /api/admin/eval/run/{run_id}/status
+| Status | Description | Media | Schema |
+| --- | --- | --- | --- |
+| 200 | Run started. Returns the run_id to poll for status. | `application/json` | [EvalRunResponse](../schemas/admin-eval.md#evalrunresponse) |
+| 401 | Missing or invalid JWT. | - | - |
+| 403 | Caller lacks the `admin` role. | - | - |
+| 422 | Invalid `pipeline` or `mode` (not in allowlist), or malformed `dataset`/`case_filter`. | - | - |
+
+Response 200 example:
+
+```json
+{
+  "run_id": "a1b2c3d4-...",
+  "status": "running",
+  "pipeline": "writing_scorer",
+  "dataset": "all",
+  "mode": "quick"
+}
+```
+
+## GET /api/admin/eval/run/{run_id}/status
 
 Summary: Poll eval run status
-Operation ID: `get_run_status_api_admin_eval_run__run_id__status_get`
 
-Description:
+Auth: BearerAuth
+
+### Description
 
 Poll eval run status / 평가 실행 상태 조회
 
@@ -444,41 +502,41 @@ Avg score: 42.3",
     }
     ```
 
-Required request headers / auth:
-|Scheme|Header|Description|
-|---|---|---|
-|BearerAuth|`Authorization: Bearer <jwt>`|JWT Bearer token. Dashboard tokens come from POST /api/eval/auth/login.|
+### Parameters
 
-Parameters:
-|name|in|required|type|description|example|
-|---|---|---|---|---|---|
-|run_id|path|yes|string|-|-|
+| Name | In | Required | Type | Description |
+| --- | --- | --- | --- | --- |
+| `run_id` | path | yes | string |  |
 
-Request body:
-- None declared.
+### Responses
 
-Responses:
-- `200` Current run status. Values: running, completed, failed, error.
-  - Response content:
-|mediaType|schema|example|
-|---|---|---|
-|application/json|[EvalRunStatusResponse](../schemas/admin-eval.md#evalrunstatusresponse)|{"status":"completed","exit_code":0,"stdout_tail":"Passed: 18/20 cases (90.0%)\nAvg score: 42.3","stderr_tail":""}|
-- `401` Missing or invalid JWT.
-- `403` Caller lacks the `admin` role.
-- `404` Run not found or expired (Redis TTL is 2 hours).
-- `422` Validation Error
-  - Response content:
-|mediaType|schema|example|
-|---|---|---|
-|application/json|[HTTPValidationError](../schemas/common.md#httpvalidationerror)|-|
-- `503` Redis unavailable.
+| Status | Description | Media | Schema |
+| --- | --- | --- | --- |
+| 200 | Current run status. Values: running, completed, failed, error. | `application/json` | [EvalRunStatusResponse](../schemas/admin-eval.md#evalrunstatusresponse) |
+| 401 | Missing or invalid JWT. | - | - |
+| 403 | Caller lacks the `admin` role. | - | - |
+| 404 | Run not found or expired (Redis TTL is 2 hours). | - | - |
+| 422 | Validation Error | `application/json` | [HTTPValidationError](../schemas/common.md#httpvalidationerror) |
+| 503 | Redis unavailable. | - | - |
 
-### GET /api/admin/eval/stats/overview
+Response 200 example:
+
+```json
+{
+  "status": "completed",
+  "exit_code": 0,
+  "stdout_tail": "Passed: 18/20 cases (90.0%)\nAvg score: 42.3",
+  "stderr_tail": ""
+}
+```
+
+## GET /api/admin/eval/stats/overview
 
 Summary: Dashboard overview statistics
-Operation ID: `get_overview_stats_api_admin_eval_stats_overview_get`
 
-Description:
+Auth: BearerAuth
+
+### Description
 
 Dashboard overview statistics / 대시보드 개요 통계
 
@@ -499,32 +557,37 @@ graded count, average scores by task type, and recent activity.
 }
 ```
 
-Required request headers / auth:
-|Scheme|Header|Description|
-|---|---|---|
-|BearerAuth|`Authorization: Bearer <jwt>`|JWT Bearer token. Dashboard tokens come from POST /api/eval/auth/login.|
+### Responses
 
-Parameters:
-- None declared.
+| Status | Description | Media | Schema |
+| --- | --- | --- | --- |
+| 200 | High-level aggregate stats for the eval dashboard. | `application/json` | [OverviewStatsResponse](../schemas/admin-eval.md#overviewstatsresponse) |
+| 401 | Missing or invalid JWT. | - | - |
+| 403 | Caller lacks the `admin` role. | - | - |
 
-Request body:
-- None declared.
+Response 200 example:
 
-Responses:
-- `200` High-level aggregate stats for the eval dashboard.
-  - Response content:
-|mediaType|schema|example|
-|---|---|---|
-|application/json|[OverviewStatsResponse](../schemas/admin-eval.md#overviewstatsresponse)|{"total_submissions":1250,"graded":1180,"pending":70,"avg_score_by_task":{"task51":38.2,"task53":42.5,"task54":55.1},"submissions_last_7d":320}|
-- `401` Missing or invalid JWT.
-- `403` Caller lacks the `admin` role.
+```json
+{
+  "total_submissions": 1250,
+  "graded": 1180,
+  "pending": 70,
+  "avg_score_by_task": {
+    "task51": 38.2,
+    "task53": 42.5,
+    "task54": 55.1
+  },
+  "submissions_last_7d": 320
+}
+```
 
-### GET /api/admin/eval/submissions/{submission_id}
+## GET /api/admin/eval/submissions/{submission_id}
 
 Summary: Get submission detail
-Operation ID: `get_submission_detail_api_admin_eval_submissions__submission_id__get`
 
-Description:
+Auth: BearerAuth
+
+### Description
 
 Get submission detail / 제출 상세 조회
 
@@ -547,36 +610,49 @@ AI 평가 점수 (섹션별), 모든 피드백 객체.
 }
 ```
 
-Required request headers / auth:
-|Scheme|Header|Description|
-|---|---|---|
-|BearerAuth|`Authorization: Bearer <jwt>`|JWT Bearer token. Dashboard tokens come from POST /api/eval/auth/login.|
+### Parameters
 
-Parameters:
-|name|in|required|type|description|example|
-|---|---|---|---|---|---|
-|submission_id|path|yes|string|-|-|
+| Name | In | Required | Type | Description |
+| --- | --- | --- | --- | --- |
+| `submission_id` | path | yes | string |  |
 
-Request body:
-- None declared.
+### Responses
 
-Responses:
-- `200` Full submission detail: essay text, task metadata, section scores, and feedback.
-  - Response content:
-|mediaType|schema|example|
-|---|---|---|
-|application/json|[SubmissionDetailResponse](../schemas/admin-eval.md#submissiondetailresponse)|{"submission_id":"uuid","task_type":"task54","text":"현대 사회에서...","total_score":58,"section_scores":{"content":20,"structure":18,"expression":20},"feedback":{"summary":"전반적으로 잘 작성된 글입니다..."},"graded_at":"2024-11-15T10:05:00"}|
-- `401` Missing or invalid JWT.
-- `403` Caller lacks the `admin` role.
-- `404` Submission not found.
-- `422` Invalid submission_id (not a UUID).
+| Status | Description | Media | Schema |
+| --- | --- | --- | --- |
+| 200 | Full submission detail: essay text, task metadata, section scores, and feedback. | `application/json` | [SubmissionDetailResponse](../schemas/admin-eval.md#submissiondetailresponse) |
+| 401 | Missing or invalid JWT. | - | - |
+| 403 | Caller lacks the `admin` role. | - | - |
+| 404 | Submission not found. | - | - |
+| 422 | Invalid submission_id (not a UUID). | - | - |
 
-### GET /api/admin/eval/users
+Response 200 example:
+
+```json
+{
+  "submission_id": "uuid",
+  "task_type": "task54",
+  "text": "현대 사회에서...",
+  "total_score": 58,
+  "section_scores": {
+    "content": 20,
+    "structure": 18,
+    "expression": 20
+  },
+  "feedback": {
+    "summary": "전반적으로 잘 작성된 글입니다..."
+  },
+  "graded_at": "2024-11-15T10:05:00"
+}
+```
+
+## GET /api/admin/eval/users
 
 Summary: List users with graded submissions
-Operation ID: `list_eval_users_api_admin_eval_users_get`
 
-Description:
+Auth: BearerAuth
+
+### Description
 
 List users with graded submissions / 채점된 제출이 있는 사용자 목록
 
@@ -597,36 +673,47 @@ Useful for browsing which learners have been evaluated.
 }
 ```
 
-Required request headers / auth:
-|Scheme|Header|Description|
-|---|---|---|
-|BearerAuth|`Authorization: Bearer <jwt>`|JWT Bearer token. Dashboard tokens come from POST /api/eval/auth/login.|
+### Parameters
 
-Parameters:
-|name|in|required|type|description|example|
-|---|---|---|---|---|---|
-|limit|query|no|integer|-|{"default":50}|
-|offset|query|no|integer|-|{"default":0}|
+| Name | In | Required | Type | Description |
+| --- | --- | --- | --- | --- |
+| `limit` | query | no | integer |  |
+| `offset` | query | no | integer |  |
 
-Request body:
-- None declared.
+### Responses
 
-Responses:
-- `200` Paginated list of users who have at least one graded submission.
-  - Response content:
-|mediaType|schema|example|
-|---|---|---|
-|application/json|[EvalUsersResponse](../schemas/admin-eval.md#evalusersresponse)|{"items":[{"user_id":"uuid","display_name":"홍길동","submission_count":5,"last_submitted_at":"2024-11-15T10:00:00"}],"total":1,"limit":50,"offset":0}|
-- `401` Missing or invalid JWT.
-- `403` Caller lacks the `admin` role.
-- `422` Invalid pagination parameters.
+| Status | Description | Media | Schema |
+| --- | --- | --- | --- |
+| 200 | Paginated list of users who have at least one graded submission. | `application/json` | [EvalUsersResponse](../schemas/admin-eval.md#evalusersresponse) |
+| 401 | Missing or invalid JWT. | - | - |
+| 403 | Caller lacks the `admin` role. | - | - |
+| 422 | Invalid pagination parameters. | - | - |
 
-### GET /api/admin/eval/users/{user_id}/submissions
+Response 200 example:
+
+```json
+{
+  "items": [
+    {
+      "user_id": "uuid",
+      "display_name": "홍길동",
+      "submission_count": 5,
+      "last_submitted_at": "2024-11-15T10:00:00"
+    }
+  ],
+  "total": 1,
+  "limit": 50,
+  "offset": 0
+}
+```
+
+## GET /api/admin/eval/users/{user_id}/submissions
 
 Summary: List a user's graded submissions
-Operation ID: `list_user_submissions_api_admin_eval_users__user_id__submissions_get`
 
-Description:
+Auth: BearerAuth
+
+### Description
 
 List user's graded submissions / 사용자 채점 제출 목록
 
@@ -647,27 +734,37 @@ newest first. Includes scores and task metadata.
 }
 ```
 
-Required request headers / auth:
-|Scheme|Header|Description|
-|---|---|---|
-|BearerAuth|`Authorization: Bearer <jwt>`|JWT Bearer token. Dashboard tokens come from POST /api/eval/auth/login.|
+### Parameters
 
-Parameters:
-|name|in|required|type|description|example|
-|---|---|---|---|---|---|
-|user_id|path|yes|string|-|-|
-|limit|query|no|integer|-|{"default":50}|
-|offset|query|no|integer|-|{"default":0}|
+| Name | In | Required | Type | Description |
+| --- | --- | --- | --- | --- |
+| `user_id` | path | yes | string |  |
+| `limit` | query | no | integer |  |
+| `offset` | query | no | integer |  |
 
-Request body:
-- None declared.
+### Responses
 
-Responses:
-- `200` All graded writing submissions for the user, newest first.
-  - Response content:
-|mediaType|schema|example|
-|---|---|---|
-|application/json|[UserSubmissionsResponse](../schemas/admin-eval.md#usersubmissionsresponse)|{"items":[{"submission_id":"uuid","task_type":"task54","total_score":58,"graded_at":"2024-11-15T10:05:00"}],"total":1,"limit":50,"offset":0}|
-- `401` Missing or invalid JWT.
-- `403` Caller lacks the `admin` role.
-- `422` Invalid user_id (not a UUID) or invalid pagination parameters.
+| Status | Description | Media | Schema |
+| --- | --- | --- | --- |
+| 200 | All graded writing submissions for the user, newest first. | `application/json` | [UserSubmissionsResponse](../schemas/admin-eval.md#usersubmissionsresponse) |
+| 401 | Missing or invalid JWT. | - | - |
+| 403 | Caller lacks the `admin` role. | - | - |
+| 422 | Invalid user_id (not a UUID) or invalid pagination parameters. | - | - |
+
+Response 200 example:
+
+```json
+{
+  "items": [
+    {
+      "submission_id": "uuid",
+      "task_type": "task54",
+      "total_score": 58,
+      "graded_at": "2024-11-15T10:05:00"
+    }
+  ],
+  "total": 1,
+  "limit": 50,
+  "offset": 0
+}
+```

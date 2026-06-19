@@ -104,11 +104,9 @@ describe("submitWritingAction", () => {
         }),
         body: JSON.stringify({
           task_type: "Q54",
-          task_id: "00000000-0000-0000-0000-000000000001",
+          task_id: "Q54",
           text: answerText,
-          user_id: "user-1",
-          lang: "ko",
-          passage_context: "",
+          user_id: "current",
         }),
       }),
     );
@@ -361,5 +359,66 @@ describe("submitWritingAction", () => {
         char_count: 28,
       }),
     ).rejects.toThrow("현재 제출할 수 없는 문제입니다. 다른 문제를 선택해 주세요.");
+  });
+
+  it("shows a learner-friendly error when the external create RPC rejects an unsubmittable problem", async () => {
+    process.env.TALKPIK_API_BASE_URL = "https://api.example.test";
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          submission_id: "00000000-0000-0000-0000-000000000099",
+          status: "processing",
+          message: "queued",
+        }),
+        { status: 202 },
+      ),
+    );
+    helpers.serviceRpcMock.mockResolvedValue({
+      data: null,
+      error: { message: "problem_not_submittable" },
+    });
+
+    await expect(
+      submitWritingAction({
+        problem_id: "00000000-0000-0000-0000-000000000001",
+        question_no: 51,
+        answer_text: "Answer for a hidden problem.",
+        char_count: 28,
+      }),
+    ).rejects.toThrow("현재 제출할 수 없는 문제입니다. 다른 문제를 선택해 주세요.");
+  });
+
+  it("returns the existing submission id when the external create RPC dedups a duplicate submit", async () => {
+    process.env.TALKPIK_API_BASE_URL = "https://api.example.test";
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          submission_id: "00000000-0000-0000-0000-0000000000bb",
+          status: "processing",
+          message: "queued",
+        }),
+        { status: 202 },
+      ),
+    );
+    // 중복 제출이면 RPC가 새 row를 만들지 않고 기존 활성 제출 id를 멱등 반환한다.
+    // 이 값은 이번 호출의 external.submission_id(...bb)와 다르다.
+    helpers.serviceRpcMock.mockResolvedValue({
+      data: "00000000-0000-0000-0000-0000000000aa",
+      error: null,
+    });
+
+    const result = await submitWritingAction({
+      draft_id: "00000000-0000-0000-0000-0000000000dd",
+      problem_id: "00000000-0000-0000-0000-000000000001",
+      question_no: 54,
+      answer_text: "Duplicate submit answer.",
+      char_count: 24,
+    });
+
+    // mismatch 에러를 던지지 않고, RPC가 반환한 기존 제출 id로 수렴한다.
+    expect(result).toEqual({
+      submissionId: "00000000-0000-0000-0000-0000000000aa",
+      questionNo: 54,
+    });
   });
 });

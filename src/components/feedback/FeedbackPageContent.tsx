@@ -157,15 +157,20 @@ export function FeedbackPageContent({
         ) : null}
 
         {showShortReportOverview ? (
-          <FeedbackReportOverview
-            feedback={bundle.feedback}
-            submission={submission}
-            dimensions={bundle.dimensions}
-            supplement={externalSupplement}
-            retryHref={retryHref}
-            retryLabel={resolvedRetryLabel}
-            showCardHeader={!showStickyReportHeader}
-          />
+          <>
+            {/* E-01 region 1: 점수/총평 요약. 53/54와 동일한 FeedbackSummary를
+                재사용하되, 점수는 아래 리포트 카드에서 강조되므로 hideScore로 총평만 노출. */}
+            <FeedbackSummary feedback={bundle.feedback} hideScore />
+            <FeedbackReportOverview
+              feedback={bundle.feedback}
+              submission={submission}
+              dimensions={bundle.dimensions}
+              supplement={externalSupplement}
+              retryHref={retryHref}
+              retryLabel={resolvedRetryLabel}
+              showCardHeader={!showStickyReportHeader}
+            />
+          </>
         ) : (
           <FeedbackSummary
             feedback={bundle.feedback}

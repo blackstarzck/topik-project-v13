@@ -80,6 +80,16 @@ describe("WritingEditor submit flow", () => {
     expect(helpers.pushMock).not.toHaveBeenCalled();
     expect(screen.getByTestId("analysis-loading-page")).toBeTruthy();
     expect(await screen.findByTestId("analysis-loading-panel")).toBeTruthy();
+    const stateAsset = screen.getByTestId(
+      "analysis-state-asset",
+    ) as HTMLImageElement;
+    expect(stateAsset.getAttribute("src")).toBe("/assets/state/refresh.svg");
+    const stateCard = screen.getByTestId("analysis-state-card");
+    const answerCard = screen.getByTestId("analysis-loading-background");
+    expect(
+      stateCard.compareDocumentPosition(answerCard) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
     expect(screen.queryByTestId("analysis-loading-modal")).toBeNull();
   });
 

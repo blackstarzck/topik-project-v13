@@ -1,15 +1,10 @@
 "use client";
 
-import {
-  Alert,
-  Button,
-  Radio,
-  Tooltip,
-  Typography,
-} from "antd";
+import { Alert, Button, Descriptions, Radio, Typography } from "antd";
+import type { DescriptionsProps } from "antd";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { AppModal } from "@/components/shared/AppModal";
 import { writingProblemHref } from "@/lib/writing/routes";
 
@@ -50,13 +45,16 @@ type Props = {
   submissionId?: string;
   /**
    * C-03 §2 예외 — 문제 만료 시 시작 대신 만료 안내 + 닫기만 제공.
-   * 현재 problems 스키마에 만료 컬럼이 없어 기본 false; 추천 만료(run.expires_at)
-   * 등 상위에서 만료를 판단해 주입하는 seam.
+   * 만료 정책은 아직 미정이므로 기본 false; 상위에서 확정된 정책값을
+   * 주입하기 전까지는 사용자에게 만료 차단 UX를 노출하지 않는다.
    */
   expired?: boolean;
 };
 
-function feedbackPathFor(questionNo: number | null, submissionId: string): string {
+function feedbackPathFor(
+  questionNo: number | null,
+  submissionId: string,
+): string {
   if (questionNo === 51 || questionNo === 52) {
     return `/writing/feedback/short/${submissionId}`;
   }
@@ -74,6 +72,21 @@ type RelativeDay =
   | { kind: "daysAgo"; days: number }
   | { kind: "absolute"; text: string };
 
+const FOCUSABLE_SELECTOR = [
+  "a[href]",
+  "button:not([disabled])",
+  "input:not([disabled])",
+  "select:not([disabled])",
+  "textarea:not([disabled])",
+  '[tabindex]:not([tabindex="-1"])',
+].join(",");
+
+const modalClassNames = {
+  header: "!mb-0 !px-0 !pb-0",
+  body: "!px-0 !pt-5",
+  title: "!text-[22px] !font-bold !leading-7 !text-text",
+};
+
 function relativeDay(iso: string | null | undefined): RelativeDay | null {
   if (!iso) return null;
   const ms = new Date(iso).getTime();
@@ -83,14 +96,6 @@ function relativeDay(iso: string | null | undefined): RelativeDay | null {
   if (days === 1) return { kind: "yesterday" };
   if (days < 7) return { kind: "daysAgo", days };
   return { kind: "absolute", text: new Date(iso).toLocaleDateString("ko-KR") };
-}
-
-function SummaryBadge({ children }: { children: ReactNode }) {
-  return (
-    <span className="inline-flex rounded-xl border border-border bg-primary px-3 py-1 text-xs font-medium text-background">
-      {children}
-    </span>
-  );
 }
 
 export function RetryModal({
@@ -118,6 +123,47 @@ export function RetryModal({
     "startMissingType" | "startOpenFailed" | null
   >(null);
 
+  useEffect(() => {
+    if (!open) return;
+
+    function handleTabKey(event: KeyboardEvent) {
+      if (event.key !== "Tab") return;
+      const dialog = document.querySelector<HTMLElement>(
+        ".app-modal [role='dialog']",
+      );
+      if (!dialog) return;
+
+      const focusable = Array.from(
+        dialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+      ).filter((element) => {
+        const rect = element.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0;
+      });
+      if (focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement;
+
+      if (!(active instanceof HTMLElement) || !dialog.contains(active)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+        return;
+      }
+
+      if (event.shiftKey && active === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && active === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
+    document.addEventListener("keydown", handleTabKey, true);
+    return () => document.removeEventListener("keydown", handleTabKey, true);
+  }, [open]);
+
   function handleStart() {
     // §4 — 시작 클릭 후 중복 실행 차단.
     if (starting) return;
@@ -128,12 +174,13 @@ export function RetryModal({
     }
     setStarting(true);
     try {
+      const canUseHintMode = false;
       router.push(
         writingProblemHref({
           questionNo,
           problemId,
           fresh: mode === "fresh",
-          hint: mode === "hint",
+          hint: canUseHintMode && mode === "hint",
         }) as never,
       );
     } catch {
@@ -171,59 +218,63 @@ export function RetryModal({
       ? t("statusDrafting")
       : t("statusNone");
 
+  const previousStatusMeta = [
+    statusLabel,
+    attemptCount > 0 ? tCommon("attemptCount", { count: attemptCount }) : null,
+    lastLabel,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  const compactSummaryMeta = [previousStatusMeta].filter(Boolean).join(" · ");
+
+  const questionNoLabel = questionNo
+    ? tCommon("questionNo", { no: questionNo })
+    : "-";
+
+  const summaryItems: DescriptionsProps["items"] = [
+    {
+      key: "problem",
+      label: t("summaryProblem"),
+      children: (
+        <Text strong className="retry-modal-summary__value">
+          {(problemTitle ?? t("summaryFallbackProblem")).slice(0, 28)}
+        </Text>
+      ),
+    },
+    {
+      key: "question",
+      label: t("summaryType"),
+      children: (
+        <Text strong className="retry-modal-summary__value">
+          {questionNoLabel}
+        </Text>
+      ),
+    },
+    {
+      key: "status",
+      label: t("summaryPreviousStatus"),
+      children: (
+        <Text className="retry-modal-summary__value">
+          {compactSummaryMeta || "-"}
+        </Text>
+      ),
+    },
+  ];
+
   // §1 예외 — 위험 상태(시작 처리 중)에서는 배경 클릭/ESC 닫기 비활성.
   const risky = starting;
 
   const summary = (
-    <div className="mb-4 grid gap-2">
-      <div className="rounded-3xl border border-border bg-surface p-3">
-        <Text type="secondary" className="block !text-xs">
-          {t("summaryProblem")}
-        </Text>
-        <strong className="mt-1 block truncate text-sm text-text">
-          {(problemTitle ?? t("summaryFallbackProblem")).slice(0, 28)}
-        </strong>
-      </div>
-      <div className="grid gap-2 sm:grid-cols-2">
-        <div className="rounded-3xl border border-border bg-background p-3">
-          <Text type="secondary" className="block !text-xs">
-            {t("summaryType")}
-          </Text>
-          <div className="mt-2">
-            {questionNo ? (
-              <SummaryBadge>
-                {tCommon("questionNo", { no: questionNo })}
-              </SummaryBadge>
-            ) : (
-              <Text>-</Text>
-            )}
-          </div>
-        </div>
-        <div className="rounded-3xl border border-border bg-background p-3">
-          <Text type="secondary" className="block !text-xs">
-            {t("summaryPreviousStatus")}
-          </Text>
-          <Text className="mt-1 block !text-sm">
-            {statusLabel}
-            {attemptCount > 0
-              ? ` · ${tCommon("attemptCount", { count: attemptCount })}`
-              : ""}
-            {lastLabel ? ` · ${lastLabel}` : ""}
-          </Text>
-          {canViewResult ? (
-            <Button
-              className="mt-2 !p-0"
-              type="link"
-              size="small"
-              onClick={handleViewResult}
-              disabled={risky}
-            >
-              {t("viewResult")}
-            </Button>
-          ) : null}
-        </div>
-      </div>
-    </div>
+    <Descriptions
+      data-testid="retry-modal-compact-summary"
+      className="retry-modal-summary"
+      bordered
+      colon={false}
+      column={1}
+      items={summaryItems}
+      size="small"
+    />
   );
 
   // §2 예외 — 만료된 문제: 시작/모드 선택 숨기고 만료 안내 + 닫기만.
@@ -234,10 +285,24 @@ export function RetryModal({
         onCancel={onClose}
         title={t("expiredTitle")}
         footer={null}
+        width={532}
+        className="retry-modal"
+        classNames={modalClassNames}
         mask={{ closable: true }}
         destroyOnHidden
       >
         {summary}
+        {canViewResult ? (
+          <Button
+            className="mb-6 !h-auto !p-0"
+            type="link"
+            size="small"
+            onClick={handleViewResult}
+            disabled={risky}
+          >
+            {t("viewResult")}
+          </Button>
+        ) : null}
         <Alert
           type="warning"
           showIcon
@@ -258,49 +323,87 @@ export function RetryModal({
       onCancel={risky ? undefined : onClose}
       title={t("title")}
       footer={null}
+      width={532}
+      className="retry-modal"
+      classNames={modalClassNames}
       mask={{ closable: !risky }}
       keyboard={!risky}
       destroyOnHidden
     >
       {summary}
+      {canViewResult ? (
+        <Button
+          className="mb-6 !h-auto !p-0"
+          type="link"
+          size="small"
+          onClick={handleViewResult}
+          disabled={risky}
+        >
+          {t("viewResult")}
+        </Button>
+      ) : null}
 
-      <Paragraph type="secondary" className="!mb-3">
+      <Paragraph className="!mb-4 !text-base !text-text">
         {t("intro")}
       </Paragraph>
 
       {/* §3 — 재풀이 모드 선택 (기본 선택 1개 항상 존재). */}
       <Radio.Group
-        className="mb-4 w-full"
+        className="w-full"
         value={mode}
         onChange={(e) => setMode(e.target.value as RetryMode)}
       >
-        <div className="grid gap-2">
-          <div className="rounded-2xl border border-border bg-background p-3">
-            <Radio className="w-full" value="fresh">
-              <span className="font-medium text-text">{t("modeFresh")}</span>{" "}
-              <Text type="secondary" className="!text-sm">
-                {t("modeFreshHint")}
-              </Text>
-            </Radio>
-          </div>
-          <div className="rounded-2xl border border-border bg-background p-3">
-            <Radio className="w-full" value="resume" disabled={!hasAttempt}>
-              <span className="font-medium text-text">{t("modeResume")}</span>{" "}
-              <Text type="secondary" className="!text-sm">
-                {hasAttempt ? t("modeResumeHint") : t("modeResumeNone")}
-              </Text>
-            </Radio>
-          </div>
-          <Tooltip title={t("modeHintTooltip")}>
-            <div className="rounded-2xl border border-border bg-background p-3">
-              <Radio className="w-full" value="hint">
-                <span className="font-medium text-text">{t("modeHint")}</span>{" "}
-                <Text type="secondary" className="!text-sm">
-                  {t("modeHintHint")}
-                </Text>
-              </Radio>
-            </div>
-          </Tooltip>
+        <div className="grid gap-3">
+          <Radio
+            className={[
+              "retry-modal-mode-option",
+              mode === "fresh" ? "bg-surface" : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            value="fresh"
+          >
+            <span className="shrink-0 whitespace-nowrap font-medium text-text">
+              {t("modeFresh")}
+            </span>{" "}
+            <Text type="secondary" className="!text-sm">
+              {t("modeFreshHint")}
+            </Text>
+          </Radio>
+          <Radio
+            className={[
+              "retry-modal-mode-option",
+              mode === "resume" ? "bg-surface" : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            value="resume"
+            disabled={!hasAttempt}
+          >
+            <span className="shrink-0 whitespace-nowrap font-medium text-text">
+              {t("modeResume")}
+            </span>{" "}
+            <Text type="secondary" className="!text-sm">
+              {hasAttempt ? t("modeResumeHint") : t("modeResumeNone")}
+            </Text>
+          </Radio>
+          <Radio
+            className={[
+              "retry-modal-mode-option",
+              mode === "hint" ? "bg-surface" : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            value="hint"
+            disabled
+          >
+            <span className="shrink-0 whitespace-nowrap font-medium text-text">
+              {t("modeHint")}
+            </span>{" "}
+            <Text type="secondary" className="!text-sm">
+              {t("modeHintHint")}
+            </Text>
+          </Radio>
         </div>
       </Radio.Group>
 
@@ -317,12 +420,13 @@ export function RetryModal({
 
       <div
         data-testid="retry-modal-actions"
-        className="grid grid-cols-2 gap-3"
+        className="app-modal-footer-actions"
       >
-        <Button block onClick={onClose} disabled={risky}>
+        <Button className="!h-10" block onClick={onClose} disabled={risky}>
           {tActions("cancel")}
         </Button>
         <Button
+          className="!h-10"
           type="primary"
           block
           onClick={handleStart}

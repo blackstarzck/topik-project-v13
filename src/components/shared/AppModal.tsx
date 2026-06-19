@@ -22,7 +22,10 @@ export function AppModal({ rootClassName, ...props }: ModalProps) {
   return (
     <Modal
       {...props}
-      rootClassName={["app-modal", rootClassName].filter(Boolean).join(" ")}
+      centered
+      rootClassName={["app-modal", "app-modal--center-origin", rootClassName]
+        .filter(Boolean)
+        .join(" ")}
     />
   );
 }

@@ -72,9 +72,7 @@ describe("SelectableAppCard", () => {
 
     const card = screen.getByRole("button", { name: /choice/i });
     expect(card.getAttribute("aria-pressed")).toBe("true");
-    expect(card.classList.contains("selectable-app-card--selected")).toBe(
-      true,
-    );
+    expect(card.classList.contains("selectable-app-card--selected")).toBe(true);
     expect(container.querySelector(".app-card")).toBeTruthy();
     expect(container.querySelector(".app-surface")).toBeTruthy();
   });
@@ -278,6 +276,21 @@ describe("AppModal (overlay sentinel — first modal cluster)", () => {
     expect(screen.getByRole("dialog")).toBeTruthy();
     expect(screen.getByTestId("modal-child")).toBeTruthy();
     expect(document.querySelector(".app-modal")).toBeTruthy();
+  });
+
+  it("centers every shared modal and applies the center-origin motion hook", () => {
+    renderWithIntl(
+      <AppModal open title="modal-title" onCancel={() => undefined}>
+        <span>body</span>
+      </AppModal>,
+    );
+
+    expect(document.querySelector(".ant-modal-centered")).toBeTruthy();
+    expect(
+      document
+        .querySelector(".app-modal")
+        ?.classList.contains("app-modal--center-origin"),
+    ).toBe(true);
   });
 
   it("merges a caller rootClassName without dropping the hook", () => {

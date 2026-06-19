@@ -1,70 +1,68 @@
-# Swagger API 문서
+# Swagger API Reference
 
-이 폴더는 `https://api.dotoretopik.com/docs` Swagger 내용을 에이전트가 읽기 쉽게 나눈 문서입니다. 기존의 긴 단일 문서 대신, 필요한 API 그룹과 스키마 그룹만 열어볼 수 있도록 분리했습니다.
+This directory is the v13 integration reference for the TALKPIK external API.
 
-- Swagger UI: https://api.dotoretopik.com/docs
-- OpenAPI JSON: http://58.236.187.135:9009/openapi.json
-- 생성 기준일: 2026-06-17
+- Swagger UI: [https://api.dotoretopik.com/docs](https://api.dotoretopik.com/docs)
+- OpenAPI JSON: [https://api.dotoretopik.com/openapi.json](https://api.dotoretopik.com/openapi.json)
+- Last synced: 2026-06-19
+- OpenAPI: `3.1.0`
+- API title/version: `TalkPik AI Service` / `0.1.0`
+- Coverage: 70 paths, 72 operations, 109 component schemas, 2 security schemes
 
-## 먼저 볼 문서
+## Start Here
 
-| 문서 | 언제 보나 | 내용 |
-| --- | --- | --- |
-| [auth-and-errors.md](./auth-and-errors.md) | API 호출 전에 | `Authorization: Bearer <token>`, `X-API-Key`, `Content-Type`, response/error code 정리 |
-| [openapi-reference.md](./openapi-reference.md) | 전체 구조를 빠르게 볼 때 | 전체 endpoint/schema 색인과 분리 문서 링크 |
-| [writing-api-v13-screen-map.html](./writing-api-v13-screen-map.html) | v13 Writing 화면 연결 판단 시 | 화면 기능별 Writing API 후보, 공백, 현재 코드 근거 |
+1. [OpenAPI summary](./openapi-reference.md)
+2. [Auth and errors](./auth-and-errors.md)
+3. [Writing API](./endpoints/writing.md)
+4. [v13 writing screen/API map](./writing-api-v13-screen-map.html)
 
-## 엔드포인트 문서
+## Endpoint Groups
 
-각 파일에는 해당 그룹 API의 request header/auth, parameter, request body, response, example value가 들어 있습니다.
+| Group | Operations | Scope |
+| --- | ---: | --- |
+| [Eval Auth](./endpoints/eval-auth.md) | 1 | Eval dashboard login |
+| [Admin Eval](./endpoints/admin-eval.md) | 12 | Evaluation operations, reviews, and datasets |
+| [Admin Campaign](./endpoints/admin-campaign.md) | 24 | Campaign admin review, email, PDF, and stats |
+| [External Campaign](./endpoints/external-campaign.md) | 6 | External campaign upload, submission, contact, and waitlist |
+| [Writing](./endpoints/writing.md) | 9 | TOPIK writing submission, generation, history, drafts, and PDF |
+| [Reading](./endpoints/reading.md) | 10 | Reading generation, submission, sessions, results, and bookmarks |
+| [Listening](./endpoints/listening.md) | 10 | Listening sessions, submissions, results, audio, and bookmarks |
+| [Evaluation](./endpoints/evaluation.md) | 0 | Async writing evaluation result lookup; not registered in current OpenAPI paths |
 
-| 그룹 | 파일 | 간략 설명 | API 수 |
-| --- | --- | --- | --- |
-| Admin Campaign API | [endpoints/admin-campaign.md](./endpoints/admin-campaign.md) | 내부 캠페인 리뷰어/관리자 대시보드 API입니다. 사용자 앱 화면용이 아닙니다. | 24 |
-| Admin Evaluation API | [endpoints/admin-eval.md](./endpoints/admin-eval.md) | 내부 평가 대시보드에서 채점 제출물, 데이터셋, 리뷰, 평가 실행을 관리합니다. | 12 |
-| Eval Auth API | [endpoints/eval-auth.md](./endpoints/eval-auth.md) | 내부 평가 대시보드 로그인 API입니다. | 1 |
-| Evaluation API | [endpoints/evaluation.md](./endpoints/evaluation.md) | Writing 제출 후 채점 상태와 피드백을 조회합니다. | 2 |
-| External Campaign API | [endpoints/external-campaign.md](./endpoints/external-campaign.md) | 랜딩/캠페인 공개 API입니다. `X-API-Key` 인증을 사용합니다. | 6 |
-| Listening API | [endpoints/listening.md](./endpoints/listening.md) | TOPIK 듣기 세션, 오디오, 북마크, 이력, SSE 생성 API입니다. | 10 |
-| Reading API | [endpoints/reading.md](./endpoints/reading.md) | TOPIK 읽기 문제 생성, 세션, 북마크, 이력, 제출 API입니다. | 10 |
-| Writing API | [endpoints/writing.md](./endpoints/writing.md) | TOPIK 쓰기 문제, 자동저장, 제출, 챗 튜터, 이력, PDF export API입니다. | 9 |
+## Schema Groups
 
-## 스키마 문서
+| Group | Schemas |
+| --- | ---: |
+| [Common](./schemas/common.md) | 3 |
+| [Eval Auth](./schemas/eval-auth.md) | 3 |
+| [Admin Eval](./schemas/admin-eval.md) | 18 |
+| [Admin Campaign](./schemas/admin-campaign.md) | 26 |
+| [External Campaign](./schemas/external-campaign.md) | 11 |
+| [Writing](./schemas/writing.md) | 16 |
+| [Reading](./schemas/reading.md) | 15 |
+| [Listening](./schemas/listening.md) | 17 |
+| [Evaluation](./schemas/evaluation.md) | 0 |
 
-엔드포인트 문서에서 request/response schema 이름을 확인한 뒤, 아래 스키마 파일에서 필드별 `required`, `type`, `enum`, `default`, `example`, `description`을 확인하면 됩니다.
+## v13 Writing Submit Contract
 
-| 그룹 | 파일 | 스키마 수 |
-| --- | --- | --- |
-| Common/shared | [schemas/common.md](./schemas/common.md) | 3 |
-| Admin Campaign API | [schemas/admin-campaign.md](./schemas/admin-campaign.md) | 26 |
-| Admin Evaluation API | [schemas/admin-eval.md](./schemas/admin-eval.md) | 18 |
-| Eval Auth API | [schemas/eval-auth.md](./schemas/eval-auth.md) | 3 |
-| Evaluation API | [schemas/evaluation.md](./schemas/evaluation.md) | 9 |
-| External Campaign API | [schemas/external-campaign.md](./schemas/external-campaign.md) | 11 |
-| Listening API | [schemas/listening.md](./schemas/listening.md) | 17 |
-| Reading API | [schemas/reading.md](./schemas/reading.md) | 15 |
-| Writing API | [schemas/writing.md](./schemas/writing.md) | 16 |
+The v13 app follows the endpoint-level Swagger request example for external writing submission.
 
-전체 스키마 이름으로 찾고 싶으면 [schemas/index.md](./schemas/index.md)를 봅니다.
+```json
+{
+  "task_type": "Q51",
+  "task_id": "Q51",
+  "text": "student answer...",
+  "user_id": "current"
+}
+```
 
-## 추천 읽기 순서
+Rules:
 
-1. [auth-and-errors.md](./auth-and-errors.md)에서 인증 방식과 오류 코드를 먼저 확인합니다.
-2. 필요한 API 그룹의 `endpoints/*.md` 파일을 엽니다.
-3. endpoint에 적힌 request/response schema 링크를 따라 `schemas/*.md`에서 필드와 example value를 확인합니다.
-4. v13 Writing 화면에 실제로 무엇을 연결할지 판단할 때는 [writing-api-v13-screen-map.html](./writing-api-v13-screen-map.html)을 봅니다.
+- Do not send the local Supabase `problem_id` UUID as external `task_id`.
+- Send `task_id` as one of the external TOPIK task codes: `Q51`, `Q52`, `Q53`, or `Q54`.
+- Send `user_id` as `current`, matching the Swagger endpoint request example and the current v13 integration contract.
+- `lang` and `passage_context` remain optional in the live component schema, but the v13 default submit payload does not send them.
 
-## 현재 v13 Writing 관련 핵심
+## Known Spec Gap
 
-- 현재 코드에 다시 남긴 외부 Writing API helper는 `POST /api/writing/save-draft` 자동저장 helper뿐입니다.
-- `GET /api/writing/tasks/{task_type}`와 `POST /api/writing/submit`은 문서에는 있지만 현재 v13 화면 코드에 연결하지 않았습니다.
-- Swagger에는 자동저장된 전체 답안을 다시 불러오는 전용 API가 없습니다. `GET /api/writing/history?status=draft`는 전체 editor 복구용이 아니라 preview 중심입니다.
-
-## 문서 생성 범위
-
-| 항목 | 값 |
-| --- | --- |
-| OpenAPI paths | 72 |
-| Operations | 74 |
-| Component schemas | 118 |
-| Security schemes | 2 |
+`POST /api/writing/submit` tells clients to poll `GET /api/evaluation/{submission_id}`, but `https://api.dotoretopik.com/openapi.json` currently does not register any `/api/evaluation/...` path. Keep this gap visible when changing the v13 writing feedback flow.

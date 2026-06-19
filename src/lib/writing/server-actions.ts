@@ -115,11 +115,9 @@ export async function submitWritingAction(
         accessToken,
         payload: {
           task_type: externalTaskType,
-          task_id: input.problem_id,
+          task_id: externalTaskType,
           text: input.answer_text,
-          user_id: user.id,
-          lang: "ko",
-          passage_context: "",
+          user_id: "current",
         },
       });
     } catch (error) {
@@ -156,18 +154,18 @@ export async function submitWritingAction(
         },
       } as never);
     if (createError) {
-      throw new Error(
-        `submitWriting external local create: ${createError.message}`,
-      );
+      throw new Error(toSubmitWritingErrorMessage(createError.message));
     }
-    if (localSubmissionId !== external.submission_id) {
+    // RPC는 같은 draft에 활성 제출이 이미 있으면 그 기존 id를 멱등 반환한다(중복 제출 방지).
+    // 반환 id는 이번 호출의 external.submission_id와 다를 수 있으므로, 반환 id를 신뢰한다.
+    if (typeof localSubmissionId !== "string" || !localSubmissionId) {
       throw new Error(
-        "submitWriting external local create returned mismatched submission id",
+        "submitWriting external local create returned empty submission id",
       );
     }
 
     return {
-      submissionId: external.submission_id,
+      submissionId: localSubmissionId,
       questionNo: input.question_no,
     };
   }

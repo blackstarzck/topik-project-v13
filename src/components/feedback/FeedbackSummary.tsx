@@ -18,6 +18,11 @@ type Props = {
     WritingSubmissionRow,
     "char_count" | "question_no" | "submitted_at"
   >;
+  /**
+   * 점수(Statistic)를 숨긴다. 단답(51/52) 리포트처럼 점수가 다른 영역에서 이미
+   * 강조될 때 총평만 재사용하기 위한 옵션. 기본값은 false(점수 표시).
+   */
+  hideScore?: boolean;
 };
 
 function formatSubmittedAtKst(value: string): string | null {
@@ -46,7 +51,11 @@ function navQuestionKey(questionNo: number): `writing${QuestionNo}` {
  * 예외: 점수 산출 실패(score 없음 또는 feedback.status='failed') 시 총평 대신
  *       분석 실패 안내를 표시한다.
  */
-export function FeedbackSummary({ feedback, submission }: Props) {
+export function FeedbackSummary({
+  feedback,
+  submission,
+  hideScore = false,
+}: Props) {
   const t = useTranslations("feedback.summary");
   const tAnalysis = useTranslations("feedback.analysis");
   const tNav = useTranslations("nav");
@@ -70,9 +79,13 @@ export function FeedbackSummary({ feedback, submission }: Props) {
     );
   }
 
+  const hasContentAboveSummary = !hideScore || Boolean(submission);
+
   return (
     <AppCard data-testid="feedback-summary">
-      <Statistic title={t("scoreTitle")} value={score} suffix={`/ ${max}`} />
+      {hideScore ? null : (
+        <Statistic title={t("scoreTitle")} value={score} suffix={`/ ${max}`} />
+      )}
       {submission ? (
         <div
           className="mt-3 flex flex-wrap gap-2"
@@ -90,7 +103,7 @@ export function FeedbackSummary({ feedback, submission }: Props) {
       ) : null}
       <Paragraph
         type="secondary"
-        className="mb-0 mt-3"
+        className={hasContentAboveSummary ? "mb-0 mt-3" : "mb-0"}
         ellipsis={{ rows: 3 }}
       >
         {feedback.overall_summary ?? t("overallFallback")}

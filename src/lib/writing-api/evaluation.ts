@@ -77,9 +77,7 @@ export type ExternalSubmitWritingRequest = {
   task_type: string;
   task_id: string;
   text: string;
-  user_id: string;
-  lang?: "ko" | "en" | "vi";
-  passage_context?: string;
+  user_id?: string | null;
 };
 
 export type ExternalSubmitWritingResponse = {

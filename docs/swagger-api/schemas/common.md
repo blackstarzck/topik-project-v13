@@ -1,43 +1,37 @@
-# Common And Shared Schemas
+# Common Schemas
 
-[Back to Swagger API README](../README.md) | [Schema index](./index.md)
-
-Each table shows field required status, type, enum, default, example value, and OpenAPI description.
+Source: [OpenAPI JSON](https://api.dotoretopik.com/openapi.json)
+Last synced: 2026-06-19
 
 ## Schema Index
 
-|Schema|Type|
-|---|---|
-|[HTTPValidationError](#httpvalidationerror)|object|
-|[ProvidedQuestion](#providedquestion)|object|
-|[ValidationError](#validationerror)|object|
+| Schema | Type | Description |
+| --- | --- | --- |
+| [HTTPValidationError](#httpvalidationerror) | object |  |
+| [ProvidedQuestion](#providedquestion) | object | A single prompt blank shown to the applicant for Q51/Q52 fill-in tasks. |
+| [ValidationError](#validationerror) | object |  |
 
 ## HTTPValidationError
 
-Type: `object`
-
-|name|required|type|enum|default|example|description|
-|---|---|---|---|---|---|---|
-|detail|no|array<ValidationError>|-|-|-|-|
+| Field | Required | Type | Description | Example / Default |
+| --- | --- | --- | --- | --- |
+| `detail` | no | array<[ValidationError](./common.md#validationerror)> |  |  |
 
 ## ProvidedQuestion
 
 A single prompt blank shown to the applicant for Q51/Q52 fill-in tasks.
-Type: `object`
 
-|name|required|type|enum|default|example|description|
-|---|---|---|---|---|---|---|
-|id|yes|string|-|-|["a"]|Stable identifier of the blank/sub-question (e.g. 'a', 'b').|
-|text|yes|string|-|-|["다음을 읽고 ( ㉠ )에 들어갈 말을 쓰십시오."]|Korean prompt text surrounding the blank the applicant must fill.|
+| Field | Required | Type | Description | Example / Default |
+| --- | --- | --- | --- | --- |
+| `id` | yes | string | Stable identifier of the blank/sub-question (e.g. 'a', 'b'). maxLength: 64 minLength: 1 | a |
+| `text` | yes | string | Korean prompt text surrounding the blank the applicant must fill. maxLength: 4000 minLength: 1 | 다음을 읽고 ( ㉠ )에 들어갈 말을 쓰십시오. |
 
 ## ValidationError
 
-Type: `object`
-
-|name|required|type|enum|default|example|description|
-|---|---|---|---|---|---|---|
-|loc|yes|array<anyOf<string \| integer>>|-|-|-|-|
-|msg|yes|string|-|-|-|-|
-|type|yes|string|-|-|-|-|
-|input|no|-|-|-|-|-|
-|ctx|no|object|-|-|-|-|
+| Field | Required | Type | Description | Example / Default |
+| --- | --- | --- | --- | --- |
+| `loc` | yes | array<string \| integer> |  |  |
+| `msg` | yes | string |  |  |
+| `type` | yes | string |  |  |
+| `input` | no | Input |  |  |
+| `ctx` | no | object |  |  |

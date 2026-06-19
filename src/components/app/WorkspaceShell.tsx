@@ -22,7 +22,13 @@ type Props = {
   children: ReactNode;
 };
 
-export function WorkspaceShell({ role, userId, email, planLabel, children }: Props) {
+export function WorkspaceShell({
+  role,
+  userId,
+  email,
+  planLabel,
+  children,
+}: Props) {
   const t = useTranslations("app");
   const pathname = usePathname();
   const screens = useBreakpoint();
@@ -34,6 +40,14 @@ export function WorkspaceShell({ role, userId, email, planLabel, children }: Pro
     pathname === "/writing/answer-writing-52" ||
     pathname === "/writing/long-form-writing-53" ||
     pathname === "/writing/essay-writing-54";
+  const isShortFeedbackRoute = pathname.startsWith("/writing/feedback/short/");
+  const contentClassName = [
+    "app-workspace-content",
+    isWritingExamRoute ? "app-workspace-content--exam" : null,
+    isShortFeedbackRoute ? "app-workspace-content--feedback-flush" : null,
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <Layout
@@ -80,15 +94,7 @@ export function WorkspaceShell({ role, userId, email, planLabel, children }: Pro
             <NotificationBell userId={userId} />
           </div>
         )}
-        <Content
-          className={
-            isWritingExamRoute
-              ? "app-workspace-content app-workspace-content--exam"
-              : "app-workspace-content"
-          }
-        >
-          {children}
-        </Content>
+        <Content className={contentClassName}>{children}</Content>
       </Layout>
 
       {isWritingExamRoute ? null : (

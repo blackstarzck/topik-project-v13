@@ -1,40 +1,32 @@
 # Listening API
 
-[Back to Swagger API README](../README.md) | [Auth and errors](../auth-and-errors.md) | [Related schemas](../schemas/listening.md)
+Source: [Swagger UI](https://api.dotoretopik.com/docs) / [OpenAPI JSON](https://api.dotoretopik.com/openapi.json)
+Last synced: 2026-06-19
 
-TOPIK listening practice sessions, audio, bookmarks, history, and streaming generation.
-
-Swagger tag description:
-
-**Listening Practice / 듣기 연습**
-
-AI-generated TOPIK listening problems with TTS-synthesised audio served via a signed proxy. Supports session-based practice and SSE streaming generation.
-
-TTS 합성 오디오(서명 프록시 제공)가 포함된 AI 생성 TOPIK 듣기 문제. 세션 기반 연습 및 SSE 스트리밍 생성 지원.
+Scope: Listening sessions, submissions, results, audio, and bookmarks
 
 ## Endpoint Index
 
-|Method|Path|Summary|
-|---|---|---|
-|`GET`|`/api/listening/audio-bank/{filename}`|Stream shared bank audio (signed proxy)|
-|`GET`|`/api/listening/audio/{session_id}/{filename}`|Stream listening problem audio (signed proxy)|
-|`POST`|`/api/listening/bookmark/{problem_id}`|Toggle bookmark on a listening problem|
-|`GET`|`/api/listening/history`|Get listening submission history|
-|`GET`|`/api/listening/question-types`|List listening question types for a level|
-|`POST`|`/api/listening/session`|Create a listening session (blocking)|
-|`GET`|`/api/listening/session/{session_id}`|Get listening session state|
-|`GET`|`/api/listening/session/{session_id}/results`|Get listening session results|
-|`POST`|`/api/listening/session/{session_id}/submit`|Submit an answer for a listening problem|
-|`POST`|`/api/listening/session/stream`|Create a listening session (SSE stream)|
+| Method | Path | Summary | Auth |
+| --- | --- | --- | --- |
+| GET | [`/api/listening/audio-bank/{filename}`](#get-api-listening-audio-bank-filename) | Stream shared bank audio (signed proxy) | BearerAuth |
+| GET | [`/api/listening/audio/{session_id}/{filename}`](#get-api-listening-audio-session-id-filename) | Stream listening problem audio (signed proxy) | BearerAuth |
+| POST | [`/api/listening/bookmark/{problem_id}`](#post-api-listening-bookmark-problem-id) | Toggle bookmark on a listening problem | BearerAuth |
+| GET | [`/api/listening/history`](#get-api-listening-history) | Get listening submission history | BearerAuth |
+| GET | [`/api/listening/question-types`](#get-api-listening-question-types) | List listening question types for a level | BearerAuth |
+| POST | [`/api/listening/session`](#post-api-listening-session) | Create a listening session (blocking) | BearerAuth |
+| GET | [`/api/listening/session/{session_id}`](#get-api-listening-session-session-id) | Get listening session state | BearerAuth |
+| GET | [`/api/listening/session/{session_id}/results`](#get-api-listening-session-session-id-results) | Get listening session results | BearerAuth |
+| POST | [`/api/listening/session/{session_id}/submit`](#post-api-listening-session-session-id-submit) | Submit an answer for a listening problem | BearerAuth |
+| POST | [`/api/listening/session/stream`](#post-api-listening-session-stream) | Create a listening session (SSE stream) | BearerAuth |
 
-## Endpoint Details
-
-### GET /api/listening/audio-bank/{filename}
+## GET /api/listening/audio-bank/{filename}
 
 Summary: Stream shared bank audio (signed proxy)
-Operation ID: `proxy_bank_audio_api_listening_audio_bank__filename__get`
 
-Description:
+Auth: BearerAuth
+
+### Description
 
 Stream shared bank audio (signed proxy) / 공용 뱅크 오디오 스트리밍 (서명 프록시)
 
@@ -46,38 +38,30 @@ which stores questions inline (no `listening_problems` row).
 **KR:** 여러 사용자·모의고사 세션이 공유하는 뱅크 오디오를 제공합니다. 세션 범위가
 없는 공용 콘텐츠이므로 bank id에 대한 HMAC `token`으로 인가합니다.
 
-Required request headers / auth:
-|Scheme|Header|Description|
-|---|---|---|
-|BearerAuth|`Authorization: Bearer <jwt>`|JWT Bearer token. Dashboard tokens come from POST /api/eval/auth/login.|
+### Parameters
 
-Parameters:
-|name|in|required|type|description|example|
-|---|---|---|---|---|---|
-|filename|path|yes|string|-|-|
-|token|query|yes|string|-|-|
+| Name | In | Required | Type | Description |
+| --- | --- | --- | --- | --- |
+| `filename` | path | yes | string |  |
+| `token` | query | yes | string |  |
 
-Request body:
-- None declared.
+### Responses
 
-Responses:
-- `200` Audio binary stream (audio/mpeg).
-  - Response content:
-|mediaType|schema|example|
-|---|---|---|
-|application/json|-|-|
-|audio/mpeg|-|-|
-- `400` Invalid bank audio path (bank_id not a valid UUID).
-- `403` Invalid bank audio token.
-- `404` Bank audio not found in storage.
-- `422` Missing required `token` query param.
+| Status | Description | Media | Schema |
+| --- | --- | --- | --- |
+| 200 | Audio binary stream (audio/mpeg). | `application/json` | - |
+| 400 | Invalid bank audio path (bank_id not a valid UUID). | - | - |
+| 403 | Invalid bank audio token. | - | - |
+| 404 | Bank audio not found in storage. | - | - |
+| 422 | Missing required `token` query param. | - | - |
 
-### GET /api/listening/audio/{session_id}/{filename}
+## GET /api/listening/audio/{session_id}/{filename}
 
 Summary: Stream listening problem audio (signed proxy)
-Operation ID: `proxy_audio_api_listening_audio__session_id___filename__get`
 
-Description:
+Auth: BearerAuth
+
+### Description
 
 Stream listening problem audio (signed proxy) / 듣기 문제 오디오 스트리밍 (서명 프록시)
 
@@ -97,39 +81,31 @@ HMAC 서명 `token` 쿼리 파라미터로 인가합니다. FE는 각 세션 문
 
 **Errors / 오류:** 400 invalid path; 403 bad/expired token; 404 file missing; 422 token 누락.
 
-Required request headers / auth:
-|Scheme|Header|Description|
-|---|---|---|
-|BearerAuth|`Authorization: Bearer <jwt>`|JWT Bearer token. Dashboard tokens come from POST /api/eval/auth/login.|
+### Parameters
 
-Parameters:
-|name|in|required|type|description|example|
-|---|---|---|---|---|---|
-|session_id|path|yes|string|-|-|
-|filename|path|yes|string|-|-|
-|token|query|yes|string|-|-|
+| Name | In | Required | Type | Description |
+| --- | --- | --- | --- | --- |
+| `session_id` | path | yes | string |  |
+| `filename` | path | yes | string |  |
+| `token` | query | yes | string |  |
 
-Request body:
-- None declared.
+### Responses
 
-Responses:
-- `200` Audio binary stream (audio/mpeg).
-  - Response content:
-|mediaType|schema|example|
-|---|---|---|
-|application/json|-|-|
-|audio/mpeg|-|-|
-- `400` Invalid audio path (session_id/filename not a valid UUID).
-- `403` Invalid or expired audio token.
-- `404` Audio file not found in storage.
-- `422` Missing required `token` query param.
+| Status | Description | Media | Schema |
+| --- | --- | --- | --- |
+| 200 | Audio binary stream (audio/mpeg). | `application/json` | - |
+| 400 | Invalid audio path (session_id/filename not a valid UUID). | - | - |
+| 403 | Invalid or expired audio token. | - | - |
+| 404 | Audio file not found in storage. | - | - |
+| 422 | Missing required `token` query param. | - | - |
 
-### POST /api/listening/bookmark/{problem_id}
+## POST /api/listening/bookmark/{problem_id}
 
 Summary: Toggle bookmark on a listening problem
-Operation ID: `toggle_listening_bookmark_api_listening_bookmark__problem_id__post`
 
-Description:
+Auth: BearerAuth
+
+### Description
 
 Toggle bookmark on a listening problem / 듣기 문제 북마크 토글
 
@@ -139,38 +115,36 @@ returns the resulting `is_bookmarked` value.
 **KR:** 현재 사용자에 대해 해당 문제의 북마크 상태를 전환하고 결과
 `is_bookmarked` 값을 반환합니다.
 
-Required request headers / auth:
-|Scheme|Header|Description|
-|---|---|---|
-|BearerAuth|`Authorization: Bearer <jwt>`|JWT Bearer token. Dashboard tokens come from POST /api/eval/auth/login.|
+### Parameters
 
-Parameters:
-|name|in|required|type|description|example|
-|---|---|---|---|---|---|
-|problem_id|path|yes|string|-|-|
+| Name | In | Required | Type | Description |
+| --- | --- | --- | --- | --- |
+| `problem_id` | path | yes | string |  |
 
-Request body:
-- None declared.
+### Responses
 
-Responses:
-- `200` Bookmark toggled; returns the new state.
-  - Response content:
-|mediaType|schema|example|
-|---|---|---|
-|application/json|[ListeningBookmarkResponse](../schemas/listening.md#listeningbookmarkresponse)|{"problem_id":"22222222-2222-2222-2222-222222222222","is_bookmarked":true}|
-- `401` Missing or invalid JWT.
-- `422` Validation Error
-  - Response content:
-|mediaType|schema|example|
-|---|---|---|
-|application/json|[HTTPValidationError](../schemas/common.md#httpvalidationerror)|-|
+| Status | Description | Media | Schema |
+| --- | --- | --- | --- |
+| 200 | Bookmark toggled; returns the new state. | `application/json` | [ListeningBookmarkResponse](../schemas/listening.md#listeningbookmarkresponse) |
+| 401 | Missing or invalid JWT. | - | - |
+| 422 | Validation Error | `application/json` | [HTTPValidationError](../schemas/common.md#httpvalidationerror) |
 
-### GET /api/listening/history
+Response 200 example:
+
+```json
+{
+  "problem_id": "22222222-2222-2222-2222-222222222222",
+  "is_bookmarked": true
+}
+```
+
+## GET /api/listening/history
 
 Summary: Get listening submission history
-Operation ID: `get_listening_history_api_listening_history_get`
 
-Description:
+Auth: BearerAuth
+
+### Description
 
 Get listening submission history / 듣기 제출 이력 조회
 
@@ -184,38 +158,31 @@ Optionally filter by question type, correctness, or TOPIK level.
 - `limit` (1-100, default 20), `offset` (>=0, default 0)
 - `question_type`, `is_correct`, `level` — optional filters
 
-Required request headers / auth:
-|Scheme|Header|Description|
-|---|---|---|
-|BearerAuth|`Authorization: Bearer <jwt>`|JWT Bearer token. Dashboard tokens come from POST /api/eval/auth/login.|
+### Parameters
 
-Parameters:
-|name|in|required|type|description|example|
-|---|---|---|---|---|---|
-|limit|query|no|integer|-|{"default":20}|
-|offset|query|no|integer|-|{"default":0}|
-|question_type|query|no|string|Filter by question type|-|
-|is_correct|query|no|boolean|Filter by correctness|-|
-|level|query|no|string|Filter by TOPIK level|-|
+| Name | In | Required | Type | Description |
+| --- | --- | --- | --- | --- |
+| `limit` | query | no | integer |  |
+| `offset` | query | no | integer |  |
+| `question_type` | query | no | string | Filter by question type |
+| `is_correct` | query | no | boolean | Filter by correctness |
+| `level` | query | no | string | Filter by TOPIK level |
 
-Request body:
-- None declared.
+### Responses
 
-Responses:
-- `200` Paginated submission history matching the filters.
-  - Response content:
-|mediaType|schema|example|
-|---|---|---|
-|application/json|[ListeningHistoryResponse](../schemas/listening.md#listeninghistoryresponse)|-|
-- `401` Missing or invalid JWT.
-- `422` Invalid query params (e.g. limit out of 1-100, negative offset).
+| Status | Description | Media | Schema |
+| --- | --- | --- | --- |
+| 200 | Paginated submission history matching the filters. | `application/json` | [ListeningHistoryResponse](../schemas/listening.md#listeninghistoryresponse) |
+| 401 | Missing or invalid JWT. | - | - |
+| 422 | Invalid query params (e.g. limit out of 1-100, negative offset). | - | - |
 
-### GET /api/listening/question-types
+## GET /api/listening/question-types
 
 Summary: List listening question types for a level
-Operation ID: `get_question_types_api_listening_question_types_get`
 
-Description:
+Auth: BearerAuth
+
+### Description
 
 List listening question types for a level / 레벨별 듣기 문제 유형 조회
 
@@ -227,34 +194,27 @@ List listening question types for a level / 레벨별 듣기 문제 유형 조�
 
 **Query param / 쿼리 파라미터:** `level` (1-6, default 4)
 
-Required request headers / auth:
-|Scheme|Header|Description|
-|---|---|---|
-|BearerAuth|`Authorization: Bearer <jwt>`|JWT Bearer token. Dashboard tokens come from POST /api/eval/auth/login.|
+### Parameters
 
-Parameters:
-|name|in|required|type|description|example|
-|---|---|---|---|---|---|
-|level|query|no|integer|TOPIK level 1-6|{"default":4}|
+| Name | In | Required | Type | Description |
+| --- | --- | --- | --- | --- |
+| `level` | query | no | integer | TOPIK level 1-6 |
 
-Request body:
-- None declared.
+### Responses
 
-Responses:
-- `200` Available question types for the requested TOPIK level.
-  - Response content:
-|mediaType|schema|example|
-|---|---|---|
-|application/json|array<ListeningQuestionTypeDTO>|-|
-- `401` Missing or invalid JWT.
-- `422` Invalid query param (level outside 1-6).
+| Status | Description | Media | Schema |
+| --- | --- | --- | --- |
+| 200 | Available question types for the requested TOPIK level. | `application/json` | - |
+| 401 | Missing or invalid JWT. | - | - |
+| 422 | Invalid query param (level outside 1-6). | - | - |
 
-### POST /api/listening/session
+## POST /api/listening/session
 
 Summary: Create a listening session (blocking)
-Operation ID: `create_listening_session_api_listening_session_post`
 
-Description:
+Auth: BearerAuth
+
+### Description
 
 Create a listening session (blocking) / 듣기 세션 생성 (동기)
 
@@ -269,41 +229,66 @@ path the FE feeds to `GET /audio/{session_id}/{filename}`.
 
 **Rate limit / 속도 제한:** 5 requests/minute
 
-Required request headers / auth:
-|Scheme|Header|Description|
-|---|---|---|
-|BearerAuth|`Authorization: Bearer <jwt>`|JWT Bearer token. Dashboard tokens come from POST /api/eval/auth/login.|
+### Request Body
 
-Parameters:
-- None declared.
+Media type: `application/json`
 
-Request body:
-- Required: yes
-|mediaType|schema|example|
-|---|---|---|
-|application/json|[ListeningSessionCreateRequest](../schemas/listening.md#listeningsessioncreaterequest)|-|
+Schema: [ListeningSessionCreateRequest](../schemas/listening.md#listeningsessioncreaterequest)
 
-Responses:
-- `200` Session created with all problems generated.
-  - Response content:
-|mediaType|schema|example|
-|---|---|---|
-|application/json|[ListeningSessionResponse](../schemas/listening.md#listeningsessionresponse)|{"id":"11111111-1111-1111-1111-111111111111","config":{"target_level":3,"question_types":["main_idea"],"question_count":5},"problems":[{"id":"22222222-2222-2222-2222-222222222222","question_type":"main_idea","difficulty":"medium","level":3,"audio_url":"/api/listening/audio/11111111-.../22222222-....mp3?token=...","audio_duration_seconds":18.4,"question":"들은 내용으로 알맞은 것을 고르십시오.","choices":[{"number":1,"text":"..."}],"created_at":"2024-11-15T09:30:00"}],"current_index":0,"total_questions":5,"status":"in_progress","started_at":"2024-11-15T09:30:00"}|
-- `400` Invalid request body (validation error).
-- `401` Missing or invalid JWT.
-- `422` Validation Error
-  - Response content:
-|mediaType|schema|example|
-|---|---|---|
-|application/json|[HTTPValidationError](../schemas/common.md#httpvalidationerror)|-|
-- `429` Rate limit exceeded (5 requests/minute).
+### Responses
 
-### GET /api/listening/session/{session_id}
+| Status | Description | Media | Schema |
+| --- | --- | --- | --- |
+| 200 | Session created with all problems generated. | `application/json` | [ListeningSessionResponse](../schemas/listening.md#listeningsessionresponse) |
+| 400 | Invalid request body (validation error). | - | - |
+| 401 | Missing or invalid JWT. | - | - |
+| 422 | Validation Error | `application/json` | [HTTPValidationError](../schemas/common.md#httpvalidationerror) |
+| 429 | Rate limit exceeded (5 requests/minute). | - | - |
+
+Response 200 example:
+
+```json
+{
+  "id": "11111111-1111-1111-1111-111111111111",
+  "config": {
+    "target_level": 3,
+    "question_types": [
+      "main_idea"
+    ],
+    "question_count": 5
+  },
+  "problems": [
+    {
+      "id": "22222222-2222-2222-2222-222222222222",
+      "question_type": "main_idea",
+      "difficulty": "medium",
+      "level": 3,
+      "audio_url": "/api/listening/audio/11111111-.../22222222-....mp3?token=...",
+      "audio_duration_seconds": 18.4,
+      "question": "들은 내용으로 알맞은 것을 고르십시오.",
+      "choices": [
+        {
+          "number": 1,
+          "text": "..."
+        }
+      ],
+      "created_at": "2024-11-15T09:30:00"
+    }
+  ],
+  "current_index": 0,
+  "total_questions": 5,
+  "status": "in_progress",
+  "started_at": "2024-11-15T09:30:00"
+}
+```
+
+## GET /api/listening/session/{session_id}
 
 Summary: Get listening session state
-Operation ID: `get_listening_session_api_listening_session__session_id__get`
 
-Description:
+Auth: BearerAuth
+
+### Description
 
 Get listening session state / 듣기 세션 상태 조회
 
@@ -315,39 +300,28 @@ for the authenticated owner. Used by the FE to resume an in-progress session.
 
 **Errors / 오류:** 404 if the session does not exist; 401 if it belongs to another user.
 
-Required request headers / auth:
-|Scheme|Header|Description|
-|---|---|---|
-|BearerAuth|`Authorization: Bearer <jwt>`|JWT Bearer token. Dashboard tokens come from POST /api/eval/auth/login.|
+### Parameters
 
-Parameters:
-|name|in|required|type|description|example|
-|---|---|---|---|---|---|
-|session_id|path|yes|string|-|-|
+| Name | In | Required | Type | Description |
+| --- | --- | --- | --- | --- |
+| `session_id` | path | yes | string |  |
 
-Request body:
-- None declared.
+### Responses
 
-Responses:
-- `200` Current session state with its problems.
-  - Response content:
-|mediaType|schema|example|
-|---|---|---|
-|application/json|[ListeningSessionResponse](../schemas/listening.md#listeningsessionresponse)|-|
-- `401` Missing/invalid JWT, or session not owned by the caller.
-- `404` Session not found.
-- `422` Validation Error
-  - Response content:
-|mediaType|schema|example|
-|---|---|---|
-|application/json|[HTTPValidationError](../schemas/common.md#httpvalidationerror)|-|
+| Status | Description | Media | Schema |
+| --- | --- | --- | --- |
+| 200 | Current session state with its problems. | `application/json` | [ListeningSessionResponse](../schemas/listening.md#listeningsessionresponse) |
+| 401 | Missing/invalid JWT, or session not owned by the caller. | - | - |
+| 404 | Session not found. | - | - |
+| 422 | Validation Error | `application/json` | [HTTPValidationError](../schemas/common.md#httpvalidationerror) |
 
-### GET /api/listening/session/{session_id}/results
+## GET /api/listening/session/{session_id}/results
 
 Summary: Get listening session results
-Operation ID: `get_listening_results_api_listening_session__session_id__results_get`
 
-Description:
+Auth: BearerAuth
+
+### Description
 
 Get listening session results / 듣기 세션 결과 조회
 
@@ -359,38 +333,27 @@ Get listening session results / 듣기 세션 결과 조회
 
 **Errors / 오류:** 401 if the session belongs to another user.
 
-Required request headers / auth:
-|Scheme|Header|Description|
-|---|---|---|
-|BearerAuth|`Authorization: Bearer <jwt>`|JWT Bearer token. Dashboard tokens come from POST /api/eval/auth/login.|
+### Parameters
 
-Parameters:
-|name|in|required|type|description|example|
-|---|---|---|---|---|---|
-|session_id|path|yes|string|-|-|
+| Name | In | Required | Type | Description |
+| --- | --- | --- | --- | --- |
+| `session_id` | path | yes | string |  |
 
-Request body:
-- None declared.
+### Responses
 
-Responses:
-- `200` All submissions plus an aggregate summary for the session.
-  - Response content:
-|mediaType|schema|example|
-|---|---|---|
-|application/json|[ListeningSessionResultsResponse](../schemas/listening.md#listeningsessionresultsresponse)|-|
-- `401` Missing/invalid JWT, or session not owned by the caller.
-- `422` Validation Error
-  - Response content:
-|mediaType|schema|example|
-|---|---|---|
-|application/json|[HTTPValidationError](../schemas/common.md#httpvalidationerror)|-|
+| Status | Description | Media | Schema |
+| --- | --- | --- | --- |
+| 200 | All submissions plus an aggregate summary for the session. | `application/json` | [ListeningSessionResultsResponse](../schemas/listening.md#listeningsessionresultsresponse) |
+| 401 | Missing/invalid JWT, or session not owned by the caller. | - | - |
+| 422 | Validation Error | `application/json` | [HTTPValidationError](../schemas/common.md#httpvalidationerror) |
 
-### POST /api/listening/session/{session_id}/submit
+## POST /api/listening/session/{session_id}/submit
 
 Summary: Submit an answer for a listening problem
-Operation ID: `submit_listening_answer_api_listening_session__session_id__submit_post`
 
-Description:
+Auth: BearerAuth
+
+### Description
 
 Submit an answer for a listening problem / 듣기 문제 정답 제출
 
@@ -405,44 +368,36 @@ audio script, per-choice status, related vocabulary, and XP earned.
 
 **Errors / 오류:** 404 session not found; 401 wrong owner; 400 if `question_index` is out of range.
 
-Required request headers / auth:
-|Scheme|Header|Description|
-|---|---|---|
-|BearerAuth|`Authorization: Bearer <jwt>`|JWT Bearer token. Dashboard tokens come from POST /api/eval/auth/login.|
+### Parameters
 
-Parameters:
-|name|in|required|type|description|example|
-|---|---|---|---|---|---|
-|session_id|path|yes|string|-|-|
+| Name | In | Required | Type | Description |
+| --- | --- | --- | --- | --- |
+| `session_id` | path | yes | string |  |
 
-Request body:
-- Required: yes
-|mediaType|schema|example|
-|---|---|---|
-|application/json|[ListeningSubmitRequest](../schemas/listening.md#listeningsubmitrequest)|-|
+### Request Body
 
-Responses:
-- `200` Answer graded; returns correctness, explanation, script, and XP.
-  - Response content:
-|mediaType|schema|example|
-|---|---|---|
-|application/json|[ListeningAnswerResultResponse](../schemas/listening.md#listeninganswerresultresponse)|-|
-- `400` Invalid request body, or question_index out of range.
-- `401` Missing/invalid JWT, or session not owned by the caller.
-- `404` Session not found.
-- `422` Validation Error
-  - Response content:
-|mediaType|schema|example|
-|---|---|---|
-|application/json|[HTTPValidationError](../schemas/common.md#httpvalidationerror)|-|
-- `429` Rate limit exceeded (30 requests/minute).
+Media type: `application/json`
 
-### POST /api/listening/session/stream
+Schema: [ListeningSubmitRequest](../schemas/listening.md#listeningsubmitrequest)
+
+### Responses
+
+| Status | Description | Media | Schema |
+| --- | --- | --- | --- |
+| 200 | Answer graded; returns correctness, explanation, script, and XP. | `application/json` | [ListeningAnswerResultResponse](../schemas/listening.md#listeninganswerresultresponse) |
+| 400 | Invalid request body, or question_index out of range. | - | - |
+| 401 | Missing/invalid JWT, or session not owned by the caller. | - | - |
+| 404 | Session not found. | - | - |
+| 422 | Validation Error | `application/json` | [HTTPValidationError](../schemas/common.md#httpvalidationerror) |
+| 429 | Rate limit exceeded (30 requests/minute). | - | - |
+
+## POST /api/listening/session/stream
 
 Summary: Create a listening session (SSE stream)
-Operation ID: `create_listening_session_stream_api_listening_session_stream_post`
 
-Description:
+Auth: BearerAuth
+
+### Description
 
 Create a listening session (SSE stream) / 듣기 세션 생성 (SSE 스트리밍)
 
@@ -464,31 +419,17 @@ Event sequence:
 
 **Rate limit / 속도 제한:** 5 requests/minute
 
-Required request headers / auth:
-|Scheme|Header|Description|
-|---|---|---|
-|BearerAuth|`Authorization: Bearer <jwt>`|JWT Bearer token. Dashboard tokens come from POST /api/eval/auth/login.|
+### Request Body
 
-Parameters:
-- None declared.
+Media type: `application/json`
 
-Request body:
-- Required: yes
-|mediaType|schema|example|
-|---|---|---|
-|application/json|[ListeningSessionCreateRequest](../schemas/listening.md#listeningsessioncreaterequest)|-|
+Schema: [ListeningSessionCreateRequest](../schemas/listening.md#listeningsessioncreaterequest)
 
-Responses:
-- `200` Server-Sent Events stream (`text/event-stream`). Named events: `meta` (session_id + total_questions, sent first), `problem` (one per generated problem, WITHOUT audio so the FE renders the question immediately), `audio` (follow-up per problem carrying `audio_url` once TTS finishes; `audio_url` may be null on TTS failure), `error` (per-problem generation failure/timeout — stream continues), and `done` (terminal marker with `total_generated`). The `done` event always closes the stream.
-  - Response content:
-|mediaType|schema|example|
-|---|---|---|
-|application/json|-|-|
-|text/event-stream|-|event: meta<br>data: {"session_id": "1111...", "total_questions": 5, "status": "generating"}<br><br>event: problem<br>data: {"index": 0, "id": "2222...", "question_type": "main_idea", "question": "...", "choices": [{"number": 1, "text": "..."}], "audio_url": null}<br><br>event: audio<br>data: {"index": 0, "problem_id": "2222...", "audio_url": "/api/listening/audio/1111.../2222....mp3?token=...", "duration_seconds": 34}<br><br>event: error<br>data: {"index": 1, "message": "Problem generation failed, please retry."}<br><br>event: done<br>data: {"session_id": "1111...", "total_generated": 4}<br><br>|
-- `401` Missing or invalid JWT.
-- `422` Validation Error
-  - Response content:
-|mediaType|schema|example|
-|---|---|---|
-|application/json|[HTTPValidationError](../schemas/common.md#httpvalidationerror)|-|
-- `429` Rate limit exceeded (5 requests/minute).
+### Responses
+
+| Status | Description | Media | Schema |
+| --- | --- | --- | --- |
+| 200 | Server-Sent Events stream (`text/event-stream`). Named events: `meta` (session_id + total_questions, sent first), `problem` (one per generated problem, WITHOUT audio so the FE renders the question immediately), `audio` (follow-up per problem carrying `audio_url` once TTS finishes; `audio_url` may be null on TTS failure), `error` (per-problem generation failure/timeout — stream continues), and `done` (terminal marker with `total_generated`). The `done` event always closes the stream. | `application/json` | - |
+| 401 | Missing or invalid JWT. | - | - |
+| 422 | Validation Error | `application/json` | [HTTPValidationError](../schemas/common.md#httpvalidationerror) |
+| 429 | Rate limit exceeded (5 requests/minute). | - | - |

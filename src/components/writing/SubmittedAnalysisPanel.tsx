@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -47,6 +48,39 @@ export function SubmittedAnalysisPanel({ state }: Props) {
   const status: AnalysisPhase = (data as AnalysisPhase | null) ?? "analyzing";
   const submittedAt = formatSubmittedAtKst(state.submittedAt);
   const showSubmittedAnswer = status !== "failed";
+  const analysisInProgress = status === "pending" || status === "analyzing";
+  const leaveConfirmMessage = t("cancelConfirm");
+
+  // 분석이 진행 중일 때만 브라우저 새로고침/닫기(beforeunload)와 뒤로가기(popstate)를
+  // 기기 빌트인 확인 창으로 막는다. 분석은 history에 남지 않는 일시 상태라, 경고 없이
+  // 이탈하면 진행 중인 분석 화면이 사라진다. 완료/실패로 바뀌면 가드를 해제한다.
+  useEffect(() => {
+    if (!analysisInProgress) return;
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    // 앱 내부 뒤로가기를 가로채기 위한 sentinel history 항목.
+    window.history.pushState(null, "", window.location.href);
+    const handlePopState = () => {
+      if (window.confirm(leaveConfirmMessage)) {
+        window.removeEventListener("beforeunload", handleBeforeUnload);
+        window.removeEventListener("popstate", handlePopState);
+        window.history.back();
+        return;
+      }
+      window.history.pushState(null, "", window.location.href);
+    };
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [analysisInProgress, leaveConfirmMessage]);
   const pageClassName = [
     "submitted-analysis-page",
     status === "failed" ? "submitted-analysis-page--failed" : null,

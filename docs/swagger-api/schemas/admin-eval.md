@@ -1,31 +1,30 @@
-# Admin Evaluation API Schemas
+# Admin Eval Schemas
 
-[Back to Swagger API README](../README.md) | [Schema index](./index.md)
-
-Each table shows field required status, type, enum, default, example value, and OpenAPI description.
+Source: [OpenAPI JSON](https://api.dotoretopik.com/openapi.json)
+Last synced: 2026-06-19
 
 ## Schema Index
 
-|Schema|Type|
-|---|---|
-|[DatasetResultsResponse](#datasetresultsresponse)|object|
-|[DatasetsResponse](#datasetsresponse)|object|
-|[DatasetStatsResponse](#datasetstatsresponse)|object|
-|[EvalRunRequest](#evalrunrequest)|object|
-|[EvalRunResponse](#evalrunresponse)|object|
-|[EvalRunStatusResponse](#evalrunstatusresponse)|object|
-|[EvalUserItem](#evaluseritem)|object|
-|[EvalUsersResponse](#evalusersresponse)|object|
-|[ExpertReview](#expertreview)|object|
-|[OverviewStatsResponse](#overviewstatsresponse)|object|
-|[ReviewListResponse](#reviewlistresponse)|object|
-|[ReviewRequest](#reviewrequest)|object|
-|[SubmissionDetailFeedback](#submissiondetailfeedback)|object|
-|[SubmissionDetailResponse](#submissiondetailresponse)|object|
-|[SubmissionDetailSubmission](#submissiondetailsubmission)|object|
-|[SubmissionDetailTask](#submissiondetailtask)|object|
-|[UserSubmissionItem](#usersubmissionitem)|object|
-|[UserSubmissionsResponse](#usersubmissionsresponse)|object|
+| Schema | Type | Description |
+| --- | --- | --- |
+| [DatasetResultsResponse](#datasetresultsresponse) | object | Paginated per-case results for an eval run. Each item mirrors a full `eval_results` row (`SELECT *`) enriched with case `input_data`, `description`, `title`, a coerced `passed` bool, and parsed `judge_verdict`/`penalty_results`/`raw_output` JSON; passed through untyped. |
+| [DatasetStatsResponse](#datasetstatsresponse) | object | Aggregate statistics for one eval run (from `compute_stats`). |
+| [DatasetsResponse](#datasetsresponse) | object | Paginated eval-run records from the SQLite eval database. Each item mirrors a full `eval_datasets` row (`SELECT *`), so the column set is schema-defined; items are passed through untyped to avoid dropping fields. |
+| [EvalRunRequest](#evalrunrequest) | object |  |
+| [EvalRunResponse](#evalrunresponse) | object | Acknowledgement returned when an eval subprocess is started. |
+| [EvalRunStatusResponse](#evalrunstatusresponse) | object | Current eval run state stored in Redis (TTL 2h). Fields vary by phase: a `running` entry carries pipeline/dataset/mode/ triggered_by; a finished entry carries exit_code and stdout/stderr tails; an internal failure carries `error`. All non-status fields are optional. |
+| [EvalUserItem](#evaluseritem) | object | A user who has at least one graded submission. |
+| [EvalUsersResponse](#evalusersresponse) | object | Paginated list of users with graded submissions. |
+| [ExpertReview](#expertreview) | object | A persisted expert review. All fields are optional because `GET .../my` returns an empty object `{}` when the current admin has not reviewed the target yet. |
+| [OverviewStatsResponse](#overviewstatsresponse) | object | High-level aggregate stats for the eval dashboard header. |
+| [ReviewListResponse](#reviewlistresponse) | object | All expert reviews submitted for a target (multi-reviewer). |
+| [ReviewRequest](#reviewrequest) | object |  |
+| [SubmissionDetailFeedback](#submissiondetailfeedback) | object | AI feedback record within the detail response. |
+| [SubmissionDetailResponse](#submissiondetailresponse) | object | Full submission detail: submission record, feedback, and linked task. |
+| [SubmissionDetailSubmission](#submissiondetailsubmission) | object | Core submission record within the detail response. |
+| [SubmissionDetailTask](#submissiondetailtask) | object | Writing task metadata within the detail response (null when no task linked). |
+| [UserSubmissionItem](#usersubmissionitem) | object | A single graded writing submission for a user. |
+| [UserSubmissionsResponse](#usersubmissionsresponse) | object | Paginated list of a user's graded submissions. |
 
 ## DatasetResultsResponse
 
@@ -34,14 +33,27 @@ Paginated per-case results for an eval run.
 Each item mirrors a full `eval_results` row (`SELECT *`) enriched with case
 `input_data`, `description`, `title`, a coerced `passed` bool, and parsed
 `judge_verdict`/`penalty_results`/`raw_output` JSON; passed through untyped.
-Type: `object`
 
-|name|required|type|enum|default|example|description|
-|---|---|---|---|---|---|---|
-|items|yes|array<object<string, ->>|-|-|[[{"actual":42.5,"case_id":"tc001","expected_min":40,"score":42.5,"status":"passed"}]]|Enriched per-case result rows (passthrough).|
-|total|yes|integer|-|-|[1]|Total matching results.|
-|limit|yes|integer|-|-|[100]|Page size echoed back.|
-|offset|yes|integer|-|-|[0]|Page offset echoed back.|
+| Field | Required | Type | Description | Example / Default |
+| --- | --- | --- | --- | --- |
+| `items` | yes | array<object> | Enriched per-case result rows (passthrough). | [{"actual":42.5,"case_id":"tc001","expected_min":40,"score":42.5,"status":"passed"}] |
+| `total` | yes | integer | Total matching results. | 1 |
+| `limit` | yes | integer | Page size echoed back. | 100 |
+| `offset` | yes | integer | Page offset echoed back. | 0 |
+
+## DatasetStatsResponse
+
+Aggregate statistics for one eval run (from `compute_stats`).
+
+| Field | Required | Type | Description | Example / Default |
+| --- | --- | --- | --- | --- |
+| `total` | yes | integer | Total cases in the run. | 20 |
+| `passed` | yes | integer | Number of passed cases. | 18 |
+| `failed` | yes | integer | Number of failed cases. | 2 |
+| `pass_rate` | yes | number | Passed / total, rounded to 4dp. | 0.9 |
+| `avg_score` | yes | number | Average weighted score, rounded to 3dp. | 42.3 |
+| `total_cost_usd` | yes | number | Summed cost in USD, rounded to 6dp. | 0.0123 |
+| `avg_processing_time` | yes | number | Average processing time in seconds, rounded to 2dp. | 1.45 |
 
 ## DatasetsResponse
 
@@ -49,62 +61,34 @@ Paginated eval-run records from the SQLite eval database.
 
 Each item mirrors a full `eval_datasets` row (`SELECT *`), so the column set
 is schema-defined; items are passed through untyped to avoid dropping fields.
-Type: `object`
 
-|name|required|type|enum|default|example|description|
-|---|---|---|---|---|---|---|
-|items|yes|array<object<string, ->>|-|-|[[{"created_at":"2024-11-15T10:00:00","id":"run-2024-11-15","mode":"full","passed":18,"pipeline":"writing_scorer","total":20}]]|Eval-run rows (passthrough; all eval_datasets columns).|
-|total|yes|integer|-|-|[1]|Total matching eval runs.|
-|limit|yes|integer|-|-|[50]|Page size echoed back.|
-|offset|yes|integer|-|-|[0]|Page offset echoed back.|
-
-## DatasetStatsResponse
-
-Aggregate statistics for one eval run (from `compute_stats`).
-Type: `object`
-
-|name|required|type|enum|default|example|description|
-|---|---|---|---|---|---|---|
-|total|yes|integer|-|-|[20]|Total cases in the run.|
-|passed|yes|integer|-|-|[18]|Number of passed cases.|
-|failed|yes|integer|-|-|[2]|Number of failed cases.|
-|pass_rate|yes|number|-|-|[0.9]|Passed / total, rounded to 4dp.|
-|avg_score|yes|number|-|-|[42.3]|Average weighted score, rounded to 3dp.|
-|total_cost_usd|yes|number|-|-|[0.0123]|Summed cost in USD, rounded to 6dp.|
-|avg_processing_time|yes|number|-|-|[1.45]|Average processing time in seconds, rounded to 2dp.|
+| Field | Required | Type | Description | Example / Default |
+| --- | --- | --- | --- | --- |
+| `items` | yes | array<object> | Eval-run rows (passthrough; all eval_datasets columns). | [{"created_at":"2024-11-15T10:00:00","id":"run-2024-11-15","mode":"full","passed":18,"pipeline":"writing_scorer","total":20}] |
+| `total` | yes | integer | Total matching eval runs. | 1 |
+| `limit` | yes | integer | Page size echoed back. | 50 |
+| `offset` | yes | integer | Page offset echoed back. | 0 |
 
 ## EvalRunRequest
 
-Type: `object`
-
-Schema example:
-```json
-{
-  "dataset": "all",
-  "mode": "quick",
-  "pipeline": "writing_scorer"
-}
-```
-
-|name|required|type|enum|default|example|description|
-|---|---|---|---|---|---|---|
-|pipeline|no|string|-|writing_scorer|["writing_scorer"]<br>{"default":"writing_scorer"}|Pipeline to run. One of: writing_scorer, content_generation, chat_tutor, exam_feedback, chat_modes, q53_dsl.|
-|dataset|no|string|-|all|["all"]<br>{"default":"all"}|Dataset name, or `all`. Safe token: alphanumeric start, no path separators or leading '-'.|
-|mode|no|string|-|full|["quick"]<br>{"default":"full"}|Run mode. One of: full (all cases), quick (fast subset), stability (repeat runs).|
-|case_filter|no|anyOf<string \| null>|-|-|["tc001"]|Optional single case id to run. Safe token: alphanumeric start, no path separators or leading '-'.|
+| Field | Required | Type | Description | Example / Default |
+| --- | --- | --- | --- | --- |
+| `pipeline` | no | string | Pipeline to run. One of: writing_scorer, content_generation, chat_tutor, exam_feedback, chat_modes, q53_dsl. | writing_scorer |
+| `dataset` | no | string | Dataset name, or `all`. Safe token: alphanumeric start, no path separators or leading '-'. | all |
+| `mode` | no | string | Run mode. One of: full (all cases), quick (fast subset), stability (repeat runs). | quick |
+| `case_filter` | no | string \| null | Optional single case id to run. Safe token: alphanumeric start, no path separators or leading '-'. | tc001 |
 
 ## EvalRunResponse
 
 Acknowledgement returned when an eval subprocess is started.
-Type: `object`
 
-|name|required|type|enum|default|example|description|
-|---|---|---|---|---|---|---|
-|run_id|yes|string|-|-|["a1b2c3d4-..."]|Run identifier to poll for status.|
-|status|yes|string|-|-|["running"]|Initial run status (always `running`).|
-|pipeline|yes|string|-|-|["writing_scorer"]|Pipeline that was started.|
-|dataset|yes|string|-|-|["all"]|Dataset name, or `all`.|
-|mode|yes|string|-|-|["quick"]|Run mode.|
+| Field | Required | Type | Description | Example / Default |
+| --- | --- | --- | --- | --- |
+| `run_id` | yes | string | Run identifier to poll for status. | a1b2c3d4-... |
+| `status` | yes | string | Initial run status (always `running`). | running |
+| `pipeline` | yes | string | Pipeline that was started. | writing_scorer |
+| `dataset` | yes | string | Dataset name, or `all`. | all |
+| `mode` | yes | string | Run mode. | quick |
 
 ## EvalRunStatusResponse
 
@@ -113,45 +97,42 @@ Current eval run state stored in Redis (TTL 2h).
 Fields vary by phase: a `running` entry carries pipeline/dataset/mode/
 triggered_by; a finished entry carries exit_code and stdout/stderr tails;
 an internal failure carries `error`. All non-status fields are optional.
-Type: `object`
 
-|name|required|type|enum|default|example|description|
-|---|---|---|---|---|---|---|
-|status|yes|string|-|-|["completed"]|Run status: running, completed, failed, or error.|
-|exit_code|no|anyOf<integer \| null>|-|-|[0]|Subprocess exit code (finished runs).|
-|stdout_tail|no|anyOf<string \| null>|-|-|["Passed: 18/20 cases (90.0%)\nAvg score: 42.3"]|Last ~3000 chars of stdout (finished runs).|
-|stderr_tail|no|anyOf<string \| null>|-|-|[""]|Last ~1000 chars of stderr (finished runs).|
-|error|no|anyOf<string \| null>|-|-|[null]|Internal error message (status=error only).|
-|pipeline|no|anyOf<string \| null>|-|-|["writing_scorer"]|Pipeline name (running entry).|
-|dataset|no|anyOf<string \| null>|-|-|["all"]|Dataset name (running entry).|
-|mode|no|anyOf<string \| null>|-|-|["quick"]|Run mode (running entry).|
-|triggered_by|no|anyOf<string \| null>|-|-|["Admin"]|Display name of the admin who started the run.|
+| Field | Required | Type | Description | Example / Default |
+| --- | --- | --- | --- | --- |
+| `status` | yes | string | Run status: running, completed, failed, or error. | completed |
+| `exit_code` | no | integer \| null | Subprocess exit code (finished runs). | 0 |
+| `stdout_tail` | no | string \| null | Last ~3000 chars of stdout (finished runs). | Passed: 18/20 cases (90.0%)<br>Avg score: 42.3 |
+| `stderr_tail` | no | string \| null | Last ~1000 chars of stderr (finished runs). |  |
+| `error` | no | string \| null | Internal error message (status=error only). |  |
+| `pipeline` | no | string \| null | Pipeline name (running entry). | writing_scorer |
+| `dataset` | no | string \| null | Dataset name (running entry). | all |
+| `mode` | no | string \| null | Run mode (running entry). | quick |
+| `triggered_by` | no | string \| null | Display name of the admin who started the run. | Admin |
 
 ## EvalUserItem
 
 A user who has at least one graded submission.
-Type: `object`
 
-|name|required|type|enum|default|example|description|
-|---|---|---|---|---|---|---|
-|id|yes|string|-|-|["uuid"]|User UUID.|
-|email|no|anyOf<string \| null>|-|-|["learner@example.com"]|User email.|
-|display_name|no|anyOf<string \| null>|-|-|["홍길동"]|User display name.|
-|submission_count|yes|integer|-|-|[5]|Number of graded submissions by this user.|
-|avg_score|no|anyOf<number \| null>|-|-|[48.5]|Average total score across graded submissions.|
-|last_submitted_at|no|anyOf<string \| null>|-|-|["2024-11-15T10:00:00"]|ISO timestamp of the user's most recent submission.|
+| Field | Required | Type | Description | Example / Default |
+| --- | --- | --- | --- | --- |
+| `id` | yes | string | User UUID. | uuid |
+| `email` | no | string \| null | User email. | learner@example.com |
+| `display_name` | no | string \| null | User display name. | 홍길동 |
+| `submission_count` | yes | integer | Number of graded submissions by this user. | 5 |
+| `avg_score` | no | number \| null | Average total score across graded submissions. | 48.5 |
+| `last_submitted_at` | no | string \| null | ISO timestamp of the user's most recent submission. | 2024-11-15T10:00:00 |
 
 ## EvalUsersResponse
 
 Paginated list of users with graded submissions.
-Type: `object`
 
-|name|required|type|enum|default|example|description|
-|---|---|---|---|---|---|---|
-|items|yes|array<EvalUserItem>|-|-|-|Users on the current page.|
-|total|yes|integer|-|-|[1]|Total matching users.|
-|limit|yes|integer|-|-|[50]|Page size echoed back.|
-|offset|yes|integer|-|-|[0]|Page offset echoed back.|
+| Field | Required | Type | Description | Example / Default |
+| --- | --- | --- | --- | --- |
+| `items` | yes | array<[EvalUserItem](./admin-eval.md#evaluseritem)> | Users on the current page. |  |
+| `total` | yes | integer | Total matching users. | 1 |
+| `limit` | yes | integer | Page size echoed back. | 50 |
+| `offset` | yes | integer | Page offset echoed back. | 0 |
 
 ## ExpertReview
 
@@ -159,155 +140,129 @@ A persisted expert review.
 
 All fields are optional because `GET .../my` returns an empty object `{}`
 when the current admin has not reviewed the target yet.
-Type: `object`
 
-|name|required|type|enum|default|example|description|
-|---|---|---|---|---|---|---|
-|id|no|anyOf<string \| null>|-|-|["uuid"]|Review UUID.|
-|target_type|no|anyOf<string \| null>|-|-|["submission"]|Reviewed target type.|
-|target_id|no|anyOf<string \| null>|-|-|["uuid"]|Reviewed target UUID.|
-|reviewer_id|no|anyOf<string \| null>|-|-|["uuid"]|Reviewer user UUID.|
-|reviewer_name|no|anyOf<string \| null>|-|-|["Admin A"]|Reviewer display name.|
-|agreement|no|anyOf<string \| null>|-|-|["mostly_agree"]|Agreement: agree \| mostly_agree \| partial \| disagree \| '' (unset).|
-|grade|no|anyOf<string \| null>|-|-|["B"]|Letter grade: A \| B \| C \| D \| F \| '' (unset).|
-|disagreed_sections|no|anyOf<array<string> \| null>|-|-|[["expression"]]|Section keys the reviewer disagrees with.|
-|section_feedbacks|no|anyOf<object<string, string> \| null>|-|-|[{"expression":"어휘 점수가 낮게 책정됨"}]|Per-section freeform feedback.|
-|general_feedback|no|anyOf<string \| null>|-|-|["채점 기준이 다소 엄격하게 적용된 것 같습니다."]|Overall freeform feedback.|
-|created_at|no|anyOf<string \| null>|-|-|["2024-11-15T11:00:00"]|ISO creation timestamp.|
-|updated_at|no|anyOf<string \| null>|-|-|["2024-11-15T11:00:00"]|ISO last-update timestamp.|
+| Field | Required | Type | Description | Example / Default |
+| --- | --- | --- | --- | --- |
+| `id` | no | string \| null | Review UUID. | uuid |
+| `target_type` | no | string \| null | Reviewed target type. | submission |
+| `target_id` | no | string \| null | Reviewed target UUID. | uuid |
+| `reviewer_id` | no | string \| null | Reviewer user UUID. | uuid |
+| `reviewer_name` | no | string \| null | Reviewer display name. | Admin A |
+| `agreement` | no | string \| null | Agreement: agree \| mostly_agree \| partial \| disagree \| '' (unset). | mostly_agree |
+| `grade` | no | string \| null | Letter grade: A \| B \| C \| D \| F \| '' (unset). | B |
+| `disagreed_sections` | no | array<string> \| null | Section keys the reviewer disagrees with. | ["expression"] |
+| `section_feedbacks` | no | object \| null | Per-section freeform feedback. | {"expression":"어휘 점수가 낮게 책정됨"} |
+| `general_feedback` | no | string \| null | Overall freeform feedback. | 채점 기준이 다소 엄격하게 적용된 것 같습니다. |
+| `created_at` | no | string \| null | ISO creation timestamp. | 2024-11-15T11:00:00 |
+| `updated_at` | no | string \| null | ISO last-update timestamp. | 2024-11-15T11:00:00 |
 
 ## OverviewStatsResponse
 
 High-level aggregate stats for the eval dashboard header.
-Type: `object`
 
-|name|required|type|enum|default|example|description|
-|---|---|---|---|---|---|---|
-|total_users|yes|integer|-|-|[1250]|Distinct users with graded submissions.|
-|total_submissions|yes|integer|-|-|[1180]|Total graded submissions.|
-|avg_score|no|anyOf<number \| null>|-|-|[42.3]|Average total score across graded submissions.|
-|total_reviews|yes|integer|-|-|[70]|Total expert reviews submitted.|
+| Field | Required | Type | Description | Example / Default |
+| --- | --- | --- | --- | --- |
+| `total_users` | yes | integer | Distinct users with graded submissions. | 1250 |
+| `total_submissions` | yes | integer | Total graded submissions. | 1180 |
+| `avg_score` | no | number \| null | Average total score across graded submissions. | 42.3 |
+| `total_reviews` | yes | integer | Total expert reviews submitted. | 70 |
 
 ## ReviewListResponse
 
 All expert reviews submitted for a target (multi-reviewer).
-Type: `object`
 
-|name|required|type|enum|default|example|description|
-|---|---|---|---|---|---|---|
-|items|yes|array<ExpertReview>|-|-|-|Reviews for the target.|
-|total|yes|integer|-|-|[1]|Number of reviews returned.|
+| Field | Required | Type | Description | Example / Default |
+| --- | --- | --- | --- | --- |
+| `items` | yes | array<[ExpertReview](./admin-eval.md#expertreview)> | Reviews for the target. |  |
+| `total` | yes | integer | Number of reviews returned. | 1 |
 
 ## ReviewRequest
 
-Type: `object`
-
-Schema example:
-```json
-{
-  "agreement": "mostly_agree",
-  "disagreed_sections": [
-    "expression"
-  ],
-  "general_feedback": "전반적으로 적절한 채점이나 표현 부분은 재검토 필요.",
-  "grade": "B",
-  "section_feedbacks": {
-    "expression": "어휘 점수가 낮게 책정됨"
-  }
-}
-```
-
-|name|required|type|enum|default|example|description|
-|---|---|---|---|---|---|---|
-|agreement|no|enum<"agree" \| "mostly_agree" \| "partial" \| "disagree" \| "">|"agree", "mostly_agree", "partial", "disagree", ""|-|["mostly_agree"]<br>{"default":""}|Reviewer's agreement with the AI grading. Empty string means unset.|
-|grade|no|enum<"A" \| "B" \| "C" \| "D" \| "F" \| "">|"A", "B", "C", "D", "F", ""|-|["B"]<br>{"default":""}|Reviewer's letter grade for the output. Empty string means unset.|
-|disagreed_sections|no|array<string>|-|-|[["expression"]]|Section keys the reviewer disagrees with (e.g. content, structure, expression).|
-|section_feedbacks|no|object<string, string>|-|-|[{"expression":"어휘 점수가 낮게 책정됨"}]|Per-section freeform feedback, keyed by section name.|
-|general_feedback|no|string|-|-|["전반적으로 적절한 채점이나 표현 부분은 재검토 필요."]<br>{"default":""}|Overall freeform feedback on the AI grading.|
+| Field | Required | Type | Description | Example / Default |
+| --- | --- | --- | --- | --- |
+| `agreement` | no | enum(`agree`, `mostly_agree`, `partial`, `disagree`, ``) | Reviewer's agreement with the AI grading. Empty string means unset. enum: `agree`, `mostly_agree`, `partial`, `disagree`, `` | mostly_agree |
+| `grade` | no | enum(`A`, `B`, `C`, `D`, `F`, ``) | Reviewer's letter grade for the output. Empty string means unset. enum: `A`, `B`, `C`, `D`, `F`, `` | B |
+| `disagreed_sections` | no | array<string> | Section keys the reviewer disagrees with (e.g. content, structure, expression). | ["expression"] |
+| `section_feedbacks` | no | object | Per-section freeform feedback, keyed by section name. | {"expression":"어휘 점수가 낮게 책정됨"} |
+| `general_feedback` | no | string | Overall freeform feedback on the AI grading. | 전반적으로 적절한 채점이나 표현 부분은 재검토 필요. |
 
 ## SubmissionDetailFeedback
 
 AI feedback record within the detail response.
-Type: `object`
 
-|name|required|type|enum|default|example|description|
-|---|---|---|---|---|---|---|
-|id|yes|string|-|-|["uuid"]|Feedback UUID.|
-|total_score|no|anyOf<number \| null>|-|-|[58]|Total score awarded.|
-|max_score|no|anyOf<number \| null>|-|-|[100]|Maximum possible score.|
-|trait_scores|no|object<string, ->|-|-|[{"content":20,"expression":20,"structure":18}]|Per-trait score breakdown (passthrough JSON).|
-|errors|no|array<->|-|-|-|Detected errors (passthrough JSON list).|
-|error_analysis|no|object<string, ->|-|-|-|Error analysis (passthrough JSON).|
-|suggestions|no|array<->|-|-|-|Improvement suggestions (passthrough JSON list).|
-|ai_summary|no|string|-|-|["전반적으로 잘 작성된 글입니다..."]<br>{"default":""}|AI summary text.|
-|annotations|no|array<->|-|-|-|Inline annotations (passthrough JSON list).|
+| Field | Required | Type | Description | Example / Default |
+| --- | --- | --- | --- | --- |
+| `id` | yes | string | Feedback UUID. | uuid |
+| `total_score` | no | number \| null | Total score awarded. | 58 |
+| `max_score` | no | number \| null | Maximum possible score. | 100 |
+| `trait_scores` | no | object | Per-trait score breakdown (passthrough JSON). | {"content":20,"expression":20,"structure":18} |
+| `errors` | no | array<-> | Detected errors (passthrough JSON list). |  |
+| `error_analysis` | no | object | Error analysis (passthrough JSON). |  |
+| `suggestions` | no | array<-> | Improvement suggestions (passthrough JSON list). |  |
+| `ai_summary` | no | string | AI summary text. | 전반적으로 잘 작성된 글입니다... |
+| `annotations` | no | array<-> | Inline annotations (passthrough JSON list). |  |
 
 ## SubmissionDetailResponse
 
 Full submission detail: submission record, feedback, and linked task.
-Type: `object`
 
-|name|required|type|enum|default|example|description|
-|---|---|---|---|---|---|---|
-|submission|yes|[SubmissionDetailSubmission](./admin-eval.md#submissiondetailsubmission)|-|-|-|Submission record.|
-|feedback|yes|[SubmissionDetailFeedback](./admin-eval.md#submissiondetailfeedback)|-|-|-|AI feedback record.|
-|task|no|anyOf<SubmissionDetailTask \| null>|-|-|-|Linked writing task, or null if none.|
+| Field | Required | Type | Description | Example / Default |
+| --- | --- | --- | --- | --- |
+| `submission` | yes | [SubmissionDetailSubmission](./admin-eval.md#submissiondetailsubmission) | Submission record. |  |
+| `feedback` | yes | [SubmissionDetailFeedback](./admin-eval.md#submissiondetailfeedback) | AI feedback record. |  |
+| `task` | no | [SubmissionDetailTask](./admin-eval.md#submissiondetailtask) \| null | Linked writing task, or null if none. |  |
 
 ## SubmissionDetailSubmission
 
 Core submission record within the detail response.
-Type: `object`
 
-|name|required|type|enum|default|example|description|
-|---|---|---|---|---|---|---|
-|id|yes|string|-|-|["uuid"]|Submission UUID.|
-|user_id|yes|string|-|-|["uuid"]|Author user UUID.|
-|user_email|no|anyOf<string \| null>|-|-|["learner@example.com"]|Author email.|
-|user_display_name|no|anyOf<string \| null>|-|-|["홍길동"]|Author display name.|
-|task_type|no|anyOf<string \| null>|-|-|["task54"]|Writing task type.|
-|text|no|anyOf<string \| null>|-|-|["현대 사회에서..."]|Submitted essay text.|
-|character_count|no|anyOf<integer \| null>|-|-|[512]|Character count of the essay.|
-|submitted_at|no|anyOf<string \| null>|-|-|["2024-11-15T10:00:00"]|ISO submission timestamp.|
-|status|no|anyOf<string \| null>|-|-|["graded"]|Submission status.|
+| Field | Required | Type | Description | Example / Default |
+| --- | --- | --- | --- | --- |
+| `id` | yes | string | Submission UUID. | uuid |
+| `user_id` | yes | string | Author user UUID. | uuid |
+| `user_email` | no | string \| null | Author email. | learner@example.com |
+| `user_display_name` | no | string \| null | Author display name. | 홍길동 |
+| `task_type` | no | string \| null | Writing task type. | task54 |
+| `text` | no | string \| null | Submitted essay text. | 현대 사회에서... |
+| `character_count` | no | integer \| null | Character count of the essay. | 512 |
+| `submitted_at` | no | string \| null | ISO submission timestamp. | 2024-11-15T10:00:00 |
+| `status` | no | string \| null | Submission status. | graded |
 
 ## SubmissionDetailTask
 
 Writing task metadata within the detail response (null when no task linked).
-Type: `object`
 
-|name|required|type|enum|default|example|description|
-|---|---|---|---|---|---|---|
-|id|no|anyOf<string \| null>|-|-|["uuid"]|Task UUID.|
-|title|no|string|-|-|["나의 꿈"]<br>{"default":""}|Task title.|
-|prompt|no|string|-|-|["..."]<br>{"default":""}|Task prompt text.|
-|topic|no|string|-|-|["사회"]<br>{"default":""}|Task topic.|
-|task_type|no|anyOf<string \| null>|-|-|["task54"]|Task type.|
-|model_answer|no|anyOf<string \| null>|-|-|[null]|Reference model answer.|
+| Field | Required | Type | Description | Example / Default |
+| --- | --- | --- | --- | --- |
+| `id` | no | string \| null | Task UUID. | uuid |
+| `title` | no | string | Task title. | 나의 꿈 |
+| `prompt` | no | string | Task prompt text. | ... |
+| `topic` | no | string | Task topic. | 사회 |
+| `task_type` | no | string \| null | Task type. | task54 |
+| `model_answer` | no | string \| null | Reference model answer. |  |
 
 ## UserSubmissionItem
 
 A single graded writing submission for a user.
-Type: `object`
 
-|name|required|type|enum|default|example|description|
-|---|---|---|---|---|---|---|
-|id|yes|string|-|-|["uuid"]|Submission UUID.|
-|task_type|no|anyOf<string \| null>|-|-|["task54"]|Writing task type.|
-|task_title|no|string|-|-|[""]<br>{"default":""}|Task title (empty if unknown).|
-|topic|no|string|-|-|[""]<br>{"default":""}|Task topic (empty if unknown).|
-|submitted_at|no|anyOf<string \| null>|-|-|["2024-11-15T10:05:00"]|ISO submission timestamp.|
-|total_score|no|anyOf<number \| null>|-|-|[58]|Total score awarded.|
-|max_score|no|anyOf<number \| null>|-|-|[100]|Maximum possible score.|
-|trait_scores|no|object<string, ->|-|-|[{"content":20,"expression":20,"structure":18}]|Per-trait score breakdown (passthrough JSON).|
+| Field | Required | Type | Description | Example / Default |
+| --- | --- | --- | --- | --- |
+| `id` | yes | string | Submission UUID. | uuid |
+| `task_type` | no | string \| null | Writing task type. | task54 |
+| `task_title` | no | string | Task title (empty if unknown). |  |
+| `topic` | no | string | Task topic (empty if unknown). |  |
+| `submitted_at` | no | string \| null | ISO submission timestamp. | 2024-11-15T10:05:00 |
+| `total_score` | no | number \| null | Total score awarded. | 58 |
+| `max_score` | no | number \| null | Maximum possible score. | 100 |
+| `trait_scores` | no | object | Per-trait score breakdown (passthrough JSON). | {"content":20,"expression":20,"structure":18} |
 
 ## UserSubmissionsResponse
 
 Paginated list of a user's graded submissions.
-Type: `object`
 
-|name|required|type|enum|default|example|description|
-|---|---|---|---|---|---|---|
-|items|yes|array<UserSubmissionItem>|-|-|-|Submissions on the current page.|
-|total|yes|integer|-|-|[1]|Total graded submissions for the user.|
-|limit|yes|integer|-|-|[50]|Page size echoed back.|
-|offset|yes|integer|-|-|[0]|Page offset echoed back.|
+| Field | Required | Type | Description | Example / Default |
+| --- | --- | --- | --- | --- |
+| `items` | yes | array<[UserSubmissionItem](./admin-eval.md#usersubmissionitem)> | Submissions on the current page. |  |
+| `total` | yes | integer | Total graded submissions for the user. | 1 |
+| `limit` | yes | integer | Page size echoed back. | 50 |
+| `offset` | yes | integer | Page offset echoed back. | 0 |

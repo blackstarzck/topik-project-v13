@@ -159,6 +159,46 @@ describe("WorkspaceShell", () => {
     expect(hasExpandedMenuItem(container, "쓰기 연습")).toBe(true);
   });
 
+  it("applies the flush content chrome only on short feedback detail routes", () => {
+    navMock.pathname = "/writing/feedback/short/submission-1";
+
+    const { container } = renderWithIntl(
+      <WorkspaceShell
+        role="learner"
+        userId="user-1"
+        email={null}
+        planLabel="premium"
+      >
+        <div>body</div>
+      </WorkspaceShell>,
+    );
+
+    const content = container.querySelector(".app-workspace-content");
+    expect(
+      content?.classList.contains("app-workspace-content--feedback-flush"),
+    ).toBe(true);
+  });
+
+  it("keeps normal workspace content chrome on non-feedback routes", () => {
+    navMock.pathname = "/dashboard";
+
+    const { container } = renderWithIntl(
+      <WorkspaceShell
+        role="learner"
+        userId="user-1"
+        email={null}
+        planLabel="premium"
+      >
+        <div>body</div>
+      </WorkspaceShell>,
+    );
+
+    const content = container.querySelector(".app-workspace-content");
+    expect(
+      content?.classList.contains("app-workspace-content--feedback-flush"),
+    ).toBe(false);
+  });
+
   it("opens settings for profile direct entry because profile is an account setting", () => {
     navMock.pathname = "/profile";
 
