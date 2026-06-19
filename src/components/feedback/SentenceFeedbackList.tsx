@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Empty, Tag, Typography } from "antd";
-import { ArrowRight, Circle } from "lucide-react";
+import { ChevronRight, Circle } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import type { SentenceFeedbackRow } from "@/lib/writing/types";
@@ -76,7 +76,7 @@ export function SentenceFeedbackList({ rows, onReanalyze }: Props) {
                 </section>
 
                 <div className="hidden items-center justify-center text-text-tertiary lg:flex">
-                  <ArrowRight aria-hidden size={22} strokeWidth={1.8} />
+                  <ChevronRight aria-hidden size={22} strokeWidth={1.8} />
                 </div>
 
                 <section

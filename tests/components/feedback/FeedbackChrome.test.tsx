@@ -203,6 +203,23 @@ describe("SentenceFeedbackList (i18n chrome)", () => {
     expect(screen.getByTestId("feedback-sentence-reason")).toBeTruthy();
   });
 
+  it("uses a chevron between before and after correction cards", () => {
+    renderWithIntl(
+      <SentenceFeedbackList
+        rows={[
+          sentence({
+            id: "s-correction-icon",
+            original_text: "Before",
+            corrected_text: "After",
+          }),
+        ]}
+      />,
+    );
+
+    expect(document.querySelector(".lucide-chevron-right")).toBeTruthy();
+    expect(document.querySelector(".lucide-arrow-right")).toBeNull();
+  });
+
   it("renders sentence feedback without an outer card or row dividers", () => {
     renderWithIntl(
       <SentenceFeedbackList
