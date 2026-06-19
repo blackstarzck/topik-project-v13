@@ -7,10 +7,13 @@ import { DimensionCardGrid } from "../../../src/components/feedback/DimensionCar
 import { SentenceFeedbackList } from "../../../src/components/feedback/SentenceFeedbackList";
 import { DetailedFeedbackPanel } from "../../../src/components/feedback/DetailedFeedbackPanel";
 import { FeedbackRecommendationCards } from "../../../src/components/feedback/FeedbackRecommendationCards";
+import { FeedbackPageContent } from "../../../src/components/feedback/FeedbackPageContent";
 import type {
+  FeedbackBundle,
   FeedbackDimensionScoreRow,
   SentenceFeedbackRow,
   WritingFeedbackRow,
+  WritingSubmissionRow,
 } from "../../../src/lib/writing/types";
 
 // router is only used on click paths exercised here indirectly; stub it so the
@@ -23,6 +26,24 @@ vi.mock("next/navigation", () => ({
     forward: vi.fn(),
     refresh: vi.fn(),
     prefetch: vi.fn(),
+  }),
+}));
+
+vi.mock("@/lib/export/pdf-export-client", () => ({
+  exportPdfWithPrintFallback: vi.fn(),
+}));
+
+vi.mock("@/lib/library/mutations", () => ({
+  useSaveLibraryItem: () => ({
+    isPending: false,
+    mutate: vi.fn(),
+  }),
+}));
+
+vi.mock("@/lib/writing/mutations", () => ({
+  useCreateComparisonReport: () => ({
+    isPending: false,
+    mutate: vi.fn(),
   }),
 }));
 
@@ -62,6 +83,19 @@ function sentence(
     comment: "설명",
     ...overrides,
   } as unknown as SentenceFeedbackRow;
+}
+
+function submission(
+  overrides: Partial<WritingSubmissionRow> = {},
+): WritingSubmissionRow {
+  return {
+    id: "sub-1",
+    user_id: "user-1",
+    problem_id: "problem-1",
+    question_no: 51,
+    feedback_status: "complete",
+    ...overrides,
+  } as unknown as WritingSubmissionRow;
 }
 
 beforeEach(() => {
@@ -185,9 +219,141 @@ describe("FeedbackRecommendationCards (i18n chrome)", () => {
   it("renders a recommendation card title for the weakest dimension", () => {
     renderWithIntl(
       <FeedbackRecommendationCards
-        dimensions={[dim({ dimension: "grammar", score: 40, weakness_level: 3 })]}
+        dimensions={[
+          dim({
+            dimension: "grammar",
+            score: 40,
+            weakness_level: 3,
+            summary: "Dynamic grammar feedback from the stored analysis.",
+          }),
+        ]}
       />,
     );
+    expect(
+      screen.getByText("Dynamic grammar feedback from the stored analysis."),
+    ).toBeTruthy();
     expect(screen.getByText("문법 집중 연습")).toBeTruthy();
+  });
+});
+
+describe("FeedbackPageContent (short feedback fallback)", () => {
+  it("renders the short-answer report overview from external trait scores and learning focus areas", () => {
+    const bundle: FeedbackBundle = {
+      feedback: feedback({
+        score_total: 0,
+        score_max: 10,
+        overall_summary: "두 빈칸 모두 내용과 표현 면에서 추가적인 연습이 필요합니다.",
+        raw_ai_result: {
+          time_spent: 1127,
+          processing_time_seconds: 16.16,
+          trait_scores: [
+            {
+              trait: "blank_1",
+              trait_korean: "빈칸 ㉠",
+              score: 0,
+              weight: 0.25,
+              feedback: "첫 번째 빈칸은 문제 맥락에 맞는 격식체 표현이 필요합니다.",
+              improvements: ["격식체(-습니다/습니까) 사용 연습"],
+            },
+            {
+              trait: "blank_2",
+              trait_korean: "빈칸 ㉡",
+              score: 0,
+              weight: 0.25,
+              feedback: "두 번째 빈칸은 문장 완성도와 어휘 선택을 다시 점검해야 합니다.",
+              improvements: ["상황에 맞는 정중한 표현 익히기"],
+            },
+          ],
+          combined_feedback: {
+            focus_areas: [
+              "격식체(-습니다/습니까) 사용 연습",
+              "상황에 맞는 정중한 표현 익히기",
+              "무의미한 문자 입력 금지",
+            ],
+            study_tips: "문제의 맥락을 먼저 파악한 뒤 문장을 완성해 보세요.",
+          },
+        },
+      }),
+      dimensions: [],
+      sentences: [],
+    };
+
+    renderWithIntl(
+      <FeedbackPageContent
+        submission={submission({
+          question_no: 51,
+          submitted_at: "2026-06-18T10:06:00.000Z",
+        })}
+        bundle={bundle}
+        withSentences
+        showDetailPanel={false}
+        dimensionCardLimit={4}
+        reloadHref="/writing/feedback/short/sub-1"
+        userId="user-1"
+        saveLocked
+      />,
+    );
+
+    expect(screen.getByTestId("feedback-report-overview")).toBeTruthy();
+    expect(screen.getByText("51번 피드백 리포트")).toBeTruthy();
+    expect(screen.getByText("제출일 2026.06.18 19:06")).toBeTruthy();
+    expect(screen.getByText("소요 시간 18분 47초")).toBeTruthy();
+    expect(screen.queryByText("AI 분석 16.16초")).toBeNull();
+    expect(screen.getByText("이번 점수")).toBeTruthy();
+    expect(screen.getByText("0")).toBeTruthy();
+    expect(screen.getByText("/ 10점")).toBeTruthy();
+    expect(screen.getByText("빈칸별 점수")).toBeTruthy();
+    expect(screen.getByText("㉠ 빈칸")).toBeTruthy();
+    expect(screen.getByText("㉡ 빈칸")).toBeTruthy();
+    expect(screen.getAllByText("0점")).toHaveLength(2);
+    expect(screen.getAllByText("배점 2.5점")).toHaveLength(2);
+    expect(screen.getByText("다음 보완 포인트")).toBeTruthy();
+    expect(screen.getAllByText("무의미한 문자 입력 금지").length).toBeGreaterThan(
+      0,
+    );
+  });
+
+  it("uses raw trait scores in the report and raw combined feedback for recommended learning", () => {
+    const bundle: FeedbackBundle = {
+      feedback: feedback({
+        raw_ai_result: {
+          trait_scores: [
+            {
+              trait: "blank_1",
+              score: 0,
+              feedback: "Use a sentence that fits the first blank.",
+            },
+          ],
+          combined_feedback: {
+            focus_areas: ["formal endings"],
+            study_tips: "Start by matching the prompt context.",
+          },
+        },
+      }),
+      dimensions: [],
+      sentences: [],
+    };
+
+    renderWithIntl(
+      <FeedbackPageContent
+        submission={submission()}
+        bundle={bundle}
+        withSentences
+        showDetailPanel={false}
+        dimensionCardLimit={4}
+        reloadHref="/writing/feedback/short/sub-1"
+        userId="user-1"
+        saveLocked
+      />,
+    );
+
+    expect(screen.getByTestId("feedback-report-overview")).toBeTruthy();
+    expect(screen.queryAllByTestId("feedback-dimension-card")).toHaveLength(0);
+    expect(screen.getAllByTestId("feedback-report-score-item")).toHaveLength(1);
+    expect(
+      screen.getByText("Use a sentence that fits the first blank."),
+    ).toBeTruthy();
+    expect(screen.getByTestId("external-learning-feedback")).toBeTruthy();
+    expect(screen.queryByTestId("external-trait-feedback-grid")).toBeNull();
   });
 });

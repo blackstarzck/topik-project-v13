@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Dropdown, Tooltip, notification } from "antd";
+import { App, Button, Dropdown, Tooltip } from "antd";
 import type { MenuProps } from "antd";
 import { ChevronDown } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -56,6 +56,7 @@ export function NextActionBar({
 }: Props) {
   const t = useTranslations("feedback.actions");
   const router = useRouter();
+  const { notification } = App.useApp();
   const [busy, setBusy] = useState(false);
   const [pdfBusy, setPdfBusy] = useState(false);
   const [saved, setSaved] = useState(alreadySaved);
@@ -75,7 +76,7 @@ export function NextActionBar({
         onError: (e) => {
           setBusy(false);
           notification.error({
-            message: t("compareFailedTitle"),
+            title: t("compareFailedTitle"),
             description: e.message,
           });
         },
@@ -97,13 +98,13 @@ export function NextActionBar({
         },
       });
       if (outcome.mode === "file") {
-        notification.success({ message: t("pdfDownloaded") });
+        notification.success({ title: t("pdfDownloaded") });
       } else {
-        notification.info({ message: t("pdfSuccess") });
+        notification.info({ title: t("pdfSuccess") });
       }
     } catch {
       notification.error({
-        message: t("pdfFailedTitle"),
+        title: t("pdfFailedTitle"),
         description: t("pdfFailedDescription"),
       });
     } finally {
@@ -118,19 +119,19 @@ export function NextActionBar({
       {
         onSuccess: () => {
           setSaved(true);
-          notification.success({ message: t("save.saveSuccess") });
+          notification.success({ title: t("save.saveSuccess") });
         },
         onError: (e: unknown) => {
           const err = e as { code?: string; message?: string };
           if (err.code && RLS_DENIED.has(err.code)) {
             notification.error({
-              message: t("save.deniedTitle"),
+              title: t("save.deniedTitle"),
               description: t("save.deniedDescription"),
             });
             return;
           }
           notification.error({
-            message: t("save.failedTitle"),
+            title: t("save.failedTitle"),
             description: err.message ?? t("save.failedDescription"),
           });
         },

@@ -19,7 +19,7 @@ test("X-09 notification settings renders preference regions without saving", asy
 }) => {
   const errors = collectErrors(page);
 
-  await page.goto("/settings/notifications", { waitUntil: "networkidle" });
+  await page.goto("/settings/notifications", { waitUntil: "domcontentloaded" });
   await expect(page).not.toHaveURL(/\/login/);
   await expect(page).toHaveURL(/\/settings\/notifications/);
 
@@ -34,7 +34,12 @@ test("X-09 notification settings renders preference regions without saving", asy
   const save = page.getByTestId("notification-save");
   await expect(save).toBeDisabled();
 
-  await page.getByRole("switch").first().click();
+  const emailChannel = page.getByRole("checkbox", { name: "이메일 알림 받기" });
+  if (await emailChannel.isChecked()) {
+    await emailChannel.uncheck();
+  } else {
+    await emailChannel.check();
+  }
   await expect(save).toBeEnabled();
 
   expect(errors).toEqual([]);

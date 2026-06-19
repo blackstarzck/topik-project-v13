@@ -3,12 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Button, Input, Space, Tabs, Typography } from "antd";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
 
-import {
-  useSubmitWriting,
-  useUpsertDraft,
-} from "@/lib/writing/mutations";
+import { useSubmitWriting, useUpsertDraft } from "@/lib/writing/mutations";
 import { logStudyEvent } from "@/lib/events/study-events";
 import {
   combine53Sections,
@@ -29,6 +25,7 @@ import { AppCard } from "@/components/shared/AppCard";
 import { AutosaveBadge } from "./AutosaveBadge";
 import { ConditionsPanel, type ProblemRubric } from "./ConditionsPanel";
 import { SubmissionConfirmModal } from "./SubmissionConfirmModal";
+import { SubmissionFailedModal } from "./SubmissionFailedModal";
 import { SectionEditor } from "./SectionEditor";
 import { ManuscriptPreview } from "./ManuscriptPreview";
 import { EssayChecklist } from "./EssayChecklist";
@@ -36,6 +33,10 @@ import {
   AutosaveWarningModal,
   type WarningTrigger,
 } from "./AutosaveWarningModal";
+import {
+  SubmittedAnalysisPanel,
+  type SubmittedAnalysisState,
+} from "./SubmittedAnalysisPanel";
 
 const { Text, Title } = Typography;
 
@@ -112,13 +113,14 @@ export function LongFormEditor({
     null,
   );
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submittedAnalysis, setSubmittedAnalysis] =
+    useState<SubmittedAnalysisState | null>(null);
   // D-M3 §5 — 자동 저장 on/off.
   const [autosaveEnabled, setAutosaveEnabled] = useState(true);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveSeqRef = useRef(0);
   const upsert = useUpsertDraft();
   const submit = useSubmitWriting();
-  const router = useRouter();
 
   // D §study_events — 작성 시작(practice_started) 1회 기록.
   useEffect(() => {
@@ -134,10 +136,7 @@ export function LongFormEditor({
 
   // Combined text for char count + submit payload.
   const combinedText = useMemo(
-    () =>
-      questionNo === 53
-        ? combine53Sections(state53)
-        : state54.text,
+    () => (questionNo === 53 ? combine53Sections(state53) : state54.text),
     [questionNo, state53, state54.text],
   );
   const charCount = combinedText.length;
@@ -304,8 +303,10 @@ export function LongFormEditor({
     setWarningTrigger(null);
   }
 
-  function onConfirmSubmit() {
-    setSubmitError(null);
+  function submitAnswer({
+    clearFailure = true,
+  }: { clearFailure?: boolean } = {}) {
+    if (clearFailure) setSubmitError(null);
     submit.mutate(
       {
         draft_id: initialDraft?.id ?? null,
@@ -320,21 +321,37 @@ export function LongFormEditor({
       {
         onSuccess: (result) => {
           setConfirmOpen(false);
+          setSubmitError(null);
           void logStudyEvent({
             eventType: "submission_submitted",
             problemId,
             submissionId: result.submissionId,
             payload: { question_no: questionNo, char_count: charCount },
           });
-          router.push(`/writing/feedback/long/${result.submissionId}`);
+          setSubmittedAnalysis({
+            submissionId: result.submissionId,
+            questionNo: result.questionNo,
+            answerText: combinedText,
+            charCount,
+            submittedAt: new Date().toISOString(),
+            feedbackHref: `/writing/feedback/long/${result.submissionId}`,
+          });
         },
         onError: (e) => {
-          // D-M1 §4 예외 — 제출 실패 시 확인 모달을 유지하고 모달 안에서 원인 +
-          // 재시도 노출(닫지 않는다).
+          // D-M1 -> failure: API 실패 후 확인 모달을 닫고 별도 실패 모달로 전환한다.
+          setConfirmOpen(false);
           setSubmitError(e.message);
         },
       },
     );
+  }
+
+  function onConfirmSubmit() {
+    submitAnswer();
+  }
+
+  function onRetrySubmitFailure() {
+    submitAnswer({ clearFailure: false });
   }
 
   const charCountUI = (
@@ -348,6 +365,10 @@ export function LongFormEditor({
     </Text>
   );
 
+  if (submittedAnalysis) {
+    return <SubmittedAnalysisPanel state={submittedAnalysis} />;
+  }
+
   return (
     <Space orientation="vertical" size="middle" className="w-full">
       {/* D-03 평가 기준 / D-04 조건·루브릭 카드 (problems.rubric). */}
@@ -357,11 +378,7 @@ export function LongFormEditor({
         loadFailed={submitBlockedReason === "problem_data_incomplete"}
       />
       {submitBlockedReason ? (
-        <Alert
-          type="warning"
-          showIcon
-          title={t("submitBlockedProblemData")}
-        />
+        <Alert type="warning" showIcon title={t("submitBlockedProblemData")} />
       ) : null}
 
       <Space wrap>
@@ -456,8 +473,13 @@ export function LongFormEditor({
         </Button>
         <Button
           type="primary"
-          onClick={() => setConfirmOpen(true)}
-          disabled={!submittable || submit.isPending || Boolean(submitBlockedReason)}
+          onClick={() => {
+            setSubmitError(null);
+            setConfirmOpen(true);
+          }}
+          disabled={
+            !submittable || submit.isPending || Boolean(submitBlockedReason)
+          }
         >
           {t("submit")}
         </Button>
@@ -469,12 +491,18 @@ export function LongFormEditor({
         questionNo={questionNo}
         lastSavedAt={lastSavedAt}
         loading={submit.isPending}
-        submitError={submitError}
         onConfirm={onConfirmSubmit}
         onCancel={() => {
           setSubmitError(null);
           setConfirmOpen(false);
         }}
+      />
+      <SubmissionFailedModal
+        open={Boolean(submitError)}
+        submitError={submitError}
+        loading={submit.isPending}
+        onRetry={onRetrySubmitFailure}
+        onClose={() => setSubmitError(null)}
       />
       <AutosaveWarningModal
         trigger={warningTrigger}

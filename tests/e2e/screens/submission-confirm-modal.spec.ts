@@ -9,7 +9,7 @@ function collectErrors(page: Page): string[] {
   return errors;
 }
 
-test("D-M1 submission confirmation modal renders and gates submit", async ({
+test("D-M1 submission confirmation modal renders without agreement gating", async ({
   page,
 }) => {
   const errors = collectErrors(page);
@@ -21,9 +21,7 @@ test("D-M1 submission confirmation modal renders and gates submit", async ({
 
   const modal = page.getByTestId("submission-confirm-modal");
   await expect(modal).toBeVisible();
-  await expect(page.getByTestId("submission-confirm-submit")).toBeDisabled();
-
-  await modal.locator(".ant-checkbox-input").check();
+  await expect(modal.locator(".ant-checkbox-input")).toHaveCount(0);
   await expect(page.getByTestId("submission-confirm-submit")).toBeEnabled();
 
   await page.getByTestId("submission-confirm-cancel").click();

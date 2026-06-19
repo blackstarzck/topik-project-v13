@@ -1,8 +1,8 @@
 # Swagger API 문서
 
-이 폴더는 `http://58.236.187.135:9009/docs#/` Swagger 내용을 에이전트가 읽기 쉽게 나눈 문서입니다. 기존의 긴 단일 문서 대신, 필요한 API 그룹과 스키마 그룹만 열어볼 수 있도록 분리했습니다.
+이 폴더는 `https://api.dotoretopik.com/docs` Swagger 내용을 에이전트가 읽기 쉽게 나눈 문서입니다. 기존의 긴 단일 문서 대신, 필요한 API 그룹과 스키마 그룹만 열어볼 수 있도록 분리했습니다.
 
-- Swagger UI: http://58.236.187.135:9009/docs#/
+- Swagger UI: https://api.dotoretopik.com/docs
 - OpenAPI JSON: http://58.236.187.135:9009/openapi.json
 - 생성 기준일: 2026-06-17
 

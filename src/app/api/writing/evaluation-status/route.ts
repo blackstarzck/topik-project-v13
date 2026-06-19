@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  createSupabaseServerClient,
+  createSupabaseServiceRoleClient,
+} from "@/lib/supabase/server";
 import type { Json } from "@/lib/supabase/types";
 import {
+  getTalkpikApiBaseUrl,
   getExternalEvaluationFeedback,
   getExternalEvaluationStatus,
   mapExternalEvaluationFeedback,
@@ -33,7 +37,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "not found" }, { status: 404 });
   }
 
-  const baseUrl = process.env.TALKPIK_WRITING_API_BASE_URL?.trim();
+  const baseUrl = getTalkpikApiBaseUrl();
   if (!baseUrl || submission.feedback_status === "complete" || submission.feedback_status === "failed") {
     return NextResponse.json({ feedback_status: submission.feedback_status });
   }
@@ -47,27 +51,43 @@ export async function GET(request: Request) {
   }
 
   try {
+    const serviceSupabase = createSupabaseServiceRoleClient();
     const status = await getExternalEvaluationStatus({
       baseUrl,
       accessToken,
       submissionId,
     });
+    if (status.submission_id !== submissionId) {
+      return NextResponse.json({ feedback_status: submission.feedback_status });
+    }
 
     if (status.status === "failed") {
-      await supabase
-        .from("writing_submissions")
-        .update({ feedback_status: "failed" })
-        .eq("id", submissionId);
+      const { error: syncError } = await serviceSupabase.rpc("sync_external_writing_feedback" as never, {
+        target_submission_id: submissionId,
+        next_status: "failed",
+        feedback: null,
+        dimensions: [],
+        sentences: [],
+      } as never);
+      if (syncError) {
+        return NextResponse.json({ feedback_status: submission.feedback_status });
+      }
       return NextResponse.json({ feedback_status: "failed" });
     }
 
     if (status.status !== "graded") {
       const nextStatus = status.status === "processing" ? "analyzing" : "pending";
       if (submission.feedback_status !== nextStatus) {
-        await supabase
-          .from("writing_submissions")
-          .update({ feedback_status: nextStatus })
-          .eq("id", submissionId);
+        const { error: syncError } = await serviceSupabase.rpc("sync_external_writing_feedback" as never, {
+          target_submission_id: submissionId,
+          next_status: nextStatus,
+          feedback: null,
+          dimensions: [],
+          sentences: [],
+        } as never);
+        if (syncError) {
+          return NextResponse.json({ feedback_status: submission.feedback_status });
+        }
       }
       return NextResponse.json({ feedback_status: nextStatus });
     }
@@ -77,44 +97,24 @@ export async function GET(request: Request) {
       accessToken,
       submissionId,
     });
+    if (externalFeedback.submission_id !== submissionId) {
+      return NextResponse.json({ feedback_status: submission.feedback_status });
+    }
     const payload = mapExternalEvaluationFeedback(externalFeedback);
 
-    await supabase.from("writing_feedback").upsert({
-      submission_id: submissionId,
-      user_id: user.id,
-      ...payload.feedback,
-      raw_ai_result: externalFeedback as unknown as Json,
-    });
-    await supabase
-      .from("feedback_dimension_scores")
-      .delete()
-      .eq("submission_id", submissionId);
-    if (payload.dimensions.length > 0) {
-      await supabase.from("feedback_dimension_scores").insert(
-        payload.dimensions.map((dimension) => ({
-          submission_id: submissionId,
-          user_id: user.id,
-          ...dimension,
-        })),
-      );
+    const { error: syncError } = await serviceSupabase.rpc("sync_external_writing_feedback" as never, {
+      target_submission_id: submissionId,
+      next_status: "complete",
+      feedback: {
+        ...payload.feedback,
+        raw_ai_result: externalFeedback as unknown as Json,
+      },
+      dimensions: payload.dimensions,
+      sentences: payload.sentences,
+    } as never);
+    if (syncError) {
+      return NextResponse.json({ feedback_status: submission.feedback_status });
     }
-    await supabase
-      .from("sentence_feedback")
-      .delete()
-      .eq("submission_id", submissionId);
-    if (payload.sentences.length > 0) {
-      await supabase.from("sentence_feedback").insert(
-        payload.sentences.map((sentence) => ({
-          submission_id: submissionId,
-          user_id: user.id,
-          ...sentence,
-        })),
-      );
-    }
-    await supabase
-      .from("writing_submissions")
-      .update({ feedback_status: "complete" })
-      .eq("id", submissionId);
 
     return NextResponse.json({ feedback_status: "complete" });
   } catch {

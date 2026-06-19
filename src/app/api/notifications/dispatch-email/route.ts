@@ -1,11 +1,13 @@
-// Notification email worker — APP-SIDE Resend dispatcher.
+// Notification email worker — transition APP-SIDE Resend dispatcher.
 //
 // ARCHITECTURE (decided): the in-DB SQL dispatcher cannot make HTTP calls
 // (pg_net not installed) and the provider API key must stay OUT of any
 // assistant/LLM context. So in `live` mode the SQL dispatcher leaves email
 // attempts as status='pending' (see migration 20260612190200_email_live_defer),
-// and THIS route processes them: it reads RESEND_API_KEY from server env and
-// calls Resend via fetch (no SDK / no extra dependency).
+// and an app-side worker processes them: it reads RESEND_API_KEY from server env
+// and calls Resend via fetch (no SDK / no extra dependency). This v13 route is
+// retained only as a transition endpoint while the topik-ai-owned worker and
+// production cron wiring are verified.
 //
 // HONESTY BOUNDARY (critical):
 //   - An attempt is only marked 'sent' when Resend actually returns 2xx.

@@ -4,8 +4,10 @@ import { Alert } from "antd";
 import { useTranslations } from "next-intl";
 import { DetailedFeedbackPanel } from "./DetailedFeedbackPanel";
 import { DimensionCardGrid } from "./DimensionCardGrid";
+import { ExternalLearningFeedbackCard } from "./ExternalFeedbackSupplement";
 import { FeedbackPendingPanel } from "./FeedbackPendingPanel";
 import { FeedbackRecommendationCards } from "./FeedbackRecommendationCards";
+import { FeedbackReportOverview } from "./FeedbackReportOverview";
 import { FeedbackSummary } from "./FeedbackSummary";
 import { NextActionBar } from "./NextActionBar";
 import { SentenceFeedbackList } from "./SentenceFeedbackList";
@@ -14,6 +16,7 @@ import type {
   FeedbackBundle,
   WritingSubmissionRow,
 } from "@/lib/writing/types";
+import { extractExternalFeedbackSupplement } from "@/lib/writing/external-feedback";
 import { writingProblemHref } from "@/lib/writing/routes";
 
 type Props = {
@@ -100,6 +103,19 @@ export function FeedbackPageContent({
 
   const partial = bundle.feedback.status === "partial";
   const onReanalyze = () => router.refresh();
+  const externalSupplement = extractExternalFeedbackSupplement(bundle.feedback);
+  const retryHref = writingProblemHref({
+    questionNo: submission.question_no,
+    problemId: submission.problem_id,
+  });
+  const hasRankableDimensions = bundle.dimensions.some(
+    (dimension) => dimension.score !== null || dimension.weakness_level !== null,
+  );
+  const showShortReportOverview =
+    withSentences && !showDetailPanel && dimensionCardLimit === 4;
+  const resolvedRetryLabel = tActions(
+    retryLabelKey ?? (withSentences ? "retryWriting" : "retryDefault"),
+  );
 
   return (
     <div className="flex w-full flex-col gap-6">
@@ -113,12 +129,23 @@ export function FeedbackPageContent({
         />
       ) : null}
 
-      <FeedbackSummary
-        feedback={bundle.feedback}
-        submission={showSubmissionMeta ? submission : undefined}
-      />
+      {showShortReportOverview ? (
+        <FeedbackReportOverview
+          feedback={bundle.feedback}
+          submission={submission}
+          dimensions={bundle.dimensions}
+          supplement={externalSupplement}
+          retryHref={retryHref}
+          retryLabel={resolvedRetryLabel}
+        />
+      ) : (
+        <FeedbackSummary
+          feedback={bundle.feedback}
+          submission={showSubmissionMeta ? submission : undefined}
+        />
+      )}
 
-      {showDimensionGrid ? (
+      {showDimensionGrid && !showShortReportOverview ? (
         <DimensionCardGrid
           rows={bundle.dimensions}
           // E-01 단답 region 2 제약: 카드 4개 이하.
@@ -135,20 +162,19 @@ export function FeedbackPageContent({
         <DetailedFeedbackPanel dimensions={bundle.dimensions} />
       ) : null}
 
-      <FeedbackRecommendationCards dimensions={bundle.dimensions} />
+      {!hasRankableDimensions && externalSupplement.hasLearning ? (
+        <ExternalLearningFeedbackCard supplement={externalSupplement} />
+      ) : (
+        <FeedbackRecommendationCards dimensions={bundle.dimensions} />
+      )}
 
       <NextActionBar
         submissionId={submission.id}
         userId={userId}
-        retryHref={writingProblemHref({
-          questionNo: submission.question_no,
-          problemId: submission.problem_id,
-        })}
+        retryHref={retryHref}
         nextHref="/practice/next"
         withPdf
-        retryLabel={
-          tActions(retryLabelKey ?? (withSentences ? "retryWriting" : "retryDefault"))
-        }
+        retryLabel={resolvedRetryLabel}
         saveLocked={saveLocked}
       />
     </div>

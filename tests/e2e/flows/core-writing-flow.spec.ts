@@ -24,39 +24,176 @@ function loadEnvLocal() {
       if (eq === -1) continue;
       const k = t.slice(0, eq).trim();
       let v = t.slice(eq + 1).trim();
-      if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) v = v.slice(1, -1);
+      if (
+        (v.startsWith('"') && v.endsWith('"')) ||
+        (v.startsWith("'") && v.endsWith("'"))
+      )
+        v = v.slice(1, -1);
       if (!(k in process.env)) process.env[k] = v;
     }
-  } catch { /* CI */ }
+  } catch {
+    /* CI */
+  }
 }
 loadEnvLocal();
 
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SERVICE_KEY =
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
+
 // Track EVERY submission this spec creates (retries create extra rows); clean them all.
 const createdSubmissionIds: string[] = [];
+
+const FLOW_DIMENSIONS = [
+  ["grammar", 72, 4],
+  ["vocab", 84, 2],
+  ["structure", 76, 3],
+  ["content", 88, 1],
+  ["expression", 79, 3],
+  ["topic_fit", 90, 1],
+] as const;
+
+type FlowSubmission = {
+  id: string;
+  user_id: string;
+  answer_text: string;
+  char_count: number;
+};
+
+function serviceClient() {
+  if (!SUPABASE_URL || !SERVICE_KEY) {
+    throw new Error(
+      "Missing Supabase service credentials for core writing flow",
+    );
+  }
+  return createClient(SUPABASE_URL, SERVICE_KEY, {
+    auth: { persistSession: false },
+  });
+}
+
+function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function waitForSubmittedFlowRow(answerToken: string) {
+  const sb = serviceClient();
+  const deadline = Date.now() + 15_000;
+
+  while (Date.now() < deadline) {
+    const { data, error } = await sb
+      .from("writing_submissions")
+      .select("id,user_id,answer_text,char_count")
+      .like("answer_text", `%${answerToken}%`)
+      .order("submitted_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) throw error;
+    if (data) return data as FlowSubmission;
+    await wait(500);
+  }
+
+  throw new Error("Timed out waiting for the flow-created writing submission");
+}
+
+async function completeSubmittedFlowRow(submission: FlowSubmission) {
+  const sb = serviceClient();
+
+  await sb
+    .from("sentence_feedback")
+    .delete()
+    .eq("submission_id", submission.id);
+  await sb
+    .from("feedback_dimension_scores")
+    .delete()
+    .eq("submission_id", submission.id);
+  await sb.from("writing_feedback").delete().eq("submission_id", submission.id);
+
+  const feedback = await sb.from("writing_feedback").insert({
+    submission_id: submission.id,
+    user_id: submission.user_id,
+    status: "complete",
+    score_total: 82,
+    score_max: 100,
+    overall_summary:
+      "Core flow fixture feedback confirms the submitted answer can proceed from analysis to feedback.",
+    ai_model: "e2e-fixture",
+    ai_model_version: "core-flow",
+  });
+  if (feedback.error) throw feedback.error;
+
+  const dimensions = await sb.from("feedback_dimension_scores").insert(
+    FLOW_DIMENSIONS.map(([dimension, score, weaknessLevel]) => ({
+      submission_id: submission.id,
+      user_id: submission.user_id,
+      dimension,
+      score,
+      score_max: 100,
+      summary: `Core flow ${dimension} feedback.`,
+      weakness_level: weaknessLevel,
+    })),
+  );
+  if (dimensions.error) throw dimensions.error;
+
+  const sentences = await sb.from("sentence_feedback").insert([
+    {
+      submission_id: submission.id,
+      user_id: submission.user_id,
+      sentence_index: 0,
+      original_text: submission.answer_text,
+      corrected_text: submission.answer_text,
+      comment: "Core flow fixture sentence feedback.",
+    },
+  ]);
+  if (sentences.error) throw sentences.error;
+
+  const status = await sb
+    .from("writing_submissions")
+    .update({ feedback_status: "complete" })
+    .eq("id", submission.id);
+  if (status.error) throw status.error;
+}
+
+test.skip(
+  !SUPABASE_URL || !SERVICE_KEY,
+  "core writing flow requires Supabase service credentials for cleanup and analysis completion fixture",
+);
 
 test.afterAll(async () => {
   if (createdSubmissionIds.length === 0) return;
   const label = (process.env.SUPABASE_ENV_LABEL || "").toLowerCase();
   if (label === "prod" || label === "production") return; // never touch prod
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
-  if (!url || !key) return;
-  const sb = createClient(url, key, { auth: { persistSession: false } });
+  const sb = serviceClient();
   for (const id of createdSubmissionIds) {
     // Delete children first (in case FKs are not ON DELETE CASCADE), then the row.
-    await sb.from("comparison_reports").delete().eq("current_submission_id", id);
+    await sb
+      .from("comparison_reports")
+      .delete()
+      .eq("current_submission_id", id);
     await sb.from("library_items").delete().eq("submission_id", id);
     await sb.from("sentence_feedback").delete().eq("submission_id", id);
     await sb.from("feedback_dimension_scores").delete().eq("submission_id", id);
     await sb.from("writing_feedback").delete().eq("submission_id", id);
     await sb.from("writing_submissions").delete().eq("id", id);
   }
-  // eslint-disable-next-line no-console
-  console.log(`[flow teardown] removed ${createdSubmissionIds.length} flow-created submission(s) + children`);
+  console.log(
+    `[flow teardown] removed ${createdSubmissionIds.length} flow-created submission(s) + children`,
+  );
 });
 
-test("core writing flow: dashboard → write → submit → feedback → compare → library → export", async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name !== "desktop-1280", "flow runs once on desktop-1280");
+test("core writing flow: dashboard → write → submit → feedback → compare → library → export", async ({
+  page,
+}, testInfo) => {
+  test.setTimeout(90_000);
+  test.skip(
+    testInfo.project.name !== "desktop-1280",
+    "flow runs once on desktop-1280",
+  );
+  const answerToken = `core-flow-${Date.now()}-${testInfo.retry}`;
+  const answerText = [
+    `Core flow submitted answer ${answerToken}.`,
+    "This answer is long enough for the q51 validation path and should remain on the writing route while analysis runs.",
+  ].join(" ");
+
   // 1) dashboard
   await page.goto("/dashboard", { waitUntil: "networkidle" });
   await expect(page).not.toHaveURL(/\/login/);
@@ -68,10 +205,12 @@ test("core writing flow: dashboard → write → submit → feedback → compare
   await expect(page.getByRole("heading").first()).toBeVisible();
 
   // 3) writing 51 — fill a valid (>= 10 char) answer
-  await page.goto("/writing/short-answer-writing-51", { waitUntil: "networkidle" });
+  await page.goto("/writing/short-answer-writing-51", {
+    waitUntil: "networkidle",
+  });
   await page.waitForTimeout(500);
   const ta = page.locator("textarea").first();
-  await ta.fill("핵심 사용자 플로우 검증을 위한 충분한 길이의 예시 답안입니다. 감사합니다.");
+  await ta.fill(answerText);
   await page.waitForTimeout(300);
 
   // D-M1 submit-confirm modal
@@ -86,14 +225,48 @@ test("core writing flow: dashboard → write → submit → feedback → compare
     confirmModal.getByRole("heading", { name: "답안을 제출하시겠어요?" }),
   ).toBeVisible();
 
-  // 4) agree + submit → feedback (single modal open → page-level locators are unambiguous)
-  await page.getByRole("checkbox").check();
-  await page.getByRole("button", { name: "제출", exact: true }).click();
-  await page.waitForURL(/\/writing\/feedback\/short\/[0-9a-f-]+/, { timeout: 20000 });
+  // 4) submit -> D-M2 on the writing route -> feedback
+  const completedAnalysisSubmissionIds = new Set<string>();
+  await page.route(
+    "**/api/writing/evaluation-status?submissionId=*",
+    async (route) => {
+      const url = new URL(route.request().url());
+      const submissionId = url.searchParams.get("submissionId");
+      await route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({
+          feedback_status:
+            submissionId && completedAnalysisSubmissionIds.has(submissionId)
+              ? "complete"
+              : "analyzing",
+        }),
+      });
+    },
+  );
+  await confirmModal.getByRole("button", { name: "제출", exact: true }).click();
+  await expect(page).toHaveURL(/\/writing\/short-answer-writing-51/);
+  await expect(page.getByTestId("analysis-loading-background")).toBeVisible({
+    timeout: 10000,
+  });
+  await expect(page.getByTestId("analysis-loading-page")).toBeVisible();
+  await expect(page.getByTestId("analysis-loading-panel")).toBeVisible();
+  await expect(page.getByTestId("analysis-loading-modal")).toHaveCount(0);
+  await expect(page).not.toHaveURL(/\/writing\/feedback\/short\//);
+  const submitted = await waitForSubmittedFlowRow(answerToken);
+  createdSubmissionIds.push(submitted.id);
+  await completeSubmittedFlowRow(submitted);
+  completedAnalysisSubmissionIds.add(submitted.id);
+  await page.evaluate(() => {
+    window.dispatchEvent(new Event("focus"));
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
+  await page.waitForURL(/\/writing\/feedback\/short\/[0-9a-f-]+/, {
+    timeout: 30000,
+  });
   const m = page.url().match(/\/writing\/feedback\/short\/([0-9a-f-]+)/);
   const newId = m ? m[1] : null;
   expect(newId, "captured new submission id").toBeTruthy();
-  if (newId) createdSubmissionIds.push(newId);
+  expect(newId).toBe(submitted.id);
 
   // 5) feedback (E-01) rendered
   await page.waitForTimeout(800);
@@ -105,12 +278,18 @@ test("core writing flow: dashboard → write → submit → feedback → compare
   // 이전 단독 "보관함 저장" 버튼 셀렉터는 stale (전용 short-feedback spec 패턴).
   await page.getByTestId("feedback-action-save").click();
   await page.getByRole("menuitem", { name: "보관함 저장" }).click();
-  await expect(page.getByText("보관함에 저장했어요.")).toBeVisible({ timeout: 10000 });
+  await expect(page.getByText("보관함에 저장했어요.")).toBeVisible({
+    timeout: 10000,
+  });
 
   // 7) comparison report (R-01)
   await page.getByTestId("feedback-action-compare").click();
-  await page.waitForURL(/\/writing\/reports\/[0-9a-f-]+\/compare/, { timeout: 20000 });
-  await expect(page.getByRole("heading", { name: "비교 리포트" })).toBeVisible();
+  await page.waitForURL(/\/writing\/reports\/[0-9a-f-]+\/compare/, {
+    timeout: 20000,
+  });
+  await expect(
+    page.getByRole("heading", { name: "비교 리포트" }),
+  ).toBeVisible();
 
   // 8) library (F-01)
   await page.goto("/library", { waitUntil: "networkidle" });
@@ -123,5 +302,7 @@ test("core writing flow: dashboard → write → submit → feedback → compare
   await page.getByTestId("library-select-item").first().click();
   await expect(page.getByTestId("library-export-pdf")).toBeEnabled();
   await page.getByTestId("library-export-pdf").click();
-  await expect(page.getByTestId("pdf-export-modal")).toBeVisible({ timeout: 10000 });
+  await expect(page.getByTestId("pdf-export-modal")).toBeVisible({
+    timeout: 10000,
+  });
 });

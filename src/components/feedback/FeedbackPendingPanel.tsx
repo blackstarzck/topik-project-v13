@@ -14,6 +14,7 @@ const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
 type Props = {
   submissionId: string;
   reloadHref?: string | null;
+  completeAction?: "refresh" | "navigate";
   initialStatus?: AnalysisPhase;
   submission?: Pick<
     WritingSubmissionRow,
@@ -37,6 +38,7 @@ function formatSubmittedAtKst(value: string): string | null {
 export function FeedbackPendingPanel({
   submissionId,
   reloadHref,
+  completeAction = "refresh",
   initialStatus = "pending",
   submission,
 }: Props) {
@@ -47,6 +49,15 @@ export function FeedbackPendingPanel({
   const submittedAt = submission?.submitted_at
     ? formatSubmittedAtKst(submission.submitted_at)
     : null;
+
+  function handleComplete() {
+    if (completeAction === "navigate" && reloadHref) {
+      router.replace(reloadHref as never);
+      return;
+    }
+
+    router.refresh();
+  }
 
   return (
     <div className="analysis-loading-shell">
@@ -91,7 +102,7 @@ export function FeedbackPendingPanel({
       <AnalysisLoadingModal
         open
         status={status}
-        onComplete={() => router.refresh()}
+        onComplete={handleComplete}
         completeHref={reloadHref ?? null}
         onRetry={() => router.refresh()}
       />

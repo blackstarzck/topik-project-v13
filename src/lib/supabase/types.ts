@@ -1328,6 +1328,12 @@ export interface Database {
     };
     Views: Record<never, never>;
     Functions: {
+      create_external_writing_submission: {
+        Args: {
+          submission: Json;
+        };
+        Returns: string;
+      };
       get_dashboard_kpi: {
         Args: Record<string, never>;
         Returns: {
@@ -1375,6 +1381,16 @@ export interface Database {
           publish_status: "draft" | "published" | "archived";
           review_status: "pending" | "approved" | "rejected";
         }[];
+      };
+      sync_external_writing_feedback: {
+        Args: {
+          target_submission_id: string;
+          next_status: string;
+          feedback?: Json | null;
+          dimensions?: Json;
+          sentences?: Json;
+        };
+        Returns: string;
       };
     };
     Enums: Record<never, never>;

@@ -1,28 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  Alert,
-  Button,
-  Input,
-  Progress,
-  Tooltip,
-  Typography,
-} from "antd";
-import {
-  Clock3,
-  Eye,
-  Info,
-  Lightbulb,
-  PenLine,
-  RotateCcw,
-  SendHorizontal,
-  Sparkles,
-} from "lucide-react";
+import { Alert, Button, Collapse, Input, Progress, Typography } from "antd";
+import { Eye, Lightbulb, PenLine, Plus, Sparkles } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
 
 import { logStudyEvent } from "@/lib/events/study-events";
+import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
 import { useSubmitWriting, useUpsertDraft } from "@/lib/writing/mutations";
 import type {
   NormalizedBlank,
@@ -33,15 +17,28 @@ import {
   isCountInRecommendedRange,
   isCountSubmittable,
 } from "@/lib/writing/constants";
-import type { AutosaveStatus, WritingDraftRow } from "@/lib/writing/types";
-import { AutosaveBadge } from "./AutosaveBadge";
+import {
+  build51AnswerText,
+  count51AnswerChars,
+  isShortAnswer51DraftJson,
+  type AutosaveStatus,
+  type ShortAnswerQuestion51Json,
+  type WritingDraftRow,
+} from "@/lib/writing/types";
 import {
   AutosaveWarningModal,
   type WarningTrigger,
 } from "./AutosaveWarningModal";
-import { QuestionPrompt } from "./QuestionPrompt";
-import { ReferenceMaterials, type ProblemAsset } from "./ReferenceMaterials";
+import { InteractiveBlankPrompt } from "./InteractiveBlankPrompt";
 import { SubmissionConfirmModal } from "./SubmissionConfirmModal";
+import { SubmissionFailedModal } from "./SubmissionFailedModal";
+import {
+  SubmittedAnalysisPanel,
+  type SubmittedAnalysisState,
+} from "./SubmittedAnalysisPanel";
+import { WritingGuideAccordion } from "./WritingGuideAccordion";
+import { WritingExamShell } from "./WritingExamShell";
+import { serializeWritingAnswerSnapshot } from "./writingAnswerSnapshot";
 
 const { Text, Paragraph } = Typography;
 
@@ -51,31 +48,50 @@ type Props = {
   userId: string;
   problem: Q51Problem;
   draft: WritingDraftRow | null;
-  assets?: ProblemAsset[];
 };
 
 const DEBOUNCE_MS = 2000;
 
-function formatElapsed(seconds: number): string {
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = seconds % 60;
-  return [h, m, s].map((n) => String(n).padStart(2, "0")).join(":");
-}
-
 function blankDisplay(blank: NormalizedBlank, index: number) {
   return `${index + 1} ${blank.label}`;
+}
+
+function initialBlankAnswers(
+  blanks: NormalizedBlank[],
+  draft: WritingDraftRow | null,
+): Record<string, string> {
+  const draftJson = draft?.answer_json;
+  if (isShortAnswer51DraftJson(draftJson)) {
+    return Object.fromEntries(
+      blanks.map((blank) => [blank.label, draftJson.blanks[blank.label] ?? ""]),
+    );
+  }
+
+  return Object.fromEntries(
+    blanks.map((blank, index) => [
+      blank.label,
+      index === 0 ? (draft?.answer_text ?? "") : "",
+    ]),
+  );
+}
+
+function uniqueNonEmpty(items: Array<string | null | undefined>) {
+  return Array.from(
+    new Set(items.map((item) => item?.trim()).filter(Boolean) as string[]),
+  );
 }
 
 export function ShortAnswerWriting51Workspace({
   userId,
   problem,
   draft,
-  assets = [],
 }: Props) {
   const tPage = useTranslations("writing.q51");
   const tEditor = useTranslations("writing.editor");
-  const [text, setText] = useState(draft?.answer_text ?? "");
+  const tGuide = useTranslations("writing.guide");
+  const [blankAnswers, setBlankAnswers] = useState<Record<string, string>>(() =>
+    initialBlankAnswers(problem.blanks, draft),
+  );
   const [status, setStatus] = useState<AutosaveStatus>(
     draft?.autosave_status ?? "clean",
   );
@@ -89,6 +105,8 @@ export function ShortAnswerWriting51Workspace({
   );
   const [blurNotice, setBlurNotice] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submittedAnalysis, setSubmittedAnalysis] =
+    useState<SubmittedAnalysisState | null>(null);
   const [autosaveEnabled, setAutosaveEnabled] = useState(true);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [activeBlankIndex, setActiveBlankIndex] = useState(0);
@@ -96,18 +114,47 @@ export function ShortAnswerWriting51Workspace({
   const saveSeqRef = useRef(0);
   const upsert = useUpsertDraft();
   const submit = useSubmitWriting();
-  const router = useRouter();
 
   const limit = getCharLimit(51);
-  const charCount = useMemo(() => text.length, [text]);
+  const answerText = useMemo(
+    () => build51AnswerText(blankAnswers, problem.blanks),
+    [blankAnswers, problem.blanks],
+  );
+  const answerJson = useMemo<ShortAnswerQuestion51Json>(
+    () => ({ _v: "51.v1", blanks: blankAnswers }),
+    [blankAnswers],
+  );
+  const currentAnswerSnapshot = useMemo(
+    () => serializeWritingAnswerSnapshot(blankAnswers),
+    [blankAnswers],
+  );
+  const [lastSavedSnapshot, setLastSavedSnapshot] = useState(
+    () => currentAnswerSnapshot,
+  );
+  const hasUnsavedAnswerChange = currentAnswerSnapshot !== lastSavedSnapshot;
+  const exitGuard = useUnsavedChangesGuard({
+    when: hasUnsavedAnswerChange,
+    fallbackHref: "/practice/problems",
+  });
+  const modalTrigger: WarningTrigger | null = exitGuard.pendingNavigation
+    ? "exit_with_dirty"
+    : warningTrigger;
+  const guideLoadFailed =
+    problem.submitBlockedReason === "problem_data_incomplete";
+  const activeBlank = problem.blanks[activeBlankIndex] ?? problem.blanks[0];
+  const activeBlankValue = activeBlank
+    ? (blankAnswers[activeBlank.label] ?? "")
+    : "";
+  const charCount = useMemo(
+    () => count51AnswerChars(blankAnswers),
+    [blankAnswers],
+  );
   const submittable = isCountSubmittable(charCount, 51);
   const inRecommended = isCountInRecommendedRange(charCount, 51);
   const progressPercent = Math.min(
     100,
     Math.round((charCount / limit.hardMax) * 100),
   );
-  const activeBlank = problem.blanks[activeBlankIndex] ?? problem.blanks[0];
-
   const expressionHints = [
     tPage("expressionHint0"),
     tPage("expressionHint1"),
@@ -115,6 +162,34 @@ export function ShortAnswerWriting51Workspace({
     tPage("expressionHint3"),
     tPage("expressionHint4"),
   ];
+  const guideMessages = useMemo(
+    () => uniqueNonEmpty(problem.validationMessages),
+    [problem.validationMessages],
+  );
+  const writingTips = useMemo(
+    () =>
+      uniqueNonEmpty([
+        ...problem.rubric.conditions,
+        ...problem.rubric.criteria,
+      ]),
+    [problem.rubric.conditions, problem.rubric.criteria],
+  );
+  const blankHints = useMemo(
+    () =>
+      problem.blanks
+        .map((blank, index) => ({
+          blank,
+          index,
+          hint: blank.targetHint ?? blank.role,
+        }))
+        .filter(
+          (
+            item,
+          ): item is { blank: NormalizedBlank; index: number; hint: string } =>
+            Boolean(item.hint?.trim()),
+        ),
+    [problem.blanks],
+  );
 
   useEffect(() => {
     void logStudyEvent({
@@ -138,18 +213,10 @@ export function ShortAnswerWriting51Workspace({
     };
   }, []);
 
-  useEffect(() => {
-    const hasUnsaved = status === "dirty" || status === "failed";
-    if (!hasUnsaved) return;
-    function onBeforeUnload(e: BeforeUnloadEvent) {
-      e.preventDefault();
-      e.returnValue = "";
-    }
-    window.addEventListener("beforeunload", onBeforeUnload);
-    return () => window.removeEventListener("beforeunload", onBeforeUnload);
-  }, [status]);
-
-  function persist(next: string, isManual: boolean) {
+  function persist(nextAnswers: Record<string, string>, isManual: boolean) {
+    const nextText = build51AnswerText(nextAnswers, problem.blanks);
+    const nextCharCount = count51AnswerChars(nextAnswers);
+    const nextSnapshot = serializeWritingAnswerSnapshot(nextAnswers);
     setStatus("syncing");
     const seq = ++saveSeqRef.current;
     upsert.mutate(
@@ -157,14 +224,16 @@ export function ShortAnswerWriting51Workspace({
         user_id: userId,
         problem_id: problem.id,
         question_no: 51,
-        answer_text: next,
-        char_count: next.length,
+        answer_text: nextText,
+        answer_json: { _v: "51.v1", blanks: nextAnswers },
+        char_count: nextCharCount,
         autosave_status: "clean",
         last_saved_at: new Date().toISOString(),
       },
       {
         onSuccess: (row) => {
           if (seq !== saveSeqRef.current) return;
+          setLastSavedSnapshot(nextSnapshot);
           setStatus("clean");
           setDraftId(row.id);
           setLastSavedAt(row.last_saved_at ?? null);
@@ -172,7 +241,7 @@ export function ShortAnswerWriting51Workspace({
             void logStudyEvent({
               eventType: "draft_autosaved",
               problemId: problem.id,
-              payload: { question_no: 51, char_count: next.length },
+              payload: { question_no: 51, char_count: nextCharCount },
             });
           }
         },
@@ -185,25 +254,30 @@ export function ShortAnswerWriting51Workspace({
     );
   }
 
-  function scheduleSave(next: string) {
+  function scheduleSave(nextAnswers: Record<string, string>) {
     if (!autosaveEnabled) {
       setStatus("dirty");
       return;
     }
     if (status !== "syncing") setStatus("dirty");
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => persist(next, false), DEBOUNCE_MS);
+    debounceRef.current = setTimeout(
+      () => persist(nextAnswers, false),
+      DEBOUNCE_MS,
+    );
   }
 
   function onChange(next: string) {
-    setText(next);
+    if (!activeBlank) return;
+    const nextAnswers = { ...blankAnswers, [activeBlank.label]: next };
+    setBlankAnswers(nextAnswers);
     setBlurNotice(null);
-    scheduleSave(next);
+    scheduleSave(nextAnswers);
   }
 
   function onManualSave() {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    persist(text, true);
+    persist(blankAnswers, true);
   }
 
   function onToggleAutosave() {
@@ -215,7 +289,7 @@ export function ShortAnswerWriting51Workspace({
   }
 
   function onBlurValidate() {
-    if (text.length === 0) return;
+    if (answerText.length === 0) return;
     if (charCount < limit.hardMin) {
       setBlurNotice(
         tEditor("blurTooShort", {
@@ -238,287 +312,351 @@ export function ShortAnswerWriting51Workspace({
   function onOpenSubmitConfirm() {
     onBlurValidate();
     if (!submittable || problem.submitBlockedReason) return;
+    setSubmitError(null);
     setConfirmOpen(true);
   }
 
-  function onConfirmSubmit() {
-    setSubmitError(null);
+  function submitAnswer({
+    clearFailure = true,
+  }: { clearFailure?: boolean } = {}) {
+    if (clearFailure) setSubmitError(null);
     submit.mutate(
       {
         draft_id: draftId,
         problem_id: problem.id,
         question_no: 51,
-        answer_text: text,
+        answer_text: answerText,
+        answer_json: answerJson,
         char_count: charCount,
       },
       {
         onSuccess: (result) => {
           setConfirmOpen(false);
+          setSubmitError(null);
           void logStudyEvent({
             eventType: "submission_submitted",
             problemId: problem.id,
             submissionId: result.submissionId,
             payload: { question_no: 51, char_count: charCount },
           });
-          router.push(`/writing/feedback/short/${result.submissionId}`);
+          setSubmittedAnalysis({
+            submissionId: result.submissionId,
+            questionNo: result.questionNo,
+            answerText,
+            charCount,
+            submittedAt: new Date().toISOString(),
+            feedbackHref: `/writing/feedback/short/${result.submissionId}`,
+          });
         },
-        onError: (e) => setSubmitError(e.message),
+        onError: (e) => {
+          setConfirmOpen(false);
+          setSubmitError(e.message);
+        },
       },
     );
   }
 
+  function onConfirmSubmit() {
+    submitAnswer();
+  }
+
+  function onRetrySubmitFailure() {
+    submitAnswer({ clearFailure: false });
+  }
+
+  if (submittedAnalysis) {
+    return <SubmittedAnalysisPanel state={submittedAnalysis} />;
+  }
+
   return (
-    <div className="writing-workspace writing-workspace--q51">
-      <header className="writing-command">
-        <div className="writing-command__titles">
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="writing-command__title">{tPage("pageTitle")}</h1>
-            <Tooltip title={tPage("titleHelp")}>
-              <Info aria-hidden size={18} className="writing-command__info" />
-            </Tooltip>
-          </div>
-          <p className="writing-command__subtitle">{tPage("pageSubtitle")}</p>
-        </div>
-        <div className="writing-command__actions">
-          <AutosaveBadge status={status} lastSavedAt={lastSavedAt} />
-          <span className="inline-flex min-h-8 items-center gap-1 rounded-full border border-border bg-surface px-3 text-xs font-semibold text-text">
-            <Clock3 aria-hidden size={14} />
-            {formatElapsed(elapsedSeconds)}
-          </span>
-          <Button
-            icon={<PenLine aria-hidden size={16} />}
-            onClick={onManualSave}
-            loading={status === "syncing" && upsert.isPending}
-            disabled={submit.isPending || text.length === 0}
-          >
-            {tEditor("saveDraft")}
-          </Button>
-          <Button
-            type="primary"
-            icon={<SendHorizontal aria-hidden size={16} />}
-            onClick={onOpenSubmitConfirm}
-            disabled={
-              !submittable ||
-              submit.isPending ||
-              Boolean(problem.submitBlockedReason)
-            }
-          >
-            {tEditor("submit")}
-          </Button>
-        </div>
-      </header>
-
-      <section className="writing-stepper" aria-label={tPage("stepperLabel")}>
-        <div className="writing-step writing-step--done">
-          <span>1</span>
-          <Text>{tPage("stepRead")}</Text>
-        </div>
-        <div className="writing-step writing-step--active">
-          <span>2</span>
-          <Text strong>{tPage("stepWrite")}</Text>
-        </div>
-        <div className="writing-step">
-          <span>3</span>
-          <Text type="secondary">{tPage("stepSubmit")}</Text>
-        </div>
-      </section>
-
-      {problem.submitBlockedReason ? (
-        <Alert
-          type="warning"
-          showIcon
-          title={tEditor("submitBlockedProblemData")}
-        />
-      ) : null}
-
-      <div className="writing-grid">
-        <section className="writing-grid__main" aria-label={tPage("mainAria")}>
-          <QuestionPrompt problem={problem} />
-          <ReferenceMaterials
-            assets={assets}
-            materials={problem.referenceMaterials}
+    <WritingExamShell
+      title={tPage("pageTitle")}
+      subtitle={tPage("pageSubtitle")}
+      progressPercent={progressPercent}
+      elapsedSeconds={elapsedSeconds}
+      autosaveStatus={status}
+      lastSavedAt={lastSavedAt}
+      canSave={!submit.isPending && charCount > 0}
+      canSubmit={
+        submittable &&
+        !submit.isPending &&
+        !Boolean(problem.submitBlockedReason)
+      }
+      isSaving={status === "syncing" && upsert.isPending}
+      isSubmitting={submit.isPending}
+      onSave={onManualSave}
+      onSubmit={onOpenSubmitConfirm}
+      onRequestBack={exitGuard.requestNavigation}
+    >
+      <div className="writing-workspace writing-workspace--q51">
+        {problem.submitBlockedReason ? (
+          <Alert
+            type="warning"
+            showIcon
+            title={tEditor("submitBlockedProblemData")}
           />
+        ) : null}
 
-          <section className="writing-answer-panel">
-            <div
-              className="writing-blank-tabs"
-              role="tablist"
-              aria-label={tPage("blankTabsLabel")}
-            >
-              {problem.blanks.map((blank, index) => (
-                <button
-                  key={blank.key}
-                  type="button"
-                  role="tab"
-                  aria-selected={index === activeBlankIndex}
-                  className={
-                    index === activeBlankIndex
-                      ? "writing-blank-tab writing-blank-tab--active"
-                      : "writing-blank-tab"
-                  }
-                  onClick={() => setActiveBlankIndex(index)}
-                >
-                  {blankDisplay(blank, index)}
-                </button>
-              ))}
-            </div>
-
-            <div className="writing-answer-card">
-              <div className="writing-answer-card__head">
-                <div>
-                  <Text strong>
-                    {tPage("answerTitle", {
-                      blank: activeBlank?.label ?? "ㄱ",
-                    })}
-                  </Text>
-                  <Paragraph
-                    type="secondary"
-                    className="writing-answer-card__hint"
-                  >
-                    {activeBlank?.targetHint ??
-                      activeBlank?.role ??
-                      tPage("answerHintFallback")}
-                  </Paragraph>
-                </div>
-                <Text type={inRecommended ? "success" : "secondary"}>
-                  {tEditor("charCount", { charCount, hardMax: limit.hardMax })}{" "}
-                  {tEditor("minOnly", { min: limit.hardMin })}
-                  {inRecommended ? " ✓" : ""}
-                </Text>
-              </div>
-
-              <Input.TextArea
-                value={text}
-                onChange={(e) => onChange(e.target.value)}
-                onBlur={onBlurValidate}
-                autoSize={{ minRows: 4 }}
-                maxLength={limit.hardMax}
-                placeholder={tPage("answerPlaceholder", {
-                  blank: activeBlank?.label ?? "ㄱ",
-                })}
-                disabled={submit.isPending}
-                aria-label={tPage("answerInputAria")}
-              />
-              <Progress
-                percent={progressPercent}
-                showInfo={false}
-                size="small"
-                status={inRecommended ? "success" : "active"}
-              />
-              {blurNotice ? (
-                <Text type="danger" className="writing-answer-card__notice">
-                  {blurNotice}
-                </Text>
-              ) : null}
-              {!autosaveEnabled ? (
-                <Text type="warning" className="writing-answer-card__notice">
-                  {tEditor("autosaveDisabledNotice")}
-                </Text>
-              ) : null}
-            </div>
-
-            <div className="writing-expression-row">
-              <div className="flex flex-wrap items-center gap-2">
-                <Lightbulb aria-hidden size={18} />
-                <Text strong>{tPage("expressionTitle")}</Text>
-                {expressionHints.map((hint) => (
-                  <span
-                    key={hint}
-                    className="inline-flex min-h-7 items-center rounded-full border border-border bg-background px-3 text-xs font-semibold text-text-secondary"
-                  >
-                    {hint}
-                  </span>
-                ))}
-                <Button size="small" type="link" onClick={onToggleAutosave}>
-                  {autosaveEnabled
-                    ? tEditor("autosaveOff")
-                    : tEditor("autosaveOn")}
-                </Button>
-              </div>
-            </div>
-          </section>
-        </section>
-
-        <aside className="writing-guide" aria-label={tPage("guideAria")}>
-          <section className="writing-guide-card writing-guide-card--tutor">
-            <div className="writing-guide-card__title">
-              <Sparkles aria-hidden size={18} />
-              <Text strong>{tPage("guideTitle")}</Text>
-            </div>
-            <p>{tPage("guideBody", { blank: activeBlank?.label ?? "ㄱ" })}</p>
-          </section>
-
-          <section className="writing-guide-card">
-            <div className="writing-guide-card__title">
-              <PenLine aria-hidden size={18} />
-              <Text strong>{tPage("tipsTitle")}</Text>
-            </div>
-            <ul className="writing-guide-list">
-              <li>{tPage("tip0")}</li>
-              <li>{tPage("tip1")}</li>
-            </ul>
-          </section>
-
-          <section className="writing-guide-card">
-            <div className="writing-guide-card__title">
-              <Eye aria-hidden size={18} />
-              <Text strong>{tPage("hintTitle")}</Text>
-            </div>
-            <div className="writing-guide-hints">
-              {problem.blanks.map((blank, index) => (
-                <div key={blank.key} className="app-card-compact">
-                  <Text strong>{blankDisplay(blank, index)}</Text>
-                  <Text type="secondary">
-                    {blank.targetHint ??
-                      blank.role ??
-                      tPage("answerHintFallback")}
-                  </Text>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <Button
-            block
-            icon={<RotateCcw aria-hidden size={16} />}
-            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        <div className="writing-grid">
+          <section
+            className="writing-grid__main"
+            aria-label={tPage("mainAria")}
           >
-            {tPage("reviewPrompt")}
-          </Button>
-        </aside>
-      </div>
+            <InteractiveBlankPrompt
+              title={problem.title}
+              textType={problem.textType}
+              questionNo={problem.questionNo}
+              prompt={problem.blankedPrompt || problem.prompt}
+              blanks={problem.blanks.map((blank) => ({
+                key: blank.key,
+                label: blank.label,
+                filled: (blankAnswers[blank.label] ?? "").trim().length > 0,
+              }))}
+              activeBlankIndex={activeBlankIndex}
+              onSelectBlank={setActiveBlankIndex}
+            />
 
-      <SubmissionConfirmModal
-        open={confirmOpen}
-        charCount={charCount}
-        minChars={limit.hardMin}
-        questionNo={51}
-        lastSavedAt={lastSavedAt}
-        loading={submit.isPending}
-        submitError={submitError}
-        onConfirm={onConfirmSubmit}
-        onCancel={() => {
-          setSubmitError(null);
-          setConfirmOpen(false);
-        }}
-      />
-      <AutosaveWarningModal
-        trigger={warningTrigger}
-        lastSavedAt={lastSavedAt}
-        retrying={upsert.isPending}
-        onKeep={() => setWarningTrigger(null)}
-        onRetry={() => {
-          setWarningTrigger(null);
-          if (debounceRef.current) clearTimeout(debounceRef.current);
-          persist(text, false);
-        }}
-        onProceed={() => {
-          if (warningTrigger === "disable_attempt") {
-            setAutosaveEnabled(false);
-          }
-          setWarningTrigger(null);
-        }}
-      />
-    </div>
+            <section className="writing-answer-panel">
+              <div
+                className="writing-blank-tabs"
+                role="tablist"
+                aria-label={tPage("blankTabsLabel")}
+              >
+                {problem.blanks.map((blank, index) => (
+                  <button
+                    key={blank.key}
+                    type="button"
+                    role="tab"
+                    aria-selected={index === activeBlankIndex}
+                    className={
+                      index === activeBlankIndex
+                        ? "writing-blank-tab writing-blank-tab--active"
+                        : "writing-blank-tab"
+                    }
+                    onClick={() => setActiveBlankIndex(index)}
+                  >
+                    {blankDisplay(blank, index)}
+                  </button>
+                ))}
+              </div>
+
+              <div className="writing-answer-card">
+                <div className="writing-answer-card__head">
+                  <div>
+                    <Text strong>
+                      {tPage("answerTitle", {
+                        blank: activeBlank?.label ?? "ㄱ",
+                      })}
+                    </Text>
+                    <Paragraph
+                      type="secondary"
+                      className="writing-answer-card__hint"
+                    >
+                      {activeBlank?.targetHint ??
+                        activeBlank?.role ??
+                        tPage("answerHintFallback")}
+                    </Paragraph>
+                  </div>
+                  <Text type={inRecommended ? "success" : "secondary"}>
+                    {tEditor("charCount", {
+                      charCount,
+                      hardMax: limit.hardMax,
+                    })}{" "}
+                    {tEditor("minOnly", { min: limit.hardMin })}
+                    {inRecommended ? " ✓" : ""}
+                  </Text>
+                </div>
+
+                <Input.TextArea
+                  value={activeBlankValue}
+                  onChange={(e) => onChange(e.target.value)}
+                  onBlur={onBlurValidate}
+                  autoSize={{ minRows: 4 }}
+                  maxLength={limit.hardMax}
+                  placeholder={tPage("answerPlaceholder", {
+                    blank: activeBlank?.label ?? "ㄱ",
+                  })}
+                  disabled={submit.isPending}
+                  aria-label={tPage("answerInputAria")}
+                />
+                <Progress
+                  percent={progressPercent}
+                  showInfo={false}
+                  size="small"
+                  status={inRecommended ? "success" : "active"}
+                />
+                {blurNotice ? (
+                  <Text type="danger" className="writing-answer-card__notice">
+                    {blurNotice}
+                  </Text>
+                ) : null}
+                {!autosaveEnabled ? (
+                  <Text type="warning" className="writing-answer-card__notice">
+                    {tEditor("autosaveDisabledNotice")}
+                  </Text>
+                ) : null}
+
+                <Collapse
+                  className="writing-expression-accordion"
+                  bordered={false}
+                  expandIconPlacement="end"
+                  expandIcon={() => <Plus aria-hidden size={16} />}
+                  items={[
+                    {
+                      key: "expression",
+                      label: (
+                        <div className="writing-guide-card__title">
+                          <Lightbulb aria-hidden size={18} />
+                          <Text strong>{tPage("expressionTitle")}</Text>
+                        </div>
+                      ),
+                      children: (
+                        <div className="writing-expression-content">
+                          <div className="writing-expression-chip-list">
+                            {expressionHints.map((hint) => (
+                              <span
+                                key={hint}
+                                className="writing-expression-chip"
+                              >
+                                {hint}
+                              </span>
+                            ))}
+                          </div>
+                          <Button
+                            size="small"
+                            type="link"
+                            onClick={onToggleAutosave}
+                          >
+                            {autosaveEnabled
+                              ? tEditor("autosaveOff")
+                              : tEditor("autosaveOn")}
+                          </Button>
+                        </div>
+                      ),
+                    },
+                  ]}
+                />
+              </div>
+            </section>
+          </section>
+
+          <aside className="writing-guide" aria-label={tPage("guideAria")}>
+            <WritingGuideAccordion
+              loadFailed={guideLoadFailed}
+              loadFailedLabel={tGuide("loadFailedTag")}
+              defaultActiveKeys={["guide", "tips", "hints"]}
+              items={[
+                {
+                  key: "guide",
+                  disabledOnLoadFailed: true,
+                  className: "writing-guide-accordion__item--tutor",
+                  icon: <Sparkles aria-hidden size={18} />,
+                  title: tPage("guideTitle"),
+                  children:
+                    guideMessages.length > 0 ? (
+                      <ul className="writing-guide-list">
+                        {guideMessages.map((message) => (
+                          <li key={message}>{message}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <Text type="secondary">{tPage("guidePlaceholder")}</Text>
+                    ),
+                },
+                {
+                  key: "tips",
+                  disabledOnLoadFailed: true,
+                  icon: <PenLine aria-hidden size={18} />,
+                  title: tPage("tipsTitle"),
+                  children:
+                    writingTips.length > 0 ? (
+                      <ul className="writing-guide-list">
+                        {writingTips.map((tip) => (
+                          <li key={tip}>{tip}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <Text type="secondary">{tPage("tipsPlaceholder")}</Text>
+                    ),
+                },
+                {
+                  key: "hints",
+                  disabledOnLoadFailed: true,
+                  icon: <Eye aria-hidden size={18} />,
+                  title: tPage("hintTitle"),
+                  children:
+                    blankHints.length > 0 ? (
+                      <div className="writing-guide-hints">
+                        {blankHints.map(({ blank, index, hint }) => (
+                          <div key={blank.key} className="app-card-compact">
+                            <Text strong>{blankDisplay(blank, index)}</Text>
+                            <Text type="secondary">{hint}</Text>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <Text type="secondary">{tPage("hintPlaceholder")}</Text>
+                    ),
+                },
+              ]}
+            />
+          </aside>
+        </div>
+
+        <SubmissionConfirmModal
+          open={confirmOpen}
+          charCount={charCount}
+          minChars={limit.hardMin}
+          questionNo={51}
+          lastSavedAt={lastSavedAt}
+          loading={submit.isPending}
+          onConfirm={onConfirmSubmit}
+          onCancel={() => {
+            setSubmitError(null);
+            setConfirmOpen(false);
+          }}
+        />
+        <SubmissionFailedModal
+          open={Boolean(submitError)}
+          submitError={submitError}
+          loading={submit.isPending}
+          onRetry={onRetrySubmitFailure}
+          onClose={() => setSubmitError(null)}
+        />
+        <AutosaveWarningModal
+          trigger={modalTrigger}
+          lastSavedAt={lastSavedAt}
+          retrying={upsert.isPending}
+          onKeep={() => {
+            if (exitGuard.pendingNavigation) {
+              exitGuard.cancelPendingNavigation();
+              return;
+            }
+            setWarningTrigger(null);
+          }}
+          onRetry={() => {
+            if (exitGuard.pendingNavigation) {
+              exitGuard.cancelPendingNavigation();
+              if (debounceRef.current) clearTimeout(debounceRef.current);
+              persist(blankAnswers, true);
+              return;
+            }
+            setWarningTrigger(null);
+            if (debounceRef.current) clearTimeout(debounceRef.current);
+            persist(blankAnswers, false);
+          }}
+          onProceed={() => {
+            if (exitGuard.pendingNavigation) {
+              exitGuard.proceedPendingNavigation();
+              return;
+            }
+            if (warningTrigger === "disable_attempt") {
+              setAutosaveEnabled(false);
+            }
+            setWarningTrigger(null);
+          }}
+        />
+      </div>
+    </WritingExamShell>
   );
 }

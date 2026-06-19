@@ -1,7 +1,6 @@
 import { Button, Empty, Space } from "antd";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
-import type { ProblemAsset } from "./ReferenceMaterials";
 import { EssayWriting54Workspace } from "./EssayWriting54Workspace";
 import { LongFormWriting53Workspace } from "./LongFormWriting53Workspace";
 import { ShortAnswerWriting51Workspace } from "./ShortAnswerWriting51Workspace";
@@ -15,7 +14,7 @@ type Props = {
   userId: string;
   problem: WritingProblem | null;
   draft: WritingDraftRow | null;
-  assets?: ProblemAsset[];
+  canRetryProblemLoad?: boolean;
 };
 
 export async function WritingPageContent({
@@ -23,19 +22,29 @@ export async function WritingPageContent({
   userId,
   problem,
   draft,
-  assets = [],
+  canRetryProblemLoad = true,
 }: Props) {
   const t = await getTranslations("writing.page");
   if (!problem) {
     // D-01 §2 예외 — 지문 로드 실패/문제 없음: 재시도 + 문제 목록 복귀 동선.
+    const problemLoadFailed = t("problemLoadFailed", { questionNo });
     return (
-      <Empty description={t("problemLoadFailed", { questionNo })}>
+      <Empty
+        className="writing-empty-state"
+        description={
+          <h1 className="writing-empty-state__title">{problemLoadFailed}</h1>
+        }
+      >
         <Space>
-          <Link href={writingQuestionHref(questionNo) as never}>
-            <Button type="primary">{t("retry")}</Button>
-          </Link>
+          {canRetryProblemLoad ? (
+            <Link href={writingQuestionHref(questionNo) as never}>
+              <Button type="primary">{t("retry")}</Button>
+            </Link>
+          ) : null}
           <Link href={"/practice/problems" as never}>
-            <Button>{t("toProblemList")}</Button>
+            <Button type={canRetryProblemLoad ? "default" : "primary"}>
+              {t("toProblemList")}
+            </Button>
           </Link>
         </Space>
       </Empty>
@@ -47,7 +56,6 @@ export async function WritingPageContent({
         userId={userId}
         problem={problem}
         draft={draft}
-        assets={assets}
       />
     );
   }
@@ -57,7 +65,6 @@ export async function WritingPageContent({
         userId={userId}
         problem={problem}
         draft={draft}
-        assets={assets}
       />
     );
   }
@@ -67,7 +74,6 @@ export async function WritingPageContent({
         userId={userId}
         problem={problem}
         draft={draft}
-        assets={assets}
       />
     );
   }
@@ -77,7 +83,6 @@ export async function WritingPageContent({
         userId={userId}
         problem={problem}
         draft={draft}
-        assets={assets}
       />
     );
   }

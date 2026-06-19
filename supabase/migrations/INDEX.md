@@ -150,6 +150,7 @@
 | 49 | `18:30:00` | [`20260617183000_list_user_problems_recommended_sort.sql`](./20260617183000_list_user_problems_recommended_sort.sql) | Redefines `list_user_problems` with C-02 `recommended` filtering through active recommendation rows and exact UI sort semantics for newest, oldest, difficulty ascending, and difficulty descending. |
 | 50 | `21:30:00` | [`20260617213000_required_random_nickname.sql`](./20260617213000_required_random_nickname.sql) | Requires new profiles to receive a non-identifying default nickname (`talkpik-...`) during auth bootstrap, backfills blank existing nicknames, and retries random nickname generation on unique collisions. Does not derive nickname from email or provider metadata. |
 | 51 | `21:40:00` | [`20260617214000_nickname_availability_rpc.sql`](./20260617214000_nickname_availability_rpc.sql) | Adds `public.is_nickname_available(candidate text)` as a SECURITY DEFINER RPC so the profile UI can check nickname availability without exposing other users' profile rows through RLS. |
+| 52 | `14:30:00` | [`20260618143000_external_writing_submission_sync.sql`](./20260618143000_external_writing_submission_sync.sql) | Adds service-role-only RPCs for external Writing API submission records and feedback sync while keeping direct `writing_submissions` inserts denied. |
 
 ---
 

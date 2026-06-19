@@ -3,6 +3,7 @@
 import { Button, Grid, Layout, Space, Typography } from "antd";
 import { Menu as MenuIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { AppDrawer } from "@/components/shared/AppDrawer";
@@ -23,24 +24,38 @@ type Props = {
 
 export function WorkspaceShell({ role, userId, email, planLabel, children }: Props) {
   const t = useTranslations("app");
+  const pathname = usePathname();
   const screens = useBreakpoint();
   const isMobile = screens.md === false;
   const [drawerOpen, setDrawerOpen] = useState(false);
   const showDrawer = isMobile && drawerOpen;
+  const isWritingExamRoute =
+    pathname === "/writing/short-answer-writing-51" ||
+    pathname === "/writing/answer-writing-52" ||
+    pathname === "/writing/long-form-writing-53" ||
+    pathname === "/writing/essay-writing-54";
 
   return (
-    <Layout className="app-workspace-layout">
-      <Sider
-        className="app-workspace-sider"
-        breakpoint="md"
-        collapsedWidth={0}
-        width={240}
-        trigger={null}
-      >
-        <SidebarNav role={role} planLabel={planLabel} />
-      </Sider>
+    <Layout
+      className={
+        isWritingExamRoute
+          ? "app-workspace-layout app-workspace-layout--exam"
+          : "app-workspace-layout"
+      }
+    >
+      {isWritingExamRoute ? null : (
+        <Sider
+          className="app-workspace-sider"
+          breakpoint="md"
+          collapsedWidth={0}
+          width={240}
+          trigger={null}
+        >
+          <SidebarNav role={role} planLabel={planLabel} />
+        </Sider>
+      )}
       <Layout className="app-workspace-main">
-        {isMobile ? (
+        {isWritingExamRoute ? null : isMobile ? (
           <Header className="app-workspace-mobile-bar">
             <Space size={12} align="center">
               <Button
@@ -65,24 +80,34 @@ export function WorkspaceShell({ role, userId, email, planLabel, children }: Pro
             <NotificationBell userId={userId} />
           </div>
         )}
-        <Content className="app-workspace-content">{children}</Content>
+        <Content
+          className={
+            isWritingExamRoute
+              ? "app-workspace-content app-workspace-content--exam"
+              : "app-workspace-content"
+          }
+        >
+          {children}
+        </Content>
       </Layout>
 
-      <AppDrawer
-        rootClassName="app-workspace-drawer"
-        placement="left"
-        size={240}
-        open={showDrawer}
-        onClose={() => setDrawerOpen(false)}
-        styles={{ body: { padding: 0 } }}
-        title={t("menu")}
-      >
-        <SidebarNav
-          role={role}
-          planLabel={planLabel}
-          onNavigate={() => setDrawerOpen(false)}
-        />
-      </AppDrawer>
+      {isWritingExamRoute ? null : (
+        <AppDrawer
+          rootClassName="app-workspace-drawer"
+          placement="left"
+          size={240}
+          open={showDrawer}
+          onClose={() => setDrawerOpen(false)}
+          styles={{ body: { padding: 0 } }}
+          title={t("menu")}
+        >
+          <SidebarNav
+            role={role}
+            planLabel={planLabel}
+            onNavigate={() => setDrawerOpen(false)}
+          />
+        </AppDrawer>
+      )}
     </Layout>
   );
 }

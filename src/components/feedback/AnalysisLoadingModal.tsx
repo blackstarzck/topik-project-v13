@@ -2,7 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Alert, App, Button, Progress, Steps, Typography, theme } from "antd";
-import { ArrowLeft, Clock3, LifeBuoy, RefreshCcw, ShieldAlert } from "lucide-react";
+import {
+  ArrowLeft,
+  Clock3,
+  LifeBuoy,
+  RefreshCcw,
+  ShieldAlert,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 
@@ -26,6 +32,8 @@ type Props = {
   onCancel?: () => void;
   onRetry?: () => void;
 };
+
+type SurfacePresentation = "modal" | "page";
 
 export function AnalysisLoadingModal({
   open,
@@ -53,6 +61,29 @@ export function AnalysisLoadingModal({
       reduceMotion={reduceMotion}
       onCancel={onCancel}
       onRetry={onRetry}
+      presentation="modal"
+    />
+  );
+}
+
+export function AnalysisLoadingPage({
+  status = "analyzing",
+  completeHref = null,
+  onComplete,
+  reduceMotion,
+  onCancel,
+  onRetry,
+}: Omit<Props, "open">) {
+  return (
+    <AnalysisLoadingModalContent
+      open
+      status={status}
+      completeHref={completeHref}
+      onComplete={onComplete}
+      reduceMotion={reduceMotion}
+      onCancel={onCancel}
+      onRetry={onRetry}
+      presentation="page"
     />
   );
 }
@@ -63,7 +94,9 @@ function readPrefersReducedMotion(): boolean {
 }
 
 function useReducedMotion(explicit?: boolean): boolean {
-  const [prefersReduced, setPrefersReduced] = useState(readPrefersReducedMotion);
+  const [prefersReduced, setPrefersReduced] = useState(
+    readPrefersReducedMotion,
+  );
 
   useEffect(() => {
     if (explicit !== undefined) return;
@@ -86,11 +119,12 @@ function AnalysisLoadingModalContent({
   reduceMotion,
   onCancel,
   onRetry,
+  presentation,
 }: Required<Pick<Props, "open" | "status">> &
   Pick<
     Props,
     "completeHref" | "onComplete" | "reduceMotion" | "onCancel" | "onRetry"
-  >) {
+  > & { presentation: SurfacePresentation }) {
   const t = useTranslations("feedback.analysis");
   const router = useRouter();
   const { message, modal } = App.useApp();
@@ -152,11 +186,15 @@ function AnalysisLoadingModalContent({
     });
   }
 
+  const contentTestId =
+    presentation === "page"
+      ? "analysis-loading-panel"
+      : "analysis-loading-modal";
   const modalBody =
     status === "failed" ? (
       <div
         className="analysis-loading analysis-loading--failed"
-        data-testid="analysis-loading-modal"
+        data-testid={contentTestId}
       >
         <div className="analysis-loading__hero">
           <div className="analysis-loading__state-icon">
@@ -191,7 +229,7 @@ function AnalysisLoadingModalContent({
     ) : status === "complete" ? (
       <div
         className="analysis-loading analysis-loading--complete"
-        data-testid="analysis-loading-modal"
+        data-testid={contentTestId}
       >
         <Alert
           type="success"
@@ -201,7 +239,7 @@ function AnalysisLoadingModalContent({
         />
       </div>
     ) : (
-      <div className="analysis-loading" data-testid="analysis-loading-modal">
+      <div className="analysis-loading" data-testid={contentTestId}>
         <div className="analysis-loading__hero">
           <AnalysisCharacter step={step} reduceMotion={reduced} />
           <Title level={2} className="analysis-loading__title">
@@ -267,6 +305,10 @@ function AnalysisLoadingModalContent({
         </div>
       </div>
     );
+
+  if (presentation === "page") {
+    return <div className="analysis-loading-page__panel">{modalBody}</div>;
+  }
 
   return (
     <AppModal

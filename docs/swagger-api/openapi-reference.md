@@ -2,7 +2,7 @@
 
 [Back to Swagger API README](./README.md)
 
-Source Swagger UI: http://58.236.187.135:9009/docs#/
+Source Swagger UI: https://api.dotoretopik.com/docs
 Source OpenAPI JSON: http://58.236.187.135:9009/openapi.json
 Generated: 2026-06-17
 

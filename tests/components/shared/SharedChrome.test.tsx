@@ -28,6 +28,18 @@ describe("AppError i18n chrome", () => {
     expect(screen.getByText("다시 시도해 주세요.")).toBeTruthy();
     expect(screen.getByRole("button", { name: "다시 시도" })).toBeTruthy();
   });
+  it("centers the error content in the visible viewport", () => {
+    renderWithIntl(<AppError error={new Error("boom-detail")} />);
+
+    expect(Array.from(screen.getByTestId("app-error").classList)).toEqual(
+      expect.arrayContaining([
+        "flex",
+        "min-h-dvh",
+        "items-center",
+        "justify-center",
+      ]),
+    );
+  });
 });
 
 describe("AppNotFound i18n chrome", () => {
@@ -38,6 +50,20 @@ describe("AppNotFound i18n chrome", () => {
       screen.getByText("요청하신 경로가 존재하지 않거나 이동되었습니다."),
     ).toBeTruthy();
     expect(screen.getByText("대시보드로 이동")).toBeTruthy();
+  });
+  it("centers the not-found content in the visible viewport", () => {
+    renderWithIntl(<AppNotFound />);
+
+    expect(
+      Array.from(screen.getByTestId("app-not-found").classList),
+    ).toEqual(
+      expect.arrayContaining([
+        "flex",
+        "min-h-dvh",
+        "items-center",
+        "justify-center",
+      ]),
+    );
   });
 });
 

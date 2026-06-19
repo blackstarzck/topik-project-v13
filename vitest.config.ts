@@ -21,7 +21,7 @@ export default defineConfig({
     // headroom removes the false positive without masking a real deadlock,
     // which would still hang to this ceiling.
     testTimeout: 20000,
-    include: ["tests/**/*.{test,spec}.{ts,tsx}"],
+    include: ["tests/**/*.{test,spec}.{ts,tsx,mjs}"],
     exclude: [
       "node_modules/**",
       ".agents/**",

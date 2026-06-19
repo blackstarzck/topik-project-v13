@@ -107,6 +107,59 @@ for (const s of PUBLIC_SCREENS) {
       await expect(heroVideo).toHaveJSProperty("loop", true);
       await expect(heroVideo).toHaveJSProperty("playsInline", true);
 
+      const landingTypeMetrics = await page.evaluate(() => {
+        const readPx = (value: string) => Number.parseFloat(value);
+        const hero = document.querySelector<HTMLElement>(".landing-hero");
+        const layoutRoot = document.querySelector<HTMLElement>(
+          ".landing-layout-motion-root",
+        );
+        const heroTitle = document.querySelector<HTMLElement>(
+          ".landing-hero-title",
+        );
+        const heroBody =
+          document.querySelector<HTMLElement>(".landing-hero-body");
+        const heroButton = document.querySelector<HTMLElement>(
+          ".landing-hero-button",
+        );
+        const heroButtonIcon = heroButton?.querySelector<SVGElement>("svg");
+
+        if (!hero || !layoutRoot || !heroTitle || !heroBody || !heroButton) {
+          throw new Error("landing typography targets are missing");
+        }
+
+        const titleStyles = window.getComputedStyle(heroTitle);
+        const titleFontSize = readPx(titleStyles.fontSize);
+        const titleLineHeight = readPx(titleStyles.lineHeight);
+
+        return {
+          heroBodyFontSize: readPx(window.getComputedStyle(heroBody).fontSize),
+          heroButtonFontSize: readPx(
+            window.getComputedStyle(heroButton).fontSize,
+          ),
+          heroButtonIconHeight:
+            heroButtonIcon?.getBoundingClientRect().height ?? 0,
+          heroButtonIconStrokeWidth:
+            heroButtonIcon?.getAttribute("stroke-width") ?? "",
+          heroButtonIconWidth:
+            heroButtonIcon?.getBoundingClientRect().width ?? 0,
+          heroFontSize: readPx(window.getComputedStyle(hero).fontSize),
+          layoutRootFontSize: readPx(
+            window.getComputedStyle(layoutRoot).fontSize,
+          ),
+          titleLineHeightRatio: Number(
+            (titleLineHeight / titleFontSize).toFixed(2),
+          ),
+        };
+      });
+      expect(landingTypeMetrics.heroFontSize).toBe(16);
+      expect(landingTypeMetrics.layoutRootFontSize).toBe(16);
+      expect(landingTypeMetrics.heroBodyFontSize).toBe(16);
+      expect(landingTypeMetrics.titleLineHeightRatio).toBe(1.2);
+      expect(landingTypeMetrics.heroButtonFontSize).toBe(16);
+      expect(landingTypeMetrics.heroButtonIconWidth).toBe(18);
+      expect(landingTypeMetrics.heroButtonIconHeight).toBe(18);
+      expect(landingTypeMetrics.heroButtonIconStrokeWidth).toBe("2.25");
+
       const landingHeader = page.locator(".landing-header");
       await expect(landingHeader).toBeVisible();
       const headerMetrics = await landingHeader.evaluate((node) => {
@@ -140,9 +193,8 @@ for (const s of PUBLIC_SCREENS) {
           zIndex: styles.zIndex,
         };
       });
-      const headerBlurMatch = headerMetrics.backdropFilter.match(
-        /blur\(([\d.]+)px\)/,
-      );
+      const headerBlurMatch =
+        headerMetrics.backdropFilter.match(/blur\(([\d.]+)px\)/);
       expect(
         headerBlurMatch,
         `expected landing header backdrop blur, got ${headerMetrics.backdropFilter}`,
@@ -168,8 +220,12 @@ for (const s of PUBLIC_SCREENS) {
       expect(Math.round(headerMetrics.top)).toBe(0);
       expect(headerMetrics.height).toBeGreaterThanOrEqual(64);
       expect(Math.round(headerMetrics.left)).toBe(0);
-      expect(Math.round(headerMetrics.right)).toBe(headerMetrics.documentClientWidth);
-      expect(Math.round(headerMetrics.width)).toBe(headerMetrics.documentClientWidth);
+      expect(Math.round(headerMetrics.right)).toBe(
+        headerMetrics.documentClientWidth,
+      );
+      expect(Math.round(headerMetrics.width)).toBe(
+        headerMetrics.documentClientWidth,
+      );
       expect(headerMetrics.maxWidth).toBe("none");
       expect(headerMetrics.transform).toBe("none");
 
@@ -213,20 +269,28 @@ for (const s of PUBLIC_SCREENS) {
         page.locator(".landing-layout-feature").filter({ hasText: "AI 첨삭" }),
       ).toBeVisible();
       await expect(
-        page.locator(".landing-layout-feature").filter({ hasText: "실전 문제" }),
+        page
+          .locator(".landing-layout-feature")
+          .filter({ hasText: "실전 문제" }),
       ).toBeVisible();
       await expect(
-        page.locator(".landing-layout-feature").filter({ hasText: "성장 리포트" }),
+        page
+          .locator(".landing-layout-feature")
+          .filter({ hasText: "성장 리포트" }),
       ).toBeVisible();
       await expect(
-        page.locator(".landing-layout-feature").filter({ hasText: "라이브러리" }),
+        page
+          .locator(".landing-layout-feature")
+          .filter({ hasText: "라이브러리" }),
       ).toBeVisible();
       await page.locator("#blog").scrollIntoViewIfNeeded();
       await expect(page.getByText("Future scope").first()).toBeVisible();
       await page.locator("#contact").scrollIntoViewIfNeeded();
       await expect(page.getByText("TALKPIK AI로 시작하기")).toBeVisible();
 
-      const signupPill = page.locator(".landing-layout-pill[href='/sign-up']").first();
+      const signupPill = page
+        .locator(".landing-layout-pill[href='/sign-up']")
+        .first();
       await expect(signupPill).toBeVisible();
       const signupPillMetrics = await signupPill.evaluate((node) => {
         const rect = node.getBoundingClientRect();
@@ -282,9 +346,13 @@ for (const s of PUBLIC_SCREENS) {
         .count();
       expect(numberOnlyPathMarkers).toBe(1);
 
-      const animatedSections = await page.locator("[data-landing-section]").count();
+      const animatedSections = await page
+        .locator("[data-landing-section]")
+        .count();
       expect(animatedSections).toBeGreaterThanOrEqual(8);
-      const staggerTargets = await page.locator("[data-landing-stagger]").count();
+      const staggerTargets = await page
+        .locator("[data-landing-stagger]")
+        .count();
       expect(staggerTargets).toBeGreaterThanOrEqual(20);
 
       const swiperRoot = page.locator(".landing-layout-testimonials.swiper");
@@ -295,7 +363,9 @@ for (const s of PUBLIC_SCREENS) {
         ),
       ).toBe(true);
       await expect(
-        page.locator(".landing-layout-testimonials__slide[data-landing-stagger]"),
+        page.locator(
+          ".landing-layout-testimonials__slide[data-landing-stagger]",
+        ),
       ).toHaveCount(0);
       const swiperSlides = await page
         .locator(".landing-layout-testimonials__slide")
@@ -332,14 +402,16 @@ for (const s of PUBLIC_SCREENS) {
       await page.locator(".landing-layout-step-list").scrollIntoViewIfNeeded();
       await expect
         .poll(() =>
-          flowLines.nth(1).evaluate((node) =>
-            Number(
-              window
-                .getComputedStyle(node)
-                .getPropertyValue("--landing-line-scale")
-                .trim() || "1",
+          flowLines
+            .nth(1)
+            .evaluate((node) =>
+              Number(
+                window
+                  .getComputedStyle(node)
+                  .getPropertyValue("--landing-line-scale")
+                  .trim() || "1",
+              ),
             ),
-          ),
         )
         .toBeGreaterThan(0.9);
       await expect

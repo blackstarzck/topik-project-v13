@@ -24,6 +24,12 @@
   padding: var(--workspace-content-padding-block) 24px;
 }
 
+.app-workspace-content--exam.ant-layout-content {
+  min-height: 100vh;
+  min-height: max(100vh, 100dvh);
+  padding: 0;
+}
+
 .app-workspace-body {
   width: 100%;
   min-width: 0;
@@ -90,6 +96,12 @@
       calc(100dvh - var(--workspace-mobile-bar-height))
     );
     padding: 16px;
+  }
+
+  .app-workspace-content--exam.ant-layout-content {
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding: 0;
   }
 }
 

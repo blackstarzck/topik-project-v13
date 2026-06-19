@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Button, Input, Space, Typography } from "antd";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
 import { useSubmitWriting, useUpsertDraft } from "@/lib/writing/mutations";
 import { logStudyEvent } from "@/lib/events/study-events";
 import {
@@ -20,10 +19,15 @@ import {
 import { AutosaveBadge } from "./AutosaveBadge";
 import { ConditionsPanel, type ProblemRubric } from "./ConditionsPanel";
 import { SubmissionConfirmModal } from "./SubmissionConfirmModal";
+import { SubmissionFailedModal } from "./SubmissionFailedModal";
 import {
   AutosaveWarningModal,
   type WarningTrigger,
 } from "./AutosaveWarningModal";
+import {
+  SubmittedAnalysisPanel,
+  type SubmittedAnalysisState,
+} from "./SubmittedAnalysisPanel";
 
 const { Text } = Typography;
 
@@ -61,13 +65,14 @@ export function WritingEditor({
   // D-01/D-02 §4 — blur 검증 메시지(글자수 미달/초과 즉시 안내).
   const [blurNotice, setBlurNotice] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submittedAnalysis, setSubmittedAnalysis] =
+    useState<SubmittedAnalysisState | null>(null);
   // D-M3 §5 — 자동 저장 on/off. 끄면 수동 임시 저장만 가능.
   const [autosaveEnabled, setAutosaveEnabled] = useState(true);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveSeqRef = useRef(0);
   const upsert = useUpsertDraft();
   const submit = useSubmitWriting();
-  const router = useRouter();
 
   const limit = getCharLimit(questionNo);
   const charCount = useMemo(() => text.length, [text]);
@@ -185,8 +190,10 @@ export function WritingEditor({
     }
   }
 
-  function onConfirmSubmit() {
-    setSubmitError(null);
+  function submitAnswer({
+    clearFailure = true,
+  }: { clearFailure?: boolean } = {}) {
+    if (clearFailure) setSubmitError(null);
     submit.mutate(
       {
         draft_id: initialDraft?.id ?? null,
@@ -198,6 +205,7 @@ export function WritingEditor({
       {
         onSuccess: (result) => {
           setConfirmOpen(false);
+          setSubmitError(null);
           void logStudyEvent({
             eventType: "submission_submitted",
             problemId,
@@ -207,15 +215,34 @@ export function WritingEditor({
           const next = isShortAnswer(result.questionNo)
             ? `/writing/feedback/short/${result.submissionId}`
             : `/writing/feedback/long/${result.submissionId}`;
-          router.push(next);
+          setSubmittedAnalysis({
+            submissionId: result.submissionId,
+            questionNo: result.questionNo,
+            answerText: text,
+            charCount,
+            submittedAt: new Date().toISOString(),
+            feedbackHref: next,
+          });
         },
         onError: (e) => {
-          // D-M1 §4 예외 — 제출 실패 시 확인 모달을 유지하고 모달 안에서 원인 +
-          // 재시도 노출(닫지 않는다).
+          // D-M1 -> failure: API 실패 후 확인 모달을 닫고 별도 실패 모달로 전환한다.
+          setConfirmOpen(false);
           setSubmitError(e.message);
         },
       },
     );
+  }
+
+  function onConfirmSubmit() {
+    submitAnswer();
+  }
+
+  function onRetrySubmitFailure() {
+    submitAnswer({ clearFailure: false });
+  }
+
+  if (submittedAnalysis) {
+    return <SubmittedAnalysisPanel state={submittedAnalysis} />;
   }
 
   return (
@@ -229,11 +256,7 @@ export function WritingEditor({
         />
       ) : null}
       {submitBlockedReason ? (
-        <Alert
-          type="warning"
-          showIcon
-          title={t("submitBlockedProblemData")}
-        />
+        <Alert type="warning" showIcon title={t("submitBlockedProblemData")} />
       ) : null}
 
       <Space wrap>
@@ -290,8 +313,13 @@ export function WritingEditor({
         </Button>
         <Button
           type="primary"
-          onClick={() => setConfirmOpen(true)}
-          disabled={!submittable || submit.isPending || Boolean(submitBlockedReason)}
+          onClick={() => {
+            setSubmitError(null);
+            setConfirmOpen(true);
+          }}
+          disabled={
+            !submittable || submit.isPending || Boolean(submitBlockedReason)
+          }
         >
           {t("submit")}
         </Button>
@@ -304,12 +332,18 @@ export function WritingEditor({
         questionNo={questionNo}
         lastSavedAt={lastSavedAt}
         loading={submit.isPending}
-        submitError={submitError}
         onConfirm={onConfirmSubmit}
         onCancel={() => {
           setSubmitError(null);
           setConfirmOpen(false);
         }}
+      />
+      <SubmissionFailedModal
+        open={Boolean(submitError)}
+        submitError={submitError}
+        loading={submit.isPending}
+        onRetry={onRetrySubmitFailure}
+        onClose={() => setSubmitError(null)}
       />
       <AutosaveWarningModal
         trigger={warningTrigger}

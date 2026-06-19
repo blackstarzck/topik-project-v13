@@ -193,7 +193,7 @@ export function LearningGoalForm({
         weak_areas: parsed.data.weak_areas,
         is_active: true,
       });
-      notification.success({ message: t("saveSuccess") });
+      notification.success({ title: t("saveSuccess") });
       router.push("/dashboard");
     } catch (err) {
       setFieldErrors({

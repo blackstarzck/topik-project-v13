@@ -42,7 +42,9 @@ export function Hero({ authStatus = "anonymous" }: HeroProps) {
               type="primary"
               size="large"
               className="landing-hero-button landing-hero-button--primary"
-              icon={<ArrowUpRight size={16} aria-hidden="true" />}
+              icon={
+                <ArrowUpRight size={18} strokeWidth={2.25} aria-hidden="true" />
+              }
               iconPlacement="end"
               loading={navigating}
               onClick={() => go(authenticatedCta.href)}
@@ -56,7 +58,9 @@ export function Hero({ authStatus = "anonymous" }: HeroProps) {
               type="primary"
               size="large"
               className="landing-hero-button landing-hero-button--primary"
-              icon={<ArrowUpRight size={16} aria-hidden="true" />}
+              icon={
+                <ArrowUpRight size={18} strokeWidth={2.25} aria-hidden="true" />
+              }
               iconPlacement="end"
               loading={navigating}
               onClick={() => go("/sign-up")}

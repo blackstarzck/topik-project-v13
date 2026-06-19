@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Tooltip, notification } from "antd";
+import { App, Button, Tooltip } from "antd";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useSaveLibraryItem } from "@/lib/library/mutations";
@@ -34,6 +34,7 @@ export function SaveToLibraryButton({
   permissionLocked = false,
 }: Props) {
   const t = useTranslations("feedback.actions.save");
+  const { notification } = App.useApp();
   const save = useSaveLibraryItem();
   const [saved, setSaved] = useState(initiallySaved);
 
@@ -52,19 +53,19 @@ export function SaveToLibraryButton({
       {
         onSuccess: () => {
           setSaved(true);
-          notification.success({ message: t("saveSuccess") });
+          notification.success({ title: t("saveSuccess") });
         },
         onError: (e: unknown) => {
           const err = e as { code?: string; message?: string };
           if (err.code && RLS_DENIED.has(err.code)) {
             notification.error({
-              message: t("deniedTitle"),
+              title: t("deniedTitle"),
               description: t("deniedDescription"),
             });
             return;
           }
           notification.error({
-            message: t("failedTitle"),
+            title: t("failedTitle"),
             description: err.message ?? t("failedDescription"),
           });
         },

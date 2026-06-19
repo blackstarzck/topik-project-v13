@@ -100,6 +100,10 @@ async function createCompletedShortFeedbackSubmission() {
       "요청한 시간과 장소가 명확합니다. 조사와 연결 표현을 조금 더 자연스럽게 다듬으면 좋습니다.",
     ai_model: "e2e-fixture",
     ai_model_version: "E-01",
+    raw_ai_result: {
+      time_spent: 1127,
+      processing_time_seconds: 14.32,
+    },
   });
   if (feedback.error) throw feedback.error;
 
@@ -212,9 +216,11 @@ test("E-01 short feedback matches the wireframe constraints", async ({ page }) =
   });
   await expect(page).not.toHaveURL(/\/login/);
 
-  await expect(page.getByTestId("feedback-summary")).toBeVisible();
+  await expect(page.getByTestId("feedback-report-overview")).toBeVisible();
+  await expect(page.getByText(/소요 시간/)).toBeVisible();
   await expect(page.locator(".ant-statistic")).toBeVisible();
-  await expect(page.getByTestId("feedback-dimension-card")).toHaveCount(4);
+  await expect(page.getByTestId("feedback-report-score-item")).toHaveCount(4);
+  await expect(page.getByTestId("feedback-dimension-card")).toHaveCount(0);
   await expect(page.getByTestId("feedback-sentence-card")).toBeVisible();
   await expect(page.locator('[data-testid^="feedback-reco-"]')).toHaveCount(3);
 

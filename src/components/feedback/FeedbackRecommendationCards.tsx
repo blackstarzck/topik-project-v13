@@ -66,7 +66,8 @@ export function FeedbackRecommendationCards({ dimensions }: Props) {
       <Row gutter={[12, 12]}>
         {ranked.map((d) => {
           const recoTitle = t(`reco.${d.dimension}.title`);
-          const recoReason = t(`reco.${d.dimension}.reason`);
+          const feedbackReason = d.summary?.trim() ?? "";
+          const recoReason = feedbackReason || t(`reco.${d.dimension}.reason`);
           return (
             <Col key={d.dimension} xs={24} md={8}>
               <AppCard

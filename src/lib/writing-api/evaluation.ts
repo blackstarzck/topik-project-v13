@@ -53,6 +53,8 @@ export type ExternalEvaluationFeedback = {
   total_score: number;
   max_score: number;
   processing_time_seconds: number;
+  time_spent?: number | null;
+  time_spent_seconds?: number | null;
   trait_scores: ExternalTraitScore[];
   errors: unknown[];
   model_answer?: unknown;

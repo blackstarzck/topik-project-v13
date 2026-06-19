@@ -1,6 +1,6 @@
 "use client";
 
-import { Alert, Button, Tooltip, Typography, notification } from "antd";
+import { Alert, App, Button, Tooltip, Typography } from "antd";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -44,6 +44,7 @@ export function ComparisonReportView({
 }: Props) {
   const t = useTranslations("reports.comparison");
   const router = useRouter();
+  const { notification } = App.useApp();
   const [sharing, setSharing] = useState(false);
   const [pendingAction, setPendingAction] = useState<NavigationAction | null>(
     null,
@@ -75,10 +76,10 @@ export function ComparisonReportView({
         navigator.clipboard
       ) {
         await navigator.clipboard.writeText(url);
-        notification.success({ message: t("shareCopied") });
+        notification.success({ title: t("shareCopied") });
       } else {
         notification.info({
-          message: t("shareLink"),
+          title: t("shareLink"),
           description: url,
         });
       }
