@@ -9,6 +9,7 @@ import {
   RefreshCcw,
   ShieldAlert,
 } from "lucide-react";
+import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 
@@ -20,6 +21,12 @@ const { Paragraph, Text, Title } = Typography;
 const STEP_KEYS = ["grammar", "structure", "expression", "score"] as const;
 const SLOW_NOTICE_MS = 10_000;
 const STEP_ADVANCE_MS = 1_600;
+const PAGE_STATE_ASSET: Record<AnalysisPhase, string> = {
+  pending: "/assets/state/refresh.svg",
+  analyzing: "/assets/state/refresh.svg",
+  complete: "/assets/state/success.svg",
+  failed: "/assets/state/fail.svg",
+};
 
 export type AnalysisPhase = "pending" | "analyzing" | "complete" | "failed";
 
@@ -34,6 +41,15 @@ type Props = {
 };
 
 type SurfacePresentation = "modal" | "page";
+
+function renderMultilineText(value: string) {
+  return value.split("\n").map((line, index) => (
+    <span key={`${line}-${index}`}>
+      {index > 0 ? <br /> : null}
+      {line}
+    </span>
+  ));
+}
 
 export function AnalysisLoadingModal({
   open,
@@ -190,6 +206,149 @@ function AnalysisLoadingModalContent({
     presentation === "page"
       ? "analysis-loading-panel"
       : "analysis-loading-modal";
+  const pageTitle =
+    status === "failed"
+      ? t("failedTitle")
+      : status === "complete"
+        ? t("completeTitle")
+        : t("title");
+  const pageSubtitle =
+    status === "failed"
+      ? t("failedDescription")
+      : status === "complete"
+        ? t("completeDescription")
+        : t("subtitle");
+  const pageActions =
+    status === "failed" ? (
+      <>
+        {onRetry ? (
+          <Button
+            type="primary"
+            icon={<RefreshCcw aria-hidden size={16} />}
+            onClick={onRetry}
+            data-testid="analysis-loading-retry"
+          >
+            {t("retryButton")}
+          </Button>
+        ) : null}
+        <Button
+          icon={<LifeBuoy aria-hidden size={16} />}
+          onClick={() => message.info(t("supportAlert"))}
+        >
+          {t("supportButton")}
+        </Button>
+      </>
+    ) : active ? (
+      <Button
+        type="default"
+        icon={<ArrowLeft aria-hidden size={16} />}
+        onClick={handleCancel}
+        data-testid="analysis-loading-cancel"
+      >
+        {t("cancelButton")}
+      </Button>
+    ) : null;
+
+  if (presentation === "page") {
+    return (
+      <div className="analysis-loading-page__panel">
+        <div
+          className={`analysis-loading analysis-loading--page analysis-loading--${status}`}
+          data-testid={contentTestId}
+        >
+          <section
+            className="analysis-state-card"
+            data-testid="analysis-state-card"
+          >
+            <div className="analysis-state-card__copy">
+              <Title level={2} className="analysis-loading__title">
+                {pageTitle}
+              </Title>
+              <Paragraph className="analysis-loading__subtitle">
+                {status === "failed" ? (
+                  <span data-testid="analysis-failed-description">
+                    {renderMultilineText(pageSubtitle)}
+                  </span>
+                ) : (
+                  pageSubtitle
+                )}
+              </Paragraph>
+            </div>
+
+            <Image
+              aria-hidden="true"
+              className="analysis-state-card__asset"
+              data-testid="analysis-state-asset"
+              src={PAGE_STATE_ASSET[status]}
+              alt=""
+              width={240}
+              height={320}
+            />
+
+            {pageActions ? (
+              <div
+                className="analysis-loading__actions analysis-state-card__actions"
+                data-testid="analysis-state-actions"
+              >
+                {pageActions}
+              </div>
+            ) : null}
+
+            {active ? (
+              <div className="analysis-state-card__details">
+                <div className="analysis-loading__meta">
+                  <Clock3 aria-hidden size={16} />
+                  <Text>{t("expectedTime")}</Text>
+                </div>
+
+                <Progress
+                  percent={progressPercent}
+                  showInfo={false}
+                  strokeColor={token.colorText}
+                  aria-label={t("progressLabel")}
+                  className="analysis-loading__progress"
+                />
+
+                <Steps
+                  className="analysis-loading__steps"
+                  current={step}
+                  size="small"
+                  responsive
+                  items={STEP_KEYS.map((key) => ({
+                    title: t(`steps.${key}Title`),
+                  }))}
+                />
+
+                <section
+                  className="analysis-loading__status"
+                  aria-live="polite"
+                >
+                  <Text strong>{t("statusTitle")}</Text>
+                  <Paragraph>
+                    {slow
+                      ? t("statusSlow")
+                      : status === "pending"
+                        ? t("statusPending")
+                        : t(`steps.${currentStepKey}Description`)}
+                  </Paragraph>
+                </section>
+
+                {slow ? (
+                  <Alert
+                    type="warning"
+                    showIcon
+                    title={t("slowTitle")}
+                    description={t("slowDescription", { retryAt })}
+                  />
+                ) : null}
+              </div>
+            ) : null}
+          </section>
+        </div>
+      </div>
+    );
+  }
+
   const modalBody =
     status === "failed" ? (
       <div
@@ -204,7 +363,7 @@ function AnalysisLoadingModalContent({
             {t("failedTitle")}
           </Title>
           <Paragraph className="analysis-loading__subtitle">
-            {t("failedDescription")}
+            {renderMultilineText(t("failedDescription"))}
           </Paragraph>
         </div>
         <div className="analysis-loading__actions">
@@ -305,10 +464,6 @@ function AnalysisLoadingModalContent({
         </div>
       </div>
     );
-
-  if (presentation === "page") {
-    return <div className="analysis-loading-page__panel">{modalBody}</div>;
-  }
 
   return (
     <AppModal

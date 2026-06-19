@@ -1,0 +1,202 @@
+import { randomUUID } from "node:crypto";
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { expect, test } from "@playwright/test";
+import { createClient } from "@supabase/supabase-js";
+
+function loadEnvLocal() {
+  try {
+    const raw = readFileSync(path.join(process.cwd(), ".env.local"), "utf8");
+    for (const line of raw.split(/\r?\n/)) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) continue;
+      const eq = trimmed.indexOf("=");
+      if (eq === -1) continue;
+      const key = trimmed.slice(0, eq).trim();
+      let value = trimmed.slice(eq + 1).trim();
+      if (
+        (value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'"))
+      ) {
+        value = value.slice(1, -1);
+      }
+      if (!(key in process.env)) process.env[key] = value;
+    }
+  } catch {
+    // CI without .env.local will skip through the explicit env guard below.
+  }
+}
+
+loadEnvLocal();
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SERVICE_KEY =
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
+const RUN_TOKEN = `analysis-page-state-${randomUUID()}`;
+
+function serviceClient() {
+  if (!SUPABASE_URL || !SERVICE_KEY) {
+    throw new Error(
+      "Missing Supabase service credentials for writing analysis state e2e",
+    );
+  }
+  return createClient(SUPABASE_URL, SERVICE_KEY, {
+    auth: { persistSession: false },
+  });
+}
+
+function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function waitForSubmittedRow(answerToken: string) {
+  const sb = serviceClient();
+  const deadline = Date.now() + 15_000;
+
+  while (Date.now() < deadline) {
+    const { data, error } = await sb
+      .from("writing_submissions")
+      .select("id")
+      .like("answer_text", `%${answerToken}%`)
+      .order("submitted_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) throw error;
+    if (data?.id) return data.id as string;
+    await wait(500);
+  }
+
+  throw new Error("Timed out waiting for the analysis state submission row");
+}
+
+test.skip(
+  !SUPABASE_URL || !SERVICE_KEY,
+  "writing analysis state e2e requires Supabase service credentials for cleanup",
+);
+
+test.afterAll(async () => {
+  const label = (process.env.SUPABASE_ENV_LABEL || "").toLowerCase();
+  if (label === "prod" || label === "production") return;
+  await serviceClient()
+    .from("writing_submissions")
+    .delete()
+    .like("answer_text", `%${RUN_TOKEN}%`);
+});
+
+test("writing submit keeps analysis state above the read-only answer", async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    !["desktop-1280", "mobile-360"].includes(testInfo.project.name),
+    "analysis state smoke runs on desktop and mobile",
+  );
+
+  const answerToken = `${RUN_TOKEN}-${testInfo.project.name}-${testInfo.retry}`;
+  const answerText = [
+    `Analysis page state answer ${answerToken}.`,
+    "The submitted answer should become read-only under the state illustration.",
+  ].join(" ");
+
+  await page.route(
+    "**/api/writing/evaluation-status?submissionId=*",
+    async (route) => {
+      await route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({ feedback_status: "analyzing" }),
+      });
+    },
+  );
+
+  await page.goto("/writing/short-answer-writing-51", {
+    waitUntil: "networkidle",
+  });
+  await expect(page).not.toHaveURL(/\/login/);
+
+  await page.locator("textarea").first().fill(answerText);
+  await page.getByRole("button", { name: /제출하기/ }).click();
+  await page.getByTestId("submission-confirm-submit").click();
+
+  await expect(page).toHaveURL(/\/writing\/short-answer-writing-51/);
+  await expect(page.getByTestId("analysis-loading-modal")).toHaveCount(0);
+  await expect(page.getByTestId("analysis-state-card")).toBeVisible();
+  await expect(page.getByTestId("analysis-loading-background")).toBeVisible();
+
+  const assetSrc = await page
+    .getByTestId("analysis-state-asset")
+    .getAttribute("src");
+  expect(assetSrc).toMatch(
+    /(?:\/assets\/state\/refresh\.svg|%2Fassets%2Fstate%2Frefresh\.svg)/,
+  );
+
+  const [stateBox, answerBox] = await Promise.all([
+    page.getByTestId("analysis-state-card").boundingBox(),
+    page.getByTestId("analysis-loading-background").boundingBox(),
+  ]);
+  expect(stateBox, "analysis state card box").toBeTruthy();
+  expect(answerBox, "read-only answer card box").toBeTruthy();
+  expect(stateBox!.y).toBeLessThan(answerBox!.y);
+
+  await waitForSubmittedRow(answerToken);
+});
+
+test("writing submit shows failure state without the read-only answer", async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    !["desktop-1280", "mobile-360"].includes(testInfo.project.name),
+    "failure state smoke runs on desktop and mobile",
+  );
+
+  const answerToken = `${RUN_TOKEN}-failed-${testInfo.project.name}-${testInfo.retry}`;
+  const answerText = [
+    `Analysis failed state answer ${answerToken}.`,
+    "The failed analysis state should stay above the submitted read-only answer.",
+  ].join(" ");
+
+  await page.route(
+    "**/api/writing/evaluation-status?submissionId=*",
+    async (route) => {
+      await route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({ feedback_status: "failed" }),
+      });
+    },
+  );
+
+  await page.goto("/writing/short-answer-writing-51", {
+    waitUntil: "networkidle",
+  });
+  await expect(page).not.toHaveURL(/\/login/);
+
+  await page.locator("textarea").first().fill(answerText);
+  await page.getByRole("button", { name: /제출하기/ }).click();
+  await page.getByTestId("submission-confirm-submit").click();
+
+  await expect(page).toHaveURL(/\/writing\/short-answer-writing-51/);
+  await expect(page.getByTestId("analysis-state-card")).toBeVisible();
+  await expect(page.getByTestId("analysis-loading-background")).toHaveCount(0);
+  await expect(page.getByTestId("analysis-loading-retry")).toBeVisible();
+  await expect(
+    page.locator('[data-testid="analysis-failed-description"] br'),
+  ).toHaveCount(1);
+
+  const assetSrc = await page
+    .getByTestId("analysis-state-asset")
+    .getAttribute("src");
+  expect(assetSrc).toMatch(
+    /(?:\/assets\/state\/fail\.svg|%2Fassets%2Fstate%2Ffail\.svg)/,
+  );
+
+  const [assetBox, actionsBox] = await Promise.all([
+    page.getByTestId("analysis-state-asset").boundingBox(),
+    page.getByTestId("analysis-state-actions").boundingBox(),
+  ]);
+  expect(assetBox, "failure state asset box").toBeTruthy();
+  expect(actionsBox, "failure state CTA box").toBeTruthy();
+  expect(assetBox!.width).toBeGreaterThanOrEqual(
+    testInfo.project.name === "mobile-360" ? 290 : 450,
+  );
+  expect(assetBox!.y).toBeLessThan(actionsBox!.y);
+
+  await waitForSubmittedRow(answerToken);
+});

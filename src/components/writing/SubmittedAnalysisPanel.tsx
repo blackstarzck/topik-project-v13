@@ -46,6 +46,13 @@ export function SubmittedAnalysisPanel({ state }: Props) {
   const { data } = useFeedbackStatus(state.submissionId);
   const status: AnalysisPhase = (data as AnalysisPhase | null) ?? "analyzing";
   const submittedAt = formatSubmittedAtKst(state.submittedAt);
+  const showSubmittedAnswer = status !== "failed";
+  const pageClassName = [
+    "submitted-analysis-page",
+    status === "failed" ? "submitted-analysis-page--failed" : null,
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   function handleComplete() {
     router.replace(state.feedbackHref as never);
@@ -53,7 +60,7 @@ export function SubmittedAnalysisPanel({ state }: Props) {
 
   return (
     <div
-      className="submitted-analysis-page"
+      className={pageClassName}
       data-testid="analysis-loading-page"
     >
       <section className="submitted-analysis-page__status">
@@ -65,41 +72,43 @@ export function SubmittedAnalysisPanel({ state }: Props) {
         />
       </section>
 
-      <AppCard
-        className="analysis-loading-background submitted-analysis-page__answer-card"
-        data-testid="analysis-loading-background"
-      >
-        <div className="analysis-loading-background__head">
-          <div>
-            <Text className="analysis-loading-background__eyebrow">
-              {t("backgroundEyebrow")}
-            </Text>
-            <Title level={1}>{t("backgroundTitle")}</Title>
+      {showSubmittedAnswer ? (
+        <AppCard
+          className="analysis-loading-background submitted-analysis-page__answer-card"
+          data-testid="analysis-loading-background"
+        >
+          <div className="analysis-loading-background__head">
+            <div>
+              <Text className="analysis-loading-background__eyebrow">
+                {t("backgroundEyebrow")}
+              </Text>
+              <Title level={1}>{t("backgroundTitle")}</Title>
+            </div>
+            <Tag color="blue">
+              {t("questionLabel", { questionNo: state.questionNo })}
+            </Tag>
           </div>
-          <Tag color="blue">
-            {t("questionLabel", { questionNo: state.questionNo })}
-          </Tag>
-        </div>
 
-        <div className="analysis-loading-background__meta">
-          <Text type="secondary">
-            {t("charsLabel", { count: state.charCount })}
-          </Text>
-          {submittedAt ? (
+          <div className="analysis-loading-background__meta">
             <Text type="secondary">
-              {t("submittedAtLabel", { submittedAt })}
+              {t("charsLabel", { count: state.charCount })}
             </Text>
-          ) : null}
-        </div>
+            {submittedAt ? (
+              <Text type="secondary">
+                {t("submittedAtLabel", { submittedAt })}
+              </Text>
+            ) : null}
+          </div>
 
-        <Paragraph className="analysis-loading-background__notice">
-          {t("readOnlyNotice")}
-        </Paragraph>
+          <Paragraph className="analysis-loading-background__notice">
+            {t("readOnlyNotice")}
+          </Paragraph>
 
-        <div className="analysis-loading-background__answer">
-          {state.answerText || t("answerUnavailable")}
-        </div>
-      </AppCard>
+          <div className="analysis-loading-background__answer">
+            {state.answerText || t("answerUnavailable")}
+          </div>
+        </AppCard>
+      ) : null}
     </div>
   );
 }
