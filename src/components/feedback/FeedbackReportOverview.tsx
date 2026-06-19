@@ -1,10 +1,9 @@
 "use client";
 
-import { Button, Progress, Statistic, Tag, Typography, theme } from "antd";
+import { Button, Progress, Tag, Typography, theme } from "antd";
 import { CalendarDays, Clock3, RotateCcw } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { AppCard } from "@/components/shared/AppCard";
 import type {
   FeedbackDimensionScoreRow,
   WritingFeedbackRow,
@@ -35,6 +34,7 @@ type Props = {
   supplement: ExternalFeedbackSupplement;
   retryHref: string;
   retryLabel: string;
+  showCardHeader?: boolean;
 };
 
 type ReportTranslator = (
@@ -49,6 +49,7 @@ export function FeedbackReportOverview({
   supplement,
   retryHref,
   retryLabel,
+  showCardHeader = true,
 }: Props) {
   const t = useTranslations("feedback.report") as ReportTranslator;
   const router = useRouter();
@@ -71,65 +72,100 @@ export function FeedbackReportOverview({
   const recommendations = buildRecommendations(scoreItems, supplement, t);
 
   return (
-    <AppCard
+    <section
       data-testid="feedback-report-overview"
       className="feedback-report-overview"
-      title={
-        <span className="text-xl font-semibold text-text">
-          {t("title", { questionNo: submission.question_no })}
-        </span>
-      }
-      extra={
-        <Button
-          type="primary"
-          icon={<RotateCcw aria-hidden size={16} />}
-          onClick={() => router.push(retryHref)}
-        >
-          {retryLabel}
-        </Button>
-      }
     >
+      {showCardHeader ? (
+        <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <span className="text-xl font-semibold text-text">
+            {t("title", { questionNo: submission.question_no })}
+          </span>
+          <Button
+            type="primary"
+            icon={<RotateCcw aria-hidden size={16} />}
+            onClick={() => router.push(retryHref)}
+          >
+            {retryLabel}
+          </Button>
+        </div>
+      ) : null}
       <div className="flex flex-col gap-5">
         <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
           <Paragraph type="secondary" className="mb-0">
             {t("subtitle")}
           </Paragraph>
-          <div className="flex flex-wrap gap-2 md:justify-end">
+          <div
+            className="flex flex-wrap items-center gap-x-3 gap-y-1 md:justify-end"
+            data-testid="feedback-report-meta"
+          >
             {submittedAt ? (
-              <Tag className="inline-flex items-center gap-1">
+              <span
+                className="inline-flex items-center gap-1 whitespace-nowrap text-xs text-text-secondary"
+                data-testid="feedback-report-meta-item"
+              >
                 <CalendarDays aria-hidden size={14} />
                 {t("submittedAt", { submittedAt })}
-              </Tag>
+              </span>
             ) : null}
             {durationSeconds !== null ? (
-              <Tag className="inline-flex items-center gap-1">
+              <span
+                className="inline-flex items-center gap-1 whitespace-nowrap text-xs text-text-secondary"
+                data-testid="feedback-report-meta-item"
+              >
                 <Clock3 aria-hidden size={14} />
                 {t("duration", {
                   duration: formatDuration(durationSeconds, t),
                 })}
-              </Tag>
+              </span>
             ) : processingSeconds !== null ? (
-              <Tag className="inline-flex items-center gap-1">
+              <span
+                className="inline-flex items-center gap-1 whitespace-nowrap text-xs text-text-secondary"
+                data-testid="feedback-report-meta-item"
+              >
                 <Clock3 aria-hidden size={14} />
-                {t("analysisTime", { seconds: formatNumber(processingSeconds) })}
-              </Tag>
+                {t("analysisTime", {
+                  seconds: formatNumber(processingSeconds),
+                })}
+              </span>
             ) : null}
           </div>
         </div>
 
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(180px,0.7fr)_minmax(0,1.7fr)_minmax(240px,0.9fr)]">
-          <section className="rounded-default bg-surface p-4">
-            <Statistic
-              title={t("scoreTitle")}
-              value={totalScore ?? "-"}
-              suffix={t("scoreSuffix", { max: formatNumber(totalMax) })}
-            />
+          <section
+            className="rounded-default bg-surface/40 p-4"
+            data-testid="feedback-report-total-score-card"
+          >
+            <Text type="secondary" className="block text-sm">
+              {t("scoreTitle")}
+            </Text>
+            <div
+              className="mt-2 flex items-end gap-1 text-text"
+              data-testid="feedback-report-total-score-line"
+            >
+              <span
+                className="text-4xl font-bold leading-none"
+                data-testid="feedback-report-total-score-value"
+              >
+                {formatScoreValue(totalScore)}
+              </span>
+              <span
+                className="pb-0.5 text-base font-semibold leading-none"
+                data-testid="feedback-report-total-score-suffix"
+              >
+                {t("scoreSuffix", { max: formatNumber(totalMax) })}
+              </span>
+            </div>
             <Text type="secondary" className="mt-2 block">
               {scoreStatusLabel(totalScore, totalMax, t)}
             </Text>
           </section>
 
-          <section className="flex min-w-0 flex-col gap-3 rounded-default bg-surface p-4">
+          <section
+            className="flex min-w-0 flex-col gap-3 rounded-default bg-surface/40 p-4"
+            data-testid="feedback-report-criteria-card"
+          >
             <div className="flex flex-wrap items-center justify-between gap-2">
               <Text strong>{t("criteriaTitle")}</Text>
               <Text type="secondary" className="text-xs">
@@ -143,7 +179,10 @@ export function FeedbackReportOverview({
                   const max = item.scoreMax ?? item.weightMax ?? totalMax;
                   const percent =
                     score !== null && max > 0
-                      ? Math.max(0, Math.min(100, Math.round((score / max) * 100)))
+                      ? Math.max(
+                          0,
+                          Math.min(100, Math.round((score / max) * 100)),
+                        )
                       : 0;
                   return (
                     <div
@@ -190,7 +229,10 @@ export function FeedbackReportOverview({
             </div>
           </section>
 
-          <section className="flex min-w-0 flex-col gap-3 rounded-default bg-surface p-4">
+          <section
+            className="flex min-w-0 flex-col gap-3 rounded-default bg-surface/40 p-4"
+            data-testid="feedback-report-focus-card"
+          >
             <Text strong>{t("focusTitle")}</Text>
             {focusAreas.length > 0 ? (
               <div className="flex flex-wrap gap-1">
@@ -211,7 +253,7 @@ export function FeedbackReportOverview({
           </section>
         </div>
       </div>
-    </AppCard>
+    </section>
   );
 }
 
@@ -231,7 +273,11 @@ function readTraitScoreItems(
     const rawMax = readNumber(record.max_score);
     const weight = readNumber(record.weight);
     const weightMax =
-      weight === null ? null : weight > 0 && weight <= 1 ? weight * totalMax : weight;
+      weight === null
+        ? null
+        : weight > 0 && weight <= 1
+          ? weight * totalMax
+          : weight;
     const scoreMax = rawMax ?? weightMax;
     return [
       {
@@ -280,7 +326,9 @@ function buildRecommendations(
     ...scoreItems.flatMap((item) => item.improvements),
     ...supplement.learning.focusAreas,
   ]
-    .filter((item): item is string => typeof item === "string" && item.length > 0)
+    .filter(
+      (item): item is string => typeof item === "string" && item.length > 0,
+    )
     .filter((item, index, list) => list.indexOf(item) === index)
     .slice(0, 2);
 

@@ -1,23 +1,26 @@
 "use client";
 
-import { Alert } from "antd";
+import { Alert, Typography } from "antd";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { DetailedFeedbackPanel } from "./DetailedFeedbackPanel";
 import { DimensionCardGrid } from "./DimensionCardGrid";
-import { ExternalLearningFeedbackCard } from "./ExternalFeedbackSupplement";
 import { FeedbackPendingPanel } from "./FeedbackPendingPanel";
 import { FeedbackRecommendationCards } from "./FeedbackRecommendationCards";
 import { FeedbackReportOverview } from "./FeedbackReportOverview";
 import { FeedbackSummary } from "./FeedbackSummary";
-import { NextActionBar } from "./NextActionBar";
+import { FeedbackActionGroup, NextActionBar } from "./NextActionBar";
 import { SentenceFeedbackList } from "./SentenceFeedbackList";
-import { useRouter } from "next/navigation";
-import type {
-  FeedbackBundle,
-  WritingSubmissionRow,
-} from "@/lib/writing/types";
 import { extractExternalFeedbackSupplement } from "@/lib/writing/external-feedback";
 import { writingProblemHref } from "@/lib/writing/routes";
+import type { FeedbackBundle, WritingSubmissionRow } from "@/lib/writing/types";
+
+const { Text, Title } = Typography;
+
+type ReportTranslator = (
+  key: string,
+  values?: Record<string, string | number>,
+) => string;
 
 type Props = {
   submission: WritingSubmissionRow;
@@ -28,24 +31,11 @@ type Props = {
   dimensionCardLimit?: number;
   showDetailPanel?: boolean;
   retryLabelKey?: "retryDefault" | "retryWriting";
-  /** 현재 화면 경로 — 분석 완료/재분석 시 RSC 갱신에 사용. */
   reloadHref: string;
-  /** 현재 사용자 id — 보관함 저장 row owner. */
   userId: string;
-  /** 보관함 저장 권한 잠금(보기 전용 공유 등). */
   saveLocked?: boolean;
 };
 
-/**
- * E-01 단답 / E-02 장문 피드백 화면 오케스트레이터.
- *
- * 상태 분기:
- *   - pending/analyzing → D-M2 로딩(무한 로딩 아님; status polling으로 종료)
- *   - failed + 데이터 없음 → 분석 실패 안내(STOP loading) + 재시도
- *   - complete/failed + 부분 데이터(writing_feedback.status='partial') → 가능한
- *     항목 표시 + 누락 사유 안내
- *   - complete → 전체 피드백
- */
 export function FeedbackPageContent({
   submission,
   bundle,
@@ -61,11 +51,10 @@ export function FeedbackPageContent({
 }: Props) {
   const t = useTranslations("feedback.page");
   const tActions = useTranslations("feedback.actions");
+  const tReport = useTranslations("feedback.report") as ReportTranslator;
   const router = useRouter();
   const status = submission.feedback_status;
 
-  // 아직 분석 중 — D-M2 로딩 패널. status가 failed/complete가 되면 패널이 스스로
-  // 멈추거나(failed) RSC를 갱신(complete)한다.
   if ((status === "pending" || status === "analyzing") && !bundle) {
     return (
       <FeedbackPendingPanel
@@ -77,7 +66,6 @@ export function FeedbackPageContent({
     );
   }
 
-  // 분석 실패 + 결과 없음 — 무한 로딩을 멈추고 정직하게 실패를 알린다.
   if (status === "failed" && !bundle) {
     return (
       <FeedbackPendingPanel
@@ -89,7 +77,6 @@ export function FeedbackPageContent({
     );
   }
 
-  // 결과는 없는데 상태가 complete인 경계(데이터 정합성 문제) — 빈 상태 안내.
   if (!bundle) {
     return (
       <Alert
@@ -108,75 +95,121 @@ export function FeedbackPageContent({
     questionNo: submission.question_no,
     problemId: submission.problem_id,
   });
-  const hasRankableDimensions = bundle.dimensions.some(
-    (dimension) => dimension.score !== null || dimension.weakness_level !== null,
-  );
   const showShortReportOverview =
     withSentences && !showDetailPanel && dimensionCardLimit === 4;
+  const showStickyReportHeader = showShortReportOverview;
   const resolvedRetryLabel = tActions(
     retryLabelKey ?? (withSentences ? "retryWriting" : "retryDefault"),
   );
 
   return (
-    <div className="flex w-full flex-col gap-6">
-      {/* 부분 피드백 — 가능한 항목만 표시하고 누락 사유 안내(description 예외). */}
-      {partial ? (
-        <Alert
-          type="warning"
-          showIcon
-          title={t("partialTitle")}
-          description={t("partialDescription")}
-        />
+    <div
+      data-testid={showStickyReportHeader ? "feedback-page-shell" : undefined}
+      className={
+        showStickyReportHeader
+          ? "flex min-h-full w-full flex-col bg-background"
+          : "flex w-full flex-col"
+      }
+    >
+      {showStickyReportHeader ? (
+        <div
+          data-testid="feedback-page-header"
+          className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85"
+        >
+          <div className="flex w-full flex-col gap-3 px-4 py-4 pr-16 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:pr-20">
+            <div className="min-w-0">
+              <Title level={3} className="m-0 text-2xl">
+                {tReport("title", { questionNo: submission.question_no })}
+              </Title>
+              <Text type="secondary" className="block">
+                {tReport("subtitle")}
+              </Text>
+            </div>
+            <FeedbackActionGroup
+              submissionId={submission.id}
+              userId={userId}
+              retryHref={retryHref}
+              nextHref="/practice/next"
+              withPdf
+              retryLabel={resolvedRetryLabel}
+              saveLocked={saveLocked}
+              variant="header"
+              className="shrink-0"
+            />
+          </div>
+        </div>
       ) : null}
 
-      {showShortReportOverview ? (
-        <FeedbackReportOverview
-          feedback={bundle.feedback}
-          submission={submission}
+      <div
+        className={
+          showStickyReportHeader
+            ? "flex w-full flex-col gap-6 px-4 py-4 sm:px-6 sm:py-6"
+            : "flex w-full flex-col gap-6"
+        }
+      >
+        {partial ? (
+          <Alert
+            type="warning"
+            showIcon
+            title={t("partialTitle")}
+            description={t("partialDescription")}
+          />
+        ) : null}
+
+        {showShortReportOverview ? (
+          <FeedbackReportOverview
+            feedback={bundle.feedback}
+            submission={submission}
+            dimensions={bundle.dimensions}
+            supplement={externalSupplement}
+            retryHref={retryHref}
+            retryLabel={resolvedRetryLabel}
+            showCardHeader={!showStickyReportHeader}
+          />
+        ) : (
+          <FeedbackSummary
+            feedback={bundle.feedback}
+            submission={showSubmissionMeta ? submission : undefined}
+          />
+        )}
+
+        {showDimensionGrid && !showShortReportOverview ? (
+          <DimensionCardGrid
+            rows={bundle.dimensions}
+            maxCards={dimensionCardLimit}
+            onReanalyze={onReanalyze}
+          />
+        ) : null}
+
+        {withSentences ? (
+          <SentenceFeedbackList
+            rows={bundle.sentences}
+            onReanalyze={onReanalyze}
+          />
+        ) : null}
+
+        {showDetailPanel ? (
+          <DetailedFeedbackPanel dimensions={bundle.dimensions} />
+        ) : null}
+
+        <FeedbackRecommendationCards
           dimensions={bundle.dimensions}
-          supplement={externalSupplement}
           retryHref={retryHref}
-          retryLabel={resolvedRetryLabel}
+          supplement={externalSupplement}
         />
-      ) : (
-        <FeedbackSummary
-          feedback={bundle.feedback}
-          submission={showSubmissionMeta ? submission : undefined}
-        />
-      )}
 
-      {showDimensionGrid && !showShortReportOverview ? (
-        <DimensionCardGrid
-          rows={bundle.dimensions}
-          // E-01 단답 region 2 제약: 카드 4개 이하.
-          maxCards={dimensionCardLimit}
-          onReanalyze={onReanalyze}
-        />
-      ) : null}
-
-      {withSentences ? (
-        <SentenceFeedbackList rows={bundle.sentences} onReanalyze={onReanalyze} />
-      ) : null}
-
-      {showDetailPanel ? (
-        <DetailedFeedbackPanel dimensions={bundle.dimensions} />
-      ) : null}
-
-      {!hasRankableDimensions && externalSupplement.hasLearning ? (
-        <ExternalLearningFeedbackCard supplement={externalSupplement} />
-      ) : (
-        <FeedbackRecommendationCards dimensions={bundle.dimensions} />
-      )}
-
-      <NextActionBar
-        submissionId={submission.id}
-        userId={userId}
-        retryHref={retryHref}
-        nextHref="/practice/next"
-        withPdf
-        retryLabel={resolvedRetryLabel}
-        saveLocked={saveLocked}
-      />
+        {showStickyReportHeader ? null : (
+          <NextActionBar
+            submissionId={submission.id}
+            userId={userId}
+            retryHref={retryHref}
+            nextHref="/practice/next"
+            withPdf
+            retryLabel={resolvedRetryLabel}
+            saveLocked={saveLocked}
+          />
+        )}
+      </div>
     </div>
   );
 }

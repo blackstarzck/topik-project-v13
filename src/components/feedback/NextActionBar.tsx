@@ -35,7 +35,16 @@ type Props = {
   alreadySaved?: boolean;
 };
 
+type FeedbackActionGroupProps = Props & {
+  className?: string;
+  variant?: "footer" | "header";
+};
+
 const RLS_DENIED = new Set(["42501", "PGRST301", "PGRST116"]);
+
+function classNames(...values: Array<string | false | null | undefined>) {
+  return values.filter(Boolean).join(" ");
+}
 
 /**
  * E-01/E-02 다음 행동 CTA (description region 4).
@@ -44,7 +53,7 @@ const RLS_DENIED = new Set(["42501", "PGRST301", "PGRST116"]);
  * 저장 관련 보조 액션은 하나의 메뉴에 묶어 CTA 수를 유지한다.
  * 예외: 저장 실패/권한 잠금, PDF 실패는 토스트와 메뉴 항목 상태로 안내한다.
  */
-export function NextActionBar({
+export function FeedbackActionGroup({
   submissionId,
   userId,
   retryHref,
@@ -53,7 +62,9 @@ export function NextActionBar({
   retryLabel,
   saveLocked = false,
   alreadySaved = false,
-}: Props) {
+  className,
+  variant = "footer",
+}: FeedbackActionGroupProps) {
   const t = useTranslations("feedback.actions");
   const router = useRouter();
   const { notification } = App.useApp();
@@ -165,9 +176,22 @@ export function NextActionBar({
     if (key === "pdf") void onPdf();
   }
 
+  const isHeader = variant === "header";
+
   return (
-    <div data-testid="feedback-actions">
-      <div className="flex w-full flex-wrap gap-2">
+    <div
+      data-testid="feedback-actions"
+      className={classNames(
+        isHeader ? "flex w-full justify-start lg:w-auto lg:justify-end" : null,
+        className,
+      )}
+    >
+      <div
+        className={classNames(
+          "flex w-full flex-wrap items-center gap-2",
+          isHeader ? "lg:justify-end" : null,
+        )}
+      >
         <Button
           type="primary"
           onClick={() => router.push(retryHref)}
@@ -175,35 +199,48 @@ export function NextActionBar({
         >
           {resolvedRetryLabel}
         </Button>
-        <Button
-          onClick={() => router.push(nextHref)}
-          data-testid="feedback-action-next"
+        <div
+          className={classNames(
+            "flex flex-wrap items-center gap-2",
+            isHeader
+              ? "w-full border-t border-border pt-2 md:ml-1 md:w-auto md:border-l md:border-t-0 md:pl-3 md:pt-0"
+              : null,
+          )}
         >
-          {t("nextProblem")}
-        </Button>
-        <Tooltip title={saveLocked ? t("save.lockedTooltip") : undefined}>
-          <Dropdown
-            menu={{ items: saveMenuItems, onClick: onSaveMenuClick }}
-            trigger={["click"]}
-            disabled={!withPdf && (saveLocked || saved)}
+          <Button
+            onClick={() => router.push(nextHref)}
+            data-testid="feedback-action-next"
           >
-            <Button
-              loading={save.isPending || pdfBusy}
-              data-testid="feedback-action-save"
+            {t("nextProblem")}
+          </Button>
+          <Tooltip title={saveLocked ? t("save.lockedTooltip") : undefined}>
+            <Dropdown
+              menu={{ items: saveMenuItems, onClick: onSaveMenuClick }}
+              trigger={["click"]}
+              disabled={!withPdf && (saveLocked || saved)}
             >
-              {t("saveGroup")}
-              <ChevronDown aria-hidden size={14} />
-            </Button>
-          </Dropdown>
-        </Tooltip>
-        <Button
-          onClick={onCompare}
-          loading={compare.isPending || busy}
-          data-testid="feedback-action-compare"
-        >
-          {t("compareReport")}
-        </Button>
+              <Button
+                loading={save.isPending || pdfBusy}
+                data-testid="feedback-action-save"
+              >
+                {t("saveGroup")}
+                <ChevronDown aria-hidden size={14} />
+              </Button>
+            </Dropdown>
+          </Tooltip>
+          <Button
+            onClick={onCompare}
+            loading={compare.isPending || busy}
+            data-testid="feedback-action-compare"
+          >
+            {t("compareReport")}
+          </Button>
+        </div>
       </div>
     </div>
   );
+}
+
+export function NextActionBar(props: Props) {
+  return <FeedbackActionGroup {...props} />;
 }

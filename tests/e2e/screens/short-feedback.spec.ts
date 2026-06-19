@@ -218,7 +218,8 @@ test("E-01 short feedback matches the wireframe constraints", async ({ page }) =
 
   await expect(page.getByTestId("feedback-report-overview")).toBeVisible();
   await expect(page.getByText(/소요 시간/)).toBeVisible();
-  await expect(page.locator(".ant-statistic")).toBeVisible();
+  await expect(page.getByTestId("feedback-report-total-score-card")).toBeVisible();
+  await expect(page.getByTestId("feedback-report-total-score-line")).toBeVisible();
   await expect(page.getByTestId("feedback-report-score-item")).toHaveCount(4);
   await expect(page.getByTestId("feedback-dimension-card")).toHaveCount(0);
   await expect(page.getByTestId("feedback-sentence-card")).toBeVisible();

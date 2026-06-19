@@ -1009,6 +1009,20 @@
       "intro": "Đây là những phần nên cải thiện dựa trên bài làm này.",
       "emptyDescription": "Không tìm thấy phần yếu nào để đề xuất từ bài làm này.",
       "viewProblemList": "Xem danh sách câu hỏi",
+      "action": {
+        "retry": {
+          "title": "Làm lại với phản hồi",
+          "description": "Áp dụng cách diễn đạt đã sửa và làm lại cùng câu hỏi."
+        },
+        "similar": {
+          "title": "Làm câu hỏi tương tự",
+          "description": "Dùng một câu hỏi cùng dạng để củng cố kỹ năng."
+        },
+        "weakness": {
+          "title": "Học thêm cách diễn đạt yếu",
+          "description": "Tập trung luyện các cách diễn đạt thường bị sai."
+        }
+      },
       "label": {
         "grammar": "Ngữ pháp",
         "vocab": "Từ vựng",
@@ -1194,6 +1208,13 @@
     "sentence": {
       "cardTitle": "Nhận xét theo từng câu",
       "emptyDescription": "Không có nhận xét theo từng câu.",
+      "blankLabel": "Chỗ trống",
+      "beforeTitle": "Trước (bài của tôi)",
+      "afterTitle": "Sau (cách diễn đạt gợi ý)",
+      "reasonTitle": "Lý do sửa",
+      "beforeFallback": "Chưa nhập câu trả lời.",
+      "afterFallback": "Chưa tạo được cách diễn đạt gợi ý.",
+      "reasonFallback": "Chưa có lý do sửa.",
       "failTag": "Tạo nhận xét thất bại",
       "reanalyze": "Phân tích lại",
       "showMore": "Xem thêm ({count})"

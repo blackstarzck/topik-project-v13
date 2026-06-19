@@ -1009,6 +1009,20 @@
       "intro": "이번 답안에서 보강하면 좋은 영역을 추천해요.",
       "emptyDescription": "이번 답안에서는 추천할 약점 영역을 찾지 못했어요.",
       "viewProblemList": "문제 목록 보기",
+      "action": {
+        "retry": {
+          "title": "다시 풀기 (피드백 반영)",
+          "description": "방금 교정된 표현을 적용해 같은 문제를 다시 풀어보세요."
+        },
+        "similar": {
+          "title": "유사 문제 풀기",
+          "description": "비슷한 유형의 다른 문제로 실력을 더 탄탄하게 만들어 보세요."
+        },
+        "weakness": {
+          "title": "취약 표현 더 공부하기",
+          "description": "자주 틀리는 표현을 모아 맞춤 학습을 시작해 보세요."
+        }
+      },
       "label": {
         "grammar": "문법",
         "vocab": "어휘",
@@ -1194,6 +1208,13 @@
     "sentence": {
       "cardTitle": "문장별 첨삭",
       "emptyDescription": "문장별 첨삭이 없습니다.",
+      "blankLabel": "빈칸",
+      "beforeTitle": "Before (내 답안)",
+      "afterTitle": "After (권장 표현)",
+      "reasonTitle": "교정 이유",
+      "beforeFallback": "입력된 답안이 없습니다.",
+      "afterFallback": "권장 표현을 만들지 못했어요.",
+      "reasonFallback": "교정 이유가 없습니다.",
       "failTag": "첨삭 생성 실패",
       "reanalyze": "다시 분석하기",
       "showMore": "더보기 ({count}개)"

@@ -1009,6 +1009,20 @@
       "intro": "Here are the areas worth strengthening from this answer.",
       "emptyDescription": "We couldn't find a weak area to recommend from this answer.",
       "viewProblemList": "View problem list",
+      "action": {
+        "retry": {
+          "title": "Try again with feedback",
+          "description": "Apply the corrected expressions and solve the same question again."
+        },
+        "similar": {
+          "title": "Solve a similar question",
+          "description": "Use another question of the same type to make the skill steadier."
+        },
+        "weakness": {
+          "title": "Study weak expressions",
+          "description": "Collect frequently missed expressions and start focused practice."
+        }
+      },
       "label": {
         "grammar": "Grammar",
         "vocab": "Vocabulary",
@@ -1194,6 +1208,13 @@
     "sentence": {
       "cardTitle": "Sentence-by-sentence feedback",
       "emptyDescription": "No sentence-by-sentence feedback.",
+      "blankLabel": "Blank",
+      "beforeTitle": "Before (my answer)",
+      "afterTitle": "After (recommended expression)",
+      "reasonTitle": "Correction reason",
+      "beforeFallback": "No answer was entered.",
+      "afterFallback": "No recommended expression was generated.",
+      "reasonFallback": "No correction reason is available.",
       "failTag": "Feedback generation failed",
       "reanalyze": "Analyze again",
       "showMore": "Show more ({count})"

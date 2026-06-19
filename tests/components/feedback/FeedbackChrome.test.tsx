@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, screen } from "@testing-library/react";
+import { cleanup, screen, within } from "@testing-library/react";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
 import { FeedbackSummary } from "../../../src/components/feedback/FeedbackSummary";
 import { DimensionCardGrid } from "../../../src/components/feedback/DimensionCardGrid";
@@ -161,9 +161,7 @@ describe("DimensionCardGrid (i18n chrome)", () => {
       />,
     );
     expect(screen.getByText("이 항목은 분석에 실패했어요.")).toBeTruthy();
-    expect(
-      screen.getByRole("button", { name: "다시 분석하기" }),
-    ).toBeTruthy();
+    expect(screen.getByRole("button", { name: "다시 분석하기" })).toBeTruthy();
   });
 });
 
@@ -180,6 +178,44 @@ describe("SentenceFeedbackList (i18n chrome)", () => {
     renderWithIntl(<SentenceFeedbackList rows={rows} />);
     // 7 rows, 5 shown initially → 2 hidden.
     expect(screen.getByText("더보기 (2개)")).toBeTruthy();
+  });
+
+  it("renders correction cards with before, after, and reason columns", () => {
+    renderWithIntl(
+      <SentenceFeedbackList
+        rows={[
+          sentence({
+            id: "s-correction",
+            original_text: "그러므로",
+            corrected_text: "하지만",
+            comment: "앞뒤 문장의 대조 관계를 자연스럽게 연결합니다.",
+          }),
+        ]}
+      />,
+    );
+
+    expect(screen.getByText("빈칸")).toBeTruthy();
+    expect(screen.getByText("Before (내 답안)")).toBeTruthy();
+    expect(screen.getByText("After (권장 표현)")).toBeTruthy();
+    expect(screen.getByText("교정 이유")).toBeTruthy();
+    expect(screen.getByTestId("feedback-sentence-before")).toBeTruthy();
+    expect(screen.getByTestId("feedback-sentence-after")).toBeTruthy();
+    expect(screen.getByTestId("feedback-sentence-reason")).toBeTruthy();
+  });
+
+  it("renders sentence feedback without an outer card or row dividers", () => {
+    renderWithIntl(
+      <SentenceFeedbackList
+        rows={[sentence({ id: "s-border-1" }), sentence({ id: "s-border-2" })]}
+      />,
+    );
+
+    expect(
+      screen.getByTestId("feedback-sentence-card").className,
+    ).not.toContain("app-card");
+    for (const item of screen.getAllByRole("listitem")) {
+      expect(item.className).not.toContain("border-b");
+    }
   });
 });
 
@@ -206,19 +242,23 @@ describe("DetailedFeedbackPanel (i18n chrome)", () => {
 });
 
 describe("FeedbackRecommendationCards (i18n chrome)", () => {
-  it("renders the empty-state CTA when no rankable dimensions exist", () => {
-    renderWithIntl(<FeedbackRecommendationCards dimensions={[]} />);
-    expect(
-      screen.getByText("이번 답안에서는 추천할 약점 영역을 찾지 못했어요."),
-    ).toBeTruthy();
-    expect(
-      screen.getByRole("button", { name: "문제 목록 보기" }),
-    ).toBeTruthy();
-  });
-
-  it("renders a recommendation card title for the weakest dimension", () => {
+  it("renders three next-study action cards even without rankable dimensions", () => {
     renderWithIntl(
       <FeedbackRecommendationCards
+        dimensions={[]}
+        retryHref="/writing/51/problem-1"
+      />,
+    );
+    expect(screen.getAllByTestId(/^feedback-reco-action-/)).toHaveLength(3);
+    expect(screen.getByText("다시 풀기 (피드백 반영)")).toBeTruthy();
+    expect(screen.getByText("유사 문제 풀기")).toBeTruthy();
+    expect(screen.getByText("취약 표현 더 공부하기")).toBeTruthy();
+  });
+
+  it("uses the weakest dimension summary as the weakness action reason", () => {
+    renderWithIntl(
+      <FeedbackRecommendationCards
+        retryHref="/writing/51/problem-1"
         dimensions={[
           dim({
             dimension: "grammar",
@@ -232,17 +272,74 @@ describe("FeedbackRecommendationCards (i18n chrome)", () => {
     expect(
       screen.getByText("Dynamic grammar feedback from the stored analysis."),
     ).toBeTruthy();
-    expect(screen.getByText("문법 집중 연습")).toBeTruthy();
+    expect(screen.getByText("취약 표현 더 공부하기")).toBeTruthy();
+  });
+  it("renders recommendations without an outer card and without elevated action shadows", () => {
+    renderWithIntl(
+      <FeedbackRecommendationCards
+        dimensions={[]}
+        retryHref="/writing/51/problem-1"
+      />,
+    );
+
+    expect(
+      screen.getByTestId("feedback-recommendation-card").className,
+    ).not.toContain("app-card");
+    for (const action of screen.getAllByTestId(/^feedback-reco-action-/)) {
+      expect(action.className).not.toContain("shadow-sm");
+      expect(action.className).not.toContain("hover:shadow");
+    }
   });
 });
 
 describe("FeedbackPageContent (short feedback fallback)", () => {
+  it("places the short-feedback action group inside the sticky page header", () => {
+    const bundle: FeedbackBundle = {
+      feedback: feedback({
+        raw_ai_result: {
+          trait_scores: [
+            {
+              trait: "blank_1",
+              score: 0,
+              weight: 0.25,
+              feedback: "Use a sentence that fits the first blank.",
+            },
+          ],
+        },
+      }),
+      dimensions: [],
+      sentences: [],
+    };
+
+    renderWithIntl(
+      <FeedbackPageContent
+        submission={submission()}
+        bundle={bundle}
+        withSentences
+        showDetailPanel={false}
+        dimensionCardLimit={4}
+        reloadHref="/writing/feedback/short/sub-1"
+        userId="user-1"
+        saveLocked
+      />,
+    );
+
+    const header = screen.getByTestId("feedback-page-header");
+    expect(header.className).toContain("sticky");
+    expect(within(header).getByTestId("feedback-action-retry")).toBeTruthy();
+    expect(within(header).getByTestId("feedback-action-next")).toBeTruthy();
+    expect(within(header).getByTestId("feedback-action-save")).toBeTruthy();
+    expect(within(header).getByTestId("feedback-action-compare")).toBeTruthy();
+    expect(screen.getAllByTestId("feedback-actions")).toHaveLength(1);
+  });
+
   it("renders the short-answer report overview from external trait scores and learning focus areas", () => {
     const bundle: FeedbackBundle = {
       feedback: feedback({
         score_total: 0,
         score_max: 10,
-        overall_summary: "두 빈칸 모두 내용과 표현 면에서 추가적인 연습이 필요합니다.",
+        overall_summary:
+          "두 빈칸 모두 내용과 표현 면에서 추가적인 연습이 필요합니다.",
         raw_ai_result: {
           time_spent: 1127,
           processing_time_seconds: 16.16,
@@ -252,7 +349,8 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
               trait_korean: "빈칸 ㉠",
               score: 0,
               weight: 0.25,
-              feedback: "첫 번째 빈칸은 문제 맥락에 맞는 격식체 표현이 필요합니다.",
+              feedback:
+                "첫 번째 빈칸은 문제 맥락에 맞는 격식체 표현이 필요합니다.",
               improvements: ["격식체(-습니다/습니까) 사용 연습"],
             },
             {
@@ -260,7 +358,8 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
               trait_korean: "빈칸 ㉡",
               score: 0,
               weight: 0.25,
-              feedback: "두 번째 빈칸은 문장 완성도와 어휘 선택을 다시 점검해야 합니다.",
+              feedback:
+                "두 번째 빈칸은 문장 완성도와 어휘 선택을 다시 점검해야 합니다.",
               improvements: ["상황에 맞는 정중한 표현 익히기"],
             },
           ],
@@ -308,9 +407,142 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
     expect(screen.getAllByText("0점")).toHaveLength(2);
     expect(screen.getAllByText("배점 2.5점")).toHaveLength(2);
     expect(screen.getByText("다음 보완 포인트")).toBeTruthy();
-    expect(screen.getAllByText("무의미한 문자 입력 금지").length).toBeGreaterThan(
-      0,
+    expect(
+      screen.getAllByText("무의미한 문자 입력 금지").length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("renders report metadata as quiet inline text instead of filled tags", () => {
+    const bundle: FeedbackBundle = {
+      feedback: feedback({
+        raw_ai_result: {
+          processing_time_seconds: 7.97,
+          trait_scores: [
+            {
+              trait: "blank_1",
+              score: 0,
+              feedback: "Use a sentence that fits the first blank.",
+            },
+          ],
+        },
+      }),
+      dimensions: [],
+      sentences: [],
+    };
+
+    renderWithIntl(
+      <FeedbackPageContent
+        submission={submission({
+          submitted_at: "2026-06-19T03:01:00.000Z",
+        })}
+        bundle={bundle}
+        withSentences
+        showDetailPanel={false}
+        dimensionCardLimit={4}
+        reloadHref="/writing/feedback/short/sub-1"
+        userId="user-1"
+      />,
     );
+
+    const meta = screen.getByTestId("feedback-report-meta");
+    const items = within(meta).getAllByTestId("feedback-report-meta-item");
+    expect(items).toHaveLength(2);
+    expect(meta.querySelectorAll(".ant-tag")).toHaveLength(0);
+    expect(items[0].className).toContain("inline-flex");
+    expect(items[0].className).toContain("text-text-secondary");
+    expect(items[0].className).not.toContain("bg-");
+    expect(items[0].textContent).toBe("제출일 2026.06.19 12:01");
+    expect(items[1].textContent).toBe("AI 분석 7.97초");
+  });
+
+  it("emphasizes the total score with a smaller baseline-aligned suffix", () => {
+    const bundle: FeedbackBundle = {
+      feedback: feedback({
+        score_total: 5,
+        score_max: 10,
+        raw_ai_result: {
+          trait_scores: [
+            {
+              trait: "blank_1",
+              score: 5,
+              feedback: "Use a sentence that fits the first blank.",
+            },
+          ],
+        },
+      }),
+      dimensions: [],
+      sentences: [],
+    };
+
+    renderWithIntl(
+      <FeedbackPageContent
+        submission={submission()}
+        bundle={bundle}
+        withSentences
+        showDetailPanel={false}
+        dimensionCardLimit={4}
+        reloadHref="/writing/feedback/short/sub-1"
+        userId="user-1"
+      />,
+    );
+
+    const scoreCard = screen.getByTestId("feedback-report-total-score-card");
+    const scoreLine = within(scoreCard).getByTestId(
+      "feedback-report-total-score-line",
+    );
+    const scoreValue = within(scoreLine).getByTestId(
+      "feedback-report-total-score-value",
+    );
+    const scoreSuffix = within(scoreLine).getByTestId(
+      "feedback-report-total-score-suffix",
+    );
+
+    expect(scoreLine.className).toContain("items-end");
+    expect(scoreValue.className).toContain("text-4xl");
+    expect(scoreValue.className).toContain("font-bold");
+    expect(scoreSuffix.className).toContain("text-base");
+    expect(scoreValue.textContent).toBe("5");
+    expect(scoreSuffix.textContent).toBe("/ 10점");
+  });
+
+  it("uses a much lighter surface tone for the three report overview cards", () => {
+    const bundle: FeedbackBundle = {
+      feedback: feedback({
+        raw_ai_result: {
+          trait_scores: [
+            {
+              trait: "blank_1",
+              score: 0,
+              feedback: "Use a sentence that fits the first blank.",
+            },
+          ],
+        },
+      }),
+      dimensions: [],
+      sentences: [],
+    };
+
+    renderWithIntl(
+      <FeedbackPageContent
+        submission={submission()}
+        bundle={bundle}
+        withSentences
+        showDetailPanel={false}
+        dimensionCardLimit={4}
+        reloadHref="/writing/feedback/short/sub-1"
+        userId="user-1"
+      />,
+    );
+
+    for (const testId of [
+      "feedback-report-total-score-card",
+      "feedback-report-criteria-card",
+      "feedback-report-focus-card",
+    ]) {
+      const card = screen.getByTestId(testId);
+      expect(card.className).toContain("bg-surface/40");
+      expect(card.className).not.toContain("bg-surface ");
+    }
   });
 
   it("uses raw trait scores in the report and raw combined feedback for recommended learning", () => {
@@ -353,7 +585,45 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
     expect(
       screen.getByText("Use a sentence that fits the first blank."),
     ).toBeTruthy();
-    expect(screen.getByTestId("external-learning-feedback")).toBeTruthy();
-    expect(screen.queryByTestId("external-trait-feedback-grid")).toBeNull();
+    expect(screen.queryByTestId("external-learning-feedback")).toBeNull();
+    expect(screen.getAllByTestId(/^feedback-reco-action-/)).toHaveLength(3);
+    expect(
+      screen.getAllByText("Start by matching the prompt context.").length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("renders the short report KPI content without an outer card component", () => {
+    const bundle: FeedbackBundle = {
+      feedback: feedback({
+        raw_ai_result: {
+          trait_scores: [
+            {
+              trait: "blank_1",
+              score: 0,
+              feedback: "Use a sentence that fits the first blank.",
+            },
+          ],
+        },
+      }),
+      dimensions: [],
+      sentences: [],
+    };
+
+    renderWithIntl(
+      <FeedbackPageContent
+        submission={submission()}
+        bundle={bundle}
+        withSentences
+        showDetailPanel={false}
+        dimensionCardLimit={4}
+        reloadHref="/writing/feedback/short/sub-1"
+        userId="user-1"
+        saveLocked
+      />,
+    );
+
+    expect(
+      screen.getByTestId("feedback-report-overview").className,
+    ).not.toContain("app-card");
   });
 });
