@@ -15,6 +15,7 @@ export const APP_ROUTES = {
   passwordResetConfirm: "/password-reset/confirm",
   authCallback: "/auth/callback",
   authCallbackFragment: "/auth/callback-fragment",
+  authClaimAffiliation: "/auth/claim-affiliation",
   authError: "/auth/error",
   authVerifyEmail: "/auth/verify-email",
   authPostAuth: "/auth/post-auth",
@@ -451,6 +452,15 @@ export const APP_ROUTE_SPECS: readonly AppRouteSpec[] = [
     appPath: "src/app/auth/verify-email/page.tsx",
     routeType: "page",
     middleware: "public",
+  },
+  {
+    id: "auth-claim-affiliation",
+    iaCode: "AUTH-CLAIM-AFFILIATION",
+    title: "기관 회원 유입 코드 claim",
+    path: APP_ROUTES.authClaimAffiliation,
+    appPath: "src/app/auth/claim-affiliation/page.tsx",
+    routeType: "system-page",
+    middleware: "protected",
   },
   {
     id: "auth-sign-out",

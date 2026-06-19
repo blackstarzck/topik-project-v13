@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+import { AffiliationCodeCapture } from "@/components/auth/AffiliationCodeCapture";
+
 type Props = {
   children: ReactNode;
   /** Optional public chrome (e.g. a brand header) rendered above the content. */
@@ -22,6 +24,7 @@ export function PublicShell({ children, header, className }: Props) {
     <div
       className={["app-public-shell", className].filter(Boolean).join(" ")}
     >
+      <AffiliationCodeCapture />
       {header ? (
         <div className="app-public-shell__header">{header}</div>
       ) : null}

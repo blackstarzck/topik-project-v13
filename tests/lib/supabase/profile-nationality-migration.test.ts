@@ -70,4 +70,29 @@ describe("profiles nationality migration", () => {
       "grant execute on function public.is_nickname_available(text) to authenticated",
     );
   });
+
+  it("adds affiliation_code with validated trigger seeding and one-shot claim protection", () => {
+    const sql = readMigrations();
+    const normalized = sql.replace(/\s+/g, " ").toLowerCase();
+
+    expect(normalized).toContain(
+      "alter table public.profiles add column if not exists affiliation_code text",
+    );
+    expect(normalized).toContain("profiles_affiliation_code_format");
+    expect(sql).toContain("affiliation_code ~ '^[A-Za-z0-9_-]{2,64}$'");
+    expect(normalized).toContain(
+      "insert into public.profiles (id, display_name, nationality_country_code, affiliation_code)",
+    );
+    expect(normalized).toContain(
+      "new.raw_user_meta_data->>'affiliation_code'",
+    );
+    expect(normalized).toContain(
+      "create or replace function public.claim_affiliation_code(p_code text)",
+    );
+    expect(normalized).toContain("set_config('app.claim_affiliation_code'");
+    expect(normalized).toContain("new.affiliation_code is distinct from old.affiliation_code");
+    expect(normalized).toContain(
+      "grant execute on function public.claim_affiliation_code(text) to authenticated",
+    );
+  });
 });

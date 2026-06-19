@@ -30,3 +30,42 @@ create trigger on_auth_user_created
 
 alter table public.profiles drop constraint if exists profiles_affiliation_code_format;
 alter table public.profiles drop column if exists affiliation_code;
+
+create or replace function private.protect_profile_columns()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, pg_catalog
+as $$
+begin
+  -- Admins (content_admin / platform_admin) bypass entirely.
+  if private.is_admin((select auth.uid())) then
+    return new;
+  end if;
+
+  if new.app_role is distinct from old.app_role then
+    raise exception
+      'profiles.app_role can only be changed by admins'
+      using errcode = '42501';
+  end if;
+
+  if new.plan_label is distinct from old.plan_label then
+    raise exception
+      'profiles.plan_label can only be changed by admins or billing service'
+      using errcode = '42501';
+  end if;
+
+  if new.status is distinct from old.status then
+    raise exception
+      'profiles.status can only be changed by admins'
+      using errcode = '42501';
+  end if;
+
+  return new;
+end;
+$$;
+
+revoke all on function private.protect_profile_columns() from public;
+
+comment on function private.protect_profile_columns() is
+  'BEFORE UPDATE on public.profiles. Blocks app_role/plan_label/status changes for non-admins.';

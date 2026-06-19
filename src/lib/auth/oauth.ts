@@ -56,6 +56,18 @@ export function buildPostAuthPath(intent: GoogleOAuthIntent): string {
   return `/auth/post-auth?intent=${intent}`;
 }
 
+export function buildClaimAffiliationPath(nextPath: string): string {
+  const params = new URLSearchParams({ next: ensureRelativePath(nextPath) });
+  return `/auth/claim-affiliation?${params.toString()}`;
+}
+
+function buildOAuthNextPath(intent: GoogleOAuthIntent): string {
+  const postAuthPath = buildPostAuthPath(intent);
+  return intent === "sign-up"
+    ? buildClaimAffiliationPath(postAuthPath)
+    : postAuthPath;
+}
+
 function ensureRelativePath(path: string): string {
   const next = path.startsWith("/") ? path : `/${path}`;
   if (next.startsWith("//") || next.includes(":")) {
@@ -107,7 +119,7 @@ export async function startGoogleOAuth(intent: GoogleOAuthIntent) {
   return supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: buildClientAuthCallbackUrl(buildPostAuthPath(intent)),
+      redirectTo: buildClientAuthCallbackUrl(buildOAuthNextPath(intent)),
     },
   });
 }

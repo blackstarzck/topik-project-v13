@@ -72,6 +72,7 @@ export interface Database {
           content_prefs: Json;
           // Phase 7-E Task 10 — self-introduction (max 160 chars, CHECK constraint).
           bio: string | null;
+          affiliation_code: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -93,6 +94,7 @@ export interface Database {
           learning_locale?: "ko" | "en" | "vi" | null;
           content_prefs?: Json;
           bio?: string | null;
+          affiliation_code?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -114,6 +116,7 @@ export interface Database {
           learning_locale?: "ko" | "en" | "vi" | null;
           content_prefs?: Json;
           bio?: string | null;
+          affiliation_code?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -1328,6 +1331,12 @@ export interface Database {
     };
     Views: Record<never, never>;
     Functions: {
+      claim_affiliation_code: {
+        Args: {
+          p_code: string;
+        };
+        Returns: string | null;
+      };
       create_external_writing_submission: {
         Args: {
           submission: Json;

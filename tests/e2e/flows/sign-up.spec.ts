@@ -36,8 +36,8 @@ function readJsonPayload(request: Request): Record<string, unknown> {
   return JSON.parse(raw) as Record<string, unknown>;
 }
 
-async function openSignUp(page: Page) {
-  await page.goto("/sign-up", { waitUntil: "load" });
+async function openSignUp(page: Page, route = "/sign-up") {
+  await page.goto(route, { waitUntil: "load" });
   await expect(page).toHaveURL(/\/sign-up/);
   await expect(page.getByRole("heading", { name: "회원가입" })).toBeVisible();
 }
@@ -348,6 +348,41 @@ test.describe("A-01 sign-up functional flow", () => {
     expect(redirectTo.searchParams.get("next")).toBe(
       "/onboarding/learning-goal",
     );
+    expect(errors).toEqual([]);
+  });
+
+  test("valid email sign-up includes an aff code captured from the sign-up URL", async ({
+    page,
+  }) => {
+    const errors = collectErrors(page);
+    const signUpRequests = await mockSignUpSuccess(page);
+
+    await openSignUp(page, "/sign-up?aff=EXPO2026-BOOTH-A");
+    await expect(page).toHaveURL(/\/sign-up$/);
+    await fillSignUpForm(page, { email: "aff-signup@example.com" });
+    await clickSubmit(page);
+
+    await page.waitForURL(
+      /\/auth\/verify-email\?email=aff-signup%40example\.com$/,
+    );
+
+    expect(signUpRequests).toHaveLength(1);
+    expect(signUpRequests[0].payload).toMatchObject({
+      data: {
+        affiliation_code: "EXPO2026-BOOTH-A",
+        display_name: VALID_NAME,
+        nationality_country_code: VALID_NATIONALITY_COUNTRY_CODE,
+      },
+      email: "aff-signup@example.com",
+      password: VALID_PASSWORD,
+    });
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          window.localStorage.getItem("talkpik:affiliation-code"),
+        ),
+      )
+      .toBeNull();
     expect(errors).toEqual([]);
   });
 

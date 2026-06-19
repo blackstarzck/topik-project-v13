@@ -32,6 +32,10 @@ import { countries, hasFlag } from "country-flag-icons";
 import * as FlagIcons from "country-flag-icons/react/3x2";
 
 import { GoogleMark } from "@/components/auth/GoogleMark";
+import {
+  buildAffiliationMetadata,
+  clearStoredAffiliationCode,
+} from "@/lib/auth/affiliation-code";
 import { buildAuthRedirectUrl } from "@/lib/auth/redirect-url";
 import { mapSupabaseErrorCode } from "@/lib/auth/error-mapping";
 import {
@@ -377,6 +381,7 @@ export function SignUpForm({
     setSubmitting(true);
     try {
       const supabase = createSupabaseBrowserClient();
+      const affiliationMetadata = buildAffiliationMetadata();
       const { error } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
@@ -386,6 +391,7 @@ export function SignUpForm({
             nationality_country_code: normalizeCountryCode(
               values.nationalityCountryCode,
             ),
+            ...affiliationMetadata,
           },
           emailRedirectTo: buildAuthRedirectUrl(
             "/auth/callback?next=/onboarding/learning-goal",
@@ -416,6 +422,7 @@ export function SignUpForm({
         );
         return;
       }
+      clearStoredAffiliationCode();
       router.push(
         `/auth/verify-email?email=${encodeURIComponent(values.email)}`,
       );

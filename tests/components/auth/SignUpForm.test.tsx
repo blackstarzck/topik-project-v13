@@ -38,6 +38,10 @@ vi.mock("next/navigation", () => ({
 }));
 
 import { SignUpForm } from "../../../src/components/auth/SignUpForm";
+import {
+  readStoredAffiliationCode,
+  storeAffiliationCode,
+} from "../../../src/lib/auth/affiliation-code";
 
 // SignUpForm now uses next-intl's useTranslations — render inside the shared
 // intl + antd App wrapper (baseline ko catalog, matching the assertions).
@@ -232,6 +236,50 @@ describe("SignUpForm", () => {
     );
   });
 
+  it("adds a stored affiliation code to email sign-up metadata and clears it on success", async () => {
+    storeAffiliationCode("EXPO2026-BOOTH-A");
+    renderInApp(<SignUpForm />);
+
+    await fillValidSignUpForm();
+
+    await act(async () => {
+      fireEvent.click(submitButton());
+    });
+
+    await waitFor(() => {
+      expect(signUpMock).toHaveBeenCalledTimes(1);
+    });
+    expect(signUpMock.mock.calls[0][0].options.data).toEqual({
+      affiliation_code: "EXPO2026-BOOTH-A",
+      display_name: "홍길동",
+      nationality_country_code: "VN",
+    });
+    await waitFor(() => {
+      expect(readStoredAffiliationCode()).toBeNull();
+    });
+  });
+
+  it("keeps a stored affiliation code when email sign-up fails", async () => {
+    storeAffiliationCode("EXPO2026-BOOTH-A");
+    signUpMock.mockResolvedValueOnce({
+      data: { session: null, user: null },
+      error: { code: "unknown", message: "Sign-up failed", status: 500 },
+    });
+    renderInApp(<SignUpForm />);
+
+    await fillValidSignUpForm();
+
+    await act(async () => {
+      fireEvent.click(submitButton());
+    });
+
+    await waitFor(() => {
+      expect(signUpMock).toHaveBeenCalledTimes(1);
+    });
+    expect(readStoredAffiliationCode()).toBe("EXPO2026-BOOTH-A");
+    expect(pushMock).not.toHaveBeenCalled();
+  });
+
   it("redirects to /auth/verify-email after successful sign-up (Phase 8-D)", async () => {
     renderInApp(<SignUpForm />);
 
@@ -410,7 +458,7 @@ describe("SignUpForm", () => {
       provider: "google",
       options: {
         redirectTo:
-          "http://localhost:3000/auth/callback?next=%2Fauth%2Fpost-auth%3Fintent%3Dsign-up",
+          "http://localhost:3000/auth/callback?next=%2Fauth%2Fclaim-affiliation%3Fnext%3D%252Fauth%252Fpost-auth%253Fintent%253Dsign-up",
       },
     });
     expect(signUpMock).not.toHaveBeenCalled();

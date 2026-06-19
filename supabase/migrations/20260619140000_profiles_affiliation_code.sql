@@ -38,13 +38,18 @@ language plpgsql
 security definer
 set search_path = pg_catalog, public
 as $$
+declare
+  v_affiliation_code text := nullif(btrim(new.raw_user_meta_data->>'affiliation_code'), '');
 begin
   insert into public.profiles (id, display_name, nationality_country_code, affiliation_code)
   values (
     new.id,
     nullif(btrim(new.raw_user_meta_data->>'display_name'), ''),
     upper(nullif(btrim(new.raw_user_meta_data->>'nationality_country_code'), '')),
-    nullif(btrim(new.raw_user_meta_data->>'affiliation_code'), '')
+    case
+      when v_affiliation_code ~ '^[A-Za-z0-9_-]{2,64}$' then v_affiliation_code
+      else null
+    end
   )
   on conflict (id) do nothing;
   return new;
@@ -64,6 +69,56 @@ create trigger on_auth_user_created
   for each row
   execute function public.handle_new_user();
 
+-- protect_profile_columns(): keep affiliation_code write-once and non-editable
+-- through normal profile updates. claim_affiliation_code() sets a transaction
+-- local flag before its own update so the trigger can distinguish the trusted
+-- one-shot claim path from user-editable profile fields.
+create or replace function private.protect_profile_columns()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, pg_catalog
+as $$
+begin
+  -- Admins (content_admin / platform_admin) bypass entirely.
+  if private.is_admin((select auth.uid())) then
+    return new;
+  end if;
+
+  if new.app_role is distinct from old.app_role then
+    raise exception
+      'profiles.app_role can only be changed by admins'
+      using errcode = '42501';
+  end if;
+
+  if new.plan_label is distinct from old.plan_label then
+    raise exception
+      'profiles.plan_label can only be changed by admins or billing service'
+      using errcode = '42501';
+  end if;
+
+  if new.status is distinct from old.status then
+    raise exception
+      'profiles.status can only be changed by admins'
+      using errcode = '42501';
+  end if;
+
+  if new.affiliation_code is distinct from old.affiliation_code
+     and current_setting('app.claim_affiliation_code', true) is distinct from '1' then
+    raise exception
+      'profiles.affiliation_code can only be changed by claim_affiliation_code'
+      using errcode = '42501';
+  end if;
+
+  return new;
+end;
+$$;
+
+revoke all on function private.protect_profile_columns() from public;
+
+comment on function private.protect_profile_columns() is
+  'BEFORE UPDATE on public.profiles. Blocks app_role/plan_label/status changes for non-admins and blocks normal affiliation_code edits.';
+
 -- claim_affiliation_code(): backfill for the OAuth sign-up path (and any case
 -- where the code was absent from sign-up metadata). Sets the caller's OWN
 -- affiliation_code ONLY IF currently empty — one-shot, not user-editable after.
@@ -81,7 +136,9 @@ declare
   v_code    text := btrim(coalesce(p_code, ''));
 begin
   if caller_id is null then raise exception 'unauthenticated'; end if;
-  if v_code !~ '^[A-Za-z0-9_-]{2,64}$' then raise exception 'invalid affiliation code'; end if;
+  if v_code !~ '^[A-Za-z0-9_-]{2,64}$' then return null; end if;
+
+  perform set_config('app.claim_affiliation_code', '1', true);
 
   update public.profiles
      set affiliation_code = v_code
