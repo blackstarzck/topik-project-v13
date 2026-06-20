@@ -230,6 +230,26 @@ body {
   min-height: 40px;
 }
 
+.weak-area-choice.ant-btn {
+  min-height: 30px;
+  height: 30px;
+  border-radius: var(--app-radius);
+  box-shadow: none;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.weak-area-choice.ant-btn > span {
+  min-width: 0;
+}
+
+.weak-area-choice--selected.ant-btn {
+  outline: 2px solid var(--app-color-primary);
+  outline-offset: 0;
+  background: var(--app-color-bg-container);
+  box-shadow: none;
+}
+
 .app-modal--center-origin .ant-modal,
 .app-modal--center-origin .ant-modal-content {
   transform-origin: center center !important;

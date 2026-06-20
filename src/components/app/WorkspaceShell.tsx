@@ -40,10 +40,15 @@ export function WorkspaceShell({
     pathname === "/writing/answer-writing-52" ||
     pathname === "/writing/long-form-writing-53" ||
     pathname === "/writing/essay-writing-54";
+  const isOnboardingLearningGoalRoute =
+    pathname === "/onboarding/learning-goal";
+  const hidesWorkspaceChrome =
+    isWritingExamRoute || isOnboardingLearningGoalRoute;
   const isShortFeedbackRoute = pathname.startsWith("/writing/feedback/short/");
   const contentClassName = [
     "app-workspace-content",
     isWritingExamRoute ? "app-workspace-content--exam" : null,
+    isOnboardingLearningGoalRoute ? "app-workspace-content--onboarding" : null,
     isShortFeedbackRoute ? "app-workspace-content--feedback-flush" : null,
   ]
     .filter(Boolean)
@@ -52,12 +57,12 @@ export function WorkspaceShell({
   return (
     <Layout
       className={
-        isWritingExamRoute
+        hidesWorkspaceChrome
           ? "app-workspace-layout app-workspace-layout--exam"
           : "app-workspace-layout"
       }
     >
-      {isWritingExamRoute ? null : (
+      {hidesWorkspaceChrome ? null : (
         <Sider
           className="app-workspace-sider"
           breakpoint="md"
@@ -69,7 +74,7 @@ export function WorkspaceShell({
         </Sider>
       )}
       <Layout className="app-workspace-main">
-        {isWritingExamRoute ? null : isMobile ? (
+        {hidesWorkspaceChrome ? null : isMobile ? (
           <Header className="app-workspace-mobile-bar">
             <Space size={12} align="center">
               <Button
@@ -97,7 +102,7 @@ export function WorkspaceShell({
         <Content className={contentClassName}>{children}</Content>
       </Layout>
 
-      {isWritingExamRoute ? null : (
+      {hidesWorkspaceChrome ? null : (
         <AppDrawer
           rootClassName="app-workspace-drawer"
           placement="left"

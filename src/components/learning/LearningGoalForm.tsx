@@ -17,10 +17,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
-import { Brain, CalendarDays, Clock3, Flag, Target } from "lucide-react";
 import { useSaveLearningGoal } from "@/lib/learning/mutations";
 import type { Tables } from "@/lib/supabase/types";
-import { AppCard } from "@/components/shared/AppCard";
 
 const { Title, Paragraph } = Typography;
 
@@ -69,7 +67,6 @@ type Props = {
 };
 
 type GoalFieldCardProps = {
-  icon: ReactNode;
   title: string;
   description: string;
   required?: boolean;
@@ -77,35 +74,26 @@ type GoalFieldCardProps = {
 };
 
 function GoalFieldCard({
-  icon,
   title,
   description,
   required,
   children,
 }: GoalFieldCardProps) {
   return (
-    <AppCard size="small">
+    <div className="rounded-default bg-background px-3 py-3 md:px-4">
       <div className="grid gap-4 md:grid-cols-2 md:items-center">
-        <div className="flex min-w-0 items-start gap-3">
-          <span
-            className="inline-flex h-11 w-11 flex-none items-center justify-center rounded-default bg-surface text-text"
-            aria-hidden="true"
-          >
-            {icon}
-          </span>
-          <span className="min-w-0">
-            <strong className="block text-sm leading-5 text-text">
-              {required ? <span aria-hidden="true">* </span> : null}
-              {title}
-            </strong>
-            <small className="mt-1 block text-xs leading-5 text-text-secondary">
-              {description}
-            </small>
-          </span>
+        <div className="min-w-0">
+          <strong className="block text-base leading-6 text-text">
+            {required ? <span aria-hidden="true">* </span> : null}
+            {title}
+          </strong>
+          <small className="mt-1 block text-sm leading-6 text-text-secondary">
+            {description}
+          </small>
         </div>
         <div className="min-w-0">{children}</div>
       </div>
-    </AppCard>
+    </div>
   );
 }
 
@@ -219,13 +207,12 @@ export function LearningGoalForm({
       ) : null}
 
       <Form
-        className="grid gap-3"
+        className="grid gap-6"
         layout="vertical"
         onFinish={onSubmit}
         disabled={mutation.isPending}
       >
         <GoalFieldCard
-          icon={<Flag size={23} />}
           title={t("topikLevelLabel")}
           description={t("topikLevelHelp")}
           required
@@ -271,7 +258,6 @@ export function LearningGoalForm({
         </GoalFieldCard>
 
         <GoalFieldCard
-          icon={<Target size={23} />}
           title={t("targetGradeLabel")}
           description={t("targetGradeHelp")}
           required
@@ -305,7 +291,6 @@ export function LearningGoalForm({
         </GoalFieldCard>
 
         <GoalFieldCard
-          icon={<CalendarDays size={23} />}
           title={t("examDateLabel")}
           description={t("examDateHelp")}
         >
@@ -335,7 +320,6 @@ export function LearningGoalForm({
         </GoalFieldCard>
 
         <GoalFieldCard
-          icon={<Clock3 size={23} />}
           title={t("weeklyMinutesLabel")}
           description={t("weeklyMinutesHelp")}
         >
@@ -369,7 +353,6 @@ export function LearningGoalForm({
         </GoalFieldCard>
 
         <GoalFieldCard
-          icon={<Brain size={23} />}
           title={t("weakAreasLabel")}
           description={t("weakAreasHelp")}
         >
@@ -382,27 +365,51 @@ export function LearningGoalForm({
                 validateStatus={fieldErrors.weak_areas ? "error" : undefined}
                 help={fieldErrors.weak_areas}
               >
-                <Select
-                  {...field}
-                  size="large"
-                  className="w-full"
+                <div
+                  role="group"
                   aria-label={t("weakAreasLabel")}
-                  mode="multiple"
-                  allowClear
-                  options={weakAreaOptions}
-                  placeholder={t("weakAreasPlaceholder")}
-                  onChange={(value) => {
-                    field.onChange(value);
-                    clearFieldError("weak_areas");
-                  }}
-                />
+                  data-testid="weak-area-options"
+                  className="grid grid-cols-2 gap-2 sm:grid-cols-3"
+                >
+                  {weakAreaOptions.map((option) => {
+                    const selectedValues = field.value ?? [];
+                    const isSelected = selectedValues.includes(option.value);
+
+                    return (
+                      <Button
+                        key={option.value}
+                        htmlType="button"
+                        color={isSelected ? "primary" : "default"}
+                        variant="outlined"
+                        className={`weak-area-choice w-full min-w-0 ${
+                          isSelected ? "weak-area-choice--selected" : ""
+                        }`}
+                        aria-pressed={isSelected}
+                        data-value={option.value}
+                        disabled={mutation.isPending}
+                        onClick={() => {
+                          const nextValue = isSelected
+                            ? selectedValues.filter(
+                                (value) => value !== option.value,
+                              )
+                            : [...selectedValues, option.value];
+
+                          field.onChange(nextValue);
+                          clearFieldError("weak_areas");
+                        }}
+                      >
+                        <span className="truncate">{option.label}</span>
+                      </Button>
+                    );
+                  })}
+                </div>
               </Form.Item>
             )}
           />
         </GoalFieldCard>
 
         <Form.Item
-          className="!mb-0 pt-1"
+          className="!mb-0 pt-10"
           validateStatus={fieldErrors.__save ? "error" : undefined}
           help={fieldErrors.__save}
         >
