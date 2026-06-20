@@ -33,7 +33,7 @@ const EMAIL = process.env.E2E_STUDENT_EMAIL ?? "student@audit.local";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SERVICE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
-const SIDER_WIDTH = 240;
+const SIDER_WIDTH = 300;
 const MAX_WIDTH_BY_SIZE = {
   form: 640,
   task: 960,

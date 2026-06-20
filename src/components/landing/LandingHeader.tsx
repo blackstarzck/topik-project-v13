@@ -5,6 +5,7 @@ import { ArrowUpRight, LogIn } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 
+import { BrandLogo } from "@/components/shared/BrandLogo";
 import type { LandingAuthStatus } from "@/lib/auth/completion-routes";
 import { getLandingCta } from "./auth-cta";
 
@@ -31,7 +32,7 @@ export function LandingHeader({ authStatus }: Props) {
   return (
     <header className="landing-header !shadow-none !backdrop-blur-sm before:!hidden after:!hidden">
       <a href="#top" className="landing-header-logo" aria-label={t("logoAria")}>
-        TALKPIK<span> AI</span>
+        <BrandLogo height={68} priority />
       </a>
 
       <nav className="landing-header-nav" aria-label={t("navAria")}>

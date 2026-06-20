@@ -1,5 +1,5 @@
 .app-workspace-layout.ant-layout {
-  --workspace-sider-width: 240px;
+  --workspace-sider-width: 300px;
   --workspace-content-padding-block: 24px;
   --workspace-mobile-bar-height: 64px;
   min-height: 100vh;
@@ -21,6 +21,7 @@
 .app-workspace-content.ant-layout-content {
   min-height: 100vh;
   min-height: max(100vh, 100dvh);
+  background: var(--app-color-bg-container);
   padding: var(--workspace-content-padding-block) 24px;
 }
 
@@ -32,6 +33,7 @@
 .app-workspace-content--exam.ant-layout-content {
   min-height: 100vh;
   min-height: max(100vh, 100dvh);
+  background: var(--app-color-bg-layout);
   padding: 0;
 }
 

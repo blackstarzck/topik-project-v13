@@ -1,4 +1,6 @@
 // @vitest-environment jsdom
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, screen } from "@testing-library/react";
@@ -9,6 +11,24 @@ import { PortfolioLandingLayout } from "../../../src/components/landing/Portfoli
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
 
 const pushMock = vi.fn();
+const LOGO_SRC = "/assets/logo.png";
+const GLOBAL_CSS = readFileSync(
+  join(process.cwd(), "src/styles/global.css"),
+  "utf8",
+);
+
+function decodedImageSrc(image: HTMLImageElement | null) {
+  return decodeURIComponent(image?.getAttribute("src") ?? "");
+}
+
+function cssRule(selector: string) {
+  const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = GLOBAL_CSS.match(
+    new RegExp(`${escapedSelector}\\s*\\{(?<body>[^}]*)\\}`, "m"),
+  );
+
+  return match?.groups?.body ?? "";
+}
 
 vi.mock("gsap", () => ({
   gsap: {
@@ -45,8 +65,16 @@ vi.mock("swiper/modules", () => ({
 }));
 
 vi.mock("swiper/react", () => ({
-  Swiper: ({ children }: { children: ReactNode }) => (
-    <div data-testid="mock-swiper">{children}</div>
+  Swiper: ({
+    children,
+    spaceBetween,
+  }: {
+    children: ReactNode;
+    spaceBetween?: number;
+  }) => (
+    <div data-testid="mock-swiper" data-space-between={spaceBetween}>
+      {children}
+    </div>
   ),
   SwiperSlide: ({ children }: { children: ReactNode }) => (
     <div data-testid="mock-swiper-slide">{children}</div>
@@ -68,13 +96,37 @@ describe("landing auth CTA", () => {
   it("keeps only the anonymous login CTA in the global nav", () => {
     renderWithIntl(<LandingHeader authStatus="anonymous" />);
 
-    expect(screen.getByRole("link", { name: "로그인" }).getAttribute("href")).toBe(
-      "/login",
-    );
+    expect(
+      screen.getByRole("link", { name: "로그인" }).getAttribute("href"),
+    ).toBe("/login");
     expect(screen.queryByRole("link", { name: "무료 시작" })).toBeNull();
-    expect(screen.getByRole("link", { name: "기능" }).getAttribute("href")).toBe(
-      "#features",
+    expect(
+      screen.getByRole("link", { name: "기능" }).getAttribute("href"),
+    ).toBe("#features");
+  });
+
+  it("renders the uploaded logo asset in the landing header", () => {
+    renderWithIntl(<LandingHeader authStatus="anonymous" />);
+
+    expect(
+      decodedImageSrc(
+        document.querySelector<HTMLImageElement>(".landing-header-logo img"),
+      ),
+    ).toContain(LOGO_SRC);
+  });
+
+  it("keeps the landing header logo at the 68px brand size", () => {
+    const source = readFileSync(
+      join(process.cwd(), "src/components/landing/LandingHeader.tsx"),
+      "utf8",
     );
+    const logoRule = cssRule(".landing-header-logo");
+    const imageRule = cssRule(".landing-header-logo .brand-logo__image");
+
+    expect(source).toContain("<BrandLogo height={68} priority />");
+    expect(logoRule).toContain("height: 68px;");
+    expect(logoRule).toContain("max-width: 180px;");
+    expect(imageRule).toContain("height: 68px;");
   });
 
   it("keeps anonymous hero focused on free start without a login CTA", () => {
@@ -112,9 +164,7 @@ describe("landing auth CTA", () => {
   it("routes users who finished consent but have no goal to onboarding", () => {
     renderWithIntl(<Hero authStatus="pending-learning-goal" />);
 
-    fireEvent.click(
-      screen.getByRole("button", { name: "학습 목표 설정하기" }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: "학습 목표 설정하기" }));
 
     expect(pushMock).toHaveBeenCalledWith("/onboarding/learning-goal");
   });
@@ -142,9 +192,21 @@ describe("landing auth CTA", () => {
 
     expect(startHrefs).toContain("/sign-up");
     expect(startHrefs).toContain("/login");
-    expect(screen.getByRole("link", { name: "로그인" }).getAttribute("href")).toBe(
-      "/login",
-    );
+    expect(
+      screen.getByRole("link", { name: "로그인" }).getAttribute("href"),
+    ).toBe("/login");
+  });
+
+  it("renders the uploaded logo asset in the Portfolio footer brand area", () => {
+    renderWithIntl(<PortfolioLandingLayout authStatus="anonymous" />);
+
+    expect(
+      decodedImageSrc(
+        document.querySelector<HTMLImageElement>(
+          ".landing-layout-footer__brandline img",
+        ),
+      ),
+    ).toContain(LOGO_SRC);
   });
 
   it("renders Learning Loop image assets in the preview cards", () => {
@@ -160,11 +222,13 @@ describe("landing auth CTA", () => {
       previewImages.map((image) =>
         decodeURIComponent(image.getAttribute("src") ?? ""),
       ),
-    ).toEqual([
-      "/assets/landing/landing-loop-dashboard.png",
-      "/assets/landing/landing-loop-feedback.png",
-      "/assets/landing/landing-loop-report.png",
-    ].map((assetPath) => expect.stringContaining(assetPath)));
+    ).toEqual(
+      [
+        "/assets/landing/landing-loop-dashboard.png",
+        "/assets/landing/landing-loop-feedback.png",
+        "/assets/landing/landing-loop-report.png",
+      ].map((assetPath) => expect.stringContaining(assetPath)),
+    );
   });
 
   it("renders Core Value image assets in the service cards", () => {
@@ -180,11 +244,13 @@ describe("landing auth CTA", () => {
       serviceImages.map((image) =>
         decodeURIComponent(image.getAttribute("src") ?? ""),
       ),
-    ).toEqual([
-      "/assets/core-value-01.png",
-      "/assets/core-value-02.png",
-      "/assets/core-value-03.png",
-    ].map((assetPath) => expect.stringContaining(assetPath)));
+    ).toEqual(
+      [
+        "/assets/landing/core-value-01.png",
+        "/assets/landing/core-value-02.png",
+        "/assets/landing/core-value-03.png",
+      ].map((assetPath) => expect.stringContaining(assetPath)),
+    );
     expect(
       document.querySelectorAll(
         "#services .landing-layout-service__frame .landing-layout-number",
@@ -192,22 +258,53 @@ describe("landing auth CTA", () => {
     ).toHaveLength(0);
   });
 
+  it("renders Core Value images in fill mode so the service card frame is covered", () => {
+    renderWithIntl(<PortfolioLandingLayout authStatus="anonymous" />);
+
+    const serviceImages = Array.from(
+      document.querySelectorAll<HTMLImageElement>(
+        "#services .landing-layout-service__frame img",
+      ),
+    );
+
+    expect(
+      serviceImages.map((image) => ({
+        dataNimg: image.getAttribute("data-nimg"),
+        height: image.getAttribute("height"),
+        width: image.getAttribute("width"),
+      })),
+    ).toEqual([
+      { dataNimg: "fill", height: null, width: null },
+      { dataNimg: "fill", height: null, width: null },
+      { dataNimg: "fill", height: null, width: null },
+    ]);
+    expect(
+      serviceImages.some((image) =>
+        (image.getAttribute("style") ?? "").includes("height: 100%"),
+      ),
+    ).toBe(true);
+  });
+
   it("renders Future Scope mascot image assets in the post cards", () => {
     renderWithIntl(<PortfolioLandingLayout authStatus="anonymous" />);
 
     const futureImages = Array.from(
-      document.querySelectorAll<HTMLImageElement>("#blog .landing-layout-post img"),
+      document.querySelectorAll<HTMLImageElement>(
+        "#blog .landing-layout-post img",
+      ),
     );
 
     expect(
       futureImages.map((image) =>
         decodeURIComponent(image.getAttribute("src") ?? ""),
       ),
-    ).toEqual([
-      "/assets/landing-future-vocabulary.png",
-      "/assets/landing-future-exam.png",
-      "/assets/landing-future-board.png",
-    ].map((assetPath) => expect.stringContaining(assetPath)));
+    ).toEqual(
+      [
+        "/assets/landing-future-vocabulary.png",
+        "/assets/landing-future-exam.png",
+        "/assets/landing-future-board.png",
+      ].map((assetPath) => expect.stringContaining(assetPath)),
+    );
   });
 
   it("renders Learner Goals comments with avatar images", () => {
@@ -236,17 +333,33 @@ describe("landing auth CTA", () => {
       avatarImages.map((image) =>
         decodeURIComponent(image.getAttribute("src") ?? ""),
       ),
-    ).toEqual([
-      "/assets/avatar/cat.png",
-      "/assets/avatar/rabbit.png",
-      "/assets/avatar/penguin.png",
-      "/assets/avatar/panda.png",
-    ].map((assetPath) => expect.stringContaining(assetPath)));
+    ).toEqual(
+      [
+        "/assets/avatar/01.svg",
+        "/assets/avatar/02.svg",
+        "/assets/avatar/03.svg",
+        "/assets/avatar/04.svg",
+      ].map((assetPath) => expect.stringContaining(assetPath)),
+    );
+  });
+
+  it("keeps the Learner Goals carousel card gap at 16px", () => {
+    renderWithIntl(<PortfolioLandingLayout authStatus="anonymous" />);
+
+    expect(screen.getByTestId("mock-swiper").dataset.spaceBetween).toBe("16");
   });
 
   it.each([
-    ["pending-consent", "약관 동의하고 계속하기", "/auth/post-auth?intent=login"],
-    ["pending-learning-goal", "학습 목표 설정하기", "/onboarding/learning-goal"],
+    [
+      "pending-consent",
+      "약관 동의하고 계속하기",
+      "/auth/post-auth?intent=login",
+    ],
+    [
+      "pending-learning-goal",
+      "학습 목표 설정하기",
+      "/onboarding/learning-goal",
+    ],
     ["ready", "대시보드로 이동", "/dashboard"],
     ["authenticated-recovery", "설정 계속하기", "/auth/post-auth?intent=login"],
   ] as const)(

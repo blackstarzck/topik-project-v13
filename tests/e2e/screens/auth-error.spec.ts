@@ -91,6 +91,51 @@ test("X-11 auth error maps expired OTP without exposing raw provider text", asyn
   expect(errors).toEqual([]);
 });
 
+test("shared AppCard surface has no independent border chrome", async ({
+  page,
+}) => {
+  await page.goto("/auth/error?reason=unknown", { waitUntil: "networkidle" });
+
+  const cardChrome = await page.locator(".app-card").first().evaluate((card) => {
+    const cardStyle = window.getComputedStyle(card);
+    const body = card.querySelector(".ant-card-body");
+    if (!(body instanceof HTMLElement)) {
+      throw new Error("expected AppCard body");
+    }
+    const bodyStyle = window.getComputedStyle(body);
+
+    return {
+      bodyBorderBottomLeftRadius: bodyStyle.borderBottomLeftRadius,
+      bodyBorderBottomRightRadius: bodyStyle.borderBottomRightRadius,
+      bodyBorderBottomWidth: bodyStyle.borderBottomWidth,
+      bodyBorderLeftWidth: bodyStyle.borderLeftWidth,
+      bodyBorderRightWidth: bodyStyle.borderRightWidth,
+      bodyBorderTopLeftRadius: bodyStyle.borderTopLeftRadius,
+      bodyBorderTopRightRadius: bodyStyle.borderTopRightRadius,
+      bodyBorderTopWidth: bodyStyle.borderTopWidth,
+      cardBorderBottomWidth: cardStyle.borderBottomWidth,
+      cardBorderLeftWidth: cardStyle.borderLeftWidth,
+      cardBorderRightWidth: cardStyle.borderRightWidth,
+      cardBorderTopWidth: cardStyle.borderTopWidth,
+    };
+  });
+
+  expect(cardChrome).toMatchObject({
+    bodyBorderBottomLeftRadius: "0px",
+    bodyBorderBottomRightRadius: "0px",
+    bodyBorderBottomWidth: "0px",
+    bodyBorderLeftWidth: "0px",
+    bodyBorderRightWidth: "0px",
+    bodyBorderTopLeftRadius: "0px",
+    bodyBorderTopRightRadius: "0px",
+    bodyBorderTopWidth: "0px",
+    cardBorderBottomWidth: "0px",
+    cardBorderLeftWidth: "0px",
+    cardBorderRightWidth: "0px",
+    cardBorderTopWidth: "0px",
+  });
+});
+
 test("X-11 expired OTP enables resend after countdown and secondary login works", async ({
   page,
 }) => {

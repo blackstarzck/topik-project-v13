@@ -9,6 +9,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { ProfileForm } from "@/components/profile/ProfileForm";
 import { AccountLoginMethodsCard } from "@/components/profile/AccountLoginMethodsCard";
 import { ExamInfoCard } from "@/components/profile/ExamInfoCard";
+import { ProfileLogoutForm } from "@/components/profile/ProfileLogoutForm";
 import { StatusHelpCard } from "@/components/profile/StatusHelpCard";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { WorkspaceBody } from "@/components/app/WorkspaceBody";
@@ -20,6 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function ProfilePage() {
   const t = await getTranslations("profile.page");
+  const tNav = await getTranslations("nav");
   const tLoginMethods = await getTranslations("profile.loginMethods");
   const user = await requireUser();
   const settings = await getProfileSettings(user.id);
@@ -96,6 +98,7 @@ export default async function ProfilePage() {
           </div>
         </Col>
       </Row>
+      <ProfileLogoutForm label={tNav("logout")} />
     </WorkspaceBody>
   );
 }

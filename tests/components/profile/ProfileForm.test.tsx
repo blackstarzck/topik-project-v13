@@ -153,6 +153,11 @@ describe("ProfileForm", () => {
   it("keeps Save disabled and does not submit when profile fields are unchanged", async () => {
     const { container } = renderProfileForm();
 
+    const form = container.querySelector("form");
+    const settingsCard = form?.firstElementChild;
+    expect(settingsCard?.classList.contains("app-card")).toBe(true);
+    expect(settingsCard?.textContent).toContain("변경 사항이 없습니다.");
+
     const saveButton = screen.getByRole("button", { name: "프로필 저장" });
     expect((saveButton as HTMLButtonElement).disabled).toBe(true);
 
@@ -195,7 +200,9 @@ describe("ProfileForm", () => {
     fireEvent.change(nickInput, { target: { value: "tester" } });
 
     await waitFor(() => {
-      expect(screen.getByText(koMessages.profile.form.nicknameAvailable)).toBeTruthy();
+      expect(
+        screen.getByText(koMessages.profile.form.nicknameAvailable),
+      ).toBeTruthy();
     });
 
     await act(async () => {
@@ -280,7 +287,9 @@ describe("ProfileForm", () => {
     ) as HTMLInputElement;
     fireEvent.change(nickInput, { target: { value: "B" } });
 
-    expect(screen.getByText(koMessages.profile.form.nicknameTooShort)).toBeTruthy();
+    expect(
+      screen.getByText(koMessages.profile.form.nicknameTooShort),
+    ).toBeTruthy();
     expect(checkNicknameAvailabilityMock).not.toHaveBeenCalled();
   });
 
@@ -294,17 +303,23 @@ describe("ProfileForm", () => {
 
     await waitFor(
       () => {
-        expect(checkNicknameAvailabilityMock).toHaveBeenCalledWith("talkpik-new");
+        expect(checkNicknameAvailabilityMock).toHaveBeenCalledWith(
+          "talkpik-new",
+        );
       },
       { timeout: 1000 },
     );
     await waitFor(() => {
-      expect(screen.getByText(koMessages.profile.form.nicknameAvailable)).toBeTruthy();
+      expect(
+        screen.getByText(koMessages.profile.form.nicknameAvailable),
+      ).toBeTruthy();
     });
     expect(
-      (screen.getByRole("button", {
-        name: koMessages.profile.form.saveAriaLabel,
-      }) as HTMLButtonElement).disabled,
+      (
+        screen.getByRole("button", {
+          name: koMessages.profile.form.saveAriaLabel,
+        }) as HTMLButtonElement
+      ).disabled,
     ).toBe(false);
   });
 
@@ -318,12 +333,16 @@ describe("ProfileForm", () => {
     fireEvent.change(nickInput, { target: { value: "talkpik-taken" } });
 
     await waitFor(() => {
-      expect(screen.getByText(koMessages.profile.form.nicknameTaken)).toBeTruthy();
+      expect(
+        screen.getByText(koMessages.profile.form.nicknameTaken),
+      ).toBeTruthy();
     });
     expect(
-      (screen.getByRole("button", {
-        name: koMessages.profile.form.saveAriaLabel,
-      }) as HTMLButtonElement).disabled,
+      (
+        screen.getByRole("button", {
+          name: koMessages.profile.form.saveAriaLabel,
+        }) as HTMLButtonElement
+      ).disabled,
     ).toBe(true);
   });
 
@@ -337,12 +356,16 @@ describe("ProfileForm", () => {
     fireEvent.change(nickInput, { target: { value: "talkpik-offline" } });
 
     await waitFor(() => {
-      expect(screen.getByText(koMessages.profile.form.nicknameCheckFailed)).toBeTruthy();
+      expect(
+        screen.getByText(koMessages.profile.form.nicknameCheckFailed),
+      ).toBeTruthy();
     });
     expect(
-      (screen.getByRole("button", {
-        name: koMessages.profile.form.saveAriaLabel,
-      }) as HTMLButtonElement).disabled,
+      (
+        screen.getByRole("button", {
+          name: koMessages.profile.form.saveAriaLabel,
+        }) as HTMLButtonElement
+      ).disabled,
     ).toBe(false);
   });
 
@@ -384,9 +407,13 @@ describe("ProfileForm", () => {
 
     resolveFirst(false);
     await waitFor(() => {
-      expect(screen.getByText(koMessages.profile.form.nicknameAvailable)).toBeTruthy();
+      expect(
+        screen.getByText(koMessages.profile.form.nicknameAvailable),
+      ).toBeTruthy();
     });
-    expect(screen.queryByText(koMessages.profile.form.nicknameTaken)).toBeNull();
+    expect(
+      screen.queryByText(koMessages.profile.form.nicknameTaken),
+    ).toBeNull();
   });
 
   it("maps save-time nickname unique conflicts to field-level feedback", async () => {
@@ -398,7 +425,9 @@ describe("ProfileForm", () => {
     ) as HTMLInputElement;
     fireEvent.change(nickInput, { target: { value: "talkpik-race" } });
     await waitFor(() => {
-      expect(screen.getByText(koMessages.profile.form.nicknameAvailable)).toBeTruthy();
+      expect(
+        screen.getByText(koMessages.profile.form.nicknameAvailable),
+      ).toBeTruthy();
     });
 
     await act(async () => {
@@ -436,18 +465,14 @@ describe("ProfileForm", () => {
     // X-05: avatar upload is now a real Supabase Storage upload (owner-scoped),
     // replacing the earlier "deferred" honest-notice. The upload affordance and
     // its constraints (JPG/PNG, 5MB, square crop) must be shown.
-    expect(
-      screen.getByText(/JPG 또는 PNG, 5MB 이하/),
-    ).toBeTruthy();
-    expect(
-      screen.getByLabelText("이미지 업로드"),
-    ).toBeTruthy();
-    expect(
-      screen.getByLabelText("프로필 이미지 파일 선택"),
-    ).toBeTruthy();
+    expect(screen.getByText(/JPG 또는 PNG, 5MB 이하/)).toBeTruthy();
+    expect(screen.getByLabelText("이미지 업로드")).toBeTruthy();
+    expect(screen.getByLabelText("프로필 이미지 파일 선택")).toBeTruthy();
     // The account-identity / PII re-auth notice remains.
     expect(
-      screen.getByText(/계정 식별 정보 변경은 향후 재인증이 필요할 수 있습니다/),
+      screen.getByText(
+        /계정 식별 정보 변경은 향후 재인증이 필요할 수 있습니다/,
+      ),
     ).toBeTruthy();
     expect(
       screen.getByText(/이름·닉네임·자기소개 변경은 바로 저장됩니다/),

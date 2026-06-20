@@ -39,6 +39,7 @@ test("X-05 profile editing renders field constraints without dirtying data", asy
   await expect(page.getByLabel("이미지 업로드")).toBeEnabled();
   await expect(page.getByText("목표 시험")).toBeVisible();
   await expect(page.getByText("계정 상태")).toBeVisible();
+  await expect(page.getByTestId("profile-logout")).toBeVisible();
 
   expect(errors).toEqual([]);
 });

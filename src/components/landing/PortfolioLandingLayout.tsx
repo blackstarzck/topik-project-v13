@@ -16,6 +16,7 @@ import { useTranslations } from "next-intl";
 import { Autoplay, FreeMode } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 
+import { BrandLogo } from "@/components/shared/BrandLogo";
 import type { LandingAuthStatus } from "@/lib/auth/completion-routes";
 import { getLandingCta, type LandingCta } from "./auth-cta";
 
@@ -29,16 +30,16 @@ type LandingLayoutCta = {
 };
 
 const CORE_VALUE_IMAGE_SRCS = [
-  "/assets/core-value-01.png",
-  "/assets/core-value-02.png",
-  "/assets/core-value-03.png",
+  "/assets/landing/core-value-01.png",
+  "/assets/landing/core-value-02.png",
+  "/assets/landing/core-value-03.png",
 ];
 
 const LEARNER_GOAL_AVATAR_SRCS = [
-  "/assets/avatar/cat.png",
-  "/assets/avatar/rabbit.png",
-  "/assets/avatar/penguin.png",
-  "/assets/avatar/panda.png",
+  "/assets/avatar/01.svg",
+  "/assets/avatar/02.svg",
+  "/assets/avatar/03.svg",
+  "/assets/avatar/04.svg",
 ];
 
 const FUTURE_SCOPE_IMAGE_SRCS = [
@@ -430,7 +431,7 @@ function LearnerGoalsSection({
           data-landing-stagger
           modules={[Autoplay, FreeMode]}
           slidesPerView="auto"
-          spaceBetween={24}
+          spaceBetween={16}
           speed={10400}
           loop={!prefersReducedMotion}
           allowTouchMove
@@ -798,7 +799,10 @@ function ProductFooter({ primary, primaryLabel }: LandingLayoutCta) {
           하나의 학습 흐름으로 이어가세요.
         </p>
         <div className="landing-layout-footer__bottom">
-          <span>© TALKPIK AI</span>
+          <span className="landing-layout-footer__brandline">
+            <BrandLogo height={34} />
+            <span>© TALKPIK AI</span>
+          </span>
           <nav>
             {primary ? (
               <a href={primary.href}>{primaryLabel}</a>

@@ -20,19 +20,32 @@ vi.mock("next/navigation", () => ({
 afterEach(() => cleanup());
 
 describe("AnalysisLoadingPage state assets", () => {
-  it("uses the refresh state illustration while analysis is active", async () => {
-    renderWithIntl(<AnalysisLoadingPage status="analyzing" />);
+  it.each([
+    ["pending", "/assets/state/refresh.svg"],
+    ["analyzing", "/assets/state/refresh.svg"],
+    ["complete", "/assets/state/success.svg"],
+    ["failed", "/assets/state/fail.svg"],
+  ] as const)(
+    "uses the matching state illustration for the %s status card",
+    async (status, expectedAsset) => {
+      renderWithIntl(
+        <AnalysisLoadingPage
+          status={status}
+          onRetry={status === "failed" ? vi.fn() : undefined}
+        />,
+      );
 
-    expect(await screen.findByTestId("analysis-loading-panel")).toBeTruthy();
-    const stateAsset = screen.getByTestId(
-      "analysis-state-asset",
-    ) as HTMLImageElement;
+      expect(await screen.findByTestId("analysis-loading-panel")).toBeTruthy();
+      const stateAsset = screen.getByTestId(
+        "analysis-state-asset",
+      ) as HTMLImageElement;
 
-    expect(screen.getByTestId("analysis-state-card")).toBeTruthy();
-    expect(stateAsset.getAttribute("src")).toBe("/assets/state/refresh.svg");
-  });
+      expect(screen.getByTestId("analysis-state-card")).toBeTruthy();
+      expect(stateAsset.getAttribute("src")).toBe(expectedAsset);
+    },
+  );
 
-  it("uses the failure state illustration and places CTA below it", async () => {
+  it("places the failure CTA below the state illustration", async () => {
     renderWithIntl(<AnalysisLoadingPage status="failed" onRetry={vi.fn()} />);
 
     expect(await screen.findByTestId("analysis-loading-panel")).toBeTruthy();
@@ -51,16 +64,5 @@ describe("AnalysisLoadingPage state assets", () => {
       stateAsset.compareDocumentPosition(actions) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
-  });
-
-  it("uses the success state illustration before redirecting to feedback", async () => {
-    renderWithIntl(<AnalysisLoadingPage status="complete" />);
-
-    expect(await screen.findByTestId("analysis-loading-panel")).toBeTruthy();
-    const stateAsset = screen.getByTestId(
-      "analysis-state-asset",
-    ) as HTMLImageElement;
-
-    expect(stateAsset.getAttribute("src")).toBe("/assets/state/success.svg");
   });
 });

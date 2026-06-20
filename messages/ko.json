@@ -13,9 +13,7 @@
   "app": {
     "brand": "TALKPIK",
     "openMenu": "메뉴 열기",
-    "menu": "메뉴",
-    "sidebarNudgeTitle": "매일 조금씩, 확실히 성장해요!",
-    "sidebarNudgeBody": "오늘의 글쓰기 흐름을 따라가며 약점을 줄여 보세요."
+    "menu": "메뉴"
   },
   "nav": {
     "dashboard": "홈",
@@ -1952,10 +1950,12 @@
       "heading": "프로필"
     },
     "form": {
+      "settingsRegionAriaLabel": "프로필 설정",
       "emailLabel": "이메일",
       "emailExtra": "이메일 변경은 재인증이 필요하며, 보안상 일정 기간 내 변경 횟수가 제한됩니다.",
       "emailPlaceholder": "등록된 이메일 없음",
       "nameLabel": "이름",
+      "nameHelp": "실명 또는 자주 사용하는 이름을 입력해 주세요.",
       "nameTooShort": "이름은 2자 이상 입력해 주세요.",
       "namePlaceholder": "실명 또는 표시 이름",
       "nicknameLabel": "닉네임",
@@ -1968,8 +1968,10 @@
       "nicknamePlaceholder": "다른 사용자에게 보여질 이름",
       "bioLabel": "자기소개",
       "bioCount": "{count}/160자",
+      "bioHelp": "다른 사용자에게 보여지는 간단한 소개입니다. (최대 160자)",
       "bioPlaceholder": "간단한 자기소개 (160자 이내)",
       "saveAriaLabel": "프로필 저장",
+      "unchangedHint": "변경 사항이 없습니다.",
       "saveSuccess": "프로필이 저장되었습니다.",
       "saveError": "저장에 실패했어요.",
       "unsavedLeavePrompt": "저장하지 않은 변경사항이 있습니다. 페이지를 떠나시겠어요?"
@@ -1998,6 +2000,7 @@
       "uploading": "업로드 중...",
       "changeImage": "이미지 변경",
       "removeImage": "기본 이미지로 변경",
+      "recommendedSize": "권장 사이즈: 512px × 512px",
       "reselect": "다시 선택",
       "uploadSuccess": "프로필 이미지를 업데이트했어요.",
       "uploadFailed": "이미지 업로드에 실패했어요.",

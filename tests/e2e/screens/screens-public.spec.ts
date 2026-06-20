@@ -77,7 +77,9 @@ function collectErrors(page: Page): string[] {
 for (const s of PUBLIC_SCREENS) {
   test(`${s.ia} ${s.name} renders without page errors`, async ({ page }) => {
     const errors = collectErrors(page);
-    await page.goto(s.route, { waitUntil: "networkidle" });
+    const waitUntil =
+      s.name === "product-landing" ? "domcontentloaded" : "networkidle";
+    await page.goto(s.route, { waitUntil });
     await page.waitForTimeout(500);
 
     if (s.urlRegex) await expect(page).toHaveURL(s.urlRegex);

@@ -7,32 +7,49 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { WorkspaceShell } from "../../../src/components/app/WorkspaceShell";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
 
+const GLOBAL_CSS = readFileSync(
+  join(process.cwd(), "src/styles/global.css"),
+  "utf8",
+);
 const WORKSPACE_LAYOUT_CSS = readFileSync(
   join(process.cwd(), "src/styles/workspace-layout.css"),
   "utf8",
 );
+
+const navMock = vi.hoisted(() => ({
+  routerPush: vi.fn(),
+  pathname: "/dashboard",
+}));
+const LOGO_SRC = "/assets/logo.png";
+
+function decodedImageSrc(image: HTMLImageElement | null) {
+  return decodeURIComponent(image?.getAttribute("src") ?? "");
+}
+
+function cssRule(selector: string) {
+  return cssRuleFrom(GLOBAL_CSS, selector);
+}
 
 function workspaceLayoutCssRule(selector: string) {
   return workspaceLayoutCssRules(selector)[0] ?? "";
 }
 
 function workspaceLayoutCssRules(selector: string) {
-  return WORKSPACE_LAYOUT_CSS.split(selector)
-    .slice(1)
-    .map((part) => {
-      const openIndex = part.indexOf("{");
-      const closeIndex = part.indexOf("}");
-
-      return openIndex >= 0 && closeIndex > openIndex
-        ? part.slice(openIndex + 1, closeIndex)
-        : "";
-    });
+  return cssRulesFrom(WORKSPACE_LAYOUT_CSS, selector);
 }
 
-const navMock = vi.hoisted(() => ({
-  routerPush: vi.fn(),
-  pathname: "/dashboard",
-}));
+function cssRuleFrom(source: string, selector: string) {
+  return cssRulesFrom(source, selector)[0] ?? "";
+}
+
+function cssRulesFrom(source: string, selector: string) {
+  const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const matches = source.matchAll(
+    new RegExp(`${escapedSelector}\\s*\\{(?<body>[^}]*)\\}`, "gm"),
+  );
+
+  return Array.from(matches, (match) => match.groups?.body ?? "");
+}
 
 vi.mock("next/navigation", () => ({
   usePathname: () => navMock.pathname,
@@ -75,12 +92,8 @@ describe("WorkspaceShell", () => {
     expect(
       container.querySelector(".app-sidebar-menu-scroll .app-sidebar-menu"),
     ).toBeTruthy();
-    expect(
-      container.querySelector(".app-sidebar-menu-scroll .app-sidebar-nudge"),
-    ).toBeNull();
-    expect(
-      container.querySelector(".app-sidebar-menu-scroll .app-sidebar-logout"),
-    ).toBeNull();
+    expect(container.querySelector(".app-sidebar-nudge")).toBeNull();
+    expect(container.querySelector(".app-sidebar-logout")).toBeNull();
     expect(container.querySelector(".app-workspace-content")).toBeTruthy();
     expect(container.querySelector(".app-header")).toBeNull();
     expect(screen.getByTestId("workspace-child")).toBeTruthy();
@@ -101,6 +114,25 @@ describe("WorkspaceShell", () => {
     fireEvent.click(screen.getAllByLabelText("TALKPIK")[0]);
 
     expect(navMock.routerPush).toHaveBeenCalledWith("/dashboard");
+  });
+
+  it("renders the uploaded logo asset in the sidebar brand", () => {
+    const { container } = renderWithIntl(
+      <WorkspaceShell
+        role="learner"
+        userId="user-1"
+        email={null}
+        planLabel={null}
+      >
+        <div>body</div>
+      </WorkspaceShell>,
+    );
+
+    expect(
+      decodedImageSrc(
+        container.querySelector<HTMLImageElement>(".app-sidebar-brand img"),
+      ),
+    ).toContain(LOGO_SRC);
   });
 
   it("hides workspace navigation chrome on the onboarding learning goal route", () => {
@@ -159,6 +191,102 @@ describe("WorkspaceShell", () => {
     expect(
       onboardingRules.some((rule) => rule.includes("min-height: 100dvh;")),
     ).toBe(true);
+  });
+
+  it("uses a white content surface for normal workspace pages", () => {
+    const { container } = renderWithIntl(
+      <WorkspaceShell
+        role="learner"
+        userId="user-1"
+        email="learner@example.com"
+        planLabel="premium"
+      >
+        <div data-testid="workspace-child">body</div>
+      </WorkspaceShell>,
+    );
+
+    const content = container.querySelector(".app-workspace-content");
+    expect(content?.classList.contains("app-workspace-content--exam")).toBe(
+      false,
+    );
+
+    const contentRule = workspaceLayoutCssRule(
+      ".app-workspace-content.ant-layout-content",
+    );
+    expect(contentRule).toContain(
+      "background: var(--app-color-bg-container);",
+    );
+  });
+
+  it("keeps writing exam pages on the layout canvas surface", () => {
+    navMock.pathname = "/writing/short-answer-writing-51";
+
+    const { container } = renderWithIntl(
+      <WorkspaceShell
+        role="learner"
+        userId="user-1"
+        email="learner@example.com"
+        planLabel="premium"
+      >
+        <div data-testid="workspace-child">body</div>
+      </WorkspaceShell>,
+    );
+
+    const content = container.querySelector(".app-workspace-content");
+    expect(content?.classList.contains("app-workspace-content--exam")).toBe(
+      true,
+    );
+
+    const examRule = workspaceLayoutCssRule(
+      ".app-workspace-content--exam.ant-layout-content",
+    );
+    expect(examRule).toContain("background: var(--app-color-bg-layout);");
+  });
+
+  it("keeps the sidebar logo slot 68px tall and centered", () => {
+    const brandRule = cssRule(".app-sidebar-brand");
+    const logoRule = cssRule(".app-sidebar-brand__logo .brand-logo__image");
+
+    expect(brandRule).toContain("height: 68px;");
+    expect(brandRule).toContain("justify-content: center;");
+    expect(brandRule).toContain("text-align: center;");
+    expect(logoRule).toContain("height: 68px;");
+  });
+
+  it("sets the selected sidebar shell horizontal padding to zero", () => {
+    const shellRule = cssRule(".app-sidebar-shell");
+
+    expect(shellRule).toContain("padding: 18px 0;");
+  });
+
+  it("sets the workspace sidebar width contract to 300px", () => {
+    const source = readFileSync(
+      join(process.cwd(), "src/components/app/WorkspaceShell.tsx"),
+      "utf8",
+    );
+    const layoutRule = workspaceLayoutCssRule(
+      ".app-workspace-layout.ant-layout",
+    );
+
+    expect(source).toContain("width={300}");
+    expect(source).toContain("size={300}");
+    expect(layoutRule).toContain("--workspace-sider-width: 300px;");
+  });
+
+  it("keeps the responsive workspace logo 68px tall", () => {
+    const source = readFileSync(
+      join(process.cwd(), "src/components/app/WorkspaceShell.tsx"),
+      "utf8",
+    );
+    const mobileBrandRule = cssRule(".app-workspace-mobile-brand");
+    const mobileLogoRule = cssRule(
+      ".app-workspace-mobile-brand .brand-logo__image",
+    );
+
+    expect(source).toContain("<BrandLogo height={68} />");
+    expect(mobileBrandRule).toContain("height: 68px;");
+    expect(mobileBrandRule).toContain("justify-content: center;");
+    expect(mobileLogoRule).toContain("height: 68px;");
   });
 
   it("keeps growth dashboard available for free-plan learners", () => {

@@ -3,12 +3,12 @@
 import { Suspense, useState } from "react";
 import NextLink from "next/link";
 import { Flex, Typography } from "antd";
-import { Sparkles } from "lucide-react";
 
 import { AnimatedAuthCharacters } from "@/components/auth/AnimatedAuthCharacters";
 import { AuthEntrySessionGuard } from "@/components/auth/AuthEntrySessionGuard";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { SignUpForm } from "@/components/auth/SignUpForm";
+import { BrandLogo } from "@/components/shared/BrandLogo";
 import { getAuthEntryRedirectPath } from "@/lib/auth/completion-routes";
 
 const { Link: AntLink, Paragraph, Text, Title } = Typography;
@@ -50,12 +50,7 @@ export function AuthPromptExperience({
       />
       <aside className="signup-prompt-hero" aria-label={heroEyebrow}>
         <NextLink href="/" className="signup-brand" aria-label="TALKPIK AI">
-          <span className="signup-brand__mark" aria-hidden="true">
-            <Sparkles size={16} />
-          </span>
-          <span>
-            Talkpik <strong>AI</strong>
-          </span>
+          <BrandLogo height={46} />
         </NextLink>
 
         <div className="signup-prompt-character-wrap">
@@ -75,12 +70,7 @@ export function AuthPromptExperience({
             className="signup-prompt-mobile-brand"
             aria-label="TALKPIK AI"
           >
-            <span className="signup-brand__mark" aria-hidden="true">
-              <Sparkles size={16} />
-            </span>
-            <span>
-              Talkpik <strong>AI</strong>
-            </span>
+            <BrandLogo height={36} />
           </NextLink>
         </div>
 

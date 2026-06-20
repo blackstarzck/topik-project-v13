@@ -1,6 +1,7 @@
 "use client";
 
 import { Alert, App, Avatar, Button, Form, Input, Typography } from "antd";
+import { Lock } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -19,12 +20,17 @@ import {
   validateAvatarFile,
 } from "./avatar-upload";
 
-const { Paragraph } = Typography;
+const { Paragraph, Text } = Typography;
 
 const PROFILE_NAME_MIN_LENGTH = 2;
 const NICKNAME_CHECK_DEBOUNCE_MS = 500;
 
-type NicknameAvailability = "idle" | "checking" | "available" | "taken" | "failed";
+type NicknameAvailability =
+  | "idle"
+  | "checking"
+  | "available"
+  | "taken"
+  | "failed";
 type FormValidateStatus = "success" | "warning" | "error" | "validating";
 
 type ProfileDraft = {
@@ -116,7 +122,9 @@ export function ProfileForm({
   const [avatarUrl, setAvatarUrl] = useState<string | null>(() =>
     safeAvatarUrl(initialAvatarPath),
   );
-  const [avatarPath, setAvatarPath] = useState<string | null>(initialAvatarPath);
+  const [avatarPath, setAvatarPath] = useState<string | null>(
+    initialAvatarPath,
+  );
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarError, setAvatarError] = useState<string | null>(null);
 
@@ -234,6 +242,8 @@ export function ProfileForm({
       .trim()
       .charAt(0)
       .toUpperCase() || "?";
+  const saveHint = !isDirty ? t("unchangedHint") : null;
+  const saveDisabled = !canSubmit || mutation.isPending;
 
   useEffect(() => {
     if (!isDirty) return;
@@ -360,116 +370,136 @@ export function ProfileForm({
       onFinish={handleFinish}
       disabled={mutation.isPending}
     >
-      <Form.Item
-        label={t("emailLabel")}
-        extra={t("emailExtra")}
-      >
-        <Input
-          value={accountEmail ?? ""}
-          readOnly
-          placeholder={t("emailPlaceholder")}
-          aria-label={t("emailLabel")}
-        />
-      </Form.Item>
-
-      <Form.Item
-        label={t("nameLabel")}
-        validateStatus={displayNameTooShort ? "error" : undefined}
-        help={displayNameTooShort ? t("nameTooShort") : undefined}
-      >
-        <Input
-          value={displayName}
-          onChange={(event) => setDisplayName(event.target.value)}
-          placeholder={t("namePlaceholder")}
-          maxLength={30}
-          aria-label={t("nameLabel")}
-        />
-      </Form.Item>
-
-      <Form.Item
-        label={t("nicknameLabel")}
-        validateStatus={nicknameValidateStatus}
-        help={nicknameHelp}
-      >
-        <Input
-          value={nickname}
-          onChange={(event) => {
-            setNickname(event.target.value);
-            setNicknameAvailability("idle");
-          }}
-          placeholder={t("nicknamePlaceholder")}
-          maxLength={20}
-          aria-label={t("nicknameLabel")}
-        />
-      </Form.Item>
-
-      <Form.Item label={t("bioLabel")} extra={t("bioCount", { count: bio.length })}>
-        <Input.TextArea
-          value={bio}
-          onChange={(event) => setBio(event.target.value)}
-          placeholder={t("bioPlaceholder")}
-          maxLength={160}
-          autoSize={{ minRows: 2, maxRows: 4 }}
-          aria-label={t("bioLabel")}
-        />
-      </Form.Item>
-
       <AppCard
         size="small"
         role="region"
-        aria-label={tAvatar("regionAriaLabel")}
-        className="mb-4"
+        aria-label={t("settingsRegionAriaLabel")}
+        className="profile-settings-card"
       >
-        <div className="flex items-start gap-4">
-          {avatarUrl ? (
-            <Avatar size={56} src={avatarUrl} alt={tAvatar("imageAlt")} />
-          ) : (
-            <Avatar size={56}>{avatarInitial}</Avatar>
-          )}
-          <div>
-            <Paragraph strong className="!mb-1 !mt-0">
-              {tAvatar("title")}
-            </Paragraph>
-            <Paragraph type="secondary" className="!mb-2">
-              {tAvatar("constraints")}
-            </Paragraph>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png"
-              hidden
-              aria-label={tAvatar("fileInputAriaLabel")}
-              onChange={handleAvatarSelect}
-            />
-            <Button
-              onClick={() => fileInputRef.current?.click()}
-              loading={avatarUploading}
-              aria-label={tAvatar("uploadAriaLabel")}
-            >
-              {avatarUploading ? tAvatar("uploading") : tAvatar("changeImage")}
-            </Button>
-            <Button
-              className="ml-2"
-              disabled={!avatarPath || avatarUploading}
-              onClick={handleAvatarRemove}
-            >
-              {tAvatar("removeImage")}
-            </Button>
+        <Form.Item label={t("emailLabel")} extra={t("emailExtra")} required>
+          <Input
+            value={accountEmail ?? ""}
+            readOnly
+            placeholder={t("emailPlaceholder")}
+            aria-label={t("emailLabel")}
+          />
+        </Form.Item>
+
+        <Form.Item
+          label={t("nameLabel")}
+          required
+          validateStatus={displayNameTooShort ? "error" : undefined}
+          help={displayNameTooShort ? t("nameTooShort") : t("nameHelp")}
+        >
+          <Input
+            value={displayName}
+            onChange={(event) => setDisplayName(event.target.value)}
+            placeholder={t("namePlaceholder")}
+            maxLength={30}
+            aria-label={t("nameLabel")}
+          />
+        </Form.Item>
+
+        <Form.Item
+          label={t("nicknameLabel")}
+          required
+          validateStatus={nicknameValidateStatus}
+          help={nicknameHelp}
+        >
+          <Input
+            value={nickname}
+            onChange={(event) => {
+              setNickname(event.target.value);
+              setNicknameAvailability("idle");
+            }}
+            placeholder={t("nicknamePlaceholder")}
+            maxLength={20}
+            aria-label={t("nicknameLabel")}
+          />
+        </Form.Item>
+
+        <Form.Item label={t("bioLabel")} extra={t("bioHelp")}>
+          <Input.TextArea
+            value={bio}
+            onChange={(event) => setBio(event.target.value)}
+            placeholder={t("bioPlaceholder")}
+            maxLength={160}
+            showCount={{
+              formatter: ({ count }) => t("bioCount", { count }),
+            }}
+            autoSize={{ minRows: 3, maxRows: 5 }}
+            aria-label={t("bioLabel")}
+          />
+        </Form.Item>
+
+        <div className="mb-4">
+          <Paragraph strong className="!mb-2 !mt-0">
+            {tAvatar("title")}
+          </Paragraph>
+          <div
+            role="region"
+            aria-label={tAvatar("regionAriaLabel")}
+            className="rounded-default border border-border px-4 py-3"
+          >
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+              {avatarUrl ? (
+                <Avatar size={72} src={avatarUrl} alt={tAvatar("imageAlt")} />
+              ) : (
+                <Avatar size={72}>{avatarInitial}</Avatar>
+              )}
+              <div className="min-w-0 flex-1">
+                <Paragraph type="secondary" className="!mb-2">
+                  {tAvatar("constraints")}
+                </Paragraph>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png"
+                  hidden
+                  aria-label={tAvatar("fileInputAriaLabel")}
+                  onChange={handleAvatarSelect}
+                />
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    onClick={() => fileInputRef.current?.click()}
+                    loading={avatarUploading}
+                    aria-label={tAvatar("uploadAriaLabel")}
+                  >
+                    {avatarUploading
+                      ? tAvatar("uploading")
+                      : tAvatar("changeImage")}
+                  </Button>
+                  <Button
+                    disabled={!avatarPath || avatarUploading}
+                    onClick={handleAvatarRemove}
+                  >
+                    {tAvatar("removeImage")}
+                  </Button>
+                </div>
+                <Paragraph type="secondary" className="!mb-0 !mt-2">
+                  {tAvatar("recommendedSize")}
+                </Paragraph>
+              </div>
+            </div>
+            {avatarError ? (
+              <Alert
+                type="error"
+                showIcon
+                className="mt-3"
+                title={avatarError}
+                action={
+                  <Button
+                    size="small"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    {tAvatar("reselect")}
+                  </Button>
+                }
+              />
+            ) : null}
           </div>
         </div>
-        {avatarError ? (
-          <Alert
-            type="error"
-            showIcon
-            className="mt-3"
-            title={avatarError}
-            action={
-              <Button size="small" onClick={() => fileInputRef.current?.click()}>
-                {tAvatar("reselect")}
-              </Button>
-            }
-          />
-        ) : null}
+
         <Alert
           className="mt-3"
           type="info"
@@ -477,19 +507,31 @@ export function ProfileForm({
           title={tAvatar("securityNoticeTitle")}
           description={tAvatar("securityNoticeDescription")}
         />
-      </AppCard>
 
-      <Form.Item>
-        <Button
-          type="primary"
-          htmlType="submit"
-          loading={mutation.isPending}
-          disabled={!canSubmit || mutation.isPending}
-          aria-label={t("saveAriaLabel")}
-        >
-          {tCommon("save")}
-        </Button>
-      </Form.Item>
+        <Form.Item className="!mb-0 !mt-6">
+          <div className="flex flex-wrap items-center gap-3">
+            <Button
+              type="primary"
+              htmlType="submit"
+              icon={
+                saveDisabled && !mutation.isPending ? (
+                  <Lock size={14} aria-hidden="true" />
+                ) : undefined
+              }
+              loading={mutation.isPending}
+              disabled={saveDisabled}
+              aria-label={t("saveAriaLabel")}
+            >
+              {tCommon("save")}
+            </Button>
+            {saveHint ? (
+              <Text type="secondary" className="text-sm">
+                {saveHint}
+              </Text>
+            ) : null}
+          </div>
+        </Form.Item>
+      </AppCard>
     </Form>
   );
 }

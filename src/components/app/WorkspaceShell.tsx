@@ -7,11 +7,12 @@ import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { AppDrawer } from "@/components/shared/AppDrawer";
+import { BrandLogo } from "@/components/shared/BrandLogo";
 import type { AppRole } from "@/lib/auth/roles";
 import { SidebarNav } from "./SidebarNav";
 
 const { Header, Sider, Content } = Layout;
-const { Title, Text } = Typography;
+const { Text } = Typography;
 const { useBreakpoint } = Grid;
 
 type Props = {
@@ -67,7 +68,7 @@ export function WorkspaceShell({
           className="app-workspace-sider"
           breakpoint="md"
           collapsedWidth={0}
-          width={240}
+          width={300}
           trigger={null}
         >
           <SidebarNav role={role} planLabel={planLabel} />
@@ -83,9 +84,12 @@ export function WorkspaceShell({
                 onClick={() => setDrawerOpen(true)}
                 icon={<MenuIcon aria-hidden size={20} />}
               />
-              <Title className="app-workspace-mobile-brand" level={4}>
-                {t("brand")}
-              </Title>
+              <span
+                className="app-workspace-mobile-brand"
+                aria-label={t("brand")}
+              >
+                <BrandLogo height={68} />
+              </span>
             </Space>
             <Space size={8} align="center">
               {email ? <Text type="secondary">{email}</Text> : null}
@@ -106,7 +110,7 @@ export function WorkspaceShell({
         <AppDrawer
           rootClassName="app-workspace-drawer"
           placement="left"
-          size={240}
+          size={300}
           open={showDrawer}
           onClose={() => setDrawerOpen(false)}
           styles={{ body: { padding: 0 } }}

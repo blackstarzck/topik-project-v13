@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-// G6 (QA 2026-06-12): 워크스페이스 사이드바 하단 로그아웃 진입점.
+// G6 (QA 2026-06-12): 프로필 화면 하단 로그아웃 진입점.
 //
 // ⚠️ 공유 storageState 세션으로 로그아웃하면 안 된다 — /auth/sign-out의
 // signOut()이 학생 계정 토큰을 revoke해 같은 계정을 쓰는 잔여 테스트의
@@ -14,7 +14,7 @@ import { test, expect } from "@playwright/test";
 const EMAIL = process.env.E2E_STUDENT_EMAIL ?? "student@audit.local";
 const PASSWORD = process.env.SUPABASE_TEST_PASSWORD ?? "";
 
-test("sidebar logout signs out and protects workspace routes (G6)", async ({ browser }, testInfo) => {
+test("profile logout signs out and protects workspace routes (G6)", async ({ browser }, testInfo) => {
   test.skip(
     testInfo.project.name !== "desktop-1280",
     "logout flow runs once on desktop-1280",
@@ -38,8 +38,16 @@ test("sidebar logout signs out and protects workspace routes (G6)", async ({ bro
     await page.locator('button[type="submit"]').click();
     await page.waitForURL("**/dashboard", { timeout: 15_000 });
 
-    // 사이드바 하단 로그아웃 → form POST /auth/sign-out → 303 → /login.
-    const logoutButton = page.getByTestId("sidebar-logout");
+    // 사이드바 하단에는 학습 문구와 로그아웃 진입점이 없어야 한다.
+    await expect(page.getByTestId("sidebar-logout")).toHaveCount(0);
+    await expect(
+      page.getByText("매일 조금씩, 확실히 성장해요!"),
+    ).toHaveCount(0);
+
+    // 프로필 화면 하단 로그아웃 → form POST /auth/sign-out → 303 → /login.
+    await page.goto("/profile", { waitUntil: "networkidle" });
+    await expect(page).toHaveURL(/\/profile/);
+    const logoutButton = page.getByTestId("profile-logout");
     await expect(logoutButton).toBeVisible();
     await logoutButton.click();
     await page.waitForURL("**/login**", { timeout: 15_000 });

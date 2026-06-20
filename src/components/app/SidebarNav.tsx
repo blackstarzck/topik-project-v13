@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Button,
   ConfigProvider,
   Menu,
   Tag,
@@ -15,14 +14,12 @@ import {
   Bell,
   BookOpen,
   CreditCard,
-  GraduationCap,
   Home,
   Languages,
   Library,
   Lightbulb,
   ListChecks,
   Lock,
-  LogOut,
   PenLine,
   Settings,
   Target,
@@ -30,7 +27,8 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState } from "react";
+import { BrandLogo } from "@/components/shared/BrandLogo";
 import type { AppRole } from "@/lib/auth/roles";
 import {
   APP_ROUTES,
@@ -157,16 +155,6 @@ function navIcon(key: string) {
   return null;
 }
 
-function TextLike({
-  children,
-  strong,
-}: {
-  children: ReactNode;
-  strong?: boolean;
-}) {
-  return strong ? <strong>{children}</strong> : <span>{children}</span>;
-}
-
 export function SidebarNav({ role, planLabel, onNavigate }: Props) {
   const pathname = usePathname();
   const router = useRouter();
@@ -255,11 +243,7 @@ export function SidebarNav({ role, planLabel, onNavigate }: Props) {
           onNavigate?.();
         }}
       >
-        <span className="app-sidebar-brand__mark">
-          <GraduationCap aria-hidden size={20} />
-        </span>
-        <span>{tApp("brand")}</span>
-        <strong>AI</strong>
+        <BrandLogo className="app-sidebar-brand__logo" height={68} />
       </button>
       <div className="app-sidebar-menu-scroll">
         <ConfigProvider theme={sidebarMenuTheme}>
@@ -281,27 +265,6 @@ export function SidebarNav({ role, planLabel, onNavigate }: Props) {
           />
         </ConfigProvider>
       </div>
-      <div className="app-sidebar-nudge">
-        <TextLike strong>{tApp("sidebarNudgeTitle")}</TextLike>
-        <span>{tApp("sidebarNudgeBody")}</span>
-        {planLabel ? <Tag>{planLabel}</Tag> : null}
-      </div>
-      {/* G6 (QA 2026-06-12): 로그아웃 진입점. /auth/sign-out은 POST 전용(CSRF
-          보호) + 303→/login이므로 JS 없이 동작하는 HTML form post를 쓴다. */}
-      <form
-        method="post"
-        action="/auth/sign-out"
-        className="app-sidebar-logout"
-      >
-        <Button
-          block
-          htmlType="submit"
-          icon={<LogOut aria-hidden size={16} strokeWidth={1.8} />}
-          data-testid="sidebar-logout"
-        >
-          {t("logout")}
-        </Button>
-      </form>
     </div>
   );
 }

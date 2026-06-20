@@ -7,6 +7,11 @@ import { renderWithIntl } from "../../test-utils/renderWithIntl";
 const getUserMock = vi.fn();
 const routerReplaceMock = vi.fn();
 const routerPushMock = vi.fn();
+const LOGO_SRC = "/assets/logo.png";
+
+function decodedImageSrc(image: HTMLImageElement) {
+  return decodeURIComponent(image.getAttribute("src") ?? "");
+}
 
 vi.mock("@/lib/supabase/browser", () => ({
   createSupabaseBrowserClient: () => ({
@@ -108,6 +113,22 @@ describe("AuthPromptExperience", () => {
         "/auth/post-auth?intent=sign-up",
       );
     });
+  });
+
+  it("renders the uploaded logo asset in desktop and mobile brand slots", () => {
+    renderLoginPrompt();
+
+    const logoImages = Array.from(
+      document.querySelectorAll<HTMLImageElement>(
+        ".signup-brand img, .signup-prompt-mobile-brand img",
+      ),
+    );
+
+    expect(logoImages).toHaveLength(2);
+    expect(logoImages.map(decodedImageSrc)).toEqual([
+      expect.stringContaining(LOGO_SRC),
+      expect.stringContaining(LOGO_SRC),
+    ]);
   });
 
   it("rechecks persisted pageshow restores after OAuth browser-back navigation", async () => {

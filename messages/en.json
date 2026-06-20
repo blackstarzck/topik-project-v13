@@ -13,9 +13,7 @@
   "app": {
     "brand": "TALKPIK",
     "openMenu": "Open menu",
-    "menu": "Menu",
-    "sidebarNudgeTitle": "Grow a little every day.",
-    "sidebarNudgeBody": "Follow today's writing flow and narrow your weak spots."
+    "menu": "Menu"
   },
   "nav": {
     "dashboard": "Home",
@@ -1952,10 +1950,12 @@
       "heading": "Profile"
     },
     "form": {
+      "settingsRegionAriaLabel": "Profile settings",
       "emailLabel": "Email",
       "emailExtra": "Changing your email requires re-verification, and for security the number of changes within a period is limited.",
       "emailPlaceholder": "No email registered",
       "nameLabel": "Name",
+      "nameHelp": "Enter your real name or the name you use most often.",
       "nameTooShort": "Please enter at least 2 characters for your name.",
       "namePlaceholder": "Real name or display name",
       "nicknameLabel": "Nickname",
@@ -1968,8 +1968,10 @@
       "nicknamePlaceholder": "The name shown to other users",
       "bioLabel": "About me",
       "bioCount": "{count}/160 chars",
+      "bioHelp": "A short introduction shown to other users. (Up to 160 characters)",
       "bioPlaceholder": "A short introduction (up to 160 characters)",
       "saveAriaLabel": "Save profile",
+      "unchangedHint": "No changes to save.",
       "saveSuccess": "Your profile has been saved.",
       "saveError": "Saving failed.",
       "unsavedLeavePrompt": "You have unsaved changes. Do you want to leave this page?"
@@ -1998,6 +2000,7 @@
       "uploading": "Uploading...",
       "changeImage": "Change image",
       "removeImage": "Use default image",
+      "recommendedSize": "Recommended size: 512px × 512px",
       "reselect": "Reselect",
       "uploadSuccess": "Your profile image has been updated.",
       "uploadFailed": "Image upload failed.",

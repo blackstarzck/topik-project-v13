@@ -13,9 +13,7 @@
   "app": {
     "brand": "TALKPIK",
     "openMenu": "Mở menu",
-    "menu": "Menu",
-    "sidebarNudgeTitle": "Tiến bộ từng chút mỗi ngày.",
-    "sidebarNudgeBody": "Theo dòng viết hôm nay và thu hẹp điểm yếu của bạn."
+    "menu": "Menu"
   },
   "nav": {
     "dashboard": "Trang chủ",
@@ -1952,10 +1950,12 @@
       "heading": "Hồ sơ"
     },
     "form": {
+      "settingsRegionAriaLabel": "Cài đặt hồ sơ",
       "emailLabel": "Email",
       "emailExtra": "Việc thay đổi email cần xác minh lại và vì lý do bảo mật, số lần thay đổi trong một khoảng thời gian bị giới hạn.",
       "emailPlaceholder": "Chưa đăng ký email",
       "nameLabel": "Tên",
+      "nameHelp": "Nhập tên thật hoặc tên bạn thường dùng.",
       "nameTooShort": "Vui lòng nhập tên có ít nhất 2 ký tự.",
       "namePlaceholder": "Tên thật hoặc tên hiển thị",
       "nicknameLabel": "Biệt danh",
@@ -1968,8 +1968,10 @@
       "nicknamePlaceholder": "Tên hiển thị cho người dùng khác",
       "bioLabel": "Giới thiệu bản thân",
       "bioCount": "{count}/160 ký tự",
+      "bioHelp": "Phần giới thiệu ngắn hiển thị cho người dùng khác. (Tối đa 160 ký tự)",
       "bioPlaceholder": "Giới thiệu ngắn gọn (tối đa 160 ký tự)",
       "saveAriaLabel": "Lưu hồ sơ",
+      "unchangedHint": "Không có thay đổi nào.",
       "saveSuccess": "Hồ sơ của bạn đã được lưu.",
       "saveError": "Lưu thất bại.",
       "unsavedLeavePrompt": "Bạn có thay đổi chưa lưu. Bạn có muốn rời khỏi trang này không?"
@@ -1998,6 +2000,7 @@
       "uploading": "Đang tải lên...",
       "changeImage": "Đổi ảnh",
       "removeImage": "Dùng ảnh mặc định",
+      "recommendedSize": "Kích thước đề xuất: 512px × 512px",
       "reselect": "Chọn lại",
       "uploadSuccess": "Ảnh hồ sơ của bạn đã được cập nhật.",
       "uploadFailed": "Tải ảnh lên thất bại.",
