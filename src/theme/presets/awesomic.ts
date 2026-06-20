@@ -1,6 +1,10 @@
 import type { AppThemePreset } from "../types";
 import { awesomicThemeTokens } from "../tokens/awesomic";
 
+const formControlFontSize = 16;
+const formControlHeight = 40;
+const formControlHeightLarge = 48;
+
 const awesomicToken = {
   colorPrimary: awesomicThemeTokens.color.obsidian,
   colorText: awesomicThemeTokens.color.ink,
@@ -14,6 +18,10 @@ const awesomicToken = {
   borderRadius: awesomicThemeTokens.radius.base,
   borderRadiusSM: awesomicThemeTokens.radius.badge,
   borderRadiusLG: awesomicThemeTokens.radius.base,
+  fontSize: formControlFontSize,
+  fontSizeLG: formControlFontSize,
+  controlHeight: formControlHeight,
+  controlHeightLG: formControlHeightLarge,
   boxShadow: awesomicThemeTokens.shadow.none,
   boxShadowSecondary: awesomicThemeTokens.shadow.elevated,
 };
@@ -29,8 +37,19 @@ const awesomicComponents = {
     borderRadiusLG: awesomicThemeTokens.radius.card,
     boxShadow: awesomicThemeTokens.shadow.none,
   },
+  Form: {
+    labelFontSize: formControlFontSize,
+    itemMarginBottom: 32,
+    verticalLabelPadding: "0 0 12px",
+  },
   Input: {
     borderRadius: awesomicThemeTokens.radius.input,
+    inputFontSize: formControlFontSize,
+    inputFontSizeLG: formControlFontSize,
+  },
+  Select: {
+    optionFontSize: formControlFontSize,
+    optionHeight: formControlHeight,
   },
   Tag: {
     borderRadiusSM: awesomicThemeTokens.radius.badge,

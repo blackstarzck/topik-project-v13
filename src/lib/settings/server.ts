@@ -18,7 +18,9 @@ export async function getProfileSettings(
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("profiles")
-    .select("display_name, nickname, bio, ui_locale, notification_prefs")
+    .select(
+      "display_name, nickname, nationality_country_code, bio, ui_locale, notification_prefs",
+    )
     .eq("id", userId)
     .maybeSingle();
   if (error) {
@@ -30,6 +32,7 @@ export async function getProfileSettings(
   return {
     display_name: data.display_name,
     nickname: data.nickname,
+    nationality_country_code: data.nationality_country_code,
     // Phase 7-E Task 10 — bio.
     bio: data.bio,
     ui_locale: data.ui_locale,

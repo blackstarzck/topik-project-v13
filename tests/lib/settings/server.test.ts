@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { getProfileSettings } from "../../../src/lib/settings/server";
+import type { SupabaseServerClient } from "../../../src/lib/supabase/server";
 
 type RowShape = {
   display_name: string | null;
   nickname: string | null;
+  nationality_country_code?: string | null;
   ui_locale: "ko" | "en" | "vi";
   notification_prefs: unknown;
 } | null;
@@ -11,20 +13,24 @@ type RowShape = {
 function makeClient(opts: {
   data?: RowShape;
   error?: { message: string } | null;
-}) {
+  onSelect?: (columns: string) => void;
+}): SupabaseServerClient {
   return {
     from: () => ({
-      select: () => ({
-        eq: () => ({
-          maybeSingle: () =>
-            Promise.resolve({
-              data: opts.data ?? null,
-              error: opts.error ?? null,
-            }),
-        }),
-      }),
+      select: (columns: string) => {
+        opts.onSelect?.(columns);
+        return {
+          eq: () => ({
+            maybeSingle: () =>
+              Promise.resolve({
+                data: opts.data ?? null,
+                error: opts.error ?? null,
+              }),
+          }),
+        };
+      },
     }),
-  };
+  } as unknown as SupabaseServerClient;
 }
 
 describe("getProfileSettings", () => {
@@ -37,10 +43,8 @@ describe("getProfileSettings", () => {
       ui_locale: "ko" as const,
       notification_prefs: { weekly_summary: true, feedback_ready: false },
     };
-    const result = await getProfileSettings(
-      "user-1",
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      async () => makeClient({ data: row }) as any,
+    const result = await getProfileSettings("user-1", async () =>
+      makeClient({ data: row }),
     );
     expect(result).toEqual({
       display_name: "Chan",
@@ -59,12 +63,29 @@ describe("getProfileSettings", () => {
       ui_locale: "ko" as const,
       notification_prefs: {},
     };
-    const result = await getProfileSettings(
-      "user-2",
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      async () => makeClient({ data: row }) as any,
+    const result = await getProfileSettings("user-2", async () =>
+      makeClient({ data: row }),
     );
     expect(result?.bio).toBeNull();
+  });
+
+  it("includes nationality_country_code in the profile settings projection", async () => {
+    const selectedColumns: string[] = [];
+    const result = await getProfileSettings("user-3", async () =>
+      makeClient({
+        data: {
+          display_name: null,
+          nickname: null,
+          nationality_country_code: "VN",
+          ui_locale: "ko",
+          notification_prefs: {},
+        },
+        onSelect: (columns) => selectedColumns.push(columns),
+      }),
+    );
+
+    expect(selectedColumns[0]).toContain("nationality_country_code");
+    expect(result?.nationality_country_code).toBe("VN");
   });
 
   it("coerces unknown / non-boolean notification_prefs keys away", async () => {

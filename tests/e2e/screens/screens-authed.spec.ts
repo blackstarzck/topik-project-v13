@@ -110,6 +110,18 @@ const AUTHED_SCREENS: Screen[] = [
     pathRegex: /\/profile/,
   },
   {
+    ia: "SETTINGS-ACCOUNT",
+    name: "account-settings",
+    route: "/settings/account",
+    pathRegex: /\/settings\/account/,
+  },
+  {
+    ia: "SETTINGS-LEARNING",
+    name: "learning-settings",
+    route: "/settings/learning",
+    pathRegex: /\/settings\/learning/,
+  },
+  {
     ia: "X-07",
     name: "weakness-based-recommendations",
     route: "/practice/weakness",

@@ -33,7 +33,7 @@ test("X-02 growth dashboard is available without a paid-plan lock", async ({
   await expect(page.getByTestId("growth-kpi-goal")).toBeVisible();
   await expect(page.getByText("성장 추세 차트")).toBeVisible();
   await expect(page.getByText("약점 매트릭스")).toBeVisible();
-  await expect(page.getByText("인사이트")).toBeVisible();
+  await expect(page.getByText("학습 인사이트")).toBeVisible();
   await expect(page.getByText("최근 완료 문제")).toBeVisible();
   await expect(page.getByText("다음 추천 문제")).toBeVisible();
   await expect(page.getByTestId("growth-locked-report")).toHaveCount(0);

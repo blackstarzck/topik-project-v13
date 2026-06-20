@@ -5,13 +5,7 @@
 //   instead of in-place "이메일 확인하세요" state. Verify page handles
 //   resend with 60s cooldown and survives reloads/deep-links.
 
-import type {
-  ChangeEvent,
-  ComponentType,
-  KeyboardEvent,
-  ReactNode,
-  SVGProps,
-} from "react";
+import type { ChangeEvent, KeyboardEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
@@ -24,14 +18,16 @@ import {
   Divider,
   Form,
   Input,
-  Select,
   Typography,
 } from "antd";
 import { ArrowRight } from "lucide-react";
-import { countries, hasFlag } from "country-flag-icons";
-import * as FlagIcons from "country-flag-icons/react/3x2";
 
 import { GoogleMark } from "@/components/auth/GoogleMark";
+import {
+  CountryRegionSelect,
+  isSupportedCountryCode,
+  normalizeCountryCode,
+} from "@/components/shared/CountryRegionSelect";
 import {
   buildAffiliationMetadata,
   clearStoredAffiliationCode,
@@ -74,50 +70,8 @@ const STEP_EMAIL = 2;
 const STEP_PASSWORD = 3;
 const STEP_TERMS = 4;
 
-const NON_ISO_REGION_CODES = new Set([
-  "AC",
-  "EU",
-  "IC",
-  "TA",
-  "XA",
-  "XC",
-  "XK",
-  "XO",
-]);
-
-const ISO_COUNTRY_CODES = countries
-  .filter(
-    (code) =>
-      /^[A-Z]{2}$/.test(code) &&
-      !NON_ISO_REGION_CODES.has(code) &&
-      hasFlag(code),
-  )
-  .sort();
-
-const ISO_COUNTRY_CODE_SET = new Set(ISO_COUNTRY_CODES);
-
-type CountryFlagComponent = ComponentType<
-  SVGProps<SVGSVGElement> & { title?: string }
->;
-
-const COUNTRY_FLAG_ICONS = FlagIcons as Record<
-  string,
-  CountryFlagComponent | undefined
->;
-
-type CountryRegionOption = {
-  value: string;
-  label: ReactNode;
-  countryName: string;
-  searchText: string;
-};
-
 function normalizeFieldValue(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
-}
-
-function normalizeCountryCode(value: unknown) {
-  return normalizeFieldValue(value).toUpperCase();
 }
 
 function isDisplayNameReady(value: unknown) {
@@ -126,7 +80,7 @@ function isDisplayNameReady(value: unknown) {
 }
 
 function isCountryCodeReady(value: unknown) {
-  return ISO_COUNTRY_CODE_SET.has(normalizeCountryCode(value));
+  return isSupportedCountryCode(value);
 }
 
 function isEmailReady(value: unknown) {
@@ -147,56 +101,6 @@ function isPasswordPairReady(password: unknown, passwordConfirm: unknown) {
     nextPassword.length <= 64 &&
     nextPassword === nextPasswordConfirm
   );
-}
-
-function CountryFlag({
-  code,
-  countryName,
-}: {
-  code: string;
-  countryName: string;
-}) {
-  const FlagIcon = COUNTRY_FLAG_ICONS[code];
-  if (!FlagIcon) {
-    return (
-      <span className="w-6 shrink-0 text-xs font-medium text-neutral-500">
-        {code}
-      </span>
-    );
-  }
-
-  return <FlagIcon title={countryName} className="h-4 w-6 shrink-0" />;
-}
-
-function CountryRegionOptionLabel({
-  code,
-  countryName,
-}: {
-  code: string;
-  countryName: string;
-}) {
-  return (
-    <span className="flex items-center gap-2">
-      <CountryFlag code={code} countryName={countryName} />
-      <span className="min-w-0 flex-1 truncate">{countryName}</span>
-      <span className="shrink-0 text-xs text-neutral-500">{code}</span>
-    </span>
-  );
-}
-
-function createCountryRegionOptions(locale: string): CountryRegionOption[] {
-  const names = new Intl.DisplayNames([locale], { type: "region" });
-  const collator = new Intl.Collator(locale);
-
-  return ISO_COUNTRY_CODES.map((code) => {
-    const countryName = names.of(code) ?? code;
-    return {
-      value: code,
-      countryName,
-      searchText: `${countryName} ${code}`,
-      label: <CountryRegionOptionLabel code={code} countryName={countryName} />,
-    };
-  }).sort((a, b) => collator.compare(a.countryName, b.countryName));
 }
 
 type CountdownTranslate = ReturnType<typeof useTranslations<"auth.countdown">>;
@@ -264,9 +168,7 @@ export function SignUpForm({
   const termsValue = Form.useWatch("terms", form);
   const isCoolingDown = signUpCooldown.remaining > 0;
   const hasValidName = isDisplayNameReady(displayNameValue);
-  const hasValidCountryRegion = isCountryCodeReady(
-    nationalityCountryCodeValue,
-  );
+  const hasValidCountryRegion = isCountryCodeReady(nationalityCountryCodeValue);
   const hasValidEmail = isEmailReady(emailValue);
   const hasValidPassword = isPasswordPairReady(
     passwordValue,
@@ -304,10 +206,6 @@ export function SignUpForm({
   const showPasswordStep = currentVisibleStep >= STEP_PASSWORD;
   const showTermsStep = currentVisibleStep >= STEP_TERMS;
   const showSubmitButton = showTermsStep;
-  const countryRegionOptions = useMemo(
-    () => createCountryRegionOptions(locale),
-    [locale],
-  );
 
   useEffect(() => {
     onCooldownChange?.(isCoolingDown);
@@ -503,26 +401,14 @@ export function SignUpForm({
             <Form.Item
               label={t("countryRegionLabel")}
               name="nationalityCountryCode"
-              rules={[
-                { required: true, message: t("countryRegionRequired") },
-              ]}
+              rules={[{ required: true, message: t("countryRegionRequired") }]}
             >
-              <Select
+              <CountryRegionSelect
+                locale={locale}
                 id="nationalityCountryCode"
-                aria-label={t("countryRegionLabel")}
-                data-testid="country-region-select"
-                showSearch
-                virtual={false}
-                options={countryRegionOptions}
+                ariaLabel={t("countryRegionLabel")}
+                dataTestId="country-region-select"
                 placeholder={t("countryRegionPlaceholder")}
-                filterOption={(input, option) => {
-                  const searchText =
-                    (option as CountryRegionOption | undefined)?.searchText ??
-                    "";
-                  return searchText
-                    .toLowerCase()
-                    .includes(input.trim().toLowerCase());
-                }}
                 onFocus={() => onTypingChange?.(true)}
                 onBlur={() => onTypingChange?.(false)}
                 onChange={(value) => {

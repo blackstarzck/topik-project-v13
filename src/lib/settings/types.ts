@@ -29,6 +29,7 @@ export type NotificationPrefs = Partial<Record<NotificationPrefKey, boolean>>;
 export interface ProfileSettings {
   display_name: string | null;
   nickname: string | null;
+  nationality_country_code: string | null;
   // Phase 7-E Task 10 (P1-6) — self-introduction up to 160 chars (nullable).
   bio: string | null;
   ui_locale: "ko" | "en" | "vi";
@@ -42,6 +43,7 @@ export interface UpdateLocaleInput {
 export interface UpdateProfileInput {
   display_name?: string | null;
   nickname?: string | null;
+  nationality_country_code?: string | null;
   // Phase 7-E Task 10 — bio mutation. DB CHECK char_length <= 160.
   bio?: string | null;
 }

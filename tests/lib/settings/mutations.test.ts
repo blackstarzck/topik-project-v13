@@ -40,9 +40,10 @@ function makeClient(opts: {
         eq: () => ({
           maybeSingle: () =>
             Promise.resolve({
-              data: opts.currentPrefs === undefined
-                ? null
-                : { notification_prefs: opts.currentPrefs },
+              data:
+                opts.currentPrefs === undefined
+                  ? null
+                  : { notification_prefs: opts.currentPrefs },
               error: opts.selectError ?? null,
             }),
         }),
@@ -187,6 +188,17 @@ describe("updateProfile", () => {
       () => makeClient({ onUpdate: (c) => calls.push(c) }) as any,
     );
     expect(calls[0].patch).toEqual({ bio: null });
+  });
+
+  it("writes nationality_country_code when provided", async () => {
+    const calls: UpdateCall[] = [];
+    await updateProfile(
+      "user-1",
+      { nationality_country_code: "VN" },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      () => makeClient({ onUpdate: (c) => calls.push(c) }) as any,
+    );
+    expect(calls[0].patch).toEqual({ nationality_country_code: "VN" });
   });
 
   it("no-ops when no keys provided", async () => {

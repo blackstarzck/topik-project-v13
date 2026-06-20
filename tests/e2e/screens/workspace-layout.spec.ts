@@ -63,6 +63,9 @@ const LAYOUT_ROUTES = [
   { route: "/practice/weakness", size: null },
   { route: "/practice/next", size: "workspace" },
   { route: "/library", size: "workspace" },
+  { route: "/profile", size: "form" },
+  { route: "/settings/account", size: "form" },
+  { route: "/settings/learning", size: "form" },
   { route: "/settings/language", size: "form" },
 ] as const;
 

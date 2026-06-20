@@ -14,6 +14,7 @@ import {
   Typography,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
+import { CreditCard, FileText, PenLine } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -29,6 +30,7 @@ import {
   fetchMySubscription,
   fetchPaymentHistory,
   formatAmountCents,
+  formatPlanPrice,
   type PaymentRecord,
   type Subscription,
   type SubscriptionPlan,
@@ -68,6 +70,7 @@ type SubState =
       status: "ready";
       subscription: Subscription | null;
       planName: string | null;
+      plan: SubscriptionPlan | null;
     }
   | { status: "error"; message: string };
 
@@ -83,6 +86,10 @@ function formatDate(iso: string | null): string {
   } catch {
     return iso;
   }
+}
+
+function scheduledCancellationDate(subscription: Subscription): string | null {
+  return subscription.cancel_at ?? subscription.current_period_end;
 }
 
 /**
@@ -115,14 +122,16 @@ export function SubscriptionShell() {
     try {
       const subscription = await fetchMySubscription();
       let planName: string | null = null;
+      let plan: SubscriptionPlan | null = null;
       if (subscription?.plan_key) {
         const plans = await fetchActivePlans();
-        planName =
+        plan =
           plans.find(
             (p: SubscriptionPlan) => p.plan_key === subscription.plan_key,
-          )?.name ?? subscription.plan_key;
+          ) ?? null;
+        planName = plan?.name ?? subscription.plan_key;
       }
-      setSub({ status: "ready", subscription, planName });
+      setSub({ status: "ready", subscription, planName, plan });
     } catch (err) {
       setSub({
         status: "error",
@@ -293,49 +302,131 @@ export function SubscriptionShell() {
                     </Link>
                   </div>
                 ) : (
-                  <Descriptions
-                    column={1}
-                    size="small"
-                    items={[
-                      {
-                        key: "status",
-                        label: t("current.statusLabel"),
-                        children: (
-                          <Tag>
-                            {t(
-                              `status.${STATUS_BADGE_META[sub.subscription.status].labelKey}` as Parameters<typeof t>[0],
-                            )}
-                          </Tag>
-                        ),
-                      },
-                      {
-                        key: "plan",
-                        label: t("current.planLabel"),
-                        children: sub.planName ?? "—",
-                      },
-                      {
-                        key: "cadence",
-                        label: t("current.cadenceLabel"),
-                        children: t(
-                          `cadence.${cadenceLabelKey(sub.subscription.billing_cadence)}` as Parameters<typeof t>[0],
-                        ),
-                      },
-                      {
-                        key: "next",
-                        label: t("current.nextBillingLabel"),
-                        children:
-                          sub.subscription.cancel_at != null
-                            ? t("current.cancelScheduled", {
-                                date: formatDate(
-                                  sub.subscription.current_period_end,
-                                ),
-                              })
-                            : formatDate(sub.subscription.current_period_end),
-                      },
-                    ]}
-                  />
+                  <div className="flex w-full flex-col gap-4">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                      <div className="flex min-w-0 items-center gap-4">
+                        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-md bg-text text-lg font-bold text-background">
+                          PRO
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <Text strong className="text-lg">
+                              {sub.planName ?? t("current.unknownPlan")}
+                            </Text>
+                            <Tag>
+                              {t(
+                                `status.${STATUS_BADGE_META[sub.subscription.status].labelKey}` as Parameters<typeof t>[0],
+                              )}
+                            </Tag>
+                          </div>
+                          <div className="mt-2 flex flex-wrap items-center gap-2">
+                            <Tag>
+                              {t(
+                                `cadence.${cadenceLabelKey(sub.subscription.billing_cadence)}` as Parameters<typeof t>[0],
+                              )}
+                            </Tag>
+                            <Text type="secondary">
+                              {t("current.autoRenewalNote")}
+                            </Text>
+                          </div>
+                        </div>
+                      </div>
+
+                      <Descriptions
+                        className="min-w-0 lg:min-w-80"
+                        column={1}
+                        size="small"
+                        items={[
+                          {
+                            key: "next",
+                            label: t("current.nextBillingLabel"),
+                            children:
+                              sub.subscription.cancel_at != null
+                                ? t("current.cancelScheduled", {
+                                    date: formatDate(
+                                      scheduledCancellationDate(
+                                        sub.subscription,
+                                      ),
+                                    ),
+                                  })
+                                : formatDate(
+                                    sub.subscription.current_period_end,
+                                  ),
+                          },
+                          {
+                            key: "amount",
+                            label: t("current.nextChargeLabel"),
+                            children: sub.plan ? formatPlanPrice(sub.plan) : "—",
+                          },
+                        ]}
+                      />
+                    </div>
+                  </div>
                 )}
               </AppCard>
+
+              {sub.status === "ready" && sub.subscription !== null ? (
+                <Row gutter={[16, 16]}>
+                  <Col xs={24} lg={12}>
+                    <AppCard
+                      data-testid="subscription-payment-card"
+                      title={t("payment.title")}
+                      extra={
+                        <CreditCard
+                          aria-hidden="true"
+                          className="h-4 w-4 text-text-secondary"
+                        />
+                      }
+                    >
+                      <div className="flex w-full flex-col gap-3">
+                        <div>
+                          <Text strong>{t("payment.placeholderTitle")}</Text>
+                          <Paragraph
+                            type="secondary"
+                            className="!mb-0 !mt-1"
+                          >
+                            {t("payment.placeholderBody")}
+                          </Paragraph>
+                        </div>
+                        <Button
+                          data-testid="subscription-payment-card-change"
+                          onClick={() => setPolicyModal("payment_method")}
+                        >
+                          {t("change.changePaymentMethod")}
+                        </Button>
+                      </div>
+                    </AppCard>
+                  </Col>
+                  <Col xs={24} lg={12}>
+                    <AppCard
+                      data-testid="subscription-usage-card"
+                      title={t("usage.title")}
+                      extra={
+                        <PenLine
+                          aria-hidden="true"
+                          className="h-4 w-4 text-text-secondary"
+                        />
+                      }
+                    >
+                      <div className="flex w-full flex-col gap-3">
+                        <Alert
+                          type="info"
+                          showIcon
+                          message={t("usage.aiTitle")}
+                          description={t("usage.aiBody")}
+                        />
+                        <div className="flex items-start gap-2">
+                          <FileText
+                            aria-hidden="true"
+                            className="mt-0.5 h-4 w-4 shrink-0 text-text-secondary"
+                          />
+                          <Text type="secondary">{t("usage.pdfBody")}</Text>
+                        </div>
+                      </div>
+                    </AppCard>
+                  </Col>
+                </Row>
+              ) : null}
 
               {/* Region 3: 변경/취소 액션 (external stubs + policy modal) */}
               {sub.status === "ready" && sub.subscription !== null ? (

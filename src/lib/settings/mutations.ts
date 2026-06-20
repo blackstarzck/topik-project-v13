@@ -32,8 +32,7 @@ function isNicknameUniqueError(error: unknown): boolean {
     candidate.details ?? "",
   )}`;
   return (
-    candidate.code === "23505" &&
-    text.includes("profiles_nickname_lower_uniq")
+    candidate.code === "23505" && text.includes("profiles_nickname_lower_uniq")
   );
 }
 
@@ -94,6 +93,7 @@ export async function updateProfile(
   const patch: {
     display_name?: string | null;
     nickname?: string | null;
+    nationality_country_code?: string | null;
     bio?: string | null;
   } = {};
   if (Object.prototype.hasOwnProperty.call(input, "display_name")) {
@@ -101,6 +101,9 @@ export async function updateProfile(
   }
   if (Object.prototype.hasOwnProperty.call(input, "nickname")) {
     patch.nickname = input.nickname ?? null;
+  }
+  if (Object.prototype.hasOwnProperty.call(input, "nationality_country_code")) {
+    patch.nationality_country_code = input.nationality_country_code ?? null;
   }
   // Phase 7-E Task 10 (P1-6) — bio mutation.
   if (Object.prototype.hasOwnProperty.call(input, "bio")) {

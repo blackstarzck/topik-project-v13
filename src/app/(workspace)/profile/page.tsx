@@ -1,18 +1,12 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { Col, Row } from "antd";
+import { WorkspaceBody } from "@/components/app/WorkspaceBody";
+import { ProfileForm } from "@/components/profile/ProfileForm";
+import { PageHeader } from "@/components/shared/PageHeader";
 import { requireUser } from "@/lib/auth/session";
 import { getProfileSettings } from "@/lib/settings/server";
-import { getLearningGoal } from "@/lib/learning/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { ProfileForm } from "@/components/profile/ProfileForm";
-import { AccountLoginMethodsCard } from "@/components/profile/AccountLoginMethodsCard";
-import { ExamInfoCard } from "@/components/profile/ExamInfoCard";
-import { ProfileLogoutForm } from "@/components/profile/ProfileLogoutForm";
-import { StatusHelpCard } from "@/components/profile/StatusHelpCard";
-import { PageHeader } from "@/components/shared/PageHeader";
-import { WorkspaceBody } from "@/components/app/WorkspaceBody";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("profile.page");
@@ -21,84 +15,32 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function ProfilePage() {
   const t = await getTranslations("profile.page");
-  const tNav = await getTranslations("nav");
-  const tLoginMethods = await getTranslations("profile.loginMethods");
   const user = await requireUser();
   const settings = await getProfileSettings(user.id);
   if (!settings) notFound();
 
-  // Phase 7-E Task 10 (P1-6) — exam info from learning_goals (reuse, no duplicate
-  // state) + status meta from profiles row (created_at + app_role + plan_label).
-  const goal = await getLearningGoal(user.id);
   const supabase = await createSupabaseServerClient();
   const { data: profileMeta } = await supabase
     .from("profiles")
-    .select("created_at, app_role, plan_label, avatar_path")
+    .select("avatar_path")
     .eq("id", user.id)
     .maybeSingle();
 
   return (
-    <WorkspaceBody>
-      <PageHeader title={t("heading")} />
-      <Row gutter={[16, 16]}>
-        <Col xs={24} md={14}>
-          <div className="flex w-full flex-col gap-4">
-            <AccountLoginMethodsCard
-              accountEmail={user.email ?? null}
-              labels={{
-                regionAriaLabel: tLoginMethods("regionAriaLabel"),
-                title: tLoginMethods("title"),
-                description: tLoginMethods("description"),
-                emailMethod: tLoginMethods("emailMethod"),
-                emailUnavailable: tLoginMethods("emailUnavailable"),
-                googleMethod: tLoginMethods("googleMethod"),
-                googleDescription: tLoginMethods("googleDescription"),
-                connected: tLoginMethods("connected"),
-                disconnected: tLoginMethods("disconnected"),
-                connectGoogle: tLoginMethods("connectGoogle"),
-                connectFailed: tLoginMethods("connectFailed"),
-                linkStarted: tLoginMethods("linkStarted"),
-              }}
-            />
-            <ProfileForm
-              userId={user.id}
-              accountEmail={user.email ?? null}
-              initialAvatarPath={profileMeta?.avatar_path ?? null}
-              initialProfile={{
-                display_name: settings.display_name,
-                nickname: settings.nickname,
-                bio: settings.bio,
-              }}
-            />
-          </div>
-        </Col>
-        <Col xs={24} md={10}>
-          <div className="flex w-full flex-col gap-4">
-            <ExamInfoCard
-              userId={user.id}
-              goal={
-                goal
-                  ? {
-                      topik_level: goal.topik_level,
-                      target_grade: goal.target_grade,
-                      exam_date: goal.exam_date,
-                      weekly_goal_minutes: goal.weekly_goal_minutes,
-                      weak_areas: goal.weak_areas,
-                    }
-                  : null
-              }
-            />
-            {profileMeta ? (
-              <StatusHelpCard
-                joinedAt={profileMeta.created_at}
-                appRole={profileMeta.app_role}
-                planLabel={profileMeta.plan_label}
-              />
-            ) : null}
-          </div>
-        </Col>
-      </Row>
-      <ProfileLogoutForm label={tNav("logout")} />
+    <WorkspaceBody size="form">
+      <PageHeader title={t("heading")} subtitle={t("subtitle")} />
+      <ProfileForm
+        userId={user.id}
+        accountEmail={user.email ?? null}
+        initialAvatarPath={profileMeta?.avatar_path ?? null}
+        initialProfile={{
+          display_name: settings.display_name,
+          nickname: settings.nickname,
+          nationality_country_code: settings.nationality_country_code,
+          bio: settings.bio,
+        }}
+        showAccountEmail={false}
+      />
     </WorkspaceBody>
   );
 }

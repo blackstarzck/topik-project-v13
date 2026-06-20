@@ -19,7 +19,7 @@ export default async function NotificationsSettingsPage() {
   if (!settings) notFound();
   return (
     <WorkspaceBody size="form">
-      <PageHeader title={t("pageHeading")} />
+      <PageHeader title={t("pageHeading")} subtitle={t("pageSubtitle")} />
       <NotificationPrefsForm
         userId={user.id}
         initialPrefs={settings.notification_prefs}

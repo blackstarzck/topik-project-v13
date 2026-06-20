@@ -16,6 +16,7 @@ import enMessages from "../../../messages/en.json";
 import koMessages from "../../../messages/ko.json";
 
 const navState = vi.hoisted(() => ({
+  push: vi.fn(),
   replace: vi.fn(),
   search: "",
 }));
@@ -24,6 +25,7 @@ const rpcMock = vi.hoisted(() => vi.fn());
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
+    push: navState.push,
     replace: navState.replace,
   }),
   useSearchParams: () => new URLSearchParams(navState.search),
@@ -98,6 +100,7 @@ function rpcRow(row: RpcProblemRow, index: number) {
 }
 
 beforeEach(() => {
+  navState.push.mockReset();
   navState.replace.mockReset();
   navState.search = "";
   rpcMock.mockReset();
@@ -301,4 +304,67 @@ describe("ProblemListView", () => {
     expect(screen.getAllByRole("button", { name: /시작하기/ })).toHaveLength(2);
     expect(screen.getAllByRole("button", { name: /다시 풀기/ })).toHaveLength(4);
   }, 45_000);
+
+  it("starts an unsolved problem when the learner selects the problem row", async () => {
+    rpcMock.mockResolvedValueOnce({
+      data: [
+        rpcRow(
+          {
+            problem_id: "problem-128",
+            title: "51-128_동의어 어휘 빈칸",
+            difficulty: 3,
+            tags: ["어휘", "동의어", "빈칸"],
+            attempt_count: 0,
+            is_solved: false,
+            solve_state: "none",
+          },
+          0,
+        ),
+      ],
+      error: null,
+    });
+
+    renderInApp(<ProblemListView userId="user-1" />, "ko");
+
+    const title = await screen.findByText("51-128_동의어 어휘 빈칸");
+    const row = title.closest("tr");
+    expect(row).toBeTruthy();
+
+    fireEvent.click(row!);
+
+    expect(navState.push).toHaveBeenCalledWith(
+      "/writing/short-answer-writing-51?problem=problem-128",
+    );
+  });
+
+  it("opens the retry modal when the learner selects a row with prior work", async () => {
+    rpcMock.mockResolvedValueOnce({
+      data: [
+        rpcRow(
+          {
+            problem_id: "problem-127",
+            title: "51-127_반의어 어휘 빈칸",
+            difficulty: 2,
+            tags: ["어휘", "반의어", "빈칸"],
+            attempt_count: 1,
+            is_solved: true,
+            solve_state: "submitted",
+          },
+          0,
+        ),
+      ],
+      error: null,
+    });
+
+    renderInApp(<ProblemListView userId="user-1" />, "ko");
+
+    const title = await screen.findByText("51-127_반의어 어휘 빈칸");
+    const row = title.closest("tr");
+    expect(row).toBeTruthy();
+
+    fireEvent.click(row!);
+
+    expect(await screen.findByText("이전 풀이가 있어요")).toBeTruthy();
+    expect(navState.push).not.toHaveBeenCalled();
+  });
 });

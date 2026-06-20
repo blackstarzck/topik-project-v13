@@ -24,6 +24,7 @@ type RecItem = {
     domain: string;
     question_no: number | null;
     publish_status: string;
+    lifecycle_status?: string;
   } | null;
 };
 
@@ -52,6 +53,7 @@ function makeClient(opts: {
 }) {
   const calls: {
     overlaps?: { column: string; values: string[] };
+    problemEq?: { column: string; value: unknown }[];
     recOrder?: boolean;
   } = {};
   const client = {
@@ -85,7 +87,10 @@ function makeClient(opts: {
       }
       if (table === "problems") {
         const chain = {
-          eq: () => chain,
+          eq: (column: string, value: unknown) => {
+            calls.problemEq = [...(calls.problemEq ?? []), { column, value }];
+            return chain;
+          },
           overlaps: (column: string, values: string[]) => {
             calls.overlaps = { column, values };
             return chain;
@@ -195,6 +200,21 @@ describe("getWeaknessRecommendations", () => {
     expect(out.map((r) => r.problemId)).toEqual(["p-1", "p-2", "p-3", "p-4"]);
   });
 
+  it("ignores recommendation_items whose joined problem is not active", async () => {
+    const recItems: RecItem[] = [
+      makeItem("i-1", "p-inactive", 1, "inactive"),
+      makeItem("i-2", "p-active", 2, "active"),
+    ];
+    const create = async () =>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      makeClient({ recItems }) as any;
+
+    const out = await getWeaknessRecommendations("user-1", create);
+
+    expect(out).toHaveLength(1);
+    expect(out[0].problemId).toBe("p-active");
+  });
+
   it("falls back to tag-overlap query when recommendation_items is empty (tier 2)", async () => {
     // Sufficient feedback to compute weak dimensions so the fallback survives
     // the threshold gate.
@@ -221,6 +241,10 @@ describe("getWeaknessRecommendations", () => {
       "content",
       "vocab",
     ]);
+    expect(client.__calls.problemEq).toContainEqual({
+      column: "lifecycle_status",
+      value: "active",
+    });
   });
 
   it("returns [] when neither recommendation_items nor weak dimensions exist", async () => {
@@ -237,7 +261,12 @@ function row(dim: string, scores: number[]): FeedbackRow[] {
   return scores.map((s) => ({ dimension: dim, score: s, score_max: 100 }));
 }
 
-function makeItem(id: string, problemId: string, rank: number): RecItem {
+function makeItem(
+  id: string,
+  problemId: string,
+  rank: number,
+  lifecycleStatus = "active",
+): RecItem {
   return {
     id,
     problem_id: problemId,
@@ -251,6 +280,7 @@ function makeItem(id: string, problemId: string, rank: number): RecItem {
       domain: "writing",
       question_no: 53,
       publish_status: "published",
+      lifecycle_status: lifecycleStatus,
     },
   };
 }

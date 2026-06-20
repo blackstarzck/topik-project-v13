@@ -32,6 +32,8 @@
     "growthDashboard": "Growth dashboard",
     "profile": "Profile",
     "settings": "Settings",
+    "settingsLearning": "Learning goal",
+    "settingsAccount": "Account",
     "settingsLanguage": "Language",
     "settingsNotifications": "Notifications",
     "subscription": "Subscription",
@@ -183,6 +185,16 @@
     "heroMascotAlt": "TALKPIK learning helper character"
   },
   "settings": {
+    "learning": {
+      "metaTitle": "Learning goal — TALKPIK",
+      "pageHeading": "Learning goal",
+      "pageSubtitle": "Manage your target exam and exam date. You can continue to the full goal setup for weekly study time and weak areas."
+    },
+    "account": {
+      "metaTitle": "Account settings — TALKPIK",
+      "pageHeading": "Account settings",
+      "pageSubtitle": "Manage login methods, account status, and sign-out in one place."
+    },
     "language": {
       "pageHeading": "Language settings",
       "uiLanguageLabel": "UI language",
@@ -225,6 +237,7 @@
     "notifications": {
       "metaTitle": "Notification settings — TALKPIK",
       "pageHeading": "Notification settings",
+      "pageSubtitle": "Receive important notifications without letting them get in the way.",
       "loadError": "We couldn't load your notification settings.",
       "loadErrorTitle": "We couldn't load your notification settings",
       "unsavedLeave": "You have unsaved changes. Are you sure you want to leave this page?",
@@ -232,21 +245,39 @@
       "saveError": "Saving failed.",
       "previewScheduled": "We'll send a study reminder every day at {time} ({timezone}).",
       "previewEmpty": "Set a study reminder time to see a sample of what we'll send.",
+      "deferredSummary": "In-app notifications are on, and email/Zalo delivery is being prepared.",
       "deferredNotice": "Actual notification delivery is still being set up. For now your channels, conditions, and time are saved, and the delivery log fills in once sending begins.",
+      "details": {
+        "show": "View details",
+        "hide": "Hide"
+      },
       "noChannel": {
         "title": "No notification channel is turned on",
         "body": "Turn on the email or Zalo channel below to receive reminders."
       },
+      "routine": {
+        "cardTitle": "Learning routine",
+        "cardDescription": "Choose when to receive reminders and build a steady study habit.",
+        "frequencyLabel": "Frequency",
+        "frequencyDaily": "Daily",
+        "frequencyWeekdays": "Weekdays",
+        "frequencyCustom": "Custom",
+        "frequencyHint": "Reminders are sent on the selected days."
+      },
       "channel": {
         "cardTitle": "Notification channels",
+        "cardDescription": "Choose where you want to receive notifications.",
+        "inApp": "In-app",
+        "inAppHint": "In-app inbox",
         "emailTab": "Email",
         "emailReceive": "Receive email notifications",
-        "emailHint": "Notifications are sent to your sign-up email.",
+        "emailHint": "Preparing",
         "notConnected": "Not connected",
         "zaloReceive": "Receive Zalo notifications",
-        "zaloHint": "Zalo integration (actual delivery) is still being prepared. For now only your receive preference is saved.",
+        "zaloHint": "Preparing",
         "bothTab": "Both",
-        "zaloReceivePending": "Receive Zalo notifications (integration coming soon)"
+        "zaloReceivePending": "Receive Zalo notifications (integration coming soon)",
+        "externalNotice": "Email and Zalo are being prepared. Actual external delivery is not supported yet."
       },
       "condition": {
         "cardTitle": "Notification conditions",
@@ -257,12 +288,23 @@
         "reminderTimeAria": "Reminder time",
         "timezoneLabel": "Time zone",
         "timezoneAria": "Reminder time zone",
-        "reminderDaysLabel": "Reminder days"
+        "timezoneHint": "Reminder time is interpreted in the selected time zone.",
+        "reminderDaysLabel": "Days",
+        "reminderDaysHint": "Reminders are sent on the selected days."
+      },
+      "notificationTypes": {
+        "cardTitle": "Notifications to receive",
+        "cardDescription": "Choose only the notifications that support your study flow."
       },
       "pref": {
         "weeklySummary": "Weekly study summary",
         "feedbackReady": "Feedback ready notification",
         "studyReminder": "Study reminder"
+      },
+      "prefDescription": {
+        "weeklySummary": "Get a summary of your study progress for the week.",
+        "feedbackReady": "Get notified when AI correction or feedback is ready.",
+        "studyReminder": "Get reminded when it is time to study or resume learning."
       },
       "weekday": {
         "mon": "Mon",
@@ -274,7 +316,8 @@
         "sun": "Sun"
       },
       "preview": {
-        "cardTitle": "Preview"
+        "cardTitle": "Preview",
+        "nextCardTitle": "Next notification preview"
       },
       "history": {
         "cardTitle": "Delivery history (latest 5)",
@@ -1615,11 +1658,11 @@
         "empty": "Submit more writing to fill in your weakness analysis. For now, this reflects your recent answers.",
         "startCta": "Start studying",
         "scoreSample": "{score} pts · {count} samples"
-      },
-      "insights": {
-        "title": "Insights",
-        "disclaimer": "This summary is calculated from your actual scores and practice records. Weak areas may change with future practice."
-      },
+    },
+    "insights": {
+      "title": "Learning insights",
+      "disclaimer": "This summary is calculated from your actual scores and practice records. Weak areas may change with future practice."
+    },
       "recent": {
         "title": "Recently completed",
         "empty": "You haven't completed any questions yet.",
@@ -1656,7 +1699,7 @@
     "locked": {
       "title": "Detailed growth reports are for paid plans only",
       "freePlan": "Free",
-      "body": "On your current plan (<plan></plan>) you can only see basic metrics. Upgrade to unlock the trend chart, weakness matrix, and personalized insights.",
+    "body": "On your current plan (<plan></plan>) you can only see basic metrics. Upgrade to unlock the trend chart, weakness matrix, and learning insights.",
       "upgradeCta": "Upgrade plan",
       "manageCta": "Manage subscription"
     },
@@ -1947,7 +1990,8 @@
   "profile": {
     "page": {
       "metaTitle": "Profile — TALKPIK",
-      "heading": "Profile"
+      "heading": "Profile",
+      "subtitle": "Manage the name, nickname, bio, and image shown to other users."
     },
     "form": {
       "settingsRegionAriaLabel": "Profile settings",
@@ -1966,6 +2010,9 @@
       "nicknameTaken": "This nickname is already taken.",
       "nicknameCheckFailed": "We can't check it right now. We'll check again when you save.",
       "nicknamePlaceholder": "The name shown to other users",
+      "countryRegionLabel": "Country/region",
+      "countryRegionHelp": "This is the country/region selected during sign-up. You can update it if needed.",
+      "countryRegionPlaceholder": "Select a country or region",
       "bioLabel": "About me",
       "bioCount": "{count}/160 chars",
       "bioHelp": "A short introduction shown to other users. (Up to 160 characters)",
@@ -2093,7 +2140,21 @@
       "planLabel": "Plan",
       "cadenceLabel": "Billing cycle",
       "nextBillingLabel": "Next billing date",
+      "nextChargeLabel": "Next charge",
+      "unknownPlan": "Subscription plan",
+      "autoRenewalNote": "Auto-renews · cancel anytime",
       "cancelScheduled": "Cancellation scheduled after {date}"
+    },
+    "payment": {
+      "title": "Payment method",
+      "placeholderTitle": "Payment method coming soon",
+      "placeholderBody": "Payment method details will appear after billing integration is connected."
+    },
+    "usage": {
+      "title": "This month's usage",
+      "aiTitle": "AI usage is being prepared.",
+      "aiBody": "Actual AI feedback limits are not enforced yet, so remaining counts are not shown.",
+      "pdfBody": "PDF export usage will also appear after billing integration is connected."
     },
     "change": {
       "title": "Change subscription",

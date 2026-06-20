@@ -14,7 +14,7 @@ import { test, expect } from "@playwright/test";
 const EMAIL = process.env.E2E_STUDENT_EMAIL ?? "student@audit.local";
 const PASSWORD = process.env.SUPABASE_TEST_PASSWORD ?? "";
 
-test("profile logout signs out and protects workspace routes (G6)", async ({ browser }, testInfo) => {
+test("account settings logout signs out and protects workspace routes (G6)", async ({ browser }, testInfo) => {
   test.skip(
     testInfo.project.name !== "desktop-1280",
     "logout flow runs once on desktop-1280",
@@ -45,8 +45,8 @@ test("profile logout signs out and protects workspace routes (G6)", async ({ bro
     ).toHaveCount(0);
 
     // 프로필 화면 하단 로그아웃 → form POST /auth/sign-out → 303 → /login.
-    await page.goto("/profile", { waitUntil: "networkidle" });
-    await expect(page).toHaveURL(/\/profile/);
+    await page.goto("/settings/account", { waitUntil: "networkidle" });
+    await expect(page).toHaveURL(/\/settings\/account/);
     const logoutButton = page.getByTestId("profile-logout");
     await expect(logoutButton).toBeVisible();
     await logoutButton.click();

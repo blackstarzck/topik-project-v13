@@ -132,6 +132,8 @@ describe("user-flow route contract", () => {
 
     expect(groupChildren("settings").map((item) => item.key)).toEqual([
       APP_ROUTES.profile,
+      APP_ROUTES.settingsLearning,
+      APP_ROUTES.settingsAccount,
       APP_ROUTES.settingsLanguage,
       APP_ROUTES.settingsNotifications,
       APP_ROUTES.subscription,

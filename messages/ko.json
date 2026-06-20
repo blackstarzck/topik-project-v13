@@ -32,6 +32,8 @@
     "growthDashboard": "성장 대시보드",
     "profile": "프로필",
     "settings": "설정",
+    "settingsLearning": "학습 목표",
+    "settingsAccount": "계정",
     "settingsLanguage": "언어",
     "settingsNotifications": "알림",
     "subscription": "구독 관리",
@@ -183,6 +185,16 @@
     "heroMascotAlt": "TALKPIK 학습 도우미 캐릭터"
   },
   "settings": {
+    "learning": {
+      "metaTitle": "학습 목표 — TALKPIK",
+      "pageHeading": "학습 목표",
+      "pageSubtitle": "목표 시험과 시험일을 관리합니다. 주당 학습 시간과 취약 영역은 전체 목표 설정에서 이어서 조정할 수 있어요."
+    },
+    "account": {
+      "metaTitle": "계정 설정 — TALKPIK",
+      "pageHeading": "계정 설정",
+      "pageSubtitle": "로그인 방법, 계정 상태, 로그아웃 같은 계정 관리 기능을 모았습니다."
+    },
     "language": {
       "pageHeading": "언어 설정",
       "uiLanguageLabel": "UI 언어",
@@ -225,6 +237,7 @@
     "notifications": {
       "metaTitle": "알림 설정 — TALKPIK",
       "pageHeading": "알림 설정",
+      "pageSubtitle": "중요한 알림은 놓치지 않고, 방해되지 않게 받아보세요.",
       "loadError": "알림 설정을 불러오지 못했어요.",
       "loadErrorTitle": "알림 설정을 불러오지 못했어요",
       "unsavedLeave": "저장하지 않은 변경사항이 있습니다. 페이지를 떠나시겠어요?",
@@ -232,21 +245,39 @@
       "saveError": "저장에 실패했어요.",
       "previewScheduled": "매일 {time} ({timezone})에 학습 리마인더를 보낼 예정입니다.",
       "previewEmpty": "학습 리마인더 시간을 설정하면 발송 예시가 표시됩니다.",
+      "deferredSummary": "인앱 알림은 켜져 있고, 이메일/Zalo 발송은 준비 중입니다.",
       "deferredNotice": "실제 알림 발송 연동은 준비 중입니다. 지금은 수신 채널·조건·시간이 저장되며, 발송 이력은 발송이 시작되면 채워집니다.",
+      "details": {
+        "show": "자세히 보기",
+        "hide": "접기"
+      },
       "noChannel": {
         "title": "수신 중인 알림 채널이 없습니다",
         "body": "아래에서 이메일 또는 Zalo 채널을 켜야 리마인더를 받을 수 있어요."
       },
+      "routine": {
+        "cardTitle": "학습 루틴",
+        "cardDescription": "언제 알림을 받을지 설정하여 꾸준한 학습 습관을 쌓아 보세요.",
+        "frequencyLabel": "알림 빈도",
+        "frequencyDaily": "매일",
+        "frequencyWeekdays": "주중(월-금)",
+        "frequencyCustom": "사용자 지정",
+        "frequencyHint": "선택한 요일에 알림을 받습니다."
+      },
       "channel": {
         "cardTitle": "알림 채널",
+        "cardDescription": "알림을 받을 채널을 선택하세요.",
+        "inApp": "인앱 알림",
+        "inAppHint": "앱 내 알림함",
         "emailTab": "이메일",
         "emailReceive": "이메일 알림 받기",
-        "emailHint": "가입 이메일로 알림을 받습니다.",
+        "emailHint": "준비 중",
         "notConnected": "미연동",
         "zaloReceive": "Zalo 알림 받기",
-        "zaloHint": "Zalo 연동(실제 발송)은 준비 중입니다. 지금은 수신 설정만 저장돼요.",
+        "zaloHint": "준비 중",
         "bothTab": "둘 다",
-        "zaloReceivePending": "Zalo 알림 받기 (연동 예정)"
+        "zaloReceivePending": "Zalo 알림 받기 (연동 예정)",
+        "externalNotice": "이메일과 Zalo는 준비 중입니다. 실제 외부 발송은 아직 지원되지 않습니다."
       },
       "condition": {
         "cardTitle": "알림 조건",
@@ -257,12 +288,23 @@
         "reminderTimeAria": "리마인더 시간",
         "timezoneLabel": "시간대",
         "timezoneAria": "리마인더 시간대",
-        "reminderDaysLabel": "리마인더 요일"
+        "timezoneHint": "선택한 시간대 기준으로 리마인더 시간을 해석합니다.",
+        "reminderDaysLabel": "요일",
+        "reminderDaysHint": "선택한 요일에 알림을 받습니다."
+      },
+      "notificationTypes": {
+        "cardTitle": "받을 알림",
+        "cardDescription": "학습 흐름에 필요한 알림만 골라 받을 수 있어요."
       },
       "pref": {
         "weeklySummary": "주간 학습 요약",
         "feedbackReady": "피드백 준비 완료 알림",
         "studyReminder": "학습 리마인더"
+      },
+      "prefDescription": {
+        "weeklySummary": "일주일 동안의 학습 성과를 요약해 드려요.",
+        "feedbackReady": "AI 첨삭/피드백이 완료되면 알려드려요.",
+        "studyReminder": "학습이 필요하거나 학습 시간이 되면 알려드려요."
       },
       "weekday": {
         "mon": "월",
@@ -274,7 +316,8 @@
         "sun": "일"
       },
       "preview": {
-        "cardTitle": "미리보기"
+        "cardTitle": "미리보기",
+        "nextCardTitle": "다음 알림 미리보기"
       },
       "history": {
         "cardTitle": "발송 이력 (최근 5건)",
@@ -1615,11 +1658,11 @@
         "empty": "글쓰기를 더 제출하면 약점 분석이 채워져요. 지금은 최근 답안 기준으로 안내해요.",
         "startCta": "학습 시작",
         "scoreSample": "{score}점 · {count}건"
-      },
-      "insights": {
-        "title": "인사이트",
-        "disclaimer": "실제 점수·풀이 기록에서 계산한 요약이에요. 약점은 다음 연습 결과에 따라 달라질 수 있습니다."
-      },
+    },
+    "insights": {
+      "title": "학습 인사이트",
+      "disclaimer": "실제 점수·풀이 기록에서 계산한 요약이에요. 약점은 다음 연습 결과에 따라 달라질 수 있습니다."
+    },
       "recent": {
         "title": "최근 완료 문제",
         "empty": "아직 완료한 문제가 없어요.",
@@ -1656,7 +1699,7 @@
     "locked": {
       "title": "상세 성장 리포트는 유료 플랜 전용이에요",
       "freePlan": "무료",
-      "body": "현재 플랜: <plan></plan> 에서는 기본 지표만 볼 수 있어요. 업그레이드하면 추세 차트와 약점 매트릭스, 맞춤 인사이트가 모두 열립니다.",
+    "body": "현재 플랜: <plan></plan> 에서는 기본 지표만 볼 수 있어요. 업그레이드하면 추세 차트와 약점 매트릭스, 학습 인사이트가 모두 열립니다.",
       "upgradeCta": "플랜 업그레이드",
       "manageCta": "구독 관리"
     },
@@ -1947,7 +1990,8 @@
   "profile": {
     "page": {
       "metaTitle": "프로필 — TALKPIK",
-      "heading": "프로필"
+      "heading": "프로필",
+      "subtitle": "다른 사용자에게 보이는 이름, 닉네임, 자기소개, 이미지를 관리합니다."
     },
     "form": {
       "settingsRegionAriaLabel": "프로필 설정",
@@ -1966,6 +2010,9 @@
       "nicknameTaken": "이미 사용 중인 닉네임이에요.",
       "nicknameCheckFailed": "지금은 확인할 수 없어요. 저장할 때 다시 확인할게요.",
       "nicknamePlaceholder": "다른 사용자에게 보여질 이름",
+      "countryRegionLabel": "국가/지역",
+      "countryRegionHelp": "회원가입 때 선택한 국가/지역입니다. 필요하면 수정할 수 있어요.",
+      "countryRegionPlaceholder": "국가 또는 지역을 선택하세요",
       "bioLabel": "자기소개",
       "bioCount": "{count}/160자",
       "bioHelp": "다른 사용자에게 보여지는 간단한 소개입니다. (최대 160자)",
@@ -2093,7 +2140,21 @@
       "planLabel": "플랜",
       "cadenceLabel": "결제 주기",
       "nextBillingLabel": "다음 결제일",
+      "nextChargeLabel": "다음 청구 금액",
+      "unknownPlan": "구독 플랜",
+      "autoRenewalNote": "자동 갱신 · 언제든지 취소 가능",
       "cancelScheduled": "{date} 이후 해지 예정"
+    },
+    "payment": {
+      "title": "결제수단",
+      "placeholderTitle": "결제수단 연동 예정",
+      "placeholderBody": "결제수단 정보는 결제 연동 후 표시됩니다."
+    },
+    "usage": {
+      "title": "이번 달 이용량",
+      "aiTitle": "AI 사용량은 준비 중입니다.",
+      "aiBody": "실제 AI 첨삭 한도는 아직 적용되지 않아 남은 횟수를 표시하지 않습니다.",
+      "pdfBody": "PDF 내보내기 사용량도 결제 연동 이후 표시됩니다."
     },
     "change": {
       "title": "구독 변경",

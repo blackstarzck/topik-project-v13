@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { KeyboardEvent, MouseEvent, ReactNode } from "react";
 import { Button, ConfigProvider, Table, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { writingProblemHref } from "@/lib/writing/routes";
 import {
@@ -83,6 +84,17 @@ function isDisabled(row: UserProblemRow): boolean {
   return row.publishStatus !== "published" || row.lifecycleStatus !== "active";
 }
 
+function hasPriorWork(row: UserProblemRow): boolean {
+  return getProblemRowDisplayMeta(row).solveStatus !== "unsolved";
+}
+
+function isInteractiveTarget(target: EventTarget | null): boolean {
+  return (
+    target instanceof Element &&
+    Boolean(target.closest("a, button, input, select, textarea, label, summary"))
+  );
+}
+
 function visibleTags(row: UserProblemRow): string[] {
   return row.tags
     .filter((tag) => !tag.startsWith("seed:") && tag !== `q${row.questionNo}`)
@@ -90,8 +102,43 @@ function visibleTags(row: UserProblemRow): string[] {
 }
 
 export function ProblemTable({ rows, onRetryClick }: Props) {
+  const router = useRouter();
   const t = useTranslations("practice.problems");
   const tCommon = useTranslations("practice.common");
+
+  function selectRow(row: UserProblemRow) {
+    if (isDisabled(row)) return;
+    if (hasPriorWork(row)) {
+      onRetryClick(row);
+      return;
+    }
+
+    router.push(
+      writingProblemHref({
+        questionNo: row.questionNo,
+        problemId: row.problemId,
+      }) as never,
+    );
+  }
+
+  function handleRowClick(
+    row: UserProblemRow,
+    event: MouseEvent<HTMLElement>,
+  ) {
+    if (isInteractiveTarget(event.target)) return;
+    selectRow(row);
+  }
+
+  function handleRowKeyDown(
+    row: UserProblemRow,
+    event: KeyboardEvent<HTMLElement>,
+  ) {
+    if (isInteractiveTarget(event.target)) return;
+    if (event.key !== "Enter" && event.key !== " ") return;
+
+    event.preventDefault();
+    selectRow(row);
+  }
 
   const columns: ColumnsType<UserProblemRow> = [
     {
@@ -272,10 +319,9 @@ export function ProblemTable({ rows, onRetryClick }: Props) {
       align: "right",
       render: (_value: unknown, row) => {
         const disabled = isDisabled(row);
-        const hasPriorWork =
-          getProblemRowDisplayMeta(row).solveStatus !== "unsolved";
+        const rowHasPriorWork = hasPriorWork(row);
 
-        const button = hasPriorWork ? (
+        const button = rowHasPriorWork ? (
           <Button
             className="problem-table__action-button problem-table__action-button--secondary"
             variant="outlined"
@@ -294,7 +340,7 @@ export function ProblemTable({ rows, onRetryClick }: Props) {
           </Button>
         );
 
-        if (hasPriorWork || disabled) {
+        if (rowHasPriorWork || disabled) {
           return <div className="problem-table__action">{button}</div>;
         }
 
@@ -327,10 +373,23 @@ export function ProblemTable({ rows, onRetryClick }: Props) {
         rowClassName={(row) =>
           [
             "problem-table__row",
+            !isDisabled(row) ? "problem-table__row--selectable" : "",
             isDisabled(row) ? "problem-table__row--disabled" : "",
-          ].join(" ")
+          ]
+            .filter(Boolean)
+            .join(" ")
         }
         rowKey="problemId"
+        onRow={(row) => {
+          const disabled = isDisabled(row);
+          return {
+            "aria-disabled": disabled ? true : undefined,
+            "aria-label": `${row.title} ${hasPriorWork(row) ? t("retryAttempt") : t("startProblem")}`,
+            onClick: (event) => handleRowClick(row, event),
+            onKeyDown: (event) => handleRowKeyDown(row, event),
+            tabIndex: disabled ? -1 : 0,
+          };
+        }}
         scroll={{ x: 980 }}
         size="medium"
         tableLayout="fixed"

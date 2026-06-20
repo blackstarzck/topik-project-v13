@@ -8,6 +8,11 @@ import {
 import { getDashboardKpi } from "@/lib/learning/kpi";
 import { getLearningGoal } from "@/lib/learning/server";
 import {
+  calculateGoalProgress,
+  normalizeFeedbackScoreTo100,
+} from "@/lib/growth/goalProgress";
+import { mergeAttemptCounts } from "@/lib/growth/activityMetrics";
+import {
   getWeakDimensions,
   getWeaknessRecommendations,
 } from "@/lib/practice/weakness";
@@ -32,7 +37,11 @@ function dayKey(iso: string): string {
   return d.toISOString().slice(0, 10);
 }
 
-type FeedbackPoint = { generated_at: string; score_total: number | null };
+type FeedbackPoint = {
+  generated_at: string;
+  score_total: number | null;
+  score_max: number | null;
+};
 
 /**
  * 일자별 시계열을 만든다.
@@ -45,10 +54,14 @@ function buildTrendPoints(
 ): GrowthTrendPoint[] {
   const scoreBuckets = new Map<string, number[]>();
   for (const f of feedbacks) {
-    if (f.score_total == null) continue;
+    const score = normalizeFeedbackScoreTo100({
+      scoreTotal: f.score_total,
+      scoreMax: f.score_max,
+    });
+    if (score == null) continue;
     const key = dayKey(f.generated_at);
     const arr = scoreBuckets.get(key) ?? [];
-    arr.push(f.score_total);
+    arr.push(score);
     scoreBuckets.set(key, arr);
   }
 
@@ -85,10 +98,19 @@ function buildTrendPoints(
 function computeImprovementPct(feedbacks: FeedbackPoint[]): number | null {
   const scores = feedbacks
     .filter((f) => f.score_total != null)
-    .map((f) => ({
-      at: new Date(f.generated_at).getTime(),
-      s: f.score_total as number,
-    }))
+    .map((f) => {
+      const score = normalizeFeedbackScoreTo100({
+        scoreTotal: f.score_total,
+        scoreMax: f.score_max,
+      });
+      return score != null
+        ? {
+            at: new Date(f.generated_at).getTime(),
+            s: score,
+          }
+        : null;
+    })
+    .filter((f): f is { at: number; s: number } => f != null)
     .sort((a, b) => a.at - b.at);
   if (scores.length < 4) return null;
   const mid = Math.floor(scores.length / 2);
@@ -114,14 +136,22 @@ async function loadGrowthData(
     const recentVolumeSince = new Date(Date.now() - 30 * DAY_MS).toISOString();
 
     const goal = await getLearningGoal(userId);
-    const [kpi, weak, recs, feedbackRes, eventsRes, recentRes, recentVolRes] =
-      await Promise.all([
+    const [
+      kpi,
+      weak,
+      recs,
+      feedbackRes,
+      eventsRes,
+      recentRes,
+      recentVolRes,
+      totalEventVolRes,
+    ] = await Promise.all([
         getDashboardKpi(userId, supabase),
         getWeakDimensions(userId),
         getWeaknessRecommendations(userId),
         supabase
           .from("writing_feedback")
-          .select("generated_at, score_total")
+          .select("generated_at, score_total, score_max")
           .eq("user_id", userId)
           .gte("generated_at", sinceIso)
           .order("generated_at", { ascending: true }),
@@ -144,6 +174,11 @@ async function loadGrowthData(
           .eq("user_id", userId)
           .in("event_type", ["attempt_submitted", "submission_submitted"])
           .gte("occurred_at", recentVolumeSince),
+        supabase
+          .from("study_events")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", userId)
+          .in("event_type", ["attempt_submitted", "submission_submitted"]),
       ]);
 
     const feedbacks = (feedbackRes.data ?? []) as FeedbackPoint[];
@@ -152,25 +187,30 @@ async function loadGrowthData(
       event_type: string;
     }[];
 
-    // 평균 점수(0~100). score_max 없이도 score_total 은 100점 기준 가정.
+    // 평균 점수(0~100). writing_feedback.score_total/score_max 원천값으로 정규화한다.
     const scored = feedbacks
-      .map((f) => f.score_total)
-      .filter((s): s is number => typeof s === "number");
+      .map((f) =>
+        normalizeFeedbackScoreTo100({
+          scoreTotal: f.score_total,
+          scoreMax: f.score_max,
+        }),
+      )
+      .filter((s): s is number => s != null);
     const averageScore =
       scored.length > 0
         ? scored.reduce((a, b) => a + b, 0) / scored.length
         : null;
 
-    // 목표 달성률 — 최근 평균 점수 / 목표 점수(목표 등급 * 가중치 추정).
-    // 목표 등급은 1~6급이므로 등급별 통과 점수(대략 60점 기준)를 100% 로 본다.
-    let goalAchievementPct: number | null = null;
-    if (goal && averageScore != null) {
-      const passingScore = 60; // 등급 통과 기준선(정직: 추정치)
-      goalAchievementPct = Math.min(
-        100,
-        Math.round((averageScore / passingScore) * 100),
-      );
-    }
+    // 목표 달성률 — 목표 등급별 TOPIK II 총점 하한을 쓰기 100점 기준으로 환산한다.
+    const goalAchievementPct = calculateGoalProgress({
+      goal: goal
+        ? { topikLevel: goal.topik_level, targetGrade: goal.target_grade }
+        : null,
+      feedbacks: feedbacks.map((f) => ({
+        scoreTotal: f.score_total,
+        scoreMax: f.score_max,
+      })),
+    });
 
     const trendPoints = buildTrendPoints(feedbacks, events);
     const improvementPct = computeImprovementPct(feedbacks);
@@ -196,7 +236,10 @@ async function loadGrowthData(
       recentVolume: recentVolRes.count ?? 0,
       kpi: {
         averageScore,
-        totalAttempts: kpi.totalAttempts,
+        totalAttempts: mergeAttemptCounts({
+          problemAttemptCount: kpi.totalAttempts,
+          studyEventCount: totalEventVolRes.count,
+        }),
         improvementPct,
         goalAchievementPct,
         goalLabel: formatGoalLabel(goal ? goal.target_grade : null),

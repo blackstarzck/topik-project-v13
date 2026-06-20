@@ -22,6 +22,18 @@ const SIDEBAR_CASES = [
     groupKey: "settings",
   },
   {
+    name: "account settings",
+    route: "/settings/account",
+    pathRegex: /\/settings\/account/,
+    groupKey: "settings",
+  },
+  {
+    name: "learning settings",
+    route: "/settings/learning",
+    pathRegex: /\/settings\/learning/,
+    groupKey: "settings",
+  },
+  {
     name: "writing feedback",
     route: `/writing/feedback/short/${SUB_SHORT}`,
     pathRegex: /\/writing\/feedback\/short\//,

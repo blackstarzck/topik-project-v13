@@ -1,0 +1,65 @@
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
+import { notFound } from "next/navigation";
+import { WorkspaceBody } from "@/components/app/WorkspaceBody";
+import { AccountLoginMethodsCard } from "@/components/profile/AccountLoginMethodsCard";
+import { ProfileLogoutForm } from "@/components/profile/ProfileLogoutForm";
+import { StatusHelpCard } from "@/components/profile/StatusHelpCard";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { requireUser } from "@/lib/auth/session";
+import { getProfileSettings } from "@/lib/settings/server";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("settings.account");
+  return { title: t("metaTitle") };
+}
+
+export default async function AccountSettingsPage() {
+  const t = await getTranslations("settings.account");
+  const tNav = await getTranslations("nav");
+  const tLoginMethods = await getTranslations("profile.loginMethods");
+  const user = await requireUser();
+  const settings = await getProfileSettings(user.id);
+  if (!settings) notFound();
+
+  const supabase = await createSupabaseServerClient();
+  const { data: profileMeta } = await supabase
+    .from("profiles")
+    .select("created_at, app_role, plan_label")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  return (
+    <WorkspaceBody size="form">
+      <PageHeader title={t("pageHeading")} subtitle={t("pageSubtitle")} />
+      <div className="flex w-full flex-col gap-4">
+        <AccountLoginMethodsCard
+          accountEmail={user.email ?? null}
+          labels={{
+            regionAriaLabel: tLoginMethods("regionAriaLabel"),
+            title: tLoginMethods("title"),
+            description: tLoginMethods("description"),
+            emailMethod: tLoginMethods("emailMethod"),
+            emailUnavailable: tLoginMethods("emailUnavailable"),
+            googleMethod: tLoginMethods("googleMethod"),
+            googleDescription: tLoginMethods("googleDescription"),
+            connected: tLoginMethods("connected"),
+            disconnected: tLoginMethods("disconnected"),
+            connectGoogle: tLoginMethods("connectGoogle"),
+            connectFailed: tLoginMethods("connectFailed"),
+            linkStarted: tLoginMethods("linkStarted"),
+          }}
+        />
+        {profileMeta ? (
+          <StatusHelpCard
+            joinedAt={profileMeta.created_at}
+            appRole={profileMeta.app_role}
+            planLabel={profileMeta.plan_label}
+          />
+        ) : null}
+        <ProfileLogoutForm label={tNav("logout")} />
+      </div>
+    </WorkspaceBody>
+  );
+}

@@ -180,6 +180,19 @@ body {
  * Color/radius/font come from the approved --app-* bridge vars; spacing is
  * layout-only (8-based rhythm, not a theme token) per 08 "plain layout CSS".
  */
+/*
+ * AntD Form helper text (Form.Item `extra` / `help`) has no dedicated
+ * component token in AntD 6.4.x. Keep labels and field values at 16px, while
+ * descriptions use the project helper-text scale.
+ */
+.ant-form-item.ant-form-item.ant-form-item .ant-form-item-extra,
+.ant-form-item.ant-form-item.ant-form-item .ant-form-item-extra *,
+.ant-form-item.ant-form-item.ant-form-item .ant-form-item-explain,
+.ant-form-item.ant-form-item.ant-form-item .ant-form-item-explain * {
+  font-size: 14px;
+  line-height: 1.5715;
+}
+
 .app-page-container {
   width: 100%;
   margin-inline: auto;
@@ -4111,6 +4124,185 @@ body {
   text-decoration: none;
 }
 
+.notification-settings-redesign {
+  display: grid;
+  gap: 8px;
+}
+
+.notification-settings-card.app-card.app-surface {
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.notification-settings-card.app-card.app-surface > .ant-card-head {
+  min-height: 0;
+  padding: 0;
+  border-bottom: 0;
+}
+
+.notification-settings-card.app-card.app-surface
+  > .ant-card-head
+  .ant-card-head-title {
+  padding: 0;
+  font-weight: 600;
+}
+
+.notification-settings-card.app-card.app-surface > .ant-card-body,
+.notification-settings-card.app-card.app-surface > .ant-card-body:first-child,
+.notification-settings-card.app-card.app-surface > .ant-card-body:last-child {
+  padding: 0;
+  border-radius: 0;
+}
+
+.notification-settings-card-body {
+  display: grid;
+  gap: 8px;
+}
+
+.notification-settings-row {
+  display: grid;
+  grid-template-columns: minmax(104px, 144px) minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  padding: 10px 0;
+  border: 0;
+}
+
+.notification-settings-row-label {
+  display: inline-flex;
+  align-items: center;
+  color: var(--app-color-text);
+  font-weight: 500;
+}
+
+.notification-settings-channel-copy svg {
+  flex: 0 0 auto;
+  color: var(--app-color-text-secondary);
+}
+
+.notification-settings-row-control {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.notification-settings-section-description.ant-typography,
+.notification-settings-row-hint.ant-typography,
+.notification-settings-type-description.ant-typography,
+.notification-settings-channel-copy .ant-typography-secondary.ant-typography,
+.notification-settings-redesign .ant-alert .ant-alert-description,
+.notification-settings-detail-panel
+  > section
+  > .ant-typography-secondary.ant-typography {
+  display: block;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.notification-settings-section-description {
+  margin-bottom: 4px;
+}
+
+.notification-settings-inline-control {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.notification-settings-timezone-select {
+  width: min(100%, 320px);
+}
+
+.notification-settings-type-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  padding: 12px 0;
+  border: 0;
+}
+
+.notification-settings-type-row .ant-switch {
+  justify-self: end;
+  width: 44px;
+  min-width: 44px;
+  max-width: 44px;
+}
+
+.notification-settings-type-copy {
+  display: grid;
+  gap: 2px;
+  align-items: start;
+  min-width: 0;
+}
+
+.notification-settings-channel-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.notification-settings-channel-option {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  min-width: 0;
+  padding: 12px;
+  border: 0;
+  border-radius: var(--app-radius);
+  background: var(--app-color-bg-container);
+  cursor: pointer;
+}
+
+.notification-settings-channel-copy {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px;
+  min-width: 0;
+}
+
+.notification-settings-channel-title {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.notification-settings-channel-notice {
+  margin-top: 4px;
+}
+
+.notification-settings-detail-panel {
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid var(--app-color-border);
+  border-radius: var(--app-radius);
+  background: var(--app-color-bg-container);
+}
+
+.notification-settings-detail-title {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+@media (max-width: 640px) {
+  .notification-settings-row,
+  .notification-settings-channel-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .notification-settings-row {
+    align-items: start;
+  }
+}
+
 .selectable-app-card {
   height: 100%;
   transition:
@@ -4203,6 +4395,15 @@ body {
 
 .problem-table__row--disabled {
   opacity: 0.68;
+}
+
+.problem-table__row--selectable {
+  cursor: pointer;
+}
+
+.problem-table__row--selectable:focus-visible > td {
+  outline: 2px solid var(--app-color-primary);
+  outline-offset: -2px;
 }
 
 .problem-table__problem-cell {

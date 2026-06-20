@@ -42,15 +42,15 @@ describe("app theme contract", () => {
     });
 
     // Must be resolved actual values from DESIGN/Awesomic, not AntD defaults.
-    expect(vars["--app-color-primary"]).toBe(awesomicThemeTokens.color.obsidian);
+    expect(vars["--app-color-primary"]).toBe(
+      awesomicThemeTokens.color.obsidian,
+    );
     expect(vars["--app-color-bg-layout"]).toBe(awesomicThemeTokens.color.mist);
     expect(vars["--app-color-bg-container"]).toBe(
       awesomicThemeTokens.color.snow,
     );
     expect(vars["--app-color-border"]).toBe(awesomicThemeTokens.color.pebble);
-    expect(vars["--app-radius"]).toBe(
-      `${awesomicThemeTokens.radius.base}px`,
-    );
+    expect(vars["--app-radius"]).toBe(`${awesomicThemeTokens.radius.base}px`);
     expect(vars["--app-color-text"]).toBe(awesomicThemeTokens.color.ink);
     expect(vars["--app-color-text-secondary"]).toBe(
       awesomicThemeTokens.color.steel,
@@ -123,5 +123,26 @@ describe("app theme contract", () => {
       expect(vars).toHaveProperty(key);
       expect(vars[key]).toBeTruthy();
     });
+  });
+
+  test("applies global AntD form control scale through theme tokens", () => {
+    for (const appearance of ["light", "dark"] as const) {
+      const built = getAppTheme(defaultThemeName, appearance);
+
+      expect(built.antd.token?.fontSize).toBe(16);
+      expect(built.antd.token?.fontSizeLG).toBe(16);
+      expect(built.antd.token?.controlHeight).toBe(40);
+      expect(built.antd.token?.controlHeightLG).toBe(48);
+
+      expect(built.antd.components?.Form?.labelFontSize).toBe(16);
+      expect(built.antd.components?.Form?.itemMarginBottom).toBe(32);
+      expect(built.antd.components?.Form?.verticalLabelPadding).toBe(
+        "0 0 12px",
+      );
+      expect(built.antd.components?.Input?.inputFontSize).toBe(16);
+      expect(built.antd.components?.Input?.inputFontSizeLG).toBe(16);
+      expect(built.antd.components?.Select?.optionFontSize).toBe(16);
+      expect(built.antd.components?.Select?.optionHeight).toBe(40);
+    }
   });
 });

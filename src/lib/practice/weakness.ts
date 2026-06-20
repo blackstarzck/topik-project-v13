@@ -227,6 +227,7 @@ type RecommendationItemJoined = {
         domain: string;
         question_no: number | null;
         publish_status: string;
+        lifecycle_status?: string | null;
       }
     | {
         id: string;
@@ -234,6 +235,7 @@ type RecommendationItemJoined = {
         domain: string;
         question_no: number | null;
         publish_status: string;
+        lifecycle_status?: string | null;
       }[]
     | null;
 };
@@ -260,7 +262,7 @@ export async function getWeaknessRecommendations(
     .select(
       "id, problem_id, rank, reason, estimated_minutes, weakness_tags," +
         " recommendation_runs!inner(expires_at)," +
-        " problems!inner(id, title, domain, question_no, publish_status)",
+        " problems!inner(id, title, domain, question_no, publish_status, lifecycle_status)",
     )
     .eq("user_id", userId)
     .eq("status", "active")
@@ -279,6 +281,7 @@ export async function getWeaknessRecommendations(
     const problem = pickOne(row.problems);
     if (!problem) continue;
     if (problem.publish_status !== "published") continue;
+    if (problem.lifecycle_status !== "active") continue;
     fromItems.push({
       problemId: problem.id,
       title: problem.title,
@@ -304,6 +307,7 @@ export async function getWeaknessRecommendations(
     .from("problems")
     .select("id, title, domain, question_no")
     .eq("publish_status", "published")
+    .eq("lifecycle_status", "active")
     .overlaps("tags", tags)
     .order("updated_at", { ascending: false })
     .limit(4);

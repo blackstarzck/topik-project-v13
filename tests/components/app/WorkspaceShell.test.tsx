@@ -426,4 +426,39 @@ describe("WorkspaceShell", () => {
     expect(hasExpandedMenuItem(container, "설정")).toBe(true);
     expect(container.textContent).toContain("프로필");
   });
+
+  it("opens settings for separated account and learning setting routes", () => {
+    navMock.pathname = "/settings/account";
+
+    const account = renderWithIntl(
+      <WorkspaceShell
+        role="learner"
+        userId="user-1"
+        email={null}
+        planLabel="premium"
+      >
+        <div>body</div>
+      </WorkspaceShell>,
+    );
+
+    expect(hasExpandedMenuItem(account.container, "설정")).toBe(true);
+    expect(account.container.textContent).toContain("계정");
+    account.unmount();
+
+    navMock.pathname = "/settings/learning";
+
+    const learning = renderWithIntl(
+      <WorkspaceShell
+        role="learner"
+        userId="user-1"
+        email={null}
+        planLabel="premium"
+      >
+        <div>body</div>
+      </WorkspaceShell>,
+    );
+
+    expect(hasExpandedMenuItem(learning.container, "설정")).toBe(true);
+    expect(learning.container.textContent).toContain("학습 목표");
+  });
 });

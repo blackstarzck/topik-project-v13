@@ -22,6 +22,7 @@ import {
   Lock,
   PenLine,
   Settings,
+  ShieldCheck,
   Target,
   UserRound,
 } from "lucide-react";
@@ -148,6 +149,8 @@ function navIcon(key: string) {
   if (key === "growth" || key === "/growth") return <BarChart3 {...props} />;
   if (key === "/profile") return <UserRound {...props} />;
   if (key === "settings") return <Settings {...props} />;
+  if (key === "/settings/learning") return <Target {...props} />;
+  if (key === "/settings/account") return <ShieldCheck {...props} />;
   if (key === "/settings/language") return <Languages {...props} />;
   if (key === "/settings/notifications") return <Bell {...props} />;
   if (key === "/subscription") return <CreditCard {...props} />;

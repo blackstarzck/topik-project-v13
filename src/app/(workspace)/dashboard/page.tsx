@@ -9,6 +9,7 @@ import type { DashboardAlertItem } from "@/components/dashboard/DashboardAlertsC
 import type { DashboardPrimary, DashboardAlternative } from "@/components/dashboard/DashboardRecommendations";
 import { WorkspaceBody } from "@/components/app/WorkspaceBody";
 import { requireUser } from "@/lib/auth/session";
+import { calculateGoalProgress } from "@/lib/growth/goalProgress";
 import { getDashboardKpi } from "@/lib/learning/kpi";
 import { getLearningGoal } from "@/lib/learning/server";
 import { getNextProblemBundle } from "@/lib/practice/next";
@@ -20,7 +21,6 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 const DAY_MS = 1000 * 60 * 60 * 24;
-const PASSING_SCORE = 60; // 등급 통과 기준선(정직: 추정치)
 
 function getExamDday(examDate: string, nowMs: number): number {
   const examMs = new Date(examDate).getTime();
@@ -66,7 +66,7 @@ export default async function DashboardPage() {
   const { data: feedbacks } = await supabase
     .from("writing_feedback")
     .select(
-      "submission_id, score_total, generated_at, writing_submissions!inner(question_no)",
+      "submission_id, score_total, score_max, generated_at, writing_submissions!inner(question_no)",
     )
     .eq("user_id", user.id)
     .order("generated_at", { ascending: false })
@@ -90,16 +90,15 @@ export default async function DashboardPage() {
       };
     });
 
-  // 목표 달성률 — 최근 평균 점수 / 통과 기준선. 목표 없으면 위에서 redirect 됨.
-  const scores = feedbackRows
-    .map((f) => f.score_total)
-    .filter((s): s is number => typeof s === "number");
-  const avgScore =
-    scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : null;
-  const goalAchievementPct =
-    avgScore != null
-      ? Math.min(100, Math.round((avgScore / PASSING_SCORE) * 100))
-      : null;
+  // 목표 달성률 — /growth와 같은 제품 산식: TOPIK II 목표 등급 총점 하한을
+  // 쓰기 100점 기준으로 환산하고, 실제 feedback 점수를 score_max로 정규화한다.
+  const goalAchievementPct = calculateGoalProgress({
+    goal: { topikLevel: goal.topik_level, targetGrade: goal.target_grade },
+    feedbacks: feedbackRows.map((f) => ({
+      scoreTotal: f.score_total,
+      scoreMax: f.score_max,
+    })),
+  });
 
   // area 4 — in-app alerts. 로드 실패는 try/catch 로 감지해 재시도/설정 CTA.
   const alerts: DashboardAlertItem[] = [];

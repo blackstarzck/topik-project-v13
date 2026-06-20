@@ -2,10 +2,13 @@
 
 import { Alert, App, Avatar, Button, Form, Input, Typography } from "antd";
 import { Lock } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { AppCard } from "@/components/shared/AppCard";
+import {
+  CountryRegionSelect,
+  normalizeCountryCode,
+} from "@/components/shared/CountryRegionSelect";
 import {
   checkNicknameAvailability,
   NicknameTakenError,
@@ -36,6 +39,7 @@ type FormValidateStatus = "success" | "warning" | "error" | "validating";
 type ProfileDraft = {
   display_name: string | null;
   nickname: string | null;
+  nationality_country_code?: string | null;
   bio: string | null;
 };
 
@@ -49,6 +53,8 @@ type Props = {
   initialProfile: ProfileDraft;
   /** Current avatar storage path (avatars bucket). Optional. */
   initialAvatarPath?: string | null;
+  /** Hide account-only identity fields when `/profile` is split from account settings. */
+  showAccountEmail?: boolean;
 };
 
 /**
@@ -60,10 +66,18 @@ export function normalizeProfileField(value: string): string | null {
   return trimmed.length === 0 ? null : trimmed;
 }
 
+function normalizeProfileCountryCode(value: string | null | undefined) {
+  const code = normalizeCountryCode(value ?? "");
+  return code.length === 0 ? null : code;
+}
+
 function normalizeProfileDraft(profile: ProfileDraft): ProfileDraft {
   return {
     display_name: normalizeProfileField(profile.display_name ?? ""),
     nickname: normalizeProfileField(profile.nickname ?? ""),
+    nationality_country_code: normalizeProfileCountryCode(
+      profile.nationality_country_code,
+    ),
     bio: normalizeProfileField(profile.bio ?? ""),
   };
 }
@@ -72,6 +86,7 @@ function profilesEqual(left: ProfileDraft, right: ProfileDraft) {
   return (
     left.display_name === right.display_name &&
     left.nickname === right.nickname &&
+    left.nationality_country_code === right.nationality_country_code &&
     left.bio === right.bio
   );
 }
@@ -103,11 +118,13 @@ export function ProfileForm({
   accountEmail,
   initialProfile,
   initialAvatarPath = null,
+  showAccountEmail = true,
 }: Props) {
   const { message } = App.useApp();
   const t = useTranslations("profile.form");
   const tAvatar = useTranslations("profile.avatar");
   const tCommon = useTranslations("common");
+  const locale = useLocale();
   const mutation = useUpdateProfile(userId);
   const [savedProfile, setSavedProfile] = useState<ProfileDraft>(() =>
     normalizeProfileDraft(initialProfile),
@@ -190,6 +207,9 @@ export function ProfileForm({
   const [nickname, setNickname] = useState<string>(
     initialProfile.nickname ?? "",
   );
+  const [nationalityCountryCode, setNationalityCountryCode] = useState<
+    string | null
+  >(() => normalizeProfileCountryCode(initialProfile.nationality_country_code));
   const [nicknameAvailability, setNicknameAvailability] =
     useState<NicknameAvailability>("idle");
   const nicknameCheckSeqRef = useRef(0);
@@ -200,9 +220,10 @@ export function ProfileForm({
       normalizeProfileDraft({
         display_name: displayName,
         nickname,
+        nationality_country_code: nationalityCountryCode,
         bio,
       }),
-    [bio, displayName, nickname],
+    [bio, displayName, nationalityCountryCode, nickname],
   );
   const isDirty = !profilesEqual(draftProfile, savedProfile);
   const displayNameTooShort = isTooShortProfileField(draftProfile.display_name);
@@ -370,87 +391,109 @@ export function ProfileForm({
       onFinish={handleFinish}
       disabled={mutation.isPending}
     >
-      <AppCard
-        size="small"
+      <section
         role="region"
         aria-label={t("settingsRegionAriaLabel")}
-        className="profile-settings-card"
+        className="profile-settings-section flex flex-col gap-8"
       >
-        <Form.Item label={t("emailLabel")} extra={t("emailExtra")} required>
-          <Input
-            value={accountEmail ?? ""}
-            readOnly
-            placeholder={t("emailPlaceholder")}
-            aria-label={t("emailLabel")}
-          />
-        </Form.Item>
+        <div className="flex flex-col gap-8">
+          {showAccountEmail ? (
+            <Form.Item
+              className="!mb-0"
+              label={t("emailLabel")}
+              extra={t("emailExtra")}
+              required
+            >
+              <Input
+                value={accountEmail ?? ""}
+                readOnly
+                placeholder={t("emailPlaceholder")}
+                aria-label={t("emailLabel")}
+              />
+            </Form.Item>
+          ) : null}
 
-        <Form.Item
-          label={t("nameLabel")}
-          required
-          validateStatus={displayNameTooShort ? "error" : undefined}
-          help={displayNameTooShort ? t("nameTooShort") : t("nameHelp")}
-        >
-          <Input
-            value={displayName}
-            onChange={(event) => setDisplayName(event.target.value)}
-            placeholder={t("namePlaceholder")}
-            maxLength={30}
-            aria-label={t("nameLabel")}
-          />
-        </Form.Item>
+          <Form.Item
+            className="!mb-0"
+            label={t("nameLabel")}
+            required
+            validateStatus={displayNameTooShort ? "error" : undefined}
+            help={displayNameTooShort ? t("nameTooShort") : t("nameHelp")}
+          >
+            <Input
+              value={displayName}
+              onChange={(event) => setDisplayName(event.target.value)}
+              placeholder={t("namePlaceholder")}
+              maxLength={30}
+              aria-label={t("nameLabel")}
+            />
+          </Form.Item>
 
-        <Form.Item
-          label={t("nicknameLabel")}
-          required
-          validateStatus={nicknameValidateStatus}
-          help={nicknameHelp}
-        >
-          <Input
-            value={nickname}
-            onChange={(event) => {
-              setNickname(event.target.value);
-              setNicknameAvailability("idle");
-            }}
-            placeholder={t("nicknamePlaceholder")}
-            maxLength={20}
-            aria-label={t("nicknameLabel")}
-          />
-        </Form.Item>
+          <Form.Item
+            className="!mb-0"
+            label={t("nicknameLabel")}
+            required
+            validateStatus={nicknameValidateStatus}
+            help={nicknameHelp}
+          >
+            <Input
+              value={nickname}
+              onChange={(event) => {
+                setNickname(event.target.value);
+                setNicknameAvailability("idle");
+              }}
+              placeholder={t("nicknamePlaceholder")}
+              maxLength={20}
+              aria-label={t("nicknameLabel")}
+            />
+          </Form.Item>
 
-        <Form.Item label={t("bioLabel")} extra={t("bioHelp")}>
-          <Input.TextArea
-            value={bio}
-            onChange={(event) => setBio(event.target.value)}
-            placeholder={t("bioPlaceholder")}
-            maxLength={160}
-            showCount={{
-              formatter: ({ count }) => t("bioCount", { count }),
-            }}
-            autoSize={{ minRows: 3, maxRows: 5 }}
-            aria-label={t("bioLabel")}
-          />
-        </Form.Item>
+          <Form.Item
+            className="!mb-0"
+            label={t("countryRegionLabel")}
+            extra={t("countryRegionHelp")}
+          >
+            <CountryRegionSelect
+              locale={locale}
+              ariaLabel={t("countryRegionLabel")}
+              placeholder={t("countryRegionPlaceholder")}
+              value={nationalityCountryCode}
+              allowClear
+              onChange={setNationalityCountryCode}
+            />
+          </Form.Item>
 
-        <div className="mb-4">
-          <Paragraph strong className="!mb-2 !mt-0">
+          <Form.Item
+            className="!mb-0"
+            label={t("bioLabel")}
+            extra={t("bioHelp")}
+          >
+            <Input.TextArea
+              value={bio}
+              onChange={(event) => setBio(event.target.value)}
+              placeholder={t("bioPlaceholder")}
+              maxLength={160}
+              showCount={{
+                formatter: ({ count }) => t("bioCount", { count }),
+              }}
+              autoSize={{ minRows: 3, maxRows: 5 }}
+              aria-label={t("bioLabel")}
+            />
+          </Form.Item>
+        </div>
+
+        <div className="profile-avatar-section flex flex-col gap-3">
+          <Paragraph strong className="!m-0">
             {tAvatar("title")}
           </Paragraph>
-          <div
-            role="region"
-            aria-label={tAvatar("regionAriaLabel")}
-            className="rounded-default border border-border px-4 py-3"
-          >
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+          <div role="region" aria-label={tAvatar("regionAriaLabel")}>
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
               {avatarUrl ? (
                 <Avatar size={72} src={avatarUrl} alt={tAvatar("imageAlt")} />
               ) : (
                 <Avatar size={72}>{avatarInitial}</Avatar>
               )}
-              <div className="min-w-0 flex-1">
-                <Paragraph type="secondary" className="!mb-2">
-                  {tAvatar("constraints")}
-                </Paragraph>
+              <div className="flex min-w-0 flex-1 flex-col gap-3">
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -476,9 +519,14 @@ export function ProfileForm({
                     {tAvatar("removeImage")}
                   </Button>
                 </div>
-                <Paragraph type="secondary" className="!mb-0 !mt-2">
-                  {tAvatar("recommendedSize")}
-                </Paragraph>
+                <div className="flex flex-col gap-1">
+                  <Paragraph type="secondary" className="!m-0 !text-sm">
+                    {tAvatar("constraints")}
+                  </Paragraph>
+                  <Paragraph type="secondary" className="!m-0 !text-sm">
+                    {tAvatar("recommendedSize")}
+                  </Paragraph>
+                </div>
               </div>
             </div>
             {avatarError ? (
@@ -500,15 +548,16 @@ export function ProfileForm({
           </div>
         </div>
 
-        <Alert
-          className="mt-3"
-          type="info"
-          showIcon
-          title={tAvatar("securityNoticeTitle")}
-          description={tAvatar("securityNoticeDescription")}
-        />
+        {showAccountEmail ? (
+          <Alert
+            type="info"
+            showIcon
+            title={tAvatar("securityNoticeTitle")}
+            description={tAvatar("securityNoticeDescription")}
+          />
+        ) : null}
 
-        <Form.Item className="!mb-0 !mt-6">
+        <Form.Item className="!mb-0">
           <div className="flex flex-wrap items-center gap-3">
             <Button
               type="primary"
@@ -531,7 +580,7 @@ export function ProfileForm({
             ) : null}
           </div>
         </Form.Item>
-      </AppCard>
+      </section>
     </Form>
   );
 }

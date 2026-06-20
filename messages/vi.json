@@ -32,6 +32,8 @@
     "growthDashboard": "Bảng tiến bộ",
     "profile": "Hồ sơ",
     "settings": "Cài đặt",
+    "settingsLearning": "Mục tiêu học tập",
+    "settingsAccount": "Tài khoản",
     "settingsLanguage": "Ngôn ngữ",
     "settingsNotifications": "Thông báo",
     "subscription": "Quản lý gói",
@@ -183,6 +185,16 @@
     "heroMascotAlt": "Nhân vật trợ lý học tập TALKPIK"
   },
   "settings": {
+    "learning": {
+      "metaTitle": "Mục tiêu học tập — TALKPIK",
+      "pageHeading": "Mục tiêu học tập",
+      "pageSubtitle": "Quản lý kỳ thi mục tiêu và ngày thi. Bạn có thể tiếp tục sang thiết lập đầy đủ để chỉnh thời gian học hàng tuần và điểm yếu."
+    },
+    "account": {
+      "metaTitle": "Cài đặt tài khoản — TALKPIK",
+      "pageHeading": "Cài đặt tài khoản",
+      "pageSubtitle": "Quản lý phương thức đăng nhập, trạng thái tài khoản và đăng xuất ở cùng một nơi."
+    },
     "language": {
       "pageHeading": "Cài đặt ngôn ngữ",
       "uiLanguageLabel": "Ngôn ngữ giao diện",
@@ -225,6 +237,7 @@
     "notifications": {
       "metaTitle": "Cài đặt thông báo — TALKPIK",
       "pageHeading": "Cài đặt thông báo",
+      "pageSubtitle": "Nhận thông báo quan trọng mà không làm gián đoạn việc học.",
       "loadError": "Không thể tải cài đặt thông báo của bạn.",
       "loadErrorTitle": "Không thể tải cài đặt thông báo của bạn",
       "unsavedLeave": "Bạn có thay đổi chưa lưu. Bạn có chắc muốn rời khỏi trang này?",
@@ -232,21 +245,39 @@
       "saveError": "Lưu thất bại.",
       "previewScheduled": "Chúng tôi sẽ gửi lời nhắc học tập mỗi ngày lúc {time} ({timezone}).",
       "previewEmpty": "Đặt giờ nhắc học tập để xem ví dụ về nội dung sẽ được gửi.",
+      "deferredSummary": "Thông báo trong ứng dụng đang bật, còn gửi qua email/Zalo đang được chuẩn bị.",
       "deferredNotice": "Việc gửi thông báo thực tế vẫn đang được thiết lập. Hiện tại kênh, điều kiện và thời gian của bạn được lưu lại, và nhật ký gửi sẽ được điền khi bắt đầu gửi.",
+      "details": {
+        "show": "Xem chi tiết",
+        "hide": "Thu gọn"
+      },
       "noChannel": {
         "title": "Chưa bật kênh thông báo nào",
         "body": "Bật kênh email hoặc Zalo bên dưới để nhận lời nhắc."
       },
+      "routine": {
+        "cardTitle": "Thói quen học tập",
+        "cardDescription": "Chọn thời điểm nhận lời nhắc để xây dựng thói quen học đều đặn.",
+        "frequencyLabel": "Tần suất",
+        "frequencyDaily": "Hằng ngày",
+        "frequencyWeekdays": "Ngày trong tuần",
+        "frequencyCustom": "Tùy chỉnh",
+        "frequencyHint": "Lời nhắc được gửi vào những ngày đã chọn."
+      },
       "channel": {
         "cardTitle": "Kênh thông báo",
+        "cardDescription": "Chọn nơi bạn muốn nhận thông báo.",
+        "inApp": "Trong ứng dụng",
+        "inAppHint": "Hộp thư trong ứng dụng",
         "emailTab": "Email",
         "emailReceive": "Nhận thông báo qua email",
-        "emailHint": "Thông báo được gửi đến email đăng ký của bạn.",
+        "emailHint": "Đang chuẩn bị",
         "notConnected": "Chưa kết nối",
         "zaloReceive": "Nhận thông báo qua Zalo",
-        "zaloHint": "Tích hợp Zalo (gửi thực tế) vẫn đang được chuẩn bị. Hiện tại chỉ lưu tùy chọn nhận của bạn.",
+        "zaloHint": "Đang chuẩn bị",
         "bothTab": "Cả hai",
-        "zaloReceivePending": "Nhận thông báo qua Zalo (sắp tích hợp)"
+        "zaloReceivePending": "Nhận thông báo qua Zalo (sắp tích hợp)",
+        "externalNotice": "Email và Zalo đang được chuẩn bị. Hiện chưa hỗ trợ gửi ra bên ngoài thực tế."
       },
       "condition": {
         "cardTitle": "Điều kiện thông báo",
@@ -257,12 +288,23 @@
         "reminderTimeAria": "Giờ nhắc",
         "timezoneLabel": "Múi giờ",
         "timezoneAria": "Múi giờ nhắc",
-        "reminderDaysLabel": "Các ngày nhắc"
+        "timezoneHint": "Giờ nhắc được hiểu theo múi giờ đã chọn.",
+        "reminderDaysLabel": "Ngày",
+        "reminderDaysHint": "Lời nhắc được gửi vào những ngày đã chọn."
+      },
+      "notificationTypes": {
+        "cardTitle": "Thông báo muốn nhận",
+        "cardDescription": "Chỉ chọn những thông báo hỗ trợ việc học của bạn."
       },
       "pref": {
         "weeklySummary": "Tóm tắt học tập hằng tuần",
         "feedbackReady": "Thông báo phản hồi đã sẵn sàng",
         "studyReminder": "Lời nhắc học tập"
+      },
+      "prefDescription": {
+        "weeklySummary": "Nhận tóm tắt tiến độ học tập trong tuần.",
+        "feedbackReady": "Nhận thông báo khi phần sửa bài hoặc phản hồi AI đã sẵn sàng.",
+        "studyReminder": "Nhận lời nhắc khi đến giờ học hoặc cần quay lại học."
       },
       "weekday": {
         "mon": "T2",
@@ -274,7 +316,8 @@
         "sun": "CN"
       },
       "preview": {
-        "cardTitle": "Xem trước"
+        "cardTitle": "Xem trước",
+        "nextCardTitle": "Xem trước thông báo tiếp theo"
       },
       "history": {
         "cardTitle": "Lịch sử gửi (5 mục gần nhất)",
@@ -1615,11 +1658,11 @@
         "empty": "Hãy nộp thêm bài viết để hoàn thiện phân tích điểm yếu. Hiện tại nội dung dựa trên các bài gần đây.",
         "startCta": "Bắt đầu học",
         "scoreSample": "{score} điểm · {count} mẫu"
-      },
-      "insights": {
-        "title": "Phân tích",
-        "disclaimer": "Tóm tắt này được tính từ điểm số và lịch sử luyện tập thực tế của bạn. Điểm yếu có thể thay đổi theo kết quả luyện tập sau này."
-      },
+    },
+    "insights": {
+      "title": "Phân tích học tập",
+      "disclaimer": "Tóm tắt này được tính từ điểm số và lịch sử luyện tập thực tế của bạn. Điểm yếu có thể thay đổi theo kết quả luyện tập sau này."
+    },
       "recent": {
         "title": "Vừa hoàn thành",
         "empty": "Bạn chưa hoàn thành câu hỏi nào.",
@@ -1656,7 +1699,7 @@
     "locked": {
       "title": "Báo cáo tiến bộ chi tiết chỉ dành cho gói trả phí",
       "freePlan": "Miễn phí",
-      "body": "Với gói hiện tại (<plan></plan>), bạn chỉ xem được các chỉ số cơ bản. Nâng cấp để mở khóa biểu đồ xu hướng, ma trận điểm yếu và phân tích cá nhân hóa.",
+    "body": "Với gói hiện tại (<plan></plan>), bạn chỉ xem được các chỉ số cơ bản. Nâng cấp để mở khóa biểu đồ xu hướng, ma trận điểm yếu và phân tích học tập.",
       "upgradeCta": "Nâng cấp gói",
       "manageCta": "Quản lý đăng ký"
     },
@@ -1947,7 +1990,8 @@
   "profile": {
     "page": {
       "metaTitle": "Hồ sơ — TALKPIK",
-      "heading": "Hồ sơ"
+      "heading": "Hồ sơ",
+      "subtitle": "Quản lý tên, biệt danh, giới thiệu và ảnh hiển thị cho người dùng khác."
     },
     "form": {
       "settingsRegionAriaLabel": "Cài đặt hồ sơ",
@@ -1966,6 +2010,9 @@
       "nicknameTaken": "Biệt danh này đã được sử dụng.",
       "nicknameCheckFailed": "Hiện chưa thể kiểm tra. Chúng tôi sẽ kiểm tra lại khi bạn lưu.",
       "nicknamePlaceholder": "Tên hiển thị cho người dùng khác",
+      "countryRegionLabel": "Quốc gia/khu vực",
+      "countryRegionHelp": "Đây là quốc gia/khu vực bạn đã chọn khi đăng ký. Bạn có thể cập nhật nếu cần.",
+      "countryRegionPlaceholder": "Chọn quốc gia hoặc khu vực",
       "bioLabel": "Giới thiệu bản thân",
       "bioCount": "{count}/160 ký tự",
       "bioHelp": "Phần giới thiệu ngắn hiển thị cho người dùng khác. (Tối đa 160 ký tự)",
@@ -2093,7 +2140,21 @@
       "planLabel": "Gói",
       "cadenceLabel": "Chu kỳ thanh toán",
       "nextBillingLabel": "Ngày thanh toán tiếp theo",
+      "nextChargeLabel": "Số tiền thanh toán tiếp theo",
+      "unknownPlan": "Gói đăng ký",
+      "autoRenewalNote": "Tự động gia hạn · có thể hủy bất cứ lúc nào",
       "cancelScheduled": "Dự kiến hủy sau {date}"
+    },
+    "payment": {
+      "title": "Phương thức thanh toán",
+      "placeholderTitle": "Sắp tích hợp phương thức thanh toán",
+      "placeholderBody": "Thông tin phương thức thanh toán sẽ hiển thị sau khi tích hợp thanh toán."
+    },
+    "usage": {
+      "title": "Mức sử dụng tháng này",
+      "aiTitle": "Mức sử dụng AI đang được chuẩn bị.",
+      "aiBody": "Giới hạn phản hồi AI thực tế chưa được áp dụng, nên chưa hiển thị số lượt còn lại.",
+      "pdfBody": "Mức sử dụng xuất PDF cũng sẽ hiển thị sau khi tích hợp thanh toán."
     },
     "change": {
       "title": "Thay đổi gói đăng ký",

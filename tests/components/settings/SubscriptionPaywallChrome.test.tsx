@@ -165,6 +165,53 @@ describe("SubscriptionShell (i18n chrome)", () => {
     expect(screen.getByTestId("subscription-change-payment")).toBeTruthy();
     expect(screen.getByTestId("subscription-cancel")).toBeTruthy();
     expect(screen.getByRole("button", { name: "구독 취소" })).toBeTruthy();
+    expect(screen.getByText("다음 청구 금액")).toBeTruthy();
+    expect(screen.getByText("₩9,900")).toBeTruthy();
+    expect(screen.getByTestId("subscription-payment-card")).toBeTruthy();
+    expect(
+      screen.getByText("결제수단 정보는 결제 연동 후 표시됩니다."),
+    ).toBeTruthy();
+    expect(screen.getByTestId("subscription-usage-card")).toBeTruthy();
+    expect(screen.getByText("AI 사용량은 준비 중입니다.")).toBeTruthy();
+  });
+
+  it("uses cancel_at as the scheduled cancellation date", async () => {
+    fetchMySubscriptionMock.mockResolvedValue({
+      id: "sub-1",
+      user_id: "u-1",
+      plan_key: "pro_monthly",
+      billing_cadence: "monthly",
+      status: "active",
+      current_period_start: null,
+      current_period_end: "2026-07-01T00:00:00Z",
+      cancel_at: "2026-06-20T00:00:00Z",
+      provider: null,
+      provider_subscription_id: null,
+      created_at: "2026-06-01T00:00:00Z",
+      updated_at: "2026-06-01T00:00:00Z",
+    });
+    fetchActivePlansMock.mockResolvedValue([
+      {
+        plan_key: "pro_monthly",
+        name: "프로 월간",
+        cadence: "monthly",
+        price_cents: 990000,
+        currency: "KRW",
+        features: [],
+        recommended: true,
+        active: true,
+      },
+    ]);
+    fetchPaymentHistoryMock.mockResolvedValue({ rows: [], total: 0 });
+
+    renderShell(<SubscriptionShell />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/2026\. 6\. 20\..*해지 예정/)).toBeTruthy();
+    });
+    expect(
+      screen.queryByText(/2026\. 7\. 1\..*해지 예정/),
+    ).toBeNull();
   });
 });
 

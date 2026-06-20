@@ -24,6 +24,19 @@ async function ensureRetryableProblem(page: Page) {
   ).toBeVisible({ timeout: 15_000 });
 }
 
+async function ensureStartableProblemRow(page: Page) {
+  await page.goto("/practice/problems", { waitUntil: "networkidle" });
+  await expect(page).not.toHaveURL(/\/login/);
+
+  const row = page
+    .locator("tr.problem-table__row--selectable", {
+      has: page.locator(".problem-table__action-button--primary"),
+    })
+    .first();
+  await expect(row).toBeVisible({ timeout: 15_000 });
+  return row;
+}
+
 async function openRetryModal(page: Page) {
   await ensureRetryableProblem(page);
   await page
@@ -145,6 +158,20 @@ test.describe("C-03 retry modal", () => {
     }
     await page.keyboard.press("Shift+Tab");
     await expectFocusInModalLayer(page);
+    expect(errors).toEqual([]);
+  });
+
+  test("selecting a startable problem row opens the writing route", async ({
+    page,
+  }) => {
+    const errors = collectErrors(page);
+    const row = await ensureStartableProblemRow(page);
+
+    await row.locator(".problem-table__title").click();
+
+    await expect(page).toHaveURL(/\/writing\/.*[?&]problem=/, {
+      timeout: 15_000,
+    });
     expect(errors).toEqual([]);
   });
 

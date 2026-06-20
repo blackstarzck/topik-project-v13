@@ -49,7 +49,12 @@ import {
   normalizeProfileField,
 } from "../../../src/components/profile/ProfileForm";
 
-const blankProfile = { display_name: null, nickname: null, bio: null };
+const blankProfile = {
+  display_name: null,
+  nickname: null,
+  nationality_country_code: null,
+  bio: null,
+};
 
 // Components now call next-intl's useTranslations, so they must render inside a
 // NextIntlClientProvider. Render against the real ko catalog (same Korean strings
@@ -149,14 +154,57 @@ function submitForm(container: HTMLElement) {
   fireEvent.submit(form);
 }
 
+async function selectProfileCountryRegion(countryName: string) {
+  fireEvent.mouseDown(screen.getByRole("combobox", { name: "국가/지역" }));
+  const matches = await screen.findAllByText(countryName);
+  const option = matches.find((node) =>
+    node.closest(".ant-select-item-option"),
+  );
+  if (!option) {
+    throw new Error(`Country option not found: ${countryName}`);
+  }
+  fireEvent.click(option);
+}
+
 describe("ProfileForm", () => {
   it("keeps Save disabled and does not submit when profile fields are unchanged", async () => {
     const { container } = renderProfileForm();
 
-    const form = container.querySelector("form");
-    const settingsCard = form?.firstElementChild;
-    expect(settingsCard?.classList.contains("app-card")).toBe(true);
-    expect(settingsCard?.textContent).toContain("변경 사항이 없습니다.");
+    const settingsRegion = screen.getByRole("region", {
+      name: koMessages.profile.form.settingsRegionAriaLabel,
+    });
+    expect(settingsRegion.tagName).toBe("SECTION");
+    expect(settingsRegion.classList.contains("profile-settings-section")).toBe(
+      true,
+    );
+    expect(settingsRegion.classList.contains("gap-8")).toBe(true);
+    expect(settingsRegion.classList.contains("app-card")).toBe(false);
+    expect(settingsRegion.querySelector(".ant-card-body")).toBeNull();
+    expect(
+      settingsRegion.querySelector(".profile-avatar-section"),
+    ).toBeTruthy();
+    const avatarRegion = screen.getByRole("region", {
+      name: koMessages.profile.avatar.regionAriaLabel,
+    });
+    expect(avatarRegion.className).not.toContain("border");
+    expect(avatarRegion.className).not.toContain("px-");
+    expect(
+      screen
+        .getByText(koMessages.profile.avatar.recommendedSize)
+        .className.includes("!text-sm"),
+    ).toBe(true);
+    const uploadButton = screen.getByRole("button", {
+      name: koMessages.profile.avatar.uploadAriaLabel,
+    });
+    const constraintsText = screen.getByText(
+      koMessages.profile.avatar.constraints,
+    );
+    expect(constraintsText.className.includes("!text-sm")).toBe(true);
+    expect(
+      uploadButton.compareDocumentPosition(constraintsText) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(settingsRegion.textContent).toContain("변경 사항이 없습니다.");
 
     const saveButton = screen.getByRole("button", { name: "프로필 저장" });
     expect((saveButton as HTMLButtonElement).disabled).toBe(true);
@@ -185,6 +233,7 @@ describe("ProfileForm", () => {
       expect(mutateAsyncMock).toHaveBeenCalledWith({
         display_name: null,
         nickname: "chan-k",
+        nationality_country_code: null,
         bio: null,
       });
     });
@@ -213,6 +262,7 @@ describe("ProfileForm", () => {
       expect(mutateAsyncMock).toHaveBeenCalledWith({
         display_name: "Chan",
         nickname: "tester",
+        nationality_country_code: null,
         bio: null,
       });
     });
@@ -234,6 +284,7 @@ describe("ProfileForm", () => {
       expect(mutateAsyncMock).toHaveBeenCalledWith({
         display_name: null,
         nickname: null,
+        nationality_country_code: null,
         bio: "TOPIK II grade 4 goal",
       });
     });
@@ -455,6 +506,46 @@ describe("ProfileForm", () => {
     expect(bioInput.value).toBe(existing);
   });
 
+  it("renders existing country/region value from initialProfile", () => {
+    renderProfileForm({
+      initialProfile: {
+        display_name: null,
+        nickname: null,
+        nationality_country_code: "VN",
+        bio: null,
+      },
+    });
+
+    expect(screen.getByRole("combobox", { name: "국가/지역" })).toBeTruthy();
+    expect(screen.getAllByText("베트남").length).toBeGreaterThan(0);
+  });
+
+  it("submits nationality_country_code when the user changes country/region", async () => {
+    const { container } = renderProfileForm({
+      initialProfile: {
+        display_name: null,
+        nickname: null,
+        nationality_country_code: "VN",
+        bio: null,
+      },
+    });
+
+    await selectProfileCountryRegion("대한민국");
+
+    await act(async () => {
+      submitForm(container);
+    });
+
+    await waitFor(() => {
+      expect(mutateAsyncMock).toHaveBeenCalledWith({
+        display_name: null,
+        nickname: null,
+        nationality_country_code: "KR",
+        bio: null,
+      });
+    });
+  });
+
   it("renders account identity and a real avatar upload area", () => {
     renderProfileForm({ accountEmail: "learner@example.com" });
 
@@ -477,6 +568,21 @@ describe("ProfileForm", () => {
     expect(
       screen.getByText(/이름·닉네임·자기소개 변경은 바로 저장됩니다/),
     ).toBeTruthy();
+  });
+
+  it("can hide account-only fields when profile and account settings are split", () => {
+    renderProfileForm({
+      accountEmail: "learner@example.com",
+      showAccountEmail: false,
+    });
+
+    expect(screen.queryByLabelText("이메일")).toBeNull();
+    expect(
+      screen.queryByText(
+        /계정 식별 정보 변경은 향후 재인증이 필요할 수 있습니다/,
+      ),
+    ).toBeNull();
+    expect(screen.getByText("프로필 이미지")).toBeTruthy();
   });
 
   it("enables Save only after a dirty edit and protects browser leave", () => {

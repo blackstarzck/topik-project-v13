@@ -1,4 +1,6 @@
 // @vitest-environment jsdom
+import { readFileSync } from "node:fs";
+
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   act,
@@ -82,12 +84,10 @@ describe("computeNotificationDiff (pure helper)", () => {
   });
 
   it("treats missing initial keys as false", () => {
-    expect(
-      computeNotificationDiff({ weekly_summary: false }, {}),
-    ).toEqual({});
-    expect(
-      computeNotificationDiff({ weekly_summary: true }, {}),
-    ).toEqual({ weekly_summary: true });
+    expect(computeNotificationDiff({ weekly_summary: false }, {})).toEqual({});
+    expect(computeNotificationDiff({ weekly_summary: true }, {})).toEqual({
+      weekly_summary: true,
+    });
   });
 
   it("only includes flipped keys", () => {
@@ -107,6 +107,20 @@ function submitForm(container: HTMLElement) {
 }
 
 describe("NotificationPrefsForm", () => {
+  it("defines notification description text styles at 14px", () => {
+    const css = readFileSync("src/styles/global.css", "utf8").replace(
+      /\s+/g,
+      " ",
+    );
+
+    expect(css).toContain(
+      ".notification-settings-section-description.ant-typography, .notification-settings-row-hint.ant-typography, .notification-settings-type-description.ant-typography, .notification-settings-channel-copy .ant-typography-secondary.ant-typography, .notification-settings-redesign .ant-alert .ant-alert-description, .notification-settings-detail-panel > section > .ant-typography-secondary.ant-typography {",
+    );
+    expect(css).toMatch(
+      /\.notification-settings-section-description\.ant-typography, .*?font-size: 14px;/,
+    );
+  });
+
   it("submits an empty diff when the user submits without toggling anything", async () => {
     const { container } = renderInApp(
       <NotificationPrefsForm
@@ -151,9 +165,7 @@ describe("NotificationPrefsForm", () => {
   });
 
   it("renders the OOS-9 informational alert", () => {
-    renderInApp(
-      <NotificationPrefsForm userId="user-1" initialPrefs={{}} />,
-    );
+    renderInApp(<NotificationPrefsForm userId="user-1" initialPrefs={{}} />);
     // X-09: transport is still deferred — only the receive channels/conditions/
     // time are persisted; actual delivery is not wired. Copy updated by the
     // X-09 build to reflect the richer settings (channels + schedule + log).
@@ -162,5 +174,48 @@ describe("NotificationPrefsForm", () => {
         "실제 알림 발송 연동은 준비 중입니다. 지금은 수신 채널·조건·시간이 저장되며, 발송 이력은 발송이 시작되면 채워집니다.",
       ),
     ).toBeTruthy();
+  });
+
+  it("renders the learning-routine redesign while preserving notification controls", async () => {
+    const { container } = renderInApp(
+      <NotificationPrefsForm userId="user-1" initialPrefs={{}} />,
+    );
+
+    expect(screen.getByTestId("notification-redesign-shell")).toBeTruthy();
+    await waitFor(() => {
+      expect(
+        screen.getByTestId("notification-routine-row-frequency"),
+      ).toBeTruthy();
+    });
+    expect(screen.getByTestId("notification-type-feedback_ready")).toBeTruthy();
+    expect(screen.getByTestId("notification-channel-in_app")).toBeTruthy();
+    expect(screen.queryByTestId("notification-preview-card")).toBeNull();
+    expect(screen.queryByTestId("notification-history-card")).toBeNull();
+    expect(screen.getByTestId("notification-details-toggle")).toBeTruthy();
+    expect(screen.queryByText("도움말")).toBeNull();
+    expect(
+      screen.getByRole("switch", { name: "피드백 준비 완료 알림" }),
+    ).toBeTruthy();
+    expect(
+      (screen.getByTestId("notification-save") as HTMLButtonElement).disabled,
+    ).toBe(true);
+
+    expect(
+      container.querySelectorAll(".notification-settings-row-label svg"),
+    ).toHaveLength(0);
+    expect(
+      container.querySelectorAll(".notification-settings-type-copy svg"),
+    ).toHaveLength(0);
+    expect(
+      container.querySelectorAll(".notification-settings-channel-copy svg"),
+    ).toHaveLength(3);
+
+    fireEvent.click(screen.getByTestId("notification-details-toggle"));
+    await waitFor(() => {
+      expect(screen.getByTestId("notification-preview-card")).toBeTruthy();
+    });
+    expect(
+      container.querySelectorAll(".notification-settings-detail-title svg"),
+    ).toHaveLength(0);
   });
 });

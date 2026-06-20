@@ -8,17 +8,18 @@ import {
   Empty,
   Form,
   List,
+  Segmented,
   Select,
   Skeleton,
   Switch,
-  Tabs,
   Tag,
   TimePicker,
   Typography,
 } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
+import { Mail, MessageCircle, MonitorCheck } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 
 import { AppCard } from "@/components/shared/AppCard";
 
@@ -51,6 +52,12 @@ const PREF_LABEL_KEYS: Record<NotificationPrefKey, string> = {
   study_reminder: "studyReminder",
 };
 
+const PREF_DESCRIPTION_KEYS: Record<NotificationPrefKey, string> = {
+  weekly_summary: "weeklySummary",
+  feedback_ready: "feedbackReady",
+  study_reminder: "studyReminder",
+};
+
 // 요일 토글 — value는 JS Date 요일 인덱스(0=일), labelKey는 카탈로그 키.
 const WEEKDAYS: { value: number; labelKey: string }[] = [
   { value: 1, labelKey: "mon" },
@@ -68,6 +75,9 @@ const TIMEZONE_OPTIONS = [
   { value: "UTC", label: "UTC" },
 ];
 
+const DAILY_DAYS = [0, 1, 2, 3, 4, 5, 6];
+const WEEKDAY_DAYS = [1, 2, 3, 4, 5];
+
 // 발송 이력 status enum → 카탈로그 키(enum 값은 그대로 유지).
 const LOG_STATUS_BADGE_META: Record<
   DeliveryHistoryEntry["status"],
@@ -80,6 +90,31 @@ const LOG_STATUS_BADGE_META: Record<
   opted_out: { labelKey: "optedOut" },
   deduped: { labelKey: "deduped" },
 };
+
+type SettingRowProps = {
+  children: ReactNode;
+  label: ReactNode;
+  description?: ReactNode;
+  testId: string;
+};
+
+function SettingRow({ children, label, description, testId }: SettingRowProps) {
+  return (
+    <div className="notification-settings-row" data-testid={testId}>
+      <div className="notification-settings-row-label">
+        <span>{label}</span>
+      </div>
+      <div className="notification-settings-row-control">
+        {children}
+        {description ? (
+          <Text type="secondary" className="notification-settings-row-hint">
+            {description}
+          </Text>
+        ) : null}
+      </div>
+    </div>
+  );
+}
 
 type Props = {
   /**
@@ -115,7 +150,10 @@ export function computeNotificationDiff(
   return diff;
 }
 
-function settingsEqual(a: NotificationSettings, b: NotificationSettings): boolean {
+function settingsEqual(
+  a: NotificationSettings,
+  b: NotificationSettings,
+): boolean {
   return (
     (a.reminder_time ?? "") === (b.reminder_time ?? "") &&
     a.timezone === b.timezone &&
@@ -140,6 +178,10 @@ function timeStringToDayjs(value: string | null): Dayjs | null {
   return dayjs().hour(hour).minute(minute).second(0).millisecond(0);
 }
 
+function sameDays(a: number[], b: number[]): boolean {
+  return a.length === b.length && a.every((day) => b.includes(day));
+}
+
 /**
  * X-09 알림 설정 — real notification_settings + notification_log.
  *
@@ -147,9 +189,9 @@ function timeStringToDayjs(value: string | null): Dayjs | null {
  *   persisted to notification_settings.channels. Zalo is shown as 미연동 (no
  *   external integration); enabling it is allowed for preference, but a notice
  *   makes clear delivery is 연동 예정.
- * - Region 3 (조건 입력): reminder_time (HH:mm) + reminder_days persisted;
+ * - Region 3 (학습 루틴): reminder_time (HH:mm) + reminder_days persisted;
  *   off-channel inputs are disabled when no channel is on.
- * - Region 4 (미리보기/도움말): preview copy + 발송 이력 5개 from
+ * - Region 4 (미리보기/발송 이력): preview copy + 발송 이력 5개 from
  *   notification_delivery_attempts (fetchDeliveryHistory).
  * - Region 5 (저장): dirty-gated, double-click guarded.
  * - 수신 권한 없음 notice when both channels off.
@@ -180,9 +222,7 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
     NOTIFICATION_SETTINGS_DEFAULTS,
   );
   const [log, setLog] = useState<DeliveryHistoryEntry[]>([]);
-  const [activeChannel, setActiveChannel] = useState<"email" | "zalo" | "both">(
-    "email",
-  );
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -219,11 +259,19 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
   const settingsDirty = !settingsEqual(settings, savedSettings);
   const isDirty = prefsDirty || settingsDirty;
 
-  const anyChannelOn = settings.channels.email || settings.channels.zalo;
+  const anyChannelOn =
+    settings.channels.in_app ||
+    settings.channels.email ||
+    settings.channels.zalo;
   const reminderTime = useMemo(
     () => timeStringToDayjs(settings.reminder_time),
     [settings.reminder_time],
   );
+  const reminderFrequency = useMemo(() => {
+    if (sameDays(settings.reminder_days, DAILY_DAYS)) return "daily";
+    if (sameDays(settings.reminder_days, WEEKDAY_DAYS)) return "weekdays";
+    return "custom";
+  }, [settings.reminder_days]);
 
   function setKey(key: NotificationPrefKey, value: boolean) {
     setValues((prev) => ({ ...prev, [key]: value }));
@@ -246,6 +294,16 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
           : [...prev.reminder_days, day].sort((a, b) => a - b),
       };
     });
+  }
+
+  function setReminderFrequency(value: string | number) {
+    if (value === "daily") {
+      setSettings((prev) => ({ ...prev, reminder_days: DAILY_DAYS }));
+      return;
+    }
+    if (value === "weekdays") {
+      setSettings((prev) => ({ ...prev, reminder_days: WEEKDAY_DAYS }));
+    }
   }
 
   // Region 1 예외 / region 5 제약: warn before leaving with unsaved changes.
@@ -328,64 +386,6 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
       })
     : t("previewEmpty");
 
-  const channelTabs = [
-    {
-      key: "email",
-      label: t("channel.emailTab"),
-      children: (
-        <div className="flex w-full flex-col gap-2">
-          <Checkbox
-            checked={settings.channels.email}
-            onChange={(e) => setChannel("email", e.target.checked)}
-          >
-            {t("channel.emailReceive")}
-          </Checkbox>
-          <Text type="secondary">{t("channel.emailHint")}</Text>
-        </div>
-      ),
-    },
-    {
-      key: "zalo",
-      label: (
-        <span className="inline-flex items-center gap-1">
-          Zalo
-          <Tag>{t("channel.notConnected")}</Tag>
-        </span>
-      ),
-      children: (
-        <div className="flex w-full flex-col gap-2">
-          <Checkbox
-            checked={settings.channels.zalo}
-            onChange={(e) => setChannel("zalo", e.target.checked)}
-          >
-            {t("channel.zaloReceive")}
-          </Checkbox>
-          <Text type="secondary">{t("channel.zaloHint")}</Text>
-        </div>
-      ),
-    },
-    {
-      key: "both",
-      label: t("channel.bothTab"),
-      children: (
-        <div className="flex w-full flex-col gap-2">
-          <Checkbox
-            checked={settings.channels.email}
-            onChange={(e) => setChannel("email", e.target.checked)}
-          >
-            {t("channel.emailReceive")}
-          </Checkbox>
-          <Checkbox
-            checked={settings.channels.zalo}
-            onChange={(e) => setChannel("zalo", e.target.checked)}
-          >
-            {t("channel.zaloReceivePending")}
-          </Checkbox>
-        </div>
-      ),
-    },
-  ];
-
   return (
     <Form
       data-testid="notification-settings-form"
@@ -393,7 +393,10 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
       onFinish={handleFinish}
       disabled={saving}
     >
-      <div className="flex w-full flex-col gap-4">
+      <div
+        className="notification-settings-redesign"
+        data-testid="notification-redesign-shell"
+      >
         {settingsLoad.status === "error" ? (
           <Alert
             type="error"
@@ -413,63 +416,64 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
           />
         ) : null}
 
-        {/* Region 2: 알림 채널 탭 (이메일 / Zalo / 둘 다) */}
-        <AppCard
-          size="small"
-          title={t("channel.cardTitle")}
-          data-testid="notification-channel-card"
-        >
-          {settingsLoad.status === "loading" ? (
-            <Skeleton active paragraph={{ rows: 2 }} />
-          ) : (
-            <Tabs
-              activeKey={activeChannel}
-              onChange={(k) => setActiveChannel(k as "email" | "zalo" | "both")}
-              items={channelTabs}
-            />
-          )}
-        </AppCard>
+        <Alert
+          type="info"
+          showIcon
+          title={t("deferredSummary")}
+          description={t("deferredNotice")}
+          action={
+            <Button
+              data-testid="notification-details-toggle"
+              type="link"
+              onClick={() => setDetailsOpen((open) => !open)}
+            >
+              {detailsOpen ? t("details.hide") : t("details.show")}
+            </Button>
+          }
+        />
 
-        {/* Region 3: 알림 조건 입력 */}
+        {/* Region 3: 학습 루틴 */}
         <AppCard
+          className="notification-settings-card"
           size="small"
-          title={t("condition.cardTitle")}
-          data-testid="notification-condition-card"
+          title={t("routine.cardTitle")}
+          data-testid="notification-routine-card"
         >
-          <div className="flex w-full flex-col gap-4">
-            {/* Boolean conditions persist to profiles.notification_prefs and do
-                not depend on the async notification_settings load. */}
-            {NOTIFICATION_PREF_KEYS.map((key) => {
-              const prefLabel = t(
-                `pref.${PREF_LABEL_KEYS[key]}` as Parameters<typeof t>[0],
-              );
-              return (
-                <Form.Item
-                  key={key}
-                  label={prefLabel}
-                  className="!mb-0"
-                >
-                  <Switch
-                    checked={values[key] ?? false}
-                    onChange={(checked) => setKey(key, checked)}
-                    aria-label={prefLabel}
-                  />
-                  <Text type="secondary" className="ml-3">
-                    {values[key] ? t("condition.on") : t("condition.off")}
-                  </Text>
-                </Form.Item>
-              );
-            })}
-
-            {/* Schedule (time/days) needs the loaded notification_settings. */}
+          <div className="notification-settings-card-body">
+            <Text
+              type="secondary"
+              className="notification-settings-section-description"
+            >
+              {t("routine.cardDescription")}
+            </Text>
             {settingsLoad.status === "loading" ? (
               <Skeleton active paragraph={{ rows: 2 }} />
             ) : (
               <>
-                <Form.Item
+                <SettingRow
+                  label={t("routine.frequencyLabel")}
+                  testId="notification-routine-row-frequency"
+                  description={t("routine.frequencyHint")}
+                >
+                  <Segmented
+                    value={reminderFrequency}
+                    disabled={!anyChannelOn}
+                    onChange={setReminderFrequency}
+                    options={[
+                      { label: t("routine.frequencyDaily"), value: "daily" },
+                      {
+                        label: t("routine.frequencyWeekdays"),
+                        value: "weekdays",
+                      },
+                      { label: t("routine.frequencyCustom"), value: "custom" },
+                    ]}
+                  />
+                </SettingRow>
+
+                <SettingRow
                   label={t("condition.reminderTimeLabel")}
-                  className="!mb-0"
-                  extra={
+                  testId="notification-routine-row-time"
+                  description={
                     anyChannelOn ? undefined : t("condition.reminderTimeExtra")
                   }
                 >
@@ -487,14 +491,38 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
                     placeholder="HH:mm"
                     aria-label={t("condition.reminderTimeAria")}
                   />
-                </Form.Item>
+                </SettingRow>
 
-                <Form.Item
+                <SettingRow
+                  label={t("condition.reminderDaysLabel")}
+                  testId="notification-routine-row-days"
+                  description={t("condition.reminderDaysHint")}
+                >
+                  <div className="notification-settings-inline-control">
+                    {WEEKDAYS.map((d) => (
+                      <Tag.CheckableTag
+                        key={d.value}
+                        checked={settings.reminder_days.includes(d.value)}
+                        onChange={() => anyChannelOn && toggleDay(d.value)}
+                        className={
+                          anyChannelOn
+                            ? undefined
+                            : "cursor-not-allowed opacity-50"
+                        }
+                      >
+                        {t(`weekday.${d.labelKey}` as Parameters<typeof t>[0])}
+                      </Tag.CheckableTag>
+                    ))}
+                  </div>
+                </SettingRow>
+
+                <SettingRow
                   label={t("condition.timezoneLabel")}
-                  className="!mb-0"
+                  testId="notification-routine-row-timezone"
+                  description={t("condition.timezoneHint")}
                 >
                   <Select
-                    className="max-w-xs"
+                    className="notification-settings-timezone-select"
                     value={settings.timezone}
                     aria-label={t("condition.timezoneAria")}
                     options={TIMEZONE_OPTIONS}
@@ -502,85 +530,216 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
                       setSettings((prev) => ({ ...prev, timezone }))
                     }
                   />
-                </Form.Item>
-
-                <Form.Item
-                  label={t("condition.reminderDaysLabel")}
-                  className="!mb-0"
-                >
-                  <div className="flex flex-wrap gap-2">
-                    {WEEKDAYS.map((d) => (
-                      <Tag.CheckableTag
-                        key={d.value}
-                        checked={settings.reminder_days.includes(d.value)}
-                        onChange={() => anyChannelOn && toggleDay(d.value)}
-                        className={
-                          anyChannelOn ? undefined : "cursor-not-allowed opacity-50"
-                        }
-                      >
-                        {t(`weekday.${d.labelKey}` as Parameters<typeof t>[0])}
-                      </Tag.CheckableTag>
-                    ))}
-                  </div>
-                </Form.Item>
+                </SettingRow>
               </>
             )}
           </div>
         </AppCard>
 
-        {/* Region 4: 미리보기 / 발송 이력 */}
+        {/* Region 3: 알림 내용 조건 */}
         <AppCard
+          className="notification-settings-card"
           size="small"
-          title={t("preview.cardTitle")}
-          data-testid="notification-preview-card"
+          title={t("notificationTypes.cardTitle")}
+          data-testid="notification-condition-card"
         >
-          <Text type="secondary">{reminderPreview}</Text>
+          <div className="notification-settings-card-body">
+            <Text
+              type="secondary"
+              className="notification-settings-section-description"
+            >
+              {t("notificationTypes.cardDescription")}
+            </Text>
+            {/* Boolean conditions persist to profiles.notification_prefs and do
+                not depend on the async notification_settings load. */}
+            {NOTIFICATION_PREF_KEYS.map((key) => {
+              const descriptionKey = PREF_DESCRIPTION_KEYS[key];
+              const prefLabel = t(
+                `pref.${PREF_LABEL_KEYS[key]}` as Parameters<typeof t>[0],
+              );
+              return (
+                <div
+                  key={key}
+                  className="notification-settings-type-row"
+                  data-testid={`notification-type-${key}`}
+                >
+                  <div className="notification-settings-type-copy">
+                    <div>
+                      <Text strong>{prefLabel}</Text>
+                      <Text
+                        type="secondary"
+                        className="notification-settings-type-description"
+                      >
+                        {t(
+                          `prefDescription.${descriptionKey}` as Parameters<
+                            typeof t
+                          >[0],
+                        )}
+                      </Text>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={values[key] ?? false}
+                    onChange={(checked) => setKey(key, checked)}
+                    aria-label={prefLabel}
+                  />
+                </div>
+              );
+            })}
+          </div>
         </AppCard>
 
+        {/* Region 2: 알림 채널 탭 (이메일 / Zalo / 둘 다) */}
         <AppCard
+          className="notification-settings-card"
           size="small"
-          title={t("history.cardTitle")}
-          data-testid="notification-history-card"
+          title={t("channel.cardTitle")}
+          data-testid="notification-channel-card"
         >
           {settingsLoad.status === "loading" ? (
             <Skeleton active paragraph={{ rows: 2 }} />
-          ) : log.length === 0 ? (
-            <Empty
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-              description={t("history.empty")}
-            />
           ) : (
-            <List
-              size="small"
-              dataSource={log}
-              renderItem={(entry) => (
-                <List.Item>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Tag>
-                      {t(
-                        `logStatus.${LOG_STATUS_BADGE_META[entry.status].labelKey}` as Parameters<typeof t>[0],
-                      )}
-                    </Tag>
-                    <Text>{entry.channel}</Text>
-                    <Text type="secondary">{entry.template_key}</Text>
-                    <Text type="secondary">
-                      {/* Pin tz + 24h: Node vs browser ICU render the ko-KR
-                          day-period differently ("PM"/"오후") → React #418. */}
-                      {new Date(
-                        entry.sent_at ?? entry.created_at,
-                      ).toLocaleString("ko-KR", {
-                        timeZone: "Asia/Seoul",
-                        hour12: false,
-                      })}
-                    </Text>
-                  </div>
-                </List.Item>
-              )}
-            />
+            <div className="notification-settings-card-body">
+              <Text
+                type="secondary"
+                className="notification-settings-section-description"
+              >
+                {t("channel.cardDescription")}
+              </Text>
+              <div className="notification-settings-channel-grid">
+                <label
+                  className="notification-settings-channel-option"
+                  data-testid="notification-channel-in_app"
+                >
+                  <Checkbox
+                    checked={settings.channels.in_app}
+                    onChange={(e) => setChannel("in_app", e.target.checked)}
+                    aria-label={t("channel.inApp")}
+                  />
+                  <span className="notification-settings-channel-copy">
+                    <MonitorCheck
+                      aria-hidden="true"
+                      size={20}
+                      strokeWidth={1.75}
+                    />
+                    <span>
+                      <Text strong>{t("channel.inApp")}</Text>
+                      <Text type="secondary">{t("channel.inAppHint")}</Text>
+                    </span>
+                  </span>
+                </label>
+
+                <label
+                  className="notification-settings-channel-option"
+                  data-testid="notification-channel-email"
+                >
+                  <Checkbox
+                    checked={settings.channels.email}
+                    onChange={(e) => setChannel("email", e.target.checked)}
+                    aria-label={t("channel.emailTab")}
+                  />
+                  <span className="notification-settings-channel-copy">
+                    <Mail aria-hidden="true" size={20} strokeWidth={1.75} />
+                    <span>
+                      <Text strong>{t("channel.emailTab")}</Text>
+                      <Text type="secondary">{t("channel.emailHint")}</Text>
+                    </span>
+                  </span>
+                </label>
+
+                <label
+                  className="notification-settings-channel-option"
+                  data-testid="notification-channel-zalo"
+                >
+                  <Checkbox
+                    checked={settings.channels.zalo}
+                    onChange={(e) => setChannel("zalo", e.target.checked)}
+                    aria-label={t("channel.zaloReceive")}
+                  />
+                  <span className="notification-settings-channel-copy">
+                    <MessageCircle
+                      aria-hidden="true"
+                      size={20}
+                      strokeWidth={1.75}
+                    />
+                    <span>
+                      <span className="notification-settings-channel-title">
+                        <Text strong>Zalo</Text>
+                        <Tag>{t("channel.notConnected")}</Tag>
+                      </span>
+                      <Text type="secondary">{t("channel.zaloHint")}</Text>
+                    </span>
+                  </span>
+                </label>
+              </div>
+              <Alert
+                type="warning"
+                showIcon
+                className="notification-settings-channel-notice"
+                title={t("channel.externalNotice")}
+              />
+            </div>
           )}
         </AppCard>
 
-        <Alert type="info" showIcon title={t("deferredNotice")} />
+        {/* Region 4: 미리보기 / 발송 이력 */}
+        {detailsOpen ? (
+          <div
+            className="notification-settings-detail-panel"
+            data-testid="notification-detail-panel"
+          >
+            <section data-testid="notification-preview-card">
+              <div className="notification-settings-detail-title">
+                <Text strong>{t("preview.nextCardTitle")}</Text>
+              </div>
+              <Text type="secondary">{reminderPreview}</Text>
+            </section>
+
+            <section data-testid="notification-history-card">
+              <div className="notification-settings-detail-title">
+                <Text strong>{t("history.cardTitle")}</Text>
+              </div>
+              {settingsLoad.status === "loading" ? (
+                <Skeleton active paragraph={{ rows: 2 }} />
+              ) : log.length === 0 ? (
+                <Empty
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  description={t("history.empty")}
+                />
+              ) : (
+                <List
+                  size="small"
+                  dataSource={log}
+                  renderItem={(entry) => (
+                    <List.Item>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Tag>
+                          {t(
+                            `logStatus.${LOG_STATUS_BADGE_META[entry.status].labelKey}` as Parameters<
+                              typeof t
+                            >[0],
+                          )}
+                        </Tag>
+                        <Text>{entry.channel}</Text>
+                        <Text type="secondary">{entry.template_key}</Text>
+                        <Text type="secondary">
+                          {/* Pin tz + 24h: Node vs browser ICU render the ko-KR
+                              day-period differently ("PM"/"오후") → React #418. */}
+                          {new Date(
+                            entry.sent_at ?? entry.created_at,
+                          ).toLocaleString("ko-KR", {
+                            timeZone: "Asia/Seoul",
+                            hour12: false,
+                          })}
+                        </Text>
+                      </div>
+                    </List.Item>
+                  )}
+                />
+              )}
+            </section>
+          </div>
+        ) : null}
 
         {/* Region 5: 저장 CTA (변경값 없으면 비활성, 저장 중 중복 클릭 차단) */}
         <Form.Item className="!mb-0">
