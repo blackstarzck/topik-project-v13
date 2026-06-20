@@ -77,4 +77,19 @@ describe("AppLoading i18n chrome", () => {
     renderWithIntl(<AppLoading tip="저장하는 중..." />);
     expect(screen.getByText("저장하는 중...")).toBeTruthy();
   });
+
+  it("centers the spinner within the workspace page body area", () => {
+    renderWithIntl(<AppLoading />);
+    const shell = screen.getByText("불러오는 중...").closest(".flex");
+
+    expect(Array.from(shell?.classList ?? [])).toEqual(
+      expect.arrayContaining([
+        "flex",
+        "items-center",
+        "justify-center",
+        "min-h-[calc(100dvh-100px)]",
+        "md:min-h-[calc(100dvh-48px)]",
+      ]),
+    );
+  });
 });
