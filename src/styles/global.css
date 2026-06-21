@@ -4166,7 +4166,15 @@ body {
 
 .notification-settings-redesign {
   display: grid;
-  gap: 8px;
+  /* Vertical rhythm between stacked items; also the empty space on each side of
+     the section <Divider> grid item. */
+  gap: 44px;
+}
+
+/* AntD Divider between sections. margin:0 so the only spacing is the grid gap
+   on each side (card → 20px → line → 20px → card); avoids double-spacing. */
+.notification-settings-divider.ant-divider {
+  margin: 0;
 }
 
 .notification-settings-card.app-card.app-surface {
@@ -4178,6 +4186,7 @@ body {
 
 .notification-settings-card.app-card.app-surface > .ant-card-head {
   min-height: 0;
+  margin-bottom: 2px;
   padding: 0;
   border-bottom: 0;
 }
@@ -4186,7 +4195,17 @@ body {
   > .ant-card-head
   .ant-card-head-title {
   padding: 0;
+}
+
+/* Section title is rendered as a real <h2> so the page exposes an accessible
+   h1 (page) > h2 (section) outline. DESIGN.md "heading-sm" role: 20px / 1.35
+   (the documented --text-* tokens are not yet implemented as CSS variables). */
+.notification-settings-section-heading {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.35;
   font-weight: 600;
+  color: var(--app-color-text);
 }
 
 .notification-settings-card.app-card.app-surface > .ant-card-body,
@@ -4201,7 +4220,11 @@ body {
   gap: 8px;
 }
 
-.notification-settings-row {
+/* `.settings-field-row*` is the reusable label-left / control-right field row.
+   `.notification-settings-row*` (X-09 알림 설정) shares the same declarations,
+   and `/settings/learning` (ExamGoalForm) reuses the generic name. */
+.notification-settings-row,
+.settings-field-row {
   display: grid;
   grid-template-columns: minmax(104px, 144px) minmax(0, 1fr);
   gap: 12px;
@@ -4210,7 +4233,8 @@ body {
   border: 0;
 }
 
-.notification-settings-row-label {
+.notification-settings-row-label,
+.settings-field-row-label {
   display: inline-flex;
   align-items: center;
   color: var(--app-color-text);
@@ -4222,7 +4246,8 @@ body {
   color: var(--app-color-text-secondary);
 }
 
-.notification-settings-row-control {
+.notification-settings-row-control,
+.settings-field-row-control {
   display: grid;
   gap: 4px;
   min-width: 0;
@@ -4242,7 +4267,10 @@ body {
 }
 
 .notification-settings-section-description {
-  margin-bottom: 4px;
+  /* Title area ↔ body separation. Stacks with the parent
+     .notification-settings-card-body 8px grid gap → 34px total below the
+     section header, vs 8px between body rows. */
+  margin-bottom: 1.625rem; /* 26px */
 }
 
 .notification-settings-inline-control {
@@ -4250,6 +4278,26 @@ body {
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
+}
+
+/* Weekday toggle buttons sized to match form controls (theme controlHeight 40). */
+.notification-settings-inline-control .ant-tag-checkable {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  min-width: 40px;
+  margin: 0;
+  padding-inline: 12px;
+  font-size: 14px;
+  border-radius: var(--app-radius);
+}
+
+/* Unchecked buttons get a border so they read as buttons at the larger size;
+   the checked state keeps AntD's filled style. */
+.notification-settings-inline-control
+  .ant-tag-checkable:not(.ant-tag-checkable-checked) {
+  border: 1px solid var(--app-color-border);
 }
 
 .notification-settings-timezone-select {
@@ -4279,23 +4327,52 @@ body {
   min-width: 0;
 }
 
+/* 받을 알림 item label — medium weight (not strong/600) per design request. */
+.notification-settings-type-title {
+  font-weight: 500;
+}
+
 .notification-settings-channel-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
 }
 
+/* Channel option as a selectable card (button). No checkbox; selection is shown
+   by an emphasized outline. Button defaults are reset to inherit. */
 .notification-settings-channel-option {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 10px;
-  align-items: start;
+  align-items: center;
+  width: 100%;
   min-width: 0;
-  padding: 12px;
-  border: 0;
+  margin: 0;
+  padding: 14px;
+  text-align: start;
+  font: inherit;
+  color: inherit;
+  border: 1px solid var(--app-color-border);
   border-radius: var(--app-radius);
   background: var(--app-color-bg-container);
   cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.notification-settings-channel-option[aria-pressed="true"] {
+  border-color: var(--app-color-primary);
+  box-shadow: 0 0 0 1px var(--app-color-primary);
+}
+
+.notification-settings-channel-option:disabled {
+  cursor: not-allowed;
+}
+
+/* 준비 중(disabled) channels: dim only the inner content (icon + text), keeping
+   the card border/background at full opacity. */
+.notification-settings-channel-option:disabled
+  .notification-settings-channel-copy {
+  opacity: 0.45;
 }
 
 .notification-settings-channel-copy {
@@ -4334,11 +4411,89 @@ body {
 
 @media (max-width: 640px) {
   .notification-settings-row,
+  .settings-field-row,
   .notification-settings-channel-grid {
     grid-template-columns: 1fr;
   }
 
-  .notification-settings-row {
+  .notification-settings-row,
+  .settings-field-row {
+    align-items: start;
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Shared settings field row — used across /settings/* pages.
+
+   Desktop: heading (left) / control (right). Mobile (≤640px): the row collapses
+   to a single column so the heading sits ABOVE the control (same behavior as
+   .notification-settings-row). Sections separate by whitespace only — there are
+   NO divider borders here (border:0 everywhere); spacing comes from
+   .settings-form-stack gap. Keeping this as one shared class gives the
+   responsive label/control behavior a single source of truth for every
+   settings screen. */
+.settings-form-stack {
+  display: grid;
+  gap: 28px;
+}
+
+.settings-section {
+  display: grid;
+  gap: 6px;
+}
+
+/* Section title as a real <h2> so the page exposes an h1 (page) > h2 (section)
+   outline, matching the notification settings screen. */
+.settings-section-heading {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.35;
+  font-weight: 600;
+  color: var(--app-color-text);
+}
+
+.settings-field-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 180px) minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  padding: 10px 0;
+  border: 0;
+}
+
+.settings-field-row__label {
+  display: inline-flex;
+  align-items: center;
+  color: var(--app-color-text);
+  font-weight: 500;
+}
+
+.settings-field-row__control {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+/* Segmented hugs its options (not stretched to the full control width) so a
+   short option group doesn't leave a wide empty track. max-width caps it to the
+   cell, and overflow-x lets a wide group (e.g. the 4-option learning-language
+   Segmented in en/vi) scroll inside its own box instead of overflowing the page
+   on narrow viewports. */
+.settings-field-row__control > .ant-segmented {
+  justify-self: start;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.settings-field-row__hint.ant-typography {
+  display: block;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+@media (max-width: 640px) {
+  .settings-field-row {
+    grid-template-columns: 1fr;
     align-items: start;
   }
 }

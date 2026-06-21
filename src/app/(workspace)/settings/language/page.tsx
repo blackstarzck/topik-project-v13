@@ -21,7 +21,7 @@ export default async function LanguageSettingsPage() {
   return (
     <WorkspaceBody>
       <div className="w-full max-w-[640px]">
-        <PageHeader title={t("pageHeading")} />
+        <PageHeader title={t("pageHeading")} subtitle={t("pageSubtitle")} />
         <LanguageForm userId={user.id} initialLocale={settings.ui_locale} />
       </div>
     </WorkspaceBody>

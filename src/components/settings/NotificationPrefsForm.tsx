@@ -4,10 +4,8 @@ import {
   Alert,
   App,
   Button,
-  Checkbox,
-  Empty,
+  Divider,
   Form,
-  List,
   Segmented,
   Select,
   Skeleton,
@@ -29,10 +27,6 @@ import {
   type NotificationPrefs,
 } from "@/lib/settings/types";
 import { useUpdateNotificationPrefs } from "@/lib/settings/mutations";
-import {
-  fetchDeliveryHistory,
-  type DeliveryHistoryEntry,
-} from "@/components/notifications/notifications-data";
 import {
   fetchNotificationSettings,
   upsertNotificationSettings,
@@ -78,19 +72,6 @@ const TIMEZONE_OPTIONS = [
 const DAILY_DAYS = [0, 1, 2, 3, 4, 5, 6];
 const WEEKDAY_DAYS = [1, 2, 3, 4, 5];
 
-// 발송 이력 status enum → 카탈로그 키(enum 값은 그대로 유지).
-const LOG_STATUS_BADGE_META: Record<
-  DeliveryHistoryEntry["status"],
-  { labelKey: string }
-> = {
-  sent: { labelKey: "sent" },
-  failed: { labelKey: "failed" },
-  pending: { labelKey: "pending" },
-  skipped: { labelKey: "skipped" },
-  opted_out: { labelKey: "optedOut" },
-  deduped: { labelKey: "deduped" },
-};
-
 type SettingRowProps = {
   children: ReactNode;
   label: ReactNode;
@@ -126,11 +107,6 @@ type Props = {
 };
 
 type SettingsLoad =
-  | { status: "loading" }
-  | { status: "ready" }
-  | { status: "error"; message: string };
-
-type HistoryLoad =
   | { status: "loading" }
   | { status: "ready" }
   | { status: "error"; message: string };
@@ -200,20 +176,16 @@ function errorMessage(err: unknown, fallback: string): string {
 }
 
 /**
- * X-09 알림 설정 — real notification_settings + notification_log.
+ * X-09 알림 설정 — notification_settings + profiles.notification_prefs.
  *
- * - Region 2 (채널 탭): 이메일 / Zalo / 둘 다, with channel-enable checkboxes
- *   persisted to notification_settings.channels. Zalo is shown as 미연동 (no
- *   external integration); enabling it is allowed for preference, but a notice
- *   makes clear delivery is 연동 예정.
+ * - Region 2 (알림 채널): in_app is a card toggle (aria-pressed); email/Zalo are
+ *   disabled "준비 중" cards (external transport deferred). Selection persists to
+ *   notification_settings.channels.
  * - Region 3 (학습 루틴): reminder_time (HH:mm) + reminder_days persisted;
  *   off-channel inputs are disabled when no channel is on.
- * - Region 4 (미리보기/발송 이력): preview copy + 발송 이력 5개 from
- *   notification_delivery_attempts (fetchDeliveryHistory).
  * - Region 5 (저장): dirty-gated, double-click guarded.
- * - 수신 권한 없음 notice when both channels off.
+ * - 수신 권한 없음 notice when no channel is on.
  * - The 3 boolean conditions still persist to profiles.notification_prefs.
- * - REAL SEND is an external stub (no transport) — preview/log only.
  */
 export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
   const t = useTranslations("settings.notifications");
@@ -231,49 +203,29 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
   const [settingsLoad, setSettingsLoad] = useState<SettingsLoad>({
     status: "loading",
   });
-  const [historyLoad, setHistoryLoad] = useState<HistoryLoad>({
-    status: "loading",
-  });
   const [savedSettings, setSavedSettings] = useState<NotificationSettings>(
     NOTIFICATION_SETTINGS_DEFAULTS,
   );
   const [settings, setSettings] = useState<NotificationSettings>(
     NOTIFICATION_SETTINGS_DEFAULTS,
   );
-  const [log, setLog] = useState<DeliveryHistoryEntry[]>([]);
-  const [detailsOpen, setDetailsOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       setSettingsLoad({ status: "loading" });
-      setHistoryLoad({ status: "loading" });
-      const [settingsResult, historyResult] = await Promise.allSettled([
-        fetchNotificationSettings(userId),
-        fetchDeliveryHistory(userId, 5),
-      ]);
-      if (cancelled) return;
-
-      if (settingsResult.status === "fulfilled") {
-        setSavedSettings(settingsResult.value);
-        setSettings(settingsResult.value);
+      try {
+        const value = await fetchNotificationSettings(userId);
+        if (cancelled) return;
+        setSavedSettings(value);
+        setSettings(value);
         setSettingsLoad({ status: "ready" });
-      } else {
+      } catch (err) {
+        if (cancelled) return;
         setSettingsLoad({
           status: "error",
-          message: errorMessage(settingsResult.reason, t("loadError")),
-        });
-      }
-
-      if (historyResult.status === "fulfilled") {
-        setLog(historyResult.value);
-        setHistoryLoad({ status: "ready" });
-      } else {
-        setLog([]);
-        setHistoryLoad({
-          status: "error",
-          message: errorMessage(historyResult.reason, t("history.loadError")),
+          message: errorMessage(err, t("loadError")),
         });
       }
     })();
@@ -416,13 +368,6 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
     }
   }
 
-  const reminderPreview = reminderTime
-    ? t("previewScheduled", {
-        time: reminderTime.format("HH:mm"),
-        timezone: settings.timezone,
-      })
-    : t("previewEmpty");
-
   return (
     <Form
       data-testid="notification-settings-form"
@@ -462,27 +407,104 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
           />
         ) : null}
 
-        <Alert
-          type="info"
-          showIcon
-          title={t("deferredSummary")}
-          description={t("deferredNotice")}
-          action={
-            <Button
-              data-testid="notification-details-toggle"
-              type="link"
-              onClick={() => setDetailsOpen((open) => !open)}
-            >
-              {detailsOpen ? t("details.hide") : t("details.show")}
-            </Button>
+        {/* Region 2: 알림 채널 (인앱 / 이메일 / Zalo) */}
+        <AppCard
+          className="notification-settings-card"
+          size="small"
+          title={
+            <h2 className="notification-settings-section-heading">
+              {t("channel.cardTitle")}
+            </h2>
           }
-        />
+          data-testid="notification-channel-card"
+        >
+          {settingsLoad.status === "loading" ? (
+            <Skeleton active paragraph={{ rows: 2 }} />
+          ) : (
+            <div className="notification-settings-card-body">
+              <Text
+                type="secondary"
+                className="notification-settings-section-description"
+              >
+                {t("channel.cardDescription")}
+              </Text>
+              <div className="notification-settings-channel-grid">
+                <button
+                  type="button"
+                  className="notification-settings-channel-option"
+                  data-testid="notification-channel-in_app"
+                  aria-pressed={settings.channels.in_app}
+                  onClick={() =>
+                    setChannel("in_app", !settings.channels.in_app)
+                  }
+                >
+                  <span className="notification-settings-channel-copy">
+                    <MonitorCheck
+                      aria-hidden="true"
+                      size={20}
+                      strokeWidth={1.75}
+                    />
+                    <span>
+                      <Text strong>{t("channel.inApp")}</Text>
+                      <Text type="secondary">{t("channel.inAppHint")}</Text>
+                    </span>
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  className="notification-settings-channel-option"
+                  data-testid="notification-channel-email"
+                  disabled
+                  aria-disabled="true"
+                >
+                  <span className="notification-settings-channel-copy">
+                    <Mail aria-hidden="true" size={20} strokeWidth={1.75} />
+                    <span>
+                      <Text strong>{t("channel.emailTab")}</Text>
+                      <Text type="secondary">{t("channel.emailHint")}</Text>
+                    </span>
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  className="notification-settings-channel-option"
+                  data-testid="notification-channel-zalo"
+                  disabled
+                  aria-disabled="true"
+                >
+                  <span className="notification-settings-channel-copy">
+                    <MessageCircle
+                      aria-hidden="true"
+                      size={20}
+                      strokeWidth={1.75}
+                    />
+                    <span>
+                      <span className="notification-settings-channel-title">
+                        <Text strong>Zalo</Text>
+                        <Tag>{t("channel.notConnected")}</Tag>
+                      </span>
+                      <Text type="secondary">{t("channel.zaloHint")}</Text>
+                    </span>
+                  </span>
+                </button>
+              </div>
+            </div>
+          )}
+        </AppCard>
+
+        <Divider className="notification-settings-divider" />
 
         {/* Region 3: 학습 루틴 */}
         <AppCard
           className="notification-settings-card"
           size="small"
-          title={t("routine.cardTitle")}
+          title={
+            <h2 className="notification-settings-section-heading">
+              {t("routine.cardTitle")}
+            </h2>
+          }
           data-testid="notification-routine-card"
         >
           <div className="notification-settings-card-body">
@@ -586,11 +608,17 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
           </div>
         </AppCard>
 
+        <Divider className="notification-settings-divider" />
+
         {/* Region 3: 알림 내용 조건 */}
         <AppCard
           className="notification-settings-card"
           size="small"
-          title={t("notificationTypes.cardTitle")}
+          title={
+            <h2 className="notification-settings-section-heading">
+              {t("notificationTypes.cardTitle")}
+            </h2>
+          }
           data-testid="notification-condition-card"
         >
           <div className="notification-settings-card-body">
@@ -615,7 +643,9 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
                 >
                   <div className="notification-settings-type-copy">
                     <div>
-                      <Text strong>{prefLabel}</Text>
+                      <Text className="notification-settings-type-title">
+                        {prefLabel}
+                      </Text>
                       <Text
                         type="secondary"
                         className="notification-settings-type-description"
@@ -638,165 +668,6 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
             })}
           </div>
         </AppCard>
-
-        {/* Region 2: 알림 채널 탭 (이메일 / Zalo / 둘 다) */}
-        <AppCard
-          className="notification-settings-card"
-          size="small"
-          title={t("channel.cardTitle")}
-          data-testid="notification-channel-card"
-        >
-          {settingsLoad.status === "loading" ? (
-            <Skeleton active paragraph={{ rows: 2 }} />
-          ) : (
-            <div className="notification-settings-card-body">
-              <Text
-                type="secondary"
-                className="notification-settings-section-description"
-              >
-                {t("channel.cardDescription")}
-              </Text>
-              <div className="notification-settings-channel-grid">
-                <label
-                  className="notification-settings-channel-option"
-                  data-testid="notification-channel-in_app"
-                >
-                  <Checkbox
-                    checked={settings.channels.in_app}
-                    onChange={(e) => setChannel("in_app", e.target.checked)}
-                    aria-label={t("channel.inApp")}
-                  />
-                  <span className="notification-settings-channel-copy">
-                    <MonitorCheck
-                      aria-hidden="true"
-                      size={20}
-                      strokeWidth={1.75}
-                    />
-                    <span>
-                      <Text strong>{t("channel.inApp")}</Text>
-                      <Text type="secondary">{t("channel.inAppHint")}</Text>
-                    </span>
-                  </span>
-                </label>
-
-                <label
-                  className="notification-settings-channel-option"
-                  data-testid="notification-channel-email"
-                >
-                  <Checkbox
-                    checked={settings.channels.email}
-                    onChange={(e) => setChannel("email", e.target.checked)}
-                    aria-label={t("channel.emailTab")}
-                  />
-                  <span className="notification-settings-channel-copy">
-                    <Mail aria-hidden="true" size={20} strokeWidth={1.75} />
-                    <span>
-                      <Text strong>{t("channel.emailTab")}</Text>
-                      <Text type="secondary">{t("channel.emailHint")}</Text>
-                    </span>
-                  </span>
-                </label>
-
-                <label
-                  className="notification-settings-channel-option"
-                  data-testid="notification-channel-zalo"
-                >
-                  <Checkbox
-                    checked={settings.channels.zalo}
-                    onChange={(e) => setChannel("zalo", e.target.checked)}
-                    aria-label={t("channel.zaloReceive")}
-                  />
-                  <span className="notification-settings-channel-copy">
-                    <MessageCircle
-                      aria-hidden="true"
-                      size={20}
-                      strokeWidth={1.75}
-                    />
-                    <span>
-                      <span className="notification-settings-channel-title">
-                        <Text strong>Zalo</Text>
-                        <Tag>{t("channel.notConnected")}</Tag>
-                      </span>
-                      <Text type="secondary">{t("channel.zaloHint")}</Text>
-                    </span>
-                  </span>
-                </label>
-              </div>
-              <Alert
-                type="warning"
-                showIcon
-                className="notification-settings-channel-notice"
-                title={t("channel.externalNotice")}
-              />
-            </div>
-          )}
-        </AppCard>
-
-        {/* Region 4: 미리보기 / 발송 이력 */}
-        {detailsOpen ? (
-          <div
-            className="notification-settings-detail-panel"
-            data-testid="notification-detail-panel"
-          >
-            <section data-testid="notification-preview-card">
-              <div className="notification-settings-detail-title">
-                <Text strong>{t("preview.nextCardTitle")}</Text>
-              </div>
-              <Text type="secondary">{reminderPreview}</Text>
-            </section>
-
-            <section data-testid="notification-history-card">
-              <div className="notification-settings-detail-title">
-                <Text strong>{t("history.cardTitle")}</Text>
-              </div>
-              {historyLoad.status === "loading" ? (
-                <Skeleton active paragraph={{ rows: 2 }} />
-              ) : historyLoad.status === "error" ? (
-                <Alert
-                  type="warning"
-                  showIcon
-                  title={t("history.loadErrorTitle")}
-                  description={historyLoad.message}
-                />
-              ) : log.length === 0 ? (
-                <Empty
-                  image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  description={t("history.empty")}
-                />
-              ) : (
-                <List
-                  size="small"
-                  dataSource={log}
-                  renderItem={(entry) => (
-                    <List.Item>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Tag>
-                          {t(
-                            `logStatus.${LOG_STATUS_BADGE_META[entry.status].labelKey}` as Parameters<
-                              typeof t
-                            >[0],
-                          )}
-                        </Tag>
-                        <Text>{entry.channel}</Text>
-                        <Text type="secondary">{entry.template_key}</Text>
-                        <Text type="secondary">
-                          {/* Pin tz + 24h: Node vs browser ICU render the ko-KR
-                              day-period differently ("PM"/"오후") → React #418. */}
-                          {new Date(
-                            entry.sent_at ?? entry.created_at,
-                          ).toLocaleString("ko-KR", {
-                            timeZone: "Asia/Seoul",
-                            hour12: false,
-                          })}
-                        </Text>
-                      </div>
-                    </List.Item>
-                  )}
-                />
-              )}
-            </section>
-          </div>
-        ) : null}
 
         {/* Region 5: 저장 CTA (변경값 없으면 비활성, 저장 중 중복 클릭 차단) */}
         <Form.Item className="!mb-0">

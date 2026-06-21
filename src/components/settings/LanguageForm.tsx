@@ -5,16 +5,13 @@ import {
   App,
   Button,
   Form,
-  Radio,
   Segmented,
   Skeleton,
   Typography,
 } from "antd";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-
-import { AppCard } from "@/components/shared/AppCard";
+import { useEffect, useState, type ReactNode } from "react";
 
 import {
   LOCALE_COOKIE,
@@ -31,7 +28,37 @@ import {
   type LearningLocale,
 } from "./learning-settings-data";
 
-const { Paragraph, Text } = Typography;
+const { Text } = Typography;
+
+type SettingRowProps = {
+  label: ReactNode;
+  hint?: ReactNode;
+  children: ReactNode;
+};
+
+/**
+ * Settings field row — heading (left) / control (right) on desktop; on mobile
+ * (≤640px) the heading stacks ABOVE the control. Layout lives in global.css
+ * (`.settings-field-row*`) and is shared across `/settings/*` pages so the
+ * responsive label/control behavior has one source of truth.
+ */
+function SettingRow({ label, hint, children }: SettingRowProps) {
+  return (
+    <div className="settings-field-row">
+      <div className="settings-field-row__label">
+        <span>{label}</span>
+      </div>
+      <div className="settings-field-row__control">
+        {children}
+        {hint ? (
+          <Text type="secondary" className="settings-field-row__hint">
+            {hint}
+          </Text>
+        ) : null}
+      </div>
+    </div>
+  );
+}
 
 type ContentLoad =
   | { status: "loading" }
@@ -239,33 +266,31 @@ export function LanguageForm({ userId, initialLocale }: Props) {
       onFinish={handleFinish}
       disabled={saving}
     >
-      <div className="flex w-full flex-col gap-4">
-        {/* Region 2: UI 언어 선택 */}
-        <Form.Item className="mb-0" label={t("uiLanguageLabel")} required>
-          <Radio.Group
-            data-testid="language-ui-radio"
-            value={locale}
-            onChange={(e) => setLocale(e.target.value as Locale)}
-            aria-label={t("uiLanguageLabel")}
-          >
-            <div className="flex flex-col gap-2">
-              <Radio value="ko">{t("optionKo")}</Radio>
-              <Radio value="en">{t("optionEn")}</Radio>
-              <Radio value="vi">{t("optionVi")}</Radio>
-            </div>
-          </Radio.Group>
-        </Form.Item>
-
-        <Paragraph type="secondary" className="mb-0">
-          <Text type="secondary">{t("coverageNote")}</Text>
-        </Paragraph>
+      <div className="settings-form-stack">
+        {/* Region 2: 표시 언어 (UI 언어) */}
+        <section className="settings-section">
+          <h2 className="settings-section-heading">{t("uiCardTitle")}</h2>
+          <SettingRow label={t("uiLanguageLabel")} hint={t("coverageNote")}>
+            <Segmented
+              data-testid="language-ui-radio"
+              value={locale}
+              onChange={(value) => setLocale(value as Locale)}
+              aria-label={t("uiLanguageLabel")}
+              options={[
+                { label: t("optionKo"), value: "ko" },
+                { label: t("optionEn"), value: "en" },
+                { label: t("optionVi"), value: "vi" },
+              ]}
+            />
+          </SettingRow>
+        </section>
 
         {/* Region 3: 학습 언어 선택 (설명·예시·번역 보조 기준 언어) */}
-        <AppCard
+        <section
+          className="settings-section"
           data-testid="language-learning-card"
-          size="small"
-          title={t("learningCardTitle")}
         >
+          <h2 className="settings-section-heading">{t("learningCardTitle")}</h2>
           {contentLoad.status === "loading" ? (
             <Skeleton active paragraph={{ rows: 2 }} />
           ) : contentLoad.status === "error" ? (
@@ -276,37 +301,35 @@ export function LanguageForm({ userId, initialLocale }: Props) {
               description={contentLoad.message}
             />
           ) : (
-            <Form.Item
-              className="mb-0"
-              label={t("learningFieldLabel")}
-              extra={t("learningFieldExtra")}
+            <SettingRow
+              label={t("learningRowLabel")}
+              hint={t("learningFieldExtra")}
             >
-              <Radio.Group
+              <Segmented
                 data-testid="language-learning-radio"
                 value={learningLocale ?? "follow"}
-                onChange={(e) => {
-                  const v = e.target.value as LearningLocale | "follow";
-                  setLearningLocale(v === "follow" ? null : v);
+                onChange={(value) => {
+                  const next = value as LearningLocale | "follow";
+                  setLearningLocale(next === "follow" ? null : next);
                 }}
                 aria-label={t("learningCardTitle")}
-              >
-                <div className="flex flex-col gap-2">
-                  <Radio value="follow">{t("learningFollow")}</Radio>
-                  <Radio value="ko">{t("optionKo")}</Radio>
-                  <Radio value="en">{t("optionEn")}</Radio>
-                  <Radio value="vi">{t("optionVi")}</Radio>
-                </div>
-              </Radio.Group>
-            </Form.Item>
+                options={[
+                  { label: t("learningFollow"), value: "follow" },
+                  { label: t("optionKo"), value: "ko" },
+                  { label: t("optionEn"), value: "en" },
+                  { label: t("optionVi"), value: "vi" },
+                ]}
+              />
+            </SettingRow>
           )}
-        </AppCard>
+        </section>
 
         {/* Region 4: 콘텐츠 설정 (피드백 표시 · 예문 난이도 · 해설 길이) */}
-        <AppCard
+        <section
+          className="settings-section"
           data-testid="language-content-card"
-          size="small"
-          title={t("contentCardTitle")}
         >
+          <h2 className="settings-section-heading">{t("contentCardTitle")}</h2>
           {contentLoad.status === "loading" ? (
             <Skeleton active paragraph={{ rows: 3 }} />
           ) : contentLoad.status === "error" ? (
@@ -317,34 +340,34 @@ export function LanguageForm({ userId, initialLocale }: Props) {
               description={contentLoad.message}
             />
           ) : (
-            <div className="flex w-full flex-col gap-4">
-              <Form.Item className="mb-0" label={t("feedbackDisplayLabel")}>
+            <>
+              <SettingRow label={t("feedbackDisplayLabel")}>
                 <Segmented
                   data-testid="language-feedback-display"
                   value={
                     contentPrefs.feedback_display ??
                     CONTENT_PREF_DEFAULTS.feedback_display
                   }
-                  onChange={(v) =>
-                    setPref("feedback_display", v as "full" | "summary")
+                  onChange={(value) =>
+                    setPref("feedback_display", value as "full" | "summary")
                   }
                   options={[
                     { label: t("feedbackFull"), value: "full" },
                     { label: t("feedbackSummary"), value: "summary" },
                   ]}
                 />
-              </Form.Item>
-              <Form.Item className="mb-0" label={t("exampleDifficultyLabel")}>
+              </SettingRow>
+              <SettingRow label={t("exampleDifficultyLabel")}>
                 <Segmented
                   data-testid="language-example-difficulty"
                   value={
                     contentPrefs.example_difficulty ??
                     CONTENT_PREF_DEFAULTS.example_difficulty
                   }
-                  onChange={(v) =>
+                  onChange={(value) =>
                     setPref(
                       "example_difficulty",
-                      v as "easy" | "standard" | "hard",
+                      value as "easy" | "standard" | "hard",
                     )
                   }
                   options={[
@@ -353,18 +376,18 @@ export function LanguageForm({ userId, initialLocale }: Props) {
                     { label: t("difficultyHard"), value: "hard" },
                   ]}
                 />
-              </Form.Item>
-              <Form.Item className="mb-0" label={t("explanationLengthLabel")}>
+              </SettingRow>
+              <SettingRow label={t("explanationLengthLabel")}>
                 <Segmented
                   data-testid="language-explanation-length"
                   value={
                     contentPrefs.explanation_length ??
                     CONTENT_PREF_DEFAULTS.explanation_length
                   }
-                  onChange={(v) =>
+                  onChange={(value) =>
                     setPref(
                       "explanation_length",
-                      v as "short" | "standard" | "detailed",
+                      value as "short" | "standard" | "detailed",
                     )
                   }
                   options={[
@@ -373,7 +396,7 @@ export function LanguageForm({ userId, initialLocale }: Props) {
                     { label: t("explanationDetailed"), value: "detailed" },
                   ]}
                 />
-              </Form.Item>
+              </SettingRow>
 
               {/* Region 4 예외: 옵션 충돌 시 경고 + 추천값 복원 */}
               {conflict ? (
@@ -389,16 +412,13 @@ export function LanguageForm({ userId, initialLocale }: Props) {
                   }
                 />
               ) : null}
-            </div>
+            </>
           )}
-        </AppCard>
+        </section>
 
         {/* Region 5: 도움말 (언어 설정 영향 범위 안내) */}
-        <AppCard
-          data-testid="language-help-card"
-          size="small"
-          title={t("helpCardTitle")}
-        >
+        <section className="settings-section" data-testid="language-help-card">
+          <h2 className="settings-section-heading">{t("helpCardTitle")}</h2>
           <ul className="m-0 list-disc pl-5">
             <li data-testid="language-help-item">
               <Text type="secondary">{t("helpUiScope")}</Text>
@@ -410,7 +430,7 @@ export function LanguageForm({ userId, initialLocale }: Props) {
               <Text type="secondary">{t("helpIncremental")}</Text>
             </li>
           </ul>
-        </AppCard>
+        </section>
 
         {/* Region 2 예외: 미지원 언어 안내 */}
         <Alert
@@ -421,7 +441,7 @@ export function LanguageForm({ userId, initialLocale }: Props) {
         />
 
         {/* Region 6: 저장 (변경값 없으면 비활성, 저장 중 중복 클릭 차단) */}
-        <Form.Item className="mb-0">
+        <Form.Item className="!mb-0">
           <Button
             data-testid="language-save"
             type="primary"

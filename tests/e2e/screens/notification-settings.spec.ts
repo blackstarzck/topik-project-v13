@@ -73,18 +73,22 @@ async function attachRuntimeErrors(testInfo: TestInfo, errors: string[]) {
   });
 }
 
-async function openNotificationDetails(page: Page) {
-  const toggle = page.getByTestId("notification-details-toggle");
-  const panel = page.getByTestId("notification-detail-panel");
-  await expect(toggle).toBeVisible();
+function inAppChannel(page: Page) {
+  return page.getByTestId("notification-channel-in_app");
+}
 
-  for (let attempt = 0; attempt < 5; attempt += 1) {
-    if (await panel.isVisible().catch(() => false)) return;
-    await toggle.click();
-    await page.waitForTimeout(250);
+async function isInAppOn(page: Page) {
+  return (await inAppChannel(page).getAttribute("aria-pressed")) === "true";
+}
+
+async function setInApp(page: Page, on: boolean) {
+  if ((await isInAppOn(page)) !== on) {
+    await inAppChannel(page).click();
+    await expect(inAppChannel(page)).toHaveAttribute(
+      "aria-pressed",
+      String(on),
+    );
   }
-
-  await expect(panel).toBeVisible({ timeout: 5_000 });
 }
 
 function waitForSettingsWrite(page: Page) {
@@ -152,14 +156,6 @@ async function reloadAndWaitForSettings(page: Page) {
   const settingsRead = waitForSettingsRead(page);
   await page.reload({ waitUntil: "domcontentloaded" });
   await settingsRead;
-}
-
-async function setCheckbox(locator: Locator, checked: boolean) {
-  if (checked) {
-    await locator.check();
-  } else {
-    await locator.uncheck();
-  }
 }
 
 async function isSwitchChecked(locator: Locator) {
@@ -243,6 +239,8 @@ test("X-09 notification settings renders preference regions without saving", asy
     await expectZeroPadding(body);
   }
 
+  // Channel options are now bordered selectable cards, so they are excluded
+  // from the flat zero-border contract that still applies to rows/types.
   for (const testId of [
     "notification-routine-row-frequency",
     "notification-routine-row-time",
@@ -251,9 +249,6 @@ test("X-09 notification settings renders preference regions without saving", asy
     "notification-type-weekly_summary",
     "notification-type-feedback_ready",
     "notification-type-study_reminder",
-    "notification-channel-in_app",
-    "notification-channel-email",
-    "notification-channel-zalo",
   ]) {
     await expectZeroBorder(page.getByTestId(testId));
   }
@@ -287,67 +282,44 @@ test("X-09 notification settings renders preference regions without saving", asy
     ),
     "14px",
   );
-  await expectAllFontSize(
-    page.locator(".notification-settings-redesign .ant-alert-description"),
-    "14px",
-  );
+  // 미리보기/발송 이력 feature and the deferred-notice alerts were removed.
   await expect(page.getByTestId("notification-preview-card")).toHaveCount(0);
   await expect(page.getByTestId("notification-history-card")).toHaveCount(0);
   await expect(page.getByText("도움말")).toHaveCount(0);
-  await expect(page.getByText(/외부 발송은 준비가 끝난 뒤/)).toBeVisible();
-
-  await openNotificationDetails(page);
-  await expect(page.getByTestId("notification-preview-card")).toBeVisible();
-  await expect(page.getByTestId("notification-history-card")).toBeVisible();
   await expect(
-    page.locator(".notification-settings-detail-title svg"),
+    page.getByTestId("notification-details-toggle"),
   ).toHaveCount(0);
-  await expectAllFontSize(
-    page.locator(
-      ".notification-settings-detail-panel > section > .ant-typography-secondary",
-    ),
-    "14px",
-  );
+
+  // email/Zalo are disabled (준비 중); in_app is the selectable toggle card.
+  await expect(page.getByTestId("notification-channel-email")).toBeDisabled();
+  await expect(page.getByTestId("notification-channel-zalo")).toBeDisabled();
 
   const save = page.getByTestId("notification-save");
   await expect(save).toBeDisabled();
 
-  const emailChannel = page
-    .getByTestId("notification-channel-email")
-    .getByRole("checkbox");
-  if (await emailChannel.isChecked()) {
-    await emailChannel.uncheck();
-  } else {
-    await emailChannel.check();
-  }
+  // Toggling the in_app channel card makes the form dirty.
+  await inAppChannel(page).click();
   await expect(save).toBeEnabled();
 
   await attachRuntimeErrors(testInfo, errors);
   expect(errors).toEqual([]);
 });
 
-test("X-09 notification settings saves channels and persists after reload", async ({
+test("X-09 notification settings saves the in_app channel and persists after reload", async ({
   page,
 }, testInfo) => {
   const errors = collectErrors(page);
 
   await gotoNotificationsSettings(page);
 
-  const emailChannel = page
-    .getByTestId("notification-channel-email")
-    .getByRole("checkbox");
   const save = page.getByTestId("notification-save");
-  await expect(emailChannel).toBeVisible();
+  await expect(inAppChannel(page)).toBeVisible();
   await expect(save).toBeDisabled();
 
-  const initialEmail = await emailChannel.isChecked();
-  const targetEmail = !initialEmail;
+  const initialInApp = await isInAppOn(page);
+  const targetInApp = !initialInApp;
 
-  if (targetEmail) {
-    await emailChannel.check();
-  } else {
-    await emailChannel.uncheck();
-  }
+  await setInApp(page, targetInApp);
   await expect(save).toBeEnabled();
 
   await savePrefsAndSettings(page);
@@ -357,22 +329,15 @@ test("X-09 notification settings saves channels and persists after reload", asyn
   });
 
   await reloadAndWaitForSettings(page);
-  const reloadedEmail = page
-    .getByTestId("notification-channel-email")
-    .getByRole("checkbox");
-  await expect(reloadedEmail).toBeVisible();
-  if (targetEmail) {
-    await expect(reloadedEmail).toBeChecked();
-  } else {
-    await expect(reloadedEmail).not.toBeChecked();
-  }
+  await expect(inAppChannel(page)).toBeVisible();
+  expect(await isInAppOn(page)).toBe(targetInApp);
   await page.screenshot({
     path: testInfo.outputPath("notification-reload-persisted.png"),
     fullPage: true,
   });
 
-  if ((await reloadedEmail.isChecked()) !== initialEmail) {
-    await setCheckbox(reloadedEmail, initialEmail);
+  if ((await isInAppOn(page)) !== initialInApp) {
+    await setInApp(page, initialInApp);
     await expect(save).toBeEnabled();
     await savePrefsAndSettings(page);
   }
@@ -454,31 +419,16 @@ test("X-09 notification settings saves custom reminder days and persists after r
   await gotoNotificationsSettings(page);
 
   const save = page.getByTestId("notification-save");
-  const inAppChannel = page
-    .getByTestId("notification-channel-in_app")
-    .getByRole("checkbox");
-  const emailChannel = page
-    .getByTestId("notification-channel-email")
-    .getByRole("checkbox");
-  const zaloChannel = page
-    .getByTestId("notification-channel-zalo")
-    .getByRole("checkbox");
   await expect(dayTags(page).first()).toBeVisible();
   await expect(save).toBeDisabled();
 
-  const initialChannels = {
-    inApp: await inAppChannel.isChecked(),
-    email: await emailChannel.isChecked(),
-    zalo: await zaloChannel.isChecked(),
-  };
+  const initialInApp = await isInAppOn(page);
   const initialDayStates = await readDayStates(page);
 
-  if (
-    !initialChannels.inApp &&
-    !initialChannels.email &&
-    !initialChannels.zalo
-  ) {
-    await inAppChannel.check();
+  // Routine inputs require a channel on — ensure in_app is enabled.
+  await setInApp(page, true);
+  if (await save.isEnabled()) {
+    await savePrefsAndSettings(page);
   }
 
   await page
@@ -512,18 +462,7 @@ test("X-09 notification settings saves custom reminder days and persists after r
   });
 
   await setDayStates(page, initialDayStates);
-  await setCheckbox(
-    page.getByTestId("notification-channel-in_app").getByRole("checkbox"),
-    initialChannels.inApp,
-  );
-  await setCheckbox(
-    page.getByTestId("notification-channel-email").getByRole("checkbox"),
-    initialChannels.email,
-  );
-  await setCheckbox(
-    page.getByTestId("notification-channel-zalo").getByRole("checkbox"),
-    initialChannels.zalo,
-  );
+  await setInApp(page, initialInApp);
   if (await save.isEnabled()) {
     await savePrefsAndSettings(page);
   }
@@ -584,48 +523,6 @@ test("X-09 notification settings blocks internal navigation while dirty", async 
     .poll(() => acceptedDialogSeen, { message: "accept dialog was shown" })
     .toBe(true);
   await expect(page).toHaveURL(/\/dashboard/);
-
-  await attachRuntimeErrors(testInfo, errors);
-  expect(errors).toEqual([]);
-});
-
-test("X-09 notification settings shows delivery history load failure", async ({
-  page,
-}, testInfo) => {
-  const errors = collectErrors(page, {
-    ignoredConsoleMessages: [
-      /Failed to load resource: the server responded with a status of 500/,
-    ],
-    ignoredResponseUrls: [/notification_delivery_attempts/],
-  });
-
-  await page.route("**/rest/v1/notification_delivery_attempts**", (route) =>
-    route.fulfill({
-      status: 500,
-      contentType: "application/json",
-      body: JSON.stringify({
-        code: "XX000",
-        message: "forced delivery history failure",
-        details: null,
-        hint: null,
-      }),
-    }),
-  );
-
-  await gotoNotificationsSettings(page);
-  await openNotificationDetails(page);
-
-  const historyCard = page.getByTestId("notification-history-card");
-  await expect(
-    historyCard.getByText("발송 이력을 불러오지 못했어요"),
-  ).toBeVisible({ timeout: 15_000 });
-  await expect(
-    historyCard.getByText("아직 발송된 알림이 없습니다."),
-  ).toHaveCount(0);
-  await page.screenshot({
-    path: testInfo.outputPath("notification-history-load-error.png"),
-    fullPage: true,
-  });
 
   await attachRuntimeErrors(testInfo, errors);
   expect(errors).toEqual([]);

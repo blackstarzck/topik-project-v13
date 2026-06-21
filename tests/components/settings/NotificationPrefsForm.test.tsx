@@ -224,18 +224,6 @@ describe("NotificationPrefsForm", () => {
     expect(mutateAsyncMock).toHaveBeenCalledWith({ feedback_ready: true });
   });
 
-  it("renders the OOS-9 informational alert", () => {
-    renderInApp(<NotificationPrefsForm userId="user-1" initialPrefs={{}} />);
-    // X-09: transport is still deferred — only the receive channels/conditions/
-    // time are persisted; actual delivery is not wired. Copy updated by the
-    // X-09 build to reflect the richer settings (channels + schedule + log).
-    expect(
-      screen.getByText(
-        "지금은 수신 채널·조건·시간을 저장합니다. 앱 안 알림은 사용할 수 있고, 이메일/Zalo 같은 외부 발송은 준비가 끝난 뒤 동작합니다.",
-      ),
-    ).toBeTruthy();
-  });
-
   it("clears dirty state after saving notification switches", async () => {
     const { container } = renderInApp(
       <NotificationPrefsForm
@@ -292,23 +280,6 @@ describe("NotificationPrefsForm", () => {
     ).toBe(true);
   });
 
-  it("shows a delivery-history error instead of the empty state", async () => {
-    fetchDeliveryHistoryMock.mockRejectedValueOnce(new Error("history failed"));
-
-    renderInApp(<NotificationPrefsForm userId="user-1" initialPrefs={{}} />);
-
-    await waitFor(() => {
-      expect(screen.getByTestId("notification-details-toggle")).toBeTruthy();
-    });
-
-    fireEvent.click(screen.getByTestId("notification-details-toggle"));
-
-    await waitFor(() => {
-      expect(screen.getByText("발송 이력을 불러오지 못했어요")).toBeTruthy();
-    });
-    expect(screen.queryByText("아직 발송된 알림이 없습니다.")).toBeNull();
-  });
-
   it("renders the learning-routine redesign while preserving notification controls", async () => {
     const { container } = renderInApp(
       <NotificationPrefsForm userId="user-1" initialPrefs={{}} />,
@@ -324,7 +295,6 @@ describe("NotificationPrefsForm", () => {
     expect(screen.getByTestId("notification-channel-in_app")).toBeTruthy();
     expect(screen.queryByTestId("notification-preview-card")).toBeNull();
     expect(screen.queryByTestId("notification-history-card")).toBeNull();
-    expect(screen.getByTestId("notification-details-toggle")).toBeTruthy();
     expect(screen.queryByText("도움말")).toBeNull();
     expect(
       screen.getByRole("switch", { name: "피드백 준비 완료 알림" }),
@@ -342,13 +312,5 @@ describe("NotificationPrefsForm", () => {
     expect(
       container.querySelectorAll(".notification-settings-channel-copy svg"),
     ).toHaveLength(3);
-
-    fireEvent.click(screen.getByTestId("notification-details-toggle"));
-    await waitFor(() => {
-      expect(screen.getByTestId("notification-preview-card")).toBeTruthy();
-    });
-    expect(
-      container.querySelectorAll(".notification-settings-detail-title svg"),
-    ).toHaveLength(0);
   });
 });

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { WorkspaceBody } from "@/components/app/WorkspaceBody";
-import { ExamInfoCard } from "@/components/profile/ExamInfoCard";
+import { ExamGoalForm } from "@/components/profile/ExamGoalForm";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { requireUser } from "@/lib/auth/session";
 import { getLearningGoal } from "@/lib/learning/server";
@@ -20,7 +20,7 @@ export default async function LearningSettingsPage() {
     <WorkspaceBody>
       <div className="w-full max-w-[640px]">
         <PageHeader title={t("pageHeading")} subtitle={t("pageSubtitle")} />
-        <ExamInfoCard
+        <ExamGoalForm
           userId={user.id}
           goal={
             goal
