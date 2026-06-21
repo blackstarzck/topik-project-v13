@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Alert, Button, Empty, Radio, Typography, theme } from "antd";
+import { Alert, Button, Empty, Segmented, Typography, theme } from "antd";
 import { useTranslations } from "next-intl";
 import { AppCard } from "@/components/shared/AppCard";
 import {
@@ -90,12 +90,10 @@ export function GrowthTrendChart({ points, onRetry }: Props) {
     <AppCard
       title={t("title")}
       extra={
-        <Radio.Group
+        <Segmented<GrowthTrendPeriod>
           size="small"
-          optionType="button"
-          buttonStyle="solid"
           value={period}
-          onChange={(e) => setPeriod(e.target.value as GrowthTrendPeriod)}
+          onChange={(value) => setPeriod(value)}
           options={PERIOD_OPTIONS.map((o) => ({
             label: t(`period.${o.labelKey}` as Parameters<typeof t>[0]),
             value: o.value,
@@ -105,7 +103,11 @@ export function GrowthTrendChart({ points, onRetry }: Props) {
     >
       {!hasData ? (
         <Empty description={t("empty")}>
-          {onRetry ? <Button onClick={onRetry}>{t("retry")}</Button> : null}
+          {onRetry ? (
+            <Button type="primary" onClick={onRetry}>
+              {t("retry")}
+            </Button>
+          ) : null}
         </Empty>
       ) : (
         <div className="flex w-full flex-col gap-4">
