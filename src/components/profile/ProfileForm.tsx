@@ -396,6 +396,72 @@ export function ProfileForm({
         aria-label={t("settingsRegionAriaLabel")}
         className="profile-settings-section flex flex-col gap-8"
       >
+        <div className="profile-avatar-section flex flex-col gap-3">
+          <Paragraph strong className="!m-0">
+            {tAvatar("title")}
+          </Paragraph>
+          <div role="region" aria-label={tAvatar("regionAriaLabel")}>
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
+              {avatarUrl ? (
+                <Avatar size={72} src={avatarUrl} alt={tAvatar("imageAlt")} />
+              ) : (
+                <Avatar size={72}>{avatarInitial}</Avatar>
+              )}
+              <div className="flex min-w-0 flex-1 flex-col gap-3">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png"
+                  hidden
+                  aria-label={tAvatar("fileInputAriaLabel")}
+                  onChange={handleAvatarSelect}
+                />
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    onClick={() => fileInputRef.current?.click()}
+                    loading={avatarUploading}
+                    aria-label={tAvatar("uploadAriaLabel")}
+                  >
+                    {avatarUploading
+                      ? tAvatar("uploading")
+                      : tAvatar("changeImage")}
+                  </Button>
+                  <Button
+                    disabled={!avatarPath || avatarUploading}
+                    onClick={handleAvatarRemove}
+                  >
+                    {tAvatar("removeImage")}
+                  </Button>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <Paragraph type="secondary" className="!m-0 !text-sm">
+                    {tAvatar("constraints")}
+                  </Paragraph>
+                  <Paragraph type="secondary" className="!m-0 !text-sm">
+                    {tAvatar("recommendedSize")}
+                  </Paragraph>
+                </div>
+              </div>
+            </div>
+            {avatarError ? (
+              <Alert
+                type="error"
+                showIcon
+                className="mt-3"
+                title={avatarError}
+                action={
+                  <Button
+                    size="small"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    {tAvatar("reselect")}
+                  </Button>
+                }
+              />
+            ) : null}
+          </div>
+        </div>
+
         <div className="flex flex-col gap-8">
           {showAccountEmail ? (
             <Form.Item
@@ -480,72 +546,6 @@ export function ProfileForm({
               aria-label={t("bioLabel")}
             />
           </Form.Item>
-        </div>
-
-        <div className="profile-avatar-section flex flex-col gap-3">
-          <Paragraph strong className="!m-0">
-            {tAvatar("title")}
-          </Paragraph>
-          <div role="region" aria-label={tAvatar("regionAriaLabel")}>
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
-              {avatarUrl ? (
-                <Avatar size={72} src={avatarUrl} alt={tAvatar("imageAlt")} />
-              ) : (
-                <Avatar size={72}>{avatarInitial}</Avatar>
-              )}
-              <div className="flex min-w-0 flex-1 flex-col gap-3">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/jpeg,image/png"
-                  hidden
-                  aria-label={tAvatar("fileInputAriaLabel")}
-                  onChange={handleAvatarSelect}
-                />
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    onClick={() => fileInputRef.current?.click()}
-                    loading={avatarUploading}
-                    aria-label={tAvatar("uploadAriaLabel")}
-                  >
-                    {avatarUploading
-                      ? tAvatar("uploading")
-                      : tAvatar("changeImage")}
-                  </Button>
-                  <Button
-                    disabled={!avatarPath || avatarUploading}
-                    onClick={handleAvatarRemove}
-                  >
-                    {tAvatar("removeImage")}
-                  </Button>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <Paragraph type="secondary" className="!m-0 !text-sm">
-                    {tAvatar("constraints")}
-                  </Paragraph>
-                  <Paragraph type="secondary" className="!m-0 !text-sm">
-                    {tAvatar("recommendedSize")}
-                  </Paragraph>
-                </div>
-              </div>
-            </div>
-            {avatarError ? (
-              <Alert
-                type="error"
-                showIcon
-                className="mt-3"
-                title={avatarError}
-                action={
-                  <Button
-                    size="small"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    {tAvatar("reselect")}
-                  </Button>
-                }
-              />
-            ) : null}
-          </div>
         </div>
 
         {showAccountEmail ? (

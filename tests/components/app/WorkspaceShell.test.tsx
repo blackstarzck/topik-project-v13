@@ -273,7 +273,7 @@ describe("WorkspaceShell", () => {
     expect(layoutRule).toContain("--workspace-sider-width: 300px;");
   });
 
-  it("keeps the responsive workspace logo 68px tall", () => {
+  it("keeps the responsive workspace logo 48px tall", () => {
     const source = readFileSync(
       join(process.cwd(), "src/components/app/WorkspaceShell.tsx"),
       "utf8",
@@ -283,10 +283,20 @@ describe("WorkspaceShell", () => {
       ".app-workspace-mobile-brand .brand-logo__image",
     );
 
-    expect(source).toContain("<BrandLogo height={68} />");
-    expect(mobileBrandRule).toContain("height: 68px;");
+    expect(source).toContain("<BrandLogo height={48} />");
+    expect(mobileBrandRule).toContain("height: 48px;");
     expect(mobileBrandRule).toContain("justify-content: center;");
-    expect(mobileLogoRule).toContain("height: 68px;");
+    expect(mobileLogoRule).toContain("height: 48px;");
+  });
+
+  it("pins the mobile GNB to the top and aligns its icons to the content edge", () => {
+    const stickyRule = cssRulesFrom(GLOBAL_CSS, ".app-workspace-mobile-bar")
+      .find((body) => body.includes("position: sticky;"));
+    const headerRule = cssRule(".app-workspace-mobile-bar.ant-layout-header");
+
+    expect(stickyRule).toBeTruthy();
+    expect(stickyRule).toContain("top: 0;");
+    expect(headerRule).toContain("padding-inline: 6px;");
   });
 
   it("keeps growth dashboard available for free-plan learners", () => {

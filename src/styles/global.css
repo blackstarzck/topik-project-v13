@@ -4022,27 +4022,39 @@ body {
   border-bottom: 1px solid var(--app-color-border);
   background: var(--app-color-bg-container);
   color: var(--app-color-text);
-  padding: 0 24px;
+  padding-block: 0;
 }
 
+/* AntD Header ships a wide default inline padding that otherwise wins over the
+   base rule above; this compound selector (higher specificity) controls it. The
+   menu/bell buttons are 40px wide with a 10px glyph inset, so 6px bar padding
+   lands their glyphs on the body content edge (content padding 16px − 10px). */
 .app-workspace-mobile-bar.ant-layout-header {
   height: 68px;
-  line-height: 68px;
+  /* `normal`, not 68px: the bar centers its children with flex + explicit
+     heights, so a tall line-height only leaks a strut into the Space items and
+     pushes the logo/icons off-center. */
+  line-height: normal;
+  padding-inline: 6px;
   background: var(--app-color-bg-container);
 }
 
 .app-workspace-mobile-brand {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-width: 0;
-  height: 68px;
+  height: 48px;
   max-width: 48vw;
   line-height: 0;
 }
 
 .app-workspace-mobile-brand .brand-logo__image {
-  height: 68px;
+  height: 48px;
 }
 
 .app-workspace-drawer .ant-drawer-body {
@@ -4058,8 +4070,11 @@ body {
     padding: 16px;
   }
 
+  /* GNB stays pinned to the top of the viewport while the content scrolls. */
   .app-workspace-mobile-bar {
-    padding-inline: 14px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
   }
 
   .app-workspace-mobile-brand {

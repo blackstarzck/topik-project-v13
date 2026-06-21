@@ -77,20 +77,17 @@ export function WorkspaceShell({
       <Layout className="app-workspace-main">
         {hidesWorkspaceChrome ? null : isMobile ? (
           <Header className="app-workspace-mobile-bar">
-            <Space size={12} align="center">
-              <Button
-                type="text"
-                aria-label={t("openMenu")}
-                onClick={() => setDrawerOpen(true)}
-                icon={<MenuIcon aria-hidden size={20} />}
-              />
-              <span
-                className="app-workspace-mobile-brand"
-                aria-label={t("brand")}
-              >
-                <BrandLogo height={68} />
-              </span>
-            </Space>
+            <Button
+              type="text"
+              aria-label={t("openMenu")}
+              onClick={() => setDrawerOpen(true)}
+              icon={<MenuIcon aria-hidden size={20} />}
+            />
+            {/* Absolutely centered in the bar so it stays put regardless of the
+                menu/bell widths (e.g. an unread badge on the bell). */}
+            <span className="app-workspace-mobile-brand" aria-label={t("brand")}>
+              <BrandLogo height={48} />
+            </span>
             <Space size={8} align="center">
               {email ? <Text type="secondary">{email}</Text> : null}
               <NotificationBell userId={userId} />
