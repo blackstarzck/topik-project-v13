@@ -193,10 +193,11 @@ export function ExamGoalForm({ userId, goal }: Props) {
           aria-label={t("examDateAriaLabel")}
         />
       </FieldRow>
-      <div className="mt-4 flex flex-wrap gap-2">
+      <div className="mt-4 flex justify-end">
         <Button
           data-testid="exam-goal-save"
           type="primary"
+          size="large"
           loading={saving}
           onClick={handleSave}
           disabled={!editable || !isDirty}

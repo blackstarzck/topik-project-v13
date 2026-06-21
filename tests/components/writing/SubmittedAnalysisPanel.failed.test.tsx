@@ -11,6 +11,7 @@ const routerMocks = vi.hoisted(() => ({
   back: vi.fn(),
   refresh: vi.fn(),
   replace: vi.fn(),
+  prefetch: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({

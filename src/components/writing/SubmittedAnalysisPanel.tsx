@@ -51,6 +51,13 @@ export function SubmittedAnalysisPanel({ state }: Props) {
   const analysisInProgress = status === "pending" || status === "analyzing";
   const leaveConfirmMessage = t("cancelConfirm");
 
+  // 분석이 끝나면 곧바로 피드백 화면으로 이동한다. 그 라우트를 분석 중 미리 prefetch해
+  // 두면 완료 시 router.replace가 즉시 그려져, 정적인 "완료" 화면에 머무르는 체감 지연을
+  // 없앨 수 있다(이동은 AnalysisLoadingModal의 complete effect가 수행).
+  useEffect(() => {
+    router.prefetch(state.feedbackHref as never);
+  }, [router, state.feedbackHref]);
+
   // 분석이 진행 중일 때만 브라우저 새로고침/닫기(beforeunload)와 뒤로가기(popstate)를
   // 기기 빌트인 확인 창으로 막는다. 분석은 history에 남지 않는 일시 상태라, 경고 없이
   // 이탈하면 진행 중인 분석 화면이 사라진다. 완료/실패로 바뀌면 가드를 해제한다.
@@ -93,10 +100,7 @@ export function SubmittedAnalysisPanel({ state }: Props) {
   }
 
   return (
-    <div
-      className={pageClassName}
-      data-testid="analysis-loading-page"
-    >
+    <div className={pageClassName} data-testid="analysis-loading-page">
       <section className="submitted-analysis-page__status">
         <AnalysisLoadingPage
           status={status}

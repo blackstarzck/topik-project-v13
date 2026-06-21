@@ -44,7 +44,7 @@ describe("StatusHelpCard (Phase 7-E Task 10)", () => {
     expect(screen.getByText("콘텐츠 관리자")).toBeTruthy();
   });
 
-  it("links to settings/notifications and settings/language", () => {
+  it("does not render the notification/language quick links (removed in redesign)", () => {
     renderCard(
       <StatusHelpCard
         joinedAt="2026-05-22T00:00:00Z"
@@ -52,10 +52,8 @@ describe("StatusHelpCard (Phase 7-E Task 10)", () => {
         planLabel="free"
       />,
     );
-    const notif = screen.getByText("알림 설정");
-    const lang = screen.getByText("언어 설정");
-    expect(notif.closest("a")?.getAttribute("href")).toBe("/settings/notifications");
-    expect(lang.closest("a")?.getAttribute("href")).toBe("/settings/language");
+    expect(screen.queryByText("알림 설정")).toBeNull();
+    expect(screen.queryByText("언어 설정")).toBeNull();
   });
 
   it("falls back to raw role string for unknown role", () => {

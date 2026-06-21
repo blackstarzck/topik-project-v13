@@ -660,15 +660,18 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
 
         {/* Region 5: 저장 CTA (변경값 없으면 비활성, 저장 중 중복 클릭 차단) */}
         <Form.Item className="!mb-0">
-          <Button
-            data-testid="notification-save"
-            type="primary"
-            htmlType="submit"
-            loading={saving}
-            disabled={!isDirty || saving || settingsLoad.status !== "ready"}
-          >
-            {tCommon("save")}
-          </Button>
+          <div className="flex justify-end">
+            <Button
+              data-testid="notification-save"
+              type="primary"
+              size="large"
+              htmlType="submit"
+              loading={saving}
+              disabled={!isDirty || saving || settingsLoad.status !== "ready"}
+            >
+              {tCommon("save")}
+            </Button>
+          </div>
         </Form.Item>
       </div>
     </Form>

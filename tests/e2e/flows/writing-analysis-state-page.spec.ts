@@ -134,7 +134,12 @@ test("writing submit keeps analysis state above the read-only answer", async ({
   ]);
   expect(stateBox, "analysis state card box").toBeTruthy();
   expect(answerBox, "read-only answer card box").toBeTruthy();
-  expect(stateBox!.y).toBeLessThan(answerBox!.y);
+  // 데스크톱은 가로 2열(상태 카드가 답안 카드 왼쪽), 모바일은 세로 스택(상태 카드가 위).
+  if (testInfo.project.name === "mobile-360") {
+    expect(stateBox!.y).toBeLessThan(answerBox!.y);
+  } else {
+    expect(stateBox!.x).toBeLessThan(answerBox!.x);
+  }
 
   await waitForSubmittedRow(answerToken);
 });
@@ -197,6 +202,18 @@ test("writing submit shows failure state without the read-only answer", async ({
     testInfo.project.name === "mobile-360" ? 290 : 450,
   );
   expect(assetBox!.y).toBeLessThan(actionsBox!.y);
+
+  // 실패 상태는 exam 라우트의 mist 배경 대신 흰색(container) 배경을 뷰포트 전체에
+  // 채운다. 배경색이 흰색인지, 그리고 폭이 콘텐츠 전체(=뷰포트)를 덮는 full-bleed인지
+  // 함께 확인한다. (수정 전에는 920px 폭 카드 + 회색 여백이었다.)
+  const failedPage = page.getByTestId("analysis-loading-page");
+  const pageBg = await failedPage.evaluate(
+    (el) => getComputedStyle(el).backgroundColor,
+  );
+  expect(pageBg).toBe("rgb(255, 255, 255)");
+  const pageBox = await failedPage.boundingBox();
+  expect(pageBox, "failed page box").toBeTruthy();
+  expect(pageBox!.width).toBeGreaterThanOrEqual(page.viewportSize()!.width - 1);
 
   await waitForSubmittedRow(answerToken);
 });

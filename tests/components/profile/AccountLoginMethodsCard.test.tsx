@@ -62,7 +62,8 @@ describe("AccountLoginMethodsCard", () => {
   it("shows email and disconnected Google login methods", async () => {
     renderCard();
 
-    expect(screen.getByText("Login methods")).toBeTruthy();
+    // 재설계: 섹션 타이틀/설명은 제거되고 카드만 남는다(이메일 주소·메서드 라벨로 검증).
+    expect(screen.getByText("Email login")).toBeTruthy();
     expect(screen.getByText("learner@example.com")).toBeTruthy();
 
     await waitFor(() => {

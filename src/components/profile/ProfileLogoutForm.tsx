@@ -1,5 +1,4 @@
 import { Button } from "antd";
-import { LogOut } from "lucide-react";
 
 type ProfileLogoutFormProps = {
   label: string;
@@ -13,8 +12,9 @@ export function ProfileLogoutForm({ label }: ProfileLogoutFormProps) {
       className="app-profile-logout"
     >
       <Button
+        type="primary"
+        size="large"
         htmlType="submit"
-        icon={<LogOut aria-hidden size={16} strokeWidth={1.8} />}
         data-testid="profile-logout"
       >
         {label}

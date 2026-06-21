@@ -1595,14 +1595,14 @@ body {
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
-  height: 68px;
+  height: 48px;
   max-width: 180px;
   line-height: 0;
   text-decoration: none;
 }
 
 .landing-header-logo .brand-logo__image {
-  height: 68px;
+  height: 48px;
 }
 
 .landing-header-nav {
@@ -3796,6 +3796,34 @@ body {
   height: 0.7em;
 }
 
+.landing-layout-footer__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+  color: inherit;
+  text-decoration: none;
+  transition: color 160ms ease-out;
+}
+
+.landing-layout-footer__cta:hover {
+  color: #3c3c40;
+}
+
+.landing-layout-footer__cta svg {
+  transition: transform 220ms ease-out;
+}
+
+.landing-layout-footer__cta:hover svg,
+.landing-layout-footer__cta:focus-visible svg {
+  transform: translateX(8px);
+}
+
+.landing-layout-footer__cta:focus-visible {
+  outline: 2px solid #0c0c0d;
+  outline-offset: 8px;
+  border-radius: 8px;
+}
+
 .landing-layout-footer p {
   max-width: 36ch;
   margin: 20px 0 0;
@@ -4302,7 +4330,8 @@ body {
   /* Title area ↔ body separation. Stacks with the parent
      .notification-settings-card-body 8px grid gap → 34px total below the
      section header, vs 8px between body rows. */
-  margin-bottom: 1.625rem; /* 26px */
+  margin-bottom: 1.625rem;
+  /* 26px */
 }
 
 .notification-settings-inline-control {
@@ -4454,16 +4483,11 @@ body {
   }
 }
 
-/* ──────────────────────────────────────────────────────────────────────────
-   Shared settings field row — used across /settings/* pages.
-
-   Desktop: heading (left) / control (right). Mobile (≤640px): the row collapses
-   to a single column so the heading sits ABOVE the control (same behavior as
-   .notification-settings-row). Sections separate by whitespace only — there are
-   NO divider borders here (border:0 everywhere); spacing comes from
-   .settings-form-stack gap. Keeping this as one shared class gives the
-   responsive label/control behavior a single source of truth for every
-   settings screen. */
+/* Language-settings layout helpers layered on the shared .settings-field-row
+   primitive defined above (grouped with .notification-settings-row): the page
+   stack / section spacing and the label / control / hint element styles. The
+   row grid and mobile (≤640px) heading-above-control stacking come from that
+   shared rule — not redefined here. Sections separate by whitespace only. */
 .settings-form-stack {
   display: grid;
   gap: 28px;
@@ -4482,15 +4506,6 @@ body {
   line-height: 1.35;
   font-weight: 600;
   color: var(--app-color-text);
-}
-
-.settings-field-row {
-  display: grid;
-  grid-template-columns: minmax(120px, 180px) minmax(0, 1fr);
-  gap: 12px;
-  align-items: center;
-  padding: 10px 0;
-  border: 0;
 }
 
 .settings-field-row__label {
@@ -4512,10 +4527,108 @@ body {
   line-height: 1.45;
 }
 
+/* ──────────────────────────────────────────────────────────────────────────
+   X-05 계정 설정 재설계 (settings/account) — 섹션 타이틀/구분선 없이 카드·행만
+   화이트스페이스(grid gap)로 구분한다. 로그인 방법은 AntD Card(머리/꼬리 없음),
+   계정 상태는 label/value 행이며 행 사이 구분선은 AntD Card의 native border 토큰
+   (colorBorderSecondary = --ant-color-border-secondary)과 같은 색을 쓴다.
+   ─────────────────────────────────────────────────────────────────────────*/
+.account-settings-redesign {
+  display: grid;
+  gap: 44px;
+}
+
+/* 로그인 방법: 각 메서드를 개별 AntD Card(.app-cards-bordered로 외곽선 복원)로
+   감싼다. 카드 본문은 icon + copy + status 가로 행. */
+.account-login-methods {
+  display: grid;
+  gap: 12px;
+}
+
+.account-login-method.app-card > .ant-card-body {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+}
+
+/* 아이콘은 글리프만 노출한다(배경/테두리 없음). 44px 박스는 정렬 폭만 유지. */
+.account-login-method-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  color: var(--app-color-text-secondary);
+}
+
+.account-login-method-copy {
+  display: grid;
+  gap: 2px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.account-login-method-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.account-login-error {
+  margin-top: 12px;
+}
+
+/* 계정 상태: label 좌 / value 우. 행 사이 구분선은 AntD Card의 native border 색
+   (--ant-color-border-secondary)과 동일하게 맞춘다(아이콘 없음). */
+.account-status-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 180px) minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--ant-color-border-secondary);
+}
+
+.account-status-row:last-of-type {
+  border-bottom: 0;
+}
+
+.account-status-row__label {
+  color: var(--app-color-text);
+  font-weight: 500;
+}
+
+.account-status-row__value {
+  min-width: 0;
+  text-align: right;
+  color: var(--app-color-text);
+}
+
 @media (max-width: 640px) {
-  .settings-field-row {
+  /* 로그인 방법: 좁은 폭에서 상태(태그·버튼)를 자체 줄로 내려 copy가 짜부라지지
+     않게 한다. icon + copy는 한 줄, 상태는 그 아래 우측 정렬.
+     조상 셀렉터(.account-login-methods)로 specificity를 올려 base 규칙을 확실히
+     덮는다. */
+  .account-login-methods .account-login-method.app-card > .ant-card-body {
+    flex-wrap: wrap;
+  }
+
+  .account-login-method-status {
+    flex-basis: 100%;
+    justify-content: flex-end;
+  }
+
+  .account-status-row {
     grid-template-columns: 1fr;
     align-items: start;
+    gap: 4px;
+  }
+
+  .account-status-row__value {
+    text-align: left;
   }
 }
 
@@ -5169,12 +5282,11 @@ body {
   line-height: 16px;
 }
 
+/* 계정 설정 하단 footer 안에 들어가며, 위 경계는 섹션 <Divider>가 담당하므로
+   자체 border-top/여백은 두지 않는다. */
 .app-profile-logout {
   display: flex;
   justify-content: flex-end;
-  margin-top: 16px;
-  border-top: 1px solid var(--app-color-border);
-  padding-top: 16px;
 }
 
 .app-profile-logout .ant-btn {
@@ -5208,6 +5320,19 @@ body {
 
 .ant-notification .ant-notification-notice.ant-notification-notice {
   box-shadow: var(--app-shadow-elevated);
+}
+
+/* Message(toast)는 Notification과 같은 공유 item 스타일을 쓰며, 그 스타일은
+ * 전역 `boxShadow` 토큰을 읽는다. awesomic 테마가 전역 boxShadow를 none으로
+ * 눌렀기 때문에 토스트 그림자가 사라졌다. (토큰 경로로는 불가: cssVar 모드에서
+ * 공유 스타일이 `box-shadow: var(--ant-box-shadow)`를 내보내 Message 컴포넌트
+ * 토큰 오버라이드는 등록만 되고 참조되지 않는다.)
+ * 화면 맨 위에 떠 있는 토스트는 공유 --app-shadow-elevated(0.04)보다 약간 더
+ * 진한 2중 그림자로 띄워 콘텐츠 위에 확실히 분리돼 보이게 한다. */
+.ant-message .ant-message-notice.ant-message-notice {
+  box-shadow:
+    0 6px 16px 0 rgba(0, 0, 0, 0.1),
+    0 2px 6px -2px rgba(0, 0, 0, 0.08);
 }
 
 .app-notification-panel {
@@ -6425,32 +6550,52 @@ body {
   min-height: min(760px, 72vh);
 }
 
+/* D-M2 분석 단계: 페이지 전체 배경을 container(흰색)로 채운다(full-bleed). 두 카드는
+   가로 2열 grid로 중앙 정렬한다. grid 같은 행의 아이템은 기본적으로 행 높이(=더 큰 카드)
+   만큼 stretch되므로, 하드코딩 없이 두 카드 높이가 자동으로 같아진다. align-content: safe
+   center로 카드를 100dvh 안에서 세로 중앙에 두되, 내용이 화면보다 길면 start로 폴백해
+   상단이 잘리지 않게 한다(모바일 세로 스택 대비). */
 .submitted-analysis-page {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 578px));
+  justify-content: center;
+  align-content: safe center;
   gap: 24px;
-  align-items: start;
-  width: min(100%, 920px);
-  min-height: min(760px, 72vh);
+  width: 100%;
+  min-height: 100dvh;
   margin-inline: auto;
-  padding: 24px 0;
+  padding: 24px 16px;
+  background: var(--app-color-bg-container);
 }
 
-.submitted-analysis-page__status {
-  width: 100%;
+.submitted-analysis-page__status,
+.submitted-analysis-page__answer-card.analysis-loading-background {
   min-width: 0;
 }
 
-.submitted-analysis-page.submitted-analysis-page--failed {
-  align-items: center;
-  justify-content: center;
-  min-height: 100dvh;
-}
-
 .submitted-analysis-page__answer-card.analysis-loading-background {
-  width: 100%;
   margin-inline: 0;
   opacity: 1;
+}
+
+/* 상태 카드는 중첩 구조(panel > analysis-loading > AppCard)라, grid item이 stretch된
+   높이를 카드 본문·내부까지 height:100%로 전달해야 답안 카드와 실제로 같은 높이가 된다. */
+.submitted-analysis-page__status .analysis-loading-page__panel,
+.submitted-analysis-page__status .analysis-loading--page {
+  height: 100%;
+}
+
+.submitted-analysis-page__status .analysis-loading--page {
+  grid-template-rows: 1fr;
+}
+
+/* 실패 상태는 답안 카드 없이 단일 일러스트 카드만 흰 배경에 이음매 없이 보인다(기존 설계).
+   1열로 가운데(가로/세로) 모으고, 좌우 거터(padding)를 없애 일러스트 폭을 확보한다. */
+.submitted-analysis-page.submitted-analysis-page--failed {
+  grid-template-columns: minmax(0, 578px);
+  justify-content: center;
+  align-content: safe center;
+  padding-inline: 0;
 }
 
 .analysis-loading-page__panel {
@@ -6512,6 +6657,11 @@ body {
   white-space: pre-wrap;
 }
 
+/* D-M2 page: 제출 답안(읽기 전용) 영역은 border 없이 표시. */
+.submitted-analysis-page__answer-card .analysis-loading-background__answer {
+  border: 0;
+}
+
 .d-m2-analysis-modal .ant-modal-content {
   overflow: hidden;
   border: 1px solid var(--app-color-border);
@@ -6534,18 +6684,48 @@ body {
   padding: 0;
 }
 
+/* D-M2 page: 첫 번째 카드도 AntD Card(AppCard)로 통일한다. 카드 표면(테두리/라운드/배경)은
+   AntD가 담당하고, 내부 레이아웃(grid/패딩)은 __inner가 담당한다. body 패딩을 0으로 두고
+   __inner가 패딩을 가져, 완료 핸드오프 오버레이가 카드 전체를 덮을 수 있게 한다. */
 .analysis-state-card {
-  display: grid;
-  justify-items: center;
-  gap: 18px;
   width: 100%;
   overflow: hidden;
+}
+
+/* D-M2 page: 흰색 배경 위에서 카드가 보이도록 두 AntD Card(상태/답안)에 테두리를 준다.
+   AppCard의 `.app-card.app-surface { border: 0 }`(0,2,0)를 이기도록 (0,3,0)으로 올린다. */
+.analysis-state-card.app-card.app-surface,
+.submitted-analysis-page__answer-card.app-card.app-surface {
   border: 1px solid var(--app-color-border);
-  border-radius: 24px;
-  background: var(--app-color-bg-container);
-  box-shadow: var(--app-shadow-elevated);
+}
+
+/* 실패 상태 카드는 흰 배경과 이음매 없이 보이는 게 설계이므로 테두리를 제거한다
+   (위 (0,3,0) 테두리 규칙을 (0,4,0)으로 덮는다). */
+.analysis-loading--failed .analysis-state-card.app-card.app-surface {
+  border: 0;
+}
+
+/* body 패딩은 __inner가 대신 가지므로 0으로 만든다. AntD 기본 body 패딩 규칙을 확실히
+   이기도록 카드 루트 클래스를 합성해 specificity를 (0,3,0)으로 올린다. height:100%로
+   stretch된 카드 높이를 본문에 전달한다(아래 __inner가 내용을 세로 중앙 정렬). */
+.analysis-state-card.app-card > .ant-card-body {
+  position: relative;
+  height: 100%;
+  padding: 0;
+}
+
+.analysis-state-card__inner {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 18px;
+  height: 100%;
   padding: 36px 40px 30px;
   text-align: center;
+}
+
+.analysis-state-card__inner--blurred {
+  filter: blur(4px);
 }
 
 .analysis-loading--failed .analysis-state-card {
@@ -6621,6 +6801,23 @@ body {
   color: var(--app-color-text-secondary);
 }
 
+/* D-M2 page: 예상 소요 시간을 border/배경 없이 14px 연한 description 톤으로 표시. */
+.analysis-loading--page .analysis-loading__meta {
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--app-color-text-secondary);
+  font-size: 14px;
+}
+
+/* 아이콘(Clock3)은 currentColor(=위 secondary)를 쓰지만, AntD Text는 기본 colorText로
+   덮인다. Text가 컨테이너 색을 상속하게 해 글자색을 아이콘과 동일(secondary)·14px로 맞춘다. */
+.analysis-loading--page .analysis-loading__meta .ant-typography {
+  color: inherit;
+  font-size: inherit;
+}
+
 .analysis-loading__progress .ant-progress-inner {
   background: color-mix(in srgb, var(--app-color-primary) 10%, transparent);
 }
@@ -6629,6 +6826,68 @@ body {
   color: var(--app-color-text);
   font-size: 13px;
   line-height: 1.35;
+}
+
+/* D-M2 page: 현재 단계 아이콘 둘레의 진행률 링(AntD Steps `percent`)을 부드럽게 채운다.
+   아이콘 스타일은 Steps `variant="outlined"`로 처리해 채움 대신 링 트랙 + primary 진행
+   링 + primary 숫자(아웃라인) 형태로 표시한다 (시안 2/3 형태). */
+.analysis-loading--page
+  .analysis-loading__steps
+  .ant-steps-item-progress-icon-circle-ptg {
+  transition: stroke-dasharray 0.18s linear;
+}
+
+/* D-M2 page: primary가 거의 검정(#09090b)이라 outlined의 현재 단계 배경 토큰
+   colorPrimaryBg가 어두운 회색(#46464a)으로 파생되어, 현재 단계 숫자(primary)가
+   배경에 묻힌다(대비 ~2.1:1). 현재 단계 아이콘 배경만 container(흰색) 토큰으로 되돌려
+   숫자를 또렷하게 한다(대비 ~19.9:1). primary 테두리/링은 그대로 현재 단계를 표시한다.
+   AntD의 `.ant-steps.ant-steps-outlined .ant-steps-item-process` 규칙이 (0,3,0)으로
+   동률이며 나중에 주입되므로, process+active 합성으로 (0,4,0)을 만들어 확실히 이긴다. */
+.analysis-loading--page
+  .analysis-loading__steps
+  .ant-steps-item-process.ant-steps-item-active {
+  --ant-cmp-steps-item-icon-active-bg-color: var(--app-color-bg-container);
+}
+
+/* D-M2 page: 마지막 단계(점수 산출)는 더 진행할 곳이 없으므로 링을 앞으로만 도는
+   스피너로 표시한다. percent는 고정 호(28%)로 두고 svg 전체를 회전시킨다. */
+.analysis-loading--page
+  .analysis-loading__steps--calculating
+  .ant-steps-item-process
+  .ant-steps-item-progress-icon-svg {
+  transform-origin: 50% 50%;
+  animation: talkpik-analysis-ring-spin 0.9s linear infinite;
+}
+
+@keyframes talkpik-analysis-ring-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* D-M2 page: 분석 완료 -> 결과 화면 핸드오프. 기존 캐릭터+step UI(__inner)는 blur(4px)
+   처리하고, 그 위에 카드 전체를 덮는 반투명 배경 + 로딩 스피너를 얹는다. */
+.analysis-state-card__overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 12px;
+  background: color-mix(
+    in srgb,
+    var(--app-color-bg-container) 62%,
+    transparent
+  );
+}
+
+.analysis-state-card__overlay-text.ant-typography {
+  color: var(--app-color-text-secondary);
+  font-size: 14px;
 }
 
 .analysis-loading__status {
@@ -6769,9 +7028,11 @@ body {
   font-size: 13px;
 }
 
+/* 좁은 폭(tablet/mobile)에서는 1열 grid로 세로 스택한다. 카드가 각자 다른 행이라
+   높이를 맞출 필요가 없다. 흰 배경 full-bleed(min-height:100dvh)는 기본형에서 유지한다. */
 @media (max-width: 980px) {
   .submitted-analysis-page {
-    min-height: auto;
+    grid-template-columns: minmax(0, 640px);
   }
 }
 
@@ -6802,12 +7063,14 @@ body {
 @media (max-width: 560px) {
   .submitted-analysis-page {
     gap: 16px;
-    min-height: auto;
-    padding: 8px 0 24px;
+    padding: 8px 16px 24px;
   }
 
   .analysis-state-card {
     border-radius: 20px;
+  }
+
+  .analysis-state-card__inner {
     padding: 26px 16px 20px;
   }
 

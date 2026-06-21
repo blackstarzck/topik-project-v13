@@ -791,8 +791,13 @@ function ProductFooter({ primary, primaryLabel }: LandingLayoutCta) {
     <footer id="contact" className="landing-layout-footer" data-landing-section>
       <div className="landing-layout-wrap landing-layout-footer__inner">
         <h2 data-landing-heading>
-          TALKPIK AI로 시작하기
-          <ArrowRight aria-hidden="true" />
+          <a
+            className="landing-layout-footer__cta"
+            href={primary?.href ?? "/sign-up"}
+          >
+            TALKPIK AI로 시작하기
+            <ArrowRight aria-hidden="true" strokeWidth={3.5} />
+          </a>
         </h2>
         <p>
           TOPIK 목표 등급을 정하고, 추천 문제를 풀고, 쓰기 답안 피드백까지

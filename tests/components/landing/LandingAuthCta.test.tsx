@@ -197,6 +197,26 @@ describe("landing auth CTA", () => {
     ).toBe("/login");
   });
 
+  it("makes the footer headline a CTA that navigates like the anonymous hero", () => {
+    renderWithIntl(<PortfolioLandingLayout authStatus="anonymous" />);
+
+    const cta = document.querySelector<HTMLAnchorElement>(
+      ".landing-layout-footer__cta",
+    );
+    expect(cta?.tagName).toBe("A");
+    expect(cta?.getAttribute("href")).toBe("/sign-up");
+    expect(cta?.textContent).toContain("TALKPIK AI로 시작하기");
+  });
+
+  it("points the footer headline CTA at the authenticated hero destination", () => {
+    renderWithIntl(<PortfolioLandingLayout authStatus="ready" />);
+
+    const cta = document.querySelector<HTMLAnchorElement>(
+      ".landing-layout-footer__cta",
+    );
+    expect(cta?.getAttribute("href")).toBe("/dashboard");
+  });
+
   it("renders the uploaded logo asset in the Portfolio footer brand area", () => {
     renderWithIntl(<PortfolioLandingLayout authStatus="anonymous" />);
 

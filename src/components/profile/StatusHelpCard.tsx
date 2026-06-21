@@ -1,12 +1,7 @@
 "use client";
 
-import { Alert, Divider, Tag, Typography } from "antd";
+import { Alert } from "antd";
 import { useTranslations } from "next-intl";
-import Link from "next/link";
-
-import { AppCard } from "@/components/shared/AppCard";
-
-const { Text, Paragraph } = Typography;
 
 type Props = {
   joinedAt: string;
@@ -44,50 +39,44 @@ export function StatusHelpCard({
   const roleLabel = (KNOWN_ROLE_KEYS as readonly string[]).includes(appRole)
     ? t(`role.${appRole}` as Parameters<typeof t>[0])
     : appRole;
+
+  // 라벨 카탈로그 키는 본래 접두사 형태("공개 범위 " 등)라 trim해 행 라벨로 쓴다.
+  const rows = [
+    {
+      key: "visibility",
+      label: t("visibilityLabel").trim(),
+      value:
+        visibility === "public" ? t("visibilityPublic") : t("visibilityPrivate"),
+    },
+    { key: "role", label: t("roleLabelPrefix").trim(), value: roleLabel },
+    { key: "plan", label: t("planLabelPrefix").trim(), value: planLabel },
+    {
+      key: "joined",
+      label: t("joinedLabelPrefix").trim(),
+      value: new Date(joinedAt).toLocaleDateString("ko-KR"),
+    },
+  ];
+
   return (
-    <AppCard title={t("cardTitle")}>
+    <section aria-label={t("cardTitle")}>
       {/* X-05 region 4 예외: 정책 미동의 경고 */}
       {!policyAgreed ? (
         <Alert
           type="warning"
           showIcon
-          className="mb-3"
+          className="account-login-error"
           title={t("policyWarningTitle")}
           description={t("policyWarningDescription")}
         />
       ) : null}
-      <Paragraph>
-        <Text type="secondary">{t("visibilityLabel")}</Text>
-        <Tag>
-          {visibility === "public" ? t("visibilityPublic") : t("visibilityPrivate")}
-        </Tag>
-      </Paragraph>
-      <Paragraph>
-        <Text type="secondary">{t("roleLabelPrefix")}</Text>
-        <Tag>{roleLabel}</Tag>
-        <Text type="secondary" className="ml-3">{t("planLabelPrefix")}</Text>
-        <Tag>{planLabel}</Tag>
-      </Paragraph>
-      <Paragraph>
-        <Text type="secondary">{t("joinedLabelPrefix")}</Text>
-        <Text strong>{new Date(joinedAt).toLocaleDateString("ko-KR")}</Text>
-      </Paragraph>
-      <Paragraph className="!mb-0">
-        <Text type="secondary" className="!text-xs">
-          {t("goalNote")}
-        </Text>
-      </Paragraph>
-      <Divider />
-      <Paragraph>
-        <Link href="/settings/notifications">{t("notificationsLink")}</Link>
-        <Text type="secondary"> · </Text>
-        <Link href="/settings/language">{t("languageLink")}</Link>
-      </Paragraph>
-      <Paragraph className="!mb-0">
-        <Text type="secondary" className="!text-xs">
-          {t("withdrawalNote")}
-        </Text>
-      </Paragraph>
-    </AppCard>
+      <div>
+        {rows.map((row) => (
+          <div key={row.key} className="account-status-row">
+            <span className="account-status-row__label">{row.label}</span>
+            <span className="account-status-row__value">{row.value}</span>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }

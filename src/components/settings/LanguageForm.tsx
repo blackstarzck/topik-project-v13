@@ -414,7 +414,7 @@ export function LanguageForm({ userId, initialLocale }: Props) {
             items are spaced apart (no disc markers). */}
         <ul
           data-testid="language-help-card"
-          className="m-0 flex list-none flex-col gap-3 p-0"
+          className="mb-0 mt-10 flex list-none flex-col gap-3 p-0"
         >
           <li data-testid="language-help-item">
             <Text type="secondary">{t("helpUiScope")}</Text>
@@ -437,15 +437,18 @@ export function LanguageForm({ userId, initialLocale }: Props) {
 
         {/* 저장 (변경값 없으면 비활성, 저장 중 중복 클릭 차단) */}
         <Form.Item className="!mb-0">
-          <Button
-            data-testid="language-save"
-            type="primary"
-            htmlType="submit"
-            loading={saving}
-            disabled={!isDirty || saving}
-          >
-            {tCommon("save")}
-          </Button>
+          <div className="flex justify-end">
+            <Button
+              data-testid="language-save"
+              type="primary"
+              size="large"
+              htmlType="submit"
+              loading={saving}
+              disabled={!isDirty || saving}
+            >
+              {tCommon("save")}
+            </Button>
+          </div>
         </Form.Item>
       </div>
     </Form>
