@@ -243,17 +243,21 @@
       "unsavedLeave": "You have unsaved changes. Are you sure you want to leave this page?",
       "saveSuccess": "Your notification settings have been saved.",
       "saveError": "Saving failed.",
-      "previewScheduled": "We'll send a study reminder every day at {time} ({timezone}).",
+      "previewScheduled": "Your reminder setting is saved for {time} ({timezone}) on the selected channels.",
       "previewEmpty": "Set a study reminder time to see a sample of what we'll send.",
-      "deferredSummary": "In-app notifications are on, and email/Zalo delivery is being prepared.",
-      "deferredNotice": "Actual notification delivery is still being set up. For now your channels, conditions, and time are saved, and the delivery log fills in once sending begins.",
+      "deferredSummary": "In-app notifications are supported first, while email/Zalo delivery is being prepared.",
+      "deferredNotice": "For now we save your channels, conditions, and time. In-app notifications can be used, and external delivery such as email/Zalo will work after setup is complete.",
       "details": {
         "show": "View details",
         "hide": "Hide"
       },
       "noChannel": {
-        "title": "No notification channel is turned on",
-        "body": "Turn on the email or Zalo channel below to receive reminders."
+        "title": "The currently usable notification channel is off",
+        "body": "The channel you can receive right now is in-app notifications. Email and Zalo are saved as preferences only."
+      },
+      "externalOnly": {
+        "title": "External channels are still being prepared",
+        "body": "Email and Zalo selections are saved, but turn on in-app notifications too if you want to receive reminders now."
       },
       "routine": {
         "cardTitle": "Learning routine",
@@ -321,7 +325,9 @@
       },
       "history": {
         "cardTitle": "Delivery history (latest 5)",
-        "empty": "No notifications have been sent yet."
+        "empty": "No notifications have been sent yet.",
+        "loadErrorTitle": "We couldn't load the delivery history",
+        "loadError": "Recent delivery history is unavailable. Please try again in a moment."
       },
       "logStatus": {
         "sent": "Sent",
@@ -1658,11 +1664,11 @@
         "empty": "Submit more writing to fill in your weakness analysis. For now, this reflects your recent answers.",
         "startCta": "Start studying",
         "scoreSample": "{score} pts · {count} samples"
-    },
-    "insights": {
-      "title": "Learning insights",
-      "disclaimer": "This summary is calculated from your actual scores and practice records. Weak areas may change with future practice."
-    },
+      },
+      "insights": {
+        "title": "Learning insights",
+        "disclaimer": "This summary is calculated from your actual scores and practice records. Weak areas may change with future practice."
+      },
       "recent": {
         "title": "Recently completed",
         "empty": "You haven't completed any questions yet.",
@@ -1699,7 +1705,7 @@
     "locked": {
       "title": "Detailed growth reports are for paid plans only",
       "freePlan": "Free",
-    "body": "On your current plan (<plan></plan>) you can only see basic metrics. Upgrade to unlock the trend chart, weakness matrix, and learning insights.",
+      "body": "On your current plan (<plan></plan>) you can only see basic metrics. Upgrade to unlock the trend chart, weakness matrix, and learning insights.",
       "upgradeCta": "Upgrade plan",
       "manageCta": "Manage subscription"
     },
@@ -2161,7 +2167,7 @@
       "changePlan": "Change plan",
       "changePaymentMethod": "Change payment method",
       "cancel": "Cancel subscription",
-      "note": "Changes and cancellations proceed after you confirm the policy, and take effect immediately once billing integration is complete."
+      "note": "Plan changes and cancellations will be available after billing integration. For now you can review the policy notice only."
     },
     "history": {
       "title": "Payment history",
@@ -2175,10 +2181,10 @@
     },
     "help": {
       "title": "Help",
-      "changePolicyTitle": "Subscription change policy",
-      "changePolicyBody": "When you change plans, the remaining period is prorated and applied.",
-      "refundTitle": "Refund criteria",
-      "refundBody": "Refunds are available within 7 days of payment if unused.",
+      "changePolicyTitle": "Subscription change notice",
+      "changePolicyBody": "Plan changes and billing adjustments will be confirmed after billing integration.",
+      "refundTitle": "Refund notice",
+      "refundBody": "Refund rules will be confirmed after formal billing integration.",
       "planDiffTitle": "Plan differences",
       "planDiffBody": "You can compare the benefits of each plan on the subscription start screen.",
       "contactSubject": "Subscription inquiry",
@@ -2188,18 +2194,18 @@
       "stubInfo": "Once billing integration is complete, you'll be able to handle this right away. (Coming soon)",
       "change": {
         "title": "Plan change policy",
-        "body": "When you change plans, the remaining billing period is prorated and applied to your next invoice. Changes take effect after billing integration is complete.",
+        "body": "Plan changes and billing adjustments will be explained after billing integration. No actual plan change is processed right now.",
         "ok": "Got it"
       },
       "paymentMethod": {
         "title": "Change payment method",
-        "body": "You can change your registered payment method. The new method will be used from your next payment. This will be available after billing integration is complete.",
+        "body": "Payment method changes will be available after billing integration. No payment method is registered or changed right now.",
         "ok": "Got it"
       },
       "cancel": {
         "title": "Subscription cancellation policy",
-        "body": "Even if you cancel now, you keep all benefits until the end of the current billing period. Refunds are only possible within 7 days of payment. This action cannot be undone.",
-        "ok": "Proceed with cancellation"
+        "body": "Cancellation, benefit access after cancellation, and refund rules will be confirmed after billing integration. No cancellation request is processed right now.",
+        "ok": "Got it"
       }
     }
   },
@@ -2239,7 +2245,7 @@
     },
     "paymentInfo": {
       "title": "Payment information",
-      "item1": "· Refunds can be requested within 7 days of payment",
+      "item1": "· Refund rules will be shared after formal billing integration",
       "item2": "· Tax invoice issuance supported",
       "item3": "· Secure payment (integration coming soon)",
       "item4": "· For institutional or group subscriptions, please contact us separately"

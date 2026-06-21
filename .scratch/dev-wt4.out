@@ -1,0 +1,27 @@
+▲ Next.js 16.2.6 (Turbopack)
+- Local:         http://localhost:3210
+- Network:       http://183.109.36.32:3210
+- Environments: .env.local
+✓ Ready in 6.1s
+
+○ Compiling /practice/weakness ...
+ GET /practice/weakness 200 in 15.6s (next.js: 12.2s, proxy.ts: 371ms, application-code: 3.1s)
+ GET /practice/next 200 in 2.1s (next.js: 1031ms, proxy.ts: 59ms, application-code: 1045ms)
+ GET /library 200 in 1638ms (next.js: 117ms, proxy.ts: 57ms, application-code: 1464ms)
+ GET /profile 200 in 1322ms (next.js: 34ms, proxy.ts: 59ms, application-code: 1229ms)
+ GET /settings/account 200 in 12.7s (next.js: 2.8s, proxy.ts: 66ms, application-code: 9.8s)
+✓ Finished writing to filesystem cache in 11.1s
+ GET /settings/learning 200 in 2.6s (next.js: 1215ms, proxy.ts: 96ms, application-code: 1277ms)
+ GET /settings/language 200 in 3.4s (next.js: 876ms, proxy.ts: 55ms, application-code: 2.5s)
+ GET /dashboard 200 in 3.7s (next.js: 524ms, proxy.ts: 57ms, application-code: 3.1s)
+ GET /login 200 in 1753ms (next.js: 649ms, proxy.ts: 5ms, application-code: 1099ms)
+ GET /dashboard 200 in 1317ms (next.js: 8ms, proxy.ts: 82ms, application-code: 1227ms)
+ GET /practice/weakness 200 in 896ms (next.js: 29ms, proxy.ts: 113ms, application-code: 754ms)
+ GET /practice/next 200 in 1175ms (next.js: 35ms, proxy.ts: 56ms, application-code: 1084ms)
+✓ Finished filesystem cache database compaction in 19.2s
+ GET /library 200 in 767ms (next.js: 26ms, proxy.ts: 52ms, application-code: 688ms)
+ GET /profile 200 in 1104ms (next.js: 15ms, proxy.ts: 57ms, application-code: 1032ms)
+ GET /settings/account 200 in 849ms (next.js: 10ms, proxy.ts: 63ms, application-code: 776ms)
+ GET /settings/learning 200 in 795ms (next.js: 17ms, proxy.ts: 53ms, application-code: 724ms)
+ GET /settings/language 200 in 859ms (next.js: 6ms, proxy.ts: 53ms, application-code: 800ms)
+ GET /library 200 in 721ms (next.js: 7ms, proxy.ts: 63ms, application-code: 650ms)

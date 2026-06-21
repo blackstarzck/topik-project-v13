@@ -130,6 +130,11 @@ type SettingsLoad =
   | { status: "ready" }
   | { status: "error"; message: string };
 
+type HistoryLoad =
+  | { status: "loading" }
+  | { status: "ready" }
+  | { status: "error"; message: string };
+
 /**
  * Compute the diff between current form values and the initial server
  * snapshot. Missing keys in `initialPrefs` are treated as `false`. Only keys
@@ -182,6 +187,18 @@ function sameDays(a: number[], b: number[]): boolean {
   return a.length === b.length && a.every((day) => b.includes(day));
 }
 
+function normalizePrefs(raw: NotificationPrefs): NotificationPrefs {
+  const next: NotificationPrefs = {};
+  for (const key of NOTIFICATION_PREF_KEYS) {
+    next[key] = raw[key] ?? false;
+  }
+  return next;
+}
+
+function errorMessage(err: unknown, fallback: string): string {
+  return err instanceof Error && err.message ? err.message : fallback;
+}
+
 /**
  * X-09 알림 설정 — real notification_settings + notification_log.
  *
@@ -205,14 +222,16 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
   const prefsMutation = useUpdateNotificationPrefs(userId);
 
   const [values, setValues] = useState<NotificationPrefs>(() => {
-    const seed: NotificationPrefs = {};
-    for (const key of NOTIFICATION_PREF_KEYS) {
-      seed[key] = initialPrefs[key] ?? false;
-    }
-    return seed;
+    return normalizePrefs(initialPrefs);
   });
+  const [savedPrefs, setSavedPrefs] = useState<NotificationPrefs>(() =>
+    normalizePrefs(initialPrefs),
+  );
 
   const [settingsLoad, setSettingsLoad] = useState<SettingsLoad>({
+    status: "loading",
+  });
+  const [historyLoad, setHistoryLoad] = useState<HistoryLoad>({
     status: "loading",
   });
   const [savedSettings, setSavedSettings] = useState<NotificationSettings>(
@@ -228,23 +247,33 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      try {
-        const [s, l] = await Promise.all([
-          fetchNotificationSettings(userId),
-          fetchDeliveryHistory(userId, 5).catch(
-            () => [] as DeliveryHistoryEntry[],
-          ),
-        ]);
-        if (cancelled) return;
-        setSavedSettings(s);
-        setSettings(s);
-        setLog(l);
+      setSettingsLoad({ status: "loading" });
+      setHistoryLoad({ status: "loading" });
+      const [settingsResult, historyResult] = await Promise.allSettled([
+        fetchNotificationSettings(userId),
+        fetchDeliveryHistory(userId, 5),
+      ]);
+      if (cancelled) return;
+
+      if (settingsResult.status === "fulfilled") {
+        setSavedSettings(settingsResult.value);
+        setSettings(settingsResult.value);
         setSettingsLoad({ status: "ready" });
-      } catch (err) {
-        if (cancelled) return;
+      } else {
         setSettingsLoad({
           status: "error",
-          message: err instanceof Error ? err.message : t("loadError"),
+          message: errorMessage(settingsResult.reason, t("loadError")),
+        });
+      }
+
+      if (historyResult.status === "fulfilled") {
+        setLog(historyResult.value);
+        setHistoryLoad({ status: "ready" });
+      } else {
+        setLog([]);
+        setHistoryLoad({
+          status: "error",
+          message: errorMessage(historyResult.reason, t("history.loadError")),
         });
       }
     })();
@@ -254,15 +283,18 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
   }, [userId, t]);
 
   const prefsDirty = NOTIFICATION_PREF_KEYS.some(
-    (key) => (values[key] ?? false) !== (initialPrefs[key] ?? false),
+    (key) => (values[key] ?? false) !== (savedPrefs[key] ?? false),
   );
   const settingsDirty = !settingsEqual(settings, savedSettings);
   const isDirty = prefsDirty || settingsDirty;
 
-  const anyChannelOn =
+  const anyChannelSelected =
     settings.channels.in_app ||
     settings.channels.email ||
     settings.channels.zalo;
+  const onlyExternalChannelsSelected =
+    !settings.channels.in_app &&
+    (settings.channels.email || settings.channels.zalo);
   const reminderTime = useMemo(
     () => timeStringToDayjs(settings.reminder_time),
     [settings.reminder_time],
@@ -303,6 +335,10 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
     }
     if (value === "weekdays") {
       setSettings((prev) => ({ ...prev, reminder_days: WEEKDAY_DAYS }));
+      return;
+    }
+    if (value === "custom") {
+      setSettings((prev) => ({ ...prev, reminder_days: [] }));
     }
   }
 
@@ -365,8 +401,9 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
       // Always persist the boolean conditions (the merge tolerates an empty
       // diff) so the form's submit contract stays simple and predictable.
       await prefsMutation.mutateAsync(
-        computeNotificationDiff(values, initialPrefs),
+        computeNotificationDiff(values, savedPrefs),
       );
+      setSavedPrefs(values);
       if (settingsDirty) {
         await upsertNotificationSettings(userId, settings);
         setSavedSettings(settings);
@@ -406,13 +443,22 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
           />
         ) : null}
 
-        {/* 수신 권한 없음 notice (both channels off) */}
-        {settingsLoad.status === "ready" && !anyChannelOn ? (
+        {/* 수신 권한 없음 notice (all channels off) */}
+        {settingsLoad.status === "ready" && !anyChannelSelected ? (
           <Alert
             type="warning"
             showIcon
             title={t("noChannel.title")}
             description={t("noChannel.body")}
+          />
+        ) : null}
+
+        {settingsLoad.status === "ready" && onlyExternalChannelsSelected ? (
+          <Alert
+            type="warning"
+            showIcon
+            title={t("externalOnly.title")}
+            description={t("externalOnly.body")}
           />
         ) : null}
 
@@ -457,7 +503,7 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
                 >
                   <Segmented
                     value={reminderFrequency}
-                    disabled={!anyChannelOn}
+                    disabled={!anyChannelSelected}
                     onChange={setReminderFrequency}
                     options={[
                       { label: t("routine.frequencyDaily"), value: "daily" },
@@ -474,12 +520,14 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
                   label={t("condition.reminderTimeLabel")}
                   testId="notification-routine-row-time"
                   description={
-                    anyChannelOn ? undefined : t("condition.reminderTimeExtra")
+                    anyChannelSelected
+                      ? undefined
+                      : t("condition.reminderTimeExtra")
                   }
                 >
                   <TimePicker
                     value={reminderTime}
-                    disabled={!anyChannelOn}
+                    disabled={!anyChannelSelected}
                     onChange={(value) =>
                       setSettings((prev) => ({
                         ...prev,
@@ -503,9 +551,11 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
                       <Tag.CheckableTag
                         key={d.value}
                         checked={settings.reminder_days.includes(d.value)}
-                        onChange={() => anyChannelOn && toggleDay(d.value)}
+                        onChange={() =>
+                          anyChannelSelected && toggleDay(d.value)
+                        }
                         className={
-                          anyChannelOn
+                          anyChannelSelected
                             ? undefined
                             : "cursor-not-allowed opacity-50"
                         }
@@ -699,8 +749,15 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
               <div className="notification-settings-detail-title">
                 <Text strong>{t("history.cardTitle")}</Text>
               </div>
-              {settingsLoad.status === "loading" ? (
+              {historyLoad.status === "loading" ? (
                 <Skeleton active paragraph={{ rows: 2 }} />
+              ) : historyLoad.status === "error" ? (
+                <Alert
+                  type="warning"
+                  showIcon
+                  title={t("history.loadErrorTitle")}
+                  description={historyLoad.message}
+                />
               ) : log.length === 0 ? (
                 <Empty
                   image={Empty.PRESENTED_IMAGE_SIMPLE}

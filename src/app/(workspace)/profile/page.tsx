@@ -27,20 +27,22 @@ export default async function ProfilePage() {
     .maybeSingle();
 
   return (
-    <WorkspaceBody size="form">
-      <PageHeader title={t("heading")} subtitle={t("subtitle")} />
-      <ProfileForm
-        userId={user.id}
-        accountEmail={user.email ?? null}
-        initialAvatarPath={profileMeta?.avatar_path ?? null}
-        initialProfile={{
-          display_name: settings.display_name,
-          nickname: settings.nickname,
-          nationality_country_code: settings.nationality_country_code,
-          bio: settings.bio,
-        }}
-        showAccountEmail={false}
-      />
+    <WorkspaceBody>
+      <div className="w-full max-w-[640px]">
+        <PageHeader title={t("heading")} subtitle={t("subtitle")} />
+        <ProfileForm
+          userId={user.id}
+          accountEmail={user.email ?? null}
+          initialAvatarPath={profileMeta?.avatar_path ?? null}
+          initialProfile={{
+            display_name: settings.display_name,
+            nickname: settings.nickname,
+            nationality_country_code: settings.nationality_country_code,
+            bio: settings.bio,
+          }}
+          showAccountEmail={false}
+        />
+      </div>
     </WorkspaceBody>
   );
 }

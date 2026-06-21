@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { notFound, redirect } from "next/navigation";
+import { WorkspaceBody } from "@/components/app/WorkspaceBody";
 import { FeedbackPageContent } from "@/components/feedback/FeedbackPageContent";
 import { requireUser } from "@/lib/auth/session";
 import { getFeedbackBundle, getSubmission } from "@/lib/writing/server";
@@ -32,15 +33,17 @@ export default async function LongFeedbackPage({
       ? null
       : await getFeedbackBundle(id);
   return (
-    <FeedbackPageContent
-      submission={submission}
-      bundle={bundle}
-      withSentences
-      showSubmissionMeta
-      showDimensionGrid={false}
-      reloadHref={`/writing/feedback/long/${id}`}
-      userId={user.id}
-      saveLocked={saveLocked}
-    />
+    <WorkspaceBody>
+      <FeedbackPageContent
+        submission={submission}
+        bundle={bundle}
+        withSentences
+        showSubmissionMeta
+        showDimensionGrid={false}
+        reloadHref={`/writing/feedback/long/${id}`}
+        userId={user.id}
+        saveLocked={saveLocked}
+      />
+    </WorkspaceBody>
   );
 }

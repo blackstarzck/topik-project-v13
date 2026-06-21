@@ -18,12 +18,14 @@ export default async function NotificationsSettingsPage() {
   const settings = await getProfileSettings(user.id);
   if (!settings) notFound();
   return (
-    <WorkspaceBody size="form">
-      <PageHeader title={t("pageHeading")} subtitle={t("pageSubtitle")} />
-      <NotificationPrefsForm
-        userId={user.id}
-        initialPrefs={settings.notification_prefs}
-      />
+    <WorkspaceBody>
+      <div className="w-full max-w-[640px]">
+        <PageHeader title={t("pageHeading")} subtitle={t("pageSubtitle")} />
+        <NotificationPrefsForm
+          userId={user.id}
+          initialPrefs={settings.notification_prefs}
+        />
+      </div>
     </WorkspaceBody>
   );
 }

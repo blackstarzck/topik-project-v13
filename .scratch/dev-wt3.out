@@ -1,0 +1,26 @@
+▲ Next.js 16.2.6 (Turbopack)
+- Local:         http://localhost:3210
+- Network:       http://183.109.36.32:3210
+- Environments: .env.local
+✓ Ready in 1238ms
+
+ GET /login 200 in 2.4s (next.js: 265ms, proxy.ts: 302ms, application-code: 1794ms)
+○ Compiling /dashboard ...
+ GET /dashboard 200 in 4.2s (next.js: 3.3s, proxy.ts: 92ms, application-code: 815ms)
+ GET /dashboard 200 in 2.4s (next.js: 12ms, proxy.ts: 61ms, application-code: 2.3s)
+ GET /profile 200 in 2.8s (next.js: 1863ms, proxy.ts: 78ms, application-code: 840ms)
+○ Compiling /settings/account ...
+ GET /settings/account 200 in 9.1s (next.js: 8.0s, proxy.ts: 64ms, application-code: 1040ms)
+ GET /settings/language 200 in 2.3s (next.js: 1489ms, proxy.ts: 56ms, application-code: 754ms)
+ GET /settings/learning 200 in 3.6s (next.js: 2.7s, proxy.ts: 68ms, application-code: 876ms)
+ GET /settings/notifications 200 in 3.3s (next.js: 2.0s, proxy.ts: 75ms, application-code: 1182ms)
+ GET /dashboard 200 in 1751ms (next.js: 192ms, proxy.ts: 72ms, application-code: 1487ms)
+ GET /profile 200 in 898ms (next.js: 5ms, proxy.ts: 80ms, application-code: 813ms)
+ GET /settings/account 200 in 829ms (next.js: 7ms, proxy.ts: 57ms, application-code: 765ms)
+ GET /settings/language 200 in 909ms (next.js: 6ms, proxy.ts: 57ms, application-code: 846ms)
+ GET /settings/learning 200 in 1379ms (next.js: 191ms, proxy.ts: 63ms, application-code: 1125ms)
+ GET /settings/notifications 200 in 2.6s (next.js: 485ms, proxy.ts: 70ms, application-code: 2.1s)
+✓ Finished writing to filesystem cache in 18.0s
+✓ Finished filesystem cache database compaction in 13.3s
+○ Compiling /library ...
+ GET /library 200 in 14.1s (next.js: 13.0s, proxy.ts: 105ms, application-code: 1000ms)

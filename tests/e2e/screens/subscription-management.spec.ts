@@ -14,10 +14,43 @@ function collectErrors(page: Page): string[] {
   return errors;
 }
 
+async function mockSubscriptionManagementData(page: Page) {
+  await page.route("https://fglggyfvzjdsbyckinqa.supabase.co/rest/v1/**", async (route) => {
+    const request = route.request();
+    const url = request.url();
+    const headers = {
+      "access-control-allow-origin": "*",
+      "content-type": "application/json",
+    };
+
+    if (request.method() === "HEAD") {
+      await route.fulfill({ status: 200, headers });
+      return;
+    }
+
+    if (url.includes("/subscriptions")) {
+      await route.fulfill({ status: 200, headers, body: "null" });
+      return;
+    }
+
+    if (url.includes("/payment_history")) {
+      await route.fulfill({
+        status: 200,
+        headers: { ...headers, "content-range": "0-0/0" },
+        body: "[]",
+      });
+      return;
+    }
+
+    await route.fulfill({ status: 200, headers, body: "[]" });
+  });
+}
+
 test("X-04 subscription management shows no-subscription shell without IA code", async ({
   page,
 }) => {
   const errors = collectErrors(page);
+  await mockSubscriptionManagementData(page);
 
   await page.goto("/subscription", { waitUntil: "networkidle" });
   await expect(page).not.toHaveURL(/\/login/);

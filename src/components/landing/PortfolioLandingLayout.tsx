@@ -801,7 +801,6 @@ function ProductFooter({ primary, primaryLabel }: LandingLayoutCta) {
         <div className="landing-layout-footer__bottom">
           <span className="landing-layout-footer__brandline">
             <BrandLogo height={34} />
-            <span>© TALKPIK AI</span>
           </span>
           <nav>
             {primary ? (

@@ -1,17 +1,15 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { cookies } from "next/headers";
 import localFont from "next/font/local";
 import { getMessages } from "next-intl/server";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
 
 import { resolveLocale } from "@/i18n/request";
 import { AppProviders } from "./providers";
-// antd v6.x 호환성: @/theme barrel은 create-theme → "use client" algorithms.ts를
-// transitively pull한다. server layout은 server-safe 모듈만 직접 import.
+// antd v6.x compatibility: avoid importing the client theme barrel here.
 import { themeSettings } from "@/theme/config";
+import { resolveInitialAppearance } from "@/theme/resolve-initial-appearance";
 import { getResolvedBridgeVars } from "@/theme/tailwind-bridge";
-import type { ThemeAppearance } from "@/theme/types";
 import "../styles/global.css";
 import "../styles/workspace-layout.css";
 
@@ -29,24 +27,6 @@ export const metadata: Metadata = {
   },
   description: "TOPIK learning workspace for practice, writing, and feedback.",
 };
-
-/**
- * Reads appearance from the theme-appearance cookie.
- * Returns "light" for any missing, invalid, or unexpected value.
- *
- * NOTE (T1): Using cookies() makes this layout dynamically rendered (no static
- * caching). For TALKPIK AI — which requires Supabase Auth on all routes — the
- * root layout is already dynamic, so this is an accepted tradeoff.
- */
-export async function resolveInitialAppearance(): Promise<ThemeAppearance> {
-  if (!themeSettings.allowAppearanceSwitching) {
-    return themeSettings.appearance;
-  }
-
-  const cookieStore = await cookies();
-  const raw = cookieStore.get("theme-appearance")?.value;
-  return raw === "dark" ? "dark" : "light";
-}
 
 export default async function RootLayout({
   children,

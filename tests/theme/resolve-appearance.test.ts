@@ -10,7 +10,7 @@ vi.mock("next/font/local", () => ({
 }));
 
 import { cookies } from "next/headers";
-import { resolveInitialAppearance } from "../../src/app/layout";
+import { resolveInitialAppearance } from "../../src/theme/resolve-initial-appearance";
 
 describe("resolveInitialAppearance", () => {
   beforeEach(() => {

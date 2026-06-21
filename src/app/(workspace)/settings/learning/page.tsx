@@ -17,22 +17,24 @@ export default async function LearningSettingsPage() {
   const goal = await getLearningGoal(user.id);
 
   return (
-    <WorkspaceBody size="form">
-      <PageHeader title={t("pageHeading")} subtitle={t("pageSubtitle")} />
-      <ExamInfoCard
-        userId={user.id}
-        goal={
-          goal
-            ? {
-                topik_level: goal.topik_level,
-                target_grade: goal.target_grade,
-                exam_date: goal.exam_date,
-                weekly_goal_minutes: goal.weekly_goal_minutes,
-                weak_areas: goal.weak_areas,
-              }
-            : null
-        }
-      />
+    <WorkspaceBody>
+      <div className="w-full max-w-[640px]">
+        <PageHeader title={t("pageHeading")} subtitle={t("pageSubtitle")} />
+        <ExamInfoCard
+          userId={user.id}
+          goal={
+            goal
+              ? {
+                  topik_level: goal.topik_level,
+                  target_grade: goal.target_grade,
+                  exam_date: goal.exam_date,
+                  weekly_goal_minutes: goal.weekly_goal_minutes,
+                  weak_areas: goal.weak_areas,
+                }
+              : null
+          }
+        />
+      </div>
     </WorkspaceBody>
   );
 }

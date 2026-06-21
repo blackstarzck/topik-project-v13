@@ -31,34 +31,36 @@ export default async function AccountSettingsPage() {
     .maybeSingle();
 
   return (
-    <WorkspaceBody size="form">
-      <PageHeader title={t("pageHeading")} subtitle={t("pageSubtitle")} />
-      <div className="flex w-full flex-col gap-4">
-        <AccountLoginMethodsCard
-          accountEmail={user.email ?? null}
-          labels={{
-            regionAriaLabel: tLoginMethods("regionAriaLabel"),
-            title: tLoginMethods("title"),
-            description: tLoginMethods("description"),
-            emailMethod: tLoginMethods("emailMethod"),
-            emailUnavailable: tLoginMethods("emailUnavailable"),
-            googleMethod: tLoginMethods("googleMethod"),
-            googleDescription: tLoginMethods("googleDescription"),
-            connected: tLoginMethods("connected"),
-            disconnected: tLoginMethods("disconnected"),
-            connectGoogle: tLoginMethods("connectGoogle"),
-            connectFailed: tLoginMethods("connectFailed"),
-            linkStarted: tLoginMethods("linkStarted"),
-          }}
-        />
-        {profileMeta ? (
-          <StatusHelpCard
-            joinedAt={profileMeta.created_at}
-            appRole={profileMeta.app_role}
-            planLabel={profileMeta.plan_label}
+    <WorkspaceBody>
+      <div className="w-full max-w-[640px]">
+        <PageHeader title={t("pageHeading")} subtitle={t("pageSubtitle")} />
+        <div className="flex w-full flex-col gap-4">
+          <AccountLoginMethodsCard
+            accountEmail={user.email ?? null}
+            labels={{
+              regionAriaLabel: tLoginMethods("regionAriaLabel"),
+              title: tLoginMethods("title"),
+              description: tLoginMethods("description"),
+              emailMethod: tLoginMethods("emailMethod"),
+              emailUnavailable: tLoginMethods("emailUnavailable"),
+              googleMethod: tLoginMethods("googleMethod"),
+              googleDescription: tLoginMethods("googleDescription"),
+              connected: tLoginMethods("connected"),
+              disconnected: tLoginMethods("disconnected"),
+              connectGoogle: tLoginMethods("connectGoogle"),
+              connectFailed: tLoginMethods("connectFailed"),
+              linkStarted: tLoginMethods("linkStarted"),
+            }}
           />
-        ) : null}
-        <ProfileLogoutForm label={tNav("logout")} />
+          {profileMeta ? (
+            <StatusHelpCard
+              joinedAt={profileMeta.created_at}
+              appRole={profileMeta.app_role}
+              planLabel={profileMeta.plan_label}
+            />
+          ) : null}
+          <ProfileLogoutForm label={tNav("logout")} />
+        </div>
       </div>
     </WorkspaceBody>
   );

@@ -243,17 +243,21 @@
       "unsavedLeave": "Bạn có thay đổi chưa lưu. Bạn có chắc muốn rời khỏi trang này?",
       "saveSuccess": "Đã lưu cài đặt thông báo của bạn.",
       "saveError": "Lưu thất bại.",
-      "previewScheduled": "Chúng tôi sẽ gửi lời nhắc học tập mỗi ngày lúc {time} ({timezone}).",
+      "previewScheduled": "Cài đặt nhắc học lúc {time} ({timezone}) sẽ được lưu cho các kênh đã chọn.",
       "previewEmpty": "Đặt giờ nhắc học tập để xem ví dụ về nội dung sẽ được gửi.",
-      "deferredSummary": "Thông báo trong ứng dụng đang bật, còn gửi qua email/Zalo đang được chuẩn bị.",
-      "deferredNotice": "Việc gửi thông báo thực tế vẫn đang được thiết lập. Hiện tại kênh, điều kiện và thời gian của bạn được lưu lại, và nhật ký gửi sẽ được điền khi bắt đầu gửi.",
+      "deferredSummary": "Thông báo trong ứng dụng được hỗ trợ trước, còn gửi qua email/Zalo đang được chuẩn bị.",
+      "deferredNotice": "Hiện tại chúng tôi lưu kênh, điều kiện và thời gian của bạn. Thông báo trong ứng dụng có thể dùng ngay, còn gửi ra ngoài như email/Zalo sẽ hoạt động sau khi hoàn tất thiết lập.",
       "details": {
         "show": "Xem chi tiết",
         "hide": "Thu gọn"
       },
       "noChannel": {
-        "title": "Chưa bật kênh thông báo nào",
-        "body": "Bật kênh email hoặc Zalo bên dưới để nhận lời nhắc."
+        "title": "Kênh thông báo hiện dùng được đang tắt",
+        "body": "Kênh có thể nhận ngay lúc này là thông báo trong ứng dụng. Email và Zalo hiện chỉ lưu lựa chọn mong muốn."
+      },
+      "externalOnly": {
+        "title": "Kênh bên ngoài vẫn đang được chuẩn bị",
+        "body": "Lựa chọn email và Zalo sẽ được lưu, nhưng hãy bật cả thông báo trong ứng dụng nếu bạn muốn nhận lời nhắc ngay."
       },
       "routine": {
         "cardTitle": "Thói quen học tập",
@@ -321,7 +325,9 @@
       },
       "history": {
         "cardTitle": "Lịch sử gửi (5 mục gần nhất)",
-        "empty": "Chưa có thông báo nào được gửi."
+        "empty": "Chưa có thông báo nào được gửi.",
+        "loadErrorTitle": "Không thể tải lịch sử gửi",
+        "loadError": "Hiện không thể xem lịch sử gửi gần đây. Vui lòng thử lại sau giây lát."
       },
       "logStatus": {
         "sent": "Đã gửi",
@@ -1658,11 +1664,11 @@
         "empty": "Hãy nộp thêm bài viết để hoàn thiện phân tích điểm yếu. Hiện tại nội dung dựa trên các bài gần đây.",
         "startCta": "Bắt đầu học",
         "scoreSample": "{score} điểm · {count} mẫu"
-    },
-    "insights": {
-      "title": "Phân tích học tập",
-      "disclaimer": "Tóm tắt này được tính từ điểm số và lịch sử luyện tập thực tế của bạn. Điểm yếu có thể thay đổi theo kết quả luyện tập sau này."
-    },
+      },
+      "insights": {
+        "title": "Phân tích học tập",
+        "disclaimer": "Tóm tắt này được tính từ điểm số và lịch sử luyện tập thực tế của bạn. Điểm yếu có thể thay đổi theo kết quả luyện tập sau này."
+      },
       "recent": {
         "title": "Vừa hoàn thành",
         "empty": "Bạn chưa hoàn thành câu hỏi nào.",
@@ -1699,7 +1705,7 @@
     "locked": {
       "title": "Báo cáo tiến bộ chi tiết chỉ dành cho gói trả phí",
       "freePlan": "Miễn phí",
-    "body": "Với gói hiện tại (<plan></plan>), bạn chỉ xem được các chỉ số cơ bản. Nâng cấp để mở khóa biểu đồ xu hướng, ma trận điểm yếu và phân tích học tập.",
+      "body": "Với gói hiện tại (<plan></plan>), bạn chỉ xem được các chỉ số cơ bản. Nâng cấp để mở khóa biểu đồ xu hướng, ma trận điểm yếu và phân tích học tập.",
       "upgradeCta": "Nâng cấp gói",
       "manageCta": "Quản lý đăng ký"
     },
@@ -2161,7 +2167,7 @@
       "changePlan": "Đổi gói",
       "changePaymentMethod": "Đổi phương thức thanh toán",
       "cancel": "Hủy gói đăng ký",
-      "note": "Việc thay đổi và hủy được thực hiện sau khi bạn xác nhận chính sách, và có hiệu lực ngay khi hoàn tất tích hợp thanh toán."
+      "note": "Việc đổi gói và hủy sẽ được cung cấp sau khi tích hợp thanh toán. Hiện tại bạn chỉ có thể xem thông báo chính sách."
     },
     "history": {
       "title": "Lịch sử thanh toán",
@@ -2175,10 +2181,10 @@
     },
     "help": {
       "title": "Trợ giúp",
-      "changePolicyTitle": "Chính sách thay đổi gói",
-      "changePolicyBody": "Khi bạn đổi gói, thời gian còn lại được tính theo tỷ lệ và áp dụng.",
-      "refundTitle": "Tiêu chí hoàn tiền",
-      "refundBody": "Có thể hoàn tiền trong vòng 7 ngày kể từ khi thanh toán nếu chưa sử dụng.",
+      "changePolicyTitle": "Thông báo đổi gói đăng ký",
+      "changePolicyBody": "Việc đổi gói và điều chỉnh thanh toán sẽ được xác nhận sau khi tích hợp thanh toán.",
+      "refundTitle": "Thông báo hoàn tiền",
+      "refundBody": "Quy định hoàn tiền sẽ được xác nhận sau khi tích hợp thanh toán chính thức.",
       "planDiffTitle": "Khác biệt giữa các gói",
       "planDiffBody": "Bạn có thể so sánh quyền lợi của từng gói tại màn hình bắt đầu đăng ký.",
       "contactSubject": "Yêu cầu hỗ trợ về gói đăng ký",
@@ -2188,18 +2194,18 @@
       "stubInfo": "Khi hoàn tất tích hợp thanh toán, bạn sẽ có thể xử lý việc này ngay. (Sắp ra mắt)",
       "change": {
         "title": "Chính sách đổi gói",
-        "body": "Khi đổi gói, thời gian thanh toán còn lại được tính theo tỷ lệ và áp dụng vào hóa đơn tiếp theo. Thay đổi có hiệu lực sau khi hoàn tất tích hợp thanh toán.",
+        "body": "Việc đổi gói và quy định điều chỉnh thanh toán sẽ được hướng dẫn sau khi tích hợp thanh toán. Hiện tại chưa xử lý đổi gói thực tế.",
         "ok": "Đã hiểu"
       },
       "paymentMethod": {
         "title": "Đổi phương thức thanh toán",
-        "body": "Bạn có thể thay đổi phương thức thanh toán đã đăng ký. Phương thức mới sẽ được dùng từ lần thanh toán tiếp theo. Tính năng này sẽ có sau khi hoàn tất tích hợp thanh toán.",
+        "body": "Đổi phương thức thanh toán sẽ được cung cấp sau khi tích hợp thanh toán. Hiện tại chưa đăng ký hoặc thay đổi phương thức thanh toán thực tế.",
         "ok": "Đã hiểu"
       },
       "cancel": {
         "title": "Chính sách hủy gói đăng ký",
-        "body": "Dù hủy ngay bây giờ, bạn vẫn giữ mọi quyền lợi cho đến hết chu kỳ thanh toán hiện tại. Chỉ có thể hoàn tiền trong vòng 7 ngày kể từ khi thanh toán. Thao tác này không thể hoàn tác.",
-        "ok": "Tiến hành hủy"
+        "body": "Việc hủy, thời gian giữ quyền lợi sau khi hủy và quy định hoàn tiền sẽ được xác nhận sau khi tích hợp thanh toán. Hiện tại chưa xử lý yêu cầu hủy thực tế.",
+        "ok": "Đã hiểu"
       }
     }
   },
@@ -2239,7 +2245,7 @@
     },
     "paymentInfo": {
       "title": "Thông tin thanh toán",
-      "item1": "· Có thể yêu cầu hoàn tiền trong vòng 7 ngày kể từ khi thanh toán",
+      "item1": "· Quy định hoàn tiền sẽ được thông báo sau khi tích hợp thanh toán chính thức",
       "item2": "· Hỗ trợ xuất hóa đơn thuế",
       "item3": "· Thanh toán an toàn (sắp tích hợp)",
       "item4": "· Đối với gói cho tổ chức hoặc nhóm, vui lòng liên hệ riêng"

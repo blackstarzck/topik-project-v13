@@ -16,12 +16,66 @@ import type { ReactNode } from "react";
 
 import koMessages from "../../../messages/ko.json";
 
-const mutateAsyncMock = vi.fn();
-const useUpdateNotificationPrefsMock = vi.fn();
+type MockNotificationSettings = {
+  reminder_time: string | null;
+  reminder_days: number[];
+  channels: { in_app: boolean; email: boolean; zalo: boolean };
+  timezone: string;
+};
+
+const {
+  mutateAsyncMock,
+  useUpdateNotificationPrefsMock,
+  fetchNotificationSettingsMock,
+  upsertNotificationSettingsMock,
+  fetchDeliveryHistoryMock,
+  defaultNotificationSettings,
+} = vi.hoisted(() => ({
+  mutateAsyncMock: vi.fn(),
+  useUpdateNotificationPrefsMock: vi.fn(),
+  fetchNotificationSettingsMock: vi.fn(),
+  upsertNotificationSettingsMock: vi.fn(),
+  fetchDeliveryHistoryMock: vi.fn(),
+  defaultNotificationSettings: {
+    reminder_time: null,
+    reminder_days: [],
+    channels: { in_app: true, email: false, zalo: false },
+    timezone: "Asia/Seoul",
+  } as MockNotificationSettings,
+}));
+
+function notificationSettings(
+  overrides: Partial<MockNotificationSettings> = {},
+) {
+  return {
+    ...defaultNotificationSettings,
+    ...overrides,
+    reminder_days: overrides.reminder_days
+      ? [...overrides.reminder_days]
+      : [...defaultNotificationSettings.reminder_days],
+    channels: {
+      ...defaultNotificationSettings.channels,
+      ...overrides.channels,
+    },
+  };
+}
 
 vi.mock("@/lib/settings/mutations", () => ({
   useUpdateNotificationPrefs: (...args: unknown[]) =>
     useUpdateNotificationPrefsMock(...args),
+}));
+
+vi.mock("@/components/notifications/notifications-data", () => ({
+  fetchDeliveryHistory: (...args: unknown[]) =>
+    fetchDeliveryHistoryMock(...args),
+}));
+
+vi.mock("../../../src/components/settings/learning-settings-data", () => ({
+  fetchNotificationSettings: (...args: unknown[]) =>
+    fetchNotificationSettingsMock(...args),
+  upsertNotificationSettings: (...args: unknown[]) =>
+    upsertNotificationSettingsMock(...args),
+  NOTIFICATION_SETTINGS_DEFAULTS: defaultNotificationSettings,
 }));
 
 import {
@@ -51,6 +105,12 @@ beforeEach(() => {
     mutateAsync: mutateAsyncMock,
     isPending: false,
   });
+  fetchNotificationSettingsMock.mockReset();
+  fetchNotificationSettingsMock.mockResolvedValue(notificationSettings());
+  upsertNotificationSettingsMock.mockReset();
+  upsertNotificationSettingsMock.mockResolvedValue(undefined);
+  fetchDeliveryHistoryMock.mockReset();
+  fetchDeliveryHistoryMock.mockResolvedValue([]);
 
   if (!window.matchMedia) {
     Object.defineProperty(window, "matchMedia", {
@@ -171,9 +231,82 @@ describe("NotificationPrefsForm", () => {
     // X-09 build to reflect the richer settings (channels + schedule + log).
     expect(
       screen.getByText(
-        "실제 알림 발송 연동은 준비 중입니다. 지금은 수신 채널·조건·시간이 저장되며, 발송 이력은 발송이 시작되면 채워집니다.",
+        "지금은 수신 채널·조건·시간을 저장합니다. 앱 안 알림은 사용할 수 있고, 이메일/Zalo 같은 외부 발송은 준비가 끝난 뒤 동작합니다.",
       ),
     ).toBeTruthy();
+  });
+
+  it("clears dirty state after saving notification switches", async () => {
+    const { container } = renderInApp(
+      <NotificationPrefsForm
+        userId="user-1"
+        initialPrefs={{ feedback_ready: false }}
+      />,
+    );
+
+    const saveButton = screen.getByTestId(
+      "notification-save",
+    ) as HTMLButtonElement;
+    await waitFor(() => expect(saveButton.disabled).toBe(true));
+
+    fireEvent.click(
+      screen.getByRole("switch", { name: "피드백 준비 완료 알림" }),
+    );
+    expect(saveButton.disabled).toBe(false);
+
+    await act(async () => {
+      submitForm(container);
+    });
+
+    await waitFor(() => {
+      expect(mutateAsyncMock).toHaveBeenCalledWith({ feedback_ready: true });
+      expect(saveButton.disabled).toBe(true);
+    });
+  });
+
+  it("makes the custom frequency segment change reminder days", async () => {
+    fetchNotificationSettingsMock.mockResolvedValueOnce(
+      notificationSettings({ reminder_days: [0, 1, 2, 3, 4, 5, 6] }),
+    );
+
+    renderInApp(<NotificationPrefsForm userId="user-1" initialPrefs={{}} />);
+    const saveButton = screen.getByTestId(
+      "notification-save",
+    ) as HTMLButtonElement;
+
+    await waitFor(() => {
+      expect(screen.getByTestId("notification-routine-row-days")).toBeTruthy();
+      expect(saveButton.disabled).toBe(true);
+    });
+
+    fireEvent.click(screen.getByText("사용자 지정"));
+
+    await waitFor(() => {
+      expect(saveButton.disabled).toBe(false);
+    });
+    expect(
+      screen
+        .getByText("사용자 지정")
+        .closest(".ant-segmented-item")
+        ?.classList.contains("ant-segmented-item-selected"),
+    ).toBe(true);
+  });
+
+  it("shows a delivery-history error instead of the empty state", async () => {
+    fetchDeliveryHistoryMock.mockRejectedValueOnce(new Error("history failed"));
+
+    renderInApp(<NotificationPrefsForm userId="user-1" initialPrefs={{}} />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("notification-details-toggle")).toBeTruthy();
+    });
+
+    fireEvent.click(screen.getByTestId("notification-details-toggle"));
+
+    await waitFor(() => {
+      expect(screen.getByText("발송 이력을 불러오지 못했어요")).toBeTruthy();
+    });
+    expect(screen.queryByText("아직 발송된 알림이 없습니다.")).toBeNull();
   });
 
   it("renders the learning-routine redesign while preserving notification controls", async () => {

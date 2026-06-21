@@ -19,9 +19,11 @@ export default async function LanguageSettingsPage() {
   // i18n (G-01): server-side translation via getTranslations (RSC-safe).
   const t = await getTranslations("settings.language");
   return (
-    <WorkspaceBody size="form">
-      <PageHeader title={t("pageHeading")} />
-      <LanguageForm userId={user.id} initialLocale={settings.ui_locale} />
+    <WorkspaceBody>
+      <div className="w-full max-w-[640px]">
+        <PageHeader title={t("pageHeading")} />
+        <LanguageForm userId={user.id} initialLocale={settings.ui_locale} />
+      </div>
     </WorkspaceBody>
   );
 }

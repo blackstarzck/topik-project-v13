@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { WorkspaceBody } from "@/components/app/WorkspaceBody";
 import { ComparisonReportView } from "@/components/reports/ComparisonReportView";
 import type { ChartDatum } from "@/components/reports/ScoreComparisonChart";
 import { requireUser } from "@/lib/auth/session";
@@ -75,20 +76,22 @@ export default async function CompareReportPage({
   })).filter((d) => d.current !== null || d.previous !== null);
 
   return (
-    <ComparisonReportView
-      metrics={metrics}
-      narrative={report.narrative}
-      currentText={current.answer_text}
-      previousText={previous?.answer_text ?? null}
-      retryHref={writingProblemHref({
-        questionNo: current.question_no,
-        problemId: current.problem_id,
-      })}
-      reportId={report.id}
-      currentScore={currentBundle?.feedback.score_total ?? null}
-      chartData={chartData}
-      currentNorm={currentNorm}
-      hasPrevious={hasPrevious}
-    />
+    <WorkspaceBody>
+      <ComparisonReportView
+        metrics={metrics}
+        narrative={report.narrative}
+        currentText={current.answer_text}
+        previousText={previous?.answer_text ?? null}
+        retryHref={writingProblemHref({
+          questionNo: current.question_no,
+          problemId: current.problem_id,
+        })}
+        reportId={report.id}
+        currentScore={currentBundle?.feedback.score_total ?? null}
+        chartData={chartData}
+        currentNorm={currentNorm}
+        hasPrevious={hasPrevious}
+      />
+    </WorkspaceBody>
   );
 }

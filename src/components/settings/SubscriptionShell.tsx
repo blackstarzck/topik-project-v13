@@ -303,7 +303,7 @@ export function SubscriptionShell() {
                   </div>
                 ) : (
                   <div className="flex w-full flex-col gap-4">
-                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex flex-col gap-4">
                       <div className="flex min-w-0 items-center gap-4">
                         <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-md bg-text text-lg font-bold text-background">
                           PRO
@@ -333,7 +333,7 @@ export function SubscriptionShell() {
                       </div>
 
                       <Descriptions
-                        className="min-w-0 lg:min-w-80"
+                        className="min-w-0"
                         column={1}
                         size="small"
                         items={[
@@ -412,7 +412,7 @@ export function SubscriptionShell() {
                         <Alert
                           type="info"
                           showIcon
-                          message={t("usage.aiTitle")}
+                          title={t("usage.aiTitle")}
                           description={t("usage.aiBody")}
                         />
                         <div className="flex items-start gap-2">
