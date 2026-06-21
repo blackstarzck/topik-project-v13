@@ -38,7 +38,9 @@ test("X-07 weakness recommendations renders without a billing gate", async ({
     ),
   ).toBeVisible();
   await expect(page.getByRole("heading", { name: "약점 분석" })).toHaveCount(0);
-  await expect(page.getByRole("heading", { name: "추천 문제" })).toBeVisible();
+  await expect(
+    page.locator(".ant-card-head-title", { hasText: "추천 문제" }),
+  ).toBeVisible();
   await expect(page.getByText(/문법/).first()).toBeVisible();
   await expect(page.getByRole("tab")).toHaveCount(4);
   await expect(page.locator('[data-testid^="weakness-rec-"]')).toHaveCount(4);

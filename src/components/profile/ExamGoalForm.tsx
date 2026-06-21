@@ -89,8 +89,8 @@ export function ExamGoalForm({ userId, goal }: Props) {
   const tCommon = useTranslations("common");
   const editable = Boolean(userId);
 
-  // 마지막으로 저장된 스냅샷. 취소(되돌리기)와, 폼이 편집하지 않는 목표 필드
-  // (weekly_goal_minutes·weak_areas) 보존에 사용한다.
+  // 마지막으로 저장된 스냅샷. dirty 판정(저장 버튼 활성화)과, 폼이 편집하지 않는
+  // 목표 필드(weekly_goal_minutes·weak_areas) 보존에 사용한다.
   const [saved, setSaved] = useState<ExamGoal | null>(goal);
   const [saving, setSaving] = useState(false);
 
@@ -100,12 +100,12 @@ export function ExamGoalForm({ userId, goal }: Props) {
   const [examDate, setExamDate] = useState<string | null>(saved?.exam_date ?? null);
   const [gradeError, setGradeError] = useState<string | null>(null);
 
-  function resetToSaved() {
-    setLevel(saved?.topik_level ?? "TOPIK_II");
-    setGrade(saved?.target_grade ?? 4);
-    setExamDate(saved?.exam_date ?? null);
-    setGradeError(null);
-  }
+  // 저장된 목표값과 현재 입력이 같으면 변경 없음 → 저장 버튼 비활성화.
+  // saved가 없을 때의 기준값은 폼 초기 기본값(TOPIK_II / 4급 / 날짜 없음)이다.
+  const isDirty =
+    level !== (saved?.topik_level ?? "TOPIK_II") ||
+    grade !== (saved?.target_grade ?? 4) ||
+    examDate !== (saved?.exam_date ?? null);
 
   async function handleSave() {
     if (!userId) return;
@@ -198,12 +198,9 @@ export function ExamGoalForm({ userId, goal }: Props) {
           type="primary"
           loading={saving}
           onClick={handleSave}
-          disabled={!editable}
+          disabled={!editable || !isDirty}
         >
           {tCommon("save")}
-        </Button>
-        <Button onClick={resetToSaved} disabled={saving}>
-          {tCommon("cancel")}
         </Button>
       </div>
     </Form>
