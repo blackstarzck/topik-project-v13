@@ -4808,9 +4808,14 @@ body {
 .problem-type-tabs__text {
   min-width: 0;
   overflow: hidden;
-  font-weight: 600;
+  /* Unselected tabs read lighter so the active (bold) tab stands out. */
+  font-weight: 400;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.problem-type-tabs .ant-tabs-tab-active .problem-type-tabs__text {
+  font-weight: 700;
 }
 
 .problem-type-tabs__badge {
