@@ -10,10 +10,11 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import { AppCard } from "@/components/shared/AppCard";
 import type { ExternalFeedbackSupplement } from "@/lib/writing/external-feedback";
 import type { FeedbackDimensionScoreRow } from "@/lib/writing/types";
 
-const { Paragraph, Text, Title } = Typography;
+const { Text, Title } = Typography;
 
 type Props = {
   dimensions: FeedbackDimensionScoreRow[];
@@ -90,47 +91,58 @@ export function FeedbackRecommendationCards({
       <Title level={5} className="mt-0">
         {t("cardTitle")}
       </Title>
-      <Paragraph type="secondary" className="mb-4">
-        {t("intro")}
-      </Paragraph>
 
-      <div className="grid gap-3 md:grid-cols-3">
+      {/* 진짜 AntD Card(AppCard) 사용. app-cards-bordered로 카드 native border를
+          복원하되, 카드 디자인을 손으로 만들지 않는다. 카드 전체가 클릭 영역이며
+          button 시맨틱(role/tabIndex/Enter·Space)으로 키보드 접근성을 유지한다. */}
+      <div className="app-cards-bordered grid gap-3 md:grid-cols-3">
         {actions.map((action) => {
           const Icon = action.icon;
+          const navigate = () => router.push(action.href);
           return (
-            <button
+            <AppCard
               key={action.key}
-              type="button"
-              onClick={() => router.push(action.href)}
-              className="group flex h-full min-h-28 w-full items-center gap-4 rounded-md border border-solid border-border bg-background p-4 text-left transition hover:border-primary/40 hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              hoverable
+              role="button"
+              tabIndex={0}
+              onClick={navigate}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  navigate();
+                }
+              }}
+              className="group h-full"
               data-testid={`feedback-reco-action-${action.key}`}
             >
-              <span
-                className={[
-                  "flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-md",
-                  action.toneClassName,
-                ].join(" ")}
-              >
-                <Icon aria-hidden size={24} strokeWidth={2} />
-              </span>
-              <span className="min-w-0 flex-1">
-                <Text strong className="block">
-                  {action.title}
-                </Text>
-                <Text
-                  type="secondary"
-                  className="mt-1 block break-words leading-relaxed"
+              <div className="flex h-full items-center gap-4">
+                <span
+                  className={[
+                    "flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-md",
+                    action.toneClassName,
+                  ].join(" ")}
                 >
-                  {action.description}
-                </Text>
-              </span>
-              <ArrowRight
-                aria-hidden
-                size={20}
-                strokeWidth={1.8}
-                className="flex-shrink-0 text-text-tertiary transition group-hover:translate-x-0.5 group-hover:text-primary"
-              />
-            </button>
+                  <Icon aria-hidden size={24} strokeWidth={2} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <Text strong className="block">
+                    {action.title}
+                  </Text>
+                  <Text
+                    type="secondary"
+                    className="mt-1 block break-words leading-relaxed"
+                  >
+                    {action.description}
+                  </Text>
+                </span>
+                <ArrowRight
+                  aria-hidden
+                  size={20}
+                  strokeWidth={1.8}
+                  className="flex-shrink-0 text-[color:var(--ant-color-text-tertiary)] transition group-hover:translate-x-0.5 group-hover:text-primary"
+                />
+              </div>
+            </AppCard>
           );
         })}
       </div>

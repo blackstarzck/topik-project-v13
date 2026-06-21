@@ -11,7 +11,7 @@ import type {
 } from "@/lib/writing/types";
 import type { ExternalFeedbackSupplement } from "@/lib/writing/external-feedback";
 
-const { Paragraph, Text } = Typography;
+const { Text } = Typography;
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
 
 type OverviewScoreItem = {
@@ -91,17 +91,14 @@ export function FeedbackReportOverview({
         </div>
       ) : null}
       <div className="flex flex-col gap-5">
-        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-          <Paragraph type="secondary" className="mb-0">
-            {t("subtitle")}
-          </Paragraph>
+        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-end">
           <div
             className="flex flex-wrap items-center gap-x-3 gap-y-1 md:justify-end"
             data-testid="feedback-report-meta"
           >
             {submittedAt ? (
               <span
-                className="inline-flex items-center gap-1 whitespace-nowrap text-xs text-text-secondary"
+                className="inline-flex items-center gap-1 whitespace-nowrap text-sm text-text-secondary"
                 data-testid="feedback-report-meta-item"
               >
                 <CalendarDays aria-hidden size={14} />
@@ -110,7 +107,7 @@ export function FeedbackReportOverview({
             ) : null}
             {durationSeconds !== null ? (
               <span
-                className="inline-flex items-center gap-1 whitespace-nowrap text-xs text-text-secondary"
+                className="inline-flex items-center gap-1 whitespace-nowrap text-sm text-text-secondary"
                 data-testid="feedback-report-meta-item"
               >
                 <Clock3 aria-hidden size={14} />
@@ -120,7 +117,7 @@ export function FeedbackReportOverview({
               </span>
             ) : processingSeconds !== null ? (
               <span
-                className="inline-flex items-center gap-1 whitespace-nowrap text-xs text-text-secondary"
+                className="inline-flex items-center gap-1 whitespace-nowrap text-sm text-text-secondary"
                 data-testid="feedback-report-meta-item"
               >
                 <Clock3 aria-hidden size={14} />

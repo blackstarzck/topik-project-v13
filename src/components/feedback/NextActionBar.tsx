@@ -203,7 +203,7 @@ export function FeedbackActionGroup({
           className={classNames(
             "flex flex-wrap items-center gap-2",
             isHeader
-              ? "w-full border-t border-border pt-2 md:ml-1 md:w-auto md:border-l md:border-t-0 md:pl-3 md:pt-0"
+              ? "feedback-action-divider w-full pt-2 md:ml-1 md:w-auto md:pl-3 md:pt-0"
               : null,
           )}
         >

@@ -75,7 +75,7 @@ export function SentenceFeedbackList({ rows, onReanalyze }: Props) {
                   </Text>
                 </section>
 
-                <div className="hidden items-center justify-center text-text-tertiary lg:flex">
+                <div className="hidden items-center justify-center text-[color:var(--ant-color-text-tertiary)] lg:flex">
                   <ChevronRight aria-hidden size={22} strokeWidth={1.8} />
                 </div>
 

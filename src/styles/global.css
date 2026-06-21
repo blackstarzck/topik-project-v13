@@ -4165,6 +4165,37 @@ body {
   border-color: var(--app-color-primary);
 }
 
+/*
+ * E-01/E-02 피드백 헤더 액션 구분선 (FeedbackActionGroup variant="header").
+ * 주요 CTA(다시 풀기)와 보조 액션 그룹(다음 문제/저장/비교 리포트) 사이 구분선.
+ * 모바일은 상단 가로선, 데스크톱(≥768px)은 좌측 세로선이다. 색은 AntD Card의
+ * native border 토큰(--ant-color-border-secondary)에 맞추고, 세로선 높이는
+ * 컨트롤 높이(controlHeight 40px)의 절반인 20px로 둔다.
+ */
+.feedback-action-divider {
+  position: relative;
+}
+
+.feedback-action-divider::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 1px;
+  background: var(--ant-color-border-secondary);
+}
+
+@media (min-width: 768px) {
+  .feedback-action-divider::before {
+    right: auto;
+    top: 50%;
+    width: 1px;
+    height: 20px;
+    transform: translateY(-50%);
+  }
+}
+
 .notification-settings-redesign {
   display: grid;
   /* Vertical rhythm between stacked items; also the empty space on each side of
