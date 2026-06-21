@@ -4160,7 +4160,8 @@ body {
  * outline. The extra `.app-surface` raises specificity above the base restore
  * rule so the selected color wins; it pairs with the inset primary ring.
  */
-.app-cards-bordered .selectable-app-card.app-surface.selectable-app-card--selected {
+.app-cards-bordered
+  .selectable-app-card.app-surface.selectable-app-card--selected {
   border-color: var(--app-color-primary);
 }
 
@@ -4474,17 +4475,6 @@ body {
   min-width: 0;
 }
 
-/* Segmented hugs its options (not stretched to the full control width) so a
-   short option group doesn't leave a wide empty track. max-width caps it to the
-   cell, and overflow-x lets a wide group (e.g. the 4-option learning-language
-   Segmented in en/vi) scroll inside its own box instead of overflowing the page
-   on narrow viewports. */
-.settings-field-row__control > .ant-segmented {
-  justify-self: start;
-  max-width: 100%;
-  overflow-x: auto;
-}
-
 .settings-field-row__hint.ant-typography {
   display: block;
   font-size: 14px;
@@ -4555,6 +4545,11 @@ body {
 
 .problem-list-card.app-card.app-surface .problem-list-card__body {
   padding: 0;
+}
+
+.problem-filter-card.app-card.app-surface > .ant-card-body {
+  padding-left: 0;
+  padding-right: 0;
 }
 
 .problem-table__column-title {
@@ -4782,111 +4777,38 @@ body {
 }
 
 /*
- * C-01 recommendation type selector. Segmented gives us the single-choice
- * control semantics; this scoped hook only changes the control from a joined
- * segmented bar into the product-requested separated button tiles.
+ * C-01/C-02 question-type selector. AntD card-type Tabs gives the requested
+ * "Card type tab" look and tablist semantics; the matching content is rendered
+ * separately below, so the empty tab panel is collapsed and the nav margin is
+ * removed to let the surrounding layout own the spacing.
  */
-.problem-type-tabs.ant-segmented {
-  display: block;
-  width: 100%;
-  max-width: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding: 0;
-  background: transparent;
+.problem-type-tabs.ant-tabs > .ant-tabs-nav {
+  margin: 0;
 }
 
-.problem-type-tabs .ant-segmented-group {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
-  overflow-x: auto;
-  padding: 1px;
-}
-
-.problem-type-tabs--with-all .ant-segmented-group {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-}
-
-.problem-type-tabs .ant-segmented-thumb {
+.problem-type-tabs.ant-tabs .ant-tabs-content-holder {
   display: none;
 }
 
-.problem-type-tabs .ant-segmented-item {
-  min-width: 180px;
-  border: 1px solid var(--app-color-border);
-  border-radius: var(--app-radius);
-  background: var(--app-color-bg-container);
-  box-shadow: var(--app-shadow-elevated);
-  transition:
-    border-color 160ms ease-out,
-    box-shadow 160ms ease-out,
-    background-color 160ms ease-out;
-}
-
-.problem-type-tabs--with-all .ant-segmented-item {
-  min-width: 160px;
-}
-
-.problem-type-tabs .ant-segmented-item::after {
-  display: none;
-}
-
-.problem-type-tabs .ant-segmented-item:hover,
-.problem-type-tabs .ant-segmented-item:focus-within {
-  border-color: var(--app-color-text-secondary);
-}
-
-.problem-type-tabs .ant-segmented-item.is-selected {
-  border-color: var(--app-color-text);
-  box-shadow: 0 0 0 1px var(--app-color-text);
-}
-
-.problem-type-tabs .ant-segmented-item.is-locked {
-  opacity: 0.56;
-}
-
-.problem-type-tabs .ant-segmented-item-label {
-  min-height: 44px;
-  padding: 0;
-}
-
-.problem-type-tabs__option {
-  display: flex;
-  min-width: 0;
-  min-height: 44px;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 8px 14px;
-  color: var(--app-color-text);
-}
-
-.problem-type-tabs__left {
+.problem-type-tabs__label {
   display: inline-flex;
   min-width: 0;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .problem-type-tabs__icon {
   display: inline-flex;
   flex: 0 0 auto;
-  width: 28px;
-  height: 28px;
   align-items: center;
   justify-content: center;
-  border-radius: var(--app-radius);
-  background: var(--app-color-bg-layout);
-  color: var(--app-color-text);
+  color: inherit;
 }
 
 .problem-type-tabs__text {
   min-width: 0;
   overflow: hidden;
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1.4;
+  font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -4895,13 +4817,13 @@ body {
   display: inline-flex;
   flex: 0 0 auto;
   align-items: center;
-  min-height: 24px;
+  min-height: 20px;
   border-radius: 999px;
   background: var(--app-color-bg-layout);
-  padding: 0 10px;
+  padding: 0 8px;
   color: var(--app-color-text-secondary);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 /* Layout only — the surface (border, radius, background, padding) is provided
@@ -5078,17 +5000,6 @@ body {
 }
 
 @media (max-width: 767px) {
-  .problem-type-tabs .ant-segmented-group {
-    display: flex;
-    width: max-content;
-    min-width: 0;
-  }
-
-  .problem-type-tabs .ant-segmented-item {
-    flex: 0 0 210px;
-    width: 210px;
-  }
-
   .recommendation-reason-card {
     gap: 12px;
   }

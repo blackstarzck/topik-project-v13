@@ -118,13 +118,15 @@ describe("ProblemListView", () => {
 
     const allTabRoot = screen
       .getByText(enMessages.practice.common.typeTabAll)
-      .closest(".ant-segmented");
+      .closest(".ant-tabs");
     expect(allTabRoot?.className).toContain("problem-type-tabs");
     expect(allTabRoot?.className).toContain("problem-type-tabs--with-all");
+    expect(allTabRoot?.className).toContain("ant-tabs-card");
     expect(
-      screen.getByText(enMessages.practice.common.typeTabAll).closest("label")
-        ?.className,
-    ).toContain("is-selected");
+      screen
+        .getByText(enMessages.practice.common.typeTabAll)
+        .closest(".ant-tabs-tab")?.className,
+    ).toContain("ant-tabs-tab-active");
     expect(
       screen.queryByText(
         enMessages.practice.recommendations.typeRecommendedBadge,

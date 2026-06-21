@@ -11,21 +11,27 @@ await page.waitForSelector('[data-testid="language-ui-radio"]', { timeout: 20000
 const before = await page.evaluate(() => document.querySelector("h1")?.textContent);
 console.log("BEFORE_H1 " + JSON.stringify(before));
 
+const saveEnabled = () => {
+  const b = document.querySelector('[data-testid="language-save"]');
+  return !!b && !b.disabled;
+};
+
 if (before !== "언어 설정") {
-  // Click the first radio input (ko) inside the UI-language Segmented directly.
-  const koInput = page.locator('[data-testid="language-ui-radio"] input[type="radio"]').first();
-  await koInput.click({ force: true });
-  const save = page.getByTestId("language-save");
-  await save.waitFor({ state: "visible" });
-  await page.waitForFunction(
-    () => {
-      const b = document.querySelector('[data-testid="language-save"]');
-      return b && !b.disabled;
-    },
-    null,
-    { timeout: 10000 },
-  );
-  await save.click();
+  const koPill = page
+    .locator('[data-testid="language-ui-radio"] .ant-segmented-item')
+    .filter({ hasText: "한국어" });
+  let enabled = false;
+  for (let i = 0; i < 6 && !enabled; i++) {
+    await koPill.click({ timeout: 5000 });
+    try {
+      await page.waitForFunction(saveEnabled, null, { timeout: 2500 });
+      enabled = true;
+    } catch {
+      /* retry */
+    }
+  }
+  if (!enabled) throw new Error("could not enable save after selecting 한국어");
+  await page.getByTestId("language-save").click();
   await page.waitForFunction(() => document.querySelector("h1")?.textContent === "언어 설정", null, { timeout: 25000 });
   console.log("RESTORED_TO_KO");
 } else {

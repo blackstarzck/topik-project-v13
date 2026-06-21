@@ -205,7 +205,7 @@ export function ProblemListView({ userId }: Props) {
         onChange={(next) => commitFilter({ ...filter, questionNo: next })}
       />
 
-      <AppCard>
+      <AppCard className="problem-filter-card">
         <div className="grid gap-4">
           <ProblemListControls
             filter={filter}

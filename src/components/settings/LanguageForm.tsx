@@ -267,9 +267,11 @@ export function LanguageForm({ userId, initialLocale }: Props) {
       disabled={saving}
     >
       <div className="settings-form-stack">
-        {/* Region 2: 표시 언어 (UI 언어) */}
-        <section className="settings-section">
-          <h2 className="settings-section-heading">{t("uiCardTitle")}</h2>
+        {/* G-01 표시 언어 / 학습 언어 / 콘텐츠 설정 — section titles removed; the
+            settings rows flow as one continuous group (heading-left /
+            control-right; stacked on mobile). */}
+        <div className="settings-field-rows">
+          {/* 표시 언어 (UI 언어) */}
           <SettingRow label={t("uiLanguageLabel")} hint={t("coverageNote")}>
             <Segmented
               data-testid="language-ui-radio"
@@ -283,156 +285,149 @@ export function LanguageForm({ userId, initialLocale }: Props) {
               ]}
             />
           </SettingRow>
-        </section>
 
-        {/* Region 3: 학습 언어 선택 (설명·예시·번역 보조 기준 언어) */}
-        <section
-          className="settings-section"
-          data-testid="language-learning-card"
-        >
-          <h2 className="settings-section-heading">{t("learningCardTitle")}</h2>
-          {contentLoad.status === "loading" ? (
-            <Skeleton active paragraph={{ rows: 2 }} />
-          ) : contentLoad.status === "error" ? (
-            <Alert
-              type="error"
-              showIcon
-              title={t("learningLoadError")}
-              description={contentLoad.message}
-            />
-          ) : (
-            <SettingRow
-              label={t("learningRowLabel")}
-              hint={t("learningFieldExtra")}
-            >
-              <Segmented
-                data-testid="language-learning-radio"
-                value={learningLocale ?? "follow"}
-                onChange={(value) => {
-                  const next = value as LearningLocale | "follow";
-                  setLearningLocale(next === "follow" ? null : next);
-                }}
-                aria-label={t("learningCardTitle")}
-                options={[
-                  { label: t("learningFollow"), value: "follow" },
-                  { label: t("optionKo"), value: "ko" },
-                  { label: t("optionEn"), value: "en" },
-                  { label: t("optionVi"), value: "vi" },
-                ]}
+          {/* 학습 언어 (기준 언어) */}
+          <div data-testid="language-learning-card">
+            {contentLoad.status === "loading" ? (
+              <Skeleton active paragraph={{ rows: 2 }} />
+            ) : contentLoad.status === "error" ? (
+              <Alert
+                type="error"
+                showIcon
+                title={t("learningLoadError")}
+                description={contentLoad.message}
               />
-            </SettingRow>
-          )}
-        </section>
+            ) : (
+              <SettingRow
+                label={t("learningRowLabel")}
+                hint={t("learningFieldExtra")}
+              >
+                <Segmented
+                  data-testid="language-learning-radio"
+                  value={learningLocale ?? "follow"}
+                  onChange={(value) => {
+                    const next = value as LearningLocale | "follow";
+                    setLearningLocale(next === "follow" ? null : next);
+                  }}
+                  aria-label={t("learningCardTitle")}
+                  options={[
+                    { label: t("learningFollow"), value: "follow" },
+                    { label: t("optionKo"), value: "ko" },
+                    { label: t("optionEn"), value: "en" },
+                    { label: t("optionVi"), value: "vi" },
+                  ]}
+                />
+              </SettingRow>
+            )}
+          </div>
 
-        {/* Region 4: 콘텐츠 설정 (피드백 표시 · 예문 난이도 · 해설 길이) */}
-        <section
-          className="settings-section"
-          data-testid="language-content-card"
+          {/* 콘텐츠 설정 (피드백 표시 · 예문 난이도 · 해설 길이) */}
+          <div data-testid="language-content-card">
+            {contentLoad.status === "loading" ? (
+              <Skeleton active paragraph={{ rows: 3 }} />
+            ) : contentLoad.status === "error" ? (
+              <Alert
+                type="error"
+                showIcon
+                title={t("contentLoadError")}
+                description={contentLoad.message}
+              />
+            ) : (
+              <>
+                <SettingRow label={t("feedbackDisplayLabel")}>
+                  <Segmented
+                    data-testid="language-feedback-display"
+                    value={
+                      contentPrefs.feedback_display ??
+                      CONTENT_PREF_DEFAULTS.feedback_display
+                    }
+                    onChange={(value) =>
+                      setPref("feedback_display", value as "full" | "summary")
+                    }
+                    options={[
+                      { label: t("feedbackFull"), value: "full" },
+                      { label: t("feedbackSummary"), value: "summary" },
+                    ]}
+                  />
+                </SettingRow>
+                <SettingRow label={t("exampleDifficultyLabel")}>
+                  <Segmented
+                    data-testid="language-example-difficulty"
+                    value={
+                      contentPrefs.example_difficulty ??
+                      CONTENT_PREF_DEFAULTS.example_difficulty
+                    }
+                    onChange={(value) =>
+                      setPref(
+                        "example_difficulty",
+                        value as "easy" | "standard" | "hard",
+                      )
+                    }
+                    options={[
+                      { label: t("difficultyEasy"), value: "easy" },
+                      { label: t("difficultyStandard"), value: "standard" },
+                      { label: t("difficultyHard"), value: "hard" },
+                    ]}
+                  />
+                </SettingRow>
+                <SettingRow label={t("explanationLengthLabel")}>
+                  <Segmented
+                    data-testid="language-explanation-length"
+                    value={
+                      contentPrefs.explanation_length ??
+                      CONTENT_PREF_DEFAULTS.explanation_length
+                    }
+                    onChange={(value) =>
+                      setPref(
+                        "explanation_length",
+                        value as "short" | "standard" | "detailed",
+                      )
+                    }
+                    options={[
+                      { label: t("explanationShort"), value: "short" },
+                      { label: t("explanationStandard"), value: "standard" },
+                      { label: t("explanationDetailed"), value: "detailed" },
+                    ]}
+                  />
+                </SettingRow>
+
+                {/* 옵션 충돌 시 경고 + 추천값 복원 */}
+                {conflict ? (
+                  <Alert
+                    type="warning"
+                    showIcon
+                    title={t("conflictTitle")}
+                    description={t("conflictDescription")}
+                    action={
+                      <Button size="small" onClick={restoreRecommended}>
+                        {t("restoreRecommended")}
+                      </Button>
+                    }
+                  />
+                ) : null}
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* 도움말 (언어 설정 영향 범위 안내) — title and list bullets removed; the
+            items are spaced apart (no disc markers). */}
+        <ul
+          data-testid="language-help-card"
+          className="m-0 flex list-none flex-col gap-3 p-0"
         >
-          <h2 className="settings-section-heading">{t("contentCardTitle")}</h2>
-          {contentLoad.status === "loading" ? (
-            <Skeleton active paragraph={{ rows: 3 }} />
-          ) : contentLoad.status === "error" ? (
-            <Alert
-              type="error"
-              showIcon
-              title={t("contentLoadError")}
-              description={contentLoad.message}
-            />
-          ) : (
-            <>
-              <SettingRow label={t("feedbackDisplayLabel")}>
-                <Segmented
-                  data-testid="language-feedback-display"
-                  value={
-                    contentPrefs.feedback_display ??
-                    CONTENT_PREF_DEFAULTS.feedback_display
-                  }
-                  onChange={(value) =>
-                    setPref("feedback_display", value as "full" | "summary")
-                  }
-                  options={[
-                    { label: t("feedbackFull"), value: "full" },
-                    { label: t("feedbackSummary"), value: "summary" },
-                  ]}
-                />
-              </SettingRow>
-              <SettingRow label={t("exampleDifficultyLabel")}>
-                <Segmented
-                  data-testid="language-example-difficulty"
-                  value={
-                    contentPrefs.example_difficulty ??
-                    CONTENT_PREF_DEFAULTS.example_difficulty
-                  }
-                  onChange={(value) =>
-                    setPref(
-                      "example_difficulty",
-                      value as "easy" | "standard" | "hard",
-                    )
-                  }
-                  options={[
-                    { label: t("difficultyEasy"), value: "easy" },
-                    { label: t("difficultyStandard"), value: "standard" },
-                    { label: t("difficultyHard"), value: "hard" },
-                  ]}
-                />
-              </SettingRow>
-              <SettingRow label={t("explanationLengthLabel")}>
-                <Segmented
-                  data-testid="language-explanation-length"
-                  value={
-                    contentPrefs.explanation_length ??
-                    CONTENT_PREF_DEFAULTS.explanation_length
-                  }
-                  onChange={(value) =>
-                    setPref(
-                      "explanation_length",
-                      value as "short" | "standard" | "detailed",
-                    )
-                  }
-                  options={[
-                    { label: t("explanationShort"), value: "short" },
-                    { label: t("explanationStandard"), value: "standard" },
-                    { label: t("explanationDetailed"), value: "detailed" },
-                  ]}
-                />
-              </SettingRow>
+          <li data-testid="language-help-item">
+            <Text type="secondary">{t("helpUiScope")}</Text>
+          </li>
+          <li data-testid="language-help-item">
+            <Text type="secondary">{t("helpLearningScope")}</Text>
+          </li>
+          <li data-testid="language-help-item">
+            <Text type="secondary">{t("helpIncremental")}</Text>
+          </li>
+        </ul>
 
-              {/* Region 4 예외: 옵션 충돌 시 경고 + 추천값 복원 */}
-              {conflict ? (
-                <Alert
-                  type="warning"
-                  showIcon
-                  title={t("conflictTitle")}
-                  description={t("conflictDescription")}
-                  action={
-                    <Button size="small" onClick={restoreRecommended}>
-                      {t("restoreRecommended")}
-                    </Button>
-                  }
-                />
-              ) : null}
-            </>
-          )}
-        </section>
-
-        {/* Region 5: 도움말 (언어 설정 영향 범위 안내) */}
-        <section className="settings-section" data-testid="language-help-card">
-          <h2 className="settings-section-heading">{t("helpCardTitle")}</h2>
-          <ul className="m-0 list-disc pl-5">
-            <li data-testid="language-help-item">
-              <Text type="secondary">{t("helpUiScope")}</Text>
-            </li>
-            <li data-testid="language-help-item">
-              <Text type="secondary">{t("helpLearningScope")}</Text>
-            </li>
-            <li data-testid="language-help-item">
-              <Text type="secondary">{t("helpIncremental")}</Text>
-            </li>
-          </ul>
-        </section>
-
-        {/* Region 2 예외: 미지원 언어 안내 */}
+        {/* 미지원 언어 안내 */}
         <Alert
           data-testid="language-unsupported-notice"
           type="info"
@@ -440,7 +435,7 @@ export function LanguageForm({ userId, initialLocale }: Props) {
           title={t("unsupportedNotice")}
         />
 
-        {/* Region 6: 저장 (변경값 없으면 비활성, 저장 중 중복 클릭 차단) */}
+        {/* 저장 (변경값 없으면 비활성, 저장 중 중복 클릭 차단) */}
         <Form.Item className="!mb-0">
           <Button
             data-testid="language-save"

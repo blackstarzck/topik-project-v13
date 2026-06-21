@@ -1,6 +1,6 @@
 "use client";
 
-import { Segmented } from "antd";
+import { Tabs, Tooltip } from "antd";
 import {
   AlignJustify,
   BarChart3,
@@ -28,6 +28,28 @@ const TYPE_ICONS: Record<QuestionNo, ReactNode> = {
   54: <ListChecks size={16} />,
 };
 
+function TabLabel({
+  icon,
+  text,
+  badge,
+  ariaLabel,
+}: {
+  icon: ReactNode;
+  text: string;
+  badge?: string;
+  ariaLabel?: string;
+}) {
+  return (
+    <span className="problem-type-tabs__label" aria-label={ariaLabel}>
+      <span className="problem-type-tabs__icon" aria-hidden="true">
+        {icon}
+      </span>
+      <span className="problem-type-tabs__text">{text}</span>
+      {badge ? <span className="problem-type-tabs__badge">{badge}</span> : null}
+    </span>
+  );
+}
+
 export function ProblemTypeTabs({
   active,
   onChange,
@@ -38,81 +60,65 @@ export function ProblemTypeTabs({
   const tRecommendations = useTranslations("practice.recommendations");
   const selectedValue = includeAll ? (active ?? ALL_VALUE) : (active ?? 51);
   const allLabel = t("typeTabAll");
-  const allOption = {
-    value: ALL_VALUE,
-    className: [
-      "problem-type-tabs__item",
-      selectedValue === ALL_VALUE ? "is-selected" : null,
-    ]
-      .filter(Boolean)
-      .join(" "),
-    label: (
-      <span className="problem-type-tabs__option" aria-label={allLabel}>
-        <span className="problem-type-tabs__left">
-          <span className="problem-type-tabs__icon" aria-hidden="true">
-            <ListFilter size={16} />
-          </span>
-          <span className="problem-type-tabs__text">{allLabel}</span>
-        </span>
-      </span>
-    ),
-  };
+
+  const items = [
+    ...(includeAll
+      ? [
+          {
+            key: ALL_VALUE,
+            label: (
+              <TabLabel
+                icon={<ListFilter size={16} />}
+                text={allLabel}
+                ariaLabel={allLabel}
+              />
+            ),
+          },
+        ]
+      : []),
+    ...QUESTION_NOS.map((n) => {
+      const locked = lockedTypes?.has(n) ?? false;
+      const label = tRecommendations(`typeButtonLabel${n}`);
+      const node = (
+        <TabLabel
+          icon={TYPE_ICONS[n]}
+          text={label}
+          badge={locked ? tRecommendations("locked") : undefined}
+          ariaLabel={locked ? t("typeTabLockedAria", { no: n }) : label}
+        />
+      );
+      return {
+        key: String(n),
+        disabled: locked,
+        label: locked ? (
+          <Tooltip title={tRecommendations("typeLockedTooltip")}>
+            {node}
+          </Tooltip>
+        ) : (
+          node
+        ),
+      };
+    }),
+  ];
 
   return (
-    <Segmented
+    <Tabs
+      type="card"
       className={[
         "problem-type-tabs",
         includeAll ? "problem-type-tabs--with-all" : null,
       ]
         .filter(Boolean)
         .join(" ")}
-      name="practice-question-type"
-      value={selectedValue}
-      onChange={(value) => {
-        if (value === ALL_VALUE) {
+      activeKey={String(selectedValue)}
+      onChange={(key) => {
+        if (key === ALL_VALUE) {
           onChange(null);
           return;
         }
-        onChange(Number(value) as QuestionNo);
+        onChange(Number(key) as QuestionNo);
       }}
-      options={[
-        ...(includeAll ? [allOption] : []),
-        ...QUESTION_NOS.map((n) => {
-          const locked = lockedTypes?.has(n) ?? false;
-          const selected = selectedValue === n;
-          const label = tRecommendations(`typeButtonLabel${n}`);
-          return {
-            value: n,
-            disabled: locked,
-            className: [
-              "problem-type-tabs__item",
-              selected ? "is-selected" : null,
-              locked ? "is-locked" : null,
-            ]
-              .filter(Boolean)
-              .join(" "),
-            tooltip: locked ? tRecommendations("typeLockedTooltip") : undefined,
-            label: (
-              <span
-                className="problem-type-tabs__option"
-                aria-label={locked ? t("typeTabLockedAria", { no: n }) : label}
-              >
-                <span className="problem-type-tabs__left">
-                  <span className="problem-type-tabs__icon" aria-hidden="true">
-                    {TYPE_ICONS[n]}
-                  </span>
-                  <span className="problem-type-tabs__text">{label}</span>
-                </span>
-                {locked ? (
-                  <span className="problem-type-tabs__badge">
-                    {tRecommendations("locked")}
-                  </span>
-                ) : null}
-              </span>
-            ),
-          };
-        }),
-      ]}
+      items={items}
     />
   );
 }
