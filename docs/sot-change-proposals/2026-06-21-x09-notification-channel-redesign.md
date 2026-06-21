@@ -23,7 +23,7 @@
    - 체크박스 제거, 각 옵션을 카드로 표현.
    - 인앱 알림: 클릭 토글(버튼, `aria-pressed`), 선택 시 outline 강조(`--app-color-primary`).
    - 이메일/Zalo: 비활성(`disabled`) "준비 중" 카드. 비활성 표현은 카드 내부 텍스트+아이콘 색에 투명도만 적용(테두리/배경은 유지).
-5. 조건부 alert(`error`, `noChannel`, `onlyExternalChannelsSelected`)는 유지(이미지에서 지목된 2개가 아님).
+5. 조건부 alert 중 `noChannel`("사용 가능한 알림 채널이 꺼져 있습니다")도 사용자 요청으로 제거. 채널 없음 신호는 루틴 입력 비활성(disabled)으로 유지(functional-spec "수신 채널 없음 → 스케줄 입력 비활성"은 충족, "경고 안내 표시"는 미충족). `error`(설정 로드 실패) alert는 유지. `onlyExternalChannelsSelected` alert는 email/Zalo 비활성화로 사실상 도달 불가한 orphan 상태로 남음(후속 정리 후보).
 
 ## active SOT와의 충돌 및 갱신 필요(승인 시)
 

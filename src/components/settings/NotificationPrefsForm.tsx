@@ -184,7 +184,6 @@ function errorMessage(err: unknown, fallback: string): string {
  * - Region 3 (학습 루틴): reminder_time (HH:mm) + reminder_days persisted;
  *   off-channel inputs are disabled when no channel is on.
  * - Region 5 (저장): dirty-gated, double-click guarded.
- * - 수신 권한 없음 notice when no channel is on.
  * - The 3 boolean conditions still persist to profiles.notification_prefs.
  */
 export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
@@ -385,16 +384,6 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
             showIcon
             title={t("loadErrorTitle")}
             description={settingsLoad.message}
-          />
-        ) : null}
-
-        {/* 수신 권한 없음 notice (all channels off) */}
-        {settingsLoad.status === "ready" && !anyChannelSelected ? (
-          <Alert
-            type="warning"
-            showIcon
-            title={t("noChannel.title")}
-            description={t("noChannel.body")}
           />
         ) : null}
 

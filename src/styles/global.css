@@ -4904,13 +4904,11 @@ body {
   font-weight: 700;
 }
 
+/* Layout only — the surface (border, radius, background, padding) is provided
+   by the wrapping AppCard so this reads as a default AntD Card. */
 .recommendation-reason-card {
   display: flex;
   gap: 16px;
-  border: 1px solid var(--app-color-border);
-  border-radius: var(--app-radius);
-  background: var(--app-color-bg-container);
-  padding: 18px 20px;
 }
 
 .recommendation-reason-card__icon {
@@ -5093,7 +5091,6 @@ body {
 
   .recommendation-reason-card {
     gap: 12px;
-    padding: 16px;
   }
 }
 

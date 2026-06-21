@@ -49,26 +49,19 @@ export function DiagnosticCard({ weakDimensions, updatedAt, failed }: Props) {
 
   if (weakDimensions.length === 0) {
     return (
-      <AppCard
-        data-testid="diagnostic-empty"
-        actions={[
+      <AppCard data-testid="diagnostic-empty">
+        <Empty
+          description={failed ? t("diagnosticFailed") : t("diagnosticNoData")}
+        >
           <Button
-            key="problem-list"
             type="primary"
             icon={<ListChecks size={16} />}
             onClick={() => router.push("/practice/problems" as never)}
             data-testid="diagnostic-reanalyze"
           >
             {t("recommendationsEmptyCta")}
-          </Button>,
-        ]}
-      >
-        <Empty
-          description={failed ? t("diagnosticFailed") : t("diagnosticNoData")}
-        />
-        <Text type="secondary" className="block text-center !text-xs">
-          {t("reanalyzeNote")}
-        </Text>
+          </Button>
+        </Empty>
       </AppCard>
     );
   }

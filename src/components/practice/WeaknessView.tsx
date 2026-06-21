@@ -297,7 +297,7 @@ export function WeaknessView({
         </AppCard>
 
         <AppCard title={t("nextStepTitle")}>
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col items-center gap-4 text-center">
             <Text type="secondary">
               {selectedRecommendation
                 ? t("nextStepBody", {
@@ -307,37 +307,35 @@ export function WeaknessView({
                   })
                 : t("nextStepFallbackBody")}
             </Text>
-            <div>
-              <Button
-                type="primary"
-                icon={
-                  selectedRecommendation ? (
-                    <ArrowRight size={16} />
-                  ) : (
-                    <ListChecks size={16} />
-                  )
-                }
-                loading={
-                  selectedRecommendation
-                    ? startingId === selectedRecommendation.problem_id
-                    : false
-                }
-                disabled={
-                  selectedRecommendation
-                    ? startingId != null &&
-                      startingId !== selectedRecommendation.problem_id
-                    : false
-                }
-                onClick={handlePrimaryCta}
-                data-testid="weakness-primary-start"
-              >
-                {selectedRecommendation
-                  ? t("startSelectedRecommendation", {
-                      rank: selectedRank,
-                    })
-                  : t("recommendationsEmptyCta")}
-              </Button>
-            </div>
+            <Button
+              type="primary"
+              icon={
+                selectedRecommendation ? (
+                  <ArrowRight size={16} />
+                ) : (
+                  <ListChecks size={16} />
+                )
+              }
+              loading={
+                selectedRecommendation
+                  ? startingId === selectedRecommendation.problem_id
+                  : false
+              }
+              disabled={
+                selectedRecommendation
+                  ? startingId != null &&
+                    startingId !== selectedRecommendation.problem_id
+                  : false
+              }
+              onClick={handlePrimaryCta}
+              data-testid="weakness-primary-start"
+            >
+              {selectedRecommendation
+                ? t("startSelectedRecommendation", {
+                    rank: selectedRank,
+                  })
+                : t("recommendationsEmptyCta")}
+            </Button>
           </div>
         </AppCard>
       </div>

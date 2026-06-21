@@ -194,50 +194,56 @@ function RecommendationReasonPanel({
         ];
 
   return (
-    <section
-      className={[
-        "recommendation-reason-card",
-        // Stagger only the real content. The skeleton stays static — animating a
-        // placeholder reads as jank. The panel's `key` remounts on the
-        // loading→ready flip, so the loaded content still animates in once.
-        isLoading ? null : "recommendation-reason-card--stagger",
-      ]
-        .filter(Boolean)
-        .join(" ")}
-      data-animation-key={animationKey}
-    >
-      <div className="recommendation-reason-card__icon" aria-hidden="true">
-        <Lightbulb size={24} strokeWidth={1.7} />
-      </div>
-      <div className="recommendation-reason-card__body">
-        <Text className="recommendation-reason-card__title" strong>
-          {t("reasonSummaryTitle")}
-        </Text>
-        {isLoading ? (
-          <RecommendationReasonSkeleton />
-        ) : (
-          <>
-            <Text className="recommendation-reason-card__copy" type="secondary">
-              {reasonSummary ?? t("reasonSummaryFallback", { type: typeLabel })}
-            </Text>
-            <div className="recommendation-reason-card__footer">
-              <div className="recommendation-reason-card__tags">
-                {tags.map((tag, index) => (
-                  <Tag
-                    className="recommendation-reason-card__tag"
-                    color={getReasonTagColor(index, tags.length)}
-                    key={`${tag}-${index}`}
-                    variant="filled"
-                  >
-                    {tag}
-                  </Tag>
-                ))}
+    <AppCard>
+      <section
+        className={[
+          "recommendation-reason-card",
+          // Stagger only the real content. The skeleton stays static — animating a
+          // placeholder reads as jank. The panel's `key` remounts on the
+          // loading→ready flip, so the loaded content still animates in once.
+          isLoading ? null : "recommendation-reason-card--stagger",
+        ]
+          .filter(Boolean)
+          .join(" ")}
+        data-animation-key={animationKey}
+      >
+        <div className="recommendation-reason-card__icon" aria-hidden="true">
+          <Lightbulb size={24} strokeWidth={1.7} />
+        </div>
+        <div className="recommendation-reason-card__body">
+          <Text className="recommendation-reason-card__title" strong>
+            {t("reasonSummaryTitle")}
+          </Text>
+          {isLoading ? (
+            <RecommendationReasonSkeleton />
+          ) : (
+            <>
+              <Text
+                className="recommendation-reason-card__copy"
+                type="secondary"
+              >
+                {reasonSummary ??
+                  t("reasonSummaryFallback", { type: typeLabel })}
+              </Text>
+              <div className="recommendation-reason-card__footer">
+                <div className="recommendation-reason-card__tags">
+                  {tags.map((tag, index) => (
+                    <Tag
+                      className="recommendation-reason-card__tag"
+                      color={getReasonTagColor(index, tags.length)}
+                      key={`${tag}-${index}`}
+                      variant="filled"
+                    >
+                      {tag}
+                    </Tag>
+                  ))}
+                </div>
               </div>
-            </div>
-          </>
-        )}
-      </div>
-    </section>
+            </>
+          )}
+        </div>
+      </section>
+    </AppCard>
   );
 }
 
