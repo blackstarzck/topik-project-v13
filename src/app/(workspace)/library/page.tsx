@@ -104,7 +104,7 @@ export default async function LibraryPage({ searchParams }: Props) {
   ]);
 
   return (
-    <WorkspaceBody>
+    <WorkspaceBody className="app-cards-bordered">
       <PageHeader title={t("heading")} />
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={16}>

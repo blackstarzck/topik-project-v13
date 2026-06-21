@@ -4139,6 +4139,31 @@ body {
   text-decoration: none;
 }
 
+/*
+ * Bordered-card content pages: dashboard, library, growth, weakness.
+ * These routes keep the default AntD outlined Card outline. The page wrapper
+ * opts in with `.app-cards-bordered`, which counters the global
+ * `.app-card.app-surface { border: 0 }` overlay rule for those routes only.
+ * Card radius already comes from `theme.components.Card`, so only the outline
+ * is restored here. The color is AntD's native Card border token
+ * (`colorBorderSecondary`, exposed as `--ant-color-border-secondary` because
+ * `cssVar` is enabled in create-theme.ts) so the restored outline matches a
+ * default AntD Card. Card-internal rows (`app-card-compact`) and the
+ * continuous footer actions stay flat per docs/ant-design/08-theme-architecture.md.
+ */
+.app-cards-bordered .app-card.app-surface {
+  border: 1px solid var(--ant-color-border-secondary);
+}
+
+/*
+ * Selectable tiles (X-07 weakness recommendations) keep their selected primary
+ * outline. The extra `.app-surface` raises specificity above the base restore
+ * rule so the selected color wins; it pairs with the inset primary ring.
+ */
+.app-cards-bordered .selectable-app-card.app-surface.selectable-app-card--selected {
+  border-color: var(--app-color-primary);
+}
+
 .notification-settings-redesign {
   display: grid;
   gap: 8px;

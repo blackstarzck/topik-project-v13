@@ -276,14 +276,14 @@ export default async function GrowthPage() {
 
   if (!data) {
     return (
-      <WorkspaceBody>
+      <WorkspaceBody className="app-cards-bordered">
         <GrowthLoadError />
       </WorkspaceBody>
     );
   }
 
   return (
-    <WorkspaceBody>
+    <WorkspaceBody className="app-cards-bordered">
       <GrowthDashboard {...data} />
     </WorkspaceBody>
   );

@@ -144,7 +144,7 @@ export default async function DashboardPage() {
   };
 
   return (
-    <WorkspaceBody className="grid gap-6">
+    <WorkspaceBody className="app-cards-bordered grid gap-6">
       <AuthIdentityNotice />
       <DashboardHeader />
       <DashboardBody

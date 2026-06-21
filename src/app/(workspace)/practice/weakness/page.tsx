@@ -44,7 +44,7 @@ export default async function PracticeWeaknessPage() {
   ]);
 
   return (
-    <WorkspaceBody>
+    <WorkspaceBody className="app-cards-bordered">
       <PageHeader title={t("pageTitle")} subtitle={t("subtitle")} />
       <WeaknessView
         weakDimensions={dimSummaries.map((d) => ({
