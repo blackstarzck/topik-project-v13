@@ -217,7 +217,7 @@ body {
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
-  margin-bottom: 24px;
+  margin-bottom: 64px;
 }
 
 .app-page-header__titles {
