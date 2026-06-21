@@ -195,6 +195,7 @@ export function ExamGoalForm({ userId, goal }: Props) {
       </FieldRow>
       <div className="mt-4 flex flex-wrap gap-2">
         <Button
+          data-testid="exam-goal-save"
           type="primary"
           loading={saving}
           onClick={handleSave}
