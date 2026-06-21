@@ -1,8 +1,0 @@
-feat: remove no-channel warning alert from notification settings
-
-Drop the no-channel warning ("사용 가능한 알림 채널이 꺼져 있습니다") from the
-X-09 notification settings screen; the empty-channel state is now signaled only
-by the disabled routine inputs. The change is recorded in the X-09
-channel-redesign SOT proposal.
-
-Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
