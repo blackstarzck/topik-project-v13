@@ -3,12 +3,13 @@
 import { Button, Grid, Layout, Space, Typography } from "antd";
 import { Menu as MenuIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { usePathname } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState, type ReactNode } from "react";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { AppDrawer } from "@/components/shared/AppDrawer";
 import { BrandLogo } from "@/components/shared/BrandLogo";
 import type { AppRole } from "@/lib/auth/roles";
+import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { SidebarNav } from "./SidebarNav";
 
 const { Header, Sider, Content } = Layout;
@@ -32,7 +33,24 @@ export function WorkspaceShell({
 }: Props) {
   const t = useTranslations("app");
   const pathname = usePathname();
+  const router = useRouter();
   const screens = useBreakpoint();
+
+  // 멀티 탭/기기 동기화: 다른 탭·기기에서 로그아웃되거나 회원 탈퇴로 세션이
+  // 무효화되면 이 탭도 로그인 화면으로 보낸다. 권위 있는 차단은 서버측
+  // (proxy getUser + workspace layout status 게이트)이고, 이 리스너는 이동 없이
+  // 열려만 있는 탭을 위한 best-effort 동기화다. INITIAL_SESSION 은 무시한다.
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") {
+        router.replace("/login");
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [router]);
   const isMobile = screens.md === false;
   const [drawerOpen, setDrawerOpen] = useState(false);
   const showDrawer = isMobile && drawerOpen;

@@ -2,6 +2,8 @@
 
 import { randomUUID } from "node:crypto";
 import { redirect } from "next/navigation";
+import { ACCOUNT_INACTIVE_PATH } from "../auth/completion-routes";
+import { fetchProfileStatus, isActiveStatus } from "../auth/profile";
 import {
   createSupabaseServerClient,
   createSupabaseServiceRoleClient,
@@ -97,6 +99,11 @@ export async function submitWritingAction(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+  // 회원 탈퇴(deleted)/차단(blocked) 계정의 쓰기 제출·리포트 생성 차단.
+  const accountStatus = await fetchProfileStatus(supabase, user.id);
+  if (!isActiveStatus(accountStatus)) {
+    redirect(`${ACCOUNT_INACTIVE_PATH}?status=${accountStatus ?? "deleted"}`);
+  }
 
   const externalBaseUrl = getTalkpikApiBaseUrl();
   if (externalBaseUrl) {
@@ -191,6 +198,11 @@ export async function createComparisonReportAction(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+  // 회원 탈퇴(deleted)/차단(blocked) 계정의 쓰기 제출·리포트 생성 차단.
+  const accountStatus = await fetchProfileStatus(supabase, user.id);
+  if (!isActiveStatus(accountStatus)) {
+    redirect(`${ACCOUNT_INACTIVE_PATH}?status=${accountStatus ?? "deleted"}`);
+  }
 
   const { data: currentSub, error: curErr } = await supabase
     .from("writing_submissions")

@@ -58,6 +58,14 @@ describe("submitWritingAction", () => {
     });
     helpers.fromMock.mockReturnValue({
       insert: vi.fn().mockResolvedValue({ error: null }),
+      // fetchProfileStatus(supabase, userId): profiles → select → eq → maybeSingle
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          maybeSingle: vi
+            .fn()
+            .mockResolvedValue({ data: { status: "active" }, error: null }),
+        })),
+      })),
     });
     helpers.rpcMock.mockResolvedValue({
       data: "local-submission-id",

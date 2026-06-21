@@ -5,6 +5,7 @@ import {
   type SupabaseServerClient,
 } from "../supabase/server";
 import type { Tables } from "../supabase/types";
+import { ACCOUNT_INACTIVE_PATH } from "./completion-routes";
 import { ADMIN_ROLES, type AppRole } from "./roles";
 import { getCurrentUser } from "./session";
 
@@ -107,4 +108,54 @@ export async function getSessionAndProfile(
   if (!user) return null;
   const profile = await bootstrapProfile(user.id, createClient);
   return { user, profile };
+}
+
+/**
+ * Reads the caller's own `profiles.status` via an RLS-bound SELECT.
+ *
+ * Used by `/api/*` route handlers (which bypass the proxy and are not under
+ * the workspace layout) to reject withdrawn (`deleted`) or `blocked` accounts.
+ * Returns `null` when the row is not visible (unauthenticated / RLS) — callers
+ * MUST treat `null` as not-active. Pass the same request-bound supabase client
+ * the route already created so the lookup runs in the caller's RLS scope.
+ */
+export async function fetchProfileStatus(
+  supabase: SupabaseServerClient,
+  userId: string,
+): Promise<Tables<"profiles">["status"] | null> {
+  const { data } = await supabase
+    .from("profiles")
+    .select("status")
+    .eq("id", userId)
+    .maybeSingle();
+  return data?.status ?? null;
+}
+
+/**
+ * True only for `status === 'active'`. Withdrawn (`deleted`) and `blocked`
+ * accounts are inactive and must be denied access everywhere.
+ */
+export function isActiveStatus(
+  status: Tables<"profiles">["status"] | null | undefined,
+): boolean {
+  return status === "active";
+}
+
+/**
+ * Server-component / server-action guard: returns the active session+profile,
+ * or `redirect`s away — to `/login` when unauthenticated, or to the
+ * cookie-clearing `/auth/account-inactive` route when the account is
+ * withdrawn (`deleted`) or `blocked`. Use this on ALL authenticated surfaces
+ * that read or mutate user data outside the workspace layout (auth-flow pages,
+ * server actions), since the proxy only checks authentication, not status.
+ */
+export async function requireActiveSession(
+  createClient: ClientFactory = createSupabaseServerClient,
+): Promise<{ user: User; profile: Tables<"profiles"> }> {
+  const session = await getSessionAndProfile(createClient);
+  if (!session) redirect("/login");
+  if (!isActiveStatus(session.profile.status)) {
+    redirect(`${ACCOUNT_INACTIVE_PATH}?status=${session.profile.status}`);
+  }
+  return session;
 }

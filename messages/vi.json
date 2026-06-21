@@ -193,7 +193,22 @@
     "account": {
       "metaTitle": "Cài đặt tài khoản — TALKPIK",
       "pageHeading": "Cài đặt tài khoản",
-      "pageSubtitle": "Quản lý phương thức đăng nhập, trạng thái tài khoản và đăng xuất ở cùng một nơi."
+      "pageSubtitle": "Quản lý phương thức đăng nhập, trạng thái tài khoản và đăng xuất ở cùng một nơi.",
+      "dangerZone": {
+        "title": "Xóa tài khoản",
+        "description": "Yêu cầu xóa tài khoản sẽ vô hiệu hóa tài khoản ngay lập tức và chặn đăng nhập. Trong vòng 30 ngày, bạn có thể yêu cầu khôi phục qua bộ phận hỗ trợ khách hàng; sau 30 ngày, lịch sử học và dữ liệu cá nhân sẽ bị xóa vĩnh viễn.",
+        "deleteButtonLabel": "Xóa tài khoản",
+        "confirmKeyword": "XÓA",
+        "errorMessage": "Chúng tôi không thể xử lý việc xóa tài khoản. Vui lòng thử lại sau giây lát.",
+        "modal": {
+          "title": "Xóa tài khoản của bạn?",
+          "body": "Việc xóa sẽ vô hiệu hóa tài khoản và đăng xuất bạn trên mọi thiết bị. Bạn có thể yêu cầu khôi phục qua bộ phận hỗ trợ trong vòng 30 ngày.",
+          "confirmInstruction": "Để tiếp tục, hãy nhập {keyword} vào ô bên dưới.",
+          "confirmPlaceholder": "Nhập {keyword}",
+          "confirmCta": "Xóa tài khoản",
+          "cancelCta": "Hủy"
+        }
+      }
     },
     "language": {
       "pageHeading": "Cài đặt ngôn ngữ",
@@ -374,7 +389,7 @@
       "failedAttemptsHint": "Bạn đã thử nhiều lần. Vui lòng đợi một lát rồi thử lại — máy chủ có thể tạm thời chặn các lần thử thêm.",
       "noticeSessionExpired": "Phiên của bạn đã hết hạn và bạn đã bị đăng xuất. Vui lòng đăng nhập lại.",
       "noticeDormant": "Đã lâu không gặp! Tài khoản này đang ở trạng thái ngủ đông. Đăng nhập sẽ kích hoạt lại.",
-      "noticeWithdrawn": "Tài khoản này đã bị xóa. Để sử dụng lại, vui lòng đăng ký tài khoản mới.",
+      "noticeWithdrawn": "Tài khoản này đã bị xóa. Trong vòng 30 ngày kể từ khi xóa, bạn có thể yêu cầu khôi phục qua bộ phận hỗ trợ khách hàng.",
       "noticeEmailNotConfirmed": "Email của bạn chưa được xác minh. Vui lòng kiểm tra hộp thư đến để tìm email xác minh.",
       "noticeUserBanned": "Tài khoản này đang bị hạn chế. Vui lòng liên hệ bộ phận hỗ trợ để biết chi tiết.",
       "formSubtitle": "Đăng nhập để tiếp tục học.",

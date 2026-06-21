@@ -7,7 +7,8 @@ import { AuthConsentPanel } from "@/components/auth/AuthConsentPanel";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PublicShell } from "@/components/shared/PublicShell";
 import { sanitizeNext } from "@/lib/auth/error-mapping";
-import { bootstrapProfile } from "@/lib/auth/profile";
+import { ACCOUNT_INACTIVE_PATH } from "@/lib/auth/completion-routes";
+import { bootstrapProfile, isActiveStatus } from "@/lib/auth/profile";
 import { requireUser } from "@/lib/auth/session";
 import { getMissingRequiredConsentDocuments } from "@/lib/legal/consent";
 
@@ -37,6 +38,10 @@ export default async function AuthConsentPage({
   const showRequiredError = pickFirst(params.error) === "required";
   const user = await requireUser();
   const profile = await bootstrapProfile(user.id);
+  // 회원 탈퇴(deleted)/차단(blocked) 계정 차단(세션 정리 route 로).
+  if (!isActiveStatus(profile.status)) {
+    redirect(`${ACCOUNT_INACTIVE_PATH}?status=${profile.status}`);
+  }
   const missingDocuments = await getMissingRequiredConsentDocuments(
     user.id,
     profile.ui_locale,

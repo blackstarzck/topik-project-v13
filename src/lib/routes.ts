@@ -21,6 +21,8 @@ export const APP_ROUTES = {
   authPostAuth: "/auth/post-auth",
   authConsent: "/auth/consent",
   authSignOut: "/auth/sign-out",
+  authAccountInactive: "/auth/account-inactive",
+  authAccountDelete: "/auth/account-delete",
   terms: "/terms",
   privacy: "/privacy",
   onboardingLearningGoal: "/onboarding/learning-goal",

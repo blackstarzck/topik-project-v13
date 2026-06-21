@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { fetchProfileStatus, isActiveStatus } from "@/lib/auth/profile";
 import {
   createSupabaseServerClient,
   createSupabaseServiceRoleClient,
@@ -23,6 +24,11 @@ export async function GET(request: Request) {
   } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+  // 회원 탈퇴(deleted)/차단(blocked) 계정 차단. /api/* 는 proxy 매처에서
+  // 제외되므로 세션 기반 라우트는 독립적으로 status 를 검증해야 한다.
+  if (!isActiveStatus(await fetchProfileStatus(supabase, user.id))) {
+    return NextResponse.json({ error: "account_inactive" }, { status: 403 });
   }
 
   const { data: submission, error: submissionError } = await supabase

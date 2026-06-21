@@ -18,7 +18,9 @@ const WORKSPACE_LAYOUT_CSS = readFileSync(
 
 const navMock = vi.hoisted(() => ({
   routerPush: vi.fn(),
+  routerReplace: vi.fn(),
   pathname: "/dashboard",
+  authCallback: null as ((event: string) => void) | null,
 }));
 const LOGO_SRC = "/assets/logo.png";
 
@@ -53,7 +55,24 @@ function cssRulesFrom(source: string, selector: string) {
 
 vi.mock("next/navigation", () => ({
   usePathname: () => navMock.pathname,
-  useRouter: () => ({ push: navMock.routerPush }),
+  useRouter: () => ({
+    push: navMock.routerPush,
+    replace: navMock.routerReplace,
+  }),
+}));
+
+// WorkspaceShell mounts an onAuthStateChange listener for multi-tab session
+// sync. Stub the browser client so the effect has a no-op subscription and no
+// real Supabase env is required.
+vi.mock("@/lib/supabase/browser", () => ({
+  createSupabaseBrowserClient: () => ({
+    auth: {
+      onAuthStateChange: (cb: (event: string) => void) => {
+        navMock.authCallback = cb;
+        return { data: { subscription: { unsubscribe: () => {} } } };
+      },
+    },
+  }),
 }));
 
 function hasExpandedMenuItem(container: HTMLElement, label: string) {
@@ -69,7 +88,24 @@ function hasExpandedMenuItem(container: HTMLElement, label: string) {
 describe("WorkspaceShell", () => {
   beforeEach(() => {
     navMock.routerPush.mockClear();
+    navMock.routerReplace.mockClear();
     navMock.pathname = "/dashboard";
+    navMock.authCallback = null;
+  });
+
+  it("redirects to /login on SIGNED_OUT (multi-tab/device sync) but ignores INITIAL_SESSION", () => {
+    renderWithIntl(
+      <WorkspaceShell role="learner" userId="user-1" email={null} planLabel={null}>
+        <div>body</div>
+      </WorkspaceShell>,
+    );
+
+    expect(navMock.authCallback).toBeTypeOf("function");
+    navMock.authCallback?.("INITIAL_SESSION");
+    expect(navMock.routerReplace).not.toHaveBeenCalled();
+
+    navMock.authCallback?.("SIGNED_OUT");
+    expect(navMock.routerReplace).toHaveBeenCalledWith("/login");
   });
 
   it("renders the workspace sidebar while keeping AppHeader unused", () => {

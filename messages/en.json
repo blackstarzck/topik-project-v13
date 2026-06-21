@@ -193,7 +193,22 @@
     "account": {
       "metaTitle": "Account settings — TALKPIK",
       "pageHeading": "Account settings",
-      "pageSubtitle": "Manage login methods, account status, and sign-out in one place."
+      "pageSubtitle": "Manage login methods, account status, and sign-out in one place.",
+      "dangerZone": {
+        "title": "Delete account",
+        "description": "Requesting account deletion immediately deactivates your account and blocks login. Within 30 days you can request recovery through customer support; after 30 days your learning history and personal data are permanently deleted.",
+        "deleteButtonLabel": "Delete account",
+        "confirmKeyword": "DELETE",
+        "errorMessage": "We couldn't process your account deletion. Please try again in a moment.",
+        "modal": {
+          "title": "Delete your account?",
+          "body": "Deleting deactivates your account and logs you out on every device. You can request recovery through customer support within 30 days.",
+          "confirmInstruction": "To proceed, type {keyword} in the box below.",
+          "confirmPlaceholder": "Type {keyword}",
+          "confirmCta": "Delete account",
+          "cancelCta": "Cancel"
+        }
+      }
     },
     "language": {
       "pageHeading": "Language settings",
@@ -374,7 +389,7 @@
       "failedAttemptsHint": "You've tried several times. Please wait a moment before trying again — the server may briefly block additional attempts.",
       "noticeSessionExpired": "Your session expired and you were logged out. Please log in again.",
       "noticeDormant": "It's been a while! This account was dormant. Logging in reactivates it.",
-      "noticeWithdrawn": "This account has been deleted. To use the service again, please sign up with a new account.",
+      "noticeWithdrawn": "This account has been deleted. Within 30 days of deletion you can request recovery through customer support.",
       "noticeEmailNotConfirmed": "Your email isn't verified yet. Please check your inbox for the verification email.",
       "noticeUserBanned": "This account is restricted. Please contact support for details.",
       "formSubtitle": "Log in to continue your learning.",

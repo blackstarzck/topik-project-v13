@@ -154,6 +154,14 @@
 | 53 | `14:00:00` | [`20260619140000_profiles_affiliation_code.sql`](./20260619140000_profiles_affiliation_code.sql) | Adds nullable `profiles.affiliation_code`, validates Auth metadata before seeding it in `handle_new_user()`, blocks normal profile edits to the column through `private.protect_profile_columns()`, and exposes authenticated one-shot `claim_affiliation_code(p_code)` for OAuth sign-up bridging. |
 | 54 | `15:00:00` | [`20260619150000_writing_submission_draft_dedup.sql`](./20260619150000_writing_submission_draft_dedup.sql) | Adds partial unique index `writing_submissions_draft_active_unique (draft_id) where draft_id is not null and feedback_status <> 'failed'` and makes `create_external_writing_submission` idempotent per draft (select-before-insert + `unique_violation` catch-and-reselect) to prevent duplicate submissions from multi-tab / network-retry / double-click. Re-attempts (new `draft_id`) and failed retries stay allowed. Renames the function's local `draft_id` to `v_draft_id` to avoid a column/variable name collision. No RLS change. |
 
+#### 22 (월) — 회원 탈퇴 소프트 삭제 (self-service 계정 삭제)
+
+> 구현 브리프: `docs/sot-change-proposals/2026-06-22-account-deletion-self-service.md`. 확정 SOT(`01-core-decisions` "탈퇴 30일 복구 유예") 기준. *소프트 삭제* 단계만. 하드 삭제 cron/storage 파기·복구 RPC는 후속(비-6·22-blocking). down 미러 동반.
+
+| # | timestamp | 파일 | 영역 |
+| ---:| --- | --- | --- |
+| 55 | `12:00:00` | [`20260622120000_account_deletion_soft_delete.sql`](./20260622120000_account_deletion_soft_delete.sql) | `profiles.deleted_at` 컬럼 추가 + `private.protect_profile_columns()` 보완(본인 `active→deleted` 단방향 예외, 그 외 status 변경·역방향 복구는 계속 admin 전용 차단) + `public.request_account_deletion()` SECURITY DEFINER RPC(호출자 본인 status=deleted·deleted_at=now(), 멱등, anon revoke·authenticated grant). admin_audit_logs 기록은 의도적 생략(admin_user_id ON DELETE RESTRICT → self-audit가 향후 하드삭제를 막는 함정). |
+
 ---
 
 ## 새 마이그레이션을 추가할 때

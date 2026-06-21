@@ -91,7 +91,13 @@
 
 | IA | Screen | Type | Columns/fields | Usage | Page feature |
 | --- | --- | --- | --- | --- | --- |
-| X-05 | Profile editing | rpc | - | trigger | 사용자가 app_role, plan_label, status를 직접 바꾸지 못하게 막는다. |
+| X-05 | Profile editing | rpc | - | trigger | 사용자가 app_role, plan_label, status를 직접 바꾸지 못하게 막는다. 단, 본인의 `active→deleted` 단방향 전이(회원 탈퇴)만 예외 허용한다(20260622120000). |
+
+## public.request_account_deletion
+
+| IA | Screen | Type | Columns/fields | Usage | Page feature |
+| --- | --- | --- | --- | --- | --- |
+| G-01 | Account settings | rpc | - → `status`, `deleted_at` | write (self) | 회원 탈퇴 시 호출자 본인 `status=deleted`, `deleted_at=now()`로 멱등 전환한다. SECURITY DEFINER, authenticated 전용. 하드 삭제/복구는 후속. |
 
 ## private.set_submission_feedback_status
 
@@ -140,6 +146,7 @@
 | A-03 | Learning goal setup | table | `id`, `ui_locale`, `status` | read | 사용자 기본 설정과 onboarding 상태 판단에 사용한다. |
 | B-01 | Home dashboard | table | `id`, `display_name`, `plan_label`, `status` | read | 대시보드 사용자 표시와 권한 상태에 사용한다. |
 | G-01 | Language settings | table | `ui_locale`, `updated_at` | read/write | 앱 표시 언어를 저장한다. |
+| G-01 | Account settings | table | `status`, `deleted_at` | write (self-deactivate) | 회원 탈퇴 시 `request_account_deletion` RPC로 `status=deleted`, `deleted_at` 기록(소프트 삭제). 인증 게이트는 `status<>'active'`면 차단한다. |
 | X-01 | Product landing | table | `plan_label` | derived-read | 랜딩의 플랜/권한 CTA fallback과 사용자 상태 분기에 연결될 수 있다. |
 | X-03 | Paywall | table | `plan_label`, `status` | fallback read | 현재 플랜과 접근 제한 안내의 fallback 분기에 연결될 수 있다. 기본 결제 근거는 `subscription_plans`와 `subscriptions`다. |
 | X-04 | Subscription management | table | `plan_label`, `status` | fallback read | 구독 상태 셸의 fallback 분기에 연결될 수 있다. 기본 결제 근거는 `subscription_plans`, `subscriptions`, `payment_history`다. |

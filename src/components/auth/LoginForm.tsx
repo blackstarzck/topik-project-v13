@@ -48,6 +48,8 @@ const REASON_NOTICE: Record<string, StatusNotice> = {
   session_expired: { tone: "warning", key: "noticeSessionExpired" },
   dormant: { tone: "info", key: "noticeDormant" },
   withdrawn: { tone: "error", key: "noticeWithdrawn" },
+  // 차단(blocked) 계정 게이트는 기존 noticeUserBanned 문구를 재사용한다.
+  blocked: { tone: "error", key: "noticeUserBanned" },
 };
 
 // 서버에서 받은 인증 실패 코드를 "필드 하단 인라인 오류"로 보여줄지,

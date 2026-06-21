@@ -73,6 +73,8 @@ export interface Database {
           // Phase 7-E Task 10 — self-introduction (max 160 chars, CHECK constraint).
           bio: string | null;
           affiliation_code: string | null;
+          // 20260622120000 — 회원 탈퇴 요청 시각. status=deleted 전환 시 기록.
+          deleted_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -95,6 +97,7 @@ export interface Database {
           content_prefs?: Json;
           bio?: string | null;
           affiliation_code?: string | null;
+          deleted_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -117,6 +120,7 @@ export interface Database {
           content_prefs?: Json;
           bio?: string | null;
           affiliation_code?: string | null;
+          deleted_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -1357,6 +1361,10 @@ export interface Database {
           candidate: string;
         };
         Returns: boolean;
+      };
+      request_account_deletion: {
+        Args: Record<string, never>;
+        Returns: undefined;
       };
       list_user_problems: {
         Args: {

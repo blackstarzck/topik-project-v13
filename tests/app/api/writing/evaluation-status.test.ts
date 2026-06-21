@@ -44,20 +44,33 @@ describe("GET /api/writing/evaluation-status", () => {
     helpers.getSessionMock.mockResolvedValue({
       data: { session: { access_token: "learner-token" } },
     });
-    helpers.fromMock.mockReturnValue({
-      select: () => ({
-        eq: () => ({
-          maybeSingle: () =>
-            Promise.resolve({
-              data: {
-                id: "00000000-0000-0000-0000-000000000099",
-                user_id: "user-1",
-                feedback_status: "analyzing",
-              },
-              error: null,
+    helpers.fromMock.mockImplementation((table: string) => {
+      // 새 status 게이트: fetchProfileStatus(supabase, userId) 는 profiles 를 조회한다.
+      if (table === "profiles") {
+        return {
+          select: () => ({
+            eq: () => ({
+              maybeSingle: () =>
+                Promise.resolve({ data: { status: "active" }, error: null }),
             }),
+          }),
+        };
+      }
+      return {
+        select: () => ({
+          eq: () => ({
+            maybeSingle: () =>
+              Promise.resolve({
+                data: {
+                  id: "00000000-0000-0000-0000-000000000099",
+                  user_id: "user-1",
+                  feedback_status: "analyzing",
+                },
+                error: null,
+              }),
+          }),
         }),
-      }),
+      };
     });
     helpers.rpcMock.mockResolvedValue({ data: "complete", error: null });
     helpers.serviceRpcMock.mockResolvedValue({ data: "complete", error: null });

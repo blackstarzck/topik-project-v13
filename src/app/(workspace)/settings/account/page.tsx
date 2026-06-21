@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { WorkspaceBody } from "@/components/app/WorkspaceBody";
+import { AccountDeletionCard } from "@/components/profile/AccountDeletionCard";
 import { AccountLoginMethodsCard } from "@/components/profile/AccountLoginMethodsCard";
 import { ProfileLogoutForm } from "@/components/profile/ProfileLogoutForm";
 import { StatusHelpCard } from "@/components/profile/StatusHelpCard";
@@ -33,14 +34,12 @@ export default async function AccountSettingsPage() {
   return (
     <WorkspaceBody>
       <div className="w-full max-w-[640px]">
-        <PageHeader title={t("pageHeading")} subtitle={t("pageSubtitle")} />
-        <div className="flex w-full flex-col gap-4">
+        <PageHeader title={t("pageHeading")} />
+        <div className="account-settings-redesign">
           <AccountLoginMethodsCard
             accountEmail={user.email ?? null}
             labels={{
               regionAriaLabel: tLoginMethods("regionAriaLabel"),
-              title: tLoginMethods("title"),
-              description: tLoginMethods("description"),
               emailMethod: tLoginMethods("emailMethod"),
               emailUnavailable: tLoginMethods("emailUnavailable"),
               googleMethod: tLoginMethods("googleMethod"),
@@ -60,6 +59,7 @@ export default async function AccountSettingsPage() {
             />
           ) : null}
           <ProfileLogoutForm label={tNav("logout")} />
+          <AccountDeletionCard />
         </div>
       </div>
     </WorkspaceBody>
