@@ -864,11 +864,8 @@ export const SIDEBAR_ITEMS: readonly SidebarItem[] = [
         label: "Notifications",
         labelKey: "settingsNotifications",
       },
-      {
-        key: APP_ROUTES.subscription,
-        label: "Subscription",
-        labelKey: "subscription",
-      },
+      // 구독 관리(X-04)는 사이드바 직접 메뉴에서 숨긴다. route 자체는 유지하며
+      // 페이월(X-03) CTA 흐름에서만 진입한다(SHARE-03 contextual-only 옵션).
     ],
   },
 ];

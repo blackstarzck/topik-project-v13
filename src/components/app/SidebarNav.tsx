@@ -13,7 +13,6 @@ import {
   BarChart3,
   Bell,
   BookOpen,
-  CreditCard,
   Home,
   Languages,
   Library,
@@ -153,7 +152,6 @@ function navIcon(key: string) {
   if (key === "/settings/account") return <ShieldCheck {...props} />;
   if (key === "/settings/language") return <Languages {...props} />;
   if (key === "/settings/notifications") return <Bell {...props} />;
-  if (key === "/subscription") return <CreditCard {...props} />;
 
   return null;
 }

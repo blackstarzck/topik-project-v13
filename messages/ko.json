@@ -2109,6 +2109,11 @@
   },
   "subscription": {
     "metaTitle": "구독 관리 — TALKPIK",
+    "comingSoon": {
+      "title": "구독 기능을 준비하고 있어요",
+      "subTitle": "구독 관리 기능은 현재 준비 중입니다. 정식 오픈 시 안내드릴게요.",
+      "backToDashboard": "대시보드로 이동"
+    },
     "heading": "구독 관리",
     "subheading": "현재 구독 상태와 결제 이력을 확인하고 관리하세요.",
     "retry": "다시 시도",

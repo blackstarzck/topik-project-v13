@@ -107,6 +107,8 @@ describe("user-flow route contract", () => {
 
     expect(sidebarKeys).not.toContain(APP_ROUTES.practiceNext);
     expect(sidebarKeys).not.toContain(APP_ROUTES.paywall);
+    // 구독 관리(X-04)는 사이드바에서 숨기고 페이월 CTA 흐름으로만 진입한다.
+    expect(sidebarKeys).not.toContain(APP_ROUTES.subscription);
     expect(sidebarKeys).not.toContain(APP_ROUTES.feedbackShort);
     expect(sidebarKeys).not.toContain(APP_ROUTES.feedbackLong);
     expect(sidebarKeys).not.toContain(APP_ROUTES.comparisonReport);
@@ -136,7 +138,6 @@ describe("user-flow route contract", () => {
       APP_ROUTES.settingsAccount,
       APP_ROUTES.settingsLanguage,
       APP_ROUTES.settingsNotifications,
-      APP_ROUTES.subscription,
     ]);
   });
 });

@@ -2109,6 +2109,11 @@
   },
   "subscription": {
     "metaTitle": "Quản lý gói đăng ký — TALKPIK",
+    "comingSoon": {
+      "title": "Tính năng gói đăng ký sắp ra mắt",
+      "subTitle": "Tính năng quản lý gói đăng ký đang được chuẩn bị. Chúng tôi sẽ thông báo khi ra mắt.",
+      "backToDashboard": "Đi tới bảng điều khiển"
+    },
     "heading": "Quản lý gói đăng ký",
     "subheading": "Kiểm tra và quản lý trạng thái gói đăng ký hiện tại cùng lịch sử thanh toán của bạn.",
     "retry": "Thử lại",

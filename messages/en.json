@@ -2109,6 +2109,11 @@
   },
   "subscription": {
     "metaTitle": "Manage subscription — TALKPIK",
+    "comingSoon": {
+      "title": "Subscription is coming soon",
+      "subTitle": "Subscription management is being prepared. We'll let you know when it launches.",
+      "backToDashboard": "Go to dashboard"
+    },
     "heading": "Manage subscription",
     "subheading": "Check and manage your current subscription status and payment history.",
     "retry": "Try again",
