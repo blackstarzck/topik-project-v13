@@ -24,6 +24,7 @@ export const APP_ROUTES = {
   authAccountInactive: "/auth/account-inactive",
   authAccountDelete: "/auth/account-delete",
   terms: "/terms",
+  termsAgreement: "/terms-agreement",
   privacy: "/privacy",
   onboardingLearningGoal: "/onboarding/learning-goal",
   dashboard: "/dashboard",
@@ -481,6 +482,17 @@ export const APP_ROUTE_SPECS: readonly AppRouteSpec[] = [
     title: "이용약관",
     path: APP_ROUTES.terms,
     appPath: "src/app/terms/page.tsx",
+    routeType: "page",
+    middleware: "public",
+  },
+  {
+    // 약관 변경 알림 이메일 CTA용 공개 진입점. 로그인 세션이 있으면 /auth/consent
+    // 로, 없으면 /login?next=/auth/consent 로 보내 로그인 후 동의 화면으로 잇는다.
+    id: "terms-agreement",
+    iaCode: "X-13B",
+    title: "약관 재동의 진입",
+    path: APP_ROUTES.termsAgreement,
+    appPath: "src/app/terms-agreement/page.tsx",
     routeType: "page",
     middleware: "public",
   },
