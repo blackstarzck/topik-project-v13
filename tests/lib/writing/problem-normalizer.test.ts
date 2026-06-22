@@ -82,7 +82,7 @@ describe("normalizeWritingProblem", () => {
     expect(count).toBe(466);
   });
 
-  it("normalizes 51 blank answers from accepted-answer fixtures", () => {
+  it("normalizes 51 blanks without exposing accepted answers to the client", () => {
     const normalized = normalizeWritingProblem(
       inputFromFixture(record(sample51[0]), 51),
     );
@@ -91,9 +91,45 @@ describe("normalizeWritingProblem", () => {
     if (normalized.kind !== "q51") throw new Error("expected q51");
     expect(normalized.blanks).toHaveLength(2);
     expect(normalized.blanks[0].key).toBe("ㄱ");
-    expect(normalized.blanks[0].acceptedAnswers).toContain("잘 수 없습니다");
+    // 정답 목록은 클라이언트로 전달되는 NormalizedBlank에 포함되지 않는다.
+    expect(normalized.blanks[0]).not.toHaveProperty("acceptedAnswers");
+    const serialized = JSON.stringify(normalized.blanks);
+    expect(serialized).not.toContain("잘 수 없습니다");
     expect(normalized.answerMode).toBe("single_text");
     expect(normalized.charLimit.hardMax).toBe(120);
+  });
+
+  it("does not expose blank_target_* authoring memo as a learner hint (answer leak guard)", () => {
+    // blank_target_giyeok/nieun은 원문 정답 구간을 그대로 담은 검수 메모다.
+    // 학습자 풀이 화면 힌트(targetHint)로 노출되면 정답이 새어 나간다.
+    const normalized = normalizeWritingProblem({
+      id: "q51-blank-target-leak",
+      title: "leak guard",
+      prompt: "지문 ( ㄱ ) 그리고 ( ㄴ ) 으로 이어진다.",
+      questionNo: 51,
+      materials: {
+        blanks: {
+          blank_target_giyeok:
+            "ㄱ: 8행에서 '참가하고 싶으신 분들은' 구간 전체를 빈칸으로 지정",
+          blank_target_nieun:
+            "ㄴ: 9행에서 '문의해 주시기를 바랍니다' 구간 전체를 빈칸으로 지정",
+        },
+      },
+      answerKey: {},
+      rubric: {},
+      lifecycleStatus: "active",
+    });
+
+    expect(normalized.kind).toBe("q51");
+    if (normalized.kind !== "q51") throw new Error("expected q51");
+    // blank_target_*는 빈칸 존재 신호로만 쓰여 빈칸 2개는 정상 생성되어야 한다.
+    expect(normalized.blanks).toHaveLength(2);
+    for (const blank of normalized.blanks) {
+      expect(blank.targetHint).toBeNull();
+    }
+    const serialized = JSON.stringify(normalized.blanks);
+    expect(serialized).not.toContain("구간 전체를 빈칸으로 지정");
+    expect(serialized).not.toContain("참가하고 싶으신 분들은");
   });
 
   it("promotes the writing fixture text_type into textType", () => {
