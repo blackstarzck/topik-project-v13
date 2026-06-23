@@ -10,21 +10,29 @@ import {
   type ThemeConfig,
 } from "antd";
 import {
-  BarChart3,
-  Bell,
-  BookOpen,
-  Home,
-  Languages,
-  Library,
-  Lightbulb,
-  ListChecks,
+  Activity,
+  ArchiveBook,
+  Book1,
+  Chart2,
+  DirectboxNotif,
+  DocumentText,
+  Edit2,
+  Home2,
+  LampOn,
   Lock,
-  PenLine,
-  Settings,
-  ShieldCheck,
-  Target,
-  UserRound,
-} from "lucide-react";
+  MedalStar,
+  NotificationBing,
+  PresentionChart,
+  ProfileCircle,
+  ProgrammingArrows,
+  Ranking,
+  Setting2,
+  ShieldTick,
+  TaskSquare,
+  Translate,
+  type Icon as IconsaxIcon,
+  type IconProps as IconsaxIconProps,
+} from "iconsax-react";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -80,7 +88,11 @@ function buildLeaf(leaf: SidebarLeaf, locks: SidebarLockMap, t: NavTranslate) {
     };
   }
 
-  return { key: leaf.key, label, icon: navIcon(leaf.key) };
+  return {
+    key: leaf.key,
+    label,
+    icon: navIcon(leaf.key),
+  };
 }
 
 function buildItem(
@@ -133,27 +145,95 @@ function mergeOpenKeys(openKeys: readonly string[], requiredKeys: string[]) {
 }
 
 function navIcon(key: string) {
-  const props = { "aria-hidden": true, size: 17, strokeWidth: 1.8 };
+  const icon = sidebarIconForKey(key);
 
-  if (key === "/dashboard") return <Home {...props} />;
-  if (key === "practice") return <BookOpen {...props} />;
-  if (key === "/practice/recommendations") return <Lightbulb {...props} />;
-  if (key === "/practice/problems") return <ListChecks {...props} />;
-  if (key === "/practice/next") return <Target {...props} />;
-  if (key === "/practice/weakness") return <BarChart3 {...props} />;
-  if (key === "writing" || key.startsWith("/writing/")) {
-    return <PenLine {...props} />;
+  if (!icon) return null;
+
+  const props: IconsaxIconProps = {
+    "aria-hidden": true,
+    color: "currentColor",
+    size: 18,
+    variant: "Linear",
+  };
+
+  return <SidebarIcon icon={icon.component} iconName={icon.name} props={props} />;
+}
+
+function sidebarIconForKey(
+  key: string,
+): { component: IconsaxIcon; name: string } | null {
+  if (key === "/dashboard") return { component: Home2, name: "Home2" };
+  if (key === "practice") return { component: Book1, name: "Book1" };
+  if (key === "/practice/recommendations") {
+    return { component: LampOn, name: "LampOn" };
   }
-  if (key === "/library") return <Library {...props} />;
-  if (key === "growth" || key === "/growth") return <BarChart3 {...props} />;
-  if (key === "/profile") return <UserRound {...props} />;
-  if (key === "settings") return <Settings {...props} />;
-  if (key === "/settings/learning") return <Target {...props} />;
-  if (key === "/settings/account") return <ShieldCheck {...props} />;
-  if (key === "/settings/language") return <Languages {...props} />;
-  if (key === "/settings/notifications") return <Bell {...props} />;
+  if (key === "/practice/problems") {
+    return { component: TaskSquare, name: "TaskSquare" };
+  }
+  if (key === "/practice/next") return { component: Ranking, name: "Ranking" };
+  if (key === "/practice/weakness") {
+    return { component: Activity, name: "Activity" };
+  }
+  if (key === APP_ROUTES.writing51) {
+    return { component: DirectboxNotif, name: "DirectboxNotif" };
+  }
+  if (key === APP_ROUTES.writing52) {
+    return { component: ProgrammingArrows, name: "ProgrammingArrows" };
+  }
+  if (key === APP_ROUTES.writing53) {
+    return { component: PresentionChart, name: "PresentationChart" };
+  }
+  if (key === APP_ROUTES.writing54) {
+    return { component: DocumentText, name: "DocumentText" };
+  }
+  if (key === "writing" || key.startsWith("/writing/")) {
+    return { component: Edit2, name: "Edit2" };
+  }
+  if (key === "/library") return { component: ArchiveBook, name: "ArchiveBook" };
+  if (key === "growth") {
+    return { component: DocumentText, name: "DocumentText" };
+  }
+  if (key === "/growth") return { component: Chart2, name: "Chart2" };
+  if (key === "/profile") {
+    return { component: ProfileCircle, name: "ProfileCircle" };
+  }
+  if (key === "settings") return { component: Setting2, name: "Setting2" };
+  if (key === "/settings/learning") {
+    return { component: MedalStar, name: "MedalStar" };
+  }
+  if (key === "/settings/account") {
+    return { component: ShieldTick, name: "ShieldTick" };
+  }
+  if (key === "/settings/language") {
+    return { component: Translate, name: "Translate" };
+  }
+  if (key === "/settings/notifications") {
+    return { component: NotificationBing, name: "NotificationBing" };
+  }
 
   return null;
+}
+
+function SidebarIcon({
+  icon: Icon,
+  iconName,
+  props,
+}: {
+  icon: IconsaxIcon;
+  iconName: string;
+  props: IconsaxIconProps;
+}) {
+  return (
+    <span
+      className="app-sidebar-icon"
+      data-sidebar-icon-kind="svg"
+      data-sidebar-icon-library="iconsax"
+      data-sidebar-icon-name={iconName}
+      aria-hidden="true"
+    >
+      <Icon {...props} />
+    </span>
+  );
 }
 
 export function SidebarNav({ role, planLabel, onNavigate }: Props) {

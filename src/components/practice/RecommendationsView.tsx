@@ -1,14 +1,7 @@
 "use client";
 
-import type { ReactNode } from "react";
-import { Alert, Button, Skeleton, Tag, Typography } from "antd";
-import {
-  ArrowRight,
-  ChartNoAxesColumnIncreasing,
-  CheckCircle2,
-  Clock3,
-  Lightbulb,
-} from "lucide-react";
+import { Alert, Button, Empty, Skeleton, Tag, Typography } from "antd";
+import { Lightbulb } from "@/components/shared/AppIcons";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -16,8 +9,6 @@ import { useMemo } from "react";
 import { AppCard } from "@/components/shared/AppCard";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { isValidQuestionNo, type QuestionNo } from "@/lib/practice/types";
-import { writingQuestionHref } from "@/lib/writing/routes";
-import { difficultyFillColor } from "./DifficultyMeter";
 import { ProblemTypeTabs } from "./ProblemTypeTabs";
 import {
   PrimaryRecommendationCard,
@@ -29,109 +20,28 @@ import { useRecommendationBundle } from "./recommendations-data";
 
 const { Title, Text } = Typography;
 
-const FALLBACK_META: Record<QuestionNo, { minutes: number }> = {
-  51: { minutes: 15 },
-  52: { minutes: 25 },
-  53: { minutes: 30 },
-  54: { minutes: 50 },
-};
-
-function RecommendationBadge({
-  children,
-  tone = "neutral",
-}: {
-  children: ReactNode;
-  tone?: "neutral" | "primary";
-}) {
-  return (
-    <span
-      className={[
-        "inline-flex w-fit items-center rounded-full border px-3 py-1 text-xs font-semibold",
-        tone === "primary"
-          ? "border-primary bg-primary text-background"
-          : "border-border bg-surface text-text-secondary",
-      ].join(" ")}
-    >
-      {children}
-    </span>
-  );
-}
-
-function FallbackRecommendationPanel({
-  questionNo,
-  reasonSummary,
-}: {
-  questionNo: QuestionNo;
-  reasonSummary?: string | null;
-}) {
+/**
+ * Honest empty state — shown when the live recommendation query returns zero
+ * items. It must NOT fabricate a personalized recommendation (no "대표 추천"
+ * hero, no "이렇게 추천했어요" analysis). It states plainly that there is nothing
+ * to recommend yet and points users to the type-select cards / problem list so
+ * they can start practicing.
+ */
+function RecommendationEmptyState() {
   const t = useTranslations("practice.recommendations");
-  const tCommon = useTranslations("practice.common");
-  const typeLabel = tCommon(`questionType${questionNo}`);
-  const questionLabel = tCommon("questionNo", { no: questionNo });
-  const meta = FALLBACK_META[questionNo];
 
   return (
     <AppCard>
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="flex min-w-0 flex-col justify-center gap-4">
-          <RecommendationBadge tone="primary">
-            {t("primaryBadge")}
-          </RecommendationBadge>
-          <h2 className="m-0 text-3xl font-semibold leading-tight text-text">
-            {t("fallbackHeroTitle", { type: typeLabel })}
-          </h2>
-          <Text className="max-w-xl text-base leading-7" type="secondary">
-            {reasonSummary ?? t("fallbackHeroBody", { type: typeLabel })}
-          </Text>
-        </div>
-        <div className="self-center">
-          <div className="grid gap-2 sm:grid-cols-3">
-            <span className="flex min-w-0 items-center gap-3 rounded-default bg-surface p-3">
-              <Clock3 size={18} aria-hidden="true" />
-              <span className="grid min-w-0 gap-1">
-                <small className="text-xs text-text-secondary">
-                  {t("fallbackHeroTime")}
-                </small>
-                <strong className="truncate text-base text-text">
-                  {tCommon("minutes", { minutes: meta.minutes })}
-                </strong>
-              </span>
-            </span>
-            <span className="flex min-w-0 items-center gap-3 rounded-default bg-surface p-3">
-              <ChartNoAxesColumnIncreasing
-                size={18}
-                aria-hidden="true"
-                color={difficultyFillColor(3)}
-              />
-              <span className="grid min-w-0 gap-1">
-                <small className="text-xs text-text-secondary">
-                  {t("fallbackHeroDifficulty")}
-                </small>
-                <strong className="truncate text-base text-text">
-                  {tCommon("difficultyNormal")}
-                </strong>
-              </span>
-            </span>
-            <span className="flex min-w-0 items-center gap-3 rounded-default bg-surface p-3">
-              <CheckCircle2 size={18} aria-hidden="true" />
-              <span className="grid min-w-0 gap-1">
-                <small className="text-xs text-text-secondary">
-                  {t("fallbackHeroStatus")}
-                </small>
-                <strong className="truncate text-base text-text">
-                  {t("fallbackHeroStatusReady")}
-                </strong>
-              </span>
-            </span>
-          </div>
-          <Link href={writingQuestionHref(questionNo) as never}>
-            <Button className="mt-4" type="primary" size="large" block>
-              <span>{t("fallbackHeroCta", { type: questionLabel })}</span>
-              <ArrowRight size={18} aria-hidden="true" />
-            </Button>
-          </Link>
-        </div>
-      </div>
+      <Empty
+        image={Empty.PRESENTED_IMAGE_SIMPLE}
+        description={
+          <span className="text-text-secondary">{t("emptyDescription")}</span>
+        }
+      >
+        <Link href={"/practice/problems" as never}>
+          <Button type="primary">{t("viewProblemList")}</Button>
+        </Link>
+      </Empty>
     </AppCard>
   );
 }
@@ -336,6 +246,13 @@ export function RecommendationsView() {
     bundle.isLoading ? "loading" : "ready"
   }`;
 
+  // The reason panel explains WHY a problem was recommended. With no
+  // recommendations there is nothing to explain — rendering a fabricated
+  // "이렇게 추천했어요" analysis (fallback summary + default weakness tags) would
+  // misrepresent an empty state as a personalized result. So it only shows
+  // while loading or when real items exist; the empty state stays honest.
+  const showReasonPanel = bundle.isLoading || items.length > 0;
+
   return (
     <div className="flex w-full flex-col gap-6">
       <PageHeader
@@ -346,14 +263,16 @@ export function RecommendationsView() {
 
       <div className="grid gap-4">
         <ProblemTypeTabs active={active} onChange={updateType} />
-        <RecommendationReasonPanel
-          key={`reason-${reasonAnimationKey}`}
-          questionNo={recommendedQuestionNo}
-          reasonSummary={reasonSummary}
-          weaknessTags={primary?.weaknessTags ?? []}
-          isLoading={bundle.isLoading}
-          animationKey={reasonAnimationKey}
-        />
+        {showReasonPanel ? (
+          <RecommendationReasonPanel
+            key={`reason-${reasonAnimationKey}`}
+            questionNo={recommendedQuestionNo}
+            reasonSummary={reasonSummary}
+            weaknessTags={primary?.weaknessTags ?? []}
+            isLoading={bundle.isLoading}
+            animationKey={reasonAnimationKey}
+          />
+        ) : null}
       </div>
 
       {bundle.isLoading ? (
@@ -400,20 +319,8 @@ export function RecommendationsView() {
         </>
       ) : (
         <>
-          <FallbackRecommendationPanel
-            questionNo={fallbackQuestionNo}
-            reasonSummary={bundle.data?.run?.reasonSummary}
-          />
+          <RecommendationEmptyState />
           <TypeSelectCards />
-          <div className="flex flex-col items-start gap-2 pt-2 sm:flex-row sm:items-center sm:gap-3">
-            <Text type="secondary">{t("emptyDescription")}</Text>
-            <Link
-              className="inline-flex items-center text-sm font-semibold text-text underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-              href={"/practice/problems" as never}
-            >
-              {t("viewProblemList")}
-            </Link>
-          </div>
         </>
       )}
     </div>

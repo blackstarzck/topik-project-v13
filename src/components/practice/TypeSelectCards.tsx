@@ -4,13 +4,9 @@ import type { ReactNode } from "react";
 import { Tooltip, Typography } from "antd";
 import {
   ArrowRight,
-  BarChart3,
   ChartNoAxesColumnIncreasing,
   Clock3,
-  FileText,
-  ListChecks,
-  PencilLine,
-} from "lucide-react";
+} from "@/components/shared/AppIcons";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { AppCard } from "@/components/shared/AppCard";
@@ -21,6 +17,7 @@ import {
   difficultyLabelKey,
   type DifficultyLevel,
 } from "./DifficultyMeter";
+import { questionTypeIcon } from "./question-type-icons";
 
 const { Text, Title } = Typography;
 
@@ -40,22 +37,22 @@ const TYPE_META: Record<
   51: {
     minutes: 15,
     difficultyLevel: 3,
-    icon: <PencilLine size={28} />,
+    icon: questionTypeIcon(51, 28),
   },
   52: {
     minutes: 25,
     difficultyLevel: 4,
-    icon: <FileText size={28} />,
+    icon: questionTypeIcon(52, 28),
   },
   53: {
     minutes: 30,
     difficultyLevel: 5,
-    icon: <BarChart3 size={28} />,
+    icon: questionTypeIcon(53, 28),
   },
   54: {
     minutes: 50,
     difficultyLevel: 5,
-    icon: <ListChecks size={28} />,
+    icon: questionTypeIcon(54, 28),
   },
 };
 

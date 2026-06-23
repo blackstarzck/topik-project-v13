@@ -41,7 +41,7 @@ function KpiTile({
   return (
     <AppCard size="small" className="h-full">
       <div className="grid gap-2">
-        <span className="text-xs font-medium text-text-secondary">{title}</span>
+        <span className="text-sm font-medium text-text-secondary">{title}</span>
         <span
           className={
             isPrompt

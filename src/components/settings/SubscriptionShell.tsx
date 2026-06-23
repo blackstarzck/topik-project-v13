@@ -14,7 +14,7 @@ import {
   Typography,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { CreditCard, FileText, PenLine } from "lucide-react";
+import { CreditCard, FileText, PenLine } from "@/components/shared/AppIcons";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";

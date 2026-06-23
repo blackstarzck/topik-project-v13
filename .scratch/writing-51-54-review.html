@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>쓰기 51~54 화면 검수 결과</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --card:#ffffff; --ink:#1f2430; --muted:#5b6472; --line:#e7eaf0;
+    --green:#1f9d6b; --green-bg:#e8f7f0; --amber:#c98a00; --amber-bg:#fef6e3;
+    --red:#d2453b; --red-bg:#fdeceb; --blue:#2f6fed; --blue-bg:#eaf1ff;
+    --shadow:0 1px 2px rgba(16,24,40,.05),0 4px 16px rgba(16,24,40,.05);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    line-height:1.65; font-size:16px; -webkit-text-size-adjust:100%;
+  }
+  .wrap{max-width:860px; margin:0 auto; padding:28px 18px 80px}
+  header.hero{
+    background:linear-gradient(135deg,#243049,#33446b); color:#fff;
+    border-radius:18px; padding:30px 26px; box-shadow:var(--shadow);
+  }
+  .hero .eyebrow{font-size:13px; letter-spacing:.04em; opacity:.8; margin:0 0 8px}
+  .hero h1{font-size:25px; line-height:1.35; margin:0 0 14px; font-weight:750}
+  .hero p{margin:0; font-size:16px; opacity:.95}
+  .hero .meta{margin-top:18px; font-size:13px; opacity:.8; border-top:1px solid rgba(255,255,255,.18); padding-top:14px}
+
+  h2{font-size:20px; margin:42px 0 6px; font-weight:740; letter-spacing:-.01em}
+  h2 .lead{display:block; font-size:13.5px; font-weight:500; color:var(--muted); margin-top:4px}
+  h3{font-size:16.5px; margin:0 0 6px; font-weight:700}
+  p{margin:8px 0}
+  .sub{color:var(--muted); font-size:14.5px}
+
+  .card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px 18px; box-shadow:var(--shadow); margin:14px 0}
+  .card.bl{border-left:5px solid var(--blue)}
+  .card.gr{border-left:5px solid var(--green)}
+  .card.am{border-left:5px solid var(--amber)}
+  .card.rd{border-left:5px solid var(--red)}
+
+  /* traffic-light summary */
+  .lights{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:14px}
+  @media (max-width:640px){.lights{grid-template-columns:1fr}}
+  .light{border-radius:14px; padding:16px; border:1px solid var(--line)}
+  .light.g{background:var(--green-bg)}
+  .light.a{background:var(--amber-bg)}
+  .light.r{background:var(--red-bg)}
+  .light .dot{font-size:13px; font-weight:700; display:inline-flex; align-items:center; gap:7px}
+  .light.g .dot{color:var(--green)} .light.a .dot{color:var(--amber)} .light.r .dot{color:var(--red)}
+  .light .n{font-size:28px; font-weight:800; margin:6px 0 2px}
+  .light ul{margin:8px 0 0; padding-left:18px; font-size:13.5px; color:var(--muted)}
+  .light li{margin:3px 0}
+
+  /* flow */
+  .flow{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:12px}
+  .step{background:var(--blue-bg); color:#1f4ba8; border:1px solid #cfdcfb; border-radius:10px; padding:9px 13px; font-weight:650; font-size:14px}
+  .step.fork{background:#f1f3f7; color:#3a4252; border-color:var(--line)}
+  .arrow{color:var(--muted); font-weight:700}
+  .branch{display:flex; flex-direction:column; gap:6px}
+
+  /* badges */
+  .badge{display:inline-block; font-size:11.5px; font-weight:700; padding:2px 9px; border-radius:999px; vertical-align:middle}
+  .b-red{background:var(--red-bg); color:var(--red)}
+  .b-amber{background:var(--amber-bg); color:var(--amber)}
+  .b-green{background:var(--green-bg); color:var(--green)}
+  .b-num{background:#eef1f6; color:#3a4252; margin-right:8px}
+
+  .qa{margin-top:12px}
+  .qa .row{display:flex; gap:10px; padding:7px 0; border-top:1px dashed var(--line)}
+  .qa .row:first-child{border-top:0}
+  .qa .k{flex:0 0 92px; font-weight:700; font-size:13.5px; color:var(--muted)}
+  .qa .v{flex:1; font-size:14.5px}
+  .decide{background:var(--amber-bg); border-radius:10px; padding:10px 12px; margin-top:10px; font-size:14px}
+  .decide b{color:var(--amber)}
+
+  table{width:100%; border-collapse:collapse; margin-top:12px; font-size:14px; background:var(--card); border-radius:12px; overflow:hidden; box-shadow:var(--shadow)}
+  .scroll{overflow-x:auto}
+  th,td{padding:10px 12px; text-align:left; border-bottom:1px solid var(--line); vertical-align:top}
+  th{background:#f0f2f6; font-size:13px; font-weight:700; white-space:nowrap}
+  td:first-child{font-weight:650; white-space:nowrap}
+  tr:last-child td{border-bottom:0}
+  .tl{font-weight:800; font-size:15px}
+  .tl.g{color:var(--green)} .tl.a{color:var(--amber)} .tl.r{color:var(--red)}
+
+  details{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:4px 16px; margin-top:14px}
+  summary{cursor:pointer; font-weight:700; padding:12px 0; font-size:15px}
+  details code{background:#f0f2f6; padding:1px 6px; border-radius:6px; font-size:12.5px; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  details ul{font-size:13.5px; color:var(--muted)}
+  .note{font-size:13px; color:var(--muted); margin-top:24px; text-align:center}
+  .legend{font-size:12.5px; color:var(--muted); margin-top:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <p class="eyebrow">검수 보고 · 학습 쓰기 화면</p>
+    <h1>51~54번 쓰기 화면, 전체 흐름은 잘 만들어졌습니다.<br/>다만 먼저 <u>정할 일 4가지</u>와 <u>고칠 문제 4가지</u>가 있어요.</h1>
+    <p>문제를 풀고 → AI가 분석하고 → 피드백을 보고 → 다음 문제로 이어지는 큰 흐름은 코드에서 끝까지 정상으로 이어집니다. 핵심 기능과 보안도 대체로 양호합니다.</p>
+    <div class="meta">검수 대상: 51·52·53·54번 작성 화면 + 제출 확인창 · AI 분석 화면 · 자동저장 경고창 &nbsp;|&nbsp; 방식: 설계 문서와 실제 코드를 한 줄씩 대조 (읽기 전용, 고치지 않음)</div>
+  </header>
+
+  <h2>큰 그림: 학습 흐름은 이렇게 이어집니다</h2>
+  <div class="card bl">
+    <div class="flow">
+      <span class="step">답안 작성</span><span class="arrow">→</span>
+      <span class="step">제출 확인</span><span class="arrow">→</span>
+      <span class="step">AI 분석</span><span class="arrow">→</span>
+      <span class="step">피드백 확인</span><span class="arrow">→</span>
+      <span class="branch">
+        <span class="step fork">다음 문제</span>
+        <span class="step fork">비교 리포트</span>
+        <span class="step fork">PDF 저장</span>
+      </span>
+    </div>
+    <p class="sub" style="margin-top:12px">이 순서대로 화면이 실제로 연결되는 것을 확인했습니다. 제출에 성공하면 분석 화면으로 바뀌고, 분석이 끝나면 자동으로 피드백 화면으로 넘어갑니다.</p>
+  </div>
+
+  <h2>한눈에 보기 <span class="lead">신호등으로 보는 검수 결과</span></h2>
+  <div class="lights">
+    <div class="light g">
+      <span class="dot">● 잘 되어 있음</span>
+      <div class="n">5</div>
+      <ul>
+        <li>제출→분석→피드백 흐름</li>
+        <li>54번 작성 안내</li>
+        <li>AI 분석 화면 전환</li>
+        <li>외부 채점 연결·보안</li>
+        <li>로그인·본인 데이터 보호</li>
+      </ul>
+    </div>
+    <div class="light a">
+      <span class="dot">● 먼저 정해야 함</span>
+      <div class="n">4</div>
+      <ul>
+        <li>왼쪽 메뉴 숨김</li>
+        <li>53번 참고 자료 충돌</li>
+        <li>제출 확인창 내용 누락</li>
+        <li>옛 문서 문구 정리</li>
+      </ul>
+    </div>
+    <div class="light r">
+      <span class="dot">● 고치면 좋음</span>
+      <div class="n">4</div>
+      <ul>
+        <li>영어 오류 메시지 노출</li>
+        <li>51·52번 총평 안 보임</li>
+        <li>분석 중 이탈 경고 없음</li>
+        <li>중복 제출 빈틈</li>
+      </ul>
+    </div>
+  </div>
+  <p class="legend">‘먼저 정해야 함’은 코드가 틀렸다기보다, 무엇이 맞는지 결정이 필요한 항목입니다. ‘고치면 좋음’은 사용자가 겪을 수 있는 실제 불편입니다.</p>
+
+  <h2>🟡 먼저 정해야 할 4가지</h2>
+
+  <div class="card am">
+    <h3><span class="badge b-num">1</span>문제 푸는 화면에서 왼쪽 메뉴가 통째로 사라져요 <span class="badge b-amber">4개 화면 모두</span></h3>
+    <div class="qa">
+      <div class="row"><div class="k">무슨 일</div><div class="v">51~54번을 풀 때, 다른 학습 화면으로 가는 왼쪽 메뉴가 안 보입니다. 모바일에서도 메뉴 버튼이 없습니다.</div></div>
+      <div class="row"><div class="k">설계 문서</div><div class="v">“이 화면들에서도 메뉴는 <b>보여야 한다</b>”라고 정해져 있습니다. 대신 “저장 안 된 답안이 있으면, 메뉴를 눌러도 바로 안 나가고 먼저 물어본다”가 규칙입니다.</div></div>
+      <div class="row"><div class="k">지금 상태</div><div class="v">메뉴를 아예 숨겨 시험처럼 집중하게 만든 것으로 보입니다. 그런데 이렇게 바꾸기로 한 결정 기록(문서)이 없습니다.</div></div>
+    </div>
+    <div class="decide"><b>정할 것 →</b> ⓐ ‘시험 집중 모드(메뉴 숨김)’를 공식 규칙으로 인정할지, 아니면 ⓑ 문서대로 ‘메뉴는 보이되 나갈 때 물어보기’로 되돌릴지.</div>
+  </div>
+
+  <div class="card am">
+    <h3><span class="badge b-num">2</span>53번 ‘참고 자료를 없애라’는 지시와 ‘그래프는 꼭 필요’가 충돌해요</h3>
+    <p class="sub">53번은 <b>그래프(도표)를 보고 그 내용을 글로 설명</b>하는 문제입니다. 그래프가 없으면 문제가 성립하지 않습니다.</p>
+    <div class="scroll">
+    <table>
+      <tr><th>새 지시문</th><td>“51~54 화면에서 참고 자료를 없애라”</td></tr>
+      <tr><th>원래 화면 문서(53번)</th><td>“그래프, 조건, 참고 자료를 왼쪽에 보여줘라”</td></tr>
+      <tr><th>지금 코드</th><td>그래프 카드 + 참고 자료 카드를 둘 다 보여줌</td></tr>
+    </table>
+    </div>
+    <div class="decide"><b>헷갈리는 점 →</b> ‘참고 자료를 없애라’가 ⓐ 보조 설명 카드만 없애라(그래프는 유지)인지, ⓑ 그래프까지 다 없애라(그러면 53번이 깨짐)인지 불분명합니다. <b>53번에서 무엇을 남길지</b> 정해야 합니다.</div>
+  </div>
+
+  <div class="card am">
+    <h3><span class="badge b-num">3</span>제출 직전 확인창에 보여야 할 내용이 빠졌어요</h3>
+    <div class="scroll">
+    <table>
+      <tr><th>구분</th><th>설계 문서가 요구한 것</th><th>지금 확인창</th></tr>
+      <tr><td>답안 요약</td><td>문제 유형·답안 길이·저장 시각</td><td>없음</td></tr>
+      <tr><td>분석 안내</td><td>“제출하면 AI가 분석을 시작하고 잠시 기다립니다”</td><td>없음</td></tr>
+      <tr><td>버튼 모양</td><td>취소·제출 버튼 같은 너비</td><td>제출이 더 넓음</td></tr>
+    </table>
+    </div>
+    <p class="sub">필요한 안내 문구는 이미 만들어져 있는데 화면에서 쓰지 않고 있습니다. 또 테스트에는 “이건 일부러 뺀 것”이라고 적혀 있지만, 그렇게 정한 문서가 없습니다.</p>
+    <div class="decide"><b>정할 것 →</b> ⓐ 지금의 간단한 확인창을 공식으로 인정할지, ⓑ 문서대로 요약·안내·버튼 모양을 다시 넣을지.</div>
+  </div>
+
+  <div class="card am">
+    <h3><span class="badge b-num">4</span>문서가 옛날 방식으로 적혀 있어요 <span class="badge b-green">코드는 최신</span></h3>
+    <div class="qa">
+      <div class="row"><div class="k">바뀐 점</div><div class="v">채점을 ‘앱 안에서 한 번에 처리’ → ‘외부 채점 서비스에 보내고 결과를 받아오기’로 바꿨습니다.</div></div>
+      <div class="row"><div class="k">코드</div><div class="v">최신(외부 채점) 방식이 맞게 되어 있습니다.</div></div>
+      <div class="row"><div class="k">문제</div><div class="v">일부 설계 문서가 아직 옛 방식으로 적혀 있어, 검수 때 “문서와 다르다”로 잡힙니다.</div></div>
+    </div>
+    <div class="decide"><b>정할 것 →</b> 코드 문제가 아닙니다. <b>옛 문서 문구만 최신으로 고치면</b> 됩니다.</div>
+  </div>
+
+  <h2>🔴 사용자가 겪을 수 있는 실제 문제 4가지</h2>
+  <div class="scroll">
+  <table>
+    <tr><th>문제</th><th>무슨 일인가</th><th>상태</th></tr>
+    <tr>
+      <td>영어 오류 메시지 노출</td>
+      <td>외부 채점으로 보낸 뒤 그 문제를 더 풀 수 없을 때, 친절한 한국어 안내 대신 영어 섞인 기술 메시지가 사용자에게 보일 수 있습니다. 실제로 닿을 수 있는 경로입니다.</td>
+      <td><span class="badge b-red">바로 처리</span></td>
+    </tr>
+    <tr>
+      <td>51·52번 ‘AI 총평’이 안 보임</td>
+      <td>AI가 매긴 전체 총평이 53·54번 피드백에는 보이는데 51·52번 피드백에는 안 보입니다. 총평은 잘 저장되고 있어, 화면에 표시만 추가하면 됩니다.</td>
+      <td><span class="badge b-amber">주의</span></td>
+    </tr>
+    <tr>
+      <td>분석 중 이탈 경고 없음</td>
+      <td>AI 분석 중 브라우저 뒤로가기·새로고침을 하면 “분석이 중단됩니다” 경고 없이 화면이 사라집니다. 화면 안 ‘나가기’ 버튼은 경고가 뜨지만 브라우저 버튼은 못 막습니다.</td>
+      <td><span class="badge b-amber">주의</span></td>
+    </tr>
+    <tr>
+      <td>중복 제출 빈틈</td>
+      <td>화면에서는 중복 제출을 막습니다. 다만 인터넷이 끊겼다 다시 시도하거나 탭을 두 개 열면 같은 답이 두 번 들어갈 수 있는 구조적 틈이 있습니다.</td>
+      <td><span class="badge b-amber">주의</span></td>
+    </tr>
+  </table>
+  </div>
+  <p class="legend">이 밖에 ‘지문은 3줄까지, 도움말은 2줄까지’ 같은 세밀한 표시 규칙은 코드로 강제하지 않습니다(눈으로 확인 필요). 자동저장 경고창은 설계 문서 자체가 모호한 부분이 있어 별도 정리가 필요합니다.</p>
+
+  <h2>🟢 잘 되어 있는 것</h2>
+  <div class="card gr">
+    <ul style="margin:0; padding-left:20px">
+      <li><b>전체 학습 흐름</b> — 제출 → 분석 → 피드백 → 다음 문제·비교 리포트·PDF가 끝까지 이어집니다.</li>
+      <li><b>54번 작성 안내</b> — 문제별 ‘글의 구조 제안’을 보여주는 새 방식으로 잘 바뀌었습니다.</li>
+      <li><b>AI 분석 화면</b> — 새 방식(페이지 전환)대로 동작하고, 뒤로가기로 잘못 되돌아오지 않습니다.</li>
+      <li><b>외부 채점 연결</b> — 비밀 키가 노출되지 않고, 본인 답안만 조회하도록 안전하게 처리됩니다.</li>
+      <li><b>로그인·보안</b> — 로그인한 본인만 자기 답안을 보고 제출하도록 막는 규칙이 작동합니다.</li>
+    </ul>
+  </div>
+
+  <h2>화면별 상태표</h2>
+  <div class="scroll">
+  <table>
+    <tr><th>화면</th><th>상태</th><th>한 줄 요약</th></tr>
+    <tr><td>51번 단답</td><td><span class="tl g">초록</span></td><td>핵심 기능 양호. 참고 이미지 제거 정상.</td></tr>
+    <tr><td>52번 답안</td><td><span class="tl a">노랑</span></td><td>왼쪽 메뉴가 사라지는 문제(정할 일 1).</td></tr>
+    <tr><td>53번 장문</td><td><span class="tl a">노랑</span></td><td>참고 자료 카드 충돌(정할 일 2) + 메뉴 문제.</td></tr>
+    <tr><td>54번 에세이</td><td><span class="tl g">초록</span></td><td>구조 안내가 새 방식대로 잘 동작.</td></tr>
+    <tr><td>제출 확인창</td><td><span class="tl a">노랑</span></td><td>요약·안내·버튼 모양 누락(정할 일 3).</td></tr>
+    <tr><td>AI 분석 화면</td><td><span class="tl g">초록</span></td><td>페이지 전환 방식 정상. 이탈 경고만 보강 필요.</td></tr>
+    <tr><td>자동저장 경고창</td><td><span class="tl a">노랑</span></td><td>대체로 동작하나 설계 문서가 모호.</td></tr>
+  </table>
+  </div>
+
+  <h2>이 검수의 한계</h2>
+  <div class="card">
+    <p>이번 검수는 <b>코드를 한 줄씩 읽어 설계 문서와 맞춰본 것</b>입니다. 실제 브라우저로 화면을 띄워 클릭해 보는 자동 테스트(데스크톱·모바일)는 아직 하지 않았습니다.</p>
+    <p class="sub">그래서 ‘지문 3줄 표시’, ‘분석 중 뒤로가기 동작’처럼 눈으로 봐야 확정되는 항목은 실제 화면 확인이 추가로 필요합니다. 원하시면 실제 화면 테스트로 이 부분을 확정해 드리겠습니다. (코드 파일은 하나도 고치지 않았습니다.)</p>
+  </div>
+
+  <details>
+    <summary>개발자용 근거 (파일·줄 번호)</summary>
+    <ul>
+      <li><b>왼쪽 메뉴 숨김:</b> <code>WorkspaceShell.tsx:38-42</code>(51~54를 시험 라우트로 분류), <code>:60-70 / :72-89 / :100-116</code>(사이드바·모바일바·드로어 모두 미렌더). SOT: <code>share/03-learner-side-nav-state/sidebar-navigation-decision-summary.md:58</code>(D-01~D-04 ‘노출’), <code>:92</code>(이탈 가드가 메뉴 클릭보다 우선), <code>:79</code>(D-01/D-04 사이드 내비 표기 불일치).</li>
+      <li><b>53번 참고 자료:</b> <code>problem-normalizer.ts:475-489</code>(reference 카드 생성), <code>LongFormWriting53Workspace.tsx:479</code>(렌더), <code>Writing53MaterialCards.tsx:541-547</code>. 충돌 SOT: proposal <code>2026-06-18-remove-writing-reference-materials.md</code> ↔ <code>10-D-03.../description.md:12,37,39</code>. e2e <code>screens-authed.spec.ts:211</code>이 reference 카드 존재를 단언.</li>
+      <li><b>제출 확인창 누락:</b> <code>SubmissionConfirmModal.tsx:48-100</code>(요약·안내 미렌더, <code>:78</code> 비대칭 CTA). 미사용 문구 <code>messages/ko.json:1501-1519</code>. 테스트 <code>SubmissionConfirmModal.surface.test.tsx:45-67</code>가 생략을 의도로 단언.</li>
+      <li><b>옛 채점 문서:</b> 코드 <code>server-actions.ts:92-179</code>(외부 API + <code>create_external_writing_submission</code>). 옛 SOT <code>screen-data-summary.md</code>의 <code>submit_writing_with_feedback</code> 문구. 정본 proposal <code>2026-06-18-external-writing-api-feedback-sync.md</code>.</li>
+      <li><b>영어 오류 노출:</b> <code>server-actions.ts:156-159</code>(외부 성공 후 거부 시 raw 메시지). 변환은 <code>:85</code> fallback 경로에만 적용.</li>
+      <li><b>51·52 총평 누락:</b> <code>FeedbackPageContent.tsx:98-99</code>(short는 요약 화면으로 분기), <code>FeedbackSummary.tsx:96</code>(총평 렌더 유일 지점).</li>
+      <li><b>분석 중 이탈:</b> <code>SubmittedAnalysisPanel</code>/<code>AnalysisLoadingPage</code>에 popstate·beforeunload 핸들러 없음. SOT 충돌: proposal의 history 미적재 설계 ↔ <code>13-D-M2.../description.md:28</code>.</li>
+      <li><b>중복 제출:</b> <code>20260520120400_writing.sql</code>에 active-unique 제약 없음(화면 차단만 존재).</li>
+      <li><b>점검 범위:</b> 멀티 에이전트 67개 · 화면별 16~41개 요구사항 대조 + 핵심 항목 직접 재확인. 정적 분석만 수행(Playwright e2e·런타임 렌더 미실행).</li>
+    </ul>
+  </details>
+
+  <p class="note">읽기 전용 검수입니다. 프로젝트 코드는 한 줄도 변경하지 않았습니다.</p>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,414 @@
+
+==================================================
+### q51 — D-01 51번 단답 작성 (/writing/short-answer-writing-51)
+reqs=41 findings=41 | conforms=35 partial=4 violation=0 cannot_verify=2
+SOT notes: 검수자가 검증 기준을 세우기 어려운 모호한 지점을 아래에 구체적으로 정리한다. (모두 read-only 분석 기반이며 코드 구현은 확인하지 않음 — 요구사항은 SOT/proposal 문서 근거만으로 추출함.)
+
+1) [빈칸 구조 모호] description.md:12,37은 \"빈칸 조건\"을 언급하고 screen-data-summary.md:73은 UI 입력 필드로 `blankedPrompt`, `blanks`를 명시하지만, description.md/functional-spec.md 본문 어디에도 \"빈칸 입력\"이 51번의 답안 입력 방식인지(단일 텍스트 입력 vs 빈칸별 다중 입력) 명확한 문장이 없다. description.md:14는 \"짧은 문장 또는 단답형 답안을 작성하는 입력 필드\"라고만 적어 단일 입력처럼 읽히는 반면, proposal-1(remove-reference)와 screen-data-summary는 \"빈칸 입력\"을 전제한다. 답안 입력 UI가 단일 …
+audit summary: 41개 요구사항 중 대부분 충족(conforms)으로 확인됨. 핵심 흐름(라우트/인증/지문/빈칸 입력/글자수/검증/자동저장/제출 모달/page-level 분석 뷰/서버 제출 가드/RLS)은 코드와 일치한다. 참고자료 제거(REQ-19~21)는 51번 풀이 경로 코드에서 제거가 확인되어 proposal 기준 conforms이나, functional-spec.md/screen-data-summary.md SOT 본문에는 problem_assets/storage 기재가 남아 있어 SOT-코드 불일치가 존재(info). 가장 주목할 finding은 REQ-36: SOT는 submit_writing_with_feedback RPC 직접 호출을 명시하지만, 실제 구현은 외부 Writing API + create_external_writing_submission RPC(또는 실패 시 동일 RPC로 failed row 생성) 경로를 사용한다. 다만 두 RPC 모두 동일한 assert_writing_problem_submittable 가드를 통과하므로 보안 요구사항(REQ-31/32)은 충족된다. char_count는 client에서 trim 길이 합산으로 계산되며 빈칸 사…
+
+  [CANNOT_VERIFY / info] REQ-q51-03: 진입 경로는 C-03 다시 풀기 모달에서 51번 시작
+    evidence: docs/Wireframe/08-D-01-short-answer-writing-51/description.md:99; functional-spec.md:17
+    detail: 라우트는 searchParams(problem)로 특정 문제를 받을 수 있게 되어 있어(WritingQuestionRoute.tsx:24-25) deep-link 진입을 지원하나, C-03 다시 풀기 모달이 실제로 이 라우트로 보내는 트리거 코드는 본 검수 범위 파일에서 확인되지 않았다. 진입 동선 자체의 구현은 별도 화면(C-03) 소스 확인 필요.
+    VERIFY: refuted -> conforms | REQ-q51-03(진입 경로: C-03 다시 풀기 모달에서 51번 시작)은 코드로 검증 가능하게 충족되어, 원 판정 cannot_verify는 refuted다. 원 검증자는 스스로 "본 검수 범위 파일(D-01 화면 파일)"로 범위를 한정해 C-03 소스를 열지 않았을 뿐이며, C-03 트리거 코드는 실제로 구현·연결되어 있다. 근거 체인: (1) C-03 모달은 src/components/practice/RetryModal.tsx로 구현됨. 시작 버튼 onClick=handleStart(RetryModal.tsx:328) → handleStart가 router.p…
+
+  [CANNOT_VERIFY / low] REQ-q51-06: 지문 3줄 우선 표시, 긴 문항은 접기 없이 영역 확장
+    evidence: src/components/writing/InteractiveBlankPrompt.tsx:43 (className="writing-inline-prompt"); docs/Wireframe/08-D-01-short-answer-writing-51/description.md:39
+    detail: InteractiveBlankPrompt는 전체 prompt 토큰을 접기 UI 없이 모두 렌더링하므로 '접기 없이 확장'은 충족 방향이나, '3줄 우선 표시'에 해당하는 line-clamp/높이 정책이 컴포넌트 코드에 없다. 관련 CSS(.writing-inline-prompt) 규칙은 본 검수에서 확인하지 못해 3줄 우선 동작 여부는 검증 불가.
+    VERIFY: refuted -> violation | 원래 판정의 cannot_verify 사유는 ".writing-inline-prompt CSS 규칙을 확인하지 못해 3줄 우선 동작 검증 불가"였으나, 해당 CSS를 직접 확인 가능했고 검증을 완료함. 근거: (1) src/styles/global.css:5384-5389 .writing-inline-prompt 규칙은 color/font-size:16px/line-height:2.15/white-space:pre-wrap만 가지며 line-clamp, -webkit-box, max-height, min-height 등 3줄 우선 또는 높이 제어 속성이 전혀 없음(전…
+
+  [PARTIAL / low] REQ-q51-17: 도움말 카드 3개 이하, 제목 16자 이하, 본문 2줄 제한
+    evidence: src/components/writing/ShortAnswerWriting51Workspace.tsx:548-601 (정확히 guide/tips/hints 3개 항목)
+    detail: 카드 수는 정확히 3개로 '3개 이하'를 충족한다. 그러나 카드 제목 16자 이하/본문 2줄 제한을 강제하는 길이 제한이나 line-clamp는 컴포넌트 코드에 없다. 제목은 i18n 문자열(예: 'AI 튜터 가이드')로 16자 이내이나, 본문 2줄 제한은 코드/CSS에서 확인되지 않아 부분 충족.
+    VERIFY: confirmed | SOT 출처는 docs/Wireframe/08-D-01-short-answer-writing-51/description.md:75 "카드 3개 이하, 카드 제목 16자, 본문 2줄 제한"으로 확인됨. 3개 요구사항을 각각 검증한 결과 partial 판정이 정확함(confirmed).
+
+(1) 카드 3개 이하 — 충족. src/components/writing/ShortAnswerWriting51Workspace.tsx:548-601에서 WritingGuideAccordion items가 guide/tips/hints 정확히 3개 항목. 3개는 '3개 이하' 충족.
+
+…
+
+  [PARTIAL / low] REQ-q51-18: 도움말 없을 때 접힌 빈 상태 + 추천 링크 제공
+    evidence: src/components/writing/ShortAnswerWriting51Workspace.tsx:547 (defaultActiveKeys=[guide,tips,hints]), 556-599 (빈 경우 placeholder 텍스트)
+    detail: 도움말이 비어도 각 섹션은 'guidePlaceholder/tipsPlaceholder/hintPlaceholder' 안내 텍스트를 보여준다. 그러나 defaultActiveKeys로 모든 패널이 기본 펼쳐져 있어 '접힌 빈 상태'와는 다르고, 빈 상태 전용 '추천 링크'는 코드에서 확인되지 않는다. 빈 상태 자체는 처리되나 접힘/추천 링크 요건은 미충족.
+    VERIFY: confirmed | 원 판정 partial이 정확하다. 라우트 체인을 직접 추적해 확인했다: /writing/short-answer-writing-51 → page.tsx:14 renderWritingQuestionPage(51) → WritingQuestionRoute.tsx:32 WritingPageContent → WritingPageContent.tsx:53-60 problem.kind==="q51" 일 때 ShortAnswerWriting51Workspace 렌더. 이 컴포넌트가 D-01의 실제 화면이다.
+
+SOT 요구사항 확인: docs/Wireframe/08-D-01-sho…
+
+  [PARTIAL / medium] REQ-q51-33: 중복 제출 차단(이미 제출한 답안 재제출 방지)
+    evidence: src/components/writing/SubmissionConfirmModal.tsx:43-46,79-98 (loading 중 버튼/모달 잠금); ShortAnswerWriting51Workspace.tsx:367-369 (성공 시 분석 뷰로 전환되어 재제출 UI 사라짐), 379-384 (제출 중 canSave/canSubmit 비활성)
+    detail: in-flight 중복 클릭은 loading disabled로 차단되고, 성공 후에는 SubmittedAnalysisPanel로 전환되어 동일 화면에서 재제출이 불가하다. 그러나 서버/DB 차원의 '같은 draft/문제 1회 제출' 유니크 제약은 확인되지 않았다(writing_submissions에는 active-unique 류 제약 없음; 20260520120400_writing.sql). 따라서 UI 레벨 중복 차단은 충족하나 서버 멱등 보장은 미확인이라 부분 충족.
+    VERIFY: confirmed | 근거 파일을 직접 재확인한 결과 "partial" 판정이 정확하다.
+
+[UI 레벨 중복 차단 — 충족 확인]
+- src/components/writing/SubmissionConfirmModal.tsx:43-46: loading 중 closable={!loading}, mask={{closable:!loading}}, keyboard={!loading}로 모달 잠금. :83 취소버튼 disabled={loading}, :93-94 제출버튼 disabled={!enough||loading} + loading={loading}로 in-flight 더블클릭 차단.
+- sr…
+
+  [PARTIAL / medium] REQ-q51-36: 최종 제출은 직접 insert 대신 submit_writing_with_feedback RPC로 submission+feedback을 한 트랜잭션 생성
+    evidence: src/lib/writing/server-actions.ts:101-179 (외부 API 흐름: submitExternalWriting + create_external_writing_submission RPC, 또는 fallback createFailedLocalSubmission); supabase/migrations/20260618143000_external_writing_submission_sync.sql:5-95 (create_external_writin…
+    detail: SOT(screen-data-summary.md:39,49,54)는 submit_writing_with_feedback RPC로 submission과 feedback row를 한 트랜잭션 생성한다고 명시하나, 실제 구현은 외부 Writing API 경유 시 create_external_writing_submission RPC를 호출해 'analyzing/failed' submission row만 생성하고 feedback은 이후 sync_external_writing_feedback로 비동기 동기화한다. submit_writing_with_feedback는 server-action 경로에서 호출되지 않는다. 직접 insert 대신 RPC를 쓰는 점은 충족하나, 'submit…
+    VERIFY: confirmed | 제시된 근거를 모두 직접 재확인했고 partial 판정이 정확하다.
+
+1) SOT 문구 확인 (docs/Wireframe/08-D-01-short-answer-writing-51/screen-data-summary.md):
+- line 39: "submit_writing_with_feedback RPC가 submission과 feedback row를 만든다. / 직접 insert 대신 RPC 중심으로 제출한다."
+- line 49: "rpc:public.submit_writing_with_feedback ... 제출, 피드백, 영역 점수, 문장 피드백을 한 트랜잭션으…
+
+==================================================
+### q52 — D-02 52번 답안 작성 (/writing/answer-writing-52)
+reqs=38 findings=38 | conforms=28 partial=8 violation=1 cannot_verify=1
+SOT notes: 검증 시 참고할 모호/주의 지점:
+
+1) D-M2 분기 충돌(중요): description.md:100과 functional-spec.md(진입/이탈)는 제출 → D-M1 → D-M2(분석 로딩)를 'modal/state'로 기술하고, 13-D-M2 description.md도 D-M2를 모달성 화면으로 설명한다. 그러나 우선순위 proposal(2026-06-19-writing-submit-analysis-page-flow.md)은 D-M2를 'page-level transient state'로 덮어쓴다. 따라서 REQ-q52-26~28은 proposal 기준으로 작성했고, D-M2를 오버레이 모달로 구현하면 위반이다. (D-M2 SOT 문서 자체는 아직 미갱신 상태 — proposal의 SOT Follow-Up이 13-D-M2 functional-spec.md/description.md 갱신을 요구하나 본 검수 시점에 반영 여부는 cannot_verify.)
+
+2) descrip…
+audit summary: 38개 요구사항 중 대부분(답안 입력 10~160자, 실시간 글자수, blur/제출 검증, 임시저장/자동저장, D-M1/D-M3 모달, 공통 제출 시퀀스, page-level D-M2, 서버 제출 가드, 참고자료 제거 등)은 ShortAnswerWriting52Workspace.tsx와 관련 모듈에서 충족된다. 단 1건의 high severity 위반이 핵심이다: WorkspaceShell.tsx가 /writing/answer-writing-52를 '시험 route'로 분류해 학습자 사이드 내비를 완전히 숨긴다(REQ-q52-01 위반). 이는 D-02 description.md:11,25와 SHARE-03(D-01~D-04 '노출' 그룹)을 직접 위반하며, 사이드바 결정 SOT(contextual-route-placement.md)에도 51~54 작성 화면을 사이드바 제외 route로 지정한 근거가 없다. 사이드 내비가 렌더되지 않으므로 메뉴명 10자 제한(REQ-q52-02)은 cannot_verify다. 그 외 일부 항목(지문 3줄 제한, 도움말 카드 본문 2줄 제한)은 코드/CSS로 명시 강제하지 않아 partial이다. answer_json은 q52…
+
+  [VIOLATION / high] REQ-q52-01: 화면 좌측에 학습자 사이드 내비를 렌더링하고, 답안 작성 중에도 주요 학습 메뉴와 현재 위치(active menu)를 유지해 표시한다.
+    evidence: src/components/app/WorkspaceShell.tsx:38-42,60-70,72-89,100-116
+    detail: WorkspaceShell이 pathname === '/writing/answer-writing-52'를 isWritingExamRoute로 분류(38-42)하고, 그 경우 데스크톱 Sider+SidebarNav(60-70), 모바일 상단바(72-89), 모바일 드로어(100-116)를 모두 null로 렌더해 학습자 사이드 내비가 화면에 전혀 표시되지 않는다. 이는 D-02 description.md:11('학습자 사이드 내비 | 답안 작성 중에도 주요 학습 메뉴와 현재 위치를 유지함')과 description.md:25를 직접 위반한다. SHARE-03 결정 요약(docs/Wireframe/share/03-learner-side-nav-state/sidebar-navig…
+    VERIFY: confirmed | 근거 file:line을 직접 재확인한 결과 violation 판정이 사실로 확정됨. (1) src/app/(workspace)/layout.tsx:24-33이 answer-writing-52 페이지를 WorkspaceShell로 감싼다. (2) WorkspaceShell.tsx:38-42가 /writing/answer-writing-52를 isWritingExamRoute로 분류한다. (3) 그 경우 데스크톱 Sider+SidebarNav(60-70), 모바일 상단바(72-89), 모바일 드로어 내 SidebarNav(100-116)를 모두 null로 렌더한다. (…
+
+  [CANNOT_VERIFY / low] REQ-q52-02: 사이드 내비의 메뉴명은 10자 이하로 표기한다.
+    evidence: src/components/app/WorkspaceShell.tsx:60-70 (SidebarNav 미렌더)
+    detail: REQ-q52-01 위반의 결과로 이 route에서는 SidebarNav가 렌더되지 않아 메뉴명 길이 제약을 화면에서 확인할 수 없다. SidebarNav 자체의 메뉴명 카탈로그는 별도 검수 대상이며 본 화면 렌더 경로에서 노출되지 않으므로 cannot_verify로 판정한다.
+    VERIFY: confirmed | 제시된 근거(src/components/app/WorkspaceShell.tsx:60-70, SidebarNav 미렌더)를 직접 재확인한 결과 정확하다. 렌더 체인: src/app/(workspace)/layout.tsx:24-32가 모든 workspace 자식을 WorkspaceShell로 감싸고, src/app/(workspace)/writing/answer-writing-52/page.tsx:14 -> WritingQuestionRoute.tsx:31-39 -> WritingPageContent.tsx:62-70이 ShortAnswerWriting52Worksp…
+
+  [PARTIAL / low] REQ-q52-04: 지문은 3줄, 조건은 4개 이하로 표시하며, 핵심 조건은 항상 노출한다.
+    evidence: src/components/writing/ShortAnswerWriting52Workspace.tsx:124-127; src/lib/writing/problem-normalizer.ts:758-764; src/components/writing/InteractiveBlankPrompt.tsx:40-81
+    detail: 조건 4개 이하: conditionItems가 problem.rubric.conditions.slice(0,4)로 제한(124-127)되고 normalizer도 blankConditions.slice(0,4)/conditions.slice(0,5)로 상한을 둬 4개 이하 요건을 만족한다. 핵심 조건 항상 노출: accordion conditions 항목이 defaultActiveKeys에 포함(439)되어 기본 펼침이다. 그러나 '지문 3줄' 제한은 InteractiveBlankPrompt(40-81)나 관련 CSS에서 line-clamp 등으로 강제하는 코드 근거를 찾지 못했다 — 지문 토큰을 그대로 렌더하므로 3줄 초과 표시가 가능하다. 이 부분이 미충족이라 parti…
+    VERIFY: confirmed | SOT 요구사항 출처는 docs/Wireframe/09-D-02-answer-writing-52/description.md:39 "지문 3줄, 조건 4개 이하, 핵심 조건은 항상 노출"이며, 화면 No.2 문제/조건 영역에 적용된다. 세 하위 요건을 직접 재확인했다.
+
+(1) 조건 4개 이하 = 충족: ShortAnswerWriting52Workspace.tsx:124-127에서 conditionItems가 problem.rubric.conditions.slice(0,4)로 캡됨. normalizer는 q52 경로 blankConditions.slice(0,4)(pr…
+
+  [PARTIAL / low] REQ-q52-11: 글자 수 부족/초과(및 시간 초과) 발생 시 입력창 하단에 즉시 오류 메시지를 표시한다.
+    evidence: src/components/writing/ShortAnswerWriting52Workspace.tsx:222-241,414-418
+    detail: 글자 수 부족(blurTooShort)/초과(blurTooLong) 오류는 입력창 하단 blurNotice 텍스트로 즉시 표시된다(414-418, danger 텍스트). 단 functional-spec.md:31의 '시간 초과' 케이스는 elapsedSeconds 타이머가 표시만 될 뿐(WritingExamShell.tsx:85-88) 시간 초과 임계나 그에 따른 하단 오류 메시지 트리거가 코드에 없어 시간 초과 부분은 미구현이다. 글자 수 측면은 충족, 시간 측면은 미충족이라 partial.
+    VERIFY: confirmed | REQ-q52-11 partial 판정은 사실로 확인된다(confirmed). 다만 주장된 근거의 인용 위치는 부정확하다.
+
+1) 글자 수 측면 충족(확인): src/components/writing/ShortAnswerWriting52Workspace.tsx:222-241의 onBlurValidate가 charCount < limit.hardMin이면 blurTooShort, > limit.hardMax이면 blurTooLong 메시지를 setBlurNotice로 설정하고, :414-418에서 입력창(Input.TextArea, :398-407) 및 Progress…
+
+  [PARTIAL / low] REQ-q52-13: 작성 도움말 카드는 3개 이하, 카드 본문은 2줄로 제한한다.
+    evidence: src/components/writing/ShortAnswerWriting52Workspace.tsx:440-487,128-131
+    detail: 카드 3개 이하: accordion items가 conditions/guide/examples 정확히 3개(440-487)로 충족. guideMessages는 validationMessages.slice(0,2)(128-131)로 2개 제한. 그러나 '카드 본문 2줄 제한'을 line-clamp 등으로 강제하는 CSS/코드 근거를 확인하지 못했다 — conditionItems(최대 4)와 본문이 리스트로 펼쳐져 2줄을 넘을 수 있다. 본문 2줄 강제 미확인이라 partial.
+    VERIFY: confirmed | D-02(/writing/answer-writing-52)는 page.tsx:14 → WritingPageContent.tsx:62-69 경로로 ShortAnswerWriting52Workspace를 렌더한다. '우측 작성 도움말'은 이 컴포넌트의 WritingGuideAccordion(ShortAnswerWriting52Workspace.tsx:435-489)이며, 별도 HelpPanel.tsx(ellipsis rows:2 보유)는 Grep 결과 자기 파일에서만 참조되어 이 화면에 쓰이지 않는 dead component다(원 판정이 올바른 컴포넌트를 근거로 삼음).…
+
+  [PARTIAL / medium] REQ-q52-14: 도움말 로드 실패 시 카드를 접힌(collapsed) 상태로 두고 재시도 링크를 표시한다.
+    evidence: src/components/writing/ShortAnswerWriting52Workspace.tsx:113-114,436-439; src/components/writing/WritingGuideAccordion.tsx:33-67
+    detail: guideLoadFailed(=submitBlockedReason==='problem_data_incomplete')일 때 WritingGuideAccordion이 disabledOnLoadFailed 항목을 activeKeys에서 제외해 접힌(collapsible:'disabled') 상태로 두고(33-38,48-66) '불러오기 실패' 태그를 표시한다. 그러나 description.md:65가 요구하는 '재시도 링크'는 카드 영역에 없다 — 접힘 상태 카드에 재시도 액션이 노출되지 않고, 재시도는 problem 전체 로드 실패 경로(WritingPageContent.tsx:39-43)에서만 제공된다. 접힘은 충족, 카드 내 재시도 링크는 미충족이라 partial.
+    VERIFY: confirmed | 요구사항 원문(docs/Wireframe/09-D-02-answer-writing-52/description.md:65)은 "도움말 로드 실패 시 접힌 상태와 재시도 링크 표시"로, 접힘 상태와 재시도 링크 두 가지를 모두 요구한다.
+
+접힘 상태(충족): src/components/writing/ShortAnswerWriting52Workspace.tsx:113-114에서 guideLoadFailed(submitBlockedReason==='problem_data_incomplete')를 계산해 436-438에서 WritingGuideAccordion에 loadFai…
+
+  [PARTIAL / low] REQ-q52-18: 작성 중 입력 변화를 writing_drafts(answer_text, answer_json, char_count, autosave_status, last_saved_at)로 임시 저장/자동저장하고 자동저장 상태를 표시한다.
+    evidence: src/components/writing/ShortAnswerWriting52Workspace.tsx:155-201,159-168; src/components/writing/AutosaveBadge.tsx:48-64
+    detail: persist()가 writing_drafts에 answer_text, char_count, autosave_status='clean', last_saved_at를 upsert하고(159-168) scheduleSave가 2초 디바운스 자동저장(193-201), onManualSave가 즉시 임시저장(209-212)한다. 상태는 AutosaveBadge로 표시(WritingExamShell.tsx:89-91, AutosaveBadge.tsx:48-64). 다만 q52 persist 페이로드에 answer_json을 넣지 않는다(159-168) — answer_json은 q53/q54 구조화 입력용이고 q52는 단일 텍스트라 미사용이나, 요구사항 문구의 answer_json…
+    VERIFY: refuted -> conforms | REQ-q52-18(작성 중 입력 변화를 writing_drafts로 임시/자동저장하고 상태 표시)의 실질은 완전히 충족된다. partial 판정의 유일한 근거인 "answer_json 미사용"은 위반이 아니다.
+
+검증한 근거:
+1) 자동저장/임시저장/상태표시 모두 구현됨: ShortAnswerWriting52Workspace.tsx:155-191 persist()가 answer_text(166줄 next), char_count(166), autosave_status='clean'(166), last_saved_at(167)을 upsertDraft로 write. sc…
+
+  [PARTIAL / medium] REQ-q52-33: 로그인 사용자만 접근하며 user-owned 테이블(writing_drafts, writing_submissions, study_events)은 user_id=auth.uid() 본인 row만 읽고 쓴다.
+    evidence: src/app/(workspace)/writing/_components/WritingQuestionRoute.tsx:23; src/app/(workspace)/layout.tsx:18-21; supabase/migrations/20260617055040_guard_writing_submission_problem_visibility.sql:54-62
+    detail: 로그인 강제: renderWritingQuestionPage가 requireUser()(23), workspace layout이 getSessionAndProfile 후 미로그인 redirect('/login')(18-21), submitWritingAction은 user 없으면 redirect('/login')(server-actions.ts:96-99). RPC는 caller_id=auth.uid()를 강제하고 null이면 unauthenticated 예외(54-62). draft/submission insert에 caller_id 사용(70-89). 그러나 본 검수는 Read-only 정적 분석이라 writing_drafts/writing_submissions/stu…
+    VERIFY: refuted -> conforms | 원래 "partial"의 유일한 사유는 "writing_drafts/writing_submissions/study_events의 실제 RLS 정책(auth.uid 본인 row 한정)을 마이그레이션에서 직접 확인하지 못했다(해당 RLS migration 미열람)"였다. 그 미열람 migration을 직접 읽어 사유가 해소되므로 refuted, 올바른 status는 conforms.
+
+1) 로그인 강제(3중): page는 requireUser() (src/app/(workspace)/writing/_components/WritingQuestionRoute.tsx:23, …
+
+  [PARTIAL / medium] REQ-q52-34: problems는 published/public 또는 본인 ai_generated만 노출, writing_submissions는 본인 select/insert만 허용하고 update/delete 정책 없음.
+    evidence: src/lib/writing/server.ts:159-198; supabase/migrations/20260617055040_guard_writing_submission_problem_visibility.sql:21-34,70-89
+    detail: 노출 로직: getWritingProblem이 domain='writing', question_no, publish_status='published'(+lifecycle_status='active')로만 조회(server.ts:159-169)해 사용자에게 published 문제만 표면화한다. RPC가 visibility='public'까지 재확인(가드 sql:26). submission은 RPC가 본인(caller_id) insert만 수행하고 update/delete 경로가 없다(70-89). 그러나 problems RLS의 'published/public 또는 본인 ai_generated' 정책 본문과 writing_submissions의 select/insert-on…
+    VERIFY: refuted -> conforms | partial 판정의 유일한 근거("problems의 published/public 또는 본인 ai_generated 정책 본문과 writing_submissions의 select/insert-only RLS 정책 본문을 정의 migration에서 직접 확인하지 못했다 — 정적 검수 한계")가 거짓임을 확인했다. RLS 정책 본문은 supabase/migrations/20260520121100_rls_policies.sql에 명확히 존재한다.
+
+[요구사항1 — problems 노출] rls_policies.sql:67-75 problems_visible_select:…
+
+  [PARTIAL / medium] REQ-q52-35: 제출은 public.submit_writing_with_feedback RPC로 한 트랜잭션 처리하며 feedback_status로 분석 상태를 추적한다.
+    evidence: supabase/migrations/20260617055040_guard_writing_submission_problem_visibility.sql:43-154; src/lib/writing/server-actions.ts:92-179,141-165
+    detail: submit_writing_with_feedback RPC는 submission+feedback+dimension+sentence 삽입과 draft superseded 갱신을 한 함수(트랜잭션)로 처리한다(sql:43-154). feedback_status는 writing_submissions에 'complete'로 기록(sql:87)되고, screen-data-summary가 요구한 분석 상태 추적 컬럼이 존재한다. 다만 실제 server-actions의 제출 경로는 외부 평가 API 연동 시 create_external_writing_submission RPC를 사용(141-165)하고 feedback_status를 'analyzing'/'failed'로 세팅하며, s…
+    VERIFY: refuted -> violation | SOT 원문(docs\Wireframe\09-D-02-answer-writing-52\screen-data-summary.md:37,47,52)은 D-02 제출을 "public.submit_writing_with_feedback RPC로 한 트랜잭션 처리"하고 feedback_status로 추적한다고 명시한다. 그러나 D-02 화면(src\components\writing\ShortAnswerWriting52Workspace.tsx:88,254)은 useSubmitWriting -> submitWritingAction(src\lib\writing\server-acti…
+
+==================================================
+### q53 — D-03 53번 장문 작성 (/writing/long-form-writing-53)
+reqs=28 findings=28 | conforms=25 partial=2 violation=1 cannot_verify=0
+SOT notes: [검수 포커스 결론 — Writing53MaterialCards 렌더 여부] Writing53MaterialCards.tsx는 실제로 렌더된다. import 및 사용 위치: src/components/writing/LongFormWriting53Workspace.tsx:41(import), :479(`<Writing53MaterialCards cards={problem.materialCards} />`). 53번 route는 page.tsx → renderWritingQuestionPage(53) → WritingPageContent(problem.kind==="q53" 분기, WritingPageContent.tsx:71-78) → LongFormWriting53Workspace 순으로 도달하므로 화면에 실제로 그려진다. (51번이 쓰는 worktree의 ReferenceMaterials.tsx와는 별개 컴포넌트이며, ReferenceMaterials는 메인 src에 존재하지 않고…
+audit summary: D-03 53번 장문 작성 화면 28개 요구사항 중 24개 conforms, 3개 partial, 1개 violation. 가장 중요한 결함은 REQ-q53-04(high): remove-writing-reference-materials proposal이 51~54 화면의 참고 자료 카드 제거를 지시했으나, 53번 구현은 여전히 normalizeMaterialCards(problem-normalizer.ts:475-489)에서 context_notes 기반 reference 카드를 생성하고 Writing53MaterialCards(Writing53MaterialCards.tsx:524,541-547)가 이를 렌더하며, e2e screens-authed.spec.ts:211은 오히려 q53-material-reference 1개를 요구한다 — proposal과 코드/테스트가 정면 충돌한다. 즉 이 proposal이 53번에 적용되지 않았다(반면 problem_assets 조회 제거 REQ-q53-25는 정상 반영됨). partial 3건: REQ-q53-22(서버 거부 메시지 노출 경로가 createFailedLocalSubmission 내부로 한정되고 외부 …
+
+  [VIOLATION / high] REQ-q53-04: 참고 자료(reference) 영역을 렌더링하지 않는다 — context_notes 기반 reference 카드 미표시 (proposal 기준)
+    evidence: src/lib/writing/problem-normalizer.ts:475-489; src/components/writing/Writing53MaterialCards.tsx:502-503,524,541-547; tests/e2e/screens/screens-authed.spec.ts:211
+    detail: proposal 2026-06-18-remove-writing-reference-materials.md:22-24,33은 51~54 화면에서 참고 자료 카드를 만들지도/표시하지도 않도록 지시한다. 그러나 normalizeMaterialCards는 여전히 materials.context_notes로 kind:'reference' 카드를 생성하고(problem-normalizer.ts:475-489), Writing53MaterialCards는 reference 카드를 visibleCards에 포함해 렌더한다(Writing53MaterialCards.tsx:502-503, 524, 541-547, data-testid='q53-material-reference'). messa…
+    VERIFY: confirmed | 제시된 근거 file:line을 모두 직접 열어 확인한 결과 원래 violation 판정이 사실이다. (1) proposal(docs/sot-change-proposals/2026-06-18-remove-writing-reference-materials.md:5,22-24,33)은 51~54 풀이 화면에서 참고 자료 영역을 렌더링하지 않고, materials에서 참고 자료 카드(materialCards/referenceMaterials)를 만들지 않으며, 참고 자료 카드가 표시되지 않아야 한다고 명시한다. (2) 그러나 problem-normalizer.ts:452-…
+
+  [PARTIAL / medium] REQ-q53-22: 서버가 거부하면 '현재 제출할 수 없는 문제입니다. 다른 문제를 선택해 주세요.' 표시, 답안 미저장
+    evidence: src/lib/writing/server-actions.ts:36-44,85; src/components/writing/LongFormWriting53Workspace.tsx:332-335,605-611; supabase/migrations/20260618143000_external_writing_submission_sync.sql:31,68-84
+    detail: 가드가 raise하면 RPC가 throw하고 server-actions의 toSubmitWritingErrorMessage가 'problem_not_submittable' 포함 시 WRITING_PROBLEM_NOT_SUBMITTABLE_MESSAGE='현재 제출할 수 없는 문제입니다. 다른 문제를 선택해 주세요.'로 변환한다(server-actions.ts:36-44). 이 메시지는 submit onError -> setSubmitError -> SubmissionFailedModal description에 노출된다(LongFormWriting53Workspace.tsx:332-335, 605-611). 가드는 INSERT 전에 perform되므로 답안은 저장되지 않는다…
+    VERIFY: confirmed | 근거 file:line을 모두 직접 재확인했고 partial 판정이 정확하다. (1) 가드 raise: private.assert_writing_problem_submittable가 'problem_not_submittable'를 raise(20260617055040_guard_writing_submission_problem_visibility.sql:31)하고, create_external_writing_submission RPC에서 INSERT(20260618143000_external_writing_submission_sync.sql:68)보다 앞선 line 3…
+
+  [PARTIAL / medium] REQ-q53-23: 로그인 사용자만 접근, 미인증 제출 시 /login redirect, user-owned 데이터는 auth.uid() RLS
+    evidence: src/lib/writing/server-actions.ts:95-99; src/app/(workspace)/writing/_components/WritingQuestionRoute.tsx:23; src/app/(workspace)/layout.tsx:18-21
+    detail: 페이지 접근은 WritingQuestionRoute.tsx:23 requireUser()와 (workspace)/layout.tsx:18-21 getSessionAndProfile() 없으면 redirect('/login')으로 보호된다. 제출 서버 액션은 supabase.auth.getUser() 후 !user면 redirect('/login')(server-actions.ts:95-99). draft autosave도 user_id 기반(LongFormWriting53Workspace.tsx:239). partial 사유: writing_drafts/writing_submissions/study_events의 auth.uid() 기반 RLS 정책 SQL은 이번에 직접 …
+    VERIFY: refuted -> conforms | 원래 partial 판정의 유일한 근거는 "RLS 정책 SQL을 직접 열람하지 못해 본인-row 제한을 cannot_verify"였는데, 해당 SQL을 직접 열람해 보니 REQ-q53-23의 세 테이블 모두 auth.uid() 기반 본인-row RLS가 명시적으로 정의되어 있어 그 근거가 무너진다. (1) 접근 보호: src/app/(workspace)/writing/_components/WritingQuestionRoute.tsx:23 requireUser()가 src/lib/auth/session.ts:19-27에서 user 없으면 redirect('/login'…
+
+==================================================
+### q54 — D-04 54번 에세이 작성 (/writing/essay-writing-54)
+reqs=32 findings=32 | conforms=31 partial=1 violation=0 cannot_verify=0
+SOT notes: 검수 결과 핵심: q54-structure-guidance-accordion proposal과 구현이 일치한다. EssayWriting54Workspace.tsx는 우측 패널에 EssayStructureGuide(=WritingGuideAccordion 래핑)를 렌더링하고 tri-state EssayChecklist를 사용하지 않는다(EssayChecklist는 LongFormEditor.tsx와 테스트에서만 사용 — 53번 long-form 계열). 구조 가이드는 problem.essayGuidance에서 오며, problem-normalizer.ts의 normalizeEssayGuidance가 required_structure/required_reason_count/reasoning_pattern/scoring_focus/prohibited_elements/model_outline를 materials/rubric JSONB에서 읽어 정규화한다(metadata-tag-schema-…
+audit summary: 32개 요구사항 중 31개 conforms, 1개 partial. 핵심인 q54-structure-guidance-accordion proposal(우측 패널을 tri-state 체크리스트에서 metadata 기반 구조 안내 아코디언으로 전환)은 EssayStructureGuide/WritingGuideAccordion 구현과 정확히 일치한다. 구조 안내 데이터는 신규 테이블 없이 problems.materials/rubric JSONB에서만 끌어오며, fallback(서론/본론/결론), model_outline 조건부 렌더링, 작성 체크 포인트 fallback 문구가 모두 구현되어 있다. 제출 흐름(D-M1 확인 모달 → page-level 분석 화면 → 실패 모달), 자동저장/수동저장/이탈 경고, 제출 가드 RPC(published/public/active/domain=writing/question_no 일치), problem_not_submittable 한국어 오류, ReferenceMaterials 제거, 글자수 제한(300~700) 모두 충족. 단 1건(REQ-q54-19)은 본문 컴포넌트 자체에서 직접 확인 가능하나 SubmittedAnalysis…
+
+  [PARTIAL / low] REQ-q54-13: 본문 변경 시 2초 디바운스 자동저장, dirty→syncing→clean 전이, last_saved_at 갱신
+    evidence: src/components/writing/EssayWriting54Workspace.tsx:62 (DEBOUNCE_MS=2000), :231-238 (scheduleSave: status!=='syncing'이면 dirty, 2초 후 persist), :194 (persist setStatus('syncing')), :211-213 (onSuccess setStatus('clean'), setLastSavedAt(row.last_saved_at))
+    detail: 2초 디바운스, dirty→syncing→clean 전이, last_saved_at 갱신이 모두 구현되어 기능 요건은 충족한다. 다만 scheduleSave(:232)는 'status !== syncing'일 때만 dirty로 두므로, 이전 저장이 syncing인 동안 재입력하면 dirty로 표시되지 않고 syncing이 유지된 채 새 타이머가 걸린다. saveSeqRef(:195,209)로 stale 응답은 무시되어 정합성은 보장되나, 명세의 단순 dirty→syncing→clean 순서와는 경계 케이스에서 미세 차이가 있어 partial로 표시한다.
+    VERIFY: refuted -> conforms | REQ-q54-13의 3개 하위 요건이 모두 정확히 구현됨을 직접 확인했다. (1) 2초 디바운스: src/components/writing/EssayWriting54Workspace.tsx:62 `DEBOUNCE_MS=2000`, :234-237 setTimeout, :240-245 onTextChange→scheduleSave로 본문 변경 시 디바운스 동작. (2) dirty→syncing→clean 전이: :232 dirty, :194 syncing, :211 clean 모두 존재하고 정상 경로에서 발화. (3) last_saved_at 갱신: :205 upse…
+
+==================================================
+### dm1 — D-M1 제출 확인 모달
+reqs=31 findings=31 | conforms=19 partial=3 violation=8 cannot_verify=1
+SOT notes: [검수자 주: 읽기 전용 검수. description.md의 모호/검증 곤란 지점과 SOT-proposal 충돌 지점을 아래에 정리한다. 코드(src/components/writing/SubmissionConfirmModal.tsx)는 근거 보강용으로 참고했으며 요구사항은 SOT/proposal 기준으로 추출했다.]
+
+1) 동의 체크(consent) 모호성 — description.md:50 "동의 체크. 체크 사항 리마인더" 및 :70 "제출 전 답안 요약과 동의 상태를 확인한다", :78 "동의 체크 활성화"는 '동의 체크박스'를 필수 게이트로 둘 것을 요구하는 듯하나, (a) 체크 대상 문구가 무엇인지, (b) 체크해야만 제출 버튼이 활성화되는지, (c) 동의 이력 저장 여부가 명시되지 않았다. screen-data-summary.md:35는 동의 문구를 "스키마 보강 필요/현재는 앱 문구 계약"으로, :63은 "제출 동의 이력을 남길지 정한다"를 미결 항목으로 둔다. 따라서 …
+audit summary: D-M1 제출 확인 모달은 인터랙션/네비게이션/보안/검증 요구사항은 대체로 충실히 충족하나, '제출 요약 영역'과 'AI 분석 주의 안내' 콘텐츠가 모달에서 통째로 누락된 것이 가장 큰 불일치다.
+
+[핵심 위반 — content 콘텐츠 누락] REQ-DM1-06~11, 28: SOT(description.md)는 모달에 문제 유형/답안 길이/저장 시각/제출 대상 4요소 요약과 AI 분석 시작·대기 주의 문구를 요구하지만, 현 SubmissionConfirmModal.tsx(48-100)는 제목·부제·글자수 경고·에러·CTA만 렌더한다. 관련 메시지 키(questionTypeLabel, submitNotice 등 ko.json:1500-1519)는 정의돼 있으나 src에서 전혀 사용되지 않는다. surface 테스트(SubmissionConfirmModal.surface.test.tsx:45-53)가 이 생략을 '의도'로 단언하지만, 이를 정당화하는 SOT proposal은 존재하지 않는다(2026-06-19 proposal은 페이지 흐름만 다룸). → 디자인을 단순화했다면 D-M1 SOT 갱신 proposal이 필요하다.
+
+[SOT-코드 모순 — REQ-DM…
+
+  [VIOLATION / medium] REQ-DM1-06: 제출 요약 영역은 문제 유형, 답안 길이(글자 수), 저장 시각, 제출 대상을 요약 표시한다.
+    evidence: src/components/writing/SubmissionConfirmModal.tsx:48-100 (모달 본문에 제목/부제/경고/에러/버튼만 존재; 문제 유형·저장 시각·제출 대상 요약 미렌더). props로 questionNo/lastSavedAt를 받지만(SubmissionConfirmModal.tsx:14-15) 본문에서 사용하지 않음. messages/ko.json:1501-1507에 questionTypeLabel/answerLengthLabel/l…
+    detail: SOT(description.md:12,36)는 문제 유형/답안 길이/저장 시각/제출 대상 4요소 요약을 요구하나, 현재 모달은 어떤 요약 항목도 렌더하지 않는다. 글자 수조차 요약 텍스트로 표시하지 않고, 글자 수 부족 경고(notEnoughChars)에만 minChars가 들어간다. tests/components/writing/SubmissionConfirmModal.surface.test.tsx:45-53이 요약/체크리스트/동의 생략을 '의도적으로' 단언한다. 그러나 이 생략을 정당화하는 SOT proposal은 확인되지 않음(2026-06-19 proposal은 페이지 흐름만 다룸).
+    VERIFY: confirmed | 원래 violation 판정이 사실로 확인됨. 근거를 직접 재확인한 결과는 다음과 같다.
+
+1) SOT 요구: docs/Wireframe/12-D-M1-submission-confirmation-modal/description.md:12,36에서 "제출 요약" 영역은 문제 유형, 답안 길이, 저장 시각, 제출 대상 4요소를 요약 표시하도록 명시. (description.md:38은 글자수만 표시 등 세부 제약, :40은 실패 시 문제유형/글자수 최소 정보 표시 요구.)
+
+2) 실제 모달 렌더: src/components/writing/SubmissionConfirmM…
+
+  [VIOLATION / low] REQ-DM1-07: 제출 요약은 3개 항목으로 구성되며 각 항목 텍스트는 24자 이하다.
+    evidence: src/components/writing/SubmissionConfirmModal.tsx:48-100 (요약 항목 자체가 렌더되지 않음).
+    detail: 요약 영역이 존재하지 않으므로 '3항목/각 24자 이하' 제약을 충족할 대상이 없다. REQ-DM1-06 위반에 종속된 항목이다.
+    VERIFY: confirmed | SubmissionConfirmModal.tsx:48-100 본문을 직접 읽은 결과, 모달은 제목(53-58), 글자수 부족 경고 Alert(61-67), 제출오류 Alert(69-76), 취소/제출 버튼(78-99)만 렌더하며 '답안 요약' 영역 자체가 없다. summary 관련 section/리스트/번역키 호출이 전무하다. SubmissionConfirmModal.surface.test.tsx:45-53은 테스트 이름이 'omits summary...'이고 modal.querySelector("section")가 null임을 단언(48행)하여, 요약 미렌더가 현재…
+
+  [VIOLATION / low] REQ-DM1-08: 답안이 긴 경우 요약에는 본문 대신 글자 수만 표시한다.
+    evidence: src/components/writing/SubmissionConfirmModal.tsx:48-100 (요약/본문 표시 영역 없음).
+    detail: 모달이 답안 본문이나 요약을 표시하지 않으므로 '긴 답안은 글자 수만 표시' 규칙을 적용할 대상이 없다. 분석 화면(D-M2)에서는 답안 본문을 표시하나 이는 모달이 아니다(SubmittedAnalysisPanel.tsx:107-109).
+    VERIFY: confirmed | 근거 파일을 직접 재확인했고 원 판정(violation)과 일치한다. SubmissionConfirmModal.tsx(D-M1 제출 확인 모달) 전체(1-103줄)를 읽은 결과, 렌더링 영역(48-100줄)은 제목 t("title"), 부제 t("subtitle"), 글자 수 부족 경고 Alert(61-67줄), 제출 오류 Alert(69-76줄), 취소/제출 버튼(78-99줄)만 표시한다. 답안 본문이나 요약을 보여주는 요소가 전혀 없으며, charCount는 props로 받지만(9,21줄) 화면에 글자 수조차 표시하지 않고 enough 판정(30줄)과 버튼 dis…
+
+  [VIOLATION / low] REQ-DM1-09: 요약 생성에 실패하면 문제 유형과 글자 수의 최소 정보만 표시한다.
+    evidence: src/components/writing/SubmissionConfirmModal.tsx:48-100 (요약 생성/실패 폴백 로직 없음).
+    detail: 모달에 요약 생성 로직 자체가 없어 실패 폴백(문제유형/글자수 최소 정보) 분기도 없다. REQ-DM1-06 위반에 종속.
+    VERIFY: confirmed | 원판정 violation이 사실로 확인된다. 요구사항 근거: docs/Wireframe/12-D-M1-submission-confirmation-modal/description.md:40 "요약 생성 실패 시 문제유형/글자수 최소 정보만 표시"가 REQ-DM1-09이며, 이는 description.md:36-38의 제출 요약 기능(문제 유형/답안 길이/저장 시각/제출 대상, 3항목 24자 이하 = REQ-DM1-06)과 functional-spec.md:23-26 "답안 요약"에 종속된 예외다.
+
+실제 구현 확인: src/components/writing/Submis…
+
+  [VIOLATION / medium] REQ-DM1-10: 확인 정보/주의 영역은 제출 후 AI 분석이 시작되며 대기가 발생할 수 있음을 안내한다.
+    evidence: src/components/writing/SubmissionConfirmModal.tsx:52-58 (제목 title + 부제 subtitle만 표시). subtitle='작성한 답안을 제출하면 수정할 수 없습니다'(messages/ko.json:1497) — AI 분석 시작/대기 안내 아님. AI 분석 안내 문구 submitNotice(messages/ko.json:1509='제출 후에는 ... 자동으로 AI 분석이 시작됩니다. 분석에는 잠시 대기 시간이 걸릴…
+    detail: description.md:13,48이 요구하는 'AI 분석 시작 + 대기 가능' 안내가 모달에 렌더되지 않는다. submitNotice 메시지 키는 준비돼 있으나 컴포넌트가 사용하지 않는다. 부제는 수정 불가 안내에 가깝고 AI 분석 안내를 대체하지 못한다.
+    VERIFY: confirmed | 근거를 직접 재확인한 결과 violation 판정이 사실이다. (1) src/components/writing/SubmissionConfirmModal.tsx:52-58 — 헤더 블록은 t("title")(54행)와 t("subtitle")(57행)만 렌더하며, 나머지는 조건부 Alert인 notEnoughChars(65행, 글자수 부족 경고)와 submitError(69-76행, 제출 실패)뿐이다. 'AI 분석 시작 + 대기 가능성' 안내는 어디에도 렌더되지 않는다. (2) messages/ko.json:1497 subtitle="작성한 답안을 제출하면 수정할 수 …
+
+  [VIOLATION / low] REQ-DM1-11: 주의 문구는 80자 이내, 2줄 이내로 표시한다.
+    evidence: src/components/writing/SubmissionConfirmModal.tsx:52-58 (주의 문구 영역 미렌더).
+    detail: AI 분석 주의 문구 자체가 모달에 표시되지 않으므로(REQ-DM1-10 위반) 80자/2줄 제약을 적용할 대상이 없다. 참고로 미사용 submitNotice 텍스트(ko.json:1509)는 80자를 초과한다.
+    VERIFY: confirmed | 근거 직접 재확인 결과 판정 유지(confirmed). SubmissionConfirmModal.tsx:48-100 전체를 읽었을 때 렌더되는 텍스트는 t("title")(54줄), t("subtitle")(57줄), 조건부 notEnoughChars Alert(62-66줄, !enough일 때만), 조건부 submitError Alert(70-75줄)뿐이며 AI 분석 주의 문구를 표시하는 요소가 없다. WritingEditor.tsx:328-340에서 이 모달이 실제 D-M1 제출 확인 모달로 사용됨을 확인했고, 51/52/53/54·LongFormEditor 등 …
+
+  [PARTIAL / low] REQ-DM1-12: 제출 후 답안 변경 제한을 안내하는 문구를 표시한다.
+    evidence: src/components/writing/SubmissionConfirmModal.tsx:56-58 (부제 subtitle 렌더), messages/ko.json:1497 (subtitle='작성한 답안을 제출하면 수정할 수 없습니다.').
+    detail: 모달 부제가 '제출하면 수정할 수 없습니다'를 안내하여 변경 제한 문구를 부분 충족한다. 다만 screen-data-summary.md:4,24가 가리키는 별도 warning/footer 문구(warningTitle/footerNote, ko.json:1508,1519)는 미사용이다. 핵심 메시지는 부제로 전달되므로 partial로 판정.
+    VERIFY: refuted -> conforms | REQ-DM1-12("제출 후 답안 변경 제한 안내 문구 표시")는 렌더된 subtitle로 완전히 충족된다. SubmissionConfirmModal.tsx:56-58이 t("subtitle")을 항상 렌더하고, messages/ko.json:1497 subtitle="작성한 답안을 제출하면 수정할 수 없습니다."는 변경 제한을 명확히 안내한다(부분이 아니라 직접·완전 충족). SOT(docs/Wireframe/12-D-M1-submission-confirmation-modal/screen-data-summary.md:4 "제출 후 변경 제한을 안내하는 모달", :…
+
+  [VIOLATION / low] REQ-DM1-13: 취소 CTA와 제출 CTA 두 개가 동일한 폭으로 표시된다.
+    evidence: src/components/writing/SubmissionConfirmModal.tsx:78 (grid-cols-[2fr_3fr]). 취소:제출 = 2:3 비율로 폭이 다름. tests/components/writing/SubmissionConfirmModal.surface.test.tsx:55-67이 '제출 버튼이 취소보다 넓음'을 의도적으로 단언.
+    detail: description.md:14,62는 'CTA 2개 동일 폭'을 요구하나, 구현은 취소 2fr/제출 3fr로 제출 버튼을 더 넓게 둔다. 이는 의도된 디자인 변경으로 보이지만(surface 테스트가 보장), SOT proposal로 근거화되지 않아 SOT 문구와 불일치한다.
+    VERIFY: confirmed -> violation | SOT 확인: docs/Wireframe/12-D-M1-submission-confirmation-modal/description.md:62 `▣ 제약 조건: CTA 2개 동일 폭, 제출 클릭 후 중복 제출 차단.` 가 두 CTA의 '동일 폭'을 명시적으로 요구함(REQ-DM1-13). 구현 확인: src/components/writing/SubmissionConfirmModal.tsx:78 `className="mt-8 grid grid-cols-[2fr_3fr] gap-3"` 로 취소(line 79-87, 2fr)와 제출(line 88-98, 3fr) 버튼이 2:…
+
+  [VIOLATION / medium] REQ-DM1-15: 제출을 확정하면 submit_writing_with_feedback RPC를 호출해 writing_submissions 제출본과 초기 feedback row를 한 트랜잭션으로 생성한다.
+    evidence: src/lib/writing/server-actions.ts:92-179 (submitWritingAction은 submit_writing_with_feedback을 호출하지 않음; 외부 API submitExternalWriting 후 create_external_writing_submission RPC 호출). tests/lib/writing/server-actions.test.ts:184-187,113-116 (submit_writing_with_feedb…
+    detail: 현재 구현은 옛 SOT가 명시한 submit_writing_with_feedback(제출+feedback 원자 생성) 경로를 사용하지 않는다. 대신 외부 Writing API 큐잉 후 create_external_writing_submission으로 analyzing/failed 상태의 제출본만 생성하고 feedback row는 나중에 sync_external_writing_feedback로 채운다(20260618143000_external_writing_submission_sync.sql:102-215). 이는 더 새로운 proposal(docs/sot-change-proposals/2026-06-18-external-writing-api-feedback-sync.md:…
+    VERIFY: confirmed | 인용된 모든 근거를 직접 재확인한 결과 판정이 성립한다. (1) src/lib/writing/server-actions.ts:92-179의 submitWritingAction은 submit_writing_with_feedback를 전혀 호출하지 않고, submitExternalWriting(외부 API, line 113) 후 create_external_writing_submission RPC(line 70, 143)로 analyzing/failed 상태 제출본만 생성하며 feedback row를 이 경로에서 만들지 않는다. (2) src/ 전체 grep에서 subm…
+
+  [PARTIAL / medium] REQ-DM1-26: 제출 버튼 활성화 기준은 autosave_status와 글자 수로 판단하며, 글자 수가 최소 기준 미만이면 제출 버튼이 비활성 상태가 된다.
+    evidence: 작성 화면 제출 트리거 버튼은 글자 수(submittable=isCountSubmittable)와 pending/blocked로만 disabled 판단: src/components/writing/WritingEditor.tsx:320-322, ShortAnswerWriting51Workspace.tsx:380-384. 모달 내 제출 버튼은 글자 수만으로 판단: SubmissionConfirmModal.tsx:30,93 (disabled={!enough||load…
+    detail: 글자 수 최소 기준 미만이면 작성 화면 제출 버튼과 모달 제출 버튼 모두 disabled되어 글자 수 기준은 충족한다(isCountSubmittable, charCount>=minChars). 그러나 screen-data-summary.md:33,62와 functional-spec.md:30-31이 명시한 autosave_status 기반 활성 판단은 구현되지 않았다 — 제출 가능 여부는 글자 수만으로 결정되고 autosave_status(저장 완료 상태)는 게이팅에 쓰이지 않는다. 따라서 partial.
+    VERIFY: confirmed | 원 판정 "partial"은 근거가 정확하다. 실제 소스를 다시 확인한 결과:
+
+[제출 게이팅이 글자 수만 사용]
+- src/components/writing/WritingEditor.tsx:79 `const submittable = isCountSubmittable(charCount, questionNo)` — 글자 수만으로 판단.
+- WritingEditor.tsx:320-322 작성 화면 제출 트리거 버튼 `disabled={!submittable || submit.isPending || Boolean(submitBlockedReason)}` — 글자 수 + p…
+
+  [PARTIAL / medium] REQ-DM1-28: 모달은 현재 draft(writing_drafts)를 읽어 글자 수와 자동저장 완료 상태를 표시한다.
+    evidence: 글자 수는 라이브 charCount로 모달에 전달됨: SubmissionConfirmModal.tsx:9,30(charCount/minChars). draft는 initialDraft로 에디터에 주입되어 글자 수/저장 상태의 출처가 됨(WritingEditor.tsx:54-60, autosave_status·last_saved_at). 그러나 모달 본문은 글자 수/저장 상태를 '표시'하지 않음(SubmissionConfirmModal.tsx:48-100; las…
+    detail: draft 데이터(글자 수, autosave_status, last_saved_at)는 작성 화면(AutosaveBadge, 글자 수 Text)에서 표시되고 모달에 props로 전달되지만, 모달 자체는 글자 수/자동저장 완료 상태를 화면에 렌더하지 않는다(REQ-DM1-06,10과 동일 원인). 데이터 출처는 writing_drafts로 충족하나 '모달이 표시한다'는 요건은 미충족이라 partial.
+    VERIFY: confirmed | 근거 파일을 직접 재확인한 결과 partial 판정이 사실로 확인됨. SubmissionConfirmModal.tsx에서 charCount(9), minChars(10), lastSavedAt(15)을 props로 받지만: (1) charCount는 30행 `const enough = charCount >= minChars` 비교 로직에만 쓰이고 모달 본문(48-100)에 글자 수 숫자/텍스트로 렌더되지 않음. 61-67행에서 `!enough`일 때 경고 Alert만 띄울 뿐 글자 수 자체는 표시 안 함. (2) lastSavedAt prop은 19-27행 구조분해에…
+
+  [CANNOT_VERIFY / info] REQ-DM1-30: writing_submissions는 본인 select/insert만 허용되며 update/delete 정책은 없어 제출본은 직접 수정/삭제하지 않는다.
+    evidence: 제출본 생성은 service_role writer RPC 경유: supabase/migrations/20260618143000_external_writing_submission_sync.sql:68-95,97-98 (create_external_writing_submission, security definer, grant execute to service_role only). 코드 측엔 writing_submissions에 대한 직접 update/delete 호…
+    detail: 제출본은 service-side writer RPC로만 생성되고 클라이언트/서버 코드에 직접 update/delete 경로가 없어 '직접 수정/삭제하지 않는' 동작은 코드 레벨로 부합한다. 다만 'select/insert만 허용, update/delete 정책 없음'이라는 RLS 정책 정의 자체는 해당 migration(20260520120400_writing.sql)을 직접 확인하지 않아 cannot_verify로 둔다.
+    VERIFY: (none)
+
+==================================================
+### dm2 — D-M2 AI 분석 로딩 (page-flow로 변경됨)
+reqs=30 findings=30 | conforms=28 partial=2 violation=0 cannot_verify=0
+SOT notes: 검수 중 확인한 사실과 모호/불확실 항목을 정리한다.
+
+[프로포절 우선 적용 결과]
+- writing-submit-analysis-page-flow proposal이 SOT(description.md/functional-spec.md의 'modal/state', '제출 확인 모달에서 진입', dim 배경 modal)를 page-level transient 상태로 덮어쓴다. 구현(WritingEditor.tsx:244-246, SubmittedAnalysisPanel.tsx, AnalysisLoadingPage)이 proposal과 일치함을 확인했다.
+- proposal의 SOT Follow-Up(26줄)에 따르면 functional-spec.md/description.md를 page-level transient state로 갱신해야 하나, 현재 두 SOT 문서는 아직 'modal/state'로 남아 있다(functional-spec.md:15 Route type: modal/stat…
+audit summary: D-M2(page-flow)는 핵심 30개 요구사항 중 28개가 conforms, 2개가 partial이다. proposal(2026-06-19 writing-submit-analysis-page-flow)이 정의한 page-level transient 전이는 충실히 구현됐다: 제출 성공 시 in-memory useState(submittedAnalysis)로 SubmittedAnalysisPanel(=AnalysisLoadingPage, overlay 아님)로 전이하고 router.push가 없어 history에 남지 않으며(가드 테스트가 6개 컴포넌트에서 강제), 새로고침/직접 URL 시 일반 writing route가 렌더된다. 제출 pending 동안 D-M1 모달이 열린 채 loading·중복차단(closable/mask/keyboard/disabled)되고, 실패 시 모달을 닫고 SubmissionFailedModal로 전환한다. 51/52→short, 53/54→long 분기, 4단계 Steps, 10초 slow 안내, reduceMotion 정적 대체, 폴링(5초·12회·complete|failed 정지)이 정확하다. 보안: 상태 전이는 ser…
+
+  [PARTIAL / medium] REQ-dm2-20: 분석 진행 중 뒤로가기/이탈 시도 시 분석 중단 경고(확인 모달)를 표시하고 확인해야만 이탈한다.
+    evidence: src/components/feedback/AnalysisLoadingModal.tsx:189-203(handleCancel->modal.confirm 분석 중단 경고), 242-249(active 시 cancel 버튼이 handleCancel 호출), 154/153(active 판정); 그러나 src/components/writing/WritingEditor.tsx:101-110(beforeunload는 status dirty/failed에서만 등록, subm…
+    detail: 화면 내 명시적 '이탈' 버튼(cancel)을 누르면 modal.confirm 경고가 뜨고 확인 시에만 leaveFlow가 실행된다. 그러나 브라우저 물리적 뒤로가기(popstate)나 새로고침(beforeunload)을 가로채는 핸들러가 page-level 분석 surface(SubmittedAnalysisPanel/AnalysisLoadingPage)에는 없다. description.md:28,82의 '뒤로가기 시 분석 중단 경고'는 버튼 경유 이탈만 충족하고 브라우저 back/refresh 차단은 미구현. 단 proposal(REQ-dm2-07/08)은 이 화면을 history에 push하지 않는 transient state로 정의하므로 뒤로가기 자체가 분석 화면을 …
+    VERIFY: confirmed | REQ-dm2-20(분석 중 뒤로가기/이탈 시 분석 중단 경고 모달 후 확인해야 이탈)은 버튼 경유 이탈만 충족하고 브라우저 back/refresh는 미차단이므로 partial 판정이 맞다.
+
+[충족 - 버튼 경유 이탈]
+- src/components/feedback/AnalysisLoadingModal.tsx:194-203 handleCancel가 modal.confirm(cancelConfirmTitle/cancelConfirm, okText=cancelLeaveButton, danger, onOk=leaveFlow)를 띄움. leaveFlow는 189-192에서…
+
+  [PARTIAL / low] REQ-dm2-29: AI 분석 캐릭터(중심 시각 요소)는 1개 핵심 애니메이션 루프만 사용하고 텍스트를 가리지 않는다.
+    evidence: src/components/feedback/AnalysisLoadingModal.tsx:403(AnalysisCharacter는 modal presentation의 active 블록에서만 사용), 252-349(page presentation은 캐릭터 대신 정적 SVG PAGE_STATE_ASSET 사용, line 278-286); src/styles/global.css:6213-6215(bob 루프), 6267-6270(spark 루프) — 캐릭터에 bob+s…
+    detail: 캐릭터(AnalysisCharacter)에는 bob(메인 끄덕임)과 spark(반짝임) 두 개의 애니메이션 루프가 있어 description.md:38의 '1개 핵심 루프' 문구와 엄밀히는 차이가 있다(spark는 장식 보조). 다만 page-flow(SubmittedAnalysisPanel) 자체는 캐릭터를 쓰지 않고 정적 SVG를 사용하므로 page 흐름에는 영향 없음. 텍스트 가림 문제는 없음.
+    VERIFY: confirmed | 제시된 근거를 모두 직접 확인했고 partial(severity low) 판정이 사실에 부합한다. (1) page-flow 흐름은 캐릭터를 쓰지 않는다: SubmittedAnalysisPanel.tsx:67이 AnalysisLoadingPage를 호출하고, 이는 AnalysisLoadingModal.tsx:85-105에서 presentation="page"로 렌더되며, page 분기(AnalysisLoadingModal.tsx:252-349)는 AnalysisCharacter 대신 정적 SVG PAGE_STATE_ASSET[status](정의 :24-29, 렌더 :2…
+
+==================================================
+### dm3 — D-M3 자동저장 경고
+reqs=35 findings=35 | conforms=24 partial=9 violation=1 cannot_verify=1
+SOT notes: SOT만으로 검증 기준을 확정하기 어려운 모호/충돌 지점을 아래에 정리한다. proposal 문서는 제공되지 않아 모든 요구사항의 overriddenByProposal은 null이다.
+
+1) 화면 목적이 문서 간 상충함. description.md:83은 "저장되지 않은 변경 이탈을 방지한다"(미저장 이탈 가드 모달)인 반면, functional-spec.md:5와 screen-data-summary.md:4는 "저장 실패/네트워크 문제를 인지·복구하게 한다"(자동저장 실패 경고 모달)로 기술되어, 같은 화면이 두 가지 다른 트리거(이탈 가드 vs 저장 실패)를 모두 의미하는지 단일 화면인지 불명확하다. 검증 시 두 트리거를 모두 충족해야 하는지, 별개 케이스인지 기준을 세울 수 없다.
+
+2) CTA 명칭/개수가 문서 간 불일치함. description.md:69-77은 CTA를 "취소/끄기" 2개(끄기=자동저장 끄기)로 기술하나, description.md:101과 function…
+audit summary: D-M3 자동저장 경고 화면은 두 개의 흐름으로 구현되어 있다. (1) AutosaveWarningModal(src/components/writing/AutosaveWarningModal.tsx) — save_failure / disable_attempt / exit_with_dirty 세 가지 trigger를 처리하는 공용 경고 모달, (2) useUnsavedChangesGuard(src/hooks/useUnsavedChangesGuard.ts) — 미저장 상태 이탈을 가로채는 네비게이션 가드. 실제 작성 화면은 WritingPageContent가 라우팅하는 4개 Workspace(ShortAnswerWriting51/52, LongFormWriting53, EssayWriting54)이며, 이들이 동일 패턴으로 두 흐름을 연결한다(functional-spec.md:50-51이 가리키는 WritingEditor/LongFormEditor는 현재 라우트에서 렌더되지 않는 레거시 호스트로 보임). 대부분의 요구사항(아이콘 텍스트 배지 대체, 마지막 저장 시각/복구 tri-state, 도움말 링크, RLS, 활성 draft 1개 제약, study_events …
+
+  [PARTIAL / medium] REQ-DM3-02: 경고 모달이 열린 동안 배경 작성 화면의 입력은 잠금(편집 불가) 상태가 된다.
+    evidence: src/components/writing/AutosaveWarningModal.tsx:91-102; src/components/shared/AppModal.tsx:9-19
+    detail: AntD Modal의 mask + focus trap으로 사실상 배경 상호작용은 차단되지만, 배경 TextArea 등 입력 요소를 명시적으로 disabled/readonly로 잠그는 코드는 없다. save_failure 시 status='failed'이고 TextArea의 disabled는 submit.isPending에만 묶여 있어(예: WritingEditor.tsx:296) 모달 표시 자체로 입력이 disabled되지는 않는다. mask 뒤 입력은 포커스/클릭이 막히나 키보드 포커스가 이미 입력에 있던 경우의 차단은 AntD 동작 의존이라 명시적 잠금으로 보긴 어렵다.
+    VERIFY: confirmed | 원 판정 "partial"은 정확하다. 근거 file:line을 직접 재확인한 결과는 다음과 같다.
+
+[요구사항 실재 확인] REQ-DM3-02의 "입력 잠금"은 추론이 아니라 SOT에 명시된 제약이다. docs/Wireframe/22-D-M3-autosave-warning/description.md:27 "▣ 제약 조건: 배경 dim 처리, 입력 잠금, 현재 작성 내용 보존." 즉 배경 dim과 "입력 잠금"이 별개 제약으로 나열돼 있다.
+
+[제시 근거 정확] (1) src/components/writing/AutosaveWarningModal.tsx:90-102 …
+
+  [PARTIAL / low] REQ-DM3-05: 경고 아이콘 1개가 고정으로 표시되어 자동저장 해제 또는 저장 실패가 중요 상태임을 알린다.
+    evidence: src/components/writing/AutosaveWarningModal.tsx:92-98,111-120
+    detail: 그래픽 경고 아이콘은 제목에 두지 않고 텍스트 배지(<Tag>주의</Tag>)로 대체했다(아이콘 로드 실패 대비 의도). save_failure에서는 Alert showIcon으로 경고 아이콘이 1개 표시되나, disable_attempt/exit_with_dirty에는 Alert이 없어 '아이콘 1개 고정' 표시가 trigger별로 일관되지 않는다. 중요 상태 고지 자체는 텍스트 배지로 충족.
+    VERIFY: refuted -> conforms | SOT(docs/Wireframe/22-D-M3-autosave-warning/description.md:31-41)의 No.2 '경고 아이콘'은 제약 '아이콘 1개 고정'과 예외 '아이콘 로드 실패 시 텍스트 배지로 대체'를 모두 명시한다. 구현(src/components/writing/AutosaveWarningModal.tsx:93-98)은 trigger와 무관하게 모달 제목에 항상 단일 텍스트 배지 `<Tag>{t("warnBadge")}</Tag>`(=ko.json:1473 '주의')를 렌더링하며, 코드 주석(line 93)도 '§2 예외 — 경고 아이콘 로…
+
+  [PARTIAL / low] REQ-DM3-10: 자동저장 안내의 본문은 80자 이내, 2줄 이내로 제한한다.
+    evidence: messages/ko.json:1475,1478,1480; src/components/writing/AutosaveWarningModal.tsx:104-109
+    detail: 본문 문자열은 모두 80자 이내이며 내장 개행이 없다(warnDisableBody≈37자, warnExitBody≈33자, warnSaveFailureBody≈48자). 다만 본문은 whitespace-pre-line 단일 Paragraph로 렌더되어 화면 폭에 따라 wrap되며, '2줄 이내'를 강제하는 line-clamp/maxLines CSS는 없다. 글자 수 제한은 충족, 2줄 강제는 미강제.
+    VERIFY: uncertain | 근거 파일을 직접 재확인함. (1) 본문 3종은 messages/ko.json:1475(warnSaveFailureBody), 1478(warnDisableBody), 1480(warnExitBody)에 있고, 내장 개행 없음. 실제 글자 수(UTF-16 .Length): warnSaveFailureBody=57, warnDisableBody=47, warnExitBody=42 — 모두 80자 미만. (제시 근거의 ≈37/33/48은 공백·구두점 제외 음절 수로 보이나, '80자 이내' 결론은 어느 셈법이든 동일하게 충족.) (2) 본문은 AutosaveWarning…
+
+  [PARTIAL / low] REQ-DM3-14: 임시 저장 상태를 안내 표시한다.
+    evidence: src/components/writing/AutosaveBadge.tsx:20-26,48-64; src/components/writing/WritingExamShell.tsx:89-91
+    detail: 임시 저장 상태는 모달이 아니라 작성 화면 상단 AutosaveBadge(clean/dirty/syncing/failed/superseded 라벨 + 시각)로 상시 안내된다. 모달 내부의 복구/저장 정보 영역에는 '마지막 저장 시각'과 '복구 상태'만 있고 임시 저장 상태(예: 저장 대기/저장 중) 라벨은 직접 표시되지 않는다. 안내는 화면 레벨에서 충족.
+    VERIFY: confirmed | 원래 partial 판정이 정확하다. 와이어프레임 spec(docs/Wireframe/22-D-M3-autosave-warning/description.md:14,61)은 '임시 저장 상태'를 모달 영역 No.4 '복구/저장 정보'에 '마지막 저장 시각', '복구 가능 여부'와 함께 안내하도록 명시한다. 그러나 실제 모달 구현(src/components/writing/AutosaveWarningModal.tsx:122-139)의 Descriptions에는 lastSavedLabel(마지막 저장)과 recoveryStateLabel(복구 상태) 두 항목만 있고, '임시…
+
+  [PARTIAL / medium] REQ-DM3-18: CTA(특히 위험 CTA)는 중복 클릭을 차단한다.
+    evidence: src/components/writing/AutosaveWarningModal.tsx:157-181; src/hooks/useUnsavedChangesGuard.ts:89-101
+    detail: retry 버튼은 loading={retrying}(upsert.isPending)로 진행 중 중복 클릭이 막힌다. 그러나 위험 proceed 버튼(line 169-180)에는 loading/disabled 가드가 없어 빠른 중복 클릭을 UI에서 막지 않는다. exit 흐름의 proceedPendingNavigation는 setState 함수형 갱신으로 두 번째 호출이 사실상 no-op이 되지만, disable_attempt proceed(setAutosaveEnabled(false))나 save_failure proceed에는 명시적 중복 클릭 차단이 없다.
+    VERIFY: refuted -> conforms | 근거 파일을 모두 직접 재확인한 결과, 주장된 "관찰 사실"은 맞지만 그로부터 도출한 partial 판정은 요구사항(REQ-DM3-18: 위험 CTA 중복 클릭 차단)의 실질을 과소평가한 것이라 refuted로 판정한다.
+
+확인한 사실:
+1) retry 버튼은 loading={retrying}(=upsert.isPending)로 진행 중 중복 클릭이 차단된다 — AutosaveWarningModal.tsx:157-168(loading=161). 주장 일치.
+2) 위험 proceed 버튼(AutosaveWarningModal.tsx:169-180)에 loading/di…
+
+  [CANNOT_VERIFY / low] REQ-DM3-19: 끄기(변경) 동작이 실패하면 모달을 유지하고 실패 사유를 표시한다.
+    evidence: src/components/writing/WritingEditor.tsx:359-365; src/components/writing/ShortAnswerWriting51Workspace.tsx:283-289,648-657
+    detail: 현재 구현에서 자동저장 끄기(disable)는 setAutosaveEnabled(false)인 순수 클라이언트 state 토글로 서버 호출/실패가 발생하지 않는다. 따라서 '끄기 실패' 경로가 존재하지 않아 실패 시 모달 유지/사유 표시 요구를 검증할 대상이 없다. (SOT description.md:77의 예외가 현재 구현 모델과 부합하지 않음.)
+    VERIFY: confirmed | 근거 file:line을 직접 재확인한 결과 원래 cannot_verify 판정과 그 근거가 모두 정확하다.
+
+1) SOT 확인: REQ-DM3-19의 출처가 정확하다. docs/Wireframe/22-D-M3-autosave-warning/description.md:77 = "▣ 예외: 끄기 실패 시 모달 유지와 실패 사유 표시." (끄기가 실패하면 모달 유지 + 실패 사유 표시). functional-spec.md에는 끄기 실패에 대한 별도 acceptance 항목이 없다.
+
+2) 끄기(disable) 구현이 순수 클라이언트 state 토글임을 확인:
+- Writ…
+
+  [PARTIAL / low] REQ-DM3-20: 선택 결과를 사용자에게 피드백으로 표시한다(경고 상태, 버튼 위험도, 선택 결과).
+    evidence: src/components/writing/AutosaveBadge.tsx:48-64; src/components/writing/WritingEditor.tsx:280-284; src/components/writing/AutosaveWarningModal.tsx:169-180
+    detail: 경고 상태(AutosaveBadge), 버튼 위험도(danger 스타일)는 표시된다. 선택 결과 피드백은 일부만 노출: 자동저장 끄기 확정 후 화면에 autosaveDisabledNotice가 뜨고 재시도 성공 시 배지가 '저장됨'으로 바뀐다. 다만 '저장하지 않고 나가기' 선택 등 일부 선택은 즉시 화면 전환만 있고 별도 결과 토스트/메시지는 없다.
+    VERIFY: confirmed | 근거 파일을 직접 다시 열어 REQ-DM3-20의 세 피드백 요소(경고 상태/버튼 위험도/선택 결과)를 적대적으로 검증한 결과 'partial' 판정이 사실이다.
+
+(1) 경고 상태 — 존재 확인. AutosaveBadge.tsx:55,60-62에서 dirty→"warning", failed→"error" 톤을 컬러 Tag로 표시. AutosaveWarningModal.tsx:94-98 제목에 경고 배지 Tag, 113-120에 save_failure 시 Alert type="warning" 노출.
+
+(2) 버튼 위험도 — 존재 확인. AutosaveWarningMo…
+
+  [VIOLATION / high] REQ-DM3-22: 저장 후 이동을 선택하면 저장 후 원래 요청한 목적지로 이동한다.
+    evidence: src/components/writing/ShortAnswerWriting51Workspace.tsx:637-647; LongFormWriting53Workspace.tsx:623-633; src/hooks/useUnsavedChangesGuard.ts:89-101
+    detail: '저장 후 이동' 분기가 미구현이다. exit_with_dirty 모달의 retry(onRetry)는 persist로 저장한 뒤 cancelPendingNavigation()을 호출해 페이지에 머무르고 목적지로 이동하지 않는다. proceed는 저장 없이 proceedPendingNavigation()으로만 이동한다. 즉 '저장 → 요청한 목적지 이동'을 한 번에 수행하는 경로가 없다. functional-spec.md:18/description.md:100의 '저장 후 이동' 분기와 불일치.
+    VERIFY: confirmed | 원래 violation 판정이 정확하다. SOT 요구사항(functional-spec.md:18, description.md:100)은 "저장 후 이동은 원래 목적지로 이동"을 요구한다. 그러나 4개 워크스페이스 모두에서 exit_with_dirty 모달의 onRetry('저장 후 이동')는 목적지로 이동하지 않는다. ShortAnswerWriting51Workspace.tsx:637-647을 보면 pendingNavigation이 있을 때 (1) exitGuard.cancelPendingNavigation()으로 대기 중인 이동을 즉시 취소하고 모달만 닫은 뒤 (2…
+
+  [PARTIAL / high] REQ-DM3-24: 모달은 변경사항 경고, 저장 후 이동, 저장하지 않고 나가기, 계속 작성 선택을 처리할 수 있어야 한다.
+    evidence: src/components/writing/AutosaveWarningModal.tsx:153-181; src/components/writing/ShortAnswerWriting51Workspace.tsx:626-658; messages/ko.json:1481-1490
+    detail: 변경사항 경고, 계속 작성(keep→cancel, 페이지 유지), 저장하지 않고 나가기(proceed)는 처리된다. 그러나 '저장 후 이동'은 처리되지 않는다(REQ-DM3-22 참조). 또한 버튼 라벨이 exit 맥락 전용이 아니라 공용 문자열을 재사용해 의미가 어긋난다: keep='자동 저장 유지'(계속 작성 의미와 불일치), retry='지금 다시 시도'(저장 후 이동 아님), proceed='위험을 알지만 진행'. 4지 선택 중 3지만 충족.
+    VERIFY: confirmed | 근거를 직접 다시 읽어 partial 판정이 사실임을 확인했다. REQ-DM3-24의 4지 선택 기준은 docs/Wireframe/22-D-M3-autosave-warning/functional-spec.md:18-19에 명시: (1) 변경사항 경고, (2) 저장 후 이동=원래 목적지로 이동, (3) 저장하지 않고 나가기=목적지로 이동, (4) 계속 작성=작성 화면 유지.
+
+실제 구현(AutosaveWarningModal.tsx:153-181)은 정확히 3개의 Button만 렌더한다(keep 154, retry 157, proceed 169). 4번째 버튼은 없다.
+…
+
+  [PARTIAL / low] REQ-DM3-29: 자동저장 이벤트는 study_events에 draft_autosaved 또는 실패 관련 payload로 기록한다.
+    evidence: src/components/writing/WritingEditor.tsx:130-137; ShortAnswerWriting51Workspace.tsx:240-246; src/lib/events/study-events.ts:13-21,196-209
+    detail: 자동저장 성공 시 draft_autosaved 이벤트를 study_events에 기록한다(수동 저장 제외). 그러나 저장 '실패'에 대한 별도 study_events 기록은 없다(onError는 status/모달만 처리). STUDY_EVENT_TYPES 카탈로그에도 실패 전용 이벤트 타입이 없어 '실패 관련 payload' 기록은 미구현.
+    VERIFY: confirmed | 근거 file:line을 모두 직접 재확인했고 partial 판정이 정확하다. (1) 자동저장 성공 기록은 구현됨: src/components/writing/WritingEditor.tsx:130-137에서 onSuccess 시 if(!isManual) 가드 하에 eventType:"draft_autosaved"를 study_events에 logStudyEvent로 기록(수동 저장 제외). 동일 패턴이 ShortAnswerWriting51Workspace.tsx:240-246에 존재. (2) 실패 기록은 전무: WritingEditor.tsx:139-143와 Shor…
+
+  [PARTIAL / medium] REQ-DM3-35: 네트워크 실패, 중복 저장, 충돌 상태를 처리/표시한다.
+    evidence: src/components/writing/WritingEditor.tsx:113-114,126-145; src/lib/writing/mutations.ts:18-100; supabase/migrations/20260520120400_writing.sql:31-34
+    detail: 네트워크/저장 실패: onError→failed+모달로 처리·표시(충족). 중복 저장: saveSeqRef seq 비교(line 114,127)로 stale 응답을 무시해 경쟁 상태를 방어하나 사용자에게 별도 '중복 저장' 표시는 없음. 충돌(conflict): autosave_status='superseded'/제출됨 라벨과 활성 draft 1개 제약은 있으나, 동시 편집·버전 충돌을 감지해 화면에 명시적 '충돌' 경고로 노출하는 처리는 확인되지 않음(failed로만 일반화). 세 상태 중 충돌 표시가 미흡.
+    VERIFY: refuted -> conforms | 원 판정 "partial(충돌 표시 미흡)"은 SOT에 없는 요구를 적용했고 핵심 근거(워크스페이스 컴포넌트)를 누락했다. SOT 정의 기준으로 세 상태 모두 처리/표시된다.
+
+[SOT 정의] docs/Wireframe/22-D-M3-autosave-warning/functional-spec.md:30,40 + description.md:95 — REQ-DM3-35의 "충돌"은 writing_drafts.autosave_status 컬럼(clean/dirty/syncing/failed/superseded) 기반이며, 예외는 "저장 실패, 네트워크 끊김, 복구 불가"로…
+
+==================================================
+### submit-guard — 교차: 쓰기 제출 보안 가드 (서버 검사)
+reqs=16 findings=16 | conforms=14 partial=1 violation=0 cannot_verify=1
+SOT notes: 검수 결론(요약): proposal이 명시한 서버 측 핵심 검사(공개/사용가능/쓰기문제/문항번호 일치)는 supabase/migrations/20260617055040_guard_writing_submission_problem_visibility.sql:11-36의 private.assert_writing_problem_submittable에 모두 구현되어 있고, submit_writing_with_feedback(line 65-70)과 create_external_writing_submission(20260618143000_external_writing_submission_sync.sql:31-34)에서 insert 이전에 호출된다. 사용자 오류 메시지(src/lib/writing/server-actions.ts:36-44), 직접 insert 차단 RLS(20260521140000_phase_6_rpc_and_admin.sql:113-118), service_role 전용 gra…
+audit summary: 16개 요구사항 중 13개 conforms, 1개 partial(REQ-guard-06: 외부 API 성공 후 가드가 거부하는 주 경로에서 한국어 메시지 변환이 누락), 2개 violation(REQ-guard-05/REQ-guard-09 관련 정보성 — 아래 상세 참조). 핵심 서버 측 가드(공개/사용가능/도메인/문항번호 검사, RPC 단일 쓰기 경로, RLS 직접 insert 차단, 소유자 서버 결정, service_role 권한 격리, draft 소유권, payload 형식 검증)는 마이그레이션과 server-action에 실제로 구현되어 있다. 단, (1) 외부 API 경로에서 가드 거부 시 사용자 친화 메시지 변환이 일부 누락되고, (2) submitWritingAction은 proposal이 전제한 submit_writing_with_feedback RPC가 아니라 external/local fallback 경로(create_external_writing_submission)를 사용하므로 REQ-guard-10의 "external 경로는 server action이 user.id를 RPC payload에 설정"이 실제 동작이며 caller_id:=a…
+
+  [PARTIAL / medium] REQ-guard-06: 제출 불가 문제일 때 사용자에게 '현재 제출할 수 없는 문제입니다. 다른 문제를 선택해 주세요.'를 표시한다. RPC 오류 메시지에 'problem_not_submittable'이 포함되면 이 문구로 변환.
+    evidence: src/lib/writing/server-actions.ts:36-44 (변환 함수 정의), :85 (createFailedLocalSubmission에서 변환 적용), :156-159 (외부 API 성공 후 create RPC 오류는 raw `submitWriting external local create: ${createError.message}`로만 throw — 변환 미적용); 테스트 tests/lib/writing/server-actions.test.t…
+    detail: toSubmitWritingErrorMessage가 problem_not_submittable -> 한국어 문구 변환을 수행하나, 이는 createFailedLocalSubmission 경로(server-actions.ts:85)에만 적용된다. TALKPIK_API_BASE_URL이 설정되어 외부 API 제출이 성공한 뒤 create_external_writing_submission(:143)이 가드로 거부하면, 그 오류는 server-actions.ts:156-159의 raw 템플릿으로 throw되어 사용자에게 한국어 안내 대신 'submitWriting external local create: problem_not_submittable'이 노출된다. 가드 거부는 외부 …
+    VERIFY: confirmed | 원 판정(partial)이 모든 file:line 근거에서 사실로 확인됨. (1) 변환 함수 toSubmitWritingErrorMessage가 problem_not_submittable -> 한국어 문구 변환을 수행함: src/lib/writing/server-actions.ts:39-44. (2) 이 변환은 createFailedLocalSubmission 경로에서만 적용됨: server-actions.ts:85. (3) 외부 API 성공 경로에서는 create_external_writing_submission RPC의 createError가 변환 없이 raw로 …
+
+  [CANNOT_VERIFY / low] REQ-guard-16: 제출 거부(취소 포함) 시 사용자는 원래 작성 화면(D-01~D-04)에 머무르고, 확인 CTA 성공 시에만 D-M2 AI 분석 로딩으로 이동한다.
+    evidence: docs/Wireframe/12-D-M1-submission-confirmation-modal/functional-spec.md:17-19 (이탈 경로 명세: 확인 CTA->D-M2, 취소->작성 화면); src/lib/writing/mutations.ts:108-112 (useSubmitWriting은 에러 시 navigate를 수행하지 않음 — 거부 시 mutation reject); 제공 소스(server-actions/mutations/queries)에는…
+    detail: 문서 명세(functional-spec.md:17-19)는 요구사항과 일치한다. 서버/뮤테이션 레벨에서는 제출 실패 시 submitWritingAction이 throw하고 useSubmitWriting이 이를 reject하므로 성공 시에만 후속 이동이 가능한 구조다. 그러나 거부/성공 시 실제 라우팅(머무름 vs D-M2 이동)을 수행하는 컴포넌트는 SubmissionConfirmModal/WritingEditor(functional-spec.md:50-52에 언급)이며, 본 검수 대상 소스(server-actions.ts/mutations.ts/queries.ts)에 포함되지 않아 화면 전이 동작을 직접 확인할 수 없다. 컴포넌트 검수 범위 밖이므로 cannot_veri…
+    VERIFY: confirmed | 제시된 근거를 직접 재확인한 결과 cannot_verify 판정이 정확하다. (1) src/lib/writing/mutations.ts:108-112의 useSubmitWriting은 useMutation에 mutationFn만 정의하고 onSuccess/onError/navigate/router 호출이 전혀 없어, 성공·거부에 따른 화면 전이를 수행하지 않는다. (2) src/lib/writing/server-actions.ts:92-179의 submitWritingAction은 실패 시 throw(107,124,157,162행)하고 성공 경로에서만 SubmitWr…
+
+==================================================
+### external-sync — 교차: 외부 Writing API 피드백 동기화
+reqs=25 findings=25 | conforms=24 partial=1 violation=0 cannot_verify=0
+SOT notes: 검수 포커스 결론: proposal 범위(외부 API 제출 -> submission_id로 상태/피드백 조회 -> Supabase 저장)는 구현 방향과 일치한다. 제출은 src/lib/writing/server-actions.ts:92-179의 submitWritingAction에서 POST /api/writing/submit 호출, 상태/피드백 조회는 src/app/api/writing/evaluation-status/route.ts:55-119에서 GET /api/evaluation/{id} 및 /feedback 호출 후 service_role RPC(sync_external_writing_feedback)로 저장한다. secret 노출 금지 규칙 위반은 발견하지 못했다: (1) base URL은 NEXT_PUBLIC_ 없는 TALKPIK_API_BASE_URL/TALKPIK_WRITING_API_BASE_URL 서버 변수에서만 읽고(src/lib/writing-api/evalu…
+audit summary: 25개 요구사항 중 23개 conforms, 1개 partial(REQ-09 총평 표시), 1개 conforms(REQ-25 범위). 제출→submission_id 수신→상태/피드백 조회→service_role RPC로 Supabase 저장 파이프라인이 proposal 범위와 일치하며, secret 노출 금지(NEXT_PUBLIC_ 미사용·서버 전용 env), force RLS + owner SELECT 전용 정책, service_role 전용 writer grant, production https 강제, 폴링 상한(5초·12회), 실패/지연/대기 상태 표시까지 구현되어 있다. 유일한 부분 미충족은 short feedback 경로에서 overall_summary(총평)가 화면에 직접 노출되지 않는 점이다(저장은 정상). 보안 규칙 위반은 발견되지 않았다.
+
+  [PARTIAL / medium] REQ-xfeedback-09: 외부 API가 정상 완료되면 feedback 화면에 총평(overall_summary)이 표시된다.
+    evidence: src/lib/writing-api/evaluation.ts:179; supabase/migrations/20260618143000_external_writing_submission_sync.sql:151; src/components/feedback/FeedbackSummary.tsx:96; src/components/feedback/FeedbackPageContent.tsx:98-99,159-174; src/components/feedback/FeedbackR…
+    detail: overall_summary 저장은 정상이다(evaluation.ts:179 -> sql:151). long 경로(/writing/feedback/long/[id])는 showShortReportOverview=false라 FeedbackSummary가 렌더링되어 overall_summary를 표시한다(FeedbackSummary.tsx:96). 그러나 short 경로(/writing/feedback/short/[id])는 withSentences + dimensionCardLimit=4 + showDetailPanel=false 조합으로 showShortReportOverview=true가 되어(FeedbackPageContent.tsx:98-99) FeedbackRep…
+    VERIFY: confirmed | 근거를 직접 재확인한 결과 partial 판정이 정확하다. (1) 저장 경로 정상: 외부 API 총평(ai_summary)이 feedback.overall_summary로 매핑된다(src/lib/writing-api/evaluation.ts:179, `overall_summary: input.ai_summary ?? ""`). (2) overall_summary를 화면에 출력하는 컴포넌트는 FeedbackSummary 한 곳뿐이다(src/components/feedback/FeedbackSummary.tsx:96, `{feedback.overall_summary ??…
+
+
+==================== CRITIC ====================
+{
+  "crossScreenIssues": [
+    "[검증완료] 사이드바 노출 불일치: WorkspaceShell.tsx:38-42가 51~54 작성 route 4개를 모두 isWritingExamRoute로 묶어 Sider/모바일바/드로어를 전부 null 렌더(60-116)한다. 그런데 검수 집계는 q52(REQ-q52-01)만 violation으로 잡고 q51/q53/q54는 동일 코드 경로임에도 사이드바 제거를 지적하지 않았다(q53-02는 오히려 conforms로 판정). 즉 같은 위반이 화면별로 다르게 판정된 검수 자체의 불일치. SOT 근거: sidebar-navigation-decision-summary.md:58은 D-01~D-04를 명시적으로 '노출'로 분류하고 :79는 D-01/D-04의 사이드 내비 명시가 D-02/D-03과 일관되지 않다고 보정 대상으로 지목. contextual-route-placement.md:22-30 제외표에 51~54 작성 화면 없음. 결론: q52 violation이 옳고 q51/q53/q54도 동일 violation이어야 한다(검수 누락).",
+    "[검증완료] 참고 자료 제거 proposal의 화면 간 적용 불일치: proposal(2026-06-18-remove-writing-reference-materials.md:5,22-24,33)은 '51~54' 전체에서 참고 자료 미렌더를 지시. q51/q52/q54는 ReferenceMaterials 컴포넌트가 src에서 제거되어 준수(Grep: src에 ReferenceMaterials 0건 확인). 그러나 q53은 Writing53MaterialCards가 normalizeMaterialCards(problem-normalizer.ts:477-488)로 context_notes 기반 kind:'reference' 카드를 여전히 생성/렌더(LongFormWriting53Workspace.tsx:479)하고, e2e screens-authed.spec.ts:211이 q53-material-reference 카운트=1을 강제. 같은 컴포넌트군이 51엔 맞고 53엔 틀린 전형적 화면 간 일관성 위반. (주의: q53의 chart 카드 q53-material-data-card는 wireframe description area2의 '그래프'에 해당해 별개 유지 대상이며 제거 대상 아님 — '참고 자료'만 제거 대상)",
+    "[검증완료] 외부 API 총평(overall_summary) 표시의 short/long 불일치: overall_summary는 FeedbackSummary.tsx:96에서만 렌더(Grep으로 src/components/feedback 내 유일 참조 확인). short 경로(51/52)는 showShortReportOverview=true(FeedbackPageContent.tsx:98-99)라 FeedbackReportOverview만 렌더되고 FeedbackSummary는 미렌더되어 총평이 화면에서 누락. long 경로(53/54)는 FeedbackSummary로 총평 표시. 같은 외부 API 필드가 long엔 보이고 short엔 사라지는 화면 간 불일치(REQ-xfeedback-09 partial이 정확)."
+  ],
+  "coverageGaps": [
+    "WorkspaceShell의 isWritingExamRoute 분기 테스트 부재: WorkspaceShell.test.tsx는 /dashboard, /practice/problems, /writing/feedback/short/..., /profile만 검증하고 51~54 작성 route에서 사이드바가 사라지는 동작에 대한 테스트가 전혀 없다(파일 전체 확인). SOT 위반 동작이 테스트로 가드되지 않아 회귀/의도 모두 추적 불가. 추가로 q51/q53/q54 검수가 이 분기를 누락한 1차 원인.",
+    "D-M1 제출 요약/안내 블록 위반(REQ-DM1-06~11,13)에 대한 SOT 정당화 근거 부재 검증 필요: SubmissionConfirmModal.tsx:48-100에 문제유형/답안길이/저장시각/제출대상 요약, AI 분석 안내(submitNotice 미사용), 동의 체크, 동일폭 CTA(현재 2fr:3fr, line78)가 모두 없다. 유일한 관련 proposal(2026-06-19-writing-submit-analysis-page-flow.md)은 page-flow만 다루고 요약/안내/동의/CTA폭은 언급 없음을 확인. 따라서 이들은 proposal 미정당화 실제 SOT 위반인데, .surface.test.tsx가 생략을 '의도'로 단언해 위반을 테스트로 고착화. 이 테스트의 SOT 근거를 사용자에게 확인해야 함.",
+    "desktop/mobile 실제 렌더·Playwright 검증 미실행: 모든 화면 검수가 읽기 전용 정적 분석으로 수행됨. '지문 3줄 우선'(REQ-q51-06/q52-04/q53), '본문 2줄 제한'(REQ-q51-17/q52-13), 자동저장 상대시간(q53), 사이드바 모바일 동작, 분석 화면 브라우저 back/forward 복원 불가(REQ-dm2-08/20) 등 런타임·뷰포트 의존 항목은 코드만으로 확정 불가. AGENTS.md 검증 기준(desktop/mobile viewport, loading/empty/error/disabled)에 따라 e2e 실행이 필요.",
+    "RLS 정책 본문 직접 미확인 항목: q52(REQ-q52-33,34), q53(REQ-q53-23), q54(REQ-q54-29), DM1(REQ-DM1-29,30), DM3는 writing_drafts/writing_submissions/study_events의 auth.uid() RLS를 코드 정황으로만 확인하고 일부는 20260520121100_rls_policies.sql을 직접 열지 않았다. q51 검수(REQ-q51-39,40)와 DM3(REQ-DM3-31,32)는 동일 migration을 직접 인용해 conforms로 확정했으므로, 미확인 화면들도 같은 migration을 교차 참조하면 cannot_verify를 해소 가능(검수 간 근거 공유 누락).",
+    "분석 진행 중 브라우저 물리적 이탈(popstate/beforeunload) 가드 부재(REQ-dm2-20 partial): SubmittedAnalysisPanel/AnalysisLoadingPage에 popstate/beforeunload 핸들러가 없어 분석 중 새로고침·뒤로가기 시 경고 없이 분석 상태가 소실된다. proposal이 history push를 금지하는 transient 설계와 description.md:28의 '뒤로가기 시 분석 중단 경고' 요구가 구조적으로 충돌하는 미해결 지점 — 어느 쪽이 우선인지 SOT 결정 필요."
+  ],
+  "falseNegativeRisks": [
+    "q53-02 'workspace shell(사이드 내비) 유지' conforms 판정은 거짓음성 위험 높음: (workspace)/layout.tsx가 WorkspaceShell로 감싸는 것은 맞으나, WorkspaceShell.tsx:38-42가 long-form-writing-53 route에서 SidebarNav를 null 렌더하므로 실제 화면엔 사이드 내비가 없다. q53 검수는 layout 래핑만 보고 WorkspaceShell 내부 분기를 보지 않아 conforms로 오판. q52와 동일 violation이어야 함.",
+    "REQ-q54-32 진입경로 conforms 및 다수 'conforms'가 진입 트리거(C-03 모달, E-02 CTA)를 직접 확인하지 않고 목적지 href만 코드로 본 채 conforms 처리됨(q51-03은 동일 사안을 cannot_verify로 둠). 진입 동선 자체는 별도 화면 소스라 q54에서 conforms로 단정하면 거짓음성 위험. q51 기준(cannot_verify)이 더 정확.",
+    "REQ-guard-06 partial이 실제로는 더 심각할 수 있음(거짓음성 경계): server-actions.ts:156-159의 외부 API 성공 후 create_external_writing_submission 가드 거부 경로는 toSubmitWritingErrorMessage 변환을 거치지 않아 사용자에게 'submitWriting external local create: problem_not_submittable' raw 메시지가 노출된다. 이는 실사용 경로(TALKPIK_API_BASE_URL 설정 시)에서 도달 가능하며 테스트는 fallback 경로만 커버. partial보다 medium violation에 가깝고, 한국어 안내 미표시는 REQ-DM1-24/q5x-32의 conforms 판정과도 모순될 소지.",
+    "REQ-q51-33/DM1-중복제출: 서버/DB 레벨 멱등(유니크 제약) 부재가 여러 화면에서 partial/미확인으로 흩어져 있는데, writing_submissions에 active-unique 제약이 없음(20260520120400_writing.sql)이 일관 확인됨에도 일부 화면은 UI 차단만으로 conforms에 가깝게 처리. 네트워크 재시도·동시 탭에서 중복 제출 가능성은 실제 위반 위험. parent_submission_id 재제출 설계와의 의도 구분이 SOT에 없어 거짓음성/거짓양성 양방향 위험.",
+    "REQ-dm2-13/14 polling 수치(5초·12회)와 dm2-16 retryAt(30초)을 conforms(info)로 판정했으나 이는 SOT가 '미정'으로 남긴 항목을 코드 상수로 확정한 것이라 'SOT 대비 conforms'가 아니라 'SOT 부재'다. conforms 라벨이 SOT 합치로 오해될 위험 — 실제로는 검증 기준 자체가 없음."
+  ],
+  "proposalPriorityIssues": [
+    "q53 reference 카드: proposal(2026-06-18, 우선 적용 대상)이 명시적으로 제거를 지시함에도 코드+e2e(screens-authed.spec.ts:211)가 정반대를 강제. proposal>SOT>코드 우선순위 원칙(AGENTS.md)대로면 e2e가 proposal 위반을 고착화하는 상태. 우선순위 적용이 q51/q52/q54엔 됐지만 q53엔 누락 — proposal의 '51~54 전체' 범위가 부분적으로만 반영됨.",
+    "D-M1 요약/동의/CTA폭: page-flow proposal은 page-flow만 덮어쓰는데, 검수가 REQ-DM1-06~13을 'proposal 무관 SOT 위반'으로 올바르게 분류한 것은 정확. 다만 .surface.test.tsx가 요약/체크리스트/동의 생략과 비대칭 CTA를 '의도'로 단언(테스트 우선순위가 SOT를 역전). proposal 없이 테스트가 SOT를 덮어쓴 형태라 우선순위 오적용. SOT 갱신 proposal이 선행돼야 함.",
+    "submit_writing_with_feedback vs create_external_writing_submission: external-writing-api proposal(2026-06-18)이 외부 API 흐름을 정당화하나, 다수 화면 검수가 옛 SOT(screen-data-summary 'submit_writing_with_feedback로 submission+feedback 원자 생성') 기준으로 REQ를 작성해 REQ-q51-36/q52-35/DM1-15를 violation/partial로 판정. 실제로는 더 신규 proposal이 우선이므로 이는 'SOT 미갱신'이 근본 원인이지 코드 위반이 아님. 우선순위상 옛 SOT REQ로 violation 잡은 것은 과잉 — proposal 기준이면 conforms 방향. 검수가 두 proposal을 교차 적용하지 않아 판정이 갈림.",
+    "writing-submission-guard proposal은 '제안' 상태(사용자 SOT 확정 선행, 89행)인데 검수가 proposal>SOT 원칙으로 REQ-guard-01~07,15와 q5x-31/32를 proposal 기준 신규 요구로 덮어씀. 지시문 우선순위와 일치하나, proposal이 아직 미확정이라는 점에서 '확정 전 적용'이 일관 표기되지 않은 화면이 있음(q51 reqNotes는 명시, 일부 화면은 암묵 적용)."
+  ],
+  "topPriorities": [
+    "[high] 사이드바 노출 위반을 4개 화면 전체로 확정하고 수정: WorkspaceShell.tsx:38-42 isWritingExamRoute 분기가 SOT(sidebar-navigation-decision-summary.md:58 'D-01~D-04 노출')를 위반. 최종원칙7(unsaved-guard가 사이드바 클릭보다 우선)이 설계 의도였다면, 사이드바를 숨기지 말고 '표시 + 이탈 가드'로 재구현해야 SOT 합치. q51/q53/q54 검수의 누락도 함께 정정. 테스트(WorkspaceShell.test.tsx)에 51~54 분기 케이스 추가 필수.",
+    "[high] q53 참고 자료 카드 제거 + 충돌 e2e 정정: proposal(2026-06-18)대로 problem-normalizer.ts:477-488의 reference 카드 생성과 LongFormWriting53Workspace.tsx:479 렌더를 제거하고, screens-authed.spec.ts:211의 q53-material-reference 카운트=1 단언을 0으로 갱신. chart(data-card)는 유지. proposal이 코드/테스트보다 우선이라는 원칙을 q53에 마저 적용.",
+    "[high] D-M1 제출 모달 SOT 합치 결정: 요약 블록(REQ-DM1-06~09), AI 분석 안내(REQ-DM1-10/11, submitNotice 미사용), 동일폭 CTA(REQ-DM1-13)가 모두 미구현. 사용자에게 두 갈래 제시 — (a) 현 단순 모달을 SOT로 승격하는 docs/sot-change-proposals 신규 제안 작성, 또는 (b) SOT대로 요약/안내/동일폭 CTA 복원. .surface.test.tsx의 '생략=의도' 단언이 SOT 근거 없이 위반을 고착화 중이므로 어느 쪽이든 결정 전엔 미해결로 보고.",
+    "[medium] guard 오류 메시지 변환 누락(REQ-guard-06): server-actions.ts:156-159 외부 API 성공 후 create_external_writing_submission 가드 거부 시 raw 메시지 노출. toSubmitWritingErrorMessage를 이 경로에도 적용하고 해당 케이스 테스트 추가(현 테스트는 fallback만 커버). 실사용 경로에서 도달 가능하므로 partial 이상으로 격상.",
+    "[medium] short feedback 총평 누락(REQ-xfeedback-09): FeedbackReportOverview에 overall_summary 표시를 추가하거나, short 경로에서도 총평이 보이도록 보강. long(53/54)과 short(51/52)의 동일 API 필드 표시 불일치 해소. external-writing-api proposal:36 수용기준('정상 완료되면 총평 표시')을 short 경로에서 충족시켜야 함.",
+    "[medium] 옛 SOT(submit_writing_with_feedback 원자 생성) 미갱신 정리: external-writing-api proposal이 정본인데 screen-data-summary/functional-spec 본문이 미갱신이라 REQ-q51-36/q52-35/DM1-15가 violation/partial로 반복 검출됨. SOT 갱신 proposal로 옛 문구를 외부 API 비동기 sync 흐름으로 정정해 코드-문서 불일치를 근본 해소(코드 자체는 proposal 합치)."
+  ]
+}

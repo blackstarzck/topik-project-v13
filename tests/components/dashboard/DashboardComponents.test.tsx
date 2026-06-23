@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
 
 import koMessages from "../../../messages/ko.json";
 import { DashboardAlertsCard } from "../../../src/components/dashboard/DashboardAlertsCard";
@@ -12,17 +12,32 @@ import {
 import { DashboardRecommendations } from "../../../src/components/dashboard/DashboardRecommendations";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
 
+const routerPushMock = vi.hoisted(() => vi.fn());
+const routerRefreshMock = vi.hoisted(() => vi.fn());
+
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
+  useRouter: () => ({
+    push: routerPushMock,
+    replace: vi.fn(),
+    refresh: routerRefreshMock,
+  }),
 }));
 
 // DashboardAlertsCard fetches user_notifications client-side; vitest has no
 // Supabase env, so the data module is mocked at the boundary.
 const fetchNotificationsMock = vi.hoisted(() => vi.fn());
+const markNotificationReadMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@/components/notifications/notifications-data", () => ({
   fetchNotifications: (...args: unknown[]) => fetchNotificationsMock(...args),
-  markNotificationRead: vi.fn(),
+  markNotificationRead: (...args: unknown[]) => markNotificationReadMock(...args),
+  resolveNotificationDestination: (item: {
+    route_path?: string | null;
+    link_url?: string | null;
+  }) => {
+    const destination = item.route_path?.trim() || item.link_url?.trim();
+    return destination?.startsWith("/") ? destination : null;
+  },
 }));
 
 const dashboard = koMessages.dashboard;
@@ -126,6 +141,10 @@ describe("DashboardAlertsCard", () => {
   beforeEach(() => {
     fetchNotificationsMock.mockReset();
     fetchNotificationsMock.mockResolvedValue([]);
+    markNotificationReadMock.mockReset();
+    markNotificationReadMock.mockResolvedValue(undefined);
+    routerPushMock.mockReset();
+    routerRefreshMock.mockReset();
   });
 
   it("renders the empty state when there are no alerts or notifications", async () => {
@@ -167,5 +186,61 @@ describe("DashboardAlertsCard", () => {
       screen.getByText(dashboard.alerts.category.examSchedule),
     ).toBeTruthy();
     expect(fetchNotificationsMock).toHaveBeenCalledWith("user-1", 5);
+  });
+
+  it("moves to the notification route path when it exists", async () => {
+    fetchNotificationsMock.mockResolvedValue([
+      {
+        id: "n-route",
+        template_key: "feedback_ready",
+        category: "study",
+        title: "Route alert",
+        body: "Feedback is ready.",
+        link_url: null,
+        route_path: "/writing/feedback/short/submission-1",
+        read_at: null,
+        created_at: "2026-06-22T09:00:00.000Z",
+      },
+    ]);
+    renderWithIntl(<DashboardAlertsCard userId="user-1" alerts={[]} />);
+    await waitFor(() => {
+      expect(screen.getByText("Route alert")).toBeTruthy();
+    });
+
+    fireEvent.click(screen.getByText("Route alert"));
+
+    await waitFor(() => {
+      expect(markNotificationReadMock).toHaveBeenCalledWith("n-route");
+    });
+    expect(routerPushMock).toHaveBeenCalledWith(
+      "/writing/feedback/short/submission-1",
+    );
+  });
+
+  it("marks a notification read without moving when there is no route path", async () => {
+    fetchNotificationsMock.mockResolvedValue([
+      {
+        id: "n-no-route",
+        template_key: "notice",
+        category: "notice",
+        title: "No route alert",
+        body: "Plain notice.",
+        link_url: null,
+        route_path: null,
+        read_at: null,
+        created_at: "2026-06-22T09:00:00.000Z",
+      },
+    ]);
+    renderWithIntl(<DashboardAlertsCard userId="user-1" alerts={[]} />);
+    await waitFor(() => {
+      expect(screen.getByText("No route alert")).toBeTruthy();
+    });
+
+    fireEvent.click(screen.getByText("No route alert"));
+
+    await waitFor(() => {
+      expect(markNotificationReadMock).toHaveBeenCalledWith("n-no-route");
+    });
+    expect(routerPushMock).not.toHaveBeenCalled();
   });
 });

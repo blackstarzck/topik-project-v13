@@ -17,6 +17,11 @@ afterEach(cleanup);
 describe("TermsContent i18n (legal.terms)", () => {
   it("renders the heading and placeholder notice from the legal.terms namespace", () => {
     renderWithIntl(<TermsContent />);
+    expect(
+      screen
+        .getByTestId("terms-card")
+        .classList.contains("legal-document-card"),
+    ).toBe(true);
     expect(screen.getByText("이용약관")).toBeTruthy();
     expect(
       screen.getByText(

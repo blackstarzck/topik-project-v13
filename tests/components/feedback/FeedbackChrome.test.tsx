@@ -216,8 +216,10 @@ describe("SentenceFeedbackList (i18n chrome)", () => {
       />,
     );
 
-    expect(document.querySelector(".lucide-chevron-right")).toBeTruthy();
-    expect(document.querySelector(".lucide-arrow-right")).toBeNull();
+    const beforeCard = screen.getByTestId("feedback-sentence-before");
+    const connector = beforeCard.nextElementSibling;
+
+    expect(connector?.querySelector("svg")).toBeTruthy();
   });
 
   it("renders sentence feedback without an outer card or row dividers", () => {
@@ -348,6 +350,33 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
     expect(within(header).getByTestId("feedback-action-save")).toBeTruthy();
     expect(within(header).getByTestId("feedback-action-compare")).toBeTruthy();
     expect(screen.getAllByTestId("feedback-actions")).toHaveLength(1);
+  });
+
+  it("disables retry actions when the submitted problem is no longer available", () => {
+    const bundle: FeedbackBundle = {
+      feedback: feedback({ raw_ai_result: {} }),
+      dimensions: [],
+      sentences: [],
+    };
+
+    renderWithIntl(
+      <FeedbackPageContent
+        submission={submission()}
+        bundle={bundle}
+        withSentences={false}
+        reloadHref="/writing/feedback/long/sub-1"
+        userId="user-1"
+        canRetryProblem={false}
+      />,
+    );
+
+    const retryButton = screen.getByTestId(
+      "feedback-action-retry",
+    ) as HTMLButtonElement;
+    expect(retryButton.disabled).toBe(true);
+    expect(
+      screen.getByTestId("feedback-reco-action-retry").getAttribute("aria-disabled"),
+    ).toBe("true");
   });
 
   it("renders the short-answer report overview from external trait scores and learning focus areas", () => {

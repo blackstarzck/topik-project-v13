@@ -1,7 +1,7 @@
 "use client";
 
 import { Alert, App, Avatar, Button, Form, Input, Typography } from "antd";
-import { Lock } from "lucide-react";
+import { Lock } from "@/components/shared/AppIcons";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
 

@@ -20,8 +20,8 @@ const { Title, Paragraph, Text } = Typography;
 export function TermsContent() {
   const t = useTranslations("legal.terms");
   return (
-    <AppCard data-testid="terms-card">
-      <div className="flex w-full flex-col gap-6">
+    <AppCard className="legal-document-card" data-testid="terms-card">
+      <div className="legal-document-card__content flex w-full flex-col gap-6">
         {/* §1 법적 고지 페이지 (제목 + 임시 약관 안내) */}
         <div>
           <Title level={2} className="!mb-2">

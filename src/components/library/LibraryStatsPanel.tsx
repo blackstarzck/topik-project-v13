@@ -3,6 +3,7 @@
 import { Empty, Statistic, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 import { AppCard } from "@/components/shared/AppCard";
 
@@ -32,9 +33,20 @@ export type LibraryStats = {
 
 type Props = {
   stats: LibraryStats;
+  actionPanel?: ReactNode;
 };
 
-export function LibraryStatsPanel({ stats }: Props) {
+function StatsActionFooter({ actionPanel }: { actionPanel?: ReactNode }) {
+  if (!actionPanel) return null;
+
+  return (
+    <div data-testid="library-stats-actions" className="mt-auto w-full">
+      {actionPanel}
+    </div>
+  );
+}
+
+export function LibraryStatsPanel({ stats, actionPanel }: Props) {
   const t = useTranslations("library.stats");
   const tDim = useTranslations("library.stats.dimensions");
   const empty = stats.savedCount === 0;
@@ -59,7 +71,7 @@ export function LibraryStatsPanel({ stats }: Props) {
     return (
       <div
         data-testid="library-stats-panel"
-        className="flex w-full flex-col gap-4"
+        className="flex h-full min-h-0 w-full flex-col gap-4"
       >
         <Text strong>{t("title")}</Text>
         <AppCard data-testid="library-empty-stats" size="small">
@@ -70,6 +82,7 @@ export function LibraryStatsPanel({ stats }: Props) {
             <Link href="/practice/problems">{t("goToPractice")}</Link>
           </Empty>
         </AppCard>
+        <StatsActionFooter actionPanel={actionPanel} />
       </div>
     );
   }
@@ -77,7 +90,7 @@ export function LibraryStatsPanel({ stats }: Props) {
   return (
     <div
       data-testid="library-stats-panel"
-      className="flex w-full flex-col gap-4"
+      className="flex h-full min-h-0 w-full flex-col gap-4"
     >
       <Text strong>{t("title")}</Text>
       <AppCard data-testid="library-stat-card" size="small">
@@ -113,6 +126,7 @@ export function LibraryStatsPanel({ stats }: Props) {
         />
         <Link href="/practice/problems">{t("continueReview")}</Link>
       </AppCard>
+      <StatsActionFooter actionPanel={actionPanel} />
     </div>
   );
 }

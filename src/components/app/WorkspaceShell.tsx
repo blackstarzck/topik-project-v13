@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Grid, Layout, Space, Typography } from "antd";
-import { Menu as MenuIcon } from "lucide-react";
+import { Menu as MenuIcon } from "@/components/shared/AppIcons";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";

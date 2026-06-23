@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button, Typography } from "antd";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight } from "@/components/shared/AppIcons";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 

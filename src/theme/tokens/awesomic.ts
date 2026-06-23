@@ -6,6 +6,7 @@ export const allowedAppBridgeVars = [
   "--app-color-bg-container",
   "--app-color-text",
   "--app-color-text-secondary",
+  "--app-color-link-secondary",
   "--app-color-border",
   "--app-radius",
   "--app-font-family",
@@ -24,6 +25,7 @@ export const awesomicThemeTokens = {
     pebble: "#d4d4d8",
     mist: "#f4f4f5",
     snow: "#ffffff",
+    linkSecondary: "#3254F2",
   },
   radius: {
     // The raw Awesomic reference uses very soft 28-36px surfaces. TALKPIK's
@@ -51,6 +53,7 @@ export const awesomicBridgeVars = {
   "--app-color-bg-container": awesomicThemeTokens.color.snow,
   "--app-color-text": awesomicThemeTokens.color.ink,
   "--app-color-text-secondary": awesomicThemeTokens.color.steel,
+  "--app-color-link-secondary": awesomicThemeTokens.color.linkSecondary,
   "--app-color-border": awesomicThemeTokens.color.pebble,
   "--app-radius": `${awesomicThemeTokens.radius.base}px`,
   "--app-font-family": awesomicThemeTokens.font.runtimeFamily,

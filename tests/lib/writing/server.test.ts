@@ -1,12 +1,16 @@
 import { describe, expect, it } from "vitest";
 
-import { getWritingProblem } from "../../../src/lib/writing/server";
+import {
+  getWritingProblem,
+  getWritingProblemAvailability,
+} from "../../../src/lib/writing/server";
 
 type QueryRow = {
   id: string;
   title: string;
   prompt: string;
   question_no: number | null;
+  tags?: string[] | null;
   materials: unknown;
   answer_key: unknown;
   rubric: unknown;
@@ -43,6 +47,27 @@ const complete51: QueryRow = {
   prompt: "Prompt whose blanks are represented in materials.",
   question_no: 51,
   materials: {
+    blanks: {
+      blank_target_giyeok: "first blank target",
+      blank_target_nieun: "second blank target",
+    },
+  },
+  answer_key: {},
+  rubric: {},
+  lifecycle_status: "active",
+  lifecycle_reason: null,
+};
+
+const SEED_51_ID = "33333333-3333-4333-8333-333333333351";
+
+const seed51: QueryRow = {
+  id: SEED_51_ID,
+  title: "Seed 51",
+  prompt: "Wireframe fixture prompt.",
+  question_no: 51,
+  tags: ["seed:wireframe_problem_fixtures", "q51"],
+  materials: {
+    seed_source: "wireframe_problem_fixtures",
     blanks: {
       blank_target_giyeok: "first blank target",
       blank_target_nieun: "second blank target",
@@ -91,9 +116,30 @@ function makeClient(rows: QueryRow[]) {
   return { client, calls };
 }
 
+function makeAvailabilityClient(
+  row: {
+    publish_status: string | null;
+    visibility: string | null;
+    lifecycle_status: string | null;
+    lifecycle_reason: string | null;
+  } | null,
+) {
+  const client = {
+    from: () => {
+      const query = {
+        select: () => query,
+        eq: () => query,
+        maybeSingle: () => Promise.resolve({ data: row, error: null }),
+      };
+      return query;
+    },
+  };
+  return client;
+}
+
 describe("getWritingProblem", () => {
   it("uses the first submittable candidate for the default writing route", async () => {
-    const { client, calls } = makeClient([incomplete51, complete51]);
+    const { client, calls } = makeClient([seed51, incomplete51, complete51]);
 
     const problem = await getWritingProblem(
       51,
@@ -104,6 +150,23 @@ describe("getWritingProblem", () => {
     expect(problem?.id).toBe(COMPLETE_51_ID);
     expect(problem?.submitBlockedReason).toBeNull();
     expect(calls).toContainEqual({ type: "limit", count: 25 });
+  });
+
+  it("does not return a seed fixture even when explicitly requested", async () => {
+    const { client, calls } = makeClient([seed51, complete51]);
+
+    const problem = await getWritingProblem(
+      51,
+      SEED_51_ID,
+      async () => client as never,
+    );
+
+    expect(problem).toBeNull();
+    expect(calls).toContainEqual({
+      type: "eq",
+      column: "id",
+      value: SEED_51_ID,
+    });
   });
 
   it("keeps an explicit problem id even when the row is submit-blocked", async () => {
@@ -146,5 +209,40 @@ describe("getWritingProblem", () => {
 
     expect(problem?.id).toBe(COMPLETE_51_ID);
     expect(calls).toContainEqual({ type: "limit", count: 25 });
+  });
+});
+
+describe("getWritingProblemAvailability", () => {
+  it("allows retry for published public active problems", async () => {
+    const availability = await getWritingProblemAvailability(
+      COMPLETE_51_ID,
+      async () =>
+        makeAvailabilityClient({
+          publish_status: "published",
+          visibility: "public",
+          lifecycle_status: "active",
+          lifecycle_reason: null,
+        }) as never,
+    );
+
+    expect(availability.canStart).toBe(true);
+    expect(availability.state).toBe("available");
+  });
+
+  it("blocks retry for published public inactive problems but keeps the reason", async () => {
+    const availability = await getWritingProblemAvailability(
+      COMPLETE_51_ID,
+      async () =>
+        makeAvailabilityClient({
+          publish_status: "published",
+          visibility: "public",
+          lifecycle_status: "inactive",
+          lifecycle_reason: "Rotation ended",
+        }) as never,
+    );
+
+    expect(availability.canStart).toBe(false);
+    expect(availability.state).toBe("soft_unavailable");
+    expect(availability.reason).toBe("Rotation ended");
   });
 });

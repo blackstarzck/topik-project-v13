@@ -9,7 +9,7 @@ import {
   ClipboardList,
   RotateCcw,
   Target,
-} from "lucide-react";
+} from "@/components/shared/AppIcons";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 
@@ -57,7 +57,7 @@ function truncateLabel(value: string, max = 34): string {
 
 function DashboardBadge({ children }: { children: ReactNode }) {
   return (
-    <span className="inline-flex min-h-7 items-center rounded-sm bg-surface px-3 text-xs font-semibold text-text-secondary">
+    <span className="inline-flex min-h-7 items-center rounded-sm bg-surface px-3 text-sm font-semibold text-text-secondary">
       {children}
     </span>
   );
@@ -261,7 +261,7 @@ export function DashboardBody({
                           ? t("feedbackQuestion", { no: item.questionNo })
                           : t("feedbackQuestionFallback")}
                       </strong>
-                      <small className="text-xs text-text-secondary">
+                      <small className="text-sm text-text-secondary">
                         {t("feedbackItemHint")}
                       </small>
                     </span>
@@ -295,7 +295,7 @@ export function DashboardBody({
                   </span>
                   <span className="grid min-w-0 flex-1 gap-1">
                     <strong className="truncate text-sm">{action.title}</strong>
-                    <small className="text-xs leading-5 text-text-secondary">
+                    <small className="text-sm leading-5 text-text-secondary">
                       {action.description}
                     </small>
                   </span>

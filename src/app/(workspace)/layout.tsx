@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { WorkspaceShell } from "@/components/app/WorkspaceShell";
-import { hasCompletedRequiredConsent } from "@/lib/auth/completion";
+import { getAuthCompletionStatusForSession } from "@/lib/auth/completion";
 import {
   ACCOUNT_INACTIVE_PATH,
   POST_AUTH_LOGIN_PATH,
@@ -26,8 +26,13 @@ export default async function WorkspaceLayout({
   if (!isActiveStatus(session.profile.status)) {
     redirect(`${ACCOUNT_INACTIVE_PATH}?status=${session.profile.status}`);
   }
-  const hasConsent = await hasCompletedRequiredConsent(session);
-  if (!hasConsent) redirect(POST_AUTH_LOGIN_PATH);
+  const completionStatus = await getAuthCompletionStatusForSession(session);
+  if (
+    completionStatus === "pending-auth-completion" ||
+    completionStatus === "pending-consent"
+  ) {
+    redirect(POST_AUTH_LOGIN_PATH);
+  }
   const { user, profile } = session;
 
   return (

@@ -5,6 +5,7 @@ import type {
   AuthCompletionStatus,
   LandingAuthStatus,
 } from "@/lib/auth/completion-routes";
+import { hasCompletedRequiredProfile } from "@/lib/auth/profile-completion";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getMissingRequiredConsentDocuments } from "@/lib/legal/consent";
 import { hasLearningGoal } from "@/lib/learning/server";
@@ -34,8 +35,12 @@ export async function hasCompletedRequiredConsent({
 export async function getAuthCompletionStatusForSession(
   session: AuthenticatedSession,
 ): Promise<Exclude<AuthCompletionStatus, "anonymous">> {
+  if (!hasCompletedRequiredProfile(session.profile)) {
+    return "pending-auth-completion";
+  }
+
   const hasConsent = await hasCompletedRequiredConsent(session);
-  if (!hasConsent) return "pending-consent";
+  if (!hasConsent) return "pending-auth-completion";
 
   const hasGoal = await hasLearningGoal(session.user.id);
   return hasGoal ? "ready" : "pending-learning-goal";

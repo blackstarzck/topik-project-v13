@@ -27,7 +27,7 @@ export default async function TermsPage() {
 
   return (
     <PublicShell>
-      <PageContainer size="narrow">
+      <PageContainer size="default" className="legal-page-container">
         {doc && !doc.is_placeholder ? (
           <TermsDocument doc={doc} />
         ) : (

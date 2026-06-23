@@ -90,6 +90,32 @@ describe("LibraryStatsPanel i18n chrome", () => {
     // formatUpdated falls back to the no-update copy when lastUpdated is null.
     expect(screen.getByText("갱신 기록 없음")).toBeTruthy();
   });
+
+  it("pins the library action panel to the bottom of the stats column", () => {
+    renderLibrary(
+      <LibraryStatsPanel
+        stats={{
+          savedCount: 0,
+          avgScore: null,
+          weakestDimension: null,
+          reviewCount: 0,
+          lastUpdated: null,
+        }}
+        actionPanel={<div data-testid="mock-library-actions">actions</div>}
+      />,
+    );
+
+    expect(screen.getByTestId("library-stats-panel").className).toContain(
+      "h-full",
+    );
+    expect(screen.getByTestId("library-stats-actions").className).toContain(
+      "mt-auto",
+    );
+    expect(screen.getByTestId("library-stats-actions").className).not.toContain(
+      "pt-",
+    );
+    expect(screen.getByTestId("mock-library-actions")).toBeTruthy();
+  });
 });
 
 describe("PdfExportModal i18n chrome", () => {

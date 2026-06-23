@@ -13,11 +13,13 @@ export type AuthenticatedLandingStatus = Exclude<
 export type LandingCta = {
   href: string;
   headerLabelKey:
+    | "ctaAuthCompletion"
     | "ctaConsentContinue"
     | "ctaLearningGoal"
     | "ctaDashboard"
     | "ctaContinueSetup";
   heroLabelKey:
+    | "heroCtaAuthCompletion"
     | "heroCtaConsentContinue"
     | "heroCtaLearningGoal"
     | "heroCtaDashboard"
@@ -26,6 +28,12 @@ export type LandingCta = {
 
 export function getLandingCta(status: AuthenticatedLandingStatus): LandingCta {
   switch (status) {
+    case "pending-auth-completion":
+      return {
+        href: POST_AUTH_LOGIN_PATH,
+        headerLabelKey: "ctaAuthCompletion",
+        heroLabelKey: "heroCtaAuthCompletion",
+      };
     case "pending-consent":
       return {
         href: POST_AUTH_LOGIN_PATH,

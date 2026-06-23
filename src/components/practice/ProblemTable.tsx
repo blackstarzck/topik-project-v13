@@ -9,7 +9,7 @@ import {
   Clock3,
   FileText,
   Trophy,
-} from "lucide-react";
+} from "@/components/shared/AppIcons";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";

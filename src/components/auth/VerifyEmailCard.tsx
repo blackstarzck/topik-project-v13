@@ -23,7 +23,7 @@ import {
   LockKeyhole,
   SendHorizontal,
   UserRoundPlus,
-} from "lucide-react";
+} from "@/components/shared/AppIcons";
 
 import { AppCard } from "@/components/shared/AppCard";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";

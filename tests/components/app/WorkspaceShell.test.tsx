@@ -135,6 +135,77 @@ describe("WorkspaceShell", () => {
     expect(screen.getByTestId("workspace-child")).toBeTruthy();
   });
 
+  it("renders Iconsax icons in the sidebar menu", () => {
+    const { container } = renderWithIntl(
+      <WorkspaceShell
+        role="learner"
+        userId="user-1"
+        email="learner@example.com"
+        planLabel="premium"
+      >
+        <div>body</div>
+      </WorkspaceShell>,
+    );
+
+    const sidebarMenu = container.querySelector(".app-sidebar-menu");
+
+    expect(
+      sidebarMenu?.querySelectorAll('[data-sidebar-icon-library="iconsax"]'),
+    ).toHaveLength(6);
+    expect(
+      sidebarMenu?.querySelectorAll('[data-sidebar-icon-kind="svg"]'),
+    ).toHaveLength(6);
+
+    const growthItem = Array.from(
+      sidebarMenu?.querySelectorAll(".ant-menu-item, .ant-menu-submenu-title") ??
+        [],
+    ).find((item) => item.textContent?.includes("성장 리포트"));
+
+    expect(
+      growthItem?.querySelector('[data-sidebar-icon-name="DocumentText"]'),
+    ).toBeTruthy();
+
+    expect(growthItem).toBeTruthy();
+    fireEvent.click(growthItem as Element);
+    expect(
+      sidebarMenu?.querySelector('[data-sidebar-icon-name="Chart2"]'),
+    ).toBeTruthy();
+  });
+
+  it("uses the requested problem-type icons for writing practice leaves", () => {
+    const { container } = renderWithIntl(
+      <WorkspaceShell
+        role="learner"
+        userId="user-1"
+        email="learner@example.com"
+        planLabel="premium"
+      >
+        <div>body</div>
+      </WorkspaceShell>,
+    );
+
+    const sidebarMenu = container.querySelector(".app-sidebar-menu");
+    const writingTitle = sidebarMenu?.querySelector(
+      '[data-menu-id="rc-menu-uuid-writing"]',
+    );
+
+    expect(writingTitle).toBeTruthy();
+    fireEvent.click(writingTitle as Element);
+
+    expect(
+      sidebarMenu?.querySelector('[data-sidebar-icon-name="DirectboxNotif"]'),
+    ).toBeTruthy();
+    expect(
+      sidebarMenu?.querySelector('[data-sidebar-icon-name="ProgrammingArrows"]'),
+    ).toBeTruthy();
+    expect(
+      sidebarMenu?.querySelector('[data-sidebar-icon-name="PresentationChart"]'),
+    ).toBeTruthy();
+    expect(
+      sidebarMenu?.querySelector('[data-sidebar-icon-name="DocumentText"]'),
+    ).toBeTruthy();
+  });
+
   it("sends the brand mark to the learner home route", () => {
     renderWithIntl(
       <WorkspaceShell
@@ -293,6 +364,19 @@ describe("WorkspaceShell", () => {
     const shellRule = cssRule(".app-sidebar-shell");
 
     expect(shellRule).toContain("padding: 18px 0;");
+  });
+
+  it("sets sidebar icon spacing", () => {
+    const appIconRule = cssRule(".app-sidebar-icon");
+    const iconRule = cssRule(".app-sidebar-menu.ant-menu .ant-menu-item-icon");
+    const titleRule = cssRule(
+      ".app-sidebar-menu.ant-menu .ant-menu-title-content",
+    );
+
+    expect(appIconRule).toContain("margin-inline-end: 8px;");
+    expect(iconRule).toContain("margin-inline-end: 8px;");
+    expect(titleRule).toContain("margin-inline-start: 0;");
+    expect(GLOBAL_CSS).not.toContain("@keyframes app-sidebar-icon-hover");
   });
 
   it("sets the workspace sidebar width contract to 300px", () => {

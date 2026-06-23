@@ -87,4 +87,14 @@ describe("Awesomic token source contract", () => {
 
     expect([...new Set(disallowed)]).toEqual([]);
   });
+
+  test("legal consent links consume the secondary link bridge token", () => {
+    const css = readFileSync(
+      resolve(process.cwd(), "src/styles/global.css"),
+      "utf8",
+    );
+
+    expect(css).toContain(".auth-legal-link");
+    expect(css).toContain("color: var(--app-color-link-secondary)");
+  });
 });

@@ -1,0 +1,580 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>v13 -> topik-ai 관리자 이관 작업 보고서</title>
+    <style>
+      :root {
+        --bg: #f6f7f9;
+        --paper: #ffffff;
+        --ink: #172033;
+        --muted: #667085;
+        --line: #d9e0ea;
+        --blue: #2364aa;
+        --green: #1f7a4d;
+        --amber: #9a6500;
+        --red: #b42318;
+        --chip: #edf4ff;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family:
+          "Pretendard",
+          "Noto Sans KR",
+          "Segoe UI",
+          Arial,
+          sans-serif;
+        line-height: 1.65;
+      }
+
+      main {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 40px 20px 72px;
+      }
+
+      header {
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 32px;
+        box-shadow: 0 18px 48px rgba(23, 32, 51, 0.08);
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        line-height: 1.25;
+      }
+
+      h1 {
+        font-size: 32px;
+        letter-spacing: 0;
+      }
+
+      h2 {
+        margin-bottom: 14px;
+        font-size: 22px;
+      }
+
+      h3 {
+        margin-top: 22px;
+        margin-bottom: 8px;
+        font-size: 17px;
+      }
+
+      p {
+        margin: 10px 0 0;
+      }
+
+      code {
+        padding: 2px 6px;
+        border-radius: 6px;
+        background: #eef1f6;
+        font-family: "Cascadia Mono", Consolas, monospace;
+        font-size: 0.92em;
+      }
+
+      a {
+        color: var(--blue);
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 18px;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        min-height: 30px;
+        padding: 5px 10px;
+        border: 1px solid #cfe0f7;
+        border-radius: 999px;
+        background: var(--chip);
+        color: #184b82;
+        font-size: 13px;
+        font-weight: 650;
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 18px;
+      }
+
+      .metric {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: #fbfcfe;
+        padding: 16px;
+      }
+
+      .metric strong {
+        display: block;
+        font-size: 22px;
+      }
+
+      .metric span {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      section {
+        margin-top: 22px;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: var(--paper);
+        padding: 26px;
+      }
+
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 5px 10px;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 13px;
+      }
+
+      .status.done {
+        background: #eaf7ef;
+        color: var(--green);
+      }
+
+      .status.pending {
+        background: #fff4df;
+        color: var(--amber);
+      }
+
+      .status.blocked {
+        background: #fff0ee;
+        color: var(--red);
+      }
+
+      .callout {
+        margin-top: 14px;
+        border-left: 4px solid var(--blue);
+        border-radius: 12px;
+        background: #f4f8ff;
+        padding: 14px 16px;
+      }
+
+      .callout.warning {
+        border-left-color: var(--amber);
+        background: #fff8eb;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 14px;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+      }
+
+      th,
+      td {
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        background: #f2f5fa;
+        font-size: 13px;
+      }
+
+      tr:last-child td {
+        border-bottom: 0;
+      }
+
+      ul {
+        margin: 10px 0 0;
+        padding-left: 22px;
+      }
+
+      li {
+        margin: 5px 0;
+      }
+
+      .timeline {
+        display: grid;
+        gap: 14px;
+        margin-top: 14px;
+      }
+
+      .phase {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 16px;
+        background: #fbfcfe;
+      }
+
+      .phase-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .commands {
+        margin-top: 14px;
+        border-radius: 12px;
+        background: #151b2b;
+        color: #f7fafc;
+        padding: 14px;
+        overflow-x: auto;
+        font-family: "Cascadia Mono", Consolas, monospace;
+        font-size: 13px;
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      .footer-note {
+        margin-top: 22px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      @media (max-width: 860px) {
+        .summary-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 560px) {
+        main {
+          padding: 20px 12px 48px;
+        }
+
+        header,
+        section {
+          padding: 20px;
+          border-radius: 14px;
+        }
+
+        h1 {
+          font-size: 25px;
+        }
+
+        .summary-grid {
+          grid-template-columns: 1fr;
+        }
+
+        th,
+        td {
+          padding: 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <p class="muted">작성일: 2026-06-18 · 대상: v13 사용자 앱 / topik-ai 관리자 앱</p>
+        <h1>v13에서 topik-ai로 관리자 영역을 분리한 작업 보고서</h1>
+        <p>
+          이번 세션의 핵심은 <strong>v13은 사용자 화면으로 유지</strong>하고,
+          관리자 전용 데이터·RPC·알림 발송 워커는 <strong>topik-ai 관리자 앱이 소유</strong>하도록
+          경계와 검증 장치를 만드는 것이었습니다.
+        </p>
+        <div class="meta">
+          <span class="chip">v13 = user-facing app</span>
+          <span class="chip">topik-ai = admin app</span>
+          <span class="chip">SOT 직접 수정 최소화</span>
+          <span class="chip">production handoff는 아직 남음</span>
+        </div>
+        <div class="summary-grid">
+          <div class="metric">
+            <strong>완료</strong>
+            <span>로컬 경계 분석과 검사 장치</span>
+          </div>
+          <div class="metric">
+            <strong>보류</strong>
+            <span>Vercel production 연결과 실증 evidence</span>
+          </div>
+          <div class="metric">
+            <strong>유지</strong>
+            <span>v13 사용자 알림/결제/동의/프로필 범위</span>
+          </div>
+          <div class="metric">
+            <strong>이관</strong>
+            <span>관리자 객체와 email worker 소유권</span>
+          </div>
+        </div>
+      </header>
+
+      <section>
+        <h2>1. 요청사항별 실행 상태</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>요청사항</th>
+              <th>실행 상태</th>
+              <th>설명</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>v13과 topik-ai의 역할 구분</td>
+              <td><span class="status done">적용됨</span></td>
+              <td>v13은 사용자 화면, topik-ai는 관리자 화면이라는 기준으로 DB 객체, RPC, 워커 소유권을 재분류했습니다.</td>
+            </tr>
+            <tr>
+              <td>각 프로젝트의 SOT 문서 확인</td>
+              <td><span class="status done">적용됨</span></td>
+              <td>topik-ai의 SOT checklist script가 v13/topik-ai 필수 문서를 출력하고 누락을 실패로 처리하도록 만들었습니다.</td>
+            </tr>
+            <tr>
+              <td>phase 단위 작업</td>
+              <td><span class="status done">적용됨</span></td>
+              <td>Phase 0 local boundary, Phase 1 production handoff gate, v13 transition route retirement gate로 분리했습니다.</td>
+            </tr>
+            <tr>
+              <td>테이블/객체 이관 판단</td>
+              <td><span class="status done">적용됨</span></td>
+              <td>topik-ai 소유, v13 유지, shared owner-read 범위를 구분하고 proposal과 checker에 반영했습니다.</td>
+            </tr>
+            <tr>
+              <td>v13/topik-ai 교차 검증</td>
+              <td><span class="status done">적용됨</span></td>
+              <td><code>npm run harness:admin-transfer:local</code> 하나로 양쪽 로컬 경계 검증을 실행하게 했습니다.</td>
+            </tr>
+            <tr>
+              <td>topik-ai 관리자 계정 기반 검증</td>
+              <td><span class="status done">로컬 조건 확인</span></td>
+              <td><code>.env.local</code>의 <code>E2E_ADMIN_EMAIL</code>, <code>E2E_ADMIN_PASSWORD</code> 존재를 검사합니다. 값은 출력하지 않습니다.</td>
+            </tr>
+            <tr>
+              <td>production 최종 이관 완료</td>
+              <td><span class="status pending">미완료</span></td>
+              <td>Vercel project link, production runtime env, 실제 production evidence가 아직 없습니다.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>2. 어디까지 적용됐는가</h2>
+        <div class="timeline">
+          <div class="phase">
+            <div class="phase-head">
+              <h3>Phase 0 · 로컬 경계 확정</h3>
+              <span class="status done">적용됨</span>
+            </div>
+            <p>
+              v13 코드와 테스트에서 제거되었거나 topik-ai가 소유해야 하는 관리자 객체를 직접 참조하지 않는지 검사했습니다.
+              동시에 v13에 남아야 하는 사용자 객체는 계속 허용했습니다.
+            </p>
+            <ul>
+              <li>v13 user-facing/shared: <code>profiles</code>, <code>notification_settings</code>, <code>user_notifications</code>, <code>notification_delivery_attempts</code> owner-read, 결제/동의 관련 객체</li>
+              <li>topik-ai admin-owned: 관리자 RPC, 알림 발송/이력, 운영/커뮤니티/커머스/시스템 관리자 객체</li>
+              <li>v13 historical admin island: org/assignment/admin problem RPC 계열은 현재 v13 사용자 앱 범위가 아닌 것으로 정리</li>
+            </ul>
+          </div>
+
+          <div class="phase">
+            <div class="phase-head">
+              <h3>Phase 1 · topik-ai 관리자 소유권 강화</h3>
+              <span class="status done">적용됨</span>
+            </div>
+            <p>
+              topik-ai에서 관리자 소유 객체와 migration directory를 검증하는 script를 추가했습니다.
+              v13 historical migration에 남은 과거 흔적은 warning으로 보고하고, 현재 소유권 판단은 topik-ai admin migration과 v13 제거 migration을 함께 봅니다.
+            </p>
+          </div>
+
+          <div class="phase">
+            <div class="phase-head">
+              <h3>Phase 2 · v13 SOT 직접 수정 대신 변경 제안</h3>
+              <span class="status done">적용됨</span>
+            </div>
+            <p>
+              v13의 active SOT는 직접 고치지 않았습니다. 대신
+              <code>docs/sot-change-proposals/2026-06-18-admin-ownership-transfer-to-topik-ai.md</code>에
+              어떤 문서를 어떤 방향으로 정리해야 하는지 제안으로 남겼습니다.
+            </p>
+          </div>
+
+          <div class="phase">
+            <div class="phase-head">
+              <h3>Phase 3 · 알림 email worker 이관 준비</h3>
+              <span class="status pending">production 검증 대기</span>
+            </div>
+            <p>
+              topik-ai가 server-only email worker를 소유하도록 runbook, smoke check, evidence check를 준비했습니다.
+              다만 실제 production Vercel 연결과 runtime env가 없으므로 v13 transition route는 아직 제거하지 않았습니다.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>3. 적용된 주요 파일</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>프로젝트</th>
+              <th>파일/영역</th>
+              <th>역할</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>v13</td>
+              <td><code>docs/sot-change-proposals/2026-06-18-admin-ownership-transfer-to-topik-ai.md</code></td>
+              <td>active SOT를 직접 바꾸지 않고, 관리자 소유권 이전 방향을 제안서로 기록</td>
+            </tr>
+            <tr>
+              <td>v13</td>
+              <td><code>scripts/check-admin-boundary*.mjs</code></td>
+              <td>v13 코드/테스트가 topik-ai-owned 관리자 객체를 참조하지 않는지 검사</td>
+            </tr>
+            <tr>
+              <td>v13</td>
+              <td><code>scripts/check-notification-*.mjs</code></td>
+              <td>owner-read 이력, transition route caller, route retirement gate를 검증</td>
+            </tr>
+            <tr>
+              <td>topik-ai</td>
+              <td><code>scripts/check-transfer-sot-checklist.mjs</code></td>
+              <td>v13/topik-ai 필수 SOT 목록과 production retirement checklist를 자동 검증</td>
+            </tr>
+            <tr>
+              <td>topik-ai</td>
+              <td><code>scripts/check-migration-ownership-boundary.mjs</code></td>
+              <td>migration 기준으로 admin-owned 객체가 topik-ai에 있는지 교차 확인</td>
+            </tr>
+            <tr>
+              <td>topik-ai</td>
+              <td><code>scripts/check-admin-transfer-completion-audit.mjs</code></td>
+              <td>최종 완료 여부를 SOT, 관리자 env, Vercel readiness, production evidence로 감사</td>
+            </tr>
+            <tr>
+              <td>topik-ai</td>
+              <td><code>package.json</code></td>
+              <td><code>harness:admin-transfer:local</code> 추가로 양쪽 로컬 검증을 한 번에 실행</td>
+            </tr>
+            <tr>
+              <td>topik-ai</td>
+              <td><code>docs/runbooks/notification-worker-production-verification.md</code></td>
+              <td>production handoff 절차와 evidence 형식을 운영 문서로 정리</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>4. 현재 검증 결과</h2>
+        <div class="callout">
+          <strong>로컬 교차 검증 명령</strong>
+          <div class="commands">npm run harness:admin-transfer:local</div>
+          <p>
+            이 명령은 topik-ai의 local admin boundary harness를 실행한 뒤,
+            v13의 <code>pnpm harness:admin-boundary</code>까지 이어서 실행합니다.
+          </p>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>검증</th>
+              <th>결과</th>
+              <th>확인 내용</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>topik-ai unit tests</td>
+              <td><span class="status done">통과</span></td>
+              <td><code>transfer-sot-checklist</code>, <code>admin-boundary-package-scripts</code> 관련 9개 테스트 통과</td>
+            </tr>
+            <tr>
+              <td>topik-ai local harness</td>
+              <td><span class="status done">통과</span></td>
+              <td>SOT checklist, admin env, client source secret, message history, migration boundary, cross-app state 확인</td>
+            </tr>
+            <tr>
+              <td>v13 boundary harness</td>
+              <td><span class="status done">통과</span></td>
+              <td>5개 test file / 19개 test 통과. v13 app/client가 transition email worker를 직접 호출하지 않음</td>
+            </tr>
+            <tr>
+              <td>completion audit</td>
+              <td><span class="status pending">incomplete</span></td>
+              <td>로컬 경계는 통과했지만 production Vercel/env/evidence가 아직 없어 최종 완료로 보지 않음</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>5. 아직 남은 일</h2>
+        <div class="callout warning">
+          <strong>중요:</strong> 현재 작업은 로컬 경계와 검증 장치까지는 정리됐지만,
+          production handoff까지 끝난 상태는 아닙니다.
+        </div>
+        <ul>
+          <li>topik-ai를 실제 Vercel project에 연결해야 합니다. 현재 <code>.vercel/project.json</code>이 없습니다.</li>
+          <li>production runtime env가 필요합니다: <code>NOTIFICATION_WORKER_SECRET</code>, <code>CRON_SECRET</code>, <code>RESEND_FROM</code>, <code>SITE_URL</code>.</li>
+          <li>operator smoke용 <code>TOPIK_AI_PRODUCTION_URL</code>이 필요합니다.</li>
+          <li>실제 production smoke 결과를 <code>docs/runbooks/notification-worker-production-evidence.md</code>에 기록해야 합니다.</li>
+          <li>그 evidence에서 topik-ai admin history와 v13 owner-read history가 모두 확인되어야 합니다.</li>
+          <li>그 후에야 v13 transition route 제거 여부를 결정할 수 있습니다.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>6. 왜 이 방향이 맞는가</h2>
+        <p>
+          Supabase 공식 문서는 service role key가 RLS를 우회할 수 있으므로 브라우저나 사용자에게 노출하지 말아야 한다고 설명합니다.
+          따라서 email worker처럼 service-role/provider secret을 쓰는 기능은 v13 사용자 앱이 아니라 topik-ai 서버 런타임에 두는 것이 안전합니다.
+        </p>
+        <p>
+          Vercel 공식 문서는 environment variable을 소스 코드 밖에서 관리하고, 민감한 환경 변수는 production/preview 환경에서 값을 읽을 수 없게 보호할 수 있다고 설명합니다.
+          그래서 이번 작업은 secret 값을 코드나 문서에 남기지 않고, 변수명과 pass/fail evidence만 기록하도록 설계했습니다.
+        </p>
+        <ul>
+          <li><a href="https://supabase.com/docs/guides/database/postgres/row-level-security">Supabase Row Level Security docs</a></li>
+          <li><a href="https://vercel.com/docs/environment-variables">Vercel Environment Variables docs</a></li>
+          <li><a href="https://vercel.com/docs/environment-variables/sensitive-environment-variables">Vercel Sensitive Environment Variables docs</a></li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>7. 한 줄 결론</h2>
+        <p>
+          <strong>v13에서 관리자 책임을 topik-ai로 옮기기 위한 로컬 경계, SOT checklist, 교차 검증, production gate는 구축되었습니다.</strong>
+          다만 실제 production worker handoff는 Vercel 연결과 운영 evidence가 있어야 완료로 처리할 수 있습니다.
+        </p>
+        <p class="footer-note">
+          이 보고서는 SOT 문서가 아니라 이번 세션 작업 내용을 설명하는 산출물입니다.
+          생성 위치: <code>artifacts/admin-transfer-session-report-2026-06-18.html</code>
+        </p>
+      </section>
+    </main>
+  </body>
+</html>

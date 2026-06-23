@@ -6,8 +6,8 @@ import {
   BarChart3,
   FileText,
   PencilLine,
-  type LucideIcon,
-} from "lucide-react";
+  type AppIcon,
+} from "@/components/shared/AppIcons";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { AppCard } from "@/components/shared/AppCard";
@@ -19,21 +19,24 @@ const { Text, Title } = Typography;
 type Props = {
   dimensions: FeedbackDimensionScoreRow[];
   retryHref?: string;
+  retryDisabled?: boolean;
   supplement?: ExternalFeedbackSupplement;
 };
 
 type ActionCard = {
   key: "retry" | "similar" | "weakness";
   href: string;
-  icon: LucideIcon;
+  icon: AppIcon;
   title: string;
   description: string;
   toneClassName: string;
+  disabled?: boolean;
 };
 
 export function FeedbackRecommendationCards({
   dimensions,
   retryHref = "/practice/problems",
+  retryDisabled = false,
   supplement,
 }: Props) {
   const t = useTranslations("feedback.recommendations");
@@ -64,6 +67,7 @@ export function FeedbackRecommendationCards({
       title: t("action.retry.title"),
       description: t("action.retry.description"),
       toneClassName: "bg-blue-50 text-blue-600",
+      disabled: retryDisabled,
     },
     {
       key: "similar",
@@ -99,20 +103,31 @@ export function FeedbackRecommendationCards({
         {actions.map((action) => {
           const Icon = action.icon;
           const navigate = () => router.push(action.href);
+          const disabled = action.disabled === true;
           return (
             <AppCard
               key={action.key}
               hoverable
               role="button"
-              tabIndex={0}
-              onClick={navigate}
+              tabIndex={disabled ? -1 : 0}
+              aria-disabled={disabled ? true : undefined}
+              onClick={() => {
+                if (disabled) return;
+                navigate();
+              }}
               onKeyDown={(event) => {
+                if (disabled) return;
                 if (event.key === "Enter" || event.key === " ") {
                   event.preventDefault();
                   navigate();
                 }
               }}
-              className="group h-full"
+              className={[
+                "group h-full",
+                disabled ? "cursor-not-allowed opacity-60" : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
               data-testid={`feedback-reco-action-${action.key}`}
             >
               <div className="flex h-full items-center gap-4">

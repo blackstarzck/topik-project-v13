@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Button, Input, Progress, Typography } from "antd";
-import { Lightbulb, PenLine, Sparkles } from "lucide-react";
+import { Lightbulb, PenLine, Sparkles } from "@/components/shared/AppIcons";
 import { useTranslations } from "next-intl";
 
 import { logStudyEvent } from "@/lib/events/study-events";

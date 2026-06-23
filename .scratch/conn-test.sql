@@ -1,0 +1,1 @@
+select 1 as ok, current_database() as db;

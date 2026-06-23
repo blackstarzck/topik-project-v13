@@ -35,9 +35,9 @@ importers:
       gsap:
         specifier: ^3.15.0
         version: 3.15.0
-      lucide-react:
-        specifier: ^1.16.0
-        version: 1.16.0(react@19.2.6)
+      iconsax-react:
+        specifier: ^0.0.8
+        version: 0.0.8(react@19.2.6)
       next:
         specifier: ^16.2.6
         version: 16.2.6(@babel/core@7.29.0)(@playwright/test@1.60.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -2415,6 +2415,11 @@ packages:
     resolution: {integrity: sha512-1dhVQZXhcHje7798IVM+xoo/1ZdVfzOMIc8/rgVSijRK38EDqOJoGula9N/8ZI5RD8QTxNQtK/Gozpr+qUqRRA==}
     engines: {node: '>=20.0.0'}
 
+  iconsax-react@0.0.8:
+    resolution: {integrity: sha512-l3dVk4zGtkkJHgvNYqAf0wDKqnKxXykee5/DoESGo2JvSYwaxajJUHSX2YrPRXSov8Hd8ClGFwJxCEaEjrFD1Q==}
+    peerDependencies:
+      react: '*'
+
   icu-minify@4.13.0:
     resolution: {integrity: sha512-SIFMeUHZJjzS5RvIGvybKvWoHjDm9cGVEs2EpJ8PmywOdJLWyblPm7TdPLLoUtkJtwQD7iGhl2WMptZ+N0on+w==}
 
@@ -2740,11 +2745,6 @@ packages:
 
   lru-cache@5.1.1:
     resolution: {integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==}
-
-  lucide-react@1.16.0:
-    resolution: {integrity: sha512-dYwyPzb4MEKpGUmNYk3WKWPnMrHs3FKM+q94kAnJrcDIqqn1hq2xY8scaS2ovsOCM5D51ey2gaRG3PBb1vgoYQ==}
-    peerDependencies:
-      react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
   lz-string@1.5.0:
     resolution: {integrity: sha512-h5bgJWpxJNswbU7qCrV0tIKQCaS3blPDrqKWx+QxzuzL1zGUzij9XCWLrSLsJPu5t+eWA/ycetzYAO5IOMcWAQ==}
@@ -6004,6 +6004,11 @@ snapshots:
 
   iceberg-js@0.8.1: {}
 
+  iconsax-react@0.0.8(react@19.2.6):
+    dependencies:
+      prop-types: 15.8.1
+      react: 19.2.6
+
   icu-minify@4.13.0:
     dependencies:
       '@formatjs/icu-messageformat-parser': 3.5.10
@@ -6318,10 +6323,6 @@ snapshots:
   lru-cache@5.1.1:
     dependencies:
       yallist: 3.1.1
-
-  lucide-react@1.16.0(react@19.2.6):
-    dependencies:
-      react: 19.2.6
 
   lz-string@1.5.0: {}
 

@@ -55,6 +55,12 @@ describe("app theme contract", () => {
     expect(vars["--app-color-text-secondary"]).toBe(
       awesomicThemeTokens.color.steel,
     );
+    expect(
+      (awesomicThemeTokens.color as Record<string, string>).linkSecondary,
+    ).toBe("#3254F2");
+    expect((vars as Record<string, string>)["--app-color-link-secondary"]).toBe(
+      "#3254F2",
+    );
   });
 
   test("getResolvedBridgeVars can resolve the stock AntD fallback theme", () => {
@@ -113,6 +119,7 @@ describe("app theme contract", () => {
       "--app-color-bg-container",
       "--app-color-text",
       "--app-color-text-secondary",
+      "--app-color-link-secondary",
       "--app-color-border",
       "--app-radius",
       "--app-font-family",

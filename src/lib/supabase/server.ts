@@ -31,6 +31,22 @@ export type SupabaseServerClient = Awaited<
   ReturnType<typeof createSupabaseServerClient>
 >;
 
+export function createSupabasePublicServerClient() {
+  const env = getPublicEnv();
+
+  return createClient<Database, "public">(env.url, env.publishableKey, {
+    auth: {
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+      persistSession: false,
+    },
+  });
+}
+
+export type SupabasePublicServerClient = ReturnType<
+  typeof createSupabasePublicServerClient
+>;
+
 export function createSupabaseServiceRoleClient() {
   const env = getPublicEnv();
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;

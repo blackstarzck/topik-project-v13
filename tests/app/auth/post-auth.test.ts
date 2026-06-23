@@ -5,9 +5,7 @@ const redirectMock = vi.fn((url: string) => {
 });
 const requireActiveSessionMock = vi.fn();
 const backfillOAuthDisplayNameMock = vi.fn();
-const getMissingRequiredConsentDocumentsMock = vi.fn();
-const getRequiredConsentDocumentsMock = vi.fn();
-const hasLearningGoalMock = vi.fn();
+const getAuthCompletionStatusForSessionMock = vi.fn();
 
 vi.mock("next/navigation", () => ({
   redirect: (url: string) => redirectMock(url),
@@ -22,23 +20,14 @@ vi.mock("@/lib/auth/profile", () => ({
 vi.mock("@/lib/legal/consent", () => ({
   backfillOAuthDisplayName: (...args: unknown[]) =>
     backfillOAuthDisplayNameMock(...args),
-  getMissingRequiredConsentDocuments: (...args: unknown[]) =>
-    getMissingRequiredConsentDocumentsMock(...args),
-  getRequiredConsentDocuments: (...args: unknown[]) =>
-    getRequiredConsentDocumentsMock(...args),
 }));
 
-vi.mock("@/lib/learning/server", () => ({
-  hasLearningGoal: (...args: unknown[]) => hasLearningGoalMock(...args),
+vi.mock("@/lib/auth/completion", () => ({
+  getAuthCompletionStatusForSession: (...args: unknown[]) =>
+    getAuthCompletionStatusForSessionMock(...args),
 }));
 
 import PostAuthPage from "../../../src/app/auth/post-auth/page";
-
-const termsDoc = {
-  id: "terms-1",
-  doc_type: "terms",
-  version: "v1",
-};
 
 async function renderPostAuth(intent?: string) {
   return PostAuthPage({
@@ -52,20 +41,24 @@ describe("/auth/post-auth", () => {
     requireActiveSessionMock.mockReset();
     requireActiveSessionMock.mockResolvedValue({
       user: { id: "user-1" },
-      profile: { status: "active", ui_locale: "ko" },
+      profile: {
+        display_name: "Chan",
+        nationality_country_code: "KR",
+        nickname: "talkpik-abc123",
+        status: "active",
+        ui_locale: "ko",
+      },
     });
     backfillOAuthDisplayNameMock.mockReset();
     backfillOAuthDisplayNameMock.mockResolvedValue({
       id: "user-1",
       display_name: "Google User",
+      nationality_country_code: "KR",
+      nickname: "talkpik-abc123",
       ui_locale: "ko",
     });
-    getRequiredConsentDocumentsMock.mockReset();
-    getRequiredConsentDocumentsMock.mockResolvedValue([termsDoc]);
-    getMissingRequiredConsentDocumentsMock.mockReset();
-    getMissingRequiredConsentDocumentsMock.mockResolvedValue([]);
-    hasLearningGoalMock.mockReset();
-    hasLearningGoalMock.mockResolvedValue(true);
+    getAuthCompletionStatusForSessionMock.mockReset();
+    getAuthCompletionStatusForSessionMock.mockResolvedValue("ready");
   });
 
   it("redirects to login when there is no session", async () => {
@@ -87,16 +80,20 @@ describe("/auth/post-auth", () => {
     expect(backfillOAuthDisplayNameMock).not.toHaveBeenCalled();
   });
 
-  it("sends users with missing required consent to the consent gate", async () => {
-    getMissingRequiredConsentDocumentsMock.mockResolvedValueOnce([termsDoc]);
+  it("sends users with incomplete auth completion to the consent gate", async () => {
+    getAuthCompletionStatusForSessionMock.mockResolvedValueOnce(
+      "pending-auth-completion",
+    );
 
     await expect(renderPostAuth("sign-up")).rejects.toThrow(
       "NEXT_REDIRECT:/auth/consent?next=%2Fauth%2Fpost-auth%3Fintent%3Dsign-up",
     );
   });
 
-  it("sends users without learning goals to onboarding after consent is complete", async () => {
-    hasLearningGoalMock.mockResolvedValueOnce(false);
+  it("sends users without learning goals to onboarding after auth completion is complete", async () => {
+    getAuthCompletionStatusForSessionMock.mockResolvedValueOnce(
+      "pending-learning-goal",
+    );
 
     await expect(renderPostAuth("login")).rejects.toThrow(
       "NEXT_REDIRECT:/onboarding/learning-goal",
@@ -126,7 +123,9 @@ describe("/auth/post-auth", () => {
       user: { id: "user-1", identities: [{ provider: "google" }] },
       profile: { status: "active", ui_locale: "ko" },
     });
-    getMissingRequiredConsentDocumentsMock.mockResolvedValueOnce([termsDoc]);
+    getAuthCompletionStatusForSessionMock.mockResolvedValueOnce(
+      "pending-auth-completion",
+    );
 
     await expect(renderPostAuth("sign-up")).rejects.toThrow(
       "NEXT_REDIRECT:/auth/consent?next=%2Fauth%2Fpost-auth%3Fintent%3Dsign-up",

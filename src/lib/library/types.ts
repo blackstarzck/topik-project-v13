@@ -63,14 +63,22 @@ export type LibraryReportView = {
   tags: string[];
 };
 
+export type LibraryProblemAvailabilityStatus =
+  | "available"
+  | "soft_unavailable"
+  | "hard_unavailable";
+
 export type LibraryProblemView = {
   kind: "problem";
   /** Underlying `problems.id`. */
   id: string;
-  title: string;
+  title: string | null;
   question_no: number | null;
   item_id: string;
   tags: string[];
+  availabilityStatus: LibraryProblemAvailabilityStatus;
+  availabilityReason: string | null;
+  canRetry: boolean;
 };
 
 export type LibraryExportView = {
@@ -98,4 +106,17 @@ export function excerptNarrative(narrative: string | null): string | null {
   if (!narrative) return null;
   if (narrative.length <= REPORT_NARRATIVE_EXCERPT_LEN) return narrative;
   return `${narrative.slice(0, REPORT_NARRATIVE_EXCERPT_LEN)}...`;
+}
+
+export function coerceLibraryProblemAvailabilityStatus(
+  value: unknown,
+): LibraryProblemAvailabilityStatus {
+  if (
+    value === "available" ||
+    value === "soft_unavailable" ||
+    value === "hard_unavailable"
+  ) {
+    return value;
+  }
+  return "hard_unavailable";
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { Alert, App, Button, Tag, Typography } from "antd";
-import { Mail } from "lucide-react";
+import { Mail } from "@/components/shared/AppIcons";
 import { useEffect, useState } from "react";
 
 import { AppCard } from "@/components/shared/AppCard";

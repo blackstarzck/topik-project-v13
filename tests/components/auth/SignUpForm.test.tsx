@@ -211,6 +211,26 @@ describe("SignUpForm", () => {
     expect(signUpMock).not.toHaveBeenCalled();
   });
 
+  it("visually distinguishes terms and privacy links with secondary link color", async () => {
+    renderInApp(<SignUpForm />);
+
+    await fillValidCredentials();
+
+    const termsLink = screen.getByRole("link", { name: "이용약관" });
+    const privacyLink = screen.getByRole("link", {
+      name: "개인정보처리방침",
+    });
+
+    expect(termsLink.getAttribute("href")).toBe("/terms");
+    expect(privacyLink.getAttribute("href")).toBe("/privacy");
+    expect(termsLink.className).toContain("auth-legal-link");
+    expect(privacyLink.className).toContain("auth-legal-link");
+    expect(termsLink.className).toContain("text-link-secondary");
+    expect(privacyLink.className).toContain("text-link-secondary");
+    expect(termsLink.className).not.toContain("font-semibold");
+    expect(privacyLink.className).not.toContain("font-semibold");
+  });
+
   it("calls supabase.auth.signUp with emailRedirectTo on valid submit", async () => {
     renderInApp(<SignUpForm />);
 

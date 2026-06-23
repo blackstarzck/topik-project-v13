@@ -20,7 +20,7 @@ import {
   Input,
   Typography,
 } from "antd";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight } from "@/components/shared/AppIcons";
 
 import { GoogleMark } from "@/components/auth/GoogleMark";
 import {
@@ -237,9 +237,14 @@ export function SignUpForm({
     }
   }
 
-  function handleStepCompletion(step: number) {
+  function handleStepCompletion(step: number, currentFieldValue?: string) {
     const values = form.getFieldsValue();
-    if (step === STEP_NAME && isDisplayNameReady(values.displayName)) {
+    const displayName =
+      step === STEP_NAME && typeof currentFieldValue === "string"
+        ? currentFieldValue
+        : values.displayName;
+
+    if (step === STEP_NAME && isDisplayNameReady(displayName)) {
       revealStep(STEP_COUNTRY_REGION, "nationalityCountryCode");
       return;
     }
@@ -268,7 +273,7 @@ export function SignUpForm({
   ) {
     if (event.key !== "Enter") return;
     event.preventDefault();
-    handleStepCompletion(step);
+    handleStepCompletion(step, event.currentTarget.value);
   }
 
   async function handleSignUp(values: SignUpFields) {
@@ -388,9 +393,9 @@ export function SignUpForm({
             autoComplete="name"
             placeholder={t("namePlaceholder")}
             onFocus={() => onTypingChange?.(true)}
-            onBlur={() => {
+            onBlur={(event) => {
               onTypingChange?.(false);
-              handleStepCompletion(STEP_NAME);
+              handleStepCompletion(STEP_NAME, event.currentTarget.value);
             }}
             onKeyDown={(event) => handleStepKeyDown(event, STEP_NAME)}
           />
@@ -533,6 +538,7 @@ export function SignUpForm({
                       href="/terms"
                       target="_blank"
                       rel="noopener noreferrer"
+                      className="auth-legal-link text-link-secondary"
                       onClick={(event) => event.stopPropagation()}
                     >
                       {chunks}
@@ -543,6 +549,7 @@ export function SignUpForm({
                       href="/privacy"
                       target="_blank"
                       rel="noopener noreferrer"
+                      className="auth-legal-link text-link-secondary"
                       onClick={(event) => event.stopPropagation()}
                     >
                       {chunks}

@@ -2,15 +2,20 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 
-import { acceptRequiredConsentsAction } from "@/app/auth/consent/actions";
-import { AuthConsentPanel } from "@/components/auth/AuthConsentPanel";
+import { completeAuthGateAction } from "@/app/auth/consent/actions";
+import {
+  AuthConsentPanel,
+  type AuthConsentPanelError,
+} from "@/components/auth/AuthConsentPanel";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PublicShell } from "@/components/shared/PublicShell";
-import { sanitizeNext } from "@/lib/auth/error-mapping";
-import { ACCOUNT_INACTIVE_PATH } from "@/lib/auth/completion-routes";
-import { bootstrapProfile, isActiveStatus } from "@/lib/auth/profile";
-import { requireUser } from "@/lib/auth/session";
-import { getMissingRequiredConsentDocuments } from "@/lib/legal/consent";
+import { sanitizeAuthCompletionNext } from "@/lib/auth/completion-routes";
+import { getMissingRequiredProfileFields } from "@/lib/auth/profile-completion";
+import { requireActiveSession } from "@/lib/auth/profile";
+import {
+  generateRandomNickname,
+  getMissingRequiredConsentDocuments,
+} from "@/lib/legal/consent";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +23,17 @@ type SearchParams = Record<string, string | string[] | undefined>;
 
 function pickFirst(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
+}
+
+function parseError(value: string | undefined): AuthConsentPanelError | null {
+  if (
+    value === "required" ||
+    value === "nickname-taken" ||
+    value === "save-failed"
+  ) {
+    return value;
+  }
+  return null;
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -31,23 +47,19 @@ export default async function AuthConsentPage({
   searchParams: Promise<SearchParams>;
 }) {
   const params = await searchParams;
-  const next = sanitizeNext(
+  const next = sanitizeAuthCompletionNext(
     pickFirst(params.next),
     "/auth/post-auth?intent=login",
   );
-  const showRequiredError = pickFirst(params.error) === "required";
-  const user = await requireUser();
-  const profile = await bootstrapProfile(user.id);
-  // 회원 탈퇴(deleted)/차단(blocked) 계정 차단(세션 정리 route 로).
-  if (!isActiveStatus(profile.status)) {
-    redirect(`${ACCOUNT_INACTIVE_PATH}?status=${profile.status}`);
-  }
+  const error = parseError(pickFirst(params.error));
+  const { user, profile } = await requireActiveSession();
+  const missingProfileFields = getMissingRequiredProfileFields(profile);
   const missingDocuments = await getMissingRequiredConsentDocuments(
     user.id,
     profile.ui_locale,
   );
 
-  if (missingDocuments.length === 0) {
+  if (missingProfileFields.length === 0 && missingDocuments.length === 0) {
     redirect(next);
   }
 
@@ -55,10 +67,18 @@ export default async function AuthConsentPage({
     <PublicShell>
       <PageContainer size="narrow">
         <AuthConsentPanel
-          action={acceptRequiredConsentsAction}
+          action={completeAuthGateAction}
           documents={missingDocuments}
           next={next}
-          showRequiredError={showRequiredError}
+          profile={profile}
+          missingProfileFields={missingProfileFields}
+          suggestedNickname={
+            missingProfileFields.includes("nickname")
+              ? generateRandomNickname()
+              : null
+          }
+          error={error}
+          showRequiredError={error === "required"}
         />
       </PageContainer>
     </PublicShell>

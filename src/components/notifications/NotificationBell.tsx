@@ -1,7 +1,16 @@
 "use client";
 
-import { App, Badge, Button, Empty, List, Popover, Skeleton, Typography } from "antd";
-import { Bell } from "lucide-react";
+import {
+  App,
+  Badge,
+  Button,
+  Empty,
+  List,
+  Popover,
+  Skeleton,
+  Typography,
+} from "antd";
+import { Bell } from "@/components/shared/AppIcons";
 import { useFormatter, useNow, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -11,6 +20,7 @@ import {
   fetchUnreadNotificationCount,
   markAllNotificationsRead,
   markNotificationRead,
+  resolveNotificationDestination,
   type UserNotification,
 } from "./notifications-data";
 
@@ -34,8 +44,9 @@ type Props = {
  * - Badge polls the unread count every 60s; the inbox list refetches each time
  *   the popover opens (no realtime subscription — polling is enough here).
  * - Read rule: clicking an item marks it read (optimistic, reverted on error)
- *   and then follows link_url when present. Same rule as the dashboard card.
- * - Unread = dot + bold title + subtle background, never color alone.
+ *   and then follows the movement path when present. Same rule as the
+ *   dashboard card.
+ * - Unread = dot indicator; the row surface stays transparent.
  */
 export function NotificationBell({ userId }: Props) {
   const t = useTranslations("notifications.bell");
@@ -101,14 +112,13 @@ export function NotificationBell({ userId }: Props) {
           prev.map((n) => (n.id === item.id ? { ...n, read_at: null } : n)),
         );
         setUnreadCount((prev) => prev + 1);
-        message.error(
-          err instanceof Error ? err.message : t("markReadError"),
-        );
+        message.error(err instanceof Error ? err.message : t("markReadError"));
       }
     }
-    if (item.link_url) {
+    const destination = resolveNotificationDestination(item);
+    if (destination) {
       setOpen(false);
-      router.push(item.link_url as never);
+      router.push(destination as never);
     }
   }
 
@@ -132,6 +142,7 @@ export function NotificationBell({ userId }: Props) {
         <Button
           type="link"
           size="small"
+          className="app-notification-panel__mark-all"
           disabled={unreadCount === 0}
           onClick={() => void handleMarkAll()}
         >
@@ -170,18 +181,25 @@ export function NotificationBell({ userId }: Props) {
                   onClick={() => void handleItemClick(item)}
                 >
                   <span className="app-notification-item__dot" aria-hidden>
-                    {unread ? <Badge status="processing" /> : null}
+                    {unread ? (
+                      <span className="app-notification-item__unread-dot" />
+                    ) : null}
                   </span>
                   <span className="app-notification-item__content">
-                    <Text strong={unread}>{item.title}</Text>
+                    <Text className="app-notification-item__title">
+                      {item.title}
+                    </Text>
                     <Paragraph
                       type="secondary"
                       ellipsis={{ rows: 2 }}
-                      className="!m-0 !text-xs"
+                      className="app-notification-item__body !m-0"
                     >
                       {item.body}
                     </Paragraph>
-                    <Text type="secondary" className="!text-xs">
+                    <Text
+                      type="secondary"
+                      className="app-notification-item__time"
+                    >
                       {format.relativeTime(new Date(item.created_at), now)}
                     </Text>
                   </span>
@@ -204,6 +222,7 @@ export function NotificationBell({ userId }: Props) {
       trigger="click"
       placement="bottomRight"
       content={content}
+      classNames={{ root: "app-notification-popover" }}
     >
       <Badge count={unreadCount} overflowCount={99} size="small">
         <Button

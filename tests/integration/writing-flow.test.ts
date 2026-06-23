@@ -7,6 +7,7 @@ const helpers = vi.hoisted(() => ({
   getFeedbackBundleMock: vi.fn(),
   getComparisonReportMock: vi.fn(),
   getActiveDraftMock: vi.fn(),
+  getWritingProblemAvailabilityMock: vi.fn(),
   notFoundMock: vi.fn(() => {
     throw new Error("NOT_FOUND");
   }),
@@ -32,6 +33,13 @@ vi.mock("@/lib/writing/server", () => ({
   getComparisonReport: (id: string) => helpers.getComparisonReportMock(id),
   getActiveDraft: (...args: unknown[]) =>
     helpers.getActiveDraftMock(...args),
+  getWritingProblemAvailability: (...args: unknown[]) =>
+    helpers.getWritingProblemAvailabilityMock(...args),
+  isProblemIdLikeUuid: (value: unknown) =>
+    typeof value === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      value,
+    ),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -60,6 +68,9 @@ beforeEach(() => {
   helpers.requireUserMock.mockResolvedValue({
     id: "user-1",
     email: "u@example.com",
+  });
+  helpers.getWritingProblemAvailabilityMock.mockResolvedValue({
+    canStart: true,
   });
 });
 
@@ -95,6 +106,35 @@ describe("writing flow — route guards", () => {
       );
     },
   );
+
+  it("loads the active draft for a valid deep-linked problem even when the problem is no longer renderable", async () => {
+    const problemId = "00000000-0000-0000-0000-000000000053";
+    helpers.getWritingProblemMock.mockResolvedValue(null);
+    helpers.getActiveDraftMock.mockResolvedValue({
+      id: "draft-hidden",
+      user_id: "user-1",
+      problem_id: problemId,
+      question_no: 53,
+      answer_text: "preserved answer",
+      answer_json: null,
+      char_count: 16,
+      autosave_status: "clean",
+      last_saved_at: "2026-06-23T00:00:00Z",
+      created_at: "2026-06-23T00:00:00Z",
+      updated_at: "2026-06-23T00:00:00Z",
+    });
+
+    const page = await writingPages[53]();
+    const el = await page.default({
+      searchParams: Promise.resolve({ problem: problemId }),
+    });
+
+    expect(el).toBeTruthy();
+    expect(helpers.getActiveDraftMock).toHaveBeenCalledWith(
+      "user-1",
+      problemId,
+    );
+  });
 
   it("/writing/feedback/short redirects to long for question 53", async () => {
     helpers.getSubmissionMock.mockResolvedValue({
@@ -138,6 +178,40 @@ describe("writing flow — route guards", () => {
     const el = await page.default({ params: Promise.resolve({ id: "s-2" }) });
     expect(el).toBeTruthy();
     expect(helpers.getFeedbackBundleMock).not.toHaveBeenCalled();
+  });
+
+  it("checks submitted problem availability before rendering feedback retry actions", async () => {
+    helpers.getSubmissionMock.mockResolvedValue({
+      id: "s-3",
+      user_id: "user-1",
+      question_no: 51,
+      feedback_status: "complete",
+      problem_id: "p-availability",
+      answer_text: "x",
+      char_count: 1,
+      submitted_at: "2026-05-21T00:00:00Z",
+      draft_id: null,
+      answer_json: null,
+      parent_submission_id: null,
+    });
+    helpers.getFeedbackBundleMock.mockResolvedValue({
+      feedback: { status: "complete" },
+      dimensions: [],
+      sentences: [],
+    });
+    helpers.getWritingProblemAvailabilityMock.mockResolvedValue({
+      canStart: false,
+    });
+
+    const page = await import(
+      "../../src/app/(workspace)/writing/feedback/short/[id]/page"
+    );
+    const el = await page.default({ params: Promise.resolve({ id: "s-3" }) });
+
+    expect(el).toBeTruthy();
+    expect(helpers.getWritingProblemAvailabilityMock).toHaveBeenCalledWith(
+      "p-availability",
+    );
   });
 
   it("/writing/reports/[id]/compare renders with previous=null (empty diff)", async () => {

@@ -47,7 +47,7 @@ export function RecentFeedbackCard({ items, className }: Props) {
               className="flex flex-wrap items-center justify-between gap-3 py-3"
             >
               <div className="flex min-w-0 flex-wrap items-center gap-2">
-                <span className="inline-flex min-h-7 items-center rounded-sm bg-surface px-3 text-xs font-semibold text-text-secondary">
+                <span className="inline-flex min-h-7 items-center rounded-sm bg-surface px-3 text-sm font-semibold text-text-secondary">
                   {item.questionNo != null
                     ? t("questionNo", { no: item.questionNo })
                     : "—"}
@@ -60,7 +60,7 @@ export function RecentFeedbackCard({ items, className }: Props) {
                       : t("scorePending")}
                   </strong>
                 </span>
-                <Text type="secondary" className="!text-xs">
+                <Text type="secondary" className="!text-sm">
                   {/* Pin tz so SSR/client render the same date string. */}
                   {new Date(item.generatedAt).toLocaleDateString("ko-KR", {
                     timeZone: "Asia/Seoul",

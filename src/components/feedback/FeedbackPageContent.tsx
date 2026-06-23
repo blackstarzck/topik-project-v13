@@ -34,6 +34,7 @@ type Props = {
   reloadHref: string;
   userId: string;
   saveLocked?: boolean;
+  canRetryProblem?: boolean;
 };
 
 export function FeedbackPageContent({
@@ -48,6 +49,7 @@ export function FeedbackPageContent({
   reloadHref,
   userId,
   saveLocked = false,
+  canRetryProblem = true,
 }: Props) {
   const t = useTranslations("feedback.page");
   const tActions = useTranslations("feedback.actions");
@@ -101,6 +103,10 @@ export function FeedbackPageContent({
   const resolvedRetryLabel = tActions(
     retryLabelKey ?? (withSentences ? "retryWriting" : "retryDefault"),
   );
+  const retryDisabled = !canRetryProblem;
+  const retryDisabledReason = retryDisabled
+    ? tActions("retryUnavailable")
+    : undefined;
 
   return (
     <div
@@ -133,6 +139,8 @@ export function FeedbackPageContent({
               withPdf
               retryLabel={resolvedRetryLabel}
               saveLocked={saveLocked}
+              retryDisabled={retryDisabled}
+              retryDisabledReason={retryDisabledReason}
               variant="header"
               className="shrink-0"
             />
@@ -168,6 +176,8 @@ export function FeedbackPageContent({
               supplement={externalSupplement}
               retryHref={retryHref}
               retryLabel={resolvedRetryLabel}
+              retryDisabled={retryDisabled}
+              retryDisabledReason={retryDisabledReason}
               showCardHeader={!showStickyReportHeader}
             />
           </>
@@ -200,6 +210,7 @@ export function FeedbackPageContent({
         <FeedbackRecommendationCards
           dimensions={bundle.dimensions}
           retryHref={retryHref}
+          retryDisabled={retryDisabled}
           supplement={externalSupplement}
         />
 
@@ -212,6 +223,8 @@ export function FeedbackPageContent({
             withPdf
             retryLabel={resolvedRetryLabel}
             saveLocked={saveLocked}
+            retryDisabled={retryDisabled}
+            retryDisabledReason={retryDisabledReason}
           />
         )}
       </div>

@@ -19,6 +19,7 @@ import type { LibraryTab } from "@/lib/library/types";
 
 type Props = {
   children: ReactNode;
+  className?: string;
   itemId: string;
   tab: LibraryTab;
   tags: string[];
@@ -42,6 +43,7 @@ type Props = {
  */
 export function LibraryItemRow({
   children,
+  className,
   itemId,
   tab,
   tags,
@@ -161,7 +163,12 @@ export function LibraryItemRow({
     <div
       data-testid="library-item-row"
       data-library-tab={tab}
-      className="flex flex-wrap items-center justify-between gap-4 border-b border-border py-4"
+      className={[
+        "flex flex-wrap items-center justify-between gap-4 border-b border-[var(--ant-color-border-secondary)] py-4",
+        className,
+      ]
+        .filter(Boolean)
+        .join(" ")}
     >
       <div className="min-w-0 flex-1 basis-72">{children}</div>
       <div className="flex flex-wrap items-center gap-2">

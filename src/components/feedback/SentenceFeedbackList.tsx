@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Empty, Tag, Typography } from "antd";
-import { ChevronRight, Circle } from "lucide-react";
+import { ChevronRight, Circle } from "@/components/shared/AppIcons";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import type { SentenceFeedbackRow } from "@/lib/writing/types";

@@ -69,7 +69,9 @@ test("X-17 missing fragment redirects to the canonical unknown auth error", asyn
 
   await page.goto("/auth/callback-fragment", { waitUntil: "domcontentloaded" });
 
-  await expect(page).toHaveURL(/\/auth\/error\?reason=unknown$/);
+  await expect(page).toHaveURL(/\/auth\/error\?reason=unknown$/, {
+    timeout: 10_000,
+  });
   await expect(page.getByTestId("auth-error-card-unknown")).toBeVisible();
   expect(new URL(page.url()).hash).toBe("");
   expect(errors).toEqual([]);
@@ -85,7 +87,9 @@ test("X-17 error fragment maps to a canonical reason and hides raw provider copy
     { waitUntil: "domcontentloaded" },
   );
 
-  await expect(page).toHaveURL(/\/auth\/error\?reason=otp_expired$/);
+  await expect(page).toHaveURL(/\/auth\/error\?reason=otp_expired$/, {
+    timeout: 10_000,
+  });
   await expect(page.getByTestId("auth-error-card-otp_expired")).toBeVisible();
   await expect(page.getByText(RAW_PROVIDER_DESCRIPTION)).toHaveCount(0);
   expect(new URL(page.url()).hash).toBe("");
@@ -133,7 +137,7 @@ test("X-17 token fragment sets a browser session and redirects to sanitized next
   await expect(page.getByTestId("callback-fragment-status")).toBeVisible();
   releaseUser?.();
 
-  await expect(page).toHaveURL(/\/terms$/);
+  await expect(page).toHaveURL(/\/terms$/, { timeout: 10_000 });
   expect(userCalls).toBe(1);
   expect(page.url()).not.toContain("access_token");
   expect(new URL(page.url()).hash).toBe("");

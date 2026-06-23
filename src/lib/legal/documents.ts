@@ -5,7 +5,9 @@
 // (legal_documents_published_read), so these pages work before sign-in.
 
 import {
+  createSupabasePublicServerClient,
   createSupabaseServerClient,
+  type SupabasePublicServerClient,
   type SupabaseServerClient,
 } from "@/lib/supabase/server";
 import type { Tables } from "@/lib/supabase/types";
@@ -23,7 +25,11 @@ export type PublishedLegalDocument = Pick<
   | "is_placeholder"
 >;
 
-type ClientFactory = () => Promise<SupabaseServerClient>;
+type LegalDocumentsClient = Pick<
+  SupabaseServerClient | SupabasePublicServerClient,
+  "from"
+>;
+type ClientFactory = () => LegalDocumentsClient | Promise<LegalDocumentsClient>;
 type LegalDocType = Tables<"legal_documents">["doc_type"];
 type LegalLocale = Tables<"legal_documents">["locale"];
 
@@ -36,6 +42,18 @@ function coerceLegalLocale(value: string | null | undefined): LegalLocale {
   return LEGAL_LOCALES.has(value as LegalLocale)
     ? (value as LegalLocale)
     : FALLBACK_LOCALE;
+}
+
+function isAuthTokenReadError(error: unknown): boolean {
+  const message =
+    error instanceof Error ? error.message.toLowerCase() : String(error);
+
+  return (
+    message.includes("no suitable key") ||
+    message.includes("wrong key type") ||
+    (message.includes("jwt") &&
+      (message.includes("invalid") || message.includes("expired")))
+  );
 }
 
 async function fetchPublished(
@@ -60,6 +78,18 @@ async function fetchPublished(
   return (data?.[0] as PublishedLegalDocument | undefined) ?? null;
 }
 
+async function fetchPublishedWithLocaleFallback(
+  docType: LegalDocType,
+  requested: LegalLocale,
+  createClient: ClientFactory,
+): Promise<PublishedLegalDocument | null> {
+  const localized = await fetchPublished(docType, requested, createClient);
+  if (localized || requested === FALLBACK_LOCALE) {
+    return localized;
+  }
+  return fetchPublished(docType, FALLBACK_LOCALE, createClient);
+}
+
 /**
  * Latest published legal document for a doc_type in the requested locale, falling
  * back to Korean when the requested locale has no published row (e.g. vi). Returns
@@ -69,11 +99,24 @@ export async function getPublishedLegalDocument(
   docType: LegalDocType,
   locale: string | null | undefined,
   createClient: ClientFactory = createSupabaseServerClient,
+  createPublicClient: ClientFactory = createSupabasePublicServerClient,
 ): Promise<PublishedLegalDocument | null> {
   const requested = coerceLegalLocale(locale);
-  const localized = await fetchPublished(docType, requested, createClient);
-  if (localized || requested === FALLBACK_LOCALE) {
-    return localized;
+  try {
+    return await fetchPublishedWithLocaleFallback(
+      docType,
+      requested,
+      createClient,
+    );
+  } catch (error) {
+    if (!isAuthTokenReadError(error)) {
+      throw error;
+    }
+
+    return fetchPublishedWithLocaleFallback(
+      docType,
+      requested,
+      createPublicClient,
+    );
   }
-  return fetchPublished(docType, FALLBACK_LOCALE, createClient);
 }

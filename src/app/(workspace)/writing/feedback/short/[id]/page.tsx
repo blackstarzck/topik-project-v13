@@ -3,7 +3,11 @@ import { getTranslations } from "next-intl/server";
 import { notFound, redirect } from "next/navigation";
 import { FeedbackPageContent } from "@/components/feedback/FeedbackPageContent";
 import { requireUser } from "@/lib/auth/session";
-import { getFeedbackBundle, getSubmission } from "@/lib/writing/server";
+import {
+  getFeedbackBundle,
+  getSubmission,
+  getWritingProblemAvailability,
+} from "@/lib/writing/server";
 import { isShortAnswer, type QuestionNo } from "@/lib/writing/types";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -35,6 +39,9 @@ export default async function ShortFeedbackPage({
     submission.feedback_status === "analyzing"
       ? null
       : await getFeedbackBundle(id);
+  const problemAvailability = await getWritingProblemAvailability(
+    submission.problem_id,
+  );
   return (
     <FeedbackPageContent
       submission={submission}
@@ -46,6 +53,7 @@ export default async function ShortFeedbackPage({
       reloadHref={`/writing/feedback/short/${id}`}
       userId={user.id}
       saveLocked={saveLocked}
+      canRetryProblem={problemAvailability.canStart}
     />
   );
 }

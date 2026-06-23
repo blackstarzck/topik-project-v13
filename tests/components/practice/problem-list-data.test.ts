@@ -53,6 +53,7 @@ describe("fetchUserProblemsRpc", () => {
 
     expect(rpc).toHaveBeenCalledWith("list_user_problems", {
       filter: {
+        exclude_seed: true,
         question_no: 54,
         difficulty: 4,
         topik_level: 2,
@@ -97,6 +98,7 @@ describe("fetchUserProblemsRpc", () => {
 
     expect(rpc).toHaveBeenCalledWith("list_user_problems", {
       filter: {
+        exclude_seed: true,
         recommended: true,
       },
       sort: "oldest",
@@ -125,12 +127,75 @@ describe("fetchUserProblemsRpc", () => {
 
     expect(rpc).toHaveBeenCalledWith("list_user_problems", {
       filter: {
+        exclude_seed: true,
         review_set_id: "review-set-1",
       },
       sort: "newest",
       page: 1,
       page_size: 10,
     });
+  });
+
+  it("removes seed fixture rows from the user-facing problem list", async () => {
+    const rpc = vi.fn(async () => ({
+      data: [
+        {
+          problem_id: "seed-problem-51",
+          title: "Seed fixture should not be visible",
+          domain: "writing",
+          topik_level: 2,
+          question_no: 51,
+          difficulty: 2,
+          tags: ["seed:wireframe_problem_fixtures", "q51"],
+          attempt_count: 0,
+          is_solved: false,
+          last_attempt_at: null,
+          created_at: "2026-06-09T00:00:00.000Z",
+          total_count: 2,
+          solve_state: "none",
+          latest_submission_id: null,
+          lifecycle_status: "active",
+          lifecycle_reason: null,
+          publish_status: "published",
+          review_status: "approved",
+        },
+        {
+          problem_id: "real-problem-51",
+          title: "External or curated problem",
+          domain: "writing",
+          topik_level: 2,
+          question_no: 51,
+          difficulty: 3,
+          tags: ["grammar"],
+          attempt_count: 0,
+          is_solved: false,
+          last_attempt_at: null,
+          created_at: "2026-06-09T00:00:00.000Z",
+          total_count: 2,
+          solve_state: "none",
+          latest_submission_id: null,
+          lifecycle_status: "active",
+          lifecycle_reason: null,
+          publish_status: "published",
+          review_status: "approved",
+        },
+      ],
+      error: null,
+    }));
+
+    const result = await fetchUserProblemsRpc(
+      {
+        filter: {},
+        sort: "newest",
+        page: 1,
+        pageSize: 10,
+      },
+      () => ({ rpc }) as never,
+    );
+
+    expect(result.rows).toHaveLength(1);
+    expect(result.rows[0].problemId).toBe("real-problem-51");
+    expect(result.total).toBe(1);
   });
 
   it("falls back to legacy solved fields when solve_state is absent", async () => {

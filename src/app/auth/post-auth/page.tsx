@@ -2,12 +2,8 @@ import { redirect } from "next/navigation";
 
 import { requireActiveSession } from "@/lib/auth/profile";
 import { addGoogleLinkedNotice } from "@/lib/auth/identity-linking";
-import {
-  backfillOAuthDisplayName,
-  getMissingRequiredConsentDocuments,
-  getRequiredConsentDocuments,
-} from "@/lib/legal/consent";
-import { hasLearningGoal } from "@/lib/learning/server";
+import { getAuthCompletionStatusForSession } from "@/lib/auth/completion";
+import { backfillOAuthDisplayName } from "@/lib/legal/consent";
 
 export const dynamic = "force-dynamic";
 
@@ -33,28 +29,21 @@ export default async function PostAuthPage({
   const { user } = await requireActiveSession();
   const profile = await backfillOAuthDisplayName(user);
 
-  const requiredDocuments = await getRequiredConsentDocuments(profile.ui_locale);
-  if (requiredDocuments.length === 0) {
-    console.warn("[auth/post-auth] no published required legal documents", {
-      userId: user.id,
-      locale: profile.ui_locale,
-      intent,
-    });
-  } else {
-    const missingDocuments = await getMissingRequiredConsentDocuments(
-      user.id,
-      profile.ui_locale,
-    );
-    if (missingDocuments.length > 0) {
-      const consentNext = `/auth/post-auth?intent=${intent}`;
-      redirect(`/auth/consent?next=${encodeURIComponent(consentNext)}`);
-    }
+  const completionStatus = await getAuthCompletionStatusForSession({
+    user,
+    profile,
+  });
+  if (
+    completionStatus === "pending-auth-completion" ||
+    completionStatus === "pending-consent"
+  ) {
+    const consentNext = `/auth/post-auth?intent=${intent}`;
+    redirect(`/auth/consent?next=${encodeURIComponent(consentNext)}`);
   }
 
-  const hasGoal = await hasLearningGoal(user.id);
   redirect(
     addGoogleLinkedNotice(
-      hasGoal ? "/dashboard" : "/onboarding/learning-goal",
+      completionStatus === "ready" ? "/dashboard" : "/onboarding/learning-goal",
       user,
     ),
   );

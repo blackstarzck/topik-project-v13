@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { GraduationCap } from "lucide-react";
+import { GraduationCap } from "@/components/shared/AppIcons";
 import { WorkspaceBody } from "@/components/app/WorkspaceBody";
 import { AuthIdentityNotice } from "@/components/auth/AuthIdentityNotice";
 import { LearningGoalForm } from "@/components/learning/LearningGoalForm";

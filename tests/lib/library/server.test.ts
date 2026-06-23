@@ -18,7 +18,10 @@ type FromResult = {
  * The returned chain is intentionally minimal — any unimplemented method
  * will throw at runtime to surface drift.
  */
-function makeClient(byTable: Record<string, FromResult>) {
+function makeClient(
+  byTable: Record<string, FromResult>,
+  byRpc: Record<string, FromResult> = {},
+) {
   return {
     from: (table: string) => {
       const result = byTable[table] ?? { data: [], error: null };
@@ -37,6 +40,58 @@ function makeClient(byTable: Record<string, FromResult>) {
       };
       return chain;
     },
+    rpc: (fn: string) => {
+      const result =
+        byRpc[fn] ??
+        (fn === "list_user_library_problem_items"
+          ? defaultProblemAvailabilityRpc(byTable)
+          : { data: [], error: null });
+      return Promise.resolve({
+        data: result.data ?? null,
+        error: result.error ?? null,
+      });
+    },
+  };
+}
+
+function defaultProblemAvailabilityRpc(
+  byTable: Record<string, FromResult>,
+): FromResult {
+  const items = byTable.library_items?.data ?? [];
+  const problems = byTable.problems?.data ?? [];
+  const problemById = new Map(
+    problems.map((row) => {
+      const problem = row as { id?: string };
+      return [problem.id, problem];
+    }),
+  );
+  return {
+    data: items.flatMap((row) => {
+      const item = row as {
+        id?: string;
+        problem_id?: string | null;
+        tags?: string[] | null;
+        saved_at?: string;
+      };
+      if (!item.problem_id) return [];
+      const problem = problemById.get(item.problem_id) as
+        | { title?: string | null; question_no?: number | null }
+        | undefined;
+      if (!problem) return [];
+      return [
+        {
+          item_id: item.id,
+          problem_id: item.problem_id,
+          title: problem.title ?? null,
+          question_no: problem.question_no ?? null,
+          tags: item.tags ?? [],
+          saved_at: item.saved_at,
+          availability_status: "available",
+          availability_reason: null,
+          can_retry: true,
+        },
+      ];
+    }),
   };
 }
 
@@ -86,7 +141,7 @@ describe("listLibraryItems(submissions)", () => {
       },
     ];
     const create = async () =>
-       
+
       makeClient({
         library_items: { data: items },
         writing_submissions: { data: subs },
@@ -148,7 +203,6 @@ describe("listLibraryItems(submissions)", () => {
       },
     ];
     const create = async () =>
-       
       makeClient({
         library_items: { data: items },
         writing_submissions: { data: [] },
@@ -184,7 +238,7 @@ describe("listLibraryItems(reports)", () => {
       },
     ];
     const create = async () =>
-       
+
       makeClient({
         library_items: { data: items },
         comparison_reports: { data: reports },
@@ -220,7 +274,7 @@ describe("listLibraryItems(reports)", () => {
       },
     ];
     const create = async () =>
-       
+
       makeClient({
         library_items: { data: items },
         comparison_reports: {
@@ -238,7 +292,7 @@ describe("listLibraryItems(reports)", () => {
 });
 
 describe("listLibraryItems(problems)", () => {
-  it("returns problem title rows", async () => {
+  it("returns available problem rows from the library availability RPC", async () => {
     const items = [
       {
         id: "li-p1",
@@ -255,7 +309,7 @@ describe("listLibraryItems(problems)", () => {
       },
     ];
     const create = async () =>
-       
+
       makeClient({
         library_items: { data: items },
         problems: {
@@ -271,6 +325,62 @@ describe("listLibraryItems(problems)", () => {
         question_no: 53,
         item_id: "li-p1",
         tags: ["bookmark"],
+        availabilityStatus: "available",
+        availabilityReason: null,
+        canRetry: true,
+      },
+    ]);
+  });
+
+  it("keeps hard-unavailable saved problem rows without exposing problem metadata", async () => {
+    const items = [
+      {
+        id: "li-p-hidden",
+        user_id: "u",
+        item_type: "problem",
+        attempt_id: null,
+        submission_id: null,
+        report_id: null,
+        export_id: null,
+        problem_id: "p-hidden",
+        note: null,
+        tags: ["bookmark"],
+        saved_at: "2026-05-21T00:00:00Z",
+      },
+    ];
+    const create = async () =>
+
+      makeClient({
+        library_items: { data: items },
+      }, {
+        list_user_library_problem_items: {
+          data: [
+            {
+              item_id: "li-p-hidden",
+              problem_id: "p-hidden",
+              title: null,
+              question_no: null,
+              tags: ["bookmark"],
+              saved_at: "2026-05-21T00:00:00Z",
+              availability_status: "hard_unavailable",
+              availability_reason: null,
+              can_retry: false,
+            },
+          ],
+        },
+      }) as never;
+    const out = await listLibraryItems("u", "problems", create);
+    expect(out).toEqual([
+      {
+        kind: "problem",
+        id: "p-hidden",
+        title: null,
+        question_no: null,
+        item_id: "li-p-hidden",
+        tags: ["bookmark"],
+        availabilityStatus: "hard_unavailable",
+        availabilityReason: null,
+        canRetry: false,
       },
     ]);
   });
@@ -294,7 +404,7 @@ describe("listLibraryItems(exports)", () => {
       },
     ];
     const create = async () =>
-       
+
       makeClient({
         library_items: { data: items },
         export_files: {

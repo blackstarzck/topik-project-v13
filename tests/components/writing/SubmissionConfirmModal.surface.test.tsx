@@ -48,8 +48,7 @@ describe("SubmissionConfirmModal content surfaces", () => {
     expect(modal.querySelector("section")).toBeNull();
     expect(modal.querySelector("label")).toBeNull();
     expect(modal.querySelector(".ant-checkbox")).toBeNull();
-    expect(modal.querySelector(".lucide-clipboard-check")).toBeNull();
-    expect(modal.querySelector(".lucide-shield-check")).toBeNull();
+    expect(modal.querySelector("svg")).toBeNull();
   });
 
   it("enables submit without agreement and makes submit wider than cancel", () => {

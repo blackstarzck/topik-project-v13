@@ -215,7 +215,7 @@ export function LibrarySubmissionsTab({
     Boolean(range && (range[0] || range[1]));
 
   return (
-    <div className="flex w-full flex-col gap-4">
+    <div className="flex min-h-0 w-full flex-1 flex-col gap-4">
       {/* Region 1: 필터 (유형·상태·기간 동시) + 결과 수 상단 표시 */}
       <div className="flex flex-wrap items-center gap-2">
         <Select<StatusFilter>
@@ -252,23 +252,25 @@ export function LibrarySubmissionsTab({
       </div>
 
       {pageItems.length === 0 ? (
-        <Empty
-          description={searching ? t("emptySearch") : t("emptyNoItems")}
-        >
-          {searching ? (
-            <Button
-              onClick={() => {
-                setStatusFilter("all");
-                setRange(null);
-                onResetSearch?.();
-              }}
-            >
-              {t("resetFilter")}
-            </Button>
-          ) : (
-            <Link href="/practice/problems">{t("goToPractice")}</Link>
-          )}
-        </Empty>
+        <div className="flex flex-1 items-center justify-center">
+          <Empty
+            description={searching ? t("emptySearch") : t("emptyNoItems")}
+          >
+            {searching ? (
+              <Button
+                onClick={() => {
+                  setStatusFilter("all");
+                  setRange(null);
+                  onResetSearch?.();
+                }}
+              >
+                {t("resetFilter")}
+              </Button>
+            ) : (
+              <Link href="/practice/problems">{t("goToPractice")}</Link>
+            )}
+          </Empty>
+        </div>
       ) : (
         <>
           <div

@@ -1,0 +1,50 @@
+[
+  {
+    "name": "01-sidebar-writing-practice-expanded-desktop.png",
+    "route": "/dashboard",
+    "note": "Desktop sidebar with Practice and Writing groups expanded.",
+    "path": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\qa\\reports\\problem-number-icon-exposure-20260623-062429\\01-sidebar-writing-practice-expanded-desktop.png"
+  },
+  {
+    "name": "02-recommendations-tabs-and-type-cards-desktop.png",
+    "route": "/practice/recommendations",
+    "note": "Recommendations page: problem type tabs and 51-54 type cards.",
+    "path": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\qa\\reports\\problem-number-icon-exposure-20260623-062429\\02-recommendations-tabs-and-type-cards-desktop.png"
+  },
+  {
+    "name": "03-problems-tabs-and-table-desktop.png",
+    "route": "/practice/problems",
+    "note": "Problems page: all/51-54 type tabs and problem table number badges.",
+    "path": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\qa\\reports\\problem-number-icon-exposure-20260623-062429\\03-problems-tabs-and-table-desktop.png"
+  },
+  {
+    "name": "04-next-recommendation-cards-desktop.png",
+    "route": "/practice/next",
+    "note": "Next problem page: primary/alternative recommendation cards with question number tags.",
+    "path": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\qa\\reports\\problem-number-icon-exposure-20260623-062429\\04-next-recommendation-cards-desktop.png"
+  },
+  {
+    "name": "05-weakness-recommendation-cards-desktop.png",
+    "route": "/practice/weakness",
+    "note": "Weakness page: recommendation cards with question number tags when data exists.",
+    "path": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\qa\\reports\\problem-number-icon-exposure-20260623-062429\\05-weakness-recommendation-cards-desktop.png"
+  },
+  {
+    "name": "06-sidebar-drawer-writing-practice-expanded-mobile.png",
+    "route": "/dashboard",
+    "note": "Mobile drawer sidebar with Practice and Writing groups expanded.",
+    "path": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\qa\\reports\\problem-number-icon-exposure-20260623-062429\\06-sidebar-drawer-writing-practice-expanded-mobile.png"
+  },
+  {
+    "name": "07-recommendations-tabs-and-type-cards-mobile.png",
+    "route": "/practice/recommendations",
+    "note": "Mobile recommendations page: horizontally scrollable type tabs and type cards.",
+    "path": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\qa\\reports\\problem-number-icon-exposure-20260623-062429\\07-recommendations-tabs-and-type-cards-mobile.png"
+  },
+  {
+    "name": "08-problems-tabs-and-table-mobile.png",
+    "route": "/practice/problems",
+    "note": "Mobile problems page: type tabs and horizontally scrollable table.",
+    "path": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\docs\\qa\\reports\\problem-number-icon-exposure-20260623-062429\\08-problems-tabs-and-table-mobile.png"
+  }
+]
