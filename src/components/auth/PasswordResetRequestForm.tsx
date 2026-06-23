@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { App, Button, Form, Input, Typography } from "antd";
 import { useTranslations } from "next-intl";
+import Link from "next/link";
 
 import { buildAuthRedirectUrl } from "@/lib/auth/redirect-url";
 import { mapSupabaseErrorCode } from "@/lib/auth/error-mapping";
@@ -15,6 +16,9 @@ import {
 const { Paragraph, Text, Title } = Typography;
 
 type Fields = { email: string };
+type PasswordResetRequestFormProps = {
+  initialEmail?: string;
+};
 
 // Cooldown label formatter — duration phrases come from the shared
 // `auth.countdown.*` catalog, wrapped by `auth.cooldown.label` so the resend
@@ -35,15 +39,27 @@ function formatCountdown(totalSeconds: number, tc: CountdownTranslate): string {
 // 도 동일 cooldown 적용해서 사용자가 "왜 안 보내지는지" 즉시 파악 가능.
 const COOLDOWN_STORAGE_KEY = "talkpik:password-reset:cooldown-until";
 
-export function PasswordResetRequestForm() {
+function normalizeEmail(value: string | null | undefined): string | undefined {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : undefined;
+}
+
+export function PasswordResetRequestForm({
+  initialEmail,
+}: PasswordResetRequestFormProps = {}) {
   const t = useTranslations("auth.passwordReset");
   // Cross-namespace: server send-failure copy lives under `auth.error.<reason>.message`.
   const te = useTranslations("auth.error");
   const tc = useTranslations("auth.countdown");
   const tcd = useTranslations("auth.cooldown");
   const { message } = App.useApp();
+  const [form] = Form.useForm<Fields>();
   const [submitting, setSubmitting] = useState(false);
   const [sentTo, setSentTo] = useState<string | null>(null);
+  const normalizedInitialEmail = useMemo(
+    () => normalizeEmail(initialEmail),
+    [initialEmail],
+  );
   const cooldown = useEmailCooldown(
     COOLDOWN_STORAGE_KEY,
     DEFAULT_COOLDOWN_SECONDS,
@@ -56,8 +72,37 @@ export function PasswordResetRequestForm() {
     return tcd("label", { label: formatCountdown(cooldown.remaining, tc) });
   }, [cooldown.remaining, tc, tcd]);
 
+  useEffect(() => {
+    if (!normalizedInitialEmail) return;
+    form.setFieldsValue({ email: normalizedInitialEmail });
+  }, [form, normalizedInitialEmail]);
+
+  useEffect(() => {
+    if (normalizedInitialEmail) return;
+    let ignore = false;
+
+    async function fillFromCurrentUser() {
+      try {
+        const supabase = createSupabaseBrowserClient();
+        const { data } = await supabase.auth.getUser();
+        const email = normalizeEmail(data.user?.email);
+        if (!ignore && email) {
+          form.setFieldsValue({ email });
+        }
+      } catch {
+        // Public password reset still works without a current session.
+      }
+    }
+
+    void fillFromCurrentUser();
+
+    return () => {
+      ignore = true;
+    };
+  }, [form, normalizedInitialEmail]);
+
   async function handleSubmit(values: Fields) {
-    if (cooldown.remaining > 0) return;
+    if (submitting || cooldown.remaining > 0) return;
     setSubmitting(true);
     try {
       const supabase = createSupabaseBrowserClient();
@@ -69,9 +114,19 @@ export function PasswordResetRequestForm() {
       );
       if (error) {
         const code = mapSupabaseErrorCode(error.code);
+        const status =
+          "status" in error && typeof error.status === "number"
+            ? error.status
+            : null;
+        if (code === "user_not_found") {
+          cooldown.start();
+          setSentTo(values.email);
+          return;
+        }
         if (
           code === "over_email_send_rate_limit" ||
-          code === "over_request_rate_limit"
+          code === "over_request_rate_limit" ||
+          status === 429
         ) {
           cooldown.start();
           message.error(t("rateLimited"));
@@ -115,28 +170,44 @@ export function PasswordResetRequestForm() {
             {countdownLabel}
           </Text>
         )}
+        <Paragraph className="password-reset-login-return">
+          <Link href="/login">{t("backToLogin")}</Link>
+        </Paragraph>
       </div>
     );
   }
 
   return (
     <Form
+      form={form}
+      initialValues={
+        normalizedInitialEmail ? { email: normalizedInitialEmail } : undefined
+      }
       data-testid="password-reset-request-form"
       layout="vertical"
       onFinish={handleSubmit}
       requiredMark={false}
+      className="password-reset-request-form"
     >
-      <Paragraph>{t("intro")}</Paragraph>
-      <Paragraph className="!mt-0">
-        <Text type="secondary">{t("sentExpiryNote")}</Text>
-      </Paragraph>
       <Form.Item
+        className="password-reset-email-item"
         label={t("emailLabel")}
         name="email"
         rules={[
           { required: true, message: t("emailRequired") },
           { type: "email", message: t("emailInvalid") },
         ]}
+        extra={
+          <div
+            data-testid="password-reset-guidance"
+            className="password-reset-guide"
+          >
+            <span className="password-reset-guide__line">{t("intro")}</span>
+            <span className="password-reset-guide__line">
+              {t("sentExpiryNote")}
+            </span>
+          </div>
+        }
       >
         <Input autoComplete="email" disabled={cooldown.remaining > 0} />
       </Form.Item>
@@ -147,17 +218,20 @@ export function PasswordResetRequestForm() {
           </Text>
         </Paragraph>
       )}
-      <Form.Item>
+      <Form.Item className="password-reset-submit">
         <Button
           type="primary"
           htmlType="submit"
           block
           loading={submitting}
-          disabled={cooldown.remaining > 0}
+          disabled={submitting || cooldown.remaining > 0}
         >
           {t("submit")}
         </Button>
       </Form.Item>
+      <Paragraph className="password-reset-login-return">
+        <Link href="/login">{t("backToLogin")}</Link>
+      </Paragraph>
     </Form>
   );
 }

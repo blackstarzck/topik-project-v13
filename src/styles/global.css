@@ -4168,6 +4168,77 @@ body {
 }
 
 /*
+ * X-06 /password-reset. Keep the auth request flow inside one card so the
+ * header, form, and escape link read as a single task.
+ */
+.password-reset-card.app-card.app-surface>.ant-card-body,
+.password-reset-card.app-card.app-surface>.ant-card-body:first-child,
+.password-reset-card.app-card.app-surface>.ant-card-body:last-child {
+  padding: 28px 24px 24px;
+}
+
+.password-reset-card__header {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  margin-bottom: 64px;
+}
+
+.password-reset-request-form.ant-form {
+  margin: 0;
+}
+
+.password-reset-guide {
+  color: var(--app-color-text-secondary);
+  font-size: 13px;
+  line-height: 1.55;
+  word-break: keep-all;
+}
+
+.password-reset-guide__line {
+  display: block;
+}
+
+.password-reset-guide__line+.password-reset-guide__line {
+  margin-top: 2px;
+}
+
+.password-reset-request-form .ant-form-item {
+  margin-bottom: 20px;
+}
+
+.password-reset-request-form .password-reset-email-item.ant-form-item {
+  margin-bottom: 64px;
+}
+
+.password-reset-request-form .ant-form-item-label>label {
+  color: var(--app-color-text);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.password-reset-submit.ant-form-item {
+  margin-bottom: 0;
+}
+
+.password-reset-login-return.ant-typography {
+  margin: 14px 0 0;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.password-reset-login-return.ant-typography a {
+  color: var(--app-color-text-secondary);
+  font-size: 16px;
+  font-weight: 400;
+  text-decoration: none;
+}
+
+.password-reset-login-return.ant-typography a:hover {
+  color: var(--app-color-text);
+  text-decoration: underline;
+}
+/*
  * X-12 /auth/verify-email. The visual treatment follows the current reference
  * image while keeping the existing public auth behavior and project token
  * bridge. The card remains within the documented 360-520px auth width.

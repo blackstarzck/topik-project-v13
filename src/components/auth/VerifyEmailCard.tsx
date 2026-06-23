@@ -158,6 +158,12 @@ export function VerifyEmailCard() {
       label: formatCountdown(cooldownRemaining, tc),
     });
   }, [cooldownRemaining, t, tc]);
+  const passwordResetHref = useMemo(() => {
+    const email = (emailValue || emailFromQuery).trim();
+    return email
+      ? `/password-reset?email=${encodeURIComponent(email)}`
+      : "/password-reset";
+  }, [emailValue, emailFromQuery]);
 
   async function handleResend() {
     const trimmed = emailValue.trim();
@@ -364,7 +370,7 @@ export function VerifyEmailCard() {
               {t("loginCta")}
             </Button>
             <Button
-              href="/password-reset"
+              href={passwordResetHref}
               icon={<LockKeyhole aria-hidden="true" />}
               className="verify-email-action-button w-full"
               data-testid="verify-email-password-reset"

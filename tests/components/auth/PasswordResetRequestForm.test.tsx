@@ -11,11 +11,13 @@ import {
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
 
 const resetPasswordForEmailMock = vi.fn();
+const getUserMock = vi.fn();
 const buildAuthRedirectUrlMock = vi.fn();
 
 vi.mock("@/lib/supabase/browser", () => ({
   createSupabaseBrowserClient: () => ({
     auth: {
+      getUser: (...args: unknown[]) => getUserMock(...args),
       resetPasswordForEmail: (...args: unknown[]) =>
         resetPasswordForEmailMock(...args),
     },
@@ -39,6 +41,8 @@ const renderInApp = renderWithIntl;
 beforeEach(() => {
   resetPasswordForEmailMock.mockReset();
   resetPasswordForEmailMock.mockResolvedValue({ error: null });
+  getUserMock.mockReset();
+  getUserMock.mockResolvedValue({ data: { user: null }, error: null });
   // The form's 60s send-cooldown persists to localStorage (keyed by
   // talkpik:password-reset:cooldown-until). Without clearing it, the cooldown
   // started by the first test leaks into the next test, leaving the submit
@@ -58,6 +62,28 @@ afterEach(() => {
 });
 
 describe("PasswordResetRequestForm", () => {
+  it("prefills the email field from the provided initial email", () => {
+    renderInApp(<PasswordResetRequestForm initialEmail="member@example.com" />);
+
+    expect((screen.getByLabelText("이메일") as HTMLInputElement).value).toBe(
+      "member@example.com",
+    );
+  });
+
+  it("prefills the email field from the current auth user when available", async () => {
+    getUserMock.mockResolvedValueOnce({
+      data: { user: { email: "session.member@example.com" } },
+      error: null,
+    });
+    renderInApp(<PasswordResetRequestForm />);
+
+    await waitFor(() => {
+      expect((screen.getByLabelText("이메일") as HTMLInputElement).value).toBe(
+        "session.member@example.com",
+      );
+    });
+  });
+
   it("calls resetPasswordForEmail with redirect URL on submit", async () => {
     renderInApp(<PasswordResetRequestForm />);
 
@@ -93,6 +119,27 @@ describe("PasswordResetRequestForm", () => {
     await waitFor(() => {
       expect(screen.getByText("이메일을 확인하세요")).toBeTruthy();
     });
+  });
+
+  it("shows the same confirmation message for unknown accounts", async () => {
+    resetPasswordForEmailMock.mockResolvedValueOnce({
+      error: { code: "user_not_found" },
+    });
+    renderInApp(<PasswordResetRequestForm />);
+
+    fireEvent.change(screen.getByLabelText("이메일"), {
+      target: { value: "missing@example.com" },
+    });
+    await act(async () => {
+      fireEvent.click(
+        screen.getByRole("button", { name: "재설정 링크 보내기" }),
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("이메일을 확인하세요")).toBeTruthy();
+    });
+    expect(screen.getByText("missing@example.com")).toBeTruthy();
   });
 
   it("clears loading and shows an error when the redirect URL builder throws (D-2)", async () => {
