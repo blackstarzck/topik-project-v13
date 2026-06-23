@@ -14,56 +14,28 @@
     th { background: #f3f4f6; }
     code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
     pre { overflow: auto; background: #0f172a; color: #e5e7eb; padding: 16px; border-radius: 8px; }
-    .warn { border-left: 4px solid #f59e0b; }
     .ok { border-left: 4px solid #10b981; }
   </style>
 </head>
 <body>
   <main>
     <h1>Writing API v13 Screen Map</h1>
-    <p>Last synced: 2026-06-19</p>
+    <p>Last synced: 2026-06-23</p>
     <p>Primary sources: <a href="https://api.dotoretopik.com/docs">Swagger UI</a>, <a href="https://api.dotoretopik.com/openapi.json">OpenAPI JSON</a></p>
-
     <section class="card ok">
       <h2>Submit Contract</h2>
-      <p>The v13 app sends the external writing submission payload according to the Swagger endpoint request example.</p>
+      <p>The live contract no longer accepts <code>task_id</code>. Submit <code>task_type</code> and <code>text</code>; include <code>question_id</code> only when the problem came from the external writing task list.</p>
       <pre>{
-  "task_type": "Q51",
-  "task_id": "Q51",
+  "task_type": "Q54",
+  "question_id": "topik-writing-54-0001",
   "text": "student answer...",
-  "user_id": "current"
+  "user_id": "112a6b57-9564-4990-8bf3-6b536d622008"
 }</pre>
-      <p><code>task_id</code> is not the local Supabase <code>problem_id</code> UUID. It is the external TOPIK task code: <code>Q51</code>, <code>Q52</code>, <code>Q53</code>, or <code>Q54</code>.</p>
+      <p><code>task_type</code> is one of <code>Q51</code>, <code>Q52</code>, <code>Q53</code>, or <code>Q54</code>. <code>question_id</code>, <code>user_id</code>, <code>lang</code>, and <code>passage_context</code> are optional in the live schema.</p>
     </section>
-
-    <section class="card warn">
-      <h2>OpenAPI Gap</h2>
-      <p><code>POST /api/writing/submit</code> tells clients to poll <code>GET /api/evaluation/{submission_id}</code>, but the current live <code>/openapi.json</code> does not register any <code>/api/evaluation/...</code> path. Keep this mismatch visible when changing the feedback flow.</p>
-    </section>
-
-    <section class="card">
-      <h2>Screen / Server Action / API Map</h2>
-      <table>
-        <thead><tr><th>v13 area</th><th>Role</th><th>External API</th><th>Notes</th></tr></thead>
-        <tbody>
-          <tr><td>Writing answer screen</td><td>User writes and submits an answer.</td><td><code>POST /api/writing/submit</code></td><td>The server action calls the external API. External API secrets stay server-side.</td></tr>
-          <tr><td><code>submitWritingAction</code></td><td>Persists local submission, submits to external evaluation, and syncs state.</td><td><code>POST /api/writing/submit</code></td><td><code>task_id = task_type</code>, <code>user_id = current</code>.</td></tr>
-          <tr><td>Analysis/result screens</td><td>Poll async evaluation and fetch feedback.</td><td><code>GET /api/evaluation/{submission_id}</code>, <code>GET /api/evaluation/{submission_id}/feedback</code></td><td>These paths are mentioned by Swagger text but absent from live paths.</td></tr>
-          <tr><td>Local DB sync</td><td>Stores external submission and feedback in Supabase.</td><td>External API response data</td><td>Uses <code>create_external_writing_submission</code> and <code>sync_external_writing_feedback</code>.</td></tr>
-        </tbody>
-      </table>
-    </section>
-
-    <section class="card">
-      <h2>Flow</h2>
-      <ol>
-        <li>The learner writes a TOPIK 51-54 answer.</li>
-        <li>The v13 server action creates or updates the local submission row and calls <code>POST /api/writing/submit</code>.</li>
-        <li>The external API returns HTTP 202 with <code>submission_id</code> and <code>status: processing</code>.</li>
-        <li>The app polls for grading, then syncs feedback into the local database when graded.</li>
-        <li>The feedback screen displays score, summary, sentence-level corrections, and next actions.</li>
-      </ol>
-    </section>
+    <section class="card ok"><h2>Evaluation Lookup</h2><p>The previous OpenAPI gap is closed. The live schema now registers <code>GET /api/evaluation/{submission_id}</code> and <code>GET /api/evaluation/{submission_id}/feedback</code>.</p></section>
+    <section class="card"><h2>Screen / Server Action / API Map</h2><table><thead><tr><th>v13 area</th><th>Role</th><th>External API</th><th>Notes</th></tr></thead><tbody><tr><td>Writing answer screen</td><td>User writes and submits an answer.</td><td><code>POST /api/writing/submit</code></td><td>The server action calls the external API. External API secrets stay server-side.</td></tr><tr><td><code>submitWritingAction</code></td><td>Persists local submission, submits to external evaluation, and syncs state.</td><td><code>POST /api/writing/submit</code></td><td>Use <code>task_type = Q51..Q54</code>; use optional <code>question_id</code> only for external task-list questions.</td></tr><tr><td>Analysis/result screens</td><td>Poll async evaluation and fetch feedback.</td><td><code>GET /api/evaluation/{submission_id}</code>, <code>GET /api/evaluation/{submission_id}/feedback</code></td><td>Registered in the current live OpenAPI paths.</td></tr><tr><td>Local DB sync</td><td>Stores external submission and feedback in Supabase.</td><td>External API response data</td><td>Uses <code>create_external_writing_submission</code> and <code>sync_external_writing_feedback</code>.</td></tr></tbody></table></section>
+    <section class="card"><h2>Flow</h2><ol><li>The learner writes a TOPIK 51-54 answer.</li><li>The v13 server action creates or updates the local submission row and calls <code>POST /api/writing/submit</code>.</li><li>The external API returns HTTP 202 with <code>submission_id</code> and a processing status.</li><li>The app polls <code>GET /api/evaluation/{submission_id}</code> until <code>status</code> is <code>graded</code>.</li><li>The app fetches <code>GET /api/evaluation/{submission_id}/feedback</code> and syncs feedback into the local database.</li></ol></section>
   </main>
 </body>
 </html>

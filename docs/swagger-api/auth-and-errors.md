@@ -1,14 +1,14 @@
 # Auth And Errors
 
 Source: [Swagger UI](https://api.dotoretopik.com/docs) / [OpenAPI JSON](https://api.dotoretopik.com/openapi.json)
-Last synced: 2026-06-19
+Last synced: 2026-06-23
 
 ## Security Schemes
 
 | Scheme | Type | In | Name | Description |
 | --- | --- | --- | --- | --- |
-| `BearerAuth` | http | - | - | JWT bearer authentication. |
-| `CampaignApiKey` | apiKey | header | X-API-Key | API key for external campaign endpoints. |
+| `BearerAuth` | http | - | - | JWT Bearer token. Dashboard tokens come from POST /api/eval/auth/login. |
+| `CampaignApiKey` | apiKey | header | X-API-Key | Shared campaign API key for the /api/external/campaign/* endpoints. |
 
 ## Header Examples
 
@@ -32,25 +32,6 @@ Multipart upload endpoints:
 X-API-Key: <campaign_api_key>
 Content-Type: multipart/form-data
 ```
-
-## Common Status Codes
-
-| Status | Meaning |
-| --- | --- |
-| 200 | Request succeeded. |
-| 201 | Resource created. |
-| 202 | Async job accepted. Poll with the returned `submission_id` or task id. |
-| 400 | Invalid request body or parameters. |
-| 401 | Missing or invalid JWT/API key. |
-| 403 | Authenticated but not allowed. |
-| 404 | Resource not found. |
-| 422 | OpenAPI/Pydantic validation error. See [HTTPValidationError](./schemas/common.md#httpvalidationerror). |
-| 429 | Rate limit exceeded. |
-| 500 | Server error. |
-
-## Rate Limit Notes
-
-The live Swagger description explicitly marks writing submission as `5 requests/minute`. If another endpoint description states a more specific limit, treat the endpoint description as authoritative.
 
 ## Error Schema
 

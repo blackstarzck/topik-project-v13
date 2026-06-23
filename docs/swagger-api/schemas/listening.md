@@ -1,7 +1,7 @@
 # Listening Schemas
 
 Source: [OpenAPI JSON](https://api.dotoretopik.com/openapi.json)
-Last synced: 2026-06-19
+Last synced: 2026-06-23
 
 ## Schema Index
 
@@ -100,7 +100,7 @@ Response for GET /api/listening/history.
 | --- | --- | --- | --- | --- |
 | `user_id` | yes | string | Identifier of the user whose history is returned. | user_a1b2c3d4 |
 | `total` | yes | integer | Total number of history items matching the query (across all pages). | 42 |
-| `items` | no | array<[ListeningHistoryItem](./listening.md#listeninghistoryitem)> | History items in the current page. | [{"audio_play_count":2,"correct_answer":2,"is_correct":true,"level":4,"problem_id":"3f9a7c2e-1b4d-4a6e-9c8f-2d1e0b5a6c7d","question_type":"dialogue","session_id":"8c1e0b5a-6c7d-4a6e-9c8f-2d1e0b5a6c7d","submission_id":"a1b2c3d4-5e6f-4a7b-8c9d-0e1f2a3b4c5d","submitted_at":"2026-06-08T09:31:00Z","time_spent_seconds":45,"user_answer":2}] |
+| `items` | no | array<[ListeningHistoryItem](./listening.md#listeninghistoryitem)> | History items in the current page. | [{"audio_play_count":2,"correct_answer":2,"is_correct":true,"level":4,"problem_id":"3f9a7c2e-1b4d-4a6e-9c8f-2d1e0b5a6c7d","question_type":"dialogue","session_id":"8c1e0b5a-6c7d-4a6e-9c8f-2d1e0b5a6c7d","submission_id":"a1b2c3d4-5e6f-4a7b-8c9d-0e1f2a3b4c5d","su? |
 
 ## ListeningProblemDTO
 
@@ -181,12 +181,12 @@ Response for a created/retrieved listening session.
 | --- | --- | --- | --- | --- |
 | `id` | yes | string | Unique session identifier (UUID). | 8c1e0b5a-6c7d-4a6e-9c8f-2d1e0b5a6c7d |
 | `config` | yes | object | Session configuration echoed back (target_level, question_types, question_count, lang). | {"lang":"ko","question_count":3,"question_types":["dialogue"],"target_level":4} |
-| `problems` | yes | array<[ListeningProblemDTO](./listening.md#listeningproblemdto)> | Generated problems for the session (correct answers hidden). | [{"audio_duration_seconds":18,"choices":[{"number":1,"text":"오후 두 시"},{"number":2,"text":"오후 세 시"}],"created_at":"2026-06-08T09:30:00Z","difficulty":"medium","id":"3f9a7c2e-1b4d-4a6e-9c8f-2d1e0b5a6c7d","level":4,"question":"남자는 몇 시에 회의를 시작합니까?","question_type":"dialogue"}] |
+| `problems` | yes | array<[ListeningProblemDTO](./listening.md#listeningproblemdto)> | Generated problems for the session (correct answers hidden). | [{"audio_duration_seconds":18,"choices":[{"number":1,"text":"오후 두 시"},{"number":2,"text":"오후 세 시"}],"created_at":"2026-06-08T09:30:00Z","difficulty":"medium","id":"3f9a7c2e-1b4d-4a6e-9c8f-2d1e0b5a6c7d","level":4,"question":"남자는 몇 시에 회의를 시작합니까?","question_type? |
 | `current_index` | no | integer | 0-based index of the question the user is currently on. | 0 |
 | `total_questions` | yes | integer | Total number of questions in the session. | 3 |
 | `status` | yes | string | Session status. One of: 'in_progress', 'completed', 'abandoned'. | in_progress |
 | `started_at` | yes | string | ISO 8601 timestamp when the session started. | 2026-06-08T09:30:00Z |
-| `ai_audio_notice` | no | string | Disclosure that audio is AI-generated (OpenRAIL-M model). | default: "Âm thanh trong bài luyện nghe này được tạo bởi AI, không phải giọng người thật." |
+| `ai_audio_notice` | no | string | Disclosure that audio is AI-generated (OpenRAIL-M model). | default: Âm thanh trong bài luyện nghe này được tạo bởi AI, không phải giọng người thật. |
 
 ## ListeningSessionResultsResponse
 
@@ -195,7 +195,7 @@ Response for GET session results.
 | Field | Required | Type | Description | Example / Default |
 | --- | --- | --- | --- | --- |
 | `session_id` | yes | string | Identifier of the session these results belong to. | 8c1e0b5a-6c7d-4a6e-9c8f-2d1e0b5a6c7d |
-| `submissions` | no | array<[ListeningSubmissionItem](./listening.md#listeningsubmissionitem)> | All submissions recorded for the session, in order. | [{"audio_play_count":2,"correct_answer":2,"explanation":"","is_correct":true,"problem_id":"3f9a7c2e-1b4d-4a6e-9c8f-2d1e0b5a6c7d","question_type":"dialogue","submission_id":"a1b2c3d4-5e6f-4a7b-8c9d-0e1f2a3b4c5d","submitted_at":"2026-06-08T09:31:00Z","time_spent_seconds":45,"user_answer":2,"wrong_analysis":""}] |
+| `submissions` | no | array<[ListeningSubmissionItem](./listening.md#listeningsubmissionitem)> | All submissions recorded for the session, in order. | [{"audio_play_count":2,"correct_answer":2,"explanation":"","is_correct":true,"problem_id":"3f9a7c2e-1b4d-4a6e-9c8f-2d1e0b5a6c7d","question_type":"dialogue","submission_id":"a1b2c3d4-5e6f-4a7b-8c9d-0e1f2a3b4c5d","submitted_at":"2026-06-08T09:31:00Z","time_spen? |
 | `summary` | yes | [ListeningSessionSummary](./listening.md#listeningsessionsummary) | Aggregate statistics for the session. | {"accuracy":0.67,"average_audio_plays":1.5,"correct_count":2,"total_questions":3,"total_time_seconds":135} |
 
 ## ListeningSessionSummary

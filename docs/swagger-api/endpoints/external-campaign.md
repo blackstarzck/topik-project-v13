@@ -1,7 +1,7 @@
 # External Campaign API
 
 Source: [Swagger UI](https://api.dotoretopik.com/docs) / [OpenAPI JSON](https://api.dotoretopik.com/openapi.json)
-Last synced: 2026-06-19
+Last synced: 2026-06-23
 
 Scope: External campaign upload, submission, contact, and waitlist
 
@@ -9,30 +9,32 @@ Scope: External campaign upload, submission, contact, and waitlist
 
 | Method | Path | Summary | Auth |
 | --- | --- | --- | --- |
-| POST | [`/api/external/campaign/contact`](#post-api-external-campaign-contact) | Submit a 'Contact us' inquiry (general lead / support) | CampaignApiKey |
-| POST | [`/api/external/campaign/follow-up`](#post-api-external-campaign-follow-up) | Submit the post-result satisfaction survey | CampaignApiKey |
+| POST | [`/api/external/campaign/uploads`](#post-api-external-campaign-uploads) | Upload an answer-sheet attachment (step 1 of submission) | CampaignApiKey |
 | POST | [`/api/external/campaign/submissions`](#post-api-external-campaign-submissions) | Create a campaign submission (step 2, accepted for review) | CampaignApiKey |
 | GET | [`/api/external/campaign/submissions/{submission_id}`](#get-api-external-campaign-submissions-submission-id) | Poll the status / result of a submission | CampaignApiKey |
-| POST | [`/api/external/campaign/uploads`](#post-api-external-campaign-uploads) | Upload an answer-sheet attachment (step 1 of submission) | CampaignApiKey |
 | POST | [`/api/external/campaign/waitlist`](#post-api-external-campaign-waitlist) | Join the landing-page waitlist (top-of-funnel lead) | CampaignApiKey |
+| POST | [`/api/external/campaign/follow-up`](#post-api-external-campaign-follow-up) | Submit the post-result satisfaction survey | CampaignApiKey |
+| POST | [`/api/external/campaign/contact`](#post-api-external-campaign-contact) | Submit a 'Contact us' inquiry (general lead / support) | CampaignApiKey |
 
-## POST /api/external/campaign/contact
+## POST /api/external/campaign/uploads
 
-Summary: Submit a 'Contact us' inquiry (general lead / support)
+Summary: Upload an answer-sheet attachment (step 1 of submission)
 
 Auth: CampaignApiKey
 
 ### Description
 
-Capture a landing-page "Contact us" inquiry (general lead / support).
+Step 1 of a submission: upload one attachment and get back a public URL.
 
-Send ``name``, ``email``, ``message`` plus optional ``affiliation``,
-``inquiry_type``, ``locale`` and attribution fields. Append-only and keyed
-by email only (no FK to submissions). Independent of scoring — this is
-top-of-funnel contact capture from the v4 modal. Returns the row ``id`` and
-``email``.
+Send a single ``multipart/form-data`` part named ``file``. Allowed types:
+JPEG, PNG, WebP, HEIC/HEIF, PDF, or plain text (max 20 MB). Content is
+validated against its declared MIME type via magic bytes.
 
-문의 양식을 제출합니다 (추가 전용).
+Returns ``url`` (the public CDN URL), ``key``, ``content_type`` and
+``bytes``. Pass ``url`` back as ``image_url`` (or one entry of
+``image_urls``) on the following POST /submissions call.
+
+업로드한 파일의 공개 URL을 받아 /submissions의 image_url로 전달합니다.
 
 ### Parameters
 
@@ -42,73 +44,30 @@ top-of-funnel contact capture from the v4 modal. Returns the row ``id`` and
 
 ### Request Body
 
-Media type: `application/json`
+Media type: `multipart/form-data`
 
-Schema: [CampaignContactRequest](../schemas/external-campaign.md#campaigncontactrequest)
-
-### Responses
-
-| Status | Description | Media | Schema |
-| --- | --- | --- | --- |
-| 201 | Inquiry stored (append-only). | `application/json` | [CampaignContactResponse](../schemas/external-campaign.md#campaigncontactresponse) |
-| 401 | Missing or invalid X-API-Key. | - | - |
-| 422 | Request body fails validation. | - | - |
-
-Response 201 example:
-
-```json
-{
-  "id": 42,
-  "email": "learner@example.com",
-  "created_at": "2026-06-08T09:30:00Z"
-}
-```
-
-## POST /api/external/campaign/follow-up
-
-Summary: Submit the post-result satisfaction survey
-
-Auth: CampaignApiKey
-
-### Description
-
-Capture the post-result satisfaction / willingness-to-pay survey.
-
-Send ``email`` plus survey fields (``helpfulness_score``,
-``most_helpful_part``, ``retry_interest``,
-``ai_feedback_interest_after_result``, ``paid_beta_interest``,
-``freeform_feedback``) and optional attribution. Append-only and keyed by
-email only (no FK to submissions). Returns the new row ``id`` and ``email``.
-
-결과 확인 후 만족도 설문을 제출합니다 (추가 전용).
-
-### Parameters
-
-| Name | In | Required | Type | Description |
-| --- | --- | --- | --- | --- |
-| `X-API-Key` | header | no | string \| null |  |
-
-### Request Body
-
-Media type: `application/json`
-
-Schema: [CampaignFollowUpRequest](../schemas/external-campaign.md#campaignfollowuprequest)
+Schema: [Body_upload_attachment_api_external_campaign_uploads_post](../schemas/external-campaign.md#body-upload-attachment-api-external-campaign-uploads-post)
 
 ### Responses
 
 | Status | Description | Media | Schema |
 | --- | --- | --- | --- |
-| 201 | Survey response stored (append-only). | `application/json` | [CampaignFollowUpResponse](../schemas/external-campaign.md#campaignfollowupresponse) |
+| 201 | Stored. Use `url` as `image_url` on POST /submissions. | `application/json` | [CampaignUploadResponse](../schemas/external-campaign.md#campaignuploadresponse) |
+| 400 | Empty upload (zero bytes). | - | - |
 | 401 | Missing or invalid X-API-Key. | - | - |
-| 422 | Request body fails validation. | - | - |
+| 413 | File exceeds the 20 MB limit. | - | - |
+| 415 | Unsupported file type, or file content does not match the declared Content-Type (magic-byte check failed). | - | - |
+| 422 | Validation Error | `application/json` | [HTTPValidationError](../schemas/common.md#httpvalidationerror) |
+| 502 | Storage backend (SeaweedFS) upload failed. | - | - |
 
 Response 201 example:
 
 ```json
 {
-  "id": 42,
-  "email": "learner@example.com",
-  "created_at": "2026-06-08T09:30:00Z"
+  "url": "https://cdn.example.com/campaign-uploads/uuid.jpg",
+  "key": "campaign-uploads/uuid.jpg",
+  "content_type": "image/jpeg",
+  "bytes": 348512
 }
 ```
 
@@ -221,61 +180,6 @@ Response 200 example:
 }
 ```
 
-## POST /api/external/campaign/uploads
-
-Summary: Upload an answer-sheet attachment (step 1 of submission)
-
-Auth: CampaignApiKey
-
-### Description
-
-Step 1 of a submission: upload one attachment and get back a public URL.
-
-Send a single ``multipart/form-data`` part named ``file``. Allowed types:
-JPEG, PNG, WebP, HEIC/HEIF, PDF, or plain text (max 20 MB). Content is
-validated against its declared MIME type via magic bytes.
-
-Returns ``url`` (the public CDN URL), ``key``, ``content_type`` and
-``bytes``. Pass ``url`` back as ``image_url`` (or one entry of
-``image_urls``) on the following POST /submissions call.
-
-업로드한 파일의 공개 URL을 받아 /submissions의 image_url로 전달합니다.
-
-### Parameters
-
-| Name | In | Required | Type | Description |
-| --- | --- | --- | --- | --- |
-| `X-API-Key` | header | no | string \| null |  |
-
-### Request Body
-
-Media type: `multipart/form-data`
-
-Schema: [Body_upload_attachment_api_external_campaign_uploads_post](../schemas/external-campaign.md#body-upload-attachment-api-external-campaign-uploads-post)
-
-### Responses
-
-| Status | Description | Media | Schema |
-| --- | --- | --- | --- |
-| 201 | Stored. Use `url` as `image_url` on POST /submissions. | `application/json` | [CampaignUploadResponse](../schemas/external-campaign.md#campaignuploadresponse) |
-| 400 | Empty upload (zero bytes). | - | - |
-| 401 | Missing or invalid X-API-Key. | - | - |
-| 413 | File exceeds the 20 MB limit. | - | - |
-| 415 | Unsupported file type, or file content does not match the declared Content-Type (magic-byte check failed). | - | - |
-| 422 | Validation Error | `application/json` | [HTTPValidationError](../schemas/common.md#httpvalidationerror) |
-| 502 | Storage backend (SeaweedFS) upload failed. | - | - |
-
-Response 201 example:
-
-```json
-{
-  "url": "https://cdn.example.com/campaign-uploads/uuid.jpg",
-  "key": "campaign-uploads/uuid.jpg",
-  "content_type": "image/jpeg",
-  "bytes": 348512
-}
-```
-
 ## POST /api/external/campaign/waitlist
 
 Summary: Join the landing-page waitlist (top-of-funnel lead)
@@ -321,5 +225,101 @@ Response 201 example:
   "created_at": "2026-06-08T09:30:00Z",
   "updated_at": "2026-06-08T09:30:00Z",
   "submission_count": 1
+}
+```
+
+## POST /api/external/campaign/follow-up
+
+Summary: Submit the post-result satisfaction survey
+
+Auth: CampaignApiKey
+
+### Description
+
+Capture the post-result satisfaction / willingness-to-pay survey.
+
+Send ``email`` plus survey fields (``helpfulness_score``,
+``most_helpful_part``, ``retry_interest``,
+``ai_feedback_interest_after_result``, ``paid_beta_interest``,
+``freeform_feedback``) and optional attribution. Append-only and keyed by
+email only (no FK to submissions). Returns the new row ``id`` and ``email``.
+
+결과 확인 후 만족도 설문을 제출합니다 (추가 전용).
+
+### Parameters
+
+| Name | In | Required | Type | Description |
+| --- | --- | --- | --- | --- |
+| `X-API-Key` | header | no | string \| null |  |
+
+### Request Body
+
+Media type: `application/json`
+
+Schema: [CampaignFollowUpRequest](../schemas/external-campaign.md#campaignfollowuprequest)
+
+### Responses
+
+| Status | Description | Media | Schema |
+| --- | --- | --- | --- |
+| 201 | Survey response stored (append-only). | `application/json` | [CampaignFollowUpResponse](../schemas/external-campaign.md#campaignfollowupresponse) |
+| 401 | Missing or invalid X-API-Key. | - | - |
+| 422 | Request body fails validation. | - | - |
+
+Response 201 example:
+
+```json
+{
+  "id": 42,
+  "email": "learner@example.com",
+  "created_at": "2026-06-08T09:30:00Z"
+}
+```
+
+## POST /api/external/campaign/contact
+
+Summary: Submit a 'Contact us' inquiry (general lead / support)
+
+Auth: CampaignApiKey
+
+### Description
+
+Capture a landing-page "Contact us" inquiry (general lead / support).
+
+Send ``name``, ``email``, ``message`` plus optional ``affiliation``,
+``inquiry_type``, ``locale`` and attribution fields. Append-only and keyed
+by email only (no FK to submissions). Independent of scoring — this is
+top-of-funnel contact capture from the v4 modal. Returns the row ``id`` and
+``email``.
+
+문의 양식을 제출합니다 (추가 전용).
+
+### Parameters
+
+| Name | In | Required | Type | Description |
+| --- | --- | --- | --- | --- |
+| `X-API-Key` | header | no | string \| null |  |
+
+### Request Body
+
+Media type: `application/json`
+
+Schema: [CampaignContactRequest](../schemas/external-campaign.md#campaigncontactrequest)
+
+### Responses
+
+| Status | Description | Media | Schema |
+| --- | --- | --- | --- |
+| 201 | Inquiry stored (append-only). | `application/json` | [CampaignContactResponse](../schemas/external-campaign.md#campaigncontactresponse) |
+| 401 | Missing or invalid X-API-Key. | - | - |
+| 422 | Request body fails validation. | - | - |
+
+Response 201 example:
+
+```json
+{
+  "id": 42,
+  "email": "learner@example.com",
+  "created_at": "2026-06-08T09:30:00Z"
 }
 ```
