@@ -532,6 +532,7 @@
       "mascotAlt": "TALKPIK study helper character",
       "title": "We sent the verification email",
       "body": "We received your sign-up request. If this is a new account, a verification email will arrive at the email below. Open the link in that email to finish signing up.",
+      "existingAccountHeading": "Already have an account?",
       "existingAccountNote": "If you've created an account before, log in or reset your password.",
       "loginCta": "Log in",
       "passwordResetCta": "Reset password",

@@ -532,6 +532,7 @@
       "mascotAlt": "Nhân vật trợ lý học tập TALKPIK",
       "title": "Chúng tôi đã gửi email xác minh",
       "body": "Chúng tôi đã nhận yêu cầu đăng ký. Nếu đây là tài khoản mới, email xác minh sẽ được gửi đến email bên dưới. Hãy mở liên kết trong email để hoàn tất đăng ký.",
+      "existingAccountHeading": "Bạn đã có tài khoản?",
       "existingAccountNote": "Nếu bạn từng tạo tài khoản trước đây, hãy đăng nhập hoặc đặt lại mật khẩu.",
       "loginCta": "Đăng nhập",
       "passwordResetCta": "Đặt lại mật khẩu",

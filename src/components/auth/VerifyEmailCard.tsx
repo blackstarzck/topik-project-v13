@@ -12,12 +12,19 @@
 // 시 cooldown 초기화 = 한도 우회 가능했음 (Codex 검수 적발).
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { App, Button, Divider, Form, Input, Typography } from "antd";
+import {
+  Inbox,
+  LogIn,
+  LockKeyhole,
+  SendHorizontal,
+  UserRoundPlus,
+} from "lucide-react";
 
-import { AuthMascot } from "@/components/auth/AuthMascot";
 import { AppCard } from "@/components/shared/AppCard";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { buildAuthRedirectUrl } from "@/lib/auth/redirect-url";
@@ -208,26 +215,49 @@ export function VerifyEmailCard() {
   }
 
   return (
-    <AppCard aria-live="polite">
-      <div className="flex w-full flex-col gap-4">
+    <AppCard
+      aria-live="polite"
+      className="verify-email-card"
+      data-testid="verify-email-card"
+    >
+      <div className="verify-email-card__content">
         {/* §1 마스코트/일러스트 — 안내 카피를 가리지 않게 상단, 대체 텍스트 필수 */}
-        <AuthMascot alt={t("mascotAlt")} emoji="📬" size={48} />
-        <Title level={3} className="!mb-0">
+        <div className="verify-email-hero-art" data-testid="verify-email-art">
+          <Image
+            src="/assets/mail-box.png"
+            alt={t("mascotAlt")}
+            width={152}
+            height={152}
+            priority
+            className="verify-email-hero-art__image"
+          />
+        </div>
+
+        <Title level={2} className="verify-email-title">
           {t("title")}
         </Title>
-        <Paragraph className="!mb-0">{t("body")}</Paragraph>
+        <Paragraph className="verify-email-body">{t("body")}</Paragraph>
 
         {emailFromQuery && (
-          <Text type="secondary">
-            {t("signupEmailPrefix")} <strong>{emailFromQuery}</strong>
-          </Text>
+          <div
+            className="verify-email-summary"
+            data-testid="verify-email-summary"
+          >
+            <Text className="verify-email-summary__label">
+              {t("signupEmailPrefix")}
+            </Text>
+            <Text className="verify-email-summary__email">
+              {emailFromQuery}
+            </Text>
+          </div>
         )}
 
-        <Form layout="vertical">
+        <Form layout="vertical" className="verify-email-form">
           <Form.Item label={t("resendOtherLabel")} htmlFor="verify-email-input">
             <Input
               id="verify-email-input"
               type="email"
+              size="large"
               value={emailValue}
               onChange={(event) => setEmailValue(event.target.value)}
               placeholder={t("emailPlaceholder")}
@@ -238,43 +268,60 @@ export function VerifyEmailCard() {
         </Form>
 
         {countdownLabel && (
-          <Text type="secondary" data-testid="verify-email-countdown">
+          <Text
+            type="secondary"
+            className="verify-email-countdown"
+            data-testid="verify-email-countdown"
+          >
             {countdownLabel}
           </Text>
         )}
 
         <Button
           type="primary"
+          size="large"
           block
           disabled={cooldownRemaining > 0}
           loading={resending}
           onClick={() => void handleResend()}
+          icon={<SendHorizontal aria-hidden="true" />}
+          className="verify-email-resend-button"
           data-testid="verify-email-resend"
         >
           {t("resend")}
         </Button>
 
-        <Text type="secondary">{t("frequentNote")}</Text>
+        <Text
+          type="secondary"
+          className="verify-email-note"
+          data-testid="verify-email-frequent-note"
+        >
+          {t("frequentNote")}
+        </Text>
 
         {/* §5 이메일 안 왔을 때 안내 — primary 재전송과 시각적 위계 구분(secondary).
             스팸함 확인 / 받은편지함 열기 / 다른 이메일로 가입하기. */}
-        <Divider className="!my-1" />
-        <div data-testid="verify-email-help">
-          <Text strong className="!text-xs">
-            {t("noEmailHeading")}
-          </Text>
-          <Paragraph type="secondary" className="!mb-2 !mt-1 !text-xs">
+        <Divider className="verify-email-divider" />
+        <div className="verify-email-support" data-testid="verify-email-help">
+          <div className="verify-email-support__heading">
+            <Text>{t("noEmailHeading")}</Text>
+          </div>
+          <Paragraph type="secondary" className="verify-email-support__body">
             {t("noEmailBody")}
           </Paragraph>
-          <div className="flex flex-wrap gap-2">
+          <div
+            className="grid grid-cols-2 gap-3"
+            data-testid="verify-email-help-actions"
+          >
             {(() => {
               const inboxUrl = inboxUrlForEmail(emailValue || emailFromQuery);
               return inboxUrl ? (
                 <Button
-                  size="small"
                   href={inboxUrl}
                   target="_blank"
                   rel="noopener noreferrer"
+                  icon={<Inbox aria-hidden="true" />}
+                  className="verify-email-action-button w-full"
                   data-testid="verify-email-open-inbox"
                 >
                   {t("openInbox")}
@@ -282,25 +329,44 @@ export function VerifyEmailCard() {
               ) : null;
             })()}
             <Link href="/sign-up">
-              <Button size="small">{t("signUpDifferentEmail")}</Button>
+              <Button
+                icon={<UserRoundPlus aria-hidden="true" />}
+                className="verify-email-action-button w-full"
+                data-testid="verify-email-sign-up-different"
+              >
+                {t("signUpDifferentEmail")}
+              </Button>
             </Link>
           </div>
         </div>
 
-        <Divider className="!my-1" />
+        <Divider className="verify-email-divider" />
         <div
-          className="flex flex-col gap-2"
+          className="verify-email-support verify-email-support--existing"
           data-testid="verify-email-existing-account-actions"
         >
-          <Paragraph type="secondary" className="!mb-0">
+          <div className="verify-email-support__heading">
+            <Text>{t("existingAccountHeading")}</Text>
+          </div>
+          <Paragraph type="secondary" className="verify-email-support__body">
             {t("existingAccountNote")}
           </Paragraph>
-          <div className="flex flex-wrap gap-2">
-            <Button href="/login" data-testid="verify-email-login">
+          <div
+            className="grid grid-cols-2 gap-3"
+            data-testid="verify-email-existing-account-button-row"
+          >
+            <Button
+              href="/login"
+              icon={<LogIn aria-hidden="true" />}
+              className="verify-email-action-button w-full"
+              data-testid="verify-email-login"
+            >
               {t("loginCta")}
             </Button>
             <Button
               href="/password-reset"
+              icon={<LockKeyhole aria-hidden="true" />}
+              className="verify-email-action-button w-full"
               data-testid="verify-email-password-reset"
             >
               {t("passwordResetCta")}
@@ -309,7 +375,7 @@ export function VerifyEmailCard() {
         </div>
 
         {/* §6 도움말/escape route — 항상 노출 */}
-        <Paragraph className="!mb-0 text-center">
+        <Paragraph className="verify-email-escape-links">
           <Link href="/login">{t("escapeToLogin")}</Link>
           {" · "}
           <Link href="/sign-up">{t("escapeSignUp")}</Link>

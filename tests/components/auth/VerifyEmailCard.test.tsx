@@ -70,12 +70,47 @@ describe("VerifyEmailCard", () => {
     ).toBeTruthy();
     expect(screen.getByText("가입 이메일:")).toBeTruthy();
     expect(screen.getByText("u@example.com")).toBeTruthy();
+    expect(screen.getByTestId("verify-email-summary")).toBeTruthy();
+    expect(
+      screen.getByTestId("verify-email-summary").querySelector("svg"),
+    ).toBeNull();
+    expect(screen.getByTestId("verify-email-card").className).toContain(
+      "verify-email-card",
+    );
     expect(screen.getByLabelText("인증 메일을 받을 이메일")).toBeTruthy();
     expect(
       screen.getByTestId("verify-email-existing-account-actions"),
     ).toBeTruthy();
+    expect(
+      screen.getByTestId("verify-email-frequent-note").querySelector("svg"),
+    ).toBeNull();
+    expect(screen.getByText("이미 계정이 있나요?")).toBeTruthy();
+    expect(
+      document.querySelectorAll(".verify-email-support__heading svg"),
+    ).toHaveLength(0);
     expect(screen.queryByText(/이미 가입된 이메일/)).toBeNull();
     expect(screen.queryByText(/계정이 존재/)).toBeNull();
+  });
+
+  it("keeps secondary action buttons in equal-width pairs", () => {
+    renderInApp(<VerifyEmailCard />);
+
+    expect(screen.getByTestId("verify-email-help-actions").className).toContain(
+      "grid-cols-2",
+    );
+    expect(
+      screen.getByTestId("verify-email-existing-account-button-row").className,
+    ).toContain("grid-cols-2");
+
+    expect(
+      screen.getByTestId("verify-email-sign-up-different").className,
+    ).toContain("w-full");
+    expect(screen.getByTestId("verify-email-login").className).toContain(
+      "w-full",
+    );
+    expect(screen.getByTestId("verify-email-password-reset").className).toContain(
+      "w-full",
+    );
   });
 
   it("resends the verification email with the callback redirect URL", async () => {

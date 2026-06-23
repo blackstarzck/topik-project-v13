@@ -532,6 +532,7 @@
       "mascotAlt": "TALKPIK 학습 도우미 캐릭터",
       "title": "인증 메일을 보냈어요",
       "body": "가입 요청을 확인했어요. 새 계정이면 아래 이메일로 인증 메일이 도착해요. 메일의 링크를 눌러 가입을 마무리해주세요.",
+      "existingAccountHeading": "이미 계정이 있나요?",
       "existingAccountNote": "이미 계정을 만든 적이 있다면 로그인하거나 비밀번호를 재설정해 주세요.",
       "loginCta": "로그인하기",
       "passwordResetCta": "비밀번호 재설정",
