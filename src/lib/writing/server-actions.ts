@@ -88,6 +88,21 @@ async function createFailedLocalSubmission({
   return { submissionId, questionNo: input.question_no };
 }
 
+// Q51/Q52 빈칸형 답안: answer_json.blanks({라벨ㄱ/ㄴ → 답})를 외부 API의 blanks로 전달한다.
+// 빈칸 구조가 없으면(Q53/Q54, 또는 단일 텍스트로 저장된 Q52) null → 호출부에서 text 폴백.
+function extractBlanksFromAnswerJson(
+  answerJson: SubmitWritingInput["answer_json"],
+): Record<string, string> | null {
+  if (!answerJson || typeof answerJson !== "object") return null;
+  const blanks = (answerJson as { blanks?: unknown }).blanks;
+  if (!blanks || typeof blanks !== "object" || Array.isArray(blanks)) return null;
+  const out: Record<string, string> = {};
+  for (const [label, value] of Object.entries(blanks)) {
+    if (typeof value === "string" && value.trim().length > 0) out[label] = value;
+  }
+  return Object.keys(out).length > 0 ? out : null;
+}
+
 export async function submitWritingAction(
   input: SubmitWritingInput,
 ): Promise<SubmitWritingResult> {
@@ -112,17 +127,44 @@ export async function submitWritingAction(
     const serviceSupabase = createSupabaseServiceRoleClient();
     const externalTaskType = toExternalTaskType(input.question_no);
 
+    // 외부 채점 API는 question_id(= §7 question_id, GET /api/writing/tasks가 주는 값)로 해당 문항의
+    // prompt/모범답안/루브릭에 맞춰 채점한다. §7 미러 problems.materials(raw_payload)에 원본
+    // question_id가 들어 있으므로 그대로 꺼내 전달한다(없으면 null → task_type 임의 문항 ad-hoc 채점).
+    const { data: problemRow } = await serviceSupabase
+      .from("problems")
+      .select("materials")
+      .eq("id", input.problem_id)
+      .maybeSingle();
+    const materials = problemRow?.materials;
+    const externalQuestionId =
+      materials && typeof materials === "object" && !Array.isArray(materials)
+        ? ((materials as Record<string, unknown>).question_id as
+            | string
+            | null
+            | undefined) ?? null
+        : null;
+
+    // Q51/Q52는 blanks(ㄱ/ㄴ→답)로, Q53/Q54(및 blanks 미보유)는 text로 제출한다.
+    // user_id는 보내지 않는다 — 백엔드가 JWT에서 취득(외부 계약).
+    const blanks = extractBlanksFromAnswerJson(input.answer_json);
+    const externalPayload = blanks
+      ? {
+          task_type: externalTaskType,
+          question_id: externalQuestionId,
+          blanks,
+        }
+      : {
+          task_type: externalTaskType,
+          question_id: externalQuestionId,
+          text: input.answer_text,
+        };
+
     let external;
     try {
       external = await submitExternalWriting({
         baseUrl: externalBaseUrl,
         accessToken,
-        payload: {
-          task_type: externalTaskType,
-          task_id: input.problem_id,
-          text: input.answer_text,
-          user_id: user.id,
-        },
+        payload: externalPayload,
       });
     } catch (error) {
       if (!isRecoverableExternalSubmitError(error)) throw error;

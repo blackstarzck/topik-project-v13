@@ -78,6 +78,17 @@ describe("submitWritingAction", () => {
     });
     helpers.createServiceClientMock.mockReturnValue({
       rpc: helpers.serviceRpcMock,
+      // submitWritingAction는 problems.materials.question_id를 외부 question_id로 읽는다.
+      from: vi.fn(() => ({
+        select: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            maybeSingle: vi.fn().mockResolvedValue({
+              data: { materials: { question_id: "topik-writing-54-0001" } },
+              error: null,
+            }),
+          })),
+        })),
+      })),
     });
     delete process.env.TALKPIK_API_BASE_URL;
   });
@@ -113,9 +124,8 @@ describe("submitWritingAction", () => {
         }),
         body: JSON.stringify({
           task_type: "054",
-          task_id: "00000000-0000-0000-0000-000000000001",
+          question_id: "topik-writing-54-0001",
           text: answerText,
-          user_id: "user-1",
         }),
       }),
     );
@@ -143,6 +153,38 @@ describe("submitWritingAction", () => {
       submissionId: "00000000-0000-0000-0000-000000000099",
       questionNo: 54,
     });
+  });
+
+  it("submits Q51 as blanks (not raw text) when answer_json carries them", async () => {
+    process.env.TALKPIK_API_BASE_URL = "https://api.example.test";
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          submission_id: "00000000-0000-0000-0000-0000000000aa",
+          status: "processing",
+        }),
+        { status: 202 },
+      ),
+    );
+
+    await submitWritingAction({
+      problem_id: "00000000-0000-0000-0000-000000000001",
+      question_no: 51,
+      answer_text: "ㄱ: 잘 수 없습니다\nㄴ: 알려 주시면",
+      answer_json: { _v: "51.v1", blanks: { ㄱ: "잘 수 없습니다", ㄴ: "알려 주시면" } },
+      char_count: 12,
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.example.test/api/writing/submit",
+      expect.objectContaining({
+        body: JSON.stringify({
+          task_type: "051",
+          question_id: "topik-writing-54-0001",
+          blanks: { ㄱ: "잘 수 없습니다", ㄴ: "알려 주시면" },
+        }),
+      }),
+    );
   });
 
   it("fails before queueing externally when the service role writer is unavailable", async () => {

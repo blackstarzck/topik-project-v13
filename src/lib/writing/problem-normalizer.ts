@@ -747,9 +747,11 @@ export function normalizeWritingProblem(
           : baseRubric.conditions,
       criteria: baseRubric.criteria,
     };
+    // 채점 rubric은 외부 백엔드가 question_id로 로드하므로 v13 rubric(표시용)이 비어도
+    // 제출을 막지 않는다. q51과 동일하게 빈칸 존재 여부로만 완결성을 판단한다.
+    // (§7 미러 q52는 rubric/criteria가 없어, 이를 요구하면 제출이 부당하게 차단됨.)
     const incomplete =
-      (input.questionNo === 52 &&
-        (rubric.conditions.length === 0 || rubric.criteria.length === 0)) ||
+      (input.questionNo === 52 && blanks.length === 0) ||
       (input.questionNo === 51 && blanks.length === 0);
     const nextSubmitBlockedReason: NormalizedProblemCommon["submitBlockedReason"] =
       common.submitBlockedReason ??

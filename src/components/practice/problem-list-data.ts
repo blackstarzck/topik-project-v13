@@ -41,6 +41,8 @@ export type UserProblemRow = {
   solveState: SolveState;
   /** Latest writing_submissions.id for submitted rows → RetryModal deep-link. */
   latestSubmissionId: string | null;
+  /** 이전 점수: 본인 최신 제출의 writing_feedback.score_total. 없으면 null. */
+  previousScore: number | null;
   lifecycleStatus: "active" | "inactive" | "expired";
   lifecycleReason: string | null;
   publishStatus: "draft" | "published" | "archived";
@@ -191,12 +193,40 @@ export async function fetchUserProblemsRpc(
       createdAt: r.created_at,
       solveState,
       latestSubmissionId: r.latest_submission_id ?? null,
+      previousScore: null,
       lifecycleStatus: toLifecycleStatus(r.lifecycle_status),
       lifecycleReason: r.lifecycle_reason ?? null,
       publishStatus: toPublishStatus(r.publish_status),
       reviewStatus: toReviewStatus(r.review_status),
     };
   });
+
+  // 이전 점수(previousScore): list_user_problems는 점수를 반환하지 않으므로, 현재 페이지
+  // 행들의 최신 제출(writing_submissions.id)에 대한 writing_feedback.score_total을 한 번의
+  // 추가 조회로 채운다. writing_feedback은 owner RLS → 본인 점수만 조회됨. 미제출/미채점 → null.
+  const submissionIds = rows
+    .map((row) => row.latestSubmissionId)
+    .filter((id): id is string => Boolean(id));
+  if (submissionIds.length > 0) {
+    const { data: feedbackRows } = await supabase
+      .from("writing_feedback")
+      .select("submission_id, score_total")
+      .in("submission_id", submissionIds);
+    if (feedbackRows && feedbackRows.length > 0) {
+      const scoreBySubmission = new Map<string, number | null>(
+        feedbackRows.map((f) => [
+          f.submission_id as string,
+          (f.score_total as number | null) ?? null,
+        ]),
+      );
+      for (const row of rows) {
+        if (row.latestSubmissionId && scoreBySubmission.has(row.latestSubmissionId)) {
+          row.previousScore = scoreBySubmission.get(row.latestSubmissionId) ?? null;
+        }
+      }
+    }
+  }
+
   return { rows, total };
 }
 

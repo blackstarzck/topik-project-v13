@@ -17,7 +17,14 @@ import type {
   NormalizedBlank,
   NormalizedWritingProblem,
 } from "@/lib/writing/problem-normalizer";
-import type { AutosaveStatus, WritingDraftRow } from "@/lib/writing/types";
+import {
+  build52AnswerText,
+  count52AnswerChars,
+  isShortAnswer52DraftJson,
+  type AutosaveStatus,
+  type ShortAnswerQuestion52Json,
+  type WritingDraftRow,
+} from "@/lib/writing/types";
 import {
   AutosaveWarningModal,
   type WarningTrigger,
@@ -49,6 +56,26 @@ function blankDisplay(blank: NormalizedBlank, index: number) {
   return `${index + 1} ${blank.label}`;
 }
 
+function initialBlankAnswers(
+  blanks: NormalizedBlank[],
+  draft: WritingDraftRow | null,
+): Record<string, string> {
+  const draftJson = draft?.answer_json;
+  if (isShortAnswer52DraftJson(draftJson)) {
+    return Object.fromEntries(
+      blanks.map((blank) => [blank.label, draftJson.blanks[blank.label] ?? ""]),
+    );
+  }
+
+  // 레거시 드래프트(단일 answer_text)는 첫 빈칸에 복원한다.
+  return Object.fromEntries(
+    blanks.map((blank, index) => [
+      blank.label,
+      index === 0 ? (draft?.answer_text ?? "") : "",
+    ]),
+  );
+}
+
 function uniqueNonEmpty(items: Array<string | null | undefined>) {
   return Array.from(
     new Set(items.map((item) => item?.trim()).filter(Boolean) as string[]),
@@ -63,7 +90,9 @@ export function ShortAnswerWriting52Workspace({
   const tPage = useTranslations("writing.q52");
   const tEditor = useTranslations("writing.editor");
   const tGuide = useTranslations("writing.guide");
-  const [text, setText] = useState(draft?.answer_text ?? "");
+  const [blankAnswers, setBlankAnswers] = useState<Record<string, string>>(() =>
+    initialBlankAnswers(problem.blanks, draft),
+  );
   const [status, setStatus] = useState<AutosaveStatus>(
     draft?.autosave_status ?? "clean",
   );
@@ -88,7 +117,18 @@ export function ShortAnswerWriting52Workspace({
   const submit = useSubmitWriting();
 
   const limit = getCharLimit(52);
-  const charCount = useMemo(() => text.length, [text]);
+  const answerText = useMemo(
+    () => build52AnswerText(blankAnswers, problem.blanks),
+    [blankAnswers, problem.blanks],
+  );
+  const answerJson = useMemo<ShortAnswerQuestion52Json>(
+    () => ({ _v: "52.v1", blanks: blankAnswers }),
+    [blankAnswers],
+  );
+  const charCount = useMemo(
+    () => count52AnswerChars(blankAnswers),
+    [blankAnswers],
+  );
   const submittable = isCountSubmittable(charCount, 52);
   const inRecommended = isCountInRecommendedRange(charCount, 52);
   const progressPercent = Math.min(
@@ -96,8 +136,8 @@ export function ShortAnswerWriting52Workspace({
     Math.round((charCount / limit.hardMax) * 100),
   );
   const currentAnswerSnapshot = useMemo(
-    () => serializeWritingAnswerSnapshot(text),
-    [text],
+    () => serializeWritingAnswerSnapshot(blankAnswers),
+    [blankAnswers],
   );
   const [lastSavedSnapshot, setLastSavedSnapshot] = useState(
     () => currentAnswerSnapshot,
@@ -113,6 +153,9 @@ export function ShortAnswerWriting52Workspace({
   const guideLoadFailed =
     problem.submitBlockedReason === "problem_data_incomplete";
   const activeBlank = problem.blanks[activeBlankIndex] ?? problem.blanks[0];
+  const activeBlankValue = activeBlank
+    ? (blankAnswers[activeBlank.label] ?? "")
+    : "";
 
   const expressionHints = [
     tPage("expressionHint0"),
@@ -152,8 +195,10 @@ export function ShortAnswerWriting52Workspace({
     };
   }, []);
 
-  function persist(next: string, isManual: boolean) {
-    const nextSnapshot = serializeWritingAnswerSnapshot(next);
+  function persist(nextAnswers: Record<string, string>, isManual: boolean) {
+    const nextText = build52AnswerText(nextAnswers, problem.blanks);
+    const nextCharCount = count52AnswerChars(nextAnswers);
+    const nextSnapshot = serializeWritingAnswerSnapshot(nextAnswers);
     setStatus("syncing");
     const seq = ++saveSeqRef.current;
     upsert.mutate(
@@ -161,8 +206,9 @@ export function ShortAnswerWriting52Workspace({
         user_id: userId,
         problem_id: problem.id,
         question_no: 52,
-        answer_text: next,
-        char_count: next.length,
+        answer_text: nextText,
+        answer_json: { _v: "52.v1", blanks: nextAnswers },
+        char_count: nextCharCount,
         autosave_status: "clean",
         last_saved_at: new Date().toISOString(),
       },
@@ -177,7 +223,7 @@ export function ShortAnswerWriting52Workspace({
             void logStudyEvent({
               eventType: "draft_autosaved",
               problemId: problem.id,
-              payload: { question_no: 52, char_count: next.length },
+              payload: { question_no: 52, char_count: nextCharCount },
             });
           }
         },
@@ -190,25 +236,30 @@ export function ShortAnswerWriting52Workspace({
     );
   }
 
-  function scheduleSave(next: string) {
+  function scheduleSave(nextAnswers: Record<string, string>) {
     if (!autosaveEnabled) {
       setStatus("dirty");
       return;
     }
     if (status !== "syncing") setStatus("dirty");
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => persist(next, false), DEBOUNCE_MS);
+    debounceRef.current = setTimeout(
+      () => persist(nextAnswers, false),
+      DEBOUNCE_MS,
+    );
   }
 
   function onChange(next: string) {
-    setText(next);
+    if (!activeBlank) return;
+    const nextAnswers = { ...blankAnswers, [activeBlank.label]: next };
+    setBlankAnswers(nextAnswers);
     setBlurNotice(null);
-    scheduleSave(next);
+    scheduleSave(nextAnswers);
   }
 
   function onManualSave() {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    persist(text, true);
+    persist(blankAnswers, true);
   }
 
   function onToggleAutosave() {
@@ -220,7 +271,7 @@ export function ShortAnswerWriting52Workspace({
   }
 
   function onBlurValidate() {
-    if (text.length === 0) return;
+    if (answerText.length === 0) return;
     if (charCount < limit.hardMin) {
       setBlurNotice(
         tEditor("blurTooShort", {
@@ -256,7 +307,8 @@ export function ShortAnswerWriting52Workspace({
         draft_id: draftId,
         problem_id: problem.id,
         question_no: 52,
-        answer_text: text,
+        answer_text: answerText,
+        answer_json: answerJson,
         char_count: charCount,
       },
       {
@@ -272,7 +324,7 @@ export function ShortAnswerWriting52Workspace({
           setSubmittedAnalysis({
             submissionId: result.submissionId,
             questionNo: result.questionNo,
-            answerText: text,
+            answerText,
             charCount,
             submittedAt: new Date().toISOString(),
             feedbackHref: `/writing/feedback/short/${result.submissionId}`,
@@ -306,7 +358,7 @@ export function ShortAnswerWriting52Workspace({
       elapsedSeconds={elapsedSeconds}
       autosaveStatus={status}
       lastSavedAt={lastSavedAt}
-      canSave={!submit.isPending && text.length > 0}
+      canSave={!submit.isPending && charCount > 0}
       canSubmit={
         submittable &&
         !submit.isPending &&
@@ -340,7 +392,7 @@ export function ShortAnswerWriting52Workspace({
               blanks={problem.blanks.map((blank) => ({
                 key: blank.key,
                 label: blank.label,
-                filled: false,
+                filled: (blankAnswers[blank.label] ?? "").trim().length > 0,
               }))}
               activeBlankIndex={activeBlankIndex}
               onSelectBlank={setActiveBlankIndex}
@@ -396,10 +448,10 @@ export function ShortAnswerWriting52Workspace({
                 </div>
 
                 <Input.TextArea
-                  value={text}
+                  value={activeBlankValue}
                   onChange={(e) => onChange(e.target.value)}
                   onBlur={onBlurValidate}
-                  autoSize={{ minRows: 5 }}
+                  autoSize={{ minRows: 4 }}
                   maxLength={limit.hardMax}
                   placeholder={tPage("answerPlaceholder")}
                   disabled={submit.isPending}
@@ -524,12 +576,12 @@ export function ShortAnswerWriting52Workspace({
             if (exitGuard.pendingNavigation) {
               exitGuard.cancelPendingNavigation();
               if (debounceRef.current) clearTimeout(debounceRef.current);
-              persist(text, true);
+              persist(blankAnswers, true);
               return;
             }
             setWarningTrigger(null);
             if (debounceRef.current) clearTimeout(debounceRef.current);
-            persist(text, false);
+            persist(blankAnswers, false);
           }}
           onProceed={() => {
             if (exitGuard.pendingNavigation) {
