@@ -63,11 +63,17 @@ export function getProblemRowDisplayMeta(
   row: UserProblemRow,
 ): ProblemRowDisplayMeta {
   const referenceMeta = REFERENCE_ROW_META_BY_TITLE.get(row.title);
-  if (referenceMeta) return referenceMeta;
+  if (referenceMeta) {
+    // 실제 제출 점수가 있으면 데모 reference 값보다 우선한다.
+    return {
+      ...referenceMeta,
+      previousScore: row.previousScore ?? referenceMeta.previousScore,
+    };
+  }
 
   return {
     estimatedMinutes: fallbackEstimatedMinutes(row.difficulty),
-    previousScore: null,
+    previousScore: row.previousScore ?? null,
     solveStatus: fallbackSolveStatus(row),
     isNew: false,
   };
