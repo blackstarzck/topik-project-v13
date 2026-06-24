@@ -20,7 +20,7 @@ import {
   Input,
   Typography,
 } from "antd";
-import { ArrowRight } from "@/components/shared/AppIcons";
+import { ArrowRight, MessageCircle } from "@/components/shared/AppIcons";
 
 import { GoogleMark } from "@/components/auth/GoogleMark";
 import {
@@ -37,6 +37,7 @@ import { mapSupabaseErrorCode } from "@/lib/auth/error-mapping";
 import {
   isGoogleOAuthUnsupportedBrowserError,
   startGoogleOAuth,
+  startKakaoOAuth,
   type GoogleOAuthEmbeddedBrowser,
 } from "@/lib/auth/oauth";
 import {
@@ -147,6 +148,7 @@ export function SignUpForm({
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [googleSubmitting, setGoogleSubmitting] = useState(false);
+  const [kakaoSubmitting, setKakaoSubmitting] = useState(false);
   const [blockedOAuthBrowser, setBlockedOAuthBrowser] =
     useState<GoogleOAuthEmbeddedBrowser | null>(null);
   const [safeGuidanceVisible, setSafeGuidanceVisible] = useState(false);
@@ -354,6 +356,21 @@ export function SignUpForm({
         message.error(t("socialAuthFailed"));
       }
       setGoogleSubmitting(false);
+    }
+  }
+
+  async function handleKakaoSignUp() {
+    setKakaoSubmitting(true);
+    setBlockedOAuthBrowser(null);
+    try {
+      const { error } = await startKakaoOAuth("sign-up");
+      if (error) {
+        message.error(t("socialKakaoAuthFailed"));
+        setKakaoSubmitting(false);
+      }
+    } catch {
+      message.error(t("socialKakaoAuthFailed"));
+      setKakaoSubmitting(false);
     }
   }
 
@@ -625,16 +642,28 @@ export function SignUpForm({
         {t("socialDivider")}
       </Divider>
 
-      <Button
-        block
-        onClick={() => void handleGoogleSignUp()}
-        loading={googleSubmitting}
-        disabled={submitting}
-        icon={<GoogleMark />}
-        className="signup-social-button"
-      >
-        {t("socialGoogle")}
-      </Button>
+      <div className="flex flex-col gap-2">
+        <Button
+          block
+          onClick={() => void handleGoogleSignUp()}
+          loading={googleSubmitting}
+          disabled={submitting || kakaoSubmitting}
+          icon={<GoogleMark />}
+          className="signup-social-button"
+        >
+          {t("socialGoogle")}
+        </Button>
+        <Button
+          block
+          onClick={() => void handleKakaoSignUp()}
+          loading={kakaoSubmitting}
+          disabled={submitting || googleSubmitting}
+          icon={<MessageCircle size={18} aria-hidden="true" />}
+          className="signup-social-button"
+        >
+          {t("socialKakao")}
+        </Button>
+      </div>
     </div>
   );
 }

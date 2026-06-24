@@ -16,12 +16,18 @@ import type { FormInstance } from "antd";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowRight, LockKeyhole, Mail } from "@/components/shared/AppIcons";
+import {
+  ArrowRight,
+  LockKeyhole,
+  Mail,
+  MessageCircle,
+} from "@/components/shared/AppIcons";
 
 import { GoogleMark } from "@/components/auth/GoogleMark";
 import {
   isGoogleOAuthUnsupportedBrowserError,
   startGoogleOAuth,
+  startKakaoOAuth,
   type GoogleOAuthEmbeddedBrowser,
 } from "@/lib/auth/oauth";
 import { buildAuthRedirectUrl } from "@/lib/auth/redirect-url";
@@ -103,6 +109,7 @@ export function LoginForm({
   const [mode, setMode] = useState<LoginMode>("password");
   const [submitting, setSubmitting] = useState(false);
   const [googleSubmitting, setGoogleSubmitting] = useState(false);
+  const [kakaoSubmitting, setKakaoSubmitting] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState<string | null>(null);
   const [failedAttempts, setFailedAttempts] = useState(0);
   // 로그인 시도 후 서버가 돌려준 상태성 오류(휴면/미인증/서버오류)를 위한 인라인 안내.
@@ -224,6 +231,26 @@ export function LoginForm({
         setStatusNotice({ tone: "error", key: "socialAuthFailed" });
       }
       setGoogleSubmitting(false);
+    }
+  }
+
+  async function handleKakaoLogin() {
+    setKakaoSubmitting(true);
+    setStatusNotice(null);
+    setBlockedOAuthBrowser(null);
+    try {
+      const { error } = await startKakaoOAuth("login");
+      if (error) {
+        const reason = mapSupabaseErrorCode(error.code);
+        setStatusNotice({
+          tone: "error",
+          text: te(`${reason}.message` as Parameters<typeof te>[0]),
+        });
+        setKakaoSubmitting(false);
+      }
+    } catch {
+      setStatusNotice({ tone: "error", key: "socialKakaoAuthFailed" });
+      setKakaoSubmitting(false);
     }
   }
 
@@ -414,17 +441,30 @@ export function LoginForm({
             {t("socialDivider")}
           </Divider>
 
-          <Button
-            block
-            htmlType="button"
-            onClick={() => void handleGoogleLogin()}
-            loading={googleSubmitting}
-            disabled={submitting}
-            icon={<GoogleMark />}
-            className="signup-social-button"
-          >
-            {t("socialGoogle")}
-          </Button>
+          <div className="flex flex-col gap-2">
+            <Button
+              block
+              htmlType="button"
+              onClick={() => void handleGoogleLogin()}
+              loading={googleSubmitting}
+              disabled={submitting || kakaoSubmitting}
+              icon={<GoogleMark />}
+              className="signup-social-button"
+            >
+              {t("socialGoogle")}
+            </Button>
+            <Button
+              block
+              htmlType="button"
+              onClick={() => void handleKakaoLogin()}
+              loading={kakaoSubmitting}
+              disabled={submitting || googleSubmitting}
+              icon={<MessageCircle size={18} aria-hidden="true" />}
+              className="signup-social-button"
+            >
+              {t("socialKakao")}
+            </Button>
+          </div>
         </div>
       </Form>
     </div>

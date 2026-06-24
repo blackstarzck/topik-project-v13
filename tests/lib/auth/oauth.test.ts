@@ -70,12 +70,16 @@ describe("Google OAuth URL helpers", () => {
     ).toEqual({ supported: true });
   });
 
-  it("allows KakaoTalk embedded browsers to start Google OAuth", () => {
+  it("blocks KakaoTalk embedded browsers before Google OAuth starts", () => {
     expect(
       getGoogleOAuthBrowserSupport(
         "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 KAKAOTALK 10.7.0",
       ),
-    ).toEqual({ supported: true });
+    ).toEqual({
+      supported: false,
+      browser: "kakaoTalk",
+      reason: "embedded_user_agent",
+    });
   });
 
   it("blocks unsupported embedded browsers before Google OAuth starts", () => {

@@ -484,7 +484,7 @@ describe("SignUpForm", () => {
     expect(signUpMock).not.toHaveBeenCalled();
   });
 
-  it("starts Google OAuth in KakaoTalk instead of showing external-browser guidance", async () => {
+  it("shows external-browser guidance instead of starting Google OAuth in KakaoTalk", async () => {
     setUserAgent(
       "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 KAKAOTALK 10.7.0",
     );
@@ -495,11 +495,24 @@ describe("SignUpForm", () => {
     });
 
     await waitFor(() => {
+      expect(screen.getByTestId("oauth-browser-warning")).toBeTruthy();
+    });
+    expect(signInWithOAuthMock).not.toHaveBeenCalled();
+    expect(signUpMock).not.toHaveBeenCalled();
+  });
+
+  it("starts Kakao OAuth with post-auth redirect", async () => {
+    renderInApp(<SignUpForm />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Kakao로 계속" }));
+    });
+
+    await waitFor(() => {
       expect(signInWithOAuthMock).toHaveBeenCalledTimes(1);
     });
-    expect(screen.queryByTestId("oauth-browser-warning")).toBeNull();
     expect(signInWithOAuthMock.mock.calls[0][0]).toEqual({
-      provider: "google",
+      provider: "kakao",
       options: {
         redirectTo:
           "http://localhost:3000/auth/callback?next=%2Fauth%2Fclaim-affiliation%3Fnext%3D%252Fauth%252Fpost-auth%253Fintent%253Dsign-up",

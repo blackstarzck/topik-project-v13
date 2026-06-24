@@ -15,7 +15,7 @@ function collectErrors(page: Page): string[] {
 async function mockAuthorizePage(page: Page) {
   await page.route(AUTHORIZE_ROUTE, async (route) => {
     await route.fulfill({
-      body: "<html><body>Google OAuth intercepted</body></html>",
+      body: "<html><body>OAuth intercepted</body></html>",
       contentType: "text/html",
       status: 200,
     });
@@ -27,11 +27,15 @@ async function expectGoogleOAuthStart({
   route,
   heading,
   intent,
+  provider = "google",
+  buttonName = /Google/,
 }: {
   page: Page;
   route: string;
   heading?: string | RegExp;
   intent: "login" | "sign-up";
+  provider?: "google" | "kakao";
+  buttonName?: string | RegExp;
 }) {
   const errors = collectErrors(page);
   await mockAuthorizePage(page);
@@ -43,14 +47,14 @@ async function expectGoogleOAuthStart({
   const appOrigin = new URL(page.url()).origin;
 
   const requestPromise = page.waitForRequest(AUTHORIZE_ROUTE);
-  const googleButton = page.getByRole("button", { name: /Google/ });
-  await expect(googleButton).toBeVisible();
-  await googleButton.click();
+  const oauthButton = page.getByRole("button", { name: buttonName });
+  await expect(oauthButton).toBeVisible();
+  await oauthButton.click();
   const request = await requestPromise;
 
   const url = new URL(request.url());
   expect(url.pathname).toBe("/auth/v1/authorize");
-  expect(url.searchParams.get("provider")).toBe("google");
+  expect(url.searchParams.get("provider")).toBe(provider);
 
   const redirectTo = url.searchParams.get("redirect_to");
   expect(redirectTo).toBeTruthy();
@@ -93,13 +97,32 @@ test.describe("Google OAuth entry", () => {
 test.describe("Google OAuth KakaoTalk browser entry", () => {
   test.use({ userAgent: KAKAOTALK_IOS_USER_AGENT });
 
-  test("login starts Supabase Google OAuth from KakaoTalk", async ({
+  test("login shows external-browser guidance instead of starting Google OAuth from KakaoTalk", async ({
     page,
   }) => {
+    const errors = collectErrors(page);
+    await mockAuthorizePage(page);
+
+    await page.goto("/login", { waitUntil: "networkidle" });
+    const requestPromise = page
+      .waitForRequest(AUTHORIZE_ROUTE, { timeout: 1_000 })
+      .then(() => true)
+      .catch(() => false);
+
+    await page.getByRole("button", { name: /Google/ }).click();
+
+    await expect(page.getByTestId("oauth-browser-warning")).toBeVisible();
+    expect(await requestPromise).toBe(false);
+    expect(errors).toEqual([]);
+  });
+
+  test("login starts Supabase Kakao OAuth from KakaoTalk", async ({ page }) => {
     await expectGoogleOAuthStart({
       page,
       route: "/login",
       intent: "login",
+      provider: "kakao",
+      buttonName: /Kakao/,
     });
   });
 });
