@@ -128,8 +128,8 @@ export function useDraft(userId: string, problemId: string) {
   });
 }
 
-const POLL_INTERVAL_MS = 5000;
-const POLL_MAX_ATTEMPTS = 12;
+const POLL_INTERVAL_MS = 10000;
+const POLL_MAX_ATTEMPTS = 6;
 
 export function useFeedbackStatus(submissionId: string) {
   return useQuery({
