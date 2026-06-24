@@ -115,6 +115,23 @@ export async function submitWritingAction(
     const serviceSupabase = createSupabaseServiceRoleClient();
     const externalTaskType = toExternalTaskType(input.question_no);
 
+    // 외부 채점 API는 question_id(= §7 question_id, GET /api/writing/tasks가 주는 값)로 해당 문항의
+    // prompt/모범답안/루브릭에 맞춰 채점한다. §7 미러 problems.materials(raw_payload)에 원본
+    // question_id가 들어 있으므로 그대로 꺼내 전달한다(없으면 null → task_type 임의 문항 ad-hoc 채점).
+    const { data: problemRow } = await serviceSupabase
+      .from("problems")
+      .select("materials")
+      .eq("id", input.problem_id)
+      .maybeSingle();
+    const materials = problemRow?.materials;
+    const externalQuestionId =
+      materials && typeof materials === "object" && !Array.isArray(materials)
+        ? ((materials as Record<string, unknown>).question_id as
+            | string
+            | null
+            | undefined) ?? null
+        : null;
+
     let external;
     try {
       external = await submitExternalWriting({
@@ -122,7 +139,7 @@ export async function submitWritingAction(
         accessToken,
         payload: {
           task_type: externalTaskType,
-          task_id: externalTaskType,
+          question_id: externalQuestionId,
           text: input.answer_text,
           user_id: "current",
         },

@@ -75,9 +75,14 @@ type ExternalEvaluationStatus = {
 
 export type ExternalSubmitWritingRequest = {
   task_type: string;
-  task_id: string;
+  // §7 question_id (= 외부 API의 question_id, GET /api/writing/tasks가 반환; 예 'topik-writing-51-0001').
+  // 채점이 이 문항의 prompt/모범답안/루브릭을 사용한다. null이면 task_type의 임의 문항으로 ad-hoc 채점.
+  question_id?: string | null;
   text: string;
   user_id?: string | null;
+  lang?: string;
+  // Q51/Q52: ㉠/㉡ 빈칸이 있는 원문 지문(DB에 없으면 프론트에서 전달).
+  passage_context?: string;
 };
 
 export type ExternalSubmitWritingResponse = {
