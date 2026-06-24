@@ -125,7 +125,6 @@ describe("submitWritingAction", () => {
           task_type: "Q54",
           question_id: "topik-writing-54-0001",
           text: answerText,
-          user_id: "current",
         }),
       }),
     );
@@ -153,6 +152,38 @@ describe("submitWritingAction", () => {
       submissionId: "00000000-0000-0000-0000-000000000099",
       questionNo: 54,
     });
+  });
+
+  it("submits Q51 as blanks (not raw text) when answer_json carries them", async () => {
+    process.env.TALKPIK_API_BASE_URL = "https://api.example.test";
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          submission_id: "00000000-0000-0000-0000-0000000000aa",
+          status: "processing",
+        }),
+        { status: 202 },
+      ),
+    );
+
+    await submitWritingAction({
+      problem_id: "00000000-0000-0000-0000-000000000001",
+      question_no: 51,
+      answer_text: "ㄱ: 잘 수 없습니다\nㄴ: 알려 주시면",
+      answer_json: { _v: "51.v1", blanks: { ㄱ: "잘 수 없습니다", ㄴ: "알려 주시면" } },
+      char_count: 12,
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.example.test/api/writing/submit",
+      expect.objectContaining({
+        body: JSON.stringify({
+          task_type: "Q51",
+          question_id: "topik-writing-54-0001",
+          blanks: { ㄱ: "잘 수 없습니다", ㄴ: "알려 주시면" },
+        }),
+      }),
+    );
   });
 
   it("fails before queueing externally when the service role writer is unavailable", async () => {
