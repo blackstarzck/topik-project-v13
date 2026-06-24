@@ -31,7 +31,7 @@ declare
 begin
   with up as (
     insert into public.problems (
-      id, source, domain, question_no, topik_level, title, prompt,
+      id, source, domain, question_no, topik_level, difficulty, tags, title, prompt,
       materials, answer_key, rubric, publish_status, visibility, lifecycle_status, updated_at
     )
     select
@@ -40,6 +40,28 @@ begin
       'writing',
       pp.item_number,
       2,  -- TOPIK II (problems.topik_level CHECK in (1,2); 쓰기 51~54는 전부 II). 등급(3~6급)은 target_level/difficulty로 별도 표현
+
+      -- 난이도: §7 difficulty_level(1~6=TOPIK 급수)을 problems.difficulty(CHECK 1~5)로 클램프.
+      -- v13 문제목록의 난이도 칩(하/중/상 버킷)과 예상시간(난이도에서 파생)을 함께 구동. 없으면 null(→'-').
+      case
+        when nullif(pp.raw_payload->>'difficulty_level', '') is null then null
+        else least(greatest((pp.raw_payload->>'difficulty_level')::int, 1), 5)::smallint
+      end,
+      -- 태그 칩: §7 분류(주제/세부/화행/시나리오)를 사람이 읽는 한글 태그로(순서 보존·중복/빈값 제거).
+      coalesce((
+        select array_agg(t order by ord)
+        from (
+          select t, min(ord) as ord
+          from (
+            select 1 as ord, nullif(pp.raw_payload->>'topic_main', '')    as t
+            union all select 2, nullif(pp.raw_payload->>'topic_detail', '')
+            union all select 3, nullif(pp.raw_payload->>'speech_act', '')
+            union all select 4, nullif(pp.raw_payload->>'scenario_type', '')
+          ) src
+          where t is not null
+          group by t
+        ) d
+      ), '{}')::text[],
 
       coalesce(
         nullif(pp.raw_payload->>'topic_seed_title', ''),
@@ -61,6 +83,8 @@ begin
     on conflict (id) do update set
       question_no     = excluded.question_no,
       topik_level     = excluded.topik_level,
+      difficulty      = excluded.difficulty,
+      tags            = excluded.tags,
       title           = excluded.title,
       prompt          = excluded.prompt,
       materials       = excluded.materials,
