@@ -152,12 +152,72 @@ export function build51AnswerText(
     .join("\n");
 }
 
+export type SubmittedAnswerDisplayItem = {
+  key: string;
+  label?: string;
+  text: string;
+};
+
+const SUBMITTED_SHORT_ANSWER_LINE_RE = /^([^:\n]{1,8})\s*:\s*(.*)$/u;
+
+export function getSubmittedAnswerDisplayItems(
+  questionNo: QuestionNo,
+  answerText: string,
+): SubmittedAnswerDisplayItem[] {
+  if (!answerText.trim()) return [];
+
+  if (!isShortAnswer(questionNo)) {
+    return [{ key: "answer", text: answerText }];
+  }
+
+  const lines = answerText
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const labeledItems = lines.reduce<SubmittedAnswerDisplayItem[]>(
+    (items, line) => {
+      const match = SUBMITTED_SHORT_ANSWER_LINE_RE.exec(line);
+      if (!match) return items;
+      const label = match[1].trim();
+      const text = match[2].trim();
+      if (!label || !text) return items;
+      items.push({ key: label, label, text });
+      return items;
+    },
+    [],
+  );
+
+  if (labeledItems.length > 0 && labeledItems.length === lines.length) {
+    return labeledItems;
+  }
+
+  return [{ key: "answer", text: answerText }];
+}
+
 export function count51AnswerChars(blanks: Record<string, string>): number {
   return Object.values(blanks).reduce(
     (total, answer) => total + answer.trim().length,
     0,
   );
 }
+
+export type ShortAnswerQuestion52Json = {
+  _v: "52.v1";
+  blanks: Record<string, string>;
+};
+
+export function isShortAnswer52DraftJson(
+  value: unknown,
+): value is ShortAnswerQuestion52Json {
+  if (!isStringRecord(value)) return false;
+  if (value._v !== "52.v1") return false;
+  if (!isStringRecord(value.blanks)) return false;
+  return Object.values(value.blanks).every((item) => typeof item === "string");
+}
+
+// Q52(단락 완성)도 Q51과 동일한 빈칸(ㄱ/ㄴ) 구조 → 답안 빌드/글자수 로직을 그대로 재사용한다.
+export const build52AnswerText = build51AnswerText;
+export const count52AnswerChars = count51AnswerChars;
 
 export function isLongFormDraftJson(value: unknown): value is LongFormDraftJson {
   if (!isStringRecord(value)) return false;
