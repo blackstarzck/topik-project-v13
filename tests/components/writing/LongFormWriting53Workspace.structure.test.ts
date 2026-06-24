@@ -26,6 +26,6 @@ describe("LongFormWriting53Workspace structure", () => {
     expect(styles).toContain(".writing-guide-accordion--support p");
     expect(styles).toContain("text-align: left;");
     expect(styles).toContain("padding-inline-start: 0;");
-    expect(styles).toContain(".writing-guide-list > li::before");
+    expect(styles).toMatch(/\.writing-guide-list\s*>\s*li::before/);
   });
 });

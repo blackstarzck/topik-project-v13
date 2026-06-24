@@ -39,10 +39,10 @@ describe("writing evaluation API adapter", () => {
   });
 
   it("maps question numbers to OpenAPI task types", () => {
-    expect(toExternalTaskType(51)).toBe("051");
-    expect(toExternalTaskType(52)).toBe("052");
-    expect(toExternalTaskType(53)).toBe("053");
-    expect(toExternalTaskType(54)).toBe("054");
+    expect(toExternalTaskType(51)).toBe("Q51");
+    expect(toExternalTaskType(52)).toBe("Q52");
+    expect(toExternalTaskType(53)).toBe("Q53");
+    expect(toExternalTaskType(54)).toBe("Q54");
   });
 
   it("maps OpenAPI evaluation feedback into the internal feedback payload", () => {

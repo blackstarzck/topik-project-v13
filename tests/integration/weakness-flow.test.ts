@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 // Phase 6 integration: weakness-flow
 // - getWeakDimensions returns empty when fewer than threshold scored entries
@@ -25,8 +25,7 @@ function makeClient(opts: {
       if (table === "feedback_dimension_scores") {
         return {
           select: () => ({
-            eq: () =>
-              Promise.resolve({ data: opts.scores ?? [], error: null }),
+            eq: () => Promise.resolve({ data: opts.scores ?? [], error: null }),
           }),
         };
       }
@@ -50,27 +49,31 @@ function makeClient(opts: {
         };
       }
       if (table === "problems") {
+        const overlapChain = {
+          eq: () => overlapChain,
+          overlaps: (col: string, values: unknown[]) => {
+            overlapsCalls.push({ col, values });
+            const result = Promise.resolve({
+              data: opts.fallbackProblems ?? [],
+              error: null,
+            });
+            return {
+              order: () => ({
+                limit: () => result,
+              }),
+              limit: () => result,
+            };
+          },
+        };
         return {
-          select: () => ({
-            eq: () => ({
-              overlaps: (col: string, values: unknown[]) => {
-                overlapsCalls.push({ col, values });
-                const result = Promise.resolve({
-                  data: opts.fallbackProblems ?? [],
-                  error: null,
-                });
-                return {
-                  order: () => ({
-                    limit: () => result,
-                  }),
-                  limit: () => result,
-                };
-              },
-            }),
-          }),
+          select: () => overlapChain,
         };
       }
-      return { select: () => ({ eq: () => Promise.resolve({ data: [], error: null }) }) };
+      return {
+        select: () => ({
+          eq: () => Promise.resolve({ data: [], error: null }),
+        }),
+      };
     },
   };
 }
@@ -83,7 +86,11 @@ describe("weakness-flow — gate threshold", () => {
         { dimension: "grammar", score: 70, score_max: 100 },
       ],
     });
-    const dims = await getWeakDimensions("user-1", 5, async () => client as never);
+    const dims = await getWeakDimensions(
+      "user-1",
+      5,
+      async () => client as never,
+    );
     expect(dims).toEqual([]);
   });
 
@@ -101,7 +108,11 @@ describe("weakness-flow — gate threshold", () => {
       scores.push(make("structure", 60 + i));
     }
     const client = makeClient({ scores });
-    const dims = await getWeakDimensions("user-1", 5, async () => client as never);
+    const dims = await getWeakDimensions(
+      "user-1",
+      5,
+      async () => client as never,
+    );
     expect(dims).toHaveLength(2);
     expect(dims[0].dimension).toBe("grammar"); // lowest avg
   });

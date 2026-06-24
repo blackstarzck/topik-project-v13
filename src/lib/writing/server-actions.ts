@@ -19,9 +19,7 @@ import {
   computeComparisonMetrics,
   generateNarrative,
 } from "./comparison-service";
-import {
-  toSubmitWritingErrorMessage as toSharedSubmitWritingErrorMessage,
-} from "./submit-errors";
+import { toSubmitWritingErrorMessage as toSharedSubmitWritingErrorMessage } from "./submit-errors";
 import type { QuestionNo } from "./types";
 
 export type SubmitWritingInput = {
@@ -30,6 +28,7 @@ export type SubmitWritingInput = {
   question_no: QuestionNo;
   answer_text: string;
   answer_json?: Record<string, unknown> | null;
+  passage_context?: string | null;
   char_count: number;
 };
 
@@ -95,10 +94,12 @@ function extractBlanksFromAnswerJson(
 ): Record<string, string> | null {
   if (!answerJson || typeof answerJson !== "object") return null;
   const blanks = (answerJson as { blanks?: unknown }).blanks;
-  if (!blanks || typeof blanks !== "object" || Array.isArray(blanks)) return null;
+  if (!blanks || typeof blanks !== "object" || Array.isArray(blanks))
+    return null;
   const out: Record<string, string> = {};
   for (const [label, value] of Object.entries(blanks)) {
-    if (typeof value === "string" && value.trim().length > 0) out[label] = value;
+    if (typeof value === "string" && value.trim().length > 0)
+      out[label] = value;
   }
   return Object.keys(out).length > 0 ? out : null;
 }
@@ -138,25 +139,29 @@ export async function submitWritingAction(
     const materials = problemRow?.materials;
     const externalQuestionId =
       materials && typeof materials === "object" && !Array.isArray(materials)
-        ? ((materials as Record<string, unknown>).question_id as
+        ? (((materials as Record<string, unknown>).question_id as
             | string
             | null
-            | undefined) ?? null
+            | undefined) ?? null)
         : null;
 
     // Q51/Q52는 blanks(ㄱ/ㄴ→답)로, Q53/Q54(및 blanks 미보유)는 text로 제출한다.
     // user_id는 보내지 않는다 — 백엔드가 JWT에서 취득(외부 계약).
     const blanks = extractBlanksFromAnswerJson(input.answer_json);
+    const passageContext = input.passage_context?.trim() || undefined;
     const externalPayload = blanks
       ? {
           task_type: externalTaskType,
           question_id: externalQuestionId,
           blanks,
+          ...(passageContext ? { passage_context: passageContext } : {}),
+          lang: "ko",
         }
       : {
           task_type: externalTaskType,
           question_id: externalQuestionId,
           text: input.answer_text,
+          lang: "ko",
         };
 
     let external;

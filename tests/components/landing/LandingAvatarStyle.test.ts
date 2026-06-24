@@ -5,8 +5,12 @@ import { describe, expect, it } from "vitest";
 const cssPath = join(process.cwd(), "src/styles/global.css");
 
 function blockFor(css: string, selector: string): string {
-  const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const match = css.match(new RegExp(`(?:^|\\n)${escaped}\\s*\\{([^}]*)\\}`));
+  const selectorPattern = selector
+    .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    .replace(/>/g, "\\s*>\\s*");
+  const match = css.match(
+    new RegExp(`(?:^|\\n)${selectorPattern}\\s*\\{([^}]*)\\}`),
+  );
 
   return match?.[1] ?? "";
 }
@@ -17,7 +21,7 @@ describe("landing learner goal avatar styles", () => {
     const avatarBlock = blockFor(css, ".landing-layout-testimonials__avatar");
     const imageBlock = blockFor(
       css,
-      ".landing-layout-testimonials__avatar > img",
+      ".landing-layout-testimonials__avatar>img",
     );
 
     expect(avatarBlock).toContain("width: 54px;");

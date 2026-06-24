@@ -122,7 +122,7 @@ describe("LoginForm", () => {
     expect(call.email).toBe("u@example.com");
     // Phase 8-D: magic-link redirect now flows through /auth/callback
     expect(call.options.emailRedirectTo).toBe(
-      "https://talkpik.example.com/auth/callback?next=/dashboard",
+      "https://talkpik.example.com/auth/callback?next=%2Fdashboard",
     );
   });
 

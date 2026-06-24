@@ -55,7 +55,7 @@ export function SubmittedAnalysisPanel({ state }: Props) {
   // 두면 완료 시 router.replace가 즉시 그려져, 정적인 "완료" 화면에 머무르는 체감 지연을
   // 없앨 수 있다(이동은 AnalysisLoadingModal의 complete effect가 수행).
   useEffect(() => {
-    router.prefetch(state.feedbackHref as never);
+    router.prefetch?.(state.feedbackHref as never);
   }, [router, state.feedbackHref]);
 
   // 분석이 진행 중일 때만 브라우저 새로고침/닫기(beforeunload)와 뒤로가기(popstate)를

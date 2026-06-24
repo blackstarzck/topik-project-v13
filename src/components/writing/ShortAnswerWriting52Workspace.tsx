@@ -309,6 +309,7 @@ export function ShortAnswerWriting52Workspace({
         question_no: 52,
         answer_text: answerText,
         answer_json: answerJson,
+        passage_context: problem.blankedPrompt || problem.prompt,
         char_count: charCount,
       },
       {

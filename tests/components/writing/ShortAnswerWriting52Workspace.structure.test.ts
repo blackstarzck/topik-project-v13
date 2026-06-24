@@ -66,7 +66,7 @@ describe("ShortAnswerWriting52Workspace structure", () => {
     const styles = readFileSync(stylesPath, "utf8");
 
     expect(styles).toContain(".writing-guide-list--examples");
-    expect(styles).toContain(".writing-guide-list--examples > li::before");
+    expect(styles).toMatch(/\.writing-guide-list--examples\s*>\s*li::before/);
     expect(styles).toContain("width: 4px;");
     expect(styles).toContain("height: 4px;");
     expect(styles).toContain("border-radius: 999px;");

@@ -34,6 +34,11 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/lib/supabase/browser", () => ({
   createSupabaseBrowserClient: () => ({
     rpc: (...args: unknown[]) => rpcMock(...args),
+    from: () => ({
+      select: () => ({
+        in: () => Promise.resolve({ data: [], error: null }),
+      }),
+    }),
   }),
 }));
 
@@ -87,9 +92,7 @@ function rpcRow(row: RpcProblemRow, index: number) {
     latest_submission_id:
       row.solve_state === "submitted" ? `submission-${index}` : null,
     latest_submission_at:
-      row.solve_state === "submitted"
-        ? "2026-06-10T00:00:00.000Z"
-        : null,
+      row.solve_state === "submitted" ? "2026-06-10T00:00:00.000Z" : null,
     writing_feedback_status:
       row.solve_state === "submitted" ? "complete" : null,
     lifecycle_status: "active",
@@ -315,7 +318,9 @@ describe("ProblemListView", () => {
     expect(screen.getByText("오답 노트")).toBeTruthy();
     expect(screen.getByText("복습 필요")).toBeTruthy();
     expect(screen.getAllByRole("button", { name: /시작하기/ })).toHaveLength(2);
-    expect(screen.getAllByRole("button", { name: /다시 풀기/ })).toHaveLength(4);
+    expect(screen.getAllByRole("button", { name: /다시 풀기/ })).toHaveLength(
+      4,
+    );
   }, 45_000);
 
   it("starts an unsolved problem when the learner selects the problem row", async () => {

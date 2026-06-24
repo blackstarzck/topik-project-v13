@@ -2,7 +2,13 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Button, Collapse, Input, Progress, Typography } from "antd";
-import { Eye, Lightbulb, PenLine, Plus, Sparkles } from "@/components/shared/AppIcons";
+import {
+  Eye,
+  Lightbulb,
+  PenLine,
+  Plus,
+  Sparkles,
+} from "@/components/shared/AppIcons";
 import { useTranslations } from "next-intl";
 
 import { logStudyEvent } from "@/lib/events/study-events";
@@ -327,6 +333,7 @@ export function ShortAnswerWriting51Workspace({
         question_no: 51,
         answer_text: answerText,
         answer_json: answerJson,
+        passage_context: problem.blankedPrompt || problem.prompt,
         char_count: charCount,
       },
       {

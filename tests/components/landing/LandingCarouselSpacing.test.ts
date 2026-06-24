@@ -5,8 +5,12 @@ import { describe, expect, it } from "vitest";
 const cssPath = join(process.cwd(), "src/styles/global.css");
 
 function blockFor(css: string, selector: string): string {
-  const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const match = css.match(new RegExp(`(?:^|\\n)${escaped}\\s*\\{([^}]*)\\}`));
+  const selectorPattern = selector
+    .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    .replace(/>/g, "\\s*>\\s*");
+  const match = css.match(
+    new RegExp(`(?:^|\\n)${selectorPattern}\\s*\\{([^}]*)\\}`),
+  );
 
   return match?.[1] ?? "";
 }
@@ -16,8 +20,8 @@ describe("landing carousel spacing styles", () => {
     const css = readFileSync(cssPath, "utf8");
 
     expect(blockFor(css, ".landing-layout-testimonials div")).toBe("");
-    expect(
-      blockFor(css, ".landing-layout-testimonials article > div"),
-    ).toContain("gap: 13px;");
+    expect(blockFor(css, ".landing-layout-testimonials article>div")).toContain(
+      "gap: 13px;",
+    );
   });
 });

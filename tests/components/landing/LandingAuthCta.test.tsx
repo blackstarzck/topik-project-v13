@@ -153,9 +153,7 @@ describe("landing auth CTA", () => {
   it("uses the pending-auth-completion CTA in the hero", () => {
     renderWithIntl(<Hero authStatus="pending-auth-completion" />);
 
-    fireEvent.click(
-      screen.getByRole("button", { name: "가입 마무리하기" }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: "가입 마무리하기" }));
 
     expect(screen.queryByText("대시보드로 이동")).toBeNull();
     expect(pushMock).toHaveBeenCalledWith("/auth/post-auth?intent=login");

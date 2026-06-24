@@ -223,6 +223,11 @@ describe("fetchUserProblemsRpc", () => {
       ],
       error: null,
     }));
+    const from = vi.fn(() => ({
+      select: vi.fn(() => ({
+        in: vi.fn(async () => ({ data: [], error: null })),
+      })),
+    }));
 
     const result = await fetchUserProblemsRpc(
       {
@@ -231,7 +236,7 @@ describe("fetchUserProblemsRpc", () => {
         page: 1,
         pageSize: 10,
       },
-      () => ({ rpc }) as never,
+      () => ({ rpc, from }) as never,
     );
 
     expect(result.rows[0]).toMatchObject({

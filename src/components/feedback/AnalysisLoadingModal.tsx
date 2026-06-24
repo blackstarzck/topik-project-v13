@@ -296,9 +296,7 @@ function AnalysisLoadingModalContent({
                 className="analysis-state-card__asset"
                 data-testid="analysis-state-asset"
                 src={
-                  isFailed
-                    ? PAGE_STATE_ASSET.failed
-                    : PAGE_STATE_ASSET.analyzing
+                  isFailed ? PAGE_STATE_ASSET.failed : PAGE_STATE_ASSET[status]
                 }
                 alt=""
                 width={240}

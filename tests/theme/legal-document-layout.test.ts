@@ -16,7 +16,8 @@ function blockFor(selector: string): string {
     .trim()
     .split(/\s+/)
     .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
-    .join("\\s+");
+    .join("\\s+")
+    .replace(/>/g, "\\s*>\\s*");
   const match = css.match(new RegExp(`(?:^|\\n)${escaped}\\s*\\{([^}]*)\\}`));
   return match?.[1] ?? "";
 }
@@ -31,7 +32,7 @@ describe("Legal document layout", () => {
   });
 
   test("legal document card fills the 960px container", () => {
-    expect(blockFor(".legal-page-container > .legal-document-card")).toContain(
+    expect(blockFor(".legal-page-container>.legal-document-card")).toContain(
       "width: 100%",
     );
   });

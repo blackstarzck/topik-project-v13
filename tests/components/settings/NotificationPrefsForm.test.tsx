@@ -168,13 +168,12 @@ function submitForm(container: HTMLElement) {
 
 describe("NotificationPrefsForm", () => {
   it("defines notification description text styles at 14px", () => {
-    const css = readFileSync("src/styles/global.css", "utf8").replace(
-      /\s+/g,
-      " ",
-    );
+    const css = readFileSync("src/styles/global.css", "utf8")
+      .replace(/\s+/g, " ")
+      .replace(/\s*>\s*/g, ">");
 
     expect(css).toContain(
-      ".notification-settings-section-description.ant-typography, .notification-settings-row-hint.ant-typography, .notification-settings-type-description.ant-typography, .notification-settings-channel-copy .ant-typography-secondary.ant-typography, .notification-settings-redesign .ant-alert .ant-alert-description, .notification-settings-detail-panel > section > .ant-typography-secondary.ant-typography {",
+      ".notification-settings-section-description.ant-typography, .notification-settings-row-hint.ant-typography, .notification-settings-type-description.ant-typography, .notification-settings-channel-copy .ant-typography-secondary.ant-typography, .notification-settings-redesign .ant-alert .ant-alert-description, .notification-settings-detail-panel>section>.ant-typography-secondary.ant-typography {",
     );
     expect(css).toMatch(
       /\.notification-settings-section-description\.ant-typography, .*?font-size: 14px;/,

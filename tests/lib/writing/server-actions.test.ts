@@ -123,9 +123,10 @@ describe("submitWritingAction", () => {
           "Content-Type": "application/json",
         }),
         body: JSON.stringify({
-          task_type: "054",
+          task_type: "Q54",
           question_id: "topik-writing-54-0001",
           text: answerText,
+          lang: "ko",
         }),
       }),
     );
@@ -171,7 +172,12 @@ describe("submitWritingAction", () => {
       problem_id: "00000000-0000-0000-0000-000000000001",
       question_no: 51,
       answer_text: "ㄱ: 잘 수 없습니다\nㄴ: 알려 주시면",
-      answer_json: { _v: "51.v1", blanks: { ㄱ: "잘 수 없습니다", ㄴ: "알려 주시면" } },
+      answer_json: {
+        _v: "51.v1",
+        blanks: { ㄱ: "잘 수 없습니다", ㄴ: "알려 주시면" },
+      },
+      passage_context:
+        "지금 사용하고 있는 방은 도로와 가까워서 잠을 ( ㄱ ). 방법을 ( ㄴ ) 감사하겠습니다.",
       char_count: 12,
     });
 
@@ -179,9 +185,12 @@ describe("submitWritingAction", () => {
       "https://api.example.test/api/writing/submit",
       expect.objectContaining({
         body: JSON.stringify({
-          task_type: "051",
+          task_type: "Q51",
           question_id: "topik-writing-54-0001",
           blanks: { ㄱ: "잘 수 없습니다", ㄴ: "알려 주시면" },
+          passage_context:
+            "지금 사용하고 있는 방은 도로와 가까워서 잠을 ( ㄱ ). 방법을 ( ㄴ ) 감사하겠습니다.",
+          lang: "ko",
         }),
       }),
     );
