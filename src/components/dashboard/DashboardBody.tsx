@@ -45,10 +45,18 @@ type Props = {
   kpi: DashboardKpiData;
   examDate: string | null;
   primary: DashboardPrimary | null;
+  continueDraft: DashboardContinueDraft | null;
   alternatives: DashboardAlternative[];
   recentFeedbacks: RecentFeedbackItem[];
   alerts: DashboardAlertItem[];
   alertsLoadFailed: boolean;
+};
+
+export type DashboardContinueDraft = {
+  problemId: string;
+  title: string;
+  questionNo: number | null;
+  lastSavedAt: string | null;
 };
 
 function truncateLabel(value: string, max = 34): string {
@@ -68,6 +76,7 @@ export function DashboardBody({
   kpi,
   examDate,
   primary,
+  continueDraft,
   alternatives,
   recentFeedbacks,
   alerts,
@@ -84,6 +93,12 @@ export function DashboardBody({
     primary?.questionNo != null
       ? t("questionTag", { no: primary.questionNo })
       : t("questionTagFallback");
+  const continueHref = continueDraft
+    ? writingProblemHref({
+        questionNo: continueDraft.questionNo,
+        problemId: continueDraft.problemId,
+      })
+    : "/practice/problems";
   const feedbackPreview = recentFeedbacks.slice(0, 2);
   const feedbackCount = recentFeedbacks.length;
   const firstFeedbackHref = feedbackPreview[0]
@@ -175,37 +190,49 @@ export function DashboardBody({
 
         <AppCard
           title={t("continueTitle")}
-          extra={<DashboardBadge>{t("continueTag")}</DashboardBadge>}
+          extra={
+            <DashboardBadge>
+              {continueDraft ? t("continueTag") : t("continueEmptyTag")}
+            </DashboardBadge>
+          }
           className="flex h-full flex-col lg:col-span-3"
           classNames={cardFooterClassNames}
           actions={[
             <Link
               key="continue-writing"
-              href={primaryHref as never}
+              href={continueHref as never}
               className="block"
             >
               <Button block size="large" icon={<ArrowRight size={16} />}>
-                {t("continueCta")}
+                {continueDraft ? t("continueCta") : t("continueEmptyCta")}
               </Button>
             </Link>,
           ]}
         >
           <div className="grid h-full gap-4">
             <div className="flex items-start gap-3 py-3">
-              <span className="mt-0.5 inline-flex text-text">
+              <span
+                className={
+                  continueDraft
+                    ? "mt-0.5 inline-flex text-text"
+                    : "mt-0.5 inline-flex text-text-secondary"
+                }
+              >
                 <BookOpenCheck aria-hidden size={20} />
               </span>
               <div className="grid min-w-0 gap-1">
                 <Text strong>
-                  {primary
-                    ? truncateLabel(primary.title, 26)
-                    : t("continueFallbackTitle")}
+                  {continueDraft
+                    ? truncateLabel(continueDraft.title, 26)
+                    : t("continueEmptyTitle")}
                 </Text>
                 <Paragraph
                   type="secondary"
                   className="!m-0 !text-sm !leading-6"
                 >
-                  {primary?.reason ?? t("continueBody")}
+                  {continueDraft
+                    ? t("continueDraftBody")
+                    : t("continueEmptyBody")}
                 </Paragraph>
               </div>
             </div>

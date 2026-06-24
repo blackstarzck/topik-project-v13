@@ -409,7 +409,9 @@
       "heroGrowthBody": "비교 리포트",
       "socialDivider": "또는",
       "socialGoogle": "Google로 로그인",
-      "socialAuthFailed": "Google 인증을 시작하지 못했어요. 잠시 후 다시 시도해주세요."
+      "socialKakao": "Kakao로 로그인",
+      "socialAuthFailed": "Google 인증을 시작하지 못했어요. 잠시 후 다시 시도해주세요.",
+      "socialKakaoAuthFailed": "Kakao 인증을 시작하지 못했어요. 잠시 후 다시 시도해주세요."
     },
     "signUp": {
       "metaTitle": "회원가입 — TALKPIK",
@@ -465,7 +467,9 @@
       "heroPracticeTitle": "다양한 유형 연습",
       "heroPracticeBody": "51~54번 유형을 체계적으로 학습",
       "socialDivider": "또는",
-      "socialGoogle": "Google로 계속"
+      "socialGoogle": "Google로 계속",
+      "socialKakao": "Kakao로 계속",
+      "socialKakaoAuthFailed": "Kakao 인증을 시작하지 못했어요. 잠시 후 다시 시도해주세요."
     },
     "languageSelect": {
       "ariaLabel": "표시 언어 선택"
@@ -724,9 +728,14 @@
       "solveNow": "바로 문제 풀기",
       "continueTitle": "이어쓰기",
       "continueTag": "진행 중",
+      "continueEmptyTag": "없음",
       "continueFallbackTitle": "작성할 문제 선택",
       "continueBody": "도입부 작성 흐름을 이어갈 문제를 선택해 보세요.",
+      "continueEmptyTitle": "작성 중인 답안이 없어요",
+      "continueEmptyBody": "답안을 쓰기 시작하면 자동 저장된 글이 여기에 표시됩니다.",
+      "continueDraftBody": "자동 저장된 답안이 있습니다. 이어서 마무리해 보세요.",
       "continueCta": "이어서 작성하기",
+      "continueEmptyCta": "문제 목록 보기",
       "pendingTitle": "피드백 미반영",
       "pendingBadge": "{count}건",
       "pendingEmpty": "확인할 피드백이 아직 없어요.",

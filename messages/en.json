@@ -409,7 +409,9 @@
       "heroGrowthBody": "Progress reports",
       "socialDivider": "or",
       "socialGoogle": "Log in with Google",
-      "socialAuthFailed": "Couldn't start Google authentication. Please try again in a moment."
+      "socialKakao": "Log in with Kakao",
+      "socialAuthFailed": "Couldn't start Google authentication. Please try again in a moment.",
+      "socialKakaoAuthFailed": "Couldn't start Kakao authentication. Please try again in a moment."
     },
     "signUp": {
       "metaTitle": "Sign up — TALKPIK",
@@ -465,7 +467,9 @@
       "heroPracticeTitle": "Practice every type",
       "heroPracticeBody": "Study TOPIK writing 51-54 systematically",
       "socialDivider": "or",
-      "socialGoogle": "Continue with Google"
+      "socialGoogle": "Continue with Google",
+      "socialKakao": "Continue with Kakao",
+      "socialKakaoAuthFailed": "Couldn't start Kakao authentication. Please try again in a moment."
     },
     "languageSelect": {
       "ariaLabel": "Choose display language"
@@ -724,9 +728,14 @@
       "solveNow": "Start problem",
       "continueTitle": "Continue writing",
       "continueTag": "In progress",
+      "continueEmptyTag": "None",
       "continueFallbackTitle": "Pick a writing task",
       "continueBody": "Choose the next problem and keep your writing flow moving.",
+      "continueEmptyTitle": "No draft in progress",
+      "continueEmptyBody": "Once you start writing, your autosaved answer will appear here.",
+      "continueDraftBody": "An autosaved answer is waiting. Pick up where you left off.",
       "continueCta": "Continue writing",
+      "continueEmptyCta": "View problems",
       "pendingTitle": "Feedback to review",
       "pendingBadge": "{count} items",
       "pendingEmpty": "No feedback needs review yet.",

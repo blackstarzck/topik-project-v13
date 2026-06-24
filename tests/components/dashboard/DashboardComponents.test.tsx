@@ -1,9 +1,16 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 
 import koMessages from "../../../messages/ko.json";
 import { DashboardAlertsCard } from "../../../src/components/dashboard/DashboardAlertsCard";
+import { DashboardBody } from "../../../src/components/dashboard/DashboardBody";
 import { DashboardHeader } from "../../../src/components/dashboard/DashboardHeader";
 import {
   DashboardKpiSummary,
@@ -41,6 +48,22 @@ vi.mock("@/components/notifications/notifications-data", () => ({
 }));
 
 const dashboard = koMessages.dashboard;
+
+const emptyKpi: DashboardKpiData = {
+  todayAttempts: 0,
+  totalAttempts: 0,
+  recentFeedbackCount: 0,
+  goalAchievementPct: null,
+  streakDays: 0,
+  updatedAt: "2026-06-02T09:00:00.000Z",
+};
+
+function getContinueCard() {
+  const title = screen.getByText(dashboard.hub.continueTitle);
+  const card = title.closest(".ant-card");
+  if (!card) throw new Error("continue card not found");
+  return within(card as HTMLElement);
+}
 
 afterEach(() => {
   cleanup();
@@ -134,6 +157,79 @@ describe("DashboardRecommendations", () => {
     expect(
       screen.getByText(dashboard.recommendations.defaultReason),
     ).toBeTruthy();
+  });
+});
+
+describe("DashboardBody", () => {
+  beforeEach(() => {
+    fetchNotificationsMock.mockReset();
+    fetchNotificationsMock.mockResolvedValue([]);
+    markNotificationReadMock.mockReset();
+    markNotificationReadMock.mockResolvedValue(undefined);
+  });
+
+  it("shows an empty continue-writing card when there is no active draft", () => {
+    renderWithIntl(
+      <DashboardBody
+        userId="user-1"
+        kpi={emptyKpi}
+        examDate={null}
+        primary={{
+          problemId: "recommended-problem",
+          title: "추천 전용 문제",
+          questionNo: 51,
+          reason: "추천 카드에만 보여야 하는 이유",
+          source: "random",
+        }}
+        alternatives={[]}
+        recentFeedbacks={[]}
+        alerts={[]}
+        alertsLoadFailed={false}
+        continueDraft={null}
+      />,
+    );
+
+    const continueCard = getContinueCard();
+    expect(continueCard.queryByText("추천 전용 문제")).toBeNull();
+    expect(continueCard.queryByText("추천 카드에만 보여야 하는 이유")).toBeNull();
+    expect(continueCard.getByText("작성 중인 답안이 없어요")).toBeTruthy();
+    expect(continueCard.getByText("문제 목록 보기")).toBeTruthy();
+  });
+
+  it("uses the active draft instead of the recommendation in the continue-writing card", () => {
+    renderWithIntl(
+      <DashboardBody
+        userId="user-1"
+        kpi={emptyKpi}
+        examDate={null}
+        primary={{
+          problemId: "recommended-problem",
+          title: "추천 전용 문제",
+          questionNo: 51,
+          reason: "추천 카드에만 보여야 하는 이유",
+          source: "random",
+        }}
+        alternatives={[]}
+        recentFeedbacks={[]}
+        alerts={[]}
+        alertsLoadFailed={false}
+        continueDraft={{
+          problemId: "draft-problem",
+          title: "작성 중인 문제",
+          questionNo: 52,
+          lastSavedAt: "2026-06-02T09:00:00.000Z",
+        }}
+      />,
+    );
+
+    const continueCard = getContinueCard();
+    expect(continueCard.getByText("작성 중인 문제")).toBeTruthy();
+    expect(continueCard.queryByText("추천 전용 문제")).toBeNull();
+    expect(continueCard.getByText(dashboard.hub.continueCta)).toBeTruthy();
+    const link = continueCard.getByText(dashboard.hub.continueCta).closest("a");
+    expect(link?.getAttribute("href")).toContain(
+      "/writing/answer-writing-52?problem=draft-problem",
+    );
   });
 });
 

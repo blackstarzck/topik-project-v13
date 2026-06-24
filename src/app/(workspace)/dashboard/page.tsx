@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
-import { DashboardBody } from "@/components/dashboard/DashboardBody";
+import {
+  DashboardBody,
+  type DashboardContinueDraft,
+} from "@/components/dashboard/DashboardBody";
 import { AuthIdentityNotice } from "@/components/auth/AuthIdentityNotice";
 import type { RecentFeedbackItem } from "@/components/learning/RecentFeedbackCard";
 import type { DashboardAlertItem } from "@/components/dashboard/DashboardAlertsCard";
@@ -22,6 +25,18 @@ export async function generateMetadata(): Promise<Metadata> {
 
 const DAY_MS = 1000 * 60 * 60 * 24;
 
+type ContinueDraftProblemJoin = {
+  title: string;
+  question_no: number | null;
+};
+
+type ContinueDraftQueryRow = {
+  problem_id: string;
+  question_no: number | null;
+  last_saved_at: string | null;
+  problems: ContinueDraftProblemJoin | ContinueDraftProblemJoin[] | null;
+};
+
 function getExamDday(examDate: string, nowMs: number): number {
   const examMs = new Date(examDate).getTime();
   return Math.ceil((examMs - nowMs) / DAY_MS);
@@ -32,6 +47,27 @@ function getExamDday(examDate: string, nowMs: number): number {
 // growth/page.tsx의 loadGrowthData 패턴과 동일.
 function getRequestNowMs(): number {
   return Date.now();
+}
+
+function pickJoinedOne<T>(value: T | T[] | null | undefined): T | null {
+  if (Array.isArray(value)) return value[0] ?? null;
+  return value ?? null;
+}
+
+function toDashboardContinueDraft(
+  row: ContinueDraftQueryRow | null,
+): DashboardContinueDraft | null {
+  if (!row) return null;
+
+  const problem = pickJoinedOne(row.problems);
+  if (!problem) return null;
+
+  return {
+    problemId: row.problem_id,
+    title: problem.title,
+    questionNo: problem.question_no ?? row.question_no,
+    lastSavedAt: row.last_saved_at,
+  };
 }
 
 export default async function DashboardPage() {
@@ -61,6 +97,23 @@ export default async function DashboardPage() {
     questionNo: a.questionNo,
     reason: a.reason,
   }));
+
+  // 이어쓰기 카드는 추천 문제와 분리해 실제 작성 중 draft가 있을 때만 표시한다.
+  const { data: draftRows } = await supabase
+    .from("writing_drafts")
+    .select(
+      "problem_id, question_no, last_saved_at, updated_at, char_count, problems!inner(title, question_no)",
+    )
+    .eq("user_id", user.id)
+    .neq("autosave_status", "superseded")
+    .gt("char_count", 0)
+    .order("last_saved_at", { ascending: false, nullsFirst: false })
+    .order("updated_at", { ascending: false })
+    .limit(1);
+  const continueDraft = toDashboardContinueDraft(
+    ((draftRows ?? [])[0] as unknown as ContinueDraftQueryRow | undefined) ??
+      null,
+  );
 
   // 최근 첨삭(받은 피드백) — KPI 타일 + 카드. single join query for question_no.
   const { data: feedbacks } = await supabase
@@ -152,6 +205,7 @@ export default async function DashboardPage() {
         kpi={kpiData}
         examDate={goal.exam_date}
         primary={primary}
+        continueDraft={continueDraft}
         alternatives={alternatives}
         recentFeedbacks={recentFeedbacks}
         alerts={alerts}
