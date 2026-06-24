@@ -30,18 +30,22 @@ async function expectGoogleOAuthStart({
 }: {
   page: Page;
   route: string;
-  heading: string;
+  heading?: string | RegExp;
   intent: "login" | "sign-up";
 }) {
   const errors = collectErrors(page);
   await mockAuthorizePage(page);
 
   await page.goto(route, { waitUntil: "networkidle" });
-  await expect(page.getByRole("heading", { name: heading })).toBeVisible();
+  if (heading) {
+    await expect(page.getByRole("heading", { name: heading })).toBeVisible();
+  }
   const appOrigin = new URL(page.url()).origin;
 
   const requestPromise = page.waitForRequest(AUTHORIZE_ROUTE);
-  await page.getByRole("button", { name: /Google/ }).click();
+  const googleButton = page.getByRole("button", { name: /Google/ });
+  await expect(googleButton).toBeVisible();
+  await googleButton.click();
   const request = await requestPromise;
 
   const url = new URL(request.url());
@@ -86,25 +90,16 @@ test.describe("Google OAuth entry", () => {
   });
 });
 
-test.describe("Google OAuth embedded browser guard", () => {
+test.describe("Google OAuth KakaoTalk browser entry", () => {
   test.use({ userAgent: KAKAOTALK_IOS_USER_AGENT });
 
-  test("login shows external-browser guidance in KakaoTalk without starting OAuth", async ({
+  test("login starts Supabase Google OAuth from KakaoTalk", async ({
     page,
   }) => {
-    let authorizeRequests = 0;
-    await page.route(AUTHORIZE_ROUTE, async (route) => {
-      authorizeRequests += 1;
-      await route.abort();
+    await expectGoogleOAuthStart({
+      page,
+      route: "/login",
+      intent: "login",
     });
-
-    await page.goto("/login", { waitUntil: "networkidle" });
-    await page.getByRole("button", { name: /Google/ }).click();
-
-    await expect(page.getByTestId("oauth-browser-warning")).toBeVisible();
-    await expect(page.getByTestId("oauth-browser-warning")).toContainText(
-      "카카오톡 안에서는 Google 로그인이 막힐 수 있어요",
-    );
-    expect(authorizeRequests).toBe(0);
   });
 });

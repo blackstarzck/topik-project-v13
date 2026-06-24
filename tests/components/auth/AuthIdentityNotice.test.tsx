@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, screen } from "@testing-library/react";
+import { cleanup, screen, waitFor } from "@testing-library/react";
 
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
 
@@ -27,14 +27,23 @@ describe("AuthIdentityNotice", () => {
 
   afterEach(() => {
     cleanup();
+    document.body.innerHTML = "";
   });
 
-  it("renders the Google linked notice and removes the query flag", () => {
+  it("opens the shared Google linked notification and removes the query flag", async () => {
     noticeValue = "google-linked";
 
-    renderWithIntl(<AuthIdentityNotice />);
+    const { container } = renderWithIntl(<AuthIdentityNotice />);
 
-    expect(screen.getByText("Google 로그인이 계정에 연결됐어요.")).toBeTruthy();
+    expect(container.textContent).toBe("");
+    await waitFor(() => {
+      expect(
+        document.body.querySelector(".ant-notification-notice"),
+      ).toBeTruthy();
+    });
+    expect(
+      await screen.findByText("Google 로그인이 계정에 연결됐어요."),
+    ).toBeTruthy();
     expect(
       screen.getByText("다음부터 이메일 또는 Google로 로그인할 수 있어요."),
     ).toBeTruthy();
