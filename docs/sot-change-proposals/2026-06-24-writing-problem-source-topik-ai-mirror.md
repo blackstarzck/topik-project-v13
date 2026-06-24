@@ -19,6 +19,7 @@ v13 사용자 화면이 보여주는 TOPIK **쓰기(51~54) 문제의 원본/원�
 | --- | --- |
 | 쓰기 문제 SoT | topik-ai §7(`topik_writing_5x_questions` + `service_status`). v13 `problems`는 파생 미러. |
 | 미러 메커니즘 | `public.sync_available_writing_problems()`(SECURITY DEFINER) — §7 `available` → `problems` upsert. id=`md5(question_id)::uuid`(결정적, idempotent). 콘텐츠(prompt/materials/answer_key/rubric)=§7 적재 원본 `raw_payload`(=기존 normalizer가 파싱하는 위자드 형태). topik_level=2(TOPIK II), publish_status=published, visibility=public, lifecycle_status=active. |
+| 목록 메타데이터 | v13 문제목록(`list_user_problems` RPC → `ProblemTable`)의 난이도/예상시간/태그는 `problems.difficulty`(smallint 1~5)와 `problems.tags`(text[])에서 읽는다. 미러가 §7 `difficulty_level`(1~6=TOPIK 급수)→`difficulty`(CHECK 1~5로 클램프), §7 `topic_main`/`topic_detail`/`speech_act`/`scenario_type`→`tags`(한글 칩, 순서보존·중복/빈값 제거)로 채운다. **예상시간**은 별도 컬럼 없이 v13가 `difficulty`에서 파생(`fallbackEstimatedMinutes`). **이전 점수**는 v13 목록이 실제 제출/피드백 점수와 미연동(하드코딩 mock=6개 데모 제목만) → 미러 범위 밖(별도 v13 기능 결정 필요). |
 | 동기화 트리거 | pg_cron `sync-writing-problems`(매 1분). admin이 노출 토글 시 1분 내 반영. |
 | 미노출 전환 | §7에서 `available`이 풀린 문항의 미러는 **하드삭제 금지**(`writing_submissions.problem_id` on delete restrict) → `publish_status='archived'`, `lifecycle_status='inactive'`. 기존 제출/서재 ledger 보존. |
 | 외부 API 경계 | `/api/writing/tasks`(상류 목록)는 **문제 로딩에 사용 금지**. 외부 API는 제출(submit)→분석(evaluation)→피드백(feedback) 전용. |
