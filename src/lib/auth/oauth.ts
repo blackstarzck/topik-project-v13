@@ -4,7 +4,6 @@ import { createSupabaseBrowserClient } from "../supabase/browser";
 
 export type GoogleOAuthIntent = "login" | "sign-up";
 export type GoogleOAuthEmbeddedBrowser =
-  | "kakaoTalk"
   | "instagram"
   | "facebook"
   | "line"
@@ -22,7 +21,6 @@ const GOOGLE_OAUTH_DISALLOWED_USER_AGENTS: ReadonlyArray<{
   browser: GoogleOAuthEmbeddedBrowser;
   pattern: RegExp;
 }> = [
-  { browser: "kakaoTalk", pattern: /\bKAKAOTALK\b/i },
   { browser: "instagram", pattern: /\bInstagram\b/i },
   { browser: "facebook", pattern: /\b(FBAN|FBAV|FB_IAB)\b/i },
   { browser: "line", pattern: /\bLine\/\d/i },
