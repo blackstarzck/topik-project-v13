@@ -77,6 +77,17 @@ describe("submitWritingAction", () => {
     });
     helpers.createServiceClientMock.mockReturnValue({
       rpc: helpers.serviceRpcMock,
+      // submitWritingAction는 problems.materials.question_id를 외부 question_id로 읽는다.
+      from: vi.fn(() => ({
+        select: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            maybeSingle: vi.fn().mockResolvedValue({
+              data: { materials: { question_id: "topik-writing-54-0001" } },
+              error: null,
+            }),
+          })),
+        })),
+      })),
     });
     delete process.env.TALKPIK_API_BASE_URL;
   });
@@ -112,7 +123,7 @@ describe("submitWritingAction", () => {
         }),
         body: JSON.stringify({
           task_type: "Q54",
-          task_id: "Q54",
+          question_id: "topik-writing-54-0001",
           text: answerText,
           user_id: "current",
         }),
