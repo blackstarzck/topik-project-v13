@@ -53,6 +53,7 @@
     "ctaDashboard": "대시보드로 이동",
     "ctaLogin": "로그인",
     "ctaSignUp": "무료 시작",
+    "ctaAuthCompletion": "가입 마무리하기",
     "ctaConsentContinue": "약관 동의하고 계속하기",
     "ctaLearningGoal": "학습 목표 설정하기",
     "ctaContinueSetup": "설정 계속하기",
@@ -62,6 +63,7 @@
     "heroCtaDashboard": "대시보드로 이동",
     "heroCtaSignUp": "무료 시작",
     "heroCtaLogin": "로그인",
+    "heroCtaAuthCompletion": "가입 마무리하기",
     "heroCtaConsentContinue": "약관 동의하고 계속하기",
     "heroCtaLearningGoal": "학습 목표 설정하기",
     "heroCtaContinueSetup": "설정 계속하기",
@@ -480,13 +482,18 @@
       "embeddedBrowserDescription": "오른쪽 위 더보기 메뉴에서 '브라우저에서 열기'를 선택해 Chrome 또는 Safari로 연 뒤 다시 Google 로그인을 눌러주세요."
     },
     "consent": {
-      "metaTitle": "약관 동의 — TALKPIK",
-      "heading": "약관 동의가 필요해요",
-      "description": "TALKPIK AI를 계속 이용하려면 아래 필수 문서에 동의해주세요.",
+      "metaTitle": "가입 마무리 — TALKPIK",
+      "heading": "가입을 마무리해 주세요",
+      "description": "서비스를 시작하기 전에 필요한 정보와 필수 동의를 확인해 주세요.",
+      "profileSectionTitle": "필수 정보",
+      "profileSectionDescription": "누락된 정보만 입력하면 됩니다.",
+      "documentsSectionTitle": "필수 약관",
+      "documentsSectionDescription": "서비스 이용에 필요한 문서를 확인해 주세요.",
       "versionLabel": "버전 {version}",
       "agreement": "위 필수 약관과 개인정보처리방침을 확인했고 동의합니다.",
-      "requiredError": "계속하려면 필수 문서에 동의해야 합니다.",
-      "submit": "동의하고 계속"
+      "requiredError": "계속하려면 필수 정보를 입력하고 필요한 동의에 체크해야 합니다.",
+      "saveFailedError": "저장에 실패했어요. 잠시 후 다시 시도해 주세요.",
+      "submit": "저장하고 계속"
     },
     "passwordReset": {
       "metaTitle": "비밀번호 재설정 — TALKPIK",
@@ -532,6 +539,7 @@
       "mascotAlt": "TALKPIK 학습 도우미 캐릭터",
       "title": "인증 메일을 보냈어요",
       "body": "가입 요청을 확인했어요. 새 계정이면 아래 이메일로 인증 메일이 도착해요. 메일의 링크를 눌러 가입을 마무리해주세요.",
+      "existingAccountHeading": "이미 계정이 있나요?",
       "existingAccountNote": "이미 계정을 만든 적이 있다면 로그인하거나 비밀번호를 재설정해 주세요.",
       "loginCta": "로그인하기",
       "passwordResetCta": "비밀번호 재설정",
@@ -1248,6 +1256,7 @@
     "actions": {
       "retryDefault": "다시 풀기",
       "retryWriting": "다시 작성",
+      "retryUnavailable": "이 문제는 더 이상 새 풀이를 시작할 수 없습니다.",
       "nextProblem": "다음 문제",
       "savePdf": "PDF 저장",
       "compareReport": "비교 리포트",
@@ -1362,6 +1371,8 @@
       "metaTitleFeedbackLong": "장문 피드백 — TALKPIK",
       "metaTitleFeedbackShort": "단답 피드백 — TALKPIK",
       "problemLoadFailed": "{questionNo}번 문제 지문을 불러오지 못했어요.",
+      "problemUnavailableTitle": "{questionNo}번 문제를 더 이상 열 수 없어요.",
+      "problemUnavailableDraftPreserved": "작성 중이던 답안은 자동 저장 기록으로 남아 있어요. 문제 목록에서 다른 문제를 선택해 주세요.",
       "retry": "다시 시도",
       "toProblemList": "문제 목록으로"
     },
@@ -1575,6 +1586,8 @@
       "notEnoughChars": "아직 최소 글자 수({minChars}자)에 도달하지 않았어요.",
       "submitFailedTitle": "제출하지 못했어요",
       "submitFailedDescription": "{submitError} — '다시 제출'을 눌러 재시도하거나, 작성한 답안을 복사해 두세요.",
+      "submitUnavailableDescription": "{submitError} 작성 중이던 답안은 유지됩니다. 문제 목록에서 다른 문제를 선택해 주세요.",
+      "chooseAnotherProblem": "다른 문제 선택",
       "agreeNoEdit": "제출 후 수정할 수 없음을 확인했어요.",
       "checklistTitle": "제출 전 체크리스트",
       "checklistQuestion": "문제 지문 확인",
@@ -1795,7 +1808,12 @@
       "emptySearch": "검색 결과가 없습니다.",
       "emptyNoItems": "저장한 문제가 없습니다.",
       "resetFilter": "필터 초기화",
-      "retry": "다시 풀기"
+      "retry": "다시 풀기",
+      "retryUnavailable": "다시 풀 수 없음",
+      "providedEnded": "제공 종료",
+      "unavailable": "이용 불가",
+      "unavailablePlaceholderTitle": "더 이상 제공되지 않는 문제",
+      "unavailableDefaultReason": "운영 정책에 따라 새 풀이를 시작할 수 없습니다."
     },
     "exports": {
       "loadError": "내보내기 기록을 불러오지 못했어요",

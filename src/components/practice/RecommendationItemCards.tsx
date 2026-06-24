@@ -7,7 +7,7 @@ import {
   ChartNoAxesColumnIncreasing,
   CheckCircle2,
   Clock3,
-} from "lucide-react";
+} from "@/components/shared/AppIcons";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { AppCard } from "@/components/shared/AppCard";

@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Progress, Tag, Typography, theme } from "antd";
-import { CalendarDays, Clock3, RotateCcw } from "lucide-react";
+import { CalendarDays, Clock3, RotateCcw } from "@/components/shared/AppIcons";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import type {
@@ -34,6 +34,8 @@ type Props = {
   supplement: ExternalFeedbackSupplement;
   retryHref: string;
   retryLabel: string;
+  retryDisabled?: boolean;
+  retryDisabledReason?: string;
   showCardHeader?: boolean;
 };
 
@@ -49,6 +51,8 @@ export function FeedbackReportOverview({
   supplement,
   retryHref,
   retryLabel,
+  retryDisabled = false,
+  retryDisabledReason,
   showCardHeader = true,
 }: Props) {
   const t = useTranslations("feedback.report") as ReportTranslator;
@@ -84,7 +88,12 @@ export function FeedbackReportOverview({
           <Button
             type="primary"
             icon={<RotateCcw aria-hidden size={16} />}
-            onClick={() => router.push(retryHref)}
+            onClick={() => {
+              if (retryDisabled) return;
+              router.push(retryHref);
+            }}
+            disabled={retryDisabled}
+            title={retryDisabled ? retryDisabledReason : undefined}
           >
             {retryLabel}
           </Button>

@@ -3,7 +3,11 @@ import { getTranslations } from "next-intl/server";
 
 import { WritingPageContent } from "@/components/writing/WritingPageContent";
 import { requireUser } from "@/lib/auth/session";
-import { getActiveDraft, getWritingProblem } from "@/lib/writing/server";
+import {
+  getActiveDraft,
+  getWritingProblem,
+  isProblemIdLikeUuid,
+} from "@/lib/writing/server";
 import type { QuestionNo } from "@/lib/writing/types";
 
 export type WritingQuestionSearchParams = Promise<{
@@ -26,7 +30,11 @@ export async function renderWritingQuestionPage(
   const canRetryProblemLoad = Boolean(problemId);
   const startFresh = fresh === "1";
   const draft =
-    problem && !startFresh ? await getActiveDraft(user.id, problem.id) : null;
+    !startFresh && problem
+      ? await getActiveDraft(user.id, problem.id)
+      : !startFresh && isProblemIdLikeUuid(problemId)
+        ? await getActiveDraft(user.id, problemId)
+        : null;
 
   return (
     <WritingPageContent

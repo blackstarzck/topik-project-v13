@@ -1,26 +1,23 @@
 "use client";
 
-import { App, Button, Input, Tabs, Tag, Typography } from "antd";
+import { Input, Tabs } from "antd";
 import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
-import { AppCard } from "@/components/shared/AppCard";
 import type { LibraryItemView, LibraryTab } from "@/lib/library/types";
 
 import { LibraryExportsTab } from "./LibraryExportsTab";
 import { LibraryReportsTab } from "./LibraryReportsTab";
 import { LibrarySavedProblemsTab } from "./LibrarySavedProblemsTab";
 import { LibrarySubmissionsTab } from "./LibrarySubmissionsTab";
-import { PdfExportModal, type ExportSelectionItem } from "./PdfExportModal";
-import { createReviewSet } from "./review-set-data";
+import type { ExportSelectionItem } from "./PdfExportModal";
 import { buildLibraryTabUrl, isLibraryTab } from "./library-tab-url";
-
-const { Text } = Typography;
 
 type Props = {
   activeTab: LibraryTab;
   initialItems: LibraryItemView[];
+  onSelectionChange?: (items: ExportSelectionItem[]) => void;
 };
 
 function pickSubmissions(items: LibraryItemView[]) {
@@ -45,41 +42,19 @@ function pickExports(items: LibraryItemView[]) {
   );
 }
 
-export function LibraryTabs({ activeTab, initialItems }: Props) {
+export function LibraryTabs({
+  activeTab,
+  initialItems,
+  onSelectionChange,
+}: Props) {
   const t = useTranslations("library.tabs");
   const router = useRouter();
   const params = useSearchParams();
-  const { message } = App.useApp();
 
   // F-01 region 1 (검색/필터): in-memory search over the already-fetched rows.
   // Phase 6 has no server-side library search, so this filters client-side by
   // title/tags. Each tab applies `matchesLibrarySearch` against this term.
   const [searchTerm, setSearchTerm] = useState("");
-
-  // F-01 region 2 (내보내기/생성 액션): selection lifted from the submissions
-  // tab drives the PDF export modal (F-M1) and the 복습 세트 생성 action.
-  const [selection, setSelection] = useState<ExportSelectionItem[]>([]);
-  const [exportOpen, setExportOpen] = useState(false);
-  const [reviewPending, setReviewPending] = useState(false);
-
-  const handleSelectionChange = useCallback((items: ExportSelectionItem[]) => {
-    setSelection(items);
-  }, []);
-
-  async function handleCreateReviewSet() {
-    setReviewPending(true);
-    try {
-      const reviewSetId = await createReviewSet(selection.map((s) => s.itemId));
-      message.success(t("reviewSetCreated", { count: selection.length }));
-      router.push(`/practice/problems?reviewSet=${reviewSetId}` as never);
-    } catch (err) {
-      message.error(
-        err instanceof Error ? err.message : t("reviewSetFailed"),
-      );
-    } finally {
-      setReviewPending(false);
-    }
-  }
 
   // Server-rendered initial items hydrate only the active tab. The other
   // three tabs start empty and rely on `useLibraryItems(tab)` to fetch on
@@ -116,7 +91,7 @@ export function LibraryTabs({ activeTab, initialItems }: Props) {
           initialItems={submissionsInitial}
           searchTerm={searchTerm}
           onResetSearch={() => setSearchTerm("")}
-          onSelectionChange={handleSelectionChange}
+          onSelectionChange={onSelectionChange}
         />
       ),
     },
@@ -156,7 +131,7 @@ export function LibraryTabs({ activeTab, initialItems }: Props) {
   ];
 
   return (
-    <div className="flex w-full flex-col gap-4">
+    <div className="flex h-full min-h-0 w-full flex-1 flex-col gap-4">
       <Input.Search
         data-testid="library-search"
         allowClear
@@ -168,49 +143,13 @@ export function LibraryTabs({ activeTab, initialItems }: Props) {
         className="max-w-sm"
       />
 
-      {/* F-01 region 2 (내보내기/생성 액션): selection-driven actions. The
-          submissions tab lifts its current selection; these actions apply to
-          저장 답안 선택. 액션 3개 이하: PDF 내보내기 / 복습 세트 생성 / 선택 해제.
-          선택 없음은 버튼 비활성으로 안내한다. */}
-      <AppCard data-testid="library-actions" size="small">
-        <div className="flex flex-wrap items-center gap-2">
-          <Tag data-testid="library-selection-count">
-            {t("selectionCount", { count: selection.length })}
-          </Tag>
-          <Button
-            data-testid="library-export-pdf"
-            type="primary"
-            disabled={selection.length === 0}
-            onClick={() => setExportOpen(true)}
-          >
-            {t("exportPdf")}
-          </Button>
-          <Button
-            data-testid="library-create-review-set"
-            disabled={selection.length === 0}
-            loading={reviewPending}
-            onClick={handleCreateReviewSet}
-          >
-            {t("createReviewSet")}
-          </Button>
-          {selection.length === 0 ? (
-            <Text type="secondary">{t("selectionHint")}</Text>
-          ) : null}
-        </div>
-      </AppCard>
-
       <Tabs
         data-testid="library-tabs"
         activeKey={activeTab}
+        className="library-tabs-fill min-h-0 flex-1"
         destroyOnHidden
         onChange={handleChange}
         items={items}
-      />
-
-      <PdfExportModal
-        open={exportOpen}
-        onClose={() => setExportOpen(false)}
-        selection={selection}
       />
     </div>
   );

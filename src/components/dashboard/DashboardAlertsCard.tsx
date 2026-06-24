@@ -1,6 +1,15 @@
 "use client";
 
-import { Alert, App, Button, Empty, List, Skeleton, Tag, Typography } from "antd";
+import {
+  Alert,
+  App,
+  Button,
+  Empty,
+  List,
+  Skeleton,
+  Tag,
+  Typography,
+} from "antd";
 import { useFormatter, useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -9,6 +18,7 @@ import { useEffect, useState } from "react";
 import {
   fetchNotifications,
   markNotificationRead,
+  resolveNotificationDestination,
   type UserNotification,
 } from "@/components/notifications/notifications-data";
 import { AppCard } from "@/components/shared/AppCard";
@@ -52,12 +62,16 @@ type Props = {
  *
  * 일정 알림(시험 D-day, 작성 중 답안)은 서버가 계산해 props로 내려주고,
  * 인앱 알림(user_notifications 최신 5건)은 클라이언트에서 직접 조회한다.
- * 읽음 규칙: 항목 클릭 = 읽음 처리 후 link_url 이동 (NotificationBell과 동일).
+ * 읽음 규칙: 항목 클릭 = 읽음 처리 후 이동경로가 있으면 이동(NotificationBell과 동일).
  *
  * 제약 조건: 알림 항목 5개 이하, 날짜 표기는 로케일 기준.
  * 예외: 알림 로드 실패 시 재시도와 설정 이동 CTA 제공.
  */
-export function DashboardAlertsCard({ userId, alerts, loadFailed = false }: Props) {
+export function DashboardAlertsCard({
+  userId,
+  alerts,
+  loadFailed = false,
+}: Props) {
   const t = useTranslations("dashboard.alerts");
   const format = useFormatter();
   const router = useRouter();
@@ -99,10 +113,13 @@ export function DashboardAlertsCard({ userId, alerts, loadFailed = false }: Prop
         setNotifications((prev) =>
           prev.map((n) => (n.id === item.id ? { ...n, read_at: null } : n)),
         );
-        message.error(err instanceof Error ? err.message : t("loadFailedMessage"));
+        message.error(
+          err instanceof Error ? err.message : t("loadFailedMessage"),
+        );
       }
     }
-    if (item.link_url) router.push(item.link_url as never);
+    const destination = resolveNotificationDestination(item);
+    if (destination) router.push(destination as never);
   }
 
   const failed = loadFailed || notifLoad.status === "error";
@@ -113,6 +130,7 @@ export function DashboardAlertsCard({ userId, alerts, loadFailed = false }: Prop
 
   return (
     <AppCard
+      className="dashboard-alerts-card"
       title={t("cardTitle")}
       extra={
         <Link href="/settings/notifications">
@@ -182,13 +200,18 @@ export function DashboardAlertsCard({ userId, alerts, loadFailed = false }: Prop
                     >
                       <Tag className="app-notification-feed-item__tag">
                         {t(
-                          `category.${CATEGORY_LABEL_KEYS[item.category]}` as Parameters<typeof t>[0],
+                          `category.${CATEGORY_LABEL_KEYS[item.category]}` as Parameters<
+                            typeof t
+                          >[0],
                         )}
                       </Tag>
-                      <Text strong={unread} className="app-notification-feed-item__title">
+                      <Text className="app-notification-feed-item__title">
                         {item.title}
                       </Text>
-                      <Text type="secondary" className="!text-xs">
+                      <Text
+                        type="secondary"
+                        className="app-notification-feed-item__time"
+                      >
                         {format.dateTime(new Date(item.created_at), {
                           dateStyle: "medium",
                         })}

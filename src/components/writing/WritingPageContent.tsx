@@ -28,21 +28,34 @@ export async function WritingPageContent({
   if (!problem) {
     // D-01 §2 예외 — 지문 로드 실패/문제 없음: 재시도 + 문제 목록 복귀 동선.
     const problemLoadFailed = t("problemLoadFailed", { questionNo });
+    const hasPreservedDraft = Boolean(draft);
+    const showRetry = canRetryProblemLoad && !hasPreservedDraft;
     return (
       <Empty
         className="writing-empty-state"
         description={
-          <h1 className="writing-empty-state__title">{problemLoadFailed}</h1>
+          <div className="flex flex-col gap-2">
+            <h1 className="writing-empty-state__title">
+              {hasPreservedDraft
+                ? t("problemUnavailableTitle", { questionNo })
+                : problemLoadFailed}
+            </h1>
+            {hasPreservedDraft ? (
+              <p className="m-0 text-sm text-text-secondary">
+                {t("problemUnavailableDraftPreserved")}
+              </p>
+            ) : null}
+          </div>
         }
       >
         <Space>
-          {canRetryProblemLoad ? (
+          {showRetry ? (
             <Link href={writingQuestionHref(questionNo) as never}>
               <Button type="primary">{t("retry")}</Button>
             </Link>
           ) : null}
           <Link href={"/practice/problems" as never}>
-            <Button type={canRetryProblemLoad ? "default" : "primary"}>
+            <Button type={showRetry ? "default" : "primary"}>
               {t("toProblemList")}
             </Button>
           </Link>

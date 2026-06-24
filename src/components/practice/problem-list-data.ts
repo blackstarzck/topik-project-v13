@@ -94,7 +94,7 @@ function mapStatusFilter(
 }
 
 function buildFilterJson(filter: ProblemFilter): Record<string, Json> {
-  const f: Record<string, Json> = {};
+  const f: Record<string, Json> = { exclude_seed: true };
   if (filter.questionNo != null) f.question_no = filter.questionNo;
   if (filter.difficulty != null) f.difficulty = filter.difficulty;
   if (filter.topikLevel != null) f.topik_level = filter.topikLevel;
@@ -140,6 +140,10 @@ function toReviewStatus(
   return "approved";
 }
 
+function isSeedFixtureRow(row: RpcRow): boolean {
+  return Array.isArray(row.tags) && row.tags.some((tag) => tag.startsWith("seed:"));
+}
+
 export async function fetchUserProblemsRpc(
   params: {
     filter: ProblemFilter;
@@ -163,9 +167,15 @@ export async function fetchUserProblemsRpc(
   if (error) throw error;
 
   const rpcRows = (data as unknown as RpcRow[]) ?? [];
-  const total = rpcRows.length > 0 ? Number(rpcRows[0].total_count ?? 0) : 0;
+  const visibleRows = rpcRows.filter((row) => !isSeedFixtureRow(row));
+  const total =
+    visibleRows.length < rpcRows.length
+      ? visibleRows.length
+      : rpcRows.length > 0
+        ? Number(rpcRows[0].total_count ?? 0)
+        : 0;
 
-  const rows: UserProblemRow[] = rpcRows.map((r) => {
+  const rows: UserProblemRow[] = visibleRows.map((r) => {
     const solveState = toSolveState(r);
     return {
       problemId: r.problem_id,

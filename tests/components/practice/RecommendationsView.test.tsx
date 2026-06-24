@@ -42,19 +42,42 @@ afterEach(() => {
   cleanup();
 });
 
-function expectHeroDifficultyUsesLucideChartIcon() {
+function expectHeroDifficultyUsesIconsaxIcon() {
   const difficultyLabel = screen.getByText(
     koMessages.practice.recommendations.fallbackHeroDifficulty,
   );
   const difficultyTile = difficultyLabel.closest("span")?.parentElement;
 
-  expect(
-    difficultyTile?.querySelector("svg.lucide-chart-no-axes-column-increasing"),
-  ).toBeTruthy();
-  expect(difficultyTile?.querySelector("svg.lucide-target")).toBeNull();
+  expect(difficultyTile?.querySelector("svg")).toBeTruthy();
 }
 
 describe("RecommendationsView", () => {
+  it("uses the requested Iconsax icons for question type tabs and cards", () => {
+    const { container } = renderWithIntl(<RecommendationsView />);
+
+    const expectedIconNames = [
+      "DirectboxNotif",
+      "ProgrammingArrows",
+      "PresentationChart",
+      "DocumentText",
+    ];
+
+    const typeTabs = container.querySelector(".problem-type-tabs");
+    for (const iconName of expectedIconNames) {
+      expect(
+        typeTabs?.querySelector(`[data-app-icon-name="${iconName}"]`),
+      ).toBeTruthy();
+    }
+
+    for (const iconName of expectedIconNames) {
+      expect(
+        container.querySelector(
+          `a[href^="/writing/"] [data-app-icon-name="${iconName}"]`,
+        ),
+      ).toBeTruthy();
+    }
+  });
+
   it("does not show a recommendation badge in the type tabs", () => {
     renderWithIntl(<RecommendationsView />);
 
@@ -70,32 +93,46 @@ describe("RecommendationsView", () => {
     );
   });
 
-  it("renders the empty recommendation action as a left-aligned anchor", () => {
+  it("renders an honest empty state without a fabricated recommendation", () => {
+    // DB-empty (run: null, items: []) is the beforeEach default. The page must
+    // NOT dress this up as a personalized result: no "대표 추천" hero, no
+    // "이렇게 추천했어요" analysis panel, no default weakness tags.
     renderWithIntl(<RecommendationsView />);
 
-    const copy = screen.getByText(
-      koMessages.practice.recommendations.emptyDescription,
-    );
-    const row = copy.closest("div");
-    expect(row?.className).toContain("items-start");
-    expect(row?.className).not.toContain("justify-center");
+    expect(
+      screen.getByText(koMessages.practice.recommendations.emptyDescription),
+    ).toBeTruthy();
 
-    const link = screen.getByRole("link", {
+    // "문제 목록 보기" is an emphasized primary button that links to the list.
+    const button = screen.getByRole("button", {
       name: koMessages.practice.recommendations.viewProblemList,
     });
-    expect(link.tagName).toBe("A");
-    expect(link.getAttribute("href")).toBe("/practice/problems");
+    expect(button.className).toContain("ant-btn-primary");
+    expect(button.closest("a")?.getAttribute("href")).toBe("/practice/problems");
+
+    // No fabricated recommendation content.
     expect(
-      screen.queryByRole("button", {
-        name: koMessages.practice.recommendations.viewProblemList,
-      }),
+      screen.queryByText(koMessages.practice.recommendations.primaryBadge),
     ).toBeNull();
     expect(
-      screen.queryByText(koMessages.practice.recommendations.footerNote),
+      screen.queryByText(
+        koMessages.practice.recommendations.reasonSummaryTitle,
+      ),
     ).toBeNull();
+    expect(
+      screen.queryByText(koMessages.practice.recommendations.reasonTagGrammar),
+    ).toBeNull();
+
+    // The type-select cards remain — the honest "pick a type to start" path.
+    expect(
+      screen.getByText(koMessages.practice.recommendations.typeSelectTitle),
+    ).toBeTruthy();
   });
 
-  it("renders an empty 52번 filter with the hero metric card pattern", () => {
+  it("renders the honest empty state for a type filter with zero items", () => {
+    // Even when a recommendation RUN exists, zero items means there is nothing
+    // concrete to recommend — we must not fabricate a hero or surface the run
+    // summary as if a problem was recommended.
     mocks.searchParams = "type=52";
     mocks.useRecommendationBundle.mockReturnValue({
       data: {
@@ -116,34 +153,30 @@ describe("RecommendationsView", () => {
 
     expect(mocks.useRecommendationBundle).toHaveBeenCalledWith(52);
     expect(
-      screen.getByText(
+      screen.queryByText(
         koMessages.practice.recommendations.fallbackHeroTitle.replace(
           "{type}",
           koMessages.practice.common.questionType52,
         ),
       ),
+    ).toBeNull();
+    expect(
+      screen.queryByText(koMessages.practice.recommendations.primaryBadge),
+    ).toBeNull();
+    expect(
+      screen.queryByText(
+        koMessages.practice.recommendations.reasonSummaryTitle,
+      ),
+    ).toBeNull();
+    expect(screen.queryByText("52번 추천 근거")).toBeNull();
+
+    // Honest empty copy + type-select cards instead.
+    expect(
+      screen.getByText(koMessages.practice.recommendations.emptyDescription),
     ).toBeTruthy();
     expect(
-      screen.getAllByText(koMessages.practice.recommendations.primaryBadge)
-        .length,
-    ).toBeGreaterThan(0);
-    expect(
-      screen.getByText(koMessages.practice.recommendations.fallbackHeroTime),
+      screen.getByText(koMessages.practice.recommendations.typeSelectTitle),
     ).toBeTruthy();
-    expectHeroDifficultyUsesLucideChartIcon();
-    expect(
-      screen.getByText(koMessages.practice.recommendations.fallbackHeroStatus),
-    ).toBeTruthy();
-    expect(
-      screen
-        .getByRole("link", {
-          name: koMessages.practice.recommendations.fallbackHeroCta.replace(
-            "{type}",
-            "52번",
-          ),
-        })
-        .getAttribute("href"),
-    ).toBe("/writing/answer-writing-52");
   });
 
   it("renders a real 51번 recommendation with the same hero metric layout", () => {
@@ -180,7 +213,7 @@ describe("RecommendationsView", () => {
     expect(
       screen.getByText(koMessages.practice.recommendations.fallbackHeroTime),
     ).toBeTruthy();
-    expectHeroDifficultyUsesLucideChartIcon();
+    expectHeroDifficultyUsesIconsaxIcon();
     expect(
       screen.getByText(koMessages.practice.recommendations.fallbackHeroStatus),
     ).toBeTruthy();
@@ -270,12 +303,38 @@ describe("RecommendationsView", () => {
     // in before the new tab's tags. The key must instead track the displayed
     // content — the selected type and its load state — so it only changes once
     // the new tab's data is actually shown.
+    //
+    // The reason panel now only renders when there are real recommendations, so
+    // this exercises it with an active item bundle.
+    const bundleFor = (questionNo: number) => ({
+      data: {
+        run: null,
+        items: [
+          {
+            itemId: `rec-${questionNo}`,
+            problemId: `problem-${questionNo}`,
+            rank: 1,
+            reason: "추천 사유",
+            estimatedMinutes: 12,
+            weaknessTags: ["grammar"],
+            title: "추천 문제",
+            questionNo,
+          },
+        ],
+        availableTypes: new Set([questionNo]),
+      },
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+
     const reasonKey = () =>
       screen
         .getByText(koMessages.practice.recommendations.reasonSummaryTitle)
         .closest("section")
         ?.getAttribute("data-animation-key");
 
+    mocks.useRecommendationBundle.mockReturnValue(bundleFor(51));
     const noType = renderWithIntl(<RecommendationsView />);
     const reasonCard = screen
       .getByText(koMessages.practice.recommendations.reasonSummaryTitle)
@@ -287,6 +346,7 @@ describe("RecommendationsView", () => {
     noType.unmount();
 
     mocks.searchParams = "type=52";
+    mocks.useRecommendationBundle.mockReturnValue(bundleFor(52));
     renderWithIntl(<RecommendationsView />);
     expect(reasonKey()).toBe("52-ready");
   });

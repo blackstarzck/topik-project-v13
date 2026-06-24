@@ -1,7 +1,7 @@
 # Eval Auth Schemas
 
 Source: [OpenAPI JSON](https://api.dotoretopik.com/openapi.json)
-Last synced: 2026-06-19
+Last synced: 2026-06-23
 
 ## Schema Index
 

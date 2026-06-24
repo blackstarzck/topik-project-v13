@@ -161,6 +161,7 @@
 | # | timestamp | 파일 | 영역 |
 | ---:| --- | --- | --- |
 | 55 | `12:00:00` | [`20260622120000_account_deletion_soft_delete.sql`](./20260622120000_account_deletion_soft_delete.sql) | `profiles.deleted_at` 컬럼 추가 + `private.protect_profile_columns()` 보완(본인 `active→deleted` 단방향 예외, 그 외 status 변경·역방향 복구는 계속 admin 전용 차단) + `public.request_account_deletion()` SECURITY DEFINER RPC(호출자 본인 status=deleted·deleted_at=now(), 멱등, anon revoke·authenticated grant). admin_audit_logs 기록은 의도적 생략(admin_user_id ON DELETE RESTRICT → self-audit가 향후 하드삭제를 막는 함정). |
+| 56 | `15:40:00` | [`20260622154000_archive_seed_writing_fixtures.sql`](./20260622154000_archive_seed_writing_fixtures.sql) | Wireframe seed writing fixtures(`tags`의 `seed:wireframe_problem_fixtures` 또는 `materials.seed_source`)를 물리 삭제하지 않고 `published/active` 사용자 문제 풀에서 제외하기 위해 `publish_status=archived`, `lifecycle_status=inactive`으로 전환한다. 기존 제출/초안 FK와 진단 가능성은 보존한다. |
 
 ---
 
@@ -180,3 +181,8 @@
 - [ ] FK 참조 테이블이 이전 timestamp 파일에 존재하는가?
 - [ ] RLS-적용 대상이라면 RLS enable + force + 정책이 같은 또는 후속 마이그레이션에 있는가?
 - [ ] INDEX.md / 관련 Wireframe 기능명세 / data-usage-index / README.md 또는 AGENTS.md 중 영향받는 곳을 모두 갱신했는가?
+## 2026-06-23 추가 migration
+
+| # | timestamp | file | scope |
+| ---:| --- | --- | --- |
+| 57 | `10:30:00` | [`20260623103000_auth_completion_gate.sql`](./20260623103000_auth_completion_gate.sql) | Expands `/auth/consent` into a single auth completion gate by adding `public.complete_auth_gate(...)`, restoring the final `handle_new_user()` definition to seed `display_name`, `nationality_country_code`, `affiliation_code`, and `nickname`, and backfilling blank nicknames to `talkpik-*`. |

@@ -19,6 +19,9 @@ import {
   computeComparisonMetrics,
   generateNarrative,
 } from "./comparison-service";
+import {
+  toSubmitWritingErrorMessage as toSharedSubmitWritingErrorMessage,
+} from "./submit-errors";
 import type { QuestionNo } from "./types";
 
 export type SubmitWritingInput = {
@@ -35,14 +38,8 @@ export type SubmitWritingResult = {
   questionNo: QuestionNo;
 };
 
-const WRITING_PROBLEM_NOT_SUBMITTABLE_MESSAGE =
-  "현재 제출할 수 없는 문제입니다. 다른 문제를 선택해 주세요.";
-
 function toSubmitWritingErrorMessage(message: string) {
-  if (message.includes("problem_not_submittable")) {
-    return WRITING_PROBLEM_NOT_SUBMITTABLE_MESSAGE;
-  }
-  return `submitWriting failed: ${message}`;
+  return toSharedSubmitWritingErrorMessage(message);
 }
 
 function isExternalSubmitNetworkError(error: unknown): error is TypeError {
@@ -122,9 +119,9 @@ export async function submitWritingAction(
         accessToken,
         payload: {
           task_type: externalTaskType,
-          task_id: externalTaskType,
+          task_id: input.problem_id,
           text: input.answer_text,
-          user_id: "current",
+          user_id: user.id,
         },
       });
     } catch (error) {

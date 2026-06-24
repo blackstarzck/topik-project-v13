@@ -42,6 +42,7 @@ vi.mock("../../../src/lib/supabase/server", () => ({
 }));
 
 import { submitWritingAction } from "../../../src/lib/writing/server-actions";
+import { WRITING_PROBLEM_NOT_SUBMITTABLE_MESSAGE } from "../../../src/lib/writing/submit-errors";
 
 describe("submitWritingAction", () => {
   beforeEach(() => {
@@ -111,10 +112,10 @@ describe("submitWritingAction", () => {
           "Content-Type": "application/json",
         }),
         body: JSON.stringify({
-          task_type: "Q54",
-          task_id: "Q54",
+          task_type: "054",
+          task_id: "00000000-0000-0000-0000-000000000001",
           text: answerText,
-          user_id: "current",
+          user_id: "user-1",
         }),
       }),
     );
@@ -366,7 +367,7 @@ describe("submitWritingAction", () => {
         answer_text: "Answer for a hidden problem.",
         char_count: 28,
       }),
-    ).rejects.toThrow("현재 제출할 수 없는 문제입니다. 다른 문제를 선택해 주세요.");
+    ).rejects.toThrow(WRITING_PROBLEM_NOT_SUBMITTABLE_MESSAGE);
   });
 
   it("shows a learner-friendly error when the external create RPC rejects an unsubmittable problem", async () => {
@@ -393,7 +394,7 @@ describe("submitWritingAction", () => {
         answer_text: "Answer for a hidden problem.",
         char_count: 28,
       }),
-    ).rejects.toThrow("현재 제출할 수 없는 문제입니다. 다른 문제를 선택해 주세요.");
+    ).rejects.toThrow(WRITING_PROBLEM_NOT_SUBMITTABLE_MESSAGE);
   });
 
   it("returns the existing submission id when the external create RPC dedups a duplicate submit", async () => {

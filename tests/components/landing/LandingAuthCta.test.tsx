@@ -138,11 +138,11 @@ describe("landing auth CTA", () => {
     expect(pushMock).toHaveBeenCalledWith("/sign-up");
   });
 
-  it("routes pending-consent users back into post-auth instead of dashboard", () => {
-    renderWithIntl(<LandingHeader authStatus="pending-consent" />);
+  it("routes pending-auth-completion users back into post-auth instead of dashboard", () => {
+    renderWithIntl(<LandingHeader authStatus="pending-auth-completion" />);
 
     const continueLink = screen.getByRole("link", {
-      name: "약관 동의하고 계속하기",
+      name: "가입 마무리하기",
     });
     expect(continueLink.getAttribute("href")).toBe(
       "/auth/post-auth?intent=login",
@@ -150,11 +150,11 @@ describe("landing auth CTA", () => {
     expect(screen.queryByText("대시보드")).toBeNull();
   });
 
-  it("uses the pending-consent CTA in the hero", () => {
-    renderWithIntl(<Hero authStatus="pending-consent" />);
+  it("uses the pending-auth-completion CTA in the hero", () => {
+    renderWithIntl(<Hero authStatus="pending-auth-completion" />);
 
     fireEvent.click(
-      screen.getByRole("button", { name: "약관 동의하고 계속하기" }),
+      screen.getByRole("button", { name: "가입 마무리하기" }),
     );
 
     expect(screen.queryByText("대시보드로 이동")).toBeNull();
@@ -371,8 +371,8 @@ describe("landing auth CTA", () => {
 
   it.each([
     [
-      "pending-consent",
-      "약관 동의하고 계속하기",
+      "pending-auth-completion",
+      "가입 마무리하기",
       "/auth/post-auth?intent=login",
     ],
     [

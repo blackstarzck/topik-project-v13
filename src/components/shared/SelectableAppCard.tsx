@@ -2,7 +2,7 @@
 
 import type { KeyboardEvent, MouseEvent, ReactNode } from "react";
 import type { CardProps } from "antd";
-import { Check } from "lucide-react";
+import { Check } from "@/components/shared/AppIcons";
 import { AppCard } from "./AppCard";
 
 type SelectableAppCardProps = Omit<CardProps, "onSelect"> & {

@@ -4,6 +4,7 @@ import {
   createSupabaseServerClient,
   type SupabaseServerClient,
 } from "../supabase/server";
+import { getProblemAvailability } from "../problems/availability";
 import type {
   ComparisonReportRow,
   FeedbackBundle,
@@ -19,6 +20,13 @@ import {
 } from "./problem-normalizer";
 
 type ClientFactory = () => Promise<SupabaseServerClient>;
+
+type ProblemAvailabilityQueryRow = {
+  publish_status: string | null;
+  visibility: string | null;
+  lifecycle_status: string | null;
+  lifecycle_reason: string | null;
+};
 
 export async function getActiveDraft(
   userId: string,
@@ -105,6 +113,7 @@ type WritingProblemQueryRow = {
   title: string;
   prompt: string;
   question_no: number | null;
+  tags?: string[] | null;
   materials: unknown;
   answer_key: unknown;
   rubric: unknown;
@@ -138,11 +147,32 @@ function normalizeWritingProblemRow(
   });
 }
 
+function isSeedFixtureProblem(row: WritingProblemQueryRow): boolean {
+  if (Array.isArray(row.tags) && row.tags.some((tag) => tag.startsWith("seed:"))) {
+    return true;
+  }
+  if (
+    row.materials &&
+    typeof row.materials === "object" &&
+    !Array.isArray(row.materials) &&
+    "seed_source" in row.materials
+  ) {
+    return row.materials.seed_source === "wireframe_problem_fixtures";
+  }
+  return false;
+}
+
 // problems.id는 uuid 컬럼 — 형식이 아닌 값을 .eq("id", …)에 넘기면 PostgREST가
 // uuid 캐스트 오류(22P02)로 500을 돌려줘 서버 에러 바운더리에 도달한다 (D-3,
 // QA 2026-06-12). 형식 검증으로 "존재하지 않는 문제"와 같은 null 경로로 보낸다.
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function isProblemIdLikeUuid(
+  problemId: string | null | undefined,
+): problemId is string {
+  return typeof problemId === "string" && UUID_PATTERN.test(problemId);
+}
 
 export async function getWritingProblem(
   questionNo: number,
@@ -150,7 +180,7 @@ export async function getWritingProblem(
   createClient: ClientFactory = createSupabaseServerClient,
 ): Promise<WritingProblem | null> {
   if (!isQuestionNo(questionNo)) return null;
-  if (problemId && !UUID_PATTERN.test(problemId)) return null;
+  if (problemId && !isProblemIdLikeUuid(problemId)) return null;
   const explicitProblemId = problemId || null;
   const supabase = await createClient();
   const runQuery = async (withLifecycle: boolean) => {
@@ -158,8 +188,8 @@ export async function getWritingProblem(
       .from("problems")
       .select(
         withLifecycle
-          ? "id, title, prompt, question_no, materials, answer_key, rubric, lifecycle_status, lifecycle_reason"
-          : "id, title, prompt, question_no, materials, answer_key, rubric",
+          ? "id, title, prompt, question_no, tags, materials, answer_key, rubric, lifecycle_status, lifecycle_reason"
+          : "id, title, prompt, question_no, tags, materials, answer_key, rubric",
       )
       .eq("domain", "writing")
       .eq("question_no", questionNo)
@@ -185,7 +215,7 @@ export async function getWritingProblem(
     ({ data, error } = await runQuery(false));
   }
   if (error) throw new Error(`getWritingProblem: ${error.message}`);
-  const problems = (data ?? []).map((row) =>
+  const problems = (data ?? []).filter((row) => !isSeedFixtureProblem(row)).map((row) =>
     normalizeWritingProblemRow(row, questionNo),
   );
   if (problems.length === 0) return null;
@@ -196,4 +226,29 @@ export async function getWritingProblem(
     );
   }
   return problems[0];
+}
+
+export async function getWritingProblemAvailability(
+  problemId: string | null | undefined,
+  createClient: ClientFactory = createSupabaseServerClient,
+) {
+  if (!isProblemIdLikeUuid(problemId)) return getProblemAvailability(null);
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("problems")
+    .select("publish_status, visibility, lifecycle_status, lifecycle_reason")
+    .eq("id", problemId)
+    .maybeSingle();
+  if (error) throw new Error(`getWritingProblemAvailability: ${error.message}`);
+  const row = data as ProblemAvailabilityQueryRow | null;
+  return getProblemAvailability(
+    row
+      ? {
+          publishStatus: row.publish_status,
+          visibility: row.visibility,
+          lifecycleStatus: row.lifecycle_status,
+          lifecycleReason: row.lifecycle_reason,
+        }
+      : null,
+  );
 }

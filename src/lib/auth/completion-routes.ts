@@ -1,7 +1,9 @@
 import { APP_ROUTES } from "../routes";
+import { sanitizeNext } from "./error-mapping";
 
 export type AuthCompletionStatus =
   | "anonymous"
+  | "pending-auth-completion"
   | "pending-consent"
   | "pending-learning-goal"
   | "ready";
@@ -20,8 +22,31 @@ export const ACCOUNT_INACTIVE_PATH = APP_ROUTES.authAccountInactive;
 export const LEARNING_GOAL_PATH = APP_ROUTES.onboardingLearningGoal;
 export const DASHBOARD_PATH = APP_ROUTES.dashboard;
 
+const AUTH_COMPLETION_NEXT_BLOCKED_PATHS = new Set<string>([
+  APP_ROUTES.authConsent,
+  APP_ROUTES.authCallback,
+  APP_ROUTES.login,
+  APP_ROUTES.signUp,
+  APP_ROUTES.authAccountInactive,
+]);
+
 export function getAuthEntryRedirectPath(pathname: string): string {
   return pathname === APP_ROUTES.signUp
     ? POST_AUTH_SIGN_UP_PATH
     : POST_AUTH_LOGIN_PATH;
+}
+
+export function sanitizeAuthCompletionNext(
+  value: string | null | undefined,
+  fallback = POST_AUTH_LOGIN_PATH,
+): string {
+  const sanitized = sanitizeNext(value, fallback);
+  const pathname = sanitized.split(/[?#]/, 1)[0] ?? sanitized;
+  if (
+    AUTH_COMPLETION_NEXT_BLOCKED_PATHS.has(pathname) ||
+    pathname.startsWith(`${APP_ROUTES.authCallback}/`)
+  ) {
+    return fallback;
+  }
+  return sanitized;
 }

@@ -1,29 +1,29 @@
-// Notification email worker — transition APP-SIDE Resend dispatcher.
+// Notification email worker — APP-SIDE SMTP dispatcher (Daou Office).
 //
-// ARCHITECTURE (decided): the in-DB SQL dispatcher cannot make HTTP calls
-// (pg_net not installed) and the provider API key must stay OUT of any
-// assistant/LLM context. So in `live` mode the SQL dispatcher leaves email
-// attempts as status='pending' (see migration 20260612190200_email_live_defer),
-// and an app-side worker processes them: it reads RESEND_API_KEY from server env
-// and calls Resend via fetch (no SDK / no extra dependency). This v13 route is
-// retained only as a transition endpoint while the topik-ai-owned worker and
-// production cron wiring are verified.
+// ARCHITECTURE (decided): the in-DB SQL dispatcher cannot make network calls
+// (pg_net not installed) and SMTP credentials must stay OUT of any assistant/LLM
+// context. So in `live` mode the SQL dispatcher leaves email attempts as
+// status='pending' (see migration 20260612190200_email_live_defer), and an
+// app-side worker processes them: it reads SMTP_* from server env and sends via
+// nodemailer (Daou Office outbound SMTP). keduall.com SPF already includes
+// _spf.daouoffice.com, so guest@keduall.com is SPF-aligned for any recipient.
 //
 // HONESTY BOUNDARY (critical):
-//   - An attempt is only marked 'sent' when Resend actually returns 2xx.
-//   - When RESEND_API_KEY is absent we DO NOT send and DO NOT mark anything —
-//     we return 503 resend_not_configured and leave all attempts untouched.
+//   - An attempt is only marked 'sent' when the SMTP send resolves successfully.
+//   - When SMTP is not configured we DO NOT send and DO NOT mark anything —
+//     we return 503 smtp_not_configured and leave all attempts untouched.
 //
 // AuthZ: this is a SERVICE worker endpoint, not a user session. The caller
 // (cron) must send header `x-worker-secret` equal to NOTIFICATION_WORKER_SECRET.
 // If the env var is unset, or the header is missing/mismatched → 401.
 //
-// runtime=nodejs: uses the service-role key + supabase auth admin API; must
-// never run on the edge or be importable by client code (server-only route).
+// runtime=nodejs: uses the service-role key + supabase auth admin API + nodemailer;
+// must never run on the edge or be importable by client code (server-only route).
 
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import nodemailer from "nodemailer";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -109,14 +109,10 @@ const BATCH_LIMIT = 50;
 const MAX_RETRY = 3;
 // error_message 저장 길이 제한 (provider 응답 본문이 길 수 있다).
 const ERROR_MESSAGE_MAX = 500;
-// 발신 주소(기본값). 오너 결정(2026-06-12): 우선 Resend 테스트 발신 주소를 쓴다.
-// ⚠ 운영 발신 도메인 필요: onboarding@resend.dev는 Resend 테스트 전용으로
-//   "본인 Resend 계정 이메일"로만 실제 발송된다(임의 수신자 발송 불가). 운영에서
-//   실제 가입 사용자들에게 보내려면 소유 도메인을 Resend에 인증하고(권장:
-//   서브도메인 notify.keduall.com — 기존 keduall.com 메일플러그 SPF와 분리) env의
-//   RESEND_FROM 을 'Talkpik AI <guest@notify.keduall.com>' 형태로 교체해야 한다.
-//   도메인 인증 전까지는 본 기본값 유지.
-const DEFAULT_FROM = "onboarding@resend.dev";
+// 발신 주소(기본값). 오너 결정(2026-06-22): Daou Office SMTP로 발송.
+// keduall.com SPF가 이미 _spf.daouoffice.com을 포함하므로 guest@keduall.com 발신은
+// SPF 정렬되어 임의 수신자에게 배달된다(별도 도메인 인증 불필요). env SMTP_FROM 으로 override.
+const DEFAULT_FROM = "도토리 토픽 <guest@keduall.com>";
 const DISPLAY_NAME_FALLBACK = "학습자";
 const SITE_URL_FALLBACK = "https://app.talkpik.ai";
 
@@ -195,11 +191,13 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // 2. Provider 미구성 — 정직한 no-op. attempt를 일절 건드리지 않는다.
-  const resendApiKey = process.env.RESEND_API_KEY;
-  if (!resendApiKey) {
+  // 2. SMTP 미구성 — 정직한 no-op. attempt를 일절 건드리지 않는다.
+  const smtpHost = process.env.SMTP_HOST;
+  const smtpUser = process.env.SMTP_USER;
+  const smtpPass = process.env.SMTP_PASS;
+  if (!smtpHost || !smtpUser || !smtpPass) {
     return NextResponse.json(
-      { ok: false, error: "resend_not_configured" },
+      { ok: false, error: "smtp_not_configured" },
       { status: 503 },
     );
   }
@@ -221,7 +219,14 @@ export async function POST(request: NextRequest) {
     { auth: { persistSession: false } },
   );
 
-  const fromAddress = process.env.RESEND_FROM ?? DEFAULT_FROM;
+  const fromAddress = process.env.SMTP_FROM ?? DEFAULT_FROM;
+  const smtpPort = Number(process.env.SMTP_PORT ?? 465);
+  const transporter = nodemailer.createTransport({
+    host: smtpHost,
+    port: smtpPort,
+    secure: smtpPort === 465, // 465 = implicit TLS
+    auth: { user: smtpUser, pass: smtpPass },
+  });
 
   // 4. pending email attempt 최대 N건 조회.
   const { data: attempts, error: selectError } = await supabase
@@ -286,48 +291,20 @@ export async function POST(request: NextRequest) {
       html = appendUnsubscribeLink(html, token);
     }
 
-    // 4c. Resend 호출. 키는 절대 로깅/반환하지 않는다.
-    let res: Response;
+    // 4c. SMTP 전송(nodemailer). 자격증명은 절대 로깅/반환하지 않는다.
+    // 정직성: 전송이 성공(resolve)했을 때만 'sent'로 기록.
     try {
-      res = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${resendApiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          from: fromAddress,
-          to: recipient,
-          subject,
-          html,
-        }),
+      const info = await transporter.sendMail({
+        from: fromAddress,
+        to: recipient,
+        subject,
+        html,
       });
-    } catch (err) {
-      failed += 1;
-      await applyFailure(
-        supabase,
-        attempt,
-        "fetch_error",
-        err instanceof Error ? err.message : "network error",
-      );
-      continue;
-    }
-
-    const bodyText = await res.text();
-
-    if (res.ok) {
-      // 정직성: Resend가 2xx를 반환했을 때만 'sent'로 기록.
-      let providerMessageId: string | null = null;
-      try {
-        providerMessageId = (JSON.parse(bodyText) as { id?: string }).id ?? null;
-      } catch {
-        providerMessageId = null;
-      }
       const { error: updateError } = await supabase
         .from("notification_delivery_attempts")
         .update({
           status: "sent",
-          provider_message_id: providerMessageId,
+          provider_message_id: info.messageId ?? null,
           error_code: null,
           error_message: null,
           sent_at: new Date().toISOString(),
@@ -341,13 +318,15 @@ export async function POST(request: NextRequest) {
         );
       }
       sent += 1;
-    } else {
+    } catch (err) {
       failed += 1;
       await applyFailure(
         supabase,
         attempt,
-        String(res.status),
-        bodyText.slice(0, ERROR_MESSAGE_MAX),
+        "smtp_error",
+        err instanceof Error
+          ? err.message.slice(0, ERROR_MESSAGE_MAX)
+          : "smtp send error",
       );
     }
   }

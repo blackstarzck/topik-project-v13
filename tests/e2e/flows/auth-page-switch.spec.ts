@@ -33,7 +33,12 @@ test.describe("A-01/A-02 auth page switch", () => {
     await expect(page).toHaveURL(/\/sign-up/);
     await expect(page.getByRole("heading", { name: "회원가입" })).toBeVisible();
     await expect(page.locator("#displayName")).toBeVisible();
-    await expect(page.locator("#passwordConfirm")).toBeVisible();
+    await expect(page.locator("#passwordConfirm")).toHaveCount(0);
+
+    await page.locator("#displayName").fill("QA User");
+    await page.locator("#displayName").blur();
+    await expect(page.getByTestId("country-region-select")).toBeVisible();
+    await expect(page.locator("#passwordConfirm")).toHaveCount(0);
 
     await page.locator('.signup-prompt-account-link a[href="/login"]').click();
     await expect(page).toHaveURL(/\/login/);

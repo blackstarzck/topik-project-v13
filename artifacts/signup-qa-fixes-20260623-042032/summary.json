@@ -1,0 +1,13 @@
+{
+  "baseURL": "http://127.0.0.1:3000",
+  "screenshots": [
+    "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\artifacts\\signup-qa-fixes-20260623-042032\\login-password-desktop.png",
+    "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\artifacts\\signup-qa-fixes-20260623-042032\\login-magic-link-desktop.png",
+    "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\artifacts\\signup-qa-fixes-20260623-042032\\login-password-mobile.png",
+    "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\artifacts\\signup-qa-fixes-20260623-042032\\login-magic-link-mobile.png",
+    "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\artifacts\\signup-qa-fixes-20260623-042032\\verify-email-desktop.png",
+    "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\artifacts\\signup-qa-fixes-20260623-042032\\password-reset-prefilled-desktop.png",
+    "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\artifacts\\signup-qa-fixes-20260623-042032\\terms-public-desktop.png"
+  ],
+  "pageEvents": []
+}

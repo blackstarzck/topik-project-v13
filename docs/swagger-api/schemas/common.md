@@ -1,7 +1,7 @@
 # Common Schemas
 
 Source: [OpenAPI JSON](https://api.dotoretopik.com/openapi.json)
-Last synced: 2026-06-19
+Last synced: 2026-06-23
 
 ## Schema Index
 
@@ -23,8 +23,8 @@ A single prompt blank shown to the applicant for Q51/Q52 fill-in tasks.
 
 | Field | Required | Type | Description | Example / Default |
 | --- | --- | --- | --- | --- |
-| `id` | yes | string | Stable identifier of the blank/sub-question (e.g. 'a', 'b'). maxLength: 64 minLength: 1 | a |
-| `text` | yes | string | Korean prompt text surrounding the blank the applicant must fill. maxLength: 4000 minLength: 1 | 다음을 읽고 ( ㉠ )에 들어갈 말을 쓰십시오. |
+| `id` | yes | string | Stable identifier of the blank/sub-question (e.g. 'a', 'b'). | a |
+| `text` | yes | string | Korean prompt text surrounding the blank the applicant must fill. | 다음을 읽고 ( ㉠ )에 들어갈 말을 쓰십시오. |
 
 ## ValidationError
 
@@ -33,5 +33,5 @@ A single prompt blank shown to the applicant for Q51/Q52 fill-in tasks.
 | `loc` | yes | array<string \| integer> |  |  |
 | `msg` | yes | string |  |  |
 | `type` | yes | string |  |  |
-| `input` | no | Input |  |  |
+| `input` | no | - |  |  |
 | `ctx` | no | object |  |  |

@@ -30,14 +30,30 @@ setup("authenticate student", async ({ page }) => {
   await page.locator('button[type="submit"]').click();
 
   // LoginForm calls router.push("/dashboard") on success, then the workspace
-  // guard may send accounts with missing required consent to /auth/consent.
-  await page.waitForURL(/\/(dashboard|auth\/consent)/, { timeout: 15_000 });
+  // guard may send accounts with missing required consent to /auth/consent,
+  // and the dashboard page itself bounces to /onboarding/learning-goal when the
+  // account has no learning goal yet.
+  await page.waitForURL(/\/(dashboard|auth\/consent|onboarding\/learning-goal)/, {
+    timeout: 15_000,
+  });
   await page.waitForLoadState("networkidle");
   await page
     .waitForURL(/\/auth\/consent/, { timeout: 5_000 })
     .catch(() => undefined);
   if (new URL(page.url()).pathname === "/auth/consent") {
     await page.locator('input[name="accept"]').check({ force: true });
+    await page.locator('form button[type="submit"]').click();
+  }
+
+  // Onboarding gate: a freshly-seeded (or DB-wiped) account has no learning
+  // goal, so /dashboard redirects here. The LearningGoalForm ships valid
+  // defaults (TOPIK II, target grade 4), so submitting persists a goal and
+  // returns to /dashboard — restoring an authed state usable by the viewport
+  // projects. Mirrors the consent handler above.
+  await page
+    .waitForURL(/\/onboarding\/learning-goal/, { timeout: 5_000 })
+    .catch(() => undefined);
+  if (new URL(page.url()).pathname === "/onboarding/learning-goal") {
     await page.locator('form button[type="submit"]').click();
   }
 

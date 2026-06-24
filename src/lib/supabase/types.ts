@@ -1341,6 +1341,15 @@ export interface Database {
         };
         Returns: string | null;
       };
+      complete_auth_gate: {
+        Args: {
+          p_display_name: string | null;
+          p_nickname: string | null;
+          p_nationality_country_code: string | null;
+          p_accept_required_consents: boolean;
+        };
+        Returns: undefined;
+      };
       create_external_writing_submission: {
         Args: {
           submission: Json;
@@ -1354,6 +1363,20 @@ export interface Database {
           total_attempts: number;
           exam_days_left: number | null;
           streak_days: number;
+        }[];
+      };
+      list_user_library_problem_items: {
+        Args: Record<string, never>;
+        Returns: {
+          item_id: string;
+          problem_id: string | null;
+          title: string | null;
+          question_no: number | null;
+          tags: string[] | null;
+          saved_at: string;
+          availability_status: string;
+          availability_reason: string | null;
+          can_retry: boolean;
         }[];
       };
       is_nickname_available: {

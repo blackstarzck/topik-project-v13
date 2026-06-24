@@ -9,9 +9,3 @@ export const themeSettings = {
   appearance: ThemeAppearance;
   allowAppearanceSwitching: boolean;
 };
-
-export const iconSettings = {
-  lucide: {
-    strokeWidth: 1.2,
-  },
-} as const;

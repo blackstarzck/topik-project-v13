@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Progress, Typography } from "antd";
-import { ArrowLeft, Clock3, PenLine, SendHorizontal } from "lucide-react";
+import { ArrowLeft, Clock3, PenLine, SendHorizontal } from "@/components/shared/AppIcons";
 import type { ReactNode } from "react";
 
 import type { AutosaveStatus } from "@/lib/writing/types";

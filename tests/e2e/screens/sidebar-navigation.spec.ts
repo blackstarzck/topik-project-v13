@@ -79,3 +79,67 @@ for (const sidebarCase of SIDEBAR_CASES) {
     expect(errors, errors.join("\n")).toEqual([]);
   });
 }
+
+test("sidebar keeps an 8px visual gap between Iconsax icons and labels", async ({
+  page,
+}) => {
+  const errors = collectErrors(page);
+
+  await page.goto("/dashboard", { waitUntil: "networkidle" });
+  await expect(page, "bounced to /login ??storageState stale?").not.toHaveURL(
+    /\/login/,
+  );
+
+  await openMobileDrawerIfNeeded(page);
+
+  const sidebarMenu = page
+    .locator(".app-sidebar-menu:not(.ant-menu-inline-collapsed)")
+    .first();
+  const growthTitle = sidebarMenu.locator(".ant-menu-submenu-title", {
+    hasText: "성장 리포트",
+  });
+
+  await expect(
+    growthTitle.locator('[data-sidebar-icon-name="DocumentText"]'),
+  ).toBeVisible();
+
+  await growthTitle.click();
+  await expect(
+    sidebarMenu
+      .locator(".ant-menu-item", { hasText: "성장 대시보드" })
+      .locator('[data-sidebar-icon-name="Chart2"]'),
+  ).toBeVisible();
+
+  const measurements = await page
+    .locator(".app-sidebar-menu:not(.ant-menu-inline-collapsed)")
+    .first()
+    .evaluate((menu) => {
+      const items = Array.from(
+        menu.querySelectorAll(".ant-menu-item, .ant-menu-submenu-title"),
+      ).filter((item) => {
+        return item.getClientRects().length > 0;
+      });
+
+      return items.map((item) => {
+        const icon = item.querySelector(".app-sidebar-icon");
+        const title = item.querySelector(".ant-menu-title-content");
+        const iconRect = icon?.getBoundingClientRect();
+        const titleRect = title?.getBoundingClientRect();
+
+        return {
+          text: title?.textContent?.trim() ?? "",
+          gap:
+            iconRect && titleRect
+              ? Math.round((titleRect.left - iconRect.right) * 100) / 100
+              : null,
+        };
+      });
+    });
+
+  expect(measurements.length).toBeGreaterThan(0);
+  for (const measurement of measurements) {
+    expect(measurement.gap, measurement.text).toBeGreaterThanOrEqual(7.5);
+    expect(measurement.gap, measurement.text).toBeLessThanOrEqual(8.5);
+  }
+  expect(errors, errors.join("\n")).toEqual([]);
+});

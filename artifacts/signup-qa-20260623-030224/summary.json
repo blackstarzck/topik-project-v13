@@ -1,0 +1,29 @@
+{
+  "baseURL": "http://127.0.0.1:3000",
+  "screenshots": [
+    "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\artifacts\\signup-qa-20260623-030224\\auth-consent-completion-desktop.png",
+    "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\artifacts\\signup-qa-20260623-030224\\auth-consent-completion-mobile.png",
+    "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\artifacts\\signup-qa-20260623-030224\\auth-error-otp-desktop.png",
+    "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\artifacts\\signup-qa-20260623-030224\\auth-error-otp-mobile.png",
+    "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\artifacts\\signup-qa-20260623-030224\\google-oauth-embedded-warning-mobile.png",
+    "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\artifacts\\signup-qa-20260623-030224\\landing-anonymous-desktop.png",
+    "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\artifacts\\signup-qa-20260623-030224\\landing-anonymous-mobile.png",
+    "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\artifacts\\signup-qa-20260623-030224\\login-magic-link-desktop.png",
+    "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\artifacts\\signup-qa-20260623-030224\\login-magic-link-mobile.png",
+    "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\artifacts\\signup-qa-20260623-030224\\login-password-desktop.png",
+    "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\artifacts\\signup-qa-20260623-030224\\login-password-mobile.png",
+    "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\artifacts\\signup-qa-20260623-030224\\privacy-public-desktop.png",
+    "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\artifacts\\signup-qa-20260623-030224\\signup-after-name-desktop.png",
+    "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\artifacts\\signup-qa-20260623-030224\\signup-after-name-mobile.png",
+    "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\artifacts\\signup-qa-20260623-030224\\signup-duplicate-error-desktop.png",
+    "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\artifacts\\signup-qa-20260623-030224\\signup-initial-desktop.png",
+    "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\artifacts\\signup-qa-20260623-030224\\signup-initial-mobile.png",
+    "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\artifacts\\signup-qa-20260623-030224\\signup-ready-desktop.png",
+    "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\artifacts\\signup-qa-20260623-030224\\signup-ready-mobile.png",
+    "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\artifacts\\signup-qa-20260623-030224\\signup-submit-verify-email-desktop.png",
+    "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\artifacts\\signup-qa-20260623-030224\\terms-public-desktop.png",
+    "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\artifacts\\signup-qa-20260623-030224\\verify-email-desktop.png",
+    "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\artifacts\\signup-qa-20260623-030224\\verify-email-mobile.png"
+  ],
+  "pageEvents": []
+}

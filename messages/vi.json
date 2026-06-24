@@ -53,6 +53,7 @@
     "ctaDashboard": "Tới bảng điều khiển",
     "ctaLogin": "Đăng nhập",
     "ctaSignUp": "Bắt đầu miễn phí",
+    "ctaAuthCompletion": "Hoàn tất đăng ký",
     "ctaConsentContinue": "Đồng ý và tiếp tục",
     "ctaLearningGoal": "Thiết lập mục tiêu học tập",
     "ctaContinueSetup": "Tiếp tục thiết lập",
@@ -62,6 +63,7 @@
     "heroCtaDashboard": "Tới bảng điều khiển",
     "heroCtaSignUp": "Bắt đầu miễn phí",
     "heroCtaLogin": "Đăng nhập",
+    "heroCtaAuthCompletion": "Hoàn tất đăng ký",
     "heroCtaConsentContinue": "Đồng ý và tiếp tục",
     "heroCtaLearningGoal": "Thiết lập mục tiêu học tập",
     "heroCtaContinueSetup": "Tiếp tục thiết lập",
@@ -480,13 +482,18 @@
       "embeddedBrowserDescription": "Hãy mở trang này bằng Chrome, Safari hoặc trình duyệt mặc định rồi thử đăng nhập Google lại."
     },
     "consent": {
-      "metaTitle": "Cần đồng ý — TALKPIK",
-      "heading": "Cần đồng ý với điều khoản",
-      "description": "Vui lòng đồng ý với các tài liệu bắt buộc bên dưới để tiếp tục sử dụng TALKPIK AI.",
+      "metaTitle": "Hoàn tất đăng ký — TALKPIK",
+      "heading": "Hoàn tất đăng ký",
+      "description": "Xác nhận thông tin bắt buộc và đồng ý cần thiết trước khi bắt đầu.",
+      "profileSectionTitle": "Thông tin bắt buộc",
+      "profileSectionDescription": "Chỉ những thông tin còn thiếu mới được hiển thị.",
+      "documentsSectionTitle": "Điều khoản bắt buộc",
+      "documentsSectionDescription": "Xem lại các tài liệu cần thiết để sử dụng dịch vụ.",
       "versionLabel": "Phiên bản {version}",
       "agreement": "Tôi đã xem và đồng ý với điều khoản bắt buộc và chính sách bảo mật.",
-      "requiredError": "Bạn cần đồng ý với các tài liệu bắt buộc để tiếp tục.",
-      "submit": "Đồng ý và tiếp tục"
+      "requiredError": "Vui lòng nhập thông tin bắt buộc và đồng ý với tài liệu cần thiết để tiếp tục.",
+      "saveFailedError": "Hiện chưa thể lưu. Vui lòng thử lại sau ít phút.",
+      "submit": "Lưu và tiếp tục"
     },
     "passwordReset": {
       "metaTitle": "Đặt lại mật khẩu — TALKPIK",
@@ -532,6 +539,7 @@
       "mascotAlt": "Nhân vật trợ lý học tập TALKPIK",
       "title": "Chúng tôi đã gửi email xác minh",
       "body": "Chúng tôi đã nhận yêu cầu đăng ký. Nếu đây là tài khoản mới, email xác minh sẽ được gửi đến email bên dưới. Hãy mở liên kết trong email để hoàn tất đăng ký.",
+      "existingAccountHeading": "Bạn đã có tài khoản?",
       "existingAccountNote": "Nếu bạn từng tạo tài khoản trước đây, hãy đăng nhập hoặc đặt lại mật khẩu.",
       "loginCta": "Đăng nhập",
       "passwordResetCta": "Đặt lại mật khẩu",
@@ -1248,6 +1256,7 @@
     "actions": {
       "retryDefault": "Làm lại",
       "retryWriting": "Viết lại",
+      "retryUnavailable": "Câu hỏi này không còn cho phép bắt đầu bài làm mới.",
       "nextProblem": "Câu hỏi tiếp theo",
       "savePdf": "Lưu PDF",
       "compareReport": "Báo cáo so sánh",
@@ -1362,6 +1371,8 @@
       "metaTitleFeedbackLong": "Phản hồi bài dài — TALKPIK",
       "metaTitleFeedbackShort": "Phản hồi câu trả lời ngắn — TALKPIK",
       "problemLoadFailed": "Không thể tải đề bài cho câu hỏi số {questionNo}.",
+      "problemUnavailableTitle": "Câu hỏi số {questionNo} không còn khả dụng.",
+      "problemUnavailableDraftPreserved": "Câu trả lời đang viết của bạn vẫn còn trong bản tự động lưu. Hãy chọn câu hỏi khác trong danh sách.",
       "retry": "Thử lại",
       "toProblemList": "Đến danh sách câu hỏi"
     },
@@ -1575,6 +1586,8 @@
       "notEnoughChars": "Bạn vẫn chưa đạt số ký tự tối thiểu ({minChars}).",
       "submitFailedTitle": "Không thể nộp bài",
       "submitFailedDescription": "{submitError} — nhấn 'Nộp lại' để thử lại, hoặc sao chép câu trả lời để dự phòng.",
+      "submitUnavailableDescription": "{submitError} Câu trả lời hiện tại của bạn vẫn được giữ lại. Hãy chọn câu hỏi khác trong danh sách bài luyện.",
+      "chooseAnotherProblem": "Chọn câu hỏi khác",
       "agreeNoEdit": "Tôi hiểu rằng không thể chỉnh sửa sau khi nộp.",
       "checklistTitle": "Danh sách kiểm tra trước khi nộp",
       "checklistQuestion": "Đã kiểm tra đề",
@@ -1795,7 +1808,12 @@
       "emptySearch": "Không tìm thấy kết quả.",
       "emptyNoItems": "Chưa có câu hỏi nào được lưu.",
       "resetFilter": "Đặt lại bộ lọc",
-      "retry": "Làm lại"
+      "retry": "Làm lại",
+      "retryUnavailable": "Không thể làm lại",
+      "providedEnded": "Đã ngừng cung cấp",
+      "unavailable": "Không khả dụng",
+      "unavailablePlaceholderTitle": "Câu hỏi không còn khả dụng",
+      "unavailableDefaultReason": "Bạn không thể bắt đầu bài làm mới vì câu hỏi này không còn khả dụng."
     },
     "exports": {
       "loadError": "Không thể tải lịch sử xuất file",

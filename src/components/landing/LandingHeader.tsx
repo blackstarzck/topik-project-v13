@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "antd";
-import { ArrowUpRight, LogIn } from "lucide-react";
+import { ArrowUpRight, LogIn } from "@/components/shared/AppIcons";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 

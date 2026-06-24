@@ -16,9 +16,11 @@ type Formatter = (raw: unknown) => string;
 const asString: Formatter = (raw) => String(raw);
 const asPx: Formatter = (raw) => `${raw}px`;
 
-const BRIDGE_TOKEN_MAP: Record<
+const ANT_D_BACKED_BRIDGE_TOKEN_MAP: Partial<
+  Record<
   AppBridgeVarName,
   { token: string; format: Formatter }
+  >
 > = {
   "--app-color-primary": { token: "colorPrimary", format: asString },
   "--app-color-bg-layout": { token: "colorBgLayout", format: asString },
@@ -64,9 +66,12 @@ describe("theme bridge ↔ AntD token parity (Awesomic selected theme)", () => {
     expect(resolved).toBeTruthy();
 
     for (const [varName, { token, format }] of Object.entries(
-      BRIDGE_TOKEN_MAP,
+      ANT_D_BACKED_BRIDGE_TOKEN_MAP,
     ) as Array<
-      [AppBridgeVarName, (typeof BRIDGE_TOKEN_MAP)[AppBridgeVarName]]
+      [
+        AppBridgeVarName,
+        NonNullable<(typeof ANT_D_BACKED_BRIDGE_TOKEN_MAP)[AppBridgeVarName]>,
+      ]
     >) {
       const expected = format(resolved?.[token]);
       expect(bridge[varName]).toBeTruthy();

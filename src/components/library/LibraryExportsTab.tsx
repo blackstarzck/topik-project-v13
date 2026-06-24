@@ -234,23 +234,34 @@ export function LibraryExportsTab({
   if (items.length === 0) {
     const searching = searchTerm.trim().length > 0;
     return (
-      <div className="flex w-full flex-col gap-4">
+      <div
+        data-testid="library-tab-body"
+        className="flex min-h-0 w-full flex-1 flex-col gap-4"
+      >
         <Text data-testid="library-result-count" type="secondary">
           {tCount("resultCount", { count: 0 })}
         </Text>
-        <Empty
-          description={searching ? t("emptySearch") : t("emptyNoItems")}
+        <div
+          data-testid="library-empty-state"
+          className="flex flex-1 items-center justify-center"
         >
-          {searching && onResetSearch ? (
-            <Button onClick={onResetSearch}>{t("resetFilter")}</Button>
-          ) : null}
-        </Empty>
+          <Empty
+            description={searching ? t("emptySearch") : t("emptyNoItems")}
+          >
+            {searching && onResetSearch ? (
+              <Button onClick={onResetSearch}>{t("resetFilter")}</Button>
+            ) : null}
+          </Empty>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex w-full flex-col gap-4">
+    <div
+      data-testid="library-tab-body"
+      className="flex min-h-0 w-full flex-1 flex-col gap-4"
+    >
       <Text data-testid="library-result-count" type="secondary">
         {tCount("resultCount", { count: items.length })}
       </Text>

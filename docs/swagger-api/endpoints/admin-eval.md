@@ -1,7 +1,7 @@
 # Admin Eval API
 
 Source: [Swagger UI](https://api.dotoretopik.com/docs) / [OpenAPI JSON](https://api.dotoretopik.com/openapi.json)
-Last synced: 2026-06-19
+Last synced: 2026-06-23
 
 Scope: Evaluation operations, reviews, and datasets
 
@@ -9,18 +9,330 @@ Scope: Evaluation operations, reviews, and datasets
 
 | Method | Path | Summary | Auth |
 | --- | --- | --- | --- |
+| POST | [`/api/admin/eval/run`](#post-api-admin-eval-run) | Trigger evaluation pipeline run | BearerAuth |
+| GET | [`/api/admin/eval/run/{run_id}/status`](#get-api-admin-eval-run-run-id-status) | Poll eval run status | BearerAuth |
+| GET | [`/api/admin/eval/users`](#get-api-admin-eval-users) | List users with graded submissions | BearerAuth |
+| GET | [`/api/admin/eval/users/{user_id}/submissions`](#get-api-admin-eval-users-user-id-submissions) | List a user's graded submissions | BearerAuth |
+| GET | [`/api/admin/eval/submissions/{submission_id}`](#get-api-admin-eval-submissions-submission-id) | Get submission detail | BearerAuth |
 | GET | [`/api/admin/eval/datasets`](#get-api-admin-eval-datasets) | List golden datasets (eval runs) | BearerAuth |
 | GET | [`/api/admin/eval/datasets/{dataset_id}/results`](#get-api-admin-eval-datasets-dataset-id-results) | Get dataset case results | BearerAuth |
 | GET | [`/api/admin/eval/datasets/{dataset_id}/stats`](#get-api-admin-eval-datasets-dataset-id-stats) | Get dataset statistics | BearerAuth |
+| GET | [`/api/admin/eval/reviews/{target_type}/{target_id}/my`](#get-api-admin-eval-reviews-target-type-target-id-my) | Get my expert review | BearerAuth |
 | GET | [`/api/admin/eval/reviews/{target_type}/{target_id}`](#get-api-admin-eval-reviews-target-type-target-id) | List all expert reviews | BearerAuth |
 | POST | [`/api/admin/eval/reviews/{target_type}/{target_id}`](#post-api-admin-eval-reviews-target-type-target-id) | Submit or update expert review | BearerAuth |
-| GET | [`/api/admin/eval/reviews/{target_type}/{target_id}/my`](#get-api-admin-eval-reviews-target-type-target-id-my) | Get my expert review | BearerAuth |
-| POST | [`/api/admin/eval/run`](#post-api-admin-eval-run) | Trigger evaluation pipeline run | BearerAuth |
-| GET | [`/api/admin/eval/run/{run_id}/status`](#get-api-admin-eval-run-run-id-status) | Poll eval run status | BearerAuth |
 | GET | [`/api/admin/eval/stats/overview`](#get-api-admin-eval-stats-overview) | Dashboard overview statistics | BearerAuth |
-| GET | [`/api/admin/eval/submissions/{submission_id}`](#get-api-admin-eval-submissions-submission-id) | Get submission detail | BearerAuth |
-| GET | [`/api/admin/eval/users`](#get-api-admin-eval-users) | List users with graded submissions | BearerAuth |
-| GET | [`/api/admin/eval/users/{user_id}/submissions`](#get-api-admin-eval-users-user-id-submissions) | List a user's graded submissions | BearerAuth |
+
+## POST /api/admin/eval/run
+
+Summary: Trigger evaluation pipeline run
+
+Auth: BearerAuth
+
+### Description
+
+Trigger evaluation pipeline run / 평가 파이프라인 실행 시작
+
+**EN:** Starts an async evaluation subprocess for a given pipeline and dataset.
+Returns a `run_id` immediately; poll `GET /api/admin/eval/run/{run_id}/status` for progress.
+
+Available pipelines: `writing_scorer`, `content_generation`, `chat_tutor`,
+`exam_feedback`, `chat_modes`, `q53_dsl`.
+
+Modes: `full` (all cases), `quick` (fast subset), `stability` (repeat runs).
+
+**KR:** 지정된 파이프라인과 데이터셋으로 비동기 평가 서브프로세스를 시작합니다.
+`run_id`를 즉시 반환하고 `GET /api/admin/eval/run/{run_id}/status`로 진행 상황을 폴링합니다.
+
+**Request example / 요청 예시:**
+```json
+{
+  "pipeline": "writing_scorer",
+  "dataset": "all",
+  "mode": "quick",
+  "case_filter": null
+}
+```
+
+**Response example / 응답 예시:**
+```json
+{
+  "run_id": "a1b2c3d4-...",
+  "status": "running",
+  "pipeline": "writing_scorer",
+  "dataset": "all",
+  "mode": "quick"
+}
+```
+
+### Request Body
+
+Media type: `application/json`
+
+Schema: [EvalRunRequest](../schemas/admin-eval.md#evalrunrequest)
+
+### Responses
+
+| Status | Description | Media | Schema |
+| --- | --- | --- | --- |
+| 200 | Run started. Returns the run_id to poll for status. | `application/json` | [EvalRunResponse](../schemas/admin-eval.md#evalrunresponse) |
+| 401 | Missing or invalid JWT. | - | - |
+| 403 | Caller lacks the `admin` role. | - | - |
+| 422 | Invalid `pipeline` or `mode` (not in allowlist), or malformed `dataset`/`case_filter`. | - | - |
+
+Response 200 example:
+
+```json
+{
+  "run_id": "a1b2c3d4-...",
+  "status": "running",
+  "pipeline": "writing_scorer",
+  "dataset": "all",
+  "mode": "quick"
+}
+```
+
+## GET /api/admin/eval/run/{run_id}/status
+
+Summary: Poll eval run status
+
+Auth: BearerAuth
+
+### Description
+
+Poll eval run status / 평가 실행 상태 조회
+
+    **EN:** Returns the current status of an eval run. Status is stored in Redis
+    for up to 2 hours after completion. Possible values: `running`, `completed`, `failed`, `error`.
+
+    **KR:** 평가 실행의 현재 상태를 반환합니다. 상태는 완료 후 최대 2시간 동안 Redis에 저장됩니다.
+    가능한 값: `running`, `completed`, `failed`, `error`.
+
+    **Response example (completed) / 응답 예시 (완료):**
+    ```json
+    {
+      "status": "completed",
+      "exit_code": 0,
+      "stdout_tail": "Passed: 18/20 cases (90.0%)
+Avg score: 42.3",
+      "stderr_tail": ""
+    }
+    ```
+
+### Parameters
+
+| Name | In | Required | Type | Description |
+| --- | --- | --- | --- | --- |
+| `run_id` | path | yes | string |  |
+
+### Responses
+
+| Status | Description | Media | Schema |
+| --- | --- | --- | --- |
+| 200 | Current run status. Values: running, completed, failed, error. | `application/json` | [EvalRunStatusResponse](../schemas/admin-eval.md#evalrunstatusresponse) |
+| 401 | Missing or invalid JWT. | - | - |
+| 403 | Caller lacks the `admin` role. | - | - |
+| 404 | Run not found or expired (Redis TTL is 2 hours). | - | - |
+| 422 | Validation Error | `application/json` | [HTTPValidationError](../schemas/common.md#httpvalidationerror) |
+| 503 | Redis unavailable. | - | - |
+
+Response 200 example:
+
+```json
+{
+  "status": "completed",
+  "exit_code": 0,
+  "stdout_tail": "Passed: 18/20 cases (90.0%)\nAvg score: 42.3",
+  "stderr_tail": ""
+}
+```
+
+## GET /api/admin/eval/users
+
+Summary: List users with graded submissions
+
+Auth: BearerAuth
+
+### Description
+
+List users with graded submissions / 채점된 제출이 있는 사용자 목록
+
+**EN:** Returns a paginated list of users who have at least one graded submission.
+Useful for browsing which learners have been evaluated.
+
+**KR:** 채점된 제출이 하나 이상 있는 사용자의 페이지네이션 목록을 반환합니다.
+어떤 학습자가 평가를 받았는지 탐색하는 데 유용합니다.
+
+**Response example / 응답 예시:**
+```json
+{
+  "items": [
+    { "user_id": "uuid", "display_name": "홍길동", "submission_count": 5,
+      "last_submitted_at": "2024-11-15T10:00:00" }
+  ],
+  "total": 1, "limit": 50, "offset": 0
+}
+```
+
+### Parameters
+
+| Name | In | Required | Type | Description |
+| --- | --- | --- | --- | --- |
+| `limit` | query | no | integer |  |
+| `offset` | query | no | integer |  |
+
+### Responses
+
+| Status | Description | Media | Schema |
+| --- | --- | --- | --- |
+| 200 | Paginated list of users who have at least one graded submission. | `application/json` | [EvalUsersResponse](../schemas/admin-eval.md#evalusersresponse) |
+| 401 | Missing or invalid JWT. | - | - |
+| 403 | Caller lacks the `admin` role. | - | - |
+| 422 | Invalid pagination parameters. | - | - |
+
+Response 200 example:
+
+```json
+{
+  "items": [
+    {
+      "user_id": "uuid",
+      "display_name": "홍길동",
+      "submission_count": 5,
+      "last_submitted_at": "2024-11-15T10:00:00"
+    }
+  ],
+  "total": 1,
+  "limit": 50,
+  "offset": 0
+}
+```
+
+## GET /api/admin/eval/users/{user_id}/submissions
+
+Summary: List a user's graded submissions
+
+Auth: BearerAuth
+
+### Description
+
+List user's graded submissions / 사용자 채점 제출 목록
+
+**EN:** Returns all graded writing submissions for a specific user, ordered
+newest first. Includes scores and task metadata.
+
+**KR:** 특정 사용자의 모든 채점된 작문 제출 목록을 최신순으로 반환합니다.
+점수와 문제 메타데이터가 포함됩니다.
+
+**Response example / 응답 예시:**
+```json
+{
+  "items": [
+    { "submission_id": "uuid", "task_type": "task54",
+      "total_score": 58.0, "graded_at": "2024-11-15T10:05:00" }
+  ],
+  "total": 1, "limit": 50, "offset": 0
+}
+```
+
+### Parameters
+
+| Name | In | Required | Type | Description |
+| --- | --- | --- | --- | --- |
+| `user_id` | path | yes | string |  |
+| `limit` | query | no | integer |  |
+| `offset` | query | no | integer |  |
+
+### Responses
+
+| Status | Description | Media | Schema |
+| --- | --- | --- | --- |
+| 200 | All graded writing submissions for the user, newest first. | `application/json` | [UserSubmissionsResponse](../schemas/admin-eval.md#usersubmissionsresponse) |
+| 401 | Missing or invalid JWT. | - | - |
+| 403 | Caller lacks the `admin` role. | - | - |
+| 422 | Invalid user_id (not a UUID) or invalid pagination parameters. | - | - |
+
+Response 200 example:
+
+```json
+{
+  "items": [
+    {
+      "submission_id": "uuid",
+      "task_type": "task54",
+      "total_score": 58,
+      "graded_at": "2024-11-15T10:05:00"
+    }
+  ],
+  "total": 1,
+  "limit": 50,
+  "offset": 0
+}
+```
+
+## GET /api/admin/eval/submissions/{submission_id}
+
+Summary: Get submission detail
+
+Auth: BearerAuth
+
+### Description
+
+Get submission detail / 제출 상세 조회
+
+**EN:** Returns full detail for a single submission: the essay text, task metadata,
+AI evaluation scores (per section), and all feedback objects.
+
+**KR:** 단일 제출의 전체 상세 정보를 반환합니다: 에세이 텍스트, 문제 메타데이터,
+AI 평가 점수 (섹션별), 모든 피드백 객체.
+
+**Response example / 응답 예시:**
+```json
+{
+  "submission_id": "uuid",
+  "task_type": "task54",
+  "text": "현대 사회에서...",
+  "total_score": 58.0,
+  "section_scores": { "content": 20, "structure": 18, "expression": 20 },
+  "feedback": { "summary": "전반적으로 잘 작성된 글입니다..." },
+  "graded_at": "2024-11-15T10:05:00"
+}
+```
+
+### Parameters
+
+| Name | In | Required | Type | Description |
+| --- | --- | --- | --- | --- |
+| `submission_id` | path | yes | string |  |
+
+### Responses
+
+| Status | Description | Media | Schema |
+| --- | --- | --- | --- |
+| 200 | Full submission detail: essay text, task metadata, section scores, and feedback. | `application/json` | [SubmissionDetailResponse](../schemas/admin-eval.md#submissiondetailresponse) |
+| 401 | Missing or invalid JWT. | - | - |
+| 403 | Caller lacks the `admin` role. | - | - |
+| 404 | Submission not found. | - | - |
+| 422 | Invalid submission_id (not a UUID). | - | - |
+
+Response 200 example:
+
+```json
+{
+  "submission_id": "uuid",
+  "task_type": "task54",
+  "text": "현대 사회에서...",
+  "total_score": 58,
+  "section_scores": {
+    "content": 20,
+    "structure": 18,
+    "expression": 20
+  },
+  "feedback": {
+    "summary": "전반적으로 잘 작성된 글입니다..."
+  },
+  "graded_at": "2024-11-15T10:05:00"
+}
+```
 
 ## GET /api/admin/eval/datasets
 
@@ -215,6 +527,66 @@ Response 200 example:
 }
 ```
 
+## GET /api/admin/eval/reviews/{target_type}/{target_id}/my
+
+Summary: Get my expert review
+
+Auth: BearerAuth
+
+### Description
+
+Get my expert review / 내 전문가 리뷰 조회
+
+**EN:** Fetches the current admin's review for a specific submission or eval result.
+Returns an empty object `{}` if no review has been submitted yet.
+
+**KR:** 특정 제출 또는 평가 결과에 대한 현재 관리자의 리뷰를 가져옵니다.
+아직 제출된 리뷰가 없으면 빈 객체 `{}`를 반환합니다.
+
+**Path parameters / 경로 파라미터:**
+- `target_type`: `submission` | `eval_result`
+- `target_id`: UUID of the target
+
+**Response example / 응답 예시:**
+```json
+{
+  "agreement": "mostly_agree", "grade": "B",
+  "disagreed_sections": ["expression"],
+  "general_feedback": "채점 기준이 다소 엄격하게 적용된 것 같습니다.",
+  "reviewed_at": "2024-11-15T11:00:00"
+}
+```
+
+### Parameters
+
+| Name | In | Required | Type | Description |
+| --- | --- | --- | --- | --- |
+| `target_type` | path | yes | enum(`submission`, `eval_result`) |  |
+| `target_id` | path | yes | string |  |
+
+### Responses
+
+| Status | Description | Media | Schema |
+| --- | --- | --- | --- |
+| 200 | The current admin's review for the target, or `{}` if none submitted yet. | `application/json` | [ExpertReview](../schemas/admin-eval.md#expertreview) |
+| 401 | Missing or invalid JWT. | - | - |
+| 403 | Caller lacks the `admin` role. | - | - |
+| 422 | Invalid target_type. | - | - |
+
+Response 200 example:
+
+```json
+{
+  "agreement": "mostly_agree",
+  "grade": "B",
+  "disagreed_sections": [
+    "expression"
+  ],
+  "general_feedback": "채점 기준이 다소 엄격하게 적용된 것 같습니다.",
+  "reviewed_at": "2024-11-15T11:00:00"
+}
+```
+
 ## GET /api/admin/eval/reviews/{target_type}/{target_id}
 
 Summary: List all expert reviews
@@ -346,190 +718,6 @@ Response 200 example:
 }
 ```
 
-## GET /api/admin/eval/reviews/{target_type}/{target_id}/my
-
-Summary: Get my expert review
-
-Auth: BearerAuth
-
-### Description
-
-Get my expert review / 내 전문가 리뷰 조회
-
-**EN:** Fetches the current admin's review for a specific submission or eval result.
-Returns an empty object `{}` if no review has been submitted yet.
-
-**KR:** 특정 제출 또는 평가 결과에 대한 현재 관리자의 리뷰를 가져옵니다.
-아직 제출된 리뷰가 없으면 빈 객체 `{}`를 반환합니다.
-
-**Path parameters / 경로 파라미터:**
-- `target_type`: `submission` | `eval_result`
-- `target_id`: UUID of the target
-
-**Response example / 응답 예시:**
-```json
-{
-  "agreement": "mostly_agree", "grade": "B",
-  "disagreed_sections": ["expression"],
-  "general_feedback": "채점 기준이 다소 엄격하게 적용된 것 같습니다.",
-  "reviewed_at": "2024-11-15T11:00:00"
-}
-```
-
-### Parameters
-
-| Name | In | Required | Type | Description |
-| --- | --- | --- | --- | --- |
-| `target_type` | path | yes | enum(`submission`, `eval_result`) |  |
-| `target_id` | path | yes | string |  |
-
-### Responses
-
-| Status | Description | Media | Schema |
-| --- | --- | --- | --- |
-| 200 | The current admin's review for the target, or `{}` if none submitted yet. | `application/json` | [ExpertReview](../schemas/admin-eval.md#expertreview) |
-| 401 | Missing or invalid JWT. | - | - |
-| 403 | Caller lacks the `admin` role. | - | - |
-| 422 | Invalid target_type. | - | - |
-
-Response 200 example:
-
-```json
-{
-  "agreement": "mostly_agree",
-  "grade": "B",
-  "disagreed_sections": [
-    "expression"
-  ],
-  "general_feedback": "채점 기준이 다소 엄격하게 적용된 것 같습니다.",
-  "reviewed_at": "2024-11-15T11:00:00"
-}
-```
-
-## POST /api/admin/eval/run
-
-Summary: Trigger evaluation pipeline run
-
-Auth: BearerAuth
-
-### Description
-
-Trigger evaluation pipeline run / 평가 파이프라인 실행 시작
-
-**EN:** Starts an async evaluation subprocess for a given pipeline and dataset.
-Returns a `run_id` immediately; poll `GET /api/admin/eval/run/{run_id}/status` for progress.
-
-Available pipelines: `writing_scorer`, `content_generation`, `chat_tutor`,
-`exam_feedback`, `chat_modes`, `q53_dsl`.
-
-Modes: `full` (all cases), `quick` (fast subset), `stability` (repeat runs).
-
-**KR:** 지정된 파이프라인과 데이터셋으로 비동기 평가 서브프로세스를 시작합니다.
-`run_id`를 즉시 반환하고 `GET /api/admin/eval/run/{run_id}/status`로 진행 상황을 폴링합니다.
-
-**Request example / 요청 예시:**
-```json
-{
-  "pipeline": "writing_scorer",
-  "dataset": "all",
-  "mode": "quick",
-  "case_filter": null
-}
-```
-
-**Response example / 응답 예시:**
-```json
-{
-  "run_id": "a1b2c3d4-...",
-  "status": "running",
-  "pipeline": "writing_scorer",
-  "dataset": "all",
-  "mode": "quick"
-}
-```
-
-### Request Body
-
-Media type: `application/json`
-
-Schema: [EvalRunRequest](../schemas/admin-eval.md#evalrunrequest)
-
-### Responses
-
-| Status | Description | Media | Schema |
-| --- | --- | --- | --- |
-| 200 | Run started. Returns the run_id to poll for status. | `application/json` | [EvalRunResponse](../schemas/admin-eval.md#evalrunresponse) |
-| 401 | Missing or invalid JWT. | - | - |
-| 403 | Caller lacks the `admin` role. | - | - |
-| 422 | Invalid `pipeline` or `mode` (not in allowlist), or malformed `dataset`/`case_filter`. | - | - |
-
-Response 200 example:
-
-```json
-{
-  "run_id": "a1b2c3d4-...",
-  "status": "running",
-  "pipeline": "writing_scorer",
-  "dataset": "all",
-  "mode": "quick"
-}
-```
-
-## GET /api/admin/eval/run/{run_id}/status
-
-Summary: Poll eval run status
-
-Auth: BearerAuth
-
-### Description
-
-Poll eval run status / 평가 실행 상태 조회
-
-    **EN:** Returns the current status of an eval run. Status is stored in Redis
-    for up to 2 hours after completion. Possible values: `running`, `completed`, `failed`, `error`.
-
-    **KR:** 평가 실행의 현재 상태를 반환합니다. 상태는 완료 후 최대 2시간 동안 Redis에 저장됩니다.
-    가능한 값: `running`, `completed`, `failed`, `error`.
-
-    **Response example (completed) / 응답 예시 (완료):**
-    ```json
-    {
-      "status": "completed",
-      "exit_code": 0,
-      "stdout_tail": "Passed: 18/20 cases (90.0%)
-Avg score: 42.3",
-      "stderr_tail": ""
-    }
-    ```
-
-### Parameters
-
-| Name | In | Required | Type | Description |
-| --- | --- | --- | --- | --- |
-| `run_id` | path | yes | string |  |
-
-### Responses
-
-| Status | Description | Media | Schema |
-| --- | --- | --- | --- |
-| 200 | Current run status. Values: running, completed, failed, error. | `application/json` | [EvalRunStatusResponse](../schemas/admin-eval.md#evalrunstatusresponse) |
-| 401 | Missing or invalid JWT. | - | - |
-| 403 | Caller lacks the `admin` role. | - | - |
-| 404 | Run not found or expired (Redis TTL is 2 hours). | - | - |
-| 422 | Validation Error | `application/json` | [HTTPValidationError](../schemas/common.md#httpvalidationerror) |
-| 503 | Redis unavailable. | - | - |
-
-Response 200 example:
-
-```json
-{
-  "status": "completed",
-  "exit_code": 0,
-  "stdout_tail": "Passed: 18/20 cases (90.0%)\nAvg score: 42.3",
-  "stderr_tail": ""
-}
-```
-
 ## GET /api/admin/eval/stats/overview
 
 Summary: Dashboard overview statistics
@@ -578,193 +766,5 @@ Response 200 example:
     "task54": 55.1
   },
   "submissions_last_7d": 320
-}
-```
-
-## GET /api/admin/eval/submissions/{submission_id}
-
-Summary: Get submission detail
-
-Auth: BearerAuth
-
-### Description
-
-Get submission detail / 제출 상세 조회
-
-**EN:** Returns full detail for a single submission: the essay text, task metadata,
-AI evaluation scores (per section), and all feedback objects.
-
-**KR:** 단일 제출의 전체 상세 정보를 반환합니다: 에세이 텍스트, 문제 메타데이터,
-AI 평가 점수 (섹션별), 모든 피드백 객체.
-
-**Response example / 응답 예시:**
-```json
-{
-  "submission_id": "uuid",
-  "task_type": "task54",
-  "text": "현대 사회에서...",
-  "total_score": 58.0,
-  "section_scores": { "content": 20, "structure": 18, "expression": 20 },
-  "feedback": { "summary": "전반적으로 잘 작성된 글입니다..." },
-  "graded_at": "2024-11-15T10:05:00"
-}
-```
-
-### Parameters
-
-| Name | In | Required | Type | Description |
-| --- | --- | --- | --- | --- |
-| `submission_id` | path | yes | string |  |
-
-### Responses
-
-| Status | Description | Media | Schema |
-| --- | --- | --- | --- |
-| 200 | Full submission detail: essay text, task metadata, section scores, and feedback. | `application/json` | [SubmissionDetailResponse](../schemas/admin-eval.md#submissiondetailresponse) |
-| 401 | Missing or invalid JWT. | - | - |
-| 403 | Caller lacks the `admin` role. | - | - |
-| 404 | Submission not found. | - | - |
-| 422 | Invalid submission_id (not a UUID). | - | - |
-
-Response 200 example:
-
-```json
-{
-  "submission_id": "uuid",
-  "task_type": "task54",
-  "text": "현대 사회에서...",
-  "total_score": 58,
-  "section_scores": {
-    "content": 20,
-    "structure": 18,
-    "expression": 20
-  },
-  "feedback": {
-    "summary": "전반적으로 잘 작성된 글입니다..."
-  },
-  "graded_at": "2024-11-15T10:05:00"
-}
-```
-
-## GET /api/admin/eval/users
-
-Summary: List users with graded submissions
-
-Auth: BearerAuth
-
-### Description
-
-List users with graded submissions / 채점된 제출이 있는 사용자 목록
-
-**EN:** Returns a paginated list of users who have at least one graded submission.
-Useful for browsing which learners have been evaluated.
-
-**KR:** 채점된 제출이 하나 이상 있는 사용자의 페이지네이션 목록을 반환합니다.
-어떤 학습자가 평가를 받았는지 탐색하는 데 유용합니다.
-
-**Response example / 응답 예시:**
-```json
-{
-  "items": [
-    { "user_id": "uuid", "display_name": "홍길동", "submission_count": 5,
-      "last_submitted_at": "2024-11-15T10:00:00" }
-  ],
-  "total": 1, "limit": 50, "offset": 0
-}
-```
-
-### Parameters
-
-| Name | In | Required | Type | Description |
-| --- | --- | --- | --- | --- |
-| `limit` | query | no | integer |  |
-| `offset` | query | no | integer |  |
-
-### Responses
-
-| Status | Description | Media | Schema |
-| --- | --- | --- | --- |
-| 200 | Paginated list of users who have at least one graded submission. | `application/json` | [EvalUsersResponse](../schemas/admin-eval.md#evalusersresponse) |
-| 401 | Missing or invalid JWT. | - | - |
-| 403 | Caller lacks the `admin` role. | - | - |
-| 422 | Invalid pagination parameters. | - | - |
-
-Response 200 example:
-
-```json
-{
-  "items": [
-    {
-      "user_id": "uuid",
-      "display_name": "홍길동",
-      "submission_count": 5,
-      "last_submitted_at": "2024-11-15T10:00:00"
-    }
-  ],
-  "total": 1,
-  "limit": 50,
-  "offset": 0
-}
-```
-
-## GET /api/admin/eval/users/{user_id}/submissions
-
-Summary: List a user's graded submissions
-
-Auth: BearerAuth
-
-### Description
-
-List user's graded submissions / 사용자 채점 제출 목록
-
-**EN:** Returns all graded writing submissions for a specific user, ordered
-newest first. Includes scores and task metadata.
-
-**KR:** 특정 사용자의 모든 채점된 작문 제출 목록을 최신순으로 반환합니다.
-점수와 문제 메타데이터가 포함됩니다.
-
-**Response example / 응답 예시:**
-```json
-{
-  "items": [
-    { "submission_id": "uuid", "task_type": "task54",
-      "total_score": 58.0, "graded_at": "2024-11-15T10:05:00" }
-  ],
-  "total": 1, "limit": 50, "offset": 0
-}
-```
-
-### Parameters
-
-| Name | In | Required | Type | Description |
-| --- | --- | --- | --- | --- |
-| `user_id` | path | yes | string |  |
-| `limit` | query | no | integer |  |
-| `offset` | query | no | integer |  |
-
-### Responses
-
-| Status | Description | Media | Schema |
-| --- | --- | --- | --- |
-| 200 | All graded writing submissions for the user, newest first. | `application/json` | [UserSubmissionsResponse](../schemas/admin-eval.md#usersubmissionsresponse) |
-| 401 | Missing or invalid JWT. | - | - |
-| 403 | Caller lacks the `admin` role. | - | - |
-| 422 | Invalid user_id (not a UUID) or invalid pagination parameters. | - | - |
-
-Response 200 example:
-
-```json
-{
-  "items": [
-    {
-      "submission_id": "uuid",
-      "task_type": "task54",
-      "total_score": 58,
-      "graded_at": "2024-11-15T10:05:00"
-    }
-  ],
-  "total": 1,
-  "limit": 50,
-  "offset": 0
 }
 ```

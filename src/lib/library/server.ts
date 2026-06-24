@@ -9,6 +9,7 @@ import {
 } from "../supabase/server";
 import {
   TAB_TO_ITEM_TYPE,
+  coerceLibraryProblemAvailabilityStatus,
   excerptNarrative,
   type LibraryExportView,
   type LibraryItemRow,
@@ -20,6 +21,18 @@ import {
 } from "./types";
 
 type ClientFactory = () => Promise<SupabaseServerClient>;
+
+type LibraryProblemRpcRow = {
+  item_id: string;
+  problem_id: string | null;
+  title: string | null;
+  question_no: number | null;
+  tags: string[] | null;
+  saved_at: string;
+  availability_status: string | null;
+  availability_reason: string | null;
+  can_retry: boolean | null;
+};
 
 /**
  * Fetch the user's saved library items for one tab.
@@ -159,27 +172,29 @@ async function joinProblems(
   const ids = uniqueIds(items.map((row) => row.problem_id));
   if (ids.length === 0) return [];
 
-  const { data, error } = await supabase
-    .from("problems")
-    .select("id, title, question_no")
-    .in("id", ids);
+  const { data, error } = await supabase.rpc(
+    "list_user_library_problem_items",
+  );
   if (error) {
     throw new Error(`listLibraryItems(problems) join: ${error.message}`);
   }
 
-  const byId = new Map((data ?? []).map((row) => [row.id, row]));
+  const rows = (data ?? []) as LibraryProblemRpcRow[];
   const out: LibraryProblemView[] = [];
-  for (const item of items) {
-    if (!item.problem_id) continue;
-    const prob = byId.get(item.problem_id);
-    if (!prob) continue;
+  for (const row of rows) {
+    const problemId = row.problem_id ?? row.item_id;
     out.push({
       kind: "problem",
-      id: prob.id,
-      title: prob.title,
-      question_no: typeof prob.question_no === "number" ? prob.question_no : null,
-      item_id: item.id,
-      tags: item.tags,
+      id: problemId,
+      title: row.title ?? null,
+      question_no: typeof row.question_no === "number" ? row.question_no : null,
+      item_id: row.item_id,
+      tags: Array.isArray(row.tags) ? row.tags : [],
+      availabilityStatus: coerceLibraryProblemAvailabilityStatus(
+        row.availability_status,
+      ),
+      availabilityReason: row.availability_reason ?? null,
+      canRetry: row.can_retry === true,
     });
   }
   return out;

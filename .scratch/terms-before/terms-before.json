@@ -1,0 +1,31 @@
+{
+  "route": "/terms",
+  "origin": "http://localhost:3000",
+  "label": "terms-before",
+  "storageState": null,
+  "capturedAt": null,
+  "shots": [
+    {
+      "viewport": 360,
+      "status": 200,
+      "finalUrl": "http://localhost:3000/terms",
+      "redirectedToLogin": false,
+      "errorOverlay": false,
+      "consoleErrorCount": 0,
+      "consoleErrors": [],
+      "bodyTextLen": 436,
+      "png": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\.scratch\\terms-before\\terms-before-360.png"
+    },
+    {
+      "viewport": 1280,
+      "status": 200,
+      "finalUrl": "http://localhost:3000/terms",
+      "redirectedToLogin": false,
+      "errorOverlay": false,
+      "consoleErrorCount": 0,
+      "consoleErrors": [],
+      "bodyTextLen": 436,
+      "png": "C:\\Users\\admin\\Desktop\\workspace\\topik-project\\v13\\.scratch\\terms-before\\terms-before-1280.png"
+    }
+  ]
+}

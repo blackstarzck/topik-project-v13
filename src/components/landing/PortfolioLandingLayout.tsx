@@ -10,7 +10,7 @@ import {
   LayoutDashboard,
   MessageSquareText,
   PanelsTopLeft,
-} from "lucide-react";
+} from "@/components/shared/AppIcons";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useTranslations } from "next-intl";
 import { Autoplay, FreeMode } from "swiper/modules";

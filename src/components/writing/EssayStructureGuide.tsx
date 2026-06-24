@@ -1,7 +1,7 @@
 "use client";
 
 import { Tag, Typography } from "antd";
-import { Ban, FileText, ListChecks, Route } from "lucide-react";
+import { Ban, FileText, ListChecks, Route } from "@/components/shared/AppIcons";
 import { useTranslations } from "next-intl";
 
 import type {

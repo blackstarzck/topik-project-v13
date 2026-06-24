@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Input, Progress, Segmented, Typography } from "antd";
-import { Sparkles } from "lucide-react";
+import { Sparkles } from "@/components/shared/AppIcons";
 import { useTranslations } from "next-intl";
 
 import { AppCard } from "@/components/shared/AppCard";

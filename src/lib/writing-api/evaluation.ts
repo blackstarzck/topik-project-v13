@@ -83,7 +83,7 @@ export type ExternalSubmitWritingRequest = {
 export type ExternalSubmitWritingResponse = {
   submission_id: string;
   status: string;
-  message?: string;
+  message: string;
 };
 
 export class ExternalEvaluationApiError extends Error {
@@ -135,7 +135,7 @@ const TRAIT_TO_DIMENSION: Record<
 };
 
 export function toExternalTaskType(questionNo: QuestionNo): string {
-  return `Q${questionNo}`;
+  return String(questionNo).padStart(3, "0");
 }
 
 export function mapExternalEvaluationFeedback(

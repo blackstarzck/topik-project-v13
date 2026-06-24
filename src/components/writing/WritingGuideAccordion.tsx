@@ -2,7 +2,7 @@
 
 import { Collapse, Tag, Typography } from "antd";
 import type { ReactNode } from "react";
-import { Plus } from "lucide-react";
+import { Plus } from "@/components/shared/AppIcons";
 
 const { Text } = Typography;
 

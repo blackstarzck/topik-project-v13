@@ -1,7 +1,7 @@
 "use client";
 
 import { Select } from "antd";
-import { Globe2 } from "lucide-react";
+import { Globe2 } from "@/components/shared/AppIcons";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";

@@ -161,7 +161,8 @@ test("X-12 verify email clickable actions navigate to the expected destinations"
     { waitUntil: "networkidle" },
   );
   await page.getByTestId("verify-email-password-reset").click();
-  await expect(page).toHaveURL(/\/password-reset$/);
+  await expect(page).toHaveURL(/\/password-reset\?email=/);
+  expect(new URL(page.url()).searchParams.get("email")).toBe(VERIFY_EMAIL);
 
   await page.goto(
     `/auth/verify-email?email=${encodeURIComponent(VERIFY_EMAIL)}`,

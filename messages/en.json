@@ -53,6 +53,7 @@
     "ctaDashboard": "Go to dashboard",
     "ctaLogin": "Log in",
     "ctaSignUp": "Get started free",
+    "ctaAuthCompletion": "Finish sign-up",
     "ctaConsentContinue": "Agree and continue",
     "ctaLearningGoal": "Set learning goal",
     "ctaContinueSetup": "Continue setup",
@@ -62,6 +63,7 @@
     "heroCtaDashboard": "Go to dashboard",
     "heroCtaSignUp": "Get started free",
     "heroCtaLogin": "Log in",
+    "heroCtaAuthCompletion": "Finish sign-up",
     "heroCtaConsentContinue": "Agree and continue",
     "heroCtaLearningGoal": "Set learning goal",
     "heroCtaContinueSetup": "Continue setup",
@@ -480,13 +482,18 @@
       "embeddedBrowserDescription": "Open this page in Chrome, Safari, or your default browser, then try Google sign-in again."
     },
     "consent": {
-      "metaTitle": "Consent required — TALKPIK",
-      "heading": "Consent is required",
-      "description": "Please accept the required documents below to continue using TALKPIK AI.",
+      "metaTitle": "Finish sign-up — TALKPIK",
+      "heading": "Finish your sign-up",
+      "description": "Confirm the required information and consent before starting.",
+      "profileSectionTitle": "Required information",
+      "profileSectionDescription": "Only missing information is shown.",
+      "documentsSectionTitle": "Required terms",
+      "documentsSectionDescription": "Review the documents required to use the service.",
       "versionLabel": "Version {version}",
       "agreement": "I have reviewed and agree to the required terms and privacy policy.",
-      "requiredError": "You need to agree to the required documents to continue.",
-      "submit": "Agree and continue"
+      "requiredError": "Enter the required information and accept any required documents to continue.",
+      "saveFailedError": "We couldn't save this right now. Please try again shortly.",
+      "submit": "Save and continue"
     },
     "passwordReset": {
       "metaTitle": "Reset password — TALKPIK",
@@ -532,6 +539,7 @@
       "mascotAlt": "TALKPIK study helper character",
       "title": "We sent the verification email",
       "body": "We received your sign-up request. If this is a new account, a verification email will arrive at the email below. Open the link in that email to finish signing up.",
+      "existingAccountHeading": "Already have an account?",
       "existingAccountNote": "If you've created an account before, log in or reset your password.",
       "loginCta": "Log in",
       "passwordResetCta": "Reset password",
@@ -1248,6 +1256,7 @@
     "actions": {
       "retryDefault": "Try again",
       "retryWriting": "Rewrite",
+      "retryUnavailable": "This question no longer allows new attempts.",
       "nextProblem": "Next problem",
       "savePdf": "Save PDF",
       "compareReport": "Comparison report",
@@ -1362,6 +1371,8 @@
       "metaTitleFeedbackLong": "Long-form Feedback — TALKPIK",
       "metaTitleFeedbackShort": "Short-answer Feedback — TALKPIK",
       "problemLoadFailed": "Could not load the prompt for question {questionNo}.",
+      "problemUnavailableTitle": "Question {questionNo} is no longer available.",
+      "problemUnavailableDraftPreserved": "Your in-progress answer remains in autosave. Choose another question from the problem list.",
       "retry": "Try again",
       "toProblemList": "To problem list"
     },
@@ -1575,6 +1586,8 @@
       "notEnoughChars": "You haven't reached the minimum character count ({minChars}) yet.",
       "submitFailedTitle": "Could not submit",
       "submitFailedDescription": "{submitError} — press 'Submit again' to retry, or copy your answer somewhere safe.",
+      "submitUnavailableDescription": "{submitError} Your current answer is still preserved. Choose another question from the problem list.",
+      "chooseAnotherProblem": "Choose another question",
       "agreeNoEdit": "I understand I cannot edit after submitting.",
       "checklistTitle": "Pre-submit checklist",
       "checklistQuestion": "Prompt checked",
@@ -1795,7 +1808,12 @@
       "emptySearch": "No results found.",
       "emptyNoItems": "No saved questions.",
       "resetFilter": "Reset filters",
-      "retry": "Solve again"
+      "retry": "Solve again",
+      "retryUnavailable": "Cannot solve again",
+      "providedEnded": "No longer provided",
+      "unavailable": "Unavailable",
+      "unavailablePlaceholderTitle": "Question no longer available",
+      "unavailableDefaultReason": "You cannot start a new attempt because this question is no longer available."
     },
     "exports": {
       "loadError": "Could not load export history",

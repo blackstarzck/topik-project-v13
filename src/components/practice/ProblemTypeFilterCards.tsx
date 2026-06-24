@@ -1,21 +1,16 @@
 "use client";
 
 import type { ReactNode } from "react";
-import {
-  BarChart3,
-  FileText,
-  ListChecks,
-  ListFilter,
-  PencilLine,
-} from "lucide-react";
+import { ListFilter } from "@/components/shared/AppIcons";
 import { useTranslations } from "next-intl";
 import { QUESTION_NOS, type QuestionNo } from "@/lib/practice/types";
+import { questionTypeIcon } from "./question-type-icons";
 
 const TYPE_ICONS: Record<QuestionNo, ReactNode> = {
-  51: <PencilLine size={22} />,
-  52: <FileText size={22} />,
-  53: <BarChart3 size={22} />,
-  54: <ListChecks size={22} />,
+  51: questionTypeIcon(51, 22),
+  52: questionTypeIcon(52, 22),
+  53: questionTypeIcon(53, 22),
+  54: questionTypeIcon(54, 22),
 };
 
 type Props = {

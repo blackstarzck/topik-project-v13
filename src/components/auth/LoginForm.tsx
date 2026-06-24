@@ -16,7 +16,7 @@ import type { FormInstance } from "antd";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowRight, LockKeyhole, Mail } from "lucide-react";
+import { ArrowRight, LockKeyhole, Mail } from "@/components/shared/AppIcons";
 
 import { GoogleMark } from "@/components/auth/GoogleMark";
 import {
@@ -25,7 +25,7 @@ import {
   type GoogleOAuthEmbeddedBrowser,
 } from "@/lib/auth/oauth";
 import { buildAuthRedirectUrl } from "@/lib/auth/redirect-url";
-import { mapSupabaseErrorCode } from "@/lib/auth/error-mapping";
+import { mapSupabaseErrorCode, sanitizeNext } from "@/lib/auth/error-mapping";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 const { Paragraph, Title } = Typography;
@@ -97,6 +97,9 @@ export function LoginForm({
   const noticeReason = searchParams.get("reason");
   // §1/§4 예외: reason query 기반 인라인 안내 (세션 만료/휴면/탈퇴).
   const queryNotice = noticeReason ? REASON_NOTICE[noticeReason] : undefined;
+  // 로그인 성공 후 이동 경로: ?next 가 있으면(예: 약관 재동의 딥링크) 그 곳으로,
+  // 없으면 /dashboard. 외부 URL/스킴은 sanitizeNext 가 차단한다.
+  const nextTarget = sanitizeNext(searchParams.get("next"), "/dashboard");
   const [mode, setMode] = useState<LoginMode>("password");
   const [submitting, setSubmitting] = useState(false);
   const [googleSubmitting, setGoogleSubmitting] = useState(false);
@@ -163,7 +166,7 @@ export function LoginForm({
       return;
     }
     setFailedAttempts(0);
-    router.push("/dashboard");
+    router.push(nextTarget);
   }
 
   async function handleMagicLink(values: MagicLinkFields) {
@@ -175,7 +178,7 @@ export function LoginForm({
         email: values.email,
         options: {
           emailRedirectTo: buildAuthRedirectUrl(
-            "/auth/callback?next=/dashboard",
+            `/auth/callback?next=${encodeURIComponent(nextTarget)}`,
           ),
         },
       });

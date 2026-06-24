@@ -1,21 +1,21 @@
 # Admin Eval Schemas
 
 Source: [OpenAPI JSON](https://api.dotoretopik.com/openapi.json)
-Last synced: 2026-06-19
+Last synced: 2026-06-23
 
 ## Schema Index
 
 | Schema | Type | Description |
 | --- | --- | --- |
-| [DatasetResultsResponse](#datasetresultsresponse) | object | Paginated per-case results for an eval run. Each item mirrors a full `eval_results` row (`SELECT *`) enriched with case `input_data`, `description`, `title`, a coerced `passed` bool, and parsed `judge_verdict`/`penalty_results`/`raw_output` JSON; passed through untyped. |
+| [DatasetResultsResponse](#datasetresultsresponse) | object | Paginated per-case results for an eval run. |
 | [DatasetStatsResponse](#datasetstatsresponse) | object | Aggregate statistics for one eval run (from `compute_stats`). |
-| [DatasetsResponse](#datasetsresponse) | object | Paginated eval-run records from the SQLite eval database. Each item mirrors a full `eval_datasets` row (`SELECT *`), so the column set is schema-defined; items are passed through untyped to avoid dropping fields. |
+| [DatasetsResponse](#datasetsresponse) | object | Paginated eval-run records from the SQLite eval database. |
 | [EvalRunRequest](#evalrunrequest) | object |  |
 | [EvalRunResponse](#evalrunresponse) | object | Acknowledgement returned when an eval subprocess is started. |
-| [EvalRunStatusResponse](#evalrunstatusresponse) | object | Current eval run state stored in Redis (TTL 2h). Fields vary by phase: a `running` entry carries pipeline/dataset/mode/ triggered_by; a finished entry carries exit_code and stdout/stderr tails; an internal failure carries `error`. All non-status fields are optional. |
+| [EvalRunStatusResponse](#evalrunstatusresponse) | object | Current eval run state stored in Redis (TTL 2h). |
 | [EvalUserItem](#evaluseritem) | object | A user who has at least one graded submission. |
 | [EvalUsersResponse](#evalusersresponse) | object | Paginated list of users with graded submissions. |
-| [ExpertReview](#expertreview) | object | A persisted expert review. All fields are optional because `GET .../my` returns an empty object `{}` when the current admin has not reviewed the target yet. |
+| [ExpertReview](#expertreview) | object | A persisted expert review. |
 | [OverviewStatsResponse](#overviewstatsresponse) | object | High-level aggregate stats for the eval dashboard header. |
 | [ReviewListResponse](#reviewlistresponse) | object | All expert reviews submitted for a target (multi-reviewer). |
 | [ReviewRequest](#reviewrequest) | object |  |
@@ -180,8 +180,8 @@ All expert reviews submitted for a target (multi-reviewer).
 
 | Field | Required | Type | Description | Example / Default |
 | --- | --- | --- | --- | --- |
-| `agreement` | no | enum(`agree`, `mostly_agree`, `partial`, `disagree`, ``) | Reviewer's agreement with the AI grading. Empty string means unset. enum: `agree`, `mostly_agree`, `partial`, `disagree`, `` | mostly_agree |
-| `grade` | no | enum(`A`, `B`, `C`, `D`, `F`, ``) | Reviewer's letter grade for the output. Empty string means unset. enum: `A`, `B`, `C`, `D`, `F`, `` | B |
+| `agreement` | no | enum(`agree`, `mostly_agree`, `partial`, `disagree`, ``) | Reviewer's agreement with the AI grading. Empty string means unset. | mostly_agree |
+| `grade` | no | enum(`A`, `B`, `C`, `D`, `F`, ``) | Reviewer's letter grade for the output. Empty string means unset. | B |
 | `disagreed_sections` | no | array<string> | Section keys the reviewer disagrees with (e.g. content, structure, expression). | ["expression"] |
 | `section_feedbacks` | no | object | Per-section freeform feedback, keyed by section name. | {"expression":"어휘 점수가 낮게 책정됨"} |
 | `general_feedback` | no | string | Overall freeform feedback on the AI grading. | 전반적으로 적절한 채점이나 표현 부분은 재검토 필요. |

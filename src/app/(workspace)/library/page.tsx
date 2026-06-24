@@ -1,15 +1,11 @@
 import type { Metadata } from "next";
-import { Col, Row } from "antd";
 import { getTranslations } from "next-intl/server";
 import { requireUser } from "@/lib/auth/session";
 import { listLibraryItems } from "@/lib/library/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { parseLibraryTab } from "@/components/library/library-tab-url";
-import { LibraryTabs } from "@/components/library/LibraryTabs";
-import {
-  LibraryStatsPanel,
-  type LibraryStats,
-} from "@/components/library/LibraryStatsPanel";
+import { LibraryWorkspace } from "@/components/library/LibraryWorkspace";
+import type { LibraryStats } from "@/components/library/LibraryStatsPanel";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { WorkspaceBody } from "@/components/app/WorkspaceBody";
 
@@ -104,16 +100,13 @@ export default async function LibraryPage({ searchParams }: Props) {
   ]);
 
   return (
-    <WorkspaceBody className="app-cards-bordered">
+    <WorkspaceBody className="app-cards-bordered flex min-h-0 flex-col">
       <PageHeader title={t("heading")} />
-      <Row gutter={[16, 16]}>
-        <Col xs={24} lg={16}>
-          <LibraryTabs activeTab={activeTab} initialItems={initialItems} />
-        </Col>
-        <Col xs={24} lg={8}>
-          <LibraryStatsPanel stats={stats} />
-        </Col>
-      </Row>
+      <LibraryWorkspace
+        activeTab={activeTab}
+        initialItems={initialItems}
+        stats={stats}
+      />
     </WorkspaceBody>
   );
 }

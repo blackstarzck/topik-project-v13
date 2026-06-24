@@ -12,6 +12,14 @@ function readMigrations() {
     .join("\n");
 }
 
+function readLatestHandleNewUserDefinition() {
+  const matches =
+    readMigrations().match(
+      /create or replace function public\.handle_new_user\(\)[\s\S]*?\$\$;/gi,
+    ) ?? [];
+  return matches.at(-1) ?? "";
+}
+
 describe("profiles nationality migration", () => {
   it("adds profiles.nationality_country_code and seeds it from auth metadata", () => {
     const sql = readMigrations();
@@ -93,6 +101,23 @@ describe("profiles nationality migration", () => {
     expect(normalized).toContain("new.affiliation_code is distinct from old.affiliation_code");
     expect(normalized).toContain(
       "grant execute on function public.claim_affiliation_code(text) to authenticated",
+    );
+  });
+
+  it("keeps the final auth bootstrap trigger aligned with all profile seed fields", () => {
+    const normalized = readLatestHandleNewUserDefinition()
+      .replace(/\s+/g, " ")
+      .toLowerCase();
+
+    expect(normalized).toContain(
+      "insert into public.profiles (id, display_name, nationality_country_code, affiliation_code, nickname)",
+    );
+    expect(normalized).toContain("private.generate_default_nickname()");
+    expect(normalized).toContain(
+      "new.raw_user_meta_data->>'affiliation_code'",
+    );
+    expect(normalized).toContain(
+      "new.raw_user_meta_data->>'nationality_country_code'",
     );
   });
 });

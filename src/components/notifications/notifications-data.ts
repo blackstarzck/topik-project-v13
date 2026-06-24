@@ -24,6 +24,8 @@ export type NotificationCategory =
   | "event"
   | "marketing";
 
+export type NotificationPayload = Record<string, unknown>;
+
 export type UserNotification = {
   id: string;
   template_key: string;
@@ -31,9 +33,83 @@ export type UserNotification = {
   title: string;
   body: string;
   link_url: string | null;
+  route_path?: string | null;
+  navigation_path?: string | null;
+  target_path?: string | null;
+  destination_path?: string | null;
+  move_path?: string | null;
+  movement_path?: string | null;
+  redirect_path?: string | null;
+  path?: string | null;
+  payload?: NotificationPayload | null;
   read_at: string | null;
   created_at: string;
 };
+
+const NOTIFICATION_DESTINATION_FIELDS = [
+  "route_path",
+  "navigation_path",
+  "target_path",
+  "destination_path",
+  "move_path",
+  "movement_path",
+  "redirect_path",
+  "path",
+  "link_url",
+] as const;
+
+type NotificationDestinationField =
+  (typeof NOTIFICATION_DESTINATION_FIELDS)[number];
+
+const NOTIFICATION_PAYLOAD_DESTINATION_FIELDS = [
+  "route_path",
+  "navigation_path",
+  "target_path",
+  "destination_path",
+  "move_path",
+  "movement_path",
+  "redirect_path",
+  "link_url",
+] as const satisfies readonly NotificationDestinationField[];
+
+type NotificationDestinationSource = Partial<
+  Record<NotificationDestinationField, unknown>
+> & {
+  payload?: unknown;
+};
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function normalizeInternalRoute(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+
+  const route = value.trim();
+  if (!route) return null;
+  if (!route.startsWith("/") || route.startsWith("//")) return null;
+  if (/[\u0000-\u001F\u007F]/.test(route)) return null;
+
+  return route;
+}
+
+export function resolveNotificationDestination(
+  item: NotificationDestinationSource,
+): string | null {
+  for (const field of NOTIFICATION_DESTINATION_FIELDS) {
+    const route = normalizeInternalRoute(item[field]);
+    if (route) return route;
+  }
+
+  if (isRecord(item.payload)) {
+    for (const field of NOTIFICATION_PAYLOAD_DESTINATION_FIELDS) {
+      const route = normalizeInternalRoute(item.payload[field]);
+      if (route) return route;
+    }
+  }
+
+  return null;
+}
 
 export async function fetchUnreadNotificationCount(
   userId: string,
@@ -60,7 +136,7 @@ export async function fetchNotifications(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const res = (await (supabase as any)
     .from("user_notifications")
-    .select("id, template_key, category, title, body, link_url, read_at, created_at")
+    .select("*")
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
     .limit(limit)) as {

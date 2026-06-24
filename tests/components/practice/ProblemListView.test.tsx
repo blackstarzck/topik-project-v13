@@ -114,7 +114,7 @@ afterEach(() => {
 
 describe("ProblemListView", () => {
   it("uses the recommendation tab card style without a recommendation badge", () => {
-    renderInApp(<ProblemListView userId="user-1" />);
+    const { container } = renderInApp(<ProblemListView userId="user-1" />);
 
     const allTabRoot = screen
       .getByText(enMessages.practice.common.typeTabAll)
@@ -140,6 +140,17 @@ describe("ProblemListView", () => {
     expect(navState.replace).toHaveBeenCalledWith(
       "/practice/problems?type=52&page=1",
     );
+
+    for (const iconName of [
+      "DirectboxNotif",
+      "ProgrammingArrows",
+      "PresentationChart",
+      "DocumentText",
+    ]) {
+      expect(
+        container.querySelector(`[data-app-icon-name="${iconName}"]`),
+      ).toBeTruthy();
+    }
   });
 
   it("updates the recommended-only control immediately while URL navigation is still pending", async () => {

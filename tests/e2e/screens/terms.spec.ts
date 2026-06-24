@@ -25,6 +25,14 @@ test("X-13 terms page exposes placeholder legal notice and escape links", async 
 
   await expect(page).toHaveURL(/\/terms/);
   await expect(page.getByTestId("terms-card")).toBeVisible();
+  const viewport = page.viewportSize();
+  const cardBox = await page.getByTestId("terms-card").boundingBox();
+  expect(cardBox).not.toBeNull();
+  if (viewport && viewport.width >= 1000) {
+    expect(cardBox!.width).toBeGreaterThanOrEqual(958);
+    expect(cardBox!.width).toBeLessThanOrEqual(962);
+    expect(cardBox!.height).toBeGreaterThan(viewport.height - 96);
+  }
   await expect(page.getByRole("heading").first()).toBeVisible();
   await expect(page.getByTestId("terms-intro")).toBeVisible();
   await expect(page.getByTestId("terms-placeholder-notice")).toBeVisible();

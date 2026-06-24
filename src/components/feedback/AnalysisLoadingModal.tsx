@@ -17,7 +17,7 @@ import {
   LifeBuoy,
   RefreshCcw,
   ShieldAlert,
-} from "lucide-react";
+} from "@/components/shared/AppIcons";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";

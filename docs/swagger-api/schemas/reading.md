@@ -1,7 +1,7 @@
 # Reading Schemas
 
 Source: [OpenAPI JSON](https://api.dotoretopik.com/openapi.json)
-Last synced: 2026-06-19
+Last synced: 2026-06-23
 
 ## Schema Index
 
@@ -167,7 +167,7 @@ Response for reading session state.
 | `status` | yes | string | Session status. One of: active, completed, abandoned. | active |
 | `total_questions` | yes | integer | Total number of questions in the session. | 5 |
 | `current_index` | yes | integer | Zero-based index of the next question to answer. | 0 |
-| `problems` | yes | array<[ReadingSessionProblemDTO](./reading.md#readingsessionproblemdto)> | Problems in the session (answers hidden). | [{"choices":[{"number":1,"text":"도시의 자전거 이용자가 줄고 있다."},{"number":2,"text":"도시의 자전거 이용자가 늘고 있다."}],"difficulty":"medium","id":"3f9a1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b","passage":"요즘 도시에서는 자전거를 이용하는 사람들이 늘고 있다. ...","question":"윗글의 내용과 같은 것을 고르십시오.","question_type":"content_match"}] |
+| `problems` | yes | array<[ReadingSessionProblemDTO](./reading.md#readingsessionproblemdto)> | Problems in the session (answers hidden). | [{"choices":[{"number":1,"text":"도시의 자전거 이용자가 줄고 있다."},{"number":2,"text":"도시의 자전거 이용자가 늘고 있다."}],"difficulty":"medium","id":"3f9a1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b","passage":"요즘 도시에서는 자전거를 이용하는 사람들이 늘고 있다. ...","question":"윗글의 내용과 같은 것을 고르십시오.","question_type? |
 | `started_at` | yes | string | ISO 8601 timestamp when the session started. | 2026-06-08T09:30:00Z |
 | `completed_at` | no | string \| null | ISO 8601 timestamp when the session completed; null while active. | 2026-06-08T09:45:00Z |
 

@@ -1,7 +1,7 @@
 # Admin Campaign Schemas
 
 Source: [OpenAPI JSON](https://api.dotoretopik.com/openapi.json)
-Last synced: 2026-06-19
+Last synced: 2026-06-23
 
 ## Schema Index
 
@@ -10,16 +10,14 @@ Last synced: 2026-06-19
 | [CampaignAssignRequest](#campaignassignrequest) | object | Admin request to assign or clear the reviewer on a submission. |
 | [CampaignAuditEntry](#campaignauditentry) | object | One entry in a submission's audit log. |
 | [CampaignAuditLogResponse](#campaignauditlogresponse) | object | Audit log entries for a submission. |
-| [CampaignContactInquiryItem](#campaigncontactinquiryitem) | object | One row in the admin contact-inquiries list. |
-| [CampaignContactInquiryListResponse](#campaigncontactinquirylistresponse) | object | Paginated list of contact inquiries for the admin dashboard. |
-| [CampaignContentEditRequest](#campaigncontenteditrequest) | object | KR content reviewer overlays edits on top of the AI draft. The body is a JSON object whose keys match the report sections — see plan-09 §4 for the canonical key list. |
+| [CampaignContentEditRequest](#campaigncontenteditrequest) | object | KR content reviewer overlays edits on top of the AI draft. The |
 | [CampaignInvalidateRequest](#campaigninvalidaterequest) | object | Admin request to mark a submission invalid. |
 | [CampaignReviewer](#campaignreviewer) | object | One assignable reviewer for the assign/claim dropdown. |
 | [CampaignReviewerListResponse](#campaignreviewerlistresponse) | object | List of assignable reviewers for the admin dashboard. |
-| [CampaignSourceEditRequest](#campaignsourceeditrequest) | object | Reviewer correction of the original source fields on a submission. All fields optional — only the keys explicitly present in the request body are applied (partial update via ``model_fields_set``), so a client can edit just the answer text without clearing the question/passage. Editing the applicant's submitted answer is sensitive, so the route audit-logs a before/after snapshot. |
+| [CampaignSourceEditRequest](#campaignsourceeditrequest) | object | Reviewer correction of the original source fields on a submission. |
 | [CampaignStateTransitionRequest](#campaignstatetransitionrequest) | object | Admin request to move a submission to a new workflow status. |
 | [CampaignStatsOverview](#campaignstatsoverview) | object | Aggregate campaign metrics for the admin overview dashboard. |
-| [CampaignSubmissionDetail](#campaignsubmissiondetail) | object | Full read-side projection of a submission used by the eval dashboard and by the PDF/email render pipeline. |
+| [CampaignSubmissionDetail](#campaignsubmissiondetail) | object | Full read-side projection of a submission used by the eval |
 | [CampaignSubmissionListItem](#campaignsubmissionlistitem) | object | One submission row in the admin per-user or cross-user queue. |
 | [CampaignSubmissionListResponse](#campaignsubmissionlistresponse) | object | Paginated list of submissions for the admin dashboard. |
 | [CampaignSubmissionUserDetail](#campaignsubmissionuserdetail) | object | Embedded applicant identity within a submission detail. |
@@ -28,11 +26,11 @@ Last synced: 2026-06-19
 | [CampaignUserSummary](#campaignusersummary) | object | One row in GET /api/admin/campaign/users. |
 | [CampaignWaitlistItem](#campaignwaitlistitem) | object | One row in the admin waitlist list. |
 | [CampaignWaitlistListResponse](#campaignwaitlistlistresponse) | object | Paginated list of waitlist entries for the admin dashboard. |
-| [OkClaimResponse](#okclaimresponse) | object | Self-claim acknowledgement carrying the new assignee id. 셀프 클레임 성공 응답 (새 담당자 ID 포함). |
-| [OkResponse](#okresponse) | object | Generic success acknowledgement for mutation endpoints. 변경 작업 성공 응답. |
-| [TaskEnqueuedResponse](#taskenqueuedresponse) | object | ARQ enqueue acknowledgement returned by the 202 task endpoints (PDF render, scoring, email send, resend). 백그라운드 작업 등록 응답 (PDF/채점/메일). |
-| [TaskStatusResponse](#taskstatusresponse) | object | Current ARQ job status from the task-status poll endpoint. ``result`` is present only once the job is complete; ``error`` only if fetching the completed job's result failed. 백그라운드 작업 상태 조회 응답. |
-| [WorkflowStateResponse](#workflowstateresponse) | object | New workflow status after a state transition. 상태 전환 후의 새 워크플로 상태. |
+| [OkClaimResponse](#okclaimresponse) | object | Self-claim acknowledgement carrying the new assignee id. |
+| [OkResponse](#okresponse) | object | Generic success acknowledgement for mutation endpoints. |
+| [TaskEnqueuedResponse](#taskenqueuedresponse) | object | ARQ enqueue acknowledgement returned by the 202 task endpoints |
+| [TaskStatusResponse](#taskstatusresponse) | object | Current ARQ job status from the task-status poll endpoint. ``result`` |
+| [WorkflowStateResponse](#workflowstateresponse) | object | New workflow status after a state transition. |
 
 ## CampaignAssignRequest
 
@@ -66,31 +64,6 @@ Audit log entries for a submission.
 | --- | --- | --- | --- | --- |
 | `items` | yes | array<[CampaignAuditEntry](./admin-campaign.md#campaignauditentry)> | Audit entries, typically newest-first. | [] |
 
-## CampaignContactInquiryItem
-
-One row in the admin contact-inquiries list.
-
-| Field | Required | Type | Description | Example / Default |
-| --- | --- | --- | --- | --- |
-| `id` | yes | integer | Primary key of the contact inquiry. | 42 |
-| `name` | yes | string | Name supplied by the person who submitted the inquiry. | Nguyen Van A |
-| `email` | yes | string | Contact email (display projection of the stored value). | learner@example.com |
-| `affiliation` | yes | string \| null | Organization/affiliation supplied by the contact; null if omitted. | Hanoi University |
-| `inquiry_type` | yes | string | Localized inquiry-type label from the contact modal, stored as free text. | General inquiry |
-| `message` | yes | string | Free-text message body of the inquiry. | I would like to know more about the campaign. |
-| `locale` | yes | string \| null | Locale the inquiry was submitted from; null if unknown. | vi |
-| `source` | yes | string | Capture source of the inquiry (free text). | contact_modal |
-| `created_at` | yes | string | ISO-8601 UTC timestamp when the inquiry was created. | 2026-06-08T09:30:00Z |
-
-## CampaignContactInquiryListResponse
-
-Paginated list of contact inquiries for the admin dashboard.
-
-| Field | Required | Type | Description | Example / Default |
-| --- | --- | --- | --- | --- |
-| `items` | yes | array<[CampaignContactInquiryItem](./admin-campaign.md#campaigncontactinquiryitem)> | Page of contact-inquiry rows. | [] |
-| `total` | yes | integer | Total number of contact inquiries matching the query. | 12 |
-
 ## CampaignContentEditRequest
 
 KR content reviewer overlays edits on top of the AI draft. The
@@ -108,7 +81,7 @@ Admin request to mark a submission invalid.
 
 | Field | Required | Type | Description | Example / Default |
 | --- | --- | --- | --- | --- |
-| `reason` | yes | string | Reason the submission is being marked invalid. maxLength: 500 minLength: 1 | Answer image was unreadable. |
+| `reason` | yes | string | Reason the submission is being marked invalid. | Answer image was unreadable. |
 
 ## CampaignReviewer
 
@@ -154,7 +127,7 @@ Admin request to move a submission to a new workflow status.
 
 | Field | Required | Type | Description | Example / Default |
 | --- | --- | --- | --- | --- |
-| `target_status` | yes | enum(`submitted`, `ai_drafted`, `content_review`, `translation_review`, `pdf_ready`, `delivered`, `followup_sent`, `invalid`, `resend_required`) | Workflow status to transition the submission to. enum: `submitted`, `ai_drafted`, `content_review`, `translation_review`, `pdf_ready`, `delivered`, `followup_sent`, `invalid`, `resend_required` | pdf_ready |
+| `target_status` | yes | enum(`submitted`, `ai_drafted`, `content_review`, `translation_review`, `pdf_ready`, `delivered`, `followup_sent`, `invalid`, `resend_required`) | Workflow status to transition the submission to. | pdf_ready |
 | `note` | no | string \| null | Optional reviewer note recorded with the transition. | Approved after content review. |
 
 ## CampaignStatsOverview
@@ -179,7 +152,7 @@ dashboard and by the PDF/email render pipeline.
 | --- | --- | --- | --- | --- |
 | `id` | yes | string | UUID of the submission. | 3f9c1a2e-7b4d-4e1a-9c2f-0a1b2c3d4e5f |
 | `user` | yes | [CampaignSubmissionUserDetail](./admin-campaign.md#campaignsubmissionuserdetail) | Embedded applicant identity. |  |
-| `task_type` | yes | enum(`Q51`, `Q52`, `Q53`, `Q54`) | TOPIK writing task. One of: 'Q51', 'Q52', 'Q53', 'Q54'. enum: `Q51`, `Q52`, `Q53`, `Q54` | Q53 |
+| `task_type` | yes | enum(`Q51`, `Q52`, `Q53`, `Q54`) | TOPIK writing task. One of: 'Q51', 'Q52', 'Q53', 'Q54'. | Q53 |
 | `text` | yes | string | The applicant's written answer. | 저는 매일 아침 운동을 합니다. |
 | `passage_context` | yes | string | Reading passage or prompt context the answer responds to. | 다음 글을 읽고 200~300자로 쓰십시오. |
 | `question_topic_text` | yes | string \| null | Q53/Q54 essay topic/instruction; null for Q51/Q52. | 환경 보호의 중요성에 대해 쓰십시오. |
@@ -201,7 +174,7 @@ dashboard and by the PDF/email render pipeline.
 | `vn_translation` | yes | string \| null | Vietnamese translation of the feedback; null if not produced. | Bài viết nhìn chung tốt. |
 | `vn_reviewed_by` | yes | string \| null | Email of the VN translation reviewer; null if not reviewed. | reviewer@example.com |
 | `vn_reviewed_at` | yes | string \| null | ISO-8601 UTC timestamp of VN translation review; null if not reviewed. | 2026-06-08T11:00:00Z |
-| `workflow_status` | yes | enum(`submitted`, `ai_drafted`, `content_review`, `translation_review`, `pdf_ready`, `delivered`, `followup_sent`, `invalid`, `resend_required`) | Current workflow state of the submission. enum: `submitted`, `ai_drafted`, `content_review`, `translation_review`, `pdf_ready`, `delivered`, `followup_sent`, `invalid`, `resend_required` | content_review |
+| `workflow_status` | yes | enum(`submitted`, `ai_drafted`, `content_review`, `translation_review`, `pdf_ready`, `delivered`, `followup_sent`, `invalid`, `resend_required`) | Current workflow state of the submission. | content_review |
 | `assignee_id` | yes | string \| null | UUID of the reviewer currently assigned; null if unassigned. | a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d |
 | `due_at` | yes | string | ISO-8601 UTC deadline by which the result is promised. | 2026-06-09T09:30:00Z |
 | `submitted_at` | yes | string | ISO-8601 UTC timestamp when the submission was received. | 2026-06-08T09:30:00Z |
@@ -225,8 +198,8 @@ One submission row in the admin per-user or cross-user queue.
 | Field | Required | Type | Description | Example / Default |
 | --- | --- | --- | --- | --- |
 | `id` | yes | string | UUID of the submission. | 3f9c1a2e-7b4d-4e1a-9c2f-0a1b2c3d4e5f |
-| `task_type` | yes | enum(`Q51`, `Q52`, `Q53`, `Q54`) | TOPIK writing task. One of: 'Q51', 'Q52', 'Q53', 'Q54'. enum: `Q51`, `Q52`, `Q53`, `Q54` | Q53 |
-| `workflow_status` | yes | enum(`submitted`, `ai_drafted`, `content_review`, `translation_review`, `pdf_ready`, `delivered`, `followup_sent`, `invalid`, `resend_required`) | Current workflow state of the submission. enum: `submitted`, `ai_drafted`, `content_review`, `translation_review`, `pdf_ready`, `delivered`, `followup_sent`, `invalid`, `resend_required` | ai_drafted |
+| `task_type` | yes | enum(`Q51`, `Q52`, `Q53`, `Q54`) | TOPIK writing task. One of: 'Q51', 'Q52', 'Q53', 'Q54'. | Q53 |
+| `workflow_status` | yes | enum(`submitted`, `ai_drafted`, `content_review`, `translation_review`, `pdf_ready`, `delivered`, `followup_sent`, `invalid`, `resend_required`) | Current workflow state of the submission. | ai_drafted |
 | `total_score` | yes | number \| null | Awarded score; null until scoring completes. | 42.5 |
 | `max_score` | yes | number \| null | Maximum possible score for this task type. | 50 |
 | `submitted_at` | yes | string | ISO-8601 UTC timestamp when the submission was received. | 2026-06-08T09:30:00Z |
@@ -288,7 +261,7 @@ One row in GET /api/admin/campaign/users.
 | `language` | yes | string | Stored preferred language (free-form; typically 'ko', 'vi', 'en'). | vi |
 | `submission_count` | yes | integer | Number of submissions made by this user. | 3 |
 | `latest_submitted_at` | yes | string | ISO-8601 UTC timestamp of the user's most recent submission. | 2026-06-08T09:30:00Z |
-| `latest_workflow_status` | yes | enum(`submitted`, `ai_drafted`, `content_review`, `translation_review`, `pdf_ready`, `delivered`, `followup_sent`, `invalid`, `resend_required`) | Workflow status of the user's most recent submission. enum: `submitted`, `ai_drafted`, `content_review`, `translation_review`, `pdf_ready`, `delivered`, `followup_sent`, `invalid`, `resend_required` | content_review |
+| `latest_workflow_status` | yes | enum(`submitted`, `ai_drafted`, `content_review`, `translation_review`, `pdf_ready`, `delivered`, `followup_sent`, `invalid`, `resend_required`) | Workflow status of the user's most recent submission. | content_review |
 | `sla_risk` | yes | boolean | True if any submission for this user is within 6h of its due_at. | true |
 
 ## CampaignWaitlistItem

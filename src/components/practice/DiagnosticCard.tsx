@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Empty, Tag, Typography } from "antd";
-import { ListChecks } from "lucide-react";
+import { ListChecks } from "@/components/shared/AppIcons";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { AppCard } from "@/components/shared/AppCard";

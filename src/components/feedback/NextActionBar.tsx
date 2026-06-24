@@ -2,7 +2,7 @@
 
 import { App, Button, Dropdown, Tooltip } from "antd";
 import type { MenuProps } from "antd";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown } from "@/components/shared/AppIcons";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -33,6 +33,9 @@ type Props = {
   saveLocked?: boolean;
   /** 이미 보관함에 저장돼 있으면 버튼을 저장됨으로 표시. */
   alreadySaved?: boolean;
+  /** 제출했던 문제가 더 이상 새 풀이를 허용하지 않는 경우 재풀이 CTA를 막는다. */
+  retryDisabled?: boolean;
+  retryDisabledReason?: string;
 };
 
 type FeedbackActionGroupProps = Props & {
@@ -62,6 +65,8 @@ export function FeedbackActionGroup({
   retryLabel,
   saveLocked = false,
   alreadySaved = false,
+  retryDisabled = false,
+  retryDisabledReason,
   className,
   variant = "footer",
 }: FeedbackActionGroupProps) {
@@ -194,7 +199,12 @@ export function FeedbackActionGroup({
       >
         <Button
           type="primary"
-          onClick={() => router.push(retryHref)}
+          onClick={() => {
+            if (retryDisabled) return;
+            router.push(retryHref);
+          }}
+          disabled={retryDisabled}
+          title={retryDisabled ? retryDisabledReason : undefined}
           data-testid="feedback-action-retry"
         >
           {resolvedRetryLabel}

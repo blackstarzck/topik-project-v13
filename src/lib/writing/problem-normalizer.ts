@@ -15,7 +15,6 @@ export type NormalizedBlank = {
   label: string;
   role: string | null;
   answerType: string | null;
-  acceptedAnswers: string[];
   targetHint: string | null;
 };
 
@@ -308,23 +307,12 @@ function normalizeRubric(
   };
 }
 
-function answerKeyRecord(answerKey: unknown): AnyRecord | null {
-  const obj = asRecord(answerKey);
-  return pickRecord(getNestedRecord(obj, "answer_key"), obj);
-}
-
 function blankFrom(record: AnyRecord | null, key: string): NormalizedBlank {
-  const accepted = asStringList(record?.accepted_answers);
-  const canonical = asString(record?.canonical_answer);
   return {
     key,
     label: key,
     role: asString(record?.role),
     answerType: asString(record?.answer_type),
-    acceptedAnswers:
-      canonical && !accepted.includes(canonical)
-        ? [canonical, ...accepted]
-        : accepted,
     targetHint: null,
   };
 }
@@ -332,10 +320,8 @@ function blankFrom(record: AnyRecord | null, key: string): NormalizedBlank {
 function extractBlanks(
   prompt: string,
   materials: AnyRecord | null,
-  answerKey: unknown,
 ): NormalizedBlank[] {
   const source = getNestedRecord(materials, "blanks") ?? materials;
-  const answerRecord = answerKeyRecord(answerKey);
   const labels = Array.from(
     new Set(
       Array.from(
@@ -358,17 +344,16 @@ function extractBlanks(
         .map(asRecord)
         .find((item) => item?.position === label) ??
       null;
-    const answers = asStringList(answerRecord?.[label]);
     const blank = blankFrom(record, label);
+    // acceptedAnswers(정답 목록)와 blank_target_giyeok/nieun(원문 정답 구간을
+    // 담은 검수 메모, 예: "ㄱ: 8행에서 '참가하고 싶으신 분들은' 구간 전체를
+    // 빈칸으로 지정")은 정답을 드러내므로 학습자에게 전달하는 NormalizedBlank에
+    // 싣지 않는다. 빈칸 힌트는 정답을 드러내지 않는 구조적 역할(role)로만
+    // 표시하고, blank_target_*는 위 fallbackLabels에서 "빈칸 존재" 신호로만
+    // 사용한다. (정답 누출 가드 — 53번 model_answer 가드와 동일 원칙)
     return {
       ...blank,
-      acceptedAnswers: answers.length > 0 ? answers : blank.acceptedAnswers,
-      targetHint:
-        label === "ㄱ"
-          ? asString(source?.blank_target_giyeok)
-          : label === "ㄴ"
-            ? asString(source?.blank_target_nieun)
-            : null,
+      targetHint: null,
     };
   });
 }
@@ -750,7 +735,7 @@ export function normalizeWritingProblem(
   };
 
   if (input.questionNo === 51 || input.questionNo === 52) {
-    const blanks = extractBlanks(prompt, materials, input.answerKey);
+    const blanks = extractBlanks(prompt, materials);
     if (blanks.length === 0) fallbackWarnings.push("missing_blanks");
     const blankConditions = blanks
       .map((blank) => blank.targetHint ?? blank.role)

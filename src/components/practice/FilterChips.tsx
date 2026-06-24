@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Typography } from "antd";
-import { X } from "lucide-react";
+import { X } from "@/components/shared/AppIcons";
 import { useTranslations } from "next-intl";
 import type { ProblemFilter, ProblemSort } from "@/lib/practice/types";
 

@@ -17,7 +17,7 @@ export default async function VerifyEmailPage() {
   const t = await getTranslations("auth.verifyEmail");
   return (
     <PublicShell>
-      <PageContainer size="narrow">
+      <PageContainer size="narrow" className="verify-email-page-container">
         <h1 className="sr-only">{t("srHeading")}</h1>
         <Suspense fallback={null}>
           <VerifyEmailCard />

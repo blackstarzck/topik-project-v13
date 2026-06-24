@@ -33,7 +33,12 @@ import {
 
 const session = {
   user: { id: "user-1" },
-  profile: { ui_locale: "ko" },
+  profile: {
+    ui_locale: "ko",
+    display_name: "Chan",
+    nickname: "talkpik-abc123",
+    nationality_country_code: "KR",
+  },
 } as unknown as AuthenticatedSession;
 
 describe("auth completion state", () => {
@@ -72,19 +77,35 @@ describe("auth completion state", () => {
     warnSpy.mockRestore();
   });
 
-  it("returns pending-consent before checking learning goals", async () => {
+  it("returns pending-auth-completion when required consent is missing", async () => {
     getMissingRequiredConsentDocumentsMock.mockResolvedValueOnce([
       { id: "terms-1" },
     ]);
 
     await expect(getAuthCompletionStatusForSession(session)).resolves.toBe(
-      "pending-consent",
+      "pending-auth-completion",
     );
 
     expect(getMissingRequiredConsentDocumentsMock).toHaveBeenCalledWith(
       "user-1",
       "ko",
     );
+    expect(hasLearningGoalMock).not.toHaveBeenCalled();
+  });
+
+  it("returns pending-auth-completion when required profile fields are missing", async () => {
+    await expect(
+      getAuthCompletionStatusForSession({
+        ...session,
+        profile: {
+          ...session.profile,
+          display_name: null,
+          nickname: "talkpik-abc123",
+          nationality_country_code: "KR",
+        },
+      }),
+    ).resolves.toBe("pending-auth-completion");
+
     expect(hasLearningGoalMock).not.toHaveBeenCalled();
   });
 

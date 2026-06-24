@@ -1,13 +1,20 @@
 "use client";
 
 import { Alert, Button } from "antd";
-import { RefreshCcw } from "lucide-react";
+import Link from "next/link";
+import { ListChecks, RefreshCcw } from "@/components/shared/AppIcons";
 import { useTranslations } from "next-intl";
 import { AppModal } from "@/components/shared/AppModal";
+import { APP_ROUTES } from "@/lib/routes";
+import {
+  classifySubmitWritingError,
+  type SubmitWritingErrorKind,
+} from "@/lib/writing/submit-errors";
 
 type Props = {
   open: boolean;
   submitError: string | null;
+  errorKind?: SubmitWritingErrorKind;
   loading?: boolean;
   onRetry: () => void;
   onClose: () => void;
@@ -16,12 +23,16 @@ type Props = {
 export function SubmissionFailedModal({
   open,
   submitError,
+  errorKind,
   loading = false,
   onRetry,
   onClose,
 }: Props) {
   const t = useTranslations("writing.submit");
   const tCommon = useTranslations("common");
+  const resolvedErrorKind =
+    errorKind ?? classifySubmitWritingError(submitError);
+  const problemUnavailable = resolvedErrorKind === "problem_unavailable";
 
   return (
     <AppModal
@@ -45,9 +56,14 @@ export function SubmissionFailedModal({
           type="error"
           showIcon
           title={t("submitFailedTitle")}
-          description={t("submitFailedDescription", {
+          description={t(
+            problemUnavailable
+              ? "submitUnavailableDescription"
+              : "submitFailedDescription",
+            {
             submitError: submitError ?? "",
-          })}
+            },
+          )}
         />
 
         <div className="grid grid-cols-[2fr_3fr] gap-3">
@@ -60,18 +76,33 @@ export function SubmissionFailedModal({
           >
             {tCommon("cancel")}
           </Button>
-          <Button
-            block
-            size="large"
-            type="primary"
-            icon={<RefreshCcw aria-hidden size={16} />}
-            onClick={onRetry}
-            loading={loading}
-            disabled={loading}
-            data-testid="submission-failed-retry"
-          >
-            {t("okRetry")}
-          </Button>
+          {problemUnavailable ? (
+            <Link href={APP_ROUTES.practiceProblems as never}>
+              <Button
+                block
+                size="large"
+                type="primary"
+                icon={<ListChecks aria-hidden size={16} />}
+                disabled={loading}
+                data-testid="submission-failed-problem-list"
+              >
+                {t("chooseAnotherProblem")}
+              </Button>
+            </Link>
+          ) : (
+            <Button
+              block
+              size="large"
+              type="primary"
+              icon={<RefreshCcw aria-hidden size={16} />}
+              onClick={onRetry}
+              loading={loading}
+              disabled={loading}
+              data-testid="submission-failed-retry"
+            >
+              {t("okRetry")}
+            </Button>
+          )}
         </div>
       </div>
     </AppModal>

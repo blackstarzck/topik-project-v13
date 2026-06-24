@@ -1,16 +1,11 @@
 "use client";
 
 import { Tabs, Tooltip } from "antd";
-import {
-  AlignJustify,
-  BarChart3,
-  ListChecks,
-  ListFilter,
-  PencilLine,
-} from "lucide-react";
+import { ListFilter } from "@/components/shared/AppIcons";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { QUESTION_NOS, type QuestionNo } from "@/lib/practice/types";
+import { questionTypeIcon } from "./question-type-icons";
 
 type Props = {
   active: QuestionNo | null;
@@ -22,10 +17,10 @@ type Props = {
 const ALL_VALUE = "all";
 
 const TYPE_ICONS: Record<QuestionNo, ReactNode> = {
-  51: <AlignJustify size={16} />,
-  52: <PencilLine size={16} />,
-  53: <BarChart3 size={16} />,
-  54: <ListChecks size={16} />,
+  51: questionTypeIcon(51, 16),
+  52: questionTypeIcon(52, 16),
+  53: questionTypeIcon(53, 16),
+  54: questionTypeIcon(54, 16),
 };
 
 function TabLabel({

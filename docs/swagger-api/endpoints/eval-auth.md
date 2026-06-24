@@ -1,7 +1,7 @@
 # Eval Auth API
 
 Source: [Swagger UI](https://api.dotoretopik.com/docs) / [OpenAPI JSON](https://api.dotoretopik.com/openapi.json)
-Last synced: 2026-06-19
+Last synced: 2026-06-23
 
 Scope: Eval dashboard login
 
@@ -9,13 +9,13 @@ Scope: Eval dashboard login
 
 | Method | Path | Summary | Auth |
 | --- | --- | --- | --- |
-| POST | [`/api/eval/auth/login`](#post-api-eval-auth-login) | Eval dashboard login | none or public endpoint |
+| POST | [`/api/eval/auth/login`](#post-api-eval-auth-login) | Eval dashboard login | none |
 
 ## POST /api/eval/auth/login
 
 Summary: Eval dashboard login
 
-Auth: none or public endpoint
+Auth: none
 
 ### Description
 
