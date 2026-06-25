@@ -103,6 +103,17 @@ describe("auth completion gate migration contract", () => {
     );
     expect(laterSql).toContain("new.raw_user_meta_data->>'ui_locale'");
     expect(laterSql).toContain("new.raw_user_meta_data->>'ui_locale_source'");
+    expect(laterSql).toContain(
+      "create or replace function public.complete_auth_gate( p_display_name text, p_nickname text, p_nationality_country_code text, p_accept_required_consents boolean, p_ui_locale text, p_ui_locale_source text )",
+    );
+    expect(laterSql).toContain(
+      "revoke all on function public.complete_auth_gate(text, text, text, boolean, text, text) from public",
+    );
+    expect(laterSql).toContain(
+      "grant execute on function public.complete_auth_gate(text, text, text, boolean, text, text) to authenticated",
+    );
+    expect(laterSql).toContain("ui_locale_source = 'default'");
+    expect(laterSql).toContain("perform public.complete_auth_gate(");
     expect(laterSql).not.toContain("accept-language");
   });
 });

@@ -172,35 +172,9 @@ export async function completeAuthGateAction(formData: FormData) {
 
   const supabase = await createSupabaseServerClient();
   const createClient = async () => supabase;
-  let localeForDocuments = profile.ui_locale;
-  if (profile.ui_locale_source === "default") {
-    const localeSeed = await getRequestLocaleSeed();
-    if (localeSeed) {
-      const { error: localeSeedError } = await supabase
-        .from("profiles")
-        .update({
-          ui_locale: localeSeed.locale,
-          ui_locale_source: localeSeed.source,
-        })
-        .eq("id", user.id)
-        .eq("ui_locale_source", "default");
-
-      if (localeSeedError) {
-        const candidate =
-          typeof localeSeedError === "object" && localeSeedError
-            ? (localeSeedError as SupabaseRpcErrorLike)
-            : {};
-        console.error("auth_consent_locale_seed_failed", {
-          code: candidate.code,
-          message: candidate.message,
-          route: "/auth/consent",
-        });
-        redirect(buildConsentRetryPath(next, "save-failed"));
-      }
-
-      localeForDocuments = localeSeed.locale;
-    }
-  }
+  const localeSeed =
+    profile.ui_locale_source === "default" ? await getRequestLocaleSeed() : null;
+  const localeForDocuments = localeSeed?.locale ?? profile.ui_locale;
 
   const missingDocuments = await getMissingRequiredConsentDocuments(
     user.id,
@@ -212,12 +186,25 @@ export async function completeAuthGateAction(formData: FormData) {
     redirect(buildConsentRetryPath(next, "required"));
   }
 
-  const { error } = await supabase.rpc("complete_auth_gate", {
+  const rpcInput: {
+    p_display_name: string | null;
+    p_nickname: string | null;
+    p_nationality_country_code: string | null;
+    p_accept_required_consents: boolean;
+    p_ui_locale?: Locale;
+    p_ui_locale_source?: RequestLocaleSource;
+  } = {
     p_display_name: input.display_name,
     p_nickname: input.nickname,
     p_nationality_country_code: input.nationality_country_code,
     p_accept_required_consents: acceptRequiredConsents,
-  });
+  };
+  if (localeSeed) {
+    rpcInput.p_ui_locale = localeSeed.locale;
+    rpcInput.p_ui_locale_source = localeSeed.source;
+  }
+
+  const { error } = await supabase.rpc("complete_auth_gate", rpcInput);
 
   if (error) {
     logAuthCompletionRpcFailure({

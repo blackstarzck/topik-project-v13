@@ -77,3 +77,58 @@ revoke all on function public.handle_new_user() from public;
 
 comment on function public.handle_new_user() is
   'After insert on auth.users, create matching public.profiles row idempotently; seeds profile metadata, generated nickname, and UI locale provenance. SECURITY DEFINER with locked search_path. Auto locale detection 2026-06-25.';
+
+create or replace function public.complete_auth_gate(
+  p_display_name text,
+  p_nickname text,
+  p_nationality_country_code text,
+  p_accept_required_consents boolean,
+  p_ui_locale text,
+  p_ui_locale_source text
+)
+returns void
+language plpgsql
+security definer
+set search_path = pg_catalog, public, private
+as $$
+declare
+  v_user_id uuid := auth.uid();
+  v_ui_locale text := case
+    when lower(nullif(btrim(p_ui_locale), '')) in ('ko','en','vi')
+      then lower(nullif(btrim(p_ui_locale), ''))
+    else null
+  end;
+  v_ui_locale_source text := case
+    when lower(nullif(btrim(p_ui_locale_source), '')) in ('auto','manual')
+      then lower(nullif(btrim(p_ui_locale_source), ''))
+    else null
+  end;
+begin
+  if v_user_id is null then
+    raise exception 'auth_completion_required: unauthenticated'
+      using errcode = '42501';
+  end if;
+
+  if v_ui_locale is not null and v_ui_locale_source is not null then
+    update public.profiles
+       set ui_locale = v_ui_locale,
+           ui_locale_source = v_ui_locale_source
+     where id = v_user_id
+       and status = 'active'
+       and ui_locale_source = 'default';
+  end if;
+
+  perform public.complete_auth_gate(
+    p_display_name,
+    p_nickname,
+    p_nationality_country_code,
+    p_accept_required_consents
+  );
+end;
+$$;
+
+revoke all on function public.complete_auth_gate(text, text, text, boolean, text, text) from public;
+grant execute on function public.complete_auth_gate(text, text, text, boolean, text, text) to authenticated;
+
+comment on function public.complete_auth_gate(text, text, text, boolean, text, text) is
+  'Completes the auth gate after atomically applying a default-source UI locale seed for the current active user, then delegates profile completion and consent recording to the existing transactional gate.';
