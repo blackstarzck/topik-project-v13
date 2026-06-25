@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import {
   DashboardBody,
-  type DashboardContinueDraft,
 } from "@/components/dashboard/DashboardBody";
 import { AuthIdentityNotice } from "@/components/auth/AuthIdentityNotice";
 import type { RecentFeedbackItem } from "@/components/learning/RecentFeedbackCard";
@@ -17,6 +16,10 @@ import { getDashboardKpi } from "@/lib/learning/kpi";
 import { getLearningGoal } from "@/lib/learning/server";
 import { getNextProblemBundle } from "@/lib/practice/next";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  pickDashboardContinueDraft,
+  type DashboardContinueDraftQueryRow,
+} from "@/lib/writing/dashboard-drafts";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("dashboard.page");
@@ -24,18 +27,6 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 const DAY_MS = 1000 * 60 * 60 * 24;
-
-type ContinueDraftProblemJoin = {
-  title: string;
-  question_no: number | null;
-};
-
-type ContinueDraftQueryRow = {
-  problem_id: string;
-  question_no: number | null;
-  last_saved_at: string | null;
-  problems: ContinueDraftProblemJoin | ContinueDraftProblemJoin[] | null;
-};
 
 function getExamDday(examDate: string, nowMs: number): number {
   const examMs = new Date(examDate).getTime();
@@ -47,27 +38,6 @@ function getExamDday(examDate: string, nowMs: number): number {
 // growth/page.tsx의 loadGrowthData 패턴과 동일.
 function getRequestNowMs(): number {
   return Date.now();
-}
-
-function pickJoinedOne<T>(value: T | T[] | null | undefined): T | null {
-  if (Array.isArray(value)) return value[0] ?? null;
-  return value ?? null;
-}
-
-function toDashboardContinueDraft(
-  row: ContinueDraftQueryRow | null,
-): DashboardContinueDraft | null {
-  if (!row) return null;
-
-  const problem = pickJoinedOne(row.problems);
-  if (!problem) return null;
-
-  return {
-    problemId: row.problem_id,
-    title: problem.title,
-    questionNo: problem.question_no ?? row.question_no,
-    lastSavedAt: row.last_saved_at,
-  };
 }
 
 export default async function DashboardPage() {
@@ -102,17 +72,15 @@ export default async function DashboardPage() {
   const { data: draftRows } = await supabase
     .from("writing_drafts")
     .select(
-      "problem_id, question_no, last_saved_at, updated_at, char_count, problems!inner(title, question_no)",
+      "problem_id, question_no, answer_text, answer_json, char_count, autosave_status, last_saved_at, updated_at, problems!inner(title, question_no)",
     )
     .eq("user_id", user.id)
     .neq("autosave_status", "superseded")
-    .gt("char_count", 0)
     .order("last_saved_at", { ascending: false, nullsFirst: false })
     .order("updated_at", { ascending: false })
-    .limit(1);
-  const continueDraft = toDashboardContinueDraft(
-    ((draftRows ?? [])[0] as unknown as ContinueDraftQueryRow | undefined) ??
-      null,
+    .limit(10);
+  const continueDraft = pickDashboardContinueDraft(
+    (draftRows ?? []) as unknown as DashboardContinueDraftQueryRow[],
   );
 
   // 최근 첨삭(받은 피드백) — KPI 타일 + 카드. single join query for question_no.

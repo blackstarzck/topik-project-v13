@@ -54,6 +54,7 @@ vi.mock("@/lib/supabase/server", () => {
   const emptyChain = {
     select: () => emptyChain,
     eq: () => emptyChain,
+    neq: () => emptyChain,
     or: () => emptyChain,
     filter: () => emptyChain,
     not: () => emptyChain,

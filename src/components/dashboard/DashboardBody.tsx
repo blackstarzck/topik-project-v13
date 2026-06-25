@@ -19,6 +19,7 @@ import {
 } from "@/components/learning/RecentFeedbackCard";
 import { UpcomingExamCard } from "@/components/learning/UpcomingExamCard";
 import { AppCard } from "@/components/shared/AppCard";
+import type { DashboardContinueDraft } from "@/lib/writing/dashboard-drafts";
 import { writingFeedbackHref, writingProblemHref } from "@/lib/writing/routes";
 import {
   DashboardAlertsCard,
@@ -52,12 +53,7 @@ type Props = {
   alertsLoadFailed: boolean;
 };
 
-export type DashboardContinueDraft = {
-  problemId: string;
-  title: string;
-  questionNo: number | null;
-  lastSavedAt: string | null;
-};
+export type { DashboardContinueDraft };
 
 function truncateLabel(value: string, max = 34): string {
   return value.length > max ? `${value.slice(0, max)}...` : value;
