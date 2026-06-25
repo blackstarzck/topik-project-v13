@@ -140,20 +140,7 @@ describe("completeAuthGateAction", () => {
 
   it("seeds a default-source profile locale from Accept-Language before completing auth", async () => {
     const rpc = vi.fn().mockResolvedValue({ data: null, error: null });
-    const eqCalls: Array<[string, string]> = [];
-    const update = vi.fn(() => ({
-      eq: (column: string, value: string) => {
-        eqCalls.push([column, value]);
-        return {
-          eq: (nextColumn: string, nextValue: string) => {
-            eqCalls.push([nextColumn, nextValue]);
-            return Promise.resolve({ data: null, error: null });
-          },
-        };
-      },
-    }));
-    const from = vi.fn(() => ({ update }));
-    createSupabaseServerClientMock.mockResolvedValueOnce({ from, rpc });
+    createSupabaseServerClientMock.mockResolvedValueOnce({ rpc });
     requireActiveSessionMock.mockResolvedValueOnce({
       user: { id: "user-1" },
       profile: {
@@ -168,15 +155,6 @@ describe("completeAuthGateAction", () => {
       completeAuthGateAction(makeForm({ next: "/dashboard" })),
     ).rejects.toThrow("NEXT_REDIRECT:/dashboard");
 
-    expect(from).toHaveBeenCalledWith("profiles");
-    expect(update).toHaveBeenCalledWith({
-      ui_locale: "vi",
-      ui_locale_source: "auto",
-    });
-    expect(eqCalls).toEqual([
-      ["id", "user-1"],
-      ["ui_locale_source", "default"],
-    ]);
     expect(getMissingRequiredConsentDocumentsMock).toHaveBeenCalledWith(
       "user-1",
       "vi",
@@ -187,6 +165,8 @@ describe("completeAuthGateAction", () => {
       p_display_name: null,
       p_nationality_country_code: null,
       p_nickname: null,
+      p_ui_locale: "vi",
+      p_ui_locale_source: "auto",
     });
   });
 

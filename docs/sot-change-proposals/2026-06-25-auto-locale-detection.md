@@ -30,5 +30,5 @@ TALKPIK already supports UI locale settings through `profiles.ui_locale` and the
 
 - Server locale resolution reads `Accept-Language` only after non-default profile and cookie fail.
 - Email sign-up stores the active rendered UI locale in Supabase Auth metadata.
-- OAuth/auth-completion users whose profile was created with `ui_locale_source='default'` render consent and completion checks with the same effective locale, then can be corrected once from the current request hint before consent documents are recorded.
+- OAuth/auth-completion users whose profile was created with `ui_locale_source='default'` render consent and completion checks with the same effective locale. When completion is submitted, the locale seed is applied inside the auth completion RPC before consent documents are recorded.
 - Existing users remain `legacy` until they manually change language or another explicit migration is approved.
