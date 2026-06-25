@@ -385,4 +385,43 @@ describe("ProblemListView", () => {
     expect(await screen.findByText("이전 풀이가 있어요")).toBeTruthy();
     expect(navState.push).not.toHaveBeenCalled();
   });
+
+  it("routes submitted rows with pending analysis to the feedback status page", async () => {
+    rpcMock.mockResolvedValueOnce({
+      data: [
+        {
+          ...rpcRow(
+            {
+              problem_id: "problem-pending-51",
+              title: "Pending analysis problem",
+              difficulty: 2,
+              tags: ["pending"],
+              attempt_count: 1,
+              is_solved: true,
+              solve_state: "submitted",
+            },
+            0,
+          ),
+          latest_submission_id: "submission-pending-51",
+          writing_feedback_status: "analyzing",
+        },
+      ],
+      error: null,
+    });
+
+    renderInApp(<ProblemListView userId="user-1" />, "en");
+
+    expect(await screen.findByText("Pending analysis problem")).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "View analysis status" }),
+    ).toBeTruthy();
+
+    fireEvent.click(
+      screen.getByText("Pending analysis problem").closest("tr")!,
+    );
+
+    expect(navState.push).toHaveBeenCalledWith(
+      "/writing/feedback/short/submission-pending-51",
+    );
+  });
 });

@@ -13,7 +13,7 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { writingProblemHref } from "@/lib/writing/routes";
+import { writingFeedbackHref, writingProblemHref } from "@/lib/writing/routes";
 import {
   difficultyBucket,
   difficultyBucketLabelKey,
@@ -31,7 +31,8 @@ type Props = {
 const PROBLEM_TABLE_THEME = {
   components: {
     Table: {
-      borderColor: "color-mix(in srgb, var(--app-color-border) 35%, transparent)",
+      borderColor:
+        "color-mix(in srgb, var(--app-color-border) 35%, transparent)",
       headerBg: "var(--app-color-bg-container)",
       headerColor: "var(--app-color-text-secondary)",
       headerSplitColor: "transparent",
@@ -73,10 +74,19 @@ function hasPriorWork(row: UserProblemRow): boolean {
   return getProblemRowDisplayMeta(row).solveStatus !== "unsolved";
 }
 
+function isAnalysisHandoff(row: UserProblemRow): boolean {
+  return (
+    Boolean(row.latestSubmissionId) &&
+    (row.feedbackStatus === "pending" || row.feedbackStatus === "analyzing")
+  );
+}
+
 function isInteractiveTarget(target: EventTarget | null): boolean {
   return (
     target instanceof Element &&
-    Boolean(target.closest("a, button, input, select, textarea, label, summary"))
+    Boolean(
+      target.closest("a, button, input, select, textarea, label, summary"),
+    )
   );
 }
 
@@ -93,6 +103,15 @@ export function ProblemTable({ rows, onRetryClick }: Props) {
 
   function selectRow(row: UserProblemRow) {
     if (isDisabled(row)) return;
+    if (isAnalysisHandoff(row) && row.latestSubmissionId) {
+      router.push(
+        writingFeedbackHref({
+          questionNo: row.questionNo,
+          submissionId: row.latestSubmissionId,
+        }) as never,
+      );
+      return;
+    }
     if (hasPriorWork(row)) {
       onRetryClick(row);
       return;
@@ -106,10 +125,7 @@ export function ProblemTable({ rows, onRetryClick }: Props) {
     );
   }
 
-  function handleRowClick(
-    row: UserProblemRow,
-    event: MouseEvent<HTMLElement>,
-  ) {
+  function handleRowClick(row: UserProblemRow, event: MouseEvent<HTMLElement>) {
     if (isInteractiveTarget(event.target)) return;
     selectRow(row);
   }
@@ -139,6 +155,12 @@ export function ProblemTable({ rows, onRetryClick }: Props) {
       render: (_title: string, row) => {
         const displayMeta = getProblemRowDisplayMeta(row);
         const tags = visibleTags(row);
+        const analysisBadgeKey =
+          row.feedbackStatus === "pending"
+            ? "analysisPendingBadge"
+            : row.feedbackStatus === "analyzing"
+              ? "analysisAnalyzingBadge"
+              : null;
         const displayTitle =
           row.title.length > 32 ? `${row.title.slice(0, 32)}...` : row.title;
 
@@ -170,6 +192,11 @@ export function ProblemTable({ rows, onRetryClick }: Props) {
                   <span className="problem-table__new-badge">
                     {t("newBadge")}
                   </span>
+                ) : null}
+                {analysisBadgeKey ? (
+                  <Tag className="problem-table__tag" color="processing">
+                    {t(analysisBadgeKey)}
+                  </Tag>
                 ) : null}
               </div>
               {tags.length > 0 ? (
@@ -210,16 +237,16 @@ export function ProblemTable({ rows, onRetryClick }: Props) {
         const diffBucket = difficultyBucket(row.difficulty);
         const value = diffBucket
           ? tCommon(
-              difficultyBucketShortKey(
-                diffBucket,
-              ) as Parameters<typeof tCommon>[0],
+              difficultyBucketShortKey(diffBucket) as Parameters<
+                typeof tCommon
+              >[0],
             )
           : "-";
         const title = diffBucket
           ? tCommon(
-              difficultyBucketLabelKey(
-                diffBucket,
-              ) as Parameters<typeof tCommon>[0],
+              difficultyBucketLabelKey(diffBucket) as Parameters<
+                typeof tCommon
+              >[0],
             )
           : undefined;
 
@@ -275,9 +302,19 @@ export function ProblemTable({ rows, onRetryClick }: Props) {
       align: "right",
       render: (_value: unknown, row) => {
         const disabled = isDisabled(row);
+        const analysisHandoff = isAnalysisHandoff(row);
         const rowHasPriorWork = hasPriorWork(row);
 
-        const button = rowHasPriorWork ? (
+        const button = analysisHandoff ? (
+          <Button
+            className="problem-table__action-button problem-table__action-button--secondary"
+            variant="outlined"
+            onClick={() => selectRow(row)}
+            disabled={disabled}
+          >
+            {t("analysisStatusAction")}
+          </Button>
+        ) : rowHasPriorWork ? (
           <Button
             className="problem-table__action-button problem-table__action-button--secondary"
             variant="outlined"
@@ -296,7 +333,7 @@ export function ProblemTable({ rows, onRetryClick }: Props) {
           </Button>
         );
 
-        if (rowHasPriorWork || disabled) {
+        if (analysisHandoff || rowHasPriorWork || disabled) {
           return <div className="problem-table__action">{button}</div>;
         }
 
@@ -340,7 +377,13 @@ export function ProblemTable({ rows, onRetryClick }: Props) {
           const disabled = isDisabled(row);
           return {
             "aria-disabled": disabled ? true : undefined,
-            "aria-label": `${row.title} ${hasPriorWork(row) ? t("retryAttempt") : t("startProblem")}`,
+            "aria-label": `${row.title} ${
+              isAnalysisHandoff(row)
+                ? t("analysisStatusAction")
+                : hasPriorWork(row)
+                  ? t("retryAttempt")
+                  : t("startProblem")
+            }`,
             onClick: (event) => handleRowClick(row, event),
             onKeyDown: (event) => handleRowKeyDown(row, event),
             tabIndex: disabled ? -1 : 0,

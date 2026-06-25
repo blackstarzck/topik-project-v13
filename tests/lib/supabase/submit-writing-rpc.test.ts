@@ -85,4 +85,35 @@ describe("create_external_writing_submission", () => {
     expect(normalized).toContain("and problem_id = (submission->>'problem_id')::uuid");
     expect(normalized).toContain("perform private.set_submission_feedback_status");
   });
+
+  it("auto-saves externally queued submissions to the user's library idempotently", () => {
+    const sql = readMigrations();
+    const normalized = sql.replace(/\s+/g, " ").toLowerCase();
+
+    expect(normalized).toContain(
+      "create or replace function private.ensure_submission_library_item",
+    );
+    expect(normalized).toContain("insert into public.library_items");
+    expect(normalized).toContain("values (p_user_id, 'submission', p_submission_id)");
+    expect(normalized).toContain(
+      "on conflict (user_id, submission_id) where submission_id is not null do nothing",
+    );
+    expect(normalized).toContain(
+      "grant execute on function private.ensure_submission_library_item(uuid, uuid) to service_role",
+    );
+
+    const existingReturnIndex = normalized.indexOf(
+      "if existing_id is not null then perform private.ensure_submission_library_item(owner_id, existing_id); return existing_id;",
+    );
+    const insertIndex = normalized.lastIndexOf(
+      "insert into public.writing_submissions",
+    );
+    const newSubmissionSaveIndex = normalized.indexOf(
+      "perform private.ensure_submission_library_item(owner_id, external_submission_id)",
+      insertIndex,
+    );
+
+    expect(existingReturnIndex).toBeGreaterThanOrEqual(0);
+    expect(newSubmissionSaveIndex).toBeGreaterThan(insertIndex);
+  });
 });

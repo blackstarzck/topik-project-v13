@@ -8,6 +8,7 @@ import type {
   SolveState,
 } from "@/lib/practice/types";
 import type { Json } from "@/lib/supabase/types";
+import type { FeedbackStatus } from "@/lib/writing/types";
 
 /**
  * C-02 문제 목록 — list_user_problems RPC client wrapper.
@@ -41,6 +42,8 @@ export type UserProblemRow = {
   solveState: SolveState;
   /** Latest writing_submissions.id for submitted rows → RetryModal deep-link. */
   latestSubmissionId: string | null;
+  latestSubmissionAt: string | null;
+  feedbackStatus: FeedbackStatus | null;
   /** 이전 점수: 본인 최신 제출의 writing_feedback.score_total. 없으면 null. */
   previousScore: number | null;
   lifecycleStatus: "active" | "inactive" | "expired";
@@ -142,8 +145,24 @@ function toReviewStatus(
   return "approved";
 }
 
+function toFeedbackStatus(
+  value: string | null | undefined,
+): FeedbackStatus | null {
+  if (
+    value === "pending" ||
+    value === "analyzing" ||
+    value === "complete" ||
+    value === "failed"
+  ) {
+    return value;
+  }
+  return null;
+}
+
 function isSeedFixtureRow(row: RpcRow): boolean {
-  return Array.isArray(row.tags) && row.tags.some((tag) => tag.startsWith("seed:"));
+  return (
+    Array.isArray(row.tags) && row.tags.some((tag) => tag.startsWith("seed:"))
+  );
 }
 
 export async function fetchUserProblemsRpc(
@@ -193,6 +212,8 @@ export async function fetchUserProblemsRpc(
       createdAt: r.created_at,
       solveState,
       latestSubmissionId: r.latest_submission_id ?? null,
+      latestSubmissionAt: r.latest_submission_at ?? null,
+      feedbackStatus: toFeedbackStatus(r.writing_feedback_status),
       previousScore: null,
       lifecycleStatus: toLifecycleStatus(r.lifecycle_status),
       lifecycleReason: r.lifecycle_reason ?? null,
@@ -220,8 +241,12 @@ export async function fetchUserProblemsRpc(
         ]),
       );
       for (const row of rows) {
-        if (row.latestSubmissionId && scoreBySubmission.has(row.latestSubmissionId)) {
-          row.previousScore = scoreBySubmission.get(row.latestSubmissionId) ?? null;
+        if (
+          row.latestSubmissionId &&
+          scoreBySubmission.has(row.latestSubmissionId)
+        ) {
+          row.previousScore =
+            scoreBySubmission.get(row.latestSubmissionId) ?? null;
         }
       }
     }

@@ -17,6 +17,7 @@ type Props = {
   label?: string;
   /** antd Button type. Defaults to "default" — caller picks "primary". */
   buttonType?: "default" | "primary" | "link" | "text" | "dashed";
+  disabled?: boolean;
 };
 
 export type ExportPdfClickArgs = {
@@ -59,7 +60,10 @@ export type ExportPdfDeps = {
  * (server route / triggerPdfExport) already inserts one, and double-logging
  * would inflate KPI counts.
  */
-export function createExportPdfHandler(args: ExportPdfClickArgs, deps: ExportPdfDeps) {
+export function createExportPdfHandler(
+  args: ExportPdfClickArgs,
+  deps: ExportPdfDeps,
+) {
   return async function onClick(): Promise<void> {
     try {
       const outcome = await deps.trigger({
@@ -88,6 +92,7 @@ export function ExportPdfButton({
   sourceId,
   label,
   buttonType = "default",
+  disabled = false,
 }: Props) {
   const t = useTranslations("library.exportButton");
   const { message } = App.useApp();
@@ -121,6 +126,7 @@ export function ExportPdfButton({
   );
 
   async function handleClick() {
+    if (disabled) return;
     setPending(true);
     try {
       await handler();
@@ -133,6 +139,7 @@ export function ExportPdfButton({
     <Button
       type={buttonType}
       loading={pending}
+      disabled={disabled}
       onClick={handleClick}
       aria-label={resolvedLabel}
     >

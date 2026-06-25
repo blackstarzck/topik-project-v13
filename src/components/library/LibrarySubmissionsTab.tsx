@@ -21,14 +21,11 @@ import type {
   LibraryItemView,
   LibrarySubmissionView,
 } from "@/lib/library/types";
-import { writingProblemHref } from "@/lib/writing/routes";
+import { writingFeedbackHref } from "@/lib/writing/routes";
 
 import { ExportPdfButton } from "./ExportPdfButton";
 import { LibraryItemRow } from "./LibraryItemRow";
-import {
-  LIBRARY_PAGE_SIZE,
-  LibraryPagination,
-} from "./LibraryPagination";
+import { LIBRARY_PAGE_SIZE, LibraryPagination } from "./LibraryPagination";
 import {
   clampTitle,
   fetchSubmissionEnrichment,
@@ -64,7 +61,15 @@ function submissionTitle(
   fallbackTitle: string,
 ): string {
   const title = item.problem_title ?? fallbackTitle;
-  return item.question_no != null ? `No. ${item.question_no} - ${title}` : title;
+  return item.question_no != null
+    ? `No. ${item.question_no} - ${title}`
+    : title;
+}
+
+function isAnalysisPendingStatus(
+  status: SubmissionEnrichment["feedbackStatus"],
+): boolean {
+  return status === "pending" || status === "analyzing";
 }
 
 /**
@@ -158,7 +163,10 @@ export function LibrarySubmissionsTab({
   }, [allItems, searchTerm, statusFilter, range, enrich, t]);
 
   // Clamp the page when the filtered set shrinks.
-  const totalPages = Math.max(1, Math.ceil(filtered.length / LIBRARY_PAGE_SIZE));
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filtered.length / LIBRARY_PAGE_SIZE),
+  );
   const safePage = Math.min(page, totalPages);
   const pageItems = filtered.slice(
     (safePage - 1) * LIBRARY_PAGE_SIZE,
@@ -168,7 +176,16 @@ export function LibrarySubmissionsTab({
   // Lift selection (intersected with currently-filtered ids) to the parent.
   useEffect(() => {
     if (!onSelectionChange) return;
-    const validIds = new Set(filtered.map((i) => i.item_id));
+    const validIds = new Set(
+      filtered
+        .filter(
+          (i) =>
+            !isAnalysisPendingStatus(
+              enrich.get(i.id)?.feedbackStatus ?? "pending",
+            ),
+        )
+        .map((i) => i.item_id),
+    );
     const items: ExportSelectionItem[] = filtered
       .filter((i) => selected.has(i.item_id) && validIds.has(i.item_id))
       .map((i) => ({
@@ -179,7 +196,7 @@ export function LibrarySubmissionsTab({
         ),
       }));
     onSelectionChange(items);
-  }, [selected, filtered, onSelectionChange, t]);
+  }, [selected, filtered, enrich, onSelectionChange, t]);
 
   function toggle(itemId: string, checked: boolean) {
     setSelected((prev) => {
@@ -253,9 +270,7 @@ export function LibrarySubmissionsTab({
 
       {pageItems.length === 0 ? (
         <div className="flex flex-1 items-center justify-center">
-          <Empty
-            description={searching ? t("emptySearch") : t("emptyNoItems")}
-          >
+          <Empty description={searching ? t("emptySearch") : t("emptyNoItems")}>
             {searching ? (
               <Button
                 onClick={() => {
@@ -273,13 +288,12 @@ export function LibrarySubmissionsTab({
         </div>
       ) : (
         <>
-          <div
-            data-testid="library-item-list"
-            className="flex w-full flex-col"
-          >
+          <div data-testid="library-item-list" className="flex w-full flex-col">
             {pageItems.map((item) => {
               const meta = enrich.get(item.id);
-              const badge = statusBadge(meta?.feedbackStatus ?? "pending");
+              const feedbackStatus = meta?.feedbackStatus ?? "pending";
+              const analysisPending = isAnalysisPendingStatus(feedbackStatus);
+              const badge = statusBadge(feedbackStatus);
               const fallbackTitle = t("problemTitle", {
                 id: item.problem_id.slice(0, 8),
               });
@@ -293,8 +307,10 @@ export function LibrarySubmissionsTab({
                   trailingActions={[
                     <span key="select" data-testid="library-select-item">
                       <Checkbox
-                        checked={selected.has(item.item_id)}
+                        checked={!analysisPending && selected.has(item.item_id)}
+                        disabled={analysisPending}
                         onChange={(e) =>
+                          !analysisPending &&
                           toggle(item.item_id, e.target.checked)
                         }
                         aria-label={t("selectForExportAriaLabel")}
@@ -304,6 +320,7 @@ export function LibrarySubmissionsTab({
                       key="export"
                       sourceType="submission"
                       sourceId={item.id}
+                      disabled={analysisPending}
                     />,
                   ]}
                 >
@@ -311,17 +328,15 @@ export function LibrarySubmissionsTab({
                     <div className="flex flex-wrap items-center gap-2">
                       <Link
                         href={
-                          writingProblemHref({
+                          writingFeedbackHref({
                             questionNo: item.question_no,
-                            problemId: item.problem_id,
+                            submissionId: item.id,
                           }) as never
                         }
                       >
                         <Text strong>{clampTitle(title)}</Text>
                       </Link>
-                      <Tag>
-                        {t(badge.labelKey as Parameters<typeof t>[0])}
-                      </Tag>
+                      <Tag>{t(badge.labelKey as Parameters<typeof t>[0])}</Tag>
                       {meta?.scoreTotal != null ? (
                         <Tag>
                           {meta.scoreMax != null
@@ -341,10 +356,16 @@ export function LibrarySubmissionsTab({
                       >
                         {meta.summary}
                       </Paragraph>
+                    ) : analysisPending ? (
+                      <Paragraph className="mb-0" type="secondary">
+                        {t("analysisPendingHint")}
+                      </Paragraph>
                     ) : null}
                     <div className="flex flex-wrap items-center gap-2">
                       <Tag>{t("charCount", { count: item.char_count })}</Tag>
-                      <Text type="secondary">{formatDate(item.submitted_at)}</Text>
+                      <Text type="secondary">
+                        {formatDate(item.submitted_at)}
+                      </Text>
                     </div>
                   </div>
                 </LibraryItemRow>

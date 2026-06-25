@@ -44,7 +44,7 @@ function formatSubmittedAtKst(value: string): string | null {
 export function SubmittedAnalysisPanel({ state }: Props) {
   const t = useTranslations("feedback.analysis");
   const router = useRouter();
-  const { data } = useFeedbackStatus(state.submissionId);
+  const { data, pollingExhausted } = useFeedbackStatus(state.submissionId);
   const status: AnalysisPhase = (data as AnalysisPhase | null) ?? "analyzing";
   const submittedAt = formatSubmittedAtKst(state.submittedAt);
   const showSubmittedAnswer = status !== "failed";
@@ -104,6 +104,7 @@ export function SubmittedAnalysisPanel({ state }: Props) {
       <section className="submitted-analysis-page__status">
         <AnalysisLoadingPage
           status={status}
+          pollingExhausted={pollingExhausted}
           completeHref={state.feedbackHref}
           onComplete={handleComplete}
           onRetry={() => router.refresh()}

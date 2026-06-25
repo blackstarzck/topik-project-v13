@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createSupabaseBrowserClient } from "../supabase/browser";
 import {
   isFeedbackComplete,
@@ -128,20 +128,54 @@ export function useDraft(userId: string, problemId: string) {
   });
 }
 
-const POLL_INTERVAL_MS = 10000;
-const POLL_MAX_ATTEMPTS = 6;
+export const FEEDBACK_STATUS_POLL_INTERVAL_MS = 10000;
+export const FEEDBACK_STATUS_POLL_MAX_ATTEMPTS = 6;
+
+export function getFeedbackStatusRefetchInterval(
+  status: FeedbackStatus | null | undefined,
+  dataUpdateCount: number,
+): false | typeof FEEDBACK_STATUS_POLL_INTERVAL_MS {
+  if (dataUpdateCount >= FEEDBACK_STATUS_POLL_MAX_ATTEMPTS) return false;
+  if (status === null) return false;
+  if (!status) return FEEDBACK_STATUS_POLL_INTERVAL_MS;
+  return isFeedbackComplete(status) ? false : FEEDBACK_STATUS_POLL_INTERVAL_MS;
+}
+
+export function isFeedbackStatusPollingExhausted(
+  status: FeedbackStatus | null | undefined,
+  dataUpdateCount: number,
+): boolean {
+  return Boolean(
+    status &&
+    !isFeedbackComplete(status) &&
+    dataUpdateCount >= FEEDBACK_STATUS_POLL_MAX_ATTEMPTS,
+  );
+}
 
 export function useFeedbackStatus(submissionId: string) {
-  return useQuery({
+  const queryClient = useQueryClient();
+  const query = useQuery({
     queryKey: feedbackStatusKey(submissionId),
     queryFn: () => fetchFeedbackStatus(submissionId),
     refetchInterval: (query) => {
-      if (query.state.dataUpdateCount >= POLL_MAX_ATTEMPTS) return false;
-      const status = query.state.data;
-      if (status === null) return false;
-      if (!status) return POLL_INTERVAL_MS;
-      return isFeedbackComplete(status) ? false : POLL_INTERVAL_MS;
+      return getFeedbackStatusRefetchInterval(
+        query.state.data,
+        query.state.dataUpdateCount,
+      );
     },
     refetchIntervalInBackground: false,
   });
+  const observedDataUpdateCount =
+    queryClient
+      .getQueryCache()
+      .find({ queryKey: feedbackStatusKey(submissionId) })?.state
+      .dataUpdateCount ?? 0;
+
+  return {
+    ...query,
+    pollingExhausted: isFeedbackStatusPollingExhausted(
+      query.data,
+      observedDataUpdateCount,
+    ),
+  };
 }
