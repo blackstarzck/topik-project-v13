@@ -236,11 +236,14 @@ test("Q54 essay writing submits and reaches long-form feedback", async ({
     await confirmModal.getByTestId("submission-confirm-submit").click();
 
     await expect(page).toHaveURL(/\/writing\/essay-writing-54/);
-    await expect(page.getByTestId("analysis-loading-background")).toBeVisible({
-      timeout: 10000,
-    });
     await expect(page.getByTestId("analysis-loading-page")).toBeVisible();
     await expect(page.getByTestId("analysis-loading-panel")).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "AI 분석 중..." }),
+    ).toBeVisible({ timeout: 10000 });
+    await expect(page.getByTestId("analysis-loading-background")).toHaveCount(
+      0,
+    );
     await expect(page.getByTestId("analysis-loading-modal")).toHaveCount(0);
 
     const submitted = await waitForSubmittedQ54Row(answerToken);

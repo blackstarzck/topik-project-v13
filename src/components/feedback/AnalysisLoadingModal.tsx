@@ -11,7 +11,6 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 
-import { AppCard } from "@/components/shared/AppCard";
 import { APP_ROUTES } from "@/lib/routes";
 
 const { Paragraph, Text, Title } = Typography;
@@ -165,10 +164,7 @@ export function AnalysisLoadingPage({
         className={`analysis-loading analysis-loading--page analysis-loading--${status}`}
         data-testid="analysis-loading-panel"
       >
-        <AppCard
-          className="analysis-state-card"
-          data-testid="analysis-state-card"
-        >
+        <div className="analysis-state-card" data-testid="analysis-state-card">
           <div
             className={`analysis-state-card__inner${
               isHandoff ? " analysis-state-card__inner--blurred" : ""
@@ -281,7 +277,7 @@ export function AnalysisLoadingPage({
               </Text>
             </div>
           ) : null}
-        </AppCard>
+        </div>
       </div>
     </div>
   );

@@ -1202,6 +1202,7 @@
     },
     "analysis": {
       "title": "AI is analyzing your answer",
+      "pageTitle": "AI analyzing...",
       "autoMoveNote": "You'll move to the results screen automatically when analysis finishes. It usually takes a few seconds to a minute.",
       "cancelButton": "Stop analysis and leave",
       "cancelConfirm": "Analysis is still in progress. Leaving now may interrupt it. Do you want to leave?",

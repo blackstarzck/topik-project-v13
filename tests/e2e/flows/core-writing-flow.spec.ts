@@ -245,11 +245,12 @@ test("core writing flow: dashboard → write → submit → feedback → compare
   );
   await confirmModal.getByRole("button", { name: "제출", exact: true }).click();
   await expect(page).toHaveURL(/\/writing\/short-answer-writing-51/);
-  await expect(page.getByTestId("analysis-loading-background")).toBeVisible({
-    timeout: 10000,
-  });
   await expect(page.getByTestId("analysis-loading-page")).toBeVisible();
   await expect(page.getByTestId("analysis-loading-panel")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "AI 분석 중..." }),
+  ).toBeVisible({ timeout: 10000 });
+  await expect(page.getByTestId("analysis-loading-background")).toHaveCount(0);
   await expect(page.getByTestId("analysis-loading-modal")).toHaveCount(0);
   await expect(page).not.toHaveURL(/\/writing\/feedback\/short\//);
   const submitted = await waitForSubmittedFlowRow(answerToken);

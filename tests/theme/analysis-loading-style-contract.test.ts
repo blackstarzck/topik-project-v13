@@ -45,4 +45,41 @@ describe("D-M2 analysis loading style contract", () => {
     expect(css).toContain("border-color: var(--app-color-primary);");
     expect(css).toContain("color: var(--app-color-bg-container);");
   });
+
+  test("submitted analysis page centers one non-card status panel", () => {
+    const pageRule = cssRule(".submitted-analysis-page");
+    const statusRule = cssRule(".submitted-analysis-page__status");
+    const statePanelRule = cssRule(".analysis-state-card");
+
+    expect(pageRule).toContain("place-items: center;");
+    expect(pageRule).not.toContain("grid-template-columns");
+    expect(statusRule).toContain("width: min(100%, 640px);");
+    expect(statePanelRule).toContain("border: 0;");
+    expect(statePanelRule).toContain("background: transparent;");
+  });
+
+  test("page analysis steps stay horizontal on mobile", () => {
+    const css = readFileSync(
+      path.join(process.cwd(), "src", "styles", "global.css"),
+      "utf8",
+    );
+    const source = readFileSync(
+      path.join(
+        process.cwd(),
+        "src",
+        "components",
+        "feedback",
+        "AnalysisLoadingModal.tsx",
+      ),
+      "utf8",
+    );
+
+    expect(source).toContain("responsive={false}");
+    expect(css).toContain("@media (max-width: 560px)");
+    expect(css).toContain(
+      ".analysis-loading--page .analysis-loading__steps.ant-steps",
+    );
+    expect(css).toContain("flex-wrap: nowrap;");
+    expect(css).toContain("min-width: 0;");
+  });
 });

@@ -71,6 +71,6 @@ describe("SubmittedAnalysisPanel failed state", () => {
       /\.submitted-analysis-page\.submitted-analysis-page--failed\s*\{([^}]+)\}/,
     );
 
-    expect(failedRule?.[1]).toContain("justify-content: center");
+    expect(failedRule?.[1]).toContain("place-items: center");
   });
 });
