@@ -1,6 +1,10 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import {
+  ANALYSIS_POLL_INTERVAL_MS,
+  ANALYSIS_POLL_MAX_ATTEMPTS,
+} from "../request-control/policies";
 import { createSupabaseBrowserClient } from "../supabase/browser";
 import {
   isFeedbackComplete,
@@ -128,19 +132,17 @@ export function useDraft(userId: string, problemId: string) {
   });
 }
 
-const POLL_INTERVAL_MS = 10000;
-const POLL_MAX_ATTEMPTS = 6;
-
 export function useFeedbackStatus(submissionId: string) {
   return useQuery({
     queryKey: feedbackStatusKey(submissionId),
     queryFn: () => fetchFeedbackStatus(submissionId),
     refetchInterval: (query) => {
-      if (query.state.dataUpdateCount >= POLL_MAX_ATTEMPTS) return false;
+      if (query.state.dataUpdateCount >= ANALYSIS_POLL_MAX_ATTEMPTS)
+        return false;
       const status = query.state.data;
       if (status === null) return false;
-      if (!status) return POLL_INTERVAL_MS;
-      return isFeedbackComplete(status) ? false : POLL_INTERVAL_MS;
+      if (!status) return ANALYSIS_POLL_INTERVAL_MS;
+      return isFeedbackComplete(status) ? false : ANALYSIS_POLL_INTERVAL_MS;
     },
     refetchIntervalInBackground: false,
   });

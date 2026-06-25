@@ -13,6 +13,7 @@ import {
   type QuestionNo,
   type SolveStatusFilter,
 } from "@/lib/practice/types";
+import { useSingleFlightAction } from "@/lib/request-control/useSingleFlightAction";
 import { FilterChips } from "./FilterChips";
 import { ProblemListControls } from "./ProblemListControls";
 import { ProblemListPagination } from "./ProblemListPagination";
@@ -181,6 +182,7 @@ export function ProblemListView({ userId }: Props) {
     [filter, sort, page, userId],
   );
   const list = useUserProblemsRpc(rpcParams);
+  const retry = useSingleFlightAction(() => list.refetch());
 
   const total = list.data?.total ?? 0;
   const rows = list.data?.rows ?? [];
@@ -236,7 +238,12 @@ export function ProblemListView({ userId }: Props) {
           title={t("loadErrorTitle")}
           description={list.error instanceof Error ? list.error.message : ""}
           action={
-            <Button size="small" onClick={() => list.refetch()}>
+            <Button
+              size="small"
+              loading={retry.pending}
+              disabled={retry.pending}
+              onClick={() => void retry.run()}
+            >
               {t("retry")}
             </Button>
           }

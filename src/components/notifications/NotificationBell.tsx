@@ -13,7 +13,7 @@ import {
 import { Bell } from "@/components/shared/AppIcons";
 import { useFormatter, useNow, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   fetchNotifications,
@@ -23,6 +23,7 @@ import {
   resolveNotificationDestination,
   type UserNotification,
 } from "./notifications-data";
+import { useSingleFlightAction } from "@/lib/request-control/useSingleFlightAction";
 
 const { Paragraph, Text } = Typography;
 
@@ -61,6 +62,10 @@ export function NotificationBell({ userId }: Props) {
   const [unreadCount, setUnreadCount] = useState(0);
   const [items, setItems] = useState<UserNotification[]>([]);
   const [listLoad, setListLoad] = useState<ListLoad>({ status: "loading" });
+  const pendingReadIdsRef = useRef<Set<string>>(new Set());
+  const [pendingReadIds, setPendingReadIds] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -100,6 +105,9 @@ export function NotificationBell({ userId }: Props) {
 
   async function handleItemClick(item: UserNotification) {
     if (!item.read_at) {
+      if (pendingReadIdsRef.current.has(item.id)) return;
+      pendingReadIdsRef.current.add(item.id);
+      setPendingReadIds(new Set(pendingReadIdsRef.current));
       const readAt = new Date().toISOString();
       setItems((prev) =>
         prev.map((n) => (n.id === item.id ? { ...n, read_at: readAt } : n)),
@@ -113,6 +121,9 @@ export function NotificationBell({ userId }: Props) {
         );
         setUnreadCount((prev) => prev + 1);
         message.error(err instanceof Error ? err.message : t("markReadError"));
+      } finally {
+        pendingReadIdsRef.current.delete(item.id);
+        setPendingReadIds(new Set(pendingReadIdsRef.current));
       }
     }
     const destination = resolveNotificationDestination(item);
@@ -134,6 +145,8 @@ export function NotificationBell({ userId }: Props) {
       message.error(err instanceof Error ? err.message : t("markAllError"));
     }
   }
+  const reloadList = useSingleFlightAction(loadList);
+  const markAll = useSingleFlightAction(handleMarkAll);
 
   const content = (
     <div className="app-notification-panel">
@@ -143,8 +156,9 @@ export function NotificationBell({ userId }: Props) {
           type="link"
           size="small"
           className="app-notification-panel__mark-all"
-          disabled={unreadCount === 0}
-          onClick={() => void handleMarkAll()}
+          loading={markAll.pending}
+          disabled={unreadCount === 0 || markAll.pending}
+          onClick={() => void markAll.run()}
         >
           {t("markAllRead")}
         </Button>
@@ -154,7 +168,12 @@ export function NotificationBell({ userId }: Props) {
       ) : listLoad.status === "error" ? (
         <div className="app-notification-panel__error">
           <Text type="danger">{t("loadError")}</Text>
-          <Button size="small" onClick={() => void loadList()}>
+          <Button
+            size="small"
+            loading={reloadList.pending}
+            disabled={reloadList.pending}
+            onClick={() => void reloadList.run()}
+          >
             {t("retry")}
           </Button>
         </div>
@@ -167,6 +186,7 @@ export function NotificationBell({ userId }: Props) {
           dataSource={items}
           renderItem={(item) => {
             const unread = !item.read_at;
+            const isPendingRead = pendingReadIds.has(item.id);
             return (
               <List.Item
                 className={
@@ -178,6 +198,7 @@ export function NotificationBell({ userId }: Props) {
                 <button
                   type="button"
                   className="app-notification-item__button"
+                  disabled={isPendingRead}
                   onClick={() => void handleItemClick(item)}
                 >
                   <span className="app-notification-item__dot" aria-hidden>
@@ -217,7 +238,7 @@ export function NotificationBell({ userId }: Props) {
       open={open}
       onOpenChange={(next) => {
         setOpen(next);
-        if (next) void loadList();
+        if (next) void reloadList.run();
       }}
       trigger="click"
       placement="bottomRight"

@@ -7,17 +7,34 @@ import { renderWithIntl } from "../../test-utils/renderWithIntl";
 const { checkNicknameAvailabilityMock } = vi.hoisted(() => ({
   checkNicknameAvailabilityMock: vi.fn(),
 }));
+const { formStatusState } = vi.hoisted(() => ({
+  formStatusState: { pending: false },
+}));
 
 vi.mock("@/lib/settings/mutations", () => ({
   checkNicknameAvailability: (...args: unknown[]) =>
     checkNicknameAvailabilityMock(...args),
 }));
 
+vi.mock("react-dom", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("react-dom")>();
+  return {
+    ...actual,
+    useFormStatus: () => ({
+      pending: formStatusState.pending,
+      data: null,
+      method: null,
+      action: null,
+    }),
+  };
+});
+
 import { AuthConsentPanel } from "../../../src/components/auth/AuthConsentPanel";
 
 afterEach(() => {
   cleanup();
   checkNicknameAvailabilityMock.mockReset();
+  formStatusState.pending = false;
 });
 
 describe("AuthConsentPanel", () => {
@@ -183,5 +200,35 @@ describe("AuthConsentPanel", () => {
       "talkpik-84x2a",
     );
     expect(screen.queryByTestId("country-region-select")).toBeNull();
+  });
+
+  it("renders the submit button as loading and disabled while the form action is pending", () => {
+    formStatusState.pending = true;
+    renderWithIntl(
+      <AuthConsentPanel
+        action={vi.fn()}
+        documents={[
+          {
+            id: "terms-1",
+            title: "Terms of Service",
+            version: "2026-06",
+            summary: "Short consent summary",
+            body: "Full consent body",
+          },
+        ]}
+        next="/auth/post-auth?intent=login"
+        profile={{
+          display_name: "Chan",
+          nationality_country_code: "KR",
+          nickname: "talkpik-abc123",
+        }}
+        missingProfileFields={[]}
+        showRequiredError={false}
+      />,
+    );
+
+    const submit = screen.getByRole("button");
+    expect(submit).toHaveProperty("disabled", true);
+    expect(submit.className).toContain("ant-btn-loading");
   });
 });

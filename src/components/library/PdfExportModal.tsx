@@ -24,6 +24,7 @@ import {
   estimatePdfPages,
   type PdfExportOptions,
 } from "@/lib/export/pdf-options";
+import { useSingleFlightAction } from "@/lib/request-control/useSingleFlightAction";
 
 const { Text, Title, Paragraph } = Typography;
 
@@ -158,15 +159,7 @@ function PdfExportModalBody({
     [enabledItems.length, includeAnswers, includeFeedback, layout],
   );
 
-  const canExport =
-    !selectionLost &&
-    !tooMany &&
-    enabledItems.length > 0 &&
-    filenameError === null &&
-    privacyConfirmed &&
-    gen.phase !== "generating";
-
-  async function handleExport() {
+  async function runExport() {
     setGen({ phase: "generating" });
     try {
       const outcome = await exportPdfWithPrintFallback({
@@ -192,6 +185,19 @@ function PdfExportModalBody({
         message: err instanceof Error ? err.message : t("generateFailed"),
       });
     }
+  }
+  const exportAction = useSingleFlightAction(runExport);
+  const isGenerating = gen.phase === "generating" || exportAction.pending;
+  const canExport =
+    !selectionLost &&
+    !tooMany &&
+    enabledItems.length > 0 &&
+    filenameError === null &&
+    privacyConfirmed &&
+    !isGenerating;
+
+  function handleExport() {
+    void exportAction.run();
   }
 
   if (selectionLost) {
@@ -476,7 +482,13 @@ function PdfExportModalBody({
             <div className="flex flex-col gap-2">
               <Text type="secondary">{gen.message}</Text>
               <div className="flex flex-wrap gap-2">
-                <Button size="small" type="primary" onClick={handleExport}>
+                <Button
+                  size="small"
+                  type="primary"
+                  loading={isGenerating}
+                  disabled={isGenerating}
+                  onClick={handleExport}
+                >
                   {t("retry")}
                 </Button>
                 <Button
@@ -504,7 +516,12 @@ function PdfExportModalBody({
                   : t("doneDescription")}
               </Text>
               <div className="flex flex-wrap gap-2">
-                <Button size="small" onClick={handleExport}>
+                <Button
+                  size="small"
+                  loading={isGenerating}
+                  disabled={isGenerating}
+                  onClick={handleExport}
+                >
                   {t("exportAgain")}
                 </Button>
               </div>
@@ -530,11 +547,11 @@ function PdfExportModalBody({
           <Button
             data-testid="pdf-export-submit"
             type="primary"
-            loading={gen.phase === "generating"}
+            loading={isGenerating}
             disabled={!canExport}
             onClick={handleExport}
           >
-            {gen.phase === "generating" ? t("generating") : t("export")}
+            {isGenerating ? t("generating") : t("export")}
           </Button>
         </div>
         {/* hifi의 "생성 후 알림으로 안내드려요"는 알림 발송 스텁이라 다운로드

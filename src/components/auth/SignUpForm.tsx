@@ -296,7 +296,8 @@ export function SignUpForm({
   }
 
   async function handleSignUp(values: SignUpFields) {
-    if (isCoolingDown) return;
+    if (submitting || googleSubmitting || kakaoSubmitting || isCoolingDown)
+      return;
 
     setSafeGuidanceVisible(false);
     setBlockedOAuthBrowser(null);
@@ -360,6 +361,7 @@ export function SignUpForm({
   }
 
   async function handleGoogleSignUp() {
+    if (googleSubmitting || submitting || kakaoSubmitting) return;
     setGoogleSubmitting(true);
     setBlockedOAuthBrowser(null);
     try {
@@ -379,6 +381,7 @@ export function SignUpForm({
   }
 
   async function handleKakaoSignUp() {
+    if (kakaoSubmitting || submitting || googleSubmitting) return;
     setKakaoSubmitting(true);
     setBlockedOAuthBrowser(null);
     try {
@@ -645,7 +648,7 @@ export function SignUpForm({
                 type="primary"
                 htmlType="submit"
                 block
-                disabled={!isSubmitReady || isCoolingDown}
+                disabled={!isSubmitReady || isCoolingDown || submitting}
                 loading={submitting}
                 icon={<ArrowRight size={16} aria-hidden="true" />}
                 iconPlacement="end"
@@ -666,7 +669,7 @@ export function SignUpForm({
           block
           onClick={() => void handleGoogleSignUp()}
           loading={googleSubmitting}
-          disabled={submitting || kakaoSubmitting}
+          disabled={submitting || googleSubmitting || kakaoSubmitting}
           icon={<GoogleMark />}
           className="signup-social-button"
         >
@@ -676,7 +679,7 @@ export function SignUpForm({
           block
           onClick={() => void handleKakaoSignUp()}
           loading={kakaoSubmitting}
-          disabled={submitting || googleSubmitting}
+          disabled={submitting || googleSubmitting || kakaoSubmitting}
           icon={<MessageCircle size={18} aria-hidden="true" />}
           className="signup-social-button"
         >

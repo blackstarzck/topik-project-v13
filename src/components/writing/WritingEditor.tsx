@@ -58,6 +58,9 @@ export function WritingEditor({
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(
     initialDraft?.last_saved_at ?? null,
   );
+  const [draftId, setDraftId] = useState<string | null>(
+    initialDraft?.id ?? null,
+  );
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [warningTrigger, setWarningTrigger] = useState<WarningTrigger | null>(
     null,
@@ -126,6 +129,7 @@ export function WritingEditor({
         onSuccess: (row) => {
           if (seq !== saveSeqRef.current) return;
           setStatus("clean");
+          setDraftId(row.id);
           setLastSavedAt(row.last_saved_at ?? null);
           // D §study_events — 자동저장 성공 기록(수동 저장 제외).
           if (!isManual) {
@@ -196,7 +200,7 @@ export function WritingEditor({
     if (clearFailure) setSubmitError(null);
     submit.mutate(
       {
-        draft_id: initialDraft?.id ?? null,
+        draft_id: draftId,
         problem_id: problemId,
         question_no: questionNo,
         answer_text: text,

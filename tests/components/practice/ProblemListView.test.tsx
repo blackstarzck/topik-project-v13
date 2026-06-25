@@ -385,4 +385,21 @@ describe("ProblemListView", () => {
     expect(await screen.findByText("이전 풀이가 있어요")).toBeTruthy();
     expect(navState.push).not.toHaveBeenCalled();
   });
+
+  it("runs the failed-load retry only once while refetch is pending", async () => {
+    const pending = new Promise(() => undefined);
+    rpcMock
+      .mockRejectedValueOnce(new Error("problem_list_timeout"))
+      .mockReturnValue(pending);
+
+    renderInApp(<ProblemListView userId="user-1" />, "ko");
+
+    const retry = await screen.findByRole("button", {
+      name: koMessages.practice.problems.retry,
+    });
+    fireEvent.click(retry);
+    fireEvent.click(retry);
+
+    expect(rpcMock).toHaveBeenCalledTimes(2);
+  });
 });

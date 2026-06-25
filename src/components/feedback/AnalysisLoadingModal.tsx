@@ -24,6 +24,8 @@ import { useRouter } from "next/navigation";
 
 import { AppCard } from "@/components/shared/AppCard";
 import { AppModal } from "@/components/shared/AppModal";
+import { MANUAL_RETRY_COOLDOWN_MS } from "@/lib/request-control/policies";
+import { useSingleFlightAction } from "@/lib/request-control/useSingleFlightAction";
 import { APP_ROUTES } from "@/lib/routes";
 import { AnalysisCharacter } from "./AnalysisCharacter";
 
@@ -233,6 +235,10 @@ function AnalysisLoadingModalContent({
     router.push(APP_ROUTES.dashboard);
   }
 
+  const retry = useSingleFlightAction(() => onRetry?.(), {
+    cooldownMs: MANUAL_RETRY_COOLDOWN_MS,
+  });
+
   const contentTestId =
     presentation === "page"
       ? "analysis-loading-panel"
@@ -244,7 +250,9 @@ function AnalysisLoadingModalContent({
           <Button
             type="primary"
             icon={<RefreshCcw aria-hidden size={16} />}
-            onClick={onRetry}
+            loading={retry.pending}
+            disabled={retry.pending}
+            onClick={() => void retry.run()}
             data-testid="analysis-loading-retry"
           >
             {t("retryButton")}
@@ -390,7 +398,9 @@ function AnalysisLoadingModalContent({
             <Button
               type="primary"
               icon={<RefreshCcw aria-hidden size={16} />}
-              onClick={onRetry}
+              loading={retry.pending}
+              disabled={retry.pending}
+              onClick={() => void retry.run()}
               data-testid="analysis-loading-retry"
             >
               {t("retryButton")}
