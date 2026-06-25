@@ -31,3 +31,13 @@ git worktree add ..\v13-auth-redirect -b codex/auth-redirect main
 작업 완료 후에는 해당 worktree에서 검증과 diff를 확인하고 commit 또는 PR 단위로 정리한다. 병합은 기준 폴더에서 최신 `main`을 기준으로 branch를 하나씩 통합한다.
 
 worktree는 코드 파일을 격리하지만 포트, 로컬 DB, Supabase 테스트 데이터, `.env.local`, dev server 같은 런타임 자원은 자동으로 격리하지 않는다. 병렬 실행 검증이 필요하면 포트와 데이터 자원 충돌을 별도로 피한다.
+
+## 배포 브랜치 보호
+
+`collab` 브랜치는 Vercel에 연결된 배포 브랜치다. `collab`에 merge 또는 push되면 사용자에게 바로 노출될 수 있으므로 아래 규칙을 반드시 지킨다.
+
+- 사용자가 `main에 머지`, `git에 올려`, `push해`, `PR 만들어`, `배포해`라고 말해도 기본 대상은 절대 `collab`이 아니다.
+- `collab`으로 merge, rebase, push, force-push, PR target 변경, `git push origin HEAD:collab`, `git push origin main:collab` 같은 작업을 하지 않는다.
+- `collab` 대상 작업은 사용자가 정확히 `collab에 배포`, `collab 브랜치에 merge`, `collab으로 push`처럼 브랜치 이름과 배포 의도를 명시한 경우에만 고려한다.
+- 그래도 바로 실행하지 않는다. 먼저 `collab은 Vercel 배포 브랜치라 즉시 노출됩니다`라고 경고하고, 변경 범위, 검증 결과, secret 점검 결과를 보고한 뒤 명시 확인을 받아야 한다.
+- Git 작업 전에는 `git branch --show-current`, `git status --short --branch`, push/merge/PR 대상 브랜치를 확인한다. 대상에 `collab`이 포함되면 위 조건을 만족하지 않는 한 중단한다.
