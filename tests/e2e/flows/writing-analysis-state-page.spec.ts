@@ -119,7 +119,15 @@ test("writing submit keeps analysis state above the read-only answer", async ({
   await expect(page).toHaveURL(/\/writing\/short-answer-writing-51/);
   await expect(page.getByTestId("analysis-loading-modal")).toHaveCount(0);
   await expect(page.getByTestId("analysis-state-card")).toBeVisible();
-  await expect(page.getByTestId("analysis-loading-background")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "AI 분석 중..." }),
+  ).toBeVisible();
+  await expect(page.getByTestId("analysis-loading-background")).toHaveCount(0);
+  await expect(page.getByText(/제출한 답안을 잠시/)).toHaveCount(0);
+  await expect(page.getByText("예상 소요 시간 8~15초")).toHaveCount(0);
+  await expect(
+    page.getByText("분석이 평소보다 오래 걸리고 있어요"),
+  ).toHaveCount(0);
 
   const assetSrc = await page
     .getByTestId("analysis-state-asset")
@@ -128,18 +136,15 @@ test("writing submit keeps analysis state above the read-only answer", async ({
     /(?:\/assets\/state\/refresh\.svg|%2Fassets%2Fstate%2Frefresh\.svg)/,
   );
 
-  const [stateBox, answerBox] = await Promise.all([
+  const [pageBox, stateBox] = await Promise.all([
+    page.getByTestId("analysis-loading-page").boundingBox(),
     page.getByTestId("analysis-state-card").boundingBox(),
-    page.getByTestId("analysis-loading-background").boundingBox(),
   ]);
+  expect(pageBox, "analysis page box").toBeTruthy();
   expect(stateBox, "analysis state card box").toBeTruthy();
-  expect(answerBox, "read-only answer card box").toBeTruthy();
-  // 데스크톱은 가로 2열(상태 카드가 답안 카드 왼쪽), 모바일은 세로 스택(상태 카드가 위).
-  if (testInfo.project.name === "mobile-360") {
-    expect(stateBox!.y).toBeLessThan(answerBox!.y);
-  } else {
-    expect(stateBox!.x).toBeLessThan(answerBox!.x);
-  }
+  const pageCenterX = pageBox!.x + pageBox!.width / 2;
+  const stateCenterX = stateBox!.x + stateBox!.width / 2;
+  expect(Math.abs(stateCenterX - pageCenterX)).toBeLessThanOrEqual(2);
 
   await waitForSubmittedRow(answerToken);
 });

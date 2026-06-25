@@ -22,7 +22,6 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 
-import { AppCard } from "@/components/shared/AppCard";
 import { AppModal } from "@/components/shared/AppModal";
 import { APP_ROUTES } from "@/lib/routes";
 import { AnalysisCharacter } from "./AnalysisCharacter";
@@ -262,7 +261,7 @@ function AnalysisLoadingModalContent({
   if (presentation === "page") {
     const isFailed = status === "failed";
     // 분석 완료(결과 화면으로 이동)는 정적 화면에 머무르면 멈춘 것처럼 보인다(NN/g 응답시간
-    // 한계). 기존 캐릭터 + step UI를 그대로 두고 blur(4px) 처리한 뒤, 카드 전체를 덮는
+    // 한계). 기존 캐릭터 + step UI를 그대로 두고 blur(4px) 처리한 뒤, 상태 패널 전체를 덮는
     // 반투명 배경 + 로딩 스피너를 그 위에 얹어 "이동 중"을 움직임으로 보여준다. 실제 이동은
     // 위 complete useEffect의 onComplete가 수행하고, 대상 라우트는 분석 중 prefetch된다.
     const isHandoff = status === "complete";
@@ -272,10 +271,7 @@ function AnalysisLoadingModalContent({
           className={`analysis-loading analysis-loading--page analysis-loading--${status}`}
           data-testid={contentTestId}
         >
-          <AppCard
-            className="analysis-state-card"
-            data-testid="analysis-state-card"
-          >
+          <div className="analysis-state-card" data-testid="analysis-state-card">
             <div
               className={`analysis-state-card__inner${
                 isHandoff ? " analysis-state-card__inner--blurred" : ""
@@ -283,17 +279,15 @@ function AnalysisLoadingModalContent({
             >
               <div className="analysis-state-card__copy">
                 <Title level={2} className="analysis-loading__title">
-                  {isFailed ? t("failedTitle") : t("title")}
+                  {isFailed ? t("failedTitle") : t("pageTitle")}
                 </Title>
-                <Paragraph className="analysis-loading__subtitle">
-                  {isFailed ? (
+                {isFailed ? (
+                  <Paragraph className="analysis-loading__subtitle">
                     <span data-testid="analysis-failed-description">
                       {renderMultilineText(t("failedDescription"))}
                     </span>
-                  ) : (
-                    t("subtitle")
-                  )}
-                </Paragraph>
+                  </Paragraph>
+                ) : null}
               </div>
 
               <Image
@@ -319,11 +313,6 @@ function AnalysisLoadingModalContent({
 
               {active || isHandoff ? (
                 <div className="analysis-state-card__details">
-                  <div className="analysis-loading__meta">
-                    <Clock3 aria-hidden size={14} />
-                    <Text>{t("expectedTime")}</Text>
-                  </div>
-
                   <Steps
                     className={`analysis-loading__steps${
                       onLastStep ? " analysis-loading__steps--calculating" : ""
@@ -332,21 +321,12 @@ function AnalysisLoadingModalContent({
                     percent={displayedRingPercent}
                     titlePlacement="vertical"
                     variant="outlined"
-                    responsive
+                    responsive={false}
                     aria-label={t("progressLabel")}
                     items={STEP_KEYS.map((key) => ({
                       title: t(`steps.${key}Title`),
                     }))}
                   />
-
-                  {slow && active ? (
-                    <Alert
-                      type="warning"
-                      showIcon
-                      title={t("slowTitle")}
-                      description={t("slowDescription", { retryAt })}
-                    />
-                  ) : null}
                 </div>
               ) : null}
             </div>
@@ -362,7 +342,7 @@ function AnalysisLoadingModalContent({
                 </Text>
               </div>
             ) : null}
-          </AppCard>
+          </div>
         </div>
       </div>
     );
