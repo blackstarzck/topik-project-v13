@@ -17,6 +17,10 @@ Claude와 Claude 계열 AI 에이전트는 이 파일을 진입점으로 읽고,
 - 기준 폴더 `v13`은 가능하면 `main` 기준 확인, 통합, 전체 검증용으로 둔다.
 - 새 병렬 작업을 시작할 때는 별도 git worktree를 만들고, 해당 worktree 폴더에서만 작업한다.
 - 이미 Codex Desktop 또는 다른 도구가 worktree를 만들어 세션을 시작했다면 그 안에서 다시 중첩 worktree를 만들지 않는다.
+- worktree를 만들기 전 사람이 읽을 수 있는 `slug`를 먼저 정한다. `slug`는 영어 소문자 kebab-case로 쓰고, 공백/한글/랜덤 형용사/의미 없는 숫자는 피한다. 예: `practice-filter`, `auth-redirect`, `analysis-loading`.
+- Claude thread 제목, branch, worktree 폴더명은 같은 `slug`를 공유해야 한다. 예: thread `auth-redirect - 로그인 이동 수정`, branch `claude/auth-redirect`, worktree `../v13-auth-redirect`.
+- 도구가 `festive-yalow-f5e2c0`처럼 자동 이름을 만들면 경로명만 믿지 않는다. 즉시 thread 제목과 branch 이름을 의미 있는 `slug`로 맞추고, 완료 보고에 실제 worktree 경로와 branch를 함께 적는다.
+- 이미 생성된 worktree의 용도가 불분명하면 삭제하지 말고 `git worktree list --verbose`, `git branch -vv`, 해당 worktree의 `git status --short --branch`, 최근 commit log를 확인한 뒤 판단한다.
 - 작업 시작 전 `pwd`, `git branch --show-current`, `git status`, 필요하면 `git worktree list`로 현재 위치와 branch를 확인한다.
 - 예상한 worktree가 아니면 파일을 수정하지 말고 먼저 위치를 바로잡는다.
 - 병렬 작업 중 공유 기준 폴더에서 `git switch`, `git checkout`, `git reset`, `git rebase`, `git merge`를 실행하지 않는다.

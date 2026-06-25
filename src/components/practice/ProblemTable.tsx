@@ -1,7 +1,7 @@
 "use client";
 
 import type { KeyboardEvent, MouseEvent, ReactNode } from "react";
-import { Button, ConfigProvider, Table, Tag } from "antd";
+import { Button, ConfigProvider, Table, Tag, Tooltip } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
   ChartNoAxesColumnIncreasing,
@@ -155,7 +155,7 @@ export function ProblemTable({ rows, onRetryClick }: Props) {
       render: (_title: string, row) => {
         const displayMeta = getProblemRowDisplayMeta(row);
         const tags = visibleTags(row);
-        const analysisBadgeKey =
+        const analysisStatusLabelKey =
           row.feedbackStatus === "pending"
             ? "analysisPendingBadge"
             : row.feedbackStatus === "analyzing"
@@ -193,10 +193,22 @@ export function ProblemTable({ rows, onRetryClick }: Props) {
                     {t("newBadge")}
                   </span>
                 ) : null}
-                {analysisBadgeKey ? (
-                  <Tag className="problem-table__tag" color="processing">
-                    {t(analysisBadgeKey)}
-                  </Tag>
+                {analysisStatusLabelKey ? (
+                  <Tooltip title={t(analysisStatusLabelKey)}>
+                    <Button
+                      aria-label={t(analysisStatusLabelKey)}
+                      className="problem-table__analysis-tooltip-trigger"
+                      data-testid="problem-analysis-tooltip-trigger"
+                      icon={<Clock3 aria-hidden size={14} />}
+                      shape="circle"
+                      size="small"
+                      type="text"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        selectRow(row);
+                      }}
+                    />
+                  </Tooltip>
                 ) : null}
               </div>
               {tags.length > 0 ? (

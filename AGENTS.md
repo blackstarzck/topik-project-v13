@@ -68,6 +68,11 @@ Codex와 모든 AI 에이전트는 이 문서를 프로젝트 작업 계약으�
 - Codex Desktop에서는 새 병렬 작업을 시작할 때 Codex의 Worktree 모드 또는 Handoff를 우선 사용한다. 앱이 이미 worktree를 관리 중이면 그 안에서 다시 중첩 worktree를 만들지 않는다.
 - 수동으로 만들 때는 기준 폴더에서 `git worktree add <path> -b <branch> main` 형태를 사용하고, 작업 세션은 생성된 `<path>`에서만 실행한다.
 - worktree 경로와 branch 이름은 작업을 식별할 수 있게 짓는다. 예: `../v13-practice-filter` + `codex/practice-filter`, `../v13-auth-redirect` + `codex/auth-redirect`.
+- worktree를 만들기 전 사람이 읽을 수 있는 `slug`를 먼저 정한다. `slug`는 영어 소문자 kebab-case로 쓰고, 공백/한글/랜덤 형용사/의미 없는 숫자는 피한다. 예: `practice-filter`, `auth-redirect`, `analysis-loading`.
+- Codex/Claude thread 제목, branch, worktree 폴더명은 같은 `slug`를 공유해야 한다. 예: thread `practice-filter - 문제 필터 개선`, branch `codex/practice-filter`, worktree `../v13-practice-filter`.
+- agent별 branch prefix는 Codex 작업은 `codex/<slug>`, Claude 작업은 `claude/<slug>`를 기본으로 한다. 사람이 직접 만든 기능 branch는 기존 브랜치 전략이 있으면 그 전략을 우선하되, worktree 폴더명에는 같은 `slug`를 포함한다.
+- Codex Desktop이나 Claude 도구가 `0fa6`, `137d`, `festive-yalow-f5e2c0`처럼 자동 경로를 만들면 경로명만 믿지 않는다. 즉시 thread 제목과 branch 이름을 의미 있는 `slug`로 맞추고, 완료 보고에 실제 worktree 경로와 branch를 함께 적는다.
+- 이미 생성된 worktree의 용도가 불분명하면 삭제하지 말고 `git worktree list --verbose`, `git branch -vv`, 해당 worktree의 `git status --short --branch`, 최근 commit log를 확인한 뒤 판단한다.
 - 병렬 작업 중 공유 기준 폴더에서 `git switch`, `git checkout`, `git reset`, `git rebase`, `git merge`를 실행해 다른 세션의 기반을 흔들지 않는다. 통합 작업은 병렬 세션의 상태를 확인한 뒤 한 번에 하나씩 진행한다.
 - 작업 시작 전 `pwd`, `git branch --show-current`, `git status`, 필요하면 `git worktree list`로 현재 위치와 branch를 확인한다. 예상한 worktree가 아니면 수정하지 말고 먼저 위치를 바로잡는다.
 - 작업 완료 후에는 해당 worktree에서 테스트와 diff를 확인하고 commit 또는 PR 단위로 정리한다. 병합은 기준 폴더에서 최신 `main`을 기준으로 작업 branch를 하나씩 통합한다.

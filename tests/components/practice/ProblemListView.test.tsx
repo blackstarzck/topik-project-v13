@@ -424,4 +424,46 @@ describe("ProblemListView", () => {
       "/writing/feedback/short/submission-pending-51",
     );
   });
+
+  it("uses an accessible tooltip trigger instead of a visible analysis status tag", async () => {
+    rpcMock.mockResolvedValueOnce({
+      data: [
+        {
+          ...rpcRow(
+            {
+              problem_id: "problem-tooltip-51",
+              title: "Tooltip analysis problem",
+              difficulty: 2,
+              tags: ["pending"],
+              attempt_count: 1,
+              is_solved: true,
+              solve_state: "submitted",
+            },
+            0,
+          ),
+          latest_submission_id: "submission-tooltip-51",
+          writing_feedback_status: "analyzing",
+        },
+      ],
+      error: null,
+    });
+
+    renderInApp(<ProblemListView userId="user-1" />, "en");
+
+    expect(await screen.findByText("Tooltip analysis problem")).toBeTruthy();
+    expect(screen.queryByText("Analyzing answer")).toBeNull();
+
+    const tooltipTrigger = screen.getByRole("button", {
+      name: "Analyzing answer",
+    });
+    expect(tooltipTrigger.getAttribute("data-testid")).toBe(
+      "problem-analysis-tooltip-trigger",
+    );
+
+    fireEvent.click(tooltipTrigger);
+
+    expect(navState.push).toHaveBeenCalledWith(
+      "/writing/feedback/short/submission-tooltip-51",
+    );
+  });
 });
