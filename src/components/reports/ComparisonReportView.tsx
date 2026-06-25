@@ -151,11 +151,17 @@ export function ComparisonReportView({
 
       <SubmissionDiffPanel currentText={currentText} previousText={previousText} />
 
-      <AppCard data-testid="comparison-next-actions">
-        <Title level={5} className="mt-0">
+      <section
+        data-testid="comparison-next-actions"
+        className="feedback-actions flex w-full flex-col gap-2"
+      >
+        <Title level={5} className="m-0">
           {t("nextLearningTitle")}
         </Title>
-        <div className="flex flex-wrap gap-2">
+        <div
+          data-testid="comparison-next-actions-controls"
+          className="flex w-full flex-wrap items-center gap-2"
+        >
           <Button
             type="primary"
             onClick={() => navigateOnce("next", "/practice/next")}
@@ -165,34 +171,41 @@ export function ComparisonReportView({
           >
             {t("nextProblem")}
           </Button>
-          {weaknessDisabled ? (
-            <Tooltip title={t("weaknessDisabledTooltip")}>
-              <Button disabled data-testid="comparison-action-weakness">
-                {t("weaknessDisabled")}
+          <div
+            data-testid="comparison-next-actions-secondary"
+            className="flex flex-wrap items-center gap-2"
+          >
+            {weaknessDisabled ? (
+              <Tooltip title={t("weaknessDisabledTooltip")}>
+                <Button disabled data-testid="comparison-action-weakness">
+                  {t("weaknessDisabled")}
+                </Button>
+              </Tooltip>
+            ) : (
+              <Button
+                onClick={() => navigateOnce("weakness", "/practice/weakness")}
+                loading={pendingAction === "weakness"}
+                disabled={
+                  pendingAction !== null && pendingAction !== "weakness"
+                }
+                data-testid="comparison-action-weakness"
+              >
+                {t("weaknessView")}
               </Button>
-            </Tooltip>
-          ) : (
-            <Button
-              onClick={() => navigateOnce("weakness", "/practice/weakness")}
-              loading={pendingAction === "weakness"}
-              disabled={pendingAction !== null && pendingAction !== "weakness"}
-              data-testid="comparison-action-weakness"
-            >
-              {t("weaknessView")}
-            </Button>
-          )}
-          {retryHref ? (
-            <Button
-              onClick={() => navigateOnce("retry", retryHref)}
-              loading={pendingAction === "retry"}
-              disabled={pendingAction !== null && pendingAction !== "retry"}
-              data-testid="comparison-action-retry"
-            >
-              {t("retryProblem")}
-            </Button>
-          ) : null}
+            )}
+            {retryHref ? (
+              <Button
+                onClick={() => navigateOnce("retry", retryHref)}
+                loading={pendingAction === "retry"}
+                disabled={pendingAction !== null && pendingAction !== "retry"}
+                data-testid="comparison-action-retry"
+              >
+                {t("retryProblem")}
+              </Button>
+            ) : null}
+          </div>
         </div>
-      </AppCard>
+      </section>
     </div>
   );
 }

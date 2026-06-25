@@ -20,7 +20,7 @@ import {
   generateNarrative,
 } from "./comparison-service";
 import { toSubmitWritingErrorMessage as toSharedSubmitWritingErrorMessage } from "./submit-errors";
-import type { QuestionNo } from "./types";
+import type { QuestionNo, WritingSubmissionRow } from "./types";
 
 export type SubmitWritingInput = {
   draft_id?: string | null;
@@ -234,6 +234,69 @@ export type CreateComparisonReportInput = {
   previous_id?: string | null;
 };
 
+type SupabaseServerClient = Awaited<
+  ReturnType<typeof createSupabaseServerClient>
+>;
+
+async function getComparisonSubmissionById({
+  supabase,
+  id,
+}: {
+  supabase: SupabaseServerClient;
+  id: string;
+}): Promise<WritingSubmissionRow | null> {
+  const { data, error } = await supabase
+    .from("writing_submissions")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw new Error(`comparison: previous ${error.message}`);
+  return data as WritingSubmissionRow | null;
+}
+
+async function resolvePreviousSubmissionForComparison({
+  supabase,
+  userId,
+  currentSub,
+  explicitPreviousId,
+}: {
+  supabase: SupabaseServerClient;
+  userId: string;
+  currentSub: WritingSubmissionRow;
+  explicitPreviousId?: string | null;
+}): Promise<WritingSubmissionRow | null> {
+  if (explicitPreviousId) {
+    return getComparisonSubmissionById({
+      supabase,
+      id: explicitPreviousId,
+    });
+  }
+
+  if (currentSub.parent_submission_id) {
+    const { data, error } = await supabase
+      .from("writing_submissions")
+      .select("*")
+      .eq("id", currentSub.parent_submission_id)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (error) throw new Error(`comparison: parent ${error.message}`);
+    if (data) return data as WritingSubmissionRow;
+  }
+
+  const { data, error } = await supabase
+    .from("writing_submissions")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("feedback_status", "complete")
+    .neq("id", currentSub.id)
+    .lt("submitted_at", currentSub.submitted_at)
+    .order("submitted_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw new Error(`comparison: previous lookup ${error.message}`);
+  return data as WritingSubmissionRow | null;
+}
+
 export async function createComparisonReportAction(
   input: CreateComparisonReportInput,
 ): Promise<{ reportId: string }> {
@@ -256,13 +319,13 @@ export async function createComparisonReportAction(
   if (curErr) throw new Error(`comparison: current ${curErr.message}`);
   if (!currentSub) throw new Error("comparison: current submission missing");
 
-  const { data: prevSub } = input.previous_id
-    ? await supabase
-        .from("writing_submissions")
-        .select("*")
-        .eq("id", input.previous_id)
-        .maybeSingle()
-    : { data: null };
+  const prevSub = await resolvePreviousSubmissionForComparison({
+    supabase,
+    userId: user.id,
+    currentSub: currentSub as WritingSubmissionRow,
+    explicitPreviousId: input.previous_id,
+  });
+  const effectivePreviousId = prevSub?.id ?? null;
 
   const [{ data: curFeedback }, { data: curDims }] = await Promise.all([
     supabase
@@ -277,23 +340,25 @@ export async function createComparisonReportAction(
   ]);
 
   const prev =
-    prevSub && input.previous_id
+    prevSub && effectivePreviousId
       ? await Promise.all([
           supabase
             .from("writing_feedback")
             .select("*")
-            .eq("submission_id", input.previous_id)
+            .eq("submission_id", effectivePreviousId)
             .maybeSingle(),
           supabase
             .from("feedback_dimension_scores")
             .select("*")
-            .eq("submission_id", input.previous_id),
+            .eq("submission_id", effectivePreviousId),
         ])
       : null;
 
   const metrics = computeComparisonMetrics({
     currentScore: curFeedback?.score_total ?? null,
+    currentScoreMax: curFeedback?.score_max ?? null,
     previousScore: prev?.[0].data?.score_total ?? null,
+    previousScoreMax: prev?.[0].data?.score_max ?? null,
     currentDims: curDims ?? [],
     previousDims: prev?.[1].data ?? null,
     currentChars: currentSub.char_count,
@@ -305,7 +370,7 @@ export async function createComparisonReportAction(
     "create_comparison_report_with_metrics" as never,
     {
       current_id: input.current_id,
-      previous_id: input.previous_id ?? null,
+      previous_id: effectivePreviousId,
       metrics: metrics as unknown as Record<string, unknown>,
       narrative,
       ai_model: "comparison-local-v1",

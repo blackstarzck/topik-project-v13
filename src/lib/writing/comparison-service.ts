@@ -9,7 +9,9 @@ export type ComparisonMetrics = {
 
 type Input = {
   currentScore: number | null;
+  currentScoreMax: number | null;
   previousScore: number | null;
+  previousScoreMax: number | null;
   currentDims: FeedbackBundle["dimensions"];
   previousDims: FeedbackBundle["dimensions"] | null;
   currentChars: number;
@@ -25,9 +27,17 @@ export function computeComparisonMetrics(input: Input): ComparisonMetrics {
       no_previous: true,
     };
   }
+  const currentNormalizedScore = normalizeScore(
+    input.currentScore,
+    input.currentScoreMax,
+  );
+  const previousNormalizedScore = normalizeScore(
+    input.previousScore,
+    input.previousScoreMax,
+  );
   const scoreDelta =
-    input.previousScore !== null && input.currentScore !== null
-      ? round1(input.currentScore - input.previousScore)
+    previousNormalizedScore !== null && currentNormalizedScore !== null
+      ? round1(currentNormalizedScore - previousNormalizedScore)
       : null;
   const charDelta =
     input.previousChars !== null
@@ -35,9 +45,7 @@ export function computeComparisonMetrics(input: Input): ComparisonMetrics {
       : null;
   const dimDeltas: Record<string, number | null> = {};
   for (const cur of input.currentDims) {
-    const prev = input.previousDims?.find(
-      (p) => p.dimension === cur.dimension,
-    );
+    const prev = input.previousDims?.find((p) => p.dimension === cur.dimension);
     if (prev && cur.score !== null && prev.score !== null) {
       dimDeltas[cur.dimension] = round1(cur.score - prev.score);
     } else {
@@ -68,14 +76,20 @@ export function generateNarrative(metrics: ComparisonMetrics): string {
         entry[1] !== null && Math.abs(entry[1]) >= 2,
     )
     .slice(0, 2)
-    .map(
-      ([k, v]) =>
-        `${k} 차원 ${v >= 0 ? "+" : ""}${v}점`,
-    )
+    .map(([k, v]) => `${k} 차원 ${v >= 0 ? "+" : ""}${v}점`)
     .join(", ");
   return dims ? `${total} 주요 변화: ${dims}.` : total;
 }
 
 function round1(n: number): number {
   return Math.round(n * 10) / 10;
+}
+
+function normalizeScore(
+  score: number | null,
+  scoreMax: number | null,
+): number | null {
+  if (score === null) return null;
+  const max = scoreMax && scoreMax > 0 ? scoreMax : 100;
+  return round1((score / max) * 100);
 }

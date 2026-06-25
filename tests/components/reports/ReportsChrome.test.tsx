@@ -1,12 +1,19 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react";
 import { App as AntdApp } from "antd";
 import { NextIntlClientProvider } from "next-intl";
 import type { ReactElement } from "react";
 
 import { ComparisonKpiBlock } from "../../../src/components/reports/ComparisonKpiBlock";
 import { DimensionComparisonCards } from "../../../src/components/reports/DimensionComparisonCards";
+import { ComparisonReportView } from "../../../src/components/reports/ComparisonReportView";
 import { ScoreComparisonChart } from "../../../src/components/reports/ScoreComparisonChart";
 import { SubmissionDiffPanel } from "../../../src/components/reports/SubmissionDiffPanel";
 import koMessages from "../../../messages/ko.json";
@@ -14,6 +21,21 @@ import koMessages from "../../../messages/ko.json";
 // The `reports.*` catalog is now merged into messages/ko.json. We render against
 // the real ko catalog (the same Korean strings the assertions match), so these
 // stay green without depending on the ephemeral messages/_staging/ dir.
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+    prefetch: vi.fn(),
+  }),
+}));
+
+vi.mock("@/lib/events/study-events", () => ({
+  logStudyEvent: vi.fn(() => Promise.resolve()),
+}));
 
 function renderReports(ui: ReactElement) {
   return render(
@@ -166,5 +188,52 @@ describe("SubmissionDiffPanel i18n chrome", () => {
     expect(screen.getByText("이번 답안")).toBeTruthy();
     expect(screen.getByText("이전 답안")).toBeTruthy();
     expect(screen.getByText("이전 답안 없음")).toBeTruthy();
+  });
+});
+
+describe("ComparisonReportView next action chrome", () => {
+  it("renders the bottom CTA with the same feedback action-group shell", () => {
+    renderReports(
+      <ComparisonReportView
+        metrics={{
+          score_delta: 12,
+          dimension_deltas: { grammar: 12 },
+          char_delta: 24,
+          no_previous: false,
+        }}
+        narrative="이전 답안보다 문법과 구성 점수가 올랐습니다."
+        currentText="이번 답안입니다."
+        previousText="이전 답안입니다."
+        retryHref="/writing/51?retry=sub-1"
+        reportId="report-1"
+        currentScore={82}
+        chartData={[]}
+        currentNorm={{ grammar: 82 }}
+        hasPrevious
+      />,
+    );
+
+    const actions = screen.getByTestId("comparison-next-actions");
+    expect(actions.className).toContain("feedback-actions");
+    expect(actions.className).not.toContain("app-card");
+
+    const controls = within(actions).getByTestId(
+      "comparison-next-actions-controls",
+    );
+    const secondary = within(actions).getByTestId(
+      "comparison-next-actions-secondary",
+    );
+
+    expect(controls.className).toContain("flex");
+    expect(secondary.className).toContain("flex");
+    expect(
+      within(actions).getByTestId("comparison-action-next").className,
+    ).toContain("ant-btn-primary");
+    expect(
+      within(secondary).getByTestId("comparison-action-weakness"),
+    ).toBeTruthy();
+    expect(
+      within(secondary).getByTestId("comparison-action-retry"),
+    ).toBeTruthy();
   });
 });
