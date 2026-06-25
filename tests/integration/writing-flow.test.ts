@@ -31,8 +31,7 @@ vi.mock("@/lib/writing/server", () => ({
   getSubmission: (id: string) => helpers.getSubmissionMock(id),
   getFeedbackBundle: (id: string) => helpers.getFeedbackBundleMock(id),
   getComparisonReport: (id: string) => helpers.getComparisonReportMock(id),
-  getActiveDraft: (...args: unknown[]) =>
-    helpers.getActiveDraftMock(...args),
+  getActiveDraft: (...args: unknown[]) => helpers.getActiveDraftMock(...args),
   getWritingProblemAvailability: (...args: unknown[]) =>
     helpers.getWritingProblemAvailabilityMock(...args),
   isProblemIdLikeUuid: (value: unknown) =>
@@ -86,8 +85,7 @@ describe("writing flow — route guards", () => {
       import("../../src/app/(workspace)/writing/answer-writing-52/page"),
     53: () =>
       import("../../src/app/(workspace)/writing/long-form-writing-53/page"),
-    54: () =>
-      import("../../src/app/(workspace)/writing/essay-writing-54/page"),
+    54: () => import("../../src/app/(workspace)/writing/essay-writing-54/page"),
   } as const;
 
   it.each([51, 52, 53, 54] as const)(
@@ -150,9 +148,8 @@ describe("writing flow — route guards", () => {
       answer_json: null,
       parent_submission_id: null,
     });
-    const page = await import(
-      "../../src/app/(workspace)/writing/feedback/short/[id]/page"
-    );
+    const page =
+      await import("../../src/app/(workspace)/writing/feedback/short/[id]/page");
     await expect(
       page.default({ params: Promise.resolve({ id: "s-1" }) }),
     ).rejects.toThrow("REDIRECT:/writing/feedback/long/s-1");
@@ -172,9 +169,8 @@ describe("writing flow — route guards", () => {
       answer_json: null,
       parent_submission_id: null,
     });
-    const page = await import(
-      "../../src/app/(workspace)/writing/feedback/long/[id]/page"
-    );
+    const page =
+      await import("../../src/app/(workspace)/writing/feedback/long/[id]/page");
     const el = await page.default({ params: Promise.resolve({ id: "s-2" }) });
     expect(el).toBeTruthy();
     expect(helpers.getFeedbackBundleMock).not.toHaveBeenCalled();
@@ -203,9 +199,8 @@ describe("writing flow — route guards", () => {
       canStart: false,
     });
 
-    const page = await import(
-      "../../src/app/(workspace)/writing/feedback/short/[id]/page"
-    );
+    const page =
+      await import("../../src/app/(workspace)/writing/feedback/short/[id]/page");
     const el = await page.default({ params: Promise.resolve({ id: "s-3" }) });
 
     expect(el).toBeTruthy();
@@ -238,10 +233,89 @@ describe("writing flow — route guards", () => {
       answer_json: null,
       parent_submission_id: null,
     });
-    const page = await import(
-      "../../src/app/(workspace)/writing/reports/[id]/compare/page"
-    );
+    const page =
+      await import("../../src/app/(workspace)/writing/reports/[id]/compare/page");
     const el = await page.default({ params: Promise.resolve({ id: "r-1" }) });
     expect(el).toBeTruthy();
+  });
+
+  it("/writing/reports/[id]/compare loads previous submission data when present", async () => {
+    const currentSubmission = {
+      id: "c-2",
+      user_id: "user-1",
+      question_no: 53,
+      feedback_status: "complete",
+      problem_id: "p-1",
+      answer_text: "이번 답안 본문",
+      char_count: 8,
+      submitted_at: "2026-05-22T00:00:00Z",
+      draft_id: null,
+      answer_json: null,
+      parent_submission_id: null,
+    };
+    const previousSubmission = {
+      ...currentSubmission,
+      id: "p-2",
+      answer_text: "이전 답안 본문",
+      submitted_at: "2026-05-21T00:00:00Z",
+    };
+    const feedbackBundle = (submissionId: string, score: number) => ({
+      feedback: {
+        id: `${submissionId}-feedback`,
+        submission_id: submissionId,
+        user_id: "user-1",
+        status: "complete",
+        score_total: score,
+        score_max: 100,
+        overall_summary: "",
+        ai_model: "test",
+        ai_model_version: "test",
+        created_at: "2026-05-22T00:00:00Z",
+      },
+      dimensions: [
+        {
+          id: `${submissionId}-grammar`,
+          submission_id: submissionId,
+          user_id: "user-1",
+          dimension: "grammar",
+          score,
+          score_max: 100,
+          summary: "",
+          weakness_level: null,
+        },
+      ],
+      sentences: [],
+    });
+    helpers.getComparisonReportMock.mockResolvedValue({
+      id: "r-2",
+      user_id: "user-1",
+      current_submission_id: "c-2",
+      previous_submission_id: "p-2",
+      metrics: {
+        no_previous: false,
+        score_delta: 12,
+        dimension_deltas: { grammar: 12 },
+        char_delta: 4,
+      },
+      narrative: "이전 답안보다 구조가 개선되었습니다.",
+      ai_model: "mock-v1",
+      generated_at: "2026-05-22T00:00:00Z",
+    });
+    helpers.getSubmissionMock.mockImplementation((id: string) =>
+      Promise.resolve(id === "p-2" ? previousSubmission : currentSubmission),
+    );
+    helpers.getFeedbackBundleMock.mockImplementation((id: string) =>
+      Promise.resolve(feedbackBundle(id, id === "p-2" ? 70 : 82)),
+    );
+
+    const page =
+      await import("../../src/app/(workspace)/writing/reports/[id]/compare/page");
+    const el = await page.default({ params: Promise.resolve({ id: "r-2" }) });
+
+    expect(el).toBeTruthy();
+    expect(helpers.getSubmissionMock).toHaveBeenCalledWith("c-2");
+    expect(helpers.getSubmissionMock).toHaveBeenCalledWith("p-2");
+    expect(helpers.getFeedbackBundleMock).toHaveBeenCalledWith("c-2");
+    expect(helpers.getFeedbackBundleMock).toHaveBeenCalledWith("p-2");
   });
 });

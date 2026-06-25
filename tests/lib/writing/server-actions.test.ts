@@ -41,8 +41,125 @@ vi.mock("../../../src/lib/supabase/server", () => ({
   createSupabaseServiceRoleClient: helpers.createServiceClientMock,
 }));
 
-import { submitWritingAction } from "../../../src/lib/writing/server-actions";
+import {
+  createComparisonReportAction,
+  submitWritingAction,
+} from "../../../src/lib/writing/server-actions";
 import { WRITING_PROBLEM_NOT_SUBMITTABLE_MESSAGE } from "../../../src/lib/writing/submit-errors";
+
+type ComparisonRow = Record<string, unknown>;
+type ComparisonStore = {
+  profiles: ComparisonRow[];
+  writing_submissions: ComparisonRow[];
+  writing_feedback: ComparisonRow[];
+  feedback_dimension_scores: ComparisonRow[];
+};
+
+function createComparisonQuery(rows: ComparisonRow[]) {
+  let result = [...rows];
+  const query = {
+    select: vi.fn(() => query),
+    eq: vi.fn((column: string, value: unknown) => {
+      result = result.filter((row) => row[column] === value);
+      return query;
+    }),
+    neq: vi.fn((column: string, value: unknown) => {
+      result = result.filter((row) => row[column] !== value);
+      return query;
+    }),
+    lt: vi.fn((column: string, value: unknown) => {
+      result = result.filter((row) => String(row[column]) < String(value));
+      return query;
+    }),
+    order: vi.fn(
+      (column: string, options?: { ascending?: boolean | undefined }) => {
+        const factor = options?.ascending === false ? -1 : 1;
+        result = [...result].sort((a, b) =>
+          String(a[column]) > String(b[column]) ? factor : -factor,
+        );
+        return query;
+      },
+    ),
+    limit: vi.fn((count: number) => {
+      result = result.slice(0, count);
+      return query;
+    }),
+    maybeSingle: vi.fn(() =>
+      Promise.resolve({ data: result[0] ?? null, error: null }),
+    ),
+    then: (
+      onFulfilled?: (value: { data: ComparisonRow[]; error: null }) => unknown,
+      onRejected?: (reason: unknown) => unknown,
+    ) =>
+      Promise.resolve({ data: result, error: null }).then(
+        onFulfilled,
+        onRejected,
+      ),
+  };
+  return query;
+}
+
+function mockComparisonStore(store: Partial<ComparisonStore>) {
+  const tables: ComparisonStore = {
+    profiles: [{ id: "user-1", status: "active" }],
+    writing_submissions: [],
+    writing_feedback: [],
+    feedback_dimension_scores: [],
+    ...store,
+  };
+  helpers.fromMock.mockImplementation((table: keyof ComparisonStore) =>
+    createComparisonQuery(tables[table] ?? []),
+  );
+}
+
+function submissionRow(overrides: Partial<ComparisonRow>): ComparisonRow {
+  return {
+    id: "submission-id",
+    user_id: "user-1",
+    problem_id: "problem-1",
+    question_no: 53,
+    answer_text: "answer",
+    answer_json: null,
+    char_count: 100,
+    feedback_status: "complete",
+    draft_id: null,
+    parent_submission_id: null,
+    submitted_at: "2026-06-20T00:00:00.000Z",
+    ...overrides,
+  };
+}
+
+function feedbackRow(
+  submissionId: string,
+  scoreTotal: number,
+  scoreMax = 100,
+): ComparisonRow {
+  return {
+    id: `${submissionId}-feedback`,
+    submission_id: submissionId,
+    user_id: "user-1",
+    status: "complete",
+    score_total: scoreTotal,
+    score_max: scoreMax,
+    overall_summary: "",
+    ai_model: "test",
+    ai_model_version: "test",
+    created_at: "2026-06-20T00:00:00.000Z",
+  };
+}
+
+function dimensionRow(submissionId: string, score: number): ComparisonRow {
+  return {
+    id: `${submissionId}-grammar`,
+    submission_id: submissionId,
+    user_id: "user-1",
+    dimension: "grammar",
+    score,
+    score_max: 100,
+    summary: "",
+    weakness_level: null,
+  };
+}
 
 describe("submitWritingAction", () => {
   beforeEach(() => {
@@ -480,5 +597,184 @@ describe("submitWritingAction", () => {
       submissionId: "00000000-0000-0000-0000-0000000000aa",
       questionNo: 54,
     });
+  });
+});
+
+describe("createComparisonReportAction", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    helpers.getUserMock.mockResolvedValue({
+      data: {
+        user: { id: "user-1" },
+      },
+    });
+    helpers.rpcMock.mockResolvedValue({
+      data: "report-id",
+      error: null,
+    });
+  });
+
+  it("uses the latest previous complete submission when previous_id is omitted", async () => {
+    mockComparisonStore({
+      writing_submissions: [
+        submissionRow({
+          id: "current",
+          char_count: 120,
+          submitted_at: "2026-06-20T10:00:00.000Z",
+        }),
+        submissionRow({
+          id: "previous-latest",
+          char_count: 90,
+          submitted_at: "2026-06-19T10:00:00.000Z",
+        }),
+        submissionRow({
+          id: "previous-older",
+          submitted_at: "2026-06-18T10:00:00.000Z",
+        }),
+        submissionRow({
+          id: "previous-incomplete",
+          feedback_status: "analyzing",
+          submitted_at: "2026-06-19T12:00:00.000Z",
+        }),
+      ],
+      writing_feedback: [
+        feedbackRow("current", 82),
+        feedbackRow("previous-latest", 70),
+      ],
+      feedback_dimension_scores: [
+        dimensionRow("current", 82),
+        dimensionRow("previous-latest", 70),
+      ],
+    });
+
+    const result = await createComparisonReportAction({
+      current_id: "current",
+    });
+
+    expect(result).toEqual({ reportId: "report-id" });
+    expect(helpers.rpcMock).toHaveBeenCalledWith(
+      "create_comparison_report_with_metrics",
+      expect.objectContaining({
+        current_id: "current",
+        previous_id: "previous-latest",
+        metrics: expect.objectContaining({
+          no_previous: false,
+          score_delta: 12,
+          char_delta: 30,
+        }),
+      }),
+    );
+  });
+
+  it("prefers parent_submission_id over the latest previous complete submission", async () => {
+    mockComparisonStore({
+      writing_submissions: [
+        submissionRow({
+          id: "current",
+          parent_submission_id: "parent",
+          submitted_at: "2026-06-20T10:00:00.000Z",
+        }),
+        submissionRow({
+          id: "parent",
+          submitted_at: "2026-06-18T10:00:00.000Z",
+        }),
+        submissionRow({
+          id: "previous-latest",
+          submitted_at: "2026-06-19T10:00:00.000Z",
+        }),
+      ],
+      writing_feedback: [feedbackRow("current", 82), feedbackRow("parent", 74)],
+      feedback_dimension_scores: [
+        dimensionRow("current", 82),
+        dimensionRow("parent", 74),
+      ],
+    });
+
+    await createComparisonReportAction({ current_id: "current" });
+
+    expect(helpers.rpcMock).toHaveBeenCalledWith(
+      "create_comparison_report_with_metrics",
+      expect.objectContaining({
+        previous_id: "parent",
+        metrics: expect.objectContaining({
+          no_previous: false,
+          score_delta: 8,
+        }),
+      }),
+    );
+  });
+
+  it("keeps an owned parent submission as previous even when parent feedback is incomplete", async () => {
+    mockComparisonStore({
+      writing_submissions: [
+        submissionRow({
+          id: "current",
+          parent_submission_id: "parent",
+          char_count: 120,
+          submitted_at: "2026-06-20T10:00:00.000Z",
+        }),
+        submissionRow({
+          id: "parent",
+          feedback_status: "analyzing",
+          char_count: 80,
+          submitted_at: "2026-06-18T10:00:00.000Z",
+        }),
+        submissionRow({
+          id: "previous-latest",
+          submitted_at: "2026-06-19T10:00:00.000Z",
+        }),
+      ],
+      writing_feedback: [
+        feedbackRow("current", 82),
+        feedbackRow("previous-latest", 74),
+      ],
+      feedback_dimension_scores: [dimensionRow("current", 82)],
+    });
+
+    await createComparisonReportAction({ current_id: "current" });
+
+    expect(helpers.rpcMock).toHaveBeenCalledWith(
+      "create_comparison_report_with_metrics",
+      expect.objectContaining({
+        previous_id: "parent",
+        metrics: expect.objectContaining({
+          no_previous: false,
+          score_delta: null,
+          char_delta: 40,
+        }),
+      }),
+    );
+  });
+
+  it("keeps no_previous=true when no previous complete submission exists", async () => {
+    mockComparisonStore({
+      writing_submissions: [
+        submissionRow({
+          id: "current",
+          submitted_at: "2026-06-20T10:00:00.000Z",
+        }),
+        submissionRow({
+          id: "previous-incomplete",
+          feedback_status: "analyzing",
+          submitted_at: "2026-06-19T10:00:00.000Z",
+        }),
+      ],
+      writing_feedback: [feedbackRow("current", 82)],
+      feedback_dimension_scores: [dimensionRow("current", 82)],
+    });
+
+    await createComparisonReportAction({ current_id: "current" });
+
+    expect(helpers.rpcMock).toHaveBeenCalledWith(
+      "create_comparison_report_with_metrics",
+      expect.objectContaining({
+        previous_id: null,
+        metrics: expect.objectContaining({
+          no_previous: true,
+          score_delta: null,
+          char_delta: null,
+        }),
+      }),
+    );
   });
 });

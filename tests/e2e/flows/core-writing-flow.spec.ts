@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { test, expect } from "@playwright/test";
@@ -56,8 +57,11 @@ const FLOW_DIMENSIONS = [
 type FlowSubmission = {
   id: string;
   user_id: string;
+  problem_id: string;
+  question_no: number;
   answer_text: string;
   char_count: number;
+  submitted_at: string;
 };
 
 function serviceClient() {
@@ -82,7 +86,9 @@ async function waitForSubmittedFlowRow(answerToken: string) {
   while (Date.now() < deadline) {
     const { data, error } = await sb
       .from("writing_submissions")
-      .select("id,user_id,answer_text,char_count")
+      .select(
+        "id,user_id,problem_id,question_no,answer_text,char_count,submitted_at",
+      )
       .like("answer_text", `%${answerToken}%`)
       .order("submitted_at", { ascending: false })
       .limit(1)
@@ -151,6 +157,58 @@ async function completeSubmittedFlowRow(submission: FlowSubmission) {
     .update({ feedback_status: "complete" })
     .eq("id", submission.id);
   if (status.error) throw status.error;
+}
+
+async function createPreviousCompletedSubmissionForFlow(
+  submission: FlowSubmission,
+) {
+  const sb = serviceClient();
+  const previousSubmissionId = randomUUID();
+  const previousAnswer =
+    "Core flow previous comparison answer with shorter supporting detail.";
+  const submittedAt = new Date(submission.submitted_at);
+  submittedAt.setDate(submittedAt.getDate() - 1);
+
+  const insertedSubmission = await sb.from("writing_submissions").insert({
+    id: previousSubmissionId,
+    user_id: submission.user_id,
+    problem_id: submission.problem_id,
+    question_no: submission.question_no,
+    answer_text: previousAnswer,
+    char_count: previousAnswer.length,
+    feedback_status: "complete",
+    submitted_at: submittedAt.toISOString(),
+  });
+  if (insertedSubmission.error) throw insertedSubmission.error;
+
+  const feedback = await sb.from("writing_feedback").insert({
+    submission_id: previousSubmissionId,
+    user_id: submission.user_id,
+    status: "complete",
+    score_total: 70,
+    score_max: 100,
+    overall_summary:
+      "Core flow previous fixture feedback gives the comparison report a baseline.",
+    ai_model: "e2e-fixture",
+    ai_model_version: "core-flow",
+  });
+  if (feedback.error) throw feedback.error;
+
+  const dimensions = await sb.from("feedback_dimension_scores").insert(
+    FLOW_DIMENSIONS.map(([dimension, score, weaknessLevel]) => ({
+      submission_id: previousSubmissionId,
+      user_id: submission.user_id,
+      dimension,
+      score: Math.max(0, score - 12),
+      score_max: 100,
+      summary: `Core flow previous ${dimension} feedback.`,
+      weakness_level: weaknessLevel,
+    })),
+  );
+  if (dimensions.error) throw dimensions.error;
+
+  createdSubmissionIds.push(previousSubmissionId);
+  return previousAnswer;
 }
 
 test.skip(
@@ -255,6 +313,8 @@ test("core writing flow: dashboard → write → submit → feedback → compare
   const submitted = await waitForSubmittedFlowRow(answerToken);
   createdSubmissionIds.push(submitted.id);
   await completeSubmittedFlowRow(submitted);
+  const previousAnswer =
+    await createPreviousCompletedSubmissionForFlow(submitted);
   completedAnalysisSubmissionIds.add(submitted.id);
   await page.evaluate(() => {
     window.dispatchEvent(new Event("focus"));
@@ -298,6 +358,16 @@ test("core writing flow: dashboard → write → submit → feedback → compare
   await expect(
     page.getByRole("heading", { name: "비교 리포트" }),
   ).toBeVisible();
+  await expect(page.getByTestId("comparison-kpi-block")).toContainText("12");
+  await expect(page.getByTestId("comparison-chart")).toBeVisible();
+  await page.getByTestId("comparison-chart-view-table").click();
+  await expect(page.getByTestId("comparison-chart-table")).toContainText(
+    /이전|Previous|Trước/,
+  );
+  await expect(page.getByTestId("comparison-submission-diff")).toContainText(
+    previousAnswer,
+  );
+  await expect(page.getByTestId("comparison-action-weakness")).toBeEnabled();
 
   // 8) library (F-01)
   await page.goto("/library", { waitUntil: "networkidle" });

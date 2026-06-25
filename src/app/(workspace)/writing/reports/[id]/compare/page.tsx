@@ -39,6 +39,15 @@ function normalizedScores(
   return map;
 }
 
+function normalizedTotalScore(
+  score: number | null | undefined,
+  scoreMax: number | null | undefined,
+): number | null {
+  if (score === null || score === undefined) return null;
+  const max = scoreMax && scoreMax > 0 ? scoreMax : 100;
+  return Math.round((score / max) * 1000) / 10;
+}
+
 export default async function CompareReportPage({
   params,
 }: {
@@ -87,7 +96,10 @@ export default async function CompareReportPage({
           problemId: current.problem_id,
         })}
         reportId={report.id}
-        currentScore={currentBundle?.feedback.score_total ?? null}
+        currentScore={normalizedTotalScore(
+          currentBundle?.feedback.score_total,
+          currentBundle?.feedback.score_max,
+        )}
         chartData={chartData}
         currentNorm={currentNorm}
         hasPrevious={hasPrevious}

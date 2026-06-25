@@ -127,7 +127,8 @@ async function createComparisonReportFixture() {
       status: "complete",
       score_total: 68,
       score_max: 100,
-      overall_summary: "The previous answer identified the trend but had limited support.",
+      overall_summary:
+        "The previous answer identified the trend but had limited support.",
       ai_model: "e2e-fixture",
       ai_model_version: "R-01",
     },
@@ -137,7 +138,8 @@ async function createComparisonReportFixture() {
       status: "complete",
       score_total: 82,
       score_max: 100,
-      overall_summary: "The current answer has clearer structure and stronger support.",
+      overall_summary:
+        "The current answer has clearer structure and stronger support.",
       ai_model: "e2e-fixture",
       ai_model_version: "R-01",
     },
@@ -192,7 +194,7 @@ async function createComparisonReportFixture() {
 
   createdSubmissionIds.push(previousSubmissionId, currentSubmissionId);
   createdReportIds.push(reportId);
-  return reportId;
+  return { reportId, previousAnswer, currentAnswer };
 }
 
 test.afterAll(async () => {
@@ -212,34 +214,62 @@ test.afterAll(async () => {
   }
 });
 
-test.skip(
-  !SUPABASE_URL || !SERVICE_KEY,
-  "R-01 e2e requires Supabase service credentials for an isolated report row",
-);
+test.describe("anonymous access", () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
 
-test("R-01 comparison report matches the wireframe constraints", async ({
-  page,
-}) => {
-  const errors = collectErrors(page);
-  const reportId = await createComparisonReportFixture();
+  test("R-01 direct URL redirects anonymous users to login", async ({
+    page,
+  }) => {
+    await page.goto(`/writing/reports/${randomUUID()}/compare`, {
+      waitUntil: "networkidle",
+    });
 
-  await page.goto(`/writing/reports/${reportId}/compare`, {
-    waitUntil: "networkidle",
+    await expect(page).toHaveURL(/\/login/);
   });
-  await expect(page).not.toHaveURL(/\/login/);
+});
 
-  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-  expect(await page.getByTestId("comparison-kpi-item").count()).toBeLessThanOrEqual(5);
-  await expect(page.getByTestId("comparison-chart")).toBeVisible();
-  await expect(page.getByTestId("comparison-chart-view-table")).toBeVisible();
-  expect(await page.getByTestId("comparison-dimension-card").count()).toBeLessThanOrEqual(4);
-  await expect(page.getByTestId("comparison-narrative")).toContainText(
-    "Current answer improved",
+test.describe("authenticated comparison report", () => {
+  test.skip(
+    !SUPABASE_URL || !SERVICE_KEY,
+    "R-01 e2e requires Supabase service credentials for an isolated report row",
   );
-  await expect(page.getByTestId("comparison-submission-diff")).toBeVisible();
-  await expect(
-    page.getByTestId("comparison-next-actions").locator("button"),
-  ).toHaveCount(3);
 
-  expect(errors).toEqual([]);
+  test("R-01 comparison report matches the wireframe constraints", async ({
+    page,
+  }) => {
+    const errors = collectErrors(page);
+    const { reportId, previousAnswer } = await createComparisonReportFixture();
+
+    await page.goto(`/writing/reports/${reportId}/compare`, {
+      waitUntil: "networkidle",
+    });
+    await expect(page).not.toHaveURL(/\/login/);
+
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    expect(
+      await page.getByTestId("comparison-kpi-item").count(),
+    ).toBeLessThanOrEqual(5);
+    await expect(page.getByTestId("comparison-kpi-block")).toContainText("14");
+    await expect(page.getByTestId("comparison-chart")).toBeVisible();
+    await expect(page.getByTestId("comparison-chart-view-table")).toBeVisible();
+    await page.getByTestId("comparison-chart-view-table").click();
+    await expect(page.getByTestId("comparison-chart-table")).toContainText(
+      /이전|Previous|Trước/,
+    );
+    expect(
+      await page.getByTestId("comparison-dimension-card").count(),
+    ).toBeLessThanOrEqual(4);
+    await expect(page.getByTestId("comparison-narrative")).toContainText(
+      "Current answer improved",
+    );
+    await expect(page.getByTestId("comparison-submission-diff")).toContainText(
+      previousAnswer,
+    );
+    await expect(page.getByTestId("comparison-action-weakness")).toBeEnabled();
+    await expect(
+      page.getByTestId("comparison-next-actions").locator("button"),
+    ).toHaveCount(3);
+
+    expect(errors).toEqual([]);
+  });
 });
