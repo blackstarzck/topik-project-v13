@@ -28,7 +28,7 @@ describe("writing/types narrowing", () => {
     expect(isLongForm(51)).toBe(false);
   });
 
-  it("FEEDBACK_DIMENSIONS lists all 6 keys", () => {
+  it("FEEDBACK_DIMENSIONS lists all feedback keys", () => {
     expect(FEEDBACK_DIMENSIONS).toEqual([
       "grammar",
       "vocab",
@@ -36,6 +36,7 @@ describe("writing/types narrowing", () => {
       "content",
       "expression",
       "topic_fit",
+      "language",
     ]);
   });
 

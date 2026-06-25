@@ -142,6 +142,8 @@ const TRAIT_TO_DIMENSION: Record<
   expression: "expression",
   topic_fit: "topic_fit",
   topic: "topic_fit",
+  language: "language",
+  language_use: "language",
 };
 
 export function toExternalTaskType(questionNo: QuestionNo): ExternalTaskType {

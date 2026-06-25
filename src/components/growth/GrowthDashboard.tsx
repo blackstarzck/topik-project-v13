@@ -34,6 +34,7 @@ const DIMENSION_KEYS = [
   "content",
   "expression",
   "topic_fit",
+  "language",
 ] as const;
 
 export type GrowthWeakDimension = {

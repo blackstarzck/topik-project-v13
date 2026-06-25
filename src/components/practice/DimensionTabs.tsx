@@ -14,6 +14,7 @@ const DIMENSION_LABEL_KEYS: Record<string, string> = {
   content: "dimContent",
   expression: "dimExpression",
   topic_fit: "dimTopicFit",
+  language: "dimLanguage",
 };
 
 type WeakDimension = {

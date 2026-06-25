@@ -66,6 +66,7 @@ const DIMENSION_LABELS: Record<string, string> = {
   content: "내용",
   expression: "표현",
   topic_fit: "주제 적합도",
+  language: "언어",
 };
 
 let fontsRegistered = false;

@@ -51,6 +51,7 @@ const DIMENSION_LABEL_KEYS: Record<string, string> = {
   content: "dimContent",
   expression: "dimExpression",
   topic_fit: "dimTopicFit",
+  language: "dimLanguage",
 };
 
 /** Dimensions that have a dedicated insight block in practice.weakness.insights. */
@@ -61,6 +62,7 @@ const INSIGHT_DIMENSIONS = new Set([
   "content",
   "expression",
   "topic_fit",
+  "language",
 ]);
 
 function getLeadingWeakDimension(dimensions: WeakDimensionProp[]) {

@@ -376,6 +376,8 @@ function dimensionLabel(
       return t("dimension.expression");
     case "topic_fit":
       return t("dimension.topic_fit");
+    case "language":
+      return t("dimension.language");
   }
 }
 

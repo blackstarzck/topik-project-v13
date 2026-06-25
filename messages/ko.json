@@ -827,6 +827,7 @@
       "dimContent": "내용",
       "dimExpression": "표현",
       "dimTopicFit": "주제 적합성",
+      "dimLanguage": "언어",
       "typeTabAll": "전체",
       "typeTabLocked": "{no}번 🔒",
       "typeTabLockedAria": "{no}번 잠김"
@@ -1015,6 +1016,11 @@
           "example": "질문이 요구한 조건보다 배경 설명이 길어지는 경우가 있을 수 있어요.",
           "strategy": "문제를 다시 읽고 필수 조건을 체크한 뒤 답안을 짧게 다듬어 보세요."
         },
+        "language": {
+          "why": "언어 사용이 흔들리면 문장의 의미와 어조가 덜 정확하게 전달될 수 있어요.",
+          "example": "문맥에 맞지 않는 표현이나 어색한 문장 연결이 반복될 수 있어요.",
+          "strategy": "답안을 다시 읽으며 어휘, 문법, 문장 흐름을 한 번에 점검해 보세요."
+        },
         "fallback": {
           "why": "최근 답안에서 낮게 나온 영역이라 먼저 확인하면 도움이 될 수 있어요.",
           "example": "같은 유형의 실수가 반복되는지 살펴볼 필요가 있어요.",
@@ -1111,7 +1117,8 @@
         "structure": "구성",
         "content": "내용",
         "expression": "표현",
-        "topic_fit": "주제 적합성"
+        "topic_fit": "주제 적합성",
+        "language": "언어"
       },
       "reco": {
         "grammar": {
@@ -1137,6 +1144,10 @@
         "topic_fit": {
           "title": "주제 적합성 연습",
           "reason": "질문 조건을 다시 확인하면 점수로 이어지기 쉬워요."
+        },
+        "language": {
+          "title": "언어 사용 연습",
+          "reason": "어휘, 문법, 표현을 함께 점검하면 답안이 더 자연스러워져요."
         }
       }
     },
@@ -1173,7 +1184,8 @@
         "structure": "구성",
         "content": "내용",
         "expression": "표현",
-        "topic_fit": "주제 적합성"
+        "topic_fit": "주제 적합성",
+        "language": "언어"
       }
     },
     "analysis": {
@@ -1229,7 +1241,8 @@
         "content": "논리",
         "vocab": "어휘",
         "grammar": "문법",
-        "topic_fit": "주제 적합성"
+        "topic_fit": "주제 적합성",
+        "language": "언어"
       }
     },
     "dimensions": {
@@ -1239,7 +1252,8 @@
         "structure": "구성",
         "content": "내용",
         "expression": "표현",
-        "topic_fit": "주제 적합도"
+        "topic_fit": "주제 적합도",
+        "language": "언어"
       },
       "failedText": "이 항목은 분석에 실패했어요.",
       "reanalyze": "다시 분석하기",
@@ -1319,7 +1333,8 @@
       "structure": "구성",
       "content": "내용",
       "expression": "표현",
-      "topic_fit": "주제 적합성"
+      "topic_fit": "주제 적합성",
+      "language": "언어"
     },
     "chart": {
       "title": "항목별 점수 비교",
@@ -1677,7 +1692,8 @@
         "structure": "구성",
         "content": "내용",
         "expression": "표현",
-        "topic_fit": "주제 적합성"
+        "topic_fit": "주제 적합성",
+        "language": "언어"
       },
       "kpi": {
         "averageScore": "평균 점수",
@@ -1864,7 +1880,8 @@
         "structure": "구성",
         "content": "내용",
         "expression": "표현",
-        "topic_fit": "주제 적합도"
+        "topic_fit": "주제 적합도",
+        "language": "언어"
       }
     },
     "item": {

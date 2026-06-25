@@ -65,6 +65,12 @@ describe("writing evaluation API adapter", () => {
           max_score: 100,
           feedback: "주제 적합성이 좋습니다.",
         },
+        {
+          trait: "language",
+          score: 76,
+          max_score: 100,
+          feedback: "언어 사용을 더 정확하게 다듬어야 합니다.",
+        },
       ],
       errors: [],
       annotations: [
@@ -99,6 +105,11 @@ describe("writing evaluation API adapter", () => {
           dimension: "topic_fit",
           score: 90,
           summary: "주제 적합성이 좋습니다.",
+        }),
+        expect.objectContaining({
+          dimension: "language",
+          score: 76,
+          summary: "언어 사용을 더 정확하게 다듬어야 합니다.",
         }),
       ]),
     );

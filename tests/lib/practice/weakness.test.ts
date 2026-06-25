@@ -171,11 +171,12 @@ describe("getWeakDimensions", () => {
     expect(out).toEqual([]);
   });
 
-  it("exposes the canonical 6-dimension catalog", () => {
+  it("exposes the canonical 7-dimension catalog", () => {
     expect([...WEAKNESS_DIMENSIONS].sort()).toEqual([
       "content",
       "expression",
       "grammar",
+      "language",
       "structure",
       "topic_fit",
       "vocab",

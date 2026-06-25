@@ -25,6 +25,7 @@ const DIMENSION_KEYS = [
   "content",
   "expression",
   "topic_fit",
+  "language",
 ] as const;
 
 const AXIS_FONT_SIZE = 12;

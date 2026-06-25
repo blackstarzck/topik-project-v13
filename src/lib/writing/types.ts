@@ -31,6 +31,7 @@ export const FEEDBACK_DIMENSIONS: readonly FeedbackDimensionKey[] = [
   "content",
   "expression",
   "topic_fit",
+  "language",
 ];
 
 export type WritingDraftRow = Tables<"writing_drafts">;

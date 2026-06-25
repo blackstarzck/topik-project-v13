@@ -14,6 +14,7 @@ const DIMENSION_KEYS = [
   "content",
   "expression",
   "topic_fit",
+  "language",
 ] as const;
 
 const MAX_CARDS = 4;

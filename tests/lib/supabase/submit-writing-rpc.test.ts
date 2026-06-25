@@ -38,6 +38,18 @@ describe("submit_writing_with_feedback problem visibility guard", () => {
 });
 
 describe("create_external_writing_submission", () => {
+  it("accepts language as a normalized feedback dimension", () => {
+    const sql = readMigrations();
+    const normalized = sql.replace(/\s+/g, " ").toLowerCase();
+
+    expect(normalized).toContain(
+      "feedback_dimension_scores_dimension_check check (dimension in ('grammar','vocab','structure','content','expression','topic_fit','language'))",
+    );
+    expect(normalized).toContain(
+      "dim_name not in ('grammar','vocab','structure','content','expression','topic_fit','language')",
+    );
+  });
+
   it("records externally queued submissions through an RPC without re-enabling direct inserts", () => {
     const sql = readMigrations();
     const normalized = sql.replace(/\s+/g, " ").toLowerCase();
