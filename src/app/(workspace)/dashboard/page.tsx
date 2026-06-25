@@ -51,6 +51,7 @@ export default async function DashboardPage() {
         questionNo: bundle.primary.questionNo,
         reason: bundle.primary.reason ?? null,
         source: bundle.primary.source,
+        primaryTier: bundle.primaryTier,
       }
     : null;
   const alternatives: DashboardAlternative[] = bundle.alternatives.map((a) => ({

@@ -417,7 +417,7 @@ describe("getNextProblem", () => {
 });
 
 describe("getNextProblemBundle", () => {
-  it("recommends all four writing question types for a new user when recommendation_items is empty", async () => {
+  it("returns a published-problem fallback bundle for a new user when recommendation_items is empty", async () => {
     const create = async () =>
       makeClient({
         recItems: [],
@@ -459,6 +459,8 @@ describe("getNextProblemBundle", () => {
     const bundle = await getNextProblemBundle("user-1", create);
 
     expect(bundle.primary?.problemId).toBe("p-51");
+    expect(bundle.primary?.source).toBe("random");
+    expect(bundle.primaryTier).toBe(3);
     expect(bundle.alternatives.map((alt) => alt.id)).toEqual([
       "p-52",
       "p-53",

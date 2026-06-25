@@ -64,6 +64,29 @@ function DashboardBadge({ children }: { children: ReactNode }) {
   );
 }
 
+function isPersonalizedRecommendation(
+  primary: DashboardPrimary | null,
+): boolean {
+  return (
+    primary != null &&
+    (primary.primaryTier ?? 1) === 1 &&
+    primary.source === "recommendation"
+  );
+}
+
+function heroTitleKey(primary: DashboardPrimary | null): string {
+  if (isPersonalizedRecommendation(primary)) return "aiTutorTitle";
+  if (primary?.source === "same_question_no") return "practiceContinueTypeTitle";
+  return "practiceStartTitle";
+}
+
+function heroBodyKey(primary: DashboardPrimary | null): string {
+  if (isPersonalizedRecommendation(primary)) return "aiTutorBody";
+  if (primary?.source === "same_question_no") return "practiceContinueTypeBody";
+  if (primary?.source === "random") return "practiceStartBody";
+  return "practiceNoCandidateBody";
+}
+
 export function DashboardBody({
   userId,
   kpi,
@@ -125,6 +148,14 @@ export function DashboardBody({
     },
   ];
   const alternativeTags = alternatives.slice(0, 2);
+  const heroIsPersonalized = isPersonalizedRecommendation(primary);
+  const heroBody =
+    heroIsPersonalized && primary?.reason
+      ? primary.reason
+      : t(heroBodyKey(primary) as Parameters<typeof t>[0]);
+  const heroMetaTag = heroIsPersonalized
+    ? t("reasonTag")
+    : t("practiceCandidateTag");
 
   return (
     <div className="grid gap-6">
@@ -153,7 +184,7 @@ export function DashboardBody({
           <div className="grid h-full gap-4">
             <div className="grid gap-4">
               <Text strong className="!text-sm !text-text-secondary">
-                {t("aiTutorTitle")}
+                {t(heroTitleKey(primary) as Parameters<typeof t>[0])}
               </Text>
               <h2 className="m-0 text-2xl font-semibold leading-tight text-text">
                 {primary
@@ -161,12 +192,12 @@ export function DashboardBody({
                   : t("aiTutorFallbackTitle")}
               </h2>
               <Paragraph type="secondary" className="!m-0 !text-sm !leading-6">
-                {primary?.reason ?? t("aiTutorBody")}
+                {heroBody}
               </Paragraph>
               <div className="flex flex-wrap gap-2">
                 <DashboardBadge>{primaryQuestionTag}</DashboardBadge>
                 <DashboardBadge>{t("estimatedTime")}</DashboardBadge>
-                <DashboardBadge>{t("reasonTag")}</DashboardBadge>
+                <DashboardBadge>{heroMetaTag}</DashboardBadge>
                 {alternativeTags.map((alt) => (
                   <DashboardBadge key={alt.problemId}>
                     {alt.questionNo != null

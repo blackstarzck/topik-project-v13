@@ -94,9 +94,11 @@ async function queryRecommendationBundle(
   const supabase = createClient();
 
   // Latest active run for this user (RLS scopes to auth.uid()).
+  const nowIso = new Date().toISOString();
   const { data: runData, error: runErr } = await supabase
     .from("recommendation_runs")
     .select("id, source_type, reason_summary, created_at, expires_at")
+    .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -106,10 +108,14 @@ async function queryRecommendationBundle(
     .from("recommendation_items")
     .select(
       "id, problem_id, rank, reason, estimated_minutes, weakness_tags," +
+        " recommendation_runs!inner(expires_at)," +
         " problems!inner(title, question_no, publish_status)",
     )
     .eq("status", "active")
     .eq("problems.publish_status", "published")
+    .or(`expires_at.is.null,expires_at.gt.${nowIso}`, {
+      referencedTable: "recommendation_runs",
+    })
     .order("rank", { ascending: true })
     .limit(8);
   if (questionNo != null) {
