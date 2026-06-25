@@ -50,7 +50,7 @@ export function AuthPromptExperience({
       />
       <aside className="signup-prompt-hero" aria-label={heroEyebrow}>
         <NextLink href="/" className="signup-brand" aria-label="TALKPIK AI">
-          <BrandLogo height={46} />
+          <BrandLogo height={46} loading="eager" />
         </NextLink>
 
         <div className="signup-prompt-character-wrap">
@@ -70,7 +70,7 @@ export function AuthPromptExperience({
             className="signup-prompt-mobile-brand"
             aria-label="TALKPIK AI"
           >
-            <BrandLogo height={36} />
+            <BrandLogo height={36} loading="eager" />
           </NextLink>
         </div>
 

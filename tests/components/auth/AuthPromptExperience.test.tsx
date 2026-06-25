@@ -129,6 +129,10 @@ describe("AuthPromptExperience", () => {
       expect.stringContaining(LOGO_SRC),
       expect.stringContaining(LOGO_SRC),
     ]);
+    expect(logoImages.map((image) => image.getAttribute("loading"))).toEqual([
+      "eager",
+      "eager",
+    ]);
   });
 
   it("rechecks persisted pageshow restores after OAuth browser-back navigation", async () => {

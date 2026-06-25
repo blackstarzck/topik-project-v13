@@ -240,6 +240,11 @@ describe("WorkspaceShell", () => {
         container.querySelector<HTMLImageElement>(".app-sidebar-brand img"),
       ),
     ).toContain(LOGO_SRC);
+    expect(
+      container
+        .querySelector<HTMLImageElement>(".app-sidebar-brand img")
+        ?.getAttribute("loading"),
+    ).toBe("eager");
   });
 
   it("hides workspace navigation chrome on the onboarding learning goal route", () => {
@@ -403,7 +408,7 @@ describe("WorkspaceShell", () => {
       ".app-workspace-mobile-brand .brand-logo__image",
     );
 
-    expect(source).toContain("<BrandLogo height={48} />");
+    expect(source).toContain('<BrandLogo height={48} loading="eager" />');
     expect(mobileBrandRule).toContain("height: 48px;");
     expect(mobileBrandRule).toContain("justify-content: center;");
     expect(mobileLogoRule).toContain("height: 48px;");

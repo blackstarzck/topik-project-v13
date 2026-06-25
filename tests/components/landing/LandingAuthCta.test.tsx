@@ -123,7 +123,7 @@ describe("landing auth CTA", () => {
     const logoRule = cssRule(".landing-header-logo");
     const imageRule = cssRule(".landing-header-logo .brand-logo__image");
 
-    expect(source).toContain("<BrandLogo height={68} priority />");
+    expect(source).toContain('<BrandLogo height={68} loading="eager" />');
     expect(logoRule).toContain("height: 68px;");
     expect(logoRule).toContain("max-width: 180px;");
     expect(imageRule).toContain("height: 68px;");

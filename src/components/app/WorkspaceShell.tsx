@@ -104,7 +104,7 @@ export function WorkspaceShell({
             {/* Absolutely centered in the bar so it stays put regardless of the
                 menu/bell widths (e.g. an unread badge on the bell). */}
             <span className="app-workspace-mobile-brand" aria-label={t("brand")}>
-              <BrandLogo height={48} />
+              <BrandLogo height={48} loading="eager" />
             </span>
             <Space size={8} align="center">
               {email ? <Text type="secondary">{email}</Text> : null}

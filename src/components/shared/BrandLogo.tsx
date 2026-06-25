@@ -10,7 +10,7 @@ type BrandLogoProps = {
   imageClassName?: string;
   decorative?: boolean;
   height?: number;
-  priority?: boolean;
+  loading?: "eager" | "lazy";
 };
 
 export function BrandLogo({
@@ -18,7 +18,7 @@ export function BrandLogo({
   imageClassName,
   decorative = true,
   height = 32,
-  priority = false,
+  loading,
 }: BrandLogoProps) {
   const width = Math.round((BRAND_LOGO_WIDTH / BRAND_LOGO_HEIGHT) * height);
 
@@ -36,7 +36,7 @@ export function BrandLogo({
           .filter(Boolean)
           .join(" ")}
         draggable={false}
-        priority={priority}
+        loading={loading}
       />
     </span>
   );

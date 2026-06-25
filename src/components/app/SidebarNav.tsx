@@ -324,7 +324,11 @@ export function SidebarNav({ role, planLabel, onNavigate }: Props) {
           onNavigate?.();
         }}
       >
-        <BrandLogo className="app-sidebar-brand__logo" height={68} />
+        <BrandLogo
+          className="app-sidebar-brand__logo"
+          height={68}
+          loading="eager"
+        />
       </button>
       <div className="app-sidebar-menu-scroll">
         <ConfigProvider theme={sidebarMenuTheme}>

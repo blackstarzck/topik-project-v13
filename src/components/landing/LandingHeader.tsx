@@ -32,7 +32,7 @@ export function LandingHeader({ authStatus }: Props) {
   return (
     <header className="landing-header !shadow-none !backdrop-blur-sm before:!hidden after:!hidden">
       <a href="#top" className="landing-header-logo" aria-label={t("logoAria")}>
-        <BrandLogo height={68} priority />
+        <BrandLogo height={68} loading="eager" />
       </a>
 
       <nav className="landing-header-nav" aria-label={t("navAria")}>
