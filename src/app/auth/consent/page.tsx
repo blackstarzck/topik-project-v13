@@ -9,6 +9,7 @@ import {
 } from "@/components/auth/AuthConsentPanel";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PublicShell } from "@/components/shared/PublicShell";
+import { resolveLocaleForProfile } from "@/i18n/request";
 import { sanitizeAuthCompletionNext } from "@/lib/auth/completion-routes";
 import { getMissingRequiredProfileFields } from "@/lib/auth/profile-completion";
 import { requireActiveSession } from "@/lib/auth/profile";
@@ -54,9 +55,10 @@ export default async function AuthConsentPage({
   const error = parseError(pickFirst(params.error));
   const { user, profile } = await requireActiveSession();
   const missingProfileFields = getMissingRequiredProfileFields(profile);
+  const consentLocale = await resolveLocaleForProfile(profile);
   const missingDocuments = await getMissingRequiredConsentDocuments(
     user.id,
-    profile.ui_locale,
+    consentLocale,
   );
 
   if (missingProfileFields.length === 0 && missingDocuments.length === 0) {

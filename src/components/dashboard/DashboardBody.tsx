@@ -23,7 +23,6 @@ import type { DashboardContinueDraft } from "@/lib/writing/dashboard-drafts";
 import { writingFeedbackHref, writingProblemHref } from "@/lib/writing/routes";
 import {
   DashboardAlertsCard,
-  type DashboardAlertItem,
 } from "./DashboardAlertsCard";
 import {
   DashboardKpiSummary,
@@ -49,8 +48,6 @@ type Props = {
   continueDraft: DashboardContinueDraft | null;
   alternatives: DashboardAlternative[];
   recentFeedbacks: RecentFeedbackItem[];
-  alerts: DashboardAlertItem[];
-  alertsLoadFailed: boolean;
 };
 
 export type { DashboardContinueDraft };
@@ -75,8 +72,6 @@ export function DashboardBody({
   continueDraft,
   alternatives,
   recentFeedbacks,
-  alerts,
-  alertsLoadFailed,
 }: Props) {
   const t = useTranslations("dashboard.hub");
   const primaryHref = primary
@@ -328,11 +323,7 @@ export function DashboardBody({
             </div>
           </AppCard>
           <UpcomingExamCard examDate={examDate} />
-          <DashboardAlertsCard
-            userId={userId}
-            alerts={alerts}
-            loadFailed={alertsLoadFailed}
-          />
+          <DashboardAlertsCard userId={userId} />
         </div>
       </section>
     </div>

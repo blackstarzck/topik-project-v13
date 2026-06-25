@@ -754,13 +754,13 @@
       "quickGoalDesc": "Điều chỉnh cấp độ và kế hoạch"
     },
     "alerts": {
-      "cardTitle": "Thông báo",
+      "cardTitle": "Thông báo chung",
       "settingsLink": "Cài đặt thông báo",
-      "loadFailedMessage": "Không tải được thông báo.",
-      "loadFailedDescription": "Vui lòng thử lại sau giây lát hoặc kiểm tra cài đặt thông báo.",
+      "loadFailedMessage": "Không tải được thông báo chung.",
+      "loadFailedDescription": "Vui lòng thử lại sau giây lát.",
       "retry": "Thử lại",
       "goToSettings": "Đến cài đặt thông báo",
-      "empty": "Không có thông báo mới.",
+      "empty": "Không có thông báo chung mới.",
       "category": {
         "study": "Học tập",
         "examSchedule": "Lịch thi",

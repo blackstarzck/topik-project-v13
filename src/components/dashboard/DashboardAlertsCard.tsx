@@ -11,7 +11,6 @@ import {
   Typography,
 } from "antd";
 import { useFormatter, useTranslations } from "next-intl";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -25,14 +24,7 @@ import { AppCard } from "@/components/shared/AppCard";
 
 const { Text } = Typography;
 
-export type DashboardAlertItem = {
-  id: string;
-  level: "info" | "warning";
-  title: string;
-  description?: string;
-};
-
-// 와이어프레임 제약: 알림 항목 5개 이하 (하드 캡).
+// 대시보드 공지사항 항목 5개 이하 (하드 캡).
 const NOTIFICATION_LIMIT = 5;
 
 // category enum → 카탈로그 키(enum 값은 그대로 유지).
@@ -50,26 +42,23 @@ type NotificationLoad =
   | { status: "error" };
 
 type Props = {
-  /** 알림 클릭 시 읽음 처리에 필요한 소유자 id (서버 레이아웃에서 전달). */
+  /** 공지 클릭 시 읽음 처리에 필요한 소유자 id (서버 레이아웃에서 전달). */
   userId: string;
-  alerts: DashboardAlertItem[];
-  /** 알림 로드 실패 여부 — true면 재시도 + 설정 이동 CTA. */
+  /** 공지사항 로드 실패 여부 — true면 재시도 CTA. */
   loadFailed?: boolean;
 };
 
 /**
- * B-01 area 4 — 일정/알림 보조 영역.
+ * B-01 area 4 — 공지사항 보조 영역.
  *
- * 일정 알림(시험 D-day, 작성 중 답안)은 서버가 계산해 props로 내려주고,
- * 인앱 알림(user_notifications 최신 5건)은 클라이언트에서 직접 조회한다.
+ * 플로팅 알림함과 역할이 겹치지 않도록 notice category만 표시한다.
  * 읽음 규칙: 항목 클릭 = 읽음 처리 후 이동경로가 있으면 이동(NotificationBell과 동일).
  *
- * 제약 조건: 알림 항목 5개 이하, 날짜 표기는 로케일 기준.
- * 예외: 알림 로드 실패 시 재시도와 설정 이동 CTA 제공.
+ * 제약 조건: 공지사항 항목 5개 이하, 날짜 표기는 로케일 기준.
+ * 예외: 공지사항 로드 실패 시 재시도 CTA 제공.
  */
 export function DashboardAlertsCard({
   userId,
-  alerts,
   loadFailed = false,
 }: Props) {
   const t = useTranslations("dashboard.alerts");
@@ -88,9 +77,11 @@ export function DashboardAlertsCard({
     let cancelled = false;
     (async () => {
       try {
-        const list = await fetchNotifications(userId, NOTIFICATION_LIMIT);
+        const list = await fetchNotifications(userId, NOTIFICATION_LIMIT, {
+          category: "notice",
+        });
         if (cancelled) return;
-        setNotifications(list);
+        setNotifications(list.filter((item) => item.category === "notice"));
         setNotifLoad({ status: "ready" });
       } catch {
         if (!cancelled) setNotifLoad({ status: "error" });
@@ -123,22 +114,12 @@ export function DashboardAlertsCard({
   }
 
   const failed = loadFailed || notifLoad.status === "error";
-  const empty =
-    notifLoad.status === "ready" &&
-    alerts.length === 0 &&
-    notifications.length === 0;
+  const empty = notifLoad.status === "ready" && notifications.length === 0;
 
   return (
     <AppCard
       className="dashboard-alerts-card"
       title={t("cardTitle")}
-      extra={
-        <Link href="/settings/notifications">
-          <Button type="link" size="small">
-            {t("settingsLink")}
-          </Button>
-        </Link>
-      }
     >
       {failed ? (
         <div className="grid gap-3">
@@ -159,24 +140,12 @@ export function DashboardAlertsCard({
             >
               {t("retry")}
             </Button>
-            <Link href="/settings/notifications">
-              <Button>{t("goToSettings")}</Button>
-            </Link>
           </div>
         </div>
       ) : empty ? (
         <Empty description={t("empty")} />
       ) : (
         <div className="grid gap-3">
-          {alerts.slice(0, 5).map((a) => (
-            <Alert
-              key={a.id}
-              type={a.level}
-              title={a.title}
-              description={a.description}
-              showIcon
-            />
-          ))}
           {notifLoad.status === "loading" ? (
             <Skeleton active paragraph={{ rows: 2 }} />
           ) : notifications.length > 0 ? (

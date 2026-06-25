@@ -183,8 +183,6 @@ describe("DashboardBody", () => {
         }}
         alternatives={[]}
         recentFeedbacks={[]}
-        alerts={[]}
-        alertsLoadFailed={false}
         continueDraft={null}
       />,
     );
@@ -211,8 +209,6 @@ describe("DashboardBody", () => {
         }}
         alternatives={[]}
         recentFeedbacks={[]}
-        alerts={[]}
-        alertsLoadFailed={false}
         continueDraft={{
           problemId: "draft-problem",
           title: "작성 중인 문제",
@@ -244,27 +240,37 @@ describe("DashboardAlertsCard", () => {
   });
 
   it("renders the empty state when there are no alerts or notifications", async () => {
-    renderWithIntl(<DashboardAlertsCard userId="user-1" alerts={[]} />);
+    renderWithIntl(<DashboardAlertsCard userId="user-1" />);
     expect(screen.getByText(dashboard.alerts.cardTitle)).toBeTruthy();
-    expect(screen.getByText(dashboard.alerts.settingsLink)).toBeTruthy();
+    expect(screen.queryByText(dashboard.alerts.settingsLink)).toBeNull();
     await waitFor(() => {
       expect(screen.getByText(dashboard.alerts.empty)).toBeTruthy();
     });
   });
 
   it("renders the retry CTA when alerts failed to load", async () => {
-    renderWithIntl(<DashboardAlertsCard userId="user-1" alerts={[]} loadFailed />);
+    renderWithIntl(<DashboardAlertsCard userId="user-1" loadFailed />);
     await waitFor(() => {
       expect(screen.getByText(dashboard.alerts.loadFailedMessage)).toBeTruthy();
     });
     expect(screen.getByText(dashboard.alerts.retry)).toBeTruthy();
-    expect(screen.getByText(dashboard.alerts.goToSettings)).toBeTruthy();
+    expect(screen.queryByText(dashboard.alerts.goToSettings)).toBeNull();
   });
 
-  it("renders latest notifications with category tag and marks the unread title", async () => {
+  it("renders latest notices without duplicating study or exam notifications", async () => {
     fetchNotificationsMock.mockResolvedValue([
       {
         id: "n1",
+        template_key: "notice",
+        category: "notice",
+        title: "서비스 점검 공지",
+        body: "오늘 밤 점검이 있어요.",
+        link_url: "/dashboard",
+        read_at: null,
+        created_at: "2026-06-11T09:00:00.000Z",
+      },
+      {
+        id: "n2",
         template_key: "exam_d7",
         category: "exam_schedule",
         title: "시험 D-7 안내",
@@ -274,43 +280,42 @@ describe("DashboardAlertsCard", () => {
         created_at: "2026-06-10T09:00:00.000Z",
       },
     ]);
-    renderWithIntl(<DashboardAlertsCard userId="user-1" alerts={[]} />);
+    renderWithIntl(<DashboardAlertsCard userId="user-1" />);
     await waitFor(() => {
-      expect(screen.getByText("시험 D-7 안내")).toBeTruthy();
+      expect(screen.getByText("서비스 점검 공지")).toBeTruthy();
     });
-    expect(
-      screen.getByText(dashboard.alerts.category.examSchedule),
-    ).toBeTruthy();
-    expect(fetchNotificationsMock).toHaveBeenCalledWith("user-1", 5);
+    expect(screen.queryByText("시험 D-7 안내")).toBeNull();
+    expect(screen.getByText(dashboard.alerts.category.notice)).toBeTruthy();
+    expect(fetchNotificationsMock).toHaveBeenCalledWith("user-1", 5, {
+      category: "notice",
+    });
   });
 
   it("moves to the notification route path when it exists", async () => {
     fetchNotificationsMock.mockResolvedValue([
       {
         id: "n-route",
-        template_key: "feedback_ready",
-        category: "study",
-        title: "Route alert",
-        body: "Feedback is ready.",
+        template_key: "notice",
+        category: "notice",
+        title: "Route notice",
+        body: "Notice has a detail page.",
         link_url: null,
-        route_path: "/writing/feedback/short/submission-1",
+        route_path: "/dashboard?notice=route",
         read_at: null,
         created_at: "2026-06-22T09:00:00.000Z",
       },
     ]);
-    renderWithIntl(<DashboardAlertsCard userId="user-1" alerts={[]} />);
+    renderWithIntl(<DashboardAlertsCard userId="user-1" />);
     await waitFor(() => {
-      expect(screen.getByText("Route alert")).toBeTruthy();
+      expect(screen.getByText("Route notice")).toBeTruthy();
     });
 
-    fireEvent.click(screen.getByText("Route alert"));
+    fireEvent.click(screen.getByText("Route notice"));
 
     await waitFor(() => {
       expect(markNotificationReadMock).toHaveBeenCalledWith("n-route");
     });
-    expect(routerPushMock).toHaveBeenCalledWith(
-      "/writing/feedback/short/submission-1",
-    );
+    expect(routerPushMock).toHaveBeenCalledWith("/dashboard?notice=route");
   });
 
   it("marks a notification read without moving when there is no route path", async () => {
@@ -327,7 +332,7 @@ describe("DashboardAlertsCard", () => {
         created_at: "2026-06-22T09:00:00.000Z",
       },
     ]);
-    renderWithIntl(<DashboardAlertsCard userId="user-1" alerts={[]} />);
+    renderWithIntl(<DashboardAlertsCard userId="user-1" />);
     await waitFor(() => {
       expect(screen.getByText("No route alert")).toBeTruthy();
     });

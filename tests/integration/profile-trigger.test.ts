@@ -32,6 +32,8 @@ describe.skipIf(!ENABLED)("profile trigger integration", () => {
         data: {
           display_name: "Trigger User",
           nationality_country_code: "VN",
+          ui_locale: "vi",
+          ui_locale_source: "auto",
         },
       },
     });
@@ -41,7 +43,9 @@ describe.skipIf(!ENABLED)("profile trigger integration", () => {
 
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("id, app_role, status, nationality_country_code, nickname")
+      .select(
+        "id, app_role, status, nationality_country_code, nickname, ui_locale, ui_locale_source",
+      )
       .eq("id", userId)
       .single();
 
@@ -56,6 +60,14 @@ describe.skipIf(!ENABLED)("profile trigger integration", () => {
     if (profile.nationality_country_code !== "VN") {
       throw new Error(
         `unexpected country code: ${profile.nationality_country_code}`,
+      );
+    }
+    if (profile.ui_locale !== "vi") {
+      throw new Error(`unexpected ui_locale: ${profile.ui_locale}`);
+    }
+    if (profile.ui_locale_source !== "auto") {
+      throw new Error(
+        `unexpected ui_locale_source: ${profile.ui_locale_source}`,
       );
     }
     if (

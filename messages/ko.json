@@ -754,13 +754,13 @@
       "quickGoalDesc": "목표 등급과 계획 설정"
     },
     "alerts": {
-      "cardTitle": "알림",
+      "cardTitle": "공지사항",
       "settingsLink": "알림 설정",
-      "loadFailedMessage": "알림을 불러오지 못했어요.",
-      "loadFailedDescription": "잠시 후 다시 시도하거나 알림 설정을 확인해 주세요.",
+      "loadFailedMessage": "공지사항을 불러오지 못했어요.",
+      "loadFailedDescription": "잠시 후 다시 시도해 주세요.",
       "retry": "다시 시도",
       "goToSettings": "알림 설정으로 이동",
-      "empty": "새 알림이 없어요.",
+      "empty": "새 공지사항이 없어요.",
       "category": {
         "study": "학습",
         "examSchedule": "시험 일정",

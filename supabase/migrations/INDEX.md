@@ -192,3 +192,4 @@
 | # | timestamp | file | scope |
 | ---:| --- | --- | --- |
 | 58 | `00:12:57` | [`20260625001257_restrict_auth_completion_gate_anon.sql`](./20260625001257_restrict_auth_completion_gate_anon.sql) | Removes explicit `anon` execute permission from `public.complete_auth_gate(text,text,text,boolean)` after remote grant drift, while preserving authenticated execution for the `/auth/consent` completion gate. |
+| 59 | `11:30:00` | [`20260625113000_auto_locale_detection.sql`](./20260625113000_auto_locale_detection.sql) | Adds `profiles.ui_locale_source` provenance (`legacy/default/auto/manual`) and updates `handle_new_user()` to seed validated UI locale metadata without persisting raw request language hints. |

@@ -66,14 +66,14 @@ describe("updateLocale", () => {
     const calls: UpdateCall[] = [];
     await updateLocale(
       "user-1",
-      { locale: "vi" },
+      { locale: "vi", source: "manual" },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       () => makeClient({ onUpdate: (c) => calls.push(c) }) as any,
     );
     expect(calls).toHaveLength(1);
     expect(calls[0]).toEqual({
       table: "profiles",
-      patch: { ui_locale: "vi" },
+      patch: { ui_locale: "vi", ui_locale_source: "manual" },
       id: "user-1",
     });
   });
@@ -82,7 +82,7 @@ describe("updateLocale", () => {
     await expect(
       updateLocale(
         "user-1",
-        { locale: "ko" },
+        { locale: "ko", source: "manual" },
         () =>
           makeClient({
             updateError: { message: "rls denied" },

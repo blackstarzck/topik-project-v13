@@ -97,7 +97,10 @@ describe("LanguageForm", () => {
       expect(mutateAsyncMock).toHaveBeenCalledTimes(1);
     });
     expect(useUpdateLocaleMock).toHaveBeenCalledWith("user-1");
-    expect(mutateAsyncMock).toHaveBeenCalledWith({ locale: "ko" });
+    expect(mutateAsyncMock).toHaveBeenCalledWith({
+      locale: "ko",
+      source: "manual",
+    });
   });
 
   it("submits the selected locale after a radio change", async () => {
@@ -117,7 +120,10 @@ describe("LanguageForm", () => {
     await waitFor(() => {
       expect(mutateAsyncMock).toHaveBeenCalledTimes(1);
     });
-    expect(mutateAsyncMock).toHaveBeenCalledWith({ locale: "en" });
+    expect(mutateAsyncMock).toHaveBeenCalledWith({
+      locale: "en",
+      source: "manual",
+    });
   });
 
   it("supports selecting Vietnamese", async () => {
@@ -132,7 +138,10 @@ describe("LanguageForm", () => {
     });
 
     await waitFor(() => {
-      expect(mutateAsyncMock).toHaveBeenCalledWith({ locale: "vi" });
+      expect(mutateAsyncMock).toHaveBeenCalledWith({
+        locale: "vi",
+        source: "manual",
+      });
     });
     expect(useUpdateLocaleMock).toHaveBeenCalledWith("user-2");
   });

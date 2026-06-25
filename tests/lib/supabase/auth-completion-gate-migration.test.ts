@@ -86,4 +86,23 @@ describe("auth completion gate migration contract", () => {
       "grant execute on function public.complete_auth_gate(text, text, text, boolean) to authenticated",
     );
   });
+
+  it("adds profile locale provenance for auto detection without storing request headers", () => {
+    const laterSql = readMigrationsAfter(authCompletionMigrationName)
+      .replace(/\s+/g, " ")
+      .toLowerCase();
+
+    expect(laterSql).toContain(
+      "add column if not exists ui_locale_source text not null default 'legacy'",
+    );
+    expect(laterSql).toContain(
+      "check (ui_locale_source in ('legacy','default','auto','manual'))",
+    );
+    expect(laterSql).toContain(
+      "insert into public.profiles (id, display_name, nationality_country_code, affiliation_code, nickname, ui_locale, ui_locale_source)",
+    );
+    expect(laterSql).toContain("new.raw_user_meta_data->>'ui_locale'");
+    expect(laterSql).toContain("new.raw_user_meta_data->>'ui_locale_source'");
+    expect(laterSql).not.toContain("accept-language");
+  });
 });

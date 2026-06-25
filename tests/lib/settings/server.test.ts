@@ -7,6 +7,7 @@ type RowShape = {
   nickname: string | null;
   nationality_country_code?: string | null;
   ui_locale: "ko" | "en" | "vi";
+  ui_locale_source: "legacy" | "default" | "auto" | "manual";
   notification_prefs: unknown;
 } | null;
 
@@ -41,6 +42,7 @@ describe("getProfileSettings", () => {
       // Phase 7-E Task 10 — bio column.
       bio: "TOPIK II 4급 목표로 학습 중입니다.",
       ui_locale: "ko" as const,
+      ui_locale_source: "manual" as const,
       notification_prefs: { weekly_summary: true, feedback_ready: false },
     };
     const result = await getProfileSettings("user-1", async () =>
@@ -49,8 +51,10 @@ describe("getProfileSettings", () => {
     expect(result).toEqual({
       display_name: "Chan",
       nickname: "찬",
+      nationality_country_code: null,
       bio: "TOPIK II 4급 목표로 학습 중입니다.",
       ui_locale: "ko",
+      ui_locale_source: "manual",
       notification_prefs: { weekly_summary: true, feedback_ready: false },
     });
   });
@@ -61,6 +65,7 @@ describe("getProfileSettings", () => {
       nickname: null,
       bio: null,
       ui_locale: "ko" as const,
+      ui_locale_source: "default" as const,
       notification_prefs: {},
     };
     const result = await getProfileSettings("user-2", async () =>
@@ -78,6 +83,7 @@ describe("getProfileSettings", () => {
           nickname: null,
           nationality_country_code: "VN",
           ui_locale: "ko",
+          ui_locale_source: "auto",
           notification_prefs: {},
         },
         onSelect: (columns) => selectedColumns.push(columns),
@@ -85,6 +91,7 @@ describe("getProfileSettings", () => {
     );
 
     expect(selectedColumns[0]).toContain("nationality_country_code");
+    expect(selectedColumns[0]).toContain("ui_locale_source");
     expect(result?.nationality_country_code).toBe("VN");
   });
 
@@ -93,6 +100,7 @@ describe("getProfileSettings", () => {
       display_name: null,
       nickname: null,
       ui_locale: "en" as const,
+      ui_locale_source: "legacy" as const,
       // includes one unknown key and one non-boolean value — both must be dropped.
       notification_prefs: {
         weekly_summary: true,

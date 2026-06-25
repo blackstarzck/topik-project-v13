@@ -44,6 +44,7 @@ import {
   DEFAULT_COOLDOWN_SECONDS,
   useEmailCooldown,
 } from "@/lib/auth/use-email-cooldown";
+import { asLocale, DEFAULT_LOCALE, LOCALE_COOKIE } from "@/i18n/locales";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { PasswordStrengthMeter } from "@/components/auth/PasswordStrengthMeter";
 
@@ -104,6 +105,22 @@ function isPasswordPairReady(password: unknown, passwordConfirm: unknown) {
   );
 }
 
+function hasSupportedLocaleCookie() {
+  if (typeof document === "undefined") return false;
+  return document.cookie
+    .split(";")
+    .map((cookie) => cookie.trim())
+    .some((cookie) => {
+      const [name, rawValue] = cookie.split("=");
+      if (name !== LOCALE_COOKIE) return false;
+      try {
+        return asLocale(decodeURIComponent(rawValue ?? "")) !== null;
+      } catch {
+        return asLocale(rawValue) !== null;
+      }
+    });
+}
+
 type CountdownTranslate = ReturnType<typeof useTranslations<"auth.countdown">>;
 
 function formatCountdown(totalSeconds: number, tc: CountdownTranslate): string {
@@ -138,7 +155,7 @@ export function SignUpForm({
   onCooldownChange,
 }: SignUpFormProps = {}) {
   const t = useTranslations("auth.signUp");
-  const locale = useLocale();
+  const locale = asLocale(useLocale()) ?? DEFAULT_LOCALE;
   const toauth = useTranslations("auth.oauth");
   const tc = useTranslations("auth.countdown");
   const tcooldown = useTranslations("auth.cooldown");
@@ -296,6 +313,8 @@ export function SignUpForm({
             nationality_country_code: normalizeCountryCode(
               values.nationalityCountryCode,
             ),
+            ui_locale: locale,
+            ui_locale_source: hasSupportedLocaleCookie() ? "manual" : "auto",
             ...affiliationMetadata,
           },
           emailRedirectTo: buildAuthRedirectUrl(
