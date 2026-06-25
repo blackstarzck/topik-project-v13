@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { WorkspaceBody } from "@/components/app/WorkspaceBody";
 import { FeedbackPageContent } from "@/components/feedback/FeedbackPageContent";
 import { requireUser } from "@/lib/auth/session";
+import { APP_ROUTES } from "@/lib/routes";
 import {
   getFeedbackBundle,
   getSubmission,
@@ -28,14 +29,16 @@ export default async function LongFeedbackPage({
   if (!isLongForm(submission.question_no as QuestionNo)) {
     redirect(`/writing/feedback/short/${id}`);
   }
+  if (
+    submission.feedback_status === "pending" ||
+    submission.feedback_status === "analyzing"
+  ) {
+    redirect(APP_ROUTES.library);
+  }
   const saveLocked = submission.user_id !== user.id;
   // Fetch the bundle whenever a feedback row may exist (complete/failed/partial)
   // so partial results and failed-with-data render instead of infinite loading.
-  const bundle =
-    submission.feedback_status === "pending" ||
-    submission.feedback_status === "analyzing"
-      ? null
-      : await getFeedbackBundle(id);
+  const bundle = await getFeedbackBundle(id);
   const problemAvailability = await getWritingProblemAvailability(
     submission.problem_id,
   );

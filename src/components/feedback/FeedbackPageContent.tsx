@@ -5,7 +5,6 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { DetailedFeedbackPanel } from "./DetailedFeedbackPanel";
 import { DimensionCardGrid } from "./DimensionCardGrid";
-import { FeedbackPendingPanel } from "./FeedbackPendingPanel";
 import { FeedbackRecommendationCards } from "./FeedbackRecommendationCards";
 import { FeedbackReportOverview } from "./FeedbackReportOverview";
 import { FeedbackSummary } from "./FeedbackSummary";
@@ -46,7 +45,6 @@ export function FeedbackPageContent({
   dimensionCardLimit,
   showDetailPanel = withSentences,
   retryLabelKey,
-  reloadHref,
   userId,
   saveLocked = false,
   canRetryProblem = true,
@@ -57,32 +55,10 @@ export function FeedbackPageContent({
   const router = useRouter();
   const status = submission.feedback_status;
 
-  if ((status === "pending" || status === "analyzing") && !bundle) {
-    return (
-      <FeedbackPendingPanel
-        submissionId={submission.id}
-        reloadHref={reloadHref}
-        initialStatus={status}
-        submission={submission}
-      />
-    );
-  }
-
-  if (status === "failed" && !bundle) {
-    return (
-      <FeedbackPendingPanel
-        submissionId={submission.id}
-        reloadHref={reloadHref}
-        initialStatus="failed"
-        submission={submission}
-      />
-    );
-  }
-
   if (!bundle) {
     return (
       <Alert
-        type="info"
+        type={status === "failed" ? "error" : "info"}
         showIcon
         title={t("loadFailedTitle")}
         description={t("loadFailedDescription")}

@@ -53,7 +53,7 @@ export function SubmittedAnalysisPanel({ state }: Props) {
 
   // 분석이 끝나면 곧바로 피드백 화면으로 이동한다. 그 라우트를 분석 중 미리 prefetch해
   // 두면 완료 시 router.replace가 즉시 그려져, 정적인 "완료" 화면에 머무르는 체감 지연을
-  // 없앨 수 있다(이동은 AnalysisLoadingModal의 complete effect가 수행).
+  // 없앨 수 있다(이동은 AnalysisLoadingPage의 complete effect가 수행).
   useEffect(() => {
     router.prefetch?.(state.feedbackHref as never);
   }, [router, state.feedbackHref]);

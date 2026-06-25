@@ -142,6 +142,7 @@ describe("DashboardRecommendations", () => {
           title: "테스트 문제",
           questionNo: 53,
           reason: null,
+          primaryTier: 1,
           source: "recommendation",
         }}
         alternatives={[]}
@@ -157,6 +158,28 @@ describe("DashboardRecommendations", () => {
     expect(
       screen.getByText(dashboard.recommendations.defaultReason),
     ).toBeTruthy();
+  });
+
+  it("does not label a published-problem fallback as a recommendation", () => {
+    renderWithIntl(
+      <DashboardRecommendations
+        primary={{
+          problemId: "p-fallback",
+          title: "Published fallback",
+          questionNo: 51,
+          reason: null,
+          primaryTier: 3,
+          source: "random",
+        }}
+        alternatives={[]}
+      />,
+    );
+
+    expect(screen.getByText("Published fallback")).toBeTruthy();
+    expect(screen.queryByText("오늘의 추천")).toBeNull();
+    expect(
+      screen.queryByText(dashboard.recommendations.defaultReason),
+    ).toBeNull();
   });
 });
 
@@ -179,6 +202,7 @@ describe("DashboardBody", () => {
           title: "추천 전용 문제",
           questionNo: 51,
           reason: "추천 카드에만 보여야 하는 이유",
+          primaryTier: 3,
           source: "random",
         }}
         alternatives={[]}
@@ -192,6 +216,36 @@ describe("DashboardBody", () => {
     expect(continueCard.queryByText("추천 카드에만 보여야 하는 이유")).toBeNull();
     expect(continueCard.getByText("작성 중인 답안이 없어요")).toBeTruthy();
     expect(continueCard.getByText("문제 목록 보기")).toBeTruthy();
+  });
+
+  it("labels a published-problem fallback as a direct practice option", () => {
+    renderWithIntl(
+      <DashboardBody
+        userId="user-1"
+        kpi={emptyKpi}
+        examDate={null}
+        primary={{
+          problemId: "fallback-problem",
+          title: "Published fallback",
+          questionNo: 51,
+          reason: null,
+          primaryTier: 3,
+          source: "random",
+        }}
+        alternatives={[]}
+        recentFeedbacks={[]}
+        continueDraft={null}
+      />,
+    );
+
+    expect(screen.getByText("Published fallback")).toBeTruthy();
+    expect(screen.queryByText("AI 튜터의 오늘 추천")).toBeNull();
+    expect(screen.queryByText("추천 이유")).toBeNull();
+
+    const cta = screen.getByRole("link", { name: dashboard.hub.solveNow });
+    expect(cta.getAttribute("href")).toContain(
+      "/writing/short-answer-writing-51?problem=fallback-problem",
+    );
   });
 
   it("uses the active draft instead of the recommendation in the continue-writing card", () => {

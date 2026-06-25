@@ -24,6 +24,7 @@ export type DashboardPrimary = {
   title: string;
   questionNo: number | null;
   reason: string | null;
+  primaryTier?: 1 | 2 | 3 | 4;
   /** recommendation | same_question_no | random — 출처 라벨용. */
   source: "recommendation" | "same_question_no" | "random";
 };
@@ -40,13 +41,23 @@ type Props = {
   alternatives: DashboardAlternative[];
 };
 
-// 출처(source) → 카탈로그 키 매핑. 모듈 스코프라 t()를 호출할 수 없으므로
-// 안정적인 키만 보관하고, 컴포넌트에서 t(SOURCE_LABEL_KEY[source])로 해석한다.
-const SOURCE_LABEL_KEY: Record<DashboardPrimary["source"], string> = {
-  recommendation: "sourceRecommendation",
-  same_question_no: "sourceSameQuestionNo",
-  random: "sourceRandom",
-};
+// Tier 1 recommendation_items만 개인화 추천으로 표시하고,
+// fallback 문제는 학습 시작 후보로 분리해 라벨링한다.
+function isPersonalizedRecommendation(primary: DashboardPrimary): boolean {
+  return (primary.primaryTier ?? 1) === 1 && primary.source === "recommendation";
+}
+
+function sourceLabelKey(primary: DashboardPrimary): string {
+  if (isPersonalizedRecommendation(primary)) return "sourceRecommendation";
+  if (primary.source === "same_question_no") return "sourceSameQuestionNo";
+  return "sourcePublishedProblem";
+}
+
+function defaultReasonKey(primary: DashboardPrimary): string {
+  if (isPersonalizedRecommendation(primary)) return "defaultReason";
+  if (primary.source === "same_question_no") return "fallbackSameTypeReason";
+  return "fallbackPublishedReason";
+}
 
 function truncate(title: string, max = 28): string {
   return title.length > max ? `${title.slice(0, max)}…` : title;
@@ -63,8 +74,12 @@ export function DashboardRecommendations({ primary, alternatives }: Props) {
         {primary ? (
           <Space orientation="vertical" size="small" className="w-full">
             <Space size={8} wrap>
-              <Tag color="geekblue">
-                {t(SOURCE_LABEL_KEY[primary.source] as Parameters<typeof t>[0])}
+              <Tag
+                color={
+                  isPersonalizedRecommendation(primary) ? "geekblue" : "default"
+                }
+              >
+                {t(sourceLabelKey(primary) as Parameters<typeof t>[0])}
               </Tag>
               {primary.questionNo != null ? (
                 <Tag>{t("questionNoTag", { questionNo: primary.questionNo })}</Tag>
@@ -81,7 +96,7 @@ export function DashboardRecommendations({ primary, alternatives }: Props) {
               </Paragraph>
             ) : (
               <Paragraph type="secondary" className="!m-0">
-                {t("defaultReason")}
+                {t(defaultReasonKey(primary) as Parameters<typeof t>[0])}
               </Paragraph>
             )}
             <Link

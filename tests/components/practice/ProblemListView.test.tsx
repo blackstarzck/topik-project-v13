@@ -386,7 +386,7 @@ describe("ProblemListView", () => {
     expect(navState.push).not.toHaveBeenCalled();
   });
 
-  it("routes submitted rows with pending analysis to the feedback status page", async () => {
+  it("keeps submitted rows with pending analysis on the problem list", async () => {
     rpcMock.mockResolvedValueOnce({
       data: [
         {
@@ -419,13 +419,14 @@ describe("ProblemListView", () => {
     fireEvent.click(
       screen.getByText("Pending analysis problem").closest("tr")!,
     );
-
-    expect(navState.push).toHaveBeenCalledWith(
-      "/writing/feedback/short/submission-pending-51",
+    fireEvent.click(
+      screen.getByRole("button", { name: "View analysis status" }),
     );
+
+    expect(navState.push).not.toHaveBeenCalled();
   });
 
-  it("uses an accessible tooltip trigger instead of a visible analysis status tag", async () => {
+  it("shows the first analysis tooltip by default and hides it after user interaction", async () => {
     rpcMock.mockResolvedValueOnce({
       data: [
         {
@@ -451,7 +452,7 @@ describe("ProblemListView", () => {
     renderInApp(<ProblemListView userId="user-1" />, "en");
 
     expect(await screen.findByText("Tooltip analysis problem")).toBeTruthy();
-    expect(screen.queryByText("Analyzing answer")).toBeNull();
+    expect(await screen.findByText("Analyzing answer")).toBeTruthy();
 
     const tooltipTrigger = screen.getByRole("button", {
       name: "Analyzing answer",
@@ -460,10 +461,16 @@ describe("ProblemListView", () => {
       "problem-analysis-tooltip-trigger",
     );
 
-    fireEvent.click(tooltipTrigger);
-
-    expect(navState.push).toHaveBeenCalledWith(
-      "/writing/feedback/short/submission-tooltip-51",
+    fireEvent.pointerDown(
+      screen.getByText("Tooltip analysis problem").closest("tr")!,
     );
+
+    await waitFor(() => {
+      expect(screen.queryByText("Analyzing answer")).toBeNull();
+    });
+
+    fireEvent.click(tooltipTrigger);
+    expect(navState.push).not.toHaveBeenCalled();
   });
+
 });

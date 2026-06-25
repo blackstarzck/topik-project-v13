@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { KeyboardEvent, MouseEvent, ReactNode } from "react";
 import { Button, ConfigProvider, Table, Tag, Tooltip } from "antd";
 import type { ColumnsType } from "antd/es/table";
@@ -13,7 +14,7 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { writingFeedbackHref, writingProblemHref } from "@/lib/writing/routes";
+import { writingProblemHref } from "@/lib/writing/routes";
 import {
   difficultyBucket,
   difficultyBucketLabelKey,
@@ -100,18 +101,56 @@ export function ProblemTable({ rows, onRetryClick }: Props) {
   const router = useRouter();
   const t = useTranslations("practice.problems");
   const tCommon = useTranslations("practice.common");
+  const firstAnalysisProblemId = useMemo(
+    () => rows.find(isAnalysisHandoff)?.problemId ?? null,
+    [rows],
+  );
+  const [analysisTooltipDismissed, setAnalysisTooltipDismissed] =
+    useState(false);
+  const [manualAnalysisTooltipId, setManualAnalysisTooltipId] = useState<
+    string | null
+  >(null);
+  const openAnalysisTooltipId = analysisTooltipDismissed
+    ? manualAnalysisTooltipId
+    : firstAnalysisProblemId;
+  const dismissAnalysisTooltip = useCallback(() => {
+    setAnalysisTooltipDismissed(true);
+    setManualAnalysisTooltipId(null);
+  }, []);
+
+  useEffect(() => {
+    if (analysisTooltipDismissed) return;
+    const listenerOptions = { capture: true, once: true } as const;
+    const body = document.body;
+    document.addEventListener(
+      "pointerdown",
+      dismissAnalysisTooltip,
+      listenerOptions,
+    );
+    document.addEventListener(
+      "keydown",
+      dismissAnalysisTooltip,
+      listenerOptions,
+    );
+    body?.addEventListener(
+      "pointerdown",
+      dismissAnalysisTooltip,
+      listenerOptions,
+    );
+    window.addEventListener("scroll", dismissAnalysisTooltip, listenerOptions);
+    window.addEventListener("wheel", dismissAnalysisTooltip, listenerOptions);
+    return () => {
+      document.removeEventListener("pointerdown", dismissAnalysisTooltip, true);
+      document.removeEventListener("keydown", dismissAnalysisTooltip, true);
+      body?.removeEventListener("pointerdown", dismissAnalysisTooltip, true);
+      window.removeEventListener("scroll", dismissAnalysisTooltip, true);
+      window.removeEventListener("wheel", dismissAnalysisTooltip, true);
+    };
+  }, [analysisTooltipDismissed, dismissAnalysisTooltip]);
 
   function selectRow(row: UserProblemRow) {
     if (isDisabled(row)) return;
-    if (isAnalysisHandoff(row) && row.latestSubmissionId) {
-      router.push(
-        writingFeedbackHref({
-          questionNo: row.questionNo,
-          submissionId: row.latestSubmissionId,
-        }) as never,
-      );
-      return;
-    }
+    if (isAnalysisHandoff(row)) return;
     if (hasPriorWork(row)) {
       onRetryClick(row);
       return;
@@ -194,7 +233,22 @@ export function ProblemTable({ rows, onRetryClick }: Props) {
                   </span>
                 ) : null}
                 {analysisStatusLabelKey ? (
-                  <Tooltip title={t(analysisStatusLabelKey)}>
+                  <Tooltip
+                    title={t(analysisStatusLabelKey)}
+                    placement="right"
+                    destroyOnHidden
+                    motion={{ motionName: "" }}
+                    open={openAnalysisTooltipId === row.problemId}
+                    onOpenChange={(open) => {
+                      if (!analysisTooltipDismissed) return;
+                      setManualAnalysisTooltipId(open ? row.problemId : null);
+                    }}
+                    classNames={{
+                      root: "problem-table__analysis-tooltip",
+                      container: "problem-table__analysis-tooltip-body",
+                      arrow: "problem-table__analysis-tooltip-arrow",
+                    }}
+                  >
                     <Button
                       aria-label={t(analysisStatusLabelKey)}
                       className="problem-table__analysis-tooltip-trigger"
@@ -205,7 +259,8 @@ export function ProblemTable({ rows, onRetryClick }: Props) {
                       type="text"
                       onClick={(event) => {
                         event.stopPropagation();
-                        selectRow(row);
+                        setAnalysisTooltipDismissed(true);
+                        setManualAnalysisTooltipId(null);
                       }}
                     />
                   </Tooltip>
@@ -321,8 +376,7 @@ export function ProblemTable({ rows, onRetryClick }: Props) {
           <Button
             className="problem-table__action-button problem-table__action-button--secondary"
             variant="outlined"
-            onClick={() => selectRow(row)}
-            disabled={disabled}
+            disabled
           >
             {t("analysisStatusAction")}
           </Button>
@@ -369,42 +423,52 @@ export function ProblemTable({ rows, onRetryClick }: Props) {
   ];
 
   return (
-    <ConfigProvider theme={PROBLEM_TABLE_THEME}>
-      <Table<UserProblemRow>
-        className="problem-table"
-        columns={columns}
-        dataSource={rows}
-        pagination={false}
-        rowClassName={(row) =>
-          [
-            "problem-table__row",
-            !isDisabled(row) ? "problem-table__row--selectable" : "",
-            isDisabled(row) ? "problem-table__row--disabled" : "",
-          ]
-            .filter(Boolean)
-            .join(" ")
-        }
-        rowKey="problemId"
-        onRow={(row) => {
-          const disabled = isDisabled(row);
-          return {
-            "aria-disabled": disabled ? true : undefined,
-            "aria-label": `${row.title} ${
-              isAnalysisHandoff(row)
-                ? t("analysisStatusAction")
-                : hasPriorWork(row)
-                  ? t("retryAttempt")
-                  : t("startProblem")
-            }`,
-            onClick: (event) => handleRowClick(row, event),
-            onKeyDown: (event) => handleRowKeyDown(row, event),
-            tabIndex: disabled ? -1 : 0,
-          };
-        }}
-        scroll={{ x: 840 }}
-        size="medium"
-        tableLayout="fixed"
-      />
-    </ConfigProvider>
+    <div
+      className="problem-table__interaction-surface"
+      onKeyDownCapture={dismissAnalysisTooltip}
+      onPointerDownCapture={dismissAnalysisTooltip}
+      onWheelCapture={dismissAnalysisTooltip}
+    >
+      <ConfigProvider theme={PROBLEM_TABLE_THEME}>
+        <Table<UserProblemRow>
+          className="problem-table"
+          columns={columns}
+          dataSource={rows}
+          pagination={false}
+          rowClassName={(row) =>
+            [
+              "problem-table__row",
+              !isDisabled(row) && !isAnalysisHandoff(row)
+                ? "problem-table__row--selectable"
+                : "",
+              isDisabled(row) ? "problem-table__row--disabled" : "",
+              isAnalysisHandoff(row) ? "problem-table__row--analysis" : "",
+            ]
+              .filter(Boolean)
+              .join(" ")
+          }
+          rowKey="problemId"
+          onRow={(row) => {
+            const disabled = isDisabled(row);
+            return {
+              "aria-disabled": disabled ? true : undefined,
+              "aria-label": `${row.title} ${
+                isAnalysisHandoff(row)
+                  ? t("analysisStatusAction")
+                  : hasPriorWork(row)
+                    ? t("retryAttempt")
+                    : t("startProblem")
+              }`,
+              onClick: (event) => handleRowClick(row, event),
+              onKeyDown: (event) => handleRowKeyDown(row, event),
+              tabIndex: disabled || isAnalysisHandoff(row) ? -1 : 0,
+            };
+          }}
+          scroll={{ x: 840 }}
+          size="medium"
+          tableLayout="fixed"
+        />
+      </ConfigProvider>
+    </div>
   );
 }

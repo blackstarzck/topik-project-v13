@@ -46,7 +46,7 @@ function collectErrors(page: Page): string[] {
 
 function serviceClient() {
   if (!SUPABASE_URL || !SERVICE_KEY) {
-    throw new Error("Missing Supabase service credentials for D-M2 e2e setup");
+    throw new Error("Missing Supabase service credentials for e2e setup");
   }
   return createClient(SUPABASE_URL, SERVICE_KEY, {
     auth: { persistSession: false },
@@ -75,9 +75,8 @@ async function createPendingSubmission() {
   if (!problem.data?.id) throw new Error("No published q51 problem found");
 
   const answerText = [
-    "D-M2 pending analysis regression answer.",
-    "This submitted text stays read-only behind the modal while AI analysis runs.",
-    "The route should render a dimmed background and a focused progress dialog.",
+    "Pending feedback route regression answer.",
+    "The legacy feedback loading modal must not render for this submission.",
   ].join("\n");
   const id = randomUUID();
   const inserted = await sb.from("writing_submissions").insert({
@@ -104,10 +103,10 @@ test.afterAll(async () => {
 
 test.skip(
   !SUPABASE_URL || !SERVICE_KEY,
-  "D-M2 e2e requires Supabase service credentials for an isolated pending row",
+  "pending feedback route e2e requires Supabase service credentials",
 );
 
-test("D-M2 analysis loading modal renders over a read-only submitted answer", async ({
+test("pending feedback route redirects to library instead of rendering the legacy modal", async ({
   page,
 }) => {
   const errors = collectErrors(page);
@@ -117,23 +116,9 @@ test("D-M2 analysis loading modal renders over a read-only submitted answer", as
     waitUntil: "networkidle",
   });
   await expect(page).not.toHaveURL(/\/login/);
-
-  await expect(page.getByTestId("analysis-loading-background")).toBeVisible();
-  const modal = page.getByTestId("analysis-loading-modal");
-  await expect(modal).toBeVisible();
-  await expect(page.locator(".ant-modal-mask")).toBeVisible();
-  await expect(page.getByText("예상 소요 시간 8~15초")).toBeVisible();
-  await expect(page.locator(".analysis-loading__steps")).toBeVisible();
-  await expect(page.locator(".ant-steps-item-active")).toHaveCount(1);
-
-  await page.getByTestId("analysis-loading-cancel").click();
-  await expect(
-    page.locator(".ant-modal-confirm-title", {
-      hasText: "분석을 중단할까요?",
-    }),
-  ).toBeVisible();
-  await page.getByRole("button", { name: "계속 기다리기" }).click();
-  await expect(modal).toBeVisible();
+  await expect(page).toHaveURL(/\/library(?:\?|$)/);
+  await expect(page.getByTestId("analysis-loading-modal")).toHaveCount(0);
+  await expect(page.getByTestId("analysis-loading-background")).toHaveCount(0);
 
   expect(errors).toEqual([]);
 });

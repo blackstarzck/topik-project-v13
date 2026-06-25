@@ -326,16 +326,20 @@ export function LibrarySubmissionsTab({
                 >
                   <div className="flex w-full flex-col gap-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <Link
-                        href={
-                          writingFeedbackHref({
-                            questionNo: item.question_no,
-                            submissionId: item.id,
-                          }) as never
-                        }
-                      >
+                      {analysisPending ? (
                         <Text strong>{clampTitle(title)}</Text>
-                      </Link>
+                      ) : (
+                        <Link
+                          href={
+                            writingFeedbackHref({
+                              questionNo: item.question_no,
+                              submissionId: item.id,
+                            }) as never
+                          }
+                        >
+                          <Text strong>{clampTitle(title)}</Text>
+                        </Link>
+                      )}
                       <Tag>{t(badge.labelKey as Parameters<typeof t>[0])}</Tag>
                       {meta?.scoreTotal != null ? (
                         <Tag>

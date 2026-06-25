@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { notFound, redirect } from "next/navigation";
 import { FeedbackPageContent } from "@/components/feedback/FeedbackPageContent";
 import { requireUser } from "@/lib/auth/session";
+import { APP_ROUTES } from "@/lib/routes";
 import {
   getFeedbackBundle,
   getSubmission,
@@ -27,6 +28,12 @@ export default async function ShortFeedbackPage({
   if (!isShortAnswer(submission.question_no as QuestionNo)) {
     redirect(`/writing/feedback/long/${id}`);
   }
+  if (
+    submission.feedback_status === "pending" ||
+    submission.feedback_status === "analyzing"
+  ) {
+    redirect(APP_ROUTES.library);
+  }
   // RLS already scopes rows to the owner; this is an explicit ownership signal
   // so the save action can render its permission-locked state if the row ever
   // surfaces read-only (e.g. future shared view).
@@ -34,11 +41,7 @@ export default async function ShortFeedbackPage({
   // Fetch the bundle whenever a feedback row may exist (complete/failed/partial)
   // so the page can render partial results and failed-with-data states instead
   // of an infinite loading modal.
-  const bundle =
-    submission.feedback_status === "pending" ||
-    submission.feedback_status === "analyzing"
-      ? null
-      : await getFeedbackBundle(id);
+  const bundle = await getFeedbackBundle(id);
   const problemAvailability = await getWritingProblemAvailability(
     submission.problem_id,
   );
