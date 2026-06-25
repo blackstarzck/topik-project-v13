@@ -58,7 +58,7 @@ function truncateLabel(value: string, max = 34): string {
 
 function DashboardBadge({ children }: { children: ReactNode }) {
   return (
-    <span className="inline-flex min-h-7 items-center rounded-sm bg-surface px-3 text-sm font-semibold text-text-secondary">
+    <span className="inline-flex min-h-7 items-center rounded-sm bg-surface px-3 text-sm text-text-secondary">
       {children}
     </span>
   );
@@ -99,9 +99,9 @@ export function DashboardBody({
   const t = useTranslations("dashboard.hub");
   const primaryHref = primary
     ? writingProblemHref({
-        questionNo: primary.questionNo,
-        problemId: primary.problemId,
-      })
+      questionNo: primary.questionNo,
+      problemId: primary.problemId,
+    })
     : "/practice/recommendations";
   const primaryQuestionTag =
     primary?.questionNo != null
@@ -109,17 +109,17 @@ export function DashboardBody({
       : t("questionTagFallback");
   const continueHref = continueDraft
     ? writingProblemHref({
-        questionNo: continueDraft.questionNo,
-        problemId: continueDraft.problemId,
-      })
+      questionNo: continueDraft.questionNo,
+      problemId: continueDraft.problemId,
+    })
     : "/practice/problems";
   const feedbackPreview = recentFeedbacks.slice(0, 2);
   const feedbackCount = recentFeedbacks.length;
   const firstFeedbackHref = feedbackPreview[0]
     ? writingFeedbackHref({
-        questionNo: feedbackPreview[0].questionNo,
-        submissionId: feedbackPreview[0].submissionId,
-      })
+      questionNo: feedbackPreview[0].questionNo,
+      submissionId: feedbackPreview[0].submissionId,
+    })
     : "/library";
   const quickActions = [
     {
