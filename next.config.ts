@@ -54,24 +54,15 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-      {
-        source: "/icon.svg",
+      ...["/favicon.ico", "/icon.png", "/apple-icon.png"].map((source) => ({
+        source,
         headers: [
           {
             key: "Cache-Control",
             value: "public, max-age=86400, must-revalidate",
           },
         ],
-      },
-      {
-        source: "/favicon.ico",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=86400, must-revalidate",
-          },
-        ],
-      },
+      })),
     );
     return rules;
   },

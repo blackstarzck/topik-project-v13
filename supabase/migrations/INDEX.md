@@ -186,3 +186,9 @@
 | # | timestamp | file | scope |
 | ---:| --- | --- | --- |
 | 57 | `10:30:00` | [`20260623103000_auth_completion_gate.sql`](./20260623103000_auth_completion_gate.sql) | Expands `/auth/consent` into a single auth completion gate by adding `public.complete_auth_gate(...)`, restoring the final `handle_new_user()` definition to seed `display_name`, `nationality_country_code`, `affiliation_code`, and `nickname`, and backfilling blank nicknames to `talkpik-*`. |
+
+## 2026-06-25 추가 migration
+
+| # | timestamp | file | scope |
+| ---:| --- | --- | --- |
+| 58 | `00:12:57` | [`20260625001257_restrict_auth_completion_gate_anon.sql`](./20260625001257_restrict_auth_completion_gate_anon.sql) | Removes explicit `anon` execute permission from `public.complete_auth_gate(text,text,text,boolean)` after remote grant drift, while preserving authenticated execution for the `/auth/consent` completion gate. |

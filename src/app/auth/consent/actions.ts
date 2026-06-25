@@ -13,6 +13,12 @@ import { getMissingRequiredConsentDocuments } from "@/lib/legal/consent";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type AuthConsentActionError = "required" | "nickname-taken" | "save-failed";
+type SupabaseRpcErrorLike = {
+  code?: unknown;
+  details?: unknown;
+  hint?: unknown;
+  message?: unknown;
+};
 
 function buildConsentRetryPath(
   next: string,
@@ -46,6 +52,64 @@ function isRequiredCompletionError(error: unknown): boolean {
     candidate.details ?? "",
   )}`.toLowerCase();
   return text.includes("auth_completion_required");
+}
+
+function getRpcFailureCategory(error: unknown): string {
+  if (!error || typeof error !== "object") {
+    return "auth_completion_rpc_failed";
+  }
+  const candidate = error as SupabaseRpcErrorLike;
+  const text = `${String(candidate.message ?? "")} ${String(
+    candidate.details ?? "",
+  )}`.toLowerCase();
+
+  if (candidate.code === "PGRST202") {
+    return "auth_completion_rpc_missing_or_stale";
+  }
+  if (candidate.code === "42501" || text.includes("permission denied")) {
+    return "auth_completion_rpc_permission_denied";
+  }
+  if (isRequiredCompletionError(error)) {
+    return "auth_completion_required";
+  }
+  if (isNicknameUniqueError(error)) {
+    return "auth_completion_nickname_conflict";
+  }
+  return "auth_completion_rpc_failed";
+}
+
+function logAuthCompletionRpcFailure({
+  error,
+  missingConsentCount,
+  missingProfileFieldCount,
+  next,
+}: {
+  error: unknown;
+  missingConsentCount: number;
+  missingProfileFieldCount: number;
+  next: string;
+}) {
+  const candidate =
+    error && typeof error === "object" ? (error as SupabaseRpcErrorLike) : {};
+
+  console.error("auth_consent_rpc_failed", {
+    category: getRpcFailureCategory(error),
+    code:
+      typeof candidate.code === "string" ? candidate.code : candidate.code,
+    details:
+      typeof candidate.details === "string"
+        ? candidate.details
+        : candidate.details,
+    hint: typeof candidate.hint === "string" ? candidate.hint : candidate.hint,
+    message:
+      typeof candidate.message === "string"
+        ? candidate.message
+        : candidate.message,
+    missingConsentCount,
+    missingProfileFieldCount,
+    next,
+    route: "/auth/consent",
+  });
 }
 
 export async function completeAuthGateAction(formData: FormData) {
@@ -95,6 +159,12 @@ export async function completeAuthGateAction(formData: FormData) {
   });
 
   if (error) {
+    logAuthCompletionRpcFailure({
+      error,
+      missingConsentCount: missingDocuments.length,
+      missingProfileFieldCount: missingProfileFields.length,
+      next,
+    });
     if (isNicknameUniqueError(error)) {
       redirect(buildConsentRetryPath(next, "nickname-taken"));
     }

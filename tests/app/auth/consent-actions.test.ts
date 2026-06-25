@@ -44,7 +44,12 @@ function makeForm(entries: Record<string, string>) {
 }
 
 describe("completeAuthGateAction", () => {
+  const consoleErrorSpy = vi
+    .spyOn(console, "error")
+    .mockImplementation(() => undefined);
+
   beforeEach(() => {
+    consoleErrorSpy.mockClear();
     redirectMock.mockClear();
     requireActiveSessionMock.mockReset();
     requireActiveSessionMock.mockResolvedValue({
@@ -167,6 +172,59 @@ describe("completeAuthGateAction", () => {
       ),
     ).rejects.toThrow(
       "NEXT_REDIRECT:/auth/consent?next=%2Fdashboard&error=nickname-taken",
+    );
+  });
+
+  it("logs sanitized RPC diagnostics when PostgREST cannot find the completion RPC", async () => {
+    createSupabaseServerClientMock.mockResolvedValueOnce({
+      rpc: vi.fn().mockResolvedValue({
+        data: null,
+        error: {
+          code: "PGRST202",
+          details:
+            "Searched for the function public.complete_auth_gate with parameters p_accept_required_consents, p_display_name, p_nationality_country_code, p_nickname",
+          hint: "Try reloading the schema cache",
+          message:
+            "Could not find the function public.complete_auth_gate(...) in the schema cache",
+        },
+      }),
+    });
+    requireActiveSessionMock.mockResolvedValueOnce({
+      user: { id: "user-1" },
+      profile: { ...completeProfile, display_name: null },
+    });
+    getMissingRequiredConsentDocumentsMock.mockResolvedValueOnce([
+      { id: "terms-1" },
+      { id: "privacy-1" },
+    ]);
+
+    await expect(
+      completeAuthGateAction(
+        makeForm({
+          accept: "on",
+          display_name: "Chan",
+          next: "/dashboard",
+        }),
+      ),
+    ).rejects.toThrow(
+      "NEXT_REDIRECT:/auth/consent?next=%2Fdashboard&error=save-failed",
+    );
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "auth_consent_rpc_failed",
+      expect.objectContaining({
+        category: "auth_completion_rpc_missing_or_stale",
+        code: "PGRST202",
+        details:
+          "Searched for the function public.complete_auth_gate with parameters p_accept_required_consents, p_display_name, p_nationality_country_code, p_nickname",
+        hint: "Try reloading the schema cache",
+        message:
+          "Could not find the function public.complete_auth_gate(...) in the schema cache",
+        missingConsentCount: 2,
+        missingProfileFieldCount: 1,
+        next: "/dashboard",
+        route: "/auth/consent",
+      }),
     );
   });
 

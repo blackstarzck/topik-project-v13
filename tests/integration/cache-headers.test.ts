@@ -24,7 +24,10 @@ describe("cache-headers — next.config headers()", () => {
       (process.env as { NODE_ENV?: string }).NODE_ENV = "production";
       const rules = await nextConfig.headers!();
       const rule = rules.find((r) => r.source === "/_next/static/:path*");
-      expect(rule, "static immutable rule must exist in production").toBeTruthy();
+      expect(
+        rule,
+        "static immutable rule must exist in production",
+      ).toBeTruthy();
       const cc = rule!.headers.find((h) => h.key === "Cache-Control");
       expect(cc).toBeTruthy();
       expect(cc!.value).toContain("immutable");
@@ -40,15 +43,18 @@ describe("cache-headers — next.config headers()", () => {
       (process.env as { NODE_ENV?: string }).NODE_ENV = "development";
       const rules = await nextConfig.headers!();
       const rule = rules.find((r) => r.source === "/_next/static/:path*");
-      expect(rule, "static immutable rule must be absent in dev").toBeUndefined();
+      expect(
+        rule,
+        "static immutable rule must be absent in dev",
+      ).toBeUndefined();
     } finally {
       (process.env as { NODE_ENV?: string }).NODE_ENV = prev;
     }
   });
 
-  it("/icon.svg and /favicon.ico receive a one-day must-revalidate header", async () => {
+  it("favicon metadata assets receive a one-day must-revalidate header", async () => {
     const rules = await nextConfig.headers!();
-    for (const path of ["/icon.svg", "/favicon.ico"]) {
+    for (const path of ["/favicon.ico", "/icon.png", "/apple-icon.png"]) {
       const rule = rules.find((r) => r.source === path);
       expect(rule, `missing rule for ${path}`).toBeTruthy();
       const cc = rule!.headers.find((h) => h.key === "Cache-Control");

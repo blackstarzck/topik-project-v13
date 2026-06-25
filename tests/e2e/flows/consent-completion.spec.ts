@@ -7,6 +7,7 @@ type TempAuthGateData = {
   admin: SupabaseClient;
   docIds: string[];
   email: string;
+  generatedNickname: string;
   password: string;
   userId: string;
 };
@@ -100,18 +101,29 @@ async function createTempAuthGateData(): Promise<TempAuthGateData> {
 
   const userId = created.data.user.id;
   const profile = await waitForProfile(admin, userId);
-  const nickname = profile.nickname ?? `talkpik-${String(stamp).slice(-6)}`;
+  if (!profile.nickname?.startsWith("talkpik-")) {
+    throw new Error(
+      "auth completion migrations are not aligned: generated profile nickname is missing.",
+    );
+  }
   const updated = await admin
     .from("profiles")
     .update({
       display_name: null,
       nationality_country_code: null,
-      nickname,
+      nickname: profile.nickname,
     })
     .eq("id", userId);
   if (updated.error) throw updated.error;
 
-  return { admin, docIds, email, password, userId };
+  return {
+    admin,
+    docIds,
+    email,
+    generatedNickname: profile.nickname,
+    password,
+    userId,
+  };
 }
 
 async function cleanupTempAuthGateData(data: TempAuthGateData) {
@@ -123,6 +135,46 @@ async function cleanupTempAuthGateData(data: TempAuthGateData) {
       .in("id", data.docIds);
     if (deletedDocs.error) throw deletedDocs.error;
   }
+}
+
+async function signInToAuthConsent(page: Page, tempData: TempAuthGateData) {
+  await page.goto("/login", { waitUntil: "networkidle" });
+  await page.locator('input[autocomplete="email"]').fill(tempData.email);
+  await page
+    .locator('input[autocomplete="current-password"]')
+    .fill(tempData.password);
+  await page.locator('button[type="submit"]').click();
+
+  await page.waitForURL(/\/auth\/consent/, { timeout: 20_000 });
+  await page.waitForLoadState("networkidle");
+}
+
+async function selectCountryRegion(page: Page, label: string) {
+  await page.getByTestId("auth-consent-country-select").click();
+  await page.locator(".ant-select-item-option").filter({ hasText: label }).click();
+}
+
+async function expectAuthGateSaved(data: TempAuthGateData) {
+  const { data: profile, error: profileError } = await data.admin
+    .from("profiles")
+    .select("display_name,nationality_country_code,nickname")
+    .eq("id", data.userId)
+    .single();
+  if (profileError) throw profileError;
+
+  expect(profile?.display_name).toBe("민준");
+  expect(profile?.nationality_country_code).toBe("KR");
+  expect(profile?.nickname).toBe(data.generatedNickname);
+
+  const { data: consents, error: consentError } = await data.admin
+    .from("user_consents")
+    .select("document_id,source")
+    .eq("user_id", data.userId)
+    .in("document_id", data.docIds);
+  if (consentError) throw consentError;
+
+  expect(consents).toHaveLength(data.docIds.length);
+  expect(consents?.every((row) => row.source === "signup")).toBe(true);
 }
 
 test("auth completion gate renders profile fields and admin-published consent documents in one card", async ({
@@ -138,15 +190,7 @@ test("auth completion gate renders profile fields and admin-published consent do
   const tempData = await createTempAuthGateData();
 
   try {
-    await page.goto("/login", { waitUntil: "networkidle" });
-    await page.locator('input[autocomplete="email"]').fill(tempData.email);
-    await page
-      .locator('input[autocomplete="current-password"]')
-      .fill(tempData.password);
-    await page.locator('button[type="submit"]').click();
-
-    await page.waitForURL(/\/auth\/consent/, { timeout: 20_000 });
-    await page.waitForLoadState("networkidle");
+    await signInToAuthConsent(page, tempData);
 
     await expect(page.getByTestId("auth-consent-card")).toBeVisible();
     await expect(page.getByTestId("auth-consent-document-card")).toHaveCount(2);
@@ -170,6 +214,49 @@ test("auth completion gate renders profile fields and admin-published consent do
       page.getByText(/계속하려면 필수 정보를 입력하고 필요한 동의에 체크해야 합니다/),
     ).toBeVisible();
 
+    expect(errors).toEqual([]);
+  } finally {
+    await cleanupTempAuthGateData(tempData);
+  }
+});
+
+test("auth completion gate saves missing profile fields and required consents before continuing", async ({
+  page,
+}) => {
+  test.skip(
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+      !process.env.SUPABASE_SERVICE_ROLE_KEY,
+    "Supabase URL and service role key are required for this e2e flow.",
+  );
+  test.skip(
+    process.env.SUPABASE_ENV_LABEL === "prod",
+    "Auth completion e2e creates temporary users and legal documents; never run it against production.",
+  );
+
+  const errors = collectErrors(page);
+  const tempData = await createTempAuthGateData();
+
+  try {
+    await signInToAuthConsent(page, tempData);
+
+    await page.locator('input[name="display_name"]').fill("민준");
+    await expect(page.locator('input[name="nickname"]')).toHaveValue(
+      tempData.generatedNickname,
+    );
+    await selectCountryRegion(page, "대한민국");
+    await page.locator('input[name="accept"]').check();
+    await page.locator('form button[type="submit"]').click();
+
+    await page.waitForURL(
+      (url) =>
+        url.pathname === "/auth/post-auth" ||
+        url.pathname === "/onboarding/learning-goal" ||
+        url.pathname === "/dashboard",
+      { timeout: 20_000 },
+    );
+    await expect(page).not.toHaveURL(/\/auth\/consent\?.*error=save-failed/);
+
+    await expectAuthGateSaved(tempData);
     expect(errors).toEqual([]);
   } finally {
     await cleanupTempAuthGateData(tempData);

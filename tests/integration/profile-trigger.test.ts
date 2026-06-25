@@ -41,7 +41,7 @@ describe.skipIf(!ENABLED)("profile trigger integration", () => {
 
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("id, app_role, status, nationality_country_code")
+      .select("id, app_role, status, nationality_country_code, nickname")
       .eq("id", userId)
       .single();
 
@@ -57,6 +57,12 @@ describe.skipIf(!ENABLED)("profile trigger integration", () => {
       throw new Error(
         `unexpected country code: ${profile.nationality_country_code}`,
       );
+    }
+    if (
+      typeof profile.nickname !== "string" ||
+      !profile.nickname.startsWith("talkpik-")
+    ) {
+      throw new Error(`unexpected generated nickname: ${profile.nickname}`);
     }
   });
 });

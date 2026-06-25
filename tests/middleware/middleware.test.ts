@@ -35,7 +35,8 @@ describe("middleware route protection", () => {
     const matcher = new RegExp(`^${config.matcher[0]}$`);
 
     expect(matcher.test("/dashboard")).toBe(true);
-    expect(matcher.test("/icon.svg")).toBe(false);
+    expect(matcher.test("/icon.png")).toBe(false);
+    expect(matcher.test("/apple-icon.png")).toBe(false);
     expect(matcher.test("/assets/landing-hero-video.mp4")).toBe(false);
   });
 

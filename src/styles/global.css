@@ -4677,14 +4677,13 @@ body {
  * opts in with `.app-cards-bordered`, which counters the global
  * `.app-card.app-surface { border: 0 }` overlay rule for those routes only.
  * Card radius already comes from `theme.components.Card`, so only the outline
- * is restored here. The color is AntD's native Card border token
- * (`colorBorderSecondary`, exposed as `--ant-color-border-secondary` because
- * `cssVar` is enabled in create-theme.ts) so the restored outline matches a
- * default AntD Card. Card-internal rows (`app-card-compact`) and the
- * continuous footer actions stay flat per docs/ant-design/08-theme-architecture.md.
+ * is restored here. The color uses the shared app border bridge so AntD Card
+ * outlines match the rest of the app chrome. Card-internal rows
+ * (`app-card-compact`) and the continuous footer actions stay flat per
+ * docs/ant-design/08-theme-architecture.md.
  */
 .app-cards-bordered .app-card.app-surface {
-  border: 1px solid var(--ant-color-border-secondary);
+  border: 1px solid var(--app-color-border);
 }
 
 /*
@@ -5266,7 +5265,7 @@ body {
 
 .problem-table__type-index--number {
   font-family: "Space Grotesk", var(--app-font-family), sans-serif;
-  font-size: 28px;
+  font-size: 16px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0;
@@ -5333,7 +5332,7 @@ body {
   align-items: center;
   justify-content: center;
   color: var(--app-color-text);
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 500;
   line-height: 1.45;
   letter-spacing: 0;
@@ -7268,9 +7267,13 @@ body {
 .analysis-loading-background__eyebrow {
   display: block;
   margin-bottom: 6px;
-  color: var(--app-color-primary);
+  color: var(--app-color-text-secondary);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 400;
+}
+
+.analysis-loading-background__eyebrow.ant-typography {
+  color: var(--app-color-text-secondary);
 }
 
 .analysis-loading-background__head h1.ant-typography {
@@ -7285,6 +7288,10 @@ body {
   gap: 12px;
   flex-wrap: wrap;
   margin-top: 12px;
+}
+
+.analysis-loading-background__meta .ant-typography {
+  font-size: 12px;
 }
 
 .analysis-loading-background__notice.ant-typography {
@@ -7492,6 +7499,69 @@ body {
    숫자를 또렷하게 한다(대비 ~19.9:1). primary 테두리/링은 그대로 현재 단계를 표시한다.
    AntD의 `.ant-steps.ant-steps-outlined .ant-steps-item-process` 규칙이 (0,3,0)으로
    동률이며 나중에 주입되므로, process+active 합성으로 (0,4,0)을 만들어 확실히 이긴다. */
+.analysis-loading--page .analysis-loading__steps .ant-steps-item-icon {
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.analysis-loading--page
+  .analysis-loading__steps
+  .ant-steps-item-icon
+  .ant-steps-icon {
+  transition: color 0.18s ease;
+}
+
+.analysis-loading--page
+  .analysis-loading__steps
+  .ant-steps-item-tail::after {
+  transition: background-color 0.18s ease;
+}
+
+.analysis-loading--page
+  .analysis-loading__steps
+  .ant-steps-item-finish
+  > .ant-steps-item-wrapper
+  > .ant-steps-item-icon,
+.analysis-loading--page
+  .analysis-loading__steps.ant-steps
+  .ant-steps-item-finish
+  > .ant-steps-item-wrapper
+  .ant-steps-item-icon {
+  border-color: var(--app-color-primary);
+  background-color: var(--app-color-primary);
+  color: var(--app-color-bg-container);
+}
+
+.analysis-loading--page
+  .analysis-loading__steps
+  .ant-steps-item-finish
+  > .ant-steps-item-wrapper
+  > .ant-steps-item-icon
+  > .ant-steps-icon,
+.analysis-loading--page
+  .analysis-loading__steps.ant-steps
+  .ant-steps-item-finish
+  > .ant-steps-item-wrapper
+  .ant-steps-item-icon
+  .ant-steps-icon,
+.analysis-loading--page
+  .analysis-loading__steps.ant-steps
+  .ant-steps-item-finish
+  > .ant-steps-item-wrapper
+  .ant-steps-item-icon
+  .anticon,
+.analysis-loading--page
+  .analysis-loading__steps.ant-steps
+  .ant-steps-item-finish
+  > .ant-steps-item-wrapper
+  .ant-steps-item-icon
+  .ant-steps-item-icon-finish {
+  color: var(--app-color-bg-container);
+}
+
 .analysis-loading--page
   .analysis-loading__steps
   .ant-steps-item-process.ant-steps-item-active {
