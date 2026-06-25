@@ -216,4 +216,10 @@ test("writing submit shows failure state without the read-only answer", async ({
   expect(pageBox!.width).toBeGreaterThanOrEqual(page.viewportSize()!.width - 1);
 
   await waitForSubmittedRow(answerToken);
+
+  await expect(
+    page.getByRole("button", { name: "고객지원 문의" }),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "대시보드로 이동" }).click();
+  await expect(page).toHaveURL(/\/dashboard$/);
 });

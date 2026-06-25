@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, screen } from "@testing-library/react";
+import { cleanup, fireEvent, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { AnalysisLoadingPage } from "../../../src/components/feedback/AnalysisLoadingModal";
@@ -7,17 +7,22 @@ import { renderWithIntl } from "../../test-utils/renderWithIntl";
 
 const routerMocks = vi.hoisted(() => ({
   back: vi.fn(),
+  push: vi.fn(),
   replace: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
     back: routerMocks.back,
+    push: routerMocks.push,
     replace: routerMocks.replace,
   }),
 }));
 
-afterEach(() => cleanup());
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 describe("AnalysisLoadingPage state assets", () => {
   it.each([
@@ -64,5 +69,21 @@ describe("AnalysisLoadingPage state assets", () => {
       stateAsset.compareDocumentPosition(actions) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
+  });
+
+  it("routes the failure dashboard CTA to the dashboard", async () => {
+    renderWithIntl(<AnalysisLoadingPage status="failed" onRetry={vi.fn()} />);
+
+    const dashboardButton = await screen.findByRole("button", {
+      name: "대시보드로 이동",
+    });
+
+    expect(
+      screen.queryByRole("button", { name: "고객지원 문의" }),
+    ).toBeNull();
+
+    fireEvent.click(dashboardButton);
+
+    expect(routerMocks.push).toHaveBeenCalledWith("/dashboard");
   });
 });

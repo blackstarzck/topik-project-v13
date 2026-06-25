@@ -14,7 +14,7 @@ import {
 import {
   ArrowLeft,
   Clock3,
-  LifeBuoy,
+  LayoutDashboard,
   RefreshCcw,
   ShieldAlert,
 } from "@/components/shared/AppIcons";
@@ -24,6 +24,7 @@ import { useRouter } from "next/navigation";
 
 import { AppCard } from "@/components/shared/AppCard";
 import { AppModal } from "@/components/shared/AppModal";
+import { APP_ROUTES } from "@/lib/routes";
 import { AnalysisCharacter } from "./AnalysisCharacter";
 
 const { Paragraph, Text, Title } = Typography;
@@ -153,7 +154,7 @@ function AnalysisLoadingModalContent({
   > & { presentation: SurfacePresentation }) {
   const t = useTranslations("feedback.analysis");
   const router = useRouter();
-  const { message, modal } = App.useApp();
+  const { modal } = App.useApp();
   const { token } = theme.useToken();
   const reduced = useReducedMotion(reduceMotion);
   const [slow, setSlow] = useState(false);
@@ -228,6 +229,10 @@ function AnalysisLoadingModalContent({
     });
   }
 
+  function goToDashboard() {
+    router.push(APP_ROUTES.dashboard);
+  }
+
   const contentTestId =
     presentation === "page"
       ? "analysis-loading-panel"
@@ -246,10 +251,10 @@ function AnalysisLoadingModalContent({
           </Button>
         ) : null}
         <Button
-          icon={<LifeBuoy aria-hidden size={16} />}
-          onClick={() => message.info(t("supportAlert"))}
+          icon={<LayoutDashboard aria-hidden size={16} />}
+          onClick={goToDashboard}
         >
-          {t("supportButton")}
+          {t("dashboardButton")}
         </Button>
       </>
     ) : null;
@@ -392,10 +397,10 @@ function AnalysisLoadingModalContent({
             </Button>
           ) : null}
           <Button
-            icon={<LifeBuoy aria-hidden size={16} />}
-            onClick={() => message.info(t("supportAlert"))}
+            icon={<LayoutDashboard aria-hidden size={16} />}
+            onClick={goToDashboard}
           >
-            {t("supportButton")}
+            {t("dashboardButton")}
           </Button>
         </div>
       </div>
