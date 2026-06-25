@@ -156,7 +156,7 @@ describe("In-app notification inbox item styles", () => {
     );
   });
 
-  test("dashboard notification feed keeps rows transparent and regular weight", () => {
+  test("dashboard notice feed keeps rows transparent and regular weight", () => {
     expect(dashboardAlertsCard).toContain('className="dashboard-alerts-card"');
     expect(dashboardAlertsCard).toContain(
       'className="app-notification-feed-item__title"',
@@ -168,9 +168,6 @@ describe("In-app notification inbox item styles", () => {
     expect(blockFor(".dashboard-alerts-card .ant-card-head-title")).toContain(
       "font-size: 14px",
     );
-    expect(
-      blockFor(".dashboard-alerts-card .ant-card-extra .ant-btn"),
-    ).toContain("font-size: 14px");
     expect(
       blockFor(".app-notification-feed-item.ant-list-item.ant-list-item"),
     ).toContain("padding: 0");

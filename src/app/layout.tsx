@@ -32,9 +32,10 @@ export default async function RootLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {
   const appearance = await resolveInitialAppearance();
-  // i18n (G-01): resolve the active locale (profiles.ui_locale → NEXT_LOCALE
-  // cookie → 'ko') and load its message catalog. Both <html lang> and the
-  // client provider read the SAME resolved locale so SSR and hydration agree.
+  // i18n (G-01): resolve the active locale (non-default profile locale →
+  // NEXT_LOCALE cookie → Accept-Language → 'ko') and load its message catalog.
+  // Both <html lang> and the client provider read the SAME resolved locale so
+  // SSR and hydration agree.
   // getMessages() reads the same getRequestConfig as the rest of next-intl.
   const locale = await resolveLocale();
   const messages = await getMessages();

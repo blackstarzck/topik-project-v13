@@ -231,7 +231,7 @@ export function LanguageForm({ userId, initialLocale }: Props) {
     try {
       // Always persist the UI locale on submit (idempotent) so the submit
       // contract stays simple and predictable.
-      await mutation.mutateAsync({ locale });
+      await mutation.mutateAsync({ locale, source: "manual" });
       setSavedLocale(locale);
       if (learningLocaleDirty || contentPrefsDirty) {
         await updateLearningSettings(userId, {
@@ -244,10 +244,11 @@ export function LanguageForm({ userId, initialLocale }: Props) {
       message.success(t("saveSuccess"));
 
       // i18n (G-01): make the new UI locale take effect immediately. The
-      // server resolver reads profiles.ui_locale first, but the just-written
-      // value may not be visible on the very next render (auth/RLS round-trip),
-      // so we also set the NEXT_LOCALE cookie as the authoritative fallback,
-      // then refresh so the server re-renders with the new locale + catalog.
+      // Server resolver reads a non-default profiles.ui_locale first, but the
+      // just-written value may not be visible on the very next render
+      // (auth/RLS round-trip), so we also set the NEXT_LOCALE cookie as the
+      // authoritative fallback, then refresh so the server re-renders with the
+      // new locale + catalog.
       if (localeChanged && typeof document !== "undefined") {
         document.cookie = `${LOCALE_COOKIE}=${locale}; path=/; max-age=${LOCALE_COOKIE_MAX_AGE}; SameSite=Lax`;
         router.refresh();

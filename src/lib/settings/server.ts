@@ -19,7 +19,7 @@ export async function getProfileSettings(
   const { data, error } = await supabase
     .from("profiles")
     .select(
-      "display_name, nickname, nationality_country_code, bio, ui_locale, notification_prefs",
+      "display_name, nickname, nationality_country_code, bio, ui_locale, ui_locale_source, notification_prefs",
     )
     .eq("id", userId)
     .maybeSingle();
@@ -32,10 +32,11 @@ export async function getProfileSettings(
   return {
     display_name: data.display_name,
     nickname: data.nickname,
-    nationality_country_code: data.nationality_country_code,
+    nationality_country_code: data.nationality_country_code ?? null,
     // Phase 7-E Task 10 — bio.
     bio: data.bio,
     ui_locale: data.ui_locale,
+    ui_locale_source: data.ui_locale_source ?? "legacy",
     notification_prefs: coerceNotificationPrefs(data.notification_prefs),
   };
 }

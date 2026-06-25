@@ -7,17 +7,16 @@ import {
   LOCALES,
 } from "../../../src/i18n/locales";
 
-// Collaborators of resolveLocale(): the authenticated profile lookup and the
-// request cookie store. Mock both so we can drive each branch of the
-// resolution order (profile → cookie → default).
 const getCurrentProfileMock = vi.fn();
 vi.mock("../../../src/lib/auth/profile", () => ({
   getCurrentProfile: () => getCurrentProfileMock(),
 }));
 
 const cookieGetMock = vi.fn();
+const headerGetMock = vi.fn();
 vi.mock("next/headers", () => ({
   cookies: async () => ({ get: (name: string) => cookieGetMock(name) }),
+  headers: async () => ({ get: (name: string) => headerGetMock(name) }),
 }));
 
 import { resolveLocale } from "../../../src/i18n/request";
@@ -45,13 +44,59 @@ describe("resolveLocale resolution order", () => {
     getCurrentProfileMock.mockReset();
     cookieGetMock.mockReset();
     cookieGetMock.mockReturnValue(undefined);
+    headerGetMock.mockReset();
+    headerGetMock.mockReturnValue(null);
   });
+
   afterEach(() => vi.clearAllMocks());
 
-  it("prefers the authenticated user's profiles.ui_locale", async () => {
-    getCurrentProfileMock.mockResolvedValue({ ui_locale: "en" });
+  it("prefers a non-default authenticated user's profiles.ui_locale", async () => {
+    getCurrentProfileMock.mockResolvedValue({
+      ui_locale: "en",
+      ui_locale_source: "manual",
+    });
     cookieGetMock.mockReturnValue({ value: "vi" });
+    headerGetMock.mockReturnValue("ko-KR,ko;q=0.9");
+
     expect(await resolveLocale()).toBe("en");
+  });
+
+  it("treats a default-source profile as unresolved and uses the locale cookie", async () => {
+    getCurrentProfileMock.mockResolvedValue({
+      ui_locale: "ko",
+      ui_locale_source: "default",
+    });
+    cookieGetMock.mockReturnValue({ value: "en" });
+    headerGetMock.mockReturnValue("vi-VN,vi;q=0.9");
+
+    expect(await resolveLocale()).toBe("en");
+  });
+
+  it("treats a default-source profile as unresolved and uses Accept-Language", async () => {
+    getCurrentProfileMock.mockResolvedValue({
+      ui_locale: "ko",
+      ui_locale_source: "default",
+    });
+    headerGetMock.mockReturnValue("vi-VN,vi;q=0.9,en-US;q=0.7");
+
+    expect(await resolveLocale()).toBe("vi");
+  });
+
+  it("does not let request hints override auto or legacy profile locales", async () => {
+    cookieGetMock.mockReturnValue({ value: "en" });
+    headerGetMock.mockReturnValue("vi-VN,vi;q=0.9");
+
+    getCurrentProfileMock.mockResolvedValueOnce({
+      ui_locale: "ko",
+      ui_locale_source: "auto",
+    });
+    await expect(resolveLocale()).resolves.toBe("ko");
+
+    getCurrentProfileMock.mockResolvedValueOnce({
+      ui_locale: "ko",
+      ui_locale_source: "legacy",
+    });
+    await expect(resolveLocale()).resolves.toBe("ko");
   });
 
   it("falls back to the NEXT_LOCALE cookie when there is no profile", async () => {
@@ -60,15 +105,20 @@ describe("resolveLocale resolution order", () => {
     expect(await resolveLocale()).toBe("vi");
   });
 
-  it("falls back to the cookie when the profile lookup throws (no session/env)", async () => {
+  it("falls back to the cookie when the profile lookup throws", async () => {
     getCurrentProfileMock.mockRejectedValue(new Error("no session"));
     cookieGetMock.mockReturnValue({ value: "en" });
     expect(await resolveLocale()).toBe("en");
   });
 
+  it("falls back to Accept-Language when there is no profile or cookie", async () => {
+    getCurrentProfileMock.mockResolvedValue(null);
+    headerGetMock.mockReturnValue("en-US,en;q=0.9");
+    expect(await resolveLocale()).toBe("en");
+  });
+
   it("falls back to the ko baseline when nothing resolves", async () => {
     getCurrentProfileMock.mockResolvedValue(null);
-    cookieGetMock.mockReturnValue(undefined);
     expect(await resolveLocale()).toBe("ko");
   });
 

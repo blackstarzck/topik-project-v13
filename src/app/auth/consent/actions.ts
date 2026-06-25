@@ -1,7 +1,13 @@
 "use server";
 
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
+import {
+  localeFromRequestHints,
+  type RequestLocaleSource,
+} from "@/i18n/detection";
+import { LOCALE_COOKIE, type Locale } from "@/i18n/locales";
 import { sanitizeAuthCompletionNext } from "@/lib/auth/completion-routes";
 import {
   getMissingRequiredProfileFields,
@@ -112,6 +118,31 @@ function logAuthCompletionRpcFailure({
   });
 }
 
+async function getRequestLocaleSeed(): Promise<{
+  locale: Locale;
+  source: RequestLocaleSource;
+} | null> {
+  let cookieLocale: string | null | undefined;
+  try {
+    const cookieStore = await cookies();
+    cookieLocale = cookieStore.get(LOCALE_COOKIE)?.value;
+  } catch {
+    cookieLocale = null;
+  }
+
+  let acceptLanguage: string | null | undefined;
+  try {
+    const headerStore = await headers();
+    acceptLanguage = headerStore.get("accept-language");
+  } catch {
+    acceptLanguage = null;
+  }
+
+  const hint = localeFromRequestHints({ cookieLocale, acceptLanguage });
+  if (!hint.locale || !hint.source) return null;
+  return { locale: hint.locale, source: hint.source };
+}
+
 export async function completeAuthGateAction(formData: FormData) {
   const next = sanitizeAuthCompletionNext(
     formData.get("next")?.toString(),
@@ -141,9 +172,39 @@ export async function completeAuthGateAction(formData: FormData) {
 
   const supabase = await createSupabaseServerClient();
   const createClient = async () => supabase;
+  let localeForDocuments = profile.ui_locale;
+  if (profile.ui_locale_source === "default") {
+    const localeSeed = await getRequestLocaleSeed();
+    if (localeSeed) {
+      const { error: localeSeedError } = await supabase
+        .from("profiles")
+        .update({
+          ui_locale: localeSeed.locale,
+          ui_locale_source: localeSeed.source,
+        })
+        .eq("id", user.id)
+        .eq("ui_locale_source", "default");
+
+      if (localeSeedError) {
+        const candidate =
+          typeof localeSeedError === "object" && localeSeedError
+            ? (localeSeedError as SupabaseRpcErrorLike)
+            : {};
+        console.error("auth_consent_locale_seed_failed", {
+          code: candidate.code,
+          message: candidate.message,
+          route: "/auth/consent",
+        });
+        redirect(buildConsentRetryPath(next, "save-failed"));
+      }
+
+      localeForDocuments = localeSeed.locale;
+    }
+  }
+
   const missingDocuments = await getMissingRequiredConsentDocuments(
     user.id,
-    profile.ui_locale,
+    localeForDocuments,
     createClient,
   );
   const acceptRequiredConsents = missingDocuments.length > 0;

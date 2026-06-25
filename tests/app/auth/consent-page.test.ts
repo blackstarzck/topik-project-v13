@@ -9,4 +9,13 @@ describe("/auth/consent page", () => {
     expect(source).not.toMatch(/from\s+["']antd["']/);
     expect(source).toContain("AuthConsentPanel");
   });
+
+  it("loads consent documents with the same effective locale used for rendering", () => {
+    const source = readFileSync("src/app/auth/consent/page.tsx", "utf8");
+
+    expect(source).toContain("resolveLocaleForProfile");
+    expect(source).toContain("const consentLocale = await resolveLocaleForProfile(profile)");
+    expect(source).toContain("getMissingRequiredConsentDocuments(\n    user.id,\n    consentLocale,");
+    expect(source).not.toContain("getMissingRequiredConsentDocuments(\n    user.id,\n    profile.ui_locale,");
+  });
 });

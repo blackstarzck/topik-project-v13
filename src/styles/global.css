@@ -6037,12 +6037,8 @@ body {
   font-size: 14px;
 }
 
-/* B-01 일정/알림 보조 영역 — 대시보드 카드 안의 알림 피드 행 */
+/* B-01 공지사항 보조 영역 — 대시보드 카드 안의 공지 피드 행 */
 .dashboard-alerts-card .ant-card-head-title {
-  font-size: 14px;
-}
-
-.dashboard-alerts-card .ant-card-extra .ant-btn {
   font-size: 14px;
 }
 

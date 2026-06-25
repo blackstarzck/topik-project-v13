@@ -128,16 +128,27 @@ export async function fetchUnreadNotificationCount(
   return res.count ?? 0;
 }
 
+export type FetchNotificationsOptions = {
+  category?: NotificationCategory;
+};
+
 export async function fetchNotifications(
   userId: string,
   limit = 20,
+  options: FetchNotificationsOptions = {},
 ): Promise<UserNotification[]> {
   const supabase = createSupabaseBrowserClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const res = (await (supabase as any)
+  let query = (supabase as any)
     .from("user_notifications")
     .select("*")
-    .eq("user_id", userId)
+    .eq("user_id", userId);
+
+  if (options.category) {
+    query = query.eq("category", options.category);
+  }
+
+  const res = (await query
     .order("created_at", { ascending: false })
     .limit(limit)) as {
     data: UserNotification[] | null;

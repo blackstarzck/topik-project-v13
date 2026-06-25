@@ -8,7 +8,6 @@ import {
 } from "@/components/dashboard/DashboardBody";
 import { AuthIdentityNotice } from "@/components/auth/AuthIdentityNotice";
 import type { RecentFeedbackItem } from "@/components/learning/RecentFeedbackCard";
-import type { DashboardAlertItem } from "@/components/dashboard/DashboardAlertsCard";
 import type { DashboardPrimary, DashboardAlternative } from "@/components/dashboard/DashboardRecommendations";
 import { WorkspaceBody } from "@/components/app/WorkspaceBody";
 import { requireUser } from "@/lib/auth/session";
@@ -23,8 +22,6 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t("metaTitle") };
 }
 
-const DAY_MS = 1000 * 60 * 60 * 24;
-
 type ContinueDraftProblemJoin = {
   title: string;
   question_no: number | null;
@@ -36,11 +33,6 @@ type ContinueDraftQueryRow = {
   last_saved_at: string | null;
   problems: ContinueDraftProblemJoin | ContinueDraftProblemJoin[] | null;
 };
-
-function getExamDday(examDate: string, nowMs: number): number {
-  const examMs = new Date(examDate).getTime();
-  return Math.ceil((examMs - nowMs) / DAY_MS);
-}
 
 // 요청 시점의 현재 시각(ms). 컴포넌트 렌더 본문에서 Date.now()를 직접 부르면
 // purity 규칙에 걸리므로(불순 함수), 별도 헬퍼로 분리해 한 번만 읽는다.
@@ -71,7 +63,6 @@ function toDashboardContinueDraft(
 }
 
 export default async function DashboardPage() {
-  const t = await getTranslations("dashboard.page");
   const user = await requireUser();
   const goal = await getLearningGoal(user.id);
   if (!goal) redirect("/onboarding/learning-goal");
@@ -153,39 +144,7 @@ export default async function DashboardPage() {
     })),
   });
 
-  // area 4 — in-app alerts. 로드 실패는 try/catch 로 감지해 재시도/설정 CTA.
-  const alerts: DashboardAlertItem[] = [];
-  let alertsLoadFailed = false;
   const nowMs = getRequestNowMs();
-  if (goal.exam_date) {
-    const dDay = getExamDday(goal.exam_date, nowMs);
-    if (dDay >= 0 && dDay <= 30) {
-      alerts.push({
-        id: "exam-dday",
-        level: dDay <= 7 ? "warning" : "info",
-        title: t("examDdayTitle", { days: dDay }),
-        description: t("examDdayDescription", { days: dDay }),
-      });
-    }
-  }
-  try {
-    const { count: dirtyDraftCount, error } = await supabase
-      .from("writing_drafts")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", user.id)
-      .eq("autosave_status", "dirty");
-    if (error) throw error;
-    if ((dirtyDraftCount ?? 0) > 0) {
-      alerts.push({
-        id: "dirty-drafts",
-        level: "info",
-        title: t("dirtyDraftsTitle"),
-        description: t("dirtyDraftsDescription", { count: dirtyDraftCount ?? 0 }),
-      });
-    }
-  } catch {
-    alertsLoadFailed = true;
-  }
 
   const kpiData = {
     todayAttempts: kpi.todayAttempts,
@@ -208,8 +167,6 @@ export default async function DashboardPage() {
         continueDraft={continueDraft}
         alternatives={alternatives}
         recentFeedbacks={recentFeedbacks}
-        alerts={alerts}
-        alertsLoadFailed={alertsLoadFailed}
       />
     </WorkspaceBody>
   );

@@ -112,8 +112,16 @@ function setUserAgent(userAgent: string) {
   });
 }
 
+function clearLocaleCookie() {
+  document.cookie =
+    "NEXT_LOCALE=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+  document.cookie =
+    "NEXT_LOCALE=; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+}
+
 beforeEach(() => {
   window.history.replaceState(null, "", "http://localhost:3000/sign-up");
+  clearLocaleCookie();
   setUserAgent(
     "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Version/17.0 Mobile/15E148 Safari/604.1",
   );
@@ -134,6 +142,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  clearLocaleCookie();
   cleanup();
   vi.unstubAllEnvs();
 });
@@ -249,10 +258,67 @@ describe("SignUpForm", () => {
     expect(call.options.data).toEqual({
       display_name: "홍길동",
       nationality_country_code: "VN",
+      ui_locale: "ko",
+      ui_locale_source: "auto",
     });
     // Phase 8-D: emailRedirectTo now points to /auth/callback?next=...
     expect(call.options.emailRedirectTo).toBe(
       "https://talkpik.example.com/auth/callback?next=/onboarding/learning-goal",
+    );
+  });
+
+  it("stores the rendered locale as an auto-detected sign-up locale", async () => {
+    renderInApp(<SignUpForm />, { locale: "en" });
+
+    await fillValidName();
+    await selectCountryRegion("Vietnam");
+    await fillValidEmail("english-locale@example.com");
+    await fillValidPassword();
+    fireEvent.click(screen.getByRole("checkbox"));
+    await waitFor(() => {
+      expect(submitButton().disabled).toBe(false);
+    });
+
+    await act(async () => {
+      fireEvent.click(submitButton());
+    });
+
+    await waitFor(() => {
+      expect(signUpMock).toHaveBeenCalledTimes(1);
+    });
+    expect(signUpMock.mock.calls[0][0].options.data).toEqual(
+      expect.objectContaining({
+        ui_locale: "en",
+        ui_locale_source: "auto",
+      }),
+    );
+  });
+
+  it("marks sign-up locale metadata as manual when the locale cookie exists", async () => {
+    document.cookie = "NEXT_LOCALE=en; path=/; max-age=3600";
+    renderInApp(<SignUpForm />, { locale: "en" });
+
+    await fillValidName();
+    await selectCountryRegion("Vietnam");
+    await fillValidEmail("manual-locale@example.com");
+    await fillValidPassword();
+    fireEvent.click(screen.getByRole("checkbox"));
+    await waitFor(() => {
+      expect(submitButton().disabled).toBe(false);
+    });
+
+    await act(async () => {
+      fireEvent.click(submitButton());
+    });
+
+    await waitFor(() => {
+      expect(signUpMock).toHaveBeenCalledTimes(1);
+    });
+    expect(signUpMock.mock.calls[0][0].options.data).toEqual(
+      expect.objectContaining({
+        ui_locale: "en",
+        ui_locale_source: "manual",
+      }),
     );
   });
 
@@ -273,6 +339,8 @@ describe("SignUpForm", () => {
       affiliation_code: "EXPO2026-BOOTH-A",
       display_name: "홍길동",
       nationality_country_code: "VN",
+      ui_locale: "ko",
+      ui_locale_source: "auto",
     });
     await waitFor(() => {
       expect(readStoredAffiliationCode()).toBeNull();

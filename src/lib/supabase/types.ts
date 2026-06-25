@@ -58,6 +58,7 @@ export interface Database {
           nickname: string | null;
           avatar_path: string | null;
           ui_locale: "ko" | "en" | "vi";
+          ui_locale_source: "legacy" | "default" | "auto" | "manual";
           app_role:
             | "learner"
             | "content_admin"
@@ -85,6 +86,7 @@ export interface Database {
           nickname?: string | null;
           avatar_path?: string | null;
           ui_locale?: "ko" | "en" | "vi";
+          ui_locale_source?: "legacy" | "default" | "auto" | "manual";
           app_role?:
             | "learner"
             | "content_admin"
@@ -108,6 +110,7 @@ export interface Database {
           nickname?: string | null;
           avatar_path?: string | null;
           ui_locale?: "ko" | "en" | "vi";
+          ui_locale_source?: "legacy" | "default" | "auto" | "manual";
           app_role?:
             | "learner"
             | "content_admin"

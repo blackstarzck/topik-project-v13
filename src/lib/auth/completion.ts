@@ -5,6 +5,7 @@ import type {
   AuthCompletionStatus,
   LandingAuthStatus,
 } from "@/lib/auth/completion-routes";
+import { resolveLocaleForProfile } from "@/i18n/request";
 import { hasCompletedRequiredProfile } from "@/lib/auth/profile-completion";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getMissingRequiredConsentDocuments } from "@/lib/legal/consent";
@@ -25,9 +26,10 @@ export async function hasCompletedRequiredConsent({
   user,
   profile,
 }: AuthenticatedSession): Promise<boolean> {
+  const consentLocale = await resolveLocaleForProfile(profile);
   const missingDocuments = await getMissingRequiredConsentDocuments(
     user.id,
-    profile.ui_locale,
+    consentLocale,
   );
   return missingDocuments.length === 0;
 }

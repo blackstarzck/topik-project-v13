@@ -64,7 +64,7 @@ export async function updateLocale(
   const supabase = createClient();
   const { error } = await supabase
     .from("profiles")
-    .update({ ui_locale: input.locale })
+    .update({ ui_locale: input.locale, ui_locale_source: input.source })
     .eq("id", userId);
   if (error) throw error;
 }

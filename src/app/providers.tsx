@@ -37,7 +37,8 @@ interface AppProvidersProps {
   initialAppearance?: ThemeAppearance;
   /**
    * i18n (G-01): the active locale + its message catalog, both resolved
-   * server-side (profiles.ui_locale → NEXT_LOCALE cookie → 'ko'). Wrapping the
+   * server-side (non-default profile locale → NEXT_LOCALE cookie →
+   * Accept-Language → 'ko'). Wrapping the
    * tree in NextIntlClientProvider here — INSIDE the client AppProviders rather
    * than the root-layout RSC — keeps the layout JSX tree unchanged (the
    * layout-hydration test navigates html→body→AntdRegistry→AppProviders).

@@ -754,13 +754,13 @@
       "quickGoalDesc": "Adjust target grade and plan"
     },
     "alerts": {
-      "cardTitle": "Alerts",
+      "cardTitle": "Notices",
       "settingsLink": "Alert settings",
-      "loadFailedMessage": "Couldn't load alerts.",
-      "loadFailedDescription": "Please try again in a moment or check your alert settings.",
+      "loadFailedMessage": "Couldn't load notices.",
+      "loadFailedDescription": "Please try again in a moment.",
       "retry": "Retry",
       "goToSettings": "Go to alert settings",
-      "empty": "No new alerts.",
+      "empty": "No new notices.",
       "category": {
         "study": "Study",
         "examSchedule": "Exam schedule",

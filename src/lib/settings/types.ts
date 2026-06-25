@@ -1,3 +1,7 @@
+import type { UiLocaleSource } from "@/i18n/detection";
+
+export type { UiLocaleSource };
+
 /**
  * Phase 6 · Settings domain types.
  *
@@ -33,11 +37,13 @@ export interface ProfileSettings {
   // Phase 7-E Task 10 (P1-6) — self-introduction up to 160 chars (nullable).
   bio: string | null;
   ui_locale: "ko" | "en" | "vi";
+  ui_locale_source: UiLocaleSource;
   notification_prefs: NotificationPrefs;
 }
 
 export interface UpdateLocaleInput {
   locale: "ko" | "en" | "vi";
+  source: Extract<UiLocaleSource, "manual">;
 }
 
 export interface UpdateProfileInput {

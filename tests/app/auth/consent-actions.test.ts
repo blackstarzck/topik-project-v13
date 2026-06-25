@@ -6,9 +6,16 @@ const redirectMock = vi.fn((url: string) => {
 const requireActiveSessionMock = vi.fn();
 const createSupabaseServerClientMock = vi.fn();
 const getMissingRequiredConsentDocumentsMock = vi.fn();
+const cookieGetMock = vi.fn();
+const headerGetMock = vi.fn();
 
 vi.mock("next/navigation", () => ({
   redirect: (url: string) => redirectMock(url),
+}));
+
+vi.mock("next/headers", () => ({
+  cookies: async () => ({ get: (name: string) => cookieGetMock(name) }),
+  headers: async () => ({ get: (name: string) => headerGetMock(name) }),
 }));
 
 vi.mock("@/lib/auth/profile", () => ({
@@ -33,6 +40,7 @@ const completeProfile = {
   nickname: "talkpik-abc123",
   status: "active",
   ui_locale: "ko",
+  ui_locale_source: "manual",
 };
 
 function makeForm(entries: Record<string, string>) {
@@ -58,6 +66,10 @@ describe("completeAuthGateAction", () => {
     });
     getMissingRequiredConsentDocumentsMock.mockReset();
     getMissingRequiredConsentDocumentsMock.mockResolvedValue([]);
+    cookieGetMock.mockReset();
+    cookieGetMock.mockReturnValue(undefined);
+    headerGetMock.mockReset();
+    headerGetMock.mockReturnValue(null);
     createSupabaseServerClientMock.mockReset();
     createSupabaseServerClientMock.mockResolvedValue({
       rpc: vi.fn().mockResolvedValue({ data: null, error: null }),
@@ -123,6 +135,58 @@ describe("completeAuthGateAction", () => {
       p_display_name: "민준",
       p_nationality_country_code: "KR",
       p_nickname: "talkpik-min",
+    });
+  });
+
+  it("seeds a default-source profile locale from Accept-Language before completing auth", async () => {
+    const rpc = vi.fn().mockResolvedValue({ data: null, error: null });
+    const eqCalls: Array<[string, string]> = [];
+    const update = vi.fn(() => ({
+      eq: (column: string, value: string) => {
+        eqCalls.push([column, value]);
+        return {
+          eq: (nextColumn: string, nextValue: string) => {
+            eqCalls.push([nextColumn, nextValue]);
+            return Promise.resolve({ data: null, error: null });
+          },
+        };
+      },
+    }));
+    const from = vi.fn(() => ({ update }));
+    createSupabaseServerClientMock.mockResolvedValueOnce({ from, rpc });
+    requireActiveSessionMock.mockResolvedValueOnce({
+      user: { id: "user-1" },
+      profile: {
+        ...completeProfile,
+        ui_locale: "ko",
+        ui_locale_source: "default",
+      },
+    });
+    headerGetMock.mockReturnValue("vi-VN,vi;q=0.9,en-US;q=0.7");
+
+    await expect(
+      completeAuthGateAction(makeForm({ next: "/dashboard" })),
+    ).rejects.toThrow("NEXT_REDIRECT:/dashboard");
+
+    expect(from).toHaveBeenCalledWith("profiles");
+    expect(update).toHaveBeenCalledWith({
+      ui_locale: "vi",
+      ui_locale_source: "auto",
+    });
+    expect(eqCalls).toEqual([
+      ["id", "user-1"],
+      ["ui_locale_source", "default"],
+    ]);
+    expect(getMissingRequiredConsentDocumentsMock).toHaveBeenCalledWith(
+      "user-1",
+      "vi",
+      expect.any(Function),
+    );
+    expect(rpc).toHaveBeenCalledWith("complete_auth_gate", {
+      p_accept_required_consents: false,
+      p_display_name: null,
+      p_nationality_country_code: null,
+      p_nickname: null,
     });
   });
 
