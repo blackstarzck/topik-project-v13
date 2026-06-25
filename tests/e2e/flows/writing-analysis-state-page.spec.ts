@@ -33,6 +33,20 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SERVICE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
 const RUN_TOKEN = `analysis-page-state-${randomUUID()}`;
+const analysisMessages = (
+  JSON.parse(
+    readFileSync(path.join(process.cwd(), "messages", "ko.json"), "utf8"),
+  ) as {
+    feedback: {
+      analysis: {
+        title: string;
+        subtitle: string;
+        expectedTime: string;
+        slowTitle: string;
+      };
+    };
+  }
+).feedback.analysis;
 
 function serviceClient() {
   if (!SUPABASE_URL || !SERVICE_KEY) {
@@ -120,14 +134,12 @@ test("writing submit keeps analysis state above the read-only answer", async ({
   await expect(page.getByTestId("analysis-loading-modal")).toHaveCount(0);
   await expect(page.getByTestId("analysis-state-card")).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "AI 분석 중..." }),
+    page.getByRole("heading", { name: analysisMessages.title }),
   ).toBeVisible();
   await expect(page.getByTestId("analysis-loading-background")).toHaveCount(0);
-  await expect(page.getByText(/제출한 답안을 잠시/)).toHaveCount(0);
-  await expect(page.getByText("예상 소요 시간 8~15초")).toHaveCount(0);
-  await expect(
-    page.getByText("분석이 평소보다 오래 걸리고 있어요"),
-  ).toHaveCount(0);
+  await expect(page.getByText(analysisMessages.subtitle)).toBeVisible();
+  await expect(page.getByText(analysisMessages.expectedTime)).toBeVisible();
+  await expect(page.getByText(analysisMessages.slowTitle)).toHaveCount(0);
 
   const assetSrc = await page
     .getByTestId("analysis-state-asset")
