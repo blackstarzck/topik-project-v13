@@ -59,6 +59,21 @@ Codex와 모든 AI 에이전트는 이 문서를 프로젝트 작업 계약으�
 - 중요한 결정, 실패, 실험 결과는 기존 기록 체계에 맞춰 남긴다. 예: `docs/superpowers/plans/`, `docs/qa/reports/`, `supabase/migrations/INDEX.md`, 관련 active docs의 Decision/History 섹션.
 - 작업후 반드시 인사이트를 제공한다. 인사이트는 반드시 웹, 커뮤니티등 조사를 통해 팩트 체크가된 객관적인 사실이어야 한다. 추측은 금지한다. 근거를 웹 링크로 명시한다.
 
+## 병렬 작업과 worktree 격리
+
+이 저장소에서 병렬 AI 작업의 최우선 규칙은 `한 작업/세션 = 한 branch = 한 worktree`다.
+
+- 여러 Codex/Claude/AI 세션이 같은 프로젝트 폴더에서 동시에 파일을 수정하면 안 된다. 같은 폴더는 현재 branch, index, 미커밋 변경을 공유하므로 한 세션의 branch switch가 다른 세션을 즉시 오염시킨다.
+- 병렬로 실행되는 모든 쓰기 작업은 반드시 독립된 git worktree에서 진행한다. 기준 폴더 `v13`은 가능하면 `main` 기준 확인, 통합, 전체 검증용으로 유지한다.
+- Codex Desktop에서는 새 병렬 작업을 시작할 때 Codex의 Worktree 모드 또는 Handoff를 우선 사용한다. 앱이 이미 worktree를 관리 중이면 그 안에서 다시 중첩 worktree를 만들지 않는다.
+- 수동으로 만들 때는 기준 폴더에서 `git worktree add <path> -b <branch> main` 형태를 사용하고, 작업 세션은 생성된 `<path>`에서만 실행한다.
+- worktree 경로와 branch 이름은 작업을 식별할 수 있게 짓는다. 예: `../v13-practice-filter` + `codex/practice-filter`, `../v13-auth-redirect` + `codex/auth-redirect`.
+- 병렬 작업 중 공유 기준 폴더에서 `git switch`, `git checkout`, `git reset`, `git rebase`, `git merge`를 실행해 다른 세션의 기반을 흔들지 않는다. 통합 작업은 병렬 세션의 상태를 확인한 뒤 한 번에 하나씩 진행한다.
+- 작업 시작 전 `pwd`, `git branch --show-current`, `git status`, 필요하면 `git worktree list`로 현재 위치와 branch를 확인한다. 예상한 worktree가 아니면 수정하지 말고 먼저 위치를 바로잡는다.
+- 작업 완료 후에는 해당 worktree에서 테스트와 diff를 확인하고 commit 또는 PR 단위로 정리한다. 병합은 기준 폴더에서 최신 `main`을 기준으로 작업 branch를 하나씩 통합한다.
+- 완료된 worktree는 변경이 commit/merge된 뒤 `git worktree remove <path>`로 정리한다. 폴더만 직접 삭제한 경우 `git worktree prune`으로 stale metadata를 정리한다.
+- worktree는 코드 파일을 격리하지만 포트, 로컬 DB, Supabase 테스트 데이터, `.env.local`, dev server 같은 런타임 자원은 자동으로 격리하지 않는다. 병렬 runtime 검증이 필요하면 포트와 데이터 자원 충돌을 별도로 피한다.
+
 ## 구현 규칙
 
 - Next.js App Router 구조와 `src/app/` route tree를 따른다.
