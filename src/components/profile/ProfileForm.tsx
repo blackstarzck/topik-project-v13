@@ -14,6 +14,7 @@ import {
   NicknameTakenError,
   useUpdateProfile,
 } from "@/lib/settings/mutations";
+import { NICKNAME_CHECK_DEBOUNCE_MS } from "@/lib/request-control/policies";
 import {
   AvatarError,
   avatarPublicUrl,
@@ -26,7 +27,6 @@ import {
 const { Paragraph, Text } = Typography;
 
 const PROFILE_NAME_MIN_LENGTH = 2;
-const NICKNAME_CHECK_DEBOUNCE_MS = 500;
 
 type NicknameAvailability =
   | "idle"

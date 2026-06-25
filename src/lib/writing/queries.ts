@@ -1,6 +1,10 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  ANALYSIS_POLL_INTERVAL_MS,
+  ANALYSIS_POLL_MAX_ATTEMPTS,
+} from "../request-control/policies";
 import { createSupabaseBrowserClient } from "../supabase/browser";
 import {
   isFeedbackComplete,
@@ -128,8 +132,8 @@ export function useDraft(userId: string, problemId: string) {
   });
 }
 
-export const FEEDBACK_STATUS_POLL_INTERVAL_MS = 10000;
-export const FEEDBACK_STATUS_POLL_MAX_ATTEMPTS = 6;
+export const FEEDBACK_STATUS_POLL_INTERVAL_MS = ANALYSIS_POLL_INTERVAL_MS;
+export const FEEDBACK_STATUS_POLL_MAX_ATTEMPTS = ANALYSIS_POLL_MAX_ATTEMPTS;
 
 export function getFeedbackStatusRefetchInterval(
   status: FeedbackStatus | null | undefined,

@@ -9,6 +9,7 @@ import { useMemo } from "react";
 import { AppCard } from "@/components/shared/AppCard";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { isValidQuestionNo, type QuestionNo } from "@/lib/practice/types";
+import { useSingleFlightAction } from "@/lib/request-control/useSingleFlightAction";
 import { ProblemTypeTabs } from "./ProblemTypeTabs";
 import {
   PrimaryRecommendationCard,
@@ -219,6 +220,7 @@ export function RecommendationsView() {
   }, [params]);
 
   const bundle = useRecommendationBundle(active);
+  const retry = useSingleFlightAction(() => bundle.refetch());
 
   function updateType(next: QuestionNo | null) {
     const search = new URLSearchParams(params.toString());
@@ -289,7 +291,12 @@ export function RecommendationsView() {
             title={t("loadErrorTitle")}
             description={t("loadErrorDescription")}
             action={
-              <Button size="small" onClick={() => bundle.refetch()}>
+              <Button
+                size="small"
+                loading={retry.pending}
+                disabled={retry.pending}
+                onClick={() => void retry.run()}
+              >
                 {t("retry")}
               </Button>
             }

@@ -130,6 +130,7 @@ export function AuthErrorCard() {
     content.hasCountdown && remaining !== null && remaining > 0;
 
   async function handleResend() {
+    if (resending || primaryDisabled) return;
     const trimmed = emailValue.trim();
     if (!trimmed) {
       message.warning(t("emailRequiredWarning"));
@@ -172,7 +173,7 @@ export function AuthErrorCard() {
   }
 
   function handlePrimaryClick(cta: AuthErrorCta) {
-    if (primaryDisabled) return;
+    if (primaryDisabled || resending) return;
     if (cta.kind === "resend") {
       void handleResend();
       return;
@@ -216,7 +217,7 @@ export function AuthErrorCard() {
           <Button
             type="primary"
             block
-            disabled={primaryDisabled}
+            disabled={primaryDisabled || resending}
             loading={resending}
             onClick={() => handlePrimaryClick(content.primary)}
             data-testid="auth-error-primary"

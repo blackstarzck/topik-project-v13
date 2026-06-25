@@ -259,6 +259,27 @@ describe("RecommendationsView", () => {
     ).toBeTruthy();
   });
 
+  it("runs the failed-load retry only once while the retry action is pending", () => {
+    const pending = new Promise<void>(() => undefined);
+    const refetch = vi.fn(() => pending);
+    mocks.useRecommendationBundle.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: new Error("recommendation_request_timeout"),
+      refetch,
+    });
+
+    renderWithIntl(<RecommendationsView />);
+
+    const retry = screen.getByRole("button", {
+      name: koMessages.practice.recommendations.retry,
+    });
+    fireEvent.click(retry);
+    fireEvent.click(retry);
+
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
   it("renders skeleton placeholders instead of spinner copy while recommendations load", () => {
     mocks.useRecommendationBundle.mockReturnValue({
       data: undefined,

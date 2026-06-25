@@ -12,6 +12,7 @@ import {
 } from "antd";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useFormStatus } from "react-dom";
 
 import {
   CountryRegionSelect,
@@ -26,10 +27,10 @@ import {
   type RequiredProfileShape,
 } from "@/lib/auth/profile-completion";
 import { sanitizeLegalDocumentHtml } from "@/lib/legal/html";
+import { NICKNAME_CHECK_DEBOUNCE_MS } from "@/lib/request-control/policies";
 import { checkNicknameAvailability } from "@/lib/settings/mutations";
 
 const { Paragraph, Text, Title } = Typography;
-const NICKNAME_CHECK_DEBOUNCE_MS = 500;
 
 export type AuthConsentPanelDocument = {
   id: string;
@@ -62,6 +63,28 @@ type NicknameAvailability =
   | "taken"
   | "failed";
 type FormValidateStatus = "success" | "warning" | "error" | "validating";
+
+function ConsentSubmitButton({
+  disabled,
+  label,
+}: {
+  disabled: boolean;
+  label: string;
+}) {
+  const { pending } = useFormStatus();
+
+  return (
+    <Button
+      type="primary"
+      htmlType="submit"
+      block
+      loading={pending}
+      disabled={disabled || pending}
+    >
+      {label}
+    </Button>
+  );
+}
 
 export function AuthConsentPanel({
   action,
@@ -303,17 +326,13 @@ export function AuthConsentPanel({
               </section>
             ) : null}
 
-            <Button
-              type="primary"
-              htmlType="submit"
-              block
+            <ConsentSubmitButton
+              label={t("submit")}
               disabled={
                 nicknameAvailability === "checking" ||
                 nicknameAvailability === "taken"
               }
-            >
-              {t("submit")}
-            </Button>
+            />
           </Flex>
         </form>
       </Flex>

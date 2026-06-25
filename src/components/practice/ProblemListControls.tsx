@@ -8,6 +8,7 @@ import type {
   ProblemSort,
   SolveStatusFilter,
 } from "@/lib/practice/types";
+import { SEARCH_DEBOUNCE_MS } from "@/lib/request-control/policies";
 import { validateSearch, type SearchReasonKey } from "./problem-list-data";
 
 const { Text } = Typography;
@@ -46,7 +47,7 @@ export function ProblemListControls({
       if ((filter.search ?? "") !== result.value) {
         onFilterChange({ ...filter, search: result.value });
       }
-    }, 300);
+    }, SEARCH_DEBOUNCE_MS);
     return () => window.clearTimeout(handle);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchInput]);

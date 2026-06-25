@@ -2,13 +2,13 @@
 
 import { App, Button } from "antd";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
 
 import { exportPdfWithPrintFallback } from "@/lib/export/pdf-export-client";
 import {
   PDF_EXPORT_DEFAULT_OPTIONS,
   type PdfExportRequest,
 } from "@/lib/export/pdf-options";
+import { useSingleFlightAction } from "@/lib/request-control/useSingleFlightAction";
 
 type Props = {
   sourceType: "submission" | "report";
@@ -96,7 +96,6 @@ export function ExportPdfButton({
 }: Props) {
   const t = useTranslations("library.exportButton");
   const { message } = App.useApp();
-  const [pending, setPending] = useState(false);
   const resolvedLabel = label ?? t("label");
 
   const handler = createExportPdfHandler(
@@ -125,25 +124,17 @@ export function ExportPdfButton({
     },
   );
 
-  async function handleClick() {
-    if (disabled) return;
-    setPending(true);
-    try {
-      await handler();
-    } finally {
-      setPending(false);
-    }
-  }
+  const exportAction = useSingleFlightAction(handler);
 
   return (
     <Button
       type={buttonType}
-      loading={pending}
-      disabled={disabled}
-      onClick={handleClick}
+      loading={exportAction.pending}
+      disabled={disabled || exportAction.pending}
+      onClick={() => void exportAction.run()}
       aria-label={resolvedLabel}
     >
-      {pending ? t("exporting") : resolvedLabel}
+      {exportAction.pending ? t("exporting") : resolvedLabel}
     </Button>
   );
 }

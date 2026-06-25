@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, screen, waitFor, act } from "@testing-library/react";
 
 import koMessages from "../../../messages/ko.json";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
@@ -49,7 +49,10 @@ beforeEach(() => {
   });
 });
 
-afterEach(() => cleanup());
+afterEach(() => {
+  vi.useRealTimers();
+  cleanup();
+});
 
 function renderEditor() {
   renderWithIntl(
@@ -63,6 +66,39 @@ function renderEditor() {
 }
 
 describe("WritingEditor submit flow", () => {
+  it("submits with the draft id returned by autosave when the editor started without a draft", async () => {
+    vi.useFakeTimers();
+    helpers.upsertMutateMock.mockImplementation((_input, options) => {
+      options?.onSuccess?.({
+        id: "draft-from-autosave",
+        last_saved_at: "2026-06-25T00:00:00.000Z",
+      });
+    });
+    renderEditor();
+
+    fireEvent.change(
+      screen.getByPlaceholderText(koMessages.writing.editor.placeholderShort),
+      { target: { value: "1234567890" } },
+    );
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(2000);
+    });
+    vi.useRealTimers();
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: koMessages.writing.editor.submit,
+      }),
+    );
+    fireEvent.click(await screen.findByTestId("submission-confirm-submit"));
+
+    expect(helpers.submitMutateMock).toHaveBeenCalledWith(
+      expect.objectContaining({ draft_id: "draft-from-autosave" }),
+      expect.any(Object),
+    );
+  });
+
   it("shows page-level D-M2 analysis UI after submit succeeds", async () => {
     renderEditor();
 

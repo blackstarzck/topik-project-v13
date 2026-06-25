@@ -166,6 +166,7 @@ export function VerifyEmailCard() {
   }, [emailValue, emailFromQuery]);
 
   async function handleResend() {
+    if (resending) return;
     const trimmed = emailValue.trim();
     if (!trimmed) {
       message.warning(t("emailRequiredWarning"));
@@ -287,7 +288,7 @@ export function VerifyEmailCard() {
           type="primary"
           size="large"
           block
-          disabled={cooldownRemaining > 0}
+          disabled={cooldownRemaining > 0 || resending}
           loading={resending}
           onClick={() => void handleResend()}
           icon={<SendHorizontal aria-hidden="true" />}

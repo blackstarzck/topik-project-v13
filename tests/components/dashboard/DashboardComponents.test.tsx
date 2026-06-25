@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  act,
   cleanup,
   fireEvent,
   screen,
@@ -66,6 +67,7 @@ function getContinueCard() {
 }
 
 afterEach(() => {
+  vi.useRealTimers();
   cleanup();
 });
 
@@ -309,6 +311,24 @@ describe("DashboardAlertsCard", () => {
     });
     expect(screen.getByText(dashboard.alerts.retry)).toBeTruthy();
     expect(screen.queryByText(dashboard.alerts.goToSettings)).toBeNull();
+  });
+
+  it("runs the failed-load retry only once while the retry action is pending", async () => {
+    vi.useFakeTimers();
+    renderWithIntl(<DashboardAlertsCard userId="user-1" loadFailed />);
+    const retry = screen.getByRole("button", {
+      name: dashboard.alerts.retry,
+    });
+
+    fireEvent.click(retry);
+    fireEvent.click(retry);
+
+    expect(routerRefreshMock).toHaveBeenCalledTimes(1);
+    expect(retry).toHaveProperty("disabled", true);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1200);
+    });
   });
 
   it("renders latest notices without duplicating study or exam notifications", async () => {

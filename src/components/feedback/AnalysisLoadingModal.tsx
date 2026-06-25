@@ -11,6 +11,8 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 
+import { MANUAL_RETRY_COOLDOWN_MS } from "@/lib/request-control/policies";
+import { useSingleFlightAction } from "@/lib/request-control/useSingleFlightAction";
 import { APP_ROUTES } from "@/lib/routes";
 
 const { Paragraph, Text, Title } = Typography;
@@ -135,6 +137,10 @@ export function AnalysisLoadingPage({
     router.push(APP_ROUTES.library);
   }
 
+  const retry = useSingleFlightAction(() => onRetry?.(), {
+    cooldownMs: MANUAL_RETRY_COOLDOWN_MS,
+  });
+
   const isFailed = status === "failed";
   const isHandoff = status === "complete";
   const pageActions = isFailed ? (
@@ -143,7 +149,9 @@ export function AnalysisLoadingPage({
         <Button
           type="primary"
           icon={<RefreshCcw aria-hidden size={16} />}
-          onClick={onRetry}
+          loading={retry.pending}
+          disabled={retry.pending}
+          onClick={() => void retry.run()}
           data-testid="analysis-loading-retry"
         >
           {t("retryButton")}

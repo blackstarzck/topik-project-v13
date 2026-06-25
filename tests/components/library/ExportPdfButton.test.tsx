@@ -1,7 +1,20 @@
-import { describe, expect, it, vi } from "vitest";
+// @vitest-environment jsdom
+import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { createExportPdfHandler } from "../../../src/components/library/ExportPdfButton";
+import {
+  createExportPdfHandler,
+  ExportPdfButton,
+} from "../../../src/components/library/ExportPdfButton";
 import koMessages from "../../../messages/ko.json";
+import { renderWithIntl } from "../../test-utils/renderWithIntl";
+
+const exportPdfWithPrintFallbackMock = vi.hoisted(() => vi.fn());
+
+vi.mock("@/lib/export/pdf-export-client", () => ({
+  exportPdfWithPrintFallback: (...args: unknown[]) =>
+    exportPdfWithPrintFallbackMock(...args),
+}));
 
 /**
  * `ExportPdfButton` is a thin shell around the server-PDF export pipeline
@@ -24,6 +37,11 @@ import koMessages from "../../../messages/ko.json";
 const DOWNLOADED_KO = koMessages.library.exportButton.downloaded;
 const FALLBACK_PRINT_KO = koMessages.library.exportButton.fallbackPrint;
 const ERROR_KO = koMessages.library.exportButton.exportFailed;
+
+afterEach(() => {
+  cleanup();
+  exportPdfWithPrintFallbackMock.mockReset();
+});
 
 function makeDeps(trigger: ReturnType<typeof vi.fn>) {
   return {
@@ -148,5 +166,30 @@ describe("ExportPdfButton — createExportPdfHandler", () => {
     );
     await onClick();
     expect(trigger).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("ExportPdfButton pending UI", () => {
+  it("triggers one export while the clicked button is pending", async () => {
+    exportPdfWithPrintFallbackMock.mockReturnValue(
+      new Promise(() => undefined),
+    );
+    renderWithIntl(
+      <ExportPdfButton
+        sourceType="submission"
+        sourceId="sub-1"
+        label="Export PDF"
+      />,
+    );
+
+    const button = screen.getByRole("button", { name: "Export PDF" });
+    fireEvent.click(button);
+    fireEvent.click(button);
+
+    expect(exportPdfWithPrintFallbackMock).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      expect(button).toHaveProperty("disabled", true);
+      expect(button.className).toContain("ant-btn-loading");
+    });
   });
 });

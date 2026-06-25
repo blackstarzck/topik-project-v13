@@ -11,8 +11,9 @@
 // - 백그라운드 탭 drift 보정: setInterval tick 마다 localStorage 의 until 으로 다시 계산.
 
 import { useCallback, useSyncExternalStore } from "react";
+import { EMAIL_COOLDOWN_SECONDS } from "@/lib/request-control/policies";
 
-export const DEFAULT_COOLDOWN_SECONDS = 60;
+export const DEFAULT_COOLDOWN_SECONDS = EMAIL_COOLDOWN_SECONDS;
 
 function readRemaining(storageKey: string): number {
   if (typeof window === "undefined") return 0;

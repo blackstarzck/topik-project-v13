@@ -21,6 +21,8 @@ import {
   type UserNotification,
 } from "@/components/notifications/notifications-data";
 import { AppCard } from "@/components/shared/AppCard";
+import { MANUAL_RETRY_COOLDOWN_MS } from "@/lib/request-control/policies";
+import { useSingleFlightAction } from "@/lib/request-control/useSingleFlightAction";
 
 const { Text } = Typography;
 
@@ -115,6 +117,14 @@ export function DashboardAlertsCard({
 
   const failed = loadFailed || notifLoad.status === "error";
   const empty = notifLoad.status === "ready" && notifications.length === 0;
+  const retry = useSingleFlightAction(
+    () => {
+      setNotifLoad({ status: "loading" });
+      setReloadKey((k) => k + 1);
+      router.refresh();
+    },
+    { cooldownMs: MANUAL_RETRY_COOLDOWN_MS },
+  );
 
   return (
     <AppCard
@@ -132,11 +142,9 @@ export function DashboardAlertsCard({
           <div className="flex flex-wrap gap-2">
             <Button
               type="primary"
-              onClick={() => {
-                setNotifLoad({ status: "loading" });
-                setReloadKey((k) => k + 1);
-                router.refresh();
-              }}
+              loading={retry.pending}
+              disabled={retry.pending}
+              onClick={() => void retry.run()}
             >
               {t("retry")}
             </Button>
