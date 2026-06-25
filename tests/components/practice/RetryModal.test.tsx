@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, screen, within } from "@testing-library/react";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
 import { RetryModal } from "../../../src/components/practice/RetryModal";
+import koMessages from "../../../messages/ko.json";
 
 const pushMock = vi.fn();
 
@@ -247,5 +248,34 @@ describe("RetryModal (Phase 7-D Task 5 route fix)", () => {
     fireEvent.click(screen.getByRole("button", { name: "취소" }));
     expect(onClose).toHaveBeenCalled();
     expect(pushMock).not.toHaveBeenCalled();
+  });
+
+  it("labels failed submissions and routes the failed status action", () => {
+    const onClose = vi.fn();
+    renderWithIntl(
+      <RetryModal
+        open
+        onClose={onClose}
+        problemId="p-1"
+        questionNo={51}
+        hasAttempt
+        hasSubmission
+        submissionId="sub-9"
+        feedbackStatus="failed"
+      />,
+    );
+
+    expect(
+      screen.getByTestId("retry-modal-compact-summary").textContent,
+    ).toContain(koMessages.practice.retry.statusFailed);
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: koMessages.practice.retry.viewFailedStatus,
+      }),
+    );
+
+    expect(onClose).toHaveBeenCalled();
+    expect(pushMock).toHaveBeenCalledWith("/writing/feedback/short/sub-9");
   });
 });

@@ -881,6 +881,8 @@
       "analysisStatusAction": "View analysis status",
       "analysisPendingBadge": "Pending analysis",
       "analysisAnalyzingBadge": "Analyzing answer",
+      "analysisFailedBadge": "Analysis failed",
+      "analysisFailedTooltip": "The answer was saved, but feedback could not be generated.",
       "statusPublished": "Published",
       "statusUnpublished": "Unpublished",
       "statusInactive": "Inactive",
@@ -1091,7 +1093,9 @@
       "startMissingType": "Can't start because the problem type information is missing. Please try again shortly.",
       "startOpenFailed": "Something went wrong opening the solving screen. Please try again.",
       "retry": "Retry",
-      "viewResult": "View result"
+      "viewResult": "View result",
+      "statusFailed": "Analysis failed",
+      "viewFailedStatus": "View failed status"
     }
   },
   "feedback": {
@@ -1825,6 +1829,8 @@
       "scoreWithMax": "{total}/{max} pts",
       "scoreNoMax": "{total} pts",
       "analysisPendingHint": "Your answer is saved here. Score and feedback will appear when analysis finishes.",
+      "analysisFailedHint": "Analysis failed, so score and feedback cannot be shown. Solve again or view the failed status.",
+      "failedExportDisabledReason": "Analysis failed items are excluded from PDF export and review sets.",
       "charCount": "{count} chars",
       "totalCount": "{count} total"
     },
@@ -1911,6 +1917,7 @@
       "exporting": "Exporting...",
       "printDialogOpened": "The PDF print dialog has opened.",
       "exportFailed": "Failed to export the PDF.",
+      "failedAnalysisExportUnavailable": "Analysis failed items are excluded from PDF export and review sets.",
       "downloaded": "Your PDF has been downloaded.",
       "fallbackPrint": "Server PDF generation failed, so the browser print dialog was opened instead.",
       "defaultFilenameSubmission": "TALKPIK-answers",
@@ -1989,7 +1996,8 @@
       "generating": "Generating...",
       "export": "Generate PDF",
       "printDialogOpened": "The PDF print dialog has opened.",
-      "generateFailed": "Failed to generate the PDF."
+      "generateFailed": "Failed to generate the PDF.",
+      "failedAnalysisExportUnavailable": "Analysis failed items are excluded from PDF export and review sets."
     }
   },
   "onboarding": {

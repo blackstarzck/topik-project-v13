@@ -279,6 +279,7 @@ export function ProblemListView({ userId }: Props) {
           hasSubmission={retryTarget.solveState === "submitted"}
           hasAttempt={retryTarget.solveState === "attempted"}
           submissionId={retryTarget.latestSubmissionId ?? undefined}
+          feedbackStatus={retryTarget.feedbackStatus}
         />
       ) : null}
     </div>

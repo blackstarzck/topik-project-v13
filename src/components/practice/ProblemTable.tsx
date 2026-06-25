@@ -155,12 +155,26 @@ export function ProblemTable({ rows, onRetryClick }: Props) {
       render: (_title: string, row) => {
         const displayMeta = getProblemRowDisplayMeta(row);
         const tags = visibleTags(row);
-        const analysisBadgeKey =
+        const analysisBadge =
           row.feedbackStatus === "pending"
-            ? "analysisPendingBadge"
+            ? {
+                labelKey: "analysisPendingBadge",
+                color: "processing",
+                title: undefined,
+              }
             : row.feedbackStatus === "analyzing"
-              ? "analysisAnalyzingBadge"
-              : null;
+              ? {
+                  labelKey: "analysisAnalyzingBadge",
+                  color: "processing",
+                  title: undefined,
+                }
+              : row.feedbackStatus === "failed"
+                ? {
+                    labelKey: "analysisFailedBadge",
+                    color: "red",
+                    title: t("analysisFailedTooltip"),
+                  }
+                : null;
         const displayTitle =
           row.title.length > 32 ? `${row.title.slice(0, 32)}...` : row.title;
 
@@ -193,9 +207,13 @@ export function ProblemTable({ rows, onRetryClick }: Props) {
                     {t("newBadge")}
                   </span>
                 ) : null}
-                {analysisBadgeKey ? (
-                  <Tag className="problem-table__tag" color="processing">
-                    {t(analysisBadgeKey)}
+                {analysisBadge ? (
+                  <Tag
+                    className="problem-table__tag"
+                    color={analysisBadge.color}
+                    title={analysisBadge.title}
+                  >
+                    {t(analysisBadge.labelKey as Parameters<typeof t>[0])}
                   </Tag>
                 ) : null}
               </div>

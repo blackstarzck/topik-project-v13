@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 
 import type { SupabaseServerClient } from "../supabase/server";
 import { getFeedbackBundle, getSubmission } from "../writing/server";
+import { PDF_EXPORT_ERROR_CODES } from "./pdf-export-errors";
 import type { PdfExportItem, PdfSubmissionItem } from "./pdf-document";
 import { PDF_EXPORT_MAX_ITEMS, type PdfExportRequest } from "./pdf-options";
 
@@ -18,10 +19,12 @@ type LibrarySelectionExportEntry = {
 /** 사용자에게 그대로 보여줄 수 있는 안전한 메시지를 가진 요청 오류. */
 export class PdfExportRequestError extends Error {
   readonly status: number;
-  constructor(status: number, message: string) {
+  readonly code?: string;
+  constructor(status: number, message: string, code?: string) {
     super(message);
     this.name = "PdfExportRequestError";
     this.status = status;
+    this.code = code;
   }
 }
 
@@ -64,6 +67,13 @@ async function loadSubmissionItem(
   const submission = await getSubmission(submissionId, factory);
   if (!submission) {
     throw new PdfExportRequestError(404, "답안을 찾을 수 없어요.");
+  }
+  if (submission.feedback_status === "failed") {
+    throw new PdfExportRequestError(
+      400,
+      "분석 실패 답안은 PDF로 내보낼 수 없어요.",
+      PDF_EXPORT_ERROR_CODES.failedAnalysisUnavailable,
+    );
   }
 
   // 문제 제목 — problems는 published만 읽힌다(공개 RLS). 이후 회수된 문제면

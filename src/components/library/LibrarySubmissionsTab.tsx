@@ -72,6 +72,18 @@ function isAnalysisPendingStatus(
   return status === "pending" || status === "analyzing";
 }
 
+function isAnalysisFailedStatus(
+  status: SubmissionEnrichment["feedbackStatus"],
+): boolean {
+  return status === "failed";
+}
+
+function isExportUnavailableStatus(
+  status: SubmissionEnrichment["feedbackStatus"],
+): boolean {
+  return isAnalysisPendingStatus(status) || isAnalysisFailedStatus(status);
+}
+
 /**
  * F-01 저장 답안 목록 (region 3) + 검색/필터 (region 1) + 페이지 이동 (region 5).
  *
@@ -178,12 +190,10 @@ export function LibrarySubmissionsTab({
     if (!onSelectionChange) return;
     const validIds = new Set(
       filtered
-        .filter(
-          (i) =>
-            !isAnalysisPendingStatus(
-              enrich.get(i.id)?.feedbackStatus ?? "pending",
-            ),
-        )
+        .filter((i) => {
+          const feedbackStatus = enrich.get(i.id)?.feedbackStatus ?? "pending";
+          return !isExportUnavailableStatus(feedbackStatus);
+        })
         .map((i) => i.item_id),
     );
     const items: ExportSelectionItem[] = filtered
@@ -293,6 +303,15 @@ export function LibrarySubmissionsTab({
               const meta = enrich.get(item.id);
               const feedbackStatus = meta?.feedbackStatus ?? "pending";
               const analysisPending = isAnalysisPendingStatus(feedbackStatus);
+              const analysisFailed = isAnalysisFailedStatus(feedbackStatus);
+              const exportUnavailable =
+                isExportUnavailableStatus(feedbackStatus);
+              const exportDisabledReason = analysisFailed
+                ? t("failedExportDisabledReason")
+                : undefined;
+              const exportDisabledReasonId = analysisFailed
+                ? `library-submission-${item.item_id}-export-disabled-reason`
+                : undefined;
               const badge = statusBadge(feedbackStatus);
               const fallbackTitle = t("problemTitle", {
                 id: item.problem_id.slice(0, 8),
@@ -305,25 +324,39 @@ export function LibrarySubmissionsTab({
                   tab="submissions"
                   tags={item.tags}
                   trailingActions={[
-                    <span key="select" data-testid="library-select-item">
+                    <span
+                      key="select"
+                      data-testid="library-select-item"
+                      title={exportDisabledReason}
+                    >
                       <Checkbox
-                        checked={!analysisPending && selected.has(item.item_id)}
-                        disabled={analysisPending}
+                        checked={
+                          !exportUnavailable && selected.has(item.item_id)
+                        }
+                        disabled={exportUnavailable}
+                        aria-describedby={exportDisabledReasonId}
                         onChange={(e) =>
-                          !analysisPending &&
+                          !exportUnavailable &&
                           toggle(item.item_id, e.target.checked)
                         }
                         aria-label={t("selectForExportAriaLabel")}
                       />
                     </span>,
-                    <ExportPdfButton
-                      key="export"
-                      sourceType="submission"
-                      sourceId={item.id}
-                      disabled={analysisPending}
-                    />,
+                    <span key="export" title={exportDisabledReason}>
+                      <ExportPdfButton
+                        sourceType="submission"
+                        sourceId={item.id}
+                        disabled={exportUnavailable}
+                        ariaDescribedBy={exportDisabledReasonId}
+                      />
+                    </span>,
                   ]}
                 >
+                  {exportDisabledReason ? (
+                    <span id={exportDisabledReasonId} className="sr-only">
+                      {exportDisabledReason}
+                    </span>
+                  ) : null}
                   <div className="flex w-full flex-col gap-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <Link
@@ -336,7 +369,9 @@ export function LibrarySubmissionsTab({
                       >
                         <Text strong>{clampTitle(title)}</Text>
                       </Link>
-                      <Tag>{t(badge.labelKey as Parameters<typeof t>[0])}</Tag>
+                      <Tag color={badge.color}>
+                        {t(badge.labelKey as Parameters<typeof t>[0])}
+                      </Tag>
                       {meta?.scoreTotal != null ? (
                         <Tag>
                           {meta.scoreMax != null
@@ -359,6 +394,10 @@ export function LibrarySubmissionsTab({
                     ) : analysisPending ? (
                       <Paragraph className="mb-0" type="secondary">
                         {t("analysisPendingHint")}
+                      </Paragraph>
+                    ) : analysisFailed ? (
+                      <Paragraph className="mb-0" type="secondary">
+                        {t("analysisFailedHint")}
                       </Paragraph>
                     ) : null}
                     <div className="flex flex-wrap items-center gap-2">
