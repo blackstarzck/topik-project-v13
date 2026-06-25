@@ -827,6 +827,7 @@
       "dimContent": "Nội dung",
       "dimExpression": "Diễn đạt",
       "dimTopicFit": "Mức phù hợp chủ đề",
+      "dimLanguage": "Ngôn ngữ",
       "typeTabAll": "Tất cả",
       "typeTabLocked": "Câu {no} 🔒",
       "typeTabLockedAria": "Câu {no} đã khóa"
@@ -877,6 +878,9 @@
       "solveAction": "Làm bài",
       "newBadge": "Mới",
       "startProblem": "Bắt đầu",
+      "analysisStatusAction": "Xem trạng thái phân tích",
+      "analysisPendingBadge": "Đang chờ phân tích",
+      "analysisAnalyzingBadge": "Đang phân tích bài nộp",
       "statusPublished": "Công khai",
       "statusUnpublished": "Riêng tư",
       "statusInactive": "Không hoạt động",
@@ -1015,6 +1019,11 @@
           "example": "Phần giải thích bối cảnh có thể dài hơn yêu cầu của đề.",
           "strategy": "Đọc lại đề, kiểm tra các điều kiện bắt buộc rồi tinh gọn câu trả lời."
         },
+        "language": {
+          "why": "Khi cách dùng ngôn ngữ chưa ổn, ý nghĩa và sắc thái có thể kém chính xác.",
+          "example": "Cách diễn đạt chưa hợp ngữ cảnh hoặc nối câu vụng về có thể lặp lại.",
+          "strategy": "Đọc lại bài và kiểm tra từ vựng, ngữ pháp, mạch câu cùng lúc."
+        },
         "fallback": {
           "why": "Đây là lĩnh vực đạt điểm thấp trong các câu trả lời gần đây, nên xem trước sẽ hữu ích.",
           "example": "Cần xem liệu cùng một loại lỗi có lặp lại hay không.",
@@ -1111,7 +1120,8 @@
         "structure": "Bố cục",
         "content": "Nội dung",
         "expression": "Diễn đạt",
-        "topic_fit": "Mức độ phù hợp chủ đề"
+        "topic_fit": "Mức độ phù hợp chủ đề",
+        "language": "Ngôn ngữ"
       },
       "reco": {
         "grammar": {
@@ -1137,6 +1147,10 @@
         "topic_fit": {
           "title": "Luyện mức độ phù hợp chủ đề",
           "reason": "Kiểm tra lại yêu cầu của đề giúp dễ ghi điểm hơn."
+        },
+        "language": {
+          "title": "Luyện cách dùng ngôn ngữ",
+          "reason": "Kiểm tra từ vựng, ngữ pháp và diễn đạt cùng lúc giúp bài viết tự nhiên hơn."
         }
       }
     },
@@ -1173,7 +1187,8 @@
         "structure": "Bố cục",
         "content": "Nội dung",
         "expression": "Diễn đạt",
-        "topic_fit": "Mức độ phù hợp chủ đề"
+        "topic_fit": "Mức độ phù hợp chủ đề",
+        "language": "Ngôn ngữ"
       }
     },
     "analysis": {
@@ -1182,7 +1197,12 @@
       "cancelButton": "Dừng phân tích và thoát",
       "cancelConfirm": "Phân tích vẫn đang diễn ra. Thoát bây giờ có thể làm gián đoạn. Bạn có muốn thoát không?",
       "slowTitle": "Phân tích đang mất nhiều thời gian hơn bình thường",
-      "slowDescription": "Vui lòng đợi thêm một chút. Nếu sau {retryAt} vẫn chưa xong, bạn có thể thử lại.",
+      "slowDescription": "Bài nộp đã được gửi và lưu trong Thư viện của tôi. Bạn có thể chờ tại đây hoặc kiểm tra trạng thái sau {retryAt}.",
+      "viewLibraryStatus": "Xem trong Thư viện",
+      "delayedTitle": "Bài phân tích đã được lưu ở trạng thái chờ",
+      "delayedDescription": "Bài làm của bạn đã được lưu. Bạn có thể rời trang này và kiểm tra kết quả sau trong Thư viện hoặc danh sách bài tập.",
+      "delayedStatus": "Đã lưu ở trạng thái chờ phân tích",
+      "statusDelayed": "Kết quả phân tích đang bị trễ, nên bài nộp này đã được lưu để xem lại sau.",
       "failedTitle": "Phân tích thất bại",
       "failedDescription": "Sự cố tạm thời khiến không thể tạo nhận xét. Vui lòng thử lại sau, hoặc chuyển đến bảng điều khiển để tiếp tục học.",
       "retryButton": "Phân tích lại",
@@ -1228,7 +1248,8 @@
         "content": "Logic",
         "vocab": "Từ vựng",
         "grammar": "Ngữ pháp",
-        "topic_fit": "Mức độ phù hợp chủ đề"
+        "topic_fit": "Mức độ phù hợp chủ đề",
+        "language": "Ngôn ngữ"
       }
     },
     "dimensions": {
@@ -1238,7 +1259,8 @@
         "structure": "Bố cục",
         "content": "Nội dung",
         "expression": "Diễn đạt",
-        "topic_fit": "Mức độ phù hợp chủ đề"
+        "topic_fit": "Mức độ phù hợp chủ đề",
+        "language": "Ngôn ngữ"
       },
       "failedText": "Mục này phân tích thất bại.",
       "reanalyze": "Phân tích lại",
@@ -1318,7 +1340,8 @@
       "structure": "Bố cục",
       "content": "Nội dung",
       "expression": "Diễn đạt",
-      "topic_fit": "Mức độ phù hợp chủ đề"
+      "topic_fit": "Mức độ phù hợp chủ đề",
+      "language": "Ngôn ngữ"
     },
     "chart": {
       "title": "So sánh điểm theo từng mục",
@@ -1676,7 +1699,8 @@
         "structure": "Bố cục",
         "content": "Nội dung",
         "expression": "Diễn đạt",
-        "topic_fit": "Độ phù hợp chủ đề"
+        "topic_fit": "Độ phù hợp chủ đề",
+        "language": "Ngôn ngữ"
       },
       "kpi": {
         "averageScore": "Điểm trung bình",
@@ -1800,6 +1824,7 @@
       "problemTitle": "Câu hỏi {id}",
       "scoreWithMax": "{total}/{max} điểm",
       "scoreNoMax": "{total} điểm",
+      "analysisPendingHint": "Bài nộp đã được lưu tại đây. Điểm và phản hồi sẽ hiển thị khi phân tích xong.",
       "charCount": "{count} ký tự",
       "totalCount": "Tổng {count}"
     },
@@ -1863,7 +1888,8 @@
         "structure": "Bố cục",
         "content": "Nội dung",
         "expression": "Diễn đạt",
-        "topic_fit": "Độ phù hợp chủ đề"
+        "topic_fit": "Độ phù hợp chủ đề",
+        "language": "Ngôn ngữ"
       }
     },
     "item": {

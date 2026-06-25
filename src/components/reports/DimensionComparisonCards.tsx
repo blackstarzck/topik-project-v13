@@ -14,6 +14,7 @@ const DIMENSION_KEYS = [
   "content",
   "expression",
   "topic_fit",
+  "language",
 ] as const;
 
 const MAX_CARDS = 4;
@@ -63,7 +64,10 @@ export function DimensionComparisonCards({
       );
     }
     return (
-      <AppCard title={t("titleScores")} data-testid="comparison-dimension-cards">
+      <AppCard
+        title={t("titleScores")}
+        data-testid="comparison-dimension-cards"
+      >
         <Row gutter={[SPACING.md, SPACING.md]}>
           {entries.map(([dimension, score]) => (
             <Col key={dimension} xs={12} md={6}>
@@ -71,7 +75,9 @@ export function DimensionComparisonCards({
                 <Text strong>{dimLabel(dimension)}</Text>
                 <div className="mt-1">
                   <Tag>
-                    {score === null ? EMPTY_VALUE : t("scorePoint", { value: score })}
+                    {score === null
+                      ? EMPTY_VALUE
+                      : t("scorePoint", { value: score })}
                   </Tag>
                 </div>
               </AppCard>

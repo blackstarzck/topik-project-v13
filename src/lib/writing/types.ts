@@ -31,6 +31,7 @@ export const FEEDBACK_DIMENSIONS: readonly FeedbackDimensionKey[] = [
   "content",
   "expression",
   "topic_fit",
+  "language",
 ];
 
 export type WritingDraftRow = Tables<"writing_drafts">;
@@ -87,11 +88,12 @@ export type ShortAnswerQuestion51Json = {
   blanks: Record<string, string>;
 };
 
-export type LongFormDraftJson =
-  | LongFormQuestion53Json
-  | LongFormQuestion54Json;
+export type LongFormDraftJson = LongFormQuestion53Json | LongFormQuestion54Json;
 
-export function emptyChecklist(): Record<EssayChecklistKey, ChecklistItemStatus> {
+export function emptyChecklist(): Record<
+  EssayChecklistKey,
+  ChecklistItemStatus
+> {
   return {
     intro: "unchecked",
     body: "unchecked",
@@ -219,7 +221,9 @@ export function isShortAnswer52DraftJson(
 export const build52AnswerText = build51AnswerText;
 export const count52AnswerChars = count51AnswerChars;
 
-export function isLongFormDraftJson(value: unknown): value is LongFormDraftJson {
+export function isLongFormDraftJson(
+  value: unknown,
+): value is LongFormDraftJson {
   if (!isStringRecord(value)) return false;
   if (value._v === "53.v1") {
     const sections = value.sections;

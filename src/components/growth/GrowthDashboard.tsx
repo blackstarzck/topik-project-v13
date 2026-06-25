@@ -34,6 +34,7 @@ const DIMENSION_KEYS = [
   "content",
   "expression",
   "topic_fit",
+  "language",
 ] as const;
 
 export type GrowthWeakDimension = {
@@ -379,9 +380,7 @@ export function GrowthDashboard({
                         </Tag>
                         <Text strong>{rec.title}</Text>
                       </div>
-                      <Link
-                        href={APP_ROUTES.practiceWeakness}
-                      >
+                      <Link href={APP_ROUTES.practiceWeakness}>
                         <Button type="primary">
                           {t("recommend.startCta")}
                         </Button>

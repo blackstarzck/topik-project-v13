@@ -247,6 +247,57 @@ describe("fetchUserProblemsRpc", () => {
     });
   });
 
+  it("preserves the latest writing feedback status for submitted rows", async () => {
+    const rpc = vi.fn(async () => ({
+      data: [
+        {
+          problem_id: "problem-pending-54",
+          title: "Long answer waiting for analysis",
+          domain: "writing",
+          topik_level: 2,
+          question_no: 54,
+          difficulty: 4,
+          tags: ["essay"],
+          attempt_count: 1,
+          is_solved: true,
+          last_attempt_at: "2026-06-10T00:00:00.000Z",
+          created_at: "2026-06-09T00:00:00.000Z",
+          total_count: 1,
+          solve_state: "submitted",
+          latest_submission_id: "submission-analyzing-1",
+          latest_submission_at: "2026-06-10T00:00:00.000Z",
+          writing_feedback_status: "analyzing",
+          lifecycle_status: "active",
+          lifecycle_reason: null,
+          publish_status: "published",
+          review_status: "approved",
+        },
+      ],
+      error: null,
+    }));
+    const from = vi.fn(() => ({
+      select: vi.fn(() => ({
+        in: vi.fn(async () => ({ data: [], error: null })),
+      })),
+    }));
+
+    const result = await fetchUserProblemsRpc(
+      {
+        filter: {},
+        sort: "newest",
+        page: 1,
+        pageSize: 10,
+      },
+      () => ({ rpc, from }) as never,
+    );
+
+    expect(result.rows[0]).toMatchObject({
+      latestSubmissionId: "submission-analyzing-1",
+      latestSubmissionAt: "2026-06-10T00:00:00.000Z",
+      feedbackStatus: "analyzing",
+    });
+  });
+
   it("throws RPC errors", async () => {
     const error = new Error("rpc failed");
     const rpc = vi.fn(async () => ({ data: null, error }));

@@ -25,6 +25,7 @@ const DIMENSION_KEYS = [
   "content",
   "expression",
   "topic_fit",
+  "language",
 ] as const;
 
 const AXIS_FONT_SIZE = 12;
@@ -155,7 +156,11 @@ function ChartBody({
   previousColor,
   currentColor,
 }: {
-  chartData: { name: string; previous: number | null; current: number | null }[];
+  chartData: {
+    name: string;
+    previous: number | null;
+    current: number | null;
+  }[];
   hasPrevious: boolean;
   previousLabel: string;
   currentLabel: string;

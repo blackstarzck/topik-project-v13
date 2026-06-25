@@ -673,7 +673,8 @@ export interface Database {
             | "structure"
             | "content"
             | "expression"
-            | "topic_fit";
+            | "topic_fit"
+            | "language";
           score: number | null;
           score_max: number | null;
           summary: string | null;
@@ -689,7 +690,8 @@ export interface Database {
             | "structure"
             | "content"
             | "expression"
-            | "topic_fit";
+            | "topic_fit"
+            | "language";
           score?: number | null;
           score_max?: number | null;
           summary?: string | null;
@@ -705,7 +707,8 @@ export interface Database {
             | "structure"
             | "content"
             | "expression"
-            | "topic_fit";
+            | "topic_fit"
+            | "language";
           score?: number | null;
           score_max?: number | null;
           summary?: string | null;

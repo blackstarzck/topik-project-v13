@@ -45,6 +45,7 @@ type Props = {
   open: boolean;
   status?: AnalysisPhase;
   completeHref?: string | null;
+  pollingExhausted?: boolean;
   onComplete?: () => void;
   reduceMotion?: boolean;
   onCancel?: () => void;
@@ -66,6 +67,7 @@ export function AnalysisLoadingModal({
   open,
   status = "analyzing",
   completeHref = null,
+  pollingExhausted = false,
   onComplete,
   reduceMotion,
   onCancel,
@@ -84,6 +86,7 @@ export function AnalysisLoadingModal({
       open={open}
       status={status}
       completeHref={completeHref}
+      pollingExhausted={pollingExhausted}
       onComplete={onComplete}
       reduceMotion={reduceMotion}
       onCancel={onCancel}
@@ -96,6 +99,7 @@ export function AnalysisLoadingModal({
 export function AnalysisLoadingPage({
   status = "analyzing",
   completeHref = null,
+  pollingExhausted = false,
   onComplete,
   reduceMotion,
   onCancel,
@@ -106,6 +110,7 @@ export function AnalysisLoadingPage({
       open
       status={status}
       completeHref={completeHref}
+      pollingExhausted={pollingExhausted}
       onComplete={onComplete}
       reduceMotion={reduceMotion}
       onCancel={onCancel}
@@ -142,6 +147,7 @@ function AnalysisLoadingModalContent({
   open,
   status,
   completeHref,
+  pollingExhausted,
   onComplete,
   reduceMotion,
   onCancel,
@@ -150,7 +156,12 @@ function AnalysisLoadingModalContent({
 }: Required<Pick<Props, "open" | "status">> &
   Pick<
     Props,
-    "completeHref" | "onComplete" | "reduceMotion" | "onCancel" | "onRetry"
+    | "completeHref"
+    | "pollingExhausted"
+    | "onComplete"
+    | "reduceMotion"
+    | "onCancel"
+    | "onRetry"
   > & { presentation: SurfacePresentation }) {
   const t = useTranslations("feedback.analysis");
   const router = useRouter();
@@ -165,6 +176,7 @@ function AnalysisLoadingModalContent({
   const [startedAtMs] = useState(() => Date.now());
 
   const active = status === "pending" || status === "analyzing";
+  const exhausted = active && pollingExhausted;
   const autoStep = Math.min(
     Math.floor(elapsedMs / STEP_ADVANCE_MS),
     STEP_KEYS.length - 1,
@@ -233,6 +245,10 @@ function AnalysisLoadingModalContent({
     router.push(APP_ROUTES.dashboard);
   }
 
+  function goToLibraryStatus() {
+    router.push("/library" as never);
+  }
+
   const contentTestId =
     presentation === "page"
       ? "analysis-loading-panel"
@@ -283,13 +299,19 @@ function AnalysisLoadingModalContent({
             >
               <div className="analysis-state-card__copy">
                 <Title level={2} className="analysis-loading__title">
-                  {isFailed ? t("failedTitle") : t("title")}
+                  {isFailed
+                    ? t("failedTitle")
+                    : exhausted
+                      ? t("delayedTitle")
+                      : t("title")}
                 </Title>
                 <Paragraph className="analysis-loading__subtitle">
                   {isFailed ? (
                     <span data-testid="analysis-failed-description">
                       {renderMultilineText(t("failedDescription"))}
                     </span>
+                  ) : exhausted ? (
+                    t("delayedDescription")
                   ) : (
                     t("subtitle")
                   )}
@@ -321,7 +343,9 @@ function AnalysisLoadingModalContent({
                 <div className="analysis-state-card__details">
                   <div className="analysis-loading__meta">
                     <Clock3 aria-hidden size={14} />
-                    <Text>{t("expectedTime")}</Text>
+                    <Text>
+                      {exhausted ? t("delayedStatus") : t("expectedTime")}
+                    </Text>
                   </div>
 
                   <Steps
@@ -339,12 +363,30 @@ function AnalysisLoadingModalContent({
                     }))}
                   />
 
-                  {slow && active ? (
+                  {(exhausted || slow) && active ? (
                     <Alert
+                      data-testid={
+                        exhausted
+                          ? "analysis-polling-exhausted"
+                          : "analysis-slow-handoff"
+                      }
                       type="warning"
                       showIcon
-                      title={t("slowTitle")}
-                      description={t("slowDescription", { retryAt })}
+                      title={exhausted ? t("delayedTitle") : t("slowTitle")}
+                      description={
+                        exhausted
+                          ? t("delayedDescription")
+                          : t("slowDescription", { retryAt })
+                      }
+                      action={
+                        <Button
+                          size="small"
+                          onClick={goToLibraryStatus}
+                          data-testid="analysis-library-status-link"
+                        >
+                          {t("viewLibraryStatus")}
+                        </Button>
+                      }
                     />
                   ) : null}
                 </div>
@@ -421,16 +463,16 @@ function AnalysisLoadingModalContent({
         <div className="analysis-loading__hero">
           <AnalysisCharacter step={step} reduceMotion={reduced} />
           <Title level={2} className="analysis-loading__title">
-            {t("title")}
+            {exhausted ? t("delayedTitle") : t("title")}
           </Title>
           <Paragraph className="analysis-loading__subtitle">
-            {t("subtitle")}
+            {exhausted ? t("delayedDescription") : t("subtitle")}
           </Paragraph>
         </div>
 
         <div className="analysis-loading__meta">
           <Clock3 aria-hidden size={16} />
-          <Text>{t("expectedTime")}</Text>
+          <Text>{exhausted ? t("delayedStatus") : t("expectedTime")}</Text>
         </div>
 
         <Progress
@@ -454,20 +496,38 @@ function AnalysisLoadingModalContent({
         <section className="analysis-loading__status" aria-live="polite">
           <Text strong>{t("statusTitle")}</Text>
           <Paragraph>
-            {slow
-              ? t("statusSlow")
-              : status === "pending"
-                ? t("statusPending")
-                : t(`steps.${currentStepKey}Description`)}
+            {exhausted
+              ? t("statusDelayed")
+              : slow
+                ? t("statusSlow")
+                : status === "pending"
+                  ? t("statusPending")
+                  : t(`steps.${currentStepKey}Description`)}
           </Paragraph>
         </section>
 
-        {slow ? (
+        {exhausted || slow ? (
           <Alert
+            data-testid={
+              exhausted ? "analysis-polling-exhausted" : "analysis-slow-handoff"
+            }
             type="warning"
             showIcon
-            title={t("slowTitle")}
-            description={t("slowDescription", { retryAt })}
+            title={exhausted ? t("delayedTitle") : t("slowTitle")}
+            description={
+              exhausted
+                ? t("delayedDescription")
+                : t("slowDescription", { retryAt })
+            }
+            action={
+              <Button
+                size="small"
+                onClick={goToLibraryStatus}
+                data-testid="analysis-library-status-link"
+              >
+                {t("viewLibraryStatus")}
+              </Button>
+            }
           />
         ) : null}
 

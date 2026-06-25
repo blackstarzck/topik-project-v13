@@ -54,7 +54,7 @@ describe("Phase 5 writing tables types snapshot", () => {
     assertType<Ins>({
       submission_id: "s",
       user_id: "u",
-      dimension: "grammar",
+      dimension: "language",
     });
     expect(true).toBe(true);
   });

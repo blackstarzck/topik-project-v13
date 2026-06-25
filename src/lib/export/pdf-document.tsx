@@ -7,7 +7,14 @@
 import path from "node:path";
 import type { ReactNode } from "react";
 
-import { Document, Font, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
+import {
+  Document,
+  Font,
+  Page,
+  StyleSheet,
+  Text,
+  View,
+} from "@react-pdf/renderer";
 
 import type { PdfExportOptions } from "./pdf-options";
 
@@ -66,6 +73,7 @@ const DIMENSION_LABELS: Record<string, string> = {
   content: "내용",
   expression: "표현",
   topic_fit: "주제 적합도",
+  language: "언어",
 };
 
 let fontsRegistered = false;
@@ -190,8 +198,8 @@ function SubmissionBlock({
             </Text>
             {fb.dimensions.map((d) => (
               <Text key={d.dimension} style={styles.scoreChip}>
-                {DIMENSION_LABELS[d.dimension] ?? d.dimension}{" "}
-                {d.score ?? "-"}/{d.scoreMax ?? 100}
+                {DIMENSION_LABELS[d.dimension] ?? d.dimension} {d.score ?? "-"}/
+                {d.scoreMax ?? 100}
               </Text>
             ))}
           </View>
@@ -223,7 +231,8 @@ function SubmissionBlock({
                 .filter((d) => d.summary)
                 .map((d) => (
                   <Text key={`s-${d.dimension}`} style={styles.bodyText}>
-                    · {DIMENSION_LABELS[d.dimension] ?? d.dimension}: {d.summary}
+                    · {DIMENSION_LABELS[d.dimension] ?? d.dimension}:{" "}
+                    {d.summary}
                   </Text>
                 ))}
               {fb.sentences.length > 0 ? (

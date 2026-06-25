@@ -14,6 +14,7 @@ const DIMENSION_LABEL_KEYS: Record<string, string> = {
   content: "dimContent",
   expression: "dimExpression",
   topic_fit: "dimTopicFit",
+  language: "dimLanguage",
 };
 
 type WeakDimension = {
@@ -57,7 +58,9 @@ export function DimensionTabs({ dimensions, tabSummaries }: Props) {
 
   function dimensionLabel(dimension: string) {
     return DIMENSION_LABEL_KEYS[dimension]
-      ? tCommon(DIMENSION_LABEL_KEYS[dimension] as Parameters<typeof tCommon>[0])
+      ? tCommon(
+          DIMENSION_LABEL_KEYS[dimension] as Parameters<typeof tCommon>[0],
+        )
       : dimension;
   }
 
@@ -99,9 +102,7 @@ export function DimensionTabs({ dimensions, tabSummaries }: Props) {
             />
             <Paragraph className="!mt-3">
               <Text strong>{label}</Text> {t("averageScoreInline")}{" "}
-              <Tag>
-                {tCommon("score", { score: Math.round(score) })}
-              </Tag>
+              <Tag>{tCommon("score", { score: Math.round(score) })}</Tag>
               <Text type="secondary">
                 {" "}
                 · {t("sampleCount", { count: s.sampleCount })}
@@ -111,9 +112,7 @@ export function DimensionTabs({ dimensions, tabSummaries }: Props) {
         ),
       };
     });
-    return (
-      <Tabs items={items} defaultActiveKey={firstReady?.dimension} />
-    );
+    return <Tabs items={items} defaultActiveKey={firstReady?.dimension} />;
   }
 
   // Legacy fallback — weak dimensions only.
@@ -141,9 +140,7 @@ export function DimensionTabs({ dimensions, tabSummaries }: Props) {
           />
           <Paragraph className="!mt-3">
             <Text strong>{label}</Text> {t("averageScoreInline")}{" "}
-            <Tag>
-              {tCommon("score", { score: Math.round(d.averageScore) })}
-            </Tag>
+            <Tag>{tCommon("score", { score: Math.round(d.averageScore) })}</Tag>
             {d.sampleCount != null ? (
               <Text type="secondary">
                 {" "}

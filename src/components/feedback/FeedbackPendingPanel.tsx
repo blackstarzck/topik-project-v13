@@ -6,7 +6,10 @@ import { useRouter } from "next/navigation";
 import { AppCard } from "@/components/shared/AppCard";
 import { useFeedbackStatus } from "@/lib/writing/queries";
 import type { WritingSubmissionRow } from "@/lib/writing/types";
-import { AnalysisLoadingModal, type AnalysisPhase } from "./AnalysisLoadingModal";
+import {
+  AnalysisLoadingModal,
+  type AnalysisPhase,
+} from "./AnalysisLoadingModal";
 
 const { Paragraph, Text, Title } = Typography;
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
@@ -44,7 +47,7 @@ export function FeedbackPendingPanel({
 }: Props) {
   const t = useTranslations("feedback.analysis");
   const router = useRouter();
-  const { data } = useFeedbackStatus(submissionId);
+  const { data, pollingExhausted } = useFeedbackStatus(submissionId);
   const status: AnalysisPhase = (data as AnalysisPhase | null) ?? initialStatus;
   const submittedAt = submission?.submitted_at
     ? formatSubmittedAtKst(submission.submitted_at)
@@ -102,6 +105,7 @@ export function FeedbackPendingPanel({
       <AnalysisLoadingModal
         open
         status={status}
+        pollingExhausted={pollingExhausted}
         onComplete={handleComplete}
         completeHref={reloadHref ?? null}
         onRetry={() => router.refresh()}

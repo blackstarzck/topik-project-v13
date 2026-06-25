@@ -28,7 +28,7 @@ describe("writing/types narrowing", () => {
     expect(isLongForm(51)).toBe(false);
   });
 
-  it("FEEDBACK_DIMENSIONS lists all 6 keys", () => {
+  it("FEEDBACK_DIMENSIONS lists all feedback keys", () => {
     expect(FEEDBACK_DIMENSIONS).toEqual([
       "grammar",
       "vocab",
@@ -36,6 +36,7 @@ describe("writing/types narrowing", () => {
       "content",
       "expression",
       "topic_fit",
+      "language",
     ]);
   });
 
@@ -50,30 +51,28 @@ describe("writing/types narrowing", () => {
     expect(
       isShortAnswer51DraftJson({
         _v: "51.v1",
-        blanks: { "ㄱ": "참가하고 싶은", "ㄴ": "문의해 주시기 바랍니다" },
+        blanks: { ㄱ: "참가하고 싶은", ㄴ: "문의해 주시기 바랍니다" },
       }),
     ).toBe(true);
 
-    expect(isShortAnswer51DraftJson({ _v: "51.v1", blanks: null })).toBe(
-      false,
-    );
+    expect(isShortAnswer51DraftJson({ _v: "51.v1", blanks: null })).toBe(false);
     expect(
       isShortAnswer51DraftJson({
         _v: "51.v1",
-        blanks: { "ㄱ": "참가하고 싶은", "ㄴ": 42 },
+        blanks: { ㄱ: "참가하고 싶은", ㄴ: 42 },
       }),
     ).toBe(false);
     expect(
       isShortAnswer51DraftJson({
         _v: "52.v1",
-        blanks: { "ㄱ": "참가하고 싶은" },
+        blanks: { ㄱ: "참가하고 싶은" },
       }),
     ).toBe(false);
   });
 
   it("flattens 51 blank answers in the provided blank order", () => {
     const text = build51AnswerText(
-      { "ㄴ": "문의해 주시기 바랍니다", "ㄱ": "참가하고 싶은" },
+      { ㄴ: "문의해 주시기 바랍니다", ㄱ: "참가하고 싶은" },
       [{ label: "ㄱ" }, { label: "ㄴ" }],
     );
 
@@ -81,7 +80,9 @@ describe("writing/types narrowing", () => {
   });
 
   it("counts only the learner-entered 51 answer characters", () => {
-    expect(count51AnswerChars({ "ㄱ": "", "ㄴ": " 문의해 주세요 " })).toBe(7);
-    expect(build51AnswerText({ "ㄱ": "", "ㄴ": "" }, [{ label: "ㄱ" }, { label: "ㄴ" }])).toBe("");
+    expect(count51AnswerChars({ ㄱ: "", ㄴ: " 문의해 주세요 " })).toBe(7);
+    expect(
+      build51AnswerText({ ㄱ: "", ㄴ: "" }, [{ label: "ㄱ" }, { label: "ㄴ" }]),
+    ).toBe("");
   });
 });

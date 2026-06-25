@@ -39,6 +39,7 @@ export const WEAKNESS_DIMENSIONS = [
   "content",
   "expression",
   "topic_fit",
+  "language",
 ] as const;
 
 export type WeaknessDimension = (typeof WEAKNESS_DIMENSIONS)[number];

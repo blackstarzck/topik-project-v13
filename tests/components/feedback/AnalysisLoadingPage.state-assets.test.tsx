@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { AnalysisLoadingPage } from "../../../src/components/feedback/AnalysisLoadingModal";
@@ -21,7 +21,10 @@ vi.mock("next/navigation", () => ({
 
 afterEach(() => {
   cleanup();
-  vi.clearAllMocks();
+  vi.useRealTimers();
+  routerMocks.back.mockReset();
+  routerMocks.push.mockReset();
+  routerMocks.replace.mockReset();
 });
 
 describe("AnalysisLoadingPage state assets", () => {
@@ -55,9 +58,7 @@ describe("AnalysisLoadingPage state assets", () => {
 
     expect(await screen.findByTestId("analysis-loading-panel")).toBeTruthy();
     expect(
-      screen
-        .getByTestId("analysis-failed-description")
-        .querySelector("br"),
+      screen.getByTestId("analysis-failed-description").querySelector("br"),
     ).toBeTruthy();
     const stateAsset = screen.getByTestId(
       "analysis-state-asset",
@@ -78,12 +79,40 @@ describe("AnalysisLoadingPage state assets", () => {
       name: "대시보드로 이동",
     });
 
-    expect(
-      screen.queryByRole("button", { name: "고객지원 문의" }),
-    ).toBeNull();
+    expect(screen.queryByRole("button", { name: "고객지원 문의" })).toBeNull();
 
     fireEvent.click(dashboardButton);
 
     expect(routerMocks.push).toHaveBeenCalledWith("/dashboard");
+  });
+
+  it("offers a library status handoff when analysis stays slow", async () => {
+    vi.useFakeTimers();
+    renderWithIntl(<AnalysisLoadingPage status="analyzing" />);
+
+    expect(screen.getByTestId("analysis-loading-panel")).toBeTruthy();
+
+    act(() => {
+      vi.advanceTimersByTime(10_000);
+    });
+
+    const libraryButton = screen.getByRole("button", {
+      name: "내 서재에서 상태 보기",
+    });
+    fireEvent.click(libraryButton);
+
+    expect(routerMocks.push).toHaveBeenCalledWith("/library");
+  });
+
+  it("shows a stored pending handoff immediately when polling attempts are exhausted", async () => {
+    renderWithIntl(<AnalysisLoadingPage status="analyzing" pollingExhausted />);
+
+    expect(
+      await screen.findByTestId("analysis-polling-exhausted"),
+    ).toBeTruthy();
+
+    fireEvent.click(screen.getByTestId("analysis-library-status-link"));
+
+    expect(routerMocks.push).toHaveBeenCalledWith("/library");
   });
 });

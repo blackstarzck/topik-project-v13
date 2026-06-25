@@ -827,6 +827,7 @@
       "dimContent": "Content",
       "dimExpression": "Expression",
       "dimTopicFit": "Topic relevance",
+      "dimLanguage": "Language",
       "typeTabAll": "All",
       "typeTabLocked": "No. {no} 🔒",
       "typeTabLockedAria": "No. {no} locked"
@@ -877,6 +878,9 @@
       "solveAction": "Solve",
       "newBadge": "New",
       "startProblem": "Start",
+      "analysisStatusAction": "View analysis status",
+      "analysisPendingBadge": "Pending analysis",
+      "analysisAnalyzingBadge": "Analyzing answer",
       "statusPublished": "Published",
       "statusUnpublished": "Unpublished",
       "statusInactive": "Inactive",
@@ -1015,6 +1019,11 @@
           "example": "Background explanation may run longer than what the prompt asked for.",
           "strategy": "Reread the prompt, check the required conditions, then trim your answer."
         },
+        "language": {
+          "why": "When language use wavers, meaning and tone can come across less precisely.",
+          "example": "Awkward expressions or sentence links may repeat in context.",
+          "strategy": "Reread your answer and check vocabulary, grammar, and sentence flow together."
+        },
         "fallback": {
           "why": "This area scored low in your recent answers, so checking it first can help.",
           "example": "It's worth checking whether the same kind of mistake keeps recurring.",
@@ -1111,7 +1120,8 @@
         "structure": "Structure",
         "content": "Content",
         "expression": "Expression",
-        "topic_fit": "Topic relevance"
+        "topic_fit": "Topic relevance",
+        "language": "Language"
       },
       "reco": {
         "grammar": {
@@ -1137,6 +1147,10 @@
         "topic_fit": {
           "title": "Topic relevance practice",
           "reason": "Rechecking the question's requirements makes it easier to earn points."
+        },
+        "language": {
+          "title": "Language use practice",
+          "reason": "Checking vocabulary, grammar, and expression together makes the answer read more naturally."
         }
       }
     },
@@ -1173,7 +1187,8 @@
         "structure": "Structure",
         "content": "Content",
         "expression": "Expression",
-        "topic_fit": "Topic relevance"
+        "topic_fit": "Topic relevance",
+        "language": "Language"
       }
     },
     "analysis": {
@@ -1182,7 +1197,12 @@
       "cancelButton": "Stop analysis and leave",
       "cancelConfirm": "Analysis is still in progress. Leaving now may interrupt it. Do you want to leave?",
       "slowTitle": "Analysis is taking longer than usual",
-      "slowDescription": "Please wait a little longer. If it isn't done after {retryAt}, you can try again.",
+      "slowDescription": "Your answer is submitted and saved in My library. You can wait here or check the status later after {retryAt}.",
+      "viewLibraryStatus": "View in My library",
+      "delayedTitle": "Analysis is queued in My library",
+      "delayedDescription": "Your answer is saved. You can leave this page and check the result later from My library or the problem list.",
+      "delayedStatus": "Saved as pending analysis",
+      "statusDelayed": "The analysis result is delayed, so this submission is saved for later review.",
       "failedTitle": "Analysis failed",
       "failedDescription": "A temporary issue prevented us from generating feedback. Please try again shortly, or go to the dashboard to keep studying.",
       "retryButton": "Analyze again",
@@ -1228,7 +1248,8 @@
         "content": "Logic",
         "vocab": "Vocabulary",
         "grammar": "Grammar",
-        "topic_fit": "Topic relevance"
+        "topic_fit": "Topic relevance",
+        "language": "Language"
       }
     },
     "dimensions": {
@@ -1238,7 +1259,8 @@
         "structure": "Structure",
         "content": "Content",
         "expression": "Expression",
-        "topic_fit": "Topic relevance"
+        "topic_fit": "Topic relevance",
+        "language": "Language"
       },
       "failedText": "This item failed to analyze.",
       "reanalyze": "Analyze again",
@@ -1318,7 +1340,8 @@
       "structure": "Structure",
       "content": "Content",
       "expression": "Expression",
-      "topic_fit": "Topic relevance"
+      "topic_fit": "Topic relevance",
+      "language": "Language"
     },
     "chart": {
       "title": "Score comparison by category",
@@ -1676,7 +1699,8 @@
         "structure": "Structure",
         "content": "Content",
         "expression": "Expression",
-        "topic_fit": "Topic Fit"
+        "topic_fit": "Topic Fit",
+        "language": "Language"
       },
       "kpi": {
         "averageScore": "Average score",
@@ -1800,6 +1824,7 @@
       "problemTitle": "Question {id}",
       "scoreWithMax": "{total}/{max} pts",
       "scoreNoMax": "{total} pts",
+      "analysisPendingHint": "Your answer is saved here. Score and feedback will appear when analysis finishes.",
       "charCount": "{count} chars",
       "totalCount": "{count} total"
     },
@@ -1863,7 +1888,8 @@
         "structure": "Structure",
         "content": "Content",
         "expression": "Expression",
-        "topic_fit": "Topic fit"
+        "topic_fit": "Topic fit",
+        "language": "Language"
       }
     },
     "item": {
