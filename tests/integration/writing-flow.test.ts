@@ -31,8 +31,7 @@ vi.mock("@/lib/writing/server", () => ({
   getSubmission: (id: string) => helpers.getSubmissionMock(id),
   getFeedbackBundle: (id: string) => helpers.getFeedbackBundleMock(id),
   getComparisonReport: (id: string) => helpers.getComparisonReportMock(id),
-  getActiveDraft: (...args: unknown[]) =>
-    helpers.getActiveDraftMock(...args),
+  getActiveDraft: (...args: unknown[]) => helpers.getActiveDraftMock(...args),
   getWritingProblemAvailability: (...args: unknown[]) =>
     helpers.getWritingProblemAvailabilityMock(...args),
   isProblemIdLikeUuid: (value: unknown) =>
@@ -86,8 +85,7 @@ describe("writing flow — route guards", () => {
       import("../../src/app/(workspace)/writing/answer-writing-52/page"),
     53: () =>
       import("../../src/app/(workspace)/writing/long-form-writing-53/page"),
-    54: () =>
-      import("../../src/app/(workspace)/writing/essay-writing-54/page"),
+    54: () => import("../../src/app/(workspace)/writing/essay-writing-54/page"),
   } as const;
 
   it.each([51, 52, 53, 54] as const)(
@@ -150,35 +148,52 @@ describe("writing flow — route guards", () => {
       answer_json: null,
       parent_submission_id: null,
     });
-    const page = await import(
-      "../../src/app/(workspace)/writing/feedback/short/[id]/page"
-    );
+    const page =
+      await import("../../src/app/(workspace)/writing/feedback/short/[id]/page");
     await expect(
       page.default({ params: Promise.resolve({ id: "s-1" }) }),
     ).rejects.toThrow("REDIRECT:/writing/feedback/long/s-1");
   });
 
-  it("/writing/feedback/long shows pending panel when status='pending'", async () => {
-    helpers.getSubmissionMock.mockResolvedValue({
-      id: "s-2",
-      user_id: "user-1",
-      question_no: 53,
-      feedback_status: "pending",
-      problem_id: "p-1",
-      answer_text: "x",
-      char_count: 1,
-      submitted_at: "2026-05-21T00:00:00Z",
-      draft_id: null,
-      answer_json: null,
-      parent_submission_id: null,
-    });
-    const page = await import(
-      "../../src/app/(workspace)/writing/feedback/long/[id]/page"
-    );
-    const el = await page.default({ params: Promise.resolve({ id: "s-2" }) });
-    expect(el).toBeTruthy();
-    expect(helpers.getFeedbackBundleMock).not.toHaveBeenCalled();
-  });
+  it.each([
+    {
+      routeKind: "short",
+      questionNo: 51,
+      status: "analyzing",
+      loader: () =>
+        import("../../src/app/(workspace)/writing/feedback/short/[id]/page"),
+    },
+    {
+      routeKind: "long",
+      questionNo: 53,
+      status: "pending",
+      loader: () =>
+        import("../../src/app/(workspace)/writing/feedback/long/[id]/page"),
+    },
+  ] as const)(
+    "/writing/feedback/$routeKind redirects $status submissions to library",
+    async ({ questionNo, status, loader }) => {
+      helpers.getSubmissionMock.mockResolvedValue({
+        id: "s-2",
+        user_id: "user-1",
+        question_no: questionNo,
+        feedback_status: status,
+        problem_id: "p-1",
+        answer_text: "x",
+        char_count: 1,
+        submitted_at: "2026-05-21T00:00:00Z",
+        draft_id: null,
+        answer_json: null,
+        parent_submission_id: null,
+      });
+      const page = await loader();
+
+      await expect(
+        page.default({ params: Promise.resolve({ id: "s-2" }) }),
+      ).rejects.toThrow("REDIRECT:/library");
+      expect(helpers.getFeedbackBundleMock).not.toHaveBeenCalled();
+    },
+  );
 
   it("checks submitted problem availability before rendering feedback retry actions", async () => {
     helpers.getSubmissionMock.mockResolvedValue({
@@ -203,9 +218,8 @@ describe("writing flow — route guards", () => {
       canStart: false,
     });
 
-    const page = await import(
-      "../../src/app/(workspace)/writing/feedback/short/[id]/page"
-    );
+    const page =
+      await import("../../src/app/(workspace)/writing/feedback/short/[id]/page");
     const el = await page.default({ params: Promise.resolve({ id: "s-3" }) });
 
     expect(el).toBeTruthy();
@@ -238,9 +252,8 @@ describe("writing flow — route guards", () => {
       answer_json: null,
       parent_submission_id: null,
     });
-    const page = await import(
-      "../../src/app/(workspace)/writing/reports/[id]/compare/page"
-    );
+    const page =
+      await import("../../src/app/(workspace)/writing/reports/[id]/compare/page");
     const el = await page.default({ params: Promise.resolve({ id: "r-1" }) });
     expect(el).toBeTruthy();
   });

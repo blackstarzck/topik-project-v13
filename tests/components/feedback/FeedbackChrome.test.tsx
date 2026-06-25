@@ -312,6 +312,22 @@ describe("FeedbackRecommendationCards (i18n chrome)", () => {
 });
 
 describe("FeedbackPageContent (short feedback fallback)", () => {
+  it("renders a simple failure notice instead of the legacy pending screen when failed feedback has no bundle", () => {
+    renderWithIntl(
+      <FeedbackPageContent
+        submission={submission({ feedback_status: "failed" })}
+        bundle={null}
+        withSentences={false}
+        reloadHref="/writing/feedback/short/sub-1"
+        userId="user-1"
+      />,
+    );
+
+    expect(screen.getByText("피드백을 불러오지 못했어요")).toBeTruthy();
+    expect(screen.queryByTestId("analysis-loading-background")).toBeNull();
+    expect(screen.queryByTestId("analysis-loading-modal")).toBeNull();
+  });
+
   it("places the short-feedback action group inside the sticky page header", () => {
     const bundle: FeedbackBundle = {
       feedback: feedback({
@@ -375,7 +391,9 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
     ) as HTMLButtonElement;
     expect(retryButton.disabled).toBe(true);
     expect(
-      screen.getByTestId("feedback-reco-action-retry").getAttribute("aria-disabled"),
+      screen
+        .getByTestId("feedback-reco-action-retry")
+        .getAttribute("aria-disabled"),
     ).toBe("true");
   });
 

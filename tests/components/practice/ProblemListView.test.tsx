@@ -386,7 +386,7 @@ describe("ProblemListView", () => {
     expect(navState.push).not.toHaveBeenCalled();
   });
 
-  it("routes submitted rows with pending analysis to the feedback status page", async () => {
+  it("keeps submitted rows with pending analysis on the problem list", async () => {
     rpcMock.mockResolvedValueOnce({
       data: [
         {
@@ -419,9 +419,57 @@ describe("ProblemListView", () => {
     fireEvent.click(
       screen.getByText("Pending analysis problem").closest("tr")!,
     );
-
-    expect(navState.push).toHaveBeenCalledWith(
-      "/writing/feedback/short/submission-pending-51",
+    fireEvent.click(
+      screen.getByRole("button", { name: "View analysis status" }),
     );
+
+    expect(navState.push).not.toHaveBeenCalled();
+  });
+
+  it("shows the first analysis tooltip by default and hides it after user interaction", async () => {
+    rpcMock.mockResolvedValueOnce({
+      data: [
+        {
+          ...rpcRow(
+            {
+              problem_id: "problem-tooltip-51",
+              title: "Tooltip analysis problem",
+              difficulty: 2,
+              tags: ["pending"],
+              attempt_count: 1,
+              is_solved: true,
+              solve_state: "submitted",
+            },
+            0,
+          ),
+          latest_submission_id: "submission-tooltip-51",
+          writing_feedback_status: "analyzing",
+        },
+      ],
+      error: null,
+    });
+
+    renderInApp(<ProblemListView userId="user-1" />, "en");
+
+    expect(await screen.findByText("Tooltip analysis problem")).toBeTruthy();
+    expect(await screen.findByText("Analyzing answer")).toBeTruthy();
+
+    const tooltipTrigger = screen.getByRole("button", {
+      name: "Analyzing answer",
+    });
+    expect(tooltipTrigger.getAttribute("data-testid")).toBe(
+      "problem-analysis-tooltip-trigger",
+    );
+
+    fireEvent.pointerDown(
+      screen.getByText("Tooltip analysis problem").closest("tr")!,
+    );
+
+    await waitFor(() => {
+      expect(screen.queryByText("Analyzing answer")).toBeNull();
+    });
+
+    fireEvent.click(tooltipTrigger);
+    expect(navState.push).not.toHaveBeenCalled();
   });
 });

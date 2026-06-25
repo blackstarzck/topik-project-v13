@@ -4683,7 +4683,8 @@ body {
  * docs/ant-design/08-theme-architecture.md.
  */
 .app-cards-bordered .app-card.app-surface {
-  border: 1px solid color-mix(in srgb, var(--app-color-border) 25%, var(--app-color-bg-layout));
+  border: 1px solid
+    color-mix(in srgb, var(--app-color-border) 25%, var(--app-color-bg-layout));
 }
 
 /*
@@ -5238,6 +5239,10 @@ body {
   cursor: pointer;
 }
 
+.problem-table__row--analysis {
+  cursor: default;
+}
+
 .problem-table__row--selectable:focus-visible > td {
   outline: 2px solid var(--app-color-primary);
   outline-offset: -2px;
@@ -5310,6 +5315,24 @@ body {
   font-size: 12px;
   font-weight: 700;
   line-height: 1.5;
+}
+
+.problem-table__analysis-tooltip-trigger {
+  color: var(--app-color-text-secondary);
+}
+
+.problem-table__analysis-tooltip.problem-table__analysis-tooltip .problem-table__analysis-tooltip-body {
+  border-radius: var(--app-radius);
+  background: var(--app-color-bg-container);
+  box-shadow:
+    var(--app-shadow-elevated),
+    0 12px 30px rgba(24, 24, 27, 0.18);
+  color: var(--app-color-text);
+  font-size: 14px;
+}
+
+.problem-table__analysis-tooltip.problem-table__analysis-tooltip .problem-table__analysis-tooltip-arrow::before {
+  background: var(--app-color-bg-container);
 }
 
 .problem-table__tags {
@@ -7187,13 +7210,6 @@ body {
   gap: 4px;
 }
 
-.analysis-loading-shell {
-  position: relative;
-  display: grid;
-  align-items: start;
-  min-height: min(760px, 72vh);
-}
-
 /* D-M2 분석 단계: 페이지 전체 배경을 container(흰색)로 채운다(full-bleed). 두 카드는
    가로 2열 grid로 중앙 정렬한다. grid 같은 행의 아이템은 기본적으로 행 높이(=더 큰 카드)
    만큼 stretch되므로, 하드코딩 없이 두 카드 높이가 자동으로 같아진다. align-content: safe
@@ -7314,18 +7330,6 @@ body {
   border: 0;
 }
 
-.d-m2-analysis-modal .ant-modal-content {
-  overflow: hidden;
-  border: 1px solid var(--app-color-border);
-  border-radius: 24px;
-  background: var(--app-color-bg-container);
-  box-shadow: var(--app-shadow-elevated);
-}
-
-.d-m2-analysis-modal .ant-modal-body {
-  padding: 0;
-}
-
 .analysis-loading {
   display: grid;
   gap: 16px;
@@ -7416,13 +7420,6 @@ body {
   margin-top: 4px;
 }
 
-.analysis-loading__hero {
-  display: grid;
-  justify-items: center;
-  gap: 8px;
-  text-align: center;
-}
-
 .analysis-loading__title.ant-typography {
   margin: 0;
   color: var(--app-color-text);
@@ -7437,8 +7434,7 @@ body {
   line-height: 1.55;
 }
 
-.analysis-loading__meta,
-.analysis-loading__status {
+.analysis-loading__meta {
   border: 1px solid var(--app-color-border);
   border-radius: 14px;
   background: color-mix(in srgb, var(--app-color-bg-layout) 86%, transparent);
@@ -7468,10 +7464,6 @@ body {
 .analysis-loading--page .analysis-loading__meta .ant-typography {
   color: inherit;
   font-size: inherit;
-}
-
-.analysis-loading__progress .ant-progress-inner {
-  background: color-mix(in srgb, var(--app-color-primary) 10%, transparent);
 }
 
 .analysis-loading__steps .ant-steps-item-title {
@@ -7510,9 +7502,7 @@ body {
   transition: color 0.18s ease;
 }
 
-.analysis-loading--page
-  .analysis-loading__steps
-  .ant-steps-item-tail::after {
+.analysis-loading--page .analysis-loading__steps .ant-steps-item-tail::after {
   transition: background-color 0.18s ease;
 }
 
@@ -7605,22 +7595,6 @@ body {
   font-size: 14px;
 }
 
-.analysis-loading__status {
-  display: grid;
-  gap: 4px;
-  padding: 14px 16px;
-}
-
-.analysis-loading__status p.ant-typography {
-  display: -webkit-box;
-  margin: 0;
-  overflow: hidden;
-  color: var(--app-color-text-secondary);
-  line-height: 1.5;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-}
-
 .analysis-loading__actions {
   display: flex;
   justify-content: center;
@@ -7634,144 +7608,11 @@ body {
   font-weight: 700;
 }
 
-.analysis-loading__state-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 64px;
-  height: 64px;
-  border-radius: 22px;
-  color: var(--app-color-primary);
-  background: color-mix(in srgb, var(--app-color-primary) 10%, transparent);
-}
-
-.analysis-character {
-  display: grid;
-  justify-items: center;
-  gap: 8px;
-}
-
-.analysis-character__stage {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 120px;
-  height: 104px;
-}
-
-.analysis-character__bot {
-  position: relative;
-  width: 82px;
-  height: 72px;
-  border: 1px solid
-    color-mix(in srgb, var(--app-color-primary) 24%, transparent);
-  border-radius: 24px 24px 18px 18px;
-  background: linear-gradient(
-    180deg,
-    color-mix(
-      in srgb,
-      var(--app-color-primary) 16%,
-      var(--app-color-bg-container)
-    ),
-    var(--app-color-bg-container)
-  );
-  box-shadow: 0 16px 34px
-    color-mix(in srgb, var(--app-color-primary) 18%, transparent);
-  transform-origin: center bottom;
-}
-
-.analysis-character:not(.analysis-character--static) .analysis-character__bot {
-  animation: talkpik-analysis-bob 1.6s ease-in-out infinite;
-}
-
-.analysis-character__eye,
-.analysis-character__mouth {
-  position: absolute;
-  display: block;
-  background: var(--app-color-text);
-}
-
-.analysis-character__eye {
-  top: 25px;
-  width: 9px;
-  height: 9px;
-  border-radius: 999px;
-}
-
-.analysis-character__eye:first-child {
-  left: 25px;
-}
-
-.analysis-character__eye:nth-child(2) {
-  right: 25px;
-}
-
-.analysis-character__mouth {
-  right: 28px;
-  bottom: 22px;
-  left: 28px;
-  height: 4px;
-  border-radius: 999px;
-  opacity: 0.72;
-}
-
-.analysis-character__spark {
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--app-color-primary) 26%, transparent);
-  transform: rotate(45deg);
-}
-
-.analysis-character__spark--left {
-  top: 14px;
-  left: 10px;
-}
-
-.analysis-character__spark--right {
-  right: 8px;
-  bottom: 18px;
-}
-
-.analysis-character:not(.analysis-character--static)
-  .analysis-character__spark {
-  animation: talkpik-analysis-spark 1.6s ease-in-out infinite;
-}
-
-.analysis-character__caption.ant-typography {
-  font-size: 13px;
-}
-
 /* 좁은 폭(tablet/mobile)에서는 1열 grid로 세로 스택한다. 카드가 각자 다른 행이라
    높이를 맞출 필요가 없다. 흰 배경 full-bleed(min-height:100dvh)는 기본형에서 유지한다. */
 @media (max-width: 980px) {
   .submitted-analysis-page {
     grid-template-columns: minmax(0, 640px);
-  }
-}
-
-@keyframes talkpik-analysis-bob {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-6px);
-  }
-}
-
-@keyframes talkpik-analysis-spark {
-  0%,
-  100% {
-    opacity: 0.36;
-    scale: 0.88;
-  }
-
-  50% {
-    opacity: 1;
-    scale: 1;
   }
 }
 
@@ -7799,10 +7640,6 @@ body {
     max-height: 560px;
   }
 
-  .analysis-loading-shell {
-    min-height: min(680px, 78vh);
-  }
-
   .analysis-loading-background__head h1.ant-typography {
     font-size: 21px;
   }
@@ -7818,35 +7655,6 @@ body {
     padding: 24px 16px 18px;
   }
 
-  .analysis-character__stage {
-    width: 96px;
-    height: 84px;
-  }
-
-  .analysis-character__bot {
-    width: 70px;
-    height: 62px;
-    border-radius: 20px 20px 16px 16px;
-  }
-
-  .analysis-character__eye {
-    top: 22px;
-  }
-
-  .analysis-character__eye:first-child {
-    left: 21px;
-  }
-
-  .analysis-character__eye:nth-child(2) {
-    right: 21px;
-  }
-
-  .analysis-character__mouth {
-    right: 23px;
-    bottom: 18px;
-    left: 23px;
-  }
-
   .analysis-loading__title.ant-typography {
     font-size: 22px;
   }
@@ -7857,10 +7665,6 @@ body {
 
   .analysis-loading__steps .ant-steps-item-title {
     font-size: 11px;
-  }
-
-  .analysis-loading__status {
-    padding: 12px;
   }
 
   .analysis-loading__actions .ant-btn {

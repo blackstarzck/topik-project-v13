@@ -91,7 +91,7 @@ describe("LibrarySubmissionsTab — no render loop (regression)", () => {
     ).not.toThrow();
   });
 
-  it("opens pending submissions on the feedback status route and disables export selection", async () => {
+  it("renders pending submissions without a feedback link and disables export selection", async () => {
     vi.mocked(fetchSubmissionEnrichment).mockResolvedValueOnce(
       new Map([
         [
@@ -126,10 +126,11 @@ describe("LibrarySubmissionsTab — no render loop (regression)", () => {
       </QueryClientProvider>,
     );
 
-    const link = await screen.findByRole("link", {
-      name: /Pending analysis probl/,
-    });
-    expect(link.getAttribute("href")).toBe("/writing/feedback/short/s1");
+    const title = await screen.findByText(/Pending analysis probl/);
+    expect(title.closest("a")).toBeNull();
+    expect(
+      screen.queryByRole("link", { name: /Pending analysis probl/ }),
+    ).toBeNull();
 
     await waitFor(() => {
       expect(
