@@ -218,6 +218,16 @@ for (const s of AUTHED_SCREENS) {
       await expectWritingPageUsesFlushBullets(page);
     }
 
+    if (s.name === "problem-list") {
+      await expect(
+        page.getByRole("columnheader", { name: "풀이 상태" }),
+      ).toHaveCount(0);
+      await expect(page.locator(".problem-table__status-pill")).toHaveCount(0);
+      await expect(
+        page.getByRole("button", { name: /시작하기|다시 풀기/ }).first(),
+      ).toBeVisible();
+    }
+
     if (s.name === "long-form-writing-53") {
       await expect(page.getByTestId("q53-material-data-card")).toHaveCount(2);
       await expect(page.getByTestId("q53-material-reference")).toHaveCount(1);

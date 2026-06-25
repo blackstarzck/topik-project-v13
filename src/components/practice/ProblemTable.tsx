@@ -5,7 +5,6 @@ import { Button, ConfigProvider, Table, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
   ChartNoAxesColumnIncreasing,
-  CheckCircle2,
   Clock3,
   FileText,
   Trophy,
@@ -21,26 +20,12 @@ import {
   difficultyBucketShortKey,
 } from "./difficulty";
 import { getProblemRowDisplayMeta } from "./problem-list-display";
-import type { ProblemRowSolveStatus } from "./problem-list-display";
 import type { UserProblemRow } from "./problem-list-data";
 import { getReasonTagColor } from "./reason-tag-colors";
 
 type Props = {
   rows: UserProblemRow[];
   onRetryClick: (row: UserProblemRow) => void;
-};
-
-const STATUS_LABEL_KEYS: Record<
-  ProblemRowSolveStatus,
-  | "rowStatusUnsolved"
-  | "rowStatusCompleted"
-  | "rowStatusWrongNote"
-  | "rowStatusReviewNeeded"
-> = {
-  unsolved: "rowStatusUnsolved",
-  completed: "rowStatusCompleted",
-  wrongNote: "rowStatusWrongNote",
-  reviewNeeded: "rowStatusReviewNeeded",
 };
 
 const PROBLEM_TABLE_THEME = {
@@ -284,35 +269,6 @@ export function ProblemTable({ rows, onRetryClick }: Props) {
       },
     },
     {
-      title: (
-        <ColumnTitle icon={<CheckCircle2 size={14} />}>
-          {t("solveStatusLabel")}
-        </ColumnTitle>
-      ),
-      key: "solveStatus",
-      align: "center",
-      width: 132,
-      render: (_value: unknown, row) => {
-        const displayMeta = getProblemRowDisplayMeta(row);
-        const rowStatusLabel = t(
-          STATUS_LABEL_KEYS[
-            displayMeta.solveStatus
-          ] as Parameters<typeof t>[0],
-        );
-
-        return (
-          <span
-            className={[
-              "problem-table__status-pill",
-              `problem-table__status-pill--${displayMeta.solveStatus}`,
-            ].join(" ")}
-          >
-            {rowStatusLabel}
-          </span>
-        );
-      },
-    },
-    {
       title: null,
       key: "action",
       width: 132,
@@ -390,7 +346,7 @@ export function ProblemTable({ rows, onRetryClick }: Props) {
             tabIndex: disabled ? -1 : 0,
           };
         }}
-        scroll={{ x: 980 }}
+        scroll={{ x: 840 }}
         size="medium"
         tableLayout="fixed"
       />

@@ -290,10 +290,10 @@ describe("ProblemListView", () => {
       }),
     ).toBeTruthy();
     expect(
-      screen.getByRole("columnheader", {
+      screen.queryByRole("columnheader", {
         name: koMessages.practice.problems.solveStatusLabel,
       }),
-    ).toBeTruthy();
+    ).toBeNull();
     expect(
       screen.queryByRole("columnheader", {
         name: koMessages.practice.problems.solveAction,
@@ -313,10 +313,10 @@ describe("ProblemListView", () => {
     expect(screen.getByText("62점")).toBeTruthy();
     expect(screen.getByText("90점")).toBeTruthy();
     expect(screen.getByText("70점")).toBeTruthy();
-    expect(screen.getAllByText("미풀이")).toHaveLength(2);
-    expect(screen.getAllByText("완료")).toHaveLength(2);
-    expect(screen.getByText("오답 노트")).toBeTruthy();
-    expect(screen.getByText("복습 필요")).toBeTruthy();
+    expect(screen.queryByText("미풀이")).toBeNull();
+    expect(screen.queryByText("완료")).toBeNull();
+    expect(screen.queryByText("오답 노트")).toBeNull();
+    expect(screen.queryByText("복습 필요")).toBeNull();
     expect(screen.getAllByRole("button", { name: /시작하기/ })).toHaveLength(2);
     expect(screen.getAllByRole("button", { name: /다시 풀기/ })).toHaveLength(
       4,
