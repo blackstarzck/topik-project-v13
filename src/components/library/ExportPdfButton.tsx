@@ -3,7 +3,14 @@
 import { App, Button } from "antd";
 import { useTranslations } from "next-intl";
 
-import { exportPdfWithPrintFallback } from "@/lib/export/pdf-export-client";
+import {
+  exportPdfWithPrintFallback,
+  getPdfExportErrorMessage,
+} from "@/lib/export/pdf-export-client";
+import {
+  PDF_EXPORT_ERROR_CODES,
+  type PdfExportErrorCode,
+} from "@/lib/export/pdf-export-errors";
 import {
   PDF_EXPORT_DEFAULT_OPTIONS,
   type PdfExportRequest,
@@ -18,6 +25,7 @@ type Props = {
   /** antd Button type. Defaults to "default" — caller picks "primary". */
   buttonType?: "default" | "primary" | "link" | "text" | "dashed";
   disabled?: boolean;
+  ariaDescribedBy?: string;
 };
 
 export type ExportPdfClickArgs = {
@@ -41,6 +49,8 @@ export type ExportPdfDeps = {
   printFallbackMessage: string;
   /** Localized fallback error toast (library.exportButton.exportFailed). */
   errorMessage: string;
+  /** Optional localized API business-rule messages keyed by stable error code. */
+  errorMessagesByCode?: Partial<Record<PdfExportErrorCode, string>>;
 };
 
 /**
@@ -76,7 +86,13 @@ export function createExportPdfHandler(
       }
       deps.notifySuccess(deps.downloadedMessage);
     } catch (err) {
-      deps.notifyError(err instanceof Error ? err.message : deps.errorMessage);
+      deps.notifyError(
+        getPdfExportErrorMessage(
+          err,
+          deps.errorMessage,
+          deps.errorMessagesByCode,
+        ),
+      );
     }
   };
 }
@@ -93,6 +109,7 @@ export function ExportPdfButton({
   label,
   buttonType = "default",
   disabled = false,
+  ariaDescribedBy,
 }: Props) {
   const t = useTranslations("library.exportButton");
   const { message } = App.useApp();
@@ -121,6 +138,11 @@ export function ExportPdfButton({
       downloadedMessage: t("downloaded"),
       printFallbackMessage: t("fallbackPrint"),
       errorMessage: t("exportFailed"),
+      errorMessagesByCode: {
+        [PDF_EXPORT_ERROR_CODES.failedAnalysisUnavailable]: t(
+          "failedAnalysisExportUnavailable",
+        ),
+      },
     },
   );
 
@@ -133,6 +155,7 @@ export function ExportPdfButton({
       disabled={disabled || exportAction.pending}
       onClick={() => void exportAction.run()}
       aria-label={resolvedLabel}
+      aria-describedby={ariaDescribedBy}
     >
       {exportAction.pending ? t("exporting") : resolvedLabel}
     </Button>

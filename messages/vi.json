@@ -890,6 +890,8 @@
       "analysisStatusAction": "Xem trạng thái phân tích",
       "analysisPendingBadge": "Đang chờ phân tích",
       "analysisAnalyzingBadge": "Đang phân tích bài nộp",
+      "analysisFailedBadge": "Phân tích thất bại",
+      "analysisFailedTooltip": "Bài nộp đã được lưu nhưng không thể tạo phản hồi.",
       "statusPublished": "Công khai",
       "statusUnpublished": "Riêng tư",
       "statusInactive": "Không hoạt động",
@@ -1100,7 +1102,9 @@
       "startMissingType": "Không thể bắt đầu vì thiếu thông tin dạng câu hỏi. Vui lòng thử lại sau giây lát.",
       "startOpenFailed": "Đã xảy ra lỗi khi mở màn hình làm bài. Vui lòng thử lại.",
       "retry": "Thử lại",
-      "viewResult": "Xem kết quả"
+      "viewResult": "Xem kết quả",
+      "statusFailed": "Phân tích thất bại",
+      "viewFailedStatus": "Xem trạng thái thất bại"
     }
   },
   "feedback": {
@@ -1835,6 +1839,8 @@
       "scoreWithMax": "{total}/{max} điểm",
       "scoreNoMax": "{total} điểm",
       "analysisPendingHint": "Bài nộp đã được lưu tại đây. Điểm và phản hồi sẽ hiển thị khi phân tích xong.",
+      "analysisFailedHint": "Phân tích thất bại nên không thể hiển thị điểm và phản hồi. Hãy làm lại hoặc xem trạng thái thất bại.",
+      "failedExportDisabledReason": "Mục phân tích thất bại bị loại khỏi PDF và bộ ôn tập.",
       "charCount": "{count} ký tự",
       "totalCount": "Tổng {count}"
     },
@@ -1921,6 +1927,7 @@
       "exporting": "Đang xuất...",
       "printDialogOpened": "Hộp thoại in PDF đã mở.",
       "exportFailed": "Không thể xuất PDF.",
+      "failedAnalysisExportUnavailable": "Mục phân tích thất bại bị loại khỏi PDF và bộ ôn tập.",
       "downloaded": "Đã tải xuống file PDF.",
       "fallbackPrint": "Tạo PDF trên máy chủ thất bại nên đã mở hộp thoại in của trình duyệt thay thế.",
       "defaultFilenameSubmission": "TALKPIK-bai-lam",
@@ -1999,7 +2006,8 @@
       "generating": "Đang tạo...",
       "export": "Tạo PDF",
       "printDialogOpened": "Hộp thoại in PDF đã mở.",
-      "generateFailed": "Không thể tạo PDF."
+      "generateFailed": "Không thể tạo PDF.",
+      "failedAnalysisExportUnavailable": "Mục phân tích thất bại bị loại khỏi PDF và bộ ôn tập."
     }
   },
   "onboarding": {

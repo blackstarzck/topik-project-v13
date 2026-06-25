@@ -142,4 +142,78 @@ describe("LibrarySubmissionsTab — no render loop (regression)", () => {
       ).toBe(true);
     });
   });
+
+  it("marks failed submissions and disables export selection", async () => {
+    vi.mocked(fetchSubmissionEnrichment).mockResolvedValueOnce(
+      new Map([
+        [
+          "s1",
+          {
+            feedbackStatus: "failed",
+            scoreTotal: null,
+            scoreMax: null,
+            summary: null,
+          },
+        ],
+      ]),
+    );
+    const qc = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+
+    render(
+      <QueryClientProvider client={qc}>
+        <NextIntlClientProvider locale="ko" messages={koMessages}>
+          <AntdApp>
+            <LibrarySubmissionsTab
+              initialItems={[
+                {
+                  ...items[0],
+                  problem_title: "Failed analysis problem",
+                } as LibrarySubmissionView,
+              ]}
+            />
+          </AntdApp>
+        </NextIntlClientProvider>
+      </QueryClientProvider>,
+    );
+
+    expect(
+      (
+        await screen.findByRole("link", {
+          name: /Failed analysis probl/,
+        })
+      ).getAttribute("href"),
+    ).toBe("/writing/feedback/short/s1");
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(koMessages.library.submissions.statusFailed),
+      ).toBeTruthy();
+      expect(
+        screen.getByText(koMessages.library.submissions.analysisFailedHint),
+      ).toBeTruthy();
+    });
+
+    const selectWrapper = screen.getByTestId("library-select-item");
+    expect(selectWrapper.getAttribute("title")).toBe(
+      koMessages.library.submissions.failedExportDisabledReason,
+    );
+    const disabledReason = screen.getByText(
+      koMessages.library.submissions.failedExportDisabledReason,
+    );
+    const checkbox = screen.getByLabelText(
+      koMessages.library.submissions.selectForExportAriaLabel,
+    ) as HTMLInputElement;
+    const exportButton = screen.getByRole("button", {
+      name: koMessages.library.exportButton.label,
+    }) as HTMLButtonElement;
+
+    expect(checkbox.disabled).toBe(true);
+    expect(exportButton.disabled).toBe(true);
+    expect(checkbox.getAttribute("aria-describedby")).toBe(disabledReason.id);
+    expect(exportButton.getAttribute("aria-describedby")).toBe(
+      disabledReason.id,
+    );
+  });
 });

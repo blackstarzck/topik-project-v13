@@ -9,6 +9,7 @@
 //     않는다). 폴백 발생 여부를 mode로 돌려줘 호출부가 안내를 띄운다.
 
 import { createSupabaseBrowserClient } from "../supabase/browser";
+import type { PdfExportErrorCode } from "./pdf-export-errors";
 import { triggerPdfExport } from "./pdf-export";
 import {
   sanitizePdfFilename,
@@ -24,6 +25,44 @@ export type ServerPdfExportResult = {
 };
 
 type BrowserClientFactory = typeof createSupabaseBrowserClient;
+
+type PdfExportApiErrorBody = {
+  error?: string;
+  code?: string;
+};
+
+export class PdfExportApiError extends Error {
+  readonly status: number;
+  readonly code?: string;
+
+  constructor(status: number, message: string, code?: string) {
+    super(message);
+    this.name = "PdfExportApiError";
+    this.status = status;
+    this.code = code;
+  }
+}
+
+function shouldUsePrintFallback(error: unknown): boolean {
+  if (error instanceof PdfExportApiError) {
+    return error.status >= 500;
+  }
+  return true;
+}
+
+export function getPdfExportErrorMessage(
+  error: unknown,
+  fallbackMessage: string,
+  messagesByCode?: Partial<Record<PdfExportErrorCode, string>>,
+): string {
+  if (error instanceof PdfExportApiError) {
+    const localized = error.code
+      ? messagesByCode?.[error.code as PdfExportErrorCode]
+      : undefined;
+    return localized ?? fallbackMessage;
+  }
+  return error instanceof Error ? error.message : fallbackMessage;
+}
 
 function triggerBrowserDownload(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob);
@@ -77,10 +116,12 @@ export async function requestServerPdfExport(
 
   if (!response.ok) {
     const body = (await response.json().catch(() => null)) as
-      | { error?: string }
+      | PdfExportApiErrorBody
       | null;
-    throw new Error(
+    throw new PdfExportApiError(
+      response.status,
       body?.error ?? `PDF export failed (HTTP ${response.status})`,
+      body?.code,
     );
   }
 
@@ -112,6 +153,9 @@ export async function exportPdfWithPrintFallback(
     const result = await requestServerPdfExport(input);
     return { mode: "file", exportId: result.exportId };
   } catch (err) {
+    if (!shouldUsePrintFallback(err)) {
+      throw err;
+    }
     const reason = err instanceof Error ? err.message : String(err);
     const printed = await triggerPdfExport({
       sourceType: input.sourceType,

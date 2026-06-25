@@ -6,15 +6,24 @@ import {
   createExportPdfHandler,
   ExportPdfButton,
 } from "../../../src/components/library/ExportPdfButton";
+import { PdfExportApiError } from "../../../src/lib/export/pdf-export-client";
+import { PDF_EXPORT_ERROR_CODES } from "../../../src/lib/export/pdf-export-errors";
 import koMessages from "../../../messages/ko.json";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
 
 const exportPdfWithPrintFallbackMock = vi.hoisted(() => vi.fn());
 
-vi.mock("@/lib/export/pdf-export-client", () => ({
-  exportPdfWithPrintFallback: (...args: unknown[]) =>
-    exportPdfWithPrintFallbackMock(...args),
-}));
+vi.mock("@/lib/export/pdf-export-client", async (importOriginal) => {
+  const actual =
+    await importOriginal<
+      typeof import("../../../src/lib/export/pdf-export-client")
+    >();
+  return {
+    ...actual,
+    exportPdfWithPrintFallback: (...args: unknown[]) =>
+      exportPdfWithPrintFallbackMock(...args),
+  };
+});
 
 /**
  * `ExportPdfButton` is a thin shell around the server-PDF export pipeline
@@ -54,6 +63,10 @@ function makeDeps(trigger: ReturnType<typeof vi.fn>) {
     downloadedMessage: DOWNLOADED_KO,
     printFallbackMessage: FALLBACK_PRINT_KO,
     errorMessage: ERROR_KO,
+    errorMessagesByCode: {
+      [PDF_EXPORT_ERROR_CODES.failedAnalysisUnavailable]:
+        koMessages.library.exportButton.failedAnalysisExportUnavailable,
+    },
   };
 }
 
@@ -125,6 +138,42 @@ describe("ExportPdfButton — createExportPdfHandler", () => {
     expect(deps.notifySuccess).not.toHaveBeenCalled();
   });
 
+  it("maps API business-rule errors through localized error codes", async () => {
+    const trigger = vi.fn(async () => {
+      throw new PdfExportApiError(
+        400,
+        "분석 실패 답안은 PDF로 내보낼 수 없어요.",
+        PDF_EXPORT_ERROR_CODES.failedAnalysisUnavailable,
+      );
+    });
+    const deps = makeDeps(trigger);
+
+    const onClick = createExportPdfHandler(
+      { sourceType: "submission", sourceId: "sub-1" },
+      deps,
+    );
+    await onClick();
+
+    expect(deps.notifyError).toHaveBeenCalledWith(
+      koMessages.library.exportButton.failedAnalysisExportUnavailable,
+    );
+  });
+
+  it("uses the localized generic error for unknown API business-rule errors", async () => {
+    const trigger = vi.fn(async () => {
+      throw new PdfExportApiError(429, "서버 문자열", undefined);
+    });
+    const deps = makeDeps(trigger);
+
+    const onClick = createExportPdfHandler(
+      { sourceType: "submission", sourceId: "sub-1" },
+      deps,
+    );
+    await onClick();
+
+    expect(deps.notifyError).toHaveBeenCalledWith(ERROR_KO);
+  });
+
   it("falls back to a Korean default message when the thrown value is not an Error", async () => {
     const trigger = vi.fn(async () => {
       // Simulate a non-Error rejection (e.g. supabase-js sometimes throws strings).
@@ -152,6 +201,7 @@ describe("ExportPdfButton — createExportPdfHandler", () => {
     expect(keys).toEqual([
       "downloadedMessage",
       "errorMessage",
+      "errorMessagesByCode",
       "notifyError",
       "notifySuccess",
       "notifyWarning",

@@ -200,6 +200,14 @@ export function ProblemTable({ rows, onRetryClick }: Props) {
             : row.feedbackStatus === "analyzing"
               ? "analysisAnalyzingBadge"
               : null;
+        const analysisFailedBadge =
+          row.feedbackStatus === "failed"
+            ? {
+                labelKey: "analysisFailedBadge",
+                color: "red",
+                title: t("analysisFailedTooltip"),
+              }
+            : null;
         const displayTitle =
           row.title.length > 32 ? `${row.title.slice(0, 32)}...` : row.title;
 
@@ -264,6 +272,17 @@ export function ProblemTable({ rows, onRetryClick }: Props) {
                       }}
                     />
                   </Tooltip>
+                ) : null}
+                {analysisFailedBadge ? (
+                  <Tag
+                    className="problem-table__tag"
+                    color={analysisFailedBadge.color}
+                    title={analysisFailedBadge.title}
+                  >
+                    {t(
+                      analysisFailedBadge.labelKey as Parameters<typeof t>[0],
+                    )}
+                  </Tag>
                 ) : null}
               </div>
               {tags.length > 0 ? (

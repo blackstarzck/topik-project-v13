@@ -489,4 +489,61 @@ describe("ProblemListView", () => {
 
     expect(rpcMock).toHaveBeenCalledTimes(2);
   });
+
+  it("marks failed submitted rows as analysis failed while keeping the retry CTA", async () => {
+    rpcMock.mockResolvedValueOnce({
+      data: [
+        {
+          ...rpcRow(
+            {
+              problem_id: "problem-failed-51",
+              title: "Failed analysis problem",
+              difficulty: 2,
+              tags: ["failed"],
+              attempt_count: 1,
+              is_solved: true,
+              solve_state: "submitted",
+            },
+            0,
+          ),
+          latest_submission_id: "submission-failed-51",
+          writing_feedback_status: "failed",
+        },
+      ],
+      error: null,
+    });
+
+    renderInApp(<ProblemListView userId="user-1" />, "en");
+
+    expect(await screen.findByText("Failed analysis problem")).toBeTruthy();
+    expect(
+      screen.getByText(enMessages.practice.problems.analysisFailedBadge),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("button", {
+        name: enMessages.practice.problems.retryAttempt,
+      }),
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole("button", {
+        name: enMessages.practice.problems.analysisStatusAction,
+      }),
+    ).toBeNull();
+
+    fireEvent.click(screen.getByText("Failed analysis problem").closest("tr")!);
+
+    await screen.findByTestId("retry-modal-compact-summary");
+    expect(
+      screen.getByTestId("retry-modal-compact-summary").textContent,
+    ).toContain(enMessages.practice.retry.statusFailed);
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: enMessages.practice.retry.viewFailedStatus,
+      }),
+    );
+
+    expect(navState.push).toHaveBeenCalledWith(
+      "/writing/feedback/short/submission-failed-51",
+    );
+  });
 });

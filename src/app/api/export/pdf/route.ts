@@ -73,7 +73,10 @@ export async function POST(request: NextRequest) {
     await assertMonthlyPdfExportLimit(supabase, user.id);
   } catch (err) {
     if (err instanceof PdfExportRequestError) {
-      return NextResponse.json({ error: err.message }, { status: err.status });
+      return NextResponse.json(
+        { error: err.message, code: err.code },
+        { status: err.status },
+      );
     }
     return NextResponse.json(
       { error: "PDF 내보내기 한도를 확인하지 못했어요." },
@@ -182,7 +185,10 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     await markFailed();
     if (err instanceof PdfExportRequestError) {
-      return NextResponse.json({ error: err.message }, { status: err.status });
+      return NextResponse.json(
+        { error: err.message, code: err.code },
+        { status: err.status },
+      );
     }
     console.error("[api/export/pdf] generation failed", {
       exportId,

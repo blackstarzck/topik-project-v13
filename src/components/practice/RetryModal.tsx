@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AppModal } from "@/components/shared/AppModal";
 import { writingProblemHref } from "@/lib/writing/routes";
+import type { FeedbackStatus } from "@/lib/writing/types";
 
 const { Paragraph, Text } = Typography;
 
@@ -43,6 +44,7 @@ type Props = {
    * id lazily from writing_submissions on click.
    */
   submissionId?: string;
+  feedbackStatus?: FeedbackStatus | null;
   /**
    * C-03 §2 예외 — 문제 만료 시 시작 대신 만료 안내 + 닫기만 제공.
    * 만료 정책은 아직 미정이므로 기본 false; 상위에서 확정된 정책값을
@@ -109,6 +111,7 @@ export function RetryModal({
   hasSubmission,
   hasAttempt,
   submissionId,
+  feedbackStatus,
   expired = false,
 }: Props) {
   const t = useTranslations("practice.retry");
@@ -212,11 +215,17 @@ export function RetryModal({
     : null;
 
   // §2 — 이전 풀이 상태 요약 라벨.
-  const statusLabel = hasSubmission
-    ? t("statusSubmitted")
-    : hasAttempt
-      ? t("statusDrafting")
-      : t("statusNone");
+  const analysisFailed = feedbackStatus === "failed";
+  const resultActionLabel = analysisFailed
+    ? t("viewFailedStatus")
+    : t("viewResult");
+  const statusLabel = analysisFailed
+    ? t("statusFailed")
+    : hasSubmission
+      ? t("statusSubmitted")
+      : hasAttempt
+        ? t("statusDrafting")
+        : t("statusNone");
 
   const previousStatusMeta = [
     statusLabel,
@@ -300,7 +309,7 @@ export function RetryModal({
             onClick={handleViewResult}
             disabled={risky}
           >
-            {t("viewResult")}
+            {resultActionLabel}
           </Button>
         ) : null}
         <Alert
@@ -339,7 +348,7 @@ export function RetryModal({
           onClick={handleViewResult}
           disabled={risky}
         >
-          {t("viewResult")}
+          {resultActionLabel}
         </Button>
       ) : null}
 

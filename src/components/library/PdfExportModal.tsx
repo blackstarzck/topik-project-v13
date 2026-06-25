@@ -17,7 +17,11 @@ import { useTranslations } from "next-intl";
 import { useMemo, useState, type ReactNode } from "react";
 
 import { AppModal } from "@/components/shared/AppModal";
-import { exportPdfWithPrintFallback } from "@/lib/export/pdf-export-client";
+import {
+  exportPdfWithPrintFallback,
+  getPdfExportErrorMessage,
+} from "@/lib/export/pdf-export-client";
+import { PDF_EXPORT_ERROR_CODES } from "@/lib/export/pdf-export-errors";
 import {
   PDF_EXPORT_MAX_ITEMS,
   PDF_FILENAME_MAX,
@@ -182,7 +186,11 @@ function PdfExportModalBody({
     } catch (err) {
       setGen({
         phase: "error",
-        message: err instanceof Error ? err.message : t("generateFailed"),
+        message: getPdfExportErrorMessage(err, t("generateFailed"), {
+          [PDF_EXPORT_ERROR_CODES.failedAnalysisUnavailable]: t(
+            "failedAnalysisExportUnavailable",
+          ),
+        }),
       });
     }
   }

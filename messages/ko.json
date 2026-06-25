@@ -890,6 +890,8 @@
       "analysisStatusAction": "분석 상태 보기",
       "analysisPendingBadge": "분석 대기 중",
       "analysisAnalyzingBadge": "제출 답안 분석 중",
+      "analysisFailedBadge": "분석 실패",
+      "analysisFailedTooltip": "제출은 저장됐지만 첨삭을 만들지 못했어요.",
       "statusPublished": "공개",
       "statusUnpublished": "비공개",
       "statusInactive": "비활성",
@@ -1100,7 +1102,9 @@
       "startMissingType": "문제 유형 정보를 찾을 수 없어 시작할 수 없어요. 잠시 후 다시 시도해 주세요.",
       "startOpenFailed": "풀이 화면을 여는 중 문제가 발생했어요. 다시 시도해 주세요.",
       "retry": "다시 시도",
-      "viewResult": "결과 보기"
+      "viewResult": "결과 보기",
+      "statusFailed": "분석 실패",
+      "viewFailedStatus": "실패 상태 보기"
     }
   },
   "feedback": {
@@ -1835,6 +1839,8 @@
       "scoreWithMax": "{total}/{max}점",
       "scoreNoMax": "{total}점",
       "analysisPendingHint": "답안은 저장되어 있어요. 분석이 끝나면 점수와 피드백이 이곳에 표시됩니다.",
+      "analysisFailedHint": "분석에 실패해 점수와 피드백을 표시할 수 없어요. 다시 풀거나 실패 상태를 확인해 주세요.",
+      "failedExportDisabledReason": "분석 실패 항목은 PDF와 복습 세트에서 제외됩니다.",
       "charCount": "{count}자",
       "totalCount": "총 {count}건"
     },
@@ -1921,6 +1927,7 @@
       "exporting": "내보내는 중...",
       "printDialogOpened": "PDF 출력 대화상자가 열렸습니다.",
       "exportFailed": "PDF 내보내기에 실패했어요.",
+      "failedAnalysisExportUnavailable": "분석 실패 항목은 PDF와 복습 세트에서 제외됩니다.",
       "downloaded": "PDF 파일을 다운로드했어요.",
       "fallbackPrint": "서버 PDF 생성에 실패해서 브라우저 인쇄 창으로 대신 열었어요.",
       "defaultFilenameSubmission": "TALKPIK-답안",
@@ -1999,7 +2006,8 @@
       "generating": "생성 중...",
       "export": "PDF 생성",
       "printDialogOpened": "PDF 출력 대화상자가 열렸습니다.",
-      "generateFailed": "PDF 생성에 실패했어요."
+      "generateFailed": "PDF 생성에 실패했어요.",
+      "failedAnalysisExportUnavailable": "분석 실패 항목은 PDF와 복습 세트에서 제외됩니다."
     }
   },
   "onboarding": {
