@@ -95,6 +95,56 @@ describe("getProfileSettings", () => {
     expect(result?.nationality_country_code).toBe("VN");
   });
 
+  it("falls back to legacy locale source when the remote schema lacks ui_locale_source", async () => {
+    const selectedColumns: string[] = [];
+    const result = await getProfileSettings(
+      "user-4",
+      async () =>
+        ({
+          from: () => ({
+            select: (columns: string) => {
+              selectedColumns.push(columns);
+              return {
+                eq: () => ({
+                  maybeSingle: () =>
+                    Promise.resolve(
+                      columns.includes("ui_locale_source")
+                        ? {
+                            data: null,
+                            error: {
+                              message:
+                                "column profiles.ui_locale_source does not exist",
+                            },
+                          }
+                        : {
+                            data: {
+                              display_name: null,
+                              nickname: null,
+                              nationality_country_code: "KR",
+                              bio: null,
+                              ui_locale: "ko",
+                              notification_prefs: {},
+                            },
+                            error: null,
+                          },
+                    ),
+                }),
+              };
+            },
+          }),
+        }) as unknown as SupabaseServerClient,
+    );
+
+    expect(selectedColumns).toHaveLength(2);
+    expect(selectedColumns[0]).toContain("ui_locale_source");
+    expect(selectedColumns[1]).not.toContain("ui_locale_source");
+    expect(result).toMatchObject({
+      nationality_country_code: "KR",
+      ui_locale: "ko",
+      ui_locale_source: "legacy",
+    });
+  });
+
   it("coerces unknown / non-boolean notification_prefs keys away", async () => {
     const row = {
       display_name: null,
