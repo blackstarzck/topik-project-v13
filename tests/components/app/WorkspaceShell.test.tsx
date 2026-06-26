@@ -271,7 +271,7 @@ describe("WorkspaceShell", () => {
     expect(cssRule(".app-profile-popover-actions")).toBe("");
     expect(cssRule(".app-profile-popover-panel__header")).toBe("");
     expect(cssRule(".app-profile-popover-action")).toContain(
-      "padding: 8px 0",
+      "padding: 8px 12px",
     );
     expect(cssRule(".app-profile-popover-action")).toContain(
       "font-size: 14px",
