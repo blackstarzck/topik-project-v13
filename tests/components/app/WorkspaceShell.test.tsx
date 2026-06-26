@@ -511,6 +511,59 @@ describe("WorkspaceShell", () => {
     expect(examRule).toContain("background: var(--app-color-bg-layout);");
   });
 
+  it.each([
+    ["/writing/short-answer-writing-51", false],
+    ["/writing/feedback/short/submission-1", true],
+    ["/writing/feedback/long/submission-1", true],
+    ["/writing/reports/report-1/compare", true],
+  ])(
+    "hides global floating actions on focus route %s",
+    (pathname, keepsSidebar) => {
+      navMock.pathname = pathname;
+
+      const { container } = renderWithIntl(
+        <WorkspaceShell
+          role="learner"
+          userId="user-1"
+          email="learner@example.com"
+          planLabel="premium"
+        >
+          <div data-testid="workspace-child">body</div>
+        </WorkspaceShell>,
+      );
+
+      expect(
+        container.querySelector(
+          ".app-notification-corner, .app-workspace-mobile-actions",
+        ),
+      ).toBeNull();
+      expect(Boolean(container.querySelector(".app-workspace-sider"))).toBe(
+        keepsSidebar,
+      );
+    },
+  );
+
+  it("keeps global floating actions on non-focus workspace routes", () => {
+    navMock.pathname = "/dashboard";
+
+    const { container } = renderWithIntl(
+      <WorkspaceShell
+        role="learner"
+        userId="user-1"
+        email="learner@example.com"
+        planLabel="premium"
+      >
+        <div data-testid="workspace-child">body</div>
+      </WorkspaceShell>,
+    );
+
+    expect(
+      container.querySelector(
+        ".app-notification-corner, .app-workspace-mobile-actions",
+      ),
+    ).toBeTruthy();
+  });
+
   it("keeps the sidebar logo slot 68px tall and centered", () => {
     const brandRule = cssRule(".app-sidebar-brand");
     const logoRule = cssRule(".app-sidebar-brand__logo .brand-logo__image");

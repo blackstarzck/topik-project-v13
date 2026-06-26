@@ -86,8 +86,15 @@ export function WorkspaceShell({
     pathname === "/writing/essay-writing-54";
   const isOnboardingLearningGoalRoute =
     pathname === "/onboarding/learning-goal";
+  const isFeedbackDetailRoute =
+    pathname.startsWith("/writing/feedback/short/") ||
+    pathname.startsWith("/writing/feedback/long/");
+  const isComparisonReportRoute =
+    pathname.startsWith("/writing/reports/") && pathname.endsWith("/compare");
   const hidesWorkspaceChrome =
     isWritingExamRoute || isOnboardingLearningGoalRoute;
+  const hidesGlobalFloatingActions =
+    hidesWorkspaceChrome || isFeedbackDetailRoute || isComparisonReportRoute;
   const isShortFeedbackRoute = pathname.startsWith("/writing/feedback/short/");
   const contentClassName = [
     "app-workspace-content",
@@ -244,11 +251,13 @@ export function WorkspaceShell({
             >
               <BrandLogo height={48} loading="eager" />
             </span>
-            <div className="app-workspace-mobile-actions">{userActions}</div>
+            {hidesGlobalFloatingActions ? null : (
+              <div className="app-workspace-mobile-actions">{userActions}</div>
+            )}
           </Header>
-        ) : (
-          /* No desktop header exists, so the bell floats fixed at the
-             top-right corner of the content area on every workspace page. */
+        ) : hidesGlobalFloatingActions ? null : (
+          /* No desktop header exists, so global user actions float fixed at
+             the top-right corner on regular workspace pages. */
           <div className="app-notification-corner">{userActions}</div>
         )}
         <Content className={contentClassName}>{children}</Content>
