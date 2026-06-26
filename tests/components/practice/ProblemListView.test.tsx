@@ -426,7 +426,7 @@ describe("ProblemListView", () => {
     expect(navState.push).not.toHaveBeenCalled();
   });
 
-  it("shows the first analysis tooltip by default and hides it after user interaction", async () => {
+  it("renders pending analysis rows without opening a row tooltip", async () => {
     rpcMock.mockResolvedValueOnce({
       data: [
         {
@@ -452,25 +452,44 @@ describe("ProblemListView", () => {
     renderInApp(<ProblemListView userId="user-1" />, "en");
 
     expect(await screen.findByText("Tooltip analysis problem")).toBeTruthy();
-    expect(await screen.findByText("Analyzing answer")).toBeTruthy();
+    expect(screen.queryByText("Analyzing answer")).toBeNull();
+    expect(screen.queryByTestId("problem-analysis-tooltip-trigger")).toBeNull();
+    expect(screen.queryByRole("tooltip")).toBeNull();
 
-    const tooltipTrigger = screen.getByRole("button", {
-      name: "Analyzing answer",
-    });
-    expect(tooltipTrigger.getAttribute("data-testid")).toBe(
-      "problem-analysis-tooltip-trigger",
-    );
-
-    fireEvent.pointerDown(
+    fireEvent.click(
       screen.getByText("Tooltip analysis problem").closest("tr")!,
     );
+    expect(navState.push).not.toHaveBeenCalled();
+  });
 
-    await waitFor(() => {
-      expect(screen.queryByText("Analyzing answer")).toBeNull();
+  it("keeps long problem titles intact for CSS two-line clamping without native title tooltips", async () => {
+    const longTitle =
+      "51-999_Long problem title that should remain intact and be visually clamped by CSS instead of truncated in React";
+    rpcMock.mockResolvedValueOnce({
+      data: [
+        rpcRow(
+          {
+            problem_id: "problem-long-title-51",
+            title: longTitle,
+            difficulty: 3,
+            tags: ["long-title"],
+            attempt_count: 0,
+            is_solved: false,
+            solve_state: "none",
+          },
+          0,
+        ),
+      ],
+      error: null,
     });
 
-    fireEvent.click(tooltipTrigger);
-    expect(navState.push).not.toHaveBeenCalled();
+    renderInApp(<ProblemListView userId="user-1" />, "en");
+
+    const title = await screen.findByText(longTitle);
+    expect(title.className).toContain("problem-table__title");
+    expect(title.textContent).toBe(longTitle);
+    expect(title.getAttribute("title")).toBeNull();
+    expect(screen.queryByText(`${longTitle.slice(0, 32)}...`)).toBeNull();
   });
 
   it("runs the failed-load retry only once while refetch is pending", async () => {

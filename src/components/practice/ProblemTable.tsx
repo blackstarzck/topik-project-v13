@@ -1,8 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
 import type { KeyboardEvent, MouseEvent, ReactNode } from "react";
-import { Button, ConfigProvider, Table, Tag, Tooltip } from "antd";
+import { Button, ConfigProvider, Table, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
   ChartNoAxesColumnIncreasing,
@@ -101,52 +100,6 @@ export function ProblemTable({ rows, onRetryClick }: Props) {
   const router = useRouter();
   const t = useTranslations("practice.problems");
   const tCommon = useTranslations("practice.common");
-  const firstAnalysisProblemId = useMemo(
-    () => rows.find(isAnalysisHandoff)?.problemId ?? null,
-    [rows],
-  );
-  const [analysisTooltipDismissed, setAnalysisTooltipDismissed] =
-    useState(false);
-  const [manualAnalysisTooltipId, setManualAnalysisTooltipId] = useState<
-    string | null
-  >(null);
-  const openAnalysisTooltipId = analysisTooltipDismissed
-    ? manualAnalysisTooltipId
-    : firstAnalysisProblemId;
-  const dismissAnalysisTooltip = useCallback(() => {
-    setAnalysisTooltipDismissed(true);
-    setManualAnalysisTooltipId(null);
-  }, []);
-
-  useEffect(() => {
-    if (analysisTooltipDismissed) return;
-    const listenerOptions = { capture: true, once: true } as const;
-    const body = document.body;
-    document.addEventListener(
-      "pointerdown",
-      dismissAnalysisTooltip,
-      listenerOptions,
-    );
-    document.addEventListener(
-      "keydown",
-      dismissAnalysisTooltip,
-      listenerOptions,
-    );
-    body?.addEventListener(
-      "pointerdown",
-      dismissAnalysisTooltip,
-      listenerOptions,
-    );
-    window.addEventListener("scroll", dismissAnalysisTooltip, listenerOptions);
-    window.addEventListener("wheel", dismissAnalysisTooltip, listenerOptions);
-    return () => {
-      document.removeEventListener("pointerdown", dismissAnalysisTooltip, true);
-      document.removeEventListener("keydown", dismissAnalysisTooltip, true);
-      body?.removeEventListener("pointerdown", dismissAnalysisTooltip, true);
-      window.removeEventListener("scroll", dismissAnalysisTooltip, true);
-      window.removeEventListener("wheel", dismissAnalysisTooltip, true);
-    };
-  }, [analysisTooltipDismissed, dismissAnalysisTooltip]);
 
   function selectRow(row: UserProblemRow) {
     if (isDisabled(row)) return;
@@ -194,22 +147,13 @@ export function ProblemTable({ rows, onRetryClick }: Props) {
       render: (_title: string, row) => {
         const displayMeta = getProblemRowDisplayMeta(row);
         const tags = visibleTags(row);
-        const analysisStatusLabelKey =
-          row.feedbackStatus === "pending"
-            ? "analysisPendingBadge"
-            : row.feedbackStatus === "analyzing"
-              ? "analysisAnalyzingBadge"
-              : null;
         const analysisFailedBadge =
           row.feedbackStatus === "failed"
             ? {
                 labelKey: "analysisFailedBadge",
                 color: "red",
-                title: t("analysisFailedTooltip"),
               }
             : null;
-        const displayTitle =
-          row.title.length > 32 ? `${row.title.slice(0, 32)}...` : row.title;
 
         return (
           <div className="problem-table__problem-cell">
@@ -232,56 +176,19 @@ export function ProblemTable({ rows, onRetryClick }: Props) {
             </span>
             <div className="problem-table__copy">
               <div className="problem-table__title-line">
-                <strong className="problem-table__title" title={row.title}>
-                  {displayTitle}
-                </strong>
+                <strong className="problem-table__title">{row.title}</strong>
                 {displayMeta.isNew ? (
                   <span className="problem-table__new-badge">
                     {t("newBadge")}
                   </span>
                 ) : null}
-                {analysisStatusLabelKey ? (
-                  <Tooltip
-                    title={t(analysisStatusLabelKey)}
-                    placement="right"
-                    destroyOnHidden
-                    motion={{ motionName: "" }}
-                    open={openAnalysisTooltipId === row.problemId}
-                    onOpenChange={(open) => {
-                      if (!analysisTooltipDismissed) return;
-                      setManualAnalysisTooltipId(open ? row.problemId : null);
-                    }}
-                    classNames={{
-                      root: "problem-table__analysis-tooltip",
-                      container: "problem-table__analysis-tooltip-body",
-                      arrow: "problem-table__analysis-tooltip-arrow",
-                    }}
-                  >
-                    <Button
-                      aria-label={t(analysisStatusLabelKey)}
-                      className="problem-table__analysis-tooltip-trigger"
-                      data-testid="problem-analysis-tooltip-trigger"
-                      icon={<Clock3 aria-hidden size={14} />}
-                      shape="circle"
-                      size="small"
-                      type="text"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        setAnalysisTooltipDismissed(true);
-                        setManualAnalysisTooltipId(null);
-                      }}
-                    />
-                  </Tooltip>
-                ) : null}
                 {analysisFailedBadge ? (
                   <Tag
                     className="problem-table__tag"
                     color={analysisFailedBadge.color}
-                    title={analysisFailedBadge.title}
+                    aria-label={t("analysisFailedTooltip")}
                   >
-                    {t(
-                      analysisFailedBadge.labelKey as Parameters<typeof t>[0],
-                    )}
+                    {t(analysisFailedBadge.labelKey as Parameters<typeof t>[0])}
                   </Tag>
                 ) : null}
               </div>
@@ -337,7 +244,10 @@ export function ProblemTable({ rows, onRetryClick }: Props) {
           : undefined;
 
         return (
-          <span className="problem-table__value tabular-nums" title={title}>
+          <span
+            className="problem-table__value tabular-nums"
+            aria-label={title}
+          >
             {value}
           </span>
         );
@@ -442,12 +352,7 @@ export function ProblemTable({ rows, onRetryClick }: Props) {
   ];
 
   return (
-    <div
-      className="problem-table__interaction-surface"
-      onKeyDownCapture={dismissAnalysisTooltip}
-      onPointerDownCapture={dismissAnalysisTooltip}
-      onWheelCapture={dismissAnalysisTooltip}
-    >
+    <div className="problem-table__interaction-surface">
       <ConfigProvider theme={PROBLEM_TABLE_THEME}>
         <Table<UserProblemRow>
           className="problem-table"

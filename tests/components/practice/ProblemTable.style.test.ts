@@ -22,34 +22,34 @@ function fontSize(selector: string) {
 }
 
 describe("ProblemTable styles", () => {
-  test("keeps problem, difficulty, estimated time, and previous score cells at 16px", () => {
-    for (const selector of [
-      ".problem-table__type-index--number",
-      ".problem-table__title",
-      ".problem-table__value",
-    ]) {
+  test("keeps title, difficulty, estimated time, and previous score cells at 16px", () => {
+    for (const selector of [".problem-table__title", ".problem-table__value"]) {
       expect(fontSize(selector)).toBe("16px");
     }
+
+    expect(fontSize(".problem-table__type-index--number")).toBe("36px");
   });
 
-  test("scopes the analysis tooltip surface strongly enough to override AntD defaults", () => {
-    const surfaceRule = cssRule(
-      ".problem-table__analysis-tooltip.problem-table__analysis-tooltip .problem-table__analysis-tooltip-body",
-    );
-    const arrowRule = cssRule(
-      ".problem-table__analysis-tooltip.problem-table__analysis-tooltip .problem-table__analysis-tooltip-arrow::before",
-    );
+  test("does not keep problem row tooltip override styles", () => {
+    expect(
+      cssRule(
+        ".problem-table__analysis-tooltip.problem-table__analysis-tooltip .problem-table__analysis-tooltip-body",
+      ),
+    ).toBe("");
+    expect(
+      cssRule(
+        ".problem-table__analysis-tooltip.problem-table__analysis-tooltip .problem-table__analysis-tooltip-arrow::before",
+      ),
+    ).toBe("");
+  });
 
-    expect(surfaceRule).toContain(
-      "background: var(--app-color-bg-container);",
-    );
-    expect(surfaceRule).toContain("box-shadow:");
-    expect(surfaceRule).toContain("var(--app-shadow-elevated)");
-    expect(surfaceRule).toContain(
-      "0 12px 30px rgba(24, 24, 27, 0.18)",
-    );
-    expect(surfaceRule).toContain("color: var(--app-color-text);");
-    expect(surfaceRule).toContain("font-size: 14px;");
-    expect(arrowRule).toContain("background: var(--app-color-bg-container);");
+  test("limits problem titles to two visual lines", () => {
+    const rule = cssRule(".problem-table__title");
+
+    expect(rule).toContain("display: -webkit-box;");
+    expect(rule).toContain("-webkit-line-clamp: 2;");
+    expect(rule).toContain("line-clamp: 2;");
+    expect(rule).toContain("-webkit-box-orient: vertical;");
+    expect(rule).toContain("overflow: hidden;");
   });
 });
