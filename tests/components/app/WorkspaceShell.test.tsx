@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { WorkspaceShell } from "../../../src/components/app/WorkspaceShell";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
+import koMessages from "../../../messages/ko.json";
 
 const GLOBAL_CSS = readFileSync(
   join(process.cwd(), "src/styles/global.css"),
@@ -135,7 +136,7 @@ describe("WorkspaceShell", () => {
     expect(screen.getByTestId("workspace-child")).toBeTruthy();
   });
 
-  it("shows the user summary beside the notification bell", () => {
+  it("groups the notification bell inside the user summary pill", () => {
     const { container } = renderWithIntl(
       <WorkspaceShell
         role="learner"
@@ -153,12 +154,88 @@ describe("WorkspaceShell", () => {
     const actionGroup = summary?.closest(
       ".app-notification-corner, .app-workspace-mobile-actions",
     );
+    const divider = actionGroup?.querySelector(
+      ".app-workspace-user-summary__divider",
+    );
+    const bell = actionGroup?.querySelector(".app-notification-bell");
 
     expect(summary).toBeTruthy();
     expect(actionGroup).toBeTruthy();
+    expect(divider).toBeTruthy();
+    expect(bell).toBeTruthy();
+    if (!summary || !actionGroup || !divider || !bell) {
+      throw new Error("user summary action group is incomplete");
+    }
+    expect(actionGroup.contains(summary)).toBe(true);
+    expect(actionGroup.contains(divider)).toBe(true);
+    expect(actionGroup.contains(bell)).toBe(true);
     expect(summary?.querySelector(".ant-avatar")).toBeTruthy();
     expect(summary?.textContent).toContain("talkpik-chan");
     expect(summary?.textContent).toContain("student@example.com");
+    expect(cssRule(".app-notification-corner")).not.toContain("height:");
+    expect(cssRule(".app-notification-corner")).toContain("gap: 0");
+    expect(cssRule(".app-notification-corner")).toContain("padding: 8px");
+    expect(cssRule(".app-workspace-mobile-actions")).toContain(
+      "padding: 8px",
+    );
+    expect(cssRule(".app-workspace-user-summary__divider")).toContain(
+      "height: 60%",
+    );
+    expect(
+      cssRule(".app-notification-corner .app-notification-bell"),
+    ).toContain("border: 0");
+    expect(
+      cssRule(".app-notification-corner .app-notification-bell"),
+    ).toContain("box-shadow: none");
+    expect(
+      cssRule(".app-notification-corner .app-notification-bell:hover"),
+    ).toContain("background: transparent");
+    expect(
+      cssRule(".app-notification-corner .app-notification-bell:hover"),
+    ).toContain("box-shadow: none");
+  });
+
+  it("opens profile actions from the user summary trigger", () => {
+    const { container } = renderWithIntl(
+      <WorkspaceShell
+        role="learner"
+        userId="user-1"
+        email="student@example.com"
+        displayName="Chan"
+        nickname="talkpik-chan"
+        planLabel="premium"
+      >
+        <div>body</div>
+      </WorkspaceShell>,
+    );
+
+    const profileTrigger = within(container).getByRole("button", {
+      name: koMessages.app.userSummary,
+    });
+    const dropdownItem = (label: string) => {
+      const item = Array.from(
+        document.body.querySelectorAll(".ant-dropdown-menu [role='menuitem']"),
+      ).find((candidate) => candidate.textContent?.includes(label));
+      if (!item) throw new Error(`dropdown item not found: ${label}`);
+      return item;
+    };
+
+    fireEvent.click(profileTrigger);
+    fireEvent.click(dropdownItem(koMessages.nav.profile));
+
+    expect(navMock.routerPush).toHaveBeenCalledWith("/profile");
+
+    fireEvent.click(profileTrigger);
+    fireEvent.click(dropdownItem(koMessages.nav.settingsLearning));
+
+    expect(navMock.routerPush).toHaveBeenCalledWith("/settings/learning");
+
+    const signOutForm = container.querySelector(".app-profile-menu-signout");
+    expect(signOutForm).toBeTruthy();
+    expect(signOutForm?.getAttribute("method")).toBe("post");
+    expect(signOutForm?.getAttribute("action")).toBe("/auth/sign-out");
+    fireEvent.click(profileTrigger);
+    expect(dropdownItem(koMessages.nav.logout)).toBeTruthy();
   });
 
   it("renders Iconsax icons in the sidebar menu", () => {

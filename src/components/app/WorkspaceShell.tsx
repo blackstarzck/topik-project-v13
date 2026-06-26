@@ -1,15 +1,24 @@
 "use client";
 
-import { Avatar, Button, Grid, Layout, Space, Typography } from "antd";
+import {
+  Avatar,
+  Button,
+  Dropdown,
+  Grid,
+  Layout,
+  Typography,
+  type MenuProps,
+} from "antd";
 import { Menu as MenuIcon } from "@/components/shared/AppIcons";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { AppDrawer } from "@/components/shared/AppDrawer";
 import { BrandLogo } from "@/components/shared/BrandLogo";
 import { avatarPublicUrl } from "@/components/profile/avatar-upload";
 import type { AppRole } from "@/lib/auth/roles";
+import { APP_ROUTES } from "@/lib/routes";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { SidebarNav } from "./SidebarNav";
 
@@ -39,9 +48,11 @@ export function WorkspaceShell({
   children,
 }: Props) {
   const t = useTranslations("app");
+  const navT = useTranslations("nav");
   const pathname = usePathname();
   const router = useRouter();
   const screens = useBreakpoint();
+  const signOutFormRef = useRef<HTMLFormElement>(null);
 
   // 멀티 탭/기기 동기화: 다른 탭·기기에서 로그아웃되거나 회원 탈퇴로 세션이
   // 무효화되면 이 탭도 로그인 화면으로 보낸다. 권위 있는 차단은 서버측
@@ -98,32 +109,70 @@ export function WorkspaceShell({
     }
   }, [avatarPath]);
   const avatarInitial = profileName?.charAt(0).toUpperCase() ?? "?";
+  const profileMenuItems: MenuProps["items"] = [
+    { key: "profile", label: navT("profile") },
+    { key: "learning-goal", label: navT("settingsLearning") },
+    { type: "divider" },
+    { key: "logout", label: navT("logout"), danger: true },
+  ];
+  const handleProfileMenuClick: MenuProps["onClick"] = ({ key }) => {
+    if (key === "profile") {
+      router.push(APP_ROUTES.profile);
+      return;
+    }
+    if (key === "learning-goal") {
+      router.push(APP_ROUTES.settingsLearning);
+      return;
+    }
+    if (key === "logout") {
+      signOutFormRef.current?.requestSubmit();
+    }
+  };
   const userSummary = profileName ? (
-    <div className="app-workspace-user-summary" aria-label={t("userSummary")}>
-      <Avatar
-        size={32}
-        src={avatarUrl ?? undefined}
-        alt={profileName}
-        className="app-workspace-user-summary__avatar"
+    <Dropdown
+      menu={{ items: profileMenuItems, onClick: handleProfileMenuClick }}
+      placement="bottomRight"
+      trigger={["click"]}
+    >
+      <button
+        type="button"
+        className="app-workspace-user-summary"
+        aria-label={t("userSummary")}
       >
-        {avatarUrl ? null : avatarInitial}
-      </Avatar>
-      <span className="app-workspace-user-summary__copy">
-        <Text strong ellipsis className="app-workspace-user-summary__name">
-          {profileName}
-        </Text>
-        {profileSecondary ? (
-          <Text
-            type="secondary"
-            ellipsis
-            className="app-workspace-user-summary__meta"
-          >
-            {profileSecondary}
+        <Avatar
+          size={32}
+          src={avatarUrl ?? undefined}
+          alt={profileName}
+          className="app-workspace-user-summary__avatar"
+        >
+          {avatarUrl ? null : avatarInitial}
+        </Avatar>
+        <span className="app-workspace-user-summary__copy">
+          <Text strong ellipsis className="app-workspace-user-summary__name">
+            {profileName}
           </Text>
-        ) : null}
-      </span>
-    </div>
+          {profileSecondary ? (
+            <Text
+              type="secondary"
+              ellipsis
+              className="app-workspace-user-summary__meta"
+            >
+              {profileSecondary}
+            </Text>
+          ) : null}
+        </span>
+      </button>
+    </Dropdown>
   ) : null;
+  const userActions = (
+    <>
+      {userSummary}
+      {userSummary ? (
+        <span className="app-workspace-user-summary__divider" aria-hidden />
+      ) : null}
+      <NotificationBell userId={userId} />
+    </>
+  );
 
   return (
     <Layout
@@ -161,22 +210,12 @@ export function WorkspaceShell({
             >
               <BrandLogo height={48} loading="eager" />
             </span>
-            <Space
-              size={8}
-              align="center"
-              className="app-workspace-mobile-actions"
-            >
-              {userSummary}
-              <NotificationBell userId={userId} />
-            </Space>
+            <div className="app-workspace-mobile-actions">{userActions}</div>
           </Header>
         ) : (
           /* No desktop header exists, so the bell floats fixed at the
              top-right corner of the content area on every workspace page. */
-          <div className="app-notification-corner">
-            {userSummary}
-            <NotificationBell userId={userId} />
-          </div>
+          <div className="app-notification-corner">{userActions}</div>
         )}
         <Content className={contentClassName}>{children}</Content>
       </Layout>
@@ -198,6 +237,13 @@ export function WorkspaceShell({
           />
         </AppDrawer>
       )}
+      <form
+        ref={signOutFormRef}
+        method="post"
+        action={APP_ROUTES.authSignOut}
+        className="app-profile-menu-signout"
+        hidden
+      />
     </Layout>
   );
 }

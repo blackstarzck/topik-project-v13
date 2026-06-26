@@ -4137,6 +4137,15 @@ body {
 .app-workspace-mobile-actions {
   position: relative;
   z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  gap: 0;
+  border: 1px solid var(--app-color-border);
+  border-radius: 999px;
+  background: var(--app-color-bg-container);
+  box-shadow: 0 6px 18px rgba(42, 55, 89, 0.1);
+  padding: 8px;
 }
 
 .app-workspace-drawer .ant-drawer-body {
@@ -5784,20 +5793,38 @@ body {
   z-index: 80;
   display: flex;
   align-items: center;
-  gap: 8px;
+  min-width: 0;
+  gap: 0;
+  border: 1px solid var(--app-color-border);
+  border-radius: 999px;
+  background: var(--app-color-bg-container);
+  box-shadow: 0 6px 18px rgba(42, 55, 89, 0.1);
+  padding: 8px;
 }
 
 .app-workspace-user-summary {
+  appearance: none;
   display: inline-flex;
   align-items: center;
   max-width: min(280px, 42vw);
   min-width: 0;
   gap: 8px;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
   border: 1px solid var(--app-color-border);
   border-radius: 999px;
   background: var(--app-color-bg-container);
   box-shadow: 0 6px 18px rgba(42, 55, 89, 0.1);
   padding: 4px 10px 4px 4px;
+}
+
+.app-notification-corner .app-workspace-user-summary {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 0 10px 0 0;
 }
 
 .app-workspace-user-summary__avatar.ant-avatar {
@@ -5813,6 +5840,15 @@ body {
   min-width: 0;
   flex-direction: column;
   line-height: 1.2;
+}
+
+.app-workspace-user-summary__divider {
+  flex: 0 0 auto;
+  width: 1px;
+  height: 60%;
+  min-height: calc(42px * 0.6);
+  background: var(--app-color-border);
+  margin-inline: 2px 4px;
 }
 
 .app-workspace-user-summary__name.ant-typography,
@@ -5831,10 +5867,33 @@ body {
 }
 
 .app-notification-corner .app-notification-bell {
-  border: 1px solid var(--app-color-border);
+  border: 0 !important;
   border-radius: 999px;
-  background: var(--app-color-bg-container);
-  box-shadow: 0 6px 18px rgba(42, 55, 89, 0.1);
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.app-workspace-mobile-actions .app-notification-bell {
+  border: 0 !important;
+  border-radius: 999px;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.app-notification-corner .app-notification-bell:hover {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.app-notification-corner .app-notification-bell:focus,
+.app-notification-corner .app-notification-bell:active,
+.app-workspace-mobile-actions .app-notification-bell:hover,
+.app-workspace-mobile-actions .app-notification-bell:focus,
+.app-workspace-mobile-actions .app-notification-bell:active {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 .ant-notification .ant-notification-notice.ant-notification-notice {
