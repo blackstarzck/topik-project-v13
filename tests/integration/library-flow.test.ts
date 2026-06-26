@@ -6,7 +6,10 @@ import { describe, it, expect, vi } from "vitest";
 //   someone else's submission_id (Phase 6 P1-5)
 // - triggerPdfExport stamps the browser_print marker
 
-import { listLibraryItems } from "@/lib/library/server";
+import {
+  isSubmissionSavedToLibrary,
+  listLibraryItems,
+} from "@/lib/library/server";
 import { saveLibraryItem } from "@/lib/library/mutations";
 import { triggerPdfExport } from "@/lib/export/pdf-export";
 
@@ -97,6 +100,35 @@ function makeClient(opts: {
   };
 }
 
+function makeLibrarySavedLookupClient(opts: {
+  data?: { id: string } | null;
+  error?: { message: string } | null;
+}) {
+  const maybeSingle = vi.fn(() =>
+    Promise.resolve({
+      data: opts.data ?? null,
+      error: opts.error ?? null,
+    }),
+  );
+  const eqSubmissionId = vi.fn(() => ({ maybeSingle }));
+  const eqItemType = vi.fn(() => ({ eq: eqSubmissionId }));
+  const eqUserId = vi.fn(() => ({ eq: eqItemType }));
+  const select = vi.fn(() => ({ eq: eqUserId }));
+  const from = vi.fn((table: string) => {
+    expect(table).toBe("library_items");
+    return { select };
+  });
+
+  return {
+    client: { from },
+    select,
+    eqUserId,
+    eqItemType,
+    eqSubmissionId,
+    maybeSingle,
+  };
+}
+
 describe("library-flow — listLibraryItems shape", () => {
   it("returns empty array for new user (all tabs)", async () => {
     const client = makeClient({});
@@ -143,6 +175,40 @@ describe("library-flow — listLibraryItems shape", () => {
     );
     expect(items).toHaveLength(1);
     expect(items[0].kind).toBe("submission");
+  });
+});
+
+describe("library-flow feedback save state lookup", () => {
+  it("returns true when the submission already has a library item", async () => {
+    const lookup = makeLibrarySavedLookupClient({ data: { id: "lib-1" } });
+
+    const saved = await isSubmissionSavedToLibrary(
+      "user-1",
+      "sub-1",
+      async () => lookup.client as never,
+    );
+
+    expect(saved).toBe(true);
+    expect(lookup.select).toHaveBeenCalledWith("id");
+    expect(lookup.eqUserId).toHaveBeenCalledWith("user_id", "user-1");
+    expect(lookup.eqItemType).toHaveBeenCalledWith("item_type", "submission");
+    expect(lookup.eqSubmissionId).toHaveBeenCalledWith(
+      "submission_id",
+      "sub-1",
+    );
+    expect(lookup.maybeSingle).toHaveBeenCalled();
+  });
+
+  it("returns false when the submission has no library item yet", async () => {
+    const lookup = makeLibrarySavedLookupClient({ data: null });
+
+    await expect(
+      isSubmissionSavedToLibrary(
+        "user-1",
+        "sub-1",
+        async () => lookup.client as never,
+      ),
+    ).resolves.toBe(false);
   });
 });
 

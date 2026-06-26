@@ -334,22 +334,14 @@ test("core writing flow: dashboard → write → submit → feedback → compare
   await expect(page).not.toHaveURL(/\/login/);
   await expect(page.getByRole("heading").first()).toBeVisible();
 
-  // 6) save to library — T-1 (QA 2026-06-12): 저장 CTA가 단독 버튼에서
-  // Dropdown 그룹(feedback-action-save, 메뉴: 보관함 저장/PDF 저장)으로 바뀜.
-  // 이전 단독 "보관함 저장" 버튼 셀렉터는 stale (전용 short-feedback spec 패턴).
+  // 6) library save state — submitted answers are auto-saved by the backend
+  // submission RPC, so the feedback action should render the saved state.
   await page.getByTestId("feedback-action-save").click();
-  const saveLibraryMenuItem = page.getByRole("menuitem", {
-    name: "보관함 저장",
+  const savedLibraryMenuItem = page.getByRole("menuitem", {
+    name: "보관함에 저장됨",
   });
-  await expect(saveLibraryMenuItem).toBeVisible();
-  await saveLibraryMenuItem.click();
-  const saveNotice = page
-    .locator(".ant-notification-notice")
-    .filter({ hasText: "보관함에 저장했어요." })
-    .last();
-  await expect(saveNotice).toBeVisible({ timeout: 20000 });
-  await saveNotice.locator(".ant-notification-notice-close").click();
-  await expect(saveNotice).toBeHidden();
+  await expect(savedLibraryMenuItem).toBeVisible();
+  await expect(savedLibraryMenuItem).toHaveAttribute("aria-disabled", "true");
 
   // 7) comparison report (R-01)
   await page.getByTestId("feedback-action-compare").click();

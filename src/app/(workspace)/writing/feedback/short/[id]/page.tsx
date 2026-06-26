@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { notFound, redirect } from "next/navigation";
 import { FeedbackPageContent } from "@/components/feedback/FeedbackPageContent";
 import { requireUser } from "@/lib/auth/session";
+import { isSubmissionSavedToLibrary } from "@/lib/library/server";
 import { APP_ROUTES } from "@/lib/routes";
 import {
   getFeedbackBundle,
@@ -41,10 +42,11 @@ export default async function ShortFeedbackPage({
   // Fetch the bundle whenever a feedback row may exist (complete/failed/partial)
   // so the page can render partial results and failed-with-data states instead
   // of an infinite loading modal.
-  const bundle = await getFeedbackBundle(id);
-  const problemAvailability = await getWritingProblemAvailability(
-    submission.problem_id,
-  );
+  const [bundle, problemAvailability, alreadySaved] = await Promise.all([
+    getFeedbackBundle(id),
+    getWritingProblemAvailability(submission.problem_id),
+    isSubmissionSavedToLibrary(user.id, id),
+  ]);
   return (
     <FeedbackPageContent
       submission={submission}
@@ -56,6 +58,7 @@ export default async function ShortFeedbackPage({
       reloadHref={`/writing/feedback/short/${id}`}
       userId={user.id}
       saveLocked={saveLocked}
+      alreadySaved={alreadySaved}
       canRetryProblem={problemAvailability.canStart}
     />
   );

@@ -13,6 +13,34 @@ import {
 type BrowserClient = ReturnType<typeof createSupabaseBrowserClient>;
 type ClientFactory = () => BrowserClient;
 
+const DUPLICATE_SUBMISSION_LIBRARY_CONSTRAINT =
+  "library_items_user_submission_uniq";
+
+type PostgrestErrorLike = {
+  code?: string;
+  constraint?: string | null;
+  details?: string | null;
+  hint?: string | null;
+  message?: string | null;
+};
+
+export function isDuplicateLibrarySaveError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const err = error as PostgrestErrorLike;
+  if (err.code !== "23505") return false;
+
+  const text = [
+    err.constraint,
+    err.details,
+    err.hint,
+    err.message,
+  ]
+    .filter((value): value is string => Boolean(value))
+    .join(" ");
+
+  return text.includes(DUPLICATE_SUBMISSION_LIBRARY_CONSTRAINT);
+}
+
 /**
  * Direct insert into `library_items`. Phase 6 RLS
  * (`library_items_owner_insert`) verifies both `user_id = auth.uid()` and

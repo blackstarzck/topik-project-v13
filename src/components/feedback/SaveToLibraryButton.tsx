@@ -3,7 +3,10 @@
 import { App, Button, Tooltip } from "antd";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { useSaveLibraryItem } from "@/lib/library/mutations";
+import {
+  isDuplicateLibrarySaveError,
+  useSaveLibraryItem,
+} from "@/lib/library/mutations";
 
 type Props = {
   submissionId: string;
@@ -56,6 +59,11 @@ export function SaveToLibraryButton({
           notification.success({ title: t("saveSuccess") });
         },
         onError: (e: unknown) => {
+          if (isDuplicateLibrarySaveError(e)) {
+            setSaved(true);
+            notification.info({ title: t("saved") });
+            return;
+          }
           const err = e as { code?: string; message?: string };
           if (err.code && RLS_DENIED.has(err.code)) {
             notification.error({

@@ -14,7 +14,7 @@ import { extractExternalFeedbackSupplement } from "@/lib/writing/external-feedba
 import { writingProblemHref } from "@/lib/writing/routes";
 import type { FeedbackBundle, WritingSubmissionRow } from "@/lib/writing/types";
 
-const { Text, Title } = Typography;
+const { Title } = Typography;
 
 type ReportTranslator = (
   key: string,
@@ -33,6 +33,7 @@ type Props = {
   reloadHref: string;
   userId: string;
   saveLocked?: boolean;
+  alreadySaved?: boolean;
   canRetryProblem?: boolean;
 };
 
@@ -47,6 +48,7 @@ export function FeedbackPageContent({
   retryLabelKey,
   userId,
   saveLocked = false,
+  alreadySaved = false,
   canRetryProblem = true,
 }: Props) {
   const t = useTranslations("feedback.page");
@@ -100,14 +102,12 @@ export function FeedbackPageContent({
         >
           <div className="app-workspace-body app-workspace-body--workspace flex w-full flex-col gap-3 px-4 py-4 pr-16 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:pr-20">
             <div className="min-w-0">
-              <Title level={3} className="m-0 text-2xl">
+              <Title level={3} className="!m-0 text-2xl">
                 {tReport("title", { questionNo: submission.question_no })}
               </Title>
-              <Text type="secondary" className="block">
-                {tReport("subtitle")}
-              </Text>
             </div>
             <FeedbackActionGroup
+              key={submission.id}
               submissionId={submission.id}
               userId={userId}
               retryHref={retryHref}
@@ -115,6 +115,7 @@ export function FeedbackPageContent({
               withPdf
               retryLabel={resolvedRetryLabel}
               saveLocked={saveLocked}
+              alreadySaved={alreadySaved}
               retryDisabled={retryDisabled}
               retryDisabledReason={retryDisabledReason}
               variant="header"
@@ -192,6 +193,7 @@ export function FeedbackPageContent({
 
         {showStickyReportHeader ? null : (
           <NextActionBar
+            key={submission.id}
             submissionId={submission.id}
             userId={userId}
             retryHref={retryHref}
@@ -199,6 +201,7 @@ export function FeedbackPageContent({
             withPdf
             retryLabel={resolvedRetryLabel}
             saveLocked={saveLocked}
+            alreadySaved={alreadySaved}
             retryDisabled={retryDisabled}
             retryDisabledReason={retryDisabledReason}
           />

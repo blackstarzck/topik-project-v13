@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   deleteLibraryItem,
+  isDuplicateLibrarySaveError,
   saveLibraryItem,
   updateItemTags,
 } from "../../../src/lib/library/mutations";
@@ -8,7 +9,7 @@ import type { LibraryItemInsert } from "../../../src/lib/library/types";
 
 type InsertResult = {
   data?: Record<string, unknown> | null;
-  error?: { message: string } | null;
+  error?: { code?: string; details?: string | null; message: string } | null;
 };
 
 function makeInsertClient(table: string, opts: InsertResult) {
@@ -122,6 +123,29 @@ describe("saveLibraryItem", () => {
         () => client as any,
       ),
     ).rejects.toThrow(/empty row/);
+  });
+});
+
+describe("isDuplicateLibrarySaveError", () => {
+  it("recognizes duplicate submission saves from the library unique index", () => {
+    expect(
+      isDuplicateLibrarySaveError({
+        code: "23505",
+        message:
+          'duplicate key value violates unique constraint "library_items_user_submission_uniq"',
+        details: "Key (user_id, submission_id)=(user-1, sub-1) already exists.",
+      }),
+    ).toBe(true);
+  });
+
+  it("does not treat unrelated unique violations as saved library items", () => {
+    expect(
+      isDuplicateLibrarySaveError({
+        code: "23505",
+        message:
+          'duplicate key value violates unique constraint "profiles_nickname_lower_uniq"',
+      }),
+    ).toBe(false);
   });
 });
 

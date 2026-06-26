@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
 import { FeedbackSummary } from "../../../src/components/feedback/FeedbackSummary";
 import { DimensionCardGrid } from "../../../src/components/feedback/DimensionCardGrid";
@@ -33,11 +33,30 @@ vi.mock("@/lib/export/pdf-export-client", () => ({
   exportPdfWithPrintFallback: vi.fn(),
 }));
 
+const libraryMutationMock = vi.hoisted(() => ({
+  mutate: vi.fn(),
+  isDuplicateLibrarySaveError: vi.fn((error: unknown) => {
+    const err = error as {
+      code?: string;
+      details?: string | null;
+      message?: string | null;
+    };
+    return (
+      err.code === "23505" &&
+      `${err.message ?? ""} ${err.details ?? ""}`.includes(
+        "library_items_user_submission_uniq",
+      )
+    );
+  }),
+}));
+
 vi.mock("@/lib/library/mutations", () => ({
   useSaveLibraryItem: () => ({
     isPending: false,
-    mutate: vi.fn(),
+    mutate: libraryMutationMock.mutate,
   }),
+  isDuplicateLibrarySaveError:
+    libraryMutationMock.isDuplicateLibrarySaveError,
 }));
 
 vi.mock("@/lib/writing/mutations", () => ({
@@ -99,6 +118,8 @@ function submission(
 }
 
 beforeEach(() => {
+  libraryMutationMock.mutate.mockReset();
+  libraryMutationMock.isDuplicateLibrarySaveError.mockClear();
   if (!window.matchMedia) {
     Object.defineProperty(window, "matchMedia", {
       writable: true,
@@ -360,12 +381,85 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
     );
 
     const header = screen.getByTestId("feedback-page-header");
+    const title = within(header).getByRole("heading", { level: 3 });
     expect(header.className).toContain("sticky");
+    expect(title.className).toContain("!m-0");
+    expect(
+      within(header).queryByText("두 빈칸 답안을 기준으로 분석했어요."),
+    ).toBeNull();
     expect(within(header).getByTestId("feedback-action-retry")).toBeTruthy();
     expect(within(header).getByTestId("feedback-action-next")).toBeTruthy();
     expect(within(header).getByTestId("feedback-action-save")).toBeTruthy();
     expect(within(header).getByTestId("feedback-action-compare")).toBeTruthy();
     expect(screen.getAllByTestId("feedback-actions")).toHaveLength(1);
+  });
+
+  it("renders the library save action as saved when the feedback page already has a library item", async () => {
+    const bundle: FeedbackBundle = {
+      feedback: feedback({ raw_ai_result: {} }),
+      dimensions: [],
+      sentences: [],
+    };
+
+    renderWithIntl(
+      <FeedbackPageContent
+        submission={submission()}
+        bundle={bundle}
+        withSentences
+        showDetailPanel={false}
+        dimensionCardLimit={4}
+        reloadHref="/writing/feedback/short/sub-1"
+        userId="user-1"
+        alreadySaved
+      />,
+    );
+
+    fireEvent.click(screen.getByTestId("feedback-action-save"));
+
+    expect(
+      await screen.findByRole("menuitem", { name: "보관함에 저장됨" }),
+    ).toBeTruthy();
+  });
+
+  it("treats a duplicate library save error as an already-saved state", async () => {
+    const bundle: FeedbackBundle = {
+      feedback: feedback({ raw_ai_result: {} }),
+      dimensions: [],
+      sentences: [],
+    };
+    libraryMutationMock.mutate.mockImplementation((_input, options) => {
+      options.onError?.({
+        code: "23505",
+        message:
+          'duplicate key value violates unique constraint "library_items_user_submission_uniq"',
+      });
+    });
+
+    renderWithIntl(
+      <FeedbackPageContent
+        submission={submission()}
+        bundle={bundle}
+        withSentences
+        showDetailPanel={false}
+        dimensionCardLimit={4}
+        reloadHref="/writing/feedback/short/sub-1"
+        userId="user-1"
+      />,
+    );
+
+    fireEvent.click(screen.getByTestId("feedback-action-save"));
+    fireEvent.click(
+      await screen.findByRole("menuitem", { name: "보관함 저장" }),
+    );
+
+    await waitFor(() => {
+      expect(libraryMutationMock.mutate).toHaveBeenCalled();
+    });
+    fireEvent.click(screen.getByTestId("feedback-action-save"));
+
+    expect(
+      await screen.findByRole("menuitem", { name: "보관함에 저장됨" }),
+    ).toBeTruthy();
   });
 
   it("disables retry actions when the submitted problem is no longer available", () => {

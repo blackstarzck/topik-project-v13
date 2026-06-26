@@ -8,7 +8,10 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { exportPdfWithPrintFallback } from "@/lib/export/pdf-export-client";
 import { PDF_EXPORT_DEFAULT_OPTIONS } from "@/lib/export/pdf-options";
-import { useSaveLibraryItem } from "@/lib/library/mutations";
+import {
+  isDuplicateLibrarySaveError,
+  useSaveLibraryItem,
+} from "@/lib/library/mutations";
 import { useCreateComparisonReport } from "@/lib/writing/mutations";
 
 type Props = {
@@ -138,6 +141,11 @@ export function FeedbackActionGroup({
           notification.success({ title: t("save.saveSuccess") });
         },
         onError: (e: unknown) => {
+          if (isDuplicateLibrarySaveError(e)) {
+            setSaved(true);
+            notification.info({ title: t("save.saved") });
+            return;
+          }
           const err = e as { code?: string; message?: string };
           if (err.code && RLS_DENIED.has(err.code)) {
             notification.error({

@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { WorkspaceBody } from "@/components/app/WorkspaceBody";
 import { FeedbackPageContent } from "@/components/feedback/FeedbackPageContent";
 import { requireUser } from "@/lib/auth/session";
+import { isSubmissionSavedToLibrary } from "@/lib/library/server";
 import { APP_ROUTES } from "@/lib/routes";
 import {
   getFeedbackBundle,
@@ -38,10 +39,11 @@ export default async function LongFeedbackPage({
   const saveLocked = submission.user_id !== user.id;
   // Fetch the bundle whenever a feedback row may exist (complete/failed/partial)
   // so partial results and failed-with-data render instead of infinite loading.
-  const bundle = await getFeedbackBundle(id);
-  const problemAvailability = await getWritingProblemAvailability(
-    submission.problem_id,
-  );
+  const [bundle, problemAvailability, alreadySaved] = await Promise.all([
+    getFeedbackBundle(id),
+    getWritingProblemAvailability(submission.problem_id),
+    isSubmissionSavedToLibrary(user.id, id),
+  ]);
   return (
     <WorkspaceBody>
       <FeedbackPageContent
@@ -53,6 +55,7 @@ export default async function LongFeedbackPage({
         reloadHref={`/writing/feedback/long/${id}`}
         userId={user.id}
         saveLocked={saveLocked}
+        alreadySaved={alreadySaved}
         canRetryProblem={problemAvailability.canStart}
       />
     </WorkspaceBody>

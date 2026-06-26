@@ -82,6 +82,27 @@ export async function listLibraryItems(
   }
 }
 
+export async function isSubmissionSavedToLibrary(
+  userId: string,
+  submissionId: string,
+  createClient: ClientFactory = createSupabaseServerClient,
+): Promise<boolean> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("library_items")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("item_type", "submission")
+    .eq("submission_id", submissionId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`isSubmissionSavedToLibrary: ${error.message}`);
+  }
+
+  return Boolean(data);
+}
+
 async function joinSubmissions(
   supabase: SupabaseServerClient,
   items: LibraryItemRow[],
