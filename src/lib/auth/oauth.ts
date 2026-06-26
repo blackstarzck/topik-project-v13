@@ -123,13 +123,3 @@ export async function startGoogleOAuth(intent: GoogleOAuthIntent) {
     },
   });
 }
-
-export async function startKakaoOAuth(intent: GoogleOAuthIntent) {
-  const supabase = createSupabaseBrowserClient();
-  return supabase.auth.signInWithOAuth({
-    provider: "kakao",
-    options: {
-      redirectTo: buildClientAuthCallbackUrl(buildOAuthNextPath(intent)),
-    },
-  });
-}

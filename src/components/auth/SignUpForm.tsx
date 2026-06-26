@@ -20,7 +20,7 @@ import {
   Input,
   Typography,
 } from "antd";
-import { ArrowRight, MessageCircle } from "@/components/shared/AppIcons";
+import { ArrowRight } from "@/components/shared/AppIcons";
 
 import { GoogleMark } from "@/components/auth/GoogleMark";
 import {
@@ -37,7 +37,6 @@ import { mapSupabaseErrorCode } from "@/lib/auth/error-mapping";
 import {
   isGoogleOAuthUnsupportedBrowserError,
   startGoogleOAuth,
-  startKakaoOAuth,
   type GoogleOAuthEmbeddedBrowser,
 } from "@/lib/auth/oauth";
 import {
@@ -165,7 +164,6 @@ export function SignUpForm({
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [googleSubmitting, setGoogleSubmitting] = useState(false);
-  const [kakaoSubmitting, setKakaoSubmitting] = useState(false);
   const [blockedOAuthBrowser, setBlockedOAuthBrowser] =
     useState<GoogleOAuthEmbeddedBrowser | null>(null);
   const [safeGuidanceVisible, setSafeGuidanceVisible] = useState(false);
@@ -296,8 +294,7 @@ export function SignUpForm({
   }
 
   async function handleSignUp(values: SignUpFields) {
-    if (submitting || googleSubmitting || kakaoSubmitting || isCoolingDown)
-      return;
+    if (submitting || googleSubmitting || isCoolingDown) return;
 
     setSafeGuidanceVisible(false);
     setBlockedOAuthBrowser(null);
@@ -361,7 +358,7 @@ export function SignUpForm({
   }
 
   async function handleGoogleSignUp() {
-    if (googleSubmitting || submitting || kakaoSubmitting) return;
+    if (googleSubmitting || submitting) return;
     setGoogleSubmitting(true);
     setBlockedOAuthBrowser(null);
     try {
@@ -377,22 +374,6 @@ export function SignUpForm({
         message.error(t("socialAuthFailed"));
       }
       setGoogleSubmitting(false);
-    }
-  }
-
-  async function handleKakaoSignUp() {
-    if (kakaoSubmitting || submitting || googleSubmitting) return;
-    setKakaoSubmitting(true);
-    setBlockedOAuthBrowser(null);
-    try {
-      const { error } = await startKakaoOAuth("sign-up");
-      if (error) {
-        message.error(t("socialKakaoAuthFailed"));
-        setKakaoSubmitting(false);
-      }
-    } catch {
-      message.error(t("socialKakaoAuthFailed"));
-      setKakaoSubmitting(false);
     }
   }
 
@@ -669,21 +650,11 @@ export function SignUpForm({
           block
           onClick={() => void handleGoogleSignUp()}
           loading={googleSubmitting}
-          disabled={submitting || googleSubmitting || kakaoSubmitting}
+          disabled={submitting || googleSubmitting}
           icon={<GoogleMark />}
           className="signup-social-button"
         >
           {t("socialGoogle")}
-        </Button>
-        <Button
-          block
-          onClick={() => void handleKakaoSignUp()}
-          loading={kakaoSubmitting}
-          disabled={submitting || googleSubmitting || kakaoSubmitting}
-          icon={<MessageCircle size={18} aria-hidden="true" />}
-          className="signup-social-button"
-        >
-          {t("socialKakao")}
         </Button>
       </div>
     </div>

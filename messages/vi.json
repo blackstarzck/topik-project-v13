@@ -410,9 +410,7 @@
       "heroGrowthBody": "Báo cáo so sánh",
       "socialDivider": "hoặc",
       "socialGoogle": "Đăng nhập bằng Google",
-      "socialKakao": "Đăng nhập bằng Kakao",
-      "socialAuthFailed": "Không thể bắt đầu xác thực Google. Vui lòng thử lại sau giây lát.",
-      "socialKakaoAuthFailed": "Không thể bắt đầu xác thực Kakao. Vui lòng thử lại sau giây lát."
+      "socialAuthFailed": "Không thể bắt đầu xác thực Google. Vui lòng thử lại sau giây lát."
     },
     "signUp": {
       "metaTitle": "Đăng ký — TALKPIK",
@@ -468,9 +466,7 @@
       "heroPracticeTitle": "Luyện nhiều dạng bài",
       "heroPracticeBody": "Học có hệ thống các dạng 51-54",
       "socialDivider": "hoặc",
-      "socialGoogle": "Tiếp tục với Google",
-      "socialKakao": "Tiếp tục với Kakao",
-      "socialKakaoAuthFailed": "Không thể bắt đầu xác thực Kakao. Vui lòng thử lại sau giây lát."
+      "socialGoogle": "Tiếp tục với Google"
     },
     "languageSelect": {
       "ariaLabel": "Chọn ngôn ngữ hiển thị"

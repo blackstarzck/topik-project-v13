@@ -569,24 +569,10 @@ describe("SignUpForm", () => {
     expect(signUpMock).not.toHaveBeenCalled();
   });
 
-  it("starts Kakao OAuth with post-auth redirect", async () => {
+  it("does not render Kakao OAuth entry", () => {
     renderInApp(<SignUpForm />);
 
-    await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "Kakao로 계속" }));
-    });
-
-    await waitFor(() => {
-      expect(signInWithOAuthMock).toHaveBeenCalledTimes(1);
-    });
-    expect(signInWithOAuthMock.mock.calls[0][0]).toEqual({
-      provider: "kakao",
-      options: {
-        redirectTo:
-          "http://localhost:3000/auth/callback?next=%2Fauth%2Fclaim-affiliation%3Fnext%3D%252Fauth%252Fpost-auth%253Fintent%253Dsign-up",
-      },
-    });
-    expect(signUpMock).not.toHaveBeenCalled();
+    expect(screen.queryByRole("button", { name: /Kakao|카카오/ })).toBeNull();
   });
 
   it("shows external-browser guidance instead of starting Google OAuth in Line", async () => {

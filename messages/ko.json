@@ -410,9 +410,7 @@
       "heroGrowthBody": "비교 리포트",
       "socialDivider": "또는",
       "socialGoogle": "Google로 로그인",
-      "socialKakao": "Kakao로 로그인",
-      "socialAuthFailed": "Google 인증을 시작하지 못했어요. 잠시 후 다시 시도해주세요.",
-      "socialKakaoAuthFailed": "Kakao 인증을 시작하지 못했어요. 잠시 후 다시 시도해주세요."
+      "socialAuthFailed": "Google 인증을 시작하지 못했어요. 잠시 후 다시 시도해주세요."
     },
     "signUp": {
       "metaTitle": "회원가입 — TALKPIK",
@@ -468,9 +466,7 @@
       "heroPracticeTitle": "다양한 유형 연습",
       "heroPracticeBody": "51~54번 유형을 체계적으로 학습",
       "socialDivider": "또는",
-      "socialGoogle": "Google로 계속",
-      "socialKakao": "Kakao로 계속",
-      "socialKakaoAuthFailed": "Kakao 인증을 시작하지 못했어요. 잠시 후 다시 시도해주세요."
+      "socialGoogle": "Google로 계속"
     },
     "languageSelect": {
       "ariaLabel": "표시 언어 선택"

@@ -27,14 +27,12 @@ async function expectGoogleOAuthStart({
   route,
   heading,
   intent,
-  provider = "google",
   buttonName = /Google/,
 }: {
   page: Page;
   route: string;
   heading?: string | RegExp;
   intent: "login" | "sign-up";
-  provider?: "google" | "kakao";
   buttonName?: string | RegExp;
 }) {
   const errors = collectErrors(page);
@@ -54,7 +52,7 @@ async function expectGoogleOAuthStart({
 
   const url = new URL(request.url());
   expect(url.pathname).toBe("/auth/v1/authorize");
-  expect(url.searchParams.get("provider")).toBe(provider);
+  expect(url.searchParams.get("provider")).toBe("google");
 
   const redirectTo = url.searchParams.get("redirect_to");
   expect(redirectTo).toBeTruthy();
@@ -77,7 +75,7 @@ test.describe("Google OAuth entry", () => {
     await expectGoogleOAuthStart({
       page,
       route: "/login",
-      heading: "다시 오신 걸 환영해요",
+      heading: /다시 오신 걸 환영해요|Welcome back/,
       intent: "login",
     });
   });
@@ -88,7 +86,7 @@ test.describe("Google OAuth entry", () => {
     await expectGoogleOAuthStart({
       page,
       route: "/sign-up",
-      heading: "회원가입",
+      heading: /회원가입|Sign up/,
       intent: "sign-up",
     });
   });
@@ -116,13 +114,13 @@ test.describe("Google OAuth KakaoTalk browser entry", () => {
     expect(errors).toEqual([]);
   });
 
-  test("login starts Supabase Kakao OAuth from KakaoTalk", async ({ page }) => {
-    await expectGoogleOAuthStart({
-      page,
-      route: "/login",
-      intent: "login",
-      provider: "kakao",
-      buttonName: /Kakao/,
-    });
+  test("login does not render Kakao OAuth entry from KakaoTalk", async ({
+    page,
+  }) => {
+    await page.goto("/login", { waitUntil: "networkidle" });
+
+    await expect(page.getByRole("button", { name: /Kakao|카카오/ })).toHaveCount(
+      0,
+    );
   });
 });
