@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { AppCard } from "@/components/shared/AppCard";
-import { PageHeader } from "@/components/shared/PageHeader";
 import { logStudyEvent } from "@/lib/events/study-events";
 import type { ComparisonMetrics } from "@/lib/writing/comparison-service";
 import { ComparisonKpiBlock } from "./ComparisonKpiBlock";
@@ -97,115 +96,145 @@ export function ComparisonReportView({
   }
 
   return (
-    <div className="flex w-full flex-col gap-6">
-      <PageHeader
-        title={t("heading")}
-        actions={
-          <Button
-            onClick={onShare}
-            loading={sharing}
-            data-testid="comparison-action-share"
-          >
-            {t("share")}
-          </Button>
-        }
-      />
-
-      <ComparisonKpiBlock
-        currentScore={currentScore}
-        scoreDelta={metrics.score_delta}
-        changedDimensions={changedDimensions}
-        hasPrevious={hasPrevious}
-      />
-
-      <AppCard data-testid="comparison-narrative">
-        {narrativeFailed ? (
-          <Alert
-            type="warning"
-            showIcon
-            message={t("narrativeFailedTitle")}
-            description={t("narrativeFailedDescription")}
-            action={
-              <Button size="small" onClick={() => router.refresh()}>
-                {t("retry")}
-              </Button>
-            }
-          />
-        ) : (
-          <>
-            <Paragraph className="mb-2" ellipsis={{ rows: 3 }}>
-              {narrative}
-            </Paragraph>
-            <Text type="secondary">{t("narrativeDisclaimer")}</Text>
-          </>
-        )}
-      </AppCard>
-
-      <ScoreComparisonChart data={chartData} hasPrevious={hasPrevious} />
-
-      <DimensionComparisonCards
-        deltas={metrics.dimension_deltas}
-        hasPrevious={hasPrevious}
-        currentScores={currentNorm}
-      />
-
-      <SubmissionDiffPanel currentText={currentText} previousText={previousText} />
-
-      <section
-        data-testid="comparison-next-actions"
-        className="feedback-actions flex w-full flex-col gap-2"
+    <div
+      data-testid="comparison-page-shell"
+      className="flex min-h-full w-full flex-col bg-background"
+    >
+      <div
+        data-testid="comparison-page-header"
+        className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85"
       >
-        <Title level={5} className="m-0">
-          {t("nextLearningTitle")}
-        </Title>
-        <div
-          data-testid="comparison-next-actions-controls"
-          className="flex w-full flex-wrap items-center gap-2"
-        >
-          <Button
-            type="primary"
-            onClick={() => navigateOnce("next", "/practice/next")}
-            loading={pendingAction === "next"}
-            disabled={pendingAction !== null && pendingAction !== "next"}
-            data-testid="comparison-action-next"
-          >
-            {t("nextProblem")}
-          </Button>
-          <div
-            data-testid="comparison-next-actions-secondary"
-            className="flex flex-wrap items-center gap-2"
-          >
-            {weaknessDisabled ? (
-              <Tooltip title={t("weaknessDisabledTooltip")}>
-                <Button disabled data-testid="comparison-action-weakness">
-                  {t("weaknessDisabled")}
+        <div className="app-workspace-body app-workspace-body--workspace w-full px-4 py-4 pr-16 sm:px-6 lg:pr-20">
+          <header className="app-page-header !mb-0">
+            <div className="app-page-header__titles">
+              <Title level={3} className="!m-0 text-2xl">
+                {t("heading")}
+              </Title>
+            </div>
+            <div className="app-page-header__actions">
+              <div className="flex w-full min-w-0 flex-wrap items-center gap-2 lg:w-auto lg:justify-end">
+                <div
+                  data-testid="comparison-next-actions"
+                  className="feedback-actions flex w-full min-w-0 flex-wrap items-center gap-2 lg:w-auto lg:justify-end"
+                >
+                  <div
+                    data-testid="comparison-next-actions-controls"
+                    className="flex w-full min-w-0 flex-wrap items-center gap-2 lg:w-auto lg:justify-end"
+                  >
+                    {retryHref ? (
+                      <Button
+                        onClick={() => navigateOnce("retry", retryHref)}
+                        loading={pendingAction === "retry"}
+                        disabled={
+                          pendingAction !== null && pendingAction !== "retry"
+                        }
+                        data-testid="comparison-action-retry"
+                      >
+                        {t("retryProblem")}
+                      </Button>
+                    ) : null}
+                    <div
+                      data-testid="comparison-next-actions-secondary"
+                      className="feedback-action-divider flex w-full flex-wrap items-center gap-2 pt-2 md:ml-1 md:w-auto md:pl-3 md:pt-0"
+                    >
+                      <Button
+                        type="primary"
+                        onClick={() => navigateOnce("next", "/practice/next")}
+                        loading={pendingAction === "next"}
+                        disabled={
+                          pendingAction !== null && pendingAction !== "next"
+                        }
+                        data-testid="comparison-action-next"
+                      >
+                        {t("nextProblem")}
+                      </Button>
+                      {weaknessDisabled ? (
+                        <Tooltip title={t("weaknessDisabledTooltip")}>
+                          <Button
+                            disabled
+                            data-testid="comparison-action-weakness"
+                          >
+                            {t("weaknessDisabled")}
+                          </Button>
+                        </Tooltip>
+                      ) : (
+                        <Button
+                          onClick={() =>
+                            navigateOnce("weakness", "/practice/weakness")
+                          }
+                          loading={pendingAction === "weakness"}
+                          disabled={
+                            pendingAction !== null &&
+                            pendingAction !== "weakness"
+                          }
+                          data-testid="comparison-action-weakness"
+                        >
+                          {t("weaknessView")}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <Button
+                  onClick={onShare}
+                  loading={sharing}
+                  data-testid="comparison-action-share"
+                >
+                  {t("share")}
                 </Button>
-              </Tooltip>
-            ) : (
-              <Button
-                onClick={() => navigateOnce("weakness", "/practice/weakness")}
-                loading={pendingAction === "weakness"}
-                disabled={
-                  pendingAction !== null && pendingAction !== "weakness"
-                }
-                data-testid="comparison-action-weakness"
-              >
-                {t("weaknessView")}
-              </Button>
-            )}
-            {retryHref ? (
-              <Button
-                onClick={() => navigateOnce("retry", retryHref)}
-                loading={pendingAction === "retry"}
-                disabled={pendingAction !== null && pendingAction !== "retry"}
-                data-testid="comparison-action-retry"
-              >
-                {t("retryProblem")}
-              </Button>
-            ) : null}
-          </div>
+              </div>
+            </div>
+          </header>
         </div>
-      </section>
+      </div>
+
+      <div
+        data-testid="comparison-page-body"
+        className="app-workspace-body app-workspace-body--workspace flex w-full flex-col gap-6 px-4 py-4 sm:px-6 sm:py-6"
+      >
+        <ComparisonKpiBlock
+          currentScore={currentScore}
+          scoreDelta={metrics.score_delta}
+          changedDimensions={changedDimensions}
+          hasPrevious={hasPrevious}
+        />
+
+        <AppCard data-testid="comparison-narrative">
+          {narrativeFailed ? (
+            <Alert
+              type="warning"
+              showIcon
+              message={t("narrativeFailedTitle")}
+              description={t("narrativeFailedDescription")}
+              action={
+                <Button size="small" onClick={() => router.refresh()}>
+                  {t("retry")}
+                </Button>
+              }
+            />
+          ) : (
+            <>
+              <Paragraph className="mb-2" ellipsis={{ rows: 3 }}>
+                {narrative}
+              </Paragraph>
+              <Text type="secondary">{t("narrativeDisclaimer")}</Text>
+            </>
+          )}
+        </AppCard>
+
+        <ScoreComparisonChart data={chartData} hasPrevious={hasPrevious} />
+
+        <DimensionComparisonCards
+          deltas={metrics.dimension_deltas}
+          hasPrevious={hasPrevious}
+          currentScores={currentNorm}
+        />
+
+        <SubmissionDiffPanel
+          currentText={currentText}
+          previousText={previousText}
+        />
+      </div>
     </div>
   );
 }

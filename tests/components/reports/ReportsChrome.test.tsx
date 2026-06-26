@@ -192,7 +192,7 @@ describe("SubmissionDiffPanel i18n chrome", () => {
 });
 
 describe("ComparisonReportView next action chrome", () => {
-  it("renders the bottom CTA with the same feedback action-group shell", () => {
+  it("places the learning CTA group in the page header actions", () => {
     renderReports(
       <ComparisonReportView
         metrics={{
@@ -213,9 +213,53 @@ describe("ComparisonReportView next action chrome", () => {
       />,
     );
 
+    const stickyHeader = screen.getByTestId("comparison-page-header");
+    expect(stickyHeader.className).toContain("sticky");
+    expect(stickyHeader.className).toContain("top-0");
+    expect(stickyHeader.className).toContain("border-b");
+    expect(stickyHeader.className).toContain("border-border");
+
+    const title = within(stickyHeader).getByRole("heading", {
+      name: "비교 리포트",
+    });
+    expect(title.tagName).toBe("H3");
+    expect(title.className).toContain("ant-typography");
+    expect(title.className).toContain("!m-0");
+    expect(title.className).toContain("text-2xl");
+    expect(title.className).not.toContain("app-page-header__title");
+
     const actions = screen.getByTestId("comparison-next-actions");
+    const pageHeader = actions.closest(".app-page-header");
+    const pageHeaderActions = actions.closest(".app-page-header__actions");
+
+    expect(stickyHeader.contains(actions)).toBe(true);
+    expect(pageHeader).toBeTruthy();
+    expect(pageHeaderActions).toBeTruthy();
+    expect(
+      pageHeaderActions?.querySelector('[data-testid="comparison-action-share"]'),
+    ).toBeTruthy();
     expect(actions.className).toContain("feedback-actions");
     expect(actions.className).not.toContain("app-card");
+    expect(within(actions).getAllByRole("button")).toHaveLength(3);
+    expect(
+      Array.from(pageHeaderActions?.querySelectorAll("button") ?? []).map(
+        (button) => button.getAttribute("data-testid"),
+      ),
+    ).toEqual([
+      "comparison-action-retry",
+      "comparison-action-next",
+      "comparison-action-weakness",
+      "comparison-action-share",
+    ]);
+    expect(
+      Array.from(actions.querySelectorAll("button")).map((button) =>
+        button.getAttribute("data-testid"),
+      ),
+    ).toEqual([
+      "comparison-action-retry",
+      "comparison-action-next",
+      "comparison-action-weakness",
+    ]);
 
     const controls = within(actions).getByTestId(
       "comparison-next-actions-controls",
@@ -230,10 +274,13 @@ describe("ComparisonReportView next action chrome", () => {
       within(actions).getByTestId("comparison-action-next").className,
     ).toContain("ant-btn-primary");
     expect(
-      within(secondary).getByTestId("comparison-action-weakness"),
-    ).toBeTruthy();
+      within(actions).getByTestId("comparison-action-retry").className,
+    ).not.toContain("ant-btn-primary");
     expect(
-      within(secondary).getByTestId("comparison-action-retry"),
+      within(secondary).getByTestId("comparison-action-weakness").className,
+    ).not.toContain("ant-btn-primary");
+    expect(
+      within(secondary).getByTestId("comparison-action-weakness"),
     ).toBeTruthy();
   });
 });

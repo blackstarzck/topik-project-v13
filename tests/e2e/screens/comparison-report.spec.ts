@@ -245,10 +245,46 @@ test.describe("authenticated comparison report", () => {
     });
     await expect(page).not.toHaveURL(/\/login/);
 
-    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    const stickyHeader = page.getByTestId("comparison-page-header");
+    await expect(stickyHeader).toBeVisible();
+    await expect(stickyHeader).toHaveCSS("position", "sticky");
+    await expect(stickyHeader).toHaveCSS("top", "0px");
+    await expect(stickyHeader).toHaveCSS("border-bottom-width", "1px");
+    await expect(stickyHeader).toHaveCSS("border-bottom-style", "solid");
+    const headerTitle = stickyHeader.getByRole("heading", {
+      name: "비교 리포트",
+    });
+    await expect(headerTitle).toHaveJSProperty("tagName", "H3");
+    await expect(headerTitle).toHaveClass(/ant-typography/);
+    await expect(headerTitle).toHaveClass(/!m-0/);
+    await expect(headerTitle).toHaveClass(/text-2xl/);
+    await expect(headerTitle).toHaveCSS("font-size", "28px");
+    await expect(headerTitle).toHaveCSS("margin-bottom", "0px");
     await expect(
       page.locator(".app-notification-corner, .app-workspace-mobile-actions"),
     ).toHaveCount(0);
+    const headerLearningActions = page
+      .getByTestId("comparison-page-header")
+      .locator(".app-page-header")
+      .getByTestId("comparison-next-actions");
+    await expect(headerLearningActions).toBeVisible();
+    await expect(
+      page
+        .locator(".app-page-header__actions")
+        .getByTestId("comparison-action-share"),
+    ).toBeVisible();
+    await expect
+      .poll(async () =>
+        page.locator(".app-page-header__actions button").evaluateAll((buttons) =>
+          buttons.map((button) => button.getAttribute("data-testid")),
+        ),
+      )
+      .toEqual([
+        "comparison-action-retry",
+        "comparison-action-next",
+        "comparison-action-weakness",
+        "comparison-action-share",
+      ]);
     expect(
       await page.getByTestId("comparison-kpi-item").count(),
     ).toBeLessThanOrEqual(5);
@@ -272,6 +308,11 @@ test.describe("authenticated comparison report", () => {
     await expect(
       page.getByTestId("comparison-next-actions").locator("button"),
     ).toHaveCount(3);
+    await expect(
+      page
+        .locator(".app-page-header ~ *")
+        .getByTestId("comparison-next-actions"),
+    ).toHaveCount(0);
 
     expect(errors).toEqual([]);
   });

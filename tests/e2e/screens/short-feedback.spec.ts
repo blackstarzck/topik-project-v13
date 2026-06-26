@@ -216,6 +216,13 @@ test("E-01 short feedback matches the wireframe constraints", async ({ page }) =
   });
   await expect(page).not.toHaveURL(/\/login/);
 
+  await expect(
+    page.getByText("두 빈칸 답안을 기준으로 분석했어요."),
+  ).toHaveCount(0);
+  const headerTitle = page
+    .getByTestId("feedback-page-header")
+    .getByRole("heading");
+  await expect(headerTitle).toHaveCSS("margin-bottom", "0px");
   await expect(page.getByTestId("feedback-report-overview")).toBeVisible();
   await expect(page.getByText(/소요 시간/)).toBeVisible();
   await expect(page.getByTestId("feedback-report-total-score-card")).toBeVisible();
