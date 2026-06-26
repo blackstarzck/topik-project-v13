@@ -30,7 +30,10 @@ describe("AccountDeletionCard", () => {
 
   it("renders the danger-zone title and delete trigger", () => {
     const { container } = renderWithIntl(<AccountDeletionCard />);
-    expect(screen.getByTestId("account-delete-open")).toBeTruthy();
+    const openButton = screen.getByTestId("account-delete-open");
+    expect(openButton).toBeTruthy();
+    expect(openButton.classList.contains("ant-btn-primary")).toBe(true);
+    expect(openButton.classList.contains("ant-btn-dangerous")).toBe(true);
     expect(container.querySelector(".account-delete-section")).toBeTruthy();
     expect(container.querySelector(".account-delete-actions")).toBeTruthy();
     // ko 카탈로그의 settings.account.dangerZone.title
@@ -45,6 +48,9 @@ describe("AccountDeletionCard", () => {
     );
     expect(css).toMatch(
       /\.account-delete-actions\s*\{[\s\S]*?display:\s*flex;[\s\S]*?justify-content:\s*flex-end;/,
+    );
+    expect(css).toMatch(
+      /\.account-delete-card\.app-card\.app-surface\s*\{[\s\S]*?border:\s*1px solid var\(--ant-color-error-border\);[\s\S]*?background:\s*var\(--ant-color-error-bg\);/,
     );
   });
 

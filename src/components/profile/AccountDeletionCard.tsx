@@ -64,6 +64,7 @@ export function AccountDeletionCard() {
           <div className="account-delete-actions">
             <Button
               danger
+              type="primary"
               onClick={() => setOpen(true)}
               data-testid="account-delete-open"
             >

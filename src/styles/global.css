@@ -4972,8 +4972,8 @@ body {
 }
 
 .account-delete-card.app-card.app-surface {
-  border: 1px solid var(--ant-color-warning-border);
-  background: var(--ant-color-warning-bg);
+  border: 1px solid var(--ant-color-error-border);
+  background: var(--ant-color-error-bg);
 }
 
 /* 로그인 방법: 각 메서드를 개별 AntD Card(.app-cards-bordered로 외곽선 복원)로
