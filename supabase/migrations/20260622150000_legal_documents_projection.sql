@@ -10,8 +10,8 @@
 -- read operation_policies — keeping it free of any cross-namespace read coupling.
 --
 -- Applied to the shared dev DB via the Management API (no CLI/DB password on the
--- build machine). SQL is idempotent (IF NOT EXISTS / CREATE OR REPLACE) so a
--- later `supabase db push` re-applying it is harmless.
+-- build machine). SQL is idempotent (IF NOT EXISTS / CREATE OR REPLACE), so
+-- replay in a controlled migration pipeline is harmless.
 -- down: supabase/migrations/down/20260622150000_legal_documents_projection.sql
 -- =====================================================================
 

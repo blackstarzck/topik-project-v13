@@ -12,7 +12,7 @@ import { describe, expect, test } from "vitest";
 // exercised by every assertion below.
 // prettier-ignore
 // @ts-expect-error -- .mjs script has no .d.ts; runtime contract verified here
-import { evaluateBuildPreflight, normalizePort, resolveProbePorts } from "../../scripts/build-preflight.mjs";
+import { evaluateBuildPreflight, evaluateSupabaseRemoteApplyBoundary, normalizePort, resolveProbePorts } from "../../scripts/build-preflight.mjs";
 
 // Cross-audit P0/P1: the preflight must probe the ports dev actually uses, not
 // just 3000. The founding incident (2026-06-02) was on :3100; Next dev auto-
@@ -80,5 +80,39 @@ describe("evaluateBuildPreflight — block build while a dev server is alive", (
   test("rejection message names the .next recovery path", () => {
     const result = evaluateBuildPreflight({ devServerDetected: true, force: false });
     expect(result.message).toMatch(/\.next/);
+  });
+});
+
+describe("evaluateSupabaseRemoteApplyBoundary - block remote DB apply surface", () => {
+  test("blocks when a Supabase management token is present", () => {
+    const result = evaluateSupabaseRemoteApplyBoundary({
+      env: { SUPABASE_ACCESS_TOKEN: "set" },
+      supabaseTempExists: false,
+    });
+
+    expect(result.block).toBe(true);
+    expect(result.code).not.toBe(0);
+    expect(result.message).toMatch(/SUPABASE_ACCESS_TOKEN/);
+  });
+
+  test("blocks when the repo is linked to a remote Supabase project", () => {
+    const result = evaluateSupabaseRemoteApplyBoundary({
+      env: {},
+      supabaseTempExists: true,
+    });
+
+    expect(result.block).toBe(true);
+    expect(result.code).not.toBe(0);
+    expect(result.message).toMatch(/supabase\/\.temp/);
+  });
+
+  test("allows the build when no remote apply surface is present", () => {
+    const result = evaluateSupabaseRemoteApplyBoundary({
+      env: {},
+      supabaseTempExists: false,
+    });
+
+    expect(result.block).toBe(false);
+    expect(result.code).toBe(0);
   });
 });

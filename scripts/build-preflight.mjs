@@ -11,7 +11,9 @@
 // so it is unit-testable / validate-the-validator provable; the port probe
 // (`detectDevServer`) is the only impure part.
 
+import fs from "node:fs";
 import net from "node:net";
+import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 /**
@@ -47,6 +49,36 @@ export function evaluateBuildPreflight({ devServerDetected, force = false }) {
     block: false,
     code: 0,
     message: "no dev server detected; safe to build.",
+  };
+}
+
+export function evaluateSupabaseRemoteApplyBoundary({
+  env = {},
+  supabaseTempExists = false,
+} = {}) {
+  const violations = [];
+  if (env.SUPABASE_ACCESS_TOKEN) {
+    violations.push("SUPABASE_ACCESS_TOKEN");
+  }
+  if (supabaseTempExists) {
+    violations.push("supabase/.temp");
+  }
+
+  if (violations.length > 0) {
+    return {
+      block: true,
+      code: 3,
+      message:
+        "remote Supabase apply surface detected in the v13 user app workspace: " +
+        `${violations.join(", ")}. ` +
+        "Remove the management token/link and handle remote DB changes in the schema owner workflow.",
+    };
+  }
+
+  return {
+    block: false,
+    code: 0,
+    message: "no remote Supabase apply surface detected.",
   };
 }
 
@@ -139,6 +171,14 @@ async function main() {
   const argv = process.argv.slice(2);
   const force =
     argv.includes("--force") || process.env.AI_BUILD_PREFLIGHT_FORCE === "1";
+  const supabaseBoundary = evaluateSupabaseRemoteApplyBoundary({
+    env: process.env,
+    supabaseTempExists: fs.existsSync(path.join(process.cwd(), "supabase", ".temp")),
+  });
+  if (supabaseBoundary.block) {
+    console.error(`[M5 build-preflight] BLOCK: ${supabaseBoundary.message}`);
+    process.exit(supabaseBoundary.code);
+  }
   const ports = resolveProbePorts(argv, process.env);
   const { detected, port } = await detectAnyDevServer(ports);
   const result = evaluateBuildPreflight({ devServerDetected: detected, force });

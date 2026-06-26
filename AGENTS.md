@@ -122,7 +122,8 @@ Codex와 모든 AI 에이전트는 이 문서를 프로젝트 작업 계약으�
 - `pnpm test:e2e` 전체 실행은 auth, middleware, app shell, route guard, global style/theme, shared navigation, test config처럼 여러 route에 영향을 주거나 영향 범위를 좁히기 어려운 경우에 사용한다.
 - 코드 변경은 관련 unit/integration test, `pnpm lint`, `pnpm typecheck` 중 영향 범위에 맞는 항목을 실행한다.
 - Supabase/migration 변경은 SQL idempotency, RLS 영향, `supabase/migrations/INDEX.md`, 관련 migration, `docs/Wireframe/data-usage-index.md`, 관련 화면 기능명세 갱신 여부를 확인한다.
-- 검증 또는 테스트 과정에서 Supabase 데이터베이스 조작이 필요하면 `.env.example`에 정의된 변수명을 기준으로 하며, 관리 API/DB 조작은 `SUPABASE_ACCESS_TOKEN`, `SUPABASE_SERVICE_ROLE_KEY`, 사용자 테스트 계정은 `E2E_STUDENT_EMAIL`, `SUPABASE_TEST_PASSWORD`를 사용한다. 해당 값은 secret으로 취급해 터미널 출력, 로그, 문서, 커밋 메시지, 테스트 리포트에 기록하지 않고, 보고에는 변수명만 언급한다.
+- v13 작업면에서는 원격 Supabase schema/data 적용 명령을 실행하지 않는다. 원격 DB 변경은 v13 사용자 앱 작업 범위가 아니며, 별도 소유 repo 또는 운영 절차에서 다룬다.
+- 검증 또는 테스트 과정에서 Supabase 데이터베이스 조작이 필요하면 `.env.example`에 정의된 변수명을 기준으로 하며, 서버 전용 테스트/fixture 조작은 `SUPABASE_SERVICE_ROLE_KEY`, 사용자 테스트 계정은 `E2E_STUDENT_EMAIL`, `SUPABASE_TEST_PASSWORD`를 사용한다. 해당 값은 secret으로 취급해 터미널 출력, 로그, 문서, 커밋 메시지, 테스트 리포트에 기록하지 않고, 보고에는 변수명만 언급한다.
 - auth/security 변경은 실패 케이스, redirect, cookie/session, secret 노출 여부를 확인한다.
 - 검증을 실행하지 못했거나 실패하면 완료로 보고하지 않는다. 미실행/실패 이유, 재현 명령, 남은 위험을 함께 보고한다.
 

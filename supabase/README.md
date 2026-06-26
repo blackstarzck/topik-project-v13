@@ -41,9 +41,9 @@ supabase/
 
 > 실제 `*.sql` 파일은 Supabase CLI 호환을 위해 `migrations/` 디렉토리 바로 아래에 **flat 으로 위치**합니다. 하위 폴더(`migrations/2026/05/20/`) 로 옮기면 CLI 가 스캔하지 못해 적용이 깨집니다. INDEX.md 는 그 한계를 우회한 시각적 메타 인덱스입니다.
 
-## 적용 방법
+## 로컬 적용 방법
 
-본 저장소는 현재 **pre-implementation 상태**라 `package.json` / Supabase CLI 가 설치되어 있지 않습니다. 프로젝트 부트스트랩 후 아래 명령을 사용합니다.
+v13 사용자 앱 repo의 Supabase 파일은 로컬 재현과 타입 생성용입니다. 원격 Supabase schema/data 적용은 v13 작업면에서 하지 않습니다.
 
 ```bash
 # Supabase CLI 초기화 (한 번)
@@ -55,14 +55,12 @@ pnpm dlx supabase start
 # 깨끗한 재적용 (로컬)
 pnpm dlx supabase db reset
 
-# 원격 적용 (linked project)
-pnpm dlx supabase db push
-
 # TypeScript 타입 생성 (정본 위치: src/lib/supabase/types.ts)
 pnpm dlx supabase gen types typescript --local > src/lib/supabase/types.ts
 ```
 
 > 생성된 타입은 `src/lib/supabase/types.ts`로 저장합니다. Supabase 클라이언트와 같은 폴더에 두어 응집도를 유지합니다. `src/types/`는 hand-written shared domain types 용도로 남깁니다.
+> 원격 DB 변경이 필요하면 v13 안에서 처리하지 않고, 해당 schema 소유 repo 또는 운영 절차에서 migration을 작성·검증·적용합니다.
 
 ## 새 마이그레이션 추가하기
 
