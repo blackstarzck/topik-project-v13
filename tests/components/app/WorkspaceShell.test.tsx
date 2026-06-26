@@ -228,8 +228,15 @@ describe("WorkspaceShell", () => {
       expect(panel).toBeTruthy();
       expect(panel?.closest(".app-profile-popover")).toBeTruthy();
       expect(panel?.closest(".app-notification-popover")).toBeTruthy();
-      expect(panel?.textContent).toContain("talkpik-chan");
-      expect(panel?.textContent).toContain("student@example.com");
+      expect(
+        panel?.querySelector(".app-profile-popover-panel__header"),
+      ).toBeNull();
+      expect(
+        panel?.querySelector(".app-profile-popover-list"),
+      ).toBeTruthy();
+      expect(panel?.querySelector(".ant-list")).toBeNull();
+      expect(panel?.textContent).not.toContain("talkpik-chan");
+      expect(panel?.textContent).not.toContain("student@example.com");
     });
     fireEvent.click(popoverItem(koMessages.nav.profile));
 
@@ -249,8 +256,14 @@ describe("WorkspaceShell", () => {
     await waitFor(() => expect(popoverItem(koMessages.nav.logout)));
     expect(popoverItem(koMessages.nav.logout)).toBeTruthy();
     expect(cssRule(".app-profile-popover-panel")).toContain("font-size: 14px");
-    expect(cssRule(".app-profile-popover-panel__header")).toContain(
-      "border-bottom: 1px solid var(--ant-color-border-secondary)",
+    expect(
+      cssRule(".app-profile-popover-list .app-profile-popover-item"),
+    ).toContain("list-style: none");
+    expect(cssRule(".app-profile-popover-list")).toContain("display: grid");
+    expect(cssRule(".app-profile-popover-actions")).toBe("");
+    expect(cssRule(".app-profile-popover-panel__header")).toBe("");
+    expect(cssRule(".app-profile-popover-action")).toContain(
+      "padding: 8px 0",
     );
     expect(cssRule(".app-profile-popover-action")).toContain(
       "font-size: 14px",

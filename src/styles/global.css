@@ -5971,33 +5971,14 @@ body {
   font-size: 14px;
 }
 
-.app-profile-popover-panel__header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  border-bottom: 1px solid var(--ant-color-border-secondary);
-  padding-bottom: 8px;
-  margin-bottom: 6px;
-}
-
-.app-profile-popover-panel__copy {
+.app-profile-popover-list {
   display: grid;
-  min-width: 0;
-  line-height: 1.2;
-}
-
-.app-profile-popover-panel__name.ant-typography,
-.app-profile-popover-panel__meta.ant-typography {
   margin: 0;
-  line-height: 1.2;
+  padding: 0;
 }
 
-.app-profile-popover-panel__name.ant-typography {
-  font-weight: 600;
-}
-
-.app-profile-popover-actions {
-  display: grid;
+.app-profile-popover-list .app-profile-popover-item {
+  list-style: none;
 }
 
 .app-profile-popover-action {

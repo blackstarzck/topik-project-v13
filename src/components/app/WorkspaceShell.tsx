@@ -25,6 +25,14 @@ const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
 const { useBreakpoint } = Grid;
 
+type ProfileActionKey = "profile" | "learning-goal" | "logout";
+
+type ProfileAction = {
+  key: ProfileActionKey;
+  label: string;
+  danger?: boolean;
+};
+
 type Props = {
   role: AppRole;
   userId: string;
@@ -109,9 +117,12 @@ export function WorkspaceShell({
     }
   }, [avatarPath]);
   const avatarInitial = profileName?.charAt(0).toUpperCase() ?? "?";
-  const handleProfileAction = (
-    key: "profile" | "learning-goal" | "logout",
-  ) => {
+  const profileActions: ProfileAction[] = [
+    { key: "profile", label: navT("profile") },
+    { key: "learning-goal", label: navT("settingsLearning") },
+    { key: "logout", label: navT("logout"), danger: true },
+  ];
+  const handleProfileAction = (key: ProfileActionKey) => {
     setProfileOpen(false);
     if (key === "profile") {
       router.push(APP_ROUTES.profile);
@@ -127,60 +138,28 @@ export function WorkspaceShell({
   };
   const profilePopoverContent = profileName ? (
     <div className="app-profile-popover-panel">
-      <div className="app-profile-popover-panel__header">
-        <Avatar
-          size={32}
-          src={avatarUrl ?? undefined}
-          alt={profileName}
-          className="app-workspace-user-summary__avatar"
-        >
-          {avatarUrl ? null : avatarInitial}
-        </Avatar>
-        <span className="app-profile-popover-panel__copy">
-          <Text strong ellipsis className="app-profile-popover-panel__name">
-            {profileName}
-          </Text>
-          {profileSecondary ? (
-            <Text
-              type="secondary"
-              ellipsis
-              className="app-profile-popover-panel__meta"
-            >
-              {profileSecondary}
-            </Text>
-          ) : null}
-        </span>
-      </div>
-      <div
-        className="app-profile-popover-actions"
+      <ul
+        className="app-profile-popover-list"
         role="menu"
         aria-label={t("userSummary")}
       >
-        <button
-          type="button"
-          role="menuitem"
-          className="app-profile-popover-action"
-          onClick={() => handleProfileAction("profile")}
-        >
-          {navT("profile")}
-        </button>
-        <button
-          type="button"
-          role="menuitem"
-          className="app-profile-popover-action"
-          onClick={() => handleProfileAction("learning-goal")}
-        >
-          {navT("settingsLearning")}
-        </button>
-        <button
-          type="button"
-          role="menuitem"
-          className="app-profile-popover-action app-profile-popover-action--danger"
-          onClick={() => handleProfileAction("logout")}
-        >
-          {navT("logout")}
-        </button>
-      </div>
+        {profileActions.map((item) => (
+          <li key={item.key} className="app-profile-popover-item">
+            <button
+              type="button"
+              role="menuitem"
+              className={
+                item.danger
+                  ? "app-profile-popover-action app-profile-popover-action--danger"
+                  : "app-profile-popover-action"
+              }
+              onClick={() => handleProfileAction(item.key)}
+            >
+              {item.label}
+            </button>
+          </li>
+        ))}
+      </ul>
     </div>
   ) : null;
   const userSummary = profileName ? (
