@@ -261,9 +261,13 @@ describe("WorkspaceShell", () => {
     ).toBe(false);
     expect(cssRule(".app-profile-popover-panel")).toContain("font-size: 14px");
     expect(
+      cssRule(".app-profile-popover.app-profile-popover .ant-popover-container"),
+    ).toContain("padding: 0");
+    expect(
       cssRule(".app-profile-popover-list .app-profile-popover-item"),
     ).toContain("list-style: none");
     expect(cssRule(".app-profile-popover-list")).toContain("display: grid");
+    expect(cssRule(".app-profile-popover-list")).toContain("padding: 8px");
     expect(cssRule(".app-profile-popover-actions")).toBe("");
     expect(cssRule(".app-profile-popover-panel__header")).toBe("");
     expect(cssRule(".app-profile-popover-action")).toContain(
