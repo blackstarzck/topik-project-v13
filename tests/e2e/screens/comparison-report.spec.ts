@@ -246,6 +246,9 @@ test.describe("authenticated comparison report", () => {
     await expect(page).not.toHaveURL(/\/login/);
 
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    await expect(
+      page.locator(".app-notification-corner, .app-workspace-mobile-actions"),
+    ).toHaveCount(0);
     expect(
       await page.getByTestId("comparison-kpi-item").count(),
     ).toBeLessThanOrEqual(5);
