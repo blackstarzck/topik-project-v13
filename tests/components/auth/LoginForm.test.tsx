@@ -120,9 +120,9 @@ describe("LoginForm", () => {
     });
     const call = signInWithOtpMock.mock.calls[0][0];
     expect(call.email).toBe("u@example.com");
-    // Phase 8-D: magic-link redirect now flows through /auth/callback
+    // Auth completion gate: magic-link success must re-enter post-auth.
     expect(call.options.emailRedirectTo).toBe(
-      "https://talkpik.example.com/auth/callback?next=%2Fdashboard",
+      "https://talkpik.example.com/auth/callback?next=%2Fauth%2Fpost-auth%3Fintent%3Dlogin",
     );
   });
 

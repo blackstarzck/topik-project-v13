@@ -1,6 +1,10 @@
 import { expect, test, type Page, type Request } from "@playwright/test";
 
-test.use({ storageState: { cookies: [], origins: [] } });
+test.use({
+  extraHTTPHeaders: { "Accept-Language": "ko-KR,ko;q=0.9" },
+  locale: "ko-KR",
+  storageState: { cookies: [], origins: [] },
+});
 
 const RESEND_ROUTE = /\/auth\/v1\/resend(?:\?|$)/;
 
@@ -164,7 +168,9 @@ test("X-11 expired OTP enables resend after countdown and secondary login works"
   );
   expect(redirectTo.origin).toBe(new URL(page.url()).origin);
   expect(redirectTo.pathname).toBe("/auth/callback");
-  expect(redirectTo.searchParams.get("next")).toBe("/onboarding/learning-goal");
+  expect(redirectTo.searchParams.get("next")).toBe(
+    "/auth/post-auth?intent=sign-up",
+  );
 
   await page.goto(
     "/auth/error?reason=otp_expired&email=student%40example.com",

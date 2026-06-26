@@ -32,6 +32,7 @@ import {
   buildAffiliationMetadata,
   clearStoredAffiliationCode,
 } from "@/lib/auth/affiliation-code";
+import { POST_AUTH_SIGN_UP_PATH } from "@/lib/auth/completion-routes";
 import { buildAuthRedirectUrl } from "@/lib/auth/redirect-url";
 import { mapSupabaseErrorCode } from "@/lib/auth/error-mapping";
 import {
@@ -316,7 +317,7 @@ export function SignUpForm({
             ...affiliationMetadata,
           },
           emailRedirectTo: buildAuthRedirectUrl(
-            "/auth/callback?next=/onboarding/learning-goal",
+            `/auth/callback?next=${encodeURIComponent(POST_AUTH_SIGN_UP_PATH)}`,
           ),
         },
       });

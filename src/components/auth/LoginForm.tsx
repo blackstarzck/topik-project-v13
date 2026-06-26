@@ -23,6 +23,7 @@ import {
 } from "@/components/shared/AppIcons";
 
 import { GoogleMark } from "@/components/auth/GoogleMark";
+import { POST_AUTH_LOGIN_PATH } from "@/lib/auth/completion-routes";
 import {
   isGoogleOAuthUnsupportedBrowserError,
   startGoogleOAuth,
@@ -182,7 +183,7 @@ export function LoginForm({
         email: values.email,
         options: {
           emailRedirectTo: buildAuthRedirectUrl(
-            `/auth/callback?next=${encodeURIComponent(nextTarget)}`,
+            `/auth/callback?next=${encodeURIComponent(POST_AUTH_LOGIN_PATH)}`,
           ),
         },
       });

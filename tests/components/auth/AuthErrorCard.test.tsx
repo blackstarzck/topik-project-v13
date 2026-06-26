@@ -102,7 +102,7 @@ describe("AuthErrorCard", () => {
     expect(call.type).toBe("signup");
     expect(call.email).toBe("u@example.com");
     expect(call.options.emailRedirectTo).toBe(
-      "https://talkpik.example.com/auth/callback?next=/onboarding/learning-goal",
+      "https://talkpik.example.com/auth/callback?next=%2Fauth%2Fpost-auth%3Fintent%3Dsign-up",
     );
     await waitFor(() => {
       expect(

@@ -27,6 +27,7 @@ import {
 
 import { AppCard } from "@/components/shared/AppCard";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { POST_AUTH_SIGN_UP_PATH } from "@/lib/auth/completion-routes";
 import { buildAuthRedirectUrl } from "@/lib/auth/redirect-url";
 import { mapSupabaseErrorCode } from "@/lib/auth/error-mapping";
 
@@ -182,7 +183,7 @@ export function VerifyEmailCard() {
         email: trimmed,
         options: {
           emailRedirectTo: buildAuthRedirectUrl(
-            "/auth/callback?next=/onboarding/learning-goal",
+            `/auth/callback?next=${encodeURIComponent(POST_AUTH_SIGN_UP_PATH)}`,
           ),
         },
       });

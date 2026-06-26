@@ -1,6 +1,10 @@
 import { expect, test, type Page, type Request } from "@playwright/test";
 
-test.use({ storageState: { cookies: [], origins: [] } });
+test.use({
+  extraHTTPHeaders: { "Accept-Language": "ko-KR,ko;q=0.9" },
+  locale: "ko-KR",
+  storageState: { cookies: [], origins: [] },
+});
 
 const RESEND_ROUTE = /\/auth\/v1\/resend(?:\?|$)/;
 const VERIFY_EMAIL = "verify.audit@gmail.com";
@@ -106,7 +110,9 @@ test("X-12 verify email resends through intercepted signup email and starts cool
   );
   expect(redirectTo.origin).toBe(new URL(page.url()).origin);
   expect(redirectTo.pathname).toBe("/auth/callback");
-  expect(redirectTo.searchParams.get("next")).toBe("/onboarding/learning-goal");
+  expect(redirectTo.searchParams.get("next")).toBe(
+    "/auth/post-auth?intent=sign-up",
+  );
 
   await expect(page.getByTestId("verify-email-countdown")).toBeVisible();
   await expect(page.locator("#verify-email-input")).toBeDisabled();

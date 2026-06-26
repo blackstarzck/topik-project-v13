@@ -1,7 +1,20 @@
 import { expect, test, type Page } from "@playwright/test";
+import { mkdir } from "node:fs/promises";
+import path from "node:path";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-test.use({ storageState: { cookies: [], origins: [] } });
+test.use({
+  extraHTTPHeaders: { "Accept-Language": "ko-KR,ko;q=0.9" },
+  locale: "ko-KR",
+  storageState: { cookies: [], origins: [] },
+});
+
+const EVIDENCE_DIR = path.join(
+  "docs",
+  "qa",
+  "reports",
+  "auth-post-auth-gate",
+);
 
 type TempAuthGateData = {
   admin: SupabaseClient;
@@ -154,6 +167,14 @@ async function selectCountryRegion(page: Page, label: string) {
   await page.locator(".ant-select-item-option").filter({ hasText: label }).click();
 }
 
+async function saveEvidenceScreenshot(page: Page, name: string) {
+  await mkdir(EVIDENCE_DIR, { recursive: true });
+  await page.screenshot({
+    fullPage: true,
+    path: path.join(EVIDENCE_DIR, `${name}.png`),
+  });
+}
+
 async function expectAuthGateSaved(data: TempAuthGateData) {
   const { data: profile, error: profileError } = await data.admin
     .from("profiles")
@@ -179,11 +200,15 @@ async function expectAuthGateSaved(data: TempAuthGateData) {
 
 test("auth completion gate renders profile fields and admin-published consent documents in one card", async ({
   page,
-}) => {
+}, testInfo) => {
   test.skip(
     !process.env.NEXT_PUBLIC_SUPABASE_URL ||
       !process.env.SUPABASE_SERVICE_ROLE_KEY,
     "Supabase URL and service role key are required for this e2e flow.",
+  );
+  test.skip(
+    process.env.SUPABASE_ENV_LABEL === "prod",
+    "Auth completion e2e creates temporary users and legal documents; never run it against production.",
   );
 
   const errors = collectErrors(page);
@@ -205,6 +230,10 @@ test("auth completion gate renders profile fields and admin-published consent do
     await expect(page.getByText("E2E Terms Body")).toBeVisible();
     await expect(page.getByText("E2E Privacy Body")).toBeVisible();
     await expect(page.locator('input[name="accept"]')).toHaveCount(1);
+    await saveEvidenceScreenshot(
+      page,
+      `consent-required-${testInfo.project.name}`,
+    );
 
     await page.locator('form button[type="submit"]').click();
     await page.waitForURL(/\/auth\/consent\?.*error=required/, {
@@ -214,6 +243,11 @@ test("auth completion gate renders profile fields and admin-published consent do
       page.getByText(/계속하려면 필수 정보를 입력하고 필요한 동의에 체크해야 합니다/),
     ).toBeVisible();
 
+    await saveEvidenceScreenshot(
+      page,
+      `consent-required-error-${testInfo.project.name}`,
+    );
+
     expect(errors).toEqual([]);
   } finally {
     await cleanupTempAuthGateData(tempData);
@@ -222,7 +256,7 @@ test("auth completion gate renders profile fields and admin-published consent do
 
 test("auth completion gate saves missing profile fields and required consents before continuing", async ({
   page,
-}) => {
+}, testInfo) => {
   test.skip(
     !process.env.NEXT_PUBLIC_SUPABASE_URL ||
       !process.env.SUPABASE_SERVICE_ROLE_KEY,
@@ -248,13 +282,20 @@ test("auth completion gate saves missing profile fields and required consents be
     await page.locator('form button[type="submit"]').click();
 
     await page.waitForURL(
-      (url) =>
-        url.pathname === "/auth/post-auth" ||
-        url.pathname === "/onboarding/learning-goal" ||
-        url.pathname === "/dashboard",
+      (url) => url.pathname === "/onboarding/learning-goal",
       { timeout: 20_000 },
     );
+    await page.waitForLoadState("networkidle");
+    await expect(
+      page.getByRole("heading", {
+        name: /학습 목표 설정|Set your learning goal/,
+      }),
+    ).toBeVisible();
     await expect(page).not.toHaveURL(/\/auth\/consent\?.*error=save-failed/);
+    await saveEvidenceScreenshot(
+      page,
+      `consent-completed-${testInfo.project.name}`,
+    );
 
     await expectAuthGateSaved(tempData);
     expect(errors).toEqual([]);

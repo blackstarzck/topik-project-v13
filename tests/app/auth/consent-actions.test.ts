@@ -102,6 +102,24 @@ describe("completeAuthGateAction", () => {
     );
   });
 
+  it("preserves the sign-up post-auth return path on required errors", async () => {
+    requireActiveSessionMock.mockResolvedValueOnce({
+      user: { id: "user-1" },
+      profile: { ...completeProfile, nationality_country_code: null },
+    });
+
+    await expect(
+      completeAuthGateAction(
+        makeForm({
+          next: "/auth/post-auth?intent=sign-up",
+          nickname: "talkpik-abc123",
+        }),
+      ),
+    ).rejects.toThrow(
+      "NEXT_REDIRECT:/auth/consent?next=%2Fauth%2Fpost-auth%3Fintent%3Dsign-up&error=required",
+    );
+  });
+
   it("calls the transactional RPC with normalized profile values and consent intent", async () => {
     const rpc = vi.fn().mockResolvedValue({ data: null, error: null });
     createSupabaseServerClientMock.mockResolvedValueOnce({ rpc });
@@ -135,6 +153,45 @@ describe("completeAuthGateAction", () => {
       p_display_name: "민준",
       p_nationality_country_code: "KR",
       p_nickname: "talkpik-min",
+    });
+  });
+
+  it("returns to sign-up post-auth after saving missing completion data", async () => {
+    const rpc = vi.fn().mockResolvedValue({ data: null, error: null });
+    createSupabaseServerClientMock.mockResolvedValueOnce({ rpc });
+    requireActiveSessionMock.mockResolvedValueOnce({
+      user: { id: "user-1" },
+      profile: {
+        ...completeProfile,
+        display_name: null,
+        nationality_country_code: null,
+        nickname: null,
+      },
+    });
+    getMissingRequiredConsentDocumentsMock.mockResolvedValueOnce([
+      { id: "terms-1" },
+      { id: "privacy-1" },
+    ]);
+
+    await expect(
+      completeAuthGateAction(
+        makeForm({
+          accept: "on",
+          display_name: "Minji",
+          nationality_country_code: "kr",
+          next: "/auth/post-auth?intent=sign-up",
+          nickname: "talkpik-minji",
+        }),
+      ),
+    ).rejects.toThrow(
+      "NEXT_REDIRECT:/auth/post-auth?intent=sign-up",
+    );
+
+    expect(rpc).toHaveBeenCalledWith("complete_auth_gate", {
+      p_accept_required_consents: true,
+      p_display_name: "Minji",
+      p_nationality_country_code: "KR",
+      p_nickname: "talkpik-minji",
     });
   });
 

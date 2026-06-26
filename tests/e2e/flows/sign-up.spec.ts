@@ -1,8 +1,20 @@
 import { expect, test, type Page, type Request } from "@playwright/test";
+import { mkdir } from "node:fs/promises";
+import path from "node:path";
 
-test.use({ storageState: { cookies: [], origins: [] } });
+test.use({
+  extraHTTPHeaders: { "Accept-Language": "ko-KR,ko;q=0.9" },
+  locale: "ko-KR",
+  storageState: { cookies: [], origins: [] },
+});
 
 const SIGN_UP_ROUTE = /\/auth\/v1\/signup(?:\?|$)/;
+const EVIDENCE_DIR = path.join(
+  "docs",
+  "qa",
+  "reports",
+  "auth-post-auth-gate",
+);
 const VALID_NAME = "홍길동";
 const VALID_NATIONALITY_COUNTRY_CODE = "VN";
 const VALID_COUNTRY_REGION_LABEL = "베트남";
@@ -95,6 +107,14 @@ async function fillSignUpForm(
 
 async function clickSubmit(page: Page) {
   await page.locator('button[type="submit"]').click();
+}
+
+async function saveEvidenceScreenshot(page: Page, name: string) {
+  await mkdir(EVIDENCE_DIR, { recursive: true });
+  await page.screenshot({
+    fullPage: true,
+    path: path.join(EVIDENCE_DIR, `${name}.png`),
+  });
 }
 
 async function mockSignUpSuccess(page: Page): Promise<SignUpRequest[]> {
@@ -318,7 +338,7 @@ test.describe("A-01 sign-up functional flow", () => {
 
   test("valid email sign-up sends auth payload and redirects to verify-email", async ({
     page,
-  }) => {
+  }, testInfo) => {
     const errors = collectErrors(page);
     const signUpRequests = await mockSignUpSuccess(page);
 
@@ -329,6 +349,10 @@ test.describe("A-01 sign-up functional flow", () => {
 
     await page.waitForURL(
       /\/auth\/verify-email\?email=e2e-signup%40example\.com$/,
+    );
+    await saveEvidenceScreenshot(
+      page,
+      `signup-verify-email-${testInfo.project.name}`,
     );
 
     expect(signUpRequests).toHaveLength(1);
@@ -346,7 +370,7 @@ test.describe("A-01 sign-up functional flow", () => {
     expect(redirectTo.origin).toBe(new URL(page.url()).origin);
     expect(redirectTo.pathname).toBe("/auth/callback");
     expect(redirectTo.searchParams.get("next")).toBe(
-      "/onboarding/learning-goal",
+      "/auth/post-auth?intent=sign-up",
     );
     expect(errors).toEqual([]);
   });

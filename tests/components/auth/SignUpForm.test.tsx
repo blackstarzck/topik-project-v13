@@ -261,9 +261,9 @@ describe("SignUpForm", () => {
       ui_locale: "ko",
       ui_locale_source: "auto",
     });
-    // Phase 8-D: emailRedirectTo now points to /auth/callback?next=...
+    // Auth completion gate: email confirmation must re-enter post-auth.
     expect(call.options.emailRedirectTo).toBe(
-      "https://talkpik.example.com/auth/callback?next=/onboarding/learning-goal",
+      "https://talkpik.example.com/auth/callback?next=%2Fauth%2Fpost-auth%3Fintent%3Dsign-up",
     );
   });
 
