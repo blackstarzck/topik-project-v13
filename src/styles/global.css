@@ -4134,6 +4134,11 @@ body {
   height: 48px;
 }
 
+.app-workspace-mobile-actions {
+  position: relative;
+  z-index: 1;
+}
+
 .app-workspace-drawer .ant-drawer-body {
   padding: 0;
 }
@@ -4160,6 +4165,17 @@ body {
   }
 
   .app-workspace-mobile-bar .ant-typography-secondary {
+    display: none;
+  }
+
+  .app-workspace-mobile-bar .app-workspace-user-summary {
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+  }
+
+  .app-workspace-mobile-bar .app-workspace-user-summary__copy {
     display: none;
   }
 }
@@ -4953,6 +4969,11 @@ body {
   display: flex;
   justify-content: flex-end;
   margin-top: 8px;
+}
+
+.account-delete-card.app-card.app-surface {
+  border: 1px solid var(--ant-color-warning-border);
+  background: var(--ant-color-warning-bg);
 }
 
 /* 로그인 방법: 각 메서드를 개별 AntD Card(.app-cards-bordered로 외곽선 복원)로
@@ -5761,6 +5782,52 @@ body {
   top: 14px;
   right: 20px;
   z-index: 80;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.app-workspace-user-summary {
+  display: inline-flex;
+  align-items: center;
+  max-width: min(280px, 42vw);
+  min-width: 0;
+  gap: 8px;
+  border: 1px solid var(--app-color-border);
+  border-radius: 999px;
+  background: var(--app-color-bg-container);
+  box-shadow: 0 6px 18px rgba(42, 55, 89, 0.1);
+  padding: 4px 10px 4px 4px;
+}
+
+.app-workspace-user-summary__avatar.ant-avatar {
+  flex: 0 0 auto;
+  background: var(--app-color-text);
+  color: var(--app-color-bg-container);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.app-workspace-user-summary__copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.app-workspace-user-summary__name.ant-typography,
+.app-workspace-user-summary__meta.ant-typography {
+  max-width: 210px;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.app-workspace-user-summary__name.ant-typography {
+  font-size: 13px;
+}
+
+.app-workspace-user-summary__meta.ant-typography {
+  font-size: 12px;
 }
 
 .app-notification-corner .app-notification-bell {
@@ -5939,6 +6006,10 @@ body {
 }
 
 .app-notification-item__time.ant-typography {
+  font-size: 14px;
+}
+
+.dashboard-alerts-card .ant-card-head-title {
   font-size: 14px;
 }
 

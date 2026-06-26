@@ -13,7 +13,8 @@
   "app": {
     "brand": "TALKPIK",
     "openMenu": "메뉴 열기",
-    "menu": "메뉴"
+    "menu": "메뉴",
+    "userSummary": "사용자 정보"
   },
   "nav": {
     "dashboard": "홈",

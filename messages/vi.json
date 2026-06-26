@@ -13,7 +13,8 @@
   "app": {
     "brand": "TALKPIK",
     "openMenu": "Mở menu",
-    "menu": "Menu"
+    "menu": "Menu",
+    "userSummary": "Thông tin người dùng"
   },
   "nav": {
     "dashboard": "Trang chủ",

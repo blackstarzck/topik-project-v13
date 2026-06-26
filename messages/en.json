@@ -13,7 +13,8 @@
   "app": {
     "brand": "TALKPIK",
     "openMenu": "Open menu",
-    "menu": "Menu"
+    "menu": "Menu",
+    "userSummary": "User information"
   },
   "nav": {
     "dashboard": "Home",

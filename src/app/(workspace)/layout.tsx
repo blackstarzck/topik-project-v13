@@ -40,6 +40,9 @@ export default async function WorkspaceLayout({
       role={profile.app_role}
       userId={user.id}
       email={user.email}
+      displayName={profile.display_name}
+      nickname={profile.nickname}
+      avatarPath={profile.avatar_path}
       planLabel={profile.plan_label}
     >
       {children}

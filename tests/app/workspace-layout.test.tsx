@@ -8,15 +8,17 @@ const redirectMock = vi.fn((url: string) => {
 });
 const getSessionAndProfileMock = vi.fn();
 const getAuthCompletionStatusForSessionMock = vi.fn();
+const workspaceShellMock = vi.hoisted(() => vi.fn());
 
 vi.mock("next/navigation", () => ({
   redirect: (url: string) => redirectMock(url),
 }));
 
 vi.mock("@/components/app/WorkspaceShell", () => ({
-  WorkspaceShell: ({ children }: { children: ReactNode }) => (
-    <main data-testid="workspace-shell">{children}</main>
-  ),
+  WorkspaceShell: (props: { children: ReactNode }) => {
+    workspaceShellMock(props);
+    return <main data-testid="workspace-shell">{props.children}</main>;
+  },
 }));
 
 vi.mock("@/lib/auth/profile", () => ({
@@ -38,6 +40,7 @@ const session = {
     display_name: "Chan",
     nationality_country_code: "KR",
     nickname: "talkpik-abc123",
+    avatar_path: "user-1/avatar.png",
     plan_label: "Free",
     status: "active",
   },
@@ -53,6 +56,7 @@ async function renderLayout() {
 describe("(workspace) layout auth completion guard", () => {
   beforeEach(() => {
     redirectMock.mockClear();
+    workspaceShellMock.mockClear();
     getSessionAndProfileMock.mockReset();
     getAuthCompletionStatusForSessionMock.mockReset();
     getAuthCompletionStatusForSessionMock.mockResolvedValue("ready");
@@ -117,5 +121,20 @@ describe("(workspace) layout auth completion guard", () => {
 
     expect(screen.getByTestId("workspace-shell")).toBeTruthy();
     expect(screen.getByText("private area")).toBeTruthy();
+  });
+
+  it("passes profile identity data to the workspace shell", async () => {
+    getSessionAndProfileMock.mockResolvedValue(session);
+
+    await renderLayout();
+
+    expect(workspaceShellMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        email: "student@example.com",
+        displayName: "Chan",
+        nickname: "talkpik-abc123",
+        avatarPath: "user-1/avatar.png",
+      }),
+    );
   });
 });

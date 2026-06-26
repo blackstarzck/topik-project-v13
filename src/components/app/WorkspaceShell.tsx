@@ -1,13 +1,14 @@
 "use client";
 
-import { Button, Grid, Layout, Space, Typography } from "antd";
+import { Avatar, Button, Grid, Layout, Space, Typography } from "antd";
 import { Menu as MenuIcon } from "@/components/shared/AppIcons";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { AppDrawer } from "@/components/shared/AppDrawer";
 import { BrandLogo } from "@/components/shared/BrandLogo";
+import { avatarPublicUrl } from "@/components/profile/avatar-upload";
 import type { AppRole } from "@/lib/auth/roles";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { SidebarNav } from "./SidebarNav";
@@ -20,6 +21,9 @@ type Props = {
   role: AppRole;
   userId: string;
   email?: string | null;
+  displayName?: string | null;
+  nickname?: string | null;
+  avatarPath?: string | null;
   planLabel?: string | null;
   children: ReactNode;
 };
@@ -28,6 +32,9 @@ export function WorkspaceShell({
   role,
   userId,
   email,
+  displayName,
+  nickname,
+  avatarPath,
   planLabel,
   children,
 }: Props) {
@@ -72,6 +79,51 @@ export function WorkspaceShell({
   ]
     .filter(Boolean)
     .join(" ");
+  const cleanNickname = cleanProfileText(nickname);
+  const cleanDisplayName = cleanProfileText(displayName);
+  const cleanEmail = cleanProfileText(email);
+  const profileName = cleanNickname ?? cleanDisplayName ?? cleanEmail;
+  const profileSecondary =
+    cleanEmail && cleanEmail !== profileName
+      ? cleanEmail
+      : cleanDisplayName && cleanDisplayName !== profileName
+        ? cleanDisplayName
+        : null;
+  const avatarUrl = useMemo(() => {
+    if (!avatarPath) return null;
+    try {
+      return avatarPublicUrl(avatarPath);
+    } catch {
+      return null;
+    }
+  }, [avatarPath]);
+  const avatarInitial = profileName?.charAt(0).toUpperCase() ?? "?";
+  const userSummary = profileName ? (
+    <div className="app-workspace-user-summary" aria-label={t("userSummary")}>
+      <Avatar
+        size={32}
+        src={avatarUrl ?? undefined}
+        alt={profileName}
+        className="app-workspace-user-summary__avatar"
+      >
+        {avatarUrl ? null : avatarInitial}
+      </Avatar>
+      <span className="app-workspace-user-summary__copy">
+        <Text strong ellipsis className="app-workspace-user-summary__name">
+          {profileName}
+        </Text>
+        {profileSecondary ? (
+          <Text
+            type="secondary"
+            ellipsis
+            className="app-workspace-user-summary__meta"
+          >
+            {profileSecondary}
+          </Text>
+        ) : null}
+      </span>
+    </div>
+  ) : null;
 
   return (
     <Layout
@@ -103,11 +155,18 @@ export function WorkspaceShell({
             />
             {/* Absolutely centered in the bar so it stays put regardless of the
                 menu/bell widths (e.g. an unread badge on the bell). */}
-            <span className="app-workspace-mobile-brand" aria-label={t("brand")}>
+            <span
+              className="app-workspace-mobile-brand"
+              aria-label={t("brand")}
+            >
               <BrandLogo height={48} loading="eager" />
             </span>
-            <Space size={8} align="center">
-              {email ? <Text type="secondary">{email}</Text> : null}
+            <Space
+              size={8}
+              align="center"
+              className="app-workspace-mobile-actions"
+            >
+              {userSummary}
               <NotificationBell userId={userId} />
             </Space>
           </Header>
@@ -115,6 +174,7 @@ export function WorkspaceShell({
           /* No desktop header exists, so the bell floats fixed at the
              top-right corner of the content area on every workspace page. */
           <div className="app-notification-corner">
+            {userSummary}
             <NotificationBell userId={userId} />
           </div>
         )}
@@ -140,4 +200,9 @@ export function WorkspaceShell({
       )}
     </Layout>
   );
+}
+
+function cleanProfileText(value: string | null | undefined) {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : null;
 }

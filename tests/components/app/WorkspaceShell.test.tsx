@@ -135,6 +135,32 @@ describe("WorkspaceShell", () => {
     expect(screen.getByTestId("workspace-child")).toBeTruthy();
   });
 
+  it("shows the user summary beside the notification bell", () => {
+    const { container } = renderWithIntl(
+      <WorkspaceShell
+        role="learner"
+        userId="user-1"
+        email="student@example.com"
+        displayName="Chan"
+        nickname="talkpik-chan"
+        planLabel="premium"
+      >
+        <div>body</div>
+      </WorkspaceShell>,
+    );
+
+    const summary = container.querySelector(".app-workspace-user-summary");
+    const actionGroup = summary?.closest(
+      ".app-notification-corner, .app-workspace-mobile-actions",
+    );
+
+    expect(summary).toBeTruthy();
+    expect(actionGroup).toBeTruthy();
+    expect(summary?.querySelector(".ant-avatar")).toBeTruthy();
+    expect(summary?.textContent).toContain("talkpik-chan");
+    expect(summary?.textContent).toContain("student@example.com");
+  });
+
   it("renders Iconsax icons in the sidebar menu", () => {
     const { container } = renderWithIntl(
       <WorkspaceShell
