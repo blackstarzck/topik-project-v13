@@ -3,11 +3,10 @@
 import {
   Avatar,
   Button,
-  Dropdown,
   Grid,
   Layout,
+  Popover,
   Typography,
-  type MenuProps,
 } from "antd";
 import { Menu as MenuIcon } from "@/components/shared/AppIcons";
 import { useTranslations } from "next-intl";
@@ -53,6 +52,7 @@ export function WorkspaceShell({
   const router = useRouter();
   const screens = useBreakpoint();
   const signOutFormRef = useRef<HTMLFormElement>(null);
+  const [profileOpen, setProfileOpen] = useState(false);
 
   // 멀티 탭/기기 동기화: 다른 탭·기기에서 로그아웃되거나 회원 탈퇴로 세션이
   // 무효화되면 이 탭도 로그인 화면으로 보낸다. 권위 있는 차단은 서버측
@@ -109,13 +109,10 @@ export function WorkspaceShell({
     }
   }, [avatarPath]);
   const avatarInitial = profileName?.charAt(0).toUpperCase() ?? "?";
-  const profileMenuItems: MenuProps["items"] = [
-    { key: "profile", label: navT("profile") },
-    { key: "learning-goal", label: navT("settingsLearning") },
-    { type: "divider" },
-    { key: "logout", label: navT("logout"), danger: true },
-  ];
-  const handleProfileMenuClick: MenuProps["onClick"] = ({ key }) => {
+  const handleProfileAction = (
+    key: "profile" | "learning-goal" | "logout",
+  ) => {
+    setProfileOpen(false);
     if (key === "profile") {
       router.push(APP_ROUTES.profile);
       return;
@@ -128,11 +125,72 @@ export function WorkspaceShell({
       signOutFormRef.current?.requestSubmit();
     }
   };
+  const profilePopoverContent = profileName ? (
+    <div className="app-profile-popover-panel">
+      <div className="app-profile-popover-panel__header">
+        <Avatar
+          size={32}
+          src={avatarUrl ?? undefined}
+          alt={profileName}
+          className="app-workspace-user-summary__avatar"
+        >
+          {avatarUrl ? null : avatarInitial}
+        </Avatar>
+        <span className="app-profile-popover-panel__copy">
+          <Text strong ellipsis className="app-profile-popover-panel__name">
+            {profileName}
+          </Text>
+          {profileSecondary ? (
+            <Text
+              type="secondary"
+              ellipsis
+              className="app-profile-popover-panel__meta"
+            >
+              {profileSecondary}
+            </Text>
+          ) : null}
+        </span>
+      </div>
+      <div
+        className="app-profile-popover-actions"
+        role="menu"
+        aria-label={t("userSummary")}
+      >
+        <button
+          type="button"
+          role="menuitem"
+          className="app-profile-popover-action"
+          onClick={() => handleProfileAction("profile")}
+        >
+          {navT("profile")}
+        </button>
+        <button
+          type="button"
+          role="menuitem"
+          className="app-profile-popover-action"
+          onClick={() => handleProfileAction("learning-goal")}
+        >
+          {navT("settingsLearning")}
+        </button>
+        <button
+          type="button"
+          role="menuitem"
+          className="app-profile-popover-action app-profile-popover-action--danger"
+          onClick={() => handleProfileAction("logout")}
+        >
+          {navT("logout")}
+        </button>
+      </div>
+    </div>
+  ) : null;
   const userSummary = profileName ? (
-    <Dropdown
-      menu={{ items: profileMenuItems, onClick: handleProfileMenuClick }}
+    <Popover
+      open={profileOpen}
+      onOpenChange={setProfileOpen}
       placement="bottomRight"
-      trigger={["click"]}
+      trigger="click"
+      content={profilePopoverContent}
+      classNames={{ root: "app-notification-popover app-profile-popover" }}
     >
       <button
         type="button"
@@ -162,7 +220,7 @@ export function WorkspaceShell({
           ) : null}
         </span>
       </button>
-    </Dropdown>
+    </Popover>
   ) : null;
   const userActions = (
     <>

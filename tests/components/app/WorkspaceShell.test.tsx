@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { fireEvent, screen, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { WorkspaceShell } from "../../../src/components/app/WorkspaceShell";
@@ -195,7 +195,7 @@ describe("WorkspaceShell", () => {
     ).toContain("box-shadow: none");
   });
 
-  it("opens profile actions from the user summary trigger", () => {
+  it("opens profile actions in a notification-style popover", async () => {
     const { container } = renderWithIntl(
       <WorkspaceShell
         role="learner"
@@ -212,21 +212,32 @@ describe("WorkspaceShell", () => {
     const profileTrigger = within(container).getByRole("button", {
       name: koMessages.app.userSummary,
     });
-    const dropdownItem = (label: string) => {
+    const popoverItem = (label: string) => {
       const item = Array.from(
-        document.body.querySelectorAll(".ant-dropdown-menu [role='menuitem']"),
+        document.body.querySelectorAll(
+          ".app-profile-popover-panel [role='menuitem']",
+        ),
       ).find((candidate) => candidate.textContent?.includes(label));
-      if (!item) throw new Error(`dropdown item not found: ${label}`);
+      if (!item) throw new Error(`profile popover item not found: ${label}`);
       return item;
     };
 
     fireEvent.click(profileTrigger);
-    fireEvent.click(dropdownItem(koMessages.nav.profile));
+    await waitFor(() => {
+      const panel = document.body.querySelector(".app-profile-popover-panel");
+      expect(panel).toBeTruthy();
+      expect(panel?.closest(".app-profile-popover")).toBeTruthy();
+      expect(panel?.closest(".app-notification-popover")).toBeTruthy();
+      expect(panel?.textContent).toContain("talkpik-chan");
+      expect(panel?.textContent).toContain("student@example.com");
+    });
+    fireEvent.click(popoverItem(koMessages.nav.profile));
 
     expect(navMock.routerPush).toHaveBeenCalledWith("/profile");
 
     fireEvent.click(profileTrigger);
-    fireEvent.click(dropdownItem(koMessages.nav.settingsLearning));
+    await waitFor(() => expect(popoverItem(koMessages.nav.settingsLearning)));
+    fireEvent.click(popoverItem(koMessages.nav.settingsLearning));
 
     expect(navMock.routerPush).toHaveBeenCalledWith("/settings/learning");
 
@@ -235,7 +246,18 @@ describe("WorkspaceShell", () => {
     expect(signOutForm?.getAttribute("method")).toBe("post");
     expect(signOutForm?.getAttribute("action")).toBe("/auth/sign-out");
     fireEvent.click(profileTrigger);
-    expect(dropdownItem(koMessages.nav.logout)).toBeTruthy();
+    await waitFor(() => expect(popoverItem(koMessages.nav.logout)));
+    expect(popoverItem(koMessages.nav.logout)).toBeTruthy();
+    expect(cssRule(".app-profile-popover-panel")).toContain("font-size: 14px");
+    expect(cssRule(".app-profile-popover-panel__header")).toContain(
+      "border-bottom: 1px solid var(--ant-color-border-secondary)",
+    );
+    expect(cssRule(".app-profile-popover-action")).toContain(
+      "font-size: 14px",
+    );
+    expect(cssRule(".app-profile-popover-action::before")).toContain(
+      "background: var(--app-color-bg-layout)",
+    );
   });
 
   it("renders Iconsax icons in the sidebar menu", () => {
