@@ -5,6 +5,7 @@ import {
   type SupabaseServerClient,
 } from "../supabase/server";
 import { getProblemAvailability } from "../problems/availability";
+import { filterVisibleProblemIds } from "../problems/visibility";
 import type {
   ComparisonReportRow,
   FeedbackBundle,
@@ -107,6 +108,8 @@ export async function getComparisonReport(
 
 export type WritingProblem = NormalizedWritingProblem;
 const DEFAULT_PROBLEM_CANDIDATE_LIMIT = 25;
+const PROBLEM_SCAN_PAGE_SIZE = 25;
+const MAX_VISIBILITY_SCAN_ROWS = 200;
 
 type WritingProblemQueryRow = {
   id: string;
@@ -143,12 +146,17 @@ function normalizeWritingProblemRow(
         ? (row.lifecycle_status as ProblemLifecycleStatus)
         : "active",
     lifecycleReason:
-      "lifecycle_reason" in row ? (row.lifecycle_reason as string | null) : null,
+      "lifecycle_reason" in row
+        ? (row.lifecycle_reason as string | null)
+        : null,
   });
 }
 
 function isSeedFixtureProblem(row: WritingProblemQueryRow): boolean {
-  if (Array.isArray(row.tags) && row.tags.some((tag) => tag.startsWith("seed:"))) {
+  if (
+    Array.isArray(row.tags) &&
+    row.tags.some((tag) => tag.startsWith("seed:"))
+  ) {
     return true;
   }
   if (
@@ -183,7 +191,10 @@ export async function getWritingProblem(
   if (problemId && !isProblemIdLikeUuid(problemId)) return null;
   const explicitProblemId = problemId || null;
   const supabase = await createClient();
-  const runQuery = async (withLifecycle: boolean) => {
+  const runQuery = async (
+    withLifecycle: boolean,
+    range: { from: number; to: number } | null,
+  ) => {
     let query = supabase
       .from("problems")
       .select(
@@ -202,20 +213,69 @@ export async function getWritingProblem(
     // candidate set and can skip incomplete rows below.
     query = query
       .order("created_at", { ascending: true })
-      .order("id", { ascending: true })
-      .limit(explicitProblemId ? 1 : DEFAULT_PROBLEM_CANDIDATE_LIMIT);
+      .order("id", { ascending: true });
     const result = explicitProblemId
-      ? await query.eq("id", explicitProblemId)
-      : await query;
+      ? await query.eq("id", explicitProblemId).limit(1)
+      : await query.range(
+          range?.from ?? 0,
+          range?.to ?? PROBLEM_SCAN_PAGE_SIZE - 1,
+        );
     return result as unknown as WritingProblemQueryResult;
   };
 
-  let { data, error } = await runQuery(true);
+  const collectVisibleRows = async (withLifecycle: boolean) => {
+    const rows: WritingProblemQueryRow[] = [];
+    let lastError: WritingProblemQueryResult["error"] = null;
+
+    if (explicitProblemId) {
+      const result = await runQuery(withLifecycle, null);
+      if (result.error) return result;
+      const nonSeedRows = (result.data ?? []).filter(
+        (row) => !isSeedFixtureProblem(row),
+      );
+      const visibleIds = await filterVisibleProblemIds(
+        supabase,
+        nonSeedRows.map((row) => row.id),
+      );
+      return {
+        data: nonSeedRows.filter((row) => visibleIds.has(row.id)),
+        error: null,
+      } satisfies WritingProblemQueryResult;
+    }
+
+    for (
+      let offset = 0;
+      offset < MAX_VISIBILITY_SCAN_ROWS &&
+      rows.length < DEFAULT_PROBLEM_CANDIDATE_LIMIT;
+      offset += PROBLEM_SCAN_PAGE_SIZE
+    ) {
+      const result = await runQuery(withLifecycle, {
+        from: offset,
+        to: offset + PROBLEM_SCAN_PAGE_SIZE - 1,
+      });
+      if (result.error) {
+        lastError = result.error;
+        break;
+      }
+      const pageRows = result.data ?? [];
+      const nonSeedRows = pageRows.filter((row) => !isSeedFixtureProblem(row));
+      const visibleIds = await filterVisibleProblemIds(
+        supabase,
+        nonSeedRows.map((row) => row.id),
+      );
+      rows.push(...nonSeedRows.filter((row) => visibleIds.has(row.id)));
+      if (pageRows.length < PROBLEM_SCAN_PAGE_SIZE) break;
+    }
+
+    return { data: rows, error: lastError } satisfies WritingProblemQueryResult;
+  };
+
+  let { data, error } = await collectVisibleRows(true);
   if (error && error.message.includes("lifecycle_status")) {
-    ({ data, error } = await runQuery(false));
+    ({ data, error } = await collectVisibleRows(false));
   }
   if (error) throw new Error(`getWritingProblem: ${error.message}`);
-  const problems = (data ?? []).filter((row) => !isSeedFixtureProblem(row)).map((row) =>
+  const problems = (data ?? []).map((row) =>
     normalizeWritingProblemRow(row, questionNo),
   );
   if (problems.length === 0) return null;

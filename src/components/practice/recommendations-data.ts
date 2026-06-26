@@ -1,8 +1,12 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
-import { QUESTION_NOS, type QuestionNo } from "@/lib/practice/types";
+import type {
+  RecommendationBundle as ServerRecommendationBundle,
+  RecommendationItemCard,
+  RecommendationRunSummary,
+} from "@/lib/practice/recommendations";
+import type { QuestionNo } from "@/lib/practice/types";
 
 /**
  * C-01 문제 유형 추천 — client-side data layer.
@@ -20,28 +24,20 @@ import { QUESTION_NOS, type QuestionNo } from "@/lib/practice/types";
  *   3) 대표 추천(rank 1) vs 나머지 분리 — 화면에서 1개를 크게 노출.
  */
 
-export type RecommendationRunSummary = {
-  reasonSummary: string | null;
-  sourceType: string;
-  createdAt: string;
-};
-
-export type RecommendationItemCard = {
-  itemId: string;
-  problemId: string;
-  rank: number;
-  reason: string | null;
-  estimatedMinutes: number | null;
-  weaknessTags: string[];
-  title: string;
-  questionNo: QuestionNo | null;
-};
+export type { RecommendationItemCard, RecommendationRunSummary };
 
 export type RecommendationBundle = {
   run: RecommendationRunSummary | null;
   items: RecommendationItemCard[];
   /** question_no values that currently have at least one active recommendation. */
   availableTypes: Set<QuestionNo>;
+};
+
+type SerializableRecommendationBundle = Omit<
+  ServerRecommendationBundle,
+  "availableTypes"
+> & {
+  availableTypes: QuestionNo[];
 };
 
 export const RECOMMENDATION_REQUEST_TIMEOUT_MS = 8_000;
@@ -51,24 +47,6 @@ export class RecommendationRequestTimeoutError extends Error {
     super("recommendation_request_timeout");
     this.name = "RecommendationRequestTimeoutError";
   }
-}
-
-function normalizeJoinedProblem(
-  raw: unknown,
-): { title: string; question_no: number | null } | null {
-  const candidate = Array.isArray(raw) ? raw[0] : raw;
-  if (!candidate || typeof candidate !== "object") return null;
-  const obj = candidate as Record<string, unknown>;
-  if (typeof obj.title !== "string") return null;
-  const qn = obj.question_no;
-  return { title: obj.title, question_no: typeof qn === "number" ? qn : null };
-}
-
-function toQuestionNo(value: number | null): QuestionNo | null {
-  if (value == null) return null;
-  return (QUESTION_NOS as readonly number[]).includes(value)
-    ? (value as QuestionNo)
-    : null;
 }
 
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
@@ -87,100 +65,27 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
 
 async function queryRecommendationBundle(
   questionNo: QuestionNo | null,
-  createClient: () => ReturnType<
-    typeof createSupabaseBrowserClient
-  > = createSupabaseBrowserClient,
 ): Promise<RecommendationBundle> {
-  const supabase = createClient();
-
-  // Latest active run for this user (RLS scopes to auth.uid()).
-  const nowIso = new Date().toISOString();
-  const { data: runData, error: runErr } = await supabase
-    .from("recommendation_runs")
-    .select("id, source_type, reason_summary, created_at, expires_at")
-    .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (runErr) throw runErr;
-
-  let itemQuery = supabase
-    .from("recommendation_items")
-    .select(
-      "id, problem_id, rank, reason, estimated_minutes, weakness_tags," +
-        " recommendation_runs!inner(expires_at)," +
-        " problems!inner(title, question_no, publish_status)",
-    )
-    .eq("status", "active")
-    .eq("problems.publish_status", "published")
-    .or(`expires_at.is.null,expires_at.gt.${nowIso}`, {
-      referencedTable: "recommendation_runs",
-    })
-    .order("rank", { ascending: true })
-    .limit(8);
-  if (questionNo != null) {
-    itemQuery = itemQuery.eq("problems.question_no", questionNo);
+  const search = questionNo == null ? "" : `?type=${questionNo}`;
+  const response = await fetch(`/api/practice/recommendations${search}`, {
+    credentials: "same-origin",
+  });
+  if (!response.ok) {
+    throw new Error(`recommendations_request_failed:${response.status}`);
   }
-  const { data: itemData, error: itemErr } = await itemQuery;
-  if (itemErr) throw itemErr;
-
-  // PostgREST embeds widen the row type to a union with an error marker; treat
-  // the rows opaquely and read each field defensively (same approach as the
-  // normalizeJoined helper in src/lib/practice/queries.ts).
-  type RawItem = {
-    id: string;
-    problem_id: string;
-    rank: number;
-    reason: string | null;
-    estimated_minutes: number | null;
-    weakness_tags: string[] | null;
-    problems: unknown;
-  };
-  const rawItems = (itemData ?? []) as unknown as RawItem[];
-
-  const items: RecommendationItemCard[] = [];
-  const availableTypes = new Set<QuestionNo>();
-  for (const row of rawItems) {
-    const problem = normalizeJoinedProblem(row.problems);
-    if (!problem) continue;
-    const qn = toQuestionNo(problem.question_no);
-    if (qn != null) availableTypes.add(qn);
-    items.push({
-      itemId: row.id,
-      problemId: row.problem_id,
-      rank: row.rank,
-      reason: row.reason,
-      estimatedMinutes: row.estimated_minutes,
-      weaknessTags: Array.isArray(row.weakness_tags) ? row.weakness_tags : [],
-      title: problem.title,
-      questionNo: qn,
-    });
-  }
+  const raw = (await response.json()) as SerializableRecommendationBundle;
 
   return {
-    run: runData
-      ? {
-          reasonSummary: runData.reason_summary,
-          sourceType: runData.source_type,
-          createdAt: runData.created_at,
-        }
-      : null,
-    items,
-    availableTypes,
+    ...raw,
+    availableTypes: new Set(raw.availableTypes),
   };
 }
 
 export function fetchRecommendationBundle(
   questionNo: QuestionNo | null,
-  createClient: () => ReturnType<
-    typeof createSupabaseBrowserClient
-  > = createSupabaseBrowserClient,
   timeoutMs = RECOMMENDATION_REQUEST_TIMEOUT_MS,
 ): Promise<RecommendationBundle> {
-  return withTimeout(
-    queryRecommendationBundle(questionNo, createClient),
-    timeoutMs,
-  );
+  return withTimeout(queryRecommendationBundle(questionNo), timeoutMs);
 }
 
 export function recommendationBundleKey(questionNo: QuestionNo | null) {

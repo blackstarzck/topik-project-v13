@@ -62,7 +62,9 @@ function collectErrors(page: Page): string[] {
 
 function serviceClient() {
   if (!SUPABASE_URL || !SERVICE_KEY) {
-    throw new Error("Missing Supabase service credentials for problem-list e2e");
+    throw new Error(
+      "Missing Supabase service credentials for problem-list e2e",
+    );
   }
   return createClient(SUPABASE_URL, SERVICE_KEY, {
     auth: { persistSession: false },
@@ -82,6 +84,7 @@ async function getStudentUser(): Promise<StudentUser> {
 
 function q51Materials(marker: string) {
   return {
+    question_id: `e2e-problem-list-${marker}`,
     blank_target_giyeok: "행사 진행 순서",
     blank_target_nieun: "참가자 준비물",
     review: {
@@ -195,7 +198,10 @@ async function cleanupProblemListFixtures(createdProblemIds: string[]) {
 
   const sb = serviceClient();
   await sb.from("study_events").delete().in("problem_id", createdProblemIds);
-  await sb.from("writing_submissions").delete().in("problem_id", createdProblemIds);
+  await sb
+    .from("writing_submissions")
+    .delete()
+    .in("problem_id", createdProblemIds);
   await sb.from("writing_drafts").delete().in("problem_id", createdProblemIds);
   await sb.from("problems").delete().in("id", createdProblemIds);
   createdProblemIds.length = 0;
@@ -223,7 +229,10 @@ function problemRow(page: Page, title: string) {
   return page.locator("tr").filter({ hasText: title }).first();
 }
 
-async function openFixtureFromProblemList(page: Page, fixture: SaveBackFixture) {
+async function openFixtureFromProblemList(
+  page: Page,
+  fixture: SaveBackFixture,
+) {
   const url = `/practice/problems?q=${encodeURIComponent(fixture.marker)}&sort=newest&page=1`;
   const deadline = Date.now() + 30_000;
   while (Date.now() < deadline) {
@@ -255,7 +264,9 @@ async function openFixtureFromProblemList(page: Page, fixture: SaveBackFixture) 
   const row = problemRow(page, fixture.title);
   await expect(row.locator(".problem-table__action-link")).toHaveCount(1);
   await row.locator(".problem-table__title").click();
-  await expect(page).toHaveURL(new RegExp(`/writing/short-answer-writing-51.*${fixture.problemId}`));
+  await expect(page).toHaveURL(
+    new RegExp(`/writing/short-answer-writing-51.*${fixture.problemId}`),
+  );
 }
 
 async function saveDraftOnWritingPage(page: Page, marker: string) {
@@ -271,7 +282,9 @@ async function expectProblemIsRetryable(page: Page, title: string) {
   await expect(page.getByText(title)).toBeVisible({ timeout: 15_000 });
   const row = problemRow(page, title);
   await expect(row.locator(".problem-table__action-link")).toHaveCount(0);
-  await expect(row.locator("button.problem-table__action-button--secondary")).toBeVisible();
+  await expect(
+    row.locator("button.problem-table__action-button--secondary"),
+  ).toBeVisible();
   await expect(row.locator(".problem-table__new-badge")).toHaveCount(0);
   await row.locator(".problem-table__title").click();
   await expect(page.getByTestId("retry-modal-compact-summary")).toBeVisible();
@@ -301,9 +314,12 @@ test("C-02 keeps deterministic newest order across repeated list_user_problems r
   try {
     const fixture = await createSortFixture(createdProblemIds);
 
-    await page.goto(`/practice/problems?q=${fixture.marker}&sort=newest&page=1`, {
-      waitUntil: "domcontentloaded",
-    });
+    await page.goto(
+      `/practice/problems?q=${fixture.marker}&sort=newest&page=1`,
+      {
+        waitUntil: "domcontentloaded",
+      },
+    );
     await expect(page).not.toHaveURL(/\/login/);
 
     await expect
@@ -328,9 +344,9 @@ test("C-02 keeps deterministic newest order across repeated list_user_problems r
         document.dispatchEvent(new Event("visibilitychange"));
       });
       await refetch;
-      await expect.poll(() => visibleProblemTitles(page)).toEqual(
-        fixture.expectedTitlesById,
-      );
+      await expect
+        .poll(() => visibleProblemTitles(page))
+        .toEqual(fixture.expectedTitlesById);
     }
 
     expect(errors).toEqual([]);

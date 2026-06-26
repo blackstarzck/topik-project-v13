@@ -1356,6 +1356,14 @@ export interface Database {
         };
         Returns: undefined;
       };
+      filter_visible_writing_problem_ids: {
+        Args: {
+          p_problem_ids: string[];
+        };
+        Returns: {
+          problem_id: string;
+        }[];
+      };
       create_external_writing_submission: {
         Args: {
           submission: Json;
@@ -1388,6 +1396,13 @@ export interface Database {
       is_nickname_available: {
         Args: {
           candidate: string;
+        };
+        Returns: boolean;
+      };
+      is_writing_problem_visible_to_caller: {
+        Args: {
+          p_problem_id: string;
+          p_question_no: number;
         };
         Returns: boolean;
       };

@@ -86,7 +86,7 @@ describe("AnalysisLoadingPage state assets", () => {
     expect(routerMocks.push).toHaveBeenCalledWith("/dashboard");
   });
 
-  it("offers a library status handoff when analysis stays slow", async () => {
+  it("keeps the slow handoff hidden when analysis stays active", async () => {
     vi.useFakeTimers();
     renderWithIntl(<AnalysisLoadingPage status="analyzing" />);
 
@@ -96,12 +96,9 @@ describe("AnalysisLoadingPage state assets", () => {
       vi.advanceTimersByTime(10_000);
     });
 
-    const libraryButton = screen.getByRole("button", {
-      name: "내 서재에서 상태 보기",
-    });
-    fireEvent.click(libraryButton);
-
-    expect(routerMocks.push).toHaveBeenCalledWith("/library");
+    expect(screen.queryByTestId("analysis-slow-handoff")).toBeNull();
+    expect(screen.queryByTestId("analysis-library-status-link")).toBeNull();
+    expect(routerMocks.push).not.toHaveBeenCalled();
   });
 
   it("shows a stored pending handoff immediately when polling attempts are exhausted", async () => {

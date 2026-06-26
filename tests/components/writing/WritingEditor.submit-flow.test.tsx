@@ -122,16 +122,18 @@ describe("WritingEditor submit flow", () => {
     expect(stateAsset.getAttribute("src")).toBe("/assets/state/refresh.svg");
     const stateCard = screen.getByTestId("analysis-state-card");
     expect(stateCard.classList.contains("app-card")).toBe(false);
-    expect(screen.getByRole("heading", { name: "AI 분석 중..." })).toBeTruthy();
     expect(
-      screen.queryByText(koMessages.feedback.analysis.subtitle),
-    ).toBeNull();
+      screen.getByRole("heading", {
+        name: koMessages.feedback.analysis.title,
+      }),
+    ).toBeTruthy();
     expect(
-      screen.queryByText(koMessages.feedback.analysis.expectedTime),
-    ).toBeNull();
+      screen.getByText(koMessages.feedback.analysis.subtitle),
+    ).toBeTruthy();
     expect(
-      screen.queryByText(koMessages.feedback.analysis.slowTitle),
-    ).toBeNull();
+      screen.getByText(koMessages.feedback.analysis.expectedTime),
+    ).toBeTruthy();
+    expect(screen.queryByTestId("analysis-slow-handoff")).toBeNull();
     expect(screen.queryByTestId("analysis-loading-background")).toBeNull();
     expect(screen.queryByTestId("analysis-loading-modal")).toBeNull();
   });

@@ -1,87 +1,58 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   fetchRecommendationBundle,
   RecommendationRequestTimeoutError,
 } from "../../../src/components/practice/recommendations-data";
 
 describe("fetchRecommendationBundle", () => {
-  it("rejects when the recommendation request stays pending", async () => {
-    const pendingQuery = {
-      select: vi.fn(() => pendingQuery),
-      or: vi.fn(() => pendingQuery),
-      order: vi.fn(() => pendingQuery),
-      limit: vi.fn(() => pendingQuery),
-      maybeSingle: vi.fn(() => new Promise(() => undefined)),
-    };
-    const createClient = vi.fn(() => ({
-      from: vi.fn(() => pendingQuery),
-    }));
-
-    await expect(
-      fetchRecommendationBundle(null, createClient as never, 5),
-    ).rejects.toBeInstanceOf(RecommendationRequestTimeoutError);
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
-  it("does not surface items from expired recommendation runs", async () => {
-    const expiredItem = {
-      id: "rec-expired",
-      problem_id: "problem-expired",
-      rank: 1,
-      reason: "expired recommendation",
-      estimated_minutes: 12,
-      weakness_tags: ["grammar"],
-      problems: {
-        title: "Expired recommendation problem",
-        question_no: 51,
-      },
-    };
-    const runQuery = {
-      select: vi.fn(() => runQuery),
-      or: vi.fn(() => runQuery),
-      order: vi.fn(() => runQuery),
-      limit: vi.fn(() => runQuery),
-      maybeSingle: vi.fn(() =>
-        Promise.resolve({
-          data: {
-            id: "run-expired",
-            source_type: "weakness",
-            reason_summary: "expired run",
-            created_at: "2026-06-01T00:00:00.000Z",
-            expires_at: "2026-06-01T00:00:00.000Z",
-          },
-          error: null,
-        }),
-      ),
-    };
-    let filteredExpiredRuns = false;
-    const itemQuery = {
-      select: vi.fn(() => itemQuery),
-      eq: vi.fn(() => itemQuery),
-      or: vi.fn(() => {
-        filteredExpiredRuns = true;
-        return itemQuery;
+  it("loads the bundle through the server API route", async () => {
+    const fetchMock = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({
+        run: null,
+        items: [],
+        availableTypes: [51, 52],
       }),
-      order: vi.fn(() => itemQuery),
-      limit: vi.fn(() =>
-        Promise.resolve({
-          data: filteredExpiredRuns ? [] : [expiredItem],
-          error: null,
-        }),
-      ),
-    };
-    const createClient = vi.fn(() => ({
-      from: vi.fn((table: string) =>
-        table === "recommendation_runs" ? runQuery : itemQuery,
-      ),
     }));
+    vi.stubGlobal("fetch", fetchMock);
 
-    const bundle = await fetchRecommendationBundle(
-      null,
-      createClient as never,
-      50,
+    const bundle = await fetchRecommendationBundle(51, 50);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/practice/recommendations?type=51",
+      { credentials: "same-origin" },
+    );
+    expect([...bundle.availableTypes]).toEqual([51, 52]);
+  });
+
+  it("rejects when the recommendation request stays pending", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => new Promise(() => undefined)),
     );
 
-    expect(bundle.items).toEqual([]);
+    await expect(fetchRecommendationBundle(null, 5)).rejects.toBeInstanceOf(
+      RecommendationRequestTimeoutError,
+    );
+  });
+
+  it("rejects when the server API route fails", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({
+        ok: false,
+        status: 500,
+      })),
+    );
+
+    await expect(fetchRecommendationBundle(null, 50)).rejects.toThrow(
+      "recommendations_request_failed:500",
+    );
   });
 });

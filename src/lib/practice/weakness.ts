@@ -7,9 +7,14 @@ import {
   createSupabaseServerClient,
   type SupabaseServerClient,
 } from "../supabase/server";
+import { filterVisibleProblemIds } from "../problems/visibility";
 import type { Tables } from "../supabase/types";
 
 type ClientFactory = () => Promise<SupabaseServerClient>;
+const RECOMMENDATION_SCAN_PAGE_SIZE = 8;
+const PROBLEM_SCAN_PAGE_SIZE = 40;
+const MAX_VISIBILITY_SCAN_ROWS = 200;
+const WEAKNESS_RECOMMENDATION_TARGET = 4;
 
 /**
  * Phase 6 — weakness practice helpers (Task 6 §weakness).
@@ -241,6 +246,11 @@ type RecommendationItemJoined = {
     | null;
 };
 
+type FallbackProblemRow = Pick<
+  Tables<"problems">,
+  "id" | "title" | "domain" | "question_no"
+>;
+
 /**
  * Up to 4 problem recommendations for the user's weakness page.
  *
@@ -258,31 +268,15 @@ export async function getWeaknessRecommendations(
   const supabase = await createClient();
 
   const nowIso = new Date().toISOString();
-  const { data: itemsData, error: itemsError } = await supabase
-    .from("recommendation_items")
-    .select(
-      "id, problem_id, rank, reason, estimated_minutes, weakness_tags," +
-        " recommendation_runs!inner(expires_at)," +
-        " problems!inner(id, title, domain, question_no, publish_status, lifecycle_status)",
-    )
-    .eq("user_id", userId)
-    .eq("status", "active")
-    .or(`expires_at.is.null,expires_at.gt.${nowIso}`, {
-      referencedTable: "recommendation_runs",
-    })
-    .order("rank", { ascending: true })
-    .limit(4);
-  if (itemsError) {
-    throw new Error(`getWeaknessRecommendations(items): ${itemsError.message}`);
-  }
-
-  const rows = (itemsData ?? []) as unknown as RecommendationItemJoined[];
+  const rows = await fetchVisibleRecommendationItemRows(
+    supabase,
+    userId,
+    nowIso,
+  );
   const fromItems: WeaknessRecommendation[] = [];
   for (const row of rows) {
     const problem = pickOne(row.problems);
     if (!problem) continue;
-    if (problem.publish_status !== "published") continue;
-    if (problem.lifecycle_status !== "active") continue;
     fromItems.push({
       problemId: problem.id,
       title: problem.title,
@@ -304,20 +298,8 @@ export async function getWeaknessRecommendations(
   if (weak.length === 0) return [];
 
   const tags = weak.map((w) => w.dimension);
-  const { data: probData, error: probError } = await supabase
-    .from("problems")
-    .select("id, title, domain, question_no")
-    .eq("publish_status", "published")
-    .eq("lifecycle_status", "active")
-    .overlaps("tags", tags)
-    .order("updated_at", { ascending: false })
-    .limit(4);
-  if (probError) {
-    throw new Error(
-      `getWeaknessRecommendations(tag-fallback): ${probError.message}`,
-    );
-  }
-  return (probData ?? []).map((p) => ({
+  const fallbackRows = await fetchVisibleTagFallbackRows(supabase, tags);
+  return fallbackRows.map((p) => ({
     problemId: p.id,
     title: p.title,
     domain: p.domain as WeaknessRecommendation["domain"],
@@ -326,6 +308,103 @@ export async function getWeaknessRecommendations(
     reason: null,
     source: "tag_fallback" as const,
   }));
+}
+
+async function fetchVisibleRecommendationItemRows(
+  supabase: SupabaseServerClient,
+  userId: string,
+  nowIso: string,
+): Promise<RecommendationItemJoined[]> {
+  const visibleRows: RecommendationItemJoined[] = [];
+
+  for (
+    let offset = 0;
+    offset < MAX_VISIBILITY_SCAN_ROWS &&
+    visibleRows.length < WEAKNESS_RECOMMENDATION_TARGET;
+    offset += RECOMMENDATION_SCAN_PAGE_SIZE
+  ) {
+    const { data, error } = await supabase
+      .from("recommendation_items")
+      .select(
+        "id, problem_id, rank, reason, estimated_minutes, weakness_tags," +
+          " recommendation_runs!inner(expires_at)," +
+          " problems!inner(id, title, domain, question_no, publish_status, lifecycle_status)",
+      )
+      .eq("user_id", userId)
+      .eq("status", "active")
+      .or(`expires_at.is.null,expires_at.gt.${nowIso}`, {
+        referencedTable: "recommendation_runs",
+      })
+      .order("rank", { ascending: true })
+      .range(offset, offset + RECOMMENDATION_SCAN_PAGE_SIZE - 1);
+    if (error) {
+      throw new Error(`getWeaknessRecommendations(items): ${error.message}`);
+    }
+
+    const rows = (data ?? []) as unknown as RecommendationItemJoined[];
+    const candidates = rows.filter((row) => {
+      const problem = pickOne(row.problems);
+      return (
+        problem != null &&
+        problem.publish_status === "published" &&
+        problem.lifecycle_status === "active"
+      );
+    });
+    const visibleIds = await filterVisibleProblemIds(
+      supabase,
+      candidates.map((row) => pickOne(row.problems)?.id ?? ""),
+    );
+    visibleRows.push(
+      ...candidates.filter((row) => {
+        const problem = pickOne(row.problems);
+        return problem != null && visibleIds.has(problem.id);
+      }),
+    );
+
+    if (rows.length < RECOMMENDATION_SCAN_PAGE_SIZE) break;
+  }
+
+  return visibleRows;
+}
+
+async function fetchVisibleTagFallbackRows(
+  supabase: SupabaseServerClient,
+  tags: WeaknessDimension[],
+): Promise<FallbackProblemRow[]> {
+  const visibleRows: FallbackProblemRow[] = [];
+
+  for (
+    let offset = 0;
+    offset < MAX_VISIBILITY_SCAN_ROWS &&
+    visibleRows.length < WEAKNESS_RECOMMENDATION_TARGET;
+    offset += PROBLEM_SCAN_PAGE_SIZE
+  ) {
+    const { data, error } = await supabase
+      .from("problems")
+      .select("id, title, domain, question_no")
+      .eq("domain", "writing")
+      .eq("publish_status", "published")
+      .eq("lifecycle_status", "active")
+      .overlaps("tags", tags)
+      .order("updated_at", { ascending: false })
+      .range(offset, offset + PROBLEM_SCAN_PAGE_SIZE - 1);
+    if (error) {
+      throw new Error(
+        `getWeaknessRecommendations(tag-fallback): ${error.message}`,
+      );
+    }
+
+    const rows = (data ?? []) as FallbackProblemRow[];
+    const visibleIds = await filterVisibleProblemIds(
+      supabase,
+      rows.map((row) => row.id),
+    );
+    visibleRows.push(...rows.filter((row) => visibleIds.has(row.id)));
+
+    if (rows.length < PROBLEM_SCAN_PAGE_SIZE) break;
+  }
+
+  return visibleRows.slice(0, WEAKNESS_RECOMMENDATION_TARGET);
 }
 
 function isWeaknessDimension(value: unknown): value is WeaknessDimension {

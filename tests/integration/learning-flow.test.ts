@@ -61,6 +61,7 @@ vi.mock("@/lib/supabase/server", () => {
     gte: () => emptyChain,
     order: () => emptyChain,
     limit: () => emptyChain,
+    range: () => emptyChain,
     head: () => emptyChain,
     maybeSingle: () => Promise.resolve({ data: null, error: null }),
     single: () => Promise.resolve({ data: null, error: null }),
@@ -76,7 +77,10 @@ vi.mock("@/lib/supabase/server", () => {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  helpers.requireUserMock.mockResolvedValue({ id: "user-1", email: "u@example.com" });
+  helpers.requireUserMock.mockResolvedValue({
+    id: "user-1",
+    email: "u@example.com",
+  });
 });
 
 afterEach(() => {
@@ -113,9 +117,8 @@ describe("learning flow — submit goal → save → dashboard load", () => {
   it("persists goal then dashboard reads the saved row on next request", async () => {
     let stored: Record<string, unknown> | null = null;
 
-    const { saveLearningGoal } = await import(
-      "../../src/lib/learning/mutations"
-    );
+    const { saveLearningGoal } =
+      await import("../../src/lib/learning/mutations");
 
     const fakeClient = () => ({
       from: () => ({
@@ -123,8 +126,7 @@ describe("learning flow — submit goal → save → dashboard load", () => {
           stored = { ...input, updated_at: "2026-05-21T00:00:00Z" };
           return {
             select: () => ({
-              single: () =>
-                Promise.resolve({ data: stored, error: null }),
+              single: () => Promise.resolve({ data: stored, error: null }),
             }),
           };
         },
@@ -143,9 +145,7 @@ describe("learning flow — submit goal → save → dashboard load", () => {
     expect(stored).not.toBeNull();
 
     helpers.getLearningGoalMock.mockResolvedValue(stored);
-    const dashboard = await import(
-      "../../src/app/(workspace)/dashboard/page"
-    );
+    const dashboard = await import("../../src/app/(workspace)/dashboard/page");
     const element = await dashboard.default();
     expect(element).toBeTruthy();
     expect(helpers.getLearningGoalMock).toHaveBeenCalledWith("user-1");

@@ -41,26 +41,32 @@ vi.mock("@/lib/writing/server", () => ({
     ),
 }));
 
-vi.mock("@/lib/supabase/server", () => ({
-  createSupabaseServerClient: () =>
-    Promise.resolve({
-      from: () => ({
-        select: () => ({
-          eq: () => ({
-            eq: () => ({
-              eq: () => ({
-                limit: () => ({
-                  eq: () => Promise.resolve({ data: [] }),
-                  then: (resolve: (v: unknown) => unknown) =>
-                    resolve({ data: [] }),
-                }),
-              }),
-            }),
-          }),
-        }),
+vi.mock("@/lib/supabase/server", () => {
+  const result = { data: [] as unknown[], error: null };
+  const emptyChain = {
+    select: () => emptyChain,
+    eq: () => emptyChain,
+    neq: () => emptyChain,
+    or: () => emptyChain,
+    filter: () => emptyChain,
+    not: () => emptyChain,
+    gte: () => emptyChain,
+    order: () => emptyChain,
+    limit: () => emptyChain,
+    range: () => emptyChain,
+    maybeSingle: () => Promise.resolve({ data: null, error: null }),
+    single: () => Promise.resolve({ data: null, error: null }),
+    then: (resolve: (value: typeof result) => unknown) => resolve(result),
+  };
+
+  return {
+    createSupabaseServerClient: () =>
+      Promise.resolve({
+        from: () => emptyChain,
+        rpc: () => Promise.resolve({ data: [], error: null }),
       }),
-    }),
-}));
+  };
+});
 
 beforeEach(() => {
   vi.clearAllMocks();

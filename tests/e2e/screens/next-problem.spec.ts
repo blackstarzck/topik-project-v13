@@ -35,6 +35,7 @@ const SERVICE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
 const createdRunIds: string[] = [];
 const createdSubmissionIds: string[] = [];
+const createdProblemIds: string[] = [];
 
 function collectErrors(page: Page): string[] {
   const errors: string[] = [];
@@ -63,19 +64,34 @@ async function createNextProblemFixture() {
   );
   if (!user) throw new Error(`E2E student user not found: ${EMAIL}`);
 
+  const marker = `e2e-next-${randomUUID().slice(0, 8)}`;
+  const createdAt = new Date(Date.now() + 90_000).toISOString();
+  const problemRows = [51, 52, 53, 54].map((questionNo, index) => ({
+    id: randomUUID(),
+    source: "curated" as const,
+    domain: "writing" as const,
+    question_no: questionNo,
+    topik_level: 2,
+    difficulty: 2 + index,
+    title: `E2E next ${marker} ${questionNo}`,
+    prompt: "다음 안내문을 읽고 알맞은 내용을 쓰십시오.",
+    materials: { question_id: `${marker}-${questionNo}` },
+    answer_key: null,
+    rubric: {},
+    tags: [marker, "e2e-next-problem"],
+    publish_status: "published" as const,
+    review_status: "approved" as const,
+    visibility: "public" as const,
+    lifecycle_status: "active" as const,
+    created_at: createdAt,
+    updated_at: createdAt,
+  }));
   const problems = await sb
     .from("problems")
-    .select("id, question_no")
-    .eq("domain", "writing")
-    .eq("publish_status", "published")
-    .order("created_at", { ascending: true })
-    .limit(4);
+    .insert(problemRows)
+    .select("id, question_no");
   if (problems.error) throw problems.error;
-  if ((problems.data ?? []).length < 4) {
-    throw new Error(
-      "R-02 e2e requires at least four published writing problems",
-    );
-  }
+  createdProblemIds.push(...problemRows.map((problem) => problem.id));
 
   const submissionId = randomUUID();
   const runId = randomUUID();
@@ -167,7 +183,13 @@ async function createNextProblemFixture() {
 }
 
 test.afterAll(async () => {
-  if (createdSubmissionIds.length === 0 && createdRunIds.length === 0) return;
+  if (
+    createdSubmissionIds.length === 0 &&
+    createdRunIds.length === 0 &&
+    createdProblemIds.length === 0
+  ) {
+    return;
+  }
   const label = (process.env.SUPABASE_ENV_LABEL || "").toLowerCase();
   if (label === "prod" || label === "production") return;
   const sb = serviceClient();
@@ -178,6 +200,9 @@ test.afterAll(async () => {
     await sb.from("feedback_dimension_scores").delete().eq("submission_id", id);
     await sb.from("writing_feedback").delete().eq("submission_id", id);
     await sb.from("writing_submissions").delete().eq("id", id);
+  }
+  if (createdProblemIds.length > 0) {
+    await sb.from("problems").delete().in("id", createdProblemIds);
   }
 });
 

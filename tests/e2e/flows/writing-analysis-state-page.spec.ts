@@ -42,7 +42,6 @@ const analysisMessages = (
         title: string;
         subtitle: string;
         expectedTime: string;
-        slowTitle: string;
       };
     };
   }
@@ -139,7 +138,7 @@ test("writing submit keeps analysis state above the read-only answer", async ({
   await expect(page.getByTestId("analysis-loading-background")).toHaveCount(0);
   await expect(page.getByText(analysisMessages.subtitle)).toBeVisible();
   await expect(page.getByText(analysisMessages.expectedTime)).toBeVisible();
-  await expect(page.getByText(analysisMessages.slowTitle)).toHaveCount(0);
+  await expect(page.getByTestId("analysis-slow-handoff")).toHaveCount(0);
 
   const assetSrc = await page
     .getByTestId("analysis-state-asset")

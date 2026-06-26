@@ -56,7 +56,7 @@ describe.skipIf(!ENABLED)("writing submission dedup (draft-level)", () => {
       difficulty: 2,
       title: "dedup test 51",
       prompt: "다음 빈칸에 알맞은 말을 쓰십시오.",
-      materials: null,
+      materials: { question_id: `dedup-${problemId}` },
       tags: ["dedup_test"],
       publish_status: "published",
       review_status: "approved",

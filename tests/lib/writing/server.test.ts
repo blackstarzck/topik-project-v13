@@ -21,7 +21,8 @@ type QueryRow = {
 type Call =
   | { type: "eq"; column: string; value: unknown }
   | { type: "limit"; count: number }
-  | { type: "order"; column: string };
+  | { type: "order"; column: string }
+  | { type: "range"; from: number; to: number };
 
 // 실제 problems.id는 uuid — getWritingProblem의 D-3 uuid 형식 가드를 통과해야
 // 하므로 fixture id도 uuid 형식을 쓴다 (이전 "incomplete-51" 류 문자열은 가드에
@@ -82,6 +83,10 @@ const seed51: QueryRow = {
 function makeClient(rows: QueryRow[]) {
   const calls: Call[] = [];
   const client = {
+    rpc: async () => ({
+      data: rows.map((row) => ({ problem_id: row.id })),
+      error: null,
+    }),
     from: () => {
       const filters: Array<{ column: string; value: unknown }> = [];
       const query = {
@@ -98,6 +103,11 @@ function makeClient(rows: QueryRow[]) {
         limit: (count: number) => {
           calls.push({ type: "limit", count });
           return query;
+        },
+        range: (from: number, to: number) => {
+          calls.push({ type: "range", from, to });
+          const data = rows.slice(from, to + 1);
+          return Promise.resolve({ data, error: null });
         },
         then: (
           resolve: (value: { data: QueryRow[]; error: null }) => unknown,
@@ -149,7 +159,7 @@ describe("getWritingProblem", () => {
 
     expect(problem?.id).toBe(COMPLETE_51_ID);
     expect(problem?.submitBlockedReason).toBeNull();
-    expect(calls).toContainEqual({ type: "limit", count: 25 });
+    expect(calls).toContainEqual({ type: "range", from: 0, to: 24 });
   });
 
   it("does not return a seed fixture even when explicitly requested", async () => {
@@ -167,6 +177,22 @@ describe("getWritingProblem", () => {
       column: "id",
       value: SEED_51_ID,
     });
+  });
+
+  it("returns null for an explicit problem id hidden by institution visibility", async () => {
+    const { client } = makeClient([complete51]);
+    const hiddenClient = {
+      ...client,
+      rpc: async () => ({ data: [], error: null }),
+    };
+
+    const problem = await getWritingProblem(
+      51,
+      COMPLETE_51_ID,
+      async () => hiddenClient as never,
+    );
+
+    expect(problem).toBeNull();
   });
 
   it("keeps an explicit problem id even when the row is submit-blocked", async () => {
@@ -205,10 +231,14 @@ describe("getWritingProblem", () => {
   it("treats an empty problem id as the default selection, not malformed", async () => {
     const { client, calls } = makeClient([incomplete51, complete51]);
 
-    const problem = await getWritingProblem(51, "", async () => client as never);
+    const problem = await getWritingProblem(
+      51,
+      "",
+      async () => client as never,
+    );
 
     expect(problem?.id).toBe(COMPLETE_51_ID);
-    expect(calls).toContainEqual({ type: "limit", count: 25 });
+    expect(calls).toContainEqual({ type: "range", from: 0, to: 24 });
   });
 });
 

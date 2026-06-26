@@ -55,6 +55,6 @@ describe("SubmittedAnalysisPanel exhausted polling state", () => {
     fireEvent.click(screen.getByTestId("analysis-library-status-link"));
 
     expect(routerMocks.push).toHaveBeenCalledWith("/library");
-    expect(screen.getByTestId("analysis-loading-background")).toBeTruthy();
+    expect(screen.queryByTestId("analysis-loading-background")).toBeNull();
   });
 });

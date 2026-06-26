@@ -21,6 +21,19 @@ function makeClient(opts: {
   const overlapsCalls: Array<{ col: string; values: unknown[] }> = [];
   return {
     overlapsCalls,
+    rpc: (name: string, args: unknown) => {
+      if (name === "filter_visible_writing_problem_ids") {
+        const problemIds =
+          typeof args === "object" && args !== null && "p_problem_ids" in args
+            ? ((args as { p_problem_ids?: string[] }).p_problem_ids ?? [])
+            : [];
+        return Promise.resolve({
+          data: problemIds.map((problemId) => ({ problem_id: problemId })),
+          error: null,
+        });
+      }
+      return Promise.resolve({ data: null, error: null });
+    },
     from: (table: string) => {
       if (table === "feedback_dimension_scores") {
         return {
@@ -30,39 +43,56 @@ function makeClient(opts: {
         };
       }
       if (table === "recommendation_items") {
+        let start = 0;
+        let end: number | null = null;
+        const rows = () =>
+          end == null
+            ? (opts.recItems ?? [])
+            : (opts.recItems ?? []).slice(start, end + 1);
+        const result = () =>
+          Promise.resolve({
+            data: rows(),
+            error: null,
+          });
+        const chain = {
+          eq: () => chain,
+          or: () => chain,
+          order: () => chain,
+          limit: () => result(),
+          range: (from: number, to: number) => {
+            start = from;
+            end = to;
+            return result();
+          },
+        };
         return {
-          select: () => ({
-            eq: () => ({
-              eq: () => ({
-                or: () => ({
-                  order: () => ({
-                    limit: () =>
-                      Promise.resolve({
-                        data: opts.recItems ?? [],
-                        error: null,
-                      }),
-                  }),
-                }),
-              }),
-            }),
-          }),
+          select: () => chain,
         };
       }
       if (table === "problems") {
+        let start = 0;
+        let end: number | null = null;
+        const rows = () =>
+          end == null
+            ? (opts.fallbackProblems ?? [])
+            : (opts.fallbackProblems ?? []).slice(start, end + 1);
+        const result = () =>
+          Promise.resolve({
+            data: rows(),
+            error: null,
+          });
         const overlapChain = {
           eq: () => overlapChain,
           overlaps: (col: string, values: unknown[]) => {
             overlapsCalls.push({ col, values });
-            const result = Promise.resolve({
-              data: opts.fallbackProblems ?? [],
-              error: null,
-            });
-            return {
-              order: () => ({
-                limit: () => result,
-              }),
-              limit: () => result,
-            };
+            return overlapChain;
+          },
+          order: () => overlapChain,
+          limit: () => result(),
+          range: (from: number, to: number) => {
+            start = from;
+            end = to;
+            return result();
           },
         };
         return {

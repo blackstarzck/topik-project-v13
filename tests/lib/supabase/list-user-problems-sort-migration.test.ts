@@ -31,5 +31,8 @@ describe("list_user_problems sort migration contract", () => {
       "case when v_sort in ('newest', 'recent', 'difficulty', 'difficulty-asc', 'difficulty-desc') then counted.created_at end desc nulls last",
     );
     expect(normalized).toContain("counted.id asc");
+    expect(normalized).toContain(
+      "public.is_writing_problem_visible_to_caller(p.id, p.question_no)",
+    );
   });
 });

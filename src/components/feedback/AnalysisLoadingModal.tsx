@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Alert, Button, Spin, Steps, Typography } from "antd";
 import {
   Clock3,
@@ -18,7 +18,6 @@ import { APP_ROUTES } from "@/lib/routes";
 const { Paragraph, Text, Title } = Typography;
 
 const STEP_KEYS = ["grammar", "structure", "expression", "score"] as const;
-const SLOW_NOTICE_MS = 10_000;
 const STEP_ADVANCE_MS = 1_600;
 const PAGE_STATE_ASSET: Record<AnalysisPhase, string> = {
   pending: "/assets/state/refresh.svg",
@@ -81,9 +80,7 @@ export function AnalysisLoadingPage({
   const t = useTranslations("feedback.analysis");
   const router = useRouter();
   const reduced = useReducedMotion(reduceMotion);
-  const [slow, setSlow] = useState(false);
   const [elapsedMs, setElapsedMs] = useState(0);
-  const [startedAtMs] = useState(() => Date.now());
 
   const active = status === "pending" || status === "analyzing";
   const exhausted = active && pollingExhausted;
@@ -109,25 +106,10 @@ export function AnalysisLoadingPage({
   }, [active, reduced]);
 
   useEffect(() => {
-    if (!active) return;
-    const timer = setTimeout(() => setSlow(true), SLOW_NOTICE_MS);
-    return () => clearTimeout(timer);
-  }, [active]);
-
-  useEffect(() => {
     if (status !== "complete") return;
     if (onComplete) onComplete();
     else if (completeHref) router.replace(completeHref as never);
   }, [status, completeHref, onComplete, router]);
-
-  const retryAt = useMemo(() => {
-    const at = new Date(startedAtMs + 30_000);
-    return at.toLocaleTimeString("ko-KR", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
-  }, [startedAtMs]);
 
   function goToDashboard() {
     router.push(APP_ROUTES.dashboard);
@@ -244,21 +226,13 @@ export function AnalysisLoadingPage({
                   }))}
                 />
 
-                {(exhausted || slow) && active ? (
+                {exhausted && active ? (
                   <Alert
-                    data-testid={
-                      exhausted
-                        ? "analysis-polling-exhausted"
-                        : "analysis-slow-handoff"
-                    }
+                    data-testid="analysis-polling-exhausted"
                     type="warning"
                     showIcon
-                    title={exhausted ? t("delayedTitle") : t("slowTitle")}
-                    description={
-                      exhausted
-                        ? t("delayedDescription")
-                        : t("slowDescription", { retryAt })
-                    }
+                    title={t("delayedTitle")}
+                    description={t("delayedDescription")}
                     action={
                       <Button
                         size="small"

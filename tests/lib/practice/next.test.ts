@@ -50,19 +50,48 @@ function makeClient(opts: {
   feedbacks?: { score_total: number | null }[];
   dimensionScores?: { dimension: string; score: number | null }[];
   profile?: { plan_label: string | null } | null;
+  visibleProblemIds?: string[];
 }) {
   return {
+    rpc(name: string, args: { p_problem_ids?: string[] }) {
+      if (name !== "filter_visible_writing_problem_ids") {
+        throw new Error(`unexpected rpc ${name}`);
+      }
+      const allowed = new Set(
+        opts.visibleProblemIds ?? args.p_problem_ids ?? [],
+      );
+      return Promise.resolve({
+        data: (args.p_problem_ids ?? [])
+          .filter((id) => allowed.has(id))
+          .map((id) => ({ problem_id: id })),
+        error: null,
+      });
+    },
     from(table: string) {
       if (table === "recommendation_items") {
+        let start = 0;
+        let end: number | null = null;
+        const resolveRows = () => {
+          const rows = opts.recItems ?? [];
+          return end == null ? rows : rows.slice(start, end + 1);
+        };
         const chain = {
           eq: () => chain,
           or: () => chain,
           order: () => chain,
           limit: () =>
             Promise.resolve({
-              data: opts.recItems ?? [],
+              data: resolveRows(),
               error: opts.recError ?? null,
             }),
+          range: (from: number, to: number) => {
+            start = from;
+            end = to;
+            return Promise.resolve({
+              data: resolveRows(),
+              error: opts.recError ?? null,
+            });
+          },
         };
         return { select: () => chain };
       }
@@ -79,6 +108,15 @@ function makeClient(opts: {
       }
       if (table === "problems") {
         let questionNoFilter: number | null = null;
+        let start = 0;
+        let end: number | null = null;
+        const resolveRows = () => {
+          const set =
+            questionNoFilter != null
+              ? (opts.problemsByQuestionNo?.[questionNoFilter] ?? [])
+              : (opts.problemsAny ?? []);
+          return end == null ? set : set.slice(start, end + 1);
+        };
         const chain = {
           eq: (col: string, value: unknown) => {
             if (col === "question_no" && typeof value === "number") {
@@ -88,12 +126,16 @@ function makeClient(opts: {
           },
           order: () => chain,
           limit: () => {
-            const set =
-              questionNoFilter != null
-                ? (opts.problemsByQuestionNo?.[questionNoFilter] ?? [])
-                : (opts.problemsAny ?? []);
             return Promise.resolve({
-              data: set,
+              data: resolveRows(),
+              error: opts.problemsError ?? null,
+            });
+          },
+          range: (from: number, to: number) => {
+            start = from;
+            end = to;
+            return Promise.resolve({
+              data: resolveRows(),
               error: opts.problemsError ?? null,
             });
           },
@@ -228,6 +270,97 @@ describe("getNextProblem", () => {
     expect(out?.reason).toBe("published backup");
   });
 
+  it("tier 1: skips a recommendation hidden by institution visibility", async () => {
+    const recItems: RecItem[] = [
+      {
+        id: "rec-hidden",
+        problem_id: "p-hidden",
+        rank: 1,
+        reason: "hidden should not show",
+        recommendation_runs: { expires_at: null },
+        problems: {
+          id: "p-hidden",
+          title: "Hidden",
+          domain: "writing",
+          question_no: 53,
+          publish_status: "published",
+        },
+      },
+      {
+        id: "rec-visible",
+        problem_id: "p-visible",
+        rank: 2,
+        reason: "visible backup",
+        recommendation_runs: { expires_at: null },
+        problems: {
+          id: "p-visible",
+          title: "Visible",
+          domain: "writing",
+          question_no: 52,
+          publish_status: "published",
+        },
+      },
+    ];
+    const create = async () =>
+      makeClient({
+        recItems,
+        attempts: [],
+        problemsAny: [],
+        visibleProblemIds: ["p-visible"],
+      }) as never;
+
+    const out = await getNextProblem("user-1", create);
+
+    expect(out?.problemId).toBe("p-visible");
+    expect(out?.source).toBe("recommendation");
+  });
+
+  it("tier 1: scans beyond the first hidden recommendation page", async () => {
+    const hidden = Array.from({ length: 8 }, (_, index) => ({
+      id: `rec-hidden-${index}`,
+      problem_id: `p-hidden-${index}`,
+      rank: index + 1,
+      reason: "hidden should not show",
+      recommendation_runs: { expires_at: null },
+      problems: {
+        id: `p-hidden-${index}`,
+        title: `Hidden ${index}`,
+        domain: "writing",
+        question_no: 53,
+        publish_status: "published",
+      },
+    }));
+    const recItems: RecItem[] = [
+      ...hidden,
+      {
+        id: "rec-visible",
+        problem_id: "p-visible",
+        rank: 9,
+        reason: "visible after hidden window",
+        recommendation_runs: { expires_at: null },
+        problems: {
+          id: "p-visible",
+          title: "Visible",
+          domain: "writing",
+          question_no: 52,
+          publish_status: "published",
+        },
+      },
+    ];
+    const create = async () =>
+      makeClient({
+        recItems,
+        attempts: [],
+        problemsAny: [],
+        visibleProblemIds: ["p-visible"],
+      }) as never;
+
+    const out = await getNextProblem("user-1", create);
+
+    expect(out?.problemId).toBe("p-visible");
+    expect(out?.source).toBe("recommendation");
+  });
+
   it("tier 2: falls back to same-question_no when recommendations are empty", async () => {
     const attempts: AttemptRow[] = [
       {
@@ -288,6 +421,66 @@ describe("getNextProblem", () => {
 
     const out = await getNextProblem("user-1", create);
     expect(out?.problemId).toBe("p-random");
+    expect(out?.source).toBe("random");
+  });
+
+  it("tier 3: skips random fallback problems hidden by institution visibility", async () => {
+    const create = async () =>
+      makeClient({
+        recItems: [],
+        attempts: [],
+        problemsAny: [
+          {
+            id: "p-hidden",
+            title: "Hidden",
+            domain: "writing",
+            question_no: 51,
+          },
+          {
+            id: "p-visible",
+            title: "Visible",
+            domain: "writing",
+            question_no: 52,
+          },
+        ],
+        visibleProblemIds: ["p-visible"],
+      }) as never;
+
+    const out = await getNextProblem("user-1", create);
+
+    expect(out?.problemId).toBe("p-visible");
+    expect(out?.source).toBe("random");
+  });
+
+  it("tier 3: scans beyond the first hidden published-problem page", async () => {
+    const hiddenProblems: ProblemRow[] = Array.from(
+      { length: 40 },
+      (_, index) => ({
+        id: `p-hidden-${index}`,
+        title: `Hidden ${index}`,
+        domain: "writing",
+        question_no: 51,
+      }),
+    );
+    const create = async () =>
+      makeClient({
+        recItems: [],
+        attempts: [],
+        problemsAny: [
+          ...hiddenProblems,
+          {
+            id: "p-visible",
+            title: "Visible after hidden window",
+            domain: "writing",
+            question_no: 52,
+          },
+        ],
+        visibleProblemIds: ["p-visible"],
+      }) as never;
+
+    const out = await getNextProblem("user-1", create);
+
+    expect(out?.problemId).toBe("p-visible");
     expect(out?.source).toBe("random");
   });
 

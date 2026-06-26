@@ -195,3 +195,9 @@
 | 59 | `11:30:00` | [`20260625113000_auto_locale_detection.sql`](./20260625113000_auto_locale_detection.sql) | Adds `profiles.ui_locale_source` provenance (`legacy/default/auto/manual`) and updates `handle_new_user()` to seed validated UI locale metadata without persisting raw request language hints. |
 | 60 | `12:00:00` | [`20260625120000_feedback_language_dimension.sql`](./20260625120000_feedback_language_dimension.sql) | Adds `language` to `feedback_dimension_scores.dimension` and the `private.assert_submission_payload` dimension validator so external feedback sync can persist backend-normalized language trait scores. |
 | 61 | `15:30:00` | [`20260625153000_auto_submission_library_item.sql`](./20260625153000_auto_submission_library_item.sql) | Adds `private.ensure_submission_library_item(uuid, uuid)` and redefines `public.create_external_writing_submission(jsonb)` so backend-created writing submissions are idempotently saved to F-01 `library_items` when inserted or when draft dedup returns an existing submission. |
+
+## 2026-06-26 migration
+
+| # | timestamp | file | scope |
+| ---:| --- | --- | --- |
+| 62 | `11:00:00` | [`20260626110000_writing_institution_visibility_predicate.sql`](./20260626110000_writing_institution_visibility_predicate.sql) | Adds institution-scoped writing problem visibility helpers and applies them to `list_user_problems` and `private.assert_writing_problem_submittable` so mapping absence remains public and mapping presence requires matching `profiles.affiliation_code`. |

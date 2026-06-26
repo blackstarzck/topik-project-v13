@@ -50,6 +50,7 @@ function makeClient(opts: {
   recItemsError?: { message: string } | null;
   problems?: ProblemRow[];
   problemsError?: { message: string } | null;
+  visibleProblemIds?: string[];
 }) {
   const calls: {
     overlaps?: { column: string; values: string[] };
@@ -58,6 +59,20 @@ function makeClient(opts: {
   } = {};
   const client = {
     __calls: calls,
+    rpc(name: string, args: { p_problem_ids?: string[] }) {
+      if (name !== "filter_visible_writing_problem_ids") {
+        throw new Error(`unexpected rpc ${name}`);
+      }
+      const allowed = new Set(
+        opts.visibleProblemIds ?? args.p_problem_ids ?? [],
+      );
+      return Promise.resolve({
+        data: (args.p_problem_ids ?? [])
+          .filter((id) => allowed.has(id))
+          .map((id) => ({ problem_id: id })),
+        error: null,
+      });
+    },
     from(table: string) {
       if (table === "feedback_dimension_scores") {
         return {
@@ -71,21 +86,41 @@ function makeClient(opts: {
         };
       }
       if (table === "recommendation_items") {
+        let start = 0;
+        let end: number | null = null;
+        const resolveRows = () => {
+          const rows = opts.recItems ?? [];
+          return end == null ? rows : rows.slice(start, end + 1);
+        };
         const chain = {
           eq: () => chain,
           or: () => chain,
           order: () => chain,
           limit: () =>
             Promise.resolve({
-              data: opts.recItems ?? [],
+              data: resolveRows(),
               error: opts.recItemsError ?? null,
             }),
+          range: (from: number, to: number) => {
+            start = from;
+            end = to;
+            return Promise.resolve({
+              data: resolveRows(),
+              error: opts.recItemsError ?? null,
+            });
+          },
         };
         return {
           select: () => chain,
         };
       }
       if (table === "problems") {
+        let start = 0;
+        let end: number | null = null;
+        const resolveRows = () => {
+          const rows = opts.problems ?? [];
+          return end == null ? rows : rows.slice(start, end + 1);
+        };
         const chain = {
           eq: (column: string, value: unknown) => {
             calls.problemEq = [...(calls.problemEq ?? []), { column, value }];
@@ -98,9 +133,17 @@ function makeClient(opts: {
           order: () => chain,
           limit: () =>
             Promise.resolve({
-              data: opts.problems ?? [],
+              data: resolveRows(),
               error: opts.problemsError ?? null,
             }),
+          range: (from: number, to: number) => {
+            start = from;
+            end = to;
+            return Promise.resolve({
+              data: resolveRows(),
+              error: opts.problemsError ?? null,
+            });
+          },
         };
         return {
           select: () => chain,
@@ -216,6 +259,34 @@ describe("getWeaknessRecommendations", () => {
     expect(out[0].problemId).toBe("p-active");
   });
 
+  it("skips recommendation_items hidden by institution visibility", async () => {
+    const recItems: RecItem[] = [
+      makeItem("i-hidden", "p-hidden", 1),
+      makeItem("i-visible", "p-visible", 2),
+    ];
+    const create = async () =>
+      makeClient({ recItems, visibleProblemIds: ["p-visible"] }) as never;
+
+    const out = await getWeaknessRecommendations("user-1", create);
+
+    expect(out.map((item) => item.problemId)).toEqual(["p-visible"]);
+  });
+
+  it("scans beyond the first hidden recommendation page", async () => {
+    const hiddenItems = Array.from({ length: 8 }, (_, index) =>
+      makeItem(`i-hidden-${index}`, `p-hidden-${index}`, index + 1),
+    );
+    const create = async () =>
+      makeClient({
+        recItems: [...hiddenItems, makeItem("i-visible", "p-visible", 9)],
+        visibleProblemIds: ["p-visible"],
+      }) as never;
+
+    const out = await getWeaknessRecommendations("user-1", create);
+
+    expect(out.map((item) => item.problemId)).toEqual(["p-visible"]);
+  });
+
   it("falls back to tag-overlap query when recommendation_items is empty (tier 2)", async () => {
     // Sufficient feedback to compute weak dimensions so the fallback survives
     // the threshold gate.
@@ -246,6 +317,65 @@ describe("getWeaknessRecommendations", () => {
       column: "lifecycle_status",
       value: "active",
     });
+  });
+
+  it("skips tag fallback problems hidden by institution visibility", async () => {
+    const feedback: FeedbackRow[] = [
+      ...row("vocab", [40, 40, 40, 40, 40]),
+      ...row("content", [50, 50, 50, 50, 50]),
+      ...row("grammar", [90, 90, 90, 90, 90]),
+    ];
+    const problems: ProblemRow[] = [
+      { id: "p-hidden", title: "Hidden", domain: "writing", question_no: 53 },
+      { id: "p-visible", title: "Visible", domain: "writing", question_no: 54 },
+    ];
+    const create = async () =>
+      makeClient({
+        recItems: [],
+        feedback,
+        problems,
+        visibleProblemIds: ["p-visible"],
+      }) as never;
+
+    const out = await getWeaknessRecommendations("user-1", create);
+
+    expect(out.map((item) => item.problemId)).toEqual(["p-visible"]);
+  });
+
+  it("scans beyond the first hidden tag fallback page", async () => {
+    const feedback: FeedbackRow[] = [
+      ...row("vocab", [40, 40, 40, 40, 40]),
+      ...row("content", [50, 50, 50, 50, 50]),
+      ...row("grammar", [90, 90, 90, 90, 90]),
+    ];
+    const hiddenProblems: ProblemRow[] = Array.from(
+      { length: 40 },
+      (_, index) => ({
+        id: `p-hidden-${index}`,
+        title: `Hidden ${index}`,
+        domain: "writing",
+        question_no: 53,
+      }),
+    );
+    const create = async () =>
+      makeClient({
+        recItems: [],
+        feedback,
+        problems: [
+          ...hiddenProblems,
+          {
+            id: "p-visible",
+            title: "Visible",
+            domain: "writing",
+            question_no: 54,
+          },
+        ],
+        visibleProblemIds: ["p-visible"],
+      }) as never;
+
+    const out = await getWeaknessRecommendations("user-1", create);
+
+    expect(out.map((item) => item.problemId)).toEqual(["p-visible"]);
   });
 
   it("returns [] when neither recommendation_items nor weak dimensions exist", async () => {

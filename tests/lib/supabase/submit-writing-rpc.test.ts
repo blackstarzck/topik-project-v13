@@ -23,6 +23,9 @@ describe("submit_writing_with_feedback problem visibility guard", () => {
     expect(normalized).toContain("p.publish_status = 'published'");
     expect(normalized).toContain("p.visibility = 'public'");
     expect(normalized).toContain("p.lifecycle_status = 'active'");
+    expect(normalized).toContain(
+      "and public.is_writing_problem_visible_to_caller(p.id, p.question_no)",
+    );
     expect(normalized).toContain("raise exception 'problem_not_submittable'");
 
     const guardIndex = normalized.indexOf(
@@ -60,6 +63,10 @@ describe("create_external_writing_submission", () => {
     expect(normalized).toContain("security definer");
     expect(normalized).toContain("submission->>'external_submission_id'");
     expect(normalized).toContain("perform private.assert_writing_problem_submittable");
+    expect(normalized).toContain(
+      "perform private.assert_writing_problem_submittable_for_user",
+    );
+    expect(normalized).toContain("owner_id");
     expect(normalized).toContain("feedback_status");
     expect(normalized).toContain("'analyzing'");
   });
