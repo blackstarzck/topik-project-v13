@@ -30,7 +30,6 @@ type ProfileActionKey = "profile" | "learning-goal" | "logout";
 type ProfileAction = {
   key: ProfileActionKey;
   label: string;
-  danger?: boolean;
 };
 
 type Props = {
@@ -120,7 +119,7 @@ export function WorkspaceShell({
   const profileActions: ProfileAction[] = [
     { key: "profile", label: navT("profile") },
     { key: "learning-goal", label: navT("settingsLearning") },
-    { key: "logout", label: navT("logout"), danger: true },
+    { key: "logout", label: navT("logout") },
   ];
   const handleProfileAction = (key: ProfileActionKey) => {
     setProfileOpen(false);
@@ -148,14 +147,12 @@ export function WorkspaceShell({
             <button
               type="button"
               role="menuitem"
-              className={
-                item.danger
-                  ? "app-profile-popover-action app-profile-popover-action--danger"
-                  : "app-profile-popover-action"
-              }
+              className="app-profile-popover-action"
               onClick={() => handleProfileAction(item.key)}
             >
-              {item.label}
+              <span className="app-profile-popover-action__label">
+                {item.label}
+              </span>
             </button>
           </li>
         ))}

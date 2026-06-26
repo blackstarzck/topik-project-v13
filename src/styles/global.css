@@ -6000,6 +6000,7 @@ body {
 
 .app-profile-popover-action::before {
   position: absolute;
+  z-index: 0;
   inset: 0;
   border-radius: inherit;
   background: var(--app-color-bg-layout);
@@ -6018,8 +6019,9 @@ body {
   opacity: 1;
 }
 
-.app-profile-popover-action--danger {
-  color: var(--ant-color-error);
+.app-profile-popover-action__label {
+  position: relative;
+  z-index: 1;
 }
 
 .app-notification-list {

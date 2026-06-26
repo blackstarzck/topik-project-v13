@@ -254,7 +254,11 @@ describe("WorkspaceShell", () => {
     expect(signOutForm?.getAttribute("action")).toBe("/auth/sign-out");
     fireEvent.click(profileTrigger);
     await waitFor(() => expect(popoverItem(koMessages.nav.logout)));
-    expect(popoverItem(koMessages.nav.logout)).toBeTruthy();
+    const logoutAction = popoverItem(koMessages.nav.logout);
+    expect(logoutAction).toBeTruthy();
+    expect(
+      logoutAction.classList.contains("app-profile-popover-action--danger"),
+    ).toBe(false);
     expect(cssRule(".app-profile-popover-panel")).toContain("font-size: 14px");
     expect(
       cssRule(".app-profile-popover-list .app-profile-popover-item"),
@@ -271,6 +275,16 @@ describe("WorkspaceShell", () => {
     expect(cssRule(".app-profile-popover-action::before")).toContain(
       "background: var(--app-color-bg-layout)",
     );
+    expect(cssRule(".app-profile-popover-action::before")).toContain(
+      "z-index: 0",
+    );
+    expect(cssRule(".app-profile-popover-action__label")).toContain(
+      "position: relative",
+    );
+    expect(cssRule(".app-profile-popover-action__label")).toContain(
+      "z-index: 1",
+    );
+    expect(cssRule(".app-profile-popover-action--danger")).toBe("");
   });
 
   it("renders Iconsax icons in the sidebar menu", () => {
