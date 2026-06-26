@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { USER_PROBLEMS_RPC_QUERY_KEY_ROOT } from "@/lib/practice/problem-list-query-key";
 import { createSupabaseBrowserClient } from "../supabase/browser";
 import {
   createComparisonReportAction,
@@ -92,10 +93,15 @@ export function useUpsertDraft() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: WritingDraftInsert) => upsertDraft(input),
-    onSuccess: (_data, variables) => {
-      qc.invalidateQueries({
-        queryKey: draftQueryKey(variables.user_id, variables.problem_id),
-      });
+    onSuccess: async (_data, variables) => {
+      await Promise.all([
+        qc.invalidateQueries({
+          queryKey: draftQueryKey(variables.user_id, variables.problem_id),
+        }),
+        qc.invalidateQueries({
+          queryKey: USER_PROBLEMS_RPC_QUERY_KEY_ROOT,
+        }),
+      ]);
     },
   });
 }

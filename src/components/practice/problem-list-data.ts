@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { userProblemsRpcKey } from "@/lib/practice/problem-list-query-key";
 import type {
   ProblemFilter,
   ProblemSort,
@@ -253,16 +254,6 @@ export async function fetchUserProblemsRpc(
   }
 
   return { rows, total };
-}
-
-export function userProblemsRpcKey(params: {
-  filter: ProblemFilter;
-  sort: ProblemSort;
-  page: number;
-  pageSize: number;
-  userId?: string;
-}) {
-  return ["list-user-problems-rpc", params] as const;
 }
 
 export function useUserProblemsRpc(params: {

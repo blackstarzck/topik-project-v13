@@ -1,4 +1,4 @@
-﻿-- =====================================================================
+-- =====================================================================
 -- Auto-save external writing submissions into My Library
 -- =====================================================================
 -- Backend-triggered analysis can finish after the learner leaves the loading
