@@ -51,7 +51,7 @@ export default function AccountSettingsLoading() {
         </div>
 
         {/* 회원 탈퇴(danger-zone) 카드 */}
-        <section>
+        <section className="account-delete-section">
           <AppCard className="account-delete-card">
             <div className="flex flex-col gap-2">
               <Skeleton.Button active size="small" className="w-[100px]" />
@@ -60,7 +60,7 @@ export default function AccountSettingsLoading() {
                 title={false}
                 paragraph={{ rows: 1, width: "80%" }}
               />
-              <div className="mt-2">
+              <div className="account-delete-actions">
                 <Skeleton.Button active className="w-[110px]" />
               </div>
             </div>

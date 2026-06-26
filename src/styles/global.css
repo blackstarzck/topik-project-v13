@@ -4945,6 +4945,16 @@ body {
   gap: 44px;
 }
 
+.account-delete-section {
+  margin-top: 64px;
+}
+
+.account-delete-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
 /* 로그인 방법: 각 메서드를 개별 AntD Card(.app-cards-bordered로 외곽선 복원)로
    감싼다. 카드 본문은 icon + copy + status 가로 행. */
 .account-login-methods {

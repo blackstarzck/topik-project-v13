@@ -50,14 +50,18 @@ export function AccountDeletionCard() {
   }
 
   return (
-    <section role="region" aria-label={t("dangerZone.title")}>
+    <section
+      role="region"
+      aria-label={t("dangerZone.title")}
+      className="account-delete-section"
+    >
       <AppCard className="account-delete-card">
         <div className="flex flex-col gap-2">
           <Title level={5} className="!mb-0">
             {t("dangerZone.title")}
           </Title>
           <Text type="secondary">{t("dangerZone.description")}</Text>
-          <div className="mt-2">
+          <div className="account-delete-actions">
             <Button
               danger
               onClick={() => setOpen(true)}

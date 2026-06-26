@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { readFileSync } from "node:fs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
 
@@ -28,10 +29,23 @@ describe("AccountDeletionCard", () => {
   afterEach(() => cleanup());
 
   it("renders the danger-zone title and delete trigger", () => {
-    renderWithIntl(<AccountDeletionCard />);
+    const { container } = renderWithIntl(<AccountDeletionCard />);
     expect(screen.getByTestId("account-delete-open")).toBeTruthy();
+    expect(container.querySelector(".account-delete-section")).toBeTruthy();
+    expect(container.querySelector(".account-delete-actions")).toBeTruthy();
     // ko 카탈로그의 settings.account.dangerZone.title
     expect(screen.getAllByText("회원 탈퇴").length).toBeGreaterThan(0);
+  });
+
+  it("keeps the account deletion area visually separated and right-aligns its action", () => {
+    const css = readFileSync("src/styles/global.css", "utf8");
+
+    expect(css).toMatch(
+      /\.account-delete-section\s*\{[\s\S]*?margin-top:\s*64px;/,
+    );
+    expect(css).toMatch(
+      /\.account-delete-actions\s*\{[\s\S]*?display:\s*flex;[\s\S]*?justify-content:\s*flex-end;/,
+    );
   });
 
   it("posts the deletion form to the account-delete route handler", async () => {
