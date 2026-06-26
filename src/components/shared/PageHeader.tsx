@@ -8,6 +8,7 @@ type Props = {
   /** Optional trailing actions (e.g. a primary CTA), right-aligned. */
   actions?: ReactNode;
   className?: string;
+  titleClassName?: string;
 };
 
 /**
@@ -19,13 +20,25 @@ type Props = {
  * Typography compound) keep it server-component safe and avoid the prod React
  * #130 compound-in-RSC hazard. No `--app-*` inline declaration.
  */
-export function PageHeader({ title, subtitle, actions, className }: Props) {
+export function PageHeader({
+  title,
+  subtitle,
+  actions,
+  className,
+  titleClassName,
+}: Props) {
   return (
     <header
       className={["app-page-header", className].filter(Boolean).join(" ")}
     >
       <div className="app-page-header__titles">
-        <h1 className="app-page-header__title">{title}</h1>
+        <h1
+          className={["app-page-header__title", titleClassName]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          {title}
+        </h1>
         {subtitle ? (
           <p className="app-page-header__subtitle">{subtitle}</p>
         ) : null}

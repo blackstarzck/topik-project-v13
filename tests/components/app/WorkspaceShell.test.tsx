@@ -96,7 +96,12 @@ describe("WorkspaceShell", () => {
 
   it("redirects to /login on SIGNED_OUT (multi-tab/device sync) but ignores INITIAL_SESSION", () => {
     renderWithIntl(
-      <WorkspaceShell role="learner" userId="user-1" email={null} planLabel={null}>
+      <WorkspaceShell
+        role="learner"
+        userId="user-1"
+        email={null}
+        planLabel={null}
+      >
         <div>body</div>
       </WorkspaceShell>,
     );
@@ -175,9 +180,7 @@ describe("WorkspaceShell", () => {
     expect(cssRule(".app-notification-corner")).not.toContain("height:");
     expect(cssRule(".app-notification-corner")).toContain("gap: 0");
     expect(cssRule(".app-notification-corner")).toContain("padding: 8px");
-    expect(cssRule(".app-workspace-mobile-actions")).toContain(
-      "padding: 8px",
-    );
+    expect(cssRule(".app-workspace-mobile-actions")).toContain("padding: 8px");
     expect(cssRule(".app-workspace-user-summary__divider")).toContain(
       "height: 60%",
     );
@@ -231,9 +234,7 @@ describe("WorkspaceShell", () => {
       expect(
         panel?.querySelector(".app-profile-popover-panel__header"),
       ).toBeNull();
-      expect(
-        panel?.querySelector(".app-profile-popover-list"),
-      ).toBeTruthy();
+      expect(panel?.querySelector(".app-profile-popover-list")).toBeTruthy();
       expect(panel?.querySelector(".ant-list")).toBeNull();
       expect(panel?.textContent).not.toContain("talkpik-chan");
       expect(panel?.textContent).not.toContain("student@example.com");
@@ -261,7 +262,9 @@ describe("WorkspaceShell", () => {
     ).toBe(false);
     expect(cssRule(".app-profile-popover-panel")).toContain("font-size: 14px");
     expect(
-      cssRule(".app-profile-popover.app-profile-popover .ant-popover-container"),
+      cssRule(
+        ".app-profile-popover.app-profile-popover .ant-popover-container",
+      ),
     ).toContain("padding: 0");
     expect(
       cssRule(".app-profile-popover-list .app-profile-popover-item"),
@@ -273,9 +276,7 @@ describe("WorkspaceShell", () => {
     expect(cssRule(".app-profile-popover-action")).toContain(
       "padding: 8px 12px",
     );
-    expect(cssRule(".app-profile-popover-action")).toContain(
-      "font-size: 14px",
-    );
+    expect(cssRule(".app-profile-popover-action")).toContain("font-size: 14px");
     expect(cssRule(".app-profile-popover-action::before")).toContain(
       "background: var(--app-color-bg-layout)",
     );
@@ -313,8 +314,9 @@ describe("WorkspaceShell", () => {
     ).toHaveLength(6);
 
     const growthItem = Array.from(
-      sidebarMenu?.querySelectorAll(".ant-menu-item, .ant-menu-submenu-title") ??
-        [],
+      sidebarMenu?.querySelectorAll(
+        ".ant-menu-item, .ant-menu-submenu-title",
+      ) ?? [],
     ).find((item) => item.textContent?.includes("성장 리포트"));
 
     expect(
@@ -352,10 +354,14 @@ describe("WorkspaceShell", () => {
       sidebarMenu?.querySelector('[data-sidebar-icon-name="DirectboxNotif"]'),
     ).toBeTruthy();
     expect(
-      sidebarMenu?.querySelector('[data-sidebar-icon-name="ProgrammingArrows"]'),
+      sidebarMenu?.querySelector(
+        '[data-sidebar-icon-name="ProgrammingArrows"]',
+      ),
     ).toBeTruthy();
     expect(
-      sidebarMenu?.querySelector('[data-sidebar-icon-name="PresentationChart"]'),
+      sidebarMenu?.querySelector(
+        '[data-sidebar-icon-name="PresentationChart"]',
+      ),
     ).toBeTruthy();
     expect(
       sidebarMenu?.querySelector('[data-sidebar-icon-name="DocumentText"]'),
@@ -425,6 +431,59 @@ describe("WorkspaceShell", () => {
     ).toBeTruthy();
   });
 
+  it.each([
+    ["/writing/short-answer-writing-51", false],
+    ["/writing/feedback/short/submission-1", true],
+    ["/writing/feedback/long/submission-1", true],
+    ["/writing/reports/report-1/compare", true],
+  ])(
+    "hides global floating actions on focus route %s",
+    (pathname, keepsSidebar) => {
+      navMock.pathname = pathname;
+
+      const { container } = renderWithIntl(
+        <WorkspaceShell
+          role="learner"
+          userId="user-1"
+          email="learner@example.com"
+          planLabel="premium"
+        >
+          <div data-testid="workspace-child">body</div>
+        </WorkspaceShell>,
+      );
+
+      expect(
+        container.querySelector(
+          ".app-notification-corner, .app-workspace-mobile-actions",
+        ),
+      ).toBeNull();
+      expect(Boolean(container.querySelector(".app-workspace-sider"))).toBe(
+        keepsSidebar,
+      );
+    },
+  );
+
+  it("keeps global floating actions on non-focus workspace routes", () => {
+    navMock.pathname = "/dashboard";
+
+    const { container } = renderWithIntl(
+      <WorkspaceShell
+        role="learner"
+        userId="user-1"
+        email="learner@example.com"
+        planLabel="premium"
+      >
+        <div data-testid="workspace-child">body</div>
+      </WorkspaceShell>,
+    );
+
+    expect(
+      container.querySelector(
+        ".app-notification-corner, .app-workspace-mobile-actions",
+      ),
+    ).toBeTruthy();
+  });
+
   it("uses a white full-viewport content surface for the onboarding learning goal route", () => {
     navMock.pathname = "/onboarding/learning-goal";
 
@@ -481,9 +540,7 @@ describe("WorkspaceShell", () => {
     const contentRule = workspaceLayoutCssRule(
       ".app-workspace-content.ant-layout-content",
     );
-    expect(contentRule).toContain(
-      "background: var(--app-color-bg-container);",
-    );
+    expect(contentRule).toContain("background: var(--app-color-bg-container);");
   });
 
   it("keeps writing exam pages on the layout canvas surface", () => {
@@ -624,8 +681,10 @@ describe("WorkspaceShell", () => {
   });
 
   it("pins the mobile GNB to the top and aligns its icons to the content edge", () => {
-    const stickyRule = cssRulesFrom(GLOBAL_CSS, ".app-workspace-mobile-bar")
-      .find((body) => body.includes("position: sticky;"));
+    const stickyRule = cssRulesFrom(
+      GLOBAL_CSS,
+      ".app-workspace-mobile-bar",
+    ).find((body) => body.includes("position: sticky;"));
     const headerRule = cssRule(".app-workspace-mobile-bar.ant-layout-header");
 
     expect(stickyRule).toBeTruthy();
@@ -713,8 +772,11 @@ describe("WorkspaceShell", () => {
     expect(hasExpandedMenuItem(container, "쓰기 연습")).toBe(true);
   });
 
-  it("applies the flush content chrome only on short feedback detail routes", () => {
-    navMock.pathname = "/writing/feedback/short/submission-1";
+  it.each([
+    "/writing/feedback/short/submission-1",
+    "/writing/reports/report-1/compare",
+  ])("applies flush content chrome on report header routes: %s", (pathname) => {
+    navMock.pathname = pathname;
 
     const { container } = renderWithIntl(
       <WorkspaceShell

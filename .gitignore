@@ -71,6 +71,7 @@ coverage/
 # Environment, credentials, and local secrets
 .env
 .env.*
+.env copy.example
 !.env.example
 *.pem
 *.key

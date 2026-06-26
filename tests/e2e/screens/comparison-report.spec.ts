@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
@@ -247,6 +247,16 @@ test.describe("authenticated comparison report", () => {
 
     const stickyHeader = page.getByTestId("comparison-page-header");
     await expect(stickyHeader).toBeVisible();
+    await expect(
+      page.locator(".app-notification-corner, .app-workspace-mobile-actions"),
+    ).toHaveCount(0);
+    mkdirSync("docs/qa/reports/2026-06-26-focus-page-global-actions", {
+      recursive: true,
+    });
+    await page.screenshot({
+      path: "docs/qa/reports/2026-06-26-focus-page-global-actions/R-01-comparison-report-e2e-after.png",
+      fullPage: true,
+    });
     await expect(stickyHeader).toHaveCSS("position", "sticky");
     await expect(stickyHeader).toHaveCSS("top", "0px");
     await expect(stickyHeader).toHaveCSS("border-bottom-width", "1px");
@@ -260,9 +270,6 @@ test.describe("authenticated comparison report", () => {
     await expect(headerTitle).toHaveClass(/text-2xl/);
     await expect(headerTitle).toHaveCSS("font-size", "28px");
     await expect(headerTitle).toHaveCSS("margin-bottom", "0px");
-    await expect(
-      page.locator(".app-notification-corner, .app-workspace-mobile-actions"),
-    ).toHaveCount(0);
     const headerLearningActions = page
       .getByTestId("comparison-page-header")
       .locator(".app-page-header")
@@ -275,9 +282,11 @@ test.describe("authenticated comparison report", () => {
     ).toBeVisible();
     await expect
       .poll(async () =>
-        page.locator(".app-page-header__actions button").evaluateAll((buttons) =>
-          buttons.map((button) => button.getAttribute("data-testid")),
-        ),
+        page
+          .locator(".app-page-header__actions button")
+          .evaluateAll((buttons) =>
+            buttons.map((button) => button.getAttribute("data-testid")),
+          ),
       )
       .toEqual([
         "comparison-action-retry",

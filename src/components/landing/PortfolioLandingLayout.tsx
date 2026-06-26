@@ -795,7 +795,7 @@ function ProductFooter({ primary, primaryLabel }: LandingLayoutCta) {
             className="landing-layout-footer__cta"
             href={primary?.href ?? "/sign-up"}
           >
-            TALKPIK AI로 시작하기
+            도토리 토픽
             <ArrowRight aria-hidden="true" strokeWidth={3.5} />
           </a>
         </h2>

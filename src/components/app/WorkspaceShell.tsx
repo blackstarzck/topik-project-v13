@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  Avatar,
-  Button,
-  Grid,
-  Layout,
-  Popover,
-  Typography,
-} from "antd";
+import { Avatar, Button, Grid, Layout, Popover, Typography } from "antd";
 import { Menu as MenuIcon } from "@/components/shared/AppIcons";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
@@ -93,14 +86,16 @@ export function WorkspaceShell({
     pathname.startsWith("/writing/reports/") && pathname.endsWith("/compare");
   const hidesWorkspaceChrome =
     isWritingExamRoute || isOnboardingLearningGoalRoute;
+  const isShortFeedbackRoute = pathname.startsWith("/writing/feedback/short/");
   const hidesGlobalFloatingActions =
     hidesWorkspaceChrome || isFeedbackDetailRoute || isComparisonReportRoute;
-  const isShortFeedbackRoute = pathname.startsWith("/writing/feedback/short/");
   const contentClassName = [
     "app-workspace-content",
     isWritingExamRoute ? "app-workspace-content--exam" : null,
     isOnboardingLearningGoalRoute ? "app-workspace-content--onboarding" : null,
-    isShortFeedbackRoute ? "app-workspace-content--feedback-flush" : null,
+    isShortFeedbackRoute || isComparisonReportRoute
+      ? "app-workspace-content--feedback-flush"
+      : null,
   ]
     .filter(Boolean)
     .join(" ");
