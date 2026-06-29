@@ -381,8 +381,19 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
     );
 
     const header = screen.getByTestId("feedback-page-header");
+    const inner = within(header).getByTestId("report-page-header-inner");
+    const titleRegion = within(header).getByTestId("report-page-header-title");
+    const actionRegion = within(header).getByTestId(
+      "report-page-header-actions",
+    );
     const title = within(header).getByRole("heading", { level: 3 });
     expect(header.className).toContain("sticky");
+    expect(inner.className).toContain("app-workspace-body");
+    expect(inner.className).toContain("lg:flex-row");
+    expect(titleRegion.contains(title)).toBe(true);
+    expect(
+      actionRegion.contains(within(header).getByTestId("feedback-actions")),
+    ).toBe(true);
     expect(title.className).toContain("!m-0");
     expect(
       within(header).queryByText("두 빈칸 답안을 기준으로 분석했어요."),

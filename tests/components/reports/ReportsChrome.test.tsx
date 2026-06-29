@@ -214,14 +214,24 @@ describe("ComparisonReportView next action chrome", () => {
     );
 
     const stickyHeader = screen.getByTestId("comparison-page-header");
+    const inner = within(stickyHeader).getByTestId("report-page-header-inner");
+    const titleRegion = within(stickyHeader).getByTestId(
+      "report-page-header-title",
+    );
+    const actionRegion = within(stickyHeader).getByTestId(
+      "report-page-header-actions",
+    );
     expect(stickyHeader.className).toContain("sticky");
     expect(stickyHeader.className).toContain("top-0");
     expect(stickyHeader.className).toContain("border-b");
     expect(stickyHeader.className).toContain("border-border");
+    expect(inner.className).toContain("app-workspace-body");
+    expect(inner.className).toContain("lg:flex-row");
 
     const title = within(stickyHeader).getByRole("heading", {
       name: "비교 리포트",
     });
+    expect(titleRegion.contains(title)).toBe(true);
     expect(title.tagName).toBe("H3");
     expect(title.className).toContain("ant-typography");
     expect(title.className).toContain("!m-0");
@@ -229,20 +239,18 @@ describe("ComparisonReportView next action chrome", () => {
     expect(title.className).not.toContain("app-page-header__title");
 
     const actions = screen.getByTestId("comparison-next-actions");
-    const pageHeader = actions.closest(".app-page-header");
-    const pageHeaderActions = actions.closest(".app-page-header__actions");
 
     expect(stickyHeader.contains(actions)).toBe(true);
-    expect(pageHeader).toBeTruthy();
-    expect(pageHeaderActions).toBeTruthy();
+    expect(stickyHeader.querySelector(".app-page-header")).toBeNull();
+    expect(actionRegion.contains(actions)).toBe(true);
     expect(
-      pageHeaderActions?.querySelector('[data-testid="comparison-action-share"]'),
+      actionRegion.querySelector('[data-testid="comparison-action-share"]'),
     ).toBeTruthy();
     expect(actions.className).toContain("feedback-actions");
     expect(actions.className).not.toContain("app-card");
-    expect(within(actions).getAllByRole("button")).toHaveLength(3);
+    expect(within(actions).getAllByRole("button")).toHaveLength(4);
     expect(
-      Array.from(pageHeaderActions?.querySelectorAll("button") ?? []).map(
+      Array.from(actionRegion.querySelectorAll("button")).map(
         (button) => button.getAttribute("data-testid"),
       ),
     ).toEqual([
@@ -259,6 +267,7 @@ describe("ComparisonReportView next action chrome", () => {
       "comparison-action-retry",
       "comparison-action-next",
       "comparison-action-weakness",
+      "comparison-action-share",
     ]);
 
     const controls = within(actions).getByTestId(
@@ -282,5 +291,6 @@ describe("ComparisonReportView next action chrome", () => {
     expect(
       within(secondary).getByTestId("comparison-action-weakness"),
     ).toBeTruthy();
+    expect(within(secondary).getByTestId("comparison-action-share")).toBeTruthy();
   });
 });
