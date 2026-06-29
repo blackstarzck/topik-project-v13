@@ -63,6 +63,56 @@ function serviceClient() {
   });
 }
 
+function isProtectedSupabaseEnv() {
+  const label = (process.env.SUPABASE_ENV_LABEL || "").toLowerCase();
+  return label === "prod" || label === "production";
+}
+
+async function cleanupStaleComparisonFixtures(
+  sb: ReturnType<typeof serviceClient>,
+  userId: string,
+) {
+  if (isProtectedSupabaseEnv()) return;
+
+  const feedback = await sb
+    .from("writing_feedback")
+    .select("submission_id")
+    .eq("user_id", userId)
+    .eq("ai_model", "e2e-fixture")
+    .eq("ai_model_version", "R-01");
+  if (feedback.error) throw feedback.error;
+
+  const submissionIds = (feedback.data ?? [])
+    .map((row) => row.submission_id)
+    .filter((id): id is string => Boolean(id));
+
+  const reports = await sb
+    .from("comparison_reports")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("ai_model", "e2e-fixture");
+  if (reports.error) throw reports.error;
+
+  const reportIds = (reports.data ?? [])
+    .map((row) => row.id)
+    .filter((id): id is string => Boolean(id));
+
+  if (reportIds.length > 0) {
+    await sb.from("comparison_reports").delete().in("id", reportIds);
+  }
+  if (submissionIds.length > 0) {
+    await sb
+      .from("feedback_dimension_scores")
+      .delete()
+      .in("submission_id", submissionIds);
+    await sb
+      .from("writing_feedback")
+      .delete()
+      .in("submission_id", submissionIds);
+    await sb.from("writing_submissions").delete().in("id", submissionIds);
+  }
+}
+
 async function createComparisonReportFixture() {
   const sb = serviceClient();
   const users = await sb.auth.admin.listUsers({ page: 1, perPage: 1000 });
@@ -71,6 +121,8 @@ async function createComparisonReportFixture() {
     (candidate) => candidate.email?.toLowerCase() === EMAIL.toLowerCase(),
   );
   if (!user) throw new Error(`E2E student user not found: ${EMAIL}`);
+
+  await cleanupStaleComparisonFixtures(sb, user.id);
 
   const problem = await sb
     .from("problems")
@@ -298,21 +350,33 @@ async function createComparisonReportFixture() {
   return { reportId, previousAnswer, currentAnswer, firstSubmissionId };
 }
 
-test.afterAll(async () => {
+async function cleanupCreatedRows() {
   if (createdSubmissionIds.length === 0 && createdReportIds.length === 0) {
     return;
   }
-  const label = (process.env.SUPABASE_ENV_LABEL || "").toLowerCase();
-  if (label === "prod" || label === "production") return;
+  if (isProtectedSupabaseEnv()) return;
   const sb = serviceClient();
-  for (const id of createdReportIds) {
+  const reportIds = [...createdReportIds];
+  const submissionIds = [...createdSubmissionIds];
+  createdReportIds.length = 0;
+  createdSubmissionIds.length = 0;
+
+  for (const id of reportIds) {
     await sb.from("comparison_reports").delete().eq("id", id);
   }
-  for (const id of createdSubmissionIds) {
+  for (const id of submissionIds) {
     await sb.from("feedback_dimension_scores").delete().eq("submission_id", id);
     await sb.from("writing_feedback").delete().eq("submission_id", id);
     await sb.from("writing_submissions").delete().eq("id", id);
   }
+}
+
+test.afterEach(async () => {
+  await cleanupCreatedRows();
+});
+
+test.afterAll(async () => {
+  await cleanupCreatedRows();
 });
 
 test.describe("anonymous access", () => {
@@ -443,11 +507,15 @@ test.describe("authenticated comparison report", () => {
       path: "docs/qa/reports/2026-06-26-focus-page-global-actions/R-01-comparison-report-drawer-open.png",
       fullPage: true,
     });
-    await expect(page.getByTestId("comparison-target-option")).toHaveCount(2);
+    await expect(page.getByTestId("comparison-target-option")).toHaveCount(3);
     await expect(
       page.getByTestId("comparison-target-drawer-body"),
-    ).not.toContainText("76");
+    ).not.toContainText("76점");
     await expect(page.getByTestId("comparison-target-confirm")).toBeDisabled();
+    await expect(page.getByTestId("comparison-target-date-sort")).toBeVisible();
+    await expect(
+      page.getByTestId("comparison-target-score-sort"),
+    ).toBeVisible();
 
     await page.getByTestId("comparison-target-status-filter").click();
     await page

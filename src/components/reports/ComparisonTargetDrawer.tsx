@@ -5,14 +5,19 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { AppDrawer } from "@/components/shared/AppDrawer";
-import { CheckCircle2, Clock3 } from "@/components/shared/AppIcons";
+import {
+  CheckCircle2,
+  ChevronDown,
+  Clock3,
+} from "@/components/shared/AppIcons";
 import { useCreateComparisonReport } from "@/lib/writing/mutations";
 import type { ComparisonTargetCandidate } from "@/lib/writing/server";
 
 const { Text } = Typography;
 
 type StatusFilter = "complete" | "with-analysis";
-type SortMode = "newest" | "score";
+type DateSortMode = "newest" | "oldest";
+type ScoreSortMode = "none" | "score-desc" | "score-asc";
 
 type Props = {
   open: boolean;
@@ -76,28 +81,44 @@ export function ComparisonTargetDrawer({
   const compare = useCreateComparisonReport();
   const [draftSelectedId, setDraftSelectedId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("complete");
-  const [sortMode, setSortMode] = useState<SortMode>("newest");
+  const [dateSortMode, setDateSortMode] = useState<DateSortMode>("newest");
+  const [scoreSortMode, setScoreSortMode] = useState<ScoreSortMode>("none");
   const fallbackSelectedId = useMemo(
     () => defaultSelectedId(candidates, selectedPreviousSubmissionId),
     [candidates, selectedPreviousSubmissionId],
   );
   const selectedId = draftSelectedId ?? fallbackSelectedId;
   const visibleCandidates = useMemo(() => {
+    const sortCandidates = (items: ComparisonTargetCandidate[]) =>
+      [...items].sort((a, b) => {
+        if (a.isDisabled !== b.isDisabled) {
+          return a.isDisabled ? 1 : -1;
+        }
+
+        if (scoreSortMode !== "none") {
+          const aScore = normalizedScore(a.score, a.scoreMax) ?? -1;
+          const bScore = normalizedScore(b.score, b.scoreMax) ?? -1;
+          const scoreDelta =
+            scoreSortMode === "score-desc" ? bScore - aScore : aScore - bScore;
+          if (scoreDelta !== 0) return scoreDelta;
+        }
+
+        const submittedDelta =
+          new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime();
+        return dateSortMode === "newest" ? submittedDelta : -submittedDelta;
+      });
+
     const filtered =
       statusFilter === "complete"
         ? candidates.filter((candidate) => !candidate.isDisabled)
         : candidates;
-    return [...filtered].sort((a, b) => {
-      if (sortMode === "score") {
-        const aScore = normalizedScore(a.score, a.scoreMax) ?? -1;
-        const bScore = normalizedScore(b.score, b.scoreMax) ?? -1;
-        return bScore - aScore;
-      }
-      return (
-        new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
-      );
-    });
-  }, [candidates, sortMode, statusFilter]);
+    const disabledPreview =
+      statusFilter === "complete"
+        ? candidates.filter((candidate) => candidate.isDisabled)
+        : [];
+
+    return [...sortCandidates(filtered), ...sortCandidates(disabledPreview)];
+  }, [candidates, dateSortMode, scoreSortMode, statusFilter]);
 
   const selectedCandidate = useMemo(
     () =>
@@ -141,27 +162,40 @@ export function ComparisonTargetDrawer({
       open={open}
       onClose={handleClose}
       placement="right"
-      size={420}
+      size={456}
       title={t("targetDrawerTitle")}
       rootClassName="comparison-target-drawer"
       getContainer={false}
       rootStyle={{ position: "absolute" }}
       styles={{
         body: { padding: 0 },
+        header: {
+          padding: "24px 24px 14px",
+          borderBottom: "0",
+        },
         footer: {
           borderTop: "1px solid var(--app-color-border)",
-          padding: 16,
+          padding: "18px 24px 20px",
+        },
+        mask: {
+          background: "rgba(244, 244, 245, 0.18)",
         },
       }}
       footer={
-        <div className="flex w-full flex-col gap-2">
+        <div className="flex w-full flex-col gap-3">
           <div className="grid grid-cols-2 gap-3">
-            <Button block onClick={handleClose} disabled={compare.isPending}>
+            <Button
+              block
+              className="h-11"
+              onClick={handleClose}
+              disabled={compare.isPending}
+            >
               {t("targetDrawerCancel")}
             </Button>
             <Button
               type="primary"
               block
+              className="h-11"
               loading={compare.isPending}
               disabled={!canCompare || unchanged || compare.isPending}
               onClick={handleCompare}
@@ -179,10 +213,10 @@ export function ComparisonTargetDrawer({
       }
     >
       <div
-        className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-5"
+        className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-6 pb-6 pt-2"
         data-testid="comparison-target-drawer-body"
       >
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3">
           <Text type="secondary">
             {t("targetDrawerDescription", { questionNo: currentQuestionNo })}
           </Text>
@@ -191,7 +225,7 @@ export function ComparisonTargetDrawer({
           </Tag>
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-[1.15fr_1fr_1fr] gap-2">
           <Select<StatusFilter>
             value={statusFilter}
             onChange={setStatusFilter}
@@ -207,13 +241,23 @@ export function ComparisonTargetDrawer({
               },
             ]}
           />
-          <Select<SortMode>
-            value={sortMode}
-            onChange={setSortMode}
-            data-testid="comparison-target-sort"
+          <Select<DateSortMode>
+            value={dateSortMode}
+            onChange={setDateSortMode}
+            data-testid="comparison-target-date-sort"
             options={[
               { value: "newest", label: t("targetDrawerSortNewest") },
-              { value: "score", label: t("targetDrawerSortScore") },
+              { value: "oldest", label: t("targetDrawerSortOldest") },
+            ]}
+          />
+          <Select<ScoreSortMode>
+            value={scoreSortMode}
+            onChange={setScoreSortMode}
+            data-testid="comparison-target-score-sort"
+            options={[
+              { value: "none", label: t("targetDrawerSortScore") },
+              { value: "score-desc", label: t("targetDrawerSortScoreHigh") },
+              { value: "score-asc", label: t("targetDrawerSortScoreLow") },
             ]}
           />
         </div>
@@ -229,7 +273,7 @@ export function ComparisonTargetDrawer({
             data-testid="comparison-target-empty"
           />
         ) : (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-3">
             {visibleCandidates.map((candidate) => {
               const score = normalizedScore(
                 candidate.score,
@@ -241,6 +285,13 @@ export function ComparisonTargetDrawer({
               );
               const attemptNo =
                 candidateIndex >= 0 ? candidates.length - candidateIndex : null;
+              const statusTagLabel = candidate.isDisabled
+                ? t("targetDrawerUnavailable")
+                : candidate.isSelected
+                  ? t("targetDrawerSelectedPrevious")
+                  : attemptNo === 1
+                    ? t("targetDrawerFirstAttempt")
+                    : t("targetDrawerPreviousComplete");
               return (
                 <label
                   key={candidate.submissionId}
@@ -248,14 +299,21 @@ export function ComparisonTargetDrawer({
                   data-submission-id={candidate.submissionId}
                   data-feedback-status={candidate.feedbackStatus}
                   data-selected={selected ? "true" : "false"}
+                  style={
+                    selected
+                      ? {
+                          borderColor: "var(--app-color-primary)",
+                          boxShadow: "0 0 0 1px var(--app-color-primary) inset",
+                          background:
+                            "color-mix(in srgb, var(--app-color-primary) 4%, var(--app-color-bg-container))",
+                        }
+                      : undefined
+                  }
                   className={[
-                    "flex gap-3 rounded-lg border border-border bg-background px-3 py-4 transition-colors",
+                    "flex gap-4 rounded-lg border border-border bg-background px-4 py-5 transition-colors",
                     candidate.isDisabled
                       ? "cursor-not-allowed opacity-60"
                       : "cursor-pointer hover:bg-[var(--app-color-bg-layout)]",
-                    selected
-                      ? "border-[var(--app-color-primary)] bg-[var(--app-color-bg-layout)]"
-                      : null,
                   ]
                     .filter(Boolean)
                     .join(" ")}
@@ -268,29 +326,28 @@ export function ComparisonTargetDrawer({
                   <span className="flex min-w-0 flex-1 flex-col gap-2">
                     <span className="flex items-start justify-between gap-2">
                       <span className="min-w-0">
-                        <span className="mb-1 flex flex-wrap items-center gap-1">
-                          {candidate.isRecommended ? (
-                            <Tag>{t("targetDrawerRecommended")}</Tag>
-                          ) : null}
-                          {candidate.isSelected ? (
-                            <Tag>{t("targetDrawerSelected")}</Tag>
-                          ) : null}
+                        <span className="mb-2 flex flex-wrap items-center gap-1.5">
                           {candidate.isDisabled ? (
                             <Tag icon={<Clock3 aria-hidden size={12} />}>
-                              {t("targetDrawerUnavailable")}
+                              {statusTagLabel}
                             </Tag>
                           ) : (
                             <Tag icon={<CheckCircle2 aria-hidden size={12} />}>
-                              {t("targetDrawerComplete")}
+                              {statusTagLabel}
                             </Tag>
                           )}
+                          {candidate.isRecommended && !candidate.isSelected ? (
+                            <Tag>{t("targetDrawerRecommended")}</Tag>
+                          ) : null}
                         </span>
                         <Text strong className="block truncate text-base">
-                          {attemptNo
-                            ? t("targetDrawerAttempt", { count: attemptNo })
-                            : t("targetDrawerQuestion", {
-                                questionNo: candidate.questionNo,
-                              })}
+                          {candidate.isDisabled
+                            ? t("targetDrawerDisabledReason")
+                            : attemptNo
+                              ? t("targetDrawerAttempt", { count: attemptNo })
+                              : t("targetDrawerQuestion", {
+                                  questionNo: candidate.questionNo,
+                                })}
                         </Text>
                       </span>
                       <Text strong className="shrink-0 text-xl">
@@ -309,12 +366,12 @@ export function ComparisonTargetDrawer({
                         })}
                       </Text>
                     </span>
-                    {candidate.isDisabled ? (
-                      <Text type="secondary" className="text-xs">
-                        {t("targetDrawerDisabledReason")}
-                      </Text>
-                    ) : null}
                   </span>
+                  {candidate.isDisabled ? (
+                    <span className="flex shrink-0 items-center self-center text-secondary">
+                      <ChevronDown aria-hidden size={16} />
+                    </span>
+                  ) : null}
                 </label>
               );
             })}
