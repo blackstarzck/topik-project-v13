@@ -1,11 +1,10 @@
 "use client";
 
-import { Col, Empty, Row, Typography } from "antd";
+import { Empty, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { AppCard } from "@/components/shared/AppCard";
-import { SPACING } from "@/theme/spacing";
 
-const { Paragraph, Title } = Typography;
+const { Paragraph, Text, Title } = Typography;
 const EMPTY_ANSWER = "-";
 
 type Props = {
@@ -16,31 +15,50 @@ type Props = {
 export function SubmissionDiffPanel({ currentText, previousText }: Props) {
   const t = useTranslations("reports.diff");
   return (
-    <Row gutter={[SPACING.md, SPACING.md]} data-testid="comparison-submission-diff">
-      <Col xs={24} md={12}>
-        <AppCard size="small">
-          <Title level={5} className="mt-0">
-            {t("currentAnswer")}
-          </Title>
-          <Paragraph className="whitespace-pre-line">
+    <AppCard
+      title={t("title")}
+      data-testid="comparison-submission-diff"
+      className="comparison-diff-panel"
+    >
+      <div className="grid overflow-hidden rounded-lg border border-border md:grid-cols-2">
+        <section className="min-w-0 border-b border-border md:border-b-0 md:border-r">
+          <div className="border-b border-border bg-[var(--app-color-bg-layout)] px-4 py-3">
+            <Title level={5} className="m-0">
+              {t("currentAnswer")}
+            </Title>
+          </div>
+          <Paragraph className="m-0 whitespace-pre-line p-4">
             {currentText || EMPTY_ANSWER}
           </Paragraph>
-        </AppCard>
-      </Col>
-      <Col xs={24} md={12}>
-        <AppCard size="small">
-          <Title level={5} className="mt-0">
-            {t("previousAnswer")}
-          </Title>
+        </section>
+        <section className="min-w-0">
+          <div className="border-b border-border bg-[var(--app-color-bg-layout)] px-4 py-3">
+            <Title level={5} className="m-0">
+              {t("previousAnswer")}
+            </Title>
+          </div>
           {previousText ? (
-            <Paragraph className="whitespace-pre-line">
+            <Paragraph className="m-0 whitespace-pre-line p-4">
               {previousText}
             </Paragraph>
           ) : (
-            <Empty description={t("noPreviousAnswer")} />
+            <div className="p-4">
+              <Empty description={t("noPreviousAnswer")} />
+            </div>
           )}
-        </AppCard>
-      </Col>
-    </Row>
+        </section>
+      </div>
+      <div className="mt-3 flex flex-wrap gap-3">
+        <Text type="secondary" className="text-xs">
+          {t("added")}
+        </Text>
+        <Text type="secondary" className="text-xs">
+          {t("removed")}
+        </Text>
+        <Text type="secondary" className="text-xs">
+          {t("changed")}
+        </Text>
+      </div>
+    </AppCard>
   );
 }

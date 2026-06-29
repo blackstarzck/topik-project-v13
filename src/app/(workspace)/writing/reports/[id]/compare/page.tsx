@@ -105,6 +105,7 @@ export default async function CompareReportPage({
       hasPrevious={hasPrevious}
       currentSubmissionId={current.id}
       currentQuestionNo={current.question_no}
+      currentSubmittedAt={current.submitted_at}
       selectedPreviousSubmissionId={report.previous_submission_id}
       comparisonTargets={comparisonTargets}
     />

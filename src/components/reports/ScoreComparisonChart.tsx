@@ -85,6 +85,7 @@ export function ScoreComparisonChart({ data, hasPrevious }: Props) {
             size="small"
             type="link"
             onClick={() => setTableFallback(false)}
+            data-testid="comparison-chart-view-chart"
           >
             {t("title")}
           </Button>

@@ -84,20 +84,51 @@ async function createComparisonReportFixture() {
   if (problem.error) throw problem.error;
   if (!problem.data?.id) throw new Error("No published q53 problem found");
 
-  const previousSubmissionId = randomUUID();
+  const firstSubmissionId = randomUUID();
+  const selectedPreviousSubmissionId = randomUUID();
+  const analyzingSubmissionId = randomUUID();
   const currentSubmissionId = randomUUID();
   const reportId = randomUUID();
+  const firstAnswer =
+    "The chart shows an increase, but the answer does not explain the reason.";
   const previousAnswer =
     "The chart shows online learning increasing, but the explanation is short.";
+  const analyzingAnswer =
+    "Online learning rose quickly. The analysis for this answer is still running.";
   const currentAnswer = [
     "The chart shows that online learning increased steadily after 2022.",
     "This change suggests that students prefer flexible study options.",
     "Schools should support both online materials and classroom guidance.",
   ].join("\n");
 
-  const submissions = await sb.from("writing_submissions").insert([
+  const otherProblem = await sb
+    .from("problems")
+    .select("id, question_no")
+    .eq("domain", "writing")
+    .eq("publish_status", "published")
+    .neq("id", problem.data.id)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (otherProblem.error) throw otherProblem.error;
+  const otherProblemData = otherProblem.data;
+
+  const otherSubmissionId = otherProblemData?.id ? randomUUID() : null;
+  const otherAnswer =
+    "This answer belongs to another problem and must not appear in the drawer.";
+  const sameProblemSubmissions = [
     {
-      id: previousSubmissionId,
+      id: firstSubmissionId,
+      user_id: user.id,
+      problem_id: problem.data.id,
+      question_no: 53,
+      answer_text: firstAnswer,
+      char_count: firstAnswer.length,
+      feedback_status: "complete",
+      submitted_at: new Date(Date.now() - 3 * 86_400_000).toISOString(),
+    },
+    {
+      id: selectedPreviousSubmissionId,
       user_id: user.id,
       problem_id: problem.data.id,
       question_no: 53,
@@ -107,6 +138,16 @@ async function createComparisonReportFixture() {
       submitted_at: new Date(Date.now() - 86_400_000).toISOString(),
     },
     {
+      id: analyzingSubmissionId,
+      user_id: user.id,
+      problem_id: problem.data.id,
+      question_no: 53,
+      answer_text: analyzingAnswer,
+      char_count: analyzingAnswer.length,
+      feedback_status: "analyzing",
+      submitted_at: new Date(Date.now() - 43_200_000).toISOString(),
+    },
+    {
       id: currentSubmissionId,
       user_id: user.id,
       problem_id: problem.data.id,
@@ -114,15 +155,51 @@ async function createComparisonReportFixture() {
       answer_text: currentAnswer,
       char_count: currentAnswer.length,
       feedback_status: "complete",
-      parent_submission_id: previousSubmissionId,
+      parent_submission_id: selectedPreviousSubmissionId,
       submitted_at: new Date().toISOString(),
     },
-  ]);
+  ];
+  const otherProblemSubmissions =
+    otherSubmissionId && otherProblemData
+      ? [
+          {
+            id: otherSubmissionId,
+            user_id: user.id,
+            problem_id: otherProblemData.id,
+            question_no: otherProblemData.question_no ?? 54,
+            answer_text: otherAnswer,
+            char_count: otherAnswer.length,
+            feedback_status: "complete",
+            submitted_at: new Date(Date.now() - 2 * 86_400_000).toISOString(),
+          },
+        ]
+      : [];
+  const submissions = await sb
+    .from("writing_submissions")
+    .insert([...sameProblemSubmissions, ...otherProblemSubmissions]);
   if (submissions.error) throw submissions.error;
+  createdSubmissionIds.push(
+    firstSubmissionId,
+    selectedPreviousSubmissionId,
+    analyzingSubmissionId,
+    currentSubmissionId,
+  );
+  if (otherSubmissionId) createdSubmissionIds.push(otherSubmissionId);
 
-  const feedback = await sb.from("writing_feedback").insert([
+  const feedbackRows = [
     {
-      submission_id: previousSubmissionId,
+      submission_id: firstSubmissionId,
+      user_id: user.id,
+      status: "complete",
+      score_total: 62,
+      score_max: 100,
+      overall_summary:
+        "The first answer noticed the increase but did not explain it enough.",
+      ai_model: "e2e-fixture",
+      ai_model_version: "R-01",
+    },
+    {
+      submission_id: selectedPreviousSubmissionId,
       user_id: user.id,
       status: "complete",
       score_total: 68,
@@ -143,13 +220,38 @@ async function createComparisonReportFixture() {
       ai_model: "e2e-fixture",
       ai_model_version: "R-01",
     },
-  ]);
+    ...(otherSubmissionId
+      ? [
+          {
+            submission_id: otherSubmissionId,
+            user_id: user.id,
+            status: "complete",
+            score_total: 76,
+            score_max: 100,
+            overall_summary:
+              "This complete feedback belongs to another problem.",
+            ai_model: "e2e-fixture",
+            ai_model_version: "R-01",
+          },
+        ]
+      : []),
+  ];
+  const feedback = await sb.from("writing_feedback").insert(feedbackRows);
   if (feedback.error) throw feedback.error;
 
   const dimensions = await sb.from("feedback_dimension_scores").insert(
     DIMENSION_ROWS.flatMap(([dimension, currentScore, previousScore]) => [
       {
-        submission_id: previousSubmissionId,
+        submission_id: firstSubmissionId,
+        user_id: user.id,
+        dimension,
+        score: Math.max(previousScore - 6, 0),
+        score_max: 100,
+        summary: `First ${dimension} baseline.`,
+        weakness_level: 4,
+      },
+      {
+        submission_id: selectedPreviousSubmissionId,
         user_id: user.id,
         dimension,
         score: previousScore,
@@ -174,7 +276,7 @@ async function createComparisonReportFixture() {
     id: reportId,
     user_id: user.id,
     current_submission_id: currentSubmissionId,
-    previous_submission_id: previousSubmissionId,
+    previous_submission_id: selectedPreviousSubmissionId,
     metrics: {
       score_delta: 14,
       dimension_deltas: Object.fromEntries(
@@ -192,9 +294,8 @@ async function createComparisonReportFixture() {
   });
   if (report.error) throw report.error;
 
-  createdSubmissionIds.push(previousSubmissionId, currentSubmissionId);
   createdReportIds.push(reportId);
-  return { reportId, previousAnswer, currentAnswer };
+  return { reportId, previousAnswer, currentAnswer, firstSubmissionId };
 }
 
 test.afterAll(async () => {
@@ -238,7 +339,7 @@ test.describe("authenticated comparison report", () => {
     page,
   }) => {
     const errors = collectErrors(page);
-    const { reportId, previousAnswer, currentAnswer } =
+    const { reportId, previousAnswer, currentAnswer, firstSubmissionId } =
       await createComparisonReportFixture();
 
     await page.goto(`/writing/reports/${reportId}/compare`, {
@@ -295,7 +396,6 @@ test.describe("authenticated comparison report", () => {
       )
       .toEqual([
         "comparison-action-retry",
-        "comparison-action-change-target",
         "comparison-action-next",
         "comparison-action-weakness",
         "comparison-action-share",
@@ -310,6 +410,7 @@ test.describe("authenticated comparison report", () => {
     await expect(page.getByTestId("comparison-chart-table")).toContainText(
       /이전|Previous|Trước/,
     );
+    await page.getByTestId("comparison-chart-view-chart").click();
     expect(
       await page.getByTestId("comparison-dimension-card").count(),
     ).toBeLessThanOrEqual(4);
@@ -325,7 +426,7 @@ test.describe("authenticated comparison report", () => {
     await expect(page.getByTestId("comparison-action-weakness")).toBeEnabled();
     await expect(
       page.getByTestId("comparison-next-actions").locator("button"),
-    ).toHaveCount(5);
+    ).toHaveCount(4);
     await expect(
       page
         .getByTestId("comparison-page-body")
@@ -338,8 +439,56 @@ test.describe("authenticated comparison report", () => {
         .getByTestId("comparison-page-shell")
         .locator(".comparison-target-drawer"),
     ).toBeVisible();
-    await expect(page.getByTestId("comparison-target-option")).toHaveCount(1);
+    await page.screenshot({
+      path: "docs/qa/reports/2026-06-26-focus-page-global-actions/R-01-comparison-report-drawer-open.png",
+      fullPage: true,
+    });
+    await expect(page.getByTestId("comparison-target-option")).toHaveCount(2);
+    await expect(
+      page.getByTestId("comparison-target-drawer-body"),
+    ).not.toContainText("76");
     await expect(page.getByTestId("comparison-target-confirm")).toBeDisabled();
+
+    await page.getByTestId("comparison-target-status-filter").click();
+    await page
+      .locator(
+        ".ant-select-dropdown:not(.ant-select-dropdown-hidden) .ant-select-item-option",
+      )
+      .nth(1)
+      .click();
+    await expect(page.getByTestId("comparison-target-option")).toHaveCount(3);
+    const analyzingCandidate = page.locator(
+      '[data-testid="comparison-target-option"][data-feedback-status="analyzing"]',
+    );
+    await expect(analyzingCandidate).toBeVisible();
+    await expect(
+      analyzingCandidate.locator('input[type="radio"]'),
+    ).toBeDisabled();
+    await page.screenshot({
+      path: "docs/qa/reports/2026-06-26-focus-page-global-actions/R-01-comparison-report-drawer-analysis-states.png",
+      fullPage: true,
+    });
+
+    await page.locator(`[data-submission-id="${firstSubmissionId}"]`).click();
+    await expect(page.getByTestId("comparison-target-confirm")).toBeEnabled();
+    await page.getByTestId("comparison-target-confirm").click();
+    await expect(page).toHaveURL(/\/writing\/reports\/[^/]+\/compare/);
+    const newReportId = page
+      .url()
+      .match(/\/writing\/reports\/([^/]+)\/compare/)?.[1];
+    if (newReportId && newReportId !== reportId) {
+      createdReportIds.push(newReportId);
+    }
+    await expect(page.getByTestId("comparison-summary-strip")).toContainText(
+      "62",
+    );
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(500);
+    await page.mouse.move(20, 20);
+    await page.screenshot({
+      path: "docs/qa/reports/2026-06-26-focus-page-global-actions/R-01-comparison-report-after-target-change.png",
+      fullPage: true,
+    });
 
     expect(errors).toEqual([]);
   });

@@ -1,8 +1,13 @@
 "use client";
 
-import { Col, Empty, Row, Statistic, Typography } from "antd";
+import { Empty, Statistic, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { AppCard } from "@/components/shared/AppCard";
+import {
+  BarChart3,
+  ChartNoAxesColumnIncreasing,
+  Trophy,
+} from "@/components/shared/AppIcons";
 
 const { Text } = Typography;
 
@@ -30,16 +35,24 @@ export function ComparisonKpiBlock({
   }
 
   return (
-    <AppCard data-testid="comparison-kpi-block">
-      <Row gutter={[16, 16]}>
-        <Col xs={24} md={8} data-testid="comparison-kpi-item">
+    <div
+      data-testid="comparison-kpi-block"
+      className="grid grid-cols-1 gap-3 md:grid-cols-3"
+    >
+      <AppCard data-testid="comparison-kpi-item" className="h-full">
+        <div className="flex items-center justify-between gap-3">
           <Statistic
             title={t("currentTotal")}
             value={currentScore}
             suffix={t("suffixPoint")}
           />
-        </Col>
-        <Col xs={24} md={8} data-testid="comparison-kpi-item">
+          <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-[var(--app-color-bg-layout)] text-primary">
+            <Trophy aria-hidden size={22} />
+          </span>
+        </div>
+      </AppCard>
+      <AppCard data-testid="comparison-kpi-item" className="h-full">
+        <div className="flex items-center justify-between gap-3">
           {hasPrevious && scoreDelta !== null ? (
             <Statistic
               title={t("improvement")}
@@ -63,8 +76,13 @@ export function ComparisonKpiBlock({
               )}
             />
           )}
-        </Col>
-        <Col xs={24} md={8} data-testid="comparison-kpi-item">
+          <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-[var(--app-color-bg-layout)] text-primary">
+            <ChartNoAxesColumnIncreasing aria-hidden size={22} />
+          </span>
+        </div>
+      </AppCard>
+      <AppCard data-testid="comparison-kpi-item" className="h-full">
+        <div className="flex items-center justify-between gap-3">
           <Statistic
             title={t("changedDimensions")}
             value={hasPrevious ? changedDimensions : 0}
@@ -79,8 +97,11 @@ export function ComparisonKpiBlock({
                   )
             }
           />
-        </Col>
-      </Row>
-    </AppCard>
+          <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-[var(--app-color-bg-layout)] text-primary">
+            <BarChart3 aria-hidden size={22} />
+          </span>
+        </div>
+      </AppCard>
+    </div>
   );
 }

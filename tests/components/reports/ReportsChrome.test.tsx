@@ -221,6 +221,7 @@ describe("ComparisonReportView next action chrome", () => {
         hasPrevious
         currentSubmissionId="current-1"
         currentQuestionNo={54}
+        currentSubmittedAt="2026-05-20T10:00:00.000Z"
         selectedPreviousSubmissionId="previous-1"
         comparisonTargets={[
           {
@@ -288,14 +289,13 @@ describe("ComparisonReportView next action chrome", () => {
     ).toBeTruthy();
     expect(actions.className).toContain("feedback-actions");
     expect(actions.className).not.toContain("app-card");
-    expect(within(actions).getAllByRole("button")).toHaveLength(5);
+    expect(within(actions).getAllByRole("button")).toHaveLength(4);
     expect(
       Array.from(actionRegion.querySelectorAll("button")).map((button) =>
         button.getAttribute("data-testid"),
       ),
     ).toEqual([
       "comparison-action-retry",
-      "comparison-action-change-target",
       "comparison-action-next",
       "comparison-action-weakness",
       "comparison-action-share",
@@ -306,7 +306,6 @@ describe("ComparisonReportView next action chrome", () => {
       ),
     ).toEqual([
       "comparison-action-retry",
-      "comparison-action-change-target",
       "comparison-action-next",
       "comparison-action-weakness",
       "comparison-action-share",
@@ -358,6 +357,7 @@ describe("ComparisonReportView next action chrome", () => {
         hasPrevious
         currentSubmissionId="current-1"
         currentQuestionNo={54}
+        currentSubmittedAt="2026-05-20T10:00:00.000Z"
         selectedPreviousSubmissionId="previous-1"
         comparisonTargets={[
           {
@@ -406,5 +406,41 @@ describe("ComparisonReportView next action chrome", () => {
       { current_id: "current-1", previous_id: "previous-2" },
       expect.any(Object),
     );
+  });
+
+  it("shows an empty drawer state when the same problem has no previous answer", () => {
+    renderReports(
+      <ComparisonReportView
+        metrics={{
+          score_delta: null,
+          dimension_deltas: {},
+          char_delta: 0,
+          no_previous: true,
+        }}
+        narrative={null}
+        currentText="이번 답안입니다."
+        previousText={null}
+        retryHref="/writing/54?retry=sub-1"
+        reportId="report-1"
+        currentScore={82}
+        chartData={[]}
+        currentNorm={{ grammar: 82 }}
+        hasPrevious={false}
+        currentSubmissionId="current-1"
+        currentQuestionNo={54}
+        currentSubmittedAt="2026-05-20T10:00:00.000Z"
+        selectedPreviousSubmissionId={null}
+        comparisonTargets={[]}
+      />,
+    );
+
+    fireEvent.click(screen.getByTestId("comparison-action-change-target"));
+
+    expect(screen.getByTestId("comparison-target-same-problem")).toBeTruthy();
+    expect(screen.getByTestId("comparison-target-empty")).toBeTruthy();
+    expect(
+      (screen.getByTestId("comparison-target-confirm") as HTMLButtonElement)
+        .disabled,
+    ).toBe(true);
   });
 });

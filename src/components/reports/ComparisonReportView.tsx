@@ -5,7 +5,11 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { AppCard } from "@/components/shared/AppCard";
-import { RefreshCcw } from "@/components/shared/AppIcons";
+import {
+  DocumentTextIcon,
+  ProgrammingArrowsIcon,
+  RefreshCcw,
+} from "@/components/shared/AppIcons";
 import { ReportPageHeader } from "@/components/shared/ReportPageHeader";
 import { logStudyEvent } from "@/lib/events/study-events";
 import type { ComparisonMetrics } from "@/lib/writing/comparison-service";
@@ -33,9 +37,28 @@ type Props = {
   hasPrevious: boolean;
   currentSubmissionId: string;
   currentQuestionNo: number;
+  currentSubmittedAt: string;
   selectedPreviousSubmissionId: string | null;
   comparisonTargets: ComparisonTargetCandidate[];
 };
+
+function normalizedScore(score: number | null, scoreMax: number | null) {
+  if (score === null) return null;
+  const max = scoreMax && scoreMax > 0 ? scoreMax : 100;
+  return Math.round((score / max) * 1000) / 10;
+}
+
+function formatSubmittedAt(value: string) {
+  const date = new Date(value);
+  const time = date.getTime();
+  if (Number.isNaN(time)) return value;
+  const kst = new Date(time + 9 * 60 * 60 * 1000);
+  const pad = (part: number) => String(part).padStart(2, "0");
+  return [
+    `${kst.getUTCFullYear()}.${pad(kst.getUTCMonth() + 1)}.${pad(kst.getUTCDate())}`,
+    `${pad(kst.getUTCHours())}:${pad(kst.getUTCMinutes())}`,
+  ].join(" ");
+}
 
 export function ComparisonReportView({
   metrics,
@@ -50,6 +73,7 @@ export function ComparisonReportView({
   hasPrevious,
   currentSubmissionId,
   currentQuestionNo,
+  currentSubmittedAt,
   selectedPreviousSubmissionId,
   comparisonTargets,
 }: Props) {
@@ -75,6 +99,19 @@ export function ComparisonReportView({
 
   const narrativeFailed = !narrative || narrative.trim().length === 0;
   const weaknessDisabled = !hasPrevious;
+  const selectedTarget =
+    comparisonTargets.find(
+      (candidate) => candidate.submissionId === selectedPreviousSubmissionId,
+    ) ??
+    comparisonTargets.find((candidate) => candidate.isSelected) ??
+    null;
+  const previousScore = selectedTarget
+    ? normalizedScore(selectedTarget.score, selectedTarget.scoreMax)
+    : null;
+  const currentSubmittedLabel = formatSubmittedAt(currentSubmittedAt);
+  const previousSubmittedLabel = selectedTarget
+    ? formatSubmittedAt(selectedTarget.submittedAt)
+    : null;
 
   async function onShare() {
     if (sharing) return;
@@ -132,16 +169,9 @@ export function ComparisonReportView({
                   {t("retryProblem")}
                 </Button>
               ) : null}
-              <Button
-                icon={<RefreshCcw aria-hidden size={16} />}
-                onClick={() => setTargetDrawerOpen(true)}
-                data-testid="comparison-action-change-target"
-              >
-                {t("changeTarget")}
-              </Button>
               <div
                 data-testid="comparison-next-actions-secondary"
-                className="feedback-action-divider flex w-full flex-wrap items-center gap-2 pt-2 md:ml-1 md:w-auto md:pl-3 md:pt-0"
+                className="flex w-full flex-wrap items-center gap-2 md:w-auto"
               >
                 <Button
                   type="primary"
@@ -187,8 +217,80 @@ export function ComparisonReportView({
 
       <div
         data-testid="comparison-page-body"
-        className="app-workspace-body app-workspace-body--workspace flex w-full flex-col gap-6 px-4 py-4 sm:px-6 sm:py-6"
+        className="app-workspace-body app-workspace-body--workspace flex w-full flex-col gap-4 px-4 py-4 sm:px-6 sm:py-6"
       >
+        <AppCard
+          data-testid="comparison-summary-strip"
+          className="comparison-summary-strip"
+        >
+          <div className="grid gap-4 lg:grid-cols-[1fr_auto_1fr_auto] lg:items-center">
+            <div className="flex min-w-0 items-center gap-3">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-border bg-background">
+                <DocumentTextIcon aria-hidden size={20} />
+              </span>
+              <div className="min-w-0">
+                <Text type="secondary" className="block text-xs">
+                  {t("currentAnswerLabel")}
+                </Text>
+                <Text strong className="block truncate">
+                  {t("questionTitle", { questionNo: currentQuestionNo })}
+                </Text>
+                <Text type="secondary" className="block text-xs">
+                  {t("submittedAt", { date: currentSubmittedLabel })}
+                </Text>
+              </div>
+              <Text strong className="ml-auto text-3xl">
+                {currentScore === null
+                  ? t("targetDrawerNoScore")
+                  : t("targetDrawerScore", { score: currentScore })}
+              </Text>
+            </div>
+
+            <ProgrammingArrowsIcon
+              aria-hidden
+              size={24}
+              className="hidden text-secondary lg:block"
+            />
+
+            <div className="flex min-w-0 items-center gap-3">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-border bg-background">
+                <DocumentTextIcon aria-hidden size={20} />
+              </span>
+              <div className="min-w-0">
+                <Text type="secondary" className="block text-xs">
+                  {t("compareTargetLabel")}
+                </Text>
+                <Text strong className="block truncate">
+                  {selectedTarget
+                    ? t("previousQuestionTitle", {
+                        questionNo: selectedTarget.questionNo,
+                      })
+                    : t("noCompareTarget")}
+                </Text>
+                <Text type="secondary" className="block text-xs">
+                  {previousSubmittedLabel
+                    ? t("submittedAt", { date: previousSubmittedLabel })
+                    : t("targetDrawerEmpty")}
+                </Text>
+              </div>
+              <Text strong className="ml-auto text-3xl">
+                {previousScore === null
+                  ? t("targetDrawerNoScore")
+                  : t("targetDrawerScore", { score: previousScore })}
+              </Text>
+            </div>
+
+            <Button
+              icon={<RefreshCcw aria-hidden size={16} />}
+              onClick={() => setTargetDrawerOpen(true)}
+              data-testid="comparison-action-change-target"
+              className="lg:justify-self-end"
+            >
+              {t("changeTarget")}
+            </Button>
+          </div>
+        </AppCard>
+
         <ComparisonKpiBlock
           currentScore={currentScore}
           scoreDelta={metrics.score_delta}
