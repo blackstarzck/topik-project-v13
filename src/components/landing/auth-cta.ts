@@ -4,6 +4,7 @@ import {
   LEARNING_GOAL_PATH,
   POST_AUTH_LOGIN_PATH,
 } from "@/lib/auth/completion-routes";
+import { APP_ROUTES } from "@/lib/routes";
 
 export type AuthenticatedLandingStatus = Exclude<
   LandingAuthStatus,
@@ -51,6 +52,12 @@ export function getLandingCta(status: AuthenticatedLandingStatus): LandingCta {
         href: DASHBOARD_PATH,
         headerLabelKey: "ctaDashboard",
         heroLabelKey: "heroCtaDashboard",
+      };
+    case "email-unverified":
+      return {
+        href: APP_ROUTES.authVerifyEmail,
+        headerLabelKey: "ctaContinueSetup",
+        heroLabelKey: "heroCtaContinueSetup",
       };
     case "authenticated-recovery":
       return {

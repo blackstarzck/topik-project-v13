@@ -10,7 +10,10 @@ export type AuthCompletionStatus =
 
 // Landing-only recovery state. It is not a product completion state and should
 // not be used by workspace guards.
-export type LandingAuthStatus = AuthCompletionStatus | "authenticated-recovery";
+export type LandingAuthStatus =
+  | AuthCompletionStatus
+  | "email-unverified"
+  | "authenticated-recovery";
 
 export const POST_AUTH_LOGIN_PATH = `${APP_ROUTES.authPostAuth}?intent=login`;
 export const POST_AUTH_SIGN_UP_PATH = `${APP_ROUTES.authPostAuth}?intent=sign-up`;

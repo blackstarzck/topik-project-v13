@@ -8,13 +8,13 @@ import {
   type RequestLocaleSource,
 } from "@/i18n/detection";
 import { LOCALE_COOKIE, type Locale } from "@/i18n/locales";
+import { requireVerifiedActiveSession } from "@/lib/auth/access-gate";
 import { sanitizeAuthCompletionNext } from "@/lib/auth/completion-routes";
 import {
   getMissingRequiredProfileFields,
   isRequiredProfileInputValid,
   normalizeAuthCompletionProfileInput,
 } from "@/lib/auth/profile-completion";
-import { requireActiveSession } from "@/lib/auth/profile";
 import { getMissingRequiredConsentDocuments } from "@/lib/legal/consent";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -149,7 +149,7 @@ export async function completeAuthGateAction(formData: FormData) {
     "/auth/post-auth?intent=login",
   );
 
-  const { user, profile } = await requireActiveSession();
+  const { user, profile } = await requireVerifiedActiveSession();
   const missingProfileFields = getMissingRequiredProfileFields(profile);
   const input = normalizeAuthCompletionProfileInput({
     display_name: formData.get("display_name")?.toString(),

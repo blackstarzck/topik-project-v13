@@ -14,6 +14,7 @@ vi.mock("next/navigation", () => ({
 // post-auth now gates withdrawn/blocked accounts via requireActiveSession
 // (returns { user, profile }) before any mutation/backfill.
 vi.mock("@/lib/auth/profile", () => ({
+  isActiveStatus: (status: string | null | undefined) => status === "active",
   requireActiveSession: () => requireActiveSessionMock(),
 }));
 
@@ -40,7 +41,11 @@ describe("/auth/post-auth", () => {
     redirectMock.mockClear();
     requireActiveSessionMock.mockReset();
     requireActiveSessionMock.mockResolvedValue({
-      user: { id: "user-1" },
+      user: {
+        id: "user-1",
+        email: "student@example.com",
+        email_confirmed_at: "2026-06-29T00:00:00.000Z",
+      },
       profile: {
         display_name: "Chan",
         nationality_country_code: "KR",
@@ -80,6 +85,30 @@ describe("/auth/post-auth", () => {
     expect(backfillOAuthDisplayNameMock).not.toHaveBeenCalled();
   });
 
+  it("redirects active email-unverified users before any backfill or completion lookup", async () => {
+    requireActiveSessionMock.mockResolvedValueOnce({
+      user: {
+        id: "user-1",
+        email: "student@example.com",
+        email_confirmed_at: null,
+      },
+      profile: {
+        display_name: "Chan",
+        nationality_country_code: "KR",
+        nickname: "talkpik-abc123",
+        status: "active",
+        ui_locale: "ko",
+      },
+    });
+
+    await expect(renderPostAuth()).rejects.toThrow(
+      "NEXT_REDIRECT:/auth/verify-email?email=student%40example.com",
+    );
+
+    expect(backfillOAuthDisplayNameMock).not.toHaveBeenCalled();
+    expect(getAuthCompletionStatusForSessionMock).not.toHaveBeenCalled();
+  });
+
   it("sends users with incomplete auth completion to the consent gate", async () => {
     getAuthCompletionStatusForSessionMock.mockResolvedValueOnce(
       "pending-auth-completion",
@@ -108,6 +137,8 @@ describe("/auth/post-auth", () => {
     requireActiveSessionMock.mockResolvedValueOnce({
       user: {
         id: "user-1",
+        email: "student@example.com",
+        email_confirmed_at: "2026-06-29T00:00:00.000Z",
         identities: [{ provider: "email" }, { provider: "google" }],
       },
       profile: { status: "active", ui_locale: "ko" },
@@ -120,7 +151,12 @@ describe("/auth/post-auth", () => {
 
   it("keeps the consent redirect free of the Google linked notice", async () => {
     requireActiveSessionMock.mockResolvedValueOnce({
-      user: { id: "user-1", identities: [{ provider: "google" }] },
+      user: {
+        id: "user-1",
+        email: "student@example.com",
+        email_confirmed_at: "2026-06-29T00:00:00.000Z",
+        identities: [{ provider: "google" }],
+      },
       profile: { status: "active", ui_locale: "ko" },
     });
     getAuthCompletionStatusForSessionMock.mockResolvedValueOnce(
@@ -137,6 +173,8 @@ describe("/auth/post-auth", () => {
 
     expect(backfillOAuthDisplayNameMock).toHaveBeenCalledWith({
       id: "user-1",
+      email: "student@example.com",
+      email_confirmed_at: "2026-06-29T00:00:00.000Z",
     });
   });
 });

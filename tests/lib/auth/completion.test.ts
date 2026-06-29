@@ -9,6 +9,8 @@ const hasLearningGoalMock = vi.fn();
 vi.mock("@/lib/auth/profile", () => ({
   bootstrapProfile: (...args: unknown[]) => bootstrapProfileMock(...args),
   getSessionAndProfile: () => getSessionAndProfileMock(),
+  isActiveStatus: (status: string | null | undefined) => status === "active",
+  requireActiveSession: vi.fn(),
 }));
 
 vi.mock("@/lib/auth/session", () => ({
@@ -32,7 +34,11 @@ import {
 } from "../../../src/lib/auth/completion";
 
 const session = {
-  user: { id: "user-1" },
+  user: {
+    id: "user-1",
+    email: "student@example.com",
+    email_confirmed_at: "2026-06-29T00:00:00.000Z",
+  },
   profile: {
     ui_locale: "ko",
     display_name: "Chan",
@@ -91,6 +97,21 @@ describe("auth completion state", () => {
       "ko",
     );
     expect(hasLearningGoalMock).not.toHaveBeenCalled();
+  });
+
+  it("returns landing-only email-unverified without calculating completion", async () => {
+    getCurrentUserMock.mockResolvedValueOnce({
+      id: "user-1",
+      email: "student@example.com",
+      email_confirmed_at: null,
+    });
+
+    await expect(getCurrentLandingAuthStatus()).resolves.toBe(
+      "email-unverified",
+    );
+
+    expect(bootstrapProfileMock).not.toHaveBeenCalled();
+    expect(getMissingRequiredConsentDocumentsMock).not.toHaveBeenCalled();
   });
 
   it("returns pending-auth-completion when required profile fields are missing", async () => {

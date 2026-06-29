@@ -116,4 +116,22 @@ describe("auth completion gate migration contract", () => {
     expect(laterSql).toContain("perform public.complete_auth_gate(");
     expect(laterSql).not.toContain("accept-language");
   });
+
+  it("guards auth completion and direct consent insert behind confirmed email", () => {
+    const laterSql = readMigrationsAfter(authCompletionMigrationName)
+      .replace(/\s+/g, " ")
+      .toLowerCase();
+
+    expect(laterSql).toContain("private.is_email_confirmed(v_user_id)");
+    expect(laterSql).toContain("auth_completion_required: email_unverified");
+    expect(laterSql).toContain(
+      "create policy user_consents_owner_insert on public.user_consents for insert to authenticated with check",
+    );
+    expect(laterSql).toContain(
+      "private.is_email_confirmed((select auth.uid()))",
+    );
+    expect(laterSql).toContain("from public.profiles");
+    expect(laterSql).toContain("profiles.id = (select auth.uid())");
+    expect(laterSql).toContain("profiles.status = 'active'");
+  });
 });

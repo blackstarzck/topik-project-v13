@@ -201,3 +201,9 @@
 | # | timestamp | file | scope |
 | ---:| --- | --- | --- |
 | 62 | `11:00:00` | [`20260626110000_writing_institution_visibility_predicate.sql`](./20260626110000_writing_institution_visibility_predicate.sql) | Adds institution-scoped writing problem visibility helpers and applies them to `list_user_problems` and `private.assert_writing_problem_submittable` so mapping absence remains public and mapping presence requires matching `profiles.affiliation_code`. |
+
+## 2026-06-29 migration
+
+| # | timestamp | file | scope |
+| ---:| --- | --- | --- |
+| 63 | `12:00:00` | [`20260629120000_auth_email_verified_access_gate.sql`](./20260629120000_auth_email_verified_access_gate.sql) | Adds an email-confirmed guard to `public.complete_auth_gate(...)` and `user_consents_owner_insert` so `profiles.status='active'` alone cannot create signup completion consent records. |
