@@ -704,7 +704,7 @@ function PathSection({ primary, primaryLabel }: LandingLayoutCta) {
   const paths = [
     [
       "처음 시작",
-      "TOPIK AI 학습을 처음 시작하는 사용자를 위한 공개 진입 흐름입니다.",
+      "도토리 토픽 학습을 처음 시작하는 사용자를 위한 공개 진입 흐름입니다.",
       "회원가입",
       ["이메일 인증", "학습 목표 설정", "홈 대시보드 이동", "무료 시작 CTA"],
       "/sign-up",
