@@ -1,7 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
 
-const SUB_SHORT = "a0d17000-0000-4000-8000-000000000051";
-
 const SIDEBAR_CASES = [
   {
     name: "practice problem list",
@@ -32,12 +30,6 @@ const SIDEBAR_CASES = [
     route: "/settings/learning",
     pathRegex: /\/settings\/learning/,
     groupKey: "settings",
-  },
-  {
-    name: "writing feedback",
-    route: `/writing/feedback/short/${SUB_SHORT}`,
-    pathRegex: /\/writing\/feedback\/short\//,
-    groupKey: "writing",
   },
 ] as const;
 

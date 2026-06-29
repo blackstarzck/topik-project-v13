@@ -78,17 +78,21 @@ export function WorkspaceShell({
     pathname === "/writing/long-form-writing-53" ||
     pathname === "/writing/essay-writing-54";
   const isOnboardingLearningGoalRoute =
-    pathname === "/onboarding/learning-goal";
+    pathname === APP_ROUTES.onboardingLearningGoal;
   const isFeedbackDetailRoute =
     pathname.startsWith("/writing/feedback/short/") ||
     pathname.startsWith("/writing/feedback/long/");
   const isComparisonReportRoute =
     pathname.startsWith("/writing/reports/") && pathname.endsWith("/compare");
+  const isNextProblemRoute = pathname === APP_ROUTES.practiceNext;
   const hidesWorkspaceChrome =
-    isWritingExamRoute || isOnboardingLearningGoalRoute;
+    isWritingExamRoute ||
+    isOnboardingLearningGoalRoute ||
+    isFeedbackDetailRoute ||
+    isComparisonReportRoute ||
+    isNextProblemRoute;
   const isShortFeedbackRoute = pathname.startsWith("/writing/feedback/short/");
-  const hidesGlobalFloatingActions =
-    hidesWorkspaceChrome || isFeedbackDetailRoute;
+  const hidesGlobalFloatingActions = hidesWorkspaceChrome;
   const contentClassName = [
     "app-workspace-content",
     isWritingExamRoute ? "app-workspace-content--exam" : null,
@@ -212,11 +216,15 @@ export function WorkspaceShell({
 
   return (
     <Layout
-      className={
-        hidesWorkspaceChrome
-          ? "app-workspace-layout app-workspace-layout--exam"
-          : "app-workspace-layout"
-      }
+      className={[
+        "app-workspace-layout",
+        hidesWorkspaceChrome ? "app-workspace-layout--chrome-hidden" : null,
+        isWritingExamRoute || isOnboardingLearningGoalRoute
+          ? "app-workspace-layout--exam"
+          : null,
+      ]
+        .filter(Boolean)
+        .join(" ")}
     >
       {hidesWorkspaceChrome ? null : (
         <Sider

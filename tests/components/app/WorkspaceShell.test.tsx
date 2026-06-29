@@ -444,35 +444,34 @@ describe("WorkspaceShell", () => {
   });
 
   it.each([
-    ["/writing/short-answer-writing-51", false],
-    ["/writing/feedback/short/submission-1", true],
-    ["/writing/feedback/long/submission-1", true],
-  ])(
-    "hides global floating actions on focus route %s",
-    (pathname, keepsSidebar) => {
-      navMock.pathname = pathname;
+    "/writing/short-answer-writing-51",
+    "/writing/feedback/short/submission-1",
+    "/writing/feedback/long/submission-1",
+    "/writing/reports/report-1/compare",
+    "/practice/next",
+  ])("hides workspace navigation chrome on focus route %s", (pathname) => {
+    navMock.pathname = pathname;
 
-      const { container } = renderWithIntl(
-        <WorkspaceShell
-          role="learner"
-          userId="user-1"
-          email="learner@example.com"
-          planLabel="premium"
-        >
-          <div data-testid="workspace-child">body</div>
-        </WorkspaceShell>,
-      );
+    const { container } = renderWithIntl(
+      <WorkspaceShell
+        role="learner"
+        userId="user-1"
+        email="learner@example.com"
+        planLabel="premium"
+      >
+        <div data-testid="workspace-child">body</div>
+      </WorkspaceShell>,
+    );
 
-      expect(
-        container.querySelector(
-          ".app-notification-corner, .app-workspace-mobile-actions",
-        ),
-      ).toBeNull();
-      expect(Boolean(container.querySelector(".app-workspace-sider"))).toBe(
-        keepsSidebar,
-      );
-    },
-  );
+    expect(container.querySelector(".app-workspace-sider")).toBeNull();
+    expect(container.querySelector(".app-sidebar-shell")).toBeNull();
+    expect(
+      container.querySelector(
+        ".app-notification-corner, .app-workspace-mobile-actions",
+      ),
+    ).toBeNull();
+    expect(container.querySelector(".app-workspace-drawer")).toBeNull();
+  });
 
   it("keeps global floating actions on non-focus workspace routes", () => {
     navMock.pathname = "/dashboard";
@@ -493,28 +492,6 @@ describe("WorkspaceShell", () => {
         ".app-notification-corner, .app-workspace-mobile-actions",
       ),
     ).toBeTruthy();
-  });
-
-  it("keeps global floating actions on comparison report routes", () => {
-    navMock.pathname = "/writing/reports/report-1/compare";
-
-    const { container } = renderWithIntl(
-      <WorkspaceShell
-        role="learner"
-        userId="user-1"
-        email="learner@example.com"
-        planLabel="premium"
-      >
-        <div data-testid="workspace-child">body</div>
-      </WorkspaceShell>,
-    );
-
-    expect(
-      container.querySelector(
-        ".app-notification-corner, .app-workspace-mobile-actions",
-      ),
-    ).toBeTruthy();
-    expect(container.querySelector(".app-workspace-sider")).toBeTruthy();
   });
 
   it("uses a white full-viewport content surface for the onboarding learning goal route", () => {
@@ -600,37 +577,6 @@ describe("WorkspaceShell", () => {
     );
     expect(examRule).toContain("background: var(--app-color-bg-layout);");
   });
-
-  it.each([
-    ["/writing/short-answer-writing-51", false],
-    ["/writing/feedback/short/submission-1", true],
-    ["/writing/feedback/long/submission-1", true],
-  ])(
-    "hides global floating actions on focus route %s",
-    (pathname, keepsSidebar) => {
-      navMock.pathname = pathname;
-
-      const { container } = renderWithIntl(
-        <WorkspaceShell
-          role="learner"
-          userId="user-1"
-          email="learner@example.com"
-          planLabel="premium"
-        >
-          <div data-testid="workspace-child">body</div>
-        </WorkspaceShell>,
-      );
-
-      expect(
-        container.querySelector(
-          ".app-notification-corner, .app-workspace-mobile-actions",
-        ),
-      ).toBeNull();
-      expect(Boolean(container.querySelector(".app-workspace-sider"))).toBe(
-        keepsSidebar,
-      );
-    },
-  );
 
   it("keeps global floating actions on non-focus workspace routes", () => {
     navMock.pathname = "/dashboard";
@@ -787,7 +733,7 @@ describe("WorkspaceShell", () => {
     expect(hasExpandedMenuItem(container, "문제 풀기")).toBe(false);
   });
 
-  it("opens the writing group for nested writing feedback routes", () => {
+  it("omits the sidebar for nested writing feedback routes", () => {
     navMock.pathname = "/writing/feedback/short/submission-1";
 
     const { container } = renderWithIntl(
@@ -801,7 +747,8 @@ describe("WorkspaceShell", () => {
       </WorkspaceShell>,
     );
 
-    expect(hasExpandedMenuItem(container, "쓰기 연습")).toBe(true);
+    expect(container.querySelector(".app-workspace-sider")).toBeNull();
+    expect(container.querySelector(".app-sidebar-menu")).toBeNull();
   });
 
   it.each([

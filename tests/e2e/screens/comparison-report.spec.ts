@@ -415,8 +415,8 @@ test.describe("authenticated comparison report", () => {
     await expect(stickyHeader).toBeVisible();
     await expect(
       page.locator(".app-notification-corner, .app-workspace-mobile-actions"),
-    ).toHaveCount(1);
-    await expect(page.locator(".app-workspace-sider")).toHaveCount(1);
+    ).toHaveCount(0);
+    await expect(page.locator(".app-workspace-sider")).toHaveCount(0);
     mkdirSync("docs/qa/reports/2026-06-26-focus-page-global-actions", {
       recursive: true,
     });
@@ -464,6 +464,12 @@ test.describe("authenticated comparison report", () => {
         "comparison-action-weakness",
         "comparison-action-share",
       ]);
+    await expect(page.getByTestId("comparison-summary-strip")).toBeVisible();
+    await expect(
+      page
+        .getByTestId("comparison-summary-strip")
+        .getByTestId("comparison-action-change-target"),
+    ).toBeVisible();
     expect(
       await page.getByTestId("comparison-kpi-item").count(),
     ).toBeLessThanOrEqual(5);

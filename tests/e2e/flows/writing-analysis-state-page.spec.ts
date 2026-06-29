@@ -132,6 +132,10 @@ test("writing submit keeps analysis state above the read-only answer", async ({
   await expect(page).toHaveURL(/\/writing\/short-answer-writing-51/);
   await expect(page.getByTestId("analysis-loading-modal")).toHaveCount(0);
   await expect(page.getByTestId("analysis-state-card")).toBeVisible();
+  await expect(page.locator(".app-workspace-sider")).toHaveCount(0);
+  await expect(
+    page.locator(".app-notification-corner, .app-workspace-mobile-actions"),
+  ).toHaveCount(0);
   await expect(
     page.getByRole("heading", { name: analysisMessages.title }),
   ).toBeVisible();
@@ -195,6 +199,10 @@ test("writing submit shows failure state without the read-only answer", async ({
 
   await expect(page).toHaveURL(/\/writing\/short-answer-writing-51/);
   await expect(page.getByTestId("analysis-state-card")).toBeVisible();
+  await expect(page.locator(".app-workspace-sider")).toHaveCount(0);
+  await expect(
+    page.locator(".app-notification-corner, .app-workspace-mobile-actions"),
+  ).toHaveCount(0);
   await expect(page.getByTestId("analysis-loading-background")).toHaveCount(0);
   await expect(page.getByTestId("analysis-loading-retry")).toBeVisible();
   await expect(

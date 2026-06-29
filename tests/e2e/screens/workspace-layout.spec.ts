@@ -33,7 +33,6 @@ const EMAIL = process.env.E2E_STUDENT_EMAIL ?? "student@audit.local";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SERVICE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
-const SIDER_WIDTH = 300;
 const MAX_WIDTH_BY_SIZE = {
   form: 640,
   task: 960,
@@ -66,7 +65,6 @@ type BodyMetrics = Rect & {
 // matches every other workspace page.
 const LAYOUT_ROUTES = [
   { route: "/practice/weakness", size: null },
-  { route: "/practice/next", size: "workspace" },
   { route: "/library", size: "workspace" },
   { route: "/profile", size: "workspace" },
   { route: "/settings/account", size: "workspace" },
@@ -451,7 +449,6 @@ test("next problem fixed CTA aligns with the workspace body", async ({
   await expect(page).not.toHaveURL(/\/login/);
   await expect(page.getByTestId("next-selection-bar")).toBeVisible();
 
-  const viewport = page.viewportSize();
   const bodyRect = await rectOf(page.getByTestId("workspace-page-body"));
   const barRect = await rectOf(page.getByTestId("next-selection-bar"));
   const innerRect = await rectOf(
@@ -459,13 +456,13 @@ test("next problem fixed CTA aligns with the workspace body", async ({
   );
 
   await expectNoHorizontalOverflow(page);
+  await expect(page.locator(".app-workspace-sider")).toHaveCount(0);
+  await expect(
+    page.locator(".app-notification-corner, .app-workspace-mobile-actions"),
+  ).toHaveCount(0);
   expect(Math.abs(innerRect.left - bodyRect.left)).toBeLessThanOrEqual(1);
   expect(Math.abs(innerRect.width - bodyRect.width)).toBeLessThanOrEqual(1);
-  if (viewport && viewport.width >= 768) {
-    expect(Math.abs(barRect.left - SIDER_WIDTH)).toBeLessThanOrEqual(1);
-  } else {
-    expect(Math.abs(barRect.left)).toBeLessThanOrEqual(1);
-  }
+  expect(Math.abs(barRect.left)).toBeLessThanOrEqual(1);
 
   expect(errors, errors.join("\n")).toEqual([]);
 });

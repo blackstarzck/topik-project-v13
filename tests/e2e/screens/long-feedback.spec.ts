@@ -206,6 +206,10 @@ test("E-02 long feedback matches the wireframe constraints", async ({ page }) =>
     waitUntil: "networkidle",
   });
   await expect(page).not.toHaveURL(/\/login/);
+  await expect(page.locator(".app-workspace-sider")).toHaveCount(0);
+  await expect(
+    page.locator(".app-notification-corner, .app-workspace-mobile-actions"),
+  ).toHaveCount(0);
 
   await expect(page.getByTestId("feedback-summary")).toBeVisible();
   await expect(page.locator(".ant-statistic")).toBeVisible();

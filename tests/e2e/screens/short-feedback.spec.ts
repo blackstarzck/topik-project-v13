@@ -215,6 +215,10 @@ test("E-01 short feedback matches the wireframe constraints", async ({ page }) =
     waitUntil: "networkidle",
   });
   await expect(page).not.toHaveURL(/\/login/);
+  await expect(page.locator(".app-workspace-sider")).toHaveCount(0);
+  await expect(
+    page.locator(".app-notification-corner, .app-workspace-mobile-actions"),
+  ).toHaveCount(0);
 
   await expect(
     page.getByText("두 빈칸 답안을 기준으로 분석했어요."),

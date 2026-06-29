@@ -219,6 +219,10 @@ test("R-02 next problem recommendation matches the wireframe constraints", async
 
   await page.goto("/practice/next", { waitUntil: "networkidle" });
   await expect(page).not.toHaveURL(/\/login/);
+  await expect(page.locator(".app-workspace-sider")).toHaveCount(0);
+  await expect(
+    page.locator(".app-notification-corner, .app-workspace-mobile-actions"),
+  ).toHaveCount(0);
 
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await expect(page.getByTestId("next-summary-card")).toHaveCount(3);

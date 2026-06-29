@@ -54,6 +54,13 @@ function isRecoverableExternalSubmitError(error: unknown): boolean {
   );
 }
 
+function shouldDisableExternalWritingApiForE2E(): boolean {
+  return (
+    process.env.NODE_ENV !== "production" &&
+    process.env.E2E_DISABLE_EXTERNAL_WRITING_API === "1"
+  );
+}
+
 async function createFailedLocalSubmission({
   serviceSupabase,
   userId,
@@ -118,7 +125,9 @@ export async function submitWritingAction(
     redirect(`${ACCOUNT_INACTIVE_PATH}?status=${accountStatus ?? "deleted"}`);
   }
 
-  const externalBaseUrl = getTalkpikApiBaseUrl();
+  const externalBaseUrl = shouldDisableExternalWritingApiForE2E()
+    ? null
+    : getTalkpikApiBaseUrl();
   if (externalBaseUrl) {
     const {
       data: { session },

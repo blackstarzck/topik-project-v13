@@ -121,6 +121,12 @@
     padding: 16px;
   }
 
+  .app-workspace-layout--chrome-hidden
+    .app-workspace-content.ant-layout-content {
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
   /* 모바일 콘텐츠는 상단 바(64px)만큼 더 줄어드므로 본문 채움 높이도 함께 뺀다.
      모바일 content padding은 위 .app-workspace-content 규칙에서 16px로 직접 지정된다.
      --workspace-content-padding-block 변수는 base 선택자(.app-workspace-layout.ant-layout,
@@ -131,6 +137,12 @@
     min-height: calc(
       max(100vh, 100dvh) - var(--workspace-mobile-bar-height) - 16px * 2
     );
+  }
+
+  .app-workspace-layout--chrome-hidden
+    .app-workspace-body[data-testid="workspace-page-body"] {
+    min-height: calc(100vh - 16px * 2);
+    min-height: calc(100dvh - 16px * 2);
   }
 
   .app-workspace-content--feedback-flush.ant-layout-content {
@@ -163,5 +175,9 @@
   .app-workspace-fixed-action-bar {
     left: var(--workspace-sider-width);
     padding-inline: 24px;
+  }
+
+  .app-workspace-layout--chrome-hidden .app-workspace-fixed-action-bar {
+    left: 0;
   }
 }
