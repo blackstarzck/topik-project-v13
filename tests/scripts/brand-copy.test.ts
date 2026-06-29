@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 const DEPRECATED_BRAND = ["TOPIK", "AI"].join(" ");
 const SCAN_ROOTS = ["src", "scripts", "supabase"];
+const SKIPPED_DIRECTORIES = new Set([".temp"]);
 const TEXT_EXTENSIONS = new Set([
   ".css",
   ".js",
@@ -20,6 +21,10 @@ function collectTextFiles(root: string): string[] {
   const files: string[] = [];
 
   for (const entry of entries) {
+    if (SKIPPED_DIRECTORIES.has(entry)) {
+      continue;
+    }
+
     const absolutePath = path.join(absoluteRoot, entry);
     const stats = statSync(absolutePath);
 
