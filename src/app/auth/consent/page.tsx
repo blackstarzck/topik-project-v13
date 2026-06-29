@@ -12,7 +12,7 @@ import { PublicShell } from "@/components/shared/PublicShell";
 import { resolveLocaleForProfile } from "@/i18n/request";
 import { sanitizeAuthCompletionNext } from "@/lib/auth/completion-routes";
 import { getMissingRequiredProfileFields } from "@/lib/auth/profile-completion";
-import { requireActiveSession } from "@/lib/auth/profile";
+import { requireVerifiedActiveSession } from "@/lib/auth/access-gate";
 import {
   generateRandomNickname,
   getMissingRequiredConsentDocuments,
@@ -53,7 +53,7 @@ export default async function AuthConsentPage({
     "/auth/post-auth?intent=login",
   );
   const error = parseError(pickFirst(params.error));
-  const { user, profile } = await requireActiveSession();
+  const { user, profile } = await requireVerifiedActiveSession();
   const missingProfileFields = getMissingRequiredProfileFields(profile);
   const consentLocale = await resolveLocaleForProfile(profile);
   const missingDocuments = await getMissingRequiredConsentDocuments(

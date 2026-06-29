@@ -19,6 +19,7 @@ vi.mock("next/headers", () => ({
 }));
 
 vi.mock("@/lib/auth/profile", () => ({
+  isActiveStatus: (status: string | null | undefined) => status === "active",
   requireActiveSession: (...args: unknown[]) =>
     requireActiveSessionMock(...args),
 }));
@@ -61,7 +62,11 @@ describe("completeAuthGateAction", () => {
     redirectMock.mockClear();
     requireActiveSessionMock.mockReset();
     requireActiveSessionMock.mockResolvedValue({
-      user: { id: "user-1" },
+      user: {
+        id: "user-1",
+        email: "student@example.com",
+        email_confirmed_at: "2026-06-29T00:00:00.000Z",
+      },
       profile: completeProfile,
     });
     getMissingRequiredConsentDocumentsMock.mockReset();
@@ -87,9 +92,33 @@ describe("completeAuthGateAction", () => {
     expect(createSupabaseServerClientMock).not.toHaveBeenCalled();
   });
 
+  it("redirects active email-unverified users before reading documents or calling the RPC", async () => {
+    requireActiveSessionMock.mockResolvedValueOnce({
+      user: {
+        id: "user-1",
+        email: "student@example.com",
+        email_confirmed_at: null,
+      },
+      profile: completeProfile,
+    });
+
+    await expect(
+      completeAuthGateAction(makeForm({ next: "/dashboard" })),
+    ).rejects.toThrow(
+      "NEXT_REDIRECT:/auth/verify-email?email=student%40example.com",
+    );
+
+    expect(getMissingRequiredConsentDocumentsMock).not.toHaveBeenCalled();
+    expect(createSupabaseServerClientMock).not.toHaveBeenCalled();
+  });
+
   it("redirects with required when a missing profile field is not submitted", async () => {
     requireActiveSessionMock.mockResolvedValueOnce({
-      user: { id: "user-1" },
+      user: {
+        id: "user-1",
+        email: "student@example.com",
+        email_confirmed_at: "2026-06-29T00:00:00.000Z",
+      },
       profile: { ...completeProfile, display_name: null },
     });
 
@@ -104,7 +133,11 @@ describe("completeAuthGateAction", () => {
 
   it("preserves the sign-up post-auth return path on required errors", async () => {
     requireActiveSessionMock.mockResolvedValueOnce({
-      user: { id: "user-1" },
+      user: {
+        id: "user-1",
+        email: "student@example.com",
+        email_confirmed_at: "2026-06-29T00:00:00.000Z",
+      },
       profile: { ...completeProfile, nationality_country_code: null },
     });
 
@@ -124,7 +157,11 @@ describe("completeAuthGateAction", () => {
     const rpc = vi.fn().mockResolvedValue({ data: null, error: null });
     createSupabaseServerClientMock.mockResolvedValueOnce({ rpc });
     requireActiveSessionMock.mockResolvedValueOnce({
-      user: { id: "user-1" },
+      user: {
+        id: "user-1",
+        email: "student@example.com",
+        email_confirmed_at: "2026-06-29T00:00:00.000Z",
+      },
       profile: {
         ...completeProfile,
         display_name: null,
@@ -160,7 +197,11 @@ describe("completeAuthGateAction", () => {
     const rpc = vi.fn().mockResolvedValue({ data: null, error: null });
     createSupabaseServerClientMock.mockResolvedValueOnce({ rpc });
     requireActiveSessionMock.mockResolvedValueOnce({
-      user: { id: "user-1" },
+      user: {
+        id: "user-1",
+        email: "student@example.com",
+        email_confirmed_at: "2026-06-29T00:00:00.000Z",
+      },
       profile: {
         ...completeProfile,
         display_name: null,
@@ -199,7 +240,11 @@ describe("completeAuthGateAction", () => {
     const rpc = vi.fn().mockResolvedValue({ data: null, error: null });
     createSupabaseServerClientMock.mockResolvedValueOnce({ rpc });
     requireActiveSessionMock.mockResolvedValueOnce({
-      user: { id: "user-1" },
+      user: {
+        id: "user-1",
+        email: "student@example.com",
+        email_confirmed_at: "2026-06-29T00:00:00.000Z",
+      },
       profile: {
         ...completeProfile,
         ui_locale: "ko",
@@ -229,7 +274,11 @@ describe("completeAuthGateAction", () => {
 
   it("validates a submitted nickname even when the profile already has one", async () => {
     requireActiveSessionMock.mockResolvedValueOnce({
-      user: { id: "user-1" },
+      user: {
+        id: "user-1",
+        email: "student@example.com",
+        email_confirmed_at: "2026-06-29T00:00:00.000Z",
+      },
       profile: { ...completeProfile, display_name: null },
     });
 
@@ -260,7 +309,11 @@ describe("completeAuthGateAction", () => {
       }),
     });
     requireActiveSessionMock.mockResolvedValueOnce({
-      user: { id: "user-1" },
+      user: {
+        id: "user-1",
+        email: "student@example.com",
+        email_confirmed_at: "2026-06-29T00:00:00.000Z",
+      },
       profile: { ...completeProfile, nickname: null },
     });
 
@@ -291,7 +344,11 @@ describe("completeAuthGateAction", () => {
       }),
     });
     requireActiveSessionMock.mockResolvedValueOnce({
-      user: { id: "user-1" },
+      user: {
+        id: "user-1",
+        email: "student@example.com",
+        email_confirmed_at: "2026-06-29T00:00:00.000Z",
+      },
       profile: { ...completeProfile, display_name: null },
     });
     getMissingRequiredConsentDocumentsMock.mockResolvedValueOnce([

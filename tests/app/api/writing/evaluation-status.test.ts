@@ -39,7 +39,13 @@ describe("GET /api/writing/evaluation-status", () => {
     vi.clearAllMocks();
     process.env.TALKPIK_API_BASE_URL = "https://api.example.test";
     helpers.getUserMock.mockResolvedValue({
-      data: { user: { id: "user-1" } },
+      data: {
+        user: {
+          id: "user-1",
+          email: "student@example.com",
+          email_confirmed_at: "2026-06-29T00:00:00.000Z",
+        },
+      },
     });
     helpers.getSessionMock.mockResolvedValue({
       data: { session: { access_token: "learner-token" } },
@@ -126,6 +132,30 @@ describe("GET /api/writing/evaluation-status", () => {
         sentences: [{ sentence_index: 0, original_text: "A", corrected_text: "B" }],
       },
     );
+  });
+
+  it("rejects email-unverified sessions before reading user data", async () => {
+    helpers.getUserMock.mockResolvedValueOnce({
+      data: {
+        user: {
+          id: "user-1",
+          email: "student@example.com",
+          email_confirmed_at: null,
+        },
+      },
+    });
+
+    const response = await GET(
+      new Request(
+        "http://localhost/api/writing/evaluation-status?submissionId=00000000-0000-0000-0000-000000000099",
+      ),
+    );
+
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toEqual({
+      error: "email_unverified",
+    });
+    expect(helpers.fromMock).not.toHaveBeenCalled();
   });
 
   it("does not sync feedback when the external status id does not match the local submission", async () => {

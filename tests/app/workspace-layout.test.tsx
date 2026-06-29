@@ -34,7 +34,11 @@ vi.mock("@/lib/auth/completion", () => ({
 import WorkspaceLayout from "../../src/app/(workspace)/layout";
 
 const session = {
-  user: { id: "user-1", email: "student@example.com" },
+  user: {
+    id: "user-1",
+    email: "student@example.com",
+    email_confirmed_at: "2026-06-29T00:00:00.000Z",
+  },
   profile: {
     app_role: "student",
     display_name: "Chan",
@@ -99,6 +103,20 @@ describe("(workspace) layout auth completion guard", () => {
     );
 
     expect(getAuthCompletionStatusForSessionMock).not.toHaveBeenCalled();
+  });
+
+  it("redirects active email-unverified users before rendering workspace shell", async () => {
+    getSessionAndProfileMock.mockResolvedValue({
+      ...session,
+      user: { ...session.user, email_confirmed_at: null },
+    });
+
+    await expect(renderLayout()).rejects.toThrow(
+      "NEXT_REDIRECT:/auth/verify-email?email=student%40example.com",
+    );
+
+    expect(getAuthCompletionStatusForSessionMock).not.toHaveBeenCalled();
+    expect(workspaceShellMock).not.toHaveBeenCalled();
   });
 
   it("redirects users with incomplete auth completion back into post-auth", async () => {

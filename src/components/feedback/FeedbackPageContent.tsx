@@ -1,8 +1,9 @@
 "use client";
 
-import { Alert, Typography } from "antd";
+import { Alert } from "antd";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import { ReportPageHeader } from "@/components/shared/ReportPageHeader";
 import { DetailedFeedbackPanel } from "./DetailedFeedbackPanel";
 import { DimensionCardGrid } from "./DimensionCardGrid";
 import { FeedbackRecommendationCards } from "./FeedbackRecommendationCards";
@@ -13,8 +14,6 @@ import { SentenceFeedbackList } from "./SentenceFeedbackList";
 import { extractExternalFeedbackSupplement } from "@/lib/writing/external-feedback";
 import { writingProblemHref } from "@/lib/writing/routes";
 import type { FeedbackBundle, WritingSubmissionRow } from "@/lib/writing/types";
-
-const { Title } = Typography;
 
 type ReportTranslator = (
   key: string,
@@ -96,16 +95,10 @@ export function FeedbackPageContent({
       }
     >
       {showStickyReportHeader ? (
-        <div
-          data-testid="feedback-page-header"
-          className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85"
-        >
-          <div className="app-workspace-body app-workspace-body--workspace flex w-full flex-col gap-3 px-4 py-4 pr-16 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:pr-20">
-            <div className="min-w-0">
-              <Title level={3} className="!m-0 text-2xl">
-                {tReport("title", { questionNo: submission.question_no })}
-              </Title>
-            </div>
+        <ReportPageHeader
+          testId="feedback-page-header"
+          title={tReport("title", { questionNo: submission.question_no })}
+          actions={
             <FeedbackActionGroup
               key={submission.id}
               submissionId={submission.id}
@@ -119,10 +112,9 @@ export function FeedbackPageContent({
               retryDisabled={retryDisabled}
               retryDisabledReason={retryDisabledReason}
               variant="header"
-              className="shrink-0"
             />
-          </div>
-        </div>
+          }
+        />
       ) : null}
 
       <div

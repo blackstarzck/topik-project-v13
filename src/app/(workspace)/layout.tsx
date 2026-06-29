@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { WorkspaceShell } from "@/components/app/WorkspaceShell";
+import { buildVerifyEmailPath, isEmailVerified } from "@/lib/auth/access-gate";
 import { getAuthCompletionStatusForSession } from "@/lib/auth/completion";
 import {
   ACCOUNT_INACTIVE_PATH,
@@ -25,6 +26,9 @@ export default async function WorkspaceLayout({
   // 서버 컴포넌트는 쿠키를 못 지우므로 쿠키 정리용 GET route 로 보낸다(루프 방지).
   if (!isActiveStatus(session.profile.status)) {
     redirect(`${ACCOUNT_INACTIVE_PATH}?status=${session.profile.status}`);
+  }
+  if (!isEmailVerified(session.user)) {
+    redirect(buildVerifyEmailPath(session.user));
   }
   const completionStatus = await getAuthCompletionStatusForSession(session);
   if (

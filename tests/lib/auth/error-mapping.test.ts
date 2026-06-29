@@ -42,6 +42,12 @@ describe("mapSupabaseErrorCode", () => {
       "bad_code_verifier",
     );
   });
+
+  it("maps provider email verification failures to the existing email recovery UX", () => {
+    expect(mapSupabaseErrorCode("provider_email_needs_verification")).toBe(
+      "email_not_confirmed",
+    );
+  });
 });
 
 describe("isValidReason", () => {

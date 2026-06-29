@@ -17,6 +17,7 @@ import type { NextRequest } from "next/server";
 import { renderToBuffer } from "@react-pdf/renderer";
 import dayjs from "dayjs";
 
+import { isEmailVerified } from "@/lib/auth/access-gate";
 import { fetchProfileStatus, isActiveStatus } from "@/lib/auth/profile";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
@@ -65,6 +66,9 @@ export async function POST(request: NextRequest) {
   }
   // 회원 탈퇴(deleted)/차단(blocked) 계정 차단. /api/* 는 proxy 매처 제외라
   // 세션 기반 라우트가 직접 status 를 검증한다.
+  if (!isEmailVerified(user)) {
+    return NextResponse.json({ error: "email_unverified" }, { status: 403 });
+  }
   if (!isActiveStatus(await fetchProfileStatus(supabase, user.id))) {
     return NextResponse.json({ error: "account_inactive" }, { status: 403 });
   }

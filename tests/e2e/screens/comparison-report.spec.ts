@@ -272,18 +272,21 @@ test.describe("authenticated comparison report", () => {
     await expect(headerTitle).toHaveCSS("margin-bottom", "0px");
     const headerLearningActions = page
       .getByTestId("comparison-page-header")
-      .locator(".app-page-header")
       .getByTestId("comparison-next-actions");
     await expect(headerLearningActions).toBeVisible();
     await expect(
-      page
-        .locator(".app-page-header__actions")
-        .getByTestId("comparison-action-share"),
+      page.getByTestId("comparison-page-header").locator(".app-page-header"),
+    ).toHaveCount(0);
+    await expect(
+      page.getByTestId("report-page-header-actions").getByTestId(
+        "comparison-action-share",
+      ),
     ).toBeVisible();
     await expect
       .poll(async () =>
         page
-          .locator(".app-page-header__actions button")
+          .getByTestId("report-page-header-actions")
+          .locator("button")
           .evaluateAll((buttons) =>
             buttons.map((button) => button.getAttribute("data-testid")),
           ),
@@ -316,11 +319,11 @@ test.describe("authenticated comparison report", () => {
     await expect(page.getByTestId("comparison-action-weakness")).toBeEnabled();
     await expect(
       page.getByTestId("comparison-next-actions").locator("button"),
-    ).toHaveCount(3);
+    ).toHaveCount(4);
     await expect(
-      page
-        .locator(".app-page-header ~ *")
-        .getByTestId("comparison-next-actions"),
+      page.getByTestId("comparison-page-body").getByTestId(
+        "comparison-next-actions",
+      ),
     ).toHaveCount(0);
 
     expect(errors).toEqual([]);

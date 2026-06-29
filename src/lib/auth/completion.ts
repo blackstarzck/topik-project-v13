@@ -1,5 +1,6 @@
 import type { User } from "@supabase/supabase-js";
 
+import { isEmailVerified } from "@/lib/auth/access-gate";
 import { bootstrapProfile, getSessionAndProfile } from "@/lib/auth/profile";
 import type {
   AuthCompletionStatus,
@@ -65,6 +66,7 @@ export async function getCurrentLandingAuthStatus(): Promise<LandingAuthStatus> 
   }
 
   if (!user) return "anonymous";
+  if (!isEmailVerified(user)) return "email-unverified";
 
   try {
     const profile = await bootstrapProfile(user.id);

@@ -18,4 +18,14 @@ describe("/auth/consent page", () => {
     expect(source).toContain("getMissingRequiredConsentDocuments(\n    user.id,\n    consentLocale,");
     expect(source).not.toContain("getMissingRequiredConsentDocuments(\n    user.id,\n    profile.ui_locale,");
   });
+
+  it("checks email verification before loading consent documents", () => {
+    const source = readFileSync("src/app/auth/consent/page.tsx", "utf8");
+
+    expect(source).toContain("requireVerifiedActiveSession");
+    expect(source).not.toContain("requireActiveSession");
+    expect(source.indexOf("requireVerifiedActiveSession")).toBeLessThan(
+      source.indexOf("getMissingRequiredConsentDocuments"),
+    );
+  });
 });
