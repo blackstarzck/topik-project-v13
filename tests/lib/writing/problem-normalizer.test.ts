@@ -99,6 +99,82 @@ describe("normalizeWritingProblem", () => {
     expect(normalized.charLimit.hardMax).toBe(120);
   });
 
+  it("normalizes SOT 7.2 q51 top-level metadata for learner-safe guide content", () => {
+    const normalized = normalizeWritingProblem({
+      id: "q51-sot-top-level",
+      title: "학생증 재발급 문의",
+      prompt:
+        "저는 어제 학생증이 들어 있는 지갑을 잃어버렸습니다. 도서관을 이용하는 데 학생증이 꼭 필요하여 새로 ( ㄱ ). 필요한 서류를 ( ㄴ ).",
+      questionNo: 51,
+      materials: {
+        text_type: "문의형 게시글",
+        relation: "학생-도서관",
+        speech_act: "요청",
+        situation_summary: "학생증을 잃어버린 뒤 재발급 절차를 문의함",
+        learning_goal_summary: "필요한 서류를 자연스럽게 묻는 표현",
+        blank_count: 2,
+        blank_1_position: "ㄱ",
+        blank_1_role: "문맥 세팅",
+        blank_1_function: "재발급 의도 제시",
+        blank_1_answer_type: "어중 표현",
+        blank_1_canonical_answer: "발급받으려고 합니다",
+        blank_1_accepted_answers: ["발급받고 싶습니다"],
+        blank_2_position: "ㄴ",
+        blank_2_role: "종결 화행",
+        blank_2_function: "정보 요청",
+        blank_2_answer_type: "어말 표현",
+        blank_2_canonical_answer: "알려 주시면 감사하겠습니다",
+        blank_2_accepted_synonyms: ["안내해 주시면 감사하겠습니다"],
+        validation_result: {
+          slot_role_passed: true,
+          register_passed: true,
+        },
+      },
+      answerKey: {},
+      rubric: null,
+      lifecycleStatus: "active",
+    });
+
+    expect(normalized.kind).toBe("q51");
+    if (normalized.kind !== "q51") throw new Error("expected q51");
+    expect(normalized.blanks).toMatchObject([
+      {
+        key: "ㄱ",
+        label: "ㄱ",
+        role: "문맥 세팅",
+        functionLabel: "재발급 의도 제시",
+        answerType: "어중 표현",
+        targetHint: null,
+      },
+      {
+        key: "ㄴ",
+        label: "ㄴ",
+        role: "종결 화행",
+        functionLabel: "정보 요청",
+        answerType: "어말 표현",
+        targetHint: null,
+      },
+    ]);
+    expect(normalized.validationMessages).toEqual([
+      "상황 요약: 학생증을 잃어버린 뒤 재발급 절차를 문의함",
+      "관계: 학생-도서관",
+      "화행: 요청",
+      "학습 목표: 필요한 서류를 자연스럽게 묻는 표현",
+    ]);
+    expect(normalized.rubric.criteria).toEqual([
+      "ㄱ 역할: 문맥 세팅",
+      "ㄱ 기능: 재발급 의도 제시",
+      "ㄱ 답안 유형: 어중 표현",
+      "ㄴ 역할: 종결 화행",
+      "ㄴ 기능: 정보 요청",
+      "ㄴ 답안 유형: 어말 표현",
+    ]);
+    const serialized = JSON.stringify(normalized);
+    expect(serialized).not.toContain("발급받으려고 합니다");
+    expect(serialized).not.toContain("발급받고 싶습니다");
+    expect(serialized).not.toContain("slot_role_passed");
+  });
+
   it("does not expose blank_target_* authoring memo as a learner hint (answer leak guard)", () => {
     // blank_target_giyeok/nieun은 원문 정답 구간을 그대로 담은 검수 메모다.
     // 학습자 풀이 화면 힌트(targetHint)로 노출되면 정답이 새어 나간다.
@@ -160,6 +236,60 @@ describe("normalizeWritingProblem", () => {
     });
 
     expect(normalized.textType).toBe("Inquiry email");
+  });
+
+  it("normalizes SOT 7.3 q52 top-level metadata before generic fallbacks", () => {
+    const normalized = normalizeWritingProblem({
+      id: "q52-sot-top-level",
+      title: "축제 쓰레기 배출 장소 안내",
+      prompt:
+        "축제에서는 많은 쓰레기가 발생한다. 그런데 쓰레기를 버리는 장소가 ( ㄱ ) 사람들은 쓰레기를 아무렇게나 버리기 쉽다. 그러면 쓰레기가 행사장 곳곳에 흩어져 ( ㄴ ).",
+      questionNo: 52,
+      materials: {
+        text_type: "설명문",
+        relation: "공지-참가자",
+        speech_act: "설명",
+        situation_summary: "축제장 쓰레기 배출 장소 안내",
+        learning_goal_summary: "조건과 결과를 자연스럽게 연결",
+        blank_count: 2,
+        completion_unit: "문장",
+        connection_function: "조건",
+        required_expression_function: "결과 설명",
+        clue_before_text: "쓰레기를 버리는 장소가",
+        clue_after_text: "사람들은 쓰레기를 아무렇게나 버리기 쉽다",
+        paragraph_role: "문제 상황 설명",
+        cohesion_focus: "조건-결과 연결",
+        scoring_notes: "두 빈칸이 한 흐름으로 이어져야 함",
+        blank_1_canonical_answer: "분명히 표시되어 있지 않으면",
+        blank_2_canonical_answer: "정리가 어려워진다",
+      },
+      answerKey: {},
+      rubric: null,
+      lifecycleStatus: "active",
+    });
+
+    expect(normalized.kind).toBe("q52");
+    if (normalized.kind !== "q52") throw new Error("expected q52");
+    expect(normalized.rubric.conditions).toEqual([
+      "연결 기능: 조건",
+      "요구 표현 기능: 결과 설명",
+    ]);
+    expect(normalized.rubric.criteria).toEqual([
+      "앞문장 단서: 쓰레기를 버리는 장소가",
+      "뒷문장 단서: 사람들은 쓰레기를 아무렇게나 버리기 쉽다",
+      "문단 역할: 문제 상황 설명",
+      "응집성 초점: 조건-결과 연결",
+      "채점 메모: 두 빈칸이 한 흐름으로 이어져야 함",
+    ]);
+    expect(normalized.validationMessages).toEqual([
+      "상황 요약: 축제장 쓰레기 배출 장소 안내",
+      "관계: 공지-참가자",
+      "화행: 설명",
+      "학습 목표: 조건과 결과를 자연스럽게 연결",
+    ]);
+    const serialized = JSON.stringify(normalized);
+    expect(serialized).not.toContain("분명히 표시되어 있지 않으면");
+    expect(serialized).not.toContain("정리가 어려워진다");
   });
 
   it("normalizes seeded 53 chart/material shape", () => {

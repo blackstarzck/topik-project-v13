@@ -14,6 +14,7 @@ export type NormalizedBlank = {
   key: "ㄱ" | "ㄴ" | string;
   label: string;
   role: string | null;
+  functionLabel: string | null;
   answerType: string | null;
   targetHint: string | null;
 };
@@ -307,12 +308,82 @@ function normalizeRubric(
   };
 }
 
-function blankFrom(record: AnyRecord | null, key: string): NormalizedBlank {
+function formattedMetadata(label: string, value: unknown): string | null {
+  const text = asString(value);
+  return text ? `${label}: ${text}` : null;
+}
+
+function shortGuideMessages(materials: AnyRecord | null): string[] {
+  return [
+    formattedMetadata("상황 요약", materials?.situation_summary),
+    formattedMetadata("관계", materials?.relation),
+    formattedMetadata("화행", materials?.speech_act),
+    formattedMetadata("학습 목표", materials?.learning_goal_summary),
+  ].filter((item): item is string => Boolean(item));
+}
+
+function blankRecord(
+  source: AnyRecord | null,
+  blankKey: string,
+  label: string,
+): AnyRecord | null {
+  return (
+    asRecord(source?.[blankKey]) ??
+    Object.values(source ?? {})
+      .map(asRecord)
+      .find((item) => item?.position === label) ??
+    null
+  );
+}
+
+function blankRole(
+  materials: AnyRecord | null,
+  record: AnyRecord | null,
+  blankKey: string,
+): string | null {
+  return (
+    getNestedString(materials, `${blankKey}_role`) ??
+    asString(record?.role) ??
+    asString(record?.blank_role)
+  );
+}
+
+function blankFunctionLabel(
+  materials: AnyRecord | null,
+  record: AnyRecord | null,
+  blankKey: string,
+): string | null {
+  return (
+    getNestedString(materials, `${blankKey}_function`) ??
+    asString(record?.function) ??
+    asString(record?.blank_function) ??
+    asString(record?.function_label)
+  );
+}
+
+function blankAnswerType(
+  materials: AnyRecord | null,
+  record: AnyRecord | null,
+  blankKey: string,
+): string | null {
+  return (
+    getNestedString(materials, `${blankKey}_answer_type`) ??
+    asString(record?.answer_type)
+  );
+}
+
+function blankFrom(
+  record: AnyRecord | null,
+  key: string,
+  materials: AnyRecord | null,
+  blankKey: string,
+): NormalizedBlank {
   return {
     key,
     label: key,
-    role: asString(record?.role),
-    answerType: asString(record?.answer_type),
+    role: blankRole(materials, record, blankKey),
+    functionLabel: blankFunctionLabel(materials, record, blankKey),
+    answerType: blankAnswerType(materials, record, blankKey),
     targetHint: null,
   };
 }
@@ -322,6 +393,10 @@ function extractBlanks(
   materials: AnyRecord | null,
 ): NormalizedBlank[] {
   const source = getNestedRecord(materials, "blanks") ?? materials;
+  const sotLabels = [
+    getNestedString(materials, "blank_1_position"),
+    getNestedString(materials, "blank_2_position"),
+  ].filter((label): label is string => Boolean(label));
   const labels = Array.from(
     new Set(
       Array.from(
@@ -331,20 +406,18 @@ function extractBlanks(
     ),
   );
   const fallbackLabels =
-    labels.length > 0 ||
-    (!source?.blank_target_giyeok && !source?.blank_target_nieun)
+    labels.length > 0
       ? labels
-      : ["ㄱ", "ㄴ"];
+      : sotLabels.length > 0
+        ? sotLabels
+        : !source?.blank_target_giyeok && !source?.blank_target_nieun
+          ? labels
+          : ["ㄱ", "ㄴ"];
 
   return fallbackLabels.map((label, index) => {
     const blankKey = index === 0 ? "blank_1" : "blank_2";
-    const record =
-      asRecord(source?.[blankKey]) ??
-      Object.values(source ?? {})
-        .map(asRecord)
-        .find((item) => item?.position === label) ??
-      null;
-    const blank = blankFrom(record, label);
+    const record = blankRecord(source, blankKey, label);
+    const blank = blankFrom(record, label, materials, blankKey);
     // acceptedAnswers(정답 목록)와 blank_target_giyeok/nieun(원문 정답 구간을
     // 담은 검수 메모, 예: "ㄱ: 8행에서 '참가하고 싶으신 분들은' 구간 전체를
     // 빈칸으로 지정")은 정답을 드러내므로 학습자에게 전달하는 NormalizedBlank에
@@ -356,6 +429,33 @@ function extractBlanks(
       targetHint: null,
     };
   });
+}
+
+function q51BlankCriteria(blanks: NormalizedBlank[]): string[] {
+  return blanks
+    .flatMap((blank) => [
+      formattedMetadata(`${blank.label} 역할`, blank.role),
+      formattedMetadata(`${blank.label} 기능`, blank.functionLabel),
+      formattedMetadata(`${blank.label} 답안 유형`, blank.answerType),
+    ])
+    .filter((item): item is string => Boolean(item));
+}
+
+function q52Conditions(materials: AnyRecord | null): string[] {
+  return [
+    formattedMetadata("연결 기능", materials?.connection_function),
+    formattedMetadata("요구 표현 기능", materials?.required_expression_function),
+  ].filter((item): item is string => Boolean(item));
+}
+
+function q52Criteria(materials: AnyRecord | null): string[] {
+  return [
+    formattedMetadata("앞문장 단서", materials?.clue_before_text),
+    formattedMetadata("뒷문장 단서", materials?.clue_after_text),
+    formattedMetadata("문단 역할", materials?.paragraph_role),
+    formattedMetadata("응집성 초점", materials?.cohesion_focus),
+    formattedMetadata("채점 메모", materials?.scoring_notes),
+  ].filter((item): item is string => Boolean(item));
 }
 
 function normalizeChart(id: string, raw: unknown): NormalizedChart | null {
@@ -740,12 +840,27 @@ export function normalizeWritingProblem(
     const blankConditions = blanks
       .map((blank) => blank.targetHint ?? blank.role)
       .filter((item): item is string => Boolean(item));
+    const guideMessages = shortGuideMessages(materials);
+    const sotQ51Criteria = q51BlankCriteria(blanks);
+    const sotQ52Conditions = q52Conditions(materials);
+    const sotQ52Criteria = q52Criteria(materials);
     const rubric = {
       conditions:
-        input.questionNo === 52 && blankConditions.length > 0
-          ? blankConditions.slice(0, 4)
+        input.questionNo === 52
+          ? (
+              sotQ52Conditions.length > 0
+                ? sotQ52Conditions
+                : blankConditions.length > 0
+                  ? blankConditions
+                  : baseRubric.conditions
+            ).slice(0, 5)
           : baseRubric.conditions,
-      criteria: baseRubric.criteria,
+      criteria:
+        input.questionNo === 51 && sotQ51Criteria.length > 0
+          ? sotQ51Criteria.slice(0, 6)
+          : input.questionNo === 52 && sotQ52Criteria.length > 0
+            ? sotQ52Criteria.slice(0, 5)
+            : baseRubric.criteria,
     };
     // 채점 rubric은 외부 백엔드가 question_id로 로드하므로 v13 rubric(표시용)이 비어도
     // 제출을 막지 않는다. q51과 동일하게 빈칸 존재 여부로만 완결성을 판단한다.
@@ -762,9 +877,10 @@ export function normalizeWritingProblem(
       blanks,
       answerMode: "single_text" as const,
       charLimit: getCharLimit(input.questionNo),
-      validationMessages: asStringList(
-        getNestedRecord(materials, "review")?.validation,
-      ),
+      validationMessages:
+        guideMessages.length > 0
+          ? guideMessages
+          : asStringList(getNestedRecord(materials, "review")?.validation),
       rubric,
       submitBlockedReason: nextSubmitBlockedReason,
     };

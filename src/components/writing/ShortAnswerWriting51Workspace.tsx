@@ -87,6 +87,16 @@ function uniqueNonEmpty(items: Array<string | null | undefined>) {
   );
 }
 
+function blankHintText(blank: NormalizedBlank, fallback: string) {
+  const parts = uniqueNonEmpty([
+    blank.targetHint,
+    blank.role,
+    blank.functionLabel,
+    blank.answerType,
+  ]);
+  return parts.length > 0 ? parts.join(" · ") : fallback;
+}
+
 export function ShortAnswerWriting51Workspace({
   userId,
   problem,
@@ -186,7 +196,7 @@ export function ShortAnswerWriting51Workspace({
         .map((blank, index) => ({
           blank,
           index,
-          hint: blank.targetHint ?? blank.role,
+          hint: blankHintText(blank, tPage("answerHintFallback")),
         }))
         .filter(
           (
@@ -194,7 +204,7 @@ export function ShortAnswerWriting51Workspace({
           ): item is { blank: NormalizedBlank; index: number; hint: string } =>
             Boolean(item.hint?.trim()),
         ),
-    [problem.blanks],
+    [problem.blanks, tPage],
   );
 
   useEffect(() => {
@@ -459,9 +469,9 @@ export function ShortAnswerWriting51Workspace({
                       type="secondary"
                       className="writing-answer-card__hint"
                     >
-                      {activeBlank?.targetHint ??
-                        activeBlank?.role ??
-                        tPage("answerHintFallback")}
+                      {activeBlank
+                        ? blankHintText(activeBlank, tPage("answerHintFallback"))
+                        : tPage("answerHintFallback")}
                     </Paragraph>
                   </div>
                   <Text type={inRecommended ? "success" : "secondary"}>
