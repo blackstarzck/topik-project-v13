@@ -1,8 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Alert, Button, Input, Progress, Typography } from "antd";
-import { Lightbulb, PenLine, Sparkles } from "@/components/shared/AppIcons";
+import { Alert, Button, Collapse, Input, Progress, Typography } from "antd";
+import {
+  Eye,
+  Lightbulb,
+  PenLine,
+  Plus,
+  Sparkles,
+} from "@/components/shared/AppIcons";
 import { useTranslations } from "next-intl";
 
 import { logStudyEvent } from "@/lib/events/study-events";
@@ -164,13 +170,26 @@ export function ShortAnswerWriting52Workspace({
     tPage("expressionHint3"),
     tPage("expressionHint4"),
   ];
-  const conditionItems = useMemo(
-    () => uniqueNonEmpty(problem.rubric.conditions.slice(0, 4)),
+  const guideMessages = useMemo(
+    () => uniqueNonEmpty(problem.rubric.conditions),
     [problem.rubric.conditions],
   );
-  const guideMessages = useMemo(
-    () => uniqueNonEmpty(problem.validationMessages.slice(0, 2)),
-    [problem.validationMessages],
+  const writingTips = useMemo(
+    () =>
+      uniqueNonEmpty([
+        ...problem.validationMessages,
+        ...problem.rubric.criteria,
+      ]),
+    [problem.validationMessages, problem.rubric.criteria],
+  );
+  const blankHints = useMemo(
+    () =>
+      problem.blanks.map((blank, index) => ({
+        blank,
+        index,
+        hint: blank.targetHint ?? blank.role ?? tPage("answerHintFallback"),
+      })),
+    [problem.blanks, tPage],
   );
 
   useEffect(() => {
@@ -400,30 +419,28 @@ export function ShortAnswerWriting52Workspace({
             />
 
             <section className="writing-answer-panel">
-              {problem.blanks.length > 0 ? (
-                <div
-                  className="writing-blank-tabs"
-                  role="tablist"
-                  aria-label={tPage("blankTabsLabel")}
-                >
-                  {problem.blanks.map((blank, index) => (
-                    <button
-                      key={blank.key}
-                      type="button"
-                      role="tab"
-                      aria-selected={index === activeBlankIndex}
-                      className={
-                        index === activeBlankIndex
-                          ? "writing-blank-tab writing-blank-tab--active"
-                          : "writing-blank-tab"
-                      }
-                      onClick={() => setActiveBlankIndex(index)}
-                    >
-                      {blankDisplay(blank, index)}
-                    </button>
-                  ))}
-                </div>
-              ) : null}
+              <div
+                className="writing-blank-tabs"
+                role="tablist"
+                aria-label={tPage("blankTabsLabel")}
+              >
+                {problem.blanks.map((blank, index) => (
+                  <button
+                    key={blank.key}
+                    type="button"
+                    role="tab"
+                    aria-selected={index === activeBlankIndex}
+                    className={
+                      index === activeBlankIndex
+                        ? "writing-blank-tab writing-blank-tab--active"
+                        : "writing-blank-tab"
+                    }
+                    onClick={() => setActiveBlankIndex(index)}
+                  >
+                    {blankDisplay(blank, index)}
+                  </button>
+                ))}
+              </div>
 
               <div className="writing-answer-card">
                 <div className="writing-answer-card__head">
@@ -474,13 +491,47 @@ export function ShortAnswerWriting52Workspace({
                     {tEditor("autosaveDisabledNotice")}
                   </Text>
                 ) : null}
-                <div className="writing-answer-card__actions">
-                  <Button size="small" type="link" onClick={onToggleAutosave}>
-                    {autosaveEnabled
-                      ? tEditor("autosaveOff")
-                      : tEditor("autosaveOn")}
-                  </Button>
-                </div>
+                <Collapse
+                  className="writing-expression-accordion"
+                  defaultActiveKey={["expression"]}
+                  bordered={false}
+                  expandIconPlacement="end"
+                  expandIcon={() => <Plus aria-hidden size={16} />}
+                  items={[
+                    {
+                      key: "expression",
+                      label: (
+                        <div className="writing-guide-card__title">
+                          <Lightbulb aria-hidden size={18} />
+                          <Text strong>{tPage("expressionTitle")}</Text>
+                        </div>
+                      ),
+                      children: (
+                        <div className="writing-expression-content">
+                          <div className="writing-expression-chip-list">
+                            {expressionHints.map((hint) => (
+                              <span
+                                key={hint}
+                                className="writing-expression-chip"
+                              >
+                                {hint}
+                              </span>
+                            ))}
+                          </div>
+                          <Button
+                            size="small"
+                            type="link"
+                            onClick={onToggleAutosave}
+                          >
+                            {autosaveEnabled
+                              ? tEditor("autosaveOff")
+                              : tEditor("autosaveOn")}
+                          </Button>
+                        </div>
+                      ),
+                    },
+                  ]}
+                />
               </div>
             </section>
           </section>
@@ -489,30 +540,14 @@ export function ShortAnswerWriting52Workspace({
             <WritingGuideAccordion
               loadFailed={guideLoadFailed}
               loadFailedLabel={tGuide("loadFailedTag")}
-              defaultActiveKeys={["conditions", "guide", "examples"]}
+              defaultActiveKeys={["guide", "tips", "hints"]}
               items={[
                 {
-                  key: "conditions",
+                  key: "guide",
                   disabledOnLoadFailed: true,
                   className: "writing-guide-accordion__item--tutor",
                   icon: <Sparkles aria-hidden size={18} />,
                   title: tPage("guideTitle"),
-                  children:
-                    conditionItems.length > 0 ? (
-                      <ul className="writing-guide-list">
-                        {conditionItems.map((condition) => (
-                          <li key={condition}>{condition}</li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <Text type="secondary">{tPage("conditionFallback")}</Text>
-                    ),
-                },
-                {
-                  key: "guide",
-                  disabledOnLoadFailed: true,
-                  icon: <PenLine aria-hidden size={18} />,
-                  title: tPage("tipsTitle"),
                   children:
                     guideMessages.length > 0 ? (
                       <ul className="writing-guide-list">
@@ -521,20 +556,39 @@ export function ShortAnswerWriting52Workspace({
                         ))}
                       </ul>
                     ) : (
+                      <Text type="secondary">{tPage("conditionFallback")}</Text>
+                    ),
+                },
+                {
+                  key: "tips",
+                  disabledOnLoadFailed: true,
+                  icon: <PenLine aria-hidden size={18} />,
+                  title: tPage("tipsTitle"),
+                  children:
+                    writingTips.length > 0 ? (
+                      <ul className="writing-guide-list">
+                        {writingTips.map((tip) => (
+                          <li key={tip}>{tip}</li>
+                        ))}
+                      </ul>
+                    ) : (
                       <Text type="secondary">{tPage("guideFallback")}</Text>
                     ),
                 },
                 {
-                  key: "examples",
+                  key: "hints",
                   disabledOnLoadFailed: true,
-                  icon: <Lightbulb aria-hidden size={18} />,
+                  icon: <Eye aria-hidden size={18} />,
                   title: tPage("hintTitle"),
                   children: (
-                    <ul className="writing-guide-list writing-guide-list--examples">
-                      {expressionHints.map((hint) => (
-                        <li key={hint}>{hint}</li>
+                    <div className="writing-guide-hints">
+                      {blankHints.map(({ blank, index, hint }) => (
+                        <div key={blank.key} className="app-card-compact">
+                          <Text strong>{blankDisplay(blank, index)}</Text>
+                          <Text type="secondary">{hint}</Text>
+                        </div>
                       ))}
-                    </ul>
+                    </div>
                   ),
                 },
               ]}

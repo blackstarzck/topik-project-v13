@@ -9,15 +9,21 @@ const sourcePath = join(
 const stylesPath = join(process.cwd(), "src/styles/global.css");
 
 describe("ShortAnswerWriting52Workspace structure", () => {
-  it("keeps conditions in the right guide rail instead of the main answer body", () => {
+  it("mirrors q51 answer-card support structure", () => {
     const source = readFileSync(sourcePath, "utf8");
 
     expect(source).toContain("<WritingGuideAccordion");
+    expect(source).toContain("Collapse");
+    expect(source).toContain("Plus");
+    expect(source).toContain('className="writing-expression-accordion"');
+    expect(source).toContain('defaultActiveKey={["expression"]}');
+    expect(source).toContain("writing-expression-chip-list");
+    expect(source).toContain("writing-expression-chip");
+    expect(source).not.toContain('className="writing-answer-card__actions"');
     expect(source).not.toContain(
       'import { ConditionsPanel } from "./ConditionsPanel";',
     );
     expect(source).not.toContain("<ConditionsPanel");
-    expect(source).not.toContain('className="writing-expression-accordion"');
   });
 
   it("uses the same inline blank prompt structure as q51", () => {
@@ -36,41 +42,46 @@ describe("ShortAnswerWriting52Workspace structure", () => {
     expect(source).not.toContain("<QuestionPrompt problem={problem} />");
   });
 
-  it("configures exactly the three q52 wireframe guide cards", () => {
+  it("configures the same guide, tips, and hints rail structure as q51", () => {
     const source = readFileSync(sourcePath, "utf8");
 
-    expect(source).toContain("problem.rubric.conditions.slice(0, 4)");
-    expect(source).toContain("problem.validationMessages.slice(0, 2)");
-    expect(source).toContain('key: "conditions"');
+    expect(source).toContain('defaultActiveKeys={["guide", "tips", "hints"]}');
     expect(source).toContain('key: "guide"');
-    expect(source).toContain('key: "examples"');
+    expect(source).toContain('key: "tips"');
+    expect(source).toContain('key: "hints"');
     expect(source).toContain('title: tPage("guideTitle")');
     expect(source).toContain('title: tPage("tipsTitle")');
     expect(source).toContain('title: tPage("hintTitle")');
-    expect(source).not.toContain("blankHints");
-    expect(source).not.toContain("problem.rubric.criteria");
+    expect(source).toContain("blankHints");
+    expect(source).toContain("problem.rubric.criteria");
+    expect(source).not.toContain("problem.rubric.conditions.slice(0, 4)");
+    expect(source).not.toContain("problem.validationMessages.slice(0, 2)");
+    expect(source).not.toContain('key: "conditions"');
+    expect(source).not.toContain('key: "examples"');
   });
 
-  it("renders q52 example expressions as a list, not chips", () => {
+  it("renders q52 example expressions as answer-card chips, not a right-rail list", () => {
     const source = readFileSync(sourcePath, "utf8");
 
-    expect(source).toContain(
+    expect(source).toContain('key: "expression"');
+    expect(source).toContain("label: (");
+    expect(source).toContain('tPage("expressionTitle")');
+    expect(source).toContain("writing-expression-chip-list");
+    expect(source).toContain("writing-expression-chip");
+    expect(source).toContain("onClick={onToggleAutosave}");
+    expect(source).not.toContain(
       '<ul className="writing-guide-list writing-guide-list--examples">',
     );
-    expect(source).toContain("<li key={hint}>{hint}</li>");
-    expect(source).not.toContain("writing-expression-chip-list");
-    expect(source).not.toContain("writing-expression-chip");
+    expect(source).not.toContain("<li key={hint}>{hint}</li>");
   });
 
-  it("styles q52 example expressions with small bullets", () => {
+  it("uses the shared q51 expression accordion and chip styles", () => {
     const styles = readFileSync(stylesPath, "utf8");
 
-    expect(styles).toContain(".writing-guide-list--examples");
-    expect(styles).toMatch(/\.writing-guide-list--examples\s*>\s*li::before/);
-    expect(styles).toContain("width: 4px;");
-    expect(styles).toContain("height: 4px;");
-    expect(styles).toContain("border-radius: 999px;");
-    expect(styles).toContain("background: var(--app-color-text-secondary);");
+    expect(styles).toContain(".writing-expression-accordion.ant-collapse");
+    expect(styles).toContain(".writing-expression-content");
+    expect(styles).toContain(".writing-expression-chip-list");
+    expect(styles).toContain(".writing-expression-chip");
   });
 
   it("uses wireframe terminology for q52 guide titles in all locales", () => {

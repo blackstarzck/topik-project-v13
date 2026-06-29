@@ -218,6 +218,55 @@ for (const s of AUTHED_SCREENS) {
       await expectWritingPageUsesFlushBullets(page);
     }
 
+    if (s.name === "answer-writing-52") {
+      const workspace = page.locator(".writing-workspace--q52");
+      const expressionAccordion = workspace.locator(
+        ".writing-expression-accordion",
+      );
+      const expressionChips = expressionAccordion.locator(
+        ".writing-expression-chip",
+      );
+
+      await expect(expressionAccordion).toBeVisible();
+      await expect(expressionChips).toHaveCount(5);
+      if (!(await expressionChips.first().isVisible())) {
+        await expressionAccordion.locator(".ant-collapse-header").click();
+      }
+      await expect(expressionChips.first()).toBeVisible();
+      await expect(
+        workspace.locator(".writing-answer-card__actions"),
+      ).toHaveCount(0);
+      await expect(
+        workspace.locator(".writing-guide .writing-guide-list--examples"),
+      ).toHaveCount(0);
+      await expect(workspace.locator(".writing-guide-hints")).toBeVisible();
+
+      const tabs = workspace.getByRole("tab");
+      await expect(tabs).toHaveCount(2);
+      await tabs.nth(1).click();
+      await expect(tabs.nth(1)).toHaveAttribute("aria-selected", "true");
+
+      const textarea = workspace.locator("textarea").first();
+      const screenAnswer = `q52 screen smoke ${Date.now()}`;
+      await textarea.fill(screenAnswer);
+      await expect(textarea).toHaveValue(screenAnswer);
+      await expect(
+        page.locator(".writing-exam-header__progress-label"),
+      ).not.toHaveText("0%");
+      await expect(
+        page.locator(".writing-exam-header__submit-button"),
+      ).toBeEnabled();
+
+      await expressionAccordion
+        .locator(".writing-expression-content button")
+        .last()
+        .click();
+      const autosaveModal = page.getByTestId("autosave-warning-modal");
+      await expect(autosaveModal).toBeVisible();
+      await page.getByTestId("autosave-warning-keep").click();
+      await expect(autosaveModal).toBeHidden();
+    }
+
     if (s.name === "problem-list") {
       await expect(
         page.getByRole("columnheader", { name: "풀이 상태" }),
