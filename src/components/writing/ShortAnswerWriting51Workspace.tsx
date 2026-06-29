@@ -478,7 +478,7 @@ export function ShortAnswerWriting51Workspace({
                   value={activeBlankValue}
                   onChange={(e) => onChange(e.target.value)}
                   onBlur={onBlurValidate}
-                  autoSize={{ minRows: 4 }}
+                  rows={4}
                   maxLength={limit.hardMax}
                   placeholder={tPage("answerPlaceholder", {
                     blank: activeBlank?.label ?? "ㄱ",

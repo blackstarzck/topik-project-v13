@@ -19,10 +19,6 @@ function isMissingVisibilityRpcError(
   );
 }
 
-function canFallbackForMissingVisibilityRpc(): boolean {
-  return process.env.NODE_ENV !== "production";
-}
-
 export async function filterVisibleProblemIds(
   supabase: SupabaseServerClient,
   problemIds: readonly string[],
@@ -39,10 +35,9 @@ export async function filterVisibleProblemIds(
 
   if (error) {
     if (
-      canFallbackForMissingVisibilityRpc() &&
       isMissingVisibilityRpcError(error, "filter_visible_writing_problem_ids")
     ) {
-      return new Set(uniqueIds);
+      return new Set();
     }
     throw new Error(`filterVisibleProblemIds: ${error.message}`);
   }
@@ -65,10 +60,9 @@ export async function isWritingProblemVisibleToCaller(
 
   if (error) {
     if (
-      canFallbackForMissingVisibilityRpc() &&
       isMissingVisibilityRpcError(error, "is_writing_problem_visible_to_caller")
     ) {
-      return true;
+      return false;
     }
     throw new Error(`isWritingProblemVisibleToCaller: ${error.message}`);
   }

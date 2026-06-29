@@ -452,7 +452,7 @@ export function ShortAnswerWriting52Workspace({
                   value={activeBlankValue}
                   onChange={(e) => onChange(e.target.value)}
                   onBlur={onBlurValidate}
-                  autoSize={{ minRows: 4 }}
+                  rows={4}
                   maxLength={limit.hardMax}
                   placeholder={tPage("answerPlaceholder")}
                   disabled={submit.isPending}

@@ -25,17 +25,35 @@ setup("authenticate student", async ({ page }) => {
 
   // Locale-agnostic selectors (the app default-renders Korean): antd Form.Item
   // inputs carry these autocomplete attrs; the submit Button renders type=submit.
-  await page.locator('input[autocomplete="email"]').fill(EMAIL);
-  await page.locator('input[autocomplete="current-password"]').fill(PASSWORD);
+  const emailInput = page.locator('input[autocomplete="email"]');
+  const passwordInput = page.locator('input[autocomplete="current-password"]');
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    await emailInput.fill(EMAIL);
+    await passwordInput.fill(PASSWORD);
+    if (
+      (await emailInput.inputValue()) === EMAIL &&
+      (await passwordInput.inputValue()) === PASSWORD
+    ) {
+      break;
+    }
+    await page.waitForTimeout(150);
+  }
+
+  await expect(emailInput).toHaveValue(EMAIL);
+  await expect(passwordInput).toHaveValue(PASSWORD);
   await page.locator('button[type="submit"]').click();
 
   // LoginForm calls router.push("/dashboard") on success, then the workspace
   // guard may send accounts with missing required consent to /auth/consent,
   // and the dashboard page itself bounces to /onboarding/learning-goal when the
   // account has no learning goal yet.
-  await page.waitForURL(/\/(dashboard|auth\/consent|onboarding\/learning-goal)/, {
-    timeout: 15_000,
-  });
+  await page.waitForURL(
+    /\/(dashboard|auth\/consent|onboarding\/learning-goal)/,
+    {
+      timeout: 15_000,
+    },
+  );
   await page.waitForLoadState("networkidle");
   await page
     .waitForURL(/\/auth\/consent/, { timeout: 5_000 })

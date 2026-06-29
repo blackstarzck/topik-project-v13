@@ -1,13 +1,47 @@
 import { randomUUID } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
+function loadEnvLocal() {
+  try {
+    const raw = readFileSync(join(process.cwd(), ".env.local"), "utf8");
+    for (const line of raw.split(/\r?\n/)) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) continue;
+      const eq = trimmed.indexOf("=");
+      if (eq === -1) continue;
+      const key = trimmed.slice(0, eq).trim();
+      let value = trimmed.slice(eq + 1).trim();
+      if (
+        (value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'"))
+      ) {
+        value = value.slice(1, -1);
+      }
+      if (!(key in process.env)) process.env[key] = value;
+    }
+  } catch {
+    // CI can provide env vars directly; local runs may intentionally skip.
+  }
+}
+
+loadEnvLocal();
+
 const ENABLED = process.env.SUPABASE_LOCAL_STACK === "1";
+const HAS_SUPABASE_ENV = Boolean(
+  process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY &&
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
+);
 type RpcResult = PromiseLike<{ data: unknown; error: unknown }>;
 type RpcClient = {
   rpc: (name: string, args: Record<string, unknown>) => RpcResult;
 };
 
-describe.skipIf(!ENABLED)("institution writing exposure", () => {
+describe.skipIf(!ENABLED || !HAS_SUPABASE_ENV)(
+  "institution writing exposure",
+  () => {
   it("filters writing problems by the authenticated user's affiliation code", async () => {
     const { createClient } = await import("@supabase/supabase-js");
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -59,6 +93,7 @@ describe.skipIf(!ENABLED)("institution writing exposure", () => {
       const general = await makeUser("general");
       const kwon = await makeUser("kwon", "PROFESSOR-KWON");
       const lu = await makeUser("lu", "PROFESSOR-LU");
+      const unassigned = await makeUser("unassigned", "PROFESSOR-NO-MAP");
 
       const rows = [
         makeProblemRow(marker, questionIds.public, 51, "Public"),
@@ -86,12 +121,16 @@ describe.skipIf(!ENABLED)("institution writing exposure", () => {
       if (exposureInserted.error) throw exposureInserted.error;
 
       await expectVisibleIds(general.client, problemIds, [rows[0].id]);
-      await expectVisibleIds(kwon.client, problemIds, [rows[0].id, rows[1].id]);
-      await expectVisibleIds(lu.client, problemIds, [rows[0].id, rows[2].id]);
+      await expectVisibleIds(kwon.client, problemIds, [rows[1].id]);
+      await expectVisibleIds(lu.client, problemIds, [rows[2].id]);
+      await expectVisibleIds(unassigned.client, problemIds, []);
 
       await expectListIds(general.client, marker, [rows[0].id]);
-      await expectListIds(kwon.client, marker, [rows[0].id, rows[1].id]);
-      await expectListIds(lu.client, marker, [rows[0].id, rows[2].id]);
+      await expectListIds(kwon.client, marker, [rows[1].id]);
+      await expectListIds(lu.client, marker, [rows[2].id]);
+      await expectListIds(unassigned.client, marker, []);
+
+      await expectExternalSubmissionBlocked(svc, unassigned.id, rows[0].id);
     } finally {
       if (problemIds.length > 0) {
         await svc
@@ -105,7 +144,8 @@ describe.skipIf(!ENABLED)("institution writing exposure", () => {
       }
     }
   });
-});
+  },
+);
 
 function makeProblemRow(
   marker: string,
@@ -131,6 +171,30 @@ function makeProblemRow(
     visibility: "public",
     lifecycle_status: "active",
   };
+}
+
+async function expectExternalSubmissionBlocked(
+  svc: RpcClient,
+  userId: string,
+  problemId: string,
+) {
+  const { error } = await svc.rpc("create_external_writing_submission", {
+    submission: {
+      external_submission_id: randomUUID(),
+      user_id: userId,
+      problem_id: problemId,
+      question_no: 51,
+      answer_text: "기관 배정이 없는 사용자의 제출은 차단되어야 합니다.",
+      answer_json: null,
+      char_count: 26,
+      feedback_status: "analyzing",
+    },
+  });
+
+  expect(error).toBeTruthy();
+  expect(String((error as { message?: string } | null)?.message ?? "")).toContain(
+    "problem_not_submittable",
+  );
 }
 
 async function expectVisibleIds(

@@ -30,13 +30,14 @@ export async function WritingPageContent({
     const problemLoadFailed = t("problemLoadFailed", { questionNo });
     const hasPreservedDraft = Boolean(draft);
     const showRetry = canRetryProblemLoad && !hasPreservedDraft;
+    const showUnavailableTitle = hasPreservedDraft || !canRetryProblemLoad;
     return (
       <Empty
         className="writing-empty-state"
         description={
           <div className="flex flex-col gap-2">
             <h1 className="writing-empty-state__title">
-              {hasPreservedDraft
+              {showUnavailableTitle
                 ? t("problemUnavailableTitle", { questionNo })
                 : problemLoadFailed}
             </h1>

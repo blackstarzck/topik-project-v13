@@ -76,6 +76,7 @@ export function TypeSelectCards({ lockedTypes }: Props) {
           const typeLabel = tCommon(`questionType${qn}`);
           const desc = t(`typeDescription${qn}`);
           const meta = TYPE_META[qn];
+          const actionLabel = locked ? t("typeLockedCta") : t("typeCardCta");
           const card = (
             <AppCard
               className={[
@@ -86,10 +87,13 @@ export function TypeSelectCards({ lockedTypes }: Props) {
               actions={[
                 <span
                   key="start"
-                  className="inline-flex w-full items-center gap-2 text-sm font-semibold text-text"
+                  className={[
+                    "inline-flex w-full items-center gap-2 text-sm font-semibold",
+                    locked ? "text-text-secondary" : "text-text",
+                  ].join(" ")}
                 >
-                  {t("typeCardCta")}
-                  <ArrowRight size={16} aria-hidden="true" />
+                  {actionLabel}
+                  {locked ? null : <ArrowRight size={16} aria-hidden="true" />}
                 </span>,
               ]}
             >

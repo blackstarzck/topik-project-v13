@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   replace: vi.fn(),
   searchParams: "",
   useRecommendationBundle: vi.fn(),
+  useWritingAvailability: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -27,6 +28,10 @@ vi.mock("../../../src/components/practice/recommendations-data", () => ({
   useRecommendationBundle: mocks.useRecommendationBundle,
 }));
 
+vi.mock("../../../src/components/practice/writing-availability-data", () => ({
+  useWritingAvailability: mocks.useWritingAvailability,
+}));
+
 beforeEach(() => {
   mocks.replace.mockReset();
   mocks.searchParams = "";
@@ -35,6 +40,15 @@ beforeEach(() => {
     isLoading: false,
     error: null,
     refetch: vi.fn(),
+  });
+  mocks.useWritingAvailability.mockReturnValue({
+    data: {
+      availableTypes: new Set([51, 52, 53, 54]),
+      lockedTypes: new Set(),
+      hasAny: true,
+    },
+    isLoading: false,
+    error: null,
   });
 });
 
@@ -315,6 +329,47 @@ describe("RecommendationsView", () => {
     expect(mocks.replace).toHaveBeenCalledWith(
       "/practice/recommendations?type=52",
     );
+  });
+
+  it("locks unavailable writing types and removes direct writing card links", () => {
+    mocks.useWritingAvailability.mockReturnValue({
+      data: {
+        availableTypes: new Set(),
+        lockedTypes: new Set([51, 52, 53, 54]),
+        hasAny: false,
+      },
+      isLoading: false,
+      error: null,
+    });
+
+    const { container } = renderWithIntl(<RecommendationsView />);
+
+    expect(container.querySelector('a[href^="/writing/"]')).toBeNull();
+    expect(
+      screen.getAllByText(koMessages.practice.recommendations.locked).length,
+    ).toBeGreaterThanOrEqual(4);
+    expect(
+      screen.getAllByText(
+        koMessages.practice.recommendations.typeLockedCta,
+      ).length,
+    ).toBe(4);
+  });
+
+  it("pessimistically hides writing links while availability is loading", () => {
+    mocks.useWritingAvailability.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      error: null,
+    });
+
+    const { container } = renderWithIntl(<RecommendationsView />);
+
+    expect(container.querySelector('a[href^="/writing/"]')).toBeNull();
+    expect(
+      screen.getAllByText(
+        koMessages.practice.recommendations.typeLockedCta,
+      ).length,
+    ).toBe(4);
   });
 
   it("keys the reason stagger to the shown content, not the tab click", () => {

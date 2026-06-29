@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
@@ -40,6 +40,13 @@ const SERVICE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
 const ENV_LABEL = (process.env.SUPABASE_ENV_LABEL ?? "").toLowerCase();
 const PASSWORD = "Password123!";
+const REPORT_DIR = path.join(
+  process.cwd(),
+  "docs",
+  "qa",
+  "reports",
+  "2026-06-29-institution-assigned-only-writing-access",
+);
 
 type TestUser = {
   email: string;
@@ -246,8 +253,23 @@ async function cleanupFixture(
 
 async function login(page: Page, email: string) {
   await page.goto("/login", { waitUntil: "domcontentloaded" });
-  await page.locator('input[autocomplete="email"]').fill(email);
-  await page.locator('input[autocomplete="current-password"]').fill(PASSWORD);
+  const emailInput = page.locator('input[autocomplete="email"]');
+  const passwordInput = page.locator('input[autocomplete="current-password"]');
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    await emailInput.fill(email);
+    await passwordInput.fill(PASSWORD);
+    if (
+      (await emailInput.inputValue()) === email &&
+      (await passwordInput.inputValue()) === PASSWORD
+    ) {
+      break;
+    }
+    await page.waitForTimeout(150);
+  }
+
+  await expect(emailInput).toHaveValue(email);
+  await expect(passwordInput).toHaveValue(PASSWORD);
   await page.locator('button[type="submit"]').click();
 
   await page.waitForURL(
@@ -296,12 +318,13 @@ async function openProblemList(page: Page, marker: string) {
 
 async function withFreshPage<T>(
   browser: Browser,
+  viewport: { width: number; height: number },
   run: (page: Page) => Promise<T>,
 ) {
   const context = await browser.newContext({
     baseURL: BASE_URL,
     storageState: { cookies: [], origins: [] },
-    viewport: { width: 1280, height: 800 },
+    viewport,
   });
   const page = await context.newPage();
   try {
@@ -309,6 +332,54 @@ async function withFreshPage<T>(
   } finally {
     await context.close();
   }
+}
+
+function viewportForProject(projectName: string) {
+  return projectName === "mobile-360"
+    ? { width: 360, height: 720 }
+    : { width: 1280, height: 800 };
+}
+
+function screenshotPath(baseName: string, projectName: string) {
+  const suffix = projectName === "mobile-360" ? "mobile" : "desktop";
+  mkdirSync(REPORT_DIR, { recursive: true });
+  return path.join(REPORT_DIR, `${baseName}-${suffix}.png`);
+}
+
+async function captureEvidence(
+  page: Page,
+  baseName: string,
+  projectName: string,
+) {
+  await page.screenshot({
+    path: screenshotPath(baseName, projectName),
+    fullPage: true,
+  });
+}
+
+async function waitForWritingAvailability(page: Page) {
+  await page
+    .waitForResponse(
+      (response) =>
+        response.url().includes("/api/practice/writing-availability") &&
+        response.status() === 200,
+      { timeout: 15_000 },
+    )
+    .catch(() => null);
+}
+
+async function openWritingSidebarGroup(page: Page, projectName: string) {
+  if (projectName === "mobile-360") {
+    await page.locator(".app-workspace-mobile-bar button").first().click();
+    const drawer = page.locator(".app-workspace-drawer");
+    await expect(drawer).toBeVisible();
+    await drawer.getByText("쓰기 연습").click();
+    return drawer;
+  }
+
+  const sidebar = page.locator(".app-sidebar-shell").first();
+  await sidebar.getByText("쓰기 연습").click();
+  return sidebar;
 }
 
 test.skip(
@@ -320,12 +391,12 @@ test.skip(
   "Institution exposure e2e must not seed production data",
 );
 
-test("institution-affiliated learners can see institution-only writing problems", async ({
+test("institution assigned-only writing access locks unassigned learners", async ({
   browser,
 }, testInfo) => {
   test.skip(
-    testInfo.project.name !== "desktop-1280",
-    "Institution exposure is a data-visibility scenario and runs once on desktop.",
+    !["desktop-1280", "mobile-360"].includes(testInfo.project.name),
+    "Institution assigned-only evidence runs on desktop and mobile.",
   );
   test.setTimeout(90_000);
 
@@ -346,17 +417,30 @@ test("institution-affiliated learners can see institution-only writing problems"
       "matched",
       fixture.institutionCode,
     );
-    users.push(generalUser, institutionUser);
+    const unassignedInstitutionCode = `UNASSIGNED_${randomUUID().slice(0, 8)}`;
+    const unassignedInstitutionUser = await createTestUser(
+      fixture.marker,
+      "unassigned",
+      unassignedInstitutionCode,
+    );
+    users.push(generalUser, institutionUser, unassignedInstitutionUser);
 
     await waitForProfileAffiliation(generalUser.id, null);
     await waitForProfileAffiliation(
       institutionUser.id,
       fixture.institutionCode,
     );
+    await waitForProfileAffiliation(
+      unassignedInstitutionUser.id,
+      unassignedInstitutionCode,
+    );
     await waitForPasswordSignInReady(generalUser.email);
     await waitForPasswordSignInReady(institutionUser.email);
+    await waitForPasswordSignInReady(unassignedInstitutionUser.email);
 
-    await withFreshPage(browser, async (page) => {
+    const viewport = viewportForProject(testInfo.project.name);
+
+    await withFreshPage(browser, viewport, async (page) => {
       const errors = collectErrors(page);
       await login(page, generalUser.email);
       await openProblemList(page, fixture!.marker);
@@ -364,13 +448,57 @@ test("institution-affiliated learners can see institution-only writing problems"
       expect(errors).toEqual([]);
     });
 
-    await withFreshPage(browser, async (page) => {
+    await withFreshPage(browser, viewport, async (page) => {
       const errors = collectErrors(page);
       await login(page, institutionUser.email);
       await openProblemList(page, fixture!.marker);
       await expect(page.getByText(fixture!.title)).toBeVisible({
         timeout: 15_000,
       });
+      expect(errors).toEqual([]);
+    });
+
+    await withFreshPage(browser, viewport, async (page) => {
+      const errors = collectErrors(page);
+      await login(page, unassignedInstitutionUser.email);
+
+      await openProblemList(page, fixture!.marker);
+      await expect(page.getByText(fixture!.title)).toHaveCount(0);
+      await captureEvidence(page, "problems-empty", testInfo.project.name);
+
+      await page.goto("/practice/recommendations", {
+        waitUntil: "domcontentloaded",
+      });
+      await waitForWritingAvailability(page);
+      await expect(page.locator(".problem-type-tabs__badge")).toHaveCount(4);
+      await expect(page.locator('a[href^="/writing/"]')).toHaveCount(0);
+      await captureEvidence(
+        page,
+        "recommendations-locked",
+        testInfo.project.name,
+      );
+
+      const menuScope = await openWritingSidebarGroup(
+        page,
+        testInfo.project.name,
+      );
+      await waitForWritingAvailability(page);
+      await expect(menuScope.locator(".app-sidebar-lock-tag")).toHaveCount(4);
+      await captureEvidence(page, "sidebar-locked", testInfo.project.name);
+
+      await page.goto("/writing/short-answer-writing-51", {
+        waitUntil: "domcontentloaded",
+      });
+      await expect(page.locator(".writing-empty-state")).toBeVisible({
+        timeout: 15_000,
+      });
+      await expect(page.locator(".writing-workspace")).toHaveCount(0);
+      await captureEvidence(
+        page,
+        "direct-writing-unavailable",
+        testInfo.project.name,
+      );
+
       expect(errors).toEqual([]);
     });
   } finally {

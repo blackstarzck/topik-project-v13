@@ -8,7 +8,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 import { AppCard } from "@/components/shared/AppCard";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { isValidQuestionNo, type QuestionNo } from "@/lib/practice/types";
+import {
+  isValidQuestionNo,
+  QUESTION_NOS,
+  type QuestionNo,
+} from "@/lib/practice/types";
 import { useSingleFlightAction } from "@/lib/request-control/useSingleFlightAction";
 import { ProblemTypeTabs } from "./ProblemTypeTabs";
 import {
@@ -18,6 +22,7 @@ import {
 import { TypeSelectCards } from "./TypeSelectCards";
 import { getReasonTagColor } from "./reason-tag-colors";
 import { useRecommendationBundle } from "./recommendations-data";
+import { useWritingAvailability } from "./writing-availability-data";
 
 const { Title, Text } = Typography;
 
@@ -220,6 +225,9 @@ export function RecommendationsView() {
   }, [params]);
 
   const bundle = useRecommendationBundle(active);
+  const writingAvailability = useWritingAvailability();
+  const lockedTypes =
+    writingAvailability.data?.lockedTypes ?? new Set<QuestionNo>(QUESTION_NOS);
   const retry = useSingleFlightAction(() => bundle.refetch());
 
   function updateType(next: QuestionNo | null) {
@@ -264,7 +272,11 @@ export function RecommendationsView() {
       />
 
       <div className="grid gap-4">
-        <ProblemTypeTabs active={active} onChange={updateType} />
+        <ProblemTypeTabs
+          active={active}
+          onChange={updateType}
+          lockedTypes={lockedTypes}
+        />
         {showReasonPanel ? (
           <RecommendationReasonPanel
             key={`reason-${reasonAnimationKey}`}
@@ -280,7 +292,7 @@ export function RecommendationsView() {
       {bundle.isLoading ? (
         <>
           <RecommendationResultsSkeleton />
-          <TypeSelectCards />
+          <TypeSelectCards lockedTypes={lockedTypes} />
         </>
       ) : bundle.error ? (
         <>
@@ -301,7 +313,7 @@ export function RecommendationsView() {
               </Button>
             }
           />
-          <TypeSelectCards />
+          <TypeSelectCards lockedTypes={lockedTypes} />
         </>
       ) : items.length > 0 ? (
         <>
@@ -322,12 +334,12 @@ export function RecommendationsView() {
             </section>
           ) : null}
 
-          <TypeSelectCards />
+          <TypeSelectCards lockedTypes={lockedTypes} />
         </>
       ) : (
         <>
           <RecommendationEmptyState />
-          <TypeSelectCards />
+          <TypeSelectCards lockedTypes={lockedTypes} />
         </>
       )}
     </div>

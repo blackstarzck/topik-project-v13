@@ -6,6 +6,7 @@
  */
 
 import type { AppRole } from "./auth/roles";
+import type { QuestionNo } from "./practice/types";
 
 export const APP_ROUTES = {
   landing: "/",
@@ -889,7 +890,17 @@ export type SidebarLockMap = Readonly<Record<string, string>>;
 export function computeSidebarLocks(args: {
   role: AppRole;
   planLabel: string | null | undefined;
+  lockedWritingTypes?: ReadonlySet<QuestionNo> | readonly QuestionNo[];
 }): SidebarLockMap {
-  void args;
-  return {};
+  const locks: Record<string, string> = {};
+  const lockedWritingTypes: ReadonlySet<QuestionNo> =
+    args.lockedWritingTypes instanceof Set
+      ? args.lockedWritingTypes
+      : new Set<QuestionNo>(args.lockedWritingTypes ?? []);
+
+  for (const questionNo of lockedWritingTypes) {
+    locks[WRITING_ROUTE_PATHS_BY_QUESTION[questionNo]] = "writingTypeLocked";
+  }
+
+  return locks;
 }
