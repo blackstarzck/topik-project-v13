@@ -22,6 +22,11 @@ import koMessages from "../../../messages/ko.json";
 // the real ko catalog (the same Korean strings the assertions match), so these
 // stay green without depending on the ephemeral messages/_staging/ dir.
 
+const mutationMocks = vi.hoisted(() => ({
+  mutate: vi.fn(),
+  isPending: false,
+}));
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
     push: vi.fn(),
@@ -37,6 +42,10 @@ vi.mock("@/lib/events/study-events", () => ({
   logStudyEvent: vi.fn(() => Promise.resolve()),
 }));
 
+vi.mock("@/lib/writing/mutations", () => ({
+  useCreateComparisonReport: () => mutationMocks,
+}));
+
 function renderReports(ui: ReactElement) {
   return render(
     <NextIntlClientProvider locale="ko" messages={koMessages}>
@@ -46,6 +55,8 @@ function renderReports(ui: ReactElement) {
 }
 
 beforeEach(() => {
+  mutationMocks.mutate.mockClear();
+  mutationMocks.isPending = false;
   // Ant Design / recharts touch ResizeObserver + matchMedia, which jsdom omits.
   if (!(globalThis as Record<string, unknown>).ResizeObserver) {
     (globalThis as Record<string, unknown>).ResizeObserver = class {
@@ -156,9 +167,7 @@ describe("ScoreComparisonChart i18n chrome", () => {
   it("shows the empty state when there is no data", () => {
     renderReports(<ScoreComparisonChart data={[]} hasPrevious={false} />);
     expect(
-      screen.getByText(
-        "항목별 점수 데이터가 없어 그래프를 그릴 수 없어요.",
-      ),
+      screen.getByText("항목별 점수 데이터가 없어 그래프를 그릴 수 없어요."),
     ).toBeTruthy();
   });
 
@@ -210,6 +219,37 @@ describe("ComparisonReportView next action chrome", () => {
         chartData={[]}
         currentNorm={{ grammar: 82 }}
         hasPrevious
+        currentSubmissionId="current-1"
+        currentQuestionNo={54}
+        selectedPreviousSubmissionId="previous-1"
+        comparisonTargets={[
+          {
+            submissionId: "previous-1",
+            questionNo: 54,
+            problemId: "problem-54",
+            submittedAt: "2026-05-19T10:00:00.000Z",
+            feedbackStatus: "complete",
+            score: 70,
+            scoreMax: 100,
+            charCount: 80,
+            isSelected: true,
+            isRecommended: true,
+            isDisabled: false,
+          },
+          {
+            submissionId: "previous-2",
+            questionNo: 54,
+            problemId: "problem-54",
+            submittedAt: "2026-05-12T10:00:00.000Z",
+            feedbackStatus: "complete",
+            score: 64,
+            scoreMax: 100,
+            charCount: 76,
+            isSelected: false,
+            isRecommended: false,
+            isDisabled: false,
+          },
+        ]}
       />,
     );
 
@@ -248,13 +288,14 @@ describe("ComparisonReportView next action chrome", () => {
     ).toBeTruthy();
     expect(actions.className).toContain("feedback-actions");
     expect(actions.className).not.toContain("app-card");
-    expect(within(actions).getAllByRole("button")).toHaveLength(4);
+    expect(within(actions).getAllByRole("button")).toHaveLength(5);
     expect(
-      Array.from(actionRegion.querySelectorAll("button")).map(
-        (button) => button.getAttribute("data-testid"),
+      Array.from(actionRegion.querySelectorAll("button")).map((button) =>
+        button.getAttribute("data-testid"),
       ),
     ).toEqual([
       "comparison-action-retry",
+      "comparison-action-change-target",
       "comparison-action-next",
       "comparison-action-weakness",
       "comparison-action-share",
@@ -265,6 +306,7 @@ describe("ComparisonReportView next action chrome", () => {
       ),
     ).toEqual([
       "comparison-action-retry",
+      "comparison-action-change-target",
       "comparison-action-next",
       "comparison-action-weakness",
       "comparison-action-share",
@@ -291,6 +333,78 @@ describe("ComparisonReportView next action chrome", () => {
     expect(
       within(secondary).getByTestId("comparison-action-weakness"),
     ).toBeTruthy();
-    expect(within(secondary).getByTestId("comparison-action-share")).toBeTruthy();
+    expect(
+      within(secondary).getByTestId("comparison-action-share"),
+    ).toBeTruthy();
+  });
+
+  it("opens an in-page right drawer for same-problem comparison targets", () => {
+    renderReports(
+      <ComparisonReportView
+        metrics={{
+          score_delta: 12,
+          dimension_deltas: { grammar: 12 },
+          char_delta: 24,
+          no_previous: false,
+        }}
+        narrative="?댁쟾 ?듭븞蹂대떎 臾몃쾿怨?援ъ꽦 ?먯닔媛 ?щ옄?듬땲??"
+        currentText="?대쾲 ?듭븞?낅땲??"
+        previousText="?댁쟾 ?듭븞?낅땲??"
+        retryHref="/writing/54?retry=sub-1"
+        reportId="report-1"
+        currentScore={82}
+        chartData={[]}
+        currentNorm={{ grammar: 82 }}
+        hasPrevious
+        currentSubmissionId="current-1"
+        currentQuestionNo={54}
+        selectedPreviousSubmissionId="previous-1"
+        comparisonTargets={[
+          {
+            submissionId: "previous-1",
+            questionNo: 54,
+            problemId: "problem-54",
+            submittedAt: "2026-05-19T10:00:00.000Z",
+            feedbackStatus: "complete",
+            score: 70,
+            scoreMax: 100,
+            charCount: 80,
+            isSelected: true,
+            isRecommended: true,
+            isDisabled: false,
+          },
+          {
+            submissionId: "previous-2",
+            questionNo: 54,
+            problemId: "problem-54",
+            submittedAt: "2026-05-12T10:00:00.000Z",
+            feedbackStatus: "complete",
+            score: 64,
+            scoreMax: 100,
+            charCount: 76,
+            isSelected: false,
+            isRecommended: false,
+            isDisabled: false,
+          },
+        ]}
+      />,
+    );
+
+    fireEvent.click(screen.getByTestId("comparison-action-change-target"));
+
+    const shell = screen.getByTestId("comparison-page-shell");
+    expect(shell.querySelector(".comparison-target-drawer")).toBeTruthy();
+    expect(screen.getByTestId("comparison-target-drawer-body")).toBeTruthy();
+    expect(screen.getAllByTestId("comparison-target-option")).toHaveLength(2);
+    expect(screen.queryByText(/same type/i)).toBeNull();
+    expect(screen.queryByText(/all/i)).toBeNull();
+
+    fireEvent.click(screen.getAllByTestId("comparison-target-option")[1]);
+    fireEvent.click(screen.getByTestId("comparison-target-confirm"));
+
+    expect(mutationMocks.mutate).toHaveBeenCalledWith(
+      { current_id: "current-1", previous_id: "previous-2" },
+      expect.any(Object),
+    );
   });
 });

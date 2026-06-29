@@ -1,9 +1,14 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  getComparisonTargetCandidates,
   getWritingProblem,
   getWritingProblemAvailability,
 } from "../../../src/lib/writing/server";
+import type {
+  WritingFeedbackRow,
+  WritingSubmissionRow,
+} from "../../../src/lib/writing/types";
 
 type QueryRow = {
   id: string;
@@ -147,6 +152,120 @@ function makeAvailabilityClient(
   return client;
 }
 
+function submissionRow(
+  overrides: Partial<WritingSubmissionRow> & { id: string },
+): WritingSubmissionRow {
+  return {
+    id: overrides.id,
+    user_id: overrides.user_id ?? "user-1",
+    problem_id: overrides.problem_id ?? "problem-54",
+    draft_id: null,
+    question_no: overrides.question_no ?? 54,
+    answer_text: overrides.answer_text ?? "answer",
+    answer_json: null,
+    char_count: overrides.char_count ?? 100,
+    submitted_at: overrides.submitted_at ?? "2026-06-20T10:00:00.000Z",
+    feedback_status: overrides.feedback_status ?? "complete",
+    parent_submission_id: overrides.parent_submission_id ?? null,
+  };
+}
+
+function feedbackRow(
+  submissionId: string,
+  score: number | null,
+  status: WritingFeedbackRow["status"] = "complete",
+): WritingFeedbackRow {
+  return {
+    submission_id: submissionId,
+    user_id: "user-1",
+    status,
+    score_total: score,
+    score_max: 100,
+    overall_summary: null,
+    ai_model: null,
+    ai_model_version: null,
+    raw_ai_result: null,
+    generated_at: "2026-06-20T10:00:00.000Z",
+  };
+}
+
+function makeComparisonClient(
+  submissions: WritingSubmissionRow[],
+  feedback: WritingFeedbackRow[],
+) {
+  const client = {
+    from: (table: string) => {
+      if (table === "writing_feedback") {
+        const query = {
+          select: () => query,
+          in: (column: string, values: string[]) => {
+            expect(column).toBe("submission_id");
+            return Promise.resolve({
+              data: feedback.filter((row) =>
+                values.includes(row.submission_id),
+              ),
+              error: null,
+            });
+          },
+        };
+        return query;
+      }
+
+      const filters: Array<{ column: string; value: unknown }> = [];
+      const neqFilters: Array<{ column: string; value: unknown }> = [];
+      let submittedBefore: string | null = null;
+
+      const applyFilters = () =>
+        submissions
+          .filter((row) =>
+            filters.every(
+              (filter) =>
+                row[filter.column as keyof WritingSubmissionRow] ===
+                filter.value,
+            ),
+          )
+          .filter((row) =>
+            neqFilters.every(
+              (filter) =>
+                row[filter.column as keyof WritingSubmissionRow] !==
+                filter.value,
+            ),
+          )
+          .filter((row) =>
+            submittedBefore ? row.submitted_at < submittedBefore : true,
+          )
+          .sort((a, b) => b.submitted_at.localeCompare(a.submitted_at));
+
+      const query = {
+        select: () => query,
+        eq: (column: string, value: unknown) => {
+          filters.push({ column, value });
+          return query;
+        },
+        neq: (column: string, value: unknown) => {
+          neqFilters.push({ column, value });
+          return query;
+        },
+        lt: (column: string, value: string) => {
+          expect(column).toBe("submitted_at");
+          submittedBefore = value;
+          return query;
+        },
+        order: () => query,
+        limit: (count: number) =>
+          Promise.resolve({
+            data: applyFilters().slice(0, count),
+            error: null,
+          }),
+        maybeSingle: () =>
+          Promise.resolve({ data: applyFilters()[0] ?? null, error: null }),
+      };
+      return query;
+    },
+  };
+  return client;
+}
+
 describe("getWritingProblem", () => {
   it("uses the first submittable candidate for the default writing route", async () => {
     const { client, calls } = makeClient([seed51, incomplete51, complete51]);
@@ -274,5 +393,88 @@ describe("getWritingProblemAvailability", () => {
     expect(availability.canStart).toBe(false);
     expect(availability.state).toBe("soft_unavailable");
     expect(availability.reason).toBe("Rotation ended");
+  });
+});
+
+describe("getComparisonTargetCandidates", () => {
+  it("returns only previous submissions for the same problem and marks the selected parent", async () => {
+    const current = submissionRow({
+      id: "current",
+      parent_submission_id: "parent",
+      submitted_at: "2026-06-20T10:00:00.000Z",
+    });
+    const parent = submissionRow({
+      id: "parent",
+      char_count: 90,
+      submitted_at: "2026-06-19T10:00:00.000Z",
+    });
+    const older = submissionRow({
+      id: "older",
+      char_count: 80,
+      submitted_at: "2026-06-18T10:00:00.000Z",
+    });
+    const otherProblem = submissionRow({
+      id: "other-problem",
+      problem_id: "problem-53",
+      submitted_at: "2026-06-19T12:00:00.000Z",
+    });
+    const laterSameProblem = submissionRow({
+      id: "later",
+      submitted_at: "2026-06-21T10:00:00.000Z",
+    });
+
+    const candidates = await getComparisonTargetCandidates(
+      "current",
+      "parent",
+      async () =>
+        makeComparisonClient(
+          [current, parent, older, otherProblem, laterSameProblem],
+          [feedbackRow("parent", 70), feedbackRow("older", 64)],
+        ) as never,
+    );
+
+    expect(candidates.map((candidate) => candidate.submissionId)).toEqual([
+      "parent",
+      "older",
+    ]);
+    expect(candidates[0]).toMatchObject({
+      submissionId: "parent",
+      isSelected: true,
+      isRecommended: true,
+      isDisabled: false,
+      score: 70,
+    });
+    expect(candidates[1]).toMatchObject({
+      submissionId: "older",
+      isSelected: false,
+      isRecommended: false,
+      isDisabled: false,
+    });
+  });
+
+  it("disables same-problem submissions whose analysis is incomplete", async () => {
+    const current = submissionRow({ id: "current" });
+    const pending = submissionRow({
+      id: "pending",
+      feedback_status: "analyzing",
+      submitted_at: "2026-06-19T10:00:00.000Z",
+    });
+
+    const candidates = await getComparisonTargetCandidates(
+      "current",
+      null,
+      async () =>
+        makeComparisonClient(
+          [current, pending],
+          [feedbackRow("pending", 70)],
+        ) as never,
+    );
+
+    expect(candidates).toHaveLength(1);
+    expect(candidates[0]).toMatchObject({
+      submissionId: "pending",
+      isDisabled: true,
+      isRecommended: false,
+    });
   });
 });

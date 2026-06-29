@@ -1403,7 +1403,23 @@
       "weaknessDisabledTooltip": "Khi đã có các bài làm trước để so sánh, bạn sẽ xem được gợi ý điểm yếu.",
       "weaknessDisabled": "Gợi ý điểm yếu (thiếu dữ liệu)",
       "weaknessView": "Xem gợi ý điểm yếu",
-      "retryProblem": "Làm lại"
+      "retryProblem": "Làm lại",
+      "changeTarget": "Đổi bài làm trước",
+      "targetDrawerTitle": "Chọn bài làm trước",
+      "targetDrawerDescription": "Chỉ có thể so sánh các bài làm lại cùng câu {questionNo}.",
+      "targetDrawerSameProblem": "Chỉ cùng câu",
+      "targetDrawerEmpty": "Chưa có bài làm hoàn tất trước đó cho câu này.",
+      "targetDrawerQuestion": "Câu {questionNo}",
+      "targetDrawerRecommended": "Đề xuất",
+      "targetDrawerSelected": "Đang chọn",
+      "targetDrawerUnavailable": "Chưa phân tích xong",
+      "targetDrawerChars": "{count} ký tự",
+      "targetDrawerScore": "{score} điểm",
+      "targetDrawerNoScore": "Chưa có điểm",
+      "targetDrawerCompare": "So sánh với bài này",
+      "targetDrawerCancel": "Đóng",
+      "targetDrawerUnchanged": "Bài này đang được chọn.",
+      "targetDrawerCompareFailedTitle": "Không thể đổi đối tượng so sánh"
     }
   },
   "writing": {

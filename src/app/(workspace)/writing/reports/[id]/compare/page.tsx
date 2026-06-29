@@ -6,6 +6,7 @@ import type { ChartDatum } from "@/components/reports/ScoreComparisonChart";
 import { requireUser } from "@/lib/auth/session";
 import {
   getComparisonReport,
+  getComparisonTargetCandidates,
   getFeedbackBundle,
   getSubmission,
 } from "@/lib/writing/server";
@@ -66,9 +67,10 @@ export default async function CompareReportPage({
   if (!current) notFound();
 
   // 차트/항목 카드용 실제 점수 — 현재/이전 dimension bundle을 정규화한다.
-  const [currentBundle, previousBundle] = await Promise.all([
+  const [currentBundle, previousBundle, comparisonTargets] = await Promise.all([
     getFeedbackBundle(current.id),
     previous ? getFeedbackBundle(previous.id) : Promise.resolve(null),
+    getComparisonTargetCandidates(current.id, report.previous_submission_id),
   ]);
 
   const metrics = report.metrics as unknown as ComparisonMetrics;
@@ -101,6 +103,10 @@ export default async function CompareReportPage({
       chartData={chartData}
       currentNorm={currentNorm}
       hasPrevious={hasPrevious}
+      currentSubmissionId={current.id}
+      currentQuestionNo={current.question_no}
+      selectedPreviousSubmissionId={report.previous_submission_id}
+      comparisonTargets={comparisonTargets}
     />
   );
 }

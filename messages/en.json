@@ -1403,7 +1403,23 @@
       "weaknessDisabledTooltip": "Once you have previous answers to compare, weakness recommendations will be available.",
       "weaknessDisabled": "Weakness recommendations (not enough data)",
       "weaknessView": "View weakness recommendations",
-      "retryProblem": "Retry"
+      "retryProblem": "Retry",
+      "changeTarget": "Change previous answer",
+      "targetDrawerTitle": "Choose previous answer",
+      "targetDrawerDescription": "Only previous answers for question {questionNo} can be compared.",
+      "targetDrawerSameProblem": "Same problem only",
+      "targetDrawerEmpty": "No previous completed answer for this problem yet.",
+      "targetDrawerQuestion": "Question {questionNo}",
+      "targetDrawerRecommended": "Recommended",
+      "targetDrawerSelected": "Selected now",
+      "targetDrawerUnavailable": "Analysis incomplete",
+      "targetDrawerChars": "{count} chars",
+      "targetDrawerScore": "{score} pts",
+      "targetDrawerNoScore": "No score",
+      "targetDrawerCompare": "Compare with this answer",
+      "targetDrawerCancel": "Close",
+      "targetDrawerUnchanged": "This answer is already selected.",
+      "targetDrawerCompareFailedTitle": "Could not change comparison target"
     }
   },
   "writing": {

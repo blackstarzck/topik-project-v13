@@ -254,6 +254,26 @@ async function getComparisonSubmissionById({
   return data as WritingSubmissionRow | null;
 }
 
+function assertComparablePreviousSubmission({
+  currentSub,
+  previousSub,
+}: {
+  currentSub: WritingSubmissionRow;
+  previousSub: WritingSubmissionRow;
+}): WritingSubmissionRow {
+  if (previousSub.id === currentSub.id) {
+    throw new Error(
+      "comparison: previous submission must differ from current submission",
+    );
+  }
+  if (previousSub.problem_id !== currentSub.problem_id) {
+    throw new Error(
+      "comparison: previous submission must use the same problem_id as current submission",
+    );
+  }
+  return previousSub;
+}
+
 async function resolvePreviousSubmissionForComparison({
   supabase,
   userId,
@@ -266,9 +286,16 @@ async function resolvePreviousSubmissionForComparison({
   explicitPreviousId?: string | null;
 }): Promise<WritingSubmissionRow | null> {
   if (explicitPreviousId) {
-    return getComparisonSubmissionById({
+    const previousSub = await getComparisonSubmissionById({
       supabase,
       id: explicitPreviousId,
+    });
+    if (!previousSub) {
+      throw new Error("comparison: previous submission missing");
+    }
+    return assertComparablePreviousSubmission({
+      currentSub,
+      previousSub,
     });
   }
 
@@ -278,6 +305,7 @@ async function resolvePreviousSubmissionForComparison({
       .select("*")
       .eq("id", currentSub.parent_submission_id)
       .eq("user_id", userId)
+      .eq("problem_id", currentSub.problem_id)
       .maybeSingle();
     if (error) throw new Error(`comparison: parent ${error.message}`);
     if (data) return data as WritingSubmissionRow;
@@ -287,6 +315,7 @@ async function resolvePreviousSubmissionForComparison({
     .from("writing_submissions")
     .select("*")
     .eq("user_id", userId)
+    .eq("problem_id", currentSub.problem_id)
     .eq("feedback_status", "complete")
     .neq("id", currentSub.id)
     .lt("submitted_at", currentSub.submitted_at)

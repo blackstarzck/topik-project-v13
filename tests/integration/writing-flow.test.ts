@@ -6,6 +6,7 @@ const helpers = vi.hoisted(() => ({
   getSubmissionMock: vi.fn(),
   getFeedbackBundleMock: vi.fn(),
   getComparisonReportMock: vi.fn(),
+  getComparisonTargetCandidatesMock: vi.fn(),
   getActiveDraftMock: vi.fn(),
   getWritingProblemAvailabilityMock: vi.fn(),
   notFoundMock: vi.fn(() => {
@@ -31,6 +32,8 @@ vi.mock("@/lib/writing/server", () => ({
   getSubmission: (id: string) => helpers.getSubmissionMock(id),
   getFeedbackBundle: (id: string) => helpers.getFeedbackBundleMock(id),
   getComparisonReport: (id: string) => helpers.getComparisonReportMock(id),
+  getComparisonTargetCandidates: (...args: unknown[]) =>
+    helpers.getComparisonTargetCandidatesMock(...args),
   getActiveDraft: (...args: unknown[]) => helpers.getActiveDraftMock(...args),
   getWritingProblemAvailability: (...args: unknown[]) =>
     helpers.getWritingProblemAvailabilityMock(...args),
@@ -332,6 +335,21 @@ describe("writing flow — route guards", () => {
     helpers.getFeedbackBundleMock.mockImplementation((id: string) =>
       Promise.resolve(feedbackBundle(id, id === "p-2" ? 70 : 82)),
     );
+    helpers.getComparisonTargetCandidatesMock.mockResolvedValue([
+      {
+        submissionId: "p-2",
+        questionNo: 54,
+        problemId: "problem-54",
+        submittedAt: "2026-05-20T00:00:00Z",
+        feedbackStatus: "complete",
+        score: 70,
+        scoreMax: 100,
+        charCount: 20,
+        isSelected: true,
+        isRecommended: true,
+        isDisabled: false,
+      },
+    ]);
 
     const page =
       await import("../../src/app/(workspace)/writing/reports/[id]/compare/page");
@@ -342,5 +360,9 @@ describe("writing flow — route guards", () => {
     expect(helpers.getSubmissionMock).toHaveBeenCalledWith("p-2");
     expect(helpers.getFeedbackBundleMock).toHaveBeenCalledWith("c-2");
     expect(helpers.getFeedbackBundleMock).toHaveBeenCalledWith("p-2");
+    expect(helpers.getComparisonTargetCandidatesMock).toHaveBeenCalledWith(
+      "c-2",
+      "p-2",
+    );
   });
 });

@@ -5,10 +5,13 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { AppCard } from "@/components/shared/AppCard";
+import { RefreshCcw } from "@/components/shared/AppIcons";
 import { ReportPageHeader } from "@/components/shared/ReportPageHeader";
 import { logStudyEvent } from "@/lib/events/study-events";
 import type { ComparisonMetrics } from "@/lib/writing/comparison-service";
+import type { ComparisonTargetCandidate } from "@/lib/writing/server";
 import { ComparisonKpiBlock } from "./ComparisonKpiBlock";
+import { ComparisonTargetDrawer } from "./ComparisonTargetDrawer";
 import { DimensionComparisonCards } from "./DimensionComparisonCards";
 import { ScoreComparisonChart, type ChartDatum } from "./ScoreComparisonChart";
 import { SubmissionDiffPanel } from "./SubmissionDiffPanel";
@@ -28,6 +31,10 @@ type Props = {
   chartData: ChartDatum[];
   currentNorm: Record<string, number | null>;
   hasPrevious: boolean;
+  currentSubmissionId: string;
+  currentQuestionNo: number;
+  selectedPreviousSubmissionId: string | null;
+  comparisonTargets: ComparisonTargetCandidate[];
 };
 
 export function ComparisonReportView({
@@ -41,6 +48,10 @@ export function ComparisonReportView({
   chartData,
   currentNorm,
   hasPrevious,
+  currentSubmissionId,
+  currentQuestionNo,
+  selectedPreviousSubmissionId,
+  comparisonTargets,
 }: Props) {
   const t = useTranslations("reports.comparison");
   const router = useRouter();
@@ -49,6 +60,7 @@ export function ComparisonReportView({
   const [pendingAction, setPendingAction] = useState<NavigationAction | null>(
     null,
   );
+  const [targetDrawerOpen, setTargetDrawerOpen] = useState(false);
 
   useEffect(() => {
     void logStudyEvent({
@@ -71,10 +83,7 @@ export function ComparisonReportView({
       const url = typeof window !== "undefined" ? window.location.href : "";
       if (typeof navigator !== "undefined" && navigator.share) {
         await navigator.share({ title: t("shareTitle"), url });
-      } else if (
-        typeof navigator !== "undefined" &&
-        navigator.clipboard
-      ) {
+      } else if (typeof navigator !== "undefined" && navigator.clipboard) {
         await navigator.clipboard.writeText(url);
         notification.success({ title: t("shareCopied") });
       } else {
@@ -99,7 +108,7 @@ export function ComparisonReportView({
   return (
     <div
       data-testid="comparison-page-shell"
-      className="flex min-h-full w-full flex-col bg-background"
+      className="relative flex min-h-full w-full flex-col overflow-x-hidden bg-background"
     >
       <ReportPageHeader
         testId="comparison-page-header"
@@ -123,6 +132,13 @@ export function ComparisonReportView({
                   {t("retryProblem")}
                 </Button>
               ) : null}
+              <Button
+                icon={<RefreshCcw aria-hidden size={16} />}
+                onClick={() => setTargetDrawerOpen(true)}
+                data-testid="comparison-action-change-target"
+              >
+                {t("changeTarget")}
+              </Button>
               <div
                 data-testid="comparison-next-actions-secondary"
                 className="feedback-action-divider flex w-full flex-wrap items-center gap-2 pt-2 md:ml-1 md:w-auto md:pl-3 md:pt-0"
@@ -216,6 +232,15 @@ export function ComparisonReportView({
           previousText={previousText}
         />
       </div>
+
+      <ComparisonTargetDrawer
+        open={targetDrawerOpen}
+        onClose={() => setTargetDrawerOpen(false)}
+        currentSubmissionId={currentSubmissionId}
+        currentQuestionNo={currentQuestionNo}
+        selectedPreviousSubmissionId={selectedPreviousSubmissionId}
+        candidates={comparisonTargets}
+      />
     </div>
   );
 }

@@ -238,7 +238,8 @@ test.describe("authenticated comparison report", () => {
     page,
   }) => {
     const errors = collectErrors(page);
-    const { reportId, previousAnswer } = await createComparisonReportFixture();
+    const { reportId, previousAnswer, currentAnswer } =
+      await createComparisonReportFixture();
 
     await page.goto(`/writing/reports/${reportId}/compare`, {
       waitUntil: "networkidle",
@@ -249,7 +250,8 @@ test.describe("authenticated comparison report", () => {
     await expect(stickyHeader).toBeVisible();
     await expect(
       page.locator(".app-notification-corner, .app-workspace-mobile-actions"),
-    ).toHaveCount(0);
+    ).toHaveCount(1);
+    await expect(page.locator(".app-workspace-sider")).toHaveCount(1);
     mkdirSync("docs/qa/reports/2026-06-26-focus-page-global-actions", {
       recursive: true,
     });
@@ -278,9 +280,9 @@ test.describe("authenticated comparison report", () => {
       page.getByTestId("comparison-page-header").locator(".app-page-header"),
     ).toHaveCount(0);
     await expect(
-      page.getByTestId("report-page-header-actions").getByTestId(
-        "comparison-action-share",
-      ),
+      page
+        .getByTestId("report-page-header-actions")
+        .getByTestId("comparison-action-share"),
     ).toBeVisible();
     await expect
       .poll(async () =>
@@ -293,6 +295,7 @@ test.describe("authenticated comparison report", () => {
       )
       .toEqual([
         "comparison-action-retry",
+        "comparison-action-change-target",
         "comparison-action-next",
         "comparison-action-weakness",
         "comparison-action-share",
@@ -316,15 +319,27 @@ test.describe("authenticated comparison report", () => {
     await expect(page.getByTestId("comparison-submission-diff")).toContainText(
       previousAnswer,
     );
+    await expect(page.getByTestId("comparison-submission-diff")).toContainText(
+      currentAnswer.split("\n")[0],
+    );
     await expect(page.getByTestId("comparison-action-weakness")).toBeEnabled();
     await expect(
       page.getByTestId("comparison-next-actions").locator("button"),
-    ).toHaveCount(4);
+    ).toHaveCount(5);
     await expect(
-      page.getByTestId("comparison-page-body").getByTestId(
-        "comparison-next-actions",
-      ),
+      page
+        .getByTestId("comparison-page-body")
+        .getByTestId("comparison-next-actions"),
     ).toHaveCount(0);
+
+    await page.getByTestId("comparison-action-change-target").click();
+    await expect(
+      page
+        .getByTestId("comparison-page-shell")
+        .locator(".comparison-target-drawer"),
+    ).toBeVisible();
+    await expect(page.getByTestId("comparison-target-option")).toHaveCount(1);
+    await expect(page.getByTestId("comparison-target-confirm")).toBeDisabled();
 
     expect(errors).toEqual([]);
   });

@@ -11,6 +11,7 @@ import type {
   FeedbackBundle,
   QuestionNo,
   WritingDraftRow,
+  WritingFeedbackRow,
   WritingSubmissionRow,
 } from "./types";
 import { isQuestionNo } from "./types";
@@ -104,6 +105,104 @@ export async function getComparisonReport(
     .maybeSingle();
   if (error) throw new Error(`getComparisonReport: ${error.message}`);
   return data;
+}
+
+export type ComparisonTargetCandidate = {
+  submissionId: string;
+  questionNo: number;
+  problemId: string;
+  submittedAt: string;
+  feedbackStatus: WritingSubmissionRow["feedback_status"];
+  score: number | null;
+  scoreMax: number | null;
+  charCount: number;
+  isSelected: boolean;
+  isRecommended: boolean;
+  isDisabled: boolean;
+};
+
+type FeedbackScoreRow = Pick<
+  WritingFeedbackRow,
+  "submission_id" | "score_total" | "score_max" | "status"
+>;
+
+export async function getComparisonTargetCandidates(
+  currentSubmissionId: string,
+  selectedPreviousSubmissionId: string | null | undefined,
+  createClient: ClientFactory = createSupabaseServerClient,
+): Promise<ComparisonTargetCandidate[]> {
+  const supabase = await createClient();
+  const { data: current, error: currentError } = await supabase
+    .from("writing_submissions")
+    .select("*")
+    .eq("id", currentSubmissionId)
+    .maybeSingle();
+  if (currentError) {
+    throw new Error(`getComparisonTargetCandidates: ${currentError.message}`);
+  }
+  if (!current) return [];
+
+  const currentSub = current as WritingSubmissionRow;
+  const { data: submissions, error: submissionsError } = await supabase
+    .from("writing_submissions")
+    .select(
+      "id, user_id, problem_id, question_no, char_count, submitted_at, feedback_status, parent_submission_id",
+    )
+    .eq("user_id", currentSub.user_id)
+    .eq("problem_id", currentSub.problem_id)
+    .neq("id", currentSub.id)
+    .lt("submitted_at", currentSub.submitted_at)
+    .order("submitted_at", { ascending: false })
+    .limit(30);
+  if (submissionsError) {
+    throw new Error(
+      `getComparisonTargetCandidates: ${submissionsError.message}`,
+    );
+  }
+
+  const rows = (submissions ?? []) as WritingSubmissionRow[];
+  if (rows.length === 0) return [];
+
+  const ids = rows.map((row) => row.id);
+  const { data: feedbackRows, error: feedbackError } = await supabase
+    .from("writing_feedback")
+    .select("submission_id, score_total, score_max, status")
+    .in("submission_id", ids);
+  if (feedbackError) {
+    throw new Error(`getComparisonTargetCandidates: ${feedbackError.message}`);
+  }
+
+  const feedbackBySubmission = new Map(
+    ((feedbackRows ?? []) as FeedbackScoreRow[]).map((row) => [
+      row.submission_id,
+      row,
+    ]),
+  );
+  const latestComplete = rows.find((row) => row.feedback_status === "complete");
+  const recommendedId = rows.some(
+    (row) => row.id === currentSub.parent_submission_id,
+  )
+    ? currentSub.parent_submission_id
+    : (latestComplete?.id ?? null);
+
+  return rows.map((row) => {
+    const feedback = feedbackBySubmission.get(row.id);
+    const enabled =
+      row.feedback_status === "complete" && feedback?.status === "complete";
+    return {
+      submissionId: row.id,
+      questionNo: row.question_no,
+      problemId: row.problem_id,
+      submittedAt: row.submitted_at,
+      feedbackStatus: row.feedback_status,
+      score: feedback?.score_total ?? null,
+      scoreMax: feedback?.score_max ?? null,
+      charCount: row.char_count,
+      isSelected: row.id === selectedPreviousSubmissionId,
+      isRecommended: row.id === recommendedId,
+      isDisabled: !enabled,
+    };
+  });
 }
 
 export type WritingProblem = NormalizedWritingProblem;

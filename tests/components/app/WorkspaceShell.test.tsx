@@ -447,7 +447,6 @@ describe("WorkspaceShell", () => {
     ["/writing/short-answer-writing-51", false],
     ["/writing/feedback/short/submission-1", true],
     ["/writing/feedback/long/submission-1", true],
-    ["/writing/reports/report-1/compare", true],
   ])(
     "hides global floating actions on focus route %s",
     (pathname, keepsSidebar) => {
@@ -494,6 +493,28 @@ describe("WorkspaceShell", () => {
         ".app-notification-corner, .app-workspace-mobile-actions",
       ),
     ).toBeTruthy();
+  });
+
+  it("keeps global floating actions on comparison report routes", () => {
+    navMock.pathname = "/writing/reports/report-1/compare";
+
+    const { container } = renderWithIntl(
+      <WorkspaceShell
+        role="learner"
+        userId="user-1"
+        email="learner@example.com"
+        planLabel="premium"
+      >
+        <div data-testid="workspace-child">body</div>
+      </WorkspaceShell>,
+    );
+
+    expect(
+      container.querySelector(
+        ".app-notification-corner, .app-workspace-mobile-actions",
+      ),
+    ).toBeTruthy();
+    expect(container.querySelector(".app-workspace-sider")).toBeTruthy();
   });
 
   it("uses a white full-viewport content surface for the onboarding learning goal route", () => {
@@ -584,7 +605,6 @@ describe("WorkspaceShell", () => {
     ["/writing/short-answer-writing-51", false],
     ["/writing/feedback/short/submission-1", true],
     ["/writing/feedback/long/submission-1", true],
-    ["/writing/reports/report-1/compare", true],
   ])(
     "hides global floating actions on focus route %s",
     (pathname, keepsSidebar) => {

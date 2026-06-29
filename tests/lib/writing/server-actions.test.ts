@@ -623,6 +623,12 @@ describe("createComparisonReportAction", () => {
           submitted_at: "2026-06-20T10:00:00.000Z",
         }),
         submissionRow({
+          id: "other-problem-newer",
+          problem_id: "problem-2",
+          char_count: 110,
+          submitted_at: "2026-06-19T12:00:00.000Z",
+        }),
+        submissionRow({
           id: "previous-latest",
           char_count: 90,
           submitted_at: "2026-06-19T10:00:00.000Z",
@@ -666,6 +672,31 @@ describe("createComparisonReportAction", () => {
     );
   });
 
+  it("rejects an explicit previous_id from a different problem", async () => {
+    mockComparisonStore({
+      writing_submissions: [
+        submissionRow({
+          id: "current",
+          submitted_at: "2026-06-20T10:00:00.000Z",
+        }),
+        submissionRow({
+          id: "different-problem",
+          problem_id: "problem-2",
+          submitted_at: "2026-06-19T10:00:00.000Z",
+        }),
+      ],
+    });
+
+    await expect(
+      createComparisonReportAction({
+        current_id: "current",
+        previous_id: "different-problem",
+      }),
+    ).rejects.toThrow("same problem_id");
+
+    expect(helpers.rpcMock).not.toHaveBeenCalled();
+  });
+
   it("prefers parent_submission_id over the latest previous complete submission", async () => {
     mockComparisonStore({
       writing_submissions: [
@@ -699,6 +730,48 @@ describe("createComparisonReportAction", () => {
         metrics: expect.objectContaining({
           no_previous: false,
           score_delta: 8,
+        }),
+      }),
+    );
+  });
+
+  it("ignores parent_submission_id when the parent belongs to a different problem", async () => {
+    mockComparisonStore({
+      writing_submissions: [
+        submissionRow({
+          id: "current",
+          parent_submission_id: "parent-other-problem",
+          submitted_at: "2026-06-20T10:00:00.000Z",
+        }),
+        submissionRow({
+          id: "parent-other-problem",
+          problem_id: "problem-2",
+          submitted_at: "2026-06-18T10:00:00.000Z",
+        }),
+        submissionRow({
+          id: "previous-same-problem",
+          submitted_at: "2026-06-19T10:00:00.000Z",
+        }),
+      ],
+      writing_feedback: [
+        feedbackRow("current", 82),
+        feedbackRow("previous-same-problem", 72),
+      ],
+      feedback_dimension_scores: [
+        dimensionRow("current", 82),
+        dimensionRow("previous-same-problem", 72),
+      ],
+    });
+
+    await createComparisonReportAction({ current_id: "current" });
+
+    expect(helpers.rpcMock).toHaveBeenCalledWith(
+      "create_comparison_report_with_metrics",
+      expect.objectContaining({
+        previous_id: "previous-same-problem",
+        metrics: expect.objectContaining({
+          no_previous: false,
+          score_delta: 10,
         }),
       }),
     );
@@ -757,6 +830,11 @@ describe("createComparisonReportAction", () => {
           id: "previous-incomplete",
           feedback_status: "analyzing",
           submitted_at: "2026-06-19T10:00:00.000Z",
+        }),
+        submissionRow({
+          id: "other-problem-complete",
+          problem_id: "problem-2",
+          submitted_at: "2026-06-19T12:00:00.000Z",
         }),
       ],
       writing_feedback: [feedbackRow("current", 82)],

@@ -1403,7 +1403,23 @@
       "weaknessDisabledTooltip": "비교할 이전 답안이 쌓이면 약점 추천을 볼 수 있어요.",
       "weaknessDisabled": "약점 추천 (데이터 부족)",
       "weaknessView": "약점 추천 보기",
-      "retryProblem": "다시 풀기"
+      "retryProblem": "다시 풀기",
+      "changeTarget": "이전 답안 변경",
+      "targetDrawerTitle": "이전 답안 선택",
+      "targetDrawerDescription": "{questionNo}번 같은 문제를 다시 푼 답안만 비교할 수 있어요.",
+      "targetDrawerSameProblem": "같은 문제만",
+      "targetDrawerEmpty": "이 문제에서 비교할 이전 완료 답안이 아직 없어요.",
+      "targetDrawerQuestion": "{questionNo}번 문제",
+      "targetDrawerRecommended": "추천",
+      "targetDrawerSelected": "현재 선택",
+      "targetDrawerUnavailable": "분석 미완료",
+      "targetDrawerChars": "{count}자",
+      "targetDrawerScore": "{score}점",
+      "targetDrawerNoScore": "점수 없음",
+      "targetDrawerCompare": "이 답안으로 비교",
+      "targetDrawerCancel": "닫기",
+      "targetDrawerUnchanged": "이미 선택된 답안이에요.",
+      "targetDrawerCompareFailedTitle": "비교 대상을 변경하지 못했어요"
     }
   },
   "writing": {

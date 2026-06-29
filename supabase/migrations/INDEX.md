@@ -207,3 +207,4 @@
 | # | timestamp | file | scope |
 | ---:| --- | --- | --- |
 | 63 | `12:00:00` | [`20260629120000_auth_email_verified_access_gate.sql`](./20260629120000_auth_email_verified_access_gate.sql) | Adds an email-confirmed guard to `public.complete_auth_gate(...)` and `user_consents_owner_insert` so `profiles.status='active'` alone cannot create signup completion consent records. |
+| 64 | `15:30:00` | [`20260629153000_enforce_same_problem_comparison.sql`](./20260629153000_enforce_same_problem_comparison.sql) | Enforces R-01 comparison reports as same-problem comparisons: RPC and table trigger reject different `problem_id` submissions while allowing `previous_submission_id` to be null. |

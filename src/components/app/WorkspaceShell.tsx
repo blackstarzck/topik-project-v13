@@ -88,7 +88,7 @@ export function WorkspaceShell({
     isWritingExamRoute || isOnboardingLearningGoalRoute;
   const isShortFeedbackRoute = pathname.startsWith("/writing/feedback/short/");
   const hidesGlobalFloatingActions =
-    hidesWorkspaceChrome || isFeedbackDetailRoute || isComparisonReportRoute;
+    hidesWorkspaceChrome || isFeedbackDetailRoute;
   const contentClassName = [
     "app-workspace-content",
     isWritingExamRoute ? "app-workspace-content--exam" : null,
