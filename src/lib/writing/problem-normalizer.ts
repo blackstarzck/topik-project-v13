@@ -497,12 +497,51 @@ function normalizeChart(id: string, raw: unknown): NormalizedChart | null {
   };
 }
 
+function uniqueRecords(values: Array<AnyRecord | null>): AnyRecord[] {
+  const seen = new Set<AnyRecord>();
+  return values.filter((record): record is AnyRecord => {
+    if (!record || seen.has(record)) return false;
+    seen.add(record);
+    return true;
+  });
+}
+
+function q53PayloadSources(materials: AnyRecord | null): AnyRecord[] {
+  const rawPayload = getNestedRecord(materials, "raw_payload");
+  const nestedMaterials = getNestedRecord(materials, "materials");
+
+  return uniqueRecords([
+    materials,
+    getNestedRecord(materials, "source_data"),
+    rawPayload,
+    getNestedRecord(rawPayload, "source_data"),
+    nestedMaterials,
+    getNestedRecord(nestedMaterials, "source_data"),
+  ]);
+}
+
+function q53ChartContainers(materials: AnyRecord | null): AnyRecord[] {
+  return uniqueRecords(
+    q53PayloadSources(materials).flatMap((source) => [
+      getNestedRecord(source, "charts"),
+      getNestedRecord(getNestedRecord(source, "source_data"), "charts"),
+      getNestedRecord(source, "source_data"),
+      source,
+    ]),
+  );
+}
+
 function extractCharts(materials: AnyRecord | null): NormalizedChart[] {
-  const charts = getNestedRecord(materials, "charts") ?? materials;
-  return [
-    normalizeChart("chart_a", charts?.chart_a),
-    normalizeChart("chart_b", charts?.chart_b),
-  ].filter((chart): chart is NormalizedChart => Boolean(chart));
+  const containers = q53ChartContainers(materials);
+  return ["chart_a", "chart_b"]
+    .map((chartId) => {
+      for (const container of containers) {
+        const chart = normalizeChart(chartId, container[chartId]);
+        if (chart) return chart;
+      }
+      return null;
+    })
+    .filter((chart): chart is NormalizedChart => Boolean(chart));
 }
 
 function chartSubtitle(chart: NormalizedChart): string | null {
@@ -535,11 +574,14 @@ function materialCardRows(
 }
 
 function contextNotesRecord(materials: AnyRecord | null): AnyRecord | null {
-  const scenario = getNestedRecord(materials, "scenario");
-  return (
-    getNestedRecord(materials, "context_notes") ??
-    getNestedRecord(scenario, "context_notes")
-  );
+  for (const source of q53PayloadSources(materials)) {
+    const scenario = getNestedRecord(source, "scenario");
+    const contextNotes =
+      getNestedRecord(source, "context_notes") ??
+      getNestedRecord(scenario, "context_notes");
+    if (contextNotes) return contextNotes;
+  }
+  return null;
 }
 
 function normalizeMaterialCards(

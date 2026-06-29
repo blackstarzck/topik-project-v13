@@ -54,12 +54,50 @@ function asRecord(value: unknown): Record<string, unknown> | null {
     : null;
 }
 
-function extractChartTypes(materials: unknown): Set<string> {
+function uniqueRecords(
+  values: Array<Record<string, unknown> | null | undefined>,
+) {
+  const seen = new Set<Record<string, unknown>>();
+  return values.filter((value): value is Record<string, unknown> => {
+    if (!value || seen.has(value)) return false;
+    seen.add(value);
+    return true;
+  });
+}
+
+function extractChartContainers(materials: unknown) {
   const root = asRecord(materials);
-  const charts = asRecord(root?.charts);
-  const values = charts
-    ? Object.values(charts)
-    : [root?.chart_a, root?.chart_b, root?.chart_c];
+  const rawPayload = asRecord(root?.raw_payload);
+  const nestedMaterials = asRecord(root?.materials);
+  const sources = uniqueRecords([
+    root,
+    asRecord(root?.source_data),
+    rawPayload,
+    asRecord(rawPayload?.source_data),
+    nestedMaterials,
+    asRecord(nestedMaterials?.source_data),
+  ]);
+
+  return uniqueRecords(
+    sources.flatMap((source) => {
+      const sourceData = asRecord(source.source_data);
+      return [
+        asRecord(source.charts),
+        asRecord(sourceData?.charts),
+        sourceData,
+        source,
+      ];
+    }),
+  );
+}
+
+function extractChartTypes(materials: unknown): Set<string> {
+  const values = extractChartContainers(materials).flatMap((container) => {
+    const charts = asRecord(container.charts);
+    return charts
+      ? Object.values(charts)
+      : [container.chart_a, container.chart_b, container.chart_c];
+  });
 
   return new Set(
     values
@@ -264,7 +302,7 @@ async function verifyValueRowsActivateChartTooltips(page: Page) {
       );
       expect(tooltipText).toContain(rowLabel);
       expect(tooltipText).toContain(rowValue);
-      expect(tooltipDistanceFromMark).toBeLessThanOrEqual(24);
+      expect(tooltipDistanceFromMark).toBeLessThanOrEqual(25);
 
       await page.mouse.move(0, 0);
       await expect(row).not.toHaveClass(

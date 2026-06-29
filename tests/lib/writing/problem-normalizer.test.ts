@@ -395,6 +395,71 @@ describe("normalizeWritingProblem", () => {
     expect(serialized).not.toContain("must not leak");
   });
 
+  it("normalizes Q53 source_data charts from the external writing task mirror", () => {
+    const normalized = normalizeWritingProblem({
+      id: "q53-source-data",
+      title: "youth startup ratio",
+      prompt: "1) overall trend\n2) category gap\n3) summary",
+      questionNo: 53,
+      materials: {
+        question_id: "topik-writing-53-0001",
+        source_data: {
+          chart_a: {
+            title: "youth startup ratio overall",
+            unit: "%",
+            chart_type: "bar",
+            year_range: [2024, 2025, 2026],
+            series: [{ label: "ratio", values: [28, 36, 45] }],
+          },
+          chart_b: {
+            title: "industry share",
+            unit: "%",
+            chart_type: "donut",
+            series: [
+              { label: "content", values: [39] },
+              { label: "IT", values: [30] },
+            ],
+          },
+          context_notes: {
+            row1_label: "cause",
+            row1_value: "government support expanded",
+            row2_label: "status",
+            row2_value: "youth startup interest increased",
+            cause: "government support expanded",
+          },
+        },
+      },
+      rubric: {},
+      lifecycleStatus: "active",
+    });
+
+    expect(normalized.kind).toBe("q53");
+    if (normalized.kind !== "q53") throw new Error("expected q53");
+    expect(normalized.charts.map((chart) => chart.id)).toEqual([
+      "chart_a",
+      "chart_b",
+    ]);
+    expect(normalized.materialCards.map((card) => card.kind)).toEqual([
+      "chart",
+      "chart",
+      "reference",
+    ]);
+    expect(normalized.materialCards[0]).toMatchObject({
+      kind: "chart",
+      title: "youth startup ratio overall",
+    });
+    const referenceCard = normalized.materialCards[2];
+    expect(referenceCard).toBeDefined();
+    if (!referenceCard || referenceCard.kind !== "reference") {
+      throw new Error("expected reference card");
+    }
+    expect(referenceCard.rows).toContainEqual({
+      label: "cause",
+      value: "government support expanded",
+    });
+    expect(normalized.submitBlockedReason).toBeNull();
+  });
+
   it("caps 53 material cards at three cards", () => {
     const normalized = normalizeWritingProblem({
       id: "q53-cap",
