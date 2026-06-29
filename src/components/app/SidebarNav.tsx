@@ -39,7 +39,6 @@ import { useMemo, useState } from "react";
 import { BrandLogo } from "@/components/shared/BrandLogo";
 import { useWritingAvailability } from "@/components/practice/writing-availability-data";
 import type { AppRole } from "@/lib/auth/roles";
-import { QUESTION_NOS } from "@/lib/practice/types";
 import {
   APP_ROUTES,
   computeSidebarLocks,
@@ -251,8 +250,7 @@ export function SidebarNav({ role, planLabel, onNavigate }: Props) {
       computeSidebarLocks({
         role,
         planLabel: planLabel ?? null,
-        lockedWritingTypes:
-          writingAvailability.data?.lockedTypes ?? QUESTION_NOS,
+        lockedWritingTypes: writingAvailability.data?.lockedTypes ?? [],
       }),
     [role, planLabel, writingAvailability.data?.lockedTypes],
   );

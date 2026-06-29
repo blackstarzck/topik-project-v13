@@ -42,7 +42,7 @@ type RpcClient = {
 describe.skipIf(!ENABLED || !HAS_SUPABASE_ENV)(
   "institution writing exposure",
   () => {
-  it("filters writing problems by the authenticated user's affiliation code", async () => {
+  it("keeps the full writing pool for non-institution users and filters institution users by affiliation code", async () => {
     const { createClient } = await import("@supabase/supabase-js");
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
@@ -120,12 +120,20 @@ describe.skipIf(!ENABLED || !HAS_SUPABASE_ENV)(
         ]);
       if (exposureInserted.error) throw exposureInserted.error;
 
-      await expectVisibleIds(general.client, problemIds, [rows[0].id]);
+      await expectVisibleIds(general.client, problemIds, [
+        rows[0].id,
+        rows[1].id,
+        rows[2].id,
+      ]);
       await expectVisibleIds(kwon.client, problemIds, [rows[1].id]);
       await expectVisibleIds(lu.client, problemIds, [rows[2].id]);
       await expectVisibleIds(unassigned.client, problemIds, []);
 
-      await expectListIds(general.client, marker, [rows[0].id]);
+      await expectListIds(general.client, marker, [
+        rows[0].id,
+        rows[1].id,
+        rows[2].id,
+      ]);
       await expectListIds(kwon.client, marker, [rows[1].id]);
       await expectListIds(lu.client, marker, [rows[2].id]);
       await expectListIds(unassigned.client, marker, []);

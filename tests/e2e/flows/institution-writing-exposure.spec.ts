@@ -45,7 +45,7 @@ const REPORT_DIR = path.join(
   "docs",
   "qa",
   "reports",
-  "2026-06-29-institution-assigned-only-writing-access",
+  "2026-06-29-non-institution-writing-full-exposure",
 );
 
 type TestUser = {
@@ -391,12 +391,12 @@ test.skip(
   "Institution exposure e2e must not seed production data",
 );
 
-test("institution assigned-only writing access locks unassigned learners", async ({
+test("non-institution writing access stays fully visible while unassigned institution learners are locked", async ({
   browser,
 }, testInfo) => {
   test.skip(
     !["desktop-1280", "mobile-360"].includes(testInfo.project.name),
-    "Institution assigned-only evidence runs on desktop and mobile.",
+    "Institution visibility evidence runs on desktop and mobile.",
   );
   test.setTimeout(90_000);
 
@@ -444,7 +444,9 @@ test("institution assigned-only writing access locks unassigned learners", async
       const errors = collectErrors(page);
       await login(page, generalUser.email);
       await openProblemList(page, fixture!.marker);
-      await expect(page.getByText(fixture!.title)).toHaveCount(0);
+      await expect(page.getByText(fixture!.title)).toBeVisible({
+        timeout: 15_000,
+      });
       expect(errors).toEqual([]);
     });
 

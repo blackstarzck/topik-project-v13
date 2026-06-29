@@ -23,6 +23,28 @@ const navMock = vi.hoisted(() => ({
   pathname: "/dashboard",
   authCallback: null as ((event: string) => void) | null,
 }));
+type WritingAvailabilityMockValue = {
+  data:
+    | {
+        availableTypes: Set<number>;
+        lockedTypes: Set<number>;
+        hasAny: boolean;
+      }
+    | undefined;
+  isLoading: boolean;
+  error: Error | null;
+};
+const writingAvailabilityMock = vi.hoisted(() => ({
+  value: {
+    data: {
+      availableTypes: new Set([51, 52, 53, 54]),
+      lockedTypes: new Set(),
+      hasAny: true,
+    },
+    isLoading: false,
+    error: null,
+  } as WritingAvailabilityMockValue,
+}));
 const LOGO_SRC = "/assets/logo.png";
 
 function decodedImageSrc(image: HTMLImageElement | null) {
@@ -77,15 +99,7 @@ vi.mock("@/lib/supabase/browser", () => ({
 }));
 
 vi.mock("@/components/practice/writing-availability-data", () => ({
-  useWritingAvailability: () => ({
-    data: {
-      availableTypes: new Set([51, 52, 53, 54]),
-      lockedTypes: new Set(),
-      hasAny: true,
-    },
-    isLoading: false,
-    error: null,
-  }),
+  useWritingAvailability: () => writingAvailabilityMock.value,
 }));
 
 function hasExpandedMenuItem(container: HTMLElement, label: string) {
@@ -104,6 +118,15 @@ describe("WorkspaceShell", () => {
     navMock.routerReplace.mockClear();
     navMock.pathname = "/dashboard";
     navMock.authCallback = null;
+    writingAvailabilityMock.value = {
+      data: {
+        availableTypes: new Set([51, 52, 53, 54]),
+        lockedTypes: new Set(),
+        hasAny: true,
+      },
+      isLoading: false,
+      error: null,
+    };
   });
 
   it("redirects to /login on SIGNED_OUT (multi-tab/device sync) but ignores INITIAL_SESSION", () => {
@@ -378,6 +401,35 @@ describe("WorkspaceShell", () => {
     expect(
       sidebarMenu?.querySelector('[data-sidebar-icon-name="DocumentText"]'),
     ).toBeTruthy();
+  });
+
+  it("does not mark writing practice leaves unavailable before availability resolves", () => {
+    writingAvailabilityMock.value = {
+      data: undefined,
+      isLoading: true,
+      error: null,
+    };
+
+    const { container } = renderWithIntl(
+      <WorkspaceShell
+        role="learner"
+        userId="user-1"
+        email="learner@example.com"
+        planLabel="premium"
+      >
+        <div>body</div>
+      </WorkspaceShell>,
+    );
+
+    const sidebarMenu = container.querySelector(".app-sidebar-menu");
+    const writingTitle = sidebarMenu?.querySelector(
+      '[data-menu-id="rc-menu-uuid-writing"]',
+    );
+    fireEvent.click(writingTitle as Element);
+
+    expect(container.querySelector(".app-sidebar-lock-label")).toBeNull();
+    expect(container.querySelector(".app-sidebar-lock-icon")).toBeNull();
+    expect(container.querySelector(".app-sidebar-lock-tag")).toBeNull();
   });
 
   it("sends the brand mark to the learner home route", () => {
