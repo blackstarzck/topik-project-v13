@@ -203,7 +203,7 @@ describe("landing auth CTA", () => {
     );
     expect(cta?.tagName).toBe("A");
     expect(cta?.getAttribute("href")).toBe("/sign-up");
-    expect(cta?.textContent).toContain("TALKPIK AI로 시작하기");
+    expect(cta?.textContent).toContain("도토리 토픽");
   });
 
   it("points the footer headline CTA at the authenticated hero destination", () => {

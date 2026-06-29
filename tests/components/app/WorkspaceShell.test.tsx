@@ -76,6 +76,18 @@ vi.mock("@/lib/supabase/browser", () => ({
   }),
 }));
 
+vi.mock("@/components/practice/writing-availability-data", () => ({
+  useWritingAvailability: () => ({
+    data: {
+      availableTypes: new Set([51, 52, 53, 54]),
+      lockedTypes: new Set(),
+      hasAny: true,
+    },
+    isLoading: false,
+    error: null,
+  }),
+}));
+
 function hasExpandedMenuItem(container: HTMLElement, label: string) {
   return Array.from(
     container.querySelectorAll('[role="menuitem"][aria-expanded]'),

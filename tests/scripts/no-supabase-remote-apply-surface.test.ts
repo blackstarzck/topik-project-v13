@@ -31,14 +31,21 @@ describe("v13 Supabase remote-apply boundary", () => {
   });
 
   it("does not carry institution exposure schema ownership in v13 migrations", () => {
-    expect(
-      existsSync(
-        join(
-          root,
-          "supabase/migrations/20260626110000_writing_institution_visibility_predicate.sql",
-        ),
-      ),
-    ).toBe(false);
+    const migrationSql = [
+      "supabase/migrations/20260626110000_writing_institution_visibility_predicate.sql",
+      "supabase/migrations/20260629110000_institution_assigned_only_writing_access.sql",
+    ]
+      .map((relativePath) => readFileSync(join(root, relativePath), "utf8"))
+      .join("\n")
+      .replace(/\s+/g, " ")
+      .toLowerCase();
+
+    expect(migrationSql).not.toMatch(
+      /create\s+table(?:\s+if\s+not\s+exists)?\s+public\.topik_writing_question_institution_exposure/,
+    );
+    expect(migrationSql).not.toMatch(
+      /alter\s+table\s+public\.topik_writing_question_institution_exposure/,
+    );
     expect(
       existsSync(
         join(

@@ -219,7 +219,7 @@ export function AnalysisLoadingPage({
                   percent={displayedRingPercent}
                   titlePlacement="vertical"
                   variant="outlined"
-                  responsive
+                  responsive={false}
                   aria-label={t("progressLabel")}
                   items={STEP_KEYS.map((key) => ({
                     title: t(`steps.${key}Title`),
