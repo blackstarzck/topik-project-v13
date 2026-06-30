@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   getComparisonTargetCandidates,
+  getRetrySubmissionSeed,
   getWritingProblem,
   getWritingProblemAvailability,
 } from "../../../src/lib/writing/server";
@@ -152,6 +153,35 @@ function makeAvailabilityClient(
   return client;
 }
 
+function makeRetrySeedClient(rows: WritingSubmissionRow[]) {
+  const client = {
+    from: () => {
+      const filters: Array<{ column: string; value: unknown }> = [];
+      const query = {
+        select: () => query,
+        eq: (column: string, value: unknown) => {
+          filters.push({ column, value });
+          return query;
+        },
+        maybeSingle: () =>
+          Promise.resolve({
+            data:
+              rows.find((row) =>
+                filters.every(
+                  (filter) =>
+                    row[filter.column as keyof WritingSubmissionRow] ===
+                    filter.value,
+                ),
+              ) ?? null,
+            error: null,
+          }),
+      };
+      return query;
+    },
+  };
+  return client;
+}
+
 function submissionRow(
   overrides: Partial<WritingSubmissionRow> & { id: string },
 ): WritingSubmissionRow {
@@ -162,7 +192,7 @@ function submissionRow(
     draft_id: null,
     question_no: overrides.question_no ?? 54,
     answer_text: overrides.answer_text ?? "answer",
-    answer_json: null,
+    answer_json: overrides.answer_json ?? null,
     char_count: overrides.char_count ?? 100,
     submitted_at: overrides.submitted_at ?? "2026-06-20T10:00:00.000Z",
     feedback_status: overrides.feedback_status ?? "complete",
@@ -393,6 +423,55 @@ describe("getWritingProblemAvailability", () => {
     expect(availability.canStart).toBe(false);
     expect(availability.state).toBe("soft_unavailable");
     expect(availability.reason).toBe("Rotation ended");
+  });
+});
+
+describe("getRetrySubmissionSeed", () => {
+  it("returns the original submission answer only when it belongs to the same user, problem, and question", async () => {
+    const seed = await getRetrySubmissionSeed({
+      userId: "user-1",
+      submissionId: "00000000-0000-0000-0000-000000000011",
+      problemId: "00000000-0000-0000-0000-000000000001",
+      questionNo: 54,
+      createClient: async () =>
+        makeRetrySeedClient([
+          submissionRow({
+            id: "00000000-0000-0000-0000-000000000011",
+            user_id: "user-1",
+            problem_id: "00000000-0000-0000-0000-000000000001",
+            question_no: 54,
+            answer_text: "previous answer",
+            answer_json: { _v: "54.v1", text: "previous answer" },
+          }),
+        ]) as never,
+    });
+
+    expect(seed).toEqual({
+      parent_submission_id: "00000000-0000-0000-0000-000000000011",
+      answer_text: "previous answer",
+      answer_json: { _v: "54.v1", text: "previous answer" },
+    });
+  });
+
+  it("does not return another user's submission as a retry seed", async () => {
+    const seed = await getRetrySubmissionSeed({
+      userId: "user-1",
+      submissionId: "00000000-0000-0000-0000-000000000011",
+      problemId: "00000000-0000-0000-0000-000000000001",
+      questionNo: 54,
+      createClient: async () =>
+        makeRetrySeedClient([
+          submissionRow({
+            id: "00000000-0000-0000-0000-000000000011",
+            user_id: "user-2",
+            problem_id: "00000000-0000-0000-0000-000000000001",
+            question_no: 54,
+            answer_text: "other answer",
+          }),
+        ]) as never,
+    });
+
+    expect(seed).toBeNull();
   });
 });
 

@@ -111,6 +111,9 @@ describe("LibraryStatsPanel i18n chrome", () => {
     expect(screen.getByTestId("library-stats-actions").className).toContain(
       "mt-auto",
     );
+    expect(screen.getByTestId("library-stats-actions").className).toContain(
+      "library-stats-actions",
+    );
     expect(screen.getByTestId("library-stats-actions").className).not.toContain(
       "pt-",
     );

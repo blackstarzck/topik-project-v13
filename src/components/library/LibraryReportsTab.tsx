@@ -8,7 +8,6 @@ import { useState } from "react";
 import { useLibraryItems } from "@/lib/library/queries";
 import type { LibraryItemView, LibraryReportView } from "@/lib/library/types";
 
-import { ExportPdfButton } from "./ExportPdfButton";
 import { LibraryItemRow } from "./LibraryItemRow";
 import {
   LIBRARY_PAGE_SIZE,
@@ -107,13 +106,6 @@ export function LibraryReportsTab({
             itemId={item.item_id}
             tab="reports"
             tags={item.tags}
-            trailingActions={[
-              <ExportPdfButton
-                key="export"
-                sourceType="report"
-                sourceId={item.id}
-              />,
-            ]}
           >
             <div className="flex w-full flex-col gap-1">
               <Link href={`/writing/reports/${item.id}/compare` as never}>

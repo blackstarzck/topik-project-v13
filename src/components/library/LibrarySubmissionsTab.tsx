@@ -3,7 +3,6 @@
 import {
   Alert,
   Button,
-  Checkbox,
   DatePicker,
   Empty,
   Select,
@@ -23,7 +22,6 @@ import type {
 } from "@/lib/library/types";
 import { writingFeedbackHref } from "@/lib/writing/routes";
 
-import { ExportPdfButton } from "./ExportPdfButton";
 import { LibraryItemRow } from "./LibraryItemRow";
 import { LIBRARY_PAGE_SIZE, LibraryPagination } from "./LibraryPagination";
 import {
@@ -44,9 +42,11 @@ type Props = {
   initialItems: LibrarySubmissionView[];
   searchTerm?: string;
   onResetSearch?: () => void;
-  /** Lifts the current (filtered) selection to the parent actions bar. */
+  /** Clears row-level selection in the parent actions bar. */
   onSelectionChange?: (items: ExportSelectionItem[]) => void;
 };
+
+const EMPTY_EXPORT_SELECTION: ExportSelectionItem[] = [];
 
 function isSubmission(item: LibraryItemView): item is LibrarySubmissionView {
   return item.kind === "submission";
@@ -78,12 +78,6 @@ function isAnalysisFailedStatus(
   return status === "failed";
 }
 
-function isExportUnavailableStatus(
-  status: SubmissionEnrichment["feedbackStatus"],
-): boolean {
-  return isAnalysisPendingStatus(status) || isAnalysisFailedStatus(status);
-}
-
 /**
  * F-01 저장 답안 목록 (region 3) + 검색/필터 (region 1) + 페이지 이동 (region 5).
  *
@@ -93,7 +87,8 @@ function isExportUnavailableStatus(
  *  - Pagination: 10/page, <=5 page buttons, total at bottom, first/last
  *    disabled at the ends (antd Pagination handles disabled ends + responsive
  *    prev/next).
- *  - Selection checkboxes feed the parent's 내보내기/복습 세트 actions.
+ *  - Row-level selection/PDF/tag-edit controls are intentionally not rendered;
+ *    parent actions stay empty until a selection surface returns.
  */
 export function LibrarySubmissionsTab({
   initialItems,
@@ -105,8 +100,8 @@ export function LibrarySubmissionsTab({
   const query = useLibraryItems("submissions");
   // Memoize so the reference is stable across renders. Recomputing `.filter`
   // inline produced a NEW array every render → the `filtered` useMemo (which
-  // depends on `allItems`) and the selection-lift useEffect (which depends on
-  // `filtered`) re-ran every render → setState loop ("Maximum update depth
+  // depends on `allItems`) and the parent-clear useEffect re-ran every render,
+  // creating a setState loop ("Maximum update depth
   // exceeded"). It was masked while the dev-smoke could not hydrate (127.0.0.1
   // cross-origin block); see runs/2026/06/04/20260604-2130-…ledger.
   const allItems = useMemo<LibrarySubmissionView[]>(
@@ -117,7 +112,6 @@ export function LibrarySubmissionsTab({
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [range, setRange] = useState<[Dayjs | null, Dayjs | null] | null>(null);
   const [page, setPage] = useState(1);
-  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [enrich, setEnrich] = useState<Map<string, SubmissionEnrichment>>(
     new Map(),
   );
@@ -185,37 +179,9 @@ export function LibrarySubmissionsTab({
     safePage * LIBRARY_PAGE_SIZE,
   );
 
-  // Lift selection (intersected with currently-filtered ids) to the parent.
   useEffect(() => {
-    if (!onSelectionChange) return;
-    const validIds = new Set(
-      filtered
-        .filter((i) => {
-          const feedbackStatus = enrich.get(i.id)?.feedbackStatus ?? "pending";
-          return !isExportUnavailableStatus(feedbackStatus);
-        })
-        .map((i) => i.item_id),
-    );
-    const items: ExportSelectionItem[] = filtered
-      .filter((i) => selected.has(i.item_id) && validIds.has(i.item_id))
-      .map((i) => ({
-        itemId: i.item_id,
-        title: submissionTitle(
-          i,
-          t("problemTitle", { id: i.problem_id.slice(0, 8) }),
-        ),
-      }));
-    onSelectionChange(items);
-  }, [selected, filtered, enrich, onSelectionChange, t]);
-
-  function toggle(itemId: string, checked: boolean) {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (checked) next.add(itemId);
-      else next.delete(itemId);
-      return next;
-    });
-  }
+    onSelectionChange?.(EMPTY_EXPORT_SELECTION);
+  }, [onSelectionChange]);
 
   if (
     query.isLoading &&
@@ -304,14 +270,6 @@ export function LibrarySubmissionsTab({
               const feedbackStatus = meta?.feedbackStatus ?? "pending";
               const analysisPending = isAnalysisPendingStatus(feedbackStatus);
               const analysisFailed = isAnalysisFailedStatus(feedbackStatus);
-              const exportUnavailable =
-                isExportUnavailableStatus(feedbackStatus);
-              const exportDisabledReason = analysisFailed
-                ? t("failedExportDisabledReason")
-                : undefined;
-              const exportDisabledReasonId = analysisFailed
-                ? `library-submission-${item.item_id}-export-disabled-reason`
-                : undefined;
               const badge = statusBadge(feedbackStatus);
               const fallbackTitle = t("problemTitle", {
                 id: item.problem_id.slice(0, 8),
@@ -323,40 +281,7 @@ export function LibrarySubmissionsTab({
                   itemId={item.item_id}
                   tab="submissions"
                   tags={item.tags}
-                  trailingActions={[
-                    <span
-                      key="select"
-                      data-testid="library-select-item"
-                      title={exportDisabledReason}
-                    >
-                      <Checkbox
-                        checked={
-                          !exportUnavailable && selected.has(item.item_id)
-                        }
-                        disabled={exportUnavailable}
-                        aria-describedby={exportDisabledReasonId}
-                        onChange={(e) =>
-                          !exportUnavailable &&
-                          toggle(item.item_id, e.target.checked)
-                        }
-                        aria-label={t("selectForExportAriaLabel")}
-                      />
-                    </span>,
-                    <span key="export" title={exportDisabledReason}>
-                      <ExportPdfButton
-                        sourceType="submission"
-                        sourceId={item.id}
-                        disabled={exportUnavailable}
-                        ariaDescribedBy={exportDisabledReasonId}
-                      />
-                    </span>,
-                  ]}
                 >
-                  {exportDisabledReason ? (
-                    <span id={exportDisabledReasonId} className="sr-only">
-                      {exportDisabledReason}
-                    </span>
-                  ) : null}
                   <div className="flex w-full flex-col gap-1">
                     <div className="flex flex-wrap items-center gap-2">
                       {analysisPending ? (

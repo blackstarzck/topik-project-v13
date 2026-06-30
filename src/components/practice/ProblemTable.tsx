@@ -14,14 +14,15 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { writingProblemHref } from "@/lib/writing/routes";
+import { writingQuestionNeonClass } from "@/lib/writing/question-number-neon";
 import {
   difficultyBucket,
   difficultyBucketLabelKey,
   difficultyBucketShortKey,
 } from "./difficulty";
+import { ProblemTagIcon } from "./problem-tag-icons";
 import { getProblemRowDisplayMeta } from "./problem-list-display";
 import type { UserProblemRow } from "./problem-list-data";
-import { getReasonTagColor } from "./reason-tag-colors";
 
 type Props = {
   rows: UserProblemRow[];
@@ -96,6 +97,23 @@ function visibleTags(row: UserProblemRow): string[] {
     .slice(0, 3);
 }
 
+function ProblemMetadataTag({ tag }: { tag: string }) {
+  return (
+    <span className="problem-table__tag problem-table__tag--meta">
+      <ProblemTagIcon
+        aria-hidden="true"
+        className="problem-table__tag-icon"
+        color="currentColor"
+        focusable="false"
+        size="1em"
+        tag={tag}
+        variant="Linear"
+      />
+      <span className="problem-table__tag-text">{tag}</span>
+    </span>
+  );
+}
+
 export function ProblemTable({ rows, onRetryClick }: Props) {
   const router = useRouter();
   const t = useTranslations("practice.problems");
@@ -163,6 +181,10 @@ export function ProblemTable({ rows, onRetryClick }: Props) {
                 row.questionNo != null
                   ? "problem-table__type-index--number tabular-nums"
                   : "",
+                writingQuestionNeonClass(
+                  "problem-table__type-index",
+                  row.questionNo,
+                ),
               ]
                 .filter(Boolean)
                 .join(" ")}
@@ -195,14 +217,7 @@ export function ProblemTable({ rows, onRetryClick }: Props) {
               {tags.length > 0 ? (
                 <div className="problem-table__tags">
                   {tags.map((tag, index) => (
-                    <Tag
-                      key={tag}
-                      className="problem-table__tag"
-                      color={getReasonTagColor(index, tags.length)}
-                      variant="filled"
-                    >
-                      {tag}
-                    </Tag>
+                    <ProblemMetadataTag key={`${tag}-${index}`} tag={tag} />
                   ))}
                 </div>
               ) : null}

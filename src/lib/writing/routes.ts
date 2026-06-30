@@ -23,11 +23,13 @@ export function writingProblemHref({
   problemId,
   fresh = false,
   hint = false,
+  retrySubmissionId,
 }: {
   questionNo: number | null | undefined;
   problemId: string | null | undefined;
   fresh?: boolean;
   hint?: boolean;
+  retrySubmissionId?: string | null;
 }): string {
   if (!isQuestionNo(questionNo) || !problemId) {
     return APP_ROUTES.practiceProblems;
@@ -35,7 +37,10 @@ export function writingProblemHref({
 
   const freshParam = fresh ? "&fresh=1" : "";
   const hintParam = hint ? "&hint=1" : "";
-  return `${writingQuestionHref(questionNo)}?problem=${encodeURIComponent(problemId)}${freshParam}${hintParam}`;
+  const retryParam = retrySubmissionId
+    ? `&retrySubmission=${encodeURIComponent(retrySubmissionId)}`
+    : "";
+  return `${writingQuestionHref(questionNo)}?problem=${encodeURIComponent(problemId)}${freshParam}${hintParam}${retryParam}`;
 }
 
 export function writingFeedbackHref({

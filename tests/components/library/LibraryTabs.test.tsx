@@ -11,7 +11,7 @@ import {
  *
  * vitest runs without a DOM in this project (no jsdom installed), so we
  * verify the URL-building helper that the React component calls inside its
- * antd Tabs `onChange`. The component itself is a thin wrapper:
+ * the library type filter `onChange`. The component itself is a thin wrapper:
  *   onChange={(key) => router.replace(buildLibraryTabUrl(key, params))}
  * so testing `buildLibraryTabUrl` exhaustively covers the URL contract.
  */

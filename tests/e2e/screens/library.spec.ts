@@ -254,7 +254,7 @@ async function openTab(page: Page, tab: string) {
   await expect(page).toHaveURL(new RegExp(`/library\\?tab=${tab}`));
 }
 
-test("F-01 library and F-M1 pdf export modal match the wireframe constraints", async ({ page }) => {
+test("F-01 library rows match the wireframe constraints", async ({ page }) => {
   const errors = collectErrors(page);
   const fixture = await createLibraryFixture();
 
@@ -265,6 +265,8 @@ test("F-01 library and F-M1 pdf export modal match the wireframe constraints", a
   await expect(page.getByTestId("library-actions")).toBeVisible();
   await expect(page.getByTestId("library-export-pdf")).toBeDisabled();
   await expect(page.getByTestId("library-create-review-set")).toBeDisabled();
+  await expect(page.getByTestId("library-tabs")).toHaveCount(0);
+  await expect(page.getByTestId("library-type-filter")).toBeVisible();
   await expect(page.getByTestId("library-search").locator("input")).toHaveAttribute(
     "maxlength",
     "40",
@@ -276,29 +278,30 @@ test("F-01 library and F-M1 pdf export modal match the wireframe constraints", a
   expect(rowText).toContain(fixture.problemTitle.slice(0, 12));
   expect(rowText).not.toContain(fixture.problemId.slice(0, 8));
 
-  await page.getByTestId("library-select-item").click();
-  await expect(page.getByTestId("library-selection-count")).toContainText("1");
-  await expect(page.getByTestId("library-export-pdf")).toBeEnabled();
-  await page.getByTestId("library-export-pdf").click();
-
-  await expect(page.getByTestId("pdf-export-modal")).toBeVisible();
-  await expect(page.getByTestId("pdf-export-filename")).toHaveAttribute(
-    "maxlength",
-    "60",
-  );
-  await expect(page.getByTestId("pdf-export-preview-item")).toHaveCount(1);
-  const previewText = await page.getByTestId("pdf-export-preview").innerText();
-  expect(previewText).toContain(fixture.problemTitle.slice(0, 12));
-  expect(previewText).not.toContain(fixture.problemId.slice(0, 8));
-  await expect(page.getByTestId("pdf-export-submit")).toBeDisabled();
-
-  await page.getByTestId("pdf-export-privacy-confirm").click();
-  await expect(page.getByTestId("pdf-export-submit")).toBeEnabled();
-  await page.getByTestId("pdf-export-close").click();
-  await expect(page.getByTestId("pdf-export-modal")).toBeHidden();
+  await expect(page.getByTestId("library-select-item")).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "PDF로 내보내기" }),
+  ).toHaveCount(1);
+  await expect(
+    page.getByRole("button", { name: "태그 편집" }),
+  ).toHaveCount(0);
+  await expect(page.getByTestId("library-selection-count")).toContainText("0");
+  await expect(page.getByTestId("library-export-pdf")).toBeDisabled();
+  const deleteButton = page.getByRole("button", { name: "삭제" });
+  await expect(deleteButton).toHaveCount(1);
+  await expect(deleteButton).toHaveText("");
+  await expect(deleteButton).toHaveClass(/ant-btn-text/);
+  await expect(deleteButton).toHaveClass(/ant-btn-dangerous/);
+  await expect(deleteButton.locator("svg")).toHaveCount(1);
 
   await openTab(page, "reports");
   await filterToFixture(page, fixture.marker);
+  await expect(
+    page.getByRole("button", { name: "PDF로 내보내기" }),
+  ).toHaveCount(1);
+  await expect(
+    page.getByRole("button", { name: "태그 편집" }),
+  ).toHaveCount(0);
 
   await openTab(page, "problems");
   await filterToFixture(page, fixture.marker);

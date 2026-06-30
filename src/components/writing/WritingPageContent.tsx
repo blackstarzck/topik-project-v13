@@ -6,7 +6,11 @@ import { LongFormWriting53Workspace } from "./LongFormWriting53Workspace";
 import { ShortAnswerWriting51Workspace } from "./ShortAnswerWriting51Workspace";
 import { ShortAnswerWriting52Workspace } from "./ShortAnswerWriting52Workspace";
 import { writingQuestionHref } from "@/lib/writing/routes";
-import type { QuestionNo, WritingDraftRow } from "@/lib/writing/types";
+import type {
+  QuestionNo,
+  WritingDraftRow,
+  WritingRetrySeed,
+} from "@/lib/writing/types";
 import type { WritingProblem } from "@/lib/writing/server";
 
 type Props = {
@@ -14,6 +18,8 @@ type Props = {
   userId: string;
   problem: WritingProblem | null;
   draft: WritingDraftRow | null;
+  retrySeed?: WritingRetrySeed | null;
+  parentSubmissionId?: string | null;
   canRetryProblemLoad?: boolean;
 };
 
@@ -22,6 +28,8 @@ export async function WritingPageContent({
   userId,
   problem,
   draft,
+  retrySeed = null,
+  parentSubmissionId = null,
   canRetryProblemLoad = true,
 }: Props) {
   const t = await getTranslations("writing.page");
@@ -70,6 +78,8 @@ export async function WritingPageContent({
         userId={userId}
         problem={problem}
         draft={draft}
+        retrySeed={retrySeed}
+        parentSubmissionId={parentSubmissionId}
       />
     );
   }
@@ -79,6 +89,8 @@ export async function WritingPageContent({
         userId={userId}
         problem={problem}
         draft={draft}
+        retrySeed={retrySeed}
+        parentSubmissionId={parentSubmissionId}
       />
     );
   }
@@ -88,6 +100,8 @@ export async function WritingPageContent({
         userId={userId}
         problem={problem}
         draft={draft}
+        retrySeed={retrySeed}
+        parentSubmissionId={parentSubmissionId}
       />
     );
   }
@@ -97,6 +111,8 @@ export async function WritingPageContent({
         userId={userId}
         problem={problem}
         draft={draft}
+        retrySeed={retrySeed}
+        parentSubmissionId={parentSubmissionId}
       />
     );
   }

@@ -805,6 +805,7 @@ describe("WorkspaceShell", () => {
 
   it.each([
     "/writing/feedback/short/submission-1",
+    "/writing/feedback/long/submission-1",
     "/writing/reports/report-1/compare",
   ])("applies flush content chrome on report header routes: %s", (pathname) => {
     navMock.pathname = pathname;

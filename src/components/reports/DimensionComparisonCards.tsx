@@ -2,10 +2,9 @@
 
 import { Col, Empty, Row, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
-import { AppCard } from "@/components/shared/AppCard";
 import { SPACING } from "@/theme/spacing";
 
-const { Text } = Typography;
+const { Text, Title } = Typography;
 
 const DIMENSION_KEYS = [
   "grammar",
@@ -20,6 +19,7 @@ const DIMENSION_KEYS = [
 const MAX_CARDS = 4;
 const HOLD_THRESHOLD = 1;
 const EMPTY_VALUE = "-";
+const SECTION_CLASS_NAME = "comparison-diff-panel min-w-0 pb-[62px]";
 
 type Props = {
   deltas: Record<string, number | null>;
@@ -58,33 +58,54 @@ export function DimensionComparisonCards({
     const entries = Object.entries(currentScores ?? {}).slice(0, MAX_CARDS);
     if (entries.length === 0) {
       return (
-        <AppCard data-testid="comparison-dimension-cards">
+        <section
+          data-testid="comparison-dimension-cards"
+          className={SECTION_CLASS_NAME}
+        >
           <Empty description={t("emptyCurrent")} />
-        </AppCard>
+        </section>
       );
     }
     return (
-      <AppCard
-        title={t("titleScores")}
+      <section
         data-testid="comparison-dimension-cards"
+        className={SECTION_CLASS_NAME}
       >
+        <Title
+          level={5}
+          className="!mb-[40px] !mt-0"
+          data-testid="comparison-dimension-section-title"
+        >
+          {t("titleScores")}
+        </Title>
         <Row gutter={[SPACING.md, SPACING.md]}>
           {entries.map(([dimension, score]) => (
             <Col key={dimension} xs={12} md={6}>
-              <AppCard size="small" data-testid="comparison-dimension-card">
-                <Text strong>{dimLabel(dimension)}</Text>
-                <div className="mt-1">
-                  <Tag>
+              <div
+                className="min-w-0 py-1"
+                data-testid="comparison-dimension-card"
+              >
+                <Text
+                  className="font-normal !text-[var(--ant-color-text-description)]"
+                  data-testid="comparison-dimension-label"
+                >
+                  {dimLabel(dimension)}
+                </Text>
+                <div className="mt-2">
+                  <span
+                    className="block text-[36px] font-semibold leading-none text-text"
+                    data-testid="comparison-dimension-score-value"
+                  >
                     {score === null
                       ? EMPTY_VALUE
                       : t("scorePoint", { value: score })}
-                  </Tag>
+                  </span>
                 </div>
-              </AppCard>
+              </div>
             </Col>
           ))}
         </Row>
-      </AppCard>
+      </section>
     );
   }
 
@@ -94,21 +115,42 @@ export function DimensionComparisonCards({
 
   if (sorted.length === 0) {
     return (
-      <AppCard data-testid="comparison-dimension-cards">
+      <section
+        data-testid="comparison-dimension-cards"
+        className={SECTION_CLASS_NAME}
+      >
         <Empty description={t("emptyChange")} />
-      </AppCard>
+      </section>
     );
   }
 
   return (
-    <AppCard title={t("titleChange")} data-testid="comparison-dimension-cards">
+    <section
+      data-testid="comparison-dimension-cards"
+      className={SECTION_CLASS_NAME}
+    >
+      <Title
+        level={5}
+        className="!mb-[40px] !mt-0"
+        data-testid="comparison-dimension-section-title"
+      >
+        {t("titleChange")}
+      </Title>
       <Row gutter={[SPACING.md, SPACING.md]}>
         {sorted.map(([dimension, delta]) => {
           const trend = trendOf(delta);
           return (
             <Col key={dimension} xs={12} md={6}>
-              <AppCard size="small" data-testid="comparison-dimension-card">
-                <Text strong>{dimLabel(dimension)}</Text>
+              <div
+                className="min-w-0 py-1"
+                data-testid="comparison-dimension-card"
+              >
+                <Text
+                  className="font-normal !text-[var(--ant-color-text-description)]"
+                  data-testid="comparison-dimension-label"
+                >
+                  {dimLabel(dimension)}
+                </Text>
                 <div className="mt-1">
                   <Tag>
                     {trendLabel[trend]}
@@ -117,11 +159,11 @@ export function DimensionComparisonCards({
                       : ""}
                   </Tag>
                 </div>
-              </AppCard>
+              </div>
             </Col>
           );
         })}
       </Row>
-    </AppCard>
+    </section>
   );
 }

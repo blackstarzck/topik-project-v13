@@ -23,6 +23,7 @@ import {
   type EssayChecklistKey,
   type LongFormDraftJson,
   type WritingDraftRow,
+  type WritingRetrySeed,
 } from "@/lib/writing/types";
 import {
   AutosaveWarningModal,
@@ -50,6 +51,8 @@ type Props = {
   userId: string;
   problem: Q54Problem;
   draft: WritingDraftRow | null;
+  retrySeed?: WritingRetrySeed | null;
+  parentSubmissionId?: string | null;
 };
 
 type Question54State = {
@@ -61,7 +64,9 @@ type ComposerMode = "write" | "manuscript";
 
 const DEBOUNCE_MS = 2000;
 
-function readInitial54(draft: WritingDraftRow | null): Question54State {
+function readInitial54(
+  draft: Pick<WritingDraftRow, "answer_json" | "answer_text"> | null,
+): Question54State {
   if (
     draft?.answer_json &&
     isLongFormDraftJson(draft.answer_json) &&
@@ -83,12 +88,19 @@ function build54Json(state: Question54State): LongFormDraftJson {
   };
 }
 
-export function EssayWriting54Workspace({ userId, problem, draft }: Props) {
+export function EssayWriting54Workspace({
+  userId,
+  problem,
+  draft,
+  retrySeed = null,
+  parentSubmissionId = null,
+}: Props) {
   const tPage = useTranslations("writing.q54");
   const tEditor = useTranslations("writing.editor");
   const tGuide = useTranslations("writing.guide");
+  const answerSource = retrySeed ?? draft;
   const [state, setState] = useState<Question54State>(() =>
-    readInitial54(draft),
+    readInitial54(answerSource),
   );
   const [status, setStatus] = useState<AutosaveStatus>(
     draft?.autosave_status ?? "clean",
@@ -265,6 +277,7 @@ export function EssayWriting54Workspace({ userId, problem, draft }: Props) {
         draft_id: draftId,
         problem_id: problem.id,
         question_no: 54,
+        parent_submission_id: parentSubmissionId,
         answer_text: state.text,
         answer_json: JSON.parse(JSON.stringify(build54Json(state))),
         char_count: charCount,

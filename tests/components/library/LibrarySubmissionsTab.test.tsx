@@ -91,7 +91,7 @@ describe("LibrarySubmissionsTab — no render loop (regression)", () => {
     ).not.toThrow();
   });
 
-  it("renders pending submissions without a feedback link and disables export selection", async () => {
+  it("renders pending submissions without row selection or row PDF export controls", async () => {
     vi.mocked(fetchSubmissionEnrichment).mockResolvedValueOnce(
       new Map([
         [
@@ -134,16 +134,24 @@ describe("LibrarySubmissionsTab — no render loop (regression)", () => {
 
     await waitFor(() => {
       expect(
-        (
-          screen.getByLabelText(
-            koMessages.library.submissions.selectForExportAriaLabel,
-          ) as HTMLInputElement
-        ).disabled,
-      ).toBe(true);
+        screen.getByText(koMessages.library.submissions.statusAnalyzing),
+      ).toBeTruthy();
     });
+
+    expect(screen.queryByTestId("library-select-item")).toBeNull();
+    expect(
+      screen.queryByLabelText(
+        koMessages.library.submissions.selectForExportAriaLabel,
+      ),
+    ).toBeNull();
+    expect(
+      screen.queryByRole("button", {
+        name: koMessages.library.exportButton.label,
+      }),
+    ).toBeNull();
   });
 
-  it("marks failed submissions and disables export selection", async () => {
+  it("marks failed submissions without row selection or row PDF export controls", async () => {
     vi.mocked(fetchSubmissionEnrichment).mockResolvedValueOnce(
       new Map([
         [
@@ -195,25 +203,21 @@ describe("LibrarySubmissionsTab — no render loop (regression)", () => {
       ).toBeTruthy();
     });
 
-    const selectWrapper = screen.getByTestId("library-select-item");
-    expect(selectWrapper.getAttribute("title")).toBe(
-      koMessages.library.submissions.failedExportDisabledReason,
-    );
-    const disabledReason = screen.getByText(
-      koMessages.library.submissions.failedExportDisabledReason,
-    );
-    const checkbox = screen.getByLabelText(
-      koMessages.library.submissions.selectForExportAriaLabel,
-    ) as HTMLInputElement;
-    const exportButton = screen.getByRole("button", {
-      name: koMessages.library.exportButton.label,
-    }) as HTMLButtonElement;
-
-    expect(checkbox.disabled).toBe(true);
-    expect(exportButton.disabled).toBe(true);
-    expect(checkbox.getAttribute("aria-describedby")).toBe(disabledReason.id);
-    expect(exportButton.getAttribute("aria-describedby")).toBe(
-      disabledReason.id,
-    );
+    expect(screen.queryByTestId("library-select-item")).toBeNull();
+    expect(
+      screen.queryByLabelText(
+        koMessages.library.submissions.selectForExportAriaLabel,
+      ),
+    ).toBeNull();
+    expect(
+      screen.queryByText(
+        koMessages.library.submissions.failedExportDisabledReason,
+      ),
+    ).toBeNull();
+    expect(
+      screen.queryByRole("button", {
+        name: koMessages.library.exportButton.label,
+      }),
+    ).toBeNull();
   });
 });

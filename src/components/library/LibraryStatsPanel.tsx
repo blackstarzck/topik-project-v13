@@ -41,7 +41,10 @@ function StatsActionFooter({ actionPanel }: { actionPanel?: ReactNode }) {
   if (!actionPanel) return null;
 
   return (
-    <div data-testid="library-stats-actions" className="mt-auto w-full">
+    <div
+      data-testid="library-stats-actions"
+      className="library-stats-actions mt-auto w-full"
+    >
       {actionPanel}
     </div>
   );

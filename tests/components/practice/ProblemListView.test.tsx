@@ -323,6 +323,79 @@ describe("ProblemListView", () => {
     );
   }, 45_000);
 
+  it("adds the matching neon background class to each writing question number", async () => {
+    rpcMock.mockResolvedValueOnce({
+      data: [51, 52, 53, 54].map((questionNo, index) => ({
+        ...rpcRow(
+          {
+            problem_id: `problem-neon-${questionNo}`,
+            title: `Neon question ${questionNo}`,
+            difficulty: 3,
+            tags: [`q${questionNo}`],
+            attempt_count: 0,
+            is_solved: false,
+            solve_state: "none",
+          },
+          index,
+        ),
+        question_no: questionNo,
+      })),
+      error: null,
+    });
+
+    const { container } = renderInApp(<ProblemListView userId="user-1" />);
+
+    await screen.findByText("Neon question 51");
+
+    for (const questionNo of [51, 52, 53, 54]) {
+      const badge = container.querySelector(
+        `.problem-table__type-index--q${questionNo}`,
+      );
+
+      expect(badge?.textContent).toBe(String(questionNo));
+      expect(badge?.classList.contains("problem-table__type-index--number")).toBe(
+        true,
+      );
+    }
+  });
+
+  it("renders problem tags as icon-led description metadata instead of filled AntD tags", async () => {
+    rpcMock.mockResolvedValueOnce({
+      data: [
+        rpcRow(
+          {
+            problem_id: "problem-tag-icons-51",
+            title: "Icon tag problem",
+            difficulty: 3,
+            tags: ["교육", "문의", "설명"],
+            attempt_count: 0,
+            is_solved: false,
+            solve_state: "none",
+          },
+          0,
+        ),
+      ],
+      error: null,
+    });
+
+    const { container } = renderInApp(<ProblemListView userId="user-1" />, "ko");
+
+    await screen.findByText("Icon tag problem");
+
+    const tags = Array.from(
+      container.querySelectorAll(".problem-table__tags .problem-table__tag--meta"),
+    );
+
+    expect(tags).toHaveLength(3);
+    expect(tags.map((tag) => tag.textContent)).toEqual(["교육", "문의", "설명"]);
+    expect(
+      container.querySelector(".problem-table__tags .problem-table__tag.ant-tag"),
+    ).toBeNull();
+    expect(
+      container.querySelectorAll(".problem-table__tags .problem-table__tag-icon"),
+    ).toHaveLength(3);
+  });
+
   it("starts an unsolved problem when the learner selects the problem row", async () => {
     rpcMock.mockResolvedValueOnce({
       data: [

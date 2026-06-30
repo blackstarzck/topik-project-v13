@@ -123,4 +123,17 @@ describe("create_external_writing_submission", () => {
     expect(existingReturnIndex).toBeGreaterThanOrEqual(0);
     expect(newSubmissionSaveIndex).toBeGreaterThan(insertIndex);
   });
+
+  it("persists a validated parent submission for feedback retries", () => {
+    const sql = readMigrations();
+    const normalized = sql.replace(/\s+/g, " ").toLowerCase();
+
+    expect(normalized).toContain("v_parent_submission_id");
+    expect(normalized).toContain("submission ? 'parent_submission_id'");
+    expect(normalized).toContain("raise exception 'parent_submission_not_owned'");
+    expect(normalized).toContain(
+      "answer_text, answer_json, char_count, feedback_status, parent_submission_id",
+    );
+    expect(normalized).toContain("v_parent_submission_id");
+  });
 });

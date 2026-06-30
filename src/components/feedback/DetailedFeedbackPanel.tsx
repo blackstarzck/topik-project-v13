@@ -1,27 +1,20 @@
 "use client";
 
-import { Collapse, Empty, Progress, Tag, Typography, theme } from "antd";
+import { Collapse, Progress, Tag, Typography, theme } from "antd";
 import { useTranslations } from "next-intl";
-import { AppCard } from "@/components/shared/AppCard";
 import type { FeedbackDimensionScoreRow } from "@/lib/writing/types";
 
-const { Paragraph, Text } = Typography;
+const { Paragraph, Text, Title } = Typography;
 
 /**
- * E-02 상세 피드백 패널이 다루는 5개 세부 항목 (description region 3):
- * 구조, 논리, 어휘, 문법, 주제 적합성. weakness_level/score로 세부 평가를 보여준다.
- * 제약: 평가 항목 5개 이하. 라벨은 feedback.detail.label.<key>에서 t()로 해석.
+ * E-02 상세 피드백 패널은 상단 요약에 이미 노출되는 content/structure를
+ * 반복하지 않고, 남은 세부 항목만 보여준다.
  */
 const DETAIL_DIMENSION_KEYS: FeedbackDimensionScoreRow["dimension"][] = [
-  "structure",
-  "content",
   "vocab",
   "grammar",
   "topic_fit",
 ];
-
-// 카드 본문 상단 패딩 0 — Collapse가 카드 상단에 붙도록(의도적 flush, antd 6.x styles API).
-const DETAIL_CARD_STYLES = { body: { paddingTop: 0 } } as const; // ai-check: allow-inline-number 0 = 의도적 flush
 
 type Props = {
   dimensions: FeedbackDimensionScoreRow[];
@@ -30,7 +23,7 @@ type Props = {
 /**
  * E-02 상세 피드백 패널 (description region 3).
  * 제약: 평가 항목 5개 이하, 각 항목 본문 2줄 우선.
- * 예외: 추천 없음/항목 누락은 빈 상태와 보완 안내 표시.
+ * 예외: 보여줄 세부 항목이 없으면 패널을 숨긴다.
  */
 export function DetailedFeedbackPanel({ dimensions }: Props) {
   const t = useTranslations("feedback.detail");
@@ -38,13 +31,7 @@ export function DetailedFeedbackPanel({ dimensions }: Props) {
   const byDim = new Map(dimensions.map((d) => [d.dimension, d] as const));
   const available = DETAIL_DIMENSION_KEYS.filter((key) => byDim.has(key));
 
-  if (available.length === 0) {
-    return (
-      <AppCard title={t("cardTitle")} data-testid="feedback-detail-panel">
-        <Empty description={t("emptyDescription")} />
-      </AppCard>
-    );
-  }
+  if (available.length === 0) return null;
 
   const items = available.map((key) => {
     const row = byDim.get(key);
@@ -86,16 +73,18 @@ export function DetailedFeedbackPanel({ dimensions }: Props) {
   });
 
   return (
-    <AppCard
-      title={t("cardTitle")}
-      styles={DETAIL_CARD_STYLES}
+    <section
+      className="flex flex-col gap-4"
       data-testid="feedback-detail-panel"
     >
+      <Title level={5} className="m-0">
+        {t("cardTitle")}
+      </Title>
       <Collapse
         ghost
         items={items}
         defaultActiveKey={available.length > 0 ? [available[0]] : []}
       />
-    </AppCard>
+    </section>
   );
 }

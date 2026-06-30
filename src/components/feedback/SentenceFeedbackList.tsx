@@ -9,14 +9,34 @@ import type { SentenceFeedbackRow } from "@/lib/writing/types";
 const { Text, Title } = Typography;
 
 const INITIAL_VISIBLE = 5;
+const SHORT_LABELS = ["ㄱ", "ㄴ", "ㄷ", "ㄹ", "ㅁ", "ㅂ", "ㅅ", "ㅇ"];
+
+export type SentenceFeedbackLabelVariant = "short" | "long";
 
 type Props = {
   rows: SentenceFeedbackRow[];
   onReanalyze?: () => void;
+  labelVariant?: SentenceFeedbackLabelVariant;
 };
 
-export function SentenceFeedbackList({ rows, onReanalyze }: Props) {
-  const t = useTranslations("feedback.sentence");
+type SentenceTranslator = (
+  key: string,
+  values?: Record<string, string | number>,
+) => string;
+
+type SentenceFeedbackDisplayItem = {
+  key: string;
+  row: SentenceFeedbackRow | null;
+  labelIndex: number;
+  labelTotal: number;
+};
+
+export function SentenceFeedbackList({
+  rows,
+  onReanalyze,
+  labelVariant = "short",
+}: Props) {
+  const t = useTranslations("feedback.sentence") as SentenceTranslator;
   const [expanded, setExpanded] = useState(false);
 
   if (rows.length === 0) {
@@ -33,8 +53,11 @@ export function SentenceFeedbackList({ rows, onReanalyze }: Props) {
     );
   }
 
-  const visible = expanded ? rows : rows.slice(0, INITIAL_VISIBLE);
-  const hiddenCount = rows.length - visible.length;
+  const displayItems = buildDisplayItems(rows, labelVariant);
+  const visible = expanded
+    ? displayItems
+    : displayItems.slice(0, INITIAL_VISIBLE);
+  const hiddenCount = displayItems.length - visible.length;
 
   return (
     <section
@@ -45,20 +68,26 @@ export function SentenceFeedbackList({ rows, onReanalyze }: Props) {
         {t("cardTitle")}
       </Title>
       <div role="list" className="flex flex-col gap-4">
-        {visible.map((row, index) => {
-          const failed = !row.corrected_text && !row.comment;
+        {visible.map((item, index) => {
+          const row = item.row;
+          const failed = !row?.corrected_text && !row?.comment;
           const itemClassName = ["py-4", index === 0 ? "pt-0" : ""]
             .filter(Boolean)
             .join(" ");
 
           return (
-            <div key={row.id} role="listitem" className={itemClassName}>
+            <div key={item.key} role="listitem" className={itemClassName}>
               <div className="mb-3 flex items-center gap-2">
                 <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border border-primary/40 bg-primary/5 text-primary">
                   <Circle aria-hidden size={10} strokeWidth={2.5} />
                 </span>
                 <Text strong className="text-primary">
-                  {t("blankLabel")}
+                  {sentenceLabel({
+                    index: item.labelIndex,
+                    total: item.labelTotal,
+                    variant: labelVariant,
+                    t,
+                  })}
                 </Text>
               </div>
 
@@ -71,7 +100,7 @@ export function SentenceFeedbackList({ rows, onReanalyze }: Props) {
                     {t("beforeTitle")}
                   </Text>
                   <Text className="mt-3 block whitespace-pre-line break-words">
-                    {row.original_text?.trim() || t("beforeFallback")}
+                    {row?.original_text?.trim() || t("beforeFallback")}
                   </Text>
                 </section>
 
@@ -87,7 +116,7 @@ export function SentenceFeedbackList({ rows, onReanalyze }: Props) {
                     {t("afterTitle")}
                   </Text>
                   <Text className="mt-3 block whitespace-pre-line break-words">
-                    {row.corrected_text?.trim() || t("afterFallback")}
+                    {row?.corrected_text?.trim() || t("afterFallback")}
                   </Text>
                 </section>
 
@@ -117,7 +146,7 @@ export function SentenceFeedbackList({ rows, onReanalyze }: Props) {
                       type="secondary"
                       className="mt-3 block whitespace-pre-line break-words"
                     >
-                      {row.comment?.trim() || t("reasonFallback")}
+                      {row?.comment?.trim() || t("reasonFallback")}
                     </Text>
                   )}
                 </section>
@@ -135,4 +164,75 @@ export function SentenceFeedbackList({ rows, onReanalyze }: Props) {
       ) : null}
     </section>
   );
+}
+
+function buildDisplayItems(
+  rows: SentenceFeedbackRow[],
+  variant: SentenceFeedbackLabelVariant,
+): SentenceFeedbackDisplayItem[] {
+  if (variant === "short" || rows.length >= 3) {
+    return rows.map((row, index) => ({
+      key: row.id,
+      row,
+      labelIndex: index,
+      labelTotal: rows.length,
+    }));
+  }
+
+  const firstRow = rows[0];
+  if (!firstRow) return [];
+
+  if (rows.length === 1) {
+    return [
+      { key: firstRow.id, row: firstRow, labelIndex: 0, labelTotal: 3 },
+      { key: "long-body-placeholder", row: null, labelIndex: 1, labelTotal: 3 },
+      {
+        key: "long-conclusion-placeholder",
+        row: null,
+        labelIndex: 2,
+        labelTotal: 3,
+      },
+    ];
+  }
+
+  const secondRow = rows[1];
+  if (!secondRow) {
+    return [
+      { key: firstRow.id, row: firstRow, labelIndex: 0, labelTotal: 3 },
+      { key: "long-body-placeholder", row: null, labelIndex: 1, labelTotal: 3 },
+      {
+        key: "long-conclusion-placeholder",
+        row: null,
+        labelIndex: 2,
+        labelTotal: 3,
+      },
+    ];
+  }
+
+  return [
+    { key: firstRow.id, row: firstRow, labelIndex: 0, labelTotal: 3 },
+    { key: "long-body-placeholder", row: null, labelIndex: 1, labelTotal: 3 },
+    { key: secondRow.id, row: secondRow, labelIndex: 2, labelTotal: 3 },
+  ];
+}
+
+function sentenceLabel({
+  index,
+  total,
+  variant,
+  t,
+}: {
+  index: number;
+  total: number;
+  variant: SentenceFeedbackLabelVariant;
+  t: SentenceTranslator;
+}): string {
+  if (variant === "short") {
+    return SHORT_LABELS[index] ?? t("shortGenericLabel", { index: index + 1 });
+  }
+
+  if (index === 0) return t("longIntroLabel");
+  if (total <= 2) return t("longConclusionLabel");
+  if (index === total - 1) return t("longConclusionLabel");
+  return t("longBodyLabel");
 }

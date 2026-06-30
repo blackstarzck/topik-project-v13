@@ -227,14 +227,75 @@ test("E-01 short feedback matches the wireframe constraints", async ({ page }) =
     .getByTestId("feedback-page-header")
     .getByRole("heading");
   await expect(headerTitle).toHaveCSS("margin-bottom", "0px");
-  await expect(page.getByTestId("feedback-report-overview")).toBeVisible();
-  await expect(page.getByText(/소요 시간/)).toBeVisible();
-  await expect(page.getByTestId("feedback-report-total-score-card")).toBeVisible();
-  await expect(page.getByTestId("feedback-report-total-score-line")).toBeVisible();
+  const headerQuestionNo = page.getByTestId("feedback-title-question-no");
+  await expect(headerQuestionNo).toHaveText("51");
+  await expect(headerQuestionNo).toHaveCSS("font-family", /Space Grotesk/);
+  await expect(headerQuestionNo).toHaveCSS(
+    "background-image",
+    /neon-yellow\.png/,
+  );
+  await expect(page.getByTestId("feedback-report-overview")).toHaveCount(0);
+  await expect(page.getByTestId("feedback-report-criteria-card")).toBeVisible();
+  await expect(page.getByTestId("feedback-report-focus-card")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { level: 5, name: "빈칸별 점수" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { level: 5, name: "다음 보완 포인트" }),
+  ).toBeVisible();
+  await expect(page.getByTestId("feedback-report-meta")).toHaveCount(0);
+  await expect(page.getByText("score와 weight 기준")).toHaveCount(0);
+  await expect(page.getByTestId("feedback-summary")).toContainText("총평 점수");
+  await expect(
+    page.getByTestId("feedback-summary-meta").locator(".ant-tag"),
+  ).toHaveCount(4);
+  await expect(
+    page
+      .getByTestId("feedback-summary")
+      .locator(".ant-typography")
+      .filter({ hasText: "요청한 시간과 장소가 명확합니다." }),
+  ).not.toHaveClass(/ant-typography-ellipsis/);
+  await expect(
+    page
+      .getByTestId("feedback-summary-score")
+      .locator(".ant-statistic-content-value"),
+  ).toHaveCSS("font-size", "46px");
+  await expect(
+    page
+      .getByTestId("feedback-summary-score")
+      .locator(".ant-statistic-content-value"),
+  ).toHaveCSS("font-weight", "700");
+  await expect(page.getByTestId("feedback-report-total-score-card")).toHaveCount(
+    0,
+  );
+  await expect(page.getByTestId("feedback-report-total-score-line")).toHaveCount(
+    0,
+  );
+  const criteriaCard = page.getByTestId("feedback-report-criteria-card");
+  const focusCard = page.getByTestId("feedback-report-focus-card");
+  await expect(criteriaCard).not.toHaveClass(/bg-surface\/40/);
+  await expect(focusCard).not.toHaveClass(/bg-surface\/40/);
+  await expect(focusCard).not.toHaveClass(/rounded-default/);
+  await expect(focusCard).not.toHaveClass(/p-4/);
+  const criteriaBox = await criteriaCard.boundingBox();
+  const focusBox = await focusCard.boundingBox();
+  expect(criteriaBox).not.toBeNull();
+  expect(focusBox).not.toBeNull();
+  expect(focusBox!.y).toBeGreaterThan(criteriaBox!.y + criteriaBox!.height - 1);
   await expect(page.getByTestId("feedback-report-score-item")).toHaveCount(4);
   await expect(page.getByTestId("feedback-dimension-card")).toHaveCount(0);
-  await expect(page.getByTestId("feedback-sentence-card")).toBeVisible();
+  const sentenceCard = page.getByTestId("feedback-sentence-card");
+  await expect(sentenceCard).toBeVisible();
+  await expect(
+    page.getByRole("heading", { level: 5, name: "문장별 첨삭" }),
+  ).toBeVisible();
+  await expect(sentenceCard.getByText("ㄱ")).toBeVisible();
+  await expect(sentenceCard.getByText("ㄴ")).toBeVisible();
+  await expect(sentenceCard.getByText("빈칸")).toHaveCount(0);
   await expect(page.locator('[data-testid^="feedback-reco-"]')).toHaveCount(3);
+  await expect(
+    page.getByRole("heading", { level: 5, name: "추천 학습" }),
+  ).toBeVisible();
 
   const actions = page.locator(
     [

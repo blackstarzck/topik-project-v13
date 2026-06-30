@@ -19,11 +19,20 @@ import {
   computeComparisonMetrics,
   generateNarrative,
 } from "./comparison-service";
+import {
+  getComparisonReportViewModel,
+  type ComparisonReportViewModel,
+} from "./comparison-report-view-model";
+import {
+  buildComparisonScoreItems,
+  toComparisonMetricScoreItems,
+} from "./comparison-score-items";
 import { toSubmitWritingErrorMessage as toSharedSubmitWritingErrorMessage } from "./submit-errors";
-import type { QuestionNo, WritingSubmissionRow } from "./types";
+import type { FeedbackBundle, QuestionNo, WritingSubmissionRow } from "./types";
 
 export type SubmitWritingInput = {
   draft_id?: string | null;
+  parent_submission_id?: string | null;
   problem_id: string;
   question_no: QuestionNo;
   answer_text: string;
@@ -61,6 +70,33 @@ function shouldDisableExternalWritingApiForE2E(): boolean {
   );
 }
 
+function externalSubmissionPayload({
+  externalSubmissionId,
+  userId,
+  input,
+  feedbackStatus,
+}: {
+  externalSubmissionId: string;
+  userId: string;
+  input: SubmitWritingInput;
+  feedbackStatus: "analyzing" | "failed";
+}) {
+  return {
+    external_submission_id: externalSubmissionId,
+    user_id: userId,
+    problem_id: input.problem_id,
+    draft_id: input.draft_id ?? null,
+    question_no: input.question_no,
+    ...(input.parent_submission_id
+      ? { parent_submission_id: input.parent_submission_id }
+      : {}),
+    answer_text: input.answer_text,
+    answer_json: (input.answer_json ?? null) as Json | null,
+    char_count: input.char_count,
+    feedback_status: feedbackStatus,
+  };
+}
+
 async function createFailedLocalSubmission({
   serviceSupabase,
   userId,
@@ -74,17 +110,12 @@ async function createFailedLocalSubmission({
   const { data, error } = await serviceSupabase.rpc(
     "create_external_writing_submission",
     {
-      submission: {
-        external_submission_id: submissionId,
-        user_id: userId,
-        problem_id: input.problem_id,
-        draft_id: input.draft_id ?? null,
-        question_no: input.question_no,
-        answer_text: input.answer_text,
-        answer_json: (input.answer_json ?? null) as Json | null,
-        char_count: input.char_count,
-        feedback_status: "failed",
-      },
+      submission: externalSubmissionPayload({
+        externalSubmissionId: submissionId,
+        userId,
+        input,
+        feedbackStatus: "failed",
+      }),
     } as never,
   );
   if (error) throw new Error(toSubmitWritingErrorMessage(error.message));
@@ -201,17 +232,12 @@ export async function submitWritingAction(
     const nextStatus = external.status === "failed" ? "failed" : "analyzing";
     const { data: localSubmissionId, error: createError } =
       await serviceSupabase.rpc("create_external_writing_submission", {
-        submission: {
-          external_submission_id: external.submission_id,
-          user_id: user.id,
-          problem_id: input.problem_id,
-          draft_id: input.draft_id ?? null,
-          question_no: input.question_no,
-          answer_text: input.answer_text,
-          answer_json: (input.answer_json ?? null) as Json | null,
-          char_count: input.char_count,
-          feedback_status: nextStatus,
-        },
+        submission: externalSubmissionPayload({
+          externalSubmissionId: external.submission_id,
+          userId: user.id,
+          input,
+          feedbackStatus: nextStatus,
+        }),
       } as never);
     if (createError) {
       throw new Error(toSubmitWritingErrorMessage(createError.message));
@@ -356,11 +382,13 @@ export async function createComparisonReportAction(
     .maybeSingle();
   if (curErr) throw new Error(`comparison: current ${curErr.message}`);
   if (!currentSub) throw new Error("comparison: current submission missing");
+  const currentSubmission = currentSub as WritingSubmissionRow;
+  const currentQuestionNo = currentSubmission.question_no as QuestionNo;
 
   const prevSub = await resolvePreviousSubmissionForComparison({
     supabase,
     userId: user.id,
-    currentSub: currentSub as WritingSubmissionRow,
+    currentSub: currentSubmission,
     explicitPreviousId: input.previous_id,
   });
   const effectivePreviousId = prevSub?.id ?? null;
@@ -392,6 +420,28 @@ export async function createComparisonReportAction(
         ])
       : null;
 
+  const currentBundle: FeedbackBundle | null = curFeedback
+    ? {
+        feedback: curFeedback as FeedbackBundle["feedback"],
+        dimensions: (curDims ?? []) as FeedbackBundle["dimensions"],
+        sentences: [],
+      }
+    : null;
+  const previousBundle: FeedbackBundle | null = prev?.[0].data
+    ? {
+        feedback: prev[0].data as FeedbackBundle["feedback"],
+        dimensions: (prev?.[1].data ?? []) as FeedbackBundle["dimensions"],
+        sentences: [],
+      }
+    : null;
+  const currentScoreItems = buildComparisonScoreItems(
+    currentQuestionNo,
+    currentBundle,
+  );
+  const previousScoreItems = previousBundle
+    ? buildComparisonScoreItems(currentQuestionNo, previousBundle)
+    : [];
+
   const metrics = computeComparisonMetrics({
     currentScore: curFeedback?.score_total ?? null,
     currentScoreMax: curFeedback?.score_max ?? null,
@@ -399,7 +449,11 @@ export async function createComparisonReportAction(
     previousScoreMax: prev?.[0].data?.score_max ?? null,
     currentDims: curDims ?? [],
     previousDims: prev?.[1].data ?? null,
-    currentChars: currentSub.char_count,
+    currentScoreItems: toComparisonMetricScoreItems(currentScoreItems),
+    previousScoreItems: previousBundle
+      ? toComparisonMetricScoreItems(previousScoreItems)
+      : null,
+    currentChars: currentSubmission.char_count,
     previousChars: prevSub?.char_count ?? null,
   });
   const narrative = generateNarrative(metrics);
@@ -411,9 +465,20 @@ export async function createComparisonReportAction(
       previous_id: effectivePreviousId,
       metrics: metrics as unknown as Record<string, unknown>,
       narrative,
-      ai_model: "comparison-local-v1",
+      ai_model: "comparison-local-v2",
     } as never,
   );
   if (rpcErr) throw new Error(`comparison rpc: ${rpcErr.message}`);
   return { reportId: (reportId as unknown as string) ?? "" };
+}
+
+export async function createComparisonReportWithViewAction(
+  input: CreateComparisonReportInput,
+): Promise<{ reportId: string; viewModel: ComparisonReportViewModel }> {
+  const { reportId } = await createComparisonReportAction(input);
+  const viewModel = await getComparisonReportViewModel(reportId);
+  if (!viewModel) {
+    throw new Error("comparison: created report view missing");
+  }
+  return { reportId, viewModel };
 }

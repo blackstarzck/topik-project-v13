@@ -30,6 +30,7 @@ import {
   type AutosaveStatus,
   type ShortAnswerQuestion51Json,
   type WritingDraftRow,
+  type WritingRetrySeed,
 } from "@/lib/writing/types";
 import {
   AutosaveWarningModal,
@@ -54,6 +55,8 @@ type Props = {
   userId: string;
   problem: Q51Problem;
   draft: WritingDraftRow | null;
+  retrySeed?: WritingRetrySeed | null;
+  parentSubmissionId?: string | null;
 };
 
 const DEBOUNCE_MS = 2000;
@@ -64,7 +67,7 @@ function blankDisplay(blank: NormalizedBlank, index: number) {
 
 function initialBlankAnswers(
   blanks: NormalizedBlank[],
-  draft: WritingDraftRow | null,
+  draft: Pick<WritingDraftRow, "answer_json" | "answer_text"> | null,
 ): Record<string, string> {
   const draftJson = draft?.answer_json;
   if (isShortAnswer51DraftJson(draftJson)) {
@@ -101,12 +104,15 @@ export function ShortAnswerWriting51Workspace({
   userId,
   problem,
   draft,
+  retrySeed = null,
+  parentSubmissionId = null,
 }: Props) {
   const tPage = useTranslations("writing.q51");
   const tEditor = useTranslations("writing.editor");
   const tGuide = useTranslations("writing.guide");
+  const answerSource = retrySeed ?? draft;
   const [blankAnswers, setBlankAnswers] = useState<Record<string, string>>(() =>
-    initialBlankAnswers(problem.blanks, draft),
+    initialBlankAnswers(problem.blanks, answerSource),
   );
   const [status, setStatus] = useState<AutosaveStatus>(
     draft?.autosave_status ?? "clean",
@@ -341,6 +347,7 @@ export function ShortAnswerWriting51Workspace({
         draft_id: draftId,
         problem_id: problem.id,
         question_no: 51,
+        parent_submission_id: parentSubmissionId,
         answer_text: answerText,
         answer_json: answerJson,
         passage_context: problem.blankedPrompt || problem.prompt,

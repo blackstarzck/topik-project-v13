@@ -12,6 +12,7 @@ import type {
   QuestionNo,
   WritingDraftRow,
   WritingFeedbackRow,
+  WritingRetrySeed,
   WritingSubmissionRow,
 } from "./types";
 import { isQuestionNo } from "./types";
@@ -59,6 +60,42 @@ export async function getSubmission(
     .maybeSingle();
   if (error) throw new Error(`getSubmission: ${error.message}`);
   return data;
+}
+
+export async function getRetrySubmissionSeed({
+  userId,
+  submissionId,
+  problemId,
+  questionNo,
+  createClient = createSupabaseServerClient,
+}: {
+  userId: string;
+  submissionId: string | null | undefined;
+  problemId: string | null | undefined;
+  questionNo: QuestionNo;
+  createClient?: ClientFactory;
+}): Promise<WritingRetrySeed | null> {
+  if (!isProblemIdLikeUuid(problemId) || !isProblemIdLikeUuid(submissionId)) {
+    return null;
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("writing_submissions")
+    .select("id, answer_text, answer_json")
+    .eq("id", submissionId)
+    .eq("user_id", userId)
+    .eq("problem_id", problemId)
+    .eq("question_no", questionNo)
+    .maybeSingle();
+  if (error) throw new Error(`getRetrySubmissionSeed: ${error.message}`);
+  if (!data) return null;
+
+  return {
+    parent_submission_id: data.id,
+    answer_text: data.answer_text,
+    answer_json: data.answer_json,
+  };
 }
 
 export async function getFeedbackBundle(

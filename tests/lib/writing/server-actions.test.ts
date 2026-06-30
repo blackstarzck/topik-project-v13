@@ -43,6 +43,7 @@ vi.mock("../../../src/lib/supabase/server", () => ({
 
 import {
   createComparisonReportAction,
+  createComparisonReportWithViewAction,
   submitWritingAction,
 } from "../../../src/lib/writing/server-actions";
 import { WRITING_PROBLEM_NOT_SUBMITTABLE_MESSAGE } from "../../../src/lib/writing/submit-errors";
@@ -50,6 +51,7 @@ import { WRITING_PROBLEM_NOT_SUBMITTABLE_MESSAGE } from "../../../src/lib/writin
 type ComparisonRow = Record<string, unknown>;
 type ComparisonStore = {
   profiles: ComparisonRow[];
+  comparison_reports: ComparisonRow[];
   writing_submissions: ComparisonRow[];
   writing_feedback: ComparisonRow[];
   feedback_dimension_scores: ComparisonRow[];
@@ -65,6 +67,10 @@ function createComparisonQuery(rows: ComparisonRow[]) {
     }),
     neq: vi.fn((column: string, value: unknown) => {
       result = result.filter((row) => row[column] !== value);
+      return query;
+    }),
+    in: vi.fn((column: string, values: unknown[]) => {
+      result = result.filter((row) => values.includes(row[column]));
       return query;
     }),
     lt: vi.fn((column: string, value: unknown) => {
@@ -102,6 +108,7 @@ function createComparisonQuery(rows: ComparisonRow[]) {
 function mockComparisonStore(store: Partial<ComparisonStore>) {
   const tables: ComparisonStore = {
     profiles: [{ id: "user-1", status: "active" }],
+    comparison_reports: [],
     writing_submissions: [],
     writing_feedback: [],
     feedback_dimension_scores: [],
@@ -133,6 +140,7 @@ function feedbackRow(
   submissionId: string,
   scoreTotal: number,
   scoreMax = 100,
+  rawAiResult: unknown = null,
 ): ComparisonRow {
   return {
     id: `${submissionId}-feedback`,
@@ -142,6 +150,7 @@ function feedbackRow(
     score_total: scoreTotal,
     score_max: scoreMax,
     overall_summary: "",
+    raw_ai_result: rawAiResult,
     ai_model: "test",
     ai_model_version: "test",
     created_at: "2026-06-20T00:00:00.000Z",
@@ -273,6 +282,41 @@ describe("submitWritingAction", () => {
     });
   });
 
+  it("records the source submission when retry feedback is submitted successfully", async () => {
+    process.env.TALKPIK_API_BASE_URL = "https://api.example.test";
+    const answerText = "Revised external writing answer.";
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          submission_id: "00000000-0000-0000-0000-0000000000bb",
+          status: "processing",
+        }),
+        { status: 202 },
+      ),
+    );
+
+    await submitWritingAction({
+      parent_submission_id: "00000000-0000-0000-0000-000000000011",
+      problem_id: "00000000-0000-0000-0000-000000000001",
+      question_no: 54,
+      answer_text: answerText,
+      char_count: answerText.length,
+    });
+
+    expect(helpers.serviceRpcMock).toHaveBeenCalledWith(
+      "create_external_writing_submission",
+      {
+        submission: expect.objectContaining({
+          external_submission_id: "00000000-0000-0000-0000-0000000000bb",
+          user_id: "user-1",
+          problem_id: "00000000-0000-0000-0000-000000000001",
+          parent_submission_id: "00000000-0000-0000-0000-000000000011",
+          feedback_status: "analyzing",
+        }),
+      },
+    );
+  });
+
   it("submits Q51 as blanks (not raw text) when answer_json carries them", async () => {
     process.env.TALKPIK_API_BASE_URL = "https://api.example.test";
     const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
@@ -391,6 +435,37 @@ describe("submitWritingAction", () => {
       submissionId: rpcPayload.submission.external_submission_id,
       questionNo: 51,
     });
+  });
+
+  it("preserves the source submission when a retry falls back to a failed local submission", async () => {
+    const answerText = "Retry fallback answer.";
+    helpers.serviceRpcMock.mockImplementation((rpcName, payload) =>
+      Promise.resolve({
+        data: (payload as { submission: { external_submission_id: string } })
+          .submission.external_submission_id,
+        error: null,
+      }),
+    );
+
+    await submitWritingAction({
+      parent_submission_id: "00000000-0000-0000-0000-000000000011",
+      problem_id: "00000000-0000-0000-0000-000000000001",
+      question_no: 53,
+      answer_text: answerText,
+      char_count: answerText.length,
+    });
+
+    const [, rpcPayload] = helpers.serviceRpcMock.mock.calls[0] as [
+      string,
+      {
+        submission: {
+          parent_submission_id?: string;
+        };
+      },
+    ];
+    expect(rpcPayload.submission.parent_submission_id).toBe(
+      "00000000-0000-0000-0000-000000000011",
+    );
   });
 
   it("records a failed local submission when the configured external API cannot be reached", async () => {
@@ -852,6 +927,134 @@ describe("createComparisonReportAction", () => {
           score_delta: null,
           char_delta: null,
         }),
+      }),
+    );
+  });
+
+  it("creates a comparison report and returns its hydrated view model", async () => {
+    mockComparisonStore({
+      comparison_reports: [
+        {
+          id: "report-id",
+          user_id: "user-1",
+          current_submission_id: "current",
+          previous_submission_id: "previous",
+          metrics: {
+            score_delta: 12,
+            dimension_deltas: { grammar: 12 },
+            char_delta: 30,
+            no_previous: false,
+          },
+          narrative: "Hydrated comparison narrative",
+          ai_model: "comparison-local-v2",
+          generated_at: "2026-06-20T10:00:00.000Z",
+        },
+      ],
+      writing_submissions: [
+        submissionRow({
+          id: "current",
+          answer_text: "current answer",
+          char_count: 120,
+          submitted_at: "2026-06-20T10:00:00.000Z",
+        }),
+        submissionRow({
+          id: "previous",
+          answer_text: "previous answer",
+          char_count: 90,
+          submitted_at: "2026-06-19T10:00:00.000Z",
+        }),
+      ],
+      writing_feedback: [
+        feedbackRow("current", 82),
+        feedbackRow("previous", 70),
+      ],
+      feedback_dimension_scores: [
+        dimensionRow("current", 82),
+        dimensionRow("previous", 70),
+      ],
+    });
+
+    const result = await createComparisonReportWithViewAction({
+      current_id: "current",
+      previous_id: "previous",
+    });
+
+    expect(result.reportId).toBe("report-id");
+    expect(result.viewModel.reportId).toBe("report-id");
+    expect(result.viewModel.selectedPreviousSubmissionId).toBe("previous");
+    expect(result.viewModel.previousText).toBe("previous answer");
+    expect(result.viewModel.comparisonTargets).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          submissionId: "previous",
+          isSelected: true,
+        }),
+      ]),
+    );
+  });
+
+  it("creates Q51 blank metrics from raw trait scores when dimension rows are empty", async () => {
+    mockComparisonStore({
+      writing_submissions: [
+        submissionRow({
+          id: "current",
+          question_no: 51,
+          answer_text: "ㄱ: 현재 답안\nㄴ: 현재 두 번째",
+          answer_json: {
+            _v: "51.v1",
+            blanks: { ㄱ: "현재 답안", ㄴ: "현재 두 번째" },
+          },
+          char_count: 18,
+          submitted_at: "2026-06-20T10:00:00.000Z",
+        }),
+        submissionRow({
+          id: "previous",
+          question_no: 51,
+          answer_text: "ㄱ: 이전 답안\nㄴ: 이전 두 번째",
+          answer_json: {
+            _v: "51.v1",
+            blanks: { ㄱ: "이전 답안", ㄴ: "이전 두 번째" },
+          },
+          char_count: 16,
+          submitted_at: "2026-06-19T10:00:00.000Z",
+        }),
+      ],
+      writing_feedback: [
+        feedbackRow("current", 4, 10, {
+          trait_scores: [
+            { trait: "blank_1", score: 4, max_score: 5 },
+            { trait: "blank_2", score: 2, max_score: 5 },
+          ],
+        }),
+        feedbackRow("previous", 2, 10, {
+          trait_scores: [
+            { trait: "blank_1", score: 2, max_score: 5 },
+            { trait: "blank_2", score: 2, max_score: 5 },
+          ],
+        }),
+      ],
+      feedback_dimension_scores: [],
+    });
+
+    await createComparisonReportAction({
+      current_id: "current",
+      previous_id: "previous",
+    });
+
+    expect(helpers.rpcMock).toHaveBeenCalledWith(
+      "create_comparison_report_with_metrics",
+      expect.objectContaining({
+        previous_id: "previous",
+        ai_model: "comparison-local-v2",
+        metrics: expect.objectContaining({
+          score_delta: 20,
+          char_delta: 2,
+          dimension_deltas: {
+            blank_1: 40,
+            blank_2: 0,
+          },
+        }),
+        narrative: expect.stringContaining("ㄱ 빈칸 +40점"),
       }),
     );
   });

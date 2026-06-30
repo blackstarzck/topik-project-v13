@@ -5,11 +5,13 @@ import { USER_PROBLEMS_RPC_QUERY_KEY_ROOT } from "@/lib/practice/problem-list-qu
 import { createSupabaseBrowserClient } from "../supabase/browser";
 import {
   createComparisonReportAction,
+  createComparisonReportWithViewAction,
   submitWritingAction,
   type CreateComparisonReportInput,
   type SubmitWritingInput,
   type SubmitWritingResult,
 } from "./server-actions";
+import type { ComparisonReportViewModel } from "./comparison-report-view-model";
 import { draftQueryKey } from "./queries";
 import type { WritingDraftInsert, WritingDraftRow } from "./types";
 
@@ -118,11 +120,17 @@ export function useSubmitWriting() {
 }
 
 export function useCreateComparisonReport() {
+  return useMutation<{ reportId: string }, Error, CreateComparisonReportInput>({
+    mutationFn: (input) => createComparisonReportAction(input),
+  });
+}
+
+export function useCreateComparisonReportWithView() {
   return useMutation<
-    { reportId: string },
+    { reportId: string; viewModel: ComparisonReportViewModel },
     Error,
     CreateComparisonReportInput
   >({
-    mutationFn: (input) => createComparisonReportAction(input),
+    mutationFn: (input) => createComparisonReportWithViewAction(input),
   });
 }

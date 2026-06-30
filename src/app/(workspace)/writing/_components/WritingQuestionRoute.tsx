@@ -5,6 +5,7 @@ import { WritingPageContent } from "@/components/writing/WritingPageContent";
 import { requireUser } from "@/lib/auth/session";
 import {
   getActiveDraft,
+  getRetrySubmissionSeed,
   getWritingProblem,
   isProblemIdLikeUuid,
 } from "@/lib/writing/server";
@@ -13,6 +14,7 @@ import type { QuestionNo } from "@/lib/writing/types";
 export type WritingQuestionSearchParams = Promise<{
   problem?: string;
   fresh?: string;
+  retrySubmission?: string;
 }>;
 
 export async function generateWritingQuestionMetadata(): Promise<Metadata> {
@@ -25,16 +27,28 @@ export async function renderWritingQuestionPage(
   searchParams: WritingQuestionSearchParams,
 ) {
   const user = await requireUser();
-  const { problem: problemId, fresh } = await searchParams;
+  const { problem: problemId, fresh, retrySubmission } = await searchParams;
   const problem = await getWritingProblem(questionNo, problemId);
   const canRetryProblemLoad = Boolean(problemId);
   const startFresh = fresh === "1";
+  const activeDraftProblemId = problem?.id ?? problemId;
+  const shouldLoadActiveDraft =
+    Boolean(retrySubmission) || (!startFresh && Boolean(activeDraftProblemId));
   const draft =
-    !startFresh && problem
+    shouldLoadActiveDraft && problem
       ? await getActiveDraft(user.id, problem.id)
-      : !startFresh && isProblemIdLikeUuid(problemId)
-        ? await getActiveDraft(user.id, problemId)
+      : shouldLoadActiveDraft && isProblemIdLikeUuid(activeDraftProblemId)
+        ? await getActiveDraft(user.id, activeDraftProblemId)
         : null;
+  const retrySeed =
+    retrySubmission && problem
+      ? await getRetrySubmissionSeed({
+          userId: user.id,
+          submissionId: retrySubmission,
+          problemId: problem.id,
+          questionNo,
+        })
+      : null;
 
   return (
     <WritingPageContent
@@ -42,6 +56,8 @@ export async function renderWritingQuestionPage(
       userId={user.id}
       problem={problem}
       draft={draft}
+      retrySeed={draft ? null : retrySeed}
+      parentSubmissionId={retrySeed?.parent_submission_id ?? null}
       canRetryProblemLoad={canRetryProblemLoad}
     />
   );

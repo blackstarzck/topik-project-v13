@@ -41,6 +41,13 @@ export type FeedbackDimensionScoreRow = Tables<"feedback_dimension_scores">;
 export type SentenceFeedbackRow = Tables<"sentence_feedback">;
 export type ComparisonReportRow = Tables<"comparison_reports">;
 
+export type WritingRetrySeed = Pick<
+  WritingSubmissionRow,
+  "answer_text" | "answer_json"
+> & {
+  parent_submission_id: string;
+};
+
 export type WritingDraftInsert = TablesInsert<"writing_drafts">;
 
 export type FeedbackBundle = {

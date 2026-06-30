@@ -84,7 +84,13 @@ export function FeedbackSummary({
   return (
     <AppCard data-testid="feedback-summary">
       {hideScore ? null : (
-        <Statistic title={t("scoreTitle")} value={score} suffix={`/ ${max}`} />
+        <Statistic
+          data-testid="feedback-summary-score"
+          title={t("scoreTitle")}
+          value={score}
+          suffix={`/ ${max}`}
+          className="[&_.ant-statistic-content-value]:text-[46px] [&_.ant-statistic-content-value]:font-bold [&_.ant-statistic-content-value]:leading-none"
+        />
       )}
       {submission ? (
         <div
@@ -104,7 +110,6 @@ export function FeedbackSummary({
       <Paragraph
         type="secondary"
         className={hasContentAboveSummary ? "mb-0 mt-3" : "mb-0"}
-        ellipsis={{ rows: 3 }}
       >
         {feedback.overall_summary ?? t("overallFallback")}
       </Paragraph>

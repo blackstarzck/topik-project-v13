@@ -3,18 +3,14 @@
 import {
   App,
   Button,
-  Input,
   Popconfirm,
-  Popover,
   Tag,
 } from "antd";
 import { useTranslations } from "next-intl";
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 
-import {
-  useDeleteLibraryItem,
-  useUpdateItemTags,
-} from "@/lib/library/mutations";
+import { Trash2 } from "@/components/shared/AppIcons";
+import { useDeleteLibraryItem } from "@/lib/library/mutations";
 import type { LibraryTab } from "@/lib/library/types";
 
 type Props = {
@@ -35,11 +31,10 @@ type Props = {
  * Shared row chrome for every `Library{Submissions,Reports,SavedProblems,Exports}Tab`.
  *
  * Layout:
- *   [ left content children ]   [ tag chips, edit tags popover, delete popconfirm ]
+ *   [ left content children ]   [ tab-specific actions, tag chips, delete popconfirm ]
  *
- * Tag editing uses a comma-separated text field inside a Popover; saving
- * fires `useUpdateItemTags`. Delete uses a Popconfirm to guard against
- * accidental loss. Both mutations invalidate the active tab's query key.
+ * Tags are read-only chips in the list. Delete uses a Popconfirm to guard
+ * against accidental loss and invalidate the active tab's query key.
  */
 export function LibraryItemRow({
   children,
@@ -51,32 +46,7 @@ export function LibraryItemRow({
 }: Props) {
   const t = useTranslations("library.item");
   const { message } = App.useApp();
-  const updateTags = useUpdateItemTags();
   const deleteItem = useDeleteLibraryItem();
-
-  const [popoverOpen, setPopoverOpen] = useState(false);
-  const [draftTags, setDraftTags] = useState(tags.join(", "));
-
-  function commitTags() {
-    const next = draftTags
-      .split(",")
-      .map((t) => t.trim())
-      .filter((t) => t.length > 0);
-    updateTags.mutate(
-      { itemId, tags: next, tab },
-      {
-        onSuccess: () => {
-          setPopoverOpen(false);
-          message.success(t("tagsSaved"));
-        },
-        onError: (err) => {
-          message.error(
-            err instanceof Error ? err.message : t("tagsSaveFailed"),
-          );
-        },
-      },
-    );
-  }
 
   function handleDelete() {
     deleteItem.mutate(
@@ -100,43 +70,6 @@ export function LibraryItemRow({
       </div>
     ) : null;
 
-  const editTagsPopover = (
-    <Popover
-      open={popoverOpen}
-      onOpenChange={(next) => {
-        setPopoverOpen(next);
-        if (next) setDraftTags(tags.join(", "));
-      }}
-      trigger="click"
-      title={t("editTags")}
-      content={
-        <div className="flex w-56 flex-col gap-2">
-          <Input
-            value={draftTags}
-            onChange={(e) => setDraftTags(e.target.value)}
-            placeholder={t("tagsInputPlaceholder")}
-            aria-label={t("tagsInputAriaLabel")}
-          />
-          <div className="flex flex-wrap gap-2">
-            <Button
-              size="small"
-              type="primary"
-              loading={updateTags.isPending}
-              onClick={commitTags}
-            >
-              {t("save")}
-            </Button>
-            <Button size="small" onClick={() => setPopoverOpen(false)}>
-              {t("cancel")}
-            </Button>
-          </div>
-        </div>
-      }
-    >
-      <Button size="small">{t("editTags")}</Button>
-    </Popover>
-  );
-
   const deleteConfirm = (
     <Popconfirm
       title={t("deleteConfirmTitle")}
@@ -146,16 +79,22 @@ export function LibraryItemRow({
       okButtonProps={{ danger: true, loading: deleteItem.isPending }}
       onConfirm={handleDelete}
     >
-      <Button size="small" danger>
-        {t("delete")}
-      </Button>
+      <Button
+        aria-label={t("delete")}
+        className="library-item-delete-button"
+        danger
+        icon={<Trash2 aria-hidden="true" size={16} />}
+        loading={deleteItem.isPending}
+        size="small"
+        title={t("delete")}
+        type="text"
+      />
     </Popconfirm>
   );
 
   const actions = [
     ...trailingActions,
     <span key="tags">{tagChips}</span>,
-    <span key="edit-tags">{editTagsPopover}</span>,
     <span key="delete">{deleteConfirm}</span>,
   ];
 

@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { Button, Empty, Table, Typography, theme } from "antd";
+import { Empty, Typography, theme } from "antd";
 import { useTranslations } from "next-intl";
 import {
   Bar,
@@ -13,7 +12,6 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { AppCard } from "@/components/shared/AppCard";
 import { SPACING } from "@/theme/spacing";
 
 const { Title } = Typography;
@@ -35,7 +33,6 @@ const CHART_MARGIN = {
   left: 0,
   bottom: SPACING.sm,
 } as const;
-const EMPTY_VALUE = "-";
 
 export type ChartDatum = {
   dimension: string;
@@ -52,20 +49,20 @@ export function ScoreComparisonChart({ data, hasPrevious }: Props) {
   const t = useTranslations("reports.chart");
   const tDim = useTranslations("reports.dimensions");
   const { token } = theme.useToken();
-  const [tableFallback, setTableFallback] = useState(false);
 
   const dimLabel = (code: string) =>
     (DIMENSION_KEYS as readonly string[]).includes(code)
       ? tDim(code as (typeof DIMENSION_KEYS)[number])
       : code;
-  const fmt = (value: number | null) =>
-    value === null ? EMPTY_VALUE : t("scorePoint", { value });
 
   if (data.length === 0) {
     return (
-      <AppCard data-testid="comparison-chart">
+      <section
+        data-testid="comparison-chart"
+        className="comparison-diff-panel min-w-0"
+      >
         <Empty description={t("emptyChart")} />
-      </AppCard>
+      </section>
     );
   }
 
@@ -75,63 +72,15 @@ export function ScoreComparisonChart({ data, hasPrevious }: Props) {
     current: item.current,
   }));
 
-  if (tableFallback) {
-    return (
-      <AppCard
-        data-testid="comparison-chart"
-        title={t("tableTitle")}
-        extra={
-          <Button
-            size="small"
-            type="link"
-            onClick={() => setTableFallback(false)}
-            data-testid="comparison-chart-view-chart"
-          >
-            {t("title")}
-          </Button>
-        }
-      >
-        <Table
-          data-testid="comparison-chart-table"
-          dataSource={data.map((item) => ({ key: item.dimension, ...item }))}
-          pagination={false}
-          size="small"
-          columns={[
-            {
-              title: t("colDimension"),
-              dataIndex: "dimension",
-              render: (value: string) => dimLabel(value),
-            },
-            ...(hasPrevious
-              ? [
-                  {
-                    title: t("seriesPrevious"),
-                    dataIndex: "previous",
-                    render: fmt,
-                  },
-                ]
-              : []),
-            { title: t("seriesCurrent"), dataIndex: "current", render: fmt },
-          ]}
-        />
-      </AppCard>
-    );
-  }
-
   return (
-    <AppCard data-testid="comparison-chart">
-      <div className="flex w-full flex-wrap items-center justify-between gap-2">
-        <Title level={5} className="mt-0">
+    <section
+      data-testid="comparison-chart"
+      className="comparison-diff-panel min-w-0"
+    >
+      <div className="flex w-full flex-wrap items-start justify-between gap-2">
+        <Title level={5} className="!mb-[40px] !mt-0">
           {t("title")}
         </Title>
-        <Button
-          size="small"
-          type="link"
-          onClick={() => setTableFallback(true)}
-          data-testid="comparison-chart-view-table"
-        >
-          {t("viewAsTable")}
-        </Button>
       </div>
       <div className="w-full overflow-x-auto">
         <div className="h-72 min-w-96">
@@ -145,7 +94,7 @@ export function ScoreComparisonChart({ data, hasPrevious }: Props) {
           />
         </div>
       </div>
-    </AppCard>
+    </section>
   );
 }
 

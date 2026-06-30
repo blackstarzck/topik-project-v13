@@ -16,6 +16,10 @@ const notificationBell = readFileSync(
   ),
   "utf8",
 );
+const appProviders = readFileSync(
+  join(process.cwd(), "src", "app", "providers.tsx"),
+  "utf8",
+);
 const dashboardAlertsCard = readFileSync(
   join(
     process.cwd(),
@@ -38,12 +42,42 @@ function blockFor(selector: string): string {
 }
 
 describe("AntD Notification shadow surface", () => {
+  test("AppProviders centralizes AntD notification placement and behavior", () => {
+    expect(appProviders).toContain("const appNotificationConfig");
+    expect(appProviders).toContain('placement: "topRight"');
+    expect(appProviders).toContain("top: 88");
+    expect(appProviders).toContain("duration: 3");
+    expect(appProviders).toContain("maxCount: 3");
+    expect(appProviders).toContain("showProgress: true");
+    expect(appProviders).toContain("const appNotificationSurfaceConfig");
+    expect(appProviders).toContain('className: "app-global-notification"');
+    expect(appProviders).toContain(
+      "notification={appNotificationSurfaceConfig}",
+    );
+    expect(appProviders).toContain(
+      "<AntdApp notification={appNotificationConfig}>",
+    );
+  });
+
   test("AntD notification notice uses the shared elevated shadow token", () => {
     expect(
       blockFor(
         ".ant-notification .ant-notification-notice.ant-notification-notice",
       ),
     ).toContain("box-shadow: var(--app-shadow-elevated)");
+  });
+
+  test("global AntD notification notices use the shared surface hook", () => {
+    const block = blockFor(
+      ".ant-notification .app-global-notification.ant-notification-notice.ant-notification-notice",
+    );
+
+    expect(block).toContain("width: min(360px, calc(100vw - 32px))");
+    expect(block).toContain(
+      "border: 1px solid var(--ant-color-border-secondary, var(--app-color-border))",
+    );
+    expect(block).toContain("border-radius: var(--app-radius)");
+    expect(block).toContain("box-shadow: var(--app-shadow-elevated)");
   });
 });
 

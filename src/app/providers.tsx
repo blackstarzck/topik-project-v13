@@ -1,7 +1,7 @@
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { App as AntdApp, ConfigProvider } from "antd";
 import { NextIntlClientProvider, type AbstractIntlMessages } from "next-intl";
 import { useState } from "react";
@@ -15,11 +15,26 @@ import type { ThemeAppearance } from "@/theme";
 // Must be a child of ThemeProvider so useTheme() is available.
 // ---------------------------------------------------------------------------
 
+const appNotificationConfig = {
+  placement: "topRight",
+  top: 88,
+  duration: 3,
+  maxCount: 3,
+  showProgress: true,
+} satisfies ComponentProps<typeof AntdApp>["notification"];
+
+const appNotificationSurfaceConfig = {
+  className: "app-global-notification",
+} satisfies ComponentProps<typeof ConfigProvider>["notification"];
+
 function AntdConfiguredProviders({ children }: { children: ReactNode }) {
   const { theme } = useTheme();
   return (
-    <ConfigProvider theme={theme.antd}>
-      <AntdApp>{children}</AntdApp>
+    <ConfigProvider
+      theme={theme.antd}
+      notification={appNotificationSurfaceConfig}
+    >
+      <AntdApp notification={appNotificationConfig}>{children}</AntdApp>
     </ConfigProvider>
   );
 }

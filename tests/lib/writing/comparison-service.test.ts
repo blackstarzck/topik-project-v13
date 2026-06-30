@@ -70,6 +70,30 @@ describe("computeComparisonMetrics", () => {
 
     expect(m.score_delta).toBe(10);
   });
+
+  it("uses virtual score items for Q51/Q52 blank deltas", () => {
+    const m = computeComparisonMetrics({
+      currentScore: 4,
+      currentScoreMax: 10,
+      previousScore: 2,
+      previousScoreMax: 10,
+      currentDims: blankDims,
+      previousDims: blankDims,
+      currentScoreItems: [
+        { key: "blank_1", score: 80, scoreMax: 100 },
+        { key: "blank_2", score: 40, scoreMax: 100 },
+      ],
+      previousScoreItems: [
+        { key: "blank_1", score: 40, scoreMax: 100 },
+        { key: "blank_2", score: 40, scoreMax: 100 },
+      ],
+      currentChars: 24,
+      previousChars: 20,
+    });
+
+    expect(m.score_delta).toBe(20);
+    expect(m.dimension_deltas).toEqual({ blank_1: 40, blank_2: 0 });
+  });
 });
 
 describe("generateNarrative", () => {
@@ -91,6 +115,17 @@ describe("generateNarrative", () => {
       no_previous: false,
     });
     expect(text).toMatch(/5점 향상/);
-    expect(text).toMatch(/grammar/);
+    expect(text).toMatch(/문법/);
+  });
+
+  it("describes blank-level changes with learner-facing labels", () => {
+    const text = generateNarrative({
+      score_delta: 20,
+      dimension_deltas: { blank_1: 40, blank_2: 0 },
+      char_delta: 10,
+      no_previous: false,
+    });
+
+    expect(text).toMatch(/ㄱ 빈칸 \+40점/);
   });
 });

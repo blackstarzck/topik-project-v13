@@ -1,9 +1,9 @@
 "use client";
 
-import { Input, Tabs } from "antd";
+import { Input, Select } from "antd";
 import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 
 import type { LibraryItemView, LibraryTab } from "@/lib/library/types";
 
@@ -82,75 +82,83 @@ export function LibraryTabs({
     router.replace(url as never);
   }
 
-  const items = [
+  const typeOptions = [
     {
-      key: "submissions" satisfies LibraryTab,
+      value: "submissions" satisfies LibraryTab,
       label: t("submissions"),
-      children: (
-        <LibrarySubmissionsTab
-          initialItems={submissionsInitial}
-          searchTerm={searchTerm}
-          onResetSearch={() => setSearchTerm("")}
-          onSelectionChange={onSelectionChange}
-        />
-      ),
     },
     {
-      key: "reports" satisfies LibraryTab,
+      value: "reports" satisfies LibraryTab,
       label: t("reports"),
-      children: (
-        <LibraryReportsTab
-          initialItems={reportsInitial}
-          searchTerm={searchTerm}
-          onResetSearch={() => setSearchTerm("")}
-        />
-      ),
     },
     {
-      key: "problems" satisfies LibraryTab,
+      value: "problems" satisfies LibraryTab,
       label: t("problems"),
-      children: (
-        <LibrarySavedProblemsTab
-          initialItems={problemsInitial}
-          searchTerm={searchTerm}
-          onResetSearch={() => setSearchTerm("")}
-        />
-      ),
     },
     {
-      key: "exports" satisfies LibraryTab,
+      value: "exports" satisfies LibraryTab,
       label: t("exports"),
-      children: (
-        <LibraryExportsTab
-          initialItems={exportsInitial}
-          searchTerm={searchTerm}
-          onResetSearch={() => setSearchTerm("")}
-        />
-      ),
     },
   ];
 
+  const activeContent = {
+    submissions: (
+      <LibrarySubmissionsTab
+        initialItems={submissionsInitial}
+        searchTerm={searchTerm}
+        onResetSearch={() => setSearchTerm("")}
+        onSelectionChange={onSelectionChange}
+      />
+    ),
+    reports: (
+      <LibraryReportsTab
+        initialItems={reportsInitial}
+        searchTerm={searchTerm}
+        onResetSearch={() => setSearchTerm("")}
+      />
+    ),
+    problems: (
+      <LibrarySavedProblemsTab
+        initialItems={problemsInitial}
+        searchTerm={searchTerm}
+        onResetSearch={() => setSearchTerm("")}
+      />
+    ),
+    exports: (
+      <LibraryExportsTab
+        initialItems={exportsInitial}
+        searchTerm={searchTerm}
+        onResetSearch={() => setSearchTerm("")}
+      />
+    ),
+  } satisfies Record<LibraryTab, ReactNode>;
+
   return (
     <div className="flex h-full min-h-0 w-full flex-1 flex-col gap-4">
-      <Input.Search
-        data-testid="library-search"
-        allowClear
-        maxLength={40}
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        placeholder={t("searchPlaceholder")}
-        aria-label={t("searchAriaLabel")}
-        className="max-w-sm"
-      />
+      <div className="flex flex-wrap items-center gap-2">
+        <Select<LibraryTab>
+          data-testid="library-type-filter"
+          value={activeTab}
+          onChange={handleChange}
+          options={typeOptions}
+          aria-label={t("typeFilterAriaLabel")}
+          className="min-w-36"
+        />
+        <Input.Search
+          data-testid="library-search"
+          allowClear
+          maxLength={40}
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder={t("searchPlaceholder")}
+          aria-label={t("searchAriaLabel")}
+          className="w-full max-w-sm sm:w-auto"
+        />
+      </div>
 
-      <Tabs
-        data-testid="library-tabs"
-        activeKey={activeTab}
-        className="library-tabs-fill min-h-0 flex-1"
-        destroyOnHidden
-        onChange={handleChange}
-        items={items}
-      />
+      <div data-testid="library-content" className="flex min-h-0 flex-1">
+        {activeContent[activeTab]}
+      </div>
     </div>
   );
 }

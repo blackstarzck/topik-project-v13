@@ -47,15 +47,29 @@ export function LibraryWorkspace({ activeTab, initialItems, stats }: Props) {
 
   return (
     <>
-      <Row gutter={[16, 16]} className="min-h-0 flex-1">
-        <Col xs={24} lg={16} className="flex min-h-0">
+      <Row
+        data-testid="library-workspace-grid"
+        gutter={[16, 16]}
+        className="min-h-0 flex-1 items-stretch"
+      >
+        <Col
+          xs={24}
+          lg={16}
+          data-testid="library-list-column"
+          className="flex min-h-0"
+        >
           <LibraryTabs
             activeTab={activeTab}
             initialItems={initialItems}
             onSelectionChange={setSelection}
           />
         </Col>
-        <Col xs={24} lg={8} className="flex min-h-0">
+        <Col
+          xs={24}
+          lg={8}
+          data-testid="library-stats-column"
+          className="library-stats-column flex min-h-0 lg:h-[calc(max(100vh,100dvh)-var(--workspace-content-padding-block)*2)] lg:max-h-[calc(max(100vh,100dvh)-var(--workspace-content-padding-block)*2)] lg:self-start"
+        >
           <LibraryStatsPanel
             stats={stats}
             actionPanel={

@@ -7,8 +7,7 @@ import { createClient } from "@supabase/supabase-js";
 // Tier 3 — core user flow (D4). One scenario, asserted step by step, so a break
 // anywhere in the chain fails loudly:
 //   dashboard → problem list → writing-51 → submit-confirm (D-M1) → submit →
-//   feedback (E-01) → save to library → comparison report (R-01) → library (F-01)
-//   → PDF export modal (F-M1).
+//   feedback (E-01) → save to library → comparison report (R-01) → library (F-01).
 // The real submit creates a submission (+ feedback/dimensions/sentences) and the
 // save/compare create a library_item + comparison_report; afterAll deletes exactly
 // those rows (tracked by the new submission id) so the shared dev DB stays clean.
@@ -238,7 +237,7 @@ test.afterAll(async () => {
   );
 });
 
-test("core writing flow: dashboard → write → submit → feedback → compare → library → export", async ({
+test("core writing flow: dashboard → write → submit → feedback → compare → library", async ({
   page,
 }, testInfo) => {
   test.setTimeout(90_000);
@@ -349,14 +348,12 @@ test("core writing flow: dashboard → write → submit → feedback → compare
     timeout: 20000,
   });
   await expect(
-    page.getByRole("heading", { name: "비교 리포트" }),
+    page.getByRole("heading", { name: /\d+ 비교 리포트/ }),
   ).toBeVisible();
   await expect(page.getByTestId("comparison-kpi-block")).toContainText("12");
   await expect(page.getByTestId("comparison-chart")).toBeVisible();
-  await page.getByTestId("comparison-chart-view-table").click();
-  await expect(page.getByTestId("comparison-chart-table")).toContainText(
-    /이전|Previous|Trước/,
-  );
+  await expect(page.getByTestId("comparison-chart-view-table")).toHaveCount(0);
+  await expect(page.getByTestId("comparison-chart-table")).toHaveCount(0);
   await expect(page.getByTestId("comparison-submission-diff")).toContainText(
     previousAnswer,
   );
@@ -367,13 +364,7 @@ test("core writing flow: dashboard → write → submit → feedback → compare
   await expect(page).toHaveURL(/\/library/);
   await expect(page.getByRole("heading").first()).toBeVisible();
 
-  // 9) PDF export modal (F-M1): select an item then open the modal.
-  // T-1 (QA 2026-06-12): .ant-modal-title은 antd 6에서 stale — 전용 library
-  // spec과 동일한 testid 셀렉터를 쓴다.
-  await page.getByTestId("library-select-item").first().click();
-  await expect(page.getByTestId("library-export-pdf")).toBeEnabled();
-  await page.getByTestId("library-export-pdf").click();
-  await expect(page.getByTestId("pdf-export-modal")).toBeVisible({
-    timeout: 10000,
-  });
+  // 9) Library rows no longer expose row-level selection/export controls.
+  await expect(page.getByTestId("library-select-item")).toHaveCount(0);
+  await expect(page.getByTestId("library-export-pdf")).toBeDisabled();
 });

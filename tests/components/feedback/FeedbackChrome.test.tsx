@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
 import { FeedbackSummary } from "../../../src/components/feedback/FeedbackSummary";
 import { DimensionCardGrid } from "../../../src/components/feedback/DimensionCardGrid";
@@ -16,11 +22,13 @@ import type {
   WritingSubmissionRow,
 } from "../../../src/lib/writing/types";
 
+const routerPushMock = vi.hoisted(() => vi.fn());
+
 // router is only used on click paths exercised here indirectly; stub it so the
 // next/navigation import resolves under jsdom.
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
-    push: vi.fn(),
+    push: routerPushMock,
     replace: vi.fn(),
     back: vi.fn(),
     forward: vi.fn(),
@@ -55,8 +63,7 @@ vi.mock("@/lib/library/mutations", () => ({
     isPending: false,
     mutate: libraryMutationMock.mutate,
   }),
-  isDuplicateLibrarySaveError:
-    libraryMutationMock.isDuplicateLibrarySaveError,
+  isDuplicateLibrarySaveError: libraryMutationMock.isDuplicateLibrarySaveError,
 }));
 
 vi.mock("@/lib/writing/mutations", () => ({
@@ -118,6 +125,7 @@ function submission(
 }
 
 beforeEach(() => {
+  routerPushMock.mockReset();
   libraryMutationMock.mutate.mockReset();
   libraryMutationMock.isDuplicateLibrarySaveError.mockClear();
   if (!window.matchMedia) {
@@ -158,6 +166,37 @@ describe("FeedbackSummary (i18n chrome)", () => {
     );
     expect(screen.getByText("점수를 산출하지 못했어요")).toBeTruthy();
   });
+
+  it("does not clamp the overall summary copy", () => {
+    const longSummary =
+      "전체 점수는 3/30점입니다. 기초부터 차근차근 다시 정리해 보겠습니다. 세 영역 모두 F등급으로 고르게 작성되었습니다. 내용 감점 내역과 구성 감점 내역, 언어 사용 감점 내역을 모두 확인해야 합니다.";
+
+    renderWithIntl(
+      <FeedbackSummary
+        feedback={feedback({ overall_summary: longSummary })}
+      />,
+    );
+
+    const summary = screen.getByText(longSummary);
+    expect(summary.className).not.toContain("ant-typography-ellipsis");
+    expect(summary.getAttribute("style") ?? "").not.toContain("line-clamp");
+  });
+
+  it("emphasizes the top summary score value at 46px and weight 700", () => {
+    renderWithIntl(
+      <FeedbackSummary
+        feedback={feedback({ score_total: 3, score_max: 30 })}
+      />,
+    );
+
+    const score = screen.getByTestId("feedback-summary-score");
+    expect(score.className).toContain(
+      "[&_.ant-statistic-content-value]:text-[46px]",
+    );
+    expect(score.className).toContain(
+      "[&_.ant-statistic-content-value]:font-bold",
+    );
+  });
 });
 
 describe("DimensionCardGrid (i18n chrome)", () => {
@@ -192,6 +231,18 @@ describe("SentenceFeedbackList (i18n chrome)", () => {
     expect(screen.getByText("문장별 첨삭이 없습니다.")).toBeTruthy();
   });
 
+  it("uses the shared content section title structure", () => {
+    renderWithIntl(<SentenceFeedbackList rows={[sentence({ id: "s-title" })]} />);
+
+    const title = screen.getByRole("heading", {
+      level: 5,
+      name: "문장별 첨삭",
+    });
+    expect(title.tagName).toBe("H5");
+    expect(title.className).toContain("ant-typography");
+    expect(title.className).toContain("m-0");
+  });
+
   it("renders the ICU 'show more' count when rows exceed the initial window", () => {
     const rows = Array.from({ length: 7 }, (_, i) =>
       sentence({ id: `s-${i}` }),
@@ -215,13 +266,31 @@ describe("SentenceFeedbackList (i18n chrome)", () => {
       />,
     );
 
-    expect(screen.getByText("빈칸")).toBeTruthy();
+    expect(screen.getByText("ㄱ")).toBeTruthy();
+    expect(screen.queryByText("빈칸")).toBeNull();
     expect(screen.getByText("Before (내 답안)")).toBeTruthy();
     expect(screen.getByText("After (권장 표현)")).toBeTruthy();
     expect(screen.getByText("교정 이유")).toBeTruthy();
     expect(screen.getByTestId("feedback-sentence-before")).toBeTruthy();
     expect(screen.getByTestId("feedback-sentence-after")).toBeTruthy();
     expect(screen.getByTestId("feedback-sentence-reason")).toBeTruthy();
+  });
+
+  it("keeps intro, body, and conclusion labels for sparse long feedback", () => {
+    renderWithIntl(
+      <SentenceFeedbackList
+        labelVariant="long"
+        rows={[
+          sentence({ id: "s-long-intro", original_text: "서론 원문" }),
+          sentence({ id: "s-long-conclusion", original_text: "결론 원문" }),
+        ]}
+      />,
+    );
+
+    expect(screen.getAllByRole("listitem")).toHaveLength(3);
+    expect(screen.getByText("서론")).toBeTruthy();
+    expect(screen.getByText("본론")).toBeTruthy();
+    expect(screen.getByText("결론")).toBeTruthy();
   });
 
   it("uses a chevron between before and after correction cards", () => {
@@ -260,24 +329,36 @@ describe("SentenceFeedbackList (i18n chrome)", () => {
 });
 
 describe("DetailedFeedbackPanel (i18n chrome)", () => {
-  it("renders the empty-state copy when no detail dimensions are present", () => {
+  it("does not render when no detail dimensions are present", () => {
     renderWithIntl(<DetailedFeedbackPanel dimensions={[]} />);
-    expect(
-      screen.getByText(
-        "세부 평가가 아직 준비되지 않았어요. 다시 분석하면 항목별 상세 평가를 볼 수 있어요.",
-      ),
-    ).toBeTruthy();
+    expect(screen.queryByTestId("feedback-detail-panel")).toBeNull();
   });
 
-  it("renders the card title + localized detail label", () => {
+  it("omits content and structure dimensions already shown in the overview", () => {
     renderWithIntl(
       <DetailedFeedbackPanel
-        dimensions={[dim({ dimension: "content", score: 60, summary: "ok" })]}
+        dimensions={[
+          dim({ dimension: "content", score: 60, summary: "content summary" }),
+          dim({
+            dimension: "structure",
+            score: 55,
+            summary: "structure summary",
+          }),
+          dim({ dimension: "grammar", score: 70, summary: "grammar summary" }),
+        ]}
       />,
     );
-    expect(screen.getAllByText("상세 피드백").length).toBeGreaterThan(0);
-    // content maps to '논리' in the detail panel.
-    expect(screen.getByText("논리")).toBeTruthy();
+    const title = screen.getByRole("heading", {
+      level: 5,
+      name: "상세 피드백",
+    });
+    expect(title.className).toContain("m-0");
+    expect(screen.getByTestId("feedback-detail-panel").className).not.toContain(
+      "app-card",
+    );
+    expect(screen.getByText("문법")).toBeTruthy();
+    expect(screen.queryByText("논리")).toBeNull();
+    expect(screen.queryByText("구조")).toBeNull();
   });
 });
 
@@ -322,12 +403,82 @@ describe("FeedbackRecommendationCards (i18n chrome)", () => {
       />,
     );
 
+    const title = screen.getByRole("heading", {
+      level: 5,
+      name: "추천 학습",
+    });
+    expect(title.className).toContain("m-0");
     expect(
       screen.getByTestId("feedback-recommendation-card").className,
     ).not.toContain("app-card");
     for (const action of screen.getAllByTestId(/^feedback-reco-action-/)) {
+      expect(action.className).not.toContain("ant-card-hoverable");
       expect(action.className).not.toContain("shadow-sm");
       expect(action.className).not.toContain("hover:shadow");
+    }
+  });
+
+  it("pins recommendation icons at the top and copy at the bottom", () => {
+    renderWithIntl(
+      <FeedbackRecommendationCards
+        dimensions={[]}
+        retryHref="/writing/51/problem-1"
+      />,
+    );
+
+    const action = screen.getByTestId("feedback-reco-action-retry");
+    const layout = within(action).getByTestId(
+      "feedback-recommendation-layout-retry",
+    );
+    const leadingIcon = within(action).getByTestId(
+      "feedback-recommendation-icon-retry",
+    );
+    const copy = within(action).getByTestId(
+      "feedback-recommendation-copy-retry",
+    );
+    const arrow = within(action).getByTestId(
+      "feedback-recommendation-arrow-retry",
+    );
+
+    expect(layout.className).toContain("relative");
+    expect(layout.className).toContain("min-h-[190px]");
+    expect(layout.className).toContain("flex-col");
+    expect(leadingIcon.className).toContain("absolute");
+    expect(leadingIcon.className).toContain("left-0");
+    expect(leadingIcon.className).toContain("top-0");
+    expect(leadingIcon.className).not.toContain("bg-");
+    expect(copy.className).not.toContain("mt-auto");
+    expect(copy.className).not.toContain("pr-8");
+    expect(copy.className).toContain("pr-0");
+    expect(copy.className).toContain("pt-[104px]");
+    expect(arrow.getAttribute("class") ?? "").toContain(
+      "lucide-arrow-up-right",
+    );
+    expect(arrow.getAttribute("class") ?? "").toContain("absolute");
+    expect(arrow.getAttribute("class") ?? "").toContain("right-0");
+    expect(arrow.getAttribute("class") ?? "").toContain("top-0");
+  });
+
+  it("removes icon backgrounds and aligns recommendation copy starts", () => {
+    renderWithIntl(
+      <FeedbackRecommendationCards
+        dimensions={[]}
+        retryHref="/writing/51/problem-1"
+      />,
+    );
+
+    for (const key of ["retry", "similar", "weakness"]) {
+      const icon = screen.getByTestId(`feedback-recommendation-icon-${key}`);
+      const copy = screen.getByTestId(`feedback-recommendation-copy-${key}`);
+
+      expect(icon.className).not.toMatch(/\bbg-/);
+      expect(icon.className).not.toContain("rounded-md");
+      expect(icon.className).toContain("h-6");
+      expect(icon.className).toContain("w-6");
+      expect(copy.className).not.toContain("pr-8");
+      expect(copy.className).toContain("pr-0");
+      expect(copy.className).toContain("pt-[104px]");
+      expect(copy.className).not.toContain("mt-auto");
     }
   });
 });
@@ -381,6 +532,7 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
     );
 
     const header = screen.getByTestId("feedback-page-header");
+    const body = screen.getByTestId("feedback-page-body");
     const inner = within(header).getByTestId("report-page-header-inner");
     const titleRegion = within(header).getByTestId("report-page-header-title");
     const actionRegion = within(header).getByTestId(
@@ -388,6 +540,9 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
     );
     const title = within(header).getByRole("heading", { level: 3 });
     expect(header.className).toContain("sticky");
+    expect(body.className).toContain("gap-12");
+    expect(body.className).toContain("pb-32");
+    expect(body.className).toContain("sm:pb-40");
     expect(inner.className).toContain("app-workspace-body");
     expect(inner.className).toContain("lg:flex-row");
     expect(titleRegion.contains(title)).toBe(true);
@@ -395,6 +550,14 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
       actionRegion.contains(within(header).getByTestId("feedback-actions")),
     ).toBe(true);
     expect(title.className).toContain("!m-0");
+    const titleQuestionNo = within(title).getByTestId(
+      "feedback-title-question-no",
+    );
+    expect(titleQuestionNo.textContent).toBe("51");
+    expect(titleQuestionNo.textContent).not.toContain("번");
+    expect(titleQuestionNo.className).toContain("font-['Space_Grotesk']");
+    expect(titleQuestionNo.className).toContain("writing-question-number");
+    expect(titleQuestionNo.className).toContain("writing-question-number--q51");
     expect(
       within(header).queryByText("두 빈칸 답안을 기준으로 분석했어요."),
     ).toBeNull();
@@ -403,6 +566,157 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
     expect(within(header).getByTestId("feedback-action-save")).toBeTruthy();
     expect(within(header).getByTestId("feedback-action-compare")).toBeTruthy();
     expect(screen.getAllByTestId("feedback-actions")).toHaveLength(1);
+  });
+
+  it("renders the short feedback summary with score and submission metadata", () => {
+    const bundle: FeedbackBundle = {
+      feedback: feedback({
+        score_total: 4,
+        score_max: 10,
+        overall_summary:
+          "두 빈칸 모두 문맥에 맞게 보완해야 하며 질문에서 요구하는 핵심 정보를 포함해야 합니다.",
+        raw_ai_result: {},
+      }),
+      dimensions: [],
+      sentences: [],
+    };
+
+    renderWithIntl(
+      <FeedbackPageContent
+        submission={submission({
+          question_no: 51,
+          char_count: 37,
+          submitted_at: "2026-06-29T09:16:00.000Z",
+        })}
+        bundle={bundle}
+        withSentences
+        showDetailPanel={false}
+        dimensionCardLimit={4}
+        reloadHref="/writing/feedback/short/sub-1"
+        userId="user-1"
+      />,
+    );
+
+    const summary = screen.getByTestId("feedback-summary");
+    expect(within(summary).getByText("총평 점수")).toBeTruthy();
+    expect(within(summary).getByText("4")).toBeTruthy();
+    expect(within(summary).getByText("/ 10")).toBeTruthy();
+    expect(within(summary).getByTestId("feedback-summary-meta")).toBeTruthy();
+    expect(within(summary).getByText("51번 문항")).toBeTruthy();
+    expect(within(summary).getByText("37자")).toBeTruthy();
+  });
+
+  it("places the long-feedback action group inside the sticky page header", () => {
+    const bundle: FeedbackBundle = {
+      feedback: feedback({ raw_ai_result: {} }),
+      dimensions: [],
+      sentences: [],
+    };
+
+    renderWithIntl(
+      <FeedbackPageContent
+        submission={submission({ question_no: 54 })}
+        bundle={bundle}
+        withSentences
+        showSubmissionMeta
+        showDimensionGrid={false}
+        reloadHref="/writing/feedback/long/sub-1"
+        userId="user-1"
+      />,
+    );
+
+    const header = screen.getByTestId("feedback-page-header");
+    const actionRegion = within(header).getByTestId(
+      "report-page-header-actions",
+    );
+
+    expect(header.className).toContain("sticky");
+    const title = within(header).getByRole("heading", {
+      name: "54번 피드백 리포트",
+    });
+    const titleQuestionNo = within(title).getByTestId(
+      "feedback-title-question-no",
+    );
+    expect(titleQuestionNo.textContent).toBe("54");
+    expect(titleQuestionNo.textContent).not.toContain("번");
+    expect(titleQuestionNo.className).toContain("font-['Space_Grotesk']");
+    expect(titleQuestionNo.className).toContain("writing-question-number");
+    expect(titleQuestionNo.className).toContain("writing-question-number--q54");
+    expect(
+      actionRegion.contains(within(header).getByTestId("feedback-actions")),
+    ).toBe(true);
+    expect(within(header).getByTestId("feedback-action-retry").textContent).toBe(
+      "다시 작성",
+    );
+    expect(screen.getAllByTestId("feedback-actions")).toHaveLength(1);
+  });
+
+  it("renders long feedback with the short-feedback overview section order", () => {
+    const bundle: FeedbackBundle = {
+      feedback: feedback({ raw_ai_result: {} }),
+      dimensions: [
+        dim({ dimension: "structure", score: 7, score_max: 10 }),
+        dim({ dimension: "content", score: 8, score_max: 10 }),
+        dim({ dimension: "grammar", score: 6, score_max: 10 }),
+        dim({ dimension: "vocab", score: 7, score_max: 10 }),
+      ],
+      sentences: [sentence({ id: "s-1" })],
+    };
+
+    renderWithIntl(
+      <FeedbackPageContent
+        submission={submission({ question_no: 53 })}
+        bundle={bundle}
+        withSentences
+        showSubmissionMeta
+        showDimensionGrid={false}
+        reloadHref="/writing/feedback/long/sub-1"
+        userId="user-1"
+      />,
+    );
+
+    const bodyChildren = Array.from(
+      screen.getByTestId("feedback-page-body").children,
+    ).map((element) => element.getAttribute("data-testid"));
+
+    expect(screen.queryByTestId("feedback-report-overview")).toBeNull();
+    expect(bodyChildren.slice(0, 5)).toEqual([
+      "feedback-summary",
+      "feedback-report-criteria-card",
+      "feedback-report-focus-card",
+      "feedback-sentence-card",
+      "feedback-recommendation-card",
+    ]);
+    expect(bodyChildren).toContain("feedback-detail-panel");
+  });
+
+  it("labels long feedback sentence corrections by writing section", () => {
+    const bundle: FeedbackBundle = {
+      feedback: feedback({ raw_ai_result: {} }),
+      dimensions: [],
+      sentences: [
+        sentence({ id: "s-intro" }),
+        sentence({ id: "s-body" }),
+        sentence({ id: "s-conclusion" }),
+      ],
+    };
+
+    renderWithIntl(
+      <FeedbackPageContent
+        submission={submission({ question_no: 53 })}
+        bundle={bundle}
+        withSentences
+        showSubmissionMeta
+        showDimensionGrid={false}
+        reloadHref="/writing/feedback/long/sub-1"
+        userId="user-1"
+      />,
+    );
+
+    expect(screen.getByText("서론")).toBeTruthy();
+    expect(screen.getByText("본론")).toBeTruthy();
+    expect(screen.getByText("결론")).toBeTruthy();
+    expect(screen.queryByText("빈칸")).toBeNull();
   });
 
   it("renders the library save action as saved when the feedback page already has a library item", async () => {
@@ -502,6 +816,34 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
     ).toBe("true");
   });
 
+  it("starts feedback retry from the original submission answer", () => {
+    const bundle: FeedbackBundle = {
+      feedback: feedback({ raw_ai_result: {} }),
+      dimensions: [],
+      sentences: [],
+    };
+
+    renderWithIntl(
+      <FeedbackPageContent
+        submission={submission({
+          id: "submission-1",
+          problem_id: "problem-1",
+          question_no: 54,
+        })}
+        bundle={bundle}
+        withSentences
+        reloadHref="/writing/feedback/long/submission-1"
+        userId="user-1"
+      />,
+    );
+
+    fireEvent.click(screen.getByTestId("feedback-action-retry"));
+
+    expect(routerPushMock).toHaveBeenCalledWith(
+      "/writing/essay-writing-54?problem=problem-1&fresh=1&retrySubmission=submission-1",
+    );
+  });
+
   it("renders the short-answer report overview from external trait scores and learning focus areas", () => {
     const bundle: FeedbackBundle = {
       feedback: feedback({
@@ -562,14 +904,19 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
       />,
     );
 
-    expect(screen.getByTestId("feedback-report-overview")).toBeTruthy();
-    expect(screen.getByText("51번 피드백 리포트")).toBeTruthy();
-    expect(screen.getByText("제출일 2026.06.18 19:06")).toBeTruthy();
-    expect(screen.getByText("소요 시간 18분 47초")).toBeTruthy();
+    expect(screen.queryByTestId("feedback-report-overview")).toBeNull();
+    expect(screen.getByTestId("feedback-report-criteria-card")).toBeTruthy();
+    expect(screen.getByTestId("feedback-report-focus-card")).toBeTruthy();
+    expect(
+      screen.getByRole("heading", { name: "51번 피드백 리포트" }),
+    ).toBeTruthy();
+    expect(screen.queryByTestId("feedback-report-meta")).toBeNull();
+    expect(screen.queryByText("제출일 2026.06.18 19:06")).toBeNull();
+    expect(screen.queryByText("소요 시간 18분 47초")).toBeNull();
     expect(screen.queryByText("AI 분석 16.16초")).toBeNull();
-    expect(screen.getByText("이번 점수")).toBeTruthy();
-    expect(screen.getByText("0")).toBeTruthy();
-    expect(screen.getByText("/ 10점")).toBeTruthy();
+    expect(screen.queryByText("score와 weight 기준")).toBeNull();
+    expect(screen.queryByTestId("feedback-report-total-score-card")).toBeNull();
+    expect(screen.queryByTestId("feedback-report-total-score-line")).toBeNull();
     expect(screen.getByText("빈칸별 점수")).toBeTruthy();
     expect(screen.getByText("㉠ 빈칸")).toBeTruthy();
     expect(screen.getByText("㉡ 빈칸")).toBeTruthy();
@@ -581,7 +928,7 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
     ).toBeGreaterThan(0);
   });
 
-  it("renders report metadata as quiet inline text instead of filled tags", () => {
+  it("does not render report metadata above the score sections", () => {
     const bundle: FeedbackBundle = {
       feedback: feedback({
         raw_ai_result: {
@@ -613,18 +960,16 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
       />,
     );
 
-    const meta = screen.getByTestId("feedback-report-meta");
-    const items = within(meta).getAllByTestId("feedback-report-meta-item");
-    expect(items).toHaveLength(2);
-    expect(meta.querySelectorAll(".ant-tag")).toHaveLength(0);
-    expect(items[0].className).toContain("inline-flex");
-    expect(items[0].className).toContain("text-text-secondary");
-    expect(items[0].className).not.toContain("bg-");
-    expect(items[0].textContent).toBe("제출일 2026.06.19 12:01");
-    expect(items[1].textContent).toBe("AI 분석 7.97초");
+    expect(screen.queryByTestId("feedback-report-meta")).toBeNull();
+    expect(screen.queryAllByTestId("feedback-report-meta-item")).toHaveLength(
+      0,
+    );
+    expect(screen.queryByText("제출일 2026.06.19 12:01")).toBeNull();
+    expect(screen.queryByText("AI 분석 7.97초")).toBeNull();
+    expect(screen.queryByText("score와 weight 기준")).toBeNull();
   });
 
-  it("emphasizes the total score with a smaller baseline-aligned suffix", () => {
+  it("does not render a duplicate total score card in the report overview", () => {
     const bundle: FeedbackBundle = {
       feedback: feedback({
         score_total: 5,
@@ -655,26 +1000,13 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
       />,
     );
 
-    const scoreCard = screen.getByTestId("feedback-report-total-score-card");
-    const scoreLine = within(scoreCard).getByTestId(
-      "feedback-report-total-score-line",
-    );
-    const scoreValue = within(scoreLine).getByTestId(
-      "feedback-report-total-score-value",
-    );
-    const scoreSuffix = within(scoreLine).getByTestId(
-      "feedback-report-total-score-suffix",
-    );
-
-    expect(scoreLine.className).toContain("items-end");
-    expect(scoreValue.className).toContain("text-4xl");
-    expect(scoreValue.className).toContain("font-bold");
-    expect(scoreSuffix.className).toContain("text-base");
-    expect(scoreValue.textContent).toBe("5");
-    expect(scoreSuffix.textContent).toBe("/ 10점");
+    expect(screen.queryByTestId("feedback-report-total-score-card")).toBeNull();
+    expect(screen.queryByTestId("feedback-report-total-score-line")).toBeNull();
+    expect(screen.getByTestId("feedback-report-criteria-card")).toBeTruthy();
+    expect(screen.getByTestId("feedback-report-focus-card")).toBeTruthy();
   });
 
-  it("uses a much lighter surface tone for the three report overview cards", () => {
+  it("renders the focus section outside the blank score hierarchy with a star icon", () => {
     const bundle: FeedbackBundle = {
       feedback: feedback({
         raw_ai_result: {
@@ -703,15 +1035,62 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
       />,
     );
 
-    for (const testId of [
-      "feedback-report-total-score-card",
-      "feedback-report-criteria-card",
-      "feedback-report-focus-card",
-    ]) {
-      const card = screen.getByTestId(testId);
-      expect(card.className).toContain("bg-surface/40");
-      expect(card.className).not.toContain("bg-surface ");
-    }
+    const body = screen.getByTestId("feedback-page-body");
+    const criteria = screen.getByTestId("feedback-report-criteria-card");
+    const focus = screen.getByTestId("feedback-report-focus-card");
+    const starIcon = focus.querySelector("img");
+
+    expect(screen.queryByTestId("feedback-report-overview")).toBeNull();
+    expect(body.children[1]).toBe(criteria);
+    expect(body.children[2]).toBe(focus);
+    expect(criteria.parentElement).toBe(body);
+    expect(focus.parentElement).toBe(body);
+    expect(criteria.className).not.toContain("bg-surface/40");
+    expect(criteria.className).not.toContain("rounded-default");
+    expect(criteria.className).not.toContain("p-4");
+    expect(focus.className).not.toContain("bg-surface/40");
+    expect(focus.className).not.toContain("rounded-default");
+    expect(focus.className).not.toContain("p-4");
+    const criteriaTitle = within(criteria).getByRole("heading", {
+      level: 5,
+      name: "빈칸별 점수",
+    });
+    const focusTitle = within(focus).getByRole("heading", {
+      level: 5,
+      name: "다음 보완 포인트",
+    });
+    const focusTitleRow = focusTitle.parentElement;
+    const starIconBox = starIcon?.parentElement;
+    expect(focusTitleRow?.children[0]).toBe(focusTitle);
+    expect(focusTitleRow?.children[1]).toBe(starIconBox);
+    expect(criteriaTitle.className).toContain("m-0");
+    expect(focusTitle.className).toContain("!m-0");
+    expect(focusTitle.className).toContain("!flex");
+    expect(focusTitle.className).toContain("!h-5");
+    expect(focusTitle.className).toContain("!items-center");
+    expect(focusTitle.className).toContain("!leading-5");
+    expect(focusTitleRow?.className).toContain(
+      "feedback-report-focus-title-row",
+    );
+    expect(focusTitleRow?.className).toContain("h-5");
+    expect(focusTitleRow?.className).toContain("items-center");
+    expect(starIconBox?.className).toContain(
+      "feedback-report-focus-title-icon-box",
+    );
+    expect(starIconBox?.className).toContain("items-center");
+    expect(starIconBox?.className).toContain("justify-center");
+    expect(starIcon?.getAttribute("src")).toContain(
+      "/assets/star-brush.png?v=red-20260630",
+    );
+    expect(starIcon?.getAttribute("src")).not.toContain("/_next/image");
+    expect(starIcon?.getAttribute("alt")).toBe("");
+    expect(starIcon?.getAttribute("aria-hidden")).toBe("true");
+    expect(starIcon?.className).toContain(
+      "feedback-report-focus-title-icon",
+    );
+    expect(starIcon?.className).toContain("block");
+    expect(starIcon?.className).toContain("h-5");
+    expect(starIcon?.className).toContain("w-5");
   });
 
   it("uses raw trait scores in the report and raw combined feedback for recommended learning", () => {
@@ -748,7 +1127,9 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
       />,
     );
 
-    expect(screen.getByTestId("feedback-report-overview")).toBeTruthy();
+    expect(screen.queryByTestId("feedback-report-overview")).toBeNull();
+    expect(screen.getByTestId("feedback-report-criteria-card")).toBeTruthy();
+    expect(screen.getByTestId("feedback-report-focus-card")).toBeTruthy();
     expect(screen.queryAllByTestId("feedback-dimension-card")).toHaveLength(0);
     expect(screen.getAllByTestId("feedback-report-score-item")).toHaveLength(1);
     expect(
@@ -761,7 +1142,7 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
     ).toBeGreaterThan(0);
   });
 
-  it("renders the short report KPI content without an outer card component", () => {
+  it("renders the short report KPI content without an outer overview wrapper", () => {
     const bundle: FeedbackBundle = {
       feedback: feedback({
         raw_ai_result: {
@@ -791,8 +1172,8 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
       />,
     );
 
-    expect(
-      screen.getByTestId("feedback-report-overview").className,
-    ).not.toContain("app-card");
+    expect(screen.queryByTestId("feedback-report-overview")).toBeNull();
+    expect(screen.getByTestId("feedback-report-criteria-card")).toBeTruthy();
+    expect(screen.getByTestId("feedback-report-focus-card")).toBeTruthy();
   });
 });

@@ -23,4 +23,17 @@ describe("writing route helpers", () => {
       writingProblemHref({ questionNo: 52, problemId: "problem-1", fresh: true }),
     ).toBe("/writing/answer-writing-52?problem=problem-1&fresh=1");
   });
+
+  it("carries the source submission when retrying from feedback", () => {
+    expect(
+      writingProblemHref({
+        questionNo: 54,
+        problemId: "problem-1",
+        fresh: true,
+        retrySubmissionId: "submission-1",
+      }),
+    ).toBe(
+      "/writing/essay-writing-54?problem=problem-1&fresh=1&retrySubmission=submission-1",
+    );
+  });
 });

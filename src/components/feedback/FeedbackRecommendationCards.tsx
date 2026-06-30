@@ -1,8 +1,8 @@
 "use client";
 
 import { Typography } from "antd";
+import { ArrowUpRight as ArrowUpRightIcon } from "lucide-react";
 import {
-  ArrowRight,
   BarChart3,
   FileText,
   PencilLine,
@@ -66,7 +66,7 @@ export function FeedbackRecommendationCards({
       icon: PencilLine,
       title: t("action.retry.title"),
       description: t("action.retry.description"),
-      toneClassName: "bg-blue-50 text-blue-600",
+      toneClassName: "text-blue-600",
       disabled: retryDisabled,
     },
     {
@@ -75,7 +75,7 @@ export function FeedbackRecommendationCards({
       icon: FileText,
       title: t("action.similar.title"),
       description: t("action.similar.description"),
-      toneClassName: "bg-emerald-50 text-emerald-600",
+      toneClassName: "text-emerald-600",
     },
     {
       key: "weakness",
@@ -83,7 +83,7 @@ export function FeedbackRecommendationCards({
       icon: BarChart3,
       title: t("action.weakness.title"),
       description: weaknessReason,
-      toneClassName: "bg-violet-50 text-violet-600",
+      toneClassName: "text-violet-600",
     },
   ];
 
@@ -92,7 +92,7 @@ export function FeedbackRecommendationCards({
       className="flex flex-col gap-4"
       data-testid="feedback-recommendation-card"
     >
-      <Title level={5} className="mt-0">
+      <Title level={5} className="m-0">
         {t("cardTitle")}
       </Title>
 
@@ -107,7 +107,6 @@ export function FeedbackRecommendationCards({
           return (
             <AppCard
               key={action.key}
-              hoverable
               role="button"
               tabIndex={disabled ? -1 : 0}
               aria-disabled={disabled ? true : undefined}
@@ -124,22 +123,36 @@ export function FeedbackRecommendationCards({
               }}
               className={[
                 "group h-full",
-                disabled ? "cursor-not-allowed opacity-60" : "",
+                disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer",
               ]
                 .filter(Boolean)
                 .join(" ")}
               data-testid={`feedback-reco-action-${action.key}`}
             >
-              <div className="flex h-full items-center gap-4">
+              <div
+                className="relative flex h-full min-h-[190px] flex-col"
+                data-testid={`feedback-recommendation-layout-${action.key}`}
+              >
                 <span
                   className={[
-                    "flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-md",
+                    "absolute left-0 top-0 flex h-6 w-6 flex-shrink-0 items-center justify-center",
                     action.toneClassName,
                   ].join(" ")}
+                  data-testid={`feedback-recommendation-icon-${action.key}`}
                 >
                   <Icon aria-hidden size={24} strokeWidth={2} />
                 </span>
-                <span className="min-w-0 flex-1">
+                <ArrowUpRightIcon
+                  aria-hidden
+                  size={20}
+                  strokeWidth={1.8}
+                  className="absolute right-0 top-0 text-[color:var(--ant-color-text-tertiary)] transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-primary"
+                  data-testid={`feedback-recommendation-arrow-${action.key}`}
+                />
+                <span
+                  className="block min-w-0 pr-0 pt-[104px]"
+                  data-testid={`feedback-recommendation-copy-${action.key}`}
+                >
                   <Text strong className="block">
                     {action.title}
                   </Text>
@@ -150,12 +163,6 @@ export function FeedbackRecommendationCards({
                     {action.description}
                   </Text>
                 </span>
-                <ArrowRight
-                  aria-hidden
-                  size={20}
-                  strokeWidth={1.8}
-                  className="flex-shrink-0 text-[color:var(--ant-color-text-tertiary)] transition group-hover:translate-x-0.5 group-hover:text-primary"
-                />
               </div>
             </AppCard>
           );

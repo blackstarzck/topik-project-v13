@@ -2,12 +2,12 @@
 
 import { Empty, Statistic, Typography } from "antd";
 import { useTranslations } from "next-intl";
-import { AppCard } from "@/components/shared/AppCard";
 import {
   BarChart3,
   ChartNoAxesColumnIncreasing,
   Trophy,
 } from "@/components/shared/AppIcons";
+import { AppCard } from "@/components/shared/AppCard";
 
 const { Text } = Typography;
 
@@ -28,7 +28,10 @@ export function ComparisonKpiBlock({
 
   if (currentScore === null) {
     return (
-      <AppCard data-testid="comparison-kpi-block">
+      <AppCard
+        data-testid="comparison-kpi-block"
+        className="comparison-kpi-block"
+      >
         <Empty description={t("emptyScore")} />
       </AppCard>
     );
@@ -37,7 +40,7 @@ export function ComparisonKpiBlock({
   return (
     <div
       data-testid="comparison-kpi-block"
-      className="grid grid-cols-1 gap-3 md:grid-cols-3"
+      className="comparison-kpi-block grid grid-cols-1 gap-3 md:grid-cols-3"
     >
       <AppCard data-testid="comparison-kpi-item" className="h-full">
         <div className="flex items-center justify-between gap-3">

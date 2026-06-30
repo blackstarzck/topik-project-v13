@@ -12,6 +12,7 @@ import { FeedbackSummary } from "./FeedbackSummary";
 import { FeedbackActionGroup, NextActionBar } from "./NextActionBar";
 import { SentenceFeedbackList } from "./SentenceFeedbackList";
 import { extractExternalFeedbackSupplement } from "@/lib/writing/external-feedback";
+import { writingQuestionNeonClass } from "@/lib/writing/question-number-neon";
 import { writingProblemHref } from "@/lib/writing/routes";
 import type { FeedbackBundle, WritingSubmissionRow } from "@/lib/writing/types";
 
@@ -73,17 +74,29 @@ export function FeedbackPageContent({
   const retryHref = writingProblemHref({
     questionNo: submission.question_no,
     problemId: submission.problem_id,
+    fresh: true,
+    retrySubmissionId: submission.id,
   });
   const showShortReportOverview =
     withSentences && !showDetailPanel && dimensionCardLimit === 4;
-  const showStickyReportHeader = showShortReportOverview;
+  const showReportOverview =
+    showShortReportOverview ||
+    (withSentences && showSubmissionMeta && showDimensionGrid === false);
+  const showStickyReportHeader = withSentences;
+  const sentenceLabelVariant = showShortReportOverview ? "short" : "long";
+  const defaultRetryLabelKey = showShortReportOverview
+    ? "retryDefault"
+    : withSentences
+      ? "retryWriting"
+      : "retryDefault";
   const resolvedRetryLabel = tActions(
-    retryLabelKey ?? (withSentences ? "retryWriting" : "retryDefault"),
+    retryLabelKey ?? defaultRetryLabelKey,
   );
   const retryDisabled = !canRetryProblem;
   const retryDisabledReason = retryDisabled
     ? tActions("retryUnavailable")
     : undefined;
+  const reportTitle = tReport("title", { questionNo: submission.question_no });
 
   return (
     <div
@@ -97,7 +110,12 @@ export function FeedbackPageContent({
       {showStickyReportHeader ? (
         <ReportPageHeader
           testId="feedback-page-header"
-          title={tReport("title", { questionNo: submission.question_no })}
+          title={
+            <FeedbackReportTitle
+              title={reportTitle}
+              questionNo={submission.question_no}
+            />
+          }
           actions={
             <FeedbackActionGroup
               key={submission.id}
@@ -118,10 +136,11 @@ export function FeedbackPageContent({
       ) : null}
 
       <div
+        data-testid="feedback-page-body"
         className={
           showStickyReportHeader
-            ? "app-workspace-body app-workspace-body--workspace flex w-full flex-col gap-6 px-4 py-4 sm:px-6 sm:py-6"
-            : "flex w-full flex-col gap-6"
+            ? "app-workspace-body app-workspace-body--workspace flex w-full flex-col gap-12 px-4 py-4 pb-32 sm:px-6 sm:py-6 sm:pb-40"
+            : "flex w-full flex-col gap-12 pb-32 sm:pb-40"
         }
       >
         {partial ? (
@@ -133,11 +152,11 @@ export function FeedbackPageContent({
           />
         ) : null}
 
-        {showShortReportOverview ? (
+        {showReportOverview ? (
           <>
-            {/* E-01 region 1: 점수/총평 요약. 53/54와 동일한 FeedbackSummary를
-                재사용하되, 점수는 아래 리포트 카드에서 강조되므로 hideScore로 총평만 노출. */}
-            <FeedbackSummary feedback={bundle.feedback} hideScore />
+            {/* E-01 region 1: 점수/총평 요약. 53/54와 같은 상단 요약 구조를
+                사용해 총평 점수, 문항 메타, 전체 설명을 모두 노출한다. */}
+            <FeedbackSummary feedback={bundle.feedback} submission={submission} />
             <FeedbackReportOverview
               feedback={bundle.feedback}
               submission={submission}
@@ -157,7 +176,7 @@ export function FeedbackPageContent({
           />
         )}
 
-        {showDimensionGrid && !showShortReportOverview ? (
+        {showDimensionGrid && !showReportOverview ? (
           <DimensionCardGrid
             rows={bundle.dimensions}
             maxCards={dimensionCardLimit}
@@ -169,11 +188,8 @@ export function FeedbackPageContent({
           <SentenceFeedbackList
             rows={bundle.sentences}
             onReanalyze={onReanalyze}
+            labelVariant={sentenceLabelVariant}
           />
-        ) : null}
-
-        {showDetailPanel ? (
-          <DetailedFeedbackPanel dimensions={bundle.dimensions} />
         ) : null}
 
         <FeedbackRecommendationCards
@@ -182,6 +198,10 @@ export function FeedbackPageContent({
           retryDisabled={retryDisabled}
           supplement={externalSupplement}
         />
+
+        {showDetailPanel ? (
+          <DetailedFeedbackPanel dimensions={bundle.dimensions} />
+        ) : null}
 
         {showStickyReportHeader ? null : (
           <NextActionBar
@@ -200,5 +220,44 @@ export function FeedbackPageContent({
         )}
       </div>
     </div>
+  );
+}
+
+function FeedbackReportTitle({
+  title,
+  questionNo,
+}: {
+  title: string;
+  questionNo: number;
+}) {
+  const questionNoText = String(questionNo);
+  const index = title.indexOf(questionNoText);
+
+  if (index === -1) {
+    return <span data-testid="feedback-title">{title}</span>;
+  }
+
+  return (
+    <span
+      data-testid="feedback-title"
+      className="inline-flex items-center whitespace-nowrap"
+    >
+      <span className="sr-only">{title}</span>
+      <span aria-hidden="true" className="inline-flex items-center">
+        {title.slice(0, index)}
+        <span
+          data-testid="feedback-title-question-no"
+          className={[
+            "writing-question-number font-['Space_Grotesk'] leading-none",
+            writingQuestionNeonClass("writing-question-number", questionNo),
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          {questionNoText}
+        </span>
+        {title.slice(index + questionNoText.length)}
+      </span>
+    </span>
   );
 }

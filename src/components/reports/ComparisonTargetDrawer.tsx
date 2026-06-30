@@ -1,21 +1,15 @@
 "use client";
 
-import { App, Button, Empty, Radio, Select, Tag, Typography } from "antd";
+import { App, Button, Empty, Radio, Select, Typography } from "antd";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { AppDrawer } from "@/components/shared/AppDrawer";
-import {
-  CheckCircle2,
-  ChevronDown,
-  Clock3,
-} from "@/components/shared/AppIcons";
-import { useCreateComparisonReport } from "@/lib/writing/mutations";
+import type { ComparisonReportViewModel } from "@/lib/writing/comparison-report-view-model";
+import { useCreateComparisonReportWithView } from "@/lib/writing/mutations";
 import type { ComparisonTargetCandidate } from "@/lib/writing/server";
 
 const { Text } = Typography;
 
-type StatusFilter = "complete" | "with-analysis";
 type DateSortMode = "newest" | "oldest";
 type ScoreSortMode = "none" | "score-desc" | "score-asc";
 
@@ -26,6 +20,7 @@ type Props = {
   currentQuestionNo: number;
   selectedPreviousSubmissionId: string | null;
   candidates: ComparisonTargetCandidate[];
+  onComparisonReportLoaded: (viewModel: ComparisonReportViewModel) => void;
 };
 
 function normalizedScore(score: number | null, scoreMax: number | null) {
@@ -74,13 +69,12 @@ export function ComparisonTargetDrawer({
   currentQuestionNo,
   selectedPreviousSubmissionId,
   candidates,
+  onComparisonReportLoaded,
 }: Props) {
   const t = useTranslations("reports.comparison");
-  const router = useRouter();
   const { notification } = App.useApp();
-  const compare = useCreateComparisonReport();
+  const compare = useCreateComparisonReportWithView();
   const [draftSelectedId, setDraftSelectedId] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("complete");
   const [dateSortMode, setDateSortMode] = useState<DateSortMode>("newest");
   const [scoreSortMode, setScoreSortMode] = useState<ScoreSortMode>("none");
   const fallbackSelectedId = useMemo(
@@ -108,17 +102,10 @@ export function ComparisonTargetDrawer({
         return dateSortMode === "newest" ? submittedDelta : -submittedDelta;
       });
 
-    const filtered =
-      statusFilter === "complete"
-        ? candidates.filter((candidate) => !candidate.isDisabled)
-        : candidates;
-    const disabledPreview =
-      statusFilter === "complete"
-        ? candidates.filter((candidate) => candidate.isDisabled)
-        : [];
-
-    return [...sortCandidates(filtered), ...sortCandidates(disabledPreview)];
-  }, [candidates, dateSortMode, scoreSortMode, statusFilter]);
+    return sortCandidates(
+      candidates.filter((candidate) => !candidate.isDisabled),
+    );
+  }, [candidates, dateSortMode, scoreSortMode]);
 
   const selectedCandidate = useMemo(
     () =>
@@ -139,8 +126,11 @@ export function ComparisonTargetDrawer({
     compare.mutate(
       { current_id: currentSubmissionId, previous_id: selectedId },
       {
-        onSuccess: ({ reportId }) => {
-          router.push(`/writing/reports/${reportId}/compare`);
+        onSuccess: ({ viewModel }) => {
+          onComparisonReportLoaded(viewModel);
+          notification.success({
+            title: t("targetDrawerCompareSuccessTitle"),
+          });
         },
         onError: (error) => {
           notification.error({
@@ -162,27 +152,49 @@ export function ComparisonTargetDrawer({
       open={open}
       onClose={handleClose}
       placement="right"
-      size={456}
+      size={376}
       title={t("targetDrawerTitle")}
       rootClassName="comparison-target-drawer"
       getContainer={false}
-      rootStyle={{ position: "absolute" }}
+      rootStyle={{ position: "fixed", inset: 0 }}
       styles={{
-        body: { padding: 0 },
+        body: {
+          flex: "1 1 0%",
+          minHeight: 0,
+          overflow: "hidden",
+          padding: 0,
+        },
         header: {
           padding: "24px 24px 14px",
           borderBottom: "0",
         },
         footer: {
+          position: "sticky",
+          bottom: 0,
+          zIndex: 1,
+          flexShrink: 0,
           borderTop: "1px solid var(--app-color-border)",
+          background: "var(--app-color-bg-container)",
           padding: "18px 24px 20px",
         },
         mask: {
           background: "rgba(244, 244, 245, 0.18)",
         },
+        section: {
+          display: "flex",
+          flexDirection: "column",
+          height: "100%",
+          overflow: "hidden",
+        },
+        wrapper: {
+          height: "100dvh",
+        },
       }}
       footer={
-        <div className="flex w-full flex-col gap-3">
+        <div
+          className="comparison-target-drawer-footer flex w-full flex-col gap-3"
+          data-testid="comparison-target-drawer-footer"
+        >
           <div className="grid grid-cols-2 gap-3">
             <Button
               block
@@ -201,46 +213,25 @@ export function ComparisonTargetDrawer({
               onClick={handleCompare}
               data-testid="comparison-target-confirm"
             >
-              {t("targetDrawerCompare")}
+              {unchanged
+                ? t("targetDrawerAlreadySelectedButton")
+                : t("targetDrawerCompare")}
             </Button>
           </div>
-          {unchanged && selectedId ? (
-            <Text type="secondary" className="text-center text-xs">
-              {t("targetDrawerUnchanged")}
-            </Text>
-          ) : null}
         </div>
       }
     >
       <div
-        className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-6 pb-6 pt-2"
+        className="flex h-full min-h-0 flex-1 flex-col gap-5 overflow-hidden px-3 pt-2"
         data-testid="comparison-target-drawer-body"
       >
         <div className="flex flex-col gap-3">
           <Text type="secondary">
             {t("targetDrawerDescription", { questionNo: currentQuestionNo })}
           </Text>
-          <Tag className="w-fit" data-testid="comparison-target-same-problem">
-            {t("targetDrawerSameProblem")}
-          </Tag>
         </div>
 
-        <div className="grid grid-cols-[1.15fr_1fr_1fr] gap-2">
-          <Select<StatusFilter>
-            value={statusFilter}
-            onChange={setStatusFilter}
-            data-testid="comparison-target-status-filter"
-            options={[
-              {
-                value: "complete",
-                label: t("targetDrawerFilterComplete"),
-              },
-              {
-                value: "with-analysis",
-                label: t("targetDrawerFilterWithAnalysis"),
-              },
-            ]}
-          />
+        <div className="grid grid-cols-2 gap-2">
           <Select<DateSortMode>
             value={dateSortMode}
             onChange={setDateSortMode}
@@ -262,121 +253,85 @@ export function ComparisonTargetDrawer({
           />
         </div>
 
-        {visibleCandidates.length === 0 ? (
-          <Empty
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description={
-              candidates.length === 0
-                ? t("targetDrawerEmpty")
-                : t("targetDrawerNoFilteredCandidates")
-            }
-            data-testid="comparison-target-empty"
-          />
-        ) : (
-          <div className="flex flex-col gap-3">
-            {visibleCandidates.map((candidate) => {
-              const score = normalizedScore(
-                candidate.score,
-                candidate.scoreMax,
-              );
-              const selected = selectedId === candidate.submissionId;
-              const candidateIndex = candidates.findIndex(
-                (item) => item.submissionId === candidate.submissionId,
-              );
-              const attemptNo =
-                candidateIndex >= 0 ? candidates.length - candidateIndex : null;
-              const statusTagLabel = candidate.isDisabled
-                ? t("targetDrawerUnavailable")
-                : candidate.isSelected
-                  ? t("targetDrawerSelectedPrevious")
-                  : attemptNo === 1
-                    ? t("targetDrawerFirstAttempt")
-                    : t("targetDrawerPreviousComplete");
-              return (
-                <label
-                  key={candidate.submissionId}
-                  data-testid="comparison-target-option"
-                  data-submission-id={candidate.submissionId}
-                  data-feedback-status={candidate.feedbackStatus}
-                  data-selected={selected ? "true" : "false"}
-                  style={
-                    selected
-                      ? {
-                          borderColor: "var(--app-color-primary)",
-                          boxShadow: "0 0 0 1px var(--app-color-primary) inset",
-                          background:
-                            "color-mix(in srgb, var(--app-color-primary) 4%, var(--app-color-bg-container))",
-                        }
-                      : undefined
-                  }
-                  className={[
-                    "flex gap-4 rounded-lg border border-border bg-background px-4 py-5 transition-colors",
-                    candidate.isDisabled
-                      ? "cursor-not-allowed opacity-60"
-                      : "cursor-pointer hover:bg-[var(--app-color-bg-layout)]",
-                  ]
-                    .filter(Boolean)
-                    .join(" ")}
-                >
-                  <Radio
-                    checked={selected}
-                    disabled={candidate.isDisabled}
-                    onChange={() => setDraftSelectedId(candidate.submissionId)}
-                  />
-                  <span className="flex min-w-0 flex-1 flex-col gap-2">
-                    <span className="flex items-start justify-between gap-2">
-                      <span className="min-w-0">
-                        <span className="mb-2 flex flex-wrap items-center gap-1.5">
-                          {candidate.isDisabled ? (
-                            <Tag icon={<Clock3 aria-hidden size={12} />}>
-                              {statusTagLabel}
-                            </Tag>
-                          ) : (
-                            <Tag icon={<CheckCircle2 aria-hidden size={12} />}>
-                              {statusTagLabel}
-                            </Tag>
-                          )}
-                          {candidate.isRecommended && !candidate.isSelected ? (
-                            <Tag>{t("targetDrawerRecommended")}</Tag>
-                          ) : null}
-                        </span>
+        <div
+          className="flex min-h-0 flex-1 flex-col overflow-y-auto pb-6"
+          data-testid="comparison-target-list-scroll"
+        >
+          {visibleCandidates.length === 0 ? (
+            <Empty
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              description={t("targetDrawerEmpty")}
+              data-testid="comparison-target-empty"
+            />
+          ) : (
+            <div className="flex flex-col">
+              {visibleCandidates.map((candidate) => {
+                const score = normalizedScore(
+                  candidate.score,
+                  candidate.scoreMax,
+                );
+                const selected = selectedId === candidate.submissionId;
+                const candidateIndex = candidates.findIndex(
+                  (item) => item.submissionId === candidate.submissionId,
+                );
+                const attemptNo =
+                  candidateIndex >= 0
+                    ? candidates.length - candidateIndex
+                    : null;
+                return (
+                  <label
+                    key={candidate.submissionId}
+                    data-testid="comparison-target-option"
+                    data-submission-id={candidate.submissionId}
+                    data-feedback-status={candidate.feedbackStatus}
+                    data-selected={selected ? "true" : "false"}
+                    className={[
+                      "flex cursor-pointer gap-3 border-b border-[var(--ant-color-border-secondary)] px-3 py-4 transition-colors last:border-b-0 hover:bg-[var(--app-color-bg-layout)]",
+                      selected ? "bg-[var(--app-color-bg-layout)]" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                  >
+                    <Radio
+                      checked={selected}
+                      onChange={() =>
+                        setDraftSelectedId(candidate.submissionId)
+                      }
+                    />
+                    <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
+                      <span
+                        className="flex min-w-0 flex-col gap-1"
+                        data-testid="comparison-target-option-meta"
+                      >
                         <Text strong className="block truncate text-base">
-                          {candidate.isDisabled
-                            ? t("targetDrawerDisabledReason")
-                            : attemptNo
-                              ? t("targetDrawerAttempt", { count: attemptNo })
-                              : t("targetDrawerQuestion", {
-                                  questionNo: candidate.questionNo,
-                                })}
+                          {attemptNo
+                            ? t("targetDrawerAttempt", { count: attemptNo })
+                            : t("targetDrawerQuestion", {
+                                questionNo: candidate.questionNo,
+                              })}
                         </Text>
+                        <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                          <Text type="secondary">
+                            {formatSubmittedAt(candidate.submittedAt)}
+                          </Text>
+                        </span>
                       </span>
-                      <Text strong className="shrink-0 text-xl">
+                      <Text
+                        strong
+                        className="shrink-0 self-center text-xl"
+                        data-testid="comparison-target-option-score"
+                      >
                         {score === null
                           ? t("targetDrawerNoScore")
                           : t("targetDrawerScore", { score })}
                       </Text>
                     </span>
-                    <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-                      <Text type="secondary">
-                        {formatSubmittedAt(candidate.submittedAt)}
-                      </Text>
-                      <Text type="secondary">
-                        {t("targetDrawerChars", {
-                          count: candidate.charCount,
-                        })}
-                      </Text>
-                    </span>
-                  </span>
-                  {candidate.isDisabled ? (
-                    <span className="flex shrink-0 items-center self-center text-secondary">
-                      <ChevronDown aria-hidden size={16} />
-                    </span>
-                  ) : null}
-                </label>
-              );
-            })}
-          </div>
-        )}
+                  </label>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
     </AppDrawer>
   );

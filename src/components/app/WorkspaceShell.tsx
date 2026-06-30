@@ -91,13 +91,12 @@ export function WorkspaceShell({
     isFeedbackDetailRoute ||
     isComparisonReportRoute ||
     isNextProblemRoute;
-  const isShortFeedbackRoute = pathname.startsWith("/writing/feedback/short/");
   const hidesGlobalFloatingActions = hidesWorkspaceChrome;
   const contentClassName = [
     "app-workspace-content",
     isWritingExamRoute ? "app-workspace-content--exam" : null,
     isOnboardingLearningGoalRoute ? "app-workspace-content--onboarding" : null,
-    isShortFeedbackRoute || isComparisonReportRoute
+    isFeedbackDetailRoute || isComparisonReportRoute
       ? "app-workspace-content--feedback-flush"
       : null,
   ]

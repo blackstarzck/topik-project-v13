@@ -1,46 +1,43 @@
 "use client";
 
 import { Alert, App, Button, Tooltip, Typography } from "antd";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { AppCard } from "@/components/shared/AppCard";
-import {
-  DocumentTextIcon,
-  ProgrammingArrowsIcon,
-  RefreshCcw,
-} from "@/components/shared/AppIcons";
+import { AiCommentaryIcon, RefreshCcw } from "@/components/shared/AppIcons";
 import { ReportPageHeader } from "@/components/shared/ReportPageHeader";
 import { logStudyEvent } from "@/lib/events/study-events";
-import type { ComparisonMetrics } from "@/lib/writing/comparison-service";
-import type { ComparisonTargetCandidate } from "@/lib/writing/server";
-import { ComparisonKpiBlock } from "./ComparisonKpiBlock";
+import type { ComparisonReportViewModel } from "@/lib/writing/comparison-report-view-model";
+import { writingQuestionNeonClass } from "@/lib/writing/question-number-neon";
+import { BlankTraitComparisonPanel } from "./BlankTraitComparisonPanel";
 import { ComparisonTargetDrawer } from "./ComparisonTargetDrawer";
 import { DimensionComparisonCards } from "./DimensionComparisonCards";
-import { ScoreComparisonChart, type ChartDatum } from "./ScoreComparisonChart";
+import { ScoreComparisonChart } from "./ScoreComparisonChart";
 import { SubmissionDiffPanel } from "./SubmissionDiffPanel";
 
 const { Paragraph, Text } = Typography;
 
 type NavigationAction = "next" | "weakness" | "retry";
 
-type Props = {
-  metrics: ComparisonMetrics;
-  narrative: string | null;
-  currentText: string;
-  previousText: string | null;
-  retryHref?: string | null;
-  reportId: string;
-  currentScore: number | null;
-  chartData: ChartDatum[];
-  currentNorm: Record<string, number | null>;
-  hasPrevious: boolean;
-  currentSubmissionId: string;
-  currentQuestionNo: number;
-  currentSubmittedAt: string;
-  selectedPreviousSubmissionId: string | null;
-  comparisonTargets: ComparisonTargetCandidate[];
-};
+type OptionalReportField =
+  | "showBlankComparison"
+  | "hasBlankTraitData"
+  | "blankComparisons";
+
+type Props = Omit<ComparisonReportViewModel, OptionalReportField> &
+  Partial<Pick<ComparisonReportViewModel, OptionalReportField>>;
+
+function normalizeReport(
+  report: Props | ComparisonReportViewModel,
+): ComparisonReportViewModel {
+  return {
+    ...report,
+    showBlankComparison: report.showBlankComparison ?? false,
+    hasBlankTraitData: report.hasBlankTraitData ?? false,
+    blankComparisons: report.blankComparisons ?? [],
+  };
+}
 
 function normalizedScore(score: number | null, scoreMax: number | null) {
   if (score === null) return null;
@@ -60,31 +57,40 @@ function formatSubmittedAt(value: string) {
   ].join(" ");
 }
 
-export function ComparisonReportView({
-  metrics,
-  narrative,
-  currentText,
-  previousText,
-  retryHref,
-  reportId,
-  currentScore,
-  chartData,
-  currentNorm,
-  hasPrevious,
-  currentSubmissionId,
-  currentQuestionNo,
-  currentSubmittedAt,
-  selectedPreviousSubmissionId,
-  comparisonTargets,
-}: Props) {
+export function ComparisonReportView(initialReport: Props) {
   const t = useTranslations("reports.comparison");
   const router = useRouter();
   const { notification } = App.useApp();
+  const [activeReport, setActiveReport] = useState<ComparisonReportViewModel>(
+    () => normalizeReport(initialReport),
+  );
   const [sharing, setSharing] = useState(false);
   const [pendingAction, setPendingAction] = useState<NavigationAction | null>(
     null,
   );
   const [targetDrawerOpen, setTargetDrawerOpen] = useState(false);
+  const {
+    metrics,
+    narrative,
+    currentText,
+    previousText,
+    currentAnswerJson,
+    previousAnswerJson,
+    retryHref,
+    reportId,
+    currentScore,
+    chartData,
+    currentNorm,
+    hasPrevious,
+    currentSubmissionId,
+    currentQuestionNo,
+    currentSubmittedAt,
+    selectedPreviousSubmissionId,
+    comparisonTargets,
+    showBlankComparison,
+    hasBlankTraitData,
+    blankComparisons,
+  } = activeReport;
 
   useEffect(() => {
     void logStudyEvent({
@@ -92,10 +98,6 @@ export function ComparisonReportView({
       payload: { report_id: reportId },
     });
   }, [reportId]);
-
-  const changedDimensions = Object.values(metrics.dimension_deltas).filter(
-    (delta) => delta !== null && Math.abs(delta) >= 1,
-  ).length;
 
   const narrativeFailed = !narrative || narrative.trim().length === 0;
   const weaknessDisabled = !hasPrevious;
@@ -112,6 +114,7 @@ export function ComparisonReportView({
   const previousSubmittedLabel = selectedTarget
     ? formatSubmittedAt(selectedTarget.submittedAt)
     : null;
+  const reportTitle = t("title", { questionNo: currentQuestionNo });
 
   async function onShare() {
     if (sharing) return;
@@ -142,6 +145,18 @@ export function ComparisonReportView({
     router.push(href);
   }
 
+  function handleComparisonReportLoaded(viewModel: ComparisonReportViewModel) {
+    setActiveReport(viewModel);
+    setTargetDrawerOpen(false);
+    if (typeof window !== "undefined") {
+      window.history.replaceState(
+        null,
+        "",
+        `/writing/reports/${viewModel.reportId}/compare`,
+      );
+    }
+  }
+
   return (
     <div
       data-testid="comparison-page-shell"
@@ -149,7 +164,12 @@ export function ComparisonReportView({
     >
       <ReportPageHeader
         testId="comparison-page-header"
-        title={t("heading")}
+        title={
+          <ComparisonReportTitle
+            questionNo={currentQuestionNo}
+            title={reportTitle}
+          />
+        }
         actions={
           <div
             data-testid="comparison-next-actions"
@@ -217,86 +237,52 @@ export function ComparisonReportView({
 
       <div
         data-testid="comparison-page-body"
-        className="app-workspace-body app-workspace-body--workspace flex w-full flex-col gap-4 px-4 py-4 sm:px-6 sm:py-6"
+        className="app-workspace-body app-workspace-body--workspace app-cards-bordered comparison-report-body flex w-full flex-col gap-20 px-4 pt-[100px] pb-32 sm:px-6 sm:pb-40"
       >
-        <AppCard
+        <section
           data-testid="comparison-summary-strip"
-          className="comparison-summary-strip"
+          className="comparison-summary-strip min-w-0 overflow-hidden py-2"
         >
-          <div className="grid gap-4 lg:grid-cols-[1fr_auto_1fr_auto] lg:items-center">
-            <div className="flex min-w-0 items-center gap-3">
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-border bg-background">
-                <DocumentTextIcon aria-hidden size={20} />
-              </span>
-              <div className="min-w-0">
-                <Text type="secondary" className="block text-xs">
-                  {t("currentAnswerLabel")}
-                </Text>
-                <Text strong className="block truncate">
-                  {t("questionTitle", { questionNo: currentQuestionNo })}
-                </Text>
-                <Text type="secondary" className="block text-xs">
-                  {t("submittedAt", { date: currentSubmittedLabel })}
-                </Text>
-              </div>
-              <Text strong className="ml-auto text-3xl">
-                {currentScore === null
+          <div
+            data-testid="comparison-summary-answer-row"
+            className="grid gap-10 xl:grid-cols-2 xl:gap-16"
+          >
+            <SummaryAnswerBlock
+              label={t("currentAnswerLabel")}
+              submittedAt={t("submittedAt", { date: currentSubmittedLabel })}
+              score={
+                currentScore === null
                   ? t("targetDrawerNoScore")
-                  : t("targetDrawerScore", { score: currentScore })}
-              </Text>
-            </div>
-
-            <ProgrammingArrowsIcon
-              aria-hidden
-              size={24}
-              className="hidden text-secondary lg:block"
+                  : t("targetDrawerScore", { score: currentScore })
+              }
             />
 
-            <div className="flex min-w-0 items-center gap-3">
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-border bg-background">
-                <DocumentTextIcon aria-hidden size={20} />
-              </span>
-              <div className="min-w-0">
-                <Text type="secondary" className="block text-xs">
-                  {t("compareTargetLabel")}
-                </Text>
-                <Text strong className="block truncate">
-                  {selectedTarget
-                    ? t("previousQuestionTitle", {
-                        questionNo: selectedTarget.questionNo,
-                      })
-                    : t("noCompareTarget")}
-                </Text>
-                <Text type="secondary" className="block text-xs">
-                  {previousSubmittedLabel
-                    ? t("submittedAt", { date: previousSubmittedLabel })
-                    : t("targetDrawerEmpty")}
-                </Text>
-              </div>
-              <Text strong className="ml-auto text-3xl">
-                {previousScore === null
+            <SummaryAnswerBlock
+              label={t("compareTargetLabel")}
+              submittedAt={
+                previousSubmittedLabel
+                  ? t("submittedAt", { date: previousSubmittedLabel })
+                  : t("targetDrawerEmpty")
+              }
+              score={
+                previousScore === null
                   ? t("targetDrawerNoScore")
-                  : t("targetDrawerScore", { score: previousScore })}
-              </Text>
-            </div>
-
-            <Button
-              icon={<RefreshCcw aria-hidden size={16} />}
-              onClick={() => setTargetDrawerOpen(true)}
-              data-testid="comparison-action-change-target"
-              className="lg:justify-self-end"
-            >
-              {t("changeTarget")}
-            </Button>
+                  : t("targetDrawerScore", { score: previousScore })
+              }
+              action={
+                <Tooltip title={t("changeTarget")}>
+                  <Button
+                    aria-label={t("changeTarget")}
+                    icon={<RefreshCcw aria-hidden size={16} />}
+                    onClick={() => setTargetDrawerOpen(true)}
+                    data-testid="comparison-action-change-target"
+                    className="shrink-0"
+                  />
+                </Tooltip>
+              }
+            />
           </div>
-        </AppCard>
-
-        <ComparisonKpiBlock
-          currentScore={currentScore}
-          scoreDelta={metrics.score_delta}
-          changedDimensions={changedDimensions}
-          hasPrevious={hasPrevious}
-        />
+        </section>
 
         <AppCard data-testid="comparison-narrative">
           {narrativeFailed ? (
@@ -313,26 +299,66 @@ export function ComparisonReportView({
             />
           ) : (
             <>
-              <Paragraph className="mb-2" ellipsis={{ rows: 3 }}>
-                {narrative}
-              </Paragraph>
-              <Text type="secondary">{t("narrativeDisclaimer")}</Text>
+              <div
+                className="flex items-center gap-3"
+                data-testid="comparison-narrative-summary-row"
+              >
+                <AiCommentaryIcon
+                  aria-hidden
+                  data-testid="comparison-narrative-summary-icon"
+                  size={32}
+                  className="shrink-0 text-text-primary"
+                />
+                <div
+                  data-testid="comparison-narrative-summary-group"
+                  className="min-w-0"
+                >
+                  <Paragraph
+                    className="min-w-0 !mb-[10px] !text-[20px] font-semibold leading-8"
+                    data-testid="comparison-narrative-summary"
+                    ellipsis={{ rows: 3 }}
+                  >
+                    {narrative}
+                  </Paragraph>
+                  <Text
+                    type="secondary"
+                    className="block text-sm"
+                    data-testid="comparison-narrative-disclaimer"
+                  >
+                    {t("narrativeDisclaimer")}
+                  </Text>
+                </div>
+              </div>
             </>
           )}
         </AppCard>
 
-        <ScoreComparisonChart data={chartData} hasPrevious={hasPrevious} />
+        {showBlankComparison ? (
+          <BlankTraitComparisonPanel
+            items={blankComparisons}
+            hasPrevious={hasPrevious}
+            hasTraitData={hasBlankTraitData}
+          />
+        ) : (
+          <>
+            <ScoreComparisonChart data={chartData} hasPrevious={hasPrevious} />
 
-        <DimensionComparisonCards
-          deltas={metrics.dimension_deltas}
-          hasPrevious={hasPrevious}
-          currentScores={currentNorm}
-        />
+            <DimensionComparisonCards
+              deltas={metrics.dimension_deltas}
+              hasPrevious={hasPrevious}
+              currentScores={currentNorm}
+            />
+          </>
+        )}
 
-        <SubmissionDiffPanel
-          currentText={currentText}
-          previousText={previousText}
-        />
+        {!showBlankComparison ? (
+          <SubmissionDiffPanel
+            currentText={currentText}
+            previousText={previousText}
+            currentAnswerJson={currentAnswerJson}
+            previousAnswerJson={previousAnswerJson}
+          />
+        ) : null}
       </div>
 
       <ComparisonTargetDrawer
@@ -342,7 +368,96 @@ export function ComparisonReportView({
         currentQuestionNo={currentQuestionNo}
         selectedPreviousSubmissionId={selectedPreviousSubmissionId}
         candidates={comparisonTargets}
+        onComparisonReportLoaded={handleComparisonReportLoaded}
       />
+    </div>
+  );
+}
+
+function ComparisonReportTitle({
+  questionNo,
+  title,
+}: {
+  questionNo: number;
+  title: string;
+}) {
+  const questionNoText = String(questionNo);
+  const index = title.indexOf(questionNoText);
+
+  if (index === -1) {
+    return <span data-testid="comparison-title">{title}</span>;
+  }
+
+  return (
+    <span
+      data-testid="comparison-title"
+      className="inline-flex items-center whitespace-nowrap"
+    >
+      <span className="sr-only">{title}</span>
+      <span aria-hidden="true" className="inline-flex items-center">
+        {title.slice(0, index)}
+        <span
+          data-testid="comparison-title-question-no"
+          className={[
+            "writing-question-number font-['Space_Grotesk'] leading-none",
+            writingQuestionNeonClass("writing-question-number", questionNo),
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          {questionNoText}
+        </span>
+        <span data-testid="comparison-title-label">
+          {title.slice(index + questionNoText.length)}
+        </span>
+      </span>
+    </span>
+  );
+}
+
+function SummaryAnswerBlock({
+  label,
+  submittedAt,
+  score,
+  action,
+}: {
+  label: string;
+  submittedAt: string;
+  score: string;
+  action?: ReactNode;
+}) {
+  return (
+    <div
+      data-testid="comparison-summary-answer-card"
+      className="flex min-w-0 w-full flex-col items-start px-6 py-8"
+    >
+      <Text
+        type="secondary"
+        data-testid="comparison-summary-label"
+        className="block !text-[16px]"
+      >
+        {label}
+      </Text>
+      <div
+        data-testid="comparison-summary-score-row"
+        className="mt-2 flex items-center gap-3"
+      >
+        <Text
+          strong
+          data-testid="comparison-summary-score"
+          className="block !text-[46px] leading-none"
+        >
+          {score}
+        </Text>
+        {action}
+      </div>
+      <Text
+        type="secondary"
+        data-testid="comparison-summary-submitted-at"
+        className="mt-2 block !text-[14px]"
+      >
+        {submittedAt}
+      </Text>
     </div>
   );
 }

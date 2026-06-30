@@ -53,7 +53,13 @@ function serviceClient() {
   });
 }
 
-async function createCompletedLongFeedbackSubmission() {
+async function createCompletedLongFeedbackSubmission({
+  questionNo = 53,
+  sentenceFeedbackTexts,
+}: {
+  questionNo?: 53 | 54;
+  sentenceFeedbackTexts?: string[];
+} = {}) {
   const sb = serviceClient();
   const users = await sb.auth.admin.listUsers({ page: 1, perPage: 1000 });
   if (users.error) throw users.error;
@@ -66,13 +72,21 @@ async function createCompletedLongFeedbackSubmission() {
     .from("problems")
     .select("id")
     .eq("domain", "writing")
-    .eq("question_no", 53)
+    .eq("question_no", questionNo)
     .eq("publish_status", "published")
     .order("created_at", { ascending: true })
     .limit(1)
     .maybeSingle();
   if (problem.error) throw problem.error;
-  if (!problem.data?.id) throw new Error("No published q53 problem found");
+  if (!problem.data?.id)
+    throw new Error(`No published q${questionNo} problem found`);
+
+  const drafts = await sb
+    .from("writing_drafts")
+    .delete()
+    .eq("user_id", user.id)
+    .eq("problem_id", problem.data.id);
+  if (drafts.error) throw drafts.error;
 
   const submissionId = randomUUID();
   const answerText = [
@@ -87,7 +101,7 @@ async function createCompletedLongFeedbackSubmission() {
     id: submissionId,
     user_id: user.id,
     problem_id: problem.data.id,
-    question_no: 53,
+    question_no: questionNo,
     answer_text: answerText,
     char_count: answerText.length,
     feedback_status: "complete",
@@ -165,19 +179,21 @@ async function createCompletedLongFeedbackSubmission() {
   ]);
   if (dimensions.error) throw dimensions.error;
 
-  const sentenceRows = answerText.split("\n").map((text, index) => ({
-    submission_id: submissionId,
-    user_id: user.id,
-    sentence_index: index,
-    original_text: text,
-    corrected_text: `${text} (수정 제안 ${index + 1})`,
-    comment: `문장 ${index + 1}의 연결과 표현을 다듬는 제안입니다.`,
-  }));
+  const sentenceRows = (sentenceFeedbackTexts ?? answerText.split("\n")).map(
+    (text, index) => ({
+      submission_id: submissionId,
+      user_id: user.id,
+      sentence_index: index,
+      original_text: text,
+      corrected_text: `${text} (수정 제안 ${index + 1})`,
+      comment: `문장 ${index + 1}의 연결과 표현을 다듬는 제안입니다.`,
+    }),
+  );
   const sentences = await sb.from("sentence_feedback").insert(sentenceRows);
   if (sentences.error) throw sentences.error;
 
   createdSubmissionIds.push(submissionId);
-  return submissionId;
+  return { submissionId, answerText };
 }
 
 test.afterAll(async () => {
@@ -200,7 +216,8 @@ test.skip(
 
 test("E-02 long feedback matches the wireframe constraints", async ({ page }) => {
   const errors = collectErrors(page);
-  const submissionId = await createCompletedLongFeedbackSubmission();
+  const { submissionId, answerText } =
+    await createCompletedLongFeedbackSubmission();
 
   await page.goto(`/writing/feedback/long/${submissionId}`, {
     waitUntil: "networkidle",
@@ -213,17 +230,110 @@ test("E-02 long feedback matches the wireframe constraints", async ({ page }) =>
 
   await expect(page.getByTestId("feedback-summary")).toBeVisible();
   await expect(page.locator(".ant-statistic")).toBeVisible();
-  await expect(page.getByTestId("feedback-summary-meta").locator(".ant-tag")).toHaveCount(4);
+  await expect(
+    page
+      .getByTestId("feedback-summary-score")
+      .locator(".ant-statistic-content-value"),
+  ).toHaveCSS("font-size", "46px");
+  await expect(
+    page
+      .getByTestId("feedback-summary-score")
+      .locator(".ant-statistic-content-value"),
+  ).toHaveCSS("font-weight", "700");
+  await expect(
+    page.getByTestId("feedback-summary-meta").locator(".ant-tag"),
+  ).toHaveCount(4);
+  await expect(
+    page
+      .getByTestId("feedback-summary")
+      .locator(".ant-typography")
+      .filter({ hasText: "자료의 변화 방향은 잘 설명했습니다." }),
+  ).not.toHaveClass(/ant-typography-ellipsis/);
   await expect(page.getByTestId("feedback-dimension-card")).toHaveCount(0);
+  await expect(page.getByTestId("feedback-report-overview")).toHaveCount(0);
+  await expect(page.getByTestId("feedback-report-criteria-card")).toBeVisible();
+  await expect(page.getByTestId("feedback-report-focus-card")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { level: 5, name: "빈칸별 점수" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { level: 5, name: "다음 보완 포인트" }),
+  ).toBeVisible();
+  await expect(page.getByTestId("feedback-report-meta")).toHaveCount(0);
+  await expect(page.getByText("score와 weight 기준")).toHaveCount(0);
+  await expect(page.getByTestId("feedback-report-total-score-card")).toHaveCount(
+    0,
+  );
+  const criteriaCard = page.getByTestId("feedback-report-criteria-card");
+  const focusCard = page.getByTestId("feedback-report-focus-card");
+  await expect(criteriaCard).not.toHaveClass(/bg-surface\/40/);
+  await expect(focusCard).not.toHaveClass(/bg-surface\/40/);
+  await expect(focusCard).not.toHaveClass(/rounded-default/);
+  await expect(focusCard).not.toHaveClass(/p-4/);
+  const criteriaBox = await criteriaCard.boundingBox();
+  const focusBox = await focusCard.boundingBox();
+  expect(criteriaBox).not.toBeNull();
+  expect(focusBox).not.toBeNull();
+  expect(focusBox!.y).toBeGreaterThan(criteriaBox!.y + criteriaBox!.height - 1);
+  await expect(page.getByTestId("feedback-report-score-item")).toHaveCount(4);
 
   const sentenceCard = page.getByTestId("feedback-sentence-card");
   await expect(sentenceCard).toBeVisible();
+  await expect(
+    page.getByRole("heading", { level: 5, name: "문장별 첨삭" }),
+  ).toBeVisible();
   await expect(sentenceCard.getByRole("listitem")).toHaveCount(5);
+  await expect(sentenceCard.getByText("서론")).toBeVisible();
+  await expect(sentenceCard.getByText("본론")).toHaveCount(4);
+  await expect(sentenceCard.getByText("빈칸")).toHaveCount(0);
   await expect(sentenceCard.getByRole("button")).toBeVisible();
+  await sentenceCard.getByRole("button").click();
+  await expect(sentenceCard.getByText("결론")).toBeVisible();
 
   await expect(page.getByTestId("feedback-detail-panel")).toBeVisible();
-  await expect(page.getByTestId("feedback-detail-item")).toHaveCount(5);
-  expect(await page.locator('[data-testid^="feedback-reco-"]').count()).toBeLessThanOrEqual(3);
+  await expect(
+    page.getByRole("heading", { level: 5, name: "상세 피드백" }),
+  ).toBeVisible();
+  const detailPanel = page.getByTestId("feedback-detail-panel");
+  await expect(detailPanel.getByTestId("feedback-detail-item")).toHaveCount(3);
+  await expect(detailPanel.getByText("논리")).toHaveCount(0);
+  await expect(detailPanel.getByText("구조")).toHaveCount(0);
+  await expect(page.getByTestId("feedback-recommendation-card")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { level: 5, name: "추천 학습" }),
+  ).toBeVisible();
+  const bodySectionIds = await page
+    .getByTestId("feedback-page-body")
+    .evaluate((body) => {
+      return Array.from(body.children).map((element) =>
+        element.getAttribute("data-testid"),
+      );
+    });
+  expect(bodySectionIds).toEqual([
+    "feedback-summary",
+    "feedback-report-criteria-card",
+    "feedback-report-focus-card",
+    "feedback-sentence-card",
+    "feedback-recommendation-card",
+    "feedback-detail-panel",
+  ]);
+  expect(
+    await page.locator('[data-testid^="feedback-reco-"]').count(),
+  ).toBeLessThanOrEqual(3);
+
+  await expect(page.getByTestId("feedback-page-header")).toBeVisible();
+  await expect(page.getByTestId("feedback-page-header")).toHaveCSS(
+    "position",
+    "sticky",
+  );
+  const headerQuestionNo = page.getByTestId("feedback-title-question-no");
+  await expect(headerQuestionNo).toHaveText("53");
+  await expect(headerQuestionNo).toHaveCSS("font-family", /Space Grotesk/);
+  await expect(headerQuestionNo).toHaveCSS(
+    "background-image",
+    /neon-orange\.png/,
+  );
+  await expect(page.getByTestId("feedback-actions")).toHaveCount(1);
 
   const actions = page.locator(
     [
@@ -235,6 +345,47 @@ test("E-02 long feedback matches the wireframe constraints", async ({ page }) =>
   );
   await expect(actions).toHaveCount(4);
   await expect(page.getByTestId("feedback-action-retry")).toHaveText("다시 작성");
+
+  await page.getByTestId("feedback-action-retry").click();
+  await page.waitForURL((url) => {
+    return (
+      url.pathname === "/writing/long-form-writing-53" &&
+      url.searchParams.get("fresh") === "1" &&
+      url.searchParams.get("retrySubmission") === submissionId
+    );
+  });
+  await page.getByRole("tab").nth(1).click();
+  await expect(
+    page.locator(".writing-workspace--q53 textarea").nth(1),
+  ).toHaveValue(answerText);
+
+  expect(errors).toEqual([]);
+});
+
+test("Q54 long feedback keeps intro, body, and conclusion labels with sparse sentence rows", async ({
+  page,
+}) => {
+  const errors = collectErrors(page);
+  const { submissionId } = await createCompletedLongFeedbackSubmission({
+    questionNo: 54,
+    sentenceFeedbackTexts: [
+      "서론에 해당하는 첨삭 원문입니다.",
+      "결론에 해당하는 첨삭 원문입니다.",
+    ],
+  });
+
+  await page.goto(`/writing/feedback/long/${submissionId}`, {
+    waitUntil: "networkidle",
+  });
+  await expect(page).not.toHaveURL(/\/login/);
+
+  const sentenceCard = page.getByTestId("feedback-sentence-card");
+  const sentenceItems = sentenceCard.getByRole("listitem");
+  await expect(sentenceCard).toBeVisible();
+  await expect(sentenceItems).toHaveCount(3);
+  await expect(sentenceItems.nth(0).getByText(/^\uC11C\uB860$/)).toBeVisible();
+  await expect(sentenceItems.nth(1).getByText(/^\uBCF8\uB860$/)).toBeVisible();
+  await expect(sentenceItems.nth(2).getByText(/^\uACB0\uB860$/)).toBeVisible();
 
   expect(errors).toEqual([]);
 });
