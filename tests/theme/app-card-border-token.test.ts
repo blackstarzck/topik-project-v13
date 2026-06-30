@@ -14,11 +14,14 @@ describe("workspace AppCard border token", () => {
       /\.app-cards-bordered\s+\.app-card\.app-surface\s*\{([^}]+)\}/,
     );
     const ruleBody = match?.[1];
+    const normalizedRuleBody = ruleBody?.replace(/\s+/g, " ").trim();
 
     expect(ruleBody).toBeTruthy();
-    expect(ruleBody).toContain(
+    expect(normalizedRuleBody).toContain(
       "border: 1px solid color-mix(in srgb, var(--app-color-border) 25%, var(--app-color-bg-layout));",
     );
-    expect(ruleBody).not.toContain("var(--ant-color-border-secondary)");
+    expect(normalizedRuleBody).not.toContain(
+      "var(--ant-color-border-secondary)",
+    );
   });
 });

@@ -76,10 +76,11 @@ describe("D-M2 analysis loading style contract", () => {
 
     expect(source).toContain("responsive={false}");
     expect(css).toContain("@media (max-width: 560px)");
-    expect(css).toContain(
+    const mobileStepsRule = cssRule(
       ".analysis-loading--page .analysis-loading__steps.ant-steps",
     );
-    expect(css).toContain("flex-wrap: nowrap;");
-    expect(css).toContain("min-width: 0;");
+
+    expect(mobileStepsRule).toContain("flex-wrap: nowrap;");
+    expect(mobileStepsRule).toContain("min-width: 0;");
   });
 });

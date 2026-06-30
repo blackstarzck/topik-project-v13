@@ -7933,6 +7933,11 @@ body {
     font-size: 11px;
   }
 
+  .analysis-loading--page .analysis-loading__steps.ant-steps {
+    min-width: 0;
+    flex-wrap: nowrap;
+  }
+
   .analysis-loading__actions .ant-btn {
     width: 100%;
   }
