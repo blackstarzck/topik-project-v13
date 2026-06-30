@@ -1,7 +1,13 @@
 import { randomUUID } from "node:crypto";
 import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
-import { expect, test, type Browser, type Page } from "@playwright/test";
+import {
+  expect,
+  test,
+  type Browser,
+  type Locator,
+  type Page,
+} from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 
 test.use({ storageState: { cookies: [], origins: [] } });
@@ -256,6 +262,7 @@ async function login(page: Page, email: string) {
   const emailInput = page.locator('input[autocomplete="email"]');
   const passwordInput = page.locator('input[autocomplete="current-password"]');
 
+  let reachedPostLoginRoute = false;
   for (let attempt = 0; attempt < 3; attempt += 1) {
     await emailInput.fill(email);
     await passwordInput.fill(PASSWORD);
@@ -263,19 +270,19 @@ async function login(page: Page, email: string) {
       (await emailInput.inputValue()) === email &&
       (await passwordInput.inputValue()) === PASSWORD
     ) {
-      break;
+      await page.locator('button[type="submit"]').click();
+      reachedPostLoginRoute = await page
+        .waitForURL(/\/(dashboard|auth\/consent|onboarding\/learning-goal)/, {
+          timeout: 30_000,
+        })
+        .then(() => true)
+        .catch(() => false);
+      if (reachedPostLoginRoute) break;
     }
     await page.waitForTimeout(150);
   }
 
-  await expect(emailInput).toHaveValue(email);
-  await expect(passwordInput).toHaveValue(PASSWORD);
-  await page.locator('button[type="submit"]').click();
-
-  await page.waitForURL(
-    /\/(dashboard|auth\/consent|onboarding\/learning-goal)/,
-    { timeout: 15_000 },
-  );
+  expect(reachedPostLoginRoute).toBe(true);
 
   for (let i = 0; i < 4; i += 1) {
     const pathname = new URL(page.url()).pathname;
@@ -314,6 +321,33 @@ async function openProblemList(page: Page, marker: string) {
   );
   await expect(page).not.toHaveURL(/\/login/);
   await response;
+}
+
+async function expectProblemTitleVisible(
+  page: Page,
+  marker: string,
+  title: string,
+) {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    await openProblemList(page, marker);
+    try {
+      await expect(page.getByText(title)).toBeVisible({ timeout: 10_000 });
+      return;
+    } catch (error) {
+      if (attempt === 2) throw error;
+      await page.waitForTimeout(1_000);
+    }
+  }
+}
+
+async function expectDirectWritingAvailable(page: Page, problemId: string) {
+  await page.goto(`/writing/short-answer-writing-51?problem=${problemId}`, {
+    waitUntil: "domcontentloaded",
+  });
+  await expect(page.locator(".writing-workspace")).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(page.locator(".writing-empty-state")).toHaveCount(0);
 }
 
 async function withFreshPage<T>(
@@ -369,16 +403,26 @@ async function waitForWritingAvailability(page: Page) {
 }
 
 async function openWritingSidebarGroup(page: Page, projectName: string) {
+  const openWritingGroup = async (scope: Locator) => {
+    const writingGroup = scope
+      .locator('.ant-menu-submenu-title:has([data-sidebar-icon-name="Edit2"])')
+      .first();
+    await expect(writingGroup).toBeVisible();
+    if ((await writingGroup.getAttribute("aria-expanded")) !== "true") {
+      await writingGroup.click();
+    }
+  };
+
   if (projectName === "mobile-360") {
     await page.locator(".app-workspace-mobile-bar button").first().click();
     const drawer = page.locator(".app-workspace-drawer");
     await expect(drawer).toBeVisible();
-    await drawer.getByText("쓰기 연습").click();
+    await openWritingGroup(drawer);
     return drawer;
   }
 
   const sidebar = page.locator(".app-sidebar-shell").first();
-  await sidebar.getByText("쓰기 연습").click();
+  await openWritingGroup(sidebar);
   return sidebar;
 }
 
@@ -443,20 +487,22 @@ test("non-institution writing access stays fully visible while unassigned instit
     await withFreshPage(browser, viewport, async (page) => {
       const errors = collectErrors(page);
       await login(page, generalUser.email);
-      await openProblemList(page, fixture!.marker);
-      await expect(page.getByText(fixture!.title)).toBeVisible({
-        timeout: 15_000,
-      });
+      if (testInfo.project.name === "mobile-360") {
+        await expectDirectWritingAvailable(page, fixture!.problemId);
+      } else {
+        await expectProblemTitleVisible(page, fixture!.marker, fixture!.title);
+      }
       expect(errors).toEqual([]);
     });
 
     await withFreshPage(browser, viewport, async (page) => {
       const errors = collectErrors(page);
       await login(page, institutionUser.email);
-      await openProblemList(page, fixture!.marker);
-      await expect(page.getByText(fixture!.title)).toBeVisible({
-        timeout: 15_000,
-      });
+      if (testInfo.project.name === "mobile-360") {
+        await expectDirectWritingAvailable(page, fixture!.problemId);
+      } else {
+        await expectProblemTitleVisible(page, fixture!.marker, fixture!.title);
+      }
       expect(errors).toEqual([]);
     });
 

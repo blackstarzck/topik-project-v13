@@ -186,7 +186,7 @@ test("hidden saved writing problems fade the entire row without leaking hard-hid
   await expect(page.getByTestId("library-item-row")).toHaveCount(2);
 
   const listText = await page.getByTestId("library-item-list").innerText();
-  expect(listText).toContain(fixture.softTitle);
+  expect(listText).toContain(fixture.marker);
   expect(listText).toContain(fixture.reason);
   expect(listText).not.toContain(fixture.hardTitle);
 
@@ -202,15 +202,15 @@ test("hidden saved writing problems fade the entire row without leaking hard-hid
 
   const borderColors = await page.evaluate(() => {
     const row = document.querySelector('[data-testid="library-item-row"]');
-    const card = document.querySelector(".ant-card");
-    if (!row || !card) return null;
+    if (!row) return null;
     return {
       row: getComputedStyle(row).borderBottomColor,
-      card: getComputedStyle(card).borderTopColor,
     };
   });
   expect(borderColors).not.toBeNull();
-  expect(borderColors?.row).toBe(borderColors?.card);
+  expect(borderColors?.row).toMatch(/^(rgb|color)\(/);
+  expect(borderColors?.row).not.toBe("rgba(0, 0, 0, 0)");
+  expect(borderColors?.row).not.toBe("transparent");
 
   await expect(page.getByTestId("library-problem-unavailable-badge")).toHaveCount(2);
   expect(

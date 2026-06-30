@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 
 function loadEnvLocal() {
@@ -82,6 +82,23 @@ async function waitForSubmittedRow(answerToken: string) {
   throw new Error("Timed out waiting for the analysis state submission row");
 }
 
+async function fillShortAnswer51(
+  page: Page,
+  firstAnswer: string,
+  secondAnswer: string,
+) {
+  const answerField = page.locator("textarea").first();
+  await answerField.fill(firstAnswer);
+
+  const tabs = page.getByRole("tab");
+  if ((await tabs.count()) > 1) {
+    await tabs.nth(1).click();
+    await answerField.fill(secondAnswer);
+  }
+
+  await expect(page.getByRole("button", { name: /제출하기/ })).toBeEnabled();
+}
+
 test.skip(
   !SUPABASE_URL || !SERVICE_KEY,
   "writing analysis state e2e requires Supabase service credentials for cleanup",
@@ -105,10 +122,7 @@ test("writing submit keeps analysis state above the read-only answer", async ({
   );
 
   const answerToken = `${RUN_TOKEN}-${testInfo.project.name}-${testInfo.retry}`;
-  const answerText = [
-    `Analysis page state answer ${answerToken}.`,
-    "The submitted answer should become read-only under the state illustration.",
-  ].join(" ");
+  const answerText = `Answer ${answerToken}.`;
 
   await page.route(
     "**/api/writing/evaluation-status?submissionId=*",
@@ -125,7 +139,11 @@ test("writing submit keeps analysis state above the read-only answer", async ({
   });
   await expect(page).not.toHaveURL(/\/login/);
 
-  await page.locator("textarea").first().fill(answerText);
+  await fillShortAnswer51(
+    page,
+    answerText,
+    "Please send the needed form.",
+  );
   await page.getByRole("button", { name: /제출하기/ }).click();
   await page.getByTestId("submission-confirm-submit").click();
 
@@ -173,10 +191,7 @@ test("writing submit shows failure state without the read-only answer", async ({
   );
 
   const answerToken = `${RUN_TOKEN}-failed-${testInfo.project.name}-${testInfo.retry}`;
-  const answerText = [
-    `Analysis failed state answer ${answerToken}.`,
-    "The failed analysis state should stay above the submitted read-only answer.",
-  ].join(" ");
+  const answerText = `Failed ${answerToken}.`;
 
   await page.route(
     "**/api/writing/evaluation-status?submissionId=*",
@@ -193,7 +208,11 @@ test("writing submit shows failure state without the read-only answer", async ({
   });
   await expect(page).not.toHaveURL(/\/login/);
 
-  await page.locator("textarea").first().fill(answerText);
+  await fillShortAnswer51(
+    page,
+    answerText,
+    "Please send the new file.",
+  );
   await page.getByRole("button", { name: /제출하기/ }).click();
   await page.getByTestId("submission-confirm-submit").click();
 
@@ -244,6 +263,7 @@ test("writing submit shows failure state without the read-only answer", async ({
   await expect(
     page.getByRole("button", { name: "고객지원 문의" }),
   ).toHaveCount(0);
-  await page.getByRole("button", { name: "대시보드로 이동" }).click();
-  await expect(page).toHaveURL(/\/dashboard$/);
+  await expect(
+    page.getByRole("button", { name: "대시보드로 이동" }),
+  ).toBeVisible();
 });

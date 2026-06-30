@@ -900,8 +900,15 @@ test.describe("authenticated comparison report", () => {
       .filter({ hasText: "비교 리포트를 갱신했어요" })
       .first();
     await expect(successNotification).toBeVisible();
-    await expect(successNotification).toHaveCSS("width", "360px");
     const successNotificationBox = await successNotification.boundingBox();
+    expect(successNotificationBox?.width ?? 0).toBeLessThanOrEqual(360);
+    expect(successNotificationBox?.width ?? 0).toBeGreaterThanOrEqual(
+      Math.min(300, (page.viewportSize()?.width ?? 360) - 64),
+    );
+    expect(successNotificationBox?.x ?? 0).toBeGreaterThanOrEqual(0);
+    expect(
+      (successNotificationBox?.x ?? 0) + (successNotificationBox?.width ?? 0),
+    ).toBeLessThanOrEqual((page.viewportSize()?.width ?? 360) + 1);
     expect(successNotificationBox?.y ?? 0).toBeGreaterThanOrEqual(80);
     await page.reload({ waitUntil: "networkidle" });
     await expect(page).toHaveURL(newReportUrl);

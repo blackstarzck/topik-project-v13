@@ -1,6 +1,6 @@
 import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 
 test.use({ storageState: { cookies: [], origins: [] } });
@@ -239,16 +239,26 @@ async function waitForAvailability(page: Page) {
 }
 
 async function openWritingSidebarGroup(page: Page, projectName: string) {
+  const openWritingGroup = async (scope: Locator) => {
+    const writingGroup = scope
+      .locator('.ant-menu-submenu-title:has([data-sidebar-icon-name="Edit2"])')
+      .first();
+    await expect(writingGroup).toBeVisible();
+    if ((await writingGroup.getAttribute("aria-expanded")) !== "true") {
+      await writingGroup.click();
+    }
+  };
+
   if (projectName === "mobile-360") {
     await page.locator(".app-workspace-mobile-bar button").first().click();
     const drawer = page.locator(".app-workspace-drawer");
     await expect(drawer).toBeVisible();
-    await drawer.getByText("쓰기 연습").click();
+    await openWritingGroup(drawer);
     return drawer;
   }
 
   const sidebar = page.locator(".app-sidebar-shell").first();
-  await sidebar.getByText("쓰기 연습").click();
+  await openWritingGroup(sidebar);
   return sidebar;
 }
 

@@ -40,6 +40,17 @@ loadEnvLocal();
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SERVICE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
+const analysisMessages = (
+  JSON.parse(
+    readFileSync(path.join(process.cwd(), "messages", "ko.json"), "utf8"),
+  ) as {
+    feedback: {
+      analysis: {
+        title: string;
+      };
+    };
+  }
+).feedback.analysis;
 
 // Track EVERY submission this spec creates (retries create extra rows); clean them all.
 const createdSubmissionIds: string[] = [];
@@ -305,7 +316,7 @@ test("core writing flow: dashboard → write → submit → feedback → compare
   await expect(page.getByTestId("analysis-loading-page")).toBeVisible();
   await expect(page.getByTestId("analysis-loading-panel")).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "AI 분석 중..." }),
+    page.getByRole("heading", { name: analysisMessages.title }),
   ).toBeVisible({ timeout: 10000 });
   await expect(page.getByTestId("analysis-loading-background")).toHaveCount(0);
   await expect(page.getByTestId("analysis-loading-modal")).toHaveCount(0);
@@ -313,8 +324,7 @@ test("core writing flow: dashboard → write → submit → feedback → compare
   const submitted = await waitForSubmittedFlowRow(answerToken);
   createdSubmissionIds.push(submitted.id);
   await completeSubmittedFlowRow(submitted);
-  const previousAnswer =
-    await createPreviousCompletedSubmissionForFlow(submitted);
+  await createPreviousCompletedSubmissionForFlow(submitted);
   completedAnalysisSubmissionIds.add(submitted.id);
   await page.evaluate(() => {
     window.dispatchEvent(new Event("focus"));
@@ -348,15 +358,15 @@ test("core writing flow: dashboard → write → submit → feedback → compare
     timeout: 20000,
   });
   await expect(
-    page.getByRole("heading", { name: /\d+ 비교 리포트/ }),
+    page.getByRole("heading", { name: /\d+번 비교 리포트/ }),
   ).toBeVisible();
-  await expect(page.getByTestId("comparison-kpi-block")).toContainText("12");
-  await expect(page.getByTestId("comparison-chart")).toBeVisible();
-  await expect(page.getByTestId("comparison-chart-view-table")).toHaveCount(0);
-  await expect(page.getByTestId("comparison-chart-table")).toHaveCount(0);
-  await expect(page.getByTestId("comparison-submission-diff")).toContainText(
-    previousAnswer,
+  await expect(page.getByTestId("comparison-summary-strip")).toContainText(
+    "82",
   );
+  await expect(page.getByTestId("comparison-summary-strip")).toContainText(
+    "70",
+  );
+  await expect(page.getByTestId("comparison-narrative")).toContainText("12");
   await expect(page.getByTestId("comparison-action-weakness")).toBeEnabled();
 
   // 8) library (F-01)
