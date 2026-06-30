@@ -1,6 +1,9 @@
 @import "tailwindcss";
 @import "swiper/css";
 @import "swiper/css/free-mode";
+@import "swiper/css/navigation";
+@import "swiper/css/pagination";
+@import "swiper/css/grid";
 
 @font-face {
   font-family: "Montserrat";
@@ -4325,6 +4328,35 @@ body {
   text-decoration: none;
 }
 
+.library-page-header.app-page-header {
+  margin-bottom: 16px;
+}
+
+.library-kpi-icon,
+.library-timeline-icon {
+  border: 1px solid var(--app-color-border);
+  background: var(--app-color-bg-layout);
+  color: var(--app-color-primary);
+}
+
+.library-kpi-icon--secondary {
+  color: var(--app-color-text-secondary);
+}
+
+.library-kpi-icon--link {
+  background: color-mix(
+    in srgb,
+    var(--app-color-link-secondary) 10%,
+    var(--app-color-bg-container)
+  );
+  color: var(--app-color-link-secondary);
+}
+
+.library-kpi-icon--muted,
+.library-timeline-icon {
+  color: var(--app-color-text-secondary);
+}
+
 .auth-consent-document-card.app-card.app-surface {
   overflow: hidden;
   border: 1px solid var(--ant-color-border-secondary, var(--app-color-border));
@@ -5609,6 +5641,23 @@ body {
     .ant-btn-disabled
   ):focus-visible {
   background: transparent;
+}
+
+.library-review-swiper .swiper-wrapper {
+  align-items: stretch;
+}
+
+.library-review-swiper .swiper-slide {
+  height: auto;
+}
+
+.library-review-swiper-pagination.swiper-pagination-bullets {
+  position: static;
+  width: auto;
+}
+
+.library-review-swiper-pagination .swiper-pagination-bullet-active {
+  background: var(--app-color-primary);
 }
 
 /*

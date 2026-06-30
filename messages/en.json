@@ -1879,7 +1879,83 @@
   "library": {
     "page": {
       "metaTitle": "My Library — TALKPIK",
-      "heading": "My Library"
+      "heading": "My Library",
+      "subtitle": "Saved answers are organized by the study actions worth revisiting."
+    },
+    "dashboard": {
+      "questionNo": "Q{questionNo}",
+      "questionUnknown": "Question",
+      "charCount": "{count} chars",
+      "kpi": {
+        "reviewable": "Ready to review",
+        "reviewableDescription": "Saved answers with available feedback",
+        "feedbackWaiting": "Feedback waiting",
+        "feedbackWaitingDescription": "You can review them when analysis finishes",
+        "comparison": "Comparable",
+        "comparisonDescription": "You rewrote the same problem",
+        "recentStudy": "Recent study",
+        "recentStudyDescription": "Last answer submission date",
+        "count": "{count}",
+        "noRecentStudy": "No record"
+      },
+      "review": {
+        "title": "Review candidates",
+        "help": "Not today's assignment, but saved answers worth revisiting.",
+        "caption": "Based on saved answers with completed feedback",
+        "empty": "Review candidates will appear when feedback is complete for saved answers.",
+        "prev": "Previous review candidate",
+        "next": "Next review candidate"
+      },
+      "status": {
+        "feedbackComplete": "Feedback complete"
+      },
+      "reason": {
+        "length_off_target": "Length needs adjustment",
+        "comparison_available": "Comparison available",
+        "low_dimension": "Recent low dimension",
+        "feedback_ready": "Ready to check",
+        "short_answer": "Short answer",
+        "lowDimensionDetail": "{dimension} {score}"
+      },
+      "actions": {
+        "viewFeedback": "View feedback",
+        "retry": "Retry",
+        "goToPractice": "Go practice"
+      },
+      "waiting": {
+        "title": "Feedback waiting",
+        "empty": "No saved answers are waiting for analysis.",
+        "submittedAt": "Submitted {date} · {count} chars",
+        "disabled": "Waiting",
+        "retryAria": "Retry {title}",
+        "status": {
+          "pending": "Waiting",
+          "analyzing": "Analyzing",
+          "failed": "Analysis failed"
+        }
+      },
+      "weak": {
+        "title": "Recent low items",
+        "caption": "From recently completed feedback",
+        "empty": "More completed feedback is needed to calculate weak items.",
+        "score": "{score}"
+      },
+      "timeline": {
+        "title": "Study timeline",
+        "empty": "No recent study events to show.",
+        "viewAll": "View full timeline",
+        "event": {
+          "submission_submitted": "Answer submitted",
+          "feedback_viewed": "Feedback viewed",
+          "report_viewed": "Report viewed",
+          "export_downloaded": "PDF downloaded"
+        }
+      },
+      "error": {
+        "title": "Could not load the library dashboard",
+        "subTitle": "Please try again in a moment.",
+        "retry": "Try again"
+      }
     },
     "tabs": {
       "submissions": "Saved Answers",

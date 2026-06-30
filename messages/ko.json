@@ -1879,7 +1879,83 @@
   "library": {
     "page": {
       "metaTitle": "내 서재 — TALKPIK",
-      "heading": "내 서재"
+      "heading": "내 서재",
+      "subtitle": "저장한 답안 중 다시 볼 만한 항목을 학습 행동 기준으로 정리했어요"
+    },
+    "dashboard": {
+      "questionNo": "{questionNo}번",
+      "questionUnknown": "문항",
+      "charCount": "{count}자",
+      "kpi": {
+        "reviewable": "복습 가능",
+        "reviewableDescription": "피드백을 확인할 수 있는 답안",
+        "feedbackWaiting": "피드백 대기",
+        "feedbackWaitingDescription": "분석이 끝나면 다시 볼 수 있어요",
+        "comparison": "비교 가능",
+        "comparisonDescription": "같은 문제를 다시 쓴 기록이 있어요",
+        "recentStudy": "최근 학습",
+        "recentStudyDescription": "마지막 답안 제출일",
+        "count": "{count}건",
+        "noRecentStudy": "기록 없음"
+      },
+      "review": {
+        "title": "복습 후보",
+        "help": "오늘 할당이 아니라, 저장한 답안 중 다시 보면 좋은 항목이에요",
+        "caption": "저장 답안 중 피드백 완료 항목 기준",
+        "empty": "저장한 답안의 피드백이 완료되면 복습 후보가 표시돼요",
+        "prev": "이전 복습 후보",
+        "next": "다음 복습 후보"
+      },
+      "status": {
+        "feedbackComplete": "피드백 완료"
+      },
+      "reason": {
+        "length_off_target": "분량 조정 필요",
+        "comparison_available": "비교 가능",
+        "low_dimension": "최근 낮은 항목",
+        "feedback_ready": "바로 확인 가능",
+        "short_answer": "짧은 답안",
+        "lowDimensionDetail": "{dimension} {score}점"
+      },
+      "actions": {
+        "viewFeedback": "피드백 보기",
+        "retry": "다시 풀기",
+        "goToPractice": "문제 풀러 가기"
+      },
+      "waiting": {
+        "title": "피드백 대기",
+        "empty": "분석을 기다리는 저장 답안이 없습니다.",
+        "submittedAt": "제출일 {date} · {count}자",
+        "disabled": "대기 중",
+        "retryAria": "{title} 다시 풀기",
+        "status": {
+          "pending": "대기 중",
+          "analyzing": "분석 중",
+          "failed": "분석 실패"
+        }
+      },
+      "weak": {
+        "title": "최근 낮게 나온 항목",
+        "caption": "최근 완료된 피드백 기준",
+        "empty": "약점 계산을 위한 완료 피드백이 더 필요해요.",
+        "score": "{score}점"
+      },
+      "timeline": {
+        "title": "학습 타임라인",
+        "empty": "표시할 최근 학습 이벤트가 없습니다.",
+        "viewAll": "전체 타임라인 보기",
+        "event": {
+          "submission_submitted": "답안 제출",
+          "feedback_viewed": "피드백 확인",
+          "report_viewed": "리포트 확인",
+          "export_downloaded": "PDF 다운로드"
+        }
+      },
+      "error": {
+        "title": "서재 대시보드를 불러오지 못했어요",
+        "subTitle": "잠시 후 다시 시도해 주세요.",
+        "retry": "다시 시도"
+      }
     },
     "tabs": {
       "submissions": "저장 답안",

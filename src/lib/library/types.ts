@@ -99,6 +99,102 @@ export type LibraryItemView =
   | LibraryProblemView
   | LibraryExportView;
 
+export type LibraryDashboardReviewReason =
+  | "length_off_target"
+  | "comparison_available"
+  | "low_dimension"
+  | "feedback_ready"
+  | "short_answer";
+
+export type LibraryDashboardFeedbackWaitingStatus =
+  | "pending"
+  | "analyzing"
+  | "failed";
+
+export type LibraryDashboardTimelineEventType =
+  | "submission_submitted"
+  | "feedback_viewed"
+  | "report_viewed"
+  | "export_downloaded";
+
+export type LibraryDashboardDimension =
+  Tables<"feedback_dimension_scores">["dimension"];
+
+export type LibraryDashboardKpis = {
+  reviewableCount: number;
+  feedbackWaitingCount: number;
+  comparisonAvailableCount: number;
+  recentSubmissionDate: string | null;
+};
+
+export type LibraryDashboardWeakDimension = {
+  dimension: LibraryDashboardDimension;
+  normalizedScore: number;
+  score: number;
+  scoreMax: number;
+};
+
+export type LibraryReviewCandidate = {
+  id: string;
+  itemId: string;
+  submissionId: string;
+  problemId: string;
+  questionNo: number | null;
+  title: string;
+  submittedAt: string;
+  charCount: number;
+  feedbackHref: string;
+  retryHref: string;
+  primaryReason: LibraryDashboardReviewReason;
+  reasons: LibraryDashboardReviewReason[];
+  hasRewrite: boolean;
+  lowestDimension?: LibraryDashboardWeakDimension;
+  lengthTarget?: {
+    min: number;
+    max: number;
+    status: "under" | "over";
+  };
+};
+
+export type LibraryFeedbackWaitingItem = {
+  id: string;
+  submissionId: string;
+  problemId: string;
+  questionNo: number | null;
+  title: string;
+  submittedAt: string;
+  charCount: number;
+  status: LibraryDashboardFeedbackWaitingStatus;
+  retryHref: string;
+};
+
+export type LibraryWeakItem = LibraryDashboardWeakDimension & {
+  id: string;
+  submissionId: string;
+  problemId: string;
+  questionNo: number | null;
+  title: string;
+  submittedAt: string;
+};
+
+export type LibraryTimelineItem = {
+  id: string;
+  eventType: LibraryDashboardTimelineEventType;
+  occurredAt: string;
+  problemId: string | null;
+  submissionId: string | null;
+  questionNo: number | null;
+  title: string;
+};
+
+export type LibraryDashboardView = {
+  kpis: LibraryDashboardKpis;
+  reviewCandidates: LibraryReviewCandidate[];
+  feedbackWaiting: LibraryFeedbackWaitingItem[];
+  weakItems: LibraryWeakItem[];
+  timeline: LibraryTimelineItem[];
+};
+
 /** Narrowing helper for excerpting comparison report narratives. */
 export const REPORT_NARRATIVE_EXCERPT_LEN = 160;
 

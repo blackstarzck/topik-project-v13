@@ -23,7 +23,7 @@ function loadEnvLocal() {
       if (!(key in process.env)) process.env[key] = value;
     }
   } catch {
-    // CI without .env.local will skip through the explicit env guard below.
+    // CI without .env.local skips through the explicit env guard below.
   }
 }
 
@@ -34,9 +34,8 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SERVICE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
 const createdLibraryItemIds: string[] = [];
-const createdExportIds: string[] = [];
-const createdReportIds: string[] = [];
 const createdSubmissionIds: string[] = [];
+const createdStudyEventIds: string[] = [];
 
 function collectErrors(page: Page): string[] {
   const errors: string[] = [];
@@ -61,7 +60,7 @@ function serviceClient() {
   });
 }
 
-async function createLibraryFixture() {
+async function createLibraryDashboardFixture() {
   const sb = serviceClient();
   const users = await sb.auth.admin.listUsers({ page: 1, perPage: 1000 });
   if (users.error) throw users.error;
@@ -81,132 +80,188 @@ async function createLibraryFixture() {
   if (problem.error) throw problem.error;
   if (!problem.data?.id) throw new Error("No published writing problem found");
 
-  const marker = `f01-audit-${randomUUID().slice(0, 8)}`;
-  const submissionId = randomUUID();
-  const reportId = randomUUID();
-  const exportId = randomUUID();
-  const libraryIds = [randomUUID(), randomUUID(), randomUUID(), randomUUID()];
-  const answerText =
-    "This saved library fixture verifies search, selection, and pagination.";
-
-  const submission = await sb.from("writing_submissions").insert({
-    id: submissionId,
-    user_id: user.id,
-    problem_id: problem.data.id,
-    question_no: problem.data.question_no ?? 53,
-    answer_text: answerText,
-    char_count: answerText.length,
-    feedback_status: "complete",
+  const problemId = problem.data.id;
+  const problemTitle = problem.data.title;
+  const marker = `f01-dashboard-${randomUUID().slice(0, 8)}`;
+  const questionNo = problem.data.question_no ?? 53;
+  const completeSubmissionIds = Array.from({ length: 12 }, () => randomUUID());
+  const analyzingSubmissionId = randomUUID();
+  const failedSubmissionId = randomUUID();
+  const completeLibraryIds = completeSubmissionIds.map(() => randomUUID());
+  const waitingLibraryIds = [randomUUID(), randomUUID()];
+  const libraryIds = [...completeLibraryIds, ...waitingLibraryIds];
+  const studyEventIds = [randomUUID(), randomUUID()];
+  const now = Date.now();
+  const completeRows = completeSubmissionIds.map((id, index) => {
+    const answerText =
+      questionNo >= 53
+        ? `${marker}-${index} `.repeat(questionNo === 54 ? 75 : 32).trim()
+        : `${marker} short answer ${index}`;
+    return {
+      id,
+      user_id: user.id,
+      problem_id: problemId,
+      question_no: questionNo,
+      answer_text: answerText,
+      char_count: answerText.length,
+      feedback_status: "complete",
+      submitted_at: new Date(now - (60_000 + index * 30_000)).toISOString(),
+    };
   });
-  if (submission.error) throw submission.error;
+  const analyzingText = `${marker} analyzing`;
+  const failedText = `${marker} failed`;
 
-  const feedback = await sb.from("writing_feedback").insert({
-    submission_id: submissionId,
-    user_id: user.id,
-    status: "complete",
-    score_total: 76,
-    score_max: 100,
-    overall_summary: "F-01 fixture feedback summary for the saved answer row.",
-    ai_model: "e2e-fixture",
-    ai_model_version: "F-01",
-  });
+  const submissions = await sb.from("writing_submissions").insert([
+    ...completeRows,
+    {
+      id: analyzingSubmissionId,
+      user_id: user.id,
+      problem_id: problemId,
+      question_no: questionNo,
+      answer_text: analyzingText,
+      char_count: analyzingText.length,
+      feedback_status: "analyzing",
+      submitted_at: new Date(now - 30_000).toISOString(),
+    },
+    {
+      id: failedSubmissionId,
+      user_id: user.id,
+      problem_id: problemId,
+      question_no: questionNo,
+      answer_text: failedText,
+      char_count: failedText.length,
+      feedback_status: "failed",
+      submitted_at: new Date(now - 15_000).toISOString(),
+    },
+  ]);
+  if (submissions.error) throw submissions.error;
+
+  const feedback = await sb.from("writing_feedback").insert([
+    ...completeSubmissionIds.map((submissionId, index) => ({
+      submission_id: submissionId,
+      user_id: user.id,
+      status: "complete",
+      score_total: 76 - (index % 4),
+      score_max: 100,
+      overall_summary: "F-01 dashboard fixture feedback summary.",
+      ai_model: "e2e-fixture",
+      ai_model_version: "F-01-dashboard",
+      generated_at: new Date(now).toISOString(),
+    })),
+    {
+      submission_id: failedSubmissionId,
+      user_id: user.id,
+      status: "failed",
+      score_total: null,
+      score_max: 100,
+      overall_summary: "F-01 dashboard fixture failed feedback.",
+      ai_model: "e2e-fixture",
+      ai_model_version: "F-01-dashboard",
+      generated_at: new Date(now).toISOString(),
+    },
+  ]);
   if (feedback.error) throw feedback.error;
 
   const dimensions = await sb.from("feedback_dimension_scores").insert([
     {
-      submission_id: submissionId,
+      submission_id: completeSubmissionIds[0],
       user_id: user.id,
-      dimension: "grammar",
+      dimension: "structure",
       score: 62,
       score_max: 100,
-      summary: "Grammar remains the weakest dimension.",
+      summary: "Structure is the lowest dashboard fixture dimension.",
       weakness_level: 5,
     },
     {
-      submission_id: submissionId,
+      submission_id: completeSubmissionIds[0],
       user_id: user.id,
-      dimension: "content",
-      score: 78,
-      score_max: 100,
-      summary: "Content is acceptable.",
-      weakness_level: 2,
+      dimension: "language",
+      score: 7,
+      score_max: 10,
+      summary: "Language uses a different max score.",
+      weakness_level: 4,
+    },
+    {
+      submission_id: completeSubmissionIds[0],
+      user_id: user.id,
+      dimension: "topic_fit",
+      score: 34,
+      score_max: 50,
+      summary: "Topic fit is normalized in the dashboard.",
+      weakness_level: 3,
     },
   ]);
   if (dimensions.error) throw dimensions.error;
 
-  const report = await sb.from("comparison_reports").insert({
-    id: reportId,
-    user_id: user.id,
-    current_submission_id: submissionId,
-    previous_submission_id: null,
-    metrics: { score_delta: 0, no_previous: true },
-    narrative: "F-01 fixture comparison narrative for the library report tab.",
-    ai_model: "e2e-fixture",
-  });
-  if (report.error) throw report.error;
-
-  const exportRow = await sb.from("export_files").insert({
-    id: exportId,
-    user_id: user.id,
-    source_type: "library_selection",
-    source_id: null,
-    storage_path: `browser-print://${marker}`,
-    options: { source: "browser_print" },
-    status: "ready",
-    ready_at: new Date().toISOString(),
-  });
-  if (exportRow.error) throw exportRow.error;
-
   const library = await sb.from("library_items").insert([
-    {
-      id: libraryIds[0],
+    ...completeSubmissionIds.map((submissionId, index) => ({
+      id: completeLibraryIds[index],
       user_id: user.id,
       item_type: "submission",
       submission_id: submissionId,
       tags: [marker],
+      saved_at: new Date(now - (60_000 + index * 30_000)).toISOString(),
+    })),
+    {
+      id: waitingLibraryIds[0],
+      user_id: user.id,
+      item_type: "submission",
+      submission_id: analyzingSubmissionId,
+      tags: [marker],
+      saved_at: new Date(now - 30_000).toISOString(),
     },
     {
-      id: libraryIds[1],
+      id: waitingLibraryIds[1],
       user_id: user.id,
-      item_type: "report",
-      report_id: reportId,
+      item_type: "submission",
+      submission_id: failedSubmissionId,
       tags: [marker],
-    },
-    {
-      id: libraryIds[2],
-      user_id: user.id,
-      item_type: "problem",
-      problem_id: problem.data.id,
-      tags: [marker],
-    },
-    {
-      id: libraryIds[3],
-      user_id: user.id,
-      item_type: "export",
-      export_id: exportId,
-      tags: [marker],
+      saved_at: new Date(now - 15_000).toISOString(),
     },
   ]);
   if (library.error) throw library.error;
 
+  const events = await sb.from("study_events").insert([
+    {
+      id: studyEventIds[0],
+      user_id: user.id,
+      event_type: "submission_submitted",
+      occurred_at: new Date(now - 10_000).toISOString(),
+      problem_id: problemId,
+      submission_id: completeSubmissionIds[0],
+      payload: { source: marker },
+    },
+    {
+      id: studyEventIds[1],
+      user_id: user.id,
+      event_type: "feedback_viewed",
+      occurred_at: new Date(now - 5_000).toISOString(),
+      problem_id: problemId,
+      submission_id: completeSubmissionIds[0],
+      payload: { source: marker },
+    },
+  ]);
+  if (events.error) throw events.error;
+
   createdLibraryItemIds.push(...libraryIds);
-  createdExportIds.push(exportId);
-  createdReportIds.push(reportId);
-  createdSubmissionIds.push(submissionId);
+  createdSubmissionIds.push(
+    ...completeSubmissionIds,
+    analyzingSubmissionId,
+    failedSubmissionId,
+  );
+  createdStudyEventIds.push(...studyEventIds);
 
   return {
     marker,
-    problemId: problem.data.id,
-    problemTitle: problem.data.title,
+    problemTitle: problemTitle ?? `${questionNo}번 문제`,
   };
 }
 
 async function cleanupLibraryFixtures() {
   if (
     createdLibraryItemIds.length === 0 &&
-    createdExportIds.length === 0 &&
-    createdReportIds.length === 0 &&
-    createdSubmissionIds.length === 0
+    createdSubmissionIds.length === 0 &&
+    createdStudyEventIds.length === 0
   ) {
     return;
   }
@@ -216,11 +271,8 @@ async function cleanupLibraryFixtures() {
   for (const id of createdLibraryItemIds) {
     await sb.from("library_items").delete().eq("id", id);
   }
-  for (const id of createdExportIds) {
-    await sb.from("export_files").delete().eq("id", id);
-  }
-  for (const id of createdReportIds) {
-    await sb.from("comparison_reports").delete().eq("id", id);
+  for (const id of createdStudyEventIds) {
+    await sb.from("study_events").delete().eq("id", id);
   }
   for (const id of createdSubmissionIds) {
     await sb.from("feedback_dimension_scores").delete().eq("submission_id", id);
@@ -228,9 +280,8 @@ async function cleanupLibraryFixtures() {
     await sb.from("writing_submissions").delete().eq("id", id);
   }
   createdLibraryItemIds.length = 0;
-  createdExportIds.length = 0;
-  createdReportIds.length = 0;
   createdSubmissionIds.length = 0;
+  createdStudyEventIds.length = 0;
 }
 
 test.afterEach(cleanupLibraryFixtures);
@@ -238,76 +289,46 @@ test.afterAll(cleanupLibraryFixtures);
 
 test.skip(
   !SUPABASE_URL || !SERVICE_KEY,
-  "F-01 e2e requires Supabase service credentials for isolated library rows",
+  "F-01 dashboard e2e requires Supabase service credentials for isolated rows",
 );
 
-async function filterToFixture(page: Page, marker: string) {
-  const input = page.getByTestId("library-search").locator("input");
-  await input.fill(marker);
-  await expect(page.getByTestId("library-result-count")).toContainText("1");
-  await expect(page.getByTestId("library-item-row")).toHaveCount(1);
-  expect(await page.getByTestId("library-item-row").count()).toBeLessThanOrEqual(10);
-}
-
-async function openTab(page: Page, tab: string) {
-  await page.goto(`/library?tab=${tab}`, { waitUntil: "load" });
-  await expect(page).toHaveURL(new RegExp(`/library\\?tab=${tab}`));
-}
-
-test("F-01 library rows match the wireframe constraints", async ({ page }) => {
+test("F-01 library dashboard renders study action sections", async ({ page }) => {
   const errors = collectErrors(page);
-  const fixture = await createLibraryFixture();
+  const fixture = await createLibraryDashboardFixture();
 
   await page.goto("/library", { waitUntil: "load" });
   await expect(page).not.toHaveURL(/\/login/);
 
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-  await expect(page.getByTestId("library-actions")).toBeVisible();
-  await expect(page.getByTestId("library-export-pdf")).toBeDisabled();
-  await expect(page.getByTestId("library-create-review-set")).toBeDisabled();
+  await expect(page.getByTestId("library-dashboard")).toBeVisible();
+  await expect(page.getByTestId("library-kpi-strip")).toBeVisible();
+  await expect(page.getByTestId("library-kpi-card")).toHaveCount(4);
+  await expect(page.getByText("복습 가능").first()).toBeVisible();
+  await expect(page.getByText("비교 가능").first()).toBeVisible();
   await expect(page.getByTestId("library-tabs")).toHaveCount(0);
-  await expect(page.getByTestId("library-type-filter")).toBeVisible();
-  await expect(page.getByTestId("library-search").locator("input")).toHaveAttribute(
-    "maxlength",
-    "40",
-  );
-  expect(await page.getByTestId("library-stat-card").count()).toBeLessThanOrEqual(3);
+  await expect(page.getByTestId("library-type-filter")).toHaveCount(0);
+  await expect(page.getByTestId("library-search")).toHaveCount(0);
 
-  await filterToFixture(page, fixture.marker);
-  const rowText = await page.getByTestId("library-item-row").innerText();
-  expect(rowText).toContain(fixture.problemTitle.slice(0, 12));
-  expect(rowText).not.toContain(fixture.problemId.slice(0, 8));
-
-  await expect(page.getByTestId("library-select-item")).toHaveCount(0);
+  await expect(page.getByTestId("library-review-swiper")).toBeVisible();
+  await expect(page.getByText(fixture.problemTitle).first()).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "PDF로 내보내기" }),
-  ).toHaveCount(1);
+    page.getByRole("link", { name: "피드백 보기" }).first(),
+  ).toHaveAttribute("href", /\/writing\/feedback\/(short|long)\//);
   await expect(
-    page.getByRole("button", { name: "태그 편집" }),
-  ).toHaveCount(0);
-  await expect(page.getByTestId("library-selection-count")).toContainText("0");
-  await expect(page.getByTestId("library-export-pdf")).toBeDisabled();
-  const deleteButton = page.getByRole("button", { name: "삭제" });
-  await expect(deleteButton).toHaveCount(1);
-  await expect(deleteButton).toHaveText("");
-  await expect(deleteButton).toHaveClass(/ant-btn-text/);
-  await expect(deleteButton).toHaveClass(/ant-btn-dangerous/);
-  await expect(deleteButton.locator("svg")).toHaveCount(1);
+    page.getByRole("link", { name: /다시 풀기/ }).first(),
+  ).toHaveAttribute("href", /fresh=1/);
 
-  await openTab(page, "reports");
-  await filterToFixture(page, fixture.marker);
-  await expect(
-    page.getByRole("button", { name: "PDF로 내보내기" }),
-  ).toHaveCount(1);
-  await expect(
-    page.getByRole("button", { name: "태그 편집" }),
-  ).toHaveCount(0);
+  await page.getByRole("button", { name: "다음 복습 후보" }).click();
+  await page.getByRole("button", { name: "이전 복습 후보" }).click();
 
-  await openTab(page, "problems");
-  await filterToFixture(page, fixture.marker);
-
-  await openTab(page, "exports");
-  await filterToFixture(page, fixture.marker);
+  await expect(page.getByTestId("library-feedback-waiting-panel")).toBeVisible();
+  await expect(page.getByText("분석 실패").first()).toBeVisible();
+  await expect(page.getByText("분석 중").first()).toBeVisible();
+  await expect(page.getByTestId("library-weak-items-panel")).toBeVisible();
+  await expect(page.getByText("구성").first()).toBeVisible();
+  await expect(page.getByTestId("library-timeline-panel")).toBeVisible();
+  await expect(page.getByText("답안 제출").first()).toBeVisible();
+  await expect(page.getByText("피드백 확인").first()).toBeVisible();
 
   expect(errors).toEqual([]);
 });

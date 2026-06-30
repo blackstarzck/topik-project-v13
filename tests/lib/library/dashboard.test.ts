@@ -1,0 +1,327 @@
+import { describe, expect, it } from "vitest";
+
+import {
+  buildLibraryDashboardFromRows,
+  type LibraryDashboardRows,
+} from "../../../src/lib/library/dashboard";
+
+const savedAt = "2026-06-29T13:00:00.000Z";
+
+function libraryItem(id: string, submissionId: string, saved_at = savedAt) {
+  return {
+    id: `item-${id}`,
+    item_type: "submission",
+    problem_id: null,
+    saved_at,
+    submission_id: submissionId,
+  } satisfies LibraryDashboardRows["libraryItems"][number];
+}
+
+function submission({
+  id,
+  problemId,
+  questionNo,
+  charCount,
+  status = "complete",
+  submittedAt,
+  parentSubmissionId = null,
+}: {
+  id: string;
+  problemId: string;
+  questionNo: number;
+  charCount: number;
+  status?: "pending" | "analyzing" | "complete" | "failed";
+  submittedAt: string;
+  parentSubmissionId?: string | null;
+}) {
+  return {
+    id,
+    problem_id: problemId,
+    question_no: questionNo,
+    char_count: charCount,
+    submitted_at: submittedAt,
+    feedback_status: status,
+    parent_submission_id: parentSubmissionId,
+  } satisfies LibraryDashboardRows["submissions"][number];
+}
+
+function feedback(
+  submissionId: string,
+  status: "partial" | "complete" | "failed" = "complete",
+) {
+  return {
+    submission_id: submissionId,
+    status,
+    score_total: 76,
+    score_max: 100,
+    generated_at: "2026-06-29T13:30:00.000Z",
+  } satisfies LibraryDashboardRows["feedback"][number];
+}
+
+function dimension(
+  submissionId: string,
+  dimensionName: LibraryDashboardRows["dimensionScores"][number]["dimension"],
+  score: number,
+  scoreMax: number,
+) {
+  return {
+    id: `${submissionId}-${dimensionName}`,
+    submission_id: submissionId,
+    dimension: dimensionName,
+    score,
+    score_max: scoreMax,
+    summary: null,
+    weakness_level: null,
+  } satisfies LibraryDashboardRows["dimensionScores"][number];
+}
+
+function problem(id: string, questionNo: number, title: string) {
+  return {
+    id,
+    question_no: questionNo,
+    title,
+  } satisfies LibraryDashboardRows["problems"][number];
+}
+
+describe("buildLibraryDashboardFromRows", () => {
+  it("builds KPI counts and prioritizes review candidates from saved completed submissions", () => {
+    const generated = Array.from({ length: 10 }, (_, index) => {
+      const n = index + 4;
+      return {
+        id: `s-${n}`,
+        problemId: `p-${n}`,
+        questionNo: 53,
+        charCount: 240 + index,
+        submittedAt: `2026-06-${String(20 - index).padStart(2, "0")}T09:00:00.000Z`,
+      };
+    });
+    const rows: LibraryDashboardRows = {
+      libraryItems: [
+        libraryItem("length", "s-length"),
+        libraryItem("rewrite", "s-rewrite"),
+        libraryItem("weak", "s-weak"),
+        libraryItem("short", "s-short"),
+        ...generated.map((row) => libraryItem(row.id, row.id)),
+        libraryItem("pending", "s-pending"),
+        libraryItem("failed", "s-failed"),
+      ],
+      submissions: [
+        submission({
+          id: "s-length",
+          problemId: "p-length",
+          questionNo: 54,
+          charCount: 724,
+          submittedAt: "2026-06-29T12:00:00.000Z",
+        }),
+        submission({
+          id: "s-rewrite",
+          problemId: "p-rewrite",
+          questionNo: 53,
+          charCount: 252,
+          submittedAt: "2026-06-28T12:00:00.000Z",
+        }),
+        submission({
+          id: "s-weak",
+          problemId: "p-weak",
+          questionNo: 53,
+          charCount: 231,
+          submittedAt: "2026-06-27T12:00:00.000Z",
+        }),
+        submission({
+          id: "s-short",
+          problemId: "p-short",
+          questionNo: 52,
+          charCount: 24,
+          submittedAt: "2026-06-26T12:00:00.000Z",
+        }),
+        ...generated.map((row) =>
+          submission({
+            id: row.id,
+            problemId: row.problemId,
+            questionNo: row.questionNo,
+            charCount: row.charCount,
+            submittedAt: row.submittedAt,
+          }),
+        ),
+        submission({
+          id: "s-pending",
+          problemId: "p-pending",
+          questionNo: 51,
+          charCount: 14,
+          status: "pending",
+          submittedAt: "2026-06-29T13:00:00.000Z",
+        }),
+        submission({
+          id: "s-failed",
+          problemId: "p-failed",
+          questionNo: 52,
+          charCount: 18,
+          status: "failed",
+          submittedAt: "2026-06-29T13:10:00.000Z",
+        }),
+      ],
+      feedback: [
+        feedback("s-length"),
+        feedback("s-rewrite"),
+        feedback("s-weak"),
+        feedback("s-short"),
+        ...generated.map((row) => feedback(row.id)),
+        feedback("s-failed", "failed"),
+      ],
+      dimensionScores: [
+        dimension("s-length", "structure", 68, 100),
+        dimension("s-rewrite", "language", 7, 10),
+        dimension("s-weak", "topic_fit", 28, 50),
+        dimension("s-short", "grammar", 90, 100),
+      ],
+      problems: [
+        problem("p-length", 54, "문화 사회형 질문"),
+        problem("p-rewrite", 53, "지역 경제 활성화 방안"),
+        problem("p-weak", 53, "환경 보호 정책 제안"),
+        problem("p-short", 52, "의견 제시형 빈칸 완성"),
+        problem("p-pending", 51, "도표 빈칸 문장 완성"),
+        problem("p-failed", 52, "기술 발전의 장단점"),
+        ...generated.map((row) =>
+          problem(row.problemId, row.questionNo, `후보 ${row.id}`),
+        ),
+      ],
+      allSubmissions: [
+        { id: "s-length", problem_id: "p-length", parent_submission_id: null },
+        { id: "s-rewrite", problem_id: "p-rewrite", parent_submission_id: null },
+        {
+          id: "s-rewrite-old",
+          problem_id: "p-rewrite",
+          parent_submission_id: null,
+        },
+      ],
+      studyEvents: [
+        {
+          id: "event-submit",
+          event_type: "submission_submitted",
+          occurred_at: "2026-06-29T12:35:00.000Z",
+          problem_id: "p-length",
+          submission_id: "s-length",
+        },
+        {
+          id: "event-ignore",
+          event_type: "review_set_created",
+          occurred_at: "2026-06-29T12:40:00.000Z",
+          problem_id: null,
+          submission_id: null,
+        },
+      ],
+    };
+
+    const view = buildLibraryDashboardFromRows(rows);
+
+    expect(view.kpis).toMatchObject({
+      reviewableCount: 14,
+      feedbackWaitingCount: 2,
+      comparisonAvailableCount: 1,
+      recentSubmissionDate: "2026-06-29T13:10:00.000Z",
+    });
+    expect(view.reviewCandidates).toHaveLength(12);
+    expect(view.reviewCandidates[0]).toMatchObject({
+      submissionId: "s-length",
+      primaryReason: "length_off_target",
+      lengthTarget: { min: 600, max: 700, status: "over" },
+    });
+    expect(view.reviewCandidates[1]).toMatchObject({
+      submissionId: "s-rewrite",
+      primaryReason: "comparison_available",
+      hasRewrite: true,
+    });
+    expect(view.reviewCandidates[2]).toMatchObject({
+      submissionId: "s-weak",
+      primaryReason: "low_dimension",
+    });
+    expect(
+      view.reviewCandidates.find((candidate) => candidate.submissionId === "s-short")
+        ?.reasons,
+    ).toContain("short_answer");
+    expect(
+      view.reviewCandidates.find((candidate) => candidate.submissionId === "s-short")
+        ?.reasons,
+    ).not.toContain("length_off_target");
+    expect(view.reviewCandidates.map((candidate) => candidate.submissionId)).not.toContain(
+      "s-pending",
+    );
+    expect(view.reviewCandidates.map((candidate) => candidate.submissionId)).not.toContain(
+      "s-failed",
+    );
+    expect(view.timeline).toHaveLength(1);
+    expect(view.timeline[0]).toMatchObject({
+      eventType: "submission_submitted",
+      title: "문화 사회형 질문",
+    });
+  });
+
+  it("separates pending and failed saved answers and normalizes weak dimension scores", () => {
+    const rows: LibraryDashboardRows = {
+      libraryItems: [
+        libraryItem("complete", "s-complete"),
+        libraryItem("pending", "s-pending"),
+        libraryItem("failed", "s-failed"),
+      ],
+      submissions: [
+        submission({
+          id: "s-complete",
+          problemId: "p-complete",
+          questionNo: 53,
+          charCount: 250,
+          submittedAt: "2026-06-29T10:00:00.000Z",
+        }),
+        submission({
+          id: "s-pending",
+          problemId: "p-pending",
+          questionNo: 51,
+          charCount: 14,
+          status: "analyzing",
+          submittedAt: "2026-06-29T11:00:00.000Z",
+        }),
+        submission({
+          id: "s-failed",
+          problemId: "p-failed",
+          questionNo: 52,
+          charCount: 18,
+          status: "failed",
+          submittedAt: "2026-06-29T12:00:00.000Z",
+        }),
+      ],
+      feedback: [feedback("s-complete"), feedback("s-failed", "failed")],
+      dimensionScores: [
+        dimension("s-complete", "structure", 6, 10),
+        dimension("s-complete", "language", 56, 100),
+        dimension("s-complete", "topic_fit", 34, 50),
+        dimension("s-complete", "grammar", 80, 100),
+      ],
+      problems: [
+        problem("p-complete", 53, "완료 답안"),
+        problem("p-pending", 51, "분석 중 답안"),
+        problem("p-failed", 52, "분석 실패 답안"),
+      ],
+      allSubmissions: [],
+      studyEvents: [],
+    };
+
+    const view = buildLibraryDashboardFromRows(rows);
+
+    expect(view.feedbackWaiting).toEqual([
+      expect.objectContaining({
+        submissionId: "s-failed",
+        status: "failed",
+        title: "분석 실패 답안",
+      }),
+      expect.objectContaining({
+        submissionId: "s-pending",
+        status: "analyzing",
+        title: "분석 중 답안",
+      }),
+    ]);
+    expect(view.weakItems).toEqual([
+      expect.objectContaining({ dimension: "language", normalizedScore: 56 }),
+      expect.objectContaining({ dimension: "structure", normalizedScore: 60 }),
+      expect.objectContaining({ dimension: "topic_fit", normalizedScore: 68 }),
+    ]);
+  });
+});

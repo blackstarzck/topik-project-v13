@@ -1879,7 +1879,83 @@
   "library": {
     "page": {
       "metaTitle": "Thư viện của tôi — TALKPIK",
-      "heading": "Thư viện của tôi"
+      "heading": "Thư viện của tôi",
+      "subtitle": "Các bài làm đã lưu được sắp xếp theo hành động học tập nên xem lại."
+    },
+    "dashboard": {
+      "questionNo": "Câu {questionNo}",
+      "questionUnknown": "Câu hỏi",
+      "charCount": "{count} ký tự",
+      "kpi": {
+        "reviewable": "Có thể ôn tập",
+        "reviewableDescription": "Bài đã lưu có phản hồi",
+        "feedbackWaiting": "Chờ phản hồi",
+        "feedbackWaitingDescription": "Có thể xem lại khi phân tích xong",
+        "comparison": "Có thể so sánh",
+        "comparisonDescription": "Bạn đã viết lại cùng một câu hỏi",
+        "recentStudy": "Học gần đây",
+        "recentStudyDescription": "Ngày nộp bài gần nhất",
+        "count": "{count}",
+        "noRecentStudy": "Chưa có"
+      },
+      "review": {
+        "title": "Gợi ý ôn tập",
+        "help": "Không phải bài được giao hôm nay, mà là bài đã lưu đáng xem lại.",
+        "caption": "Dựa trên bài đã lưu có phản hồi hoàn tất",
+        "empty": "Gợi ý ôn tập sẽ hiển thị khi phản hồi của bài đã lưu hoàn tất.",
+        "prev": "Gợi ý ôn tập trước",
+        "next": "Gợi ý ôn tập tiếp theo"
+      },
+      "status": {
+        "feedbackComplete": "Phản hồi xong"
+      },
+      "reason": {
+        "length_off_target": "Cần chỉnh độ dài",
+        "comparison_available": "Có thể so sánh",
+        "low_dimension": "Mục gần đây thấp",
+        "feedback_ready": "Có thể xem ngay",
+        "short_answer": "Câu trả lời ngắn",
+        "lowDimensionDetail": "{dimension} {score}"
+      },
+      "actions": {
+        "viewFeedback": "Xem phản hồi",
+        "retry": "Làm lại",
+        "goToPractice": "Đi luyện tập"
+      },
+      "waiting": {
+        "title": "Chờ phản hồi",
+        "empty": "Không có bài đã lưu nào đang chờ phân tích.",
+        "submittedAt": "Đã nộp {date} · {count} ký tự",
+        "disabled": "Đang chờ",
+        "retryAria": "Làm lại {title}",
+        "status": {
+          "pending": "Đang chờ",
+          "analyzing": "Đang phân tích",
+          "failed": "Phân tích lỗi"
+        }
+      },
+      "weak": {
+        "title": "Mục gần đây thấp",
+        "caption": "Theo phản hồi đã hoàn tất gần đây",
+        "empty": "Cần thêm phản hồi hoàn tất để tính điểm yếu.",
+        "score": "{score}"
+      },
+      "timeline": {
+        "title": "Dòng thời gian học tập",
+        "empty": "Không có hoạt động học gần đây để hiển thị.",
+        "viewAll": "Xem toàn bộ dòng thời gian",
+        "event": {
+          "submission_submitted": "Đã nộp bài",
+          "feedback_viewed": "Đã xem phản hồi",
+          "report_viewed": "Đã xem báo cáo",
+          "export_downloaded": "Đã tải PDF"
+        }
+      },
+      "error": {
+        "title": "Không thể tải bảng điều khiển thư viện",
+        "subTitle": "Vui lòng thử lại sau.",
+        "retry": "Thử lại"
+      }
     },
     "tabs": {
       "submissions": "Bài làm đã lưu",
