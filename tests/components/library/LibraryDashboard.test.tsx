@@ -91,6 +91,9 @@ describe("LibraryDashboard", () => {
     renderWithIntl(<LibraryDashboard dashboard={dashboardFixture} />);
 
     expect(screen.getByTestId("library-dashboard")).toBeTruthy();
+    expect(screen.getByTestId("library-dashboard").className).toContain(
+      "gap-10",
+    );
     expect(screen.getByTestId("library-kpi-strip")).toBeTruthy();
     expect(screen.getAllByText("복습 가능").length).toBeGreaterThan(0);
     expect(screen.getAllByText("피드백 대기").length).toBeGreaterThan(0);

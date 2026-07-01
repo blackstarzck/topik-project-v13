@@ -2,7 +2,6 @@
 @import "swiper/css";
 @import "swiper/css/free-mode";
 @import "swiper/css/navigation";
-@import "swiper/css/pagination";
 @import "swiper/css/grid";
 
 @font-face {
@@ -4394,8 +4393,7 @@ body {
   margin-bottom: 16px;
 }
 
-.library-kpi-icon,
-.library-timeline-icon {
+.library-kpi-icon {
   border: 1px solid var(--app-color-border);
   background: var(--app-color-bg-layout);
   color: var(--app-color-primary);
@@ -4412,8 +4410,7 @@ body {
   color: var(--app-color-link-secondary);
 }
 
-.library-kpi-icon--muted,
-.library-timeline-icon {
+.library-kpi-icon--muted {
   color: var(--app-color-text-secondary);
 }
 
@@ -5729,15 +5726,6 @@ body {
 
 .library-review-swiper .swiper-slide {
   height: auto;
-}
-
-.library-review-swiper-pagination.swiper-pagination-bullets {
-  position: static;
-  width: auto;
-}
-
-.library-review-swiper-pagination .swiper-pagination-bullet-active {
-  background: var(--app-color-primary);
 }
 
 /*

@@ -1938,7 +1938,8 @@
         "caption": "Based on saved answers with completed feedback",
         "empty": "Review candidates will appear when feedback is complete for saved answers.",
         "prev": "Previous review candidate",
-        "next": "Next review candidate"
+        "next": "Next review candidate",
+        "viewAll": "View all"
       },
       "status": {
         "feedbackComplete": "Feedback complete"
@@ -2015,6 +2016,22 @@
       "selectionHint": "Select saved answers to export or build a review set.",
       "reviewSetCreated": "Review set created ({count} items).",
       "reviewSetFailed": "Failed to create the review set."
+    },
+    "problemsPage": {
+      "metaTitle": "All Learning Questions — TALKPIK",
+      "heading": "All Learning Questions",
+      "subtitle": "Search saved answers and questions in one place, then keep practicing.",
+      "backToLibrary": "Back to My Library"
+    },
+    "problemsList": {
+      "loadError": "Could not load the learning question list",
+      "searchPlaceholder": "Search saved answers and questions",
+      "searchAriaLabel": "Search saved answers and questions",
+      "typeSubmission": "Saved answer",
+      "typeProblem": "Saved question",
+      "emptyNoItems": "No saved answers or questions yet.",
+      "emptySearch": "No search results.",
+      "resetSearch": "Reset search"
     },
     "submissions": {
       "loadError": "Could not load your saved answers",

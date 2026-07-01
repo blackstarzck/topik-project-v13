@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, screen } from "@testing-library/react";
 
+import koMessages from "../../../messages/ko.json";
 import { LibraryReviewCandidateSwiper } from "../../../src/components/library/LibraryReviewCandidateSwiper";
 import type { LibraryReviewCandidate } from "../../../src/lib/library/types";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
@@ -11,7 +12,6 @@ vi.mock("swiper/modules", () => ({
   A11y: {},
   Grid: {},
   Navigation: {},
-  Pagination: {},
 }));
 
 vi.mock("swiper/react", () => ({
@@ -92,12 +92,15 @@ describe("LibraryReviewCandidateSwiper", () => {
     expect(title?.className).toContain("!m-0");
     expect(header.className).toContain("items-center");
     expect(header.className).not.toContain("justify-center");
-    expect(header.className).not.toContain("justify-between");
+    expect(header.className).toContain("justify-between");
     expect(screen.queryByTestId("library-review-swiper-caption")).toBeNull();
     expect(
-      screen.getByTestId("library-review-swiper-actions").previousElementSibling
-        ?.tagName,
-    ).toBe("H4");
+      screen.getByTestId("library-review-swiper-title-group").querySelector("h4"),
+    ).toBeTruthy();
+    const viewAll = screen.getByRole("link", {
+      name: koMessages.library.dashboard.review.viewAll,
+    });
+    expect(viewAll.getAttribute("href")).toBe("/library/problems");
     expect(screen.getByTestId("mock-swiper").getAttribute("data-grid-rows")).toBe(
       "2",
     );
@@ -112,7 +115,12 @@ describe("LibraryReviewCandidateSwiper", () => {
     for (const slide of slides) {
       expect(slide.className).toContain("h-auto");
     }
-    expect(screen.getByText("1 / 2")).toBeTruthy();
+    expect(screen.queryByText("1 / 2")).toBeNull();
+    expect(
+      screen
+        .getByTestId("library-review-swiper")
+        .querySelector(".library-review-swiper-pagination"),
+    ).toBeNull();
   });
 
   it("renders the empty review section without a wrapping card or title info icon", () => {
@@ -124,6 +132,10 @@ describe("LibraryReviewCandidateSwiper", () => {
     expect(section.className).not.toContain("bg-background");
     expect(section.className).not.toContain("p-5");
     expect(section.querySelector(".lucide-info")).toBeNull();
+    const viewAll = screen.getByRole("link", {
+      name: koMessages.library.dashboard.review.viewAll,
+    });
+    expect(viewAll.getAttribute("href")).toBe("/library/problems");
   });
 
   it("provides accessible navigation buttons", () => {

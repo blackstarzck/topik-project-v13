@@ -15,7 +15,7 @@ export function LibraryDashboard({ dashboard }: Props) {
   return (
     <div
       data-testid="library-dashboard"
-      className="flex min-h-0 w-full flex-col gap-4"
+      className="flex min-h-0 w-full flex-col gap-10 xl:gap-12"
     >
       <LibraryKpiStrip kpis={dashboard.kpis} />
       <LibraryReviewCandidateSwiper candidates={dashboard.reviewCandidates} />

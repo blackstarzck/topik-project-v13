@@ -49,6 +49,8 @@ export type LibrarySubmissionView = {
   char_count: number;
   /** `library_items.id` — the saved-ledger row, used for delete/tag mutations. */
   item_id: string;
+  /** `library_items.saved_at` for mixed saved-item ordering. */
+  saved_at: string;
   tags: string[];
 };
 
@@ -75,6 +77,8 @@ export type LibraryProblemView = {
   title: string | null;
   question_no: number | null;
   item_id: string;
+  /** `library_items.saved_at` for mixed saved-item ordering. */
+  saved_at: string;
   tags: string[];
   availabilityStatus: LibraryProblemAvailabilityStatus;
   availabilityReason: string | null;
@@ -198,6 +202,19 @@ export type LibraryDashboardView = {
   feedbackWaiting: LibraryFeedbackWaitingItem[];
   weakItems: LibraryWeakItem[];
   timeline: LibraryTimelineItem[];
+};
+
+export type LibraryStats = {
+  /** Total saved library items in the current page scope. */
+  savedCount: number;
+  /** Average writing feedback score over saved submissions, or null. */
+  avgScore: number | null;
+  /** Lowest average feedback dimension key, or null when no score exists. */
+  weakestDimension: string | null;
+  /** Count of saved retry submissions. */
+  reviewCount: number;
+  /** Latest `library_items.saved_at` ISO string. */
+  lastUpdated: string | null;
 };
 
 /** Narrowing helper for excerpting comparison report narratives. */

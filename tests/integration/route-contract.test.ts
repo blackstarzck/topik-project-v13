@@ -84,6 +84,9 @@ describe("user-flow route contract", () => {
     expect(PROTECTED_ROUTE_CASES.map((route) => route.path)).toEqual(
       expectedProtected,
     );
+    expect(PROTECTED_ROUTE_CASES.map((route) => route.path)).toContain(
+      APP_ROUTES.libraryProblems,
+    );
   });
 
   it("keeps the learner sidebar on the SHARE-03 fixed top-level menu contract", () => {
@@ -112,6 +115,7 @@ describe("user-flow route contract", () => {
     expect(sidebarKeys).not.toContain(APP_ROUTES.feedbackShort);
     expect(sidebarKeys).not.toContain(APP_ROUTES.feedbackLong);
     expect(sidebarKeys).not.toContain(APP_ROUTES.comparisonReport);
+    expect(sidebarKeys).not.toContain(APP_ROUTES.libraryProblems);
   });
 
   it("groups user-flow workspace routes under the sidebar section that owns the flow", () => {

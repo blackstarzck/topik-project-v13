@@ -89,7 +89,12 @@ async function createLibraryDashboardFixture() {
   const failedSubmissionId = randomUUID();
   const completeLibraryIds = completeSubmissionIds.map(() => randomUUID());
   const waitingLibraryIds = [randomUUID(), randomUUID()];
-  const libraryIds = [...completeLibraryIds, ...waitingLibraryIds];
+  const savedProblemLibraryId = randomUUID();
+  const libraryIds = [
+    ...completeLibraryIds,
+    ...waitingLibraryIds,
+    savedProblemLibraryId,
+  ];
   const studyEventIds = [randomUUID(), randomUUID()];
   const now = Date.now();
   const completeRows = completeSubmissionIds.map((id, index) => {
@@ -218,6 +223,14 @@ async function createLibraryDashboardFixture() {
       tags: [marker],
       saved_at: new Date(now - 15_000).toISOString(),
     },
+    {
+      id: savedProblemLibraryId,
+      user_id: user.id,
+      item_type: "problem",
+      problem_id: problemId,
+      tags: [marker],
+      saved_at: new Date(now - 45_000).toISOString(),
+    },
   ]);
   if (library.error) throw library.error;
 
@@ -310,6 +323,7 @@ test("F-01 library dashboard renders study action sections", async ({ page }) =>
   await expect(page.getByTestId("library-search")).toHaveCount(0);
 
   await expect(page.getByTestId("library-review-swiper")).toBeVisible();
+  await expect(page.locator(".library-review-swiper-pagination")).toHaveCount(0);
   await expect(page.getByText(fixture.problemTitle).first()).toBeVisible();
   await expect(
     page.getByRole("link", { name: "피드백 보기" }).first(),
@@ -320,6 +334,52 @@ test("F-01 library dashboard renders study action sections", async ({ page }) =>
 
   await page.getByRole("button", { name: "다음 복습 후보" }).click();
   await page.getByRole("button", { name: "이전 복습 후보" }).click();
+
+  await expect(page.getByTestId("library-review-view-all")).toHaveAttribute(
+    "href",
+    "/library/problems",
+  );
+  await page.getByTestId("library-review-view-all").click();
+  await expect(page).toHaveURL(/\/library\/problems$/);
+  await expect(page.getByTestId("library-problems-back-link")).toHaveAttribute(
+    "href",
+    "/library",
+  );
+  await expect(page.getByTestId("library-problems-back-link")).not.toHaveClass(
+    /ant-btn/,
+  );
+  await expect(page.getByTestId("library-problems-page-header")).toHaveClass(
+    /items-center/,
+  );
+  await page.getByTestId("library-problems-back-link").click();
+  await expect(page).toHaveURL(/\/library$/);
+  await page.getByTestId("library-review-view-all").click();
+  await expect(page).toHaveURL(/\/library\/problems$/);
+  await expect(page.getByTestId("library-problems-workspace")).toBeVisible();
+  await expect(page.getByTestId("library-problems-list")).toBeVisible();
+  await expect(page.getByTestId("library-problems-stats-column")).toHaveCount(0);
+  await expect(
+    page.locator(
+      '[data-testid="library-problems-mixed-row"][data-library-kind="problem"]',
+    ),
+  ).toHaveCount(1);
+  await expect(
+    page
+      .locator(
+        '[data-testid="library-problems-mixed-row"][data-library-kind="submission"]',
+      )
+      .first(),
+  ).toBeVisible();
+  await expect(page.locator('a[href*="/writing/feedback/"]').first()).toBeVisible();
+  await expect(page.locator('a[href*="?problem="]').first()).toBeVisible();
+
+  const savedSearch = page.getByTestId("library-problems-search").locator("input");
+  await savedSearch.fill(fixture.marker);
+  await expect(page.getByTestId("library-problems-mixed-row").first()).toBeVisible();
+  await savedSearch.fill(`missing-${fixture.marker}`);
+  await expect(page.getByTestId("library-problems-empty")).toBeVisible();
+
+  await page.goto("/library", { waitUntil: "load" });
 
   await expect(page.getByTestId("library-feedback-waiting-panel")).toBeVisible();
   await expect(page.getByText("분석 실패").first()).toBeVisible();

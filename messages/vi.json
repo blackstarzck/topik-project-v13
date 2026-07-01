@@ -1938,7 +1938,8 @@
         "caption": "Dựa trên bài đã lưu có phản hồi hoàn tất",
         "empty": "Gợi ý ôn tập sẽ hiển thị khi phản hồi của bài đã lưu hoàn tất.",
         "prev": "Gợi ý ôn tập trước",
-        "next": "Gợi ý ôn tập tiếp theo"
+        "next": "Gợi ý ôn tập tiếp theo",
+        "viewAll": "Xem tất cả"
       },
       "status": {
         "feedbackComplete": "Phản hồi xong"
@@ -2015,6 +2016,22 @@
       "selectionHint": "Chọn bài làm đã lưu để xuất file hoặc tạo bộ ôn tập.",
       "reviewSetCreated": "Đã tạo bộ ôn tập ({count} mục).",
       "reviewSetFailed": "Không thể tạo bộ ôn tập."
+    },
+    "problemsPage": {
+      "metaTitle": "Tất cả câu hỏi học tập — TALKPIK",
+      "heading": "Tất cả câu hỏi học tập",
+      "subtitle": "Tìm bài làm và câu hỏi đã lưu ở một nơi, rồi tiếp tục luyện tập.",
+      "backToLibrary": "Quay lại thư viện của tôi"
+    },
+    "problemsList": {
+      "loadError": "Không thể tải danh sách câu hỏi học tập",
+      "searchPlaceholder": "Tìm bài làm và câu hỏi đã lưu",
+      "searchAriaLabel": "Tìm bài làm và câu hỏi đã lưu",
+      "typeSubmission": "Bài làm đã lưu",
+      "typeProblem": "Câu hỏi đã lưu",
+      "emptyNoItems": "Chưa có bài làm hoặc câu hỏi nào được lưu.",
+      "emptySearch": "Không có kết quả tìm kiếm.",
+      "resetSearch": "Đặt lại tìm kiếm"
     },
     "submissions": {
       "loadError": "Không thể tải bài làm đã lưu của bạn",

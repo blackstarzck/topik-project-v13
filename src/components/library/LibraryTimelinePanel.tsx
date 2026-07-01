@@ -1,8 +1,8 @@
 "use client";
 
-import { Button, Empty, Tag, Typography } from "antd";
+import { Button, Empty, Typography } from "antd";
 import { Download, Eye, FileText, PenLine } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { AppCard } from "@/components/shared/AppCard";
 import type {
@@ -11,7 +11,7 @@ import type {
 } from "@/lib/library/types";
 import { APP_ROUTES } from "@/lib/routes";
 
-import { formatDashboardDateTime } from "./library-dashboard-format";
+import { formatDashboardRelativeTime } from "./library-dashboard-format";
 
 const { Text, Title } = Typography;
 
@@ -21,6 +21,7 @@ type Props = {
 
 export function LibraryTimelinePanel({ items }: Props) {
   const t = useTranslations("library.dashboard");
+  const locale = useLocale();
 
   return (
     <AppCard data-testid="library-timeline-panel" className="h-full">
@@ -38,26 +39,41 @@ export function LibraryTimelinePanel({ items }: Props) {
             <div className="flex flex-col gap-3">
               {items.map((item) => {
                 const Icon = eventIcon(item.eventType);
-                return (
-                  <div key={item.id} className="flex items-center gap-3">
-                    <span className="library-timeline-icon flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full">
-                      <Icon aria-hidden size={15} />
-                    </span>
-                    <Text type="secondary" className="w-[116px] flex-shrink-0 text-sm">
-                      {formatDashboardDateTime(item.occurredAt)}
-                    </Text>
-                    <Text className="min-w-0 flex-1 truncate">
-                      {t(
+                const eventLabel =
+                  item.eventType === "report_viewed" && item.questionNo
+                    ? t("questionNo", { questionNo: item.questionNo })
+                    : t(
                         `timeline.event.${item.eventType}` as Parameters<
                           typeof t
                         >[0],
-                      )}
+                      );
+                return (
+                  <div
+                    key={item.id}
+                    data-testid={`library-timeline-row-${item.id}`}
+                    className="flex min-w-0 items-center justify-between gap-3"
+                  >
+                    <span
+                      data-testid={`library-timeline-content-${item.id}`}
+                      className="flex min-w-0 flex-1 items-center gap-2"
+                    >
+                      <span
+                        data-testid="library-timeline-icon"
+                        className="flex h-5 w-5 flex-shrink-0 items-center justify-center text-text-secondary"
+                      >
+                        <Icon aria-hidden size={16} />
+                      </span>
+                      <Text className="min-w-0 truncate text-sm">
+                        {eventLabel}
+                      </Text>
+                    </span>
+                    <Text
+                      data-testid={`library-timeline-time-${item.id}`}
+                      type="secondary"
+                      className="ml-auto flex-shrink-0 whitespace-nowrap text-right text-sm"
+                    >
+                      {formatDashboardRelativeTime(item.occurredAt, locale)}
                     </Text>
-                    {item.questionNo ? (
-                      <Tag className="m-0 flex-shrink-0">
-                        {t("questionNo", { questionNo: item.questionNo })}
-                      </Tag>
-                    ) : null}
                   </div>
                 );
               })}

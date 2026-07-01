@@ -1938,7 +1938,8 @@
         "caption": "저장 답안 중 피드백 완료 항목 기준",
         "empty": "저장한 답안의 피드백이 완료되면 복습 후보가 표시돼요",
         "prev": "이전 복습 후보",
-        "next": "다음 복습 후보"
+        "next": "다음 복습 후보",
+        "viewAll": "전체 보기"
       },
       "status": {
         "feedbackComplete": "피드백 완료"
@@ -2015,6 +2016,22 @@
       "selectionHint": "저장 답안에서 항목을 선택하면 내보내기·복습 세트를 만들 수 있어요.",
       "reviewSetCreated": "복습 세트를 만들었어요. ({count}개 항목)",
       "reviewSetFailed": "복습 세트 생성에 실패했어요."
+    },
+    "problemsPage": {
+      "metaTitle": "학습 문제 전체보기 — TALKPIK",
+      "heading": "학습 문제 전체보기",
+      "subtitle": "저장한 답안과 문제를 한 곳에서 검색하고 다시 학습해요",
+      "backToLibrary": "내 서재로 돌아가기"
+    },
+    "problemsList": {
+      "loadError": "학습 문제 목록을 불러오지 못했어요",
+      "searchPlaceholder": "저장 답안과 문제 검색",
+      "searchAriaLabel": "저장 답안과 문제 검색",
+      "typeSubmission": "저장 답안",
+      "typeProblem": "저장 문제",
+      "emptyNoItems": "저장한 답안이나 문제가 아직 없어요",
+      "emptySearch": "검색 결과가 없어요",
+      "resetSearch": "검색 초기화"
     },
     "submissions": {
       "loadError": "저장한 답안을 불러오지 못했어요",
