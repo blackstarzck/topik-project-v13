@@ -483,6 +483,40 @@
       "embeddedBrowserTitle": "Đăng nhập Google có thể bị chặn trong {browser}",
       "embeddedBrowserDescription": "Hãy mở trang này bằng Chrome, Safari hoặc trình duyệt mặc định rồi thử đăng nhập Google lại."
     },
+    "institutionInvite": {
+      "loadingTitle": "Đang kiểm tra lời mời",
+      "loadingDescription": "Vui lòng chờ trong giây lát.",
+      "noCodeTitle": "Mã mời bị thiếu hoặc đã hết hạn",
+      "noCodeDescription": "Liên kết mời đã hết hạn hoặc trình duyệt này không có mã mời đã lưu.",
+      "anonymousTitle": "Lời mời thuộc tổ chức",
+      "anonymousDescription": "Tạo tài khoản mới hoặc đăng nhập bằng tài khoản hiện có rồi kết nối lời mời này.",
+      "anonymousSignUp": "Đăng ký tài khoản mới và kết nối tổ chức",
+      "anonymousLogin": "Đăng nhập bằng tài khoản hiện có",
+      "anonymousContinue": "Tiếp tục không dùng lời mời",
+      "authenticatedTitle": "Kết nối tài khoản này với tổ chức?",
+      "authenticatedDescription": "Tài khoản này sẽ được đăng ký là thành viên tổ chức và luồng học theo tổ chức sẽ được áp dụng.",
+      "policyTitle": "Điều thay đổi sau khi kết nối",
+      "policyPreserve": "Lịch sử học tập hiện có của bạn sẽ được giữ lại.",
+      "policyInstitutionScope": "Sau khi kết nối, việc tìm bài mới, gợi ý, nộp bài và làm lại sẽ theo chính sách bài được giao của tổ chức hiện tại.",
+      "policyReadOnly": "Các bài cũ không được giao cho tổ chức hiện tại chỉ có thể xem như lịch sử chỉ đọc; không cho phép làm mới hoặc nộp lại.",
+      "authenticatedAccept": "Tôi đã hiểu và muốn kết nối tài khoản này",
+      "authenticatedOtherAccount": "Đăng nhập bằng tài khoản khác",
+      "authenticatedContinue": "Tiếp tục không kết nối",
+      "currentAccount": "Tài khoản hiện tại",
+      "currentAccountValue": "Tài khoản hiện tại: {email}",
+      "codeLabel": "Mã mời: {code}",
+      "successTitle": "Đã kết nối tổ chức",
+      "successDescription": "Bạn có thể tiếp tục với luồng học dành cho tổ chức.",
+      "alreadySameTitle": "Đã kết nối với tổ chức này",
+      "alreadySameDescription": "Tài khoản này đã được đăng ký bằng cùng mã tổ chức.",
+      "alreadyOtherTitle": "Đã kết nối với tổ chức khác",
+      "alreadyOtherDescription": "Không tự động chuyển tổ chức. Hãy đăng nhập bằng tài khoản khác hoặc tiếp tục không kết nối.",
+      "invalidTitle": "Mã mời không hợp lệ",
+      "invalidDescription": "Vui lòng kiểm tra lại liên kết mời.",
+      "failedTitle": "Không thể hoàn tất kết nối tổ chức",
+      "failedDescription": "Hãy thử lại sau hoặc tiếp tục không dùng lời mời.",
+      "continue": "Tiếp tục"
+    },
     "consent": {
       "metaTitle": "Hoàn tất đăng ký — TALKPIK",
       "heading": "Hoàn tất đăng ký",
@@ -1928,6 +1962,7 @@
       "actions": {
         "viewFeedback": "Xem phản hồi",
         "retry": "Làm lại",
+        "retryUnavailable": "Không thể làm lại",
         "goToPractice": "Đi luyện tập"
       },
       "waiting": {
@@ -1935,6 +1970,7 @@
         "empty": "Không có bài đã lưu nào đang chờ phân tích.",
         "submittedAt": "Đã nộp {date} · {count} ký tự",
         "disabled": "Đang chờ",
+        "retryUnavailable": "Không thể làm lại",
         "retryAria": "Làm lại {title}",
         "status": {
           "pending": "Đang chờ",

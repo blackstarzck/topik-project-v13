@@ -381,8 +381,11 @@ test.describe("A-01 sign-up functional flow", () => {
     const errors = collectErrors(page);
     const signUpRequests = await mockSignUpSuccess(page);
 
-    await openSignUp(page, "/sign-up?aff=EXPO2026-BOOTH-A");
+    await page.goto("/sign-up?aff=EXPO2026-BOOTH-A", { waitUntil: "load" });
+    await expect(page).toHaveURL(/\/auth\/institution-invite$/);
+    await page.locator('a[href="/sign-up"]').click();
     await expect(page).toHaveURL(/\/sign-up$/);
+    await expect(page.locator("#displayName")).toBeVisible();
     await fillSignUpForm(page, { email: "aff-signup@example.com" });
     await clickSubmit(page);
 

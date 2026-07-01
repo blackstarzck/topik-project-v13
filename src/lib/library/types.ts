@@ -149,7 +149,7 @@ export type LibraryReviewCandidate = {
   scoreMax: number | null;
   scorePercent: number | null;
   feedbackHref: string;
-  retryHref: string;
+  retryHref: string | null;
   primaryReason: LibraryDashboardReviewReason;
   reasons: LibraryDashboardReviewReason[];
   hasRewrite: boolean;
@@ -170,7 +170,7 @@ export type LibraryFeedbackWaitingItem = {
   submittedAt: string;
   charCount: number;
   status: LibraryDashboardFeedbackWaitingStatus;
-  retryHref: string;
+  retryHref: string | null;
 };
 
 export type LibraryWeakItem = LibraryDashboardWeakDimension & {

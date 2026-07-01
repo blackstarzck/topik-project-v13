@@ -335,4 +335,69 @@ describe("buildLibraryDashboardFromRows", () => {
       expect.objectContaining({ dimension: "topic_fit", normalizedScore: 68 }),
     ]);
   });
+
+  it("removes retry links for saved submissions whose problem is no longer visible to the caller", () => {
+    const rows = {
+      libraryItems: [
+        libraryItem("visible", "s-visible"),
+        libraryItem("hidden", "s-hidden"),
+        libraryItem("failed-hidden", "s-failed-hidden"),
+      ],
+      submissions: [
+        submission({
+          id: "s-visible",
+          problemId: "p-visible",
+          questionNo: 53,
+          charCount: 250,
+          submittedAt: "2026-06-29T10:00:00.000Z",
+        }),
+        submission({
+          id: "s-hidden",
+          problemId: "p-hidden",
+          questionNo: 53,
+          charCount: 250,
+          submittedAt: "2026-06-29T11:00:00.000Z",
+        }),
+        submission({
+          id: "s-failed-hidden",
+          problemId: "p-failed-hidden",
+          questionNo: 52,
+          charCount: 18,
+          status: "failed",
+          submittedAt: "2026-06-29T12:00:00.000Z",
+        }),
+      ],
+      feedback: [
+        feedback("s-visible"),
+        feedback("s-hidden"),
+        feedback("s-failed-hidden", "failed"),
+      ],
+      dimensionScores: [],
+      problems: [
+        problem("p-visible", 53, "Visible problem"),
+        problem("p-hidden", 53, "Hidden problem"),
+        problem("p-failed-hidden", 52, "Failed hidden problem"),
+      ],
+      allSubmissions: [],
+      studyEvents: [],
+      visibleProblemIds: ["p-visible"],
+    } satisfies LibraryDashboardRows & { visibleProblemIds: string[] };
+
+    const view = buildLibraryDashboardFromRows(rows);
+
+    expect(
+      view.reviewCandidates.find((candidate) => candidate.problemId === "p-visible")
+        ?.retryHref,
+    ).toBe(
+      "/writing/long-form-writing-53?problem=p-visible&fresh=1&retrySubmission=s-visible",
+    );
+    expect(
+      view.reviewCandidates.find((candidate) => candidate.problemId === "p-hidden")
+        ?.retryHref,
+    ).toBeNull();
+    expect(
+      view.feedbackWaiting.find((item) => item.problemId === "p-failed-hidden")
+        ?.retryHref,
+    ).toBeNull();
+  });
 });

@@ -17,6 +17,7 @@ export const APP_ROUTES = {
   authCallback: "/auth/callback",
   authCallbackFragment: "/auth/callback-fragment",
   authClaimAffiliation: "/auth/claim-affiliation",
+  authInstitutionInvite: "/auth/institution-invite",
   authError: "/auth/error",
   authVerifyEmail: "/auth/verify-email",
   authPostAuth: "/auth/post-auth",
@@ -457,6 +458,15 @@ export const APP_ROUTE_SPECS: readonly AppRouteSpec[] = [
     path: APP_ROUTES.authVerifyEmail,
     appPath: "src/app/auth/verify-email/page.tsx",
     routeType: "page",
+    middleware: "public",
+  },
+  {
+    id: "auth-institution-invite",
+    iaCode: "AUTH-INSTITUTION-INVITE",
+    title: "Institution invite confirmation",
+    path: APP_ROUTES.authInstitutionInvite,
+    appPath: "src/app/auth/institution-invite/page.tsx",
+    routeType: "system-page",
     middleware: "public",
   },
   {

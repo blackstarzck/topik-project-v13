@@ -62,7 +62,7 @@ async function expectGoogleOAuthStart({
   expect(callbackUrl.pathname).toBe("/auth/callback");
   expect(callbackUrl.searchParams.get("next")).toBe(
     intent === "sign-up"
-      ? "/auth/claim-affiliation?next=%2Fauth%2Fpost-auth%3Fintent%3Dsign-up"
+      ? "/auth/institution-invite?next=%2Fauth%2Fpost-auth%3Fintent%3Dsign-up"
       : `/auth/post-auth?intent=${intent}`,
   );
   expect(errors).toEqual([]);

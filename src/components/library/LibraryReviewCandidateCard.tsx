@@ -163,14 +163,20 @@ export function LibraryReviewCandidateCard({ candidate }: Props) {
             icon={<MagicPen size={16} aria-hidden="true" />}
             className="size-8 min-w-8 p-0"
           />
-          <Button
-            block
-            href={candidate.retryHref}
-            icon={<ArrowRight size={14} />}
-            iconPlacement="end"
-          >
-            {t("actions.retry")}
-          </Button>
+          {candidate.retryHref ? (
+            <Button
+              block
+              href={candidate.retryHref}
+              icon={<ArrowRight size={14} />}
+              iconPlacement="end"
+            >
+              {t("actions.retry")}
+            </Button>
+          ) : (
+            <Button block disabled>
+              {t("actions.retryUnavailable")}
+            </Button>
+          )}
         </div>
       </article>
     </AppCard>

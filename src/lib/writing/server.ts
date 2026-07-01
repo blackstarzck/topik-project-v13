@@ -5,7 +5,10 @@ import {
   type SupabaseServerClient,
 } from "../supabase/server";
 import { getProblemAvailability } from "../problems/availability";
-import { filterVisibleProblemIds } from "../problems/visibility";
+import {
+  filterVisibleProblemIds,
+  isWritingProblemVisibleToCaller,
+} from "../problems/visibility";
 import type {
   ComparisonReportRow,
   FeedbackBundle,
@@ -29,6 +32,7 @@ type ProblemAvailabilityQueryRow = {
   visibility: string | null;
   lifecycle_status: string | null;
   lifecycle_reason: string | null;
+  question_no: number | null;
 };
 
 export async function getActiveDraft(
@@ -432,12 +436,14 @@ export async function getWritingProblemAvailability(
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("problems")
-    .select("publish_status, visibility, lifecycle_status, lifecycle_reason")
+    .select(
+      "publish_status, visibility, lifecycle_status, lifecycle_reason, question_no",
+    )
     .eq("id", problemId)
     .maybeSingle();
   if (error) throw new Error(`getWritingProblemAvailability: ${error.message}`);
   const row = data as ProblemAvailabilityQueryRow | null;
-  return getProblemAvailability(
+  const availability = getProblemAvailability(
     row
       ? {
           publishStatus: row.publish_status,
@@ -447,4 +453,20 @@ export async function getWritingProblemAvailability(
         }
       : null,
   );
+
+  if (!row || !availability.canStart) {
+    return availability;
+  }
+
+  if (!isQuestionNo(row.question_no)) {
+    return getProblemAvailability(null);
+  }
+
+  const visible = await isWritingProblemVisibleToCaller(
+    supabase,
+    problemId,
+    row.question_no,
+  );
+
+  return visible ? availability : getProblemAvailability(null);
 }

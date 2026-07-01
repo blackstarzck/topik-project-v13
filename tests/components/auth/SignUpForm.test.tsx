@@ -546,7 +546,7 @@ describe("SignUpForm", () => {
       provider: "google",
       options: {
         redirectTo:
-          "http://localhost:3000/auth/callback?next=%2Fauth%2Fclaim-affiliation%3Fnext%3D%252Fauth%252Fpost-auth%253Fintent%253Dsign-up",
+          "http://localhost:3000/auth/callback?next=%2Fauth%2Finstitution-invite%3Fnext%3D%252Fauth%252Fpost-auth%253Fintent%253Dsign-up",
       },
     });
     expect(signUpMock).not.toHaveBeenCalled();

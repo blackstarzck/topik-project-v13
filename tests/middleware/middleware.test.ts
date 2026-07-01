@@ -68,6 +68,14 @@ describe("middleware route protection", () => {
     expect(response.status).toBe(200);
   });
 
+  it("allows anon user to access the institution invite route", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: null }, error: null });
+    const response = await callMiddleware(
+      "http://localhost/auth/institution-invite",
+    );
+    expect(response.status).toBe(200);
+  });
+
   it("redirects authenticated users away from /login", async () => {
     mockGetUser.mockResolvedValue({
       data: { user: { id: "user-123" } },
@@ -89,6 +97,48 @@ describe("middleware route protection", () => {
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe(
       "http://localhost/auth/post-auth?intent=sign-up",
+    );
+  });
+
+  it("redirects authenticated users with aff on /login to the institution invite route", async () => {
+    mockGetUser.mockResolvedValue({
+      data: { user: { id: "user-123" } },
+      error: null,
+    });
+    const response = await callMiddleware(
+      "http://localhost/login?aff=EXPO2026-BOOTH-A",
+    );
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe(
+      "http://localhost/auth/institution-invite?aff=EXPO2026-BOOTH-A",
+    );
+  });
+
+  it("redirects authenticated users with aff on /sign-up to the institution invite route", async () => {
+    mockGetUser.mockResolvedValue({
+      data: { user: { id: "user-123" } },
+      error: null,
+    });
+    const response = await callMiddleware(
+      "http://localhost/sign-up?aff=EXPO2026-BOOTH-A",
+    );
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe(
+      "http://localhost/auth/institution-invite?aff=EXPO2026-BOOTH-A",
+    );
+  });
+
+  it("redirects authenticated users with an invite next target back to the institution invite route", async () => {
+    mockGetUser.mockResolvedValue({
+      data: { user: { id: "user-123" } },
+      error: null,
+    });
+    const response = await callMiddleware(
+      "http://localhost/login?next=/auth/institution-invite",
+    );
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe(
+      "http://localhost/auth/institution-invite",
     );
   });
 

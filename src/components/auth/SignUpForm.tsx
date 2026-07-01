@@ -31,6 +31,7 @@ import {
 import {
   buildAffiliationMetadata,
   clearStoredAffiliationCode,
+  readStoredAffiliationCode,
 } from "@/lib/auth/affiliation-code";
 import { POST_AUTH_SIGN_UP_PATH } from "@/lib/auth/completion-routes";
 import { buildAuthRedirectUrl } from "@/lib/auth/redirect-url";
@@ -47,6 +48,7 @@ import {
 import { asLocale, DEFAULT_LOCALE, LOCALE_COOKIE } from "@/i18n/locales";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { PasswordStrengthMeter } from "@/components/auth/PasswordStrengthMeter";
+import { APP_ROUTES } from "@/lib/routes";
 
 // description §3 예외: "중복 이메일/형식 오류는 필드 하단에 표시함."
 // Supabase가 가입 중복을 알리는 error.code 들. 이 코드는 토스트가 아니라
@@ -224,6 +226,11 @@ export function SignUpForm({
   const showPasswordStep = currentVisibleStep >= STEP_PASSWORD;
   const showTermsStep = currentVisibleStep >= STEP_TERMS;
   const showSubmitButton = showTermsStep;
+  const safeGuidanceLoginHref = readStoredAffiliationCode()
+    ? `${APP_ROUTES.login}?next=${encodeURIComponent(
+        APP_ROUTES.authInstitutionInvite,
+      )}`
+    : APP_ROUTES.login;
 
   useEffect(() => {
     onCooldownChange?.(isCoolingDown);
@@ -595,7 +602,7 @@ export function SignUpForm({
                 <div className="flex flex-wrap gap-2">
                   <Button
                     size="small"
-                    href="/login"
+                    href={safeGuidanceLoginHref}
                     data-testid="sign-up-safe-guidance-login"
                   >
                     {t("accountCheckLogin")}

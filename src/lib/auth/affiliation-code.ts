@@ -17,6 +17,35 @@ export type AffiliationMetadata = {
 };
 
 export type ClaimAffiliationCodeResult = "empty" | "claimed" | "failed";
+export type AcceptAffiliationInviteResult =
+  | "empty"
+  | "accepted"
+  | "invalid"
+  | "already_affiliated_same"
+  | "already_affiliated_other"
+  | "profile_not_found"
+  | "failed";
+
+const ACCEPT_AFFILIATION_INVITE_RESULTS = new Set<
+  Exclude<AcceptAffiliationInviteResult, "empty">
+>([
+  "accepted",
+  "invalid",
+  "already_affiliated_same",
+  "already_affiliated_other",
+  "profile_not_found",
+  "failed",
+]);
+
+type SupabaseRpcErrorLike = {
+  code?: string;
+  message?: string;
+};
+
+type ProfileAffiliationSnapshot = {
+  affiliation_code: string | null;
+  status?: "active" | "blocked" | "deleted" | null;
+};
 
 function getStorage(): Storage | null {
   if (typeof window === "undefined") return null;
@@ -108,21 +137,116 @@ export function buildAffiliationMetadata(now = Date.now()): AffiliationMetadata 
   return affiliationCode ? { affiliation_code: affiliationCode } : {};
 }
 
-export async function claimStoredAffiliationCode(
+function parseAcceptInviteResult(data: unknown): AcceptAffiliationInviteResult {
+  if (
+    typeof data === "object" &&
+    data !== null &&
+    "status" in data &&
+    typeof data.status === "string" &&
+    ACCEPT_AFFILIATION_INVITE_RESULTS.has(
+      data.status as Exclude<AcceptAffiliationInviteResult, "empty">,
+    )
+  ) {
+    return data.status as AcceptAffiliationInviteResult;
+  }
+
+  return "failed";
+}
+
+function shouldUseLegacyClaimFallback(error: unknown): boolean {
+  if (typeof error !== "object" || error === null) return false;
+  const rpcError = error as SupabaseRpcErrorLike;
+  return (
+    rpcError.code === "PGRST202" &&
+    typeof rpcError.message === "string" &&
+    rpcError.message.includes("accept_affiliation_invite")
+  );
+}
+
+async function readProfileAffiliationAfterLegacyClaim(
+  supabase: ReturnType<typeof createSupabaseBrowserClient>,
+  affiliationCode: string,
+): Promise<AcceptAffiliationInviteResult> {
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError || !user) return "failed";
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("affiliation_code,status")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (error) return "failed";
+  if (!data) return "profile_not_found";
+
+  const profile = data as ProfileAffiliationSnapshot;
+  if (profile.status && profile.status !== "active") return "failed";
+
+  const currentAffiliationCode = normalizeAffiliationCode(
+    profile.affiliation_code,
+  );
+  if (currentAffiliationCode === affiliationCode) return "accepted";
+  if (currentAffiliationCode) return "already_affiliated_other";
+  return "failed";
+}
+
+async function claimWithLegacyRpcFallback(
+  supabase: ReturnType<typeof createSupabaseBrowserClient>,
+  affiliationCode: string,
+): Promise<AcceptAffiliationInviteResult> {
+  const { error } = await supabase.rpc("claim_affiliation_code", {
+    p_code: affiliationCode,
+  });
+  if (error) return "failed";
+
+  return readProfileAffiliationAfterLegacyClaim(supabase, affiliationCode);
+}
+
+export async function acceptStoredAffiliationInvite(
   now = Date.now(),
-): Promise<ClaimAffiliationCodeResult> {
+): Promise<AcceptAffiliationInviteResult> {
   const affiliationCode = readStoredAffiliationCode(now);
   if (!affiliationCode) return "empty";
 
   try {
     const supabase = createSupabaseBrowserClient();
-    const { error } = await supabase.rpc("claim_affiliation_code", {
+    const { data, error } = await supabase.rpc("accept_affiliation_invite", {
       p_code: affiliationCode,
+      p_confirmed: true,
     });
+    if (error && shouldUseLegacyClaimFallback(error)) {
+      const result = await claimWithLegacyRpcFallback(supabase, affiliationCode);
+      if (result === "accepted") {
+        clearStoredAffiliationCode();
+      }
+      return result;
+    }
     if (error) return "failed";
-    clearStoredAffiliationCode();
-    return "claimed";
+
+    const result = parseAcceptInviteResult(data);
+    if (
+      result === "accepted" ||
+      result === "already_affiliated_same" ||
+      result === "invalid" ||
+      result === "profile_not_found"
+    ) {
+      clearStoredAffiliationCode();
+    }
+    return result;
   } catch {
     return "failed";
   }
+}
+
+export async function claimStoredAffiliationCode(
+  now = Date.now(),
+): Promise<ClaimAffiliationCodeResult> {
+  const result = await acceptStoredAffiliationInvite(now);
+  if (result === "empty") return "empty";
+  if (result === "accepted" || result === "already_affiliated_same") {
+    return "claimed";
+  }
+  return "failed";
 }

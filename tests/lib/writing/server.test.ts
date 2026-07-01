@@ -138,9 +138,16 @@ function makeAvailabilityClient(
     visibility: string | null;
     lifecycle_status: string | null;
     lifecycle_reason: string | null;
+    question_no: number | null;
   } | null,
+  visible = true,
 ) {
+  const rpcCalls: Array<{ name: string; args: Record<string, unknown> }> = [];
   const client = {
+    rpc: (name: string, args: Record<string, unknown>) => {
+      rpcCalls.push({ name, args });
+      return Promise.resolve({ data: visible, error: null });
+    },
     from: () => {
       const query = {
         select: () => query,
@@ -150,7 +157,7 @@ function makeAvailabilityClient(
       return query;
     },
   };
-  return client;
+  return { client, rpcCalls };
 }
 
 function makeRetrySeedClient(rows: WritingSubmissionRow[]) {
@@ -393,15 +400,16 @@ describe("getWritingProblem", () => {
 
 describe("getWritingProblemAvailability", () => {
   it("allows retry for published public active problems", async () => {
+    const { client } = makeAvailabilityClient({
+      publish_status: "published",
+      visibility: "public",
+      lifecycle_status: "active",
+      lifecycle_reason: null,
+      question_no: 51,
+    });
     const availability = await getWritingProblemAvailability(
       COMPLETE_51_ID,
-      async () =>
-        makeAvailabilityClient({
-          publish_status: "published",
-          visibility: "public",
-          lifecycle_status: "active",
-          lifecycle_reason: null,
-        }) as never,
+      async () => client as never,
     );
 
     expect(availability.canStart).toBe(true);
@@ -409,20 +417,49 @@ describe("getWritingProblemAvailability", () => {
   });
 
   it("blocks retry for published public inactive problems but keeps the reason", async () => {
+    const { client } = makeAvailabilityClient({
+      publish_status: "published",
+      visibility: "public",
+      lifecycle_status: "inactive",
+      lifecycle_reason: "Rotation ended",
+      question_no: 51,
+    });
     const availability = await getWritingProblemAvailability(
       COMPLETE_51_ID,
-      async () =>
-        makeAvailabilityClient({
-          publish_status: "published",
-          visibility: "public",
-          lifecycle_status: "inactive",
-          lifecycle_reason: "Rotation ended",
-        }) as never,
+      async () => client as never,
     );
 
     expect(availability.canStart).toBe(false);
     expect(availability.state).toBe("soft_unavailable");
     expect(availability.reason).toBe("Rotation ended");
+  });
+
+  it("blocks retry for institution users when the active problem is not assigned to the caller", async () => {
+    const { client, rpcCalls } = makeAvailabilityClient(
+      {
+        publish_status: "published",
+        visibility: "public",
+        lifecycle_status: "active",
+        lifecycle_reason: null,
+        question_no: 51,
+      },
+      false,
+    );
+
+    const availability = await getWritingProblemAvailability(
+      COMPLETE_51_ID,
+      async () => client as never,
+    );
+
+    expect(availability.canStart).toBe(false);
+    expect(availability.canSubmit).toBe(false);
+    expect(availability.state).toBe("hard_unavailable");
+    expect(rpcCalls).toEqual([
+      {
+        name: "is_writing_problem_visible_to_caller",
+        args: { p_problem_id: COMPLETE_51_ID, p_question_no: 51 },
+      },
+    ]);
   });
 });
 

@@ -4,6 +4,7 @@ import {
   createSupabaseServerClient,
   type SupabaseServerClient,
 } from "../supabase/server";
+import { filterVisibleProblemIds } from "../problems/visibility";
 import type { Tables } from "../supabase/types";
 import { writingFeedbackHref, writingProblemHref } from "../writing/routes";
 import type {
@@ -70,6 +71,7 @@ export type LibraryDashboardRows = {
   problems: ProblemDashboardRow[];
   allSubmissions: SubmissionProblemRow[];
   studyEvents: StudyEventDashboardRow[];
+  visibleProblemIds?: string[];
 };
 
 type ClientFactory = () => Promise<SupabaseServerClient>;
@@ -128,7 +130,10 @@ export async function getLibraryDashboard(
     ...(libraryItems ?? []).map((row) => row.problem_id),
     ...studyEvents.map((row) => row.problem_id),
   ]);
-  const problems = await fetchProblems(supabase, problemIds);
+  const [problems, visibleProblemIds] = await Promise.all([
+    fetchProblems(supabase, problemIds),
+    filterVisibleProblemIds(supabase, problemIds),
+  ]);
 
   return buildLibraryDashboardFromRows({
     libraryItems: (libraryItems ?? []) as LibraryItemDashboardRow[],
@@ -138,6 +143,7 @@ export async function getLibraryDashboard(
     problems,
     allSubmissions,
     studyEvents,
+    visibleProblemIds: [...visibleProblemIds],
   });
 }
 
@@ -152,6 +158,9 @@ export function buildLibraryDashboardFromRows(
     rows.feedback.map((row) => [row.submission_id, row]),
   );
   const problemsById = new Map(rows.problems.map((row) => [row.id, row]));
+  const visibleProblemIds = rows.visibleProblemIds
+    ? new Set(rows.visibleProblemIds)
+    : null;
   const dimensionsBySubmissionId = groupDimensions(rows.dimensionScores);
   const submissionProblemCounts = countSubmissionsByProblem(
     rows.allSubmissions.length > 0
@@ -198,6 +207,7 @@ export function buildLibraryDashboardFromRows(
         row.problem,
         row.dimensions,
         hasRewrite(row.submission, submissionProblemCounts),
+        canRetryProblem(row.submission.problem_id, visibleProblemIds),
       ),
     )
     .sort(sortCandidates)
@@ -216,12 +226,14 @@ export function buildLibraryDashboardFromRows(
         row.submission.feedback_status,
         row.feedback?.status ?? null,
       ),
-      retryHref: writingProblemHref({
-        questionNo: row.submission.question_no,
-        problemId: row.submission.problem_id,
-        fresh: true,
-        retrySubmissionId: row.submission.id,
-      }),
+      retryHref: canRetryProblem(row.submission.problem_id, visibleProblemIds)
+        ? writingProblemHref({
+            questionNo: row.submission.question_no,
+            problemId: row.submission.problem_id,
+            fresh: true,
+            retrySubmissionId: row.submission.id,
+          })
+        : null,
     }))
     .sort((a, b) => compareIsoDesc(a.submittedAt, b.submittedAt))
     .slice(0, FEEDBACK_WAITING_LIMIT);
@@ -372,6 +384,7 @@ function buildReviewCandidate(
   problem: ProblemDashboardRow | null,
   dimensions: DimensionScoreDashboardRow[],
   rewrite: boolean,
+  canRetry: boolean,
 ): LibraryReviewCandidate {
   const lengthTarget = lengthTargetStatus(
     submission.question_no,
@@ -413,18 +426,27 @@ function buildReviewCandidate(
       questionNo: submission.question_no,
       submissionId: submission.id,
     }),
-    retryHref: writingProblemHref({
-      questionNo: submission.question_no,
-      problemId: submission.problem_id,
-      fresh: true,
-      retrySubmissionId: submission.id,
-    }),
+    retryHref: canRetry
+      ? writingProblemHref({
+          questionNo: submission.question_no,
+          problemId: submission.problem_id,
+          fresh: true,
+          retrySubmissionId: submission.id,
+        })
+      : null,
     primaryReason: pickPrimaryReason(reasons),
     reasons,
     hasRewrite: rewrite,
     ...(lowestDimension ? { lowestDimension } : {}),
     ...(lengthTarget ? { lengthTarget } : {}),
   };
+}
+
+function canRetryProblem(
+  problemId: string,
+  visibleProblemIds: Set<string> | null,
+): boolean {
+  return visibleProblemIds === null || visibleProblemIds.has(problemId);
 }
 
 function buildWeakItems(

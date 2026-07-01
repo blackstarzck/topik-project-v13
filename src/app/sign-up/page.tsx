@@ -4,6 +4,8 @@ import { getTranslations } from "next-intl/server";
 import { AuthPromptExperience } from "@/components/auth/AuthPromptExperience";
 import { PublicShell } from "@/components/shared/PublicShell";
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("auth.signUp");
   return { title: t("metaTitle") };
