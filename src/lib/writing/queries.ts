@@ -5,6 +5,7 @@ import {
   ANALYSIS_POLL_INTERVAL_MS,
   ANALYSIS_POLL_MAX_ATTEMPTS,
 } from "../request-control/policies";
+import { fetchWithGoogleAnalytics } from "../analytics/google-analytics";
 import { createSupabaseBrowserClient } from "../supabase/browser";
 import {
   isFeedbackComplete,
@@ -104,9 +105,10 @@ export async function fetchFeedbackStatus(
   submissionId: string,
   createClient: ClientFactory = createSupabaseBrowserClient,
 ): Promise<FeedbackStatus | null> {
-  const syncResponse = await fetch(
+  const syncResponse = await fetchWithGoogleAnalytics(
     `/api/writing/evaluation-status?submissionId=${encodeURIComponent(submissionId)}`,
     { cache: "no-store" },
+    { apiName: "writing_evaluation_status" },
   );
   if (syncResponse.ok) {
     const body = (await syncResponse.json()) as {

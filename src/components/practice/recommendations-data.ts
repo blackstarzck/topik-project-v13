@@ -6,6 +6,7 @@ import type {
   RecommendationItemCard,
   RecommendationRunSummary,
 } from "@/lib/practice/recommendations";
+import { fetchWithGoogleAnalytics } from "@/lib/analytics/google-analytics";
 import type { QuestionNo } from "@/lib/practice/types";
 
 /**
@@ -67,9 +68,13 @@ async function queryRecommendationBundle(
   questionNo: QuestionNo | null,
 ): Promise<RecommendationBundle> {
   const search = questionNo == null ? "" : `?type=${questionNo}`;
-  const response = await fetch(`/api/practice/recommendations${search}`, {
-    credentials: "same-origin",
-  });
+  const response = await fetchWithGoogleAnalytics(
+    `/api/practice/recommendations${search}`,
+    {
+      credentials: "same-origin",
+    },
+    { apiName: "practice_recommendations" },
+  );
   if (!response.ok) {
     throw new Error(`recommendations_request_failed:${response.status}`);
   }

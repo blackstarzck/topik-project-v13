@@ -6,6 +6,10 @@ import { ChevronDown } from "@/components/shared/AppIcons";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import {
+  trackApiRequestResult,
+  trackButtonClick,
+} from "@/lib/analytics/google-analytics";
 import { exportPdfWithPrintFallback } from "@/lib/export/pdf-export-client";
 import { PDF_EXPORT_DEFAULT_OPTIONS } from "@/lib/export/pdf-options";
 import {
@@ -85,14 +89,29 @@ export function FeedbackActionGroup({
 
   function onCompare() {
     if (busy || compare.isPending) return; // 중복 클릭 차단
+    trackButtonClick({
+      buttonId: "feedback_compare_report",
+      surface: "feedback_report",
+    });
     setBusy(true);
+    const startedAt = performance.now();
     compare.mutate(
       { current_id: submissionId },
       {
         onSuccess: ({ reportId }) => {
+          trackApiRequestResult({
+            apiName: "create_comparison_report",
+            status: "success",
+            durationMs: performance.now() - startedAt,
+          });
           router.push(`/writing/reports/${reportId}/compare`);
         },
         onError: (e) => {
+          trackApiRequestResult({
+            apiName: "create_comparison_report",
+            status: "error",
+            durationMs: performance.now() - startedAt,
+          });
           setBusy(false);
           notification.error({
             title: t("compareFailedTitle"),
@@ -105,6 +124,10 @@ export function FeedbackActionGroup({
 
   async function onPdf() {
     if (pdfBusy) return; // 중복 클릭 차단
+    trackButtonClick({
+      buttonId: "feedback_export_pdf",
+      surface: "feedback_report",
+    });
     setPdfBusy(true);
     try {
       // 서버 실파일 생성 → 실패 시 브라우저 인쇄 폴백 (F-M1 브리프 §3-B).
@@ -133,6 +156,10 @@ export function FeedbackActionGroup({
 
   function onSaveLibrary() {
     if (saveLocked || saved || save.isPending) return;
+    trackButtonClick({
+      buttonId: "feedback_save_library",
+      surface: "feedback_report",
+    });
     save.mutate(
       { item_type: "submission", submission_id: submissionId, user_id: userId },
       {
@@ -209,6 +236,10 @@ export function FeedbackActionGroup({
           type="primary"
           onClick={() => {
             if (retryDisabled) return;
+            trackButtonClick({
+              buttonId: "feedback_retry",
+              surface: "feedback_report",
+            });
             router.push(retryHref);
           }}
           disabled={retryDisabled}
@@ -226,7 +257,13 @@ export function FeedbackActionGroup({
           )}
         >
           <Button
-            onClick={() => router.push(nextHref)}
+            onClick={() => {
+              trackButtonClick({
+                buttonId: "feedback_next_problem",
+                surface: "feedback_report",
+              });
+              router.push(nextHref);
+            }}
             data-testid="feedback-action-next"
           >
             {t("nextProblem")}

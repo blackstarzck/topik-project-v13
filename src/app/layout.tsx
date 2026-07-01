@@ -4,6 +4,7 @@ import localFont from "next/font/local";
 import { getMessages } from "next-intl/server";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
 
+import { GoogleAnalyticsTags } from "@/components/analytics/GoogleAnalyticsTags";
 import { resolveLocale } from "@/i18n/request";
 import { AppProviders } from "./providers";
 // antd v6.x compatibility: avoid importing the client theme barrel here.
@@ -73,6 +74,7 @@ export default async function RootLayout({
             {children}
           </AppProviders>
         </AntdRegistry>
+        <GoogleAnalyticsTags />
       </body>
     </html>
   );

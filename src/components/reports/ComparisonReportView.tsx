@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { AppCard } from "@/components/shared/AppCard";
 import { AiCommentaryIcon, RefreshCcw } from "@/components/shared/AppIcons";
 import { ReportPageHeader } from "@/components/shared/ReportPageHeader";
+import { trackButtonClick } from "@/lib/analytics/google-analytics";
 import { logStudyEvent } from "@/lib/events/study-events";
 import type { ComparisonReportViewModel } from "@/lib/writing/comparison-report-view-model";
 import { writingQuestionNeonClass } from "@/lib/writing/question-number-neon";
@@ -141,6 +142,11 @@ export function ComparisonReportView(initialReport: Props) {
 
   function navigateOnce(action: NavigationAction, href: string) {
     if (pendingAction) return;
+    trackButtonClick({
+      buttonId: `comparison_${action}`,
+      surface: "comparison_report",
+      questionNo: currentQuestionNo,
+    });
     setPendingAction(action);
     router.push(href);
   }
@@ -223,7 +229,14 @@ export function ComparisonReportView(initialReport: Props) {
                   </Button>
                 )}
                 <Button
-                  onClick={onShare}
+                  onClick={() => {
+                    trackButtonClick({
+                      buttonId: "comparison_share",
+                      surface: "comparison_report",
+                      questionNo: currentQuestionNo,
+                    });
+                    void onShare();
+                  }}
                   loading={sharing}
                   data-testid="comparison-action-share"
                 >
