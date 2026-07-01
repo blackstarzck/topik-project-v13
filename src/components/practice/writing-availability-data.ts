@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { fetchWithGoogleAnalytics } from "@/lib/analytics/google-analytics";
 import type { QuestionNo } from "@/lib/practice/types";
 import type { WritingAvailability as ServerWritingAvailability } from "@/lib/practice/writing-availability";
 
@@ -21,9 +22,13 @@ type SerializableWritingAvailability = Omit<
 };
 
 async function queryWritingAvailability(): Promise<WritingAvailability> {
-  const response = await fetch("/api/practice/writing-availability", {
-    credentials: "same-origin",
-  });
+  const response = await fetchWithGoogleAnalytics(
+    "/api/practice/writing-availability",
+    {
+      credentials: "same-origin",
+    },
+    { apiName: "practice_writing_availability" },
+  );
   if (!response.ok) {
     throw new Error(`writing_availability_request_failed:${response.status}`);
   }

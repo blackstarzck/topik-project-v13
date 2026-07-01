@@ -57,12 +57,21 @@ export function buildPostAuthPath(intent: GoogleOAuthIntent): string {
 }
 
 export function buildClaimAffiliationPath(nextPath: string): string {
-  const params = new URLSearchParams({ next: ensureRelativePath(nextPath) });
-  return `/auth/claim-affiliation?${params.toString()}`;
+  return buildInstitutionInvitePath(nextPath);
 }
 
-function buildOAuthNextPath(intent: GoogleOAuthIntent): string {
-  const postAuthPath = buildPostAuthPath(intent);
+export function buildInstitutionInvitePath(nextPath: string): string {
+  const params = new URLSearchParams({ next: ensureRelativePath(nextPath) });
+  return `/auth/institution-invite?${params.toString()}`;
+}
+
+function buildOAuthNextPath(
+  intent: GoogleOAuthIntent,
+  nextPath?: string,
+): string {
+  const postAuthPath = nextPath
+    ? ensureRelativePath(nextPath)
+    : buildPostAuthPath(intent);
   return intent === "sign-up"
     ? buildClaimAffiliationPath(postAuthPath)
     : postAuthPath;
@@ -109,7 +118,10 @@ export function getGoogleOAuthBrowserSupport(
   return { supported: true };
 }
 
-export async function startGoogleOAuth(intent: GoogleOAuthIntent) {
+export async function startGoogleOAuth(
+  intent: GoogleOAuthIntent,
+  nextPath?: string,
+) {
   const browserSupport = getGoogleOAuthBrowserSupport();
   if (!browserSupport.supported) {
     throw new GoogleOAuthUnsupportedBrowserError(browserSupport.browser);
@@ -119,7 +131,7 @@ export async function startGoogleOAuth(intent: GoogleOAuthIntent) {
   return supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: buildClientAuthCallbackUrl(buildOAuthNextPath(intent)),
+      redirectTo: buildClientAuthCallbackUrl(buildOAuthNextPath(intent, nextPath)),
     },
   });
 }

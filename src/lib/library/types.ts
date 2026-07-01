@@ -49,6 +49,8 @@ export type LibrarySubmissionView = {
   char_count: number;
   /** `library_items.id` — the saved-ledger row, used for delete/tag mutations. */
   item_id: string;
+  /** `library_items.saved_at` for mixed saved-item ordering. */
+  saved_at: string;
   tags: string[];
 };
 
@@ -75,6 +77,8 @@ export type LibraryProblemView = {
   title: string | null;
   question_no: number | null;
   item_id: string;
+  /** `library_items.saved_at` for mixed saved-item ordering. */
+  saved_at: string;
   tags: string[];
   availabilityStatus: LibraryProblemAvailabilityStatus;
   availabilityReason: string | null;
@@ -98,6 +102,120 @@ export type LibraryItemView =
   | LibraryReportView
   | LibraryProblemView
   | LibraryExportView;
+
+export type LibraryDashboardReviewReason =
+  | "length_off_target"
+  | "comparison_available"
+  | "low_dimension"
+  | "feedback_ready"
+  | "short_answer";
+
+export type LibraryDashboardFeedbackWaitingStatus =
+  | "pending"
+  | "analyzing"
+  | "failed";
+
+export type LibraryDashboardTimelineEventType =
+  | "submission_submitted"
+  | "feedback_viewed"
+  | "report_viewed"
+  | "export_downloaded";
+
+export type LibraryDashboardDimension =
+  Tables<"feedback_dimension_scores">["dimension"];
+
+export type LibraryDashboardKpis = {
+  reviewableCount: number;
+  feedbackWaitingCount: number;
+  comparisonAvailableCount: number;
+  recentSubmissionDate: string | null;
+};
+
+export type LibraryDashboardWeakDimension = {
+  dimension: LibraryDashboardDimension;
+  normalizedScore: number;
+  score: number;
+  scoreMax: number;
+};
+
+export type LibraryReviewCandidate = {
+  id: string;
+  itemId: string;
+  submissionId: string;
+  problemId: string;
+  questionNo: number | null;
+  title: string;
+  submittedAt: string;
+  charCount: number;
+  estimatedMinutes: number | null;
+  difficultyLevel: number | null;
+  scoreTotal: number | null;
+  scoreMax: number | null;
+  scorePercent: number | null;
+  feedbackHref: string;
+  retryHref: string | null;
+  primaryReason: LibraryDashboardReviewReason;
+  reasons: LibraryDashboardReviewReason[];
+  hasRewrite: boolean;
+  lowestDimension?: LibraryDashboardWeakDimension;
+  lengthTarget?: {
+    min: number;
+    max: number;
+    status: "under" | "over";
+  };
+};
+
+export type LibraryFeedbackWaitingItem = {
+  id: string;
+  submissionId: string;
+  problemId: string;
+  questionNo: number | null;
+  title: string;
+  submittedAt: string;
+  charCount: number;
+  status: LibraryDashboardFeedbackWaitingStatus;
+  retryHref: string | null;
+};
+
+export type LibraryWeakItem = LibraryDashboardWeakDimension & {
+  id: string;
+  submissionId: string;
+  problemId: string;
+  questionNo: number | null;
+  title: string;
+  submittedAt: string;
+};
+
+export type LibraryTimelineItem = {
+  id: string;
+  eventType: LibraryDashboardTimelineEventType;
+  occurredAt: string;
+  problemId: string | null;
+  submissionId: string | null;
+  questionNo: number | null;
+  title: string;
+};
+
+export type LibraryDashboardView = {
+  kpis: LibraryDashboardKpis;
+  reviewCandidates: LibraryReviewCandidate[];
+  feedbackWaiting: LibraryFeedbackWaitingItem[];
+  weakItems: LibraryWeakItem[];
+  timeline: LibraryTimelineItem[];
+};
+
+export type LibraryStats = {
+  /** Total saved library items in the current page scope. */
+  savedCount: number;
+  /** Average writing feedback score over saved submissions, or null. */
+  avgScore: number | null;
+  /** Lowest average feedback dimension key, or null when no score exists. */
+  weakestDimension: string | null;
+  /** Count of saved retry submissions. */
+  reviewCount: number;
+  /** Latest `library_items.saved_at` ISO string. */
+  lastUpdated: string | null;
+};
 
 /** Narrowing helper for excerpting comparison report narratives. */
 export const REPORT_NARRATIVE_EXCERPT_LEN = 160;

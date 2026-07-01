@@ -2,6 +2,7 @@
 
 import { Suspense, useState } from "react";
 import NextLink from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Flex, Typography } from "antd";
 
 import { AnimatedAuthCharacters } from "@/components/auth/AnimatedAuthCharacters";
@@ -10,6 +11,8 @@ import { LoginForm } from "@/components/auth/LoginForm";
 import { SignUpForm } from "@/components/auth/SignUpForm";
 import { BrandLogo } from "@/components/shared/BrandLogo";
 import { getAuthEntryRedirectPath } from "@/lib/auth/completion-routes";
+import { sanitizeNext } from "@/lib/auth/error-mapping";
+import { APP_ROUTES } from "@/lib/routes";
 
 const { Link: AntLink, Paragraph, Text, Title } = Typography;
 
@@ -37,16 +40,23 @@ export function AuthPromptExperience({
   switchLabel,
 }: AuthPromptExperienceProps) {
   const [isTyping, setIsTyping] = useState(false);
+  const searchParams = useSearchParams();
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [isSignUpCoolingDown, setIsSignUpCoolingDown] = useState(false);
   const titleId = `${mode}-title`;
   const isSwitchDisabled = mode === "sign-up" && isSignUpCoolingDown;
+  const nextTarget = sanitizeNext(searchParams.get("next"), "");
+  const guardRedirectTo =
+    nextTarget === APP_ROUTES.authInstitutionInvite ||
+    nextTarget.startsWith(`${APP_ROUTES.authInstitutionInvite}?`)
+      ? nextTarget
+      : getAuthEntryRedirectPath(`/${mode}`);
 
   return (
     <div className={`signup-prompt-layout signup-prompt-layout--${mode}`}>
       <AuthEntrySessionGuard
-        redirectTo={getAuthEntryRedirectPath(`/${mode}`)}
+        redirectTo={guardRedirectTo}
       />
       <aside className="signup-prompt-hero" aria-label={heroEyebrow}>
         <NextLink href="/" className="signup-brand" aria-label="TALKPIK AI">

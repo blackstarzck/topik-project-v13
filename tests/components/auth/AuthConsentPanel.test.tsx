@@ -112,6 +112,63 @@ describe("AuthConsentPanel", () => {
     expect(legalBody?.innerHTML).not.toContain("style=");
   });
 
+  it("renders consent document Markdown as sanitized markup", () => {
+    renderWithIntl(
+      <AuthConsentPanel
+        action={vi.fn()}
+        documents={[
+          {
+            id: "terms-1",
+            title: "Terms of Service",
+            version: "2026-06",
+            summary: "Short consent summary",
+            body: `
+              # Required Terms
+
+              ## Article 1 Purpose
+
+              Body includes **important consent**.
+
+              - First consent item
+
+              [Privacy Policy](/privacy)
+
+              <script>alert("xss")</script>
+            `,
+          },
+        ]}
+        next="/auth/post-auth?intent=login"
+        profile={{
+          display_name: "Chan",
+          nationality_country_code: "KR",
+          nickname: "talkpik-abc123",
+        }}
+        missingProfileFields={[]}
+        showRequiredError={false}
+      />,
+    );
+
+    const heading = screen.getByRole("heading", {
+      level: 1,
+      name: "Required Terms",
+    });
+    const legalBody = heading.closest(".legal-document-body");
+
+    expect(legalBody).toBeTruthy();
+    expect(
+      screen.getByRole("heading", { level: 2, name: "Article 1 Purpose" }),
+    ).toBeTruthy();
+    expect(screen.getByText("important consent")).toBeTruthy();
+    expect(screen.getByText("First consent item")).toBeTruthy();
+    expect(
+      screen.getByRole("link", { name: "Privacy Policy" }).getAttribute("href"),
+    ).toBe("/privacy");
+    expect(legalBody?.textContent).not.toContain("# Required Terms");
+    expect(legalBody?.innerHTML).not.toContain("**important consent**");
+    expect(legalBody?.innerHTML).not.toContain("<script");
+    expect(legalBody?.innerHTML).not.toContain("alert");
+  });
+
   it("renders missing profile fields and required consent in one form", () => {
     renderWithIntl(
       <AuthConsentPanel

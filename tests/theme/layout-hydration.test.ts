@@ -74,7 +74,9 @@ describe("RootLayout hydration consistency", () => {
 
   async function getLayoutAndProviderProps(cookieValue: string | undefined) {
     mockCookie(cookieValue);
-    const element = await RootLayout({ children: React.createElement("span") }) as AnyElement;
+    const element = (await RootLayout({
+      children: React.createElement("span"),
+    })) as AnyElement;
 
     // Structure: <html lang style={...}><body>{...AppProviders mock...}</body></html>
     const htmlStyle = element.props.style as Record<string, string>;
@@ -87,7 +89,10 @@ describe("RootLayout hydration consistency", () => {
     // child remains a JSX element. We read props.initialAppearance / locale
     // straight off the AppProviders JSX element (mocks only matter on render).
     const body = element.props.children as AnyElement;
-    const antdRegistryEl = body.props.children as AnyElement;
+    const bodyChildren = React.Children.toArray(
+      body.props.children as React.ReactNode,
+    ) as AnyElement[];
+    const antdRegistryEl = bodyChildren[0];
     const appProvidersEl = antdRegistryEl.props.children as AnyElement;
     const initialAppearance = appProvidersEl.props.initialAppearance as string;
     const locale = appProvidersEl.props.locale as string;

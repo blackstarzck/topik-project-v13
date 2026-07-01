@@ -105,6 +105,9 @@ export function LoginForm({
   // 로그인 성공 후 이동 경로: ?next 가 있으면(예: 약관 재동의 딥링크) 그 곳으로,
   // 없으면 /dashboard. 외부 URL/스킴은 sanitizeNext 가 차단한다.
   const nextTarget = sanitizeNext(searchParams.get("next"), "/dashboard");
+  const postAuthNextTarget = searchParams.get("next")
+    ? nextTarget
+    : POST_AUTH_LOGIN_PATH;
   const [mode, setMode] = useState<LoginMode>("password");
   const [submitting, setSubmitting] = useState(false);
   const [googleSubmitting, setGoogleSubmitting] = useState(false);
@@ -183,7 +186,7 @@ export function LoginForm({
         email: values.email,
         options: {
           emailRedirectTo: buildAuthRedirectUrl(
-            `/auth/callback?next=${encodeURIComponent(POST_AUTH_LOGIN_PATH)}`,
+            `/auth/callback?next=${encodeURIComponent(postAuthNextTarget)}`,
           ),
         },
       });
@@ -213,7 +216,7 @@ export function LoginForm({
     setStatusNotice(null);
     setBlockedOAuthBrowser(null);
     try {
-      const { error } = await startGoogleOAuth("login");
+      const { error } = await startGoogleOAuth("login", postAuthNextTarget);
       if (error) {
         const reason = mapSupabaseErrorCode(error.code);
         setStatusNotice({

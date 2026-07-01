@@ -25,7 +25,7 @@ const questionNeonAssets = [
   [51, "neon-yellow.png"],
   [52, "neon-blue.png"],
   [53, "neon-orange.png"],
-  [54, "neon-red.png"],
+  [54, "neon-purple.png"],
 ] as const;
 
 describe("ProblemTable styles", () => {

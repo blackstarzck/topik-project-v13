@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  buildClaimAffiliationPath,
   buildClientAuthCallbackUrl,
+  buildInstitutionInvitePath,
   buildPostAuthPath,
   getGoogleOAuthBrowserSupport,
   GoogleOAuthUnsupportedBrowserError,
@@ -14,9 +14,9 @@ describe("Google OAuth URL helpers", () => {
     expect(buildPostAuthPath("sign-up")).toBe("/auth/post-auth?intent=sign-up");
   });
 
-  it("buildClaimAffiliationPath wraps the sign-up post-auth path as a relative next route", () => {
-    expect(buildClaimAffiliationPath(buildPostAuthPath("sign-up"))).toBe(
-      "/auth/claim-affiliation?next=%2Fauth%2Fpost-auth%3Fintent%3Dsign-up",
+  it("buildInstitutionInvitePath wraps the sign-up post-auth path as a relative next route", () => {
+    expect(buildInstitutionInvitePath(buildPostAuthPath("sign-up"))).toBe(
+      "/auth/institution-invite?next=%2Fauth%2Fpost-auth%3Fintent%3Dsign-up",
     );
   });
 
@@ -51,14 +51,25 @@ describe("Google OAuth URL helpers", () => {
     ).toThrow(/relative/);
   });
 
-  it("buildClientAuthCallbackUrl can target the sign-up claim bridge", () => {
+  it("buildClientAuthCallbackUrl can target the sign-up institution invite confirmation", () => {
     expect(
       buildClientAuthCallbackUrl(
-        buildClaimAffiliationPath(buildPostAuthPath("sign-up")),
+        buildInstitutionInvitePath(buildPostAuthPath("sign-up")),
         "http://localhost:3000",
       ),
     ).toBe(
-      "http://localhost:3000/auth/callback?next=%2Fauth%2Fclaim-affiliation%3Fnext%3D%252Fauth%252Fpost-auth%253Fintent%253Dsign-up",
+      "http://localhost:3000/auth/callback?next=%2Fauth%2Finstitution-invite%3Fnext%3D%252Fauth%252Fpost-auth%253Fintent%253Dsign-up",
+    );
+  });
+
+  it("buildClientAuthCallbackUrl preserves the invite route as a login next target", () => {
+    expect(
+      buildClientAuthCallbackUrl(
+        buildInstitutionInvitePath("/dashboard"),
+        "http://localhost:3000",
+      ),
+    ).toBe(
+      "http://localhost:3000/auth/callback?next=%2Fauth%2Finstitution-invite%3Fnext%3D%252Fdashboard",
     );
   });
 

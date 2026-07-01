@@ -51,6 +51,44 @@ describe("TermsDocument", () => {
     );
   });
 
+  it("renders admin-authored Markdown as document markup inside the legal card layout", () => {
+    renderTermsDocument({
+      ...publishedTerms,
+      body: `
+        # Published Terms
+
+        ## Article 1 Purpose
+
+        This policy includes **important notice** text.
+
+        - First term item
+        - Second term item
+
+        [Privacy Policy](/privacy)
+
+        <script>alert("xss")</script>
+      `,
+    });
+
+    const body = screen.getByTestId("terms-document-body");
+
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Published Terms" }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("heading", { level: 2, name: "Article 1 Purpose" }),
+    ).toBeTruthy();
+    expect(screen.getByText("important notice")).toBeTruthy();
+    expect(screen.getByText("First term item")).toBeTruthy();
+    expect(
+      screen.getByRole("link", { name: "Privacy Policy" }).getAttribute("href"),
+    ).toBe("/privacy");
+    expect(body.textContent).not.toContain("# Published Terms");
+    expect(body.innerHTML).not.toContain("**important notice**");
+    expect(body.innerHTML).not.toContain("<script");
+    expect(body.innerHTML).not.toContain("alert");
+  });
+
   it("strips admin HTML hooks that can collide with app styling", () => {
     renderTermsDocument({
       ...publishedTerms,

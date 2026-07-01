@@ -8,6 +8,7 @@ const getUserMock = vi.fn();
 const routerReplaceMock = vi.fn();
 const routerPushMock = vi.fn();
 const LOGO_SRC = "/assets/logo.png";
+let searchParamsMock = new URLSearchParams();
 
 function decodedImageSrc(image: HTMLImageElement) {
   return decodeURIComponent(image.getAttribute("src") ?? "");
@@ -30,7 +31,7 @@ vi.mock("next/navigation", () => ({
     replace: routerReplaceMock,
     refresh: vi.fn(),
   }),
-  useSearchParams: () => ({ get: () => null }),
+  useSearchParams: () => searchParamsMock,
 }));
 
 import { AuthPromptExperience } from "../../../src/components/auth/AuthPromptExperience";
@@ -74,6 +75,7 @@ function persistedPageShowEvent() {
 describe("AuthPromptExperience", () => {
   beforeEach(() => {
     window.history.replaceState(null, "", "http://localhost:3000/login");
+    searchParamsMock = new URLSearchParams();
     getUserMock.mockReset();
     getUserMock.mockResolvedValue({ data: { user: null }, error: null });
     routerReplaceMock.mockReset();
@@ -112,6 +114,20 @@ describe("AuthPromptExperience", () => {
       expect(routerReplaceMock).toHaveBeenCalledWith(
         "/auth/post-auth?intent=sign-up",
       );
+    });
+  });
+
+  it("does not overwrite an institution invite next target for authenticated login entry pages", async () => {
+    searchParamsMock = new URLSearchParams("next=/auth/institution-invite");
+    getUserMock.mockResolvedValueOnce({
+      data: { user: { id: "user-123" } },
+      error: null,
+    });
+
+    renderLoginPrompt();
+
+    await waitFor(() => {
+      expect(routerReplaceMock).toHaveBeenCalledWith("/auth/institution-invite");
     });
   });
 

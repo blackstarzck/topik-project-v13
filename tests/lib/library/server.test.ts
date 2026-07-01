@@ -164,6 +164,7 @@ describe("listLibraryItems(submissions)", () => {
       submitted_at: "2026-05-21T01:00:00Z",
       char_count: 412,
       item_id: "li-1",
+      saved_at: "2026-05-21T00:00:00Z",
       tags: ["essay"],
     });
     expect(out[1].kind).toBe("submission");
@@ -324,6 +325,7 @@ describe("listLibraryItems(problems)", () => {
         title: "TOPIK 53 — 도표 분석",
         question_no: 53,
         item_id: "li-p1",
+        saved_at: "2026-05-21T00:00:00Z",
         tags: ["bookmark"],
         availabilityStatus: "available",
         availabilityReason: null,
@@ -377,6 +379,7 @@ describe("listLibraryItems(problems)", () => {
         title: null,
         question_no: null,
         item_id: "li-p-hidden",
+        saved_at: "2026-05-21T00:00:00Z",
         tags: ["bookmark"],
         availabilityStatus: "hard_unavailable",
         availabilityReason: null,

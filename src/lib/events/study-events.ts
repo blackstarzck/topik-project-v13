@@ -2,6 +2,7 @@
 
 import { createSupabaseBrowserClient } from "../supabase/browser";
 import type { Json, TablesInsert } from "../supabase/types";
+import { trackStudyEventInGoogleAnalytics } from "../analytics/google-analytics";
 
 type BrowserClient = ReturnType<typeof createSupabaseBrowserClient>;
 type ClientFactory = () => BrowserClient;
@@ -178,6 +179,7 @@ export async function logStudyEvent(
     if (input.payload) {
       assertSafePayload(input.payload);
     }
+    trackStudyEventInGoogleAnalytics(input);
 
     const supabase = createClient();
     const {
@@ -208,7 +210,6 @@ export async function logStudyEvent(
 
     const { error } = await supabase.from("study_events").insert(row);
     if (error) {
-       
       console.warn("logStudyEvent: insert failed", error.message);
     }
   } catch (err) {
@@ -218,7 +219,7 @@ export async function logStudyEvent(
     if (err instanceof Error && /study-events:/.test(err.message)) {
       throw err;
     }
-     
+
     console.warn("logStudyEvent: swallowed unexpected error", err);
   }
 }

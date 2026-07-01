@@ -99,11 +99,14 @@ describe("AccountLoginMethodsCard", () => {
       fireEvent.click(screen.getByRole("button", { name: "Connect Google" }));
     });
 
-    expect(linkIdentityMock).toHaveBeenCalledWith({ provider: "google" });
+    await waitFor(() => {
+      expect(linkIdentityMock).toHaveBeenCalledWith({ provider: "google" });
+      expect(screen.queryByRole("button", { name: "Connect Google" })).toBeNull();
+    });
   });
 
   it("does not expose raw provider errors when linking fails", async () => {
-    linkIdentityMock.mockResolvedValueOnce({
+    linkIdentityMock.mockResolvedValue({
       data: null,
       error: { message: "provider token leaked raw detail" },
     });
@@ -119,6 +122,7 @@ describe("AccountLoginMethodsCard", () => {
     });
 
     await waitFor(() => {
+      expect(linkIdentityMock).toHaveBeenCalledWith({ provider: "google" });
       expect(screen.getByText("Could not start Google linking.")).toBeTruthy();
     });
     expect(screen.queryByText(/provider token leaked raw detail/)).toBeNull();

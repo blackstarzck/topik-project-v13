@@ -27,6 +27,7 @@ import {
   sanitizeNext,
   type AuthErrorReason,
 } from "@/lib/auth/error-mapping";
+import { APP_ROUTES } from "@/lib/routes";
 import { getPublicEnv } from "@/lib/supabase/env";
 import type { Database } from "@/lib/supabase/types";
 
@@ -64,6 +65,11 @@ const ALLOWED_VERIFY_TYPES = new Set<VerifyType>([
 
 function isVerifyType(value: string | null): value is VerifyType {
   return value !== null && ALLOWED_VERIFY_TYPES.has(value as VerifyType);
+}
+
+function resolveCallbackNext(rawNext: string | null, type: VerifyType | null): string {
+  if (type === "recovery") return APP_ROUTES.passwordResetConfirm;
+  return sanitizeNext(rawNext);
 }
 
 function buildBrowserVisibleAppUrl(path: string, request: NextRequest): URL {
@@ -128,7 +134,7 @@ function createAuthCallbackClient(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const next = sanitizeNext(searchParams.get("next"));
+  const rawNext = searchParams.get("next");
 
   // 1. Provider error in query (some OAuth providers).
   const errorCode = searchParams.get("error_code");
@@ -149,11 +155,12 @@ export async function GET(request: NextRequest) {
 
   const tokenHash = searchParams.get("token_hash");
   const typeParam = searchParams.get("type");
+  const verifyType = isVerifyType(typeParam) ? typeParam : null;
   const code = searchParams.get("code");
 
   // 2a. token_hash 있지만 type이 invalid — malformed callback. Codex 후속:
   // fragment fallback으로 흘리지 말고 명시적으로 /auth/error?reason=unknown.
-  if (tokenHash && !isVerifyType(typeParam)) {
+  if (tokenHash && !verifyType) {
     console.error(
       "[auth/callback] malformed callback: token_hash present but invalid type",
       {
@@ -164,11 +171,12 @@ export async function GET(request: NextRequest) {
   }
 
   // 2. Server-side PKCE main flow.
-  if (tokenHash && isVerifyType(typeParam)) {
+  if (tokenHash && verifyType) {
+    const next = resolveCallbackNext(rawNext, verifyType);
     const { supabase, withAuthCookies } = createAuthCallbackClient(request);
     const { error } = await supabase.auth.verifyOtp({
       token_hash: tokenHash,
-      type: typeParam,
+      type: verifyType,
     });
     if (error) {
       console.error("[auth/callback] verifyOtp error", {
@@ -195,6 +203,7 @@ export async function GET(request: NextRequest) {
 
   // 3. OAuth code flow.
   if (code) {
+    const next = sanitizeNext(rawNext);
     const { supabase, withAuthCookies } = createAuthCallbackClient(request);
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (error) {
@@ -243,6 +252,7 @@ export async function GET(request: NextRequest) {
     "/auth/callback-fragment",
     request,
   );
+  const next = resolveCallbackNext(rawNext, verifyType);
   fragmentTarget.searchParams.set("next", next);
   return NextResponse.redirect(fragmentTarget);
 }

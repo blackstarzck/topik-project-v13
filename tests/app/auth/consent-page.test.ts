@@ -28,4 +28,11 @@ describe("/auth/consent page", () => {
       source.indexOf("getMissingRequiredConsentDocuments"),
     );
   });
+
+  it("uses the default page container width for readable legal documents", () => {
+    const source = readFileSync("src/app/auth/consent/page.tsx", "utf8");
+
+    expect(source).toContain('<PageContainer size="default">');
+    expect(source).not.toContain('<PageContainer size="narrow">');
+  });
 });

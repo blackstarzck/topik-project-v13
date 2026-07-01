@@ -1341,6 +1341,13 @@ export interface Database {
     };
     Views: Record<never, never>;
     Functions: {
+      accept_affiliation_invite: {
+        Args: {
+          p_code: string;
+          p_confirmed: boolean;
+        };
+        Returns: Json;
+      };
       claim_affiliation_code: {
         Args: {
           p_code: string;

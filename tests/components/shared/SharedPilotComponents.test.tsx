@@ -11,6 +11,15 @@ import { PublicShell } from "../../../src/components/shared/PublicShell";
 import { SelectableAppCard } from "../../../src/components/shared/SelectableAppCard";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
 
+const routerReplaceMock = vi.hoisted(() => vi.fn());
+
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/",
+  useRouter: () => ({
+    replace: routerReplaceMock,
+  }),
+}));
+
 // PLAN §Phase 1 — shared pilot components, TDD contract (#12 · #15 a11y).
 // Role/class/key based only (no Korean literal coupling). Every component is
 // also asserted NOT to declare `--app-*` in inline style (08 Rule 1: --app-* may

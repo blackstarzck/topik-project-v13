@@ -133,6 +133,43 @@ describe("/auth/callback route", () => {
     );
   });
 
+  it("routes password recovery token callbacks without next to reset confirmation", async () => {
+    const response = await GET(
+      request(
+        "http://localhost:3000/auth/callback?token_hash=recovery-token&type=recovery",
+      ),
+    );
+
+    expect(verifyOtpMock).toHaveBeenCalledWith({
+      token_hash: "recovery-token",
+      type: "recovery",
+    });
+    expect(response.headers.get("location")).toBe(
+      "http://localhost:3000/password-reset/confirm",
+    );
+    expect(response.headers.getSetCookie()).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("sb-test-auth-token=session-cookie"),
+      ]),
+    );
+  });
+
+  it("does not let password recovery callbacks continue to arbitrary next routes", async () => {
+    const response = await GET(
+      request(
+        "http://localhost:3000/auth/callback?token_hash=recovery-token&type=recovery&next=%2Fdashboard",
+      ),
+    );
+
+    expect(verifyOtpMock).toHaveBeenCalledWith({
+      token_hash: "recovery-token",
+      type: "recovery",
+    });
+    expect(response.headers.get("location")).toBe(
+      "http://localhost:3000/password-reset/confirm",
+    );
+  });
+
   it("recovers a stale OAuth callback revisit when an active session exists", async () => {
     exchangeCodeForSessionMock.mockResolvedValueOnce({
       error: {

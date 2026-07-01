@@ -15,6 +15,7 @@ const signInWithOtpMock = vi.fn();
 const signInWithOAuthMock = vi.fn();
 const pushMock = vi.fn();
 const buildAuthRedirectUrlMock = vi.fn();
+let searchParamsMock = new URLSearchParams();
 
 vi.mock("@/lib/supabase/browser", () => ({
   createSupabaseBrowserClient: () => ({
@@ -36,7 +37,7 @@ vi.mock("@/lib/auth/redirect-url", () => ({
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: pushMock, replace: vi.fn(), refresh: vi.fn() }),
-  useSearchParams: () => ({ get: () => null }),
+  useSearchParams: () => searchParamsMock,
 }));
 
 import { LoginForm } from "../../../src/components/auth/LoginForm";
@@ -55,6 +56,7 @@ function setUserAgent(userAgent: string) {
 
 beforeEach(() => {
   window.history.replaceState(null, "", "http://localhost:3000/login");
+  searchParamsMock = new URLSearchParams();
   setUserAgent(
     "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Version/17.0 Mobile/15E148 Safari/604.1",
   );
@@ -101,6 +103,37 @@ describe("LoginForm", () => {
     expect(pushMock).toHaveBeenCalledWith("/dashboard");
   });
 
+  it("submits password login and preserves an institution invite next target", async () => {
+    searchParamsMock = new URLSearchParams("next=/auth/institution-invite");
+    renderInApp(<LoginForm />);
+
+    const emailInput = document.querySelector(
+      'input[autocomplete="email"]',
+    ) as HTMLInputElement;
+    const passwordInput = document.querySelector(
+      'input[autocomplete="current-password"]',
+    ) as HTMLInputElement;
+    const submit = document.querySelector(
+      'button[type="submit"]',
+    ) as HTMLButtonElement;
+
+    fireEvent.change(emailInput, {
+      target: { value: "user@example.com" },
+    });
+    fireEvent.change(passwordInput, {
+      target: { value: "secret-pass" },
+    });
+
+    await act(async () => {
+      fireEvent.click(submit);
+    });
+
+    await waitFor(() => {
+      expect(signInWithPasswordMock).toHaveBeenCalledTimes(1);
+    });
+    expect(pushMock).toHaveBeenCalledWith("/auth/institution-invite");
+  });
+
   it("switches to magic-link mode and sends OTP with redirect URL", async () => {
     renderInApp(<LoginForm />);
 
@@ -123,6 +156,37 @@ describe("LoginForm", () => {
     // Auth completion gate: magic-link success must re-enter post-auth.
     expect(call.options.emailRedirectTo).toBe(
       "https://talkpik.example.com/auth/callback?next=%2Fauth%2Fpost-auth%3Fintent%3Dlogin",
+    );
+  });
+
+  it("sends magic-link OTP back to the institution invite when next is present", async () => {
+    searchParamsMock = new URLSearchParams("next=/auth/institution-invite");
+    renderInApp(<LoginForm />);
+
+    const [, magicLinkSegment] = Array.from(
+      document.querySelectorAll<HTMLElement>(".ant-segmented-item"),
+    );
+    await act(async () => {
+      fireEvent.click(magicLinkSegment);
+    });
+    const emailInput = document.querySelector(
+      'input[autocomplete="email"]',
+    ) as HTMLInputElement;
+    fireEvent.change(emailInput, {
+      target: { value: "u@example.com" },
+    });
+
+    await act(async () => {
+      fireEvent.click(
+        document.querySelector('button[type="submit"]') as HTMLButtonElement,
+      );
+    });
+
+    await waitFor(() => {
+      expect(signInWithOtpMock).toHaveBeenCalledTimes(1);
+    });
+    expect(signInWithOtpMock.mock.calls[0][0].options.emailRedirectTo).toBe(
+      "https://talkpik.example.com/auth/callback?next=%2Fauth%2Finstitution-invite",
     );
   });
 
@@ -202,6 +266,28 @@ describe("LoginForm", () => {
       options: {
         redirectTo:
           "http://localhost:3000/auth/callback?next=%2Fauth%2Fpost-auth%3Fintent%3Dlogin",
+      },
+    });
+  });
+
+  it("starts Google OAuth with the institution invite next target when present", async () => {
+    searchParamsMock = new URLSearchParams("next=/auth/institution-invite");
+    renderInApp(<LoginForm />);
+
+    await act(async () => {
+      fireEvent.click(
+        document.querySelector(".signup-social-button") as HTMLButtonElement,
+      );
+    });
+
+    await waitFor(() => {
+      expect(signInWithOAuthMock).toHaveBeenCalledTimes(1);
+    });
+    expect(signInWithOAuthMock.mock.calls[0][0]).toEqual({
+      provider: "google",
+      options: {
+        redirectTo:
+          "http://localhost:3000/auth/callback?next=%2Fauth%2Finstitution-invite",
       },
     });
   });

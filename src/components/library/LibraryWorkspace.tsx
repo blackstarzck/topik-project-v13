@@ -5,10 +5,9 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import type { LibraryItemView, LibraryTab } from "@/lib/library/types";
+import type { LibraryItemView, LibraryStats, LibraryTab } from "@/lib/library/types";
 
 import { LibraryActionsPanel } from "./LibraryActionsPanel";
-import type { LibraryStats } from "./LibraryStatsPanel";
 import { LibraryStatsPanel } from "./LibraryStatsPanel";
 import { LibraryTabs } from "./LibraryTabs";
 import { PdfExportModal, type ExportSelectionItem } from "./PdfExportModal";

@@ -51,6 +51,10 @@ const DROP_WITH_CONTENT_TAGS = [
 ];
 
 const TAG_PATTERN = /<\/?\s*([a-zA-Z][a-zA-Z0-9:-]*)([^<>]*)>/g;
+const HTML_TAG_PATTERN = /<\/?\s*[a-zA-Z][a-zA-Z0-9:-]*(?:\s[^<>]*)?>/;
+const MARKDOWN_BLOCK_PATTERN = /(^|\n)\s*(#{1,6}\s+|[-*+]\s+|\d+[.)]\s+|>\s+)/;
+const MARKDOWN_INLINE_PATTERN =
+  /(\*\*[^*\n]+\*\*|__[^_\n]+__|\[[^\]\n]+\]\([^)]+\)|`[^`\n]+`)/;
 const ATTRIBUTE_PATTERN =
   /([^\s"'<>/=]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
 const SAFE_PROTOCOLS = new Set(["http", "https", "mailto", "tel"]);
@@ -71,6 +75,13 @@ function escapeAttribute(value: string): string {
   return value
     .replace(/&/g, "&amp;")
     .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function escapeText(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 }
@@ -186,4 +197,166 @@ export function sanitizeLegalDocumentHtml(
       return `<${tagName}${attributes}>`;
     },
   );
+}
+
+function normalizeDocumentSource(value: string): string {
+  const normalized = value.replace(/\r\n?/g, "\n").replace(/^\n+|\n+$/g, "");
+  const lines = normalized.split("\n");
+  const indents = lines
+    .filter((line) => line.trim().length > 0)
+    .map((line) => line.match(/^\s*/)?.[0].length ?? 0);
+  const minIndent = indents.length > 0 ? Math.min(...indents) : 0;
+
+  if (minIndent === 0) return normalized.trim();
+  return lines
+    .map((line) => (line.trim() ? line.slice(minIndent) : ""))
+    .join("\n")
+    .trim();
+}
+
+function hasMarkdownSyntax(value: string): boolean {
+  return (
+    MARKDOWN_BLOCK_PATTERN.test(value) || MARKDOWN_INLINE_PATTERN.test(value)
+  );
+}
+
+function renderInlineMarkdown(value: string): string {
+  const tokens: string[] = [];
+  const stash = (html: string): string => {
+    const token = `@@LEGAL_DOC_TOKEN_${tokens.length}@@`;
+    tokens.push(html);
+    return token;
+  };
+
+  let output = value;
+
+  output = output.replace(/`([^`\n]+)`/g, (_, code: string) =>
+    stash(`<code>${escapeText(code)}</code>`),
+  );
+  output = output.replace(
+    /\[([^\]\n]+)\]\(([^)\s]+)\)/g,
+    (_, label: string, href: string) =>
+      stash(
+        `<a href="${escapeAttribute(href.trim())}">${escapeText(
+          label.trim(),
+        )}</a>`,
+      ),
+  );
+  output = output.replace(/\*\*([^*\n]+)\*\*/g, (_, text: string) =>
+    stash(`<strong>${escapeText(text)}</strong>`),
+  );
+  output = output.replace(/__([^_\n]+)__/g, (_, text: string) =>
+    stash(`<strong>${escapeText(text)}</strong>`),
+  );
+  output = output.replace(/\*([^*\n]+)\*/g, (_, text: string) =>
+    stash(`<em>${escapeText(text)}</em>`),
+  );
+
+  output = escapeText(output);
+
+  return tokens.reduce(
+    (current, html, index) =>
+      current.replaceAll(`@@LEGAL_DOC_TOKEN_${index}@@`, html),
+    output,
+  );
+}
+
+function markdownToHtml(value: string): string {
+  const source = normalizeDocumentSource(value);
+  const withoutUnsafeBlocks = removeDroppedBlocks(source).replace(
+    /<!--[\s\S]*?-->/g,
+    "",
+  );
+  const lines = withoutUnsafeBlocks.split("\n");
+  const blocks: string[] = [];
+  const paragraphLines: string[] = [];
+  let listType: "ol" | "ul" | null = null;
+
+  const closeList = () => {
+    if (!listType) return;
+    blocks.push(`</${listType}>`);
+    listType = null;
+  };
+
+  const flushParagraph = () => {
+    if (paragraphLines.length === 0) return;
+    blocks.push(
+      `<p>${paragraphLines.map(renderInlineMarkdown).join("<br>")}</p>`,
+    );
+    paragraphLines.length = 0;
+  };
+
+  const ensureList = (nextListType: "ol" | "ul") => {
+    if (listType === nextListType) return;
+    closeList();
+    blocks.push(`<${nextListType}>`);
+    listType = nextListType;
+  };
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      flushParagraph();
+      closeList();
+      continue;
+    }
+
+    const heading = trimmed.match(/^(#{1,6})\s+(.+)$/);
+    if (heading) {
+      flushParagraph();
+      closeList();
+      const level = heading[1].length;
+      blocks.push(`<h${level}>${renderInlineMarkdown(heading[2])}</h${level}>`);
+      continue;
+    }
+
+    const unorderedItem = trimmed.match(/^[-*+]\s+(.+)$/);
+    if (unorderedItem) {
+      flushParagraph();
+      ensureList("ul");
+      blocks.push(`<li>${renderInlineMarkdown(unorderedItem[1])}</li>`);
+      continue;
+    }
+
+    const orderedItem = trimmed.match(/^\d+[.)]\s+(.+)$/);
+    if (orderedItem) {
+      flushParagraph();
+      ensureList("ol");
+      blocks.push(`<li>${renderInlineMarkdown(orderedItem[1])}</li>`);
+      continue;
+    }
+
+    const quote = trimmed.match(/^>\s?(.+)$/);
+    if (quote) {
+      flushParagraph();
+      closeList();
+      blocks.push(
+        `<blockquote><p>${renderInlineMarkdown(quote[1])}</p></blockquote>`,
+      );
+      continue;
+    }
+
+    closeList();
+    paragraphLines.push(trimmed);
+  }
+
+  flushParagraph();
+  closeList();
+
+  return blocks.join("\n");
+}
+
+export function renderLegalDocumentBodyHtml(
+  value: string | null | undefined,
+): string {
+  if (!value) return "";
+
+  const normalized = normalizeDocumentSource(value);
+  if (!normalized) return "";
+
+  if (HTML_TAG_PATTERN.test(normalized) && !hasMarkdownSyntax(normalized)) {
+    return sanitizeLegalDocumentHtml(normalized);
+  }
+
+  return sanitizeLegalDocumentHtml(markdownToHtml(normalized));
 }

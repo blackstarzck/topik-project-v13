@@ -143,3 +143,36 @@ test("X-17 token fragment sets a browser session and redirects to sanitized next
   expect(new URL(page.url()).hash).toBe("");
   expect(errors).toEqual([]);
 });
+
+test("X-17 recovery token fragment without next opens password reset confirmation", async ({
+  page,
+}) => {
+  const errors = collectErrors(page);
+  const token = makeAuditJwt();
+
+  await page.route(USER_ROUTE, async (route, request) => {
+    if (request.method() === "OPTIONS") {
+      await route.fulfill({ headers: corsHeaders(request), status: 204 });
+      return;
+    }
+
+    await route.fulfill({
+      body: syntheticUserBody(),
+      contentType: "application/json",
+      headers: corsHeaders(request),
+      status: 200,
+    });
+  });
+
+  await page.goto(
+    `/auth/callback-fragment#access_token=${encodeURIComponent(token)}&refresh_token=refresh-audit&token_type=bearer&type=recovery`,
+    { waitUntil: "domcontentloaded" },
+  );
+
+  await expect(page).toHaveURL(/\/password-reset\/confirm$/, {
+    timeout: 10_000,
+  });
+  await expect(page.getByTestId("password-reset-confirm-form")).toBeVisible();
+  expect(new URL(page.url()).hash).toBe("");
+  expect(errors).toEqual([]);
+});

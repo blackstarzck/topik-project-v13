@@ -37,6 +37,29 @@ const DIFFICULTY_FILL_COLOR: Record<DifficultyLevel, string> = {
   5: "#c75d4f", // 어려움 — 벽돌색
 };
 
+const DIFFICULTY_ICON_COLOR_CLASS: Record<DifficultyLevel, string> = {
+  1: "bg-[#5e9e6f]",
+  2: "bg-[#8aa04e]",
+  3: "bg-[#cca63a]",
+  4: "bg-[#cf833f]",
+  5: "bg-[#c75d4f]",
+};
+
+type DifficultyIconBand = "low" | "middle" | "high";
+
+const DIFFICULTY_STATE_ASSET: Record<DifficultyIconBand, string> = {
+  low: "/assets/state/difficulty-low.svg",
+  middle: "/assets/state/difficulty-middle.svg",
+  high: "/assets/state/difficulty-high.svg",
+};
+
+const DIFFICULTY_ICON_MASK_CLASS: Record<DifficultyIconBand, string> = {
+  low: "[mask:url(/assets/state/difficulty-low.svg)_center/contain_no-repeat] [-webkit-mask:url(/assets/state/difficulty-low.svg)_center/contain_no-repeat]",
+  middle:
+    "[mask:url(/assets/state/difficulty-middle.svg)_center/contain_no-repeat] [-webkit-mask:url(/assets/state/difficulty-middle.svg)_center/contain_no-repeat]",
+  high: "[mask:url(/assets/state/difficulty-high.svg)_center/contain_no-repeat] [-webkit-mask:url(/assets/state/difficulty-high.svg)_center/contain_no-repeat]",
+};
+
 const BAR_HEIGHTS = ["h-1.5", "h-2", "h-2.5", "h-3", "h-3.5"] as const;
 
 /** 임의의 숫자를 1~5 정수 난이도로 보정한다. */
@@ -53,8 +76,56 @@ export function difficultyFillColor(level: number): string {
 }
 
 /** 난이도 → `practice.common` 라벨 키. */
+export function difficultyIconColorClass(level: number): string {
+  return DIFFICULTY_ICON_COLOR_CLASS[clampDifficultyLevel(level)];
+}
+
 export function difficultyLabelKey(level: number): DifficultyLabelKey {
   return DIFFICULTY_LABEL_KEYS[clampDifficultyLevel(level) - 1];
+}
+
+function difficultyIconBand(level: number): DifficultyIconBand {
+  const clamped = clampDifficultyLevel(level);
+  if (clamped <= 2) return "low";
+  if (clamped === 3) return "middle";
+  return "high";
+}
+
+export function difficultyStateAsset(level: number): string {
+  return DIFFICULTY_STATE_ASSET[difficultyIconBand(level)];
+}
+
+export function difficultyIconMaskClass(level: number): string {
+  return DIFFICULTY_ICON_MASK_CLASS[difficultyIconBand(level)];
+}
+
+type DifficultyStateIconProps = {
+  level: number;
+  className?: string;
+  sizeClassName?: string;
+  testId?: string;
+};
+
+export function DifficultyStateIcon({
+  level,
+  className,
+  sizeClassName = "size-4",
+  testId,
+}: DifficultyStateIconProps) {
+  return (
+    <span
+      aria-hidden="true"
+      data-testid={testId}
+      data-difficulty-icon-src={difficultyStateAsset(level)}
+      className={[
+        "inline-block shrink-0",
+        sizeClassName,
+        difficultyIconColorClass(level),
+        difficultyIconMaskClass(level),
+        className ?? "",
+      ].join(" ")}
+    />
+  );
 }
 
 type Props = {

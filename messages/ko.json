@@ -483,6 +483,40 @@
       "embeddedBrowserTitle": "{browser} 안에서는 Google 로그인이 막힐 수 있어요",
       "embeddedBrowserDescription": "오른쪽 위 더보기 메뉴에서 '브라우저에서 열기'를 선택해 Chrome 또는 Safari로 연 뒤 다시 Google 로그인을 눌러주세요."
     },
+    "institutionInvite": {
+      "loadingTitle": "초대 정보를 확인하고 있어요",
+      "loadingDescription": "잠시만 기다려 주세요.",
+      "noCodeTitle": "초대 코드가 없거나 만료됐어요",
+      "noCodeDescription": "기관 초대 링크가 만료되었거나 이 브라우저에 저장된 초대 코드가 없습니다.",
+      "anonymousTitle": "기관 소속 초대",
+      "anonymousDescription": "새 계정으로 가입하거나 기존 계정으로 로그인한 뒤 이 초대를 연결할 수 있어요.",
+      "anonymousSignUp": "새 계정으로 가입하고 기관에 연결",
+      "anonymousLogin": "기존 계정으로 로그인",
+      "anonymousContinue": "초대 없이 계속하기",
+      "authenticatedTitle": "이 계정으로 기관에 연결할까요?",
+      "authenticatedDescription": "연결하면 이 계정이 기관 소속으로 등록되고 기관 배정 학습 흐름이 적용됩니다.",
+      "policyTitle": "기관 연결 후 달라지는 점",
+      "policyPreserve": "기존 학습 기록은 보존됩니다.",
+      "policyInstitutionScope": "기관 연결 후 새 문제 탐색, 추천, 제출, 다시 풀기는 현재 기관에 배정된 문제 기준으로 제공됩니다.",
+      "policyReadOnly": "기관에 배정되지 않은 기존 문제는 읽기 전용 이력으로만 접근할 수 있고, 새 풀이 또는 재제출은 허용되지 않습니다.",
+      "authenticatedAccept": "위 내용을 확인하고 이 계정으로 기관에 연결",
+      "authenticatedOtherAccount": "다른 계정으로 로그인",
+      "authenticatedContinue": "연결하지 않고 계속",
+      "currentAccount": "현재 계정",
+      "currentAccountValue": "현재 계정: {email}",
+      "codeLabel": "초대 코드: {code}",
+      "successTitle": "기관 연결이 완료됐어요",
+      "successDescription": "이제 기관 소속 학습 흐름으로 이어집니다.",
+      "alreadySameTitle": "이미 이 기관에 연결되어 있어요",
+      "alreadySameDescription": "이 계정은 같은 기관 코드로 등록되어 있습니다.",
+      "alreadyOtherTitle": "이미 다른 기관에 연결되어 있어요",
+      "alreadyOtherDescription": "기관 전환은 자동으로 처리하지 않습니다. 다른 계정으로 로그인하거나 연결하지 않고 계속해 주세요.",
+      "invalidTitle": "초대 코드가 올바르지 않아요",
+      "invalidDescription": "초대 링크를 다시 확인해 주세요.",
+      "failedTitle": "기관 연결을 완료하지 못했어요",
+      "failedDescription": "잠시 후 다시 시도하거나 초대 없이 계속할 수 있습니다.",
+      "continue": "계속하기"
+    },
     "consent": {
       "metaTitle": "가입 마무리 — TALKPIK",
       "heading": "가입을 마무리해 주세요",
@@ -1879,7 +1913,94 @@
   "library": {
     "page": {
       "metaTitle": "내 서재 — TALKPIK",
-      "heading": "내 서재"
+      "heading": "내 서재",
+      "subtitle": "저장한 답안 중 다시 볼 만한 항목을 학습 행동 기준으로 정리했어요"
+    },
+    "dashboard": {
+      "questionNo": "{questionNo}번",
+      "questionUnknown": "문항",
+      "charCount": "{count}자",
+      "kpi": {
+        "reviewable": "복습 가능",
+        "reviewableDescription": "피드백을 확인할 수 있는 답안",
+        "feedbackWaiting": "피드백 대기",
+        "feedbackWaitingDescription": "분석이 끝나면 다시 볼 수 있어요",
+        "comparison": "비교 가능",
+        "comparisonDescription": "같은 문제를 다시 쓴 기록이 있어요",
+        "recentStudy": "최근 학습",
+        "recentStudyDescription": "마지막 답안 제출일",
+        "count": "{count}건",
+        "noRecentStudy": "기록 없음"
+      },
+      "review": {
+        "title": "복습 후보",
+        "help": "오늘 할당이 아니라, 저장한 답안 중 다시 보면 좋은 항목이에요",
+        "caption": "저장 답안 중 피드백 완료 항목 기준",
+        "empty": "저장한 답안의 피드백이 완료되면 복습 후보가 표시돼요",
+        "prev": "이전 복습 후보",
+        "next": "다음 복습 후보",
+        "viewAll": "전체 보기"
+      },
+      "status": {
+        "feedbackComplete": "피드백 완료"
+      },
+      "meta": {
+        "submittedAt": "제출일",
+        "estimatedTime": "예상 시간",
+        "difficulty": "난이도",
+        "totalScore": "총점 {score}점",
+        "totalScoreTooltip": "총 {score}/{max}",
+        "totalScoreUnavailable": "총점 없음"
+      },
+      "reason": {
+        "length_off_target": "분량 조정 필요",
+        "comparison_available": "비교 가능",
+        "low_dimension": "최근 낮은 항목",
+        "feedback_ready": "바로 확인 가능",
+        "short_answer": "짧은 답안",
+        "lowDimensionDetail": "{dimension} {score}점"
+      },
+      "actions": {
+        "viewFeedback": "피드백 보기",
+        "retry": "다시 풀기",
+        "retryUnavailable": "다시 풀 수 없음",
+        "goToPractice": "문제 풀러 가기"
+      },
+      "waiting": {
+        "title": "피드백 대기",
+        "empty": "분석을 기다리는 저장 답안이 없습니다.",
+        "submittedAt": "제출일 {date} · {count}자",
+        "disabled": "대기 중",
+        "retryUnavailable": "다시 풀 수 없음",
+        "retryAria": "{title} 다시 풀기",
+        "status": {
+          "pending": "대기 중",
+          "analyzing": "분석 중",
+          "failed": "분석 실패"
+        }
+      },
+      "weak": {
+        "title": "최근 낮게 나온 항목",
+        "caption": "최근 완료된 피드백 기준",
+        "empty": "약점 계산을 위한 완료 피드백이 더 필요해요.",
+        "score": "{score}점"
+      },
+      "timeline": {
+        "title": "학습 타임라인",
+        "empty": "표시할 최근 학습 이벤트가 없습니다.",
+        "viewAll": "전체 타임라인 보기",
+        "event": {
+          "submission_submitted": "답안 제출",
+          "feedback_viewed": "피드백 확인",
+          "report_viewed": "리포트 확인",
+          "export_downloaded": "PDF 다운로드"
+        }
+      },
+      "error": {
+        "title": "서재 대시보드를 불러오지 못했어요",
+        "subTitle": "잠시 후 다시 시도해 주세요.",
+        "retry": "다시 시도"
+      }
     },
     "tabs": {
       "submissions": "저장 답안",
@@ -1895,6 +2016,22 @@
       "selectionHint": "저장 답안에서 항목을 선택하면 내보내기·복습 세트를 만들 수 있어요.",
       "reviewSetCreated": "복습 세트를 만들었어요. ({count}개 항목)",
       "reviewSetFailed": "복습 세트 생성에 실패했어요."
+    },
+    "problemsPage": {
+      "metaTitle": "학습 문제 전체보기 — TALKPIK",
+      "heading": "학습 문제 전체보기",
+      "subtitle": "저장한 답안과 문제를 한 곳에서 검색하고 다시 학습해요",
+      "backToLibrary": "내 서재로 돌아가기"
+    },
+    "problemsList": {
+      "loadError": "학습 문제 목록을 불러오지 못했어요",
+      "searchPlaceholder": "저장 답안과 문제 검색",
+      "searchAriaLabel": "저장 답안과 문제 검색",
+      "typeSubmission": "저장 답안",
+      "typeProblem": "저장 문제",
+      "emptyNoItems": "저장한 답안이나 문제가 아직 없어요",
+      "emptySearch": "검색 결과가 없어요",
+      "resetSearch": "검색 초기화"
     },
     "submissions": {
       "loadError": "저장한 답안을 불러오지 못했어요",

@@ -106,6 +106,7 @@ async function joinSubmissions(
       submitted_at: sub.submitted_at,
       char_count: sub.char_count,
       item_id: item.id,
+      saved_at: item.saved_at,
       tags: item.tags,
     });
   }
@@ -161,6 +162,7 @@ async function joinProblems(
       title: row.title ?? null,
       question_no: typeof row.question_no === "number" ? row.question_no : null,
       item_id: row.item_id,
+      saved_at: row.saved_at,
       tags: Array.isArray(row.tags) ? row.tags : [],
       availabilityStatus: coerceLibraryProblemAvailabilityStatus(
         row.availability_status,

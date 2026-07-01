@@ -1,6 +1,7 @@
 "use client";
 
 import { Alert } from "antd";
+import { useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { ReportPageHeader } from "@/components/shared/ReportPageHeader";
@@ -11,6 +12,7 @@ import { FeedbackReportOverview } from "./FeedbackReportOverview";
 import { FeedbackSummary } from "./FeedbackSummary";
 import { FeedbackActionGroup, NextActionBar } from "./NextActionBar";
 import { SentenceFeedbackList } from "./SentenceFeedbackList";
+import { logStudyEvent } from "@/lib/events/study-events";
 import { extractExternalFeedbackSupplement } from "@/lib/writing/external-feedback";
 import { writingQuestionNeonClass } from "@/lib/writing/question-number-neon";
 import { writingProblemHref } from "@/lib/writing/routes";
@@ -57,6 +59,16 @@ export function FeedbackPageContent({
   const router = useRouter();
   const status = submission.feedback_status;
 
+  useEffect(() => {
+    if (!bundle) return;
+    void logStudyEvent({
+      eventType: "feedback_viewed",
+      problemId: submission.problem_id,
+      submissionId: submission.id,
+      payload: { question_no: submission.question_no },
+    });
+  }, [bundle, submission.id, submission.problem_id, submission.question_no]);
+
   if (!bundle) {
     return (
       <Alert
@@ -89,9 +101,7 @@ export function FeedbackPageContent({
     : withSentences
       ? "retryWriting"
       : "retryDefault";
-  const resolvedRetryLabel = tActions(
-    retryLabelKey ?? defaultRetryLabelKey,
-  );
+  const resolvedRetryLabel = tActions(retryLabelKey ?? defaultRetryLabelKey);
   const retryDisabled = !canRetryProblem;
   const retryDisabledReason = retryDisabled
     ? tActions("retryUnavailable")
@@ -156,7 +166,10 @@ export function FeedbackPageContent({
           <>
             {/* E-01 region 1: 점수/총평 요약. 53/54와 같은 상단 요약 구조를
                 사용해 총평 점수, 문항 메타, 전체 설명을 모두 노출한다. */}
-            <FeedbackSummary feedback={bundle.feedback} submission={submission} />
+            <FeedbackSummary
+              feedback={bundle.feedback}
+              submission={submission}
+            />
             <FeedbackReportOverview
               feedback={bundle.feedback}
               submission={submission}

@@ -6,6 +6,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { AppCard } from "@/components/shared/AppCard";
+import type { LibraryStats } from "@/lib/library/types";
 
 const { Text } = Typography;
 
@@ -18,19 +19,6 @@ const DIMENSION_KEYS = [
   "topic_fit",
   "language",
 ] as const;
-
-export type LibraryStats = {
-  /** Total saved library items across all tabs. */
-  savedCount: number;
-  /** Average writing_feedback score over saved submissions, or null. */
-  avgScore: number | null;
-  /** Lowest average dimension key, or null when not enough data exists. */
-  weakestDimension: string | null;
-  /** Count of saved retry submissions. */
-  reviewCount: number;
-  /** Latest library_items.saved_at ISO string. */
-  lastUpdated: string | null;
-};
 
 type Props = {
   stats: LibraryStats;

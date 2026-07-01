@@ -210,3 +210,10 @@
 | 64 | `12:00:00` | [`20260629120000_auth_email_verified_access_gate.sql`](./20260629120000_auth_email_verified_access_gate.sql) | Adds an email-confirmed guard to `public.complete_auth_gate(...)` and `user_consents_owner_insert` so `profiles.status='active'` alone cannot create signup completion consent records. |
 | 65 | `15:30:00` | [`20260629153000_enforce_same_problem_comparison.sql`](./20260629153000_enforce_same_problem_comparison.sql) | Enforces R-01 comparison reports as same-problem comparisons: RPC and table trigger reject different `problem_id` submissions while allowing `previous_submission_id` to be null. |
 | 66 | `17:00:00` | [`20260629170000_non_institution_writing_full_exposure.sql`](./20260629170000_non_institution_writing_full_exposure.sql) | Restores non-institution users to the full writing problem pool while preserving institution assigned-only visibility through `profiles.affiliation_code`. |
+
+## 2026-07-01 migration
+
+| # | timestamp | file | scope |
+| ---:| --- | --- | --- |
+| 67 | `14:00:00` | [`20260701140000_accept_affiliation_invite.sql`](./20260701140000_accept_affiliation_invite.sql) | Adds confirmed one-shot `public.accept_affiliation_invite(p_code,p_confirmed)` for user-approved institution invite acceptance, keeps legacy `claim_affiliation_code` as a deprecated wrapper, and prevents automatic switching from another institution code. |
+| 68 | `16:00:00` | [`20260701160000_institution_retry_availability.sql`](./20260701160000_institution_retry_availability.sql) | Redefines saved writing problem retry availability so `list_user_library_problem_items()` follows `is_writing_problem_visible_to_caller`; institution-hidden saved problems remain in the ledger but expose no retry action. |

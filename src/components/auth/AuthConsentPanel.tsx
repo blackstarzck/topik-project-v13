@@ -26,7 +26,7 @@ import {
   type RequiredProfileField,
   type RequiredProfileShape,
 } from "@/lib/auth/profile-completion";
-import { sanitizeLegalDocumentHtml } from "@/lib/legal/html";
+import { renderLegalDocumentBodyHtml } from "@/lib/legal/html";
 import { NICKNAME_CHECK_DEBOUNCE_MS } from "@/lib/request-control/policies";
 import { checkNicknameAvailability } from "@/lib/settings/mutations";
 
@@ -315,7 +315,7 @@ export function AuthConsentPanel({
                         <div
                           className="legal-document-body max-h-40 overflow-auto"
                           dangerouslySetInnerHTML={{
-                            __html: sanitizeLegalDocumentHtml(doc.body),
+                            __html: renderLegalDocumentBodyHtml(doc.body),
                           }}
                         />
                       </Flex>

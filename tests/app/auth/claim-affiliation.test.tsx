@@ -1,18 +1,14 @@
-// @vitest-environment jsdom
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { cleanup, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 
-vi.mock("@/components/auth/ClaimAffiliationRedirect", () => ({
-  ClaimAffiliationRedirect: ({ nextPath }: { nextPath: string }) => (
-    <div data-next={nextPath} data-testid="claim-affiliation-redirect" />
-  ),
+const redirectMock = vi.fn((path: string) => {
+  throw new Error(`NEXT_REDIRECT:${path}`);
+});
+
+vi.mock("next/navigation", () => ({
+  redirect: (path: string) => redirectMock(path),
 }));
 
 import ClaimAffiliationPage from "../../../src/app/auth/claim-affiliation/page";
-
-afterEach(() => {
-  cleanup();
-});
 
 function renderClaimAffiliationPage(searchParams: Record<string, string>) {
   return ClaimAffiliationPage({
@@ -21,31 +17,27 @@ function renderClaimAffiliationPage(searchParams: Record<string, string>) {
 }
 
 describe("/auth/claim-affiliation", () => {
-  it("passes a relative next path to the client bridge", async () => {
-    render(
-      await renderClaimAffiliationPage({
+  it("redirects the legacy claim route to the institution invite confirmation", async () => {
+    await expect(
+      renderClaimAffiliationPage({
         next: "/auth/post-auth?intent=sign-up",
       }),
-    );
+    ).rejects.toThrow("NEXT_REDIRECT");
 
-    expect(
-      screen
-        .getByTestId("claim-affiliation-redirect")
-        .getAttribute("data-next"),
-    ).toBe("/auth/post-auth?intent=sign-up");
+    expect(redirectMock).toHaveBeenCalledWith(
+      "/auth/institution-invite?next=%2Fauth%2Fpost-auth%3Fintent%3Dsign-up",
+    );
   });
 
   it("falls back when next is absolute", async () => {
-    render(
-      await renderClaimAffiliationPage({
+    await expect(
+      renderClaimAffiliationPage({
         next: "https://evil.example",
       }),
-    );
+    ).rejects.toThrow("NEXT_REDIRECT");
 
-    expect(
-      screen
-        .getByTestId("claim-affiliation-redirect")
-        .getAttribute("data-next"),
-    ).toBe("/auth/post-auth?intent=sign-up");
+    expect(redirectMock).toHaveBeenCalledWith(
+      "/auth/institution-invite?next=%2Fauth%2Fpost-auth%3Fintent%3Dsign-up",
+    );
   });
 });

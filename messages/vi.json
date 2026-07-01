@@ -483,6 +483,40 @@
       "embeddedBrowserTitle": "Đăng nhập Google có thể bị chặn trong {browser}",
       "embeddedBrowserDescription": "Hãy mở trang này bằng Chrome, Safari hoặc trình duyệt mặc định rồi thử đăng nhập Google lại."
     },
+    "institutionInvite": {
+      "loadingTitle": "Đang kiểm tra lời mời",
+      "loadingDescription": "Vui lòng chờ trong giây lát.",
+      "noCodeTitle": "Mã mời bị thiếu hoặc đã hết hạn",
+      "noCodeDescription": "Liên kết mời đã hết hạn hoặc trình duyệt này không có mã mời đã lưu.",
+      "anonymousTitle": "Lời mời thuộc tổ chức",
+      "anonymousDescription": "Tạo tài khoản mới hoặc đăng nhập bằng tài khoản hiện có rồi kết nối lời mời này.",
+      "anonymousSignUp": "Đăng ký tài khoản mới và kết nối tổ chức",
+      "anonymousLogin": "Đăng nhập bằng tài khoản hiện có",
+      "anonymousContinue": "Tiếp tục không dùng lời mời",
+      "authenticatedTitle": "Kết nối tài khoản này với tổ chức?",
+      "authenticatedDescription": "Tài khoản này sẽ được đăng ký là thành viên tổ chức và luồng học theo tổ chức sẽ được áp dụng.",
+      "policyTitle": "Điều thay đổi sau khi kết nối",
+      "policyPreserve": "Lịch sử học tập hiện có của bạn sẽ được giữ lại.",
+      "policyInstitutionScope": "Sau khi kết nối, việc tìm bài mới, gợi ý, nộp bài và làm lại sẽ theo chính sách bài được giao của tổ chức hiện tại.",
+      "policyReadOnly": "Các bài cũ không được giao cho tổ chức hiện tại chỉ có thể xem như lịch sử chỉ đọc; không cho phép làm mới hoặc nộp lại.",
+      "authenticatedAccept": "Tôi đã hiểu và muốn kết nối tài khoản này",
+      "authenticatedOtherAccount": "Đăng nhập bằng tài khoản khác",
+      "authenticatedContinue": "Tiếp tục không kết nối",
+      "currentAccount": "Tài khoản hiện tại",
+      "currentAccountValue": "Tài khoản hiện tại: {email}",
+      "codeLabel": "Mã mời: {code}",
+      "successTitle": "Đã kết nối tổ chức",
+      "successDescription": "Bạn có thể tiếp tục với luồng học dành cho tổ chức.",
+      "alreadySameTitle": "Đã kết nối với tổ chức này",
+      "alreadySameDescription": "Tài khoản này đã được đăng ký bằng cùng mã tổ chức.",
+      "alreadyOtherTitle": "Đã kết nối với tổ chức khác",
+      "alreadyOtherDescription": "Không tự động chuyển tổ chức. Hãy đăng nhập bằng tài khoản khác hoặc tiếp tục không kết nối.",
+      "invalidTitle": "Mã mời không hợp lệ",
+      "invalidDescription": "Vui lòng kiểm tra lại liên kết mời.",
+      "failedTitle": "Không thể hoàn tất kết nối tổ chức",
+      "failedDescription": "Hãy thử lại sau hoặc tiếp tục không dùng lời mời.",
+      "continue": "Tiếp tục"
+    },
     "consent": {
       "metaTitle": "Hoàn tất đăng ký — TALKPIK",
       "heading": "Hoàn tất đăng ký",
@@ -1879,7 +1913,94 @@
   "library": {
     "page": {
       "metaTitle": "Thư viện của tôi — TALKPIK",
-      "heading": "Thư viện của tôi"
+      "heading": "Thư viện của tôi",
+      "subtitle": "Các bài làm đã lưu được sắp xếp theo hành động học tập nên xem lại."
+    },
+    "dashboard": {
+      "questionNo": "Câu {questionNo}",
+      "questionUnknown": "Câu hỏi",
+      "charCount": "{count} ký tự",
+      "kpi": {
+        "reviewable": "Có thể ôn tập",
+        "reviewableDescription": "Bài đã lưu có phản hồi",
+        "feedbackWaiting": "Chờ phản hồi",
+        "feedbackWaitingDescription": "Có thể xem lại khi phân tích xong",
+        "comparison": "Có thể so sánh",
+        "comparisonDescription": "Bạn đã viết lại cùng một câu hỏi",
+        "recentStudy": "Học gần đây",
+        "recentStudyDescription": "Ngày nộp bài gần nhất",
+        "count": "{count}",
+        "noRecentStudy": "Chưa có"
+      },
+      "review": {
+        "title": "Gợi ý ôn tập",
+        "help": "Không phải bài được giao hôm nay, mà là bài đã lưu đáng xem lại.",
+        "caption": "Dựa trên bài đã lưu có phản hồi hoàn tất",
+        "empty": "Gợi ý ôn tập sẽ hiển thị khi phản hồi của bài đã lưu hoàn tất.",
+        "prev": "Gợi ý ôn tập trước",
+        "next": "Gợi ý ôn tập tiếp theo",
+        "viewAll": "Xem tất cả"
+      },
+      "status": {
+        "feedbackComplete": "Phản hồi xong"
+      },
+      "meta": {
+        "submittedAt": "Ngày nộp",
+        "estimatedTime": "Thời gian dự kiến",
+        "difficulty": "Độ khó",
+        "totalScore": "Tổng {score} điểm",
+        "totalScoreTooltip": "Tổng {score}/{max}",
+        "totalScoreUnavailable": "Chưa có tổng điểm"
+      },
+      "reason": {
+        "length_off_target": "Cần chỉnh độ dài",
+        "comparison_available": "Có thể so sánh",
+        "low_dimension": "Mục gần đây thấp",
+        "feedback_ready": "Có thể xem ngay",
+        "short_answer": "Câu trả lời ngắn",
+        "lowDimensionDetail": "{dimension} {score}"
+      },
+      "actions": {
+        "viewFeedback": "Xem phản hồi",
+        "retry": "Làm lại",
+        "retryUnavailable": "Không thể làm lại",
+        "goToPractice": "Đi luyện tập"
+      },
+      "waiting": {
+        "title": "Chờ phản hồi",
+        "empty": "Không có bài đã lưu nào đang chờ phân tích.",
+        "submittedAt": "Đã nộp {date} · {count} ký tự",
+        "disabled": "Đang chờ",
+        "retryUnavailable": "Không thể làm lại",
+        "retryAria": "Làm lại {title}",
+        "status": {
+          "pending": "Đang chờ",
+          "analyzing": "Đang phân tích",
+          "failed": "Phân tích lỗi"
+        }
+      },
+      "weak": {
+        "title": "Mục gần đây thấp",
+        "caption": "Theo phản hồi đã hoàn tất gần đây",
+        "empty": "Cần thêm phản hồi hoàn tất để tính điểm yếu.",
+        "score": "{score}"
+      },
+      "timeline": {
+        "title": "Dòng thời gian học tập",
+        "empty": "Không có hoạt động học gần đây để hiển thị.",
+        "viewAll": "Xem toàn bộ dòng thời gian",
+        "event": {
+          "submission_submitted": "Đã nộp bài",
+          "feedback_viewed": "Đã xem phản hồi",
+          "report_viewed": "Đã xem báo cáo",
+          "export_downloaded": "Đã tải PDF"
+        }
+      },
+      "error": {
+        "title": "Không thể tải bảng điều khiển thư viện",
+        "subTitle": "Vui lòng thử lại sau.",
+        "retry": "Thử lại"
+      }
     },
     "tabs": {
       "submissions": "Bài làm đã lưu",
@@ -1895,6 +2016,22 @@
       "selectionHint": "Chọn bài làm đã lưu để xuất file hoặc tạo bộ ôn tập.",
       "reviewSetCreated": "Đã tạo bộ ôn tập ({count} mục).",
       "reviewSetFailed": "Không thể tạo bộ ôn tập."
+    },
+    "problemsPage": {
+      "metaTitle": "Tất cả câu hỏi học tập — TALKPIK",
+      "heading": "Tất cả câu hỏi học tập",
+      "subtitle": "Tìm bài làm và câu hỏi đã lưu ở một nơi, rồi tiếp tục luyện tập.",
+      "backToLibrary": "Quay lại thư viện của tôi"
+    },
+    "problemsList": {
+      "loadError": "Không thể tải danh sách câu hỏi học tập",
+      "searchPlaceholder": "Tìm bài làm và câu hỏi đã lưu",
+      "searchAriaLabel": "Tìm bài làm và câu hỏi đã lưu",
+      "typeSubmission": "Bài làm đã lưu",
+      "typeProblem": "Câu hỏi đã lưu",
+      "emptyNoItems": "Chưa có bài làm hoặc câu hỏi nào được lưu.",
+      "emptySearch": "Không có kết quả tìm kiếm.",
+      "resetSearch": "Đặt lại tìm kiếm"
     },
     "submissions": {
       "loadError": "Không thể tải bài làm đã lưu của bạn",

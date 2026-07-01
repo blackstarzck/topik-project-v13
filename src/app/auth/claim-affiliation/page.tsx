@@ -1,5 +1,7 @@
-import { ClaimAffiliationRedirect } from "@/components/auth/ClaimAffiliationRedirect";
+import { redirect } from "next/navigation";
+
 import { sanitizeNext } from "@/lib/auth/error-mapping";
+import { APP_ROUTES } from "@/lib/routes";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +20,7 @@ export default async function ClaimAffiliationPage({
 }) {
   const params = await searchParams;
   const nextPath = sanitizeNext(pickFirst(params.next), DEFAULT_NEXT);
+  const inviteParams = new URLSearchParams({ next: nextPath });
 
-  return <ClaimAffiliationRedirect nextPath={nextPath} />;
+  redirect(`${APP_ROUTES.authInstitutionInvite}?${inviteParams.toString()}`);
 }

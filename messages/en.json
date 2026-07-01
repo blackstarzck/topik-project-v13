@@ -483,6 +483,40 @@
       "embeddedBrowserTitle": "Google sign-in may be blocked inside {browser}",
       "embeddedBrowserDescription": "Open this page in Chrome, Safari, or your default browser, then try Google sign-in again."
     },
+    "institutionInvite": {
+      "loadingTitle": "Checking the invite",
+      "loadingDescription": "Please wait a moment.",
+      "noCodeTitle": "The invite code is missing or expired",
+      "noCodeDescription": "This invite link has expired or no invite code is stored in this browser.",
+      "anonymousTitle": "Institution invitation",
+      "anonymousDescription": "Create a new account or sign in with an existing account before connecting this invite.",
+      "anonymousSignUp": "Sign up with a new account and connect institution",
+      "anonymousLogin": "Sign in with an existing account",
+      "anonymousContinue": "Continue without invitation",
+      "authenticatedTitle": "Connect this account to the institution?",
+      "authenticatedDescription": "This account will be registered as institution-affiliated and institution-assigned learning will apply.",
+      "policyTitle": "What changes after connecting",
+      "policyPreserve": "Your existing learning history is preserved.",
+      "policyInstitutionScope": "After connection, new problem discovery, recommendations, submissions, and retries follow the current institution's assigned problem policy.",
+      "policyReadOnly": "Existing problems not assigned to the current institution remain available only as read-only history, and new solving or resubmission is not allowed.",
+      "authenticatedAccept": "I understand and want to connect this account",
+      "authenticatedOtherAccount": "Sign in with another account",
+      "authenticatedContinue": "Continue without connecting",
+      "currentAccount": "Current account",
+      "currentAccountValue": "Current account: {email}",
+      "codeLabel": "Invite code: {code}",
+      "successTitle": "Institution connection complete",
+      "successDescription": "You can now continue with institution-affiliated learning.",
+      "alreadySameTitle": "Already connected to this institution",
+      "alreadySameDescription": "This account is already registered with the same institution code.",
+      "alreadyOtherTitle": "Already connected to another institution",
+      "alreadyOtherDescription": "Institution switching is not automatic. Sign in with another account or continue without connecting.",
+      "invalidTitle": "The invite code is invalid",
+      "invalidDescription": "Please check the invite link again.",
+      "failedTitle": "Could not complete institution connection",
+      "failedDescription": "Try again later or continue without the invite.",
+      "continue": "Continue"
+    },
     "consent": {
       "metaTitle": "Finish sign-up — TALKPIK",
       "heading": "Finish your sign-up",
@@ -1879,7 +1913,94 @@
   "library": {
     "page": {
       "metaTitle": "My Library — TALKPIK",
-      "heading": "My Library"
+      "heading": "My Library",
+      "subtitle": "Saved answers are organized by the study actions worth revisiting."
+    },
+    "dashboard": {
+      "questionNo": "Q{questionNo}",
+      "questionUnknown": "Question",
+      "charCount": "{count} chars",
+      "kpi": {
+        "reviewable": "Ready to review",
+        "reviewableDescription": "Saved answers with available feedback",
+        "feedbackWaiting": "Feedback waiting",
+        "feedbackWaitingDescription": "You can review them when analysis finishes",
+        "comparison": "Comparable",
+        "comparisonDescription": "You rewrote the same problem",
+        "recentStudy": "Recent study",
+        "recentStudyDescription": "Last answer submission date",
+        "count": "{count}",
+        "noRecentStudy": "No record"
+      },
+      "review": {
+        "title": "Review candidates",
+        "help": "Not today's assignment, but saved answers worth revisiting.",
+        "caption": "Based on saved answers with completed feedback",
+        "empty": "Review candidates will appear when feedback is complete for saved answers.",
+        "prev": "Previous review candidate",
+        "next": "Next review candidate",
+        "viewAll": "View all"
+      },
+      "status": {
+        "feedbackComplete": "Feedback complete"
+      },
+      "meta": {
+        "submittedAt": "Submitted",
+        "estimatedTime": "Estimated time",
+        "difficulty": "Difficulty",
+        "totalScore": "Total {score} pts",
+        "totalScoreTooltip": "Total {score}/{max}",
+        "totalScoreUnavailable": "No total score"
+      },
+      "reason": {
+        "length_off_target": "Length needs adjustment",
+        "comparison_available": "Comparison available",
+        "low_dimension": "Recent low dimension",
+        "feedback_ready": "Ready to check",
+        "short_answer": "Short answer",
+        "lowDimensionDetail": "{dimension} {score}"
+      },
+      "actions": {
+        "viewFeedback": "View feedback",
+        "retry": "Retry",
+        "retryUnavailable": "Cannot retry",
+        "goToPractice": "Go practice"
+      },
+      "waiting": {
+        "title": "Feedback waiting",
+        "empty": "No saved answers are waiting for analysis.",
+        "submittedAt": "Submitted {date} · {count} chars",
+        "disabled": "Waiting",
+        "retryUnavailable": "Cannot retry",
+        "retryAria": "Retry {title}",
+        "status": {
+          "pending": "Waiting",
+          "analyzing": "Analyzing",
+          "failed": "Analysis failed"
+        }
+      },
+      "weak": {
+        "title": "Recent low items",
+        "caption": "From recently completed feedback",
+        "empty": "More completed feedback is needed to calculate weak items.",
+        "score": "{score}"
+      },
+      "timeline": {
+        "title": "Study timeline",
+        "empty": "No recent study events to show.",
+        "viewAll": "View full timeline",
+        "event": {
+          "submission_submitted": "Answer submitted",
+          "feedback_viewed": "Feedback viewed",
+          "report_viewed": "Report viewed",
+          "export_downloaded": "PDF downloaded"
+        }
+      },
+      "error": {
+        "title": "Could not load the library dashboard",
+        "subTitle": "Please try again in a moment.",
+        "retry": "Try again"
+      }
     },
     "tabs": {
       "submissions": "Saved Answers",
@@ -1895,6 +2016,22 @@
       "selectionHint": "Select saved answers to export or build a review set.",
       "reviewSetCreated": "Review set created ({count} items).",
       "reviewSetFailed": "Failed to create the review set."
+    },
+    "problemsPage": {
+      "metaTitle": "All Learning Questions — TALKPIK",
+      "heading": "All Learning Questions",
+      "subtitle": "Search saved answers and questions in one place, then keep practicing.",
+      "backToLibrary": "Back to My Library"
+    },
+    "problemsList": {
+      "loadError": "Could not load the learning question list",
+      "searchPlaceholder": "Search saved answers and questions",
+      "searchAriaLabel": "Search saved answers and questions",
+      "typeSubmission": "Saved answer",
+      "typeProblem": "Saved question",
+      "emptyNoItems": "No saved answers or questions yet.",
+      "emptySearch": "No search results.",
+      "resetSearch": "Reset search"
     },
     "submissions": {
       "loadError": "Could not load your saved answers",

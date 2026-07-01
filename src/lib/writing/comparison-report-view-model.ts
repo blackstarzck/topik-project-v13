@@ -17,6 +17,7 @@ import {
   getComparisonReport,
   getComparisonTargetCandidates,
   getFeedbackBundle,
+  getWritingProblemAvailability,
   getSubmission,
   type ComparisonTargetCandidate,
 } from "@/lib/writing/server";
@@ -87,10 +88,16 @@ export async function getComparisonReportViewModel(
   ]);
   if (!current) return null;
 
-  const [currentBundle, previousBundle, comparisonTargets] = await Promise.all([
+  const [
+    currentBundle,
+    previousBundle,
+    comparisonTargets,
+    currentProblemAvailability,
+  ] = await Promise.all([
     getFeedbackBundle(current.id),
     previous ? getFeedbackBundle(previous.id) : Promise.resolve(null),
     getComparisonTargetCandidates(current.id, report.previous_submission_id),
+    getWritingProblemAvailability(current.problem_id),
   ]);
 
   const persistedMetrics = report.metrics as unknown as ComparisonMetrics;
@@ -153,10 +160,12 @@ export async function getComparisonReportViewModel(
     previousText: previous?.answer_text ?? null,
     currentAnswerJson: current.answer_json,
     previousAnswerJson: previous?.answer_json ?? null,
-    retryHref: writingProblemHref({
-      questionNo: currentQuestionNo,
-      problemId: current.problem_id,
-    }),
+    retryHref: currentProblemAvailability.canStart
+      ? writingProblemHref({
+          questionNo: currentQuestionNo,
+          problemId: current.problem_id,
+        })
+      : null,
     reportId: report.id,
     currentScore: normalizedTotalScore(
       currentBundle?.feedback.score_total,
