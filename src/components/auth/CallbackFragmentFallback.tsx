@@ -28,6 +28,7 @@ import {
   mapSupabaseErrorCode,
   parseAuthFragment,
 } from "@/lib/auth/error-mapping";
+import { APP_ROUTES } from "@/lib/routes";
 
 const { Paragraph } = Typography;
 
@@ -67,7 +68,9 @@ export function CallbackFragmentFallback({ next }: { next: string }) {
           return;
         }
         setStatus("redirecting");
-        router.replace(next);
+        router.replace(
+          parsed.type === "recovery" ? APP_ROUTES.passwordResetConfirm : next,
+        );
         return;
       }
 
