@@ -1,8 +1,8 @@
 "use client";
 
 // DB-backed legal document renderer (X-13 terms). Renders the published
-// legal_documents row projected from the admin operation_policies. The body is
-// admin-authored HTML (operation_policies.body_html) and already includes the
+// legal_documents row projected from the admin operation_policies. The body may
+// be admin-authored HTML or Markdown and already includes the
 // document heading, so we render the sanitized body and show only a
 // version/effective-date meta line above it. "use client" because AppCard/antd
 // Typography crash in a server component (prod React #130), matching
@@ -12,7 +12,7 @@ import { Typography } from "antd";
 
 import { AppCard } from "@/components/shared/AppCard";
 import type { PublishedLegalDocument } from "@/lib/legal/documents";
-import { sanitizeLegalDocumentHtml } from "@/lib/legal/html";
+import { renderLegalDocumentBodyHtml } from "@/lib/legal/html";
 
 const { Text } = Typography;
 
@@ -25,7 +25,7 @@ function formatEffectiveDate(value: string | null): string | null {
 
 export function TermsDocument({ doc }: { doc: PublishedLegalDocument }) {
   const effective = formatEffectiveDate(doc.effective_at);
-  const bodyHtml = sanitizeLegalDocumentHtml(doc.body);
+  const bodyHtml = renderLegalDocumentBodyHtml(doc.body);
   const meta = [doc.version, effective].filter(Boolean).join(" · ");
 
   return (

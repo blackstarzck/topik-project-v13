@@ -67,7 +67,7 @@ export default async function AuthConsentPage({
 
   return (
     <PublicShell>
-      <PageContainer size="narrow">
+      <PageContainer size="default">
         <AuthConsentPanel
           action={completeAuthGateAction}
           documents={missingDocuments}
