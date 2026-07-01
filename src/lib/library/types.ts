@@ -143,6 +143,11 @@ export type LibraryReviewCandidate = {
   title: string;
   submittedAt: string;
   charCount: number;
+  estimatedMinutes: number | null;
+  difficultyLevel: number | null;
+  scoreTotal: number | null;
+  scoreMax: number | null;
+  scorePercent: number | null;
   feedbackHref: string;
   retryHref: string;
   primaryReason: LibraryDashboardReviewReason;

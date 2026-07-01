@@ -1909,6 +1909,14 @@
       "status": {
         "feedbackComplete": "Phản hồi xong"
       },
+      "meta": {
+        "submittedAt": "Ngày nộp",
+        "estimatedTime": "Thời gian dự kiến",
+        "difficulty": "Độ khó",
+        "totalScore": "Tổng {score} điểm",
+        "totalScoreTooltip": "Tổng {score}/{max}",
+        "totalScoreUnavailable": "Chưa có tổng điểm"
+      },
       "reason": {
         "length_off_target": "Cần chỉnh độ dài",
         "comparison_available": "Có thể so sánh",

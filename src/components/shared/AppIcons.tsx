@@ -29,6 +29,7 @@ import {
   Filter,
   Global,
   HambergerMenu,
+  Magicpen,
   LampOn,
   Lifebuoy,
   Lock as IconsaxLock,
@@ -161,6 +162,7 @@ export const ListFilter = createIconsaxIcon(Filter);
 export const Lock = createIconsaxIcon(IconsaxLock);
 export const LockKeyhole = createIconsaxIcon(ShieldTick);
 export const LogIn = createIconsaxIcon(Login);
+export const MagicPen = createIconsaxIcon(Magicpen);
 export const Mail = createIconsaxIcon(Sms);
 export const Menu = createIconsaxIcon(HambergerMenu);
 export const MessageCircle = createIconsaxIcon(IconsaxMessageCircle);

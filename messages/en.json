@@ -1909,6 +1909,14 @@
       "status": {
         "feedbackComplete": "Feedback complete"
       },
+      "meta": {
+        "submittedAt": "Submitted",
+        "estimatedTime": "Estimated time",
+        "difficulty": "Difficulty",
+        "totalScore": "Total {score} pts",
+        "totalScoreTooltip": "Total {score}/{max}",
+        "totalScoreUnavailable": "No total score"
+      },
       "reason": {
         "length_off_target": "Length needs adjustment",
         "comparison_available": "Comparison available",

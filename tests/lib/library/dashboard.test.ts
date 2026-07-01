@@ -75,11 +75,17 @@ function dimension(
   } satisfies LibraryDashboardRows["dimensionScores"][number];
 }
 
-function problem(id: string, questionNo: number, title: string) {
+function problem(
+  id: string,
+  questionNo: number,
+  title: string,
+  difficulty: number | null = 5,
+) {
   return {
     id,
     question_no: questionNo,
     title,
+    difficulty,
   } satisfies LibraryDashboardRows["problems"][number];
 }
 
@@ -225,6 +231,11 @@ describe("buildLibraryDashboardFromRows", () => {
       submissionId: "s-length",
       primaryReason: "length_off_target",
       lengthTarget: { min: 600, max: 700, status: "over" },
+      estimatedMinutes: 50,
+      difficultyLevel: 5,
+      scoreTotal: 76,
+      scoreMax: 100,
+      scorePercent: 76,
     });
     expect(view.reviewCandidates[1]).toMatchObject({
       submissionId: "s-rewrite",

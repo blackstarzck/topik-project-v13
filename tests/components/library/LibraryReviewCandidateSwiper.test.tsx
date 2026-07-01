@@ -33,8 +33,16 @@ vi.mock("swiper/react", () => ({
       {children}
     </div>
   ),
-  SwiperSlide: ({ children }: { children: ReactNode }) => (
-    <div data-testid="mock-swiper-slide">{children}</div>
+  SwiperSlide: ({
+    children,
+    className,
+  }: {
+    children: ReactNode;
+    className?: string;
+  }) => (
+    <div data-testid="mock-swiper-slide" className={className}>
+      {children}
+    </div>
   ),
 }));
 
@@ -51,6 +59,11 @@ const candidates: LibraryReviewCandidate[] = Array.from(
       title: `복습 후보 ${number}`,
       submittedAt: "2026-06-29T12:00:00.000Z",
       charCount: 240 + number,
+      estimatedMinutes: number % 2 === 0 ? 30 : 50,
+      difficultyLevel: 5,
+      scoreTotal: 76,
+      scoreMax: 100,
+      scorePercent: 76,
       feedbackHref: `/writing/feedback/long/sub-${number}`,
       retryHref: `/writing/53?problem=problem-${number}&fresh=1&retrySubmission=sub-${number}`,
       primaryReason: "feedback_ready",
@@ -68,6 +81,23 @@ describe("LibraryReviewCandidateSwiper", () => {
   it("renders 12 candidate slides with grid rows and numeric breakpoints", () => {
     renderWithIntl(<LibraryReviewCandidateSwiper candidates={candidates} />);
 
+    const section = screen.getByTestId("library-review-swiper");
+    expect(section.className).not.toContain("rounded-default");
+    expect(section.className).not.toContain("border");
+    expect(section.className).not.toContain("bg-background");
+    expect(section.className).not.toContain("p-4");
+    expect(section.querySelector(".lucide-info")).toBeNull();
+    const header = screen.getByTestId("library-review-swiper-header");
+    const title = header.querySelector("h4");
+    expect(title?.className).toContain("!m-0");
+    expect(header.className).toContain("items-center");
+    expect(header.className).not.toContain("justify-center");
+    expect(header.className).not.toContain("justify-between");
+    expect(screen.queryByTestId("library-review-swiper-caption")).toBeNull();
+    expect(
+      screen.getByTestId("library-review-swiper-actions").previousElementSibling
+        ?.tagName,
+    ).toBe("H4");
     expect(screen.getByTestId("mock-swiper").getAttribute("data-grid-rows")).toBe(
       "2",
     );
@@ -77,8 +107,23 @@ describe("LibraryReviewCandidateSwiper", () => {
     expect(
       screen.getByTestId("mock-swiper").getAttribute("data-tablet-slides"),
     ).toBe("2.2");
-    expect(screen.getAllByTestId("mock-swiper-slide")).toHaveLength(12);
+    const slides = screen.getAllByTestId("mock-swiper-slide");
+    expect(slides).toHaveLength(12);
+    for (const slide of slides) {
+      expect(slide.className).toContain("h-auto");
+    }
     expect(screen.getByText("1 / 2")).toBeTruthy();
+  });
+
+  it("renders the empty review section without a wrapping card or title info icon", () => {
+    renderWithIntl(<LibraryReviewCandidateSwiper candidates={[]} />);
+
+    const section = screen.getByTestId("library-review-swiper");
+    expect(section.className).not.toContain("rounded-default");
+    expect(section.className).not.toContain("border");
+    expect(section.className).not.toContain("bg-background");
+    expect(section.className).not.toContain("p-5");
+    expect(section.querySelector(".lucide-info")).toBeNull();
   });
 
   it("provides accessible navigation buttons", () => {

@@ -1,7 +1,7 @@
 "use client";
 
-import { Button, Empty, Tooltip, Typography } from "antd";
-import { ChevronLeft, ChevronRight, Info } from "lucide-react";
+import { Button, Empty, Typography } from "antd";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { A11y, Grid, Navigation, Pagination } from "swiper/modules";
@@ -31,19 +31,14 @@ export function LibraryReviewCandidateSwiper({ candidates }: Props) {
 
   if (candidates.length === 0) {
     return (
-      <section
-        data-testid="library-review-swiper"
-        className="rounded-default border border-border bg-background p-5"
-      >
-        <div className="mb-4 flex items-center gap-2">
-          <Title level={4} className="m-0">
+      <section data-testid="library-review-swiper" className="min-w-0">
+        <div className="mb-4 flex items-center">
+          <Title level={4} className="!m-0">
             {t("review.title")}
           </Title>
-          <Tooltip title={t("review.help")}>
-            <Info aria-hidden size={16} className="text-text-secondary" />
-          </Tooltip>
         </div>
         <Empty
+          className="py-8"
           image={Empty.PRESENTED_IMAGE_SIMPLE}
           description={t("review.empty")}
         >
@@ -56,23 +51,18 @@ export function LibraryReviewCandidateSwiper({ candidates }: Props) {
   }
 
   return (
-    <section
-      data-testid="library-review-swiper"
-      className="rounded-default border border-border bg-background p-4"
-    >
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2">
-          <Title level={4} className="m-0">
-            {t("review.title")}
-          </Title>
-          <Tooltip title={t("review.help")}>
-            <Info aria-hidden size={16} className="text-text-secondary" />
-          </Tooltip>
-          <Text type="secondary" className="hidden text-sm sm:inline">
-            {t("review.caption")}
-          </Text>
-        </div>
-        <div className="flex items-center gap-2">
+    <section data-testid="library-review-swiper" className="min-w-0">
+      <div
+        data-testid="library-review-swiper-header"
+        className="mb-4 flex flex-wrap items-center gap-3"
+      >
+        <Title level={4} className="!m-0">
+          {t("review.title")}
+        </Title>
+        <div
+          data-testid="library-review-swiper-actions"
+          className="flex items-center gap-2"
+        >
           <Button
             aria-label={t("review.prev")}
             className="library-review-swiper-prev"
@@ -111,7 +101,7 @@ export function LibraryReviewCandidateSwiper({ candidates }: Props) {
         className="library-review-swiper"
       >
         {candidates.map((candidate) => (
-          <SwiperSlide key={candidate.id}>
+          <SwiperSlide key={candidate.id} className="h-auto">
             <LibraryReviewCandidateCard candidate={candidate} />
           </SwiperSlide>
         ))}

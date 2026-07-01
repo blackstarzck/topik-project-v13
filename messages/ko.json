@@ -1909,6 +1909,14 @@
       "status": {
         "feedbackComplete": "피드백 완료"
       },
+      "meta": {
+        "submittedAt": "제출일",
+        "estimatedTime": "예상 시간",
+        "difficulty": "난이도",
+        "totalScore": "총점 {score}점",
+        "totalScoreTooltip": "총 {score}/{max}",
+        "totalScoreUnavailable": "총점 없음"
+      },
       "reason": {
         "length_off_target": "분량 조정 필요",
         "comparison_available": "비교 가능",

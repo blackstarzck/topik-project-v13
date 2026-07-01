@@ -47,7 +47,10 @@ type DimensionScoreDashboardRow = Pick<
   | "weakness_level"
 >;
 
-type ProblemDashboardRow = Pick<Tables<"problems">, "id" | "question_no" | "title">;
+type ProblemDashboardRow = Pick<
+  Tables<"problems">,
+  "id" | "question_no" | "title" | "difficulty"
+>;
 
 type SubmissionProblemRow = Pick<
   Tables<"writing_submissions">,
@@ -191,6 +194,7 @@ export function buildLibraryDashboardFromRows(
       buildReviewCandidate(
         row.item,
         row.submission,
+        row.feedback,
         row.problem,
         row.dimensions,
         hasRewrite(row.submission, submissionProblemCounts),
@@ -353,7 +357,7 @@ async function fetchProblems(
   if (ids.length === 0) return [];
   const { data, error } = await supabase
     .from("problems")
-    .select("id, question_no, title")
+    .select("id, question_no, title, difficulty")
     .in("id", ids);
   if (error) {
     throw new Error(`getLibraryDashboard(problems): ${error.message}`);
@@ -364,6 +368,7 @@ async function fetchProblems(
 function buildReviewCandidate(
   item: LibraryItemDashboardRow,
   submission: SubmissionDashboardRow,
+  feedback: FeedbackDashboardRow | null,
   problem: ProblemDashboardRow | null,
   dimensions: DimensionScoreDashboardRow[],
   rewrite: boolean,
@@ -376,6 +381,7 @@ function buildReviewCandidate(
   const lowDimension =
     lowestDimension != null &&
     lowestDimension.normalizedScore < LOW_DIMENSION_THRESHOLD;
+  const totalScore = normalizeTotalScore(feedback);
   const reasons = uniqueReasons([
     lengthTarget ? "length_off_target" : null,
     rewrite ? "comparison_available" : null,
@@ -395,6 +401,14 @@ function buildReviewCandidate(
     title: problemTitle(problem, submission.question_no),
     submittedAt: submission.submitted_at,
     charCount: submission.char_count,
+    estimatedMinutes: estimatedMinutesForQuestion(submission.question_no),
+    difficultyLevel: candidateDifficultyLevel(
+      problem?.difficulty ?? null,
+      submission.question_no,
+    ),
+    scoreTotal: totalScore?.scoreTotal ?? null,
+    scoreMax: totalScore?.scoreMax ?? null,
+    scorePercent: totalScore?.scorePercent ?? null,
     feedbackHref: writingFeedbackHref({
       questionNo: submission.question_no,
       submissionId: submission.id,
@@ -511,6 +525,27 @@ function lengthTargetStatus(questionNo: number | null, charCount: number) {
   return null;
 }
 
+function estimatedMinutesForQuestion(questionNo: number | null) {
+  if (questionNo === 51) return 15;
+  if (questionNo === 52) return 25;
+  if (questionNo === 53) return 30;
+  if (questionNo === 54) return 50;
+  return null;
+}
+
+function candidateDifficultyLevel(
+  problemDifficulty: number | null,
+  questionNo: number | null,
+) {
+  if (problemDifficulty != null) {
+    return Math.max(1, Math.min(5, Math.round(problemDifficulty)));
+  }
+  if (questionNo === 51) return 3;
+  if (questionNo === 52) return 4;
+  if (questionNo === 53 || questionNo === 54) return 5;
+  return null;
+}
+
 function isShortAnswerReason(questionNo: number | null, charCount: number) {
   return (
     (questionNo === 51 || questionNo === 52) &&
@@ -539,6 +574,23 @@ function normalizeDimensionScore(row: DimensionScoreDashboardRow) {
     normalizedScore,
     score: row.score,
     scoreMax,
+  };
+}
+
+function normalizeTotalScore(feedback: FeedbackDashboardRow | null) {
+  if (feedback?.score_total == null) return null;
+  const scoreMax =
+    feedback.score_max != null && feedback.score_max > 0
+      ? feedback.score_max
+      : 100;
+  const scorePercent = Math.max(
+    0,
+    Math.min(100, Math.round((feedback.score_total / scoreMax) * 100)),
+  );
+  return {
+    scoreTotal: feedback.score_total,
+    scoreMax,
+    scorePercent,
   };
 }
 
