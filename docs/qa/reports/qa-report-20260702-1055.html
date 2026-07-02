@@ -1,0 +1,612 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TALKPIK AI UltraQA Deep QA Report - 2026-07-02 10:55 KST</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --fg: #111827;
+        --muted: #4b5563;
+        --line: #d1d5db;
+        --soft: #f3f4f6;
+        --pass: #0f766e;
+        --fail: #b91c1c;
+        --warn: #b45309;
+        --info: #1d4ed8;
+      }
+
+      body {
+        margin: 0;
+        background: #ffffff;
+        color: var(--fg);
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        line-height: 1.55;
+      }
+
+      main {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 32px 20px 56px;
+      }
+
+      h1,
+      h2,
+      h3 {
+        line-height: 1.25;
+      }
+
+      h1 {
+        margin: 0 0 8px;
+        font-size: 30px;
+      }
+
+      h2 {
+        margin: 36px 0 12px;
+        border-top: 1px solid var(--line);
+        padding-top: 24px;
+        font-size: 22px;
+      }
+
+      h3 {
+        margin: 20px 0 8px;
+        font-size: 17px;
+      }
+
+      p {
+        margin: 8px 0;
+      }
+
+      a {
+        color: var(--info);
+      }
+
+      code {
+        border-radius: 4px;
+        background: var(--soft);
+        padding: 1px 5px;
+        font-family: "Cascadia Mono", Consolas, monospace;
+        font-size: 0.93em;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 12px 0 20px;
+        font-size: 14px;
+      }
+
+      th,
+      td {
+        border: 1px solid var(--line);
+        padding: 8px 10px;
+        vertical-align: top;
+        text-align: left;
+      }
+
+      th {
+        background: var(--soft);
+      }
+
+      ul {
+        margin: 8px 0 16px 22px;
+        padding: 0;
+      }
+
+      .meta {
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 10px;
+        margin: 18px 0 22px;
+      }
+
+      .tile {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 14px;
+        background: #fff;
+      }
+
+      .tile strong {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 20px;
+      }
+
+      .badge {
+        display: inline-block;
+        border-radius: 999px;
+        padding: 2px 8px;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .pass {
+        background: #ccfbf1;
+        color: var(--pass);
+      }
+
+      .fail {
+        background: #fee2e2;
+        color: var(--fail);
+      }
+
+      .warn {
+        background: #fef3c7;
+        color: var(--warn);
+      }
+
+      .info {
+        background: #dbeafe;
+        color: var(--info);
+      }
+
+      .gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 14px;
+      }
+
+      figure {
+        margin: 0;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        overflow: hidden;
+        background: #fff;
+      }
+
+      figure img {
+        display: block;
+        width: 100%;
+        max-height: 520px;
+        object-fit: contain;
+        background: #f9fafb;
+      }
+
+      figcaption {
+        border-top: 1px solid var(--line);
+        padding: 8px 10px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .note {
+        border-left: 4px solid var(--info);
+        background: #eff6ff;
+        padding: 10px 12px;
+      }
+
+      .risk {
+        border-left: 4px solid var(--fail);
+        background: #fef2f2;
+        padding: 10px 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>TALKPIK AI UltraQA Deep QA Report</h1>
+      <p class="meta">
+        실행 시각: 2026-07-02 10:46-11:19 KST | 기준 URL:
+        <code>http://127.0.0.1:3000</code> | 브랜치: <code>main</code> |
+        실행 계획:
+        <code>docs/qa/plan/2026-07-02-ultraqa-deep-qa-execution-plan.md</code>
+      </p>
+
+      <section class="summary" aria-label="QA 요약">
+        <div class="tile">
+          <strong>Blocked</strong>
+          <span>릴리스 준비도</span>
+        </div>
+        <div class="tile">
+          <strong>0 / 1 / 8</strong>
+          <span>P0 / P1 / P2+ 결함</span>
+        </div>
+        <div class="tile">
+          <strong>4 Pass, 4 Fail/Timeout</strong>
+          <span>자동 게이트</span>
+        </div>
+        <div class="tile">
+          <strong>27</strong>
+          <span>브라우저 스모크 캡처</span>
+        </div>
+      </section>
+
+      <p class="risk">
+        결론: 현재 빌드 자체는 가능하지만 <code>pnpm format</code>,
+        <code>pnpm harness:admin-boundary</code>, <code>pnpm test:e2e</code>가 실패 또는
+        타임아웃되어 배포 준비 상태로 볼 수 없습니다. 특히 admin boundary gate 실패는 v13 사용자 앱과
+        admin-owned surface 경계가 자동 정책상 깨진 상태이므로 P1 릴리스 차단 이슈로 분류했습니다.
+      </p>
+
+      <h2>범위와 기준</h2>
+      <ul>
+        <li>요청 범위: QA 계획 문서를 읽고 코드 수정 없이 QA 실행, 증거와 HTML 리포트 생성.</li>
+        <li>수정 범위: 새 QA 산출물만 생성. 제품 코드, SOT 문서, migration, 설정 파일은 수정하지 않음.</li>
+        <li>
+          증거 저장소:
+          <code>docs/qa/reports/qa-report-20260702-1055-evidence/</code>
+        </li>
+        <li>
+          금지 준수: auth-state 파일과 Playwright trace zip은 증거 폴더로 복사하지 않음. secret 값은 출력하지
+          않음.
+        </li>
+      </ul>
+
+      <h2>환경</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>항목</th>
+            <th>결과</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>작업 폴더</td>
+            <td><code>C:\Users\admin\Desktop\workspace\topik-project\v13</code></td>
+          </tr>
+          <tr>
+            <td>Git 상태</td>
+            <td>
+              <code>main...origin/main [ahead 28]</code>. QA 전부터 <code>.env.example</code>과 계획
+              문서가 dirty/untracked 상태였고, QA 실행 후 일부 기존 QA 스크린샷과
+              <code>next-env.d.ts</code>가 변경 상태로 보입니다. 리셋/스테이지/커밋은 하지 않았습니다.
+            </td>
+          </tr>
+          <tr>
+            <td>Runtime</td>
+            <td>Node <code>v24.15.0</code>, pnpm <code>11.7.0</code>. <code>packageManager</code>는 <code>pnpm@11.1.3</code>.</td>
+          </tr>
+          <tr>
+            <td>서버</td>
+            <td>
+              기존 3000 포트 점유 프로세스를 정리한 뒤 <code>pnpm start --hostname 127.0.0.1 --port 3000</code>
+              실행. <code>/</code> 200 응답 확인.
+            </td>
+          </tr>
+          <tr>
+            <td>환경 변수</td>
+            <td>
+              <code>.env.local</code> 존재. <code>SUPABASE_ENV_LABEL</code>,
+              <code>E2E_STUDENT_EMAIL</code>, <code>SUPABASE_TEST_PASSWORD</code>,
+              <code>NEXT_PUBLIC_SUPABASE_URL</code>, <code>NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY</code>,
+              <code>SUPABASE_SERVICE_ROLE_KEY</code>, <code>SUPABASE_ACCESS_TOKEN</code> 존재 여부만 확인.
+              값은 출력하지 않음.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>자동 게이트</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>명령</th>
+            <th>결과</th>
+            <th>근거</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>pnpm lint</code></td>
+            <td><span class="badge pass">PASS</span></td>
+            <td>exit 0. warning 7건: <code>.scratch/*</code>, 일부 script/test 파일.</td>
+          </tr>
+          <tr>
+            <td><code>pnpm typecheck</code></td>
+            <td><span class="badge pass">PASS</span></td>
+            <td>exit 0.</td>
+          </tr>
+          <tr>
+            <td><code>pnpm format</code></td>
+            <td><span class="badge fail">FAIL</span></td>
+            <td><code>prettier --check .</code>가 271개 파일의 formatting issue를 보고. 코드 수정 범위 밖이라 <code>format:write</code> 미실행.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>pnpm vitest run tests/scripts/build-preflight.test.ts tests/scripts/no-supabase-remote-apply-surface.test.ts tests/scripts/env-example-contract.test.ts</code>
+            </td>
+            <td><span class="badge pass">PASS</span></td>
+            <td>3 files, 16 tests passed.</td>
+          </tr>
+          <tr>
+            <td><code>pnpm harness:admin-boundary</code></td>
+            <td><span class="badge fail">FAIL</span></td>
+            <td>
+              <code>operation_policies</code> 참조 감지:
+              <code>src/app/terms/page.tsx:10</code>,
+              <code>src/components/legal/TermsDocument.tsx:4</code>,
+              <code>src/lib/legal/documents.ts:3</code>.
+            </td>
+          </tr>
+          <tr>
+            <td><code>pnpm build</code></td>
+            <td><span class="badge pass">PASS with warning</span></td>
+            <td>
+              Next 16.2.6 build exit 0. 경고: <code>/_next/static/:path*</code> Cache-Control header, landing CTA에서
+              cookies 사용으로 <code>DYNAMIC_SERVER_USAGE</code> 로그.
+            </td>
+          </tr>
+          <tr>
+            <td><code>pnpm test</code></td>
+            <td><span class="badge pass">PASS</span></td>
+            <td>224 files passed, 6 skipped. 1404 tests passed, 9 skipped. JSDOM pseudo-element <code>getComputedStyle</code> warning 반복.</td>
+          </tr>
+          <tr>
+            <td><code>pnpm test:e2e</code></td>
+            <td><span class="badge fail">TIMEOUT</span></td>
+            <td>
+              약 15분 후 exit 124. <code>test-results/failure-log.json</code> 미생성. <code>test-results</code>에
+              <code>error-context.md</code> 58개, retry trace 다수 생성. trace zip은 복사하지 않음.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>브라우저 스모크</h2>
+      <p>
+        Playwright 직접 스모크로 public, anon redirect, login, authed route를 desktop 1280px와 mobile 360px에서
+        확인했습니다. 결과 요약은
+        <code>qa-report-20260702-1055-evidence/browser-smoke-summary.json</code>에 저장했습니다.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>범위</th>
+            <th>결과</th>
+            <th>비고</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>public routes</td>
+            <td><span class="badge pass">RENDERED</span></td>
+            <td><code>/</code>, <code>/login</code>, <code>/password-reset</code>, <code>/terms</code>, <code>/privacy</code> 200 렌더링.</td>
+          </tr>
+          <tr>
+            <td>anon protected redirect</td>
+            <td><span class="badge pass">PASS</span></td>
+            <td><code>/dashboard</code>, <code>/admin</code> 요청이 <code>/login</code>으로 이동.</td>
+          </tr>
+          <tr>
+            <td>login flow</td>
+            <td><span class="badge pass">PASS</span></td>
+            <td><code>E2E_STUDENT_EMAIL</code> + <code>SUPABASE_TEST_PASSWORD</code>로 <code>/dashboard</code> 도달.</td>
+          </tr>
+          <tr>
+            <td>authed routes</td>
+            <td><span class="badge info">REVIEW</span></td>
+            <td>
+              <code>/dashboard</code>, <code>/practice/problems</code>,
+              <code>/writing/short-answer-writing-51</code>, <code>/library</code>,
+              <code>/settings/language</code>, <code>/paywall</code>, <code>/subscription</code> 렌더링.
+              다만 구독/약관/테스트 데이터 이슈는 별도 결함으로 기록.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="gallery" aria-label="대표 스크린샷">
+        <figure>
+          <img src="qa-report-20260702-1055-evidence/landing-mobile-360.png" alt="Landing mobile screenshot" />
+          <figcaption>Landing mobile - 렌더링 확인</figcaption>
+        </figure>
+        <figure>
+          <img src="qa-report-20260702-1055-evidence/terms-mobile-360.png" alt="Terms mobile screenshot" />
+          <figcaption>Terms mobile - raw HTML/markdown 노출</figcaption>
+        </figure>
+        <figure>
+          <img src="qa-report-20260702-1055-evidence/password-reset-mobile-360.png" alt="Password reset mobile screenshot" />
+          <figcaption>Password reset mobile - 실제 화면은 한국어 렌더링</figcaption>
+        </figure>
+        <figure>
+          <img src="qa-report-20260702-1055-evidence/paywall-mobile-360.png" alt="Paywall mobile screenshot" />
+          <figcaption>Paywall mobile - 플랜 없음 상태</figcaption>
+        </figure>
+        <figure>
+          <img src="qa-report-20260702-1055-evidence/subscription-mobile-360.png" alt="Subscription mobile screenshot" />
+          <figcaption>Subscription mobile - 준비 중 안내</figcaption>
+        </figure>
+        <figure>
+          <img src="qa-report-20260702-1055-evidence/dashboard-mobile-360.png" alt="Dashboard mobile screenshot" />
+          <figcaption>Dashboard mobile - 로그인 후 렌더링</figcaption>
+        </figure>
+      </div>
+
+      <h2>결함 로그</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>등급</th>
+            <th>영역</th>
+            <th>현상</th>
+            <th>재현/근거</th>
+            <th>권장 후속 조치</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>QA-20260702-01</td>
+            <td><span class="badge fail">P1</span></td>
+            <td>Security boundary</td>
+            <td><code>harness:admin-boundary</code>가 v13 코드의 admin-owned object 참조를 차단.</td>
+            <td>
+              <code>operation_policies</code> 문자열이 terms/legal 주석에서 감지됨. 현재 확인 범위에서는 런타임 DB 호출이 아니라
+              주석이지만 자동 release gate는 실패.
+            </td>
+            <td>
+              주석 표현을 v13 허용 용어로 바꾸거나, 실제로 허용해야 하는 경우 SOT 승인 예외를
+              <code>docs/sot-change-proposals/</code>로 제안.
+            </td>
+          </tr>
+          <tr>
+            <td>QA-20260702-02</td>
+            <td><span class="badge warn">P2</span></td>
+            <td>Formatting</td>
+            <td><code>pnpm format</code> 실패.</td>
+            <td>Prettier check가 271개 파일 formatting issue 보고.</td>
+            <td>별도 formatting-only 작업으로 정리. 현재 QA 범위에서는 코드 변경하지 않음.</td>
+          </tr>
+          <tr>
+            <td>QA-20260702-03</td>
+            <td><span class="badge warn">P2</span></td>
+            <td><code>/terms</code></td>
+            <td>이용약관 본문에 <code>&lt;div&gt;</code>, <code>&lt;br&gt;</code>, markdown heading이 사용자에게 그대로 보임. heading role도 없음.</td>
+            <td>
+              <code>screens-public.spec.ts</code> X-13 실패,
+              <code>terms-mobile-360.png</code>, browser summary <code>rawHtmlVisible=true</code>.
+            </td>
+            <td>약관 body 저장 형식과 렌더러 계약을 정리하고 HTML/markdown을 의도한 방식으로 렌더링.</td>
+          </tr>
+          <tr>
+            <td>QA-20260702-04</td>
+            <td><span class="badge warn">P2</span></td>
+            <td><code>/password-reset</code> E2E</td>
+            <td>자동 테스트는 한국어 label을 찾지 못해 실패했지만 스모크 화면은 한국어로 정상 렌더링.</td>
+            <td>
+              <code>tests/e2e/screens/password-reset.spec.ts</code>에서 <code>getByLabel("이메일")</code>
+              기대가 실패한 것으로 보임. error-context의 접근성 snapshot은 인코딩이 깨져 English로 보였고, 실제 스크린샷은 한국어.
+            </td>
+            <td>테스트 실행 인코딩/locale 고정과 accessible name 쿼리 안정화 필요.</td>
+          </tr>
+          <tr>
+            <td>QA-20260702-05</td>
+            <td><span class="badge warn">P2</span></td>
+            <td><code>/paywall</code></td>
+            <td>테스트는 plan grid를 기대하지만 실제 화면은 "현재 안내 가능한 플랜이 없습니다" empty state.</td>
+            <td><code>paywall-plan-grid</code> 미발견. <code>paywall-mobile-360.png</code>.</td>
+            <td>결제 deferred scope 기준에서 empty state가 맞는지, 테스트가 fixture 플랜을 주입해야 하는지 결정.</td>
+          </tr>
+          <tr>
+            <td>QA-20260702-06</td>
+            <td><span class="badge warn">P2</span></td>
+            <td>C-03 retry modal</td>
+            <td>재시도 modal 테스트 3건이 secondary action 버튼을 찾지 못함.</td>
+            <td><code>.problem-table__action-button--secondary</code> 미발견. 현재 문제 목록 데이터/selector drift 가능.</td>
+            <td>재시도 가능한 문제 fixture를 고정하거나 selector/test contract를 현재 UI에 맞게 갱신.</td>
+          </tr>
+          <tr>
+            <td>QA-20260702-07</td>
+            <td><span class="badge info">UNVERIFIED</span></td>
+            <td>Feedback routes</td>
+            <td>E-01/E-02 feedback 화면 테스트가 heading 미표시로 실패. 이전 스크린샷에서는 404 fallback 확인.</td>
+            <td>동적 submission id fixture가 현재 데이터와 맞지 않을 가능성.</td>
+            <td>feedback id fixture 생성/정리 절차를 고정한 뒤 재실행.</td>
+          </tr>
+          <tr>
+            <td>QA-20260702-08</td>
+            <td><span class="badge warn">P2</span></td>
+            <td>Build warning</td>
+            <td>Landing CTA auth user 판별 중 cookies 사용으로 <code>DYNAMIC_SERVER_USAGE</code> 경고.</td>
+            <td><code>pnpm build</code>는 exit 0이지만 warning/error 로그 출력.</td>
+            <td>정적 렌더링 의도와 cookie 기반 CTA 분기를 재검토. 경고가 의도된 dynamic fallback이면 문서화.</td>
+          </tr>
+          <tr>
+            <td>QA-20260702-09</td>
+            <td><span class="badge warn">P2</span></td>
+            <td>Runtime warning</td>
+            <td>Recharts container width/height가 <code>-1</code>이라는 warning 반복.</td>
+            <td><code>next-start.err.log</code>에 chart size warning 4회.</td>
+            <td>차트 부모 컨테이너의 mobile/min-size 조건 확인.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>미검증 항목</h2>
+      <ul>
+        <li><code>pnpm test:e2e</code>가 mobile project 진행 중 timeout되어 tablet/desktop 전체 E2E는 완료 검증하지 못함.</li>
+        <li>RLS 두 사용자 row isolation은 별도 두 번째 계정/fixture 없이 직접 검증하지 못함.</li>
+        <li>Feedback/report dynamic id 기반 화면은 fixture 불일치 가능성 때문에 제품 결함인지 테스트 데이터 결함인지 확정하지 못함.</li>
+        <li>local Supabase Docker-gated 테스트는 이번 계획 범위에서 별도로 실행하지 않았고, unit suite에서는 skip으로 남음.</li>
+      </ul>
+
+      <h2>보안/데이터 확인</h2>
+      <ul>
+        <li>
+          브라우저 정적 번들 <code>.next/static</code>에서 <code>SUPABASE_SERVICE_ROLE_KEY</code>,
+          <code>SUPABASE_ACCESS_TOKEN</code>, <code>SUPABASE_TEST_PASSWORD</code>의 값과 변수명을 검색했고 모두 미검출.
+        </li>
+        <li>비로그인 상태 <code>/dashboard</code>, <code>/admin</code> 접근은 <code>/login</code>으로 리다이렉트.</li>
+        <li>E2E 과정에서 기존 E2E student 계정 setup이 실행되었을 수 있으나, 수동 QA는 별도 custom seed row를 만들지 않음.</li>
+        <li>auth-state와 trace zip은 report evidence로 복사하지 않음.</li>
+      </ul>
+
+      <h2>공식 문서 기반 인사이트</h2>
+      <ul>
+        <li>
+          Playwright 공식 문서는 trace가 <code>on-first-retry</code>, <code>retain-on-failure</code> 같은 모드로
+          실패 분석용 산출물을 만들 수 있다고 설명합니다.
+          이번 실행에서 trace zip은 <code>test-results</code>에 남겼고 민감 세션 산출물 복사 금지 정책 때문에 evidence에는 넣지 않았습니다.
+          참고:
+          <a href="https://playwright.dev/docs/trace-viewer">Playwright Trace Viewer</a>,
+          <a href="https://playwright.dev/docs/test-use-options">Playwright test use options</a>.
+        </li>
+        <li>
+          Supabase 공식 보안 문서는 service role/secret key를 frontend에 노출하지 말라고 명시합니다.
+          이번 QA의 <code>.next/static</code> secret 검색은 이 원칙을 검증하기 위한 정적 번들 확인입니다.
+          참고:
+          <a href="https://supabase.com/docs/guides/database/secure-data">Supabase Securing your data</a>.
+        </li>
+        <li>
+          Next.js 공식 문서는 <code>NEXT_PUBLIC_</code> prefix가 붙은 환경 변수만 browser bundle에 노출된다고 설명하고,
+          <code>next.config.js env</code> 값은 항상 JavaScript bundle에 포함된다고 설명합니다.
+          따라서 secret은 runtime server env로만 유지해야 합니다.
+          참고:
+          <a href="https://nextjs.org/docs/pages/guides/environment-variables">Next.js Environment Variables</a>,
+          <a href="https://nextjs.org/docs/app/api-reference/config/next-config-js/env">Next.js env config</a>.
+        </li>
+        <li>
+          Supabase API 보안 문서는 Data API 접근 제어가 grants와 RLS 정책의 조합으로 결정된다고 설명합니다.
+          UI 스모크만으로는 row isolation을 증명할 수 없으므로, 두 사용자 fixture 기반 RLS 테스트가 별도로 필요합니다.
+          참고:
+          <a href="https://supabase.com/docs/guides/api/securing-your-api">Supabase Securing your API</a>.
+        </li>
+      </ul>
+
+      <h2>SOT 체크</h2>
+      <table>
+        <tbody>
+          <tr>
+            <th>읽은 SOT/기준 문서</th>
+            <td>
+              <code>AGENTS.md</code>, <code>README.md</code>, <code>TESTING.md</code>,
+              <code>package.json</code>, <code>docs/qa/plan/2026-07-02-ultraqa-deep-qa-execution-plan.md</code>,
+              <code>docs/qa/qa-execution-plan.md</code>, <code>playwright.config.ts</code>,
+              <code>docs/ia.md</code>, <code>docs/flow/user-flow.md</code>,
+              <code>docs/Wireframe/README.md</code>, <code>docs/ant-design/07-review-checklist.md</code>,
+              <code>supabase/migrations/INDEX.md</code>, <code>docs/Wireframe/data-usage-index.md</code>.
+            </td>
+          </tr>
+          <tr>
+            <th>확인한 요구사항</th>
+            <td>코드 수정 제외, auth-state/trace 복사 금지, secret 출력 금지, HTML QA 리포트와 screenshot evidence 생성.</td>
+          </tr>
+          <tr>
+            <th>충돌 여부</th>
+            <td>QA 실행 자체와 SOT 충돌 없음. 단, admin-boundary gate는 v13/admin scope 경계 위반 가능성을 보고함.</td>
+          </tr>
+          <tr>
+            <th>갱신 필요 문서</th>
+            <td>
+              즉시 SOT 수정은 하지 않음. <code>operation_policies</code> 참조를 허용하려면
+              <code>docs/sot-change-proposals/</code>에 예외/계약 제안이 필요.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </main>
+  </body>
+</html>

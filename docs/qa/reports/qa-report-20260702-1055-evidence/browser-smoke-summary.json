@@ -1,0 +1,637 @@
+{
+  "generatedAt": "2026-07-02T02:18:47.033Z",
+  "baseUrl": "http://127.0.0.1:3000",
+  "evidencePolicy": "Screenshots and sanitized route summary only. Secrets, storageState, auth-state, and trace zips are not copied here.",
+  "totals": {
+    "count": 27,
+    "passOrReview": 27,
+    "failOrReview": 0,
+    "unverified": 0
+  },
+  "results": [
+    {
+      "id": "landing-desktop-1280",
+      "route": "/",
+      "viewport": "desktop-1280",
+      "startedAt": "2026-07-02T02:17:51.665Z",
+      "status": 200,
+      "finalPath": "/",
+      "title": "TALKPIK AI · TOPIK 글쓰기 AI 학습",
+      "bodyLength": 212,
+      "firstHeadings": [
+        "쓰고.\n첨삭받고.\n정복하세요.",
+        "학습 현황부터피드백까지 하나의 흐름",
+        "TOPIK 학습자가 원하는 것"
+      ],
+      "rawHtmlVisible": false,
+      "appNotFoundVisible": false,
+      "overlayVisible": false,
+      "navError": null,
+      "consoleErrors": [
+        "requestfailed: /login net::ERR_ABORTED",
+        "requestfailed: /terms net::ERR_ABORTED",
+        "requestfailed: /terms net::ERR_ABORTED",
+        "requestfailed: /login net::ERR_ABORTED"
+      ],
+      "consoleErrorCount": 4,
+      "screenshot": "landing-desktop-1280.png",
+      "verdict": "PASS_OR_REVIEW"
+    },
+    {
+      "id": "login-desktop-1280",
+      "route": "/login",
+      "viewport": "desktop-1280",
+      "startedAt": "2026-07-02T02:17:53.816Z",
+      "status": 200,
+      "finalPath": "/login",
+      "title": "로그인 — TALKPIK | TALKPIK AI",
+      "bodyLength": 119,
+      "firstHeadings": [
+        "다시 오신 걸 환영해요"
+      ],
+      "rawHtmlVisible": false,
+      "appNotFoundVisible": false,
+      "overlayVisible": false,
+      "navError": null,
+      "consoleErrors": [
+        "requestfailed: /password-reset net::ERR_ABORTED",
+        "requestfailed: /password-reset net::ERR_ABORTED"
+      ],
+      "consoleErrorCount": 2,
+      "screenshot": "login-desktop-1280.png",
+      "verdict": "PASS_OR_REVIEW"
+    },
+    {
+      "id": "password-reset-desktop-1280",
+      "route": "/password-reset",
+      "viewport": "desktop-1280",
+      "startedAt": "2026-07-02T02:17:55.290Z",
+      "status": 200,
+      "finalPath": "/password-reset",
+      "title": "비밀번호 재설정 — TALKPIK | TALKPIK AI",
+      "bodyLength": 121,
+      "firstHeadings": [
+        "비밀번호 재설정"
+      ],
+      "rawHtmlVisible": false,
+      "appNotFoundVisible": false,
+      "overlayVisible": false,
+      "navError": null,
+      "consoleErrors": [
+        "requestfailed: /login net::ERR_ABORTED"
+      ],
+      "consoleErrorCount": 1,
+      "screenshot": "password-reset-desktop-1280.png",
+      "verdict": "PASS_OR_REVIEW"
+    },
+    {
+      "id": "terms-desktop-1280",
+      "route": "/terms",
+      "viewport": "desktop-1280",
+      "startedAt": "2026-07-02T02:17:56.748Z",
+      "status": 200,
+      "finalPath": "/terms",
+      "title": "이용약관 — TALKPIK | TALKPIK AI",
+      "bodyLength": 8272,
+      "firstHeadings": [],
+      "rawHtmlVisible": true,
+      "appNotFoundVisible": false,
+      "overlayVisible": false,
+      "navError": null,
+      "consoleErrors": [],
+      "consoleErrorCount": 0,
+      "screenshot": "terms-desktop-1280.png",
+      "verdict": "PASS_OR_REVIEW"
+    },
+    {
+      "id": "privacy-desktop-1280",
+      "route": "/privacy",
+      "viewport": "desktop-1280",
+      "startedAt": "2026-07-02T02:17:58.796Z",
+      "status": 200,
+      "finalPath": "/privacy",
+      "title": "개인정보처리방침 — TALKPIK | TALKPIK AI",
+      "bodyLength": 497,
+      "firstHeadings": [
+        "개인정보처리방침",
+        "처리 항목 요약 (임시)",
+        "갱신 안내"
+      ],
+      "rawHtmlVisible": false,
+      "appNotFoundVisible": false,
+      "overlayVisible": false,
+      "navError": null,
+      "consoleErrors": [
+        "requestfailed: /sign-up net::ERR_ABORTED",
+        "requestfailed: / net::ERR_ABORTED",
+        "requestfailed: /terms net::ERR_ABORTED",
+        "requestfailed: /sign-up net::ERR_ABORTED",
+        "requestfailed: / net::ERR_ABORTED",
+        "requestfailed: /terms net::ERR_ABORTED"
+      ],
+      "consoleErrorCount": 6,
+      "screenshot": "privacy-desktop-1280.png",
+      "verdict": "PASS_OR_REVIEW"
+    },
+    {
+      "id": "landing-mobile-360",
+      "route": "/",
+      "viewport": "mobile-360",
+      "startedAt": "2026-07-02T02:18:00.181Z",
+      "status": 200,
+      "finalPath": "/",
+      "title": "TALKPIK AI · TOPIK 글쓰기 AI 학습",
+      "bodyLength": 357,
+      "firstHeadings": [
+        "쓰고.\n첨삭받고.\n정복하세요.",
+        "학습 현황부터피드백까지 하나의 흐름",
+        "TOPIK 학습자가 원하는 것"
+      ],
+      "rawHtmlVisible": false,
+      "appNotFoundVisible": false,
+      "overlayVisible": false,
+      "navError": null,
+      "consoleErrors": [
+        "requestfailed: /login net::ERR_ABORTED"
+      ],
+      "consoleErrorCount": 1,
+      "screenshot": "landing-mobile-360.png",
+      "verdict": "PASS_OR_REVIEW"
+    },
+    {
+      "id": "login-mobile-360",
+      "route": "/login",
+      "viewport": "mobile-360",
+      "startedAt": "2026-07-02T02:18:01.817Z",
+      "status": 200,
+      "finalPath": "/login",
+      "title": "로그인 — TALKPIK | TALKPIK AI",
+      "bodyLength": 119,
+      "firstHeadings": [
+        "다시 오신 걸 환영해요"
+      ],
+      "rawHtmlVisible": false,
+      "appNotFoundVisible": false,
+      "overlayVisible": false,
+      "navError": null,
+      "consoleErrors": [
+        "requestfailed: /password-reset net::ERR_ABORTED"
+      ],
+      "consoleErrorCount": 1,
+      "screenshot": "login-mobile-360.png",
+      "verdict": "PASS_OR_REVIEW"
+    },
+    {
+      "id": "password-reset-mobile-360",
+      "route": "/password-reset",
+      "viewport": "mobile-360",
+      "startedAt": "2026-07-02T02:18:03.260Z",
+      "status": 200,
+      "finalPath": "/password-reset",
+      "title": "비밀번호 재설정 — TALKPIK | TALKPIK AI",
+      "bodyLength": 121,
+      "firstHeadings": [
+        "비밀번호 재설정"
+      ],
+      "rawHtmlVisible": false,
+      "appNotFoundVisible": false,
+      "overlayVisible": false,
+      "navError": null,
+      "consoleErrors": [
+        "requestfailed: /login net::ERR_ABORTED"
+      ],
+      "consoleErrorCount": 1,
+      "screenshot": "password-reset-mobile-360.png",
+      "verdict": "PASS_OR_REVIEW"
+    },
+    {
+      "id": "terms-mobile-360",
+      "route": "/terms",
+      "viewport": "mobile-360",
+      "startedAt": "2026-07-02T02:18:04.738Z",
+      "status": 200,
+      "finalPath": "/terms",
+      "title": "이용약관 — TALKPIK | TALKPIK AI",
+      "bodyLength": 8272,
+      "firstHeadings": [],
+      "rawHtmlVisible": true,
+      "appNotFoundVisible": false,
+      "overlayVisible": false,
+      "navError": null,
+      "consoleErrors": [],
+      "consoleErrorCount": 0,
+      "screenshot": "terms-mobile-360.png",
+      "verdict": "PASS_OR_REVIEW"
+    },
+    {
+      "id": "privacy-mobile-360",
+      "route": "/privacy",
+      "viewport": "mobile-360",
+      "startedAt": "2026-07-02T02:18:06.392Z",
+      "status": 200,
+      "finalPath": "/privacy",
+      "title": "개인정보처리방침 — TALKPIK | TALKPIK AI",
+      "bodyLength": 497,
+      "firstHeadings": [
+        "개인정보처리방침",
+        "처리 항목 요약 (임시)",
+        "갱신 안내"
+      ],
+      "rawHtmlVisible": false,
+      "appNotFoundVisible": false,
+      "overlayVisible": false,
+      "navError": null,
+      "consoleErrors": [
+        "requestfailed: /sign-up net::ERR_ABORTED",
+        "requestfailed: / net::ERR_ABORTED",
+        "requestfailed: /terms net::ERR_ABORTED",
+        "requestfailed: / net::ERR_ABORTED",
+        "requestfailed: /sign-up net::ERR_ABORTED",
+        "requestfailed: /terms net::ERR_ABORTED"
+      ],
+      "consoleErrorCount": 6,
+      "screenshot": "privacy-mobile-360.png",
+      "verdict": "PASS_OR_REVIEW"
+    },
+    {
+      "id": "anon-dashboard-redirect-mobile-360",
+      "route": "/dashboard",
+      "viewport": "mobile-360",
+      "startedAt": "2026-07-02T02:18:07.750Z",
+      "status": 200,
+      "finalPath": "/login",
+      "title": "로그인 — TALKPIK | TALKPIK AI",
+      "bodyLength": 119,
+      "firstHeadings": [
+        "다시 오신 걸 환영해요"
+      ],
+      "rawHtmlVisible": false,
+      "appNotFoundVisible": false,
+      "overlayVisible": false,
+      "navError": null,
+      "consoleErrors": [
+        "requestfailed: /password-reset net::ERR_ABORTED",
+        "requestfailed: /password-reset net::ERR_ABORTED"
+      ],
+      "consoleErrorCount": 2,
+      "screenshot": "anon-dashboard-redirect-mobile-360.png",
+      "verdict": "PASS_OR_REVIEW"
+    },
+    {
+      "id": "anon-admin-mobile-360",
+      "route": "/admin",
+      "viewport": "mobile-360",
+      "startedAt": "2026-07-02T02:18:09.203Z",
+      "status": 200,
+      "finalPath": "/login",
+      "title": "로그인 — TALKPIK | TALKPIK AI",
+      "bodyLength": 119,
+      "firstHeadings": [
+        "다시 오신 걸 환영해요"
+      ],
+      "rawHtmlVisible": false,
+      "appNotFoundVisible": false,
+      "overlayVisible": false,
+      "navError": null,
+      "consoleErrors": [
+        "requestfailed: / net::ERR_ABORTED",
+        "requestfailed: /password-reset net::ERR_ABORTED"
+      ],
+      "consoleErrorCount": 2,
+      "screenshot": "anon-admin-mobile-360.png",
+      "verdict": "PASS_OR_REVIEW"
+    },
+    {
+      "id": "login-flow-mobile-360",
+      "route": "/login",
+      "viewport": "mobile-360",
+      "finalPath": "/dashboard",
+      "verdict": "PASS",
+      "consoleErrors": [
+        "requestfailed: /password-reset net::ERR_ABORTED",
+        "requestfailed: / net::ERR_ABORTED"
+      ],
+      "consoleErrorCount": 2
+    },
+    {
+      "id": "dashboard-desktop-1280",
+      "route": "/dashboard",
+      "viewport": "desktop-1280",
+      "startedAt": "2026-07-02T02:18:12.329Z",
+      "status": 200,
+      "finalPath": "/dashboard",
+      "title": "대시보드 — TALKPIK | TALKPIK AI",
+      "bodyLength": 627,
+      "firstHeadings": [
+        "오늘의 학습",
+        "도로 쪽 소음으로 공부에 방해를 받아 기숙사 방 변경 방법과 ..."
+      ],
+      "rawHtmlVisible": false,
+      "appNotFoundVisible": false,
+      "overlayVisible": false,
+      "navError": null,
+      "consoleErrors": [
+        "requestfailed: /growth net::ERR_ABORTED",
+        "requestfailed: /practice/problems net::ERR_ABORTED",
+        "requestfailed: /onboarding/learning-goal net::ERR_ABORTED",
+        "requestfailed: /practice/recommendations net::ERR_ABORTED",
+        "requestfailed: /writing/feedback/short/0fbab1d2-a35f-4565-b652-4fa7578365e2 net::ERR_ABORTED",
+        "requestfailed: /writing/feedback/short/1cca8609-379a-445f-a1c2-42b0510d62c9 net::ERR_ABORTED",
+        "requestfailed: /writing/answer-writing-52 net::ERR_ABORTED",
+        "requestfailed: /writing/answer-writing-52 net::ERR_ABORTED"
+      ],
+      "consoleErrorCount": 8,
+      "screenshot": "dashboard-desktop-1280.png",
+      "verdict": "PASS_OR_REVIEW"
+    },
+    {
+      "id": "practice-problems-desktop-1280",
+      "route": "/practice/problems",
+      "viewport": "desktop-1280",
+      "startedAt": "2026-07-02T02:18:15.788Z",
+      "status": 200,
+      "finalPath": "/practice/problems",
+      "title": "문제 목록 — TALKPIK | TALKPIK AI",
+      "bodyLength": 1855,
+      "firstHeadings": [
+        "문제 목록"
+      ],
+      "rawHtmlVisible": false,
+      "appNotFoundVisible": false,
+      "overlayVisible": false,
+      "navError": null,
+      "consoleErrors": [
+        "requestfailed: /writing/essay-writing-54 net::ERR_ABORTED",
+        "requestfailed: /writing/essay-writing-54 net::ERR_ABORTED",
+        "requestfailed: /writing/answer-writing-52 net::ERR_ABORTED",
+        "requestfailed: /writing/essay-writing-54 net::ERR_ABORTED",
+        "requestfailed: /writing/answer-writing-52 net::ERR_ABORTED",
+        "requestfailed: /writing/answer-writing-52 net::ERR_ABORTED",
+        "requestfailed: /writing/essay-writing-54 net::ERR_ABORTED",
+        "requestfailed: /writing/answer-writing-52 net::ERR_ABORTED"
+      ],
+      "consoleErrorCount": 9,
+      "screenshot": "practice-problems-desktop-1280.png",
+      "verdict": "PASS_OR_REVIEW"
+    },
+    {
+      "id": "writing51-desktop-1280",
+      "route": "/writing/short-answer-writing-51",
+      "viewport": "desktop-1280",
+      "startedAt": "2026-07-02T02:18:18.741Z",
+      "status": 200,
+      "finalPath": "/writing/short-answer-writing-51",
+      "title": "쓰기 — TALKPIK | TALKPIK AI",
+      "bodyLength": 665,
+      "firstHeadings": [
+        "51번 단문 빈칸"
+      ],
+      "rawHtmlVisible": false,
+      "appNotFoundVisible": false,
+      "overlayVisible": false,
+      "navError": null,
+      "consoleErrors": [],
+      "consoleErrorCount": 0,
+      "screenshot": "writing51-desktop-1280.png",
+      "verdict": "PASS_OR_REVIEW"
+    },
+    {
+      "id": "library-desktop-1280",
+      "route": "/library",
+      "viewport": "desktop-1280",
+      "startedAt": "2026-07-02T02:18:20.740Z",
+      "status": 200,
+      "finalPath": "/library",
+      "title": "내 서재 — TALKPIK | TALKPIK AI",
+      "bodyLength": 762,
+      "firstHeadings": [
+        "내 서재"
+      ],
+      "rawHtmlVisible": false,
+      "appNotFoundVisible": false,
+      "overlayVisible": false,
+      "navError": null,
+      "consoleErrors": [],
+      "consoleErrorCount": 0,
+      "screenshot": "library-desktop-1280.png",
+      "verdict": "PASS_OR_REVIEW"
+    },
+    {
+      "id": "settings-language-desktop-1280",
+      "route": "/settings/language",
+      "viewport": "desktop-1280",
+      "startedAt": "2026-07-02T02:18:23.355Z",
+      "status": 200,
+      "finalPath": "/settings/language",
+      "title": "언어 설정 — TALKPIK | TALKPIK AI",
+      "bodyLength": 529,
+      "firstHeadings": [
+        "언어 설정"
+      ],
+      "rawHtmlVisible": false,
+      "appNotFoundVisible": false,
+      "overlayVisible": false,
+      "navError": null,
+      "consoleErrors": [],
+      "consoleErrorCount": 0,
+      "screenshot": "settings-language-desktop-1280.png",
+      "verdict": "PASS_OR_REVIEW"
+    },
+    {
+      "id": "paywall-desktop-1280",
+      "route": "/paywall",
+      "viewport": "desktop-1280",
+      "startedAt": "2026-07-02T02:18:25.816Z",
+      "status": 200,
+      "finalPath": "/paywall",
+      "title": "구독 가입 — TALKPIK | TALKPIK AI",
+      "bodyLength": 348,
+      "firstHeadings": [
+        "구독 시작하기"
+      ],
+      "rawHtmlVisible": false,
+      "appNotFoundVisible": false,
+      "overlayVisible": false,
+      "navError": null,
+      "consoleErrors": [
+        "requestfailed: /subscription net::ERR_ABORTED"
+      ],
+      "consoleErrorCount": 1,
+      "screenshot": "paywall-desktop-1280.png",
+      "verdict": "PASS_OR_REVIEW"
+    },
+    {
+      "id": "subscription-desktop-1280",
+      "route": "/subscription",
+      "viewport": "desktop-1280",
+      "startedAt": "2026-07-02T02:18:28.151Z",
+      "status": 200,
+      "finalPath": "/subscription",
+      "title": "구독 관리 — TALKPIK | TALKPIK AI",
+      "bodyLength": 130,
+      "firstHeadings": [],
+      "rawHtmlVisible": false,
+      "appNotFoundVisible": false,
+      "overlayVisible": false,
+      "navError": null,
+      "consoleErrors": [
+        "requestfailed: /dashboard net::ERR_ABORTED"
+      ],
+      "consoleErrorCount": 1,
+      "screenshot": "subscription-desktop-1280.png",
+      "verdict": "PASS_OR_REVIEW"
+    },
+    {
+      "id": "dashboard-mobile-360",
+      "route": "/dashboard",
+      "viewport": "mobile-360",
+      "startedAt": "2026-07-02T02:18:30.645Z",
+      "status": 200,
+      "finalPath": "/dashboard",
+      "title": "대시보드 — TALKPIK | TALKPIK AI",
+      "bodyLength": 561,
+      "firstHeadings": [
+        "오늘의 학습",
+        "도로 쪽 소음으로 공부에 방해를 받아 기숙사 방 변경 방법과 ..."
+      ],
+      "rawHtmlVisible": false,
+      "appNotFoundVisible": false,
+      "overlayVisible": false,
+      "navError": null,
+      "consoleErrors": [
+        "requestfailed: /writing/short-answer-writing-51 net::ERR_ABORTED"
+      ],
+      "consoleErrorCount": 1,
+      "screenshot": "dashboard-mobile-360.png",
+      "verdict": "PASS_OR_REVIEW"
+    },
+    {
+      "id": "practice-problems-mobile-360",
+      "route": "/practice/problems",
+      "viewport": "mobile-360",
+      "startedAt": "2026-07-02T02:18:33.188Z",
+      "status": 200,
+      "finalPath": "/practice/problems",
+      "title": "문제 목록 — TALKPIK | TALKPIK AI",
+      "bodyLength": 1772,
+      "firstHeadings": [
+        "문제 목록"
+      ],
+      "rawHtmlVisible": false,
+      "appNotFoundVisible": false,
+      "overlayVisible": false,
+      "navError": null,
+      "consoleErrors": [],
+      "consoleErrorCount": 0,
+      "screenshot": "practice-problems-mobile-360.png",
+      "verdict": "PASS_OR_REVIEW"
+    },
+    {
+      "id": "writing51-mobile-360",
+      "route": "/writing/short-answer-writing-51",
+      "viewport": "mobile-360",
+      "startedAt": "2026-07-02T02:18:35.562Z",
+      "status": 200,
+      "finalPath": "/writing/short-answer-writing-51",
+      "title": "쓰기 — TALKPIK | TALKPIK AI",
+      "bodyLength": 665,
+      "firstHeadings": [
+        "51번 단문 빈칸"
+      ],
+      "rawHtmlVisible": false,
+      "appNotFoundVisible": false,
+      "overlayVisible": false,
+      "navError": null,
+      "consoleErrors": [],
+      "consoleErrorCount": 0,
+      "screenshot": "writing51-mobile-360.png",
+      "verdict": "PASS_OR_REVIEW"
+    },
+    {
+      "id": "library-mobile-360",
+      "route": "/library",
+      "viewport": "mobile-360",
+      "startedAt": "2026-07-02T02:18:37.556Z",
+      "status": 200,
+      "finalPath": "/library",
+      "title": "내 서재 — TALKPIK | TALKPIK AI",
+      "bodyLength": 696,
+      "firstHeadings": [
+        "내 서재"
+      ],
+      "rawHtmlVisible": false,
+      "appNotFoundVisible": false,
+      "overlayVisible": false,
+      "navError": null,
+      "consoleErrors": [],
+      "consoleErrorCount": 0,
+      "screenshot": "library-mobile-360.png",
+      "verdict": "PASS_OR_REVIEW"
+    },
+    {
+      "id": "settings-language-mobile-360",
+      "route": "/settings/language",
+      "viewport": "mobile-360",
+      "startedAt": "2026-07-02T02:18:40.042Z",
+      "status": 200,
+      "finalPath": "/settings/language",
+      "title": "언어 설정 — TALKPIK | TALKPIK AI",
+      "bodyLength": 444,
+      "firstHeadings": [
+        "언어 설정"
+      ],
+      "rawHtmlVisible": false,
+      "appNotFoundVisible": false,
+      "overlayVisible": false,
+      "navError": null,
+      "consoleErrors": [],
+      "consoleErrorCount": 0,
+      "screenshot": "settings-language-mobile-360.png",
+      "verdict": "PASS_OR_REVIEW"
+    },
+    {
+      "id": "paywall-mobile-360",
+      "route": "/paywall",
+      "viewport": "mobile-360",
+      "startedAt": "2026-07-02T02:18:42.376Z",
+      "status": 200,
+      "finalPath": "/paywall",
+      "title": "구독 가입 — TALKPIK | TALKPIK AI",
+      "bodyLength": 282,
+      "firstHeadings": [
+        "구독 시작하기"
+      ],
+      "rawHtmlVisible": false,
+      "appNotFoundVisible": false,
+      "overlayVisible": false,
+      "navError": null,
+      "consoleErrors": [
+        "requestfailed: /subscription net::ERR_ABORTED"
+      ],
+      "consoleErrorCount": 1,
+      "screenshot": "paywall-mobile-360.png",
+      "verdict": "PASS_OR_REVIEW"
+    },
+    {
+      "id": "subscription-mobile-360",
+      "route": "/subscription",
+      "viewport": "mobile-360",
+      "startedAt": "2026-07-02T02:18:44.659Z",
+      "status": 200,
+      "finalPath": "/subscription",
+      "title": "구독 관리 — TALKPIK | TALKPIK AI",
+      "bodyLength": 64,
+      "firstHeadings": [],
+      "rawHtmlVisible": false,
+      "appNotFoundVisible": false,
+      "overlayVisible": false,
+      "navError": null,
+      "consoleErrors": [
+        "requestfailed: /dashboard net::ERR_ABORTED"
+      ],
+      "consoleErrorCount": 1,
+      "screenshot": "subscription-mobile-360.png",
+      "verdict": "PASS_OR_REVIEW"
+    }
+  ]
+}
