@@ -10,6 +10,7 @@ import {
   difficultyLabelKey,
 } from "@/components/practice/DifficultyMeter";
 import type { LibraryReviewCandidate } from "@/lib/library/types";
+import { writingQuestionNeonClass } from "@/lib/writing/question-number-neon";
 
 import { formatDashboardDate } from "./library-dashboard-format";
 
@@ -48,6 +49,9 @@ export function LibraryReviewCandidateCard({ candidate }: Props) {
           max: candidate.scoreMax,
         })
       : t("meta.totalScoreUnavailable");
+  const questionNoLabel = candidate.questionNo
+    ? t("questionNo", { questionNo: candidate.questionNo })
+    : t("questionUnknown");
 
   return (
     <AppCard
@@ -65,20 +69,42 @@ export function LibraryReviewCandidateCard({ candidate }: Props) {
         >
           <div
             data-testid="library-review-candidate-heading"
-            className="grid gap-4"
+            className="grid min-w-0 gap-2"
           >
-            <div>
-              <Tag className="m-0 text-sm">
-                <span className="sr-only">{t("meta.submittedAt")} </span>
-                {formatDashboardDate(candidate.submittedAt)}
-              </Tag>
+            <div
+              data-testid="library-review-candidate-question-row"
+              className="flex justify-end"
+            >
+              {candidate.questionNo ? (
+                <span
+                  aria-label={questionNoLabel}
+                  className={[
+                    "writing-question-number library-review-candidate-question-number font-['Space_Grotesk'] leading-none",
+                    writingQuestionNeonClass(
+                      "writing-question-number",
+                      candidate.questionNo,
+                    ),
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                >
+                  {candidate.questionNo}
+                </span>
+              ) : (
+                <Tag className="m-0 text-sm">{questionNoLabel}</Tag>
+              )}
             </div>
 
-            <div className="min-w-0">
-              <Tag className="mb-2 ml-0 mr-0 text-sm">
-                {candidate.questionNo
-                  ? t("questionNo", { questionNo: candidate.questionNo })
-                  : t("questionUnknown")}
+            <div
+              data-testid="library-review-candidate-content"
+              className="min-w-0"
+            >
+              <Tag
+                data-testid="library-review-candidate-date"
+                className="mb-2 ml-0 mr-0 text-sm"
+              >
+                <span className="sr-only">{t("meta.submittedAt")} </span>
+                {formatDashboardDate(candidate.submittedAt)}
               </Tag>
               <strong
                 data-testid="library-review-candidate-title"

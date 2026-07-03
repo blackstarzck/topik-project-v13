@@ -358,6 +358,52 @@ test("F-01 library dashboard renders study action sections", async ({
   await expect(page.locator(".library-review-swiper-pagination")).toHaveCount(
     0,
   );
+  const reviewCandidateQuestionLayout = await page
+    .getByTestId("library-review-candidate-card")
+    .first()
+    .evaluate((card) => {
+      const questionRow = card.querySelector(
+        '[data-testid="library-review-candidate-question-row"]',
+      );
+      const content = card.querySelector(
+        '[data-testid="library-review-candidate-content"]',
+      );
+      const questionNumber = card.querySelector(
+        ".library-review-candidate-question-number",
+      );
+      const heading = card.querySelector(
+        '[data-testid="library-review-candidate-heading"]',
+      );
+
+      if (!questionRow || !content || !questionNumber || !heading) {
+        throw new Error("Review candidate question layout nodes are missing");
+      }
+
+      const questionRowRect = questionRow.getBoundingClientRect();
+      const contentRect = content.getBoundingClientRect();
+      const questionStyle = window.getComputedStyle(questionNumber);
+
+      return {
+        childOrder: Array.from(heading.children).map((child) =>
+          child.getAttribute("data-testid"),
+        ),
+        contentTop: contentRect.top,
+        questionFontSize: questionStyle.fontSize,
+        questionHeight: questionNumber.getBoundingClientRect().height,
+        questionRowBottom: questionRowRect.bottom,
+        questionWidth: questionNumber.getBoundingClientRect().width,
+      };
+    });
+  expect(reviewCandidateQuestionLayout.childOrder).toEqual([
+    "library-review-candidate-question-row",
+    "library-review-candidate-content",
+  ]);
+  expect(reviewCandidateQuestionLayout.questionFontSize).toBe("18px");
+  expect(reviewCandidateQuestionLayout.questionWidth).toBeLessThan(30);
+  expect(reviewCandidateQuestionLayout.questionHeight).toBeLessThan(30);
+  expect(reviewCandidateQuestionLayout.questionRowBottom).toBeLessThanOrEqual(
+    reviewCandidateQuestionLayout.contentTop,
+  );
   await expect(page.getByText(fixture.problemTitle).first()).toBeVisible();
   await expect(
     page.getByRole("link", { name: "피드백 보기" }).first(),
