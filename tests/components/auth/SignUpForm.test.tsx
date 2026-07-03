@@ -428,7 +428,7 @@ describe("SignUpForm", () => {
     );
   });
 
-  it("shows safe account guidance for explicit duplicate signup errors", async () => {
+  it("shows explicit duplicate guidance for duplicate signup error codes", async () => {
     signUpMock.mockResolvedValueOnce({
       data: { session: null, user: null },
       error: {
@@ -448,21 +448,67 @@ describe("SignUpForm", () => {
     await waitFor(() => {
       expect(screen.getByTestId("sign-up-safe-guidance")).toBeTruthy();
     });
+    // message 토스트 본문
     expect(
       screen.getByText(
-        "이 이메일로 바로 새 가입을 계속할 수 없어요. 이미 계정을 만든 적이 있다면 로그인하거나 비밀번호를 재설정해 주세요.",
+        "이 이메일로 가입한 계정이 이미 있어요. 로그인하거나 비밀번호를 재설정해 주세요.",
       ),
     ).toBeTruthy();
+    // 2026-07-03 제안: 이메일 필드 인라인 오류로도 중복을 명시한다.
+    expect(await screen.findByText("이미 가입된 이메일이에요")).toBeTruthy();
+    // raw provider 문구는 계속 노출하지 않는다.
     expect(screen.queryByText("User already registered")).toBeNull();
-    expect(screen.queryByText(/이미 가입된 이메일/)).toBeNull();
-    expect(screen.queryByText(/계정이 존재/)).toBeNull();
-    expect(
-      screen.getByTestId("sign-up-safe-guidance-login").getAttribute("href"),
-    ).toBe("/login");
-    expect(
-      screen.getByTestId("sign-up-safe-guidance-reset").getAttribute("href"),
-    ).toBe("/password-reset");
     expect(pushMock).not.toHaveBeenCalled();
+  });
+
+  it("treats an identities-empty success response as a duplicate email", async () => {
+    signUpMock.mockResolvedValueOnce({
+      data: {
+        session: null,
+        user: { id: "00000000-0000-4000-8000-000000000001", identities: [] },
+      },
+      error: null,
+    });
+    renderInApp(<SignUpForm />);
+
+    await fillValidSignUpForm("registered@example.com");
+
+    await act(async () => {
+      fireEvent.click(submitButton());
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("sign-up-safe-guidance")).toBeTruthy();
+    });
+    expect(await screen.findByText("이미 가입된 이메일이에요")).toBeTruthy();
+    expect(pushMock).not.toHaveBeenCalled();
+  });
+
+  it("redirects to /auth/verify-email when the new user has identities", async () => {
+    signUpMock.mockResolvedValueOnce({
+      data: {
+        session: null,
+        user: {
+          id: "00000000-0000-4000-8000-000000000001",
+          identities: [{ id: "00000000-0000-4000-8000-000000000002" }],
+        },
+      },
+      error: null,
+    });
+    renderInApp(<SignUpForm />);
+
+    await fillValidSignUpForm("new-user@example.com");
+
+    await act(async () => {
+      fireEvent.click(submitButton());
+    });
+
+    await waitFor(() => {
+      expect(pushMock).toHaveBeenCalledTimes(1);
+    });
+    expect(pushMock.mock.calls[0][0]).toBe(
+      "/auth/verify-email?email=new-user%40example.com",
+    );
   });
 
   it("keeps a stored affiliation code when duplicate email guidance is shown", async () => {
@@ -487,9 +533,6 @@ describe("SignUpForm", () => {
       expect(screen.getByTestId("sign-up-safe-guidance")).toBeTruthy();
     });
     expect(readStoredAffiliationCode()).toBe("EXPO2026-BOOTH-A");
-    expect(
-      screen.getByTestId("sign-up-safe-guidance-login").getAttribute("href"),
-    ).toBe("/login?next=%2Fauth%2Finstitution-invite");
     expect(pushMock).not.toHaveBeenCalled();
   });
 

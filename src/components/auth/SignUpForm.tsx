@@ -31,7 +31,6 @@ import {
 import {
   buildAffiliationMetadata,
   clearStoredAffiliationCode,
-  readStoredAffiliationCode,
 } from "@/lib/auth/affiliation-code";
 import { POST_AUTH_SIGN_UP_PATH } from "@/lib/auth/completion-routes";
 import { buildAuthRedirectUrl } from "@/lib/auth/redirect-url";
@@ -49,11 +48,10 @@ import {
 import { asLocale, DEFAULT_LOCALE, LOCALE_COOKIE } from "@/i18n/locales";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { PasswordStrengthMeter } from "@/components/auth/PasswordStrengthMeter";
-import { APP_ROUTES } from "@/lib/routes";
 
-// description §3 예외: "중복 이메일/형식 오류는 필드 하단에 표시함."
-// Supabase가 가입 중복을 알리는 error.code 들. 이 코드는 토스트가 아니라
-// 이메일 필드 하단 인라인 오류로 보여준다.
+// 2026-07-03 sign-up-explicit-duplicate-email 제안: 중복 이메일은 숨기지 않고
+// 이메일 필드 인라인 오류 + 로그인/비밀번호 재설정 CTA Alert로 명시한다.
+// Supabase가 가입 중복을 알리는 error.code 들.
 const DUPLICATE_EMAIL_CODES = new Set([
   "user_already_exists",
   "email_exists",
@@ -66,6 +64,12 @@ const RATE_LIMIT_CODES = new Set([
 ]);
 
 const SIGN_UP_COOLDOWN_STORAGE_KEY = "talkpik:sign-up:cooldown-until";
+
+// 중복 안내 message는 고정 key로 띄워 재제출 시 중복 표시를 막고,
+// 이메일 수정 시 같은 key로 닫는다. 문장을 읽을 시간을 주기 위해
+// 기본(3초)보다 긴 5초 뒤 자동으로 사라진다(hover 시 일시정지).
+const DUPLICATE_EMAIL_MESSAGE_KEY = "sign-up-duplicate-email";
+const DUPLICATE_EMAIL_MESSAGE_DURATION_SECONDS = 5;
 
 const { Text } = Typography;
 
@@ -170,7 +174,6 @@ export function SignUpForm({
   const [googleSubmitting, setGoogleSubmitting] = useState(false);
   const [blockedOAuthBrowser, setBlockedOAuthBrowser] =
     useState<GoogleOAuthEmbeddedBrowser | null>(null);
-  const [safeGuidanceVisible, setSafeGuidanceVisible] = useState(false);
   const [visibleStep, setVisibleStep] = useState(STEP_NAME);
   const signUpCooldown = useEmailCooldown(
     SIGN_UP_COOLDOWN_STORAGE_KEY,
@@ -227,11 +230,6 @@ export function SignUpForm({
   const showPasswordStep = currentVisibleStep >= STEP_PASSWORD;
   const showTermsStep = currentVisibleStep >= STEP_TERMS;
   const showSubmitButton = showTermsStep;
-  const safeGuidanceLoginHref = readStoredAffiliationCode()
-    ? `${APP_ROUTES.login}?next=${encodeURIComponent(
-        APP_ROUTES.authInstitutionInvite,
-      )}`
-    : APP_ROUTES.login;
 
   useEffect(() => {
     onCooldownChange?.(isCoolingDown);
@@ -302,16 +300,31 @@ export function SignUpForm({
     handleStepCompletion(step, event.currentTarget.value);
   }
 
+  function showDuplicateEmailGuidance() {
+    // 인라인 오류는 message가 사라진 뒤에도 남는 지속 단서다.
+    form.setFields([{ name: "email", errors: [t("emailDuplicate")] }]);
+    void message.open({
+      key: DUPLICATE_EMAIL_MESSAGE_KEY,
+      type: "warning",
+      content: (
+        <span data-testid="sign-up-safe-guidance">
+          {t("accountCheckDescription")}
+        </span>
+      ),
+      duration: DUPLICATE_EMAIL_MESSAGE_DURATION_SECONDS,
+    });
+  }
+
   async function handleSignUp(values: SignUpFields) {
     if (submitting || googleSubmitting || isCoolingDown) return;
 
-    setSafeGuidanceVisible(false);
+    message.destroy(DUPLICATE_EMAIL_MESSAGE_KEY);
     setBlockedOAuthBrowser(null);
     setSubmitting(true);
     try {
       const supabase = createSupabaseBrowserClient();
       const affiliationMetadata = buildAffiliationMetadata();
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
         options: {
@@ -339,10 +352,8 @@ export function SignUpForm({
           message.error(t("rateLimitedMessage"));
           return;
         }
-        // §3 예외: 중복 이메일 여부는 단정하지 않고 보안-safe 안내로 처리한다.
         if (error.code && DUPLICATE_EMAIL_CODES.has(error.code)) {
-          form.setFields([{ name: "email", errors: [] }]);
-          setSafeGuidanceVisible(true);
+          showDuplicateEmailGuidance();
           return;
         }
         const reason = mapSupabaseErrorCode(error.code);
@@ -351,6 +362,14 @@ export function SignUpForm({
             message: te(`${reason}.message` as Parameters<typeof te>[0]),
           }),
         );
+        return;
+      }
+      // 이메일 확인이 켜진 Supabase 프로젝트는 이미 확인된 계정의 재가입 요청에
+      // 에러 대신 identities가 빈 성공형 응답을 돌려준다. 이 응답도 중복으로
+      // 안내한다. user가 없는 성공형 응답은 판정할 수 없으므로 기존 verify-email
+      // 이동을 유지한다.
+      if (data?.user && data.user.identities?.length === 0) {
+        showDuplicateEmailGuidance();
         return;
       }
       clearStoredAffiliationCode();
@@ -483,7 +502,7 @@ export function SignUpForm({
                   if (form.getFieldError("email").length > 0) {
                     form.setFields([{ name: "email", errors: [] }]);
                   }
-                  setSafeGuidanceVisible(false);
+                  message.destroy(DUPLICATE_EMAIL_MESSAGE_KEY);
                 }}
               />
             </Form.Item>
@@ -591,37 +610,6 @@ export function SignUpForm({
               </Checkbox>
             </Form.Item>
           </div>
-        )}
-
-        {safeGuidanceVisible && (
-          <Alert
-            type="info"
-            showIcon
-            className="!mb-4"
-            data-testid="sign-up-safe-guidance"
-            title={t("accountCheckTitle")}
-            description={
-              <div className="flex flex-col gap-3">
-                <span>{t("accountCheckDescription")}</span>
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    size="small"
-                    href={safeGuidanceLoginHref}
-                    data-testid="sign-up-safe-guidance-login"
-                  >
-                    {t("accountCheckLogin")}
-                  </Button>
-                  <Button
-                    size="small"
-                    href="/password-reset"
-                    data-testid="sign-up-safe-guidance-reset"
-                  >
-                    {t("accountCheckReset")}
-                  </Button>
-                </div>
-              </div>
-            }
-          />
         )}
 
         {countdownLabel && (
