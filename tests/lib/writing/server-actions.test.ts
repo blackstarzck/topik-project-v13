@@ -357,6 +357,51 @@ describe("submitWritingAction", () => {
     );
   });
 
+  it("uses the profile UI locale as the external submit language", async () => {
+    process.env.TALKPIK_API_BASE_URL = "https://api.example.test";
+    helpers.fromMock.mockReturnValue({
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          maybeSingle: vi
+            .fn()
+            .mockResolvedValue({
+              data: { status: "active", ui_locale: "vi" },
+              error: null,
+            }),
+        })),
+      })),
+    });
+    const answerText = "External writing answer.";
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          submission_id: "00000000-0000-0000-0000-000000000099",
+          status: "processing",
+        }),
+        { status: 202 },
+      ),
+    );
+
+    await submitWritingAction({
+      problem_id: "00000000-0000-0000-0000-000000000001",
+      question_no: 54,
+      answer_text: answerText,
+      char_count: answerText.length,
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.example.test/api/writing/submit",
+      expect.objectContaining({
+        body: JSON.stringify({
+          task_type: "Q54",
+          question_id: "topik-writing-54-0001",
+          text: answerText,
+          lang: "vi",
+        }),
+      }),
+    );
+  });
+
   it("fails before queueing externally when the service role writer is unavailable", async () => {
     process.env.TALKPIK_API_BASE_URL = "https://api.example.test";
     helpers.createServiceClientMock.mockImplementation(() => {
