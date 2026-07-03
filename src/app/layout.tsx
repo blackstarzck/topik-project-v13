@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import localFont from "next/font/local";
+import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
 
 import { GoogleAnalyticsTags } from "@/components/analytics/GoogleAnalyticsTags";
+import { DEFAULT_TIME_ZONE } from "@/i18n/locales";
 import { resolveLocale } from "@/i18n/request";
 import { AppProviders } from "./providers";
 // antd v6.x compatibility: avoid importing the client theme barrel here.
@@ -95,15 +97,17 @@ export default async function RootLayout({
          * It extracts and injects AntD styles during SSR streaming.
          * See: https://ant.design/docs/react/use-with-next
          */}
-        <AntdRegistry>
-          <AppProviders
-            initialAppearance={appearance}
-            locale={locale}
-            messages={messages}
-          >
-            {children}
-          </AppProviders>
-        </AntdRegistry>
+        <NextIntlClientProvider
+          locale={locale}
+          messages={messages}
+          timeZone={DEFAULT_TIME_ZONE}
+        >
+          <AntdRegistry>
+            <AppProviders initialAppearance={appearance}>
+              {children}
+            </AppProviders>
+          </AntdRegistry>
+        </NextIntlClientProvider>
         <GoogleAnalyticsTags />
       </body>
     </html>

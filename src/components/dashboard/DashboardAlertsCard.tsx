@@ -5,9 +5,7 @@ import {
   App,
   Button,
   Empty,
-  List,
   Skeleton,
-  Tag,
   Typography,
 } from "antd";
 import { useFormatter, useTranslations } from "next-intl";
@@ -29,15 +27,6 @@ const { Text } = Typography;
 // 대시보드 공지사항 항목 5개 이하 (하드 캡).
 const NOTIFICATION_LIMIT = 5;
 
-// category enum → 카탈로그 키(enum 값은 그대로 유지).
-const CATEGORY_LABEL_KEYS: Record<UserNotification["category"], string> = {
-  study: "study",
-  exam_schedule: "examSchedule",
-  notice: "notice",
-  event: "event",
-  marketing: "marketing",
-};
-
 type NotificationLoad =
   | { status: "loading" }
   | { status: "ready" }
@@ -56,7 +45,7 @@ type Props = {
  * 플로팅 알림함과 역할이 겹치지 않도록 notice category만 표시한다.
  * 읽음 규칙: 항목 클릭 = 읽음 처리 후 이동경로가 있으면 이동(NotificationBell과 동일).
  *
- * 제약 조건: 공지사항 항목 5개 이하, 날짜 표기는 로케일 기준.
+ * 제약 조건: 공지사항 항목 5개 이하, 제목은 최대 2줄, 날짜 표기는 로케일 기준.
  * 예외: 공지사항 로드 실패 시 재시도 CTA 제공.
  */
 export function DashboardAlertsCard({ userId, loadFailed = false }: Props) {
@@ -151,13 +140,15 @@ export function DashboardAlertsCard({ userId, loadFailed = false }: Props) {
           {notifLoad.status === "loading" ? (
             <Skeleton active paragraph={{ rows: 2 }} />
           ) : notifications.length > 0 ? (
-            <List
-              size="small"
-              dataSource={notifications}
-              renderItem={(item) => {
+            <ul
+              className="app-notification-feed-list"
+              aria-label={t("cardTitle")}
+            >
+              {notifications.map((item) => {
                 const unread = !item.read_at;
                 return (
-                  <List.Item
+                  <li
+                    key={item.id}
                     className={
                       unread
                         ? "app-notification-feed-item app-notification-feed-item--unread"
@@ -169,13 +160,6 @@ export function DashboardAlertsCard({ userId, loadFailed = false }: Props) {
                       className="app-notification-feed-item__button"
                       onClick={() => void handleNotificationClick(item)}
                     >
-                      <Tag className="app-notification-feed-item__tag">
-                        {t(
-                          `category.${CATEGORY_LABEL_KEYS[item.category]}` as Parameters<
-                            typeof t
-                          >[0],
-                        )}
-                      </Tag>
                       <Text className="app-notification-feed-item__title">
                         {item.title}
                       </Text>
@@ -188,10 +172,10 @@ export function DashboardAlertsCard({ userId, loadFailed = false }: Props) {
                         })}
                       </Text>
                     </button>
-                  </List.Item>
+                  </li>
                 );
-              }}
-            />
+              })}
+            </ul>
           ) : null}
         </div>
       )}

@@ -3,7 +3,6 @@ import { afterEach, describe, expect, test } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import { Input, Select } from "antd";
 
-import koMessages from "../../messages/ko.json";
 import { AppProviders } from "../../src/app/providers";
 
 describe("AppProviders form control theming", () => {
@@ -13,7 +12,7 @@ describe("AppProviders form control theming", () => {
 
   test("does not inject per-component sizing class hooks", () => {
     const { container } = render(
-      <AppProviders messages={koMessages}>
+      <AppProviders>
         <Input aria-label="plain input" />
         <Input.Password aria-label="password input" />
         <Input.TextArea aria-label="profile textarea" />

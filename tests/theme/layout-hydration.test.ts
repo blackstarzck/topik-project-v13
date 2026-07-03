@@ -1,6 +1,8 @@
 /**
  * Tests that layout.tsx correctly threads the cookie appearance through
  * BOTH <html style> (SSR vars) AND <AppProviders initialAppearance> (client seed).
+ * It also keeps the next-intl provider in the server layout tree, where server
+ * rendered client components can see the translation context during SSR.
  *
  * RootLayout is a React Server Component — an async function returning JSX.
  * We test it by calling it directly and inspecting the returned element tree.
@@ -32,21 +34,29 @@ vi.mock("../../src/i18n/request", () => ({
 vi.mock("next-intl/server", () => ({
   getMessages: vi.fn(async () => ({})),
 }));
+vi.mock("next-intl", () => ({
+  NextIntlClientProvider: ({
+    children,
+  }: {
+    children: React.ReactNode;
+    locale?: string;
+    messages?: Record<string, unknown>;
+    timeZone?: string;
+  }) => children,
+}));
 
-// Mock providers to capture the initialAppearance + locale props without rendering
+// Mock providers to capture initialAppearance without rendering.
 vi.mock("../../src/app/providers", () => ({
   AppProviders: ({
     initialAppearance,
-    locale,
     children,
   }: {
     initialAppearance?: string;
-    locale?: string;
     children: React.ReactNode;
   }) =>
     React.createElement(
       "div",
-      { "data-initial-appearance": initialAppearance, "data-locale": locale },
+      { "data-initial-appearance": initialAppearance },
       children,
     ),
 }));
@@ -78,26 +88,50 @@ describe("RootLayout hydration consistency", () => {
       children: React.createElement("span"),
     })) as AnyElement;
 
-    // Structure: <html lang style={...}><body>{...AppProviders mock...}</body></html>
+    // Structure:
+    // <html lang style>
+    //   <body>
+    //     <NextIntlClientProvider>
+    //       <AntdRegistry>
+    //         <AppProviders />
+    //       </AntdRegistry>
+    //     </NextIntlClientProvider>
+    //   </body>
+    // </html>
     const htmlStyle = element.props.style as Record<string, string>;
     const colorScheme = htmlStyle.colorScheme as string;
     const bgContainer = htmlStyle["--app-color-bg-container"] as string;
     const lang = element.props.lang as string;
 
-    // Navigate: <html> → <body> → <AntdRegistry> → <AppProviders>
+    // Navigate: <html> → <body> → <NextIntlClientProvider> →
+    // <AntdRegistry> → <AppProviders>
     // Components are NOT rendered when calling RootLayout directly, so each
     // child remains a JSX element. We read props.initialAppearance / locale
-    // straight off the AppProviders JSX element (mocks only matter on render).
+    // straight off the JSX elements (mocks only matter on render).
     const body = element.props.children as AnyElement;
     const bodyChildren = React.Children.toArray(
       body.props.children as React.ReactNode,
     ) as AnyElement[];
-    const antdRegistryEl = bodyChildren[0];
+    const intlProviderEl = bodyChildren[0];
+    const intlLocale = intlProviderEl.props.locale as string;
+    const intlTimeZone = intlProviderEl.props.timeZone as string;
+    const intlMessages = intlProviderEl.props.messages as Record<
+      string,
+      unknown
+    >;
+    const antdRegistryEl = intlProviderEl.props.children as AnyElement;
     const appProvidersEl = antdRegistryEl.props.children as AnyElement;
     const initialAppearance = appProvidersEl.props.initialAppearance as string;
-    const locale = appProvidersEl.props.locale as string;
 
-    return { colorScheme, bgContainer, initialAppearance, lang, locale };
+    return {
+      colorScheme,
+      bgContainer,
+      initialAppearance,
+      lang,
+      intlLocale,
+      intlMessages,
+      intlTimeZone,
+    };
   }
 
   test("dark cookie is ignored while DESIGN/Awesomic is light-fixed", async () => {
@@ -128,20 +162,29 @@ describe("RootLayout hydration consistency", () => {
   });
 
   // i18n (G-01): the resolved locale must drive BOTH <html lang> and the
-  // client provider's locale prop, so SSR and hydration agree on the language.
-  test("resolved locale → html lang AND AppProviders locale match", async () => {
+  // root client provider's locale prop, so SSR and hydration agree on the
+  // language.
+  test("resolved locale → html lang AND NextIntlClientProvider locale match", async () => {
     resolveLocaleMock.mockResolvedValue("en");
-    const { lang, locale } = await getLayoutAndProviderProps(undefined);
+    const { lang, intlLocale } = await getLayoutAndProviderProps(undefined);
 
     expect(lang).toBe("en");
-    expect(locale).toBe("en");
+    expect(intlLocale).toBe("en");
   });
 
   test("baseline locale → html lang=ko", async () => {
     resolveLocaleMock.mockResolvedValue("ko");
-    const { lang, locale } = await getLayoutAndProviderProps(undefined);
+    const { lang, intlLocale } = await getLayoutAndProviderProps(undefined);
 
     expect(lang).toBe("ko");
-    expect(locale).toBe("ko");
+    expect(intlLocale).toBe("ko");
+  });
+
+  test("NextIntlClientProvider receives messages and the canonical time zone", async () => {
+    const { intlMessages, intlTimeZone } =
+      await getLayoutAndProviderProps(undefined);
+
+    expect(intlMessages).toEqual({});
+    expect(intlTimeZone).toBe("Asia/Seoul");
   });
 });
