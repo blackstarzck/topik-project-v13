@@ -1,7 +1,8 @@
 "use client";
 
+import type { MouseEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
-import { Alert, Button, Result, Typography } from "antd";
+import { Button, Checkbox, Result, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 
@@ -58,11 +59,15 @@ function isSuccessLike(result: AcceptAffiliationInviteResult) {
   return result === "accepted" || result === "already_affiliated_same";
 }
 
-export function InstitutionInvitePanel({ nextPath }: InstitutionInvitePanelProps) {
+export function InstitutionInvitePanel({
+  nextPath,
+}: InstitutionInvitePanelProps) {
   const t = useTranslations("auth.institutionInvite");
   const router = useRouter();
   const [state, setState] = useState<InvitePanelState>({ kind: "loading" });
   const [submitting, setSubmitting] = useState(false);
+  const [institutionInviteConfirmed, setInstitutionInviteConfirmed] =
+    useState(false);
   const loginHref = useMemo(() => loginInviteHref(), []);
 
   useEffect(() => {
@@ -150,6 +155,13 @@ export function InstitutionInvitePanel({ nextPath }: InstitutionInvitePanelProps
     );
   }
 
+  function preventDefaultAndContinueWithoutInvite(
+    event: MouseEvent<HTMLAnchorElement>,
+  ) {
+    event.preventDefault();
+    continueWithoutInvite();
+  }
+
   async function signOutForAnotherAccount() {
     const supabase = createSupabaseBrowserClient();
     await supabase.auth.signOut();
@@ -157,6 +169,8 @@ export function InstitutionInvitePanel({ nextPath }: InstitutionInvitePanelProps
   }
 
   async function acceptInvite() {
+    if (!institutionInviteConfirmed || submitting) return;
+
     setSubmitting(true);
     const result = await acceptStoredAffiliationInvite();
     setSubmitting(false);
@@ -185,7 +199,8 @@ export function InstitutionInvitePanel({ nextPath }: InstitutionInvitePanelProps
     state.kind === "already-other"
       ? state.email
       : null;
-  const pageClassName = "institution-invite-page institution-invite-page--white";
+  const pageClassName =
+    "institution-invite-page institution-invite-page--white";
   const policyNotice = (
     <section
       className="institution-invite-policy institution-invite-policy--plain"
@@ -240,7 +255,7 @@ export function InstitutionInvitePanel({ nextPath }: InstitutionInvitePanelProps
               title={<span id="invite-title">{t("anonymousTitle")}</span>}
               subTitle={t("anonymousDescription")}
             />
-            <Alert type="info" showIcon title={t("codeLabel", { code: state.code })} />
+            <div className="institution-invite-code">{state.code}</div>
             {policyNotice}
             <div className="institution-invite-actions institution-invite-actions-grid">
               <Button
@@ -282,12 +297,24 @@ export function InstitutionInvitePanel({ nextPath }: InstitutionInvitePanelProps
               <Text type="secondary">{t("currentAccount")}</Text>
               {email ? <Text strong>{email}</Text> : null}
             </div>
-            <Alert type="info" showIcon title={t("codeLabel", { code: state.code })} />
-            {policyNotice}
+            <div className="institution-invite-code">{state.code}</div>
+            <div className="institution-invite-policy-confirmation">
+              {policyNotice}
+              <Checkbox
+                checked={institutionInviteConfirmed}
+                className="institution-invite-consent"
+                onChange={(event) =>
+                  setInstitutionInviteConfirmed(event.target.checked)
+                }
+              >
+                {t("authenticatedConsent")}
+              </Checkbox>
+            </div>
             <div className="institution-invite-actions institution-invite-actions-grid">
               <Button
                 type="primary"
                 className="institution-invite-action-primary"
+                disabled={!institutionInviteConfirmed || submitting}
                 loading={submitting}
                 onClick={() => void acceptInvite()}
                 icon={<CheckCircle2 size={16} aria-hidden="true" />}
@@ -301,13 +328,13 @@ export function InstitutionInvitePanel({ nextPath }: InstitutionInvitePanelProps
               >
                 {t("authenticatedOtherAccount")}
               </Button>
-              <Button
-                type="text"
-                className="institution-invite-action-tertiary"
-                onClick={continueWithoutInvite}
+              <a
+                className="institution-invite-action-anchor"
+                href={nextPath}
+                onClick={preventDefaultAndContinueWithoutInvite}
               >
                 {t("authenticatedContinue")}
-              </Button>
+              </a>
             </div>
           </div>
         ) : null}
@@ -368,9 +395,13 @@ export function InstitutionInvitePanel({ nextPath }: InstitutionInvitePanelProps
               >
                 {t("authenticatedOtherAccount")}
               </Button>
-              <Button type="text" onClick={continueWithoutInvite}>
+              <a
+                className="institution-invite-action-anchor"
+                href={nextPath}
+                onClick={preventDefaultAndContinueWithoutInvite}
+              >
                 {t("authenticatedContinue")}
-              </Button>
+              </a>
             </div>
           </div>
         ) : null}
@@ -381,7 +412,9 @@ export function InstitutionInvitePanel({ nextPath }: InstitutionInvitePanelProps
             status={state.kind === "invalid" ? "warning" : "error"}
             title={
               <span id="invite-title">
-                {state.kind === "invalid" ? t("invalidTitle") : t("failedTitle")}
+                {state.kind === "invalid"
+                  ? t("invalidTitle")
+                  : t("failedTitle")}
               </span>
             }
             subTitle={
@@ -390,9 +423,13 @@ export function InstitutionInvitePanel({ nextPath }: InstitutionInvitePanelProps
                 : t("failedDescription")
             }
             extra={
-              <Button onClick={continueWithoutInvite}>
+              <a
+                className="institution-invite-action-anchor"
+                href={nextPath}
+                onClick={preventDefaultAndContinueWithoutInvite}
+              >
                 {t("authenticatedContinue")}
-              </Button>
+              </a>
             }
           />
         ) : null}

@@ -43,7 +43,9 @@ async function mockAcceptInviteRpc(page: Page, status = "accepted") {
         return;
       }
 
-      calls.push(JSON.parse(request.postData() ?? "{}") as Record<string, unknown>);
+      calls.push(
+        JSON.parse(request.postData() ?? "{}") as Record<string, unknown>,
+      );
       await route.fulfill({
         body: JSON.stringify({ status }),
         contentType: "application/json",
@@ -63,7 +65,9 @@ test.describe("institution invite anonymous entry", () => {
     storageState: { cookies: [], origins: [] },
   });
 
-  test("routes aff entry to invite choices before sign-up", async ({ page }) => {
+  test("routes aff entry to invite choices before sign-up", async ({
+    page,
+  }) => {
     await page.goto(`/?aff=${INVITE_CODE}`, { waitUntil: "networkidle" });
 
     await expect(page).toHaveURL(/\/auth\/institution-invite$/);
@@ -88,7 +92,10 @@ test.describe("institution invite anonymous entry", () => {
     await expect(page).toHaveURL(/\/$/);
     await expect
       .poll(() =>
-        page.evaluate((key) => window.localStorage.getItem(key), AFFILIATION_STORAGE_KEY),
+        page.evaluate(
+          (key) => window.localStorage.getItem(key),
+          AFFILIATION_STORAGE_KEY,
+        ),
       )
       .toBeNull();
   });
@@ -112,24 +119,32 @@ test.describe("institution invite authenticated entry", () => {
 
     await expect(
       page.getByRole("button", {
-        name: "위 내용을 확인하고 이 계정으로 기관에 연결",
+        name: "기관에 연결",
       }),
     ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "기관에 연결" }),
+    ).toBeDisabled();
     expect(rpcCalls).toEqual([]);
+
+    await page.getByRole("checkbox", { name: "동의하시겠습니까?" }).check();
+    await expect(
+      page.getByRole("button", { name: "기관에 연결" }),
+    ).toBeEnabled();
 
     await page
       .getByRole("button", {
-        name: "위 내용을 확인하고 이 계정으로 기관에 연결",
+        name: "기관에 연결",
       })
       .click();
 
     await expect(page.getByText("기관 연결이 완료됐어요")).toBeVisible();
-    expect(rpcCalls).toEqual([
-      { p_code: INVITE_CODE, p_confirmed: true },
-    ]);
+    expect(rpcCalls).toEqual([{ p_code: INVITE_CODE, p_confirmed: true }]);
   });
 
-  test("declines an invite without calling the accept RPC", async ({ page }) => {
+  test("declines an invite without calling the accept RPC", async ({
+    page,
+  }) => {
     await mockProfileAffiliation(page, null);
     const rpcCalls = await mockAcceptInviteRpc(page, "accepted");
 
@@ -137,7 +152,7 @@ test.describe("institution invite authenticated entry", () => {
       waitUntil: "networkidle",
     });
 
-    await page.getByRole("button", { name: "연결하지 않고 계속" }).click();
+    await page.getByRole("link", { name: "연결하지 않고 계속" }).click();
     await expect(page).toHaveURL(/\/dashboard/);
     expect(rpcCalls).toEqual([]);
   });
@@ -157,7 +172,7 @@ test.describe("institution invite authenticated entry", () => {
     ).toBeVisible();
     await expect(
       page.getByRole("button", {
-        name: "위 내용을 확인하고 이 계정으로 기관에 연결",
+        name: "기관에 연결",
       }),
     ).toHaveCount(0);
     expect(rpcCalls).toEqual([]);

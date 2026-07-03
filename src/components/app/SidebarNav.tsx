@@ -3,8 +3,6 @@
 import {
   ConfigProvider,
   Menu,
-  Tag,
-  Tooltip,
   theme as antdTheme,
   type MenuProps,
   type ThemeConfig,
@@ -19,7 +17,6 @@ import {
   Edit2,
   Home2,
   LampOn,
-  Lock,
   MedalStar,
   NotificationBing,
   PresentionChart,
@@ -59,33 +56,17 @@ type MenuItem = NonNullable<MenuItems>[number];
 type NavTranslate = ReturnType<typeof useTranslations<"nav">>;
 type NavKey = Parameters<NavTranslate>[0];
 
-function lockedLeafLabel(label: string, reason: string) {
-  return (
-    <Tooltip title={`${label} - ${reason}`} placement="right">
-      <span
-        className="app-sidebar-lock-label"
-        aria-label={`${label}, ${reason}`}
-      >
-        <Lock aria-hidden className="app-sidebar-lock-icon" size={12} />
-        <span>{label}</span>
-        <Tag className="app-sidebar-lock-tag">{reason}</Tag>
-      </span>
-    </Tooltip>
-  );
-}
-
 function buildLeaf(leaf: SidebarLeaf, locks: SidebarLockMap, t: NavTranslate) {
   const label = t(leaf.labelKey as NavKey);
   const lockKey = locks[leaf.key];
 
   if (lockKey) {
-    const reason = t(lockKey as NavKey);
     return {
       key: leaf.key,
-      label: lockedLeafLabel(label, reason),
+      label,
       icon: navIcon(leaf.key),
       disabled: true,
-      title: `${label} (${reason})`,
+      title: label,
     };
   }
 
@@ -157,7 +138,9 @@ function navIcon(key: string) {
     variant: "Linear",
   };
 
-  return <SidebarIcon icon={icon.component} iconName={icon.name} props={props} />;
+  return (
+    <SidebarIcon icon={icon.component} iconName={icon.name} props={props} />
+  );
 }
 
 function sidebarIconForKey(
@@ -190,7 +173,8 @@ function sidebarIconForKey(
   if (key === "writing" || key.startsWith("/writing/")) {
     return { component: Edit2, name: "Edit2" };
   }
-  if (key === "/library") return { component: ArchiveBook, name: "ArchiveBook" };
+  if (key === "/library")
+    return { component: ArchiveBook, name: "ArchiveBook" };
   if (key === "growth") {
     return { component: DocumentText, name: "DocumentText" };
   }

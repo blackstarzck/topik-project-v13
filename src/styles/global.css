@@ -505,6 +505,7 @@ body {
   justify-content: center;
   background: #ffffff;
   padding: 32px 16px;
+  word-break: keep-all;
 }
 
 .institution-invite-page--white {
@@ -564,11 +565,50 @@ body {
   width: min(100%, 280px);
 }
 
+.institution-invite-action-anchor {
+  grid-column: 1 / -1;
+  justify-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  min-height: 0;
+  border: 0;
+  background: transparent;
+  color: #191919;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.5;
+  padding: 2px 4px;
+  text-decoration: none;
+}
+
+.institution-invite-action-anchor:hover,
+.institution-invite-action-anchor:focus-visible {
+  color: #191919;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .institution-invite-account {
   display: flex;
   flex-direction: column;
   gap: 4px;
   align-items: center;
+  text-align: center;
+}
+
+.institution-invite-code {
+  width: 100%;
+  border: 1px solid #91caff;
+  border-radius: 6px;
+  background: #e6f4ff;
+  color: #191919;
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 1.2;
+  padding: 14px 16px;
   text-align: center;
 }
 
@@ -591,12 +631,26 @@ body {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  list-style: none;
+  list-style: disc;
   margin: 0;
-  padding-left: 0;
+  padding-left: 18px;
   color: var(--app-color-text-secondary);
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.6;
+}
+
+.institution-invite-policy-confirmation {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.institution-invite-consent.ant-checkbox-wrapper {
+  align-self: flex-start;
+  color: #191919;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
 }
 
 .institution-invite-note {
@@ -6058,24 +6112,6 @@ body {
 
 .app-sidebar-menu.ant-menu .ant-menu-title-content {
   margin-inline-start: 0;
-}
-
-.app-sidebar-lock-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  width: 100%;
-}
-
-.app-sidebar-lock-icon {
-  flex-shrink: 0;
-  opacity: 0.7;
-}
-
-.app-sidebar-lock-tag {
-  margin-inline-start: auto;
-  font-size: 11px;
-  line-height: 16px;
 }
 
 /* 계정 설정 하단 footer 안에 들어가며, 위 경계는 섹션 <Divider>가 담당하므로
