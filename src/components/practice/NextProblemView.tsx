@@ -9,7 +9,10 @@ import { WorkspaceFixedActionBar } from "@/components/app/WorkspaceBody";
 import { AppCard } from "@/components/shared/AppCard";
 import { logStudyEvent } from "@/lib/events/study-events";
 import { consumeRecommendationItem } from "@/lib/practice/consume";
-import type { AlternativeProblem, NextProblemBundle } from "@/lib/practice/next";
+import type {
+  AlternativeProblem,
+  NextProblemBundle,
+} from "@/lib/practice/next";
 import { writingProblemHref } from "@/lib/writing/routes";
 import { AlternativeCardsGrid } from "./AlternativeCardsGrid";
 import { difficultyKey } from "./difficulty";
@@ -204,7 +207,9 @@ export function NextProblemView({ bundle }: Props) {
           onKeyDown={(event) => handleCardKeyDown(event, selectPrimary)}
           data-testid="next-primary-card"
           data-problem-id={primary.problemId}
-          className={selected?.source === "next" ? "ring-2 ring-primary" : undefined}
+          className={
+            selected?.source === "next" ? "ring-2 ring-primary" : undefined
+          }
           title={
             <div className="flex flex-wrap items-center gap-2">
               <Tag data-testid="next-problem-badge">
@@ -219,7 +224,10 @@ export function NextProblemView({ bundle }: Props) {
           }
         >
           <div className="flex w-full flex-col gap-2">
-            <div className="flex flex-wrap gap-2" data-testid="next-problem-badges">
+            <div
+              className="flex flex-wrap gap-2"
+              data-testid="next-problem-badges"
+            >
               <Tag>
                 {t("difficultyBadge", {
                   value: diffLabel ?? t("noInfo"),

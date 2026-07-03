@@ -74,10 +74,14 @@ describe("Writing53MaterialCards", () => {
     const reference = screen.getByTestId("q53-material-reference");
     const referenceCell = reference.closest(".writing-material-card__cell");
     expect(
-      referenceCell?.classList.contains("writing-material-card__cell--reference"),
+      referenceCell?.classList.contains(
+        "writing-material-card__cell--reference",
+      ),
     ).toBe(true);
     expect(
-      referenceCell?.classList.contains("writing-material-card__cell--span-row"),
+      referenceCell?.classList.contains(
+        "writing-material-card__cell--span-row",
+      ),
     ).toBe(true);
     expect(
       reference.querySelector(".writing-material-card__heading"),

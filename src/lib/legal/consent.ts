@@ -76,7 +76,9 @@ async function fetchRequiredConsentDocuments(
     .eq("requires_consent", true);
 
   if (error) {
-    throw new Error(`Failed to load required legal documents: ${error.message}`);
+    throw new Error(
+      `Failed to load required legal documents: ${error.message}`,
+    );
   }
 
   return latestByDocType(data ?? []);
@@ -183,7 +185,8 @@ export async function backfillOAuthDisplayName(
 
   if (
     profile.nickname == null ||
-    (typeof profile.nickname === "string" && profile.nickname.trim().length === 0)
+    (typeof profile.nickname === "string" &&
+      profile.nickname.trim().length === 0)
   ) {
     patch.nickname = generateRandomNickname(random);
   }

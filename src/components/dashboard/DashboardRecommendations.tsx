@@ -44,7 +44,9 @@ type Props = {
 // Tier 1 recommendation_items만 개인화 추천으로 표시하고,
 // fallback 문제는 학습 시작 후보로 분리해 라벨링한다.
 function isPersonalizedRecommendation(primary: DashboardPrimary): boolean {
-  return (primary.primaryTier ?? 1) === 1 && primary.source === "recommendation";
+  return (
+    (primary.primaryTier ?? 1) === 1 && primary.source === "recommendation"
+  );
 }
 
 function sourceLabelKey(primary: DashboardPrimary): string {
@@ -82,7 +84,9 @@ export function DashboardRecommendations({ primary, alternatives }: Props) {
                 {t(sourceLabelKey(primary) as Parameters<typeof t>[0])}
               </Tag>
               {primary.questionNo != null ? (
-                <Tag>{t("questionNoTag", { questionNo: primary.questionNo })}</Tag>
+                <Tag>
+                  {t("questionNoTag", { questionNo: primary.questionNo })}
+                </Tag>
               ) : null}
             </Space>
             <Text strong>{truncate(primary.title)}</Text>

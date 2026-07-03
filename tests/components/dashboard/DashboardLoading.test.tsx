@@ -17,9 +17,9 @@ afterEach(() => {
 describe("dashboard loading skeleton", () => {
   it("renders antd Skeletons on shared app-card surfaces", () => {
     const { container } = renderWithIntl(<DashboardLoading />);
-    expect(
-      container.querySelectorAll(".ant-skeleton").length,
-    ).toBeGreaterThan(0);
+    expect(container.querySelectorAll(".ant-skeleton").length).toBeGreaterThan(
+      0,
+    );
     // surfaces reuse the AppCard hook so the skeleton mirrors the populated grid
     expect(container.querySelectorAll(".app-card").length).toBeGreaterThan(0);
   });

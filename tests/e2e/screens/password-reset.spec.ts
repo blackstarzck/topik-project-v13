@@ -1,6 +1,12 @@
 import { expect, test, type Page, type Route } from "@playwright/test";
 
-test.use({ storageState: { cookies: [], origins: [] } });
+test.use({
+  storageState: { cookies: [], origins: [] },
+  // Without a stored session the server negotiates locale from Accept-Language;
+  // pin Korean so the Korean-copy assertions below match (see auth-error.spec.ts).
+  locale: "ko-KR",
+  extraHTTPHeaders: { "Accept-Language": "ko-KR,ko;q=0.9" },
+});
 
 function collectErrors(page: Page): string[] {
   const errors: string[] = [];
@@ -83,9 +89,7 @@ test("X-06 password reset request renders prefilled email and confirms success",
   const guidanceLines = guidance.locator(".password-reset-guide__line");
   await expect(guidanceLines).toHaveCount(2);
   await expect(
-    card
-      .locator(".ant-form-item-extra")
-      .getByTestId("password-reset-guidance"),
+    card.locator(".ant-form-item-extra").getByTestId("password-reset-guidance"),
   ).toBeVisible();
   await expect(guidanceLines.first()).toHaveText(
     "가입하신 이메일을 입력하시면 비밀번호 재설정 링크를 보내드립니다.",
@@ -112,9 +116,7 @@ test("X-06 password reset request renders prefilled email and confirms success",
   await expect(page.getByLabel("이메일")).toHaveValue(
     "member.audit@example.com",
   );
-  await expect(
-    page.getByText(/링크는 약 1시간 후 만료돼요/),
-  ).toBeVisible();
+  await expect(page.getByText(/링크는 약 1시간 후 만료돼요/)).toBeVisible();
   const submitButton = card.getByRole("button", {
     name: "재설정 링크 보내기",
   });
@@ -131,9 +133,7 @@ test("X-06 password reset request renders prefilled email and confirms success",
     "font-weight",
     "600",
   );
-  await expect(
-    loginLink,
-  ).toHaveAttribute("href", "/login");
+  await expect(loginLink).toHaveAttribute("href", "/login");
   await expect(loginLink).toHaveCSS("font-size", "16px");
   const submitBox = await submitButton.boundingBox();
   const loginBox = await loginLink.boundingBox();

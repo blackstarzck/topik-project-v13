@@ -30,7 +30,9 @@ type Props = {
 };
 
 function truncateTitle(title: string) {
-  return title.length > TITLE_LIMIT ? `${title.slice(0, TITLE_LIMIT)}...` : title;
+  return title.length > TITLE_LIMIT
+    ? `${title.slice(0, TITLE_LIMIT)}...`
+    : title;
 }
 
 function handleCardKeyDown(
@@ -123,7 +125,9 @@ export function AlternativeCardsGrid({
                 data-testid="next-alternative-card"
                 data-problem-id={alternative.id}
                 className={
-                  selectedId === alternative.id ? "ring-2 ring-primary" : undefined
+                  selectedId === alternative.id
+                    ? "ring-2 ring-primary"
+                    : undefined
                 }
                 title={
                   <div className="flex flex-wrap items-center gap-2">

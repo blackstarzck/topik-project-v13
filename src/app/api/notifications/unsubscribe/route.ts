@@ -75,7 +75,9 @@ function htmlPage(title: string, message: string, status: number) {
   });
 }
 
-async function processUnsubscribe(token: string | null): Promise<UnsubscribeOutcome> {
+async function processUnsubscribe(
+  token: string | null,
+): Promise<UnsubscribeOutcome> {
   // 1. 토큰 형식 검사 — 없거나 uuid가 아니면 즉시 invalid.
   if (!token || !UUID_RE.test(token)) {
     return { kind: "invalid_token" };
@@ -138,11 +140,7 @@ export async function GET(request: NextRequest) {
     case "already":
       return htmlPage("수신거부 완료", "이미 수신거부됨.", 200);
     case "invalid_token":
-      return htmlPage(
-        "잘못된 요청",
-        "유효하지 않은 수신거부 링크입니다.",
-        400,
-      );
+      return htmlPage("잘못된 요청", "유효하지 않은 수신거부 링크입니다.", 400);
     case "misconfigured":
       return htmlPage("일시적 오류", "잠시 후 다시 시도해 주세요.", 500);
     default:
@@ -165,7 +163,10 @@ export async function POST(request: NextRequest) {
   const outcome = await processUnsubscribe(token);
   switch (outcome.kind) {
     case "unsubscribed":
-      return NextResponse.json({ ok: true, status: "수신거부 처리되었습니다." });
+      return NextResponse.json({
+        ok: true,
+        status: "수신거부 처리되었습니다.",
+      });
     case "already":
       return NextResponse.json({ ok: true, status: "이미 수신거부됨." });
     case "invalid_token":

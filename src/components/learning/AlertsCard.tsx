@@ -23,11 +23,7 @@ export function AlertsCard({ alerts }: Props) {
     <Card title="알림">
       <Space orientation="vertical" className="w-full">
         {alerts.length === 0 ? (
-          <Alert
-            type="info"
-            title="새 알림이 없어요."
-            showIcon
-          />
+          <Alert type="info" title="새 알림이 없어요." showIcon />
         ) : (
           alerts.map((a) => (
             <Alert

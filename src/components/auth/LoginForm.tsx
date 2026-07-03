@@ -16,11 +16,7 @@ import type { FormInstance } from "antd";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  ArrowRight,
-  LockKeyhole,
-  Mail,
-} from "@/components/shared/AppIcons";
+import { ArrowRight, LockKeyhole, Mail } from "@/components/shared/AppIcons";
 
 import { GoogleMark } from "@/components/auth/GoogleMark";
 import { POST_AUTH_LOGIN_PATH } from "@/lib/auth/completion-routes";

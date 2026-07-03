@@ -295,9 +295,17 @@ async function login(page: Page, email: string) {
 
   expect(reachedPostLoginRoute).toBe(true);
 
-  for (let i = 0; i < 4; i += 1) {
+  for (let i = 0; i < 6; i += 1) {
     const pathname = new URL(page.url()).pathname;
-    if (pathname === "/dashboard") return;
+    if (pathname === "/dashboard") {
+      // The post-login client-side redirect (router.push("/dashboard")) can
+      // land here WITHOUT the (workspace) completion gate running, so a fresh
+      // user may still owe required consents. Verify with a full document
+      // load; if the gate bounces to consent/onboarding, keep handling it.
+      await page.goto("/dashboard", { waitUntil: "domcontentloaded" });
+      if (new URL(page.url()).pathname === "/dashboard") return;
+      continue;
+    }
     if (pathname === "/auth/consent") {
       await page.locator('input[name="accept"]').check({ force: true });
       await page.locator('form button[type="submit"]').click();
@@ -465,7 +473,9 @@ test("non-institution writing access stays fully visible while unassigned instit
     !["desktop-1280", "mobile-360"].includes(testInfo.project.name),
     "Institution visibility evidence runs on desktop and mobile.",
   );
-  test.setTimeout(90_000);
+  // Three fresh users each clear the consent + onboarding gates now, so give
+  // the flow more headroom than the original 90s.
+  test.setTimeout(150_000);
 
   const hasExposureTable = await exposureTableAvailable();
   test.skip(

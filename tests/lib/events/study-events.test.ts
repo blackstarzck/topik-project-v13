@@ -268,14 +268,12 @@ afterEach(() => {
 describe("logStudyEvent — prod-safety sanitize (Codex post-impl P1 fix)", () => {
   const originalEnv = process.env.NODE_ENV;
   afterEach(() => {
-    (process.env as Record<string, string | undefined>).NODE_ENV =
-      originalEnv;
+    (process.env as Record<string, string | undefined>).NODE_ENV = originalEnv;
     vi.restoreAllMocks();
   });
 
   it("strips forbidden keys before insert when NODE_ENV=production", async () => {
-    (process.env as Record<string, string | undefined>).NODE_ENV =
-      "production";
+    (process.env as Record<string, string | undefined>).NODE_ENV = "production";
     const inserts: InsertCall[] = [];
     const client = makeClient({
       user: { id: "user-1" },
@@ -307,8 +305,7 @@ describe("logStudyEvent — prod-safety sanitize (Codex post-impl P1 fix)", () =
   });
 
   it("sets payload to null when sanitizer empties the object", async () => {
-    (process.env as Record<string, string | undefined>).NODE_ENV =
-      "production";
+    (process.env as Record<string, string | undefined>).NODE_ENV = "production";
     const inserts: InsertCall[] = [];
     const client = makeClient({
       user: { id: "user-1" },

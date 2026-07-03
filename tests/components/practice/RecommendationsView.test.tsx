@@ -122,7 +122,9 @@ describe("RecommendationsView", () => {
       name: koMessages.practice.recommendations.viewProblemList,
     });
     expect(button.className).toContain("ant-btn-primary");
-    expect(button.closest("a")?.getAttribute("href")).toBe("/practice/problems");
+    expect(button.closest("a")?.getAttribute("href")).toBe(
+      "/practice/problems",
+    );
 
     // No fabricated recommendation content.
     expect(
@@ -349,9 +351,8 @@ describe("RecommendationsView", () => {
       screen.getAllByText(koMessages.practice.recommendations.locked).length,
     ).toBeGreaterThanOrEqual(4);
     expect(
-      screen.getAllByText(
-        koMessages.practice.recommendations.typeLockedCta,
-      ).length,
+      screen.getAllByText(koMessages.practice.recommendations.typeLockedCta)
+        .length,
     ).toBe(4);
   });
 
@@ -366,9 +367,8 @@ describe("RecommendationsView", () => {
 
     expect(container.querySelector('a[href^="/writing/"]')).toBeNull();
     expect(
-      screen.getAllByText(
-        koMessages.practice.recommendations.typeLockedCta,
-      ).length,
+      screen.getAllByText(koMessages.practice.recommendations.typeLockedCta)
+        .length,
     ).toBe(4);
   });
 

@@ -23,9 +23,15 @@ const SUBMISSION: PdfSubmissionItem = {
   feedback: {
     scoreTotal: 82,
     scoreMax: 100,
-    overallSummary: "전반적으로 안정적인 답안입니다. 표현을 다듬으면 더 좋아요.",
+    overallSummary:
+      "전반적으로 안정적인 답안입니다. 표현을 다듬으면 더 좋아요.",
     dimensions: [
-      { dimension: "grammar", score: 76, scoreMax: 100, summary: "문법 — 양호" },
+      {
+        dimension: "grammar",
+        score: 76,
+        scoreMax: 100,
+        summary: "문법 — 양호",
+      },
       { dimension: "vocab", score: 78, scoreMax: 100, summary: "어휘 — 양호" },
     ],
     sentences: [

@@ -28,7 +28,10 @@ const REASON_TAG_COLOR_SEQUENCE = [
   "gold",
 ] satisfies readonly ReasonTagColor[];
 
-export function getReasonTagColor(index: number, total: number): ReasonTagColor {
+export function getReasonTagColor(
+  index: number,
+  total: number,
+): ReasonTagColor {
   const colors =
     total === 1 || total === 2 || total === 3
       ? REASON_TAG_COLORS_BY_COUNT[total]

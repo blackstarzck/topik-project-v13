@@ -1,9 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  createSupabaseBrowserClient,
-} from "../supabase/browser";
+import { createSupabaseBrowserClient } from "../supabase/browser";
 import type { Tables, TablesInsert } from "../supabase/types";
 import { learningGoalQueryKey } from "./queries";
 

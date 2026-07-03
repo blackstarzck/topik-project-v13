@@ -137,6 +137,7 @@ export function PaywallShell() {
             {/* Region 2: 결제 주기 카드 3열 */}
             {plans.length === 0 ? (
               <Alert
+                data-testid="paywall-empty-state"
                 type="info"
                 showIcon
                 title={t("noPlans.title")}
@@ -159,9 +160,7 @@ export function PaywallShell() {
                       <AppCard
                         data-testid={`paywall-plan-${plan.cadence}`}
                         className={
-                          plan.recommended
-                            ? "h-full border-primary"
-                            : "h-full"
+                          plan.recommended ? "h-full border-primary" : "h-full"
                         }
                         title={
                           <span className="flex flex-wrap items-center gap-2">
@@ -180,7 +179,9 @@ export function PaywallShell() {
                             <Text type="secondary">
                               {t("cadenceBilling", {
                                 cadence: t(
-                                  `cadence.${cadenceLabelKey(plan.cadence)}` as Parameters<typeof t>[0],
+                                  `cadence.${cadenceLabelKey(plan.cadence)}` as Parameters<
+                                    typeof t
+                                  >[0],
                                 ),
                               })}
                             </Text>
@@ -208,7 +209,9 @@ export function PaywallShell() {
                           >
                             {t("selectCta", {
                               cadence: t(
-                                `cadence.${cadenceLabelKey(plan.cadence)}` as Parameters<typeof t>[0],
+                                `cadence.${cadenceLabelKey(plan.cadence)}` as Parameters<
+                                  typeof t
+                                >[0],
                               ),
                             })}
                           </Button>

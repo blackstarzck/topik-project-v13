@@ -22,9 +22,9 @@ export function UpcomingExamCard({ examDate }: Props) {
           {exam.format("YYYY-MM-DD")}
         </strong>
         <p className="m-0 text-sm text-text-secondary">
-        {daysLeft === 0
-          ? t("daysLeftToday")
-          : t("daysLeft", { days: daysLeft })}
+          {daysLeft === 0
+            ? t("daysLeftToday")
+            : t("daysLeft", { days: daysLeft })}
         </p>
       </div>
     </AppCard>

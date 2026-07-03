@@ -43,16 +43,14 @@ const PAGE_SIZE = 10;
 
 // i18n: 상태/결제 enum 값은 카탈로그 키 이름만 보관하고(공유 엔티티
 // 의미를 바꾸지 않음), 한글 라벨은 렌더 시 t(`status.${key}`)로 해석한다.
-const STATUS_BADGE_META: Record<
-  Subscription["status"],
-  { labelKey: string }
-> = {
-  active: { labelKey: "active" },
-  trialing: { labelKey: "trialing" },
-  past_due: { labelKey: "pastDue" },
-  canceled: { labelKey: "canceled" },
-  paused: { labelKey: "paused" },
-};
+const STATUS_BADGE_META: Record<Subscription["status"], { labelKey: string }> =
+  {
+    active: { labelKey: "active" },
+    trialing: { labelKey: "trialing" },
+    past_due: { labelKey: "pastDue" },
+    canceled: { labelKey: "canceled" },
+    paused: { labelKey: "paused" },
+  };
 
 const PAYMENT_STATUS_BADGE_META: Record<
   PaymentRecord["status"],
@@ -135,22 +133,26 @@ export function SubscriptionShell() {
     } catch (err) {
       setSub({
         status: "error",
-        message: err instanceof Error ? err.message : t("subscriptionLoadError"),
+        message:
+          err instanceof Error ? err.message : t("subscriptionLoadError"),
       });
     }
   }, [t]);
 
-  const loadHistory = useCallback(async (pageIndex: number) => {
-    try {
-      const { rows, total } = await fetchPaymentHistory(pageIndex, PAGE_SIZE);
-      setHistory({ status: "ready", rows, total });
-    } catch (err) {
-      setHistory({
-        status: "error",
-        message: err instanceof Error ? err.message : t("historyLoadError"),
-      });
-    }
-  }, [t]);
+  const loadHistory = useCallback(
+    async (pageIndex: number) => {
+      try {
+        const { rows, total } = await fetchPaymentHistory(pageIndex, PAGE_SIZE);
+        setHistory({ status: "ready", rows, total });
+      } catch (err) {
+        setHistory({
+          status: "error",
+          message: err instanceof Error ? err.message : t("historyLoadError"),
+        });
+      }
+    },
+    [t],
+  );
 
   // 재시도 버튼/이벤트에서 즉시 로딩 표시 후 다시 불러온다.
   const reloadSubscription = useCallback(() => {
@@ -185,7 +187,8 @@ export function SubscriptionShell() {
       title: t("history.colDate"),
       dataIndex: "paid_at",
       key: "paid_at",
-      render: (value: string | null, row) => formatDate(value ?? row.created_at),
+      render: (value: string | null, row) =>
+        formatDate(value ?? row.created_at),
     },
     {
       title: t("history.colAmount"),
@@ -315,14 +318,18 @@ export function SubscriptionShell() {
                             </Text>
                             <Tag>
                               {t(
-                                `status.${STATUS_BADGE_META[sub.subscription.status].labelKey}` as Parameters<typeof t>[0],
+                                `status.${STATUS_BADGE_META[sub.subscription.status].labelKey}` as Parameters<
+                                  typeof t
+                                >[0],
                               )}
                             </Tag>
                           </div>
                           <div className="mt-2 flex flex-wrap items-center gap-2">
                             <Tag>
                               {t(
-                                `cadence.${cadenceLabelKey(sub.subscription.billing_cadence)}` as Parameters<typeof t>[0],
+                                `cadence.${cadenceLabelKey(sub.subscription.billing_cadence)}` as Parameters<
+                                  typeof t
+                                >[0],
                               )}
                             </Tag>
                             <Text type="secondary">
@@ -356,7 +363,9 @@ export function SubscriptionShell() {
                           {
                             key: "amount",
                             label: t("current.nextChargeLabel"),
-                            children: sub.plan ? formatPlanPrice(sub.plan) : "—",
+                            children: sub.plan
+                              ? formatPlanPrice(sub.plan)
+                              : "—",
                           },
                         ]}
                       />
@@ -381,10 +390,7 @@ export function SubscriptionShell() {
                       <div className="flex w-full flex-col gap-3">
                         <div>
                           <Text strong>{t("payment.placeholderTitle")}</Text>
-                          <Paragraph
-                            type="secondary"
-                            className="!mb-0 !mt-1"
-                          >
+                          <Paragraph type="secondary" className="!mb-0 !mt-1">
                             {t("payment.placeholderBody")}
                           </Paragraph>
                         </div>
@@ -455,10 +461,7 @@ export function SubscriptionShell() {
                       {t("change.cancel")}
                     </Button>
                   </div>
-                  <Paragraph
-                    type="secondary"
-                    className="!mb-0 !mt-3 !text-xs"
-                  >
+                  <Paragraph type="secondary" className="!mb-0 !mt-3 !text-xs">
                     {t("change.note")}
                   </Paragraph>
                 </AppCard>
@@ -492,9 +495,7 @@ export function SubscriptionShell() {
                     size="small"
                     columns={columns}
                     loading={history.status === "loading"}
-                    dataSource={
-                      history.status === "ready" ? history.rows : []
-                    }
+                    dataSource={history.status === "ready" ? history.rows : []}
                     locale={{ emptyText: t("history.empty") }}
                     pagination={{
                       current: page + 1,

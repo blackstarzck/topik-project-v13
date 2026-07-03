@@ -8,6 +8,13 @@ import { PageContainer } from "@/components/shared/PageContainer";
 import { PublicShell } from "@/components/shared/PublicShell";
 import { getCurrentLandingAuthStatus } from "@/lib/auth/completion";
 
+// The landing CTA branches on the visitor's auth status, which is read from the
+// session cookie (getCurrentLandingAuthStatus -> cookies()). That makes this
+// route inherently dynamic; declaring it explicitly documents the intent and
+// silences the DYNAMIC_SERVER_USAGE build log instead of leaving Next to infer
+// it. See docs/qa/plan/2026-07-03-qa-defect-remediation-plan.md (QA-20260702-08).
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("landing");
   return { title: t("metaTitle") };

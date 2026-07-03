@@ -94,7 +94,9 @@ describe("GET /api/writing/evaluation-status", () => {
       submission_id: "00000000-0000-0000-0000-000000000099",
       status: "graded",
     };
-    helpers.getExternalEvaluationFeedbackMock.mockResolvedValue(externalFeedback);
+    helpers.getExternalEvaluationFeedbackMock.mockResolvedValue(
+      externalFeedback,
+    );
     helpers.mapExternalEvaluationFeedbackMock.mockReturnValue({
       feedback: {
         status: "complete",
@@ -105,7 +107,9 @@ describe("GET /api/writing/evaluation-status", () => {
         ai_model_version: "openapi",
       },
       dimensions: [{ dimension: "grammar", score: 9, score_max: 10 }],
-      sentences: [{ sentence_index: 0, original_text: "A", corrected_text: "B" }],
+      sentences: [
+        { sentence_index: 0, original_text: "A", corrected_text: "B" },
+      ],
     });
 
     const response = await GET(
@@ -114,7 +118,9 @@ describe("GET /api/writing/evaluation-status", () => {
       ),
     );
 
-    await expect(response.json()).resolves.toEqual({ feedback_status: "complete" });
+    await expect(response.json()).resolves.toEqual({
+      feedback_status: "complete",
+    });
     expect(helpers.rpcMock).not.toHaveBeenCalledWith(
       "sync_external_writing_feedback",
       expect.anything(),
@@ -129,7 +135,9 @@ describe("GET /api/writing/evaluation-status", () => {
           raw_ai_result: externalFeedback,
         }),
         dimensions: [{ dimension: "grammar", score: 9, score_max: 10 }],
-        sentences: [{ sentence_index: 0, original_text: "A", corrected_text: "B" }],
+        sentences: [
+          { sentence_index: 0, original_text: "A", corrected_text: "B" },
+        ],
       },
     );
   });
@@ -170,7 +178,9 @@ describe("GET /api/writing/evaluation-status", () => {
       ),
     );
 
-    await expect(response.json()).resolves.toEqual({ feedback_status: "analyzing" });
+    await expect(response.json()).resolves.toEqual({
+      feedback_status: "analyzing",
+    });
     expect(helpers.getExternalEvaluationFeedbackMock).not.toHaveBeenCalled();
     expect(helpers.serviceRpcMock).not.toHaveBeenCalled();
   });
@@ -203,7 +213,9 @@ describe("GET /api/writing/evaluation-status", () => {
       ),
     );
 
-    await expect(response.json()).resolves.toEqual({ feedback_status: "analyzing" });
+    await expect(response.json()).resolves.toEqual({
+      feedback_status: "analyzing",
+    });
     expect(helpers.serviceRpcMock).not.toHaveBeenCalled();
   });
 });

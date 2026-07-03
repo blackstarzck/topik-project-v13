@@ -33,7 +33,9 @@ describe("saveExternalWritingDraft", () => {
 
     expect(result.submission_id).toBe("draft-1");
     expect(calls).toHaveLength(1);
-    expect(calls[0].url).toBe("https://api.example.test/api/writing/save-draft");
+    expect(calls[0].url).toBe(
+      "https://api.example.test/api/writing/save-draft",
+    );
     expect(calls[0].method).toBe("POST");
     expect(calls[0].headers.get("authorization")).toBe("Bearer access-token");
     expect(calls[0].headers.get("content-type")).toBe("application/json");

@@ -140,9 +140,7 @@ export function LanguageForm({ userId, initialLocale }: Props) {
         setContentLoad({
           status: "error",
           message:
-            err instanceof Error
-              ? err.message
-              : t("learningSettingsLoadError"),
+            err instanceof Error ? err.message : t("learningSettingsLoadError"),
         });
       }
     })();

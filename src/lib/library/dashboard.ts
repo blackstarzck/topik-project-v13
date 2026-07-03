@@ -102,7 +102,9 @@ export async function getLibraryDashboard(
     .eq("user_id", userId)
     .order("saved_at", { ascending: false });
   if (libraryError) {
-    throw new Error(`getLibraryDashboard(library_items): ${libraryError.message}`);
+    throw new Error(
+      `getLibraryDashboard(library_items): ${libraryError.message}`,
+    );
   }
 
   const savedSubmissionIds = uniqueIds(
@@ -111,19 +113,14 @@ export async function getLibraryDashboard(
       .map((item) => item.submission_id),
   );
 
-  const [
-    submissions,
-    feedback,
-    dimensionScores,
-    allSubmissions,
-    studyEvents,
-  ] = await Promise.all([
-    fetchSavedSubmissions(supabase, savedSubmissionIds),
-    fetchFeedback(supabase, savedSubmissionIds),
-    fetchDimensionScores(supabase, savedSubmissionIds),
-    fetchAllSubmissionProblemRows(supabase, userId),
-    fetchTimelineEvents(supabase, userId),
-  ]);
+  const [submissions, feedback, dimensionScores, allSubmissions, studyEvents] =
+    await Promise.all([
+      fetchSavedSubmissions(supabase, savedSubmissionIds),
+      fetchFeedback(supabase, savedSubmissionIds),
+      fetchDimensionScores(supabase, savedSubmissionIds),
+      fetchAllSubmissionProblemRows(supabase, userId),
+      fetchTimelineEvents(supabase, userId),
+    ]);
 
   const problemIds = uniqueIds([
     ...submissions.map((row) => row.problem_id),
@@ -195,7 +192,10 @@ export function buildLibraryDashboardFromRows(
   );
 
   const feedbackWaitingRows = savedRows.filter((row) =>
-    isFeedbackWaiting(row.submission.feedback_status, row.feedback?.status ?? null),
+    isFeedbackWaiting(
+      row.submission.feedback_status,
+      row.feedback?.status ?? null,
+    ),
   );
 
   const reviewCandidates = completeSavedRows
@@ -248,7 +248,7 @@ export function buildLibraryDashboardFromRows(
         ? submissionsById.get(event.submission_id)
         : undefined;
       const problemId = event.problem_id ?? submission?.problem_id ?? null;
-      const problem = problemId ? problemsById.get(problemId) ?? null : null;
+      const problem = problemId ? (problemsById.get(problemId) ?? null) : null;
       return {
         id: event.id,
         eventType: event.event_type as LibraryDashboardTimelineEventType,
@@ -256,7 +256,10 @@ export function buildLibraryDashboardFromRows(
         problemId,
         submissionId: event.submission_id,
         questionNo: submission?.question_no ?? problem?.question_no ?? null,
-        title: problemTitle(problem, submission?.question_no ?? problem?.question_no),
+        title: problemTitle(
+          problem,
+          submission?.question_no ?? problem?.question_no,
+        ),
       };
     });
 
@@ -290,7 +293,9 @@ async function fetchSavedSubmissions(
     )
     .in("id", ids);
   if (error) {
-    throw new Error(`getLibraryDashboard(writing_submissions): ${error.message}`);
+    throw new Error(
+      `getLibraryDashboard(writing_submissions): ${error.message}`,
+    );
   }
   return (data ?? []) as SubmissionDashboardRow[];
 }
@@ -317,7 +322,9 @@ async function fetchDimensionScores(
   if (ids.length === 0) return [];
   const { data, error } = await supabase
     .from("feedback_dimension_scores")
-    .select("id, submission_id, dimension, score, score_max, summary, weakness_level")
+    .select(
+      "id, submission_id, dimension, score, score_max, summary, weakness_level",
+    )
     .in("submission_id", ids);
   if (error) {
     throw new Error(
@@ -586,7 +593,8 @@ function lowestDimensionScore(rows: DimensionScoreDashboardRow[]) {
 
 function normalizeDimensionScore(row: DimensionScoreDashboardRow) {
   if (row.score == null) return null;
-  const scoreMax = row.score_max != null && row.score_max > 0 ? row.score_max : 100;
+  const scoreMax =
+    row.score_max != null && row.score_max > 0 ? row.score_max : 100;
   const normalizedScore = Math.max(
     0,
     Math.min(100, Math.round((row.score / scoreMax) * 100)),

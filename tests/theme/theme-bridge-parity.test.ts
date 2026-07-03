@@ -17,10 +17,7 @@ const asString: Formatter = (raw) => String(raw);
 const asPx: Formatter = (raw) => `${raw}px`;
 
 const ANT_D_BACKED_BRIDGE_TOKEN_MAP: Partial<
-  Record<
-  AppBridgeVarName,
-  { token: string; format: Formatter }
-  >
+  Record<AppBridgeVarName, { token: string; format: Formatter }>
 > = {
   "--app-color-primary": { token: "colorPrimary", format: asString },
   "--app-color-bg-layout": { token: "colorBgLayout", format: asString },

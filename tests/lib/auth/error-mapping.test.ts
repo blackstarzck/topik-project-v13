@@ -107,7 +107,9 @@ describe("REASON_CONTENT", () => {
   it("resend-relevant reasons show editable email field", () => {
     expect(REASON_CONTENT.otp_expired.showsEmailField).toBe(true);
     expect(REASON_CONTENT.email_not_confirmed.showsEmailField).toBe(true);
-    expect(REASON_CONTENT.over_email_send_rate_limit.showsEmailField).toBe(true);
+    expect(REASON_CONTENT.over_email_send_rate_limit.showsEmailField).toBe(
+      true,
+    );
   });
 });
 

@@ -172,9 +172,7 @@ describe("FeedbackSummary (i18n chrome)", () => {
       "전체 점수는 3/30점입니다. 기초부터 차근차근 다시 정리해 보겠습니다. 세 영역 모두 F등급으로 고르게 작성되었습니다. 내용 감점 내역과 구성 감점 내역, 언어 사용 감점 내역을 모두 확인해야 합니다.";
 
     renderWithIntl(
-      <FeedbackSummary
-        feedback={feedback({ overall_summary: longSummary })}
-      />,
+      <FeedbackSummary feedback={feedback({ overall_summary: longSummary })} />,
     );
 
     const summary = screen.getByText(longSummary);
@@ -232,7 +230,9 @@ describe("SentenceFeedbackList (i18n chrome)", () => {
   });
 
   it("uses the shared content section title structure", () => {
-    renderWithIntl(<SentenceFeedbackList rows={[sentence({ id: "s-title" })]} />);
+    renderWithIntl(
+      <SentenceFeedbackList rows={[sentence({ id: "s-title" })]} />,
+    );
 
     const title = screen.getByRole("heading", {
       level: 5,
@@ -645,9 +645,9 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
     expect(
       actionRegion.contains(within(header).getByTestId("feedback-actions")),
     ).toBe(true);
-    expect(within(header).getByTestId("feedback-action-retry").textContent).toBe(
-      "다시 작성",
-    );
+    expect(
+      within(header).getByTestId("feedback-action-retry").textContent,
+    ).toBe("다시 작성");
     expect(screen.getAllByTestId("feedback-actions")).toHaveLength(1);
   });
 
@@ -1085,9 +1085,7 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
     expect(starIcon?.getAttribute("src")).not.toContain("/_next/image");
     expect(starIcon?.getAttribute("alt")).toBe("");
     expect(starIcon?.getAttribute("aria-hidden")).toBe("true");
-    expect(starIcon?.className).toContain(
-      "feedback-report-focus-title-icon",
-    );
+    expect(starIcon?.className).toContain("feedback-report-focus-title-icon");
     expect(starIcon?.className).toContain("block");
     expect(starIcon?.className).toContain("h-5");
     expect(starIcon?.className).toContain("w-5");

@@ -64,8 +64,11 @@ describe("getCurrentProfile", () => {
     const { getCurrentProfile } = await import("../../../src/lib/auth/profile");
     const profile = await getCurrentProfile(
       async () =>
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        makeClient({ user: { id: "user-1" }, profile: makeProfile("learner") }) as any,
+        makeClient({
+          user: { id: "user-1" },
+          profile: makeProfile("learner"),
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        }) as any,
     );
     expect(profile?.app_role).toBe("learner");
   });
@@ -84,8 +87,11 @@ describe("requireRole", () => {
     const profile = await requireRole(
       ["platform_admin"],
       async () =>
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        makeClient({ user: { id: "u" }, profile: makeProfile("platform_admin") }) as any,
+        makeClient({
+          user: { id: "u" },
+          profile: makeProfile("platform_admin"),
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        }) as any,
     );
     expect(profile.app_role).toBe("platform_admin");
   });
@@ -96,8 +102,11 @@ describe("requireRole", () => {
       requireRole(
         ["platform_admin"],
         async () =>
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          makeClient({ user: { id: "u" }, profile: makeProfile("learner") }) as any,
+          makeClient({
+            user: { id: "u" },
+            profile: makeProfile("learner"),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          }) as any,
       ),
     ).rejects.toThrow("REDIRECT:/dashboard");
   });

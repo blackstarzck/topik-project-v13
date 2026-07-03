@@ -59,6 +59,27 @@ const ATTRIBUTE_PATTERN =
   /([^\s"'<>/=]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
 const SAFE_PROTOCOLS = new Set(["http", "https", "mailto", "tel"]);
 
+// Matches a single HTML tag with the tag name directly after `<`/`</`. This is a
+// strict subset of TAG_PATTERN, so anything stashed with it is still re-processed
+// by sanitizeLegalDocumentHtml — the final sanitize step remains the only gate.
+const INLINE_HTML_TAG_PATTERN = /<\/?[a-zA-Z][^<>]*>/g;
+// In the Markdown path <br> is a block separator, so collapse it to a newline
+// before line splitting instead of leaking a literal &lt;br&gt; to the reader.
+const STRUCTURAL_BR_PATTERN = /<br\b[^<>]*>/gi;
+// Block wrapper tags (<div>/<p>/<section>) that admin bodies sometimes wrap a
+// single line in. Their attributes are dropped by the sanitizer anyway, so we
+// peel them and treat the wrapper as a block boundary.
+const WRAPPER_TAG_PREFIX_PATTERN = /^(?:<\/?(?:div|p|section)\b[^<>]*>\s*)+/i;
+const WRAPPER_TAG_SUFFIX_PATTERN = /(?:\s*<\/?(?:div|p|section)\b[^<>]*>)+$/i;
+// A line that opens with a block-level HTML element must pass through as-is
+// rather than being wrapped in <p>.
+const RAW_BLOCK_TAG_LINE_PATTERN =
+  /^<\/?(?:h[1-6]|ul|ol|li|table|thead|tbody|tfoot|tr|td|th|caption|colgroup|col|blockquote|pre|hr)\b/i;
+// Markdown heading marker used only to re-route HTML-looking bodies that still
+// carry Markdown headings into the Markdown path.
+const MARKDOWN_HEADING_PATTERN = /(^|\n)\s*#{1,6}\s+/;
+const LEGAL_DOC_TOKEN_PATTERN = /@@LEGAL_DOC_TOKEN_\d+@@/g;
+
 function entityToCharacter(value: string, radix: 10 | 16): string {
   const codePoint = Number.parseInt(value, radix);
   if (!Number.isFinite(codePoint) || codePoint < 0 || codePoint > 0x10ffff) {
@@ -79,9 +100,17 @@ function escapeAttribute(value: string): string {
     .replace(/>/g, "&gt;");
 }
 
+// Escape bare markup characters while leaving already-valid HTML entities
+// (e.g. admin-authored &nbsp; / &gt; / &#160;) intact — re-escaping their "&"
+// to "&amp;" would surface the literal "&nbsp;" text to readers. Entities in a
+// text node decode to characters only (never re-parsed as markup), so this is
+// XSS-safe: the final sanitize pass has already removed any real tags.
+const NAMED_OR_NUMERIC_ENTITY =
+  /&(?![a-zA-Z][a-zA-Z0-9]*;|#\d+;|#x[0-9a-fA-F]+;)/g;
+
 function escapeText(value: string): string {
   return value
-    .replace(/&/g, "&amp;")
+    .replace(NAMED_OR_NUMERIC_ENTITY, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 }
@@ -228,11 +257,16 @@ function renderInlineMarkdown(value: string): string {
     return token;
   };
 
-  let output = value;
+  // Drop any pre-existing token markers so admin bodies cannot spoof the stash.
+  let output = value.replace(LEGAL_DOC_TOKEN_PATTERN, "");
 
   output = output.replace(/`([^`\n]+)`/g, (_, code: string) =>
     stash(`<code>${escapeText(code)}</code>`),
   );
+  // Preserve inline HTML tags (e.g. <strong>, <a>) authored inside otherwise
+  // Markdown bodies by stashing them before escapeText runs. Placed after the
+  // code-span stash so backtick-quoted "`<div>`" still renders literally.
+  output = output.replace(INLINE_HTML_TAG_PATTERN, (tag: string) => stash(tag));
   output = output.replace(
     /\[([^\]\n]+)\]\(([^)\s]+)\)/g,
     (_, label: string, href: string) =>
@@ -254,7 +288,9 @@ function renderInlineMarkdown(value: string): string {
 
   output = escapeText(output);
 
-  return tokens.reduce(
+  // Restore descending so a token nested inside a later token (e.g. a code span
+  // inside a link label) is expanded after its container.
+  return tokens.reduceRight(
     (current, html, index) =>
       current.replaceAll(`@@LEGAL_DOC_TOKEN_${index}@@`, html),
     output,
@@ -263,10 +299,9 @@ function renderInlineMarkdown(value: string): string {
 
 function markdownToHtml(value: string): string {
   const source = normalizeDocumentSource(value);
-  const withoutUnsafeBlocks = removeDroppedBlocks(source).replace(
-    /<!--[\s\S]*?-->/g,
-    "",
-  );
+  const withoutUnsafeBlocks = removeDroppedBlocks(source)
+    .replace(/<!--[\s\S]*?-->/g, "")
+    .replace(STRUCTURAL_BR_PATTERN, "\n");
   const lines = withoutUnsafeBlocks.split("\n");
   const blocks: string[] = [];
   const paragraphLines: string[] = [];
@@ -301,7 +336,29 @@ function markdownToHtml(value: string): string {
       continue;
     }
 
-    const heading = trimmed.match(/^(#{1,6})\s+(.+)$/);
+    // Peel <div>/<p>/<section> wrappers so a line like "<div>## 제1조</div>"
+    // is classified by its inner Markdown instead of leaking the wrapper tag.
+    const unwrapped = trimmed
+      .replace(WRAPPER_TAG_PREFIX_PATTERN, "")
+      .replace(WRAPPER_TAG_SUFFIX_PATTERN, "")
+      .trim();
+    if (!unwrapped) {
+      // Wrapper-only line (e.g. a lone <div> or </div>) is just a block break.
+      flushParagraph();
+      closeList();
+      continue;
+    }
+
+    // Lines that open with a block-level HTML element pass through untouched
+    // (still sanitized later) rather than being wrapped in <p>.
+    if (RAW_BLOCK_TAG_LINE_PATTERN.test(unwrapped)) {
+      flushParagraph();
+      closeList();
+      blocks.push(renderInlineMarkdown(unwrapped));
+      continue;
+    }
+
+    const heading = unwrapped.match(/^(#{1,6})\s+(.+)$/);
     if (heading) {
       flushParagraph();
       closeList();
@@ -310,7 +367,7 @@ function markdownToHtml(value: string): string {
       continue;
     }
 
-    const unorderedItem = trimmed.match(/^[-*+]\s+(.+)$/);
+    const unorderedItem = unwrapped.match(/^[-*+]\s+(.+)$/);
     if (unorderedItem) {
       flushParagraph();
       ensureList("ul");
@@ -318,7 +375,7 @@ function markdownToHtml(value: string): string {
       continue;
     }
 
-    const orderedItem = trimmed.match(/^\d+[.)]\s+(.+)$/);
+    const orderedItem = unwrapped.match(/^\d+[.)]\s+(.+)$/);
     if (orderedItem) {
       flushParagraph();
       ensureList("ol");
@@ -326,7 +383,7 @@ function markdownToHtml(value: string): string {
       continue;
     }
 
-    const quote = trimmed.match(/^>\s?(.+)$/);
+    const quote = unwrapped.match(/^>\s?(.+)$/);
     if (quote) {
       flushParagraph();
       closeList();
@@ -337,7 +394,7 @@ function markdownToHtml(value: string): string {
     }
 
     closeList();
-    paragraphLines.push(trimmed);
+    paragraphLines.push(unwrapped);
   }
 
   flushParagraph();
@@ -355,7 +412,13 @@ export function renderLegalDocumentBodyHtml(
   if (!normalized) return "";
 
   if (HTML_TAG_PATTERN.test(normalized) && !hasMarkdownSyntax(normalized)) {
-    return sanitizeLegalDocumentHtml(normalized);
+    // A body can look like HTML yet still carry Markdown headings inside its
+    // tags (e.g. "<div>## 제1조</div>"). Strip tags and, only if a heading
+    // marker survives, fall through to the Markdown path so "##" is converted.
+    const probe = removeDroppedBlocks(normalized).replace(TAG_PATTERN, "\n");
+    if (!MARKDOWN_HEADING_PATTERN.test(probe)) {
+      return sanitizeLegalDocumentHtml(normalized);
+    }
   }
 
   return sanitizeLegalDocumentHtml(markdownToHtml(normalized));

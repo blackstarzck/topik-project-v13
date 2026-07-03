@@ -130,9 +130,7 @@ describe("GrowthDashboard (i18n chrome)", () => {
     expect(screen.getByText("최근 완료 문제")).toBeTruthy();
     expect(screen.getByText("다음 추천 문제")).toBeTruthy();
     expect(
-      screen
-        .getByRole("link", { name: "추천 학습 시작" })
-        .getAttribute("href"),
+      screen.getByRole("link", { name: "추천 학습 시작" }).getAttribute("href"),
     ).toBe("/practice/weakness");
     expect(
       screen.queryByText("상세 성장 리포트는 유료 플랜 전용이에요"),

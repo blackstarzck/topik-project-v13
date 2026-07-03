@@ -21,11 +21,7 @@ export function ChecklistRow({ label, status, onChange }: Props) {
     { label: t("statusComplete"), value: "complete" },
   ];
   return (
-    <Space
-      orientation="vertical"
-      size={2}
-      className="mb-3 w-full"
-    >
+    <Space orientation="vertical" size={2} className="mb-3 w-full">
       <Text>{label}</Text>
       <Segmented
         block

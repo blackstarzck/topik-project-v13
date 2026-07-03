@@ -25,16 +25,14 @@ test("account settings keeps login methods, account status, and logout", async (
 
   await expect(page.getByRole("heading", { name: "계정 설정" })).toBeVisible();
   // 재설계: 섹션 타이틀("로그인 방법"/"계정 상태")은 제거되고 카드·행만 남는다.
-  await expect(
-    page.getByText("이메일 로그인", { exact: true }),
-  ).toBeVisible();
-  await expect(
-    page.getByText("Google 로그인", { exact: true }),
-  ).toBeVisible();
+  await expect(page.getByText("이메일 로그인", { exact: true })).toBeVisible();
+  await expect(page.getByText("Google 로그인", { exact: true })).toBeVisible();
   // 제거된 요소: 알림/언어 빠른 링크, 탈퇴/학습목표 안내 문구.
   await expect(page.getByText("알림 설정")).toHaveCount(0);
   await expect(page.getByText("언어 설정")).toHaveCount(0);
-  await expect(page.getByText("회원 탈퇴는 다음 업데이트에서 지원됩니다.")).toHaveCount(0);
+  await expect(
+    page.getByText("회원 탈퇴는 다음 업데이트에서 지원됩니다."),
+  ).toHaveCount(0);
   await expect(
     page.getByText("학습 목표는 프로필에 반영되어 추천·리포트에 사용됩니다."),
   ).toHaveCount(0);

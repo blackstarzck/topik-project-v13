@@ -37,7 +37,8 @@ vi.mock("@/lib/auth/profile", () => ({
 }));
 
 vi.mock("@/lib/export/pdf-document", () => ({
-  buildPdfDocument: (...args: unknown[]) => helpers.buildPdfDocumentMock(...args),
+  buildPdfDocument: (...args: unknown[]) =>
+    helpers.buildPdfDocumentMock(...args),
   registerPdfFonts: (...args: unknown[]) =>
     helpers.registerPdfFontsMock(...args),
 }));
@@ -157,8 +158,7 @@ describe("POST /api/export/pdf", () => {
     await expect(response.json()).resolves.toMatchObject({
       exportId: "00000000-0000-0000-0000-000000000111",
       filename: "learning-export.pdf",
-      storagePath:
-        "exports/user-1/00000000-0000-0000-0000-000000000111.pdf",
+      storagePath: "exports/user-1/00000000-0000-0000-0000-000000000111.pdf",
     });
     expect(helpers.fetchProfileStatusMock).toHaveBeenCalledWith(
       expect.anything(),

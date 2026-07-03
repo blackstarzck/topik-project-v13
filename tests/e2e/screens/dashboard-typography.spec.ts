@@ -31,8 +31,9 @@ test("B-01 home dashboard renders dashboard copy at 14px or larger", async ({
   await expect(page).toHaveURL(/\/dashboard/);
   await expect(page.getByRole("heading").first()).toBeVisible();
 
-  const twelvePxTexts = await page.locator(".app-cards-bordered").evaluate(
-    (root) => {
+  const twelvePxTexts = await page
+    .locator(".app-cards-bordered")
+    .evaluate((root) => {
       const elements = Array.from(
         root.querySelectorAll<HTMLElement>(
           [
@@ -62,8 +63,7 @@ test("B-01 home dashboard renders dashboard copy at 14px or larger", async ({
           tagName: element.tagName.toLowerCase(),
           text: element.textContent?.replace(/\s+/g, " ").trim(),
         }));
-    },
-  );
+    });
 
   await testInfo.attach("dashboard-12px-texts.json", {
     body: JSON.stringify(twelvePxTexts, null, 2),

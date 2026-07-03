@@ -55,8 +55,13 @@ export function LibraryFeedbackWaitingPanel({ items }: Props) {
                     })}
                   </Text>
                 </span>
-                <Tag color={statusColor(item.status)} className="m-0 flex-shrink-0">
-                  {t(`waiting.status.${item.status}` as Parameters<typeof t>[0])}
+                <Tag
+                  color={statusColor(item.status)}
+                  className="m-0 flex-shrink-0"
+                >
+                  {t(
+                    `waiting.status.${item.status}` as Parameters<typeof t>[0],
+                  )}
                 </Tag>
                 {item.status === "failed" && item.retryHref ? (
                   <Button

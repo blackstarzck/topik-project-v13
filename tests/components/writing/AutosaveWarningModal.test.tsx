@@ -89,9 +89,9 @@ describe("AutosaveWarningModal", () => {
     const handlers = renderModal({ trigger: "disable_attempt" });
 
     expect(screen.queryByTestId("autosave-warning-alert")).toBeNull();
-    expect(screen.getByTestId("autosave-warning-no-backup").textContent).toContain(
-      "복구할 수 있는 임시 저장본이 없어요",
-    );
+    expect(
+      screen.getByTestId("autosave-warning-no-backup").textContent,
+    ).toContain("복구할 수 있는 임시 저장본이 없어요");
 
     const retryButton = modalButton("autosave-warning-retry");
     expect(retryButton.disabled).toBe(true);

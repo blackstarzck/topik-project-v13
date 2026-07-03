@@ -37,14 +37,17 @@ export async function saveExternalWritingDraft({
     throw new Error("accessToken is required");
   }
 
-  const response = await fetchImpl(`${baseUrl.replace(/\/$/, "")}/api/writing/save-draft`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
+  const response = await fetchImpl(
+    `${baseUrl.replace(/\/$/, "")}/api/writing/save-draft`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
     },
-    body: JSON.stringify(payload),
-  });
+  );
 
   const body = await parseJson(response);
 

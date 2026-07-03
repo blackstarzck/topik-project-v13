@@ -22,9 +22,9 @@ describe("computeExamDaysLeft", () => {
   });
 
   it("returns the positive day diff in the future", () => {
-    expect(
-      computeExamDaysLeft(TODAY.add(30, "day").format("YYYY-MM-DD")),
-    ).toBe(30);
+    expect(computeExamDaysLeft(TODAY.add(30, "day").format("YYYY-MM-DD"))).toBe(
+      30,
+    );
   });
 
   it("returns null when exam_date is in the past", () => {
@@ -65,10 +65,7 @@ describe("computeStreakDays", () => {
 });
 
 describe("getDashboardKpi (Phase 6 RPC)", () => {
-  function makeSupabase(opts: {
-    rpcData?: unknown;
-    rpcError?: string | null;
-  }) {
+  function makeSupabase(opts: { rpcData?: unknown; rpcError?: string | null }) {
     let calledFn: string | null = null;
     return {
       rpc: (name: string) => {
@@ -95,9 +92,9 @@ describe("getDashboardKpi (Phase 6 RPC)", () => {
     });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const kpi = await getDashboardKpi("user-1", supabase as any);
-    expect((supabase as unknown as { __calledFn: () => string }).__calledFn()).toBe(
-      "get_dashboard_kpi",
-    );
+    expect(
+      (supabase as unknown as { __calledFn: () => string }).__calledFn(),
+    ).toBe("get_dashboard_kpi");
     expect(kpi.todayAttempts).toBe(3);
     expect(kpi.totalAttempts).toBe(17);
     expect(kpi.examDaysLeft).toBe(45);

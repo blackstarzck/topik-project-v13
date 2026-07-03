@@ -54,9 +54,7 @@ describe("AppNotFound i18n chrome", () => {
   it("centers the not-found content in the visible viewport", () => {
     renderWithIntl(<AppNotFound />);
 
-    expect(
-      Array.from(screen.getByTestId("app-not-found").classList),
-    ).toEqual(
+    expect(Array.from(screen.getByTestId("app-not-found").classList)).toEqual(
       expect.arrayContaining([
         "flex",
         "min-h-dvh",

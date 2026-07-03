@@ -38,7 +38,10 @@ export function applySort<T extends { column: string; ascending?: boolean }>(
   }
 }
 
-export function pageRange(page: number, pageSize: number): {
+export function pageRange(
+  page: number,
+  pageSize: number,
+): {
   from: number;
   to: number;
 } {
@@ -149,8 +152,7 @@ export async function fetchUserProblemList(
     ...row,
     solveState: userMap.solveStates.get(row.id) ?? "none",
     recommended: userMap.recommended.has(row.id),
-    latestSubmissionId:
-      userMap.latestSubmissionByProblem.get(row.id) ?? null,
+    latestSubmissionId: userMap.latestSubmissionByProblem.get(row.id) ?? null,
   }));
 
   let rows = enriched;
@@ -206,9 +208,7 @@ export async function fetchProblemRecommendations(
   const { data, error } = await query;
   if (error) throw error;
   return (data ?? []).flatMap((row) => {
-    const problems = normalizeJoined(
-      (row as { problems: unknown }).problems,
-    );
+    const problems = normalizeJoined((row as { problems: unknown }).problems);
     if (!problems) return [];
     return [
       {
@@ -227,9 +227,7 @@ export async function fetchProblemRecommendations(
 
 function normalizeJoined(
   raw: unknown,
-):
-  | { title: string; domain: string; question_no: number | null }
-  | null {
+): { title: string; domain: string; question_no: number | null } | null {
   // Supabase types nested embed loosely: PostgREST may return a single object
   // (1:1 relation) or an array. !inner guarantees a row exists, but the type
   // layer doesn't, so normalize both shapes and drop unexpected ones.

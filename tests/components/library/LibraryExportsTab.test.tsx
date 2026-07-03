@@ -52,14 +52,16 @@ describe("LibraryExportsTab — browser_print branching", () => {
     // `options` is `Json | null` and Json includes arrays. The helper must
     // not crash if the column ever ends up holding an array literal.
     expect(
-      isBrowserPrintExport(makeExport([] as unknown as LibraryExportView["options"])),
+      isBrowserPrintExport(
+        makeExport([] as unknown as LibraryExportView["options"]),
+      ),
     ).toBe(false);
   });
 
   it("only the marker key 'source' is consulted (other keys ignored)", () => {
-    expect(
-      isBrowserPrintExport(makeExport({ kind: "browser_print" })),
-    ).toBe(false);
+    expect(isBrowserPrintExport(makeExport({ kind: "browser_print" }))).toBe(
+      false,
+    );
     expect(
       isBrowserPrintExport(
         makeExport({ source: "browser_print", extra: 1, nested: { x: 1 } }),

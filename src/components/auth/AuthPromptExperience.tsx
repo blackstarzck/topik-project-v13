@@ -55,9 +55,7 @@ export function AuthPromptExperience({
 
   return (
     <div className={`signup-prompt-layout signup-prompt-layout--${mode}`}>
-      <AuthEntrySessionGuard
-        redirectTo={guardRedirectTo}
-      />
+      <AuthEntrySessionGuard redirectTo={guardRedirectTo} />
       <aside className="signup-prompt-hero" aria-label={heroEyebrow}>
         <NextLink href="/" className="signup-brand" aria-label="TALKPIK AI">
           <BrandLogo height={46} loading="eager" />

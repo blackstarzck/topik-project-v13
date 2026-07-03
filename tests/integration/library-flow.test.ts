@@ -37,7 +37,10 @@ function makeClient(opts: {
             eq: () => ({
               eq: () => ({
                 order: () =>
-                  Promise.resolve({ data: opts.libraryRows ?? [], error: null }),
+                  Promise.resolve({
+                    data: opts.libraryRows ?? [],
+                    error: null,
+                  }),
               }),
             }),
           }),
@@ -95,7 +98,11 @@ function makeClient(opts: {
           },
         };
       }
-      return { select: () => ({ in: () => Promise.resolve({ data: [], error: null }) }) };
+      return {
+        select: () => ({
+          in: () => Promise.resolve({ data: [], error: null }),
+        }),
+      };
     },
   };
 }
@@ -217,7 +224,8 @@ describe("library-flow — RLS rejection on cross-user save", () => {
     const client = makeClient({
       insertError: {
         code: "42501",
-        message: 'new row violates row-level security policy for table "library_items"',
+        message:
+          'new row violates row-level security policy for table "library_items"',
       },
     });
     await expect(

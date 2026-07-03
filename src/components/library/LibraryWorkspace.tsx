@@ -5,7 +5,11 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import type { LibraryItemView, LibraryStats, LibraryTab } from "@/lib/library/types";
+import type {
+  LibraryItemView,
+  LibraryStats,
+  LibraryTab,
+} from "@/lib/library/types";
 
 import { LibraryActionsPanel } from "./LibraryActionsPanel";
 import { LibraryStatsPanel } from "./LibraryStatsPanel";
@@ -36,9 +40,7 @@ export function LibraryWorkspace({ activeTab, initialItems, stats }: Props) {
       message.success(t("reviewSetCreated", { count: selection.length }));
       router.push(`/practice/problems?reviewSet=${reviewSetId}` as never);
     } catch (err) {
-      message.error(
-        err instanceof Error ? err.message : t("reviewSetFailed"),
-      );
+      message.error(err instanceof Error ? err.message : t("reviewSetFailed"));
     } finally {
       setReviewPending(false);
     }

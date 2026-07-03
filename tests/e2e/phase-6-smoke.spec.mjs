@@ -6,12 +6,7 @@ import { chromium } from "playwright";
 const BASE = "http://localhost:3000";
 
 // Routes that should return 200 directly (public).
-const PUBLIC_ROUTES = [
-  "/",
-  "/login",
-  "/sign-up",
-  "/password-reset",
-];
+const PUBLIC_ROUTES = ["/", "/login", "/sign-up", "/password-reset"];
 
 // Routes behind auth — middleware (src/proxy.ts) should 307 → /login.
 const PRIVATE_ROUTES = [

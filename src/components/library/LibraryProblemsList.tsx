@@ -211,7 +211,9 @@ export function LibraryProblemsList({
       <Alert
         type="error"
         title={t("loadError")}
-        description={queryError instanceof Error ? queryError.message : undefined}
+        description={
+          queryError instanceof Error ? queryError.message : undefined
+        }
       />
     );
   }
@@ -249,9 +251,7 @@ export function LibraryProblemsList({
           data-testid="library-problems-empty"
           className="flex flex-1 items-center justify-center"
         >
-          <Empty
-            description={searching ? t("emptySearch") : t("emptyNoItems")}
-          >
+          <Empty description={searching ? t("emptySearch") : t("emptyNoItems")}>
             {searching ? (
               <Button
                 onClick={() => {
@@ -335,9 +335,7 @@ function renderSubmissionRow(
               <Text strong>{clampTitle(title)}</Text>
             </Link>
           )}
-          <Tag color={badge.color}>
-            {tSubmissions(badge.labelKey)}
-          </Tag>
+          <Tag color={badge.color}>{tSubmissions(badge.labelKey)}</Tag>
           {meta?.scoreTotal != null ? (
             <Tag>
               {meta.scoreMax != null
@@ -384,8 +382,12 @@ function renderProblemRow(
     >
       <div className="flex w-full min-w-0 flex-col gap-1">
         <div className="flex flex-wrap items-center gap-2">
-          <Tag data-testid="library-problems-type-badge">{t("typeProblem")}</Tag>
-          <Text strong>{item.title ?? tSaved("unavailablePlaceholderTitle")}</Text>
+          <Tag data-testid="library-problems-type-badge">
+            {t("typeProblem")}
+          </Tag>
+          <Text strong>
+            {item.title ?? tSaved("unavailablePlaceholderTitle")}
+          </Text>
           {unavailable ? (
             <Tag data-testid="library-problem-unavailable-badge">
               {item.availabilityStatus === "soft_unavailable"
@@ -395,7 +397,10 @@ function renderProblemRow(
           ) : null}
         </div>
         {unavailable ? (
-          <Text data-testid="library-problem-unavailable-reason" type="secondary">
+          <Text
+            data-testid="library-problem-unavailable-reason"
+            type="secondary"
+          >
             {item.availabilityReason ?? tSaved("unavailableDefaultReason")}
           </Text>
         ) : null}

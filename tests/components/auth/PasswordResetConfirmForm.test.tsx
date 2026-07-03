@@ -54,9 +54,7 @@ describe("PasswordResetConfirmForm", () => {
     });
 
     await act(async () => {
-      fireEvent.click(
-        screen.getByRole("button", { name: "비밀번호 변경" }),
-      );
+      fireEvent.click(screen.getByRole("button", { name: "비밀번호 변경" }));
     });
 
     await waitFor(() => {
@@ -76,9 +74,7 @@ describe("PasswordResetConfirmForm", () => {
     });
 
     await act(async () => {
-      fireEvent.click(
-        screen.getByRole("button", { name: "비밀번호 변경" }),
-      );
+      fireEvent.click(screen.getByRole("button", { name: "비밀번호 변경" }));
     });
 
     await waitFor(() => {

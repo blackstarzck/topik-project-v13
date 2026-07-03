@@ -100,29 +100,32 @@ test("shared AppCard surface has no independent border chrome", async ({
 }) => {
   await page.goto("/auth/error?reason=unknown", { waitUntil: "networkidle" });
 
-  const cardChrome = await page.locator(".app-card").first().evaluate((card) => {
-    const cardStyle = window.getComputedStyle(card);
-    const body = card.querySelector(".ant-card-body");
-    if (!(body instanceof HTMLElement)) {
-      throw new Error("expected AppCard body");
-    }
-    const bodyStyle = window.getComputedStyle(body);
+  const cardChrome = await page
+    .locator(".app-card")
+    .first()
+    .evaluate((card) => {
+      const cardStyle = window.getComputedStyle(card);
+      const body = card.querySelector(".ant-card-body");
+      if (!(body instanceof HTMLElement)) {
+        throw new Error("expected AppCard body");
+      }
+      const bodyStyle = window.getComputedStyle(body);
 
-    return {
-      bodyBorderBottomLeftRadius: bodyStyle.borderBottomLeftRadius,
-      bodyBorderBottomRightRadius: bodyStyle.borderBottomRightRadius,
-      bodyBorderBottomWidth: bodyStyle.borderBottomWidth,
-      bodyBorderLeftWidth: bodyStyle.borderLeftWidth,
-      bodyBorderRightWidth: bodyStyle.borderRightWidth,
-      bodyBorderTopLeftRadius: bodyStyle.borderTopLeftRadius,
-      bodyBorderTopRightRadius: bodyStyle.borderTopRightRadius,
-      bodyBorderTopWidth: bodyStyle.borderTopWidth,
-      cardBorderBottomWidth: cardStyle.borderBottomWidth,
-      cardBorderLeftWidth: cardStyle.borderLeftWidth,
-      cardBorderRightWidth: cardStyle.borderRightWidth,
-      cardBorderTopWidth: cardStyle.borderTopWidth,
-    };
-  });
+      return {
+        bodyBorderBottomLeftRadius: bodyStyle.borderBottomLeftRadius,
+        bodyBorderBottomRightRadius: bodyStyle.borderBottomRightRadius,
+        bodyBorderBottomWidth: bodyStyle.borderBottomWidth,
+        bodyBorderLeftWidth: bodyStyle.borderLeftWidth,
+        bodyBorderRightWidth: bodyStyle.borderRightWidth,
+        bodyBorderTopLeftRadius: bodyStyle.borderTopLeftRadius,
+        bodyBorderTopRightRadius: bodyStyle.borderTopRightRadius,
+        bodyBorderTopWidth: bodyStyle.borderTopWidth,
+        cardBorderBottomWidth: cardStyle.borderBottomWidth,
+        cardBorderLeftWidth: cardStyle.borderLeftWidth,
+        cardBorderRightWidth: cardStyle.borderRightWidth,
+        cardBorderTopWidth: cardStyle.borderTopWidth,
+      };
+    });
 
   expect(cardChrome).toMatchObject({
     bodyBorderBottomLeftRadius: "0px",

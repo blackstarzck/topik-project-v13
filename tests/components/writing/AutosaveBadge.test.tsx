@@ -15,10 +15,7 @@ describe("AutosaveBadge", () => {
   it("does not server-render locale-dependent saved time", () => {
     const html = renderToString(
       <IntlAntdWrapper>
-        <AutosaveBadge
-          status="clean"
-          lastSavedAt="2026-06-08T07:11:00.000Z"
-        />
+        <AutosaveBadge status="clean" lastSavedAt="2026-06-08T07:11:00.000Z" />
       </IntlAntdWrapper>,
     );
 
@@ -29,10 +26,7 @@ describe("AutosaveBadge", () => {
 
   it("adds the saved time after the client mounts", async () => {
     renderWithIntl(
-      <AutosaveBadge
-        status="clean"
-        lastSavedAt="2026-06-08T07:11:00.000Z"
-      />,
+      <AutosaveBadge status="clean" lastSavedAt="2026-06-08T07:11:00.000Z" />,
     );
 
     await waitFor(() => {

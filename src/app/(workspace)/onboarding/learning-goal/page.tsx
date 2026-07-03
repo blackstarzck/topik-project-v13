@@ -24,10 +24,7 @@ export default async function OnboardingLearningGoalPage() {
       <div className="mb-4">
         <AuthIdentityNotice />
       </div>
-      <section
-        className="mx-auto w-full max-w-4xl"
-        aria-label={t("heroTitle")}
-      >
+      <section className="mx-auto w-full max-w-4xl" aria-label={t("heroTitle")}>
         <AppCard>
           <div className="onboarding-goal-shell grid gap-12 md:gap-14">
             <div className="mx-auto grid max-w-3xl justify-items-center gap-3 text-center">

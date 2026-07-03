@@ -43,9 +43,7 @@ async function login(page: Page) {
   await page.goto("/login");
   // Same locale-agnostic selectors auth.setup.ts relies on (antd Input attrs).
   await page.locator('input[autocomplete="email"]').fill(EMAIL);
-  await page
-    .locator('input[autocomplete="current-password"]')
-    .fill(PASSWORD);
+  await page.locator('input[autocomplete="current-password"]').fill(PASSWORD);
   await page.locator('button[type="submit"]').click();
   await page.waitForURL("**/dashboard", { timeout: 20_000 });
 }
@@ -73,9 +71,7 @@ test.describe.serial("알림 오류 상태 (route interception)", () => {
     await expect(errorAlert).toContainText("알림 설정을 불러오지 못했어요");
 
     // 화면 갇힘 없음: 페이지 셸/제목은 정상 렌더(빈 화면/크래시 아님).
-    await expect(
-      page.getByRole("button", { name: "알림 열기" }),
-    ).toBeVisible();
+    await expect(page.getByRole("button", { name: "알림 열기" })).toBeVisible();
 
     // 재시도 경로: route 해제 후 재진입하면 폼이 정상 로드된다.
     await page.unroute(SETTINGS_ROUTE);
@@ -83,9 +79,7 @@ test.describe.serial("알림 오류 상태 (route interception)", () => {
     await expect(page.locator(".ant-alert-error")).toHaveCount(0, {
       timeout: 15_000,
     });
-    await expect(
-      page.getByTestId("notification-save"),
-    ).toBeVisible();
+    await expect(page.getByTestId("notification-save")).toBeVisible();
   });
 
   // ── N-SET-10 ──────────────────────────────────────────────────────────
@@ -160,9 +154,9 @@ test.describe.serial("알림 오류 상태 (route interception)", () => {
     // 화면 갇힘 없음 + 회복: route 해제 후 재시도하면 목록이 보인다.
     await page.unroute(INBOX_ROUTE);
     await retry.click();
-    await expect(
-      page.locator(".app-notification-item").first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator(".app-notification-item").first()).toBeVisible({
+      timeout: 10_000,
+    });
   });
 
   // ── N-INB-11 ──────────────────────────────────────────────────────────
@@ -173,9 +167,7 @@ test.describe.serial("알림 오류 상태 (route interception)", () => {
     await login(page);
     await openBell(page);
 
-    const unreadItem = page
-      .locator(".app-notification-item--unread")
-      .first();
+    const unreadItem = page.locator(".app-notification-item--unread").first();
     await expect(unreadItem).toBeVisible({ timeout: 10_000 });
 
     // 읽음 처리(PATCH)만 차단 — GET은 통과시켜 재로딩이 가능하게 둔다.
@@ -203,9 +195,9 @@ test.describe.serial("알림 오류 상태 (route interception)", () => {
     //     다시 불러온 목록에 해당 항목이 여전히 미읽음으로 남아 있다.
     await page.unroute(INBOX_ROUTE);
     await page.reload();
-    await expect(
-      page.getByRole("button", { name: "알림 열기" }),
-    ).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole("button", { name: "알림 열기" })).toBeVisible({
+      timeout: 15_000,
+    });
     await openBell(page);
     await expect(
       page.locator(".app-notification-item--unread").first(),

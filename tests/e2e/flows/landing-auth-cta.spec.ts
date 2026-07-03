@@ -94,7 +94,13 @@ async function fillSignUpForm(page: Page) {
 }
 
 test.describe("anonymous landing", () => {
-  test.use({ storageState: { cookies: [], origins: [] } });
+  test.use({
+    storageState: { cookies: [], origins: [] },
+    // Pin Korean so anonymous landing copy assertions match (Playwright's
+    // default en-US would otherwise render "Log in" instead of "로그인").
+    locale: "ko-KR",
+    extraHTTPHeaders: { "Accept-Language": "ko-KR,ko;q=0.9" },
+  });
 
   test("keeps login in GNB and free start in the hero", async ({ page }) => {
     const errors = collectErrors(page);
@@ -111,24 +117,30 @@ test.describe("anonymous landing", () => {
     await expect(
       page.locator(".landing-hero button").filter({ hasText: "로그인" }),
     ).toHaveCount(0);
-    await expect.poll(() =>
-      page.evaluate(
-        () =>
-          document.documentElement.scrollWidth <=
-          document.documentElement.clientWidth,
-      ),
-    ).toBe(true);
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () =>
+            document.documentElement.scrollWidth <=
+            document.documentElement.clientWidth,
+        ),
+      )
+      .toBe(true);
     expect(errors).toEqual([]);
   });
 
-  test("keeps aff captured from landing through CTA into email sign-up", async ({
+  test("keeps aff captured from landing through the invite screen into email sign-up", async ({
     page,
   }) => {
     const errors = collectErrors(page);
     const signUpRequests = await mockSignUpSuccess(page);
 
+    // 2026-07-01 institution-invite flow (docs/sot-change-proposals/
+    // 2026-07-01-institution-invite-flow.md): an anonymous `?aff=` entry on any
+    // route stores the code and routes to /auth/institution-invite, where the
+    // visitor picks new sign-up / existing login / continue without invite.
     await page.goto("/?aff=EXPO2026-BOOTH-A", { waitUntil: "networkidle" });
-    await expect(page).toHaveURL(/\/$/);
+    await expect(page).toHaveURL(/\/auth\/institution-invite$/);
     await expect
       .poll(() =>
         page.evaluate(() =>
@@ -137,10 +149,7 @@ test.describe("anonymous landing", () => {
       )
       .toContain("EXPO2026-BOOTH-A");
 
-    await page
-      .locator(".landing-hero button")
-      .filter({ hasText: "무료 시작" })
-      .click();
+    await page.locator('a[href="/sign-up"]').first().click();
     await expect(page).toHaveURL(/\/sign-up$/);
 
     await fillSignUpForm(page);
@@ -171,9 +180,9 @@ test("ready authenticated landing routes primary CTAs to dashboard", async ({
   await page.goto("/", { waitUntil: "networkidle" });
 
   await expect(page).toHaveURL(/\/$/);
-  await expect(
-    page.locator('header a[href="/dashboard"]'),
-  ).toContainText("대시보드로 이동");
+  await expect(page.locator('header a[href="/dashboard"]')).toContainText(
+    "대시보드로 이동",
+  );
   await expect(page.locator('a[href="/sign-up"]')).toHaveCount(0);
   await expect(page.locator('a[href="/login"]')).toHaveCount(0);
   await expect(

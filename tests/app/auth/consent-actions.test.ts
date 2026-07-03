@@ -224,9 +224,7 @@ describe("completeAuthGateAction", () => {
           nickname: "talkpik-minji",
         }),
       ),
-    ).rejects.toThrow(
-      "NEXT_REDIRECT:/auth/post-auth?intent=sign-up",
-    );
+    ).rejects.toThrow("NEXT_REDIRECT:/auth/post-auth?intent=sign-up");
 
     expect(rpc).toHaveBeenCalledWith("complete_auth_gate", {
       p_accept_required_consents: true,
@@ -389,8 +387,6 @@ describe("completeAuthGateAction", () => {
   it("falls back unsafe next values before redirecting", async () => {
     await expect(
       completeAuthGateAction(makeForm({ next: "/login" })),
-    ).rejects.toThrow(
-      "NEXT_REDIRECT:/auth/post-auth?intent=login",
-    );
+    ).rejects.toThrow("NEXT_REDIRECT:/auth/post-auth?intent=login");
   });
 });

@@ -17,7 +17,10 @@ export function hasProviderIdentity(
   );
 }
 
-export function addGoogleLinkedNotice(path: string, user: AuthUserLike): string {
+export function addGoogleLinkedNotice(
+  path: string,
+  user: AuthUserLike,
+): string {
   if (!hasProviderIdentity(user, "google")) return path;
 
   const [pathname, query = ""] = path.split("?");

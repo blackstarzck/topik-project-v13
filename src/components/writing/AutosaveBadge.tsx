@@ -7,7 +7,10 @@ import type { AutosaveStatus } from "@/lib/writing/types";
 
 type Props = { status: AutosaveStatus; lastSavedAt?: string | null };
 
-const TONE: Record<AutosaveStatus, "default" | "processing" | "warning" | "success" | "error"> = {
+const TONE: Record<
+  AutosaveStatus,
+  "default" | "processing" | "warning" | "success" | "error"
+> = {
   clean: "success",
   dirty: "warning",
   syncing: "processing",

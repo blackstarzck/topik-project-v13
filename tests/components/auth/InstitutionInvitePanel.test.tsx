@@ -421,7 +421,9 @@ describe("InstitutionInvitePanel", () => {
 
     renderPanel();
 
-    expect(await screen.findByText("초대 코드가 없거나 만료됐어요")).toBeTruthy();
+    expect(
+      await screen.findByText("초대 코드가 없거나 만료됐어요"),
+    ).toBeTruthy();
 
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "대시보드로 이동" }));

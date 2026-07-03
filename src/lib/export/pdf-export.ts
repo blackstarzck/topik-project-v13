@@ -86,7 +86,8 @@ export async function triggerPdfExport(
     .insert({
       user_id: user.id,
       source_type: input.sourceType,
-      source_id: input.sourceType === "library_selection" ? null : input.sourceId,
+      source_id:
+        input.sourceType === "library_selection" ? null : input.sourceId,
       storage_path: storagePath,
       options: { source: "browser_print" },
       status: "ready",
@@ -111,7 +112,8 @@ export async function triggerPdfExport(
       event_type: "export_downloaded",
       payload: {
         source_type: input.sourceType,
-        source_id: input.sourceType === "library_selection" ? null : input.sourceId,
+        source_id:
+          input.sourceType === "library_selection" ? null : input.sourceId,
       },
     })
     .then(

@@ -6,10 +6,9 @@ test.describe("F-01 library actions layout", () => {
   }) => {
     await page.goto("/library");
 
-    await expect(
-      page,
-      "bounced to /login - storageState stale?",
-    ).not.toHaveURL(/\/login/);
+    await expect(page, "bounced to /login - storageState stale?").not.toHaveURL(
+      /\/login/,
+    );
     await expect(page.getByTestId("library-actions")).toBeVisible();
 
     const viewport = page.viewportSize();

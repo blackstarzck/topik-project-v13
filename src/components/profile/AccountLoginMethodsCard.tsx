@@ -94,7 +94,9 @@ export function AccountLoginMethodsCard({
     setLinking(true);
     try {
       const supabase = createSupabaseBrowserClient();
-      const { error } = await supabase.auth.linkIdentity({ provider: "google" });
+      const { error } = await supabase.auth.linkIdentity({
+        provider: "google",
+      });
       if (error) {
         setErrorVisible(true);
         return;

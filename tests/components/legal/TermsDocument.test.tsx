@@ -89,6 +89,30 @@ describe("TermsDocument", () => {
     expect(body.innerHTML).not.toContain("alert");
   });
 
+  it("renders admin-authored mixed HTML and Markdown as document markup", () => {
+    renderTermsDocument({
+      ...publishedTerms,
+      body: `
+        <div>## 제1조 (목적)</div>
+        <br>
+        이 약관은 **TALKPIK AI** 서비스 이용 조건을 규정합니다.
+
+        - 첫 번째 항목
+        - 두 번째 항목
+      `,
+    });
+
+    const body = screen.getByTestId("terms-document-body");
+
+    expect(
+      screen.getByRole("heading", { level: 2, name: "제1조 (목적)" }),
+    ).toBeTruthy();
+    expect(screen.getByText("첫 번째 항목")).toBeTruthy();
+    expect(body.textContent).not.toContain("<div>");
+    expect(body.textContent).not.toContain("<br>");
+    expect(body.textContent).not.toContain("##");
+  });
+
   it("strips admin HTML hooks that can collide with app styling", () => {
     renderTermsDocument({
       ...publishedTerms,

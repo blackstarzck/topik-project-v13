@@ -14,7 +14,9 @@ import { test, expect } from "@playwright/test";
 const EMAIL = process.env.E2E_STUDENT_EMAIL ?? "student@audit.local";
 const PASSWORD = process.env.SUPABASE_TEST_PASSWORD ?? "";
 
-test("account settings logout signs out and protects workspace routes (G6)", async ({ browser }, testInfo) => {
+test("account settings logout signs out and protects workspace routes (G6)", async ({
+  browser,
+}, testInfo) => {
   test.skip(
     testInfo.project.name !== "desktop-1280",
     "logout flow runs once on desktop-1280",
@@ -40,9 +42,9 @@ test("account settings logout signs out and protects workspace routes (G6)", asy
 
     // 사이드바 하단에는 학습 문구와 로그아웃 진입점이 없어야 한다.
     await expect(page.getByTestId("sidebar-logout")).toHaveCount(0);
-    await expect(
-      page.getByText("매일 조금씩, 확실히 성장해요!"),
-    ).toHaveCount(0);
+    await expect(page.getByText("매일 조금씩, 확실히 성장해요!")).toHaveCount(
+      0,
+    );
 
     // 프로필 화면 하단 로그아웃 → form POST /auth/sign-out → 303 → /login.
     await page.goto("/settings/account", { waitUntil: "networkidle" });

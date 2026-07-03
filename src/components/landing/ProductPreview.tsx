@@ -114,10 +114,7 @@ export function ProductPreview() {
               <Title level={5} className="!mb-1 !mt-3">
                 {title}
               </Title>
-              <Paragraph
-                type="secondary"
-                className="!mb-0 !text-[13px]"
-              >
+              <Paragraph type="secondary" className="!mb-0 !text-[13px]">
                 {t(preview.summaryKey)}
               </Paragraph>
             </AppCard>

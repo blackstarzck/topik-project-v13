@@ -22,17 +22,11 @@ export function RecommendationCard({
     <Card
       title={title.length > 28 ? `${title.slice(0, 28)}…` : title}
       extra={
-        estimatedMinutes ? (
-          <Tag color="blue">{estimatedMinutes}분</Tag>
-        ) : null
+        estimatedMinutes ? <Tag color="blue">{estimatedMinutes}분</Tag> : null
       }
     >
       {reason ? (
-        <Paragraph
-          type="secondary"
-          ellipsis={{ rows: 2 }}
-          className="!mb-3"
-        >
+        <Paragraph type="secondary" ellipsis={{ rows: 2 }} className="!mb-3">
           {reason}
         </Paragraph>
       ) : null}

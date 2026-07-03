@@ -17,6 +17,8 @@ const eslintConfig = defineConfig([
     "node_modules/**",
     "next-env.d.ts",
     "docs/**",
+    // Throwaway QA diagnostic scripts — mirrors the .prettierignore exclusion.
+    ".scratch/**",
   ]),
 ]);
 

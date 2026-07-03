@@ -21,13 +21,9 @@ type Props = {
  */
 export function PublicShell({ children, header, className }: Props) {
   return (
-    <div
-      className={["app-public-shell", className].filter(Boolean).join(" ")}
-    >
+    <div className={["app-public-shell", className].filter(Boolean).join(" ")}>
       <AffiliationCodeCapture />
-      {header ? (
-        <div className="app-public-shell__header">{header}</div>
-      ) : null}
+      {header ? <div className="app-public-shell__header">{header}</div> : null}
       {children}
     </div>
   );

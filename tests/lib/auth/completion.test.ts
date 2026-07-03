@@ -147,7 +147,9 @@ describe("auth completion state", () => {
   it("returns authenticated-recovery for landing after authenticated downstream lookup fails", async () => {
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
     getCurrentUserMock.mockResolvedValueOnce(session.user);
-    bootstrapProfileMock.mockRejectedValueOnce(new Error("profile unavailable"));
+    bootstrapProfileMock.mockRejectedValueOnce(
+      new Error("profile unavailable"),
+    );
 
     await expect(getCurrentLandingAuthStatus()).resolves.toBe(
       "authenticated-recovery",

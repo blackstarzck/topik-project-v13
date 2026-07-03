@@ -96,7 +96,7 @@ describe("saveLibraryItem", () => {
       data: null,
       error: {
         message:
-          "new row violates row-level security policy for table \"library_items\"",
+          'new row violates row-level security policy for table "library_items"',
       },
     });
     await expect(

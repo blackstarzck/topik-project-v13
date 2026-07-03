@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  App,
-  Button,
-  Popconfirm,
-  Tag,
-} from "antd";
+import { App, Button, Popconfirm, Tag } from "antd";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
@@ -54,9 +49,7 @@ export function LibraryItemRow({
       {
         onSuccess: () => message.success(t("deleted")),
         onError: (err) =>
-          message.error(
-            err instanceof Error ? err.message : t("deleteFailed"),
-          ),
+          message.error(err instanceof Error ? err.message : t("deleteFailed")),
       },
     );
   }
@@ -110,9 +103,7 @@ export function LibraryItemRow({
         .join(" ")}
     >
       <div className="min-w-0 flex-1 basis-72">{children}</div>
-      <div className="flex flex-wrap items-center gap-2">
-        {actions}
-      </div>
+      <div className="flex flex-wrap items-center gap-2">{actions}</div>
     </div>
   );
 }

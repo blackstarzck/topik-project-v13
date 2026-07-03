@@ -44,10 +44,7 @@ export async function consumeRecommendationItem(
       .eq("user_id", user.id)
       .eq("status", "active");
     if (error) {
-      console.warn(
-        "consumeRecommendationItem: update failed",
-        error.message,
-      );
+      console.warn("consumeRecommendationItem: update failed", error.message);
     }
   } catch (err) {
     // Swallow everything (missing env in tests, network, RLS, transient).

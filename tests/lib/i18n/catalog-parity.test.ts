@@ -38,9 +38,10 @@ describe("message catalog parity", () => {
           );
         return value === "";
       });
-      expect(empties, `${name} has empty values: ${empties.join(", ")}`).toEqual(
-        [],
-      );
+      expect(
+        empties,
+        `${name} has empty values: ${empties.join(", ")}`,
+      ).toEqual([]);
     }
   });
 });

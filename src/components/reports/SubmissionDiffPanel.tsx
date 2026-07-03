@@ -167,7 +167,8 @@ function sectionLabelKey(key: SectionKey) {
 
 function getAnswerSections(answerJson: unknown, fallbackText: string) {
   return (
-    readSectionsFromJson(answerJson) ?? splitAnswerTextIntoSections(fallbackText)
+    readSectionsFromJson(answerJson) ??
+    splitAnswerTextIntoSections(fallbackText)
   );
 }
 

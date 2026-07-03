@@ -327,12 +327,12 @@ describe("WeaknessView", () => {
       />,
     );
 
-    expect(screen.getByTestId("weakness-rec-prob-1").getAttribute("aria-pressed")).toBe(
-      "true",
-    );
-    expect(screen.getByTestId("weakness-rec-prob-4").getAttribute("aria-pressed")).toBe(
-      "false",
-    );
+    expect(
+      screen.getByTestId("weakness-rec-prob-1").getAttribute("aria-pressed"),
+    ).toBe("true");
+    expect(
+      screen.getByTestId("weakness-rec-prob-4").getAttribute("aria-pressed"),
+    ).toBe("false");
     expect(screen.queryByTestId("weakness-rec-prob-5")).toBeNull();
     expect(screen.getByRole("button", { name: "선택됨" })).toBeTruthy();
     expect(

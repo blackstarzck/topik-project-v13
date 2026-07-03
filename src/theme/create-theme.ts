@@ -12,7 +12,9 @@ function mergeComponentTokens(
   const merged = new Map<string, Record<string, unknown>>();
 
   Object.entries(base).forEach(([componentName, componentTokens]) => {
-    merged.set(componentName, { ...(componentTokens as Record<string, unknown>) });
+    merged.set(componentName, {
+      ...(componentTokens as Record<string, unknown>),
+    });
   });
 
   Object.entries(overrides).forEach(([componentName, componentTokens]) => {

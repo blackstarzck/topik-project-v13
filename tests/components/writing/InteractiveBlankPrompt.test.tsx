@@ -88,10 +88,14 @@ describe("InteractiveBlankPrompt", () => {
     );
 
     expect(
-      screen.getByRole("button", { name: /빈칸 ㄴ/ }).getAttribute("aria-pressed"),
+      screen
+        .getByRole("button", { name: /빈칸 ㄴ/ })
+        .getAttribute("aria-pressed"),
     ).toBe("true");
     expect(
-      screen.getByRole("button", { name: /빈칸 ㄱ/ }).getAttribute("aria-pressed"),
+      screen
+        .getByRole("button", { name: /빈칸 ㄱ/ })
+        .getAttribute("aria-pressed"),
     ).toBe("false");
   });
 });

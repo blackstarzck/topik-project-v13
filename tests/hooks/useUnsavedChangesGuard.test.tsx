@@ -24,7 +24,10 @@ function GuardHarness({ when }: { when: boolean }) {
   return (
     <div>
       <a href="/dashboard">Dashboard</a>
-      <button type="button" onClick={() => guard.requestNavigation("/practice/problems")}>
+      <button
+        type="button"
+        onClick={() => guard.requestNavigation("/practice/problems")}
+      >
         Back
       </button>
       <button type="button" onClick={guard.cancelPendingNavigation}>
@@ -33,9 +36,13 @@ function GuardHarness({ when }: { when: boolean }) {
       <button type="button" onClick={guard.proceedPendingNavigation}>
         Proceed
       </button>
-      <span data-testid="pending-kind">{guard.pendingNavigation?.kind ?? "none"}</span>
+      <span data-testid="pending-kind">
+        {guard.pendingNavigation?.kind ?? "none"}
+      </span>
       <span data-testid="pending-href">
-        {guard.pendingNavigation?.kind === "href" ? guard.pendingNavigation.href : ""}
+        {guard.pendingNavigation?.kind === "href"
+          ? guard.pendingNavigation.href
+          : ""}
       </span>
     </div>
   );
@@ -68,7 +75,9 @@ describe("useUnsavedChangesGuard", () => {
 
     expect(pushMock).not.toHaveBeenCalled();
     expect(screen.getByTestId("pending-kind").textContent).toBe("href");
-    expect(screen.getByTestId("pending-href").textContent).toBe("/practice/problems");
+    expect(screen.getByTestId("pending-href").textContent).toBe(
+      "/practice/problems",
+    );
   });
 
   it("captures same-origin link clicks while an answer change is unsaved", () => {

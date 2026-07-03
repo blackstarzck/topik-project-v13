@@ -78,8 +78,8 @@ export function computeExamDaysLeft(examDate: string | null): number | null {
 
 export function computeStreakDays(startedAtIsoList: readonly string[]): number {
   if (startedAtIsoList.length === 0) return 0;
-  const days = Array.from(new Set(startedAtIsoList.map(dayKey))).sort(
-    (a, b) => (a > b ? -1 : a < b ? 1 : 0),
+  const days = Array.from(new Set(startedAtIsoList.map(dayKey))).sort((a, b) =>
+    a > b ? -1 : a < b ? 1 : 0,
   );
   const today = startOfTodayKst().format("YYYY-MM-DD");
   const yesterday = startOfTodayKst().subtract(1, "day").format("YYYY-MM-DD");

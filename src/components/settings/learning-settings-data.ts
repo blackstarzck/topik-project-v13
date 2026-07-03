@@ -85,7 +85,10 @@ export async function fetchLearningSettings(
 
 export async function updateLearningSettings(
   userId: string,
-  patch: { learning_locale?: LearningLocale | null; content_prefs?: ContentPrefs },
+  patch: {
+    learning_locale?: LearningLocale | null;
+    content_prefs?: ContentPrefs;
+  },
 ): Promise<void> {
   const supabase = createSupabaseBrowserClient();
   const update: Record<string, unknown> = {};
@@ -127,7 +130,11 @@ export function detectContentPrefConflict(prefs: ContentPrefs): boolean {
  * toggle yet). Rows written before 2026-06-12 lack the in_app key —
  * missing in_app is read as TRUE (in-app은 기본 수신 채널).
  */
-export type NotificationChannels = { in_app: boolean; email: boolean; zalo: boolean };
+export type NotificationChannels = {
+  in_app: boolean;
+  email: boolean;
+  zalo: boolean;
+};
 
 export type NotificationSettings = {
   reminder_time: string | null; // "HH:mm[:ss]"
@@ -197,18 +204,16 @@ export async function upsertNotificationSettings(
 ): Promise<void> {
   const supabase = createSupabaseBrowserClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const res = (await (supabase as any)
-    .from("notification_settings")
-    .upsert(
-      {
-        user_id: userId,
-        reminder_time: settings.reminder_time,
-        reminder_days: settings.reminder_days,
-        channels: settings.channels,
-        timezone: settings.timezone,
-      },
-      { onConflict: "user_id" },
-    )) as { error: { message: string } | null };
+  const res = (await (supabase as any).from("notification_settings").upsert(
+    {
+      user_id: userId,
+      reminder_time: settings.reminder_time,
+      reminder_days: settings.reminder_days,
+      channels: settings.channels,
+      timezone: settings.timezone,
+    },
+    { onConflict: "user_id" },
+  )) as { error: { message: string } | null };
   if (res.error) throw new Error(res.error.message);
 }
 

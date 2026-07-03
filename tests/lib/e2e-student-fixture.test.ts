@@ -80,7 +80,9 @@ describe("e2e student fixture account setup", () => {
     supabaseUrl: "http://127.0.0.1:54321",
   };
 
-  function createAdminDouble(users: Array<{ email?: string; id: string }> = []) {
+  function createAdminDouble(
+    users: Array<{ email?: string; id: string }> = [],
+  ) {
     const calls = {
       createUser: [] as unknown[],
       profileUpdate: [] as unknown[],

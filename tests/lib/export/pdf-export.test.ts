@@ -45,7 +45,7 @@ function makeClient(overrides: Partial<FakeClient> = {}): FakeClient {
         return {
           then: (resolve: (v: unknown) => unknown) =>
             Promise.resolve(client.__studyEventResult).then(resolve),
-          catch: (_reject: (e: unknown) => unknown) => {
+          catch: () => {
             // noop — Promise.then() chain in helper handles errors
           },
         };
@@ -84,7 +84,10 @@ describe("triggerPdfExport", () => {
 
     const result = await triggerPdfExport(
       { sourceType: "submission", sourceId: "sub-42" },
-      () => client as unknown as ReturnType<typeof import("../../../src/lib/supabase/browser").createSupabaseBrowserClient>,
+      () =>
+        client as unknown as ReturnType<
+          typeof import("../../../src/lib/supabase/browser").createSupabaseBrowserClient
+        >,
     );
 
     expect(result.exportId).toBe("exp-1");
@@ -115,7 +118,10 @@ describe("triggerPdfExport", () => {
     await expect(
       triggerPdfExport(
         { sourceType: "library_selection", sourceId: "should-be-null" },
-        () => client as unknown as ReturnType<typeof import("../../../src/lib/supabase/browser").createSupabaseBrowserClient>,
+        () =>
+          client as unknown as ReturnType<
+            typeof import("../../../src/lib/supabase/browser").createSupabaseBrowserClient
+          >,
       ),
     ).rejects.toThrow(/source_id must be null/);
     // Insert must not have run.
@@ -128,7 +134,10 @@ describe("triggerPdfExport", () => {
 
     await triggerPdfExport(
       { sourceType: "library_selection", sourceId: null },
-      () => client as unknown as ReturnType<typeof import("../../../src/lib/supabase/browser").createSupabaseBrowserClient>,
+      () =>
+        client as unknown as ReturnType<
+          typeof import("../../../src/lib/supabase/browser").createSupabaseBrowserClient
+        >,
     );
 
     const exportInsert = client.__insertCalls.find(
@@ -147,7 +156,10 @@ describe("triggerPdfExport", () => {
 
     await triggerPdfExport(
       { sourceType: "report", sourceId: "rep-1" },
-      () => client as unknown as ReturnType<typeof import("../../../src/lib/supabase/browser").createSupabaseBrowserClient>,
+      () =>
+        client as unknown as ReturnType<
+          typeof import("../../../src/lib/supabase/browser").createSupabaseBrowserClient
+        >,
     );
 
     // study_events insert is fire-and-forget — yield the microtask queue so
@@ -173,7 +185,10 @@ describe("triggerPdfExport", () => {
 
     await triggerPdfExport(
       { sourceType: "submission", sourceId: "sub-1" },
-      () => client as unknown as ReturnType<typeof import("../../../src/lib/supabase/browser").createSupabaseBrowserClient>,
+      () =>
+        client as unknown as ReturnType<
+          typeof import("../../../src/lib/supabase/browser").createSupabaseBrowserClient
+        >,
     );
 
     expect(printSpy).toHaveBeenCalledTimes(1);
@@ -185,7 +200,10 @@ describe("triggerPdfExport", () => {
 
     const result = await triggerPdfExport(
       { sourceType: "submission", sourceId: "sub-9" },
-      () => client as unknown as ReturnType<typeof import("../../../src/lib/supabase/browser").createSupabaseBrowserClient>,
+      () =>
+        client as unknown as ReturnType<
+          typeof import("../../../src/lib/supabase/browser").createSupabaseBrowserClient
+        >,
     );
 
     expect(result.exportId).toBe("exp-1");
@@ -207,7 +225,10 @@ describe("triggerPdfExport", () => {
     await expect(
       triggerPdfExport(
         { sourceType: "submission", sourceId: "sub-1" },
-        () => client as unknown as ReturnType<typeof import("../../../src/lib/supabase/browser").createSupabaseBrowserClient>,
+        () =>
+          client as unknown as ReturnType<
+            typeof import("../../../src/lib/supabase/browser").createSupabaseBrowserClient
+          >,
       ),
     ).rejects.toThrow(/not authenticated/);
   });

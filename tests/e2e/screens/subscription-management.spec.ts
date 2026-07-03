@@ -34,7 +34,9 @@ test("X-04 subscription direct entry shows the centered coming-soon notice", asy
   await expect(page.getByText("X-04")).toHaveCount(0);
 
   // 대시보드로 이동 CTA가 노출된다.
-  await expect(page.getByRole("link", { name: "대시보드로 이동" })).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "대시보드로 이동" }),
+  ).toBeVisible();
 
   expect(errors).toEqual([]);
 });

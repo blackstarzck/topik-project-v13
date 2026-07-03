@@ -286,9 +286,7 @@ test("X-09 notification settings renders preference regions without saving", asy
   await expect(page.getByTestId("notification-preview-card")).toHaveCount(0);
   await expect(page.getByTestId("notification-history-card")).toHaveCount(0);
   await expect(page.getByText("도움말")).toHaveCount(0);
-  await expect(
-    page.getByTestId("notification-details-toggle"),
-  ).toHaveCount(0);
+  await expect(page.getByTestId("notification-details-toggle")).toHaveCount(0);
 
   // email/Zalo are disabled (준비 중); in_app is the selectable toggle card.
   await expect(page.getByTestId("notification-channel-email")).toBeDisabled();

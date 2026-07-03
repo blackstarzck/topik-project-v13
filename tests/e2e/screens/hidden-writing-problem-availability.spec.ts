@@ -53,7 +53,9 @@ function collectErrors(page: Page): string[] {
 
 function serviceClient() {
   if (!SUPABASE_URL || !SERVICE_KEY) {
-    throw new Error("Missing Supabase service credentials for hidden problem e2e setup");
+    throw new Error(
+      "Missing Supabase service credentials for hidden problem e2e setup",
+    );
   }
   return createClient(SUPABASE_URL, SERVICE_KEY, {
     auth: { persistSession: false },
@@ -177,12 +179,23 @@ test("hidden saved writing problems fade the entire row without leaking hard-hid
   const errors = collectErrors(page);
   const fixture = await createHiddenProblemFixture();
 
-  await page.goto("/library?tab=problems", { waitUntil: "load" });
+  // The saved-item drilldown moved from /library?tab=problems to the dedicated
+  // /library/problems route (commit a0c4c5f4 "Keep library dashboard focused
+  // while preserving saved-item drilldown"); /library now renders the dashboard
+  // without a search box (see library.spec.ts assertions).
+  await page.goto("/library/problems", { waitUntil: "load" });
   await expect(page).not.toHaveURL(/\/login/);
 
-  const searchInput = page.getByTestId("library-search").locator("input");
+  const searchInput = page
+    .getByTestId("library-problems-search")
+    .locator("input");
+  // Wait for the library search box to hydrate before typing — the row-fixture
+  // list can otherwise still be mounting when fill() fires.
+  await expect(searchInput).toBeVisible({ timeout: 10_000 });
   await searchInput.fill(fixture.marker);
-  await expect(page.getByTestId("library-result-count")).toContainText("2");
+  await expect(page.getByTestId("library-problems-result-count")).toContainText(
+    "2",
+  );
   await expect(page.getByTestId("library-item-row")).toHaveCount(2);
 
   const listText = await page.getByTestId("library-item-list").innerText();
@@ -212,7 +225,9 @@ test("hidden saved writing problems fade the entire row without leaking hard-hid
   expect(borderColors?.row).not.toBe("rgba(0, 0, 0, 0)");
   expect(borderColors?.row).not.toBe("transparent");
 
-  await expect(page.getByTestId("library-problem-unavailable-badge")).toHaveCount(2);
+  await expect(
+    page.getByTestId("library-problem-unavailable-badge"),
+  ).toHaveCount(2);
   expect(
     await page
       .getByTestId("library-item-row")

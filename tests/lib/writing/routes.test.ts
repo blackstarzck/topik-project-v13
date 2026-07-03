@@ -10,9 +10,9 @@ describe("writing route helpers", () => {
   });
 
   it("falls back to the problem list when the problem cannot map to a writing page", () => {
-    expect(writingProblemHref({ questionNo: null, problemId: "problem-1" })).toBe(
-      "/practice/problems",
-    );
+    expect(
+      writingProblemHref({ questionNo: null, problemId: "problem-1" }),
+    ).toBe("/practice/problems");
     expect(writingProblemHref({ questionNo: 88, problemId: "problem-1" })).toBe(
       "/practice/problems",
     );
@@ -20,7 +20,11 @@ describe("writing route helpers", () => {
 
   it("preserves the fresh retry flag", () => {
     expect(
-      writingProblemHref({ questionNo: 52, problemId: "problem-1", fresh: true }),
+      writingProblemHref({
+        questionNo: 52,
+        problemId: "problem-1",
+        fresh: true,
+      }),
     ).toBe("/writing/answer-writing-52?problem=problem-1&fresh=1");
   });
 

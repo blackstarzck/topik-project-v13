@@ -60,11 +60,14 @@ describe("legal document reads", () => {
 
   it("keeps non-auth query failures visible", async () => {
     await expect(
-      getPublishedLegalDocument("terms", "ko", async () =>
-        makeClient({
-          data: null,
-          error: { message: "permission denied for table legal_documents" },
-        }) as never,
+      getPublishedLegalDocument(
+        "terms",
+        "ko",
+        async () =>
+          makeClient({
+            data: null,
+            error: { message: "permission denied for table legal_documents" },
+          }) as never,
       ),
     ).rejects.toThrow("permission denied for table legal_documents");
   });

@@ -172,7 +172,10 @@ type PendingAttempt = {
 
 // {{display_name}} 만 치환한다. subject/body는 템플릿 소유 콘텐츠이므로 그 외
 // 가공(HTML strip 등)은 하지 않는다 — body_html은 HTML 그대로 발송한다.
-function renderDisplayName(source: string | null, displayName: string | null): string {
+function renderDisplayName(
+  source: string | null,
+  displayName: string | null,
+): string {
   const name =
     displayName && displayName.trim().length > 0
       ? displayName.trim()
@@ -238,7 +241,10 @@ export async function POST(request: NextRequest) {
     .limit(BATCH_LIMIT);
 
   if (selectError) {
-    console.error("[dispatch-email] select pending failed", selectError.message);
+    console.error(
+      "[dispatch-email] select pending failed",
+      selectError.message,
+    );
     return NextResponse.json(
       { ok: false, error: "query_failed" },
       { status: 500 },

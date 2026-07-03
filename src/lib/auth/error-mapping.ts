@@ -34,7 +34,9 @@ const SUPPORTED_REASONS = new Set<AuthErrorReason>([
   "unknown",
 ]);
 
-export function mapSupabaseErrorCode(code: string | null | undefined): AuthErrorReason {
+export function mapSupabaseErrorCode(
+  code: string | null | undefined,
+): AuthErrorReason {
   if (!code) return "unknown";
   if (code === "pkce_code_verifier_not_found") return "bad_code_verifier";
   if (code === "provider_email_needs_verification") {
@@ -45,7 +47,9 @@ export function mapSupabaseErrorCode(code: string | null | undefined): AuthError
     : "unknown";
 }
 
-export function isValidReason(value: string | null | undefined): value is AuthErrorReason {
+export function isValidReason(
+  value: string | null | undefined,
+): value is AuthErrorReason {
   if (!value) return false;
   return SUPPORTED_REASONS.has(value as AuthErrorReason);
 }
@@ -147,7 +151,10 @@ export const REASON_CONTENT: Record<AuthErrorReason, AuthErrorContent> = {
 // next query sanitizer — relative path only.
 // Allow: "/dashboard", "/practice/problems"
 // Reject: "//evil.com", "https://evil.com", "javascript:..."
-export function sanitizeNext(value: string | null | undefined, fallback = "/dashboard"): string {
+export function sanitizeNext(
+  value: string | null | undefined,
+  fallback = "/dashboard",
+): string {
   if (!value) return fallback;
   if (!value.startsWith("/")) return fallback;
   if (value.startsWith("//")) return fallback;
@@ -167,7 +174,9 @@ export const RATE_LIMIT_FALLBACK_SECONDS = 60;
 // Retry-After header value (seconds) sanitizer.
 // Accept: positive integer 1..86400
 // Reject: NaN, negative, > 86400, decimal
-export function sanitizeRetryAfterSeconds(value: string | null | undefined): number | null {
+export function sanitizeRetryAfterSeconds(
+  value: string | null | undefined,
+): number | null {
   if (!value) return null;
   const num = Number(value);
   if (!Number.isInteger(num)) return null;
@@ -189,7 +198,9 @@ export type ParsedAuthFragment = {
   type: string | null;
 };
 
-export function parseAuthFragment(hash: string | null | undefined): ParsedAuthFragment {
+export function parseAuthFragment(
+  hash: string | null | undefined,
+): ParsedAuthFragment {
   const empty: ParsedAuthFragment = {
     errorCode: null,
     errorDescription: null,

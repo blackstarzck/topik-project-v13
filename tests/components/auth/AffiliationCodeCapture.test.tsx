@@ -72,7 +72,9 @@ describe("AffiliationCodeCapture", () => {
     await waitFor(() => {
       expect(window.location.search).toBe("?utm=expo");
     });
-    expect(window.localStorage.getItem(AFFILIATION_CODE_STORAGE_KEY)).toBeNull();
+    expect(
+      window.localStorage.getItem(AFFILIATION_CODE_STORAGE_KEY),
+    ).toBeNull();
     expect(replaceMock).not.toHaveBeenCalled();
   });
 });

@@ -1,6 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
 
-test.use({ storageState: { cookies: [], origins: [] } });
+test.use({
+  storageState: { cookies: [], origins: [] },
+  // Anonymous pages negotiate locale from Accept-Language; pin Korean so the
+  // Korean-copy assertions below match (see auth-error.spec.ts).
+  locale: "ko-KR",
+  extraHTTPHeaders: { "Accept-Language": "ko-KR,ko;q=0.9" },
+});
 
 function collectErrors(page: Page): string[] {
   const errors: string[] = [];

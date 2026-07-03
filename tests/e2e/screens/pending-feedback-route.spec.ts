@@ -53,14 +53,29 @@ function serviceClient() {
   });
 }
 
+// Paginate the auth user list so the student is found even past the first 1000
+// users (mirrors tests/e2e/_setup/e2e-student-fixture.ts findUserByEmail).
+async function findStudentUser(sb: ReturnType<typeof serviceClient>) {
+  for (let page = 1; page <= 10; page += 1) {
+    const { data, error } = await sb.auth.admin.listUsers({
+      page,
+      perPage: 1000,
+    });
+    if (error) throw error;
+    const match = data.users.find(
+      (candidate) => candidate.email?.toLowerCase() === EMAIL.toLowerCase(),
+    );
+    if (match) return match;
+    if (data.users.length < 1000) break;
+  }
+  throw new Error(
+    "E2E student user not found for E2E_STUDENT_EMAIL — run the setup project first and check .env.local",
+  );
+}
+
 async function createPendingSubmission() {
   const sb = serviceClient();
-  const users = await sb.auth.admin.listUsers({ page: 1, perPage: 1000 });
-  if (users.error) throw users.error;
-  const user = users.data.users.find(
-    (candidate) => candidate.email?.toLowerCase() === EMAIL.toLowerCase(),
-  );
-  if (!user) throw new Error(`E2E student user not found: ${EMAIL}`);
+  const user = await findStudentUser(sb);
 
   const problem = await sb
     .from("problems")
@@ -72,13 +87,19 @@ async function createPendingSubmission() {
     .limit(1)
     .maybeSingle();
   if (problem.error) throw problem.error;
-  if (!problem.data?.id) throw new Error("No published q51 problem found");
+  if (!problem.data?.id)
+    throw new Error(
+      "No published q51 writing problem found in this Supabase project (NEXT_PUBLIC_SUPABASE_URL). Seed at least one published q51 problem before running this e2e.",
+    );
 
   const answerText = [
     "Pending feedback route regression answer.",
     "The legacy feedback loading modal must not render for this submission.",
   ].join("\n");
   const id = randomUUID();
+  // Register for cleanup before the insert so a partial failure still gets torn
+  // down by afterAll instead of leaking a row.
+  createdSubmissionIds.push(id);
   const inserted = await sb.from("writing_submissions").insert({
     id,
     user_id: user.id,
@@ -89,7 +110,6 @@ async function createPendingSubmission() {
     feedback_status: "analyzing",
   });
   if (inserted.error) throw inserted.error;
-  createdSubmissionIds.push(id);
   return id;
 }
 
@@ -112,9 +132,13 @@ test("pending feedback route redirects to library instead of rendering the legac
   const errors = collectErrors(page);
   const submissionId = await createPendingSubmission();
 
-  await page.goto(`/writing/feedback/short/${submissionId}`, {
+  const response = await page.goto(`/writing/feedback/short/${submissionId}`, {
     waitUntil: "networkidle",
   });
+  expect(
+    response?.status(),
+    `pending feedback route returned ${response?.status()} — a 404 means the fixture row is not visible to the logged-in e2e student (stale tests/e2e/auth-state/student.json or E2E_STUDENT_EMAIL mismatch)`,
+  ).toBeLessThan(400);
   await expect(page).not.toHaveURL(/\/login/);
   await expect(page).toHaveURL(/\/library(?:\?|$)/);
   await expect(page.getByTestId("analysis-loading-modal")).toHaveCount(0);

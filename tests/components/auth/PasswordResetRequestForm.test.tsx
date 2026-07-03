@@ -97,10 +97,9 @@ describe("PasswordResetRequestForm", () => {
     });
 
     await waitFor(() => {
-      expect(resetPasswordForEmailMock).toHaveBeenCalledWith(
-        "u@example.com",
-        { redirectTo: "https://talkpik.example.com/password-reset/confirm" },
-      );
+      expect(resetPasswordForEmailMock).toHaveBeenCalledWith("u@example.com", {
+        redirectTo: "https://talkpik.example.com/password-reset/confirm",
+      });
     });
   });
 

@@ -305,7 +305,9 @@ test.skip(
   "F-01 dashboard e2e requires Supabase service credentials for isolated rows",
 );
 
-test("F-01 library dashboard renders study action sections", async ({ page }) => {
+test("F-01 library dashboard renders study action sections", async ({
+  page,
+}) => {
   const errors = collectErrors(page);
   const fixture = await createLibraryDashboardFixture();
 
@@ -323,7 +325,9 @@ test("F-01 library dashboard renders study action sections", async ({ page }) =>
   await expect(page.getByTestId("library-search")).toHaveCount(0);
 
   await expect(page.getByTestId("library-review-swiper")).toBeVisible();
-  await expect(page.locator(".library-review-swiper-pagination")).toHaveCount(0);
+  await expect(page.locator(".library-review-swiper-pagination")).toHaveCount(
+    0,
+  );
   await expect(page.getByText(fixture.problemTitle).first()).toBeVisible();
   await expect(
     page.getByRole("link", { name: "피드백 보기" }).first(),
@@ -357,7 +361,9 @@ test("F-01 library dashboard renders study action sections", async ({ page }) =>
   await expect(page).toHaveURL(/\/library\/problems$/);
   await expect(page.getByTestId("library-problems-workspace")).toBeVisible();
   await expect(page.getByTestId("library-problems-list")).toBeVisible();
-  await expect(page.getByTestId("library-problems-stats-column")).toHaveCount(0);
+  await expect(page.getByTestId("library-problems-stats-column")).toHaveCount(
+    0,
+  );
   await expect(
     page.locator(
       '[data-testid="library-problems-mixed-row"][data-library-kind="problem"]',
@@ -370,18 +376,26 @@ test("F-01 library dashboard renders study action sections", async ({ page }) =>
       )
       .first(),
   ).toBeVisible();
-  await expect(page.locator('a[href*="/writing/feedback/"]').first()).toBeVisible();
+  await expect(
+    page.locator('a[href*="/writing/feedback/"]').first(),
+  ).toBeVisible();
   await expect(page.locator('a[href*="?problem="]').first()).toBeVisible();
 
-  const savedSearch = page.getByTestId("library-problems-search").locator("input");
+  const savedSearch = page
+    .getByTestId("library-problems-search")
+    .locator("input");
   await savedSearch.fill(fixture.marker);
-  await expect(page.getByTestId("library-problems-mixed-row").first()).toBeVisible();
+  await expect(
+    page.getByTestId("library-problems-mixed-row").first(),
+  ).toBeVisible();
   await savedSearch.fill(`missing-${fixture.marker}`);
   await expect(page.getByTestId("library-problems-empty")).toBeVisible();
 
   await page.goto("/library", { waitUntil: "load" });
 
-  await expect(page.getByTestId("library-feedback-waiting-panel")).toBeVisible();
+  await expect(
+    page.getByTestId("library-feedback-waiting-panel"),
+  ).toBeVisible();
   await expect(page.getByText("분석 실패").first()).toBeVisible();
   await expect(page.getByText("분석 중").first()).toBeVisible();
   await expect(page.getByTestId("library-weak-items-panel")).toBeVisible();

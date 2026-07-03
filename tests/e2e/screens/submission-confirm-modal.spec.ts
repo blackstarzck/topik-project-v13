@@ -13,7 +13,9 @@ test("D-M1 submission confirmation modal renders without agreement gating", asyn
   page,
 }) => {
   const errors = collectErrors(page);
-  await page.goto("/writing/short-answer-writing-51", { waitUntil: "networkidle" });
+  await page.goto("/writing/short-answer-writing-51", {
+    waitUntil: "networkidle",
+  });
   await expect(page).not.toHaveURL(/\/login/);
 
   await page.locator("textarea").first().fill("a".repeat(80));

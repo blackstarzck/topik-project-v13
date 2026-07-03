@@ -33,14 +33,15 @@ export function InteractiveBlankPrompt({
 }: Props) {
   const tokens = tokenizeQ51Prompt(prompt);
   const titlePrefix = textType?.trim();
-  const displayTitle = titlePrefix
-    ? `${titlePrefix} - ${title}`
-    : title;
+  const displayTitle = titlePrefix ? `${titlePrefix} - ${title}` : title;
 
   return (
     <AppCard size="small">
       <Title level={5}>{displayTitle}</Title>
-      <div className="writing-inline-prompt" aria-label={`${questionNo}번 문제 지문`}>
+      <div
+        className="writing-inline-prompt"
+        aria-label={`${questionNo}번 문제 지문`}
+      >
         {tokens.map((token, index) => {
           if (token.type === "text") {
             return <span key={`text-${index}`}>{token.value}</span>;

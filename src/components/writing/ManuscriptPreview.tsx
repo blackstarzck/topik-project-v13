@@ -77,10 +77,7 @@ export function ManuscriptPreview({
         data-testid="manuscript-preview-grid"
       >
         {lines.map((row, rowIdx) => (
-          <div
-            key={rowIdx}
-            className="writing-manuscript-preview__row"
-          >
+          <div key={rowIdx} className="writing-manuscript-preview__row">
             {Array.from({ length: charsPerLine }).map((_, colIdx) => {
               const cell = row[colIdx];
               const highlighted = Boolean(

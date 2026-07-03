@@ -85,7 +85,11 @@ export function LibraryKpiStrip({ kpis }: Props) {
                   {item.description}
                 </Text>
               </span>
-              <ChevronRight aria-hidden size={18} className="text-text-secondary" />
+              <ChevronRight
+                aria-hidden
+                size={18}
+                className="text-text-secondary"
+              />
             </div>
           </AppCard>
         );

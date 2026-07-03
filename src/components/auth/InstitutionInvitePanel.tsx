@@ -70,10 +70,7 @@ export function InstitutionInvitePanel({
     () => loginHref(APP_ROUTES.authInstitutionInvite),
     [],
   );
-  const dashboardLoginHref = useMemo(
-    () => loginHref(APP_ROUTES.dashboard),
-    [],
-  );
+  const dashboardLoginHref = useMemo(() => loginHref(APP_ROUTES.dashboard), []);
 
   useEffect(() => {
     let cancelled = false;

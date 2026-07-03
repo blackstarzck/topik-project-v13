@@ -1,15 +1,6 @@
 "use client";
 
-import {
-  Alert,
-  App,
-  Badge,
-  Button,
-  Empty,
-  Spin,
-  Tag,
-  Typography,
-} from "antd";
+import { Alert, App, Badge, Button, Empty, Spin, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
@@ -19,10 +10,7 @@ import { useLibraryItems } from "@/lib/library/queries";
 import type { LibraryExportView, LibraryItemView } from "@/lib/library/types";
 
 import { LibraryItemRow } from "./LibraryItemRow";
-import {
-  LIBRARY_PAGE_SIZE,
-  LibraryPagination,
-} from "./LibraryPagination";
+import { LIBRARY_PAGE_SIZE, LibraryPagination } from "./LibraryPagination";
 import { matchesLibrarySearch } from "./library-tab-url";
 
 const { Text } = Typography;
@@ -118,9 +106,7 @@ function RetryPrintButton({ item }: RetryButtonProps) {
       });
       message.success(t("printDialogOpened"));
     } catch (err) {
-      message.error(
-        err instanceof Error ? err.message : t("reprintFailed"),
-      );
+      message.error(err instanceof Error ? err.message : t("reprintFailed"));
     } finally {
       setPending(false);
     }
@@ -217,7 +203,11 @@ export function LibraryExportsTab({
     safePage * LIBRARY_PAGE_SIZE,
   );
 
-  if (query.isLoading && (query.data ?? []).length === 0 && initialItems.length === 0) {
+  if (
+    query.isLoading &&
+    (query.data ?? []).length === 0 &&
+    initialItems.length === 0
+  ) {
     return <Spin />;
   }
   if (query.error) {
@@ -245,9 +235,7 @@ export function LibraryExportsTab({
           data-testid="library-empty-state"
           className="flex flex-1 items-center justify-center"
         >
-          <Empty
-            description={searching ? t("emptySearch") : t("emptyNoItems")}
-          >
+          <Empty description={searching ? t("emptySearch") : t("emptyNoItems")}>
             {searching && onResetSearch ? (
               <Button onClick={onResetSearch}>{t("resetFilter")}</Button>
             ) : null}
@@ -265,10 +253,7 @@ export function LibraryExportsTab({
       <Text data-testid="library-result-count" type="secondary">
         {tCount("resultCount", { count: items.length })}
       </Text>
-      <div
-        data-testid="library-item-list"
-        className="flex w-full flex-col"
-      >
+      <div data-testid="library-item-list" className="flex w-full flex-col">
         {pageItems.map((item) => {
           const isPrint = isBrowserPrintExport(item);
           return (
@@ -288,9 +273,9 @@ export function LibraryExportsTab({
               <div className="flex w-full flex-col gap-1">
                 <Text strong>
                   {t(
-                    exportSourceLabelKey(
-                      item.source_type,
-                    ) as Parameters<typeof t>[0],
+                    exportSourceLabelKey(item.source_type) as Parameters<
+                      typeof t
+                    >[0],
                   )}
                 </Text>
                 <div className="flex flex-wrap items-center gap-2">
@@ -300,9 +285,7 @@ export function LibraryExportsTab({
                       statusLabelKey(item.status) as Parameters<typeof t>[0],
                     )}
                   />
-                  {isPrint ? (
-                    <Tag>{t("browserPrintTag")}</Tag>
-                  ) : null}
+                  {isPrint ? <Tag>{t("browserPrintTag")}</Tag> : null}
                   <Text type="secondary">{item.storage_path}</Text>
                 </div>
               </div>

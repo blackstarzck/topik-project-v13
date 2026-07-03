@@ -35,10 +35,7 @@ const { Paragraph, Title, Text } = Typography;
 // catalog so minutes/seconds render correctly per locale.
 type CountdownTranslate = ReturnType<typeof useTranslations<"auth.countdown">>;
 
-function formatCountdown(
-  totalSeconds: number,
-  tc: CountdownTranslate,
-): string {
+function formatCountdown(totalSeconds: number, tc: CountdownTranslate): string {
   if (totalSeconds <= 0) return tc("zero");
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
@@ -107,7 +104,7 @@ export function AuthErrorCard() {
   );
 
   const [remaining, setRemaining] = useState<number | null>(
-    content.hasCountdown ? initialRetryAfter ?? 60 : null,
+    content.hasCountdown ? (initialRetryAfter ?? 60) : null,
   );
   const [emailValue, setEmailValue] = useState(emailFromQuery);
   const [resending, setResending] = useState(false);
@@ -151,7 +148,10 @@ export function AuthErrorCard() {
       });
       if (error) {
         const code = mapSupabaseErrorCode(error.code);
-        if (code === "over_email_send_rate_limit" || code === "over_request_rate_limit") {
+        if (
+          code === "over_email_send_rate_limit" ||
+          code === "over_request_rate_limit"
+        ) {
           setRemaining(60);
           message.error(t("resendRateLimited"));
           return;
@@ -183,10 +183,7 @@ export function AuthErrorCard() {
   }
 
   return (
-    <AppCard
-      aria-live="polite"
-      data-testid={`auth-error-card-${reason}`}
-    >
+    <AppCard aria-live="polite" data-testid={`auth-error-card-${reason}`}>
       <div className="flex w-full flex-col gap-4">
         <Title level={3} className="!mb-0">
           {reasonTitle}

@@ -67,7 +67,10 @@ function isVerifyType(value: string | null): value is VerifyType {
   return value !== null && ALLOWED_VERIFY_TYPES.has(value as VerifyType);
 }
 
-function resolveCallbackNext(rawNext: string | null, type: VerifyType | null): string {
+function resolveCallbackNext(
+  rawNext: string | null,
+  type: VerifyType | null,
+): string {
   if (type === "recovery") return APP_ROUTES.passwordResetConfirm;
   return sanitizeNext(rawNext);
 }

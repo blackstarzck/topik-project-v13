@@ -20,7 +20,9 @@ afterEach(() => {
 
 describe("ClaimAffiliationRedirect", () => {
   it("redirects the deprecated bridge to explicit invite confirmation", async () => {
-    render(<ClaimAffiliationRedirect nextPath="/auth/post-auth?intent=sign-up" />);
+    render(
+      <ClaimAffiliationRedirect nextPath="/auth/post-auth?intent=sign-up" />,
+    );
 
     await waitFor(() => {
       expect(replaceMock).toHaveBeenCalledWith(

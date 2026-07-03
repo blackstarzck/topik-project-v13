@@ -17,5 +17,7 @@ export default async function TermsAgreementEntryPage() {
     redirect(APP_ROUTES.authConsent);
   }
 
-  redirect(`${APP_ROUTES.login}?next=${encodeURIComponent(APP_ROUTES.authConsent)}`);
+  redirect(
+    `${APP_ROUTES.login}?next=${encodeURIComponent(APP_ROUTES.authConsent)}`,
+  );
 }

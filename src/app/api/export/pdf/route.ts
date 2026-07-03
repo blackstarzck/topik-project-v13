@@ -20,10 +20,7 @@ import dayjs from "dayjs";
 import { isEmailVerified } from "@/lib/auth/access-gate";
 import { fetchProfileStatus, isActiveStatus } from "@/lib/auth/profile";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import {
-  buildPdfDocument,
-  registerPdfFonts,
-} from "@/lib/export/pdf-document";
+import { buildPdfDocument, registerPdfFonts } from "@/lib/export/pdf-document";
 import {
   assertMonthlyPdfExportLimit,
   PdfExportRequestError,

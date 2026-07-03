@@ -108,21 +108,27 @@ describe("affiliation code storage", () => {
     storeAffiliationCode("EXPO2026-BOOTH-A", NOW);
 
     expect(readStoredAffiliationCode(NOW + THIRTY_MINUTES_MS)).toBeNull();
-    expect(window.localStorage.getItem(AFFILIATION_CODE_STORAGE_KEY)).toBeNull();
+    expect(
+      window.localStorage.getItem(AFFILIATION_CODE_STORAGE_KEY),
+    ).toBeNull();
   });
 
   it("deletes expired values after the 30 minute boundary when read", () => {
     storeAffiliationCode("EXPO2026-BOOTH-A", NOW);
 
     expect(readStoredAffiliationCode(NOW + THIRTY_MINUTES_MS + 1)).toBeNull();
-    expect(window.localStorage.getItem(AFFILIATION_CODE_STORAGE_KEY)).toBeNull();
+    expect(
+      window.localStorage.getItem(AFFILIATION_CODE_STORAGE_KEY),
+    ).toBeNull();
   });
 
   it("excludes expired values from sign-up metadata", () => {
     storeAffiliationCode("EXPO2026-BOOTH-A", NOW);
 
     expect(buildAffiliationMetadata(NOW + THIRTY_MINUTES_MS)).toEqual({});
-    expect(window.localStorage.getItem(AFFILIATION_CODE_STORAGE_KEY)).toBeNull();
+    expect(
+      window.localStorage.getItem(AFFILIATION_CODE_STORAGE_KEY),
+    ).toBeNull();
   });
 
   it("clears the stored value on demand", () => {

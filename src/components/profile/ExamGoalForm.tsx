@@ -95,9 +95,13 @@ export function ExamGoalForm({ userId, goal }: Props) {
   const [saving, setSaving] = useState(false);
 
   // 폼 입력 상태.
-  const [level, setLevel] = useState<TopikLevel>(saved?.topik_level ?? "TOPIK_II");
+  const [level, setLevel] = useState<TopikLevel>(
+    saved?.topik_level ?? "TOPIK_II",
+  );
   const [grade, setGrade] = useState<number>(saved?.target_grade ?? 4);
-  const [examDate, setExamDate] = useState<string | null>(saved?.exam_date ?? null);
+  const [examDate, setExamDate] = useState<string | null>(
+    saved?.exam_date ?? null,
+  );
   const [gradeError, setGradeError] = useState<string | null>(null);
 
   // 저장된 목표값과 현재 입력이 같으면 변경 없음 → 저장 버튼 비활성화.

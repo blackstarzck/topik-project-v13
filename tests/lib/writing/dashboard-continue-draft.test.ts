@@ -13,7 +13,7 @@ function draft(
     problem_id: "problem-1",
     question_no: 51,
     answer_text: "ㄱ: 실제 답안",
-    answer_json: { _v: "51.v1", blanks: { "ㄱ": "실제 답안" } },
+    answer_json: { _v: "51.v1", blanks: { ㄱ: "실제 답안" } },
     char_count: 5,
     autosave_status: "clean",
     last_saved_at: "2026-06-24T08:53:33.067Z",
@@ -29,7 +29,7 @@ describe("dashboard continue draft candidate", () => {
       isDashboardContinueDraftCandidate(
         draft({
           answer_text: " \n\t ",
-          answer_json: { _v: "51.v1", blanks: { "ㄱ": " ", "ㄴ": "" } },
+          answer_json: { _v: "51.v1", blanks: { ㄱ: " ", ㄴ: "" } },
           char_count: 3,
         }),
       ),
@@ -41,7 +41,7 @@ describe("dashboard continue draft candidate", () => {
       isDashboardContinueDraftCandidate(
         draft({
           answer_text: "",
-          answer_json: { _v: "52.v1", blanks: { "ㄱ": "", "ㄴ": " " } },
+          answer_json: { _v: "52.v1", blanks: { ㄱ: "", ㄴ: " " } },
           char_count: 1,
           question_no: 52,
           problems: { title: "52번 문제", question_no: 52 },
@@ -96,7 +96,10 @@ describe("dashboard continue draft candidate", () => {
         draft({
           question_no: 51,
           answer_text: "",
-          answer_json: { _v: "51.v1", blanks: { "ㄱ": "기숙사를 바꾸고 싶습니다" } },
+          answer_json: {
+            _v: "51.v1",
+            blanks: { ㄱ: "기숙사를 바꾸고 싶습니다" },
+          },
           char_count: 0,
         }),
       ),
@@ -120,7 +123,7 @@ describe("dashboard continue draft candidate", () => {
       draft({
         problem_id: "empty-latest",
         answer_text: " ",
-        answer_json: { _v: "51.v1", blanks: { "ㄱ": " " } },
+        answer_json: { _v: "51.v1", blanks: { ㄱ: " " } },
         char_count: 1,
         last_saved_at: "2026-06-25T09:00:00.000Z",
         updated_at: "2026-06-25T09:00:00.000Z",
@@ -130,7 +133,7 @@ describe("dashboard continue draft candidate", () => {
         problem_id: "meaningful-older",
         question_no: null,
         answer_text: "ㄱ: 실제로 작성한 답안",
-        answer_json: { _v: "51.v1", blanks: { "ㄱ": "실제로 작성한 답안" } },
+        answer_json: { _v: "51.v1", blanks: { ㄱ: "실제로 작성한 답안" } },
         char_count: 10,
         last_saved_at: "2026-06-24T09:00:00.000Z",
         updated_at: "2026-06-24T09:00:00.000Z",

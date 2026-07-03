@@ -28,7 +28,10 @@ function redirectWithRefreshedCookies(url: URL, response: NextResponse) {
 
 function isSafeRelativePath(path: string | null): path is string {
   return Boolean(
-    path && path.startsWith("/") && !path.startsWith("//") && !path.includes(":"),
+    path &&
+    path.startsWith("/") &&
+    !path.startsWith("//") &&
+    !path.includes(":"),
   );
 }
 

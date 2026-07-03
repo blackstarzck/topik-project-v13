@@ -17,9 +17,7 @@ type FeedbackExternalTranslator = (
 ) => string;
 
 export function ExternalLearningFeedbackCard({ supplement }: Props) {
-  const t = useTranslations(
-    "feedback.external",
-  ) as FeedbackExternalTranslator;
+  const t = useTranslations("feedback.external") as FeedbackExternalTranslator;
   const learning = supplement.learning;
   if (!supplement.hasLearning) return null;
 
