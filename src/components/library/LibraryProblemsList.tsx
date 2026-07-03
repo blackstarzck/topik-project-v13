@@ -374,7 +374,12 @@ function renderSubmissionRow(
   const title = submissionTitle(item, fallbackTitle);
 
   return (
-    <LibraryItemRow itemId={item.item_id} tab="submissions" tags={item.tags}>
+    <LibraryItemRow
+      itemId={item.item_id}
+      showDeleteAction={false}
+      tab="submissions"
+      tags={item.tags}
+    >
       <div className="flex w-full flex-col gap-1">
         <div className="flex flex-wrap items-center gap-2">
           <Tag data-testid="library-problems-type-badge">
@@ -435,6 +440,7 @@ function renderProblemRow(
     <LibraryItemRow
       className={unavailable ? "opacity-40" : undefined}
       itemId={item.item_id}
+      showDeleteAction={false}
       tab="problems"
       tags={item.tags}
       trailingActions={[renderRetryAction(item, tSaved)]}

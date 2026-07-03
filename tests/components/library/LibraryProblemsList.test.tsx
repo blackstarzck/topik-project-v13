@@ -154,6 +154,16 @@ describe("LibraryProblemsList", () => {
     });
   });
 
+  it("does not render delete buttons in the problems list rows", () => {
+    renderList();
+
+    expect(
+      screen.queryByRole("button", {
+        name: koMessages.library.item.delete,
+      }),
+    ).toBeNull();
+  });
+
   it("searches by type label and resets an empty search result", () => {
     renderList();
 

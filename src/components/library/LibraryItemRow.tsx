@@ -20,6 +20,7 @@ type Props = {
    * own affordance — the row stays oblivious to the underlying entity.
    */
   trailingActions?: ReactNode[];
+  showDeleteAction?: boolean;
 };
 
 /**
@@ -35,6 +36,7 @@ export function LibraryItemRow({
   children,
   className,
   itemId,
+  showDeleteAction = true,
   tab,
   tags,
   trailingActions = [],
@@ -88,7 +90,7 @@ export function LibraryItemRow({
   const actions = [
     ...trailingActions,
     <span key="tags">{tagChips}</span>,
-    <span key="delete">{deleteConfirm}</span>,
+    showDeleteAction ? <span key="delete">{deleteConfirm}</span> : null,
   ];
 
   return (

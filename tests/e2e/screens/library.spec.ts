@@ -456,6 +456,11 @@ test("F-01 library dashboard renders study action sections", async ({
     page.locator('a[href*="/writing/feedback/"]').first(),
   ).toBeVisible();
   await expect(page.locator('a[href*="?problem="]').first()).toBeVisible();
+  await expect(
+    page
+      .getByTestId("library-problems-list")
+      .getByRole("button", { name: "삭제" }),
+  ).toHaveCount(0);
 
   const savedSearch = page
     .getByTestId("library-problems-search")
