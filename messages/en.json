@@ -1889,14 +1889,7 @@
       "noRecord": "No record",
       "seriesScore": "Average score",
       "seriesVolume": "Attempts",
-      "legendHelp": "The blue line is the average score (left axis, out of 100); the green line is the number of attempts (right axis). Days with no score connect across, and days with no attempts show as 0."
-    },
-    "locked": {
-      "title": "Detailed growth reports are for paid plans only",
-      "freePlan": "Free",
-      "body": "On your current plan (<plan></plan>) you can only see basic metrics. Upgrade to unlock the trend chart, weakness matrix, and learning insights.",
-      "upgradeCta": "Upgrade plan",
-      "manageCta": "Manage subscription"
+      "legendHelp": "The blue line is the average score (left axis, out of 100); the green line is the number of attempts (right axis). Days with no score connect across, and only days with study records appear on the chart."
     },
     "error": {
       "title": "We couldn't load your growth metrics.",

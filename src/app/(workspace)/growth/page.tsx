@@ -12,6 +12,8 @@ import {
   normalizeFeedbackScoreTo100,
 } from "@/lib/growth/goalProgress";
 import { mergeAttemptCounts } from "@/lib/growth/activityMetrics";
+import { kstDayKey } from "@/lib/growth/kstDay";
+import { throwIfQueryError } from "@/lib/supabase/query-error";
 import {
   getWeakDimensions,
   getWeaknessRecommendations,
@@ -30,12 +32,6 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-
-function dayKey(iso: string): string {
-  // KST(+9h) 기준 day bucket. 서버 TZ 의존 없이 오프셋 가산.
-  const d = new Date(new Date(iso).getTime() + 9 * 60 * 60 * 1000);
-  return d.toISOString().slice(0, 10);
-}
 
 type FeedbackPoint = {
   generated_at: string;
@@ -59,7 +55,7 @@ function buildTrendPoints(
       scoreMax: f.score_max,
     });
     if (score == null) continue;
-    const key = dayKey(f.generated_at);
+    const key = kstDayKey(f.generated_at);
     const arr = scoreBuckets.get(key) ?? [];
     arr.push(score);
     scoreBuckets.set(key, arr);
@@ -69,7 +65,7 @@ function buildTrendPoints(
   const VOLUME_EVENTS = new Set(["attempt_submitted", "submission_submitted"]);
   for (const e of events) {
     if (!VOLUME_EVENTS.has(e.event_type)) continue;
-    const key = dayKey(e.occurred_at);
+    const key = kstDayKey(e.occurred_at);
     volumeBuckets.set(key, (volumeBuckets.get(key) ?? 0) + 1);
   }
 
@@ -166,6 +162,9 @@ async function loadGrowthData(
           "submission_id, score_total, generated_at, writing_submissions!inner(question_no)",
         )
         .eq("user_id", userId)
+        // 분석 실패(failed) 행은 "최근 완료 문제"가 아니다. partial은 라이브러리와
+        // 같은 의미(피드백 대기)로 남겨 점수 "대기" 라벨을 유지한다.
+        .neq("status", "failed")
         .order("generated_at", { ascending: false })
         .limit(5),
       supabase
@@ -180,6 +179,14 @@ async function loadGrowthData(
         .eq("user_id", userId)
         .in("event_type", ["attempt_submitted", "submission_submitted"]),
     ]);
+
+    // supabase-js는 쿼리 실패 시 throw하지 않고 error를 반환한다. 여기서 확인해
+    // throw해야 아래 catch가 GrowthLoadError(재시도 화면)로 승격시킬 수 있다.
+    throwIfQueryError("loadGrowthData(writing_feedback)", feedbackRes);
+    throwIfQueryError("loadGrowthData(study_events)", eventsRes);
+    throwIfQueryError("loadGrowthData(recent_feedback)", recentRes);
+    throwIfQueryError("loadGrowthData(recent_volume)", recentVolRes);
+    throwIfQueryError("loadGrowthData(total_volume)", totalEventVolRes);
 
     const feedbacks = (feedbackRes.data ?? []) as FeedbackPoint[];
     const events = (eventsRes.data ?? []) as {

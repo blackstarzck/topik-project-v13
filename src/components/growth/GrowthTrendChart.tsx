@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Alert, Button, Empty, Segmented, Typography, theme } from "antd";
 import { useTranslations } from "next-intl";
 import { AppCard } from "@/components/shared/AppCard";
+import { kstDayKey } from "@/lib/growth/kstDay";
 import {
   CartesianGrid,
   Legend,
@@ -80,8 +81,11 @@ export function GrowthTrendChart({ points, onRetry }: Props) {
   const filtered = useMemo(() => {
     const opt = PERIOD_OPTIONS.find((o) => o.value === period);
     if (!opt || opt.days == null) return points;
-    const cutoffMs = nowMs - opt.days * 24 * 60 * 60 * 1000;
-    return points.filter((p) => new Date(p.date).getTime() >= cutoffMs);
+    // p.date는 KST day 키다. Date 파싱(UTC 자정 해석) 대신 같은 규칙으로 만든
+    // 컷오프 키와 문자열 비교해야 경계일이 KST 기준으로 정확히 잘린다.
+    // "N일" = 오늘 포함 최근 N개 KST 달력일.
+    const cutoffKey = kstDayKey(nowMs - (opt.days - 1) * 24 * 60 * 60 * 1000);
+    return points.filter((p) => p.date >= cutoffKey);
   }, [points, period, nowMs]);
 
   const hasData = filtered.some((p) => p.volume > 0 || p.score != null);

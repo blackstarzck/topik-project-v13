@@ -1889,14 +1889,7 @@
       "noRecord": "Không có dữ liệu",
       "seriesScore": "Điểm trung bình",
       "seriesVolume": "Số lần làm",
-      "legendHelp": "Đường màu xanh dương là điểm trung bình (trục trái, thang 100); đường màu xanh lá là số lần làm (trục phải). Ngày không có điểm sẽ nối liền đường, ngày không làm bài hiển thị là 0."
-    },
-    "locked": {
-      "title": "Báo cáo tiến bộ chi tiết chỉ dành cho gói trả phí",
-      "freePlan": "Miễn phí",
-      "body": "Với gói hiện tại (<plan></plan>), bạn chỉ xem được các chỉ số cơ bản. Nâng cấp để mở khóa biểu đồ xu hướng, ma trận điểm yếu và phân tích học tập.",
-      "upgradeCta": "Nâng cấp gói",
-      "manageCta": "Quản lý đăng ký"
+      "legendHelp": "Đường màu xanh dương là điểm trung bình (trục trái, thang 100); đường màu xanh lá là số lần làm (trục phải). Ngày không có điểm sẽ nối liền đường, và chỉ những ngày có ghi nhận học tập mới hiển thị trên biểu đồ."
     },
     "error": {
       "title": "Không thể tải các chỉ số tiến bộ của bạn.",
