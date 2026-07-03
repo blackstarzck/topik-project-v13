@@ -488,6 +488,8 @@
       "loadingDescription": "잠시만 기다려 주세요.",
       "noCodeTitle": "초대 코드가 없거나 만료됐어요",
       "noCodeDescription": "기관 초대 링크가 만료되었거나 이 브라우저에 저장된 초대 코드가 없습니다.",
+      "noCodeLogin": "기존 계정으로 로그인",
+      "noCodeDashboard": "대시보드로 이동",
       "anonymousTitle": "기관 소속 초대",
       "anonymousDescription": "새 계정으로 가입하거나 기존 계정으로 로그인한 뒤 이 초대를 연결할 수 있어요.",
       "anonymousSignUp": "새 계정으로 가입하고 기관에 연결",

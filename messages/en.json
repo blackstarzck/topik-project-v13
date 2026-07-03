@@ -488,6 +488,8 @@
       "loadingDescription": "Please wait a moment.",
       "noCodeTitle": "The invite code is missing or expired",
       "noCodeDescription": "This invite link has expired or no invite code is stored in this browser.",
+      "noCodeLogin": "Sign in with an existing account",
+      "noCodeDashboard": "Go to dashboard",
       "anonymousTitle": "Institution invitation",
       "anonymousDescription": "Create a new account or sign in with an existing account before connecting this invite.",
       "anonymousSignUp": "Sign up with a new account and connect institution",

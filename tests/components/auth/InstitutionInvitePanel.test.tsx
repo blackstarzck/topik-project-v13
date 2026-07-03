@@ -299,7 +299,7 @@ describe("InstitutionInvitePanel", () => {
     );
   });
 
-  it("does not call the accept RPC when the stored invite code is missing or expired", async () => {
+  it("shows a dashboard login CTA when an anonymous invite code is missing or expired", async () => {
     readStoredAffiliationCodeMock.mockReturnValueOnce(null);
 
     renderPanel();
@@ -307,6 +307,31 @@ describe("InstitutionInvitePanel", () => {
     expect(
       await screen.findByText("초대 코드가 없거나 만료됐어요"),
     ).toBeTruthy();
+    expect(
+      screen
+        .getByRole("link", { name: "기존 계정으로 로그인" })
+        .getAttribute("href"),
+    ).toBe("/login?next=%2Fdashboard");
+    expect(acceptStoredAffiliationInviteMock).not.toHaveBeenCalled();
+  });
+
+  it("sends an authenticated user with a missing or expired invite code to the dashboard", async () => {
+    readStoredAffiliationCodeMock.mockReturnValueOnce(null);
+    getUserMock.mockResolvedValueOnce({
+      data: { user: { id: "user-123", email: "learner@example.com" } },
+      error: null,
+    });
+
+    renderPanel();
+
+    expect(await screen.findByText("초대 코드가 없거나 만료됐어요")).toBeTruthy();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "대시보드로 이동" }));
+    });
+
+    expect(clearStoredAffiliationCodeMock).toHaveBeenCalledTimes(1);
+    expect(replaceMock).toHaveBeenCalledWith("/dashboard");
     expect(acceptStoredAffiliationInviteMock).not.toHaveBeenCalled();
   });
 });

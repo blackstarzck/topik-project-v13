@@ -488,6 +488,8 @@
       "loadingDescription": "Vui lòng chờ trong giây lát.",
       "noCodeTitle": "Mã mời bị thiếu hoặc đã hết hạn",
       "noCodeDescription": "Liên kết mời đã hết hạn hoặc trình duyệt này không có mã mời đã lưu.",
+      "noCodeLogin": "Đăng nhập bằng tài khoản hiện có",
+      "noCodeDashboard": "Đi tới bảng điều khiển",
       "anonymousTitle": "Lời mời thuộc tổ chức",
       "anonymousDescription": "Tạo tài khoản mới hoặc đăng nhập bằng tài khoản hiện có rồi kết nối lời mời này.",
       "anonymousSignUp": "Đăng ký tài khoản mới và kết nối tổ chức",

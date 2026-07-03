@@ -1,7 +1,28 @@
+import { mkdir } from "node:fs/promises";
+import path from "node:path";
+
 import { expect, test, type Page, type Request } from "@playwright/test";
 
 const INVITE_CODE = "EXPO2026-BOOTH-A";
 const AFFILIATION_STORAGE_KEY = "talkpik:affiliation-code";
+const EVIDENCE_DIR = path.join(
+  "docs",
+  "qa",
+  "reports",
+  "2026-07-03-institution-invite-expired",
+);
+
+async function screenshotEvidence(
+  page: Page,
+  projectName: string,
+  name: string,
+) {
+  await mkdir(EVIDENCE_DIR, { recursive: true });
+  await page.screenshot({
+    fullPage: true,
+    path: path.join(EVIDENCE_DIR, `${name}-${projectName}.png`),
+  });
+}
 
 function corsHeaders(request: Request) {
   return {
@@ -99,6 +120,23 @@ test.describe("institution invite anonymous entry", () => {
       )
       .toBeNull();
   });
+
+  test("routes a missing or expired invite to existing-account dashboard login", async ({
+    page,
+  }, testInfo) => {
+    await page.goto("/auth/institution-invite", { waitUntil: "networkidle" });
+
+    await expect(page.getByText("초대 코드가 없거나 만료됐어요")).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "기존 계정으로 로그인" }),
+    ).toHaveAttribute("href", "/login?next=%2Fdashboard");
+
+    await screenshotEvidence(
+      page,
+      testInfo.project.name,
+      "expired-invite-login",
+    );
+  });
 });
 
 test.describe("institution invite authenticated entry", () => {
@@ -176,5 +214,25 @@ test.describe("institution invite authenticated entry", () => {
       }),
     ).toHaveCount(0);
     expect(rpcCalls).toEqual([]);
+  });
+
+  test("lets an authenticated learner return to the dashboard from a missing or expired invite", async ({
+    page,
+  }, testInfo) => {
+    await page.goto("/auth/institution-invite", { waitUntil: "networkidle" });
+
+    await expect(page.getByText("초대 코드가 없거나 만료됐어요")).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "대시보드로 이동" }),
+    ).toBeVisible();
+
+    await screenshotEvidence(
+      page,
+      testInfo.project.name,
+      "expired-invite-dashboard",
+    );
+
+    await page.getByRole("button", { name: "대시보드로 이동" }).click();
+    await expect(page).toHaveURL(/\/(dashboard|onboarding\/learning-goal)/);
   });
 });
