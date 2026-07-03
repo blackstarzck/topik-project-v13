@@ -82,6 +82,37 @@ const ALLOWED_CODE_REFERENCES = new Map([
     ]),
   ],
   [
+    "src/app/terms/page.tsx",
+    new Set([
+      // Documentation-only reference. The comment explains that admin publishes
+      // policies via operation_policies which are projected into the v13-owned
+      // legal_documents table; this page reads legal_documents only (no direct
+      // admin table access). See
+      // docs/sot-change-proposals/2026-06-22-legal-documents-admin-html-rendering.md
+      "operation_policies",
+    ]),
+  ],
+  [
+    "src/components/legal/TermsDocument.tsx",
+    new Set([
+      // Documentation-only reference explaining the admin operation_policies ->
+      // v13 legal_documents projection. The renderer consumes doc.body from
+      // legal_documents; it never queries operation_policies. See
+      // docs/sot-change-proposals/2026-06-22-legal-documents-admin-html-rendering.md
+      "operation_policies",
+    ]),
+  ],
+  [
+    "src/lib/legal/documents.ts",
+    new Set([
+      // Documentation-only reference. All queries here target legal_documents
+      // (the user-facing projection of admin operation_policies); v13 has
+      // read-only access and never touches operation_policies directly. See
+      // docs/sot-change-proposals/2026-06-22-legal-documents-admin-html-rendering.md
+      "operation_policies",
+    ]),
+  ],
+  [
     "src/lib/supabase/types.ts",
     new Set([
       // Generated/manual snapshot comments record removed Phase 6 admin RPCs.

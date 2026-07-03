@@ -1,11 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  cleanup,
-  render,
-  screen,
-  waitFor,
-} from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { App as AntdApp } from "antd";
 import { NextIntlClientProvider } from "next-intl";
 import type { ReactElement } from "react";
@@ -209,9 +204,7 @@ describe("SubscriptionShell (i18n chrome)", () => {
     await waitFor(() => {
       expect(screen.getByText(/2026\. 6\. 20\..*해지 예정/)).toBeTruthy();
     });
-    expect(
-      screen.queryByText(/2026\. 7\. 1\..*해지 예정/),
-    ).toBeNull();
+    expect(screen.queryByText(/2026\. 7\. 1\..*해지 예정/)).toBeNull();
   });
 });
 
@@ -260,9 +253,7 @@ describe("PaywallShell (i18n chrome)", () => {
       // recommended badge + ICU "{cadence} 구독 선택" with cadence "분기".
       expect(screen.getByText("추천")).toBeTruthy();
     });
-    expect(
-      screen.getByRole("button", { name: "분기 구독 선택" }),
-    ).toBeTruthy();
+    expect(screen.getByRole("button", { name: "분기 구독 선택" })).toBeTruthy();
     expect(screen.getByText("분기 10% 할인")).toBeTruthy();
     expect(screen.queryByText("분기 17% 할인")).toBeNull();
     expect(screen.getByText("연간 17% 할인")).toBeTruthy();
@@ -282,5 +273,6 @@ describe("PaywallShell (i18n chrome)", () => {
         screen.getByText("현재 안내 가능한 플랜이 없습니다."),
       ).toBeTruthy();
     });
+    expect(screen.getByTestId("paywall-empty-state")).toBeTruthy();
   });
 });

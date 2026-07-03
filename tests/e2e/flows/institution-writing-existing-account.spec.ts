@@ -205,9 +205,17 @@ async function login(page: Page, email: string) {
     { timeout: 20_000 },
   );
 
-  for (let i = 0; i < 4; i += 1) {
+  for (let i = 0; i < 6; i += 1) {
     const pathname = new URL(page.url()).pathname;
-    if (pathname === "/dashboard") return;
+    if (pathname === "/dashboard") {
+      // The post-login client-side redirect (router.push("/dashboard")) can
+      // land here WITHOUT the (workspace) completion gate running, so a fresh
+      // user may still owe required consents. Verify with a full document
+      // load; if the gate bounces to consent/onboarding, keep handling it.
+      await page.goto("/dashboard", { waitUntil: "domcontentloaded" });
+      if (new URL(page.url()).pathname === "/dashboard") return;
+      continue;
+    }
     if (pathname === "/auth/consent") {
       await page.locator('input[name="accept"]').check({ force: true });
       await page.locator('form button[type="submit"]').click();
@@ -299,7 +307,24 @@ test("existing institution learner sees only assigned writing type", async ({
   test.setTimeout(90_000);
 
   const errors = collectErrors(page);
-  const fixture = await getExistingAccountFixture();
+  // Environment precondition, not a product assertion: this scenario needs the
+  // shared E2E student to be provisioned as an institution learner
+  // (profiles.affiliation_code set + exposure rows). Deliberately NOT seeded
+  // here — affiliating the shared student flips its content visibility
+  // (2026-06-29 assigned-only policy) and would break the rest of the suite.
+  // Skip in environments where the account is a general learner (mirrors the
+  // exposure-table skip in institution-writing-exposure.spec.ts).
+  let fixture: Awaited<ReturnType<typeof getExistingAccountFixture>>;
+  try {
+    fixture = await getExistingAccountFixture();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    test.skip(
+      message.includes("not institution-affiliated"),
+      "Shared E2E student is a general learner in this environment — provision an affiliated account (E2E_EXISTING_INSTITUTION_USER_ID) to run this scenario",
+    );
+    throw error;
+  }
   expect(fixture.assignedProblems).toHaveLength(EXPECTED_COUNT);
   const assignedProblem = fixture.assignedProblems[0];
 

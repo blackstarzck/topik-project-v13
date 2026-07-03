@@ -53,6 +53,26 @@ function serviceClient() {
   });
 }
 
+// Paginate the auth user list so the student is found even past the first 1000
+// users (mirrors tests/e2e/_setup/e2e-student-fixture.ts findUserByEmail).
+async function findStudentUser(sb: ReturnType<typeof serviceClient>) {
+  for (let page = 1; page <= 10; page += 1) {
+    const { data, error } = await sb.auth.admin.listUsers({
+      page,
+      perPage: 1000,
+    });
+    if (error) throw error;
+    const match = data.users.find(
+      (candidate) => candidate.email?.toLowerCase() === EMAIL.toLowerCase(),
+    );
+    if (match) return match;
+    if (data.users.length < 1000) break;
+  }
+  throw new Error(
+    "E2E student user not found for E2E_STUDENT_EMAIL — run the setup project first and check .env.local",
+  );
+}
+
 async function createCompletedLongFeedbackSubmission({
   questionNo = 53,
   sentenceFeedbackTexts,
@@ -61,12 +81,7 @@ async function createCompletedLongFeedbackSubmission({
   sentenceFeedbackTexts?: string[];
 } = {}) {
   const sb = serviceClient();
-  const users = await sb.auth.admin.listUsers({ page: 1, perPage: 1000 });
-  if (users.error) throw users.error;
-  const user = users.data.users.find(
-    (candidate) => candidate.email?.toLowerCase() === EMAIL.toLowerCase(),
-  );
-  if (!user) throw new Error(`E2E student user not found: ${EMAIL}`);
+  const user = await findStudentUser(sb);
 
   const problem = await sb
     .from("problems")
@@ -79,7 +94,9 @@ async function createCompletedLongFeedbackSubmission({
     .maybeSingle();
   if (problem.error) throw problem.error;
   if (!problem.data?.id)
-    throw new Error(`No published q${questionNo} problem found`);
+    throw new Error(
+      `No published q${questionNo} writing problem found in this Supabase project (NEXT_PUBLIC_SUPABASE_URL). Seed at least one published q53/q54 problem before running E-02 e2e.`,
+    );
 
   const drafts = await sb
     .from("writing_drafts")
@@ -89,6 +106,9 @@ async function createCompletedLongFeedbackSubmission({
   if (drafts.error) throw drafts.error;
 
   const submissionId = randomUUID();
+  // Register for cleanup before the first insert so a partial failure mid-way
+  // still gets torn down by afterAll instead of leaking rows.
+  createdSubmissionIds.push(submissionId);
   const answerText = [
     "첫째, 자료에서 가장 큰 변화는 방문자 수 증가입니다.",
     "둘째, 2024년 이후 온라인 신청 비율이 빠르게 높아졌습니다.",
@@ -192,7 +212,31 @@ async function createCompletedLongFeedbackSubmission({
   const sentences = await sb.from("sentence_feedback").insert(sentenceRows);
   if (sentences.error) throw sentences.error;
 
-  createdSubmissionIds.push(submissionId);
+  // Read the rows back so a silently-dropped insert surfaces here (with a clear
+  // message) instead of later as a confusing 404 on the feedback route.
+  const verifySubmission = await sb
+    .from("writing_submissions")
+    .select("id, feedback_status")
+    .eq("id", submissionId)
+    .maybeSingle();
+  if (verifySubmission.error) throw verifySubmission.error;
+  if (!verifySubmission.data) {
+    throw new Error(
+      `E-02 fixture verification failed: writing_submissions row ${submissionId} missing after insert`,
+    );
+  }
+  const verifyFeedback = await sb
+    .from("writing_feedback")
+    .select("status")
+    .eq("submission_id", submissionId)
+    .maybeSingle();
+  if (verifyFeedback.error) throw verifyFeedback.error;
+  if (!verifyFeedback.data) {
+    throw new Error(
+      `E-02 fixture verification failed: writing_feedback row for ${submissionId} missing after insert`,
+    );
+  }
+
   return { submissionId, answerText };
 }
 
@@ -214,15 +258,24 @@ test.skip(
   "E-02 e2e requires Supabase service credentials for an isolated feedback row",
 );
 
-test("E-02 long feedback matches the wireframe constraints", async ({ page }) => {
+test("E-02 long feedback matches the wireframe constraints", async ({
+  page,
+}) => {
   const errors = collectErrors(page);
   const { submissionId, answerText } =
     await createCompletedLongFeedbackSubmission();
 
-  await page.goto(`/writing/feedback/long/${submissionId}`, {
+  const response = await page.goto(`/writing/feedback/long/${submissionId}`, {
     waitUntil: "networkidle",
   });
+  expect(
+    response?.status(),
+    `long feedback route returned ${response?.status()} — a 404 means the fixture row is not visible to the logged-in e2e student (stale tests/e2e/auth-state/student.json or E2E_STUDENT_EMAIL mismatch)`,
+  ).toBeLessThan(400);
   await expect(page).not.toHaveURL(/\/login/);
+  await expect(page.getByTestId("feedback-page-header")).toBeVisible({
+    timeout: 15_000,
+  });
   await expect(page.locator(".app-workspace-sider")).toHaveCount(0);
   await expect(
     page.locator(".app-notification-corner, .app-workspace-mobile-actions"),
@@ -261,9 +314,9 @@ test("E-02 long feedback matches the wireframe constraints", async ({ page }) =>
   ).toBeVisible();
   await expect(page.getByTestId("feedback-report-meta")).toHaveCount(0);
   await expect(page.getByText("score와 weight 기준")).toHaveCount(0);
-  await expect(page.getByTestId("feedback-report-total-score-card")).toHaveCount(
-    0,
-  );
+  await expect(
+    page.getByTestId("feedback-report-total-score-card"),
+  ).toHaveCount(0);
   const criteriaCard = page.getByTestId("feedback-report-criteria-card");
   const focusCard = page.getByTestId("feedback-report-focus-card");
   await expect(criteriaCard).not.toHaveClass(/bg-surface\/40/);
@@ -344,7 +397,9 @@ test("E-02 long feedback matches the wireframe constraints", async ({ page }) =>
     ].join(","),
   );
   await expect(actions).toHaveCount(4);
-  await expect(page.getByTestId("feedback-action-retry")).toHaveText("다시 작성");
+  await expect(page.getByTestId("feedback-action-retry")).toHaveText(
+    "다시 작성",
+  );
 
   await page.getByTestId("feedback-action-retry").click();
   await page.waitForURL((url) => {
@@ -374,10 +429,17 @@ test("Q54 long feedback keeps intro, body, and conclusion labels with sparse sen
     ],
   });
 
-  await page.goto(`/writing/feedback/long/${submissionId}`, {
+  const response = await page.goto(`/writing/feedback/long/${submissionId}`, {
     waitUntil: "networkidle",
   });
+  expect(
+    response?.status(),
+    `long feedback route returned ${response?.status()} — a 404 means the fixture row is not visible to the logged-in e2e student (stale tests/e2e/auth-state/student.json or E2E_STUDENT_EMAIL mismatch)`,
+  ).toBeLessThan(400);
   await expect(page).not.toHaveURL(/\/login/);
+  await expect(page.getByTestId("feedback-page-header")).toBeVisible({
+    timeout: 15_000,
+  });
 
   const sentenceCard = page.getByTestId("feedback-sentence-card");
   const sentenceItems = sentenceCard.getByRole("listitem");

@@ -8,6 +8,11 @@ out/
 build/
 coverage/
 
+# Local/throwaway QA diagnostics and generated fixture snapshots — not source.
+.scratch/
+.tmp/
+artifacts/
+
 *.html
 *.md
 *.sql

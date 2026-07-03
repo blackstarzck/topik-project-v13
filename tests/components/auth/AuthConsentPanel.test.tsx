@@ -169,6 +169,49 @@ describe("AuthConsentPanel", () => {
     expect(legalBody?.innerHTML).not.toContain("alert");
   });
 
+  it("renders mixed HTML and Markdown consent bodies without raw markup", () => {
+    renderWithIntl(
+      <AuthConsentPanel
+        action={vi.fn()}
+        documents={[
+          {
+            id: "terms-1",
+            title: "Terms of Service",
+            version: "2026-06",
+            summary: "Short consent summary",
+            body: `
+              <div>## 제1조 (목적)</div>
+              <br>
+              이 약관은 **TALKPIK AI** 이용 조건을 규정합니다.
+
+              - 첫 번째 항목
+            `,
+          },
+        ]}
+        next="/auth/post-auth?intent=login"
+        profile={{
+          display_name: "Chan",
+          nationality_country_code: "KR",
+          nickname: "talkpik-abc123",
+        }}
+        missingProfileFields={[]}
+        showRequiredError={false}
+      />,
+    );
+
+    const heading = screen.getByRole("heading", {
+      level: 2,
+      name: "제1조 (목적)",
+    });
+    const legalBody = heading.closest(".legal-document-body");
+
+    expect(legalBody).toBeTruthy();
+    expect(screen.getByText("첫 번째 항목")).toBeTruthy();
+    expect(legalBody?.textContent).not.toContain("<div>");
+    expect(legalBody?.textContent).not.toContain("<br>");
+    expect(legalBody?.textContent).not.toContain("##");
+  });
+
   it("renders missing profile fields and required consent in one form", () => {
     renderWithIntl(
       <AuthConsentPanel

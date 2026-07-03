@@ -1,11 +1,127 @@
+import { randomUUID } from "node:crypto";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
+import { createClient } from "@supabase/supabase-js";
+
+function loadEnvLocal() {
+  try {
+    const raw = readFileSync(path.join(process.cwd(), ".env.local"), "utf8");
+    for (const line of raw.split(/\r?\n/)) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) continue;
+      const eq = trimmed.indexOf("=");
+      if (eq === -1) continue;
+      const key = trimmed.slice(0, eq).trim();
+      let value = trimmed.slice(eq + 1).trim();
+      if (
+        (value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'"))
+      ) {
+        value = value.slice(1, -1);
+      }
+      if (!(key in process.env)) process.env[key] = value;
+    }
+  } catch {
+    // CI without .env.local will skip through the explicit env guard below.
+  }
+}
+
+loadEnvLocal();
 
 const SUPPORTED_PROJECTS = new Set(["mobile-360", "desktop-1280"]);
+const EMAIL = process.env.E2E_STUDENT_EMAIL ?? "student@audit.local";
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SERVICE_KEY =
+  process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
+const ENV_LABEL = (process.env.SUPABASE_ENV_LABEL ?? "").toLowerCase();
+
+// Fixture identity shared across the tests, seeded in beforeAll. Problem A has a
+// draft (solve_state='attempted' -> retryable/secondary button); problem B has
+// none (startable/primary button).
+const createdProblemIds: string[] = [];
+let retryMarker = "";
+let retryableTitle = "";
+let startableTitle = "";
 
 function collectErrors(page: Page): string[] {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
   return errors;
+}
+
+function serviceClient() {
+  if (!SUPABASE_URL || !SERVICE_KEY) {
+    throw new Error("Missing Supabase service credentials for C-03 e2e setup");
+  }
+  return createClient(SUPABASE_URL, SERVICE_KEY, {
+    auth: { persistSession: false },
+  });
+}
+
+async function findStudentUser(sb: ReturnType<typeof serviceClient>) {
+  for (let page = 1; page <= 10; page += 1) {
+    const { data, error } = await sb.auth.admin.listUsers({
+      page,
+      perPage: 1000,
+    });
+    if (error) throw error;
+    const match = data.users.find(
+      (candidate) => candidate.email?.toLowerCase() === EMAIL.toLowerCase(),
+    );
+    if (match) return match;
+    if (data.users.length < 1000) break;
+  }
+  throw new Error(
+    "E2E student user not found for E2E_STUDENT_EMAIL — run the setup project first and check .env.local",
+  );
+}
+
+function q51Materials(marker: string) {
+  return {
+    question_id: `e2e-retry-modal-${marker}`,
+    blank_target_giyeok: "행사 진행 순서",
+    blank_target_nieun: "참가자 준비물",
+    review: { validation: [`E2E retry modal fixture ${marker}`] },
+  };
+}
+
+function q51Rubric() {
+  return {
+    conditions: ["공지 흐름을 자연스럽게 완성한다."],
+    criteria: ["내용 연결", "격식", "문장 정확성"],
+  };
+}
+
+// Navigate to the problem list scoped to the fixture marker and wait for the
+// list_user_problems RPC to settle, retrying because the fixture is inserted
+// immediately before the first navigation (mirrors problem-list-regressions).
+async function goToMarkerList(page: Page, confirmTitle: string) {
+  const url = `/practice/problems?q=${encodeURIComponent(retryMarker)}&sort=newest&page=1`;
+  const deadline = Date.now() + 30_000;
+  while (Date.now() < deadline) {
+    const listResponse = page
+      .waitForResponse(
+        (response) =>
+          response.url().includes("/rest/v1/rpc/list_user_problems") &&
+          response.status() === 200,
+        { timeout: 10_000 },
+      )
+      .catch(() => null);
+    await page.goto(url, { waitUntil: "domcontentloaded" });
+    await expect(page).not.toHaveURL(/\/login/);
+    await listResponse;
+    try {
+      await expect(page.getByText(confirmTitle)).toBeVisible({
+        timeout: 3_000,
+      });
+      return;
+    } catch {
+      // RPC had not refreshed the UI yet; retry the scoped list page.
+    }
+    await page.waitForTimeout(1_000);
+  }
+  await expect(page.getByText(confirmTitle)).toBeVisible();
 }
 
 async function expectFocusInModalLayer(page: Page) {
@@ -17,37 +133,43 @@ async function expectFocusInModalLayer(page: Page) {
 }
 
 async function ensureRetryableProblem(page: Page) {
-  await page.goto("/practice/problems", { waitUntil: "networkidle" });
-  await expect(page).not.toHaveURL(/\/login/);
+  await goToMarkerList(page, retryableTitle);
+  const row = page.locator("tr").filter({ hasText: retryableTitle }).first();
   await expect(
-    page.locator(".problem-table__action-button--secondary").first(),
+    row.locator(".problem-table__action-button--secondary"),
   ).toBeVisible({ timeout: 15_000 });
+  return row;
 }
 
 async function ensureStartableProblemRow(page: Page) {
-  await page.goto("/practice/problems", { waitUntil: "networkidle" });
-  await expect(page).not.toHaveURL(/\/login/);
-
+  await goToMarkerList(page, startableTitle);
   const row = page
     .locator("tr.problem-table__row--selectable", {
       has: page.locator(".problem-table__action-button--primary"),
     })
+    .filter({ hasText: startableTitle })
     .first();
   await expect(row).toBeVisible({ timeout: 15_000 });
   return row;
 }
 
 async function openRetryModal(page: Page) {
-  await ensureRetryableProblem(page);
-  await page
-    .locator(".problem-table__action-button--secondary")
-    .first()
-    .click();
+  const row = await ensureRetryableProblem(page);
+  await row.locator(".problem-table__action-button--secondary").click();
   const dialog = page.getByRole("dialog");
   await expect(dialog).toBeVisible();
   await expect(dialog.getByText("이전 풀이가 있어요")).toBeVisible();
   return dialog;
 }
+
+test.skip(
+  !SUPABASE_URL || !SERVICE_KEY,
+  "C-03 retry-modal e2e requires Supabase service credentials to seed a retryable problem",
+);
+test.skip(
+  ENV_LABEL === "prod" || ENV_LABEL === "production",
+  "C-03 retry-modal e2e must not seed production data",
+);
 
 test.describe("C-03 retry modal", () => {
   test.beforeEach(({}, testInfo) => {
@@ -55,6 +177,79 @@ test.describe("C-03 retry modal", () => {
       !SUPPORTED_PROJECTS.has(testInfo.project.name),
       "C-03 modal is verified on mobile and desktop only.",
     );
+  });
+
+  test.beforeAll(async () => {
+    if (!SUPABASE_URL || !SERVICE_KEY) return;
+    if (ENV_LABEL === "prod" || ENV_LABEL === "production") return;
+
+    const sb = serviceClient();
+    const user = await findStudentUser(sb);
+    retryMarker = `e2e-retry-${randomUUID().slice(0, 8)}`;
+    retryableTitle = `E2E retry modal ${retryMarker} A`;
+    startableTitle = `E2E retry modal ${retryMarker} B`;
+    const createdAt = new Date(Date.now() + 60_000).toISOString();
+    const problemA = randomUUID();
+    const problemB = randomUUID();
+    const prompt =
+      "말하기 대회 운영팀이 참가자들에게 행사 준비 순서를 안내하는 공지이다. 빈칸에 알맞은 내용을 쓰십시오.";
+
+    const problemRowBase = {
+      source: "curated" as const,
+      domain: "writing" as const,
+      question_no: 51,
+      topik_level: 2,
+      difficulty: 3,
+      prompt,
+      materials: q51Materials(retryMarker),
+      answer_key: null,
+      rubric: q51Rubric(),
+      tags: [retryMarker, "e2e-retry-modal"],
+      publish_status: "published" as const,
+      review_status: "approved" as const,
+      visibility: "public" as const,
+      lifecycle_status: "active" as const,
+      created_at: createdAt,
+      updated_at: createdAt,
+    };
+
+    const insertedProblems = await sb.from("problems").insert([
+      { id: problemA, title: retryableTitle, ...problemRowBase },
+      { id: problemB, title: startableTitle, ...problemRowBase },
+    ]);
+    if (insertedProblems.error) throw insertedProblems.error;
+    createdProblemIds.push(problemA, problemB);
+
+    // Non-superseded draft with no submission -> solve_state='attempted', which
+    // renders the secondary "다시 풀기" button and defaults the modal to resume.
+    const answerText = `이전 풀이 임시 저장 ${retryMarker}`;
+    const draft = await sb.from("writing_drafts").insert({
+      user_id: user.id,
+      problem_id: problemA,
+      question_no: 51,
+      answer_text: answerText,
+      char_count: answerText.length,
+      autosave_status: "dirty",
+      last_saved_at: createdAt,
+    });
+    if (draft.error) throw draft.error;
+  });
+
+  test.afterAll(async () => {
+    if (createdProblemIds.length === 0) return;
+    if (ENV_LABEL === "prod" || ENV_LABEL === "production") return;
+    const sb = serviceClient();
+    await sb
+      .from("writing_drafts")
+      .delete()
+      .in("problem_id", createdProblemIds);
+    await sb
+      .from("writing_submissions")
+      .delete()
+      .in("problem_id", createdProblemIds);
+    await sb.from("study_events").delete().in("problem_id", createdProblemIds);
+    await sb.from("problems").delete().in("id", createdProblemIds);
+    createdProblemIds.length = 0;
   });
 
   test("matches description layout constraints and disabled hint mode", async ({
@@ -179,10 +374,8 @@ test.describe("C-03 retry modal", () => {
     page,
   }) => {
     const errors = collectErrors(page);
-    await ensureRetryableProblem(page);
-    const retryButton = page
-      .locator(".problem-table__action-button--secondary")
-      .first();
+    const row = await ensureRetryableProblem(page);
+    const retryButton = row.locator(".problem-table__action-button--secondary");
     await retryButton.click();
     let dialog = page.getByRole("dialog");
     await expect(dialog).toBeVisible();

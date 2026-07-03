@@ -98,7 +98,7 @@ const allCollisions = [];
 for (const locale of LOCALES) {
   const catalogPath = join(ROOT, "messages", `${locale}.json`);
   const catalog = JSON.parse(readFileSync(catalogPath, "utf8"));
-  for (const { name, data } of staged) {
+  for (const { data } of staged) {
     const partial = extractLocale(data, locale, "");
     deepMerge(catalog, partial, "", allCollisions);
   }

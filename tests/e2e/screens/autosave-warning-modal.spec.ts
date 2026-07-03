@@ -25,6 +25,10 @@ test("D-M3 autosave warning modal blocks disabling autosave until confirmed", as
   await expect(page).not.toHaveURL(/\/login/);
   await expect(page).toHaveURL(/\/writing\/short-answer-writing-51/);
 
+  // The autosave toggle moved inside the collapsed "표현 힌트" accordion on the
+  // Q51 workspace (ShortAnswerWriting51Workspace.tsx) — expand it first so the
+  // toggle button exists in the DOM.
+  await page.getByRole("button", { name: /표현 힌트/ }).click();
   await page.getByRole("button", { name: "자동 저장 끄기" }).click();
 
   const modal = page.getByTestId("autosave-warning-modal");
@@ -36,7 +40,9 @@ test("D-M3 autosave warning modal blocks disabling autosave until confirmed", as
   );
   await expect(page.getByTestId("autosave-warning-state")).toBeVisible();
   await expect(page.getByTestId("autosave-warning-last-saved")).toBeVisible();
-  await expect(page.getByTestId("autosave-warning-recovery-state")).toBeVisible();
+  await expect(
+    page.getByTestId("autosave-warning-recovery-state"),
+  ).toBeVisible();
   await expect(page.getByTestId("autosave-warning-retry")).toBeDisabled();
   await expect(page.getByTestId("autosave-warning-keep")).toBeEnabled();
   await expect(page.getByTestId("autosave-warning-proceed")).toBeEnabled();

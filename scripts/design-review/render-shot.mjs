@@ -20,7 +20,7 @@
 // READ-ONLY w.r.t. the app: it only navigates and screenshots. It writes PNG/JSON to RS_OUT.
 
 import { chromium } from 'playwright'
-import { mkdir, writeFile, readFile, stat } from 'node:fs/promises'
+import { mkdir, writeFile, stat } from 'node:fs/promises'
 import path from 'node:path'
 
 const ROUTE = process.env.RS_ROUTE

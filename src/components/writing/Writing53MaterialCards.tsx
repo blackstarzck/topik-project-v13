@@ -358,7 +358,12 @@ function ChartVisual({
         data-testid="q53-material-chart"
         ref={chartRef}
       >
-        <ResponsiveContainer width="100%" height={RADIAL_CHART_HEIGHT}>
+        <ResponsiveContainer
+          width="100%"
+          height={RADIAL_CHART_HEIGHT}
+          minWidth={0}
+          initialDimension={{ width: 320, height: RADIAL_CHART_HEIGHT }}
+        >
           <PieChart>
             <ChartTooltip activeValueRow={activeValueRow} />
             <Pie
@@ -393,7 +398,12 @@ function ChartVisual({
         data-testid="q53-material-chart"
         ref={chartRef}
       >
-        <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
+        <ResponsiveContainer
+          width="100%"
+          height={CHART_HEIGHT}
+          minWidth={0}
+          initialDimension={{ width: 320, height: CHART_HEIGHT }}
+        >
           <LineChart data={data} margin={CARTESIAN_CHART_MARGIN}>
             <CartesianGrid stroke={CHART_GRID_COLOR} strokeDasharray="3 3" />
             <XAxis dataKey="name" />
@@ -423,7 +433,12 @@ function ChartVisual({
       data-testid="q53-material-chart"
       ref={chartRef}
     >
-      <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
+      <ResponsiveContainer
+        width="100%"
+        height={CHART_HEIGHT}
+        minWidth={0}
+        initialDimension={{ width: 320, height: CHART_HEIGHT }}
+      >
         <BarChart data={data} margin={CARTESIAN_CHART_MARGIN}>
           <CartesianGrid stroke={CHART_GRID_COLOR} strokeDasharray="3 3" />
           <XAxis dataKey="name" />
