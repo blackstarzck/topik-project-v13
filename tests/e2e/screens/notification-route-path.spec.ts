@@ -18,12 +18,12 @@ const notificationRows = [
   {
     id: "e2e-route",
     user_id: "e2e-user",
-    template_key: "feedback_ready",
-    category: "study",
+    template_key: "notice",
+    category: "notice",
     title: "Route path notice",
-    body: "This notification moves to practice.",
+    body: "This notification moves to a dashboard route.",
     link_url: null,
-    route_path: "/practice/problems",
+    route_path: "/dashboard#notice-route",
     read_at: null,
     created_at: "2026-06-22T09:01:00.000Z",
   },
@@ -55,7 +55,7 @@ async function fulfillNotifications(route: Route) {
   });
 }
 
-test("dashboard notification rows move only when a route path exists", async ({
+test("dashboard notice rows move only when a route path exists", async ({
   page,
 }) => {
   await page.route(NOTIFICATIONS_ROUTE, fulfillNotifications);
@@ -76,5 +76,5 @@ test("dashboard notification rows move only when a route path exists", async ({
   await expect(page).toHaveURL(/\/dashboard(?:$|\?)/);
 
   await withRoute.click();
-  await expect(page).toHaveURL(/\/practice\/problems/);
+  await expect(page).toHaveURL(/\/dashboard#notice-route/);
 });
