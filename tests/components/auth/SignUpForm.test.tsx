@@ -596,9 +596,31 @@ describe("SignUpForm", () => {
       provider: "google",
       options: {
         redirectTo:
+          "http://localhost:3000/auth/callback?next=%2Fauth%2Fpost-auth%3Fintent%3Dsign-up",
+      },
+    });
+    expect(signUpMock).not.toHaveBeenCalled();
+  });
+
+  it("returns Google OAuth signup to invite confirmation when a valid affiliation code is stored", async () => {
+    storeAffiliationCode("EXPO2026-BOOTH-A");
+    renderInApp(<SignUpForm />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Google로 계속" }));
+    });
+
+    await waitFor(() => {
+      expect(signInWithOAuthMock).toHaveBeenCalledTimes(1);
+    });
+    expect(signInWithOAuthMock.mock.calls[0][0]).toEqual({
+      provider: "google",
+      options: {
+        redirectTo:
           "http://localhost:3000/auth/callback?next=%2Fauth%2Finstitution-invite%3Fnext%3D%252Fauth%252Fpost-auth%253Fintent%253Dsign-up",
       },
     });
+    expect(readStoredAffiliationCode()).toBe("EXPO2026-BOOTH-A");
     expect(signUpMock).not.toHaveBeenCalled();
   });
 

@@ -37,6 +37,7 @@ import { POST_AUTH_SIGN_UP_PATH } from "@/lib/auth/completion-routes";
 import { buildAuthRedirectUrl } from "@/lib/auth/redirect-url";
 import { mapSupabaseErrorCode } from "@/lib/auth/error-mapping";
 import {
+  buildInstitutionInvitePath,
   isGoogleOAuthUnsupportedBrowserError,
   startGoogleOAuth,
   type GoogleOAuthEmbeddedBrowser,
@@ -370,7 +371,10 @@ export function SignUpForm({
     setGoogleSubmitting(true);
     setBlockedOAuthBrowser(null);
     try {
-      const { error } = await startGoogleOAuth("sign-up");
+      const nextPath = readStoredAffiliationCode()
+        ? buildInstitutionInvitePath(POST_AUTH_SIGN_UP_PATH)
+        : POST_AUTH_SIGN_UP_PATH;
+      const { error } = await startGoogleOAuth("sign-up", nextPath);
       if (error) {
         message.error(t("socialAuthFailed"));
         setGoogleSubmitting(false);
