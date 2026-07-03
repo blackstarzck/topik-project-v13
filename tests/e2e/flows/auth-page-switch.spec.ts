@@ -91,6 +91,34 @@ test.describe("A-01/A-02 auth page switch", () => {
     expect(errors).toEqual([]);
   });
 
+  test("shows withdrawn account reason as a message", async ({ page }) => {
+    const errors = collectErrors(page);
+
+    await page.goto("/login?reason=withdrawn", { waitUntil: "networkidle" });
+
+    const withdrawnMessage = page
+      .locator(".ant-message-notice")
+      .filter({
+        hasText:
+          "탈퇴 처리된 계정이에요. 탈퇴 후 30일 이내에는 고객센터를 통해 복구를 요청할 수 있어요.",
+      });
+    await expect(withdrawnMessage).toBeVisible();
+    await expect(page.getByTestId("login-session-notice")).toHaveCount(0);
+    await expect(page.locator(".ant-notification-notice")).toHaveCount(0);
+
+    const messageBox = await withdrawnMessage.boundingBox();
+    const viewport = page.viewportSize();
+    expect(messageBox).not.toBeNull();
+    expect(viewport).not.toBeNull();
+    expect(messageBox!.x).toBeGreaterThanOrEqual(0);
+    expect(messageBox!.x + messageBox!.width).toBeLessThanOrEqual(
+      viewport!.width + 1,
+    );
+    expect(messageBox!.y).toBeLessThan(140);
+
+    expect(errors).toEqual([]);
+  });
+
   test("anonymous auth pages hide secondary settings and hero links", async ({
     page,
   }) => {
