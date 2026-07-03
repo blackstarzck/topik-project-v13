@@ -242,9 +242,106 @@ describe("InstitutionInvitePanel", () => {
     });
 
     expect(signOutMock).toHaveBeenCalledTimes(1);
+    expect(clearStoredAffiliationCodeMock).not.toHaveBeenCalled();
     expect(replaceMock).toHaveBeenCalledWith(
       "/login?next=%2Fauth%2Finstitution-invite",
     );
+  });
+
+  it("clears the stored code when an already-affiliated learner continues without connecting", async () => {
+    getUserMock.mockResolvedValueOnce({
+      data: { user: { id: "user-123", email: "learner@example.com" } },
+      error: null,
+    });
+    maybeSingleMock.mockResolvedValueOnce({
+      data: { affiliation_code: "OTHER-INSTITUTION" },
+      error: null,
+    });
+    const { container } = renderPanel("/dashboard");
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId("institution-invite-already-other-primary"),
+      ).toBeTruthy();
+    });
+    const continueLink = container.querySelector(
+      ".institution-invite-action-anchor",
+    ) as HTMLAnchorElement | null;
+    expect(continueLink).toBeTruthy();
+
+    await act(async () => {
+      fireEvent.click(continueLink as HTMLAnchorElement);
+    });
+
+    expect(clearStoredAffiliationCodeMock).toHaveBeenCalledTimes(1);
+    expect(replaceMock).toHaveBeenCalledWith("/dashboard");
+    expect(signOutMock).not.toHaveBeenCalled();
+  });
+
+  it("clears the stored code when an invalid invite result continues without connecting", async () => {
+    getUserMock.mockResolvedValueOnce({
+      data: { user: { id: "user-123", email: "learner@example.com" } },
+      error: null,
+    });
+    acceptStoredAffiliationInviteMock.mockResolvedValueOnce("invalid");
+    const { container } = renderPanel("/dashboard");
+
+    await screen.findByText("learner@example.com");
+    await act(async () => {
+      fireEvent.click(screen.getByRole("checkbox"));
+      fireEvent.click(
+        container.querySelector(
+          ".institution-invite-action-primary",
+        ) as HTMLButtonElement,
+      );
+    });
+    await waitFor(() => {
+      expect(acceptStoredAffiliationInviteMock).toHaveBeenCalledTimes(1);
+      expect(
+        container.querySelector(".institution-invite-action-primary"),
+      ).toBeNull();
+    });
+
+    const continueLink = container.querySelector(
+      ".institution-invite-action-anchor",
+    ) as HTMLAnchorElement | null;
+    expect(continueLink).toBeTruthy();
+
+    await act(async () => {
+      fireEvent.click(continueLink as HTMLAnchorElement);
+    });
+
+    expect(clearStoredAffiliationCodeMock).toHaveBeenCalledTimes(1);
+    expect(replaceMock).toHaveBeenCalledWith("/dashboard");
+  });
+
+  it("clears the stored code when a failed invite state continues without connecting", async () => {
+    getUserMock.mockResolvedValueOnce({
+      data: { user: { id: "user-123", email: "learner@example.com" } },
+      error: null,
+    });
+    maybeSingleMock.mockResolvedValueOnce({
+      data: null,
+      error: { message: "profile lookup failed" },
+    });
+    const { container } = renderPanel("/dashboard");
+
+    await waitFor(() => {
+      expect(
+        container.querySelector(".institution-invite-action-anchor"),
+      ).toBeTruthy();
+    });
+    const continueLink = container.querySelector(
+      ".institution-invite-action-anchor",
+    ) as HTMLAnchorElement | null;
+    expect(continueLink).toBeTruthy();
+
+    await act(async () => {
+      fireEvent.click(continueLink as HTMLAnchorElement);
+    });
+
+    expect(clearStoredAffiliationCodeMock).toHaveBeenCalledTimes(1);
+    expect(replaceMock).toHaveBeenCalledWith("/dashboard");
   });
 
   it("renders the success result on a pure white page background", async () => {

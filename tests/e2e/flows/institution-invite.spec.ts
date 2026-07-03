@@ -5,6 +5,7 @@ import { expect, test, type Page, type Request } from "@playwright/test";
 
 const INVITE_CODE = "EXPO2026-BOOTH-A";
 const AFFILIATION_STORAGE_KEY = "talkpik:affiliation-code";
+const THIRTY_MINUTES_MS = 30 * 60 * 1000;
 const EVIDENCE_DIR = path.join(
   "docs",
   "qa",
@@ -136,6 +137,38 @@ test.describe("institution invite anonymous entry", () => {
       testInfo.project.name,
       "expired-invite-login",
     );
+  });
+
+  test("removes an expired stored invite before showing the no-code state", async ({
+    page,
+  }) => {
+    const capturedAt = Date.now() - THIRTY_MINUTES_MS - 1;
+    await page.addInitScript(
+      ({ code, capturedAt, expiresAt, storageKey }) => {
+        window.localStorage.setItem(
+          storageKey,
+          JSON.stringify({ code, capturedAt, expiresAt }),
+        );
+      },
+      {
+        capturedAt,
+        code: INVITE_CODE,
+        expiresAt: capturedAt + THIRTY_MINUTES_MS,
+        storageKey: AFFILIATION_STORAGE_KEY,
+      },
+    );
+
+    await page.goto("/auth/institution-invite", { waitUntil: "networkidle" });
+
+    await expect(page.locator(".institution-invite-code")).toHaveCount(0);
+    await expect
+      .poll(() =>
+        page.evaluate(
+          (key) => window.localStorage.getItem(key),
+          AFFILIATION_STORAGE_KEY,
+        ),
+      )
+      .toBeNull();
   });
 });
 

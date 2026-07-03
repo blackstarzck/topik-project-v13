@@ -43,6 +43,8 @@ import {
   storeAffiliationCode,
 } from "../../../src/lib/auth/affiliation-code";
 
+const THIRTY_MINUTES_MS = 30 * 60 * 1000;
+
 // SignUpForm now uses next-intl's useTranslations — render inside the shared
 // intl + antd App wrapper (baseline ko catalog, matching the assertions).
 const renderInApp = renderWithIntl;
@@ -368,6 +370,29 @@ describe("SignUpForm", () => {
     expect(pushMock).not.toHaveBeenCalled();
   });
 
+  it("does not add an expired affiliation code to email sign-up metadata", async () => {
+    storeAffiliationCode(
+      "EXPO2026-BOOTH-A",
+      Date.now() - THIRTY_MINUTES_MS,
+    );
+    renderInApp(<SignUpForm />);
+
+    await fillValidSignUpForm();
+
+    await act(async () => {
+      fireEvent.click(submitButton());
+    });
+
+    await waitFor(() => {
+      expect(signUpMock).toHaveBeenCalledTimes(1);
+    });
+    const metadata = signUpMock.mock.calls[0][0].options.data as Record<
+      string,
+      unknown
+    >;
+    expect(metadata.affiliation_code).toBeUndefined();
+  });
+
   it("redirects to /auth/verify-email after successful sign-up (Phase 8-D)", async () => {
     renderInApp(<SignUpForm />);
 
@@ -440,6 +465,34 @@ describe("SignUpForm", () => {
     expect(
       screen.getByTestId("sign-up-safe-guidance-reset").getAttribute("href"),
     ).toBe("/password-reset");
+    expect(pushMock).not.toHaveBeenCalled();
+  });
+
+  it("keeps a stored affiliation code when duplicate email guidance is shown", async () => {
+    storeAffiliationCode("EXPO2026-BOOTH-A");
+    signUpMock.mockResolvedValueOnce({
+      data: { session: null, user: null },
+      error: {
+        code: "user_already_exists",
+        message: "User already registered",
+        status: 422,
+      },
+    });
+    renderInApp(<SignUpForm />);
+
+    await fillValidSignUpForm("registered@example.com");
+
+    await act(async () => {
+      fireEvent.click(submitButton());
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("sign-up-safe-guidance")).toBeTruthy();
+    });
+    expect(readStoredAffiliationCode()).toBe("EXPO2026-BOOTH-A");
+    expect(
+      screen.getByTestId("sign-up-safe-guidance-login").getAttribute("href"),
+    ).toBe("/login?next=%2Fauth%2Finstitution-invite");
     expect(pushMock).not.toHaveBeenCalled();
   });
 

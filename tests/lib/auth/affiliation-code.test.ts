@@ -33,7 +33,7 @@ vi.mock("@/lib/supabase/browser", () => ({
 }));
 
 const NOW = Date.UTC(2026, 5, 19, 10, 0, 0);
-const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+const THIRTY_MINUTES_MS = 30 * 60 * 1000;
 
 function readRawStoredValue() {
   const raw = window.localStorage.getItem(AFFILIATION_CODE_STORAGE_KEY);
@@ -56,7 +56,7 @@ beforeEach(() => {
 });
 
 describe("affiliation code storage", () => {
-  it("stores a valid aff search param with a 24 hour expiry", () => {
+  it("stores a valid aff search param with a 30 minute expiry", () => {
     const captured = captureAffiliationCodeFromSearch(
       new URLSearchParams("aff=EXPO2026-BOOTH-A"),
       NOW,
@@ -66,7 +66,7 @@ describe("affiliation code storage", () => {
     expect(readRawStoredValue()).toEqual({
       code: "EXPO2026-BOOTH-A",
       capturedAt: NOW,
-      expiresAt: NOW + ONE_DAY_MS,
+      expiresAt: NOW + THIRTY_MINUTES_MS,
     });
   });
 
@@ -91,10 +91,37 @@ describe("affiliation code storage", () => {
     });
   });
 
-  it("deletes expired values when read", () => {
+  it("keeps stored values readable until just before the 30 minute boundary", () => {
     storeAffiliationCode("EXPO2026-BOOTH-A", NOW);
 
-    expect(readStoredAffiliationCode(NOW + ONE_DAY_MS + 1)).toBeNull();
+    expect(readStoredAffiliationCode(NOW + THIRTY_MINUTES_MS - 1)).toBe(
+      "EXPO2026-BOOTH-A",
+    );
+    expect(readRawStoredValue()).toEqual({
+      code: "EXPO2026-BOOTH-A",
+      capturedAt: NOW,
+      expiresAt: NOW + THIRTY_MINUTES_MS,
+    });
+  });
+
+  it("deletes values at the 30 minute boundary when read", () => {
+    storeAffiliationCode("EXPO2026-BOOTH-A", NOW);
+
+    expect(readStoredAffiliationCode(NOW + THIRTY_MINUTES_MS)).toBeNull();
+    expect(window.localStorage.getItem(AFFILIATION_CODE_STORAGE_KEY)).toBeNull();
+  });
+
+  it("deletes expired values after the 30 minute boundary when read", () => {
+    storeAffiliationCode("EXPO2026-BOOTH-A", NOW);
+
+    expect(readStoredAffiliationCode(NOW + THIRTY_MINUTES_MS + 1)).toBeNull();
+    expect(window.localStorage.getItem(AFFILIATION_CODE_STORAGE_KEY)).toBeNull();
+  });
+
+  it("excludes expired values from sign-up metadata", () => {
+    storeAffiliationCode("EXPO2026-BOOTH-A", NOW);
+
+    expect(buildAffiliationMetadata(NOW + THIRTY_MINUTES_MS)).toEqual({});
     expect(window.localStorage.getItem(AFFILIATION_CODE_STORAGE_KEY)).toBeNull();
   });
 
