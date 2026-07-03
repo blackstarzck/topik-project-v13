@@ -25,6 +25,12 @@ import { APP_ROUTES } from "@/lib/routes";
 import { writingFeedbackHref, writingProblemHref } from "@/lib/writing/routes";
 
 import { LibraryItemRow } from "./LibraryItemRow";
+import { LibraryProblemsFilterCards } from "./LibraryProblemsFilterCards";
+import {
+  applyLibraryProblemsFilters,
+  countLibraryProblemsFilters,
+  type LibraryProblemsFilterKey,
+} from "./library-problems-filters";
 import { matchesLibrarySearch } from "./library-tab-url";
 
 const { Paragraph, Text } = Typography;
@@ -102,6 +108,9 @@ export function LibraryProblemsList({
   const [enrich, setEnrich] = useState<Map<string, SubmissionEnrichment>>(
     new Map(),
   );
+  const [checkedFilters, setCheckedFilters] = useState<
+    ReadonlySet<LibraryProblemsFilterKey>
+  >(new Set());
 
   const submissions = useMemo(
     () => (submissionQuery.data ?? initialSubmissions).filter(isSubmission),
@@ -151,7 +160,7 @@ export function LibraryProblemsList({
     [problems, submissions],
   );
 
-  const filtered = useMemo(
+  const searchFiltered = useMemo(
     () =>
       mixed.filter((entry) => {
         if (entry.kind === "submission") {
@@ -184,6 +193,16 @@ export function LibraryProblemsList({
     [enrich, mixed, searchTerm, t, tSubmissions],
   );
 
+  // 카드 개수는 검색 적용 후 · 카드 필터 적용 전 집합 기준(패싯 카운트).
+  const filterCounts = useMemo(
+    () => countLibraryProblemsFilters(searchFiltered, enrich),
+    [enrich, searchFiltered],
+  );
+  const filtered = useMemo(
+    () => applyLibraryProblemsFilters(searchFiltered, checkedFilters, enrich),
+    [checkedFilters, enrich, searchFiltered],
+  );
+
   const totalPages = Math.max(
     1,
     Math.ceil(filtered.length / LIBRARY_PAGE_SIZE),
@@ -194,6 +213,7 @@ export function LibraryProblemsList({
     safePage * LIBRARY_PAGE_SIZE,
   );
   const searching = searchTerm.trim().length > 0;
+  const filtering = checkedFilters.size > 0;
   const isLoading =
     submissionQuery.isLoading &&
     problemQuery.isLoading &&
@@ -205,6 +225,19 @@ export function LibraryProblemsList({
   if (isLoading) {
     return <Spin data-testid="library-problems-loading" />;
   }
+
+  const toggleFilter = (key: LibraryProblemsFilterKey) => {
+    setCheckedFilters((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+    setPage(1);
+  };
 
   if (queryError) {
     return (
@@ -246,20 +279,46 @@ export function LibraryProblemsList({
         </Text>
       </div>
 
+      {mixed.length > 0 ? (
+        <LibraryProblemsFilterCards
+          checked={checkedFilters}
+          counts={filterCounts}
+          onToggle={toggleFilter}
+        />
+      ) : null}
+
       {pageItems.length === 0 ? (
         <div
           data-testid="library-problems-empty"
           className="flex flex-1 items-center justify-center"
         >
-          <Empty description={searching ? t("emptySearch") : t("emptyNoItems")}>
+          <Empty
+            description={
+              searching
+                ? t("emptySearch")
+                : filtering
+                  ? t("emptyFiltered")
+                  : t("emptyNoItems")
+            }
+          >
             {searching ? (
               <Button
                 onClick={() => {
                   setSearchTerm("");
+                  setCheckedFilters(new Set());
                   setPage(1);
                 }}
               >
                 {t("resetSearch")}
+              </Button>
+            ) : filtering ? (
+              <Button
+                onClick={() => {
+                  setCheckedFilters(new Set());
+                  setPage(1);
+                }}
+              >
+                {tSaved("resetFilter")}
               </Button>
             ) : (
               <Link href={APP_ROUTES.practiceProblems as never}>

@@ -2024,6 +2024,8 @@
       "searchAriaLabel": "Search saved answers and questions",
       "typeSubmission": "Saved answer",
       "typeProblem": "Saved question",
+      "filterCardsAriaLabel": "Type and status filters",
+      "emptyFiltered": "No items match the selected filters.",
       "emptyNoItems": "No saved answers or questions yet.",
       "emptySearch": "No search results.",
       "resetSearch": "Reset search"
