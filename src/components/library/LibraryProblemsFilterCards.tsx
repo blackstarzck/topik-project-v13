@@ -15,9 +15,10 @@ type Props = {
 };
 
 /**
- * F-01 `/library/problems` 유형·상태 필터 카드 그리드.
- * 카드 전체가 AntD Checkbox 라벨이며, 체크박스는 카드 끝(오른쪽)에 둔다.
- * 라벨 문구는 행 태그와 동일한 기존 카탈로그 키를 재사용한다.
+ * F-01 `/library/problems` 유형·상태 필터 그리드.
+ * AntD Checkbox 기본 배치(체크박스 왼쪽, 라벨+개수 오른쪽)를 그대로 쓰고
+ * 테두리 없는 텍스트 행으로 나열한다. 라벨 문구는 행 태그와 동일한 기존
+ * 카탈로그 키를 재사용한다.
  */
 export function LibraryProblemsFilterCards({
   counts,
@@ -45,37 +46,24 @@ export function LibraryProblemsFilterCards({
       data-testid="library-problems-filter-cards"
       className="grid grid-cols-2 gap-2 sm:grid-cols-4"
     >
-      {LIBRARY_PROBLEMS_FILTER_KEYS.map((key) => {
-        const selected = checked.has(key);
-        return (
-          <Checkbox
-            key={key}
-            checked={selected}
-            data-testid={`library-problems-filter-card-${key}`}
-            // flex-row-reverse: 체크박스를 카드 끝(오른쪽)으로 보낸다.
-            // [&>span:last-child]:* 는 AntD 라벨 span을 남은 폭만큼 키우는
-            // 레이아웃 글루로, 시각 상태(색/보더)는 건드리지 않는다.
-            className={[
-              "flex w-full flex-row-reverse items-center rounded-default border bg-background px-3 py-2 transition",
-              "[&>span:last-child]:min-w-0 [&>span:last-child]:flex-1",
-              selected
-                ? "border-text shadow-sm"
-                : "border-border hover:border-text",
-            ].join(" ")}
-            onChange={() => onToggle(key)}
-          >
-            <span className="flex w-full min-w-0 items-center justify-between gap-2">
-              <span className="truncate text-sm text-text">{labels[key]}</span>
-              <strong
-                className="flex-none text-sm tabular-nums text-text-secondary"
-                data-testid={`library-problems-filter-count-${key}`}
-              >
-                {counts[key]}
-              </strong>
-            </span>
-          </Checkbox>
-        );
-      })}
+      {LIBRARY_PROBLEMS_FILTER_KEYS.map((key) => (
+        <Checkbox
+          key={key}
+          checked={checked.has(key)}
+          data-testid={`library-problems-filter-card-${key}`}
+          onChange={() => onToggle(key)}
+        >
+          <span className="flex min-w-0 items-center gap-1">
+            <span className="truncate text-sm text-text">{labels[key]}</span>
+            <strong
+              className="flex-none text-sm tabular-nums text-text-secondary"
+              data-testid={`library-problems-filter-count-${key}`}
+            >
+              {counts[key]}
+            </strong>
+          </span>
+        </Checkbox>
+      ))}
     </section>
   );
 }

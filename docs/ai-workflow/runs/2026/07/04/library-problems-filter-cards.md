@@ -52,6 +52,12 @@
       — 카운트 8종 fixture 일치, 저장 문제 체크 시 problem 행만, 0건 카드 체크 시 emptyFiltered+필터 초기화,
         저장 항목 0이면 카드 그리드 숨김, 모바일 2열 가로 오버플로 없음 (스크린샷 .scratch/library-problems-*.png)
 
+## Follow-up (2026-07-04, restyle)
+
+- 사용자 결정: 항목 테두리 제거, 체크박스 왼쪽 끝 + 라벨·개수 붙여서 오른쪽 (AntD Checkbox 기본 배치).
+- branch: `claude/library-problems-filters-restyle` (base: merge 88d030cb 이후 origin/main), 같은 worktree 재사용.
+- flex-row-reverse / [&>span:last-child] 레이아웃 글루 제거로 단순화. 테스트 testid 계약은 불변.
+
 ## Critic notes (self-review)
 
 - 기존 테스트 `getByText(typeSubmission/typeProblem)`가 카드 라벨과 이중 매치 → getAllByText로 보정 필요 (반영).
