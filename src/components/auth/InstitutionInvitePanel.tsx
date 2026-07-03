@@ -26,7 +26,7 @@ const { Paragraph, Text } = Typography;
 
 type InvitePanelState =
   | { kind: "loading" }
-  | { kind: "no-code" }
+  | { kind: "no-code"; authenticated: boolean }
   | { kind: "anonymous"; code: string }
   | { kind: "authenticated"; code: string; email: string | null }
   | { kind: "success" }
@@ -44,10 +44,8 @@ type InstitutionInvitePanelProps = {
   nextPath: string;
 };
 
-function loginInviteHref() {
-  return `${APP_ROUTES.login}?next=${encodeURIComponent(
-    APP_ROUTES.authInstitutionInvite,
-  )}`;
+function loginHref(nextPath: string) {
+  return `${APP_ROUTES.login}?next=${encodeURIComponent(nextPath)}`;
 }
 
 function normalizeProfileAffiliation(value: string | null | undefined) {
@@ -66,24 +64,31 @@ export function InstitutionInvitePanel({ nextPath }: InstitutionInvitePanelProps
   const [submitting, setSubmitting] = useState(false);
   const [institutionInviteConfirmed, setInstitutionInviteConfirmed] =
     useState(false);
-  const loginHref = useMemo(() => loginInviteHref(), []);
+  const inviteLoginHref = useMemo(
+    () => loginHref(APP_ROUTES.authInstitutionInvite),
+    [],
+  );
+  const dashboardLoginHref = useMemo(
+    () => loginHref(APP_ROUTES.dashboard),
+    [],
+  );
 
   useEffect(() => {
     let cancelled = false;
 
     async function loadInviteState() {
       const storedCode = readStoredAffiliationCode();
-      if (!storedCode) {
-        setState({ kind: "no-code" });
-        return;
-      }
-
       const supabase = createSupabaseBrowserClient();
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
       if (cancelled) return;
+
+      if (!storedCode) {
+        setState({ kind: "no-code", authenticated: Boolean(user) });
+        return;
+      }
 
       if (!user) {
         setState({ kind: "anonymous", code: storedCode });
@@ -144,6 +149,11 @@ export function InstitutionInvitePanel({ nextPath }: InstitutionInvitePanelProps
     router.replace(nextPath);
   }
 
+  function continueToDashboard() {
+    clearStoredAffiliationCode();
+    router.replace(APP_ROUTES.dashboard);
+  }
+
   function continueWithoutInvite() {
     clearStoredAffiliationCode();
     router.replace(
@@ -163,7 +173,7 @@ export function InstitutionInvitePanel({ nextPath }: InstitutionInvitePanelProps
   async function signOutForAnotherAccount() {
     const supabase = createSupabaseBrowserClient();
     await supabase.auth.signOut();
-    router.replace(loginHref);
+    router.replace(inviteLoginHref);
   }
 
   async function acceptInvite() {
@@ -184,8 +194,15 @@ export function InstitutionInvitePanel({ nextPath }: InstitutionInvitePanelProps
       });
       return;
     }
-    if (result === "invalid" || result === "empty") {
-      setState({ kind: result === "invalid" ? "invalid" : "no-code" });
+    if (result === "invalid") {
+      setState({ kind: "invalid" });
+      return;
+    }
+    if (result === "empty") {
+      setState({
+        kind: "no-code",
+        authenticated: state.kind === "authenticated",
+      });
       return;
     }
     setState({ kind: "failed" });
@@ -237,9 +254,19 @@ export function InstitutionInvitePanel({ nextPath }: InstitutionInvitePanelProps
             title={<span id="invite-title">{t("noCodeTitle")}</span>}
             subTitle={t("noCodeDescription")}
             extra={
-              <Button onClick={continueWithoutInvite}>
-                {t("anonymousContinue")}
-              </Button>
+              state.authenticated ? (
+                <Button type="primary" onClick={continueToDashboard}>
+                  {t("noCodeDashboard")}
+                </Button>
+              ) : (
+                <Button
+                  type="primary"
+                  href={dashboardLoginHref}
+                  icon={<LogIn size={16} aria-hidden="true" />}
+                >
+                  {t("noCodeLogin")}
+                </Button>
+              )
             }
           />
         ) : null}
@@ -264,7 +291,7 @@ export function InstitutionInvitePanel({ nextPath }: InstitutionInvitePanelProps
                 {t("anonymousSignUp")}
               </Button>
               <Button
-                href={loginHref}
+                href={inviteLoginHref}
                 className="institution-invite-action-secondary"
                 icon={<LogIn size={16} aria-hidden="true" />}
               >
