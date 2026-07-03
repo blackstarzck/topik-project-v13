@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>TALKPIK AI UltraQA Deep QA Report - 2026-07-02 10:55 KST</title>
+    <title>TALKPIK AI QA 보고서 - 2026-07-02 10:55 KST</title>
     <style>
       :root {
         color-scheme: light;
@@ -27,7 +27,7 @@
           BlinkMacSystemFont,
           "Segoe UI",
           sans-serif;
-        line-height: 1.55;
+        line-height: 1.6;
       }
 
       main {
@@ -94,7 +94,8 @@
         background: var(--soft);
       }
 
-      ul {
+      ul,
+      ol {
         margin: 8px 0 16px 22px;
         padding: 0;
       }
@@ -130,6 +131,7 @@
         padding: 2px 8px;
         font-size: 12px;
         font-weight: 700;
+        white-space: nowrap;
       }
 
       .pass {
@@ -150,6 +152,18 @@
       .info {
         background: #dbeafe;
         color: var(--info);
+      }
+
+      .note {
+        border-left: 4px solid var(--info);
+        background: #eff6ff;
+        padding: 10px 12px;
+      }
+
+      .risk {
+        border-left: 4px solid var(--fail);
+        background: #fef2f2;
+        padding: 10px 12px;
       }
 
       .gallery {
@@ -180,76 +194,102 @@
         color: var(--muted);
         font-size: 13px;
       }
-
-      .note {
-        border-left: 4px solid var(--info);
-        background: #eff6ff;
-        padding: 10px 12px;
-      }
-
-      .risk {
-        border-left: 4px solid var(--fail);
-        background: #fef2f2;
-        padding: 10px 12px;
-      }
     </style>
   </head>
   <body>
     <main>
-      <h1>TALKPIK AI UltraQA Deep QA Report</h1>
+      <h1>TALKPIK AI QA 보고서</h1>
       <p class="meta">
-        실행 시각: 2026-07-02 10:46-11:19 KST | 기준 URL:
-        <code>http://127.0.0.1:3000</code> | 브랜치: <code>main</code> |
+        실행 시간: 2026-07-02 10:46-11:19 KST |
+        기준 주소: <code>http://127.0.0.1:3000</code> |
+        브랜치: <code>main</code> |
         실행 계획:
         <code>docs/qa/plan/2026-07-02-ultraqa-deep-qa-execution-plan.md</code>
+      </p>
+
+      <p class="note">
+        이 문서는 기존 QA 결과를 새로 바꾼 것이 아니라, 같은 결과를 더 쉬운 말로 다시 정리한 보고서입니다.
+        테스트 판정, 결함 ID, 증거 파일 경로는 원본 내용에 맞춰 유지했습니다.
       </p>
 
       <section class="summary" aria-label="QA 요약">
         <div class="tile">
           <strong>Blocked</strong>
-          <span>릴리스 준비도</span>
+          <span>지금 상태로는 배포 준비 완료라고 보기 어렵습니다.</span>
         </div>
         <div class="tile">
           <strong>0 / 1 / 8</strong>
-          <span>P0 / P1 / P2+ 결함</span>
+          <span>P0 / P1 / P2 이상 문제 수입니다.</span>
         </div>
         <div class="tile">
           <strong>4 Pass, 4 Fail/Timeout</strong>
-          <span>자동 게이트</span>
+          <span>자동 검사 결과입니다.</span>
         </div>
         <div class="tile">
           <strong>27</strong>
-          <span>브라우저 스모크 캡처</span>
+          <span>브라우저로 직접 확인한 화면 캡처 수입니다.</span>
         </div>
       </section>
 
       <p class="risk">
-        결론: 현재 빌드 자체는 가능하지만 <code>pnpm format</code>,
-        <code>pnpm harness:admin-boundary</code>, <code>pnpm test:e2e</code>가 실패 또는
-        타임아웃되어 배포 준비 상태로 볼 수 없습니다. 특히 admin boundary gate 실패는 v13 사용자 앱과
-        admin-owned surface 경계가 자동 정책상 깨진 상태이므로 P1 릴리스 차단 이슈로 분류했습니다.
+        결론: 앱 빌드는 가능하지만, 릴리스 전에 막아야 할 검사가 남아 있습니다.
+        특히 <code>pnpm harness:admin-boundary</code>가 실패했습니다.
+        이 검사는 사용자 앱인 v13에 관리자 전용 영역이 섞이지 않았는지 확인하는 장치라서,
+        현재 결과는 P1 릴리스 차단 문제로 분류했습니다.
       </p>
 
-      <h2>범위와 기준</h2>
+      <h2>한눈에 보는 결론</h2>
+      <table>
+        <tbody>
+          <tr>
+            <th>배포 가능 여부</th>
+            <td>아직 어렵습니다. 앱은 빌드되지만, 필수 검사 일부가 실패하거나 끝까지 완료되지 않았습니다.</td>
+          </tr>
+          <tr>
+            <th>가장 중요한 문제</th>
+            <td>
+              사용자 앱 코드 안에서 관리자 영역과 관련된 표현이 감지되어
+              <code>harness:admin-boundary</code>가 실패했습니다.
+            </td>
+          </tr>
+          <tr>
+            <th>사용자가 볼 수 있는 문제</th>
+            <td>
+              약관 화면에 HTML/Markdown 기호가 그대로 보이는 문제가 있고,
+              결제 안내 화면과 피드백 화면 일부는 데이터나 테스트 조건이 맞지 않아 추가 확인이 필요합니다.
+            </td>
+          </tr>
+          <tr>
+            <th>좋았던 점</th>
+            <td>
+              기본 코드 검사, 타입 검사, 단위 테스트, 빌드는 통과했습니다.
+              비로그인 사용자가 보호된 화면에 들어가면 로그인 화면으로 이동하는 동작도 확인했습니다.
+            </td>
+          </tr>
+          <tr>
+            <th>주의할 점</th>
+            <td>
+              전체 E2E 테스트는 15분 제한 안에 끝나지 않았습니다.
+              그래서 태블릿/데스크톱 전체 흐름은 완료 검증으로 볼 수 없습니다.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>이번 QA에서 한 일</h2>
       <ul>
-        <li>요청 범위: QA 계획 문서를 읽고 코드 수정 없이 QA 실행, 증거와 HTML 리포트 생성.</li>
-        <li>수정 범위: 새 QA 산출물만 생성. 제품 코드, SOT 문서, migration, 설정 파일은 수정하지 않음.</li>
-        <li>
-          증거 저장소:
-          <code>docs/qa/reports/qa-report-20260702-1055-evidence/</code>
-        </li>
-        <li>
-          금지 준수: auth-state 파일과 Playwright trace zip은 증거 폴더로 복사하지 않음. secret 값은 출력하지
-          않음.
-        </li>
+        <li>QA 실행 계획 문서를 기준으로, 코드 수정 없이 검사와 화면 확인을 진행했습니다.</li>
+        <li>증거 파일은 <code>docs/qa/reports/qa-report-20260702-1055-evidence/</code>에 저장했습니다.</li>
+        <li>민감할 수 있는 로그인 상태 파일과 Playwright trace zip은 보고서 증거 폴더에 복사하지 않았습니다.</li>
+        <li>secret 값은 출력하지 않았고, 존재 여부만 확인했습니다.</li>
       </ul>
 
-      <h2>환경</h2>
+      <h2>검사 환경</h2>
       <table>
         <thead>
           <tr>
             <th>항목</th>
-            <th>결과</th>
+            <th>내용</th>
           </tr>
         </thead>
         <tbody>
@@ -260,139 +300,168 @@
           <tr>
             <td>Git 상태</td>
             <td>
-              <code>main...origin/main [ahead 28]</code>. QA 전부터 <code>.env.example</code>과 계획
-              문서가 dirty/untracked 상태였고, QA 실행 후 일부 기존 QA 스크린샷과
-              <code>next-env.d.ts</code>가 변경 상태로 보입니다. 리셋/스테이지/커밋은 하지 않았습니다.
+              <code>main...origin/main [ahead 28]</code> 상태였습니다.
+              QA 전부터 <code>.env.example</code>, QA 계획 문서, 일부 QA 스크린샷,
+              <code>next-env.d.ts</code> 변경이 보였습니다.
+              이 QA에서는 reset, stash, commit을 하지 않았습니다.
             </td>
           </tr>
           <tr>
-            <td>Runtime</td>
-            <td>Node <code>v24.15.0</code>, pnpm <code>11.7.0</code>. <code>packageManager</code>는 <code>pnpm@11.1.3</code>.</td>
+            <td>실행 도구</td>
+            <td>Node <code>v24.15.0</code>, pnpm <code>11.7.0</code>. 프로젝트의 <code>packageManager</code>는 <code>pnpm@11.1.3</code>입니다.</td>
           </tr>
           <tr>
             <td>서버</td>
             <td>
-              기존 3000 포트 점유 프로세스를 정리한 뒤 <code>pnpm start --hostname 127.0.0.1 --port 3000</code>
-              실행. <code>/</code> 200 응답 확인.
+              기존 3000 포트 프로세스를 정리한 뒤
+              <code>pnpm start --hostname 127.0.0.1 --port 3000</code>로 실행했습니다.
+              <code>/</code> 화면이 200 응답을 주는 것을 확인했습니다.
             </td>
           </tr>
           <tr>
             <td>환경 변수</td>
             <td>
-              <code>.env.local</code> 존재. <code>SUPABASE_ENV_LABEL</code>,
-              <code>E2E_STUDENT_EMAIL</code>, <code>SUPABASE_TEST_PASSWORD</code>,
-              <code>NEXT_PUBLIC_SUPABASE_URL</code>, <code>NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY</code>,
-              <code>SUPABASE_SERVICE_ROLE_KEY</code>, <code>SUPABASE_ACCESS_TOKEN</code> 존재 여부만 확인.
-              값은 출력하지 않음.
+              <code>.env.local</code>이 있었고,
+              <code>SUPABASE_ENV_LABEL</code>,
+              <code>E2E_STUDENT_EMAIL</code>,
+              <code>SUPABASE_TEST_PASSWORD</code>,
+              <code>NEXT_PUBLIC_SUPABASE_URL</code>,
+              <code>NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY</code>,
+              <code>SUPABASE_SERVICE_ROLE_KEY</code>,
+              <code>SUPABASE_ACCESS_TOKEN</code> 존재 여부를 확인했습니다.
+              값 자체는 보고서에 쓰지 않았습니다.
             </td>
           </tr>
         </tbody>
       </table>
 
-      <h2>자동 게이트</h2>
+      <h2>자동 검사 결과</h2>
       <table>
         <thead>
           <tr>
-            <th>명령</th>
+            <th>검사</th>
             <th>결과</th>
-            <th>근거</th>
+            <th>쉬운 설명</th>
+            <th>개발자용 근거</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td><code>pnpm lint</code></td>
             <td><span class="badge pass">PASS</span></td>
-            <td>exit 0. warning 7건: <code>.scratch/*</code>, 일부 script/test 파일.</td>
+            <td>코드 규칙 검사는 통과했습니다. 다만 일부 임시 파일과 테스트 파일에서 경고가 7개 있었습니다.</td>
+            <td>exit 0, warning 7건</td>
           </tr>
           <tr>
             <td><code>pnpm typecheck</code></td>
             <td><span class="badge pass">PASS</span></td>
-            <td>exit 0.</td>
+            <td>코드의 타입 연결 상태는 문제 없이 확인됐습니다.</td>
+            <td>exit 0</td>
           </tr>
           <tr>
             <td><code>pnpm format</code></td>
             <td><span class="badge fail">FAIL</span></td>
-            <td><code>prettier --check .</code>가 271개 파일의 formatting issue를 보고. 코드 수정 범위 밖이라 <code>format:write</code> 미실행.</td>
+            <td>자동 정리 규칙에 맞지 않는 파일이 많았습니다. 이번 QA는 코드 수정 작업이 아니어서 자동 정리는 하지 않았습니다.</td>
+            <td><code>prettier --check .</code>가 271개 파일의 formatting issue 보고</td>
           </tr>
           <tr>
-            <td>
-              <code>pnpm vitest run tests/scripts/build-preflight.test.ts tests/scripts/no-supabase-remote-apply-surface.test.ts tests/scripts/env-example-contract.test.ts</code>
-            </td>
+            <td>핵심 스크립트 테스트</td>
             <td><span class="badge pass">PASS</span></td>
-            <td>3 files, 16 tests passed.</td>
+            <td>빌드 전 점검, 원격 Supabase 적용 방지, 환경 변수 예시 계약 테스트는 통과했습니다.</td>
+            <td>
+              <code>tests/scripts/build-preflight.test.ts</code>,
+              <code>tests/scripts/no-supabase-remote-apply-surface.test.ts</code>,
+              <code>tests/scripts/env-example-contract.test.ts</code>:
+              3 files, 16 tests passed
+            </td>
           </tr>
           <tr>
             <td><code>pnpm harness:admin-boundary</code></td>
             <td><span class="badge fail">FAIL</span></td>
             <td>
+              사용자 앱에 관리자 쪽 표현이 들어왔는지 막는 검사가 실패했습니다.
+              실제 DB 노출이 확인된 것은 아니지만, 릴리스 전에는 반드시 정리해야 합니다.
+            </td>
+            <td>
               <code>operation_policies</code> 참조 감지:
               <code>src/app/terms/page.tsx:10</code>,
               <code>src/components/legal/TermsDocument.tsx:4</code>,
-              <code>src/lib/legal/documents.ts:3</code>.
+              <code>src/lib/legal/documents.ts:3</code>
             </td>
           </tr>
           <tr>
             <td><code>pnpm build</code></td>
-            <td><span class="badge pass">PASS with warning</span></td>
+            <td><span class="badge warn">PASS with warning</span></td>
+            <td>배포용 빌드는 성공했지만, 정적 페이지 처리와 쿠키 사용 관련 경고가 있었습니다.</td>
             <td>
-              Next 16.2.6 build exit 0. 경고: <code>/_next/static/:path*</code> Cache-Control header, landing CTA에서
-              cookies 사용으로 <code>DYNAMIC_SERVER_USAGE</code> 로그.
+              Next 16.2.6 build exit 0.
+              <code>/_next/static/:path*</code> Cache-Control header 경고,
+              landing CTA의 cookies 사용으로 <code>DYNAMIC_SERVER_USAGE</code> 로그
             </td>
           </tr>
           <tr>
             <td><code>pnpm test</code></td>
             <td><span class="badge pass">PASS</span></td>
-            <td>224 files passed, 6 skipped. 1404 tests passed, 9 skipped. JSDOM pseudo-element <code>getComputedStyle</code> warning 반복.</td>
+            <td>일반 테스트 묶음은 통과했습니다. 일부 테스트는 의도적으로 건너뛰었습니다.</td>
+            <td>224 files passed, 6 skipped. 1404 tests passed, 9 skipped</td>
           </tr>
           <tr>
             <td><code>pnpm test:e2e</code></td>
             <td><span class="badge fail">TIMEOUT</span></td>
             <td>
-              약 15분 후 exit 124. <code>test-results/failure-log.json</code> 미생성. <code>test-results</code>에
-              <code>error-context.md</code> 58개, retry trace 다수 생성. trace zip은 복사하지 않음.
+              실제 브라우저로 여러 화면을 도는 전체 테스트가 15분 안에 끝나지 않았습니다.
+              그래서 전체 E2E 통과라고 말할 수 없습니다.
+            </td>
+            <td>
+              exit 124.
+              <code>test-results/failure-log.json</code> 미생성.
+              <code>test-results</code>에 <code>error-context.md</code> 58개와 retry trace 다수 생성.
+              trace zip은 보고서 증거로 복사하지 않음.
             </td>
           </tr>
         </tbody>
       </table>
 
-      <h2>브라우저 스모크</h2>
+      <h2>브라우저로 확인한 화면</h2>
       <p>
-        Playwright 직접 스모크로 public, anon redirect, login, authed route를 desktop 1280px와 mobile 360px에서
-        확인했습니다. 결과 요약은
-        <code>qa-report-20260702-1055-evidence/browser-smoke-summary.json</code>에 저장했습니다.
+        Playwright로 실제 브라우저를 열어 공개 화면, 비로그인 접근 차단, 로그인,
+        로그인 후 화면을 desktop 1280px과 mobile 360px에서 확인했습니다.
+        요약 파일은
+        <code>qa-report-20260702-1055-evidence/browser-smoke-summary.json</code>입니다.
       </p>
+
       <table>
         <thead>
           <tr>
             <th>범위</th>
             <th>결과</th>
-            <th>비고</th>
+            <th>쉬운 설명</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td>public routes</td>
+            <td>공개 화면</td>
             <td><span class="badge pass">RENDERED</span></td>
-            <td><code>/</code>, <code>/login</code>, <code>/password-reset</code>, <code>/terms</code>, <code>/privacy</code> 200 렌더링.</td>
+            <td><code>/</code>, <code>/login</code>, <code>/password-reset</code>, <code>/terms</code>, <code>/privacy</code>가 열렸습니다.</td>
           </tr>
           <tr>
-            <td>anon protected redirect</td>
+            <td>비로그인 보호 화면</td>
             <td><span class="badge pass">PASS</span></td>
-            <td><code>/dashboard</code>, <code>/admin</code> 요청이 <code>/login</code>으로 이동.</td>
+            <td><code>/dashboard</code>, <code>/admin</code>에 비로그인으로 들어가면 <code>/login</code>으로 이동했습니다.</td>
           </tr>
           <tr>
-            <td>login flow</td>
+            <td>로그인 흐름</td>
             <td><span class="badge pass">PASS</span></td>
-            <td><code>E2E_STUDENT_EMAIL</code> + <code>SUPABASE_TEST_PASSWORD</code>로 <code>/dashboard</code> 도달.</td>
+            <td><code>E2E_STUDENT_EMAIL</code>과 <code>SUPABASE_TEST_PASSWORD</code>로 로그인해 <code>/dashboard</code>에 도착했습니다.</td>
           </tr>
           <tr>
-            <td>authed routes</td>
+            <td>로그인 후 화면</td>
             <td><span class="badge info">REVIEW</span></td>
             <td>
               <code>/dashboard</code>, <code>/practice/problems</code>,
               <code>/writing/short-answer-writing-51</code>, <code>/library</code>,
-              <code>/settings/language</code>, <code>/paywall</code>, <code>/subscription</code> 렌더링.
-              다만 구독/약관/테스트 데이터 이슈는 별도 결함으로 기록.
+              <code>/settings/language</code>, <code>/paywall</code>, <code>/subscription</code>이 렌더링됐습니다.
+              다만 구독, 평가, 테스트 데이터 관련 이슈는 별도 결함으로 남겼습니다.
             </td>
           </tr>
         </tbody>
@@ -400,179 +469,181 @@
 
       <div class="gallery" aria-label="대표 스크린샷">
         <figure>
-          <img src="qa-report-20260702-1055-evidence/landing-mobile-360.png" alt="Landing mobile screenshot" />
-          <figcaption>Landing mobile - 렌더링 확인</figcaption>
+          <img src="qa-report-20260702-1055-evidence/landing-mobile-360.png" alt="모바일 랜딩 화면" />
+          <figcaption>랜딩 모바일 - 화면이 열리는지 확인</figcaption>
         </figure>
         <figure>
-          <img src="qa-report-20260702-1055-evidence/terms-mobile-360.png" alt="Terms mobile screenshot" />
-          <figcaption>Terms mobile - raw HTML/markdown 노출</figcaption>
+          <img src="qa-report-20260702-1055-evidence/terms-mobile-360.png" alt="모바일 약관 화면" />
+          <figcaption>약관 모바일 - HTML/Markdown 기호가 그대로 보임</figcaption>
         </figure>
         <figure>
-          <img src="qa-report-20260702-1055-evidence/password-reset-mobile-360.png" alt="Password reset mobile screenshot" />
-          <figcaption>Password reset mobile - 실제 화면은 한국어 렌더링</figcaption>
+          <img src="qa-report-20260702-1055-evidence/password-reset-mobile-360.png" alt="모바일 비밀번호 재설정 화면" />
+          <figcaption>비밀번호 재설정 모바일 - 실제 화면은 한국어로 렌더링됨</figcaption>
         </figure>
         <figure>
-          <img src="qa-report-20260702-1055-evidence/paywall-mobile-360.png" alt="Paywall mobile screenshot" />
-          <figcaption>Paywall mobile - 플랜 없음 상태</figcaption>
+          <img src="qa-report-20260702-1055-evidence/paywall-mobile-360.png" alt="모바일 결제 안내 화면" />
+          <figcaption>결제 안내 모바일 - 이용 가능한 플랜이 없는 상태</figcaption>
         </figure>
         <figure>
-          <img src="qa-report-20260702-1055-evidence/subscription-mobile-360.png" alt="Subscription mobile screenshot" />
-          <figcaption>Subscription mobile - 준비 중 안내</figcaption>
+          <img src="qa-report-20260702-1055-evidence/subscription-mobile-360.png" alt="모바일 구독 관리 화면" />
+          <figcaption>구독 관리 모바일 - 준비 중 안내</figcaption>
         </figure>
         <figure>
-          <img src="qa-report-20260702-1055-evidence/dashboard-mobile-360.png" alt="Dashboard mobile screenshot" />
-          <figcaption>Dashboard mobile - 로그인 후 렌더링</figcaption>
+          <img src="qa-report-20260702-1055-evidence/dashboard-mobile-360.png" alt="모바일 대시보드 화면" />
+          <figcaption>대시보드 모바일 - 로그인 후 화면 렌더링 확인</figcaption>
         </figure>
       </div>
 
-      <h2>결함 로그</h2>
+      <h2>발견한 문제</h2>
       <table>
         <thead>
           <tr>
             <th>ID</th>
             <th>등급</th>
-            <th>영역</th>
-            <th>현상</th>
-            <th>재현/근거</th>
-            <th>권장 후속 조치</th>
+            <th>어디에서</th>
+            <th>무슨 문제인가</th>
+            <th>왜 중요한가</th>
+            <th>다음 조치</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td>QA-20260702-01</td>
             <td><span class="badge fail">P1</span></td>
-            <td>Security boundary</td>
-            <td><code>harness:admin-boundary</code>가 v13 코드의 admin-owned object 참조를 차단.</td>
+            <td>사용자 앱과 관리자 영역 경계</td>
+            <td><code>harness:admin-boundary</code>가 관리자 전용 개체 이름을 감지했습니다.</td>
             <td>
-              <code>operation_policies</code> 문자열이 terms/legal 주석에서 감지됨. 현재 확인 범위에서는 런타임 DB 호출이 아니라
-              주석이지만 자동 release gate는 실패.
+              v13은 사용자 앱이므로 관리자 전용 개념이 섞이면 제품 범위와 보안 경계가 흐려집니다.
+              현재 확인만으로 실제 DB 노출이 있었다고 말할 수는 없지만, 자동 릴리스 게이트는 실패했습니다.
             </td>
             <td>
-              주석 표현을 v13 허용 용어로 바꾸거나, 실제로 허용해야 하는 경우 SOT 승인 예외를
-              <code>docs/sot-change-proposals/</code>로 제안.
+              약관/법무 문서의 표현을 v13에서 허용되는 표현으로 바꾸거나,
+              정말 필요한 참조라면 <code>docs/sot-change-proposals/</code>에 예외 제안을 작성해야 합니다.
             </td>
           </tr>
           <tr>
             <td>QA-20260702-02</td>
             <td><span class="badge warn">P2</span></td>
-            <td>Formatting</td>
-            <td><code>pnpm format</code> 실패.</td>
-            <td>Prettier check가 271개 파일 formatting issue 보고.</td>
-            <td>별도 formatting-only 작업으로 정리. 현재 QA 범위에서는 코드 변경하지 않음.</td>
+            <td>코드 정리 상태</td>
+            <td><code>pnpm format</code>이 실패했습니다.</td>
+            <td>형식이 맞지 않는 파일이 많으면 이후 변경 diff가 커지고, 실제 기능 변경과 단순 정리가 섞일 수 있습니다.</td>
+            <td>별도 formatting-only 작업으로 정리합니다. 이번 QA에서는 코드 정리를 하지 않았습니다.</td>
           </tr>
           <tr>
             <td>QA-20260702-03</td>
             <td><span class="badge warn">P2</span></td>
-            <td><code>/terms</code></td>
-            <td>이용약관 본문에 <code>&lt;div&gt;</code>, <code>&lt;br&gt;</code>, markdown heading이 사용자에게 그대로 보임. heading role도 없음.</td>
-            <td>
-              <code>screens-public.spec.ts</code> X-13 실패,
-              <code>terms-mobile-360.png</code>, browser summary <code>rawHtmlVisible=true</code>.
-            </td>
-            <td>약관 body 저장 형식과 렌더러 계약을 정리하고 HTML/markdown을 의도한 방식으로 렌더링.</td>
+            <td><code>/terms</code> 약관 화면</td>
+            <td>화면 본문에 <code>&lt;div&gt;</code>, <code>&lt;br&gt;</code>, Markdown 제목 기호가 그대로 보입니다.</td>
+            <td>사용자는 약관 내용을 읽어야 하는데, 코드처럼 보이는 기호가 섞이면 신뢰도가 떨어지고 읽기 어렵습니다.</td>
+            <td>약관 본문 저장 형식과 화면 렌더링 방식을 맞춰서 HTML/Markdown 기호가 사용자에게 보이지 않게 합니다.</td>
           </tr>
           <tr>
             <td>QA-20260702-04</td>
             <td><span class="badge warn">P2</span></td>
-            <td><code>/password-reset</code> E2E</td>
-            <td>자동 테스트는 한국어 label을 찾지 못해 실패했지만 스모크 화면은 한국어로 정상 렌더링.</td>
-            <td>
-              <code>tests/e2e/screens/password-reset.spec.ts</code>에서 <code>getByLabel("이메일")</code>
-              기대가 실패한 것으로 보임. error-context의 접근성 snapshot은 인코딩이 깨져 English로 보였고, 실제 스크린샷은 한국어.
-            </td>
-            <td>테스트 실행 인코딩/locale 고정과 accessible name 쿼리 안정화 필요.</td>
+            <td><code>/password-reset</code> E2E 테스트</td>
+            <td>자동 테스트가 한국어 label을 찾지 못해 실패했지만, 실제 스크린샷에서는 화면이 한국어로 정상 표시됩니다.</td>
+            <td>제품 문제인지 테스트 기준 문제인지 분리해야 합니다. 지금 증거로는 테스트 쪽 locale 또는 접근성 이름 기준이 흔들렸을 가능성이 큽니다.</td>
+            <td>테스트 실행 locale을 고정하고, label을 찾는 기준을 현재 화면과 맞춥니다.</td>
           </tr>
           <tr>
             <td>QA-20260702-05</td>
             <td><span class="badge warn">P2</span></td>
-            <td><code>/paywall</code></td>
-            <td>테스트는 plan grid를 기대하지만 실제 화면은 "현재 안내 가능한 플랜이 없습니다" empty state.</td>
-            <td><code>paywall-plan-grid</code> 미발견. <code>paywall-mobile-360.png</code>.</td>
-            <td>결제 deferred scope 기준에서 empty state가 맞는지, 테스트가 fixture 플랜을 주입해야 하는지 결정.</td>
+            <td><code>/paywall</code> 결제 안내 화면</td>
+            <td>테스트는 플랜 목록을 기대했지만 실제 화면은 “현재 안내 가능한 플랜이 없습니다”라는 빈 상태입니다.</td>
+            <td>결제 기능은 보류 범위일 수 있어, 제품 의도와 테스트 기대값을 맞춰야 합니다.</td>
+            <td>빈 상태가 맞는지 결정합니다. 플랜 목록이 필요하다면 테스트 fixture로 플랜 데이터를 넣어야 합니다.</td>
           </tr>
           <tr>
             <td>QA-20260702-06</td>
             <td><span class="badge warn">P2</span></td>
-            <td>C-03 retry modal</td>
-            <td>재시도 modal 테스트 3건이 secondary action 버튼을 찾지 못함.</td>
-            <td><code>.problem-table__action-button--secondary</code> 미발견. 현재 문제 목록 데이터/selector drift 가능.</td>
-            <td>재시도 가능한 문제 fixture를 고정하거나 selector/test contract를 현재 UI에 맞게 갱신.</td>
+            <td>C-03 다시풀기 modal</td>
+            <td>다시풀기 modal 테스트 3건이 보조 버튼을 찾지 못했습니다.</td>
+            <td>문제 목록 데이터나 버튼 selector가 현재 UI와 어긋났을 수 있습니다.</td>
+            <td>다시풀기 가능한 문제 fixture를 고정하거나, 테스트 selector를 현재 UI 계약에 맞게 갱신합니다.</td>
           </tr>
           <tr>
             <td>QA-20260702-07</td>
             <td><span class="badge info">UNVERIFIED</span></td>
-            <td>Feedback routes</td>
-            <td>E-01/E-02 feedback 화면 테스트가 heading 미표시로 실패. 이전 스크린샷에서는 404 fallback 확인.</td>
-            <td>동적 submission id fixture가 현재 데이터와 맞지 않을 가능성.</td>
-            <td>feedback id fixture 생성/정리 절차를 고정한 뒤 재실행.</td>
+            <td>피드백 화면</td>
+            <td>E-01/E-02 피드백 화면 테스트가 heading을 찾지 못했습니다. 이전 스크린샷에서는 404 fallback이 보였습니다.</td>
+            <td>실제 제품 문제인지, 테스트가 사용하는 submission id가 현재 데이터와 맞지 않는 문제인지 아직 확정할 수 없습니다.</td>
+            <td>feedback id fixture 생성과 정리 절차를 고정한 뒤 다시 확인합니다.</td>
           </tr>
           <tr>
             <td>QA-20260702-08</td>
             <td><span class="badge warn">P2</span></td>
-            <td>Build warning</td>
-            <td>Landing CTA auth user 판별 중 cookies 사용으로 <code>DYNAMIC_SERVER_USAGE</code> 경고.</td>
-            <td><code>pnpm build</code>는 exit 0이지만 warning/error 로그 출력.</td>
-            <td>정적 렌더링 의도와 cookie 기반 CTA 분기를 재검토. 경고가 의도된 dynamic fallback이면 문서화.</td>
+            <td>빌드 경고</td>
+            <td>랜딩 CTA가 auth user를 확인하는 과정에서 쿠키를 사용해 <code>DYNAMIC_SERVER_USAGE</code> 경고가 나왔습니다.</td>
+            <td>정적으로 만들 수 있는 페이지가 동적으로 처리될 수 있어, 빌드 결과와 캐시 전략이 흔들릴 수 있습니다.</td>
+            <td>랜딩 CTA의 로그인 상태 분기를 어떻게 처리할지 정하고, 의도된 동적 처리라면 문서화합니다.</td>
           </tr>
           <tr>
             <td>QA-20260702-09</td>
             <td><span class="badge warn">P2</span></td>
-            <td>Runtime warning</td>
-            <td>Recharts container width/height가 <code>-1</code>이라는 warning 반복.</td>
-            <td><code>next-start.err.log</code>에 chart size warning 4회.</td>
-            <td>차트 부모 컨테이너의 mobile/min-size 조건 확인.</td>
+            <td>런타임 경고</td>
+            <td>Recharts 차트 컨테이너의 width/height가 <code>-1</code>로 잡혔다는 경고가 반복됐습니다.</td>
+            <td>모바일 또는 작은 화면에서 차트 크기가 제대로 계산되지 않을 수 있습니다.</td>
+            <td>차트 부모 컨테이너의 최소 크기와 모바일 레이아웃 조건을 확인합니다.</td>
           </tr>
         </tbody>
       </table>
 
-      <h2>미검증 항목</h2>
+      <h2>아직 검증하지 못한 것</h2>
       <ul>
-        <li><code>pnpm test:e2e</code>가 mobile project 진행 중 timeout되어 tablet/desktop 전체 E2E는 완료 검증하지 못함.</li>
-        <li>RLS 두 사용자 row isolation은 별도 두 번째 계정/fixture 없이 직접 검증하지 못함.</li>
-        <li>Feedback/report dynamic id 기반 화면은 fixture 불일치 가능성 때문에 제품 결함인지 테스트 데이터 결함인지 확정하지 못함.</li>
-        <li>local Supabase Docker-gated 테스트는 이번 계획 범위에서 별도로 실행하지 않았고, unit suite에서는 skip으로 남음.</li>
+        <li><code>pnpm test:e2e</code>가 mobile project 진행 중 timeout되어 tablet/desktop 전체 E2E 완료를 확인하지 못했습니다.</li>
+        <li>사용자별 데이터 격리와 RLS는 별도 테스트 계정/fixture 없이 직접 검증하지 못했습니다.</li>
+        <li>피드백/리포트처럼 동적 id가 필요한 화면은 테스트 데이터 문제인지 제품 문제인지 확정하지 못했습니다.</li>
+        <li>local Supabase Docker가 필요한 테스트는 이번 범위에서 별도로 실행하지 않았고, unit suite에서도 skip 상태였습니다.</li>
       </ul>
 
-      <h2>보안/데이터 확인</h2>
+      <h2>보안과 데이터 확인</h2>
       <ul>
         <li>
-          브라우저 정적 번들 <code>.next/static</code>에서 <code>SUPABASE_SERVICE_ROLE_KEY</code>,
-          <code>SUPABASE_ACCESS_TOKEN</code>, <code>SUPABASE_TEST_PASSWORD</code>의 값과 변수명을 검색했고 모두 미검출.
+          정적 브라우저 번들 <code>.next/static</code>에서
+          <code>SUPABASE_SERVICE_ROLE_KEY</code>,
+          <code>SUPABASE_ACCESS_TOKEN</code>,
+          <code>SUPABASE_TEST_PASSWORD</code>의 값과 변수명을 검색했고, 발견되지 않았습니다.
         </li>
-        <li>비로그인 상태 <code>/dashboard</code>, <code>/admin</code> 접근은 <code>/login</code>으로 리다이렉트.</li>
-        <li>E2E 과정에서 기존 E2E student 계정 setup이 실행되었을 수 있으나, 수동 QA는 별도 custom seed row를 만들지 않음.</li>
-        <li>auth-state와 trace zip은 report evidence로 복사하지 않음.</li>
+        <li>비로그인 상태에서 <code>/dashboard</code>, <code>/admin</code>에 접근하면 <code>/login</code>으로 이동했습니다.</li>
+        <li>E2E 과정에서 기존 E2E student 계정 setup은 실행됐을 수 있지만, 수동 QA에서 별도 custom seed row를 만들지는 않았습니다.</li>
+        <li>auth-state와 trace zip은 민감 정보 가능성 때문에 보고서 증거 폴더에 복사하지 않았습니다.</li>
       </ul>
 
-      <h2>공식 문서 기반 인사이트</h2>
+      <h2>다음 순서 제안</h2>
+      <ol>
+        <li>P1 문제인 관리자 경계 검사 실패를 먼저 정리합니다.</li>
+        <li>약관 화면에서 HTML/Markdown 기호가 그대로 보이는 문제를 수정합니다.</li>
+        <li>비밀번호 재설정, 결제 안내, 다시풀기, 피드백 화면 테스트가 현재 제품 의도와 맞는지 정리합니다.</li>
+        <li>formatting-only 작업을 별도로 묶어 <code>pnpm format</code> 실패를 없앱니다.</li>
+        <li>전체 <code>pnpm test:e2e</code>가 timeout 없이 끝나는지 다시 확인합니다.</li>
+      </ol>
+
+      <h2>개발자용 참고</h2>
       <ul>
         <li>
-          Playwright 공식 문서는 trace가 <code>on-first-retry</code>, <code>retain-on-failure</code> 같은 모드로
-          실패 분석용 산출물을 만들 수 있다고 설명합니다.
-          이번 실행에서 trace zip은 <code>test-results</code>에 남겼고 민감 세션 산출물 복사 금지 정책 때문에 evidence에는 넣지 않았습니다.
+          Playwright trace zip은 실패 원인 분석에는 유용하지만, 이번 보고서에는 민감한 세션 정보가 섞일 수 있어 복사하지 않았습니다.
           참고:
           <a href="https://playwright.dev/docs/trace-viewer">Playwright Trace Viewer</a>,
-          <a href="https://playwright.dev/docs/test-use-options">Playwright test use options</a>.
+          <a href="https://playwright.dev/docs/test-use-options">Playwright test use options</a>
         </li>
         <li>
-          Supabase 공식 보안 문서는 service role/secret key를 frontend에 노출하지 말라고 명시합니다.
-          이번 QA의 <code>.next/static</code> secret 검색은 이 원칙을 검증하기 위한 정적 번들 확인입니다.
+          Supabase service role/secret key는 브라우저에 노출되면 안 됩니다.
+          이번 QA에서는 정적 번들에 secret 이름이나 값이 들어가지 않았는지 확인했습니다.
           참고:
-          <a href="https://supabase.com/docs/guides/database/secure-data">Supabase Securing your data</a>.
+          <a href="https://supabase.com/docs/guides/database/secure-data">Supabase Securing your data</a>
         </li>
         <li>
-          Next.js 공식 문서는 <code>NEXT_PUBLIC_</code> prefix가 붙은 환경 변수만 browser bundle에 노출된다고 설명하고,
-          <code>next.config.js env</code> 값은 항상 JavaScript bundle에 포함된다고 설명합니다.
-          따라서 secret은 runtime server env로만 유지해야 합니다.
+          Next.js는 <code>NEXT_PUBLIC_</code> prefix가 붙은 환경 변수를 브라우저 번들에서 사용할 수 있게 만듭니다.
+          secret은 서버 런타임 환경 변수로만 유지해야 합니다.
           참고:
           <a href="https://nextjs.org/docs/pages/guides/environment-variables">Next.js Environment Variables</a>,
-          <a href="https://nextjs.org/docs/app/api-reference/config/next-config-js/env">Next.js env config</a>.
+          <a href="https://nextjs.org/docs/app/api-reference/config/next-config-js/env">Next.js env config</a>
         </li>
         <li>
-          Supabase API 보안 문서는 Data API 접근 제어가 grants와 RLS 정책의 조합으로 결정된다고 설명합니다.
-          UI 스모크만으로는 row isolation을 증명할 수 없으므로, 두 사용자 fixture 기반 RLS 테스트가 별도로 필요합니다.
+          Supabase Data API 접근은 database grants와 RLS 정책 조합으로 결정됩니다.
+          화면 확인만으로 사용자별 row isolation을 증명할 수 없으므로 별도 RLS 테스트가 필요합니다.
           참고:
-          <a href="https://supabase.com/docs/guides/api/securing-your-api">Supabase Securing your API</a>.
+          <a href="https://supabase.com/docs/guides/api/securing-your-api">Supabase Securing your API</a>
         </li>
       </ul>
 
@@ -582,27 +653,30 @@
           <tr>
             <th>읽은 SOT/기준 문서</th>
             <td>
-              <code>AGENTS.md</code>, <code>README.md</code>, <code>TESTING.md</code>,
-              <code>package.json</code>, <code>docs/qa/plan/2026-07-02-ultraqa-deep-qa-execution-plan.md</code>,
-              <code>docs/qa/qa-execution-plan.md</code>, <code>playwright.config.ts</code>,
-              <code>docs/ia.md</code>, <code>docs/flow/user-flow.md</code>,
-              <code>docs/Wireframe/README.md</code>, <code>docs/ant-design/07-review-checklist.md</code>,
-              <code>supabase/migrations/INDEX.md</code>, <code>docs/Wireframe/data-usage-index.md</code>.
+              <code>AGENTS.md</code>, <code>README.md</code>,
+              <code>docs/user-communication-style.md</code>,
+              <code>docs/qa/reports/qa-report-20260702-1055.html</code>
             </td>
           </tr>
           <tr>
             <th>확인한 요구사항</th>
-            <td>코드 수정 제외, auth-state/trace 복사 금지, secret 출력 금지, HTML QA 리포트와 screenshot evidence 생성.</td>
+            <td>
+              사용자가 지정한 QA 보고서를 같은 위치에 덮어쓰기.
+              비개발자도 읽기 쉬운 말로 바꾸기.
+              기존 QA 판정과 증거 경로는 유지하기.
+            </td>
           </tr>
           <tr>
             <th>충돌 여부</th>
-            <td>QA 실행 자체와 SOT 충돌 없음. 단, admin-boundary gate는 v13/admin scope 경계 위반 가능성을 보고함.</td>
+            <td>
+              사용자 요청은 <code>docs/</code> 아래 파일 변경이지만, 대상 파일과 덮어쓰기가 명시되어 있어 해당 범위 안에서만 수정했습니다.
+              제품 동작이나 SOT 정책 자체는 바꾸지 않았습니다.
+            </td>
           </tr>
           <tr>
             <th>갱신 필요 문서</th>
             <td>
-              즉시 SOT 수정은 하지 않음. <code>operation_policies</code> 참조를 허용하려면
-              <code>docs/sot-change-proposals/</code>에 예외/계약 제안이 필요.
+              이번 작업은 기존 QA 보고서 표현을 쉽게 바꾼 것이므로 추가 SOT 변경 제안은 만들지 않았습니다.
             </td>
           </tr>
         </tbody>
