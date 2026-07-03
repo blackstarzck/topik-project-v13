@@ -31,6 +31,7 @@ import {
 import {
   buildAffiliationMetadata,
   clearStoredAffiliationCode,
+  readStoredAffiliationCode,
 } from "@/lib/auth/affiliation-code";
 import { POST_AUTH_SIGN_UP_PATH } from "@/lib/auth/completion-routes";
 import { buildAuthRedirectUrl } from "@/lib/auth/redirect-url";
