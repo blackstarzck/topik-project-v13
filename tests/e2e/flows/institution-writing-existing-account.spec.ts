@@ -1,6 +1,6 @@
 import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 
 test.use({ storageState: { cookies: [], origins: [] } });
@@ -37,6 +37,17 @@ const LOGIN_PASSWORD =
 const EXPECTED_COUNT = Number(
   process.env.E2E_EXISTING_INSTITUTION_EXPECTED_WRITING_COUNT ?? "1",
 );
+const DISABLED_WRITING_MENU_SELECTOR = [
+  "DirectboxNotif",
+  "ProgrammingArrows",
+  "PresentationChart",
+  "DocumentText",
+]
+  .map(
+    (iconName) =>
+      `.ant-menu-item-disabled:has([data-sidebar-icon-name="${iconName}"])`,
+  )
+  .join(", ");
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const PUBLISHABLE_KEY =
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
@@ -252,6 +263,18 @@ async function openWritingSidebarGroup(page: Page, projectName: string) {
   return sidebar;
 }
 
+async function expectDisabledWritingMenuItems(
+  menuScope: Locator,
+  expectedCount: number,
+) {
+  await expect(menuScope.locator(DISABLED_WRITING_MENU_SELECTOR)).toHaveCount(
+    expectedCount,
+  );
+  await expect(menuScope.locator(".app-sidebar-lock-label")).toHaveCount(0);
+  await expect(menuScope.locator(".app-sidebar-lock-icon")).toHaveCount(0);
+  await expect(menuScope.locator(".app-sidebar-lock-tag")).toHaveCount(0);
+}
+
 function collectErrors(page: Page) {
   const errors: string[] = [];
   page.on("pageerror", (error) => {
@@ -321,9 +344,7 @@ test("existing institution learner sees only assigned writing type", async ({
 
   const menuScope = await openWritingSidebarGroup(page, testInfo.project.name);
   await waitForAvailability(page);
-  await expect(menuScope.locator(".app-sidebar-lock-tag")).toHaveCount(
-    4 - EXPECTED_COUNT,
-  );
+  await expectDisabledWritingMenuItems(menuScope, 4 - EXPECTED_COUNT);
   await screenshot(page, "existing-account-sidebar", testInfo.project.name);
 
   await page.goto(writingPath(assignedProblem.questionNo), {

@@ -6114,24 +6114,6 @@ body {
   margin-inline-start: 0;
 }
 
-.app-sidebar-lock-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  width: 100%;
-}
-
-.app-sidebar-lock-icon {
-  flex-shrink: 0;
-  opacity: 0.7;
-}
-
-.app-sidebar-lock-tag {
-  margin-inline-start: auto;
-  font-size: 11px;
-  line-height: 16px;
-}
-
 /* 계정 설정 하단 footer 안에 들어가며, 위 경계는 섹션 <Divider>가 담당하므로
    자체 border-top/여백은 두지 않는다. */
 .app-profile-logout {
