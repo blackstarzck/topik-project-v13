@@ -126,12 +126,14 @@ describe("LibraryProblemsList", () => {
     expect(rows[0].getAttribute("data-library-kind")).toBe("problem");
     expect(rows[1].getAttribute("data-library-kind")).toBe("submission");
 
+    // 유형 라벨은 행 태그와 필터 카드에 함께 노출된다.
     expect(
-      screen.getByText(koMessages.library.problemsList.typeProblem),
-    ).toBeTruthy();
+      screen.getAllByText(koMessages.library.problemsList.typeProblem).length,
+    ).toBeGreaterThan(0);
     expect(
-      screen.getByText(koMessages.library.problemsList.typeSubmission),
-    ).toBeTruthy();
+      screen.getAllByText(koMessages.library.problemsList.typeSubmission)
+        .length,
+    ).toBeGreaterThan(0);
 
     expect(
       screen
@@ -212,5 +214,86 @@ describe("LibraryProblemsList", () => {
       10,
     );
     expect(screen.getByTestId("library-pagination")).toBeTruthy();
+  });
+
+  it("renders filter cards with facet counts", async () => {
+    renderList();
+
+    expect(screen.getByTestId("library-problems-filter-cards")).toBeTruthy();
+    expect(
+      screen.getByTestId("library-problems-filter-count-submissions")
+        .textContent,
+    ).toBe("1");
+    expect(
+      screen.getByTestId("library-problems-filter-count-problems").textContent,
+    ).toBe("1");
+
+    // enrichment 반영 후 complete=1, pending=0으로 이동한다.
+    await waitFor(() => {
+      expect(
+        screen.getByTestId("library-problems-filter-count-statusComplete")
+          .textContent,
+      ).toBe("1");
+    });
+    expect(
+      screen.getByTestId("library-problems-filter-count-statusPending")
+        .textContent,
+    ).toBe("0");
+    expect(
+      screen.getByTestId("library-problems-filter-count-providedEnded")
+        .textContent,
+    ).toBe("0");
+  });
+
+  it("filters the list by checked cards as a union", () => {
+    renderList();
+
+    fireEvent.click(
+      screen.getByTestId("library-problems-filter-card-submissions"),
+    );
+    let rows = screen.getAllByTestId("library-problems-mixed-row");
+    expect(rows).toHaveLength(1);
+    expect(rows[0].getAttribute("data-library-kind")).toBe("submission");
+
+    fireEvent.click(
+      screen.getByTestId("library-problems-filter-card-problems"),
+    );
+    rows = screen.getAllByTestId("library-problems-mixed-row");
+    expect(rows).toHaveLength(2);
+
+    fireEvent.click(
+      screen.getByTestId("library-problems-filter-card-submissions"),
+    );
+    rows = screen.getAllByTestId("library-problems-mixed-row");
+    expect(rows).toHaveLength(1);
+    expect(rows[0].getAttribute("data-library-kind")).toBe("problem");
+  });
+
+  it("shows the filter empty state and resets checked filters", () => {
+    renderList();
+
+    fireEvent.click(
+      screen.getByTestId("library-problems-filter-card-statusFailed"),
+    );
+    expect(
+      screen.getByText(koMessages.library.problemsList.emptyFiltered),
+    ).toBeTruthy();
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: koMessages.library.saved.resetFilter,
+      }),
+    );
+    expect(screen.getAllByTestId("library-problems-mixed-row")).toHaveLength(2);
+  });
+
+  it("hides filter cards when nothing is saved", () => {
+    configureQueries({ submissions: [], problems: [] });
+
+    renderList(
+      <LibraryProblemsList initialSubmissions={[]} initialProblems={[]} />,
+    );
+
+    expect(screen.queryByTestId("library-problems-filter-cards")).toBeNull();
   });
 });

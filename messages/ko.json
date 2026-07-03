@@ -2032,6 +2032,8 @@
       "searchAriaLabel": "저장 답안과 문제 검색",
       "typeSubmission": "저장 답안",
       "typeProblem": "저장 문제",
+      "filterCardsAriaLabel": "유형·상태 필터",
+      "emptyFiltered": "선택한 조건에 맞는 항목이 없어요",
       "emptyNoItems": "저장한 답안이나 문제가 아직 없어요",
       "emptySearch": "검색 결과가 없어요",
       "resetSearch": "검색 초기화"

@@ -2032,6 +2032,8 @@
       "searchAriaLabel": "Tìm bài làm và câu hỏi đã lưu",
       "typeSubmission": "Bài làm đã lưu",
       "typeProblem": "Câu hỏi đã lưu",
+      "filterCardsAriaLabel": "Bộ lọc loại và trạng thái",
+      "emptyFiltered": "Không có mục nào khớp với bộ lọc đã chọn.",
       "emptyNoItems": "Chưa có bài làm hoặc câu hỏi nào được lưu.",
       "emptySearch": "Không có kết quả tìm kiếm.",
       "resetSearch": "Đặt lại tìm kiếm"
