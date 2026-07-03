@@ -112,14 +112,22 @@ test.describe("institution invite authenticated entry", () => {
 
     await expect(
       page.getByRole("button", {
-        name: "위 내용을 확인하고 이 계정으로 기관에 연결",
+        name: "기관에 연결",
       }),
     ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "기관에 연결" }),
+    ).toBeDisabled();
     expect(rpcCalls).toEqual([]);
+
+    await page.getByRole("checkbox", { name: "동의하시겠습니까?" }).check();
+    await expect(
+      page.getByRole("button", { name: "기관에 연결" }),
+    ).toBeEnabled();
 
     await page
       .getByRole("button", {
-        name: "위 내용을 확인하고 이 계정으로 기관에 연결",
+        name: "기관에 연결",
       })
       .click();
 
@@ -137,7 +145,7 @@ test.describe("institution invite authenticated entry", () => {
       waitUntil: "networkidle",
     });
 
-    await page.getByRole("button", { name: "연결하지 않고 계속" }).click();
+    await page.getByRole("link", { name: "연결하지 않고 계속" }).click();
     await expect(page).toHaveURL(/\/dashboard/);
     expect(rpcCalls).toEqual([]);
   });
@@ -157,7 +165,7 @@ test.describe("institution invite authenticated entry", () => {
     ).toBeVisible();
     await expect(
       page.getByRole("button", {
-        name: "위 내용을 확인하고 이 계정으로 기관에 연결",
+        name: "기관에 연결",
       }),
     ).toHaveCount(0);
     expect(rpcCalls).toEqual([]);

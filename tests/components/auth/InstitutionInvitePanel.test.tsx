@@ -165,12 +165,22 @@ describe("InstitutionInvitePanel", () => {
     ).toBeTruthy();
     expect(acceptStoredAffiliationInviteMock).not.toHaveBeenCalled();
 
+    const consentCheckbox = screen.getByRole("checkbox", {
+      name: "동의하시겠습니까?",
+    });
+    const acceptButton = screen.getByRole("button", {
+      name: "기관에 연결",
+    }) as HTMLButtonElement;
+    expect(acceptButton.disabled).toBe(true);
+
     await act(async () => {
-      fireEvent.click(
-        screen.getByRole("button", {
-          name: "위 내용을 확인하고 이 계정으로 기관에 연결",
-        }),
-      );
+      fireEvent.click(consentCheckbox);
+    });
+
+    expect(acceptButton.disabled).toBe(false);
+
+    await act(async () => {
+      fireEvent.click(acceptButton);
     });
 
     await waitFor(() => {
@@ -194,7 +204,7 @@ describe("InstitutionInvitePanel", () => {
     await screen.findByText("learner@example.com");
 
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "연결하지 않고 계속" }));
+      fireEvent.click(screen.getByRole("link", { name: "연결하지 않고 계속" }));
     });
 
     expect(clearStoredAffiliationCodeMock).toHaveBeenCalledTimes(1);
@@ -219,7 +229,7 @@ describe("InstitutionInvitePanel", () => {
     ).toBeTruthy();
     expect(
       screen.queryByRole("button", {
-        name: "위 내용을 확인하고 이 계정으로 기관에 연결",
+        name: "기관에 연결",
       }),
     ).toBeNull();
 
@@ -244,11 +254,14 @@ describe("InstitutionInvitePanel", () => {
     await screen.findByText("learner@example.com");
     const acceptButton = container.querySelector(
       ".institution-invite-actions .ant-btn-primary",
-    );
+    ) as HTMLButtonElement | null;
     expect(acceptButton).toBeTruthy();
 
     await act(async () => {
-      fireEvent.click(acceptButton as HTMLElement);
+      fireEvent.click(
+        screen.getByRole("checkbox", { name: "동의하시겠습니까?" }),
+      );
+      fireEvent.click(acceptButton as HTMLButtonElement);
     });
 
     await waitFor(() => {
