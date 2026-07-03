@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it } from "vitest";
-import { cleanup, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { cleanup, screen, within } from "@testing-library/react";
 
 import { LibraryDashboard } from "../../../src/components/library/LibraryDashboard";
 import type { LibraryDashboardView } from "../../../src/lib/library/types";
@@ -82,8 +82,14 @@ const dashboardFixture: LibraryDashboardView = {
   ],
 };
 
+beforeEach(() => {
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date("2026-07-04T12:00:00.000Z"));
+});
+
 afterEach(() => {
   cleanup();
+  vi.useRealTimers();
 });
 
 describe("LibraryDashboard", () => {
@@ -95,10 +101,65 @@ describe("LibraryDashboard", () => {
       "gap-10",
     );
     expect(screen.getByTestId("library-kpi-strip")).toBeTruthy();
+    for (const card of screen.getAllByTestId("library-kpi-card")) {
+      expect(card.querySelector(".library-kpi-icon")).toBeNull();
+      expect(within(card).queryByRole("img", { hidden: true })).toBeNull();
+      expect(card.querySelector("svg")).toBeNull();
+      expect(within(card).queryByText(/건$/)).toBeNull();
+    }
+    expect(
+      screen.getByTestId("library-kpi-card-reviewable").textContent,
+    ).toContain("12");
+    expect(
+      screen.getByTestId("library-kpi-card-feedbackWaiting").textContent,
+    ).toContain("2");
+    expect(
+      screen.getByTestId("library-kpi-card-comparison").textContent,
+    ).toContain("3");
+    for (const testId of [
+      "library-kpi-card-reviewable",
+      "library-kpi-card-feedbackWaiting",
+      "library-kpi-card-comparison",
+    ]) {
+      expect(
+        within(screen.getByTestId(testId)).getByTestId("library-kpi-value")
+          .className,
+      ).toContain("!text-[24px]");
+    }
+    expect(
+      screen.getByTestId("library-kpi-card-recentStudy").textContent,
+    ).toContain("6월 29일");
+    expect(
+      within(screen.getByTestId("library-kpi-card-recentStudy")).getByText(
+        "최근 학습일 6월 29일",
+      ),
+    ).toBeTruthy();
+    expect(
+      within(screen.getByTestId("library-kpi-card-recentStudy")).getByText(
+        "마지막 학습 후 5일",
+      ),
+    ).toBeTruthy();
+    expect(
+      within(screen.getByTestId("library-kpi-card-recentStudy")).queryByText(
+        "최근 학습",
+      ),
+    ).toBeNull();
+    expect(
+      screen
+        .getByTestId("library-kpi-card-recentStudy")
+        .textContent?.startsWith("최근 학습일 6월 29일"),
+    ).toBe(true);
+    expect(screen.queryByText("12건")).toBeNull();
+    expect(screen.queryByText("2건")).toBeNull();
+    expect(screen.queryByText("3건")).toBeNull();
+    expect(screen.queryByText("복습할 수 있는 저장 답안")).toBeNull();
+    expect(screen.queryByText("AI 분석을 기다리는 답안")).toBeNull();
+    expect(screen.queryByText("비교 리포트를 만들 수 있는 답안")).toBeNull();
+    expect(screen.queryByText("마지막 제출일 기준")).toBeNull();
     expect(screen.getAllByText("복습 가능").length).toBeGreaterThan(0);
     expect(screen.getAllByText("피드백 대기").length).toBeGreaterThan(0);
     expect(screen.getAllByText("비교 가능").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("최근 학습").length).toBeGreaterThan(0);
+    expect(screen.queryByText("최근 학습")).toBeNull();
     expect(
       screen.getByTestId("library-review-candidate-card").textContent,
     ).toContain("문화 사회형 질문");
@@ -111,6 +172,40 @@ describe("LibraryDashboard", () => {
     expect(screen.getByTestId("library-feedback-waiting-panel")).toBeTruthy();
     expect(screen.getByTestId("library-weak-items-panel")).toBeTruthy();
     expect(screen.getByTestId("library-timeline-panel")).toBeTruthy();
+  });
+
+  it("uses AntD Card heads and footer actions for the bottom dashboard panels", () => {
+    renderWithIntl(<LibraryDashboard dashboard={dashboardFixture} />);
+
+    const feedbackWaitingPanel = screen.getByTestId(
+      "library-feedback-waiting-panel",
+    );
+    const weakItemsPanel = screen.getByTestId("library-weak-items-panel");
+    const timelinePanel = screen.getByTestId("library-timeline-panel");
+
+    for (const panel of [feedbackWaitingPanel, weakItemsPanel, timelinePanel]) {
+      expect(panel.classList.contains("ant-card")).toBe(true);
+      expect(panel.classList.contains("app-card")).toBe(true);
+    }
+
+    expect(
+      feedbackWaitingPanel.querySelector(".ant-card-head-title")?.textContent,
+    ).toContain("피드백 대기");
+    expect(
+      weakItemsPanel.querySelector(".ant-card-head-title")?.textContent,
+    ).toContain("최근 낮게 나온 항목");
+    expect(
+      timelinePanel.querySelector(".ant-card-head-title")?.textContent,
+    ).toContain("학습 타임라인");
+
+    expect(screen.queryByText("최근 완료된 피드백 기준")).toBeNull();
+
+    const timelineViewAll = screen.getByRole("link", {
+      name: "전체 타임라인 보기",
+    });
+    expect(timelineViewAll.closest(".ant-card-actions")).toBeTruthy();
+    expect(timelineViewAll.closest(".app-card-footer-actions")).toBeTruthy();
+    expect(timelineViewAll.closest(".ant-card-body")).toBeNull();
   });
 
   it("renders the review empty state with a practice CTA", () => {

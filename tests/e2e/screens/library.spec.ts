@@ -320,6 +320,36 @@ test("F-01 library dashboard renders study action sections", async ({
   await expect(page.getByTestId("library-kpi-card")).toHaveCount(4);
   await expect(page.getByText("복습 가능").first()).toBeVisible();
   await expect(page.getByText("비교 가능").first()).toBeVisible();
+  await expect(page.getByTestId("library-kpi-card-reviewable")).toContainText(
+    "12",
+  );
+  await expect(
+    page.getByTestId("library-kpi-card-feedbackWaiting"),
+  ).toContainText("2");
+  await expect(page.getByTestId("library-kpi-card-comparison")).toContainText(
+    /\d+/,
+  );
+  for (const testId of [
+    "library-kpi-card-reviewable",
+    "library-kpi-card-feedbackWaiting",
+    "library-kpi-card-comparison",
+  ]) {
+    await expect(
+      page.getByTestId(testId).getByTestId("library-kpi-value"),
+    ).toHaveClass(/!text-\[24px\]/);
+  }
+  const recentStudyKpi = page.getByTestId("library-kpi-card-recentStudy");
+  await expect(recentStudyKpi).toContainText(/최근 학습일 \d+월 \d+일/);
+  await expect(
+    recentStudyKpi.getByText("최근 학습", { exact: true }),
+  ).toHaveCount(0);
+  await expect(recentStudyKpi).toHaveText(
+    /^\s*최근 학습일 \d+월 \d+일\s*마지막 학습 후 \d+(년|개월|주|일)\s*$/,
+  );
+  await expect(recentStudyKpi).toContainText(
+    /마지막 학습 후 \d+(년|개월|주|일)/,
+  );
+  await expect(page.getByTestId("library-kpi-strip")).not.toContainText("건");
   await expect(page.getByTestId("library-tabs")).toHaveCount(0);
   await expect(page.getByTestId("library-type-filter")).toHaveCount(0);
   await expect(page.getByTestId("library-search")).toHaveCount(0);
@@ -357,7 +387,7 @@ test("F-01 library dashboard renders study action sections", async ({
   );
   await page.getByTestId("library-problems-back-link").click();
   await expect(page).toHaveURL(/\/library$/);
-  await page.getByTestId("library-review-view-all").click();
+  await page.goto("/library/problems", { waitUntil: "load" });
   await expect(page).toHaveURL(/\/library\/problems$/);
   await expect(page.getByTestId("library-problems-workspace")).toBeVisible();
   await expect(page.getByTestId("library-problems-list")).toBeVisible();
@@ -396,13 +426,39 @@ test("F-01 library dashboard renders study action sections", async ({
   await expect(
     page.getByTestId("library-feedback-waiting-panel"),
   ).toBeVisible();
+  await expect(
+    page
+      .getByTestId("library-feedback-waiting-panel")
+      .locator(".ant-card-head-title"),
+  ).toContainText("피드백 대기");
   await expect(page.getByText("분석 실패").first()).toBeVisible();
   await expect(page.getByText("분석 중").first()).toBeVisible();
   await expect(page.getByTestId("library-weak-items-panel")).toBeVisible();
+  await expect(
+    page
+      .getByTestId("library-weak-items-panel")
+      .locator(".ant-card-head-title"),
+  ).toContainText("최근 낮게 나온 항목");
+  await expect(page.getByText("최근 완료된 피드백 기준")).toHaveCount(0);
   await expect(page.getByText("구성").first()).toBeVisible();
   await expect(page.getByTestId("library-timeline-panel")).toBeVisible();
+  await expect(
+    page.getByTestId("library-timeline-panel").locator(".ant-card-head-title"),
+  ).toContainText("학습 타임라인");
   await expect(page.getByText("답안 제출").first()).toBeVisible();
   await expect(page.getByText("피드백 확인").first()).toBeVisible();
+  await expect(
+    page
+      .getByTestId("library-timeline-panel")
+      .locator(".ant-card-actions")
+      .getByRole("link", { name: "전체 타임라인 보기" }),
+  ).toHaveAttribute("href", "/growth");
+  await expect(
+    page
+      .getByTestId("library-timeline-panel")
+      .locator(".ant-card-body")
+      .getByRole("link", { name: "전체 타임라인 보기" }),
+  ).toHaveCount(0);
 
   expect(errors).toEqual([]);
 });

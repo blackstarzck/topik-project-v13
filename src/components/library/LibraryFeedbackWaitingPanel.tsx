@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Empty, Tag, Typography } from "antd";
+import type { CardProps } from "antd";
 import { ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -12,7 +13,11 @@ import type {
 
 import { formatDashboardShortDateTime } from "./library-dashboard-format";
 
-const { Text, Title } = Typography;
+const { Text } = Typography;
+
+const cardClassNames = {
+  body: "flex-1",
+} satisfies CardProps["classNames"];
 
 type Props = {
   items: LibraryFeedbackWaitingItem[];
@@ -22,11 +27,13 @@ export function LibraryFeedbackWaitingPanel({ items }: Props) {
   const t = useTranslations("library.dashboard");
 
   return (
-    <AppCard data-testid="library-feedback-waiting-panel" className="h-full">
+    <AppCard
+      data-testid="library-feedback-waiting-panel"
+      title={t("waiting.title")}
+      className="flex h-full flex-col"
+      classNames={cardClassNames}
+    >
       <div className="flex h-full min-h-[220px] flex-col gap-4">
-        <Title level={5} className="m-0">
-          {t("waiting.title")}
-        </Title>
         {items.length === 0 ? (
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}

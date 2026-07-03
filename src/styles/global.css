@@ -4531,29 +4531,6 @@ body {
   margin-bottom: 16px;
 }
 
-.library-kpi-icon {
-  border: 1px solid var(--app-color-border);
-  background: var(--app-color-bg-layout);
-  color: var(--app-color-primary);
-}
-
-.library-kpi-icon--secondary {
-  color: var(--app-color-text-secondary);
-}
-
-.library-kpi-icon--link {
-  background: color-mix(
-    in srgb,
-    var(--app-color-link-secondary) 10%,
-    var(--app-color-bg-container)
-  );
-  color: var(--app-color-link-secondary);
-}
-
-.library-kpi-icon--muted {
-  color: var(--app-color-text-secondary);
-}
-
 .library-review-candidate-card.app-card.app-surface {
   display: flex;
   height: 100%;
@@ -6665,7 +6642,6 @@ body {
 .app-notification-feed-item--unread .app-notification-feed-item__button:hover {
   background: transparent;
 }
-
 
 .app-notification-feed-item__title.ant-typography {
   display: -webkit-box;

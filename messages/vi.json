@@ -1932,6 +1932,8 @@
         "comparisonDescription": "Bạn đã viết lại cùng một câu hỏi",
         "recentStudy": "Học gần đây",
         "recentStudyDescription": "Ngày nộp bài gần nhất",
+        "recentStudyDate": "Học gần nhất {date}",
+        "inactiveSince": "{duration} kể từ lần học gần nhất",
         "count": "{count}",
         "noRecentStudy": "Chưa có"
       },

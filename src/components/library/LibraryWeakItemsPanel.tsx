@@ -1,12 +1,17 @@
 "use client";
 
 import { Empty, Progress, Typography } from "antd";
+import type { CardProps } from "antd";
 import { useTranslations } from "next-intl";
 
 import { AppCard } from "@/components/shared/AppCard";
 import type { LibraryWeakItem } from "@/lib/library/types";
 
-const { Text, Title } = Typography;
+const { Text } = Typography;
+
+const cardClassNames = {
+  body: "flex-1",
+} satisfies CardProps["classNames"];
 
 type Props = {
   items: LibraryWeakItem[];
@@ -17,16 +22,13 @@ export function LibraryWeakItemsPanel({ items }: Props) {
   const tDim = useTranslations("library.stats.dimensions");
 
   return (
-    <AppCard data-testid="library-weak-items-panel" className="h-full">
+    <AppCard
+      data-testid="library-weak-items-panel"
+      title={t("weak.title")}
+      className="flex h-full flex-col"
+      classNames={cardClassNames}
+    >
       <div className="flex h-full min-h-[220px] flex-col gap-4">
-        <div className="flex items-start justify-between gap-3">
-          <Title level={5} className="m-0">
-            {t("weak.title")}
-          </Title>
-          <Text type="secondary" className="text-xs">
-            {t("weak.caption")}
-          </Text>
-        </div>
         {items.length === 0 ? (
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}

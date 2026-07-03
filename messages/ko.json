@@ -1932,6 +1932,8 @@
         "comparisonDescription": "같은 문제를 다시 쓴 기록이 있어요",
         "recentStudy": "최근 학습",
         "recentStudyDescription": "마지막 답안 제출일",
+        "recentStudyDate": "최근 학습일 {date}",
+        "inactiveSince": "마지막 학습 후 {duration}",
         "count": "{count}건",
         "noRecentStudy": "기록 없음"
       },

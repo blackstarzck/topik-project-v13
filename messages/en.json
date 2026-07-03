@@ -1932,6 +1932,8 @@
         "comparisonDescription": "You rewrote the same problem",
         "recentStudy": "Recent study",
         "recentStudyDescription": "Last answer submission date",
+        "recentStudyDate": "Last studied {date}",
+        "inactiveSince": "{duration} since last study",
         "count": "{count}",
         "noRecentStudy": "No record"
       },
