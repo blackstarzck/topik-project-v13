@@ -7,6 +7,7 @@ import {
   AnalysisLoadingPage,
   type AnalysisPhase,
 } from "@/components/feedback/AnalysisLoadingModal";
+import { APP_ROUTES } from "@/lib/routes";
 import { useFeedbackStatus } from "@/lib/writing/queries";
 import type { QuestionNo } from "@/lib/writing/types";
 
@@ -37,6 +38,11 @@ export function SubmittedAnalysisPanel({ state }: Props) {
   useEffect(() => {
     router.prefetch?.(state.feedbackHref as never);
   }, [router, state.feedbackHref]);
+
+  useEffect(() => {
+    if (!pollingExhausted) return;
+    router.replace(APP_ROUTES.library as never);
+  }, [pollingExhausted, router]);
 
   // 분석이 진행 중일 때만 브라우저 새로고침/닫기(beforeunload)와 뒤로가기(popstate)를
   // 기기 빌트인 확인 창으로 막는다. 분석은 history에 남지 않는 일시 상태라, 경고 없이

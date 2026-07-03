@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, screen } from "@testing-library/react";
+import { cleanup, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { SubmittedAnalysisPanel } from "../../../src/components/writing/SubmittedAnalysisPanel";
@@ -34,7 +34,7 @@ afterEach(() => {
 });
 
 describe("SubmittedAnalysisPanel exhausted polling state", () => {
-  it("shows the library handoff instead of leaving the learner in an endless analysis state", async () => {
+  it("automatically routes to the library instead of leaving the learner in an endless analysis state", async () => {
     renderWithIntl(
       <SubmittedAnalysisPanel
         state={{
@@ -52,9 +52,8 @@ describe("SubmittedAnalysisPanel exhausted polling state", () => {
       await screen.findByTestId("analysis-polling-exhausted"),
     ).toBeTruthy();
 
-    fireEvent.click(screen.getByTestId("analysis-library-status-link"));
-
-    expect(routerMocks.push).toHaveBeenCalledWith("/library");
+    expect(routerMocks.replace).toHaveBeenCalledWith("/library");
+    expect(routerMocks.push).not.toHaveBeenCalled();
     expect(screen.queryByTestId("analysis-loading-background")).toBeNull();
   });
 });
