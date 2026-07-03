@@ -371,10 +371,7 @@ describe("SignUpForm", () => {
   });
 
   it("does not add an expired affiliation code to email sign-up metadata", async () => {
-    storeAffiliationCode(
-      "EXPO2026-BOOTH-A",
-      Date.now() - THIRTY_MINUTES_MS,
-    );
+    storeAffiliationCode("EXPO2026-BOOTH-A", Date.now() - THIRTY_MINUTES_MS);
     renderInApp(<SignUpForm />);
 
     await fillValidSignUpForm();

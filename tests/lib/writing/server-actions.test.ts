@@ -362,12 +362,10 @@ describe("submitWritingAction", () => {
     helpers.fromMock.mockReturnValue({
       select: vi.fn(() => ({
         eq: vi.fn(() => ({
-          maybeSingle: vi
-            .fn()
-            .mockResolvedValue({
-              data: { status: "active", ui_locale: "vi" },
-              error: null,
-            }),
+          maybeSingle: vi.fn().mockResolvedValue({
+            data: { status: "active", ui_locale: "vi" },
+            error: null,
+          }),
         })),
       })),
     });

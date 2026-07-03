@@ -27,9 +27,9 @@ import { metadata } from "../../src/app/layout";
 
 describe("Root metadata", () => {
   it("registers the public thumbnail as the Open Graph and Twitter preview image", () => {
-    expect(
-      existsSync(join(process.cwd(), "public/assets/thumnail.png")),
-    ).toBe(true);
+    expect(existsSync(join(process.cwd(), "public/assets/thumnail.png"))).toBe(
+      true,
+    );
     expect(metadata.metadataBase?.toString()).toBe("http://127.0.0.1:3000/");
     expect(metadata.openGraph).toMatchObject({
       images: [
