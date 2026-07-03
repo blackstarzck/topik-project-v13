@@ -103,8 +103,7 @@ export function buildClientAuthCallbackUrl(
 }
 
 export function getGoogleOAuthBrowserSupport(
-  userAgent =
-    typeof navigator === "undefined" ? "" : navigator.userAgent,
+  userAgent = typeof navigator === "undefined" ? "" : navigator.userAgent,
 ): GoogleOAuthBrowserSupport {
   for (const disallowed of GOOGLE_OAUTH_DISALLOWED_USER_AGENTS) {
     if (disallowed.pattern.test(userAgent)) {
@@ -131,7 +130,9 @@ export async function startGoogleOAuth(
   return supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: buildClientAuthCallbackUrl(buildOAuthNextPath(intent, nextPath)),
+      redirectTo: buildClientAuthCallbackUrl(
+        buildOAuthNextPath(intent, nextPath),
+      ),
     },
   });
 }

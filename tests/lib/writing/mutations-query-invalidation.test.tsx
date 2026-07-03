@@ -121,9 +121,8 @@ describe("useUpsertDraft query invalidation", () => {
 
     await waitFor(() => {
       expect(
-        queryClient
-          .getQueryCache()
-          .find({ queryKey: PROBLEM_LIST_QUERY_KEY })?.state.isInvalidated,
+        queryClient.getQueryCache().find({ queryKey: PROBLEM_LIST_QUERY_KEY })
+          ?.state.isInvalidated,
       ).toBe(true);
     });
   });

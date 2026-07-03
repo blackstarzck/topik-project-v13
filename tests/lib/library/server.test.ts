@@ -141,7 +141,6 @@ describe("listLibraryItems(submissions)", () => {
       },
     ];
     const create = async () =>
-
       makeClient({
         library_items: { data: items },
         writing_submissions: { data: subs },
@@ -182,9 +181,9 @@ describe("listLibraryItems(submissions)", () => {
       makeClient({
         library_items: { data: null, error: { message: "permission denied" } },
       }) as never;
-    await expect(
-      listLibraryItems("u", "submissions", create),
-    ).rejects.toThrow(/permission denied/);
+    await expect(listLibraryItems("u", "submissions", create)).rejects.toThrow(
+      /permission denied/,
+    );
   });
 
   it("drops items whose underlying submission is not visible (RLS strip)", async () => {
@@ -239,7 +238,6 @@ describe("listLibraryItems(reports)", () => {
       },
     ];
     const create = async () =>
-
       makeClient({
         library_items: { data: items },
         comparison_reports: { data: reports },
@@ -275,12 +273,15 @@ describe("listLibraryItems(reports)", () => {
       },
     ];
     const create = async () =>
-
       makeClient({
         library_items: { data: items },
         comparison_reports: {
           data: [
-            { id: "rep-2", generated_at: "2026-05-20T00:00:00Z", narrative: null },
+            {
+              id: "rep-2",
+              generated_at: "2026-05-20T00:00:00Z",
+              narrative: null,
+            },
           ],
         },
       }) as never;
@@ -310,7 +311,6 @@ describe("listLibraryItems(problems)", () => {
       },
     ];
     const create = async () =>
-
       makeClient({
         library_items: { data: items },
         problems: {
@@ -351,26 +351,28 @@ describe("listLibraryItems(problems)", () => {
       },
     ];
     const create = async () =>
-
-      makeClient({
-        library_items: { data: items },
-      }, {
-        list_user_library_problem_items: {
-          data: [
-            {
-              item_id: "li-p-hidden",
-              problem_id: "p-hidden",
-              title: null,
-              question_no: null,
-              tags: ["bookmark"],
-              saved_at: "2026-05-21T00:00:00Z",
-              availability_status: "hard_unavailable",
-              availability_reason: null,
-              can_retry: false,
-            },
-          ],
+      makeClient(
+        {
+          library_items: { data: items },
         },
-      }) as never;
+        {
+          list_user_library_problem_items: {
+            data: [
+              {
+                item_id: "li-p-hidden",
+                problem_id: "p-hidden",
+                title: null,
+                question_no: null,
+                tags: ["bookmark"],
+                saved_at: "2026-05-21T00:00:00Z",
+                availability_status: "hard_unavailable",
+                availability_reason: null,
+                can_retry: false,
+              },
+            ],
+          },
+        },
+      ) as never;
     const out = await listLibraryItems("u", "problems", create);
     expect(out).toEqual([
       {
@@ -407,7 +409,6 @@ describe("listLibraryItems(exports)", () => {
       },
     ];
     const create = async () =>
-
       makeClient({
         library_items: { data: items },
         export_files: {

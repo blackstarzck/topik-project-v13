@@ -44,7 +44,9 @@ describe("ExternalFeedbackSupplement", () => {
     expect(
       screen.getByText("Start by matching the prompt context."),
     ).toBeTruthy();
-    expect(screen.getByText("Use formal endings in TOPIK writing.")).toBeTruthy();
+    expect(
+      screen.getByText("Use formal endings in TOPIK writing."),
+    ).toBeTruthy();
     expect(screen.getByText("Rewrite the sentence formally.")).toBeTruthy();
   });
 });

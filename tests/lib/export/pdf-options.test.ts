@@ -130,7 +130,7 @@ describe("sanitizePdfFilename", () => {
   });
 
   it("falls back to a default when everything is stripped", () => {
-    expect(sanitizePdfFilename('///***???')).toBe("talkpik-export");
+    expect(sanitizePdfFilename("///***???")).toBe("talkpik-export");
   });
 
   it("truncates to the max length", () => {

@@ -35,7 +35,11 @@ async function ensureUser() {
   const res = await fetch(`${URL_BASE}/auth/v1/admin/users`, {
     method: "POST",
     headers,
-    body: JSON.stringify({ email: EMAIL, password: PASSWORD, email_confirm: true }),
+    body: JSON.stringify({
+      email: EMAIL,
+      password: PASSWORD,
+      email_confirm: true,
+    }),
   });
   if (res.ok) {
     const j = await res.json();
@@ -43,10 +47,9 @@ async function ensureUser() {
     return j.id;
   }
   // already exists -> find id via admin list and reset password
-  const list = await fetch(
-    `${URL_BASE}/auth/v1/admin/users?per_page=200`,
-    { headers },
-  );
+  const list = await fetch(`${URL_BASE}/auth/v1/admin/users?per_page=200`, {
+    headers,
+  });
   const lj = await list.json();
   const found = (lj.users ?? []).find((u) => u.email === EMAIL);
   if (!found) {
@@ -69,7 +72,10 @@ async function main() {
   // profiles row (FK target for settings/notifications); upsert is safe.
   await service
     .from("profiles")
-    .upsert({ id: uid, display_name: EMAIL.split("@")[0] }, { onConflict: "id" });
+    .upsert(
+      { id: uid, display_name: EMAIL.split("@")[0] },
+      { onConflict: "id" },
+    );
 
   // notification_settings row (optin: in_app on).
   const { error: sErr } = await service.from("notification_settings").upsert(

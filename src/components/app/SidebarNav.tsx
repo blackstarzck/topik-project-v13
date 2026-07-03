@@ -157,7 +157,9 @@ function navIcon(key: string) {
     variant: "Linear",
   };
 
-  return <SidebarIcon icon={icon.component} iconName={icon.name} props={props} />;
+  return (
+    <SidebarIcon icon={icon.component} iconName={icon.name} props={props} />
+  );
 }
 
 function sidebarIconForKey(
@@ -190,7 +192,8 @@ function sidebarIconForKey(
   if (key === "writing" || key.startsWith("/writing/")) {
     return { component: Edit2, name: "Edit2" };
   }
-  if (key === "/library") return { component: ArchiveBook, name: "ArchiveBook" };
+  if (key === "/library")
+    return { component: ArchiveBook, name: "ArchiveBook" };
   if (key === "growth") {
     return { component: DocumentText, name: "DocumentText" };
   }

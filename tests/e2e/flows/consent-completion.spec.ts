@@ -9,12 +9,7 @@ test.use({
   storageState: { cookies: [], origins: [] },
 });
 
-const EVIDENCE_DIR = path.join(
-  "docs",
-  "qa",
-  "reports",
-  "auth-post-auth-gate",
-);
+const EVIDENCE_DIR = path.join("docs", "qa", "reports", "auth-post-auth-gate");
 
 type TempAuthGateData = {
   admin: SupabaseClient;
@@ -164,7 +159,10 @@ async function signInToAuthConsent(page: Page, tempData: TempAuthGateData) {
 
 async function selectCountryRegion(page: Page, label: string) {
   await page.getByTestId("auth-consent-country-select").click();
-  await page.locator(".ant-select-item-option").filter({ hasText: label }).click();
+  await page
+    .locator(".ant-select-item-option")
+    .filter({ hasText: label })
+    .click();
 }
 
 async function saveEvidenceScreenshot(page: Page, name: string) {
@@ -240,7 +238,9 @@ test("auth completion gate renders profile fields and admin-published consent do
       timeout: 10_000,
     });
     await expect(
-      page.getByText(/계속하려면 필수 정보를 입력하고 필요한 동의에 체크해야 합니다/),
+      page.getByText(
+        /계속하려면 필수 정보를 입력하고 필요한 동의에 체크해야 합니다/,
+      ),
     ).toBeVisible();
 
     await saveEvidenceScreenshot(

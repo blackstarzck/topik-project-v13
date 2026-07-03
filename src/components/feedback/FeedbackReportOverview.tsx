@@ -101,10 +101,7 @@ export function FeedbackReportOverview({
               const max = item.scoreMax ?? item.weightMax ?? totalMax;
               const percent =
                 score !== null && max > 0
-                  ? Math.max(
-                      0,
-                      Math.min(100, Math.round((score / max) * 100)),
-                    )
+                  ? Math.max(0, Math.min(100, Math.round((score / max) * 100)))
                   : 0;
               return (
                 <div

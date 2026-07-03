@@ -46,7 +46,9 @@ export function StatusHelpCard({
       key: "visibility",
       label: t("visibilityLabel").trim(),
       value:
-        visibility === "public" ? t("visibilityPublic") : t("visibilityPrivate"),
+        visibility === "public"
+          ? t("visibilityPublic")
+          : t("visibilityPrivate"),
     },
     { key: "role", label: t("roleLabelPrefix").trim(), value: roleLabel },
     { key: "plan", label: t("planLabelPrefix").trim(), value: planLabel },

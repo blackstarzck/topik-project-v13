@@ -278,7 +278,9 @@ function PdfExportModalBody({
                   <span className="flex min-w-0 items-center gap-2">
                     <Checkbox
                       checked={!excludedIds.has(item.itemId)}
-                      onChange={(e) => toggleItem(item.itemId, e.target.checked)}
+                      onChange={(e) =>
+                        toggleItem(item.itemId, e.target.checked)
+                      }
                     />
                     <Text ellipsis className="min-w-0">
                       {item.title}

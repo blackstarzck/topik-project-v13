@@ -134,7 +134,8 @@ describe("LibraryProblemsList", () => {
     ).toBeTruthy();
 
     expect(
-      screen.getByRole("link", { name: koMessages.library.saved.retry })
+      screen
+        .getByRole("link", { name: koMessages.library.saved.retry })
         .getAttribute("href"),
     ).toBe("/writing/answer-writing-52?problem=problem-52");
 
@@ -201,10 +202,15 @@ describe("LibraryProblemsList", () => {
     }));
 
     renderList(
-      <LibraryProblemsList initialSubmissions={[]} initialProblems={problems} />,
+      <LibraryProblemsList
+        initialSubmissions={[]}
+        initialProblems={problems}
+      />,
     );
 
-    expect(screen.getAllByTestId("library-problems-mixed-row")).toHaveLength(10);
+    expect(screen.getAllByTestId("library-problems-mixed-row")).toHaveLength(
+      10,
+    );
     expect(screen.getByTestId("library-pagination")).toBeTruthy();
   });
 });

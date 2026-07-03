@@ -11,10 +11,7 @@
 import { createSupabaseBrowserClient } from "../supabase/browser";
 import type { PdfExportErrorCode } from "./pdf-export-errors";
 import { triggerPdfExport } from "./pdf-export";
-import {
-  sanitizePdfFilename,
-  type PdfExportRequest,
-} from "./pdf-options";
+import { sanitizePdfFilename, type PdfExportRequest } from "./pdf-options";
 
 const BUCKET = "generated-exports";
 
@@ -115,9 +112,9 @@ export async function requestServerPdfExport(
   });
 
   if (!response.ok) {
-    const body = (await response.json().catch(() => null)) as
-      | PdfExportApiErrorBody
-      | null;
+    const body = (await response
+      .json()
+      .catch(() => null)) as PdfExportApiErrorBody | null;
     throw new PdfExportApiError(
       response.status,
       body?.error ?? `PDF export failed (HTTP ${response.status})`,
@@ -130,7 +127,8 @@ export async function requestServerPdfExport(
   await downloadStoredPdfExport(
     {
       storagePath: result.storagePath,
-      filename: result.filename ?? `${sanitizePdfFilename(input.options.filename)}.pdf`,
+      filename:
+        result.filename ?? `${sanitizePdfFilename(input.options.filename)}.pdf`,
     },
     createClient,
   );
@@ -162,6 +160,10 @@ export async function exportPdfWithPrintFallback(
       sourceId:
         input.sourceType === "library_selection" ? null : input.sourceId,
     });
-    return { mode: "print", exportId: printed.exportId, fallbackReason: reason };
+    return {
+      mode: "print",
+      exportId: printed.exportId,
+      fallbackReason: reason,
+    };
   }
 }

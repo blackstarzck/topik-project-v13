@@ -103,13 +103,19 @@ export function AccountDeletionCard() {
             <Input
               value={confirmText}
               onChange={(event) => setConfirmText(event.target.value)}
-              placeholder={t("dangerZone.modal.confirmPlaceholder", { keyword })}
+              placeholder={t("dangerZone.modal.confirmPlaceholder", {
+                keyword,
+              })}
               autoComplete="off"
               data-testid="account-delete-confirm-input"
             />
           </label>
           <div className="flex justify-end gap-2">
-            <Button htmlType="button" onClick={closeModal} disabled={submitting}>
+            <Button
+              htmlType="button"
+              onClick={closeModal}
+              disabled={submitting}
+            >
               {t("dangerZone.modal.cancelCta")}
             </Button>
             <Button

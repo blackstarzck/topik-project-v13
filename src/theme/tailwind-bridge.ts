@@ -2,10 +2,7 @@ import type { ThemeConfig } from "antd";
 
 import { themeSettings } from "./config";
 import type { ThemeAppearance } from "./types";
-import {
-  type AppBridgeVars,
-  awesomicBridgeVars,
-} from "./tokens/awesomic";
+import { type AppBridgeVars, awesomicBridgeVars } from "./tokens/awesomic";
 import { appFontFamily } from "./global/shared-seed";
 
 export type ResolvedBridgeVars = AppBridgeVars;

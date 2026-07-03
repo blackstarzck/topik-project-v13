@@ -61,7 +61,7 @@ export function SubmissionFailedModal({
               ? "submitUnavailableDescription"
               : "submitFailedDescription",
             {
-            submitError: submitError ?? "",
+              submitError: submitError ?? "",
             },
           )}
         />

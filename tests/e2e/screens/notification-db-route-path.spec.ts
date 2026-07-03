@@ -100,7 +100,9 @@ async function insertRouteNotification(params: {
   throw new Error("No route field candidate could be inserted.");
 }
 
-async function seedNotifications(projectName: string): Promise<NotificationSeed> {
+async function seedNotifications(
+  projectName: string,
+): Promise<NotificationSeed> {
   const userId = await findUserIdByEmail(service, STUDENT_EMAIL);
   const marker = `${TEMPLATE_PREFIX}-${projectName.replace(/\W+/g, "-")}-${Date.now()}`;
   const routeNotificationId = randomUUID();

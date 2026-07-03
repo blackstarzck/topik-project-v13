@@ -72,7 +72,10 @@ function makeDeps(trigger: ReturnType<typeof vi.fn>) {
 
 describe("ExportPdfButton — createExportPdfHandler", () => {
   it("calls the trigger with the bound sourceType/sourceId exactly once", async () => {
-    const trigger = vi.fn(async () => ({ mode: "file" as const, exportId: "exp-1" }));
+    const trigger = vi.fn(async () => ({
+      mode: "file" as const,
+      exportId: "exp-1",
+    }));
     const deps = makeDeps(trigger);
 
     const onClick = createExportPdfHandler(
@@ -89,7 +92,10 @@ describe("ExportPdfButton — createExportPdfHandler", () => {
   });
 
   it("emits the downloaded toast when the server render succeeds (mode=file)", async () => {
-    const trigger = vi.fn(async () => ({ mode: "file" as const, exportId: "exp-1" }));
+    const trigger = vi.fn(async () => ({
+      mode: "file" as const,
+      exportId: "exp-1",
+    }));
     const deps = makeDeps(trigger);
 
     const onClick = createExportPdfHandler(
@@ -105,7 +111,10 @@ describe("ExportPdfButton — createExportPdfHandler", () => {
   });
 
   it("emits the print-fallback notice when the server render fell back (mode=print)", async () => {
-    const trigger = vi.fn(async () => ({ mode: "print" as const, exportId: "exp-2" }));
+    const trigger = vi.fn(async () => ({
+      mode: "print" as const,
+      exportId: "exp-2",
+    }));
     const deps = makeDeps(trigger);
 
     const onClick = createExportPdfHandler(
@@ -194,7 +203,10 @@ describe("ExportPdfButton — createExportPdfHandler", () => {
     // channels + the three localized toast strings. There's no `logEvent`
     // channel — the button has no way to write a second study_events row
     // even if a future refactor tries.
-    const trigger = vi.fn(async () => ({ mode: "file" as const, exportId: "exp-1" }));
+    const trigger = vi.fn(async () => ({
+      mode: "file" as const,
+      exportId: "exp-1",
+    }));
     const deps = makeDeps(trigger);
 
     const keys = Object.keys(deps).sort();

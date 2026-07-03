@@ -82,7 +82,10 @@ type UntypedQuery = {
   order: (col: string, opts?: { ascending?: boolean }) => UntypedQuery;
   range: (from: number, to: number) => UntypedQuery;
   limit: (n: number) => UntypedQuery;
-  maybeSingle: () => Promise<{ data: unknown; error: { message: string } | null }>;
+  maybeSingle: () => Promise<{
+    data: unknown;
+    error: { message: string } | null;
+  }>;
   then: PromiseLike<{
     data: unknown;
     error: { message: string } | null;

@@ -1,8 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  getCurrentUser,
-  requireUser,
-} from "../../../src/lib/auth/session";
+import { getCurrentUser, requireUser } from "../../../src/lib/auth/session";
 
 vi.mock("next/navigation", () => ({
   redirect: vi.fn((path: string) => {

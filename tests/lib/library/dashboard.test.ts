@@ -193,7 +193,11 @@ describe("buildLibraryDashboardFromRows", () => {
       ],
       allSubmissions: [
         { id: "s-length", problem_id: "p-length", parent_submission_id: null },
-        { id: "s-rewrite", problem_id: "p-rewrite", parent_submission_id: null },
+        {
+          id: "s-rewrite",
+          problem_id: "p-rewrite",
+          parent_submission_id: null,
+        },
         {
           id: "s-rewrite-old",
           problem_id: "p-rewrite",
@@ -247,19 +251,21 @@ describe("buildLibraryDashboardFromRows", () => {
       primaryReason: "low_dimension",
     });
     expect(
-      view.reviewCandidates.find((candidate) => candidate.submissionId === "s-short")
-        ?.reasons,
+      view.reviewCandidates.find(
+        (candidate) => candidate.submissionId === "s-short",
+      )?.reasons,
     ).toContain("short_answer");
     expect(
-      view.reviewCandidates.find((candidate) => candidate.submissionId === "s-short")
-        ?.reasons,
+      view.reviewCandidates.find(
+        (candidate) => candidate.submissionId === "s-short",
+      )?.reasons,
     ).not.toContain("length_off_target");
-    expect(view.reviewCandidates.map((candidate) => candidate.submissionId)).not.toContain(
-      "s-pending",
-    );
-    expect(view.reviewCandidates.map((candidate) => candidate.submissionId)).not.toContain(
-      "s-failed",
-    );
+    expect(
+      view.reviewCandidates.map((candidate) => candidate.submissionId),
+    ).not.toContain("s-pending");
+    expect(
+      view.reviewCandidates.map((candidate) => candidate.submissionId),
+    ).not.toContain("s-failed");
     expect(view.timeline).toHaveLength(1);
     expect(view.timeline[0]).toMatchObject({
       eventType: "submission_submitted",
@@ -386,14 +392,16 @@ describe("buildLibraryDashboardFromRows", () => {
     const view = buildLibraryDashboardFromRows(rows);
 
     expect(
-      view.reviewCandidates.find((candidate) => candidate.problemId === "p-visible")
-        ?.retryHref,
+      view.reviewCandidates.find(
+        (candidate) => candidate.problemId === "p-visible",
+      )?.retryHref,
     ).toBe(
       "/writing/long-form-writing-53?problem=p-visible&fresh=1&retrySubmission=s-visible",
     );
     expect(
-      view.reviewCandidates.find((candidate) => candidate.problemId === "p-hidden")
-        ?.retryHref,
+      view.reviewCandidates.find(
+        (candidate) => candidate.problemId === "p-hidden",
+      )?.retryHref,
     ).toBeNull();
     expect(
       view.feedbackWaiting.find((item) => item.problemId === "p-failed-hidden")

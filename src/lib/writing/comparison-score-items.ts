@@ -131,7 +131,9 @@ export function buildBlankComparisonData({
   });
 }
 
-function readBlankTraitScoreItems(rawValue: Json | null): ComparisonScoreItem[] {
+function readBlankTraitScoreItems(
+  rawValue: Json | null,
+): ComparisonScoreItem[] {
   const raw = asRecord(rawValue);
   const traits = raw?.trait_scores;
   if (!Array.isArray(traits)) return [];

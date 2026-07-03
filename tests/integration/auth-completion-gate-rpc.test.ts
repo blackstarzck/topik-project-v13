@@ -66,7 +66,9 @@ async function createSignedInUser({
   return { supabase, userId };
 }
 
-async function expectRequiredLegalDocuments(supabase: SignedInUser["supabase"]) {
+async function expectRequiredLegalDocuments(
+  supabase: SignedInUser["supabase"],
+) {
   const { count, error } = await supabase
     .from("legal_documents")
     .select("id", { count: "exact", head: true })

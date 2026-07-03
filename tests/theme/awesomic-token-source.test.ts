@@ -67,9 +67,7 @@ describe("Awesomic token source contract", () => {
     expect(awesomicThemeTokens.radius.button).toBeLessThan(
       tokenPx("radius.3xl-3"),
     );
-    expect(awesomicThemeTokens.radius.badge).toBeLessThan(
-      tokenPx("radius.xl"),
-    );
+    expect(awesomicThemeTokens.radius.badge).toBeLessThan(tokenPx("radius.xl"));
   });
 
   test("global.css uses only approved --app-* bridge variables", () => {
@@ -81,9 +79,7 @@ describe("Awesomic token source contract", () => {
       ([value]) => value,
     );
     const allowedVars = new Set<string>(allowedAppBridgeVars);
-    const disallowed = usedVars.filter(
-      (value) => !allowedVars.has(value),
-    );
+    const disallowed = usedVars.filter((value) => !allowedVars.has(value));
 
     expect([...new Set(disallowed)]).toEqual([]);
   });

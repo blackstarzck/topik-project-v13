@@ -59,10 +59,7 @@ type Props = {
  * 제약 조건: 공지사항 항목 5개 이하, 날짜 표기는 로케일 기준.
  * 예외: 공지사항 로드 실패 시 재시도 CTA 제공.
  */
-export function DashboardAlertsCard({
-  userId,
-  loadFailed = false,
-}: Props) {
+export function DashboardAlertsCard({ userId, loadFailed = false }: Props) {
   const t = useTranslations("dashboard.alerts");
   const format = useFormatter();
   const router = useRouter();
@@ -127,10 +124,7 @@ export function DashboardAlertsCard({
   );
 
   return (
-    <AppCard
-      className="dashboard-alerts-card"
-      title={t("cardTitle")}
-    >
+    <AppCard className="dashboard-alerts-card" title={t("cardTitle")}>
       {failed ? (
         <div className="grid gap-3">
           <Alert

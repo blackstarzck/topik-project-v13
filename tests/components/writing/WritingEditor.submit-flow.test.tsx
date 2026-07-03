@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, screen, waitFor, act } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  screen,
+  waitFor,
+  act,
+} from "@testing-library/react";
 
 import koMessages from "../../../messages/ko.json";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";

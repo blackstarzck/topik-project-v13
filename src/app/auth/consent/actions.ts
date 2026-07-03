@@ -100,8 +100,7 @@ function logAuthCompletionRpcFailure({
 
   console.error("auth_consent_rpc_failed", {
     category: getRpcFailureCategory(error),
-    code:
-      typeof candidate.code === "string" ? candidate.code : candidate.code,
+    code: typeof candidate.code === "string" ? candidate.code : candidate.code,
     details:
       typeof candidate.details === "string"
         ? candidate.details
@@ -173,7 +172,9 @@ export async function completeAuthGateAction(formData: FormData) {
   const supabase = await createSupabaseServerClient();
   const createClient = async () => supabase;
   const localeSeed =
-    profile.ui_locale_source === "default" ? await getRequestLocaleSeed() : null;
+    profile.ui_locale_source === "default"
+      ? await getRequestLocaleSeed()
+      : null;
   const localeForDocuments = localeSeed?.locale ?? profile.ui_locale;
 
   const missingDocuments = await getMissingRequiredConsentDocuments(

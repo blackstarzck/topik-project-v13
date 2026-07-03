@@ -43,7 +43,11 @@ export function isValidQuestionNo(value: unknown): value is QuestionNo {
   );
 }
 
-export type ProblemSort = "newest" | "oldest" | "difficulty-asc" | "difficulty-desc";
+export type ProblemSort =
+  | "newest"
+  | "oldest"
+  | "difficulty-asc"
+  | "difficulty-desc";
 
 // Phase 7-D Task 12 (P1-8) — IA spec 4 filters: type + difficulty + 추천 + 풀이 상태.
 export type SolveStatusFilter = "all" | "unsolved" | "inProgress" | "solved";

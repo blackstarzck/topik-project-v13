@@ -1,9 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import {
-  createSupabaseBrowserClient,
-} from "../supabase/browser";
+import { createSupabaseBrowserClient } from "../supabase/browser";
 import type { Tables } from "../supabase/types";
 
 type BrowserClient = ReturnType<typeof createSupabaseBrowserClient>;

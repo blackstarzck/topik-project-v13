@@ -477,7 +477,10 @@ export function ShortAnswerWriting51Workspace({
                       className="writing-answer-card__hint"
                     >
                       {activeBlank
-                        ? blankHintText(activeBlank, tPage("answerHintFallback"))
+                        ? blankHintText(
+                            activeBlank,
+                            tPage("answerHintFallback"),
+                          )
                         : tPage("answerHintFallback")}
                     </Paragraph>
                   </div>

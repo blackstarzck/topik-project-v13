@@ -38,7 +38,8 @@ const markNotificationReadMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@/components/notifications/notifications-data", () => ({
   fetchNotifications: (...args: unknown[]) => fetchNotificationsMock(...args),
-  markNotificationRead: (...args: unknown[]) => markNotificationReadMock(...args),
+  markNotificationRead: (...args: unknown[]) =>
+    markNotificationReadMock(...args),
   resolveNotificationDestination: (item: {
     route_path?: string | null;
     link_url?: string | null;
@@ -215,7 +216,9 @@ describe("DashboardBody", () => {
 
     const continueCard = getContinueCard();
     expect(continueCard.queryByText("추천 전용 문제")).toBeNull();
-    expect(continueCard.queryByText("추천 카드에만 보여야 하는 이유")).toBeNull();
+    expect(
+      continueCard.queryByText("추천 카드에만 보여야 하는 이유"),
+    ).toBeNull();
     expect(continueCard.getByText("작성 중인 답안이 없어요")).toBeTruthy();
     expect(continueCard.getByText("문제 목록 보기")).toBeTruthy();
   });

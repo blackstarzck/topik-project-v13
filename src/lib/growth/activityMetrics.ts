@@ -12,5 +12,8 @@ export function mergeAttemptCounts({
   problemAttemptCount: CountInput;
   studyEventCount: CountInput;
 }): number {
-  return Math.max(toSafeCount(problemAttemptCount), toSafeCount(studyEventCount));
+  return Math.max(
+    toSafeCount(problemAttemptCount),
+    toSafeCount(studyEventCount),
+  );
 }

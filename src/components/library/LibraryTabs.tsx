@@ -28,17 +28,20 @@ function pickSubmissions(items: LibraryItemView[]) {
 }
 function pickReports(items: LibraryItemView[]) {
   return items.filter(
-    (i): i is Extract<LibraryItemView, { kind: "report" }> => i.kind === "report",
+    (i): i is Extract<LibraryItemView, { kind: "report" }> =>
+      i.kind === "report",
   );
 }
 function pickProblems(items: LibraryItemView[]) {
   return items.filter(
-    (i): i is Extract<LibraryItemView, { kind: "problem" }> => i.kind === "problem",
+    (i): i is Extract<LibraryItemView, { kind: "problem" }> =>
+      i.kind === "problem",
   );
 }
 function pickExports(items: LibraryItemView[]) {
   return items.filter(
-    (i): i is Extract<LibraryItemView, { kind: "export" }> => i.kind === "export",
+    (i): i is Extract<LibraryItemView, { kind: "export" }> =>
+      i.kind === "export",
   );
 }
 

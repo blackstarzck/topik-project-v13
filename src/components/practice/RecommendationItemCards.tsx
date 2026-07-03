@@ -130,9 +130,7 @@ export function PrimaryRecommendationCard({
             <RecommendationMetaTile
               icon={<Clock3 size={18} aria-hidden="true" />}
               label={t("fallbackHeroTime")}
-              value={
-                minutes != null ? tCommon("minutes", { minutes }) : "—"
-              }
+              value={minutes != null ? tCommon("minutes", { minutes }) : "—"}
             />
             <RecommendationMetaTile
               icon={

@@ -14,9 +14,15 @@ describe("/auth/consent page", () => {
     const source = readFileSync("src/app/auth/consent/page.tsx", "utf8");
 
     expect(source).toContain("resolveLocaleForProfile");
-    expect(source).toContain("const consentLocale = await resolveLocaleForProfile(profile)");
-    expect(source).toContain("getMissingRequiredConsentDocuments(\n    user.id,\n    consentLocale,");
-    expect(source).not.toContain("getMissingRequiredConsentDocuments(\n    user.id,\n    profile.ui_locale,");
+    expect(source).toContain(
+      "const consentLocale = await resolveLocaleForProfile(profile)",
+    );
+    expect(source).toContain(
+      "getMissingRequiredConsentDocuments(\n    user.id,\n    consentLocale,",
+    );
+    expect(source).not.toContain(
+      "getMissingRequiredConsentDocuments(\n    user.id,\n    profile.ui_locale,",
+    );
   });
 
   it("checks email verification before loading consent documents", () => {

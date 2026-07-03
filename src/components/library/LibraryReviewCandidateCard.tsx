@@ -3,11 +3,7 @@
 import { Button, Tag, Tooltip, Typography } from "antd";
 import { useTranslations } from "next-intl";
 
-import {
-  ArrowRight,
-  Clock3,
-  MagicPen,
-} from "@/components/shared/AppIcons";
+import { ArrowRight, Clock3, MagicPen } from "@/components/shared/AppIcons";
 import { AppCard } from "@/components/shared/AppCard";
 import {
   DifficultyStateIcon,

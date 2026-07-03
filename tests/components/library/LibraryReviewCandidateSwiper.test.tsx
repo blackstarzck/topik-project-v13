@@ -95,15 +95,17 @@ describe("LibraryReviewCandidateSwiper", () => {
     expect(header.className).toContain("justify-between");
     expect(screen.queryByTestId("library-review-swiper-caption")).toBeNull();
     expect(
-      screen.getByTestId("library-review-swiper-title-group").querySelector("h4"),
+      screen
+        .getByTestId("library-review-swiper-title-group")
+        .querySelector("h4"),
     ).toBeTruthy();
     const viewAll = screen.getByRole("link", {
       name: koMessages.library.dashboard.review.viewAll,
     });
     expect(viewAll.getAttribute("href")).toBe("/library/problems");
-    expect(screen.getByTestId("mock-swiper").getAttribute("data-grid-rows")).toBe(
-      "2",
-    );
+    expect(
+      screen.getByTestId("mock-swiper").getAttribute("data-grid-rows"),
+    ).toBe("2");
     expect(
       screen.getByTestId("mock-swiper").getAttribute("data-desktop-slides"),
     ).toBe("3.25");
@@ -141,11 +143,7 @@ describe("LibraryReviewCandidateSwiper", () => {
   it("provides accessible navigation buttons", () => {
     renderWithIntl(<LibraryReviewCandidateSwiper candidates={candidates} />);
 
-    expect(
-      screen.getByRole("button", { name: "이전 복습 후보" }),
-    ).toBeTruthy();
-    expect(
-      screen.getByRole("button", { name: "다음 복습 후보" }),
-    ).toBeTruthy();
+    expect(screen.getByRole("button", { name: "이전 복습 후보" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "다음 복습 후보" })).toBeTruthy();
   });
 });

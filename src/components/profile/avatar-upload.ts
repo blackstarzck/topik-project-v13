@@ -28,7 +28,11 @@ export type AvatarValidationError =
   | { ok: false; reason: "size" | "type"; messageKey: string };
 
 export function validateAvatarFile(file: File): AvatarValidationError {
-  if (!AVATAR_ALLOWED_TYPES.includes(file.type as (typeof AVATAR_ALLOWED_TYPES)[number])) {
+  if (
+    !AVATAR_ALLOWED_TYPES.includes(
+      file.type as (typeof AVATAR_ALLOWED_TYPES)[number],
+    )
+  ) {
     return {
       ok: false,
       reason: "type",
@@ -144,7 +148,10 @@ export async function squareCropImage(
   size = 256,
 ): Promise<{ blob: Blob; ext: "png" | "jpg" }> {
   const ext = extensionFor(file);
-  if (typeof document === "undefined" || typeof createImageBitmap === "undefined") {
+  if (
+    typeof document === "undefined" ||
+    typeof createImageBitmap === "undefined"
+  ) {
     return { blob: file, ext };
   }
   const bitmap = await createImageBitmap(file);

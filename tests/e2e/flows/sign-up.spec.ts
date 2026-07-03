@@ -9,12 +9,7 @@ test.use({
 });
 
 const SIGN_UP_ROUTE = /\/auth\/v1\/signup(?:\?|$)/;
-const EVIDENCE_DIR = path.join(
-  "docs",
-  "qa",
-  "reports",
-  "auth-post-auth-gate",
-);
+const EVIDENCE_DIR = path.join("docs", "qa", "reports", "auth-post-auth-gate");
 const VALID_NAME = "홍길동";
 const VALID_NATIONALITY_COUNTRY_CODE = "VN";
 const VALID_COUNTRY_REGION_LABEL = "베트남";

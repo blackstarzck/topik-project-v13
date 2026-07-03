@@ -94,7 +94,9 @@ describe("LibrarySavedProblemsTab hidden problem UX", () => {
     ]);
 
     expect(screen.getByText("TOPIK 52 sentence completion")).toBeTruthy();
-    expect(screen.getByText(koMessages.library.saved.providedEnded)).toBeTruthy();
+    expect(
+      screen.getByText(koMessages.library.saved.providedEnded),
+    ).toBeTruthy();
     expect(screen.getByText("Rotation ended")).toBeTruthy();
     expect(screen.getByTestId("library-item-row").className).toContain(
       "opacity-40",

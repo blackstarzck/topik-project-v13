@@ -75,11 +75,7 @@ export function HelpPanel({ cards, questionNo }: Props) {
       {resolved.slice(0, 3).map((c, i) => (
         <AppCard key={i} size="small">
           <Text strong>{c.title.slice(0, 16)}</Text>
-          <Paragraph
-            className="!m-0"
-            type="secondary"
-            ellipsis={{ rows: 2 }}
-          >
+          <Paragraph className="!m-0" type="secondary" ellipsis={{ rows: 2 }}>
             {c.body}
           </Paragraph>
         </AppCard>

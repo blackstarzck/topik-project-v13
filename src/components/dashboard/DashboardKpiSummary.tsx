@@ -90,9 +90,7 @@ export function DashboardKpiSummary({ kpi }: Props) {
         <KpiTile
           title={t("goalAchievementTitle")}
           value={
-            goalIsEmpty
-              ? startPrompt
-              : (kpi.goalAchievementPct ?? startPrompt)
+            goalIsEmpty ? startPrompt : (kpi.goalAchievementPct ?? startPrompt)
           }
           suffix={goalIsEmpty ? undefined : "%"}
           isPrompt={goalIsEmpty}

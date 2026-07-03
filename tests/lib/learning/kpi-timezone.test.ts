@@ -33,16 +33,12 @@ describe("KPI timezone — Asia/Seoul day boundary", () => {
     const todayKst = "2026-05-20T16:00:00Z";
     const yesterdayKst = "2026-05-19T16:00:00Z";
     const twoDaysAgoKst = "2026-05-18T16:00:00Z";
-    expect(
-      computeStreakDays([todayKst, yesterdayKst, twoDaysAgoKst]),
-    ).toBe(3);
+    expect(computeStreakDays([todayKst, yesterdayKst, twoDaysAgoKst])).toBe(3);
   });
 
   it("an attempt at 2026-05-20T08:00 KST (= 2026-05-19T23:00 UTC) bucketed as yesterday-KST", () => {
     const yesterdayKstMorning = "2026-05-19T23:00:00Z";
     const todayKstAfternoon = "2026-05-20T16:00:00Z";
-    expect(
-      computeStreakDays([todayKstAfternoon, yesterdayKstMorning]),
-    ).toBe(2);
+    expect(computeStreakDays([todayKstAfternoon, yesterdayKstMorning])).toBe(2);
   });
 });

@@ -28,11 +28,17 @@ export function LibraryWeakItemsPanel({ items }: Props) {
           </Text>
         </div>
         {items.length === 0 ? (
-          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t("weak.empty")} />
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description={t("weak.empty")}
+          />
         ) : (
           <div className="flex flex-col gap-3">
             {items.map((item) => (
-              <div key={item.id} className="grid grid-cols-[72px_1fr_44px] gap-3">
+              <div
+                key={item.id}
+                className="grid grid-cols-[72px_1fr_44px] gap-3"
+              >
                 <Text className="truncate">
                   {tDim(item.dimension as Parameters<typeof tDim>[0])}
                 </Text>
@@ -43,7 +49,9 @@ export function LibraryWeakItemsPanel({ items }: Props) {
                   strokeColor="var(--app-color-primary)"
                   railColor="var(--app-color-bg-layout)"
                 />
-                <Text className="text-right">{t("weak.score", { score: item.normalizedScore })}</Text>
+                <Text className="text-right">
+                  {t("weak.score", { score: item.normalizedScore })}
+                </Text>
               </div>
             ))}
             <div className="grid grid-cols-[72px_1fr_44px] gap-3">

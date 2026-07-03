@@ -108,9 +108,9 @@ describe("VerifyEmailCard", () => {
     expect(screen.getByTestId("verify-email-login").className).toContain(
       "w-full",
     );
-    expect(screen.getByTestId("verify-email-password-reset").className).toContain(
-      "w-full",
-    );
+    expect(
+      screen.getByTestId("verify-email-password-reset").className,
+    ).toContain("w-full");
     expect(
       screen.getByTestId("verify-email-password-reset").getAttribute("href"),
     ).toBe("/password-reset?email=u%40example.com");

@@ -25,11 +25,7 @@ describe("profile completion helpers", () => {
         nickname: "t",
         nationality_country_code: "ZZ",
       }),
-    ).toEqual([
-      "display_name",
-      "nickname",
-      "nationality_country_code",
-    ]);
+    ).toEqual(["display_name", "nickname", "nationality_country_code"]);
   });
 
   it("normalizes form input by trimming strings and uppercasing country codes", () => {

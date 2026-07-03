@@ -19,9 +19,9 @@ describe("sanitizeAuthCompletionNext", () => {
     expect(sanitizeAuthCompletionNext("/auth/consent", fallback)).toBe(
       fallback,
     );
-    expect(sanitizeAuthCompletionNext("/auth/callback?code=123", fallback)).toBe(
-      fallback,
-    );
+    expect(
+      sanitizeAuthCompletionNext("/auth/callback?code=123", fallback),
+    ).toBe(fallback);
     expect(sanitizeAuthCompletionNext("/auth/callback/otp", fallback)).toBe(
       fallback,
     );

@@ -15,7 +15,8 @@ const DEFAULT_TAB: LibraryTab = "submissions";
 
 export function isLibraryTab(value: unknown): value is LibraryTab {
   return (
-    typeof value === "string" && (LIBRARY_TABS as readonly string[]).includes(value)
+    typeof value === "string" &&
+    (LIBRARY_TABS as readonly string[]).includes(value)
   );
 }
 

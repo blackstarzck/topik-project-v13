@@ -38,7 +38,9 @@ describe("route matrix — anonymous context", () => {
     expect(PUBLIC_PATHS).not.toContain("/dev-preview");
 
     mockGetUser.mockResolvedValue({ data: { user: null }, error: null });
-    const response = await callMiddleware("http://localhost/dev-preview/dashboard");
+    const response = await callMiddleware(
+      "http://localhost/dev-preview/dashboard",
+    );
 
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toContain("/login");

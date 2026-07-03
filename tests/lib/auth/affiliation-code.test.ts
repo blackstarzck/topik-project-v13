@@ -95,7 +95,9 @@ describe("affiliation code storage", () => {
     storeAffiliationCode("EXPO2026-BOOTH-A", NOW);
 
     expect(readStoredAffiliationCode(NOW + ONE_DAY_MS + 1)).toBeNull();
-    expect(window.localStorage.getItem(AFFILIATION_CODE_STORAGE_KEY)).toBeNull();
+    expect(
+      window.localStorage.getItem(AFFILIATION_CODE_STORAGE_KEY),
+    ).toBeNull();
   });
 
   it("clears the stored value on demand", () => {

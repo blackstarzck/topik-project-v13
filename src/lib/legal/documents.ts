@@ -73,7 +73,9 @@ async function fetchPublished(
     .limit(1);
 
   if (error) {
-    throw new Error(`Failed to load published legal document: ${error.message}`);
+    throw new Error(
+      `Failed to load published legal document: ${error.message}`,
+    );
   }
   return (data?.[0] as PublishedLegalDocument | undefined) ?? null;
 }

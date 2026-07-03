@@ -170,8 +170,10 @@ async function createCompletedShortFeedbackSubmission() {
       submission_id: submissionId,
       user_id: user.id,
       sentence_index: 0,
-      original_text: "저는 회의 일정 때문에 금요일 오후 세 시에 만날 수 있습니다.",
-      corrected_text: "저는 회의 일정 때문에 금요일 오후 3시에 만날 수 있습니다.",
+      original_text:
+        "저는 회의 일정 때문에 금요일 오후 세 시에 만날 수 있습니다.",
+      corrected_text:
+        "저는 회의 일정 때문에 금요일 오후 3시에 만날 수 있습니다.",
       comment: "시간 표현을 숫자로 정리하면 더 읽기 쉽습니다.",
     },
     {
@@ -207,7 +209,9 @@ test.skip(
   "E-01 e2e requires Supabase service credentials for an isolated feedback row",
 );
 
-test("E-01 short feedback matches the wireframe constraints", async ({ page }) => {
+test("E-01 short feedback matches the wireframe constraints", async ({
+  page,
+}) => {
   const errors = collectErrors(page);
   const submissionId = await createCompletedShortFeedbackSubmission();
 
@@ -265,12 +269,12 @@ test("E-01 short feedback matches the wireframe constraints", async ({ page }) =
       .getByTestId("feedback-summary-score")
       .locator(".ant-statistic-content-value"),
   ).toHaveCSS("font-weight", "700");
-  await expect(page.getByTestId("feedback-report-total-score-card")).toHaveCount(
-    0,
-  );
-  await expect(page.getByTestId("feedback-report-total-score-line")).toHaveCount(
-    0,
-  );
+  await expect(
+    page.getByTestId("feedback-report-total-score-card"),
+  ).toHaveCount(0);
+  await expect(
+    page.getByTestId("feedback-report-total-score-line"),
+  ).toHaveCount(0);
   const criteriaCard = page.getByTestId("feedback-report-criteria-card");
   const focusCard = page.getByTestId("feedback-report-focus-card");
   await expect(criteriaCard).not.toHaveClass(/bg-surface\/40/);
@@ -306,7 +310,9 @@ test("E-01 short feedback matches the wireframe constraints", async ({ page }) =
     ].join(","),
   );
   await expect(actions).toHaveCount(4);
-  await expect(page.getByTestId("feedback-action-retry")).toHaveText("다시 풀기");
+  await expect(page.getByTestId("feedback-action-retry")).toHaveText(
+    "다시 풀기",
+  );
   await expect(page.getByTestId("feedback-action-next")).toBeVisible();
   await expect(page.getByTestId("feedback-action-save")).toBeVisible();
   await expect(page.getByTestId("feedback-action-compare")).toBeVisible();

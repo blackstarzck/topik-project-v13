@@ -9,10 +9,7 @@ import { useLibraryItems } from "@/lib/library/queries";
 import type { LibraryItemView, LibraryReportView } from "@/lib/library/types";
 
 import { LibraryItemRow } from "./LibraryItemRow";
-import {
-  LIBRARY_PAGE_SIZE,
-  LibraryPagination,
-} from "./LibraryPagination";
+import { LIBRARY_PAGE_SIZE, LibraryPagination } from "./LibraryPagination";
 import { matchesLibrarySearch } from "./library-tab-url";
 
 const { Text, Paragraph } = Typography;
@@ -57,7 +54,11 @@ export function LibraryReportsTab({
     safePage * LIBRARY_PAGE_SIZE,
   );
 
-  if (query.isLoading && (query.data ?? []).length === 0 && initialItems.length === 0) {
+  if (
+    query.isLoading &&
+    (query.data ?? []).length === 0 &&
+    initialItems.length === 0
+  ) {
     return <Spin />;
   }
   if (query.error) {
@@ -79,9 +80,7 @@ export function LibraryReportsTab({
           {tCount("resultCount", { count: 0 })}
         </Text>
         <div className="flex flex-1 items-center justify-center">
-          <Empty
-            description={searching ? t("emptySearch") : t("emptyNoItems")}
-          >
+          <Empty description={searching ? t("emptySearch") : t("emptyNoItems")}>
             {searching && onResetSearch ? (
               <Button onClick={onResetSearch}>{t("resetFilter")}</Button>
             ) : null}
@@ -96,10 +95,7 @@ export function LibraryReportsTab({
       <Text data-testid="library-result-count" type="secondary">
         {tCount("resultCount", { count: items.length })}
       </Text>
-      <div
-        data-testid="library-item-list"
-        className="flex w-full flex-col"
-      >
+      <div data-testid="library-item-list" className="flex w-full flex-col">
         {pageItems.map((item) => (
           <LibraryItemRow
             key={item.item_id}

@@ -139,11 +139,7 @@ test("writing submit keeps analysis state above the read-only answer", async ({
   });
   await expect(page).not.toHaveURL(/\/login/);
 
-  await fillShortAnswer51(
-    page,
-    answerText,
-    "Please send the needed form.",
-  );
+  await fillShortAnswer51(page, answerText, "Please send the needed form.");
   await page.getByRole("button", { name: /제출하기/ }).click();
   await page.getByTestId("submission-confirm-submit").click();
 
@@ -208,11 +204,7 @@ test("writing submit shows failure state without the read-only answer", async ({
   });
   await expect(page).not.toHaveURL(/\/login/);
 
-  await fillShortAnswer51(
-    page,
-    answerText,
-    "Please send the new file.",
-  );
+  await fillShortAnswer51(page, answerText, "Please send the new file.");
   await page.getByRole("button", { name: /제출하기/ }).click();
   await page.getByTestId("submission-confirm-submit").click();
 
@@ -260,9 +252,9 @@ test("writing submit shows failure state without the read-only answer", async ({
 
   await waitForSubmittedRow(answerToken);
 
-  await expect(
-    page.getByRole("button", { name: "고객지원 문의" }),
-  ).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "고객지원 문의" })).toHaveCount(
+    0,
+  );
   await expect(
     page.getByRole("button", { name: "대시보드로 이동" }),
   ).toBeVisible();

@@ -21,9 +21,7 @@ import { UpcomingExamCard } from "@/components/learning/UpcomingExamCard";
 import { AppCard } from "@/components/shared/AppCard";
 import type { DashboardContinueDraft } from "@/lib/writing/dashboard-drafts";
 import { writingFeedbackHref, writingProblemHref } from "@/lib/writing/routes";
-import {
-  DashboardAlertsCard,
-} from "./DashboardAlertsCard";
+import { DashboardAlertsCard } from "./DashboardAlertsCard";
 import {
   DashboardKpiSummary,
   type DashboardKpiData,
@@ -76,7 +74,8 @@ function isPersonalizedRecommendation(
 
 function heroTitleKey(primary: DashboardPrimary | null): string {
   if (isPersonalizedRecommendation(primary)) return "aiTutorTitle";
-  if (primary?.source === "same_question_no") return "practiceContinueTypeTitle";
+  if (primary?.source === "same_question_no")
+    return "practiceContinueTypeTitle";
   return "practiceStartTitle";
 }
 
@@ -99,9 +98,9 @@ export function DashboardBody({
   const t = useTranslations("dashboard.hub");
   const primaryHref = primary
     ? writingProblemHref({
-      questionNo: primary.questionNo,
-      problemId: primary.problemId,
-    })
+        questionNo: primary.questionNo,
+        problemId: primary.problemId,
+      })
     : "/practice/recommendations";
   const primaryQuestionTag =
     primary?.questionNo != null
@@ -109,17 +108,17 @@ export function DashboardBody({
       : t("questionTagFallback");
   const continueHref = continueDraft
     ? writingProblemHref({
-      questionNo: continueDraft.questionNo,
-      problemId: continueDraft.problemId,
-    })
+        questionNo: continueDraft.questionNo,
+        problemId: continueDraft.problemId,
+      })
     : "/practice/problems";
   const feedbackPreview = recentFeedbacks.slice(0, 2);
   const feedbackCount = recentFeedbacks.length;
   const firstFeedbackHref = feedbackPreview[0]
     ? writingFeedbackHref({
-      questionNo: feedbackPreview[0].questionNo,
-      submissionId: feedbackPreview[0].submissionId,
-    })
+        questionNo: feedbackPreview[0].questionNo,
+        submissionId: feedbackPreview[0].submissionId,
+      })
     : "/library";
   const quickActions = [
     {

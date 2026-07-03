@@ -29,12 +29,7 @@ export function isDuplicateLibrarySaveError(error: unknown): boolean {
   const err = error as PostgrestErrorLike;
   if (err.code !== "23505") return false;
 
-  const text = [
-    err.constraint,
-    err.details,
-    err.hint,
-    err.message,
-  ]
+  const text = [err.constraint, err.details, err.hint, err.message]
     .filter((value): value is string => Boolean(value))
     .join(" ");
 

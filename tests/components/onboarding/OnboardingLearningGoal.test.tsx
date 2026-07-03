@@ -95,10 +95,12 @@ describe("OnboardingLearningGoalPage chrome", () => {
 
     const goalShell = container.querySelector(".onboarding-goal-shell");
     const actionFlow = container.querySelector(".onboarding-goal-cta-flow");
-    const submitButton =
-      actionFlow?.querySelector<HTMLButtonElement>('button[type="submit"]');
-    const skipButton =
-      actionFlow?.querySelector<HTMLButtonElement>("button.ant-btn-text");
+    const submitButton = actionFlow?.querySelector<HTMLButtonElement>(
+      'button[type="submit"]',
+    );
+    const skipButton = actionFlow?.querySelector<HTMLButtonElement>(
+      "button.ant-btn-text",
+    );
 
     expect(goalShell?.className).toContain("gap-12");
     expect(actionFlow).toBeTruthy();
@@ -154,8 +156,9 @@ describe("LearningGoalForm i18n chrome", () => {
 
   it("keeps enough vertical room above the save CTA", () => {
     const { container } = renderWithIntl(<LearningGoalForm userId="u1" />);
-    const submitButton =
-      container.querySelector<HTMLButtonElement>('button[type="submit"]');
+    const submitButton = container.querySelector<HTMLButtonElement>(
+      'button[type="submit"]',
+    );
 
     expect(submitButton).toBeTruthy();
     expect(submitButton?.closest(".ant-form-item")?.className).toContain(
@@ -198,8 +201,9 @@ describe("LearningGoalForm i18n chrome", () => {
     const vocabulary = weakAreaGroup?.querySelector<HTMLButtonElement>(
       '[data-value="vocabulary"]',
     );
-    const grammar =
-      weakAreaGroup?.querySelector<HTMLButtonElement>('[data-value="grammar"]');
+    const grammar = weakAreaGroup?.querySelector<HTMLButtonElement>(
+      '[data-value="grammar"]',
+    );
 
     expect(vocabulary).toBeTruthy();
     expect(grammar).toBeTruthy();

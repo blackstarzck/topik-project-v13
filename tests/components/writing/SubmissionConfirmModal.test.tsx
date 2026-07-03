@@ -40,7 +40,9 @@ describe("SubmissionConfirmModal (i18n)", () => {
     );
 
     expect(screen.getByText("답안을 제출하시겠어요?")).toBeTruthy();
-    expect(screen.getByText("작성한 답안을 제출하면 수정할 수 없습니다.")).toBeTruthy();
+    expect(
+      screen.getByText("작성한 답안을 제출하면 수정할 수 없습니다."),
+    ).toBeTruthy();
   });
 
   it("keeps submit enabled when the answer is long enough", () => {

@@ -27,10 +27,7 @@ const INPUT: WritingDraftInsert = {
   last_saved_at: "2026-06-08T00:00:00.000Z",
 };
 
-function makeRow(
-  input: WritingDraftInsert,
-  id = "draft-1",
-): WritingDraftRow {
+function makeRow(input: WritingDraftInsert, id = "draft-1"): WritingDraftRow {
   return {
     id,
     user_id: input.user_id,
@@ -114,16 +111,10 @@ describe("upsertDraft", () => {
   it("updates the active draft instead of targeting a partial unique index with upsert", async () => {
     const client = makeClient({ lookupIds: ["draft-active"] });
 
-    const result = await upsertDraft(
-      INPUT,
-      () => client as never,
-    );
+    const result = await upsertDraft(INPUT, () => client as never);
 
     expect(result.id).toBe("draft-active");
-    expect(client.calls.map((call) => call.type)).toEqual([
-      "lookup",
-      "update",
-    ]);
+    expect(client.calls.map((call) => call.type)).toEqual(["lookup", "update"]);
     expect(client.calls[1]).toMatchObject({
       type: "update",
       draftId: "draft-active",
@@ -134,16 +125,10 @@ describe("upsertDraft", () => {
   it("inserts a new draft when no active draft exists", async () => {
     const client = makeClient({ lookupIds: [null] });
 
-    const result = await upsertDraft(
-      INPUT,
-      () => client as never,
-    );
+    const result = await upsertDraft(INPUT, () => client as never);
 
     expect(result.id).toBe("inserted-draft");
-    expect(client.calls.map((call) => call.type)).toEqual([
-      "lookup",
-      "insert",
-    ]);
+    expect(client.calls.map((call) => call.type)).toEqual(["lookup", "insert"]);
   });
 
   it("recovers when another autosave creates the active draft between lookup and insert", async () => {
@@ -153,10 +138,7 @@ describe("upsertDraft", () => {
       insertData: null,
     });
 
-    const result = await upsertDraft(
-      INPUT,
-      () => client as never,
-    );
+    const result = await upsertDraft(INPUT, () => client as never);
 
     expect(result.id).toBe("raced-draft");
     expect(client.calls.map((call) => call.type)).toEqual([

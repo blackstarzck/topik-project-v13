@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { act, cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
 
@@ -92,7 +98,9 @@ describe("AccountLoginMethodsCard", () => {
     renderCard();
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Connect Google" })).toBeTruthy();
+      expect(
+        screen.getByRole("button", { name: "Connect Google" }),
+      ).toBeTruthy();
     });
 
     await act(async () => {
@@ -101,7 +109,9 @@ describe("AccountLoginMethodsCard", () => {
 
     await waitFor(() => {
       expect(linkIdentityMock).toHaveBeenCalledWith({ provider: "google" });
-      expect(screen.queryByRole("button", { name: "Connect Google" })).toBeNull();
+      expect(
+        screen.queryByRole("button", { name: "Connect Google" }),
+      ).toBeNull();
     });
   });
 
@@ -114,7 +124,9 @@ describe("AccountLoginMethodsCard", () => {
     renderCard();
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Connect Google" })).toBeTruthy();
+      expect(
+        screen.getByRole("button", { name: "Connect Google" }),
+      ).toBeTruthy();
     });
 
     await act(async () => {

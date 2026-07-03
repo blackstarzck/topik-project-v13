@@ -45,9 +45,9 @@ describe("LibraryActionsPanel", () => {
     expect(screen.getByTestId("library-actions").className).not.toContain(
       "ant-card",
     );
-    expect(screen.getByTestId("library-selection-count").className).not.toContain(
-      "ant-tag",
-    );
+    expect(
+      screen.getByTestId("library-selection-count").className,
+    ).not.toContain("ant-tag");
   });
 
   it("stacks the CTA buttons vertically and makes each CTA fill the panel width", () => {
@@ -66,9 +66,9 @@ describe("LibraryActionsPanel", () => {
     expect(screen.getByTestId("library-export-pdf").className).toContain(
       "ant-btn-block",
     );
-    expect(
-      screen.getByTestId("library-create-review-set").className,
-    ).toContain("ant-btn-block");
+    expect(screen.getByTestId("library-create-review-set").className).toContain(
+      "ant-btn-block",
+    );
   });
 
   it("keeps both CTAs disabled until the user selects at least one saved answer", () => {

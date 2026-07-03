@@ -97,7 +97,9 @@ describe("LibraryReviewCandidateCard", () => {
     );
     expect(difficultyIcon.className).toContain("bg-[#c75d4f]");
 
-    const progress = within(card).getByTestId("library-review-candidate-progress");
+    const progress = within(card).getByTestId(
+      "library-review-candidate-progress",
+    );
     expect(progress.className).toContain("h-[3px]");
     expect(progress.getAttribute("value")).toBe("76");
     expect(progress.getAttribute("max")).toBe("100");
@@ -143,7 +145,9 @@ describe("LibraryReviewCandidateCard", () => {
   it("shows the total score tooltip from the progress bar", async () => {
     renderWithIntl(<LibraryReviewCandidateCard candidate={candidate} />);
 
-    fireEvent.mouseEnter(screen.getByTestId("library-review-candidate-progress"));
+    fireEvent.mouseEnter(
+      screen.getByTestId("library-review-candidate-progress"),
+    );
 
     expect(await screen.findByText("총 76/100")).toBeTruthy();
   });

@@ -108,10 +108,12 @@ export function captureAffiliationCodeFromSearch(
   capturedAt = Date.now(),
 ): string | null {
   if (!searchParams.has(AFFILIATION_CODE_PARAM)) return null;
-  return storeAffiliationCode(
-    searchParams.get(AFFILIATION_CODE_PARAM) ?? "",
-    capturedAt,
-  )?.code ?? null;
+  return (
+    storeAffiliationCode(
+      searchParams.get(AFFILIATION_CODE_PARAM) ?? "",
+      capturedAt,
+    )?.code ?? null
+  );
 }
 
 export function clearStoredAffiliationCode() {
@@ -132,7 +134,9 @@ export function readStoredAffiliationCode(now = Date.now()): string | null {
   return stored.code;
 }
 
-export function buildAffiliationMetadata(now = Date.now()): AffiliationMetadata {
+export function buildAffiliationMetadata(
+  now = Date.now(),
+): AffiliationMetadata {
   const affiliationCode = readStoredAffiliationCode(now);
   return affiliationCode ? { affiliation_code: affiliationCode } : {};
 }
@@ -217,7 +221,10 @@ export async function acceptStoredAffiliationInvite(
       p_confirmed: true,
     });
     if (error && shouldUseLegacyClaimFallback(error)) {
-      const result = await claimWithLegacyRpcFallback(supabase, affiliationCode);
+      const result = await claimWithLegacyRpcFallback(
+        supabase,
+        affiliationCode,
+      );
       if (result === "accepted") {
         clearStoredAffiliationCode();
       }

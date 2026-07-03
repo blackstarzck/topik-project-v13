@@ -56,7 +56,9 @@
    data-testid로 한정해 fixed action bar inner / feedback 본문 div에는 적용하지 않는다. */
 .app-workspace-body[data-testid="workspace-page-body"] {
   min-height: calc(100vh - var(--workspace-content-padding-block) * 2);
-  min-height: calc(max(100vh, 100dvh) - var(--workspace-content-padding-block) * 2);
+  min-height: calc(
+    max(100vh, 100dvh) - var(--workspace-content-padding-block) * 2
+  );
 }
 
 .app-workspace-body--form {

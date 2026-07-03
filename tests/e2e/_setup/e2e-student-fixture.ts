@@ -49,7 +49,10 @@ export type E2EAdminClientLike = {
   };
   from(table: "profiles"): {
     select(columns: string): {
-      eq(column: "id", value: string): {
+      eq(
+        column: "id",
+        value: string,
+      ): {
         maybeSingle(): Promise<ProfileResult>;
       };
     };
@@ -151,7 +154,9 @@ async function findUserByEmail(
     if (user) return user;
     if (data.users.length < 1000) return null;
   }
-  throw new Error("Could not find e2e student user within first 10000 auth users.");
+  throw new Error(
+    "Could not find e2e student user within first 10000 auth users.",
+  );
 }
 
 async function waitForProfile(
@@ -191,7 +196,8 @@ export async function ensureE2EStudentUser(
 
   if (result.error) throw result.error;
   const userId = result.data.user?.id ?? existing?.id;
-  if (!userId) throw new Error("Supabase did not return an e2e student user id.");
+  if (!userId)
+    throw new Error("Supabase did not return an e2e student user id.");
 
   const profile = await waitForProfile(admin, userId);
   if (profile.status !== "active") {

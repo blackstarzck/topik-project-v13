@@ -47,9 +47,8 @@ describe("getComparisonReportViewModel", () => {
   });
 
   it("omits retry navigation when the current problem is no longer visible to the caller", async () => {
-    const { getComparisonReportViewModel } = await import(
-      "../../../src/lib/writing/comparison-report-view-model"
-    );
+    const { getComparisonReportViewModel } =
+      await import("../../../src/lib/writing/comparison-report-view-model");
 
     const viewModel = await getComparisonReportViewModel("report-1");
 

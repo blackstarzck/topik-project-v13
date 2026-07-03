@@ -15,7 +15,11 @@ import {
   Typography,
 } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
-import { Mail, MessageCircle, MonitorCheck } from "@/components/shared/AppIcons";
+import {
+  Mail,
+  MessageCircle,
+  MonitorCheck,
+} from "@/components/shared/AppIcons";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 

@@ -353,9 +353,9 @@ describe("ProblemListView", () => {
       );
 
       expect(badge?.textContent).toBe(String(questionNo));
-      expect(badge?.classList.contains("problem-table__type-index--number")).toBe(
-        true,
-      );
+      expect(
+        badge?.classList.contains("problem-table__type-index--number"),
+      ).toBe(true);
     }
   });
 
@@ -378,21 +378,34 @@ describe("ProblemListView", () => {
       error: null,
     });
 
-    const { container } = renderInApp(<ProblemListView userId="user-1" />, "ko");
+    const { container } = renderInApp(
+      <ProblemListView userId="user-1" />,
+      "ko",
+    );
 
     await screen.findByText("Icon tag problem");
 
     const tags = Array.from(
-      container.querySelectorAll(".problem-table__tags .problem-table__tag--meta"),
+      container.querySelectorAll(
+        ".problem-table__tags .problem-table__tag--meta",
+      ),
     );
 
     expect(tags).toHaveLength(3);
-    expect(tags.map((tag) => tag.textContent)).toEqual(["교육", "문의", "설명"]);
+    expect(tags.map((tag) => tag.textContent)).toEqual([
+      "교육",
+      "문의",
+      "설명",
+    ]);
     expect(
-      container.querySelector(".problem-table__tags .problem-table__tag.ant-tag"),
+      container.querySelector(
+        ".problem-table__tags .problem-table__tag.ant-tag",
+      ),
     ).toBeNull();
     expect(
-      container.querySelectorAll(".problem-table__tags .problem-table__tag-icon"),
+      container.querySelectorAll(
+        ".problem-table__tags .problem-table__tag-icon",
+      ),
     ).toHaveLength(3);
   });
 

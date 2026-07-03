@@ -194,9 +194,7 @@ async function joinProblems(
   const ids = uniqueIds(items.map((row) => row.problem_id));
   if (ids.length === 0) return [];
 
-  const { data, error } = await supabase.rpc(
-    "list_user_library_problem_items",
-  );
+  const { data, error } = await supabase.rpc("list_user_library_problem_items");
   if (error) {
     throw new Error(`listLibraryItems(problems) join: ${error.message}`);
   }

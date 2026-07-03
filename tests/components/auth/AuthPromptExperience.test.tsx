@@ -127,7 +127,9 @@ describe("AuthPromptExperience", () => {
     renderLoginPrompt();
 
     await waitFor(() => {
-      expect(routerReplaceMock).toHaveBeenCalledWith("/auth/institution-invite");
+      expect(routerReplaceMock).toHaveBeenCalledWith(
+        "/auth/institution-invite",
+      );
     });
   });
 

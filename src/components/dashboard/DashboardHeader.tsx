@@ -11,10 +11,5 @@ import { PageHeader } from "@/components/shared/PageHeader";
  */
 export function DashboardHeader() {
   const t = useTranslations("dashboard.header");
-  return (
-    <PageHeader
-      title={t("title")}
-      subtitle={t("subtitle")}
-    />
-  );
+  return <PageHeader title={t("title")} subtitle={t("subtitle")} />;
 }

@@ -119,8 +119,8 @@ test.describe("Google OAuth KakaoTalk browser entry", () => {
   }) => {
     await page.goto("/login", { waitUntil: "networkidle" });
 
-    await expect(page.getByRole("button", { name: /Kakao|카카오/ })).toHaveCount(
-      0,
-    );
+    await expect(
+      page.getByRole("button", { name: /Kakao|카카오/ }),
+    ).toHaveCount(0);
   });
 });

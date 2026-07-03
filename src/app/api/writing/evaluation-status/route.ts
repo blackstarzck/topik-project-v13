@@ -16,7 +16,10 @@ import {
 export async function GET(request: Request) {
   const submissionId = new URL(request.url).searchParams.get("submissionId");
   if (!submissionId) {
-    return NextResponse.json({ error: "submissionId is required" }, { status: 400 });
+    return NextResponse.json(
+      { error: "submissionId is required" },
+      { status: 400 },
+    );
   }
 
   const supabase = await createSupabaseServerClient();
@@ -41,14 +44,21 @@ export async function GET(request: Request) {
     .eq("id", submissionId)
     .maybeSingle();
   if (submissionError) {
-    return NextResponse.json({ error: submissionError.message }, { status: 500 });
+    return NextResponse.json(
+      { error: submissionError.message },
+      { status: 500 },
+    );
   }
   if (!submission || submission.user_id !== user.id) {
     return NextResponse.json({ error: "not found" }, { status: 404 });
   }
 
   const baseUrl = getTalkpikApiBaseUrl();
-  if (!baseUrl || submission.feedback_status === "complete" || submission.feedback_status === "failed") {
+  if (
+    !baseUrl ||
+    submission.feedback_status === "complete" ||
+    submission.feedback_status === "failed"
+  ) {
     return NextResponse.json({ feedback_status: submission.feedback_status });
   }
 
@@ -72,31 +82,42 @@ export async function GET(request: Request) {
     }
 
     if (status.status === "failed") {
-      const { error: syncError } = await serviceSupabase.rpc("sync_external_writing_feedback" as never, {
-        target_submission_id: submissionId,
-        next_status: "failed",
-        feedback: null,
-        dimensions: [],
-        sentences: [],
-      } as never);
+      const { error: syncError } = await serviceSupabase.rpc(
+        "sync_external_writing_feedback" as never,
+        {
+          target_submission_id: submissionId,
+          next_status: "failed",
+          feedback: null,
+          dimensions: [],
+          sentences: [],
+        } as never,
+      );
       if (syncError) {
-        return NextResponse.json({ feedback_status: submission.feedback_status });
+        return NextResponse.json({
+          feedback_status: submission.feedback_status,
+        });
       }
       return NextResponse.json({ feedback_status: "failed" });
     }
 
     if (status.status !== "graded") {
-      const nextStatus = status.status === "processing" ? "analyzing" : "pending";
+      const nextStatus =
+        status.status === "processing" ? "analyzing" : "pending";
       if (submission.feedback_status !== nextStatus) {
-        const { error: syncError } = await serviceSupabase.rpc("sync_external_writing_feedback" as never, {
-          target_submission_id: submissionId,
-          next_status: nextStatus,
-          feedback: null,
-          dimensions: [],
-          sentences: [],
-        } as never);
+        const { error: syncError } = await serviceSupabase.rpc(
+          "sync_external_writing_feedback" as never,
+          {
+            target_submission_id: submissionId,
+            next_status: nextStatus,
+            feedback: null,
+            dimensions: [],
+            sentences: [],
+          } as never,
+        );
         if (syncError) {
-          return NextResponse.json({ feedback_status: submission.feedback_status });
+          return NextResponse.json({
+            feedback_status: submission.feedback_status,
+          });
         }
       }
       return NextResponse.json({ feedback_status: nextStatus });
@@ -112,16 +133,19 @@ export async function GET(request: Request) {
     }
     const payload = mapExternalEvaluationFeedback(externalFeedback);
 
-    const { error: syncError } = await serviceSupabase.rpc("sync_external_writing_feedback" as never, {
-      target_submission_id: submissionId,
-      next_status: "complete",
-      feedback: {
-        ...payload.feedback,
-        raw_ai_result: externalFeedback as unknown as Json,
-      },
-      dimensions: payload.dimensions,
-      sentences: payload.sentences,
-    } as never);
+    const { error: syncError } = await serviceSupabase.rpc(
+      "sync_external_writing_feedback" as never,
+      {
+        target_submission_id: submissionId,
+        next_status: "complete",
+        feedback: {
+          ...payload.feedback,
+          raw_ai_result: externalFeedback as unknown as Json,
+        },
+        dimensions: payload.dimensions,
+        sentences: payload.sentences,
+      } as never,
+    );
     if (syncError) {
       return NextResponse.json({ feedback_status: submission.feedback_status });
     }

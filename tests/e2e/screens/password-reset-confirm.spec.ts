@@ -82,9 +82,9 @@ test("X-16 password reset confirm renders and gives a recovery path when update 
   await expect(
     page.getByTestId("password-reset-confirm-request-link"),
   ).toHaveAttribute("href", "/password-reset");
-  await expect(page.getByText("Synthetic expired recovery session")).toHaveCount(
-    0,
-  );
+  await expect(
+    page.getByText("Synthetic expired recovery session"),
+  ).toHaveCount(0);
 
   expect(updateCalls()).toBeLessThanOrEqual(1);
   expect(errors).toEqual([]);

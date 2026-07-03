@@ -146,40 +146,40 @@ async function loadGrowthData(
       recentVolRes,
       totalEventVolRes,
     ] = await Promise.all([
-        getDashboardKpi(userId, supabase),
-        getWeakDimensions(userId),
-        getWeaknessRecommendations(userId),
-        supabase
-          .from("writing_feedback")
-          .select("generated_at, score_total, score_max")
-          .eq("user_id", userId)
-          .gte("generated_at", sinceIso)
-          .order("generated_at", { ascending: true }),
-        supabase
-          .from("study_events")
-          .select("occurred_at, event_type")
-          .eq("user_id", userId)
-          .gte("occurred_at", sinceIso),
-        supabase
-          .from("writing_feedback")
-          .select(
-            "submission_id, score_total, generated_at, writing_submissions!inner(question_no)",
-          )
-          .eq("user_id", userId)
-          .order("generated_at", { ascending: false })
-          .limit(5),
-        supabase
-          .from("study_events")
-          .select("id", { count: "exact", head: true })
-          .eq("user_id", userId)
-          .in("event_type", ["attempt_submitted", "submission_submitted"])
-          .gte("occurred_at", recentVolumeSince),
-        supabase
-          .from("study_events")
-          .select("id", { count: "exact", head: true })
-          .eq("user_id", userId)
-          .in("event_type", ["attempt_submitted", "submission_submitted"]),
-      ]);
+      getDashboardKpi(userId, supabase),
+      getWeakDimensions(userId),
+      getWeaknessRecommendations(userId),
+      supabase
+        .from("writing_feedback")
+        .select("generated_at, score_total, score_max")
+        .eq("user_id", userId)
+        .gte("generated_at", sinceIso)
+        .order("generated_at", { ascending: true }),
+      supabase
+        .from("study_events")
+        .select("occurred_at, event_type")
+        .eq("user_id", userId)
+        .gte("occurred_at", sinceIso),
+      supabase
+        .from("writing_feedback")
+        .select(
+          "submission_id, score_total, generated_at, writing_submissions!inner(question_no)",
+        )
+        .eq("user_id", userId)
+        .order("generated_at", { ascending: false })
+        .limit(5),
+      supabase
+        .from("study_events")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .in("event_type", ["attempt_submitted", "submission_submitted"])
+        .gte("occurred_at", recentVolumeSince),
+      supabase
+        .from("study_events")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .in("event_type", ["attempt_submitted", "submission_submitted"]),
+    ]);
 
     const feedbacks = (feedbackRes.data ?? []) as FeedbackPoint[];
     const events = (eventsRes.data ?? []) as {

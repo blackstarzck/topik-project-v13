@@ -141,9 +141,13 @@ describe("legal consent helpers", () => {
     const inserts: Row[][] = [];
     const client = makeClient({ inserts });
 
-    await recordRequiredConsents("user-1", [termsDoc, privacyDoc], "signup", async () =>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      client as any,
+    await recordRequiredConsents(
+      "user-1",
+      [termsDoc, privacyDoc],
+      "signup",
+      async () =>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        client as any,
     );
 
     expect(inserts).toHaveLength(1);

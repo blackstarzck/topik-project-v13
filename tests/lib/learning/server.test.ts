@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { getLearningGoal, hasLearningGoal } from "../../../src/lib/learning/server";
+import {
+  getLearningGoal,
+  hasLearningGoal,
+} from "../../../src/lib/learning/server";
 
 function makeClient(opts: {
   count?: number | null;
@@ -28,7 +31,10 @@ function makeClient(opts: {
 // Supabase's `.select(_, { count: 'exact', head: true })` returns a thenable
 // shape { count, error }. The chain above resolves through the eq() return,
 // so the helper test below builds it explicitly.
-function makeCountClient(count: number | null, error: { message: string } | null = null) {
+function makeCountClient(
+  count: number | null,
+  error: { message: string } | null = null,
+) {
   return {
     from: () => ({
       select: () => ({

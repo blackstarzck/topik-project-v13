@@ -101,7 +101,9 @@ describe("InstitutionInvitePanel", () => {
     ).toBeTruthy();
     expect(container.querySelector(".institution-invite-panel")).toBeTruthy();
     expect(container.querySelector(".institution-invite-card")).toBeNull();
-    expect(container.querySelector(".institution-invite-panel.ant-card")).toBeNull();
+    expect(
+      container.querySelector(".institution-invite-panel.ant-card"),
+    ).toBeNull();
     expect(
       container.querySelector(".institution-invite-policy--plain"),
     ).toBeTruthy();
@@ -138,7 +140,9 @@ describe("InstitutionInvitePanel", () => {
     ).toBe("/login?next=%2Fauth%2Finstitution-invite");
 
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "초대 없이 계속하기" }));
+      fireEvent.click(
+        screen.getByRole("button", { name: "초대 없이 계속하기" }),
+      );
     });
 
     expect(clearStoredAffiliationCodeMock).toHaveBeenCalledTimes(1);
@@ -176,9 +180,7 @@ describe("InstitutionInvitePanel", () => {
     await waitFor(() => {
       expect(acceptStoredAffiliationInviteMock).toHaveBeenCalledTimes(1);
     });
-    expect(
-      await screen.findByText("기관 연결이 완료됐어요"),
-    ).toBeTruthy();
+    expect(await screen.findByText("기관 연결이 완료됐어요")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "계속하기" }));
     expect(replaceMock).toHaveBeenCalledWith("/dashboard");
   });
@@ -194,7 +196,9 @@ describe("InstitutionInvitePanel", () => {
     await screen.findByText("learner@example.com");
 
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "연결하지 않고 계속" }));
+      fireEvent.click(
+        screen.getByRole("button", { name: "연결하지 않고 계속" }),
+      );
     });
 
     expect(clearStoredAffiliationCodeMock).toHaveBeenCalledTimes(1);
@@ -224,7 +228,9 @@ describe("InstitutionInvitePanel", () => {
     ).toBeNull();
 
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "다른 계정으로 로그인" }));
+      fireEvent.click(
+        screen.getByRole("button", { name: "다른 계정으로 로그인" }),
+      );
     });
 
     expect(signOutMock).toHaveBeenCalledTimes(1);
@@ -277,7 +283,9 @@ describe("InstitutionInvitePanel", () => {
     const priorityAction = screen.getByTestId(
       "institution-invite-already-other-primary",
     );
-    expect(priorityAction.className).toContain("institution-invite-flat-action");
+    expect(priorityAction.className).toContain(
+      "institution-invite-flat-action",
+    );
   });
 
   it("does not call the accept RPC when the stored invite code is missing or expired", async () => {
@@ -285,7 +293,9 @@ describe("InstitutionInvitePanel", () => {
 
     renderPanel();
 
-    expect(await screen.findByText("초대 코드가 없거나 만료됐어요")).toBeTruthy();
+    expect(
+      await screen.findByText("초대 코드가 없거나 만료됐어요"),
+    ).toBeTruthy();
     expect(acceptStoredAffiliationInviteMock).not.toHaveBeenCalled();
   });
 });

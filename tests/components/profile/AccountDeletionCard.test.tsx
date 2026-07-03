@@ -118,7 +118,9 @@ describe("AccountDeletionCard", () => {
     // open → false 시 AntD 가 leave 애니메이션 클래스를 동기 적용한다(jsdom 은
     // transitionend 를 안 쏴 노드 제거는 안 되므로, 닫힘 신호를 클래스로 확인).
     await waitFor(() =>
-      expect(baseElement.querySelector(".ant-modal.ant-zoom-leave")).toBeTruthy(),
+      expect(
+        baseElement.querySelector(".ant-modal.ant-zoom-leave"),
+      ).toBeTruthy(),
     );
   });
 });

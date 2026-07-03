@@ -58,7 +58,9 @@ function isSuccessLike(result: AcceptAffiliationInviteResult) {
   return result === "accepted" || result === "already_affiliated_same";
 }
 
-export function InstitutionInvitePanel({ nextPath }: InstitutionInvitePanelProps) {
+export function InstitutionInvitePanel({
+  nextPath,
+}: InstitutionInvitePanelProps) {
   const t = useTranslations("auth.institutionInvite");
   const router = useRouter();
   const [state, setState] = useState<InvitePanelState>({ kind: "loading" });
@@ -185,7 +187,8 @@ export function InstitutionInvitePanel({ nextPath }: InstitutionInvitePanelProps
     state.kind === "already-other"
       ? state.email
       : null;
-  const pageClassName = "institution-invite-page institution-invite-page--white";
+  const pageClassName =
+    "institution-invite-page institution-invite-page--white";
   const policyNotice = (
     <section
       className="institution-invite-policy institution-invite-policy--plain"
@@ -240,7 +243,11 @@ export function InstitutionInvitePanel({ nextPath }: InstitutionInvitePanelProps
               title={<span id="invite-title">{t("anonymousTitle")}</span>}
               subTitle={t("anonymousDescription")}
             />
-            <Alert type="info" showIcon title={t("codeLabel", { code: state.code })} />
+            <Alert
+              type="info"
+              showIcon
+              title={t("codeLabel", { code: state.code })}
+            />
             {policyNotice}
             <div className="institution-invite-actions institution-invite-actions-grid">
               <Button
@@ -282,7 +289,11 @@ export function InstitutionInvitePanel({ nextPath }: InstitutionInvitePanelProps
               <Text type="secondary">{t("currentAccount")}</Text>
               {email ? <Text strong>{email}</Text> : null}
             </div>
-            <Alert type="info" showIcon title={t("codeLabel", { code: state.code })} />
+            <Alert
+              type="info"
+              showIcon
+              title={t("codeLabel", { code: state.code })}
+            />
             {policyNotice}
             <div className="institution-invite-actions institution-invite-actions-grid">
               <Button
@@ -381,7 +392,9 @@ export function InstitutionInvitePanel({ nextPath }: InstitutionInvitePanelProps
             status={state.kind === "invalid" ? "warning" : "error"}
             title={
               <span id="invite-title">
-                {state.kind === "invalid" ? t("invalidTitle") : t("failedTitle")}
+                {state.kind === "invalid"
+                  ? t("invalidTitle")
+                  : t("failedTitle")}
               </span>
             }
             subTitle={

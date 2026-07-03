@@ -444,7 +444,10 @@ function q51BlankCriteria(blanks: NormalizedBlank[]): string[] {
 function q52Conditions(materials: AnyRecord | null): string[] {
   return [
     formattedMetadata("연결 기능", materials?.connection_function),
-    formattedMetadata("요구 표현 기능", materials?.required_expression_function),
+    formattedMetadata(
+      "요구 표현 기능",
+      materials?.required_expression_function,
+    ),
   ].filter((item): item is string => Boolean(item));
 }
 
@@ -889,12 +892,11 @@ export function normalizeWritingProblem(
     const rubric = {
       conditions:
         input.questionNo === 52
-          ? (
-              sotQ52Conditions.length > 0
-                ? sotQ52Conditions
-                : blankConditions.length > 0
-                  ? blankConditions
-                  : baseRubric.conditions
+          ? (sotQ52Conditions.length > 0
+              ? sotQ52Conditions
+              : blankConditions.length > 0
+                ? blankConditions
+                : baseRubric.conditions
             ).slice(0, 5)
           : baseRubric.conditions,
       criteria:
