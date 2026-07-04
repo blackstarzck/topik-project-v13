@@ -95,7 +95,6 @@ export function FeedbackPageContent({
     showShortReportOverview ||
     (withSentences && showSubmissionMeta && showDimensionGrid === false);
   const showStickyReportHeader = withSentences;
-  const sentenceLabelVariant = showShortReportOverview ? "short" : "long";
   const defaultRetryLabelKey = showShortReportOverview
     ? "retryDefault"
     : withSentences
@@ -201,7 +200,9 @@ export function FeedbackPageContent({
           <SentenceFeedbackList
             rows={bundle.sentences}
             onReanalyze={onReanalyze}
-            labelVariant={sentenceLabelVariant}
+            questionNo={submission.question_no}
+            answerText={submission.answer_text}
+            answerJson={submission.answer_json}
           />
         ) : null}
 
