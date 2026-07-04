@@ -1,7 +1,6 @@
 "use client";
 
 import { Table, Typography } from "antd";
-import { TrendingDown, TrendingUp } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 const { Text, Title } = Typography;
@@ -22,13 +21,11 @@ type Props = {
 
 type SectionKey = (typeof SECTION_KEYS)[number];
 type AnswerSections = Record<SectionKey, string>;
-type SectionTrend = "up" | "down" | null;
 type AnswerSectionRow = {
   key: SectionKey;
   section: string;
   current: string;
   previous: string;
-  trend: SectionTrend;
 };
 
 export function SubmissionDiffPanel({
@@ -50,7 +47,6 @@ export function SubmissionDiffPanel({
     previous:
       previousSections?.[key] ??
       (key === "intro" ? t("noPreviousAnswer") : EMPTY_ANSWER),
-    trend: getSectionTrend(currentSections[key], previousSections?.[key]),
   }));
 
   return (
@@ -81,8 +77,7 @@ export function SubmissionDiffPanel({
             dataIndex: "current",
             width: ANSWER_COLUMN_WIDTH,
             onHeaderCell: () => ({ className: TABLE_HEADER_CLASS_NAME }),
-            render: (value: string, row: AnswerSectionRow) =>
-              renderCurrentAnswerCell(value, row),
+            render: renderAnswerCell,
           },
           {
             title: renderTableHeader(t("previousAnswer")),
@@ -110,53 +105,12 @@ function renderTableHeader(label: string) {
   );
 }
 
-function renderCurrentAnswerCell(value: string, row: AnswerSectionRow) {
-  return (
-    <div className="flex items-start gap-2">
-      <TrendIcon trend={row.trend} sectionKey={row.key} />
-      {renderAnswerCell(value)}
-    </div>
-  );
-}
-
 function renderAnswerCell(value: string) {
   return (
     <span className="comparison-submission-answer-text block min-w-0 whitespace-pre-wrap break-words">
       {value}
     </span>
   );
-}
-
-function TrendIcon({
-  trend,
-  sectionKey,
-}: {
-  trend: SectionTrend;
-  sectionKey: SectionKey;
-}) {
-  if (trend === "up") {
-    return (
-      <TrendingUp
-        aria-hidden
-        className="mt-0.5 shrink-0 text-primary"
-        data-testid={`comparison-submission-trend-up-${sectionKey}`}
-        size={16}
-        strokeWidth={2}
-      />
-    );
-  }
-  if (trend === "down") {
-    return (
-      <TrendingDown
-        aria-hidden
-        className="mt-0.5 shrink-0 text-text-secondary"
-        data-testid={`comparison-submission-trend-down-${sectionKey}`}
-        size={16}
-        strokeWidth={2}
-      />
-    );
-  }
-  return null;
 }
 
 function sectionLabelKey(key: SectionKey) {
@@ -214,21 +168,6 @@ function splitAnswerTextIntoSections(value: string): AnswerSections {
 function normalizeSectionText(value: string) {
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : EMPTY_ANSWER;
-}
-
-function getSectionTrend(
-  current: string,
-  previous: string | undefined,
-): SectionTrend {
-  if (previous === undefined) return null;
-  const delta = visibleLength(current) - visibleLength(previous);
-  if (delta > 0) return "up";
-  if (delta < 0) return "down";
-  return null;
-}
-
-function visibleLength(value: string) {
-  return value === EMPTY_ANSWER ? 0 : Array.from(value.trim()).length;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
