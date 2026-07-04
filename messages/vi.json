@@ -1361,6 +1361,9 @@
       "longIntroLabel": "Mở bài",
       "longBodyLabel": "Thân bài",
       "longConclusionLabel": "Kết bài",
+      "generalLabel": "Toàn bài",
+      "generalBeforeFallback": "Nhận xét về toàn bộ bài viết.",
+      "generalAfterFallback": "Không áp dụng",
       "beforeTitle": "Trước (bài của tôi)",
       "afterTitle": "Sau (cách diễn đạt gợi ý)",
       "reasonTitle": "Lý do sửa",
@@ -1968,6 +1971,8 @@
         "disabled": "Đang chờ",
         "retryUnavailable": "Không thể làm lại",
         "retryAria": "Làm lại {title}",
+        "refreshAria": "Làm mới trạng thái phân tích",
+        "refreshTooltip": "Kiểm tra phân tích đã hoàn tất chưa",
         "status": {
           "pending": "Đang chờ",
           "analyzing": "Đang phân tích",

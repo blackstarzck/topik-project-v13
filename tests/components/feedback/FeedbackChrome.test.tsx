@@ -120,6 +120,8 @@ function submission(
     problem_id: "problem-1",
     question_no: 51,
     feedback_status: "complete",
+    answer_text: "",
+    answer_json: null,
     ...overrides,
   } as unknown as WritingSubmissionRow;
 }
@@ -224,14 +226,24 @@ describe("DimensionCardGrid (i18n chrome)", () => {
 });
 
 describe("SentenceFeedbackList (i18n chrome)", () => {
+  // 51/52는 답안 줄("ㄱ: …")에 첨삭 원문을 대조해 그룹을 만든다.
+  const shortAnchorProps = {
+    questionNo: 51,
+    answerText: "ㄱ: 그러므로 시작합니다\nㄴ: 하지만 마무리합니다",
+    answerJson: null,
+  };
+
   it("renders the empty-state copy when there are no rows", () => {
-    renderWithIntl(<SentenceFeedbackList rows={[]} />);
+    renderWithIntl(<SentenceFeedbackList rows={[]} {...shortAnchorProps} />);
     expect(screen.getByText("문장별 첨삭이 없습니다.")).toBeTruthy();
   });
 
   it("uses the shared content section title structure", () => {
     renderWithIntl(
-      <SentenceFeedbackList rows={[sentence({ id: "s-title" })]} />,
+      <SentenceFeedbackList
+        rows={[sentence({ id: "s-title" })]}
+        {...shortAnchorProps}
+      />,
     );
 
     const title = screen.getByRole("heading", {
@@ -247,9 +259,10 @@ describe("SentenceFeedbackList (i18n chrome)", () => {
     const rows = Array.from({ length: 7 }, (_, i) =>
       sentence({ id: `s-${i}` }),
     );
-    renderWithIntl(<SentenceFeedbackList rows={rows} />);
+    renderWithIntl(<SentenceFeedbackList rows={rows} {...shortAnchorProps} />);
     // 7 rows, 5 shown initially → 2 hidden.
     expect(screen.getByText("더보기 (2개)")).toBeTruthy();
+    expect(screen.getAllByRole("listitem")).toHaveLength(5);
   });
 
   it("renders correction cards with before, after, and reason columns", () => {
@@ -263,6 +276,7 @@ describe("SentenceFeedbackList (i18n chrome)", () => {
             comment: "앞뒤 문장의 대조 관계를 자연스럽게 연결합니다.",
           }),
         ]}
+        {...shortAnchorProps}
       />,
     );
 
@@ -276,21 +290,86 @@ describe("SentenceFeedbackList (i18n chrome)", () => {
     expect(screen.getByTestId("feedback-sentence-reason")).toBeTruthy();
   });
 
-  it("keeps intro, body, and conclusion labels for sparse long feedback", () => {
+  it("labels only the blanks that exist in the answer and never invents ㄷ/ㄹ", () => {
     renderWithIntl(
       <SentenceFeedbackList
-        labelVariant="long"
+        rows={[
+          sentence({ id: "s-1", original_text: "그러므로" }),
+          sentence({ id: "s-2", original_text: "하지만" }),
+          sentence({ id: "s-3", original_text: "" }),
+          sentence({ id: "s-4", original_text: "답안에 없는 텍스트" }),
+        ]}
+        {...shortAnchorProps}
+      />,
+    );
+
+    const labels = screen
+      .getAllByTestId("feedback-sentence-group-label")
+      .map((node) => node.textContent);
+    expect(labels).toEqual(["ㄱ", "ㄴ", "전체"]);
+    expect(screen.queryByText("ㄷ")).toBeNull();
+    expect(screen.queryByText("ㄹ")).toBeNull();
+  });
+
+  it("groups long feedback under one header per matched section", () => {
+    renderWithIntl(
+      <SentenceFeedbackList
+        questionNo={53}
+        answerText={null}
+        answerJson={{
+          _v: "53.v1",
+          sections: {
+            intro: "서론 원문입니다",
+            body: "본론 원문입니다",
+            conclusion: "결론 원문입니다",
+          },
+        }}
         rows={[
           sentence({ id: "s-long-intro", original_text: "서론 원문" }),
+          sentence({ id: "s-long-body-1", original_text: "본론 원문" }),
+          sentence({ id: "s-long-body-2", original_text: "본론 원문입니다" }),
           sentence({ id: "s-long-conclusion", original_text: "결론 원문" }),
         ]}
       />,
     );
 
-    expect(screen.getAllByRole("listitem")).toHaveLength(3);
-    expect(screen.getByText("서론")).toBeTruthy();
-    expect(screen.getByText("본론")).toBeTruthy();
-    expect(screen.getByText("결론")).toBeTruthy();
+    expect(screen.getAllByRole("listitem")).toHaveLength(4);
+    const labels = screen
+      .getAllByTestId("feedback-sentence-group-label")
+      .map((node) => node.textContent);
+    // 본론 첨삭이 2개여도 헤더는 1번만 나타난다.
+    expect(labels).toEqual(["서론", "본론", "결론"]);
+  });
+
+  it("sends document-level long annotations to the 전체 group", () => {
+    renderWithIntl(
+      <SentenceFeedbackList
+        questionNo={53}
+        answerText={"서론입니다.\n\n본론입니다.\n\n결론입니다."}
+        answerJson={null}
+        rows={[
+          sentence({
+            id: "s-doc",
+            original_text: "",
+            corrected_text: null,
+            comment: "문단을 나누어 구조를 분명히 하세요.",
+          }),
+        ]}
+      />,
+    );
+
+    const labels = screen
+      .getAllByTestId("feedback-sentence-group-label")
+      .map((node) => node.textContent);
+    expect(labels).toEqual(["전체"]);
+    expect(screen.queryByText("서론")).toBeNull();
+    expect(screen.queryByText("본론")).toBeNull();
+    expect(screen.queryByText("결론")).toBeNull();
+    // 빈 원문의 문서 수준 조언은 "입력된 답안이 없습니다" 대신 전용 문구를 쓴다.
+    expect(screen.getByText("글 전체에 대한 조언입니다.")).toBeTruthy();
+    expect(screen.getByText("해당 없음")).toBeTruthy();
+    expect(screen.queryByText("입력된 답안이 없습니다.")).toBeNull();
+    expect(screen.queryByText("권장 표현을 만들지 못했어요.")).toBeNull();
   });
 
   it("uses a chevron between before and after correction cards", () => {
@@ -303,6 +382,7 @@ describe("SentenceFeedbackList (i18n chrome)", () => {
             corrected_text: "After",
           }),
         ]}
+        {...shortAnchorProps}
       />,
     );
 
@@ -316,6 +396,7 @@ describe("SentenceFeedbackList (i18n chrome)", () => {
     renderWithIntl(
       <SentenceFeedbackList
         rows={[sentence({ id: "s-border-1" }), sentence({ id: "s-border-2" })]}
+        {...shortAnchorProps}
       />,
     );
 
@@ -690,20 +771,31 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
     expect(bodyChildren).toContain("feedback-detail-panel");
   });
 
-  it("labels long feedback sentence corrections by writing section", () => {
+  it("labels long feedback sentence corrections by matching answer sections", () => {
     const bundle: FeedbackBundle = {
       feedback: feedback({ raw_ai_result: {} }),
       dimensions: [],
       sentences: [
-        sentence({ id: "s-intro" }),
-        sentence({ id: "s-body" }),
-        sentence({ id: "s-conclusion" }),
+        sentence({ id: "s-intro", original_text: "서론 문장" }),
+        sentence({ id: "s-body", original_text: "본론 문장" }),
+        sentence({ id: "s-conclusion", original_text: "결론 문장" }),
       ],
     };
 
     renderWithIntl(
       <FeedbackPageContent
-        submission={submission({ question_no: 53 })}
+        submission={submission({
+          question_no: 53,
+          answer_text: "서론 문장입니다.\n\n본론 문장입니다.\n\n결론 문장입니다.",
+          answer_json: {
+            _v: "53.v1",
+            sections: {
+              intro: "서론 문장입니다.",
+              body: "본론 문장입니다.",
+              conclusion: "결론 문장입니다.",
+            },
+          },
+        })}
         bundle={bundle}
         withSentences
         showSubmissionMeta

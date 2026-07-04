@@ -1361,6 +1361,9 @@
       "longIntroLabel": "서론",
       "longBodyLabel": "본론",
       "longConclusionLabel": "결론",
+      "generalLabel": "전체",
+      "generalBeforeFallback": "글 전체에 대한 조언입니다.",
+      "generalAfterFallback": "해당 없음",
       "beforeTitle": "Before (내 답안)",
       "afterTitle": "After (권장 표현)",
       "reasonTitle": "교정 이유",
@@ -1968,6 +1971,8 @@
         "disabled": "대기 중",
         "retryUnavailable": "다시 풀 수 없음",
         "retryAria": "{title} 다시 풀기",
+        "refreshAria": "분석 완료 여부 새로고침",
+        "refreshTooltip": "분석 완료 여부 확인",
         "status": {
           "pending": "대기 중",
           "analyzing": "분석 중",

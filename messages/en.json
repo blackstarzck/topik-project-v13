@@ -1361,6 +1361,9 @@
       "longIntroLabel": "Introduction",
       "longBodyLabel": "Body",
       "longConclusionLabel": "Conclusion",
+      "generalLabel": "Overall",
+      "generalBeforeFallback": "Advice about the whole answer.",
+      "generalAfterFallback": "Not applicable",
       "beforeTitle": "Before (my answer)",
       "afterTitle": "After (recommended expression)",
       "reasonTitle": "Correction reason",
@@ -1968,6 +1971,8 @@
         "disabled": "Waiting",
         "retryUnavailable": "Cannot retry",
         "retryAria": "Retry {title}",
+        "refreshAria": "Refresh analysis status",
+        "refreshTooltip": "Check whether analysis is complete",
         "status": {
           "pending": "Waiting",
           "analyzing": "Analyzing",
