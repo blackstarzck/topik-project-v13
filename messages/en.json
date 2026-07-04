@@ -1968,6 +1968,8 @@
         "disabled": "Waiting",
         "retryUnavailable": "Cannot retry",
         "retryAria": "Retry {title}",
+        "refreshAria": "Refresh analysis status",
+        "refreshTooltip": "Check whether analysis is complete",
         "status": {
           "pending": "Waiting",
           "analyzing": "Analyzing",

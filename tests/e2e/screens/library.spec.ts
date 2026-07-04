@@ -482,8 +482,15 @@ test("F-01 library dashboard renders study action sections", async ({
       .getByTestId("library-feedback-waiting-panel")
       .locator(".ant-card-head-title"),
   ).toContainText("피드백 대기");
+  await expect(
+    page
+      .getByTestId("library-feedback-waiting-panel")
+      .getByRole("button", { name: "분석 완료 여부 새로고침" }),
+  ).toBeVisible();
   await expect(page.getByText("분석 실패").first()).toBeVisible();
-  await expect(page.getByText("분석 중").first()).toBeVisible();
+  await expect(
+    page.getByTestId("library-feedback-waiting-spinner").first(),
+  ).toBeVisible();
   await expect(page.getByTestId("library-weak-items-panel")).toBeVisible();
   await expect(
     page

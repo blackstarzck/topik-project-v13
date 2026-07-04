@@ -1968,6 +1968,8 @@
         "disabled": "대기 중",
         "retryUnavailable": "다시 풀 수 없음",
         "retryAria": "{title} 다시 풀기",
+        "refreshAria": "분석 완료 여부 새로고침",
+        "refreshTooltip": "분석 완료 여부 확인",
         "status": {
           "pending": "대기 중",
           "analyzing": "분석 중",

@@ -6,6 +6,16 @@ import { LibraryDashboard } from "../../../src/components/library/LibraryDashboa
 import type { LibraryDashboardView } from "../../../src/lib/library/types";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
 
+const routerRefreshMock = vi.hoisted(() => vi.fn());
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    refresh: routerRefreshMock,
+  }),
+}));
+
 const dashboardFixture: LibraryDashboardView = {
   kpis: {
     reviewableCount: 12,
@@ -85,6 +95,7 @@ const dashboardFixture: LibraryDashboardView = {
 beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(new Date("2026-07-04T12:00:00.000Z"));
+  routerRefreshMock.mockReset();
 });
 
 afterEach(() => {

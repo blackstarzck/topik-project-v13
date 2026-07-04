@@ -4556,6 +4556,12 @@ body {
   font-size: 18px;
 }
 
+.library-feedback-waiting-panel .library-review-candidate-question-number {
+  width: 1.47em;
+  height: 1.47em;
+  font-size: 18px;
+}
+
 .library-review-candidate-score-progress {
   appearance: none;
   overflow: hidden;

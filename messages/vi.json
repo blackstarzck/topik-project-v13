@@ -1968,6 +1968,8 @@
         "disabled": "Đang chờ",
         "retryUnavailable": "Không thể làm lại",
         "retryAria": "Làm lại {title}",
+        "refreshAria": "Làm mới trạng thái phân tích",
+        "refreshTooltip": "Kiểm tra phân tích đã hoàn tất chưa",
         "status": {
           "pending": "Đang chờ",
           "analyzing": "Đang phân tích",
