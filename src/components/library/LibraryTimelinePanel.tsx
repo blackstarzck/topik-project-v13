@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Empty, Typography } from "antd";
+import { Empty, Typography } from "antd";
 import type { CardProps } from "antd";
 import { Download, Eye, FileText, PenLine } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
@@ -10,7 +10,6 @@ import type {
   LibraryDashboardTimelineEventType,
   LibraryTimelineItem,
 } from "@/lib/library/types";
-import { APP_ROUTES } from "@/lib/routes";
 
 import { formatDashboardRelativeTime } from "./library-dashboard-format";
 
@@ -18,7 +17,6 @@ const { Text } = Typography;
 
 const cardClassNames = {
   body: "flex-1",
-  actions: "app-card-footer-actions",
 } satisfies CardProps["classNames"];
 
 type Props = {
@@ -35,15 +33,6 @@ export function LibraryTimelinePanel({ items }: Props) {
       title={t("timeline.title")}
       className="flex h-full flex-col"
       classNames={cardClassNames}
-      actions={
-        items.length > 0
-          ? [
-              <Button key="timeline-view-all" block href={APP_ROUTES.growth}>
-                {t("timeline.viewAll")}
-              </Button>,
-            ]
-          : undefined
-      }
     >
       <div className="flex h-full min-h-[220px] flex-col gap-4">
         {items.length === 0 ? (

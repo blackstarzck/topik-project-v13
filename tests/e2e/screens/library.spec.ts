@@ -508,13 +508,6 @@ test("F-01 library dashboard renders study action sections", async ({
   await expect(
     page
       .getByTestId("library-timeline-panel")
-      .locator(".ant-card-actions")
-      .getByRole("link", { name: "전체 타임라인 보기" }),
-  ).toHaveAttribute("href", "/growth");
-  await expect(
-    page
-      .getByTestId("library-timeline-panel")
-      .locator(".ant-card-body")
       .getByRole("link", { name: "전체 타임라인 보기" }),
   ).toHaveCount(0);
 

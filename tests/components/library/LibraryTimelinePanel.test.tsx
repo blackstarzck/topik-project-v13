@@ -64,5 +64,8 @@ describe("LibraryTimelinePanel", () => {
     expect(reportContent.textContent).toContain("54번");
     expect(reportTime.className).toContain("ml-auto");
     expect(reportTime.textContent).toBe("1시간 전");
+    expect(
+      screen.queryByRole("link", { name: "전체 타임라인 보기" }),
+    ).toBeNull();
   });
 });

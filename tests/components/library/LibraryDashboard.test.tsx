@@ -211,12 +211,9 @@ describe("LibraryDashboard", () => {
 
     expect(screen.queryByText("최근 완료된 피드백 기준")).toBeNull();
 
-    const timelineViewAll = screen.getByRole("link", {
-      name: "전체 타임라인 보기",
-    });
-    expect(timelineViewAll.closest(".ant-card-actions")).toBeTruthy();
-    expect(timelineViewAll.closest(".app-card-footer-actions")).toBeTruthy();
-    expect(timelineViewAll.closest(".ant-card-body")).toBeNull();
+    expect(
+      screen.queryByRole("link", { name: "전체 타임라인 보기" }),
+    ).toBeNull();
   });
 
   it("renders the review empty state with a practice CTA", () => {
