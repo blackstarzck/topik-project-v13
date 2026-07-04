@@ -12,7 +12,6 @@ import Link from "next/link";
 
 import {
   clampTitle,
-  statusBadge,
   type SubmissionEnrichment,
 } from "@/components/library/library-enrich-data";
 import type {
@@ -22,9 +21,10 @@ import type {
 import { writingFeedbackHref, writingProblemHref } from "@/lib/writing/routes";
 
 import { LibraryItemRow } from "./LibraryItemRow";
+import { LibraryProblemsQuestionNumber } from "./LibraryProblemsQuestionNumber";
 import {
-  formatDate,
   isAnalysisPendingStatus,
+  problemTitle,
   submissionTitle,
   type LibraryListTranslate,
 } from "./library-problems-presenter";
@@ -38,13 +38,11 @@ export function LibraryProblemsSubmissionRow({
   item: LibrarySubmissionView;
   meta: SubmissionEnrichment | undefined;
 }) {
-  const t = useTranslations("library.problemsList") as LibraryListTranslate;
   const tSubmissions = useTranslations(
     "library.submissions",
   ) as LibraryListTranslate;
   const feedbackStatus = meta?.feedbackStatus ?? "pending";
   const analysisPending = isAnalysisPendingStatus(feedbackStatus);
-  const badge = statusBadge(feedbackStatus);
   const fallbackTitle = tSubmissions("problemTitle", {
     id: item.problem_id.slice(0, 8),
   });
@@ -58,10 +56,8 @@ export function LibraryProblemsSubmissionRow({
       tags={item.tags}
     >
       <div className="flex w-full flex-col gap-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <Tag data-testid="library-problems-type-badge">
-            {t("typeSubmission")}
-          </Tag>
+        <div className="flex flex-wrap items-center gap-3">
+          <LibraryProblemsQuestionNumber questionNo={item.question_no} />
           {analysisPending ? (
             <Text strong>{clampTitle(title)}</Text>
           ) : (
@@ -76,7 +72,6 @@ export function LibraryProblemsSubmissionRow({
               <Text strong>{clampTitle(title)}</Text>
             </Link>
           )}
-          <Tag color={badge.color}>{tSubmissions(badge.labelKey)}</Tag>
           {meta?.scoreTotal != null ? (
             <Tag>
               {meta.scoreMax != null
@@ -97,10 +92,6 @@ export function LibraryProblemsSubmissionRow({
             {tSubmissions("analysisPendingHint")}
           </Paragraph>
         ) : null}
-        <div className="flex flex-wrap items-center gap-2">
-          <Tag>{tSubmissions("charCount", { count: item.char_count })}</Tag>
-          <Text type="secondary">{formatDate(item.submitted_at)}</Text>
-        </div>
       </div>
     </LibraryItemRow>
   );
@@ -111,9 +102,9 @@ export function LibraryProblemsProblemRow({
 }: {
   item: LibraryProblemView;
 }) {
-  const t = useTranslations("library.problemsList");
   const tSaved = useTranslations("library.saved");
   const unavailable = item.availabilityStatus !== "available";
+  const title = problemTitle(item.title, tSaved("unavailablePlaceholderTitle"));
 
   return (
     <LibraryItemRow
@@ -125,13 +116,9 @@ export function LibraryProblemsProblemRow({
       trailingActions={[<LibraryProblemsRetryAction key="retry" item={item} />]}
     >
       <div className="flex w-full min-w-0 flex-col gap-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <Tag data-testid="library-problems-type-badge">
-            {t("typeProblem")}
-          </Tag>
-          <Text strong>
-            {item.title ?? tSaved("unavailablePlaceholderTitle")}
-          </Text>
+        <div className="flex flex-wrap items-center gap-3">
+          <LibraryProblemsQuestionNumber questionNo={item.question_no} />
+          <Text strong>{title}</Text>
           {unavailable ? (
             <Tag data-testid="library-problem-unavailable-badge">
               {item.availabilityStatus === "soft_unavailable"

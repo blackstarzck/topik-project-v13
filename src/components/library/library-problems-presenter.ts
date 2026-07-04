@@ -32,14 +32,20 @@ export function formatDate(iso: string): string {
   return iso.slice(0, 16).replace("T", " ");
 }
 
+export function stripQuestionNumberPrefix(title: string): string {
+  return title.replace(/^\s*No\.\s*5[1-4]\s*(?:[-–—:]\s*)?/i, "").trim();
+}
+
 export function submissionTitle(
   item: LibrarySubmissionView,
   fallbackTitle: string,
 ): string {
   const title = item.problem_title ?? fallbackTitle;
-  return item.question_no != null
-    ? `No. ${item.question_no} - ${title}`
-    : title;
+  return stripQuestionNumberPrefix(title);
+}
+
+export function problemTitle(title: string | null, fallbackTitle: string) {
+  return stripQuestionNumberPrefix(title ?? fallbackTitle);
 }
 
 export function isAnalysisPendingStatus(

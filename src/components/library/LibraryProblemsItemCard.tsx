@@ -2,7 +2,7 @@
 
 /**
  * F-01 `/library/problems` 카드 뷰 렌더러.
- * 표지 이미지가 없는 데이터라 유형/상태 배지 + 제목 + 요약 + 저장일로
+ * 표지 이미지가 없는 데이터라 문제 번호 + 제목 + 요약 중심으로
  * 구성한다. 링크/배지/불가 처리 규칙은 리스트 행(LibraryProblemsRows)과
  * 동일하고, 다시 풀기 액션은 LibraryProblemsRetryAction을 공유한다.
  */
@@ -13,16 +13,16 @@ import Link from "next/link";
 
 import {
   clampTitle,
-  statusBadge,
   type SubmissionEnrichment,
 } from "@/components/library/library-enrich-data";
 import { AppCard } from "@/components/shared/AppCard";
 import { writingFeedbackHref } from "@/lib/writing/routes";
 
+import { LibraryProblemsQuestionNumber } from "./LibraryProblemsQuestionNumber";
 import { LibraryProblemsRetryAction } from "./LibraryProblemsRows";
 import {
-  formatDate,
   isAnalysisPendingStatus,
+  problemTitle,
   submissionTitle,
   type LibraryListTranslate,
   type MixedLibraryProblemItem,
@@ -47,7 +47,6 @@ function TagChips({ tags }: { tags: string[] }) {
 }
 
 export function LibraryProblemsItemCard({ entry, meta }: Props) {
-  const t = useTranslations("library.problemsList") as LibraryListTranslate;
   const tSubmissions = useTranslations(
     "library.submissions",
   ) as LibraryListTranslate;
@@ -57,7 +56,6 @@ export function LibraryProblemsItemCard({ entry, meta }: Props) {
     const item = entry.item;
     const feedbackStatus = meta?.feedbackStatus ?? "pending";
     const analysisPending = isAnalysisPendingStatus(feedbackStatus);
-    const badge = statusBadge(feedbackStatus);
     const fallbackTitle = tSubmissions("problemTitle", {
       id: item.problem_id.slice(0, 8),
     });
@@ -66,11 +64,10 @@ export function LibraryProblemsItemCard({ entry, meta }: Props) {
     return (
       <AppCard className="h-full">
         <div className="flex h-full flex-col gap-2">
+          <div className="flex justify-end">
+            <LibraryProblemsQuestionNumber questionNo={item.question_no} />
+          </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Tag data-testid="library-problems-type-badge">
-              {t("typeSubmission")}
-            </Tag>
-            <Tag color={badge.color}>{tSubmissions(badge.labelKey)}</Tag>
             {meta?.scoreTotal != null ? (
               <Tag>
                 {meta.scoreMax != null
@@ -106,8 +103,6 @@ export function LibraryProblemsItemCard({ entry, meta }: Props) {
             </Paragraph>
           ) : null}
           <div className="mt-auto flex flex-wrap items-center gap-2 pt-2">
-            <Tag>{tSubmissions("charCount", { count: item.char_count })}</Tag>
-            <Text type="secondary">{formatDate(entry.savedAt)}</Text>
             <TagChips tags={item.tags} />
           </div>
         </div>
@@ -117,14 +112,15 @@ export function LibraryProblemsItemCard({ entry, meta }: Props) {
 
   const item = entry.item;
   const unavailable = item.availabilityStatus !== "available";
+  const title = problemTitle(item.title, tSaved("unavailablePlaceholderTitle"));
 
   return (
     <AppCard className={unavailable ? "h-full opacity-40" : "h-full"}>
       <div className="flex h-full flex-col gap-2">
+        <div className="flex justify-end">
+          <LibraryProblemsQuestionNumber questionNo={item.question_no} />
+        </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Tag data-testid="library-problems-type-badge">
-            {t("typeProblem")}
-          </Tag>
           {unavailable ? (
             <Tag data-testid="library-problem-unavailable-badge">
               {item.availabilityStatus === "soft_unavailable"
@@ -133,9 +129,7 @@ export function LibraryProblemsItemCard({ entry, meta }: Props) {
             </Tag>
           ) : null}
         </div>
-        <Text strong>
-          {item.title ?? tSaved("unavailablePlaceholderTitle")}
-        </Text>
+        <Text strong>{title}</Text>
         {unavailable ? (
           <Text
             data-testid="library-problem-unavailable-reason"
@@ -146,7 +140,6 @@ export function LibraryProblemsItemCard({ entry, meta }: Props) {
         ) : null}
         <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-2">
           <span className="flex flex-wrap items-center gap-2">
-            <Text type="secondary">{formatDate(entry.savedAt)}</Text>
             <TagChips tags={item.tags} />
           </span>
           <LibraryProblemsRetryAction item={item} />

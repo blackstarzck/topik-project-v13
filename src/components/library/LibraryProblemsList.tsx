@@ -267,27 +267,29 @@ export function LibraryProblemsList({
       data-testid="library-problems-list"
       className="flex min-h-0 w-full flex-1 flex-col gap-4"
     >
-      <LibraryProblemsToolbar
-        activeFilterCount={activeFilterCount}
-        resultCount={sorted.length}
-        searchTerm={searchTerm}
-        showControls={mixed.length > 0}
-        sortKey={sortKey}
-        viewMode={viewMode}
-        onOpenFilters={() => setFilterDrawerOpen(true)}
-        onSearchChange={(value) => {
-          setSearchTerm(value);
-          setPage(1);
-        }}
-        onSortChange={(key) => {
-          setSortKey(key);
-          setPage(1);
-        }}
-        onViewModeChange={setViewMode}
-      />
-
       <div className="flex min-h-0 w-full flex-1 items-start gap-6">
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 self-stretch">
+        <div
+          data-testid="library-problems-results-column"
+          className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 self-stretch"
+        >
+          <LibraryProblemsToolbar
+            activeFilterCount={activeFilterCount}
+            searchTerm={searchTerm}
+            showControls={mixed.length > 0}
+            sortKey={sortKey}
+            viewMode={viewMode}
+            onOpenFilters={() => setFilterDrawerOpen(true)}
+            onSearchChange={(value) => {
+              setSearchTerm(value);
+              setPage(1);
+            }}
+            onSortChange={(key) => {
+              setSortKey(key);
+              setPage(1);
+            }}
+            onViewModeChange={setViewMode}
+          />
+
           {pageItems.length === 0 ? (
             showEnrichLoading ? (
               <div
@@ -392,7 +394,7 @@ export function LibraryProblemsList({
         {mixed.length > 0 ? (
           <aside
             data-testid="library-problems-filter-panel-desktop"
-            className="hidden w-64 shrink-0 lg:block"
+            className="hidden w-[22rem] shrink-0 self-start lg:sticky lg:top-6 lg:block lg:max-h-[calc(100vh-3rem)] lg:overflow-x-hidden lg:overflow-y-auto"
           >
             {filterPanel(true)}
           </aside>

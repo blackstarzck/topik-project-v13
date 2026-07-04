@@ -53,7 +53,7 @@ const submission: LibrarySubmissionView = {
 const problem: LibraryProblemView = {
   kind: "problem",
   id: "problem-52",
-  title: "휴대전화 진동 문장 완성",
+  title: "No. 52 - 휴대전화 진동 문장 완성",
   question_no: 52,
   item_id: "library-problem-1",
   saved_at: "2026-06-30T10:00:00.000Z",
@@ -138,14 +138,26 @@ describe("LibraryProblemsList", () => {
     expect(rows[0].getAttribute("data-library-kind")).toBe("problem");
     expect(rows[1].getAttribute("data-library-kind")).toBe("submission");
 
-    // 유형 라벨은 행 태그와 필터 패널에 함께 노출된다.
+    const resultsColumn = screen.getByTestId(
+      "library-problems-results-column",
+    );
     expect(
-      screen.getAllByText(koMessages.library.problemsList.typeProblem).length,
-    ).toBeGreaterThan(0);
+      within(resultsColumn).queryByTestId("library-problems-type-badge"),
+    ).toBeNull();
     expect(
-      screen.getAllByText(koMessages.library.problemsList.typeSubmission)
+      within(resultsColumn).queryByText(
+        koMessages.library.submissions.statusComplete,
+      ),
+    ).toBeNull();
+    expect(within(resultsColumn).queryByText(/No\.\s*5[1-4]/)).toBeNull();
+    expect(
+      within(resultsColumn).getAllByTestId("library-problems-question-number")
         .length,
     ).toBeGreaterThan(0);
+    expect(within(resultsColumn).getByText("휴대전화 진동 문장 완성")).toBeTruthy();
+    const list = screen.getByTestId("library-item-list");
+    expect(within(list).queryAllByText(/2026-06-(29|30)/)).toHaveLength(0);
+    expect(within(list).queryAllByText("252자")).toHaveLength(0);
 
     expect(
       screen
@@ -243,8 +255,23 @@ describe("LibraryProblemsList", () => {
 
     expect(screen.getByTestId("library-problems-filter-panel")).toBeTruthy();
     expect(
+      screen.getByTestId("library-problems-filter-panel").className,
+    ).toContain("gap-6");
+    expect(
       screen.getByTestId("library-problems-filter-panel-desktop"),
     ).toBeTruthy();
+    expect(
+      screen.getByTestId("library-problems-filter-panel-desktop").className,
+    ).toContain("sticky");
+    expect(
+      screen.getByTestId("library-problems-filter-panel-desktop").className,
+    ).toContain("top-6");
+    expect(
+      screen.getByTestId("library-problems-filter-panel-desktop").className,
+    ).toContain("w-[22rem]");
+    expect(
+      screen.getByTestId("library-problems-filter-panel-desktop").className,
+    ).toContain("overflow-x-hidden");
     expect(
       screen.getByTestId("library-problems-filter-kind-submission-count")
         .textContent,
@@ -268,6 +295,37 @@ describe("LibraryProblemsList", () => {
     expect(
       screen.getByTestId("library-problems-filter-score-slider"),
     ).toBeTruthy();
+    expect(
+      screen.getByTestId("library-problems-filter-date-stack").className,
+    ).toContain("gap-4");
+    expect(
+      screen.getByTestId("library-problems-filter-date-presets").className,
+    ).toContain("grid");
+    expect(
+      screen.getByTestId("library-problems-filter-date-presets").className,
+    ).toContain("library-problems-date-presets");
+    expect(
+      screen.getByTestId("library-problems-filter-date-presets").className,
+    ).toContain("gap-x-8");
+    expect(
+      screen.getByTestId("library-problems-filter-date-presets").className,
+    ).toContain("gap-y-5");
+    expect(
+      screen.getByTestId("library-problems-filter-date-range").className,
+    ).toContain("px-3");
+    expect(
+      screen.getByTestId("library-problems-filter-score-slider").className,
+    ).toContain("px-3");
+    const resetButton = screen.getByTestId("library-problems-filter-reset");
+    expect(resetButton.getAttribute("aria-label")).toBe(
+      koMessages.library.saved.resetFilter,
+    );
+    expect(resetButton.className).toContain("mr-2");
+    const resetIcon = resetButton.querySelector("svg");
+    expect(resetIcon).toBeTruthy();
+    expect(resetIcon?.getAttribute("width")).toBe("18");
+    expect(resetIcon?.getAttribute("height")).toBe("18");
+    expect(resetButton.textContent?.trim()).toBe("");
 
     // enrichment 반영 후 complete=1, pending=0으로 이동한다.
     await waitFor(() => {
@@ -285,6 +343,25 @@ describe("LibraryProblemsList", () => {
         "library-problems-filter-availability-soft_unavailable-count",
       ).textContent,
     ).toBe("0");
+  });
+
+  it("keeps toolbar controls on the search row without a result count label", () => {
+    renderList();
+
+    expect(screen.getByTestId("library-problems-toolbar")).toBeTruthy();
+    expect(screen.queryByTestId("library-problems-result-count")).toBeNull();
+    expect(screen.getByTestId("library-problems-toolbar-controls")).toBeTruthy();
+    expect(screen.getByTestId("library-problems-sort")).toBeTruthy();
+
+    const viewToggleShell = screen.getByTestId(
+      "library-problems-view-toggle",
+    );
+    expect(viewToggleShell.className).toContain(
+      "library-problems-view-toggle-shell",
+    );
+    expect(
+      viewToggleShell.querySelector(".library-problems-view-toggle"),
+    ).toBeTruthy();
   });
 
   it("filters by item kind as a branch union", () => {
@@ -410,8 +487,22 @@ describe("LibraryProblemsList", () => {
       screen.getByTitle(koMessages.library.problemsList.viewCard),
     );
 
-    expect(screen.getByTestId("library-problems-card-grid")).toBeTruthy();
+    const cardGrid = screen.getByTestId("library-problems-card-grid");
+    expect(cardGrid).toBeTruthy();
     expect(screen.queryByTestId("library-item-list")).toBeNull();
+    expect(within(cardGrid).queryByTestId("library-problems-type-badge")).toBe(
+      null,
+    );
+    expect(
+      within(cardGrid).queryByText(koMessages.library.submissions.statusComplete),
+    ).toBeNull();
+    expect(within(cardGrid).queryByText(/No\.\s*5[1-4]/)).toBeNull();
+    expect(
+      within(cardGrid).getAllByTestId("library-problems-question-number")
+        .length,
+    ).toBeGreaterThan(0);
+    expect(within(cardGrid).queryAllByText(/2026-06-(29|30)/)).toHaveLength(0);
+    expect(within(cardGrid).queryAllByText("252자")).toHaveLength(0);
     // 카드 뷰에서도 행 testid 계약과 다시 풀기 액션이 유지된다.
     expect(screen.getAllByTestId("library-problems-mixed-row")).toHaveLength(2);
     expect(

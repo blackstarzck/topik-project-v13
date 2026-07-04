@@ -8,12 +8,20 @@
  * (근거: docs/sot-change-proposals/2026-07-04-library-problems-filter-panel.md)
  */
 
-import { Button, Checkbox, DatePicker, Radio, Slider, Typography } from "antd";
+import {
+  Button,
+  Checkbox,
+  DatePicker,
+  Radio,
+  Slider,
+  Tooltip,
+  Typography,
+} from "antd";
 import dayjs, { type Dayjs } from "dayjs";
 import { useTranslations } from "next-intl";
 import { useState, type ReactNode } from "react";
 
-import { ListFilter } from "@/components/shared/AppIcons";
+import { ListFilter, RefreshCcw } from "@/components/shared/AppIcons";
 
 import {
   LIBRARY_PROBLEMS_QUESTION_NOS,
@@ -61,7 +69,7 @@ function FilterGroup({
   children: ReactNode;
 }) {
   return (
-    <section className="flex flex-col gap-2 border-b border-border pb-4 last:border-b-0 last:pb-0">
+    <section className="flex flex-col gap-3 border-b border-border pb-5 last:border-b-0 last:pb-0">
       <Text strong>{label}</Text>
       {children}
     </section>
@@ -155,7 +163,7 @@ export function LibraryProblemsFilterPanel({
     <div
       aria-label={t("filterPanelAriaLabel")}
       data-testid="library-problems-filter-panel"
-      className="flex w-full flex-col gap-4"
+      className="flex w-full flex-col gap-6"
       role="group"
     >
       {showHeader ? (
@@ -170,20 +178,24 @@ export function LibraryProblemsFilterPanel({
               {activeCount}
             </Text>
           </span>
-          <Button
-            data-testid="library-problems-filter-reset"
-            disabled={activeCount === 0}
-            size="small"
-            type="text"
-            onClick={onReset}
-          >
-            {tSaved("resetFilter")}
-          </Button>
+          <Tooltip title={tSaved("resetFilter")}>
+            <Button
+              aria-label={tSaved("resetFilter")}
+              className="mr-2"
+              data-testid="library-problems-filter-reset"
+              disabled={activeCount === 0}
+              icon={<RefreshCcw aria-hidden size={18} />}
+              size="small"
+              title={tSaved("resetFilter")}
+              type="text"
+              onClick={onReset}
+            />
+          </Tooltip>
         </div>
       ) : null}
 
       <FilterGroup label={t("groupQuestionType")}>
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3">
           {LIBRARY_PROBLEMS_QUESTION_NOS.map((questionNo) => (
             <CheckboxRow
               key={questionNo}
@@ -205,7 +217,7 @@ export function LibraryProblemsFilterPanel({
       </FilterGroup>
 
       <FilterGroup label={t("groupItemType")}>
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3">
           <CheckboxRow
             checked={state.kinds.has("submission")}
             indeterminate={
@@ -216,7 +228,7 @@ export function LibraryProblemsFilterPanel({
             testId="library-problems-filter-kind-submission"
             onToggle={() => toggleKind("submission")}
           />
-          <div className="flex flex-col gap-2 pl-6">
+          <div className="flex flex-col gap-3 pl-6">
             {statusRows.map(({ status, label }) => (
               <CheckboxRow
                 key={status}
@@ -240,7 +252,7 @@ export function LibraryProblemsFilterPanel({
             testId="library-problems-filter-kind-problem"
             onToggle={() => toggleKind("problem")}
           />
-          <div className="flex flex-col gap-2 pl-6">
+          <div className="flex flex-col gap-3 pl-6">
             {availabilityRows.map(({ availability, label }) => (
               <CheckboxRow
                 key={availability}
@@ -260,48 +272,58 @@ export function LibraryProblemsFilterPanel({
       </FilterGroup>
 
       <FilterGroup label={t("groupDate")}>
-        {/* 좁은 패널(w-64)에서 버튼형은 가로 오버플로가 나서 세로 라디오로 배치한다. */}
-        <Radio.Group
-          className="flex flex-col gap-2"
-          data-testid="library-problems-filter-date-presets"
-          value={datePresetValue}
-          onChange={(event) => {
-            const value = event.target.value as
-              | "all"
-              | LibraryProblemsDatePreset;
-            onChange({
-              date: value === "all" ? null : resolveDatePreset(value),
-            });
-          }}
-          options={[
-            { value: "all", label: t("datePresetAll") },
-            { value: "week", label: t("datePresetWeek") },
-            { value: "month", label: t("datePresetMonth") },
-            { value: "quarter", label: t("datePresetQuarter") },
-          ]}
-        />
-        <span data-testid="library-problems-filter-date-range">
-          <RangePicker
-            allowEmpty={[true, true]}
-            aria-label={t("dateRangeAriaLabel")}
-            className="w-full"
-            value={dateRangeValue ?? undefined}
-            onChange={(value) => {
-              const from = value?.[0]?.startOf("day").toISOString() ?? null;
-              const to = value?.[1]?.endOf("day").toISOString() ?? null;
+        <div
+          data-testid="library-problems-filter-date-stack"
+          className="flex flex-col gap-4"
+        >
+          <Radio.Group
+            className="library-problems-date-presets grid grid-cols-2 gap-x-8 gap-y-5"
+            data-testid="library-problems-filter-date-presets"
+            value={datePresetValue}
+            onChange={(event) => {
+              const value = event.target.value as
+                | "all"
+                | LibraryProblemsDatePreset;
               onChange({
-                date:
-                  from == null && to == null
-                    ? null
-                    : { preset: null, from, to },
+                date: value === "all" ? null : resolveDatePreset(value),
               });
             }}
+            options={[
+              { value: "all", label: t("datePresetAll") },
+              { value: "week", label: t("datePresetWeek") },
+              { value: "month", label: t("datePresetMonth") },
+              { value: "quarter", label: t("datePresetQuarter") },
+            ]}
           />
-        </span>
+          <span
+            data-testid="library-problems-filter-date-range"
+            className="block px-3"
+          >
+            <RangePicker
+              allowEmpty={[true, true]}
+              aria-label={t("dateRangeAriaLabel")}
+              className="w-full"
+              value={dateRangeValue ?? undefined}
+              onChange={(value) => {
+                const from = value?.[0]?.startOf("day").toISOString() ?? null;
+                const to = value?.[1]?.endOf("day").toISOString() ?? null;
+                onChange({
+                  date:
+                    from == null && to == null
+                      ? null
+                      : { preset: null, from, to },
+                });
+              }}
+            />
+          </span>
+        </div>
       </FilterGroup>
 
       <FilterGroup label={t("groupScore")}>
-        <span data-testid="library-problems-filter-score-slider">
+        <span
+          data-testid="library-problems-filter-score-slider"
+          className="block px-3"
+        >
           <Slider
             range
             ariaLabelForHandle={[

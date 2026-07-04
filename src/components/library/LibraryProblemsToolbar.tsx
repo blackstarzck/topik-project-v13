@@ -2,12 +2,12 @@
 
 /**
  * F-01 `/library/problems` 목록 상단 툴바.
- * 검색 + 결과 수 + 정렬 Select + 리스트/카드 뷰 Segmented + 모바일 필터
- * 버튼(Badge)을 한 줄로 배치한다. 정렬 Select는 practice 목록
- * (ProblemListControls)과 같은 패턴을 쓴다.
+ * 검색 + 정렬 Select + 리스트/카드 뷰 Segmented + 모바일 필터 버튼(Badge)을
+ * 한 줄로 배치한다. 정렬 Select는 practice 목록(ProblemListControls)과
+ * 같은 패턴을 쓴다.
  */
 
-import { Badge, Button, Input, Segmented, Select, Typography } from "antd";
+import { Badge, Button, Input, Segmented, Select } from "antd";
 import { useTranslations } from "next-intl";
 
 import {
@@ -22,14 +22,11 @@ import {
   type LibraryProblemsSortKey,
 } from "./library-problems-sort";
 
-const { Text } = Typography;
-
 export type LibraryProblemsViewMode = "list" | "card";
 
 type Props = {
   searchTerm: string;
   onSearchChange: (value: string) => void;
-  resultCount: number;
   /** 저장 항목이 없으면 정렬/뷰/필터 컨트롤을 숨긴다(검색만 유지). */
   showControls: boolean;
   sortKey: LibraryProblemsSortKey;
@@ -51,7 +48,6 @@ const SORT_LABEL_KEYS: Record<LibraryProblemsSortKey, string> = {
 export function LibraryProblemsToolbar({
   searchTerm,
   onSearchChange,
-  resultCount,
   showControls,
   sortKey,
   onSortChange,
@@ -61,12 +57,12 @@ export function LibraryProblemsToolbar({
   onOpenFilters,
 }: Props) {
   const t = useTranslations("library.problemsList") as LibraryListTranslate;
-  const tSubmissions = useTranslations(
-    "library.submissions",
-  ) as LibraryListTranslate;
 
   return (
-    <div className="flex flex-wrap items-center gap-3">
+    <div
+      className="flex w-full flex-wrap items-center gap-3"
+      data-testid="library-problems-toolbar"
+    >
       <Input.Search
         allowClear
         aria-label={t("searchAriaLabel")}
@@ -78,11 +74,11 @@ export function LibraryProblemsToolbar({
         onChange={(event) => onSearchChange(event.target.value)}
         onSearch={(value) => onSearchChange(value)}
       />
-      <Text data-testid="library-problems-result-count" type="secondary">
-        {tSubmissions("resultCount", { count: resultCount })}
-      </Text>
       {showControls ? (
-        <div className="ml-auto flex flex-wrap items-center gap-2">
+        <div
+          className="ml-auto flex flex-wrap items-center justify-end gap-2"
+          data-testid="library-problems-toolbar-controls"
+        >
           <Select<LibraryProblemsSortKey>
             aria-label={t("sortAriaLabel")}
             className="min-w-36"
@@ -94,9 +90,13 @@ export function LibraryProblemsToolbar({
               label: t(SORT_LABEL_KEYS[key]),
             }))}
           />
-          <span data-testid="library-problems-view-toggle">
+          <span
+            className="library-problems-view-toggle-shell inline-flex items-center"
+            data-testid="library-problems-view-toggle"
+          >
             <Segmented<LibraryProblemsViewMode>
               aria-label={t("viewAriaLabel")}
+              className="library-problems-view-toggle"
               value={viewMode}
               onChange={(value) => onViewModeChange(value)}
               options={[

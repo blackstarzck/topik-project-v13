@@ -523,6 +523,12 @@ test("F-01 library problems filter panel, sort, and view toggle", async ({
   await page.goto("/library/problems", { waitUntil: "load" });
   await expect(page).not.toHaveURL(/\/login/);
   await expect(page.getByTestId("library-problems-list")).toBeVisible();
+  await expect(page.getByTestId("library-problems-result-count")).toHaveCount(
+    0,
+  );
+  await expect(
+    page.getByTestId("library-problems-toolbar-controls"),
+  ).toBeVisible();
 
   const viewport = page.viewportSize();
   const isDesktop = (viewport?.width ?? 0) >= 1024;
@@ -532,12 +538,205 @@ test("F-01 library problems filter panel, sort, and view toggle", async ({
   const submissionRows = page.locator(
     '[data-testid="library-problems-mixed-row"][data-library-kind="submission"]',
   );
+  const resultsColumn = page.getByTestId("library-problems-results-column");
+  await expect(
+    resultsColumn.getByTestId("library-problems-question-number").first(),
+  ).toBeVisible();
+  await expect(resultsColumn).not.toContainText(/No\.\s*5[1-4]/);
+  await expect(
+    resultsColumn.getByTestId("library-problems-type-badge"),
+  ).toHaveCount(0);
+  await expect(resultsColumn).not.toContainText("분석 완료");
+  const list = page.getByTestId("library-item-list");
+  await expect(list).toBeVisible();
+  await expect(list).not.toContainText(/\d{4}-\d{2}-\d{2}/);
+  await expect(list).not.toContainText(/\d+자/);
 
   if (isDesktop) {
     // 데스크톱: 우측 aside 필터 패널이 보이고 모바일 필터 버튼은 숨겨진다.
     const aside = page.getByTestId("library-problems-filter-panel-desktop");
     await expect(aside).toBeVisible();
     await expect(page.getByTestId("library-problems-filter-open")).toBeHidden();
+    const desktopFilterPanelOverflow = await aside.evaluate((node) => ({
+      clientWidth: node.clientWidth,
+      overflowX: window.getComputedStyle(node).overflowX,
+      scrollWidth: node.scrollWidth,
+      width: node.getBoundingClientRect().width,
+    }));
+    expect(desktopFilterPanelOverflow.width).toBeGreaterThanOrEqual(352);
+    expect(desktopFilterPanelOverflow.overflowX).toBe("hidden");
+    await expect(aside.getByTestId("library-problems-filter-reset")).toHaveText(
+      "",
+    );
+    await expect(aside.getByTestId("library-problems-filter-reset")).toHaveAttribute(
+      "aria-label",
+      "필터 초기화",
+    );
+    const filterResetButtonRightInset = await aside.evaluate((node) => {
+      const resetButton = node.querySelector(
+        '[data-testid="library-problems-filter-reset"]',
+      );
+      if (!resetButton) {
+        throw new Error("Library problems filter reset button is missing");
+      }
+
+      return (
+        node.getBoundingClientRect().right -
+        resetButton.getBoundingClientRect().right
+      );
+    });
+    expect(filterResetButtonRightInset).toBeGreaterThanOrEqual(8);
+    const filterPanelSpacing = await aside.evaluate((node) => {
+      const dateStack = node.querySelector(
+        '[data-testid="library-problems-filter-date-stack"]',
+      );
+      const scoreSlider = node.querySelector(
+        '[data-testid="library-problems-filter-score-slider"]',
+      );
+      const dateRange = node.querySelector(
+        '[data-testid="library-problems-filter-date-range"]',
+      );
+      const datePresetGroup = node.querySelector(
+        '[data-testid="library-problems-filter-date-presets"]',
+      );
+      const datePresetOption = node.querySelector(
+        '[data-testid="library-problems-filter-date-presets"] .ant-radio-wrapper',
+      );
+      const datePresetOptionLabel = node.querySelector(
+        '[data-testid="library-problems-filter-date-presets"] .ant-radio-wrapper > span:last-child',
+      );
+      const datePicker = node.querySelector(
+        '[data-testid="library-problems-filter-date-range"] .ant-picker',
+      );
+      const slider = node.querySelector(
+        '[data-testid="library-problems-filter-score-slider"] .ant-slider',
+      );
+
+      if (
+        !dateStack ||
+        !dateRange ||
+        !datePresetGroup ||
+        !scoreSlider ||
+        !datePresetOption ||
+        !datePresetOptionLabel ||
+        !datePicker ||
+        !slider
+      ) {
+        throw new Error("Library problems filter spacing nodes are missing");
+      }
+
+      const asideRect = node.getBoundingClientRect();
+      const datePickerRect = datePicker.getBoundingClientRect();
+      const sliderRect = slider.getBoundingClientRect();
+      const datePresetGroupStyle = window.getComputedStyle(datePresetGroup);
+      const dateRangeStyle = window.getComputedStyle(dateRange);
+      const scoreSliderStyle = window.getComputedStyle(scoreSlider);
+
+      return {
+        dateStackGap: window.getComputedStyle(dateStack).rowGap,
+        datePresetGroupDisplay: datePresetGroupStyle.display,
+        datePresetGroupColumnGap: datePresetGroupStyle.columnGap,
+        datePresetGroupRowGap: datePresetGroupStyle.rowGap,
+        datePresetOptionGap:
+          window.getComputedStyle(datePresetOption).columnGap,
+        datePresetOptionFontSize:
+          window.getComputedStyle(datePresetOptionLabel).fontSize,
+        dateRangePaddingLeft: dateRangeStyle.paddingLeft,
+        dateRangePaddingRight: dateRangeStyle.paddingRight,
+        datePickerLeftInset: datePickerRect.left - asideRect.left,
+        datePickerRightInset: asideRect.right - datePickerRect.right,
+        scorePaddingLeft: scoreSliderStyle.paddingLeft,
+        scorePaddingRight: scoreSliderStyle.paddingRight,
+        sliderLeftInset: sliderRect.left - asideRect.left,
+        sliderRightInset: asideRect.right - sliderRect.right,
+      };
+    });
+    expect(filterPanelSpacing.dateStackGap).toBe("16px");
+    expect(filterPanelSpacing.datePresetGroupDisplay).toBe("grid");
+    expect(filterPanelSpacing.datePresetGroupColumnGap).toBe("32px");
+    expect(filterPanelSpacing.datePresetGroupRowGap).toBe("20px");
+    expect(filterPanelSpacing.datePresetOptionGap).toBe("10px");
+    expect(filterPanelSpacing.datePresetOptionFontSize).toBe("14px");
+    expect(filterPanelSpacing.dateRangePaddingLeft).toBe("12px");
+    expect(filterPanelSpacing.dateRangePaddingRight).toBe("12px");
+    expect(filterPanelSpacing.datePickerLeftInset).toBeGreaterThanOrEqual(12);
+    expect(filterPanelSpacing.datePickerRightInset).toBeGreaterThanOrEqual(12);
+    expect(filterPanelSpacing.scorePaddingLeft).toBe("12px");
+    expect(filterPanelSpacing.scorePaddingRight).toBe("12px");
+    expect(filterPanelSpacing.sliderLeftInset).toBeGreaterThanOrEqual(12);
+    expect(filterPanelSpacing.sliderRightInset).toBeGreaterThanOrEqual(12);
+    const toolbarControls = page.getByTestId(
+      "library-problems-toolbar-controls",
+    );
+    await expect(toolbarControls).toBeVisible();
+    const desktopToolbarLayout = await page.evaluate(() => {
+      const controls = document.querySelector(
+        '[data-testid="library-problems-toolbar-controls"]',
+      );
+      const asideEl = document.querySelector(
+        '[data-testid="library-problems-filter-panel-desktop"]',
+      );
+      const resultsColumn = document.querySelector(
+        '[data-testid="library-problems-results-column"]',
+      );
+
+      if (!controls || !asideEl || !resultsColumn) {
+        throw new Error("Library problems toolbar layout nodes are missing");
+      }
+
+      return {
+        asideLeft: asideEl.getBoundingClientRect().left,
+        controlsRight: controls.getBoundingClientRect().right,
+        resultsRight: resultsColumn.getBoundingClientRect().right,
+      };
+    });
+    expect(desktopToolbarLayout.controlsRight).toBeLessThanOrEqual(
+      desktopToolbarLayout.resultsRight + 1,
+    );
+    expect(desktopToolbarLayout.controlsRight).toBeLessThan(
+      desktopToolbarLayout.asideLeft,
+    );
+    const asideStickyTop = await aside.evaluate((node) =>
+      Number.parseFloat(window.getComputedStyle(node).top),
+    );
+    await page.evaluate(() => window.scrollTo(0, 320));
+    await expect
+      .poll(() => page.evaluate(() => window.scrollY))
+      .toBeGreaterThan(0);
+    const scrolledAsideTop = await aside.evaluate(
+      (node) => node.getBoundingClientRect().top,
+    );
+    expect(Math.abs(scrolledAsideTop - asideStickyTop)).toBeLessThanOrEqual(1);
+
+    const viewToggleIconOffsets = await page.evaluate(() =>
+      Array.from(
+        document.querySelectorAll(
+          ".library-problems-view-toggle .ant-segmented-item",
+        ),
+      ).map((item) => {
+        const svg = item.querySelector("svg");
+        if (!svg) throw new Error("View toggle icon SVG is missing");
+
+        const itemRect = item.getBoundingClientRect();
+        const svgRect = svg.getBoundingClientRect();
+        return {
+          dx: Math.abs(
+            svgRect.left +
+              svgRect.width / 2 -
+              (itemRect.left + itemRect.width / 2),
+          ),
+          dy: Math.abs(
+            svgRect.top +
+              svgRect.height / 2 -
+              (itemRect.top + itemRect.height / 2),
+          ),
+        };
+      }),
+    );
+    for (const offset of viewToggleIconOffsets) {
+      expect(offset.dx).toBeLessThanOrEqual(1);
+      expect(offset.dy).toBeLessThanOrEqual(1);
+    }
 
     // 저장 문제 체크 → 문제 행만 남는다.
     await aside.getByTestId("library-problems-filter-kind-problem").click();
@@ -577,10 +776,13 @@ test("F-01 library problems filter panel, sort, and view toggle", async ({
 
     // 뷰 전환: 카드 그리드 ↔ 리스트.
     await page.getByTitle("카드 보기").click();
-    await expect(page.getByTestId("library-problems-card-grid")).toBeVisible();
+    const cardGrid = page.getByTestId("library-problems-card-grid");
+    await expect(cardGrid).toBeVisible();
     await expect(page.getByTestId("library-problems-mixed-row")).toHaveCount(
       10,
     );
+    await expect(cardGrid).not.toContainText(/\d{4}-\d{2}-\d{2}/);
+    await expect(cardGrid).not.toContainText(/\d+자/);
     await page.getByTitle("리스트 보기").click();
     await expect(page.getByTestId("library-item-list")).toBeVisible();
   } else {
@@ -588,11 +790,15 @@ test("F-01 library problems filter panel, sort, and view toggle", async ({
     await expect(
       page.getByTestId("library-problems-filter-panel-desktop"),
     ).toBeHidden();
-    await page.getByTestId("library-problems-filter-open").click();
-
     const drawer = page.locator(".app-drawer");
+    const drawerPanel = drawer.getByTestId("library-problems-filter-panel");
+    await expect(async () => {
+      await page.getByTestId("library-problems-filter-open").click();
+      await expect(drawerPanel).toBeVisible({ timeout: 2_500 });
+    }).toPass({ timeout: 8_000 });
+
     await expect(
-      drawer.getByTestId("library-problems-filter-panel"),
+      drawerPanel,
     ).toBeVisible();
     await drawer.getByTestId("library-problems-filter-kind-problem").click();
     await drawer.getByTestId("library-problems-filter-drawer-apply").click();
