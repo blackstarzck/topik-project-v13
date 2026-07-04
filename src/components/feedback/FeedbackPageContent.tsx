@@ -13,6 +13,7 @@ import { FeedbackSummary } from "./FeedbackSummary";
 import { FeedbackActionGroup, NextActionBar } from "./NextActionBar";
 import { SentenceFeedbackList } from "./SentenceFeedbackList";
 import { logStudyEvent } from "@/lib/events/study-events";
+import { APP_ROUTES } from "@/lib/routes";
 import { extractExternalFeedbackSupplement } from "@/lib/writing/external-feedback";
 import { writingQuestionNeonClass } from "@/lib/writing/question-number-neon";
 import { writingProblemHref } from "@/lib/writing/routes";
@@ -119,6 +120,9 @@ export function FeedbackPageContent({
       {showStickyReportHeader ? (
         <ReportPageHeader
           testId="feedback-page-header"
+          backHref={APP_ROUTES.library}
+          backLabel="내 서재로 돌아가기"
+          backTestId="feedback-header-back-link"
           title={
             <FeedbackReportTitle
               title={reportTitle}

@@ -420,13 +420,23 @@ test("E-02 long feedback matches the wireframe constraints", async ({
     [
       '[data-testid="feedback-action-retry"]',
       '[data-testid="feedback-action-next"]',
-      '[data-testid="feedback-action-save"]',
+      '[data-testid="feedback-action-pdf"]',
       '[data-testid="feedback-action-compare"]',
     ].join(","),
   );
   await expect(actions).toHaveCount(4);
   await expect(page.getByTestId("feedback-action-retry")).toHaveText(
     "다시 작성",
+  );
+  await expect(page.getByTestId("feedback-action-pdf")).toHaveText("PDF 저장");
+  await expect(page.getByTestId("feedback-action-save")).toHaveCount(0);
+  await expect(page.getByTestId("feedback-header-back-link")).toHaveAttribute(
+    "href",
+    "/library",
+  );
+  await expect(page.getByTestId("feedback-header-back-link")).toHaveAttribute(
+    "aria-label",
+    "내 서재로 돌아가기",
   );
 
   await page.getByTestId("feedback-action-retry").click();

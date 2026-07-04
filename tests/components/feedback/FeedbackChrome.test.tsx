@@ -23,6 +23,7 @@ import type {
 } from "../../../src/lib/writing/types";
 
 const routerPushMock = vi.hoisted(() => vi.fn());
+const exportPdfMock = vi.hoisted(() => vi.fn());
 
 // router is only used on click paths exercised here indirectly; stub it so the
 // next/navigation import resolves under jsdom.
@@ -38,7 +39,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("@/lib/export/pdf-export-client", () => ({
-  exportPdfWithPrintFallback: vi.fn(),
+  exportPdfWithPrintFallback: exportPdfMock,
 }));
 
 const libraryMutationMock = vi.hoisted(() => ({
@@ -128,6 +129,8 @@ function submission(
 
 beforeEach(() => {
   routerPushMock.mockReset();
+  exportPdfMock.mockReset();
+  exportPdfMock.mockResolvedValue({ mode: "file", exportId: "export-1" });
   libraryMutationMock.mutate.mockReset();
   libraryMutationMock.isDuplicateLibrarySaveError.mockClear();
   if (!window.matchMedia) {
@@ -630,6 +633,13 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
     expect(
       actionRegion.contains(within(header).getByTestId("feedback-actions")),
     ).toBe(true);
+    const backLink = within(titleRegion).getByTestId(
+      "feedback-header-back-link",
+    );
+    expect(backLink.getAttribute("href")).toBe("/library");
+    expect(backLink.getAttribute("aria-label")).toBe("내 서재로 돌아가기");
+    expect(actionRegion.contains(backLink)).toBe(false);
+    expect(backLink.querySelector("svg")).toBeTruthy();
     expect(title.className).toContain("!m-0");
     const titleQuestionNo = within(title).getByTestId(
       "feedback-title-question-no",
@@ -644,7 +654,8 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
     ).toBeNull();
     expect(within(header).getByTestId("feedback-action-retry")).toBeTruthy();
     expect(within(header).getByTestId("feedback-action-next")).toBeTruthy();
-    expect(within(header).getByTestId("feedback-action-save")).toBeTruthy();
+    expect(within(header).getByTestId("feedback-action-pdf")).toBeTruthy();
+    expect(within(header).queryByTestId("feedback-action-save")).toBeNull();
     expect(within(header).getByTestId("feedback-action-compare")).toBeTruthy();
     expect(screen.getAllByTestId("feedback-actions")).toHaveLength(1);
   });
@@ -811,7 +822,7 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
     expect(screen.queryByText("빈칸")).toBeNull();
   });
 
-  it("renders the library save action as saved when the feedback page already has a library item", async () => {
+  it("renders a direct PDF action instead of the saved-library menu", async () => {
     const bundle: FeedbackBundle = {
       feedback: feedback({ raw_ai_result: {} }),
       dimensions: [],
@@ -831,26 +842,30 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
       />,
     );
 
-    fireEvent.click(screen.getByTestId("feedback-action-save"));
+    const pdfButton = screen.getByTestId("feedback-action-pdf");
+    expect(pdfButton.textContent).toBe("PDF 저장");
+    expect(screen.queryByTestId("feedback-action-save")).toBeNull();
 
-    expect(
-      await screen.findByRole("menuitem", { name: "보관함에 저장됨" }),
-    ).toBeTruthy();
+    fireEvent.click(pdfButton);
+
+    await waitFor(() => {
+      expect(exportPdfMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sourceType: "submission",
+          sourceId: "sub-1",
+        }),
+      );
+    });
+    expect(screen.queryByRole("menuitem", { name: "보관함에 저장됨" })).toBeNull();
+    expect(screen.queryByRole("menuitem", { name: "보관함 저장" })).toBeNull();
   });
 
-  it("treats a duplicate library save error as an already-saved state", async () => {
+  it("does not save to the library from the feedback header actions", async () => {
     const bundle: FeedbackBundle = {
       feedback: feedback({ raw_ai_result: {} }),
       dimensions: [],
       sentences: [],
     };
-    libraryMutationMock.mutate.mockImplementation((_input, options) => {
-      options.onError?.({
-        code: "23505",
-        message:
-          'duplicate key value violates unique constraint "library_items_user_submission_uniq"',
-      });
-    });
 
     renderWithIntl(
       <FeedbackPageContent
@@ -864,19 +879,14 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
       />,
     );
 
-    fireEvent.click(screen.getByTestId("feedback-action-save"));
-    fireEvent.click(
-      await screen.findByRole("menuitem", { name: "보관함 저장" }),
-    );
+    expect(screen.queryByTestId("feedback-action-save")).toBeNull();
+    fireEvent.click(screen.getByTestId("feedback-action-pdf"));
 
     await waitFor(() => {
-      expect(libraryMutationMock.mutate).toHaveBeenCalled();
+      expect(exportPdfMock).toHaveBeenCalled();
     });
-    fireEvent.click(screen.getByTestId("feedback-action-save"));
 
-    expect(
-      await screen.findByRole("menuitem", { name: "보관함에 저장됨" }),
-    ).toBeTruthy();
+    expect(libraryMutationMock.mutate).not.toHaveBeenCalled();
   });
 
   it("disables retry actions when the submitted problem is no longer available", () => {

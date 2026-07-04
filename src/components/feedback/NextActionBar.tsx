@@ -1,8 +1,6 @@
 "use client";
 
-import { App, Button, Dropdown, Tooltip } from "antd";
-import type { MenuProps } from "antd";
-import { ChevronDown } from "@/components/shared/AppIcons";
+import { App, Button } from "antd";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -12,10 +10,6 @@ import {
 } from "@/lib/analytics/google-analytics";
 import { exportPdfWithPrintFallback } from "@/lib/export/pdf-export-client";
 import { PDF_EXPORT_DEFAULT_OPTIONS } from "@/lib/export/pdf-options";
-import {
-  isDuplicateLibrarySaveError,
-  useSaveLibraryItem,
-} from "@/lib/library/mutations";
 import { useCreateComparisonReport } from "@/lib/writing/mutations";
 
 type Props = {
@@ -50,8 +44,6 @@ type FeedbackActionGroupProps = Props & {
   variant?: "footer" | "header";
 };
 
-const RLS_DENIED = new Set(["42501", "PGRST301", "PGRST116"]);
-
 function classNames(...values: Array<string | false | null | undefined>) {
   return values.filter(Boolean).join(" ");
 }
@@ -60,18 +52,15 @@ function classNames(...values: Array<string | false | null | undefined>) {
  * E-01/E-02 다음 행동 CTA (description region 4).
  * 제약: 주요 CTA 1개(다시 풀기/작성), 보조 CTA 3개 이하, 중복 클릭 차단.
  * 모바일은 탭/스택 전환 — 액션들이 줄바꿈되며 각 버튼 block로 쌓인다.
- * 저장 관련 보조 액션은 하나의 메뉴에 묶어 CTA 수를 유지한다.
- * 예외: 저장 실패/권한 잠금, PDF 실패는 토스트와 메뉴 항목 상태로 안내한다.
+ * PDF 저장은 드롭다운 없이 직접 실행한다.
+ * 예외: PDF 실패는 토스트로 안내한다.
  */
 export function FeedbackActionGroup({
   submissionId,
-  userId,
   retryHref,
   nextHref,
   withPdf = true,
   retryLabel,
-  saveLocked = false,
-  alreadySaved = false,
   retryDisabled = false,
   retryDisabledReason,
   className,
@@ -82,8 +71,6 @@ export function FeedbackActionGroup({
   const { notification } = App.useApp();
   const [busy, setBusy] = useState(false);
   const [pdfBusy, setPdfBusy] = useState(false);
-  const [saved, setSaved] = useState(alreadySaved);
-  const save = useSaveLibraryItem();
   const compare = useCreateComparisonReport();
   const resolvedRetryLabel = retryLabel ?? t("retryDefault");
 
@@ -154,68 +141,6 @@ export function FeedbackActionGroup({
     }
   }
 
-  function onSaveLibrary() {
-    if (saveLocked || saved || save.isPending) return;
-    trackButtonClick({
-      buttonId: "feedback_save_library",
-      surface: "feedback_report",
-    });
-    save.mutate(
-      { item_type: "submission", submission_id: submissionId, user_id: userId },
-      {
-        onSuccess: () => {
-          setSaved(true);
-          notification.success({ title: t("save.saveSuccess") });
-        },
-        onError: (e: unknown) => {
-          if (isDuplicateLibrarySaveError(e)) {
-            setSaved(true);
-            notification.info({ title: t("save.saved") });
-            return;
-          }
-          const err = e as { code?: string; message?: string };
-          if (err.code && RLS_DENIED.has(err.code)) {
-            notification.error({
-              title: t("save.deniedTitle"),
-              description: t("save.deniedDescription"),
-            });
-            return;
-          }
-          notification.error({
-            title: t("save.failedTitle"),
-            description: err.message ?? t("save.failedDescription"),
-          });
-        },
-      },
-    );
-  }
-
-  const saveMenuItems: MenuProps["items"] = [
-    {
-      key: "library",
-      label: saveLocked
-        ? t("save.lockedButton")
-        : saved
-          ? t("save.saved")
-          : t("save.save"),
-      disabled: saveLocked || saved || save.isPending,
-    },
-    ...(withPdf
-      ? [
-          {
-            key: "pdf",
-            label: t("savePdf"),
-            disabled: pdfBusy,
-          },
-        ]
-      : []),
-  ];
-
-  function onSaveMenuClick({ key }: { key: string }) {
-    if (key === "library") onSaveLibrary();
-    if (key === "pdf") void onPdf();
-  }
-
   const isHeader = variant === "header";
 
   return (
@@ -268,21 +193,15 @@ export function FeedbackActionGroup({
           >
             {t("nextProblem")}
           </Button>
-          <Tooltip title={saveLocked ? t("save.lockedTooltip") : undefined}>
-            <Dropdown
-              menu={{ items: saveMenuItems, onClick: onSaveMenuClick }}
-              trigger={["click"]}
-              disabled={!withPdf && (saveLocked || saved)}
+          {withPdf ? (
+            <Button
+              onClick={() => void onPdf()}
+              loading={pdfBusy}
+              data-testid="feedback-action-pdf"
             >
-              <Button
-                loading={save.isPending || pdfBusy}
-                data-testid="feedback-action-save"
-              >
-                {t("saveGroup")}
-                <ChevronDown aria-hidden size={14} />
-              </Button>
-            </Dropdown>
-          </Tooltip>
+              {t("savePdf")}
+            </Button>
+          ) : null}
           <Button
             onClick={onCompare}
             loading={compare.isPending || busy}

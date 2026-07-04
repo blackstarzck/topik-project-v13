@@ -309,7 +309,7 @@ test("E-01 short feedback matches the wireframe constraints", async ({
     [
       '[data-testid="feedback-action-retry"]',
       '[data-testid="feedback-action-next"]',
-      '[data-testid="feedback-action-save"]',
+      '[data-testid="feedback-action-pdf"]',
       '[data-testid="feedback-action-compare"]',
     ].join(","),
   );
@@ -318,8 +318,20 @@ test("E-01 short feedback matches the wireframe constraints", async ({
     "다시 풀기",
   );
   await expect(page.getByTestId("feedback-action-next")).toBeVisible();
-  await expect(page.getByTestId("feedback-action-save")).toBeVisible();
+  await expect(page.getByTestId("feedback-action-pdf")).toHaveText("PDF 저장");
+  await expect(page.getByTestId("feedback-action-save")).toHaveCount(0);
   await expect(page.getByTestId("feedback-action-compare")).toBeVisible();
+  await expect(page.getByTestId("feedback-header-back-link")).toHaveAttribute(
+    "href",
+    "/library",
+  );
+  await expect(page.getByTestId("feedback-header-back-link")).toHaveAttribute(
+    "aria-label",
+    "내 서재로 돌아가기",
+  );
+  await page.getByTestId("feedback-header-back-link").click();
+  await expect(page).toHaveURL(/\/library$/);
+  await expect(page.getByRole("heading", { name: "내 서재" })).toBeVisible();
 
   expect(errors).toEqual([]);
 });
