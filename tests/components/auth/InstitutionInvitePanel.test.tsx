@@ -160,6 +160,7 @@ describe("InstitutionInvitePanel", () => {
     renderPanel("/dashboard");
 
     await screen.findByText("learner@example.com");
+    expect(screen.getByText("기관 초대가 도착했어요")).toBeTruthy();
     expect(screen.getByText("기관 연결 후 달라지는 점")).toBeTruthy();
     expect(screen.getByText("기존 학습 기록은 보존됩니다.")).toBeTruthy();
     expect(

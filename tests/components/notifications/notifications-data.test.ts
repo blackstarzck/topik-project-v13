@@ -36,6 +36,22 @@ describe("resolveNotificationDestination", () => {
     ).toBe("/dashboard?from=notification");
   });
 
+  it("accepts an institution invite link with aff and next query params", () => {
+    expect(
+      resolveNotificationDestination({
+        ...baseNotification,
+        link_url:
+          "/auth/institution-invite?aff=EXPO2026-BOOTH-A&next=/settings/account",
+        payload: {
+          affiliation_code: "EXPO2026-BOOTH-A",
+          kind: "institution_invite",
+        },
+      }),
+    ).toBe(
+      "/auth/institution-invite?aff=EXPO2026-BOOTH-A&next=/settings/account",
+    );
+  });
+
   it("does not resolve an empty or external destination", () => {
     expect(
       resolveNotificationDestination({
