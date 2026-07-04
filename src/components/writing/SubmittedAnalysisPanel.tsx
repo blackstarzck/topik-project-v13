@@ -7,6 +7,7 @@ import {
   AnalysisLoadingPage,
   type AnalysisPhase,
 } from "@/components/feedback/AnalysisLoadingModal";
+import { AnalysisPendingModal } from "@/components/feedback/AnalysisPendingModal";
 import { APP_ROUTES } from "@/lib/routes";
 import { useFeedbackStatus } from "@/lib/writing/queries";
 import type { QuestionNo } from "@/lib/writing/types";
@@ -39,16 +40,12 @@ export function SubmittedAnalysisPanel({ state }: Props) {
     router.prefetch?.(state.feedbackHref as never);
   }, [router, state.feedbackHref]);
 
-  useEffect(() => {
-    if (!pollingExhausted) return;
-    router.replace(APP_ROUTES.library as never);
-  }, [pollingExhausted, router]);
-
   // 분석이 진행 중일 때만 브라우저 새로고침/닫기(beforeunload)와 뒤로가기(popstate)를
   // 기기 빌트인 확인 창으로 막는다. 분석은 history에 남지 않는 일시 상태라, 경고 없이
   // 이탈하면 진행 중인 분석 화면이 사라진다. 완료/실패로 바뀌면 가드를 해제한다.
+  // 폴링 소진 후에는 답안이 이미 보관됐고 대기 모달이 이동을 안내하므로 가드를 푼다.
   useEffect(() => {
-    if (!analysisInProgress) return;
+    if (!analysisInProgress || pollingExhausted) return;
 
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
       event.preventDefault();
@@ -73,7 +70,7 @@ export function SubmittedAnalysisPanel({ state }: Props) {
       window.removeEventListener("beforeunload", handleBeforeUnload);
       window.removeEventListener("popstate", handlePopState);
     };
-  }, [analysisInProgress, leaveConfirmMessage]);
+  }, [analysisInProgress, pollingExhausted, leaveConfirmMessage]);
   const pageClassName = [
     "submitted-analysis-page",
     status === "failed" ? "submitted-analysis-page--failed" : null,
@@ -90,12 +87,22 @@ export function SubmittedAnalysisPanel({ state }: Props) {
       <section className="submitted-analysis-page__status">
         <AnalysisLoadingPage
           status={status}
-          pollingExhausted={pollingExhausted}
           completeHref={state.feedbackHref}
           onComplete={handleComplete}
           onRetry={() => router.refresh()}
         />
       </section>
+      {/* 폴링 소진 시 갑작스러운 리다이렉트 대신 대기 모달로 안내한다.
+          자동 이동은 replace(죽은 분석 화면을 history에 남기지 않음),
+          버튼 이동은 사용자 의도이므로 push를 쓴다. */}
+      {analysisInProgress && pollingExhausted ? (
+        <AnalysisPendingModal
+          open
+          onGoDashboard={() => router.push(APP_ROUTES.dashboard as never)}
+          onGoLibrary={() => router.push(APP_ROUTES.library as never)}
+          onAutoRedirect={() => router.replace(APP_ROUTES.library as never)}
+        />
+      ) : null}
     </div>
   );
 }

@@ -259,3 +259,106 @@ test("writing submit shows failure state without the read-only answer", async ({
     page.getByRole("button", { name: "대시보드로 이동" }),
   ).toBeVisible();
 });
+
+test("exhausted polling opens the wait modal and the library button routes to the library", async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    !["desktop-1280", "mobile-360"].includes(testInfo.project.name),
+    "exhausted wait modal smoke runs on desktop and mobile",
+  );
+
+  // Q51 답안 총량 상한(120자)을 넘기지 않도록 토큰/문구를 짧게 유지한다.
+  const answerToken = `${RUN_TOKEN}-exh-${testInfo.project.name}-${testInfo.retry}`;
+  const answerText = `Exh ${answerToken}.`;
+
+  await page.route(
+    "**/api/writing/evaluation-status?submissionId=*",
+    async (route) => {
+      await route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({ feedback_status: "analyzing" }),
+      });
+    },
+  );
+
+  await page.goto("/writing/short-answer-writing-51", {
+    waitUntil: "networkidle",
+  });
+  await expect(page).not.toHaveURL(/\/login/);
+
+  await fillShortAnswer51(page, answerText, "Please send the new file.");
+  await page.getByRole("button", { name: /제출하기/ }).click();
+  await page.getByTestId("submission-confirm-submit").click();
+
+  await expect(page.getByTestId("analysis-state-card")).toBeVisible();
+
+  // 폴링 소진(초기 조회 + 10초 후 재조회)까지 기다리면 즉시 리다이렉트 대신
+  // 대기 모달이 열린다. step 아래 인라인 경고는 더 이상 렌더되지 않는다.
+  const waitModal = page.getByTestId("analysis-pending-modal");
+  await expect(waitModal).toBeVisible({ timeout: 15_000 });
+  await expect(page).toHaveURL(/\/writing\/short-answer-writing-51/);
+  await expect(page.getByTestId("analysis-polling-exhausted")).toHaveCount(0);
+  await expect(waitModal.getByText("곧 분석이 완료될 거예요")).toBeVisible();
+  await expect(page.getByTestId("analysis-pending-dashboard")).toBeVisible();
+
+  const libraryButton = page.getByTestId("analysis-pending-library");
+  await expect(libraryButton).toContainText("내 서재로 이동");
+
+  // 5초 자동 이동 전에 버튼 클릭 경로를 검증한다(자동 이동도 동일하게 /library).
+  await libraryButton.click();
+  await expect(page).toHaveURL(/\/library/, { timeout: 15_000 });
+
+  await waitForSubmittedRow(answerToken);
+});
+
+test("exhausted polling counts down and auto-redirects to the library without a click", async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name !== "desktop-1280",
+    "auto redirect timing smoke runs on desktop only (button path covers mobile)",
+  );
+
+  const answerToken = `${RUN_TOKEN}-auto-${testInfo.project.name}-${testInfo.retry}`;
+  const answerText = `Auto ${answerToken}.`;
+
+  await page.route(
+    "**/api/writing/evaluation-status?submissionId=*",
+    async (route) => {
+      await route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({ feedback_status: "analyzing" }),
+      });
+    },
+  );
+
+  await page.goto("/writing/short-answer-writing-51", {
+    waitUntil: "networkidle",
+  });
+  await expect(page).not.toHaveURL(/\/login/);
+
+  await fillShortAnswer51(page, answerText, "Please send the new file.");
+  await page.getByRole("button", { name: /제출하기/ }).click();
+  await page.getByTestId("submission-confirm-submit").click();
+
+  await expect(page.getByTestId("analysis-state-card")).toBeVisible();
+  await expect(page.getByTestId("analysis-pending-modal")).toBeVisible({
+    timeout: 15_000,
+  });
+
+  // 카운트다운이 실제로 줄어드는지 확인한다(라벨의 숫자가 감소).
+  const libraryButton = page.getByTestId("analysis-pending-library");
+  const readCountdown = async () =>
+    Number(/\((\d)\)/.exec((await libraryButton.textContent()) ?? "")?.[1]);
+  const first = await readCountdown();
+  expect(first).toBeGreaterThanOrEqual(1);
+  await expect
+    .poll(readCountdown, { timeout: 4_000 })
+    .toBeLessThan(first);
+
+  // 아무것도 클릭하지 않아도 타이머 만료 시 /library로 자동 이동한다.
+  await page.waitForURL(/\/library/, { timeout: 10_000 });
+
+  await waitForSubmittedRow(answerToken);
+});
