@@ -513,3 +513,99 @@ test("F-01 library dashboard renders study action sections", async ({
 
   expect(errors).toEqual([]);
 });
+
+test("F-01 library problems filter panel, sort, and view toggle", async ({
+  page,
+}) => {
+  const errors = collectErrors(page);
+  await createLibraryDashboardFixture();
+
+  await page.goto("/library/problems", { waitUntil: "load" });
+  await expect(page).not.toHaveURL(/\/login/);
+  await expect(page.getByTestId("library-problems-list")).toBeVisible();
+
+  const viewport = page.viewportSize();
+  const isDesktop = (viewport?.width ?? 0) >= 1024;
+  const problemRows = page.locator(
+    '[data-testid="library-problems-mixed-row"][data-library-kind="problem"]',
+  );
+  const submissionRows = page.locator(
+    '[data-testid="library-problems-mixed-row"][data-library-kind="submission"]',
+  );
+
+  if (isDesktop) {
+    // 데스크톱: 우측 aside 필터 패널이 보이고 모바일 필터 버튼은 숨겨진다.
+    const aside = page.getByTestId("library-problems-filter-panel-desktop");
+    await expect(aside).toBeVisible();
+    await expect(page.getByTestId("library-problems-filter-open")).toBeHidden();
+
+    // 저장 문제 체크 → 문제 행만 남는다.
+    await aside.getByTestId("library-problems-filter-kind-problem").click();
+    await expect(problemRows).toHaveCount(1);
+    await expect(submissionRows).toHaveCount(0);
+
+    // 분석 실패 추가 체크 → 브랜치 합집합(실패 답안 ∪ 저장 문제).
+    await aside.getByTestId("library-problems-filter-status-failed").click();
+    await expect(problemRows).toHaveCount(1);
+    await expect(submissionRows).toHaveCount(1);
+
+    // 필터 초기화 → 전체 목록 복귀(페이지당 10행).
+    await aside.getByTestId("library-problems-filter-reset").click();
+    await expect(page.getByTestId("library-problems-mixed-row")).toHaveCount(
+      10,
+    );
+
+    // 점수 범위 슬라이더(키보드 조작) → 점수 없는 항목(분석 중/실패, 저장 문제) 제외.
+    const minHandle = aside
+      .getByTestId("library-problems-filter-score-slider")
+      .locator('[role="slider"]')
+      .first();
+    await minHandle.focus();
+    await page.keyboard.press("ArrowRight");
+    await expect(problemRows).toHaveCount(0);
+    await expect(submissionRows).toHaveCount(10);
+    await aside.getByTestId("library-problems-filter-reset").click();
+
+    // 정렬: 점수 높은 순 → 점수 없는 항목이 뒤로 가고 답안이 첫 행.
+    await page.getByTestId("library-problems-sort").click();
+    await page
+      .locator(".ant-select-item-option", { hasText: "점수 높은 순" })
+      .click();
+    await expect(
+      page.getByTestId("library-problems-mixed-row").first(),
+    ).toHaveAttribute("data-library-kind", "submission");
+
+    // 뷰 전환: 카드 그리드 ↔ 리스트.
+    await page.getByTitle("카드 보기").click();
+    await expect(page.getByTestId("library-problems-card-grid")).toBeVisible();
+    await expect(page.getByTestId("library-problems-mixed-row")).toHaveCount(
+      10,
+    );
+    await page.getByTitle("리스트 보기").click();
+    await expect(page.getByTestId("library-item-list")).toBeVisible();
+  } else {
+    // 모바일/태블릿: aside는 숨겨지고 필터 버튼 → Drawer로 연다.
+    await expect(
+      page.getByTestId("library-problems-filter-panel-desktop"),
+    ).toBeHidden();
+    await page.getByTestId("library-problems-filter-open").click();
+
+    const drawer = page.locator(".app-drawer");
+    await expect(
+      drawer.getByTestId("library-problems-filter-panel"),
+    ).toBeVisible();
+    await drawer.getByTestId("library-problems-filter-kind-problem").click();
+    await drawer.getByTestId("library-problems-filter-drawer-apply").click();
+    await expect(
+      drawer.getByTestId("library-problems-filter-panel"),
+    ).toBeHidden();
+
+    await expect(problemRows).toHaveCount(1);
+    await expect(submissionRows).toHaveCount(0);
+    await expect(
+      page.getByTestId("library-problems-filter-badge"),
+    ).toContainText("1");
+  }
+
+  expect(errors).toEqual([]);
+});

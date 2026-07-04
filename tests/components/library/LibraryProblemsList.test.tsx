@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ReactElement } from "react";
 
@@ -95,6 +101,12 @@ function renderList(
   );
 }
 
+async function waitForEnrichment() {
+  await waitFor(() => {
+    expect(screen.getByText(/68\/100/)).toBeTruthy();
+  });
+}
+
 beforeEach(() => {
   configureQueries();
   mockedFetchSubmissionEnrichment.mockResolvedValue(
@@ -126,7 +138,7 @@ describe("LibraryProblemsList", () => {
     expect(rows[0].getAttribute("data-library-kind")).toBe("problem");
     expect(rows[1].getAttribute("data-library-kind")).toBe("submission");
 
-    // 유형 라벨은 행 태그와 필터 카드에 함께 노출된다.
+    // 유형 라벨은 행 태그와 필터 패널에 함께 노출된다.
     expect(
       screen.getAllByText(koMessages.library.problemsList.typeProblem).length,
     ).toBeGreaterThan(0);
@@ -226,84 +238,202 @@ describe("LibraryProblemsList", () => {
     expect(screen.getByTestId("library-pagination")).toBeTruthy();
   });
 
-  it("renders filter cards with facet counts", async () => {
+  it("renders the filter panel groups with facet counts", async () => {
     renderList();
 
-    expect(screen.getByTestId("library-problems-filter-cards")).toBeTruthy();
+    expect(screen.getByTestId("library-problems-filter-panel")).toBeTruthy();
     expect(
-      screen.getByTestId("library-problems-filter-count-submissions")
+      screen.getByTestId("library-problems-filter-panel-desktop"),
+    ).toBeTruthy();
+    expect(
+      screen.getByTestId("library-problems-filter-kind-submission-count")
         .textContent,
     ).toBe("1");
     expect(
-      screen.getByTestId("library-problems-filter-count-problems").textContent,
+      screen.getByTestId("library-problems-filter-kind-problem-count")
+        .textContent,
     ).toBe("1");
+    expect(
+      screen.getByTestId("library-problems-filter-question-52-count")
+        .textContent,
+    ).toBe("1");
+    expect(
+      screen.getByTestId("library-problems-filter-question-51-count")
+        .textContent,
+    ).toBe("0");
+    // 날짜 프리셋과 점수 슬라이더 그룹도 함께 렌더링된다.
+    expect(
+      screen.getByTestId("library-problems-filter-date-presets"),
+    ).toBeTruthy();
+    expect(
+      screen.getByTestId("library-problems-filter-score-slider"),
+    ).toBeTruthy();
 
     // enrichment 반영 후 complete=1, pending=0으로 이동한다.
     await waitFor(() => {
       expect(
-        screen.getByTestId("library-problems-filter-count-statusComplete")
+        screen.getByTestId("library-problems-filter-status-complete-count")
           .textContent,
       ).toBe("1");
     });
     expect(
-      screen.getByTestId("library-problems-filter-count-statusPending")
+      screen.getByTestId("library-problems-filter-status-pending-count")
         .textContent,
     ).toBe("0");
     expect(
-      screen.getByTestId("library-problems-filter-count-providedEnded")
-        .textContent,
+      screen.getByTestId(
+        "library-problems-filter-availability-soft_unavailable-count",
+      ).textContent,
     ).toBe("0");
   });
 
-  it("filters the list by checked cards as a union", () => {
+  it("filters by item kind as a branch union", () => {
     renderList();
 
     fireEvent.click(
-      screen.getByTestId("library-problems-filter-card-submissions"),
+      screen.getByTestId("library-problems-filter-kind-submission"),
     );
     let rows = screen.getAllByTestId("library-problems-mixed-row");
     expect(rows).toHaveLength(1);
     expect(rows[0].getAttribute("data-library-kind")).toBe("submission");
 
-    fireEvent.click(
-      screen.getByTestId("library-problems-filter-card-problems"),
-    );
+    fireEvent.click(screen.getByTestId("library-problems-filter-kind-problem"));
     rows = screen.getAllByTestId("library-problems-mixed-row");
     expect(rows).toHaveLength(2);
 
     fireEvent.click(
-      screen.getByTestId("library-problems-filter-card-submissions"),
+      screen.getByTestId("library-problems-filter-kind-submission"),
     );
     rows = screen.getAllByTestId("library-problems-mixed-row");
     expect(rows).toHaveLength(1);
     expect(rows[0].getAttribute("data-library-kind")).toBe("problem");
   });
 
-  it("shows the filter empty state and resets checked filters", () => {
+  it("combines the question type group with the kind group as AND", () => {
     renderList();
 
-    fireEvent.click(
-      screen.getByTestId("library-problems-filter-card-statusFailed"),
-    );
+    fireEvent.click(screen.getByTestId("library-problems-filter-question-53"));
+    const rows = screen.getAllByTestId("library-problems-mixed-row");
+    expect(rows).toHaveLength(1);
+    expect(rows[0].getAttribute("data-library-kind")).toBe("submission");
+
+    // 53번(답안뿐) AND 저장 문제 브랜치 → 매칭 없음.
+    fireEvent.click(screen.getByTestId("library-problems-filter-kind-problem"));
     expect(
       screen.getByText(koMessages.library.problemsList.emptyFiltered),
     ).toBeTruthy();
+  });
+
+  it("shows the filter empty state and resets all groups at once", async () => {
+    renderList();
+    await waitForEnrichment();
 
     fireEvent.click(
-      screen.getByRole("button", {
+      screen.getByTestId("library-problems-filter-status-failed"),
+    );
+    const empty = screen.getByTestId("library-problems-empty");
+    expect(
+      within(empty).getByText(koMessages.library.problemsList.emptyFiltered),
+    ).toBeTruthy();
+
+    fireEvent.click(
+      within(empty).getByRole("button", {
         name: koMessages.library.saved.resetFilter,
       }),
     );
     expect(screen.getAllByTestId("library-problems-mixed-row")).toHaveLength(2);
   });
 
-  it("hides filter cards when nothing is saved", () => {
+  it("shows a loading indicator instead of the filtered empty state while enrichment loads", () => {
+    mockedFetchSubmissionEnrichment.mockReturnValue(new Promise(() => {}));
+    renderList();
+
+    fireEvent.click(
+      screen.getByTestId("library-problems-filter-status-failed"),
+    );
+    expect(screen.getByTestId("library-problems-enrich-loading")).toBeTruthy();
+    expect(screen.queryByTestId("library-problems-empty")).toBeNull();
+  });
+
+  it("opens the mobile filter drawer with the shared panel content", async () => {
+    renderList();
+
+    fireEvent.click(screen.getByTestId("library-problems-filter-open"));
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId("library-problems-filter-drawer-apply"),
+      ).toBeTruthy();
+    });
+    // 데스크톱 aside + Drawer 양쪽에 같은 패널 콘텐츠가 렌더링된다.
+    expect(screen.getAllByTestId("library-problems-filter-panel").length).toBe(
+      2,
+    );
+  });
+
+  it("sorts by score keeping unscored items last", async () => {
+    renderList();
+    await waitForEnrichment();
+
+    // 기본: 최근 저장 순 → problem(6/30)이 submission(6/29)보다 앞.
+    let rows = screen.getAllByTestId("library-problems-mixed-row");
+    expect(rows[0].getAttribute("data-library-kind")).toBe("problem");
+
+    fireEvent.mouseDown(
+      screen.getByRole("combobox", {
+        name: koMessages.library.problemsList.sortAriaLabel,
+      }),
+    );
+    const matches = await screen.findAllByText(
+      koMessages.library.problemsList.sortScoreDesc,
+    );
+    const option = matches.find((node) =>
+      node.closest(".ant-select-item-option"),
+    );
+    if (!option) throw new Error("sort option not found");
+    fireEvent.click(option);
+
+    // 점수 있는 submission이 앞으로, 점수 없는 problem은 뒤로.
+    rows = screen.getAllByTestId("library-problems-mixed-row");
+    expect(rows[0].getAttribute("data-library-kind")).toBe("submission");
+    expect(rows[1].getAttribute("data-library-kind")).toBe("problem");
+  });
+
+  it("switches between list and card views", async () => {
+    renderList();
+    await waitForEnrichment();
+
+    expect(screen.getByTestId("library-item-list")).toBeTruthy();
+    expect(screen.queryByTestId("library-problems-card-grid")).toBeNull();
+
+    fireEvent.click(
+      screen.getByTitle(koMessages.library.problemsList.viewCard),
+    );
+
+    expect(screen.getByTestId("library-problems-card-grid")).toBeTruthy();
+    expect(screen.queryByTestId("library-item-list")).toBeNull();
+    // 카드 뷰에서도 행 testid 계약과 다시 풀기 액션이 유지된다.
+    expect(screen.getAllByTestId("library-problems-mixed-row")).toHaveLength(2);
+    expect(
+      screen.getByRole("link", { name: koMessages.library.saved.retry }),
+    ).toBeTruthy();
+
+    fireEvent.click(
+      screen.getByTitle(koMessages.library.problemsList.viewList),
+    );
+    expect(screen.getByTestId("library-item-list")).toBeTruthy();
+  });
+
+  it("hides the filter panel and filter button when nothing is saved", () => {
     configureQueries({ submissions: [], problems: [] });
 
     renderList(
       <LibraryProblemsList initialSubmissions={[]} initialProblems={[]} />,
     );
 
-    expect(screen.queryByTestId("library-problems-filter-cards")).toBeNull();
+    expect(
+      screen.queryByTestId("library-problems-filter-panel-desktop"),
+    ).toBeNull();
+    expect(screen.queryByTestId("library-problems-filter-open")).toBeNull();
   });
 });
