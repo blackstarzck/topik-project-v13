@@ -166,6 +166,7 @@ export async function getLibraryDashboard(
     ...submissions.map((row) => row.problem_id),
     ...(libraryItems ?? []).map((row) => row.problem_id),
     ...studyEvents.map((row) => row.problem_id),
+    ...studyEvents.map((row) => payloadString(row.payload, "problem_id")),
     ...timelineSubmissions.map((row) => row.problem_id),
   ]);
   const [problems, visibleProblemIds] = await Promise.all([
@@ -315,10 +316,17 @@ export function buildLibraryDashboardFromRows(
       const submission = submissionId
         ? timelineSubmissionsById.get(submissionId)
         : undefined;
-      const problemId = event.problem_id ?? submission?.problem_id ?? null;
+      const problemId =
+        event.problem_id ??
+        payloadString(event.payload, "problem_id") ??
+        submission?.problem_id ??
+        null;
       const problem = problemId ? (problemsById.get(problemId) ?? null) : null;
       const questionNo =
-        submission?.question_no ?? problem?.question_no ?? null;
+        submission?.question_no ??
+        problem?.question_no ??
+        payloadNumber(event.payload, "question_no") ??
+        null;
       return {
         id: event.id,
         eventType: event.event_type as LibraryDashboardTimelineEventType,
@@ -799,6 +807,20 @@ function payloadString(payload: Json | null, key: string): string | null {
   return typeof value === "string" && value.length > 0 ? value : null;
 }
 
+function payloadNumber(payload: Json | null, key: string): number | null {
+  if (
+    payload === null ||
+    typeof payload !== "object" ||
+    Array.isArray(payload)
+  ) {
+    return null;
+  }
+  const value = payload[key];
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && /^\d+$/.test(value)) return Number(value);
+  return null;
+}
+
 function collectTimelineExportIds(events: StudyEventDashboardRow[]): string[] {
   return uniqueIds(
     events.map((event) => payloadString(event.payload, "export_id")),
@@ -865,6 +887,9 @@ function resolvePayloadSubmissionId(
   comparisonReportsById: Map<string, ComparisonReportDashboardRow>,
   exportFilesById: Map<string, ExportFileDashboardRow>,
 ): string | null {
+  const directSubmissionId = payloadString(event.payload, "submission_id");
+  if (directSubmissionId) return directSubmissionId;
+
   if (event.event_type === "report_viewed") {
     const reportId = payloadString(event.payload, "report_id");
     return reportId
