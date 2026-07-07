@@ -1981,6 +1981,7 @@
         "status": {
           "pending": "대기 중",
           "analyzing": "분석 중",
+          "complete": "피드백 완료",
           "failed": "분석 실패"
         }
       },

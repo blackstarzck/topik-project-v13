@@ -128,9 +128,7 @@ describe("In-app notification inbox item styles", () => {
 
   test("notification rows remove outer horizontal padding and add transitioned hover feedback", () => {
     expect(
-      blockFor(
-        ".app-notification-list .app-notification-item.ant-list-item.ant-list-item",
-      ),
+      blockFor(".app-notification-item"),
     ).toContain("padding-inline: 0");
     expect(blockFor(".app-notification-item__button")).toContain(
       "background: transparent",

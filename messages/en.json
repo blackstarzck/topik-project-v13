@@ -1981,6 +1981,7 @@
         "status": {
           "pending": "Waiting",
           "analyzing": "Analyzing",
+          "complete": "Feedback ready",
           "failed": "Analysis failed"
         }
       },

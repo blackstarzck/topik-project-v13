@@ -45,7 +45,7 @@ afterEach(() => {
 });
 
 describe("LibraryFeedbackWaitingPanel", () => {
-  it("syncs waiting submission statuses from the card header without refreshing the route", async () => {
+  it("keeps completed submissions visible with a feedback link after status sync", async () => {
     const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
       new Response(JSON.stringify({ feedback_status: "complete" }), {
         status: 200,
@@ -56,10 +56,12 @@ describe("LibraryFeedbackWaitingPanel", () => {
     fireEvent.click(screen.getByTestId("library-feedback-waiting-refresh"));
 
     await waitFor(() => {
-      expect(
-        screen.queryByTestId("library-feedback-waiting-row"),
-      ).toBeNull();
+      expect(screen.getByText("피드백 완료")).toBeTruthy();
     });
+    expect(screen.getByTestId("library-feedback-waiting-row")).toBeTruthy();
+    expect(
+      screen.getByRole("link", { name: "피드백 보기" }).getAttribute("href"),
+    ).toBe("/writing/feedback/long/submission-1");
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/writing/evaluation-status?submissionId=submission-1",
       { cache: "no-store" },

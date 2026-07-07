@@ -13,6 +13,7 @@ import type {
   LibraryFeedbackWaitingItem,
 } from "@/lib/library/types";
 import { writingQuestionNeonClass } from "@/lib/writing/question-number-neon";
+import { writingFeedbackHref } from "@/lib/writing/routes";
 
 import { formatDashboardShortDateTime } from "./library-dashboard-format";
 
@@ -41,11 +42,8 @@ type Props = {
 export function LibraryFeedbackWaitingPanel({ items }: Props) {
   const t = useTranslations("library.dashboard");
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [removedItemIds, setRemovedItemIds] = useState<ReadonlySet<string>>(
-    () => new Set(),
-  );
   const [statusByItemId, setStatusByItemId] = useState<
-    ReadonlyMap<string, LibraryDashboardFeedbackWaitingStatus>
+    ReadonlyMap<string, SyncedFeedbackStatus>
   >(() => new Map());
   const [syncErrorIds, setSyncErrorIds] = useState<ReadonlySet<string>>(
     () => new Set(),
@@ -53,12 +51,11 @@ export function LibraryFeedbackWaitingPanel({ items }: Props) {
 
   const visibleItems = useMemo(
     () =>
-      items.flatMap((item) =>
-        removedItemIds.has(item.id)
-          ? []
-          : [{ ...item, status: statusByItemId.get(item.id) ?? item.status }],
-      ),
-    [items, removedItemIds, statusByItemId],
+      items.map((item) => ({
+        ...item,
+        status: statusByItemId.get(item.id) ?? item.status,
+      })),
+    [items, statusByItemId],
   );
 
   const syncableItems = useMemo(
@@ -83,19 +80,10 @@ export function LibraryFeedbackWaitingPanel({ items }: Props) {
       })),
     );
 
-    setRemovedItemIds((current) => {
-      const next = new Set(current);
-      for (const { item, result } of results) {
-        if (result.ok && result.status === "complete") next.add(item.id);
-      }
-      return next;
-    });
     setStatusByItemId((current) => {
       const next = new Map(current);
       for (const { item, result } of results) {
-        if (result.status === "complete") {
-          next.delete(item.id);
-        } else if (result.status) {
+        if (result.status) {
           next.set(item.id, result.status);
         }
       }
@@ -191,7 +179,7 @@ export function LibraryFeedbackWaitingPanel({ items }: Props) {
                 </span>
                 <span
                   data-testid="library-feedback-waiting-status-actions"
-                  className="flex items-start justify-end gap-2"
+                  className="flex flex-wrap items-start justify-end gap-2"
                 >
                   {syncErrorIds.has(item.id) ? (
                     <Tag
@@ -232,6 +220,17 @@ export function LibraryFeedbackWaitingPanel({ items }: Props) {
                     />
                   ) : item.status === "failed" ? (
                     <Button disabled>{t("waiting.retryUnavailable")}</Button>
+                  ) : item.status === "complete" ? (
+                    <Button
+                      href={writingFeedbackHref({
+                        questionNo: item.questionNo,
+                        submissionId: item.submissionId,
+                      })}
+                      icon={<ChevronRight aria-hidden size={14} />}
+                      iconPlacement="end"
+                    >
+                      {t("actions.viewFeedback")}
+                    </Button>
                   ) : null}
                 </span>
               </div>
@@ -243,15 +242,14 @@ export function LibraryFeedbackWaitingPanel({ items }: Props) {
   );
 }
 
-function statusColor(status: LibraryDashboardFeedbackWaitingStatus) {
+function statusColor(status: SyncedFeedbackStatus) {
   if (status === "failed") return "error";
   if (status === "analyzing") return "processing";
+  if (status === "complete") return "success";
   return "warning";
 }
 
-function isSyncableWaitingStatus(
-  status: LibraryDashboardFeedbackWaitingStatus,
-) {
+function isSyncableWaitingStatus(status: SyncedFeedbackStatus) {
   return status === "pending" || status === "analyzing";
 }
 

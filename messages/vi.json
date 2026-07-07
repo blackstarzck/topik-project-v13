@@ -1981,6 +1981,7 @@
         "status": {
           "pending": "Đang chờ",
           "analyzing": "Đang phân tích",
+          "complete": "Phản hồi đã sẵn sàng",
           "failed": "Phân tích lỗi"
         }
       },
