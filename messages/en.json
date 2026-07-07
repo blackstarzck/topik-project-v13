@@ -846,11 +846,14 @@
       "accepted": "You have been registered as an institution member.",
       "declined": "You declined the invitation.",
       "canceled": "This invitation has expired or been withdrawn.",
+      "expired": "This invitation has expired.",
+      "withdrawn": "The administrator has withdrawn this invitation.",
       "alreadyResponded": "This invitation has already been handled.",
       "unauthenticated": "Your login has expired. Please sign in again.",
       "failed": "We couldn't process the invitation. Please try again shortly.",
       "accept": "Accept",
       "decline": "Decline",
+      "signInAgain": "Sign in again",
       "close": "Close"
     }
   },

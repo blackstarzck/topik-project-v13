@@ -846,11 +846,14 @@
       "accepted": "기관 회원으로 등록되었습니다.",
       "declined": "초대를 거부했습니다.",
       "canceled": "만료되었거나 회수된 초대입니다.",
+      "expired": "만료된 초대입니다.",
+      "withdrawn": "관리자가 회수한 초대입니다.",
       "alreadyResponded": "이미 처리된 초대입니다.",
       "unauthenticated": "로그인이 만료되었습니다. 다시 로그인해 주세요.",
       "failed": "초대를 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.",
       "accept": "수락",
       "decline": "거부",
+      "signInAgain": "다시 로그인",
       "close": "닫기"
     }
   },

@@ -846,11 +846,14 @@
       "accepted": "Bạn đã được đăng ký là thành viên tổ chức.",
       "declined": "Bạn đã từ chối lời mời.",
       "canceled": "Lời mời này đã hết hạn hoặc đã bị thu hồi.",
+      "expired": "Lời mời này đã hết hạn.",
+      "withdrawn": "Quản trị viên đã thu hồi lời mời này.",
       "alreadyResponded": "Lời mời này đã được xử lý.",
       "unauthenticated": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
       "failed": "Không thể xử lý lời mời. Vui lòng thử lại sau.",
       "accept": "Chấp nhận",
       "decline": "Từ chối",
+      "signInAgain": "Đăng nhập lại",
       "close": "Đóng"
     }
   },

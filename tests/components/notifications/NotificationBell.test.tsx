@@ -8,6 +8,18 @@ import { renderWithIntl } from "../../test-utils/renderWithIntl";
 
 const routerPushMock = vi.hoisted(() => vi.fn());
 const routerRefreshMock = vi.hoisted(() => vi.fn());
+const routerReplaceMock = vi.hoisted(() => vi.fn());
+const navigationState = vi.hoisted(() => ({
+  pathname: "/dashboard",
+  searchParams: new URLSearchParams(),
+}));
+const { messageErrorMock, messageInfoMock, messageSuccessMock } = vi.hoisted(
+  () => ({
+    messageErrorMock: vi.fn(),
+    messageInfoMock: vi.fn(),
+    messageSuccessMock: vi.fn(),
+  }),
+);
 const {
   fetchNotificationsMock,
   fetchUnreadNotificationCountMock,
@@ -25,9 +37,28 @@ const {
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
     push: routerPushMock,
+    replace: routerReplaceMock,
     refresh: routerRefreshMock,
   }),
+  usePathname: () => navigationState.pathname,
+  useSearchParams: () => navigationState.searchParams,
 }));
+
+vi.mock("antd", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("antd")>();
+  return {
+    ...actual,
+    App: Object.assign(actual.App, {
+      useApp: () => ({
+        message: {
+          error: messageErrorMock,
+          info: messageInfoMock,
+          success: messageSuccessMock,
+        },
+      }),
+    }),
+  };
+});
 
 vi.mock("../../../src/components/notifications/notifications-data", () => ({
   fetchNotifications: (...args: unknown[]) => fetchNotificationsMock(...args),
@@ -39,10 +70,21 @@ vi.mock("../../../src/components/notifications/notifications-data", () => ({
     markNotificationReadMock(...args),
   mapInstitutionInvitationError: (err: unknown) => {
     const message = err instanceof Error ? err.message : String(err);
+    if (message.includes("already responded: canceled")) return "withdrawn";
     if (message.includes("already responded")) return "alreadyResponded";
-    if (message.includes("canceled")) return "canceled";
+    if (message.includes("code_inactive")) return "expired";
+    if (message.includes("canceled")) return "withdrawn";
     if (message.includes("unauthenticated")) return "unauthenticated";
     return "failed";
+  },
+  resolveInstitutionInvitationStatus: (result: {
+    status: string;
+    error?: string | null;
+  }) => {
+    if (result.status === "canceled") {
+      return result.error === "code_inactive" ? "expired" : "withdrawn";
+    }
+    return result.status;
   },
   resolveNotificationAction: (item: {
     template_key?: string;
@@ -116,6 +158,12 @@ function makeInstitutionInvitationNotification(
 beforeEach(() => {
   routerPushMock.mockReset();
   routerRefreshMock.mockReset();
+  routerReplaceMock.mockReset();
+  navigationState.pathname = "/dashboard";
+  navigationState.searchParams = new URLSearchParams();
+  messageErrorMock.mockReset();
+  messageInfoMock.mockReset();
+  messageSuccessMock.mockReset();
   fetchNotificationsMock.mockReset();
   fetchUnreadNotificationCountMock.mockReset();
   markAllNotificationsReadMock.mockReset();
@@ -141,6 +189,27 @@ afterEach(() => {
 });
 
 describe("NotificationBell", () => {
+  it("opens the inbox from the email CTA query and removes only that query", async () => {
+    navigationState.pathname = "/settings/notifications";
+    navigationState.searchParams = new URLSearchParams(
+      "openNotifications=1&tab=email",
+    );
+    fetchNotificationsMock.mockResolvedValue([
+      makeNotification("n-1", "First notice"),
+    ]);
+
+    renderWithIntl(<NotificationBell userId="user-1" />);
+
+    expect(await screen.findByText("First notice")).toBeTruthy();
+    await waitFor(() => {
+      expect(fetchNotificationsMock).toHaveBeenCalledWith("user-1", 20);
+    });
+    expect(routerReplaceMock).toHaveBeenCalledWith(
+      "/settings/notifications?tab=email",
+      { scroll: false },
+    );
+  });
+
   it("runs mark-all only once while the mutation is pending", async () => {
     markAllNotificationsReadMock.mockReturnValue(new Promise(() => undefined));
     renderWithIntl(<NotificationBell userId="user-1" />);
@@ -222,6 +291,9 @@ describe("NotificationBell", () => {
       );
     });
     expect(routerRefreshMock).toHaveBeenCalledTimes(1);
+    expect(messageSuccessMock).toHaveBeenCalledWith(
+      koMessages.notifications.institutionInvitation.accepted,
+    );
   });
 
   it("submits a declined invitation without refreshing profile state", async () => {
@@ -250,6 +322,9 @@ describe("NotificationBell", () => {
       );
     });
     expect(routerRefreshMock).not.toHaveBeenCalled();
+    expect(messageInfoMock).toHaveBeenCalledWith(
+      koMessages.notifications.institutionInvitation.declined,
+    );
   });
 
   it("disables invitation actions when the payload has no usable invitation id", async () => {

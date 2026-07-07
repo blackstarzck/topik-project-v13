@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   mapInstitutionInvitationError,
+  resolveInstitutionInvitationStatus,
   resolveNotificationAction,
   resolveNotificationDestination,
   type UserNotification,
@@ -147,7 +148,13 @@ describe("mapInstitutionInvitationError", () => {
       mapInstitutionInvitationError(
         new Error("invitation already responded: canceled"),
       ),
-    ).toBe("canceled");
+    ).toBe("withdrawn");
+    expect(mapInstitutionInvitationError(new Error("code_inactive"))).toBe(
+      "expired",
+    );
+    expect(
+      mapInstitutionInvitationError(new Error("invitation canceled by admin")),
+    ).toBe("withdrawn");
     expect(mapInstitutionInvitationError(new Error("unauthenticated"))).toBe(
       "unauthenticated",
     );
@@ -156,5 +163,21 @@ describe("mapInstitutionInvitationError", () => {
         new Error("forbidden: not invitation owner"),
       ),
     ).toBe("failed");
+  });
+});
+
+describe("resolveInstitutionInvitationStatus", () => {
+  it("splits canceled RPC results into expired or withdrawn user states", () => {
+    expect(
+      resolveInstitutionInvitationStatus({
+        status: "canceled",
+        error: "code_inactive",
+      }),
+    ).toBe("expired");
+    expect(
+      resolveInstitutionInvitationStatus({
+        status: "canceled",
+      }),
+    ).toBe("withdrawn");
   });
 });

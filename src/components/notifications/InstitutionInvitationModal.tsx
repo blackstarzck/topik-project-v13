@@ -8,13 +8,13 @@ import { AppModal } from "@/components/shared/AppModal";
 import type {
   InstitutionInvitationErrorKind,
   InstitutionInvitationPayload,
-  InstitutionInvitationResponseStatus,
+  InstitutionInvitationResolvedStatus,
 } from "./notifications-data";
 
 const { Text } = Typography;
 
 export type InstitutionInvitationModalStatus =
-  | InstitutionInvitationResponseStatus
+  | InstitutionInvitationResolvedStatus
   | InstitutionInvitationErrorKind
   | null;
 
@@ -28,13 +28,15 @@ type Props = {
   submitting: InvitationSubmitAction | null;
   onAccept: () => void;
   onDecline: () => void;
+  onSignIn?: () => void;
   onClose: () => void;
 };
 
 const resolvedStatuses = new Set<InstitutionInvitationModalStatus>([
   "accepted",
   "declined",
-  "canceled",
+  "expired",
+  "withdrawn",
   "alreadyResponded",
 ]);
 
@@ -46,6 +48,7 @@ export function InstitutionInvitationModal({
   submitting,
   onAccept,
   onDecline,
+  onSignIn,
   onClose,
 }: Props) {
   const t = useTranslations("notifications.institutionInvitation");
@@ -61,7 +64,11 @@ export function InstitutionInvitationModal({
       currentAffiliation !== invitedAffiliation,
   );
   const actionsDisabled =
-    !invitationId || submitting !== null || resolvedStatuses.has(status);
+    !invitationId ||
+    submitting !== null ||
+    resolvedStatuses.has(status) ||
+    status === "unauthenticated";
+  const needsSignIn = status === "unauthenticated" && onSignIn;
 
   return (
     <AppModal
@@ -72,22 +79,30 @@ export function InstitutionInvitationModal({
       footer={
         <div className="flex flex-wrap justify-end gap-2">
           <Button onClick={onClose}>{t("close")}</Button>
-          <Button
-            danger
-            disabled={actionsDisabled}
-            loading={submitting === "decline"}
-            onClick={onDecline}
-          >
-            {t("decline")}
-          </Button>
-          <Button
-            type="primary"
-            disabled={actionsDisabled}
-            loading={submitting === "accept"}
-            onClick={onAccept}
-          >
-            {t("accept")}
-          </Button>
+          {needsSignIn ? (
+            <Button type="primary" onClick={onSignIn}>
+              {t("signInAgain")}
+            </Button>
+          ) : (
+            <>
+              <Button
+                danger
+                disabled={actionsDisabled}
+                loading={submitting === "decline"}
+                onClick={onDecline}
+              >
+                {t("decline")}
+              </Button>
+              <Button
+                type="primary"
+                disabled={actionsDisabled}
+                loading={submitting === "accept"}
+                onClick={onAccept}
+              >
+                {t("accept")}
+              </Button>
+            </>
+          )}
         </div>
       }
     >

@@ -11,15 +11,17 @@ import {
 } from "antd";
 import { Bell } from "@/components/shared/AppIcons";
 import { useFormatter, useNow, useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { APP_ROUTES } from "@/lib/routes";
 import {
   fetchNotifications,
   fetchUnreadNotificationCount,
   mapInstitutionInvitationError,
   markAllNotificationsRead,
   markNotificationRead,
+  resolveInstitutionInvitationStatus,
   resolveNotificationAction,
   respondInstitutionInvitation,
   type InstitutionInvitationPayload,
@@ -65,11 +67,14 @@ type InvitationModalState = {
  */
 export function NotificationBell({ userId, affiliationCode }: Props) {
   const t = useTranslations("notifications.bell");
+  const tInvitation = useTranslations("notifications.institutionInvitation");
   const format = useFormatter();
   // relativeTime은 now가 없으면 호출마다 IntlError(ENVIRONMENT_FALLBACK)를 던진다
   // (dev 콘솔 폭주 — QA 2차 라운드에서 발견). 1분 주기로 갱신되는 now를 공급한다.
   const now = useNow({ updateInterval: 60_000 });
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { message } = App.useApp();
 
   const [open, setOpen] = useState(false);
@@ -84,6 +89,7 @@ export function NotificationBell({ userId, affiliationCode }: Props) {
     useState<InvitationModalState | null>(null);
   const [invitationSubmitting, setInvitationSubmitting] =
     useState<InvitationSubmitAction | null>(null);
+  const handledOpenQueryRef = useRef<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -167,6 +173,7 @@ export function NotificationBell({ userId, affiliationCode }: Props) {
     setInvitationSubmitting(submitAction);
     try {
       const result = await respondInstitutionInvitation(invitationId, accept);
+      const status = resolveInstitutionInvitationStatus(result);
       setInvitationModal((prev) => {
         if (!prev) return prev;
         return {
@@ -175,10 +182,15 @@ export function NotificationBell({ userId, affiliationCode }: Props) {
             code: result.code ?? prev.invitation.code,
             codeLabel: result.code_label ?? prev.invitation.codeLabel,
           },
-          status: result.status,
+          status,
         };
       });
-      if (result.status === "accepted") router.refresh();
+      if (status === "accepted") {
+        message.success(tInvitation("accepted"));
+        router.refresh();
+      } else if (status === "declined") {
+        message.info(tInvitation("declined"));
+      }
     } catch (err) {
       const status = mapInstitutionInvitationError(err);
       setInvitationModal((prev) => (prev ? { ...prev, status } : prev));
@@ -199,8 +211,28 @@ export function NotificationBell({ userId, affiliationCode }: Props) {
       message.error(err instanceof Error ? err.message : t("markAllError"));
     }
   }
-  const reloadList = useSingleFlightAction(loadList);
+  const { pending: reloadListPending, run: reloadList } =
+    useSingleFlightAction(loadList);
   const markAll = useSingleFlightAction(handleMarkAll);
+
+  useEffect(() => {
+    const query = searchParams.toString();
+    if (searchParams.get("openNotifications") !== "1") {
+      handledOpenQueryRef.current = null;
+      return;
+    }
+    if (handledOpenQueryRef.current === query) return;
+
+    handledOpenQueryRef.current = query;
+    setOpen(true);
+    void reloadList();
+
+    const nextParams = new URLSearchParams(query);
+    nextParams.delete("openNotifications");
+    const nextQuery = nextParams.toString();
+    const nextHref = nextQuery ? `${pathname}?${nextQuery}` : pathname;
+    router.replace(nextHref as never, { scroll: false } as never);
+  }, [pathname, reloadList, router, searchParams]);
 
   const content = (
     <div className="app-notification-panel">
@@ -224,9 +256,9 @@ export function NotificationBell({ userId, affiliationCode }: Props) {
           <Text type="danger">{t("loadError")}</Text>
           <Button
             size="small"
-            loading={reloadList.pending}
-            disabled={reloadList.pending}
-            onClick={() => void reloadList.run()}
+            loading={reloadListPending}
+            disabled={reloadListPending}
+            onClick={() => void reloadList()}
           >
             {t("retry")}
           </Button>
@@ -292,7 +324,7 @@ export function NotificationBell({ userId, affiliationCode }: Props) {
         open={open}
         onOpenChange={(next) => {
           setOpen(next);
-          if (next) void reloadList.run();
+          if (next) void reloadList();
         }}
         trigger="click"
         placement="bottomRight"
@@ -316,6 +348,7 @@ export function NotificationBell({ userId, affiliationCode }: Props) {
         submitting={invitationSubmitting}
         onAccept={() => void handleInvitationResponse(true)}
         onDecline={() => void handleInvitationResponse(false)}
+        onSignIn={() => router.push(APP_ROUTES.login as never)}
         onClose={() => {
           setInvitationModal(null);
           setInvitationSubmitting(null);

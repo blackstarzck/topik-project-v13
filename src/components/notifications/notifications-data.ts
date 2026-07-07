@@ -72,14 +72,22 @@ export type InstitutionInvitationResponseStatus =
 
 export type InstitutionInvitationResponse = {
   status: InstitutionInvitationResponseStatus;
+  error?: string | null;
   code?: string | null;
   code_label?: string | null;
   prev_code?: string | null;
 };
 
+export type InstitutionInvitationResolvedStatus =
+  | "accepted"
+  | "declined"
+  | "expired"
+  | "withdrawn";
+
 export type InstitutionInvitationErrorKind =
   | "alreadyResponded"
-  | "canceled"
+  | "expired"
+  | "withdrawn"
   | "unauthenticated"
   | "failed";
 
@@ -221,23 +229,43 @@ export function mapInstitutionInvitationError(
   const normalized = message.toLowerCase();
 
   if (
-    normalized.includes("canceled") ||
-    normalized.includes("cancelled") ||
-    normalized.includes("expired") ||
-    normalized.includes("revoked")
-  ) {
-    return "canceled";
-  }
-  if (normalized.includes("already responded")) return "alreadyResponded";
-  if (
     normalized.includes("unauthenticated") ||
     normalized.includes("jwt") ||
     normalized.includes("auth")
   ) {
     return "unauthenticated";
   }
+  if (normalized.includes("already responded")) {
+    if (
+      normalized.includes("canceled") ||
+      normalized.includes("cancelled")
+    ) {
+      return "withdrawn";
+    }
+    return "alreadyResponded";
+  }
+  if (normalized.includes("code_inactive") || normalized.includes("expired")) {
+    return "expired";
+  }
+  if (
+    normalized.includes("canceled") ||
+    normalized.includes("cancelled") ||
+    normalized.includes("revoked") ||
+    normalized.includes("withdrawn")
+  ) {
+    return "withdrawn";
+  }
 
   return "failed";
+}
+
+export function resolveInstitutionInvitationStatus(
+  response: InstitutionInvitationResponse,
+): InstitutionInvitationResolvedStatus {
+  if (response.status === "canceled") {
+    return response.error === "code_inactive" ? "expired" : "withdrawn";
+  }
+  return response.status;
 }
 
 export async function respondInstitutionInvitation(
