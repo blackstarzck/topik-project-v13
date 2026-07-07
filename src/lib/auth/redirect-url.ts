@@ -5,7 +5,6 @@
 // Always returns an absolute http(s) URL; never a bare relative path.
 
 const DEV_FALLBACK = "http://127.0.0.1:3000";
-const LOCAL_BROWSER_HOSTS = new Set(["localhost", "127.0.0.1", "0.0.0.0"]);
 
 function ensureLeadingSlash(path: string): string {
   return path.startsWith("/") ? path : `/${path}`;
@@ -15,11 +14,10 @@ function stripTrailingSlash(url: string): string {
   return url.endsWith("/") ? url.slice(0, -1) : url;
 }
 
-function normalizeLocalBrowserOrigin(origin: string): string | null {
+function normalizeBrowserOrigin(origin: string): string | null {
   try {
     const url = new URL(origin);
     if (!/^https?:$/i.test(url.protocol)) return null;
-    if (!LOCAL_BROWSER_HOSTS.has(url.hostname)) return null;
     if (url.hostname === "0.0.0.0") {
       url.hostname = "localhost";
     }
@@ -29,27 +27,30 @@ function normalizeLocalBrowserOrigin(origin: string): string | null {
   }
 }
 
-function resolveDevelopmentBrowserOrigin(): string | null {
-  if (process.env.NODE_ENV !== "development") return null;
+function resolveBrowserOrigin(): string | null {
   if (typeof window === "undefined") return null;
-  return normalizeLocalBrowserOrigin(window.location.origin);
+  return normalizeBrowserOrigin(window.location.origin);
 }
 
 function resolveSiteUrl(): string {
-  const browserOrigin = resolveDevelopmentBrowserOrigin();
-  if (browserOrigin) {
-    return browserOrigin;
-  }
-
   const env = process.env.NEXT_PUBLIC_SITE_URL?.trim();
   if (env && env.length > 0) {
-    // Validate scheme — reject javascript:, data:, etc.
+    // Validate scheme - reject javascript:, data:, etc.
     if (!/^https?:\/\//i.test(env)) {
       throw new Error(
         `NEXT_PUBLIC_SITE_URL must start with http:// or https://, got: ${env}`,
       );
     }
+    const browserOrigin = resolveBrowserOrigin();
+    if (browserOrigin) {
+      return browserOrigin;
+    }
     return stripTrailingSlash(env);
+  }
+
+  const browserOrigin = resolveBrowserOrigin();
+  if (process.env.NODE_ENV === "development" && browserOrigin) {
+    return browserOrigin;
   }
 
   if (process.env.NODE_ENV === "development") {
