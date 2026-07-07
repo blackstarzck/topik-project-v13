@@ -45,6 +45,7 @@ type NextProblemCall =
   | { type: "from"; table: string }
   | { type: "select"; columns: string }
   | { type: "eq"; column: string; value: unknown }
+  | { type: "gt"; column: string; value: unknown }
   | { type: "order"; column: string }
   | { type: "limit"; count: number }
   | { type: "rpc"; name: string; args: Record<string, unknown> };
@@ -195,6 +196,8 @@ function makeNextProblemClient(
     from: (table: string) => {
       calls.push({ type: "from", table });
       const filters: Array<{ column: string; value: unknown }> = [];
+      const greaterThanFilters: Array<{ column: string; value: unknown }> = [];
+      let limitCount: number | null = null;
       const query = {
         select: (columns: string) => {
           calls.push({ type: "select", columns });
@@ -205,12 +208,18 @@ function makeNextProblemClient(
           calls.push({ type: "eq", column, value });
           return query;
         },
+        gt: (column: string, value: unknown) => {
+          greaterThanFilters.push({ column, value });
+          calls.push({ type: "gt", column, value });
+          return query;
+        },
         order: (column: string) => {
           calls.push({ type: "order", column });
           return query;
         },
         limit: (count: number) => {
           calls.push({ type: "limit", count });
+          limitCount = count;
           return query;
         },
         then: (
@@ -224,7 +233,18 @@ function makeNextProblemClient(
                   row[filter.column as keyof NextProblemRow] === filter.value,
               ),
             )
-            .sort((a, b) => a.id.localeCompare(b.id));
+            .filter((row) =>
+              greaterThanFilters.every((filter) => {
+                const rowValue = row[filter.column as keyof NextProblemRow];
+                return (
+                  typeof rowValue === "string" &&
+                  typeof filter.value === "string" &&
+                  rowValue.localeCompare(filter.value) > 0
+                );
+              }),
+            )
+            .sort((a, b) => a.id.localeCompare(b.id))
+            .slice(0, limitCount ?? undefined);
           return Promise.resolve({ data, error: null }).then(resolve, reject);
         },
       };
@@ -543,6 +563,10 @@ describe("getNextWritingProblemStartHref", () => {
   const nextId = "30000000-0000-4000-8000-000000000052";
   const laterId = "40000000-0000-4000-8000-000000000052";
 
+  function idForOrder(index: number): string {
+    return `${index.toString(16).padStart(8, "0")}-0000-4000-8000-000000000052`;
+  }
+
   function nextProblemRow(
     id: string,
     overrides: Partial<NextProblemRow> = {},
@@ -596,6 +620,29 @@ describe("getNextWritingProblemStartHref", () => {
     });
 
     expect(href).toBe(`/writing/answer-writing-52?problem=${firstId}&fresh=1`);
+  });
+
+  it("uses keyset lookup so more than 200 earlier problems do not force an early wrap", async () => {
+    const currentLargeSetId = idForOrder(200);
+    const nextLargeSetId = idForOrder(201);
+    const rows = [
+      ...Array.from({ length: 200 }, (_, index) =>
+        nextProblemRow(idForOrder(index)),
+      ),
+      nextProblemRow(currentLargeSetId),
+      nextProblemRow(nextLargeSetId),
+    ];
+    const { client } = makeNextProblemClient(rows);
+
+    const href = await getNextWritingProblemStartHref({
+      currentProblemId: currentLargeSetId,
+      questionNo: 52,
+      createClient: async () => client as never,
+    });
+
+    expect(href).toBe(
+      `/writing/answer-writing-52?problem=${nextLargeSetId}&fresh=1`,
+    );
   });
 
   it("skips unavailable, hidden, and seed fixture problems", async () => {

@@ -371,51 +371,85 @@ async function getNextWritingProblemTarget({
   }
 
   const supabase = await createClient();
-  const runQuery = async (
-    withLifecycle: boolean,
-  ): Promise<NextWritingProblemCandidateResult> => {
-    let query = supabase
-      .from("problems")
-      .select("id, question_no, tags, materials")
-      .eq("domain", "writing")
-      .eq("question_no", questionNo)
-      .eq("publish_status", "published");
+  const findFirstEligibleProblemAfter = async (
+    afterProblemId: string | null,
+  ): Promise<{ problemId: string; questionNo: QuestionNo } | null> => {
+    const scan = async (
+      withLifecycle: boolean,
+    ): Promise<{
+      error: NextWritingProblemCandidateResult["error"];
+      target: { problemId: string; questionNo: QuestionNo } | null;
+    }> => {
+      let cursor = afterProblemId;
 
-    if (withLifecycle) {
-      query = query.eq("lifecycle_status", "active");
+      for (;;) {
+        let query = supabase
+          .from("problems")
+          .select("id, question_no, tags, materials")
+          .eq("domain", "writing")
+          .eq("question_no", questionNo)
+          .eq("publish_status", "published");
+
+        if (withLifecycle) {
+          query = query.eq("lifecycle_status", "active");
+        }
+        if (cursor) {
+          query = query.gt("id", cursor);
+        }
+
+        const result = (await query
+          .order("id", { ascending: true })
+          .limit(
+            MAX_VISIBILITY_SCAN_ROWS,
+          )) as unknown as NextWritingProblemCandidateResult;
+        if (result.error) return { error: result.error, target: null };
+
+        const pageRows = (result.data ?? [])
+          .filter((row) => isQuestionNo(row.question_no))
+          .sort((a, b) => a.id.localeCompare(b.id));
+        if (pageRows.length === 0) return { error: null, target: null };
+
+        const candidates = pageRows.filter((row) => !isSeedFixtureProblem(row));
+        const visibleIds = await filterVisibleProblemIds(
+          supabase,
+          candidates.map((row) => row.id),
+        );
+        const firstVisible = candidates.find((row) => visibleIds.has(row.id));
+        if (firstVisible) {
+          return {
+            error: null,
+            target: { problemId: firstVisible.id, questionNo },
+          };
+        }
+
+        const nextCursor = pageRows[pageRows.length - 1]?.id ?? null;
+        if (
+          !nextCursor ||
+          (cursor && nextCursor.localeCompare(cursor) <= 0) ||
+          pageRows.length < MAX_VISIBILITY_SCAN_ROWS
+        ) {
+          return { error: null, target: null };
+        }
+        cursor = nextCursor;
+      }
+    };
+
+    let result = await scan(true);
+    if (result.error && result.error.message.includes("lifecycle_status")) {
+      result = await scan(false);
     }
-
-    const result = await query
-      .order("id", { ascending: true })
-      .limit(MAX_VISIBILITY_SCAN_ROWS);
-    return result as unknown as NextWritingProblemCandidateResult;
+    if (result.error) {
+      throw new Error(
+        `getNextWritingProblemStartHref: ${result.error.message}`,
+      );
+    }
+    return result.target;
   };
 
-  let { data, error } = await runQuery(true);
-  if (error && error.message.includes("lifecycle_status")) {
-    ({ data, error } = await runQuery(false));
-  }
-  if (error)
-    throw new Error(`getNextWritingProblemStartHref: ${error.message}`);
-
-  const rows = (data ?? [])
-    .filter((row) => isQuestionNo(row.question_no))
-    .filter((row) => !isSeedFixtureProblem(row));
-  const visibleIds = await filterVisibleProblemIds(
-    supabase,
-    rows.map((row) => row.id),
+  return (
+    (await findFirstEligibleProblemAfter(currentProblemId)) ??
+    (await findFirstEligibleProblemAfter(null))
   );
-  const candidates = rows
-    .filter((row) => visibleIds.has(row.id))
-    .sort((a, b) => a.id.localeCompare(b.id));
-
-  if (candidates.length === 0) return null;
-
-  const next =
-    candidates.find((row) => row.id.localeCompare(currentProblemId) > 0) ??
-    candidates[0];
-
-  return { problemId: next.id, questionNo };
 }
 
 export async function getWritingProblem(
