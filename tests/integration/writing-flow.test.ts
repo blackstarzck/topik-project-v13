@@ -9,6 +9,7 @@ const helpers = vi.hoisted(() => ({
   getComparisonTargetCandidatesMock: vi.fn(),
   getActiveDraftMock: vi.fn(),
   getWritingProblemAvailabilityMock: vi.fn(),
+  getNextWritingProblemStartHrefMock: vi.fn(),
   notFoundMock: vi.fn(() => {
     throw new Error("NOT_FOUND");
   }),
@@ -37,6 +38,8 @@ vi.mock("@/lib/writing/server", () => ({
   getActiveDraft: (...args: unknown[]) => helpers.getActiveDraftMock(...args),
   getWritingProblemAvailability: (...args: unknown[]) =>
     helpers.getWritingProblemAvailabilityMock(...args),
+  getNextWritingProblemStartHref: (...args: unknown[]) =>
+    helpers.getNextWritingProblemStartHrefMock(...args),
   isProblemIdLikeUuid: (value: unknown) =>
     typeof value === "string" &&
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
@@ -80,6 +83,9 @@ beforeEach(() => {
   helpers.getWritingProblemAvailabilityMock.mockResolvedValue({
     canStart: true,
   });
+  helpers.getNextWritingProblemStartHrefMock.mockResolvedValue(
+    "/writing/short-answer-writing-51?problem=next-problem&fresh=1",
+  );
 });
 
 afterEach(() => {
@@ -235,6 +241,10 @@ describe("writing flow — route guards", () => {
     expect(helpers.getWritingProblemAvailabilityMock).toHaveBeenCalledWith(
       "p-availability",
     );
+    expect(helpers.getNextWritingProblemStartHrefMock).toHaveBeenCalledWith({
+      currentProblemId: "p-availability",
+      questionNo: 51,
+    });
   });
 
   it("/writing/reports/[id]/compare renders with previous=null (empty diff)", async () => {

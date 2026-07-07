@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   getComparisonTargetCandidates,
+  getNextWritingProblemStartHref,
   getRetrySubmissionSeed,
   getWritingProblem,
   getWritingProblemAvailability,
@@ -29,6 +30,24 @@ type Call =
   | { type: "limit"; count: number }
   | { type: "order"; column: string }
   | { type: "range"; from: number; to: number };
+
+type NextProblemRow = {
+  id: string;
+  domain: string;
+  question_no: number | null;
+  publish_status: string | null;
+  lifecycle_status: string | null;
+  tags?: string[] | null;
+  materials?: unknown;
+};
+
+type NextProblemCall =
+  | { type: "from"; table: string }
+  | { type: "select"; columns: string }
+  | { type: "eq"; column: string; value: unknown }
+  | { type: "order"; column: string }
+  | { type: "limit"; count: number }
+  | { type: "rpc"; name: string; args: Record<string, unknown> };
 
 // 실제 problems.id는 uuid — getWritingProblem의 D-3 uuid 형식 가드를 통과해야
 // 하므로 fixture id도 uuid 형식을 쓴다 (이전 "incomplete-51" 류 문자열은 가드에
@@ -158,6 +177,61 @@ function makeAvailabilityClient(
     },
   };
   return { client, rpcCalls };
+}
+
+function makeNextProblemClient(
+  rows: NextProblemRow[],
+  visibleProblemIds = rows.map((row) => row.id),
+) {
+  const calls: NextProblemCall[] = [];
+  const client = {
+    rpc: (name: string, args: Record<string, unknown>) => {
+      calls.push({ type: "rpc", name, args });
+      return Promise.resolve({
+        data: visibleProblemIds.map((problem_id) => ({ problem_id })),
+        error: null,
+      });
+    },
+    from: (table: string) => {
+      calls.push({ type: "from", table });
+      const filters: Array<{ column: string; value: unknown }> = [];
+      const query = {
+        select: (columns: string) => {
+          calls.push({ type: "select", columns });
+          return query;
+        },
+        eq: (column: string, value: unknown) => {
+          filters.push({ column, value });
+          calls.push({ type: "eq", column, value });
+          return query;
+        },
+        order: (column: string) => {
+          calls.push({ type: "order", column });
+          return query;
+        },
+        limit: (count: number) => {
+          calls.push({ type: "limit", count });
+          return query;
+        },
+        then: (
+          resolve: (value: { data: NextProblemRow[]; error: null }) => unknown,
+          reject?: (reason: unknown) => unknown,
+        ) => {
+          const data = rows
+            .filter((row) =>
+              filters.every(
+                (filter) =>
+                  row[filter.column as keyof NextProblemRow] === filter.value,
+              ),
+            )
+            .sort((a, b) => a.id.localeCompare(b.id));
+          return Promise.resolve({ data, error: null }).then(resolve, reject);
+        },
+      };
+      return query;
+    },
+  };
+  return { client, calls };
 }
 
 function makeRetrySeedClient(rows: WritingSubmissionRow[]) {
@@ -460,6 +534,122 @@ describe("getWritingProblemAvailability", () => {
         args: { p_problem_id: COMPLETE_51_ID, p_question_no: 51 },
       },
     ]);
+  });
+});
+
+describe("getNextWritingProblemStartHref", () => {
+  const firstId = "10000000-0000-4000-8000-000000000052";
+  const currentId = "20000000-0000-4000-8000-000000000052";
+  const nextId = "30000000-0000-4000-8000-000000000052";
+  const laterId = "40000000-0000-4000-8000-000000000052";
+
+  function nextProblemRow(
+    id: string,
+    overrides: Partial<NextProblemRow> = {},
+  ): NextProblemRow {
+    return {
+      id,
+      domain: "writing",
+      question_no: 52,
+      publish_status: "published",
+      lifecycle_status: "active",
+      tags: [],
+      materials: {},
+      ...overrides,
+    };
+  }
+
+  it("builds a fresh writing URL for the next visible problem id in the same question", async () => {
+    const { client, calls } = makeNextProblemClient([
+      nextProblemRow(currentId),
+      nextProblemRow(nextId),
+      nextProblemRow(firstId),
+      nextProblemRow("00000000-0000-4000-8000-000000000053", {
+        question_no: 53,
+      }),
+    ]);
+
+    const href = await getNextWritingProblemStartHref({
+      currentProblemId: currentId,
+      questionNo: 52,
+      createClient: async () => client as never,
+    });
+
+    expect(href).toBe(`/writing/answer-writing-52?problem=${nextId}&fresh=1`);
+    expect(href).not.toContain("retrySubmission");
+    expect(calls.filter((call) => call.type === "from")).toEqual([
+      { type: "from", table: "problems" },
+    ]);
+  });
+
+  it("wraps to the first eligible problem when the current id is last", async () => {
+    const { client } = makeNextProblemClient([
+      nextProblemRow(firstId),
+      nextProblemRow(currentId),
+      nextProblemRow(nextId),
+    ]);
+
+    const href = await getNextWritingProblemStartHref({
+      currentProblemId: nextId,
+      questionNo: 52,
+      createClient: async () => client as never,
+    });
+
+    expect(href).toBe(`/writing/answer-writing-52?problem=${firstId}&fresh=1`);
+  });
+
+  it("skips unavailable, hidden, and seed fixture problems", async () => {
+    const hiddenId = "30000000-0000-4000-8000-000000000052";
+    const inactiveId = "35000000-0000-4000-8000-000000000052";
+    const draftId = "36000000-0000-4000-8000-000000000052";
+    const seedId = "37000000-0000-4000-8000-000000000052";
+    const { client } = makeNextProblemClient(
+      [
+        nextProblemRow(currentId),
+        nextProblemRow(hiddenId),
+        nextProblemRow(inactiveId, { lifecycle_status: "inactive" }),
+        nextProblemRow(draftId, { publish_status: "draft" }),
+        nextProblemRow(seedId, {
+          tags: ["seed:wireframe_problem_fixtures"],
+        }),
+        nextProblemRow(laterId),
+      ],
+      [currentId, inactiveId, draftId, seedId, laterId],
+    );
+
+    const href = await getNextWritingProblemStartHref({
+      currentProblemId: currentId,
+      questionNo: 52,
+      createClient: async () => client as never,
+    });
+
+    expect(href).toBe(`/writing/answer-writing-52?problem=${laterId}&fresh=1`);
+  });
+
+  it("opens the same problem as a fresh attempt when it is the only eligible candidate", async () => {
+    const { client } = makeNextProblemClient([nextProblemRow(currentId)]);
+
+    const href = await getNextWritingProblemStartHref({
+      currentProblemId: currentId,
+      questionNo: 52,
+      createClient: async () => client as never,
+    });
+
+    expect(href).toBe(
+      `/writing/answer-writing-52?problem=${currentId}&fresh=1`,
+    );
+  });
+
+  it("falls back to the problem list when no eligible next problem exists", async () => {
+    const { client } = makeNextProblemClient([]);
+
+    const href = await getNextWritingProblemStartHref({
+      currentProblemId: currentId,
+      questionNo: 52,
+      createClient: async () => client as never,
+    });
+
+    expect(href).toBe("/practice/problems");
   });
 });
 

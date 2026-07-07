@@ -24,6 +24,7 @@ import {
   type NormalizedWritingProblem,
   type ProblemLifecycleStatus,
 } from "./problem-normalizer";
+import { writingProblemHref } from "./routes";
 
 type ClientFactory = () => Promise<SupabaseServerClient>;
 
@@ -264,8 +265,18 @@ type WritingProblemQueryRow = {
   lifecycle_reason?: string | null;
 };
 
+type NextWritingProblemCandidateRow = Pick<
+  WritingProblemQueryRow,
+  "id" | "question_no" | "tags" | "materials"
+>;
+
 type WritingProblemQueryResult = {
   data: WritingProblemQueryRow[] | null;
+  error: { message: string } | null;
+};
+
+type NextWritingProblemCandidateResult = {
+  data: NextWritingProblemCandidateRow[] | null;
   error: { message: string } | null;
 };
 
@@ -292,7 +303,9 @@ function normalizeWritingProblemRow(
   });
 }
 
-function isSeedFixtureProblem(row: WritingProblemQueryRow): boolean {
+function isSeedFixtureProblem(
+  row: Pick<WritingProblemQueryRow, "tags" | "materials">,
+): boolean {
   if (
     Array.isArray(row.tags) &&
     row.tags.some((tag) => tag.startsWith("seed:"))
@@ -320,6 +333,89 @@ export function isProblemIdLikeUuid(
   problemId: string | null | undefined,
 ): problemId is string {
   return typeof problemId === "string" && UUID_PATTERN.test(problemId);
+}
+
+export async function getNextWritingProblemStartHref({
+  currentProblemId,
+  questionNo,
+  createClient = createSupabaseServerClient,
+}: {
+  currentProblemId: string | null | undefined;
+  questionNo: number | null | undefined;
+  createClient?: ClientFactory;
+}): Promise<string> {
+  const target = await getNextWritingProblemTarget({
+    currentProblemId,
+    questionNo,
+    createClient,
+  });
+
+  return writingProblemHref({
+    questionNo: target?.questionNo ?? questionNo,
+    problemId: target?.problemId ?? null,
+    fresh: true,
+  });
+}
+
+async function getNextWritingProblemTarget({
+  currentProblemId,
+  questionNo,
+  createClient,
+}: {
+  currentProblemId: string | null | undefined;
+  questionNo: number | null | undefined;
+  createClient: ClientFactory;
+}): Promise<{ problemId: string; questionNo: QuestionNo } | null> {
+  if (!isQuestionNo(questionNo) || !isProblemIdLikeUuid(currentProblemId)) {
+    return null;
+  }
+
+  const supabase = await createClient();
+  const runQuery = async (
+    withLifecycle: boolean,
+  ): Promise<NextWritingProblemCandidateResult> => {
+    let query = supabase
+      .from("problems")
+      .select("id, question_no, tags, materials")
+      .eq("domain", "writing")
+      .eq("question_no", questionNo)
+      .eq("publish_status", "published");
+
+    if (withLifecycle) {
+      query = query.eq("lifecycle_status", "active");
+    }
+
+    const result = await query
+      .order("id", { ascending: true })
+      .limit(MAX_VISIBILITY_SCAN_ROWS);
+    return result as unknown as NextWritingProblemCandidateResult;
+  };
+
+  let { data, error } = await runQuery(true);
+  if (error && error.message.includes("lifecycle_status")) {
+    ({ data, error } = await runQuery(false));
+  }
+  if (error)
+    throw new Error(`getNextWritingProblemStartHref: ${error.message}`);
+
+  const rows = (data ?? [])
+    .filter((row) => isQuestionNo(row.question_no))
+    .filter((row) => !isSeedFixtureProblem(row));
+  const visibleIds = await filterVisibleProblemIds(
+    supabase,
+    rows.map((row) => row.id),
+  );
+  const candidates = rows
+    .filter((row) => visibleIds.has(row.id))
+    .sort((a, b) => a.id.localeCompare(b.id));
+
+  if (candidates.length === 0) return null;
+
+  const next =
+    candidates.find((row) => row.id.localeCompare(currentProblemId) > 0) ??
+    candidates[0];
+
+  return { problemId: next.id, questionNo };
 }
 
 export async function getWritingProblem(
