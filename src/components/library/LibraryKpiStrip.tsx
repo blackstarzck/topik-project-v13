@@ -1,9 +1,10 @@
 "use client";
 
-import { Typography } from "antd";
+import { Button, Tooltip, Typography } from "antd";
 import { useLocale, useTranslations } from "next-intl";
 
 import { AppCard } from "@/components/shared/AppCard";
+import { RefreshCcw } from "@/components/shared/AppIcons";
 import type { LibraryDashboardKpis } from "@/lib/library/types";
 
 import {
@@ -15,9 +16,14 @@ const { Text } = Typography;
 
 type Props = {
   kpis: LibraryDashboardKpis;
+  feedbackWaitingRefresh?: {
+    canRefresh: boolean;
+    isRefreshing: boolean;
+    onRefresh: () => void;
+  };
 };
 
-export function LibraryKpiStrip({ kpis }: Props) {
+export function LibraryKpiStrip({ kpis, feedbackWaitingRefresh }: Props) {
   const t = useTranslations("library.dashboard");
   const locale = useLocale();
   const numberFormat = new Intl.NumberFormat(locale);
@@ -50,13 +56,37 @@ export function LibraryKpiStrip({ kpis }: Props) {
   return (
     <div data-testid="library-kpi-strip" className="grid gap-4 lg:grid-cols-4">
       {countItems.map((item) => (
-        <AppCard key={item.key} size="small" data-testid="library-kpi-card">
+        <AppCard
+          key={item.key}
+          size="small"
+          data-testid="library-kpi-card"
+          title={<Text className="block text-sm">{item.label}</Text>}
+          extra={
+            item.key === "feedbackWaiting" && feedbackWaitingRefresh ? (
+              <Tooltip title={t("waiting.refreshTooltip")}>
+                <Button
+                  type="text"
+                  aria-label={t("waiting.refreshAria")}
+                  data-testid="library-kpi-feedbackWaiting-refresh"
+                  icon={<RefreshCcw aria-hidden size={16} />}
+                  loading={feedbackWaitingRefresh.isRefreshing}
+                  disabled={
+                    feedbackWaitingRefresh.isRefreshing ||
+                    !feedbackWaitingRefresh.canRefresh
+                  }
+                  onClick={() => {
+                    feedbackWaitingRefresh.onRefresh();
+                  }}
+                />
+              </Tooltip>
+            ) : null
+          }
+        >
           <div
             data-testid={`library-kpi-card-${item.key}`}
-            className="flex min-h-[72px] items-center"
+            className="flex min-h-[40px] items-center"
           >
             <span className="min-w-0 flex-1">
-              <Text className="block text-sm">{item.label}</Text>
               <Text
                 strong
                 data-testid="library-kpi-value"
