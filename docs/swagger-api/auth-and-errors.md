@@ -1,7 +1,7 @@
 # Auth And Errors
 
 Source: [Swagger UI](https://api.dotoretopik.com/docs) / [OpenAPI JSON](https://api.dotoretopik.com/openapi.json)
-Last synced: 2026-06-23
+Last synced: 2026-07-07
 
 ## Security Schemes
 

@@ -4,10 +4,10 @@ This directory is the v13 integration reference for the TALKPIK external API.
 
 - Swagger UI: [https://api.dotoretopik.com/docs](https://api.dotoretopik.com/docs)
 - OpenAPI JSON: [https://api.dotoretopik.com/openapi.json](https://api.dotoretopik.com/openapi.json)
-- Last synced: 2026-06-23
+- Last synced: 2026-07-07
 - OpenAPI: `3.1.0`
 - API title/version: `TalkPik AI Service` / `0.1.0`
-- Coverage: 74 paths, 79 operations, 123 component schemas, 2 security schemes
+- Coverage: 82 paths, 87 operations, 133 component schemas, 2 security schemes
 
 ## Start Here
 
@@ -21,15 +21,17 @@ This directory is the v13 integration reference for the TALKPIK external API.
 
 | Group | Operations | Scope |
 | --- | ---: | --- |
+| [Account](./endpoints/account.md) | 1 | User account self-service |
 | [Eval Auth](./endpoints/eval-auth.md) | 1 | Eval dashboard login |
 | [Admin Users](./endpoints/admin-users.md) | 6 | Admin/user account management; reference only, not v13 user-app scope |
 | [Admin Eval](./endpoints/admin-eval.md) | 12 | Evaluation operations, reviews, and datasets |
+| [Admin Reading](./endpoints/admin-reading.md) | 3 | Admin reading question-bank operations; reference only, admin-only, not v13 user-app scope |
 | [Admin Campaign](./endpoints/admin-campaign.md) | 24 | Campaign admin review, email, PDF, and stats |
 | [External Campaign](./endpoints/external-campaign.md) | 6 | External campaign upload, submission, contact, and waitlist |
-| [Writing](./endpoints/writing.md) | 9 | TOPIK writing submission, generation, history, drafts, and PDF |
+| [Writing](./endpoints/writing.md) | 12 | TOPIK writing submission, generation, tutor sessions, history, drafts, and PDF |
 | [Reading](./endpoints/reading.md) | 9 | Reading generation, submission, sessions, results, and bookmarks |
 | [Listening](./endpoints/listening.md) | 10 | Listening sessions, submissions, results, audio, and bookmarks |
-| [Evaluation](./endpoints/evaluation.md) | 2 | Async writing evaluation status and detailed feedback lookup |
+| [Evaluation](./endpoints/evaluation.md) | 3 | Async writing evaluation status, SSE stream, and detailed feedback lookup |
 
 Admin endpoint groups are reference-only for this user-facing app. Do not treat them as permission to add or expand admin UI in v13.
 
@@ -41,9 +43,10 @@ Admin endpoint groups are reference-only for this user-facing app. Do not treat 
 | [Eval Auth](./schemas/eval-auth.md) | 3 |
 | [Admin Users](./schemas/admin-users.md) | 5 |
 | [Admin Eval](./schemas/admin-eval.md) | 18 |
+| [Admin Reading](./schemas/admin-reading.md) | 4 |
 | [Admin Campaign](./schemas/admin-campaign.md) | 24 |
 | [External Campaign](./schemas/external-campaign.md) | 13 |
-| [Writing](./schemas/writing.md) | 16 |
+| [Writing](./schemas/writing.md) | 22 |
 | [Reading](./schemas/reading.md) | 15 |
 | [Listening](./schemas/listening.md) | 17 |
 | [Evaluation](./schemas/evaluation.md) | 9 |
