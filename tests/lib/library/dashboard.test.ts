@@ -676,6 +676,48 @@ describe("buildLibraryDashboardFromRows", () => {
       }),
     ]);
   });
+
+  it("prefers the fetched submission problem over a mismatched payload problem", () => {
+    const rows = {
+      libraryItems: [],
+      submissions: [],
+      feedback: [],
+      dimensionScores: [],
+      problems: [
+        problem("p-submission-feedback", 54, "Submission feedback problem"),
+        problem("p-payload-feedback", 51, "Stale payload problem"),
+      ],
+      allSubmissions: [
+        allSubmission("s-mismatch-feedback", "p-submission-feedback", 54),
+      ],
+      studyEvents: [
+        {
+          id: "event-mismatch-feedback",
+          event_type: "feedback_viewed",
+          occurred_at: "2026-06-29T13:00:00.000Z",
+          problem_id: null,
+          submission_id: null,
+          payload: {
+            submission_id: "s-mismatch-feedback",
+            problem_id: "p-payload-feedback",
+            question_no: 51,
+          },
+        },
+      ],
+    } satisfies LibraryDashboardRows;
+
+    const view = buildLibraryDashboardFromRows(rows);
+
+    expect(view.timeline).toEqual([
+      expect.objectContaining({
+        id: "event-mismatch-feedback",
+        submissionId: "s-mismatch-feedback",
+        problemId: "p-submission-feedback",
+        questionNo: 54,
+        title: "Submission feedback problem",
+      }),
+    ]);
+  });
 });
 
 describe("getLibraryDashboard", () => {

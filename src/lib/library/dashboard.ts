@@ -318,8 +318,8 @@ export function buildLibraryDashboardFromRows(
         : undefined;
       const problemId =
         event.problem_id ??
-        payloadString(event.payload, "problem_id") ??
         submission?.problem_id ??
+        payloadString(event.payload, "problem_id") ??
         null;
       const problem = problemId ? (problemsById.get(problemId) ?? null) : null;
       const questionNo =
