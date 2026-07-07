@@ -1,9 +1,9 @@
 # Evaluation API
 
 Source: [Swagger UI](https://api.dotoretopik.com/docs) / [OpenAPI JSON](https://api.dotoretopik.com/openapi.json)
-Last synced: 2026-06-23
+Last synced: 2026-07-07
 
-Scope: Async writing evaluation status and detailed feedback lookup
+Scope: Async writing evaluation status, SSE stream, and detailed feedback lookup
 
 ## Endpoint Index
 
@@ -11,6 +11,7 @@ Scope: Async writing evaluation status and detailed feedback lookup
 | --- | --- | --- | --- |
 | GET | [`/api/evaluation/{submission_id}`](#get-api-evaluation-submission-id) | Poll writing evaluation status | BearerAuth |
 | GET | [`/api/evaluation/{submission_id}/feedback`](#get-api-evaluation-submission-id-feedback) | Get detailed writing evaluation feedback | BearerAuth |
+| GET | [`/api/evaluation/{submission_id}/stream`](#get-api-evaluation-submission-id-stream) | Stream writing evaluation results (SSE) | BearerAuth |
 
 ## v13 Integration Notes
 
@@ -18,6 +19,7 @@ Scope: Async writing evaluation status and detailed feedback lookup
 - Poll `GET /api/evaluation/{submission_id}` until `status` is `graded`.
 - Fetch full scoring details from `GET /api/evaluation/{submission_id}/feedback` after grading completes.
 - While grading is still running, the feedback endpoint can return HTTP 202 with `{ "status": "processing" }`.
+- `GET /api/evaluation/{submission_id}/stream` is an SSE channel. Test with `curl -N` or a fetch-based SSE client because browser `EventSource` cannot set Authorization headers.
 
 ## GET /api/evaluation/{submission_id}
 
@@ -183,3 +185,35 @@ Response 202 example:
   "status": "processing"
 }
 ```
+
+## GET /api/evaluation/{submission_id}/stream
+
+Summary: Stream writing evaluation results (SSE)
+
+Auth: BearerAuth
+
+### Description
+
+Streams grading result clusters over Server-Sent Events as the worker finishes them. Events are identified by `event:` name and should be mapped to fixed UI slots rather than arrival order. If grading already completed before connection, the full result set is replayed once and the stream closes.
+
+Consumer notes:
+
+- Use a fetch-based SSE reader or server-side proxy; browser `EventSource` cannot set `Authorization`.
+- Test with `curl -N -H "Authorization: Bearer <token>" .../api/evaluation/<id>/stream`.
+- Once opened, failures are delivered as an in-stream `error` event, not a 5xx HTTP response.
+- Fall back to `GET /api/evaluation/{submission_id}/feedback` if the stream drops.
+
+### Parameters
+
+| Name | In | Required | Type | Description |
+| --- | --- | --- | --- | --- |
+| `submission_id` | path | yes | string |  |
+
+### Responses
+
+| Status | Description | Media | Schema |
+| --- | --- | --- | --- |
+| 200 | Server-Sent Events stream of grading result clusters. | `text/event-stream` | - |
+| 401 | Missing or invalid JWT. | - | - |
+| 403 | Submission belongs to another user, delivered in-stream as `error`. | - | - |
+| 422 | Validation Error | `application/json` | [HTTPValidationError](../schemas/common.md#httpvalidationerror) |
