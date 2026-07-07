@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildLibraryDashboardFromRows,
+  getLibraryDashboard,
   type LibraryDashboardRows,
 } from "../../../src/lib/library/dashboard";
 
@@ -95,6 +96,148 @@ function allSubmission(id: string, problemId: string, questionNo: number) {
     problem_id: problemId,
     question_no: questionNo,
     parent_submission_id: null,
+  };
+}
+
+function makeDashboardClientForTimelineSubmissionFetch() {
+  const oldSubmissions = [
+    {
+      id: "s-old-report",
+      problem_id: "p-old-report",
+      question_no: 54,
+      parent_submission_id: null,
+    },
+    {
+      id: "s-old-export",
+      problem_id: "p-old-export",
+      question_no: 53,
+      parent_submission_id: null,
+    },
+  ];
+  const problems = [
+    problem("p-old-report", 54, "Old report problem"),
+    problem("p-old-export", 53, "Old export problem"),
+  ];
+  const queries: Array<{
+    table: string;
+    inFilters: Array<{ column: string; values: unknown[] }>;
+  }> = [];
+
+  return {
+    queries,
+    client: {
+      from(table: string) {
+        const query = {
+          table,
+          inFilters: [] as Array<{ column: string; values: unknown[] }>,
+        };
+        queries.push(query);
+
+        const resolve = () => {
+          if (table === "library_items") {
+            return { data: [], error: null };
+          }
+          if (table === "writing_submissions") {
+            const ids = query.inFilters.find(
+              (filter) => filter.column === "id",
+            )?.values;
+            return {
+              data: ids
+                ? oldSubmissions.filter((row) => ids.includes(row.id))
+                : [],
+              error: null,
+            };
+          }
+          if (table === "writing_feedback") {
+            return { data: [], error: null };
+          }
+          if (table === "feedback_dimension_scores") {
+            return { data: [], error: null };
+          }
+          if (table === "study_events") {
+            return {
+              data: [
+                {
+                  id: "event-old-report",
+                  event_type: "report_viewed",
+                  occurred_at: "2026-06-29T13:00:00.000Z",
+                  problem_id: null,
+                  submission_id: null,
+                  payload: { report_id: "report-old" },
+                },
+                {
+                  id: "event-old-export",
+                  event_type: "export_downloaded",
+                  occurred_at: "2026-06-29T12:59:00.000Z",
+                  problem_id: null,
+                  submission_id: null,
+                  payload: {
+                    source_type: "submission",
+                    source_id: "s-old-export",
+                  },
+                },
+              ],
+              error: null,
+            };
+          }
+          if (table === "comparison_reports") {
+            return {
+              data: [
+                {
+                  id: "report-old",
+                  current_submission_id: "s-old-report",
+                },
+              ],
+              error: null,
+            };
+          }
+          if (table === "export_files") {
+            return { data: [], error: null };
+          }
+          if (table === "problems") {
+            const ids = query.inFilters.find(
+              (filter) => filter.column === "id",
+            )?.values;
+            return {
+              data: ids
+                ? problems.filter((row) => ids.includes(row.id))
+                : problems,
+              error: null,
+            };
+          }
+          throw new Error(`unexpected table ${table}`);
+        };
+
+        const resolvePromise = () => Promise.resolve(resolve());
+        const chain = {
+          select: () => chain,
+          eq: () => chain,
+          order: () => chain,
+          in: (column: string, values: unknown[]) => {
+            query.inFilters.push({ column, values });
+            return chain;
+          },
+          limit: () => resolvePromise(),
+          then: (
+            onfulfilled?: Parameters<Promise<unknown>["then"]>[0],
+            onrejected?: Parameters<Promise<unknown>["then"]>[1],
+          ) => resolvePromise().then(onfulfilled, onrejected),
+          catch: (onrejected?: Parameters<Promise<unknown>["catch"]>[0]) =>
+            resolvePromise().catch(onrejected),
+          finally: (onfinally?: Parameters<Promise<unknown>["finally"]>[0]) =>
+            resolvePromise().finally(onfinally),
+        };
+        return chain;
+      },
+      rpc(_name: string, args: { p_problem_ids?: string[] }) {
+        return Promise.resolve({
+          data: (args.p_problem_ids ?? []).map((problem_id) => ({
+            problem_id,
+          })),
+          error: null,
+        });
+      },
+    },
   };
 }
 
@@ -495,5 +638,46 @@ describe("buildLibraryDashboardFromRows", () => {
         title: "비교 리포트 문제",
       }),
     ]);
+  });
+});
+
+describe("getLibraryDashboard", () => {
+  it("fetches payload-linked timeline submissions even when they are outside the recent submission cache", async () => {
+    const { client, queries } = makeDashboardClientForTimelineSubmissionFetch();
+
+    const view = await getLibraryDashboard(
+      "user-1",
+      async () => client as never,
+    );
+
+    expect(view.timeline).toEqual([
+      expect.objectContaining({
+        id: "event-old-report",
+        submissionId: "s-old-report",
+        problemId: "p-old-report",
+        questionNo: 54,
+        title: "Old report problem",
+      }),
+      expect.objectContaining({
+        id: "event-old-export",
+        submissionId: "s-old-export",
+        problemId: "p-old-export",
+        questionNo: 53,
+        title: "Old export problem",
+      }),
+    ]);
+    expect(queries).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          table: "writing_submissions",
+          inFilters: [
+            {
+              column: "id",
+              values: ["s-old-report", "s-old-export"],
+            },
+          ],
+        }),
+      ]),
+    );
   });
 });

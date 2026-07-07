@@ -90,6 +90,7 @@ export type LibraryDashboardRows = {
   dimensionScores: DimensionScoreDashboardRow[];
   problems: ProblemDashboardRow[];
   allSubmissions: SubmissionProblemRow[];
+  timelineSubmissions?: TimelineSubmissionRow[];
   studyEvents: StudyEventDashboardRow[];
   comparisonReports?: ComparisonReportDashboardRow[];
   exportFiles?: ExportFileDashboardRow[];
@@ -157,16 +158,15 @@ export async function getLibraryDashboard(
     comparisonReports,
     exportFiles,
   );
-  const allSubmissionsById = new Map(
-    allSubmissions.map((row) => [row.id, row]),
+  const timelineSubmissions = await fetchTimelineSubmissions(
+    supabase,
+    timelineSubmissionIds,
   );
   const problemIds = uniqueIds([
     ...submissions.map((row) => row.problem_id),
     ...(libraryItems ?? []).map((row) => row.problem_id),
     ...studyEvents.map((row) => row.problem_id),
-    ...timelineSubmissionIds.map(
-      (submissionId) => allSubmissionsById.get(submissionId)?.problem_id,
-    ),
+    ...timelineSubmissions.map((row) => row.problem_id),
   ]);
   const [problems, visibleProblemIds] = await Promise.all([
     fetchProblems(supabase, problemIds),
@@ -180,6 +180,7 @@ export async function getLibraryDashboard(
     dimensionScores,
     problems,
     allSubmissions,
+    timelineSubmissions,
     studyEvents,
     comparisonReports,
     exportFiles,
@@ -196,6 +197,9 @@ export function buildLibraryDashboardFromRows(
   const submissionsById = new Map(rows.submissions.map((row) => [row.id, row]));
   const timelineSubmissionsById = new Map<string, TimelineSubmissionRow>();
   for (const row of rows.allSubmissions) {
+    timelineSubmissionsById.set(row.id, row);
+  }
+  for (const row of rows.timelineSubmissions ?? []) {
     timelineSubmissionsById.set(row.id, row);
   }
   for (const row of rows.submissions) {
@@ -217,13 +221,13 @@ export function buildLibraryDashboardFromRows(
   const dimensionsBySubmissionId = groupDimensions(rows.dimensionScores);
   const submissionProblemCounts = countSubmissionsByProblem(
     rows.allSubmissions.length > 0
-        ? rows.allSubmissions
-        : rows.submissions.map((row) => ({
-            id: row.id,
-            problem_id: row.problem_id,
-            question_no: row.question_no,
-            parent_submission_id: row.parent_submission_id,
-          })),
+      ? rows.allSubmissions
+      : rows.submissions.map((row) => ({
+          id: row.id,
+          problem_id: row.problem_id,
+          question_no: row.question_no,
+          parent_submission_id: row.parent_submission_id,
+        })),
   );
 
   const savedRows = savedSubmissionItems
@@ -462,6 +466,23 @@ async function fetchExportFiles(
     throw new Error(`getLibraryDashboard(export_files): ${error.message}`);
   }
   return (data ?? []) as ExportFileDashboardRow[];
+}
+
+async function fetchTimelineSubmissions(
+  supabase: SupabaseServerClient,
+  ids: string[],
+): Promise<TimelineSubmissionRow[]> {
+  if (ids.length === 0) return [];
+  const { data, error } = await supabase
+    .from("writing_submissions")
+    .select("id, problem_id, question_no")
+    .in("id", ids);
+  if (error) {
+    throw new Error(
+      `getLibraryDashboard(timeline writing_submissions): ${error.message}`,
+    );
+  }
+  return (data ?? []) as TimelineSubmissionRow[];
 }
 
 async function fetchProblems(
