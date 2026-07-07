@@ -8,10 +8,12 @@ async function loadModule() {
 describe("auth redirect URL builder", () => {
   beforeEach(() => {
     vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
   });
 
   afterEach(() => {
     vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
   });
 
   it("buildAuthRedirectUrl returns absolute URL by joining NEXT_PUBLIC_SITE_URL and path", async () => {
@@ -63,6 +65,19 @@ describe("auth redirect URL builder", () => {
       buildAuthRedirectUrl("/auth/callback?next=/onboarding/learning-goal"),
     ).toBe(
       "http://localhost:3000/auth/callback?next=/onboarding/learning-goal",
+    );
+  });
+
+  it("buildAuthRedirectUrl uses the current deployed browser origin to avoid cross-domain auth callbacks", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://talkpik.example.com");
+    vi.stubGlobal("window", {
+      location: { origin: "https://www.talkpik.example.com" },
+    });
+    const { buildAuthRedirectUrl } = await loadModule();
+
+    expect(buildAuthRedirectUrl("/auth/callback?next=/dashboard")).toBe(
+      "https://www.talkpik.example.com/auth/callback?next=/dashboard",
     );
   });
 
