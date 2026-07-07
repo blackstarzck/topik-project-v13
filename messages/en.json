@@ -1977,9 +1977,11 @@
         "retryAria": "Retry {title}",
         "refreshAria": "Refresh analysis status",
         "refreshTooltip": "Check whether analysis is complete",
+        "statusCheckFailed": "Status check failed",
         "status": {
           "pending": "Waiting",
           "analyzing": "Analyzing",
+          "complete": "Feedback ready",
           "failed": "Analysis failed"
         }
       },

@@ -494,14 +494,7 @@ test("F-01 library dashboard renders study action sections", async ({
   await expect(
     page.getByTestId("library-feedback-waiting-spinner").first(),
   ).toBeVisible();
-  await expect(page.getByTestId("library-weak-items-panel")).toBeVisible();
-  await expect(
-    page
-      .getByTestId("library-weak-items-panel")
-      .locator(".ant-card-head-title"),
-  ).toContainText("최근 낮게 나온 항목");
-  await expect(page.getByText("최근 완료된 피드백 기준")).toHaveCount(0);
-  await expect(page.getByText("구성").first()).toBeVisible();
+  await expect(page.getByTestId("library-weak-items-panel")).toHaveCount(0);
   await expect(page.getByTestId("library-timeline-panel")).toBeVisible();
   await expect(
     page.getByTestId("library-timeline-panel").locator(".ant-card-head-title"),

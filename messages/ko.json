@@ -1977,9 +1977,11 @@
         "retryAria": "{title} 다시 풀기",
         "refreshAria": "분석 완료 여부 새로고침",
         "refreshTooltip": "분석 완료 여부 확인",
+        "statusCheckFailed": "상태 확인 실패",
         "status": {
           "pending": "대기 중",
           "analyzing": "분석 중",
+          "complete": "피드백 완료",
           "failed": "분석 실패"
         }
       },

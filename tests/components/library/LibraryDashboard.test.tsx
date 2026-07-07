@@ -104,7 +104,7 @@ afterEach(() => {
 });
 
 describe("LibraryDashboard", () => {
-  it("renders KPI strip, review candidate cards, and the three bottom panels", () => {
+  it("renders KPI strip, review candidate cards, and the two bottom panels", () => {
     renderWithIntl(<LibraryDashboard dashboard={dashboardFixture} />);
 
     expect(screen.getByTestId("library-dashboard")).toBeTruthy();
@@ -180,9 +180,17 @@ describe("LibraryDashboard", () => {
     expect(
       screen.getByRole("link", { name: /다시 풀기/ }).getAttribute("href"),
     ).toBe("/writing/54?problem=problem-1&fresh=1&retrySubmission=sub-1");
-    expect(screen.getByTestId("library-feedback-waiting-panel")).toBeTruthy();
-    expect(screen.getByTestId("library-weak-items-panel")).toBeTruthy();
-    expect(screen.getByTestId("library-timeline-panel")).toBeTruthy();
+    const feedbackWaitingPanel = screen.getByTestId(
+      "library-feedback-waiting-panel",
+    );
+    const timelinePanel = screen.getByTestId("library-timeline-panel");
+    const bottomPanelGrid = feedbackWaitingPanel.parentElement;
+
+    expect(feedbackWaitingPanel).toBeTruthy();
+    expect(screen.queryByTestId("library-weak-items-panel")).toBeNull();
+    expect(timelinePanel).toBeTruthy();
+    expect(bottomPanelGrid?.className).toContain("xl:grid-cols-2");
+    expect(bottomPanelGrid?.className).not.toContain("xl:grid-cols-3");
   });
 
   it("uses AntD Card heads and footer actions for the bottom dashboard panels", () => {
@@ -191,10 +199,9 @@ describe("LibraryDashboard", () => {
     const feedbackWaitingPanel = screen.getByTestId(
       "library-feedback-waiting-panel",
     );
-    const weakItemsPanel = screen.getByTestId("library-weak-items-panel");
     const timelinePanel = screen.getByTestId("library-timeline-panel");
 
-    for (const panel of [feedbackWaitingPanel, weakItemsPanel, timelinePanel]) {
+    for (const panel of [feedbackWaitingPanel, timelinePanel]) {
       expect(panel.classList.contains("ant-card")).toBe(true);
       expect(panel.classList.contains("app-card")).toBe(true);
     }
@@ -203,12 +210,10 @@ describe("LibraryDashboard", () => {
       feedbackWaitingPanel.querySelector(".ant-card-head-title")?.textContent,
     ).toContain("피드백 대기");
     expect(
-      weakItemsPanel.querySelector(".ant-card-head-title")?.textContent,
-    ).toContain("최근 낮게 나온 항목");
-    expect(
       timelinePanel.querySelector(".ant-card-head-title")?.textContent,
     ).toContain("학습 타임라인");
 
+    expect(screen.queryByTestId("library-weak-items-panel")).toBeNull();
     expect(screen.queryByText("최근 완료된 피드백 기준")).toBeNull();
 
     expect(
