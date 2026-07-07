@@ -46,6 +46,47 @@ export type UserNotification = {
   created_at: string;
 };
 
+export type InstitutionInvitationPayload = {
+  invitationId: string | null;
+  code: string | null;
+  codeLabel: string | null;
+};
+
+export type NotificationAction =
+  | {
+      kind: "institutionInvitation";
+      invitation: InstitutionInvitationPayload;
+    }
+  | {
+      kind: "route";
+      href: string;
+    }
+  | {
+      kind: "none";
+    };
+
+export type InstitutionInvitationResponseStatus =
+  | "accepted"
+  | "declined"
+  | "canceled";
+
+export type InstitutionInvitationResponse = {
+  status: InstitutionInvitationResponseStatus;
+  code?: string | null;
+  code_label?: string | null;
+  prev_code?: string | null;
+};
+
+export type InstitutionInvitationErrorKind =
+  | "alreadyResponded"
+  | "canceled"
+  | "unauthenticated"
+  | "failed";
+
+const INSTITUTION_INVITATION_KEY = "institution_invitation";
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 const NOTIFICATION_DESTINATION_FIELDS = [
   "route_path",
   "navigation_path",
@@ -75,6 +116,7 @@ const NOTIFICATION_PAYLOAD_DESTINATION_FIELDS = [
 type NotificationDestinationSource = Partial<
   Record<NotificationDestinationField, unknown>
 > & {
+  template_key?: unknown;
   payload?: unknown;
 };
 
@@ -93,6 +135,45 @@ function normalizeInternalRoute(value: unknown): string | null {
   return route;
 }
 
+function normalizeDisplayText(value: unknown, maxLength = 120): string | null {
+  if (typeof value !== "string") return null;
+
+  const text = value.trim();
+  if (!text) return null;
+  if (text.length <= maxLength) return text;
+  return `${text.slice(0, maxLength)}...`;
+}
+
+function normalizeInvitationId(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+
+  const invitationId = value.trim();
+  return UUID_PATTERN.test(invitationId) ? invitationId : null;
+}
+
+export function getInstitutionInvitationPayload(
+  item: NotificationDestinationSource,
+): InstitutionInvitationPayload | null {
+  const payload = isRecord(item.payload) ? item.payload : null;
+  const templateKey = normalizeDisplayText(item.template_key);
+  const payloadKind = payload ? normalizeDisplayText(payload.kind) : null;
+
+  if (
+    templateKey !== INSTITUTION_INVITATION_KEY &&
+    payloadKind !== INSTITUTION_INVITATION_KEY
+  ) {
+    return null;
+  }
+
+  return {
+    invitationId: normalizeInvitationId(
+      payload?.invitation_id ?? payload?.invitationId,
+    ),
+    code: normalizeDisplayText(payload?.code ?? payload?.affiliation_code),
+    codeLabel: normalizeDisplayText(payload?.code_label ?? payload?.codeLabel),
+  };
+}
+
 export function resolveNotificationDestination(
   item: NotificationDestinationSource,
 ): string | null {
@@ -109,6 +190,80 @@ export function resolveNotificationDestination(
   }
 
   return null;
+}
+
+export function resolveNotificationAction(
+  item: NotificationDestinationSource,
+): NotificationAction {
+  const invitation = getInstitutionInvitationPayload(item);
+  if (invitation) {
+    return { kind: "institutionInvitation", invitation };
+  }
+
+  const destination = resolveNotificationDestination(item);
+  return destination ? { kind: "route", href: destination } : { kind: "none" };
+}
+
+function normalizeRpcStatus(
+  status: unknown,
+): InstitutionInvitationResponseStatus | null {
+  return status === "accepted" ||
+    status === "declined" ||
+    status === "canceled"
+    ? status
+    : null;
+}
+
+export function mapInstitutionInvitationError(
+  err: unknown,
+): InstitutionInvitationErrorKind {
+  const message = err instanceof Error ? err.message : String(err);
+  const normalized = message.toLowerCase();
+
+  if (
+    normalized.includes("canceled") ||
+    normalized.includes("cancelled") ||
+    normalized.includes("expired") ||
+    normalized.includes("revoked")
+  ) {
+    return "canceled";
+  }
+  if (normalized.includes("already responded")) return "alreadyResponded";
+  if (
+    normalized.includes("unauthenticated") ||
+    normalized.includes("jwt") ||
+    normalized.includes("auth")
+  ) {
+    return "unauthenticated";
+  }
+
+  return "failed";
+}
+
+export async function respondInstitutionInvitation(
+  invitationId: string,
+  accept: boolean,
+): Promise<InstitutionInvitationResponse> {
+  const supabase = createSupabaseBrowserClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const res = (await (supabase as any).rpc("respond_institution_invitation", {
+    p_invitation_id: invitationId,
+    p_accept: accept,
+  })) as {
+    data: InstitutionInvitationResponse | null;
+    error: { message: string } | null;
+  };
+  if (res.error) throw new Error(res.error.message);
+
+  const status = normalizeRpcStatus(res.data?.status);
+  if (!res.data || !status) {
+    throw new Error("unexpected institution invitation response");
+  }
+
+  return {
+    ...res.data,
+    status,
+  };
 }
 
 export async function fetchUnreadNotificationCount(

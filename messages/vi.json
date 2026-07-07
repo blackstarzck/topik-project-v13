@@ -835,6 +835,23 @@
       "retry": "Thử lại",
       "markReadError": "Không thể đánh dấu thông báo là đã đọc.",
       "markAllError": "Không thể đánh dấu tất cả thông báo là đã đọc."
+    },
+    "institutionInvitation": {
+      "title": "Lời mời từ tổ chức",
+      "description": "Bạn đã nhận được lời mời từ một tổ chức. Nếu chấp nhận, tài khoản này sẽ được đăng ký là thành viên của tổ chức đó.",
+      "unknownLabel": "Tổ chức",
+      "unknownCode": "Không rõ mã",
+      "overwriteWarning": "Liên kết tổ chức hiện tại sẽ thay đổi. Khi chấp nhận, tổ chức hiện tại sẽ được thay bằng tổ chức này.",
+      "invalid": "Không thể xác minh thông tin lời mời.",
+      "accepted": "Bạn đã được đăng ký là thành viên tổ chức.",
+      "declined": "Bạn đã từ chối lời mời.",
+      "canceled": "Lời mời này đã hết hạn hoặc đã bị thu hồi.",
+      "alreadyResponded": "Lời mời này đã được xử lý.",
+      "unauthenticated": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
+      "failed": "Không thể xử lý lời mời. Vui lòng thử lại sau.",
+      "accept": "Chấp nhận",
+      "decline": "Từ chối",
+      "close": "Đóng"
     }
   },
   "practice": {

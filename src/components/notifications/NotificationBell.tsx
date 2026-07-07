@@ -17,11 +17,18 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   fetchNotifications,
   fetchUnreadNotificationCount,
+  mapInstitutionInvitationError,
   markAllNotificationsRead,
   markNotificationRead,
-  resolveNotificationDestination,
+  resolveNotificationAction,
+  respondInstitutionInvitation,
+  type InstitutionInvitationPayload,
   type UserNotification,
 } from "./notifications-data";
+import {
+  InstitutionInvitationModal,
+  type InstitutionInvitationModalStatus,
+} from "./InstitutionInvitationModal";
 import { useSingleFlightAction } from "@/lib/request-control/useSingleFlightAction";
 
 const { Paragraph, Text } = Typography;
@@ -36,6 +43,14 @@ type ListLoad =
 
 type Props = {
   userId: string;
+  affiliationCode?: string | null;
+};
+
+type InvitationSubmitAction = "accept" | "decline";
+
+type InvitationModalState = {
+  invitation: InstitutionInvitationPayload;
+  status: InstitutionInvitationModalStatus;
 };
 
 /**
@@ -48,7 +63,7 @@ type Props = {
  *   dashboard card.
  * - Unread = dot indicator; the row surface stays transparent.
  */
-export function NotificationBell({ userId }: Props) {
+export function NotificationBell({ userId, affiliationCode }: Props) {
   const t = useTranslations("notifications.bell");
   const format = useFormatter();
   // relativeTime은 now가 없으면 호출마다 IntlError(ENVIRONMENT_FALLBACK)를 던진다
@@ -65,6 +80,10 @@ export function NotificationBell({ userId }: Props) {
   const [pendingReadIds, setPendingReadIds] = useState<ReadonlySet<string>>(
     () => new Set(),
   );
+  const [invitationModal, setInvitationModal] =
+    useState<InvitationModalState | null>(null);
+  const [invitationSubmitting, setInvitationSubmitting] =
+    useState<InvitationSubmitAction | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -125,10 +144,46 @@ export function NotificationBell({ userId }: Props) {
         setPendingReadIds(new Set(pendingReadIdsRef.current));
       }
     }
-    const destination = resolveNotificationDestination(item);
-    if (destination) {
+    const action = resolveNotificationAction(item);
+    if (action.kind === "institutionInvitation") {
       setOpen(false);
-      router.push(destination as never);
+      setInvitationModal({
+        invitation: action.invitation,
+        status: null,
+      });
+      return;
+    }
+    if (action.kind === "route") {
+      setOpen(false);
+      router.push(action.href as never);
+    }
+  }
+
+  async function handleInvitationResponse(accept: boolean) {
+    const invitationId = invitationModal?.invitation.invitationId;
+    if (!invitationId) return;
+
+    const submitAction: InvitationSubmitAction = accept ? "accept" : "decline";
+    setInvitationSubmitting(submitAction);
+    try {
+      const result = await respondInstitutionInvitation(invitationId, accept);
+      setInvitationModal((prev) => {
+        if (!prev) return prev;
+        return {
+          invitation: {
+            invitationId,
+            code: result.code ?? prev.invitation.code,
+            codeLabel: result.code_label ?? prev.invitation.codeLabel,
+          },
+          status: result.status,
+        };
+      });
+      if (result.status === "accepted") router.refresh();
+    } catch (err) {
+      const status = mapInstitutionInvitationError(err);
+      setInvitationModal((prev) => (prev ? { ...prev, status } : prev));
+    } finally {
+      setInvitationSubmitting(null);
     }
   }
 
@@ -232,25 +287,40 @@ export function NotificationBell({ userId }: Props) {
   );
 
   return (
-    <Popover
-      open={open}
-      onOpenChange={(next) => {
-        setOpen(next);
-        if (next) void reloadList.run();
-      }}
-      trigger="click"
-      placement="bottomRight"
-      content={content}
-      classNames={{ root: "app-notification-popover" }}
-    >
-      <Badge count={unreadCount} overflowCount={99} size="small">
-        <Button
-          type="text"
-          className="app-notification-bell"
-          aria-label={t("bellAria")}
-          icon={<Bell aria-hidden size={20} />}
-        />
-      </Badge>
-    </Popover>
+    <>
+      <Popover
+        open={open}
+        onOpenChange={(next) => {
+          setOpen(next);
+          if (next) void reloadList.run();
+        }}
+        trigger="click"
+        placement="bottomRight"
+        content={content}
+        classNames={{ root: "app-notification-popover" }}
+      >
+        <Badge count={unreadCount} overflowCount={99} size="small">
+          <Button
+            type="text"
+            className="app-notification-bell"
+            aria-label={t("bellAria")}
+            icon={<Bell aria-hidden size={20} />}
+          />
+        </Badge>
+      </Popover>
+      <InstitutionInvitationModal
+        open={Boolean(invitationModal)}
+        invitation={invitationModal?.invitation ?? null}
+        affiliationCode={affiliationCode}
+        status={invitationModal?.status ?? null}
+        submitting={invitationSubmitting}
+        onAccept={() => void handleInvitationResponse(true)}
+        onDecline={() => void handleInvitationResponse(false)}
+        onClose={() => {
+          setInvitationModal(null);
+          setInvitationSubmitting(null);
+        }}
+      />
+    </>
   );
 }

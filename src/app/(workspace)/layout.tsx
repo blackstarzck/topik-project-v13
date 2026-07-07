@@ -48,6 +48,7 @@ export default async function WorkspaceLayout({
       nickname={profile.nickname}
       avatarPath={profile.avatar_path}
       planLabel={profile.plan_label}
+      affiliationCode={profile.affiliation_code}
     >
       {children}
     </WorkspaceShell>

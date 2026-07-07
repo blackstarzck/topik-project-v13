@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  mapInstitutionInvitationError,
+  resolveNotificationAction,
   resolveNotificationDestination,
   type UserNotification,
 } from "../../../src/components/notifications/notifications-data";
@@ -67,5 +69,92 @@ describe("resolveNotificationDestination", () => {
         link_url: null,
       }),
     ).toBeNull();
+  });
+});
+
+describe("resolveNotificationAction", () => {
+  it("opens the institution invitation modal before any route destination", () => {
+    expect(
+      resolveNotificationAction({
+        ...baseNotification,
+        template_key: "institution_invitation",
+        route_path: "/dashboard",
+        link_url: "/auth/institution-invite?aff=LEGACY",
+        payload: {
+          kind: "institution_invitation",
+          invitation_id: "2a2ff7b8-cc31-4f4d-a455-283aaad28f30",
+          code: "CAMPAIGN-01",
+          code_label: "캠페인 유입 유저",
+        },
+      }),
+    ).toEqual({
+      kind: "institutionInvitation",
+      invitation: {
+        invitationId: "2a2ff7b8-cc31-4f4d-a455-283aaad28f30",
+        code: "CAMPAIGN-01",
+        codeLabel: "캠페인 유입 유저",
+      },
+    });
+  });
+
+  it("keeps the legacy institution invite link as a route action", () => {
+    expect(
+      resolveNotificationAction({
+        ...baseNotification,
+        link_url:
+          "/auth/institution-invite?aff=EXPO2026-BOOTH-A&next=/settings/account",
+        payload: {
+          affiliation_code: "EXPO2026-BOOTH-A",
+          kind: "institution_invite",
+        },
+      }),
+    ).toEqual({
+      kind: "route",
+      href: "/auth/institution-invite?aff=EXPO2026-BOOTH-A&next=/settings/account",
+    });
+  });
+
+  it("returns an invalid institution invitation action when the id is missing", () => {
+    expect(
+      resolveNotificationAction({
+        ...baseNotification,
+        template_key: "institution_invitation",
+        payload: {
+          kind: "institution_invitation",
+          code: "CAMPAIGN-01",
+          code_label: "캠페인 유입 유저",
+        },
+      }),
+    ).toEqual({
+      kind: "institutionInvitation",
+      invitation: {
+        invitationId: null,
+        code: "CAMPAIGN-01",
+        codeLabel: "캠페인 유입 유저",
+      },
+    });
+  });
+});
+
+describe("mapInstitutionInvitationError", () => {
+  it("maps known RPC messages without exposing raw database errors", () => {
+    expect(
+      mapInstitutionInvitationError(
+        new Error("invitation already responded: accepted"),
+      ),
+    ).toBe("alreadyResponded");
+    expect(
+      mapInstitutionInvitationError(
+        new Error("invitation already responded: canceled"),
+      ),
+    ).toBe("canceled");
+    expect(mapInstitutionInvitationError(new Error("unauthenticated"))).toBe(
+      "unauthenticated",
+    );
+    expect(
+      mapInstitutionInvitationError(
+        new Error("forbidden: not invitation owner"),
+      ),
+    ).toBe("failed");
   });
 });

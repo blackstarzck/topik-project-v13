@@ -835,6 +835,23 @@
       "retry": "다시 시도",
       "markReadError": "알림 읽음 처리에 실패했어요.",
       "markAllError": "알림 모두 읽음 처리에 실패했어요."
+    },
+    "institutionInvitation": {
+      "title": "기관 소속 초대",
+      "description": "기관 초대가 도착했습니다. 수락하면 이 계정이 해당 기관 회원으로 등록됩니다.",
+      "unknownLabel": "기관",
+      "unknownCode": "코드 미확인",
+      "overwriteWarning": "기존 소속이 변경됩니다. 수락하면 현재 소속이 이 기관으로 교체됩니다.",
+      "invalid": "초대 정보를 확인할 수 없습니다.",
+      "accepted": "기관 회원으로 등록되었습니다.",
+      "declined": "초대를 거부했습니다.",
+      "canceled": "만료되었거나 회수된 초대입니다.",
+      "alreadyResponded": "이미 처리된 초대입니다.",
+      "unauthenticated": "로그인이 만료되었습니다. 다시 로그인해 주세요.",
+      "failed": "초대를 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+      "accept": "수락",
+      "decline": "거부",
+      "close": "닫기"
     }
   },
   "practice": {

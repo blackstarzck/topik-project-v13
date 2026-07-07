@@ -33,6 +33,7 @@ type Props = {
   nickname?: string | null;
   avatarPath?: string | null;
   planLabel?: string | null;
+  affiliationCode?: string | null;
   children: ReactNode;
 };
 
@@ -44,6 +45,7 @@ export function WorkspaceShell({
   nickname,
   avatarPath,
   planLabel,
+  affiliationCode,
   children,
 }: Props) {
   const t = useTranslations("app");
@@ -209,7 +211,7 @@ export function WorkspaceShell({
       {userSummary ? (
         <span className="app-workspace-user-summary__divider" aria-hidden />
       ) : null}
-      <NotificationBell userId={userId} />
+      <NotificationBell userId={userId} affiliationCode={affiliationCode} />
     </>
   );
 

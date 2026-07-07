@@ -835,6 +835,23 @@
       "retry": "Retry",
       "markReadError": "Couldn't mark the notification as read.",
       "markAllError": "Couldn't mark all notifications as read."
+    },
+    "institutionInvitation": {
+      "title": "Institution invitation",
+      "description": "You received an institution invitation. If you accept, this account will be registered as a member of that institution.",
+      "unknownLabel": "Institution",
+      "unknownCode": "Unknown code",
+      "overwriteWarning": "Your existing affiliation will change. Accepting replaces your current institution with this one.",
+      "invalid": "We couldn't verify this invitation.",
+      "accepted": "You have been registered as an institution member.",
+      "declined": "You declined the invitation.",
+      "canceled": "This invitation has expired or been withdrawn.",
+      "alreadyResponded": "This invitation has already been handled.",
+      "unauthenticated": "Your login has expired. Please sign in again.",
+      "failed": "We couldn't process the invitation. Please try again shortly.",
+      "accept": "Accept",
+      "decline": "Decline",
+      "close": "Close"
     }
   },
   "practice": {
