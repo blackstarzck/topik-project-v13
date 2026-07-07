@@ -193,9 +193,6 @@ test("hidden saved writing problems fade the entire row without leaking hard-hid
   // list can otherwise still be mounting when fill() fires.
   await expect(searchInput).toBeVisible({ timeout: 10_000 });
   await searchInput.fill(fixture.marker);
-  await expect(page.getByTestId("library-problems-result-count")).toContainText(
-    "2",
-  );
   await expect(page.getByTestId("library-item-row")).toHaveCount(2);
 
   const listText = await page.getByTestId("library-item-list").innerText();

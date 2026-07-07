@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Alert, Button, Spin, Steps, Typography } from "antd";
+import { Button, Spin, Steps, Typography } from "antd";
 import {
   Clock3,
   LayoutDashboard,
@@ -115,10 +115,6 @@ export function AnalysisLoadingPage({
     router.push(APP_ROUTES.dashboard);
   }
 
-  function goToLibraryStatus() {
-    router.push(APP_ROUTES.library);
-  }
-
   const retry = useSingleFlightAction(() => onRetry?.(), {
     cooldownMs: MANUAL_RETRY_COOLDOWN_MS,
   });
@@ -225,25 +221,6 @@ export function AnalysisLoadingPage({
                     title: t(`steps.${key}Title`),
                   }))}
                 />
-
-                {exhausted && active ? (
-                  <Alert
-                    data-testid="analysis-polling-exhausted"
-                    type="warning"
-                    showIcon
-                    title={t("delayedTitle")}
-                    description={t("delayedDescription")}
-                    action={
-                      <Button
-                        size="small"
-                        onClick={goToLibraryStatus}
-                        data-testid="analysis-library-status-link"
-                      >
-                        {t("viewLibraryStatus")}
-                      </Button>
-                    }
-                  />
-                ) : null}
               </div>
             ) : null}
           </div>

@@ -334,7 +334,7 @@ describe("DashboardAlertsCard", () => {
     });
   });
 
-  it("renders latest notices without duplicating study or exam notifications", async () => {
+  it("renders latest notices without category tags or duplicating study/exam notifications", async () => {
     fetchNotificationsMock.mockResolvedValue([
       {
         id: "n1",
@@ -362,7 +362,7 @@ describe("DashboardAlertsCard", () => {
       expect(screen.getByText("서비스 점검 공지")).toBeTruthy();
     });
     expect(screen.queryByText("시험 D-7 안내")).toBeNull();
-    expect(screen.getByText(dashboard.alerts.category.notice)).toBeTruthy();
+    expect(screen.queryByText(dashboard.alerts.category.notice)).toBeNull();
     expect(fetchNotificationsMock).toHaveBeenCalledWith("user-1", 5, {
       category: "notice",
     });

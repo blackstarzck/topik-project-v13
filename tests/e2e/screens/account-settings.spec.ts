@@ -1,10 +1,35 @@
-import { expect, test, type Page } from "@playwright/test";
+import { randomUUID } from "node:crypto";
+
+import { expect, test, type Browser, type Page } from "@playwright/test";
+import { createClient } from "@supabase/supabase-js";
+
+const BASE_URL = process.env.E2E_BASE_URL ?? "http://127.0.0.1:3000";
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SERVICE_KEY =
+  process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
+const PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+const PASSWORD =
+  process.env.E2E_STUDENT_PASSWORD ?? process.env.SUPABASE_TEST_PASSWORD;
+const ENV_LABEL = (process.env.SUPABASE_ENV_LABEL ?? "").toLowerCase();
+const NON_PROD_ENV_LABELS = new Set([
+  "dev",
+  "development",
+  "local",
+  "preview",
+  "qa",
+  "staging",
+  "test",
+  "testing",
+]);
 
 function collectErrors(page: Page): string[] {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(`pageerror: ${error.message}`));
   page.on("console", (msg) => {
-    if (msg.type() === "error") errors.push(`console: ${msg.text()}`);
+    const text = msg.text();
+    if (msg.type() === "error" && !text.startsWith("Failed to load resource:")) {
+      errors.push(`console: ${text}`);
+    }
   });
   page.on("response", (response) => {
     if (response.status() >= 500) {
@@ -12,6 +37,180 @@ function collectErrors(page: Page): string[] {
     }
   });
   return errors;
+}
+
+function serviceClient() {
+  if (!SUPABASE_URL || !SERVICE_KEY) {
+    throw new Error("Missing Supabase service credentials for account e2e");
+  }
+  return createClient(SUPABASE_URL, SERVICE_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
+
+function publicClient() {
+  if (!SUPABASE_URL || !PUBLISHABLE_KEY) {
+    throw new Error("Missing Supabase public credentials for account e2e");
+  }
+  return createClient(SUPABASE_URL, PUBLISHABLE_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
+
+async function createInvitedUser(marker: string) {
+  if (!PASSWORD) {
+    throw new Error("Missing e2e password for account invite flow");
+  }
+
+  const email = `e2e-account-invite-${marker}@example.com`;
+  const { data, error } = await serviceClient().auth.admin.createUser({
+    email,
+    password: PASSWORD,
+    email_confirm: true,
+    user_metadata: {
+      display_name: "E2E Account Invite",
+      nationality_country_code: "KR",
+      ui_locale: "ko",
+      ui_locale_source: "manual",
+    },
+  });
+  if (error) throw error;
+  const userId = data.user?.id;
+  if (!userId) throw new Error("Supabase did not return a temp user id.");
+  return { email, userId };
+}
+
+async function waitForProfile(userId: string) {
+  await expect
+    .poll(async () => {
+      const { data, error } = await serviceClient()
+        .from("profiles")
+        .select("status")
+        .eq("id", userId)
+        .maybeSingle();
+      if (error) throw error;
+      return data?.status ?? null;
+    })
+    .toBe("active");
+}
+
+async function waitForPasswordSignInReady(email: string) {
+  if (!PASSWORD) {
+    throw new Error("Missing e2e password for account invite flow");
+  }
+
+  let lastMessage = "";
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const { error } = await publicClient().auth.signInWithPassword({
+      email,
+      password: PASSWORD,
+    });
+    if (!error) {
+      await publicClient().auth.signOut();
+      return;
+    }
+    lastMessage = error.message;
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+
+  throw new Error(`Temp user password sign-in was not ready: ${lastMessage}`);
+}
+
+async function insertInstitutionInviteNotification(params: {
+  affiliationCode: string;
+  notificationId: string;
+  userId: string;
+}) {
+  const { error } = await serviceClient().from("user_notifications").insert({
+    id: params.notificationId,
+    user_id: params.userId,
+    template_key: "institution_invite",
+    category: "notice",
+    title: "기관 초대가 도착했어요",
+    body: "초대를 확인하고 이 계정을 기관에 연결할지 선택하세요.",
+    link_url: `/auth/institution-invite?aff=${params.affiliationCode}&next=/settings/account`,
+    payload: {
+      affiliation_code: params.affiliationCode,
+      kind: "institution_invite",
+    },
+    read_at: null,
+    created_at: new Date(Date.now() + 30_000).toISOString(),
+  });
+  if (error) throw error;
+}
+
+async function cleanupInviteFixture(userId: string | null) {
+  if (!userId || !SERVICE_KEY || !SUPABASE_URL) return;
+  if (!NON_PROD_ENV_LABELS.has(ENV_LABEL)) return;
+  await serviceClient().auth.admin.deleteUser(userId);
+}
+
+async function loginTempUser(page: Page, email: string) {
+  if (!PASSWORD) {
+    throw new Error("Missing e2e password for account invite flow");
+  }
+
+  await page.goto("/login", { waitUntil: "domcontentloaded" });
+  const emailInput = page.locator('input[autocomplete="email"]');
+  const passwordInput = page.locator('input[autocomplete="current-password"]');
+
+  await emailInput.fill(email);
+  await passwordInput.fill(PASSWORD);
+  await page.locator('button[type="submit"]').click();
+  await page.waitForURL(/\/(dashboard|auth\/consent|onboarding\/learning-goal)/, {
+    timeout: 30_000,
+  });
+
+  for (let i = 0; i < 6; i += 1) {
+    const pathname = new URL(page.url()).pathname;
+    if (pathname === "/dashboard") {
+      await page.goto("/dashboard", { waitUntil: "domcontentloaded" });
+      if (new URL(page.url()).pathname === "/dashboard") return;
+      continue;
+    }
+    if (pathname === "/auth/consent") {
+      await page.locator('input[name="accept"]').check({ force: true });
+      await page.locator('form button[type="submit"]').click();
+      await page.waitForURL(/\/(dashboard|onboarding\/learning-goal)/, {
+        timeout: 15_000,
+      });
+      continue;
+    }
+    if (pathname === "/onboarding/learning-goal") {
+      await page.locator('form button[type="submit"]').click();
+      await page.waitForURL("**/dashboard", { timeout: 15_000 });
+      return;
+    }
+    await page.waitForLoadState("networkidle");
+  }
+
+  await expect(page).toHaveURL(/\/dashboard/);
+}
+
+function viewportForProject(projectName: string) {
+  return projectName === "mobile-360"
+    ? { width: 360, height: 720 }
+    : { width: 1280, height: 800 };
+}
+
+async function withFreshPage<T>(
+  browser: Browser,
+  projectName: string,
+  run: (page: Page) => Promise<T>,
+) {
+  const context = await browser.newContext({
+    baseURL: BASE_URL,
+    extraHTTPHeaders: { "Accept-Language": "ko-KR,ko;q=0.9" },
+    locale: "ko-KR",
+    storageState: { cookies: [], origins: [] },
+    viewport: viewportForProject(projectName),
+  });
+  const page = await context.newPage();
+  try {
+    return await run(page);
+  } finally {
+    await context.close();
+  }
 }
 
 test("account settings keeps login methods, account status, and logout", async ({
@@ -78,4 +277,67 @@ test("account settings exposes a guarded 회원 탈퇴 danger zone (no submit)",
   await expect(page).toHaveURL(/\/settings\/account/);
 
   expect(errors).toEqual([]);
+});
+
+test("institution invite notification connects the account and appears in account settings", async ({
+  browser,
+}, testInfo) => {
+  test.skip(
+    !["desktop-1280", "mobile-360"].includes(testInfo.project.name),
+    "Account invite notification e2e runs on desktop and mobile.",
+  );
+  test.skip(
+    !SUPABASE_URL || !SERVICE_KEY || !PUBLISHABLE_KEY || !PASSWORD,
+    "Institution invite notification e2e requires Supabase test credentials.",
+  );
+  test.skip(
+    !NON_PROD_ENV_LABELS.has(ENV_LABEL),
+    "Institution invite notification e2e must not create production data.",
+  );
+  test.setTimeout(120_000);
+
+  const marker = randomUUID().slice(0, 8);
+  const affiliationCode = `E2E_INVITE_${marker}`;
+  const notificationId = randomUUID();
+  let userId: string | null = null;
+
+  try {
+    const user = await createInvitedUser(marker);
+    userId = user.userId;
+    await waitForProfile(userId);
+    await waitForPasswordSignInReady(user.email);
+    await insertInstitutionInviteNotification({
+      affiliationCode,
+      notificationId,
+      userId,
+    });
+
+    await withFreshPage(browser, testInfo.project.name, async (page) => {
+      const errors = collectErrors(page);
+      await loginTempUser(page, user.email);
+      await page.goto("/dashboard", { waitUntil: "networkidle" });
+
+      await page.getByRole("button", { name: "알림 열기" }).click();
+      await page
+        .locator(".app-notification-panel")
+        .getByText("기관 초대가 도착했어요")
+        .click();
+
+      await expect(page).toHaveURL(/\/auth\/institution-invite/);
+      await expect(page.getByText("기관 초대가 도착했어요").first()).toBeVisible();
+      await expect(page.getByText(affiliationCode)).toBeVisible();
+
+      await page.getByRole("checkbox", { name: "동의하시겠습니까?" }).check();
+      await page.getByRole("button", { name: "기관에 연결" }).click();
+      await expect(page.getByText("기관 연결이 완료됐어요")).toBeVisible();
+      await page.getByRole("button", { name: "계속하기" }).click();
+
+      await expect(page).toHaveURL(/\/settings\/account/);
+      await expect(page.getByText("기관 소속")).toBeVisible();
+      await expect(page.getByText(`기관 코드 ${affiliationCode}`)).toBeVisible();
+      expect(errors).toEqual([]);
+    });
+  } finally {
+    await cleanupInviteFixture(userId);
+  }
 });

@@ -192,19 +192,22 @@ describe("In-app notification inbox item styles", () => {
 
   test("dashboard notice feed keeps rows transparent and regular weight", () => {
     expect(dashboardAlertsCard).toContain('className="dashboard-alerts-card"');
+    expect(dashboardAlertsCard).not.toContain("  List,");
+    expect(dashboardAlertsCard).not.toContain("<List");
     expect(dashboardAlertsCard).toContain(
       'className="app-notification-feed-item__title"',
     );
     expect(dashboardAlertsCard).toContain(
       'className="app-notification-feed-item__time"',
     );
+    expect(dashboardAlertsCard).not.toContain(
+      'className="app-notification-feed-item__tag"',
+    );
     expect(dashboardAlertsCard).not.toContain("strong={unread}");
     expect(blockFor(".dashboard-alerts-card .ant-card-head-title")).toContain(
       "font-size: 14px",
     );
-    expect(
-      blockFor(".app-notification-feed-item.ant-list-item.ant-list-item"),
-    ).toContain("padding: 0");
+    expect(blockFor(".app-notification-feed-item")).toContain("padding: 0");
     expect(blockFor(".app-notification-feed-item__button")).toContain(
       "background: transparent",
     );
@@ -233,8 +236,20 @@ describe("In-app notification inbox item styles", () => {
     expect(
       blockFor(".app-notification-feed-item__title.ant-typography"),
     ).toContain("font-size: 14px");
-    expect(blockFor(".app-notification-feed-item__tag.ant-tag")).toContain(
-      "font-size: 14px",
+    expect(
+      blockFor(".app-notification-feed-item__title.ant-typography"),
+    ).toContain("-webkit-line-clamp: 2");
+    expect(
+      blockFor(".app-notification-feed-item__title.ant-typography"),
+    ).toContain("white-space: normal");
+    expect(
+      blockFor(".app-notification-feed-item__title.ant-typography"),
+    ).toContain("overflow-wrap: anywhere");
+    expect(
+      blockFor(".app-notification-feed-item__time.ant-typography"),
+    ).toContain("flex: 0 0 auto");
+    expect(blockFor(".app-notification-feed-item__tag.ant-tag")).toBe(
+      "",
     );
     expect(
       blockFor(".app-notification-feed-item__time.ant-typography"),

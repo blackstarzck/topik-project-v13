@@ -7,6 +7,7 @@ type Props = {
   joinedAt: string;
   appRole: string;
   planLabel: string;
+  affiliationCode?: string | null;
   /** X-05 region 4 — profile visibility badge. Defaults to private. */
   visibility?: "public" | "private";
   /** X-05 region 4 예외 — surface a warning when policy not agreed. */
@@ -30,6 +31,7 @@ export function StatusHelpCard({
   joinedAt,
   appRole,
   planLabel,
+  affiliationCode,
   visibility = "private",
   policyAgreed = true,
 }: Props) {
@@ -39,6 +41,7 @@ export function StatusHelpCard({
   const roleLabel = (KNOWN_ROLE_KEYS as readonly string[]).includes(appRole)
     ? t(`role.${appRole}` as Parameters<typeof t>[0])
     : appRole;
+  const normalizedAffiliationCode = affiliationCode?.trim() || null;
 
   // 라벨 카탈로그 키는 본래 접두사 형태("공개 범위 " 등)라 trim해 행 라벨로 쓴다.
   const rows = [
@@ -52,6 +55,17 @@ export function StatusHelpCard({
     },
     { key: "role", label: t("roleLabelPrefix").trim(), value: roleLabel },
     { key: "plan", label: t("planLabelPrefix").trim(), value: planLabel },
+    ...(normalizedAffiliationCode
+      ? [
+          {
+            key: "affiliation",
+            label: t("affiliationLabel").trim(),
+            value: t("affiliationCodeValue", {
+              code: normalizedAffiliationCode,
+            }),
+          },
+        ]
+      : []),
     {
       key: "joined",
       label: t("joinedLabelPrefix").trim(),

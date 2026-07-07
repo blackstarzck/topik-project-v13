@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildClientAuthCallbackUrl,
   buildInstitutionInvitePath,
+  buildOAuthNextPath,
   buildPostAuthPath,
   getGoogleOAuthBrowserSupport,
   GoogleOAuthUnsupportedBrowserError,
@@ -18,6 +19,18 @@ describe("Google OAuth URL helpers", () => {
     expect(buildInstitutionInvitePath(buildPostAuthPath("sign-up"))).toBe(
       "/auth/institution-invite?next=%2Fauth%2Fpost-auth%3Fintent%3Dsign-up",
     );
+  });
+
+  it("buildOAuthNextPath sends default sign-up OAuth to post-auth without invite confirmation", () => {
+    expect(buildOAuthNextPath("sign-up")).toBe(
+      "/auth/post-auth?intent=sign-up",
+    );
+  });
+
+  it("buildOAuthNextPath preserves an explicit sign-up institution invite target", () => {
+    const invitePath = buildInstitutionInvitePath(buildPostAuthPath("sign-up"));
+
+    expect(buildOAuthNextPath("sign-up", invitePath)).toBe(invitePath);
   });
 
   it("buildClientAuthCallbackUrl uses the active browser origin", () => {

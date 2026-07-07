@@ -104,6 +104,30 @@ export function formatDashboardRelativeTime(
   );
 }
 
+export function formatDashboardInactiveDuration(
+  iso: string | null,
+  locale = "ko",
+  nowMs = Date.now(),
+): string | null {
+  if (!iso) return null;
+
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return null;
+
+  const elapsedMs = Math.max(0, nowMs - date.getTime());
+  const bucket = getInactiveDurationBucket(elapsedMs);
+
+  if (locale.startsWith("ko")) {
+    return formatKoreanInactiveDuration(bucket.value, bucket.unit);
+  }
+
+  if (locale.startsWith("vi")) {
+    return formatVietnameseInactiveDuration(bucket.value, bucket.unit);
+  }
+
+  return formatEnglishInactiveDuration(bucket.value, bucket.unit);
+}
+
 function getRelativeTimeBucket(elapsedMs: number): {
   value: number;
   unit: Intl.RelativeTimeFormatUnit;
@@ -124,6 +148,67 @@ function getRelativeTimeBucket(elapsedMs: number): {
     return { value: Math.floor(elapsedMs / MONTH_MS), unit: "month" };
   }
   return { value: Math.floor(elapsedMs / YEAR_MS), unit: "year" };
+}
+
+type InactiveDurationUnit = "year" | "month" | "week" | "day";
+
+function getInactiveDurationBucket(elapsedMs: number): {
+  value: number;
+  unit: InactiveDurationUnit;
+} {
+  if (elapsedMs >= YEAR_MS) {
+    return { value: Math.floor(elapsedMs / YEAR_MS), unit: "year" };
+  }
+  if (elapsedMs >= MONTH_MS) {
+    return { value: Math.floor(elapsedMs / MONTH_MS), unit: "month" };
+  }
+  if (elapsedMs >= WEEK_MS) {
+    return { value: Math.floor(elapsedMs / WEEK_MS), unit: "week" };
+  }
+  return { value: Math.floor(elapsedMs / DAY_MS), unit: "day" };
+}
+
+function formatKoreanInactiveDuration(
+  value: number,
+  unit: InactiveDurationUnit,
+): string {
+  const labels: Record<InactiveDurationUnit, string> = {
+    year: "년",
+    month: "개월",
+    week: "주",
+    day: "일",
+  };
+
+  return `${value}${labels[unit]}`;
+}
+
+function formatVietnameseInactiveDuration(
+  value: number,
+  unit: InactiveDurationUnit,
+): string {
+  const labels: Record<InactiveDurationUnit, string> = {
+    year: "năm",
+    month: "tháng",
+    week: "tuần",
+    day: "ngày",
+  };
+
+  return `${value} ${labels[unit]}`;
+}
+
+function formatEnglishInactiveDuration(
+  value: number,
+  unit: InactiveDurationUnit,
+): string {
+  const labels: Record<InactiveDurationUnit, string> = {
+    year: "year",
+    month: "month",
+    week: "week",
+    day: "day",
+  };
+  const label = labels[unit];
+
+  return `${value} ${value === 1 ? label : `${label}s`}`;
 }
 
 function formatKoreanRelativeTime(

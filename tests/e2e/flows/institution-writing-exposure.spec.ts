@@ -46,6 +46,17 @@ const SERVICE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
 const ENV_LABEL = (process.env.SUPABASE_ENV_LABEL ?? "").toLowerCase();
 const PASSWORD = "Password123!";
+const DISABLED_WRITING_MENU_SELECTOR = [
+  "DirectboxNotif",
+  "ProgrammingArrows",
+  "PresentationChart",
+  "DocumentText",
+]
+  .map(
+    (iconName) =>
+      `.ant-menu-item-disabled:has([data-sidebar-icon-name="${iconName}"])`,
+  )
+  .join(", ");
 const REPORT_DIR = path.join(
   process.cwd(),
   "docs",
@@ -434,6 +445,18 @@ async function openWritingSidebarGroup(page: Page, projectName: string) {
   return sidebar;
 }
 
+async function expectDisabledWritingMenuItems(
+  menuScope: Locator,
+  expectedCount: number,
+) {
+  await expect(menuScope.locator(DISABLED_WRITING_MENU_SELECTOR)).toHaveCount(
+    expectedCount,
+  );
+  await expect(menuScope.locator(".app-sidebar-lock-label")).toHaveCount(0);
+  await expect(menuScope.locator(".app-sidebar-lock-icon")).toHaveCount(0);
+  await expect(menuScope.locator(".app-sidebar-lock-tag")).toHaveCount(0);
+}
+
 test.skip(
   !SUPABASE_URL || !PUBLISHABLE_KEY || !SERVICE_KEY,
   "Institution exposure e2e requires Supabase service credentials",
@@ -541,7 +564,7 @@ test("non-institution writing access stays fully visible while unassigned instit
         testInfo.project.name,
       );
       await waitForWritingAvailability(page);
-      await expect(menuScope.locator(".app-sidebar-lock-tag")).toHaveCount(4);
+      await expectDisabledWritingMenuItems(menuScope, 4);
       await captureEvidence(page, "sidebar-locked", testInfo.project.name);
 
       await page.goto("/writing/short-answer-writing-51", {

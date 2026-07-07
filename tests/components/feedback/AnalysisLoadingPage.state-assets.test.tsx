@@ -101,15 +101,11 @@ describe("AnalysisLoadingPage state assets", () => {
     expect(routerMocks.push).not.toHaveBeenCalled();
   });
 
-  it("shows a stored pending handoff immediately when polling attempts are exhausted", async () => {
+  it("never renders the inline exhausted alert, even when polling is exhausted", async () => {
     renderWithIntl(<AnalysisLoadingPage status="analyzing" pollingExhausted />);
 
-    expect(
-      await screen.findByTestId("analysis-polling-exhausted"),
-    ).toBeTruthy();
-
-    fireEvent.click(screen.getByTestId("analysis-library-status-link"));
-
-    expect(routerMocks.push).toHaveBeenCalledWith("/library");
+    expect(await screen.findByTestId("analysis-loading-panel")).toBeTruthy();
+    expect(screen.queryByTestId("analysis-polling-exhausted")).toBeNull();
+    expect(screen.queryByTestId("analysis-library-status-link")).toBeNull();
   });
 });

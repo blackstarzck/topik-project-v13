@@ -377,6 +377,65 @@ body {
   flex-shrink: 0;
 }
 
+.library-problems-view-toggle.library-problems-view-toggle.ant-segmented
+  .ant-segmented-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.library-problems-view-toggle.library-problems-view-toggle.ant-segmented
+  .ant-segmented-item-label {
+  display: inline-flex !important;
+  width: 100%;
+  height: 100%;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+}
+
+.library-problems-view-toggle.library-problems-view-toggle.ant-segmented
+  .ant-segmented-item-label
+  .ant-segmented-item-icon {
+  display: inline-flex !important;
+  width: 16px;
+  height: 16px;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 0 !important;
+}
+
+.library-problems-view-toggle.library-problems-view-toggle.ant-segmented
+  .ant-segmented-item-label
+  .ant-segmented-item-icon
+  svg {
+  display: block;
+}
+
+.library-problems-date-presets.library-problems-date-presets {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 32px !important;
+  row-gap: 20px !important;
+  align-items: center;
+}
+
+.library-problems-date-presets.library-problems-date-presets
+  .ant-radio-wrapper {
+  display: inline-flex;
+  align-items: center;
+  column-gap: 10px;
+  font-size: 14px;
+  margin-inline-end: 0;
+}
+
+.library-problems-date-presets.library-problems-date-presets
+  .ant-radio-wrapper
+  > span:last-child {
+  font-size: 14px;
+  padding-inline: 0;
+}
+
 .app-modal-footer-actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -504,6 +563,7 @@ body {
   justify-content: center;
   background: #ffffff;
   padding: 32px 16px;
+  word-break: keep-all;
 }
 
 .institution-invite-page--white {
@@ -563,11 +623,50 @@ body {
   width: min(100%, 280px);
 }
 
+.institution-invite-action-anchor {
+  grid-column: 1 / -1;
+  justify-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  min-height: 0;
+  border: 0;
+  background: transparent;
+  color: #191919;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.5;
+  padding: 2px 4px;
+  text-decoration: none;
+}
+
+.institution-invite-action-anchor:hover,
+.institution-invite-action-anchor:focus-visible {
+  color: #191919;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .institution-invite-account {
   display: flex;
   flex-direction: column;
   gap: 4px;
   align-items: center;
+  text-align: center;
+}
+
+.institution-invite-code {
+  width: 100%;
+  border: 1px solid #91caff;
+  border-radius: 6px;
+  background: #e6f4ff;
+  color: #191919;
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 1.2;
+  padding: 14px 16px;
   text-align: center;
 }
 
@@ -590,12 +689,26 @@ body {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  list-style: none;
+  list-style: disc;
   margin: 0;
-  padding-left: 0;
+  padding-left: 18px;
   color: var(--app-color-text-secondary);
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.6;
+}
+
+.institution-invite-policy-confirmation {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.institution-invite-consent.ant-checkbox-wrapper {
+  align-self: flex-start;
+  color: #191919;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
 }
 
 .institution-invite-note {
@@ -4477,29 +4590,6 @@ body {
   margin-bottom: 16px;
 }
 
-.library-kpi-icon {
-  border: 1px solid var(--app-color-border);
-  background: var(--app-color-bg-layout);
-  color: var(--app-color-primary);
-}
-
-.library-kpi-icon--secondary {
-  color: var(--app-color-text-secondary);
-}
-
-.library-kpi-icon--link {
-  background: color-mix(
-    in srgb,
-    var(--app-color-link-secondary) 10%,
-    var(--app-color-bg-container)
-  );
-  color: var(--app-color-link-secondary);
-}
-
-.library-kpi-icon--muted {
-  color: var(--app-color-text-secondary);
-}
-
 .library-review-candidate-card.app-card.app-surface {
   display: flex;
   height: 100%;
@@ -4517,6 +4607,18 @@ body {
 
 .library-review-candidate-card.app-card.app-surface > .ant-card-body > * {
   width: 100%;
+}
+
+.library-review-candidate-card .library-review-candidate-question-number {
+  width: 1.47em;
+  height: 1.47em;
+  font-size: 18px;
+}
+
+.library-feedback-waiting-panel .library-review-candidate-question-number {
+  width: 1.47em;
+  height: 1.47em;
+  font-size: 18px;
 }
 
 .library-review-candidate-score-progress {
@@ -5370,6 +5472,7 @@ body {
   min-width: 0;
   text-align: right;
   color: var(--app-color-text);
+  overflow-wrap: anywhere;
 }
 
 @media (max-width: 640px) {
@@ -5549,6 +5652,41 @@ body {
 }
 
 .writing-question-number--q54 {
+  background-image: url("/assets/neon-purple.png");
+}
+
+.library-problems-question-number {
+  display: inline-flex;
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  color: var(--app-color-text);
+  font-family: "Space Grotesk", var(--app-font-family), sans-serif;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  font-size: 18px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+.library-problems-question-number--q51 {
+  background-image: url("/assets/neon-yellow.png");
+}
+
+.library-problems-question-number--q52 {
+  background-image: url("/assets/neon-blue.png");
+}
+
+.library-problems-question-number--q53 {
+  background-image: url("/assets/neon-orange.png");
+}
+
+.library-problems-question-number--q54 {
   background-image: url("/assets/neon-purple.png");
 }
 
@@ -6189,24 +6327,6 @@ body {
   margin-inline-start: 0;
 }
 
-.app-sidebar-lock-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  width: 100%;
-}
-
-.app-sidebar-lock-icon {
-  flex-shrink: 0;
-  opacity: 0.7;
-}
-
-.app-sidebar-lock-tag {
-  margin-inline-start: auto;
-  font-size: 11px;
-  line-height: 16px;
-}
-
 /* 계정 설정 하단 footer 안에 들어가며, 위 경계는 섹션 <Divider>가 담당하므로
    자체 border-top/여백은 두지 않는다. */
 .app-profile-logout {
@@ -6485,10 +6605,8 @@ body {
   overflow-y: auto;
 }
 
-.app-notification-list .app-notification-item.ant-list-item.ant-list-item {
-  padding-block: 0;
-  padding-inline: 0;
-  border-block-end: 0;
+.app-notification-item {
+  padding: 0;
 }
 
 .app-notification-item__button {
@@ -6592,15 +6710,21 @@ body {
   font-size: 14px;
 }
 
-.app-notification-feed-item.ant-list-item.ant-list-item {
+.app-notification-feed-list {
+  display: grid;
+  margin: 0;
   padding: 0;
-  border-block-end: 0;
+  list-style: none;
+}
+
+.app-notification-feed-item {
+  padding: 0;
 }
 
 .app-notification-feed-item__button {
   display: flex;
   width: 100%;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   border: 0;
   border-radius: 8px;
@@ -6624,23 +6748,22 @@ body {
   background: transparent;
 }
 
-.app-notification-feed-item__tag.ant-tag {
-  flex-shrink: 0;
-  margin-inline-end: 0;
-  font-size: 14px;
-}
-
 .app-notification-feed-item__title.ant-typography {
+  display: -webkit-box;
   flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow-wrap: anywhere;
+  white-space: normal;
   font-size: 14px;
   font-weight: 400;
+  line-height: 1.45;
 }
 
 .app-notification-feed-item__time.ant-typography {
+  flex: 0 0 auto;
   font-size: 14px;
 }
 

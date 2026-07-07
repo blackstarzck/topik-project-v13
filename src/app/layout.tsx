@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import localFont from "next/font/local";
+import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
 
 import { GoogleAnalyticsTags } from "@/components/analytics/GoogleAnalyticsTags";
+import { DEFAULT_TIME_ZONE } from "@/i18n/locales";
 import { resolveLocale } from "@/i18n/request";
 import { AppProviders } from "./providers";
 // antd v6.x compatibility: avoid importing the client theme barrel here.
@@ -21,12 +23,42 @@ const pretendard = localFont({
   display: "swap",
 });
 
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL?.trim() || "http://127.0.0.1:3000";
+const siteDescription =
+  "TOPIK learning workspace for practice, writing, and feedback.";
+const socialPreviewImage = {
+  url: "/assets/thumnail.png",
+  width: 1672,
+  height: 941,
+  alt: "TALKPIK AI",
+};
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: {
     default: "TALKPIK AI",
     template: "%s | TALKPIK AI",
   },
-  description: "TOPIK learning workspace for practice, writing, and feedback.",
+  description: siteDescription,
+  openGraph: {
+    title: "TALKPIK AI",
+    description: siteDescription,
+    siteName: "TALKPIK AI",
+    type: "website",
+    images: [socialPreviewImage],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "TALKPIK AI",
+    description: siteDescription,
+    images: [
+      {
+        url: socialPreviewImage.url,
+        alt: socialPreviewImage.alt,
+      },
+    ],
+  },
 };
 
 export default async function RootLayout({
@@ -65,15 +97,17 @@ export default async function RootLayout({
          * It extracts and injects AntD styles during SSR streaming.
          * See: https://ant.design/docs/react/use-with-next
          */}
-        <AntdRegistry>
-          <AppProviders
-            initialAppearance={appearance}
-            locale={locale}
-            messages={messages}
-          >
-            {children}
-          </AppProviders>
-        </AntdRegistry>
+        <NextIntlClientProvider
+          locale={locale}
+          messages={messages}
+          timeZone={DEFAULT_TIME_ZONE}
+        >
+          <AntdRegistry>
+            <AppProviders initialAppearance={appearance}>
+              {children}
+            </AppProviders>
+          </AntdRegistry>
+        </NextIntlClientProvider>
         <GoogleAnalyticsTags />
       </body>
     </html>

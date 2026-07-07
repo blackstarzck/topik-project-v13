@@ -404,7 +404,7 @@ describe("SubmissionDiffPanel i18n chrome", () => {
     expect(panel.innerHTML).not.toContain("color-warning");
   });
 
-  it("uses lucide trend icons when section length changes between answers", () => {
+  it("does not render trend icons in the section comparison table", () => {
     renderReports(
       <SubmissionDiffPanel
         currentText="fallback current"
@@ -431,16 +431,16 @@ describe("SubmissionDiffPanel i18n chrome", () => {
     const table = within(
       screen.getByTestId("comparison-submission-diff"),
     ).getByRole("table");
-    const trendUp = within(table).getByTestId(
-      "comparison-submission-trend-up-intro",
-    );
-    const trendDown = within(table).getByTestId(
-      "comparison-submission-trend-down-body",
-    );
-    expect(trendUp.tagName.toLowerCase()).toBe("svg");
-    expect(trendDown.tagName.toLowerCase()).toBe("svg");
-    expect(trendUp.getAttribute("aria-hidden")).toBe("true");
-    expect(trendDown.getAttribute("aria-hidden")).toBe("true");
+    expect(
+      within(table).getByText("current intro with more detail"),
+    ).toBeTruthy();
+    expect(within(table).getByText("short body")).toBeTruthy();
+    expect(
+      within(table).queryByTestId("comparison-submission-trend-up-intro"),
+    ).toBeNull();
+    expect(
+      within(table).queryByTestId("comparison-submission-trend-down-body"),
+    ).toBeNull();
     expect(
       within(table).queryByTestId("comparison-submission-trend-up-conclusion"),
     ).toBeNull();

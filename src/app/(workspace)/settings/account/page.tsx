@@ -27,7 +27,7 @@ export default async function AccountSettingsPage() {
   const supabase = await createSupabaseServerClient();
   const { data: profileMeta } = await supabase
     .from("profiles")
-    .select("created_at, app_role, plan_label")
+    .select("created_at, app_role, plan_label, affiliation_code")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -56,6 +56,7 @@ export default async function AccountSettingsPage() {
               joinedAt={profileMeta.created_at}
               appRole={profileMeta.app_role}
               planLabel={profileMeta.plan_label}
+              affiliationCode={profileMeta.affiliation_code}
             />
           ) : null}
           <ProfileLogoutForm label={tNav("logout")} />

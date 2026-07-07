@@ -112,6 +112,12 @@ function hasExpandedMenuItem(container: HTMLElement, label: string) {
   );
 }
 
+function sidebarMenuItemByLabel(container: HTMLElement, label: string) {
+  return Array.from(
+    container.querySelectorAll(".app-sidebar-menu .ant-menu-item"),
+  ).find((item) => item.textContent?.includes(label));
+}
+
 describe("WorkspaceShell", () => {
   beforeEach(() => {
     navMock.routerPush.mockClear();
@@ -430,6 +436,63 @@ describe("WorkspaceShell", () => {
     expect(container.querySelector(".app-sidebar-lock-label")).toBeNull();
     expect(container.querySelector(".app-sidebar-lock-icon")).toBeNull();
     expect(container.querySelector(".app-sidebar-lock-tag")).toBeNull();
+  });
+
+  it("keeps unavailable writing practice leaves disabled without an unavailable tag", () => {
+    writingAvailabilityMock.value = {
+      data: {
+        availableTypes: new Set([51, 52, 53]),
+        lockedTypes: new Set([54]),
+        hasAny: true,
+      },
+      isLoading: false,
+      error: null,
+    };
+
+    const { container } = renderWithIntl(
+      <WorkspaceShell
+        role="learner"
+        userId="user-1"
+        email="learner@example.com"
+        planLabel="premium"
+      >
+        <div>body</div>
+      </WorkspaceShell>,
+    );
+
+    const sidebarMenu = container.querySelector(".app-sidebar-menu");
+    const writingTitle = sidebarMenu?.querySelector(
+      '[data-menu-id="rc-menu-uuid-writing"]',
+    );
+
+    expect(writingTitle).toBeTruthy();
+    fireEvent.click(writingTitle as Element);
+
+    const writing53 = sidebarMenuItemByLabel(
+      container,
+      koMessages.nav.writing53,
+    );
+    const writing54 = sidebarMenuItemByLabel(
+      container,
+      koMessages.nav.writing54,
+    );
+
+    expect(writing53).toBeTruthy();
+    expect(writing53?.classList.contains("ant-menu-item-disabled")).toBe(false);
+    expect(writing54).toBeTruthy();
+    expect(writing54?.classList.contains("ant-menu-item-disabled")).toBe(true);
+    expect(container.textContent).not.toContain(
+      koMessages.nav.writingTypeLocked,
+    );
+    expect(container.querySelector(".app-sidebar-lock-label")).toBeNull();
+    expect(container.querySelector(".app-sidebar-lock-icon")).toBeNull();
+    expect(container.querySelector(".app-sidebar-lock-tag")).toBeNull();
+
+    fireEvent.click(writing54 as Element);
+
+    expect(navMock.routerPush).not.toHaveBeenCalledWith(
+      "/writing/essay-writing-54",
+    );
   });
 
   it("sends the brand mark to the learner home route", () => {

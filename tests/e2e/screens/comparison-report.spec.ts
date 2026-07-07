@@ -708,6 +708,9 @@ test.describe("authenticated comparison report", () => {
       await expectColorToMatchCssVar(label, "--ant-color-text-description");
     }
     const submissionTable = page.getByTestId("comparison-submission-table");
+    await expect(
+      submissionTable.locator('[data-testid^="comparison-submission-trend-"]'),
+    ).toHaveCount(0);
     for (const heading of ["이번 답안", "이전 답안", "서론", "본론", "결론"]) {
       await expectColorToMatchCssVar(
         submissionTable.getByText(heading, { exact: true }),

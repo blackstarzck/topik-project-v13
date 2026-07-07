@@ -80,6 +80,21 @@ afterEach(() => {
 });
 
 describe("LoginForm", () => {
+  it("shows withdrawn account notice as a message instead of an inline alert", async () => {
+    searchParamsMock = new URLSearchParams("reason=withdrawn");
+
+    renderInApp(<LoginForm />);
+
+    expect(screen.queryByTestId("login-session-notice")).toBeNull();
+    await waitFor(() => {
+      expect(document.querySelector(".ant-notification-notice")).toBeNull();
+      const messageNotice = document.querySelector(".ant-message-notice");
+      expect(messageNotice?.textContent).toContain(
+        "탈퇴 처리된 계정이에요. 탈퇴 후 30일 이내에는 고객센터를 통해 복구를 요청할 수 있어요.",
+      );
+    });
+  });
+
   it("submits password login and redirects to dashboard", async () => {
     renderInApp(<LoginForm />);
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { Alert, Button, Empty, Input, Spin, Tag, Typography } from "antd";
+import { Alert, Button, Empty, Spin } from "antd";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -10,11 +10,10 @@ import {
   LibraryPagination,
 } from "@/components/library/LibraryPagination";
 import {
-  clampTitle,
   fetchSubmissionEnrichment,
-  statusBadge,
   type SubmissionEnrichment,
 } from "@/components/library/library-enrich-data";
+import { AppDrawer } from "@/components/shared/AppDrawer";
 import { useLibraryItems } from "@/lib/library/queries";
 import type {
   LibraryItemView,
@@ -22,34 +21,48 @@ import type {
   LibrarySubmissionView,
 } from "@/lib/library/types";
 import { APP_ROUTES } from "@/lib/routes";
-import { writingFeedbackHref, writingProblemHref } from "@/lib/writing/routes";
 
-import { LibraryItemRow } from "./LibraryItemRow";
+import { LibraryProblemsFilterPanel } from "./LibraryProblemsFilterPanel";
+import { LibraryProblemsItemCard } from "./LibraryProblemsItemCard";
+import {
+  LibraryProblemsProblemRow,
+  LibraryProblemsSubmissionRow,
+} from "./LibraryProblemsRows";
+import {
+  LibraryProblemsToolbar,
+  type LibraryProblemsViewMode,
+} from "./LibraryProblemsToolbar";
+import {
+  EMPTY_LIBRARY_PROBLEMS_FILTERS,
+  applyLibraryProblemsFilters,
+  countActiveLibraryProblemsFilters,
+  countLibraryProblemsFacets,
+  isLibraryProblemsFilterStateEmpty,
+  type LibraryProblemsFilterState,
+} from "./library-problems-filter-model";
+import {
+  submissionTitle,
+  type LibraryListTranslate,
+  type MixedLibraryProblemItem,
+} from "./library-problems-presenter";
+import {
+  DEFAULT_LIBRARY_PROBLEMS_SORT,
+  sortLibraryProblems,
+  type LibraryProblemsSortKey,
+} from "./library-problems-sort";
 import { matchesLibrarySearch } from "./library-tab-url";
 
-const { Paragraph, Text } = Typography;
-
-type LibraryListTranslate = (
-  key: string,
-  values?: Record<string, string | number | null | undefined>,
-) => string;
+const EMPTY_ENRICHMENT: ReadonlyMap<string, SubmissionEnrichment> = new Map();
 
 type Props = {
   initialSubmissions: LibrarySubmissionView[];
   initialProblems: LibraryProblemView[];
 };
 
-type MixedLibraryProblemItem =
-  | {
-      kind: "submission";
-      item: LibrarySubmissionView;
-      savedAt: string;
-    }
-  | {
-      kind: "problem";
-      item: LibraryProblemView;
-      savedAt: string;
-    };
+type EnrichmentResult = {
+  map: ReadonlyMap<string, SubmissionEnrichment>;
+  error: boolean;
+};
 
 function isSubmission(item: LibraryItemView): item is LibrarySubmissionView {
   return item.kind === "submission";
@@ -57,33 +70,6 @@ function isSubmission(item: LibraryItemView): item is LibrarySubmissionView {
 
 function isProblem(item: LibraryItemView): item is LibraryProblemView {
   return item.kind === "problem";
-}
-
-function formatDate(iso: string): string {
-  return iso.slice(0, 16).replace("T", " ");
-}
-
-function submissionTitle(
-  item: LibrarySubmissionView,
-  fallbackTitle: string,
-): string {
-  const title = item.problem_title ?? fallbackTitle;
-  return item.question_no != null
-    ? `No. ${item.question_no} - ${title}`
-    : title;
-}
-
-function compareSavedDesc(
-  a: MixedLibraryProblemItem,
-  b: MixedLibraryProblemItem,
-) {
-  return new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime();
-}
-
-function isAnalysisPendingStatus(
-  status: SubmissionEnrichment["feedbackStatus"],
-): boolean {
-  return status === "pending" || status === "analyzing";
 }
 
 export function LibraryProblemsList({
@@ -99,9 +85,17 @@ export function LibraryProblemsList({
   const problemQuery = useLibraryItems("problems");
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
-  const [enrich, setEnrich] = useState<Map<string, SubmissionEnrichment>>(
-    new Map(),
+  const [enrichResult, setEnrichResult] = useState<EnrichmentResult | null>(
+    null,
   );
+  const [filters, setFilters] = useState<LibraryProblemsFilterState>(
+    EMPTY_LIBRARY_PROBLEMS_FILTERS,
+  );
+  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+  const [sortKey, setSortKey] = useState<LibraryProblemsSortKey>(
+    DEFAULT_LIBRARY_PROBLEMS_SORT,
+  );
+  const [viewMode, setViewMode] = useState<LibraryProblemsViewMode>("list");
 
   const submissions = useMemo(
     () => (submissionQuery.data ?? initialSubmissions).filter(isSubmission),
@@ -121,10 +115,10 @@ export function LibraryProblemsList({
     let cancelled = false;
     fetchSubmissionEnrichment(ids)
       .then((map) => {
-        if (!cancelled) setEnrich(map);
+        if (!cancelled) setEnrichResult({ map, error: false });
       })
       .catch(() => {
-        if (!cancelled) setEnrich(new Map());
+        if (!cancelled) setEnrichResult({ map: new Map(), error: true });
       });
 
     return () => {
@@ -134,24 +128,33 @@ export function LibraryProblemsList({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [submissions.map((item) => item.id).join(",")]);
 
+  const enrich = enrichResult?.map ?? EMPTY_ENRICHMENT;
+  const enrichState: "loading" | "ready" | "error" =
+    submissions.length === 0
+      ? "ready"
+      : enrichResult == null
+        ? "loading"
+        : enrichResult.error
+          ? "error"
+          : "ready";
+
   const mixed = useMemo<MixedLibraryProblemItem[]>(
-    () =>
-      [
-        ...submissions.map((item) => ({
-          kind: "submission" as const,
-          item,
-          savedAt: item.saved_at,
-        })),
-        ...problems.map((item) => ({
-          kind: "problem" as const,
-          item,
-          savedAt: item.saved_at,
-        })),
-      ].sort(compareSavedDesc),
+    () => [
+      ...submissions.map((item) => ({
+        kind: "submission" as const,
+        item,
+        savedAt: item.saved_at,
+      })),
+      ...problems.map((item) => ({
+        kind: "problem" as const,
+        item,
+        savedAt: item.saved_at,
+      })),
+    ],
     [problems, submissions],
   );
 
-  const filtered = useMemo(
+  const searchFiltered = useMemo(
     () =>
       mixed.filter((entry) => {
         if (entry.kind === "submission") {
@@ -184,16 +187,29 @@ export function LibraryProblemsList({
     [enrich, mixed, searchTerm, t, tSubmissions],
   );
 
-  const totalPages = Math.max(
-    1,
-    Math.ceil(filtered.length / LIBRARY_PAGE_SIZE),
+  // 패싯 카운트는 검색 적용 후 · 패널 필터 적용 전 집합 기준.
+  const facetCounts = useMemo(
+    () => countLibraryProblemsFacets(searchFiltered, enrich),
+    [enrich, searchFiltered],
   );
+  const filtered = useMemo(
+    () => applyLibraryProblemsFilters(searchFiltered, filters, enrich),
+    [filters, enrich, searchFiltered],
+  );
+  const sorted = useMemo(
+    () => sortLibraryProblems(filtered, sortKey, enrich),
+    [enrich, filtered, sortKey],
+  );
+
+  const totalPages = Math.max(1, Math.ceil(sorted.length / LIBRARY_PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
-  const pageItems = filtered.slice(
+  const pageItems = sorted.slice(
     (safePage - 1) * LIBRARY_PAGE_SIZE,
     safePage * LIBRARY_PAGE_SIZE,
   );
   const searching = searchTerm.trim().length > 0;
+  const filtering = !isLibraryProblemsFilterStateEmpty(filters);
+  const activeFilterCount = countActiveLibraryProblemsFilters(filters);
   const isLoading =
     submissionQuery.isLoading &&
     problemQuery.isLoading &&
@@ -201,10 +217,27 @@ export function LibraryProblemsList({
     initialSubmissions.length === 0 &&
     initialProblems.length === 0;
   const queryError = submissionQuery.error ?? problemQuery.error;
+  // 분석 상태/점수 필터는 enrichment 도착 전에 0건 오탐이 나므로 로딩을 보여준다.
+  const enrichSensitiveFilter =
+    filters.statuses.size > 0 || filters.scoreRange != null;
+  const showEnrichLoading =
+    enrichState === "loading" &&
+    enrichSensitiveFilter &&
+    pageItems.length === 0;
 
   if (isLoading) {
     return <Spin data-testid="library-problems-loading" />;
   }
+
+  const updateFilters = (partial: Partial<LibraryProblemsFilterState>) => {
+    setFilters((prev) => ({ ...prev, ...partial }));
+    setPage(1);
+  };
+
+  const resetFilters = () => {
+    setFilters(EMPTY_LIBRARY_PROBLEMS_FILTERS);
+    setPage(1);
+  };
 
   if (queryError) {
     return (
@@ -218,230 +251,179 @@ export function LibraryProblemsList({
     );
   }
 
+  const filterPanel = (showHeader: boolean) => (
+    <LibraryProblemsFilterPanel
+      activeCount={activeFilterCount}
+      counts={facetCounts}
+      showHeader={showHeader}
+      state={filters}
+      onChange={updateFilters}
+      onReset={resetFilters}
+    />
+  );
+
   return (
     <div
       data-testid="library-problems-list"
       className="flex min-h-0 w-full flex-1 flex-col gap-4"
     >
-      <div className="flex flex-wrap items-center gap-3">
-        <Input.Search
-          allowClear
-          aria-label={t("searchAriaLabel")}
-          className="w-full sm:max-w-sm"
-          data-testid="library-problems-search"
-          maxLength={40}
-          placeholder={t("searchPlaceholder")}
-          value={searchTerm}
-          onChange={(event) => {
-            setSearchTerm(event.target.value);
-            setPage(1);
-          }}
-          onSearch={(value) => {
-            setSearchTerm(value);
-            setPage(1);
-          }}
-        />
-        <Text data-testid="library-problems-result-count" type="secondary">
-          {tSubmissions("resultCount", { count: filtered.length })}
-        </Text>
-      </div>
-
-      {pageItems.length === 0 ? (
+      <div className="flex min-h-0 w-full flex-1 items-start gap-6">
         <div
-          data-testid="library-problems-empty"
-          className="flex flex-1 items-center justify-center"
+          data-testid="library-problems-results-column"
+          className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 self-stretch"
         >
-          <Empty description={searching ? t("emptySearch") : t("emptyNoItems")}>
-            {searching ? (
-              <Button
-                onClick={() => {
-                  setSearchTerm("");
-                  setPage(1);
-                }}
-              >
-                {t("resetSearch")}
-              </Button>
-            ) : (
-              <Link href={APP_ROUTES.practiceProblems as never}>
-                {tSubmissions("goToPractice")}
-              </Link>
-            )}
-          </Empty>
-        </div>
-      ) : (
-        <>
-          <div data-testid="library-item-list" className="flex w-full flex-col">
-            {pageItems.map((entry) => (
-              <div
-                key={entry.item.item_id}
-                data-testid="library-problems-mixed-row"
-                data-library-kind={entry.kind}
-              >
-                {entry.kind === "submission"
-                  ? renderSubmissionRow(
-                      entry.item,
-                      enrich.get(entry.item.id),
-                      t,
-                      tSubmissions,
-                    )
-                  : renderProblemRow(entry.item, t, tSaved)}
-              </div>
-            ))}
-          </div>
-
-          <LibraryPagination
-            current={safePage}
-            total={filtered.length}
-            onChange={(nextPage) => setPage(nextPage)}
+          <LibraryProblemsToolbar
+            activeFilterCount={activeFilterCount}
+            searchTerm={searchTerm}
+            showControls={mixed.length > 0}
+            sortKey={sortKey}
+            viewMode={viewMode}
+            onOpenFilters={() => setFilterDrawerOpen(true)}
+            onSearchChange={(value) => {
+              setSearchTerm(value);
+              setPage(1);
+            }}
+            onSortChange={(key) => {
+              setSortKey(key);
+              setPage(1);
+            }}
+            onViewModeChange={setViewMode}
           />
-        </>
-      )}
-    </div>
-  );
-}
 
-function renderSubmissionRow(
-  item: LibrarySubmissionView,
-  meta: SubmissionEnrichment | undefined,
-  t: LibraryListTranslate,
-  tSubmissions: LibraryListTranslate,
-) {
-  const feedbackStatus = meta?.feedbackStatus ?? "pending";
-  const analysisPending = isAnalysisPendingStatus(feedbackStatus);
-  const badge = statusBadge(feedbackStatus);
-  const fallbackTitle = tSubmissions("problemTitle", {
-    id: item.problem_id.slice(0, 8),
-  });
-  const title = submissionTitle(item, fallbackTitle);
-
-  return (
-    <LibraryItemRow itemId={item.item_id} tab="submissions" tags={item.tags}>
-      <div className="flex w-full flex-col gap-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <Tag data-testid="library-problems-type-badge">
-            {t("typeSubmission")}
-          </Tag>
-          {analysisPending ? (
-            <Text strong>{clampTitle(title)}</Text>
+          {pageItems.length === 0 ? (
+            showEnrichLoading ? (
+              <div
+                data-testid="library-problems-enrich-loading"
+                className="flex flex-1 items-center justify-center"
+              >
+                <Spin />
+              </div>
+            ) : (
+              <div
+                data-testid="library-problems-empty"
+                className="flex flex-1 items-center justify-center"
+              >
+                <Empty
+                  description={
+                    searching
+                      ? t("emptySearch")
+                      : filtering
+                        ? t("emptyFiltered")
+                        : t("emptyNoItems")
+                  }
+                >
+                  {searching ? (
+                    <Button
+                      onClick={() => {
+                        setSearchTerm("");
+                        resetFilters();
+                      }}
+                    >
+                      {t("resetSearch")}
+                    </Button>
+                  ) : filtering ? (
+                    <Button onClick={resetFilters}>
+                      {tSaved("resetFilter")}
+                    </Button>
+                  ) : (
+                    <Link href={APP_ROUTES.practiceProblems as never}>
+                      {tSubmissions("goToPractice")}
+                    </Link>
+                  )}
+                </Empty>
+              </div>
+            )
           ) : (
-            <Link
-              href={
-                writingFeedbackHref({
-                  questionNo: item.question_no,
-                  submissionId: item.id,
-                }) as never
-              }
-            >
-              <Text strong>{clampTitle(title)}</Text>
-            </Link>
+            <>
+              {viewMode === "card" ? (
+                <div
+                  data-testid="library-problems-card-grid"
+                  className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"
+                >
+                  {pageItems.map((entry) => (
+                    <div
+                      key={entry.item.item_id}
+                      className="h-full"
+                      data-testid="library-problems-mixed-row"
+                      data-library-kind={entry.kind}
+                    >
+                      <LibraryProblemsItemCard
+                        entry={entry}
+                        meta={
+                          entry.kind === "submission"
+                            ? enrich.get(entry.item.id)
+                            : undefined
+                        }
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div
+                  data-testid="library-item-list"
+                  className="flex w-full flex-col"
+                >
+                  {pageItems.map((entry) => (
+                    <div
+                      key={entry.item.item_id}
+                      data-testid="library-problems-mixed-row"
+                      data-library-kind={entry.kind}
+                    >
+                      {entry.kind === "submission" ? (
+                        <LibraryProblemsSubmissionRow
+                          item={entry.item}
+                          meta={enrich.get(entry.item.id)}
+                        />
+                      ) : (
+                        <LibraryProblemsProblemRow item={entry.item} />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <LibraryPagination
+                current={safePage}
+                total={sorted.length}
+                onChange={(nextPage) => setPage(nextPage)}
+              />
+            </>
           )}
-          <Tag color={badge.color}>{tSubmissions(badge.labelKey)}</Tag>
-          {meta?.scoreTotal != null ? (
-            <Tag>
-              {meta.scoreMax != null
-                ? tSubmissions("scoreWithMax", {
-                    total: meta.scoreTotal,
-                    max: meta.scoreMax,
-                  })
-                : tSubmissions("scoreNoMax", { total: meta.scoreTotal })}
-            </Tag>
-          ) : null}
         </div>
-        {meta?.summary ? (
-          <Paragraph className="mb-0" ellipsis={{ rows: 2 }} type="secondary">
-            {meta.summary}
-          </Paragraph>
-        ) : analysisPending ? (
-          <Paragraph className="mb-0" type="secondary">
-            {tSubmissions("analysisPendingHint")}
-          </Paragraph>
-        ) : null}
-        <div className="flex flex-wrap items-center gap-2">
-          <Tag>{tSubmissions("charCount", { count: item.char_count })}</Tag>
-          <Text type="secondary">{formatDate(item.submitted_at)}</Text>
-        </div>
-      </div>
-    </LibraryItemRow>
-  );
-}
 
-function renderProblemRow(
-  item: LibraryProblemView,
-  t: LibraryListTranslate,
-  tSaved: LibraryListTranslate,
-) {
-  const unavailable = item.availabilityStatus !== "available";
-
-  return (
-    <LibraryItemRow
-      className={unavailable ? "opacity-40" : undefined}
-      itemId={item.item_id}
-      tab="problems"
-      tags={item.tags}
-      trailingActions={[renderRetryAction(item, tSaved)]}
-    >
-      <div className="flex w-full min-w-0 flex-col gap-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <Tag data-testid="library-problems-type-badge">
-            {t("typeProblem")}
-          </Tag>
-          <Text strong>
-            {item.title ?? tSaved("unavailablePlaceholderTitle")}
-          </Text>
-          {unavailable ? (
-            <Tag data-testid="library-problem-unavailable-badge">
-              {item.availabilityStatus === "soft_unavailable"
-                ? tSaved("providedEnded")
-                : tSaved("unavailable")}
-            </Tag>
-          ) : null}
-        </div>
-        {unavailable ? (
-          <Text
-            data-testid="library-problem-unavailable-reason"
-            type="secondary"
+        {mixed.length > 0 ? (
+          <aside
+            data-testid="library-problems-filter-panel-desktop"
+            className="hidden w-[22rem] shrink-0 self-start lg:sticky lg:top-6 lg:block lg:max-h-[calc(100vh-3rem)] lg:overflow-x-hidden lg:overflow-y-auto"
           >
-            {item.availabilityReason ?? tSaved("unavailableDefaultReason")}
-          </Text>
+            {filterPanel(true)}
+          </aside>
         ) : null}
       </div>
-    </LibraryItemRow>
-  );
-}
 
-function renderRetryAction(
-  item: LibraryProblemView,
-  tSaved: LibraryListTranslate,
-) {
-  const canRetry = item.canRetry && item.question_no !== null;
-  if (!canRetry) {
-    return (
-      <Button
-        key="retry"
-        type="primary"
-        size="small"
-        disabled
-        aria-label={tSaved("retryUnavailable")}
-        title={tSaved("retryUnavailable")}
+      <AppDrawer
+        open={filterDrawerOpen}
+        placement="right"
+        title={t("filterDrawerTitle")}
+        onClose={() => setFilterDrawerOpen(false)}
+        footer={
+          <div className="flex items-center gap-2">
+            <Button disabled={activeFilterCount === 0} onClick={resetFilters}>
+              {tSaved("resetFilter")}
+            </Button>
+            <Button
+              block
+              data-testid="library-problems-filter-drawer-apply"
+              type="primary"
+              onClick={() => setFilterDrawerOpen(false)}
+            >
+              {t("showResults", { count: sorted.length })}
+            </Button>
+          </div>
+        }
       >
-        {tSaved("retry")}
-      </Button>
-    );
-  }
-
-  return (
-    <Link
-      key="retry"
-      href={
-        writingProblemHref({
-          questionNo: item.question_no,
-          problemId: item.id,
-        }) as never
-      }
-    >
-      <Button type="primary" size="small">
-        {tSaved("retry")}
-      </Button>
-    </Link>
+        {filterPanel(false)}
+      </AppDrawer>
+    </div>
   );
 }

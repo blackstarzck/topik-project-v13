@@ -33,6 +33,33 @@ describe("StatusHelpCard (Phase 7-E Task 10)", () => {
     expect(screen.getByText(/2026/)).toBeTruthy();
   });
 
+  it("renders institution affiliation only when an affiliation code exists", () => {
+    const { rerender } = renderCard(
+      <StatusHelpCard
+        joinedAt="2026-05-22T07:27:40.629953Z"
+        appRole="learner"
+        planLabel="free"
+      />,
+    );
+
+    expect(screen.queryByText("기관 소속")).toBeNull();
+    expect(screen.queryByText("기관 코드 EXPO2026-BOOTH-A")).toBeNull();
+
+    rerender(
+      <NextIntlClientProvider locale="ko" messages={koMessages}>
+        <StatusHelpCard
+          joinedAt="2026-05-22T07:27:40.629953Z"
+          appRole="learner"
+          planLabel="free"
+          affiliationCode="EXPO2026-BOOTH-A"
+        />
+      </NextIntlClientProvider>,
+    );
+
+    expect(screen.getByText("기관 소속")).toBeTruthy();
+    expect(screen.getByText("기관 코드 EXPO2026-BOOTH-A")).toBeTruthy();
+  });
+
   it("renders Korean role label for admin trio", () => {
     renderCard(
       <StatusHelpCard

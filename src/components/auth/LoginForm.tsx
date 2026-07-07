@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ChangeEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import {
   App,
   Alert,
@@ -31,7 +31,8 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 const { Paragraph, Title } = Typography;
 
-// description §1 예외 + §4 예외: 세션 만료 / 휴면 / 탈퇴 등은 인라인 안내(Alert)로.
+// description §1 예외 + §4 예외: 세션 만료 / 휴면 등은 인라인 안내(Alert)로.
+// 탈퇴 계정 reason은 로그인 화면 진입 시 전역 Message로 안내한다.
 // reason query 로 진입했을 때 보여줄 안내 톤(type) + 번역 키. i18n: 문구는
 // 카탈로그(auth.login.notice*)에서 t()로 해석하므로 여기서는 키만 보관한다.
 // Translator + key types scoped to the `auth.login` namespace. next-intl's
@@ -114,9 +115,34 @@ export function LoginForm({
   const [blockedOAuthBrowser, setBlockedOAuthBrowser] =
     useState<GoogleOAuthEmbeddedBrowser | null>(null);
   const [form] = Form.useForm<PasswordFields | MagicLinkFields>();
+  const shownQueryMessageRef = useRef<string | null>(null);
 
+  const shouldMessageWithdrawn = noticeReason === "withdrawn";
+  const withdrawnMessage = shouldMessageWithdrawn ? queryNotice : undefined;
   // 화면 상단에 노출할 최종 안내: 시도 후 statusNotice가 query 안내보다 우선.
-  const activeNotice = statusNotice ?? queryNotice ?? null;
+  const activeNotice =
+    statusNotice ?? (shouldMessageWithdrawn ? null : queryNotice) ?? null;
+
+  useEffect(() => {
+    if (!withdrawnMessage) {
+      shownQueryMessageRef.current = null;
+      return;
+    }
+
+    const noticeText =
+      withdrawnMessage.text ??
+      (withdrawnMessage.key ? t(withdrawnMessage.key) : "");
+    if (!noticeText) return;
+
+    const messageKey = `login-reason-${noticeReason}`;
+    if (shownQueryMessageRef.current === messageKey) return;
+
+    shownQueryMessageRef.current = messageKey;
+    message[withdrawnMessage.tone]({
+      key: messageKey,
+      content: noticeText,
+    });
+  }, [message, noticeReason, t, withdrawnMessage]);
 
   function handlePasswordChange(event: ChangeEvent<HTMLInputElement>) {
     onPasswordChange?.(event.target.value);

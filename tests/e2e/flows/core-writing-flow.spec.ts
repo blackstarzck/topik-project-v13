@@ -343,14 +343,9 @@ test("core writing flow: dashboard → write → submit → feedback → compare
   await expect(page).not.toHaveURL(/\/login/);
   await expect(page.getByRole("heading").first()).toBeVisible();
 
-  // 6) library save state — submitted answers are auto-saved by the backend
-  // submission RPC, so the feedback action should render the saved state.
-  await page.getByTestId("feedback-action-save").click();
-  const savedLibraryMenuItem = page.getByRole("menuitem", {
-    name: "보관함에 저장됨",
-  });
-  await expect(savedLibraryMenuItem).toBeVisible();
-  await expect(savedLibraryMenuItem).toHaveAttribute("aria-disabled", "true");
+  // 6) feedback top action — save dropdown is removed; PDF save is a direct CTA.
+  await expect(page.getByTestId("feedback-action-pdf")).toHaveText("PDF 저장");
+  await expect(page.getByTestId("feedback-action-save")).toHaveCount(0);
 
   // 7) comparison report (R-01)
   await page.getByTestId("feedback-action-compare").click();

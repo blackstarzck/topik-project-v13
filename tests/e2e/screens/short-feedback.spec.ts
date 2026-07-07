@@ -75,9 +75,11 @@ async function createCompletedShortFeedbackSubmission() {
   if (!problem.data?.id) throw new Error("No published q51 problem found");
 
   const submissionId = randomUUID();
+  // 실제 51 제출과 동일하게 build51AnswerText 형식("ㄱ: …\nㄴ: …")으로 저장한다.
+  // 문장별 첨삭은 이 줄에 원문을 대조해 ㄱ/ㄴ 그룹으로 묶인다.
   const answerText = [
-    "저는 회의 일정 때문에 금요일 오후 세 시에 만날 수 있습니다.",
-    "장소는 회사 근처 카페가 좋겠습니다.",
+    "ㄱ: 저는 회의 일정 때문에 금요일 오후 세 시에 만날 수 있습니다.",
+    "ㄴ: 장소는 회사 근처 카페가 좋겠습니다.",
   ].join("\n");
   const inserted = await sb.from("writing_submissions").insert({
     id: submissionId,
@@ -293,8 +295,10 @@ test("E-01 short feedback matches the wireframe constraints", async ({
   await expect(
     page.getByRole("heading", { level: 5, name: "문장별 첨삭" }),
   ).toBeVisible();
-  await expect(sentenceCard.getByText("ㄱ")).toBeVisible();
-  await expect(sentenceCard.getByText("ㄴ")).toBeVisible();
+  await expect(
+    sentenceCard.getByTestId("feedback-sentence-group-label"),
+  ).toHaveText(["ㄱ", "ㄴ"]);
+  await expect(sentenceCard.getByText("ㄷ")).toHaveCount(0);
   await expect(sentenceCard.getByText("빈칸")).toHaveCount(0);
   await expect(page.locator('[data-testid^="feedback-reco-"]')).toHaveCount(3);
   await expect(
@@ -305,7 +309,7 @@ test("E-01 short feedback matches the wireframe constraints", async ({
     [
       '[data-testid="feedback-action-retry"]',
       '[data-testid="feedback-action-next"]',
-      '[data-testid="feedback-action-save"]',
+      '[data-testid="feedback-action-pdf"]',
       '[data-testid="feedback-action-compare"]',
     ].join(","),
   );
@@ -314,8 +318,20 @@ test("E-01 short feedback matches the wireframe constraints", async ({
     "다시 풀기",
   );
   await expect(page.getByTestId("feedback-action-next")).toBeVisible();
-  await expect(page.getByTestId("feedback-action-save")).toBeVisible();
+  await expect(page.getByTestId("feedback-action-pdf")).toHaveText("PDF 저장");
+  await expect(page.getByTestId("feedback-action-save")).toHaveCount(0);
   await expect(page.getByTestId("feedback-action-compare")).toBeVisible();
+  await expect(page.getByTestId("feedback-header-back-link")).toHaveAttribute(
+    "href",
+    "/library",
+  );
+  await expect(page.getByTestId("feedback-header-back-link")).toHaveAttribute(
+    "aria-label",
+    "내 서재로 돌아가기",
+  );
+  await page.getByTestId("feedback-header-back-link").click();
+  await expect(page).toHaveURL(/\/library$/);
+  await expect(page.getByRole("heading", { name: "내 서재" })).toBeVisible();
 
   expect(errors).toEqual([]);
 });

@@ -1,7 +1,8 @@
 "use client";
 
+import type { MouseEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
-import { Alert, Button, Result, Typography } from "antd";
+import { Button, Checkbox, Result, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 
@@ -25,7 +26,7 @@ const { Paragraph, Text } = Typography;
 
 type InvitePanelState =
   | { kind: "loading" }
-  | { kind: "no-code" }
+  | { kind: "no-code"; authenticated: boolean }
   | { kind: "anonymous"; code: string }
   | { kind: "authenticated"; code: string; email: string | null }
   | { kind: "success" }
@@ -43,10 +44,8 @@ type InstitutionInvitePanelProps = {
   nextPath: string;
 };
 
-function loginInviteHref() {
-  return `${APP_ROUTES.login}?next=${encodeURIComponent(
-    APP_ROUTES.authInstitutionInvite,
-  )}`;
+function loginHref(nextPath: string) {
+  return `${APP_ROUTES.login}?next=${encodeURIComponent(nextPath)}`;
 }
 
 function normalizeProfileAffiliation(value: string | null | undefined) {
@@ -65,24 +64,30 @@ export function InstitutionInvitePanel({
   const router = useRouter();
   const [state, setState] = useState<InvitePanelState>({ kind: "loading" });
   const [submitting, setSubmitting] = useState(false);
-  const loginHref = useMemo(() => loginInviteHref(), []);
+  const [institutionInviteConfirmed, setInstitutionInviteConfirmed] =
+    useState(false);
+  const inviteLoginHref = useMemo(
+    () => loginHref(APP_ROUTES.authInstitutionInvite),
+    [],
+  );
+  const dashboardLoginHref = useMemo(() => loginHref(APP_ROUTES.dashboard), []);
 
   useEffect(() => {
     let cancelled = false;
 
     async function loadInviteState() {
       const storedCode = readStoredAffiliationCode();
-      if (!storedCode) {
-        setState({ kind: "no-code" });
-        return;
-      }
-
       const supabase = createSupabaseBrowserClient();
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
       if (cancelled) return;
+
+      if (!storedCode) {
+        setState({ kind: "no-code", authenticated: Boolean(user) });
+        return;
+      }
 
       if (!user) {
         setState({ kind: "anonymous", code: storedCode });
@@ -143,6 +148,11 @@ export function InstitutionInvitePanel({
     router.replace(nextPath);
   }
 
+  function continueToDashboard() {
+    clearStoredAffiliationCode();
+    router.replace(APP_ROUTES.dashboard);
+  }
+
   function continueWithoutInvite() {
     clearStoredAffiliationCode();
     router.replace(
@@ -152,13 +162,22 @@ export function InstitutionInvitePanel({
     );
   }
 
+  function preventDefaultAndContinueWithoutInvite(
+    event: MouseEvent<HTMLAnchorElement>,
+  ) {
+    event.preventDefault();
+    continueWithoutInvite();
+  }
+
   async function signOutForAnotherAccount() {
     const supabase = createSupabaseBrowserClient();
     await supabase.auth.signOut();
-    router.replace(loginHref);
+    router.replace(inviteLoginHref);
   }
 
   async function acceptInvite() {
+    if (!institutionInviteConfirmed || submitting) return;
+
     setSubmitting(true);
     const result = await acceptStoredAffiliationInvite();
     setSubmitting(false);
@@ -174,8 +193,15 @@ export function InstitutionInvitePanel({
       });
       return;
     }
-    if (result === "invalid" || result === "empty") {
-      setState({ kind: result === "invalid" ? "invalid" : "no-code" });
+    if (result === "invalid") {
+      setState({ kind: "invalid" });
+      return;
+    }
+    if (result === "empty") {
+      setState({
+        kind: "no-code",
+        authenticated: state.kind === "authenticated",
+      });
       return;
     }
     setState({ kind: "failed" });
@@ -228,9 +254,19 @@ export function InstitutionInvitePanel({
             title={<span id="invite-title">{t("noCodeTitle")}</span>}
             subTitle={t("noCodeDescription")}
             extra={
-              <Button onClick={continueWithoutInvite}>
-                {t("anonymousContinue")}
-              </Button>
+              state.authenticated ? (
+                <Button type="primary" onClick={continueToDashboard}>
+                  {t("noCodeDashboard")}
+                </Button>
+              ) : (
+                <Button
+                  type="primary"
+                  href={dashboardLoginHref}
+                  icon={<LogIn size={16} aria-hidden="true" />}
+                >
+                  {t("noCodeLogin")}
+                </Button>
+              )
             }
           />
         ) : null}
@@ -243,11 +279,7 @@ export function InstitutionInvitePanel({
               title={<span id="invite-title">{t("anonymousTitle")}</span>}
               subTitle={t("anonymousDescription")}
             />
-            <Alert
-              type="info"
-              showIcon
-              title={t("codeLabel", { code: state.code })}
-            />
+            <div className="institution-invite-code">{state.code}</div>
             {policyNotice}
             <div className="institution-invite-actions institution-invite-actions-grid">
               <Button
@@ -259,7 +291,7 @@ export function InstitutionInvitePanel({
                 {t("anonymousSignUp")}
               </Button>
               <Button
-                href={loginHref}
+                href={inviteLoginHref}
                 className="institution-invite-action-secondary"
                 icon={<LogIn size={16} aria-hidden="true" />}
               >
@@ -289,16 +321,24 @@ export function InstitutionInvitePanel({
               <Text type="secondary">{t("currentAccount")}</Text>
               {email ? <Text strong>{email}</Text> : null}
             </div>
-            <Alert
-              type="info"
-              showIcon
-              title={t("codeLabel", { code: state.code })}
-            />
-            {policyNotice}
+            <div className="institution-invite-code">{state.code}</div>
+            <div className="institution-invite-policy-confirmation">
+              {policyNotice}
+              <Checkbox
+                checked={institutionInviteConfirmed}
+                className="institution-invite-consent"
+                onChange={(event) =>
+                  setInstitutionInviteConfirmed(event.target.checked)
+                }
+              >
+                {t("authenticatedConsent")}
+              </Checkbox>
+            </div>
             <div className="institution-invite-actions institution-invite-actions-grid">
               <Button
                 type="primary"
                 className="institution-invite-action-primary"
+                disabled={!institutionInviteConfirmed || submitting}
                 loading={submitting}
                 onClick={() => void acceptInvite()}
                 icon={<CheckCircle2 size={16} aria-hidden="true" />}
@@ -312,13 +352,13 @@ export function InstitutionInvitePanel({
               >
                 {t("authenticatedOtherAccount")}
               </Button>
-              <Button
-                type="text"
-                className="institution-invite-action-tertiary"
-                onClick={continueWithoutInvite}
+              <a
+                className="institution-invite-action-anchor"
+                href={nextPath}
+                onClick={preventDefaultAndContinueWithoutInvite}
               >
                 {t("authenticatedContinue")}
-              </Button>
+              </a>
             </div>
           </div>
         ) : null}
@@ -379,9 +419,13 @@ export function InstitutionInvitePanel({
               >
                 {t("authenticatedOtherAccount")}
               </Button>
-              <Button type="text" onClick={continueWithoutInvite}>
+              <a
+                className="institution-invite-action-anchor"
+                href={nextPath}
+                onClick={preventDefaultAndContinueWithoutInvite}
+              >
                 {t("authenticatedContinue")}
-              </Button>
+              </a>
             </div>
           </div>
         ) : null}
@@ -403,9 +447,13 @@ export function InstitutionInvitePanel({
                 : t("failedDescription")
             }
             extra={
-              <Button onClick={continueWithoutInvite}>
+              <a
+                className="institution-invite-action-anchor"
+                href={nextPath}
+                onClick={preventDefaultAndContinueWithoutInvite}
+              >
                 {t("authenticatedContinue")}
-              </Button>
+              </a>
             }
           />
         ) : null}

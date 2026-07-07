@@ -65,16 +65,11 @@ export function buildInstitutionInvitePath(nextPath: string): string {
   return `/auth/institution-invite?${params.toString()}`;
 }
 
-function buildOAuthNextPath(
+export function buildOAuthNextPath(
   intent: GoogleOAuthIntent,
   nextPath?: string,
 ): string {
-  const postAuthPath = nextPath
-    ? ensureRelativePath(nextPath)
-    : buildPostAuthPath(intent);
-  return intent === "sign-up"
-    ? buildClaimAffiliationPath(postAuthPath)
-    : postAuthPath;
+  return nextPath ? ensureRelativePath(nextPath) : buildPostAuthPath(intent);
 }
 
 function ensureRelativePath(path: string): string {

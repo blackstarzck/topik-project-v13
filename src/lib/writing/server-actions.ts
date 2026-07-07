@@ -2,13 +2,14 @@
 
 import { randomUUID } from "node:crypto";
 import { redirect } from "next/navigation";
+import { asLocale, DEFAULT_LOCALE, type Locale } from "@/i18n/locales";
 import { ACCOUNT_INACTIVE_PATH } from "../auth/completion-routes";
 import { fetchProfileStatus, isActiveStatus } from "../auth/profile";
 import {
   createSupabaseServerClient,
   createSupabaseServiceRoleClient,
 } from "../supabase/server";
-import type { Json } from "../supabase/types";
+import type { Json, Tables } from "../supabase/types";
 import {
   ExternalEvaluationApiError,
   getTalkpikApiBaseUrl,
@@ -29,6 +30,10 @@ import {
 } from "./comparison-score-items";
 import { toSubmitWritingErrorMessage as toSharedSubmitWritingErrorMessage } from "./submit-errors";
 import type { FeedbackBundle, QuestionNo, WritingSubmissionRow } from "./types";
+
+type SupabaseServerClient = Awaited<
+  ReturnType<typeof createSupabaseServerClient>
+>;
 
 export type SubmitWritingInput = {
   draft_id?: string | null;
@@ -68,6 +73,22 @@ function shouldDisableExternalWritingApiForE2E(): boolean {
     process.env.NODE_ENV !== "production" &&
     process.env.E2E_DISABLE_EXTERNAL_WRITING_API === "1"
   );
+}
+
+async function fetchSubmitProfileContext(
+  supabase: SupabaseServerClient,
+  userId: string,
+): Promise<{ status: Tables<"profiles">["status"] | null; locale: Locale }> {
+  const { data } = await supabase
+    .from("profiles")
+    .select("status, ui_locale")
+    .eq("id", userId)
+    .maybeSingle();
+
+  return {
+    status: data?.status ?? null,
+    locale: asLocale(data?.ui_locale) ?? DEFAULT_LOCALE,
+  };
 }
 
 function externalSubmissionPayload({
@@ -151,9 +172,11 @@ export async function submitWritingAction(
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
   // 회원 탈퇴(deleted)/차단(blocked) 계정의 쓰기 제출·리포트 생성 차단.
-  const accountStatus = await fetchProfileStatus(supabase, user.id);
-  if (!isActiveStatus(accountStatus)) {
-    redirect(`${ACCOUNT_INACTIVE_PATH}?status=${accountStatus ?? "deleted"}`);
+  const profileContext = await fetchSubmitProfileContext(supabase, user.id);
+  if (!isActiveStatus(profileContext.status)) {
+    redirect(
+      `${ACCOUNT_INACTIVE_PATH}?status=${profileContext.status ?? "deleted"}`,
+    );
   }
 
   const externalBaseUrl = shouldDisableExternalWritingApiForE2E()
@@ -195,13 +218,13 @@ export async function submitWritingAction(
           question_id: externalQuestionId,
           blanks,
           ...(passageContext ? { passage_context: passageContext } : {}),
-          lang: "ko",
+          lang: profileContext.locale,
         }
       : {
           task_type: externalTaskType,
           question_id: externalQuestionId,
           text: input.answer_text,
-          lang: "ko",
+          lang: profileContext.locale,
         };
 
     let external;
@@ -268,10 +291,6 @@ export type CreateComparisonReportInput = {
   current_id: string;
   previous_id?: string | null;
 };
-
-type SupabaseServerClient = Awaited<
-  ReturnType<typeof createSupabaseServerClient>
->;
 
 async function getComparisonSubmissionById({
   supabase,

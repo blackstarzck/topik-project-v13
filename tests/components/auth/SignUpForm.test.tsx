@@ -43,6 +43,8 @@ import {
   storeAffiliationCode,
 } from "../../../src/lib/auth/affiliation-code";
 
+const THIRTY_MINUTES_MS = 30 * 60 * 1000;
+
 // SignUpForm now uses next-intl's useTranslations — render inside the shared
 // intl + antd App wrapper (baseline ko catalog, matching the assertions).
 const renderInApp = renderWithIntl;
@@ -368,6 +370,26 @@ describe("SignUpForm", () => {
     expect(pushMock).not.toHaveBeenCalled();
   });
 
+  it("does not add an expired affiliation code to email sign-up metadata", async () => {
+    storeAffiliationCode("EXPO2026-BOOTH-A", Date.now() - THIRTY_MINUTES_MS);
+    renderInApp(<SignUpForm />);
+
+    await fillValidSignUpForm();
+
+    await act(async () => {
+      fireEvent.click(submitButton());
+    });
+
+    await waitFor(() => {
+      expect(signUpMock).toHaveBeenCalledTimes(1);
+    });
+    const metadata = signUpMock.mock.calls[0][0].options.data as Record<
+      string,
+      unknown
+    >;
+    expect(metadata.affiliation_code).toBeUndefined();
+  });
+
   it("redirects to /auth/verify-email after successful sign-up (Phase 8-D)", async () => {
     renderInApp(<SignUpForm />);
 
@@ -406,7 +428,7 @@ describe("SignUpForm", () => {
     );
   });
 
-  it("shows safe account guidance for explicit duplicate signup errors", async () => {
+  it("shows explicit duplicate guidance for duplicate signup error codes", async () => {
     signUpMock.mockResolvedValueOnce({
       data: { session: null, user: null },
       error: {
@@ -426,20 +448,91 @@ describe("SignUpForm", () => {
     await waitFor(() => {
       expect(screen.getByTestId("sign-up-safe-guidance")).toBeTruthy();
     });
+    // message 토스트 본문
     expect(
       screen.getByText(
-        "이 이메일로 바로 새 가입을 계속할 수 없어요. 이미 계정을 만든 적이 있다면 로그인하거나 비밀번호를 재설정해 주세요.",
+        "이 이메일로 가입한 계정이 이미 있어요. 로그인하거나 비밀번호를 재설정해 주세요.",
       ),
     ).toBeTruthy();
+    // 2026-07-03 제안: 이메일 필드 인라인 오류로도 중복을 명시한다.
+    expect(await screen.findByText("이미 가입된 이메일이에요")).toBeTruthy();
+    // raw provider 문구는 계속 노출하지 않는다.
     expect(screen.queryByText("User already registered")).toBeNull();
-    expect(screen.queryByText(/이미 가입된 이메일/)).toBeNull();
-    expect(screen.queryByText(/계정이 존재/)).toBeNull();
-    expect(
-      screen.getByTestId("sign-up-safe-guidance-login").getAttribute("href"),
-    ).toBe("/login");
-    expect(
-      screen.getByTestId("sign-up-safe-guidance-reset").getAttribute("href"),
-    ).toBe("/password-reset");
+    expect(pushMock).not.toHaveBeenCalled();
+  });
+
+  it("treats an identities-empty success response as a duplicate email", async () => {
+    signUpMock.mockResolvedValueOnce({
+      data: {
+        session: null,
+        user: { id: "00000000-0000-4000-8000-000000000001", identities: [] },
+      },
+      error: null,
+    });
+    renderInApp(<SignUpForm />);
+
+    await fillValidSignUpForm("registered@example.com");
+
+    await act(async () => {
+      fireEvent.click(submitButton());
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("sign-up-safe-guidance")).toBeTruthy();
+    });
+    expect(await screen.findByText("이미 가입된 이메일이에요")).toBeTruthy();
+    expect(pushMock).not.toHaveBeenCalled();
+  });
+
+  it("redirects to /auth/verify-email when the new user has identities", async () => {
+    signUpMock.mockResolvedValueOnce({
+      data: {
+        session: null,
+        user: {
+          id: "00000000-0000-4000-8000-000000000001",
+          identities: [{ id: "00000000-0000-4000-8000-000000000002" }],
+        },
+      },
+      error: null,
+    });
+    renderInApp(<SignUpForm />);
+
+    await fillValidSignUpForm("new-user@example.com");
+
+    await act(async () => {
+      fireEvent.click(submitButton());
+    });
+
+    await waitFor(() => {
+      expect(pushMock).toHaveBeenCalledTimes(1);
+    });
+    expect(pushMock.mock.calls[0][0]).toBe(
+      "/auth/verify-email?email=new-user%40example.com",
+    );
+  });
+
+  it("keeps a stored affiliation code when duplicate email guidance is shown", async () => {
+    storeAffiliationCode("EXPO2026-BOOTH-A");
+    signUpMock.mockResolvedValueOnce({
+      data: { session: null, user: null },
+      error: {
+        code: "user_already_exists",
+        message: "User already registered",
+        status: 422,
+      },
+    });
+    renderInApp(<SignUpForm />);
+
+    await fillValidSignUpForm("registered@example.com");
+
+    await act(async () => {
+      fireEvent.click(submitButton());
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("sign-up-safe-guidance")).toBeTruthy();
+    });
+    expect(readStoredAffiliationCode()).toBe("EXPO2026-BOOTH-A");
     expect(pushMock).not.toHaveBeenCalled();
   });
 
@@ -546,9 +639,31 @@ describe("SignUpForm", () => {
       provider: "google",
       options: {
         redirectTo:
+          "http://localhost:3000/auth/callback?next=%2Fauth%2Fpost-auth%3Fintent%3Dsign-up",
+      },
+    });
+    expect(signUpMock).not.toHaveBeenCalled();
+  });
+
+  it("returns Google OAuth signup to invite confirmation when a valid affiliation code is stored", async () => {
+    storeAffiliationCode("EXPO2026-BOOTH-A");
+    renderInApp(<SignUpForm />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Google로 계속" }));
+    });
+
+    await waitFor(() => {
+      expect(signInWithOAuthMock).toHaveBeenCalledTimes(1);
+    });
+    expect(signInWithOAuthMock.mock.calls[0][0]).toEqual({
+      provider: "google",
+      options: {
+        redirectTo:
           "http://localhost:3000/auth/callback?next=%2Fauth%2Finstitution-invite%3Fnext%3D%252Fauth%252Fpost-auth%253Fintent%253Dsign-up",
       },
     });
+    expect(readStoredAffiliationCode()).toBe("EXPO2026-BOOTH-A");
     expect(signUpMock).not.toHaveBeenCalled();
   });
 

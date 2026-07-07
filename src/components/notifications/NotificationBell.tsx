@@ -5,7 +5,6 @@ import {
   Badge,
   Button,
   Empty,
-  List,
   Popover,
   Skeleton,
   Typography,
@@ -180,15 +179,14 @@ export function NotificationBell({ userId }: Props) {
       ) : items.length === 0 ? (
         <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t("empty")} />
       ) : (
-        <List
-          className="app-notification-list"
-          size="small"
-          dataSource={items}
-          renderItem={(item) => {
+        <div className="app-notification-list" role="list">
+          {items.map((item) => {
             const unread = !item.read_at;
             const isPendingRead = pendingReadIds.has(item.id);
             return (
-              <List.Item
+              <div
+                key={item.id}
+                role="listitem"
                 className={
                   unread
                     ? "app-notification-item app-notification-item--unread"
@@ -225,10 +223,10 @@ export function NotificationBell({ userId }: Props) {
                     </Text>
                   </span>
                 </button>
-              </List.Item>
+              </div>
             );
-          }}
-        />
+          })}
+        </div>
       )}
     </div>
   );

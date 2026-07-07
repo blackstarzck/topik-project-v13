@@ -160,6 +160,7 @@ describe("InstitutionInvitePanel", () => {
     renderPanel("/dashboard");
 
     await screen.findByText("learner@example.com");
+    expect(screen.getByText("기관 초대가 도착했어요")).toBeTruthy();
     expect(screen.getByText("기관 연결 후 달라지는 점")).toBeTruthy();
     expect(screen.getByText("기존 학습 기록은 보존됩니다.")).toBeTruthy();
     expect(
@@ -169,12 +170,22 @@ describe("InstitutionInvitePanel", () => {
     ).toBeTruthy();
     expect(acceptStoredAffiliationInviteMock).not.toHaveBeenCalled();
 
+    const consentCheckbox = screen.getByRole("checkbox", {
+      name: "동의하시겠습니까?",
+    });
+    const acceptButton = screen.getByRole("button", {
+      name: "기관에 연결",
+    }) as HTMLButtonElement;
+    expect(acceptButton.disabled).toBe(true);
+
     await act(async () => {
-      fireEvent.click(
-        screen.getByRole("button", {
-          name: "위 내용을 확인하고 이 계정으로 기관에 연결",
-        }),
-      );
+      fireEvent.click(consentCheckbox);
+    });
+
+    expect(acceptButton.disabled).toBe(false);
+
+    await act(async () => {
+      fireEvent.click(acceptButton);
     });
 
     await waitFor(() => {
@@ -196,9 +207,7 @@ describe("InstitutionInvitePanel", () => {
     await screen.findByText("learner@example.com");
 
     await act(async () => {
-      fireEvent.click(
-        screen.getByRole("button", { name: "연결하지 않고 계속" }),
-      );
+      fireEvent.click(screen.getByRole("link", { name: "연결하지 않고 계속" }));
     });
 
     expect(clearStoredAffiliationCodeMock).toHaveBeenCalledTimes(1);
@@ -223,7 +232,7 @@ describe("InstitutionInvitePanel", () => {
     ).toBeTruthy();
     expect(
       screen.queryByRole("button", {
-        name: "위 내용을 확인하고 이 계정으로 기관에 연결",
+        name: "기관에 연결",
       }),
     ).toBeNull();
 
@@ -234,9 +243,106 @@ describe("InstitutionInvitePanel", () => {
     });
 
     expect(signOutMock).toHaveBeenCalledTimes(1);
+    expect(clearStoredAffiliationCodeMock).not.toHaveBeenCalled();
     expect(replaceMock).toHaveBeenCalledWith(
       "/login?next=%2Fauth%2Finstitution-invite",
     );
+  });
+
+  it("clears the stored code when an already-affiliated learner continues without connecting", async () => {
+    getUserMock.mockResolvedValueOnce({
+      data: { user: { id: "user-123", email: "learner@example.com" } },
+      error: null,
+    });
+    maybeSingleMock.mockResolvedValueOnce({
+      data: { affiliation_code: "OTHER-INSTITUTION" },
+      error: null,
+    });
+    const { container } = renderPanel("/dashboard");
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId("institution-invite-already-other-primary"),
+      ).toBeTruthy();
+    });
+    const continueLink = container.querySelector(
+      ".institution-invite-action-anchor",
+    ) as HTMLAnchorElement | null;
+    expect(continueLink).toBeTruthy();
+
+    await act(async () => {
+      fireEvent.click(continueLink as HTMLAnchorElement);
+    });
+
+    expect(clearStoredAffiliationCodeMock).toHaveBeenCalledTimes(1);
+    expect(replaceMock).toHaveBeenCalledWith("/dashboard");
+    expect(signOutMock).not.toHaveBeenCalled();
+  });
+
+  it("clears the stored code when an invalid invite result continues without connecting", async () => {
+    getUserMock.mockResolvedValueOnce({
+      data: { user: { id: "user-123", email: "learner@example.com" } },
+      error: null,
+    });
+    acceptStoredAffiliationInviteMock.mockResolvedValueOnce("invalid");
+    const { container } = renderPanel("/dashboard");
+
+    await screen.findByText("learner@example.com");
+    await act(async () => {
+      fireEvent.click(screen.getByRole("checkbox"));
+      fireEvent.click(
+        container.querySelector(
+          ".institution-invite-action-primary",
+        ) as HTMLButtonElement,
+      );
+    });
+    await waitFor(() => {
+      expect(acceptStoredAffiliationInviteMock).toHaveBeenCalledTimes(1);
+      expect(
+        container.querySelector(".institution-invite-action-primary"),
+      ).toBeNull();
+    });
+
+    const continueLink = container.querySelector(
+      ".institution-invite-action-anchor",
+    ) as HTMLAnchorElement | null;
+    expect(continueLink).toBeTruthy();
+
+    await act(async () => {
+      fireEvent.click(continueLink as HTMLAnchorElement);
+    });
+
+    expect(clearStoredAffiliationCodeMock).toHaveBeenCalledTimes(1);
+    expect(replaceMock).toHaveBeenCalledWith("/dashboard");
+  });
+
+  it("clears the stored code when a failed invite state continues without connecting", async () => {
+    getUserMock.mockResolvedValueOnce({
+      data: { user: { id: "user-123", email: "learner@example.com" } },
+      error: null,
+    });
+    maybeSingleMock.mockResolvedValueOnce({
+      data: null,
+      error: { message: "profile lookup failed" },
+    });
+    const { container } = renderPanel("/dashboard");
+
+    await waitFor(() => {
+      expect(
+        container.querySelector(".institution-invite-action-anchor"),
+      ).toBeTruthy();
+    });
+    const continueLink = container.querySelector(
+      ".institution-invite-action-anchor",
+    ) as HTMLAnchorElement | null;
+    expect(continueLink).toBeTruthy();
+
+    await act(async () => {
+      fireEvent.click(continueLink as HTMLAnchorElement);
+    });
+
+    expect(clearStoredAffiliationCodeMock).toHaveBeenCalledTimes(1);
+    expect(replaceMock).toHaveBeenCalledWith("/dashboard");
   });
 
   it("renders the success result on a pure white page background", async () => {
@@ -250,11 +356,14 @@ describe("InstitutionInvitePanel", () => {
     await screen.findByText("learner@example.com");
     const acceptButton = container.querySelector(
       ".institution-invite-actions .ant-btn-primary",
-    );
+    ) as HTMLButtonElement | null;
     expect(acceptButton).toBeTruthy();
 
     await act(async () => {
-      fireEvent.click(acceptButton as HTMLElement);
+      fireEvent.click(
+        screen.getByRole("checkbox", { name: "동의하시겠습니까?" }),
+      );
+      fireEvent.click(acceptButton as HTMLButtonElement);
     });
 
     await waitFor(() => {
@@ -288,7 +397,7 @@ describe("InstitutionInvitePanel", () => {
     );
   });
 
-  it("does not call the accept RPC when the stored invite code is missing or expired", async () => {
+  it("shows a dashboard login CTA when an anonymous invite code is missing or expired", async () => {
     readStoredAffiliationCodeMock.mockReturnValueOnce(null);
 
     renderPanel();
@@ -296,6 +405,33 @@ describe("InstitutionInvitePanel", () => {
     expect(
       await screen.findByText("초대 코드가 없거나 만료됐어요"),
     ).toBeTruthy();
+    expect(
+      screen
+        .getByRole("link", { name: "기존 계정으로 로그인" })
+        .getAttribute("href"),
+    ).toBe("/login?next=%2Fdashboard");
+    expect(acceptStoredAffiliationInviteMock).not.toHaveBeenCalled();
+  });
+
+  it("sends an authenticated user with a missing or expired invite code to the dashboard", async () => {
+    readStoredAffiliationCodeMock.mockReturnValueOnce(null);
+    getUserMock.mockResolvedValueOnce({
+      data: { user: { id: "user-123", email: "learner@example.com" } },
+      error: null,
+    });
+
+    renderPanel();
+
+    expect(
+      await screen.findByText("초대 코드가 없거나 만료됐어요"),
+    ).toBeTruthy();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "대시보드로 이동" }));
+    });
+
+    expect(clearStoredAffiliationCodeMock).toHaveBeenCalledTimes(1);
+    expect(replaceMock).toHaveBeenCalledWith("/dashboard");
     expect(acceptStoredAffiliationInviteMock).not.toHaveBeenCalled();
   });
 });

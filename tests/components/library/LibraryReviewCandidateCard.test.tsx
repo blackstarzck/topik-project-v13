@@ -54,15 +54,39 @@ describe("LibraryReviewCandidateCard", () => {
     const top = within(card).getByTestId("library-review-candidate-top");
     expect(top.className).toContain("justify-between");
     const heading = within(top).getByTestId("library-review-candidate-heading");
-    expect(heading.className).toContain("gap-4");
+    expect(heading.className).toContain("gap-2");
+    expect(heading.className).not.toContain("relative");
+    const questionNumberRow = within(heading).getByTestId(
+      "library-review-candidate-question-row",
+    );
+    expect(questionNumberRow.className).toContain("justify-end");
+    const content = within(heading).getByTestId(
+      "library-review-candidate-content",
+    );
     const metaGroup = within(top).getByTestId(
       "library-review-candidate-meta-group",
     );
     expect(metaGroup.className).toContain("mt-auto");
     expect(metaGroup.className).toContain("pt-8");
 
-    expect(within(top).getByText("2026-06-29")).toBeTruthy();
-    expect(within(top).getByText("54번")).toBeTruthy();
+    expect(
+      Array.from(heading.children).map((child) =>
+        child.getAttribute("data-testid"),
+      ),
+    ).toEqual([
+      "library-review-candidate-question-row",
+      "library-review-candidate-content",
+    ]);
+
+    const date = within(content).getByTestId("library-review-candidate-date");
+    expect(date.textContent).toContain("2026-06-29");
+    const questionNumber = within(questionNumberRow).getByLabelText("54번");
+    expect(questionNumber.textContent).toBe("54");
+    expect(questionNumber.className).toContain("writing-question-number");
+    expect(questionNumber.className).toContain("writing-question-number--q54");
+    expect(questionNumber.className).toContain(
+      "library-review-candidate-question-number",
+    );
     const title = within(top).getByTestId("library-review-candidate-title");
     expect(title.textContent).toBe("문화 사회형 질문");
     expect(title.className).toContain("text-base");
@@ -130,6 +154,15 @@ describe("LibraryReviewCandidateCard", () => {
 
     expect(css).toMatch(
       /\.library-review-candidate-card\.app-card\.app-surface\s*>\s*\.ant-card-body[\s\S]*?height:\s*100%;/,
+    );
+    expect(css).toMatch(
+      /\.library-review-candidate-card\s+\.library-review-candidate-question-number\s*\{[\s\S]*?width:\s*1\.47em;/,
+    );
+    expect(css).toMatch(
+      /\.library-review-candidate-card\s+\.library-review-candidate-question-number\s*\{[\s\S]*?height:\s*1\.47em;/,
+    );
+    expect(css).toMatch(
+      /\.library-review-candidate-card\s+\.library-review-candidate-question-number\s*\{[\s\S]*?font-size:\s*18px;/,
     );
     expect(css).toMatch(
       /\.library-review-candidate-score-progress\s*\{[\s\S]*?background:\s*color-mix\(\s*in srgb,\s*var\(--app-color-border\) 18%,\s*var\(--app-color-bg-container\)\s*\);/,

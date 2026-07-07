@@ -136,13 +136,71 @@ async function mockSignUpSuccess(page: Page): Promise<SignUpRequest[]> {
           created_at: new Date().toISOString(),
           email: VALID_EMAIL,
           id: "00000000-0000-4000-8000-000000000001",
-          identities: [],
+          // 새 계정 성공 응답은 방금 만든 email identity를 포함한다.
+          identities: [
+            {
+              created_at: new Date().toISOString(),
+              id: "00000000-0000-4000-8000-000000000001",
+              identity_data: {
+                email: VALID_EMAIL,
+                sub: "00000000-0000-4000-8000-000000000001",
+              },
+              identity_id: "00000000-0000-4000-8000-000000000002",
+              last_sign_in_at: new Date().toISOString(),
+              provider: "email",
+              updated_at: new Date().toISOString(),
+              user_id: "00000000-0000-4000-8000-000000000001",
+            },
+          ],
           role: "authenticated",
           updated_at: new Date().toISOString(),
           user_metadata: {
             display_name: VALID_NAME,
             nationality_country_code: VALID_NATIONALITY_COUNTRY_CODE,
           },
+        },
+      }),
+      contentType: "application/json",
+      headers: corsHeaders(request),
+      status: 200,
+    });
+  });
+
+  return requests;
+}
+
+// 이메일 확인이 켜진 프로젝트에서 이미 확인된 계정에 재가입을 시도하면
+// Supabase는 에러 대신 identities가 빈 난독화 성공 응답을 돌려준다.
+async function mockSignUpExistingEmailObfuscated(
+  page: Page,
+): Promise<SignUpRequest[]> {
+  const requests: SignUpRequest[] = [];
+
+  await page.route(SIGN_UP_ROUTE, async (route, request) => {
+    if (request.method() === "OPTIONS") {
+      await route.fulfill({ headers: corsHeaders(request), status: 204 });
+      return;
+    }
+
+    requests.push({
+      payload: readJsonPayload(request),
+      url: new URL(request.url()),
+    });
+
+    await route.fulfill({
+      body: JSON.stringify({
+        session: null,
+        user: {
+          app_metadata: { provider: "email", providers: ["email"] },
+          aud: "authenticated",
+          confirmation_sent_at: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+          email: VALID_EMAIL,
+          id: "00000000-0000-4000-8000-000000000003",
+          identities: [],
+          role: "authenticated",
+          updated_at: new Date().toISOString(),
+          user_metadata: {},
         },
       }),
       contentType: "application/json",
@@ -451,7 +509,7 @@ test.describe("A-01 sign-up functional flow", () => {
     expect(errors).toEqual([]);
   });
 
-  test("duplicate email auth error shows safe guidance and keeps user on sign-up", async ({
+  test("duplicate email auth error shows explicit duplicate guidance and keeps user on sign-up", async ({
     page,
   }) => {
     const errors = collectErrors(page);
@@ -462,33 +520,43 @@ test.describe("A-01 sign-up functional flow", () => {
     await clickSubmit(page);
 
     await expect(page.getByTestId("sign-up-safe-guidance")).toBeVisible();
+    // 2026-07-03 제안: 중복을 명시하되 raw provider 문구는 노출하지 않는다.
+    await expect(
+      page.getByText(
+        "이 이메일로 가입한 계정이 이미 있어요. 로그인하거나 비밀번호를 재설정해 주세요.",
+      ),
+    ).toBeVisible();
+    await expect(page.getByText("이미 가입된 이메일이에요")).toBeVisible();
     await expect(page.getByText("User already registered")).toHaveCount(0);
-    await expect(page.getByText(/이미 가입된 이메일/)).toHaveCount(0);
-    await expect(page.getByText(/계정이 존재/)).toHaveCount(0);
     expect(page.url()).not.toContain("duplicate");
     expect(page.url()).not.toContain("exists");
     expect(page.url()).not.toContain("reason");
     expect(page.url()).not.toContain("user_not_found");
-    await expect(
-      page.getByTestId("sign-up-safe-guidance-login"),
-    ).toHaveAttribute("href", "/login");
-    await expect(
-      page.getByTestId("sign-up-safe-guidance-reset"),
-    ).toHaveAttribute("href", "/password-reset");
     await expect(page).toHaveURL(/\/sign-up/);
     expect(signUpRequests).toHaveLength(1);
+    expect(errors).toEqual([]);
+  });
 
-    await page.getByTestId("sign-up-safe-guidance-login").click();
-    await expect(page).toHaveURL(/\/login$/);
+  test("identities-empty obfuscated response shows duplicate guidance instead of verify-email", async ({
+    page,
+  }) => {
+    const errors = collectErrors(page);
+    const signUpRequests = await mockSignUpExistingEmailObfuscated(page);
 
     await openSignUp(page);
-    await fillSignUpForm(page);
+    await fillSignUpForm(page, { email: "existing@example.com" });
     await clickSubmit(page);
-    await expect(page.getByTestId("sign-up-safe-guidance")).toBeVisible();
-    await page.getByTestId("sign-up-safe-guidance-reset").click();
-    await expect(page).toHaveURL(/\/password-reset$/);
 
-    expect(signUpRequests).toHaveLength(2);
+    await expect(page.getByTestId("sign-up-safe-guidance")).toBeVisible();
+    await expect(page.getByText("이미 가입된 이메일이에요")).toBeVisible();
+    await expect(page).toHaveURL(/\/sign-up/);
+
+    // 이메일을 고치면 인라인 오류와 안내가 사라진다.
+    await page.locator("#email").fill("another@example.com");
+    await expect(page.getByTestId("sign-up-safe-guidance")).toHaveCount(0);
+    await expect(page.getByText("이미 가입된 이메일이에요")).toHaveCount(0);
+
+    expect(signUpRequests).toHaveLength(1);
     expect(errors).toEqual([]);
   });
 

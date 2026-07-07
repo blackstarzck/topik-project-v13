@@ -3,7 +3,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 export const AFFILIATION_CODE_PARAM = "aff";
 export const AFFILIATION_CODE_STORAGE_KEY = "talkpik:affiliation-code";
 
-const AFFILIATION_CODE_TTL_MS = 24 * 60 * 60 * 1000;
+const AFFILIATION_CODE_TTL_MS = 30 * 60 * 1000;
 const AFFILIATION_CODE_PATTERN = /^[A-Za-z0-9_-]{2,64}$/;
 
 export type StoredAffiliationCode = {

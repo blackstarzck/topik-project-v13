@@ -76,9 +76,11 @@ async function findStudentUser(sb: ReturnType<typeof serviceClient>) {
 async function createCompletedLongFeedbackSubmission({
   questionNo = 53,
   sentenceFeedbackTexts,
+  answerSections,
 }: {
   questionNo?: 53 | 54;
   sentenceFeedbackTexts?: string[];
+  answerSections?: { intro: string; body: string; conclusion: string };
 } = {}) {
   const sb = serviceClient();
   const user = await findStudentUser(sb);
@@ -109,20 +111,31 @@ async function createCompletedLongFeedbackSubmission({
   // Register for cleanup before the first insert so a partial failure mid-way
   // still gets torn down by afterAll instead of leaking rows.
   createdSubmissionIds.push(submissionId);
-  const answerText = [
-    "첫째, 자료에서 가장 큰 변화는 방문자 수 증가입니다.",
-    "둘째, 2024년 이후 온라인 신청 비율이 빠르게 높아졌습니다.",
-    "그러므로 기관은 모바일 안내를 강화해야 합니다.",
-    "또한 오프라인 방문자를 위한 안내도 유지할 필요가 있습니다.",
-    "마지막으로 두 방식의 균형을 맞추는 것이 중요합니다.",
-    "이런 변화는 이용자 편의가 중요한 기준이 되었음을 보여 줍니다.",
-  ].join("\n");
+  // 실제 53 제출과 동일하게 서론/본론/결론 섹션 + combine53Sections 형태(\n\n 결합)로
+  // 저장한다. 문장별 첨삭 그룹은 이 섹션 텍스트에 원문을 대조해 만들어진다.
+  const sections = answerSections ?? {
+    intro: "첫째, 자료에서 가장 큰 변화는 방문자 수 증가입니다.",
+    body: [
+      "둘째, 2024년 이후 온라인 신청 비율이 빠르게 높아졌습니다.",
+      "그러므로 기관은 모바일 안내를 강화해야 합니다.",
+      "또한 오프라인 방문자를 위한 안내도 유지할 필요가 있습니다.",
+    ].join(" "),
+    conclusion: [
+      "마지막으로 두 방식의 균형을 맞추는 것이 중요합니다.",
+      "이런 변화는 이용자 편의가 중요한 기준이 되었음을 보여 줍니다.",
+    ].join(" "),
+  };
+  const answerText = [sections.intro, sections.body, sections.conclusion].join(
+    "\n\n",
+  );
   const inserted = await sb.from("writing_submissions").insert({
     id: submissionId,
     user_id: user.id,
     problem_id: problem.data.id,
     question_no: questionNo,
     answer_text: answerText,
+    answer_json:
+      questionNo === 53 ? { _v: "53.v1", sections } : null,
     char_count: answerText.length,
     feedback_status: "complete",
   });
@@ -199,7 +212,16 @@ async function createCompletedLongFeedbackSubmission({
   ]);
   if (dimensions.error) throw dimensions.error;
 
-  const sentenceRows = (sentenceFeedbackTexts ?? answerText.split("\n")).map(
+  // 기본 첨삭 6개: 서론 1개 + 본론 3개 + 결론 2개 (각 원문은 해당 섹션의 부분 문자열).
+  const defaultSentenceTexts = [
+    "자료에서 가장 큰 변화는 방문자 수 증가입니다.",
+    "온라인 신청 비율이 빠르게 높아졌습니다.",
+    "기관은 모바일 안내를 강화해야 합니다.",
+    "오프라인 방문자를 위한 안내도 유지할 필요가 있습니다.",
+    "두 방식의 균형을 맞추는 것이 중요합니다.",
+    "이용자 편의가 중요한 기준이 되었음을 보여 줍니다.",
+  ];
+  const sentenceRows = (sentenceFeedbackTexts ?? defaultSentenceTexts).map(
     (text, index) => ({
       submission_id: submissionId,
       user_id: user.id,
@@ -237,7 +259,7 @@ async function createCompletedLongFeedbackSubmission({
     );
   }
 
-  return { submissionId, answerText };
+  return { submissionId, answerText, sections };
 }
 
 test.afterAll(async () => {
@@ -262,7 +284,7 @@ test("E-02 long feedback matches the wireframe constraints", async ({
   page,
 }) => {
   const errors = collectErrors(page);
-  const { submissionId, answerText } =
+  const { submissionId, sections } =
     await createCompletedLongFeedbackSubmission();
 
   const response = await page.goto(`/writing/feedback/long/${submissionId}`, {
@@ -335,13 +357,19 @@ test("E-02 long feedback matches the wireframe constraints", async ({
   await expect(
     page.getByRole("heading", { level: 5, name: "문장별 첨삭" }),
   ).toBeVisible();
+  // 첨삭 6개 중 5개만 먼저 노출(wireframe: 5개 후 더보기). 그룹 헤더는
+  // 섹션당 1번만 나타난다 — 본론 첨삭이 3개여도 "본론" 헤더는 1개다.
   await expect(sentenceCard.getByRole("listitem")).toHaveCount(5);
-  await expect(sentenceCard.getByText("서론")).toBeVisible();
-  await expect(sentenceCard.getByText("본론")).toHaveCount(4);
+  const groupLabels = sentenceCard.getByTestId(
+    "feedback-sentence-group-label",
+  );
+  await expect(groupLabels).toHaveText(["서론", "본론", "결론"]);
+  await expect(sentenceCard.getByText("본론")).toHaveCount(1);
   await expect(sentenceCard.getByText("빈칸")).toHaveCount(0);
   await expect(sentenceCard.getByRole("button")).toBeVisible();
   await sentenceCard.getByRole("button").click();
-  await expect(sentenceCard.getByText("결론")).toBeVisible();
+  await expect(sentenceCard.getByRole("listitem")).toHaveCount(6);
+  await expect(groupLabels).toHaveText(["서론", "본론", "결론"]);
 
   await expect(page.getByTestId("feedback-detail-panel")).toBeVisible();
   await expect(
@@ -392,13 +420,23 @@ test("E-02 long feedback matches the wireframe constraints", async ({
     [
       '[data-testid="feedback-action-retry"]',
       '[data-testid="feedback-action-next"]',
-      '[data-testid="feedback-action-save"]',
+      '[data-testid="feedback-action-pdf"]',
       '[data-testid="feedback-action-compare"]',
     ].join(","),
   );
   await expect(actions).toHaveCount(4);
   await expect(page.getByTestId("feedback-action-retry")).toHaveText(
     "다시 작성",
+  );
+  await expect(page.getByTestId("feedback-action-pdf")).toHaveText("PDF 저장");
+  await expect(page.getByTestId("feedback-action-save")).toHaveCount(0);
+  await expect(page.getByTestId("feedback-header-back-link")).toHaveAttribute(
+    "href",
+    "/library",
+  );
+  await expect(page.getByTestId("feedback-header-back-link")).toHaveAttribute(
+    "aria-label",
+    "내 서재로 돌아가기",
   );
 
   await page.getByTestId("feedback-action-retry").click();
@@ -410,22 +448,33 @@ test("E-02 long feedback matches the wireframe constraints", async ({
     );
   });
   await page.getByRole("tab").nth(1).click();
+  // answer_json(53.v1)이 있으므로 재작성 에디터는 섹션별로 시드된다.
+  await expect(
+    page.locator(".writing-workspace--q53 textarea").nth(0),
+  ).toHaveValue(sections.intro);
   await expect(
     page.locator(".writing-workspace--q53 textarea").nth(1),
-  ).toHaveValue(answerText);
+  ).toHaveValue(sections.body);
 
   expect(errors).toEqual([]);
 });
 
-test("Q54 long feedback keeps intro, body, and conclusion labels with sparse sentence rows", async ({
+test("Q54 long feedback anchors corrections to answer paragraphs and keeps unanchored advice in 전체", async ({
   page,
 }) => {
   const errors = collectErrors(page);
   const { submissionId } = await createCompletedLongFeedbackSubmission({
     questionNo: 54,
+    // q54는 answer_json 없이 문단(빈 줄) 경계로 서론/본론/결론을 앵커한다.
+    answerSections: {
+      intro: "온라인 수업은 시간과 장소의 제약이 적다는 장점이 있습니다.",
+      body: "하지만 집중력이 떨어지기 쉽고 실습 과목에는 한계가 있습니다.",
+      conclusion: "그러므로 상황에 맞게 두 방식을 병행하는 것이 바람직합니다.",
+    },
     sentenceFeedbackTexts: [
-      "서론에 해당하는 첨삭 원문입니다.",
-      "결론에 해당하는 첨삭 원문입니다.",
+      "시간과 장소의 제약이 적다는 장점",
+      "두 방식을 병행하는 것이 바람직합니다",
+      "문단을 나누어 글의 구조를 분명히 하세요.",
     ],
   });
 
@@ -445,9 +494,12 @@ test("Q54 long feedback keeps intro, body, and conclusion labels with sparse sen
   const sentenceItems = sentenceCard.getByRole("listitem");
   await expect(sentenceCard).toBeVisible();
   await expect(sentenceItems).toHaveCount(3);
-  await expect(sentenceItems.nth(0).getByText(/^\uC11C\uB860$/)).toBeVisible();
-  await expect(sentenceItems.nth(1).getByText(/^\uBCF8\uB860$/)).toBeVisible();
-  await expect(sentenceItems.nth(2).getByText(/^\uACB0\uB860$/)).toBeVisible();
+  // \uCCA8\uC0AD\uC774 \uBD99\uC740 \uC139\uC158\uB9CC \uD5E4\uB354\uAC00 \uB098\uD0C0\uB098\uACE0(\uBCF8\uB860 \uCCA8\uC0AD \uC5C6\uC74C \u2192 \uBCF8\uB860 \uD5E4\uB354 \uC5C6\uC74C),
+  // \uB2F5\uC548 \uD14D\uC2A4\uD2B8\uC5D0 \uC575\uCEE4\uB418\uC9C0 \uC54A\uB294 \uBB38\uC11C \uC218\uC900 \uC870\uC5B8\uC740 "\uC804\uCCB4"\uB85C \uD45C\uAE30\uB41C\uB2E4.
+  await expect(
+    sentenceCard.getByTestId("feedback-sentence-group-label"),
+  ).toHaveText(["\uC11C\uB860", "\uACB0\uB860", "\uC804\uCCB4"]);
+  await expect(sentenceCard.getByText(/^\uBCF8\uB860$/)).toHaveCount(0);
 
   expect(errors).toEqual([]);
 });
