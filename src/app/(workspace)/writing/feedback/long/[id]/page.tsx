@@ -7,6 +7,7 @@ import { isSubmissionSavedToLibrary } from "@/lib/library/server";
 import { APP_ROUTES } from "@/lib/routes";
 import {
   getFeedbackBundle,
+  getNextWritingProblemStartHref,
   getSubmission,
   getWritingProblemAvailability,
 } from "@/lib/writing/server";
@@ -38,11 +39,16 @@ export default async function LongFeedbackPage({
   const saveLocked = submission.user_id !== user.id;
   // Fetch the bundle whenever a feedback row may exist (complete/failed/partial)
   // so partial results and failed-with-data render instead of infinite loading.
-  const [bundle, problemAvailability, alreadySaved] = await Promise.all([
-    getFeedbackBundle(id),
-    getWritingProblemAvailability(submission.problem_id),
-    isSubmissionSavedToLibrary(user.id, id),
-  ]);
+  const [bundle, problemAvailability, alreadySaved, nextHref] =
+    await Promise.all([
+      getFeedbackBundle(id),
+      getWritingProblemAvailability(submission.problem_id),
+      isSubmissionSavedToLibrary(user.id, id),
+      getNextWritingProblemStartHref({
+        currentProblemId: submission.problem_id,
+        questionNo: submission.question_no,
+      }),
+    ]);
   return (
     <FeedbackPageContent
       submission={submission}
@@ -55,6 +61,7 @@ export default async function LongFeedbackPage({
       saveLocked={saveLocked}
       alreadySaved={alreadySaved}
       canRetryProblem={problemAvailability.canStart}
+      nextHref={nextHref}
     />
   );
 }
