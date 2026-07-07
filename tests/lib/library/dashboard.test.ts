@@ -488,6 +488,87 @@ describe("buildLibraryDashboardFromRows", () => {
     ]);
   });
 
+  it("keeps full pending and analyzing sync targets separate from the two visible waiting rows", () => {
+    const rows: LibraryDashboardRows = {
+      libraryItems: [
+        libraryItem("pending-1", "s-pending-1"),
+        libraryItem("pending-2", "s-pending-2"),
+        libraryItem("analyzing-3", "s-analyzing-3"),
+        libraryItem("failed", "s-failed"),
+      ],
+      submissions: [
+        submission({
+          id: "s-pending-1",
+          problemId: "p-pending-1",
+          questionNo: 51,
+          charCount: 14,
+          status: "pending",
+          submittedAt: "2026-06-29T13:00:00.000Z",
+        }),
+        submission({
+          id: "s-pending-2",
+          problemId: "p-pending-2",
+          questionNo: 52,
+          charCount: 18,
+          status: "pending",
+          submittedAt: "2026-06-29T12:00:00.000Z",
+        }),
+        submission({
+          id: "s-analyzing-3",
+          problemId: "p-analyzing-3",
+          questionNo: 53,
+          charCount: 220,
+          status: "analyzing",
+          submittedAt: "2026-06-29T11:00:00.000Z",
+        }),
+        submission({
+          id: "s-failed",
+          problemId: "p-failed",
+          questionNo: 54,
+          charCount: 620,
+          status: "failed",
+          submittedAt: "2026-06-29T10:00:00.000Z",
+        }),
+      ],
+      feedback: [feedback("s-failed", "failed")],
+      dimensionScores: [],
+      problems: [
+        problem("p-pending-1", 51, "Pending 1"),
+        problem("p-pending-2", 52, "Pending 2"),
+        problem("p-analyzing-3", 53, "Analyzing 3"),
+        problem("p-failed", 54, "Failed"),
+      ],
+      allSubmissions: [],
+      studyEvents: [],
+    };
+
+    const view = buildLibraryDashboardFromRows(rows);
+
+    expect(view.kpis.feedbackWaitingCount).toBe(4);
+    expect(view.feedbackWaiting).toHaveLength(2);
+    expect(view.feedbackWaiting.map((item) => item.submissionId)).toEqual([
+      "s-pending-1",
+      "s-pending-2",
+    ]);
+    expect(view.feedbackWaitingSyncTargets).toEqual([
+      {
+        itemId: "item-pending-1",
+        submissionId: "s-pending-1",
+        initialStatus: "pending",
+      },
+      {
+        itemId: "item-pending-2",
+        submissionId: "s-pending-2",
+        initialStatus: "pending",
+      },
+      {
+        itemId: "item-analyzing-3",
+        submissionId: "s-analyzing-3",
+        initialStatus: "analyzing",
+      },
+    ]);
+  });
+
   it("removes retry links for saved submissions whose problem is no longer visible to the caller", () => {
     const rows = {
       libraryItems: [

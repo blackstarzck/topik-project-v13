@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, screen, within } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 
 import { LibraryDashboard } from "../../../src/components/library/LibraryDashboard";
 import type { LibraryDashboardView } from "../../../src/lib/library/types";
@@ -65,6 +71,13 @@ const dashboardFixture: LibraryDashboardView = {
       retryHref: "/writing/51?problem=problem-2&fresh=1&retrySubmission=sub-2",
     },
   ],
+  feedbackWaitingSyncTargets: [
+    {
+      itemId: "waiting-1",
+      submissionId: "sub-2",
+      initialStatus: "analyzing",
+    },
+  ],
   weakItems: [
     {
       id: "weak-1",
@@ -92,6 +105,145 @@ const dashboardFixture: LibraryDashboardView = {
   ],
 };
 
+function waitingSyncDashboard(): LibraryDashboardView {
+  return {
+    ...dashboardFixture,
+    kpis: {
+      ...dashboardFixture.kpis,
+      feedbackWaitingCount: 3,
+    },
+    feedbackWaiting: [
+      {
+        id: "waiting-visible-complete",
+        submissionId: "sub-visible-complete",
+        problemId: "problem-visible-complete",
+        questionNo: 53,
+        title: "Visible complete",
+        submittedAt: "2026-06-28T10:00:00.000Z",
+        charCount: 230,
+        status: "analyzing",
+        retryHref:
+          "/writing/long-form-writing-53?problem=problem-visible-complete&fresh=1&retrySubmission=sub-visible-complete",
+      },
+      {
+        id: "waiting-visible-failed",
+        submissionId: "sub-visible-failed",
+        problemId: "problem-visible-failed",
+        questionNo: 52,
+        title: "Visible failed",
+        submittedAt: "2026-06-28T09:00:00.000Z",
+        charCount: 18,
+        status: "pending",
+        retryHref:
+          "/writing/52?problem=problem-visible-failed&fresh=1&retrySubmission=sub-visible-failed",
+      },
+    ],
+    feedbackWaitingSyncTargets: [
+      {
+        itemId: "waiting-visible-complete",
+        submissionId: "sub-visible-complete",
+        initialStatus: "analyzing",
+      },
+      {
+        itemId: "waiting-visible-failed",
+        submissionId: "sub-visible-failed",
+        initialStatus: "pending",
+      },
+      {
+        itemId: "waiting-hidden-complete",
+        submissionId: "sub-hidden-complete",
+        initialStatus: "analyzing",
+      },
+    ],
+  };
+}
+
+function mockEvaluationStatuses(
+  responses: Record<
+    string,
+    { feedbackStatus: string; responseStatus?: number; invalidBody?: boolean }
+  >,
+) {
+  const fetchMock = vi
+    .spyOn(globalThis, "fetch")
+    .mockImplementation(async (input) => {
+      const url = new URL(String(input), "http://localhost");
+      const submissionId = url.searchParams.get("submissionId") ?? "";
+      const response = responses[submissionId];
+      if (!response) {
+        return new Response(JSON.stringify({ feedback_status: "analyzing" }), {
+          status: 200,
+        });
+      }
+      return new Response(
+        response.invalidBody
+          ? "{"
+          : JSON.stringify({ feedback_status: response.feedbackStatus }),
+        {
+          status: response.responseStatus ?? 200,
+        },
+      );
+    });
+  fetchMock.mockClear();
+  return fetchMock;
+}
+
+function mockDeferredEvaluationStatuses(
+  responses: Record<
+    string,
+    { feedbackStatus: string; responseStatus?: number; invalidBody?: boolean }
+  >,
+) {
+  const pending: Array<{
+    submissionId: string;
+    resolve: (response: Response) => void;
+  }> = [];
+  const fetchMock = vi
+    .spyOn(globalThis, "fetch")
+    .mockImplementation((input) => {
+      const url = new URL(String(input), "http://localhost");
+      const submissionId = url.searchParams.get("submissionId") ?? "";
+      return new Promise<Response>((resolve) => {
+        pending.push({ submissionId, resolve });
+      });
+    });
+  fetchMock.mockClear();
+
+  return {
+    fetchMock,
+    pending,
+    resolveAll() {
+      for (const request of pending) {
+        const response = responses[request.submissionId] ?? {
+          feedbackStatus: "analyzing",
+        };
+        request.resolve(
+          new Response(
+            response.invalidBody
+              ? "{"
+              : JSON.stringify({ feedback_status: response.feedbackStatus }),
+            {
+              status: response.responseStatus ?? 200,
+            },
+          ),
+        );
+      }
+    },
+  };
+}
+
+function calledSubmissionIds(
+  fetchMock: ReturnType<typeof mockEvaluationStatuses>,
+) {
+  return fetchMock.mock.calls
+    .map((call) =>
+      new URL(String(call[0]), "http://localhost").searchParams.get(
+        "submissionId",
+      ),
+    )
+    .sort();
+}
+
 beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(new Date("2026-07-04T12:00:00.000Z"));
@@ -113,9 +265,12 @@ describe("LibraryDashboard", () => {
     );
     expect(screen.getByTestId("library-kpi-strip")).toBeTruthy();
     for (const card of screen.getAllByTestId("library-kpi-card")) {
+      const hasRefreshButton = within(card).queryByTestId(
+        "library-kpi-feedbackWaiting-refresh",
+      );
       expect(card.querySelector(".library-kpi-icon")).toBeNull();
       expect(within(card).queryByRole("img", { hidden: true })).toBeNull();
-      expect(card.querySelector("svg")).toBeNull();
+      if (!hasRefreshButton) expect(card.querySelector("svg")).toBeNull();
       expect(within(card).queryByText(/건$/)).toBeNull();
     }
     expect(
@@ -191,6 +346,116 @@ describe("LibraryDashboard", () => {
     expect(timelinePanel).toBeTruthy();
     expect(bottomPanelGrid?.className).toContain("xl:grid-cols-2");
     expect(bottomPanelGrid?.className).not.toContain("xl:grid-cols-3");
+  });
+
+  it("refreshes all feedback waiting sync targets from the top KPI without refreshing the page", async () => {
+    vi.useRealTimers();
+    const fetchMock = mockEvaluationStatuses({
+      "sub-visible-complete": { feedbackStatus: "complete" },
+      "sub-visible-failed": { feedbackStatus: "failed" },
+      "sub-hidden-complete": { feedbackStatus: "complete" },
+    });
+    renderWithIntl(<LibraryDashboard dashboard={waitingSyncDashboard()} />);
+
+    fireEvent.click(screen.getByTestId("library-kpi-feedbackWaiting-refresh"));
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId("library-kpi-card-feedbackWaiting").textContent,
+      ).toContain("1");
+    });
+    expect(calledSubmissionIds(fetchMock)).toEqual([
+      "sub-hidden-complete",
+      "sub-visible-complete",
+      "sub-visible-failed",
+    ]);
+    expect(
+      screen
+        .getByTestId("library-feedback-waiting-panel")
+        .querySelector('a[href="/writing/feedback/long/sub-visible-complete"]'),
+    ).toBeTruthy();
+    expect(screen.getAllByTestId("library-feedback-waiting-row")).toHaveLength(
+      2,
+    );
+    expect(routerRefreshMock).not.toHaveBeenCalled();
+  });
+
+  it("deduplicates near-simultaneous top and bottom refresh clicks", async () => {
+    vi.useRealTimers();
+    const deferred = mockDeferredEvaluationStatuses({
+      "sub-visible-complete": { feedbackStatus: "complete" },
+      "sub-visible-failed": { feedbackStatus: "pending" },
+      "sub-hidden-complete": { feedbackStatus: "complete" },
+    });
+    renderWithIntl(<LibraryDashboard dashboard={waitingSyncDashboard()} />);
+
+    fireEvent.click(screen.getByTestId("library-kpi-feedbackWaiting-refresh"));
+    await waitFor(() => {
+      expect(deferred.pending).toHaveLength(3);
+    });
+
+    fireEvent.click(screen.getByTestId("library-feedback-waiting-refresh"));
+    expect(deferred.pending).toHaveLength(3);
+    expect(calledSubmissionIds(deferred.fetchMock)).toEqual([
+      "sub-hidden-complete",
+      "sub-visible-complete",
+      "sub-visible-failed",
+    ]);
+
+    deferred.resolveAll();
+    await waitFor(() => {
+      expect(
+        screen.getByTestId("library-kpi-card-feedbackWaiting").textContent,
+      ).toContain("1");
+    });
+    expect(routerRefreshMock).not.toHaveBeenCalled();
+  });
+
+  it("keeps the top KPI count in sync when the bottom panel refreshes", async () => {
+    vi.useRealTimers();
+    mockEvaluationStatuses({
+      "sub-visible-complete": { feedbackStatus: "complete" },
+      "sub-visible-failed": { feedbackStatus: "pending" },
+      "sub-hidden-complete": { feedbackStatus: "analyzing" },
+    });
+    renderWithIntl(<LibraryDashboard dashboard={waitingSyncDashboard()} />);
+
+    fireEvent.click(screen.getByTestId("library-feedback-waiting-refresh"));
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId("library-kpi-card-feedbackWaiting").textContent,
+      ).toContain("2");
+    });
+    expect(routerRefreshMock).not.toHaveBeenCalled();
+  });
+
+  it("preserves previous state for partial status check failures", async () => {
+    vi.useRealTimers();
+    mockEvaluationStatuses({
+      "sub-visible-complete": { feedbackStatus: "complete" },
+      "sub-visible-failed": {
+        feedbackStatus: "analyzing",
+        responseStatus: 502,
+      },
+      "sub-hidden-complete": {
+        feedbackStatus: "complete",
+        invalidBody: true,
+      },
+    });
+    renderWithIntl(<LibraryDashboard dashboard={waitingSyncDashboard()} />);
+
+    fireEvent.click(screen.getByTestId("library-kpi-feedbackWaiting-refresh"));
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId("library-feedback-waiting-sync-error"),
+      ).toBeTruthy();
+    });
+    expect(
+      screen.getByTestId("library-kpi-card-feedbackWaiting").textContent,
+    ).toContain("2");
+    expect(routerRefreshMock).not.toHaveBeenCalled();
   });
 
   it("uses AntD Card heads and footer actions for the bottom dashboard panels", () => {

@@ -115,6 +115,19 @@ export type LibraryDashboardFeedbackWaitingStatus =
   | "analyzing"
   | "failed";
 
+export type LibraryFeedbackWaitingSyncedStatus =
+  | LibraryDashboardFeedbackWaitingStatus
+  | "complete";
+
+export type LibraryFeedbackWaitingSyncTarget = {
+  itemId: string;
+  submissionId: string;
+  initialStatus: Extract<
+    LibraryDashboardFeedbackWaitingStatus,
+    "pending" | "analyzing"
+  >;
+};
+
 export type LibraryDashboardTimelineEventType =
   | "submission_submitted"
   | "feedback_viewed"
@@ -177,6 +190,13 @@ export type LibraryFeedbackWaitingItem = {
   retryHref: string | null;
 };
 
+export type LibraryFeedbackWaitingVisibleItem = Omit<
+  LibraryFeedbackWaitingItem,
+  "status"
+> & {
+  status: LibraryFeedbackWaitingSyncedStatus;
+};
+
 export type LibraryWeakItem = LibraryDashboardWeakDimension & {
   id: string;
   submissionId: string;
@@ -200,6 +220,7 @@ export type LibraryDashboardView = {
   kpis: LibraryDashboardKpis;
   reviewCandidates: LibraryReviewCandidate[];
   feedbackWaiting: LibraryFeedbackWaitingItem[];
+  feedbackWaitingSyncTargets: LibraryFeedbackWaitingSyncTarget[];
   weakItems: LibraryWeakItem[];
   timeline: LibraryTimelineItem[];
 };

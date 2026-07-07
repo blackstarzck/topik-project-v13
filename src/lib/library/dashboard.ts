@@ -275,7 +275,7 @@ export function buildLibraryDashboardFromRows(
     .sort(sortCandidates)
     .slice(0, REVIEW_CANDIDATE_LIMIT);
 
-  const feedbackWaiting = feedbackWaitingRows
+  const sortedFeedbackWaiting = feedbackWaitingRows
     .map((row) => ({
       id: row.item.id,
       submissionId: row.submission.id,
@@ -297,8 +297,24 @@ export function buildLibraryDashboardFromRows(
           })
         : null,
     }))
-    .sort((a, b) => compareIsoDesc(a.submittedAt, b.submittedAt))
-    .slice(0, FEEDBACK_WAITING_LIMIT);
+    .sort((a, b) => compareIsoDesc(a.submittedAt, b.submittedAt));
+
+  const feedbackWaiting = sortedFeedbackWaiting.slice(
+    0,
+    FEEDBACK_WAITING_LIMIT,
+  );
+
+  const feedbackWaitingSyncTargets = sortedFeedbackWaiting.flatMap((item) =>
+    isInitialSyncTargetStatus(item.status)
+      ? [
+          {
+            itemId: item.id,
+            submissionId: item.submissionId,
+            initialStatus: item.status,
+          },
+        ]
+      : [],
+  );
 
   const weakItems = buildWeakItems(completeSavedRows);
   const timeline = rows.studyEvents
@@ -351,6 +367,7 @@ export function buildLibraryDashboardFromRows(
     },
     reviewCandidates,
     feedbackWaiting,
+    feedbackWaitingSyncTargets,
     weakItems,
     timeline,
   };
@@ -663,6 +680,12 @@ function feedbackWaitingStatus(
   }
   if (submissionStatus === "analyzing") return "analyzing";
   return "pending";
+}
+
+function isInitialSyncTargetStatus(
+  status: LibraryDashboardFeedbackWaitingStatus,
+): status is "pending" | "analyzing" {
+  return status === "pending" || status === "analyzing";
 }
 
 function lengthTargetStatus(questionNo: number | null, charCount: number) {

@@ -1,15 +1,10 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  cleanup,
-  fireEvent,
-  screen,
-  waitFor,
-  within,
-} from "@testing-library/react";
+import { cleanup, fireEvent, screen, within } from "@testing-library/react";
+import type { ComponentProps } from "react";
 
 import { LibraryFeedbackWaitingPanel } from "../../../src/components/library/LibraryFeedbackWaitingPanel";
-import type { LibraryFeedbackWaitingItem } from "../../../src/lib/library/types";
+import type { LibraryFeedbackWaitingVisibleItem } from "../../../src/lib/library/types";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
 
 const refreshMock = vi.hoisted(() => vi.fn());
@@ -18,7 +13,7 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: refreshMock }),
 }));
 
-const analyzingItem: LibraryFeedbackWaitingItem = {
+const analyzingItem: LibraryFeedbackWaitingVisibleItem = {
   id: "waiting-1",
   submissionId: "submission-1",
   problemId: "problem-1",
@@ -30,13 +25,23 @@ const analyzingItem: LibraryFeedbackWaitingItem = {
   retryHref: null,
 };
 
+function renderPanel(
+  overrides: Partial<ComponentProps<typeof LibraryFeedbackWaitingPanel>> = {},
+) {
+  return renderWithIntl(
+    <LibraryFeedbackWaitingPanel
+      items={[analyzingItem]}
+      canRefresh={true}
+      isRefreshing={false}
+      onRefresh={vi.fn()}
+      syncErrorIds={new Set()}
+      {...overrides}
+    />,
+  );
+}
+
 beforeEach(() => {
   refreshMock.mockReset();
-  vi.spyOn(globalThis, "fetch").mockResolvedValue(
-    new Response(JSON.stringify({ feedback_status: "analyzing" }), {
-      status: 200,
-    }),
-  );
 });
 
 afterEach(() => {
@@ -45,57 +50,33 @@ afterEach(() => {
 });
 
 describe("LibraryFeedbackWaitingPanel", () => {
-  it("keeps completed submissions visible with a feedback link after status sync", async () => {
-    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
-      new Response(JSON.stringify({ feedback_status: "complete" }), {
-        status: 200,
-      }),
-    );
-    renderWithIntl(<LibraryFeedbackWaitingPanel items={[analyzingItem]} />);
-
-    fireEvent.click(screen.getByTestId("library-feedback-waiting-refresh"));
-
-    await waitFor(() => {
-      expect(screen.getByText("피드백 완료")).toBeTruthy();
+  it("keeps completed submissions visible with a feedback link", () => {
+    renderPanel({
+      items: [{ ...analyzingItem, status: "complete" }],
+      canRefresh: false,
     });
+
     expect(screen.getByTestId("library-feedback-waiting-row")).toBeTruthy();
     expect(
       screen.getByRole("link", { name: "피드백 보기" }).getAttribute("href"),
     ).toBe("/writing/feedback/long/submission-1");
-    expect(fetchMock).toHaveBeenCalledWith(
-      "/api/writing/evaluation-status?submissionId=submission-1",
-      { cache: "no-store" },
-    );
     expect(refreshMock).not.toHaveBeenCalled();
   });
 
-  it("keeps the row and marks a transient check error when status sync fails", async () => {
-    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({
-          feedback_status: "analyzing",
-          error: "status_check_failed",
-        }),
-        { status: 502 },
-      ),
-    );
-    renderWithIntl(<LibraryFeedbackWaitingPanel items={[analyzingItem]} />);
-
-    fireEvent.click(screen.getByTestId("library-feedback-waiting-refresh"));
-
-    await waitFor(() => {
-      expect(
-        screen.getByTestId("library-feedback-waiting-sync-error"),
-      ).toBeTruthy();
+  it("keeps the row and marks a transient check error", () => {
+    renderPanel({
+      syncErrorIds: new Set([analyzingItem.id]),
     });
-    expect(screen.getByTestId("library-feedback-waiting-row")).toBeTruthy();
+
     expect(
-      screen.queryByTestId("library-feedback-waiting-spinner"),
-    ).toBeNull();
+      screen.getByTestId("library-feedback-waiting-sync-error"),
+    ).toBeTruthy();
+    expect(screen.getByTestId("library-feedback-waiting-row")).toBeTruthy();
+    expect(screen.queryByTestId("library-feedback-waiting-spinner")).toBeNull();
   });
 
   it("renders analyzing rows with a loading spinner instead of a status tag", () => {
-    renderWithIntl(<LibraryFeedbackWaitingPanel items={[analyzingItem]} />);
+    renderPanel();
 
     const panel = screen.getByTestId("library-feedback-waiting-panel");
     const statusActions = within(panel).getByTestId(
@@ -110,7 +91,7 @@ describe("LibraryFeedbackWaitingPanel", () => {
   });
 
   it("uses compact metadata and the review-candidate question number badge", () => {
-    renderWithIntl(<LibraryFeedbackWaitingPanel items={[analyzingItem]} />);
+    renderPanel();
 
     const panel = screen.getByTestId("library-feedback-waiting-panel");
     const row = within(panel).getByTestId("library-feedback-waiting-row");
@@ -134,5 +115,23 @@ describe("LibraryFeedbackWaitingPanel", () => {
       "library-review-candidate-question-number",
     );
     expect(questionNumber?.className).toContain("writing-question-number--q53");
+  });
+
+  it("delegates refresh clicks to the parent handler", () => {
+    const onRefresh = vi.fn();
+    renderPanel({ onRefresh });
+
+    fireEvent.click(screen.getByTestId("library-feedback-waiting-refresh"));
+
+    expect(onRefresh).toHaveBeenCalledTimes(1);
+  });
+
+  it("disables refresh while parent refresh is running", () => {
+    const onRefresh = vi.fn();
+    renderPanel({ isRefreshing: true, onRefresh });
+
+    fireEvent.click(screen.getByTestId("library-feedback-waiting-refresh"));
+
+    expect(onRefresh).not.toHaveBeenCalled();
   });
 });

@@ -96,7 +96,7 @@ async function createLibraryDashboardFixture() {
     savedProblemLibraryId,
   ];
   const studyEventIds = [randomUUID(), randomUUID()];
-  const now = Date.now();
+  const now = Date.now() - 15_000;
   const completeRows = completeSubmissionIds.map((id, index) => {
     const answerText =
       questionNo >= 53
@@ -265,6 +265,7 @@ async function createLibraryDashboardFixture() {
   createdStudyEventIds.push(...studyEventIds);
 
   return {
+    analyzingSubmissionId,
     marker,
     questionNo,
     problemTitle: problemTitle ?? `${questionNo}번 문제`,
@@ -490,10 +491,61 @@ test("F-01 library dashboard renders study action sections", async ({
       .getByTestId("library-feedback-waiting-panel")
       .getByRole("button", { name: "분석 완료 여부 새로고침" }),
   ).toBeVisible();
+  await expect(
+    page.getByTestId("library-kpi-feedbackWaiting-refresh"),
+  ).toBeVisible();
+  await expect(
+    page.getByTestId("library-feedback-waiting-spinner"),
+  ).toBeVisible();
+  await page.route("**/api/writing/evaluation-status?**", async (route) => {
+    const url = new URL(route.request().url());
+    expect(url.searchParams.get("submissionId")).toBe(
+      fixture.analyzingSubmissionId,
+    );
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ feedback_status: "complete" }),
+    });
+  });
+  const documentRequests: string[] = [];
+  page.on("request", (request) => {
+    if (
+      request.resourceType() === "document" &&
+      request.url().includes("/library")
+    ) {
+      documentRequests.push(request.url());
+    }
+  });
+  await page.evaluate(() => {
+    (
+      window as Window & { __libraryReloadSentinel?: string }
+    ).__libraryReloadSentinel = "library-refresh-kept";
+  });
+  await page.getByTestId("library-kpi-feedbackWaiting-refresh").click();
+  await expect(
+    page.getByTestId("library-kpi-card-feedbackWaiting"),
+  ).toContainText("1");
+  await expect(
+    page
+      .getByTestId("library-feedback-waiting-panel")
+      .locator(
+        `a[href*="/writing/feedback/"][href$="${fixture.analyzingSubmissionId}"]`,
+      ),
+  ).toBeVisible();
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          (window as Window & { __libraryReloadSentinel?: string })
+            .__libraryReloadSentinel,
+      ),
+    )
+    .toBe("library-refresh-kept");
+  expect(documentRequests).toEqual([]);
   await expect(page.getByText("분석 실패").first()).toBeVisible();
   await expect(
-    page.getByTestId("library-feedback-waiting-spinner").first(),
-  ).toBeVisible();
+    page.getByTestId("library-feedback-waiting-spinner"),
+  ).toHaveCount(0);
   await expect(page.getByTestId("library-weak-items-panel")).toHaveCount(0);
   await expect(page.getByTestId("library-timeline-panel")).toBeVisible();
   await expect(
@@ -564,10 +616,9 @@ test("F-01 library problems filter panel, sort, and view toggle", async ({
     await expect(aside.getByTestId("library-problems-filter-reset")).toHaveText(
       "",
     );
-    await expect(aside.getByTestId("library-problems-filter-reset")).toHaveAttribute(
-      "aria-label",
-      "필터 초기화",
-    );
+    await expect(
+      aside.getByTestId("library-problems-filter-reset"),
+    ).toHaveAttribute("aria-label", "필터 초기화");
     const filterResetButtonRightInset = await aside.evaluate((node) => {
       const resetButton = node.querySelector(
         '[data-testid="library-problems-filter-reset"]',
@@ -635,8 +686,8 @@ test("F-01 library problems filter panel, sort, and view toggle", async ({
         datePresetGroupRowGap: datePresetGroupStyle.rowGap,
         datePresetOptionGap:
           window.getComputedStyle(datePresetOption).columnGap,
-        datePresetOptionFontSize:
-          window.getComputedStyle(datePresetOptionLabel).fontSize,
+        datePresetOptionFontSize: window.getComputedStyle(datePresetOptionLabel)
+          .fontSize,
         dateRangePaddingLeft: dateRangeStyle.paddingLeft,
         dateRangePaddingRight: dateRangeStyle.paddingRight,
         datePickerLeftInset: datePickerRect.left - asideRect.left,
@@ -793,9 +844,7 @@ test("F-01 library problems filter panel, sort, and view toggle", async ({
       await expect(drawerPanel).toBeVisible({ timeout: 2_500 });
     }).toPass({ timeout: 8_000 });
 
-    await expect(
-      drawerPanel,
-    ).toBeVisible();
+    await expect(drawerPanel).toBeVisible();
     await drawer.getByTestId("library-problems-filter-kind-problem").click();
     await drawer.getByTestId("library-problems-filter-drawer-apply").click();
     await expect(
