@@ -79,9 +79,30 @@ export type InstitutionInvitationResponse = {
 
 export type InstitutionInvitationErrorKind =
   | "alreadyResponded"
+  | "alreadyAffiliatedOther"
   | "canceled"
+  | "invalid"
   | "unauthenticated"
   | "failed";
+
+type AcceptAffiliationInviteRpcStatus =
+  | "accepted"
+  | "invalid"
+  | "already_affiliated_same"
+  | "already_affiliated_other"
+  | "profile_not_found"
+  | "failed";
+
+const ACCEPT_AFFILIATION_INVITE_STATUSES = new Set<
+  AcceptAffiliationInviteRpcStatus
+>([
+  "accepted",
+  "invalid",
+  "already_affiliated_same",
+  "already_affiliated_other",
+  "profile_not_found",
+  "failed",
+]);
 
 const INSTITUTION_INVITATION_KEY = "institution_invitation";
 const UUID_PATTERN =
@@ -204,14 +225,20 @@ export function resolveNotificationAction(
   return destination ? { kind: "route", href: destination } : { kind: "none" };
 }
 
-function normalizeRpcStatus(
-  status: unknown,
-): InstitutionInvitationResponseStatus | null {
-  return status === "accepted" ||
-    status === "declined" ||
-    status === "canceled"
-    ? status
-    : null;
+function normalizeAcceptAffiliationInviteStatus(
+  data: unknown,
+): AcceptAffiliationInviteRpcStatus {
+  if (
+    isRecord(data) &&
+    typeof data.status === "string" &&
+    ACCEPT_AFFILIATION_INVITE_STATUSES.has(
+      data.status as AcceptAffiliationInviteRpcStatus,
+    )
+  ) {
+    return data.status as AcceptAffiliationInviteRpcStatus;
+  }
+
+  return "failed";
 }
 
 export function mapInstitutionInvitationError(
@@ -229,6 +256,15 @@ export function mapInstitutionInvitationError(
     return "canceled";
   }
   if (normalized.includes("already responded")) return "alreadyResponded";
+  if (normalized.includes("already affiliated")) {
+    return "alreadyAffiliatedOther";
+  }
+  if (
+    normalized.includes("invalid") ||
+    normalized.includes("profile_not_found")
+  ) {
+    return "invalid";
+  }
   if (
     normalized.includes("unauthenticated") ||
     normalized.includes("jwt") ||
@@ -241,29 +277,47 @@ export function mapInstitutionInvitationError(
 }
 
 export async function respondInstitutionInvitation(
-  invitationId: string,
+  invitation: InstitutionInvitationPayload,
   accept: boolean,
 ): Promise<InstitutionInvitationResponse> {
+  if (!accept) {
+    return {
+      status: "declined",
+      code: invitation.code,
+      code_label: invitation.codeLabel,
+    };
+  }
+
+  if (!invitation.code) {
+    throw new Error("invalid institution invitation");
+  }
+
   const supabase = createSupabaseBrowserClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const res = (await (supabase as any).rpc("respond_institution_invitation", {
-    p_invitation_id: invitationId,
-    p_accept: accept,
+  const res = (await supabase.rpc("accept_affiliation_invite", {
+    p_code: invitation.code,
+    p_confirmed: true,
   })) as {
-    data: InstitutionInvitationResponse | null;
+    data: unknown;
     error: { message: string } | null;
   };
   if (res.error) throw new Error(res.error.message);
 
-  const status = normalizeRpcStatus(res.data?.status);
-  if (!res.data || !status) {
-    throw new Error("unexpected institution invitation response");
+  const status = normalizeAcceptAffiliationInviteStatus(res.data);
+  if (status === "accepted" || status === "already_affiliated_same") {
+    return {
+      status: "accepted",
+      code: invitation.code,
+      code_label: invitation.codeLabel,
+    };
+  }
+  if (status === "already_affiliated_other") {
+    throw new Error("already affiliated with another institution");
+  }
+  if (status === "invalid" || status === "profile_not_found") {
+    throw new Error("invalid institution invitation");
   }
 
-  return {
-    ...res.data,
-    status,
-  };
+  throw new Error("institution invitation failed");
 }
 
 export async function fetchUnreadNotificationCount(

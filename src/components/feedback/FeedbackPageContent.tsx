@@ -38,6 +38,7 @@ type Props = {
   saveLocked?: boolean;
   alreadySaved?: boolean;
   canRetryProblem?: boolean;
+  nextHref?: string;
 };
 
 export function FeedbackPageContent({
@@ -53,6 +54,7 @@ export function FeedbackPageContent({
   saveLocked = false,
   alreadySaved = false,
   canRetryProblem = true,
+  nextHref = APP_ROUTES.practiceProblems,
 }: Props) {
   const t = useTranslations("feedback.page");
   const tActions = useTranslations("feedback.actions");
@@ -135,7 +137,7 @@ export function FeedbackPageContent({
               submissionId={submission.id}
               userId={userId}
               retryHref={retryHref}
-              nextHref="/practice/next"
+              nextHref={nextHref}
               withPdf
               retryLabel={resolvedRetryLabel}
               saveLocked={saveLocked}
@@ -227,7 +229,7 @@ export function FeedbackPageContent({
             submissionId={submission.id}
             userId={userId}
             retryHref={retryHref}
-            nextHref="/practice/next"
+            nextHref={nextHref}
             withPdf
             retryLabel={resolvedRetryLabel}
             saveLocked={saveLocked}

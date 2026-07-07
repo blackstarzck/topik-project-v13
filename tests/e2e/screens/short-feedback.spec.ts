@@ -335,3 +335,27 @@ test("E-01 short feedback matches the wireframe constraints", async ({
 
   expect(errors).toEqual([]);
 });
+
+test("E-01 short feedback next action starts a fresh direct writing attempt", async ({
+  page,
+}) => {
+  const errors = collectErrors(page);
+  const submissionId = await createCompletedShortFeedbackSubmission();
+
+  await page.goto(`/writing/feedback/short/${submissionId}`, {
+    waitUntil: "networkidle",
+  });
+
+  await page.getByTestId("feedback-action-next").click();
+  await page.waitForURL((url) => {
+    return (
+      url.pathname === "/writing/short-answer-writing-51" &&
+      Boolean(url.searchParams.get("problem")) &&
+      url.searchParams.get("fresh") === "1" &&
+      url.searchParams.get("retrySubmission") === null
+    );
+  });
+  expect(page.url()).not.toContain("/practice/next");
+
+  expect(errors).toEqual([]);
+});

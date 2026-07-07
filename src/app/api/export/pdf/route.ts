@@ -179,6 +179,10 @@ export async function POST(request: NextRequest) {
       .insert({
         user_id: user.id,
         event_type: "export_downloaded",
+        submission_id:
+          exportRequest.sourceType === "submission"
+            ? exportRequest.sourceId
+            : null,
         payload: {
           source_type: exportRequest.sourceType,
           source_id:

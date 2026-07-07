@@ -271,4 +271,45 @@ describe("POST /api/export/pdf", () => {
       "server_render_failed",
     );
   });
+
+  it("logs submission export downloads with the submission_id column", async () => {
+    const studyEventInsert = vi.fn().mockResolvedValue({ error: null });
+    helpers.fromMock.mockImplementation((table: string) => {
+      if (table === "export_files") {
+        return {
+          insert: vi.fn(() => ({
+            select: vi.fn(() => ({
+              single: vi.fn().mockResolvedValue({
+                data: { id: "00000000-0000-0000-0000-000000000111" },
+                error: null,
+              }),
+            })),
+          })),
+          update: vi.fn(() => ({
+            eq: vi.fn().mockResolvedValue({ error: null }),
+          })),
+        };
+      }
+
+      if (table === "study_events") {
+        return {
+          insert: studyEventInsert,
+        };
+      }
+
+      return {
+        insert: vi.fn().mockResolvedValue({ error: null }),
+      };
+    });
+
+    const response = await postPdf();
+
+    expect(response.status).toBe(200);
+    expect(studyEventInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event_type: "export_downloaded",
+        submission_id: validRequestBody.sourceId,
+      }),
+    );
+  });
 });

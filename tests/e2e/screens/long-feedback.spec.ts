@@ -134,8 +134,7 @@ async function createCompletedLongFeedbackSubmission({
     problem_id: problem.data.id,
     question_no: questionNo,
     answer_text: answerText,
-    answer_json:
-      questionNo === 53 ? { _v: "53.v1", sections } : null,
+    answer_json: questionNo === 53 ? { _v: "53.v1", sections } : null,
     char_count: answerText.length,
     feedback_status: "complete",
   });
@@ -360,9 +359,7 @@ test("E-02 long feedback matches the wireframe constraints", async ({
   // 첨삭 6개 중 5개만 먼저 노출(wireframe: 5개 후 더보기). 그룹 헤더는
   // 섹션당 1번만 나타난다 — 본론 첨삭이 3개여도 "본론" 헤더는 1개다.
   await expect(sentenceCard.getByRole("listitem")).toHaveCount(5);
-  const groupLabels = sentenceCard.getByTestId(
-    "feedback-sentence-group-label",
-  );
+  const groupLabels = sentenceCard.getByTestId("feedback-sentence-group-label");
   await expect(groupLabels).toHaveText(["서론", "본론", "결론"]);
   await expect(sentenceCard.getByText("본론")).toHaveCount(1);
   await expect(sentenceCard.getByText("빈칸")).toHaveCount(0);
@@ -455,6 +452,30 @@ test("E-02 long feedback matches the wireframe constraints", async ({
   await expect(
     page.locator(".writing-workspace--q53 textarea").nth(1),
   ).toHaveValue(sections.body);
+
+  expect(errors).toEqual([]);
+});
+
+test("E-02 long feedback next action starts a fresh direct writing attempt", async ({
+  page,
+}) => {
+  const errors = collectErrors(page);
+  const { submissionId } = await createCompletedLongFeedbackSubmission();
+
+  await page.goto(`/writing/feedback/long/${submissionId}`, {
+    waitUntil: "networkidle",
+  });
+
+  await page.getByTestId("feedback-action-next").click();
+  await page.waitForURL((url) => {
+    return (
+      url.pathname === "/writing/long-form-writing-53" &&
+      Boolean(url.searchParams.get("problem")) &&
+      url.searchParams.get("fresh") === "1" &&
+      url.searchParams.get("retrySubmission") === null
+    );
+  });
+  expect(page.url()).not.toContain("/practice/next");
 
   expect(errors).toEqual([]);
 });

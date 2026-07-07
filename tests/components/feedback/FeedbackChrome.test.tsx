@@ -660,6 +660,34 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
     expect(screen.getAllByTestId("feedback-actions")).toHaveLength(1);
   });
 
+  it("navigates the short feedback next action to the provided fresh problem URL", () => {
+    const bundle: FeedbackBundle = {
+      feedback: feedback({ raw_ai_result: {} }),
+      dimensions: [],
+      sentences: [],
+    };
+    const nextHref = "/writing/answer-writing-51?problem=next-problem&fresh=1";
+
+    renderWithIntl(
+      <FeedbackPageContent
+        submission={submission({ question_no: 51 })}
+        bundle={bundle}
+        withSentences
+        showDetailPanel={false}
+        dimensionCardLimit={4}
+        reloadHref="/writing/feedback/short/sub-1"
+        userId="user-1"
+        nextHref={nextHref}
+      />,
+    );
+
+    fireEvent.click(screen.getByTestId("feedback-action-next"));
+
+    expect(routerPushMock).toHaveBeenCalledWith(nextHref);
+    expect(routerPushMock).not.toHaveBeenCalledWith("/practice/next");
+    expect(nextHref).not.toContain("retrySubmission");
+  });
+
   it("renders the short feedback summary with score and submission metadata", () => {
     const bundle: FeedbackBundle = {
       feedback: feedback({
@@ -743,6 +771,32 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
     expect(screen.getAllByTestId("feedback-actions")).toHaveLength(1);
   });
 
+  it("uses the provided next href for the non-sticky bottom action group", () => {
+    const bundle: FeedbackBundle = {
+      feedback: feedback({ raw_ai_result: {} }),
+      dimensions: [],
+      sentences: [],
+    };
+    const nextHref = "/writing/essay-writing-54?problem=next-problem&fresh=1";
+
+    renderWithIntl(
+      <FeedbackPageContent
+        submission={submission({ question_no: 54 })}
+        bundle={bundle}
+        withSentences={false}
+        reloadHref="/writing/feedback/long/sub-1"
+        userId="user-1"
+        nextHref={nextHref}
+      />,
+    );
+
+    fireEvent.click(screen.getByTestId("feedback-action-next"));
+
+    expect(routerPushMock).toHaveBeenCalledWith(nextHref);
+    expect(routerPushMock).not.toHaveBeenCalledWith("/practice/next");
+    expect(nextHref).not.toContain("retrySubmission");
+  });
+
   it("renders long feedback with the short-feedback overview section order", () => {
     const bundle: FeedbackBundle = {
       feedback: feedback({ raw_ai_result: {} }),
@@ -797,7 +851,8 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
       <FeedbackPageContent
         submission={submission({
           question_no: 53,
-          answer_text: "서론 문장입니다.\n\n본론 문장입니다.\n\n결론 문장입니다.",
+          answer_text:
+            "서론 문장입니다.\n\n본론 문장입니다.\n\n결론 문장입니다.",
           answer_json: {
             _v: "53.v1",
             sections: {
@@ -856,7 +911,9 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
         }),
       );
     });
-    expect(screen.queryByRole("menuitem", { name: "보관함에 저장됨" })).toBeNull();
+    expect(
+      screen.queryByRole("menuitem", { name: "보관함에 저장됨" }),
+    ).toBeNull();
     expect(screen.queryByRole("menuitem", { name: "보관함 저장" })).toBeNull();
   });
 
@@ -1278,9 +1335,7 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
 
     expect(explanation.className).not.toMatch(/\bline-clamp-\d+\b/);
     expect(explanation.className).not.toContain("truncate");
-    expect(explanation.getAttribute("style") ?? "").not.toContain(
-      "line-clamp",
-    );
+    expect(explanation.getAttribute("style") ?? "").not.toContain("line-clamp");
   });
 
   it("renders the short report KPI content without an outer overview wrapper", () => {

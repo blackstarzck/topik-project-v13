@@ -1,11 +1,20 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   mapInstitutionInvitationError,
+  respondInstitutionInvitation,
   resolveNotificationAction,
   resolveNotificationDestination,
   type UserNotification,
 } from "../../../src/components/notifications/notifications-data";
+
+const rpcMock = vi.hoisted(() => vi.fn());
+
+vi.mock("../../../src/lib/supabase/browser", () => ({
+  createSupabaseBrowserClient: () => ({
+    rpc: rpcMock,
+  }),
+}));
 
 const baseNotification = {
   id: "notification-1",
@@ -17,6 +26,10 @@ const baseNotification = {
   read_at: null,
   created_at: "2026-06-22T09:00:00.000Z",
 } satisfies UserNotification;
+
+beforeEach(() => {
+  rpcMock.mockReset();
+});
 
 describe("resolveNotificationDestination", () => {
   it("uses the notification route path before the legacy link url", () => {
@@ -156,5 +169,76 @@ describe("mapInstitutionInvitationError", () => {
         new Error("forbidden: not invitation owner"),
       ),
     ).toBe("failed");
+    expect(
+      mapInstitutionInvitationError(
+        new Error("already affiliated with another institution"),
+      ),
+    ).toBe("alreadyAffiliatedOther");
+  });
+});
+
+describe("respondInstitutionInvitation", () => {
+  it("accepts an invitation through the existing affiliation invite RPC", async () => {
+    rpcMock.mockResolvedValue({
+      data: { status: "accepted" },
+      error: null,
+    });
+
+    await expect(
+      respondInstitutionInvitation(
+        {
+          invitationId: "2a2ff7b8-cc31-4f4d-a455-283aaad28f30",
+          code: "CAMPAIGN-01",
+          codeLabel: "Campaign",
+        },
+        true,
+      ),
+    ).resolves.toEqual({
+      status: "accepted",
+      code: "CAMPAIGN-01",
+      code_label: "Campaign",
+    });
+
+    expect(rpcMock).toHaveBeenCalledWith("accept_affiliation_invite", {
+      p_code: "CAMPAIGN-01",
+      p_confirmed: true,
+    });
+  });
+
+  it("declines locally because the current DB contract has no decline RPC", async () => {
+    await expect(
+      respondInstitutionInvitation(
+        {
+          invitationId: "2a2ff7b8-cc31-4f4d-a455-283aaad28f30",
+          code: "CAMPAIGN-01",
+          codeLabel: "Campaign",
+        },
+        false,
+      ),
+    ).resolves.toEqual({
+      status: "declined",
+      code: "CAMPAIGN-01",
+      code_label: "Campaign",
+    });
+
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it("maps an existing different affiliation to a handled modal error", async () => {
+    rpcMock.mockResolvedValue({
+      data: { status: "already_affiliated_other" },
+      error: null,
+    });
+
+    await expect(
+      respondInstitutionInvitation(
+        {
+          invitationId: "2a2ff7b8-cc31-4f4d-a455-283aaad28f30",
+          code: "CAMPAIGN-01",
+          codeLabel: "Campaign",
+        },
+        true,
+      ),
+    ).rejects.toThrow(/already affiliated/);
   });
 });

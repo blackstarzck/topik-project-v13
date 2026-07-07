@@ -217,7 +217,10 @@ describe("NotificationBell", () => {
 
     await waitFor(() => {
       expect(respondInstitutionInvitationMock).toHaveBeenCalledWith(
-        "2a2ff7b8-cc31-4f4d-a455-283aaad28f30",
+        expect.objectContaining({
+          invitationId: "2a2ff7b8-cc31-4f4d-a455-283aaad28f30",
+          code: "CAMPAIGN-01",
+        }),
         true,
       );
     });
@@ -245,19 +248,21 @@ describe("NotificationBell", () => {
 
     await waitFor(() => {
       expect(respondInstitutionInvitationMock).toHaveBeenCalledWith(
-        "2a2ff7b8-cc31-4f4d-a455-283aaad28f30",
+        expect.objectContaining({
+          invitationId: "2a2ff7b8-cc31-4f4d-a455-283aaad28f30",
+          code: "CAMPAIGN-01",
+        }),
         false,
       );
     });
     expect(routerRefreshMock).not.toHaveBeenCalled();
   });
 
-  it("disables invitation actions when the payload has no usable invitation id", async () => {
+  it("disables invitation acceptance when the payload has no usable code", async () => {
     fetchNotificationsMock.mockResolvedValue([
       makeInstitutionInvitationNotification({
         payload: {
           kind: "institution_invitation",
-          code: "CAMPAIGN-01",
           code_label: "캠페인 유입 유저",
         },
       }),

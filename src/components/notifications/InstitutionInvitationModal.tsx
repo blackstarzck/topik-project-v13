@@ -52,7 +52,6 @@ export function InstitutionInvitationModal({
 
   const code = invitation?.code ?? t("unknownCode");
   const codeLabel = invitation?.codeLabel ?? t("unknownLabel");
-  const invitationId = invitation?.invitationId ?? null;
   const currentAffiliation = affiliationCode?.trim() ?? "";
   const invitedAffiliation = invitation?.code?.trim() ?? "";
   const replacesAffiliation = Boolean(
@@ -61,7 +60,7 @@ export function InstitutionInvitationModal({
       currentAffiliation !== invitedAffiliation,
   );
   const actionsDisabled =
-    !invitationId || submitting !== null || resolvedStatuses.has(status);
+    !invitedAffiliation || submitting !== null || resolvedStatuses.has(status);
 
   return (
     <AppModal
@@ -97,7 +96,7 @@ export function InstitutionInvitationModal({
           <Text strong>{codeLabel}</Text>
           <Text code>{code}</Text>
         </div>
-        {!invitationId ? (
+        {!invitedAffiliation ? (
           <Alert type="error" showIcon title={t("invalid")} />
         ) : null}
         {replacesAffiliation ? (

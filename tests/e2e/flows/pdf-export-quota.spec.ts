@@ -41,6 +41,8 @@ function loadEnvLocal() {
 loadEnvLocal();
 
 const EMAIL = process.env.E2E_STUDENT_EMAIL ?? "student@audit.local";
+const PASSWORD =
+  process.env.E2E_STUDENT_PASSWORD ?? process.env.SUPABASE_TEST_PASSWORD ?? "";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SERVICE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
@@ -51,6 +53,8 @@ const createdExportIds: string[] = [];
 const createdStoragePaths: string[] = [];
 const createdQuotaTargets: Array<{ userId: string; problemId: string }> = [];
 
+test.use({ storageState: { cookies: [], origins: [] } });
+
 function serviceClient() {
   if (!SUPABASE_URL || !SERVICE_KEY) {
     throw new Error("Missing Supabase service credentials for PDF quota e2e");
@@ -58,6 +62,37 @@ function serviceClient() {
   return createClient(SUPABASE_URL, SERVICE_KEY, {
     auth: { persistSession: false },
   });
+}
+
+async function loginStudent(page: Page) {
+  expect(
+    PASSWORD,
+    "E2E_STUDENT_PASSWORD or SUPABASE_TEST_PASSWORD must be set for PDF quota e2e",
+  ).not.toBe("");
+
+  await page.goto("/login", { waitUntil: "networkidle" });
+  await page.locator('input[autocomplete="email"]').fill(EMAIL);
+  await page.locator('input[autocomplete="current-password"]').fill(PASSWORD);
+  await page.locator('button[type="submit"]').click();
+  await page.waitForURL(
+    /\/(dashboard|auth\/consent|onboarding\/learning-goal)/,
+    { timeout: 15_000 },
+  );
+  await page.waitForLoadState("networkidle");
+
+  if (new URL(page.url()).pathname === "/auth/consent") {
+    await page.locator('input[name="accept"]').check({ force: true });
+    await page.locator('form button[type="submit"]').click();
+  }
+
+  await page
+    .waitForURL(/\/onboarding\/learning-goal/, { timeout: 5_000 })
+    .catch(() => undefined);
+  if (new URL(page.url()).pathname === "/onboarding/learning-goal") {
+    await page.locator('form button[type="submit"]').click();
+  }
+
+  await page.waitForURL("**/dashboard", { timeout: 15_000 });
 }
 
 async function quotaSchemaAvailable() {
@@ -172,6 +207,44 @@ async function seedUserResetTarget(input: {
   createdResetIds.push(reset.data.id);
 }
 
+async function clearPdfQuotaFixtureState(input: {
+  userId: string;
+  problemId: string;
+}) {
+  const sb = serviceClient();
+  const resets = await sb
+    .from("pdf_export_quota_resets")
+    .select("id")
+    .eq("problem_id", input.problemId)
+    .eq("reason", "e2e pdf quota reset");
+  if (resets.error) throw resets.error;
+
+  const resetIds =
+    resets.data?.map((reset) => reset.id).filter((id): id is string => !!id) ??
+    [];
+
+  if (resetIds.length > 0) {
+    const targetDelete = await sb
+      .from("pdf_export_quota_reset_targets")
+      .delete()
+      .in("reset_id", resetIds);
+    if (targetDelete.error) throw targetDelete.error;
+
+    const resetDelete = await sb
+      .from("pdf_export_quota_resets")
+      .delete()
+      .in("id", resetIds);
+    if (resetDelete.error) throw resetDelete.error;
+  }
+
+  const usageDelete = await sb
+    .from("pdf_export_quota_usages")
+    .delete()
+    .eq("user_id", input.userId)
+    .eq("problem_id", input.problemId);
+  if (usageDelete.error) throw usageDelete.error;
+}
+
 async function stubStorageDownloadAndPrintEndpoint(page: Page) {
   let printEndpointCalls = 0;
 
@@ -245,6 +318,16 @@ async function closeNotifications(page: Page) {
       });
     })
     .catch(() => undefined);
+  await page
+    .locator(".ant-notification-notice")
+    .evaluateAll((elements) => {
+      elements.forEach((element) => {
+        if (element instanceof HTMLElement) {
+          element.style.pointerEvents = "none";
+        }
+      });
+    })
+    .catch(() => undefined);
 }
 
 test.afterAll(async () => {
@@ -311,14 +394,16 @@ test("feedback PDF quota warning UI does not invoke print fallback", async ({
   const pdfNetwork = await stubStorageDownloadAndPrintEndpoint(page);
   const pdfApi = await stubPdfExportQuotaSequence(page);
 
+  await loginStudent(page);
   await page.goto(`/writing/feedback/short/${submission.submissionId}`, {
-    waitUntil: "domcontentloaded",
+    waitUntil: "networkidle",
   });
   await expect(page).not.toHaveURL(/\/login/);
 
   const pdfButton = page.getByTestId("feedback-action-pdf");
   await expect(pdfButton).toBeVisible();
   for (let i = 0; i < 3; i += 1) {
+    await closeNotifications(page);
     await expect(pdfButton).toBeEnabled();
     const responsePromise = page.waitForResponse(
       (response) =>
@@ -377,17 +462,20 @@ test("feedback PDF export quota warning does not invoke print fallback", async (
     };
   });
   const submission = await createCompletedFeedbackSubmission();
+  await clearPdfQuotaFixtureState(submission);
   await seedUserResetTarget(submission);
   const pdfNetwork = await stubStorageDownloadAndPrintEndpoint(page);
 
+  await loginStudent(page);
   await page.goto(`/writing/feedback/short/${submission.submissionId}`, {
-    waitUntil: "domcontentloaded",
+    waitUntil: "networkidle",
   });
   await expect(page).not.toHaveURL(/\/login/);
 
   const pdfButton = page.getByTestId("feedback-action-pdf");
   await expect(pdfButton).toBeVisible();
   for (let i = 0; i < 3; i += 1) {
+    await closeNotifications(page);
     await expect(pdfButton).toBeEnabled();
     const responsePromise = page.waitForResponse(
       (response) =>
@@ -417,10 +505,10 @@ test("feedback PDF export quota warning does not invoke print fallback", async (
   const response = await blockedResponse;
   expect(response.status()).toBe(429);
   await expect(
-    page.getByText("PDF 내보내기 횟수를 모두 사용했어요"),
+    page.getByText(koMessages.feedback.actions.pdfQuotaExceededTitle),
   ).toBeVisible();
   await expect(
-    page.getByText("이 문제는 이번 기간 3회까지 PDF로 내보낼 수 있어요."),
+    page.getByText(koMessages.feedback.actions.pdfQuotaExceededDescription),
   ).toBeVisible();
 
   expect(pdfNetwork.getPrintEndpointCalls()).toBe(0);
@@ -434,6 +522,7 @@ test("feedback PDF export quota warning does not invoke print fallback", async (
     )
     .toBe(0);
 
+  await closeNotifications(page);
   await seedUserResetTarget(submission);
 
   await expect(pdfButton).toBeEnabled();

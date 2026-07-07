@@ -54,6 +54,11 @@ New DB objects:
 - `commit_pdf_export_quota(p_user_id uuid, p_usage_ids uuid[], p_export_file_id uuid)`
 - `release_pdf_export_quota(p_user_id uuid, p_usage_ids uuid[], p_reason text)`
 
+Reset target contract:
+
+- `user`, `group`, and `global` resets are all materialized into `pdf_export_quota_reset_targets`.
+- Reset audit headers are admin-only except for rows where the current user is a materialized target.
+
 ## SOT Files To Update If Accepted
 
 - `docs/prd.md`
@@ -66,4 +71,4 @@ New DB objects:
 
 - Whether multiple simultaneous active policies are allowed beyond the default `user + problem` rule.
 - Whether `resetAt` should be presented to learners as an exact date/time or only as “next period”.
-- Whether reset history should be visible to learners or admin-only.
+- Whether learners should see a summarized reset notice. Raw reset audit history should remain admin-only.

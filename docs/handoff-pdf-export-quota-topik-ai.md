@@ -38,8 +38,9 @@ Owner boundary: `v13` user app enforces quota during export. `topik-ai` owns adm
   - `reset_scope` values: `user`, `group`, `global`.
   - `problem_id=null` means all problems in the current period.
 - `pdf_export_quota_reset_targets`
-  - Materialized user targets for `user` and `group` resets.
-  - For group reset, topik-ai must expand the group membership to concrete `user_id` rows at reset creation time.
+  - Materialized user targets for `user`, `group`, and `global` resets.
+  - For group and global reset, topik-ai must expand the target population to concrete `user_id` rows at reset creation time.
+  - This prevents reset audit headers (`reason`, `created_by`) from being visible to unrelated authenticated users.
 
 ## Required Admin Features
 
@@ -51,7 +52,7 @@ Owner boundary: `v13` user app enforces quota during export. `topik-ai` owns adm
 2. Reset operations
    - Individual user reset: insert `pdf_export_quota_resets(reset_scope='user', problem_id?, reason, created_by)` and one target row.
    - Group reset: insert reset header and materialize all target users into `pdf_export_quota_reset_targets`.
-   - Global reset: insert reset header with `reset_scope='global'`; target rows are not required.
+   - Global reset: insert reset header with `reset_scope='global'` and materialize all affected users into `pdf_export_quota_reset_targets`.
    - Reset is period-local in v13 RPC: usages before the latest matching reset in the same period are excluded.
 
 3. Audit
@@ -76,5 +77,5 @@ Owner boundary: `v13` user app enforces quota during export. `topik-ai` owns adm
 - Change policy from 3 monthly to 5 weekly and verify v13 claim behavior follows the DB policy.
 - Reset one user for one problem and verify exports are allowed again in the same period.
 - Reset a group by materializing target rows and verify only those users are affected.
-- Global reset should apply without target rows.
+- Global reset should apply only to materialized target users and should not expose reset audit rows to unrelated authenticated users.
 - Non-admin browser users cannot insert/update policy or reset rows directly.

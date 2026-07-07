@@ -160,18 +160,18 @@ export function NotificationBell({ userId, affiliationCode }: Props) {
   }
 
   async function handleInvitationResponse(accept: boolean) {
-    const invitationId = invitationModal?.invitation.invitationId;
-    if (!invitationId) return;
+    const invitation = invitationModal?.invitation;
+    if (!invitation) return;
 
     const submitAction: InvitationSubmitAction = accept ? "accept" : "decline";
     setInvitationSubmitting(submitAction);
     try {
-      const result = await respondInstitutionInvitation(invitationId, accept);
+      const result = await respondInstitutionInvitation(invitation, accept);
       setInvitationModal((prev) => {
         if (!prev) return prev;
         return {
           invitation: {
-            invitationId,
+            invitationId: invitation.invitationId,
             code: result.code ?? prev.invitation.code,
             codeLabel: result.code_label ?? prev.invitation.codeLabel,
           },
