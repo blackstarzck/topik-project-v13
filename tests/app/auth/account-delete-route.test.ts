@@ -162,6 +162,19 @@ describe("/auth/account-delete route handler", () => {
     expect(helpers.signOut).not.toHaveBeenCalled();
   });
 
+  it("continues local deletion when the external profile is already gone", async () => {
+    helpers.deleteTalkpikAccountProfile.mockRejectedValue(
+      Object.assign(new Error("external profile not found"), { status: 404 }),
+    );
+
+    const res = await POST(postRequest());
+
+    expect(helpers.rpc).toHaveBeenCalledWith("request_account_deletion");
+    expect(helpers.signOut).toHaveBeenCalledWith({ scope: "global" });
+    expect(res.status).toBe(303);
+    expect(res.headers.get("location")).toContain("/login?reason=withdrawn");
+  });
+
   it("keeps error redirects on the public browser origin", async () => {
     helpers.deleteTalkpikAccountProfile.mockRejectedValue(
       new Error("external failed"),

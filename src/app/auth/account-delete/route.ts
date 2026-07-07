@@ -131,11 +131,14 @@ export async function POST(request: NextRequest) {
   try {
     await deleteTalkpikAccountProfile({ baseUrl, accessToken });
   } catch (error) {
-    console.error("[auth/account-delete] external account deletion error", {
-      message: error instanceof Error ? error.message : "unknown",
-      status: errorStatus(error),
-    });
-    return redirectToDeleteError(request);
+    const status = errorStatus(error);
+    if (status !== 404) {
+      console.error("[auth/account-delete] external account deletion error", {
+        message: error instanceof Error ? error.message : "unknown",
+        status,
+      });
+      return redirectToDeleteError(request);
+    }
   }
 
   const { error: rpcError } = await supabase.rpc("request_account_deletion");
