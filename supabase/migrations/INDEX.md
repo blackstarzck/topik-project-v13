@@ -217,3 +217,9 @@
 | ---:| --- | --- | --- |
 | 67 | `14:00:00` | [`20260701140000_accept_affiliation_invite.sql`](./20260701140000_accept_affiliation_invite.sql) | Adds confirmed one-shot `public.accept_affiliation_invite(p_code,p_confirmed)` for user-approved institution invite acceptance, keeps legacy `claim_affiliation_code` as a deprecated wrapper, and prevents automatic switching from another institution code. |
 | 68 | `16:00:00` | [`20260701160000_institution_retry_availability.sql`](./20260701160000_institution_retry_availability.sql) | Redefines saved writing problem retry availability so `list_user_library_problem_items()` follows `is_writing_problem_visible_to_caller`; institution-hidden saved problems remain in the ledger but expose no retry action. |
+
+## 2026-07-07 migration
+
+| # | timestamp | file | scope |
+| ---:| --- | --- | --- |
+| 69 | `12:00:00` | [`20260707120000_pdf_export_quota.sql`](./20260707120000_pdf_export_quota.sql) | Adds DB-backed PDF export quota policy, usage, reset, and reset-target ledgers plus SECURITY DEFINER RPCs for atomic per-user/per-problem claim, commit, and release. Seeds the default 3-per-month Asia/Seoul policy and keeps admin management for topik-ai. |

@@ -72,9 +72,40 @@ describe("exportPdfWithPrintFallback", () => {
       exportId: "print-1",
       fallbackReason: "render failed",
     });
-    expect(triggerPdfExport).toHaveBeenCalledWith({
-      sourceType: "submission",
-      sourceId: request.sourceId,
+    expect(triggerPdfExport).toHaveBeenCalledWith(request);
+  });
+
+  it("does not print-fallback for quota exceeded errors", async () => {
+    mockFetch(429, {
+      error: "PDF 내보내기 횟수를 모두 사용했어요.",
+      code: PDF_EXPORT_ERROR_CODES.quotaExceeded,
+      limit: 3,
+      used: 3,
+      remaining: 0,
+      resetAt: "2026-08-01T00:00:00+09:00",
+      periodUnit: "month",
     });
+    vi.mocked(triggerPdfExport).mockResolvedValue({ exportId: "print-1" });
+
+    let caught: unknown;
+    try {
+      await exportPdfWithPrintFallback(request);
+    } catch (err) {
+      caught = err;
+    }
+
+    expect(caught).toBeInstanceOf(PdfExportApiError);
+    expect(caught).toMatchObject({
+      status: 429,
+      code: PDF_EXPORT_ERROR_CODES.quotaExceeded,
+      details: {
+        limit: 3,
+        used: 3,
+        remaining: 0,
+        resetAt: "2026-08-01T00:00:00+09:00",
+        periodUnit: "month",
+      },
+    });
+    expect(triggerPdfExport).not.toHaveBeenCalled();
   });
 });

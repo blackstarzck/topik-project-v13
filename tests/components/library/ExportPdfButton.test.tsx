@@ -66,7 +66,10 @@ function makeDeps(trigger: ReturnType<typeof vi.fn>) {
     errorMessagesByCode: {
       [PDF_EXPORT_ERROR_CODES.failedAnalysisUnavailable]:
         koMessages.library.exportButton.failedAnalysisExportUnavailable,
+      [PDF_EXPORT_ERROR_CODES.quotaExceeded]:
+        koMessages.library.exportButton.quotaExceeded,
     },
+    warningCodes: [PDF_EXPORT_ERROR_CODES.quotaExceeded],
   };
 }
 
@@ -168,6 +171,28 @@ describe("ExportPdfButton — createExportPdfHandler", () => {
     );
   });
 
+  it("shows quota exceeded as a localized warning instead of an error", async () => {
+    const trigger = vi.fn(async () => {
+      throw new PdfExportApiError(
+        429,
+        "PDF 내보내기 횟수를 모두 사용했어요.",
+        PDF_EXPORT_ERROR_CODES.quotaExceeded,
+      );
+    });
+    const deps = makeDeps(trigger);
+
+    const onClick = createExportPdfHandler(
+      { sourceType: "submission", sourceId: "sub-1" },
+      deps,
+    );
+    await onClick();
+
+    expect(deps.notifyWarning).toHaveBeenCalledWith(
+      koMessages.library.exportButton.quotaExceeded,
+    );
+    expect(deps.notifyError).not.toHaveBeenCalled();
+  });
+
   it("uses the localized generic error for unknown API business-rule errors", async () => {
     const trigger = vi.fn(async () => {
       throw new PdfExportApiError(429, "서버 문자열", undefined);
@@ -219,6 +244,7 @@ describe("ExportPdfButton — createExportPdfHandler", () => {
       "notifyWarning",
       "printFallbackMessage",
       "trigger",
+      "warningCodes",
     ]);
     expect(keys).not.toContain("logEvent");
 

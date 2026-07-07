@@ -1,10 +1,7 @@
-import { renderToBuffer } from "@react-pdf/renderer";
-import dayjs from "dayjs";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { isEmailVerified } from "@/lib/auth/access-gate";
 import { fetchProfileStatus, isActiveStatus } from "@/lib/auth/profile";
-import { buildPdfDocument, registerPdfFonts } from "@/lib/export/pdf-document";
 import {
   claimPdfExportQuota,
   commitPdfExportQuota,
@@ -14,18 +11,13 @@ import {
   resolvePdfExportItems,
   type PdfExportQuotaClaim,
 } from "@/lib/export/pdf-export-server";
-import {
-  pdfExportRequestSchema,
-  sanitizePdfFilename,
-} from "@/lib/export/pdf-options";
+import { pdfExportRequestSchema } from "@/lib/export/pdf-options";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
 import type { SupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const BUCKET = "generated-exports";
 
 function requestErrorBody(error: PdfExportRequestError) {
   return {
@@ -120,9 +112,10 @@ export async function POST(request: NextRequest) {
           exportRequest.sourceType === "library_selection"
             ? null
             : exportRequest.sourceId,
-        storage_path: `server-render://${crypto.randomUUID()}`,
-        options: { source: "server_render", ...exportRequest.options },
-        status: "queued",
+        storage_path: `browser-print://${crypto.randomUUID()}`,
+        options: { source: "browser_print", ...exportRequest.options },
+        status: "ready",
+        ready_at: new Date().toISOString(),
       })
       .select("id")
       .single();
@@ -132,39 +125,6 @@ export async function POST(request: NextRequest) {
       );
     }
     exportId = created.id as string;
-
-    registerPdfFonts();
-    const buffer = await renderToBuffer(
-      buildPdfDocument({
-        title: sanitizePdfFilename(exportRequest.options.filename),
-        generatedAtLabel: dayjs().format("YYYY-MM-DD"),
-        items,
-        options: exportRequest.options,
-      }),
-    );
-
-    const storagePath = `exports/${user.id}/${exportId}.pdf`;
-    const { error: uploadError } = await supabase.storage
-      .from(BUCKET)
-      .upload(storagePath, buffer, {
-        contentType: "application/pdf",
-        upsert: false,
-      });
-    if (uploadError) {
-      throw new Error(`storage upload: ${uploadError.message}`);
-    }
-
-    const { error: updateError } = await supabase
-      .from("export_files")
-      .update({
-        storage_path: storagePath,
-        status: "ready",
-        ready_at: new Date().toISOString(),
-      })
-      .eq("id", exportId);
-    if (updateError) {
-      throw new Error(`export_files update: ${updateError.message}`);
-    }
 
     await commitPdfExportQuota(
       quotaSupabase,
@@ -186,7 +146,7 @@ export async function POST(request: NextRequest) {
               ? null
               : exportRequest.sourceId,
           export_id: exportId,
-          source: "server_render",
+          source: "browser_print",
         },
       })
       .then(
@@ -194,11 +154,7 @@ export async function POST(request: NextRequest) {
         () => undefined,
       );
 
-    return NextResponse.json({
-      exportId,
-      storagePath,
-      filename: `${sanitizePdfFilename(exportRequest.options.filename)}.pdf`,
-    });
+    return NextResponse.json({ exportId });
   } catch (err) {
     await markExportFailed(supabase, exportId);
     if (quotaSupabase) {
@@ -206,19 +162,19 @@ export async function POST(request: NextRequest) {
         quotaSupabase,
         user.id,
         quotaClaim,
-        "server_render_failed",
+        "browser_print_failed",
       );
     }
 
     if (err instanceof PdfExportRequestError) {
       return NextResponse.json(requestErrorBody(err), { status: err.status });
     }
-    console.error("[api/export/pdf] generation failed", {
+    console.error("[api/export/pdf/print] failed", {
       exportId,
       message: err instanceof Error ? err.message : String(err),
     });
     return NextResponse.json(
-      { error: "PDF 생성에 실패했어요. 잠시 후 다시 시도해 주세요." },
+      { error: "PDF 출력 준비에 실패했어요. 잠시 후 다시 시도해 주세요." },
       { status: 500 },
     );
   }

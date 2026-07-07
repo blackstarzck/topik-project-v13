@@ -20,7 +20,6 @@ const helpers = vi.hoisted(() => {
   }
 
   return {
-    buildPdfDocumentMock: vi.fn(),
     claimPdfExportQuotaMock: vi.fn(),
     commitPdfExportQuotaMock: vi.fn(),
     fetchProfileStatusMock: vi.fn(),
@@ -30,29 +29,15 @@ const helpers = vi.hoisted(() => {
     ),
     getUserMock: vi.fn(),
     PdfExportRequestError,
-    registerPdfFontsMock: vi.fn(),
-    renderToBufferMock: vi.fn(),
     releasePdfExportQuotaMock: vi.fn(),
     resolvePdfExportItemsMock: vi.fn(),
-    storageFromMock: vi.fn(),
   };
 });
-
-vi.mock("@react-pdf/renderer", () => ({
-  renderToBuffer: (...args: unknown[]) => helpers.renderToBufferMock(...args),
-}));
 
 vi.mock("@/lib/auth/profile", () => ({
   fetchProfileStatus: (...args: unknown[]) =>
     helpers.fetchProfileStatusMock(...args),
   isActiveStatus: (status: string | null | undefined) => status === "active",
-}));
-
-vi.mock("@/lib/export/pdf-document", () => ({
-  buildPdfDocument: (...args: unknown[]) =>
-    helpers.buildPdfDocumentMock(...args),
-  registerPdfFonts: (...args: unknown[]) =>
-    helpers.registerPdfFontsMock(...args),
 }));
 
 vi.mock("@/lib/export/pdf-export-server", () => ({
@@ -74,14 +59,13 @@ vi.mock("@/lib/supabase/server", () => ({
     Promise.resolve({
       auth: { getUser: helpers.getUserMock },
       from: helpers.fromMock,
-      storage: { from: helpers.storageFromMock },
     }),
   createSupabaseServiceRoleClient: () => ({
     rpc: vi.fn(),
   }),
 }));
 
-import { POST } from "../../../../src/app/api/export/pdf/route";
+import { POST } from "../../../../src/app/api/export/pdf/print/route";
 
 const validRequestBody = {
   sourceType: "submission",
@@ -95,9 +79,9 @@ const validRequestBody = {
   },
 };
 
-function postPdf(body = validRequestBody) {
+function postPrintPdf(body = validRequestBody) {
   return POST(
-    new Request("http://localhost/api/export/pdf", {
+    new Request("http://localhost/api/export/pdf/print", {
       body: JSON.stringify(body),
       headers: { "content-type": "application/json" },
       method: "POST",
@@ -105,7 +89,7 @@ function postPdf(body = validRequestBody) {
   );
 }
 
-describe("POST /api/export/pdf", () => {
+describe("POST /api/export/pdf/print", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     helpers.getUserMock.mockResolvedValue({
@@ -119,6 +103,9 @@ describe("POST /api/export/pdf", () => {
       error: null,
     });
     helpers.fetchProfileStatusMock.mockResolvedValue("active");
+    helpers.resolvePdfExportItemsMock.mockResolvedValue([
+      { kind: "submission", problemId: "problem-1" },
+    ]);
     helpers.claimPdfExportQuotaMock.mockResolvedValue({
       usageIds: ["usage-1"],
       limit: 3,
@@ -129,21 +116,13 @@ describe("POST /api/export/pdf", () => {
     });
     helpers.commitPdfExportQuotaMock.mockResolvedValue(undefined);
     helpers.releasePdfExportQuotaMock.mockResolvedValue(undefined);
-    helpers.resolvePdfExportItemsMock.mockResolvedValue([
-      { kind: "submission", problemId: "problem-1" },
-    ]);
-    helpers.buildPdfDocumentMock.mockReturnValue({ type: "pdf-doc" });
-    helpers.renderToBufferMock.mockResolvedValue(Buffer.from("pdf"));
-    helpers.storageFromMock.mockReturnValue({
-      upload: vi.fn().mockResolvedValue({ error: null }),
-    });
     helpers.fromMock.mockImplementation((table: string) => {
       if (table === "export_files") {
         return {
           insert: vi.fn(() => ({
             select: vi.fn(() => ({
               single: vi.fn().mockResolvedValue({
-                data: { id: "00000000-0000-0000-0000-000000000111" },
+                data: { id: "00000000-0000-0000-0000-000000000222" },
                 error: null,
               }),
             })),
@@ -160,30 +139,27 @@ describe("POST /api/export/pdf", () => {
     });
   });
 
-  it("rejects email-unverified sessions before checking account status or export data", async () => {
-    helpers.getUserMock.mockResolvedValueOnce({
-      data: {
-        user: {
-          id: "user-1",
-          email: "student@example.com",
-          email_confirmed_at: null,
-        },
-      },
-      error: null,
-    });
+  it("creates a browser-print export only after quota is claimed", async () => {
+    const response = await postPrintPdf();
 
-    const response = await postPdf();
-
-    expect(response.status).toBe(403);
+    expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({
-      error: "email_unverified",
+      exportId: "00000000-0000-0000-0000-000000000222",
     });
-    expect(helpers.fetchProfileStatusMock).not.toHaveBeenCalled();
-    expect(helpers.claimPdfExportQuotaMock).not.toHaveBeenCalled();
-    expect(helpers.fromMock).not.toHaveBeenCalled();
+    expect(helpers.claimPdfExportQuotaMock).toHaveBeenCalledWith(
+      expect.anything(),
+      "user-1",
+      ["problem-1"],
+    );
+    expect(helpers.commitPdfExportQuotaMock).toHaveBeenCalledWith(
+      expect.anything(),
+      "user-1",
+      ["usage-1"],
+      "00000000-0000-0000-0000-000000000222",
+    );
   });
 
-  it("returns stable quota metadata and does not create export rows when quota is exceeded", async () => {
+  it("returns quota metadata without creating a browser-print row", async () => {
     helpers.claimPdfExportQuotaMock.mockRejectedValueOnce(
       new helpers.PdfExportRequestError(
         429,
@@ -199,52 +175,37 @@ describe("POST /api/export/pdf", () => {
       ),
     );
 
-    const response = await postPdf();
+    const response = await postPrintPdf();
 
     expect(response.status).toBe(429);
-    await expect(response.json()).resolves.toEqual({
-      error: "PDF 내보내기 횟수를 모두 사용했어요.",
+    await expect(response.json()).resolves.toMatchObject({
       code: "pdf_export_quota_exceeded",
       limit: 3,
       used: 3,
       remaining: 0,
-      resetAt: "2026-08-01T00:00:00+09:00",
-      periodUnit: "month",
     });
     expect(helpers.fromMock).not.toHaveBeenCalled();
-    expect(helpers.renderToBufferMock).not.toHaveBeenCalled();
   });
 
-  it("continues PDF export for verified active sessions", async () => {
-    const response = await postPdf();
-
-    expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toMatchObject({
-      exportId: "00000000-0000-0000-0000-000000000111",
-      filename: "learning-export.pdf",
-      storagePath: "exports/user-1/00000000-0000-0000-0000-000000000111.pdf",
+  it("releases reserved quota when browser-print export row creation fails", async () => {
+    helpers.fromMock.mockImplementationOnce((table: string) => {
+      if (table !== "export_files") return { insert: vi.fn() };
+      return {
+        insert: vi.fn(() => ({
+          select: vi.fn(() => ({
+            single: vi.fn().mockResolvedValue({
+              data: null,
+              error: { message: "insert boom" },
+            }),
+          })),
+        })),
+        update: vi.fn(() => ({
+          eq: vi.fn().mockResolvedValue({ error: null }),
+        })),
+      };
     });
-    expect(helpers.fetchProfileStatusMock).toHaveBeenCalledWith(
-      expect.anything(),
-      "user-1",
-    );
-    expect(helpers.claimPdfExportQuotaMock).toHaveBeenCalledWith(
-      expect.anything(),
-      "user-1",
-      ["problem-1"],
-    );
-    expect(helpers.commitPdfExportQuotaMock).toHaveBeenCalledWith(
-      expect.anything(),
-      "user-1",
-      ["usage-1"],
-      "00000000-0000-0000-0000-000000000111",
-    );
-  });
 
-  it("releases reserved quota when server rendering fails", async () => {
-    helpers.renderToBufferMock.mockRejectedValueOnce(new Error("render boom"));
-
-    const response = await postPdf();
+    const response = await postPrintPdf();
 
     expect(response.status).toBe(500);
     expect(helpers.commitPdfExportQuotaMock).not.toHaveBeenCalled();
@@ -252,23 +213,23 @@ describe("POST /api/export/pdf", () => {
       expect.anything(),
       "user-1",
       ["usage-1"],
-      "server_render_failed",
+      "browser_print_failed",
     );
   });
 
-  it("releases reserved quota when quota commit fails after export generation", async () => {
+  it("releases reserved quota when browser-print quota commit fails", async () => {
     helpers.commitPdfExportQuotaMock.mockRejectedValueOnce(
       new Error("commit boom"),
     );
 
-    const response = await postPdf();
+    const response = await postPrintPdf();
 
     expect(response.status).toBe(500);
     expect(helpers.releasePdfExportQuotaMock).toHaveBeenCalledWith(
       expect.anything(),
       "user-1",
       ["usage-1"],
-      "server_render_failed",
+      "browser_print_failed",
     );
   });
 });

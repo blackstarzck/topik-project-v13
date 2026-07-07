@@ -190,6 +190,7 @@ function PdfExportModalBody({
           [PDF_EXPORT_ERROR_CODES.failedAnalysisUnavailable]: t(
             "failedAnalysisExportUnavailable",
           ),
+          [PDF_EXPORT_ERROR_CODES.quotaExceeded]: t("quotaExceeded"),
         }),
       });
     }

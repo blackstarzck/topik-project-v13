@@ -1362,6 +1362,8 @@
       "pdfDefaultFilename": "TALKPIK-답안-피드백",
       "pdfFailedTitle": "PDF 저장에 실패했어요",
       "pdfFailedDescription": "내 보관함에서 다시 저장해 보세요.",
+      "pdfQuotaExceededTitle": "PDF 내보내기 횟수를 모두 사용했어요",
+      "pdfQuotaExceededDescription": "이 문제는 이번 기간 3회까지 PDF로 내보낼 수 있어요. 다음 기간에 다시 시도해 주세요.",
       "save": {
         "lockedTooltip": "이 답안은 보기 전용이라 보관함에 저장할 수 없어요.",
         "lockedButton": "보관함 저장 (잠금)",
@@ -2193,6 +2195,7 @@
       "printDialogOpened": "PDF 출력 대화상자가 열렸습니다.",
       "exportFailed": "PDF 내보내기에 실패했어요.",
       "failedAnalysisExportUnavailable": "분석 실패 항목은 PDF와 복습 세트에서 제외됩니다.",
+      "quotaExceeded": "이 문제는 이번 기간 3회까지 PDF로 내보낼 수 있어요.",
       "downloaded": "PDF 파일을 다운로드했어요.",
       "fallbackPrint": "서버 PDF 생성에 실패해서 브라우저 인쇄 창으로 대신 열었어요.",
       "defaultFilenameSubmission": "TALKPIK-답안",
@@ -2272,7 +2275,8 @@
       "export": "PDF 생성",
       "printDialogOpened": "PDF 출력 대화상자가 열렸습니다.",
       "generateFailed": "PDF 생성에 실패했어요.",
-      "failedAnalysisExportUnavailable": "분석 실패 항목은 PDF와 복습 세트에서 제외됩니다."
+      "failedAnalysisExportUnavailable": "분석 실패 항목은 PDF와 복습 세트에서 제외됩니다.",
+      "quotaExceeded": "이 문제는 이번 기간 3회까지 PDF로 내보낼 수 있어요."
     }
   },
   "onboarding": {

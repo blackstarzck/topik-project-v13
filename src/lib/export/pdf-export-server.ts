@@ -1,6 +1,8 @@
 // F-M1 서버 PDF — 요청을 PDF 항목 데이터로 변환하는 서버 전용 조립기.
 // 모든 조회는 사용자 세션 클라이언트로 실행되어 RLS(본인 소유)가 강제된다.
 import dayjs from "dayjs";
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
 
 import type { SupabaseServerClient } from "../supabase/server";
 import { getFeedbackBundle, getSubmission } from "../writing/server";
@@ -8,7 +10,41 @@ import { PDF_EXPORT_ERROR_CODES } from "./pdf-export-errors";
 import type { PdfExportItem, PdfSubmissionItem } from "./pdf-document";
 import { PDF_EXPORT_MAX_ITEMS, type PdfExportRequest } from "./pdf-options";
 
-export const PDF_EXPORT_MONTHLY_LIMIT = 3;
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+export const PDF_EXPORT_QUOTA_DEFAULT_LIMIT = 3;
+
+export type PdfExportQuotaPeriodUnit = "day" | "week" | "month";
+
+export type PdfExportQuotaDetails = {
+  limit: number;
+  used: number;
+  remaining: number;
+  resetAt: string;
+  periodUnit: PdfExportQuotaPeriodUnit;
+  problemId?: string;
+};
+
+export type PdfExportQuotaClaim = PdfExportQuotaDetails & {
+  usageIds: string[];
+};
+
+type PdfExportQuotaRpcResult = {
+  allowed?: boolean;
+  code?: string;
+  usageIds?: string[];
+  usage_ids?: string[];
+  limit?: number;
+  used?: number;
+  remaining?: number;
+  resetAt?: string;
+  reset_at?: string;
+  periodUnit?: string;
+  period_unit?: string;
+  problemId?: string;
+  problem_id?: string;
+};
 
 type LibrarySelectionExportEntry = {
   kind: "submission" | "report";
@@ -20,39 +56,140 @@ type LibrarySelectionExportEntry = {
 export class PdfExportRequestError extends Error {
   readonly status: number;
   readonly code?: string;
-  constructor(status: number, message: string, code?: string) {
+  readonly details?: PdfExportQuotaDetails;
+  constructor(
+    status: number,
+    message: string,
+    code?: string,
+    details?: PdfExportQuotaDetails,
+  ) {
     super(message);
     this.name = "PdfExportRequestError";
     this.status = status;
     this.code = code;
+    this.details = details;
   }
 }
 
-export async function assertMonthlyPdfExportLimit(
+function formatZoned(value: dayjs.Dayjs): string {
+  return value.format("YYYY-MM-DDTHH:mm:ssZ");
+}
+
+export function getPdfExportQuotaWindow(
+  periodUnit: PdfExportQuotaPeriodUnit,
+  periodTimezone: string,
+  now = new Date(),
+): { start: string; end: string } {
+  const localNow = dayjs(now).tz(periodTimezone);
+  let start: dayjs.Dayjs;
+
+  if (periodUnit === "day") {
+    start = localNow.startOf("day");
+  } else if (periodUnit === "week") {
+    const daysSinceMonday = (localNow.day() + 6) % 7;
+    start = localNow.startOf("day").subtract(daysSinceMonday, "day");
+  } else {
+    start = localNow.startOf("month");
+  }
+
+  const end = start.add(1, periodUnit);
+  return {
+    start: formatZoned(start),
+    end: formatZoned(end),
+  };
+}
+
+export function getPdfExportProblemIds(items: PdfExportItem[]): string[] {
+  return Array.from(new Set(items.map((item) => item.problemId).filter(Boolean)));
+}
+
+function readQuotaDetails(
+  data: PdfExportQuotaRpcResult,
+): PdfExportQuotaDetails {
+  return {
+    limit: Number(data.limit ?? PDF_EXPORT_QUOTA_DEFAULT_LIMIT),
+    used: Number(data.used ?? 0),
+    remaining: Number(data.remaining ?? 0),
+    resetAt: String(data.resetAt ?? data.reset_at ?? ""),
+    periodUnit: String(
+      data.periodUnit ?? data.period_unit ?? "month",
+    ) as PdfExportQuotaPeriodUnit,
+    problemId: data.problemId ?? data.problem_id,
+  };
+}
+
+export async function claimPdfExportQuota(
   supabase: SupabaseServerClient,
   userId: string,
-  now = new Date(),
-): Promise<void> {
-  const monthStart = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1),
-  );
-  const nextMonthStart = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1),
-  );
-  const { count, error } = await supabase
-    .from("export_files")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", userId)
-    .neq("status", "failed")
-    .gte("created_at", monthStart.toISOString())
-    .lt("created_at", nextMonthStart.toISOString());
-  if (error) throw new Error(`pdf export limit: ${error.message}`);
-  if ((count ?? 0) >= PDF_EXPORT_MONTHLY_LIMIT) {
+  problemIds: string[],
+): Promise<PdfExportQuotaClaim> {
+  const distinctProblemIds = Array.from(new Set(problemIds.filter(Boolean)));
+  if (distinctProblemIds.length === 0) {
     throw new PdfExportRequestError(
-      429,
-      `PDF 내보내기는 월 ${PDF_EXPORT_MONTHLY_LIMIT}회까지 사용할 수 있어요.`,
+      400,
+      "PDF 내보내기 대상 문제를 확인할 수 없어요.",
     );
   }
+
+  const { data, error } = await supabase.rpc("claim_pdf_export_quota", {
+    p_user_id: userId,
+    p_problem_ids: distinctProblemIds,
+  });
+  if (error) throw new Error(`pdf export quota claim: ${error.message}`);
+  if (!data || typeof data !== "object") {
+    throw new Error("pdf export quota claim: empty response");
+  }
+
+  const result = data as PdfExportQuotaRpcResult;
+  const details = readQuotaDetails(result);
+  if (result.allowed === false) {
+    throw new PdfExportRequestError(
+      429,
+      "PDF 내보내기 횟수를 모두 사용했어요.",
+      result.code ?? PDF_EXPORT_ERROR_CODES.quotaExceeded,
+      details,
+    );
+  }
+
+  const usageIds = result.usageIds ?? result.usage_ids ?? [];
+  if (result.allowed !== true || usageIds.length === 0) {
+    throw new Error("pdf export quota claim: invalid response");
+  }
+
+  return {
+    usageIds,
+    ...details,
+  };
+}
+
+export async function commitPdfExportQuota(
+  supabase: SupabaseServerClient,
+  userId: string,
+  usageIds: string[],
+  exportFileId: string,
+): Promise<void> {
+  if (usageIds.length === 0) return;
+  const { error } = await supabase.rpc("commit_pdf_export_quota", {
+    p_user_id: userId,
+    p_usage_ids: usageIds,
+    p_export_file_id: exportFileId,
+  });
+  if (error) throw new Error(`pdf export quota commit: ${error.message}`);
+}
+
+export async function releasePdfExportQuota(
+  supabase: SupabaseServerClient,
+  userId: string,
+  usageIds: string[],
+  reason?: string,
+): Promise<void> {
+  if (usageIds.length === 0) return;
+  const { error } = await supabase.rpc("release_pdf_export_quota", {
+    p_user_id: userId,
+    p_usage_ids: usageIds,
+    p_reason: reason ?? null,
+  });
+  if (error) throw new Error(`pdf export quota release: ${error.message}`);
 }
 
 function formatDate(value: string): string {
@@ -92,6 +229,7 @@ async function loadSubmissionItem(
 
   return {
     kind: "submission",
+    problemId: submission.problem_id,
     questionNo: submission.question_no,
     problemTitle: (problem as { title: string } | null)?.title ?? null,
     submittedAt: formatDate(submission.submitted_at),
@@ -125,15 +263,30 @@ async function loadReportItem(
 ): Promise<PdfExportItem> {
   const { data: report, error } = await supabase
     .from("comparison_reports")
-    .select("id, narrative, generated_at")
+    .select("id, current_submission_id, narrative, generated_at")
     .eq("id", reportId)
     .maybeSingle();
   if (error) throw new Error(`resolvePdfExportItems: ${error.message}`);
   if (!report) {
     throw new PdfExportRequestError(404, "리포트를 찾을 수 없어요.");
   }
+  const { data: submission, error: submissionError } = await supabase
+    .from("writing_submissions")
+    .select("problem_id")
+    .eq("id", report.current_submission_id)
+    .maybeSingle();
+  if (submissionError) {
+    throw new Error(
+      `resolvePdfExportItems(report submission): ${submissionError.message}`,
+    );
+  }
+  if (!submission?.problem_id) {
+    throw new PdfExportRequestError(404, "리포트의 문제를 찾을 수 없어요.");
+  }
+
   return {
     kind: "report",
+    problemId: submission.problem_id,
     generatedAt: formatDate(report.generated_at),
     narrative: report.narrative,
   };
@@ -155,24 +308,6 @@ export async function resolvePdfExportItems(
 
   if (request.sourceType === "report") {
     return [await loadReportItem(supabase, request.sourceId)];
-    /*
-    const { data: report, error } = await supabase
-      .from("comparison_reports")
-      .select("id, narrative, generated_at")
-      .eq("id", request.sourceId)
-      .maybeSingle();
-    if (error) throw new Error(`resolvePdfExportItems: ${error.message}`);
-    if (!report) {
-      throw new PdfExportRequestError(404, "리포트를 찾을 수 없어요.");
-    }
-    return [
-      {
-        kind: "report",
-        generatedAt: formatDate(report.generated_at),
-        narrative: report.narrative,
-      },
-    ];
-    */
   }
 
   // library_selection: 본인 library_items(submission 항목) → 제출별 PDF 블록.

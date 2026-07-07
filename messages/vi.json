@@ -1362,6 +1362,8 @@
       "pdfDefaultFilename": "TALKPIK-bai-lam-phan-hoi",
       "pdfFailedTitle": "Lưu PDF thất bại",
       "pdfFailedDescription": "Hãy thử lưu lại từ Thư viện của tôi.",
+      "pdfQuotaExceededTitle": "Bạn đã dùng hết lượt xuất PDF",
+      "pdfQuotaExceededDescription": "Mỗi bài này có thể xuất PDF tối đa 3 lần trong kỳ hiện tại. Vui lòng thử lại ở kỳ tiếp theo.",
       "save": {
         "lockedTooltip": "Bài làm này chỉ để xem nên không thể lưu vào thư viện.",
         "lockedButton": "Lưu vào thư viện (đã khóa)",
@@ -2193,6 +2195,7 @@
       "printDialogOpened": "Hộp thoại in PDF đã mở.",
       "exportFailed": "Không thể xuất PDF.",
       "failedAnalysisExportUnavailable": "Mục phân tích thất bại bị loại khỏi PDF và bộ ôn tập.",
+      "quotaExceeded": "Mỗi bài này có thể xuất PDF tối đa 3 lần trong kỳ hiện tại.",
       "downloaded": "Đã tải xuống file PDF.",
       "fallbackPrint": "Tạo PDF trên máy chủ thất bại nên đã mở hộp thoại in của trình duyệt thay thế.",
       "defaultFilenameSubmission": "TALKPIK-bai-lam",
@@ -2272,7 +2275,8 @@
       "export": "Tạo PDF",
       "printDialogOpened": "Hộp thoại in PDF đã mở.",
       "generateFailed": "Không thể tạo PDF.",
-      "failedAnalysisExportUnavailable": "Mục phân tích thất bại bị loại khỏi PDF và bộ ôn tập."
+      "failedAnalysisExportUnavailable": "Mục phân tích thất bại bị loại khỏi PDF và bộ ôn tập.",
+      "quotaExceeded": "Mỗi bài này có thể xuất PDF tối đa 3 lần trong kỳ hiện tại."
     }
   },
   "onboarding": {

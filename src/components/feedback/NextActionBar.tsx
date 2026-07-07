@@ -8,7 +8,12 @@ import {
   trackApiRequestResult,
   trackButtonClick,
 } from "@/lib/analytics/google-analytics";
-import { exportPdfWithPrintFallback } from "@/lib/export/pdf-export-client";
+import {
+  exportPdfWithPrintFallback,
+  getPdfExportErrorMessage,
+  PdfExportApiError,
+} from "@/lib/export/pdf-export-client";
+import { PDF_EXPORT_ERROR_CODES } from "@/lib/export/pdf-export-errors";
 import { PDF_EXPORT_DEFAULT_OPTIONS } from "@/lib/export/pdf-options";
 import { useCreateComparisonReport } from "@/lib/writing/mutations";
 
@@ -131,7 +136,21 @@ export function FeedbackActionGroup({
       } else {
         notification.info({ title: t("pdfSuccess") });
       }
-    } catch {
+    } catch (err) {
+      if (
+        err instanceof PdfExportApiError &&
+        err.code === PDF_EXPORT_ERROR_CODES.quotaExceeded
+      ) {
+        notification.warning({
+          title: t("pdfQuotaExceededTitle"),
+          description: getPdfExportErrorMessage(err, t("pdfQuotaExceededDescription"), {
+            [PDF_EXPORT_ERROR_CODES.quotaExceeded]: t(
+              "pdfQuotaExceededDescription",
+            ),
+          }),
+        });
+        return;
+      }
       notification.error({
         title: t("pdfFailedTitle"),
         description: t("pdfFailedDescription"),

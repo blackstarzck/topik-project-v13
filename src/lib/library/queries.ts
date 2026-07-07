@@ -180,7 +180,7 @@ async function joinExports(
   if (ids.length === 0) return [];
   const { data, error } = await supabase
     .from("export_files")
-    .select("id, source_type, storage_path, status, options")
+    .select("id, source_type, source_id, storage_path, status, options")
     .in("id", ids);
   if (error) throw error;
   const byId = new Map((data ?? []).map((row) => [row.id, row]));
@@ -193,6 +193,7 @@ async function joinExports(
       kind: "export",
       id: exp.id,
       source_type: exp.source_type,
+      source_id: exp.source_id,
       storage_path: exp.storage_path,
       status: exp.status,
       options: exp.options,

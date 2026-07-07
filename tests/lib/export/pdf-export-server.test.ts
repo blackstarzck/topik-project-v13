@@ -3,8 +3,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PDF_EXPORT_DEFAULT_OPTIONS } from "../../../src/lib/export/pdf-options";
 import { PDF_EXPORT_ERROR_CODES } from "../../../src/lib/export/pdf-export-errors";
 import {
-  assertMonthlyPdfExportLimit,
-  PdfExportRequestError,
+  PDF_EXPORT_QUOTA_DEFAULT_LIMIT,
+  claimPdfExportQuota,
+  getPdfExportProblemIds,
+  getPdfExportQuotaWindow,
   resolvePdfExportItems,
 } from "../../../src/lib/export/pdf-export-server";
 import { getSubmission } from "../../../src/lib/writing/server";
@@ -75,53 +77,97 @@ beforeEach(() => {
   vi.mocked(getSubmission).mockReset();
 });
 
-describe("assertMonthlyPdfExportLimit", () => {
-  it("allows the third monthly PDF export attempt", async () => {
+describe("PDF export quota", () => {
+  it("allows the third PDF export for the same problem in a KST month", async () => {
+    const rpc = vi.fn(async () => ({
+      data: {
+        allowed: true,
+        usageIds: ["usage-1"],
+        limit: PDF_EXPORT_QUOTA_DEFAULT_LIMIT,
+        used: 3,
+        remaining: 0,
+        resetAt: "2026-08-01T00:00:00+09:00",
+        periodUnit: "month",
+      },
+      error: null,
+    }));
     const supabase = {
-      from: vi.fn(() => ({
-        select: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            neq: vi.fn(() => ({
-              gte: vi.fn(() => ({
-                lt: vi.fn(async () => ({ count: 2, error: null })),
-              })),
-            })),
-          })),
-        })),
-      })),
+      rpc,
     };
 
     await expect(
-      assertMonthlyPdfExportLimit(
+      claimPdfExportQuota(
         supabase as never,
         "user-1",
-        new Date("2026-06-17T12:00:00.000Z"),
+        ["problem-1"],
       ),
-    ).resolves.toBeUndefined();
+    ).resolves.toMatchObject({
+      usageIds: ["usage-1"],
+      limit: 3,
+      remaining: 0,
+    });
+    expect(rpc).toHaveBeenCalledWith("claim_pdf_export_quota", {
+      p_user_id: "user-1",
+      p_problem_ids: ["problem-1"],
+    });
   });
 
-  it("blocks the fourth monthly PDF export attempt", async () => {
+  it("blocks the fourth PDF export for the same problem with stable quota metadata", async () => {
     const supabase = {
-      from: vi.fn(() => ({
-        select: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            neq: vi.fn(() => ({
-              gte: vi.fn(() => ({
-                lt: vi.fn(async () => ({ count: 3, error: null })),
-              })),
-            })),
-          })),
-        })),
+      rpc: vi.fn(async () => ({
+        data: {
+          allowed: false,
+          code: "pdf_export_quota_exceeded",
+          limit: 3,
+          used: 3,
+          remaining: 0,
+          resetAt: "2026-08-01T00:00:00+09:00",
+          periodUnit: "month",
+        },
+        error: null,
       })),
     };
 
     await expect(
-      assertMonthlyPdfExportLimit(
-        supabase as never,
-        "user-1",
-        new Date("2026-06-17T12:00:00.000Z"),
-      ),
-    ).rejects.toBeInstanceOf(PdfExportRequestError);
+      claimPdfExportQuota(supabase as never, "user-1", ["problem-1"]),
+    ).rejects.toMatchObject({
+      status: 429,
+      code: "pdf_export_quota_exceeded",
+      details: {
+        limit: 3,
+        used: 3,
+        remaining: 0,
+        resetAt: "2026-08-01T00:00:00+09:00",
+        periodUnit: "month",
+      },
+    });
+  });
+
+  it("calculates day, week, and month windows in Asia/Seoul", () => {
+    const now = new Date("2026-07-07T05:30:00.000Z");
+
+    expect(getPdfExportQuotaWindow("day", "Asia/Seoul", now)).toEqual({
+      start: "2026-07-07T00:00:00+09:00",
+      end: "2026-07-08T00:00:00+09:00",
+    });
+    expect(getPdfExportQuotaWindow("week", "Asia/Seoul", now)).toEqual({
+      start: "2026-07-06T00:00:00+09:00",
+      end: "2026-07-13T00:00:00+09:00",
+    });
+    expect(getPdfExportQuotaWindow("month", "Asia/Seoul", now)).toEqual({
+      start: "2026-07-01T00:00:00+09:00",
+      end: "2026-08-01T00:00:00+09:00",
+    });
+  });
+
+  it("extracts distinct problem ids from mixed PDF export items", () => {
+    expect(
+      getPdfExportProblemIds([
+        { kind: "submission", problemId: "problem-1" } as never,
+        { kind: "submission", problemId: "problem-1" } as never,
+        { kind: "report", problemId: "problem-2" } as never,
+      ]),
+    ).toEqual(["problem-1", "problem-2"]);
   });
 
   it("rejects direct PDF export for failed-analysis submissions", async () => {

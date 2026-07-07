@@ -9,6 +9,10 @@
 //     않는다). 폴백 발생 여부를 mode로 돌려줘 호출부가 안내를 띄운다.
 
 import { createSupabaseBrowserClient } from "../supabase/browser";
+import {
+  PdfExportApiError,
+  readPdfExportApiError,
+} from "./pdf-export-api-error";
 import type { PdfExportErrorCode } from "./pdf-export-errors";
 import { triggerPdfExport } from "./pdf-export";
 import { sanitizePdfFilename, type PdfExportRequest } from "./pdf-options";
@@ -23,22 +27,7 @@ export type ServerPdfExportResult = {
 
 type BrowserClientFactory = typeof createSupabaseBrowserClient;
 
-type PdfExportApiErrorBody = {
-  error?: string;
-  code?: string;
-};
-
-export class PdfExportApiError extends Error {
-  readonly status: number;
-  readonly code?: string;
-
-  constructor(status: number, message: string, code?: string) {
-    super(message);
-    this.name = "PdfExportApiError";
-    this.status = status;
-    this.code = code;
-  }
-}
+export { PdfExportApiError };
 
 function shouldUsePrintFallback(error: unknown): boolean {
   if (error instanceof PdfExportApiError) {
@@ -112,14 +101,7 @@ export async function requestServerPdfExport(
   });
 
   if (!response.ok) {
-    const body = (await response
-      .json()
-      .catch(() => null)) as PdfExportApiErrorBody | null;
-    throw new PdfExportApiError(
-      response.status,
-      body?.error ?? `PDF export failed (HTTP ${response.status})`,
-      body?.code,
-    );
+    throw await readPdfExportApiError(response);
   }
 
   const result = (await response.json()) as ServerPdfExportResult;
@@ -155,11 +137,7 @@ export async function exportPdfWithPrintFallback(
       throw err;
     }
     const reason = err instanceof Error ? err.message : String(err);
-    const printed = await triggerPdfExport({
-      sourceType: input.sourceType,
-      sourceId:
-        input.sourceType === "library_selection" ? null : input.sourceId,
-    });
+    const printed = await triggerPdfExport(input);
     return {
       mode: "print",
       exportId: printed.exportId,
