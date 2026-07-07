@@ -39,14 +39,13 @@ export function LibraryTimelinePanel({ items }: Props) {
             <div className="flex flex-col gap-3">
               {items.map((item) => {
                 const Icon = eventIcon(item.eventType);
+                const eventTypeLabel = t(
+                  `timeline.event.${item.eventType}` as Parameters<typeof t>[0],
+                );
                 const eventLabel =
-                  item.eventType === "report_viewed" && item.questionNo
-                    ? t("questionNo", { questionNo: item.questionNo })
-                    : t(
-                        `timeline.event.${item.eventType}` as Parameters<
-                          typeof t
-                        >[0],
-                      );
+                  item.questionNo != null
+                    ? `${t("questionNo", { questionNo: item.questionNo })} ${eventTypeLabel}`
+                    : eventTypeLabel;
                 return (
                   <div
                     key={item.id}

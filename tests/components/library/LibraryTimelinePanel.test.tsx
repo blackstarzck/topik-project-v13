@@ -38,14 +38,13 @@ afterEach(() => {
 });
 
 describe("LibraryTimelinePanel", () => {
-  it("renders relative event time, plain icons, and report rows as question number only", () => {
+  it("renders relative event time, plain icons, and prefixes event labels with question numbers", () => {
     renderWithIntl(<LibraryTimelinePanel items={baseItems} />);
 
     expect(screen.getByText("1시간 전")).toBeTruthy();
     expect(screen.getByText("1일 전")).toBeTruthy();
-    expect(screen.getByText("54번")).toBeTruthy();
-    expect(screen.queryByText("리포트 확인")).toBeNull();
-    expect(screen.getByText("피드백 확인")).toBeTruthy();
+    expect(screen.getByText("54번 리포트 확인")).toBeTruthy();
+    expect(screen.getByText("53번 피드백 확인")).toBeTruthy();
 
     const icon = screen.getAllByTestId("library-timeline-icon")[0];
     expect(icon.className).not.toContain("rounded-full");
@@ -61,7 +60,7 @@ describe("LibraryTimelinePanel", () => {
     expect(reportRow.lastElementChild).toBe(reportTime);
     expect(reportRow.className).toContain("justify-between");
     expect(reportContent.className).toContain("gap-2");
-    expect(reportContent.textContent).toContain("54번");
+    expect(reportContent.textContent).toContain("54번 리포트 확인");
     expect(reportTime.className).toContain("ml-auto");
     expect(reportTime.textContent).toBe("1시간 전");
   });

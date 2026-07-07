@@ -266,6 +266,7 @@ async function createLibraryDashboardFixture() {
 
   return {
     marker,
+    questionNo,
     problemTitle: problemTitle ?? `${questionNo}번 문제`,
   };
 }
@@ -403,6 +404,28 @@ test("F-01 library dashboard renders study action sections", async ({
   await expect(page.getByTestId("library-timeline-panel")).toBeVisible();
   await expect(page.getByText("답안 제출").first()).toBeVisible();
   await expect(page.getByText("피드백 확인").first()).toBeVisible();
+
+  expect(errors).toEqual([]);
+});
+
+test("F-01 library timeline prefixes event labels with question numbers", async ({
+  page,
+}) => {
+  const errors = collectErrors(page);
+  const fixture = await createLibraryDashboardFixture();
+
+  await page.goto("/library", { waitUntil: "load" });
+  await expect(page).not.toHaveURL(/\/login/);
+
+  const timeline = page.getByTestId("library-timeline-panel");
+  await timeline.scrollIntoViewIfNeeded();
+  await expect(timeline).toBeVisible();
+  await expect(
+    timeline.getByText(`${fixture.questionNo}번 답안 제출`).first(),
+  ).toBeVisible();
+  await expect(
+    timeline.getByText(`${fixture.questionNo}번 피드백 확인`).first(),
+  ).toBeVisible();
 
   expect(errors).toEqual([]);
 });
