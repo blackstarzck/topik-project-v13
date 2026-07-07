@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, screen, within } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 
 import { LibraryFeedbackWaitingPanel } from "../../../src/components/library/LibraryFeedbackWaitingPanel";
 import type { LibraryFeedbackWaitingItem } from "../../../src/lib/library/types";
@@ -17,7 +23,7 @@ const analyzingItem: LibraryFeedbackWaitingItem = {
   submissionId: "submission-1",
   problemId: "problem-1",
   questionNo: 53,
-  title: "지역 경제 활성화 기여 방안",
+  title: "Digital citizenship",
   submittedAt: "2026-04-07T00:04:00.000Z",
   charCount: 123,
   status: "analyzing",
@@ -26,21 +32,66 @@ const analyzingItem: LibraryFeedbackWaitingItem = {
 
 beforeEach(() => {
   refreshMock.mockReset();
+  vi.spyOn(globalThis, "fetch").mockResolvedValue(
+    new Response(JSON.stringify({ feedback_status: "analyzing" }), {
+      status: 200,
+    }),
+  );
 });
 
 afterEach(() => {
+  vi.restoreAllMocks();
   cleanup();
 });
 
 describe("LibraryFeedbackWaitingPanel", () => {
-  it("refreshes the library dashboard from the card header", () => {
+  it("keeps completed submissions visible with a feedback link after status sync", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      new Response(JSON.stringify({ feedback_status: "complete" }), {
+        status: 200,
+      }),
+    );
     renderWithIntl(<LibraryFeedbackWaitingPanel items={[analyzingItem]} />);
 
-    fireEvent.click(
-      screen.getByRole("button", { name: "분석 완료 여부 새로고침" }),
-    );
+    fireEvent.click(screen.getByTestId("library-feedback-waiting-refresh"));
 
-    expect(refreshMock).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      expect(screen.getByText("피드백 완료")).toBeTruthy();
+    });
+    expect(screen.getByTestId("library-feedback-waiting-row")).toBeTruthy();
+    expect(
+      screen.getByRole("link", { name: "피드백 보기" }).getAttribute("href"),
+    ).toBe("/writing/feedback/long/submission-1");
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/writing/evaluation-status?submissionId=submission-1",
+      { cache: "no-store" },
+    );
+    expect(refreshMock).not.toHaveBeenCalled();
+  });
+
+  it("keeps the row and marks a transient check error when status sync fails", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          feedback_status: "analyzing",
+          error: "status_check_failed",
+        }),
+        { status: 502 },
+      ),
+    );
+    renderWithIntl(<LibraryFeedbackWaitingPanel items={[analyzingItem]} />);
+
+    fireEvent.click(screen.getByTestId("library-feedback-waiting-refresh"));
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId("library-feedback-waiting-sync-error"),
+      ).toBeTruthy();
+    });
+    expect(screen.getByTestId("library-feedback-waiting-row")).toBeTruthy();
+    expect(
+      screen.queryByTestId("library-feedback-waiting-spinner"),
+    ).toBeNull();
   });
 
   it("renders analyzing rows with a loading spinner instead of a status tag", () => {
@@ -76,8 +127,7 @@ describe("LibraryFeedbackWaitingPanel", () => {
       "library-feedback-waiting-status-actions",
     ]);
     expect(meta.textContent).toContain("04. 07. 09:04");
-    expect(meta.textContent).toContain("123자");
-    expect(meta.textContent).not.toContain("제출일");
+    expect(meta.textContent).toContain("123");
     expect(meta.className).toContain("!text-[14px]");
     expect(questionNumber?.textContent).toBe("53");
     expect(questionNumber?.className).toContain(

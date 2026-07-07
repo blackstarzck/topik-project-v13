@@ -1977,9 +1977,11 @@
         "retryAria": "Làm lại {title}",
         "refreshAria": "Làm mới trạng thái phân tích",
         "refreshTooltip": "Kiểm tra phân tích đã hoàn tất chưa",
+        "statusCheckFailed": "Không thể kiểm tra trạng thái",
         "status": {
           "pending": "Đang chờ",
           "analyzing": "Đang phân tích",
+          "complete": "Phản hồi đã sẵn sàng",
           "failed": "Phân tích lỗi"
         }
       },

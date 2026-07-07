@@ -1242,6 +1242,47 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
     ).toBeGreaterThan(0);
   });
 
+  it("does not clamp blank score item explanations", () => {
+    const longFeedback =
+      "This feedback explains the blank in full, including why the answer missed the prompt, which grammar signal was expected, and what the learner should practice next without hiding the ending behind an ellipsis.";
+    const bundle: FeedbackBundle = {
+      feedback: feedback({
+        raw_ai_result: {
+          trait_scores: [
+            {
+              trait: "blank_1",
+              score: 0,
+              feedback: longFeedback,
+            },
+          ],
+        },
+      }),
+      dimensions: [],
+      sentences: [],
+    };
+
+    renderWithIntl(
+      <FeedbackPageContent
+        submission={submission()}
+        bundle={bundle}
+        withSentences
+        showDetailPanel={false}
+        dimensionCardLimit={4}
+        reloadHref="/writing/feedback/short/sub-1"
+        userId="user-1"
+      />,
+    );
+
+    const scoreItem = screen.getByTestId("feedback-report-score-item");
+    const explanation = within(scoreItem).getByText(longFeedback);
+
+    expect(explanation.className).not.toMatch(/\bline-clamp-\d+\b/);
+    expect(explanation.className).not.toContain("truncate");
+    expect(explanation.getAttribute("style") ?? "").not.toContain(
+      "line-clamp",
+    );
+  });
+
   it("renders the short report KPI content without an outer overview wrapper", () => {
     const bundle: FeedbackBundle = {
       feedback: feedback({

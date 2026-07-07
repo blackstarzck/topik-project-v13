@@ -134,7 +134,7 @@ export function FeedbackReportOverview({
                   />
                   <Text
                     type="secondary"
-                    className="line-clamp-2 text-sm"
+                    className="block text-sm"
                     title={item.summary ?? undefined}
                   >
                     {item.summary ?? t("scoreSummaryFallback")}

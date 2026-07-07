@@ -6607,6 +6607,7 @@ body {
 
 .app-notification-item {
   padding: 0;
+  padding-inline: 0;
 }
 
 .app-notification-item__button {

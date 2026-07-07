@@ -93,9 +93,7 @@ export async function GET(request: Request) {
         } as never,
       );
       if (syncError) {
-        return NextResponse.json({
-          feedback_status: submission.feedback_status,
-        });
+        return statusCheckFailedResponse(submission.feedback_status);
       }
       return NextResponse.json({ feedback_status: "failed" });
     }
@@ -115,9 +113,7 @@ export async function GET(request: Request) {
           } as never,
         );
         if (syncError) {
-          return NextResponse.json({
-            feedback_status: submission.feedback_status,
-          });
+          return statusCheckFailedResponse(submission.feedback_status);
         }
       }
       return NextResponse.json({ feedback_status: nextStatus });
@@ -147,11 +143,21 @@ export async function GET(request: Request) {
       } as never,
     );
     if (syncError) {
-      return NextResponse.json({ feedback_status: submission.feedback_status });
+      return statusCheckFailedResponse(submission.feedback_status);
     }
 
     return NextResponse.json({ feedback_status: "complete" });
   } catch {
-    return NextResponse.json({ feedback_status: submission.feedback_status });
+    return statusCheckFailedResponse(submission.feedback_status);
   }
+}
+
+function statusCheckFailedResponse(feedbackStatus: string) {
+  return NextResponse.json(
+    {
+      feedback_status: feedbackStatus,
+      error: "status_check_failed",
+    },
+    { status: 502 },
+  );
 }
