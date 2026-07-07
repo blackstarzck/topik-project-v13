@@ -110,6 +110,7 @@ export async function triggerPdfExport(
     .insert({
       user_id: user.id,
       event_type: "export_downloaded",
+      submission_id: input.sourceType === "submission" ? input.sourceId : null,
       payload: {
         source_type: input.sourceType,
         source_id:

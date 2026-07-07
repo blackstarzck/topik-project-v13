@@ -96,9 +96,10 @@ export function ComparisonReportView(initialReport: Props) {
   useEffect(() => {
     void logStudyEvent({
       eventType: "report_viewed",
+      submissionId: currentSubmissionId,
       payload: { report_id: reportId },
     });
-  }, [reportId]);
+  }, [currentSubmissionId, reportId]);
 
   const narrativeFailed = !narrative || narrative.trim().length === 0;
   const weaknessDisabled = !hasPrevious;

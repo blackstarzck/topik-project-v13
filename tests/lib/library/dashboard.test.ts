@@ -89,6 +89,15 @@ function problem(
   } satisfies LibraryDashboardRows["problems"][number];
 }
 
+function allSubmission(id: string, problemId: string, questionNo: number) {
+  return {
+    id,
+    problem_id: problemId,
+    question_no: questionNo,
+    parent_submission_id: null,
+  };
+}
+
 describe("buildLibraryDashboardFromRows", () => {
   it("builds KPI counts and prioritizes review candidates from saved completed submissions", () => {
     const generated = Array.from({ length: 10 }, (_, index) => {
@@ -192,17 +201,9 @@ describe("buildLibraryDashboardFromRows", () => {
         ),
       ],
       allSubmissions: [
-        { id: "s-length", problem_id: "p-length", parent_submission_id: null },
-        {
-          id: "s-rewrite",
-          problem_id: "p-rewrite",
-          parent_submission_id: null,
-        },
-        {
-          id: "s-rewrite-old",
-          problem_id: "p-rewrite",
-          parent_submission_id: null,
-        },
+        allSubmission("s-length", "p-length", 54),
+        allSubmission("s-rewrite", "p-rewrite", 53),
+        allSubmission("s-rewrite-old", "p-rewrite", 53),
       ],
       studyEvents: [
         {
@@ -211,6 +212,7 @@ describe("buildLibraryDashboardFromRows", () => {
           occurred_at: "2026-06-29T12:35:00.000Z",
           problem_id: "p-length",
           submission_id: "s-length",
+          payload: null,
         },
         {
           id: "event-ignore",
@@ -218,6 +220,7 @@ describe("buildLibraryDashboardFromRows", () => {
           occurred_at: "2026-06-29T12:40:00.000Z",
           problem_id: null,
           submission_id: null,
+          payload: null,
         },
       ],
     };
@@ -407,5 +410,90 @@ describe("buildLibraryDashboardFromRows", () => {
       view.feedbackWaiting.find((item) => item.problemId === "p-failed-hidden")
         ?.retryHref,
     ).toBeNull();
+  });
+
+  it("restores question numbers for payload-backed report and export timeline events", () => {
+    const rows = {
+      libraryItems: [],
+      submissions: [],
+      feedback: [],
+      dimensionScores: [],
+      problems: [
+        problem("p-report", 54, "비교 리포트 문제"),
+        problem("p-export", 53, "PDF 내보내기 문제"),
+      ],
+      allSubmissions: [
+        allSubmission("s-report", "p-report", 54),
+        allSubmission("s-export", "p-export", 53),
+      ],
+      comparisonReports: [
+        {
+          id: "report-1",
+          current_submission_id: "s-report",
+        },
+      ],
+      exportFiles: [
+        {
+          id: "export-1",
+          source_type: "report",
+          source_id: "report-1",
+        },
+      ],
+      studyEvents: [
+        {
+          id: "event-report",
+          event_type: "report_viewed",
+          occurred_at: "2026-06-29T13:00:00.000Z",
+          problem_id: null,
+          submission_id: null,
+          payload: { report_id: "report-1" },
+        },
+        {
+          id: "event-export-submission",
+          event_type: "export_downloaded",
+          occurred_at: "2026-06-29T12:59:00.000Z",
+          problem_id: null,
+          submission_id: null,
+          payload: {
+            source_type: "submission",
+            source_id: "s-export",
+          },
+        },
+        {
+          id: "event-export-report",
+          event_type: "export_downloaded",
+          occurred_at: "2026-06-29T12:58:00.000Z",
+          problem_id: null,
+          submission_id: null,
+          payload: { export_id: "export-1" },
+        },
+      ],
+    } satisfies LibraryDashboardRows;
+
+    const view = buildLibraryDashboardFromRows(rows);
+
+    expect(view.timeline).toEqual([
+      expect.objectContaining({
+        id: "event-report",
+        submissionId: "s-report",
+        problemId: "p-report",
+        questionNo: 54,
+        title: "비교 리포트 문제",
+      }),
+      expect.objectContaining({
+        id: "event-export-submission",
+        submissionId: "s-export",
+        problemId: "p-export",
+        questionNo: 53,
+        title: "PDF 내보내기 문제",
+      }),
+      expect.objectContaining({
+        id: "event-export-report",
+        submissionId: "s-report",
+        problemId: "p-report",
+        questionNo: 54,
+        title: "비교 리포트 문제",
+      }),
+    ]);
   });
 });

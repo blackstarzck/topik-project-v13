@@ -177,6 +177,30 @@ describe("triggerPdfExport", () => {
     });
   });
 
+  it("sets the submission_id column for submission download events", async () => {
+    const client = makeClient();
+    vi.spyOn(window, "print").mockImplementation(() => undefined);
+
+    await triggerPdfExport(
+      { sourceType: "submission", sourceId: "sub-1" },
+      () =>
+        client as unknown as ReturnType<
+          typeof import("../../../src/lib/supabase/browser").createSupabaseBrowserClient
+        >,
+    );
+
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    const eventInsert = client.__insertCalls.find(
+      (c) => c.table === "study_events",
+    );
+    expect(eventInsert?.values).toMatchObject({
+      event_type: "export_downloaded",
+      submission_id: "sub-1",
+      payload: { source_type: "submission", source_id: "sub-1" },
+    });
+  });
+
   it("calls window.print exactly once when running in a browser", async () => {
     const client = makeClient();
     const printSpy = vi.spyOn(window, "print").mockImplementation(() => {

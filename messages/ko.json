@@ -1993,6 +1993,7 @@
         "title": "학습 타임라인",
         "empty": "표시할 최근 학습 이벤트가 없습니다.",
         "viewAll": "전체 타임라인 보기",
+        "eventWithQuestion": "{questionNo} {event}",
         "event": {
           "submission_submitted": "답안 제출",
           "feedback_viewed": "피드백 확인",

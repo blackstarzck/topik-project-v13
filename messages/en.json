@@ -1993,6 +1993,7 @@
         "title": "Study timeline",
         "empty": "No recent study events to show.",
         "viewAll": "View full timeline",
+        "eventWithQuestion": "{questionNo}: {event}",
         "event": {
           "submission_submitted": "Answer submitted",
           "feedback_viewed": "Feedback viewed",

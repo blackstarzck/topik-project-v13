@@ -268,6 +268,8 @@ async function createLibraryDashboardFixture() {
     marker,
     questionNo,
     problemTitle: problemTitle ?? `${questionNo}번 문제`,
+    submittedEventId: studyEventIds[0],
+    feedbackEventId: studyEventIds[1],
   };
 }
 
@@ -830,11 +832,11 @@ test("F-01 library timeline prefixes event labels with question numbers", async 
   await timeline.scrollIntoViewIfNeeded();
   await expect(timeline).toBeVisible();
   await expect(
-    timeline.getByText(`${fixture.questionNo}번 답안 제출`).first(),
-  ).toBeVisible();
+    page.getByTestId(`library-timeline-content-${fixture.submittedEventId}`),
+  ).toContainText(`${fixture.questionNo}번`);
   await expect(
-    timeline.getByText(`${fixture.questionNo}번 피드백 확인`).first(),
-  ).toBeVisible();
+    page.getByTestId(`library-timeline-content-${fixture.feedbackEventId}`),
+  ).toContainText(`${fixture.questionNo}번`);
 
   expect(errors).toEqual([]);
 });

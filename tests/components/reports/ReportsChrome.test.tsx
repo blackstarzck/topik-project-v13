@@ -17,6 +17,7 @@ import { ComparisonReportView } from "../../../src/components/reports/Comparison
 import { ScoreComparisonChart } from "../../../src/components/reports/ScoreComparisonChart";
 import { SubmissionDiffPanel } from "../../../src/components/reports/SubmissionDiffPanel";
 import CompareReportLoading from "../../../src/app/(workspace)/writing/reports/[id]/compare/loading";
+import { logStudyEvent } from "../../../src/lib/events/study-events";
 import koMessages from "../../../messages/ko.json";
 
 // The `reports.*` catalog is now merged into messages/ko.json. We render against
@@ -92,6 +93,7 @@ beforeEach(() => {
   appApiMocks.notification.success.mockClear();
   appApiMocks.notification.error.mockClear();
   appApiMocks.notification.info.mockClear();
+  vi.mocked(logStudyEvent).mockClear();
   // Ant Design / recharts touch ResizeObserver + matchMedia, which jsdom omits.
   if (!(globalThis as Record<string, unknown>).ResizeObserver) {
     (globalThis as Record<string, unknown>).ResizeObserver = class {
@@ -511,6 +513,53 @@ describe("Comparison report loading chrome", () => {
 });
 
 describe("ComparisonReportView next action chrome", () => {
+  it("logs report views with the current submission id for timeline attribution", () => {
+    renderReports(
+      <ComparisonReportView
+        metrics={{
+          score_delta: 12,
+          dimension_deltas: { grammar: 12 },
+          char_delta: 24,
+          no_previous: false,
+        }}
+        narrative="이전 답안보다 문법과 구성 점수가 올랐습니다."
+        currentText="이번 답안입니다."
+        previousText="이전 답안입니다."
+        retryHref="/writing/51?retry=sub-1"
+        reportId="report-1"
+        currentScore={82}
+        chartData={[]}
+        currentNorm={{ grammar: 82 }}
+        hasPrevious
+        currentSubmissionId="current-1"
+        currentQuestionNo={54}
+        currentSubmittedAt="2026-05-20T10:00:00.000Z"
+        selectedPreviousSubmissionId="previous-1"
+        comparisonTargets={[
+          {
+            submissionId: "previous-1",
+            questionNo: 54,
+            problemId: "problem-54",
+            submittedAt: "2026-05-19T10:00:00.000Z",
+            feedbackStatus: "complete",
+            score: 70,
+            scoreMax: 100,
+            charCount: 80,
+            isSelected: true,
+            isRecommended: true,
+            isDisabled: false,
+          },
+        ]}
+      />,
+    );
+
+    expect(logStudyEvent).toHaveBeenCalledWith({
+      eventType: "report_viewed",
+      submissionId: "current-1",
+      payload: { report_id: "report-1" },
+    });
+  });
+
   it("renders the report title with only digits in the styled question number", () => {
     renderReports(
       <ComparisonReportView

@@ -5,7 +5,7 @@ import {
   type SupabaseServerClient,
 } from "../supabase/server";
 import { filterVisibleProblemIds } from "../problems/visibility";
-import type { Tables } from "../supabase/types";
+import type { Json, Tables } from "../supabase/types";
 import { writingFeedbackHref, writingProblemHref } from "../writing/routes";
 import type {
   LibraryDashboardFeedbackWaitingStatus,
@@ -55,12 +55,32 @@ type ProblemDashboardRow = Pick<
 
 type SubmissionProblemRow = Pick<
   Tables<"writing_submissions">,
-  "id" | "problem_id" | "parent_submission_id"
+  "id" | "problem_id" | "question_no" | "parent_submission_id"
 >;
 
 type StudyEventDashboardRow = Pick<
   Tables<"study_events">,
-  "id" | "event_type" | "occurred_at" | "problem_id" | "submission_id"
+  | "id"
+  | "event_type"
+  | "occurred_at"
+  | "problem_id"
+  | "submission_id"
+  | "payload"
+>;
+
+type ComparisonReportDashboardRow = Pick<
+  Tables<"comparison_reports">,
+  "id" | "current_submission_id"
+>;
+
+type ExportFileDashboardRow = Pick<
+  Tables<"export_files">,
+  "id" | "source_type" | "source_id"
+>;
+
+type TimelineSubmissionRow = Pick<
+  Tables<"writing_submissions">,
+  "id" | "problem_id" | "question_no"
 >;
 
 export type LibraryDashboardRows = {
@@ -71,6 +91,8 @@ export type LibraryDashboardRows = {
   problems: ProblemDashboardRow[];
   allSubmissions: SubmissionProblemRow[];
   studyEvents: StudyEventDashboardRow[];
+  comparisonReports?: ComparisonReportDashboardRow[];
+  exportFiles?: ExportFileDashboardRow[];
   visibleProblemIds?: string[];
 };
 
@@ -122,10 +144,29 @@ export async function getLibraryDashboard(
       fetchTimelineEvents(supabase, userId),
     ]);
 
+  const exportFiles = await fetchExportFiles(
+    supabase,
+    collectTimelineExportIds(studyEvents),
+  );
+  const comparisonReports = await fetchComparisonReports(
+    supabase,
+    collectTimelineReportIds(studyEvents, exportFiles),
+  );
+  const timelineSubmissionIds = collectTimelineSubmissionIds(
+    studyEvents,
+    comparisonReports,
+    exportFiles,
+  );
+  const allSubmissionsById = new Map(
+    allSubmissions.map((row) => [row.id, row]),
+  );
   const problemIds = uniqueIds([
     ...submissions.map((row) => row.problem_id),
     ...(libraryItems ?? []).map((row) => row.problem_id),
     ...studyEvents.map((row) => row.problem_id),
+    ...timelineSubmissionIds.map(
+      (submissionId) => allSubmissionsById.get(submissionId)?.problem_id,
+    ),
   ]);
   const [problems, visibleProblemIds] = await Promise.all([
     fetchProblems(supabase, problemIds),
@@ -140,6 +181,8 @@ export async function getLibraryDashboard(
     problems,
     allSubmissions,
     studyEvents,
+    comparisonReports,
+    exportFiles,
     visibleProblemIds: [...visibleProblemIds],
   });
 }
@@ -151,22 +194,36 @@ export function buildLibraryDashboardFromRows(
     (item) => item.item_type === "submission" && Boolean(item.submission_id),
   );
   const submissionsById = new Map(rows.submissions.map((row) => [row.id, row]));
+  const timelineSubmissionsById = new Map<string, TimelineSubmissionRow>();
+  for (const row of rows.allSubmissions) {
+    timelineSubmissionsById.set(row.id, row);
+  }
+  for (const row of rows.submissions) {
+    timelineSubmissionsById.set(row.id, row);
+  }
   const feedbackBySubmissionId = new Map(
     rows.feedback.map((row) => [row.submission_id, row]),
   );
   const problemsById = new Map(rows.problems.map((row) => [row.id, row]));
+  const comparisonReportsById = new Map(
+    (rows.comparisonReports ?? []).map((row) => [row.id, row]),
+  );
+  const exportFilesById = new Map(
+    (rows.exportFiles ?? []).map((row) => [row.id, row]),
+  );
   const visibleProblemIds = rows.visibleProblemIds
     ? new Set(rows.visibleProblemIds)
     : null;
   const dimensionsBySubmissionId = groupDimensions(rows.dimensionScores);
   const submissionProblemCounts = countSubmissionsByProblem(
     rows.allSubmissions.length > 0
-      ? rows.allSubmissions
-      : rows.submissions.map((row) => ({
-          id: row.id,
-          problem_id: row.problem_id,
-          parent_submission_id: row.parent_submission_id,
-        })),
+        ? rows.allSubmissions
+        : rows.submissions.map((row) => ({
+            id: row.id,
+            problem_id: row.problem_id,
+            question_no: row.question_no,
+            parent_submission_id: row.parent_submission_id,
+          })),
   );
 
   const savedRows = savedSubmissionItems
@@ -244,22 +301,28 @@ export function buildLibraryDashboardFromRows(
     .sort((a, b) => compareIsoDesc(a.occurred_at, b.occurred_at))
     .slice(0, TIMELINE_LIMIT)
     .map((event) => {
-      const submission = event.submission_id
-        ? submissionsById.get(event.submission_id)
+      const submissionId =
+        event.submission_id ??
+        resolvePayloadSubmissionId(
+          event,
+          comparisonReportsById,
+          exportFilesById,
+        );
+      const submission = submissionId
+        ? timelineSubmissionsById.get(submissionId)
         : undefined;
       const problemId = event.problem_id ?? submission?.problem_id ?? null;
       const problem = problemId ? (problemsById.get(problemId) ?? null) : null;
+      const questionNo =
+        submission?.question_no ?? problem?.question_no ?? null;
       return {
         id: event.id,
         eventType: event.event_type as LibraryDashboardTimelineEventType,
         occurredAt: event.occurred_at,
         problemId,
-        submissionId: event.submission_id,
-        questionNo: submission?.question_no ?? problem?.question_no ?? null,
-        title: problemTitle(
-          problem,
-          submission?.question_no ?? problem?.question_no,
-        ),
+        submissionId,
+        questionNo,
+        title: problemTitle(problem, questionNo),
       };
     });
 
@@ -340,7 +403,7 @@ async function fetchAllSubmissionProblemRows(
 ): Promise<SubmissionProblemRow[]> {
   const { data, error } = await supabase
     .from("writing_submissions")
-    .select("id, problem_id, parent_submission_id")
+    .select("id, problem_id, question_no, parent_submission_id")
     .eq("user_id", userId)
     .order("submitted_at", { ascending: false })
     .limit(500);
@@ -358,7 +421,7 @@ async function fetchTimelineEvents(
 ): Promise<StudyEventDashboardRow[]> {
   const { data, error } = await supabase
     .from("study_events")
-    .select("id, event_type, occurred_at, problem_id, submission_id")
+    .select("id, event_type, occurred_at, problem_id, submission_id, payload")
     .eq("user_id", userId)
     .in("event_type", [...TIMELINE_EVENT_TYPES])
     .order("occurred_at", { ascending: false })
@@ -367,6 +430,38 @@ async function fetchTimelineEvents(
     throw new Error(`getLibraryDashboard(study_events): ${error.message}`);
   }
   return (data ?? []) as StudyEventDashboardRow[];
+}
+
+async function fetchComparisonReports(
+  supabase: SupabaseServerClient,
+  ids: string[],
+): Promise<ComparisonReportDashboardRow[]> {
+  if (ids.length === 0) return [];
+  const { data, error } = await supabase
+    .from("comparison_reports")
+    .select("id, current_submission_id")
+    .in("id", ids);
+  if (error) {
+    throw new Error(
+      `getLibraryDashboard(comparison_reports): ${error.message}`,
+    );
+  }
+  return (data ?? []) as ComparisonReportDashboardRow[];
+}
+
+async function fetchExportFiles(
+  supabase: SupabaseServerClient,
+  ids: string[],
+): Promise<ExportFileDashboardRow[]> {
+  if (ids.length === 0) return [];
+  const { data, error } = await supabase
+    .from("export_files")
+    .select("id, source_type, source_id")
+    .in("id", ids);
+  if (error) {
+    throw new Error(`getLibraryDashboard(export_files): ${error.message}`);
+  }
+  return (data ?? []) as ExportFileDashboardRow[];
 }
 
 async function fetchProblems(
@@ -671,6 +766,114 @@ function isTimelineEventType(
   );
 }
 
+function payloadString(payload: Json | null, key: string): string | null {
+  if (
+    payload === null ||
+    typeof payload !== "object" ||
+    Array.isArray(payload)
+  ) {
+    return null;
+  }
+  const value = payload[key];
+  return typeof value === "string" && value.length > 0 ? value : null;
+}
+
+function collectTimelineExportIds(events: StudyEventDashboardRow[]): string[] {
+  return uniqueIds(
+    events.map((event) => payloadString(event.payload, "export_id")),
+  );
+}
+
+function collectTimelineReportIds(
+  events: StudyEventDashboardRow[],
+  exportFiles: ExportFileDashboardRow[],
+): string[] {
+  return uniqueIds([
+    ...events.map((event) =>
+      event.event_type === "report_viewed"
+        ? payloadString(event.payload, "report_id")
+        : null,
+    ),
+    ...events.map((event) => {
+      const source = payloadSource(event.payload);
+      return source?.sourceType === "report" ? source.sourceId : null;
+    }),
+    ...exportFiles.map((file) =>
+      file.source_type === "report" ? file.source_id : null,
+    ),
+  ]);
+}
+
+function collectTimelineSubmissionIds(
+  events: StudyEventDashboardRow[],
+  comparisonReports: ComparisonReportDashboardRow[],
+  exportFiles: ExportFileDashboardRow[],
+): string[] {
+  const comparisonReportsById = new Map(
+    comparisonReports.map((row) => [row.id, row]),
+  );
+  const exportFilesById = new Map(exportFiles.map((row) => [row.id, row]));
+
+  return uniqueIds([
+    ...events.map((event) => event.submission_id),
+    ...events.map((event) =>
+      resolvePayloadSubmissionId(event, comparisonReportsById, exportFilesById),
+    ),
+  ]);
+}
+
+function payloadSource(payload: Json | null): {
+  sourceType: ExportFileDashboardRow["source_type"];
+  sourceId: string;
+} | null {
+  const sourceType = payloadString(payload, "source_type");
+  const sourceId = payloadString(payload, "source_id");
+  if (
+    (sourceType === "submission" ||
+      sourceType === "report" ||
+      sourceType === "library_selection") &&
+    sourceId
+  ) {
+    return { sourceType, sourceId };
+  }
+  return null;
+}
+
+function resolvePayloadSubmissionId(
+  event: StudyEventDashboardRow,
+  comparisonReportsById: Map<string, ComparisonReportDashboardRow>,
+  exportFilesById: Map<string, ExportFileDashboardRow>,
+): string | null {
+  if (event.event_type === "report_viewed") {
+    const reportId = payloadString(event.payload, "report_id");
+    return reportId
+      ? (comparisonReportsById.get(reportId)?.current_submission_id ?? null)
+      : null;
+  }
+
+  if (event.event_type !== "export_downloaded") return null;
+
+  const source =
+    payloadSource(event.payload) ??
+    (() => {
+      const exportId = payloadString(event.payload, "export_id");
+      const file = exportId ? exportFilesById.get(exportId) : null;
+      if (!file?.source_id) return null;
+      return {
+        sourceType: file.source_type,
+        sourceId: file.source_id,
+      };
+    })();
+
+  if (source?.sourceType === "submission") return source.sourceId;
+  if (source?.sourceType === "report") {
+    return (
+      comparisonReportsById.get(source.sourceId)?.current_submission_id ?? null
+    );
+  }
+  return null;
+}
+
 function problemTitle(
   problem: ProblemDashboardRow | null | undefined,
   questionNo: number | null | undefined,
@@ -688,7 +891,7 @@ function compareIsoDesc(a: string, b: string) {
   return new Date(b).getTime() - new Date(a).getTime();
 }
 
-function uniqueIds(values: Array<string | null>): string[] {
+function uniqueIds(values: Array<string | null | undefined>): string[] {
   const set = new Set<string>();
   for (const value of values) {
     if (value) set.add(value);

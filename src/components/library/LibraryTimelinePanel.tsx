@@ -49,7 +49,12 @@ export function LibraryTimelinePanel({ items }: Props) {
               );
               const eventLabel =
                 item.questionNo != null
-                  ? `${t("questionNo", { questionNo: item.questionNo })} ${eventTypeLabel}`
+                  ? t("timeline.eventWithQuestion", {
+                      questionNo: t("questionNo", {
+                        questionNo: item.questionNo,
+                      }),
+                      event: eventTypeLabel,
+                    })
                   : eventTypeLabel;
               return (
                 <div

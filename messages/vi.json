@@ -1993,6 +1993,7 @@
         "title": "Dòng thời gian học tập",
         "empty": "Không có hoạt động học gần đây để hiển thị.",
         "viewAll": "Xem toàn bộ dòng thời gian",
+        "eventWithQuestion": "{questionNo}: {event}",
         "event": {
           "submission_submitted": "Đã nộp bài",
           "feedback_viewed": "Đã xem phản hồi",
