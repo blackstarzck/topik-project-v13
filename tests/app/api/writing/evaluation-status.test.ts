@@ -218,4 +218,62 @@ describe("GET /api/writing/evaluation-status", () => {
     });
     expect(helpers.serviceRpcMock).not.toHaveBeenCalled();
   });
+
+  it("reports a status check error without marking the submission failed when external status lookup fails", async () => {
+    helpers.getExternalEvaluationStatusMock.mockRejectedValueOnce(
+      new Error("upstream unavailable"),
+    );
+
+    const response = await GET(
+      new Request(
+        "http://localhost/api/writing/evaluation-status?submissionId=00000000-0000-0000-0000-000000000099",
+      ),
+    );
+
+    expect(response.status).toBe(502);
+    await expect(response.json()).resolves.toEqual({
+      feedback_status: "analyzing",
+      error: "status_check_failed",
+    });
+    expect(helpers.serviceRpcMock).not.toHaveBeenCalled();
+  });
+
+  it("reports a status check error without marking the submission failed when feedback sync fails", async () => {
+    helpers.getExternalEvaluationStatusMock.mockResolvedValue({
+      submission_id: "00000000-0000-0000-0000-000000000099",
+      status: "graded",
+    });
+    helpers.getExternalEvaluationFeedbackMock.mockResolvedValue({
+      submission_id: "00000000-0000-0000-0000-000000000099",
+      status: "graded",
+    });
+    helpers.mapExternalEvaluationFeedbackMock.mockReturnValue({
+      feedback: {
+        status: "complete",
+        score_total: 9,
+        score_max: 10,
+        overall_summary: "Good",
+        ai_model: "talkpik-writing-api",
+        ai_model_version: "openapi",
+      },
+      dimensions: [],
+      sentences: [],
+    });
+    helpers.serviceRpcMock.mockResolvedValueOnce({
+      data: null,
+      error: { message: "illegal feedback_status transition" },
+    });
+
+    const response = await GET(
+      new Request(
+        "http://localhost/api/writing/evaluation-status?submissionId=00000000-0000-0000-0000-000000000099",
+      ),
+    );
+
+    expect(response.status).toBe(502);
+    await expect(response.json()).resolves.toEqual({
+      feedback_status: "analyzing",
+      error: "status_check_failed",
+    });
+  });
 });
