@@ -211,6 +211,7 @@ async function createDirectFixture(): Promise<DirectFixture> {
   const marker = `e2e-direct-${randomUUID().slice(0, 8)}`;
   const baseTime = Date.parse("2000-01-01T00:00:00.000Z");
   const problems: DirectFixture["problems"] = [];
+  const fixture: DirectFixture = { marker, userId: user.id, problems };
   const rows = [];
 
   for (const questionNo of [51, 52, 53, 54] as const) {
@@ -277,39 +278,44 @@ async function createDirectFixture(): Promise<DirectFixture> {
     );
   }
 
-  const inserted = await sb.from("problems").insert(rows);
-  if (inserted.error) throw inserted.error;
+  try {
+    const inserted = await sb.from("problems").insert(rows);
+    if (inserted.error) throw inserted.error;
 
-  const q51Touched = problems.find(
-    (problem) => problem.questionNo === 51 && problem.role === "touched",
-  );
-  const q52Touched = problems.find(
-    (problem) => problem.questionNo === 52 && problem.role === "touched",
-  );
-  if (!q51Touched || !q52Touched) throw new Error("Fixture setup failed.");
+    const q51Touched = problems.find(
+      (problem) => problem.questionNo === 51 && problem.role === "touched",
+    );
+    const q52Touched = problems.find(
+      (problem) => problem.questionNo === 52 && problem.role === "touched",
+    );
+    if (!q51Touched || !q52Touched) throw new Error("Fixture setup failed.");
 
-  const submission = await sb.from("writing_submissions").insert({
-    user_id: user.id,
-    problem_id: q51Touched.id,
-    question_no: 51,
-    answer_text: `submitted fixture ${marker}`,
-    char_count: `submitted fixture ${marker}`.length,
-    feedback_status: "failed",
-  });
-  if (submission.error) throw submission.error;
+    const submission = await sb.from("writing_submissions").insert({
+      user_id: user.id,
+      problem_id: q51Touched.id,
+      question_no: 51,
+      answer_text: `submitted fixture ${marker}`,
+      char_count: `submitted fixture ${marker}`.length,
+      feedback_status: "failed",
+    });
+    if (submission.error) throw submission.error;
 
-  const draft = await sb.from("writing_drafts").insert({
-    user_id: user.id,
-    problem_id: q52Touched.id,
-    question_no: 52,
-    answer_text: `superseded draft fixture ${marker}`,
-    char_count: `superseded draft fixture ${marker}`.length,
-    autosave_status: "superseded",
-    last_saved_at: new Date().toISOString(),
-  });
-  if (draft.error) throw draft.error;
+    const draft = await sb.from("writing_drafts").insert({
+      user_id: user.id,
+      problem_id: q52Touched.id,
+      question_no: 52,
+      answer_text: `superseded draft fixture ${marker}`,
+      char_count: `superseded draft fixture ${marker}`.length,
+      autosave_status: "superseded",
+      last_saved_at: new Date().toISOString(),
+    });
+    if (draft.error) throw draft.error;
 
-  return { marker, userId: user.id, problems };
+    return fixture;
+  } catch (error) {
+    await cleanupFixture(fixture);
+    throw error;
+  }
 }
 
 async function cleanupFixture(fixture: DirectFixture | null) {
