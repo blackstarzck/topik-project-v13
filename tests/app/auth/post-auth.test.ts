@@ -133,7 +133,7 @@ describe("/auth/post-auth", () => {
     await expect(renderPostAuth()).rejects.toThrow("NEXT_REDIRECT:/dashboard");
   });
 
-  it("adds a Google linked notice only to final authenticated destinations", async () => {
+  it("does not add a Google linked notice for a normal Google login", async () => {
     requireActiveSessionMock.mockResolvedValueOnce({
       user: {
         id: "user-1",
@@ -145,7 +145,39 @@ describe("/auth/post-auth", () => {
     });
 
     await expect(renderPostAuth("sign-up")).rejects.toThrow(
+      /^NEXT_REDIRECT:\/dashboard$/,
+    );
+  });
+
+  it("adds a Google linked notice only after the explicit Google link intent", async () => {
+    requireActiveSessionMock.mockResolvedValueOnce({
+      user: {
+        id: "user-1",
+        email: "student@example.com",
+        email_confirmed_at: "2026-06-29T00:00:00.000Z",
+        identities: [{ provider: "email" }, { provider: "google" }],
+      },
+      profile: { status: "active", ui_locale: "ko" },
+    });
+
+    await expect(renderPostAuth("link-google")).rejects.toThrow(
       "NEXT_REDIRECT:/dashboard?notice=google-linked",
+    );
+  });
+
+  it("does not add a Google linked notice when the link intent returns without a Google identity", async () => {
+    requireActiveSessionMock.mockResolvedValueOnce({
+      user: {
+        id: "user-1",
+        email: "student@example.com",
+        email_confirmed_at: "2026-06-29T00:00:00.000Z",
+        identities: [{ provider: "email" }],
+      },
+      profile: { status: "active", ui_locale: "ko" },
+    });
+
+    await expect(renderPostAuth("link-google")).rejects.toThrow(
+      /^NEXT_REDIRECT:\/dashboard$/,
     );
   });
 

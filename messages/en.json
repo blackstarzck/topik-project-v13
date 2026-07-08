@@ -363,8 +363,7 @@
   },
   "auth": {
     "identityNotice": {
-      "googleLinkedTitle": "Google sign-in is connected to your account.",
-      "googleLinkedDescription": "You can use either email or Google to sign in next time."
+      "googleLinkedMessage": "Google account connected."
     },
     "login": {
       "metaTitle": "Log in — TALKPIK",

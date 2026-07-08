@@ -3,6 +3,7 @@
 import { createSupabaseBrowserClient } from "../supabase/browser";
 
 export type GoogleOAuthIntent = "login" | "sign-up";
+export type PostAuthIntent = GoogleOAuthIntent | "link-google";
 export type GoogleOAuthEmbeddedBrowser =
   | "kakaoTalk"
   | "instagram"
@@ -52,7 +53,7 @@ export function isGoogleOAuthUnsupportedBrowserError(
   );
 }
 
-export function buildPostAuthPath(intent: GoogleOAuthIntent): string {
+export function buildPostAuthPath(intent: PostAuthIntent): string {
   return `/auth/post-auth?intent=${intent}`;
 }
 

@@ -363,8 +363,7 @@
   },
   "auth": {
     "identityNotice": {
-      "googleLinkedTitle": "Google 로그인이 계정에 연결됐어요.",
-      "googleLinkedDescription": "다음부터 이메일 또는 Google로 로그인할 수 있어요."
+      "googleLinkedMessage": "Google 계정이 연결됐어요."
     },
     "login": {
       "metaTitle": "로그인 — TALKPIK",

@@ -9,7 +9,7 @@ import { GOOGLE_LINKED_NOTICE } from "@/lib/auth/identity-linking";
 
 export function AuthIdentityNotice() {
   const t = useTranslations("auth.identityNotice");
-  const { notification } = App.useApp();
+  const { message } = App.useApp();
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -18,10 +18,10 @@ export function AuthIdentityNotice() {
 
   useEffect(() => {
     if (notice !== GOOGLE_LINKED_NOTICE) return;
-    notification.success({
+    message.open({
+      type: "success",
       key: GOOGLE_LINKED_NOTICE,
-      title: t("googleLinkedTitle"),
-      description: t("googleLinkedDescription"),
+      content: t("googleLinkedMessage"),
     });
 
     const nextParams = new URLSearchParams(searchParamString);
@@ -30,7 +30,7 @@ export function AuthIdentityNotice() {
     router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, {
       scroll: false,
     });
-  }, [notice, notification, pathname, router, searchParamString, t]);
+  }, [notice, message, pathname, router, searchParamString, t]);
 
   return null;
 }
