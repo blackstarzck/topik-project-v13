@@ -1,12 +1,26 @@
 import dayjs from "dayjs";
-import { describe, expect, it } from "vitest";
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import {
   computeExamDaysLeft,
   computeStreakDays,
   getDashboardKpi,
 } from "../../../src/lib/learning/kpi";
 
-const TODAY = dayjs().startOf("day");
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+const KST = "Asia/Seoul";
+const TODAY = dayjs.tz("2026-05-21", KST).startOf("day");
+
+beforeAll(() => {
+  vi.useFakeTimers({ now: new Date("2026-05-21T03:00:00Z") });
+});
+
+afterAll(() => {
+  vi.useRealTimers();
+});
 
 function isoDaysAgo(n: number): string {
   return TODAY.subtract(n, "day").add(10, "hour").toISOString();

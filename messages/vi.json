@@ -363,8 +363,7 @@
   },
   "auth": {
     "identityNotice": {
-      "googleLinkedTitle": "Đăng nhập Google đã được kết nối với tài khoản.",
-      "googleLinkedDescription": "Lần sau bạn có thể đăng nhập bằng email hoặc Google."
+      "googleLinkedMessage": "Đã kết nối tài khoản Google."
     },
     "login": {
       "metaTitle": "Đăng nhập — TALKPIK",

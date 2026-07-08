@@ -1,21 +1,26 @@
 import { redirect } from "next/navigation";
 
 import { requireVerifiedActiveSession } from "@/lib/auth/access-gate";
-import { addGoogleLinkedNotice } from "@/lib/auth/identity-linking";
+import {
+  GOOGLE_LINK_INTENT,
+  addGoogleLinkedNotice,
+  shouldAddGoogleLinkedNotice,
+} from "@/lib/auth/identity-linking";
 import { getAuthCompletionStatusForSession } from "@/lib/auth/completion";
 import { backfillOAuthDisplayName } from "@/lib/legal/consent";
 
 export const dynamic = "force-dynamic";
 
 type SearchParams = Record<string, string | string[] | undefined>;
-type AuthIntent = "login" | "sign-up";
+type AuthIntent = "login" | "sign-up" | typeof GOOGLE_LINK_INTENT;
 
 function pickFirst(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
 }
 
 function parseIntent(value: string | undefined): AuthIntent {
-  return value === "sign-up" ? "sign-up" : "login";
+  if (value === "sign-up" || value === GOOGLE_LINK_INTENT) return value;
+  return "login";
 }
 
 export default async function PostAuthPage({
@@ -41,10 +46,11 @@ export default async function PostAuthPage({
     redirect(`/auth/consent?next=${encodeURIComponent(consentNext)}`);
   }
 
+  const destination =
+    completionStatus === "ready" ? "/dashboard" : "/onboarding/learning-goal";
   redirect(
-    addGoogleLinkedNotice(
-      completionStatus === "ready" ? "/dashboard" : "/onboarding/learning-goal",
-      user,
-    ),
+    shouldAddGoogleLinkedNotice(user, intent)
+      ? addGoogleLinkedNotice(destination)
+      : destination,
   );
 }

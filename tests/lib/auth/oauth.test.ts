@@ -10,9 +10,12 @@ import {
 } from "../../../src/lib/auth/oauth";
 
 describe("Google OAuth URL helpers", () => {
-  it("buildPostAuthPath keeps login and sign-up intents distinct", () => {
+  it("buildPostAuthPath keeps auth and linking intents distinct", () => {
     expect(buildPostAuthPath("login")).toBe("/auth/post-auth?intent=login");
     expect(buildPostAuthPath("sign-up")).toBe("/auth/post-auth?intent=sign-up");
+    expect(buildPostAuthPath("link-google")).toBe(
+      "/auth/post-auth?intent=link-google",
+    );
   });
 
   it("buildInstitutionInvitePath wraps the sign-up post-auth path as a relative next route", () => {

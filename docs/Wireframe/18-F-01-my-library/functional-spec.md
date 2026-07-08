@@ -28,6 +28,7 @@
 ## 상태/오류
 
 - 저장 항목 없음, export 실패
+- PDF quota exceeded: warning/info message. Library selection export does not bypass quota through print fallback.
 
 ## 데이터 사용
 
@@ -42,6 +43,8 @@
 | `comparison_reports` | `id`, `metrics`, `narrative`, `generated_at` | read | 리포트 탭에 사용한다. | authenticated user; auth.uid() owner RLS where user-owned | `src/lib/library/queries.ts`<br>`src/lib/library/server.ts`<br>`src/lib/writing/server.ts`<br>`supabase/migrations/20260520120500_feedback.sql` | none |
 | `problems` | `id`, `title`, `question_no`, `difficulty` | read | 저장한 문제 탭에 사용한다. | authenticated user; auth.uid() owner RLS where user-owned | `src/lib/library/queries.ts`<br>`src/lib/library/server.ts`<br>`src/lib/practice/next.ts` | none |
 | `export_files` | `source_type`, `source_id`, `storage_path`, `status`, `created_at` | read | 내보내기 파일 목록에 사용한다. | authenticated user; auth.uid() owner RLS where user-owned | `src/lib/export/pdf-export.ts`<br>`src/lib/library/queries.ts`<br>`src/lib/library/server.ts`<br>`supabase/migrations/20260520120700_library_events_exports.sql` | none |
+| `pdf_export_quota_policies` / `pdf_export_quota_usages` | `limit_count`, `period_unit`, `problem_id`, `status`, `period_start`, `period_end` | read/write via RPC | Library PDF export quota is enforced for the distinct `problem_id` values included in the export. The same problem appearing multiple times in one PDF counts once. | no direct browser writes; SECURITY DEFINER RPCs enforce owner scope | `src/lib/export/pdf-export-quota.ts`<br>`supabase/migrations/20260707120000_pdf_export_quota.sql` | none |
+| `claim_pdf_export_quota` / `commit_pdf_export_quota` / `release_pdf_export_quota` | `p_problem_ids`, `p_usage_ids`, `p_export_file_id` | rpc | Reserves, commits, or releases quota for library selection PDF export and server print fallback. | authenticated user scoped | `src/app/api/export/pdf/route.ts`<br>`src/app/api/export/pdf/print/route.ts` | none |
 | `study_events` | `event_type`, `occurred_at`, `payload` | read | 학습 활동 기록에 사용한다. | authenticated user; auth.uid() owner RLS where user-owned | `src/lib/events/study-events.ts`<br>`src/lib/export/pdf-export.ts`<br>`supabase/migrations/20260520120700_library_events_exports.sql` | none |
 
 ## 현재 구현 상태

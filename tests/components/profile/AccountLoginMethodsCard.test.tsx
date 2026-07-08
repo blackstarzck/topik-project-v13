@@ -50,6 +50,7 @@ function renderCard() {
 
 describe("AccountLoginMethodsCard", () => {
   beforeEach(() => {
+    window.history.pushState({}, "", "http://localhost:3000/settings/account");
     getUserIdentitiesMock.mockReset();
     getUserIdentitiesMock.mockResolvedValue({
       data: {
@@ -108,7 +109,13 @@ describe("AccountLoginMethodsCard", () => {
     });
 
     await waitFor(() => {
-      expect(linkIdentityMock).toHaveBeenCalledWith({ provider: "google" });
+      expect(linkIdentityMock).toHaveBeenCalledWith({
+        provider: "google",
+        options: {
+          redirectTo:
+            "http://localhost:3000/auth/callback?next=%2Fauth%2Fpost-auth%3Fintent%3Dlink-google",
+        },
+      });
       expect(
         screen.queryByRole("button", { name: "Connect Google" }),
       ).toBeNull();
@@ -134,7 +141,13 @@ describe("AccountLoginMethodsCard", () => {
     });
 
     await waitFor(() => {
-      expect(linkIdentityMock).toHaveBeenCalledWith({ provider: "google" });
+      expect(linkIdentityMock).toHaveBeenCalledWith({
+        provider: "google",
+        options: {
+          redirectTo:
+            "http://localhost:3000/auth/callback?next=%2Fauth%2Fpost-auth%3Fintent%3Dlink-google",
+        },
+      });
       expect(screen.getByText("Could not start Google linking.")).toBeTruthy();
     });
     expect(screen.queryByText(/provider token leaked raw detail/)).toBeNull();

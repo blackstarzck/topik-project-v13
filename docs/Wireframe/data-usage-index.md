@@ -5,13 +5,13 @@
 ## Summary
 
 - Pages: 36
-- Tables: 32 (31 v13 + 1 topik-ai shared)
-- RPC/functions: 38
+- Tables: 36 (35 v13 + 1 topik-ai shared)
+- RPC/functions: 41
 - Storage buckets: 3
-- Page data links: 122
+- Page data links: 129
 - Unclassified DB objects: 0
 
-> 집계 기준: Tables는 현재 v13 forward migration 테이블 31개와 topik-ai 소유 공유 테이블 `notification_delivery_attempts` 1개를 합산한다. Page data links는 fallback/schema-supported/deprecated 행까지 포함한 화면 데이터 계약 행 수다.
+> 집계 기준: Tables는 현재 v13 forward migration 테이블 35개와 topik-ai 소유 공유 테이블 `notification_delivery_attempts` 1개를 합산한다. v13 테이블 수에는 2026-07-08에 accepted된 PDF quota 테이블 4개가 포함된다. RPC/functions에는 PDF quota RPC 3개가 포함된다. Page data links는 fallback/schema-supported/deprecated 행까지 포함한 화면 데이터 계약 행 수다.
 
 ## avatars
 
@@ -34,6 +34,33 @@
 | E-02 | Long-form feedback | table | `source_type`, `source_id`, `status`, `storage_path` | read/write | 피드백 PDF 내보내기와 연결된다. |
 | F-01 | My library | table | `source_type`, `source_id`, `storage_path`, `status`, `created_at` | read | 내보내기 파일 목록에 사용한다. |
 | F-M1 | PDF export modal | table | `source_type`, `source_id`, `storage_path`, `options`, `status` | read/write | PDF 생성 요청과 결과 파일 상태를 저장한다. |
+
+## pdf_export_quota_policies
+
+| IA | Screen | Type | Columns/fields | Usage | Page feature |
+| --- | --- | --- | --- | --- | --- |
+| F-M1 | PDF export modal | table | `limit_count`, `period_unit`, `timezone`, `is_active` | read | PDF export quota policy. Default accepted policy is 3 exports per user + problem per month using `Asia/Seoul`; future policy values can use n/day/week/month. |
+
+## pdf_export_quota_usages
+
+| IA | Screen | Type | Columns/fields | Usage | Page feature |
+| --- | --- | --- | --- | --- | --- |
+| E-01 | Short-answer feedback | table | `user_id`, `problem_id`, `period_start`, `period_end`, `status`, `export_file_id` | write via RPC | Feedback PDF export quota ledger for the submission's `writing_submissions.problem_id`. |
+| E-02 | Long-form feedback | table | `user_id`, `problem_id`, `period_start`, `period_end`, `status`, `export_file_id` | write via RPC | Feedback PDF export quota ledger for the submission's `writing_submissions.problem_id`. |
+| F-01 | My library | table | `user_id`, `problem_id`, `period_start`, `period_end`, `status`, `export_file_id` | write via RPC | Library selection export counts each distinct included `problem_id` once. |
+| F-M1 | PDF export modal | table | `user_id`, `problem_id`, `period_start`, `period_end`, `status`, `export_file_id` | write via RPC | Server-side reserve/commit/release ledger for PDF generation and print fallback. Failed generation is released. |
+
+## pdf_export_quota_resets
+
+| IA | Screen | Type | Columns/fields | Usage | Page feature |
+| --- | --- | --- | --- | --- | --- |
+| F-M1 | PDF export modal | table | `reset_scope`, `policy_id`, `problem_id`, `effective_at` | effective policy read | Reset headers are managed by the separate topik-ai admin app. v13 uses reset effects only through quota enforcement. |
+
+## pdf_export_quota_reset_targets
+
+| IA | Screen | Type | Columns/fields | Usage | Page feature |
+| --- | --- | --- | --- | --- | --- |
+| F-M1 | PDF export modal | table | `reset_id`, `user_id`, `problem_id` | effective policy read | Materialized individual/group/global reset targets let v13 enforce allowance after topik-ai resets. |
 
 ## feedback_dimension_scores
 
@@ -196,6 +223,24 @@
 | IA | Screen | Type | Columns/fields | Usage | Page feature |
 | --- | --- | --- | --- | --- | --- |
 | R-01 | Comparison report | rpc | - | rpc | 현재 제출과 이전 제출 비교 리포트를 생성한다. |
+
+## public.claim_pdf_export_quota
+
+| IA | Screen | Type | Columns/fields | Usage | Page feature |
+| --- | --- | --- | --- | --- | --- |
+| F-M1 | PDF export modal | rpc | `p_user_id`, `p_problem_ids` | rpc | Atomically reserves quota for each distinct problem included in a PDF export request. Returns quota-exceeded metadata when the accepted policy is exhausted. |
+
+## public.commit_pdf_export_quota
+
+| IA | Screen | Type | Columns/fields | Usage | Page feature |
+| --- | --- | --- | --- | --- | --- |
+| F-M1 | PDF export modal | rpc | `p_user_id`, `p_usage_ids`, `p_export_file_id` | rpc | Commits reserved quota after PDF generation or server print entitlement succeeds and links usage to the export file. |
+
+## public.release_pdf_export_quota
+
+| IA | Screen | Type | Columns/fields | Usage | Page feature |
+| --- | --- | --- | --- | --- | --- |
+| F-M1 | PDF export modal | rpc | `p_user_id`, `p_usage_ids`, `p_reason` | rpc | Releases reserved quota after failed PDF generation so failed exports do not consume allowance. |
 
 ## public.get_dashboard_kpi
 
