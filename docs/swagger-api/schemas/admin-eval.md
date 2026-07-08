@@ -1,7 +1,7 @@
 # Admin Eval Schemas
 
 Source: [OpenAPI JSON](https://api.dotoretopik.com/openapi.json)
-Last synced: 2026-06-23
+Last synced: 2026-07-07
 
 ## Schema Index
 
@@ -18,7 +18,7 @@ Last synced: 2026-06-23
 | [ExpertReview](#expertreview) | object | A persisted expert review. |
 | [OverviewStatsResponse](#overviewstatsresponse) | object | High-level aggregate stats for the eval dashboard header. |
 | [ReviewListResponse](#reviewlistresponse) | object | All expert reviews submitted for a target (multi-reviewer). |
-| [ReviewRequest](#reviewrequest) | object |  |
+| [src__api__routes__admin_eval__ReviewRequest](#src-api-routes-admin-eval-reviewrequest) | object | Expert review request. |
 | [SubmissionDetailFeedback](#submissiondetailfeedback) | object | AI feedback record within the detail response. |
 | [SubmissionDetailResponse](#submissiondetailresponse) | object | Full submission detail: submission record, feedback, and linked task. |
 | [SubmissionDetailSubmission](#submissiondetailsubmission) | object | Core submission record within the detail response. |
@@ -176,7 +176,9 @@ All expert reviews submitted for a target (multi-reviewer).
 | `items` | yes | array<[ExpertReview](./admin-eval.md#expertreview)> | Reviews for the target. |  |
 | `total` | yes | integer | Number of reviews returned. | 1 |
 
-## ReviewRequest
+## src__api__routes__admin_eval__ReviewRequest
+
+OpenAPI component key: `src__api__routes__admin_eval__ReviewRequest`. The shared schema title is `ReviewRequest`; use the component key in links to avoid colliding with `src__api__routes__admin_reading__ReviewRequest`.
 
 | Field | Required | Type | Description | Example / Default |
 | --- | --- | --- | --- | --- |

@@ -12,6 +12,7 @@ import {
 
 const SUBMISSION: PdfSubmissionItem = {
   kind: "submission",
+  problemId: "problem-1",
   questionNo: 51,
   problemTitle: "기숙사 방 변경 문의",
   submittedAt: "2026-06-12",

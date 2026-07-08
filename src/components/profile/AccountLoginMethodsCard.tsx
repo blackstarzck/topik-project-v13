@@ -5,6 +5,10 @@ import { Mail } from "@/components/shared/AppIcons";
 import { useEffect, useState } from "react";
 
 import { AppCard } from "@/components/shared/AppCard";
+import {
+  buildClientAuthCallbackUrl,
+  buildPostAuthPath,
+} from "@/lib/auth/oauth";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 const { Text } = Typography;
@@ -96,6 +100,11 @@ export function AccountLoginMethodsCard({
       const supabase = createSupabaseBrowserClient();
       const { error } = await supabase.auth.linkIdentity({
         provider: "google",
+        options: {
+          redirectTo: buildClientAuthCallbackUrl(
+            buildPostAuthPath("link-google"),
+          ),
+        },
       });
       if (error) {
         setErrorVisible(true);

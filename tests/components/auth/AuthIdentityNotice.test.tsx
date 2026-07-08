@@ -30,23 +30,17 @@ describe("AuthIdentityNotice", () => {
     document.body.innerHTML = "";
   });
 
-  it("opens the shared Google linked notification and removes the query flag", async () => {
+  it("opens the shared Google linked message and removes the query flag", async () => {
     noticeValue = "google-linked";
 
     const { container } = renderWithIntl(<AuthIdentityNotice />);
 
     expect(container.textContent).toBe("");
     await waitFor(() => {
-      expect(
-        document.body.querySelector(".ant-notification-notice"),
-      ).toBeTruthy();
+      expect(document.body.querySelector(".ant-message-notice")).toBeTruthy();
     });
-    expect(
-      await screen.findByText("Google 로그인이 계정에 연결됐어요."),
-    ).toBeTruthy();
-    expect(
-      screen.getByText("다음부터 이메일 또는 Google로 로그인할 수 있어요."),
-    ).toBeTruthy();
+    expect(document.body.querySelector(".ant-notification-notice")).toBeNull();
+    expect(await screen.findByText("Google 계정이 연결됐어요.")).toBeTruthy();
     expect(replaceMock).toHaveBeenCalledWith("/dashboard", { scroll: false });
   });
 

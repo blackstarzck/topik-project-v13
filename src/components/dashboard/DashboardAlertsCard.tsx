@@ -15,7 +15,7 @@ import { useEffect, useState } from "react";
 import {
   fetchNotifications,
   markNotificationRead,
-  resolveNotificationDestination,
+  resolveNotificationAction,
   type UserNotification,
 } from "@/components/notifications/notifications-data";
 import { AppCard } from "@/components/shared/AppCard";
@@ -69,7 +69,13 @@ export function DashboardAlertsCard({ userId, loadFailed = false }: Props) {
           category: "notice",
         });
         if (cancelled) return;
-        setNotifications(list.filter((item) => item.category === "notice"));
+        setNotifications(
+          list.filter(
+            (item) =>
+              item.category === "notice" &&
+              resolveNotificationAction(item).kind !== "institutionInvitation",
+          ),
+        );
         setNotifLoad({ status: "ready" });
       } catch {
         if (!cancelled) setNotifLoad({ status: "error" });
@@ -97,8 +103,8 @@ export function DashboardAlertsCard({ userId, loadFailed = false }: Props) {
         );
       }
     }
-    const destination = resolveNotificationDestination(item);
-    if (destination) router.push(destination as never);
+    const action = resolveNotificationAction(item);
+    if (action.kind === "route") router.push(action.href as never);
   }
 
   const failed = loadFailed || notifLoad.status === "error";

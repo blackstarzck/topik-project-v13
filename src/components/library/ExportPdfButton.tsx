@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import {
   exportPdfWithPrintFallback,
   getPdfExportErrorMessage,
+  PdfExportApiError,
 } from "@/lib/export/pdf-export-client";
 import {
   PDF_EXPORT_ERROR_CODES,
@@ -51,6 +52,8 @@ export type ExportPdfDeps = {
   errorMessage: string;
   /** Optional localized API business-rule messages keyed by stable error code. */
   errorMessagesByCode?: Partial<Record<PdfExportErrorCode, string>>;
+  /** Business-rule codes that should be shown as warning, not failure. */
+  warningCodes?: PdfExportErrorCode[];
 };
 
 /**
@@ -86,13 +89,19 @@ export function createExportPdfHandler(
       }
       deps.notifySuccess(deps.downloadedMessage);
     } catch (err) {
-      deps.notifyError(
-        getPdfExportErrorMessage(
-          err,
-          deps.errorMessage,
-          deps.errorMessagesByCode,
-        ),
+      const message = getPdfExportErrorMessage(
+        err,
+        deps.errorMessage,
+        deps.errorMessagesByCode,
       );
+      if (
+        err instanceof PdfExportApiError &&
+        deps.warningCodes?.includes(err.code as PdfExportErrorCode)
+      ) {
+        deps.notifyWarning(message);
+        return;
+      }
+      deps.notifyError(message);
     }
   };
 }
@@ -142,7 +151,9 @@ export function ExportPdfButton({
         [PDF_EXPORT_ERROR_CODES.failedAnalysisUnavailable]: t(
           "failedAnalysisExportUnavailable",
         ),
+        [PDF_EXPORT_ERROR_CODES.quotaExceeded]: t("quotaExceeded"),
       },
+      warningCodes: [PDF_EXPORT_ERROR_CODES.quotaExceeded],
     },
   );
 

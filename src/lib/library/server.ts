@@ -230,7 +230,7 @@ async function joinExports(
 
   const { data, error } = await supabase
     .from("export_files")
-    .select("id, source_type, storage_path, status, options")
+    .select("id, source_type, source_id, storage_path, status, options")
     .in("id", ids);
   if (error) {
     throw new Error(`listLibraryItems(exports) join: ${error.message}`);
@@ -246,6 +246,7 @@ async function joinExports(
       kind: "export",
       id: exp.id,
       source_type: exp.source_type,
+      source_id: exp.source_id,
       storage_path: exp.storage_path,
       status: exp.status,
       options: exp.options,

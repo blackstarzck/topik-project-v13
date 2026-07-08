@@ -37,6 +37,12 @@
  *
  * Do not hand-edit individual rows; prefer regenerating via the CLI command
  * above so the type and the migrations stay aligned by construction.
+ *
+ * Shared DB contract exception: `respond_institution_invitation` is owned by
+ * the topik-ai admin migration home, not v13 migrations. Keep the type here so
+ * the v13 client call is typed, and see
+ * `docs/sot-change-proposals/2026-07-08-institution-invitation-modal-contract.md`
+ * for the ownership and smoke evidence.
  */
 
 export type Json =
@@ -914,6 +920,197 @@ export interface Database {
           },
         ];
       };
+      pdf_export_quota_policies: {
+        Row: {
+          id: string;
+          subject_scope: "user";
+          resource_scope: "problem";
+          period_unit: "day" | "week" | "month";
+          period_timezone: string;
+          limit_count: number;
+          priority: number;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          subject_scope?: "user";
+          resource_scope?: "problem";
+          period_unit?: "day" | "week" | "month";
+          period_timezone?: string;
+          limit_count?: number;
+          priority?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          subject_scope?: "user";
+          resource_scope?: "problem";
+          period_unit?: "day" | "week" | "month";
+          period_timezone?: string;
+          limit_count?: number;
+          priority?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      pdf_export_quota_usages: {
+        Row: {
+          id: string;
+          policy_id: string;
+          user_id: string;
+          problem_id: string;
+          export_file_id: string | null;
+          period_start: string;
+          period_end: string;
+          status: "reserved" | "committed" | "released";
+          reserved_at: string;
+          committed_at: string | null;
+          released_at: string | null;
+          release_reason: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          policy_id: string;
+          user_id: string;
+          problem_id: string;
+          export_file_id?: string | null;
+          period_start: string;
+          period_end: string;
+          status?: "reserved" | "committed" | "released";
+          reserved_at?: string;
+          committed_at?: string | null;
+          released_at?: string | null;
+          release_reason?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          policy_id?: string;
+          user_id?: string;
+          problem_id?: string;
+          export_file_id?: string | null;
+          period_start?: string;
+          period_end?: string;
+          status?: "reserved" | "committed" | "released";
+          reserved_at?: string;
+          committed_at?: string | null;
+          released_at?: string | null;
+          release_reason?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "pdf_export_quota_usages_policy_id_fkey";
+            columns: ["policy_id"];
+            isOneToOne: false;
+            referencedRelation: "pdf_export_quota_policies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "pdf_export_quota_usages_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "pdf_export_quota_usages_problem_id_fkey";
+            columns: ["problem_id"];
+            isOneToOne: false;
+            referencedRelation: "problems";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "pdf_export_quota_usages_export_file_id_fkey";
+            columns: ["export_file_id"];
+            isOneToOne: false;
+            referencedRelation: "export_files";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      pdf_export_quota_resets: {
+        Row: {
+          id: string;
+          reset_scope: "user" | "group" | "global";
+          problem_id: string | null;
+          reason: string | null;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          reset_scope: "user" | "group" | "global";
+          problem_id?: string | null;
+          reason?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          reset_scope?: "user" | "group" | "global";
+          problem_id?: string | null;
+          reason?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "pdf_export_quota_resets_problem_id_fkey";
+            columns: ["problem_id"];
+            isOneToOne: false;
+            referencedRelation: "problems";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "pdf_export_quota_resets_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      pdf_export_quota_reset_targets: {
+        Row: {
+          reset_id: string;
+          user_id: string;
+          materialized_at: string;
+        };
+        Insert: {
+          reset_id: string;
+          user_id: string;
+          materialized_at?: string;
+        };
+        Update: {
+          reset_id?: string;
+          user_id?: string;
+          materialized_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "pdf_export_quota_reset_targets_reset_id_fkey";
+            columns: ["reset_id"];
+            isOneToOne: false;
+            referencedRelation: "pdf_export_quota_resets";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "pdf_export_quota_reset_targets_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       study_events: {
         Row: {
           id: string;
@@ -1341,6 +1538,36 @@ export interface Database {
     };
     Views: Record<never, never>;
     Functions: {
+      claim_pdf_export_quota: {
+        Args: {
+          p_user_id: string;
+          p_problem_ids: string[];
+        };
+        Returns: Json;
+      };
+      commit_pdf_export_quota: {
+        Args: {
+          p_user_id: string;
+          p_usage_ids: string[];
+          p_export_file_id: string;
+        };
+        Returns: undefined;
+      };
+      release_pdf_export_quota: {
+        Args: {
+          p_user_id: string;
+          p_usage_ids: string[];
+          p_reason?: string | null;
+        };
+        Returns: undefined;
+      };
+      respond_institution_invitation: {
+        Args: {
+          p_invitation_id: string;
+          p_accept: boolean;
+        };
+        Returns: Json;
+      };
       accept_affiliation_invite: {
         Args: {
           p_code: string;

@@ -363,8 +363,7 @@
   },
   "auth": {
     "identityNotice": {
-      "googleLinkedTitle": "Đăng nhập Google đã được kết nối với tài khoản.",
-      "googleLinkedDescription": "Lần sau bạn có thể đăng nhập bằng email hoặc Google."
+      "googleLinkedMessage": "Đã kết nối tài khoản Google."
     },
     "login": {
       "metaTitle": "Đăng nhập — TALKPIK",
@@ -835,6 +834,27 @@
       "retry": "Thử lại",
       "markReadError": "Không thể đánh dấu thông báo là đã đọc.",
       "markAllError": "Không thể đánh dấu tất cả thông báo là đã đọc."
+    },
+    "institutionInvitation": {
+      "title": "Lời mời từ tổ chức",
+      "description": "Bạn đã nhận được lời mời từ một tổ chức. Nếu chấp nhận, tài khoản này sẽ được đăng ký là thành viên của tổ chức đó.",
+      "unknownLabel": "Tổ chức",
+      "unknownCode": "Không rõ mã",
+      "overwriteWarning": "Liên kết tổ chức hiện tại sẽ thay đổi. Khi chấp nhận, tổ chức hiện tại sẽ được thay bằng tổ chức này.",
+      "invalid": "Không thể xác minh thông tin lời mời.",
+      "accepted": "Bạn đã được đăng ký là thành viên tổ chức.",
+      "declined": "Bạn đã từ chối lời mời.",
+      "canceled": "Lời mời này đã hết hạn hoặc đã bị thu hồi.",
+      "expired": "Lời mời này đã hết hạn.",
+      "withdrawn": "Quản trị viên đã thu hồi lời mời này.",
+      "alreadyResponded": "Lời mời này đã được xử lý.",
+      "alreadyAffiliatedOther": "Tài khoản này đã liên kết với tổ chức khác. Hãy đăng nhập bằng tài khoản khác hoặc tiếp tục mà không kết nối.",
+      "unauthenticated": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
+      "failed": "Không thể xử lý lời mời. Vui lòng thử lại sau.",
+      "accept": "Chấp nhận",
+      "decline": "Từ chối",
+      "signInAgain": "Đăng nhập lại",
+      "close": "Đóng"
     }
   },
   "practice": {
@@ -1345,6 +1365,8 @@
       "pdfDefaultFilename": "TALKPIK-bai-lam-phan-hoi",
       "pdfFailedTitle": "Lưu PDF thất bại",
       "pdfFailedDescription": "Hãy thử lưu lại từ Thư viện của tôi.",
+      "pdfQuotaExceededTitle": "Bạn đã dùng hết lượt xuất PDF",
+      "pdfQuotaExceededDescription": "Mỗi bài này có thể xuất PDF tối đa 3 lần trong kỳ hiện tại. Vui lòng thử lại ở kỳ tiếp theo.",
       "save": {
         "lockedTooltip": "Bài làm này chỉ để xem nên không thể lưu vào thư viện.",
         "lockedButton": "Lưu vào thư viện (đã khóa)",
@@ -2177,6 +2199,7 @@
       "printDialogOpened": "Hộp thoại in PDF đã mở.",
       "exportFailed": "Không thể xuất PDF.",
       "failedAnalysisExportUnavailable": "Mục phân tích thất bại bị loại khỏi PDF và bộ ôn tập.",
+      "quotaExceeded": "Mỗi bài này có thể xuất PDF tối đa 3 lần trong kỳ hiện tại.",
       "downloaded": "Đã tải xuống file PDF.",
       "fallbackPrint": "Tạo PDF trên máy chủ thất bại nên đã mở hộp thoại in của trình duyệt thay thế.",
       "defaultFilenameSubmission": "TALKPIK-bai-lam",
@@ -2256,7 +2279,8 @@
       "export": "Tạo PDF",
       "printDialogOpened": "Hộp thoại in PDF đã mở.",
       "generateFailed": "Không thể tạo PDF.",
-      "failedAnalysisExportUnavailable": "Mục phân tích thất bại bị loại khỏi PDF và bộ ôn tập."
+      "failedAnalysisExportUnavailable": "Mục phân tích thất bại bị loại khỏi PDF và bộ ôn tập.",
+      "quotaExceeded": "Mỗi bài này có thể xuất PDF tối đa 3 lần trong kỳ hiện tại."
     }
   },
   "onboarding": {

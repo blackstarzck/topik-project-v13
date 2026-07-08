@@ -214,6 +214,19 @@ flowchart TD
 
 ```
 
+## PDF export quota flow
+
+- The F-M1 PDF export modal calls server-side export routes for both PDF generation and browser print fallback.
+- v13 resolves the target problem ids on the server before consuming quota:
+  - submission: `writing_submissions.problem_id`
+  - report: `comparison_reports.current_submission_id -> writing_submissions.problem_id`
+  - library selection: distinct problem ids from included submissions/reports
+- Default accepted rule: each user can export each problem 3 times per month using `Asia/Seoul` period boundaries.
+- If one PDF includes the same problem more than once, that problem consumes one quota unit for that export.
+- Quota exceeded returns `code: "pdf_export_quota_exceeded"` with `limit`, `used`, `remaining`, `resetAt`, and `periodUnit`. The UI shows a warning-style message and does not run `window.print()`.
+- Saved PDF re-download is not a new export. Failed PDF generation releases the reservation and does not consume quota.
+- Admin policy changes and reset operations are handled in the separate topik-ai admin app; v13 enforces the accepted policy only.
+
 ## 인증 콜백 / 에러 흐름 — 상세 시나리오
 
 위 다이어그램의 `CB` (`/auth/callback`)와 X-11/X-12는 cleanup 정책(30일 미인증 자동 삭제)과 함께 가야 의미가 있다. cleanup이 켜진 상태에서 사용자가 옛 인증 링크를 클릭하면 Supabase가 보낼 응답이 늘어나기 때문이다. 시나리오는 다음 여섯 가지.

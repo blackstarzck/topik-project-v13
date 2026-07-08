@@ -4,7 +4,7 @@ import { describe, it, expect, vi } from "vitest";
 // - listLibraryItems honors the tab discriminator
 // - saveLibraryItem surfaces the RLS rejection when a user tries to save
 //   someone else's submission_id (Phase 6 P1-5)
-// - triggerPdfExport stamps the browser_print marker
+// - triggerPdfExport goes through the server print endpoint
 
 import {
   isSubmissionSavedToLibrary,
@@ -241,36 +241,37 @@ describe("library-flow — RLS rejection on cross-user save", () => {
   });
 });
 
-describe("library-flow — browser_print marker", () => {
-  it("triggerPdfExport stamps options.source='browser_print' on submission rows", async () => {
-    const client = makeClient({});
-    // window stub for SSR-style vitest env
-    if (typeof window === "undefined") {
-      (globalThis as { window?: unknown }).window = {
-        print: vi.fn(),
-      } as never;
-    }
-    const result = await triggerPdfExport(
-      { sourceType: "submission", sourceId: "sub-1" },
-      () => client as never,
-    );
-    expect(result.exportId).toBeTruthy();
-    const exportInsert = client.inserted.find(
-      (i) => i.table === "export_files",
-    );
-    expect(exportInsert).toBeTruthy();
-    const row = exportInsert!.row as { options: unknown; storage_path: string };
-    expect((row.options as { source: string }).source).toBe("browser_print");
-    expect(row.storage_path).toMatch(/^browser-print:\/\//);
-  });
+describe("library-flow — server print fallback", () => {
+  it("triggerPdfExport calls the server print endpoint before opening print", async () => {
+    const fetcher = vi.fn(async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({ exportId: "exp-1" }),
+    }));
+    (globalThis as { window?: { print: () => void } }).window = {
+      print: vi.fn(),
+    };
 
-  it("triggerPdfExport rejects library_selection with non-null sourceId", async () => {
-    const client = makeClient({});
-    await expect(
-      triggerPdfExport(
-        { sourceType: "library_selection", sourceId: "not-null" } as never,
-        () => client as never,
-      ),
-    ).rejects.toThrow();
+    const result = await triggerPdfExport(
+      {
+        sourceType: "submission",
+        sourceId: "sub-1",
+        options: {
+          filename: "TALKPIK-export",
+          includeAnswers: true,
+          includeFeedback: true,
+          layout: "paged",
+          orientation: "portrait",
+        },
+      },
+      fetcher as never,
+    );
+
+    expect(result.exportId).toBe("exp-1");
+    expect(fetcher).toHaveBeenCalledWith(
+      "/api/export/pdf/print",
+      expect.objectContaining({ method: "POST" }),
+    );
+    expect(window.print).toHaveBeenCalledTimes(1);
   });
 });

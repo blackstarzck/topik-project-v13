@@ -363,8 +363,7 @@
   },
   "auth": {
     "identityNotice": {
-      "googleLinkedTitle": "Google sign-in is connected to your account.",
-      "googleLinkedDescription": "You can use either email or Google to sign in next time."
+      "googleLinkedMessage": "Google account connected."
     },
     "login": {
       "metaTitle": "Log in — TALKPIK",
@@ -835,6 +834,27 @@
       "retry": "Retry",
       "markReadError": "Couldn't mark the notification as read.",
       "markAllError": "Couldn't mark all notifications as read."
+    },
+    "institutionInvitation": {
+      "title": "Institution invitation",
+      "description": "You received an institution invitation. If you accept, this account will be registered as a member of that institution.",
+      "unknownLabel": "Institution",
+      "unknownCode": "Unknown code",
+      "overwriteWarning": "Your existing affiliation will change. Accepting replaces your current institution with this one.",
+      "invalid": "We couldn't verify this invitation.",
+      "accepted": "You have been registered as an institution member.",
+      "declined": "You declined the invitation.",
+      "canceled": "This invitation has expired or been withdrawn.",
+      "expired": "This invitation has expired.",
+      "withdrawn": "The administrator has withdrawn this invitation.",
+      "alreadyResponded": "This invitation has already been handled.",
+      "alreadyAffiliatedOther": "This account is already connected to another institution. Sign in with another account or continue without connecting.",
+      "unauthenticated": "Your login has expired. Please sign in again.",
+      "failed": "We couldn't process the invitation. Please try again shortly.",
+      "accept": "Accept",
+      "decline": "Decline",
+      "signInAgain": "Sign in again",
+      "close": "Close"
     }
   },
   "practice": {
@@ -1345,6 +1365,8 @@
       "pdfDefaultFilename": "TALKPIK-answers-feedback",
       "pdfFailedTitle": "Failed to save PDF",
       "pdfFailedDescription": "Try saving again from My Library.",
+      "pdfQuotaExceededTitle": "You've used all PDF exports",
+      "pdfQuotaExceededDescription": "This problem can be exported to PDF up to 3 times this period. Please try again next period.",
       "save": {
         "lockedTooltip": "This answer is view-only and can't be saved to your library.",
         "lockedButton": "Save to library (locked)",
@@ -2177,6 +2199,7 @@
       "printDialogOpened": "The PDF print dialog has opened.",
       "exportFailed": "Failed to export the PDF.",
       "failedAnalysisExportUnavailable": "Analysis failed items are excluded from PDF export and review sets.",
+      "quotaExceeded": "This problem can be exported to PDF up to 3 times this period.",
       "downloaded": "Your PDF has been downloaded.",
       "fallbackPrint": "Server PDF generation failed, so the browser print dialog was opened instead.",
       "defaultFilenameSubmission": "TALKPIK-answers",
@@ -2256,7 +2279,8 @@
       "export": "Generate PDF",
       "printDialogOpened": "The PDF print dialog has opened.",
       "generateFailed": "Failed to generate the PDF.",
-      "failedAnalysisExportUnavailable": "Analysis failed items are excluded from PDF export and review sets."
+      "failedAnalysisExportUnavailable": "Analysis failed items are excluded from PDF export and review sets.",
+      "quotaExceeded": "This problem can be exported to PDF up to 3 times this period."
     }
   },
   "onboarding": {

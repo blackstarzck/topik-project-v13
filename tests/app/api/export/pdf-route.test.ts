@@ -2,25 +2,37 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const helpers = vi.hoisted(() => {
   class PdfExportRequestError extends Error {
-    code: string;
+    code?: string;
+    details?: Record<string, unknown>;
     status: number;
 
-    constructor(message: string, code: string, status: number) {
+    constructor(
+      status: number,
+      message: string,
+      code?: string,
+      details?: Record<string, unknown>,
+    ) {
       super(message);
       this.code = code;
       this.status = status;
+      this.details = details;
     }
   }
 
   return {
-    assertMonthlyPdfExportLimitMock: vi.fn(),
     buildPdfDocumentMock: vi.fn(),
+    claimPdfExportQuotaMock: vi.fn(),
+    commitPdfExportQuotaMock: vi.fn(),
     fetchProfileStatusMock: vi.fn(),
     fromMock: vi.fn(),
+    getPdfExportProblemIdsMock: vi.fn((items: Array<{ problemId: string }>) =>
+      items.map((item) => item.problemId),
+    ),
     getUserMock: vi.fn(),
     PdfExportRequestError,
     registerPdfFontsMock: vi.fn(),
     renderToBufferMock: vi.fn(),
+    releasePdfExportQuotaMock: vi.fn(),
     resolvePdfExportItemsMock: vi.fn(),
     storageFromMock: vi.fn(),
   };
@@ -44,9 +56,15 @@ vi.mock("@/lib/export/pdf-document", () => ({
 }));
 
 vi.mock("@/lib/export/pdf-export-server", () => ({
-  assertMonthlyPdfExportLimit: (...args: unknown[]) =>
-    helpers.assertMonthlyPdfExportLimitMock(...args),
+  claimPdfExportQuota: (...args: unknown[]) =>
+    helpers.claimPdfExportQuotaMock(...args),
+  commitPdfExportQuota: (...args: unknown[]) =>
+    helpers.commitPdfExportQuotaMock(...args),
+  getPdfExportProblemIds: (items: Array<{ problemId: string }>) =>
+    helpers.getPdfExportProblemIdsMock(items),
   PdfExportRequestError: helpers.PdfExportRequestError,
+  releasePdfExportQuota: (...args: unknown[]) =>
+    helpers.releasePdfExportQuotaMock(...args),
   resolvePdfExportItems: (...args: unknown[]) =>
     helpers.resolvePdfExportItemsMock(...args),
 }));
@@ -58,6 +76,9 @@ vi.mock("@/lib/supabase/server", () => ({
       from: helpers.fromMock,
       storage: { from: helpers.storageFromMock },
     }),
+  createSupabaseServiceRoleClient: () => ({
+    rpc: vi.fn(),
+  }),
 }));
 
 import { POST } from "../../../../src/app/api/export/pdf/route";
@@ -98,8 +119,19 @@ describe("POST /api/export/pdf", () => {
       error: null,
     });
     helpers.fetchProfileStatusMock.mockResolvedValue("active");
-    helpers.assertMonthlyPdfExportLimitMock.mockResolvedValue(undefined);
-    helpers.resolvePdfExportItemsMock.mockResolvedValue([]);
+    helpers.claimPdfExportQuotaMock.mockResolvedValue({
+      usageIds: ["usage-1"],
+      limit: 3,
+      used: 1,
+      remaining: 2,
+      resetAt: "2026-08-01T00:00:00+09:00",
+      periodUnit: "month",
+    });
+    helpers.commitPdfExportQuotaMock.mockResolvedValue(undefined);
+    helpers.releasePdfExportQuotaMock.mockResolvedValue(undefined);
+    helpers.resolvePdfExportItemsMock.mockResolvedValue([
+      { kind: "submission", problemId: "problem-1" },
+    ]);
     helpers.buildPdfDocumentMock.mockReturnValue({ type: "pdf-doc" });
     helpers.renderToBufferMock.mockResolvedValue(Buffer.from("pdf"));
     helpers.storageFromMock.mockReturnValue({
@@ -147,8 +179,40 @@ describe("POST /api/export/pdf", () => {
       error: "email_unverified",
     });
     expect(helpers.fetchProfileStatusMock).not.toHaveBeenCalled();
-    expect(helpers.assertMonthlyPdfExportLimitMock).not.toHaveBeenCalled();
+    expect(helpers.claimPdfExportQuotaMock).not.toHaveBeenCalled();
     expect(helpers.fromMock).not.toHaveBeenCalled();
+  });
+
+  it("returns stable quota metadata and does not create export rows when quota is exceeded", async () => {
+    helpers.claimPdfExportQuotaMock.mockRejectedValueOnce(
+      new helpers.PdfExportRequestError(
+        429,
+        "PDF 내보내기 횟수를 모두 사용했어요.",
+        "pdf_export_quota_exceeded",
+        {
+          limit: 3,
+          used: 3,
+          remaining: 0,
+          resetAt: "2026-08-01T00:00:00+09:00",
+          periodUnit: "month",
+        },
+      ),
+    );
+
+    const response = await postPdf();
+
+    expect(response.status).toBe(429);
+    await expect(response.json()).resolves.toEqual({
+      error: "PDF 내보내기 횟수를 모두 사용했어요.",
+      code: "pdf_export_quota_exceeded",
+      limit: 3,
+      used: 3,
+      remaining: 0,
+      resetAt: "2026-08-01T00:00:00+09:00",
+      periodUnit: "month",
+    });
+    expect(helpers.fromMock).not.toHaveBeenCalled();
+    expect(helpers.renderToBufferMock).not.toHaveBeenCalled();
   });
 
   it("continues PDF export for verified active sessions", async () => {
@@ -163,6 +227,48 @@ describe("POST /api/export/pdf", () => {
     expect(helpers.fetchProfileStatusMock).toHaveBeenCalledWith(
       expect.anything(),
       "user-1",
+    );
+    expect(helpers.claimPdfExportQuotaMock).toHaveBeenCalledWith(
+      expect.anything(),
+      "user-1",
+      ["problem-1"],
+    );
+    expect(helpers.commitPdfExportQuotaMock).toHaveBeenCalledWith(
+      expect.anything(),
+      "user-1",
+      ["usage-1"],
+      "00000000-0000-0000-0000-000000000111",
+    );
+  });
+
+  it("releases reserved quota when server rendering fails", async () => {
+    helpers.renderToBufferMock.mockRejectedValueOnce(new Error("render boom"));
+
+    const response = await postPdf();
+
+    expect(response.status).toBe(500);
+    expect(helpers.commitPdfExportQuotaMock).not.toHaveBeenCalled();
+    expect(helpers.releasePdfExportQuotaMock).toHaveBeenCalledWith(
+      expect.anything(),
+      "user-1",
+      ["usage-1"],
+      "server_render_failed",
+    );
+  });
+
+  it("releases reserved quota when quota commit fails after export generation", async () => {
+    helpers.commitPdfExportQuotaMock.mockRejectedValueOnce(
+      new Error("commit boom"),
+    );
+
+    const response = await postPdf();
+
+    expect(response.status).toBe(500);
+    expect(helpers.releasePdfExportQuotaMock).toHaveBeenCalledWith(
+      expect.anything(),
+      "user-1",
+      ["usage-1"],
+      "server_render_failed",
     );
   });
 

@@ -1,7 +1,7 @@
 # Schema Index
 
 Source: [OpenAPI JSON](https://api.dotoretopik.com/openapi.json)
-Last synced: 2026-06-23
+Last synced: 2026-07-07
 
 | Group | Schemas |
 | --- | ---: |
@@ -9,9 +9,10 @@ Last synced: 2026-06-23
 | [Eval Auth](./eval-auth.md) | 3 |
 | [Admin Users](./admin-users.md) | 5 |
 | [Admin Eval](./admin-eval.md) | 18 |
+| [Admin Reading](./admin-reading.md) | 4 |
 | [Admin Campaign](./admin-campaign.md) | 24 |
 | [External Campaign](./external-campaign.md) | 13 |
-| [Writing](./writing.md) | 16 |
+| [Writing](./writing.md) | 22 |
 | [Reading](./reading.md) | 15 |
 | [Listening](./listening.md) | 17 |
 | [Evaluation](./evaluation.md) | 9 |
@@ -42,13 +43,17 @@ Last synced: 2026-06-23
 | [ExpertReview](./admin-eval.md#expertreview) | admin-eval | A persisted expert review. |
 | [OverviewStatsResponse](./admin-eval.md#overviewstatsresponse) | admin-eval | High-level aggregate stats for the eval dashboard header. |
 | [ReviewListResponse](./admin-eval.md#reviewlistresponse) | admin-eval | All expert reviews submitted for a target (multi-reviewer). |
-| [ReviewRequest](./admin-eval.md#reviewrequest) | admin-eval |  |
+| [src__api__routes__admin_eval__ReviewRequest](./admin-eval.md#src-api-routes-admin-eval-reviewrequest) | admin-eval | Expert review request. |
 | [SubmissionDetailFeedback](./admin-eval.md#submissiondetailfeedback) | admin-eval | AI feedback record within the detail response. |
 | [SubmissionDetailResponse](./admin-eval.md#submissiondetailresponse) | admin-eval | Full submission detail: submission record, feedback, and linked task. |
 | [SubmissionDetailSubmission](./admin-eval.md#submissiondetailsubmission) | admin-eval | Core submission record within the detail response. |
 | [SubmissionDetailTask](./admin-eval.md#submissiondetailtask) | admin-eval | Writing task metadata within the detail response (null when no task linked). |
 | [UserSubmissionItem](./admin-eval.md#usersubmissionitem) | admin-eval | A single graded writing submission for a user. |
 | [UserSubmissionsResponse](./admin-eval.md#usersubmissionsresponse) | admin-eval | Paginated list of a user's graded submissions. |
+| [EditRequest](./admin-reading.md#editrequest) | admin-reading | Admin reading bank edit request. |
+| [ReadingBankItem](./admin-reading.md#readingbankitem) | admin-reading | One reading bank item. |
+| [ReadingBankListResponse](./admin-reading.md#readingbanklistresponse) | admin-reading | Reading bank list response. |
+| [src__api__routes__admin_reading__ReviewRequest](./admin-reading.md#src-api-routes-admin-reading-reviewrequest) | admin-reading | Admin reading review request. |
 | [CampaignAssignRequest](./admin-campaign.md#campaignassignrequest) | admin-campaign | Admin request to assign or clear the reviewer on a submission. |
 | [CampaignAuditEntry](./admin-campaign.md#campaignauditentry) | admin-campaign | One entry in a submission's audit log. |
 | [CampaignAuditLogResponse](./admin-campaign.md#campaignauditlogresponse) | admin-campaign | Audit log entries for a submission. |
@@ -96,6 +101,12 @@ Last synced: 2026-06-23
 | [TopikWriting54Response](./writing.md#topikwriting54response) | writing | Q54 논술·의견 제시형 (51 keys). |
 | [TopikWritingQuestionListResponse](./writing.md#topikwritingquestionlistresponse) | writing | Paginated list of TOPIK writing questions (rich §7 metadata, per item type). |
 | [WritingChatRequest](./writing.md#writingchatrequest) | writing | Request for chat tutor interaction. |
+| [StartSessionRequest](./writing.md#startsessionrequest) | writing | Begin a writing attempt. |
+| [StartSessionResponse](./writing.md#startsessionresponse) | writing | IDs created at the start of a writing attempt. |
+| [TutorMessageItem](./writing.md#tutormessageitem) | writing | One turn in a tutor session transcript. |
+| [TutorSessionDetailResponse](./writing.md#tutorsessiondetailresponse) | writing | A session header plus its full transcript. |
+| [TutorSessionListResponse](./writing.md#tutorsessionlistresponse) | writing | Tutor sessions list. |
+| [TutorSessionSummary](./writing.md#tutorsessionsummary) | writing | A tutor session header. |
 | [WritingGenerateRequestV2](./writing.md#writinggeneraterequestv2) | writing | v2 generate 요청 — task_type 문자열을 item_number:int 로 교체 (라우트 연결은 Step 8). |
 | [WritingHistoryItem](./writing.md#writinghistoryitem) | writing |  |
 | [WritingHistoryResponse](./writing.md#writinghistoryresponse) | writing |  |

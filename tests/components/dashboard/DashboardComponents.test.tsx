@@ -29,6 +29,8 @@ vi.mock("next/navigation", () => ({
     replace: vi.fn(),
     refresh: routerRefreshMock,
   }),
+  usePathname: () => "/dashboard",
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 // DashboardAlertsCard fetches user_notifications client-side; vitest has no
@@ -40,6 +42,36 @@ vi.mock("@/components/notifications/notifications-data", () => ({
   fetchNotifications: (...args: unknown[]) => fetchNotificationsMock(...args),
   markNotificationRead: (...args: unknown[]) =>
     markNotificationReadMock(...args),
+  resolveNotificationAction: (item: {
+    template_key?: string | null;
+    route_path?: string | null;
+    link_url?: string | null;
+    payload?: Record<string, unknown> | null;
+  }) => {
+    if (
+      item.template_key === "institution_invitation" ||
+      item.payload?.kind === "institution_invitation"
+    ) {
+      return {
+        kind: "institutionInvitation",
+        invitation: {
+          invitationId:
+            typeof item.payload?.invitation_id === "string"
+              ? item.payload.invitation_id
+              : null,
+          code: typeof item.payload?.code === "string" ? item.payload.code : null,
+          codeLabel:
+            typeof item.payload?.code_label === "string"
+              ? item.payload.code_label
+              : null,
+        },
+      };
+    }
+    const destination = item.route_path?.trim() || item.link_url?.trim();
+    return destination?.startsWith("/")
+      ? { kind: "route", href: destination }
+      : { kind: "none" };
+  },
   resolveNotificationDestination: (item: {
     route_path?: string | null;
     link_url?: string | null;
@@ -366,6 +398,46 @@ describe("DashboardAlertsCard", () => {
     expect(fetchNotificationsMock).toHaveBeenCalledWith("user-1", 5, {
       category: "notice",
     });
+  });
+
+  it("hides institution invitation notifications from the dashboard alerts card", async () => {
+    fetchNotificationsMock.mockResolvedValue([
+      {
+        id: "n-invite",
+        template_key: "institution_invitation",
+        category: "notice",
+        title: "기관 소속 초대가 도착했습니다",
+        body: "수락 또는 거부가 필요한 초대입니다.",
+        link_url: "/dashboard",
+        route_path: "/dashboard",
+        payload: {
+          kind: "institution_invitation",
+          invitation_id: "2a2ff7b8-cc31-4f4d-a455-283aaad28f30",
+          code: "CAMPAIGN-01",
+          code_label: "캠페인 유입 유저",
+        },
+        read_at: null,
+        created_at: "2026-06-22T09:00:00.000Z",
+      },
+      {
+        id: "n-notice",
+        template_key: "notice",
+        category: "notice",
+        title: "일반 공지",
+        body: "대시보드에 유지되어야 하는 공지입니다.",
+        link_url: "/dashboard",
+        route_path: "/dashboard",
+        read_at: null,
+        created_at: "2026-06-22T08:00:00.000Z",
+      },
+    ]);
+
+    renderWithIntl(<DashboardAlertsCard userId="user-1" />);
+
+    await waitFor(() => {
+      expect(screen.getByText("일반 공지")).toBeTruthy();
+    });
+    expect(screen.queryByText("기관 소속 초대가 도착했습니다")).toBeNull();
   });
 
   it("moves to the notification route path when it exists", async () => {

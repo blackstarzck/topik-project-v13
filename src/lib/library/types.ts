@@ -90,6 +90,7 @@ export type LibraryExportView = {
   /** Underlying `export_files.id`. */
   id: string;
   source_type: Tables<"export_files">["source_type"];
+  source_id: Tables<"export_files">["source_id"];
   storage_path: string;
   status: Tables<"export_files">["status"];
   options: Tables<"export_files">["options"];

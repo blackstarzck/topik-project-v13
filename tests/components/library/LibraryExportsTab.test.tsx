@@ -18,16 +18,18 @@ function makeExport(
   options: LibraryExportView["options"],
   overrides: Partial<LibraryExportView> = {},
 ): LibraryExportView {
+  const { source_id = "sub-1", ...rest } = overrides;
   return {
     kind: "export",
     id: "exp-1",
     source_type: "submission",
+    source_id,
     storage_path: "browser-print://abc",
     status: "ready",
     options,
     item_id: "item-1",
     tags: [],
-    ...overrides,
+    ...rest,
   };
 }
 

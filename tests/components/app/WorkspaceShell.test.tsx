@@ -82,6 +82,7 @@ vi.mock("next/navigation", () => ({
     push: navMock.routerPush,
     replace: navMock.routerReplace,
   }),
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 // WorkspaceShell mounts an onAuthStateChange listener for multi-tab session

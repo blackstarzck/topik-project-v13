@@ -34,6 +34,7 @@ export type PdfSentenceFeedback = {
 
 export type PdfSubmissionItem = {
   kind: "submission";
+  problemId: string;
   questionNo: number;
   problemTitle: string | null;
   submittedAt: string;
@@ -50,6 +51,7 @@ export type PdfSubmissionItem = {
 
 export type PdfReportItem = {
   kind: "report";
+  problemId: string;
   generatedAt: string;
   narrative: string | null;
 };

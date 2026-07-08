@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { triggerPdfExport } from "@/lib/export/pdf-export";
+import { PDF_EXPORT_DEFAULT_OPTIONS } from "@/lib/export/pdf-options";
 import { downloadStoredPdfExport } from "@/lib/export/pdf-export-client";
 import { useLibraryItems } from "@/lib/library/queries";
 import type { LibraryExportView, LibraryItemView } from "@/lib/library/types";
@@ -90,7 +91,7 @@ function RetryPrintButton({ item }: RetryButtonProps) {
   // and don't get re-triggered from the library row.
   const reprintable =
     (item.source_type === "submission" || item.source_type === "report") &&
-    item.id != null;
+    item.source_id != null;
 
   async function handleClick() {
     if (!reprintable) return;
@@ -99,10 +100,13 @@ function RetryPrintButton({ item }: RetryButtonProps) {
       // Reuse the same source_type/source_id pair the original ledger row
       // carried. We don't try to dedupe export_files entries — each click
       // produces a new ledger row, which matches "다시 인쇄" intent.
-      const sourceId = item.id;
       await triggerPdfExport({
         sourceType: item.source_type as "submission" | "report",
-        sourceId,
+        sourceId: item.source_id as string,
+        options: {
+          filename: exportFilename(item) ?? "TALKPIK-export",
+          ...PDF_EXPORT_DEFAULT_OPTIONS,
+        },
       });
       message.success(t("printDialogOpened"));
     } catch (err) {

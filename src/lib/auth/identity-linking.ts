@@ -7,6 +7,7 @@ type AuthUserLike = {
 };
 
 export const GOOGLE_LINKED_NOTICE = "google-linked";
+export const GOOGLE_LINK_INTENT = "link-google";
 
 export function hasProviderIdentity(
   user: AuthUserLike,
@@ -17,12 +18,14 @@ export function hasProviderIdentity(
   );
 }
 
-export function addGoogleLinkedNotice(
-  path: string,
+export function shouldAddGoogleLinkedNotice(
   user: AuthUserLike,
-): string {
-  if (!hasProviderIdentity(user, "google")) return path;
+  intent: string,
+): boolean {
+  return intent === GOOGLE_LINK_INTENT && hasProviderIdentity(user, "google");
+}
 
+export function addGoogleLinkedNotice(path: string): string {
   const [pathname, query = ""] = path.split("?");
   const params = new URLSearchParams(query);
   params.set("notice", GOOGLE_LINKED_NOTICE);

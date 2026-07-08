@@ -28,6 +28,7 @@
 ## 상태/오류
 
 - 생성 실패, 권한 없음, 파일 없음
+- PDF quota exceeded: `code = "pdf_export_quota_exceeded"` is shown as a warning/info message, not as a system error.
 
 ## 데이터 사용
 
@@ -38,6 +39,10 @@
 | 테이블/버킷/RPC | 컬럼/필드 | 사용 방식 | 화면 기능 | 권한/RLS | 근거 | 불확실성 |
 | --- | --- | --- | --- | --- | --- | --- |
 | `export_files` | `source_type`, `source_id`, `storage_path`, `options`, `status` | read/write | PDF 생성 요청과 결과 파일 상태를 저장한다. | authenticated user; auth.uid() owner RLS where user-owned | `src/lib/export/pdf-export.ts`<br>`src/lib/library/queries.ts`<br>`src/lib/library/server.ts`<br>`supabase/migrations/20260520120700_library_events_exports.sql` | none |
+| `pdf_export_quota_policies` | `limit_count`, `period_unit`, `timezone`, `is_active` | read | Default policy is 3 exports per user + problem per month using `Asia/Seoul`. Future policies can change n/day/week/month. | authenticated read for active user-app enforcement; admin management belongs to topik-ai | `src/lib/export/pdf-export-quota.ts`<br>`supabase/migrations/20260707120000_pdf_export_quota.sql` | none |
+| `pdf_export_quota_usages` | `user_id`, `problem_id`, `period_start`, `period_end`, `status`, `export_file_id` | write via RPC | Server-side quota ledger. A distinct problem in one PDF is charged once; failed generation is released. | no direct browser writes; SECURITY DEFINER RPC validates auth user | `src/lib/export/pdf-export-quota.ts`<br>`supabase/migrations/20260707120000_pdf_export_quota.sql` | none |
+| `pdf_export_quota_resets` / `pdf_export_quota_reset_targets` | `reset_scope`, `policy_id`, `user_id`, `problem_id`, `effective_at` | read via effective policy | Reset materialization lets topik-ai reset individual, group, or global quota without v13 admin UI. | reset management is topik-ai server/admin only; users see only effective allowance | `docs/handoff-pdf-export-quota-topik-ai.md`<br>`supabase/migrations/20260707120000_pdf_export_quota.sql` | none |
+| `claim_pdf_export_quota` / `commit_pdf_export_quota` / `release_pdf_export_quota` | RPC args: `p_user_id`, `p_problem_ids`, `p_usage_ids`, `p_export_file_id` | rpc | Atomically reserve, commit, or release PDF quota for `POST /api/export/pdf` and `/api/export/pdf/print`. | SECURITY DEFINER, authenticated user scoped | `src/app/api/export/pdf/route.ts`<br>`src/app/api/export/pdf/print/route.ts`<br>`supabase/migrations/20260707120000_pdf_export_quota.sql` | none |
 | `study_events` | `event_type`, `export_file_id`, `payload` | write | PDF 다운로드 이벤트를 기록한다. | authenticated user; auth.uid() owner RLS where user-owned | `src/lib/events/study-events.ts`<br>`src/lib/export/pdf-export.ts`<br>`supabase/migrations/20260520120700_library_events_exports.sql` | none |
 | `storage:generated-exports` | - | read/write | 생성된 PDF 파일을 저장하고 소유자에게만 노출한다. | owner or public bucket policy depending on bucket | `supabase/migrations/20260520121200_storage_buckets.sql` | none |
 
@@ -49,6 +54,8 @@
   queued→ready(실패 시 failed)로 기록한다. 클라이언트는 본인 경로 파일을
   내려받아 저장하며, 서버 생성 실패 시 브라우저 인쇄(`window.print`)로
   폴백한다. 본문은 한국어 고정(NanumGothic 임베딩, `public/fonts/pdf/`).
+- **PDF quota enforcement accepted on 2026-07-08**:
+  `POST /api/export/pdf` and `POST /api/export/pdf/print` both resolve target problem ids server-side and pass through the same quota RPCs. The default policy is 3 exports per user + problem per month in `Asia/Seoul`. Direct client-side `export_files` counting or print fallback bypass is not allowed.
 - 모달 UI는 hifi.png 2단 레이아웃(선택한 문제/포함할 항목/레이아웃 옵션 +
   미리보기)으로 정렬됨. 파일명·개인정보 확인은 본 문서 제약에 따라 유지.
 
@@ -57,8 +64,10 @@
 - `PdfExportModal`, `handleExport` - `src/components/library/PdfExportModal.tsx`
 - `ExportPdfButton` - `src/components/library/ExportPdfButton.tsx`
 - `POST /api/export/pdf` - `src/app/api/export/pdf/route.ts`
+- `POST /api/export/pdf/print` - `src/app/api/export/pdf/print/route.ts`
 - `buildPdfDocument`, `registerPdfFonts` - `src/lib/export/pdf-document.tsx`
 - `resolvePdfExportItems` - `src/lib/export/pdf-export-server.ts`
+- `claimPdfExportQuota`, `commitPdfExportQuota`, `releasePdfExportQuota` - `src/lib/export/pdf-export-quota.ts`
 - `requestServerPdfExport`, `exportPdfWithPrintFallback` - `src/lib/export/pdf-export-client.ts`
 - `pdfExportRequestSchema`(options 계약) - `src/lib/export/pdf-options.ts`
 - `triggerPdfExport`(인쇄 폴백) - `src/lib/export/pdf-export.ts`
