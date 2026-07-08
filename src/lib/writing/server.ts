@@ -528,6 +528,8 @@ async function selectDefaultWritingProblemForUser({
   problem: WritingProblem | null;
   error: WritingProblemQueryResult["error"];
 }> {
+  const submittableProblems: WritingProblem[] = [];
+
   for (
     let offset = 0;
     offset < MAX_VISIBILITY_SCAN_ROWS;
@@ -545,25 +547,25 @@ async function selectDefaultWritingProblemForUser({
       supabase,
       nonSeedRows.map((row) => row.id),
     );
-    const submittableProblems = nonSeedRows
-      .filter((row) => visibleIds.has(row.id))
-      .map((row) => normalizeWritingProblemRow(row, questionNo))
-      .filter((problem) => problem.submitBlockedReason === null);
-
-    if (submittableProblems.length > 0) {
-      const touchedIds = await getTouchedWritingProblemIds(
-        supabase,
-        userId,
-        submittableProblems.map((problem) => problem.id),
-      );
-      const untouched = submittableProblems.find(
-        (problem) => !touchedIds.has(problem.id),
-      );
-      if (untouched) return { problem: untouched, error: null };
-    }
+    submittableProblems.push(
+      ...nonSeedRows
+        .filter((row) => visibleIds.has(row.id))
+        .map((row) => normalizeWritingProblemRow(row, questionNo))
+        .filter((problem) => problem.submitBlockedReason === null),
+    );
 
     if (pageRows.length < PROBLEM_SCAN_PAGE_SIZE) break;
   }
+
+  const touchedIds = await getTouchedWritingProblemIds(
+    supabase,
+    userId,
+    submittableProblems.map((problem) => problem.id),
+  );
+  const untouched = submittableProblems.find(
+    (problem) => !touchedIds.has(problem.id),
+  );
+  if (untouched) return { problem: untouched, error: null };
 
   return { problem: null, error: null };
 }

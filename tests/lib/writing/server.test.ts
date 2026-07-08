@@ -621,6 +621,16 @@ describe("getWritingProblem", () => {
 
     expect(problem?.id).toBe(untouched51.id);
     expect(calls).toContainEqual({ type: "range", from: 25, to: 49 });
+    expect(
+      calls.filter(
+        (call) => call.type === "from" && call.table === "writing_submissions",
+      ),
+    ).toHaveLength(1);
+    expect(
+      calls.filter(
+        (call) => call.type === "from" && call.table === "writing_drafts",
+      ),
+    ).toHaveLength(1);
   });
 
   it("skips untouched candidates that are not submittable", async () => {

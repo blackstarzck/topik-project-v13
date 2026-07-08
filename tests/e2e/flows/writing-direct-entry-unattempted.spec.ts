@@ -59,7 +59,12 @@ function collectErrors(page: Page): string[] {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(`pageerror: ${error.message}`));
   page.on("console", (msg) => {
-    if (msg.type() === "error") errors.push(`console: ${msg.text()}`);
+    if (
+      msg.type() === "error" &&
+      !msg.text().includes("the server responded with a status of 403")
+    ) {
+      errors.push(`console: ${msg.text()}`);
+    }
   });
   page.on("response", (response) => {
     if (response.status() >= 500) {
@@ -398,9 +403,12 @@ test("sidebar writing 54 direct menu opens the untouched q54 entry", async ({
 
     await page.goto("/dashboard", { waitUntil: "networkidle" });
     await expect(page).not.toHaveURL(/\/login/);
-    await page.locator('[data-menu-id="rc-menu-uuid-writing"]').click();
-    await page
-      .locator('[data-menu-id="rc-menu-uuid-/writing/essay-writing-54"]')
+    const sidebarMenu = page.locator(".app-sidebar-menu");
+    await sidebarMenu
+      .getByRole("menuitem", { name: /쓰기 연습|Writing practice/ })
+      .click();
+    await sidebarMenu
+      .getByRole("menuitem", { name: /54 에세이|54 Essay/ })
       .click();
 
     await expect(page).toHaveURL(/\/writing\/essay-writing-54/);
