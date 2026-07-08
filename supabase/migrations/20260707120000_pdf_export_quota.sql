@@ -77,7 +77,7 @@ create index if not exists pdf_export_quota_resets_lookup
   on public.pdf_export_quota_resets (reset_scope, problem_id, created_at desc);
 
 comment on table public.pdf_export_quota_resets is
-  'PDF export quota reset audit header. Group/user reset targets are materialized in pdf_export_quota_reset_targets.';
+  'PDF export quota reset audit header. User/group/global reset targets are materialized in pdf_export_quota_reset_targets.';
 
 create table if not exists public.pdf_export_quota_reset_targets (
   reset_id uuid not null references public.pdf_export_quota_resets(id)
@@ -91,7 +91,7 @@ create index if not exists pdf_export_quota_reset_targets_user
   on public.pdf_export_quota_reset_targets (user_id, reset_id);
 
 comment on table public.pdf_export_quota_reset_targets is
-  'Materialized user targets for user/group quota resets. topik-ai owns target expansion.';
+  'Materialized user targets for user/group/global quota resets. topik-ai owns target expansion.';
 
 insert into public.pdf_export_quota_policies (
   subject_scope,
@@ -150,8 +150,7 @@ create policy pdf_export_quota_resets_select
   on public.pdf_export_quota_resets
   for select to authenticated
   using (
-    reset_scope = 'global'
-    or private.is_platform_admin((select auth.uid()))
+    private.is_platform_admin((select auth.uid()))
     or exists (
       select 1
       from public.pdf_export_quota_reset_targets t
@@ -227,10 +226,13 @@ begin
       using errcode = 'P0002';
   end if;
 
-  select array_agg(distinct pid)
+  select array_agg(pid order by pid)
     into v_problem_ids
-  from unnest(coalesce(p_problem_ids, '{}')) as pid
-  where pid is not null;
+  from (
+    select distinct u.pid
+    from unnest(coalesce(p_problem_ids, '{}')) as u(pid)
+    where u.pid is not null
+  ) ordered_problem_ids;
 
   if coalesce(array_length(v_problem_ids, 1), 0) = 0 then
     raise exception 'claim_pdf_export_quota: problem_ids required'
@@ -265,14 +267,11 @@ begin
     where (r.problem_id is null or r.problem_id = v_problem_id)
       and r.created_at >= v_period_start
       and r.created_at < v_period_end
-      and (
-        r.reset_scope = 'global'
-        or exists (
-          select 1
-          from public.pdf_export_quota_reset_targets t
-          where t.reset_id = r.id
-            and t.user_id = p_user_id
-        )
+      and exists (
+        select 1
+        from public.pdf_export_quota_reset_targets t
+        where t.reset_id = r.id
+          and t.user_id = p_user_id
       );
 
     update public.pdf_export_quota_usages
@@ -337,14 +336,11 @@ begin
     where (r.problem_id is null or r.problem_id = v_problem_id)
       and r.created_at >= v_period_start
       and r.created_at < v_period_end
-      and (
-        r.reset_scope = 'global'
-        or exists (
-          select 1
-          from public.pdf_export_quota_reset_targets t
-          where t.reset_id = r.id
-            and t.user_id = p_user_id
-        )
+      and exists (
+        select 1
+        from public.pdf_export_quota_reset_targets t
+        where t.reset_id = r.id
+          and t.user_id = p_user_id
       );
 
     select count(*)::integer

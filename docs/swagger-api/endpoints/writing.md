@@ -1,9 +1,9 @@
 # Writing API
 
 Source: [Swagger UI](https://api.dotoretopik.com/docs) / [OpenAPI JSON](https://api.dotoretopik.com/openapi.json)
-Last synced: 2026-06-23
+Last synced: 2026-07-07
 
-Scope: TOPIK writing submission, generation, history, drafts, and PDF
+Scope: TOPIK writing submission, generation, tutor sessions, history, drafts, and PDF
 
 ## Endpoint Index
 
@@ -13,6 +13,9 @@ Scope: TOPIK writing submission, generation, history, drafts, and PDF
 | POST | [`/api/writing/submit`](#post-api-writing-submit) | Submit writing for AI evaluation | BearerAuth |
 | POST | [`/api/writing/generate`](#post-api-writing-generate) | Generate & persist a TOPIK II writing problem (v2) | BearerAuth |
 | POST | [`/api/writing/chat`](#post-api-writing-chat) | AI writing chat tutor (SSE stream) | BearerAuth |
+| GET | [`/api/writing/chat/sessions`](#get-api-writing-chat-sessions) | List the user's tutor chat sessions | BearerAuth |
+| GET | [`/api/writing/chat/sessions/{session_id}`](#get-api-writing-chat-sessions-session-id) | Get one tutor session with its full transcript | BearerAuth |
+| POST | [`/api/writing/submissions/start`](#post-api-writing-submissions-start) | Start a writing attempt (draft submission + tutor session) | BearerAuth |
 | GET | [`/api/writing/tasks`](#get-api-writing-tasks) | List writing questions across types (§7.9 view, 노출 가능 only) | BearerAuth |
 | GET | [`/api/writing/tasks/{task_type}`](#get-api-writing-tasks-task-type) | List TOPIK II writing questions of a type (메타데이터 적용) | BearerAuth |
 | POST | [`/api/writing/save-draft`](#post-api-writing-save-draft) | Auto-save writing draft | BearerAuth |
@@ -28,6 +31,8 @@ Scope: TOPIK writing submission, generation, history, drafts, and PDF
 - `question_id` is optional. When the selected problem came from `GET /api/writing/tasks`, send that external rich question id, such as `topik-writing-54-0001`; otherwise omit it or send `null` for ad-hoc scoring.
 - `user_id` is optional in the live schema. Authenticated v13 requests may send the current learner id; guest-style submissions may use `null`.
 - `lang` and `passage_context` remain optional in the live component schema.
+- `POST /api/writing/submissions/start` is the live anchor for creating both a draft submission id and tutor session id when the user enters the write/chat step.
+- `GET /api/writing/chat/sessions` and `GET /api/writing/chat/sessions/{session_id}` expose tutor session history and transcripts.
 
 ```json
 {
@@ -290,6 +295,79 @@ Schema: [WritingChatRequest](../schemas/writing.md#writingchatrequest)
 | 401 | Missing or invalid JWT. | - | - |
 | 422 | Validation Error | `application/json` | [HTTPValidationError](../schemas/common.md#httpvalidationerror) |
 | 429 | Rate limit exceeded (20 requests/minute). | - | - |
+
+## GET /api/writing/chat/sessions
+
+Summary: List the user's tutor chat sessions
+
+Auth: BearerAuth
+
+Description: Returns the authenticated user's tutor sessions, newest activity first.
+
+### Parameters
+
+| Name | In | Required | Type | Description |
+| --- | --- | --- | --- | --- |
+| `task_type` | query | no | string \| null | Optional task type filter. |
+| `limit` | query | no | integer | Page size, 1-100, default 20. |
+| `offset` | query | no | integer | Pagination offset, default 0. |
+
+### Responses
+
+| Status | Description | Media | Schema |
+| --- | --- | --- | --- |
+| 200 | Successful Response | `application/json` | [TutorSessionListResponse](../schemas/writing.md#tutorsessionlistresponse) |
+| 401 | Missing or invalid JWT. | - | - |
+| 422 | Validation Error | `application/json` | [HTTPValidationError](../schemas/common.md#httpvalidationerror) |
+| 503 | Chat tutor disabled (kill-switch). | - | - |
+
+## GET /api/writing/chat/sessions/{session_id}
+
+Summary: Get one tutor session with its full transcript
+
+Auth: BearerAuth
+
+Description: Returns one tutor session and its full transcript, oldest turn first. Another user's session resolves to 404.
+
+### Parameters
+
+| Name | In | Required | Type | Description |
+| --- | --- | --- | --- | --- |
+| `session_id` | path | yes | string | Tutor session id. |
+
+### Responses
+
+| Status | Description | Media | Schema |
+| --- | --- | --- | --- |
+| 200 | Successful Response | `application/json` | [TutorSessionDetailResponse](../schemas/writing.md#tutorsessiondetailresponse) |
+| 401 | Missing or invalid JWT. | - | - |
+| 404 | Session not found or not owned by the user. | - | - |
+| 422 | Validation Error | `application/json` | [HTTPValidationError](../schemas/common.md#httpvalidationerror) |
+| 503 | Chat tutor disabled (kill-switch). | - | - |
+
+## POST /api/writing/submissions/start
+
+Summary: Start a writing attempt (draft submission + tutor session)
+
+Auth: BearerAuth
+
+Description: Call when the user enters the write/chat step, not when the prompt is merely shown. Creates a draft submission and tutor chat session in one transaction and returns both ids.
+
+### Request Body
+
+Media type: `application/json`
+
+Schema: [StartSessionRequest](../schemas/writing.md#startsessionrequest)
+
+### Responses
+
+| Status | Description | Media | Schema |
+| --- | --- | --- | --- |
+| 200 | Draft submission and tutor session created; returns both ids. | `application/json` | [StartSessionResponse](../schemas/writing.md#startsessionresponse) |
+| 400 | Invalid task type. | - | - |
+| 401 | Missing or invalid JWT. | - | - |
+| 422 | Validation Error | `application/json` | [HTTPValidationError](../schemas/common.md#httpvalidationerror) |
+| 503 | Chat tutor disabled (kill-switch). | - | - |
 
 ## GET /api/writing/tasks
 

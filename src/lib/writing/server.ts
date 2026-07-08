@@ -24,6 +24,7 @@ import {
   type NormalizedWritingProblem,
   type ProblemLifecycleStatus,
 } from "./problem-normalizer";
+import { writingProblemHref } from "./routes";
 
 type ClientFactory = () => Promise<SupabaseServerClient>;
 
@@ -264,8 +265,18 @@ type WritingProblemQueryRow = {
   lifecycle_reason?: string | null;
 };
 
+type NextWritingProblemCandidateRow = Pick<
+  WritingProblemQueryRow,
+  "id" | "question_no" | "tags" | "materials"
+>;
+
 type WritingProblemQueryResult = {
   data: WritingProblemQueryRow[] | null;
+  error: { message: string } | null;
+};
+
+type NextWritingProblemCandidateResult = {
+  data: NextWritingProblemCandidateRow[] | null;
   error: { message: string } | null;
 };
 
@@ -292,7 +303,9 @@ function normalizeWritingProblemRow(
   });
 }
 
-function isSeedFixtureProblem(row: WritingProblemQueryRow): boolean {
+function isSeedFixtureProblem(
+  row: Pick<WritingProblemQueryRow, "tags" | "materials">,
+): boolean {
   if (
     Array.isArray(row.tags) &&
     row.tags.some((tag) => tag.startsWith("seed:"))
@@ -320,6 +333,123 @@ export function isProblemIdLikeUuid(
   problemId: string | null | undefined,
 ): problemId is string {
   return typeof problemId === "string" && UUID_PATTERN.test(problemId);
+}
+
+export async function getNextWritingProblemStartHref({
+  currentProblemId,
+  questionNo,
+  createClient = createSupabaseServerClient,
+}: {
+  currentProblemId: string | null | undefined;
+  questionNo: number | null | undefined;
+  createClient?: ClientFactory;
+}): Promise<string> {
+  const target = await getNextWritingProblemTarget({
+    currentProblemId,
+    questionNo,
+    createClient,
+  });
+
+  return writingProblemHref({
+    questionNo: target?.questionNo ?? questionNo,
+    problemId: target?.problemId ?? null,
+    fresh: true,
+  });
+}
+
+async function getNextWritingProblemTarget({
+  currentProblemId,
+  questionNo,
+  createClient,
+}: {
+  currentProblemId: string | null | undefined;
+  questionNo: number | null | undefined;
+  createClient: ClientFactory;
+}): Promise<{ problemId: string; questionNo: QuestionNo } | null> {
+  if (!isQuestionNo(questionNo) || !isProblemIdLikeUuid(currentProblemId)) {
+    return null;
+  }
+
+  const supabase = await createClient();
+  const findFirstEligibleProblemAfter = async (
+    afterProblemId: string | null,
+  ): Promise<{ problemId: string; questionNo: QuestionNo } | null> => {
+    const scan = async (
+      withLifecycle: boolean,
+    ): Promise<{
+      error: NextWritingProblemCandidateResult["error"];
+      target: { problemId: string; questionNo: QuestionNo } | null;
+    }> => {
+      let cursor = afterProblemId;
+
+      for (;;) {
+        let query = supabase
+          .from("problems")
+          .select("id, question_no, tags, materials")
+          .eq("domain", "writing")
+          .eq("question_no", questionNo)
+          .eq("publish_status", "published");
+
+        if (withLifecycle) {
+          query = query.eq("lifecycle_status", "active");
+        }
+        if (cursor) {
+          query = query.gt("id", cursor);
+        }
+
+        const result = (await query
+          .order("id", { ascending: true })
+          .limit(
+            MAX_VISIBILITY_SCAN_ROWS,
+          )) as unknown as NextWritingProblemCandidateResult;
+        if (result.error) return { error: result.error, target: null };
+
+        const pageRows = (result.data ?? [])
+          .filter((row) => isQuestionNo(row.question_no))
+          .sort((a, b) => a.id.localeCompare(b.id));
+        if (pageRows.length === 0) return { error: null, target: null };
+
+        const candidates = pageRows.filter((row) => !isSeedFixtureProblem(row));
+        const visibleIds = await filterVisibleProblemIds(
+          supabase,
+          candidates.map((row) => row.id),
+        );
+        const firstVisible = candidates.find((row) => visibleIds.has(row.id));
+        if (firstVisible) {
+          return {
+            error: null,
+            target: { problemId: firstVisible.id, questionNo },
+          };
+        }
+
+        const nextCursor = pageRows[pageRows.length - 1]?.id ?? null;
+        if (
+          !nextCursor ||
+          (cursor && nextCursor.localeCompare(cursor) <= 0) ||
+          pageRows.length < MAX_VISIBILITY_SCAN_ROWS
+        ) {
+          return { error: null, target: null };
+        }
+        cursor = nextCursor;
+      }
+    };
+
+    let result = await scan(true);
+    if (result.error && result.error.message.includes("lifecycle_status")) {
+      result = await scan(false);
+    }
+    if (result.error) {
+      throw new Error(
+        `getNextWritingProblemStartHref: ${result.error.message}`,
+      );
+    }
+    return result.target;
+  };
+
+  return (
+    (await findFirstEligibleProblemAfter(currentProblemId)) ??
+    (await findFirstEligibleProblemAfter(null))
+  );
 }
 
 export async function getWritingProblem(

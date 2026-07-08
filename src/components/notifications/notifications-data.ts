@@ -86,8 +86,10 @@ export type InstitutionInvitationResolvedStatus =
 
 export type InstitutionInvitationErrorKind =
   | "alreadyResponded"
+  | "alreadyAffiliatedOther"
   | "expired"
   | "withdrawn"
+  | "invalid"
   | "unauthenticated"
   | "failed";
 
@@ -254,6 +256,15 @@ export function mapInstitutionInvitationError(
     normalized.includes("withdrawn")
   ) {
     return "withdrawn";
+  }
+  if (normalized.includes("already affiliated")) {
+    return "alreadyAffiliatedOther";
+  }
+  if (
+    normalized.includes("invalid") ||
+    normalized.includes("profile_not_found")
+  ) {
+    return "invalid";
   }
 
   return "failed";

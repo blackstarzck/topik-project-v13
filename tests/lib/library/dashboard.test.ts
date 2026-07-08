@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildLibraryDashboardFromRows,
+  getLibraryDashboard,
   type LibraryDashboardRows,
 } from "../../../src/lib/library/dashboard";
 
@@ -87,6 +88,157 @@ function problem(
     title,
     difficulty,
   } satisfies LibraryDashboardRows["problems"][number];
+}
+
+function allSubmission(id: string, problemId: string, questionNo: number) {
+  return {
+    id,
+    problem_id: problemId,
+    question_no: questionNo,
+    parent_submission_id: null,
+  };
+}
+
+function makeDashboardClientForTimelineSubmissionFetch() {
+  const oldSubmissions = [
+    {
+      id: "s-old-report",
+      problem_id: "p-old-report",
+      question_no: 54,
+      parent_submission_id: null,
+    },
+    {
+      id: "s-old-export",
+      problem_id: "p-old-export",
+      question_no: 53,
+      parent_submission_id: null,
+    },
+  ];
+  const problems = [
+    problem("p-old-report", 54, "Old report problem"),
+    problem("p-old-export", 53, "Old export problem"),
+  ];
+  const queries: Array<{
+    table: string;
+    inFilters: Array<{ column: string; values: unknown[] }>;
+  }> = [];
+
+  return {
+    queries,
+    client: {
+      from(table: string) {
+        const query = {
+          table,
+          inFilters: [] as Array<{ column: string; values: unknown[] }>,
+        };
+        queries.push(query);
+
+        const resolve = () => {
+          if (table === "library_items") {
+            return { data: [], error: null };
+          }
+          if (table === "writing_submissions") {
+            const ids = query.inFilters.find(
+              (filter) => filter.column === "id",
+            )?.values;
+            return {
+              data: ids
+                ? oldSubmissions.filter((row) => ids.includes(row.id))
+                : [],
+              error: null,
+            };
+          }
+          if (table === "writing_feedback") {
+            return { data: [], error: null };
+          }
+          if (table === "feedback_dimension_scores") {
+            return { data: [], error: null };
+          }
+          if (table === "study_events") {
+            return {
+              data: [
+                {
+                  id: "event-old-report",
+                  event_type: "report_viewed",
+                  occurred_at: "2026-06-29T13:00:00.000Z",
+                  problem_id: null,
+                  submission_id: null,
+                  payload: { report_id: "report-old" },
+                },
+                {
+                  id: "event-old-export",
+                  event_type: "export_downloaded",
+                  occurred_at: "2026-06-29T12:59:00.000Z",
+                  problem_id: null,
+                  submission_id: null,
+                  payload: {
+                    source_type: "submission",
+                    source_id: "s-old-export",
+                  },
+                },
+              ],
+              error: null,
+            };
+          }
+          if (table === "comparison_reports") {
+            return {
+              data: [
+                {
+                  id: "report-old",
+                  current_submission_id: "s-old-report",
+                },
+              ],
+              error: null,
+            };
+          }
+          if (table === "export_files") {
+            return { data: [], error: null };
+          }
+          if (table === "problems") {
+            const ids = query.inFilters.find(
+              (filter) => filter.column === "id",
+            )?.values;
+            return {
+              data: ids
+                ? problems.filter((row) => ids.includes(row.id))
+                : problems,
+              error: null,
+            };
+          }
+          throw new Error(`unexpected table ${table}`);
+        };
+
+        const resolvePromise = () => Promise.resolve(resolve());
+        const chain = {
+          select: () => chain,
+          eq: () => chain,
+          order: () => chain,
+          in: (column: string, values: unknown[]) => {
+            query.inFilters.push({ column, values });
+            return chain;
+          },
+          limit: () => resolvePromise(),
+          then: (
+            onfulfilled?: Parameters<Promise<unknown>["then"]>[0],
+            onrejected?: Parameters<Promise<unknown>["then"]>[1],
+          ) => resolvePromise().then(onfulfilled, onrejected),
+          catch: (onrejected?: Parameters<Promise<unknown>["catch"]>[0]) =>
+            resolvePromise().catch(onrejected),
+          finally: (onfinally?: Parameters<Promise<unknown>["finally"]>[0]) =>
+            resolvePromise().finally(onfinally),
+        };
+        return chain;
+      },
+      rpc(_name: string, args: { p_problem_ids?: string[] }) {
+        return Promise.resolve({
+          data: (args.p_problem_ids ?? []).map((problem_id) => ({
+            problem_id,
+          })),
+          error: null,
+        });
+      },
+    },
+  };
 }
 
 describe("buildLibraryDashboardFromRows", () => {
@@ -192,17 +344,9 @@ describe("buildLibraryDashboardFromRows", () => {
         ),
       ],
       allSubmissions: [
-        { id: "s-length", problem_id: "p-length", parent_submission_id: null },
-        {
-          id: "s-rewrite",
-          problem_id: "p-rewrite",
-          parent_submission_id: null,
-        },
-        {
-          id: "s-rewrite-old",
-          problem_id: "p-rewrite",
-          parent_submission_id: null,
-        },
+        allSubmission("s-length", "p-length", 54),
+        allSubmission("s-rewrite", "p-rewrite", 53),
+        allSubmission("s-rewrite-old", "p-rewrite", 53),
       ],
       studyEvents: [
         {
@@ -211,6 +355,7 @@ describe("buildLibraryDashboardFromRows", () => {
           occurred_at: "2026-06-29T12:35:00.000Z",
           problem_id: "p-length",
           submission_id: "s-length",
+          payload: null,
         },
         {
           id: "event-ignore",
@@ -218,6 +363,7 @@ describe("buildLibraryDashboardFromRows", () => {
           occurred_at: "2026-06-29T12:40:00.000Z",
           problem_id: null,
           submission_id: null,
+          payload: null,
         },
       ],
     };
@@ -488,5 +634,210 @@ describe("buildLibraryDashboardFromRows", () => {
       view.feedbackWaiting.find((item) => item.problemId === "p-failed-hidden")
         ?.retryHref,
     ).toBeNull();
+  });
+
+  it("restores question numbers for payload-backed report and export timeline events", () => {
+    const rows = {
+      libraryItems: [],
+      submissions: [],
+      feedback: [],
+      dimensionScores: [],
+      problems: [
+        problem("p-report", 54, "비교 리포트 문제"),
+        problem("p-export", 53, "PDF 내보내기 문제"),
+      ],
+      allSubmissions: [
+        allSubmission("s-report", "p-report", 54),
+        allSubmission("s-export", "p-export", 53),
+      ],
+      comparisonReports: [
+        {
+          id: "report-1",
+          current_submission_id: "s-report",
+        },
+      ],
+      exportFiles: [
+        {
+          id: "export-1",
+          source_type: "report",
+          source_id: "report-1",
+        },
+      ],
+      studyEvents: [
+        {
+          id: "event-report",
+          event_type: "report_viewed",
+          occurred_at: "2026-06-29T13:00:00.000Z",
+          problem_id: null,
+          submission_id: null,
+          payload: { report_id: "report-1" },
+        },
+        {
+          id: "event-export-submission",
+          event_type: "export_downloaded",
+          occurred_at: "2026-06-29T12:59:00.000Z",
+          problem_id: null,
+          submission_id: null,
+          payload: {
+            source_type: "submission",
+            source_id: "s-export",
+          },
+        },
+        {
+          id: "event-export-report",
+          event_type: "export_downloaded",
+          occurred_at: "2026-06-29T12:58:00.000Z",
+          problem_id: null,
+          submission_id: null,
+          payload: { export_id: "export-1" },
+        },
+      ],
+    } satisfies LibraryDashboardRows;
+
+    const view = buildLibraryDashboardFromRows(rows);
+
+    expect(view.timeline).toEqual([
+      expect.objectContaining({
+        id: "event-report",
+        submissionId: "s-report",
+        problemId: "p-report",
+        questionNo: 54,
+        title: "비교 리포트 문제",
+      }),
+      expect.objectContaining({
+        id: "event-export-submission",
+        submissionId: "s-export",
+        problemId: "p-export",
+        questionNo: 53,
+        title: "PDF 내보내기 문제",
+      }),
+      expect.objectContaining({
+        id: "event-export-report",
+        submissionId: "s-report",
+        problemId: "p-report",
+        questionNo: 54,
+        title: "비교 리포트 문제",
+      }),
+    ]);
+  });
+
+  it("restores direct submission, problem, and question numbers from event payloads", () => {
+    const rows = {
+      libraryItems: [],
+      submissions: [],
+      feedback: [],
+      dimensionScores: [],
+      problems: [problem("p-payload-feedback", 52, "Payload feedback problem")],
+      allSubmissions: [],
+      studyEvents: [
+        {
+          id: "event-payload-feedback",
+          event_type: "feedback_viewed",
+          occurred_at: "2026-06-29T13:00:00.000Z",
+          problem_id: null,
+          submission_id: null,
+          payload: {
+            submission_id: "s-payload-feedback",
+            problem_id: "p-payload-feedback",
+            question_no: 52,
+          },
+        },
+      ],
+    } satisfies LibraryDashboardRows;
+
+    const view = buildLibraryDashboardFromRows(rows);
+
+    expect(view.timeline).toEqual([
+      expect.objectContaining({
+        id: "event-payload-feedback",
+        submissionId: "s-payload-feedback",
+        problemId: "p-payload-feedback",
+        questionNo: 52,
+        title: "Payload feedback problem",
+      }),
+    ]);
+  });
+
+  it("prefers the fetched submission problem over a mismatched payload problem", () => {
+    const rows = {
+      libraryItems: [],
+      submissions: [],
+      feedback: [],
+      dimensionScores: [],
+      problems: [
+        problem("p-submission-feedback", 54, "Submission feedback problem"),
+        problem("p-payload-feedback", 51, "Stale payload problem"),
+      ],
+      allSubmissions: [
+        allSubmission("s-mismatch-feedback", "p-submission-feedback", 54),
+      ],
+      studyEvents: [
+        {
+          id: "event-mismatch-feedback",
+          event_type: "feedback_viewed",
+          occurred_at: "2026-06-29T13:00:00.000Z",
+          problem_id: null,
+          submission_id: null,
+          payload: {
+            submission_id: "s-mismatch-feedback",
+            problem_id: "p-payload-feedback",
+            question_no: 51,
+          },
+        },
+      ],
+    } satisfies LibraryDashboardRows;
+
+    const view = buildLibraryDashboardFromRows(rows);
+
+    expect(view.timeline).toEqual([
+      expect.objectContaining({
+        id: "event-mismatch-feedback",
+        submissionId: "s-mismatch-feedback",
+        problemId: "p-submission-feedback",
+        questionNo: 54,
+        title: "Submission feedback problem",
+      }),
+    ]);
+  });
+});
+
+describe("getLibraryDashboard", () => {
+  it("fetches payload-linked timeline submissions even when they are outside the recent submission cache", async () => {
+    const { client, queries } = makeDashboardClientForTimelineSubmissionFetch();
+
+    const view = await getLibraryDashboard(
+      "user-1",
+      async () => client as never,
+    );
+
+    expect(view.timeline).toEqual([
+      expect.objectContaining({
+        id: "event-old-report",
+        submissionId: "s-old-report",
+        problemId: "p-old-report",
+        questionNo: 54,
+        title: "Old report problem",
+      }),
+      expect.objectContaining({
+        id: "event-old-export",
+        submissionId: "s-old-export",
+        problemId: "p-old-export",
+        questionNo: 53,
+        title: "Old export problem",
+      }),
+    ]);
+    expect(queries).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          table: "writing_submissions",
+          inFilters: [
+            {
+              column: "id",
+              values: ["s-old-report", "s-old-export"],
+            },
+          ],
+        }),
+      ]),
+    );
   });
 });

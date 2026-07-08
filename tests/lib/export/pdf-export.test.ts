@@ -59,7 +59,7 @@ describe("triggerPdfExport", () => {
   it("does not open the print dialog when the server print endpoint rejects", async () => {
     const fetcher = vi.fn(async () =>
       response(429, {
-        error: "PDF 내보내기 횟수를 모두 사용했어요.",
+        error: "PDF export quota exceeded",
         code: "pdf_export_quota_exceeded",
       }),
     );
@@ -68,7 +68,7 @@ describe("triggerPdfExport", () => {
     });
 
     await expect(triggerPdfExport(request, fetcher as never)).rejects.toThrow(
-      /PDF 내보내기 횟수/,
+      /PDF export quota exceeded/,
     );
     expect(printSpy).not.toHaveBeenCalled();
   });

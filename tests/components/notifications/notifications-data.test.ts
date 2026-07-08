@@ -1,12 +1,21 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   mapInstitutionInvitationError,
   resolveInstitutionInvitationStatus,
+  respondInstitutionInvitation,
   resolveNotificationAction,
   resolveNotificationDestination,
   type UserNotification,
 } from "../../../src/components/notifications/notifications-data";
+
+const rpcMock = vi.hoisted(() => vi.fn());
+
+vi.mock("../../../src/lib/supabase/browser", () => ({
+  createSupabaseBrowserClient: () => ({
+    rpc: rpcMock,
+  }),
+}));
 
 const baseNotification = {
   id: "notification-1",
@@ -18,6 +27,10 @@ const baseNotification = {
   read_at: null,
   created_at: "2026-06-22T09:00:00.000Z",
 } satisfies UserNotification;
+
+beforeEach(() => {
+  rpcMock.mockReset();
+});
 
 describe("resolveNotificationDestination", () => {
   it("uses the notification route path before the legacy link url", () => {
@@ -163,6 +176,84 @@ describe("mapInstitutionInvitationError", () => {
         new Error("forbidden: not invitation owner"),
       ),
     ).toBe("failed");
+    expect(
+      mapInstitutionInvitationError(
+        new Error("already affiliated with another institution"),
+      ),
+    ).toBe("alreadyAffiliatedOther");
+    expect(
+      mapInstitutionInvitationError(new Error("profile_not_found")),
+    ).toBe("invalid");
+  });
+});
+
+describe("respondInstitutionInvitation", () => {
+  it("accepts an invitation through the institution invitation response RPC", async () => {
+    rpcMock.mockResolvedValue({
+      data: {
+        status: "accepted",
+        code: "CAMPAIGN-01",
+        code_label: "Campaign",
+      },
+      error: null,
+    });
+
+    await expect(
+      respondInstitutionInvitation(
+        "2a2ff7b8-cc31-4f4d-a455-283aaad28f30",
+        true,
+      ),
+    ).resolves.toEqual({
+      status: "accepted",
+      code: "CAMPAIGN-01",
+      code_label: "Campaign",
+    });
+
+    expect(rpcMock).toHaveBeenCalledWith("respond_institution_invitation", {
+      p_invitation_id: "2a2ff7b8-cc31-4f4d-a455-283aaad28f30",
+      p_accept: true,
+    });
+  });
+
+  it("declines an invitation through the institution invitation response RPC", async () => {
+    rpcMock.mockResolvedValue({
+      data: {
+        status: "declined",
+        code: "CAMPAIGN-01",
+        code_label: "Campaign",
+      },
+      error: null,
+    });
+
+    await expect(
+      respondInstitutionInvitation(
+        "2a2ff7b8-cc31-4f4d-a455-283aaad28f30",
+        false,
+      ),
+    ).resolves.toEqual({
+      status: "declined",
+      code: "CAMPAIGN-01",
+      code_label: "Campaign",
+    });
+
+    expect(rpcMock).toHaveBeenCalledWith("respond_institution_invitation", {
+      p_invitation_id: "2a2ff7b8-cc31-4f4d-a455-283aaad28f30",
+      p_accept: false,
+    });
+  });
+
+  it("passes RPC errors through for handled modal mapping", async () => {
+    rpcMock.mockResolvedValue({
+      data: null,
+      error: { message: "already affiliated with another institution" },
+    });
+
+    await expect(
+      respondInstitutionInvitation(
+        "2a2ff7b8-cc31-4f4d-a455-283aaad28f30",
+        true,
+      ),
+    ).rejects.toThrow(/already affiliated/);
   });
 });
 

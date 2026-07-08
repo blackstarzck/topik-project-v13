@@ -38,6 +38,8 @@ const resolvedStatuses = new Set<InstitutionInvitationModalStatus>([
   "expired",
   "withdrawn",
   "alreadyResponded",
+  "alreadyAffiliatedOther",
+  "invalid",
 ]);
 
 export function InstitutionInvitationModal({
@@ -55,8 +57,8 @@ export function InstitutionInvitationModal({
 
   const code = invitation?.code ?? t("unknownCode");
   const codeLabel = invitation?.codeLabel ?? t("unknownLabel");
-  const invitationId = invitation?.invitationId ?? null;
   const currentAffiliation = affiliationCode?.trim() ?? "";
+  const invitationId = invitation?.invitationId?.trim() ?? "";
   const invitedAffiliation = invitation?.code?.trim() ?? "";
   const replacesAffiliation = Boolean(
     currentAffiliation &&

@@ -1,7 +1,7 @@
 # Writing Schemas
 
 Source: [OpenAPI JSON](https://api.dotoretopik.com/openapi.json)
-Last synced: 2026-06-23
+Last synced: 2026-07-07
 
 ## Schema Index
 
@@ -17,6 +17,12 @@ Last synced: 2026-06-23
 | [TopikWriting54Response](#topikwriting54response) | object | Q54 논술·의견 제시형 (51 keys). |
 | [TopikWritingQuestionListResponse](#topikwritingquestionlistresponse) | object | Paginated list of TOPIK writing questions (rich §7 metadata, per item type). |
 | [WritingChatRequest](#writingchatrequest) | object | Request for chat tutor interaction. |
+| [StartSessionRequest](#startsessionrequest) | object | Begin a writing attempt. |
+| [StartSessionResponse](#startsessionresponse) | object | IDs created at the start of a writing attempt. |
+| [TutorMessageItem](#tutormessageitem) | object | One turn in a tutor session transcript. |
+| [TutorSessionDetailResponse](#tutorsessiondetailresponse) | object | A session header plus its full transcript. |
+| [TutorSessionListResponse](#tutorsessionlistresponse) | object | Tutor sessions list. |
+| [TutorSessionSummary](#tutorsessionsummary) | object | A tutor session header. |
 | [WritingGenerateRequestV2](#writinggeneraterequestv2) | object | v2 generate 요청 — task_type 문자열을 item_number:int 로 교체 (라우트 연결은 Step 8). |
 | [WritingHistoryItem](#writinghistoryitem) | object |  |
 | [WritingHistoryResponse](#writinghistoryresponse) | object |  |
@@ -355,6 +361,71 @@ Example:
   "user_id": "user_a1b2c3d4"
 }
 ```
+
+## StartSessionRequest
+
+Begin a writing attempt.
+
+| Field | Required | Type | Description | Example / Default |
+| --- | --- | --- | --- | --- |
+| `task_type` | yes | string | Task type to start: `Q51`, `Q52`, `Q53`, or `Q54`. | Q54 |
+| `question_id` | no | string \| null | Rich question id to link; omit for an ad-hoc draft. | topik-writing-54-0001 |
+| `topic` | no | string | Optional topic label for the session. | 1인 가구 증가 |
+
+## StartSessionResponse
+
+IDs created at the start of a writing attempt.
+
+| Field | Required | Type | Description | Example / Default |
+| --- | --- | --- | --- | --- |
+| `submission_id` | yes | string | UUID of the draft submission. | f47ac10b-58cc-4372-a567-0e02b2c3d479 |
+| `session_id` | yes | string | UUID of the tutor chat session. | 9c858901-8a57-4791-81fe-4c455b099bc9 |
+
+## TutorMessageItem
+
+One turn in a tutor session transcript.
+
+| Field | Required | Type | Description | Example / Default |
+| --- | --- | --- | --- | --- |
+| `role` | yes | string | `user` or `assistant`. | assistant |
+| `content` | yes | string | Message text. |  |
+| `hint_level` | no | string \| null | Escalation level when the assistant turn was generated. | nudge |
+| `created_at` | yes | string | ISO-8601 timestamp. | 2024-11-15T09:30:00+00:00 |
+
+## TutorSessionDetailResponse
+
+A session header plus its full transcript.
+
+| Field | Required | Type | Description | Example / Default |
+| --- | --- | --- | --- | --- |
+| `session_id` | yes | string | Tutor session UUID. |  |
+| `submission_id` | no | string \| null | Linked writing submission UUID. |  |
+| `task_type` | yes | string | `Q51`, `Q52`, `Q53`, or `Q54`. | Q54 |
+| `topic` | no | string | Session topic. | default:  |
+| `frustration_count` | yes | integer | Server-counted frustration signals. | 0 |
+| `has_real_draft` | yes | boolean | Whether a real Korean draft was submitted. |  |
+| `last_message_at` | yes | string | ISO-8601 last activity timestamp. |  |
+| `messages` | yes | array<[TutorMessageItem](./writing.md#tutormessageitem)> | Full transcript, oldest first. |  |
+
+## TutorSessionListResponse
+
+| Field | Required | Type | Description | Example / Default |
+| --- | --- | --- | --- | --- |
+| `sessions` | yes | array<[TutorSessionSummary](./writing.md#tutorsessionsummary)> | Sessions, newest activity first. |  |
+
+## TutorSessionSummary
+
+A tutor session header without transcript messages.
+
+| Field | Required | Type | Description | Example / Default |
+| --- | --- | --- | --- | --- |
+| `session_id` | yes | string | Tutor session UUID. |  |
+| `submission_id` | no | string \| null | Linked writing submission UUID. |  |
+| `task_type` | yes | string | `Q51`, `Q52`, `Q53`, or `Q54`. | Q54 |
+| `topic` | no | string | Session topic. | default:  |
+| `frustration_count` | yes | integer | Server-counted frustration signals. | 0 |
+| `has_real_draft` | yes | boolean | Whether a real Korean draft was submitted. |  |
+| `last_message_at` | yes | string | ISO-8601 last activity timestamp. |  |
 
 ## WritingGenerateRequestV2
 

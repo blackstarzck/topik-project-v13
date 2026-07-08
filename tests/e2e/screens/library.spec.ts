@@ -267,7 +267,10 @@ async function createLibraryDashboardFixture() {
   return {
     analyzingSubmissionId,
     marker,
+    questionNo,
     problemTitle: problemTitle ?? `${questionNo}번 문제`,
+    submittedEventId: studyEventIds[0],
+    feedbackEventId: studyEventIds[1],
   };
 }
 
@@ -854,6 +857,28 @@ test("F-01 library problems filter panel, sort, and view toggle", async ({
       page.getByTestId("library-problems-filter-badge"),
     ).toContainText("1");
   }
+
+  expect(errors).toEqual([]);
+});
+
+test("F-01 library timeline prefixes event labels with question numbers", async ({
+  page,
+}) => {
+  const errors = collectErrors(page);
+  const fixture = await createLibraryDashboardFixture();
+
+  await page.goto("/library", { waitUntil: "load" });
+  await expect(page).not.toHaveURL(/\/login/);
+
+  const timeline = page.getByTestId("library-timeline-panel");
+  await timeline.scrollIntoViewIfNeeded();
+  await expect(timeline).toBeVisible();
+  await expect(
+    page.getByTestId(`library-timeline-content-${fixture.submittedEventId}`),
+  ).toContainText(`${fixture.questionNo}번`);
+  await expect(
+    page.getByTestId(`library-timeline-content-${fixture.feedbackEventId}`),
+  ).toContainText(`${fixture.questionNo}번`);
 
   expect(errors).toEqual([]);
 });

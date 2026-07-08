@@ -327,12 +327,11 @@ describe("NotificationBell", () => {
     );
   });
 
-  it("disables invitation actions when the payload has no usable invitation id", async () => {
+  it("disables invitation acceptance when the payload has no usable code", async () => {
     fetchNotificationsMock.mockResolvedValue([
       makeInstitutionInvitationNotification({
         payload: {
           kind: "institution_invitation",
-          code: "CAMPAIGN-01",
           code_label: "캠페인 유입 유저",
         },
       }),

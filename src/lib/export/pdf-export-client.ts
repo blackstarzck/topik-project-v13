@@ -29,7 +29,17 @@ type BrowserClientFactory = typeof createSupabaseBrowserClient;
 
 export { PdfExportApiError };
 
+export class PdfExportDownloadError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "PdfExportDownloadError";
+  }
+}
+
 function shouldUsePrintFallback(error: unknown): boolean {
+  if (error instanceof PdfExportDownloadError) {
+    return false;
+  }
   if (error instanceof PdfExportApiError) {
     return error.status >= 500;
   }
@@ -82,7 +92,7 @@ export async function downloadStoredPdfExport(
     .from(BUCKET)
     .download(input.storagePath);
   if (error || !data) {
-    throw new Error(error?.message ?? "download failed");
+    throw new PdfExportDownloadError(error?.message ?? "download failed");
   }
   triggerBrowserDownload(
     data,

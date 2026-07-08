@@ -849,6 +849,7 @@
       "expired": "This invitation has expired.",
       "withdrawn": "The administrator has withdrawn this invitation.",
       "alreadyResponded": "This invitation has already been handled.",
+      "alreadyAffiliatedOther": "This account is already connected to another institution. Sign in with another account or continue without connecting.",
       "unauthenticated": "Your login has expired. Please sign in again.",
       "failed": "We couldn't process the invitation. Please try again shortly.",
       "accept": "Accept",
@@ -2017,6 +2018,7 @@
         "title": "Study timeline",
         "empty": "No recent study events to show.",
         "viewAll": "View full timeline",
+        "eventWithQuestion": "{questionNo}: {event}",
         "event": {
           "submission_submitted": "Answer submitted",
           "feedback_viewed": "Feedback viewed",

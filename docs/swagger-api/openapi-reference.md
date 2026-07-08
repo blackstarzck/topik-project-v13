@@ -6,33 +6,36 @@ Index generated from the live Swagger OpenAPI JSON.
 | --- | --- |
 | Swagger UI | [https://api.dotoretopik.com/docs](https://api.dotoretopik.com/docs) |
 | OpenAPI JSON | [https://api.dotoretopik.com/openapi.json](https://api.dotoretopik.com/openapi.json) |
-| Last synced | 2026-06-23 |
+| Last synced | 2026-07-07 |
 | OpenAPI version | `3.1.0` |
 | API title | `TalkPik AI Service` |
 | API version | `0.1.0` |
-| Paths | 74 |
-| Operations | 79 |
-| Component schemas | 123 |
+| Paths | 82 |
+| Operations | 87 |
+| Component schemas | 133 |
 | Security schemes | `BearerAuth`, `CampaignApiKey` |
 
 ## Endpoint Files
 
 | File | Operations | Scope |
 | --- | ---: | --- |
+| [Account](./endpoints/account.md) | 1 | User account self-service |
 | [Eval Auth](./endpoints/eval-auth.md) | 1 | Eval dashboard login |
 | [Admin Users](./endpoints/admin-users.md) | 6 | Admin/user account management; reference only, not v13 user-app scope |
 | [Admin Eval](./endpoints/admin-eval.md) | 12 | Evaluation operations, reviews, and datasets |
+| [Admin Reading](./endpoints/admin-reading.md) | 3 | Admin reading question-bank operations; reference only, admin-only, not v13 user-app scope |
 | [Admin Campaign](./endpoints/admin-campaign.md) | 24 | Campaign admin review, email, PDF, and stats |
 | [External Campaign](./endpoints/external-campaign.md) | 6 | External campaign upload, submission, contact, and waitlist |
-| [Writing](./endpoints/writing.md) | 9 | TOPIK writing submission, generation, history, drafts, and PDF |
+| [Writing](./endpoints/writing.md) | 12 | TOPIK writing submission, generation, tutor sessions, history, drafts, and PDF |
 | [Reading](./endpoints/reading.md) | 9 | Reading generation, submission, sessions, results, and bookmarks |
 | [Listening](./endpoints/listening.md) | 10 | Listening sessions, submissions, results, audio, and bookmarks |
-| [Evaluation](./endpoints/evaluation.md) | 2 | Async writing evaluation status and detailed feedback lookup |
+| [Evaluation](./endpoints/evaluation.md) | 3 | Async writing evaluation status, SSE stream, and detailed feedback lookup |
 
 ## Full Endpoint Index
 
 | Method | Path | Tag | Summary |
 | --- | --- | --- | --- |
+| DELETE | `/api/auth/profile` | Account | Delete (soft-delete) own account |
 | GET | `/api/admin/campaign/contact-inquiries` | Admin Campaign | List contact-us inquiries |
 | GET | `/api/admin/campaign/reviewers` | Admin Campaign | List campaign reviewers |
 | GET | `/api/admin/campaign/stats/overview` | Admin Campaign | Get campaign stats overview |
@@ -69,6 +72,9 @@ Index generated from the live Swagger OpenAPI JSON.
 | GET | `/api/admin/eval/submissions/{submission_id}` | admin-eval | Get submission detail |
 | GET | `/api/admin/eval/users` | admin-eval | List users with graded submissions |
 | GET | `/api/admin/eval/users/{user_id}/submissions` | admin-eval | List a user's graded submissions |
+| GET | `/api/admin/reading/questions` | Admin Reading | List Questions |
+| PUT | `/api/admin/reading/questions/{question_id}` | Admin Reading | Edit Question |
+| POST | `/api/admin/reading/questions/{question_id}/review` | Admin Reading | Review Question |
 | GET | `/api/admin/users` | admin-users | List users (paginated, searchable) |
 | POST | `/api/admin/users` | admin-users | Create an admin/user account |
 | DELETE | `/api/admin/users/{user_id}` | admin-users | Soft-delete a user |
@@ -78,6 +84,7 @@ Index generated from the live Swagger OpenAPI JSON.
 | POST | `/api/eval/auth/login` | eval-auth | Eval dashboard login |
 | GET | `/api/evaluation/{submission_id}` | Evaluation | Poll writing evaluation status |
 | GET | `/api/evaluation/{submission_id}/feedback` | Evaluation | Get detailed writing evaluation feedback |
+| GET | `/api/evaluation/{submission_id}/stream` | Evaluation | Stream writing evaluation results (SSE) |
 | POST | `/api/external/campaign/contact` | External Campaign | Submit a 'Contact us' inquiry (general lead / support) |
 | POST | `/api/external/campaign/follow-up` | External Campaign | Submit the post-result satisfaction survey |
 | POST | `/api/external/campaign/submissions` | External Campaign | Create a campaign submission (step 2, accepted for review) |
@@ -104,11 +111,14 @@ Index generated from the live Swagger OpenAPI JSON.
 | POST | `/api/reading/session/stream` | reading | Create a reading session (SSE stream) |
 | POST | `/api/reading/submit` | reading | Submit a reading answer |
 | POST | `/api/writing/chat` | Writing | AI writing chat tutor (SSE stream) |
+| GET | `/api/writing/chat/sessions` | Writing | List the user's tutor chat sessions |
+| GET | `/api/writing/chat/sessions/{session_id}` | Writing | Get one tutor session with its full transcript |
 | GET | `/api/writing/feedback/{submission_id}/export-pdf` | Writing | Export feedback as PDF |
 | POST | `/api/writing/generate` | Writing | Generate & persist a TOPIK II writing problem (v2) |
 | GET | `/api/writing/history` | Writing | Get writing submission history |
 | DELETE | `/api/writing/history/{submission_id}` | Writing | Delete writing submission |
 | POST | `/api/writing/save-draft` | Writing | Auto-save writing draft |
+| POST | `/api/writing/submissions/start` | Writing | Start a writing attempt (draft submission + tutor session) |
 | POST | `/api/writing/submit` | Writing | Submit writing for AI evaluation |
 | GET | `/api/writing/tasks` | Writing | List writing questions across types (§7.9 view, 노출 가능 only) |
 | GET | `/api/writing/tasks/{task_type}` | Writing | List TOPIK II writing questions of a type (메타데이터 적용) |
@@ -121,9 +131,10 @@ Index generated from the live Swagger OpenAPI JSON.
 | [Eval Auth](./schemas/eval-auth.md) | 3 |
 | [Admin Users](./schemas/admin-users.md) | 5 |
 | [Admin Eval](./schemas/admin-eval.md) | 18 |
+| [Admin Reading](./schemas/admin-reading.md) | 4 |
 | [Admin Campaign](./schemas/admin-campaign.md) | 24 |
 | [External Campaign](./schemas/external-campaign.md) | 13 |
-| [Writing](./schemas/writing.md) | 16 |
+| [Writing](./schemas/writing.md) | 22 |
 | [Reading](./schemas/reading.md) | 15 |
 | [Listening](./schemas/listening.md) | 17 |
 | [Evaluation](./schemas/evaluation.md) | 9 |
@@ -154,13 +165,17 @@ Index generated from the live Swagger OpenAPI JSON.
 | [ExpertReview](./schemas/admin-eval.md#expertreview) | `admin-eval.md` | A persisted expert review. |
 | [OverviewStatsResponse](./schemas/admin-eval.md#overviewstatsresponse) | `admin-eval.md` | High-level aggregate stats for the eval dashboard header. |
 | [ReviewListResponse](./schemas/admin-eval.md#reviewlistresponse) | `admin-eval.md` | All expert reviews submitted for a target (multi-reviewer). |
-| [ReviewRequest](./schemas/admin-eval.md#reviewrequest) | `admin-eval.md` |  |
+| [src__api__routes__admin_eval__ReviewRequest](./schemas/admin-eval.md#src-api-routes-admin-eval-reviewrequest) | `admin-eval.md` | Expert review request. |
 | [SubmissionDetailFeedback](./schemas/admin-eval.md#submissiondetailfeedback) | `admin-eval.md` | AI feedback record within the detail response. |
 | [SubmissionDetailResponse](./schemas/admin-eval.md#submissiondetailresponse) | `admin-eval.md` | Full submission detail: submission record, feedback, and linked task. |
 | [SubmissionDetailSubmission](./schemas/admin-eval.md#submissiondetailsubmission) | `admin-eval.md` | Core submission record within the detail response. |
 | [SubmissionDetailTask](./schemas/admin-eval.md#submissiondetailtask) | `admin-eval.md` | Writing task metadata within the detail response (null when no task linked). |
 | [UserSubmissionItem](./schemas/admin-eval.md#usersubmissionitem) | `admin-eval.md` | A single graded writing submission for a user. |
 | [UserSubmissionsResponse](./schemas/admin-eval.md#usersubmissionsresponse) | `admin-eval.md` | Paginated list of a user's graded submissions. |
+| [EditRequest](./schemas/admin-reading.md#editrequest) | `admin-reading.md` | Admin reading bank edit request. |
+| [ReadingBankItem](./schemas/admin-reading.md#readingbankitem) | `admin-reading.md` | One reading bank item. |
+| [ReadingBankListResponse](./schemas/admin-reading.md#readingbanklistresponse) | `admin-reading.md` | Paginated reading bank list. |
+| [src__api__routes__admin_reading__ReviewRequest](./schemas/admin-reading.md#src-api-routes-admin-reading-reviewrequest) | `admin-reading.md` | Admin reading review status request. |
 | [CampaignAssignRequest](./schemas/admin-campaign.md#campaignassignrequest) | `admin-campaign.md` | Admin request to assign or clear the reviewer on a submission. |
 | [CampaignAuditEntry](./schemas/admin-campaign.md#campaignauditentry) | `admin-campaign.md` | One entry in a submission's audit log. |
 | [CampaignAuditLogResponse](./schemas/admin-campaign.md#campaignauditlogresponse) | `admin-campaign.md` | Audit log entries for a submission. |
@@ -208,6 +223,12 @@ Index generated from the live Swagger OpenAPI JSON.
 | [TopikWriting54Response](./schemas/writing.md#topikwriting54response) | `writing.md` | Q54 논술·의견 제시형 (51 keys). |
 | [TopikWritingQuestionListResponse](./schemas/writing.md#topikwritingquestionlistresponse) | `writing.md` | Paginated list of TOPIK writing questions (rich §7 metadata, per item type). |
 | [WritingChatRequest](./schemas/writing.md#writingchatrequest) | `writing.md` | Request for chat tutor interaction. |
+| [StartSessionRequest](./schemas/writing.md#startsessionrequest) | `writing.md` | Begin a writing attempt. |
+| [StartSessionResponse](./schemas/writing.md#startsessionresponse) | `writing.md` | IDs created at the start of a writing attempt. |
+| [TutorMessageItem](./schemas/writing.md#tutormessageitem) | `writing.md` | One turn in a tutor session transcript. |
+| [TutorSessionDetailResponse](./schemas/writing.md#tutorsessiondetailresponse) | `writing.md` | A session header plus its full transcript. |
+| [TutorSessionListResponse](./schemas/writing.md#tutorsessionlistresponse) | `writing.md` | Tutor sessions list. |
+| [TutorSessionSummary](./schemas/writing.md#tutorsessionsummary) | `writing.md` | A tutor session header. |
 | [WritingGenerateRequestV2](./schemas/writing.md#writinggeneraterequestv2) | `writing.md` | v2 generate 요청 — task_type 문자열을 item_number:int 로 교체 (라우트 연결은 Step 8). |
 | [WritingHistoryItem](./schemas/writing.md#writinghistoryitem) | `writing.md` |  |
 | [WritingHistoryResponse](./schemas/writing.md#writinghistoryresponse) | `writing.md` |  |
