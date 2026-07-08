@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   mapInstitutionInvitationError,
+  resolveInstitutionInvitationStatus,
   respondInstitutionInvitation,
   resolveNotificationAction,
   resolveNotificationDestination,
@@ -160,7 +161,13 @@ describe("mapInstitutionInvitationError", () => {
       mapInstitutionInvitationError(
         new Error("invitation already responded: canceled"),
       ),
-    ).toBe("canceled");
+    ).toBe("withdrawn");
+    expect(mapInstitutionInvitationError(new Error("code_inactive"))).toBe(
+      "expired",
+    );
+    expect(
+      mapInstitutionInvitationError(new Error("invitation canceled by admin")),
+    ).toBe("withdrawn");
     expect(mapInstitutionInvitationError(new Error("unauthenticated"))).toBe(
       "unauthenticated",
     );
@@ -174,23 +181,26 @@ describe("mapInstitutionInvitationError", () => {
         new Error("already affiliated with another institution"),
       ),
     ).toBe("alreadyAffiliatedOther");
+    expect(
+      mapInstitutionInvitationError(new Error("profile_not_found")),
+    ).toBe("invalid");
   });
 });
 
 describe("respondInstitutionInvitation", () => {
-  it("accepts an invitation through the existing affiliation invite RPC", async () => {
+  it("accepts an invitation through the institution invitation response RPC", async () => {
     rpcMock.mockResolvedValue({
-      data: { status: "accepted" },
+      data: {
+        status: "accepted",
+        code: "CAMPAIGN-01",
+        code_label: "Campaign",
+      },
       error: null,
     });
 
     await expect(
       respondInstitutionInvitation(
-        {
-          invitationId: "2a2ff7b8-cc31-4f4d-a455-283aaad28f30",
-          code: "CAMPAIGN-01",
-          codeLabel: "Campaign",
-        },
+        "2a2ff7b8-cc31-4f4d-a455-283aaad28f30",
         true,
       ),
     ).resolves.toEqual({
@@ -199,20 +209,25 @@ describe("respondInstitutionInvitation", () => {
       code_label: "Campaign",
     });
 
-    expect(rpcMock).toHaveBeenCalledWith("accept_affiliation_invite", {
-      p_code: "CAMPAIGN-01",
-      p_confirmed: true,
+    expect(rpcMock).toHaveBeenCalledWith("respond_institution_invitation", {
+      p_invitation_id: "2a2ff7b8-cc31-4f4d-a455-283aaad28f30",
+      p_accept: true,
     });
   });
 
-  it("declines locally because the current DB contract has no decline RPC", async () => {
+  it("declines an invitation through the institution invitation response RPC", async () => {
+    rpcMock.mockResolvedValue({
+      data: {
+        status: "declined",
+        code: "CAMPAIGN-01",
+        code_label: "Campaign",
+      },
+      error: null,
+    });
+
     await expect(
       respondInstitutionInvitation(
-        {
-          invitationId: "2a2ff7b8-cc31-4f4d-a455-283aaad28f30",
-          code: "CAMPAIGN-01",
-          codeLabel: "Campaign",
-        },
+        "2a2ff7b8-cc31-4f4d-a455-283aaad28f30",
         false,
       ),
     ).resolves.toEqual({
@@ -221,24 +236,39 @@ describe("respondInstitutionInvitation", () => {
       code_label: "Campaign",
     });
 
-    expect(rpcMock).not.toHaveBeenCalled();
+    expect(rpcMock).toHaveBeenCalledWith("respond_institution_invitation", {
+      p_invitation_id: "2a2ff7b8-cc31-4f4d-a455-283aaad28f30",
+      p_accept: false,
+    });
   });
 
-  it("maps an existing different affiliation to a handled modal error", async () => {
+  it("passes RPC errors through for handled modal mapping", async () => {
     rpcMock.mockResolvedValue({
-      data: { status: "already_affiliated_other" },
-      error: null,
+      data: null,
+      error: { message: "already affiliated with another institution" },
     });
 
     await expect(
       respondInstitutionInvitation(
-        {
-          invitationId: "2a2ff7b8-cc31-4f4d-a455-283aaad28f30",
-          code: "CAMPAIGN-01",
-          codeLabel: "Campaign",
-        },
+        "2a2ff7b8-cc31-4f4d-a455-283aaad28f30",
         true,
       ),
     ).rejects.toThrow(/already affiliated/);
+  });
+});
+
+describe("resolveInstitutionInvitationStatus", () => {
+  it("splits canceled RPC results into expired or withdrawn user states", () => {
+    expect(
+      resolveInstitutionInvitationStatus({
+        status: "canceled",
+        error: "code_inactive",
+      }),
+    ).toBe("expired");
+    expect(
+      resolveInstitutionInvitationStatus({
+        status: "canceled",
+      }),
+    ).toBe("withdrawn");
   });
 });

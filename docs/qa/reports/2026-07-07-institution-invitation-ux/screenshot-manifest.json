@@ -1,0 +1,102 @@
+{
+  "generatedAt": "2026-07-07T08:36:30.889Z",
+  "baseUrl": "http://127.0.0.1:3107/terms/qa-institution-invitation-modal",
+  "results": [
+    {
+      "viewport": "desktop",
+      "status": "accepted",
+      "fileName": "institution-invitation-modal-desktop-accepted.png",
+      "url": "http://127.0.0.1:3107/terms/qa-institution-invitation-modal?status=accepted"
+    },
+    {
+      "viewport": "desktop",
+      "status": "declined",
+      "fileName": "institution-invitation-modal-desktop-declined.png",
+      "url": "http://127.0.0.1:3107/terms/qa-institution-invitation-modal?status=declined"
+    },
+    {
+      "viewport": "desktop",
+      "status": "expired",
+      "fileName": "institution-invitation-modal-desktop-expired.png",
+      "url": "http://127.0.0.1:3107/terms/qa-institution-invitation-modal?status=expired"
+    },
+    {
+      "viewport": "desktop",
+      "status": "withdrawn",
+      "fileName": "institution-invitation-modal-desktop-withdrawn.png",
+      "url": "http://127.0.0.1:3107/terms/qa-institution-invitation-modal?status=withdrawn"
+    },
+    {
+      "viewport": "desktop",
+      "status": "already-responded",
+      "fileName": "institution-invitation-modal-desktop-already-responded.png",
+      "url": "http://127.0.0.1:3107/terms/qa-institution-invitation-modal?status=alreadyResponded"
+    },
+    {
+      "viewport": "desktop",
+      "status": "unauthenticated",
+      "fileName": "institution-invitation-modal-desktop-unauthenticated.png",
+      "url": "http://127.0.0.1:3107/terms/qa-institution-invitation-modal?status=unauthenticated"
+    },
+    {
+      "viewport": "desktop",
+      "status": "failed",
+      "fileName": "institution-invitation-modal-desktop-failed.png",
+      "url": "http://127.0.0.1:3107/terms/qa-institution-invitation-modal?status=failed"
+    },
+    {
+      "viewport": "desktop",
+      "status": "invalid",
+      "fileName": "institution-invitation-modal-desktop-invalid.png",
+      "url": "http://127.0.0.1:3107/terms/qa-institution-invitation-modal?variant=invalid"
+    },
+    {
+      "viewport": "mobile",
+      "status": "accepted",
+      "fileName": "institution-invitation-modal-mobile-accepted.png",
+      "url": "http://127.0.0.1:3107/terms/qa-institution-invitation-modal?status=accepted"
+    },
+    {
+      "viewport": "mobile",
+      "status": "declined",
+      "fileName": "institution-invitation-modal-mobile-declined.png",
+      "url": "http://127.0.0.1:3107/terms/qa-institution-invitation-modal?status=declined"
+    },
+    {
+      "viewport": "mobile",
+      "status": "expired",
+      "fileName": "institution-invitation-modal-mobile-expired.png",
+      "url": "http://127.0.0.1:3107/terms/qa-institution-invitation-modal?status=expired"
+    },
+    {
+      "viewport": "mobile",
+      "status": "withdrawn",
+      "fileName": "institution-invitation-modal-mobile-withdrawn.png",
+      "url": "http://127.0.0.1:3107/terms/qa-institution-invitation-modal?status=withdrawn"
+    },
+    {
+      "viewport": "mobile",
+      "status": "already-responded",
+      "fileName": "institution-invitation-modal-mobile-already-responded.png",
+      "url": "http://127.0.0.1:3107/terms/qa-institution-invitation-modal?status=alreadyResponded"
+    },
+    {
+      "viewport": "mobile",
+      "status": "unauthenticated",
+      "fileName": "institution-invitation-modal-mobile-unauthenticated.png",
+      "url": "http://127.0.0.1:3107/terms/qa-institution-invitation-modal?status=unauthenticated"
+    },
+    {
+      "viewport": "mobile",
+      "status": "failed",
+      "fileName": "institution-invitation-modal-mobile-failed.png",
+      "url": "http://127.0.0.1:3107/terms/qa-institution-invitation-modal?status=failed"
+    },
+    {
+      "viewport": "mobile",
+      "status": "invalid",
+      "fileName": "institution-invitation-modal-mobile-invalid.png",
+      "url": "http://127.0.0.1:3107/terms/qa-institution-invitation-modal?variant=invalid"
+    }
+  ]
+}

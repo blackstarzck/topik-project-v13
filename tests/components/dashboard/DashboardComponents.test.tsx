@@ -29,6 +29,8 @@ vi.mock("next/navigation", () => ({
     replace: vi.fn(),
     refresh: routerRefreshMock,
   }),
+  usePathname: () => "/dashboard",
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 // DashboardAlertsCard fetches user_notifications client-side; vitest has no

@@ -8,13 +8,13 @@ import { AppModal } from "@/components/shared/AppModal";
 import type {
   InstitutionInvitationErrorKind,
   InstitutionInvitationPayload,
-  InstitutionInvitationResponseStatus,
+  InstitutionInvitationResolvedStatus,
 } from "./notifications-data";
 
 const { Text } = Typography;
 
 export type InstitutionInvitationModalStatus =
-  | InstitutionInvitationResponseStatus
+  | InstitutionInvitationResolvedStatus
   | InstitutionInvitationErrorKind
   | null;
 
@@ -28,14 +28,18 @@ type Props = {
   submitting: InvitationSubmitAction | null;
   onAccept: () => void;
   onDecline: () => void;
+  onSignIn?: () => void;
   onClose: () => void;
 };
 
 const resolvedStatuses = new Set<InstitutionInvitationModalStatus>([
   "accepted",
   "declined",
-  "canceled",
+  "expired",
+  "withdrawn",
   "alreadyResponded",
+  "alreadyAffiliatedOther",
+  "invalid",
 ]);
 
 export function InstitutionInvitationModal({
@@ -46,6 +50,7 @@ export function InstitutionInvitationModal({
   submitting,
   onAccept,
   onDecline,
+  onSignIn,
   onClose,
 }: Props) {
   const t = useTranslations("notifications.institutionInvitation");
@@ -53,6 +58,7 @@ export function InstitutionInvitationModal({
   const code = invitation?.code ?? t("unknownCode");
   const codeLabel = invitation?.codeLabel ?? t("unknownLabel");
   const currentAffiliation = affiliationCode?.trim() ?? "";
+  const invitationId = invitation?.invitationId?.trim() ?? "";
   const invitedAffiliation = invitation?.code?.trim() ?? "";
   const replacesAffiliation = Boolean(
     currentAffiliation &&
@@ -60,7 +66,11 @@ export function InstitutionInvitationModal({
       currentAffiliation !== invitedAffiliation,
   );
   const actionsDisabled =
-    !invitedAffiliation || submitting !== null || resolvedStatuses.has(status);
+    !invitationId ||
+    submitting !== null ||
+    resolvedStatuses.has(status) ||
+    status === "unauthenticated";
+  const needsSignIn = status === "unauthenticated" && onSignIn;
 
   return (
     <AppModal
@@ -71,22 +81,30 @@ export function InstitutionInvitationModal({
       footer={
         <div className="flex flex-wrap justify-end gap-2">
           <Button onClick={onClose}>{t("close")}</Button>
-          <Button
-            danger
-            disabled={actionsDisabled}
-            loading={submitting === "decline"}
-            onClick={onDecline}
-          >
-            {t("decline")}
-          </Button>
-          <Button
-            type="primary"
-            disabled={actionsDisabled}
-            loading={submitting === "accept"}
-            onClick={onAccept}
-          >
-            {t("accept")}
-          </Button>
+          {needsSignIn ? (
+            <Button type="primary" onClick={onSignIn}>
+              {t("signInAgain")}
+            </Button>
+          ) : (
+            <>
+              <Button
+                danger
+                disabled={actionsDisabled}
+                loading={submitting === "decline"}
+                onClick={onDecline}
+              >
+                {t("decline")}
+              </Button>
+              <Button
+                type="primary"
+                disabled={actionsDisabled}
+                loading={submitting === "accept"}
+                onClick={onAccept}
+              >
+                {t("accept")}
+              </Button>
+            </>
+          )}
         </div>
       }
     >
@@ -96,7 +114,7 @@ export function InstitutionInvitationModal({
           <Text strong>{codeLabel}</Text>
           <Text code>{code}</Text>
         </div>
-        {!invitedAffiliation ? (
+        {!invitationId ? (
           <Alert type="error" showIcon title={t("invalid")} />
         ) : null}
         {replacesAffiliation ? (
