@@ -229,6 +229,17 @@ TALKPIK AI는 TOPIK 한국어능력시험 학습자를 위한 AI 기반 학습 �
 
 - 사용자는 자신의 답안이 어떤 과정으로 개선됐는지 단계별로 확인할 수 있어야 한다.
 
+### 7.8.1 PDF export quota
+
+- PDF export is governed by a managed quota policy.
+- Default policy: each authenticated user can export a PDF up to 3 times per writing problem per month.
+- The period boundary uses `Asia/Seoul`; the default monthly window starts at 00:00 KST on the first day of each month.
+- The policy is stored so the limit can later change from 3 to another number, and the period can later change to day, week, or month.
+- Quota is counted by distinct `writing_submissions.problem_id` resolved server-side. If one PDF contains the same problem multiple times, that problem is charged once.
+- Saved PDF re-download does not consume a new quota. Failed PDF generation does not consume quota.
+- Quota-exceeded UX is a neutral warning, not a system error. The response code is `pdf_export_quota_exceeded` and includes limit, used, remaining, resetAt, and periodUnit metadata.
+- Quota reset and policy management are admin operations owned by the separate topik-ai admin app; v13 only enforces the accepted policy and reads server-side quota results.
+
 ### 7.9 내 서재
 
 #### 요구사항

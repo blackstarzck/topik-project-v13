@@ -29,6 +29,7 @@
 ## 상태/오류
 
 - 분석 대기, 결과 없음, 권한 없음, export 실패
+- PDF quota exceeded: warning/info message. The feedback page does not show this as a system error and does not bypass quota through print fallback.
 
 ## 데이터 사용
 
@@ -44,6 +45,8 @@
 | `sentence_feedback` | `sentence_index`, `original_text`, `corrected_text`, `comment` | read | 문장별 수정 제안을 표시한다. | authenticated user; auth.uid() owner RLS where user-owned | `src/lib/writing/queries.ts`<br>`src/lib/writing/server.ts`<br>`supabase/migrations/20260520120500_feedback.sql` | none |
 | `library_items` | `submission_id`, `item_type`, `note`, `tags` | read/write | 피드백 저장/보관함 추가에 사용한다. | authenticated user; auth.uid() owner RLS where user-owned | `src/lib/library/mutations.ts`<br>`src/lib/library/queries.ts`<br>`src/lib/library/server.ts`<br>`supabase/migrations/20260520120700_library_events_exports.sql` | none |
 | `export_files` | `source_type`, `source_id`, `status`, `storage_path` | read/write | 피드백 PDF 내보내기와 연결된다. | authenticated user; auth.uid() owner RLS where user-owned | `src/lib/export/pdf-export.ts`<br>`src/lib/library/queries.ts`<br>`src/lib/library/server.ts`<br>`supabase/migrations/20260520120700_library_events_exports.sql` | none |
+| `pdf_export_quota_policies` / `pdf_export_quota_usages` | `limit_count`, `period_unit`, `problem_id`, `status`, `period_start`, `period_end` | read/write via RPC | Feedback PDF export quota is enforced per user + problem + period. Default is 3 per month in `Asia/Seoul`. | no direct browser writes; SECURITY DEFINER RPCs enforce owner scope | `src/lib/export/pdf-export-quota.ts`<br>`supabase/migrations/20260707120000_pdf_export_quota.sql` | none |
+| `claim_pdf_export_quota` / `commit_pdf_export_quota` / `release_pdf_export_quota` | `p_problem_ids`, `p_usage_ids`, `p_export_file_id` | rpc | Reserves, commits, or releases quota for feedback PDF export and server print fallback. | authenticated user scoped | `src/app/api/export/pdf/route.ts`<br>`src/app/api/export/pdf/print/route.ts` | none |
 | `study_events` | `event_type`, `submission_id`, `payload` | write | 피드백 조회 이벤트를 기록한다. | authenticated user; auth.uid() owner RLS where user-owned | `src/lib/events/study-events.ts`<br>`src/lib/export/pdf-export.ts`<br>`supabase/migrations/20260520120700_library_events_exports.sql` | none |
 
 ## 현재 구현 상태

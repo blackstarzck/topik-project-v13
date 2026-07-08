@@ -1,7 +1,8 @@
 # SOT Change Proposal: PDF Export Quota Management
 
 Date: 2026-07-07
-Status: proposed
+Status: accepted
+Accepted: 2026-07-08
 Implementation owner: v13 user app for enforcement, topik-ai for admin management
 
 ## Proposal
@@ -59,15 +60,19 @@ Reset target contract:
 - `user`, `group`, and `global` resets are all materialized into `pdf_export_quota_reset_targets`.
 - Reset audit headers are admin-only except for rows where the current user is a materialized target.
 
-## SOT Files To Update If Accepted
+## Accepted SOT Updates
 
 - `docs/prd.md`
 - `docs/flow/user-flow.md`
-- relevant feedback/library Wireframe functional specs
+- `docs/development-core-planning/07-storage-payment-notifications/README.md`
+- `docs/Wireframe/14-E-01-short-answer-feedback/functional-spec.md`
+- `docs/Wireframe/15-E-02-long-form-feedback/functional-spec.md`
+- `docs/Wireframe/18-F-01-my-library/functional-spec.md`
+- `docs/Wireframe/19-F-M1-pdf-export-modal/functional-spec.md`
 - `docs/Wireframe/data-usage-index.md`
 - `supabase/migrations/INDEX.md`
 
-## Open Decisions
+## Deferred Decisions
 
 - Whether multiple simultaneous active policies are allowed beyond the default `user + problem` rule.
 - Whether `resetAt` should be presented to learners as an exact date/time or only as “next period”.
