@@ -105,6 +105,28 @@
 | --- | --- | --- | --- | --- | --- |
 | D-M2 | AI analysis loading | rpc | - | function | service role 전용 상태 전이를 담당한다. |
 
+## pdf_export_quota_policies
+
+| IA | Screen | Type | Columns/fields | Usage | Page feature |
+| --- | --- | --- | --- | --- | --- |
+| E-01 | Short-answer feedback | table | `limit_count`, `period_unit`, `period_timezone`, `is_active` | derived-read | 서버 claim RPC가 활성 정책을 읽어 PDF 내보내기 한도를 강제한다. |
+| E-02 | Long-form feedback | table | `limit_count`, `period_unit`, `period_timezone`, `is_active` | derived-read | 서버 claim RPC가 활성 정책을 읽어 PDF 내보내기 한도를 강제한다. |
+| F-M1 | PDF export modal | table | `limit_count`, `period_unit`, `period_timezone`, `is_active` | derived-read | 429 응답의 `limit`/`resetAt`/`periodUnit` 안내 근거가 된다. 정책 관리는 topik-ai 소관. |
+
+## pdf_export_quota_usages
+
+| IA | Screen | Type | Columns/fields | Usage | Page feature |
+| --- | --- | --- | --- | --- | --- |
+| E-01 | Short-answer feedback | table | `status`, `period_start`, `period_end`, `export_file_id` | derived-write | `/api/export/pdf` 성공 경로가 reserve→commit으로 사용량을 기록한다(실패 시 release). |
+| E-02 | Long-form feedback | table | `status`, `period_start`, `period_end`, `export_file_id` | derived-write | `/api/export/pdf` 성공 경로가 reserve→commit으로 사용량을 기록한다(실패 시 release). |
+| F-M1 | PDF export modal | table | `status`, `period_start`, `period_end`, `export_file_id` | derived-write | 서버 렌더와 브라우저 인쇄(`/api/export/pdf/print`) 모두 같은 원장을 사용한다. 직접 쓰기 없음(RPC 전용). |
+
+## pdf_export_quota_resets / pdf_export_quota_reset_targets
+
+| IA | Screen | Type | Columns/fields | Usage | Page feature |
+| --- | --- | --- | --- | --- | --- |
+| F-M1 | PDF export modal | table | `reset_scope`, `problem_id`, `created_at` | derived-read | claim RPC가 같은 기간 내 리셋을 반영해 사용량 카운트를 재계산한다. 리셋 생성은 topik-ai 관리자 앱 소관. |
+
 ## problem_assets
 
 | IA | Screen | Type | Columns/fields | Usage | Page feature |

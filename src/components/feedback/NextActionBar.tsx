@@ -216,6 +216,7 @@ export function FeedbackActionGroup({
             <Button
               onClick={() => void onPdf()}
               loading={pdfBusy}
+              disabled={pdfBusy}
               data-testid="feedback-action-pdf"
             >
               {t("savePdf")}

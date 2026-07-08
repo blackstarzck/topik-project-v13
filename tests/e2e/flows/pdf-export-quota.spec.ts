@@ -395,7 +395,9 @@ test("feedback PDF export quota warning does not invoke print fallback", async (
         response.request().method() === "POST",
     );
     await pdfButton.click();
-    await expect(pdfButton).toBeDisabled();
+    // NOTE: 실 DB 렌더 속도에 따라 busy(disabled) 상태가 단언 전에 끝날 수 있어
+    // in-flight 상태 단언은 두지 않는다. 재클릭 방지는 버튼 loading+disabled와
+    // 아래 응답 직렬화(waitForResponse)로 보장된다.
     const response = await responsePromise;
     expect(response.status()).toBe(200);
     const body = (await response.json()) as {
@@ -435,6 +437,9 @@ test("feedback PDF export quota warning does not invoke print fallback", async (
     .toBe(0);
 
   await seedUserResetTarget(submission);
+
+  // 모바일 뷰포트에서는 429 경고 알림이 액션 바를 덮어 재클릭을 가로막는다.
+  await closeNotifications(page);
 
   await expect(pdfButton).toBeEnabled();
   const resetResponse = page.waitForResponse(

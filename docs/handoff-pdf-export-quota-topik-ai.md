@@ -1,7 +1,16 @@
 # topik-ai Handoff: PDF Export Quota Management
 
-Date: 2026-07-07
+Date: 2026-07-07 (amended 2026-07-08)
 Owner boundary: `v13` user app enforces quota during export. `topik-ai` owns admin UI and operations.
+
+## 2026-07-08 Amendments (owner-approved decisions)
+
+- **Group definition**: a "group" is an institution code — users linked via `profiles.affiliation_code`. Group reset targets are materialized as a **snapshot at reset creation time**; users joining the institution afterwards are not included. A group reset with zero members must be rejected.
+- **Policy precedence**: the active policy is resolved by `order by priority asc, created_at desc limit 1` — **lower `priority` number wins**. Product decision: keep exactly one active `user + problem` policy; `priority` stays a documented-only reserved field.
+- **Reset is period-local**: `claim_pdf_export_quota` only honors resets whose `created_at` falls inside the current period. A reset cannot be pre-scheduled for the next period, and a reset created in a previous period has no effect on the current one.
+- **`period_unit` change side effect**: claims count usages by exact `period_start`/`period_end` match. Changing the period unit shifts the boundaries, so existing usages stop counting — effectively a global quota reset. Admin UI must warn about this on save.
+- **Migration application record**: `20260707120000_pdf_export_quota.sql` was applied to the shared dev DB (talkpik-dev) on 2026-07-07 via the topik-ai Management API runner (v13 does not apply remote schema). A repair row for version `20260707120000` was inserted into `supabase_migrations.schema_migrations` to keep the v13 CLI tracker consistent. A paired down migration exists at `supabase/migrations/down/20260707120000_pdf_export_quota.sql`.
+- **Admin write/read path**: topik-ai manages the feature through its own admin RPCs (`get_admin_pdf_quota_policies`, `get_admin_pdf_quota_resets`, `admin_save_pdf_quota_policy`, `admin_create_pdf_quota_reset` — `admin_schema_migrations` tracker). Reads must go through the read RPCs because `pdf_export_quota_usages`/`pdf_export_quota_resets` RLS only grants direct select to `platform_admin`. `pdf_export_quota_resets.created_by` references v13 `profiles`, so admin-account actors are stored as `null` and tracked via `admin_audit_logs`.
 
 ## Current User-App Contract
 

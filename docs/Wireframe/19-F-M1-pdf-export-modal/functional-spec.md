@@ -24,10 +24,12 @@
 - 생성 요청
 - 다운로드
 - 실패 재시도
+- 쿼터 강제(2026-07-07 SOT 수락): 사용자+문제+기간 단위 한도(기본 월 3회, Asia/Seoul). 서버 렌더(`/api/export/pdf`)와 브라우저 인쇄 대체(`/api/export/pdf/print`) 모두 서버에서 claim→commit/release로 계산한다. 같은 문제가 한 PDF에 여러 번 포함돼도 1회, 저장된 PDF 재다운로드와 생성 실패는 미소비.
 
 ## 상태/오류
 
 - 생성 실패, 권한 없음, 파일 없음
+- 쿼터 초과: HTTP 429 + `{code: 'pdf_export_quota_exceeded', limit, used, remaining, resetAt, periodUnit}` — 화면은 남은 횟수와 초기화 시점을 안내한다. 쿼터 초기화(개인/기관 코드/전체)는 topik-ai 관리자 앱 소관이며 실행한 기간 안에서만 유효하다.
 
 ## 데이터 사용
 
@@ -40,6 +42,10 @@
 | `export_files` | `source_type`, `source_id`, `storage_path`, `options`, `status` | read/write | PDF 생성 요청과 결과 파일 상태를 저장한다. | authenticated user; auth.uid() owner RLS where user-owned | `src/lib/export/pdf-export.ts`<br>`src/lib/library/queries.ts`<br>`src/lib/library/server.ts`<br>`supabase/migrations/20260520120700_library_events_exports.sql` | none |
 | `study_events` | `event_type`, `export_file_id`, `payload` | write | PDF 다운로드 이벤트를 기록한다. | authenticated user; auth.uid() owner RLS where user-owned | `src/lib/events/study-events.ts`<br>`src/lib/export/pdf-export.ts`<br>`supabase/migrations/20260520120700_library_events_exports.sql` | none |
 | `storage:generated-exports` | - | read/write | 생성된 PDF 파일을 저장하고 소유자에게만 노출한다. | owner or public bucket policy depending on bucket | `supabase/migrations/20260520121200_storage_buckets.sql` | none |
+| `pdf_export_quota_policies` | `limit_count`, `period_unit`, `period_timezone`, `is_active` | derived-read | 활성 정책이 내보내기 한도를 결정한다. | claim RPC(SECURITY DEFINER) 경유, active 정책은 authenticated select 허용 | `supabase/migrations/20260707120000_pdf_export_quota.sql`<br>`src/lib/export/pdf-export-server.ts` | none |
+| `pdf_export_quota_usages` | `status`, `period_start`, `period_end`, `export_file_id` | derived-write | reserve→commit/release 원장으로 사용량을 계산한다. | 직접 쓰기 없음. claim은 본인만(authenticated RPC), commit/release는 service role 전용 | `supabase/migrations/20260707120000_pdf_export_quota.sql`<br>`src/app/api/export/pdf/route.ts`<br>`src/app/api/export/pdf/print/route.ts` | none |
+| `pdf_export_quota_resets`/`pdf_export_quota_reset_targets` | `reset_scope`, `problem_id`, `created_at` | derived-read | 같은 기간 내 리셋 이후 사용량만 카운트한다(period-local). | 리셋 생성/관리는 topik-ai admin RPC 소관 | `supabase/migrations/20260707120000_pdf_export_quota.sql` | none |
+| `claim_pdf_export_quota` RPC | `p_user_id`, `p_problem_ids` | function | 문제 ID별 쿼터를 원자적으로 선점하고 429 근거를 반환한다. | authenticated, `p_user_id = auth.uid()` 강제 | `supabase/migrations/20260707120000_pdf_export_quota.sql`<br>`src/lib/export/pdf-export-server.ts` | none |
 
 ## 현재 구현 상태
 

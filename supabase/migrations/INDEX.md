@@ -222,4 +222,4 @@
 
 | # | timestamp | file | scope |
 | ---:| --- | --- | --- |
-| 69 | `12:00:00` | [`20260707120000_pdf_export_quota.sql`](./20260707120000_pdf_export_quota.sql) | Adds DB-backed PDF export quota policy, usage, reset, and reset-target ledgers plus SECURITY DEFINER RPCs for atomic per-user/per-problem claim, commit, and release. Seeds the default 3-per-month Asia/Seoul policy and keeps admin management for topik-ai. |
+| 69 | `12:00:00` | [`20260707120000_pdf_export_quota.sql`](./20260707120000_pdf_export_quota.sql) | Adds DB-backed PDF export quota policy, usage, reset, and reset-target ledgers plus SECURITY DEFINER RPCs for atomic per-user/per-problem claim, commit, and release. Seeds the default 3-per-month Asia/Seoul policy and keeps admin management for topik-ai. Applied to talkpik-dev on 2026-07-07 via the topik-ai Management API runner with a manual `supabase_migrations.schema_migrations` repair row (v13 does not apply remote schema); paired down migration added. |
