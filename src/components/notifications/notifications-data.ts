@@ -284,23 +284,20 @@ export async function respondInstitutionInvitation(
   accept: boolean,
 ): Promise<InstitutionInvitationResponse> {
   const supabase = createSupabaseBrowserClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const res = (await (supabase as any).rpc("respond_institution_invitation", {
+  const res = await supabase.rpc("respond_institution_invitation", {
     p_invitation_id: invitationId,
     p_accept: accept,
-  })) as {
-    data: InstitutionInvitationResponse | null;
-    error: { message: string } | null;
-  };
+  });
   if (res.error) throw new Error(res.error.message);
 
-  const status = normalizeRpcStatus(res.data?.status);
-  if (!res.data || !status) {
+  const data = res.data as InstitutionInvitationResponse | null;
+  const status = normalizeRpcStatus(data?.status);
+  if (!data || !status) {
     throw new Error("unexpected institution invitation response");
   }
 
   return {
-    ...res.data,
+    ...data,
     status,
   };
 }

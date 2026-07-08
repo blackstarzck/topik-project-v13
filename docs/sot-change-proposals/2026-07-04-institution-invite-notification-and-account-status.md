@@ -4,6 +4,12 @@
 
 상태: implementation brief
 
+대체 기록(2026-07-08): 이 문서는 `institution_invite` + `/auth/institution-invite`
+링크 기반 초대 흐름의 제안으로 남긴다. topik-ai admin이 새로 발행하는 기관 초대
+알림은 `docs/sot-change-proposals/2026-07-08-institution-invitation-modal-contract.md`의
+`institution_invitation` + `invitation_id` + modal-first + `respond_institution_invitation`
+계약을 우선한다. 기존 `accept_affiliation_invite` 흐름은 QR/레거시 링크 경로로 유지한다.
+
 ## 제안 요약
 
 관리자 앱이 기존 사용자에게 기관 초대를 보낼 수 있다는 전제를 사용자 앱 UX에 반영한다.

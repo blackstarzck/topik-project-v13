@@ -37,6 +37,12 @@
  *
  * Do not hand-edit individual rows; prefer regenerating via the CLI command
  * above so the type and the migrations stay aligned by construction.
+ *
+ * Shared DB contract exception: `respond_institution_invitation` is owned by
+ * the topik-ai admin migration home, not v13 migrations. Keep the type here so
+ * the v13 client call is typed, and see
+ * `docs/sot-change-proposals/2026-07-08-institution-invitation-modal-contract.md`
+ * for the ownership and smoke evidence.
  */
 
 export type Json =
@@ -1554,6 +1560,13 @@ export interface Database {
           p_reason?: string | null;
         };
         Returns: undefined;
+      };
+      respond_institution_invitation: {
+        Args: {
+          p_invitation_id: string;
+          p_accept: boolean;
+        };
+        Returns: Json;
       };
       accept_affiliation_invite: {
         Args: {
