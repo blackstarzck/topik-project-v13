@@ -28,7 +28,9 @@ export async function renderWritingQuestionPage(
 ) {
   const user = await requireUser();
   const { problem: problemId, fresh, retrySubmission } = await searchParams;
-  const problem = await getWritingProblem(questionNo, problemId);
+  const problem = await getWritingProblem(questionNo, problemId, undefined, {
+    userId: user.id,
+  });
   const canRetryProblemLoad = Boolean(problemId);
   const startFresh = fresh === "1";
   const activeDraftProblemId = problem?.id ?? problemId;
