@@ -2,7 +2,6 @@ import {
   isSupportedCountryCode,
   normalizeCountryCode,
 } from "@/lib/geo/country-codes";
-import { getCountryCallingCode } from "@/lib/geo/country-calling-codes";
 
 export const PROFILE_NAME_MIN_LENGTH = 2;
 export const DISPLAY_NAME_MAX_LENGTH = 30;
@@ -68,11 +67,13 @@ function normalizePhoneNumber(value: unknown): string | null {
   return PHONE_NUMBER_DIGITS_PATTERN.test(digits) ? digits : null;
 }
 
-function normalizePhoneCountryCode(value: unknown): string | null {
-  const normalizedCountryCode = normalizeCountryCode(value);
-  return getCountryCallingCode(normalizedCountryCode)
-    ? normalizedCountryCode
-    : null;
+function normalizePhoneCountryCode(
+  value: unknown,
+  phoneNumber: string | null,
+): string | null {
+  if (!phoneNumber) return null;
+  if (!isSupportedCountryCode(value)) return null;
+  return normalizeCountryCode(value);
 }
 
 function isValidDisplayName(value: unknown) {
@@ -158,9 +159,10 @@ export function normalizeOptionalProfileInput(input: {
   const phoneNumber = normalizePhoneNumber(input.phone_number);
   return {
     gender: normalizeGender(input.gender),
-    phone_country_code: phoneNumber
-      ? normalizePhoneCountryCode(input.phone_country_code)
-      : null,
+    phone_country_code: normalizePhoneCountryCode(
+      input.phone_country_code,
+      phoneNumber,
+    ),
     phone_number: phoneNumber,
   };
 }
@@ -172,13 +174,8 @@ export function isOptionalProfileInputValid(input: {
 }) {
   const rawGender = normalizeText(input.gender);
   const rawPhoneNumber = normalizeText(input.phone_number);
-  const rawPhoneCountryCode = normalizeText(input.phone_country_code);
-  const phoneNumber = normalizePhoneNumber(rawPhoneNumber);
   return (
     (rawGender === null || normalizeGender(rawGender) !== null) &&
-    (rawPhoneNumber === null || phoneNumber !== null) &&
-    (phoneNumber === null ||
-      rawPhoneCountryCode === null ||
-      normalizePhoneCountryCode(rawPhoneCountryCode) !== null)
+    (rawPhoneNumber === null || normalizePhoneNumber(rawPhoneNumber) !== null)
   );
 }

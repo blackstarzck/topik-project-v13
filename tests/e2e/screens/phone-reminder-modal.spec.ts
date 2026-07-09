@@ -14,9 +14,9 @@ import {
 // for that student as a baseline; this spec clears the flag per test to exercise
 // the modal, then restores it so later specs are not overlaid.
 //
-// Skips automatically when profiles.phone_number_prompt_dismissed_at is absent
-// (migrations 20260709153000 + 20260709154000 not applied on this environment),
-// so it never false-fails before the schema catches up.
+// Skips automatically when the split-phone reminder columns are absent
+// (migrations 20260709153000 + 20260709154000 + 20260709165000 not applied on
+// this environment), so it never false-fails before the schema catches up.
 
 const koMessages = JSON.parse(
   readFileSync(path.join(process.cwd(), "messages", "ko.json"), "utf8"),
@@ -43,11 +43,14 @@ let studentId = "";
 let columnReady = false;
 
 test.beforeAll(async () => {
-  const ensured = await ensureE2EStudentUser(createE2EAdminClient(config), config);
+  const ensured = await ensureE2EStudentUser(
+    createE2EAdminClient(config),
+    config,
+  );
   studentId = ensured.userId;
   const probe = await admin
     .from("profiles")
-    .select("phone_number_prompt_dismissed_at")
+    .select("phone_country_code, phone_number_prompt_dismissed_at")
     .limit(1);
   columnReady = !probe.error;
 });
@@ -55,11 +58,15 @@ test.beforeAll(async () => {
 test.beforeEach(async () => {
   test.skip(
     !columnReady,
-    "profiles.phone_number_prompt_dismissed_at is not applied on this environment; apply migrations 20260709153000 + 20260709154000.",
+    "profiles.phone_number_prompt_dismissed_at is not applied on this environment; apply migrations 20260709153000 + 20260709154000 + 20260709165000.",
   );
   const { error } = await admin
     .from("profiles")
-    .update({ phone_number: null, phone_number_prompt_dismissed_at: null })
+    .update({
+      phone_country_code: null,
+      phone_number: null,
+      phone_number_prompt_dismissed_at: null,
+    })
     .eq("id", studentId);
   if (error) throw error;
 });

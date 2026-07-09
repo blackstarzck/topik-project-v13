@@ -8,10 +8,10 @@ type ClientFactory = () => Promise<SupabaseServerClient>;
 
 const PROFILE_SETTINGS_COLUMNS =
   "display_name, nickname, nationality_country_code, phone_country_code, phone_number, bio, ui_locale, ui_locale_source, notification_prefs";
-// Legacy projection intentionally omits optional-profile columns and
-// ui_locale_source so the page still loads on environments where the latest
-// profile migrations have not been applied yet; toProfileSettings maps the
-// absent columns to null / legacy.
+// Legacy projection intentionally omits split phone fields (and
+// ui_locale_source) so the page still loads on environments where the
+// optional-profile migrations (20260709153000/20260709165000) have not been
+// applied yet; toProfileSettings maps the absent columns to null.
 const LEGACY_PROFILE_SETTINGS_COLUMNS =
   "display_name, nickname, nationality_country_code, bio, ui_locale, notification_prefs";
 
@@ -27,16 +27,14 @@ type ProfileSettingsRow = {
   notification_prefs: unknown;
 };
 
-function isMissingOptionalProfileColumnError(error: unknown): boolean {
+function isMissingUiLocaleSourceError(error: unknown): boolean {
   if (!error || typeof error !== "object") return false;
   const candidate = error as { code?: unknown; message?: unknown };
   const text = String(candidate.message ?? "").toLowerCase();
   return (
     candidate.code === "42703" ||
     candidate.code === "PGRST204" ||
-    text.includes("ui_locale_source") ||
-    text.includes("phone_country_code") ||
-    text.includes("phone_number")
+    text.includes("ui_locale_source")
   );
 }
 
@@ -82,7 +80,7 @@ export async function getProfileSettings(
     PROFILE_SETTINGS_COLUMNS,
   );
 
-  if (error && isMissingOptionalProfileColumnError(error)) {
+  if (error && isMissingUiLocaleSourceError(error)) {
     const legacyResult = await selectProfileSettings(
       supabase,
       userId,

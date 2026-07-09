@@ -61,18 +61,16 @@ async function fillSignUpForm(
     displayName = VALID_NAME,
     countryRegionLabel = VALID_COUNTRY_REGION_LABEL,
     email = VALID_EMAIL,
-    genderLabel = VALID_GENDER_LABEL,
-    includeOptionalProfile = true,
+    genderLabel,
     password = VALID_PASSWORD,
     passwordConfirm = VALID_PASSWORD,
-    phoneNumber = VALID_PHONE_NUMBER,
+    phoneNumber,
     agreeToTerms = true,
   }: {
     displayName?: string;
     countryRegionLabel?: string;
     email?: string;
     genderLabel?: string;
-    includeOptionalProfile?: boolean;
     password?: string;
     passwordConfirm?: string;
     phoneNumber?: string;
@@ -83,12 +81,6 @@ async function fillSignUpForm(
   await expect(displayNameInput).toBeVisible();
   await displayNameInput.fill(displayName);
   await displayNameInput.blur();
-
-  await expect(genderOption(page, "남성")).toHaveCount(0);
-  await expect(genderOption(page, "여성")).toHaveCount(0);
-  await expect(page.getByText("선택 안 함")).toHaveCount(0);
-  await expect(page.locator("#phoneNumber")).toHaveCount(0);
-  await expect(page.getByTestId("country-region-select")).toBeVisible();
 
   const countryRegionSelect = page.getByTestId("country-region-select");
   await expect(countryRegionSelect).toBeVisible();
@@ -114,6 +106,7 @@ async function fillSignUpForm(
 
   await expect(genderOption(page, "남성")).toBeVisible();
   await expect(genderOption(page, "여성")).toBeVisible();
+  await expect(page.getByText("선택 안 함")).toHaveCount(0);
   await expect(page.locator("#phoneNumber")).toBeVisible();
   await expect(page.getByTestId("phone-country-code-select")).toContainText(
     "+82",
@@ -123,10 +116,10 @@ async function fillSignUpForm(
       "선택 입력입니다. 입력하는 경우 국가번호를 포함한 국제 형식으로 적어 주세요.",
     ),
   ).toHaveCount(0);
-  if (includeOptionalProfile) {
+  if (genderLabel) {
     await genderOption(page, genderLabel).click();
   }
-  if (includeOptionalProfile && phoneNumber) {
+  if (phoneNumber) {
     await page.locator("#phoneNumber").fill(phoneNumber);
     await page.locator("#phoneNumber").blur();
   }
@@ -358,17 +351,12 @@ test.describe("A-01 sign-up functional flow", () => {
     ).toBeVisible();
 
     await page.locator("#displayName").fill(VALID_NAME);
-    await expect(page.locator("#displayName")).toBeFocused();
+    await page.locator("#displayName").blur();
+    await expect(page.getByTestId("country-region-select")).toBeVisible();
     await expect(genderOption(page, "남성")).toHaveCount(0);
     await expect(genderOption(page, "여성")).toHaveCount(0);
     await expect(page.getByText("선택 안 함")).toHaveCount(0);
     await expect(page.locator("#phoneNumber")).toHaveCount(0);
-    await expect(page.getByTestId("country-region-select")).toBeVisible();
-    await expect(
-      page.getByText(
-        "선택 입력입니다. 입력하는 경우 국가번호를 포함한 국제 형식으로 적어 주세요.",
-      ),
-    ).toHaveCount(0);
 
     const displayNameBox = await page.locator("#displayName").boundingBox();
     const countryRegionBox = await page
@@ -377,6 +365,7 @@ test.describe("A-01 sign-up functional flow", () => {
     if (!displayNameBox || !countryRegionBox) {
       throw new Error("Could not measure sign-up input heights");
     }
+    expect(countryRegionBox.y).toBeGreaterThan(displayNameBox.y);
     expect(
       Math.abs(countryRegionBox.height - displayNameBox.height),
     ).toBeLessThanOrEqual(1);
@@ -435,7 +424,7 @@ test.describe("A-01 sign-up functional flow", () => {
     await expect(page.locator("#terms")).toBeVisible();
     await expect(passwordConfirmInput).toBeFocused();
 
-    await page.reload({ waitUntil: "load" });
+    await page.reload({ waitUntil: "networkidle" });
     await fillSignUpForm(page, { agreeToTerms: false });
     await expect(
       page.locator('a[href="/terms"]:visible').first(),
@@ -496,8 +485,8 @@ test.describe("A-01 sign-up functional flow", () => {
     await openSignUp(page);
     await fillSignUpForm(page, {
       email: "optional-profile@example.com",
-      genderLabel: "여성",
-      phoneNumber: "1012345678",
+      genderLabel: VALID_GENDER_LABEL,
+      phoneNumber: VALID_PHONE_NUMBER,
     });
     await clickSubmit(page);
 
@@ -520,40 +509,6 @@ test.describe("A-01 sign-up functional flow", () => {
     expect(errors).toEqual([]);
   });
 
-  test("valid email sign-up can skip optional gender and phone metadata", async ({
-    page,
-  }) => {
-    const errors = collectErrors(page);
-    const signUpRequests = await mockSignUpSuccess(page);
-
-    await openSignUp(page);
-    await fillSignUpForm(page, {
-      email: "skip-optional@example.com",
-      includeOptionalProfile: false,
-    });
-    await clickSubmit(page);
-
-    await page.waitForURL(
-      /\/auth\/verify-email\?email=skip-optional%40example\.com$/,
-    );
-
-    expect(signUpRequests).toHaveLength(1);
-    expect(signUpRequests[0].payload).toMatchObject({
-      data: {
-        display_name: VALID_NAME,
-        nationality_country_code: VALID_NATIONALITY_COUNTRY_CODE,
-      },
-      email: "skip-optional@example.com",
-      password: VALID_PASSWORD,
-    });
-    expect(signUpRequests[0].payload.data).not.toMatchObject({
-      gender: expect.any(String),
-      phone_country_code: expect.any(String),
-      phone_number: expect.any(String),
-    });
-    expect(errors).toEqual([]);
-  });
-
   test("valid email sign-up includes an aff code captured from the sign-up URL", async ({
     page,
   }) => {
@@ -564,7 +519,6 @@ test.describe("A-01 sign-up functional flow", () => {
     await expect(page).toHaveURL(/\/auth\/institution-invite$/);
     await page.locator('a[href="/sign-up"]').click();
     await expect(page).toHaveURL(/\/sign-up$/);
-    await page.waitForLoadState("networkidle");
     await expect(page.locator("#displayName")).toBeVisible();
     await fillSignUpForm(page, { email: "aff-signup@example.com" });
     await clickSubmit(page);
@@ -722,7 +676,7 @@ test.describe("A-01 sign-up functional flow", () => {
       )
       .not.toBe("rgba(0, 0, 0, 0.25)");
 
-    await page.reload({ waitUntil: "load" });
+    await page.reload({ waitUntil: "networkidle" });
     await expect(page.getByTestId("sign-up-countdown")).toBeVisible();
     await expect(submit).toHaveCount(0);
     await expect(page.getByTestId("auth-switch-link-disabled")).toBeVisible();

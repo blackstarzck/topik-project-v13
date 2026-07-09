@@ -21,10 +21,11 @@
 | column | type | nullable | validation |
 | --- | --- | --- | --- |
 | `gender` | `text` | yes | `male`, `female` 중 하나 또는 `null` |
-| `phone_country_code` | `text` | yes | ISO 3166-1 alpha-2 country code. `phone_number`가 `null`이면 함께 `null` |
-| `phone_number` | `text` | yes | 국가번호를 제외한 로컬 번호 숫자만 저장 또는 `null`. 예: `phone_country_code = KR`, `phone_number = 1012345678` |
+| `phone_country_code` | `text` | yes | ISO 3166-1 alpha-2 국가 코드 또는 `null`. 예: `KR` |
+| `phone_number` | `text` | yes | 국가번호를 제외한 로컬 번호 숫자만 저장 또는 `null`. 예: `1012345678` |
 
 전화번호는 사용자가 입력한 자기 신고 값이다. Google 계정의 전화번호를 자동 조회하지 않는다.
+전화번호를 저장할 때는 국가 코드와 로컬 번호를 분리한다.
 
 ## 화면 영향
 
@@ -32,6 +33,7 @@
 | --- | --- |
 | `/sign-up` | 기존 단계형 필수 입력 흐름을 유지하고, 비밀번호 확인까지 유효해져 약관 단계가 열릴 때 성별 select와 전화번호 input을 함께 표시한다. 둘 다 선택 입력이며 다음 단계 노출 조건이 아니다. |
 | `/auth/consent` | 필수 프로필/필수 약관 완료 게이트가 열렸을 때 선택 정보 섹션을 함께 표시한다. 선택값이 비어 있어도 계속할 수 있다. |
+| `/profile` | 사용자가 선택 입력한 전화 국가 코드와 로컬 번호를 수정하거나 비울 수 있다. |
 
 ## 갱신이 필요한 active SOT
 
@@ -45,5 +47,4 @@
 
 - Google People API 연동.
 - Google OAuth scope에 `user.gender.read`, `user.phonenumbers.read` 추가.
-- 프로필 설정 화면에서 성별/전화번호를 수정하는 기능.
 - 기존 사용자에게 선택값 입력을 강제하는 리마인더 또는 게이트.

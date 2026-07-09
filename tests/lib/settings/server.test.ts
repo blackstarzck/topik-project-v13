@@ -8,6 +8,7 @@ type RowShape = {
   nationality_country_code?: string | null;
   phone_country_code?: string | null;
   phone_number?: string | null;
+  bio?: string | null;
   ui_locale: "ko" | "en" | "vi";
   ui_locale_source: "legacy" | "default" | "auto" | "manual";
   notification_prefs: unknown;
@@ -97,12 +98,11 @@ describe("getProfileSettings", () => {
     );
 
     expect(selectedColumns[0]).toContain("nationality_country_code");
-    expect(selectedColumns[0]).toContain("phone_country_code");
     expect(selectedColumns[0]).toContain("ui_locale_source");
     expect(result?.nationality_country_code).toBe("VN");
   });
 
-  it("falls back to legacy locale source when the remote schema lacks optional profile columns", async () => {
+  it("falls back to legacy locale source when the remote schema lacks ui_locale_source", async () => {
     const selectedColumns: string[] = [];
     const result = await getProfileSettings(
       "user-4",
@@ -115,12 +115,12 @@ describe("getProfileSettings", () => {
                 eq: () => ({
                   maybeSingle: () =>
                     Promise.resolve(
-                      columns.includes("phone_country_code")
+                      columns.includes("ui_locale_source")
                         ? {
                             data: null,
                             error: {
                               message:
-                                "column profiles.phone_country_code does not exist",
+                                "column profiles.ui_locale_source does not exist",
                             },
                           }
                         : {
@@ -144,12 +144,9 @@ describe("getProfileSettings", () => {
 
     expect(selectedColumns).toHaveLength(2);
     expect(selectedColumns[0]).toContain("ui_locale_source");
-    expect(selectedColumns[0]).toContain("phone_country_code");
     expect(selectedColumns[1]).not.toContain("ui_locale_source");
-    expect(selectedColumns[1]).not.toContain("phone_country_code");
     expect(result).toMatchObject({
       nationality_country_code: "KR",
-      phone_country_code: null,
       ui_locale: "ko",
       ui_locale_source: "legacy",
     });

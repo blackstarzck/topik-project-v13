@@ -199,7 +199,7 @@ test("hidden saved writing problems fade the entire row without leaking hard-hid
   await expect(page.getByTestId("library-item-row")).toHaveCount(2);
 
   const listText = await page.getByTestId("library-item-list").innerText();
-  expect(listText).toContain(fixture.marker);
+  expect(listText).toContain("E2E soft unavailable");
   expect(listText).toContain(fixture.reason);
   expect(listText).not.toContain(fixture.hardTitle);
 
@@ -234,9 +234,6 @@ test("hidden saved writing problems fade the entire row without leaking hard-hid
   await expect(
     page.getByRole("link", { name: SAVED_PROBLEM_RETRY }),
   ).toHaveCount(0);
-  await expect(
-    page.getByTestId("library-item-row").locator("button[disabled]"),
-  ).toHaveCount(0);
 
   mkdirSync(path.join(process.cwd(), "output", "playwright"), {
     recursive: true,
@@ -250,6 +247,14 @@ test("hidden saved writing problems fade the entire row without leaking hard-hid
     ),
     fullPage: true,
   });
+
+  await page
+    .getByRole("button", { name: PROBLEMS_ACTION_MENU_OPEN })
+    .first()
+    .click();
+  await expect(
+    page.getByRole("menuitem", { name: SAVED_PROBLEM_RETRY }),
+  ).toHaveAttribute("aria-disabled", "true");
 
   expect(errors).toEqual([]);
 });

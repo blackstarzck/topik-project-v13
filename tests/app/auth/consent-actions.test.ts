@@ -40,7 +40,6 @@ const completeProfile = {
   gender: null,
   nationality_country_code: "KR",
   nickname: "talkpik-abc123",
-  phone_country_code: null,
   phone_number: null,
   status: "active",
   ui_locale: "ko",
@@ -209,7 +208,7 @@ describe("completeAuthGateAction", () => {
         makeForm({
           gender: " female ",
           next: "/dashboard",
-          phone_country_code: " vn ",
+          phone_country_code: " kr ",
           phone_number: " 010-1234-5678 ",
         }),
       ),
@@ -221,7 +220,7 @@ describe("completeAuthGateAction", () => {
       p_gender: "female",
       p_nationality_country_code: null,
       p_nickname: null,
-      p_phone_country_code: "VN",
+      p_phone_country_code: "KR",
       p_phone_number: "01012345678",
     });
   });

@@ -590,6 +590,16 @@ async function selectSavedProblemFilter(page: Page) {
   await page.getByTestId("library-problems-filter-drawer-apply").last().click();
 }
 
+function visibleLibraryTitlePrefix(title: string) {
+  return title.slice(0, Math.min(24, title.length));
+}
+
+function savedProblemRow(page: Page, fixture: SaveBackFixture) {
+  return page
+    .getByTestId("library-problems-mixed-row")
+    .filter({ hasText: visibleLibraryTitlePrefix(fixture.title) });
+}
+
 test.skip(
   !SUPABASE_URL || !SERVICE_KEY,
   "Problem list regression e2e requires Supabase service credentials",
@@ -695,9 +705,7 @@ test("C-02 problem save appears in the F-01 saved problem filter", async ({
 
     await searchLibraryProblems(page, fixture.marker);
     await selectSavedProblemFilter(page);
-    const savedRow = page
-      .getByTestId("library-problems-mixed-row")
-      .filter({ hasText: fixture.title });
+    const savedRow = savedProblemRow(page, fixture);
     await expect(savedRow).toBeVisible({ timeout: 15_000 });
     await expect(savedRow).toHaveAttribute("data-library-kind", "problem");
     await savedRow
@@ -733,11 +741,8 @@ test("C-02 problem save appears in the F-01 saved problem filter", async ({
     ).toHaveAttribute("fill", "none");
 
     await searchLibraryProblems(page, fixture.marker);
-    await expect(
-      page
-        .getByTestId("library-problems-mixed-row")
-        .filter({ hasText: fixture.title }),
-    ).toHaveCount(0);
+    await selectSavedProblemFilter(page);
+    await expect(savedProblemRow(page, fixture)).toHaveCount(0);
     await expect(page.getByTestId("library-problems-empty")).toBeVisible();
 
     expect(errors).toEqual([]);
@@ -765,11 +770,8 @@ test("D-01 temporary save does not create a saved problem library item", async (
     await expectProblemNotSaved(fixture);
 
     await searchLibraryProblems(page, fixture.marker);
-    await expect(
-      page
-        .getByTestId("library-problems-mixed-row")
-        .filter({ hasText: fixture.title }),
-    ).toHaveCount(0);
+    await selectSavedProblemFilter(page);
+    await expect(savedProblemRow(page, fixture)).toHaveCount(0);
     await expect(page.getByTestId("library-problems-empty")).toBeVisible();
 
     expect(errors).toEqual([]);

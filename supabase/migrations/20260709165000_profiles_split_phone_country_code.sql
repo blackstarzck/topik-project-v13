@@ -1,35 +1,34 @@
 -- ============================================================================
--- TALKPIK AI - 2026-07-09 - optional profile phone country code
+-- TALKPIK AI - 2026-07-09 - split profile phone country code and local number
 --
--- Stores the phone-number country selection separately from the local digits.
--- Phone remains optional: empty phone numbers clear the country code as well.
+-- Follow-up safety migration for environments that already applied
+-- 20260709153000 when phone_number briefly stored the selected calling code
+-- together with local digits. The durable contract is:
+--   phone_country_code = ISO 3166-1 alpha-2 country code, for example KR
+--   phone_number       = local digits only, for example 1012345678
 -- ============================================================================
 
 alter table public.profiles
   add column if not exists phone_country_code text;
 
 alter table public.profiles
-  drop constraint if exists profiles_phone_country_code_format;
+  drop constraint if exists profiles_phone_country_code_check;
 
 alter table public.profiles
-  add constraint profiles_phone_country_code_format
+  add constraint profiles_phone_country_code_check
   check (
     phone_country_code is null
     or phone_country_code ~ '^[A-Z]{2}$'
-  );
+  ) not valid;
 
 alter table public.profiles
-  drop constraint if exists profiles_phone_country_code_requires_number;
-
-alter table public.profiles
-  add constraint profiles_phone_country_code_requires_number
-  check (
-    phone_number is not null
-    or phone_country_code is null
-  );
+  validate constraint profiles_phone_country_code_check;
 
 comment on column public.profiles.phone_country_code is
-  'Optional ISO 3166-1 alpha-2 country code for the self-reported phone number calling-code selector. NULL when phone_number is NULL.';
+  'Optional self-reported phone country code stored as an ISO 3166-1 alpha-2 country code, for example KR.';
+
+comment on column public.profiles.phone_number is
+  'Optional self-reported local phone number digits without the selected country calling code.';
 
 create or replace function public.handle_new_user()
 returns trigger
@@ -73,7 +72,6 @@ begin
   end if;
 
   v_phone_number := nullif(left(regexp_replace(coalesce(v_phone_number, ''), '[^0-9]', '', 'g'), 20), '');
-
   if v_phone_number is null then
     v_phone_country_code := null;
   end if;
@@ -122,7 +120,10 @@ $$;
 revoke all on function public.handle_new_user() from public;
 
 comment on function public.handle_new_user() is
-  'After insert on auth.users, create matching public.profiles row idempotently; seeds required profile metadata, optional gender/phone metadata including phone_country_code, generated nickname, and UI locale provenance. SECURITY DEFINER with locked search_path.';
+  'After insert on auth.users, create matching public.profiles row idempotently; seeds required profile metadata, optional gender/split-phone metadata, generated nickname, and UI locale provenance. SECURITY DEFINER with locked search_path.';
+
+drop function if exists public.complete_auth_gate(text, text, text, text, text, boolean);
+drop function if exists public.complete_auth_gate(text, text, text, text, text, boolean, text, text);
 
 create or replace function public.complete_auth_gate(
   p_display_name text,
@@ -157,12 +158,10 @@ begin
 
   if v_phone_country_code is not null
      and v_phone_country_code !~ '^[A-Z]{2}$' then
-    raise exception 'auth_completion_invalid: phone_country_code'
-      using errcode = 'P0001';
+    v_phone_country_code := null;
   end if;
 
   v_phone_number := nullif(left(regexp_replace(coalesce(v_phone_number, ''), '[^0-9]', '', 'g'), 20), '');
-
   if v_phone_number is null then
     v_phone_country_code := null;
   end if;
@@ -192,7 +191,7 @@ revoke execute on function public.complete_auth_gate(text, text, text, text, tex
 grant execute on function public.complete_auth_gate(text, text, text, text, text, text, boolean) to authenticated;
 
 comment on function public.complete_auth_gate(text, text, text, text, text, text, boolean) is
-  'Completes the existing auth gate and stores optional gender/phone profile fields, including phone_country_code, in the same RPC transaction.';
+  'Completes the existing auth gate and stores optional gender/split-phone profile fields in the same RPC transaction.';
 
 create or replace function public.complete_auth_gate(
   p_display_name text,
@@ -254,4 +253,4 @@ revoke execute on function public.complete_auth_gate(text, text, text, text, tex
 grant execute on function public.complete_auth_gate(text, text, text, text, text, text, boolean, text, text) to authenticated;
 
 comment on function public.complete_auth_gate(text, text, text, text, text, text, boolean, text, text) is
-  'Completes the auth gate after atomically applying a default-source UI locale seed and optional gender/phone profile fields, including phone_country_code.';
+  'Completes the auth gate after atomically applying a default-source UI locale seed and optional gender/split-phone profile fields.';

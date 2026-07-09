@@ -7,13 +7,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   CountryRegionSelect,
+  isSupportedCountryCode,
   normalizeCountryCode,
 } from "@/components/shared/CountryRegionSelect";
 import { PhoneNumberInput } from "@/components/shared/PhoneNumberInput";
-import {
-  DEFAULT_PHONE_COUNTRY_CODE,
-  getCountryCallingCode,
-} from "@/lib/geo/country-calling-codes";
+import { DEFAULT_PHONE_COUNTRY_CODE } from "@/lib/geo/country-calling-codes";
 import {
   checkNicknameAvailability,
   NicknameTakenError,
@@ -79,9 +77,13 @@ function normalizeProfileCountryCode(value: string | null | undefined) {
   return code.length === 0 ? null : code;
 }
 
-function normalizeProfilePhoneCountryCode(value: string | null | undefined) {
-  const code = normalizeCountryCode(value ?? "");
-  return getCountryCallingCode(code) ? code : null;
+function normalizeProfilePhoneCountryCode(
+  value: string | null | undefined,
+  phoneNumber: string | null,
+) {
+  if (!phoneNumber) return null;
+  if (isSupportedCountryCode(value)) return normalizeCountryCode(value);
+  return DEFAULT_PHONE_COUNTRY_CODE;
 }
 
 function normalizeProfileDraft(profile: ProfileDraft): ProfileDraft {
@@ -92,13 +94,12 @@ function normalizeProfileDraft(profile: ProfileDraft): ProfileDraft {
     nationality_country_code: normalizeProfileCountryCode(
       profile.nationality_country_code,
     ),
-    phone_country_code: phoneNumber
-      ? normalizeProfilePhoneCountryCode(
-          profile.phone_country_code ?? DEFAULT_PHONE_COUNTRY_CODE,
-        )
-      : null,
     // Trim only; empty -> null. Digit-only shape is validated at the save gate
     // so an in-progress invalid number is never silently dropped.
+    phone_country_code: normalizeProfilePhoneCountryCode(
+      profile.phone_country_code,
+      phoneNumber,
+    ),
     phone_number: phoneNumber,
     bio: normalizeProfileField(profile.bio ?? ""),
   };
@@ -113,31 +114,6 @@ function profilesEqual(left: ProfileDraft, right: ProfileDraft) {
     left.phone_number === right.phone_number &&
     left.bio === right.bio
   );
-}
-
-function changedProfileFields(next: ProfileDraft, previous: ProfileDraft) {
-  const patch: Partial<ProfileDraft> = {};
-
-  if (next.display_name !== previous.display_name) {
-    patch.display_name = next.display_name;
-  }
-  if (next.nickname !== previous.nickname) {
-    patch.nickname = next.nickname;
-  }
-  if (next.nationality_country_code !== previous.nationality_country_code) {
-    patch.nationality_country_code = next.nationality_country_code;
-  }
-  if (next.phone_country_code !== previous.phone_country_code) {
-    patch.phone_country_code = next.phone_country_code;
-  }
-  if (next.phone_number !== previous.phone_number) {
-    patch.phone_number = next.phone_number;
-  }
-  if (next.bio !== previous.bio) {
-    patch.bio = next.bio;
-  }
-
-  return patch;
 }
 
 function isTooShortProfileField(value: string | null) {
@@ -442,8 +418,7 @@ export function ProfileForm({
     }
 
     try {
-      const changedFields = changedProfileFields(draftProfile, savedProfile);
-      await mutation.mutateAsync(changedFields);
+      await mutation.mutateAsync(draftProfile);
       setSavedProfile(draftProfile);
       setNicknameAvailability("idle");
       message.success(t("saveSuccess"));

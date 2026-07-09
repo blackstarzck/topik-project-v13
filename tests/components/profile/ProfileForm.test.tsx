@@ -53,6 +53,7 @@ const blankProfile = {
   display_name: null,
   nickname: null,
   nationality_country_code: null,
+  phone_country_code: null,
   bio: null,
 };
 
@@ -232,33 +233,11 @@ describe("ProfileForm", () => {
     await waitFor(() => {
       expect(mutateAsyncMock).toHaveBeenCalledWith({
         display_name: null,
-      });
-    });
-  });
-
-  it("submits only display_name when the user changes only their name", async () => {
-    const { container } = renderProfileForm({
-      initialProfile: {
-        display_name: "김찬기",
-        nickname: "talkpik-f2twvg",
-        nationality_country_code: "GG",
+        nickname: "chan-k",
+        nationality_country_code: null,
+        phone_country_code: null,
         phone_number: null,
         bio: null,
-      },
-    });
-
-    const nameInput = screen.getByLabelText(
-      koMessages.profile.form.nameLabel,
-    ) as HTMLInputElement;
-    fireEvent.change(nameInput, { target: { value: "김찬기1" } });
-
-    await act(async () => {
-      submitForm(container);
-    });
-
-    await waitFor(() => {
-      expect(mutateAsyncMock).toHaveBeenCalledWith({
-        display_name: "김찬기1",
       });
     });
   });
@@ -286,6 +265,10 @@ describe("ProfileForm", () => {
       expect(mutateAsyncMock).toHaveBeenCalledWith({
         display_name: "Chan",
         nickname: "tester",
+        nationality_country_code: null,
+        phone_country_code: null,
+        phone_number: null,
+        bio: null,
       });
     });
   });
@@ -304,6 +287,11 @@ describe("ProfileForm", () => {
 
     await waitFor(() => {
       expect(mutateAsyncMock).toHaveBeenCalledWith({
+        display_name: null,
+        nickname: null,
+        nationality_country_code: null,
+        phone_country_code: null,
+        phone_number: null,
         bio: "TOPIK II grade 4 goal",
       });
     });
@@ -557,7 +545,12 @@ describe("ProfileForm", () => {
 
     await waitFor(() => {
       expect(mutateAsyncMock).toHaveBeenCalledWith({
+        display_name: null,
+        nickname: null,
         nationality_country_code: "KR",
+        phone_country_code: null,
+        phone_number: null,
+        bio: null,
       });
     });
   });
@@ -619,8 +612,12 @@ describe("ProfileForm", () => {
     });
     await waitFor(() => {
       expect(mutateAsyncMock).toHaveBeenCalledWith({
+        display_name: null,
+        nickname: null,
+        nationality_country_code: null,
         phone_country_code: "KR",
         phone_number: "01012345678",
+        bio: null,
       });
     });
   });
@@ -639,8 +636,12 @@ describe("ProfileForm", () => {
 
     await waitFor(() => {
       expect(mutateAsyncMock).toHaveBeenCalledWith({
+        display_name: null,
+        nickname: null,
+        nationality_country_code: null,
         phone_country_code: "KR",
         phone_number: "01087654321",
+        bio: null,
       });
     });
   });
@@ -666,8 +667,12 @@ describe("ProfileForm", () => {
 
     await waitFor(() => {
       expect(mutateAsyncMock).toHaveBeenCalledWith({
+        display_name: null,
+        nickname: null,
+        nationality_country_code: null,
         phone_country_code: null,
         phone_number: null,
+        bio: null,
       });
     });
   });

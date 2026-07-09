@@ -202,29 +202,35 @@ describe("updateProfile", () => {
     expect(calls[0].patch).toEqual({ nationality_country_code: "VN" });
   });
 
-  it("writes phone_number when provided", async () => {
+  it("writes split phone country code and local number when provided", async () => {
     const calls: UpdateCall[] = [];
     await updateProfile(
       "user-1",
-      { phone_number: "01012345678" },
+      { phone_country_code: "KR", phone_number: "01012345678" },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       () => makeClient({ onUpdate: (c) => calls.push(c) }) as any,
     );
-    expect(calls[0].patch).toEqual({ phone_number: "01012345678" });
+    expect(calls[0].patch).toEqual({
+      phone_country_code: "KR",
+      phone_number: "01012345678",
+    });
   });
 
-  it("writes phone_country_code when provided", async () => {
+  it("preserves explicit null split phone fields (clear)", async () => {
     const calls: UpdateCall[] = [];
     await updateProfile(
       "user-1",
-      { phone_country_code: "KR" },
+      { phone_country_code: null, phone_number: null },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       () => makeClient({ onUpdate: (c) => calls.push(c) }) as any,
     );
-    expect(calls[0].patch).toEqual({ phone_country_code: "KR" });
+    expect(calls[0].patch).toEqual({
+      phone_country_code: null,
+      phone_number: null,
+    });
   });
 
-  it("clears phone_country_code when phone_number is explicitly cleared", async () => {
+  it("clears split phone country code when clearing phone number", async () => {
     const calls: UpdateCall[] = [];
     await updateProfile(
       "user-1",
