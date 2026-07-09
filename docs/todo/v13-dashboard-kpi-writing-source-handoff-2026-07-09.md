@@ -111,10 +111,9 @@ select count(*)::int
   where user_id = caller_id;
 ```
 
-> study_events 기준으로 맞추려면 `writing_submissions` 대신
+> 대안으로 study_events 기준을 쓰려면 `writing_submissions` 대신
 > `study_events where event_type in ('attempt_submitted','submission_submitted')`를 쓴다.
-> 성장 페이지의 `mergeAttemptCounts` 우회가 이미 study_events count를 쓰므로, **study_events로
-> 통일하면 대시보드·성장의 "누적 풀이 수"가 정확히 일치**한다(권장).
+> PR #29 구현 결정은 관리자 정렬을 우선해 `writing_submissions.submitted_at` 제출 수를 사용한다.
 
 ## 6. v13 영향 파일 (예상)
 
@@ -123,7 +122,7 @@ select count(*)::int
 | `supabase/migrations/2026XXXXHHMMSS_dashboard_kpi_writing_source.sql` (신규) | `create or replace function public.get_dashboard_kpi()` — §5 계산식으로 본문 교체. 반환 시그니처(`today_attempts, total_attempts, exam_days_left, streak_days`)는 **그대로 유지**(프론트 계약 무변경). down 파일로 직전 정의 복원 가능하게. |
 | `src/lib/learning/kpi.ts` | 변경 없음(반환 시그니처 유지 시). 주석의 "attempts" 표현만 "제출/학습 이벤트"로 정정 권장. |
 | `src/components/dashboard/DashboardKpiSummary.tsx` | 라벨이 이미 "오늘 제출 수(todaySubmissions)"라 대체로 무변경. `total_attempts` 의미가 "제출 수"로 바뀌므로 관련 i18n 문구 검토. |
-| `src/app/(workspace)/growth/page.tsx` | streak가 이제 RPC에서 실값으로 오므로 별도 우회 불필요. `mergeAttemptCounts`는 study_events로 통일 시 그대로 두거나 단순화 가능(회귀 주의). |
+| `src/app/(workspace)/growth/page.tsx` | streak가 이제 RPC에서 실값으로 오므로 별도 우회 불필요. PR #29에서는 누적 제출 수를 `kpi.totalAttempts`로 단순화해 `writing_submissions` 기준과 맞춘다. |
 | `messages/{ko,en,vi}.json` | KPI 라벨/단위 문구가 "풀이"→"제출"로 바뀌면 함께 갱신. |
 | `src/lib/learning/kpi.test.ts` 등 | `computeStreakDays` 단위 테스트는 그대로 두되(순수 함수), RPC 계약 변경에 맞춰 통합/컴포넌트 테스트 기대값 갱신. |
 
@@ -131,7 +130,7 @@ select count(*)::int
 
 | 항목 | 선택지 | 권장 |
 | --- | --- | --- |
-| "제출 수" 원천 | (a) `writing_submissions` / (b) `study_events` 제출 이벤트 | **(b)** — 성장 페이지 기존 우회와 일치, 재제출/이벤트 흐름과도 정합 |
+| "제출 수" 원천 | (a) `writing_submissions` / (b) `study_events` 제출 이벤트 | **(a)** — PR #29 구현 결정. `submitted_at` KST 경계 기준이며 재제출도 제출 수에 포함한다. |
 | "제출 수"에 재제출 포함 여부 | 포함 / 제외(원 제출만) | 대시보드는 "활동량" 성격이므로 **포함**(관리자 회원 상세도 총 제출 수는 재제출 포함) |
 | 라벨 유지 | 현행 "제출 수" 유지 / "학습 활동" 등으로 변경 | 현행 유지(문구 변경 최소) |
 
@@ -164,3 +163,9 @@ select count(*)::int
 - `docs/specs/admin-data-contract.md` 2026-07-08 절 — 관리자 쪽 재정의 계약(원천·계산식 SoT)
 - `docs/specs/admin-page-gap-register.md` 2026-07-08 절 — 이 gap이 미확정으로 등록된 위치
 - 관리자 참고 마이그레이션(계산식 원본): `supabase/migrations-admin/20260708130000_users_learning_overview_writing_first.sql`
+
+## 11. Implementation decision (PR #29)
+
+- Submission counts use `writing_submissions.submitted_at` for `today_attempts` and `total_attempts`.
+- `study_events` remains the streak source through KST learning-event dates.
+- The earlier `study_events` submission-count alternative is retained as a considered option, but it is not the accepted v13 implementation for PR #29.

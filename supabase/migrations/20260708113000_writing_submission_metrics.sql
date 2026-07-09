@@ -76,8 +76,10 @@ create policy writing_submission_metrics_owner_insert
     and exists (
       select 1
       from public.writing_submissions ws
-      where ws.id = submission_id
+      where ws.id = writing_submission_metrics.submission_id
         and ws.user_id = (select auth.uid())
+        and ws.problem_id is not distinct from writing_submission_metrics.problem_id
+        and ws.question_no is not distinct from writing_submission_metrics.question_no
     )
   );
 

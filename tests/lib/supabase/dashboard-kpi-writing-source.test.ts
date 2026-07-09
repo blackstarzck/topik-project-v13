@@ -62,3 +62,32 @@ describe("migration index", () => {
     );
   });
 });
+
+describe("KPI source SOT", () => {
+  it("documents dashboard/growth submission counts as writing_submissions-based", () => {
+    const dataUsage = normalize(
+      readFileSync(
+        join(process.cwd(), "docs", "Wireframe", "data-usage-index.md"),
+        "utf8",
+      ),
+    );
+    const handoff = normalize(
+      readFileSync(
+        join(
+          process.cwd(),
+          "docs",
+          "todo",
+          "v13-dashboard-kpi-writing-source-handoff-2026-07-09.md",
+        ),
+        "utf8",
+      ),
+    );
+
+    expect(dataUsage).toContain("dashboard/growth kpi submission counts");
+    expect(dataUsage).toContain("source: `writing_submissions.submitted_at`");
+    expect(dataUsage).toContain("writing_submission_metrics");
+    expect(handoff).toContain("implementation decision");
+    expect(handoff).toContain("submission counts use `writing_submissions");
+    expect(handoff).toContain("`study_events` remains the streak source");
+  });
+});

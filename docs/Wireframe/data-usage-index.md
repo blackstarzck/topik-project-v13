@@ -5,13 +5,13 @@
 ## Summary
 
 - Pages: 36
-- Tables: 36 (35 v13 + 1 topik-ai shared)
+- Tables: 37 (36 v13 + 1 topik-ai shared)
 - RPC/functions: 41
 - Storage buckets: 3
-- Page data links: 129
+- Page data links: 135
 - Unclassified DB objects: 0
 
-> 집계 기준: Tables는 현재 v13 forward migration 테이블 35개와 topik-ai 소유 공유 테이블 `notification_delivery_attempts` 1개를 합산한다. v13 테이블 수에는 2026-07-08에 accepted된 PDF quota 테이블 4개가 포함된다. RPC/functions에는 PDF quota RPC 3개가 포함된다. Page data links는 fallback/schema-supported/deprecated 행까지 포함한 화면 데이터 계약 행 수다.
+> 집계 기준: Tables는 현재 v13 forward migration 테이블 36개와 topik-ai 소유 공유 테이블 `notification_delivery_attempts` 1개를 합산한다. v13 테이블 수에는 2026-07-08에 accepted된 PDF quota 테이블 4개와 `writing_submission_metrics`가 포함된다. RPC/functions에는 PDF quota RPC 3개가 포함된다. Page data links는 fallback/schema-supported/deprecated 행까지 포함한 화면 데이터 계약 행 수다.
 
 ## avatars
 
@@ -246,8 +246,8 @@
 
 | IA | Screen | Type | Columns/fields | Usage | Page feature |
 | --- | --- | --- | --- | --- | --- |
-| B-01 | Home dashboard | rpc | - | rpc | 대시보드 KPI 요약을 만든다. |
-| X-02 | Growth dashboard | rpc | - | rpc | 성장 지표 일부를 재사용할 수 있다. |
+| B-01 | Home dashboard | rpc | - | rpc | Dashboard/growth KPI submission counts. Source: `writing_submissions.submitted_at` for `today_attempts`/`total_attempts`; source: `study_events.occurred_at` KST learning days for `streak_days`. |
+| X-02 | Growth dashboard | rpc | - | rpc | Dashboard/growth KPI submission counts. Source: `writing_submissions.submitted_at` via `total_attempts`; source: `study_events.occurred_at` via `streak_days`. |
 
 ## public.handle_new_user
 
@@ -295,7 +295,7 @@
 
 | IA | Screen | Type | Columns/fields | Usage | Page feature |
 | --- | --- | --- | --- | --- | --- |
-| B-01 | Home dashboard | table | `event_type`, `occurred_at`, `payload` | derived-read | 학습 연속성, 오늘 활동, 이벤트 기반 KPI에 사용한다. |
+| B-01 | Home dashboard | table | `event_type`, `occurred_at`, `payload` | derived-read | 연속 학습일과 학습 활동 이벤트에 사용한다. 제출 수 KPI 원천은 `writing_submissions.submitted_at`이다. |
 | D-01 | Short-answer writing 51 | table | `event_type`, `problem_id`, `submission_id`, `payload` | write | 작성 시작과 제출 이벤트를 기록한다. |
 | D-02 | Answer writing 52 | table | `event_type`, `problem_id`, `submission_id`, `payload` | write | 작성 시작과 제출 이벤트를 기록한다. |
 | D-03 | Long-form writing 53 | table | `event_type`, `problem_id`, `submission_id`, `payload` | write | 작성 시작과 제출 이벤트를 기록한다. |
@@ -306,7 +306,7 @@
 | F-01 | My library | table | `event_type`, `occurred_at`, `payload` | read | 학습 활동 기록에 사용한다. |
 | F-M1 | PDF export modal | table | `event_type`, `export_file_id`, `payload` | write | PDF 다운로드 이벤트를 기록한다. |
 | D-M3 | Autosave warning | table | `event_type`, `payload`, `occurred_at` | write | 자동저장 이벤트를 기록한다. |
-| X-02 | Growth dashboard | table | `event_type`, `occurred_at`, `payload` | derived-read | 학습 추세와 활동 그래프에 사용한다. |
+| X-02 | Growth dashboard | table | `event_type`, `occurred_at`, `payload` | derived-read | 학습 추세, 활동 그래프, 연속 학습일에 사용한다. 누적 제출 수 KPI 원천은 `writing_submissions.submitted_at`이다. |
 
 ## user_notifications
 
@@ -345,6 +345,7 @@
 
 | IA | Screen | Type | Columns/fields | Usage | Page feature |
 | --- | --- | --- | --- | --- | --- |
+| B-01 | Home dashboard | table | `user_id`, `submitted_at` | derived-read via `public.get_dashboard_kpi` | 오늘 제출 수와 전체 제출 수 KPI의 원천이다. |
 | D-01 | Short-answer writing 51 | table | `problem_id`, `answer_text`, `answer_json`, `char_count`, `feedback_status` | write/read | 최종 제출과 제출 상태 확인에 사용한다. |
 | D-02 | Answer writing 52 | table | `problem_id`, `answer_text`, `answer_json`, `char_count`, `feedback_status` | write/read | 최종 제출과 제출 상태 확인에 사용한다. |
 | D-03 | Long-form writing 53 | table | `problem_id`, `answer_text`, `answer_json`, `char_count`, `feedback_status` | write/read | 최종 제출과 제출 상태 확인에 사용한다. |
@@ -356,6 +357,16 @@
 | R-01 | Comparison report | table | `id`, `answer_text`, `char_count`, `submitted_at` | read | 비교 대상 제출본을 불러온다. |
 | R-02 | Next problem recommendation | table | `problem_id`, `submitted_at` | derived-read | 최근 제출 흐름을 추천 근거로 사용한다. |
 | F-01 | My library | table | `id`, `problem_id`, `submitted_at`, `char_count` | read | 제출 이력 탭에 사용한다. |
+| X-02 | Growth dashboard | table | `user_id`, `submitted_at` | derived-read via `public.get_dashboard_kpi` | 누적 제출 수 KPI의 원천이다. |
+
+## writing_submission_metrics
+
+| IA | Screen | Type | Columns/fields | Usage | Page feature |
+| --- | --- | --- | --- | --- | --- |
+| D-01 | Short-answer writing 51 | table | `submission_id`, `user_id`, `problem_id`, `question_no`, `elapsed_seconds`, `active_seconds`, `started_at`, `submitted_at` | write | 제출 성공 후 51번 쓰기 소요 시간과 활성 입력 시간을 기록한다. 답안 본문은 저장하지 않는다. |
+| D-02 | Answer writing 52 | table | `submission_id`, `user_id`, `problem_id`, `question_no`, `elapsed_seconds`, `active_seconds`, `started_at`, `submitted_at` | write | 제출 성공 후 52번 쓰기 소요 시간과 활성 입력 시간을 기록한다. 답안 본문은 저장하지 않는다. |
+| D-03 | Long-form writing 53 | table | `submission_id`, `user_id`, `problem_id`, `question_no`, `elapsed_seconds`, `active_seconds`, `started_at`, `submitted_at` | write | 제출 성공 후 53번 쓰기 소요 시간과 활성 입력 시간을 기록한다. 답안 본문은 저장하지 않는다. |
+| D-04 | Essay writing 54 | table | `submission_id`, `user_id`, `problem_id`, `question_no`, `elapsed_seconds`, `active_seconds`, `started_at`, `submitted_at` | write | 제출 성공 후 54번 쓰기 소요 시간과 활성 입력 시간을 기록한다. 답안 본문은 저장하지 않는다. |
 
 ## Unmapped Or Infrastructure DB Objects
 
