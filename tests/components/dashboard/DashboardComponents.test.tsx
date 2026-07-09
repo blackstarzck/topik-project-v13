@@ -133,10 +133,14 @@ describe("DashboardKpiSummary", () => {
       updatedAt: "2026-06-02T09:00:00.000Z",
     };
     renderWithIntl(<DashboardKpiSummary kpi={empty} />);
-    expect(screen.getByText(dashboard.kpi.todaySubmissionsTitle)).toBeTruthy();
+    expect(
+      screen.getByTestId("dashboard-kpi-today-submissions").textContent,
+    ).toContain(dashboard.kpi.todaySubmissionsTitle);
     expect(screen.getByText(dashboard.kpi.recentFeedbackTitle)).toBeTruthy();
     expect(screen.getByText(dashboard.kpi.goalAchievementTitle)).toBeTruthy();
-    expect(screen.getByText(dashboard.kpi.streakTitle)).toBeTruthy();
+    expect(screen.getByTestId("dashboard-kpi-streak").textContent).toContain(
+      dashboard.kpi.streakTitle,
+    );
     expect(screen.getAllByText(dashboard.kpi.zeroValuePrompt)).toHaveLength(4);
   });
 

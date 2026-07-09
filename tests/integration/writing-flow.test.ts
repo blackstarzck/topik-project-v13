@@ -116,6 +116,8 @@ describe("writing flow — route guards", () => {
       expect(helpers.getWritingProblemMock).toHaveBeenCalledWith(
         questionNo,
         undefined,
+        undefined,
+        { userId: "user-1" },
       );
     },
   );

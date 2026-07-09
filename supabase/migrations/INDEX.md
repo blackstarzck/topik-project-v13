@@ -223,3 +223,15 @@
 | # | timestamp | file | scope |
 | ---:| --- | --- | --- |
 | 69 | `12:00:00` | [`20260707120000_pdf_export_quota.sql`](./20260707120000_pdf_export_quota.sql) | Adds DB-backed PDF export quota policy, usage, reset, and reset-target ledgers plus SECURITY DEFINER RPCs for atomic per-user/per-problem claim, commit, and release. Seeds the default 3-per-month Asia/Seoul policy and keeps admin management for topik-ai. |
+
+## 2026-07-08 migration
+
+| # | timestamp | file | scope |
+| ---:| --- | --- | --- |
+| 70 | `11:30:00` | [`20260708113000_writing_submission_metrics.sql`](./20260708113000_writing_submission_metrics.sql) | Adds immutable per-submission writing solve-time metrics for topik-ai learning analytics while keeping answer content out of the metric row and avoiding `problem_attempts` for writing. |
+
+## 2026-07-09 migration
+
+| # | timestamp | file | scope |
+| ---:| --- | --- | --- |
+| 71 | `12:00:00` | [`20260709120000_dashboard_kpi_writing_source.sql`](./20260709120000_dashboard_kpi_writing_source.sql) | Redefines `public.get_dashboard_kpi()` so dashboard/growth submission counts use `writing_submissions` and streak uses `study_events` KST learning days, preserving the existing RPC return contract. |
