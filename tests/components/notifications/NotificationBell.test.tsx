@@ -341,7 +341,7 @@ describe("NotificationBell", () => {
     expect(messageInfoMock).not.toHaveBeenCalled();
   });
 
-  it("disables invitation acceptance when the payload has no usable code", async () => {
+  it("disables invitation acceptance when the payload has no invitation id", async () => {
     fetchNotificationsMock.mockResolvedValue([
       makeInstitutionInvitationNotification({
         payload: {
@@ -366,6 +366,39 @@ describe("NotificationBell", () => {
     expect(
       screen.queryByRole("button", { name: tInvitation.decline }),
     ).toBeNull();
+  });
+
+  it("allows invitation acceptance when only the display code is missing", async () => {
+    fetchNotificationsMock.mockResolvedValue([
+      makeInstitutionInvitationNotification({
+        payload: {
+          kind: "institution_invitation",
+          invitation_id: "2a2ff7b8-cc31-4f4d-a455-283aaad28f30",
+          code_label: "캠페인 유입 유저",
+        },
+      }),
+    ]);
+    renderWithIntl(<NotificationBell userId="user-1" />);
+
+    fireEvent.click(screen.getByRole("button", { name: t.bellAria }));
+    const title = await screen.findByText("기관 소속 초대가 도착했습니다");
+    const rowButton = title.closest("button");
+    if (!rowButton) throw new Error("notification row button not found");
+    fireEvent.click(rowButton);
+
+    expect(await screen.findByText(tInvitation.unknownCode)).toBeTruthy();
+    const acceptButton = screen.getByRole("button", {
+      name: tInvitation.accept,
+    });
+    expect(acceptButton).toHaveProperty("disabled", false);
+
+    fireEvent.click(acceptButton);
+    await waitFor(() => {
+      expect(respondInstitutionInvitationMock).toHaveBeenCalledWith(
+        "2a2ff7b8-cc31-4f4d-a455-283aaad28f30",
+        true,
+      );
+    });
   });
 
   it("shows a handled state when the invitation was already responded", async () => {
