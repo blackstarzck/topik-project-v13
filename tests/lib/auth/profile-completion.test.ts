@@ -4,18 +4,38 @@ import {
   getMissingRequiredProfileFields,
   hasCompletedRequiredProfile,
   normalizeAuthCompletionProfileInput,
+  normalizeOptionalProfileInput,
 } from "../../../src/lib/auth/profile-completion";
 
 const completeProfile = {
   display_name: "Chan",
   nickname: "talkpik-abc123",
   nationality_country_code: "KR",
+  gender: null,
+  phone_number: null,
 };
 
 describe("profile completion helpers", () => {
   it("treats display name, nickname, and supported nationality as required", () => {
     expect(hasCompletedRequiredProfile(completeProfile)).toBe(true);
     expect(getMissingRequiredProfileFields(completeProfile)).toEqual([]);
+  });
+
+  it("does not require optional gender or phone number for profile completion", () => {
+    expect(
+      hasCompletedRequiredProfile({
+        ...completeProfile,
+        gender: null,
+        phone_number: null,
+      }),
+    ).toBe(true);
+    expect(
+      getMissingRequiredProfileFields({
+        ...completeProfile,
+        gender: "female",
+        phone_number: "01012345678",
+      }),
+    ).toEqual([]);
   });
 
   it("reports only the profile fields that are blank or invalid", () => {
@@ -37,8 +57,42 @@ describe("profile completion helpers", () => {
       }),
     ).toEqual({
       display_name: "민준",
+      gender: null,
       nickname: "talkpik-min",
       nationality_country_code: "KR",
+      phone_number: null,
+    });
+  });
+
+  it("normalizes optional gender and phone fields without making them required", () => {
+    expect(
+      normalizeOptionalProfileInput({
+        gender: "  FEMALE  ",
+        phone_number: "  010-1234-5678  ",
+      }),
+    ).toEqual({
+      gender: "female",
+      phone_number: "01012345678",
+    });
+
+    expect(
+      normalizeOptionalProfileInput({
+        gender: "prefer_not_to_say",
+        phone_number: "+82 10 1234 5678",
+      }),
+    ).toEqual({
+      gender: null,
+      phone_number: "821012345678",
+    });
+
+    expect(
+      normalizeOptionalProfileInput({
+        gender: "",
+        phone_number: "",
+      }),
+    ).toEqual({
+      gender: null,
+      phone_number: null,
     });
   });
 });

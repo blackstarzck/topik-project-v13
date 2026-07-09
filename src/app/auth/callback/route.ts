@@ -206,7 +206,7 @@ export async function GET(request: NextRequest) {
 
   // 3. OAuth code flow.
   if (code) {
-    const next = sanitizeNext(rawNext);
+    const next = resolveCallbackNext(rawNext, verifyType);
     const { supabase, withAuthCookies } = createAuthCallbackClient(request);
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (error) {

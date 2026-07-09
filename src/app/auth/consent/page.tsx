@@ -29,6 +29,7 @@ function pickFirst(value: string | string[] | undefined): string | undefined {
 function parseError(value: string | undefined): AuthConsentPanelError | null {
   if (
     value === "required" ||
+    value === "invalid-profile" ||
     value === "nickname-taken" ||
     value === "save-failed"
   ) {

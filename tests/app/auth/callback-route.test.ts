@@ -133,6 +133,24 @@ describe("/auth/callback route", () => {
     );
   });
 
+  it("routes password recovery code callbacks to reset confirmation even when next points elsewhere", async () => {
+    const response = await GET(
+      request(
+        "http://localhost:3000/auth/callback?code=recovery-code&type=recovery&next=%2Fdashboard",
+      ),
+    );
+
+    expect(exchangeCodeForSessionMock).toHaveBeenCalledWith("recovery-code");
+    expect(response.headers.get("location")).toBe(
+      "http://localhost:3000/password-reset/confirm",
+    );
+    expect(response.headers.getSetCookie()).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("sb-test-auth-token=session-cookie"),
+      ]),
+    );
+  });
+
   it("routes password recovery token callbacks without next to reset confirmation", async () => {
     const response = await GET(
       request(

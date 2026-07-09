@@ -68,6 +68,10 @@ async function fetchPublished(
     .eq("doc_type", docType)
     .eq("locale", locale)
     .eq("status", "published")
+    // Trust only admin-projected documents (source_policy_id set) or seeded
+    // placeholders; exclude rows inserted directly into legal_documents (e.g.
+    // E2E test seeds) so they never surface on /terms or /privacy.
+    .or("source_policy_id.not.is.null,is_placeholder.is.true")
     .order("effective_at", { ascending: false })
     .order("created_at", { ascending: false })
     .limit(1);

@@ -2,8 +2,8 @@ import Image from "next/image";
 
 const BRAND_LOGO_SRC = "/assets/logo.png";
 const BRAND_LOGO_ALT = "dotore TOPIK";
-const BRAND_LOGO_WIDTH = 1163;
-const BRAND_LOGO_HEIGHT = 499;
+const BRAND_LOGO_WIDTH = 491;
+const BRAND_LOGO_HEIGHT = 173;
 
 type BrandLogoProps = {
   className?: string;

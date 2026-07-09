@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   checkNicknameAvailability,
+  dismissPhoneNumberPrompt,
   NicknameTakenError,
   updateLocale,
   updateNotificationPrefs,
@@ -201,6 +202,28 @@ describe("updateProfile", () => {
     expect(calls[0].patch).toEqual({ nationality_country_code: "VN" });
   });
 
+  it("writes phone_number when provided", async () => {
+    const calls: UpdateCall[] = [];
+    await updateProfile(
+      "user-1",
+      { phone_number: "01012345678" },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      () => makeClient({ onUpdate: (c) => calls.push(c) }) as any,
+    );
+    expect(calls[0].patch).toEqual({ phone_number: "01012345678" });
+  });
+
+  it("preserves explicit null phone_number (clear)", async () => {
+    const calls: UpdateCall[] = [];
+    await updateProfile(
+      "user-1",
+      { phone_number: null },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      () => makeClient({ onUpdate: (c) => calls.push(c) }) as any,
+    );
+    expect(calls[0].patch).toEqual({ phone_number: null });
+  });
+
   it("no-ops when no keys provided", async () => {
     const calls: UpdateCall[] = [];
     await updateProfile(
@@ -228,6 +251,36 @@ describe("updateProfile", () => {
           }) as any,
       ),
     ).rejects.toBeInstanceOf(NicknameTakenError);
+  });
+});
+
+describe("dismissPhoneNumberPrompt", () => {
+  it("stamps phone_number_prompt_dismissed_at for the user", async () => {
+    const calls: UpdateCall[] = [];
+    await dismissPhoneNumberPrompt(
+      "user-1",
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      () => makeClient({ onUpdate: (c) => calls.push(c) }) as any,
+    );
+    expect(calls).toHaveLength(1);
+    expect(calls[0].table).toBe("profiles");
+    expect(calls[0].id).toBe("user-1");
+    expect(typeof calls[0].patch.phone_number_prompt_dismissed_at).toBe(
+      "string",
+    );
+  });
+
+  it("throws when the update fails so the banner can stay and retry", async () => {
+    await expect(
+      dismissPhoneNumberPrompt(
+        "user-1",
+        () =>
+          makeClient({
+            updateError: { message: "rls denied" },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          }) as any,
+      ),
+    ).rejects.toMatchObject({ message: "rls denied" });
   });
 });
 

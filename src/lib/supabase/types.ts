@@ -60,8 +60,11 @@ export interface Database {
         Row: {
           id: string;
           display_name: string | null;
+          gender: "male" | "female" | null;
           nationality_country_code: string | null;
           nickname: string | null;
+          phone_number: string | null;
+          phone_number_prompt_dismissed_at: string | null;
           avatar_path: string | null;
           ui_locale: "ko" | "en" | "vi";
           ui_locale_source: "legacy" | "default" | "auto" | "manual";
@@ -88,8 +91,11 @@ export interface Database {
         Insert: {
           id: string;
           display_name?: string | null;
+          gender?: "male" | "female" | null;
           nationality_country_code?: string | null;
           nickname?: string | null;
+          phone_number?: string | null;
+          phone_number_prompt_dismissed_at?: string | null;
           avatar_path?: string | null;
           ui_locale?: "ko" | "en" | "vi";
           ui_locale_source?: "legacy" | "default" | "auto" | "manual";
@@ -112,8 +118,11 @@ export interface Database {
         Update: {
           id?: string;
           display_name?: string | null;
+          gender?: "male" | "female" | null;
           nationality_country_code?: string | null;
           nickname?: string | null;
+          phone_number?: string | null;
+          phone_number_prompt_dismissed_at?: string | null;
           avatar_path?: string | null;
           ui_locale?: "ko" | "en" | "vi";
           ui_locale_source?: "legacy" | "default" | "auto" | "manual";
@@ -1642,9 +1651,13 @@ export interface Database {
       complete_auth_gate: {
         Args: {
           p_display_name: string | null;
+          p_gender: string | null;
           p_nickname: string | null;
           p_nationality_country_code: string | null;
+          p_phone_number: string | null;
           p_accept_required_consents: boolean;
+          p_ui_locale?: "ko" | "en" | "vi";
+          p_ui_locale_source?: "auto" | "manual";
         };
         Returns: undefined;
       };

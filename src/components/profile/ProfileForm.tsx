@@ -9,11 +9,13 @@ import {
   CountryRegionSelect,
   normalizeCountryCode,
 } from "@/components/shared/CountryRegionSelect";
+import { PhoneNumberInput } from "@/components/shared/PhoneNumberInput";
 import {
   checkNicknameAvailability,
   NicknameTakenError,
   useUpdateProfile,
 } from "@/lib/settings/mutations";
+import { PHONE_NUMBER_DIGITS_PATTERN } from "@/lib/auth/profile-completion";
 import { NICKNAME_CHECK_DEBOUNCE_MS } from "@/lib/request-control/policies";
 import {
   AvatarError,
@@ -40,6 +42,7 @@ type ProfileDraft = {
   display_name: string | null;
   nickname: string | null;
   nationality_country_code?: string | null;
+  phone_number?: string | null;
   bio: string | null;
 };
 
@@ -78,6 +81,9 @@ function normalizeProfileDraft(profile: ProfileDraft): ProfileDraft {
     nationality_country_code: normalizeProfileCountryCode(
       profile.nationality_country_code,
     ),
+    // Trim only; empty -> null. Digit-only shape is validated at the save gate
+    // so an in-progress invalid number is never silently dropped.
+    phone_number: normalizeProfileField(profile.phone_number ?? ""),
     bio: normalizeProfileField(profile.bio ?? ""),
   };
 }
@@ -87,6 +93,7 @@ function profilesEqual(left: ProfileDraft, right: ProfileDraft) {
     left.display_name === right.display_name &&
     left.nickname === right.nickname &&
     left.nationality_country_code === right.nationality_country_code &&
+    left.phone_number === right.phone_number &&
     left.bio === right.bio
   );
 }
@@ -213,6 +220,9 @@ export function ProfileForm({
   const [nicknameAvailability, setNicknameAvailability] =
     useState<NicknameAvailability>("idle");
   const nicknameCheckSeqRef = useRef(0);
+  const [phoneNumber, setPhoneNumber] = useState<string>(
+    initialProfile.phone_number ?? "",
+  );
   const [bio, setBio] = useState<string>(initialProfile.bio ?? "");
 
   const draftProfile = useMemo(
@@ -221,22 +231,32 @@ export function ProfileForm({
         display_name: displayName,
         nickname,
         nationality_country_code: nationalityCountryCode,
+        phone_number: phoneNumber,
         bio,
       }),
-    [bio, displayName, nationalityCountryCode, nickname],
+    [bio, displayName, nationalityCountryCode, nickname, phoneNumber],
   );
   const isDirty = !profilesEqual(draftProfile, savedProfile);
   const displayNameTooShort = isTooShortProfileField(draftProfile.display_name);
   const nicknameTooShort = isTooShortProfileField(draftProfile.nickname);
+  const phoneNumberInvalid =
+    draftProfile.phone_number !== null &&
+    draftProfile.phone_number !== undefined &&
+    !PHONE_NUMBER_DIGITS_PATTERN.test(draftProfile.phone_number);
   const validationError = displayNameTooShort
     ? t("nameTooShort")
     : nicknameTooShort
       ? t("nicknameTooShort")
-      : null;
+      : phoneNumberInvalid
+        ? t("phoneNumberInvalid")
+        : null;
   const nicknameAvailabilityBlocksSubmit =
     nicknameAvailability === "checking" || nicknameAvailability === "taken";
   const canSubmit =
-    isDirty && !validationError && !nicknameAvailabilityBlocksSubmit;
+    isDirty &&
+    !validationError &&
+    !phoneNumberInvalid &&
+    !nicknameAvailabilityBlocksSubmit;
   const nicknameValidateStatus: FormValidateStatus | undefined =
     nicknameTooShort || nicknameAvailability === "taken"
       ? "error"
@@ -511,6 +531,25 @@ export function ProfileForm({
               placeholder={t("nicknamePlaceholder")}
               maxLength={20}
               aria-label={t("nicknameLabel")}
+            />
+          </Form.Item>
+
+          <Form.Item
+            className="!mb-0"
+            label={t("phoneNumberLabel")}
+            validateStatus={phoneNumberInvalid ? "error" : undefined}
+            help={phoneNumberInvalid ? t("phoneNumberInvalid") : undefined}
+            extra={phoneNumberInvalid ? undefined : t("phoneNumberHelp")}
+          >
+            <PhoneNumberInput
+              id="phoneNumber"
+              ariaLabel={t("phoneNumberLabel")}
+              callingCodeAriaLabel={t("phoneCountryCodeLabel")}
+              disabled={mutation.isPending}
+              locale={locale}
+              placeholder={t("phoneNumberPlaceholder")}
+              value={phoneNumber}
+              onChange={setPhoneNumber}
             />
           </Form.Item>
 

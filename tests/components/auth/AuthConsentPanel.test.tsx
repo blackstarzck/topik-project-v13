@@ -54,8 +54,10 @@ describe("AuthConsentPanel", () => {
         next="/auth/post-auth?intent=login"
         profile={{
           display_name: "Chan",
+          gender: null,
           nationality_country_code: "KR",
           nickname: "talkpik-abc123",
+          phone_number: null,
         }}
         missingProfileFields={[]}
         showRequiredError={false}
@@ -68,6 +70,8 @@ describe("AuthConsentPanel", () => {
     expect(screen.getByText("Terms of Service")).toBeTruthy();
     expect(screen.getByText("Short consent summary")).toBeTruthy();
     expect(screen.getByText("Full consent body")).toBeTruthy();
+    expect(screen.getByLabelText(/성별/)).toBeTruthy();
+    expect(screen.getByLabelText(/전화번호/)).toBeTruthy();
     expect(screen.getByRole("button")).toBeTruthy();
   });
 

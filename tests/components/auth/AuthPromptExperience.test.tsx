@@ -1,4 +1,7 @@
 // @vitest-environment jsdom
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
 import { act, cleanup, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -8,10 +11,21 @@ const getUserMock = vi.fn();
 const routerReplaceMock = vi.fn();
 const routerPushMock = vi.fn();
 const LOGO_SRC = "/assets/logo.png";
+const GLOBAL_CSS = readFileSync(
+  join(process.cwd(), "src/styles/global.css"),
+  "utf8",
+);
 let searchParamsMock = new URLSearchParams();
 
 function decodedImageSrc(image: HTMLImageElement) {
   return decodeURIComponent(image.getAttribute("src") ?? "");
+}
+
+function getCssRule(selector: string) {
+  const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = GLOBAL_CSS.match(new RegExp(`${escapedSelector}\\s*\\{([^}]*)\\}`));
+
+  return match?.[1] ?? "";
 }
 
 vi.mock("@/lib/supabase/browser", () => ({
@@ -151,6 +165,16 @@ describe("AuthPromptExperience", () => {
       "eager",
       "eager",
     ]);
+  });
+
+  it("keeps the desktop hero panel viewport-bound independently from the form column", () => {
+    const heroRule = getCssRule(".signup-prompt-hero");
+
+    expect(heroRule).toContain("position: sticky");
+    expect(heroRule).toContain("top: 0");
+    expect(heroRule).toContain("align-self: start");
+    expect(heroRule).toContain("height: 100dvh");
+    expect(heroRule).toContain("max-height: 100dvh");
   });
 
   it("rechecks persisted pageshow restores after OAuth browser-back navigation", async () => {

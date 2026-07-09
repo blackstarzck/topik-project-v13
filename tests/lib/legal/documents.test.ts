@@ -26,6 +26,7 @@ function makeClient(result: {
       const query = {
         select: () => query,
         eq: () => query,
+        or: () => query,
         order: () => query,
         limit: () => Promise.resolve(result),
       };

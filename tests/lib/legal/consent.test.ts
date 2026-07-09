@@ -47,6 +47,12 @@ function makeClient(db: {
           inFilters.push([key, values]);
           return query;
         },
+        or() {
+          // Source-trust filter (source_policy_id / is_placeholder) is a DB-side
+          // guard; this stub does not simulate it. Kept as a no-op so the query
+          // chain resolves.
+          return query;
+        },
         update(nextPatch: Row) {
           patch = nextPatch;
           db.updates?.push(nextPatch);

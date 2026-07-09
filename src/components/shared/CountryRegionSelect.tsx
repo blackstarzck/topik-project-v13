@@ -40,7 +40,7 @@ type CountryRegionSelectProps = {
   onBlur?: () => void;
 };
 
-function CountryFlag({
+export function CountryFlag({
   code,
   countryName,
 }: {

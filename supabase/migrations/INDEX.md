@@ -235,3 +235,5 @@
 | # | timestamp | file | scope |
 | ---:| --- | --- | --- |
 | 71 | `12:00:00` | [`20260709120000_dashboard_kpi_writing_source.sql`](./20260709120000_dashboard_kpi_writing_source.sql) | Redefines `public.get_dashboard_kpi()` so dashboard/growth submission counts use `writing_submissions` and streak uses `study_events` KST learning days, preserving the existing RPC return contract. |
+| 72 | `15:30:00` | [`20260709153000_profiles_optional_gender_phone.sql`](./20260709153000_profiles_optional_gender_phone.sql) | Adds nullable `profiles.gender` and `profiles.phone_number`, seeds them from email signup Auth metadata, and adds new `complete_auth_gate` overloads so `/auth/consent` can save the optional fields without making them signup requirements. |
+| 73 | `15:40:00` | [`20260709154000_profiles_phone_prompt_dismissed.sql`](./20260709154000_profiles_phone_prompt_dismissed.sql) | Adds nullable `profiles.phone_number_prompt_dismissed_at` timestamp so the non-blocking workspace phone-number reminder banner can be permanently dismissed per account. New rows default to NULL (not dismissed); no backfill or RLS/trigger change needed. |

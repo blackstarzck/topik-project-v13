@@ -110,9 +110,11 @@ describe("profiles nationality migration", () => {
       .toLowerCase();
 
     expect(normalized).toContain(
-      "insert into public.profiles (id, display_name, nationality_country_code, affiliation_code, nickname, ui_locale, ui_locale_source)",
+      "insert into public.profiles ( id, display_name, gender, nationality_country_code, affiliation_code, nickname, phone_number, ui_locale, ui_locale_source )",
     );
     expect(normalized).toContain("private.generate_default_nickname()");
+    expect(normalized).toContain("new.raw_user_meta_data->>'gender'");
+    expect(normalized).toContain("new.raw_user_meta_data->>'phone_number'");
     expect(normalized).toContain(
       "new.raw_user_meta_data->>'affiliation_code'",
     );

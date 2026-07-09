@@ -114,7 +114,8 @@ async function getCurrentRequiredDocuments(
     .select("id, doc_type, locale, title, version, effective_at, created_at")
     .eq("locale", "ko")
     .eq("requires_consent", true)
-    .eq("status", "published");
+    .eq("status", "published")
+    .or("source_policy_id.not.is.null,is_placeholder.is.true");
 
   if (error) throw error;
 
@@ -146,6 +147,14 @@ function skipIfRequiredDocumentsMissing(documents: RequiredConsentDocument[]) {
   );
 }
 
+async function skipIfOptionalProfileColumnsMissing(admin: SupabaseClient) {
+  const { error } = await admin.from("profiles").select("gender").limit(1);
+  test.skip(
+    !!error,
+    "profiles.gender is not applied on this environment; apply migration 20260709153000 before running auth completion optional-profile e2e.",
+  );
+}
+
 async function createTempAuthGateData({
   completeProfile = false,
 }: {
@@ -154,6 +163,7 @@ async function createTempAuthGateData({
   const admin = createAdminClient();
   const documents = await getCurrentRequiredDocuments(admin);
   skipIfRequiredDocumentsMissing(documents);
+  await skipIfOptionalProfileColumnsMissing(admin);
 
   const stamp = Date.now();
   const email = `auth-gate-e2e-${stamp}@example.com`;
@@ -178,8 +188,10 @@ async function createTempAuthGateData({
     .from("profiles")
     .update({
       display_name: completeProfile ? "Consent Guard User" : null,
+      gender: completeProfile ? "female" : null,
       nationality_country_code: completeProfile ? "KR" : null,
       nickname: profile.nickname,
+      phone_number: completeProfile ? "01012345678" : null,
     })
     .eq("id", userId);
   if (updated.error) throw updated.error;
@@ -216,6 +228,10 @@ async function selectCountryRegion(page: Page, label: string) {
     .locator(".ant-select-item-option")
     .filter({ hasText: label })
     .click();
+}
+
+async function selectGender(page: Page, label: string) {
+  await page.getByRole("radio", { name: label }).click();
 }
 
 async function attachEvidenceScreenshot(
@@ -258,14 +274,18 @@ async function expectNoCurrentRequiredConsents(data: TempAuthGateData) {
 async function expectAuthGateSaved(data: TempAuthGateData) {
   const { data: profile, error: profileError } = await data.admin
     .from("profiles")
-    .select("display_name,nationality_country_code,nickname")
+    .select(
+      "display_name,gender,nationality_country_code,nickname,phone_number",
+    )
     .eq("id", data.userId)
     .single();
   if (profileError) throw profileError;
 
   expect(profile?.display_name).toBe("민준");
+  expect(profile?.gender).toBe("female");
   expect(profile?.nationality_country_code).toBe("KR");
   expect(profile?.nickname).toBe(data.generatedNickname);
+  expect(profile?.phone_number).toBe("01012345678");
 
   const { data: consents, error: consentError } = await data.admin
     .from("user_consents")
@@ -308,6 +328,9 @@ test("auth completion gate renders profile fields and current required consent d
       /talkpik-/,
     );
     await expect(page.getByTestId("auth-consent-country-select")).toBeVisible();
+    await expect(page.getByRole("radio", { name: "남성" })).toBeVisible();
+    await expect(page.getByRole("radio", { name: "여성" })).toBeVisible();
+    await expect(page.getByLabel(/전화번호/)).toBeVisible();
     await expect(page.locator('input[name="accept"]')).toHaveCount(1);
     await expectNoCurrentRequiredConsents(tempData);
     await attachEvidenceScreenshot(
@@ -363,6 +386,8 @@ test("auth completion gate saves missing profile fields and required consents be
       tempData.generatedNickname,
     );
     await selectCountryRegion(page, "대한민국");
+    await selectGender(page, "여성");
+    await page.getByLabel(/전화번호/).fill("01012345678");
     await page.locator('input[name="accept"]').check();
     await page.locator('form button[type="submit"]').click();
 

@@ -1,8 +1,14 @@
 // @vitest-environment jsdom
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { fireEvent, screen, waitFor, within } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  cleanup,
+  fireEvent,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { WorkspaceShell } from "../../../src/components/app/WorkspaceShell";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
@@ -125,6 +131,7 @@ describe("WorkspaceShell", () => {
     navMock.routerReplace.mockClear();
     navMock.pathname = "/dashboard";
     navMock.authCallback = null;
+    window.sessionStorage.clear();
     writingAvailabilityMock.value = {
       data: {
         availableTypes: new Set([51, 52, 53, 54]),
@@ -134,6 +141,10 @@ describe("WorkspaceShell", () => {
       isLoading: false,
       error: null,
     };
+  });
+
+  afterEach(() => {
+    cleanup();
   });
 
   it("redirects to /login on SIGNED_OUT (multi-tab/device sync) but ignores INITIAL_SESSION", () => {
@@ -722,6 +733,7 @@ describe("WorkspaceShell", () => {
     expect(brandRule).toContain("height: 68px;");
     expect(brandRule).toContain("justify-content: center;");
     expect(brandRule).toContain("text-align: center;");
+    expect(logoRule).toContain("width: auto;");
     expect(logoRule).toContain("height: 68px;");
   });
 
@@ -771,6 +783,7 @@ describe("WorkspaceShell", () => {
     expect(source).toContain('<BrandLogo height={48} loading="eager" />');
     expect(mobileBrandRule).toContain("height: 48px;");
     expect(mobileBrandRule).toContain("justify-content: center;");
+    expect(mobileLogoRule).toContain("width: auto;");
     expect(mobileLogoRule).toContain("height: 48px;");
   });
 
@@ -962,5 +975,76 @@ describe("WorkspaceShell", () => {
 
     expect(hasExpandedMenuItem(learning.container, "설정")).toBe(true);
     expect(learning.container.textContent).toContain("학습 목표");
+  });
+
+  it("opens the phone number reminder modal on entry when phone is missing", async () => {
+    navMock.pathname = "/dashboard";
+
+    renderWithIntl(
+      <WorkspaceShell
+        role="learner"
+        userId="user-1"
+        email={null}
+        planLabel={null}
+        phoneNumber={null}
+        phoneNumberPromptDismissedAt={null}
+      >
+        <div>body</div>
+      </WorkspaceShell>,
+    );
+
+    expect(
+      await screen.findByText(koMessages.app.phoneReminder.title),
+    ).toBeTruthy();
+  });
+
+  it("does not open the reminder modal while phone profile fields are unavailable", () => {
+    navMock.pathname = "/dashboard";
+
+    renderWithIntl(
+      <WorkspaceShell role="learner" userId="user-1" email={null} planLabel={null}>
+        <div>body</div>
+      </WorkspaceShell>,
+    );
+
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("does not open the reminder modal once a phone number exists", () => {
+    navMock.pathname = "/dashboard";
+
+    renderWithIntl(
+      <WorkspaceShell
+        role="learner"
+        userId="user-1"
+        email={null}
+        planLabel={null}
+        phoneNumber="01012345678"
+        phoneNumberPromptDismissedAt={null}
+      >
+        <div>body</div>
+      </WorkspaceShell>,
+    );
+
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("does not open the reminder modal on an immersive writing route", () => {
+    navMock.pathname = "/writing/short-answer-writing-51";
+
+    renderWithIntl(
+      <WorkspaceShell
+        role="learner"
+        userId="user-1"
+        email={null}
+        planLabel={null}
+        phoneNumber={null}
+        phoneNumberPromptDismissedAt={null}
+      >
+        <div>body</div>
+      </WorkspaceShell>,
+    );
+
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 });

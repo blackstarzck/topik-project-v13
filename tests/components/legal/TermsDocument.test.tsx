@@ -3,7 +3,10 @@ import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import { App as AntdApp } from "antd";
 
-import { TermsDocument } from "../../../src/components/legal/TermsDocument";
+import {
+  LegalDocument,
+  TermsDocument,
+} from "../../../src/components/legal/TermsDocument";
 import type { PublishedLegalDocument } from "../../../src/lib/legal/documents";
 
 afterEach(cleanup);
@@ -21,6 +24,21 @@ const publishedTerms: PublishedLegalDocument = {
     <h1>관리자 발행 이용약관</h1>
     <p><strong>중요 안내</strong>를 확인해주세요.</p>
     <ul><li>첫 번째 약관 항목</li></ul>
+  `,
+};
+
+const publishedPrivacy: PublishedLegalDocument = {
+  ...publishedTerms,
+  id: "privacy-admin-1",
+  doc_type: "privacy",
+  title: "개인정보처리방침",
+  summary: "관리자 발행 개인정보처리방침",
+  body: `
+    # Published Privacy
+
+    ## Article 1 Personal Data
+
+    This policy includes **privacy notice** text.
   `,
 };
 
@@ -87,6 +105,23 @@ describe("TermsDocument", () => {
     expect(body.innerHTML).not.toContain("**important notice**");
     expect(body.innerHTML).not.toContain("<script");
     expect(body.innerHTML).not.toContain("alert");
+  });
+
+  it("supports privacy document test ids while using the same Markdown renderer", () => {
+    render(
+      <AntdApp>
+        <LegalDocument doc={publishedPrivacy} testIdPrefix="privacy" />
+      </AntdApp>,
+    );
+
+    expect(screen.getByTestId("privacy-card")).toBeTruthy();
+    expect(screen.getByTestId("privacy-version")).toBeTruthy();
+    expect(screen.getByTestId("privacy-document-body")).toBeTruthy();
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Published Privacy" }),
+    ).toBeTruthy();
+    expect(screen.getByText("privacy notice")).toBeTruthy();
+    expect(screen.queryByTestId("terms-document-body")).toBeNull();
   });
 
   it("renders admin-authored mixed HTML and Markdown as document markup", () => {

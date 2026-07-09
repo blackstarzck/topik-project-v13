@@ -30,6 +30,24 @@ export default async function AccountSettingsPage() {
     .select("created_at, app_role, plan_label, affiliation_code")
     .eq("id", user.id)
     .maybeSingle();
+  const loginMethodLabels = {
+    regionAriaLabel: tLoginMethods("regionAriaLabel"),
+    emailMethod: tLoginMethods("emailMethod"),
+    emailUnavailable: tLoginMethods("emailUnavailable"),
+    googleMethod: tLoginMethods("googleMethod"),
+    googleDescription: tLoginMethods("googleDescription"),
+    passwordMethod: tLoginMethods("passwordMethod"),
+    passwordDescription: tLoginMethods("passwordDescription"),
+    passwordAction: tLoginMethods("passwordAction"),
+    passwordSent: tLoginMethods("passwordSent"),
+    passwordRateLimited: tLoginMethods("passwordRateLimited"),
+    passwordSendFailed: tLoginMethods("passwordSendFailed"),
+    connected: tLoginMethods("connected"),
+    disconnected: tLoginMethods("disconnected"),
+    connectGoogle: tLoginMethods("connectGoogle"),
+    connectFailed: tLoginMethods("connectFailed"),
+    linkStarted: tLoginMethods("linkStarted"),
+  };
 
   return (
     <WorkspaceBody>
@@ -38,18 +56,7 @@ export default async function AccountSettingsPage() {
         <div className="account-settings-redesign">
           <AccountLoginMethodsCard
             accountEmail={user.email ?? null}
-            labels={{
-              regionAriaLabel: tLoginMethods("regionAriaLabel"),
-              emailMethod: tLoginMethods("emailMethod"),
-              emailUnavailable: tLoginMethods("emailUnavailable"),
-              googleMethod: tLoginMethods("googleMethod"),
-              googleDescription: tLoginMethods("googleDescription"),
-              connected: tLoginMethods("connected"),
-              disconnected: tLoginMethods("disconnected"),
-              connectGoogle: tLoginMethods("connectGoogle"),
-              connectFailed: tLoginMethods("connectFailed"),
-              linkStarted: tLoginMethods("linkStarted"),
-            }}
+            labels={loginMethodLabels}
           />
           {profileMeta ? (
             <StatusHelpCard
