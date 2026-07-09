@@ -3,6 +3,11 @@ import {
   type SupabaseServerClient,
 } from "../supabase/server";
 import { filterVisibleProblemIds } from "../problems/visibility";
+import {
+  computeFallbackRecommendations,
+  type ComputedSummaryCode,
+  type RecommendationReasonCode,
+} from "./recommendation-fallback";
 import { QUESTION_NOS, type QuestionNo } from "./types";
 
 type ClientFactory = () => Promise<SupabaseServerClient>;
@@ -17,20 +22,28 @@ export type RecommendationRunSummary = {
 };
 
 export type RecommendationItemCard = {
-  itemId: string;
+  /** recommendation_items.id for stored rows; null for computed (transient) items. */
+  itemId: string | null;
   problemId: string;
   rank: number;
   reason: string | null;
+  /** Rule that won the score for a computed item; the client resolves it to copy. */
+  reasonCode?: RecommendationReasonCode | null;
   estimatedMinutes: number | null;
   weaknessTags: string[];
   title: string;
   questionNo: QuestionNo | null;
 };
 
+export type RecommendationBundleSource = "stored" | "computed";
+
 export type RecommendationBundle = {
   run: RecommendationRunSummary | null;
   items: RecommendationItemCard[];
   availableTypes: QuestionNo[];
+  source: RecommendationBundleSource;
+  /** Present on computed bundles — which honest summary copy applies. */
+  summaryCode?: ComputedSummaryCode | null;
 };
 
 type JoinedProblem = {
@@ -119,6 +132,24 @@ export async function queryRecommendationBundleForUser(
     });
   }
 
+  // Tier-2: zero stored items (none, all expired, or all hidden) → compute a
+  // transient rule-based bundle from the user's own history. No DB writes;
+  // `run` stays null because no recommendation_runs row exists for it.
+  if (items.length === 0) {
+    const computed = await computeFallbackRecommendations(
+      supabase,
+      userId,
+      questionNo,
+    );
+    return {
+      run: null,
+      items: computed.items,
+      availableTypes: computed.availableTypes,
+      source: "computed",
+      summaryCode: computed.summaryCode,
+    };
+  }
+
   return {
     run:
       runData && visibleRunIds.has(runData.id)
@@ -130,6 +161,8 @@ export async function queryRecommendationBundleForUser(
         : null,
     items,
     availableTypes: [...availableTypes],
+    source: "stored",
+    summaryCode: null,
   };
 }
 

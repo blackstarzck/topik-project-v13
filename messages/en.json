@@ -963,10 +963,27 @@
       "subtitle": "Recommendations tailored to your current learning flow. Pick a type to get new recommendations.",
       "reasonSummaryTitle": "Here's why we recommended this",
       "reasonSummaryLoading": "Loading the recommendation reason.",
-      "reasonSummaryFallback": "Your recent analysis shows room to improve grammar and structure, so we recommend {type} first.",
-      "reasonTagGrammar": "Improve grammar accuracy",
-      "reasonTagStructure": "Strengthen structure flow",
-      "reasonTagExpression": "Repeat core expressions",
+      "reasonSummaryFallback": "For now, we suggest starting your practice with {type}.",
+      "reasonCode": {
+        "TYPE_ROTATION_NEXT": "A type you've practiced less — it's next in order.",
+        "RECENT_TYPE_CONTINUATION": "A good way to keep practicing the type you worked on recently.",
+        "WEAK_AREA_TAG_MATCH": "Practice for an area where your recent feedback scores were low.",
+        "GOAL_DIFFICULTY_MATCH": "A problem close to the level and difficulty of your goal.",
+        "UNATTEMPTED_AVAILABLE": "A published problem you haven't tried yet."
+      },
+      "computedSummary": {
+        "history": "Picked by fixed rules using your available goals and practice history.",
+        "rotation": "You have little practice history yet, so problems follow the 51→54 type rotation."
+      },
+      "dimension": {
+        "grammar": "Grammar",
+        "vocab": "Vocabulary",
+        "structure": "Structure",
+        "content": "Content",
+        "expression": "Expression",
+        "topic_fit": "Topic fit",
+        "language": "Language"
+      },
       "loadingTip": "Loading recommendations",
       "loadErrorTitle": "Couldn't load recommendations",
       "loadErrorDescription": "The recommendation request is taking too long. Retry, or pick a type below to start directly.",
