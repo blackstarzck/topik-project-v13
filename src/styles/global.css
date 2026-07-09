@@ -5876,6 +5876,11 @@ body {
   display: inline-flex;
 }
 
+.problem-table__actions-compact {
+  display: inline-flex;
+  align-items: center;
+}
+
 .problem-table__action-button.ant-btn {
   min-width: 82px;
   height: 32px;
@@ -5898,6 +5903,35 @@ body {
   background: var(--app-color-bg-container);
   color: var(--app-color-text);
   font-weight: 400;
+}
+
+.problem-table__bookmark-button.ant-btn,
+.writing-exam-header__bookmark-button.ant-btn {
+  flex: 0 0 32px;
+  width: 32px;
+  min-width: 32px;
+  max-width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  padding-inline: 0;
+  line-height: 1;
+}
+
+.writing-exam-header__bookmark-button.ant-btn {
+  align-self: center;
+}
+
+.problem-bookmark-toggle--saved.ant-btn {
+  border-color: color-mix(in srgb, var(--app-color-primary) 45%, transparent);
+  background: var(--app-color-bg-container);
+  color: var(--app-color-primary);
+}
+
+.problem-bookmark-toggle--saved.ant-btn:not(:disabled):hover,
+.problem-bookmark-toggle--saved.ant-btn:not(:disabled):focus-visible {
+  border-color: var(--app-color-primary);
+  background: var(--app-color-bg-layout);
+  color: var(--app-color-primary);
 }
 
 .problem-table__action-button--primary.ant-btn:not(:disabled):hover,
@@ -6847,6 +6881,7 @@ body {
 }
 
 .writing-exam-header__title {
+  flex: 0 1 auto;
   min-width: 0;
   margin: 0;
   overflow: hidden;
@@ -8448,9 +8483,9 @@ body {
   }
 
   .writing-exam-header__title-row {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 6px;
+    align-items: center;
+    flex-direction: row;
+    gap: 8px;
   }
 
   .writing-exam-header__title,

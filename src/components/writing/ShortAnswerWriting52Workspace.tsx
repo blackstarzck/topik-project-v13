@@ -396,6 +396,7 @@ export function ShortAnswerWriting52Workspace({
       }
       isSaving={status === "syncing" && upsert.isPending}
       isSubmitting={submit.isPending}
+      problemBookmark={{ userId, problemId: problem.id }}
       onSave={onManualSave}
       onSubmit={onOpenSubmitConfirm}
       onRequestBack={exitGuard.requestNavigation}

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  deleteProblemLibraryItem,
   deleteLibraryItem,
   isDuplicateLibrarySaveError,
   saveLibraryItem,
@@ -36,6 +37,22 @@ function makeDeleteClient(opts: { error?: { message: string } | null }) {
   const del = vi.fn(() => ({ eq }));
   const from = vi.fn(() => ({ delete: del }));
   return { client: { from }, del, eq, from };
+}
+
+function makeProblemDeleteClient(opts: { error?: { message: string } | null }) {
+  const filters: Array<[string, unknown]> = [];
+  const builder = {
+    eq: vi.fn((column: string, value: unknown) => {
+      filters.push([column, value]);
+      if (column === "problem_id") {
+        return Promise.resolve({ data: null, error: opts.error ?? null });
+      }
+      return builder;
+    }),
+  };
+  const del = vi.fn(() => builder);
+  const from = vi.fn(() => ({ delete: del }));
+  return { client: { from }, del, eq: builder.eq, filters, from };
 }
 
 function makeUpdateClient(opts: InsertResult) {
@@ -138,6 +155,17 @@ describe("isDuplicateLibrarySaveError", () => {
     ).toBe(true);
   });
 
+  it("recognizes duplicate problem saves from the library unique index", () => {
+    expect(
+      isDuplicateLibrarySaveError({
+        code: "23505",
+        message:
+          'duplicate key value violates unique constraint "library_items_user_problem_uniq"',
+        details: "Key (user_id, problem_id)=(user-1, problem-1) already exists.",
+      }),
+    ).toBe(true);
+  });
+
   it("does not treat unrelated unique violations as saved library items", () => {
     expect(
       isDuplicateLibrarySaveError({
@@ -173,6 +201,41 @@ describe("deleteLibraryItem", () => {
         () => client as any,
       ),
     ).rejects.toMatchObject({ message: "not found" });
+  });
+});
+
+describe("deleteProblemLibraryItem", () => {
+  it("deletes a saved problem by owner and problem identity", async () => {
+    const { client, from, del, filters } = makeProblemDeleteClient({
+      error: null,
+    });
+    await deleteProblemLibraryItem(
+      { user_id: "user-1", problem_id: "problem-1" },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      () => client as any,
+    );
+
+    expect(from).toHaveBeenCalledWith("library_items");
+    expect(del).toHaveBeenCalled();
+    expect(filters).toEqual([
+      ["user_id", "user-1"],
+      ["item_type", "problem"],
+      ["problem_id", "problem-1"],
+    ]);
+  });
+
+  it("throws on supabase error", async () => {
+    const { client } = makeProblemDeleteClient({
+      error: { message: "permission denied" },
+    });
+
+    await expect(
+      deleteProblemLibraryItem(
+        { user_id: "user-1", problem_id: "problem-1" },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        () => client as any,
+      ),
+    ).rejects.toMatchObject({ message: "permission denied" });
   });
 });
 

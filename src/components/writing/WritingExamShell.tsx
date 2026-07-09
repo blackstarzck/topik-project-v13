@@ -7,8 +7,11 @@ import {
   PenLine,
   SendHorizontal,
 } from "@/components/shared/AppIcons";
-import type { ReactNode } from "react";
+import { useTranslations } from "next-intl";
+import { useMemo, type ReactNode } from "react";
 
+import { ProblemBookmarkToggle } from "@/components/practice/ProblemBookmarkToggle";
+import { useLibraryItems } from "@/lib/library/queries";
 import type { AutosaveStatus } from "@/lib/writing/types";
 import { AutosaveBadge } from "./AutosaveBadge";
 
@@ -25,6 +28,10 @@ type Props = {
   canSubmit: boolean;
   isSaving: boolean;
   isSubmitting: boolean;
+  problemBookmark?: {
+    userId: string;
+    problemId: string;
+  };
   onSave: () => void;
   onSubmit: () => void;
   onRequestBack: () => void;
@@ -38,6 +45,33 @@ function formatElapsed(seconds: number): string {
   return [h, m, s].map((n) => String(n).padStart(2, "0")).join(":");
 }
 
+function WritingProblemBookmark({
+  userId,
+  problemId,
+}: {
+  userId: string;
+  problemId: string;
+}) {
+  const savedProblems = useLibraryItems("problems");
+  const initiallySaved = useMemo(
+    () =>
+      (savedProblems.data ?? []).some(
+        (item) => item.kind === "problem" && item.id === problemId,
+      ),
+    [problemId, savedProblems.data],
+  );
+
+  return (
+    <ProblemBookmarkToggle
+      userId={userId}
+      problemId={problemId}
+      initiallySaved={initiallySaved}
+      disabled={savedProblems.isLoading}
+      className="writing-exam-header__bookmark-button"
+    />
+  );
+}
+
 export function WritingExamShell({
   title,
   subtitle,
@@ -49,11 +83,14 @@ export function WritingExamShell({
   canSubmit,
   isSaving,
   isSubmitting,
+  problemBookmark,
   onSave,
   onSubmit,
   onRequestBack,
   children,
 }: Props) {
+  const t = useTranslations("writing.editor");
+
   return (
     <div className="writing-exam-shell">
       <header className="writing-exam-header">
@@ -69,6 +106,12 @@ export function WritingExamShell({
           <div className="writing-exam-header__titles">
             <div className="writing-exam-header__title-row">
               <h1 className="writing-exam-header__title">{title}</h1>
+              {problemBookmark ? (
+                <WritingProblemBookmark
+                  userId={problemBookmark.userId}
+                  problemId={problemBookmark.problemId}
+                />
+              ) : null}
             </div>
             <p className="writing-exam-header__subtitle">{subtitle}</p>
           </div>
@@ -101,7 +144,7 @@ export function WritingExamShell({
             loading={isSaving}
             disabled={!canSave}
           >
-            저장
+            {t("saveDraft")}
           </Button>
           <Button
             type="primary"
