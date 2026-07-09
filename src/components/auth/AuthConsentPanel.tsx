@@ -193,7 +193,6 @@ export function AuthConsentPanel({
           <PhoneNumberInput
             ariaLabel={tProfile("phoneNumberLabel")}
             callingCodeAriaLabel={tProfile("phoneCountryCodeLabel")}
-            countryCode={nationalityCountryCode}
             locale={locale}
             value={phoneNumber}
             placeholder={tProfile("phoneNumberPlaceholder")}

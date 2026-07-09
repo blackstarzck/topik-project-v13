@@ -196,11 +196,7 @@ async function selectCountryRegion(page: Page, label: string) {
 }
 
 async function selectGender(page: Page, label: string) {
-  await page.getByRole("combobox", { name: /성별/ }).click();
-  await page
-    .locator(".ant-select-item-option")
-    .filter({ hasText: label })
-    .click();
+  await page.getByRole("radio", { name: label }).click();
 }
 
 async function saveEvidenceScreenshot(page: Page, name: string) {
@@ -265,7 +261,8 @@ test("auth completion gate renders profile fields and admin-published consent do
       /talkpik-/,
     );
     await expect(page.getByTestId("auth-consent-country-select")).toBeVisible();
-    await expect(page.getByRole("combobox", { name: /성별/ })).toBeVisible();
+    await expect(page.getByRole("radio", { name: "남성" })).toBeVisible();
+    await expect(page.getByRole("radio", { name: "여성" })).toBeVisible();
     await expect(page.getByLabel(/전화번호/)).toBeVisible();
     await expect(page.getByText("E2E Terms", { exact: true })).toBeVisible();
     await expect(page.getByText("E2E Privacy", { exact: true })).toBeVisible();

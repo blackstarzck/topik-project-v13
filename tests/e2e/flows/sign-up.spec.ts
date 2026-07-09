@@ -14,7 +14,9 @@ const VALID_NAME = "홍길동";
 const VALID_NATIONALITY_COUNTRY_CODE = "VN";
 const VALID_COUNTRY_REGION_LABEL = "베트남";
 const VALID_EMAIL = "e2e-signup@example.com";
+const VALID_GENDER_LABEL = "여성";
 const VALID_PASSWORD = "Password123!";
+const VALID_PHONE_NUMBER = "1012345678";
 
 type SignUpRequest = {
   url: URL;
@@ -59,10 +61,10 @@ async function fillSignUpForm(
     displayName = VALID_NAME,
     countryRegionLabel = VALID_COUNTRY_REGION_LABEL,
     email = VALID_EMAIL,
-    genderLabel,
+    genderLabel = VALID_GENDER_LABEL,
     password = VALID_PASSWORD,
     passwordConfirm = VALID_PASSWORD,
-    phoneNumber,
+    phoneNumber = VALID_PHONE_NUMBER,
     agreeToTerms = true,
   }: {
     displayName?: string;
@@ -83,22 +85,15 @@ async function fillSignUpForm(
   await expect(genderOption(page, "남성")).toBeVisible();
   await expect(genderOption(page, "여성")).toBeVisible();
   await expect(page.getByText("선택 안 함")).toHaveCount(0);
-  if (genderLabel) {
-    await genderOption(page, genderLabel).click();
-  }
+  await expect(page.locator("#phoneNumber")).toHaveCount(0);
+  await expect(page.getByTestId("country-region-select")).toHaveCount(0);
+  await genderOption(page, genderLabel).click();
 
-  const countryRegionSelect = page.getByTestId("country-region-select");
-  await expect(countryRegionSelect).toBeVisible();
-  await countryRegionSelect.click();
-  await page
-    .locator(".ant-select-item-option")
-    .filter({ hasText: countryRegionLabel })
-    .click();
-
-  await expect(page.getByTestId("phone-country-code-select")).toContainText(
-    "+84",
-  );
   await expect(page.locator("#phoneNumber")).toBeVisible();
+  await expect(page.getByTestId("country-region-select")).toHaveCount(0);
+  await expect(page.getByTestId("phone-country-code-select")).toContainText(
+    "+82",
+  );
   await expect(
     page.getByText(
       "선택 입력입니다. 입력하는 경우 국가번호를 포함한 국제 형식으로 적어 주세요.",
@@ -108,6 +103,14 @@ async function fillSignUpForm(
     await page.locator("#phoneNumber").fill(phoneNumber);
     await page.locator("#phoneNumber").blur();
   }
+
+  const countryRegionSelect = page.getByTestId("country-region-select");
+  await expect(countryRegionSelect).toBeVisible();
+  await countryRegionSelect.click();
+  await page
+    .locator(".ant-select-item-option")
+    .filter({ hasText: countryRegionLabel })
+    .click();
 
   const emailInput = page.locator("#email");
   await expect(emailInput).toBeVisible();
@@ -354,13 +357,22 @@ test.describe("A-01 sign-up functional flow", () => {
     await expect(genderOption(page, "남성")).toBeVisible();
     await expect(genderOption(page, "여성")).toBeVisible();
     await expect(page.getByText("선택 안 함")).toHaveCount(0);
-    await expect(page.getByTestId("country-region-select")).toBeVisible();
+    await expect(page.locator("#phoneNumber")).toHaveCount(0);
+    await expect(page.getByTestId("country-region-select")).toHaveCount(0);
+
+    await genderOption(page, VALID_GENDER_LABEL).click();
     await expect(page.locator("#phoneNumber")).toBeVisible();
+    await expect(page.getByTestId("country-region-select")).toHaveCount(0);
     await expect(
       page.getByText(
         "선택 입력입니다. 입력하는 경우 국가번호를 포함한 국제 형식으로 적어 주세요.",
       ),
     ).toHaveCount(0);
+
+    await page.locator("#phoneNumber").fill(VALID_PHONE_NUMBER);
+    await page.locator("#phoneNumber").blur();
+    await expect(page.getByTestId("country-region-select")).toBeVisible();
+
     const displayNameBox = await page.locator("#displayName").boundingBox();
     const countryRegionBox = await page
       .getByTestId("country-region-select")
@@ -382,7 +394,7 @@ test.describe("A-01 sign-up functional flow", () => {
       .filter({ hasText: VALID_COUNTRY_REGION_LABEL })
       .click();
     await expect(page.getByTestId("phone-country-code-select")).toContainText(
-      "+84",
+      "+82",
     );
     const selectedCountryCenterDelta = await page
       .getByTestId("country-region-select")

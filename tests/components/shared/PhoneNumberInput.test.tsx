@@ -13,12 +13,11 @@ afterEach(() => {
 });
 
 describe("PhoneNumberInput", () => {
-  it("renders a tel input with the selected country calling code", () => {
+  it("renders a tel input with the default country calling code", () => {
     renderWithIntl(
       <PhoneNumberInput
         ariaLabel="전화번호"
         callingCodeAriaLabel="국가번호"
-        countryCode="KR"
         locale="ko"
         value="01012345678"
         onChange={vi.fn()}
@@ -41,7 +40,6 @@ describe("PhoneNumberInput", () => {
       <PhoneNumberInput
         ariaLabel="전화번호"
         callingCodeAriaLabel="국가번호"
-        countryCode="KR"
         locale="ko"
         value=""
         onChange={handleChange}
@@ -60,7 +58,6 @@ describe("PhoneNumberInput", () => {
       <PhoneNumberInput
         ariaLabel="전화번호"
         callingCodeAriaLabel="국가번호"
-        countryCode="KR"
         locale="ko"
         value=""
         onChange={vi.fn()}

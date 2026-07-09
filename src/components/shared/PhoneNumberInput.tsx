@@ -25,7 +25,6 @@ type PhoneCountryOption = {
 type PhoneNumberInputProps = {
   ariaLabel: string;
   callingCodeAriaLabel?: string;
-  countryCode?: string | null;
   disabled?: boolean;
   id?: string;
   locale?: string;
@@ -105,7 +104,6 @@ function isAllowedPhoneKey(event: KeyboardEvent<HTMLInputElement>) {
 export function PhoneNumberInput({
   ariaLabel,
   callingCodeAriaLabel,
-  countryCode,
   disabled = false,
   id,
   locale,
@@ -115,9 +113,9 @@ export function PhoneNumberInput({
   placeholder = "1012345678",
   value,
 }: PhoneNumberInputProps) {
-  const [phoneCountryCodeOverride, setPhoneCountryCodeOverride] = useState<
-    string | null
-  >(null);
+  const [phoneCountryCode, setPhoneCountryCode] = useState(() =>
+    getSupportedPhoneCountryCode(DEFAULT_PHONE_COUNTRY_CODE),
+  );
   const phoneCountryOptions = useMemo(
     () =>
       createPhoneCountryOptions(
@@ -126,8 +124,6 @@ export function PhoneNumberInput({
       ),
     [locale],
   );
-  const phoneCountryCode =
-    phoneCountryCodeOverride ?? getSupportedPhoneCountryCode(countryCode);
   const localNumber = normalizePhoneDigits(value ?? "");
 
   return (
@@ -152,7 +148,7 @@ export function PhoneNumberInput({
         onChange={(nextCountryCode) => {
           const normalizedCountryCode =
             getSupportedPhoneCountryCode(nextCountryCode);
-          setPhoneCountryCodeOverride(normalizedCountryCode);
+          setPhoneCountryCode(normalizedCountryCode);
         }}
         onFocus={onFocus}
       />

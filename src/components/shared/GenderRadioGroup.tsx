@@ -2,7 +2,6 @@
 
 import { Radio, type RadioChangeEvent } from "antd";
 
-import { Check } from "@/components/shared/AppIcons";
 import type { ProfileGender } from "@/lib/auth/profile-completion";
 
 type GenderRadioGroupProps = {
@@ -20,7 +19,7 @@ const GENDER_OPTIONS: readonly ProfileGender[] = ["male", "female"];
 
 function optionClassName(isSelected: boolean) {
   return [
-    "gender-radio-option !m-0 !h-auto !leading-normal flex min-h-12 flex-1 items-center rounded-md border border-solid px-3 py-2 transition-colors",
+    "gender-radio-option !m-0 !inline-flex !h-auto min-h-12 min-w-24 !items-center !justify-center rounded-md border border-solid px-4 py-2 text-center !leading-normal transition-colors",
     isSelected
       ? "border-primary bg-background text-text"
       : "border-border bg-background text-text hover:border-primary",
@@ -50,7 +49,7 @@ export function GenderRadioGroup({
     <Radio.Group
       id={id}
       aria-label={ariaLabel}
-      className="grid w-full grid-cols-2 gap-2"
+      className="!flex w-full flex-wrap !gap-6"
       value={value ?? undefined}
       onBlur={onBlur}
       onChange={handleChange}
@@ -69,20 +68,7 @@ export function GenderRadioGroup({
               }
             }}
           >
-            <span className="flex w-full items-center gap-2">
-              <span
-                aria-hidden="true"
-                className={[
-                  "flex size-4 shrink-0 items-center justify-center rounded border border-solid",
-                  isSelected
-                    ? "border-primary bg-primary text-background"
-                    : "border-border bg-background",
-                ].join(" ")}
-              >
-                {isSelected ? <Check size={12} aria-hidden="true" /> : null}
-              </span>
-              <span>{labels[option]}</span>
-            </span>
+            <span>{labels[option]}</span>
           </Radio.Button>
         );
       })}

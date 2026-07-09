@@ -73,7 +73,12 @@ async function fetchRequiredConsentDocuments(
     )
     .eq("locale", locale)
     .eq("status", "published")
-    .eq("requires_consent", true);
+    .eq("requires_consent", true)
+    // Trust only documents that came through the admin projection
+    // (source_policy_id set) or seeded placeholders. Rows inserted directly into
+    // legal_documents (e.g. E2E test seeds, which never set source_policy_id and
+    // are not placeholders) must never surface in the consent gate.
+    .or("source_policy_id.not.is.null,is_placeholder.is.true");
 
   if (error) {
     throw new Error(

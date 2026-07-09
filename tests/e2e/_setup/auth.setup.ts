@@ -1,5 +1,6 @@
 import path from "node:path";
 import { test as setup, expect } from "@playwright/test";
+import { createClient } from "@supabase/supabase-js";
 import {
   createE2EAdminClient,
   ensureE2EStudentUser,
@@ -22,7 +23,24 @@ const STUDENT_STATE = path.join("tests", "e2e", "auth-state", "student.json");
 setup("authenticate student", async ({ page }) => {
   const config = resolveE2EStudentConfig();
   const admin = createE2EAdminClient(config);
-  await ensureE2EStudentUser(admin, config);
+  const { userId } = await ensureE2EStudentUser(admin, config);
+
+  // Baseline: permanently dismiss the phone-number reminder modal for the shared
+  // authed student so it does not overlay every other authed spec. The dedicated
+  // phone-reminder-modal spec clears this to exercise the modal. Tolerant of the
+  // column being absent (migration 20260709154000 not yet applied) — when it is
+  // absent the modal is already suppressed by the WorkspaceShell prop guard.
+  try {
+    const rawAdmin = createClient(config.supabaseUrl, config.serviceRoleKey, {
+      auth: { persistSession: false },
+    });
+    await rawAdmin
+      .from("profiles")
+      .update({ phone_number_prompt_dismissed_at: new Date().toISOString() })
+      .eq("id", userId);
+  } catch {
+    // Ignore: column may not exist on this environment yet.
+  }
 
   await page.goto("/login");
 

@@ -131,6 +131,7 @@ describe("WorkspaceShell", () => {
     navMock.routerReplace.mockClear();
     navMock.pathname = "/dashboard";
     navMock.authCallback = null;
+    window.sessionStorage.clear();
     writingAvailabilityMock.value = {
       data: {
         availableTypes: new Set([51, 52, 53, 54]),
@@ -974,7 +975,7 @@ describe("WorkspaceShell", () => {
     expect(learning.container.textContent).toContain("학습 목표");
   });
 
-  it("shows the phone number reminder on a non-focus route when phone is missing", () => {
+  it("opens the phone number reminder modal on entry when phone is missing", async () => {
     navMock.pathname = "/dashboard";
 
     renderWithIntl(
@@ -990,10 +991,12 @@ describe("WorkspaceShell", () => {
       </WorkspaceShell>,
     );
 
-    expect(screen.getByTestId("phone-number-reminder")).toBeTruthy();
+    expect(
+      await screen.findByText(koMessages.app.phoneReminder.title),
+    ).toBeTruthy();
   });
 
-  it("hides the phone number reminder once a phone number exists", () => {
+  it("does not open the reminder modal once a phone number exists", () => {
     navMock.pathname = "/dashboard";
 
     renderWithIntl(
@@ -1009,10 +1012,10 @@ describe("WorkspaceShell", () => {
       </WorkspaceShell>,
     );
 
-    expect(screen.queryByTestId("phone-number-reminder")).toBeNull();
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 
-  it("hides the phone number reminder on chrome-hidden focus routes", () => {
+  it("does not open the reminder modal on an immersive writing route", () => {
     navMock.pathname = "/writing/short-answer-writing-51";
 
     renderWithIntl(
@@ -1028,6 +1031,6 @@ describe("WorkspaceShell", () => {
       </WorkspaceShell>,
     );
 
-    expect(screen.queryByTestId("phone-number-reminder")).toBeNull();
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 });
