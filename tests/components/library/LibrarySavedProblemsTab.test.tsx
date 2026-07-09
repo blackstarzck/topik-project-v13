@@ -41,7 +41,7 @@ afterEach(() => {
 });
 
 describe("LibrarySavedProblemsTab hidden problem UX", () => {
-  it("keeps available saved problems as solve-again links", () => {
+  it("keeps available saved problems read-only without solve-again actions", () => {
     renderTab([
       {
         kind: "problem",
@@ -57,12 +57,14 @@ describe("LibrarySavedProblemsTab hidden problem UX", () => {
       },
     ]);
 
-    const link = screen.getByRole("link", {
-      name: koMessages.library.saved.retry,
-    });
-    expect(link.getAttribute("href")).toBe(
-      "/writing/long-form-writing-53?problem=p-available",
-    );
+    expect(
+      screen.queryByRole("link", { name: koMessages.library.saved.retry }),
+    ).toBeNull();
+    expect(
+      screen.queryByRole("button", {
+        name: koMessages.library.saved.retryUnavailable,
+      }),
+    ).toBeNull();
     expect(screen.getByTestId("library-item-row").className).toContain(
       "border-[var(--ant-color-border-secondary)]",
     );
@@ -102,10 +104,11 @@ describe("LibrarySavedProblemsTab hidden problem UX", () => {
       "opacity-40",
     );
 
-    const disabledRetry = screen.getByRole("button", {
-      name: koMessages.library.saved.retryUnavailable,
-    }) as HTMLButtonElement;
-    expect(disabledRetry.disabled).toBe(true);
+    expect(
+      screen.queryByRole("button", {
+        name: koMessages.library.saved.retryUnavailable,
+      }),
+    ).toBeNull();
     expect(
       screen.queryByRole("link", { name: koMessages.library.saved.retry }),
     ).toBeNull();
@@ -138,9 +141,13 @@ describe("LibrarySavedProblemsTab hidden problem UX", () => {
       "opacity-40",
     );
 
-    const disabledRetry = screen.getByRole("button", {
-      name: koMessages.library.saved.retryUnavailable,
-    }) as HTMLButtonElement;
-    expect(disabledRetry.disabled).toBe(true);
+    expect(
+      screen.queryByRole("button", {
+        name: koMessages.library.saved.retryUnavailable,
+      }),
+    ).toBeNull();
+    expect(
+      screen.queryByRole("link", { name: koMessages.library.saved.retry }),
+    ).toBeNull();
   });
 });

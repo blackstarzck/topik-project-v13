@@ -33,6 +33,14 @@ const EMAIL = process.env.E2E_STUDENT_EMAIL ?? "student@audit.local";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SERVICE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
+const PROBLEMS_ACTION_MENU_OPEN =
+  "\ubb38\uc81c \uc791\uc5c5 \uba54\ub274 \uc5f4\uae30";
+const PROBLEMS_ACTION_MENU_ITEMS = [
+  "PDF \ub0b4\ubcf4\ub0b4\uae30",
+  "\ub2e4\uc74c \ubb38\uc81c \ud480\uae30",
+  "\ube44\uad50 \ub9ac\ud3ec\ud2b8",
+  "\ub2e4\uc2dc \ud480\uae30",
+] as const;
 const createdLibraryItemIds: string[] = [];
 const createdSubmissionIds: string[] = [];
 const createdStudyEventIds: string[] = [];
@@ -140,6 +148,11 @@ async function createLibraryDashboardFixture() {
     },
   ]);
   if (submissions.error) throw submissions.error;
+  createdSubmissionIds.push(
+    ...completeSubmissionIds,
+    analyzingSubmissionId,
+    failedSubmissionId,
+  );
 
   const feedback = await sb.from("writing_feedback").insert([
     ...completeSubmissionIds.map((submissionId, index) => ({
@@ -198,6 +211,12 @@ async function createLibraryDashboardFixture() {
   ]);
   if (dimensions.error) throw dimensions.error;
 
+  const staleLibraryItems = await sb
+    .from("library_items")
+    .delete()
+    .eq("user_id", user.id);
+  if (staleLibraryItems.error) throw staleLibraryItems.error;
+
   const library = await sb.from("library_items").insert([
     ...completeSubmissionIds.map((submissionId, index) => ({
       id: completeLibraryIds[index],
@@ -233,6 +252,7 @@ async function createLibraryDashboardFixture() {
     },
   ]);
   if (library.error) throw library.error;
+  createdLibraryItemIds.push(...libraryIds);
 
   const events = await sb.from("study_events").insert([
     {
@@ -255,13 +275,6 @@ async function createLibraryDashboardFixture() {
     },
   ]);
   if (events.error) throw events.error;
-
-  createdLibraryItemIds.push(...libraryIds);
-  createdSubmissionIds.push(
-    ...completeSubmissionIds,
-    analyzingSubmissionId,
-    failedSubmissionId,
-  );
   createdStudyEventIds.push(...studyEventIds);
 
   return {
@@ -459,7 +472,24 @@ test("F-01 library dashboard renders study action sections", async ({
   await expect(
     page.locator('a[href*="/writing/feedback/"]').first(),
   ).toBeVisible();
-  await expect(page.locator('a[href*="?problem="]').first()).toBeVisible();
+  const problemsList = page.getByTestId("library-problems-list");
+  const actionMenuButton = problemsList
+    .getByRole("button", { name: PROBLEMS_ACTION_MENU_OPEN })
+    .first();
+  await expect(actionMenuButton).toBeVisible();
+  await actionMenuButton.click();
+  for (const label of PROBLEMS_ACTION_MENU_ITEMS) {
+    await expect(page.getByRole("menuitem", { name: label })).toBeVisible();
+  }
+  await page.keyboard.press("Escape");
+  await expect(problemsList.locator('a[href*="?problem="]')).toHaveCount(0);
+  await expect(
+    page
+      .locator(
+        '[data-testid="library-problems-mixed-row"][data-library-kind="problem"]',
+      )
+      .getByRole("button", { name: PROBLEMS_ACTION_MENU_OPEN }),
+  ).toHaveCount(0);
   await expect(
     page
       .getByTestId("library-problems-list")
@@ -599,6 +629,42 @@ test("F-01 library problems filter panel, sort, and view toggle", async ({
   await expect(list).toBeVisible();
   await expect(list).not.toContainText(/\d{4}-\d{2}-\d{2}/);
   await expect(list).not.toContainText(/\d+자/);
+
+  const submissionActionMenu = submissionRows
+    .first()
+    .getByRole("button", { name: PROBLEMS_ACTION_MENU_OPEN });
+  await expect(submissionActionMenu).toBeVisible();
+  await expect(
+    problemRows.first().getByRole("button", {
+      name: PROBLEMS_ACTION_MENU_OPEN,
+    }),
+  ).toHaveCount(0);
+  await submissionActionMenu.click();
+  const actionMenu = page
+    .getByRole("menu")
+    .filter({ hasText: PROBLEMS_ACTION_MENU_ITEMS[0] });
+  await expect(actionMenu).toBeVisible();
+  for (const label of PROBLEMS_ACTION_MENU_ITEMS) {
+    await expect(
+      actionMenu.getByRole("menuitem", { name: label }),
+    ).toBeVisible();
+  }
+  const menuBox = await actionMenu.boundingBox();
+  const viewportBox = page.viewportSize();
+  expect(menuBox).not.toBeNull();
+  expect(viewportBox).not.toBeNull();
+  if (menuBox && viewportBox) {
+    expect(menuBox.x).toBeGreaterThanOrEqual(0);
+    expect(menuBox.y).toBeGreaterThanOrEqual(0);
+    expect(menuBox.x + menuBox.width).toBeLessThanOrEqual(
+      viewportBox.width + 1,
+    );
+    expect(menuBox.y + menuBox.height).toBeLessThanOrEqual(
+      viewportBox.height + 1,
+    );
+  }
+  await page.keyboard.press("Escape");
+  await expect(actionMenu).toBeHidden();
 
   if (isDesktop) {
     // 데스크톱: 우측 aside 필터 패널이 보이고 모바일 필터 버튼은 숨겨진다.
@@ -828,6 +894,9 @@ test("F-01 library problems filter panel, sort, and view toggle", async ({
     await expect(page.getByTestId("library-problems-mixed-row")).toHaveCount(
       10,
     );
+    await expect(
+      cardGrid.getByRole("button", { name: PROBLEMS_ACTION_MENU_OPEN }).first(),
+    ).toBeVisible();
     await expect(cardGrid).not.toContainText(/\d{4}-\d{2}-\d{2}/);
     await expect(cardGrid).not.toContainText(/\d+자/);
     await page.getByTitle("리스트 보기").click();
@@ -845,7 +914,11 @@ test("F-01 library problems filter panel, sort, and view toggle", async ({
     }).toPass({ timeout: 8_000 });
 
     await expect(drawerPanel).toBeVisible();
-    await drawer.getByTestId("library-problems-filter-kind-problem").click();
+    const drawerProblemKindInput = drawer.getByTestId(
+      "library-problems-filter-kind-problem",
+    );
+    await drawerProblemKindInput.check();
+    await expect(drawerProblemKindInput).toBeChecked();
     await drawer.getByTestId("library-problems-filter-drawer-apply").click();
     await expect(
       drawer.getByTestId("library-problems-filter-panel"),

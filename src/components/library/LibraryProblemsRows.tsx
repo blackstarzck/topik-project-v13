@@ -6,7 +6,7 @@
  * 다시 풀기 액션은 카드 뷰(LibraryProblemsItemCard)와 공유한다.
  */
 
-import { Button, Tag, Typography } from "antd";
+import { Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 
@@ -18,9 +18,10 @@ import type {
   LibraryProblemView,
   LibrarySubmissionView,
 } from "@/lib/library/types";
-import { writingFeedbackHref, writingProblemHref } from "@/lib/writing/routes";
+import { writingFeedbackHref } from "@/lib/writing/routes";
 
 import { LibraryItemRow } from "./LibraryItemRow";
+import { LibraryProblemsActionMenu } from "./LibraryProblemsActionMenu";
 import { LibraryProblemsQuestionNumber } from "./LibraryProblemsQuestionNumber";
 import {
   isAnalysisPendingStatus,
@@ -54,6 +55,11 @@ export function LibraryProblemsSubmissionRow({
       showDeleteAction={false}
       tab="submissions"
       tags={item.tags}
+      trailingActions={
+        analysisPending
+          ? undefined
+          : [<LibraryProblemsActionMenu key="actions" item={item} />]
+      }
     >
       <div className="flex w-full flex-col gap-1">
         <div className="flex flex-wrap items-center gap-3">
@@ -113,7 +119,6 @@ export function LibraryProblemsProblemRow({
       showDeleteAction={false}
       tab="problems"
       tags={item.tags}
-      trailingActions={[<LibraryProblemsRetryAction key="retry" item={item} />]}
     >
       <div className="flex w-full min-w-0 flex-col gap-1">
         <div className="flex flex-wrap items-center gap-3">
@@ -137,43 +142,5 @@ export function LibraryProblemsProblemRow({
         ) : null}
       </div>
     </LibraryItemRow>
-  );
-}
-
-export function LibraryProblemsRetryAction({
-  item,
-}: {
-  item: LibraryProblemView;
-}) {
-  const tSaved = useTranslations("library.saved");
-  const canRetry = item.canRetry && item.question_no !== null;
-
-  if (!canRetry) {
-    return (
-      <Button
-        type="primary"
-        size="small"
-        disabled
-        aria-label={tSaved("retryUnavailable")}
-        title={tSaved("retryUnavailable")}
-      >
-        {tSaved("retry")}
-      </Button>
-    );
-  }
-
-  return (
-    <Link
-      href={
-        writingProblemHref({
-          questionNo: item.question_no,
-          problemId: item.id,
-        }) as never
-      }
-    >
-      <Button type="primary" size="small">
-        {tSaved("retry")}
-      </Button>
-    </Link>
   );
 }
