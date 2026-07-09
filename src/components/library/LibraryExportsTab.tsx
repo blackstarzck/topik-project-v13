@@ -104,7 +104,7 @@ function RetryPrintButton({ item }: RetryButtonProps) {
         sourceType: item.source_type as "submission" | "report",
         sourceId: item.source_id as string,
         options: {
-          filename: exportFilename(item) ?? "TALKPIK-export",
+          filename: exportFilename(item) ?? "DOTORE-TOPIK-export",
           ...PDF_EXPORT_DEFAULT_OPTIONS,
         },
       });

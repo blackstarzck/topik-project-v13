@@ -1,5 +1,5 @@
 /**
- * Supported UI locales for TALKPIK AI.
+ * Supported UI locales for DOTORE TOPIK.
  *
  * `ko` is the baseline (source of truth for copy); `en` and `vi` are full
  * translations of whatever keys have been migrated so far. This list is the

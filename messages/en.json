@@ -11,7 +11,7 @@
     "dashboard": "Dashboard"
   },
   "app": {
-    "brand": "TALKPIK",
+    "brand": "DOTORE TOPIK",
     "openMenu": "Open menu",
     "menu": "Menu",
     "userSummary": "User information"
@@ -47,7 +47,7 @@
     "logout": "Log out"
   },
   "landing": {
-    "logoAria": "Go to top of TALKPIK home",
+    "logoAria": "Go to top of DOTORE TOPIK home",
     "navAria": "Main menu",
     "navFeatures": "Features",
     "navPreview": "Preview",
@@ -116,7 +116,7 @@
       "quoteSource": "TOPIK II writing learner",
       "platformEyebrow": "Practice platform",
       "platformTitle": "Continue writing, feedback, and review in one platform",
-      "platformBody": "TALKPIK AI keeps question recommendations, answer writing, AI analysis, and next-study suggestions in the same flow.",
+      "platformBody": "DOTORE TOPIK keeps question recommendations, answer writing, AI analysis, and next-study suggestions in the same flow.",
       "platformListAria": "Core learning flow steps",
       "platformStepGoal": "Goal-based recommendations",
       "platformStepGoalBody": "Suggest the next question from your target grade and weak areas.",
@@ -127,7 +127,7 @@
       "platformImage": "Platform screen image placeholder",
       "assistantEyebrow": "AI feedback engine",
       "assistantTitle": "Break down answer weaknesses by dimension",
-      "assistantBody": "The important part is not just a score, but what to improve next. TALKPIK AI separates answer structure and expression, then connects them to a follow-up learning action.",
+      "assistantBody": "The important part is not just a score, but what to improve next. DOTORE TOPIK separates answer structure and expression, then connects them to a follow-up learning action.",
       "assistantImage": "AI analysis image placeholder",
       "capabilityProblemTitle": "Question type recommendation",
       "capabilityProblemBody": "Start a practice flow from TOPIK I/II and question types 51-54.",
@@ -183,19 +183,19 @@
       "footerLegal": "Docs",
       "footerLegalTerms": "Terms",
       "footerLegalPrivacy": "Privacy Policy",
-      "footerNotice": "TALKPIK AI helps TOPIK learners practice writing, receive AI feedback, and return to review."
+      "footerNotice": "DOTORE TOPIK helps TOPIK learners practice writing, receive AI feedback, and return to review."
     },
-    "metaTitle": "TALKPIK AI · AI-powered TOPIK writing practice",
-    "heroMascotAlt": "TALKPIK learning helper character"
+    "metaTitle": "DOTORE TOPIK · AI-powered TOPIK writing practice",
+    "heroMascotAlt": "DOTORE TOPIK learning helper character"
   },
   "settings": {
     "learning": {
-      "metaTitle": "Learning goal — TALKPIK",
+      "metaTitle": "Learning goal — TOPIK",
       "pageHeading": "Learning goal",
       "pageSubtitle": "Manage your target exam and exam date. You can continue to the full goal setup for weekly study time and weak areas."
     },
     "account": {
-      "metaTitle": "Account settings — TALKPIK",
+      "metaTitle": "Account settings — TOPIK",
       "pageHeading": "Account settings",
       "pageSubtitle": "Manage login methods, account status, and sign-out in one place.",
       "dangerZone": {
@@ -254,10 +254,10 @@
       "saveSuccess": "Your language and content settings were saved.",
       "saveError": "Couldn't save your settings.",
       "learningSettingsLoadError": "Couldn't load your content settings.",
-      "metaTitle": "Language settings — TALKPIK"
+      "metaTitle": "Language settings — TOPIK"
     },
     "notifications": {
-      "metaTitle": "Notification settings — TALKPIK",
+      "metaTitle": "Notification settings — TOPIK",
       "pageHeading": "Notification settings",
       "pageSubtitle": "Receive important notifications without letting them get in the way.",
       "loadError": "We couldn't load your notification settings.",
@@ -366,7 +366,7 @@
       "googleLinkedMessage": "Google account connected."
     },
     "login": {
-      "metaTitle": "Log in — TALKPIK",
+      "metaTitle": "Log in — TOPIK",
       "pageHeading": "Welcome back",
       "mascotCaption": "Welcome back. Shall we keep practicing your writing?",
       "noAccountPrompt": "Don't have an account?",
@@ -398,7 +398,7 @@
       "formSubtitle": "Log in to continue your learning.",
       "heroEyebrow": "AI TOPIK WRITING",
       "heroTitle": "Good to see you again!",
-      "heroBody": "Keep improving your TOPIK writing skills step by step with TALKPIK AI.",
+      "heroBody": "Keep improving your TOPIK writing skills step by step with DOTORE TOPIK.",
       "mascotTitle": "One sentence at a time",
       "mascotBody": "Jump back into your saved practice and feedback.",
       "benefitStripAria": "Learning features available after login",
@@ -413,7 +413,7 @@
       "socialAuthFailed": "Couldn't start Google authentication. Please try again in a moment."
     },
     "signUp": {
-      "metaTitle": "Sign up — TALKPIK",
+      "metaTitle": "Sign up — TOPIK",
       "pageHeading": "Sign up",
       "pageSubtitle": "TOPIK writing, faster with AI feedback. Get started free, no pressure.",
       "benefitFreeTrial": "Free AI feedback trial",
@@ -517,7 +517,7 @@
       "continue": "Continue"
     },
     "consent": {
-      "metaTitle": "Finish sign-up — TALKPIK",
+      "metaTitle": "Finish sign-up — TOPIK",
       "heading": "Finish your sign-up",
       "description": "Confirm the required information and consent before starting.",
       "profileSectionTitle": "Required information",
@@ -531,7 +531,7 @@
       "submit": "Save and continue"
     },
     "passwordReset": {
-      "metaTitle": "Reset password — TALKPIK",
+      "metaTitle": "Reset password — TOPIK",
       "pageHeading": "Reset password",
       "backToLogin": "Back to login",
       "intro": "Enter the email you signed up with and we'll send you a password reset link.",
@@ -546,8 +546,8 @@
       "sentExpiryNote": "For security, the link expires in about 1 hour. If it expires, you can resend it from this screen."
     },
     "passwordResetConfirm": {
-      "metaTitle": "Set a new password — TALKPIK",
-      "mascotAlt": "TALKPIK security helper character",
+      "metaTitle": "Set a new password — TOPIK",
+      "mascotAlt": "DOTORE TOPIK security helper character",
       "title": "Set a new password",
       "subtitle": "You came in from the email link. This is the last step — just choose a new password and you're done.",
       "guideBase": "8–64 characters; mixing letters, numbers, and symbols is safer.",
@@ -569,9 +569,9 @@
       "changeSuccess": "Your password was changed. Please log in again."
     },
     "verifyEmail": {
-      "metaTitle": "Verify email — TALKPIK",
+      "metaTitle": "Verify email — TOPIK",
       "srHeading": "Verify email",
-      "mascotAlt": "TALKPIK study helper character",
+      "mascotAlt": "DOTORE TOPIK study helper character",
       "title": "We sent the verification email",
       "body": "We received your sign-up request. If this is a new account, a verification email will arrive at the email below. Open the link in that email to finish signing up.",
       "existingAccountHeading": "Already have an account?",
@@ -597,7 +597,7 @@
       "resendCountdown": "You can resend in {label}"
     },
     "error": {
-      "metaTitle": "Authentication error — TALKPIK",
+      "metaTitle": "Authentication error — TOPIK",
       "srHeading": "Authentication error",
       "emailLabel": "Email",
       "emailPlaceholder": "Enter the email you signed up with",
@@ -674,7 +674,7 @@
       }
     },
     "callback": {
-      "metaTitle": "Verifying — TALKPIK",
+      "metaTitle": "Verifying — TOPIK",
       "srHeading": "Verifying",
       "checking": "Verifying your sign-in…",
       "redirecting": "Redirecting…"
@@ -698,8 +698,8 @@
       "ruleSymbol": "Symbol"
     },
     "mascot": {
-      "loginAlt": "TALKPIK study helper character",
-      "signUpAlt": "TALKPIK study helper character"
+      "loginAlt": "DOTORE TOPIK study helper character",
+      "signUpAlt": "DOTORE TOPIK study helper character"
     },
     "cooldown": {
       "label": "You can resend in {label}"
@@ -707,7 +707,7 @@
   },
   "dashboard": {
     "page": {
-      "metaTitle": "Dashboard — TALKPIK",
+      "metaTitle": "Dashboard — TOPIK",
       "examDdayTitle": "Exam D-{days}",
       "examDdayDescription": "{days} days left until your target exam date.",
       "dirtyDraftsTitle": "Answers in progress",
@@ -894,7 +894,7 @@
       "typeTabLockedAria": "No. {no} locked"
     },
     "problems": {
-      "metaTitle": "Problem list — TALKPIK",
+      "metaTitle": "Problem list — TOPIK",
       "heading": "Problem list",
       "subtitle": "Choose a type and filters to find the right practice problem.",
       "totalRange": "Showing {start}-{end} of {total}",
@@ -958,7 +958,7 @@
       "attemptCount": "{count} attempts"
     },
     "recommendations": {
-      "metaTitle": "Recommended problems — TALKPIK",
+      "metaTitle": "Recommended problems — TOPIK",
       "heading": "Recommended problems",
       "subtitle": "Recommendations tailored to your current learning flow. Pick a type to get new recommendations.",
       "reasonSummaryTitle": "Here's why we recommended this",
@@ -1005,7 +1005,7 @@
       "typeDescription54": "Write a 600-700 character argumentative essay on the topic."
     },
     "next": {
-      "metaTitle": "Next problem — TALKPIK",
+      "metaTitle": "Next problem — TOPIK",
       "pageTitle": "Next problem",
       "heading": "Next problem",
       "subtitle": "Here's a good problem to keep going with.",
@@ -1040,7 +1040,7 @@
       "summaryEstimatedTime": "Estimated study time"
     },
     "weakness": {
-      "metaTitle": "Weakness practice — TALKPIK",
+      "metaTitle": "Weakness practice — TOPIK",
       "pageTitle": "Weakness practice",
       "lockTitle": "Weakness-based recommendations are getting ready",
       "lockBody": "Once enough recent writing data is available, per-area diagnosis and recommended problems will appear here.",
@@ -1368,7 +1368,7 @@
       "compareFailedTitle": "Failed to create comparison report",
       "pdfSuccess": "The PDF print dialog has opened.",
       "pdfDownloaded": "Your PDF has been downloaded.",
-      "pdfDefaultFilename": "TALKPIK-answers-feedback",
+      "pdfDefaultFilename": "DOTORE-TOPIK-answers-feedback",
       "pdfFailedTitle": "Failed to save PDF",
       "pdfFailedDescription": "Try saving again from My Library.",
       "pdfQuotaExceededTitle": "You've used all PDF exports",
@@ -1415,7 +1415,7 @@
   },
   "reports": {
     "page": {
-      "metaTitle": "Comparison report — TALKPIK"
+      "metaTitle": "Comparison report — TOPIK"
     },
     "dimensions": {
       "grammar": "Grammar",
@@ -1499,7 +1499,7 @@
       "heading": "Comparison report",
       "title": "Question {questionNo} comparison report",
       "share": "Share",
-      "shareTitle": "TALKPIK comparison report",
+      "shareTitle": "DOTORE TOPIK comparison report",
       "shareCopied": "Link copied.",
       "shareLink": "Share link",
       "narrativeFailedTitle": "We couldn't generate the summary",
@@ -1556,9 +1556,9 @@
   },
   "writing": {
     "page": {
-      "metaTitle": "Writing — TALKPIK",
-      "metaTitleFeedbackLong": "Long-form Feedback — TALKPIK",
-      "metaTitleFeedbackShort": "Short-answer Feedback — TALKPIK",
+      "metaTitle": "Writing — TOPIK",
+      "metaTitleFeedbackLong": "Long-form Feedback — TOPIK",
+      "metaTitleFeedbackShort": "Short-answer Feedback — TOPIK",
       "problemLoadFailed": "Could not load the prompt for question {questionNo}.",
       "problemUnavailableTitle": "Question {questionNo} is no longer available.",
       "problemUnavailableDraftPreserved": "Your in-progress answer remains in autosave. Choose another question from the problem list.",
@@ -1844,7 +1844,7 @@
   },
   "growth": {
     "page": {
-      "metaTitle": "Growth Dashboard — TALKPIK",
+      "metaTitle": "Growth Dashboard — TOPIK",
       "goalGrade": "Level {grade}",
       "goalUnset": "Not set"
     },
@@ -1940,7 +1940,7 @@
   },
   "library": {
     "page": {
-      "metaTitle": "My Library — TALKPIK",
+      "metaTitle": "My Library — TOPIK",
       "heading": "My Library",
       "subtitle": "Saved answers are organized by the study actions worth revisiting."
     },
@@ -2053,7 +2053,7 @@
       "reviewSetFailed": "Failed to create the review set."
     },
     "problemsPage": {
-      "metaTitle": "All Learning Questions — TALKPIK",
+      "metaTitle": "All Learning Questions — TOPIK",
       "heading": "All Learning Questions",
       "subtitle": "Search saved answers and questions in one place, then keep practicing.",
       "backToLibrary": "Back to My Library"
@@ -2208,8 +2208,8 @@
       "quotaExceeded": "This problem can be exported to PDF up to 3 times this period.",
       "downloaded": "Your PDF has been downloaded.",
       "fallbackPrint": "Server PDF generation failed, so the browser print dialog was opened instead.",
-      "defaultFilenameSubmission": "TALKPIK-answers",
-      "defaultFilenameReport": "TALKPIK-report"
+      "defaultFilenameSubmission": "DOTORE-TOPIK-answers",
+      "defaultFilenameReport": "DOTORE-TOPIK-report"
     },
     "pdf": {
       "modalTitle": "PDF export settings",
@@ -2268,7 +2268,7 @@
       "excluded": "Excluded",
       "regeneratePreview": "Regenerate preview",
       "previewAriaLabel": "PDF preview",
-      "previewSubtitle": "TALKPIK My Library · {count} items",
+      "previewSubtitle": "DOTORE TOPIK My Library · {count} items",
       "previewAnswerTag": " · Answer",
       "previewFeedbackTag": " · Feedback",
       "previewMore": "…and {count} more (long answers are truncated)",
@@ -2291,7 +2291,7 @@
   },
   "onboarding": {
     "page": {
-      "metaTitle": "Set learning goal — TALKPIK",
+      "metaTitle": "Set learning goal — TOPIK",
       "brandSubtitle": "TOPIK Writing Tutor",
       "mascotTitle": "Tell us your goal and language",
       "mascotBody": "We'll prepare personalized questions and feedback for you.",
@@ -2362,7 +2362,7 @@
   },
   "profile": {
     "page": {
-      "metaTitle": "Profile — TALKPIK",
+      "metaTitle": "Profile — TOPIK",
       "heading": "Profile",
       "subtitle": "Manage the name, nickname, bio, and image shown to other users."
     },
@@ -2477,7 +2477,7 @@
     }
   },
   "subscription": {
-    "metaTitle": "Manage subscription — TALKPIK",
+    "metaTitle": "Manage subscription — TOPIK",
     "comingSoon": {
       "title": "Subscription is coming soon",
       "subTitle": "Subscription management is being prepared. We'll let you know when it launches.",
@@ -2584,7 +2584,7 @@
     }
   },
   "paywall": {
-    "metaTitle": "Subscribe — TALKPIK",
+    "metaTitle": "Subscribe — TOPIK",
     "heading": "Start a subscription",
     "subheading": "Compare billing cycles and pick one subscription. You can see prices and benefits in the cards below.",
     "retry": "Try again",
@@ -2627,9 +2627,9 @@
   },
   "legal": {
     "terms": {
-      "metaTitle": "Terms of Service — TALKPIK",
+      "metaTitle": "Terms of Service — TOPIK",
       "heading": "Terms of Service",
-      "intro": "This page is a provisional notice of terms for the TALKPIK AI service. The formal terms of service will be published separately before launch, at which point this page will be updated to the official terms.",
+      "intro": "This page is a provisional notice of terms for the DOTORE TOPIK service. The formal terms of service will be published separately before launch, at which point this page will be updated to the official terms.",
       "placeholderNotice": "The current text is a placeholder pending legal review and is not a finalized, legally binding agreement.",
       "summaryTitle": "Provisional notice",
       "summaryTool": "This service is a tool that supports TOPIK writing practice.",
@@ -2644,9 +2644,9 @@
       "linkPrivacy": "Privacy Policy"
     },
     "privacy": {
-      "metaTitle": "Privacy Policy — TALKPIK",
+      "metaTitle": "Privacy Policy — TOPIK",
       "heading": "Privacy Policy",
-      "intro": "This page is a provisional notice on personal data handling for TALKPIK AI. The formal privacy policy will reflect compliance with Korea's Personal Information Protection Act and be published separately before launch.",
+      "intro": "This page is a provisional notice on personal data handling for DOTORE TOPIK. The formal privacy policy will reflect compliance with Korea's Personal Information Protection Act and be published separately before launch.",
       "summaryTitle": "Summary of processing (provisional)",
       "summaryCollect": "<strong>Data collected:</strong> email, name, learning activity logs, writing submissions, evaluation results.",
       "summaryPurpose": "<strong>Purpose of use:</strong> account identification, tracking learning progress, improving AI feedback quality.",

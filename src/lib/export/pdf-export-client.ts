@@ -77,7 +77,7 @@ function filenameFromStoragePath(storagePath: string): string {
   const lastSegment = storagePath.split("/").filter(Boolean).at(-1);
   return lastSegment && lastSegment.endsWith(".pdf")
     ? lastSegment
-    : "talkpik-export.pdf";
+    : "dotore-topik-export.pdf";
 }
 
 export async function downloadStoredPdfExport(

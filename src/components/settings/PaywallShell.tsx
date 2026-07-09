@@ -30,7 +30,7 @@ import {
 
 const { Title, Text } = Typography;
 
-const SUPPORT_EMAIL = "support@talkpik.example";
+const SUPPORT_EMAIL = "support@dotoretopik.example";
 
 type LoadState =
   | { status: "loading" }

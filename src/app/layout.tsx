@@ -31,26 +31,26 @@ const socialPreviewImage = {
   url: "/assets/thumnail.png",
   width: 1672,
   height: 941,
-  alt: "TALKPIK AI",
+  alt: "DOTORE TOPIK",
 };
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "TALKPIK AI",
-    template: "%s | TALKPIK AI",
+    default: "DOTORE TOPIK",
+    template: "%s | DOTORE TOPIK",
   },
   description: siteDescription,
   openGraph: {
-    title: "TALKPIK AI",
+    title: "DOTORE TOPIK",
     description: siteDescription,
-    siteName: "TALKPIK AI",
+    siteName: "DOTORE TOPIK",
     type: "website",
     images: [socialPreviewImage],
   },
   twitter: {
     card: "summary_large_image",
-    title: "TALKPIK AI",
+    title: "DOTORE TOPIK",
     description: siteDescription,
     images: [
       {

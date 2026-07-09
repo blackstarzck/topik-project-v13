@@ -508,7 +508,7 @@ describe("WorkspaceShell", () => {
       </WorkspaceShell>,
     );
 
-    fireEvent.click(screen.getAllByLabelText("TALKPIK")[0]);
+    fireEvent.click(screen.getAllByLabelText("DOTORE TOPIK")[0]);
 
     expect(navMock.routerPush).toHaveBeenCalledWith("/dashboard");
   });
