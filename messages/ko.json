@@ -2098,6 +2098,7 @@
       "typeSubmission": "저장 답안",
       "typeProblem": "북마크한 문제",
       "typeDraft": "임시 저장",
+      "bookmarkTag": "북마크",
       "continueDraft": "이어쓰기",
       "filterPanelTitle": "필터",
       "filterPanelAriaLabel": "문제 목록 필터",

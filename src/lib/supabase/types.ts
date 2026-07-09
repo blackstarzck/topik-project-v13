@@ -1695,6 +1695,7 @@ export interface Database {
           problem_id: string | null;
           title: string | null;
           question_no: number | null;
+          answer_text: string | null;
           tags: string[] | null;
           saved_at: string;
           availability_status: string;

@@ -113,6 +113,12 @@ export async function updateProfile(
   if (Object.prototype.hasOwnProperty.call(input, "phone_number")) {
     patch.phone_number = input.phone_number ?? null;
   }
+  if (
+    Object.prototype.hasOwnProperty.call(input, "phone_number") &&
+    input.phone_number === null
+  ) {
+    patch.phone_country_code = null;
+  }
   // Phase 7-E Task 10 (P1-6) — bio mutation.
   if (Object.prototype.hasOwnProperty.call(input, "bio")) {
     patch.bio = input.bio ?? null;

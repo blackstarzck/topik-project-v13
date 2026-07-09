@@ -562,24 +562,45 @@ test("F-01 library dashboard renders study action sections", async ({
   await expect(
     page.locator('a[href*="/writing/feedback/"]').first(),
   ).toBeVisible();
-  const problemsList = page.getByTestId("library-problems-list");
-  const actionMenuButton = problemsList
+  const completeSubmissionActionMenuButton = page
+    .locator(
+      '[data-testid="library-problems-mixed-row"][data-library-kind="submission"]',
+    )
+    .filter({ hasText: "F-01 dashboard fixture feedback summary." })
     .getByRole("button", { name: PROBLEMS_ACTION_MENU_OPEN })
     .first();
-  await expect(actionMenuButton).toBeVisible();
-  await actionMenuButton.click();
+  await expect(completeSubmissionActionMenuButton).toBeVisible();
+  await completeSubmissionActionMenuButton.click();
   for (const label of PROBLEMS_ACTION_MENU_ITEMS) {
     await expect(page.getByRole("menuitem", { name: label })).toBeVisible();
   }
   await page.keyboard.press("Escape");
-  await expect(problemsList.locator('a[href*="?problem="]')).toHaveCount(0);
+  const savedProblemRow = page
+    .locator(
+      '[data-testid="library-problems-mixed-row"][data-library-kind="problem"]',
+    )
+    .first();
   await expect(
-    page
-      .locator(
-        '[data-testid="library-problems-mixed-row"][data-library-kind="problem"]',
-      )
-      .getByRole("button", { name: PROBLEMS_ACTION_MENU_OPEN }),
+    savedProblemRow.getByRole("link", {
+      name: PROBLEMS_ACTION_MENU_ITEMS[3],
+    }),
   ).toHaveCount(0);
+  await expect(
+    savedProblemRow.getByRole("button", { name: PROBLEMS_ACTION_MENU_OPEN }),
+  ).toBeVisible();
+  await savedProblemRow
+    .getByRole("button", { name: PROBLEMS_ACTION_MENU_OPEN })
+    .click();
+  const savedProblemActionMenu = page
+    .getByRole("menu")
+    .filter({ hasText: new RegExp(`^${PROBLEMS_ACTION_MENU_ITEMS[3]}$`) });
+  await expect(savedProblemActionMenu).toBeVisible();
+  await expect(
+    savedProblemActionMenu.getByRole("menuitem", {
+      name: PROBLEMS_ACTION_MENU_ITEMS[3],
+    }),
+  ).toBeVisible();
+  await page.keyboard.press("Escape");
   await expect(
     page
       .getByTestId("library-problems-list")
@@ -712,8 +733,8 @@ test("F-01 library problems filter panel, sort, and view toggle", async ({
   ).toBeVisible();
   await expect(resultsColumn).not.toContainText(/No\.\s*5[1-4]/);
   await expect(
-    resultsColumn.getByTestId("library-problems-type-badge"),
-  ).toHaveCount(0);
+    resultsColumn.getByTestId("library-problems-type-badge").first(),
+  ).toContainText("북마크");
   await expect(resultsColumn).not.toContainText("분석 완료");
   const list = page.getByTestId("library-item-list");
   await expect(list).toBeVisible();
@@ -724,8 +745,9 @@ test("F-01 library problems filter panel, sort, and view toggle", async ({
     .filter({ hasText: "F-01 dashboard fixture feedback summary." })
     .first();
   await expect(completeSubmissionRow).toBeVisible();
-  const submissionActionMenu = completeSubmissionRow
-    .getByRole("button", { name: PROBLEMS_ACTION_MENU_OPEN });
+  const submissionActionMenu = completeSubmissionRow.getByRole("button", {
+    name: PROBLEMS_ACTION_MENU_OPEN,
+  });
   await expect(submissionActionMenu).toBeVisible();
   const failedSubmissionRow = submissionRows
     .filter({ hasText: "F-01 dashboard fixture failed feedback." })
@@ -740,7 +762,26 @@ test("F-01 library problems filter panel, sort, and view toggle", async ({
     problemRows.first().getByRole("button", {
       name: PROBLEMS_ACTION_MENU_OPEN,
     }),
+  ).toBeVisible();
+  await expect(
+    problemRows.first().getByRole("link", {
+      name: PROBLEMS_ACTION_MENU_ITEMS[3],
+    }),
   ).toHaveCount(0);
+  await problemRows
+    .first()
+    .getByRole("button", { name: PROBLEMS_ACTION_MENU_OPEN })
+    .click();
+  const problemActionMenu = page
+    .getByRole("menu")
+    .filter({ hasText: new RegExp(`^${PROBLEMS_ACTION_MENU_ITEMS[3]}$`) });
+  await expect(problemActionMenu).toBeVisible();
+  await expect(
+    problemActionMenu.getByRole("menuitem", {
+      name: PROBLEMS_ACTION_MENU_ITEMS[3],
+    }),
+  ).toBeVisible();
+  await page.keyboard.press("Escape");
   await submissionActionMenu.click();
   const actionMenu = page
     .getByRole("menu")
@@ -1046,9 +1087,9 @@ test("F-01 library problems temporary draft filter is separate from saved items"
   await expect(page).not.toHaveURL(/\/login/);
   await expect(page.getByTestId("library-problems-list")).toBeVisible();
 
-  const searchInput = page.getByTestId("library-problems-search").locator(
-    "input",
-  );
+  const searchInput = page
+    .getByTestId("library-problems-search")
+    .locator("input");
   await expect(searchInput).toHaveAttribute("placeholder", /임시 저장/);
   await searchInput.fill(fixture.marker);
 
@@ -1060,11 +1101,27 @@ test("F-01 library problems temporary draft filter is separate from saved items"
   ).toContainText("임시 저장");
   await expect(rows.first()).toContainText("E2E library temporary draft");
   await expect(rows.first()).toContainText(fixture.marker);
-  await expect(rows.first().getByRole("link", { name: "이어쓰기" }))
-    .toHaveAttribute(
-      "href",
-      `/writing/short-answer-writing-51?problem=${fixture.problemId}`,
-    );
+  await expect(
+    rows.first().getByRole("link", { name: "이어쓰기" }),
+  ).toHaveCount(0);
+  await rows
+    .first()
+    .getByRole("button", { name: PROBLEMS_ACTION_MENU_OPEN })
+    .click();
+  const draftActionMenu = page.getByRole("menu").filter({ hasText: "이어쓰기" });
+  await expect(draftActionMenu).toBeVisible();
+  await expect(
+    draftActionMenu.getByRole("menuitem", { name: "이어쓰기" }),
+  ).toBeVisible();
+  await draftActionMenu.getByRole("menuitem", { name: "이어쓰기" }).click();
+  await expect(page).toHaveURL(
+    new RegExp(
+      `/writing/short-answer-writing-51\\?problem=${fixture.problemId}`,
+    ),
+  );
+  await page.goto("/library/problems", { waitUntil: "load" });
+  await searchInput.fill(fixture.marker);
+  await expect(rows).toHaveCount(1);
 
   const viewport = page.viewportSize();
   const isDesktop = (viewport?.width ?? 0) >= 1024;

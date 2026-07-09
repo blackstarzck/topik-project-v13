@@ -40,6 +40,8 @@ const SERVICE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
 const ENV_LABEL = (process.env.SUPABASE_ENV_LABEL ?? "").toLowerCase();
 const REMOTE_FIXTURE_SYNC_TIMEOUT_MS = 60_000;
+const PROBLEMS_ACTION_MENU_OPEN =
+  "\ubb38\uc81c \uc791\uc5c5 \uba54\ub274 \uc5f4\uae30";
 
 type StudentUser = {
   id: string;
@@ -588,6 +590,16 @@ async function selectSavedProblemFilter(page: Page) {
   await page.getByTestId("library-problems-filter-drawer-apply").last().click();
 }
 
+function visibleLibraryTitlePrefix(title: string) {
+  return title.slice(0, Math.min(24, title.length));
+}
+
+function savedProblemRow(page: Page, fixture: SaveBackFixture) {
+  return page
+    .getByTestId("library-problems-mixed-row")
+    .filter({ hasText: visibleLibraryTitlePrefix(fixture.title) });
+}
+
 test.skip(
   !SUPABASE_URL || !SERVICE_KEY,
   "Problem list regression e2e requires Supabase service credentials",
@@ -693,13 +705,16 @@ test("C-02 problem save appears in the F-01 saved problem filter", async ({
 
     await searchLibraryProblems(page, fixture.marker);
     await selectSavedProblemFilter(page);
-    const savedRow = page
-      .getByTestId("library-problems-mixed-row")
-      .filter({ hasText: fixture.title });
+    const savedRow = savedProblemRow(page, fixture);
     await expect(savedRow).toBeVisible({ timeout: 15_000 });
     await expect(savedRow).toHaveAttribute("data-library-kind", "problem");
     await savedRow
-      .getByRole("button", { name: /다시 풀기|Solve again|Làm lại|Thử lại/ })
+      .getByRole("button", { name: PROBLEMS_ACTION_MENU_OPEN })
+      .click();
+    await page
+      .getByRole("menuitem", {
+        name: /다시 풀기|Solve again|Làm lại|Thử lại/,
+      })
       .click();
     await expect(page).toHaveURL(
       new RegExp(`/writing/short-answer-writing-51.*${fixture.problemId}`),
@@ -726,11 +741,8 @@ test("C-02 problem save appears in the F-01 saved problem filter", async ({
     ).toHaveAttribute("fill", "none");
 
     await searchLibraryProblems(page, fixture.marker);
-    await expect(
-      page
-        .getByTestId("library-problems-mixed-row")
-        .filter({ hasText: fixture.title }),
-    ).toHaveCount(0);
+    await selectSavedProblemFilter(page);
+    await expect(savedProblemRow(page, fixture)).toHaveCount(0);
     await expect(page.getByTestId("library-problems-empty")).toBeVisible();
 
     expect(errors).toEqual([]);
@@ -758,11 +770,8 @@ test("D-01 temporary save does not create a saved problem library item", async (
     await expectProblemNotSaved(fixture);
 
     await searchLibraryProblems(page, fixture.marker);
-    await expect(
-      page
-        .getByTestId("library-problems-mixed-row")
-        .filter({ hasText: fixture.title }),
-    ).toHaveCount(0);
+    await selectSavedProblemFilter(page);
+    await expect(savedProblemRow(page, fixture)).toHaveCount(0);
     await expect(page.getByTestId("library-problems-empty")).toBeVisible();
 
     expect(errors).toEqual([]);

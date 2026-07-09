@@ -230,6 +230,20 @@ describe("updateProfile", () => {
     });
   });
 
+  it("clears split phone country code when clearing phone number", async () => {
+    const calls: UpdateCall[] = [];
+    await updateProfile(
+      "user-1",
+      { phone_number: null },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      () => makeClient({ onUpdate: (c) => calls.push(c) }) as any,
+    );
+    expect(calls[0].patch).toEqual({
+      phone_country_code: null,
+      phone_number: null,
+    });
+  });
+
   it("no-ops when no keys provided", async () => {
     const calls: UpdateCall[] = [];
     await updateProfile(
