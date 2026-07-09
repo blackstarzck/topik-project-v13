@@ -207,7 +207,7 @@ describe("completeAuthGateAction", () => {
         makeForm({
           gender: " female ",
           next: "/dashboard",
-          phone_number: " +821012345678 ",
+          phone_number: " 010-1234-5678 ",
         }),
       ),
     ).rejects.toThrow("NEXT_REDIRECT:/dashboard");
@@ -218,7 +218,7 @@ describe("completeAuthGateAction", () => {
       p_gender: "female",
       p_nationality_country_code: null,
       p_nickname: null,
-      p_phone_number: "+821012345678",
+      p_phone_number: "01012345678",
     });
   });
 

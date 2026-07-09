@@ -49,6 +49,8 @@ export default async function WorkspaceLayout({
       avatarPath={profile.avatar_path}
       planLabel={profile.plan_label}
       affiliationCode={profile.affiliation_code}
+      phoneNumber={profile.phone_number}
+      phoneNumberPromptDismissedAt={profile.phone_number_prompt_dismissed_at}
     >
       {children}
     </WorkspaceShell>

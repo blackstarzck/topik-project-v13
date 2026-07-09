@@ -39,6 +39,7 @@ describe("getProfileSettings", () => {
     const row = {
       display_name: "Chan",
       nickname: "찬",
+      phone_number: "01012345678",
       // Phase 7-E Task 10 — bio column.
       bio: "TOPIK II 4급 목표로 학습 중입니다.",
       ui_locale: "ko" as const,
@@ -52,6 +53,7 @@ describe("getProfileSettings", () => {
       display_name: "Chan",
       nickname: "찬",
       nationality_country_code: null,
+      phone_number: "01012345678",
       bio: "TOPIK II 4급 목표로 학습 중입니다.",
       ui_locale: "ko",
       ui_locale_source: "manual",

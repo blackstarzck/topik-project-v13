@@ -12,6 +12,7 @@ import { avatarPublicUrl } from "@/components/profile/avatar-upload";
 import type { AppRole } from "@/lib/auth/roles";
 import { APP_ROUTES } from "@/lib/routes";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { PhoneNumberReminder } from "./PhoneNumberReminder";
 import { SidebarNav } from "./SidebarNav";
 
 const { Header, Sider, Content } = Layout;
@@ -34,6 +35,8 @@ type Props = {
   avatarPath?: string | null;
   planLabel?: string | null;
   affiliationCode?: string | null;
+  phoneNumber?: string | null;
+  phoneNumberPromptDismissedAt?: string | null;
   children: ReactNode;
 };
 
@@ -46,6 +49,8 @@ export function WorkspaceShell({
   avatarPath,
   planLabel,
   affiliationCode,
+  phoneNumber,
+  phoneNumberPromptDismissedAt,
   children,
 }: Props) {
   const t = useTranslations("app");
@@ -264,7 +269,17 @@ export function WorkspaceShell({
              the top-right corner on regular workspace pages. */
           <div className="app-notification-corner">{userActions}</div>
         )}
-        <Content className={contentClassName}>{children}</Content>
+        <Content className={contentClassName}>
+          {hidesWorkspaceChrome ? null : (
+            <PhoneNumberReminder
+              userId={userId}
+              phoneNumber={phoneNumber}
+              phoneNumberPromptDismissedAt={phoneNumberPromptDismissedAt}
+              pathname={pathname}
+            />
+          )}
+          {children}
+        </Content>
       </Layout>
 
       {hidesWorkspaceChrome ? null : (

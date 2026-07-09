@@ -7,14 +7,15 @@ import { coerceNotificationPrefs, type ProfileSettings } from "./types";
 type ClientFactory = () => Promise<SupabaseServerClient>;
 
 const PROFILE_SETTINGS_COLUMNS =
-  "display_name, nickname, nationality_country_code, bio, ui_locale, ui_locale_source, notification_prefs";
+  "display_name, nickname, nationality_country_code, phone_number, bio, ui_locale, ui_locale_source, notification_prefs";
 const LEGACY_PROFILE_SETTINGS_COLUMNS =
-  "display_name, nickname, nationality_country_code, bio, ui_locale, notification_prefs";
+  "display_name, nickname, nationality_country_code, phone_number, bio, ui_locale, notification_prefs";
 
 type ProfileSettingsRow = {
   display_name: string | null;
   nickname: string | null;
   nationality_country_code?: string | null;
+  phone_number: string | null;
   bio: string | null;
   ui_locale: ProfileSettings["ui_locale"];
   ui_locale_source?: ProfileSettings["ui_locale_source"] | null;
@@ -49,6 +50,7 @@ function toProfileSettings(data: ProfileSettingsRow): ProfileSettings {
     display_name: data.display_name,
     nickname: data.nickname,
     nationality_country_code: data.nationality_country_code ?? null,
+    phone_number: data.phone_number ?? null,
     bio: data.bio,
     ui_locale: data.ui_locale,
     ui_locale_source: data.ui_locale_source ?? "legacy",

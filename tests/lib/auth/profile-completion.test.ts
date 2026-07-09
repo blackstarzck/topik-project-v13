@@ -33,7 +33,7 @@ describe("profile completion helpers", () => {
       getMissingRequiredProfileFields({
         ...completeProfile,
         gender: "female",
-        phone_number: "+821012345678",
+        phone_number: "01012345678",
       }),
     ).toEqual([]);
   });
@@ -68,11 +68,21 @@ describe("profile completion helpers", () => {
     expect(
       normalizeOptionalProfileInput({
         gender: "  FEMALE  ",
-        phone_number: "  +821012345678  ",
+        phone_number: "  010-1234-5678  ",
       }),
     ).toEqual({
       gender: "female",
-      phone_number: "+821012345678",
+      phone_number: "01012345678",
+    });
+
+    expect(
+      normalizeOptionalProfileInput({
+        gender: "prefer_not_to_say",
+        phone_number: "+82 10 1234 5678",
+      }),
+    ).toEqual({
+      gender: null,
+      phone_number: "821012345678",
     });
 
     expect(

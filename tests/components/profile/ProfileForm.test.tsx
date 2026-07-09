@@ -234,6 +234,7 @@ describe("ProfileForm", () => {
         display_name: null,
         nickname: "chan-k",
         nationality_country_code: null,
+        phone_number: null,
         bio: null,
       });
     });
@@ -263,6 +264,7 @@ describe("ProfileForm", () => {
         display_name: "Chan",
         nickname: "tester",
         nationality_country_code: null,
+        phone_number: null,
         bio: null,
       });
     });
@@ -285,6 +287,7 @@ describe("ProfileForm", () => {
         display_name: null,
         nickname: null,
         nationality_country_code: null,
+        phone_number: null,
         bio: "TOPIK II grade 4 goal",
       });
     });
@@ -541,6 +544,98 @@ describe("ProfileForm", () => {
         display_name: null,
         nickname: null,
         nationality_country_code: "KR",
+        phone_number: null,
+        bio: null,
+      });
+    });
+  });
+
+  it("renders existing phone number from initialProfile", () => {
+    renderProfileForm({
+      initialProfile: {
+        display_name: null,
+        nickname: null,
+        phone_number: "01012345678",
+        bio: null,
+      },
+    });
+
+    const phoneInput = screen.getByLabelText(
+      koMessages.profile.form.phoneNumberLabel,
+    ) as HTMLInputElement;
+    expect(phoneInput.value).toBe("01012345678");
+  });
+
+  it("blocks saving a phone number that is not digits only", async () => {
+    const { container } = renderProfileForm();
+
+    const phoneInput = screen.getByLabelText(
+      koMessages.profile.form.phoneNumberLabel,
+    ) as HTMLInputElement;
+    fireEvent.change(phoneInput, { target: { value: "010-1234-5678" } });
+
+    expect(
+      screen.getByText(koMessages.profile.form.phoneNumberInvalid),
+    ).toBeTruthy();
+    expect(
+      (screen.getByRole("button", { name: "프로필 저장" }) as HTMLButtonElement)
+        .disabled,
+    ).toBe(true);
+
+    await act(async () => {
+      submitForm(container);
+    });
+    expect(mutateAsyncMock).not.toHaveBeenCalled();
+  });
+
+  it("submits a valid digit-only phone number", async () => {
+    const { container } = renderProfileForm();
+
+    const phoneInput = screen.getByLabelText(
+      koMessages.profile.form.phoneNumberLabel,
+    ) as HTMLInputElement;
+    fireEvent.change(phoneInput, { target: { value: "01087654321" } });
+
+    await act(async () => {
+      submitForm(container);
+    });
+
+    await waitFor(() => {
+      expect(mutateAsyncMock).toHaveBeenCalledWith({
+        display_name: null,
+        nickname: null,
+        nationality_country_code: null,
+        phone_number: "01087654321",
+        bio: null,
+      });
+    });
+  });
+
+  it("submits null when the user clears an existing phone number", async () => {
+    const { container } = renderProfileForm({
+      initialProfile: {
+        display_name: null,
+        nickname: null,
+        phone_number: "01012345678",
+        bio: null,
+      },
+    });
+
+    const phoneInput = screen.getByLabelText(
+      koMessages.profile.form.phoneNumberLabel,
+    ) as HTMLInputElement;
+    fireEvent.change(phoneInput, { target: { value: "" } });
+
+    await act(async () => {
+      submitForm(container);
+    });
+
+    await waitFor(() => {
+      expect(mutateAsyncMock).toHaveBeenCalledWith({
+        display_name: null,
+        nickname: null,
+        nationality_country_code: null,
+        phone_number: null,
         bio: null,
       });
     });

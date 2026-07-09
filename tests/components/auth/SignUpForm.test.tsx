@@ -186,9 +186,10 @@ describe("SignUpForm", () => {
       ),
     ).toBeNull();
     expect(
-      screen.getByLabelText("국가/지역").compareDocumentPosition(
-        document.querySelector("#phoneNumber") as Element,
-      ) & Node.DOCUMENT_POSITION_FOLLOWING,
+      (
+        document.querySelector("#phoneNumber") as Element
+      ).compareDocumentPosition(screen.getByLabelText("국가/지역")) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     expect(screen.queryByLabelText("이메일")).toBeNull();
     expect(screen.queryByLabelText("비밀번호")).toBeNull();
@@ -323,7 +324,7 @@ describe("SignUpForm", () => {
       display_name: "홍길동",
       gender: "female",
       nationality_country_code: "VN",
-      phone_number: "+841012345678",
+      phone_number: "1012345678",
     });
   });
 

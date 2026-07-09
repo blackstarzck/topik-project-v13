@@ -20,8 +20,8 @@
 
 | column | type | nullable | validation |
 | --- | --- | --- | --- |
-| `gender` | `text` | yes | `male`, `female`, `prefer_not_to_say` 중 하나 또는 `null` |
-| `phone_number` | `text` | yes | E.164 형식 또는 `null` |
+| `gender` | `text` | yes | `male`, `female` 중 하나 또는 `null` |
+| `phone_number` | `text` | yes | 숫자만 저장 또는 `null` |
 
 전화번호는 사용자가 입력한 자기 신고 값이다. Google 계정의 전화번호를 자동 조회하지 않는다.
 

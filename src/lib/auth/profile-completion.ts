@@ -6,12 +6,9 @@ import {
 export const PROFILE_NAME_MIN_LENGTH = 2;
 export const DISPLAY_NAME_MAX_LENGTH = 30;
 export const NICKNAME_MAX_LENGTH = 20;
-export const PROFILE_GENDERS = [
-  "male",
-  "female",
-  "prefer_not_to_say",
-] as const;
-export const PHONE_NUMBER_E164_PATTERN = /^\+[1-9]\d{1,14}$/;
+export const PROFILE_GENDERS = ["male", "female"] as const;
+export const PHONE_NUMBER_MAX_LENGTH = 20;
+export const PHONE_NUMBER_DIGITS_PATTERN = /^\d{1,20}$/;
 
 export type RequiredProfileField =
   | "display_name"
@@ -62,7 +59,10 @@ function normalizeGender(value: unknown): ProfileGender | null {
 function normalizePhoneNumber(value: unknown): string | null {
   const normalized = normalizeText(value);
   if (!normalized) return null;
-  return PHONE_NUMBER_E164_PATTERN.test(normalized) ? normalized : null;
+  const digits = normalized
+    .replace(/\D/g, "")
+    .slice(0, PHONE_NUMBER_MAX_LENGTH);
+  return PHONE_NUMBER_DIGITS_PATTERN.test(digits) ? digits : null;
 }
 
 function isValidDisplayName(value: unknown) {

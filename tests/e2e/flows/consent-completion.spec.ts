@@ -48,6 +48,31 @@ async function waitForProfile(admin: SupabaseClient, userId: string) {
   throw new Error("profile row was not created in time");
 }
 
+const E2E_LEGAL_VERSION_PREFIX = "e2e-auth-gate-";
+
+/**
+ * Remove every legal_documents row this suite has ever seeded (version prefixed
+ * with `e2e-auth-gate-`) plus consents referencing them. The per-test `finally`
+ * cleanup can be skipped when the runner is hard-killed or times out, and this
+ * suite runs against a shared dev Supabase project, so orphaned published rows
+ * would otherwise accumulate and shadow the real projected documents on
+ * /auth/consent, /terms and /privacy. Running this before each seed makes the
+ * suite self-healing. NOTE: it deletes ALL `e2e-auth-gate-%` rows, so this spec
+ * must not be run concurrently against the same project.
+ */
+async function purgeE2eLegalDocuments(admin: SupabaseClient) {
+  const { data, error } = await admin
+    .from("legal_documents")
+    .select("id")
+    .like("version", `${E2E_LEGAL_VERSION_PREFIX}%`);
+  if (error) throw error;
+  const ids = (data ?? []).map((row) => row.id as string);
+  if (ids.length === 0) return;
+  await admin.from("user_consents").delete().in("document_id", ids);
+  const deleted = await admin.from("legal_documents").delete().in("id", ids);
+  if (deleted.error) throw deleted.error;
+}
+
 async function createTempAuthGateData(): Promise<TempAuthGateData> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -60,8 +85,11 @@ async function createTempAuthGateData(): Promise<TempAuthGateData> {
   const admin = createClient(url, serviceRoleKey, {
     auth: { persistSession: false },
   });
+  // Self-heal: clear leftovers from previously interrupted runs before seeding
+  // this run's documents.
+  await purgeE2eLegalDocuments(admin);
   const stamp = Date.now();
-  const version = `e2e-auth-gate-${stamp}`;
+  const version = `${E2E_LEGAL_VERSION_PREFIX}${stamp}`;
   const email = `auth-gate-e2e-${stamp}@example.com`;
   const password = `Gate-${stamp}!Aa1`;
   const docIds: string[] = [];
@@ -186,7 +214,9 @@ async function saveEvidenceScreenshot(page: Page, name: string) {
 async function expectAuthGateSaved(data: TempAuthGateData) {
   const { data: profile, error: profileError } = await data.admin
     .from("profiles")
-    .select("display_name,gender,nationality_country_code,nickname,phone_number")
+    .select(
+      "display_name,gender,nationality_country_code,nickname,phone_number",
+    )
     .eq("id", data.userId)
     .single();
   if (profileError) throw profileError;
@@ -195,7 +225,7 @@ async function expectAuthGateSaved(data: TempAuthGateData) {
   expect(profile?.gender).toBe("female");
   expect(profile?.nationality_country_code).toBe("KR");
   expect(profile?.nickname).toBe(data.generatedNickname);
-  expect(profile?.phone_number).toBe("+821012345678");
+  expect(profile?.phone_number).toBe("01012345678");
 
   const { data: consents, error: consentError } = await data.admin
     .from("user_consents")
@@ -293,7 +323,7 @@ test("auth completion gate saves missing profile fields and required consents be
     );
     await selectCountryRegion(page, "대한민국");
     await selectGender(page, "여성");
-    await page.getByLabel(/전화번호/).fill("+821012345678");
+    await page.getByLabel(/전화번호/).fill("01012345678");
     await page.locator('input[name="accept"]').check();
     await page.locator('form button[type="submit"]').click();
 

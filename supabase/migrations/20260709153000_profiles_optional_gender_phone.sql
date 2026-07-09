@@ -18,24 +18,27 @@ alter table public.profiles
   add constraint profiles_gender_check
   check (
     gender is null
-    or gender in ('male', 'female', 'prefer_not_to_say')
+    or gender in ('male', 'female')
   );
 
 alter table public.profiles
   drop constraint if exists profiles_phone_number_e164_check;
 
 alter table public.profiles
-  add constraint profiles_phone_number_e164_check
+  drop constraint if exists profiles_phone_number_digits_check;
+
+alter table public.profiles
+  add constraint profiles_phone_number_digits_check
   check (
     phone_number is null
-    or phone_number ~ '^\+[1-9][0-9]{1,14}$'
+    or phone_number ~ '^[0-9]{1,20}$'
   );
 
 comment on column public.profiles.gender is
-  'Optional self-reported profile gender collected at signup or auth completion. Allowed values: male, female, prefer_not_to_say.';
+  'Optional self-reported profile gender collected at signup or auth completion. Allowed values: male, female.';
 
 comment on column public.profiles.phone_number is
-  'Optional self-reported phone number in E.164 international format.';
+  'Optional self-reported local phone number digits. The country calling code is selected in the signup UI prefix.';
 
 create or replace function public.handle_new_user()
 returns trigger
@@ -68,14 +71,11 @@ begin
   end if;
 
   if v_gender is not null
-     and v_gender not in ('male', 'female', 'prefer_not_to_say') then
+     and v_gender not in ('male', 'female') then
     v_gender := null;
   end if;
 
-  if v_phone_number is not null
-     and v_phone_number !~ '^\+[1-9][0-9]{1,14}$' then
-    v_phone_number := null;
-  end if;
+  v_phone_number := nullif(left(regexp_replace(coalesce(v_phone_number, ''), '[^0-9]', '', 'g'), 20), '');
 
   loop
     v_attempt := v_attempt + 1;
@@ -145,16 +145,12 @@ begin
   end if;
 
   if v_gender is not null
-     and v_gender not in ('male', 'female', 'prefer_not_to_say') then
+     and v_gender not in ('male', 'female') then
     raise exception 'auth_completion_invalid: gender'
       using errcode = 'P0001';
   end if;
 
-  if v_phone_number is not null
-     and v_phone_number !~ '^\+[1-9][0-9]{1,14}$' then
-    raise exception 'auth_completion_invalid: phone_number'
-      using errcode = 'P0001';
-  end if;
+  v_phone_number := nullif(left(regexp_replace(coalesce(v_phone_number, ''), '[^0-9]', '', 'g'), 20), '');
 
   perform public.complete_auth_gate(
     p_display_name,

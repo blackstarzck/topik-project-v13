@@ -49,6 +49,10 @@ async function openSignUp(page: Page, route = "/sign-up") {
   await expect(page.getByRole("heading", { name: "회원가입" })).toBeVisible();
 }
 
+function genderOption(page: Page, label: string) {
+  return page.locator(".gender-radio-option").filter({ hasText: label });
+}
+
 async function fillSignUpForm(
   page: Page,
   {
@@ -76,11 +80,11 @@ async function fillSignUpForm(
   await displayNameInput.fill(displayName);
   await displayNameInput.blur();
 
-  await expect(page.getByRole("radio", { name: "남성" })).toBeVisible();
-  await expect(page.getByRole("radio", { name: "여성" })).toBeVisible();
+  await expect(genderOption(page, "남성")).toBeVisible();
+  await expect(genderOption(page, "여성")).toBeVisible();
   await expect(page.getByText("선택 안 함")).toHaveCount(0);
   if (genderLabel) {
-    await page.getByRole("radio", { name: genderLabel }).check();
+    await genderOption(page, genderLabel).click();
   }
 
   const countryRegionSelect = page.getByTestId("country-region-select");
@@ -347,8 +351,8 @@ test.describe("A-01 sign-up functional flow", () => {
 
     await page.locator("#displayName").fill(VALID_NAME);
     await expect(page.locator("#displayName")).toBeFocused();
-    await expect(page.getByRole("radio", { name: "남성" })).toBeVisible();
-    await expect(page.getByRole("radio", { name: "여성" })).toBeVisible();
+    await expect(genderOption(page, "남성")).toBeVisible();
+    await expect(genderOption(page, "여성")).toBeVisible();
     await expect(page.getByText("선택 안 함")).toHaveCount(0);
     await expect(page.getByTestId("country-region-select")).toBeVisible();
     await expect(page.locator("#phoneNumber")).toBeVisible();
@@ -365,7 +369,8 @@ test.describe("A-01 sign-up functional flow", () => {
     if (!displayNameBox || !countryRegionBox || !phoneNumberBox) {
       throw new Error("Could not measure sign-up input heights");
     }
-    expect(phoneNumberBox.y).toBeGreaterThan(countryRegionBox.y);
+    expect(phoneNumberBox.y).toBeGreaterThan(displayNameBox.y);
+    expect(countryRegionBox.y).toBeGreaterThan(phoneNumberBox.y);
     expect(
       Math.abs(phoneNumberBox.height - displayNameBox.height),
     ).toBeLessThanOrEqual(1);
@@ -401,17 +406,17 @@ test.describe("A-01 sign-up functional flow", () => {
     const passwordInput = page.locator("#password");
     const passwordConfirmInput = page.locator("#passwordConfirm");
     await expect(emailInput).toBeVisible();
-    await expect(page.locator("#phoneNumber")).toBeFocused();
-    await expect(page.getByRole("radio", { name: "남성" })).toBeVisible();
-    await expect(page.getByRole("radio", { name: "여성" })).toBeVisible();
+    await expect(emailInput).toBeFocused();
+    await expect(genderOption(page, "남성")).toBeVisible();
+    await expect(genderOption(page, "여성")).toBeVisible();
     await expect(page.locator("#phoneNumber")).toBeVisible();
 
     await emailInput.fill(VALID_EMAIL);
     await expect(passwordInput).toBeVisible();
     await expect(passwordConfirmInput).toBeVisible();
     await expect(emailInput).toBeFocused();
-    await expect(page.getByRole("radio", { name: "남성" })).toBeVisible();
-    await expect(page.getByRole("radio", { name: "여성" })).toBeVisible();
+    await expect(genderOption(page, "남성")).toBeVisible();
+    await expect(genderOption(page, "여성")).toBeVisible();
     await expect(page.locator("#phoneNumber")).toBeVisible();
 
     await expect(page.locator("#terms")).toHaveCount(0);
@@ -497,7 +502,7 @@ test.describe("A-01 sign-up functional flow", () => {
         display_name: VALID_NAME,
         gender: "female",
         nationality_country_code: VALID_NATIONALITY_COUNTRY_CODE,
-        phone_number: "+841012345678",
+        phone_number: "1012345678",
       },
       email: "optional-profile@example.com",
       password: VALID_PASSWORD,

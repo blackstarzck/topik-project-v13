@@ -20,7 +20,7 @@ import {
   Input,
   Typography,
 } from "antd";
-import { ArrowRight, Check } from "@/components/shared/AppIcons";
+import { ArrowRight } from "@/components/shared/AppIcons";
 
 import { GoogleMark } from "@/components/auth/GoogleMark";
 import {
@@ -48,12 +48,12 @@ import {
 } from "@/lib/auth/use-email-cooldown";
 import {
   normalizeOptionalProfileInput,
-  PHONE_NUMBER_E164_PATTERN,
   type ProfileGender,
 } from "@/lib/auth/profile-completion";
 import { asLocale, DEFAULT_LOCALE, LOCALE_COOKIE } from "@/i18n/locales";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { PasswordStrengthMeter } from "@/components/auth/PasswordStrengthMeter";
+import { GenderRadioGroup } from "@/components/shared/GenderRadioGroup";
 import { PhoneNumberInput } from "@/components/shared/PhoneNumberInput";
 
 // 2026-07-03 sign-up-explicit-duplicate-email 제안: 중복 이메일은 숨기지 않고
@@ -157,8 +157,6 @@ type SignUpFields = {
   terms: boolean;
 };
 
-type VisibleGender = Extract<ProfileGender, "male" | "female">;
-
 type SignUpFormProps = {
   onTypingChange?: (isTyping: boolean) => void;
   onPasswordChange?: (password: string) => void;
@@ -194,7 +192,6 @@ export function SignUpForm({
   const [passwordValue, setPasswordValue] = useState("");
   const [form] = Form.useForm<SignUpFields>();
   const displayNameValue = Form.useWatch("displayName", form);
-  const genderValue = Form.useWatch("gender", form);
   const nationalityCountryCodeValue = Form.useWatch(
     "nationalityCountryCode",
     form,
@@ -273,10 +270,6 @@ export function SignUpForm({
     }
   }
 
-  function handleGenderSelect(gender: VisibleGender) {
-    form.setFieldsValue({ gender });
-  }
-
   function handleStepCompletion(step: number, currentFieldValue?: string) {
     const values = form.getFieldsValue();
     const displayName =
@@ -285,14 +278,14 @@ export function SignUpForm({
         : values.displayName;
 
     if (step === STEP_NAME && isDisplayNameReady(displayName)) {
-      revealStep(STEP_COUNTRY_REGION, "nationalityCountryCode");
+      revealStep(STEP_COUNTRY_REGION, "gender");
       return;
     }
     if (
       step === STEP_COUNTRY_REGION &&
       isCountryCodeReady(values.nationalityCountryCode)
     ) {
-      revealStep(STEP_EMAIL, "phoneNumber");
+      revealStep(STEP_EMAIL, "email");
       return;
     }
     if (step === STEP_EMAIL && isEmailReady(values.email)) {
@@ -456,7 +449,7 @@ export function SignUpForm({
         onFinish={handleSignUp}
         requiredMark={false}
       >
-        {/* description §3 입력 순서: 이름, 국가/지역, 이메일, 비밀번호 */}
+        {/* description 3 input order: name, optional gender/phone, country, email, password */}
         <Form.Item
           label={t("nameLabel")}
           name="displayName"
@@ -480,53 +473,28 @@ export function SignUpForm({
 
         {showCountryRegionStep && (
           <div className="auth-progressive-step">
-            <Form.Item name="gender" hidden>
-              <Input />
+            <Form.Item label={t("genderLabel")} name="gender">
+              <GenderRadioGroup
+                id="gender"
+                ariaLabel={t("genderLabel")}
+                femaleLabel={t("genderFemale")}
+                maleLabel={t("genderMale")}
+                onFocus={() => onTypingChange?.(true)}
+                onBlur={() => onTypingChange?.(false)}
+              />
             </Form.Item>
 
-            <Form.Item label={t("genderLabel")}>
-              <div
-                role="radiogroup"
-                aria-label={t("genderLabel")}
-                className="grid w-full grid-cols-2 gap-2"
-              >
-                {(
-                  [
-                    { value: "male", label: t("genderMale") },
-                    { value: "female", label: t("genderFemale") },
-                  ] as const
-                ).map((option) => {
-                  const selected = genderValue === option.value;
-                  return (
-                    <button
-                      key={option.value}
-                      type="button"
-                      role="radio"
-                      aria-checked={selected}
-                      className={[
-                        "flex h-10 w-full items-center justify-center gap-2 rounded-default border px-3 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
-                        selected
-                          ? "border-primary bg-primary text-background"
-                          : "border-border bg-background text-text hover:border-primary hover:text-primary",
-                      ].join(" ")}
-                      onClick={() => handleGenderSelect(option.value)}
-                    >
-                      <span
-                        aria-hidden="true"
-                        className={[
-                          "flex size-4 items-center justify-center rounded-sm border",
-                          selected
-                            ? "border-background bg-background text-primary"
-                            : "border-border bg-background text-transparent",
-                        ].join(" ")}
-                      >
-                        {selected ? <Check size={12} /> : null}
-                      </span>
-                      <span>{option.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
+            <Form.Item label={t("phoneNumberLabel")} name="phoneNumber">
+              <PhoneNumberInput
+                id="phoneNumber"
+                ariaLabel={t("phoneNumberLabel")}
+                callingCodeAriaLabel={t("phoneCountryCodeLabel")}
+                countryCode={nationalityCountryCodeValue}
+                locale={locale}
+                placeholder={t("phoneNumberPlaceholder")}
+                onFocus={() => onTypingChange?.(true)}
+                onBlur={() => onTypingChange?.(false)}
+              />
             </Form.Item>
 
             <Form.Item
@@ -535,45 +503,18 @@ export function SignUpForm({
               rules={[{ required: true, message: t("countryRegionRequired") }]}
             >
               <CountryRegionSelect
-                locale={locale}
                 id="nationalityCountryCode"
                 ariaLabel={t("countryRegionLabel")}
                 dataTestId="country-region-select"
+                locale={locale}
                 placeholder={t("countryRegionPlaceholder")}
                 onFocus={() => onTypingChange?.(true)}
                 onBlur={() => onTypingChange?.(false)}
                 onChange={(value) => {
                   if (isCountryCodeReady(value)) {
-                    revealStep(STEP_EMAIL, "phoneNumber");
+                    revealStep(STEP_EMAIL, "email");
                   }
                 }}
-              />
-            </Form.Item>
-
-            <Form.Item
-              label={t("phoneNumberLabel")}
-              name="phoneNumber"
-              rules={[
-                {
-                  validator(_, value) {
-                    const phoneNumber = normalizeFieldValue(value);
-                    if (
-                      phoneNumber.length === 0 ||
-                      PHONE_NUMBER_E164_PATTERN.test(phoneNumber)
-                    ) {
-                      return Promise.resolve();
-                    }
-                    return Promise.reject(new Error(t("phoneNumberInvalid")));
-                  },
-                },
-              ]}
-            >
-              <PhoneNumberInput
-                id="phoneNumber"
-                ariaLabel={t("phoneNumberLabel")}
-                countryCode={nationalityCountryCodeValue}
-                onFocus={() => onTypingChange?.(true)}
-                onBlur={() => onTypingChange?.(false)}
               />
             </Form.Item>
           </div>

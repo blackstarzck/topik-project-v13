@@ -60,10 +60,11 @@ export interface Database {
         Row: {
           id: string;
           display_name: string | null;
-          gender: "male" | "female" | "prefer_not_to_say" | null;
+          gender: "male" | "female" | null;
           nationality_country_code: string | null;
           nickname: string | null;
           phone_number: string | null;
+          phone_number_prompt_dismissed_at: string | null;
           avatar_path: string | null;
           ui_locale: "ko" | "en" | "vi";
           ui_locale_source: "legacy" | "default" | "auto" | "manual";
@@ -90,10 +91,11 @@ export interface Database {
         Insert: {
           id: string;
           display_name?: string | null;
-          gender?: "male" | "female" | "prefer_not_to_say" | null;
+          gender?: "male" | "female" | null;
           nationality_country_code?: string | null;
           nickname?: string | null;
           phone_number?: string | null;
+          phone_number_prompt_dismissed_at?: string | null;
           avatar_path?: string | null;
           ui_locale?: "ko" | "en" | "vi";
           ui_locale_source?: "legacy" | "default" | "auto" | "manual";
@@ -116,10 +118,11 @@ export interface Database {
         Update: {
           id?: string;
           display_name?: string | null;
-          gender?: "male" | "female" | "prefer_not_to_say" | null;
+          gender?: "male" | "female" | null;
           nationality_country_code?: string | null;
           nickname?: string | null;
           phone_number?: string | null;
+          phone_number_prompt_dismissed_at?: string | null;
           avatar_path?: string | null;
           ui_locale?: "ko" | "en" | "vi";
           ui_locale_source?: "legacy" | "default" | "auto" | "manual";

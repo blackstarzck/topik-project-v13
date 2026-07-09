@@ -1,8 +1,14 @@
 // @vitest-environment jsdom
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { fireEvent, screen, waitFor, within } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  cleanup,
+  fireEvent,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { WorkspaceShell } from "../../../src/components/app/WorkspaceShell";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
@@ -134,6 +140,10 @@ describe("WorkspaceShell", () => {
       isLoading: false,
       error: null,
     };
+  });
+
+  afterEach(() => {
+    cleanup();
   });
 
   it("redirects to /login on SIGNED_OUT (multi-tab/device sync) but ignores INITIAL_SESSION", () => {
@@ -962,5 +972,62 @@ describe("WorkspaceShell", () => {
 
     expect(hasExpandedMenuItem(learning.container, "설정")).toBe(true);
     expect(learning.container.textContent).toContain("학습 목표");
+  });
+
+  it("shows the phone number reminder on a non-focus route when phone is missing", () => {
+    navMock.pathname = "/dashboard";
+
+    renderWithIntl(
+      <WorkspaceShell
+        role="learner"
+        userId="user-1"
+        email={null}
+        planLabel={null}
+        phoneNumber={null}
+        phoneNumberPromptDismissedAt={null}
+      >
+        <div>body</div>
+      </WorkspaceShell>,
+    );
+
+    expect(screen.getByTestId("phone-number-reminder")).toBeTruthy();
+  });
+
+  it("hides the phone number reminder once a phone number exists", () => {
+    navMock.pathname = "/dashboard";
+
+    renderWithIntl(
+      <WorkspaceShell
+        role="learner"
+        userId="user-1"
+        email={null}
+        planLabel={null}
+        phoneNumber="01012345678"
+        phoneNumberPromptDismissedAt={null}
+      >
+        <div>body</div>
+      </WorkspaceShell>,
+    );
+
+    expect(screen.queryByTestId("phone-number-reminder")).toBeNull();
+  });
+
+  it("hides the phone number reminder on chrome-hidden focus routes", () => {
+    navMock.pathname = "/writing/short-answer-writing-51";
+
+    renderWithIntl(
+      <WorkspaceShell
+        role="learner"
+        userId="user-1"
+        email={null}
+        planLabel={null}
+        phoneNumber={null}
+        phoneNumberPromptDismissedAt={null}
+      >
+        <div>body</div>
+      </WorkspaceShell>,
+    );
+
+    expect(screen.queryByTestId("phone-number-reminder")).toBeNull();
   });
 });

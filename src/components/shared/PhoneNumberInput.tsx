@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { KeyboardEvent, ReactNode } from "react";
 import { useMemo, useState } from "react";
 import { Input, Select } from "antd";
 import { CountryFlag } from "@/components/shared/CountryRegionSelect";
@@ -24,15 +24,19 @@ type PhoneCountryOption = {
 
 type PhoneNumberInputProps = {
   ariaLabel: string;
+  callingCodeAriaLabel?: string;
   countryCode?: string | null;
   disabled?: boolean;
   id?: string;
+  locale?: string;
   onBlur?: () => void;
   onChange?: (value: string) => void;
   onFocus?: () => void;
   placeholder?: string;
   value?: string | null;
 };
+
+export const PHONE_NUMBER_INPUT_MAX_LENGTH = 20;
 
 function PhoneCountryOptionLabel({
   code,
@@ -82,61 +86,54 @@ function getSupportedPhoneCountryCode(countryCode: string | null | undefined) {
     : DEFAULT_PHONE_COUNTRY_CODE;
 }
 
-function composePhoneNumber(dialCode: string, localNumber: string) {
-  const trimmedLocalNumber = localNumber.trim();
-  if (trimmedLocalNumber.length === 0) return "";
+function normalizePhoneDigits(value: unknown) {
+  if (typeof value !== "string") return "";
+  return value.replace(/\D/g, "").slice(0, PHONE_NUMBER_INPUT_MAX_LENGTH);
+}
 
-  if (trimmedLocalNumber.startsWith("+")) {
-    const internationalDigits = trimmedLocalNumber.replace(/[^\d]/g, "");
-    return internationalDigits.length > 0 ? `+${internationalDigits}` : "";
-  }
+function isAllowedPhoneKey(event: KeyboardEvent<HTMLInputElement>) {
+  if (event.ctrlKey || event.metaKey || event.altKey) return true;
 
-  const nationalDigits = trimmedLocalNumber
-    .replace(/[^\d]/g, "")
-    .replace(/^0+/, "");
-  return nationalDigits.length > 0 ? `${dialCode}${nationalDigits}` : "";
+  const keyCode = event.keyCode || event.which;
+  return (
+    (keyCode >= 48 && keyCode <= 57) ||
+    (keyCode >= 96 && keyCode <= 105) ||
+    [8, 9, 13, 27, 35, 36, 37, 38, 39, 40, 46].includes(keyCode)
+  );
 }
 
 export function PhoneNumberInput({
   ariaLabel,
+  callingCodeAriaLabel,
   countryCode,
   disabled = false,
   id,
+  locale,
   onBlur,
   onChange,
   onFocus,
   placeholder = "1012345678",
+  value,
 }: PhoneNumberInputProps) {
   const [phoneCountryCodeOverride, setPhoneCountryCodeOverride] = useState<
     string | null
   >(null);
-  const [localNumber, setLocalNumber] = useState("");
   const phoneCountryOptions = useMemo(
     () =>
       createPhoneCountryOptions(
-        typeof navigator === "undefined" ? "en" : navigator.language,
+        locale ??
+          (typeof navigator === "undefined" ? "en" : navigator.language),
       ),
-    [],
+    [locale],
   );
   const phoneCountryCode =
     phoneCountryCodeOverride ?? getSupportedPhoneCountryCode(countryCode);
-  const dialCode =
-    getCountryCallingCode(phoneCountryCode) ??
-    getCountryCallingCode(DEFAULT_PHONE_COUNTRY_CODE) ??
-    "+82";
-
-  function emitPhoneNumber(nextCountryCode: string, nextLocalNumber: string) {
-    const nextDialCode =
-      getCountryCallingCode(nextCountryCode) ??
-      getCountryCallingCode(DEFAULT_PHONE_COUNTRY_CODE) ??
-      "+82";
-    onChange?.(composePhoneNumber(nextDialCode, nextLocalNumber));
-  }
+  const localNumber = normalizePhoneDigits(value ?? "");
 
   return (
     <div className="grid grid-cols-[minmax(104px,128px)_minmax(0,1fr)] gap-2">
       <Select
-        aria-label="Country calling code"
+        aria-label={callingCodeAriaLabel ?? "Country calling code"}
         className="min-w-0"
         data-testid="phone-country-code-select"
         disabled={disabled}
@@ -153,11 +150,9 @@ export function PhoneNumberInput({
         }}
         onBlur={onBlur}
         onChange={(nextCountryCode) => {
-          const normalizedCountryCode = getSupportedPhoneCountryCode(
-            nextCountryCode,
-          );
+          const normalizedCountryCode =
+            getSupportedPhoneCountryCode(nextCountryCode);
           setPhoneCountryCodeOverride(normalizedCountryCode);
-          emitPhoneNumber(normalizedCountryCode, localNumber);
         }}
         onFocus={onFocus}
       />
@@ -166,16 +161,22 @@ export function PhoneNumberInput({
         aria-label={ariaLabel}
         autoComplete="tel-national"
         disabled={disabled}
-        inputMode="tel"
+        inputMode="numeric"
+        maxLength={PHONE_NUMBER_INPUT_MAX_LENGTH}
+        pattern="[0-9]*"
         placeholder={placeholder}
+        type="tel"
         value={localNumber}
         onBlur={onBlur}
         onChange={(event) => {
-          const nextLocalNumber = event.target.value;
-          setLocalNumber(nextLocalNumber);
-          onChange?.(composePhoneNumber(dialCode, nextLocalNumber));
+          onChange?.(normalizePhoneDigits(event.target.value));
         }}
         onFocus={onFocus}
+        onKeyDown={(event) => {
+          if (!isAllowedPhoneKey(event)) {
+            event.preventDefault();
+          }
+        }}
       />
     </div>
   );
