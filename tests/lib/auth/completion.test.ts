@@ -83,13 +83,13 @@ describe("auth completion state", () => {
     warnSpy.mockRestore();
   });
 
-  it("returns pending-auth-completion when required consent is missing", async () => {
+  it("returns pending-consent when profile is complete but required consent is missing", async () => {
     getMissingRequiredConsentDocumentsMock.mockResolvedValueOnce([
       { id: "terms-1" },
     ]);
 
     await expect(getAuthCompletionStatusForSession(session)).resolves.toBe(
-      "pending-auth-completion",
+      "pending-consent",
     );
 
     expect(getMissingRequiredConsentDocumentsMock).toHaveBeenCalledWith(

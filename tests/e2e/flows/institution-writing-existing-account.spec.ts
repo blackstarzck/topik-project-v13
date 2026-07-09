@@ -368,9 +368,28 @@ test("existing institution learner sees only assigned writing type", async ({
   await expect(page.locator(".problem-type-tabs__badge")).toHaveCount(
     4 - EXPECTED_COUNT,
   );
-  await expect(page.locator('a[href^="/writing/"]')).toHaveCount(
-    EXPECTED_COUNT,
+  // The rule-based fallback (C-01 Tier-2) may add recommendation CTAs (hero +
+  // secondary cards) for assigned problems on top of the always-present type
+  // cards; how many render depends on this durable account's attempt history.
+  // Bound the count instead of pinning it, and assert the exposure boundary
+  // directly: every problem-targeted link must point at an ASSIGNED problem.
+  const writingLinkCount = await page.locator('a[href^="/writing/"]').count();
+  expect(writingLinkCount).toBeGreaterThanOrEqual(EXPECTED_COUNT);
+  expect(writingLinkCount).toBeLessThanOrEqual(EXPECTED_COUNT * 2);
+  const assignedProblemIds = new Set(
+    fixture.assignedProblems.map((problem) => problem.id),
   );
+  const problemLinkHrefs = await page
+    .locator('a[href*="problem="]')
+    .evaluateAll((anchors) =>
+      anchors.map((anchor) => anchor.getAttribute("href") ?? ""),
+    );
+  for (const href of problemLinkHrefs) {
+    const problemId = new URL(href, "http://localhost").searchParams.get(
+      "problem",
+    );
+    expect(problemId != null && assignedProblemIds.has(problemId)).toBe(true);
+  }
   await screenshot(
     page,
     "existing-account-recommendations",

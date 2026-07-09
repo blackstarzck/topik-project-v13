@@ -43,6 +43,21 @@ test("X-05 profile editing renders field constraints without dirtying data", asy
 
   await expect(page.getByLabel("이름")).toHaveAttribute("maxlength", "30");
   await expect(page.getByLabel("닉네임")).toHaveAttribute("maxlength", "20");
+  await expect(page.locator("#phoneNumber")).toBeVisible();
+  await expect(page.getByTestId("phone-country-code-select")).toBeVisible();
+  await expect(page.getByTestId("phone-country-code-select")).toContainText(
+    "+82",
+  );
+  const nicknameBox = await page.getByLabel("닉네임").boundingBox();
+  const phoneNumberBox = await page.locator("#phoneNumber").boundingBox();
+  const countryRegionBox = await page
+    .getByRole("combobox", { name: "국가/지역" })
+    .boundingBox();
+  if (!nicknameBox || !phoneNumberBox || !countryRegionBox) {
+    throw new Error("Could not measure profile phone field placement");
+  }
+  expect(phoneNumberBox.y).toBeGreaterThan(nicknameBox.y);
+  expect(countryRegionBox.y).toBeGreaterThan(phoneNumberBox.y);
   await expect(page.getByLabel("자기소개")).toHaveAttribute("maxlength", "160");
   await expect(
     page.getByText("실명 또는 자주 사용하는 이름을 입력해 주세요."),

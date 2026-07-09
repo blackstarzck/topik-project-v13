@@ -130,7 +130,7 @@ describe("TermsDocument", () => {
       body: `
         <div>## 제1조 (목적)</div>
         <br>
-        이 약관은 **TALKPIK AI** 서비스 이용 조건을 규정합니다.
+        이 약관은 **DOTORE TOPIK** 서비스 이용 조건을 규정합니다.
 
         - 첫 번째 항목
         - 두 번째 항목

@@ -504,7 +504,7 @@ function PdfExportModalBody({
                 </Button>
                 <Button
                   size="small"
-                  href={`mailto:support@talkpik.example?subject=${encodeURIComponent(
+                  href={`mailto:support@dotoretopik.example?subject=${encodeURIComponent(
                     t("contactSubject"),
                   )}`}
                 >

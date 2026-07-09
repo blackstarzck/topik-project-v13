@@ -59,14 +59,14 @@ describe("legal document HTML helpers", () => {
     const html = renderLegalDocumentBodyHtml(`
       <div>## 제1조 (목적)</div>
       <br>
-      이 약관은 **TALKPIK AI** 서비스 이용 조건을 규정합니다.
+      이 약관은 **DOTORE TOPIK** 서비스 이용 조건을 규정합니다.
 
       - 첫 번째 항목
       - 두 번째 항목
     `);
 
     expect(html).toContain("<h2>제1조 (목적)</h2>");
-    expect(html).toContain("<strong>TALKPIK AI</strong>");
+    expect(html).toContain("<strong>DOTORE TOPIK</strong>");
     expect(html).toContain("<li>첫 번째 항목</li>");
     expect(html).toContain("<li>두 번째 항목</li>");
     expect(html).not.toContain("&lt;div&gt;");

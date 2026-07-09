@@ -18,6 +18,7 @@ import { ProblemTypeTabs } from "./ProblemTypeTabs";
 import {
   PrimaryRecommendationCard,
   SecondaryRecommendationCard,
+  weaknessTagLabel,
 } from "./RecommendationItemCards";
 import { TypeSelectCards } from "./TypeSelectCards";
 import { getReasonTagColor } from "./reason-tag-colors";
@@ -100,14 +101,10 @@ function RecommendationReasonPanel({
   const t = useTranslations("practice.recommendations");
   const tCommon = useTranslations("practice.common");
   const typeLabel = tCommon(`questionType${questionNo}`);
-  const tags =
-    weaknessTags.length > 0
-      ? weaknessTags
-      : [
-          t("reasonTagGrammar"),
-          t("reasonTagStructure"),
-          t("reasonTagExpression"),
-        ];
+  // Only measured weakness dimensions appear as tags. Padding this list with
+  // static copy would present fabricated analysis as personal data — when
+  // there is nothing measured, the tag row simply doesn't render.
+  const tags = weaknessTags.map((tag) => weaknessTagLabel(t, tag));
 
   return (
     <AppCard>
@@ -141,20 +138,22 @@ function RecommendationReasonPanel({
                 {reasonSummary ??
                   t("reasonSummaryFallback", { type: typeLabel })}
               </Text>
-              <div className="recommendation-reason-card__footer">
-                <div className="recommendation-reason-card__tags">
-                  {tags.map((tag, index) => (
-                    <Tag
-                      className="recommendation-reason-card__tag"
-                      color={getReasonTagColor(index, tags.length)}
-                      key={`${tag}-${index}`}
-                      variant="filled"
-                    >
-                      {tag}
-                    </Tag>
-                  ))}
+              {tags.length > 0 ? (
+                <div className="recommendation-reason-card__footer">
+                  <div className="recommendation-reason-card__tags">
+                    {tags.map((tag, index) => (
+                      <Tag
+                        className="recommendation-reason-card__tag"
+                        color={getReasonTagColor(index, tags.length)}
+                        key={`${tag}-${index}`}
+                        variant="filled"
+                      >
+                        {tag}
+                      </Tag>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              ) : null}
             </>
           )}
         </div>
@@ -239,12 +238,29 @@ export function RecommendationsView() {
     );
   }
 
-  const items = bundle.data?.items ?? [];
+  const bundleData = bundle.data;
+  // Computed (rule-based) items carry a reasonCode instead of stored copy —
+  // resolve it to locale text once so the card components stay unchanged.
+  const items = useMemo(() => {
+    return (bundleData?.items ?? []).map((card) => ({
+      ...card,
+      reason:
+        card.reason ??
+        (card.reasonCode
+          ? t(`reasonCode.${card.reasonCode}` as Parameters<typeof t>[0])
+          : null),
+    }));
+  }, [bundleData, t]);
   const primary = items[0] ?? null;
   const rest = items.slice(1);
   const fallbackQuestionNo = active ?? primary?.questionNo ?? 51;
   const recommendedQuestionNo = primary?.questionNo ?? fallbackQuestionNo;
-  const reasonSummary = bundle.data?.run?.reasonSummary ?? primary?.reason;
+  const summaryCode = bundleData?.summaryCode ?? null;
+  const computedSummary = summaryCode
+    ? t(`computedSummary.${summaryCode}` as Parameters<typeof t>[0])
+    : null;
+  const reasonSummary =
+    bundleData?.run?.reasonSummary ?? computedSummary ?? primary?.reason;
 
   // The stagger replays whenever this key changes the panel's React `key`,
   // remounting it. Derive it from the content actually shown — the selected
@@ -326,7 +342,9 @@ export function RecommendationsView() {
               </Title>
               <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                 {rest.map((card) => (
-                  <div key={card.itemId} className="min-w-0">
+                  // Computed items have no recommendation row, so itemId is
+                  // null — problemId keeps keys unique in that case.
+                  <div key={card.itemId ?? card.problemId} className="min-w-0">
                     <SecondaryRecommendationCard card={card} />
                   </div>
                 ))}

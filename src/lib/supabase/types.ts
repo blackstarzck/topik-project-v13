@@ -1,5 +1,5 @@
 /**
- * Schema-aligned Supabase type snapshot for TALKPIK AI.
+ * Schema-aligned Supabase type snapshot for DOTORE TOPIK.
  *
  * Source of truth: `supabase/migrations/*.sql` (16 canonical migrations) plus
  * the trigger migration added in Phase 2 (`20260521120000_auth_user_profile_bootstrap.sql`).

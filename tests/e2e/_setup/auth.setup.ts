@@ -34,11 +34,26 @@ setup("authenticate student", async ({ page }) => {
     const rawAdmin = createClient(config.supabaseUrl, config.serviceRoleKey, {
       auth: { persistSession: false },
     });
-    await rawAdmin
+    const dismissed = await rawAdmin
       .from("profiles")
       .update({ phone_number_prompt_dismissed_at: new Date().toISOString() })
       .eq("id", userId);
-  } catch {
+    if (dismissed.error) {
+      throw dismissed.error;
+    }
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : error &&
+            typeof error === "object" &&
+            "message" in error &&
+            typeof error.message === "string"
+          ? error.message
+          : "";
+    if (!message.includes("phone_number_prompt_dismissed_at")) {
+      throw error;
+    }
     // Ignore: column may not exist on this environment yet.
   }
 

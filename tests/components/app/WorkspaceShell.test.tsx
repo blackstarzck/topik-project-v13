@@ -519,7 +519,7 @@ describe("WorkspaceShell", () => {
       </WorkspaceShell>,
     );
 
-    fireEvent.click(screen.getAllByLabelText("TALKPIK")[0]);
+    fireEvent.click(screen.getAllByLabelText("DOTORE TOPIK")[0]);
 
     expect(navMock.routerPush).toHaveBeenCalledWith("/dashboard");
   });
@@ -733,6 +733,7 @@ describe("WorkspaceShell", () => {
     expect(brandRule).toContain("height: 68px;");
     expect(brandRule).toContain("justify-content: center;");
     expect(brandRule).toContain("text-align: center;");
+    expect(logoRule).toContain("width: auto;");
     expect(logoRule).toContain("height: 68px;");
   });
 
@@ -782,6 +783,7 @@ describe("WorkspaceShell", () => {
     expect(source).toContain('<BrandLogo height={48} loading="eager" />');
     expect(mobileBrandRule).toContain("height: 48px;");
     expect(mobileBrandRule).toContain("justify-content: center;");
+    expect(mobileLogoRule).toContain("width: auto;");
     expect(mobileLogoRule).toContain("height: 48px;");
   });
 
@@ -994,6 +996,18 @@ describe("WorkspaceShell", () => {
     expect(
       await screen.findByText(koMessages.app.phoneReminder.title),
     ).toBeTruthy();
+  });
+
+  it("does not open the reminder modal while phone profile fields are unavailable", () => {
+    navMock.pathname = "/dashboard";
+
+    renderWithIntl(
+      <WorkspaceShell role="learner" userId="user-1" email={null} planLabel={null}>
+        <div>body</div>
+      </WorkspaceShell>,
+    );
+
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 
   it("does not open the reminder modal once a phone number exists", () => {

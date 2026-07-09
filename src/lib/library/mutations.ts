@@ -13,8 +13,10 @@ import {
 type BrowserClient = ReturnType<typeof createSupabaseBrowserClient>;
 type ClientFactory = () => BrowserClient;
 
-const DUPLICATE_SUBMISSION_LIBRARY_CONSTRAINT =
-  "library_items_user_submission_uniq";
+const DUPLICATE_LIBRARY_CONSTRAINTS = [
+  "library_items_user_submission_uniq",
+  "library_items_user_problem_uniq",
+] as const;
 
 type PostgrestErrorLike = {
   code?: string;
@@ -33,7 +35,9 @@ export function isDuplicateLibrarySaveError(error: unknown): boolean {
     .filter((value): value is string => Boolean(value))
     .join(" ");
 
-  return text.includes(DUPLICATE_SUBMISSION_LIBRARY_CONSTRAINT);
+  return DUPLICATE_LIBRARY_CONSTRAINTS.some((constraint) =>
+    text.includes(constraint),
+  );
 }
 
 /**
@@ -70,6 +74,25 @@ export async function deleteLibraryItem(
     .from("library_items")
     .delete()
     .eq("id", itemId);
+  if (error) throw error;
+}
+
+export type DeleteProblemLibraryItemInput = {
+  user_id: string;
+  problem_id: string;
+};
+
+export async function deleteProblemLibraryItem(
+  input: DeleteProblemLibraryItemInput,
+  createClient: ClientFactory = createSupabaseBrowserClient,
+): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("library_items")
+    .delete()
+    .eq("user_id", input.user_id)
+    .eq("item_type", "problem")
+    .eq("problem_id", input.problem_id);
   if (error) throw error;
 }
 
@@ -129,6 +152,17 @@ export function useDeleteLibraryItem() {
       deleteLibraryItem(itemId),
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: libraryItemsKey(variables.tab) });
+    },
+  });
+}
+
+export function useDeleteProblemLibraryItem() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: DeleteProblemLibraryItemInput) =>
+      deleteProblemLibraryItem(input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: libraryItemsKey("problems") });
     },
   });
 }

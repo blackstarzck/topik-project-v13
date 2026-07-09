@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { expect, test } from "@playwright/test";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
@@ -16,8 +18,19 @@ import {
 // (migrations 20260709153000 + 20260709154000 not applied on this environment),
 // so it never false-fails before the schema catches up.
 
-const REMINDER_TITLE = "전화번호를 등록해 주세요";
-const DISMISS_LABEL = "다시 보지 않기";
+const koMessages = JSON.parse(
+  readFileSync(path.join(process.cwd(), "messages", "ko.json"), "utf8"),
+) as {
+  app: {
+    phoneReminder: {
+      title: string;
+      dismiss: string;
+    };
+  };
+};
+
+const REMINDER_TITLE = koMessages.app.phoneReminder.title;
+const DISMISS_LABEL = koMessages.app.phoneReminder.dismiss;
 
 const config = resolveE2EStudentConfig();
 const admin: SupabaseClient = createClient(

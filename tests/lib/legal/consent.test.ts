@@ -143,6 +143,37 @@ describe("legal consent helpers", () => {
     expect(missing.map((doc) => doc.id)).toEqual(["privacy-1"]);
   });
 
+  it("requires consent to the newest required document version even when an older version was accepted", async () => {
+    const newerTermsDoc: RequiredConsentDocument = {
+      ...termsDoc,
+      id: "terms-2",
+      version: "v2",
+      effective_at: "2026-07-01T00:00:00.000Z",
+      created_at: "2026-07-01T00:00:00.000Z",
+    };
+    const client = makeClient({
+      legalDocuments: [
+        { ...termsDoc, status: "published", requires_consent: true },
+        { ...newerTermsDoc, status: "published", requires_consent: true },
+        { ...privacyDoc, status: "published", requires_consent: true },
+      ],
+      userConsents: [
+        { user_id: "user-1", document_id: "terms-1" },
+        { user_id: "user-1", document_id: "privacy-1" },
+      ],
+    });
+
+    const missing = await getMissingRequiredConsentDocuments(
+      "user-1",
+      "ko",
+      async () =>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        client as any,
+    );
+
+    expect(missing.map((doc) => doc.id)).toEqual(["terms-2"]);
+  });
+
   it("records consent rows for provided documents", async () => {
     const inserts: Row[][] = [];
     const client = makeClient({ inserts });

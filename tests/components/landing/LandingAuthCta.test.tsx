@@ -126,6 +126,7 @@ describe("landing auth CTA", () => {
     expect(source).toContain('<BrandLogo height={68} loading="eager" />');
     expect(logoRule).toContain("height: 68px;");
     expect(logoRule).toContain("max-width: 193px;");
+    expect(imageRule).toContain("width: auto;");
     expect(imageRule).toContain("height: 68px;");
   });
 

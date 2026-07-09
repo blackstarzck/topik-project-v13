@@ -252,7 +252,7 @@ async function stubStorageDownloadAndPrintEndpoint(page: Page) {
     await route.fulfill({
       status: 200,
       contentType: "application/pdf",
-      body: "%PDF-1.4\n%TALKPIK e2e\n%%EOF",
+      body: "%PDF-1.4\n%DOTORE TOPIK e2e\n%%EOF",
     });
   });
 

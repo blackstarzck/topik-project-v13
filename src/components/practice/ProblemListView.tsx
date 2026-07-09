@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { AppCard } from "@/components/shared/AppCard";
+import { useLibraryItems } from "@/lib/library/queries";
 import {
   isValidQuestionNo,
   type ProblemFilter,
@@ -182,10 +183,18 @@ export function ProblemListView({ userId }: Props) {
     [filter, sort, page, userId],
   );
   const list = useUserProblemsRpc(rpcParams);
+  const savedProblems = useLibraryItems("problems");
   const retry = useSingleFlightAction(() => list.refetch());
 
   const total = list.data?.total ?? 0;
   const rows = list.data?.rows ?? [];
+  const savedProblemIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const item of savedProblems.data ?? []) {
+      if (item.kind === "problem") ids.add(item.id);
+    }
+    return ids;
+  }, [savedProblems.data]);
   const rangeStart = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
   const rangeEnd = Math.min(page * PAGE_SIZE, total);
 
@@ -254,7 +263,13 @@ export function ProblemListView({ userId }: Props) {
             className="problem-list-card overflow-hidden"
             classNames={problemListCardClassNames}
           >
-            <ProblemTable rows={rows} onRetryClick={setRetryTarget} />
+            <ProblemTable
+              rows={rows}
+              userId={userId}
+              savedProblemIds={savedProblemIds}
+              savedProblemsLoading={savedProblems.isLoading}
+              onRetryClick={setRetryTarget}
+            />
           </AppCard>
           {/* §5 하단 총 건수 + 페이지 이동 */}
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">

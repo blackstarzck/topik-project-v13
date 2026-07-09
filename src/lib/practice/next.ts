@@ -339,7 +339,7 @@ function pickOne<T>(raw: T | T[] | null | undefined): T | null {
   return raw;
 }
 
-function isWritingQuestionNo(
+export function isWritingQuestionNo(
   questionNo: number | null | undefined,
 ): questionNo is (typeof WRITING_QUESTION_NOS)[number] {
   return WRITING_QUESTION_NOS.includes(
@@ -347,7 +347,7 @@ function isWritingQuestionNo(
   );
 }
 
-function questionRotationOrder(
+export function questionRotationOrder(
   latestQuestionNo: number | null | undefined,
 ): readonly number[] {
   if (!isWritingQuestionNo(latestQuestionNo)) return WRITING_QUESTION_NOS;

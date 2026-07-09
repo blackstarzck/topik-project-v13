@@ -95,5 +95,5 @@ export function sanitizePdfFilename(filename: string): string {
     cleaned += ch;
   }
   cleaned = cleaned.slice(0, PDF_FILENAME_MAX);
-  return cleaned.length > 0 ? cleaned : "talkpik-export";
+  return cleaned.length > 0 ? cleaned : "dotore-topik-export";
 }

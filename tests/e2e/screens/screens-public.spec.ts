@@ -288,7 +288,7 @@ for (const s of PUBLIC_SCREENS) {
       await page.locator("#blog").scrollIntoViewIfNeeded();
       await expect(page.getByText("Future scope").first()).toBeVisible();
       await page.locator("#contact").scrollIntoViewIfNeeded();
-      await expect(page.getByText("TALKPIK AI로 시작하기")).toBeVisible();
+      await expect(page.getByText("DOTORE TOPIK으로 시작하기")).toBeVisible();
 
       const signupPill = page
         .locator(".landing-layout-pill[href='/sign-up']")

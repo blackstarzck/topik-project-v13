@@ -21,5 +21,6 @@ describe("brand logo image sizing", () => {
     const imageRule = cssRule(".brand-logo__image");
 
     expect(imageRule).toContain("width: auto;");
+    expect(imageRule).toContain("height: auto;");
   });
 });

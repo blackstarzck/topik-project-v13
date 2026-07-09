@@ -132,6 +132,20 @@ describe("(workspace) layout auth completion guard", () => {
     expect(getAuthCompletionStatusForSessionMock).toHaveBeenCalledWith(session);
   });
 
+  it("redirects users with missing required consent before rendering workspace shell", async () => {
+    getSessionAndProfileMock.mockResolvedValue(session);
+    getAuthCompletionStatusForSessionMock.mockResolvedValueOnce(
+      "pending-consent",
+    );
+
+    await expect(renderLayout()).rejects.toThrow(
+      "NEXT_REDIRECT:/auth/post-auth?intent=login",
+    );
+
+    expect(getAuthCompletionStatusForSessionMock).toHaveBeenCalledWith(session);
+    expect(workspaceShellMock).not.toHaveBeenCalled();
+  });
+
   it("renders workspace content after consent is complete", async () => {
     getSessionAndProfileMock.mockResolvedValue(session);
 

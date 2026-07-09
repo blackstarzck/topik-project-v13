@@ -9,6 +9,7 @@ import {
   CountryRegionSelect,
   normalizeCountryCode,
 } from "@/components/shared/CountryRegionSelect";
+import { PhoneNumberInput } from "@/components/shared/PhoneNumberInput";
 import {
   checkNicknameAvailability,
   NicknameTakenError,
@@ -535,6 +536,25 @@ export function ProfileForm({
 
           <Form.Item
             className="!mb-0"
+            label={t("phoneNumberLabel")}
+            validateStatus={phoneNumberInvalid ? "error" : undefined}
+            help={phoneNumberInvalid ? t("phoneNumberInvalid") : undefined}
+            extra={phoneNumberInvalid ? undefined : t("phoneNumberHelp")}
+          >
+            <PhoneNumberInput
+              id="phoneNumber"
+              ariaLabel={t("phoneNumberLabel")}
+              callingCodeAriaLabel={t("phoneCountryCodeLabel")}
+              disabled={mutation.isPending}
+              locale={locale}
+              placeholder={t("phoneNumberPlaceholder")}
+              value={phoneNumber}
+              onChange={setPhoneNumber}
+            />
+          </Form.Item>
+
+          <Form.Item
+            className="!mb-0"
             label={t("countryRegionLabel")}
             extra={t("countryRegionHelp")}
           >
@@ -563,25 +583,6 @@ export function ProfileForm({
               }}
               autoSize={{ minRows: 3, maxRows: 5 }}
               aria-label={t("bioLabel")}
-            />
-          </Form.Item>
-
-          <Form.Item
-            className="!mb-0"
-            label={t("phoneNumberLabel")}
-            validateStatus={phoneNumberInvalid ? "error" : undefined}
-            help={phoneNumberInvalid ? t("phoneNumberInvalid") : undefined}
-            extra={phoneNumberInvalid ? undefined : t("phoneNumberHelp")}
-          >
-            <Input
-              value={phoneNumber}
-              onChange={(event) => setPhoneNumber(event.target.value)}
-              autoComplete="tel"
-              inputMode="numeric"
-              maxLength={20}
-              pattern="[0-9]*"
-              placeholder={t("phoneNumberPlaceholder")}
-              aria-label={t("phoneNumberLabel")}
             />
           </Form.Item>
         </div>

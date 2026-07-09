@@ -5,6 +5,7 @@
  */
 
 import type {
+  LibraryDraftView,
   LibraryProblemView,
   LibrarySubmissionView,
 } from "@/lib/library/types";
@@ -20,6 +21,11 @@ export type MixedLibraryProblemItem =
   | {
       kind: "problem";
       item: LibraryProblemView;
+      savedAt: string;
+    }
+  | {
+      kind: "draft";
+      item: LibraryDraftView;
       savedAt: string;
     };
 
@@ -46,6 +52,13 @@ export function submissionTitle(
 
 export function problemTitle(title: string | null, fallbackTitle: string) {
   return stripQuestionNumberPrefix(title ?? fallbackTitle);
+}
+
+export function draftTitle(
+  item: LibraryDraftView,
+  fallbackTitle: string,
+): string {
+  return stripQuestionNumberPrefix(item.problem_title ?? fallbackTitle);
 }
 
 export function isAnalysisPendingStatus(

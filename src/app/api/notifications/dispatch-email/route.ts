@@ -114,7 +114,7 @@ const ERROR_MESSAGE_MAX = 500;
 // SPF 정렬되어 임의 수신자에게 배달된다(별도 도메인 인증 불필요). env SMTP_FROM 으로 override.
 const DEFAULT_FROM = "도토리 토픽 <guest@keduall.com>";
 const DISPLAY_NAME_FALLBACK = "학습자";
-const SITE_URL_FALLBACK = "https://app.talkpik.ai";
+const SITE_URL_FALLBACK = "https://www.dotoretopik.com";
 
 // 이메일 본문에 클릭 가능한 CTA 링크를 덧붙인다. in_app은 카드 클릭으로 link_url
 // 이동이 되지만 이메일은 본문 안에 절대경로 링크가 있어야 행동 가능하다(N-EML-04).

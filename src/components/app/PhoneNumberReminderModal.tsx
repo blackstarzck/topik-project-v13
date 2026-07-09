@@ -3,13 +3,14 @@
 import { App, Button, Modal } from "antd";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 
 import { APP_ROUTES } from "@/lib/routes";
 import { dismissPhoneNumberPrompt } from "@/lib/settings/mutations";
 
 /** Session-scoped suppression so the modal shows at most once per browser session. */
 const SESSION_SUPPRESS_KEY = "talkpik.phoneReminderModalDismissed";
+const SESSION_SUPPRESS_EVENT = "talkpik:phone-reminder-session-suppressed";
 
 /**
  * Routes where the modal must NOT interrupt: the profile editor itself (where
@@ -42,6 +43,40 @@ function readSessionSuppressed() {
   }
 }
 
+function readServerSessionSuppressed() {
+  // Keep the modal closed during SSR and initial hydration; it may open after
+  // the client can safely render AntD's portal.
+  return true;
+}
+
+function subscribeToSessionSuppressed(onStoreChange: () => void) {
+  if (typeof window === "undefined") return () => {};
+
+  const hydrationTick = window.setTimeout(onStoreChange, 0);
+  const handleStorageChange = (event: StorageEvent) => {
+    if (event.key === SESSION_SUPPRESS_KEY) onStoreChange();
+  };
+
+  window.addEventListener("storage", handleStorageChange);
+  window.addEventListener(SESSION_SUPPRESS_EVENT, onStoreChange);
+  return () => {
+    window.clearTimeout(hydrationTick);
+    window.removeEventListener("storage", handleStorageChange);
+    window.removeEventListener(SESSION_SUPPRESS_EVENT, onStoreChange);
+  };
+}
+
+function writeSessionSuppressed() {
+  if (typeof window === "undefined") return false;
+  try {
+    window.sessionStorage.setItem(SESSION_SUPPRESS_KEY, "1");
+    window.dispatchEvent(new Event(SESSION_SUPPRESS_EVENT));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 type Props = {
   userId: string;
   phoneNumber?: string | null;
@@ -68,24 +103,26 @@ export function PhoneNumberReminderModal({
   const t = useTranslations("app.phoneReminder");
   const { message } = App.useApp();
   const router = useRouter();
-  const [sessionSuppressed, setSessionSuppressed] = useState(
+  const sessionSuppressed = useSyncExternalStore(
+    subscribeToSessionSuppressed,
     readSessionSuppressed,
+    readServerSessionSuppressed,
   );
+  const [locallySuppressed, setLocallySuppressed] = useState(false);
   const [permanentlyDismissed, setPermanentlyDismissed] = useState(false);
   const [pending, setPending] = useState(false);
 
   const eligible =
     !phoneNumber && !phoneNumberPromptDismissedAt && !isExcludedRoute(pathname);
-  const modalOpen = eligible && !sessionSuppressed && !permanentlyDismissed;
+  const modalOpen =
+    eligible && !sessionSuppressed && !locallySuppressed && !permanentlyDismissed;
 
   function suppressForSession() {
-    try {
-      window.sessionStorage.setItem(SESSION_SUPPRESS_KEY, "1");
-    } catch {
+    if (!writeSessionSuppressed()) {
       // sessionStorage unavailable (e.g. privacy mode). Fall back to the
       // in-memory close below; the modal simply may reappear on a full reload.
     }
-    setSessionSuppressed(true);
+    setLocallySuppressed(true);
   }
 
   function handleClose() {

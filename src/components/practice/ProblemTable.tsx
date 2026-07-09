@@ -1,7 +1,7 @@
 "use client";
 
 import type { KeyboardEvent, MouseEvent, ReactNode } from "react";
-import { Button, ConfigProvider, Table, Tag } from "antd";
+import { Button, ConfigProvider, Space, Table, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
   ChartNoAxesColumnIncreasing,
@@ -23,11 +23,17 @@ import {
 import { ProblemTagIcon } from "./problem-tag-icons";
 import { getProblemRowDisplayMeta } from "./problem-list-display";
 import type { UserProblemRow } from "./problem-list-data";
+import { ProblemBookmarkToggle } from "./ProblemBookmarkToggle";
 
 type Props = {
   rows: UserProblemRow[];
+  userId: string;
+  savedProblemIds?: ReadonlySet<string>;
+  savedProblemsLoading?: boolean;
   onRetryClick: (row: UserProblemRow) => void;
 };
+
+const EMPTY_SAVED_PROBLEM_IDS: ReadonlySet<string> = new Set<string>();
 
 const PROBLEM_TABLE_THEME = {
   components: {
@@ -114,7 +120,13 @@ function ProblemMetadataTag({ tag }: { tag: string }) {
   );
 }
 
-export function ProblemTable({ rows, onRetryClick }: Props) {
+export function ProblemTable({
+  rows,
+  userId,
+  savedProblemIds = EMPTY_SAVED_PROBLEM_IDS,
+  savedProblemsLoading = false,
+  onRetryClick,
+}: Props) {
   const router = useRouter();
   const t = useTranslations("practice.problems");
   const tCommon = useTranslations("practice.common");
@@ -309,14 +321,23 @@ export function ProblemTable({ rows, onRetryClick }: Props) {
     {
       title: null,
       key: "action",
-      width: 132,
+      width: 176,
       align: "right",
       render: (_value: unknown, row) => {
         const disabled = isDisabled(row);
         const analysisHandoff = isAnalysisHandoff(row);
         const rowHasPriorWork = hasPriorWork(row);
+        const bookmarkButton = (
+          <ProblemBookmarkToggle
+            userId={userId}
+            problemId={row.problemId}
+            initiallySaved={savedProblemIds.has(row.problemId)}
+            disabled={disabled || savedProblemsLoading}
+            className="problem-table__bookmark-button"
+          />
+        );
 
-        const button = analysisHandoff ? (
+        const solveButton = analysisHandoff ? (
           <Button
             className="problem-table__action-button problem-table__action-button--secondary"
             variant="outlined"
@@ -336,19 +357,16 @@ export function ProblemTable({ rows, onRetryClick }: Props) {
         ) : (
           <Button
             className="problem-table__action-button problem-table__action-button--primary"
-            size="large"
             disabled={disabled}
           >
             {t("startProblem")}
           </Button>
         );
 
-        if (analysisHandoff || rowHasPriorWork || disabled) {
-          return <div className="problem-table__action">{button}</div>;
-        }
-
-        return (
-          <div className="problem-table__action">
+        const primaryAction =
+          analysisHandoff || rowHasPriorWork || disabled ? (
+            solveButton
+          ) : (
             <Link
               className="problem-table__action-link"
               href={
@@ -358,8 +376,16 @@ export function ProblemTable({ rows, onRetryClick }: Props) {
                 }) as never
               }
             >
-              {button}
+              {solveButton}
             </Link>
+          );
+
+        return (
+          <div className="problem-table__action">
+            <Space.Compact className="problem-table__actions-compact">
+              {primaryAction}
+              {bookmarkButton}
+            </Space.Compact>
           </div>
         );
       },
@@ -403,7 +429,7 @@ export function ProblemTable({ rows, onRetryClick }: Props) {
               tabIndex: disabled || isAnalysisHandoff(row) ? -1 : 0,
             };
           }}
-          scroll={{ x: 840 }}
+          scroll={{ x: 900 }}
           size="medium"
           tableLayout="fixed"
         />

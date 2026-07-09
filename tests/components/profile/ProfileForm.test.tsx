@@ -566,7 +566,31 @@ describe("ProfileForm", () => {
     expect(phoneInput.value).toBe("01012345678");
   });
 
-  it("blocks saving a phone number that is not digits only", async () => {
+  it("renders the sign-up phone input structure directly after nickname", () => {
+    renderProfileForm();
+
+    const nicknameInput = screen.getByLabelText(
+      koMessages.profile.form.nicknameLabel,
+    );
+    const phoneInput = screen.getByLabelText(
+      koMessages.profile.form.phoneNumberLabel,
+    );
+    const countryRegionSelect = screen.getByRole("combobox", {
+      name: koMessages.profile.form.countryRegionLabel,
+    });
+
+    expect(screen.getByTestId("phone-country-code-select")).toBeTruthy();
+    expect(
+      nicknameInput.compareDocumentPosition(phoneInput) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      phoneInput.compareDocumentPosition(countryRegionSelect) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it("normalizes non-digit phone number edits through the shared phone input", async () => {
     const { container } = renderProfileForm();
 
     const phoneInput = screen.getByLabelText(
@@ -574,18 +598,22 @@ describe("ProfileForm", () => {
     ) as HTMLInputElement;
     fireEvent.change(phoneInput, { target: { value: "010-1234-5678" } });
 
-    expect(
-      screen.getByText(koMessages.profile.form.phoneNumberInvalid),
-    ).toBeTruthy();
-    expect(
-      (screen.getByRole("button", { name: "프로필 저장" }) as HTMLButtonElement)
-        .disabled,
-    ).toBe(true);
+    await waitFor(() => {
+      expect(phoneInput.value).toBe("01012345678");
+    });
 
     await act(async () => {
       submitForm(container);
     });
-    expect(mutateAsyncMock).not.toHaveBeenCalled();
+    await waitFor(() => {
+      expect(mutateAsyncMock).toHaveBeenCalledWith({
+        display_name: null,
+        nickname: null,
+        nationality_country_code: null,
+        phone_number: "01012345678",
+        bio: null,
+      });
+    });
   });
 
   it("submits a valid digit-only phone number", async () => {

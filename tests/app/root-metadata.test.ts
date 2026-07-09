@@ -26,6 +26,20 @@ vi.mock("../../src/app/providers", () => ({
 import { metadata } from "../../src/app/layout";
 
 describe("Root metadata", () => {
+  it("uses DOTORE TOPIK as the browser title and social site brand", () => {
+    expect(metadata.title).toMatchObject({
+      default: "DOTORE TOPIK",
+      template: "%s | DOTORE TOPIK",
+    });
+    expect(metadata.openGraph).toMatchObject({
+      title: "DOTORE TOPIK",
+      siteName: "DOTORE TOPIK",
+    });
+    expect(metadata.twitter).toMatchObject({
+      title: "DOTORE TOPIK",
+    });
+  });
+
   it("registers the public thumbnail as the Open Graph and Twitter preview image", () => {
     expect(existsSync(join(process.cwd(), "public/assets/thumnail.png"))).toBe(
       true,
@@ -37,7 +51,7 @@ describe("Root metadata", () => {
           url: "/assets/thumnail.png",
           width: 1672,
           height: 941,
-          alt: "TALKPIK AI",
+          alt: "DOTORE TOPIK",
         },
       ],
     });
@@ -46,7 +60,7 @@ describe("Root metadata", () => {
       images: [
         {
           url: "/assets/thumnail.png",
-          alt: "TALKPIK AI",
+          alt: "DOTORE TOPIK",
         },
       ],
     });

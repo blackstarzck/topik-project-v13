@@ -41,9 +41,12 @@ const PROBLEMS_ACTION_MENU_ITEMS = [
   "\ube44\uad50 \ub9ac\ud3ec\ud2b8",
   "\ub2e4\uc2dc \ud480\uae30",
 ] as const;
+const ENV_LABEL = (process.env.SUPABASE_ENV_LABEL ?? "").toLowerCase();
 const createdLibraryItemIds: string[] = [];
 const createdSubmissionIds: string[] = [];
 const createdStudyEventIds: string[] = [];
+const createdProblemIds: string[] = [];
+const createdDraftIds: string[] = [];
 
 function collectErrors(page: Page): string[] {
   const errors: string[] = [];
@@ -66,6 +69,24 @@ function serviceClient() {
   return createClient(SUPABASE_URL, SERVICE_KEY, {
     auth: { persistSession: false },
   });
+}
+
+function q51Materials(marker: string) {
+  return {
+    question_id: `e2e-library-draft-${marker}`,
+    blank_target_giyeok: "draft fixture first blank",
+    blank_target_nieun: "draft fixture second blank",
+    review: {
+      validation: [`Library draft fixture ${marker}`],
+    },
+  };
+}
+
+function q51Rubric() {
+  return {
+    conditions: ["Complete the notice in a natural order."],
+    criteria: ["content", "format", "sentence accuracy"],
+  };
 }
 
 async function createLibraryDashboardFixture() {
@@ -287,16 +308,75 @@ async function createLibraryDashboardFixture() {
   };
 }
 
+async function createLibraryDraftFixture() {
+  const sb = serviceClient();
+  const users = await sb.auth.admin.listUsers({ page: 1, perPage: 1000 });
+  if (users.error) throw users.error;
+  const user = users.data.users.find(
+    (candidate) => candidate.email?.toLowerCase() === EMAIL.toLowerCase(),
+  );
+  if (!user) throw new Error(`E2E student user not found: ${EMAIL}`);
+
+  const marker = `f01-draft-${randomUUID().slice(0, 8)}`;
+  const problemId = randomUUID();
+  const draftId = randomUUID();
+  const now = new Date(Date.now() - 10_000).toISOString();
+  const title = `E2E library temporary draft ${marker}`;
+  const answerText = `${marker} temporary draft answer`;
+
+  const problem = await sb.from("problems").insert({
+    id: problemId,
+    source: "curated",
+    domain: "writing",
+    question_no: 51,
+    topik_level: 2,
+    difficulty: 3,
+    title,
+    prompt: "Complete the short-answer writing fixture.",
+    materials: q51Materials(marker),
+    answer_key: null,
+    rubric: q51Rubric(),
+    tags: [marker, "e2e-library-draft"],
+    publish_status: "published",
+    review_status: "approved",
+    visibility: "public",
+    lifecycle_status: "active",
+    created_at: now,
+    updated_at: now,
+  });
+  if (problem.error) throw problem.error;
+  createdProblemIds.push(problemId);
+
+  const draft = await sb.from("writing_drafts").insert({
+    id: draftId,
+    user_id: user.id,
+    problem_id: problemId,
+    question_no: 51,
+    answer_text: answerText,
+    answer_json: null,
+    char_count: answerText.length,
+    autosave_status: "clean",
+    last_saved_at: now,
+    created_at: now,
+    updated_at: now,
+  });
+  if (draft.error) throw draft.error;
+  createdDraftIds.push(draftId);
+
+  return { marker, problemId, title };
+}
+
 async function cleanupLibraryFixtures() {
   if (
     createdLibraryItemIds.length === 0 &&
     createdSubmissionIds.length === 0 &&
-    createdStudyEventIds.length === 0
+    createdStudyEventIds.length === 0 &&
+    createdProblemIds.length === 0 &&
+    createdDraftIds.length === 0
   ) {
     return;
   }
-  const label = (process.env.SUPABASE_ENV_LABEL || "").toLowerCase();
-  if (label === "prod" || label === "production") return;
+  if (ENV_LABEL === "prod" || ENV_LABEL === "production") return;
   const sb = serviceClient();
   for (const id of createdLibraryItemIds) {
     await sb.from("library_items").delete().eq("id", id);
@@ -309,9 +389,19 @@ async function cleanupLibraryFixtures() {
     await sb.from("writing_feedback").delete().eq("submission_id", id);
     await sb.from("writing_submissions").delete().eq("id", id);
   }
+  for (const id of createdDraftIds) {
+    await sb.from("writing_drafts").delete().eq("id", id);
+  }
+  for (const id of createdProblemIds) {
+    await sb.from("library_items").delete().eq("problem_id", id);
+    await sb.from("writing_drafts").delete().eq("problem_id", id);
+    await sb.from("problems").delete().eq("id", id);
+  }
   createdLibraryItemIds.length = 0;
   createdSubmissionIds.length = 0;
   createdStudyEventIds.length = 0;
+  createdProblemIds.length = 0;
+  createdDraftIds.length = 0;
 }
 
 test.afterEach(cleanupLibraryFixtures);
@@ -943,6 +1033,72 @@ test("F-01 library problems filter panel, sort, and view toggle", async ({
     ).toContainText("1");
   }
 
+  expect(errors).toEqual([]);
+});
+
+test("F-01 library problems temporary draft filter is separate from saved items", async ({
+  page,
+}) => {
+  const errors = collectErrors(page);
+  const fixture = await createLibraryDraftFixture();
+
+  await page.goto("/library/problems", { waitUntil: "load" });
+  await expect(page).not.toHaveURL(/\/login/);
+  await expect(page.getByTestId("library-problems-list")).toBeVisible();
+
+  const searchInput = page.getByTestId("library-problems-search").locator(
+    "input",
+  );
+  await expect(searchInput).toHaveAttribute("placeholder", /임시 저장/);
+  await searchInput.fill(fixture.marker);
+
+  const rows = page.getByTestId("library-problems-mixed-row");
+  await expect(rows).toHaveCount(1);
+  await expect(rows.first()).toHaveAttribute("data-library-kind", "draft");
+  await expect(
+    rows.first().getByTestId("library-problems-type-badge"),
+  ).toContainText("임시 저장");
+  await expect(rows.first()).toContainText("E2E library temporary draft");
+  await expect(rows.first()).toContainText(fixture.marker);
+  await expect(rows.first().getByRole("link", { name: "이어쓰기" }))
+    .toHaveAttribute(
+      "href",
+      `/writing/short-answer-writing-51?problem=${fixture.problemId}`,
+    );
+
+  const viewport = page.viewportSize();
+  const isDesktop = (viewport?.width ?? 0) >= 1024;
+  const panel = isDesktop
+    ? page.getByTestId("library-problems-filter-panel-desktop")
+    : page.locator(".app-drawer").getByTestId("library-problems-filter-panel");
+
+  if (!isDesktop) {
+    await page.getByTestId("library-problems-filter-open").click();
+  }
+  await expect(panel).toBeVisible();
+
+  const itemTypeGroup = panel.getByTestId(
+    "library-problems-filter-group-item-type",
+  );
+  await expect(itemTypeGroup).toContainText("저장 답안");
+  await expect(itemTypeGroup).toContainText("북마크한 문제");
+  await expect(itemTypeGroup).toContainText("임시 저장");
+  await expect(itemTypeGroup).not.toContainText("제공 종료");
+  await expect(itemTypeGroup).not.toContainText("이용 불가");
+  await expect(
+    panel.getByTestId("library-problems-filter-group-problem-availability"),
+  ).toContainText("제공 종료");
+  await expect(
+    panel.getByTestId("library-problems-filter-group-problem-availability"),
+  ).toContainText("이용 불가");
+
+  await panel.getByTestId("library-problems-filter-kind-draft").click();
+  if (!isDesktop) {
+    await page.getByTestId("library-problems-filter-drawer-apply").click();
+  }
+
+  await expect(rows).toHaveCount(1);
+  await expect(rows.first()).toHaveAttribute("data-library-kind", "draft");
   expect(errors).toEqual([]);
 });
 

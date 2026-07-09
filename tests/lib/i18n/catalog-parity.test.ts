@@ -12,6 +12,15 @@ function keyPaths(obj: unknown, prefix = ""): string[] {
   );
 }
 
+function valueAtPath(obj: unknown, path: string): unknown {
+  return path
+    .split(".")
+    .reduce<unknown>(
+      (acc, seg) => (acc as Record<string, unknown>)?.[seg],
+      obj,
+    );
+}
+
 describe("message catalog parity", () => {
   const koKeys = keyPaths(ko).sort();
 
@@ -43,5 +52,26 @@ describe("message catalog parity", () => {
         `${name} has empty values: ${empties.join(", ")}`,
       ).toEqual([]);
     }
+  });
+
+  it("uses TOPIK page title labels without legacy TALKPIK wording", () => {
+    for (const [name, cat] of [
+      ["ko", ko],
+      ["en", en],
+      ["vi", vi],
+    ] as const) {
+      const legacyMetaTitles = keyPaths(cat)
+        .filter((path) => path.split(".").at(-1)?.startsWith("metaTitle"))
+        .filter((path) => String(valueAtPath(cat, path)).includes("TALKPIK"));
+
+      expect(
+        legacyMetaTitles,
+        `${name} still has legacy TALKPIK page titles: ${legacyMetaTitles.join(", ")}`,
+      ).toEqual([]);
+    }
+
+    expect(ko.legal.terms.metaTitle).toBe("이용약관 — TOPIK");
+    expect(ko.legal.privacy.metaTitle).toBe("개인정보처리방침 — TOPIK");
+    expect(ko.landing.metaTitle).toBe("DOTORE TOPIK · TOPIK 글쓰기 AI 학습");
   });
 });

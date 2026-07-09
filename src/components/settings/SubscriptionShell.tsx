@@ -38,7 +38,7 @@ import {
 
 const { Paragraph, Text } = Typography;
 
-const SUPPORT_EMAIL = "support@talkpik.example";
+const SUPPORT_EMAIL = "support@dotoretopik.example";
 const PAGE_SIZE = 10;
 
 // i18n: 상태/결제 enum 값은 카탈로그 키 이름만 보관하고(공유 엔티티

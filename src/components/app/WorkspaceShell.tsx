@@ -277,7 +277,8 @@ export function WorkspaceShell({
           per session. Only mounted once the profile's phone state is actually
           known (the workspace layout always passes it); `undefined` means the
           caller did not provide it, so we do not prompt. */}
-      {phoneNumber === undefined ? null : (
+      {phoneNumber === undefined ||
+      phoneNumberPromptDismissedAt === undefined ? null : (
         <PhoneNumberReminderModal
           userId={userId}
           phoneNumber={phoneNumber}

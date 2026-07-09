@@ -85,6 +85,23 @@ export type LibraryProblemView = {
   canRetry: boolean;
 };
 
+export type LibraryDraftView = {
+  kind: "draft";
+  /** Underlying `writing_drafts.id`. */
+  id: string;
+  problem_id: string;
+  problem_title: string | null;
+  question_no: number | null;
+  answer_text: string | null;
+  char_count: number | null;
+  autosave_status: Tables<"writing_drafts">["autosave_status"];
+  /** Synthetic row id used by the mixed `/library/problems` list. */
+  item_id: string;
+  /** `writing_drafts.last_saved_at ?? updated_at` for mixed ordering. */
+  saved_at: string;
+  last_saved_at: string | null;
+};
+
 export type LibraryExportView = {
   kind: "export";
   /** Underlying `export_files.id`. */

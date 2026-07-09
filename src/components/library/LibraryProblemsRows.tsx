@@ -6,7 +6,7 @@
  * 다시 풀기 액션은 카드 뷰(LibraryProblemsItemCard)와 공유한다.
  */
 
-import { Tag, Typography } from "antd";
+import { Button, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 
@@ -15,15 +15,17 @@ import {
   type SubmissionEnrichment,
 } from "@/components/library/library-enrich-data";
 import type {
+  LibraryDraftView,
   LibraryProblemView,
   LibrarySubmissionView,
 } from "@/lib/library/types";
-import { writingFeedbackHref } from "@/lib/writing/routes";
+import { writingFeedbackHref, writingProblemHref } from "@/lib/writing/routes";
 
 import { LibraryItemRow } from "./LibraryItemRow";
 import { LibraryProblemsActionMenu } from "./LibraryProblemsActionMenu";
 import { LibraryProblemsQuestionNumber } from "./LibraryProblemsQuestionNumber";
 import {
+  draftTitle,
   isAnalysisPendingStatus,
   problemTitle,
   submissionTitle,
@@ -143,5 +145,74 @@ export function LibraryProblemsProblemRow({
         ) : null}
       </div>
     </LibraryItemRow>
+  );
+}
+export function LibraryProblemsDraftRow({ item }: { item: LibraryDraftView }) {
+  const t = useTranslations("library.problemsList") as LibraryListTranslate;
+  const tSubmissions = useTranslations(
+    "library.submissions",
+  ) as LibraryListTranslate;
+  const fallbackTitle = tSubmissions("problemTitle", {
+    id: item.problem_id.slice(0, 8),
+  });
+  const title = draftTitle(item, fallbackTitle);
+
+  return (
+    <LibraryItemRow
+      itemId={item.item_id}
+      showDeleteAction={false}
+      tab="drafts"
+      tags={[]}
+      trailingActions={[
+        <LibraryProblemsDraftAction key="continue" item={item} />,
+      ]}
+    >
+      <div className="flex w-full min-w-0 flex-col gap-1">
+        <div className="flex flex-wrap items-center gap-3">
+          <LibraryProblemsQuestionNumber questionNo={item.question_no} />
+          <Text strong>{clampTitle(title)}</Text>
+          <Tag data-testid="library-problems-type-badge">
+            {t("typeDraft")}
+          </Tag>
+        </div>
+        {item.answer_text ? (
+          <Paragraph className="mb-0" ellipsis={{ rows: 2 }} type="secondary">
+            {item.answer_text}
+          </Paragraph>
+        ) : null}
+      </div>
+    </LibraryItemRow>
+  );
+}
+
+export function LibraryProblemsDraftAction({
+  item,
+}: {
+  item: LibraryDraftView;
+}) {
+  const t = useTranslations("library.problemsList") as LibraryListTranslate;
+  const canContinue = item.question_no !== null;
+
+  if (!canContinue) {
+    return (
+      <Button size="small" disabled aria-label={t("continueDraft")}>
+        {t("continueDraft")}
+      </Button>
+    );
+  }
+
+  return (
+    <Link
+      href={
+        writingProblemHref({
+          questionNo: item.question_no,
+          problemId: item.problem_id,
+        }) as never
+      }
+    >
+      <Button type="primary" size="small">
+        {t("continueDraft")}
+      </Button>
+    </Link>
   );
 }

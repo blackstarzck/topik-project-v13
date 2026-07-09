@@ -3,6 +3,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type {
+  LibraryDraftView,
   LibraryProblemView,
   LibrarySubmissionView,
 } from "../../../src/lib/library/types";
@@ -46,6 +47,20 @@ const problem: LibraryProblemView = {
   canRetry: true,
 };
 
+const draft: LibraryDraftView = {
+  kind: "draft",
+  id: "draft-51",
+  problem_id: "problem-51",
+  problem_title: "No. 51 - Draft answer problem",
+  question_no: 51,
+  answer_text: "draft body",
+  char_count: 10,
+  autosave_status: "clean",
+  item_id: "draft:draft-51",
+  saved_at: "2026-07-01T10:00:00.000Z",
+  last_saved_at: "2026-07-01T10:00:00.000Z",
+};
+
 afterEach(cleanup);
 
 describe("LibraryProblemsWorkspace", () => {
@@ -54,6 +69,7 @@ describe("LibraryProblemsWorkspace", () => {
       <LibraryProblemsWorkspace
         initialSubmissions={[submission]}
         initialProblems={[problem]}
+        initialDrafts={[draft]}
       />,
     );
 

@@ -532,6 +532,7 @@ test.describe("A-01 sign-up functional flow", () => {
     await expect(page).toHaveURL(/\/auth\/institution-invite$/);
     await page.locator('a[href="/sign-up"]').click();
     await expect(page).toHaveURL(/\/sign-up$/);
+    await page.waitForLoadState("networkidle");
     await expect(page.locator("#displayName")).toBeVisible();
     await fillSignUpForm(page, { email: "aff-signup@example.com" });
     await clickSubmit(page);
